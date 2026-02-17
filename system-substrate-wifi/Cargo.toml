@@ -1,0 +1,9 @@
+[package]
+name = "system-substrate-wifi"
+version = "0.1.0"
+edition = "2021"
+authors = ["P. Woodfine <pwoodfine@woodfinegroup.com>"]
+description = "Tier 6: Standardized Wireless Interface for PointSav Private Networks."
+
+[dependencies]
+system-core = { path = "../system-core" }

@@ -1,0 +1,11 @@
+[package]
+name = "os-network-admin"
+version = "0.1.0"
+edition = "2021"
+authors = ["P. Woodfine <pwoodfine@woodfinegroup.com>"]
+description = "Tier 4: Routing Policy and Authority Engine for the Private Network."
+
+[dependencies]
+system-core = { path = "../system-core" }
+system-security = { path = "../system-security" }
+system-substrate = { path = "../system-substrate" }

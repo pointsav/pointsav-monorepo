@@ -1,0 +1,9 @@
+[package]
+name = "system-core"
+version = "0.1.0"
+edition = "2021"
+authors = ["P. Woodfine <pwoodfine@woodfinegroup.com>"]
+description = "Tier 6: Immutable primitives and root traits for PointSav."
+
+[dependencies]
+# Strictly no dependencies to maintain the Root of Trust.

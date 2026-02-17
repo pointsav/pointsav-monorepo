@@ -1,0 +1,15 @@
+[workspace]
+members = [
+    "system-core",
+    "system-substrate",
+    "system-security",
+    "system-substrate-wifi",
+    "system-substrate-broadcom",
+    "os-network-admin",
+    "os-infrastructure",
+]
+
+resolver = "2"
+
+[profile.release]
+panic = "abort"

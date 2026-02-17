@@ -1,0 +1,16 @@
+[package]
+name = "os-infrastructure"
+version = "0.1.0"
+edition = "2021"
+authors = ["P. Woodfine <pwoodfine@woodfinegroup.com>"]
+description = "Tier 4: Stateless Hypervisor Node (The Rails) for seL4."
+
+[features]
+# Define the hardware-specific feature
+wifi-broadcom = ["system-substrate-broadcom"]
+
+[dependencies]
+system-core = { path = "../system-core" }
+system-substrate = { path = "../system-substrate" }
+# Optional dependency triggered by the feature
+system-substrate-broadcom = { path = "../system-substrate-broadcom", optional = true }

@@ -1,0 +1,9 @@
+[package]
+name = "system-security"
+version = "0.1.0"
+edition = "2021"
+authors = ["P. Woodfine <pwoodfine@woodfinegroup.com>"]
+description = "Tier 6: Capability Monitor and MBA handshake logic."
+
+[dependencies]
+system-core = { path = "../system-core" }

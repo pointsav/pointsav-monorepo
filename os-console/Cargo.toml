@@ -1,0 +1,10 @@
+[package]
+name = "os-console"
+version = "0.1.0"
+edition = "2021"
+authors = ["J. Woodfine <jwoodfine@woodfinegroup.com>"]
+description = "Tier 4: Zero-dependency Graphical Interface Engine (TUI)."
+
+[dependencies]
+# Dependencies will be added as we refine the TUI logic.
+# Currently strictly no_std compatible where possible.

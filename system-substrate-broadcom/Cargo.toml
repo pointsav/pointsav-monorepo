@@ -1,0 +1,10 @@
+[package]
+name = "system-substrate-broadcom"
+version = "0.1.0"
+edition = "2021"
+authors = ["P. Woodfine <pwoodfine@woodfinegroup.com>"]
+description = "Tier 6: Broadcom-specific Wireless Substrate for MacBook Pro hardware."
+
+[dependencies]
+system-core = { path = "../system-core" }
+system-substrate-wifi = { path = "../system-substrate-wifi" }

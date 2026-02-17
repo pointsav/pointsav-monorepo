@@ -1,0 +1,12 @@
+[package]
+name = "pointsav-system-interface"
+version = "0.1.0"
+edition = "2021"
+authors = ["PointSav Digital Systems AG"]
+
+[dependencies]
+system_core = { package = "pointsav-system-core", path = "../system-core" }
+
+[lib]
+name = "system_interface"
+path = "src/lib.rs"
