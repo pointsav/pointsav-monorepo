@@ -1,4 +1,21 @@
+# --- PointSav Institutional Standard: Rust/seL4 ---
+
+# Build Artifacts
 target/
-**/*.rs.bk
+**/*.rlib
+**/*.rmeta
+**/*.d
+
+# Binary Blobs (Use Totebox for large storage)
+*.iso
 *.img
-Cargo.lock
+*.bin
+!usb_test.bin
+
+# Environment & Keys
+.env
+*.key
+*.pem
+
+# MacOS Metadata
+.DS_Store
