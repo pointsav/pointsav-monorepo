@@ -1,19 +1,10 @@
 # system-substrate
-
-### [EN] Institutional Context / [ES] Contexto Institucional
-| **Tier** | **Role / Rol** | **Status / Estado** |
+### [EN] Institutional Context
+| Tier | Role | Status |
 | :--- | :--- | :--- |
-| Tier 6: System | HAL | **CORE** |
+| Tier 6 | HAL | **CORE: SILICON-LOCKED** |
 
 ---
-
-### [EN] Technical Directive
-Hardware Abstraction Layer (HAL). Standardizes drivers and acts as the root of trust, interfacing directly with the mathematically verified seL4 core.
-
-### [ES] Directiva Técnica
-Capa de Abstracción de Hardware (HAL). Estandariza controladores y actúa como la raíz de confianza, interactuando directamente con el núcleo seL4 matemáticamente verificado.
-
-
-
----
-*© 2026 PointSav Digital Systems AG | Verified Execution Environment*
+### Technical Directive
+Hardware Abstraction Layer (HAL). 
+**Milestone:** Successfully integrated the BCM4331 Silicon Lock protocol, bypassing legacy Apple SMC requirements.
