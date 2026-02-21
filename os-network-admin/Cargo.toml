@@ -9,7 +9,4 @@ description = "Tier 4: Routing Policy and Authority Engine for the Private Netwo
 system-core = { path = "../system-core" }
 system-security = { path = "../system-security" }
 system-substrate = { path = "../system-substrate" }
-<<<<<<< HEAD
-=======
 
->>>>>>> 826b968 (sys: achieve BCM4331 silicon lock; bypass SMC via D0 transition [MBA-Verified])

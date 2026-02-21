@@ -13,7 +13,4 @@ resolver = "2"
 
 [profile.release]
 panic = "abort"
-<<<<<<< HEAD
-=======
 
->>>>>>> 826b968 (sys: achieve BCM4331 silicon lock; bypass SMC via D0 transition [MBA-Verified])
