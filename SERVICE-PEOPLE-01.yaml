@@ -1,0 +1,9 @@
+topic_id: SERVICE-PEOPLE-01
+title: service-people: Personnel Signal Distillation
+tier: Tier-5-Service
+category: Service-Logic
+tags: [harvester, lexicon, surveyor, archetypes]
+abstract: |
+  Human-centric service distilling digital signals into a private 
+  personnel substrate using a weight-based token system and archetypes.
+links: [TOTEBOX-01, SERVICE-EMAIL-01]

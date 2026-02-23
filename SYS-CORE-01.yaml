@@ -1,0 +1,9 @@
+topic_id: SYS-CORE-01
+title: PointSav Capability-Based Manager (CBM)
+tier: Tier-6-System
+category: Foundation
+tags: [sel4, rust, no_std, capability-management]
+abstract: |
+  The core Rust no_std Root-Task (< 5k LOC) replacing generic OS layers. 
+  Abstracts seL4 system calls into safe Rust hardware capabilities.
+links: [SYS-ARCH-01, SYS-SEC-01]

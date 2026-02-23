@@ -1,0 +1,9 @@
+topic_id: PPN-01
+title: PointSav Private Network (PPN)
+tier: Tier-4-OS
+category: Infrastructure
+tags: [mesh, hypervisor, virtualization, cloud-agnostic]
+abstract: |
+  Physical/virtual mesh for scaling a Totebox Orchestration. 
+  Acts as a lightweight, stateless hypervisor on any hardware.
+links: [TOTEBOX-01, SYS-BOOT-01]

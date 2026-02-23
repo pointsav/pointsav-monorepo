@@ -1,0 +1,9 @@
+topic_id: SYS-SEC-02
+title: Machine-Based Authorization (MBA)
+tier: Tier-6-System
+category: System-Security
+tags: [mba, hardware-pairing, authentication, root-of-trust]
+abstract: |
+  Permission via hardware pairing, not passwords. Establishes the trust 
+  relationship between the Command Authority (iMac) and Nodes.
+links: [SYS-GLOS-01, PPN-01, SYS-CORE-01]

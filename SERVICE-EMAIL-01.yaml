@@ -1,0 +1,9 @@
+topic_id: SERVICE-EMAIL-01
+title: service-email: Sovereign Email Bridge
+tier: Tier-5-Service
+category: Service-Logic
+tags: [maildir, microsoft-graph, exchange, on-prem]
+abstract: |
+  Bridge ensuring 100% on-prem ownership of Microsoft 365 Exchange data 
+  by minting cloud data into local Maildir archives.
+links: [TOTEBOX-01, SYS-SEC-01]

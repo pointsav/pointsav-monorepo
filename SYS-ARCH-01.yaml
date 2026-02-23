@@ -1,0 +1,9 @@
+topic_id: SYS-ARCH-01
+title: Factory Architecture & The 3-Layer Stack
+tier: Tier-6-System
+category: Foundation
+tags: [architecture, infrastructure, platform, delivery]
+abstract: |
+  Outlines the PointSav Monorepo structure and the 3-Layer Stack 
+  (Infrastructure, Platform, Delivery) that decouples Logic from Metal.
+links: [SYS-GLOS-01, PPN-01, TOTEBOX-01]

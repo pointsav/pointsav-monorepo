@@ -1,0 +1,9 @@
+topic_id: MOON-01
+title: Moonshot Roadmap: Debt-to-Sovereignty
+tier: Tier-3-Moonshot
+category: Strategy
+tags: [rust-replacement, vector, x-ray, psdb]
+abstract: |
+  Roadmap to replace Tier 0 Legacy Debt with Sovereign Rust alternatives, 
+  including Project Vector (Rust Kernel) and Project X-Ray (Native GPU).
+links: [SYS-ARCH-01, SYS-CORE-01]

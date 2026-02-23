@@ -1,0 +1,9 @@
+topic_id: SERVICE-CONTENT-01
+title: service-content: Asset & Knowledge Synthesis
+tier: Tier-5-Service
+category: Service-Logic
+tags: [synthesis, legal, memo, comm, translate]
+abstract: |
+  Specialized engine for the structural synthesis of digital assets 
+  featuring LEGAL, MEMO, COMM, and TRANSLATE internal engines.
+links: [TOTEBOX-01, SYS-GLOS-01]

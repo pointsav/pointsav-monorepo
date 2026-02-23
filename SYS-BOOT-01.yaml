@@ -1,0 +1,9 @@
+topic_id: SYS-BOOT-01
+title: OS Boot Specifications
+tier: Tier-4-OS
+category: Infrastructure-Provisioning
+tags: [boot, flash, infrastructure-os, network-admin-os]
+abstract: |
+  Technical profiles for Laptop B (Infra-Leased) and iMac 12.1 (Command). 
+  Defines the flash protocol for USB-based Totebox Archives.
+links: [PPN-01, SYS-SEC-02]

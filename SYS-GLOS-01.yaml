@@ -1,0 +1,9 @@
+topic_id: SYS-GLOS-01
+title: Institutional Glossary & Nomenclature Lock
+tier: Tier-6-System
+category: Foundation
+tags: [nomenclature, factory, fleet, taxonomy]
+abstract: |
+  The definitive source of truth for all PointSav immutable terms. 
+  Establishes the Six-Tier Taxonomy and nomenclature lock for all assets.
+links: [SYS-ARCH-01, OPS-WORK-01]

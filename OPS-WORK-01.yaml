@@ -1,0 +1,9 @@
+topic_id: OPS-WORK-01
+title: Sovereign Workflow & Governance
+tier: Tier-5-Service
+category: Operations
+tags: [governance, matrix-strategy, sync, staging]
+abstract: |
+  Protocol for the PointSav Factory and Woodfine Fleet. Defines the 
+  3-Cycle Workflow (Engineering, Operations, Recovery) and Air-Gap sync.
+links: [SYS-GLOS-01, SYS-ARCH-01]

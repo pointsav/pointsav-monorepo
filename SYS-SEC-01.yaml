@@ -1,0 +1,9 @@
+topic_id: SYS-SEC-01
+title: The Diode Standard
+tier: Tier-6-System
+category: System-Security
+tags: [security, isolation, one-way-flow]
+abstract: |
+  A universal one-way command flow from startpoints to endpoints. 
+  The OS accepts commands only from authorized Console-OS transmitters.
+links: [TOTEBOX-01, SERVICE-EMAIL-01]
