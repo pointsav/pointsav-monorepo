@@ -1,0 +1,42 @@
+Metadata-Version: 2.4
+Name: sel4-deps
+Version: 0.7.0
+Summary: Metapackage for downloading build dependencies for the seL4 microkernel
+Home-page: https://sel4.systems
+Author: TrustworthySystems
+Author-email: pypi@trustworthy.systems
+License: BSD2
+Requires-Python: >=3
+Description-Content-Type: text/markdown
+Requires-Dist: six
+Requires-Dist: future
+Requires-Dist: jinja2
+Requires-Dist: lxml
+Requires-Dist: ply
+Requires-Dist: psutil
+Requires-Dist: bs4
+Requires-Dist: pyelftools
+Requires-Dist: sh
+Requires-Dist: pexpect
+Requires-Dist: pyyaml>=5.1
+Requires-Dist: jsonschema
+Requires-Dist: pyfdt
+Requires-Dist: cmake-format==0.6.13
+Requires-Dist: guardonce
+Requires-Dist: autopep8==2.3.2
+Requires-Dist: libarchive-c
+Dynamic: author
+Dynamic: author-email
+Dynamic: description
+Dynamic: description-content-type
+Dynamic: home-page
+Dynamic: license
+Dynamic: requires-dist
+Dynamic: requires-python
+Dynamic: summary
+
+
+This meta package depends on all python packages you need to build the seL4 microkernel and manual.
+
+This package is maintained on <https://github.com/seL4/seL4>,
+in directory <https://github.com/seL4/seL4/tree/master/tools/python-deps>

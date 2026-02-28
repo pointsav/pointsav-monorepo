@@ -1,0 +1,7 @@
+[package]
+name = "system-security"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+# PointSav no_std security primitives

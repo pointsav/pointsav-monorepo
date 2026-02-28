@@ -1,0 +1,17 @@
+[workspace]
+resolver = "2"
+members = [
+    "system-substrate",
+    "system-security",
+    "system-core",
+    "moonshot-toolkit",
+    "os-network-admin",
+]
+
+[profile.release]
+opt-level = 3
+lto = true
+panic = "abort"  # Required for no_std hardware management
+
+[profile.dev]
+panic = "abort"

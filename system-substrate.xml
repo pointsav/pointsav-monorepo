@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<system>
+    <device name="broadcom_wifi" mac="04:54:53:09:f2:ea" />
+    
+    <memory_region name="broadcom_mmio" size="0x1000" phys_addr="0x40000000" />
+    
+    <component name="system-substrate">
+        <map region="broadcom_mmio" vaddr="0x40000000" perms="rw" />
+        <property name="ip_address" value="10.0.0.101" />
+    </component>
+</system>
