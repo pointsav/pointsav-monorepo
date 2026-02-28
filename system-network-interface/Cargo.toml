@@ -1,0 +1,18 @@
+[package]
+name = "system-network-interface"
+version = "0.1.0"
+edition = "2024"
+authors = ["PointSav Digital Systems AG"]
+description = "Universal Vertical Adapter for decoupled network routing (Tier 6)"
+
+[dependencies]
+# This is a no_std library - it does not use the standard library.
+core = { version = "1.0", optional = true }
+
+[lib]
+name = "system_network_interface"
+path = "src/lib.rs"
+
+[features]
+default = ["no_std"]
+no_std = []

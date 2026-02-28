@@ -1,0 +1,7 @@
+[package]
+name = "moonshot-toolkit"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+# Toolchain for ISO generation and seL4 orchestration
