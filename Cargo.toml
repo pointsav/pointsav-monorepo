@@ -1,17 +1,23 @@
 [workspace]
 resolver = "2"
+
 members = [
-    "system-substrate",
-    "system-security",
-    "system-core",
-    "moonshot-toolkit",
+    "os-infrastructure",
+    "system-network-interface",
     "os-network-admin",
 ]
+
+[workspace.package]
+version = "0.1.0"
+authors = ["PointSav Digital Systems AG"]
+edition = "2024"
+
+# Global Optimization for Sovereign Artifacts
+[profile.dev]
+panic = "abort"
 
 [profile.release]
 opt-level = 3
 lto = true
-panic = "abort"  # Required for no_std hardware management
-
-[profile.dev]
 panic = "abort"
+strip = true

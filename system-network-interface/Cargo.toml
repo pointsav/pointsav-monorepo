@@ -6,13 +6,9 @@ authors = ["PointSav Digital Systems AG"]
 description = "Universal Vertical Adapter for decoupled network routing (Tier 6)"
 
 [dependencies]
-# This is a no_std library - it does not use the standard library.
-core = { version = "1.0", optional = true }
+# No external dependencies allowed for Tier 6 Core. 
+# Rust provides 'core' automatically via #![no_std].
 
 [lib]
 name = "system_network_interface"
 path = "src/lib.rs"
-
-[features]
-default = ["no_std"]
-no_std = []
