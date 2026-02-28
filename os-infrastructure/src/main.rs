@@ -4,7 +4,6 @@
 use core::arch::{global_asm, asm};
 use core::panic::PanicInfo;
 
-// MULTIBOOT2 HANDSHAKE
 global_asm!(
     ".section .multiboot",
     ".align 8",
@@ -17,34 +16,29 @@ global_asm!(
     "multiboot_header_end:"
 );
 
-fn outb(port: u16, val: u8) { unsafe { asm!("outb %al, %dx", in("dx") port, in("al") val, options(att_syntax)); } }
 fn outl(port: u16, val: u32) { unsafe { asm!("outl %eax, %dx", in("dx") port, in("eax") val, options(att_syntax)); } }
 fn inl(port: u16) -> u32 { let val: u32; unsafe { asm!("inl %dx, %eax", out("eax") val, in("dx") port, options(att_syntax)); } val }
-
-fn print_serial(s: &str) { for b in s.bytes() { outb(0x3f8, b); } }
+fn print_serial(s: &str) { for b in s.bytes() { unsafe { asm!("outb %al, %dx", in("dx") 0x3f8u16, in("al") b, options(att_syntax)); } } }
 
 #[unsafe(no_mangle)]
 pub extern "C" fn _start() -> ! {
     print_serial("\n--- SOVEREIGN PCI SCAN ---\n");
 
     for slot in 0..32 {
-        let address = (1 << 31) | (slot << 11) | (0x0);
+        let address = (1 << 31) | (slot << 11);
         outl(0xCF8, address);
         let val = inl(0xCFC);
         let vendor = (val & 0xFFFF) as u16;
         let device = (val >> 16) as u16;
 
         if vendor != 0xFFFF {
-            print_serial("Found Device: ");
-            // In a real build, we'd format hex here; for now, we just flag the Broadcom ID
             if vendor == 0x14e4 && device == 0x432b {
-                print_serial("!!! BROADCOM BCM4322 DETECTED !!!\n");
+                print_serial("!!! BROADCOM BCM4322 DETECTED (NODE 1) !!!\n");
             } else {
-                print_serial("Unknown Hardware\n");
+                print_serial("Found Unknown Device on Bus 0\n");
             }
         }
     }
-
     loop {}
 }
 
