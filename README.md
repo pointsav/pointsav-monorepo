@@ -3,10 +3,16 @@
 
 ---
 
+## 🚀 Leapfrog 2030: Manufacturing Status
+| Component | Target Silicon | Hardware Interface | Build State |
+| :--- | :--- | :--- | :--- |
+| **`os-infrastructure`** | Intel P8600 (Node 1) | `14e4:432b` (Broadcom) Scanned | 🟢 Verified & Bootable |
+| **`os-network-admin`** | Intel i5-2400S (Node 3) | Pending `system-network-interface` | 🟡 Active Engineering |
+
+---
+
 ## 🏛️ Development Matrix (Six-Tier Taxonomy)
 This repository contains the proprietary source code, Rust crates, and seL4 foundation modules engineered by **PointSav Digital Systems AG**. It is strictly a software development and compilation environment.
-
-*(Note: Master design tokens and visual resources are maintained in the separate `resource-design-system` repository).*
 
 ### **Tier 6: System (Foundation)**
 * `system-substrate`: Core hardware abstraction layer (HAL) source.
