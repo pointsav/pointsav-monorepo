@@ -1,10 +1,15 @@
 ENTRY(_start)
 
 SECTIONS {
-    . = 1M; /* Load the kernel at 1MB */
+    /* The 1MB physical address required by Multiboot2 */
+    . = 1M;
+
+    .boot : {
+        /* Force the header to the very first byte of the file */
+        KEEP(*(.multiboot))
+    }
 
     .text : {
-        KEEP(*(.multiboot)) /* Ensure the header is FIRST */
         *(.text .text.*)
     }
 
