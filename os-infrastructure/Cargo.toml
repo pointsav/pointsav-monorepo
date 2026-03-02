@@ -1,19 +1,12 @@
 [package]
 name = "os-infrastructure"
 version = "0.1.0"
-edition = "2024"
-authors = ["PointSav Digital Systems AG"]
-description = "Silicon-Pinned ISO for Node 1 (Muscle) - P8600 / BCM4322"
-
-[profile.dev]
-panic = "abort"
-
-[profile.release]
-opt-level = 3
-lto = true
-panic = "abort"
-strip = true
+edition = "2021"
 
 [dependencies]
-# Linking the Tier 6 dependency to the Tier 4 product
+system-substrate-broadcom = { path = "../system-substrate-broadcom" }
 system-network-interface = { path = "../system-network-interface" }
+
+[profile.release]
+panic = "abort"
+lto = true
