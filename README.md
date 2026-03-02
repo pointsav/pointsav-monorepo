@@ -9,6 +9,8 @@
 | **`os-infrastructure`** | Intel P8600 (Node 1) | `14e4:432b` (Broadcom) | 🟢 Verified (Multiboot2) |
 | **`system-security`** | Architecture Agnostic | seL4 CapDL | 🟡 Active Development (Rust) |
 | **`system-security`** | Architecture Agnostic | seL4 CapDL | 🟡 Active Development (Rust) |
+| **`system-security`** | Architecture Agnostic | seL4 CapDL | 🟡 Active Development (Rust) |
+| **`system-security`** | Architecture Agnostic | seL4 CapDL | 🟡 Active Development (Rust) |
 | **`os-network-admin`** | Intel i5-2400S (Node 3) | Pending `system-network-interface` | 🟡 Active Engineering |
 
 ---
