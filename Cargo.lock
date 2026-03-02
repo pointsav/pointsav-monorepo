@@ -7,6 +7,7 @@ name = "os-infrastructure"
 version = "0.1.0"
 dependencies = [
  "system-network-interface",
+ "system-substrate-broadcom",
 ]
 
 [[package]]
@@ -15,4 +16,11 @@ version = "0.1.0"
 
 [[package]]
 name = "system-network-interface"
+version = "0.1.0"
+dependencies = [
+ "system-substrate-broadcom",
+]
+
+[[package]]
+name = "system-substrate-broadcom"
 version = "0.1.0"
