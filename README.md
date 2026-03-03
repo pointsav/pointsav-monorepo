@@ -1,33 +1,40 @@
-# PointSav Monorepo
+# PointSav Monorepo | Código Fuente Soberano
 ### *Engineering & Source Code for Sovereign Digital Systems*
 
 > **OPERATIONAL POSTURE [MARCH 2026]:**
 > **Phase:** Production Iteration 1
-> **Current Build State:** `system-security` execution verified. `os-infrastructure` delivery vehicle successfully synthesized and deployed. Advancing Dual-Track Operations for Infrastructure and Totebox Services.
+> **Engineering Focus:** 3-Track Architecture & Mathematical Compliance (SOC 3 / DARP)
+> **Estado Actual:** Desarrollo activo de servicios Totebox y arquitectura de archivos determinista.
 
 ---
 
-## 🚀 Leapfrog 2030: Manufacturing Status
-We operate on a strict dual-track engineering mandate.
+## 🚀 The Digital First Operating System
+This repository contains the engineering source code for the PointSav Trustworthy System. We build decentralized operating environments that guarantee structural sovereignty and operational trust natively, completely bypassing legacy Software-as-a-Service (SaaS) databases.
 
-### Track 1: Private Network (Infrastructure)
-| Component | Target Silicon | Hardware Interface | Build State |
-| :--- | :--- | :--- | :--- |
-| **`os-infrastructure`** | Intel P8600 (Node 1) | `14e4:432b` (Broadcom) | 🟢 Active (Multiboot2 Verified) |
-| **`system-security`** | Architecture Agnostic | seL4 CapDL | 🟢 Active (Rust / C-Bridge) |
-| **`os-network-admin`** | Intel i5-2400S (Node 3) | Pending Adapter | 🟡 Active Engineering |
+### Track 1: Infrastructure (Private Network)
+| Component | Hardware Target | Status |
+| :--- | :--- | :--- |
+| **`os-infrastructure`** | Intel P8600 (Edge Node) | 🟢 Active (Multiboot2) |
+| **`os-network-admin`** | Intel i5-2400S (Command) | 🟡 Active Engineering |
 
 ### Track 2: Totebox Orchestration (Active Services)
-| Component | Taxonomy Tier | Operational Logic | Build State |
-| :--- | :--- | :--- | :--- |
-| **`service-content`** | Tier-5-Service | Institutional knowledge synthesis (Legal, Memo, Comm, Translate). | 🟡 Active Engineering |
-| **`service-people`** | Tier-5-Service | Secure personnel distillation (Harvester, Surveyor, Manager). | 🟡 Active Engineering |
-| **`service-email`** | Tier-5-Service | On-premise Exchange bridge (Graph API, Local Vault). | 🟡 Active Engineering |
+| Component | Workload Payload | Status |
+| :--- | :--- | :--- |
+| **`service-content`** | Institutional knowledge synthesis (Legal, Memo, Translate). | 🟡 Active Engineering |
+| **`service-people`** | Personnel signal distillation (Harvester, Surveyor). | 🟡 Active Engineering |
+| **`service-email`** | Sovereign Exchange bridge (Local Vault). | 🟡 Active Engineering |
 
-## 🏛️ Development Matrix (Six-Tier Taxonomy)
-This repository contains the proprietary source code, Rust crates, and seL4 foundation modules engineered by **PointSav Digital Systems AG**. It is strictly a software development and compilation environment.
+### Track 3: Workplace (Sovereign Desktop)
+| Component | Deterministic File Output | Status |
+| :--- | :--- | :--- |
+| **`app-workplace-editor`** | Markdown, YAML, CSV (Files over Databases) | 🟡 Active Engineering |
+| **`app-workplace-comm`** | Maildir local storage | 🟡 Active Engineering |
 
-*(Directory structures adhere to the established Tier 0 through Tier 6 taxonomy).*
+## ⚖️ Mathematical Compliance Foundation
+Our systems do not rely on compliance policies; they enforce the Six Orchestration Contracts at the microkernel level.
+* **`system-audit`**: Immutable ledger enforcing SOC 3 (Operational Trust).
+* **`system-resolution`**: Cryptographic packager enforcing DARP (Structural Sovereignty).
+* **`system-verification`**: Cross-archive consensus engine verifying claims across the network.
 
 ---
 *© 2026 PointSav Digital Systems AG.*
