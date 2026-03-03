@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<system>
+    <memory_region name="telemetry_shared" size="0x1000" />
+
+    <protection_domain name="system_security" priority="254">
+        <program_image path="system_security.elf" />
+        <ioport id="0" addr="0x3f8" size="8" />
+        <map mr="telemetry_shared" vaddr="0x4000000" perms="rw" />
+    </protection_domain>
+
+    <protection_domain name="system_watchdog" priority="200">
+        <program_image path="watchdog.elf" />
+        <map mr="telemetry_shared" vaddr="0x4000000" perms="r" />
+    </protection_domain>
+
+    <channel>
+        <end pd="system_security" id="10" />
+        <end pd="system_watchdog" id="10" />
+    </channel>
+</system>
