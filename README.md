@@ -20,4 +20,4 @@ This repository contains the proprietary source code, Rust crates, and seL4 foun
 *(Directory structures adhere to the established Tier 0 through Tier 6 taxonomy).*
 
 ---
-*© 2026 PointSav Digital Systems AG. All code strictly governed by the Sovereign Data Foundation.*
+*© 2026 PointSav Digital Systems AG.*
