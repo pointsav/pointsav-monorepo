@@ -2,10 +2,23 @@
 resolver = "2"
 
 members = [
+    # System & Infrastructure
     "system-security",
+    "os-infrastructure",
+    "os-network-admin",
+    
+    # Totebox Orchestration Libraries
+    "os-totebox",
+    "service-content",
+    "service-people",
+    "service-email",
+    
+    # Console Delivery Binaries
+    "os-console",
+    "app-console-content",
+    "app-console-people",
+    "app-console-email"
 ]
 
-[profile.release]
-panic = "abort"
-opt-level = "z"
-lto = true
+[workspace.dependencies]
+# Shared dependencies will be managed here for version consistency
