@@ -37,4 +37,4 @@ Our systems do not rely on compliance policies; they enforce the Six Orchestrati
 * **`system-verification`**: Cross-archive consensus engine verifying claims across the network.
 
 ---
-*© 2026 PointSav Digital Systems AG.*
+*© 2026 PointSav Digital Systems™.*

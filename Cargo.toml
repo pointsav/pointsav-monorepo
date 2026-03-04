@@ -2,12 +2,15 @@
 resolver = "2"
 
 members = [
-    # System & Infrastructure
+    # System & Infrastructure (Tier-6 / Tier-4)
     "system-security",
+    "system-audit",
+    "system-resolution",
+    "system-verification",
     "os-infrastructure",
     "os-network-admin",
     
-    # Totebox Orchestration Libraries
+    # Totebox Orchestration Libraries (Tier-5)
     "os-totebox",
     "service-content",
     "service-people",
@@ -21,4 +24,4 @@ members = [
 ]
 
 [workspace.dependencies]
-# Shared dependencies will be managed here for version consistency
+# Shared dependencies managed here for version consistency across the 3-Track ecosystem
