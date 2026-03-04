@@ -6,4 +6,4 @@
 This component provides the secure execution environment for the aggregation software (`app-interface-command`). It manages the connections between the operator console and multiple underlying data environments.
 
 ---
-*© 2026 PointSav Digital Systems AG.*
+*© 2026 PointSav Digital Systems™.*

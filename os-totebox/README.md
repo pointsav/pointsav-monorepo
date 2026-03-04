@@ -8,4 +8,4 @@ This component is the fundamental unit of the PointSav architecture. It is an is
 Because of its "Cloud-Blind" design, an `os-totebox` can be safely deployed on private servers or public cloud infrastructure (AWS/GCP) without compromising data sovereignty.
 
 ---
-*© 2026 PointSav Digital Systems AG.*
+*© 2026 PointSav Digital Systems™.*
