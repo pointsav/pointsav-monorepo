@@ -1,7 +1,9 @@
 use service_content::engines::{MemoEngine, SynthesisEngine, ProtocolManifest};
 use service_content::parser::parse_glossary_csv;
+use service_content::payload::ContextSnippet;
 use std::env;
 use std::fs;
+use std::path::Path;
 use std::process;
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -36,19 +38,50 @@ fn main() {
     });
     engine.manifest = Some(manifest);
 
-    // 4. Ingest the Data Substrate
+    // 4. Ingest the Data Substrate (Structured CSV)
     println!("[SERVICE-CONTENT] Ingesting Glossary Substrate: {}", glossary_path);
     let csv_data = fs::read_to_string(glossary_path).unwrap_or_else(|_| {
         eprintln!("Fatal: Unable to read CSV Substrate.");
         process::exit(1);
     });
 
-    let context_snippets = parse_glossary_csv(&csv_data, "content-wiki-corporate").unwrap_or_else(|_| {
+    let mut context_snippets = parse_glossary_csv(&csv_data, "content-wiki-corporate").unwrap_or_else(|_| {
         eprintln!("Fatal: CSV Parsing Failure.");
         process::exit(1);
     });
 
-    // 5. Execute the RAG Pipeline and Route Output
+    // 5. Ingest the Unstructured Data Substrate (TXT/MD)
+    // Automatically locate the base directory of the provided wiki (e.g., content-wiki-corporate)
+    let base_dir = Path::new(glossary_path).parent().unwrap();
+    let sub_dirs = ["research", "artifacts", "themes"];
+    
+    for dir in sub_dirs.iter() {
+        let target_dir = base_dir.join(dir);
+        if target_dir.exists() && target_dir.is_dir() {
+            if let Ok(entries) = fs::read_dir(&target_dir) {
+                for entry in entries.flatten() {
+                    let path = entry.path();
+                    if path.is_file() {
+                        if let Some(ext) = path.extension().and_then(|e| e.to_str()) {
+                            if ext == "txt" || ext == "md" {
+                                let content = fs::read_to_string(&path).unwrap_or_default();
+                                let source_id = path.file_name().unwrap().to_str().unwrap();
+                                
+                                context_snippets.push(ContextSnippet {
+                                    source_id: source_id.to_string(),
+                                    content,
+                                    tags: vec![dir.to_string()],
+                                });
+                                println!("[SERVICE-CONTENT] Ingested Flat File: {} [{}]", source_id, dir);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // 6. Execute the RAG Pipeline and Route Output
     println!("[SERVICE-CONTENT] Executing Synthesis for Theme: {}", target_theme);
     match engine.execute_synthesis(target_theme, context_snippets) {
         Ok(artifact) => {
