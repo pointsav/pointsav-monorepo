@@ -3,6 +3,7 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::env;
+use std::time::Duration;
 use crate::payload::{PayloadBuilder, ContextSnippet};
 use crate::verification::verify_artifact;
 
@@ -67,15 +68,23 @@ impl SynthesisEngine for MemoEngine {
         });
 
         println!("[API BRIDGE] Transmitting payload to Linguistic Compiler...");
-        let client = reqwest::blocking::Client::new();
+        
+        let client = reqwest::blocking::Client::builder()
+            .timeout(Duration::from_secs(120))
+            .build()
+            .map_err(|e| format!("Failed to build network client: {}", e))?;
+
         let response = client.post(&url)
             .header("Content-Type", "application/json")
             .json(&request_body)
             .send()
             .map_err(|e| format!("Network transmission failed: {}", e))?;
 
+        // TELEMETRY INJECTED: Capture and print the exact Google JSON error
         if !response.status().is_success() {
-            return Err(format!("API rejected the payload. Status: {}", response.status()));
+            let status = response.status();
+            let error_text = response.text().unwrap_or_else(|_| "No detailed error body provided by Google.".to_string());
+            return Err(format!("API rejected the payload. Status: {}\n[GOOGLE DIAGNOSTIC REPORT]:\n{}", status, error_text));
         }
 
         let response_json: serde_json::Value = response.json().map_err(|_| "Failed to parse API response.")?;
