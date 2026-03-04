@@ -1,19 +1,28 @@
-# service-content
-### *Asset & Knowledge Synthesis Engine*
+# Service Content: The Linguistic Compiler
 
-**Status: Active Engineering** | **Taxonomy: Tier-5-Service**
+## Core Mandate
+This engine acts as the deterministic Linguistic Compiler for the PointSav and Woodfine fleets. It ingests raw textual artifacts, applies the active Data Mesh (Corporate, Project, and Documentation Glossaries), and outputs high-fidelity documents utilizing mathematically strict language constraints.
 
-This component is a stateless processing engine designed to synthesize institutional knowledge. It orchestrates the flow of data between the decentralized Totebox Archives (State) and external linguistic compilers (LLM APIs) to generate BCSC-compliant corporate documentation.
+## Supported Protocols
+The engine requires a specific protocol manifest to execute a synthesis run.
 
-## 🏛️ Architectural Mandate: Stateless Compute
-`service-content` holds no persistent memory and stores no proprietary data. It relies entirely on the File-Over-Database architecture. 
+* **MEMO:** For internal corporate overviews, structural summaries, and operational logic. Enforces high-density, Minto Pyramid structuring and strict paragraph mapping.
+* **COMM:** For external transactional messaging (emails, media releases, social posts). Enforces BCSC continuous disclosure compliance, bans technological puffery, and secures institutional tone.
+* **LEGAL:** For binding corporate agreements and disclosures. Enforces strict liability boundaries, Flow-Through Taxation definitions, and statutory phrasing.
+* **TRANSLATE:** For strictly mapped 1-to-1 bilingual parity (English/Spanish) across all corporate artifacts.
+* **TEXT:** For repository documentation, README files, system architecture definitions, and machine-facing text. Enforces the imperative mood, flat hierarchies, and the ISO 24495-1 Plain Language standard.
 
-When triggered, the engine executes a deterministic loop:
-1. **Ingest Rules:** Reads the `protocols/` directory to establish the legal and structural boundaries (e.g., Anti-Puffery, Nomenclature Lock).
-2. **Ingest Context:** Pulls raw data (`RESEARCH`), plot structures (`THEMES`), and tone guidelines (`VOICE`) from the target `content-wiki-*` repository located inside a secure `os-totebox`.
-3. **Linguistic Synthesis:** Transmits a strictly packaged payload to an external AI API (e.g., Gemini) for text generation. *Note: The engine can bypass this step and utilize static string concatenation if AI processing is not authorized for a specific protocol.*
-4. **Local Verification:** Executes a local regex blacklist check against the generated output to ensure strict compliance.
-5. **Output Routing:** Saves the final Markdown document back into the `content-wiki-*` repository or a designated `outbox/` for human review.
+## Execution Syntax
+All payload synthesis must follow the standard triple-argument execution:
 
-## 🛡️ Security Posture
-The engine operates inside an Isolated Protection Domain (PD). It utilizes the PointSav Capability-Based Manager to request read/write access to specific Totebox Archives. The external API connection is structurally restricted to a one-way outbound request, preventing the LLM from executing commands on the local hardware.
+```bash
+cargo run -- <PROTOCOL_YAML_PATH> "<ENGINEERING_PROMPT>" <OUTPUT_DIRECTORY>
+```
+
+## System Architecture
+* **Ingestion:** Automatically mounts all `.txt`, `.md`, and `.csv` files located in the target `artifacts/` directory to build the active context window.
+* **Execution:** Transmits the payload to the Gemini API using strict structural mandates.
+* **Output:** Writes the synthesized document to the isolated `outbox/` directory to prevent recursive context looping.
+
+---
+*© 2026 PointSav Digital Systems™*

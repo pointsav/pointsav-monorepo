@@ -70,7 +70,7 @@ impl SynthesisEngine for MemoEngine {
         println!("[API BRIDGE] Transmitting payload to Linguistic Compiler...");
         
         let client = reqwest::blocking::Client::builder()
-            .timeout(Duration::from_secs(120))
+            .timeout(Duration::from_secs(600))
             .build()
             .map_err(|e| format!("Failed to build network client: {}", e))?;
 
