@@ -1,14 +1,20 @@
-pub fn add(left: u64, right: u64) -> u64 {
-    left + right
-}
+//! # service-content
+//! 
+//! The Tier-5 stateless processing engine for institutional knowledge synthesis.
+//! This crate orchestrates the Retrieval-Augmented Generation (RAG) pipeline,
+//! strictly separating compute logic from data state (Totebox Archives).
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+pub mod engines;
+pub mod parser;
+pub mod payload;
+pub mod verification;
 
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
+/// The core stateless synthesis orchestrator.
+pub struct SynthesisEngine;
+
+impl SynthesisEngine {
+    /// Initializes a blank engine ready to ingest a Protocol and execute synthesis.
+    pub fn new() -> Self {
+        Self
     }
 }
