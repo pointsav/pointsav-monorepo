@@ -1,0 +1,7 @@
+# CONVERT Protocol Manifest - Legacy File Extraction
+protocol_name: CONVERT
+operational_rules:
+  strict_extraction_only: true         # 1-to-1 data extraction. Zero creative synthesis.
+  prohibit_summarization: true         # Extract all tables, lists, and text verbatim.
+  format_output: deterministic         # Output strictly as machine-readable Markdown or YAML.
+  metadata_generation: true            # Extract metadata to assist in ledger pointers.
