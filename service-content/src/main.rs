@@ -41,11 +41,10 @@ fn main() {
         for line in staging_data.lines() {
             if line.trim().is_empty() || line.starts_with("Term,") || line.starts_with("```") { continue; }
             
-            // Isolate the Target_Silo by splitting only the final comma from the right
             let parts: Vec<&str> = line.rsplitn(2, ',').collect();
             if parts.len() == 2 {
                 let silo = parts[0].trim().to_lowercase();
-                let payload = parts[1].trim(); // Retains the "Term,Definition,Spanish_Equivalent" structure
+                let payload = parts[1].trim(); 
                 
                 if silo.contains("corporate") { corp_appends.push(payload); }
                 else if silo.contains("project") { proj_appends.push(payload); }
@@ -54,7 +53,6 @@ fn main() {
             }
         }
 
-        // Route payloads strictly to the physical capabilities defined in the YAML
         for req_path in &manifest.capability_requests {
             let req_lower = req_path.to_lowercase();
             let payload_ref = if req_lower.contains("corporate") { &corp_appends }
@@ -146,13 +144,60 @@ fn main() {
     match engine.execute_synthesis(target_theme, context_snippets) {
         Ok(artifact) => {
             let timestamp = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
-            let file_name = format!("{}/ARTIFACT_{}.md", output_dir, timestamp);
             
-            fs::write(&file_name, artifact).unwrap_or_else(|_| {
-                eprintln!("Fatal: Unable to write artifact to output directory.");
-                process::exit(1);
-            });
-            println!("\n[SUCCESS] Artifact generated, verified, and saved to:\n{}", file_name);
+            // =========================================================================
+            // TEMPLATE-INJECTION ARCHITECTURE (Design Protocol Only)
+            // =========================================================================
+            if protocol_path.contains("protocol-design.yaml") {
+                println!("[INJECTION] Design Protocol detected. Initiating Template Merge...");
+                
+                let template_filename = if target_theme.to_lowercase().contains("woodfine") {
+                    "woodfine-brutalist.html"
+                } else {
+                    "pointsav-monolith.html"
+                };
+                
+                let template_path = base_dir.join("templates").join(template_filename);
+                let template_str = fs::read_to_string(&template_path).unwrap_or_else(|_| {
+                    eprintln!("Fatal: Missing template at {:?}", template_path);
+                    process::exit(1);
+                });
+
+                // Safety Net: Extract purely the JSON block from the LLM artifact
+                let json_start = artifact.find('{').unwrap_or(0);
+                let json_end = artifact.rfind('}').unwrap_or(artifact.len() - 1) + 1;
+                let clean_json = &artifact[json_start..json_end];
+
+                let parsed_data: serde_json::Value = serde_json::from_str(clean_json).unwrap_or_else(|e| {
+                    eprintln!("Fatal: LLM did not return valid JSON. Error: {}", e);
+                    process::exit(1);
+                });
+
+                let content_en = parsed_data["CONTENT_EN"].as_str().unwrap_or("");
+                let content_es = parsed_data["CONTENT_ES"].as_str().unwrap_or("");
+
+                // Execute the deterministic merge
+                let final_html = template_str
+                    .replace("{{CONTENT_EN}}", content_en)
+                    .replace("{{CONTENT_ES}}", content_es);
+
+                let file_name = format!("{}/ARTIFACT_{}.html", output_dir, timestamp);
+                fs::write(&file_name, final_html).expect("Fatal: Write failed.");
+                
+                println!("\n[SUCCESS] Template Injection complete. HTML Artifact saved to:\n{}", file_name);
+
+            } else {
+                // =========================================================================
+                // LEGACY OUTPUT (Standard Markdown Ledgers)
+                // =========================================================================
+                let file_name = format!("{}/ARTIFACT_{}.md", output_dir, timestamp);
+                
+                fs::write(&file_name, artifact).unwrap_or_else(|_| {
+                    eprintln!("Fatal: Unable to write artifact to output directory.");
+                    process::exit(1);
+                });
+                println!("\n[SUCCESS] Artifact generated, verified, and saved to:\n{}", file_name);
+            }
         }
         Err(e) => {
             eprintln!("\n[HALT] Synthesis aborted due to compliance failure:\n{}", e);
