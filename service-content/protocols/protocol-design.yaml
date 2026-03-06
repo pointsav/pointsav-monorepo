@@ -1,6 +1,0 @@
-# DESIGN Protocol Manifest - UI/UX Code Generation
-protocol_name: DESIGN
-operational_rules:
-  enforce_design_tokens: true          # Adhere strictly to tokens-color.yaml and tokens-spacing.yaml
-  prohibit_inline_styles: true         # All output must utilize CSS variables.
-  zero_execution_state: true           # Prohibit JavaScript. Utilize CSS state-machines.

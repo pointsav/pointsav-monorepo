@@ -1,13 +1,14 @@
 # app-mediakit-knowledge
-### *Sovereign Structural Anchor*
+### *Zero-Execution Presentation Layer*
 
-**Status: Provisioning** | **Taxonomy: Core Component**
+**Status: Active Engineering** | **Taxonomy: Core Component**
 
-## ⚙️ Execution Mechanics
-This component operates within the strict isolation boundaries of the PointSav infrastructure. It is designed to process localized logic without exposing internal states to the network routing layer.
+This component holds the static, structural HTML/CSS payloads for the Sovereign Edge Network. 
 
-* **Inputs:** Awaiting deterministic routing assignment.
-* **Outputs:** Machine-readable file structures.
-* **Dependencies:** system-core
+## Architectural Mandate
+Adhering to DS-ADR-05 (Zero-Execution Presentation State) and DS-ADR-08 (The Entity Aesthetic Dichotomy), this application contains zero client-side logic. It relies purely on the native browser engine for rendering and CSS state-machines for user interaction.
 
-*Awaiting deterministic payload execution.*
+It acts as the visual counterpart to `app-mediakit-telemetry` within an `os-mediakit` edge deployment.
+
+---
+*© 2026 PointSav Digital Systems™*
