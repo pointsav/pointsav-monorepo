@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 # Identity: Ingestion Gateway (Ground Control - v1.6 Surgical)
 
-# --- Config ---
 GCP_IP="35.212.238.174" 
 REMOTE_USER="mathew"
 REMOTE_REPO="/home/foundry/node-gcp-free/factory-pointsav/pointsav-monorepo"
