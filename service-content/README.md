@@ -1,21 +1,30 @@
-# Service Content: The Stateless Linguistic Compiler
+# Service-Content: Linguistic Synthesis Engine
 
-## Core Mandate
-This engine acts as the deterministic Linguistic Compiler for the PointSav and Woodfine fleets. It is a strictly stateless engine operating in its own isolated microkernel partition. It holds no structural templates and writes no data directly back to operational vaults.
+This silo contains the PointSav OS synthesis engine. It is a stateless Rust application that leverages the Gemini API to transform legacy documents into machine-readable institutional memory.
 
-## Execution Mechanics (The Donor-to-Outbox Lifecycle)
-1. **Ingestion (State):** Reads inert donor assets from a target vault's `/assets/` directory based on verified `/ledger/` pointers.
-2. **The Law (Source Control):** Reads universal Linguistic Tokens (e.g., `EXTRACT`, `DESIGN`) mapped from the Tier-6 `pointsav-design-system` anchor in Source Control.
-3. **The Structure (Templates):** Retrieves the domain-specific layout from the target vault's local `/templates/` directory.
-4. **Synthesis & Egress:** Synthesizes the final artifact and ejects it securely across the air-gap to the local `/outbox/` for human verification.
+## 🏛️ Ingestion Gateway (The Console)
 
-## The Glossary Anchor
-To ensure 100% compliance during translation and extraction, `service-content` holds the localized Institutional Glossaries (`corporate`, `projects`, `documentation`) within its own isolated partition to enforce universal nomenclature lock.
+The engine is driven by a Desktop Console interface designed for Mathew and Jennifer.
 
-## Execution Syntax
-All payload synthesis must follow the standard triple-argument execution:
+### 1. Installation
+To set up the gateway on a new workstation (macOS 13+ or Linux Mint):
+1. Clone this repository.
+2. Navigate to `service-content/tools/`.
+3. Run the installer:
+   ```bash
+   bash install_console_input.sh
+   ```
 
-    cargo run -- <PROTOCOL_YAML_PATH> "<ENGINEERING_PROMPT>" <OUTPUT_DIRECTORY>
+### 2. Usage Workflow
+1.  **Airlock**: Drop legacy files into `~/Desktop/service-content/input`.
+2.  **Trigger**: Run `pointsav-input` in your terminal.
+3.  **Target**: Select the destination Silo (The Data Mesh) for persistence.
+4.  **Result**: The artifact appears in `~/Desktop/service-content/output`.
+
+## ⚙️ Architecture
+- **Engine**: Rust-based synthesis (Stateless).
+- **Protocols**: `pointsav-design-system/tokens/linguistic/`.
+- **Data Mesh**: Results persisted to service-silo `assets/` on node-gcp-free.
 
 ---
-*© 2026 PointSav Digital Systems™*
+**Status**: v1.5 Deployed (Airlock-to-Mesh Active)
