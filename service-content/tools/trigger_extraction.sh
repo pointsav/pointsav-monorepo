@@ -5,7 +5,7 @@ PROTOCOL=$2
 SILO_PATH=$3
 
 ENGINE_DIR="/home/foundry/node-gcp-free/factory-pointsav/pointsav-monorepo/service-content"
-DNA_PATH="/home/foundry/node-gcp-free/factory-pointsav/pointsav-design-system/tokens/linguistic"
+DNA_PATH="/home/foundry/node-foundry/node-gcp-free/factory-pointsav/pointsav-design-system/tokens/linguistic"
 PROTO_FILE="${DNA_PATH}/protocol-${PROTOCOL,,}.yaml"
 
 echo "⚙️  SURGICAL ENGINE: Processing $FILENAME..."
