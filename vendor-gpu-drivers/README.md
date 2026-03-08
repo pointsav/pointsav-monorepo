@@ -1,13 +1,7 @@
 # vendor-gpu-drivers
-### *Sovereign Structural Anchor*
+### *Foreign Component Dependency & Integration*
 
-**Status: Provisioning** | **Taxonomy: Core Component**
+**Status: Legacy Dependency** | **Taxonomy: Tier-0-Vendor**
 
-## ⚙️ Execution Mechanics
-This component operates within the strict isolation boundaries of the PointSav infrastructure. It is designed to process localized logic without exposing internal states to the network routing layer.
-
-* **Inputs:** Awaiting deterministic routing assignment.
-* **Outputs:** Machine-readable file structures.
-* **Dependencies:** system-core
-
-*Awaiting deterministic payload execution.*
+## 📜 Architectural Mandate
+This directory isolates third-party code, binary blobs, and APIs required for bridging legacy infrastructure to the PointSav environment. These components are strictly quarantined and slated for replacement via Moonshot initiatives.
