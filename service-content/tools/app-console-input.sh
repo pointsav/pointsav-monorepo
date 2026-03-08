@@ -8,7 +8,7 @@ HOT_ZONE="$HOME/Desktop/service-content"
 echo "📡 POINTSAV SURGICAL GATEWAY ACTIVE"
 cd "$HOT_ZONE/input"
 files=(*)
-if [ "${files[0]}" == "*" ]; then echo "❌ No files."; exit 1; fi
+if [ "${files[0]}" == "*" ]; then echo "❌ No files found."; exit 1; fi
 
 select FILE in "${files[@]}"; do [ -f "$FILE" ] && break; done
 
