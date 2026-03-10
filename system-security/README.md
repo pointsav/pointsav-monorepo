@@ -1,26 +1,25 @@
-# system-security
-### *Capability-Based Manager (CBM)*
+<div align="center">
 
-**Status: Operational (Production Iteration 1)** | **Taxonomy: Tier-6-System**
+# Capability-Based Manager | Gestor Basado en Capacidades
+### *A mathematical software lock replacing traditional operating systems for secure hardware management.*
 
-This component replaces standard operating system abstraction layers with a verifiable Rust implementation. Operating directly on the seL4 microkernel, it manages hardware resources securely and enforces strict, one-way command flow before guest operating systems are permitted to boot.
+</div>
 
-## 🏛️ Architecture & Fault Tolerance
-The Capability-Based Manager utilizes a dual-domain architecture designed for autonomous self-healing and continuous execution.
+<br/>
 
-### 1. Protection Domains (PD)
-* **System Security (Muscle):** The primary initialization and hardware management domain. It is responsible for orchestrating the boot sequence and continuously asserting its operational state via a shared memory heartbeat.
-* **System Watchdog:** A secondary, isolated domain operating at a lower scheduler priority. It is strictly tasked with monitoring the primary domain's operational state and enforcing recovery protocols upon failure detection.
+> [!WARNING]
+> **SOVEREIGN FRAMEWORK DECLARATION**
+> This repository is a reference implementation of the Sovereign Data Protocol. It enforces absolute data isolation. It contains zero active proprietary network payloads.
 
-### 2. The Telemetry Plane (Shared Memory)
-Communication between the isolated domains is facilitated through a kernel-enforced shared memory segment (`telemetry_shared`) mapped to virtual address `0x4000000`.
-* **Byte 0 (Heartbeat):** Continuously written by the primary domain. A flatline (0x00) triggers immediate recovery.
-* **Byte 1 (Crash Counter):** A persistent execution counter that increments upon each software reset, allowing the system to track stability metrics across failure events.
+| Architecture Tier | Component Role | Governance Anchor |
+| :--- | :--- | :--- |
+| 🟢 Active | System Security | Sovereign Disclosure Standard |
 
-### 3. Capability Routing & Inter-Process Communication (IPC)
-The system leverages seL4 Notification Channels to execute software resets securely. To maintain strict Application Binary Interface (ABI) compliance with the Microkit SDK, capability routing is handled via a native C-Wrapper (`notify.c`). This bridge ensures the Rust logic interfaces correctly with the kernel's dynamically assigned capability IDs without requiring insecure inline assembly.
+## 📖 The Architectural Blueprint
+We replace standard operating systems with a verifiable Rust lock. This component securely manages all physical hardware resources. It enforces a strict, one-way command flow before any network starts. 
 
-## ⚙️ Build Constraints
-* **Language:** Rust (`no_std`).
-* **Dependencies:** Bare-metal execution only. Zero standard library dependencies.
-* **Toolchain:** Compilation requires the `microkit` toolchain for final ELF synthesis and metadata patching.
+Any enterprise can use this mathematical lock. It prevents unauthorized software from altering system memory. It runs continuous self-healing checks to detect hardware failures immediately. This guarantees that corporate ledgers remain mathematically sealed from external cyber threats.
+
+---
+*© 2026 PointSav Digital Systems™.*
+*Public Architectural Blueprint. Governed by the Sovereign Data Protocol.*
