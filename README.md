@@ -5,8 +5,9 @@
 
 <br/>
 
-**[ ➔ Linguistic & Design System ](https://github.com/pointsav/pointsav-design-system)** | **[ ➔ System Architecture Wiki ](https://github.com/pointsav/content-wiki-documentation)**
-**[ ➔ VIEW LIVE CUSTOMER DEPLOYMENT (WOODFINE) ](https://github.com/woodfine/woodfine-fleet-deployment)**
+**[ ➔ System Architecture Wiki ](https://github.com/pointsav/content-wiki-documentation)**<br/>
+**[ ➔ Linguistic & Design System ](https://github.com/pointsav/pointsav-design-system)**<br/>
+**[ ➔ Live Customer Deployment ](https://github.com/woodfine/woodfine-fleet-deployment)**
 
 </div>
 
