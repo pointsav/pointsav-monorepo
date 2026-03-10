@@ -1,20 +1,25 @@
-# os-totebox
-### Sovereign Data Archive & Federated Cluster
+<div align="center">
 
-**Status: Active Engineering** | **Taxonomy: Tier-3 (Platform Layer)**
+# Sovereign Data Archive | Archivo de Datos Soberano
+### *An isolated, highly secure container for holding organizational ledgers and corporate assets.*
 
-This component is the fundamental unit of the PointSav architecture. It is an isolated, highly secure container designed to hold specific organizational data. Because of its "Cloud-Blind" design, an `os-totebox` can be safely deployed on private servers or public cloud infrastructure (AWS/GCP) without compromising data sovereignty.
+</div>
 
-## Architectural Mandate & Partitioning
+<br/>
 
-### Microkernel Partitions (Isolated Protection Domains)
-An `os-totebox` operates as a Federated Cluster. Under the seL4 microkernel, each service (e.g., `service-study`, `service-people`, `service-content`) is executed within its own strictly isolated cryptographic partition. This prevents cross-domain memory access, ensuring that a vulnerability in one active engine cannot compromise the passive data vaults.
+> [!WARNING]
+> **SOVEREIGN FRAMEWORK DECLARATION**
+> This repository is a reference implementation of the Sovereign Data Protocol. It enforces absolute data isolation. It contains zero active proprietary network payloads.
 
-### The Payload-Agnostic Flat-File Ledger (SYS-ADR-12)
-Passive vaults (e.g., `service-study`) reject opaque SQL databases. Original assets are stored as inert binaries in `/assets/`, while deterministic metadata and cryptographic checksums are stored as `.yaml` pointers in `/ledger/`. Execution permissions are stripped at the kernel level.
+| Architecture Tier | Component Role | Governance Anchor |
+| :--- | :--- | :--- |
+| 🟢 Active | Secure Vault | Sovereign Disclosure Standard |
 
-### The Relational Exception (SYS-ADR-13)
-Vaults managing highly mutable PII (e.g., `service-people`) operate inside a dedicated partition housing a Zero-Trust relational database, physically isolated from the flat-file ledgers.
+## 📖 The Architectural Blueprint
+This is the fundamental unit of our secure architecture. It strictly separates active software engines from passive data vaults. 
+
+Any company can deploy this isolated container. We replace opaque cloud databases with verifiable flat-file ledgers. Original corporate assets are stored as inert files. We lock their metadata using cryptographic checksums. This prevents unauthorized network users from altering established corporate history.
 
 ---
-*© 2026 PointSav Digital Systems™*
+*© 2026 PointSav Digital Systems™.*
+*Public Architectural Blueprint. Governed by the Sovereign Data Protocol.*

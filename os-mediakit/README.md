@@ -1,14 +1,25 @@
-# os-mediakit
-### *Autonomous Edge Substrate*
+<div align="center">
 
-**Status: Active Engineering** | **Taxonomy: Tier-3 (Platform Layer)**
+# Autonomous Edge Substrate | Sustrato de Borde Autónomo
+### *The baseline secure network for public-facing data delivery and compliance reporting.*
 
-This component provides the baseline substrate for public-facing edge delivery. In the PointSav architecture, edge nodes are not "dumb" web servers that query central databases. `os-mediakit` enforces the **Autonomous Edge Node Pattern**.
+</div>
 
-## Architectural Mandate
-An `os-mediakit` deployment bundles the presentation layer (`app-mediakit-knowledge`), the intelligence engine (`app-mediakit-telemetry`), and a local micro-vault into a single, highly portable execution environment. 
+<br/>
 
-This design guarantees that if an edge node is compromised, the blast radius is strictly limited to that specific userspace. The attacker gains zero access to the broader `os-totebox` network.
+> [!WARNING]
+> **SOVEREIGN FRAMEWORK DECLARATION**
+> This repository is a reference implementation of the Sovereign Data Protocol. It enforces absolute data isolation. It contains zero active proprietary network payloads.
+
+| Architecture Tier | Component Role | Governance Anchor |
+| :--- | :--- | :--- |
+| 🟢 Active | Edge Delivery | Sovereign Disclosure Standard |
+
+## 📖 The Architectural Blueprint
+This component enforces our autonomous edge node pattern. Our edge servers do not blindly query central corporate databases. 
+
+Any business can adopt this delivery model. We bundle the presentation screen and local intelligence into a single vault. If an edge node is attacked, the blast radius is physically isolated. The attacker gains absolutely zero access to the broader corporate network. 
 
 ---
-*© 2026 PointSav Digital Systems™*
+*© 2026 PointSav Digital Systems™.*
+*Public Architectural Blueprint. Governed by the Sovereign Data Protocol.*

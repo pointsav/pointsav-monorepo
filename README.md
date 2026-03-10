@@ -1,39 +1,42 @@
----
-repo_id: pointsav-monorepo
-taxonomy: Tier-0-System
-status: Active Engineering
----
 <div align="center">
 
 # PointSav Monorepo | Código Fuente Soberano
-### *Engineering & Source Code for Sovereign Digital Systems*
+### *The open-source blueprint for enterprise digital transformation.*
+
+<br/>
+
+**[ ➔ Linguistic & Design System ](https://github.com/pointsav/pointsav-design-system)** | **[ ➔ System Architecture Wiki ](https://github.com/pointsav/content-wiki-documentation)**
+**[ ➔ VIEW LIVE CUSTOMER DEPLOYMENT (WOODFINE) ](https://github.com/woodfine/woodfine-fleet-deployment)**
 
 </div>
 
 <br/>
 
 > [!WARNING]
-> **SECURITY BOUNDARY DECLARATION**
-> This repository contains the `no_std` Rust engineering source code and Capability-Based Manager definitions. **It contains zero active cryptographic keys, network payloads, or client data.**
+> **SOVEREIGN FRAMEWORK DECLARATION**
+> This repository is a reference implementation of the Sovereign Data Protocol. It enforces absolute data isolation. It contains zero active proprietary network payloads.
 
-## 📖 The Human Narrative (Business Value)
-We engineer Trustworthy Systems. This repository houses the core logic of the PointSav Operating System. By completely replacing legacy web-based databases with a microkernel-enforced flat-file architecture, we provide enterprises with absolute ownership of their digital assets.
+| Architecture Tier | Component Role | Governance Anchor |
+| :--- | :--- | :--- |
+| 🟢 Active | System Vendor Hub | Sovereign Disclosure Standard |
 
-### ⚙️ Track 1: Infrastructure (Private Network)
+## 📖 The Engineering Blueprint
+We build trustworthy systems. This repository holds our core software architecture. We replace vulnerable web databases with secure, flat files. This guarantees our clients permanently own their digital assets.
+
+This acts as the master engineering hub. Any enterprise can fork this architecture. We engineer the mathematical locks. Our customers deploy them to protect their capital. 
+
+### ⚙️ Track 1: Infrastructure Network
 | Component Directory | Hardware Target | Status |
 | :--- | :--- | :--- |
-| `os-infrastructure` | Intel P8600 (Edge Node) | 🟢 **Verified** |
-| `os-network-admin` | Intel i5-2400S (Command) | 🟡 **Engineering** |
+| `os-infrastructure` | Secure Edge Node | 🟢 Verified |
+| `os-network-admin` | Command Authority | 🟡 Engineering |
 
-### 🧠 Track 2: Totebox Orchestration (Active Services)
-| Component Directory | Payload Engine | Status |
+### 🧠 Track 2: Totebox Data Vaults
+| Component Directory | System Function | Status |
 | :--- | :--- | :--- |
-| `service-content` | Linguistic compiler & institutional synthesis. | 🟡 **Engineering** |
-| `service-people` | Personnel signal distillation & scoring. | 🟡 **Engineering** |
-| `app-mediakit-telemetry` | Cookieless IP Masking & Intelligence Loop. | 🟡 **Engineering** |
+| `service-content` | Document Processing | 🟡 Engineering |
+| `service-people` | Personnel Records | 🟡 Engineering |
 
 ---
-*© 2026 PointSav Digital Systems™*
-
-> **Directory Nomenclature Ledger**
-> The root of this repository is restricted. Only standard compilation anchors (`Cargo.toml`, `Makefile`, `rust-toolchain.toml`) and sovereign `.md` files are permitted.
+*© 2026 PointSav Digital Systems™.*
+*Public Architectural Blueprint. Governed by the Sovereign Data Protocol.*

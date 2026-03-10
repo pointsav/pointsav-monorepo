@@ -1,37 +1,25 @@
-# service-LLM
-### Sovereign AI Routing Engine
+<div align="center">
 
-**Status: Provisioning | Taxonomy: Tier-5-Service**
+# Sovereign AI Routing | Enrutamiento de IA Soberana
+### *Processes linguistic intelligence while keeping core systems physically isolated from external models.*
 
-## ⚙️ Execution Mechanics
-This component processes Artificial Intelligence (AI) requests. It ensures secure data handling and prevents prompt injection vulnerabilities.
+</div>
 
-### 1. Sovereign AI Routing
-The system routes AI processing requests. It keeps the seL4 microkernel isolated from external AI models. AI operates in a restricted user-space sandbox.
+<br/>
 
-### 2. Cryptographic Inheritance
-The AI service temporarily uses the human operator's Machine-Based Authorization (MBA) key. This key provides temporary access for processing. The system revokes access after processing.
+> [!WARNING]
+> **SOVEREIGN FRAMEWORK DECLARATION**
+> This repository is a reference implementation of the Sovereign Data Protocol. It enforces absolute data isolation. It contains zero active proprietary network payloads.
 
-### 3. SLM-Default / LLM-Fallback
-The system uses a two-stage processing method:
-*   **SLM-Default:** A local Small Language Model (SLM) processes data first. It sanitizes Personally Identifiable Information (PII).
-*   **LLM-Fallback:** If the SLM cannot complete the task, the system sends the sanitized data to an external Large Language Model (LLM) in the cloud.
+| Architecture Tier | Component Role | Governance Anchor |
+| :--- | :--- | :--- |
+| 🟡 Provisioning | Intelligence Routing | Sovereign Disclosure Standard |
 
-### 4. System Layer Prohibition
-This service does not run as a `system-LLM` base layer. Running AI at the microkernel level creates prompt injection vulnerabilities. Prompt injections can bypass security controls. This design maintains the seL4 microkernel's isolation and integrity.
+## 📖 The Architectural Blueprint
+This component processes external language requests securely. It keeps our central microkernel completely isolated from third-party AI models. 
 
-## 📥 Inputs
-*   Textual data for processing.
-*   Human operator's Machine-Based Authorization (MBA) key.
-
-## 📤 Outputs
-*   Synthesized linguistic payloads.
-*   Sanitized data for external LLM processing.
-
-## 🔗 Dependencies
-*   `system-core`
-*   `service-content`
-*   `os-totebox`
+Any enterprise can implement this secure routing logic. All artificial intelligence operates strictly within a restricted sandbox. We use a local Small Language Model first to sanitize sensitive information. We only route anonymous, sanitized data to external cloud models when strictly required.
 
 ---
-*© 2026 PointSav Digital Systems™*
+*© 2026 PointSav Digital Systems™.*
+*Public Architectural Blueprint. Governed by the Sovereign Data Protocol.*
