@@ -1,15 +1,15 @@
-# 🏗️ SERVICE-PEOPLE
-**Entity:** PointSav Digital Systems™ (The Vendor)
-**Taxonomy:** Tier-1 Core Component
-**Status:** Architectural Scaffold (Pending Engineering Cycle)
+# ⚙️ SERVICE-PEOPLE: SOVEREIGN PERSONNEL LEDGER
+**Vendor:** PointSav Digital Systems™
+**Protocol:** DS-ADR-02 (Files over Databases)
+**Tier:** 1 (Core Engineering Monorepo)
 
 ---
 
-## I. ARCHITECTURAL MANDATE
-This directory defines the physical execution parameters, compilation logic, and strict memory boundaries for its respective structural domain. It currently serves as an isolated memory sandbox pending a dedicated engineering cycle.
+## I. ARCHITECTURAL OVERVIEW
+This engine is a deterministic JSON state machine. It manages the centralized personnel ledger. It replaces fragile database clusters with verifiable flat files. It provides CLI query and update operations to local execution adapters.
 
-## II. COMPONENT ISOLATION
-In accordance with Capability-Based Security (SYS-SEC-01), this component is mathematically air-gapped from all other system functions until explicit cryptographic execution commands are authored and verified.
+## II. DATA STRUCTURE (JSON)
+The engine reads and writes strictly to `ledger_personnel.json`. It stores nested, multi-dimensional communication history for every contact ID. This ensures schema stability for future Sovereign AI Routing ingestion.
 
-## III. LICENSING
-This component is governed by the Sovereign Data Protocol and remains in an active **Incubation Phase**. Refer to the root `LICENSE` file. All structural designs and protocols are strictly reserved.
+## III. LEGAL & LICENSING
+Refer to the `LICENSE` file in this directory. This software is currently under a strict **Incubation Phase**. All rights are reserved by Woodfine Capital Projects Inc.
