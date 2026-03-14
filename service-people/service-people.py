@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
 PointSav Digital Systems | service-people
-Deterministic Flat-File Personnel Ledger Engine (DS-ADR-02)
-Format: JSON (Leapfrog 2030 Standard)
+Deterministic Flat-File Personnel Ledger Engine
+Temporal Upgrade: The 27-Hour Matrix (Home 07-22 & Target 08-20)
 """
 
 import os
@@ -10,8 +10,14 @@ import json
 import argparse
 import datetime
 import sys
+try:
+    from zoneinfo import ZoneInfo
+except ImportError:
+    print("FATAL: Python 3.9+ with zoneinfo module is required.", file=sys.stderr)
+    sys.exit(1)
 
 LEDGER_PATH = os.getenv("LEDGER_PATH", os.path.join(os.path.dirname(__file__), "ledger_personnel.json"))
+HOME_TIMEZONE = "America/Vancouver"
 
 def load_ledger():
     if not os.path.exists(LEDGER_PATH):
@@ -23,6 +29,34 @@ def save_ledger(data):
     with open(LEDGER_PATH, 'w') as f:
         json.dump(data, f, indent=4)
 
+def check_dual_temporal_window(target_timezone_str):
+    """
+    Enforces the 27-Hour Dual-Timezone Intersection.
+    Returns True ONLY if Home Time is 07:00-22:00 AND Target Time is 08:00-20:00.
+    """
+    if not target_timezone_str:
+        return False
+        
+    now_utc = datetime.datetime.now(datetime.timezone.utc)
+    
+    try:
+        # 1. Home Node Biological Guardrail (07:00 to 22:00)
+        home_tz = ZoneInfo(HOME_TIMEZONE)
+        home_local_time = now_utc.astimezone(home_tz)
+        if not (7 <= home_local_time.hour < 22):
+            return False
+            
+        # 2. Target Node Receiving Guardrail (08:00 to 20:00)
+        target_tz = ZoneInfo(target_timezone_str)
+        target_local_time = now_utc.astimezone(target_tz)
+        if not (8 <= target_local_time.hour < 20):
+            return False
+            
+        return True
+    except Exception:
+        # Failsafe: If timezone string is invalid, drop the target.
+        return False
+
 def query_targets(limit, campaign_id):
     ledger = load_ledger()
     targets = []
@@ -33,9 +67,11 @@ def query_targets(limit, campaign_id):
             
         history = contact.get("communication_history", {})
         if campaign_id not in history:
-            targets.append(contact)
-            if len(targets) >= limit:
-                break
+            # Enforce the 27-Hour dual-timezone intersection
+            if check_dual_temporal_window(contact.get("timezone")):
+                targets.append(contact)
+                if len(targets) >= limit:
+                    break
                 
     return targets
 
