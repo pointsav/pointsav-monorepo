@@ -9,7 +9,7 @@ use std::time::Duration;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    println!("SYSTEM EVENT: Initializing Sovereign Email Bridge daemon (Production Recursive Mode).");
+    println!("SYSTEM EVENT: Initializing Sovereign Email Bridge daemon (Anti-Throttling Mode).");
 
     let archive_path = env::var("TOTEBOX_ARCHIVE_PATH")
         .unwrap_or_else(|_| "/assets/personnel-maildir".to_string());
@@ -29,13 +29,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             Ok(token) => {
                 let bridge = GraphBridge::new(token);
                 
-                // Initialize physical query with $top=500 for maximum throughput
                 let mut current_url = format!(
                     "https://graph.microsoft.com/v1.0/users/{}/messages?$filter=isRead eq false&$top=500",
                     target_user
                 );
 
-                // Recursive Pagination Loop
                 loop {
                     match bridge.fetch_url(&current_url).await {
                         Ok(messages) => {
@@ -45,15 +43,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                                     for msg in msg_array {
                                         let raw_json = msg.to_string();
                                         
-                                        // Physical Extraction
                                         if let Ok(_) = vault.write_payload(&raw_json) {
-                                            // State Mutation (Authorized)
                                             if let Some(msg_id) = msg["id"].as_str() {
-                                                if let Ok(_) = bridge.mutate_state(&target_user, msg_id).await {
-                                                    mutation_count += 1;
-                                                } else {
-                                                    eprintln!("SYSTEM ERROR: Failed to mutate state for {}", msg_id);
+                                                match bridge.mutate_state(&target_user, msg_id).await {
+                                                    Ok(_) => {
+                                                        mutation_count += 1;
+                                                    }
+                                                    Err(e) => {
+                                                        eprintln!("SYSTEM ERROR: Failed to mutate state for {} - REASON: {}", msg_id, e);
+                                                    }
                                                 }
+                                                // ANTI-THROTTLING INJECTION: 50ms physical sleep between mutations
+                                                tokio::time::sleep(Duration::from_millis(50)).await;
                                             }
                                         }
                                     }
@@ -61,17 +62,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                                 }
                             }
                             
-                            // Evaluate Microsoft Graph Pagination
                             if let Some(next_link) = messages["@odata.nextLink"].as_str() {
                                 println!("SYSTEM EVENT: Network pagination detected. Bypassing throttle to recursively extract next batch.");
                                 current_url = next_link.to_string();
                             } else {
-                                break; // Mathematical exhaustion achieved. Break recursive loop.
+                                break; 
                             }
                         }
                         Err(e) => {
                             eprintln!("SYSTEM ERROR: Graph Bridge extraction failed: {}", e);
-                            break; // Break on error to prevent infinite fail loop
+                            break; 
                         }
                     }
                 }
@@ -79,7 +79,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             Err(e) => eprintln!("SYSTEM ERROR: OAuth2 Negotiation Failed: {}", e),
         }
         
-        // Physical Throttle (Only executes when the inbox is mathematically empty)
         tokio::time::sleep(Duration::from_secs(60)).await;
     }
 }
