@@ -1,79 +1,45 @@
-# ⚙️ OS-MEDIAKIT: SOVEREIGN TELEMETRY ENGINE
-**Vendor:** PointSav Digital Systems™
-**Protocol:** DS-ADR-06 (Zero-Cookie Architecture)
-**Tier:** 1 (Core Engineering Monorepo)
+# 📊 POINTSAV SOVEREIGN TELEMETRY SUITE
 
----
+**Version:** 1.2.0 (Compiled Rust Core)
+**Standard:** Sovereign Data Protocol (DS-ADR-06)
+**Type:** Generic Self-Hosted Analytics Infrastructure
+**Vendor:** PointSav Digital Systems
 
-## I. ARCHITECTURAL OVERVIEW
-The Sovereign Telemetry Engine is a highly optimized, asynchronous data ingestion diode written in Rust. It provides institutional-grade website analytics without relying on third-party tracking cookies, Javascript states, or centralized silicon valley data brokers.
+## System Overview
+The Sovereign Telemetry Suite is a zero-cookie, mathematically absolute intelligence ledger. It replaces third-party tracking scripts (e.g., Google Analytics) with an air-gapped, privacy-first ingestion diode. 
 
-It operates entirely within the Customer's isolated cloud environment (Tier-2) and maps geographic routing strictly using an offline MaxMind `.mmdb` vault, ensuring absolute data sovereignty and compliance with international privacy mandates.
+It captures network interactions directly at the edge, stores them in an immutable `.csv` ledger, and synthesizes the data into 8 highly detailed Institutional Brutalist Markdown matrices.
 
-## II. THE JSON CONTRACT (DS-ADR-06)
-The Rust daemon (`telemetry-daemon.rs`) is engineered to instantly drop any connection that does not strictly adhere to the following `POST` payload structure.
+## Dual-Binary Architecture
+This software is compiled natively via Rust into two distinct, memory-safe execution cores:
+1. **`telemetry-daemon` (The Shield):** An asynchronous `tokio`/`warp` web server that listens for incoming JS beacons and safely appends them to the physical ledger.
+2. **`omni-matrix-engine` (The Synthesizer):** A fault-tolerant calculation engine that reads the ledger, cross-references offline geographic databases, and generates the Markdown reports.
 
-**Endpoint:** `POST /telemetry-endpoint`
-**Headers:** `Content-Type: application/json`
-
-```json
-{
-  "uri": "[https://woodfinegroup.com/investors](https://woodfinegroup.com/investors)",
-  "timestamp": "2026-03-12T14:30:00Z",
-  "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)..."
-}
+```text
+app-mediakit-telemetry/
+├── src/bin/
+│   ├── telemetry-daemon.rs    # Edge Ingestion Source
+│   └── omni-matrix-engine.rs  # Synthesis Source
+├── assets/
+│   ├── ledger_telemetry.csv   # The Immutable Source of Truth (Generated)
+│   └── GeoLite2-City.mmdb     # The Offline Geographic Brain (User Provided)
+└── outbox/
+    └── REPORT_TIMESTAMP.md    # The Synthesized Financial Matrix
 ```
 
-## III. DEPENDENCY MATRIX
-To guarantee air-gapped operation, all dependencies must be locally compiled.
-
-1. **Rust Toolchain:** `cargo` (1.70+)
-2. **Crates:** - `tokio` (Asynchronous runtime)
-   - `warp` (HTTP web server framework)
-   - `serde` / `serde_json` (Strict serialization)
-   - `maxminddb` (Offline IP routing lookup)
-   - `chrono` (ISO 8601 timestamp handling)
-3. **Vendor Binaries:** `GeoLite2-City.mmdb` (Must reside in `../vendors-maxmind/` relative to the monorepo root).
-
-## IV. COMPILATION INSTRUCTIONS
-The daemons must be compiled specifically for the target Tier-2 cloud architecture (e.g., Linux x86_64).
+## Compilation & Deployment Mandate
+This software must be compiled natively for the target deployment architecture (e.g., Linux x86_64).
 
 ```bash
-# 1. Navigate to the core application
-cd app-mediakit-telemetry
-
-# 2. Compile for production release (strips debug symbols for maximum efficiency)
+# 1. Compile the binaries
 cargo build --release
 
-# 3. Locate the compiled binaries
-ls -la target/release/telemetry-daemon
-ls -la target/release/telemetry-synthesizer
+# 2. Provision the database
+# You must place a licensed GeoLite2-City.mmdb inside the assets/ directory.
+
+# 3. Ignite the Daemon (Background Service)
+PORT=8081 ./target/release/telemetry-daemon &
+
+# 4. Generate the Matrix (Cron Job)
+FLEET_ID="YOUR_ORG" ./target/release/omni-matrix-engine
 ```
-
-## V. DAEMON ORCHESTRATION (SYSTEMD)
-The `telemetry-daemon` is designed to be kept alive by the Linux kernel via `systemd`. It requires strict environment variables to dictate its physical boundaries.
-
-**Required Environment Variables:**
-* `PORT`: The internal localhost port the daemon will bind to (e.g., `8081`).
-* The daemon automatically detects its `WorkingDirectory` and writes its immutable log to `./assets/ledger_telemetry.csv`.
-
-**Standard Systemd Unit Example:**
-```ini
-[Unit]
-Description=PointSav Sovereign Telemetry Engine
-After=network.target
-
-[Service]
-Type=simple
-User=admin
-WorkingDirectory=/opt/deployments/pointsav-fleet-deployment/media-marketing-landing
-Environment="PORT=8081"
-ExecStart=/opt/deployments/pointsav-fleet-deployment/media-marketing-landing/telemetry-daemon
-Restart=always
-
-[Install]
-WantedBy=multi-user.target
-```
-
-## VI. LEGAL & LICENSING
-Refer to the `LICENSE` file in this directory. This software is currently under a strict **Incubation Phase**. All rights are reserved by Woodfine Capital Projects Inc.
