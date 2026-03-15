@@ -1,118 +1,155 @@
-use std::env;
-use std::fs::{self, File};
-use std::io::Write;
+use std::fs::File;
+use std::io::{BufRead, BufReader, Write};
 use std::collections::HashMap;
-use std::net::IpAddr;
-use chrono::{Utc, DateTime, Duration, Datelike};
-use maxminddb::Reader;
+use chrono::{DateTime, Utc, Duration, Datelike, TimeZone};
+
+struct TelemetryRecord {
+    received_at: DateTime<Utc>,
+    masked_ip: String,
+    uri: String,
+    referrer: String,
+    viewport: String,
+    timezone: String,
+    device_memory: String,
+    hardware_cores: String,
+    dwell_seconds: i64,
+    scroll_depth: i64,
+    intent_clicks: String,
+}
+
+fn get_distribution(items: Vec<String>) -> String {
+    let mut counts = HashMap::new();
+    for item in items {
+        let clean = item.trim().to_string();
+        if clean != "unknown" && clean != "" && clean != "***.***.***.***" {
+            *counts.entry(clean).or_insert(0) += 1;
+        }
+    }
+    
+    if counts.is_empty() { 
+        return "  - *No verifiable data points recorded*\n".to_string(); 
+    }
+    
+    let mut sorted: Vec<_> = counts.into_iter().collect();
+    sorted.sort_by(|a, b| b.1.cmp(&a.1));
+    
+    sorted.into_iter()
+        .map(|(k, v)| format!("  - **{}**: {} instances", k, v))
+        .collect::<Vec<_>>()
+        .join("\n")
+        + "\n"
+}
 
 fn main() {
-    println!("[SYSTEM] Initiating Sovereign Telemetry Synthesis...");
+    let ledger_path = "./assets/ledger_telemetry.csv";
+    let report_path = format!("./outbox/REPORT_TELEMETRY_{}.md", Utc::now().format("%Y%m%d_%H%M%S"));
 
-    let fleet_id = env::var("FLEET_ID").unwrap_or_else(|_| "UNKNOWN_FLEET".to_string());
-    let current_time = Utc::now();
-    let current_date = current_time.format("%Y-%m-%d").to_string();
-    
-    let db_path = "assets/GeoLite2-City.mmdb";
-    let ledger_path = "assets/ledger_telemetry.csv";
-    let report_path = format!("outbox/REPORT_{}_{}.md", fleet_id, current_date);
+    let file = match File::open(ledger_path) {
+        Ok(f) => f,
+        Err(_) => {
+            println!("No ledger found at {}. Exiting synthesis.", ledger_path);
+            return;
+        }
+    };
 
-    let _ = fs::create_dir_all("outbox");
+    let mut records: Vec<TelemetryRecord> = Vec::new();
+    let reader = BufReader::new(file);
 
-    // Initialize Time Buckets
-    let mut count_yesterday = 0;
-    let mut count_7d = 0;
-    let mut count_30d = 0;
-    let mut count_60d = 0;
-    let mut count_90d = 0;
-    let mut count_ytd = 0;
-    let mut count_inception = 0;
+    for line in reader.lines().flatten() {
+        let cols: Vec<&str> = line.split(',').collect();
+        if cols.len() < 15 { continue; } // Bypass malformed rows
 
-    let mut metro_counts: HashMap<String, usize> = HashMap::new();
-    let geo_reader = Reader::open_readfile(db_path).ok();
-
-    // Parse the Flat-File Ledger
-    if let Ok(contents) = fs::read_to_string(ledger_path) {
-        for line in contents.lines() {
-            // Strip quotes and split: "IP","TIMESTAMP","URI","USER_AGENT"
-            let clean_line = line.replace("\"", "");
-            let parts: Vec<&str> = clean_line.split(',').collect();
-            
-            if parts.len() >= 2 {
-                let ip_str = parts[0];
-                let time_str = parts[1];
-
-                if let Ok(event_time) = DateTime::parse_from_rfc3339(time_str).map(|dt| dt.with_timezone(&Utc)) {
-                    count_inception += 1;
-                    
-                    let duration = current_time.signed_duration_since(event_time);
-                    let days_ago = duration.num_days();
-
-                    if days_ago <= 1 && days_ago >= 0 { count_yesterday += 1; }
-                    if days_ago <= 7 { count_7d += 1; }
-                    if days_ago <= 30 { count_30d += 1; }
-                    if days_ago <= 60 { count_60d += 1; }
-                    if days_ago <= 90 { count_90d += 1; }
-                    
-                    if event_time.year() == current_time.year() { count_ytd += 1; }
-
-                    // Metro Region Resolution (Offline)
-                    let metro_name = if let Some(ref reader) = geo_reader {
-                        if let Ok(ip) = ip_str.parse::<IpAddr>() {
-                            if let Ok(city) = reader.lookup::<maxminddb::geoip2::City>(ip) {
-                                city.city.and_then(|c| c.names).and_then(|n| n.get("en").map(|&s| s.to_string()))
-                                    .unwrap_or_else(|| "Unknown_Region".to_string())
-                            } else {
-                                "Unresolved_IP".to_string()
-                            }
-                        } else {
-                            "Malformed_IP".to_string()
-                        }
-                    } else {
-                        "[OFFLINE_DB_REQUIRED]".to_string()
-                    };
-
-                    *metro_counts.entry(metro_name).or_insert(0) += 1;
-                }
-            }
+        if let Ok(received) = DateTime::parse_from_rfc3339(cols[0]) {
+            records.push(TelemetryRecord {
+                received_at: received.with_timezone(&Utc),
+                masked_ip: cols[2].to_string(),
+                uri: cols[3].to_string(),
+                referrer: cols[5].to_string(),
+                viewport: cols[6].to_string(),
+                timezone: cols[7].to_string(),
+                device_memory: cols[8].to_string(),
+                hardware_cores: cols[9].to_string(),
+                dwell_seconds: cols[10].parse().unwrap_or(0),
+                scroll_depth: cols[11].parse().unwrap_or(0),
+                intent_clicks: cols[12].to_string(),
+            });
         }
     }
 
-    // Sort Metro Density
-    let mut sorted_metros: Vec<(&String, &usize)> = metro_counts.iter().collect();
-    sorted_metros.sort_by(|a, b| b.1.cmp(a.1));
-
-    // Construct Brutalist Markdown Report
-    let mut report = String::new();
-    report.push_str(&format!("# 📊 FLEET TELEMETRY LEDGER | {}\n", fleet_id));
-    report.push_str(&format!("**Generated:** {}\n", current_time.to_rfc3339()));
-    report.push_str("**Standard:** Sovereign Data Protocol (DS-ADR-06)\n\n---\n\n");
-
-    if geo_reader.is_none() {
-        report.push_str("> [!WARNING]\n> Offline GeoLite2-City.mmdb not found in /assets/. Metro parsing bypassed.\n\n");
-    }
-
-    report.push_str("## ⏱️ TIME MATRIX\n");
-    report.push_str("| Interval | Unique Events |\n| :--- | :--- |\n");
-    report.push_str(&format!("| Yesterday | {} |\n", count_yesterday));
-    report.push_str(&format!("| 7 Days | {} |\n", count_7d));
-    report.push_str(&format!("| 30 Days | {} |\n", count_30d));
-    report.push_str(&format!("| 60 Days | {} |\n", count_60d));
-    report.push_str(&format!("| 90 Days | {} |\n", count_90d));
-    report.push_str(&format!("| YTD | {} |\n", count_ytd));
-    report.push_str(&format!("| Inception | {} |\n\n", count_inception));
-
-    report.push_str("## 🌍 METRO REGION MATRIX\n");
-    report.push_str("| Metro Area | Volume | Density % |\n| :--- | :--- | :--- |\n");
+    let mut out = File::create(&report_path).expect("Failed to create report.");
     
-    for (metro, &count) in sorted_metros.into_iter().take(15) {
-        let density = if count_inception > 0 { (count as f64 / count_inception as f64) * 100.0 } else { 0.0 };
-        report.push_str(&format!("| {} | {} | {:.1}% |\n", metro, count, density));
+    writeln!(out, "# INSTITUTIONAL TELEMETRY INTELLIGENCE LEDGER").unwrap();
+    writeln!(out, "**Generated:** {}  \n", Utc::now().to_rfc3339()).unwrap();
+    writeln!(out, "*This report complies with the Sovereign Data Protocol. PII is scrubbed via /24 Subnet Masking.* \n\n").unwrap();
+    writeln!(out, "---\n").unwrap();
+
+    let now = Utc::now();
+    let ytd_start = Utc.with_ymd_and_hms(now.year(), 1, 1, 0, 0, 0).unwrap();
+
+    let windows = vec![
+        ("1 DAY (24H)", now - Duration::days(1)),
+        ("1 WEEK (7D)", now - Duration::days(7)),
+        ("30 DAYS", now - Duration::days(30)),
+        ("60 DAYS", now - Duration::days(60)),
+        ("90 DAYS", now - Duration::days(90)),
+        ("YEAR TO DATE (YTD)", ytd_start),
+        ("INCEPTION", Utc.with_ymd_and_hms(2000, 1, 1, 0, 0, 0).unwrap()),
+    ];
+
+    for (label, start_time) in windows {
+        let subset: Vec<&TelemetryRecord> = records.iter().filter(|r| r.received_at >= start_time).collect();
+        
+        writeln!(out, "## {}\n", label).unwrap();
+        
+        if subset.is_empty() {
+            writeln!(out, "> **No operations recorded in this window.**\n\n---\n").unwrap();
+            continue;
+        }
+
+        let total_loads = subset.len();
+        let avg_dwell = subset.iter().map(|r| r.dwell_seconds).sum::<i64>() / total_loads as i64;
+        let max_dwell = subset.iter().map(|r| r.dwell_seconds).max().unwrap_or(0);
+        let avg_scroll = subset.iter().map(|r| r.scroll_depth).sum::<i64>() / total_loads as i64;
+        
+        let clicks_raw: Vec<String> = subset.iter()
+            .filter(|r| r.intent_clicks != "none")
+            .flat_map(|r| r.intent_clicks.split(" | ").map(|s| s.to_string()))
+            .collect();
+        
+        // Distribution Aggregations
+        let subnets = get_distribution(subset.iter().map(|r| r.masked_ip.clone()).collect());
+        let viewports = get_distribution(subset.iter().map(|r| r.viewport.clone()).collect());
+        let timezones = get_distribution(subset.iter().map(|r| r.timezone.clone()).collect());
+        let referrers = get_distribution(subset.iter().map(|r| r.referrer.clone()).collect());
+        let memory = get_distribution(subset.iter().map(|r| format!("{} GB", r.device_memory)).collect());
+        let cores = get_distribution(subset.iter().map(|r| format!("{} Cores", r.hardware_cores)).collect());
+        let clicks_dist = get_distribution(clicks_raw);
+            
+        writeln!(out, "### 1. Core Engagement Volume").unwrap();
+        writeln!(out, "- **Total Asset Renderings:** {}", total_loads).unwrap();
+        writeln!(out, "- **Average Dwell Time:** {} seconds", avg_dwell).unwrap();
+        writeln!(out, "- **Maximum Dwell Time:** {} seconds", max_dwell).unwrap();
+        writeln!(out, "- **Average Scroll Depth:** {}%\n", avg_scroll).unwrap();
+        
+        writeln!(out, "### 2. Geographic Theaters (Masked IPs & Timezones)").unwrap();
+        writeln!(out, "{}", subnets).unwrap();
+        writeln!(out, "{}", timezones).unwrap();
+
+        writeln!(out, "### 3. Traffic Origins (Referrers)").unwrap();
+        writeln!(out, "{}", referrers).unwrap();
+
+        writeln!(out, "### 4. Hardware Profiles (Processing & Memory)").unwrap();
+        writeln!(out, "{}", cores).unwrap();
+        writeln!(out, "{}", memory).unwrap();
+
+        writeln!(out, "### 5. Viewport Topologies (Device Geometry)").unwrap();
+        writeln!(out, "{}", viewports).unwrap();
+
+        writeln!(out, "### 6. High-Intent Physical Actions (Clicks)").unwrap();
+        writeln!(out, "{}", clicks_dist).unwrap();
+        
+        writeln!(out, "---\n").unwrap();
     }
 
-    // Write to Outbox
-    let mut file = File::create(&report_path).expect("[ERROR] Cannot write to outbox.");
-    file.write_all(report.as_bytes()).expect("[ERROR] Disk write failure.");
-
-    println!("[SUCCESS] Synthesized Report anchored at: {}", report_path);
+    println!("Synthesizer complete. Ledger generated at: {}", report_path);
 }
