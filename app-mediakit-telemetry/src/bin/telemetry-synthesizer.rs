@@ -1,5 +1,7 @@
-use std::fs::File;
+use std::fs::{self, File};
 use std::io::{BufRead, BufReader, Write};
+use std::path::Path;
+use std::ffi::OsStr;
 use std::collections::HashMap;
 use chrono::{DateTime, Utc, Duration, Datelike, TimeZone};
 
@@ -21,7 +23,7 @@ fn get_distribution(items: Vec<String>) -> String {
     let mut counts = HashMap::new();
     for item in items {
         let clean = item.trim().to_string();
-        if clean != "unknown" && clean != "" && clean != "***.***.***.***" {
+        if clean != "unknown" && clean != "" && !clean.contains("***.***.***.***") {
             *counts.entry(clean).or_insert(0) += 1;
         }
     }
@@ -41,41 +43,71 @@ fn get_distribution(items: Vec<String>) -> String {
 }
 
 fn main() {
-    let ledger_path = "./assets/ledger_telemetry.csv";
+    let assets_dir = Path::new("./assets/");
     let report_path = format!("./outbox/REPORT_TELEMETRY_{}.md", Utc::now().format("%Y%m%d_%H%M%S"));
-
-    let file = match File::open(ledger_path) {
-        Ok(f) => f,
-        Err(_) => {
-            println!("No ledger found at {}. Exiting synthesis.", ledger_path);
-            return;
-        }
-    };
-
     let mut records: Vec<TelemetryRecord> = Vec::new();
-    let reader = BufReader::new(file);
 
-    for line in reader.lines().flatten() {
-        let cols: Vec<&str> = line.split(',').collect();
-        if cols.len() < 15 { continue; } // Bypass malformed rows
+    // 1. Shard Ingestion Engine
+    if let Ok(entries) = fs::read_dir(assets_dir) {
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.extension().and_then(OsStr::to_str) == Some("csv") {
+                if let Ok(file) = File::open(&path) {
+                    let reader = BufReader::new(file);
+                    for line in reader.lines().flatten() {
+                        let cols: Vec<&str> = line.split(',').collect();
+                        
+                        let (masked_ip, uri, referrer, viewport, timezone, memory, cores, dwell, scroll, clicks);
+                        
+                        // V4 Architecture (15 Columns)
+                        if cols.len() >= 15 {
+                            masked_ip = cols[2].to_string();
+                            uri = cols[3].to_string();
+                            referrer = cols[5].to_string();
+                            viewport = cols[6].to_string();
+                            timezone = cols[7].to_string();
+                            memory = cols[8].to_string();
+                            cores = cols[9].to_string();
+                            dwell = cols[10].parse().unwrap_or(0);
+                            scroll = cols[11].parse().unwrap_or(0);
+                            clicks = cols[12].to_string();
+                        } 
+                        // Legacy V3 Architecture (14 Columns)
+                        else if cols.len() == 14 {
+                            masked_ip = "***.***.***.*** (Legacy)".to_string();
+                            uri = cols[2].to_string();
+                            referrer = cols[4].to_string();
+                            viewport = cols[5].to_string();
+                            timezone = cols[6].to_string();
+                            memory = cols[7].to_string();
+                            cores = cols[8].to_string();
+                            dwell = cols[9].parse().unwrap_or(0);
+                            scroll = cols[10].parse().unwrap_or(0);
+                            clicks = cols[11].to_string();
+                        } else {
+                            continue; // Bypass heavily fragmented rows
+                        }
 
-        if let Ok(received) = DateTime::parse_from_rfc3339(cols[0]) {
-            records.push(TelemetryRecord {
-                received_at: received.with_timezone(&Utc),
-                masked_ip: cols[2].to_string(),
-                uri: cols[3].to_string(),
-                referrer: cols[5].to_string(),
-                viewport: cols[6].to_string(),
-                timezone: cols[7].to_string(),
-                device_memory: cols[8].to_string(),
-                hardware_cores: cols[9].to_string(),
-                dwell_seconds: cols[10].parse().unwrap_or(0),
-                scroll_depth: cols[11].parse().unwrap_or(0),
-                intent_clicks: cols[12].to_string(),
-            });
+                        if let Ok(received) = DateTime::parse_from_rfc3339(cols[0]) {
+                            records.push(TelemetryRecord {
+                                received_at: received.with_timezone(&Utc),
+                                masked_ip, uri, referrer, viewport, timezone,
+                                device_memory: memory, hardware_cores: cores,
+                                dwell_seconds: dwell, scroll_depth: scroll, intent_clicks: clicks,
+                            });
+                        }
+                    }
+                }
+            }
         }
     }
 
+    if records.is_empty() {
+        println!("No parseable data found in ./assets/. Exiting synthesis.");
+        return;
+    }
+
+    // 2. Report Generation
     let mut out = File::create(&report_path).expect("Failed to create report.");
     
     writeln!(out, "# INSTITUTIONAL TELEMETRY INTELLIGENCE LEDGER").unwrap();
@@ -116,7 +148,6 @@ fn main() {
             .flat_map(|r| r.intent_clicks.split(" | ").map(|s| s.to_string()))
             .collect();
         
-        // Distribution Aggregations
         let subnets = get_distribution(subset.iter().map(|r| r.masked_ip.clone()).collect());
         let viewports = get_distribution(subset.iter().map(|r| r.viewport.clone()).collect());
         let timezones = get_distribution(subset.iter().map(|r| r.timezone.clone()).collect());

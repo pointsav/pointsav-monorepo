@@ -4,20 +4,18 @@ use reqwest::{Client, header};
 use serde_json::Value;
 use std::env;
 use std::fs;
-use std::path::Path;
-use std::process::Command;
 
-const BATCH_SIZE: usize = 50;
-const GCP_TARGET: &str = "admin@136.117.130.104:/opt/deployments/woodfine-fleet-deployment/cluster-totebox-personnel/service-email/personnel-maildir/new/";
+const BATCH_SIZE: usize = 5; // Strict 5-asset throttle
+const LOCAL_SPOOL: &str = "/opt/woodfine/cluster-totebox-personnel/service-email/personnel-maildir/new";
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("========================================================");
-    println!(" 💥 MASTER DESTRUCTIVE HARVESTER (RUST ASYNC BATCHING)");
+    println!(" 🟢 RECOVERY HARVESTER (ZERO-NETWORK SAVE | 5-ASSET LIMIT)");
     println!("========================================================");
 
-    // 1. Load WORM Credentials
-    from_path("/home/mathew/deployments/woodfine-fleet-deployment/cluster-totebox-personnel/service-email/auth-credentials.env").ok();
+    // 1. Load WORM Credentials natively on the GCP Node
+    from_path("/opt/woodfine/cluster-totebox-personnel/auth-credentials.env").ok();
     
     let tenant = env::var("AZURE_TENANT_ID").expect("Missing AZURE_TENANT_ID");
     let client_id = env::var("AZURE_CLIENT_ID").expect("Missing AZURE_CLIENT_ID");
@@ -27,94 +25,61 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let client = Client::new();
     let mut token = get_token(&client, &tenant, &client_id, &secret).await?;
 
-    let folders = vec![
-        ("Data_Ingest", "AAMkAGNiMzVmMDMxLTY1OTEtNGQzNC05YzE2LTM2YWMyOWMwOTkyMgAuAAAAAABUZZ-cFXcyR6WM1RpB-73bAQDF6l4UzZZOR6tUM0g2iU_BAAmpzIZlAAA="),
-        ("OpenStack", "AAMkAGNiMzVmMDMxLTY1OTEtNGQzNC05YzE2LTM2YWMyOWMwOTkyMgAuAAAAAABUZZ-cFXcyR6WM1RpB-73bAQDF6l4UzZZOR6tUM0g2iU_BAAi_G0ETAAA="),
-        ("PostgresSQL", "AAMkAGNiMzVmMDMxLTY1OTEtNGQzNC05YzE2LTM2YWMyOWMwOTkyMgAuAAAAAABUZZ-cFXcyR6WM1RpB-73bAQDF6l4UzZZOR6tUM0g2iU_BAAjT8448AAA="),
-    ];
+    let folder_name = "DumpsterRecovery";
+    let folder_id = "recoverableitemsdeletions"; 
 
-    let local_batch_dir = "/home/mathew/Desktop/NOSAVE_BATCH";
-    let mut grand_total = 0;
+    println!("\n[SYSTEM] Initiating Sovereign Recovery on: {}", folder_name);
 
-    for (folder_name, folder_id) in folders {
-        println!("\n[SYSTEM] Initiating Destructive Sweep on: {}", folder_name);
-        let mut folder_total = 0;
+    // Ensure the local GCP spool exists
+    fs::create_dir_all(LOCAL_SPOOL)?;
 
-        loop {
-            // Fetch Batch
-            let url = format!("https://graph.microsoft.com/v1.0/users/{}/mailFolders/{}/messages?$top={}&$select=id", user, folder_id, BATCH_SIZE);
-            let res = client.get(&url).bearer_auth(&token).send().await?;
-            
-            if res.status() == 401 {
-                println!("  -> [SYSTEM] Token expired. Renegotiating...");
-                token = get_token(&client, &tenant, &client_id, &secret).await?;
-                continue;
-            }
-
-            let msg_data: Value = res.json().await?;
-            let messages = match msg_data["value"].as_array() {
-                Some(arr) if !arr.is_empty() => arr,
-                _ => {
-                    println!("[SUCCESS] {} is mathematically empty. Total destroyed: {}", folder_name, folder_total);
-                    break;
-                }
-            };
-
-            // Recreate Local Directory
-            let _ = fs::remove_dir_all(local_batch_dir);
-            fs::create_dir_all(local_batch_dir)?;
-
-            let mut download_futures = vec![];
-            let mut batch_ids = vec![];
-
-            println!("  -> Pulling async batch of {} assets...", messages.len());
-
-            for (idx, msg) in messages.iter().enumerate() {
-                let msg_id = msg["id"].as_str().unwrap().to_string();
-                batch_ids.push(msg_id.clone());
-                
-                let local_file = format!("{}/NOSAVE_{}_{}.eml", local_batch_dir, folder_name, folder_total + idx + 1);
-                let download_url = format!("https://graph.microsoft.com/v1.0/users/{}/messages/{}/$value", user, msg_id);
-                let t_token = token.clone();
-                let t_client = client.clone();
-                
-                download_futures.push(tokio::spawn(async move {
-                    if let Ok(response) = t_client.get(&download_url).bearer_auth(t_token).send().await {
-                        if let Ok(bytes) = response.bytes().await {
-                            let _ = fs::write(local_file, bytes);
-                        }
-                    }
-                }));
-            }
-
-            join_all(download_futures).await;
-
-            // Transmit via PSST Airlock
-            println!("  -> Pushing batch to GCP Node via WORM airlock...");
-            let batch_path = format!("{}/", local_batch_dir);
-            let _ = Command::new("rsync").args(["-avz", "-e", "ssh", &batch_path, GCP_TARGET]).output();
-
-            // Issue Async Hard Deletes
-            println!("  -> Issuing {} Async Hard Deletes to Microsoft...", batch_ids.len());
-            let mut delete_futures = vec![];
-            for msg_id in &batch_ids {
-                let delete_url = format!("https://graph.microsoft.com/v1.0/users/{}/messages/{}", user, msg_id);
-                let t_token = token.clone();
-                let t_client = client.clone();
-                delete_futures.push(tokio::spawn(async move {
-                    let _ = t_client.delete(&delete_url).bearer_auth(t_token).send().await;
-                }));
-            }
-            join_all(delete_futures).await;
-
-            folder_total += batch_ids.len();
-            grand_total += batch_ids.len();
-            println!("     [+] {} assets processed in {} so far...", folder_total, folder_name);
-        }
+    // Fetch exactly 1 Batch of 5
+    let url = format!("https://graph.microsoft.com/v1.0/users/{}/mailFolders/{}/messages?$top={}&$select=id", user, folder_id, BATCH_SIZE);
+    let res = client.get(&url).bearer_auth(&token).send().await?;
+    
+    if res.status() == 401 {
+        println!("  -> [SYSTEM] Token expired. Renegotiating...");
+        token = get_token(&client, &tenant, &client_id, &secret).await?;
     }
 
+    let msg_data: Value = res.json().await?;
+    let messages = match msg_data["value"].as_array() {
+        Some(arr) if !arr.is_empty() => arr,
+        _ => {
+            println!("[SUCCESS] Dumpster is mathematically empty.");
+            return Ok(());
+        }
+    };
+
+    let mut download_futures = vec![];
+    let mut batch_ids = vec![];
+
+    println!("  -> Pulling async recovery batch of {} assets...", messages.len());
+
+    for msg in messages.iter() {
+        let msg_id = msg["id"].as_str().unwrap().to_string();
+        batch_ids.push(msg_id.clone());
+        
+        // Generate LIVE file without NOSAVE prefix directly in the GCP Spool
+        let local_file = format!("{}/LIVE_RECOVERY_{}.eml", LOCAL_SPOOL, msg_id);
+        let download_url = format!("https://graph.microsoft.com/v1.0/users/{}/messages/{}/$value", user, msg_id);
+        let t_token = token.clone();
+        let t_client = client.clone();
+        
+        download_futures.push(tokio::spawn(async move {
+            if let Ok(response) = t_client.get(&download_url).bearer_auth(t_token).send().await {
+                if let Ok(bytes) = response.bytes().await {
+                    let _ = fs::write(local_file, bytes);
+                }
+            }
+        }));
+    }
+
+    join_all(download_futures).await;
+
     println!("\n========================================================");
-    println!("[SUCCESS] BURN COMPLETE. Grand Total Extracted & Destroyed: {}", grand_total);
+    println!("[SUCCESS] RECOVERY COMPLETE. {} assets secured in local GCP Spool.", batch_ids.len());
+    println!("No network push was used. No destruct commands were fired.");
     Ok(())
 }
 
