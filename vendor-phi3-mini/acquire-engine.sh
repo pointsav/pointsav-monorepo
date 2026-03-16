@@ -23,4 +23,5 @@ else
     echo "  -> Weights already exist."
 fi
 
+echo "========================================================"
 echo "[SUCCESS] Vendor payloads successfully acquired to local SSD."
