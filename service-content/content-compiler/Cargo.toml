@@ -1,0 +1,13 @@
+[package]
+name = "content-compiler"
+version = "1.0.0"
+edition = "2021"
+
+[dependencies]
+serde_json = "1.0"
+chrono = "0.4"
+
+[profile.dev]
+opt-level = 0
+debug = false
+split-debuginfo = "off"
