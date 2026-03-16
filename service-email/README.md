@@ -6,6 +6,7 @@
 ---
 
 ## I. ARCHITECTURAL MANDATE
+n* **Pipeline Position:** Step 1 (Ingestion Gateway). Feeds the universal Spool for `service-people` and `service-content`.
 This component operates as an autonomous Transport Interceptor. It penetrates legacy email infrastructures (Microsoft 365), extracts inbound assets, mutates the server state, and deposits raw OData JSON into temporary local queuing directories.
 
 ## II. EXECUTION MECHANICS
