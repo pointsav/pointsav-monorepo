@@ -6,6 +6,7 @@
 ---
 
 ## I. ARCHITECTURAL OVERVIEW
+n* **Pipeline Position:** Step 2 (Identity Resolution). Relies on the Verification Surveyor workflow (via `app-console-input`) restricted to 40-60 daily human verifications to ensure air-gapped fidelity.
 This engine is a deterministic JSON state machine. It manages the centralized personnel ledger. It replaces fragile database clusters with verifiable flat files. It provides CLI query and update operations to local execution adapters.
 
 ## II. DATA STRUCTURE (JSON)
