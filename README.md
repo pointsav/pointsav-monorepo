@@ -1,5 +1,13 @@
+<div align="center">
+
 # PointSav Monorepo | Código Fuente Soberano
 ### *Engineering & Source Code for Sovereign Digital Systems*
+
+**[ 📚 System Architecture Wiki ](https://github.com/pointsav/content-wiki-documentation)** | **[ 📐 Linguistic & Design System ](https://github.com/pointsav/pointsav-design-system)** | **[ 🏢 Main Profile ](https://github.com/pointsav)**
+
+</div>
+
+---
 
 > [!NOTE]
 > **OPERATIONAL POSTURE [MARCH 2026]**
