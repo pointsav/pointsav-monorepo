@@ -1,61 +1,37 @@
-<div align="center">
+# PointSav Monorepo | Código Fuente Soberano
+### *Engineering & Source Code for Sovereign Digital Systems*
 
-# 🏭 POINTSAV DIGITAL SYSTEMS
-### SYSTEM ENGINEERING & LOGIC VAULT (MONOREPO)
-*The sovereign architectural blueprint for enterprise digital transformation.*<br/>
-*El plano arquitectónico soberano para la transformación digital empresarial.*
+> [!NOTE]
+> **OPERATIONAL POSTURE [MARCH 2026]**
+> **Phase:** Production Iteration 2 | **Focus:** Sovereign Data Pipeline & Inverted Index Search | **Estado:** Despliegue activo de servicios Totebox.
 
-<br/>
-
-**[ ➔ System Architecture Wiki ](https://github.com/pointsav/content-wiki-documentation)**<br/>
-**[ ➔ Linguistic & Design System ](https://github.com/pointsav/pointsav-design-system)**<br/>
-**[ ➔ Customer Fleet Deployment ](https://github.com/woodfine/woodfine-fleet-deployment)**
-
-</div>
-
-<br/>
+### 🚀 The Digital First Operating System
+**[ EN ]** PointSav engineers Trustworthy Systems. We build decentralized, mathematically verified operating environments that guarantee structural sovereignty natively, completely bypassing legacy Software-as-a-Service (SaaS) databases.
 
 > [!WARNING]
-> **SOVEREIGN FRAMEWORK DECLARATION**
-> This repository is a reference implementation of the Sovereign Data Protocol. It enforces absolute data isolation and contains zero active proprietary network payloads.
->
-> *Este repositorio es una implementación de referencia del Sovereign Data Protocol. Impone un aislamiento absoluto de datos y contiene cero cargas de red propietarias activas.*
+> **SECURITY BOUNDARY DECLARATION**
+> This repository contains the `no_std` Rust engineering source code and Capability-Based Manager definitions. **It contains zero active cryptographic keys, network payloads, or client data.**
+
+### ⚙️ Track 1: Infrastructure (Private Network)
+| Component Directory | Hardware Target | Status |
+| :--- | :--- | :--- |
+| [`os-infrastructure`](./os-infrastructure) | Intel P8600 (Edge Node) | 🟢 `Verified (Multiboot2)` |
+| [`os-network-admin`](./os-network-admin) | Intel i5-2400S (Command) | 🟡 `Active Engineering` |
+
+### 🧠 Track 2: Totebox Orchestration (Active Services)
+| Component Directory | Payload Engine | Status |
+| :--- | :--- | :--- |
+| [`service-email`](./service-email) | Ingestion Gateway (MSFT Graph Harvester & MIME Splinter). | 🟢 `Verified` |
+| [`service-people`](./service-people) | Personnel Signal Distillation (Sovereign ACS Engine). | 🟢 `Verified` |
+| [`service-slm`](./service-slm) | Linguistic Air-Lock (Cognitive Forge - Qwen2-0.5B). | 🟢 `Verified` |
+| [`service-content`](./service-content) | Knowledge Synthesis (Content Compiler & Verified Ledgers). | 🟢 `Verified` |
+| [`service-search`](./service-search) | Sovereign Search (Leapfrog 2050 Flat-File Inverted Index). | 🟡 `Active Engineering` |
+
+### 🖥️ Track 3: Workplace (Sovereign Desktop)
+| Component Directory | Deterministic File Output | Status |
+| :--- | :--- | :--- |
+| [`app-workplace-editor`](./app-workplace-editor) | Markdown, YAML, CSV | 🟡 `Active Engineering` |
+| [`app-workplace-comm`](./app-workplace-comm) | Maildir local storage | 🟡 `Active Engineering` |
 
 ---
-
-## I. THE INSTITUTIONAL MODEL
-
-PointSav Digital Systems acts as the System Vendor. This repository is our central engineering hub, containing the mathematical locks, system logic, and core backend architecture. Our systems replace vulnerable web databases with secure, isolated flat-file vaults. This framework guarantees that our customers—such as Woodfine Management Corp.—maintain absolute ownership, control, and operational execution over their digital assets within their own private fleet networks.
-
-*PointSav Digital Systems actúa como el Proveedor del Sistema. Este repositorio es nuestro centro de ingeniería central, que contiene las cerraduras matemáticas, la lógica del sistema y la arquitectura central del backend. Nuestros sistemas reemplazan las bases de datos web vulnerables con bóvedas seguras y aisladas de archivos planos. Este marco garantiza que nuestros clientes, como Woodfine Management Corp., mantengan la propiedad, el control y la ejecución operativa absolutos sobre sus activos digitales dentro de sus propias redes de flota privadas.*
-
----
-
-## II. ENGINEERING LEDGER & COMPONENT STATUS
-
-### ⚙️ Track 1: Infrastructure Network
-| Component Directory | Hardware Target / Function | Status |
-| :--- | :--- | :--- |
-| `os-infrastructure` | Secure Edge Node OS | 🟢 Verified |
-| `os-network-admin` | Command Authority Interface | 🟡 Engineering |
-
-### 🧠 Track 2: Core System Abstractions
-| Component Directory | System Function | Status |
-| :--- | :--- | :--- |
-| `app-mediakit-telemetry` | Sovereign Telemetry Engine (DS-ADR-06) | 🟢 Active |
-| `vendors-maxmind` | Offline Geographic Dependency Vault | 🟢 Active |
-
-### 🗄️ Track 3: Totebox Data Vaults
-| Component Directory | System Function | Status |
-| :--- | :--- | :--- |
-| `service-content` | Document Processing & Publishing | 🟡 Engineering |
-| `service-people` | Personnel & Identity Records | 🟡 Engineering |
-
----
-
-## III. LICENSING & DEPLOYMENT
-
-All software herein is currently under an active **Incubation Phase**. Operational execution and public deployment occur strictly within Customer Fleet networks. Refer to the `LICENSE` file for governance.
-
-*© 2026 PointSav Digital Systems™.*
-*Governed by the Sovereign Data Protocol.*
+*© 2026 PointSav Digital Systems™*

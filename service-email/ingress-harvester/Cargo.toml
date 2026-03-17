@@ -7,3 +7,9 @@ edition = "2021"
 imap = "2.4"
 native-tls = "0.2"
 dotenv = "0.15"
+
+# PHYSICAL THROTTLE: Disable heavy debug symbols and optimizations
+[profile.dev]
+opt-level = 0
+debug = false
+split-debuginfo = "off"
