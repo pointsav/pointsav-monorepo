@@ -8,8 +8,8 @@ fi
 
 LOCAL_EXPORT_DIR="${LOCAL_EXPORT_DIR:-./Sovereign-Exports/People}"
 
-echo "[SYSTEM] Injecting Substrate Flattener to $REMOTE_TARGET..."
-ssh "$REMOTE_TARGET" "python3 -c \"
+echo "[SYSTEM] Injecting Substrate Flattener to $REMOTE_TARGET (with Sudo)..."
+ssh "$REMOTE_TARGET" "sudo python3 -c \"
 import os, json, csv
 substrate_file = '${TOTEBOX_ROOT}/service-people/substrate/claims.jsonl'
 out_file = '/tmp/personnel_export.csv'
@@ -34,9 +34,9 @@ with open(out_file, 'w', newline='') as f:
     w = csv.writer(f)
     w.writerow(['Extracted Value', 'Attribute Type', 'Source Document', 'Sovereign UUID', 'Timestamp'])
     w.writerows(data)
-\""
+\" && sudo chmod 644 /tmp/personnel_export.csv"
 
 mkdir -p "$LOCAL_EXPORT_DIR"
 rsync -avz "$REMOTE_TARGET:/tmp/personnel_export.csv" "$LOCAL_EXPORT_DIR/"
-ssh "$REMOTE_TARGET" "rm -f /tmp/personnel_export.csv"
+ssh "$REMOTE_TARGET" "sudo rm -f /tmp/personnel_export.csv"
 echo "[SUCCESS] Personnel Substrate extracted to: $LOCAL_EXPORT_DIR"
