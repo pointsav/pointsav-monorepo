@@ -1,15 +1,15 @@
-# ⚙️ SERVICE-EMAIL
-**Entity:** PointSav Digital Systems™ (The Vendor)
-**Taxonomy:** Tier-5 Core Component
-**Status:** Active Engineering / Operational
+# ⚙️ SERVICE-EMAIL: SOVEREIGN INGESTION GATEWAY
+**Vendor:** PointSav Digital Systems™
+**Standard:** SYS-ADR-07 (Bifurcated Ingestion)
+**Tier:** 5 (Service Logic)
 
 ---
 
 ## I. ARCHITECTURAL MANDATE
-n* **Pipeline Position:** Step 1 (Ingestion Gateway). Feeds the universal Spool for `service-people` and `service-content`.
-This component operates as an autonomous Transport Interceptor. It penetrates legacy email infrastructures (Microsoft 365), extracts inbound assets, mutates the server state, and deposits raw OData JSON into temporary local queuing directories.
+This component operates as the primary ingestion diode for the Sovereign Totebox Architecture. It penetrates legacy email infrastructures, extracts inbound assets without retaining state, and mathematically splinters the payload for secure downstream processing.
 
-## II. EXECUTION MECHANICS
-* **Inputs:** Microsoft Graph API (OData JSON).
-* **Outputs:** Unparsed `.json` payloads written to `/assets/tmp-maildir/`.
-* **Dependencies:** Secure OAuth2 App Registration (Entra ID) with `Mail.ReadWrite` application-level authority.
+## II. THE DUAL-ENGINE PIPELINE
+This service is divided into two distinct Rust binaries:
+
+1. **`master-harvester-rs` (The Pull Diode):** An asynchronous `tokio` engine that queries Microsoft Graph API (OData JSON). It utilizes a 2-minute `cron` pulse and micro-batching (Max 5 assets) to securely extract payloads from targeted folders (`totebox-ingress`, `OpenStack`) directly into the local `/new` Spool, bypassing public cloud storage entirely.
+2. **`mime-splinter` (The Forensic Diode):** A deterministic routing engine triggered by the `spool-daemon`. It shatters raw `.eml` payloads into their constituent parts, routing Identity Mass (`.csv`) to `service-people`, linguistic bodies (`.txt`/`.html`) to `service-slm`, and inert media (`.png`/`.pdf`) to `assets/inert-media`.
