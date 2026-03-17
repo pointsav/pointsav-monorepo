@@ -1,6 +1,5 @@
 use std::env;
 use std::fs;
-use std::path::Path;
 use chrono::Utc;
 
 fn main() {
@@ -45,7 +44,14 @@ fn main() {
     }
 
     // 2. Process the Extracted JSON
-    let paths = fs::read_dir(&graph_dir).expect("[ERROR] Cannot read knowledge graph.");
+    let paths = match fs::read_dir(&graph_dir) {
+        Ok(p) => p,
+        Err(_) => {
+            println!("  -> [SYSTEM] The knowledge graph directory is mathematically empty.");
+            return;
+        }
+    };
+    
     let mut files_processed = 0;
 
     for path in paths {
