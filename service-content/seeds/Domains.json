@@ -1,0 +1,19 @@
+{
+  "domains": [
+    {
+      "domain_name": "Corporate Strategy",
+      "category": "Corporate",
+      "gravity_keywords": ["Qualified Investment", "Direct-Hold Solutions", "Perpetual Equity", "Flow-Through Taxation", "Institutional-Grade"]
+    },
+    {
+      "domain_name": "Capital Projects",
+      "category": "Projects",
+      "gravity_keywords": ["Fixed Floor Plate", "Co-location", "Geometry of Sustainability", "Woodfine Professional Centres", "Vertical Warehouses"]
+    },
+    {
+      "domain_name": "Digital Systems",
+      "category": "Documentation",
+      "gravity_keywords": ["PointSav Digital Systems", "Totebox Archive", "Sovereign Telemetry", "Capability-Based Manager", "Microkernel"]
+    }
+  ]
+}
