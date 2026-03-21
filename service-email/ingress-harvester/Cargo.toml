@@ -1,15 +1,16 @@
 [package]
 name = "ingress-harvester"
-version = "1.1.0"
+version = "1.0.0"
 edition = "2021"
 
-[dependencies]
-imap = "2.4"
-native-tls = "0.2"
-dotenv = "0.15"
+[workspace]
 
-# PHYSICAL THROTTLE: Disable heavy debug symbols and optimizations
-[profile.dev]
-opt-level = 0
-debug = false
-split-debuginfo = "off"
+[dependencies]
+reqwest = { version = "0.11", default-features = false, features = ["rustls-tls", "json"] }
+tokio = { version = "1.32", features = ["full"] }
+base64 = "0.21"
+regex = "1.10"
+uuid = { version = "1.4", features = ["v4"] }
+chrono = "0.4"
+serde_json = "1.0"
+serde = { version = "1.0", features = ["derive"] }
