@@ -1,87 +1,126 @@
-use std::env;
+use reqwest::Client;
 use std::fs;
-use std::io::Write;
-use native_tls::TlsConnector;
+use base64::{Engine as _, engine::general_purpose::STANDARD};
+use regex::Regex;
 
-fn main() {
+const SPOOL_DIR: &str = "/opt/deployments/woodfine-fleet-deployment/cluster-totebox-personnel/service-email/personnel-maildir/new";
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("========================================================");
-    println!(" 📡 INGRESS HARVESTER: DESTRUCTIVE M365 AIR-BRIDGE");
+    println!(" 💥 EWS SOAP HARVESTER (ABSOLUTE PADDING EGRESS)");
     println!("========================================================");
 
-    dotenv::dotenv().ok();
-    let email_user = env::var("M365_USER").expect("[ERROR] M365_USER missing in .env");
-    let email_pass = env::var("M365_APP_PASS").expect("[ERROR] M365_APP_PASS missing in .env");
-    let totebox_root = env::var("TOTEBOX_ROOT").expect("[ERROR] TOTEBOX_ROOT missing in .env");
-
-    let ingress_dir = format!("{}/service-people/raw-ingress", totebox_root);
-    let _ = fs::create_dir_all(&ingress_dir);
-
-    println!("  -> Establishing TLS encrypted diode to outlook.office365.com...");
-    let tls = TlsConnector::builder().build().unwrap();
-    let client = imap::connect(("outlook.office365.com", 993), "outlook.office365.com", &tls).unwrap();
-
-    let mut imap_session = match client.login(&email_user, &email_pass) {
-        Ok(s) => s,
-        Err(e) => {
-            eprintln!("  -> [ERROR] M365 Authentication Failed. ({})", e.0);
-            std::process::exit(1);
-        }
-    };
-
-    println!("  -> Accessing restricted folder: totebox-ingress...");
-    if imap_session.select("totebox-ingress").is_err() {
-        if imap_session.select("INBOX/totebox-ingress").is_err() {
-            eprintln!("  -> [ERROR] Target folder not found. Halting execution.");
-            std::process::exit(1);
-        }
-    }
-
-    let messages = imap_session.search("ALL").unwrap_or_default();
-    if messages.is_empty() {
-        println!("  -> [SYSTEM] The ingress folder is mathematically empty.");
-        imap_session.logout().unwrap();
-        return;
-    }
-
-    let target_batch: Vec<u32> = messages.into_iter().take(10).collect();
-    println!("  -> [SYSTEM] Detected {} payloads. Extracting {}...", messages.len(), target_batch.len());
-
-    let mut deletion_count = 0;
-
-    for sequence_number in target_batch {
-        let seq_str = sequence_number.to_string();
-        let mut download_success = false;
+    let env_content = fs::read_to_string("/opt/deployments/woodfine-fleet-deployment/cluster-totebox-personnel/service-email/auth-credentials.env")
+        .expect("[FATAL] Missing auth-credentials.env");
         
-        // PHYSICAL MEMORY BOUNDARY: Scope the IMAP read lock
-        {
-            if let Ok(msg_stream) = imap_session.fetch(&seq_str, "RFC822") {
-                for message in msg_stream.iter() {
-                    if let Some(body) = message.body() {
-                        let out_path = format!("{}/M365_PAYLOAD_{}.eml", ingress_dir, sequence_number);
-                        if let Ok(mut file) = fs::File::create(&out_path) {
-                            if file.write_all(body).is_ok() {
-                                println!("     [SUCCESS] Downloaded: {}", out_path);
-                                download_success = true;
-                            }
-                        }
-                    }
+    let mut tenant = String::new();
+    let mut client_id = String::new();
+    let mut secret = String::new();
+    let mut user = String::new();
+
+    for line in env_content.lines() {
+        if line.starts_with("AZURE_TENANT_ID=") { tenant = line.replace("AZURE_TENANT_ID=", "").replace("\"", ""); }
+        if line.starts_with("AZURE_CLIENT_ID=") { client_id = line.replace("AZURE_CLIENT_ID=", "").replace("\"", ""); }
+        if line.starts_with("AZURE_CLIENT_SECRET=") { secret = line.replace("AZURE_CLIENT_SECRET=", "").replace("\"", ""); }
+        if line.starts_with("EXCHANGE_TARGET_USER=") { user = line.replace("EXCHANGE_TARGET_USER=", "").replace("\"", ""); }
+    }
+
+    let client = Client::new();
+    let token = get_token(&client, &tenant, &client_id, &secret).await?;
+    println!("[SYSTEM] EWS OAuth2 Token Negotiated.");
+
+    let folders = vec![
+        ("totebox-ingress", "AAMkAGNiMzVmMDMxLTY1OTEtNGQzNC05YzE2LTM2YWMyOWMwOTkyMgAuAAAAAABUZZ+cFXcyR6WM1RpB+73bAQDF6l4UzZZOR6tUM0g2iU/BAAmpzIZlAAA="),
+    ];
+
+    fs::create_dir_all(SPOOL_DIR)?;
+    let mut grand_total = 0;
+
+    for (folder_name, folder_id) in folders {
+        println!("\n[SYSTEM] Probing EWS Folder: {}", folder_name);
+        
+        let find_xml = format!(
+            r#"<?xml version="1.0" encoding="utf-8"?>
+            <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:t="http://schemas.microsoft.com/exchange/services/2006/types" xmlns:m="http://schemas.microsoft.com/exchange/services/2006/messages">
+            <soap:Header><t:RequestServerVersion Version="Exchange2013" /><t:ExchangeImpersonation><t:ConnectingSID><t:PrimarySmtpAddress>{}</t:PrimarySmtpAddress></t:ConnectingSID></t:ExchangeImpersonation></soap:Header>
+            <soap:Body><m:FindItem Traversal="Shallow"><m:ItemShape><t:BaseShape>IdOnly</t:BaseShape></m:ItemShape><m:ParentFolderIds><t:FolderId Id="{}"/></m:ParentFolderIds></m:FindItem></soap:Body>
+            </soap:Envelope>"#, user, folder_id
+        );
+
+        let res = client.post("https://outlook.office365.com/EWS/Exchange.asmx")
+            .header("Authorization", format!("Bearer {}", token))
+            .header("Content-Type", "text/xml; charset=utf-8")
+            .body(find_xml)
+            .send().await?.text().await?;
+
+        let re = Regex::new(r#"<t:ItemId Id="([^"]+)""#).unwrap();
+        let item_ids: Vec<String> = re.captures_iter(&res).map(|cap| cap[1].to_string()).collect();
+
+        if item_ids.is_empty() {
+            println!("  -> [STATUS] Folder is mathematically empty.");
+            if res.contains("ResponseClass=\"Error\"") {
+                println!("  -> [SOAP FAULT DETECTED]:");
+                let fault_re = Regex::new(r#"<m:MessageText>(.*?)</m:MessageText>"#).unwrap();
+                if let Some(caps) = fault_re.captures(&res) {
+                    println!("     {}", &caps[1]);
+                } else {
+                    println!("     {}", res);
                 }
             }
-        } // Read lock is mathematically released here
+            continue;
+        }
 
-        // Now we safely assert a write lock to flag for deletion
-        if download_success {
-            let _ = imap_session.store(&seq_str, "+FLAGS (\\Deleted)");
-            deletion_count += 1;
+        println!("  -> Extracting {} raw MIME payloads via EWS...", item_ids.len());
+
+        for (idx, item_id) in item_ids.iter().enumerate() {
+            let get_xml = format!(
+                r#"<?xml version="1.0" encoding="utf-8"?>
+                <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:t="http://schemas.microsoft.com/exchange/services/2006/types" xmlns:m="http://schemas.microsoft.com/exchange/services/2006/messages">
+                <soap:Header><t:RequestServerVersion Version="Exchange2013" /><t:ExchangeImpersonation><t:ConnectingSID><t:PrimarySmtpAddress>{}</t:PrimarySmtpAddress></t:ConnectingSID></t:ExchangeImpersonation></soap:Header>
+                <soap:Body><m:GetItem><m:ItemShape><t:BaseShape>IdOnly</t:BaseShape><t:IncludeMimeContent>true</t:IncludeMimeContent></m:ItemShape><m:ItemIds><t:ItemId Id="{}"/></m:ItemIds></m:GetItem></soap:Body>
+                </soap:Envelope>"#, user, item_id
+            );
+
+            let mime_res = client.post("https://outlook.office365.com/EWS/Exchange.asmx")
+                .header("Authorization", format!("Bearer {}", token))
+                .header("Content-Type", "text/xml; charset=utf-8")
+                .body(get_xml)
+                .send().await?.text().await?;
+
+            let mime_re = Regex::new(r"(?s)<t:MimeContent[^>]*>(.*?)</t:MimeContent>").unwrap();
+            if let Some(caps) = mime_re.captures(&mime_res) {
+                let base64_mime = &caps[1];
+                if let Ok(decoded_bytes) = STANDARD.decode(base64_mime) {
+                    let local_file = format!("{}/NOSAVE_{}_{}.eml", SPOOL_DIR, folder_name, idx + 1);
+                    fs::write(local_file, decoded_bytes)?;
+                    grand_total += 1;
+                }
+            }
+            
+            let del_xml = format!(
+                r#"<?xml version="1.0" encoding="utf-8"?>
+                <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:t="http://schemas.microsoft.com/exchange/services/2006/types" xmlns:m="http://schemas.microsoft.com/exchange/services/2006/messages">
+                <soap:Header><t:RequestServerVersion Version="Exchange2013" /><t:ExchangeImpersonation><t:ConnectingSID><t:PrimarySmtpAddress>{}</t:PrimarySmtpAddress></t:ConnectingSID></t:ExchangeImpersonation></soap:Header>
+                <soap:Body><m:DeleteItem DeleteType="HardDelete"><m:ItemIds><t:ItemId Id="{}"/></m:ItemIds></m:DeleteItem></soap:Body>
+                </soap:Envelope>"#, user, item_id
+            );
+            client.post("https://outlook.office365.com/EWS/Exchange.asmx")
+                .header("Authorization", format!("Bearer {}", token))
+                .header("Content-Type", "text/xml; charset=utf-8")
+                .body(del_xml).send().await?;
         }
     }
 
-    if deletion_count > 0 {
-        println!("  -> [SYSTEM] Executing IMAP Expunge. Permanently obliterating {} emails...", deletion_count);
-        let _ = imap_session.expunge();
-    }
+    println!("\n========================================================");
+    println!("[SUCCESS] EWS BURN COMPLETE. Total Assets Extracted: {}", grand_total);
+    Ok(())
+}
 
-    imap_session.logout().unwrap();
-    println!("--------------------------------------------------------");
-    println!("[SUCCESS] Destructive extraction cycle complete.");
+async fn get_token(client: &Client, tenant: &str, client_id: &str, secret: &str) -> Result<String, Box<dyn std::error::Error>> {
+    let url = format!("https://login.microsoftonline.com/{}/oauth2/v2.0/token", tenant);
+    let params = [("client_id", client_id), ("scope", "https://outlook.office365.com/.default"), ("client_secret", secret), ("grant_type", "client_credentials")];
+    let res = client.post(&url).form(&params).send().await?;
+    let json: serde_json::Value = res.json().await?;
+    Ok(json["access_token"].as_str().unwrap().to_string())
 }

@@ -1,25 +1,12 @@
-<div align="center">
+# Vendor SLM Engine (PointSav Digital Systems)
 
-# Quarantined Foreign Component | Componente Extranjero en Cuarentena
-### *Isolated third-party open-weights engine (Apache 2.0).*
+This repository holds the Single Source of Truth for all Small Language Model (SLM) configurations used within the Woodfine/PointSav ecosystem.
 
-</div>
+## Asset Ledger
+* **pointsav-nano (135M):** The core Semantic Router for edge-node data extraction. Built on Apache 2.0 SmolLM2.
 
-<br/>
+## Operational Deployment
+The physical weights are NOT stored in this repository. To instantiate the model on a Tier-2 or Tier-3 node, execute:
+`ollama create pointsav-nano -f Modelfile.pointsav-nano`
 
-> [!WARNING]
-> **SOVEREIGN FRAMEWORK DECLARATION**
-> This repository is a reference implementation of the Sovereign Data Protocol. It enforces absolute data isolation. It contains zero active proprietary network payloads.
-
-| Architecture Tier | Component Role | Governance Anchor |
-| :--- | :--- | :--- |
-| ⚪ Quarantined | Vendor Dependency | Sovereign Disclosure Standard |
-
-## 📖 Architectural Audit Placeholder
-This directory serves as a structural anchor for the "We Own It" tier of language models (e.g., Qwen 2.5, Mistral NeMo) and their execution binaries (e.g., Ollama, llama.cpp). 
-
-Because PointSav did not engineer the mathematical weights, this component is classified as a Vendor Dependency. It is strictly quarantined within a hypervised container with zero outbound network egress. It accepts inputs exclusively from `service-slm` via localized sockets.
-
----
-*© 2026 PointSav Digital Systems™.*
-*Public Architectural Blueprint. Governed by the Sovereign Data Protocol.*
+© 2026 PointSav Digital Systems
