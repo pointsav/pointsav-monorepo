@@ -1,27 +1,8 @@
 [workspace]
-resolver = "2"
-
 members = [
-    # System & Infrastructure (Tier-6 / Tier-4)
-    "system-security",
-    "system-audit",
-    "system-resolution",
-    "system-verification",
-    "os-infrastructure",
-    "os-network-admin",
-    
-    # Totebox Orchestration Libraries (Tier-5)
-    "os-totebox",
-    "service-content",
     "service-people",
-    "service-email",
-    
-    # Console Delivery Binaries
-    "os-console",
+    "service-content",
     "app-console-content",
-    "app-console-people",
-    "app-console-email"
+    "tool-acs-miner",
+    "system-mba-shim"
 ]
-
-[workspace.dependencies]
-# Shared dependencies managed here for version consistency across the 3-Track ecosystem
