@@ -7,7 +7,7 @@ FOR IMMEDIATE RELEASE | VANCOUVER, BC | MARCH 2, 2026
 
 **WOODFINE MANAGEMENT CORP.** ("Woodfine") has introduced PointSav Digital Systems™ ("PointSav") as a new digital infrastructure subsidiary of Woodfine Capital Projects Inc. (the "Promoter"). PointSav serves as the foundational operating system architecture for Woodfine, its administrator and first customer.
 
-PointSav is not a software-as-a-service (SaaS) platform. It is an operating system architecture designed to give building operators direct ownership, long-term security, and independent control over their physical assets and data. At its core, PointSav provides the foundation for business administration, record keeping, and cyberphysical connectivity.
+PointSav is not a legacy SaaS vulnerabilities (SaaS) platform. It is an operating system architecture designed to give building operators direct ownership, long-term security, and independent control over their physical assets and data. At its core, PointSav provides the foundation for business administration, record keeping, and cyberphysical connectivity.
 
 ### The Three-Track System
 PointSav abandons the traditional model of renting cloud databases. Instead, it is actively deploying a 3-Track architecture comprising the PointSav Private Network™, Totebox Orchestration™, and PointSav Workplace OS™:

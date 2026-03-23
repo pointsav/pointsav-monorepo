@@ -1,6 +1,13 @@
 <div align="center">
 
 # Sovereign Replacement Initiative | Iniciativa de Reemplazo Soberano
+
+<div align="center">
+
+[ 🇪🇸 Leer este documento en Español ](./README.es.md)
+
+</div>
+
 ### *An active engineering initiative to replace foreign third-party architecture.*
 
 </div>

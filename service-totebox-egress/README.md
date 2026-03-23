@@ -1,4 +1,11 @@
 # PointSav Digital Systems: Totebox Egress Engine
+
+<div align="center">
+
+[ 🇪🇸 Leer este documento en Español ](./README.es.md)
+
+</div>
+
 © 2026 PointSav Digital Systems
 
 ## The Infinite Egress Loop (Archive Sweeper)

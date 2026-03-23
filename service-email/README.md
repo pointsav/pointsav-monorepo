@@ -1,4 +1,11 @@
 # ⚙️ SERVICE-EMAIL: SOVEREIGN INGESTION GATEWAY
+
+<div align="center">
+
+[ 🇪🇸 Leer este documento en Español ](./README.es.md)
+
+</div>
+
 **Vendor:** PointSav Digital Systems™
 **Standard:** SYS-ADR-07 (Bifurcated Ingestion)
 **Tier:** 5 (Service Logic)

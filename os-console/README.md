@@ -1,4 +1,11 @@
 # os-console
+
+<div align="center">
+
+[ 🇪🇸 Leer este documento en Español ](./README.es.md)
+
+</div>
+
 ### *Operator Delivery Vehicle*
 
 **Status: Active Engineering** | **Taxonomy: Tier-3 (Delivery Layer)**
