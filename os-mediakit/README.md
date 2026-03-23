@@ -1,6 +1,13 @@
 <div align="center">
 
 # Autonomous Edge Substrate | Sustrato de Borde Autónomo
+
+<div align="center">
+
+[ 🇪🇸 Leer este documento en Español ](./README.es.md)
+
+</div>
+
 ### *The baseline secure network for public-facing data delivery and compliance reporting.*
 
 </div>

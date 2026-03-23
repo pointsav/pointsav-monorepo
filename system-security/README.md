@@ -1,6 +1,13 @@
 <div align="center">
 
 # Capability-Based Manager | Gestor Basado en Capacidades
+
+<div align="center">
+
+[ 🇪🇸 Leer este documento en Español ](./README.es.md)
+
+</div>
+
 ### *A mathematical software lock replacing traditional operating systems for secure hardware management.*
 
 </div>

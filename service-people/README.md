@@ -1,4 +1,11 @@
 # ⚙️ SERVICE-PEOPLE: SOVEREIGN PERSONNEL LEDGER
+
+<div align="center">
+
+[ 🇪🇸 Leer este documento en Español ](./README.es.md)
+
+</div>
+
 **Vendor:** PointSav Digital Systems™
 **Protocol:** DS-ADR-02 (Files over Databases)
 **Tier:** 1 (Core Engineering Monorepo)

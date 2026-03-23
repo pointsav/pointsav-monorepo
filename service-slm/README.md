@@ -1,4 +1,11 @@
 # ⚙️ SERVICE-SLM: LINGUISTIC AIR-LOCK
+
+<div align="center">
+
+[ 🇪🇸 Leer este documento en Español ](./README.es.md)
+
+</div>
+
 **Vendor:** PointSav Digital Systems™
 **Standard:** SYS-ADR-07 (Bifurcated Ingestion)
 **Tier:** 5 (Service Logic)

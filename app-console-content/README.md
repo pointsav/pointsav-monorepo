@@ -1,4 +1,11 @@
 # 🏗️ APP-CONSOLE-CONTENT (Verification Surveyor)
+
+<div align="center">
+
+[ 🇪🇸 Leer este documento en Español ](./README.es.md)
+
+</div>
+
 **Entity:** PointSav Digital Systems™ (The Vendor)
 **Taxonomy:** Tier-3 Delivery Layer
 

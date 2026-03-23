@@ -1,6 +1,13 @@
 <div align="center">
 
 # Secure Edge Relays | Relés de Borde Seguro
+
+<div align="center">
+
+[ 🇪🇸 Leer este documento en Español ](./README.es.md)
+
+</div>
+
 ### *The verified delivery vehicle for private network routing and bare-metal execution.*
 
 </div>

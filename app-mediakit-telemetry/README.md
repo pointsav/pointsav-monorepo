@@ -1,5 +1,12 @@
 # 📊 POINTSAV SOVEREIGN TELEMETRY SUITE
 
+<div align="center">
+
+[ 🇪🇸 Leer este documento en Español ](./README.es.md)
+
+</div>
+
+
 **Version:** 1.2.0 (Compiled Rust Core)
 **Standard:** Sovereign Data Protocol (DS-ADR-06)
 **Type:** Generic Self-Hosted Analytics Infrastructure
@@ -32,14 +39,49 @@ This software must be compiled natively for the target deployment architecture (
 
 ```bash
 # 1. Compile the binaries
+
+<div align="center">
+
+[ 🇪🇸 Leer este documento en Español ](./README.es.md)
+
+</div>
+
 cargo build --release
 
 # 2. Provision the database
+
+<div align="center">
+
+[ 🇪🇸 Leer este documento en Español ](./README.es.md)
+
+</div>
+
 # You must place a licensed GeoLite2-City.mmdb inside the assets/ directory.
 
+<div align="center">
+
+[ 🇪🇸 Leer este documento en Español ](./README.es.md)
+
+</div>
+
+
 # 3. Ignite the Daemon (Background Service)
+
+<div align="center">
+
+[ 🇪🇸 Leer este documento en Español ](./README.es.md)
+
+</div>
+
 PORT=8081 ./target/release/telemetry-daemon &
 
 # 4. Generate the Matrix (Cron Job)
+
+<div align="center">
+
+[ 🇪🇸 Leer este documento en Español ](./README.es.md)
+
+</div>
+
 FLEET_ID="YOUR_ORG" ./target/release/omni-matrix-engine
 ```

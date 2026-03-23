@@ -1,4 +1,11 @@
 # 💿 OS Network Admin (Node 3: Brain)
+
+<div align="center">
+
+[ 🇪🇸 Leer este documento en Español ](./README.es.md)
+
+</div>
+
 ### *Mesh Orchestration & Routing Authority*
 
 **Current Silicon Target:** iMac 12,1 (Mid-2011)

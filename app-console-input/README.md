@@ -1,4 +1,11 @@
 # app-console-input
+
+<div align="center">
+
+[ 🇪🇸 Leer este documento en Español ](./README.es.md)
+
+</div>
+
 ### Intercepts user data and processes it into deterministic file structures.
 
 **Status: Provisioning | Taxonomy: Tier-3 (Delivery Layer)**
