@@ -1,4 +1,11 @@
 # system-substrate-freebsd
+
+<div align="center">
+
+[ 🇪🇸 Leer este documento en Español ](./README.es.md)
+
+</div>
+
 ### *Sovereign Driver Domain (Host OS)*
 
 **Status: Operational (Showcase MVP)** | **Taxonomy: Tier-6-System**

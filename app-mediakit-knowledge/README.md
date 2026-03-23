@@ -1,4 +1,11 @@
 # app-mediakit-knowledge
+
+<div align="center">
+
+[ 🇪🇸 Leer este documento en Español ](./README.es.md)
+
+</div>
+
 ### *Zero-Execution Presentation Layer*
 
 **Status: Active Engineering** | **Taxonomy: Core Component**

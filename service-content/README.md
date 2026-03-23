@@ -1,4 +1,11 @@
 # ⚙️ SERVICE-CONTENT: KNOWLEDGE SYNTHESIS
+
+<div align="center">
+
+[ 🇪🇸 Leer este documento en Español ](./README.es.md)
+
+</div>
+
 **Vendor:** PointSav Digital Systems™
 **Standard:** SYS-ADR-05 (Stateless Presentation vs. Stateful Storage)
 **Tier:** 5 (Service Logic)

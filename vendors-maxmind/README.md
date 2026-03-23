@@ -1,5 +1,12 @@
 # 🌍 VENDOR DEPENDENCY | MAXMIND GEO-ROUTING
 
+<div align="center">
+
+[ 🇪🇸 Leer este documento en Español ](./README.es.md)
+
+</div>
+
+
 **Component:** Sovereign Offline Geographic Database
 **Provider:** MaxMind (GeoLite2)
 **License Compliance:** End-User must provision their own API Key.

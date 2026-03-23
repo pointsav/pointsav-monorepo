@@ -1,4 +1,11 @@
 # 🏗️ OS-PRIVATEGIT
+
+<div align="center">
+
+[ 🇪🇸 Leer este documento en Español ](./README.es.md)
+
+</div>
+
 **Entity:** PointSav Digital Systems™ (The Vendor)
 **Taxonomy:** Tier-1 Core Component
 **Status:** Architectural Scaffold (Pending Engineering Cycle)

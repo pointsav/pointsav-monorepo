@@ -1,5 +1,12 @@
 # Vendor SLM Engine (PointSav Digital Systems)
 
+<div align="center">
+
+[ 🇪🇸 Leer este documento en Español ](./README.es.md)
+
+</div>
+
+
 This repository holds the Single Source of Truth for all Small Language Model (SLM) configurations used within the Woodfine/PointSav ecosystem.
 
 ## Asset Ledger
