@@ -3,7 +3,7 @@
 # PointSav Monorepo
 ### *Engineering & Source Code for Independent Digital Infrastructure*
 
-[ **Technical Library** ](https://github.com/pointsav/content-wiki-documentation) | [ **Design System** ](https://github.com/pointsav/pointsav-design-system) | [ **Main Profile** ](https://github.com/pointsav)
+[ **Documentation Wiki** ](https://github.com/pointsav/content-wiki-documentation) | [ **Design System** ](https://github.com/pointsav/pointsav-design-system) | [ **Main Profile** ](https://github.com/pointsav)
 
 *Operational Deployment:* [ **Woodfine Management Corp.** ](https://github.com/woodfine)
 
