@@ -18,9 +18,9 @@
 > **Fase:** Iteración de Producción 2 | **Enfoque:** Tubería de Datos Soberana y Libros de Construcción Criptográficos | **Estado:** Despliegue Activo de Servicios Totebox.
 
 ### 🚀 El Sistema Operativo de Prioridad Digital
-PointSav proporciona la ingeniería fundamental para asegurar el capital institucional. Construimos entornos operativos descentralizados que evitan sistemáticamente las vulnerabilidades del Software como Servicio (SaaS) heredado y la infraestructura comercial de hiperescaladores.
+PointSav proporciona la ingeniería fundamental para asegurar la empresa moderna y democratizar la propiedad de los datos. Construimos entornos operativos Unikernel descentralizados que evitan las vulnerabilidades de las aplicaciones web heredadas y la infraestructura comercial de hiperescaladores.
 
-Al ejecutar un modelo de seguridad basado en capacidades a través del **micronúcleo seL4** verificado formalmente y **Rust** (seguro en memoria), garantizamos que los libros de contabilidad corporativos permanezcan matemáticamente sellados contra la extracción externa o amenazas cibernéticas sistémicas.
+Al erradicar por completo el sistema operativo Linux genérico y multiinquilino, nuestra arquitectura aísla las cargas de trabajo críticas —como los sistemas de archivos criptográficos y el enrutamiento de IA cognitiva— en Unikernels dedicados y seguros en memoria. Garantizamos que los libros de contabilidad operativos permanezcan matemáticamente sellados contra la extracción externa o amenazas cibernéticas sistémicas.
 
 > [!WARNING]
 > **DECLARACIÓN DE LÍMITE DE SEGURIDAD**
@@ -30,8 +30,8 @@ Al ejecutar un modelo de seguridad basado en capacidades a través del **micron�
 Enfoque: Ejecución en hardware (bare-metal), puentes de virtualización y bloqueos matemáticos.
 | Directorio de Componentes | Objetivo de Ingeniería | Estado |
 | :--- | :--- | :--- |
-| [`os-infrastructure`](./os-infrastructure) | Intel P8600 (GRUB Multiboot2 ISO) | 🟢 `Verificado` |
-| [`os-network-admin`](./os-network-admin) | Intel i5-2400S (Orquestación de Malla) | 🟡 `Ingeniería Activa` |
+| [`os-infrastructure`](./os-infrastructure) | Nodos de Entrega de Borde | 🟢 `Arquitectura Verificada` |
+| [`os-network-admin`](./os-network-admin) | Pasarelas de Comando y Enrutamiento | 🟡 `Ingeniería Activa` |
 | [`system-security`](./system-security) | Gestor Basado en Capacidades seL4 (Rust) | 🟢 `Verificado` |
 
 ### 🧠 Vía 2: Orquestación Totebox (Cajas de Arena de Servicios Activos)

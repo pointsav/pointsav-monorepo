@@ -18,9 +18,9 @@
 > **Phase:** Production Iteration 2 | **Focus:** Sovereign Data Pipeline & Cryptographic Build Ledgers | **State:** Active Totebox Service Deployment.
 
 ### 🚀 The Digital First Operating System
-PointSav provides the foundational engineering to secure institutional capital. We build decentralized operating environments that systematically bypass the vulnerabilities of legacy legacy SaaS vulnerabilities (SaaS) and commercial hyperscaler infrastructure. 
+PointSav provides the foundational engineering to secure the modern enterprise and democratize data ownership. We build decentralized Unikernel operating environments that bypass the vulnerabilities of legacy web applications and commercial hyperscaler infrastructure. 
 
-By executing a capability-based security model via the formally verified **seL4 microkernel** and memory-safe **Rust**, we guarantee that corporate ledgers remain mathematically sealed from external extraction or systemic cyber threats. 
+By eradicating the generic, multi-tenant Linux OS entirely, our architecture isolates critical workloads—such as cryptographic file systems and cognitive AI routing—into dedicated, memory-safe Unikernels. We guarantee that operational ledgers remain mathematically sealed from external extraction or systemic cyber threats.
 
 > [!WARNING]
 > **SECURITY BOUNDARY DECLARATION**
@@ -30,8 +30,8 @@ By executing a capability-based security model via the formally verified **seL4 
 Focus: Bare-metal execution, virtualization bridges, and mathematical locks.
 | Component Directory | Engineering Target | Status |
 | :--- | :--- | :--- |
-| [`os-infrastructure`](./os-infrastructure) | Intel P8600 (GRUB Multiboot2 ISO) | 🟢 `Verified` |
-| [`os-network-admin`](./os-network-admin) | Intel i5-2400S (Mesh Orchestration) | 🟡 `Active Engineering` |
+| [`os-infrastructure`](./os-infrastructure) | Edge Delivery Nodes | 🟢 `Verified Architecture` |
+| [`os-network-admin`](./os-network-admin) | Command & Routing Gateways | 🟡 `Active Engineering` |
 | [`system-security`](./system-security) | seL4 Capability-Based Manager (Rust) | 🟢 `Verified` |
 
 ### 🧠 Track 2: Totebox Orchestration (Active Service Sandboxes)
