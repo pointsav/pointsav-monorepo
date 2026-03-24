@@ -40,16 +40,18 @@ Focus: Data processing, identity isolation, and deterministic intelligence routi
 | :--- | :--- | :--- |
 | [`service-email`](./service-email) | Ingestion Gateway (MSFT Graph Harvester & MIME Splinter). Bypasses API scraping. | 🟢 `Verified` |
 | [`service-people`](./service-people) | Personnel Signal Distillation (Sovereign ACS Engine). | 🟢 `Verified` |
-| [`service-slm`](./service-slm) | Linguistic Air-Lock (Cognitive Forge - Qwen2-0.5B). Headless noise reduction. | 🟢 `Verified` |
-| [`service-content`](./service-content) | Knowledge Synthesis (Content Compiler & Verified Ledgers). | 🟢 `Verified` |
+| [`service-slm`](./service-slm) | Linguistic Air-Lock (Cognitive Forge - SmolLM2 135M). Headless noise reduction. | 🟢 `Verified` |
+| [`service-content`](./service-content) | Knowledge Synthesis (Content Compiler, Verified Ledgers & Self-Healing Wikis). | 🟢 `Verified` |
 | [`service-search`](./service-search) | Sovereign Search (Leapfrog 2050 Flat-File Inverted Index). Replaces Elasticsearch. | 🟡 `Active Engineering` |
 
 ### 🖥️ Track 3: Workplace (The Sovereign Desktop)
 Focus: Operator environments engineered to produce zero-dependency outputs.
-| Component Directory | Deterministic File Output | Status |
+| Component Directory | Deterministic File Output & Interfaces | Status |
 | :--- | :--- | :--- |
-| [`app-workplace-editor`](./app-workplace-editor) | Machine-readable standards: Markdown, YAML, CSV | 🟡 `Active Engineering` |
-| [`app-workplace-comm`](./app-workplace-comm) | Localized, asynchronous Maildir storage | 🟡 `Active Engineering` |
+| [`os-console`](./os-console) | Operator Delivery Vehicle (Local HTTP Server). | 🟡 `Active Engineering` |
+| [`app-console-*`](./) | Admin & Surveyor Interfaces (Content, Email, People, Input). | 🟡 `Active Engineering` |
+| [`app-workplace-editor`](./app-workplace-editor) | Machine-readable standards: Markdown, YAML, CSV. | 🟡 `Active Engineering` |
+| [`app-workplace-comm`](./app-workplace-comm) | Localized, asynchronous Maildir storage. | 🟡 `Active Engineering` |
 
 ---
 *© 2026 PointSav Digital Systems™*
