@@ -40,16 +40,18 @@ Enfoque: Procesamiento de datos, aislamiento de identidad y enrutamiento de inte
 | :--- | :--- | :--- |
 | [`service-email`](./service-email) | Pasarela de Ingestión (MSFT Graph Harvester y MIME Splinter). | 🟢 `Verificado` |
 | [`service-people`](./service-people) | Destilación de Señales de Personal (Motor ACS Soberano). | 🟢 `Verificado` |
-| [`service-slm`](./service-slm) | Esclusa de Aire Lingüística (Cognitive Forge - Qwen2-0.5B). | 🟢 `Verificado` |
-| [`service-content`](./service-content) | Síntesis de Conocimiento (Compilador de Contenido y Libros Verificados). | 🟢 `Verificado` |
+| [`service-slm`](./service-slm) | Esclusa de Aire Lingüística (Cognitive Forge - SmolLM2 135M). | 🟢 `Verificado` |
+| [`service-content`](./service-content) | Síntesis de Conocimiento (Compilador de Contenido, Libros Verificados y Wikis Autorreparables). | 🟢 `Verificado` |
 | [`service-search`](./service-search) | Búsqueda Soberana (Índice Invertido de Archivo Plano Leapfrog 2050). | 🟡 `Ingeniería Activa` |
 
 ### 🖥️ Vía 3: Workplace (El Escritorio Soberano)
 Enfoque: Entornos de operador diseñados para producir salidas sin dependencias.
-| Directorio de Componentes | Salida de Archivo Determinista | Estado |
+| Directorio de Componentes | Salida de Archivo Determinista e Interfaces | Estado |
 | :--- | :--- | :--- |
-| [`app-workplace-editor`](./app-workplace-editor) | Estándares legibles por máquina: Markdown, YAML, CSV | 🟡 `Ingeniería Activa` |
-| [`app-workplace-comm`](./app-workplace-comm) | Almacenamiento Maildir asíncrono y localizado | 🟡 `Ingeniería Activa` |
+| [`os-console`](./os-console) | Vehículo de Entrega del Operador (Servidor HTTP Local). | 🟡 `Ingeniería Activa` |
+| [`app-console-*`](./) | Interfaces de Administración e Inspector (Contenido, Correo, Personal, Entrada). | 🟡 `Ingeniería Activa` |
+| [`app-workplace-editor`](./app-workplace-editor) | Estándares legibles por máquina: Markdown, YAML, CSV. | 🟡 `Ingeniería Activa` |
+| [`app-workplace-comm`](./app-workplace-comm) | Almacenamiento Maildir asíncrono y localizado. | 🟡 `Ingeniería Activa` |
 
 ---
 *© 2026 PointSav Digital Systems™*
