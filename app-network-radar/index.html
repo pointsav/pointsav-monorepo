@@ -1,0 +1,26 @@
+<h2 style="margin-top:0; color: var(--wf-accent);">LIVE MESH RADAR</h2>
+<p>Asynchronous cyberphysical map. Fetching state from PPN Substrate...</p>
+<div id="radar-output"></div>
+
+<script>
+function initRadar() {
+    const output = document.getElementById('radar-output');
+    fetch('mesh-state.json')
+        .then(response => response.json())
+        .then(data => {
+            let html = `<p><strong>STATE TIMESTAMP:</strong> ${data.timestamp}</p>`;
+            data.nodes.forEach(node => {
+                html += `<div style="border: 1px solid var(--wf-border); padding: 16px; margin-bottom: 16px;">`;
+                html += `<h3 style="margin-top:0;">${node.id} <span style="color:green;">[${node.status}]</span></h3>`;
+                html += `<p><strong>IP:</strong> ${node.ip} | <strong>Role:</strong> ${node.role}</p>`;
+                html += `<p><strong>ACTIVE WORKLOADS (LXC):</strong></p><ul>`;
+                node.workloads.forEach(wl => html += `<li>${wl}</li>`);
+                html += `</ul></div>`;
+            });
+            output.innerHTML = html;
+        })
+        .catch(err => output.innerHTML = `<p style="color:red;">[RADAR FAILURE] Unable to sync with mesh state.</p>`);
+}
+// Auto-init if loaded directly, otherwise the chassis calls it
+if (document.readyState === 'complete') initRadar();
+</script>
