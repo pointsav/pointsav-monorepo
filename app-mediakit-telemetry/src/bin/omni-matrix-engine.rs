@@ -114,12 +114,12 @@ fn format_table(headers: &[&str], rows: &[Vec<String>]) -> String {
 
 fn main() {
     let fleet_id = env::var("FLEET_ID").unwrap_or_else(|_| "UNKNOWN_FLEET".to_string());
-    let ledger_path = "app-mediakit-telemetry/assets/ledger_telemetry.csv";
-    let db_path = "app-mediakit-telemetry/assets/GeoLite2-City.mmdb";
+    let ledger_path = "assets/ledger_telemetry.csv";
+    let db_path = "assets/GeoLite2-City.mmdb";
     
     let now = Utc::now();
     let today_str = now.format("%Y-%m-%d").to_string();
-    let outbox_path = format!("app-mediakit-telemetry/outbox/REPORT_{}_{}.md", fleet_id, today_str);
+    let outbox_path = format!("outbox/REPORT_{}_{}.md", fleet_id, today_str);
 
     let mut time_stats: HashMap<&str, TimeStats> = HashMap::new();
     let intervals = vec!["Yesterday", "7 Days", "30 Days", "60 Days", "90 Days", "YTD", "Inception"];

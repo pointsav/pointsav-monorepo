@@ -1,7 +1,7 @@
 <div align="center">
 
-# PointSav Monorepo
-### *Engineering & Source Code for Independent Digital Infrastructure*
+# PointSav Monorepo | Código Fuente Soberano
+### *Engineering & Source Code for Sovereign Digital Systems*
 
 [ **Documentation Wiki** ](https://github.com/pointsav/content-wiki-documentation) | [ **Design System** ](https://github.com/pointsav/pointsav-design-system) | [ **Main Profile** ](https://github.com/pointsav)
 
@@ -15,43 +15,35 @@
 
 > [!NOTE]
 > **OPERATIONAL POSTURE [MARCH 2026]**
-> **Phase:** Production Iteration 2 | **Focus:** Sovereign Data Pipeline & Cryptographic Build Ledgers | **State:** Active Totebox Service Deployment.
+> **Phase:** Production Iteration 2 | **Focus:** Sovereign Command Ledger & Micro-Frontend Architecture | **Estado:** Desarrollo activo de interfaces fiduciarias.
 
 ### 🚀 The Digital First Operating System
-PointSav provides the foundational engineering to secure the modern enterprise and democratize data ownership. We build decentralized Unikernel operating environments that bypass the vulnerabilities of legacy web applications and commercial hyperscaler infrastructure. 
-
-By eradicating the generic, multi-tenant Linux OS entirely, our architecture isolates critical workloads—such as cryptographic file systems and cognitive AI routing—into dedicated, memory-safe Unikernels. We guarantee that operational ledgers remain mathematically sealed from external extraction or systemic cyber threats.
+**[ EN ]** PointSav engineers Trustworthy Systems. We build decentralized, mathematically verified operating environments that guarantee structural sovereignty natively, completely bypassing legacy Software-as-a-Service (SaaS) databases.
 
 > [!WARNING]
 > **SECURITY BOUNDARY DECLARATION**
-> This repository contains the `no_std` Rust engineering source code and Capability-Based Manager definitions. **It contains zero active cryptographic keys, network payloads, or client financial data.**
+> This repository contains the `no_std` Rust engineering source code and Capability-Based Manager definitions. **It contains zero active cryptographic keys, network payloads, or client data.**
 
-### ⚙️ Track 1: Infrastructure (The Cryptographic Build Ledger)
-Focus: Bare-metal execution, virtualization bridges, and mathematical locks.
-| Component Directory | Engineering Target | Status |
+### ⚙️ Track 1: Infrastructure (Private Network)
+| Component Directory | Hardware Target | Status |
 | :--- | :--- | :--- |
-| [`os-infrastructure`](./os-infrastructure) | Edge Delivery Nodes | 🟢 `Verified Architecture` |
+| [`os-infrastructure`](./os-infrastructure) | Edge Node (Bare Metal) | 🟢 `Verified Architecture` |
 | [`os-network-admin`](./os-network-admin) | Command & Routing Gateways | 🟡 `Active Engineering` |
-| [`system-security`](./system-security) | seL4 Capability-Based Manager (Rust) | 🟢 `Verified` |
 
-### 🧠 Track 2: Totebox Orchestration (Active Service Sandboxes)
-Focus: Data processing, identity isolation, and deterministic intelligence routing.
-| Component Directory | Payload Engine & Risk Mitigation | Status |
+### 🧠 Track 2: Totebox Orchestration (Active Services)
+| Component Directory | Payload Engine | Status |
 | :--- | :--- | :--- |
-| [`service-email`](./service-email) | Ingestion Gateway (MSFT Graph Harvester & MIME Splinter). Bypasses API scraping. | 🟢 `Verified` |
-| [`service-people`](./service-people) | Personnel Signal Distillation (Sovereign ACS Engine). | 🟢 `Verified` |
-| [`service-slm`](./service-slm) | Linguistic Air-Lock (Cognitive Forge - SmolLM2 135M). Headless noise reduction. | 🟢 `Verified` |
-| [`service-content`](./service-content) | Knowledge Synthesis (Content Compiler, Verified Ledgers & Self-Healing Wikis). | 🟢 `Verified` |
-| [`service-search`](./service-search) | Sovereign Search (Leapfrog 2050 Flat-File Inverted Index). Replaces Elasticsearch. | 🟡 `Active Engineering` |
+| [`service-content`](./service-content) | Linguistic compiler & institutional synthesis. | 🟡 `Active Engineering` |
+| [`service-people`](./service-people) | Personnel signal distillation & scoring. | 🟡 `Active Engineering` |
+| [`service-email`](./service-email) | Sovereign Exchange bridge (Maildir local vault). | 🟡 `Active Engineering` |
 
-### 🖥️ Track 3: Workplace (The Sovereign Desktop)
-Focus: Operator environments engineered to produce zero-dependency outputs.
-| Component Directory | Deterministic File Output & Interfaces | Status |
+### 🖥️ Track 3: Workplace (Sovereign Desktop)
+Focus: The Unified Terminal utilizing Micro-Frontend UI Plugins.
+| Component Directory | Deterministic UI Output | Status |
 | :--- | :--- | :--- |
-| [`os-console`](./os-console) | Operator Delivery Vehicle (Local HTTP Server). | 🟡 `Active Engineering` |
-| [`app-console-*`](./) | Admin & Surveyor Interfaces (Content, Email, People, Input). | 🟡 `Active Engineering` |
+| [`os-console`](./os-console) | Unified Terminal Chassis & F-Key Router. | 🟡 `Active Engineering` |
+| [`app-console-*`](./) | Modular UI Plugins (People, Email, Content, Keys). | 🟡 `Active Engineering` |
 | [`app-workplace-editor`](./app-workplace-editor) | Machine-readable standards: Markdown, YAML, CSV. | 🟡 `Active Engineering` |
-| [`app-workplace-comm`](./app-workplace-comm) | Localized, asynchronous Maildir storage. | 🟡 `Active Engineering` |
 
 ---
 *© 2026 PointSav Digital Systems™*
