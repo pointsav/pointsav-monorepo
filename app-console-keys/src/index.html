@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Command Ledger | Woodfine Management Corp.</title>
+    <style>
+        :root { 
+            --wf-canvas: #F7F9FA; --wf-card: #FFFFFF; --wf-slate: #111827;
+            --wf-muted: #6B7280; --wf-accent: #164679; --wf-border: #111827; /* HEAVY GRID BORDER */
+            --wf-alert: #ED1B2F; --font-mono: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background-color: var(--wf-canvas); color: var(--wf-slate); font-family: var(--font-mono); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        
+        /* THE HEAVY GEOMETRY GRID */
+        header { border-bottom: 2px solid var(--wf-border); padding: 12px 24px; display: flex; justify-content: space-between; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; background: var(--wf-card); }
+        .hardware-ribbon { display: flex; gap: 8px; padding: 12px 24px; background: var(--wf-canvas); border-bottom: 2px solid var(--wf-border); overflow-x: auto; }
+        .workspace { display: flex; flex-grow: 1; overflow: hidden; }
+        .tui-matrix { flex: 1; padding: 24px; overflow-y: auto; border-right: 2px solid var(--wf-border); display: flex; flex-direction: column; gap: 8px; font-size: 13px; line-height: 1.5; background: var(--wf-card); }
+        .gui-viewport { flex: 1; padding: 32px; background: var(--wf-canvas); display: flex; align-items: flex-start; justify-content: center; overflow-y: auto; }
+        .omnibar { border-top: 2px solid var(--wf-border); padding: 16px 24px; display: flex; align-items: center; background: var(--wf-card); }
+        
+        .hdr-label { color: var(--wf-muted); margin-right: 8px; }
+        .hdr-val { color: var(--wf-accent); font-weight: bold; }
+        .hdr-alert { color: var(--wf-alert); font-weight: bold; }
+        
+        .f-key { background: var(--wf-card); border: 1px solid var(--wf-muted); border-radius: 2px; padding: 6px 12px; font-size: 11px; font-weight: bold; color: var(--wf-slate); cursor: pointer; user-select: none; transition: all 0.1s; box-shadow: 0 2px 0 var(--wf-muted); }
+        .f-key:active { box-shadow: 0 0 0 var(--wf-muted); transform: translateY(2px); background: #e9ecef; }
+        .f-key.active-key { background: var(--wf-accent); color: #fff; border-color: var(--wf-accent); box-shadow: 0 0 0 var(--wf-accent); transform: translateY(2px); }
+        
+        .log-sys { color: var(--wf-muted); }
+        .log-cmd { color: var(--wf-slate); font-weight: bold; }
+        .log-cartridge { color: var(--wf-accent); font-weight: bold; margin-top: 16px; margin-bottom: 8px; }
+        
+        .prompt-prefix { color: var(--wf-accent); margin-right: 12px; font-weight: bold; font-size: 15px; }
+        #cli-input { background: transparent; border: none; color: var(--wf-slate); font-family: inherit; font-size: 15px; flex-grow: 1; outline: none; }
+    </style>
+</head>
+<body>
+    <header>
+        <div><span class="hdr-label">NODE:</span><span class="hdr-val">console.woodfinegroup.com</span></div>
+        <div><span class="hdr-label">CARTRIDGE:</span><span class="hdr-alert" id="ui-cartridge">NONE [AWAITING F-KEY]</span></div>
+        <div><span class="hdr-label">AUTH:</span><span class="hdr-val">PENDING MBA</span></div>
+    </header>
+    <div class="hardware-ribbon" id="hardware-ribbon"></div>
+    <div class="workspace">
+        <div class="tui-matrix" id="tui-log">
+            <div class="log-sys">========================================================</div>
+            <div class="log-sys"> 🏛️ COMMAND LEDGER (CHASSIS) | WOODFINE MANAGEMENT CORP.</div>
+            <div class="log-sys">========================================================</div>
+            <div class="log-sys">[SYSTEM] Initializing Hardware Intercepts... OK.</div>
+            <div class="log-sys"><br>Click a Hardware Key above, or strike F1-F6/F12 on your keyboard.</div>
+        </div>
+        <div class="gui-viewport" id="gui-viewport">
+            <div style="color: var(--wf-muted); font-size: 14px; text-transform: uppercase; letter-spacing: 1px; margin-top: 40vh;">
+                [ GUI VIEWPORT INERT - AWAITING ASSET ]
+            </div>
+        </div>
+    </div>
+    <div class="omnibar">
+        <span class="prompt-prefix" id="ui-prompt">operator@chassis:~$</span>
+        <input type="text" id="cli-input" autocomplete="off" spellcheck="false" autofocus>
+    </div>
+    <script>
+        const tuiLog = document.getElementById('tui-log');
+        const input = document.getElementById('cli-input');
+        const uiCartridge = document.getElementById('ui-cartridge');
+        const uiPrompt = document.getElementById('ui-prompt');
+        const ribbon = document.getElementById('hardware-ribbon');
+
+        const F_KEY_MAP = {
+            'F1': { name: 'app-console-help', label: 'HELP' },
+            'F2': { name: 'app-console-people', label: 'PEOPLE' },
+            'F3': { name: 'app-console-email', label: 'EMAIL' },
+            'F4': { name: 'app-console-content', label: 'CONTENT' },
+            'F5': { name: 'app-console-minutebook', label: 'MINUTEBOOK' },
+            'F6': { name: 'app-console-bookkeeper', label: 'BOOKKEEPER' },
+            'F12': { name: 'app-console-input', label: 'INPUT MACHINE' }
+        };
+
+        Object.keys(F_KEY_MAP).forEach(key => {
+            const btn = document.createElement('div');
+            btn.className = 'f-key';
+            btn.id = `btn-${key}`;
+            btn.textContent = `[${key}] ${F_KEY_MAP[key].label}`;
+            btn.onclick = () => mountCartridge(key);
+            ribbon.appendChild(btn);
+        });
+
+        function printLog(text, className = 'log-sys') {
+            const div = document.createElement('div');
+            div.className = className;
+            div.innerHTML = text;
+            tuiLog.appendChild(div);
+            tuiLog.scrollTop = tuiLog.scrollHeight;
+        }
+
+        async function mountCartridge(key) {
+            const cartridge = F_KEY_MAP[key];
+            
+            document.querySelectorAll('.f-key').forEach(b => b.classList.remove('active-key'));
+            document.getElementById(`btn-${key}`).classList.add('active-key');
+            
+            uiCartridge.textContent = `[${key}] ${cartridge.label}`;
+            uiCartridge.style.color = 'var(--wf-accent)';
+            uiPrompt.textContent = `operator@${cartridge.name.split('-')[2]}:~$`;
+            
+            printLog(`========================================================`, 'log-sys');
+            printLog(` 🔄 PHYSICAL CARTRIDGE MOUNTED: ${key}`, 'log-cartridge');
+            printLog(`[TARGET] ${cartridge.name}`, 'log-sys');
+            printLog(`[SYSTEM] Initiating hardware API fetch...`, 'log-sys');
+            
+            const viewport = document.getElementById('gui-viewport');
+            try {
+                const response = await fetch(`/cartridges/${cartridge.name}.html`);
+                const html = await response.text();
+                
+                // THE ANTI-MIRROR LOCK
+                if (html.includes('<title>Command Ledger')) {
+                    viewport.innerHTML = `<div style="color: var(--wf-alert); font-weight: bold; margin-top: 40vh;">[ FAULT: NGINX ROUTING LOOP DETECTED. CARTRIDGE MISSING. ]</div>`;
+                    printLog(`[FAULT] NGINX served full chassis instead of fragment.`, 'log-sys');
+                } else if (response.ok) {
+                    viewport.innerHTML = html;
+                    printLog(`[SUCCESS] Cartridge payload injected successfully.`, 'log-sys');
+                } else {
+                    viewport.innerHTML = `<div style="color: var(--wf-muted); font-size: 14px; text-transform: uppercase; margin-top: 40vh;">[ FAULT: CARTRIDGE PAYLOAD HTTP ${response.status} ]</div>`;
+                    printLog(`[FAULT] HTTP ${response.status} - Cartridge missing.`, 'log-sys');
+                }
+            } catch (err) {
+                viewport.innerHTML = `<div style="color: var(--wf-alert); font-weight: bold; margin-top: 40vh;">[ FAULT: ISOLATION BOUNDARY BLOCK ]</div>`;
+                printLog(`[FAULT] Fetch blocked. Engine offline.`, 'log-sys');
+            }
+            input.focus();
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (F_KEY_MAP[e.key]) { e.preventDefault(); mountCartridge(e.key); }
+        });
+
+        input.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                const cmd = this.value.trim();
+                if (!cmd) return;
+                printLog(`> ${cmd}`, 'log-cmd');
+                this.value = '';
+                if (uiCartridge.textContent.includes('NONE')) {
+                    printLog(`[FAULT] Cannot execute. No physical cartridge mounted. Select an F-Key.`, 'log-sys');
+                    return;
+                }
+                printLog(`[ROUTING] Command intercepted. Cartridge offline pending Tier-3 fetch().`, 'log-sys');
+            }
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!e.target.classList.contains('f-key')) { input.focus(); }
+        });
+    </script>
+</body>
+</html>
