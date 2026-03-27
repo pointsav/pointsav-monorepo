@@ -37,30 +37,6 @@ This repository contains the <code>no_std</code> Rust engineering source code an
 ## 📐 The 3-Track Capability Matrix
 Our architecture strictly decouples computational logic from physical hardware, establishing a verifiable, cloud-agnostic operating environment.
 
-```mermaid
-graph TD;
-    subgraph Track 1: Infrastructure
-        A[PPN Mesh Routing] --> B[seL4 Microkernel]
-    end
-    subgraph Track 2: Totebox Orchestration
-        B -->|Cloud-Blind Vault| C[service-content]
-        B -->|Cloud-Blind Vault| D[service-people]
-        B -->|Cloud-Blind Vault| E[service-email]
-    end
-    subgraph Track 3: Sovereign Desktop
-        C -->|Deterministic File| F[Workplace Terminals]
-        D -->|Deterministic File| F
-        E -->|Deterministic File| F
-    end
-    
-    style A fill:#111827,stroke:#869FB9,stroke-width:1px,color:#fff
-    style B fill:#111827,stroke:#869FB9,stroke-width:1px,color:#fff
-    style C fill:#164679,stroke:#869FB9,stroke-width:1px,color:#fff
-    style D fill:#164679,stroke:#869FB9,stroke-width:1px,color:#fff
-    style E fill:#164679,stroke:#869FB9,stroke-width:1px,color:#fff
-    style F fill:#292929,stroke:#869FB9,stroke-width:1px,color:#fff
-```
-
 ### ⚙️ Track 1: Infrastructure (Private Network)
 | Component Directory | Hardware Target | Status |
 | :--- | :--- | :--- |
