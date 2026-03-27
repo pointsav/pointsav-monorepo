@@ -7,32 +7,29 @@
     <style>
         :root { 
             --wf-canvas: #F7F9FA; --wf-card: #FFFFFF; --wf-slate: #111827;
-            --wf-muted: #6B7280; --wf-accent: #164679; --wf-border: #111827; /* HEAVY GRID BORDER */
+            --wf-muted: #6B7280; --wf-accent: #164679; --wf-border: #111827; 
             --wf-alert: #ED1B2F; --font-mono: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { background-color: var(--wf-canvas); color: var(--wf-slate); font-family: var(--font-mono); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
-        
-        /* THE HEAVY GEOMETRY GRID */
-        header { border-bottom: 2px solid var(--wf-border); padding: 12px 24px; display: flex; justify-content: space-between; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; background: var(--wf-card); }
-        .hardware-ribbon { display: flex; gap: 8px; padding: 12px 24px; background: var(--wf-canvas); border-bottom: 2px solid var(--wf-border); overflow-x: auto; }
-        .workspace { display: flex; flex-grow: 1; overflow: hidden; }
+        html, body { height: 100%; overflow: hidden; }
+        body { background-color: var(--wf-canvas); color: var(--wf-slate); font-family: var(--font-mono); display: flex; flex-direction: column; }
+        header { flex-shrink: 0; border-bottom: 2px solid var(--wf-border); padding: 12px 24px; display: flex; justify-content: space-between; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; background: var(--wf-card); }
+        .hardware-ribbon { flex-shrink: 0; display: flex; gap: 8px; padding: 12px 24px; background: var(--wf-canvas); overflow-x: auto; }
+        .workspace { flex-grow: 1; display: flex; overflow: hidden; border-top: 2px solid var(--wf-border); }
         .tui-matrix { flex: 1; padding: 24px; overflow-y: auto; border-right: 2px solid var(--wf-border); display: flex; flex-direction: column; gap: 8px; font-size: 13px; line-height: 1.5; background: var(--wf-card); }
         .gui-viewport { flex: 1; padding: 32px; background: var(--wf-canvas); display: flex; align-items: flex-start; justify-content: center; overflow-y: auto; }
-        .omnibar { border-top: 2px solid var(--wf-border); padding: 16px 24px; display: flex; align-items: center; background: var(--wf-card); }
-        
+        .omnibar { flex-shrink: 0; border-top: 2px solid var(--wf-border); padding: 16px 24px; display: flex; align-items: center; background: var(--wf-card); }
         .hdr-label { color: var(--wf-muted); margin-right: 8px; }
         .hdr-val { color: var(--wf-accent); font-weight: bold; }
         .hdr-alert { color: var(--wf-alert); font-weight: bold; }
-        
-        .f-key { background: var(--wf-card); border: 1px solid var(--wf-muted); border-radius: 2px; padding: 6px 12px; font-size: 11px; font-weight: bold; color: var(--wf-slate); cursor: pointer; user-select: none; transition: all 0.1s; box-shadow: 0 2px 0 var(--wf-muted); }
+        .f-key { background: var(--wf-card); border: 1px solid var(--wf-muted); border-radius: 2px; padding: 6px 12px; font-size: 11px; font-weight: bold; color: var(--wf-slate); cursor: pointer; user-select: none; box-shadow: 0 2px 0 var(--wf-muted); }
         .f-key:active { box-shadow: 0 0 0 var(--wf-muted); transform: translateY(2px); background: #e9ecef; }
         .f-key.active-key { background: var(--wf-accent); color: #fff; border-color: var(--wf-accent); box-shadow: 0 0 0 var(--wf-accent); transform: translateY(2px); }
-        
         .log-sys { color: var(--wf-muted); }
         .log-cmd { color: var(--wf-slate); font-weight: bold; }
         .log-cartridge { color: var(--wf-accent); font-weight: bold; margin-top: 16px; margin-bottom: 8px; }
-        
+        .log-alert { color: var(--wf-alert); font-weight: bold; }
+        .json-block { color: var(--wf-accent); padding-left: 16px; white-space: pre-wrap; }
         .prompt-prefix { color: var(--wf-accent); margin-right: 12px; font-weight: bold; font-size: 15px; }
         #cli-input { background: transparent; border: none; color: var(--wf-slate); font-family: inherit; font-size: 15px; flex-grow: 1; outline: none; }
     </style>
@@ -50,10 +47,11 @@
             <div class="log-sys"> 🏛️ COMMAND LEDGER (CHASSIS) | WOODFINE MANAGEMENT CORP.</div>
             <div class="log-sys">========================================================</div>
             <div class="log-sys">[SYSTEM] Initializing Hardware Intercepts... OK.</div>
+            <div class="log-sys">[SYSTEM] Establishing Isolation Boundaries... OK.</div>
             <div class="log-sys"><br>Click a Hardware Key above, or strike F1-F6/F12 on your keyboard.</div>
         </div>
         <div class="gui-viewport" id="gui-viewport">
-            <div style="color: var(--wf-muted); font-size: 14px; text-transform: uppercase; letter-spacing: 1px; margin-top: 40vh;">
+            <div style="color: var(--wf-muted); font-size: 14px; text-transform: uppercase; letter-spacing: 1px; margin-top: 40vh; text-align: center;">
                 [ GUI VIEWPORT INERT - AWAITING ASSET ]
             </div>
         </div>
@@ -68,6 +66,9 @@
         const uiCartridge = document.getElementById('ui-cartridge');
         const uiPrompt = document.getElementById('ui-prompt');
         const ribbon = document.getElementById('hardware-ribbon');
+
+        let currentState = 'INTENT'; 
+        let pendingPayload = null;
 
         const F_KEY_MAP = {
             'F1': { name: 'app-console-help', label: 'HELP' },
@@ -98,13 +99,15 @@
 
         async function mountCartridge(key) {
             const cartridge = F_KEY_MAP[key];
-            
             document.querySelectorAll('.f-key').forEach(b => b.classList.remove('active-key'));
             document.getElementById(`btn-${key}`).classList.add('active-key');
             
             uiCartridge.textContent = `[${key}] ${cartridge.label}`;
             uiCartridge.style.color = 'var(--wf-accent)';
-            uiPrompt.textContent = `operator@${cartridge.name.split('-')[2]}:~$`;
+            
+            if (currentState === 'INTENT') {
+                uiPrompt.textContent = `operator@${cartridge.name.split('-')[2]}:~$`;
+            }
             
             printLog(`========================================================`, 'log-sys');
             printLog(` 🔄 PHYSICAL CARTRIDGE MOUNTED: ${key}`, 'log-cartridge');
@@ -112,19 +115,21 @@
             printLog(`[SYSTEM] Initiating hardware API fetch...`, 'log-sys');
             
             const viewport = document.getElementById('gui-viewport');
+            viewport.innerHTML = `<div style="color: var(--wf-muted); font-size: 14px; text-transform: uppercase; margin-top: 40vh;">[ FETCHING SECURE PAYLOAD... ]</div>`;
+
             try {
-                const response = await fetch(`/cartridges/${cartridge.name}.html`);
+                const url = `/cartridges/${cartridge.name}.html?v=` + Date.now();
+                const response = await fetch(url);
                 const html = await response.text();
                 
-                // THE ANTI-MIRROR LOCK
-                if (html.includes('<title>Command Ledger')) {
+                if (html.includes('id="tui-log"') || html.includes('<title>Command Ledger')) {
                     viewport.innerHTML = `<div style="color: var(--wf-alert); font-weight: bold; margin-top: 40vh;">[ FAULT: NGINX ROUTING LOOP DETECTED. CARTRIDGE MISSING. ]</div>`;
                     printLog(`[FAULT] NGINX served full chassis instead of fragment.`, 'log-sys');
                 } else if (response.ok) {
                     viewport.innerHTML = html;
                     printLog(`[SUCCESS] Cartridge payload injected successfully.`, 'log-sys');
                 } else {
-                    viewport.innerHTML = `<div style="color: var(--wf-muted); font-size: 14px; text-transform: uppercase; margin-top: 40vh;">[ FAULT: CARTRIDGE PAYLOAD HTTP ${response.status} ]</div>`;
+                    viewport.innerHTML = `<div style="color: var(--wf-alert); font-weight: bold; margin-top: 40vh;">[ FAULT: CARTRIDGE PAYLOAD HTTP ${response.status} ]</div>`;
                     printLog(`[FAULT] HTTP ${response.status} - Cartridge missing.`, 'log-sys');
                 }
             } catch (err) {
@@ -138,23 +143,90 @@
             if (F_KEY_MAP[e.key]) { e.preventDefault(); mountCartridge(e.key); }
         });
 
-        input.addEventListener('keydown', function(e) {
+        // THE FIDUCIARY GATEWAY (AI LOGIC)
+        input.addEventListener('keydown', async function(e) {
             if (e.key === 'Enter') {
-                const cmd = this.value.trim();
-                if (!cmd) return;
-                printLog(`> ${cmd}`, 'log-cmd');
+                const val = this.value.trim();
+                if (!val) return;
+                
+                printLog(`> ${val}`, 'log-cmd');
                 this.value = '';
-                if (uiCartridge.textContent.includes('NONE')) {
-                    printLog(`[FAULT] Cannot execute. No physical cartridge mounted. Select an F-Key.`, 'log-sys');
-                    return;
+
+                if (currentState === 'INTENT') {
+                    printLog('[SYSTEM] Transmitting intent to Semantic Router...', 'log-sys');
+                    input.disabled = true;
+
+                    try {
+                        const res = await fetch('/api/translate', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ raw_input: val })
+                        });
+                        
+                        const data = await res.json();
+                        
+                        if (data.status === 'PENDING_AUTHORIZATION') {
+                            pendingPayload = data.data;
+                            printLog('[PROPOSED MACHINE PAYLOAD]:', 'log-sys');
+                            printLog(JSON.stringify(pendingPayload, null, 2), 'json-block');
+                            printLog('[FIDUCIARY GATEWAY] Verify translation. Type EXECUTE to broadcast, or ABORT to cancel.', 'log-alert');
+                            
+                            currentState = 'AUTHORIZE';
+                            uiPrompt.textContent = '[AUTHORIZE]~#';
+                        } else {
+                            printLog(`[ERROR] ${data.message}`, 'log-alert');
+                        }
+                    } catch (err) {
+                        printLog(`[FATAL] Network rejection. Gateway unreachable.`, 'log-alert');
+                    }
+                    input.disabled = false;
+                    input.focus();
+
+                } else if (currentState === 'AUTHORIZE') {
+                    if (val.toUpperCase() === 'EXECUTE' && pendingPayload) {
+                        printLog('[SYSTEM] Authorization verified. Injecting to UDP Mesh...', 'log-sys');
+                        input.disabled = true;
+
+                        try {
+                            const res = await fetch('/api/authorize', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(pendingPayload)
+                            });
+                            
+                            const data = await res.json();
+                            if (data.status === 'SUCCESS') {
+                                printLog(`[SUCCESS] ${data.message} [TS: ${data.data.timestamp}]`, 'log-cmd');
+                            } else {
+                                printLog(`[FATAL] ${data.message}`, 'log-alert');
+                            }
+                        } catch (err) {
+                            printLog(`[FATAL] Mesh injection failed.`, 'log-alert');
+                        }
+                    } else {
+                        printLog('[SYSTEM] Execution aborted by operator.', 'log-sys');
+                    }
+                    
+                    // Reset State Machine
+                    currentState = 'INTENT';
+                    pendingPayload = null;
+                    
+                    // Recover the prompt name based on the active cartridge
+                    const activeBtn = document.querySelector('.active-key');
+                    if (activeBtn) {
+                        const keyId = activeBtn.id.replace('btn-', '');
+                        uiPrompt.textContent = `operator@${F_KEY_MAP[keyId].name.split('-')[2]}:~$`;
+                    } else {
+                        uiPrompt.textContent = 'operator@chassis:~$';
+                    }
+                    
+                    input.disabled = false;
+                    input.focus();
                 }
-                printLog(`[ROUTING] Command intercepted. Cartridge offline pending Tier-3 fetch().`, 'log-sys');
             }
         });
 
-        document.addEventListener('click', (e) => {
-            if (!e.target.classList.contains('f-key')) { input.focus(); }
-        });
+        document.addEventListener('click', (e) => { if (!e.target.classList.contains('f-key')) { input.focus(); } });
     </script>
 </body>
 </html>
