@@ -1,13 +1,12 @@
 [package]
-name = "system-network-interface"
+name = "system-slm"
 version = "1.0.0"
 edition = "2021"
 authors = ["PointSav Digital Systems"]
-description = "Control Plane bridging HTTP F8 Terminal traffic to the Zero-Broker UDP Mesh."
+description = "Semantic translation engine. Converts natural language to deterministic JSON."
 
 [dependencies]
 tokio = { version = "1", features = ["full"] }
-warp = "0.3"
+reqwest = { version = "0.11", features = ["json"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-chrono = "0.4"

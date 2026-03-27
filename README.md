@@ -1,73 +1,84 @@
 <div align="center">
 
-# PointSav Digital Systems
-### *Engineering & Source Code for Independent Digital Infrastructure | Ingeniería y Código Fuente para Infraestructura Digital Independiente*
-**Vancouver | New York | Berlin**
+<img src="https://raw.githubusercontent.com/pointsav/pointsav-media-assets/main/ASSET-SIGNET-MASTER.svg" width="80" alt="PointSav Signet">
 
-[ **Documentation Wiki** ](https://github.com/pointsav/content-wiki-documentation) | [ **Design System** ](https://github.com/pointsav/pointsav-design-system) | [ **Reference Deployment (Woodfine Fleet)** ](https://github.com/woodfine/woodfine-fleet-deployment)
+# PointSav Monorepo | Código Fuente Soberano
+### *Engineering & Source Code for Sovereign Digital Systems*
+
+[![Architecture](https://img.shields.io/badge/Architecture-seL4_Unikernel-111827?style=flat-square)](#)
+[![Language](https://img.shields.io/badge/Language-Rust_no__std-111827?style=flat-square)](#)
+[![Compliance](https://img.shields.io/badge/Compliance-SOC_3_%7C_DARP-111827?style=flat-square)](#)
+[![Telemetry](https://img.shields.io/badge/Telemetry-Zero_Cookie-111827?style=flat-square)](#)
+
+[ **Documentation Wiki** ](https://github.com/pointsav/content-wiki-documentation) | [ **Design System** ](https://github.com/pointsav/pointsav-design-system) | [ **Live Fleet Manifest** ](https://github.com/woodfine/woodfine-fleet-deployment)
 
 </div>
 
 ---
 
-## 1. EXECUTIVE OVERVIEW | VISIÓN GENERAL EJECUTIVA
+> [!NOTE]
+> **OPERATIONAL POSTURE [MARCH 2026]**
+> **Phase:** Production Iteration 1 | **Focus:** 3-Track Architecture & SOC 3 / DARP Compliance | **Estado:** Desarrollo activo de servicios Totebox.
 
-**[ EN ]** PointSav Digital Systems engineers Trustworthy Systems for the Digital First enterprise. We construct Capability-Based Managers in `no_std` Rust, establishing decentralized operating environments that guarantee absolute custodial control. This architecture mathematically bypasses legacy Software-as-a-Service (SaaS) vulnerabilities, ensuring that institutional data remains permanently secured on physical hardware owned by the deploying enterprise. Our commercial model physically separates generic open-source foundations (Apache 2.0) from proprietary infrastructure routing and archive aggregation.
+## 🚀 The Digital First Operating System
+**[ EN ]** PointSav engineers Trustworthy Systems. We build decentralized, mathematically verified operating environments that guarantee structural sovereignty natively, completely bypassing legacy Software-as-a-Service (SaaS) databases.
 
-**[ ES ]** PointSav Digital Systems diseña Sistemas Confiables para la empresa de prioridad digital. Construimos Gestores Basados en Capacidades en Rust `no_std`, estableciendo entornos operativos descentralizados que garantizan un control de custodia absoluto. Esta arquitectura evita matemáticamente las vulnerabilidades del Software como Servicio (SaaS) tradicional, asegurando que los datos institucionales permanezcan bajo el control de la empresa. Nuestro modelo comercial separa físicamente las bases de código abierto (Apache 2.0) del enrutamiento de infraestructura propietario.
+**[ ES ]** PointSav diseña Sistemas Confiables. Construimos entornos operativos descentralizados y verificados matemáticamente que garantizan la soberanía estructural de forma nativa.
 
----
-
-## 2. THE 3-LAYER STACK | LA PILA DE 3 NIVELES
-This architecture decouples computational logic from physical hardware, establishing a verifiable, cloud-agnostic operating environment.
-
-### 2.1 Infrastructure Layer (The Private Network)
-* **`os-infrastructure`**: A lightweight hypervisor enabling stateless node provisioning across physical or virtual boundaries.
-* **`os-network-admin`**: The routing authority orchestrating the Private Network and enforcing physical access policies.
-
-### 2.2 Platform Layer (Portable Unikernels)
-* **`os-totebox`**: The core, hardware-agnostic microkernel foundation for absolute data segregation.
-* **`os-integration`**: The gateway component executing the aggregation of multiple isolated Totebox Archives.
-* **`os-mediakit`**: A high-performance "Just-Enough-OS" (JeOS) optimized for compliance reporting and investor relations.
-* **`os-privategit`**: The independent version-control and local build server.
-
-### 2.3 Delivery Layer (User Terminals)
-* **`os-workplace`**: A bare-metal Desktop Environment installed on trusted hardware, executing the interface layer.
-* **`os-console`**: The graphical terminal and Command Ledger, hosting UI plugins (`app-console-*`) to interact with the underlying Totebox Archives.
+<details>
+<summary><b>🛡️ VIEW SECURITY BOUNDARY DECLARATION</b></summary>
+<br>
+This repository contains the <code>no_std</code> Rust engineering source code and Capability-Based Manager definitions. <b>It contains zero active cryptographic keys, network payloads, or client data.</b>
+<br><br>
+</details>
 
 ---
 
-## 3. ACTIVE SERVICES (TOTEBOX ORCHESTRATION)
-Specialized business logic engines compiled to execute within the isolated bounds of a Totebox Archive.
+## 📐 The 3-Track Capability Matrix
+Our architecture strictly decouples computational logic from physical hardware, establishing a verifiable, cloud-agnostic operating environment.
 
-* **`service-content`**: The deterministic Linguistic Compiler. Synthesizes institutional knowledge, applies continuous disclosure protocols, and generates structured reporting.
-* **`service-people`**: The Personnel Ledger. Distills raw digital signals into a deterministic identity matrix, bypassing standard database schemas.
-* **`service-email`**: The Ingestion Gateway. Penetrates legacy infrastructure to securely extract and archive corporate communications using the local Maildir format.
-* **`service-slm`**: The Localized Small Language Model. A dedicated semantic parser isolating the microkernel from external commercial intelligence models.
+```mermaid
+graph TD;
+    subgraph Track 1: Infrastructure
+        A[PPN Mesh Routing] --> B[seL4 Microkernel]
+    end
+    subgraph Track 2: Totebox Orchestration
+        B -->|Cloud-Blind Vault| C[service-content]
+        B -->|Cloud-Blind Vault| D[service-people]
+        B -->|Cloud-Blind Vault| E[service-email]
+    end
+    subgraph Track 3: Sovereign Desktop
+        C -->|Deterministic File| F[Workplace Terminals]
+        D -->|Deterministic File| F
+        E -->|Deterministic File| F
+    end
+    
+    style A fill:#111827,stroke:#869FB9,stroke-width:1px,color:#fff
+    style B fill:#111827,stroke:#869FB9,stroke-width:1px,color:#fff
+    style C fill:#164679,stroke:#869FB9,stroke-width:1px,color:#fff
+    style D fill:#164679,stroke:#869FB9,stroke-width:1px,color:#fff
+    style E fill:#164679,stroke:#869FB9,stroke-width:1px,color:#fff
+    style F fill:#292929,stroke:#869FB9,stroke-width:1px,color:#fff
+```
 
----
-
-## 4. ENGINEERING TO DATE (THE MONOREPO CORE)
-The active foundation of the Trustworthy System, defining the mathematical limits of the physical hardware.
-
-* **`system-substrate`**: The operational microkernel (seL4) and physical hardware bridges (e.g., Broadcom, FreeBSD).
-* **`system-core` & `system-foundation`**: Proprietary Rust `no_std` libraries managing hardware resource allocation and execution parameters.
-* **`system-security`**: The Capability Monitor enforcing strict cryptographic pairing and authorization across the network.
-* **`system-interface`**: The pure software rendering engine and UI layout rasterizer.
-
----
-
-## 5. VENDOR QUARANTINES & NATIVE REPLACEMENTS
-PointSav systematically tracks and isolates legacy dependencies (Foreign Technology). Each Quarantined Component represents technical debt slated for replacement by an active, native Rust Moonshot initiative.
-
-| Quarantined Component (Legacy) | Functional Role | Native Replacement (Moonshot) |
+### ⚙️ Track 1: Infrastructure (Private Network)
+| Component Directory | Hardware Target | Status |
 | :--- | :--- | :--- |
-| `vendor-sel4-kernel` | C-Language Microkernel | **`moonshot-kernel`** (Project Vector: `no_std` Rust) |
-| `vendor-virtio` | Virtualization Bridge | **`moonshot-hypervisor`** (Rust VMM) |
-| `vendor-gpu-drivers` | UEFI Firmware | **`moonshot-gpu`** (Project X-Ray: Native Drivers) |
-| `vendor-linux-systemd` | Process Supervision | **`moonshot-toolkit`** (Rust-Only Toolchain) |
-| `vendor-azure-auth` | Commercial Identity API | Quarantined outside core microkernel. |
-| `vendor-microsoft-graph` | External Mail API | Quarantined to `service-email` bridge. |
+| [`os-infrastructure`](./os-infrastructure) | Intel P8600 (Edge Node) | 🟢 `Verified (Multiboot2)` |
+| [`os-network-admin`](./os-network-admin) | Intel i5-2400S (Command) | 🟡 `Active Engineering` |
+
+### 🧠 Track 2: Totebox Orchestration (Active Services)
+| Component Directory | Payload Engine | Status |
+| :--- | :--- | :--- |
+| [`service-content`](./service-content) | Linguistic compiler & institutional synthesis. | 🟡 `Active Engineering` |
+| [`service-people`](./service-people) | Personnel signal distillation & scoring. | 🟡 `Active Engineering` |
+| [`service-email`](./service-email) | Sovereign Exchange bridge (Maildir local vault). | 🟡 `Active Engineering` |
+
+### 🖥️ Track 3: Workplace (Sovereign Desktop)
+| Component Directory | Deterministic File Output | Status |
+| :--- | :--- | :--- |
+| [`app-workplace-editor`](./app-workplace-editor) | Markdown, YAML, CSV | 🟡 `Active Engineering` |
+| [`app-workplace-comm`](./app-workplace-comm) | Maildir local storage | 🟡 `Active Engineering` |
 
 ---
-*© 2026 PointSav Digital Systems. Public Architectural Blueprint.*
+*© 2026 PointSav Digital Systems™*
