@@ -28,7 +28,7 @@
 <details>
 <summary><b>🛡️ VIEW SECURITY BOUNDARY DECLARATION</b></summary>
 <br>
-This repository contains the <code>no_std</code> Rust engineering source code and Capability-Based Manager definitions. <b>It contains zero active cryptographic keys, network payloads, or client data.</b>
+This repository contains the no_std Rust engineering source code and Capability-Based Manager definitions. <b>It contains zero active cryptographic keys, network payloads, or client data.</b>
 <br><br>
 </details>
 
@@ -40,21 +40,21 @@ Our architecture strictly decouples computational logic from physical hardware, 
 ### ⚙️ Track 1: Infrastructure (Private Network)
 | Component Directory | Hardware Target | Status |
 | :--- | :--- | :--- |
-| [`os-infrastructure`](./os-infrastructure) | Intel P8600 (Edge Node) | 🟢 `Verified (Multiboot2)` |
-| [`os-network-admin`](./os-network-admin) | Intel i5-2400S (Command) | 🟡 `Active Engineering` |
+| `os-infrastructure` | Intel P8600 (Edge Node) | 🟢 Verified (Multiboot2) |
+| `os-network-admin` | Intel i5-2400S (Command) | 🟡 Active Engineering |
 
 ### 🧠 Track 2: Totebox Orchestration (Active Services)
 | Component Directory | Payload Engine | Status |
 | :--- | :--- | :--- |
-| [`service-content`](./service-content) | Linguistic compiler & institutional synthesis. | 🟡 `Active Engineering` |
-| [`service-people`](./service-people) | Personnel signal distillation & scoring. | 🟡 `Active Engineering` |
-| [`service-email`](./service-email) | Sovereign Exchange bridge (Maildir local vault). | 🟡 `Active Engineering` |
+| `service-content` | Linguistic compiler & institutional synthesis. | 🟡 Active Engineering |
+| `service-people` | Personnel signal distillation & scoring. | 🟡 Active Engineering |
+| `service-email` | Sovereign Exchange bridge (Maildir local vault). | 🟡 Active Engineering |
 
 ### 🖥️ Track 3: Workplace (Sovereign Desktop)
 | Component Directory | Deterministic File Output | Status |
 | :--- | :--- | :--- |
-| [`app-workplace-editor`](./app-workplace-editor) | Markdown, YAML, CSV | 🟡 `Active Engineering` |
-| [`app-workplace-comm`](./app-workplace-comm) | Maildir local storage | 🟡 `Active Engineering` |
+| `app-workplace-editor` | Markdown, YAML, CSV | 🟡 Active Engineering |
+| `app-workplace-comm` | Maildir local storage | 🟡 Active Engineering |
 
 ---
 *© 2026 PointSav Digital Systems™*
