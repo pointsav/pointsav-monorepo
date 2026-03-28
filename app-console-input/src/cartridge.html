@@ -1,13 +1,102 @@
-<div style="width: 100%; height: 100%; display: flex; flex-direction: column; gap: 20px; color: var(--wf-slate); font-family: var(--font-sans, Arial, sans-serif);">
-    <h2 style="border-bottom: 2px solid var(--wf-slate); padding-bottom: 8px;">SECURE INGESTION GATEWAY</h2>
-    <div style="flex: 1; min-height: 200px; border: 2px dashed var(--wf-muted); display: flex; align-items: center; justify-content: center; background: #fff; cursor: crosshair;">
-        <div style="text-align: center;">
-            <div style="font-size: 32px; margin-bottom: 12px; opacity: 0.8;">📥</div>
-            <div style="font-weight: bold; color: var(--wf-accent); font-size: 16px; letter-spacing: 1px; text-transform: uppercase;">DROP ASSETS HERE TO IGNITE PIPELINE</div>
-            <div style="font-size: 12px; color: var(--wf-muted); margin-top: 12px; font-family: var(--font-mono);">
-                Supported Payloads: .CSV, .PDF, .DOCX<br><br>
-                <span style="color: var(--wf-alert);">[WARNING] Execution permissions will be stripped immediately upon ingest.</span>
+<div style="width: 100%; height: 100%; display: flex; flex-direction: column; gap: 20px; color: var(--wf-slate); text-transform: none; letter-spacing: normal;">
+    
+    <div style="flex-shrink: 0; border-bottom: 2px solid var(--wf-slate); padding-bottom: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: flex-end;">
+        <h2 style="margin: 0; font-size: 18px; text-transform: uppercase; letter-spacing: 1px;">THE COMMIT GATEWAY</h2>
+        <div style="font-family: var(--font-mono); font-size: 11px; color: var(--wf-muted); font-weight: bold;">
+            AIRGAP STATUS: <span style="color: #54924E;" id="f12-status">SECURE</span>
+        </div>
+    </div>
+
+    <div id="f12-dropzone" style="flex: 1; border: 2px dashed var(--wf-muted); display: flex; align-items: center; justify-content: center; background: #fff; cursor: crosshair; transition: all 0.2s;">
+        <div style="text-align: center; pointer-events: none;">
+            <div style="font-size: 32px; margin-bottom: 12px; opacity: 0.8;" id="f12-icon">📥</div>
+            <div id="f12-title" style="font-weight: bold; color: var(--wf-accent); font-size: 16px; letter-spacing: 1px; text-transform: uppercase;">DROP VERIFIED ASSETS TO COMMIT</div>
+            <div id="f12-subtitle" style="font-size: 12px; color: var(--wf-muted); margin-top: 16px; font-family: var(--font-mono); line-height: 1.6;">
+                <strong>Accepted Formats:</strong><br>
+                <code>.md</code> (Knowledge Synthesis -> Overwrites LTS Wiki)<br>
+                <code>.json</code> (Personnel CRM -> Overwrites Identity Ledger)<br>
+                <code>.csv</code> / <code>.pdf</code> / <code>.eml</code> (Raw Intake -> Routes to Spool)<br><br>
+                <span style="color: var(--wf-alert); font-weight: bold;">[WARNING] Dropping files here constitutes absolute cryptographic verification.</span>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+    (function() {
+        const dropzone = document.getElementById('f12-dropzone');
+        const title = document.getElementById('f12-title');
+        const icon = document.getElementById('f12-icon');
+        const status = document.getElementById('f12-status');
+
+        dropzone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropzone.style.borderColor = 'var(--wf-accent)';
+            dropzone.style.backgroundColor = '#f0f4f8';
+            title.textContent = 'INITIATE COMMIT SEQUENCE';
+        });
+
+        dropzone.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            dropzone.style.borderColor = 'var(--wf-muted)';
+            dropzone.style.backgroundColor = '#fff';
+            title.textContent = 'DROP VERIFIED ASSETS TO COMMIT';
+        });
+
+        dropzone.addEventListener('drop', async (e) => {
+            e.preventDefault();
+            dropzone.style.borderColor = 'var(--wf-muted)';
+            dropzone.style.backgroundColor = '#fff';
+            
+            if (e.dataTransfer.files.length === 0) return;
+            
+            const file = e.dataTransfer.files[0];
+            title.textContent = `TRANSMITTING: ${file.name}...`;
+            icon.textContent = '📡';
+            status.textContent = 'TRANSMITTING';
+            status.style.color = 'var(--wf-accent)';
+
+            try {
+                const response = await fetch('/api/upload', {
+                    method: 'POST',
+                    headers: { 'x-file-name': file.name },
+                    body: file
+                });
+
+                const result = await response.json();
+                
+                if (result.status === 'SUCCESS') {
+                    title.textContent = `[SUCCESS] ${file.name} VAULTED.`;
+                    title.style.color = '#54924E';
+                    icon.textContent = '🔒';
+                    status.textContent = 'ASSET SECURED';
+                    
+                    // Log to the Chassis TUI if it exists
+                    if (typeof printLog === 'function') {
+                        printLog(`[INGESTION] Base Asset ${file.name} securely transmitted to WORM spool.`, 'log-cmd');
+                    }
+                    
+                    setTimeout(() => {
+                        title.textContent = 'DROP VERIFIED ASSETS TO COMMIT';
+                        title.style.color = 'var(--wf-accent)';
+                        icon.textContent = '📥';
+                        status.textContent = 'SECURE';
+                        status.style.color = '#54924E';
+                    }, 3000);
+                } else {
+                    throw new Error(result.message);
+                }
+            } catch (error) {
+                title.textContent = `[FAULT] KERNEL REJECTION`;
+                title.style.color = 'var(--wf-alert)';
+                icon.textContent = '🛑';
+                status.textContent = 'NETWORK FAULT';
+                status.style.color = 'var(--wf-alert)';
+                
+                if (typeof printLog === 'function') {
+                    printLog(`[FATAL] Ingestion failed: ${error.message}`, 'log-alert');
+                }
+            }
+        });
+    })();
+</script>
