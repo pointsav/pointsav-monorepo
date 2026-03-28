@@ -1,0 +1,257 @@
+Received: from SA1PR16MB6502.namprd16.prod.outlook.com (2603:10b6:806:3e5::14)
+ by DM6PR16MB2569.namprd16.prod.outlook.com with HTTPS; Fri, 27 Mar 2026
+ 22:25:08 +0000
+Received: from BYAPR07CA0058.namprd07.prod.outlook.com (2603:10b6:a03:60::35)
+ by SA1PR16MB6502.namprd16.prod.outlook.com (2603:10b6:806:3e5::14) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9745.20; Fri, 27 Mar
+ 2026 22:25:07 +0000
+Received: from SJ5PEPF000001D1.namprd05.prod.outlook.com
+ (2603:10b6:a03:60:cafe::a7) by BYAPR07CA0058.outlook.office365.com
+ (2603:10b6:a03:60::35) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.20.9745.22 via Frontend Transport; Fri,
+ 27 Mar 2026 22:25:06 +0000
+Authentication-Results: spf=pass (sender IP is 2a02:16a8:dc51::56)
+ smtp.mailfrom=lists.postgresql.org; dkim=pass (signature was verified)
+ header.d=yesql.se;dmarc=bestguesspass action=none
+ header.from=yesql.se;compauth=pass reason=109
+Received-SPF: Pass (protection.outlook.com: domain of lists.postgresql.org
+ designates 2a02:16a8:dc51::56 as permitted sender)
+ receiver=protection.outlook.com; client-ip=2a02:16a8:dc51::56;
+ helo=malur.postgresql.org; pr=C
+Received: from malur.postgresql.org (2a02:16a8:dc51::56) by
+ SJ5PEPF000001D1.mail.protection.outlook.com (2603:10b6:a0f:fc02::135) with
+ Microsoft SMTP Server (version=TLS1_3, cipher=TLS_AES_256_GCM_SHA384) id
+ 15.20.9745.21 via Frontend Transport; Fri, 27 Mar 2026 22:25:05 +0000
+Received: from localhost ([127.0.0.1] helo=malur.postgresql.org)
+	by malur.postgresql.org with esmtp (Exim 4.96)
+	(envelope-from <pgsql-hackers-owner+M91260-745148@lists.postgresql.org>)
+	id 1w6Fbz-00CXcH-2c
+	for info@woodfine.co;
+	Fri, 27 Mar 2026 22:25:04 +0000
+Received: from makus.postgresql.org ([2001:4800:3e1:1::229])
+	by malur.postgresql.org with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+	(Exim 4.96)
+	(envelope-from <daniel@yesql.se>)
+	id 1w6Fbs-00CVuB-0H
+	for pgsql-hackers@lists.postgresql.org;
+	Fri, 27 Mar 2026 22:24:56 +0000
+Received: from smtp.outgoing.loopia.se ([93.188.3.37])
+	by makus.postgresql.org with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+	(Exim 4.98.2)
+	(envelope-from <daniel@yesql.se>)
+	id 1w6Fbq-00000001Ot2-0eQt
+	for pgsql-hackers@lists.postgresql.org;
+	Fri, 27 Mar 2026 22:24:55 +0000
+Received: from s807.loopia.se (localhost [127.0.0.1])
+	by s807.loopia.se (Postfix) with ESMTP id B5D4D58488B
+	for <pgsql-hackers@lists.postgresql.org>; Fri, 27 Mar 2026 23:24:51 +0100 (CET)
+Received: from s980.loopia.se (unknown [172.22.191.6])
+	by s807.loopia.se (Postfix) with ESMTP id A2255582670;
+	Fri, 27 Mar 2026 23:24:51 +0100 (CET)
+Received: from localhost (unknown [172.22.191.6])
+	by s980.loopia.se (Postfix) with ESMTP id 9F7652201639;
+	Fri, 27 Mar 2026 23:24:51 +0100 (CET)
+X-Virus-Scanned: amavis at amavis.loopia.se
+X-Spam-Flag: NO
+X-Spam-Score: -1.2
+X-Spam-Level:
+X-Spam-Status: No, score=-1.2 tagged_above=-999 required=6.2
+ tests=[ALL_TRUSTED=-1, DKIM_SIGNED=0.1, DKIM_VALID=-0.1, DKIM_VALID_AU=-0.1,
+ DKIM_VALID_EF=-0.1] autolearn=disabled
+Authentication-Results-Original: s473.loopia.se (amavis); dkim=pass (2048-bit
+ key) header.d=yesql.se
+Received: from s899.loopia.se ([172.22.191.5])
+ by localhost (s473.loopia.se [172.22.190.13]) (amavis, port 10024) with LMTP
+ id iccvCEZfleRA; Fri, 27 Mar 2026 23:24:51 +0100 (CET)
+X-Loopia-Auth: user
+X-Loopia-User: daniel@yesql.se
+X-Loopia-Originating-IP: 89.255.232.236
+Received: from smtpclient.apple (customer-89-255-232-236.stosn.net [89.255.232.236])
+	(Authenticated sender: daniel@yesql.se)
+	by s899.loopia.se (Postfix) with ESMTPSA id CC3AC2C8BA86;
+	Fri, 27 Mar 2026 23:24:50 +0100 (CET)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yesql.se;
+	s=loopiadkim1707475645; t=1774650290;
+	bh=W0i4WTh7UF//L/svXhYzHz40OFF0ws9L/9MsW080VuA=;
+	h=Subject:From:In-Reply-To:Date:Cc:References:To;
+	b=Bosdo4DilQ4TWtSCTayYTy6RCGnvRv4NlNu0SCOQcEAZJkeAoO3K7MERIMsfFTq9a
+	 LnRB0Hdh0eugA9zxgF8bWGb/v5l3/b/OlSmRPyRHQM17UQVslLnUflU8SjSibhjAc8
+	 IvvSwK1Tz8SQCbSZihG+hXPh9kqnaT65h1+2t2P0zwNUeWGoPjke/wIjFvQg2rSBMX
+	 xzdJWUTc9QC+ZGL64lc2/lpDH1lOr56A7A5rnVRgM5i9v5yhwaWSOJIW/SsRDwMYRm
+	 ra/Bk1dxbJyqUnzSTYgR8KGSSXYRFFxCsiSWrPn1Z8/Dq48liZ9ya5ZyfKdvppcLI+
+	 ADNu10Nt3mcjA==
+Content-Type: text/plain; charset="utf-8"
+Subject: Re: unclear OAuth error message
+From: Daniel Gustafsson <daniel@yesql.se>
+In-Reply-To: <CAOYmi+mxcvtJ9QJhxd4SbYHk=+L9r3VrK0xJ1DsM+H3pFFUtGg@mail.gmail.com>
+Date: Fri, 27 Mar 2026 23:24:40 +0100
+Cc: Zsolt Parragi <zsolt.parragi@percona.com>,
+ =?utf-8?Q?=C3=81lvaro_Herrera?= <alvherre@kurilemu.de>,
+ Pg Hackers <pgsql-hackers@lists.postgresql.org>
+Content-Transfer-Encoding: quoted-printable
+Message-ID: <E187E05E-33C2-46E1-A324-160374CE1914@yesql.se>
+References: <202601241015.y5uvxd7oxnfs@alvherre.pgsql>
+ <CAOYmi+kLmjJmtmkKs1mWcmNFsgQWsY8ajRhctsrmeVy-y6OKFw@mail.gmail.com>
+ <CAOYmi+naxE5os6dSPpVp-=ip=xv_dfmtypOOjzEfreA2KgVPTA@mail.gmail.com>
+ <CAOYmi+kCD3GmTZMQKC=zXZb10SpVX3FpztUZaqMwZ5BJr-G=tg@mail.gmail.com>
+ <CAN4CZFOXdgVT-HQQvjQVushcQtiBovcrLz4ohLtkCKXBWgN_VA@mail.gmail.com>
+ <CAOYmi+mxcvtJ9QJhxd4SbYHk=+L9r3VrK0xJ1DsM+H3pFFUtGg@mail.gmail.com>
+To: Jacob Champion <jacob.champion@enterprisedb.com>
+X-Mailer: Apple Mail (2.3776.700.51.11.2)
+List-Id: <pgsql-hackers.lists.postgresql.org>
+List-Help: <https://lists.postgresql.org/manage/>
+List-Subscribe: <https://lists.postgresql.org/manage/>
+List-Post: <mailto:pgsql-hackers@lists.postgresql.org>
+List-Owner: <mailto:pgsql-hackers-owner@lists.postgresql.org>
+List-Archive: <https://www.postgresql.org/list/pgsql-hackers>
+Archived-At: <https://www.postgresql.org/message-id/E187E05E-33C2-46E1-A324-160374CE1914%40yesql.se>
+Precedence: bulk
+List-Unsubscribe: <https://lists.postgresql.org/unsub/36/c9f3835a6050fd40fd2ee4b2559b28212aeb25359957e828f0dab980629c9cca/>
+List-Unsubscribe-Post: List-Unsubscribe=One-Click
+Return-Path: pgsql-hackers-owner+M91260-745148@lists.postgresql.org
+X-MS-Exchange-Organization-ExpirationStartTime: 27 Mar 2026 22:25:06.1385
+ (UTC)
+X-MS-Exchange-Organization-ExpirationStartTimeReason: OriginalSubmit
+X-MS-Exchange-Organization-ExpirationInterval: 1:00:00:00.0000000
+X-MS-Exchange-Organization-ExpirationIntervalReason: OriginalSubmit
+X-MS-Exchange-Organization-Network-Message-Id: 1f4786c8-ac30-4f16-3201-08de8c4fb2b0
+X-EOPAttributedMessage: 0
+X-EOPTenantAttributedMessage: ce7cb31c-acf7-4351-b0fe-c89cda16c4ab:0
+X-MS-Exchange-Organization-MessageDirectionality: Incoming
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: SJ5PEPF000001D1:EE_|SA1PR16MB6502:EE_|DM6PR16MB2569:EE_
+X-MS-Exchange-Organization-AuthSource: SJ5PEPF000001D1.namprd05.prod.outlook.com
+X-MS-Exchange-Organization-AuthAs: Anonymous
+X-MS-Office365-Filtering-Correlation-Id: 1f4786c8-ac30-4f16-3201-08de8c4fb2b0
+X-MS-Exchange-Organization-SCL: 1
+X-Microsoft-Antispam: BCL:0;ARA:13230040|704160511799003|12012899012|2092899012|4022899009|57112099003|19002099003|21082099003|18002099003|16102099003|22082099003;
+X-Forefront-Antispam-Report: CIP:2a02:16a8:dc51::56;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:malur.postgresql.org;PTR:malur.postgresql.org;CAT:NONE;SFS:(13230040)(704160511799003)(12012899012)(2092899012)(4022899009)(57112099003)(19002099003)(21082099003)(18002099003)(16102099003)(22082099003);DIR:INB;
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 27 Mar 2026 22:25:05.8371
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 1f4786c8-ac30-4f16-3201-08de8c4fb2b0
+X-MS-Exchange-CrossTenant-Id: ce7cb31c-acf7-4351-b0fe-c89cda16c4ab
+X-MS-Exchange-CrossTenant-AuthSource: SJ5PEPF000001D1.namprd05.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: Internet
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA1PR16MB6502
+X-MS-Exchange-Transport-EndToEndLatency: 00:00:03.1003174
+X-MS-Exchange-Processed-By-BccFoldering: 15.20.9745.015
+X-Microsoft-Antispam-Mailbox-Delivery:
+	ucf:1;jmr:0;auth:0;dest:C;OFR:CustomRules;ENG:(910005)(944506478)(944626604)(920097)(930201)(20251009189)(140003);
+X-Microsoft-Antispam-Message-Info:
+	=?utf-8?B?N09ZNjdQcGV1SWdDa3NhaGE1UVNERy8ycWc0UGFaZkE5OEVpRVMzR0Njb0xX?=
+ =?utf-8?B?SjhWN3EwaDNTOGpPL1g1UUdiSXJDb1hzZHlOVzBZTXVEbWVyRTF4ck1ZWkV0?=
+ =?utf-8?B?T3NyQzJxRDBwOEN5cTdTSFdiOHhEb0JvYndXVkRSOVpEN3QzQXl3TFBSaUhs?=
+ =?utf-8?B?NGdURkdhRE1YYXJMSXhLNUNjbjZobytVVmlFZWIxRTU2a0xodWxiQjRGcFFz?=
+ =?utf-8?B?MllqVUFjeUdySk1PNUNaQ2pxWGlFN1paM0NSR2t2d1NubzN5Ukc1UzhFYVdI?=
+ =?utf-8?B?aWtHa0UxNGVVS2tiRlpaaW9sRmRVOCtQOSs3TTVtQ2NuQ2FmNEtzU1JydGtl?=
+ =?utf-8?B?eWhxT3ZXVW4vUkkwQVgyRXBkTWpFQ205L3c0Y1BXZ0M1ejFZWlhzcGx2cWZ1?=
+ =?utf-8?B?RGNkTGl4YTl5Z0s3czUvY29TTU1WOW1LY1VjSjZVYzNTaHB1b1NWd2pOSndp?=
+ =?utf-8?B?S3ZlTTNuWDIvK0Q5Qnp5VndLK3FyeUdsTVliVEkwaHFTbmlQd2tQOHZScGhN?=
+ =?utf-8?B?MUtVM3RMQS9RWURhem40cXA0RCtiTDlLRUo5VzIwbGgzbXlZYVdJS29XWGtw?=
+ =?utf-8?B?OWU4cldFbjlmSzg5VENCdFhHZEpOZUpGSnh6dWlxTVZ4QzhUV3JPb25oV1Uy?=
+ =?utf-8?B?MlgrS2Z0ZlVuSEhqNUtuUlpXUkt0ZmYyaTM3VGQ0QzlIWmdJejJkRjg5U01o?=
+ =?utf-8?B?bElWZmJWN2RNdGFvQ1VBWUlIOEM1TjlGM2ltZXFQdWRESUgrSkh2RUlpZ3g4?=
+ =?utf-8?B?SEd3cTY5NGszVTl4S3Z0U2lYSHNtdkN1RTdDOGlFNC9CTkFFaTAzcHJiT1ow?=
+ =?utf-8?B?ZlVGVTc5aFlOZmthYi9QelR1dU0wTXVMS3h5OVFYU24rMHhIVkxnWGdoczFn?=
+ =?utf-8?B?WklkZDZmY0t6N250T3pZeWpBYkxlRE52SFRNdUJJREhxWE1XSU8zeW1GVE5V?=
+ =?utf-8?B?SWhEQ0krV2FZOFhvaTZkMjdyQUEySXZQbHNTcUJia1lONkFvTUlqeDA1dTM3?=
+ =?utf-8?B?OHl4bnZ5YTR2NmN5WVkxemkxbVVIWkNhMW13NHJ4ZGt0NTlDY2tEYTJXMjdZ?=
+ =?utf-8?B?WEZiWnE2aGtzaEs4bFBReDdrTUMxRndDaGNORy8wbWcrM3R0QTNCVzhhVUVR?=
+ =?utf-8?B?aFhpVGExWDNGOVBNRmN0cXhMeVJ6UUN4ZzFwTmRVVGlhdzVFQjh4Ymp1eGtx?=
+ =?utf-8?B?cjN2dG5pUkpnUTlEayt0VER6NEVOMHhzRTBQNWNpSCtrTmk4MGVrcEZqbzlO?=
+ =?utf-8?B?Q3JHSHJ6cmJBL3hkQnpXYlQzb0pjem5VNVdERTJkYzZiaDNmZnllVmhJU0pT?=
+ =?utf-8?B?L1U3czVrb3hvRlJXci9qQ0lZZVFBLzFsWk41SU9zdnhRZ2ZIT25BVGJMOURo?=
+ =?utf-8?B?MWwzMXIrQnI5SEpuaGlzYk43c01zNXJIUXlwdHpXMnlXVHhaeDNHUENnSmY0?=
+ =?utf-8?B?YzZCMGNWbGRZbW1xd2FXVjN5enNoSldSVi8xZVJ0dFU1bkRkdWQ5eXNDOGdQ?=
+ =?utf-8?B?OHNHZTd4RE9haGNITHpKMmZnVGphOElHaG5acnVpbVhkc3lMRGVJL2xxZE55?=
+ =?utf-8?B?TnBFb2UvemNHZmxtS3ZiL3dkMFBEakNrZGNyWkFLNGFmcDZJRlRXNGhiSGZG?=
+ =?utf-8?B?anpYOW5ZSHZnV2w0L1p2Zm0ySVN6ZFpYVktxakRyZ3E0Si9SalZoSE41N3ZD?=
+ =?utf-8?B?a3ZFVDNNQmpnZG9MZDAyMGwrY3lZN2xYVkhaaEZ4RlVBRjV1Y1ZKRXNENXdj?=
+ =?utf-8?B?dG5uMmZsZGZQOVpQRGFBS3E5elBFa2k0by9aN0FYUWs2ZzRJSDNBVHJEamdo?=
+ =?utf-8?B?SDFGOXEwSW5PT0xQalh2dEdjL2dOdGkwT3dyd1k4RmFYYW1DdGM1RHQ3czVo?=
+ =?utf-8?B?SXJtM0NiTEVoT2dwNXlyY25IZGNaT1ZrZEk5SVhnNm40ZHJQeDdKOGhLN3Fq?=
+ =?utf-8?B?TjJLNWJCS2pvLzJWZE5TSjJUem9DbWVSYkpTYWlaWDlZa2FVc1hXUko2UTlC?=
+ =?utf-8?B?Wm1uMHhxeEJUQkY2c3pCVXJBWlFQU0thMEFSSjI1TFdaVWdKUGRLdWd4U3FJ?=
+ =?utf-8?B?Tm5jSWZpRC92T0djR3owYm9HS2c2VTV3RmcvRVFlL3cyNjVXREt2TlMxWE1T?=
+ =?utf-8?B?aFlWQTVXR3pjM2h4aVdRdW9JaGcwakVTWWhqNzI3b2Z5dDI3MEdObnFMT0l4?=
+ =?utf-8?B?anVPOFcyT3AxQzlmd0RKWmpTTEdwdlA0K2VVRy9IdEZJV2dQS0Z5Y09XOGxU?=
+ =?utf-8?B?NEFMeGRQL0JIVDVGdisycUtEdlV3VzN4T2RBbUdxeTMyU00rUHR2RzkyQ3dt?=
+ =?utf-8?B?Yk1wTytTZTJBWmdRVHN1U3Y0dVlKdHBudGRmL2NncjVHRFZlMEp3akwxdWUv?=
+ =?utf-8?B?eVVBbzk4Y2pzNXVhN25FTHlmQVRVVGVnTWo2RWlQUnBpSWhKM0NzUnJwSjFR?=
+ =?utf-8?B?RGQzQ0xXTWFOTEJoQkpudk1hNmNkWm5wKzE2WDZ6Z0lKNkRGYkFvSWxXc0tO?=
+ =?utf-8?B?Qi93MkYrQWN2ZDJxbXg4cmVvOU1Za0Y3OENTUFkvVXV1ekxnVENZMm83UTlT?=
+ =?utf-8?B?UHVmV1NXNkxSWUxOTURPRnVKV2dvZlpEeVBTWUNIM1VqYVJkbFpjbGRta1JH?=
+ =?utf-8?B?eGhYZ2VFOHp5cnY5OEEzNzkvS3E5TGpINXVkMFRQRVZQSGxQK0kvanFxUUFF?=
+ =?utf-8?B?VTB2eEVBaGhFSjkxVDRwQVc1VWlSMDhFM3RaaStTVEVYWWNibDZEYnd3dzF6?=
+ =?utf-8?B?NHA3RzJjc1ozUlRaT2c3bndELzQvV2dGZXFEQkY4QmVpYnRQaVk4WDl4L1hY?=
+ =?utf-8?B?dEFqYlJUY0ozU0dBY091cDR3TkRleklTeCtlR1NXMHFWV3VORWxQV3B2alpp?=
+ =?utf-8?B?b1dUeGFsbGkwdVFKVGFtUWZvUGNmTmZlSnpSdFZ1bFB2VkpkM0NONzhQdjR4?=
+ =?utf-8?B?QjFHSzBFbkNyTWpqbG1SS2tqOUZvbGdXRmUyMmhHRnFrT3M2dzhIWU4rTVhp?=
+ =?utf-8?B?OTZFVkplMFdSSHRMQ09MQTROeEl0OTZETzlLdEtCWlFaVXE4ZlhKVzFONTBT?=
+ =?utf-8?B?aHNBTStPeHcrWG1VNk5LT1M2RzJyMnl1WWpFbERVeEt3Yy9yUzU2a1B2ZldH?=
+ =?utf-8?B?ZDhBNXZ1V3c1c0ZGNzkrRTVpRTNKTGE0SDE2dWtnY09XL1NJRkpRckUzQkFU?=
+ =?utf-8?B?YVVmUERUaGhVWnRYd1RmZGhFMnNUNEtxY1Jmdnd3T1FFbnVidHp6bUczbTE0?=
+ =?utf-8?B?dUJKc2tmUE4zTktVY3kyaEZKZktadUUwSldCRERBcjN0SmJJbUNyQ0ltZGhK?=
+ =?utf-8?B?aW11RWNvSGpvT1U3VjFTcHV2UmkwOFhDeUVITmJEZnE4WE9hYUFQN0N4NnhF?=
+ =?utf-8?B?aUlJL2RzOTdOY1YwM1V2RnY1SVdLQjJ2TzhhYmNOL3I5S1VCNEd4NWRHQ3RW?=
+ =?utf-8?B?aEF3UjVjMUZKc3VxN2gxTkZUc0IxVDdOUEExQ0k4dFZPTTBua1hJakVoNkNh?=
+ =?utf-8?B?Z24yTytKVk9UekwrRlVHRm0yczE2TTcxeVdYOTlRTjlTam5aNk9hNkdmTStv?=
+ =?utf-8?B?a1cyQ0JTSHhIMTdaaG8wMHZkenpGcnpUYnJyaU56ZUJPM2psekgybHdDeUpD?=
+ =?utf-8?B?VG9GSGZzUG5rN0g1OGpjSk5DbEZhRy9jMExNQ2loMnJFbXRCcFVKVjZGVDFP?=
+ =?utf-8?B?Zmd4TkwwMC8rYmp2YWxta29wdFBUMHc1N0xabzVrVXY3bENkMlNDS3VIeGlS?=
+ =?utf-8?B?USt2cmZ1d0VvdTJ4b210eXpZTTdERUJmdHJBY2NKdHV3TDZiZGxlK1hqOGNi?=
+ =?utf-8?Q?THmd8=3D?=
+MIME-Version: 1.0
+
+> On 27 Mar 2026, at 18:01, Jacob Champion <jacob.champion@enterprisedb.com=
+> wrote:
+>=20
+> On Mon, Mar 23, 2026 at 2:21=E2=80=AFPM Zsolt Parragi <zsolt.parragi@perc=
+ona.com> wrote:
+>> Isn't including the detail for both the warning and the fatal error
+>> still overly verbose?
+>=20
+> I'm not too worried about verbosity for an internal error situation;
+> users shouldn't see it. If they do, I don't mind being very loud about
+> whose fault it is.
+>=20
+> (I'm also influenced by some recent support work on clusters that have
+> huge log volumes. If someone is focused on the internal error, they
+> should be able to see at a glance what caused that error, and if
+> someone is focused on the authentication failure, they should be able
+> to see at a glance what caused that. The more logs you have to
+> correlate in a "help! no one can log in" panic situation, the less
+> likely you are to succeed.)
+
+Agreed.
+
+>> Shouldn't the oauth code include a sanity check to ensure validators
+>> return no error_detail on success instead of silently ignoring it?
+>=20
+> IMO, no. I don't want error_detail to add semantics to the API, just
+> descriptive power. Plus, I think a design that sets a possible error
+> message before entering a complex operation, knowing that it will be
+> ignored on success, is perfectly valid. libpq-oauth, and to a lesser
+> extent libpq, make use of that pattern.
+
+Callsites can also clear the error message on success and not even rely on =
+it
+being ignored.
+
++	 * This string may be either of static duration or palloc'd.
++	 */
++	char	   *error_detail;
+
+I'm not a big fan of "either static or allocated" and prefer if we just req=
+uire
+one or the other.  We have this pattern in other places so it's not a block=
+er
+for going it, but.
+
+--
+Daniel Gustafsson
+
+
+

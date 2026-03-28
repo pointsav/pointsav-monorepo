@@ -911,8 +911,9 @@ dependencies = [
 
 [[package]]
 name = "system-network-interface"
-version = "1.0.0"
+version = "1.1.0"
 dependencies = [
+ "bytes",
  "chrono",
  "serde",
  "serde_json",

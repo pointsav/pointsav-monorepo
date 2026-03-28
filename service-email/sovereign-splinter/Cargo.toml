@@ -1,0 +1,16 @@
+[package]
+name = "sovereign-splinter"
+version = "2.1.0"
+edition = "2021"
+authors = ["PointSav Digital Systems"]
+description = "Deterministic MIME routing diode. Enforces HTML purification and Payload Chunking."
+
+[workspace]
+
+[dependencies]
+mailparse = "0.14"
+uuid = { version = "1.4", features = ["v4"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+chrono = "0.4"
+html2text = "0.6"
