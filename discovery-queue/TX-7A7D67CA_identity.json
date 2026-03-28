@@ -1,0 +1,10 @@
+{
+  "extracted_signals": {
+    "sender": "Dmitriy Rabotyagov <noonedeadpunk@gmail.com>",
+    "subject": "Re: [glance][swift][2026.1] Glance fails on image download from Swift"
+  },
+  "source_artifact": "VAULT_INGRESS_OpenStack_1214A746.eml",
+  "status": "AWAITING_HITL_CHECKOUT",
+  "timestamp": "2026-03-28T03:34:07.030965507+00:00",
+  "transaction_id": "7A7D67CA"
+}

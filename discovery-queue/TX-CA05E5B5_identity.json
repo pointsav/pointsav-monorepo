@@ -1,0 +1,10 @@
+{
+  "extracted_signals": {
+    "sender": "Heikki Linnakangas <hlinnaka@iki.fi>",
+    "subject": "Re: Clean up NamedLWLockTranche stuff"
+  },
+  "source_artifact": "VAULT_INGRESS_PostgresSQL_89277FA7.eml",
+  "status": "AWAITING_HITL_CHECKOUT",
+  "timestamp": "2026-03-28T03:34:07.515149526+00:00",
+  "transaction_id": "CA05E5B5"
+}
