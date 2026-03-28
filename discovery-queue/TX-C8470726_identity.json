@@ -1,0 +1,10 @@
+{
+  "extracted_signals": {
+    "sender": "Daniel Gustafsson <daniel@yesql.se>",
+    "subject": "Re: unclear OAuth error message"
+  },
+  "source_artifact": "VAULT_INGRESS_PostgresSQL_A13D528D.eml",
+  "status": "AWAITING_HITL_CHECKOUT",
+  "timestamp": "2026-03-28T03:34:07.526393360+00:00",
+  "transaction_id": "C8470726"
+}

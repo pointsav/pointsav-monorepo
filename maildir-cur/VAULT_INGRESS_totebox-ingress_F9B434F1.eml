@@ -1,0 +1,2541 @@
+Received: from CH3PR16MB6403.namprd16.prod.outlook.com (2603:10b6:610:1d8::9)
+ by DM6PR16MB2569.namprd16.prod.outlook.com with HTTPS; Fri, 27 Mar 2026
+ 20:16:01 +0000
+Received: from PH7P221CA0058.NAMP221.PROD.OUTLOOK.COM (2603:10b6:510:33c::28)
+ by CH3PR16MB6403.namprd16.prod.outlook.com (2603:10b6:610:1d8::9) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9745.23; Fri, 27 Mar
+ 2026 20:15:58 +0000
+Received: from CY4PEPF0000EE34.namprd05.prod.outlook.com
+ (2603:10b6:510:33c:cafe::af) by PH7P221CA0058.outlook.office365.com
+ (2603:10b6:510:33c::28) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.20.9745.23 via Frontend Transport; Fri,
+ 27 Mar 2026 20:15:57 +0000
+Authentication-Results: spf=pass (sender IP is 161.38.197.117)
+ smtp.mailfrom=mg-d1.substack.com; dkim=pass (signature was verified)
+ header.d=mg-d1.substack.com;dmarc=pass action=none
+ header.from=substack.com;compauth=pass reason=100
+Received-SPF: Pass (protection.outlook.com: domain of mg-d1.substack.com
+ designates 161.38.197.117 as permitted sender)
+ receiver=protection.outlook.com; client-ip=161.38.197.117;
+ helo=mg-197-117.substack.com; pr=C
+Received: from mg-197-117.substack.com (161.38.197.117) by
+ CY4PEPF0000EE34.mail.protection.outlook.com (10.167.242.40) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.9745.21 via Frontend Transport; Fri, 27 Mar 2026 20:15:58 +0000
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg-d1.substack.com; q=dns/txt; s=k1; t=1774642557; x=1774649757;
+ h=List-Unsubscribe-Post: List-Unsubscribe: List-Post: List-Id: List-Archive: List-Owner: Reply-To: In-Reply-To: References: Sender: Sender: Date: Message-Id: To: To: From: From: Subject: Subject: Content-Type: Mime-Version;
+ bh=js6JoYquZS07B9w3cZMUuHLEQh8m/8/hC42BRPtv0oU=;
+ b=Yg9OxNBwXNnhghRwhpgnt0wdASkNYpMlB9WkGehmhzzUfzTcUz8yYagbmeOY7ll17kwCzNafmZ1lqCZK2Cik85Q9d//M1D728iG7gBIRJJfcb9MorihZ/QY+Z26atK/xQqw+f/SCzhKppfOxMjPw256kUiYZVk3ZXkXlcCapy+E=
+X-Mailgun-Sid: WyI3MWJkYyIsImluZm9Ad29vZGZpbmUuY28iLCIzOWIwOGM2Il0=
+Received: by 5d8e7f3ace9b95e203776337c6ee8b262a0c398d300e6325b74d2a0b451cc56c with HTTP
+ id 69c6e57cd2850378f2c03a97; Fri, 27 Mar 2026 20:15:56 GMT
+X-Mailgun-Sending-Ip: 161.38.197.117
+X-Mailgun-Batch-Id: 69c6e57cfb29a309a88765a4
+Content-Type: multipart/alternative;
+ boundary="6e4c827580f12578189be22ce4b89ebef8e3bc789e7bde9bc870a87b6e52"
+Subject: Your case study is lying (and everyone knows it)
+From: User Experience University <researchbookmark@substack.com>
+To: info@woodfine.co
+X-Mailgun-Tag: post
+X-Mailgun-Track-Clicks: false
+Message-Id: <20260327201544.3.4400eafd59eb430c@mg-d1.substack.com>
+Date: Fri, 27 Mar 2026 20:15:44 +0000
+Feedback-Id: post-191451802:cat-post:pub-1519708:substack
+Sender: User Experience University <researchbookmark@substack.com>
+References: <post-191451802@substack.com>
+In-Reply-To: <post-191451802@substack.com>
+Reply-To: User Experience University
+ <reply+35zh5m&1judjp&&95e5372aae2d96af16e316c5fbf3a218fd7492f40923213719694c9966fe8e7d@mg1.substack.com>
+List-Owner: <mailto:researchbookmark@substack.com>
+List-Url: <https://newsletter.uxuniversity.io/>
+List-Archive: <https://newsletter.uxuniversity.io/archive>
+List-Id: <researchbookmark.substack.com>
+List-Post: <https://newsletter.uxuniversity.io/p/your-case-study-is-lying-and-everyone>
+List-Unsubscribe: <https://newsletter.uxuniversity.io/action/disable_email/disable?token=eyJ1c2VyX2lkIjo5Mzc5NjExNywicG9zdF9pZCI6MTkxNDUxODAyLCJpYXQiOjE3NzQ2NDI1NTUsImV4cCI6MTgwNjE3ODU1NSwiaXNzIjoicHViLTE1MTk3MDgiLCJzdWIiOiJkaXNhYmxlX2VtYWlsIn0._N6D14jyjZ98nc91vHaOlL3Ce17RyX7TRED5C2npkHI&all_sections=true>
+List-Unsubscribe-Post: List-Unsubscribe=One-Click
+X-Mailgun-Variables: {"category": "post", "email_generated_at": "1774642556110", "is_freemail":
+ "true", "post_audience": "everyone", "post_id": "191451802", "post_type":
+ "podcast", "pub_community_enabled": "true", "publication_id": "1519708",
+ "subdomain": "researchbookmark", "user_id": "93796117"}
+Return-Path: bounce+7c5388.39b08c6-info=woodfine.co@mg-d1.substack.com
+X-MS-Exchange-Organization-ExpirationStartTime: 27 Mar 2026 20:15:58.4582
+ (UTC)
+X-MS-Exchange-Organization-ExpirationStartTimeReason: OriginalSubmit
+X-MS-Exchange-Organization-ExpirationInterval: 1:00:00:00.0000000
+X-MS-Exchange-Organization-ExpirationIntervalReason: OriginalSubmit
+X-MS-Exchange-Organization-Network-Message-Id: 6817227e-78b8-4765-fe6d-08de8c3da8b5
+X-EOPAttributedMessage: 0
+X-EOPTenantAttributedMessage: ce7cb31c-acf7-4351-b0fe-c89cda16c4ab:0
+X-MS-Exchange-Organization-MessageDirectionality: Incoming
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: CY4PEPF0000EE34:EE_|CH3PR16MB6403:EE_|DM6PR16MB2569:EE_
+X-MS-Exchange-Organization-AuthSource: CY4PEPF0000EE34.namprd05.prod.outlook.com
+X-MS-Exchange-Organization-AuthAs: Anonymous
+X-MS-Office365-Filtering-Correlation-Id: 6817227e-78b8-4765-fe6d-08de8c3da8b5
+X-MS-Exchange-Organization-SCL: 1
+X-Microsoft-Antispam: BCL:5;ARA:13230040|704161211799003|12012899012|7049299003|3109299003|1032899013|69100299015|2092899012|7149299003|4022899009|13003099007|21082099003|22082099003|19002099003|18002099003|16102099003|2066899003|8096899003|57112099003;
+X-Forefront-Antispam-Report: CIP:161.38.197.117;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mg-197-117.substack.com;PTR:mg-197-117.substack.com;CAT:NONE;SFS:(13230040)(704161211799003)(12012899012)(7049299003)(3109299003)(1032899013)(69100299015)(2092899012)(7149299003)(4022899009)(13003099007)(21082099003)(22082099003)(19002099003)(18002099003)(16102099003)(2066899003)(8096899003)(57112099003);DIR:INB;
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 27 Mar 2026 20:15:58.0996
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 6817227e-78b8-4765-fe6d-08de8c3da8b5
+X-MS-Exchange-CrossTenant-Id: ce7cb31c-acf7-4351-b0fe-c89cda16c4ab
+X-MS-Exchange-CrossTenant-AuthSource: CY4PEPF0000EE34.namprd05.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: Internet
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH3PR16MB6403
+X-MS-Exchange-Transport-EndToEndLatency: 00:00:03.5088052
+X-MS-Exchange-Processed-By-BccFoldering: 15.20.9745.015
+X-Microsoft-Antispam-Mailbox-Delivery:
+	ucf:0;jmr:0;auth:0;dest:I;ENG:(910005)(944490095)(944506478)(944626604)(920097)(930201)(20251009189)(140003);
+X-Microsoft-Antispam-Message-Info:
+	=?utf-8?B?K2JUUC9nNzJPalNFenVocG03dUFtQTdqRjNFQjc2akNtTDNTdnVTcE1JR2lF?=
+ =?utf-8?B?YkRZWkpIZjVSYlJWUGUxaFFvUzR6TEJCNW9kNHBpamNLQkFTeVFXaUlCTUZV?=
+ =?utf-8?B?TThObFFWaERtTnVRemlKOTE4WEFIU2daOHFuZWVnVFlMbXhzdWd2ZXNCSzl5?=
+ =?utf-8?B?czRib0YvbnRxaGZYclJ2ZWZaMFFTNXpmZjc4bVlUdkZkcTlaVUpxdmpZbEVJ?=
+ =?utf-8?B?TlUzWG9zTGVGcC9CV1VPTHhtZmJwTjZwT2pUeDJyQXpqeW9tdUtEUU93TlFL?=
+ =?utf-8?B?YTh5Z1diQzlyOXdVa3E4ZDYrVWUvTEpzZk1TdnJMWVJCZitDQU81MThBZUxK?=
+ =?utf-8?B?R1luVVJiZnhOUTlwQWdzT3FkZGFDQ1VqNFpETUtUaUZ1NWFZVUl1d0RnSURL?=
+ =?utf-8?B?Z3FIUlZ3anlZV2pYRitDdWZjSVp0YmY5K09STVpHUE0xSnZTemFvc0NqY2JV?=
+ =?utf-8?B?WW9BKzBOTUVhVjRXVkowcU01NkRuZzl4Ukt2RUVJY05nL0NXNkRlRkFHUUs5?=
+ =?utf-8?B?SjQ5S05YSUt5NDJBR0Z4UlVBR1FFN2hiNjR2cGFjVVJGYTRWSWUwZmFuYitj?=
+ =?utf-8?B?MDRPcndYaytVZE1qTkkyZitRc0V0RlErdFl4K3FzaVZsYkFRdklqQ2t1NXY1?=
+ =?utf-8?B?UEZjci9HRnJvYmZVYTRWV1NJMUplYlJlSHFTRXdTU3JxclVpL3V1MFZyOVpo?=
+ =?utf-8?B?T3VCbFk3bjRFanFNOGxFUXpmNDlQWVVmZFNaUHdrWGVjT0c4ZDFNTmJONFgv?=
+ =?utf-8?B?Y0QwWFp4bDBsUnJDdllrYjlOUmxsK2NuS3cwemdNL1lsaVFuczRTdmx6NVR6?=
+ =?utf-8?B?V2UwM3Fpejh0TFlQVzMwblNtQmJhV2oyc3hiTWZFbjlXRzIxVDkxS3Qxc1Nq?=
+ =?utf-8?B?clJ3TWZaVzJiZkJybHFYQ0FuM1hPWXd4cy9YMWF1UjJ2dHJRWDRaN2FzUkVv?=
+ =?utf-8?B?a3hQZWpvT3hjNk5SQ1J1S0FrWUxpM3pNaHl2eUZ1T1BvVWpVQm8xL2hCMzF3?=
+ =?utf-8?B?V0FCLzU2V1ZxWmtkWS80MlhBdWlPREhadFB3UmhzLzRVVUxEUk1qUUJ4NmMx?=
+ =?utf-8?B?Q1N4aXBPZ3FRdnBVa2YwK28zc0doQkRzRzZ3ckxNZmIvb1gyQ3NkMnUxMG16?=
+ =?utf-8?B?VDhZZnNPNHR5SlpiamdiMU9wNC9rWS9jSnBpcVh1VUUwMS9xbDV6WEhIbGR0?=
+ =?utf-8?B?MU9ZWlIvOUZWMVVpQUdGOS8xb25UMzNaRk9Jdkw0M2ZsQnNiVURTTUZENFMw?=
+ =?utf-8?B?S25QMmJsOGFHcE1FSFlxbWpLNE42ODR3UGxDUFRIUFRPOGJBWmFIYU9qWGxo?=
+ =?utf-8?B?MjBBNFdISyttYlc0bm94S3RZVTdmYlMveE8xeWJ2QlQ1WXRLVzBJczhJdXVK?=
+ =?utf-8?B?M0JtL3Q0RkM3MU9GaHVMWDNncS9lckZZTElobmlWdW51YlRYUnVlSitTZGVY?=
+ =?utf-8?B?bnB1VkFNV1BhMEtBNkRNc2lDTnc3OFhDaGc0OXZZU3l5L0EyY1Zzd0Q0dDN6?=
+ =?utf-8?B?NEFQTmpOa0N5RmhNQ3ljNlVIdmtqQ1I1Z2w0SmtCV3k0TlBRb012TTVlMWdO?=
+ =?utf-8?B?NUUyNzZNYVFoOXMvSnd1dkJ3Smt4QXMraTZwOHMreG45UzltUExncFFkQXZm?=
+ =?utf-8?B?aHBETWtQck5nc3RHVE04bkpCLzlsL21Rak9sNTRZeDh2ZlFxU3BSU2tIaFph?=
+ =?utf-8?B?WDArZ3hiclN6dzIyV0VIQ1BXUzN4cURocGFqL2ZNVHZZaU5aUDdhNGVxVWFB?=
+ =?utf-8?B?ZzIrMWRZTFlpbnFNajFVanFFNFZjZ3h4U1Q0eE1XbWtibmJIMXljSnl3L1Za?=
+ =?utf-8?B?VDRtb2JvZGYzZjVGS01scHcyNVNPdE5kaVM3RFJxOFVkcDBYbVJzNjR1OTZL?=
+ =?utf-8?B?Y21xUXNXbWxHRWh1VDBibVpWRmRQcjYvNDZ2cTU3azlZYTdNMEZKNFVaTWxh?=
+ =?utf-8?B?NGZvTkw4KzA4L1d2VzFqcDBzTE1xdkNTVUhvZ0M2UmhzeWNWWjhYQnhXN2Ju?=
+ =?utf-8?B?VFBYTit5WXlWOXNvZ3RlU2VWTjQxVjNjakVqazVDV3hmNjltSzhhY3Q5ZDRp?=
+ =?utf-8?B?RGpwdFpoV0E2VFZqQjZheDNORWJBdGY3bzU2T0p2a3EzT2h6d3JDWUJBR1VG?=
+ =?utf-8?B?YXExaHNBMGJtNnpUczJjWTBENjdPeFgzQ1lyRTUvaStMZ1pheXgxN2h1OEty?=
+ =?utf-8?B?R2tqUjhsaHEwTG5ZUmxBNWdxL3djNjB5QXBQa28wQ3hFTEtUWisvMENsUnpZ?=
+ =?utf-8?B?MkxEancwTDk5dTdLSVlvdHN3MWlsQzFwcGU3aHZ2NFVsOFNxOG4yc21nN0NG?=
+ =?utf-8?B?SmVTbDRMZ1M5dXBRazNCK0xhTmdMRzNuTlA5M09HWG8yTEhEL3l5YzAvTHRN?=
+ =?utf-8?B?UTgxZ3IrdHhGUEZVZmx5b2kyMUxJaW1OYlk5RFNJN2c0T1ZhQmpvek5Oa1Jh?=
+ =?utf-8?B?VzRQWFJlVUk5ZUhscFF4TjFlYWhMb0Yxd3lkN1VFSXF5RWNTUFNZMElPMkY3?=
+ =?utf-8?B?clV3U214UmhlMkc5Q3hjb2tXNkc5QlRwQTd5c21DVkpkVk1PUnpybFpKUW9v?=
+ =?utf-8?B?K0NSc3lxNStxcmdQWEt1Mmd6S0RaNGU1bjZrdG16ZE5YVWNsb3BKTlAxVVRu?=
+ =?utf-8?B?Y29QcjFaRmtRNlhNMEhyaW44WmZHZ1pVa0hINDA3SUVmUGwyRndoakZIK0VY?=
+ =?utf-8?B?YWV2bzg0SGUyY1RUUDB5YkZIR2lYQlNlOG9ISmJGTTl1UWduUGFtZWhwT1ZI?=
+ =?utf-8?B?Vk1WMG5wR2NZS0xLblFob0pQWDkwRURMejZkL29RaHJGSC9Zd2JuTDJqVkVW?=
+ =?utf-8?B?Q0NoN2Z6WjdMeFo3dWpFTk9ielpqazNiOXVYakord2pJdGFoamRWUG1KVzRC?=
+ =?utf-8?B?bFRockI0N1JKc0dWK0RnVkMyYVdKTVROeUZsT0t1VDM4VFF5TGVCRGpOZEpV?=
+ =?utf-8?B?RnVQdWlRcFBlNXQzOXNFTFA5cVp1TTRrVWl0N2J0QzZYZDNMU3NzbGpDZy8z?=
+ =?utf-8?B?b0NrR2JDaVhQYlI4ZW9jalRCQVJ5amZnZWNBUEgxWGFqeVlwRmpUcm8xUnRM?=
+ =?utf-8?B?MTQrM2RLVU01b3NZaTZ5aXZvV1l0WENpNkVRMHMyNGlOdTlsTnl4aWNLRE1Z?=
+ =?utf-8?B?a29PM3BqOEJtWUFpYmR0THRtRjZmMTRIYTRCUVZ0bitybFRVNERhTUJ5OC9K?=
+ =?utf-8?B?djdnbGd5K1hqQTd6bS92S1VPdXJ4cU1FcUFDZStldG1RSDhqdkNSbU11dVVq?=
+ =?utf-8?B?bDNyZTY4N1N3NDFPM2VkRlBoZy9xR3B5Vm1TMnU2VGRyRHVBWHNlazJTb01M?=
+ =?utf-8?B?TWZxdTl2dksyTTYySlpLTlJtdW1kd2o4Rnh4aUtUQWZWVDZleW5NRkI2dXZ4?=
+ =?utf-8?B?OW04UkxXdDFka2IxOE9WSjhoSXFyR1hTcTh0UVd5ZkVBQzh1WGhxVE5vK0NK?=
+ =?utf-8?B?eHF2MW5PVnI2UnRpT2hMMXpuWFJBWGtodHJ1aEZML3dmUzJzM01iU1h2UHRI?=
+ =?utf-8?B?VDlwSm4ycjkwT0RUSGtqU0c1VGJMUjVPemJ2M1cwQWlvM3IzandHK051Uk01?=
+ =?utf-8?B?N2F1cnZHWGhMakZjNFhpSVhmMCtNU2NvTExkejZzTGN1c3lpQWIybkFSTGRo?=
+ =?utf-8?B?b1hsaWtVT3o3TzZ4WjJGczRGZ1dBVHE2dU5EZDVNR2psNW9tdkNNRjhKL3Y1?=
+ =?utf-8?B?eU8xREd2VjZHczN6Z0hNRVZjWTBZUjdoUTA5dzczVm9TNWVxM01PS2E0azJG?=
+ =?utf-8?Q?wuLD8D8?=
+MIME-Version: 1.0
+
+--6e4c827580f12578189be22ce4b89ebef8e3bc789e7bde9bc870a87b6e52
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+
+View this post on the web at https://newsletter.uxuniversity.io/p/your-case=
+-study-is-lying-and-everyone
+
+You didn=E2=80=99t do all that research. You didn=E2=80=99t run those A/B t=
+ests. The =E2=80=9Cclient=E2=80=9D was actually a practice project from a b=
+ootcamp. The =E2=80=9C20% increase in conversion=E2=80=9D is a number you m=
+ade up because every case study needs metrics. And here=E2=80=99s the thing=
+: hiring managers know. They=E2=80=99ve seen hundreds of portfolios and the=
+y can smell BS instantly. This issue breaks down why portfolio dishonesty h=
+appens, how it backfires, and how to present your actual work honestly in a=
+ way that still gets you hired.
+In this issue:
+The lies hiring managers spot immediately
+Why fabricating results is worse than having no results
+How to present real work (even when it=E2=80=99s messy)
+What to do when you genuinely don=E2=80=99t have metrics
+The honesty that actually impresses interviewers
+=F0=9F=93=A6 Resource Corner
+The lies hiring managers spot immediately
+Let=E2=80=99s be direct about what=E2=80=99s happening. Designers, especial=
+ly junior ones, feel pressure to have impressive portfolios. So they embell=
+ish. They exaggerate. Sometimes they straight-up invent things. And hiring =
+managers can tell.
+Here are the red flags that scream =E2=80=9Cthis didn=E2=80=99t really happ=
+en=E2=80=9D:
+=F0=9F=9A=A9 Every project has perfect, round metrics =E2=80=9CIncreased co=
+nversion by 25%.=E2=80=9D =E2=80=9CReduced bounce rate by 30%.=E2=80=9D =E2=
+=80=9CImproved user satisfaction by 40%.=E2=80=9D These numbers are suspici=
+ously clean. Real metrics are messy: 23.7%, 18%, 34.2%. When every project =
+ends in a multiple of 5 or 10, it looks made up.
+=F0=9F=9A=A9 The process is too perfect Real design is messy. You interview=
+ the wrong people. Stakeholders change their minds. Developers push back on=
+ your design. Timeline gets cut. But portfolio case studies show this perfe=
+ct linear process: research =E2=86=92 insights =E2=86=92 wireframes =E2=86=
+=92 testing =E2=86=92 shipping =E2=86=92 success. That=E2=80=99s fiction.
+=F0=9F=9A=A9 No mention of constraints, tradeoffs, or failures Every real p=
+roject has constraints. Budget. Timeline. Technical limitations. Stakeholde=
+r opinions. But portfolio projects never mention them. Every decision was o=
+ptimal. Nothing was compromised. That=E2=80=99s not how work happens.
+=F0=9F=9A=A9 =E2=80=9CI did everything=E2=80=9D (on a team project) =E2=80=
+=9CI conducted the research, designed the solution, and shipped the feature=
+=2E=E2=80=9D If this was a real company wi=
+th a real team, where was the PM? T=
+he researchers? The other designers? Taking sole credit for collaborative w=
+ork is an instant credibility killer.
+=F0=9F=9A=A9 The timeline doesn=E2=80=99t make sense =E2=80=9CI conducted 1=
+5 user interviews, analyzed the data, created wireframes, built high-fideli=
+ty mockups, ran usability tests, and launched in 2 weeks.=E2=80=9D No, you =
+didn=E2=80=99t. That=E2=80=99s 6-8 weeks minimum. Compressed timelines reve=
+al that the story is fabricated.
+=F0=9F=9A=A9 Vague or missing company/client details =E2=80=9CA fintech sta=
+rtup=E2=80=9D instead of naming the company. =E2=80=9CAn e-commerce client=
+=E2=80=9D without specifics. If it was real work, you=E2=80=99d name them (=
+or explain the NDA). Vagueness suggests it=E2=80=99s a practice project you=
+=E2=80=99re pretending was real.
+=F0=9F=9A=A9 The problems are generic, the solutions are trendy =E2=80=9CUs=
+ers found the checkout confusing, so I simplified it=E2=80=9D describes eve=
+ry checkout redesign ever. Real projects have specific, messy problems. Gen=
+eric problems suggest you=E2=80=99re retrofitting a solution you saw elsewh=
+ere.
+Why this matters: Hiring managers aren=E2=80=99t trying to catch you lying.=
+ But when they spot inconsistencies, they start questioning everything in y=
+our portfolio. One fabricated detail ruins your credibility on legitimate w=
+ork.
+Join Don Norman at UXCON26
+Co-Founder, Nielsen Norman Group =C2=B7 Former VP of Advanced Technology, A=
+pple =C2=B7 Founder, Design Lab at UC San Diego Headlining Keynote
+Don Norman is famous for doors that are confusing to open. They are called =
+Norman Doors. If you have ever pushed a door that should be pulled, you hav=
+e lived inside one of his ideas.
+That is what Don Norman does. He makes you see the world differently.
+He coined the term =E2=80=9Cuser experience.=E2=80=9D He wrote The Design o=
+f Everyday Things, the book on virtually every designer=E2=80=99s shelf, no=
+w in its revised edition and still as essential as the day it was published=
+=2E He helped found the world=E2=80=99s fi=
+rst Department of Cognitive Science=
+ at UC San Diego. He became Vice President of Advanced Technology at Apple.=
+ He co-founded the Nielsen Norman Group, the firm that shaped how the entir=
+e industry thinks about human-centered design. He has published 21 books tr=
+anslated into over 20 languages. He holds three honorary degrees and is a m=
+ember of the National Academy of Engineering.
+Hearing Don Norman speak in 2026 is not a checkbox on a conference list. It=
+ is a genuine once-in-a-career opportunity.
+Why fabricating results is worse than having no results
+The instinct makes sense: every article about portfolios says =E2=80=9Cshow=
+ impact=E2=80=9D and =E2=80=9Cinclude metrics.=E2=80=9D So if you don=E2=80=
+=99t have metrics, you feel like you need to invent them. But that=E2=80=99=
+s backwards.
+Here=E2=80=99s what actually happens when you fake results:
+=E2=9D=8C You can=E2=80=99t defend them in interviews =E2=80=9CTell me more=
+ about that 30% conversion increase. What were you measuring? How did you i=
+solate your changes from other variables?=E2=80=9D If you made it up, you=
+=E2=80=99ll fumble the answer. And now you=E2=80=99ve lost the job and your=
+ credibility.
+=E2=9D=8C You set expectations you can=E2=80=99t meet If your portfolio sho=
+ws you consistently deliver 20-40% improvements, that=E2=80=99s what the co=
+mpany will expect when they hire you. When you can=E2=80=99t deliver (becau=
+se those numbers were fiction), you=E2=80=99ve set yourself up to fail.
+=E2=9D=8C You miss the chance to show real thinking Honesty about what you =
+don=E2=80=99t know is more impressive than fake confidence. =E2=80=9CWe did=
+n=E2=80=99t have analytics set up, so I can=E2=80=99t give you hard numbers=
+, but here=E2=80=99s the qualitative feedback we got=E2=80=9D shows self-aw=
+areness and intellectual honesty.
+=E2=9D=8C It reveals you don=E2=80=99t understand how metrics work Saying =
+=E2=80=9CI increased revenue by 50%=E2=80=9D without explaining baseline, s=
+ample size, timeframe, or confounding variables shows you don=E2=80=99t act=
+ually understand measurement. That=E2=80=99s worse than admitting you don=
+=E2=80=99t have data.
+The truth that hiring managers won=E2=80=99t tell you: They don=E2=80=99t a=
+ctually expect junior designers to have perfect metrics on every project. T=
+hey know you=E2=80=99re early in your career. They know practice projects e=
+xist. What they=E2=80=99re looking for is honest thinking and real problem-=
+solving ability.
+A case study that says =E2=80=9CI don=E2=80=99t have quantitative data, but=
+ here=E2=80=99s what I learned from user feedback=E2=80=9D is infinitely mo=
+re valuable than one with fabricated numbers.
+How to present real work (even when it=E2=80=99s messy)
+Real projects are messy. Constraints are real. You don=E2=80=99t get to do =
+everything perfectly. That=E2=80=99s fine. Actually, that=E2=80=99s better =
+for your portfolio because it shows you understand how design actually work=
+s.
+Here=E2=80=99s how to present honest, messy work in a way that still gets y=
+ou hired:
+1. Be specific about your role (and the team)
+Don=E2=80=99t say =E2=80=9CI designed this feature.=E2=80=9D Say exactly wh=
+at you did:
+=E2=9C=85 =E2=80=9CI was one of two designers on this project. I focused on=
+ the mobile experience while Sarah handled desktop. I conducted 6 of the 12=
+ user interviews, and we both participated in synthesis.=E2=80=9D
+This is honest. It shows collaboration. It shows you understand team dynami=
+cs. Hiring managers respect this infinitely more than inflated solo credit.
+2. Show the constraints, not just the solution
+Every project has limits. Talking about them makes your work more credible:
+=E2=9C=85 =E2=80=9CWe had 3 weeks and a developer handoff deadline, so I pr=
+ioritized wireframes and basic interactivity testing over high-fidelity moc=
+kups. Given more time, I would have tested more variations.=E2=80=9D
+This shows you make strategic tradeoffs. That=E2=80=99s a professional skil=
+l. Pretending constraints didn=E2=80=99t exist makes you look inexperienced=
+=2E
+3. Admit what you don=E2=80=99t know or didn=E2=80=99t measure
+Honesty about gaps is professional:
+=E2=9C=85 =E2=80=9CWe didn=E2=80=99t have analytics instrumentation for thi=
+s feature, so I can=E2=80=99t provide conversion metrics. What I do have is=
+ usability test feedback from 5 users and support ticket volume before and =
+after launch.=E2=80=9D
+This shows you understand the difference between quantitative and qualitati=
+ve data. It shows you work with what you have. That=E2=80=99s real-world de=
+sign.
+4. Talk about what didn=E2=80=99t work
+Failed experiments are learning opportunities. Show them:
+=E2=9C=85 =E2=80=9CMy first concept tested poorly. Users found the navigati=
+on confusing. I went back, simplified the structure, and the second round o=
+f testing showed significant improvement in task completion.=E2=80=9D
+Iteration based on feedback is what design actually is. Showing only succes=
+ses makes you look either inexperienced or dishonest.
+5. Be honest about practice projects
+If it=E2=80=99s a bootcamp project or self-initiated work, just say so. The=
+n make it rigorous:
+=E2=9C=85 =E2=80=9CThis is a self-initiated project. I identified a real pr=
+oblem with my local library=E2=80=99s website by interviewing 5 regular use=
+rs. While this didn=E2=80=99t ship, the research and design process are rea=
+l.=E2=80=9D
+Nobody expects you to only have shipped work if you=E2=80=99re junior. They=
+ expect you to demonstrate thinking. Practice projects are fine if you trea=
+t them seriously. (Source: Nielsen Norman Group on Portfolios) [ https://su=
+bstack.com/redirect/a597aeb8-6ad9-422a-a016-fd591e618d55?j=3DeyJ1IjoiMWp1ZG=
+pwIn0.5o04gUnkd-Msu0Ib_nbCOLc-sw15-DjXlvGx8bWpSeo ]
+6. Use qualitative data when you don=E2=80=99t have quantitative
+User quotes, feedback themes, observation notes, support ticket reduction, =
+stakeholder reactions. These are all valid forms of impact:
+=E2=9C=85 =E2=80=9CWhile we didn=E2=80=99t track conversion metrics, we saw=
+ support tickets related to checkout drop from ~30/week to ~5/week in the m=
+onth after launch.=E2=80=9D
+This is real impact, honestly presented.
+What to do when you genuinely don=E2=80=99t have metrics
+Most junior designers don=E2=80=99t have access to metrics. Many companies =
+don=E2=80=99t track things properly. Some projects ship and nobody measures=
+ the impact. This is normal. Here=E2=80=99s how to handle it honestly:
+Option 1: Explain why metrics don=E2=80=99t exist
+=E2=9C=85 =E2=80=9CThis was a client project and I didn=E2=80=99t have acce=
+ss to their analytics after handoff.=E2=80=9D =E2=9C=85 =E2=80=9CThe compan=
+y didn=E2=80=99t have measurement infrastructure in place for this feature.=
+=E2=80=9D =E2=9C=85 =E2=80=9CThis was exploratory work that informed strate=
+gy but didn=E2=80=99t result in a shipped product.=E2=80=9D
+These are all legitimate. Just state them matter-of-factly.
+Option 2: Use proxy metrics or observations
+If you don=E2=80=99t have hard numbers, look for other signals:
+=E2=9C=85 =E2=80=9CThe redesigned form reduced the average support call len=
+gth from 8 minutes to 3 minutes based on call center reports.=E2=80=9D =E2=
+=9C=85 =E2=80=9CUser testing showed task completion time dropped from an av=
+erage of 4 minutes to 90 seconds.=E2=80=9D =E2=9C=85 =E2=80=9CIn our usabil=
+ity tests, 4 out of 5 users completed the task successfully compared to 1 o=
+ut of 5 with the old design.=E2=80=9D
+These aren=E2=80=99t conversion rates or revenue numbers, but they=E2=80=99=
+re real measurements.
+Option 3: Focus on the problem-solving process
+If you have no outcome data at all, double down on showing your thinking:
+=E2=9C=85 =E2=80=9CI can=E2=80=99t measure the impact because the project w=
+as paused before launch, but I can walk you through how I identified the co=
+re user problem and my rationale for the design decisions.=E2=80=9D
+Your thinking process is actually what hiring managers care about most. The=
+ metrics are just evidence that the thinking worked. If you have strong thi=
+nking, that=E2=80=99s 80% of what matters.
+Option 4: Be upfront that it=E2=80=99s a learning project
+If it=E2=80=99s bootcamp work or practice:
+=E2=9C=85 =E2=80=9CThis is a practice project I completed during my UX boot=
+camp. It=E2=80=99s based on research I conducted with real users, but it=E2=
+=80=99s not a shipped product.=E2=80=9D
+Then show rigorous process. Show real research. Show thoughtful decisions. =
+The fact that it didn=E2=80=99t ship is fine if the work is solid.
+=F0=9F=8E=AF Take-home: Hiring managers would rather see honest thinking ab=
+out a small project than fabricated metrics on a fake one.
+The honesty that actually impresses interviewers
+Here=E2=80=99s the paradox: the things designers think make them look weak =
+are often what actually build credibility.
+What you think makes you look bad but actually impresses:
+=E2=9C=85 =E2=80=9CI made a mistake in my initial approach=E2=80=9D This sh=
+ows self-awareness and learning. Everyone makes mistakes. Acknowledging you=
+rs shows maturity.
+=E2=9C=85 =E2=80=9CI don=E2=80=99t have access to the final metrics=E2=80=
+=9D This is honest about real-world constraints. Way better than making num=
+bers up.
+=E2=9C=85 =E2=80=9CThis was my first time doing [research method] and here=
+=E2=80=99s what I learned=E2=80=9D Growth mindset. Willingness to try new t=
+hings. Reflective practice. All good signals.
+=E2=9C=85 =E2=80=9CThe stakeholder pushed back on my recommendation and we =
+had to compromise=E2=80=9D This shows you work with real constraints and co=
+llaborate with non-designers. That=E2=80=99s a critical skill.
+=E2=9C=85 =E2=80=9CI would do this differently now=E2=80=9D This shows you=
+=E2=80=99re growing and learning from experience. Static skills are less va=
+luable than learning ability.
+=E2=9C=85 =E2=80=9CI don=E2=80=99t know, but here=E2=80=99s how I=E2=80=99d=
+ figure it out=E2=80=9D In interviews, admitting you don=E2=80=99t know som=
+ething and explaining your problem-solving approach is stronger than bullsh=
+itting an answer.
+What actually makes you look bad:
+=E2=9D=8C Taking credit for team work as solo work =E2=9D=8C Fabricating me=
+trics you can=E2=80=99t defend =E2=9D=8C Claiming you did research you clea=
+rly didn=E2=80=99t do =E2=9D=8C Presenting polished work with no mention of=
+ process or iteration =E2=9D=8C Being unable to explain your design decisio=
+ns =E2=9D=8C Pretending you have no weaknesses or learning areas
+The pattern: Honesty about your actual experience and limitations, combined=
+ with clear thinking and genuine learning, beats fabricated perfection ever=
+y time.
+Hiring managers aren=E2=80=99t looking for designers who never make mistake=
+s. They=E2=80=99re looking for designers who think clearly, learn from expe=
+rience, and are honest about what they do and don=E2=80=99t know. That=E2=
+=80=99s what builds trust. And trust is what gets you hired.
+=F0=9F=93=A6 Resource Corner
+Honest UX Portfolio Examples (Bestfolios) [ https://substack.com/redirect/c=
+e6be27b-2f6d-4c03-b9b4-98314f7b314f?j=3DeyJ1IjoiMWp1ZGpwIn0.5o04gUnkd-Msu0I=
+b_nbCOLc-sw15-DjXlvGx8bWpSeo ] Browse portfolios that show real work with h=
+onest context. Look for ones that mention constraints, team roles, and lear=
+ning.
+How to Show Process in Your Portfolio (NN/g) [ https://substack.com/redirec=
+t/8748bee4-30c1-4fae-af7d-16e892692c01?j=3DeyJ1IjoiMWp1ZGpwIn0.5o04gUnkd-Ms=
+u0Ib_nbCOLc-sw15-DjXlvGx8bWpSeo ] Research-backed guidance on what to inclu=
+de in case studies. Strong on showing thinking over just outcomes.
+The Mom Test by Rob Fitzpatrick [ https://substack.com/redirect/20e98920-4a=
+99-4868-9362-ac4b2ab36de7?j=3DeyJ1IjoiMWp1ZGpwIn0.5o04gUnkd-Msu0Ib_nbCOLc-s=
+w15-DjXlvGx8bWpSeo ] While focused on customer interviews, the core lesson =
+applies to portfolios: honesty and specificity build more credibility than =
+trying to impress.
+Case Study Club [ https://substack.com/redirect/cdb0c607-a47a-46a0-b1f3-a2a=
+c10dbcab1?j=3DeyJ1IjoiMWp1ZGpwIn0.5o04gUnkd-Msu0Ib_nbCOLc-sw15-DjXlvGx8bWpS=
+eo ] Collection of case studies with varying levels of polish and honesty. =
+Good for seeing different approaches to presenting real work.
+Lenny=E2=80=99s Podcast: Portfolio Reviews [ https://substack.com/redirect/=
+d456c50d-9e06-4011-ba19-30459a2be551?j=3DeyJ1IjoiMWp1ZGpwIn0.5o04gUnkd-Msu0=
+Ib_nbCOLc-sw15-DjXlvGx8bWpSeo ] Occasional episodes where industry leaders =
+review portfolios. Listen for what they call out as credible vs questionabl=
+e.
+Portfolios for UX Researchers (Mixed Methods) [ https://substack.com/redire=
+ct/0e11ea3a-3129-4ff5-b0b3-b99e64f3b547?j=3DeyJ1IjoiMWp1ZGpwIn0.5o04gUnkd-M=
+su0Ib_nbCOLc-sw15-DjXlvGx8bWpSeo ] While focused on research, the advice on=
+ presenting rigorous process and being honest about limitations applies to =
+design portfolios too.
+Redesigning Your Portfolio (A List Apart) [ https://substack.com/redirect/7=
+4b39df4-0142-4c15-8425-2dc38239fdc9?j=3DeyJ1IjoiMWp1ZGpwIn0.5o04gUnkd-Msu0I=
+b_nbCOLc-sw15-DjXlvGx8bWpSeo ] Articles on presenting work honestly and eff=
+ectively. Good on the narrative structure of case studies.
+Final Thought
+Portfolio dishonesty happens because designers are scared. Scared they=E2=
+=80=99re not good enough. Scared they don=E2=80=99t have the =E2=80=9Cright=
+=E2=80=9D kind of experience. Scared everyone else=E2=80=99s work is better=
+=2E So they embellish, exaggerate, or invent to compete.
+But here=E2=80=99s what actually happens: the fabrication gets caught, cred=
+ibility is destroyed, and the job goes to someone else. Or worse, you get h=
+ired based on fake credentials and can=E2=80=99t deliver what you claimed.
+The alternative is simpler and more effective: be honest about what you did=
+, what you learned, and what you still don=E2=80=99t know. Show real thinki=
+ng, even on imperfect projects. Admit constraints. Talk about tradeoffs. Pr=
+esent yourself as someone who=E2=80=99s learning and growing, not someone w=
+ho=E2=80=99s already perfect.
+Hiring managers don=E2=80=99t want perfect designers. Those don=E2=80=99t e=
+xist. They want honest ones who can think clearly, learn quickly, and work =
+with real-world constraints.
+Your real work, honestly presented, is already good enough. Stop lying abou=
+t it.
+--The UXU Team
+
+Unsubscribe https://substack.com/redirect/2/eyJlIjoiaHR0cHM6Ly9uZXdzbGV0dGV=
+yLnV4dW5pdmVyc2l0eS5pby9hY3Rpb24vZGlzYWJsZV9lbWFpbD90b2tlbj1leUoxYzJWeVgybG=
+tJam81TXpjNU5qRXhOeXdpY0c5emRGOXBaQ0k2TVRreE5EVXhPREF5TENKcFlYUWlPakUzTnpRM=
+k5ESTFOVFVzSW1WNGNDSTZNVGd3TmpFM09EVTFOU3dpYVhOeklqb2ljSFZpTFRFMU1UazNNRGdp=
+TENKemRXSWlPaUprYVhOaFlteGxYMlZ0WVdsc0luMC5fTjZEMTRqeWpaOThuYzkxdkhhT2xMM0N=
+lMTdSeVg3VFJFRDVDMm5wa0hJIiwicCI6MTkxNDUxODAyLCJzIjoxNTE5NzA4LCJmIjp0cnVlLC=
+J1Ijo5Mzc5NjExNywiaWF0IjoxNzc0NjQyNTU1LCJleHAiOjIwOTAyMTg1NTUsImlzcyI6InB1Y=
+i0wIiwic3ViIjoibGluay1yZWRpcmVjdCJ9.3nIB7PKFfmss_Kb9eP9zVwzZvRDHt6IMPZX_i0b=
+e9n8?
+--6e4c827580f12578189be22ce4b89ebef8e3bc789e7bde9bc870a87b6e52
+Content-Type: text/html; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+
+<html style=3D"scrollbar-width: thin;scrollbar-color: rgb(219,219,219)rgb(2=
+55,255,255);"><head>
+<meta http-equiv=3D"Content-Type" content=3D"text/html; charset=3Dutf-8"><t=
+itle>Your case study is lying (and everyone knows it)</title><style>
+@media (max-width: 1024px) {
+  .typography .pullquote-align-left,
+  .typography.editor .pullquote-align-left,
+  .typography .pullquote-align-right,
+  .typography.editor .pullquote-align-right,
+  .typography .pullquote-align-wide,
+  .typography.editor .pullquote-align-wide,
+  .typography .pullquote-align-center,
+  .typography.editor .pullquote-align-center {
+    float: none;
+    margin: 0 auto;
+    width: 100%;
+    max-width: 100%;
+  }
+}
+@media all and (-ms-high-contrast: none), (-ms-high-contrast: active) {
+  .typography .markup table.image-wrapper img,
+  .typography.editor .markup table.image-wrapper img,
+  .typography .markup table.kindle-wrapper img,
+  .typography.editor .markup table.kindle-wrapper img {
+    max-width: 550px;
+  }
+}
+@media (min-width: 1024px) {
+  .typography:not(:has(#toc)) .captioned-image-container figure:has(> a.ima=
+ge2-offset-left),
+  .typography.editor:not(:has(#toc)) .captioned-image-container figure:has(=
+> a.image2-offset-left) {
+    margin-left: var(--image-offset-margin);
+  }
+  .typography:not(:has(#toc)) .captioned-image-container figure:has(> a.ima=
+ge2-offset-right),
+  .typography.editor:not(:has(#toc)) .captioned-image-container figure:has(=
+> a.image2-offset-right) {
+    margin-right: var(--image-offset-margin);
+  }
+}
+@media (min-width: 1300px) {
+  .typography .captioned-image-container figure:has(> a.image2-offset-left)=
+,
+  .typography.editor .captioned-image-container figure:has(> a.image2-offse=
+t-left) {
+    margin-left: var(--image-offset-margin);
+  }
+  .typography .captioned-image-container figure:has(> a.image2-offset-right=
+),
+  .typography.editor .captioned-image-container figure:has(> a.image2-offse=
+t-right) {
+    margin-right: var(--image-offset-margin);
+  }
+}
+@media (max-width: 1024px) {
+  .typography,
+  .typography.editor {
+    /* Disable offset on mobile/tablet */
+  }
+  .typography .captioned-image-container figure:has(> a.image2-align-left),
+  .typography.editor .captioned-image-container figure:has(> a.image2-align=
+-left),
+  .typography .captioned-image-container figure:has(> a.image2-align-right)=
+,
+  .typography.editor .captioned-image-container figure:has(> a.image2-align=
+-right) {
+    float: none;
+    margin: 1em auto;
+    max-width: 100%;
+    width: auto;
+    padding: 0;
+  }
+  .typography .captioned-image-container figure:has(> a.image2-align-left.t=
+hefp),
+  .typography.editor .captioned-image-container figure:has(> a.image2-align=
+-left.thefp),
+  .typography .captioned-image-container figure:has(> a.image2-align-right.=
+thefp),
+  .typography.editor .captioned-image-container figure:has(> a.image2-align=
+-right.thefp) {
+    margin: 1em auto;
+  }
+  .typography .captioned-image-container figure:has(> a.image2-offset-left)=
+,
+  .typography.editor .captioned-image-container figure:has(> a.image2-offse=
+t-left),
+  .typography .captioned-image-container figure:has(> a.image2-offset-right=
+),
+  .typography.editor .captioned-image-container figure:has(> a.image2-offse=
+t-right) {
+    margin: 1em auto;
+  }
+  .typography .captioned-image-container figure:has(> a.image2-align-left) =
+.image2-inset,
+  .typography.editor .captioned-image-container figure:has(> a.image2-align=
+-left) .image2-inset,
+  .typography .captioned-image-container figure:has(> a.image2-align-right)=
+ .image2-inset,
+  .typography.editor .captioned-image-container figure:has(> a.image2-align=
+-right) .image2-inset {
+    display: block;
+    justify-content: initial;
+  }
+}
+@media (max-width: 768px) {
+  .typography .markup div.sponsorship-campaign-embed,
+  .typography.editor .markup div.sponsorship-campaign-embed {
+    margin-top: 24px;
+    margin-bottom: 24px;
+  }
+  .typography .markup div.sponsorship-campaign-embed:first-child,
+  .typography.editor .markup div.sponsorship-campaign-embed:first-child {
+    margin-top: 0px;
+  }
+}
+@media screen and (max-width: 650px) {
+  .typography .markup div.youtube-overlay,
+  .typography.editor .markup div.youtube-overlay,
+  .typography .markup div.vimeo-overlay,
+  .typography.editor .markup div.vimeo-overlay {
+    display: none !important;
+  }
+}
+@media screen and (max-width: 370px) {
+  .typography .markup div.tiktok-wrap,
+  .typography.editor .markup div.tiktok-wrap {
+    width: calc(95vw - 32px);
+    height: calc((95vw - 32px - 2px) / 0.485714);
+  }
+}
+@media screen and (max-width: 650px) {
+  .typography .markup div.embedded-publication-wrap .embedded-publication.s=
+how-subscribe,
+  .typography.editor .markup div.embedded-publication-wrap .embedded-public=
+ation.show-subscribe {
+    padding: 24px;
+  }
+}
+@media screen and (max-width: 650px) {
+  .typography .markup div.subscription-widget-wrap .subscription-widget.sho=
+w-subscribe,
+  .typography.editor .markup div.subscription-widget-wrap .subscription-wid=
+get.show-subscribe,
+  .typography .markup div.subscription-widget-wrap-editor .subscription-wid=
+get.show-subscribe,
+  .typography.editor .markup div.subscription-widget-wrap-editor .subscript=
+ion-widget.show-subscribe,
+  .typography .markup div.captioned-button-wrap .subscription-widget.show-s=
+ubscribe,
+  .typography.editor .markup div.captioned-button-wrap .subscription-widget=
+.show-subscribe {
+    padding: 0px 24px;
+  }
+}
+@media screen and (max-width: 650px) {
+  .typography .markup div.subscription-widget-wrap .subscription-widget.sho=
+w-subscribe .subscription-widget-subscribe .button,
+  .typography.editor .markup div.subscription-widget-wrap .subscription-wid=
+get.show-subscribe .subscription-widget-subscribe .button,
+  .typography .markup div.subscription-widget-wrap-editor .subscription-wid=
+get.show-subscribe .subscription-widget-subscribe .button,
+  .typography.editor .markup div.subscription-widget-wrap-editor .subscript=
+ion-widget.show-subscribe .subscription-widget-subscribe .button,
+  .typography .markup div.captioned-button-wrap .subscription-widget.show-s=
+ubscribe .subscription-widget-subscribe .button,
+  .typography.editor .markup div.captioned-button-wrap .subscription-widget=
+.show-subscribe .subscription-widget-subscribe .button {
+    padding: 10px 12px;
+    min-width: 110px;
+  }
+}
+@media (max-width: 650px) {
+  .typography .markup .twitter-embed,
+  .typography.editor .markup .twitter-embed,
+  .typography .markup .tweet,
+  .typography.editor .markup .tweet {
+    padding: 12px;
+  }
+}
+@media (max-width: 650px) {
+  .typography .markup .twitter-embed .tweet-text,
+  .typography.editor .markup .twitter-embed .tweet-text,
+  .typography .markup .tweet .tweet-text,
+  .typography.editor .markup .tweet .tweet-text {
+    font-size: 14px;
+    line-height: 20px;
+  }
+}
+@media (max-width: 650px) {
+  .typography .markup .twitter-embed .tweet-photos-container.two,
+  .typography.editor .markup .twitter-embed .tweet-photos-container.two,
+  .typography .markup .tweet .tweet-photos-container.two,
+  .typography.editor .markup .tweet .tweet-photos-container.two,
+  .typography .markup .twitter-embed .tweet-photos-container.three,
+  .typography.editor .markup .twitter-embed .tweet-photos-container.three,
+  .typography .markup .tweet .tweet-photos-container.three,
+  .typography.editor .markup .tweet .tweet-photos-container.three,
+  .typography .markup .twitter-embed .tweet-photos-container.four,
+  .typography.editor .markup .twitter-embed .tweet-photos-container.four,
+  .typography .markup .tweet .tweet-photos-container.four,
+  .typography.editor .markup .tweet .tweet-photos-container.four {
+    height: 200px;
+  }
+}
+@media (max-width: 650px) {
+  .typography .markup .twitter-embed a.expanded-link .expanded-link-img,
+  .typography.editor .markup .twitter-embed a.expanded-link .expanded-link-=
+img,
+  .typography .markup .tweet a.expanded-link .expanded-link-img,
+  .typography.editor .markup .tweet a.expanded-link .expanded-link-img {
+    max-height: 180px;
+  }
+}
+@media (max-width: 650px) {
+  .typography .markup .twitter-embed a.expanded-link .expanded-link-descrip=
+tion,
+  .typography.editor .markup .twitter-embed a.expanded-link .expanded-link-=
+description,
+  .typography .markup .tweet a.expanded-link .expanded-link-description,
+  .typography.editor .markup .tweet a.expanded-link .expanded-link-descript=
+ion {
+    display: none;
+  }
+}
+@media screen and (max-width: 650px) {
+  .typography .markup .apple-podcast-container,
+  .typography.editor .markup .apple-podcast-container {
+    width: unset;
+  }
+}
+@media (max-width: 420px) {
+  .typography .markup .install-substack-app-embed img.install-substack-app-=
+embed-img,
+  .typography.editor .markup .install-substack-app-embed img.install-substa=
+ck-app-embed-img {
+    margin: 0 auto 16px auto;
+  }
+}
+@media (max-width: 420px) {
+  .typography .markup .install-substack-app-embed .install-substack-app-emb=
+ed-text,
+  .typography.editor .markup .install-substack-app-embed .install-substack-=
+app-embed-text {
+    margin: 0 0 12px 0;
+    max-width: 100%;
+    width: auto;
+    text-align: center;
+  }
+}
+@media (max-width: 420px) {
+  .typography .markup .install-substack-app-embed .install-substack-app-emb=
+ed-link,
+  .typography.editor .markup .install-substack-app-embed .install-substack-=
+app-embed-link {
+    display: flex;
+    justify-content: center;
+  }
+}
+@media screen and (min-width: 481px) {
+  .share-button-container {
+    height: 38px;
+  }
+}
+@media screen and (min-width: 481px) {
+  .share-button-container a.comment {
+    height: 38px;
+    line-height: 38px;
+    padding-right: 10px;
+  }
+}
+@media screen and (max-width: 480px) {
+  .share-button-container .separator {
+    display: block;
+    margin: 0;
+    height: 8px;
+    border-left: none;
+  }
+}
+@media screen and (max-width: 480px) {
+  .share-button-container a.share.first img {
+    padding-left: 0;
+  }
+}
+@media screen and (min-width: 481px) {
+  .share-button-container a.mobile {
+    display: none !important;
+  }
+}
+@media screen and (min-width: 541px) {
+  .settings-add-pub-modal-wrapper .container .add-recommending-pub-modal-co=
+ntainer {
+    padding: 36px;
+    height: 680px;
+  }
+}
+@media screen and (min-width: 541px) {
+  .settings-add-pub-modal-wrapper .container .add-recommending-pub-modal-co=
+ntainer .footer {
+    position: absolute;
+    bottom: 36px;
+    margin: 0px;
+  }
+}
+@media screen and (max-width: 650px) {
+  .header-anchor-parent {
+    display: none;
+  }
+}
+@media screen and (max-width: 768px) {
+  .post {
+    padding: 16px 0 0 0;
+  }
+}
+@media screen and (max-width: 650px) {
+  .post .post-header .post-label {
+    margin-top: 8px;
+  }
+}
+@media screen and (max-width: 650px) {
+  .post .post-header .meta-author-wrap.alternative-meta .meta-right-column =
+.post-meta {
+    margin-top: 6px;
+  }
+}
+@media screen and (max-width: 650px) {
+  .post .footer-facepile-container {
+    height: 64px;
+    padding: 0 16px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    width: 100%;
+  }
+}
+@media screen and (max-width: 650px) {
+  .post .post-footer.use-separators {
+    justify-content: center;
+  }
+}
+@media screen and (max-width: 650px) {
+  .post .post-footer.next-prev {
+    height: 64px;
+    justify-content: space-between;
+    box-sizing: border-box;
+  }
+}
+@media screen and (max-width: 650px) {
+  .post-contributor-footer .post-contributor-bio-table {
+    display: block;
+  }
+  .post-contributor-footer .post-contributor-bio-table-row {
+    display: flex;
+    flex-direction: row;
+  }
+  .post-contributor-footer .post-contributor-bio-userhead-cell,
+  .post-contributor-footer .post-contributor-bio-body-cell {
+    display: block;
+  }
+  .post-contributor-footer .post-contributor-bio-body-cell {
+    flex-grow: 1;
+  }
+  .post-contributor-footer .post-contributor-bio-body-table {
+    display: block;
+  }
+  .post-contributor-footer .post-contributor-bio-body-table-row {
+    display: block;
+  }
+  .post-contributor-footer .post-contributor-bio-copy-cell,
+  .post-contributor-footer .post-contributor-bio-controls-cell {
+    display: block;
+  }
+  .post-contributor-footer .post-contributor-bio-copy-cell {
+    margin: 0 0 16px 0;
+  }
+  .post-contributor-footer .post-contributor-bio-controls-cell {
+    width: auto;
+  }
+  .post-contributor-footer .post-contributor-bio-controls {
+    margin: auto;
+  }
+  .post-contributor-footer .post-contributor-bio-controls .button.primary {
+    width: 100%;
+  }
+  .post-contributor-footer .post-contributor-bio-text {
+    font-size: 14px;
+  }
+}
+@media screen and (min-width: 768px) {
+  .post-silhouette {
+    padding: 32px 0;
+  }
+}
+@media screen and (max-width: 650px) {
+  .post-silhouette .post-silhouette-title {
+    margin-top: 10.44225025px;
+    height: 120px;
+  }
+}
+@media screen and (max-width: 650px) {
+  .post-silhouette .post-silhouette-meta {
+    width: 75%;
+  }
+}
+@media screen and (max-width: 650px) {
+  .post-silhouette .post-silhouette-meta.with-byline-image {
+    margin: 20px 0;
+  }
+}
+@media screen and (max-width: 650px) {
+  .use-theme-bg .post-meta.alternative-meta .post-meta-item,
+  .post-meta.alternative-meta .post-meta-item {
+    padding-right: 16px;
+  }
+}
+@media screen and (max-width: 370px) {
+  .use-theme-bg .post-meta.alternative-meta .post-meta-item,
+  .post-meta.alternative-meta .post-meta-item {
+    font-size: 14px;
+  }
+}
+@media screen and (max-width: 650px) {
+  .use-theme-bg .post-meta.alternative-meta .post-meta-item.guest-author-pu=
+blication,
+  .post-meta.alternative-meta .post-meta-item.guest-author-publication {
+    display: none;
+  }
+}
+@media screen and (max-width: 370px) {
+  .post-meta .post-meta-item .post-meta-button {
+    height: 36px !important;
+    /* important to override in-line height style on emails */
+  }
+  .post-meta .post-meta-item .post-meta-button .meta-button-label {
+    display: none;
+  }
+  .post-meta .post-meta-item .post-meta-button > svg {
+    margin-right: 0;
+  }
+}
+@media screen and (max-width: 370px) {
+  .post-meta .post-meta-item {
+    font-size: 12px;
+  }
+}
+@media screen and (max-width: 650px) {
+  .post .floating-subscribe-button {
+    bottom: 20px;
+    right: 20px;
+  }
+}
+@media (max-width: 1024px) {
+  body .pullquote-align-left,
+  body .pullquote-align-right,
+  body .pullquote-align-wide,
+  body .pullquote-align-center {
+    float: none;
+    margin: 0 auto;
+    width: 100%;
+    max-width: 100%;
+  }
+}
+@media all and (-ms-high-contrast: none), (-ms-high-contrast: active) {
+  body .markup table.image-wrapper img,
+  body .markup table.kindle-wrapper img {
+    max-width: 550px;
+  }
+}
+@media (min-width: 1024px) {
+  body:not(:has(#toc)) .captioned-image-container figure:has(> a.image2-off=
+set-left) {
+    margin-left: var(--image-offset-margin);
+  }
+  body:not(:has(#toc)) .captioned-image-container figure:has(> a.image2-off=
+set-right) {
+    margin-right: var(--image-offset-margin);
+  }
+}
+@media (min-width: 1300px) {
+  body .captioned-image-container figure:has(> a.image2-offset-left) {
+    margin-left: var(--image-offset-margin);
+  }
+  body .captioned-image-container figure:has(> a.image2-offset-right) {
+    margin-right: var(--image-offset-margin);
+  }
+}
+@media (max-width: 1024px) {
+  body {
+    /* Disable offset on mobile/tablet */
+  }
+  body .captioned-image-container figure:has(> a.image2-align-left),
+  body .captioned-image-container figure:has(> a.image2-align-right) {
+    float: none;
+    margin: 1em auto;
+    max-width: 100%;
+    width: auto;
+    padding: 0;
+  }
+  body .captioned-image-container figure:has(> a.image2-align-left.thefp),
+  body .captioned-image-container figure:has(> a.image2-align-right.thefp) =
+{
+    margin: 1em auto;
+  }
+  body .captioned-image-container figure:has(> a.image2-offset-left),
+  body .captioned-image-container figure:has(> a.image2-offset-right) {
+    margin: 1em auto;
+  }
+  body .captioned-image-container figure:has(> a.image2-align-left) .image2=
+-inset,
+  body .captioned-image-container figure:has(> a.image2-align-right) .image=
+2-inset {
+    display: block;
+    justify-content: initial;
+  }
+}
+@media (max-width: 768px) {
+  body .markup div.sponsorship-campaign-embed {
+    margin-top: 24px;
+    margin-bottom: 24px;
+  }
+  body .markup div.sponsorship-campaign-embed:first-child {
+    margin-top: 0px;
+  }
+}
+@media screen and (max-width: 650px) {
+  body .markup div.youtube-overlay,
+  body .markup div.vimeo-overlay {
+    display: none !important;
+  }
+}
+@media screen and (max-width: 370px) {
+  body .markup div.tiktok-wrap {
+    width: calc(95vw - 32px);
+    height: calc((95vw - 32px - 2px) / 0.485714);
+  }
+}
+@media screen and (max-width: 650px) {
+  body .markup div.embedded-publication-wrap .embedded-publication.show-sub=
+scribe {
+    padding: 24px;
+  }
+}
+@media screen and (max-width: 650px) {
+  body .markup div.subscription-widget-wrap .subscription-widget.show-subsc=
+ribe,
+  body .markup div.subscription-widget-wrap-editor .subscription-widget.sho=
+w-subscribe,
+  body .markup div.captioned-button-wrap .subscription-widget.show-subscrib=
+e {
+    padding: 0px 24px;
+  }
+}
+@media screen and (max-width: 650px) {
+  body .markup div.subscription-widget-wrap .subscription-widget.show-subsc=
+ribe .subscription-widget-subscribe .button,
+  body .markup div.subscription-widget-wrap-editor .subscription-widget.sho=
+w-subscribe .subscription-widget-subscribe .button,
+  body .markup div.captioned-button-wrap .subscription-widget.show-subscrib=
+e .subscription-widget-subscribe .button {
+    padding: 10px 12px;
+    min-width: 110px;
+  }
+}
+@media (max-width: 650px) {
+  body .markup .twitter-embed,
+  body .markup .tweet {
+    padding: 12px;
+  }
+}
+@media (max-width: 650px) {
+  body .markup .twitter-embed .tweet-text,
+  body .markup .tweet .tweet-text {
+    font-size: 14px;
+    line-height: 20px;
+  }
+}
+@media (max-width: 650px) {
+  body .markup .twitter-embed .tweet-photos-container.two,
+  body .markup .tweet .tweet-photos-container.two,
+  body .markup .twitter-embed .tweet-photos-container.three,
+  body .markup .tweet .tweet-photos-container.three,
+  body .markup .twitter-embed .tweet-photos-container.four,
+  body .markup .tweet .tweet-photos-container.four {
+    height: 200px;
+  }
+}
+@media (max-width: 650px) {
+  body .markup .twitter-embed a.expanded-link .expanded-link-img,
+  body .markup .tweet a.expanded-link .expanded-link-img {
+    max-height: 180px;
+  }
+}
+@media (max-width: 650px) {
+  body .markup .twitter-embed a.expanded-link .expanded-link-description,
+  body .markup .tweet a.expanded-link .expanded-link-description {
+    display: none;
+  }
+}
+@media screen and (max-width: 650px) {
+  body .markup .apple-podcast-container {
+    width: unset;
+  }
+}
+@media (max-width: 420px) {
+  body .markup .install-substack-app-embed img.install-substack-app-embed-i=
+mg {
+    margin: 0 auto 16px auto;
+  }
+}
+@media (max-width: 420px) {
+  body .markup .install-substack-app-embed .install-substack-app-embed-text=
+ {
+    margin: 0 0 12px 0;
+    max-width: 100%;
+    width: auto;
+    text-align: center;
+  }
+}
+@media (max-width: 420px) {
+  body .markup .install-substack-app-embed .install-substack-app-embed-link=
+ {
+    display: flex;
+    justify-content: center;
+  }
+}
+@media screen and (min-width: 500px) {
+  body .header a.logo {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+  }
+}
+@media screen and (max-width: 420px) {
+  body .subscription-receipt table:first-of-type .subscription-amount .subs=
+cription-discount {
+    width: 72px !important;
+  }
+}
+@media screen and (min-width: 481px) {
+  body .share-button-container {
+    height: auto;
+  }
+}
+@media screen and (max-width: 480px) {
+  body .share-button-container .separator {
+    display: block !important;
+    margin: 0 !important;
+    height: 8px !important;
+    border-left: none !important;
+  }
+}
+@media screen and (max-width: 650px) {
+  .digest .item .post-meta-item.audience {
+    display: none;
+  }
+}
+@media screen and (min-width: 500px) {
+  .digest-publication .logo img {
+    width: 42px;
+    height: 42px;
+    border-radius: 8px;
+  }
+}
+@media screen and (max-width: 650px) {
+  .comments-page .container .comment-list .collapsed-reply {
+    margin-left: calc(10 + 32px - 24px);
+  }
+}
+@media screen and (max-width: 650px) {
+  .comment > .comment-list {
+    padding-left: 24px;
+  }
+}
+@media screen and (max-width: 650px) {
+  .finish-magic-login-modal .modal-content .container {
+    padding: 24px 0;
+  }
+}
+@media (max-width: 650px) {
+  .reader2-text-b3 {
+    line-height: 24px;
+  }
+}
+@media screen and (max-width: 650px) {
+  .reader2-text-h4 {
+    line-height: 24px;
+  }
+}
+@media screen and (min-width: 541px) {
+  .user-profile-modal {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+}
+@media screen and (max-width: 650px) {
+  .subscribe-widget form.form .sideBySideWrap button.rightButton {
+    padding: 10px 12px;
+  }
+}
+@media screen and (min-width: 541px) {
+  .pub-icon:hover .logo-hover,
+  .feed-item-icon:hover .logo-hover {
+    display: block;
+  }
+}
+@media screen and (max-width: 650px) {
+  .post-ufi.single-full-width-button .post-ufi-button-wrapper {
+    width: 100%;
+    padding: 16px;
+  }
+  .post-ufi.single-full-width-button .post-ufi-button-wrapper:empty {
+    display: none;
+  }
+  .post-ufi.single-full-width-button .post-ufi-button {
+    width: 100%;
+    justify-content: center;
+  }
+}
+@media screen and (max-width: 768px) {
+  .file-embed-wrapper {
+    padding: 0;
+  }
+}
+@media screen and (max-width: 768px) {
+  .file-embed-wrapper-editor {
+    padding: 0;
+  }
+}
+@media screen and (max-width: 768px) {
+  .file-embed-wrapper-editor:active {
+    padding: 0;
+  }
+}
+@media only screen and (max-width: 650px) {
+  .file-embed-button.wide,
+  .file-embed-error-button.wide {
+    display: none;
+  }
+}
+@media only screen and (min-width: 630px) {
+  .file-embed-button.narrow,
+  .file-embed-error-button.narrow {
+    display: none;
+  }
+}
+@media screen and (min-width: 541px) {
+  .audio-player-wrapper .audio-player {
+    min-width: 500px;
+  }
+}
+@media screen and (max-width: 650px) {
+  .audio-player-wrapper .audio-player .audio-player-progress {
+    border-left-width: 16px;
+    border-right-width: 16px;
+  }
+}
+@media screen and (max-width: 650px) {
+  .audio-player-wrapper .audio-player .audio-player-progress .audio-player-=
+progress-bar .audio-player-progress-bar-popup {
+    top: -54px;
+  }
+}
+@media screen and (max-width: 650px) {
+  .audio-player-wrapper-fancy .audio-player .audio-player-progress {
+    border-left-width: 16px;
+    border-right-width: 16px;
+  }
+}
+@media screen and (max-width: 650px) {
+  .audio-player-wrapper-fancy .audio-player .audio-player-progress .audio-p=
+layer-progress-bar .audio-player-progress-bar-popup {
+    top: -54px;
+  }
+}
+@media (min-width: 250px) {
+  .audio-player-wrapper-fancy .audio-player {
+    padding: 32px;
+  }
+  .audio-player-wrapper-fancy .audio-player .btn-group {
+    display: flex;
+  }
+  .audio-player-wrapper-fancy .audio-player .btn-group .button:last-of-type=
+ {
+    display: block;
+  }
+}
+@media (min-width: 300px) {
+  .audio-player-wrapper-fancy .audio-player .btn-group {
+    display: block;
+  }
+  .audio-player-wrapper-fancy .audio-player .btn-group .button:first-of-typ=
+e {
+    display: block;
+  }
+}
+@media (min-width: 350px) {
+  .audio-player-wrapper-fancy .audio-player .audio-player-substack-logo {
+    display: block;
+  }
+  .audio-player-wrapper-fancy .audio-player .audio-player-title {
+    margin-top: 16px;
+  }
+  .audio-player-wrapper-fancy .audio-player .audio-player-hero-image-contai=
+ner {
+    padding-top: 15%;
+    width: 15%;
+    display: block;
+  }
+  .audio-player-wrapper-fancy .audio-player .btn-group .button:first-of-typ=
+e {
+    display: block;
+  }
+  .audio-player-wrapper-fancy .audio-player .audio-player-substack-logo {
+    display: block;
+  }
+}
+@media (min-width: 350px) {
+  .audio-player-wrapper-fancy .audio-player .audio-player-hero-image-contai=
+ner {
+    padding-top: 25%;
+    width: 25%;
+    display: block;
+  }
+  .audio-player-wrapper-fancy .audio-player .btn-group {
+    display: flex;
+  }
+  .audio-player-wrapper-fancy .audio-player .btn-group .button:first-of-typ=
+e {
+    display: block;
+  }
+}
+@media (min-width: 400px) {
+  .audio-player-wrapper-fancy .audio-player .audio-player-hero-image-contai=
+ner {
+    padding-top: 40%;
+    width: 40%;
+  }
+}
+@media (max-width: 400px) {
+  .audio-player-wrapper-fancy .audio-player .btn-group {
+    margin-top: 12px;
+  }
+  .audio-player-wrapper-fancy .audio-player .btn-group .button {
+    font-size: 13px;
+    padding: 6px 12px;
+    height: auto;
+    margin-top: 10px;
+  }
+}
+@media (min-width: 600px) {
+  .audio-player-wrapper-fancy .audio-player .audio-player-hero-image-contai=
+ner {
+    padding-top: 55%;
+    width: 55%;
+  }
+}
+@media (max-width: 650px) {
+  .poll-editor-modal {
+    min-width: calc(100% - 20px);
+  }
+}
+@media (max-width: 750px) {
+  .poll-embed .poll-anchor-target .poll-anchor-copy-button {
+    left: 8px;
+    top: 45px;
+  }
+}</style></head><body class=3D"email-body" style=3D"font-kerning: auto;--im=
+age-offset-margin: -120px;"><img src=3D"https://eotrx.substackcdn.com/open?=
+token=3DeyJtIjoiPDIwMjYwMzI3MjAxNTQ0LjMuNDQwMGVhZmQ1OWViNDMwY0BtZy1kMS5zdWJ=
+zdGFjay5jb20-IiwidSI6OTM3OTYxMTcsInIiOiJpbmZvQHdvb2RmaW5lLmNvIiwiZCI6Im1nLW=
+QxLnN1YnN0YWNrLmNvbSIsInAiOjE5MTQ1MTgwMiwidCI6InBvZGNhc3QiLCJhIjoiZXZlcnlvb=
+mUiLCJzIjoxNTE5NzA4LCJjIjoicG9zdCIsImYiOnRydWUsInBvc2l0aW9uIjoidG9wIiwiaWF0=
+IjoxNzc0NjQyNTU2LCJleHAiOjE3NzcyMzQ1NTYsImlzcyI6InB1Yi0wIiwic3ViIjoiZW8ifQ.=
+JWqeFUVZGqszoJ5XFYiAB6G74JlsLzwNJxTyAkYVtZg" alt=3D"" width=3D"1" height=3D=
+"1" border=3D"0" style=3D"height:1px !important;width:1px !important;border=
+-width:0 !important;margin-top:0 !important;margin-bottom:0 !important;marg=
+in-right:0 !important;margin-left:0 !important;padding-top:0 !important;pad=
+ding-bottom:0 !important;padding-right:0 !important;padding-left:0 !importa=
+nt;"><div class=3D"preview" style=3D"display:none;font-size:1px;color:#3333=
+33;line-height:1px;max-height:0px;max-width:0px;opacity:0;overflow:hidden;"=
+>Watch now (8 mins) | Why hiring managers can spot fabricated projects from=
+ a mile away, what honesty actually looks like in portfolios, and how to pr=
+esent real work without exposing yourself as a fraud.</div><div class=3D"pr=
+eview" style=3D"display:none;font-size:1px;color:#333333;line-height:1px;ma=
+x-height:0px;max-width:0px;opacity:0;overflow:hidden;">=CD=8F &nbsp; =E2=80=
+=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=
+=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=
+=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=
+=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp; =
+=E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=
+=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp=
+; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=
+=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp=
+; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=
+=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp=
+; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=
+=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp=
+; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=
+=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp=
+; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=
+=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp=
+; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=
+=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp=
+; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=
+=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp=
+; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=
+=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp=
+; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=
+=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp=
+; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=
+=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp=
+; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=
+=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp=
+; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=
+=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp=
+; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=
+=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp=
+; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=
+=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp=
+; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=
+=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp=
+; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=
+=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp=
+; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=
+=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp=
+; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=
+=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp=
+; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=
+=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp=
+; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=
+=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp=
+; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=
+=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp=
+; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=
+=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp=
+; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=
+=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp=
+; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=
+=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp=
+; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=
+=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp=
+; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=
+=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp=
+; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=
+=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp=
+; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=
+=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp=
+; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=
+=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp=
+; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=
+=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp=
+; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=
+=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp=
+; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=
+=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp=
+; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=
+=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp=
+; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=
+=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp=
+; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=
+=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp=
+; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=
+=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp=
+; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=
+=AD=CD=8F &nbsp; =E2=80=87 =C2=AD=CD=8F &nbsp; =E2=80=87 =C2=AD</div><table=
+ class=3D"email-body-container" role=3D"presentation" width=3D"100%" border=
+=3D"0" cellspacing=3D"0" cellpadding=3D"0"><tbody><tr><td></td><td class=3D=
+"content" width=3D"550"></td><td></td></tr><tr><td></td><td class=3D"conten=
+t" width=3D"550" align=3D"left"><div style=3D"font-size: 16px;line-height: =
+26px;max-width: 550px;width: 100%;margin: 0 auto;overflow-wrap: break-word;=
+"><table role=3D"presentation" width=3D"100%" border=3D"0" cellspacing=3D"0=
+" cellpadding=3D"0"><tbody><tr><td align=3D"right" style=3D"height:20px;"><=
+table role=3D"presentation" width=3D"auto" border=3D"0" cellspacing=3D"0" c=
+ellpadding=3D"0"><tbody><tr><td style=3D"vertical-align:middle;"><span clas=
+s=3D"pencraft pc-reset reset-IxiVJZ tw-font-body tw-text-ssm tw-text-substa=
+ck-secondary" style=3D"font-family: SF Pro Text, -apple-system, system-ui, =
+BlinkMacSystemFont, Inter, Segoe UI, Roboto, Helvetica, Arial, sans-serif, =
+Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol;font-size: 13px;color: u=
+nset;list-style: none;text-decoration: unset;margin: 0;"><div class=3D"penc=
+raft pc-reset align-right-VJbKw5 size-12-mmZ61m reset-IxiVJZ" style=3D"list=
+-style: none;color: unset;text-align: right;font-size: 12px;line-height: 16=
+px;text-decoration: unset;margin: 0;"><span class=3D"pencraft pc-reset rese=
+t-IxiVJZ" translated=3D"" style=3D"list-style: none;color: unset;text-decor=
+ation: unset;margin: 0;">Forwarded this email? <a class=3D"pencraft pc-rese=
+t decoration-underline-ClTkYc reset-IxiVJZ" href=3D"https://substack.com/re=
+direct/2/eyJlIjoiaHR0cHM6Ly9uZXdzbGV0dGVyLnV4dW5pdmVyc2l0eS5pby9zdWJzY3JpYm=
+U_dXRtX3NvdXJjZT1lbWFpbCZ1dG1fY2FtcGFpZ249ZW1haWwtc3Vic2NyaWJlJnI9MWp1ZGpwJ=
+m5leHQ9aHR0cHMlM0ElMkYlMkZuZXdzbGV0dGVyLnV4dW5pdmVyc2l0eS5pbyUyRnAlMkZ5b3Vy=
+LWNhc2Utc3R1ZHktaXMtbHlpbmctYW5kLWV2ZXJ5b25lIiwicCI6MTkxNDUxODAyLCJzIjoxNTE=
+5NzA4LCJmIjp0cnVlLCJ1Ijo5Mzc5NjExNywiaWF0IjoxNzc0NjQyNTU1LCJleHAiOjIwOTAyMT=
+g1NTUsImlzcyI6InB1Yi0wIiwic3ViIjoibGluay1yZWRpcmVjdCJ9.APnarNf40OqlZrCDWOML=
+-E-yuA7YtqwXsKqPp1K8Uzk?" style=3D"list-style: none;color: unset;text-decor=
+ation: unset;margin: 0;-webkit-text-decoration-line: underline;text-decorat=
+ion-line: underline;">Subscribe here</a> for more</span></div></span></td><=
+/tr></tbody></table></td></tr></tbody></table><table class=3D"header graphi=
+c-header" role=3D"presentation" style=3D"border-spacing: 0;padding: 16px 0 =
+32px;"><tbody><tr><td align=3D"center" style=3D"text-align: center;padding:=
+ 0;"><a href=3D"https://substack.com/redirect/2/eyJlIjoiaHR0cHM6Ly9uZXdzbGV=
+0dGVyLnV4dW5pdmVyc2l0eS5pby9wL3lvdXItY2FzZS1zdHVkeS1pcy1seWluZy1hbmQtZXZlcn=
+lvbmU_dXRtX2NhbXBhaWduPWVtYWlsLWhhbGYtcG9zdCZyPTFqdWRqcCZ0b2tlbj1leUoxYzJWe=
+VgybGtJam81TXpjNU5qRXhOeXdpY0c5emRGOXBaQ0k2TVRreE5EVXhPREF5TENKcFlYUWlPakUz=
+TnpRMk5ESTFOVFVzSW1WNGNDSTZNVGMzTnpJek5EVTFOU3dpYVhOeklqb2ljSFZpTFRFMU1UazN=
+NRGdpTENKemRXSWlPaUp3YjNOMExYSmxZV04wYVc5dUluMC40Z3piTHk1MGpHUDJNc01ySUVlUE=
+hwNVFiSXQwN3U4c0F1UkhLUGdLbS04IiwicCI6MTkxNDUxODAyLCJzIjoxNTE5NzA4LCJmIjp0c=
+nVlLCJ1Ijo5Mzc5NjExNywiaWF0IjoxNzc0NjQyNTU1LCJleHAiOjIwOTAyMTg1NTUsImlzcyI6=
+InB1Yi0wIiwic3ViIjoibGluay1yZWRpcmVjdCJ9.bTmB_Ou9fKoJ8LSly7i7lEXJYVRkezmbOj=
+CZjPEYPtY?"><img class=3D"header-image" role=3D"presentation" width=3D"550"=
+ height=3D"110" src=3D"https://substackcdn.com/image/fetch/$s_!UPf9!,w_1100=
+,c_limit,f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-pos=
+t-media.s3.amazonaws.com%2Fpublic%2Fimages%2F9b28f3a0-2b9c-4b00-8925-a136f8=
+4153ae_1100x220.png" style=3D"border: none !important;vertical-align: middl=
+e;max-width: 550px;display: block;margin: 0 auto;height: auto;width: 100%;"=
+></a></td></tr></tbody></table><table role=3D"presentation" width=3D"auto" =
+border=3D"0" cellspacing=3D"0" cellpadding=3D"0" style=3D"width:100%;"><tbo=
+dy><tr><td style=3D"vertical-align:middle;width:100%;"><a href=3D"https://s=
+ubstack.com/app-link/post?publication_id=3D1519708&amp;post_id=3D191451802&=
+amp;utm_source=3Dpodcast-email&amp;play_audio=3Dtrue&amp;r=3D1judjp&amp;utm=
+_campaign=3Demail-play-on-substack&amp;token=3DeyJ1c2VyX2lkIjo5Mzc5NjExNywi=
+cG9zdF9pZCI6MTkxNDUxODAyLCJpYXQiOjE3NzQ2NDI1NTUsImV4cCI6MTc3NzIzNDU1NSwiaXN=
+zIjoicHViLTE1MTk3MDgiLCJzdWIiOiJwb3N0LXJlYWN0aW9uIn0.4gzbLy50jGP2MsMrIEePHp=
+5QbIt07u8sAuRHKPgKm-8&amp;utm_content=3Dwatch_now_gif"><img src=3D"https://=
+substackcdn.com/image/fetch/$s_!KIlR!,w_1138,c_limit,f_auto,q_auto:good,fl_=
+progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpubl=
+ic%2Fimages%2Fec86662d-fea1-41f7-80f9-ff8b5e99f1c1_320x180.gif" alt=3D"The_=
+Honest_Portfolio_Playbook.mp4" style=3D"max-width: 550px;border: none;verti=
+cal-align: middle;width: 100%;border-radius: 12px"></a></td></tr></tbody></=
+table><table role=3D"presentation" width=3D"auto" border=3D"0" cellspacing=
+=3D"0" cellpadding=3D"0" style=3D"width:100%;"><tbody><tr><td><div style=3D=
+"font-size: 16px;line-height: 26px;height: 16px">&nbsp;</div></td></tr><tr =
+height=3D"8"><td></td></tr><tr><td><table role=3D"presentation" width=3D"au=
+to" border=3D"0" cellspacing=3D"0" cellpadding=3D"0" style=3D"width:100%;">=
+<tbody><tr><td style=3D"vertical-align:middle;width:100%;"><table class=3D"=
+fullWidth-mgXGs7" role=3D"presentation" width=3D"auto" border=3D"0" cellspa=
+cing=3D"0" cellpadding=3D"0" style=3D"box-sizing: border-box;width: 100%;mi=
+n-height: 40px;padding-left: 0;padding-right: 0;"><tbody><tr><td class=3D"f=
+ullWidth-mgXGs7 emailButtonTd-o2ymya priority_primary-vWRHI0" align=3D"cent=
+er" style=3D"box-sizing: border-box;width: 100%;min-height: 40px;padding-le=
+ft: 0;padding-right: 0;border-radius: 8px;background-color: #538cfa;"><a cl=
+ass=3D"fullWidth-mgXGs7 emailButtonA-Ktpg7h" href=3D"https://substack.com/a=
+pp-link/post?publication_id=3D1519708&amp;post_id=3D191451802&amp;utm_sourc=
+e=3Dpodcast-email&amp;play_audio=3Dtrue&amp;r=3D1judjp&amp;utm_campaign=3De=
+mail-play-on-substack&amp;token=3DeyJ1c2VyX2lkIjo5Mzc5NjExNywicG9zdF9pZCI6M=
+TkxNDUxODAyLCJpYXQiOjE3NzQ2NDI1NTUsImV4cCI6MTc3NzIzNDU1NSwiaXNzIjoicHViLTE1=
+MTk3MDgiLCJzdWIiOiJwb3N0LXJlYWN0aW9uIn0.4gzbLy50jGP2MsMrIEePHp5QbIt07u8sAuR=
+HKPgKm-8&amp;utm_content=3Dwatch_now_button" style=3D"box-sizing: border-bo=
+x;width: 100%;min-height: 40px;padding-left: 0;padding-right: 0;font-family=
+: system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Ar=
+ial,sans-serif,'Apple Color Emoji','Segoe UI Emoji','Segoe UI Symbol';font-=
+size: 14px;font-weight: 600;letter-spacing: -.15px;border-radius: 8px;paddi=
+ng: 12px 24px;line-height: 1;text-decoration: none;display: inline-block;co=
+lor: #ffffff;border: none;"><img src=3D"https://substackcdn.com/image/fetch=
+/$s_!JR-4!,w_26.046511627906977,c_scale,f_png,q_auto:good,fl_progressive:st=
+eep/https%3A%2F%2Fsubstack.com%2Ficon%2FPlayIcon%3Fv%3D4%26height%3D32%26fi=
+ll%3D%2523ffffff%26stroke%3D%2523ffffff%26strokeWidth%3D2" width=3D"13.0232=
+55813953488" height=3D"16" style=3D"border: none;vertical-align: middle;max=
+-width: 13.023255813953488px" alt=3D""><span style=3D"margin-left:8px;verti=
+cal-align:middle;">Watch now</span></a></td></tr></tbody></table></td></tr>=
+</tbody></table></td></tr><tr height=3D"8"><td></td></tr><tr><td><div style=
+=3D"font-size: 16px;line-height: 26px;height: 16px">&nbsp;</div></td></tr><=
+/tbody></table><div class=3D"post typography" dir=3D"auto" style=3D"--image=
+-offset-margin: -120px;padding: 32px 0 0 0;font-size: 16px;line-height: 26p=
+x;"><div class=3D"post-header" role=3D"region" aria-label=3D"Post header" s=
+tyle=3D"font-size: 16px;line-height: 26px;"><h1 class=3D"post-title publish=
+ed title-X77sOw" dir=3D"auto" style=3D"direction: auto;text-align: start;un=
+icode-bidi: isolate;color: rgb(54,55,55);font-family: 'SF Pro Display',-app=
+le-system-headline,system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Ro=
+boto,Helvetica,Arial,sans-serif,'Apple Color Emoji','Segoe UI Emoji','Segoe=
+ UI Symbol';font-weight: bold;-webkit-font-smoothing: antialiased;-moz-osx-=
+font-smoothing: antialiased;-webkit-appearance: optimizelegibility;-moz-app=
+earance: optimizelegibility;appearance: optimizelegibility;margin: 0;line-h=
+eight: 36px;font-size: 32px;"><a href=3D"https://substack.com/app-link/post=
+?publication_id=3D1519708&amp;post_id=3D191451802&amp;utm_source=3Dpost-ema=
+il-title&amp;utm_campaign=3Demail-post-title&amp;isFreemail=3Dtrue&amp;r=3D=
+1judjp&amp;token=3DeyJ1c2VyX2lkIjo5Mzc5NjExNywicG9zdF9pZCI6MTkxNDUxODAyLCJp=
+YXQiOjE3NzQ2NDI1NTUsImV4cCI6MTc3NzIzNDU1NSwiaXNzIjoicHViLTE1MTk3MDgiLCJzdWI=
+iOiJwb3N0LXJlYWN0aW9uIn0.4gzbLy50jGP2MsMrIEePHp5QbIt07u8sAuRHKPgKm-8" style=
+=3D"color: rgb(54,55,55);text-decoration: none;">Your case study is lying (=
+and everyone knows it)</a></h1><h3 class=3D"subtitle subtitle-HEEcLo" dir=
+=3D"auto" style=3D"direction: auto;text-align: start;unicode-bidi: isolate;=
+font-family: 'SF Pro Display',-apple-system-headline,system-ui,-apple-syste=
+m,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif,'Apple Co=
+lor Emoji','Segoe UI Emoji','Segoe UI Symbol';font-weight: normal;-webkit-f=
+ont-smoothing: antialiased;-moz-osx-font-smoothing: antialiased;-webkit-app=
+earance: optimizelegibility;-moz-appearance: optimizelegibility;appearance:=
+ optimizelegibility;margin: 4px 0 0;color: #777777;line-height: 24px;font-s=
+ize: 18px;margin-top: 12px;">Why hiring managers can spot fabricated projec=
+ts from a mile away, what honesty actually looks like in portfolios, and ho=
+w to present real work without exposing yourself as a fraud.</h3><table cla=
+ss=3D"post-meta" role=3D"presentation" width=3D"100%" border=3D"0" cellspac=
+ing=3D"0" cellpadding=3D"0" style=3D"margin: 1em 0;height: 20px;align-items=
+: center;"><tbody><tr><td><table role=3D"presentation" width=3D"auto" borde=
+r=3D"0" cellspacing=3D"0" cellpadding=3D"0"><tbody><tr><td><table role=3D"p=
+resentation" width=3D"auto" border=3D"0" cellspacing=3D"0" cellpadding=3D"0=
+"><tbody><tr><td style=3D"vertical-align:middle;"><div class=3D"pencraft pc=
+-reset color-primary-zABazT line-height-20-t4M0El font-meta-MWBumP size-11-=
+NuY2Zx weight-medium-fw81nC transform-uppercase-yKDgcq reset-IxiVJZ meta-Eg=
+zBVA custom-css-email-post-author" style=3D"list-style: none;font-size: 11p=
+x;line-height: 20px;text-decoration: unset;color: rgb(54,55,55);margin: 0;f=
+ont-family: 'SF Compact',-apple-system,system-ui,-apple-system,BlinkMacSyst=
+emFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif,'Apple Color Emoji','Se=
+goe UI Emoji','Segoe UI Symbol';font-weight: 500;text-transform: uppercase;=
+letter-spacing: .2px;"><a class=3D"pencraft pc-reset color-primary-zABazT l=
+ine-height-20-t4M0El font-meta-MWBumP size-11-NuY2Zx weight-medium-fw81nC t=
+ransform-uppercase-yKDgcq reset-IxiVJZ meta-EgzBVA" style=3D"list-style: no=
+ne;color: rgb(54,55,55);margin: 0;font-size: 11px;line-height: 20px;font-fa=
+mily: 'SF Compact',-apple-system,system-ui,-apple-system,BlinkMacSystemFont=
+,'Segoe UI',Roboto,Helvetica,Arial,sans-serif,'Apple Color Emoji','Segoe UI=
+ Emoji','Segoe UI Symbol';font-weight: 500;text-transform: uppercase;letter=
+-spacing: .2px;text-decoration: none" href=3D"https://substack.com/@researc=
+hbookmark">User Experience University</a> and <a class=3D"pencraft pc-reset=
+ color-primary-zABazT line-height-20-t4M0El font-meta-MWBumP size-11-NuY2Zx=
+ weight-medium-fw81nC transform-uppercase-yKDgcq reset-IxiVJZ meta-EgzBVA" =
+style=3D"list-style: none;color: rgb(54,55,55);margin: 0;font-size: 11px;li=
+ne-height: 20px;font-family: 'SF Compact',-apple-system,system-ui,-apple-sy=
+stem,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif,'Apple=
+ Color Emoji','Segoe UI Emoji','Segoe UI Symbol';font-weight: 500;text-tran=
+sform: uppercase;letter-spacing: .2px;text-decoration: none" href=3D"https:=
+//substack.com/@yaoadantor">Yao Adantor</a></div></td></tr></tbody></table>=
+</td></tr><tr><td><table role=3D"presentation" width=3D"auto" border=3D"0" =
+cellspacing=3D"0" cellpadding=3D"0"><tbody><tr><td style=3D"vertical-align:=
+middle;"><div class=3D"pencraft pc-reset color-secondary-ls1g8s line-height=
+-20-t4M0El font-meta-MWBumP size-11-NuY2Zx weight-medium-fw81nC transform-u=
+ppercase-yKDgcq reset-IxiVJZ meta-EgzBVA" style=3D"list-style: none;font-si=
+ze: 11px;line-height: 20px;text-decoration: unset;color: rgb(119,119,119);m=
+argin: 0;font-family: 'SF Compact',-apple-system,system-ui,-apple-system,Bl=
+inkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif,'Apple Color =
+Emoji','Segoe UI Emoji','Segoe UI Symbol';font-weight: 500;text-transform: =
+uppercase;letter-spacing: .2px;"><time datetime=3D"2026-03-27T20:15:44.267Z=
+">Mar 27</time></div></td></tr></tbody></table></td></tr></tbody></table></=
+td><td align=3D"right"><table role=3D"presentation" width=3D"auto" border=
+=3D"0" cellspacing=3D"0" cellpadding=3D"0"><tbody><tr><td style=3D"vertical=
+-align:middle;"><a href=3D"https://substack.com/@researchbookmark"><img cla=
+ss=3D"custom-css-email-avatar avatar-QIQ5yR" src=3D"https://substackcdn.com=
+/image/fetch/$s_!Pl5d!,f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%=
+2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2F3692b75c-e00b-46=
+04-be49-e6edc54265bd_200x200.jpeg" style=3D"box-sizing: border-box;max-widt=
+h: 550px;border: none;vertical-align: middle;width: 32px;height: 32px;min-w=
+idth: 32px;min-height: 32px;object-fit: cover;margin: 0px;display: inline;b=
+order-radius: 50%" width=3D"32" height=3D"32"></a></td><td width=3D"4" styl=
+e=3D"min-width:4px;"></td><td style=3D"vertical-align:middle;"><a href=3D"h=
+ttps://substack.com/@yaoadantor"><img class=3D"custom-css-email-avatar avat=
+ar-QIQ5yR" src=3D"https://substackcdn.com/image/fetch/$s_!8Bmo!,f_auto,q_au=
+to:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws=
+.com%2Fpublic%2Fimages%2F810e0186-5729-4aa2-8e38-ca564ef77753_2829x2829.jpe=
+g" style=3D"box-sizing: border-box;max-width: 550px;border: none;vertical-a=
+lign: middle;width: 32px;height: 32px;min-width: 32px;min-height: 32px;obje=
+ct-fit: cover;margin: 0px;display: inline;border-radius: 50%" width=3D"32" =
+height=3D"32"></a></td></tr></tbody></table></td></tr></tbody></table><tabl=
+e class=3D"email-ufi-2-top" role=3D"presentation" width=3D"100%" border=3D"=
+0" cellspacing=3D"0" cellpadding=3D"0" style=3D"border-top: 1px solid rgb(0=
+,0,0,.1);border-bottom: 1px solid rgb(0,0,0,.1);min-width: 100%;"><tbody><t=
+r height=3D"16"><td height=3D"16" style=3D"font-size:0px;line-height:0;">&n=
+bsp;</td></tr><tr><td><table role=3D"presentation" width=3D"100%" border=3D=
+"0" cellspacing=3D"0" cellpadding=3D"0"><tbody><tr><td><table role=3D"prese=
+ntation" width=3D"auto" border=3D"0" cellspacing=3D"0" cellpadding=3D"0"><t=
+body><tr><td style=3D"vertical-align:middle;"><table role=3D"presentation" =
+width=3D"38" border=3D"0" cellspacing=3D"0" cellpadding=3D"0"><tbody><tr><t=
+d align=3D"center"><a class=3D"email-icon-button" href=3D"https://substack.=
+com/app-link/post?publication_id=3D1519708&amp;post_id=3D191451802&amp;utm_=
+source=3Dsubstack&amp;isFreemail=3Dtrue&amp;submitLike=3Dtrue&amp;token=3De=
+yJ1c2VyX2lkIjo5Mzc5NjExNywicG9zdF9pZCI6MTkxNDUxODAyLCJyZWFjdGlvbiI6IuKdpCIs=
+ImlhdCI6MTc3NDY0MjU1NSwiZXhwIjoxNzc3MjM0NTU1LCJpc3MiOiJwdWItMTUxOTcwOCIsInN=
+1YiI6InJlYWN0aW9uIn0.IzLgigHNShHaCTnASoxut3dgmHK7pd8nikZ1rCVE-C0&amp;utm_me=
+dium=3Demail&amp;utm_campaign=3Demail-reaction&amp;r=3D1judjp" style=3D"fon=
+t-family: system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helv=
+etica,Arial,sans-serif,'Apple Color Emoji','Segoe UI Emoji','Segoe UI Symbo=
+l';display: inline-block;font-weight: 500;border: 1px solid rgb(0,0,0,.1);b=
+order-radius: 9999px;text-transform: uppercase;font-size: 12px;line-height:=
+ 1;padding: 9px 0;text-decoration: none;color: rgb(119,119,119);min-width: =
+38px;box-sizing: border-box;width: 38px"><img class=3D"icon" src=3D"https:/=
+/substackcdn.com/image/fetch/$s_!PeVs!,w_36,c_scale,f_png,q_auto:good,fl_pr=
+ogressive:steep/https%3A%2F%2Fsubstack.com%2Ficon%2FLucideHeart%3Fv%3D4%26h=
+eight%3D36%26fill%3Dnone%26stroke%3D%2523808080%26strokeWidth%3D2" width=3D=
+"18" height=3D"18" style=3D"border: none;vertical-align: middle;max-width: =
+18px" alt=3D""></a></td></tr></tbody></table></td><td width=3D"8" style=3D"=
+min-width:8px;"></td><td style=3D"vertical-align:middle;"><table role=3D"pr=
+esentation" width=3D"38" border=3D"0" cellspacing=3D"0" cellpadding=3D"0"><=
+tbody><tr><td align=3D"center"><a class=3D"email-icon-button" href=3D"https=
+://substack.com/app-link/post?publication_id=3D1519708&amp;post_id=3D191451=
+802&amp;utm_source=3Dsubstack&amp;utm_medium=3Demail&amp;isFreemail=3Dtrue&=
+amp;comments=3Dtrue&amp;token=3DeyJ1c2VyX2lkIjo5Mzc5NjExNywicG9zdF9pZCI6MTk=
+xNDUxODAyLCJpYXQiOjE3NzQ2NDI1NTUsImV4cCI6MTc3NzIzNDU1NSwiaXNzIjoicHViLTE1MT=
+k3MDgiLCJzdWIiOiJwb3N0LXJlYWN0aW9uIn0.4gzbLy50jGP2MsMrIEePHp5QbIt07u8sAuRHK=
+PgKm-8&amp;r=3D1judjp&amp;utm_campaign=3Demail-half-magic-comments&amp;acti=
+on=3Dpost-comment&amp;utm_source=3Dsubstack&amp;utm_medium=3Demail" style=
+=3D"font-family: system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Robo=
+to,Helvetica,Arial,sans-serif,'Apple Color Emoji','Segoe UI Emoji','Segoe U=
+I Symbol';display: inline-block;font-weight: 500;border: 1px solid rgb(0,0,=
+0,.1);border-radius: 9999px;text-transform: uppercase;font-size: 12px;line-=
+height: 1;padding: 9px 0;text-decoration: none;color: rgb(119,119,119);min-=
+width: 38px;box-sizing: border-box;width: 38px"><img class=3D"icon" src=3D"=
+https://substackcdn.com/image/fetch/$s_!x1tS!,w_36,c_scale,f_png,q_auto:goo=
+d,fl_progressive:steep/https%3A%2F%2Fsubstack.com%2Ficon%2FLucideComments%3=
+Fv%3D4%26height%3D36%26fill%3Dnone%26stroke%3D%2523808080%26strokeWidth%3D2=
+" width=3D"18" height=3D"18" style=3D"border: none;vertical-align: middle;m=
+ax-width: 18px" alt=3D""></a></td></tr></tbody></table></td><td width=3D"8"=
+ style=3D"min-width:8px;"></td><td style=3D"vertical-align:middle;"><table =
+role=3D"presentation" width=3D"38" border=3D"0" cellspacing=3D"0" cellpaddi=
+ng=3D"0"><tbody><tr><td align=3D"center"><a class=3D"email-icon-button" hre=
+f=3D"https://substack.com/app-link/post?publication_id=3D1519708&amp;post_i=
+d=3D191451802&amp;utm_source=3Dsubstack&amp;utm_medium=3Demail&amp;utm_cont=
+ent=3Dshare&amp;utm_campaign=3Demail-share&amp;action=3Dshare&amp;triggerSh=
+are=3Dtrue&amp;isFreemail=3Dtrue&amp;r=3D1judjp&amp;token=3DeyJ1c2VyX2lkIjo=
+5Mzc5NjExNywicG9zdF9pZCI6MTkxNDUxODAyLCJpYXQiOjE3NzQ2NDI1NTUsImV4cCI6MTc3Nz=
+IzNDU1NSwiaXNzIjoicHViLTE1MTk3MDgiLCJzdWIiOiJwb3N0LXJlYWN0aW9uIn0.4gzbLy50j=
+GP2MsMrIEePHp5QbIt07u8sAuRHKPgKm-8" style=3D"font-family: system-ui,-apple-=
+system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif,'App=
+le Color Emoji','Segoe UI Emoji','Segoe UI Symbol';display: inline-block;fo=
+nt-weight: 500;border: 1px solid rgb(0,0,0,.1);border-radius: 9999px;text-t=
+ransform: uppercase;font-size: 12px;line-height: 1;padding: 9px 0;text-deco=
+ration: none;color: rgb(119,119,119);min-width: 38px;box-sizing: border-box=
+;width: 38px"><img class=3D"icon" src=3D"https://substackcdn.com/image/fetc=
+h/$s_!_L14!,w_36,c_scale,f_png,q_auto:good,fl_progressive:steep/https%3A%2F=
+%2Fsubstack.com%2Ficon%2FLucideShare2%3Fv%3D4%26height%3D36%26fill%3Dnone%2=
+6stroke%3D%2523808080%26strokeWidth%3D2" width=3D"18" height=3D"18" style=
+=3D"border: none;vertical-align: middle;max-width: 18px" alt=3D""></a></td>=
+</tr></tbody></table></td><td width=3D"8" style=3D"min-width:8px;"></td><td=
+ style=3D"vertical-align:middle;"><table role=3D"presentation" width=3D"38"=
+ border=3D"0" cellspacing=3D"0" cellpadding=3D"0"><tbody><tr><td align=3D"c=
+enter"><a class=3D"email-icon-button" href=3D"https://substack.com/redirect=
+/2/eyJlIjoiaHR0cHM6Ly9vcGVuLnN1YnN0YWNrLmNvbS9wdWIvcmVzZWFyY2hib29rbWFyay9w=
+L3lvdXItY2FzZS1zdHVkeS1pcy1seWluZy1hbmQtZXZlcnlvbmU_dXRtX3NvdXJjZT1zdWJzdGF=
+jayZ1dG1fbWVkaXVtPWVtYWlsJnV0bV9jYW1wYWlnbj1lbWFpbC1yZXN0YWNrLWNvbW1lbnQmYW=
+N0aW9uPXJlc3RhY2stY29tbWVudCZyPTFqdWRqcCZ0b2tlbj1leUoxYzJWeVgybGtJam81TXpjN=
+U5qRXhOeXdpY0c5emRGOXBaQ0k2TVRreE5EVXhPREF5TENKcFlYUWlPakUzTnpRMk5ESTFOVFVz=
+SW1WNGNDSTZNVGMzTnpJek5EVTFOU3dpYVhOeklqb2ljSFZpTFRFMU1UazNNRGdpTENKemRXSWl=
+PaUp3YjNOMExYSmxZV04wYVc5dUluMC40Z3piTHk1MGpHUDJNc01ySUVlUEhwNVFiSXQwN3U4c0=
+F1UkhLUGdLbS04IiwicCI6MTkxNDUxODAyLCJzIjoxNTE5NzA4LCJmIjp0cnVlLCJ1Ijo5Mzc5N=
+jExNywiaWF0IjoxNzc0NjQyNTU1LCJleHAiOjIwOTAyMTg1NTUsImlzcyI6InB1Yi0wIiwic3Vi=
+IjoibGluay1yZWRpcmVjdCJ9.9xGdaQHhRh5LEAZ9TLuR3OgB4RPQyNWiGpovk9_hptg?&amp;u=
+tm_source=3Dsubstack&amp;utm_medium=3Demail" style=3D"font-family: system-u=
+i,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-s=
+erif,'Apple Color Emoji','Segoe UI Emoji','Segoe UI Symbol';display: inline=
+-block;font-weight: 500;border: 1px solid rgb(0,0,0,.1);border-radius: 9999=
+px;text-transform: uppercase;font-size: 12px;line-height: 1;padding: 9px 0;=
+text-decoration: none;color: rgb(119,119,119);min-width: 38px;box-sizing: b=
+order-box;width: 38px"><img class=3D"icon" src=3D"https://substackcdn.com/i=
+mage/fetch/$s_!ubXF!,w_36,c_scale,f_png,q_auto:good,fl_progressive:steep/ht=
+tps%3A%2F%2Fsubstack.com%2Ficon%2Fnotes__NoteRestackIcon%3Fv%3D4%26height%3=
+D36%26fill%3Dnone%26stroke%3D%2523808080%26strokeWidth%3D2%26strokeLinecap%=
+3Dround%26strokeLinejoin%3Dround" width=3D"18" height=3D"18" alt=3D"" style=
+=3D"max-width: 550px;border: none !important;vertical-align: middle;"></a><=
+/td></tr></tbody></table></td></tr></tbody></table></td><td align=3D"right"=
+><table role=3D"presentation" width=3D"auto" border=3D"0" cellspacing=3D"0"=
+ cellpadding=3D"0"><tbody><tr><td style=3D"vertical-align:middle;"><table r=
+ole=3D"presentation" width=3D"auto" border=3D"0" cellspacing=3D"0" cellpadd=
+ing=3D"0"><tbody><tr><td align=3D"center"><a class=3D"email-button-outline"=
+ href=3D"https://open.substack.com/pub/researchbookmark/p/your-case-study-i=
+s-lying-and-everyone?utm_source=3Demail&amp;redirect=3Dapp-store&amp;utm_ca=
+mpaign=3Demail-read-in-app" style=3D"font-family: system-ui,-apple-system,B=
+linkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif,'Apple Color=
+ Emoji','Segoe UI Emoji','Segoe UI Symbol';display: inline-block;font-weigh=
+t: 500;border: 1px solid rgb(0,0,0,.1);border-radius: 9999px;text-transform=
+: uppercase;font-size: 12px;line-height: 12px;padding: 9px 14px;text-decora=
+tion: none;color: rgb(119,119,119);"><div class=3D"email-button-spacer" sty=
+le=3D"font-size: 16px;line-height: 26px;display: inline-block;vertical-alig=
+n: middle;max-width: 0;min-height: 18px;"></div><span class=3D"email-button=
+-text" style=3D"vertical-align: middle;margin-right: 4px">READ IN APP</span=
+><img class=3D"icon text-icon" src=3D"https://substackcdn.com/image/fetch/$=
+s_!ET-_!,w_36,c_scale,f_png,q_auto:good,fl_progressive:steep/https%3A%2F%2F=
+substack.com%2Ficon%2FLucideArrowUpRight%3Fv%3D4%26height%3D36%26fill%3Dnon=
+e%26stroke%3D%2523808080%26strokeWidth%3D2" width=3D"18" height=3D"18" styl=
+e=3D"min-width: 18px;min-height: 18px;border: none;vertical-align: middle;m=
+argin-right: 0;margin-left: 0;max-width: 18px" alt=3D""></a></td></tr></tbo=
+dy></table></td></tr></tbody></table></td></tr></tbody></table></td></tr><t=
+r height=3D"16"><td height=3D"16" style=3D"font-size:0px;line-height:0;">&n=
+bsp;</td></tr></tbody></table></div></div><div class=3D"post typography" di=
+r=3D"auto" style=3D"--image-offset-margin: -120px;padding: 32px 0 0 0;font-=
+size: 16px;line-height: 26px;"><div class=3D"body markup" dir=3D"auto" styl=
+e=3D"text-align: initial;font-size: 16px;line-height: 26px;width: 100%;word=
+-break: break-word;margin-bottom: 16px;"><p style=3D"margin: 0 0 20px 0;col=
+or: rgb(54,55,55);line-height: 26px;font-size: 16px;margin-top: 0;">You did=
+n=E2=80=99t do all that research. You didn=E2=80=99t run those A/B tests. T=
+he =E2=80=9Cclient=E2=80=9D was actually a practice project from a bootcamp=
+. The =E2=80=9C20% increase in conversion=E2=80=9D is a number you made up =
+because every case study needs metrics. And here=E2=80=99s the thing: hirin=
+g managers know. They=E2=80=99ve seen hundreds of portfolios and they can s=
+mell BS instantly. This issue breaks down why portfolio dishonesty happens,=
+ how it backfires, and how to present your actual work honestly in a way th=
+at still gets you hired.</p><div style=3D"font-size: 16px;line-height: 26px=
+;"><hr style=3D"margin: 32px 0;padding: 0;height: 1px;background: rgb(0,0,0=
+,.1);border: none;"></div><p style=3D"margin: 0 0 20px 0;color: rgb(54,55,5=
+5);line-height: 26px;font-size: 16px;"><strong>In this issue:</strong></p><=
+ul style=3D"margin-top: 0;padding: 0;"><li style=3D"margin: 8px 0 0 32px;ms=
+o-special-format: bullet;"><p style=3D"color: rgb(54,55,55);line-height: 26=
+px;margin-bottom: 0;box-sizing: border-box;padding-left: 4px;font-size: 16p=
+x;margin: 0;">The lies hiring managers spot immediately</p></li><li style=
+=3D"margin: 8px 0 0 32px;mso-special-format: bullet;"><p style=3D"color: rg=
+b(54,55,55);line-height: 26px;margin-bottom: 0;box-sizing: border-box;paddi=
+ng-left: 4px;font-size: 16px;margin: 0;">Why fabricating results is worse t=
+han having no results</p></li><li style=3D"margin: 8px 0 0 32px;mso-special=
+-format: bullet;"><p style=3D"color: rgb(54,55,55);line-height: 26px;margin=
+-bottom: 0;box-sizing: border-box;padding-left: 4px;font-size: 16px;margin:=
+ 0;">How to present real work (even when it=E2=80=99s messy)</p></li><li st=
+yle=3D"margin: 8px 0 0 32px;mso-special-format: bullet;"><p style=3D"color:=
+ rgb(54,55,55);line-height: 26px;margin-bottom: 0;box-sizing: border-box;pa=
+dding-left: 4px;font-size: 16px;margin: 0;">What to do when you genuinely d=
+on=E2=80=99t have metrics</p></li><li style=3D"margin: 8px 0 0 32px;mso-spe=
+cial-format: bullet;"><p style=3D"color: rgb(54,55,55);line-height: 26px;ma=
+rgin-bottom: 0;box-sizing: border-box;padding-left: 4px;font-size: 16px;mar=
+gin: 0;">The honesty that actually impresses interviewers</p></li><li style=
+=3D"margin: 8px 0 0 32px;mso-special-format: bullet;"><p style=3D"color: rg=
+b(54,55,55);line-height: 26px;margin-bottom: 0;box-sizing: border-box;paddi=
+ng-left: 4px;font-size: 16px;margin: 0;">&#128230; Resource Corner</p></li>=
+</ul><div style=3D"font-size: 16px;line-height: 26px;"><hr style=3D"margin:=
+ 32px 0;padding: 0;height: 1px;background: rgb(0,0,0,.1);border: none;"></d=
+iv><h2 class=3D"header-anchor-post" style=3D"position: relative;font-family=
+: 'SF Pro Display',-apple-system-headline,system-ui,-apple-system,BlinkMacS=
+ystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif,'Apple Color Emoji',=
+'Segoe UI Emoji','Segoe UI Symbol';font-weight: bold;-webkit-font-smoothing=
+: antialiased;-moz-osx-font-smoothing: antialiased;-webkit-appearance: opti=
+mizelegibility;-moz-appearance: optimizelegibility;appearance: optimizelegi=
+bility;margin: 1em 0 0.625em 0;color: rgb(54,55,55);line-height: 1.16em;fon=
+t-size: 1.625em;">The lies hiring managers spot immediately</h2><p style=3D=
+"margin: 0 0 20px 0;color: rgb(54,55,55);line-height: 26px;font-size: 16px;=
+">Let=E2=80=99s be direct about what=E2=80=99s happening. Designers, especi=
+ally junior ones, feel pressure to have impressive portfolios. So they embe=
+llish. They exaggerate. Sometimes they straight-up invent things. And hirin=
+g managers can tell.</p><p style=3D"margin: 0 0 20px 0;color: rgb(54,55,55)=
+;line-height: 26px;font-size: 16px;"><strong>Here are the red flags that sc=
+ream =E2=80=9Cthis didn=E2=80=99t really happen=E2=80=9D:</strong></p><p st=
+yle=3D"margin: 0 0 20px 0;color: rgb(54,55,55);line-height: 26px;font-size:=
+ 16px;"><span>&#128681; </span><strong>Every project has perfect, round met=
+rics</strong><span> =E2=80=9CIncreased conversion by 25%.=E2=80=9D =E2=80=
+=9CReduced bounce rate by 30%.=E2=80=9D =E2=80=9CImproved user satisfaction=
+ by 40%.=E2=80=9D These numbers are suspiciously clean. Real metrics are me=
+ssy: 23.7%, 18%, 34.2%. When every project ends in a multiple of 5 or 10, i=
+t looks made up.</span></p><p style=3D"margin: 0 0 20px 0;color: rgb(54,55,=
+55);line-height: 26px;font-size: 16px;"><span>&#128681; </span><strong>The =
+process is too perfect</strong><span> Real design is messy. You interview t=
+he wrong people. Stakeholders change their minds. Developers push back on y=
+our design. Timeline gets cut. But portfolio case studies show this perfect=
+ linear process: research =E2=86=92 insights =E2=86=92 wireframes =E2=86=92=
+ testing =E2=86=92 shipping =E2=86=92 success. That=E2=80=99s fiction.</spa=
+n></p><p style=3D"margin: 0 0 20px 0;color: rgb(54,55,55);line-height: 26px=
+;font-size: 16px;"><span>&#128681; </span><strong>No mention of constraints=
+, tradeoffs, or failures</strong><span> Every real project has constraints.=
+ Budget. Timeline. Technical limitations. Stakeholder opinions. But portfol=
+io projects never mention them. Every decision was optimal. Nothing was com=
+promised. That=E2=80=99s not how work happens.</span></p><p style=3D"margin=
+: 0 0 20px 0;color: rgb(54,55,55);line-height: 26px;font-size: 16px;"><span=
+>&#128681; </span><strong>=E2=80=9CI did everything=E2=80=9D (on a team pro=
+ject)</strong><span> =E2=80=9CI conducted the research, designed the soluti=
+on, and shipped the feature.=E2=80=9D If this was a real company with a rea=
+l team, where was the PM? The researchers? The other designers? Taking sole=
+ credit for collaborative work is an instant credibility killer.</span></p>=
+<p style=3D"margin: 0 0 20px 0;color: rgb(54,55,55);line-height: 26px;font-=
+size: 16px;"><span>&#128681; </span><strong>The timeline doesn=E2=80=99t ma=
+ke sense</strong><span> =E2=80=9CI conducted 15 user interviews, analyzed t=
+he data, created wireframes, built high-fidelity mockups, ran usability tes=
+ts, and launched in 2 weeks.=E2=80=9D No, you didn=E2=80=99t. That=E2=80=99=
+s 6-8 weeks minimum. Compressed timelines reveal that the story is fabricat=
+ed.</span></p><p style=3D"margin: 0 0 20px 0;color: rgb(54,55,55);line-heig=
+ht: 26px;font-size: 16px;"><span>&#128681; </span><strong>Vague or missing =
+company/client details</strong><span> =E2=80=9CA fintech startup=E2=80=9D i=
+nstead of naming the company. =E2=80=9CAn e-commerce client=E2=80=9D withou=
+t specifics. If it was real work, you=E2=80=99d name them (or explain the N=
+DA). Vagueness suggests it=E2=80=99s a practice project you=E2=80=99re pret=
+ending was real.</span></p><p style=3D"margin: 0 0 20px 0;color: rgb(54,55,=
+55);line-height: 26px;font-size: 16px;"><span>&#128681; </span><strong>The =
+problems are generic, the solutions are trendy</strong><span> =E2=80=9CUser=
+s found the checkout confusing, so I simplified it=E2=80=9D describes every=
+ checkout redesign ever. Real projects have specific, messy problems. Gener=
+ic problems suggest you=E2=80=99re retrofitting a solution you saw elsewher=
+e.</span></p><p style=3D"margin: 0 0 20px 0;color: rgb(54,55,55);line-heigh=
+t: 26px;font-size: 16px;"><strong>Why this matters:</strong><span> Hiring m=
+anagers aren=E2=80=99t trying to catch you lying. But when they spot incons=
+istencies, they start questioning everything in your portfolio. One fabrica=
+ted detail ruins your credibility on legitimate work.</span></p><div style=
+=3D"font-size: 16px;line-height: 26px;"><hr style=3D"margin: 32px 0;padding=
+: 0;height: 1px;background: rgb(0,0,0,.1);border: none;"></div><h3 class=3D=
+"header-anchor-post" style=3D"position: relative;font-family: 'SF Pro Displ=
+ay',-apple-system-headline,system-ui,-apple-system,BlinkMacSystemFont,'Sego=
+e UI',Roboto,Helvetica,Arial,sans-serif,'Apple Color Emoji','Segoe UI Emoji=
+','Segoe UI Symbol';font-weight: bold;-webkit-font-smoothing: antialiased;-=
+moz-osx-font-smoothing: antialiased;-webkit-appearance: optimizelegibility;=
+-moz-appearance: optimizelegibility;appearance: optimizelegibility;margin: =
+1em 0 0.625em 0;color: rgb(54,55,55);line-height: 1.16em;font-size: 1.375em=
+;"><strong>Join Don Norman at UXCON26</strong></h3><p style=3D"margin: 0 0 =
+20px 0;color: rgb(54,55,55);line-height: 26px;font-size: 16px;"><em><span>C=
+o-Founder, </span><strong>Nielsen Norman Group</strong><span> =C2=B7 Former=
+ VP of Advanced Technology, Apple =C2=B7 Founder, Design Lab at UC San Dieg=
+o</span></em><span> </span><strong>Headlining Keynote</strong></p><div clas=
+s=3D"captioned-image-container-static" style=3D"font-size: 16px;line-height=
+: 26px;margin: 32px auto;"><figure style=3D"width: 100%;margin: 0 auto;"><t=
+able class=3D"image-wrapper" width=3D"100%" border=3D"0" cellspacing=3D"0" =
+cellpadding=3D"0" data-component-name=3D"Image2ToDOMStatic" style=3D"mso-pa=
+dding-alt: 1em 0 1.6em;"><tbody><tr><td style=3D"text-align: center;"></td>=
+<td class=3D"content" align=3D"left" width=3D"1456" style=3D"text-align: ce=
+nter;"><a class=3D"image-link" target=3D"_blank" href=3D"https://substack.c=
+om/redirect/5af664ec-bf5b-4c89-ad5b-395715abe49b?j=3DeyJ1IjoiMWp1ZGpwIn0.5o=
+04gUnkd-Msu0Ib_nbCOLc-sw15-DjXlvGx8bWpSeo" rel=3D"" style=3D"position: rela=
+tive;flex-direction: column;align-items: center;padding: 0;width: auto;heig=
+ht: auto;border: none;text-decoration: none;display: block;margin: 0;"><img=
+ class=3D"wide-image" data-attrs=3D"{&quot;src&quot;:&quot;https://substack=
+-post-media.s3.amazonaws.com/public/images/66cafbbb-e8db-472d-8059-06addab1=
+336c_1800x941.png&quot;,&quot;srcNoWatermark&quot;:null,&quot;fullscreen&qu=
+ot;:null,&quot;imageSize&quot;:null,&quot;height&quot;:761,&quot;width&quot=
+;:1456,&quot;resizeWidth&quot;:null,&quot;bytes&quot;:2656340,&quot;alt&quo=
+t;:&quot;&quot;,&quot;title&quot;:null,&quot;type&quot;:&quot;image/png&quo=
+t;,&quot;href&quot;:null,&quot;belowTheFold&quot;:true,&quot;topImage&quot;=
+:false,&quot;internalRedirect&quot;:&quot;https://newsletter.uxuniversity.i=
+o/i/190040087?img=3Dhttps%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpu=
+blic%2Fimages%2F66cafbbb-e8db-472d-8059-06addab1336c_1800x941.png&quot;,&qu=
+ot;isProcessing&quot;:false,&quot;align&quot;:null,&quot;offset&quot;:false=
+}" alt=3D"" title=3D"" width=3D"550" height=3D"287.46565934065933" src=3D"h=
+ttps://substackcdn.com/image/fetch/$s_!xht4!,w_1100,c_limit,f_auto,q_auto:g=
+ood,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com=
+%2Fpublic%2Fimages%2F66cafbbb-e8db-472d-8059-06addab1336c_1800x941.png" sty=
+le=3D"border: none !important;vertical-align: middle;display: block;-ms-int=
+erpolation-mode: bicubic;height: auto;margin-bottom: 0;width: auto !importa=
+nt;max-width: 100% !important;margin: 0 auto;"></a></td><td style=3D"text-a=
+lign: center;"></td></tr></tbody></table></figure></div><p style=3D"margin:=
+ 0 0 20px 0;color: rgb(54,55,55);line-height: 26px;font-size: 16px;"><stron=
+g>Don Norman</strong><span> is famous for doors that are confusing to open.=
+ They are called Norman Doors. If you have ever pushed a door that should b=
+e pulled, you have lived inside one of his ideas.</span></p><p style=3D"mar=
+gin: 0 0 20px 0;color: rgb(54,55,55);line-height: 26px;font-size: 16px;">Th=
+at is what Don Norman does. He makes you see the world differently.</p><p s=
+tyle=3D"margin: 0 0 20px 0;color: rgb(54,55,55);line-height: 26px;font-size=
+: 16px;"><span>He coined the term =E2=80=9C</span><strong>user experience.<=
+/strong><span>=E2=80=9D He wrote </span><strong>The Design of Everyday Thin=
+gs</strong><span>, the book on virtually every designer=E2=80=99s shelf, no=
+w in its revised edition and still as essential as the day it was published=
+. He helped found the world=E2=80=99s first Department of Cognitive Science=
+ at UC San Diego. He became Vice President of Advanced Technology at Apple.=
+ He co-founded the </span><strong>Nielsen Norman Group</strong><span>, the =
+firm that shaped how the entire industry thinks about human-centered design=
+. He has published 21 books translated into over 20 languages. He holds thr=
+ee honorary degrees and is a member of the National Academy of Engineering.=
+</span></p><p style=3D"margin: 0 0 20px 0;color: rgb(54,55,55);line-height:=
+ 26px;font-size: 16px;">Hearing Don Norman speak in 2026 is not a checkbox =
+on a conference list. It is a genuine once-in-a-career opportunity.</p><p c=
+lass=3D"button-wrapper" data-attrs=3D"{&quot;url&quot;:&quot;https://www.ev=
+entbrite.com/e/uxcon26-inspire-and-connect-tickets-1975200340389?aff=3Doddt=
+dtcreator&amp;discount=3DUXCONDON&quot;,&quot;text&quot;:&quot;Join Don Nor=
+man at UXCON26&quot;,&quot;action&quot;:null,&quot;class&quot;:&quot;button=
+-wrapper&quot;}" data-component-name=3D"ButtonCreateButton" style=3D"margin=
+: 0 0 20px 0;color: rgb(54,55,55);line-height: 26px;font-size: 16px;text-al=
+ign: center;cursor: pointer;border-radius: 4px;"><a class=3D"button primary=
+ button-wrapper" href=3D"https://substack.com/redirect/51cab160-79d1-478b-a=
+0a2-445e70294d06?j=3DeyJ1IjoiMWp1ZGpwIn0.5o04gUnkd-Msu0Ib_nbCOLc-sw15-DjXlv=
+Gx8bWpSeo" rel=3D"" style=3D"font-family: system-ui,-apple-system,BlinkMacS=
+ystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif,'Apple Color Emoji',=
+'Segoe UI Emoji','Segoe UI Symbol';display: inline-block;box-sizing: border=
+-box;border: none;font-size: 14px;line-height: 20px;font-weight: 600;margin=
+: 0;opacity: 1;outline: none;white-space: nowrap;color: #ffffff !important;=
+text-decoration: none !important;text-align: center;cursor: pointer;border-=
+radius: 4px;background-color: #538cfa;padding: 12px 20px;height: auto;"><sp=
+an style=3D"color: #ffffff;text-decoration: none;">Join Don Norman at UXCON=
+26</span></a></p><div style=3D"font-size: 16px;line-height: 26px;"><hr styl=
+e=3D"margin: 32px 0;padding: 0;height: 1px;background: rgb(0,0,0,.1);border=
+: none;"></div><h2 class=3D"header-anchor-post" style=3D"position: relative=
+;font-family: 'SF Pro Display',-apple-system-headline,system-ui,-apple-syst=
+em,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif,'Apple C=
+olor Emoji','Segoe UI Emoji','Segoe UI Symbol';font-weight: bold;-webkit-fo=
+nt-smoothing: antialiased;-moz-osx-font-smoothing: antialiased;-webkit-appe=
+arance: optimizelegibility;-moz-appearance: optimizelegibility;appearance: =
+optimizelegibility;margin: 1em 0 0.625em 0;color: rgb(54,55,55);line-height=
+: 1.16em;font-size: 1.625em;">Why fabricating results is worse than having =
+no results</h2><p style=3D"margin: 0 0 20px 0;color: rgb(54,55,55);line-hei=
+ght: 26px;font-size: 16px;">The instinct makes sense: every article about p=
+ortfolios says =E2=80=9Cshow impact=E2=80=9D and =E2=80=9Cinclude metrics.=
+=E2=80=9D So if you don=E2=80=99t have metrics, you feel like you need to i=
+nvent them. But that=E2=80=99s backwards.</p><p style=3D"margin: 0 0 20px 0=
+;color: rgb(54,55,55);line-height: 26px;font-size: 16px;"><strong>Here=E2=
+=80=99s what actually happens when you fake results:</strong></p><p style=
+=3D"margin: 0 0 20px 0;color: rgb(54,55,55);line-height: 26px;font-size: 16=
+px;"><span>=E2=9D=8C </span><strong>You can=E2=80=99t defend them in interv=
+iews</strong><span> =E2=80=9CTell me more about that 30% conversion increas=
+e. What were you measuring? How did you isolate your changes from other var=
+iables?=E2=80=9D If you made it up, you=E2=80=99ll fumble the answer. And n=
+ow you=E2=80=99ve lost the job and your credibility.</span></p><p style=3D"=
+margin: 0 0 20px 0;color: rgb(54,55,55);line-height: 26px;font-size: 16px;"=
+><span>=E2=9D=8C </span><strong>You set expectations you can=E2=80=99t meet=
+</strong><span> If your portfolio shows you consistently deliver 20-40% imp=
+rovements, that=E2=80=99s what the company will expect when they hire you. =
+When you can=E2=80=99t deliver (because those numbers were fiction), you=E2=
+=80=99ve set yourself up to fail.</span></p><p style=3D"margin: 0 0 20px 0;=
+color: rgb(54,55,55);line-height: 26px;font-size: 16px;"><span>=E2=9D=8C </=
+span><strong>You miss the chance to show real thinking</strong><span> Hones=
+ty about what you don=E2=80=99t know is more impressive than fake confidenc=
+e. =E2=80=9CWe didn=E2=80=99t have analytics set up, so I can=E2=80=99t giv=
+e you hard numbers, but here=E2=80=99s the qualitative feedback we got=E2=
+=80=9D shows self-awareness and intellectual honesty.</span></p><p style=3D=
+"margin: 0 0 20px 0;color: rgb(54,55,55);line-height: 26px;font-size: 16px;=
+"><span>=E2=9D=8C </span><strong>It reveals you don=E2=80=99t understand ho=
+w metrics work</strong><span> Saying =E2=80=9CI increased revenue by 50%=E2=
+=80=9D without explaining baseline, sample size, timeframe, or confounding =
+variables shows you don=E2=80=99t actually understand measurement. That=E2=
+=80=99s worse than admitting you don=E2=80=99t have data.</span></p><p styl=
+e=3D"margin: 0 0 20px 0;color: rgb(54,55,55);line-height: 26px;font-size: 1=
+6px;"><strong>The truth that hiring managers won=E2=80=99t tell you:</stron=
+g><span> They don=E2=80=99t actually expect junior designers to have perfec=
+t metrics on every project. They know you=E2=80=99re early in your career. =
+They know practice projects exist. What they=E2=80=99re looking for is </sp=
+an><strong>honest thinking and real problem-solving ability.</strong></p><p=
+ style=3D"margin: 0 0 20px 0;color: rgb(54,55,55);line-height: 26px;font-si=
+ze: 16px;">A case study that says =E2=80=9CI don=E2=80=99t have quantitativ=
+e data, but here=E2=80=99s what I learned from user feedback=E2=80=9D is in=
+finitely more valuable than one with fabricated numbers.</p><div style=3D"f=
+ont-size: 16px;line-height: 26px;"><hr style=3D"margin: 32px 0;padding: 0;h=
+eight: 1px;background: rgb(0,0,0,.1);border: none;"></div><h2 class=3D"head=
+er-anchor-post" style=3D"position: relative;font-family: 'SF Pro Display',-=
+apple-system-headline,system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI'=
+,Roboto,Helvetica,Arial,sans-serif,'Apple Color Emoji','Segoe UI Emoji','Se=
+goe UI Symbol';font-weight: bold;-webkit-font-smoothing: antialiased;-moz-o=
+sx-font-smoothing: antialiased;-webkit-appearance: optimizelegibility;-moz-=
+appearance: optimizelegibility;appearance: optimizelegibility;margin: 1em 0=
+ 0.625em 0;color: rgb(54,55,55);line-height: 1.16em;font-size: 1.625em;">Ho=
+w to present real work (even when it=E2=80=99s messy)</h2><p style=3D"margi=
+n: 0 0 20px 0;color: rgb(54,55,55);line-height: 26px;font-size: 16px;"><spa=
+n>Real projects are messy. Constraints are real. You don=E2=80=99t get to d=
+o everything perfectly. That=E2=80=99s fine. Actually, that=E2=80=99s </spa=
+n><em>better</em><span> for your portfolio because it shows you understand =
+how design actually works.</span></p><p style=3D"margin: 0 0 20px 0;color: =
+rgb(54,55,55);line-height: 26px;font-size: 16px;"><strong>Here=E2=80=99s ho=
+w to present honest, messy work in a way that still gets you hired:</strong=
+></p><div class=3D"captioned-image-container-static" style=3D"font-size: 16=
+px;line-height: 26px;margin: 32px auto;"><figure style=3D"width: 100%;margi=
+n: 0 auto;"><table class=3D"image-wrapper" width=3D"100%" border=3D"0" cell=
+spacing=3D"0" cellpadding=3D"0" data-component-name=3D"Image2ToDOMStatic" s=
+tyle=3D"mso-padding-alt: 1em 0 1.6em;"><tbody><tr><td style=3D"text-align: =
+center;"></td><td class=3D"content" align=3D"left" width=3D"654" style=3D"t=
+ext-align: center;"><a class=3D"image-link" target=3D"_blank" href=3D"https=
+://substack.com/redirect/c3a07360-1f40-4bac-a49d-4eae60d2bbd4?j=3DeyJ1IjoiM=
+Wp1ZGpwIn0.5o04gUnkd-Msu0Ib_nbCOLc-sw15-DjXlvGx8bWpSeo" rel=3D"" style=3D"p=
+osition: relative;flex-direction: column;align-items: center;padding: 0;wid=
+th: auto;height: auto;border: none;text-decoration: none;display: block;mar=
+gin: 0;"><img class=3D"wide-image" data-attrs=3D"{&quot;src&quot;:&quot;htt=
+ps://substack-post-media.s3.amazonaws.com/public/images/02c1e7bc-441f-4dea-=
+b11e-00eb596773eb_654x646.png&quot;,&quot;srcNoWatermark&quot;:null,&quot;f=
+ullscreen&quot;:null,&quot;imageSize&quot;:null,&quot;height&quot;:646,&quo=
+t;width&quot;:654,&quot;resizeWidth&quot;:null,&quot;bytes&quot;:81071,&quo=
+t;alt&quot;:null,&quot;title&quot;:null,&quot;type&quot;:&quot;image/png&qu=
+ot;,&quot;href&quot;:null,&quot;belowTheFold&quot;:true,&quot;topImage&quot=
+;:false,&quot;internalRedirect&quot;:&quot;https://newsletter.uxuniversity.=
+io/i/191451802?img=3Dhttps%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fp=
+ublic%2Fimages%2F8e66a776-945b-473e-a26f-fd023ca4ae32_654x726.png&quot;,&qu=
+ot;isProcessing&quot;:false,&quot;align&quot;:null,&quot;offset&quot;:false=
+}" alt=3D"" width=3D"550" height=3D"543.2721712538226" src=3D"https://subst=
+ackcdn.com/image/fetch/$s_!Fh-c!,w_1100,c_limit,f_auto,q_auto:good,fl_progr=
+essive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2F=
+images%2F02c1e7bc-441f-4dea-b11e-00eb596773eb_654x646.png" style=3D"border:=
+ none !important;vertical-align: middle;display: block;-ms-interpolation-mo=
+de: bicubic;height: auto;margin-bottom: 0;width: auto !important;max-width:=
+ 100% !important;margin: 0 auto;"></a></td><td style=3D"text-align: center;=
+"></td></tr></tbody></table></figure></div><p style=3D"margin: 0 0 20px 0;c=
+olor: rgb(54,55,55);line-height: 26px;font-size: 16px;"><strong>1. Be speci=
+fic about your role (and the team)</strong></p><p style=3D"margin: 0 0 20px=
+ 0;color: rgb(54,55,55);line-height: 26px;font-size: 16px;">Don=E2=80=99t s=
+ay =E2=80=9CI designed this feature.=E2=80=9D Say exactly what you did:</p>=
+<p style=3D"margin: 0 0 20px 0;color: rgb(54,55,55);line-height: 26px;font-=
+size: 16px;">=E2=9C=85 =E2=80=9CI was one of two designers on this project.=
+ I focused on the mobile experience while Sarah handled desktop. I conducte=
+d 6 of the 12 user interviews, and we both participated in synthesis.=E2=80=
+=9D</p><p style=3D"margin: 0 0 20px 0;color: rgb(54,55,55);line-height: 26p=
+x;font-size: 16px;">This is honest. It shows collaboration. It shows you un=
+derstand team dynamics. Hiring managers respect this infinitely more than i=
+nflated solo credit.</p><p style=3D"margin: 0 0 20px 0;color: rgb(54,55,55)=
+;line-height: 26px;font-size: 16px;"><strong>2. Show the constraints, not j=
+ust the solution</strong></p><p style=3D"margin: 0 0 20px 0;color: rgb(54,5=
+5,55);line-height: 26px;font-size: 16px;">Every project has limits. Talking=
+ about them makes your work more credible:</p><p style=3D"margin: 0 0 20px =
+0;color: rgb(54,55,55);line-height: 26px;font-size: 16px;">=E2=9C=85 =E2=80=
+=9CWe had 3 weeks and a developer handoff deadline, so I prioritized wirefr=
+ames and basic interactivity testing over high-fidelity mockups. Given more=
+ time, I would have tested more variations.=E2=80=9D</p><p style=3D"margin:=
+ 0 0 20px 0;color: rgb(54,55,55);line-height: 26px;font-size: 16px;">This s=
+hows you make strategic tradeoffs. That=E2=80=99s a professional skill. Pre=
+tending constraints didn=E2=80=99t exist makes you look inexperienced.</p><=
+p style=3D"margin: 0 0 20px 0;color: rgb(54,55,55);line-height: 26px;font-s=
+ize: 16px;"><strong>3. Admit what you don=E2=80=99t know or didn=E2=80=99t =
+measure</strong></p><p style=3D"margin: 0 0 20px 0;color: rgb(54,55,55);lin=
+e-height: 26px;font-size: 16px;">Honesty about gaps is professional:</p><p =
+style=3D"margin: 0 0 20px 0;color: rgb(54,55,55);line-height: 26px;font-siz=
+e: 16px;">=E2=9C=85 =E2=80=9CWe didn=E2=80=99t have analytics instrumentati=
+on for this feature, so I can=E2=80=99t provide conversion metrics. What I =
+do have is usability test feedback from 5 users and support ticket volume b=
+efore and after launch.=E2=80=9D</p><p style=3D"margin: 0 0 20px 0;color: r=
+gb(54,55,55);line-height: 26px;font-size: 16px;">This shows you understand =
+the difference between quantitative and qualitative data. It shows you work=
+ with what you have. That=E2=80=99s real-world design.</p><p style=3D"margi=
+n: 0 0 20px 0;color: rgb(54,55,55);line-height: 26px;font-size: 16px;"><str=
+ong>4. Talk about what didn=E2=80=99t work</strong></p><p style=3D"margin: =
+0 0 20px 0;color: rgb(54,55,55);line-height: 26px;font-size: 16px;">Failed =
+experiments are learning opportunities. Show them:</p><p style=3D"margin: 0=
+ 0 20px 0;color: rgb(54,55,55);line-height: 26px;font-size: 16px;">=E2=9C=
+=85 =E2=80=9CMy first concept tested poorly. Users found the navigation con=
+fusing. I went back, simplified the structure, and the second round of test=
+ing showed significant improvement in task completion.=E2=80=9D</p><p style=
+=3D"margin: 0 0 20px 0;color: rgb(54,55,55);line-height: 26px;font-size: 16=
+px;">Iteration based on feedback is what design actually is. Showing only s=
+uccesses makes you look either inexperienced or dishonest.</p><p style=3D"m=
+argin: 0 0 20px 0;color: rgb(54,55,55);line-height: 26px;font-size: 16px;">=
+<strong>5. Be honest about practice projects</strong></p><p style=3D"margin=
+: 0 0 20px 0;color: rgb(54,55,55);line-height: 26px;font-size: 16px;">If it=
+=E2=80=99s a bootcamp project or self-initiated work, just say so. Then mak=
+e it rigorous:</p><p style=3D"margin: 0 0 20px 0;color: rgb(54,55,55);line-=
+height: 26px;font-size: 16px;">=E2=9C=85 =E2=80=9CThis is a self-initiated =
+project. I identified a real problem with my local library=E2=80=99s websit=
+e by interviewing 5 regular users. While this didn=E2=80=99t ship, the rese=
+arch and design process are real.=E2=80=9D</p><p style=3D"margin: 0 0 20px =
+0;color: rgb(54,55,55);line-height: 26px;font-size: 16px;"><span>Nobody exp=
+ects you to only have shipped work if you=E2=80=99re junior. They expect yo=
+u to demonstrate thinking. Practice projects are fine if you treat them ser=
+iously. </span><a href=3D"https://substack.com/redirect/a597aeb8-6ad9-422a-=
+a016-fd591e618d55?j=3DeyJ1IjoiMWp1ZGpwIn0.5o04gUnkd-Msu0Ib_nbCOLc-sw15-DjXl=
+vGx8bWpSeo" rel=3D"" style=3D"color: rgb(54,55,55);text-decoration: underli=
+ne;">(Source: Nielsen Norman Group on Portfolios)</a></p><p style=3D"margin=
+: 0 0 20px 0;color: rgb(54,55,55);line-height: 26px;font-size: 16px;"><stro=
+ng>6. Use qualitative data when you don=E2=80=99t have quantitative</strong=
+></p><p style=3D"margin: 0 0 20px 0;color: rgb(54,55,55);line-height: 26px;=
+font-size: 16px;">User quotes, feedback themes, observation notes, support =
+ticket reduction, stakeholder reactions. These are all valid forms of impac=
+t:</p><p style=3D"margin: 0 0 20px 0;color: rgb(54,55,55);line-height: 26px=
+;font-size: 16px;">=E2=9C=85 =E2=80=9CWhile we didn=E2=80=99t track convers=
+ion metrics, we saw support tickets related to checkout drop from ~30/week =
+to ~5/week in the month after launch.=E2=80=9D</p><p style=3D"margin: 0 0 2=
+0px 0;color: rgb(54,55,55);line-height: 26px;font-size: 16px;">This is real=
+ impact, honestly presented.</p><div style=3D"font-size: 16px;line-height: =
+26px;"><hr style=3D"margin: 32px 0;padding: 0;height: 1px;background: rgb(0=
+,0,0,.1);border: none;"></div><h2 class=3D"header-anchor-post" style=3D"pos=
+ition: relative;font-family: 'SF Pro Display',-apple-system-headline,system=
+-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans=
+-serif,'Apple Color Emoji','Segoe UI Emoji','Segoe UI Symbol';font-weight: =
+bold;-webkit-font-smoothing: antialiased;-moz-osx-font-smoothing: antialias=
+ed;-webkit-appearance: optimizelegibility;-moz-appearance: optimizelegibili=
+ty;appearance: optimizelegibility;margin: 1em 0 0.625em 0;color: rgb(54,55,=
+55);line-height: 1.16em;font-size: 1.625em;">What to do when you genuinely =
+don=E2=80=99t have metrics</h2><p style=3D"margin: 0 0 20px 0;color: rgb(54=
+,55,55);line-height: 26px;font-size: 16px;">Most junior designers don=E2=80=
+=99t have access to metrics. Many companies don=E2=80=99t track things prop=
+erly. Some projects ship and nobody measures the impact. This is normal. He=
+re=E2=80=99s how to handle it honestly:</p><div class=3D"captioned-image-co=
+ntainer-static" style=3D"font-size: 16px;line-height: 26px;margin: 32px aut=
+o;"><figure style=3D"width: 100%;margin: 0 auto;"><table class=3D"image-wra=
+pper" width=3D"100%" border=3D"0" cellspacing=3D"0" cellpadding=3D"0" data-=
+component-name=3D"Image2ToDOMStatic" style=3D"mso-padding-alt: 1em 0 1.6em;=
+"><tbody><tr><td style=3D"text-align: center;"></td><td class=3D"content" a=
+lign=3D"left" width=3D"1032" style=3D"text-align: center;"><a class=3D"imag=
+e-link" target=3D"_blank" href=3D"https://substack.com/redirect/3f1208b4-08=
+1f-497e-abce-18f5a57263f6?j=3DeyJ1IjoiMWp1ZGpwIn0.5o04gUnkd-Msu0Ib_nbCOLc-s=
+w15-DjXlvGx8bWpSeo" rel=3D"" style=3D"position: relative;flex-direction: co=
+lumn;align-items: center;padding: 0;width: auto;height: auto;border: none;t=
+ext-decoration: none;display: block;margin: 0;"><img class=3D"wide-image" d=
+ata-attrs=3D"{&quot;src&quot;:&quot;https://substack-post-media.s3.amazonaw=
+s.com/public/images/4991a4d2-bf55-4f4b-bea4-72006923c531_1032x449.png&quot;=
+,&quot;srcNoWatermark&quot;:null,&quot;fullscreen&quot;:null,&quot;imageSiz=
+e&quot;:null,&quot;height&quot;:449,&quot;width&quot;:1032,&quot;resizeWidt=
+h&quot;:null,&quot;bytes&quot;:89718,&quot;alt&quot;:null,&quot;title&quot;=
+:null,&quot;type&quot;:&quot;image/png&quot;,&quot;href&quot;:null,&quot;be=
+lowTheFold&quot;:true,&quot;topImage&quot;:false,&quot;internalRedirect&quo=
+t;:&quot;https://newsletter.uxuniversity.io/i/191451802?img=3Dhttps%3A%2F%2=
+Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2F77d6081a-90f1-4ad=
+8-aaa2-91ce9ed26038_1032x481.png&quot;,&quot;isProcessing&quot;:false,&quot=
+;align&quot;:null,&quot;offset&quot;:false}" alt=3D"" width=3D"550" height=
+=3D"239.29263565891472" src=3D"https://substackcdn.com/image/fetch/$s_!qnCv=
+!,w_1100,c_limit,f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubs=
+tack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2F4991a4d2-bf55-4f4b-bea=
+4-72006923c531_1032x449.png" style=3D"border: none !important;vertical-alig=
+n: middle;display: block;-ms-interpolation-mode: bicubic;height: auto;margi=
+n-bottom: 0;width: auto !important;max-width: 100% !important;margin: 0 aut=
+o;"></a></td><td style=3D"text-align: center;"></td></tr></tbody></table></=
+figure></div><p style=3D"margin: 0 0 20px 0;color: rgb(54,55,55);line-heigh=
+t: 26px;font-size: 16px;"></p><p style=3D"margin: 0 0 20px 0;color: rgb(54,=
+55,55);line-height: 26px;font-size: 16px;"><strong>Option 1: Explain why me=
+trics don=E2=80=99t exist</strong></p><p style=3D"margin: 0 0 20px 0;color:=
+ rgb(54,55,55);line-height: 26px;font-size: 16px;">=E2=9C=85 =E2=80=9CThis =
+was a client project and I didn=E2=80=99t have access to their analytics af=
+ter handoff.=E2=80=9D =E2=9C=85 =E2=80=9CThe company didn=E2=80=99t have me=
+asurement infrastructure in place for this feature.=E2=80=9D =E2=9C=85 =E2=
+=80=9CThis was exploratory work that informed strategy but didn=E2=80=99t r=
+esult in a shipped product.=E2=80=9D</p><p style=3D"margin: 0 0 20px 0;colo=
+r: rgb(54,55,55);line-height: 26px;font-size: 16px;">These are all legitima=
+te. Just state them matter-of-factly.</p><p style=3D"margin: 0 0 20px 0;col=
+or: rgb(54,55,55);line-height: 26px;font-size: 16px;"><strong>Option 2: Use=
+ proxy metrics or observations</strong></p><p style=3D"margin: 0 0 20px 0;c=
+olor: rgb(54,55,55);line-height: 26px;font-size: 16px;">If you don=E2=80=99=
+t have hard numbers, look for other signals:</p><p style=3D"margin: 0 0 20p=
+x 0;color: rgb(54,55,55);line-height: 26px;font-size: 16px;">=E2=9C=85 =E2=
+=80=9CThe redesigned form reduced the average support call length from 8 mi=
+nutes to 3 minutes based on call center reports.=E2=80=9D =E2=9C=85 =E2=80=
+=9CUser testing showed task completion time dropped from an average of 4 mi=
+nutes to 90 seconds.=E2=80=9D =E2=9C=85 =E2=80=9CIn our usability tests, 4 =
+out of 5 users completed the task successfully compared to 1 out of 5 with =
+the old design.=E2=80=9D</p><p style=3D"margin: 0 0 20px 0;color: rgb(54,55=
+,55);line-height: 26px;font-size: 16px;">These aren=E2=80=99t conversion ra=
+tes or revenue numbers, but they=E2=80=99re real measurements.</p><p style=
+=3D"margin: 0 0 20px 0;color: rgb(54,55,55);line-height: 26px;font-size: 16=
+px;"><strong>Option 3: Focus on the problem-solving process</strong></p><p =
+style=3D"margin: 0 0 20px 0;color: rgb(54,55,55);line-height: 26px;font-siz=
+e: 16px;">If you have no outcome data at all, double down on showing your t=
+hinking:</p><p style=3D"margin: 0 0 20px 0;color: rgb(54,55,55);line-height=
+: 26px;font-size: 16px;">=E2=9C=85 =E2=80=9CI can=E2=80=99t measure the imp=
+act because the project was paused before launch, but I can walk you throug=
+h how I identified the core user problem and my rationale for the design de=
+cisions.=E2=80=9D</p><p style=3D"margin: 0 0 20px 0;color: rgb(54,55,55);li=
+ne-height: 26px;font-size: 16px;">Your thinking process is actually what hi=
+ring managers care about most. The metrics are just evidence that the think=
+ing worked. If you have strong thinking, that=E2=80=99s 80% of what matters=
+.</p><p style=3D"margin: 0 0 20px 0;color: rgb(54,55,55);line-height: 26px;=
+font-size: 16px;"><strong>Option 4: Be upfront that it=E2=80=99s a learning=
+ project</strong></p><p style=3D"margin: 0 0 20px 0;color: rgb(54,55,55);li=
+ne-height: 26px;font-size: 16px;">If it=E2=80=99s bootcamp work or practice=
+:</p><p style=3D"margin: 0 0 20px 0;color: rgb(54,55,55);line-height: 26px;=
+font-size: 16px;">=E2=9C=85 =E2=80=9CThis is a practice project I completed=
+ during my UX bootcamp. It=E2=80=99s based on research I conducted with rea=
+l users, but it=E2=80=99s not a shipped product.=E2=80=9D</p><p style=3D"ma=
+rgin: 0 0 20px 0;color: rgb(54,55,55);line-height: 26px;font-size: 16px;">T=
+hen show rigorous process. Show real research. Show thoughtful decisions. T=
+he fact that it didn=E2=80=99t ship is fine if the work is solid.</p><block=
+quote style=3D"border-left: 4px solid #538cfa;margin: 20px 0;padding: 0;"><=
+p style=3D"margin: 0 0 20px 0;color: rgb(54,55,55);margin-left: 20px;line-h=
+eight: 26px;font-size: 16px;"><span>&#127919; </span><strong>Take-home:</st=
+rong><span> Hiring managers would rather see honest thinking about a small =
+project than fabricated metrics on a fake one.</span></p></blockquote><div =
+style=3D"font-size: 16px;line-height: 26px;"><hr style=3D"margin: 32px 0;pa=
+dding: 0;height: 1px;background: rgb(0,0,0,.1);border: none;"></div><h2 cla=
+ss=3D"header-anchor-post" style=3D"position: relative;font-family: 'SF Pro =
+Display',-apple-system-headline,system-ui,-apple-system,BlinkMacSystemFont,=
+'Segoe UI',Roboto,Helvetica,Arial,sans-serif,'Apple Color Emoji','Segoe UI =
+Emoji','Segoe UI Symbol';font-weight: bold;-webkit-font-smoothing: antialia=
+sed;-moz-osx-font-smoothing: antialiased;-webkit-appearance: optimizelegibi=
+lity;-moz-appearance: optimizelegibility;appearance: optimizelegibility;mar=
+gin: 1em 0 0.625em 0;color: rgb(54,55,55);line-height: 1.16em;font-size: 1.=
+625em;">The honesty that actually impresses interviewers</h2><p style=3D"ma=
+rgin: 0 0 20px 0;color: rgb(54,55,55);line-height: 26px;font-size: 16px;">H=
+ere=E2=80=99s the paradox: the things designers think make them look weak a=
+re often what actually build credibility.</p><p style=3D"margin: 0 0 20px 0=
+;color: rgb(54,55,55);line-height: 26px;font-size: 16px;"><strong>What you =
+think makes you look bad but actually impresses:</strong></p><p style=3D"ma=
+rgin: 0 0 20px 0;color: rgb(54,55,55);line-height: 26px;font-size: 16px;"><=
+span>=E2=9C=85 </span><strong>=E2=80=9CI made a mistake in my initial appro=
+ach=E2=80=9D</strong><span> This shows self-awareness and learning. Everyon=
+e makes mistakes. Acknowledging yours shows maturity.</span></p><p style=3D=
+"margin: 0 0 20px 0;color: rgb(54,55,55);line-height: 26px;font-size: 16px;=
+"><span>=E2=9C=85 </span><strong>=E2=80=9CI don=E2=80=99t have access to th=
+e final metrics=E2=80=9D</strong><span> This is honest about real-world con=
+straints. Way better than making numbers up.</span></p><p style=3D"margin: =
+0 0 20px 0;color: rgb(54,55,55);line-height: 26px;font-size: 16px;"><span>=
+=E2=9C=85 </span><strong>=E2=80=9CThis was my first time doing [research me=
+thod] and here=E2=80=99s what I learned=E2=80=9D</strong><span> Growth mind=
+set. Willingness to try new things. Reflective practice. All good signals.<=
+/span></p><p style=3D"margin: 0 0 20px 0;color: rgb(54,55,55);line-height: =
+26px;font-size: 16px;"><span>=E2=9C=85 </span><strong>=E2=80=9CThe stakehol=
+der pushed back on my recommendation and we had to compromise=E2=80=9D</str=
+ong><span> This shows you work with real constraints and collaborate with n=
+on-designers. That=E2=80=99s a critical skill.</span></p><p style=3D"margin=
+: 0 0 20px 0;color: rgb(54,55,55);line-height: 26px;font-size: 16px;"><span=
+>=E2=9C=85 </span><strong>=E2=80=9CI would do this differently now=E2=80=9D=
+</strong><span> This shows you=E2=80=99re growing and learning from experie=
+nce. Static skills are less valuable than learning ability.</span></p><p st=
+yle=3D"margin: 0 0 20px 0;color: rgb(54,55,55);line-height: 26px;font-size:=
+ 16px;"><span>=E2=9C=85 </span><strong>=E2=80=9CI don=E2=80=99t know, but h=
+ere=E2=80=99s how I=E2=80=99d figure it out=E2=80=9D</strong><span> In inte=
+rviews, admitting you don=E2=80=99t know something and explaining your prob=
+lem-solving approach is stronger than bullshitting an answer.</span></p><p =
+style=3D"margin: 0 0 20px 0;color: rgb(54,55,55);line-height: 26px;font-siz=
+e: 16px;"><strong>What actually makes you look bad:</strong></p><p style=3D=
+"margin: 0 0 20px 0;color: rgb(54,55,55);line-height: 26px;font-size: 16px;=
+">=E2=9D=8C Taking credit for team work as solo work =E2=9D=8C Fabricating =
+metrics you can=E2=80=99t defend =E2=9D=8C Claiming you did research you cl=
+early didn=E2=80=99t do =E2=9D=8C Presenting polished work with no mention =
+of process or iteration =E2=9D=8C Being unable to explain your design decis=
+ions =E2=9D=8C Pretending you have no weaknesses or learning areas</p><p st=
+yle=3D"margin: 0 0 20px 0;color: rgb(54,55,55);line-height: 26px;font-size:=
+ 16px;"><strong>The pattern:</strong><span> Honesty about your actual exper=
+ience and limitations, combined with clear thinking and genuine learning, b=
+eats fabricated perfection every time.</span></p><p style=3D"margin: 0 0 20=
+px 0;color: rgb(54,55,55);line-height: 26px;font-size: 16px;">Hiring manage=
+rs aren=E2=80=99t looking for designers who never make mistakes. They=E2=80=
+=99re looking for designers who think clearly, learn from experience, and a=
+re honest about what they do and don=E2=80=99t know. That=E2=80=99s what bu=
+ilds trust. And trust is what gets you hired.</p><div style=3D"font-size: 1=
+6px;line-height: 26px;"><hr style=3D"margin: 32px 0;padding: 0;height: 1px;=
+background: rgb(0,0,0,.1);border: none;"></div><h2 class=3D"header-anchor-p=
+ost" style=3D"position: relative;font-family: 'SF Pro Display',-apple-syste=
+m-headline,system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Hel=
+vetica,Arial,sans-serif,'Apple Color Emoji','Segoe UI Emoji','Segoe UI Symb=
+ol';font-weight: bold;-webkit-font-smoothing: antialiased;-moz-osx-font-smo=
+othing: antialiased;-webkit-appearance: optimizelegibility;-moz-appearance:=
+ optimizelegibility;appearance: optimizelegibility;margin: 1em 0 0.625em 0;=
+color: rgb(54,55,55);line-height: 1.16em;font-size: 1.625em;">&#128230; Res=
+ource Corner</h2><p style=3D"margin: 0 0 20px 0;color: rgb(54,55,55);line-h=
+eight: 26px;font-size: 16px;"><strong><a href=3D"https://substack.com/redir=
+ect/ce6be27b-2f6d-4c03-b9b4-98314f7b314f?j=3DeyJ1IjoiMWp1ZGpwIn0.5o04gUnkd-=
+Msu0Ib_nbCOLc-sw15-DjXlvGx8bWpSeo" rel=3D"" style=3D"color: rgb(54,55,55);t=
+ext-decoration: underline;">Honest UX Portfolio Examples (Bestfolios)</a></=
+strong><span> Browse portfolios that show real work with honest context. Lo=
+ok for ones that mention constraints, team roles, and learning.</span></p><=
+p style=3D"margin: 0 0 20px 0;color: rgb(54,55,55);line-height: 26px;font-s=
+ize: 16px;"><strong><a href=3D"https://substack.com/redirect/8748bee4-30c1-=
+4fae-af7d-16e892692c01?j=3DeyJ1IjoiMWp1ZGpwIn0.5o04gUnkd-Msu0Ib_nbCOLc-sw15=
+-DjXlvGx8bWpSeo" rel=3D"" style=3D"color: rgb(54,55,55);text-decoration: un=
+derline;">How to Show Process in Your Portfolio (NN/g)</a></strong><span> R=
+esearch-backed guidance on what to include in case studies. Strong on showi=
+ng thinking over just outcomes.</span></p><p style=3D"margin: 0 0 20px 0;co=
+lor: rgb(54,55,55);line-height: 26px;font-size: 16px;"><strong><a href=3D"h=
+ttps://substack.com/redirect/20e98920-4a99-4868-9362-ac4b2ab36de7?j=3DeyJ1I=
+joiMWp1ZGpwIn0.5o04gUnkd-Msu0Ib_nbCOLc-sw15-DjXlvGx8bWpSeo" rel=3D"" style=
+=3D"color: rgb(54,55,55);text-decoration: underline;">The Mom Test by Rob F=
+itzpatrick</a></strong><span> While focused on customer interviews, the cor=
+e lesson applies to portfolios: honesty and specificity build more credibil=
+ity than trying to impress.</span></p><p style=3D"margin: 0 0 20px 0;color:=
+ rgb(54,55,55);line-height: 26px;font-size: 16px;"><strong><a href=3D"https=
+://substack.com/redirect/cdb0c607-a47a-46a0-b1f3-a2ac10dbcab1?j=3DeyJ1IjoiM=
+Wp1ZGpwIn0.5o04gUnkd-Msu0Ib_nbCOLc-sw15-DjXlvGx8bWpSeo" rel=3D"" style=3D"c=
+olor: rgb(54,55,55);text-decoration: underline;">Case Study Club</a></stron=
+g><span> Collection of case studies with varying levels of polish and hones=
+ty. Good for seeing different approaches to presenting real work.</span></p=
+><p style=3D"margin: 0 0 20px 0;color: rgb(54,55,55);line-height: 26px;font=
+-size: 16px;"><strong><a href=3D"https://substack.com/redirect/d456c50d-9e0=
+6-4011-ba19-30459a2be551?j=3DeyJ1IjoiMWp1ZGpwIn0.5o04gUnkd-Msu0Ib_nbCOLc-sw=
+15-DjXlvGx8bWpSeo" rel=3D"" style=3D"color: rgb(54,55,55);text-decoration: =
+underline;">Lenny=E2=80=99s Podcast: Portfolio Reviews</a></strong><span> O=
+ccasional episodes where industry leaders review portfolios. Listen for wha=
+t they call out as credible vs questionable.</span></p><p style=3D"margin: =
+0 0 20px 0;color: rgb(54,55,55);line-height: 26px;font-size: 16px;"><strong=
+><a href=3D"https://substack.com/redirect/0e11ea3a-3129-4ff5-b0b3-b99e64f3b=
+547?j=3DeyJ1IjoiMWp1ZGpwIn0.5o04gUnkd-Msu0Ib_nbCOLc-sw15-DjXlvGx8bWpSeo" re=
+l=3D"" style=3D"color: rgb(54,55,55);text-decoration: underline;">Portfolio=
+s for UX Researchers (Mixed Methods)</a></strong><span> While focused on re=
+search, the advice on presenting rigorous process and being honest about li=
+mitations applies to design portfolios too.</span></p><p style=3D"margin: 0=
+ 0 20px 0;color: rgb(54,55,55);line-height: 26px;font-size: 16px;"><strong>=
+<a href=3D"https://substack.com/redirect/74b39df4-0142-4c15-8425-2dc38239fd=
+c9?j=3DeyJ1IjoiMWp1ZGpwIn0.5o04gUnkd-Msu0Ib_nbCOLc-sw15-DjXlvGx8bWpSeo" rel=
+=3D"" style=3D"color: rgb(54,55,55);text-decoration: underline;">Redesignin=
+g Your Portfolio (A List Apart)</a></strong><span> Articles on presenting w=
+ork honestly and effectively. Good on the narrative structure of case studi=
+es.</span></p><div style=3D"font-size: 16px;line-height: 26px;"><hr style=
+=3D"margin: 32px 0;padding: 0;height: 1px;background: rgb(0,0,0,.1);border:=
+ none;"></div><h2 class=3D"header-anchor-post" style=3D"position: relative;=
+font-family: 'SF Pro Display',-apple-system-headline,system-ui,-apple-syste=
+m,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif,'Apple Co=
+lor Emoji','Segoe UI Emoji','Segoe UI Symbol';font-weight: bold;-webkit-fon=
+t-smoothing: antialiased;-moz-osx-font-smoothing: antialiased;-webkit-appea=
+rance: optimizelegibility;-moz-appearance: optimizelegibility;appearance: o=
+ptimizelegibility;margin: 1em 0 0.625em 0;color: rgb(54,55,55);line-height:=
+ 1.16em;font-size: 1.625em;">Final Thought</h2><p style=3D"margin: 0 0 20px=
+ 0;color: rgb(54,55,55);line-height: 26px;font-size: 16px;">Portfolio disho=
+nesty happens because designers are scared. Scared they=E2=80=99re not good=
+ enough. Scared they don=E2=80=99t have the =E2=80=9Cright=E2=80=9D kind of=
+ experience. Scared everyone else=E2=80=99s work is better. So they embelli=
+sh, exaggerate, or invent to compete.</p><p style=3D"margin: 0 0 20px 0;col=
+or: rgb(54,55,55);line-height: 26px;font-size: 16px;">But here=E2=80=99s wh=
+at actually happens: the fabrication gets caught, credibility is destroyed,=
+ and the job goes to someone else. Or worse, you get hired based on fake cr=
+edentials and can=E2=80=99t deliver what you claimed.</p><p style=3D"margin=
+: 0 0 20px 0;color: rgb(54,55,55);line-height: 26px;font-size: 16px;">The a=
+lternative is simpler and more effective: be honest about what you did, wha=
+t you learned, and what you still don=E2=80=99t know. Show real thinking, e=
+ven on imperfect projects. Admit constraints. Talk about tradeoffs. Present=
+ yourself as someone who=E2=80=99s learning and growing, not someone who=E2=
+=80=99s already perfect.</p><p style=3D"margin: 0 0 20px 0;color: rgb(54,55=
+,55);line-height: 26px;font-size: 16px;">Hiring managers don=E2=80=99t want=
+ perfect designers. Those don=E2=80=99t exist. They want honest ones who ca=
+n think clearly, learn quickly, and work with real-world constraints.</p><p=
+ style=3D"margin: 0 0 20px 0;color: rgb(54,55,55);line-height: 26px;font-si=
+ze: 16px;">Your real work, honestly presented, is already good enough. Stop=
+ lying about it.</p><div style=3D"font-size: 16px;line-height: 26px;"><hr s=
+tyle=3D"margin: 32px 0;padding: 0;height: 1px;background: rgb(0,0,0,.1);bor=
+der: none;"></div><h3 class=3D"header-anchor-post" style=3D"position: relat=
+ive;font-family: 'SF Pro Display',-apple-system-headline,system-ui,-apple-s=
+ystem,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif,'Appl=
+e Color Emoji','Segoe UI Emoji','Segoe UI Symbol';font-weight: bold;-webkit=
+-font-smoothing: antialiased;-moz-osx-font-smoothing: antialiased;-webkit-a=
+ppearance: optimizelegibility;-moz-appearance: optimizelegibility;appearanc=
+e: optimizelegibility;margin: 1em 0 0.625em 0;color: rgb(54,55,55);line-hei=
+ght: 1.16em;font-size: 1.375em;margin-bottom: 0;"><em>--The UXU Team</em></=
+h3></div></div><div class=3D"container-border" style=3D"margin: 32px 0 0;wi=
+dth: 100%;box-sizing: border-box;border-top: 1px solid #e6e6e6;font-size: 1=
+6px;line-height: 26px;"></div><div class=3D"typography" style=3D"--image-of=
+fset-margin: -120px;font-size: 16px;line-height: 26px;"><div class=3D"posts=
+cript" style=3D"margin: 32px 0;font-size: 16px;line-height: 26px;"><div cla=
+ss=3D"body markup" dir=3D"auto" style=3D"text-align: initial;font-size: 16p=
+x;line-height: 26px;width: 100%;word-break: break-word;margin-bottom: 16px;=
+"><div class=3D"captioned-image-container-static" style=3D"font-size: 16px;=
+line-height: 26px;margin: 32px auto;margin-top: 0;"><figure style=3D"width:=
+ 100%;margin: 0 auto;"><table class=3D"image-wrapper" width=3D"100%" border=
+=3D"0" cellspacing=3D"0" cellpadding=3D"0" data-component-name=3D"Image2ToD=
+OMStatic" style=3D"mso-padding-alt: 1em 0 1.6em;"><tbody><tr><td style=3D"t=
+ext-align: center;"></td><td class=3D"content" align=3D"left" width=3D"1456=
+" style=3D"text-align: center;"><a class=3D"image-link" target=3D"_blank" h=
+ref=3D"https://substack.com/redirect/5bf36063-86b3-4384-a9ce-f5d1003bcd52?j=
+=3DeyJ1IjoiMWp1ZGpwIn0.5o04gUnkd-Msu0Ib_nbCOLc-sw15-DjXlvGx8bWpSeo" rel=3D"=
+" style=3D"position: relative;flex-direction: column;align-items: center;pa=
+dding: 0;width: auto;height: auto;border: none;text-decoration: none;displa=
+y: block;margin: 0;margin-top: 0;margin-bottom: 0;"><img class=3D"wide-imag=
+e" data-attrs=3D"{&quot;src&quot;:&quot;https://substack-post-media.s3.amaz=
+onaws.com/public/images/676b6bdb-b048-4263-aa16-456a83284317_1584x396.jpeg&=
+quot;,&quot;srcNoWatermark&quot;:null,&quot;fullscreen&quot;:null,&quot;ima=
+geSize&quot;:null,&quot;height&quot;:364,&quot;width&quot;:1456,&quot;resiz=
+eWidth&quot;:null,&quot;bytes&quot;:389634,&quot;alt&quot;:null,&quot;title=
+&quot;:null,&quot;type&quot;:&quot;image/jpeg&quot;,&quot;href&quot;:&quot;=
+https://luma.com/ylkwtbzj&quot;,&quot;belowTheFold&quot;:false,&quot;topIma=
+ge&quot;:true,&quot;internalRedirect&quot;:null,&quot;isProcessing&quot;:fa=
+lse,&quot;align&quot;:null,&quot;offset&quot;:false}" alt=3D"" width=3D"550=
+" height=3D"137.5" src=3D"https://substackcdn.com/image/fetch/$s_!VpBa!,w_1=
+100,c_limit,f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-=
+post-media.s3.amazonaws.com%2Fpublic%2Fimages%2F676b6bdb-b048-4263-aa16-456=
+a83284317_1584x396.jpeg" style=3D"border: none !important;vertical-align: m=
+iddle;display: block;-ms-interpolation-mode: bicubic;height: auto;margin-bo=
+ttom: 0;width: auto !important;max-width: 100% !important;margin: 0 auto;">=
+</a></td><td style=3D"text-align: center;"></td></tr></tbody></table></figu=
+re></div><p style=3D"margin: 0 0 20px 0;color: rgb(54,55,55);line-height: 2=
+6px;font-size: 16px;margin-bottom: 0;"><em>March Meet-up Loading=E2=80=A6.<=
+/em></p></div></div></div><table class=3D"email-ufi-2-bottom" role=3D"prese=
+ntation" width=3D"100%" border=3D"0" cellspacing=3D"0" cellpadding=3D"0" st=
+yle=3D"border-top: 1px solid rgb(0,0,0,.1);border-bottom: 1px solid rgb(0,0=
+,0,.1);min-width: 100%;"><tbody><tr height=3D"16"><td height=3D"16" style=
+=3D"font-size:0px;line-height:0;">&nbsp;</td></tr><tr><td><table role=3D"pr=
+esentation" width=3D"100%" border=3D"0" cellspacing=3D"0" cellpadding=3D"0"=
+><tbody><tr><td><table role=3D"presentation" width=3D"auto" border=3D"0" ce=
+llspacing=3D"0" cellpadding=3D"0" style=3D"margin:0 auto;"><tbody><tr><td s=
+tyle=3D"vertical-align:middle;"><table role=3D"presentation" width=3D"auto"=
+ border=3D"0" cellspacing=3D"0" cellpadding=3D"0"><tbody><tr><td align=3D"c=
+enter"><a class=3D"email-button-outline" href=3D"https://substack.com/app-l=
+ink/post?publication_id=3D1519708&amp;post_id=3D191451802&amp;utm_source=3D=
+substack&amp;isFreemail=3Dtrue&amp;submitLike=3Dtrue&amp;token=3DeyJ1c2VyX2=
+lkIjo5Mzc5NjExNywicG9zdF9pZCI6MTkxNDUxODAyLCJyZWFjdGlvbiI6IuKdpCIsImlhdCI6M=
+Tc3NDY0MjU1NSwiZXhwIjoxNzc3MjM0NTU1LCJpc3MiOiJwdWItMTUxOTcwOCIsInN1YiI6InJl=
+YWN0aW9uIn0.IzLgigHNShHaCTnASoxut3dgmHK7pd8nikZ1rCVE-C0&amp;utm_medium=3Dem=
+ail&amp;utm_campaign=3Demail-reaction&amp;r=3D1judjp" style=3D"font-family:=
+ system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Ari=
+al,sans-serif,'Apple Color Emoji','Segoe UI Emoji','Segoe UI Symbol';displa=
+y: inline-block;font-weight: 500;border: 1px solid rgb(0,0,0,.1);border-rad=
+ius: 9999px;text-transform: uppercase;font-size: 12px;line-height: 12px;pad=
+ding: 9px 14px;text-decoration: none;color: rgb(119,119,119);"><img class=
+=3D"icon" src=3D"https://substackcdn.com/image/fetch/$s_!PeVs!,w_36,c_scale=
+,f_png,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack.com%2Ficon%2=
+FLucideHeart%3Fv%3D4%26height%3D36%26fill%3Dnone%26stroke%3D%2523808080%26s=
+trokeWidth%3D2" width=3D"18" height=3D"18" style=3D"margin-right: 8px;min-w=
+idth: 18px;min-height: 18px;border: none;vertical-align: middle;max-width: =
+18px" alt=3D""><span class=3D"email-button-text" style=3D"vertical-align: m=
+iddle;">Like</span></a></td></tr></tbody></table></td><td width=3D"8" style=
+=3D"min-width:8px;"></td><td style=3D"vertical-align:middle;"><table role=
+=3D"presentation" width=3D"auto" border=3D"0" cellspacing=3D"0" cellpadding=
+=3D"0"><tbody><tr><td align=3D"center"><a class=3D"email-button-outline" hr=
+ef=3D"https://substack.com/app-link/post?publication_id=3D1519708&amp;post_=
+id=3D191451802&amp;utm_source=3Dsubstack&amp;utm_medium=3Demail&amp;isFreem=
+ail=3Dtrue&amp;comments=3Dtrue&amp;token=3DeyJ1c2VyX2lkIjo5Mzc5NjExNywicG9z=
+dF9pZCI6MTkxNDUxODAyLCJpYXQiOjE3NzQ2NDI1NTUsImV4cCI6MTc3NzIzNDU1NSwiaXNzIjo=
+icHViLTE1MTk3MDgiLCJzdWIiOiJwb3N0LXJlYWN0aW9uIn0.4gzbLy50jGP2MsMrIEePHp5QbI=
+t07u8sAuRHKPgKm-8&amp;r=3D1judjp&amp;utm_campaign=3Demail-half-magic-commen=
+ts&amp;action=3Dpost-comment&amp;utm_source=3Dsubstack&amp;utm_medium=3Dema=
+il" style=3D"font-family: system-ui,-apple-system,BlinkMacSystemFont,'Segoe=
+ UI',Roboto,Helvetica,Arial,sans-serif,'Apple Color Emoji','Segoe UI Emoji'=
+,'Segoe UI Symbol';display: inline-block;font-weight: 500;border: 1px solid=
+ rgb(0,0,0,.1);border-radius: 9999px;text-transform: uppercase;font-size: 1=
+2px;line-height: 12px;padding: 9px 14px;text-decoration: none;color: rgb(11=
+9,119,119);"><img class=3D"icon" src=3D"https://substackcdn.com/image/fetch=
+/$s_!x1tS!,w_36,c_scale,f_png,q_auto:good,fl_progressive:steep/https%3A%2F%=
+2Fsubstack.com%2Ficon%2FLucideComments%3Fv%3D4%26height%3D36%26fill%3Dnone%=
+26stroke%3D%2523808080%26strokeWidth%3D2" width=3D"18" height=3D"18" style=
+=3D"margin-right: 8px;min-width: 18px;min-height: 18px;border: none;vertica=
+l-align: middle;max-width: 18px" alt=3D""><span class=3D"email-button-text"=
+ style=3D"vertical-align: middle;">Comment</span></a></td></tr></tbody></ta=
+ble></td><td width=3D"8" style=3D"min-width:8px;"></td><td style=3D"vertica=
+l-align:middle;"><table role=3D"presentation" width=3D"auto" border=3D"0" c=
+ellspacing=3D"0" cellpadding=3D"0"><tbody><tr><td align=3D"center"><a class=
+=3D"email-button-outline" href=3D"https://substack.com/redirect/2/eyJlIjoia=
+HR0cHM6Ly9vcGVuLnN1YnN0YWNrLmNvbS9wdWIvcmVzZWFyY2hib29rbWFyay9wL3lvdXItY2Fz=
+ZS1zdHVkeS1pcy1seWluZy1hbmQtZXZlcnlvbmU_dXRtX3NvdXJjZT1zdWJzdGFjayZ1dG1fbWV=
+kaXVtPWVtYWlsJnV0bV9jYW1wYWlnbj1lbWFpbC1yZXN0YWNrLWNvbW1lbnQmYWN0aW9uPXJlc3=
+RhY2stY29tbWVudCZyPTFqdWRqcCZ0b2tlbj1leUoxYzJWeVgybGtJam81TXpjNU5qRXhOeXdpY=
+0c5emRGOXBaQ0k2TVRreE5EVXhPREF5TENKcFlYUWlPakUzTnpRMk5ESTFOVFVzSW1WNGNDSTZN=
+VGMzTnpJek5EVTFOU3dpYVhOeklqb2ljSFZpTFRFMU1UazNNRGdpTENKemRXSWlPaUp3YjNOMEx=
+YSmxZV04wYVc5dUluMC40Z3piTHk1MGpHUDJNc01ySUVlUEhwNVFiSXQwN3U4c0F1UkhLUGdLbS=
+04IiwicCI6MTkxNDUxODAyLCJzIjoxNTE5NzA4LCJmIjp0cnVlLCJ1Ijo5Mzc5NjExNywiaWF0I=
+joxNzc0NjQyNTU1LCJleHAiOjIwOTAyMTg1NTUsImlzcyI6InB1Yi0wIiwic3ViIjoibGluay1y=
+ZWRpcmVjdCJ9.9xGdaQHhRh5LEAZ9TLuR3OgB4RPQyNWiGpovk9_hptg?&amp;utm_source=3D=
+substack&amp;utm_medium=3Demail" style=3D"font-family: system-ui,-apple-sys=
+tem,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif,'Apple =
+Color Emoji','Segoe UI Emoji','Segoe UI Symbol';display: inline-block;font-=
+weight: 500;border: 1px solid rgb(0,0,0,.1);border-radius: 9999px;text-tran=
+sform: uppercase;font-size: 12px;line-height: 12px;padding: 9px 14px;text-d=
+ecoration: none;color: rgb(119,119,119);"><img class=3D"icon" src=3D"https:=
+//substackcdn.com/image/fetch/$s_!ubXF!,w_36,c_scale,f_png,q_auto:good,fl_p=
+rogressive:steep/https%3A%2F%2Fsubstack.com%2Ficon%2Fnotes__NoteRestackIcon=
+%3Fv%3D4%26height%3D36%26fill%3Dnone%26stroke%3D%2523808080%26strokeWidth%3=
+D2%26strokeLinecap%3Dround%26strokeLinejoin%3Dround" width=3D"18" height=3D=
+"18" alt=3D"" style=3D"margin-right: 8px;min-width: 18px;min-height: 18px;m=
+ax-width: 550px;border: none !important;vertical-align: middle;"><span clas=
+s=3D"email-button-text" style=3D"vertical-align: middle;">Restack</span></a=
+></td></tr></tbody></table></td></tr></tbody></table></td><td align=3D"righ=
+t"><table role=3D"presentation" width=3D"auto" border=3D"0" cellspacing=3D"=
+0" cellpadding=3D"0"><tbody><tr></tr></tbody></table></td></tr></tbody></ta=
+ble></td></tr><tr height=3D"16"><td height=3D"16" style=3D"font-size:0px;li=
+ne-height:0;">&nbsp;</td></tr></tbody></table><div class=3D"footer footer-Z=
+M59BM" style=3D"color: rgb(119,119,119);text-align: center;font-size: 16px;=
+line-height: 26px;padding: 24px0;"><div style=3D"font-size: 16px;line-heigh=
+t: 26px;padding-bottom: 24px"><p class=3D"pencraft pc-reset color-secondary=
+-ls1g8s size-12-mmZ61m reset-IxiVJZ small meta-B2bqa5" style=3D"list-style:=
+ none;font-family: system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Ro=
+boto,Helvetica,Arial,sans-serif,'Apple Color Emoji','Segoe UI Emoji','Segoe=
+ UI Symbol';padding-bottom: 0;font-size: 12px;line-height: 16px;margin: 0;c=
+olor: rgb(119,119,119);text-decoration: unset;">=C2=A9 2026 <span>User Expe=
+rience University</span><br>651 N BROAD ST,STE 205 #9506, MIDDLETOWN, DELAW=
+ARE 19709 <br><a href=3D"https://substack.com/redirect/2/eyJlIjoiaHR0cHM6Ly=
+9uZXdzbGV0dGVyLnV4dW5pdmVyc2l0eS5pby9hY3Rpb24vZGlzYWJsZV9lbWFpbD90b2tlbj1le=
+UoxYzJWeVgybGtJam81TXpjNU5qRXhOeXdpY0c5emRGOXBaQ0k2TVRreE5EVXhPREF5TENKcFlY=
+UWlPakUzTnpRMk5ESTFOVFVzSW1WNGNDSTZNVGd3TmpFM09EVTFOU3dpYVhOeklqb2ljSFZpTFR=
+FMU1UazNNRGdpTENKemRXSWlPaUprYVhOaFlteGxYMlZ0WVdsc0luMC5fTjZEMTRqeWpaOThuYz=
+kxdkhhT2xMM0NlMTdSeVg3VFJFRDVDMm5wa0hJIiwicCI6MTkxNDUxODAyLCJzIjoxNTE5NzA4L=
+CJmIjp0cnVlLCJ1Ijo5Mzc5NjExNywiaWF0IjoxNzc0NjQyNTU1LCJleHAiOjIwOTAyMTg1NTUs=
+ImlzcyI6InB1Yi0wIiwic3ViIjoibGluay1yZWRpcmVjdCJ9.3nIB7PKFfmss_Kb9eP9zVwzZvR=
+DHt6IMPZX_i0be9n8?" style=3D"text-decoration: underline;color: rgb(119,119,=
+119);"><span style=3D"color: rgb(119,119,119);text-decoration: underline;">=
+Unsubscribe</span></a></p></div><p class=3D"footerSection-EHR0jG small powe=
+red-by-substack" style=3D"padding: 0 24px;font-size: 12px;line-height: 20px=
+;margin: 0;color: rgb(119,119,119);font-family: system-ui,-apple-system,Bli=
+nkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif,'Apple Color E=
+moji','Segoe UI Emoji','Segoe UI Symbol';padding-bottom: 0;margin-top: 0;">=
+<a href=3D"https://substack.com/redirect/da2018f7-bd7e-4291-bbea-a5d909c605=
+36?j=3DeyJ1IjoiMWp1ZGpwIn0.5o04gUnkd-Msu0Ib_nbCOLc-sw15-DjXlvGx8bWpSeo" sty=
+le=3D"color: rgb(119,119,119);text-decoration: none;display: inline-block;m=
+argin: 0 4px;"><img src=3D"https://substackcdn.com/image/fetch/$s_!IzGP!,w_=
+262,c_limit,f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack.=
+com%2Fimg%2Femail%2Fgeneric-app-button%402x.png" srcset=3D"https://substack=
+cdn.com/image/fetch/$s_!DIki!,w_131,c_limit,f_auto,q_auto:good,fl_progressi=
+ve:steep/https%3A%2F%2Fsubstack.com%2Fimg%2Femail%2Fgeneric-app-button.png,=
+ https://substackcdn.com/image/fetch/$s_!IzGP!,w_262,c_limit,f_auto,q_auto:=
+good,fl_progressive:steep/https%3A%2F%2Fsubstack.com%2Fimg%2Femail%2Fgeneri=
+c-app-button%402x.png 2x, https://substackcdn.com/image/fetch/$s_!QWua!,w_3=
+93,c_limit,f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack.c=
+om%2Fimg%2Femail%2Fgeneric-app-button%403x.png 3x" width=3D"131" alt=3D"Get=
+ the app" height=3D"40" style=3D"max-width: 550px;border: none !important;v=
+ertical-align: middle;"></a><a href=3D"https://substack.com/redirect/2/eyJl=
+IjoiaHR0cHM6Ly9zdWJzdGFjay5jb20vc2lnbnVwP3V0bV9zb3VyY2U9c3Vic3RhY2smdXRtX21=
+lZGl1bT1lbWFpbCZ1dG1fY29udGVudD1mb290ZXImdXRtX2NhbXBhaWduPWF1dG9maWxsZWQtZm=
+9vdGVyJmZyZWVTaWdudXBFbWFpbD1pbmZvQHdvb2RmaW5lLmNvJnI9MWp1ZGpwIiwicCI6MTkxN=
+DUxODAyLCJzIjoxNTE5NzA4LCJmIjp0cnVlLCJ1Ijo5Mzc5NjExNywiaWF0IjoxNzc0NjQyNTU1=
+LCJleHAiOjIwOTAyMTg1NTUsImlzcyI6InB1Yi0wIiwic3ViIjoibGluay1yZWRpcmVjdCJ9.G0=
+X8juombxAMC9bK4PUfirF6808HzpNi6VaLLmo8Kzk?" style=3D"color: rgb(119,119,119=
+);text-decoration: none;display: inline-block;margin: 0 4px;"><img src=3D"h=
+ttps://substackcdn.com/image/fetch/$s_!LkrL!,w_270,c_limit,f_auto,q_auto:go=
+od,fl_progressive:steep/https%3A%2F%2Fsubstack.com%2Fimg%2Femail%2Fpublish-=
+button%402x.png" srcset=3D"https://substackcdn.com/image/fetch/$s_!wgfj!,w_=
+135,c_limit,f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack.=
+com%2Fimg%2Femail%2Fpublish-button.png, https://substackcdn.com/image/fetch=
+/$s_!LkrL!,w_270,c_limit,f_auto,q_auto:good,fl_progressive:steep/https%3A%2=
+F%2Fsubstack.com%2Fimg%2Femail%2Fpublish-button%402x.png 2x, https://substa=
+ckcdn.com/image/fetch/$s_!KjtY!,w_405,c_limit,f_auto,q_auto:good,fl_progres=
+sive:steep/https%3A%2F%2Fsubstack.com%2Fimg%2Femail%2Fpublish-button%403x.p=
+ng 3x" width=3D"135" alt=3D"Start writing" height=3D"40" style=3D"max-width=
+: 550px;border: none !important;vertical-align: middle;"></a></p></div></di=
+v></td><td></td></tr></tbody></table><img src=3D"https://eotrx.substackcdn.=
+com/open?token=3DeyJtIjoiPDIwMjYwMzI3MjAxNTQ0LjMuNDQwMGVhZmQ1OWViNDMwY0BtZy=
+1kMS5zdWJzdGFjay5jb20-IiwidSI6OTM3OTYxMTcsInIiOiJpbmZvQHdvb2RmaW5lLmNvIiwiZ=
+CI6Im1nLWQxLnN1YnN0YWNrLmNvbSIsInAiOjE5MTQ1MTgwMiwidCI6InBvZGNhc3QiLCJhIjoi=
+ZXZlcnlvbmUiLCJzIjoxNTE5NzA4LCJjIjoicG9zdCIsImYiOnRydWUsInBvc2l0aW9uIjoiYm9=
+0dG9tIiwiaWF0IjoxNzc0NjQyNTU2LCJleHAiOjE3NzcyMzQ1NTYsImlzcyI6InB1Yi0wIiwic3=
+ViIjoiZW8ifQ.tjmEx0Bu4xUrsNZ2bZAn93XYZJODxVC5LGa_vqRpDEI" alt=3D"" width=3D=
+"1" height=3D"1" border=3D"0" style=3D"height:1px !important;width:1px !imp=
+ortant;border-width:0 !important;margin-top:0 !important;margin-bottom:0 !i=
+mportant;margin-right:0 !important;margin-left:0 !important;padding-top:0 !=
+important;padding-bottom:0 !important;padding-right:0 !important;padding-le=
+ft:0 !important;"><img width=3D"1" height=3D"1" alt=3D"" src=3D"https://ema=
+il.mg-d1.substack.com/o/eJxEkNuKwyAURb-mvk04x2iMD35L8HLSSqsGLx3y90MvMK9rw2K=
+xve10LfU0R2mdBTNrB6tfGBlUSiyCS6kYJRsf25UyVdspbLb_rwsisJuRYgVUQQilpN53wF1rAX=
+ydEUHrlVg0HPgCM1ccUAoxzZMQAGT3IDU5MYO_CEjXn4BTG6516--TL4nFtu2V3gmm10HsVbrZE=
+SJlT4aeVM-SvzgGgxqFxBX4h_TzIHOU4G3r7Bhu8yWlkWM_N8rWPSh8rcM9orc9lvy2SNQKVlZN=
+zHu5CPgtJewx0-QLa8OFkmzMplIjW_3NlXJPtt5Z_xw5GtWXRs9KL4iKPQ3_CwAA__8k8Haj"><=
+/body></html>=
+
+--6e4c827580f12578189be22ce4b89ebef8e3bc789e7bde9bc870a87b6e52--
