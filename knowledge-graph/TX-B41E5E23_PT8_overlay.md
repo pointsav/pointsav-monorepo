@@ -1,0 +1,2 @@
+- Domain Glossaries: Archetypes, Chart of Accounts, Themes, Domains
+- Core Facts: Extract objective facts from payload, generate an Overlay Proposal, use the term "user experience."
