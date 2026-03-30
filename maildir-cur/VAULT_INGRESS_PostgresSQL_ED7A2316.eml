@@ -1,0 +1,343 @@
+Received: from DS0PR16MB5326.namprd16.prod.outlook.com (2603:10b6:8:163::10)
+ by DM6PR16MB2569.namprd16.prod.outlook.com with HTTPS; Mon, 30 Mar 2026
+ 04:21:26 +0000
+ARC-Seal: i=2; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=pass;
+ b=nexRb1WmBayihIv4Cs3xEekGPqhjxaY1fsYTrpo3kaCYvZ8N5SdwGPraXcbDoFl63fELju2xZ1Y7ylsjChK2jnyphkjxNtsvjwdft161shvjQbSZP+ICZoYTO/ggnEyei4ldtGQ+f0KCWFBPwAWP6yVpDO++zAoumiZamAojTft5pbOzU9fn2rAl+myo3J3ttpDdNf6YWDYC446CU0JLO20i0JsBX+DFChrfRffJrIhz+pufdTWTEElQnJh1ZcK3L0ZVtUvNDWUPmzrfSNrzljAmgPKQgZJ9eJ31Wu84eXXrGLETP+PneXdlhZuRlwjPue7n3FA0e0TSg8RhwnFMPw==
+ARC-Message-Signature: i=2; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=WT3RbIB4nY84dgK5yTgh75RAmNOgcyATV8PoT534QTE=;
+ b=neB3sntvw3ulQkbHNavOcmVgTFe3iIZBk6pGTsvp1WZO0x2Gos8YgjhcgVEAorppjzVbQURjeDfOzDH4sprtxSMd/zy0WUprM4PZPNi3jPZJZDNXZCzu0E6UjlacLMY34tiNE6uA51W7j5I9p/Hv/DoBs/y+eW4e01rjFFwVobkDifwPB4n8JNkSltdy3bZSBLcGpTeVRZsa7YE7cPwyAyLovNVd4gs4f5nrPokg+0tk29KFoIUHJ++mAd5omFDDZUzHFq8DOg+FspZjJfUkKENVRFeLsR6oLbUV6HX2kYpMnMMvLMtwwVv3r69feDVOBDkLhSyQRz3bfmEOJ5m79g==
+ARC-Authentication-Results: i=2; mx.microsoft.com 1; spf=pass (sender ip is
+ 2a02:16a8:dc51::56) smtp.rcpttodomain=woodfine.co
+ smtp.mailfrom=lists.postgresql.org; dmarc=pass (p=none sp=quarantine pct=100)
+ action=none header.from=gmail.com; dkim=pass (signature was verified)
+ header.d=gmail.com; arc=pass (0 oda=0 ltdi=1)
+Received: from PH7P222CA0013.NAMP222.PROD.OUTLOOK.COM (2603:10b6:510:33a::34)
+ by DS0PR16MB5326.namprd16.prod.outlook.com (2603:10b6:8:163::10) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9745.28; Mon, 30 Mar
+ 2026 04:21:25 +0000
+Received: from CY4PEPF0000E9D8.namprd05.prod.outlook.com
+ (2603:10b6:510:33a:cafe::86) by PH7P222CA0013.outlook.office365.com
+ (2603:10b6:510:33a::34) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.20.9745.28 via Frontend Transport; Mon,
+ 30 Mar 2026 04:21:21 +0000
+Authentication-Results: spf=pass (sender IP is 2a02:16a8:dc51::56)
+ smtp.mailfrom=lists.postgresql.org; dkim=pass (signature was verified)
+ header.d=gmail.com;dmarc=pass action=none header.from=gmail.com;compauth=pass
+ reason=100
+Received-SPF: Pass (protection.outlook.com: domain of lists.postgresql.org
+ designates 2a02:16a8:dc51::56 as permitted sender)
+ receiver=protection.outlook.com; client-ip=2a02:16a8:dc51::56;
+ helo=malur.postgresql.org; pr=C
+Received: from malur.postgresql.org (2a02:16a8:dc51::56) by
+ CY4PEPF0000E9D8.mail.protection.outlook.com (2603:10b6:92f::1001:0:13) with
+ Microsoft SMTP Server (version=TLS1_3, cipher=TLS_AES_256_GCM_SHA384) id
+ 15.20.9745.21 via Frontend Transport; Mon, 30 Mar 2026 04:21:23 +0000
+Received: from localhost ([127.0.0.1] helo=malur.postgresql.org)
+	by malur.postgresql.org with esmtp (Exim 4.96)
+	(envelope-from <pgsql-hackers-owner+M91260-745720@lists.postgresql.org>)
+	id 1w747u-001AWw-09
+	for info@woodfine.co;
+	Mon, 30 Mar 2026 04:21:22 +0000
+Received: from magus.postgresql.org ([2a02:c0:301:0:ffff::29])
+	by malur.postgresql.org with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+	(Exim 4.96)
+	(envelope-from <dilipbalaut@gmail.com>)
+	id 1w747m-0018qQ-1Y
+	for pgsql-hackers@lists.postgresql.org;
+	Mon, 30 Mar 2026 04:21:14 +0000
+Received: from mail-lf1-x136.google.com ([2a00:1450:4864:20::136])
+	by magus.postgresql.org with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+	(Exim 4.98.2)
+	(envelope-from <dilipbalaut@gmail.com>)
+	id 1w747k-00000001vwV-1vn5
+	for pgsql-hackers@lists.postgresql.org;
+	Mon, 30 Mar 2026 04:21:14 +0000
+Received: by mail-lf1-x136.google.com with SMTP id 2adb3069b0e04-59e5aa4ca41so2325043e87.2
+        for <pgsql-hackers@lists.postgresql.org>; Sun, 29 Mar 2026 21:21:12 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1774844472; cv=none;
+        d=google.com; s=arc-20240605;
+        b=h0EU7bi+W5MxZVMIdfZ2vxxYZJB+YyV2MR/RfZWxbFrnaEtQ3zr0Mmb+rbHX/Ue1cZ
+         ofxcGO/jb338HxwR4wqpuWpQcbUVmqv4P9g2rfeUJ0h5YqUV0zQjHEFR7LJyLDsTvrKo
+         254VaXYJ2TNQiNsNit8ZPF6oo6gwsBNDzgYtjQCIB00o4dPpHeAkUSol5Ahe+PDP8tEA
+         g9yI5B1oP8DtRi0fsxIzqdiIzQZOUU3um7Xxw5P3/zfOVPs+K5T485UNN7bse6H03S30
+         RApSrOKo+kGbKwMWohlHXnIOQaRzdwkinvYVXP3VOZlqhW/pZb1QxuvkS6YlP62Lof3p
+         zC/g==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=WT3RbIB4nY84dgK5yTgh75RAmNOgcyATV8PoT534QTE=;
+        fh=nlo53KgM6r1EBL1DLKhXH6r8ZrpUbFFzYIdQqob4nTY=;
+        b=KF2nb2QfSLVleqYDWFr3WqEGDS9HEd+vehFOBv2+Fp0Z7AHIIbD3/5R8a1SB4XMeqW
+         uaB6LevIMRgC9ZAt9wsJbclYcPlL1BUAuzM5KXL9suaNTmaMhCWaB/B7m2uNYtVWvvDg
+         9cLTdVArTsUxRVBmkdY2kVbont01jqH5S2jjExNAYpC4s7p+mux0mDHqD5zskDuY2sd0
+         xzO89DOtXodXP7PeHqbO3HhzhmDsPBO5iX1W3Uutnej2KNqdLJVQm9XU/ILi5CI068kh
+         6FKHxkz6Fyfekca86GMTT1kD6ZwcQDqenceG40xUKWCPGSkp7nGDTFpnXzwoE4VCD2Tf
+         gwtw==;
+        darn=lists.postgresql.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1774844472; x=1775449272; darn=lists.postgresql.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=WT3RbIB4nY84dgK5yTgh75RAmNOgcyATV8PoT534QTE=;
+        b=HTzH3AG8UwonVnFGCcjqkYtlqTa8Rgbvzx5PqKQb29LyuaBomMDl1ubcunq3FGA6QC
+         pN4j9sg4u8Q8nzD9ssOKUOI9PGQbeHc30W/fbz7ojWqVp7nD0ZqccR1j0SH0KikPHbs4
+         zwf3YAAv41db/VON6P7tvuKhll70hiAGMr23E+ICRUx9bLeTIPaBMOcqLutQLWfRzq5Z
+         avMp8S9rBWnULR01nYPh+eVxIonhNCRfnmbW8AIsvCJdSVrnt9uNwiLjFFGeKFzo9xIx
+         pCZBTiJ4BKZmJ1JuiXFJfpbAwHFTfmyrwfjRlaUJc1UrpND42vbtL9HxmZKHmrn8KI2/
+         uBqw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1774844472; x=1775449272;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=WT3RbIB4nY84dgK5yTgh75RAmNOgcyATV8PoT534QTE=;
+        b=RIeOgXmVrwsHfgjKx59gVmrluljsm3tCbT5Y7pfb3lycyYFpp7BdA7oPKmCfDBB3Q9
+         0A70WyePHr4rY97antoS8zKuzO+iuHwayggKveW8GhQZAn+V8vXG+ncfb6Y1dUreFRXo
+         Zs5yUlhsgPKIxOx0So4wThlRnVaI9MklOMKG65qhPnFj11Q8LfNMy7h8R7fgqtDKBVm9
+         +pBM9LQEcLJB0Ycrg9r+/mOeEfDkeCNtz17KnYulKJRBQ5HQMe96d4HA0gVva9pc0GnT
+         UtuweEtFTRoTkBVQe1WUkrg4GBjcDh6RSMoMJz5eFEdaXP+QwA8P6Ze/Wa0spisppPBO
+         XCzA==
+X-Forwarded-Encrypted: i=1; AJvYcCWtMYxCrphKXaYkTkAINiSNX29G7TxMOPhvjwmWYVMPQ8Q0fwXybAf2dCX82IL9E9s0REub08XkgA0Riwku@lists.postgresql.org
+X-Gm-Message-State: AOJu0Yx+Xum0sneQl3L1IHLyd+gndlquXfMg16DLX6uC24G+dp05jgkI
+	lGoQ7p1keQ6bVgJxtyGBlLQkJaU38srOsVJ2O/Eju63sKRv/Lu8rUu223Y9lF5YF3454sCB/WEc
+	t1cKjAH6Q36VsUqWrJ1/brbIPnOjvWcs=
+X-Gm-Gg: ATEYQzwpcX/2z99hkG1NjCnV5vYB2GbH6fFRcW8ukJmtjaiTenD2oJreFdNI4Op8CoQ
+	YiTdcKyCPsD+tNsGxlxaJDZ0JwnvfPRKAQu3OS9J+Nnh0l0VyhSqk0q6cnOw088a31WG+PvlwLy
+	PUp5Zl0c8r/3KNgW+D+Q1i/TZIumlcC6vcYYrPCopyYPpufeEZVmnNTc3i8XeD8/nhGdxvHzUrn
+	Gk/+jv2HN/FgLxIsF44ZQofeSd0WmwE6akB7wIlRisWUj144EQTehp0zRz2HUUKUcXnklqRJVeP
+	aJ7KH0vHbIhQyfzcbQcxETJwCoTsk1PI2/dnOg==
+X-Received: by 2002:a05:6512:b99:b0:5a1:34d2:b6db with SMTP id
+ 2adb3069b0e04-5a2ab7e95b7mr4525818e87.1.1774844471757; Sun, 29 Mar 2026
+ 21:21:11 -0700 (PDT)
+References: <CALj2ACWd5apddj6Cd885WwJ6LquYu_G81C4GoR4xSoDV1x-FEA@mail.gmail.com>
+ <b5eab65a-e11b-6435-b6aa-dac206e17d38@gmail.com> <CAHGQGwFBnBQZbt4e9qjZoiM0GW2eXCvS=Ny5wt+s1-+iJpK15A@mail.gmail.com>
+ <29CA73B2-872A-4D7D-B8E9-D89F76DC18AF@gmail.com>
+In-Reply-To: <29CA73B2-872A-4D7D-B8E9-D89F76DC18AF@gmail.com>
+From: Dilip Kumar <dilipbalaut@gmail.com>
+Date: Mon, 30 Mar 2026 09:50:54 +0530
+X-Gm-Features: AQROBzDSq2iAIWoLXb2MTVTBe1aITKN1FpZb8zsq8N5W5jFkEPDbI5iH2Cg-UgU
+Message-ID: <CAFiTN-vfzMucegigUQhOQgE0FNGhf1ixauQ1fYkbNsvTpBOZRQ@mail.gmail.com>
+Subject: Re: Avoid multiple SetLatch() calls in procsignal_sigusr1_handler()
+To: Chao Li <li.evan.chao@gmail.com>
+Cc: Fujii Masao <masao.fujii@gmail.com>, 
+	"Drouvot, Bertrand" <bertranddrouvot.pg@gmail.com>, 
+	Bharath Rupireddy <bharath.rupireddyforpostgres@gmail.com>, 
+	PostgreSQL Hackers <pgsql-hackers@lists.postgresql.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+List-Id: <pgsql-hackers.lists.postgresql.org>
+List-Help: <https://lists.postgresql.org/manage/>
+List-Subscribe: <https://lists.postgresql.org/manage/>
+List-Post: <mailto:pgsql-hackers@lists.postgresql.org>
+List-Owner: <mailto:pgsql-hackers-owner@lists.postgresql.org>
+List-Archive: <https://www.postgresql.org/list/pgsql-hackers>
+Archived-At: <https://www.postgresql.org/message-id/CAFiTN-vfzMucegigUQhOQgE0FNGhf1ixauQ1fYkbNsvTpBOZRQ%40mail.gmail.com>
+Precedence: bulk
+List-Unsubscribe: <https://lists.postgresql.org/unsub/36/c9f3835a6050fd40fd2ee4b2559b28212aeb25359957e828f0dab980629c9cca/>
+List-Unsubscribe-Post: List-Unsubscribe=One-Click
+Return-Path: pgsql-hackers-owner+M91260-745720@lists.postgresql.org
+X-MS-Exchange-Organization-ExpirationStartTime: 30 Mar 2026 04:21:24.0377
+ (UTC)
+X-MS-Exchange-Organization-ExpirationStartTimeReason: OriginalSubmit
+X-MS-Exchange-Organization-ExpirationInterval: 1:00:00:00.0000000
+X-MS-Exchange-Organization-ExpirationIntervalReason: OriginalSubmit
+X-MS-Exchange-Organization-Network-Message-Id: 99215fb9-1c43-46b2-3d6e-08de8e13cdbc
+X-EOPAttributedMessage: 0
+X-EOPTenantAttributedMessage: ce7cb31c-acf7-4351-b0fe-c89cda16c4ab:0
+X-MS-Exchange-Organization-MessageDirectionality: Incoming
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: CY4PEPF0000E9D8:EE_|DS0PR16MB5326:EE_|DM6PR16MB2569:EE_
+X-MS-Exchange-Organization-AuthSource: CY4PEPF0000E9D8.namprd05.prod.outlook.com
+X-MS-Exchange-Organization-AuthAs: Anonymous
+X-MS-Office365-Filtering-Correlation-Id: 99215fb9-1c43-46b2-3d6e-08de8e13cdbc
+X-MS-Exchange-Organization-SCL: 1
+X-Microsoft-Antispam: BCL:0;ARA:13230040|7093399015|4022899009|22082099003|18002099003|16102099003|19002099003|21082099003|57112099003;
+X-Forefront-Antispam-Report: CIP:2a02:16a8:dc51::56;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:malur.postgresql.org;PTR:malur.postgresql.org;CAT:NONE;SFS:(13230040)(7093399015)(4022899009)(22082099003)(18002099003)(16102099003)(19002099003)(21082099003)(57112099003);DIR:INB;
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 30 Mar 2026 04:21:23.8299
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 99215fb9-1c43-46b2-3d6e-08de8e13cdbc
+X-MS-Exchange-CrossTenant-Id: ce7cb31c-acf7-4351-b0fe-c89cda16c4ab
+X-MS-Exchange-CrossTenant-AuthSource: CY4PEPF0000E9D8.namprd05.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: Internet
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS0PR16MB5326
+X-MS-Exchange-Transport-EndToEndLatency: 00:00:02.9695551
+X-MS-Exchange-Processed-By-BccFoldering: 15.20.9745.023
+X-Microsoft-Antispam-Mailbox-Delivery:
+	rwl:1;ucf:1;jmr:0;auth:0;dest:C;OFR:CustomRules;ENG:(910005)(944506478)(944626604)(920097)(815096)(255002)(410001)(930201)(20251009189)(140003);
+X-Microsoft-Antispam-Message-Info:
+	=?utf-8?B?RkVOaHA4em84VXZXWGlTVS8vd0c1MHp6UWhzanBxc2lSaldBdUs3bWdDOHBu?=
+ =?utf-8?B?ckF2L3l4dFgycmVBeTZSU1hVRmdleFhVcXRTSTc5ZC9TV24vR3VGWEF3azJW?=
+ =?utf-8?B?c2R0aCtBbVZqL09RUUV2UWxmbkEzbDd0RmJGbnpjSzlHR05oZS9VYkM4VEho?=
+ =?utf-8?B?a3ZvcnlNalVlWXgrVkVGTGcrVmc5VmFESFdhZksvVEwzdU5VbzFjUzBYYit0?=
+ =?utf-8?B?UkRzbVNPSDl1SDVYVUVUM3E4YzdtK0FHNHZ3MlFieHpSYzdkTk1hQ1ZOUkk0?=
+ =?utf-8?B?TkRvWmloaGRYbkk2S2NTQkpJWVUyeExEcndOeTIzMHpzdU9xVnArUEJTSjNJ?=
+ =?utf-8?B?TXNja3VUMmJDeFhwby9YVzlPYk9wS0dxS1dlQ0h0VEhRVU5QTDdsMFFSL1Nh?=
+ =?utf-8?B?dGJWUDlaN3UzZUF6WEtza1FJM054YlUraEx5RmlQdW1xRFpPVnhYUEo3RWJN?=
+ =?utf-8?B?MUl5cDhYQWF4aXZ2Qk42eWM1VWRYVXRUUnBnRjdaZ3hPSXBxNmp2NlRMZVpO?=
+ =?utf-8?B?Z2lUeW53U1JVS0VhdGtLVGJNdzNoU2twbkhlRTNlTTF2bzE5em9mTlRUZmhN?=
+ =?utf-8?B?Vk1nNm0zaEZBaWExR2pDK3BsMTduTTdEUElkQVhkcFpvYnplYndoOExXTWlW?=
+ =?utf-8?B?d1AvRVpTRjZ2eUFXcFJLZndxMG1obTQrRFpXeU9mb2dCQ0l3cEI0RlgwZmJq?=
+ =?utf-8?B?RkFLekUrVXp3QTNmK2dZaXVGT3dIWDV2OWNBR2FhV2Q1QVJ6MWZla2RWR0xx?=
+ =?utf-8?B?Z3orUmNCbDJna1pITnVScW5OWjQ5VFpYeXpTZGlXcjBRSkFxbXVORVowSEZw?=
+ =?utf-8?B?QTdEZ29wcDZXYTg5Zkc2OXdDUDQ5dHRKb0tJblZxR2dDWmx0RTFvRkJMUk5N?=
+ =?utf-8?B?enVhNHQreSs4cURCVDhQUXA3N1QzcUdmdUFjYlFKcmZWWUVTb2lYU1JYRFdO?=
+ =?utf-8?B?Qmt6SytCbm4yZElJemM0bXloS294Qkt1WG1PYzNMeEp6VlZoSDNZckZLaThj?=
+ =?utf-8?B?eUhWNEk3d09IT0VDTkdnNXZ3VHpOYmJUYjhmakxsTVdvUGMwVnF6ODJaNE1m?=
+ =?utf-8?B?ZVBxSGEvZ0Ztd3JtZnF5bTllU1NJalBzRXd5WUZiWC81R1NtOHpGM1daZ2Vu?=
+ =?utf-8?B?WDJNR1VnUVVMUWw4eGlEVmtBR3RLSmtHd0dvb212Z3lhcVFzYmZiMUxPL0Rh?=
+ =?utf-8?B?aVpiTHhseWtocTJIQnkxTWN2SzFGQXQ4YmJaUzRxN1E1Vk9iTEhYRzFNeWFF?=
+ =?utf-8?B?M09FV3FHb0Y0cDd1Rm9yKzcwZzd0andETXpDdXVUSDVCUW1CSUFLeCt1T0Er?=
+ =?utf-8?B?dkozckhKdE03NlBkdHl1R0toSWlmNnR2UjVWTjJUTjNva3hqT1psdHEyT0JF?=
+ =?utf-8?B?VVdlVm1jL25YYjRxL3pobGpCcEs2OGJJQVdJQmtsTkw2RVlsa3dUN1RCc214?=
+ =?utf-8?B?SzJlbWFlRXl3TFE2bkxsL1lNcDk2NkhpMFYwUk80dHE4eE9TOThMb1hsSGVI?=
+ =?utf-8?B?VStYZGErZGVBRldrMWJaYlRYVDAzTXE5Tmp5NUY5RDh5NjNUbGNybVN4N2hl?=
+ =?utf-8?B?NStzNkVwb3EvYlFLbERvTUN0c2JvNnBCNTF4U3RlUFQ3SWRGbUJyNEZjWCtU?=
+ =?utf-8?B?bEN0SStRVXlrdHZQS1ZMQU53L2hWbVJ3R05QVnBOTkkyWEtwUWJXQlJGdGFZ?=
+ =?utf-8?B?WTZFTmJhVjB6ak8vVkxLV1k0OWJvVzhJTUk0blZHVy9sM1dDTG4rOWhJNDEw?=
+ =?utf-8?B?NWgvSGs2WGIwaVJnV2NLeEZGVDJlRVEydDJPd28weUFZYTZ1QnhPYUhJb2JF?=
+ =?utf-8?B?UlZ1SnJOQkw5YWxRMkhaUjV2M2NPN2l6VFlZdlR3d0VNM05mY2x3aURYRDdD?=
+ =?utf-8?B?Rmk4SFVHMUhsaWdBU2tDY29wOEFReW8xbTFYNGRlM0RJRTlXbUNwODVBcklx?=
+ =?utf-8?B?WDRTUlg1NmtXcnQ1SDVVSjN5UzJtbWhPNStOcnRzV3JrSGlCSVZkMU15eis4?=
+ =?utf-8?B?MktHYlNwTkR4L3RPbXpuQVM3TzJRODZ6eGZWNWRjYXpBUEQxcEhsKzA0R1Rs?=
+ =?utf-8?B?d0FydnBjSGh6b1AySzIwNmovYzdaZlEyaG5SN1JKMXpYbjA1RmFzcjVWSnZI?=
+ =?utf-8?B?QVNkOFFrSktoZXdOZmo2KzJEaVFZMVdxeEw2elEzdzY5dnBLUnpUWHpZcjUv?=
+ =?utf-8?B?cUo3cENaNE9PcTJwWmZMVXVkSDhSdlVzREZVTEhDTncwSkVva1RqUVRGb05h?=
+ =?utf-8?B?RjBPbTJYckVwUXU3NXRsdFd1cVAzUHFtSGZyV3ZVZlBKczhobFRkNlNoeGtM?=
+ =?utf-8?B?ejl1WjIwM1E3Wk1MZ1crZTNpS2NadXhxNEpQSnRxSEJ3Z2JnbUtkbThDd3Bv?=
+ =?utf-8?B?RHNWZnVZMVZlMnNmUVg5SHNvemlSK3BuREVudkVMTjltUkdnQ0FWVUxPZFht?=
+ =?utf-8?B?TUxTemlTeXAxQ2xaUTVRYUxEcHp1RHBJWGdJb2hNYzkvVDl2Z3hzSG9PcHha?=
+ =?utf-8?B?ZXpNTkw2V3VoM0VhdlFQVklIbUNJWUlTOHhTQ1hnczBCNGlpcURLSDJ6L1Nt?=
+ =?utf-8?B?bnltWWxnQTNHaTRXOExmejh4NlZkUXFYcG1NM2Y1a1c2RVZxam1YZWFlYkE4?=
+ =?utf-8?B?NmkxaGZmV1dabEpFTmVwSGpOcTBYZlZvOHhZWEx5MVN1TUFVNnBDTXQxS1Nw?=
+ =?utf-8?B?dzk2bFAzN1VuRHNwL3h5b08vRWN0blUzdTNmRytFQ0loQ1hMMGNteTVIeGsy?=
+ =?utf-8?B?QTAvZ3lZV21HbzNEZ1NKZDBjM3E4ajlCazB6SG9JcFQzaUhna2RxR2pCRCs0?=
+ =?utf-8?B?Q1loMFZ6QlpOalRCNU1RT2czckJ0Z0Roc0Y2NTFkdDhDVGdYeWhwSzhPMzMr?=
+ =?utf-8?B?RGIxZ0h1OEY5WkV5bVVQaWt5cmNEcEU4UkFGcGROZyt1TnJldkQ0bEFsUWR0?=
+ =?utf-8?B?YUJFUmNVU3Q4YTdWTXJsOENVNXRxeWxUVXpNV1FkQ1hrcUR0WVI2SUhWVXI1?=
+ =?utf-8?B?Z1RiVXY5MVFuNENja1Q3OUtuM29UVXBURCtEZFZTRndwWXpHNjRGY01QcUVh?=
+ =?utf-8?B?VjZyQytoYko2TW5XWW5FdmdwY3FwaUFLNHBNNEY0WHYwNDRyL3U5eC9xSFh3?=
+ =?utf-8?B?MVIrWTgxKytCT053NzhnZlh1UjUwNWNNNHY5THBHYTRTblUwRkJyV0VKSGpk?=
+ =?utf-8?B?a2dQUyt5cFN3SFZSNkh1RXhkN2RVN1lIWUx5MDZmdVoxbkpwUmFvcTZyOEhw?=
+ =?utf-8?B?eXZOTm5jZDg5MXV2VlNPVDhPaHBTSkM3RFJSSEg3TzFqUGhibjNzQUM3a0pP?=
+ =?utf-8?B?djRWYi9YUE5mc0kyMWI5MWVrNDlOVGVPLzZZekxlV1pRbERYNmpBYlJxdFo4?=
+ =?utf-8?B?b1Z3U0hONk1pUlpCVFRBSWZKTHduSlJhVVdzV0U0Q3preTBkd3Zab290TnpU?=
+ =?utf-8?B?Z3dPejJUZXY5YWZudzdHY2ZQYUNRRW1vTXE3ZXhjN2kvSUJHTUM1QlAyWDBm?=
+ =?utf-8?B?VUFvQXhZTlJMTEU1L2FLeU5BZkg2MDNJU2hseHFQQjFNNHcyMmF6RWxuTXFJ?=
+ =?utf-8?B?bW9tRk82RmdTTlNEOUN2UXdmWWdPd0VCUzgwdGhwWjAyR2ZyNnkxajI1ZFg0?=
+ =?utf-8?B?MkN2YUlLRzZ1aW9LbFVaQ2wvVnpOQ2tZV0tqUE1mQVltanloQUdlQWVGSzZU?=
+ =?utf-8?B?c2hwWWttTzhScnVQMWI0eFVMTUZlVlA2cTdPZ1VTZW8vTmt2R1dsTXlLS2tr?=
+ =?utf-8?B?S2xNbVF4MGJ2d2lYbllkTm0xNk1jSW8rMEdmaFpmK1BpNEMzUTduVGk1RFVq?=
+ =?utf-8?B?UWpobzdGWmluTzFHTWNnS0xXNjc4V2VDd0s4L2JyTEFLNXNCMGdONkU3ZGRM?=
+ =?utf-8?B?N2FVWXZqSHMybXRmQUdUVjhMZllnQjdEdkloL2pRbWsrLzY0bk9VeWNBOFVW?=
+ =?utf-8?B?TVNtSGw5MjlhNU5xcE1UUjBOcDl0Y0RlbkJFSnhIdmZBMVVFK1JzRDlIbFls?=
+ =?utf-8?B?SWlDcGJBeW1TWFhIMDNPa2pHZ052MGFSOGV4emRRK2JiMnlrUXJQaW5LeTU5?=
+ =?utf-8?B?R1pRUVlxdU1pY1lLbmE0ejN3OEVOWXZtVE4rZis4a1VabzZZYjRwNnlyQ2Uv?=
+ =?utf-8?B?M3h1Q1hBR25maFRhUkNBPT0=?=
+MIME-Version: 1.0
+
+On Mon, Mar 30, 2026 at 7:58=E2=80=AFAM Chao Li <li.evan.chao@gmail.com> wr=
+ote:
+>
+>
+>
+> > On Mar 30, 2026, at 08:30, Fujii Masao <masao.fujii@gmail.com> wrote:
+> >
+> > On Thu, Mar 9, 2023 at 9:24=E2=80=AFPM Drouvot, Bertrand
+> > <bertranddrouvot.pg@gmail.com> wrote:
+> >>
+> >> Hi,
+> >>
+> >> On 2/28/23 4:30 PM, Bharath Rupireddy wrote:
+> >>> Hi,
+> >>>
+> >>> Most of the multiplexed SIGUSR1 handlers are setting latch explicitly
+> >>> when the procsignal_sigusr1_handler() can do that for them at the end=
+.
+> >>
+> >> Right.
+> >>
+> >>> These multiplexed handlers are currently being used as SIGUSR1
+> >>> handlers, not as independent handlers, so no problem if SetLatch() is
+> >>> removed from them.
+> >>
+> >> Agree, they are only used in procsignal_sigusr1_handler().
+> >>
+> >>> A few others do it right by saying /* latch will be
+> >>> set by procsignal_sigusr1_handler */.
+> >>
+> >> Yeap, so do HandleProcSignalBarrierInterrupt() and HandleLogMemoryCont=
+extInterrupt().
+> >>
+> >>> Although, calling SetLatch() in
+> >>> quick succession does no harm (it just returns if the latch was
+> >>> previously set), it seems unnecessary.
+> >>>
+> >>
+> >> Agree.
+> >
+> > While reviewing the patch in [1], I noticed this issue and ended up her=
+e.
+> > I agree with the approach and have attached a revised version of the pa=
+tch.
+> >
+> >
+> >>> I'm attaching a patch that avoids multiple SetLatch() calls.
+> >>>
+> >>> Thoughts?
+> >>>
+> >>
+> >> I agree with the idea behind the patch. The thing
+> >> that worry me a bit is that the changed functions are defined
+> >> as external and so may produce an impact outside of core pg and I'm
+> >> not sure that's worth it.
+> >
+> > I understand the concern. There's no guarantee that PostgreSQL function=
+s
+> > behave identically across major versions, so removing redundant SetLatc=
+h()
+> > calls is generally fine. However, as you are concerned, extensions migh=
+t call
+> > these functions and implicitly rely on the extra SetLatch().
+>
+> Actually, after reading this patch, I had the same feeling. Today, in cor=
+e, those handler functions are only called by procsignal_sigusr1_handler(),=
+ but is it possible that they may have other callers in the future?
+>
+> IMO, removing the current duplicate SetLatch() calls from the individual =
+handler functions is fine. But I do not like the idea of adding the comment=
+ "latch will be set by procsignal_sigusr1_handler" to every handler functio=
+n. My reasons are:
+>
+> * When a new handler is added, will it become the standard pattern to add=
+ the same comment everywhere? That seems like extra burden.
+> * Usually, code readers come to procsignal_sigusr1_handler() first, and t=
+hen read down into the individual handlers.
+> * A handler function could, at least in theory, be reused in some other c=
+ontext where calling SetLatch() would still be necessary.
+>
+> So instead of adding the comment everywhere, I would suggest adding one c=
+omment in procsignal_sigusr1_handler(), something like =E2=80=9Chandlers sh=
+ould not call SetLatch() themselves=E2=80=9D. If a handler ever needs to be=
+ used in different contexts, then it could take a parameter to decide wheth=
+er SetLatch() should be called. When the function is called from procsignal=
+_sigusr1_handler(), that parameter could disable SetLatch(), while other ca=
+llers could enable it as needed. In other words, the control of not calling=
+ SetLatch() for handlers stays in procsignal_sigusr1_handler().
+
+Shouldn't we add a comment to the handler function header stating that
+SetLatch should be called by the caller? procsignal_sigusr1_handler()
+is currently the only caller and handles it, but this would ensure any
+future callers are responsible for the same.
+
+--=20
+Regards,
+Dilip Kumar
+Google
+
+

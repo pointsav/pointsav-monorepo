@@ -7,7 +7,7 @@
 </div>
 
 **Vendor:** PointSav Digital Systems™
-**Protocol:** DS-ADR-02 (3D Asset Tokens & Asymmetric Storage)
+**Protocol:** DS-ADR-02 (Totebox Archives & Asymmetric Storage)
 **Tier:** 1 (Core Engineering Monorepo)
 
 ---
