@@ -5,117 +5,83 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Command Ledger | Woodfine Management Corp.</title>
     <style>
-        /* OPTICAL PHYSICS: Woodfine Institutional Light */
         :root { 
-            --wf-canvas: #F7F9FA; 
-            --wf-card: #FFFFFF;
-            --wf-text: #111827;
-            --wf-muted: #6B7280;
-            --wf-accent: #164679;
-            --wf-border: #e9ecef;
-            --wf-border-heavy: #111827;
-            --wf-alert: #ED1B2F;
+            --wf-canvas: #F7F9FA; --wf-card: #FFFFFF; --wf-text: #111827;
+            --wf-muted: #6B7280; --wf-accent: #164679; --wf-border: #e9ecef;
+            --wf-border-heavy: #111827; --wf-alert: #ED1B2F;
             --font-mono: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
-            --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { 
-            background-color: var(--wf-canvas); color: var(--wf-text); 
-            font-family: var(--font-mono); height: 100vh; display: flex; 
-            flex-direction: column; overflow: hidden; 
-        }
+        body { background-color: var(--wf-canvas); color: var(--wf-text); font-family: var(--font-mono); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
         
-        /* HEADER & HARDWARE RIBBON */
-        header { 
-            flex-shrink: 0; border-bottom: 2px solid var(--wf-border-heavy); padding: 12px 24px; 
-            display: flex; justify-content: space-between; font-size: 12px; 
-            text-transform: uppercase; letter-spacing: 1px; background: var(--wf-card);
-        }
+        /* HEADER */
+        header { flex-shrink: 0; border-bottom: 2px solid var(--wf-border-heavy); padding: 12px 24px; display: flex; justify-content: space-between; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; background: var(--wf-card); }
         .hdr-label { color: var(--wf-muted); margin-right: 8px; }
         .hdr-val { color: var(--wf-accent); font-weight: bold; }
-        .hdr-alert { color: var(--wf-alert); font-weight: bold; }
         
-        .hardware-ribbon {
-            flex-shrink: 0; display: flex; gap: 8px; padding: 12px 24px; background: var(--wf-canvas);
-            border-bottom: 1px solid var(--wf-border); overflow-x: auto;
-        }
-        .f-key {
-            background: var(--wf-card); border: 1px solid var(--wf-muted); border-radius: 2px;
-            padding: 6px 12px; font-size: 11px; font-weight: bold; color: var(--wf-text);
-            cursor: pointer; user-select: none; transition: all 0.1s; box-shadow: 0 2px 0 var(--wf-border);
-        }
-        .f-key:active { box-shadow: 0 0 0 var(--wf-border); transform: translateY(2px); background: var(--wf-border); }
-        .f-key.active-key {
-            background: var(--wf-accent); color: #fff; border-color: var(--wf-accent);
-            box-shadow: 0 0 0 var(--wf-accent); transform: translateY(2px);
-        }
-        
-        /* DYNAMIC WORKSPACE PHYSICS */
+        /* PANOPTIC WORKSPACE */
         .workspace { display: flex; flex-grow: 1; overflow: hidden; }
         
-        .tui-matrix {
-            /* Width is now controlled dynamically via JS */
-            width: 35%; flex-shrink: 0; padding: 24px; overflow-y: auto; 
-            display: flex; flex-direction: column; gap: 8px; font-size: 13px;
-            line-height: 1.5; background: var(--wf-card);
-        }
+        /* LEFT RIBBON (THE GLOBAL LENS) */
+        .left-ribbon { width: 20%; flex-shrink: 0; background: var(--wf-card); border-right: 2px solid var(--wf-border-heavy); display: flex; flex-direction: column; padding: 24px; overflow-y: auto; }
         
-        /* THE RESIZER BAR */
-        .resizer {
-            width: 4px; background-color: var(--wf-border-heavy); cursor: col-resize;
-            flex-shrink: 0; transition: background-color 0.2s; z-index: 10;
-        }
+        .vault-selector { margin-bottom: 24px; }
+        .vault-selector select { width: 100%; padding: 8px; font-family: var(--font-mono); font-size: 11px; border: 1px solid var(--wf-border-heavy); background: var(--wf-canvas); color: var(--wf-text); font-weight: bold; }
+        
+        .f-key-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: auto; }
+        .f-key { background: var(--wf-canvas); border: 1px solid var(--wf-muted); border-radius: 2px; padding: 10px 12px; font-size: 11px; font-weight: bold; color: var(--wf-text); cursor: pointer; user-select: none; transition: all 0.1s; text-align: left; }
+        .f-key:hover { border-color: var(--wf-accent); }
+        .f-key.active-key { background: var(--wf-accent); color: #fff; border-color: var(--wf-accent); transform: translateX(4px); box-shadow: -2px 2px 0 var(--wf-border-heavy); }
+        
+        .telemetry-box { border-top: 1px dashed var(--wf-muted); padding-top: 16px; font-size: 10px; line-height: 1.6; color: var(--wf-muted); }
+        .telemetry-box span { color: #54924E; font-weight: bold; }
+        
+        /* DYNAMIC RESIZER */
+        .resizer { width: 4px; background-color: var(--wf-border-heavy); cursor: col-resize; flex-shrink: 0; transition: background-color 0.2s; z-index: 10; }
         .resizer:hover, .resizer.active { background-color: var(--wf-accent); }
         
-        .gui-viewport {
-            flex-grow: 1; padding: 24px; background: var(--wf-canvas); display: flex;
-            align-items: center; justify-content: center; color: var(--wf-muted);
-            font-size: 14px; text-transform: uppercase; letter-spacing: 1px; overflow-y: auto;
-        }
+        /* CARTRIDGE VIEWPORT (Middle + Right Panes inside) */
+        .cartridge-viewport { flex-grow: 1; display: flex; overflow: hidden; background: var(--wf-canvas); }
         
         /* OMNIBAR */
-        .omnibar { 
-            flex-shrink: 0; border-top: 2px solid var(--wf-border-heavy); padding: 16px 24px; 
-            display: flex; align-items: center; background: var(--wf-card); 
-        }
+        .omnibar { flex-shrink: 0; border-top: 2px solid var(--wf-border-heavy); padding: 16px 24px; display: flex; align-items: center; background: var(--wf-card); }
         .prompt-prefix { color: var(--wf-accent); margin-right: 12px; font-weight: bold; font-size: 15px; }
-        #cli-input { 
-            background: transparent; border: none; color: var(--wf-text); 
-            font-family: inherit; font-size: 15px; flex-grow: 1; outline: none; 
-        }
-
-        /* LOG STYLING */
-        .log-sys { color: var(--wf-muted); }
-        .log-cmd { color: var(--wf-text); font-weight: bold; }
-        .log-cartridge { color: var(--wf-accent); font-weight: bold; margin-top: 16px; margin-bottom: 8px; }
-        .log-alert { color: var(--wf-alert); font-weight: bold; }
-        .json-block { color: var(--wf-accent); padding-left: 16px; white-space: pre-wrap; }
+        #cli-input { background: transparent; border: none; color: var(--wf-text); font-family: inherit; font-size: 15px; flex-grow: 1; outline: none; }
     </style>
 </head>
 <body>
     <header>
         <div><span class="hdr-label">NODE:</span><span class="hdr-val">console.woodfinegroup.com</span></div>
-        <div><span class="hdr-label">CARTRIDGE:</span><span class="hdr-alert" id="ui-cartridge">NONE [AWAITING F-KEY]</span></div>
-        <div><span class="hdr-label">AUTH:</span><span class="hdr-val">PENDING MBA</span></div>
+        <div><span class="hdr-label">AUTH:</span><span class="hdr-val">MACHINE-BASED (MBA)</span></div>
+        <div><span class="hdr-label">HUD:</span><span class="hdr-val">PANOPTIC V3.0</span></div>
     </header>
     
-    <div class="hardware-ribbon" id="hardware-ribbon"></div>
-    
     <div class="workspace">
-        <div class="tui-matrix" id="tui-log">
-            <div class="log-sys">========================================================</div>
-            <div class="log-sys"> 🏛️ COMMAND LEDGER (CHASSIS) | WOODFINE MANAGEMENT CORP.</div>
-            <div class="log-sys">========================================================</div>
-            <div class="log-sys">[SYSTEM] Initializing Hardware Intercepts... OK.</div>
-            <div class="log-sys">[SYSTEM] Establishing Isolation Boundaries... OK.</div>
-            <div class="log-sys">[SYSTEM] Dynamic Viewport Physics Engaged.</div>
-            <div class="log-sys"><br>Click a Hardware Key above, or strike F1-F6/F12 on your keyboard.</div>
+        <div class="left-ribbon">
+            <div class="vault-selector">
+                <div style="font-size: 10px; color: var(--wf-muted); margin-bottom: 4px; font-weight: bold;">ACTIVE TOTEBOX (THE GLOBAL LENS)</div>
+                <select id="global-vault-selector">
+                    <option value="personnel-1">cluster-totebox-personnel-1</option>
+                    <option value="corporate-1">cluster-totebox-corporate-1</option>
+                    <option value="property-1">cluster-totebox-real-property-1</option>
+                </select>
+            </div>
+            
+            <div class="f-key-list" id="hardware-ribbon"></div>
+            
+            <div class="telemetry-box">
+                <div>Mesh Sync: <span>SECURE</span></div>
+                <div>Storage API: <span>ONLINE (Port 8095)</span></div>
+                <div>Nano-SLM: <span>ARMED (135M)</span></div>
+            </div>
         </div>
         
-        <div class="resizer" id="resizer"></div>
+        <div class="resizer" id="main-resizer"></div>
         
-        <div class="gui-viewport" id="gui-viewport">
-            <div style="text-align: center;">[ GUI VIEWPORT INERT - AWAITING ASSET ]</div>
+        <div class="cartridge-viewport" id="cartridge-viewport">
+            <div style="width: 100%; display: flex; align-items: center; justify-content: center; color: var(--wf-muted); font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">
+                [ AWAITING F-KEY STRIKE ]
+            </div>
         </div>
     </div>
     
@@ -125,27 +91,21 @@
     </div>
     
     <script>
-        const tuiLog = document.getElementById('tui-log');
+        const viewport = document.getElementById('cartridge-viewport');
         const input = document.getElementById('cli-input');
-        const uiCartridge = document.getElementById('ui-cartridge');
         const uiPrompt = document.getElementById('ui-prompt');
         const ribbon = document.getElementById('hardware-ribbon');
-        const resizer = document.getElementById('resizer');
-
-        let currentState = 'INTENT'; 
-        let pendingPayload = null;
+        const resizer = document.getElementById('main-resizer');
+        const leftRibbon = document.querySelector('.left-ribbon');
 
         const F_KEY_MAP = {
-            'F1': { name: 'app-console-help', label: 'HELP' },
-            'F2': { name: 'app-console-people', label: 'PEOPLE' },
-            'F3': { name: 'app-console-email', label: 'EMAIL' },
-            'F4': { name: 'app-console-content', label: 'CONTENT' },
-            'F5': { name: 'app-console-minutebook', label: 'MINUTEBOOK' },
-            'F6': { name: 'app-console-bookkeeper', label: 'BOOKKEEPER' },
-            'F12': { name: 'app-console-input', label: 'INPUT MACHINE' }
+            'F2': { name: 'app-console-people', label: 'PEOPLE (Spatial CRM)' },
+            'F3': { name: 'app-console-email', label: 'EMAIL (Cold Archive)' },
+            'F4': { name: 'app-console-content', label: 'CONTENT (Generative Forge)' },
+            'F5': { name: 'app-console-vault', label: 'THE VAULT (service-fs)' },
+            'F12': { name: 'app-console-input', label: 'INPUT MACHINE (Anchor)' }
         };
 
-        // Render the F-Keys
         Object.keys(F_KEY_MAP).forEach(key => {
             const btn = document.createElement('div');
             btn.className = 'f-key';
@@ -155,189 +115,41 @@
             ribbon.appendChild(btn);
         });
 
-        function printLog(text, className = 'log-sys') {
-            const div = document.createElement('div');
-            div.className = className;
-            div.innerHTML = text;
-            tuiLog.appendChild(div);
-            tuiLog.scrollTop = tuiLog.scrollHeight;
-        }
-
-        // --- DRAG AND DROP PHYSICS ---
+        // DRAG AND DROP PHYSICS
         let isResizing = false;
-
-        resizer.addEventListener('mousedown', (e) => {
-            isResizing = true;
-            document.body.style.cursor = 'col-resize';
-            document.body.style.userSelect = 'none'; // Prevent highlighting text while dragging
-            resizer.classList.add('active');
-        });
-
+        resizer.addEventListener('mousedown', () => { isResizing = true; document.body.style.cursor = 'col-resize'; resizer.classList.add('active'); });
         document.addEventListener('mousemove', (e) => {
             if (!isResizing) return;
-            
-            // Calculate width as a percentage of the window
             let newWidth = (e.clientX / window.innerWidth) * 100;
-            
-            // Hard clamp to prevent crushing the UI completely
             if (newWidth < 15) newWidth = 15;
-            if (newWidth > 85) newWidth = 85;
-            
-            tuiLog.style.width = `${newWidth}%`;
+            if (newWidth > 40) newWidth = 40;
+            leftRibbon.style.width = `${newWidth}%`;
         });
-
-        document.addEventListener('mouseup', () => {
-            if (isResizing) {
-                isResizing = false;
-                document.body.style.cursor = 'default';
-                document.body.style.userSelect = '';
-                resizer.classList.remove('active');
-            }
-        });
-        // -----------------------------
+        document.addEventListener('mouseup', () => { isResizing = false; document.body.style.cursor = 'default'; resizer.classList.remove('active'); });
 
         async function mountCartridge(key) {
             const cartridge = F_KEY_MAP[key];
-            
             document.querySelectorAll('.f-key').forEach(b => b.classList.remove('active-key'));
             document.getElementById(`btn-${key}`).classList.add('active-key');
+            uiPrompt.textContent = `operator@${cartridge.name.split('-')[2]}:~$`;
             
-            uiCartridge.textContent = `[${key}] ${cartridge.label}`;
-            uiCartridge.style.color = 'var(--wf-accent)';
-            
-            if (currentState === 'INTENT') {
-                uiPrompt.textContent = `operator@${cartridge.name.split('-')[2]}:~$`;
-            }
-            
-            printLog(`========================================================`, 'log-sys');
-            printLog(` 🔄 PHYSICAL CARTRIDGE MOUNTED: ${key}`, 'log-cartridge');
-            printLog(`[TARGET] ${cartridge.name}`, 'log-sys');
-            printLog(`[SYSTEM] Initiating hardware API fetch across isolation boundary...`, 'log-sys');
-            
-            const viewport = document.getElementById('gui-viewport');
-            viewport.innerHTML = `<div style="text-align: center;">[ FETCHING SECURE PAYLOAD... ]</div>`;
+            viewport.innerHTML = `<div style="width: 100%; display: flex; align-items: center; justify-content: center; color: var(--wf-muted); font-size: 14px; text-transform: uppercase;">[ FETCHING SECURE PAYLOAD... ]</div>`;
 
             try {
-                // Cache Annihilator
-                const url = `/cartridges/${cartridge.name}.html?v=` + Date.now();
-                const response = await fetch(url);
-                const html = await response.text();
-                
-                // Anti-Mirror Lock
-                if (html.includes('id="tui-log"') || html.includes('<title>Command Ledger')) {
-                    viewport.innerHTML = `<div style="color: var(--wf-alert); font-weight: bold;">[ FAULT: NGINX ROUTING LOOP DETECTED. CARTRIDGE MISSING. ]</div>`;
-                    printLog(`[FAULT] NGINX served full chassis instead of fragment.`, 'log-sys');
-                } else if (response.ok) {
-                    // Inject and automatically reset scroll
-                    viewport.innerHTML = html;
-                    viewport.scrollTop = 0;
-                    printLog(`[SUCCESS] Cartridge payload injected successfully.`, 'log-sys');
+                const response = await fetch(`/cartridges/${cartridge.name}.html?v=` + Date.now());
+                if (response.ok) {
+                    viewport.innerHTML = await response.text();
                 } else {
-                    viewport.innerHTML = `<div style="color: var(--wf-alert); font-weight: bold;">[ FAULT: CARTRIDGE PAYLOAD HTTP ${response.status} ]</div>`;
-                    printLog(`[FAULT] HTTP ${response.status} - Cartridge missing.`, 'log-sys');
+                    viewport.innerHTML = `<div style="width: 100%; display: flex; align-items: center; justify-content: center; color: var(--wf-alert); font-weight: bold;">[ FAULT: CARTRIDGE MISSING ]</div>`;
                 }
             } catch (err) {
-                viewport.innerHTML = `<div style="color: var(--wf-alert); font-weight: bold;">[ FAULT: ISOLATION BOUNDARY BLOCK ]</div>`;
-                printLog(`[FAULT] Fetch blocked. Engine offline.`, 'log-sys');
+                viewport.innerHTML = `<div style="width: 100%; display: flex; align-items: center; justify-content: center; color: var(--wf-alert); font-weight: bold;">[ FAULT: ISOLATION BOUNDARY BLOCK ]</div>`;
             }
             input.focus();
         }
 
-        // Hardware Keystroke Intercepts
-        document.addEventListener('keydown', function(e) {
-            if (F_KEY_MAP[e.key]) {
-                e.preventDefault();
-                mountCartridge(e.key);
-            }
-        });
-
-        // The Fiduciary Gateway (AI Logic)
-        input.addEventListener('keydown', async function(e) {
-            if (e.key === 'Enter') {
-                const val = this.value.trim();
-                if (!val) return;
-                
-                printLog(`> ${val}`, 'log-cmd');
-                this.value = '';
-
-                if (currentState === 'INTENT') {
-                    printLog('[SYSTEM] Transmitting intent to Semantic Router...', 'log-sys');
-                    input.disabled = true;
-
-                    try {
-                        const res = await fetch('/api/translate', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ raw_input: val })
-                        });
-                        
-                        const data = await res.json();
-                        
-                        if (data.status === 'PENDING_AUTHORIZATION') {
-                            pendingPayload = data.data;
-                            printLog('[PROPOSED MACHINE PAYLOAD]:', 'log-sys');
-                            printLog(JSON.stringify(pendingPayload, null, 2), 'json-block');
-                            printLog('[FIDUCIARY GATEWAY] Verify translation. Type EXECUTE to broadcast, or ABORT to cancel.', 'log-alert');
-                            
-                            currentState = 'AUTHORIZE';
-                            uiPrompt.textContent = '[AUTHORIZE]~#';
-                        } else {
-                            printLog(`[ERROR] ${data.message}`, 'log-alert');
-                        }
-                    } catch (err) {
-                        printLog(`[FATAL] Network rejection. Gateway unreachable.`, 'log-alert');
-                    }
-                    input.disabled = false;
-                    input.focus();
-
-                } else if (currentState === 'AUTHORIZE') {
-                    if (val.toUpperCase() === 'EXECUTE' && pendingPayload) {
-                        printLog('[SYSTEM] Authorization verified. Injecting to UDP Mesh...', 'log-sys');
-                        input.disabled = true;
-
-                        try {
-                            const res = await fetch('/api/authorize', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify(pendingPayload)
-                            });
-                            
-                            const data = await res.json();
-                            if (data.status === 'SUCCESS') {
-                                printLog(`[SUCCESS] ${data.message} [TS: ${data.data.timestamp}]`, 'log-cmd');
-                            } else {
-                                printLog(`[FATAL] ${data.message}`, 'log-alert');
-                            }
-                        } catch (err) {
-                            printLog(`[FATAL] Mesh injection failed.`, 'log-alert');
-                        }
-                    } else {
-                        printLog('[SYSTEM] Execution aborted by operator.', 'log-sys');
-                    }
-                    
-                    currentState = 'INTENT';
-                    pendingPayload = null;
-                    
-                    const activeBtn = document.querySelector('.active-key');
-                    if (activeBtn) {
-                        const keyId = activeBtn.id.replace('btn-', '');
-                        uiPrompt.textContent = `operator@${F_KEY_MAP[keyId].name.split('-')[2]}:~$`;
-                    } else {
-                        uiPrompt.textContent = 'operator@chassis:~$';
-                    }
-                    
-                    input.disabled = false;
-                    input.focus();
-                }
-            }
-        });
-
-        document.addEventListener('click', (e) => {
-            // Only refocus the input if we aren't clicking the resizer or a button
-            if (!e.target.classList.contains('f-key') && !e.target.classList.contains('resizer') && e.target.tagName !== 'BUTTON' && e.target.tagName !== 'SELECT' && e.target.tagName !== 'TEXTAREA') {
-                input.focus();
-            }
-        });
+        document.addEventListener('keydown', function(e) { if (F_KEY_MAP[e.key]) { e.preventDefault(); mountCartridge(e.key); } });
+        document.addEventListener('click', (e) => { if (!e.target.closest('.left-ribbon') && e.target.tagName !== 'INPUT') { input.focus(); } });
     </script>
 </body>
 </html>

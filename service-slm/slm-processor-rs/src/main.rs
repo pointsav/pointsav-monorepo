@@ -1,66 +1,92 @@
+use reqwest::Client;
+use serde_json::{json, Value};
 use std::fs;
-use std::process::Command;
+use std::time::Duration;
 
 const TRANSIENT_QUEUE: &str = "/opt/woodfine/cluster-totebox-personnel-1/service-slm/transient-queues";
-const CONTENT_VAULT: &str = "/opt/woodfine/cluster-totebox-personnel-1/knowledge-graph";
-const LLAMAFILE_BIN: &str = "/opt/woodfine/cluster-totebox-personnel-1/service-slm/vendor-micro-slm/llamafile";
-const MODEL_WEIGHTS: &str = "/opt/woodfine/cluster-totebox-personnel-1/service-slm/vendor-micro-slm/weights/qwen2-0.5b.gguf";
+const KNOWLEDGE_GRAPH: &str = "/opt/woodfine/cluster-totebox-personnel-1/knowledge-graph";
+const SLM_URL: &str = "http://127.0.0.1:8080/v1/chat/completions";
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("========================================================");
-    println!(" 🤖 NANO-SLM PROCESSOR (SUB-PROCESS EXECUTION ENGINE)");
+    println!(" 🤖 NANO-SLM PROCESSOR (STRICT ENUM GUARDRAIL)");
     println!("========================================================");
 
-    fs::create_dir_all(CONTENT_VAULT)?;
-    
-    let entries = fs::read_dir(TRANSIENT_QUEUE)?;
+    fs::create_dir_all(KNOWLEDGE_GRAPH)?;
+    let client = Client::builder().timeout(Duration::from_secs(300)).build()?;
     let mut processed = 0;
 
-    for entry in entries {
-        let path = entry?.path();
-        
-        if path.is_file() && path.extension().unwrap_or_default() == "txt" {
-            let filename = path.file_name().unwrap().to_string_lossy();
-            let overlay_name = filename.replace("_payload.txt", "_overlay.md");
-            let out_path = format!("{}/{}", CONTENT_VAULT, overlay_name);
-            
-            println!("[SYSTEM] Initiating Sub-Process Extraction on: {}", filename);
-            let payload_content = fs::read_to_string(&path)?;
-            
-            // Frame the payload with the exact Qwen Chat Template for absolute instruction adherence
-            let formatted_prompt = format!("<|im_start|>system\nYou are an Institutional Data Extraction AI. Extract the core facts from the text provided.<|im_end|>\n<|im_start|>user\n{}<|im_end|>\n<|im_start|>assistant\n", payload_content);
-            
-            // Execute the AI directly on the CPU
-            let output = Command::new("/bin/sh").arg(LLAMAFILE_BIN)
-                .arg("-m").arg(MODEL_WEIGHTS)
-                .arg("-p").arg(&formatted_prompt)
-                .arg("-n").arg("256") // Strict token cap to prevent infinite loop
-                .arg("-t").arg("1")   // 1 Thread for stability
-                .arg("-c").arg("512").arg("-b").arg("64")// Context limit
-                .arg("--temp").arg("0.1") // Cold, factual logic
-                .arg("--log-disable").arg("--no-display-prompt") // Silence internal engine noise
-                .output()?;
+    if let Ok(entries) = fs::read_dir(TRANSIENT_QUEUE) {
+        let mut files: Vec<_> = entries.flatten().map(|e| e.path()).collect();
+        files.sort();
+
+        for path in files {
+            if path.is_file() && path.extension().unwrap_or_default() == "txt" {
+                let filename = path.file_name().unwrap().to_string_lossy().to_string();
+                let overlay_name = filename.replace(".txt", "_overlay.md").replace("_raw", "");
+                let out_path = format!("{}/{}", KNOWLEDGE_GRAPH, overlay_name);
                 
-            if output.status.success() {
-                let extracted_text = String::from_utf8_lossy(&output.stdout);
-                // Strip out the prompt text from the final output for clean markdown
-                let clean_text = extracted_text.split("<|im_start|>assistant\n").last().unwrap_or(&extracted_text).trim();
+                println!("[SYSTEM] Requesting Sentiment for: {}", filename);
+                let payload_content = fs::read_to_string(&path).unwrap_or_default();
                 
-                fs::write(&out_path, clean_text)?;
-                println!("   -> [SUCCESS] Staging Overlay forged: {}", overlay_name);
+                let body_start = payload_content.find("[RAW CONTEXT SUMMARY]").map(|i| i + 21).unwrap_or(0);
+                let actual_body = &payload_content[body_start..];
                 
-                // Erase the transient payload
-                fs::remove_file(&path)?;
-                processed += 1;
-            } else {
-                let err_text = String::from_utf8_lossy(&output.stderr);
-                println!("   -> [FATAL] Engine crashed: {}", err_text);
+                let sanitized: String = actual_body
+                    .chars()
+                    .filter(|c| c.is_ascii() && (*c == '\n' || !c.is_control()))
+                    .skip_while(|c| c.is_whitespace())
+                    .take(400)
+                    .collect();
+                
+                let user_prompt = format!("Text:\n{}\n\nSentiment:", sanitized);
+                
+                // Brutalist Prompting
+                let payload = json!({
+                    "messages": [
+                        {
+                            "role": "system", 
+                            "content": "You are a strict classification engine. You must output exactly one word from this array: [POSITIVE, NEGATIVE, NEUTRAL]. Do not explain. Do not output any other text."
+                        },
+                        {
+                            "role": "user", 
+                            "content": user_prompt
+                        }
+                    ],
+                    "temperature": 0.0,
+                    "max_tokens": 5 
+                });
+
+                match client.post(SLM_URL).json(&payload).send().await {
+                    Ok(res) => {
+                        if let Ok(json_res) = res.json::<Value>().await {
+                            if let Some(content) = json_res["choices"][0]["message"]["content"].as_str() {
+                                // THE GUARDRAIL: Force to uppercase and check for exact substring matches
+                                let clean_content = content.trim().to_uppercase();
+                                
+                                let final_sentiment = if clean_content.contains("POSITIVE") {
+                                    "POSITIVE"
+                                } else if clean_content.contains("NEGATIVE") {
+                                    "NEGATIVE"
+                                } else if clean_content.contains("NEUTRAL") {
+                                    "NEUTRAL"
+                                } else {
+                                    "UNKNOWN"
+                                };
+
+                                fs::write(&out_path, format!("Sentiment: {}", final_sentiment))?;
+                                println!("   -> [SUCCESS] Logged Sentiment: {}", final_sentiment);
+                                fs::remove_file(&path)?;
+                                processed += 1;
+                            }
+                        }
+                    },
+                    Err(e) => println!("   -> [FAULT] API Timeout/Error: {}", e)
+                }
             }
         }
     }
-    
-    println!("========================================================");
     println!("[SUCCESS] Cognitive Phase Complete. Processed {} payloads.", processed);
     Ok(())
 }
