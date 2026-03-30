@@ -1,0 +1,300 @@
+Received: from LV8PR16MB6644.namprd16.prod.outlook.com (2603:10b6:408:266::15)
+ by DM6PR16MB2569.namprd16.prod.outlook.com with HTTPS; Mon, 30 Mar 2026
+ 03:35:46 +0000
+ARC-Seal: i=2; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=pass;
+ b=TjvWlluU8qeRgYLkOqN0LLyBMsrg78wkywrvFA2sBXCXEiuni65wCu7WXjNpvwB3WR0c9kMw8ysQUwgWEoFNAyGEccdqJfaLyyfQlw6yN50aDtpV9Hk8b2U3dVci7llI+oQ0MZXIDsr/WiqhTuqOFLuDr3vFNpdjru+2CF+BIW2XIhbMCEsWTlXMEqKVM9RBVnY59KRp8zXys33LVCm2jMbLqERofgddDWS+2py6KksNHV1f5xXeuT3RpA0fmokM9oVewkIiPVVsMxJHHEpcHdFnKGS3TRwdIQkFuLdjx8BomncLoDObABw0zGtunZTNL06D/mj/VY9t/S1BC57TUw==
+ARC-Message-Signature: i=2; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=giOnJuRNOkKhZOl8I6R5r0EpFsCFGXGX/g6NHfmsccI=;
+ b=K34Q+fQ7dUzd/pMvxy+ZEgHKshSvYgDmLeF17ld8WvjSljOvuBFSO7XeCef27ZVr6S9+lLItSsU6QrIHFneVTSkx+c19sPoRCcgrytODgCVucVITZnhgWCeb45melaQAXBsmq4FvxX/5NEyb0UGFvsPFHtp2KOb3Ia9jNfjFr719q1IO4sDiFTlQMya7lX0sZyDyBAmPNq7eDX8pZ3CKQMlrLTb72ycXoC8mPCh5adyjdeHaWBUeJlDaL5yEePbaoKYy/peKzmgITgD77hTs2xTb7eqAHevzTOYXzwtwaE+O/GBFOrz4XMYaXsO/j72KhidoWgJ8GrXQba+QO0Hd4A==
+ARC-Authentication-Results: i=2; mx.microsoft.com 1; spf=pass (sender ip is
+ 2a02:16a8:dc51::56) smtp.rcpttodomain=woodfine.co
+ smtp.mailfrom=lists.postgresql.org; dmarc=pass (p=none sp=quarantine pct=100)
+ action=none header.from=gmail.com; dkim=pass (signature was verified)
+ header.d=gmail.com; arc=pass (0 oda=0 ltdi=1)
+Received: from BN0PR04CA0151.namprd04.prod.outlook.com (2603:10b6:408:eb::6)
+ by LV8PR16MB6644.namprd16.prod.outlook.com (2603:10b6:408:266::15) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9745.28; Mon, 30 Mar
+ 2026 03:35:44 +0000
+Received: from BN2PEPF000044A1.namprd02.prod.outlook.com
+ (2603:10b6:408:eb:cafe::1) by BN0PR04CA0151.outlook.office365.com
+ (2603:10b6:408:eb::6) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.20.9745.28 via Frontend Transport; Mon,
+ 30 Mar 2026 03:35:44 +0000
+Authentication-Results: spf=pass (sender IP is 2a02:16a8:dc51::56)
+ smtp.mailfrom=lists.postgresql.org; dkim=pass (signature was verified)
+ header.d=gmail.com;dmarc=pass action=none header.from=gmail.com;compauth=pass
+ reason=100
+Received-SPF: Pass (protection.outlook.com: domain of lists.postgresql.org
+ designates 2a02:16a8:dc51::56 as permitted sender)
+ receiver=protection.outlook.com; client-ip=2a02:16a8:dc51::56;
+ helo=malur.postgresql.org; pr=C
+Received: from malur.postgresql.org (2a02:16a8:dc51::56) by
+ BN2PEPF000044A1.mail.protection.outlook.com (2603:10b6:40f:fc02::158) with
+ Microsoft SMTP Server (version=TLS1_3, cipher=TLS_AES_256_GCM_SHA384) id
+ 15.20.9745.21 via Frontend Transport; Mon, 30 Mar 2026 03:35:43 +0000
+Received: from localhost ([127.0.0.1] helo=malur.postgresql.org)
+	by malur.postgresql.org with esmtp (Exim 4.96)
+	(envelope-from <pgsql-hackers-owner+M91260-745705@lists.postgresql.org>)
+	id 1w73Pi-000zth-1Z
+	for info@woodfine.co;
+	Mon, 30 Mar 2026 03:35:42 +0000
+Received: from makus.postgresql.org ([2001:4800:3e1:1::229])
+	by malur.postgresql.org with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+	(Exim 4.96)
+	(envelope-from <david.g.johnston@gmail.com>)
+	id 1w73Pa-000yB3-32
+	for pgsql-hackers@lists.postgresql.org;
+	Mon, 30 Mar 2026 03:35:35 +0000
+Received: from mail-oa1-x2c.google.com ([2001:4860:4864:20::2c])
+	by makus.postgresql.org with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+	(Exim 4.98.2)
+	(envelope-from <david.g.johnston@gmail.com>)
+	id 1w73PY-00000001k3U-3eMO
+	for pgsql-hackers@postgresql.org;
+	Mon, 30 Mar 2026 03:35:33 +0000
+Received: by mail-oa1-x2c.google.com with SMTP id 586e51a60fabf-40429b1d8baso1504304fac.0
+        for <pgsql-hackers@postgresql.org>; Sun, 29 Mar 2026 20:35:32 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1774841732; cv=none;
+        d=google.com; s=arc-20240605;
+        b=Tzib4knBVgb/222cePmDbCZjkKPXAz4KVtf4rztdxLVdBgzX8OZsLShfMpHI48f5OS
+         FM2klap9ED1jGsKRoHSscLc24FMyzAtu58hSrQPmc1ck2oKwd4FQiQ2zaSUSH9hOIi7h
+         C1sggve/fExVRC2dKb+AOqiDS/J0RIsNCBCeML6v/T9oF13Ss2kfSwY1YnbI4G+KjhLs
+         mb7oDnOAk+FodhSouoiIAKOLy9SbzwL/1iriu2lxwaNcs+8kqay6E0ZVv/soDwQIrx7i
+         qybCMX87/BSXA8gy6RvCmm7S4CBi2gS3nxg0y/hIX5nNkCpFbaK4jnvHQUUf1Vq06cc9
+         xpag==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:dkim-signature;
+        bh=giOnJuRNOkKhZOl8I6R5r0EpFsCFGXGX/g6NHfmsccI=;
+        fh=zoRFi4vqyblac5YGSUJxae8nhQ5jpL9RmI3ky3M0sTQ=;
+        b=GrvcecLoEEIhXAx9te9lo+s8YQFjz7JIdz1KSJ02PWEWBizHBerpHz/YluzKut+P/0
+         n4abn23Klo63JJf17Yvz92oE4pPV/Cs1bgU4lTTqth7Pu2DZQPFlY6/b/gk1W6ylnuzN
+         SCNY3C74bdRlmivsJlYzZitfkxgyKvLoPeF66WXjNr2IPPaRhKaTSoI5sAdxeG/4ijx+
+         lVczb0Guv+c7i9n4WDZ1eoqleUb2oLH0GSETd751qUZGl5S1R2IM6P4PdE/02/D2U/Js
+         obdfybsuGl1mVhfOo5qG/phbwUomoZL0otjRvMeiYPwqtQaUd4hSq9y+JkVocaRONZj3
+         HoLQ==;
+        darn=postgresql.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1774841732; x=1775446532; darn=postgresql.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=giOnJuRNOkKhZOl8I6R5r0EpFsCFGXGX/g6NHfmsccI=;
+        b=JLoCqGeMDh/StOma92Xpjd7NetQrP2WCxBlBsRBHhLOXjdyiQ/kDadHRZgPU6Bqoql
+         NMOJKRcIhlZsKbCkKdrc5IDRpENkUsX5r8VfOt3Hwnw4C98Ru44TjdQCMX2OeWh+7ykI
+         f7kJBotEH/CfH56THhcFex9I6vyInJAcosQ8IeZbrTMGamndTBYuAUmGioiinpFWzsB/
+         gA33yFqh5JGf2mucONj8RbR54dqJ6neh1HWuwkwt2ZnlpdJ11Pwx3kIITouEQl3pIOpg
+         lxKSNpqll03eFQPfWp4h4eYL2Apx+ZnND+0MCIuyuxwwDBXQ8BcnsbhVZiPpNZFW2Gcx
+         +sww==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1774841732; x=1775446532;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=giOnJuRNOkKhZOl8I6R5r0EpFsCFGXGX/g6NHfmsccI=;
+        b=NLn+Vgc6AOzYGtA53iQlCMIHzle/cKgveL+fTIdf07VUrHyhBwDkeFc0biG7I7g9yg
+         C/WC9U0FpXo55nE/7VqI9dVdboBhgKCVw6uoFoi/Br2VSuymddFiIsAtO+vfqutn+Wnw
+         ksxyBS7CGq++7OeFdaMhdq1u9zjJk7a0v4fYjUauzKxB7onfBVtBxeqClqQk9H2jXnWO
+         MXWl1+CXR5XYFEi2KYkLozp4rhTXSPv9GXHxMiVMBHQSG3oJGjHp10EXBbQPqjbS1iV6
+         SK7xQayUltrDdCLckholdMmDtEgEIIPlv8brsgIoOO8XsaK0Eg08E3gkkNLL5moVnRyw
+         WlcA==
+X-Gm-Message-State: AOJu0YyiE/e1VYQFWlMX83wYvHxmynjDpZPIERDuDtsJtvh4Zz8VbS4R
+	PNA/2AdV7br5rF5kJjMOPzZaoPyaSBR7FSW4mA3IdBUcHm1nlR7sNbGpIaFmq+WpRNliXR6FiT2
+	5cIT2tsZSCMc2Pu9s/gR3Bgr3LXUZ510=
+X-Gm-Gg: ATEYQzyBENSi7B+45fV13fIPX6ew0+4lgcLAjjjrPJfRvF7P9ooIdSKspL+ivCiUbBV
+	Ds4KEwjBOl019SY/GicMkH2TvYGDBCp7sr3a9Dw496IhloK0P61H9dElkvzttKq0Wc8QSTE2vh4
+	X9T8InJfca5vutEjGh/jVKFkUMUEEdKw0f58xioM1A1MbcmOhsAdV2g9WEYwrmCzdcnxYOP5aVI
+	OvtfVpU/Pdxh+W99wS7J+D4QHa7Ne3bxDeoliasIAxyxw7bg99Ev6lHrS5jDbCIWlZczAgWeRwm
+	5KkjLNqTFBXLOHc3qMknUdQPnGrUG/qbXZXOwQw=
+X-Received: by 2002:a05:6870:63aa:b0:417:3767:bf11 with SMTP id
+ 586e51a60fabf-41cec38428emr5429958fac.47.1774841732300; Sun, 29 Mar 2026
+ 20:35:32 -0700 (PDT)
+References: <CAGRrpzbhG3YaR6bDV4z6=cSND3+RVx0dEN9f_PiSVLE_DCiNzA@mail.gmail.com>
+In-Reply-To: <CAGRrpzbhG3YaR6bDV4z6=cSND3+RVx0dEN9f_PiSVLE_DCiNzA@mail.gmail.com>
+From: "David G. Johnston" <david.g.johnston@gmail.com>
+Date: Sun, 29 Mar 2026 20:34:56 -0700
+X-Gm-Features: AQROBzAfWopn8t-r38Pt1zdGzU9Nbcq4lo_EjWHBsC9hJxcbgaAhmdoKGy-6DiI
+Message-ID: <CAKFQuwaiP+kYLCtUh_5Hdd7XKUHHH_Y5JAvb-0x2JQevJevVeA@mail.gmail.com>
+Subject: Re: [PATCH] Report column-level error when lacking privilege
+To: Steve Chavez <steve@supabase.io>
+Cc: PostgreSQL-development <pgsql-hackers@postgresql.org>
+Content-Type: multipart/alternative; boundary="000000000000fc85ca064e358a20"
+List-Id: <pgsql-hackers.lists.postgresql.org>
+List-Help: <https://lists.postgresql.org/manage/>
+List-Subscribe: <https://lists.postgresql.org/manage/>
+List-Post: <mailto:pgsql-hackers@lists.postgresql.org>
+List-Owner: <mailto:pgsql-hackers-owner@lists.postgresql.org>
+List-Archive: <https://www.postgresql.org/list/pgsql-hackers>
+Archived-At: <https://www.postgresql.org/message-id/CAKFQuwaiP%2BkYLCtUh_5Hdd7XKUHHH_Y5JAvb-0x2JQevJevVeA%40mail.gmail.com>
+Precedence: bulk
+List-Unsubscribe: <https://lists.postgresql.org/unsub/36/c9f3835a6050fd40fd2ee4b2559b28212aeb25359957e828f0dab980629c9cca/>
+List-Unsubscribe-Post: List-Unsubscribe=One-Click
+Return-Path: pgsql-hackers-owner+M91260-745705@lists.postgresql.org
+X-MS-Exchange-Organization-ExpirationStartTime: 30 Mar 2026 03:35:44.2550
+ (UTC)
+X-MS-Exchange-Organization-ExpirationStartTimeReason: OriginalSubmit
+X-MS-Exchange-Organization-ExpirationInterval: 1:00:00:00.0000000
+X-MS-Exchange-Organization-ExpirationIntervalReason: OriginalSubmit
+X-MS-Exchange-Organization-Network-Message-Id: 46f2a742-b6c4-4b2b-94e8-08de8e0d6cb2
+X-EOPAttributedMessage: 0
+X-EOPTenantAttributedMessage: ce7cb31c-acf7-4351-b0fe-c89cda16c4ab:0
+X-MS-Exchange-Organization-MessageDirectionality: Incoming
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: BN2PEPF000044A1:EE_|LV8PR16MB6644:EE_|DM6PR16MB2569:EE_
+X-MS-Exchange-Organization-AuthSource: BN2PEPF000044A1.namprd02.prod.outlook.com
+X-MS-Exchange-Organization-AuthAs: Anonymous
+X-MS-Office365-Filtering-Correlation-Id: 46f2a742-b6c4-4b2b-94e8-08de8e0d6cb2
+X-MS-Exchange-Organization-SCL: 1
+X-Microsoft-Antispam: BCL:0;ARA:13230040|3072899012|7093399015|2092899012|12012899012|4022899009|16102099003|22082099003|18002099003|19002099003|21082099003|8096899003|57112099003;
+X-Forefront-Antispam-Report: CIP:2a02:16a8:dc51::56;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:malur.postgresql.org;PTR:malur.postgresql.org;CAT:NONE;SFS:(13230040)(3072899012)(7093399015)(2092899012)(12012899012)(4022899009)(16102099003)(22082099003)(18002099003)(19002099003)(21082099003)(8096899003)(57112099003);DIR:INB;
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 30 Mar 2026 03:35:43.9914
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 46f2a742-b6c4-4b2b-94e8-08de8e0d6cb2
+X-MS-Exchange-CrossTenant-Id: ce7cb31c-acf7-4351-b0fe-c89cda16c4ab
+X-MS-Exchange-CrossTenant-AuthSource: BN2PEPF000044A1.namprd02.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: Internet
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: LV8PR16MB6644
+X-MS-Exchange-Transport-EndToEndLatency: 00:00:02.7827194
+X-MS-Exchange-Processed-By-BccFoldering: 15.20.9745.023
+X-Microsoft-Antispam-Mailbox-Delivery:
+	ucf:1;jmr:0;auth:0;dest:C;OFR:CustomRules;ENG:(910005)(944506478)(944626604)(920097)(930201)(20251009189)(140003);
+X-Microsoft-Antispam-Message-Info:
+	=?utf-8?B?STZPL3F0emc2MUNmaWNUTkZBNHBNN2pPOEpWd3B3NUx5Sm92Y3BBYktRMlNn?=
+ =?utf-8?B?M3F6YU1sZUNVYXhyckJaMzdNaC9Wa0xxZTk5eWM2ejlYVHpHckJIVUdxeDZw?=
+ =?utf-8?B?dUhWSkJOMy9lbWxCc2tkdEJ0V0M1M0YrRDd0bmxYSjQzMVdVbVJSTHYwbi9B?=
+ =?utf-8?B?Umo3bEwwK2dzTFpZcm9wZ09sdUdWeEVBUXAxVTl1N1FzckRNL0RIR1l3MEFQ?=
+ =?utf-8?B?eXNKM0FpQy9qQnovR2VHRHdibDEzN1pUWVpZc2tabzJXcXhuSDJETXgveVFo?=
+ =?utf-8?B?UXVvRm1QTFYrRXM2SW5WanZIZS9lV2s1NUNseko4UXhZVVZkdVVBbWlJTjI2?=
+ =?utf-8?B?SzFMM0hveFRFYlVUcWpkZXc2THJGeDQ5SURlNk4vZXNUbUxMZmwzMEJtdFZD?=
+ =?utf-8?B?VndSSHdheVFnMTZrblJ4aHd3TlJHMjlDSE10MUQ3ajRxdE12SHlrU2V2ZnMz?=
+ =?utf-8?B?NlB5ZjcwVUxWeHpPdi85QUlGQ0pjd0x0WnAvSFFYL29IT0lSSDQ5UG1FbVI4?=
+ =?utf-8?B?UmxmT1B6Z3NCc09kNzU5Q1JpdWhLN084ZnlBbHgrOWNPdnpwS2w3cjZIeWVQ?=
+ =?utf-8?B?dDF1ajdEcGp2cjcwZzVGQ2Fwd0dDbzdpaS9RdklpUWJGOXJIdWJtaUpFUmFZ?=
+ =?utf-8?B?V0c0cGJGUElabk52YmlMSlRGdnpBQmYweXU2TUpEdVhucFdzVUN4d2RpZzlj?=
+ =?utf-8?B?WWxYWkVjcUFxT0Z5UFJTTW9qb0tOK1JOcGhna1pmUUVGZzhnVDhEOGorWDhG?=
+ =?utf-8?B?QkRpS0VYaWEyL1licDNGT3ZaN2FEYTlsSjZ6T1V4UngxQjZGRWh5YWJleHhL?=
+ =?utf-8?B?K29taVFUdFlydVp5aVp6Y3BMTU5lTGsvbkRWZWJuTDI4WTZUSDhySHl3Zk5p?=
+ =?utf-8?B?azdLb0YzeDFHc2J4Z3NVQVFIRnRaenQzem5HTmFONjVGVzVhbWtxWkZVOExH?=
+ =?utf-8?B?ejdSRHQzSzV1cVFiR3BRT0J1c29JaVdFSlh2VDBTMDZ6akY5Q25NZGtJc0dk?=
+ =?utf-8?B?TURBWGUxTnpHU0RHZFB4WHE0SEsyci8rZmxGbSs4aThaZDl3WENTL1dQNXpT?=
+ =?utf-8?B?dW9nU3JsVkFWbHIrZTB4QWp1ZTV0YVNUdklaOWN1WCtwT1VhdDhGdi9IaVRY?=
+ =?utf-8?B?Mzk1bHJGa21DQlZRUzBGRnh3YTdvVEhvd0M3QlJQQWdXUll0dXVqOEV2N3ln?=
+ =?utf-8?B?WldCaHhUeDl0WS8zMzdRb01vdHI2UjVzdEl5cTFkVDdxMVlpZDJvL2FlamFs?=
+ =?utf-8?B?YXhENDJuOERaMkhyZE00L0hqU3dLZ1pKaXNKUlhzb3RuLzlCb005ZUZCdUxx?=
+ =?utf-8?B?TThzTU1UcCtET0p3bWpxaUpKeDZFeWo5czdYQ0NrWE1WUi9WL25KR0I2U2Y3?=
+ =?utf-8?B?anViSWJRSE5QZUdZeXphRWxIcjJFaWdrcHp5dGtKQUh6UTZaSFE2NWlYekM1?=
+ =?utf-8?B?UU8xNGZKNGlnMEVwK3E1cHl4Z29SeW9pdC8wbWRpWWtkTUJveUVpY2dUNVhN?=
+ =?utf-8?B?L0U4UWkyYVdBUVBsVE5kdXR6ZHhoME5RTlE1cUhiU2lzN1c5SWphMHZXN2ha?=
+ =?utf-8?B?V25mY04vMTkwNm5aWUFyaWRQK2UrbHZXaDFRUkdpNDRNUDhpNHRseERVQUJw?=
+ =?utf-8?B?N3QyVkVaUm5kZDVjekZtSEJMaWkwRk1aNHpWZUJYa1E5NTl2dzhUTitkckFl?=
+ =?utf-8?B?dGZxekpYVTFBbVE2M0prbWtMYWNxZGY2MG5DanUvUmtWU0xZWXFGN0NIKzNR?=
+ =?utf-8?B?aUFjYmRGbzBxS09IWmdnTDBoMjZadmFkQ1dScmdTU3pyL1A1SjB6NS9ZRGJr?=
+ =?utf-8?B?ckdxVE5JK25HTE1ycjFMZXZJMVJlOWVOOFo5MkwyWTBNSUViaHp3K3l1N3hj?=
+ =?utf-8?B?ZXR0aXRUdjdhK2ljbUlEdldTYS9wT085eEdhN2FOUysyRlYxcmFqQTA1REV1?=
+ =?utf-8?B?S3dPSk9NRE0zT3JKNXJGZHFTQmNvMWtia1M1MUdKcFU5NmFMMzN1bU1UWmYx?=
+ =?utf-8?B?U1lHbVBqdUF4YVdpczZYOXkycEhlZThxU3oxM2RVZU9BdG96OHl3cmhnRVJG?=
+ =?utf-8?B?L0pMR1E0aVhGOWY4Z2RYeWRlejhEUExpczR5OUQybjhra1JsbEFQZ0JNRStv?=
+ =?utf-8?B?NzR6Y1BqbVlLMkpON2dJREVZb2dWREpSRFZOazJjNkMwYnVIL0ZUcnBCc1JD?=
+ =?utf-8?B?RmQzNDNvN2ZXRVF3UTh1T1JCSVpzU3M4VG9ac1p4Um15YXQxNVBmK1lBSXVy?=
+ =?utf-8?B?SkZzOTRQcUQzWWxGZDViSklCWTV1YXkvNmtFdWN2Um1IUzhFNGJZL1lYZGlE?=
+ =?utf-8?B?LzNVRXhJaGJzUzNYbTlXZndnMWxjTThwdkNuYlFIelg3ZU9nblFFZ2ZVV2xa?=
+ =?utf-8?B?bzRaL3c4VDlSZlhHYlJpeWxicWs5SjFxNW9oai94S3ZIUG00Qjlmb3lnMWov?=
+ =?utf-8?B?ME83UmtpbkdXMW9qelovQVAvU3hZWms0dXNtNUIva2tmRGJuSlJOQnVQa3JO?=
+ =?utf-8?B?NE5VMno0SmZqS1FhMU5aR0lrSWM0TXU0bkRBeUxTSGZZajJKaGVBb0lBNitH?=
+ =?utf-8?B?Y1RReldZejQ3S21SWmFkU3B3Q0ZzT1JTMzFBVTg5em9BaUVqMmZDYU0zQlJm?=
+ =?utf-8?B?OEJkREwwa3Nrd0hTeStOY2ErWUt6ZlMraDA0Q0hOUEhQK2NjSFhzendxKzRm?=
+ =?utf-8?B?WGthSjE3UjQ4Mis3VVE4L2lxTmduVy9zZnlwOElDWnhFLzY1cEVMVXpzMzRF?=
+ =?utf-8?B?am56NURua2g1Vm5POEpvOURqWUprQWZBUUpuUmRQRlpJOGRWc1NuWk04NTNa?=
+ =?utf-8?B?ZVN4VEdSZCtJUU0wRGlhTXhLVDRkYnE2WFNMbS81Y213ZzFOQ2FqRjFnR3ZT?=
+ =?utf-8?B?Zlk4enh1QkpSb0IwcHlwWGFaNllUWXlJYVBhbFprcFNnSU9CZFpQaEFyaXRz?=
+ =?utf-8?B?WHBEKzFLR2VzSnZoaXAvMHBWSk11N0JPUEJ2K25vYVhtbWd3cGJGMWMrMFRp?=
+ =?utf-8?B?WXVQNlFmZ2RBSWcxK201Y2ZLaDFnU2Zpc2Y1OG44YjM1TjBTRzdUOU9uWW50?=
+ =?utf-8?B?Ymg4b1hNa0dZNVVtdTAyM01Pd0NQbTlwRUFRa1dTQUJqN0kvcEJkU2prbjJO?=
+ =?utf-8?B?NzcySGVORzRyTStsZ3BBNjYrT2paS0pXLys0NXRBZHJHSS9iUk96eE4wNnpk?=
+ =?utf-8?B?ZTdBQm1FaFBTZUZOTzFvV3p1bkMxejRmazVUT0tZVU1kYlZPQ0JVb0lDVzM1?=
+ =?utf-8?B?T3FlU1kzYnFNT1VMM1Bld1I3UDB1NEtqT3NscDVlL0t2S0VSaHUwdnpXdGVN?=
+ =?utf-8?B?Tm8wbENObFRhWlVlSG8ycXhtMWF5aTUvNFNVREFPQ21aaDRIYjZveFV3aVBK?=
+ =?utf-8?B?anovUUVPVXd0cHBRTzFTQUJaS09HS282MWlTcllxcGp4c1VtaWNhUmIyaTVN?=
+ =?utf-8?B?UzZuMDk1Nm5GTWZCL1pDQXdCQ0ZRQjY4SHNqOVFtNEppcUViS043MnlaK1Uy?=
+ =?utf-8?B?N2pxRU5WSmloeGVZWjhQQkNzZlVvQzBtbjM2QllnMm5ZSGR0VnprTUdIWmo3?=
+ =?utf-8?B?d3BzZWVEcUhtQmFpSDVYN1BBaWhwNkdlNmU2UzZnWFBRN1pUa3dKQUEvYWlQ?=
+ =?utf-8?B?YjdqVHkvaUtYek1yR1llbXdYOTVmem00d3NpTGgwN1pKUWpGQnFHQUV1R1k2?=
+ =?utf-8?B?dHNxMHV2ajFFVlBTNytqcmUxTVp2QnJTaDUzVHA1ZGZ0ZW14WXQ1aUVLTXhm?=
+ =?utf-8?B?Q1VnbWkrQXRnNWJQTHJRN09BdmM5MFNLK3FKMFphcjFYTVVBWE1hYS9uSTBv?=
+ =?utf-8?B?UFlLdUJDYWhhaEtHaFdkLzVqT29MZ21oWjNjQW1RQjJ1R2trMEFaS0swSFFp?=
+ =?utf-8?Q?Nrm7Hl++dk0ihWY+khWUO6L8=3D?=
+MIME-Version: 1.0
+
+--000000000000fc85ca064e358a20
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+On Sun, Mar 29, 2026 at 6:07=E2=80=AFPM Steve Chavez <steve@supabase.io> wr=
+ote:
+
+> When a role `xx` has `grant select (name) on items to xx;`, a generic
+> table-level error is given:
+>
+> select * from items;
+> ERROR:  permission denied for table items
+>
+> With this patch, we now give:
+>
+> select * from items;
+> ERROR:  permission denied for column "id" of relation "items"
+>
+>
+Not too fond of picking one column as a representative for the error
+message.  Better to say something like:
+
+ERROR:  permission denied for column subset of table items
+
+Haven't looked but it should be doable to run a query for a given relation
+and role and report for each column whether a grant is available or not;
+which would be the one-stop shop for figuring out which columns at least
+don't have permissions granted.  The user would still have to know which
+ones their query is actually using.
+
+David J.
+
+--000000000000fc85ca064e358a20
+Content-Type: text/html; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+<meta http-equiv=3D"Content-Type" content=3D"text/html; charset=3Dutf-8"><d=
+iv dir=3D"ltr"><div dir=3D"ltr"><div dir=3D"ltr"><div class=3D"gmail_defaul=
+t" style=3D"font-family:arial,helvetica,sans-serif"><span style=3D"font-fam=
+ily:Arial,Helvetica,sans-serif">On Sun, Mar 29, 2026 at 6:07=E2=80=AFPM Ste=
+ve Chavez &lt;<a href=3D"mailto:steve@supabase.io" target=3D"_blank">steve@=
+supabase.io</a>&gt; wrote:</span></div></div><div class=3D"gmail_quote"><bl=
+ockquote class=3D"gmail_quote" style=3D"margin:0px 0px 0px 0.8ex;border-lef=
+t:1px solid rgb(204,204,204);padding-left:1ex"><div dir=3D"ltr"><div>When a=
+ role `xx` has `grant select (name) on items to xx;`, a generic table-level=
+ error is given:</div><div><br>select * from items;<br>ERROR: &nbsp;permiss=
+ion denied for table items<br><br>With this patch, we now give:<br><br>sele=
+ct * from items;<br>ERROR: &nbsp;permission denied for column &quot;id&quot=
+; of relation &quot;items&quot;<br></div><br></div></blockquote><div><br></=
+div><div class=3D"gmail_default" style=3D"font-family:arial,helvetica,sans-=
+serif">Not too fond of picking one column as a representative for the error=
+ message.&nbsp; Better to say something like:</div><div class=3D"gmail_defa=
+ult" style=3D"font-family:arial,helvetica,sans-serif"><br></div><div class=
+=3D"gmail_default" style=3D"font-family:arial,helvetica,sans-serif">ERROR:&=
+nbsp; permission denied for column subset of table items</div><div class=3D=
+"gmail_default" style=3D"font-family:arial,helvetica,sans-serif"><br></div>=
+<div class=3D"gmail_default" style=3D"font-family:arial,helvetica,sans-seri=
+f">Haven't looked but it should be doable to run a query for a given relati=
+on and role and report for each column whether a grant is available or not;=
+ which would be the one-stop shop for figuring out which columns at least d=
+on't have permissions granted.&nbsp; The user would still have to know whic=
+h ones their query is actually using.</div><div class=3D"gmail_default" sty=
+le=3D"font-family:arial,helvetica,sans-serif"><br></div><div class=3D"gmail=
+_default" style=3D"font-family:arial,helvetica,sans-serif">David J.</div><d=
+iv class=3D"gmail_default" style=3D"font-family:arial,helvetica,sans-serif"=
+><br></div></div></div>
+</div>
+
+--000000000000fc85ca064e358a20--
