@@ -6,7 +6,7 @@
 > **Phase:** Production Iteration 1 | **Focus:** Decentralized Data Vaults & Regulatory Compliance | **Estado:** Desarrollo activo de servicios empresariales.
 
 ### 🚀 The Post-SaaS Operating Environment
-**[ EN ]** PointSav provides the foundational engineering to secure institutional capital. We build decentralized Unikernel operating environments that bypass the vulnerabilities of legacy web applications and commercial hyperscaler infrastructure. By eradicating the generic, multi-tenant Linux OS entirely, our architecture isolates critical workloads—such as cryptographic file systems and cognitive AI routing—into dedicated, memory-safe Unikernels. We guarantee that corporate ledgers remain mathematically sealed from external cyber threats.
+**[ EN ]** PointSav provides the foundational engineering to secure institutional capital. We build decentralized operating environments that bypass the vulnerabilities of legacy web applications and commercial hyperscaler infrastructure. By eradicating the generic, multi-tenant OS, our architecture isolates critical workloads into dedicated, memory-safe data vaults. We guarantee that corporate ledgers remain mathematically sealed from external cyber threats.
 
 > [!WARNING]
 > **SECURITY BOUNDARY DECLARATION**
@@ -15,23 +15,23 @@
 ### ⚙️ Track 1: Infrastructure (The Private Network)
 | Component Directory | Hardware Target | Status |
 | :--- | :--- | :--- |
-| `os-infrastructure` | Edge Delivery Nodes | 🟢 `Verified Architecture` |
-| `os-network-admin` | Command & Routing Gateways | 🟡 `Active Engineering` |
+| [`os-infrastructure`](./os-infrastructure) | Edge Delivery Nodes | 🟢 `Verified Architecture` |
+| [`os-network-admin`](./os-network-admin) | Command & Routing Gateways | 🟡 `Active Engineering` |
 
-### 🧠 Track 2: Totebox Orchestration (Active Data Vaults)
+### 🧠 Track 2: Data Ledgers & Gateways (Active Vaults)
 | Component Directory | Enterprise Function | Status |
 | :--- | :--- | :--- |
-| `service-content` | Institutional knowledge synthesis and automated reporting. | 🟡 `Active Engineering` |
-| `service-people` | Personnel communication filtering and identity management. | 🟡 `Active Engineering` |
-| `service-email` | Secure ingestion and archiving of corporate communications. | 🟡 `Active Engineering` |
-| `service-slm` | Semantic Co-Processor (ALU) & Linguistic Air-Lock. | 🟡 `Active Engineering` |
-| `service-egress` | The Sovereign Release Valve (Asymmetric Physical Backup). | 🟡 `Active Engineering` |
+| [`service-email`](./service-email) | The Communications Ledger. Secure ingestion and archiving. | 🟡 `Active Engineering` |
+| [`service-people`](./service-people) | The Identity Ledger. Personnel and corporate entity resolution. | 🟡 `Active Engineering` |
+| [`service-content`](./service-content) | The Taxonomy Ledger. Immutable glossaries and corporate architecture. | 🟡 `Active Engineering` |
+| [`service-extraction`](./service-extraction) | The Deterministic Parser. Mathematical routing and extraction engine. | 🟡 `Active Engineering` |
+| [`service-slm`](./service-slm) | The API Gateway. Secure port bridging external AI models to the archive. | 🟡 `Active Engineering` |
 
-### 🖥️ Track 3: Workplace (The Sovereign Desktop)
+### 🖥️ Track 3: Operator Terminals (The Desktop)
 | Component Directory | Enterprise Function | Status |
 | :--- | :--- | :--- |
-| `app-workplace-editor` | State Projection & Asset Rendering (YAML/MD/CSV). Generates PDFs purely as Analog Exhaust. | 🟡 `Active Engineering` |
-| `app-workplace-comm` | Localized, encrypted email and dispatch storage. | 🟡 `Active Engineering` |
+| [`app-workplace-editor`](./app-workplace-editor) | Markdown, YAML, and CSV document authoring. | 🟡 `Active Engineering` |
+| [`app-workplace-comm`](./app-workplace-comm) | Localized, encrypted email and dispatch storage. | 🟡 `Active Engineering` |
 
 ---
 *© 2026 PointSav Digital Systems™*
