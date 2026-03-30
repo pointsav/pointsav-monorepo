@@ -1,0 +1,10 @@
+{
+  "extracted_signals": {
+    "sender": "Kees Meijs | Nefos <keesm@nefos.com>",
+    "subject": "Re: Status of Debian packages for Gazpacho"
+  },
+  "source_artifact": "VAULT_INGRESS_OpenStack_C436E882.eml",
+  "status": "AWAITING_HITL_CHECKOUT",
+  "timestamp": "2026-03-29T04:51:58.969979708+00:00",
+  "transaction_id": "68E7D78A"
+}

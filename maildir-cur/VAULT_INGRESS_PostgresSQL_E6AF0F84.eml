@@ -1,0 +1,245 @@
+Received: from CO6PR16MB4260.namprd16.prod.outlook.com (2603:10b6:303:a2::6)
+ by DM6PR16MB2569.namprd16.prod.outlook.com with HTTPS; Sun, 29 Mar 2026
+ 02:02:20 +0000
+ARC-Seal: i=2; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=pass;
+ b=ij+g4V1NMGN1GoX2FlZmi2mMLFcqR1cd3L4PybLWMkUqMURSNjjNO/tA0GcoTyfoVZBUtGbmveivVIoMSh2NHHzdjkkC6BoBM/eLwhjLm1EREMMewEbT7FJJ1d6HaOhchg1abYUn7YWp7ZMWZGeJNkvzwArF+c+qhkbMiXd1DqgtfcGcfS8hPJujJ1S4itfZSz92b8MFFyMkH9iSpBImpz/gidlusF2YLL9lLmxC8DwXyhtb1Qg1P3iWa7FnE/EbmNGZGetFbs1QPtUsBEdP7v7LFN80KTqaAXbqQBZusdI7R/FJ3G85n1RQ8OLjKmzwTM2P/8XRZ7gWXaVjSIzElQ==
+ARC-Message-Signature: i=2; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=S77koDYsrFD4BfSLR0mOASjCT3oMV+ckdq9cHdvm5J4=;
+ b=QhKGT9WSJJoQfY0wYomGcrra7Ax5EkLW4ngSNbDEzBmDJpmryp0DGPNdC9Bs2ViCVQ8CwzNI153Y4PAgucxcUyQZQ5eMZh1eEEtJ8aL+Mssq8PhZ5k22M/J67Skvtvu9gMYo4PxdNBN2SIiAgLtmtkBP/2Jdt4MbM6UltJb4Y/yProQREsz/m6w15JbjWN5Om3RVVKuLTl9vlU8qqIPYCxQQyoXHpdSSpenSix2o3zODStmmXuGwLWcRejP0+E5KD144Wl5a/5muApMCpWi8SKftVULkAJbuEb7r2GtY9ux4bqyMfwQQcGMGFYSe8APVCLeaz7Cd7eSZdhrORaZxmA==
+ARC-Authentication-Results: i=2; mx.microsoft.com 1; spf=pass (sender ip is
+ 2a02:16a8:dc51::56) smtp.rcpttodomain=woodfine.co
+ smtp.mailfrom=lists.postgresql.org; dmarc=pass (p=none sp=quarantine pct=100)
+ action=none header.from=gmail.com; dkim=pass (signature was verified)
+ header.d=gmail.com; arc=pass (0 oda=0 ltdi=1)
+Received: from BL0PR1501CA0005.namprd15.prod.outlook.com
+ (2603:10b6:207:17::18) by CO6PR16MB4260.namprd16.prod.outlook.com
+ (2603:10b6:303:a2::6) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9745.22; Sun, 29 Mar
+ 2026 02:02:15 +0000
+Received: from BN1PEPF00004687.namprd05.prod.outlook.com
+ (2603:10b6:207:17:cafe::6d) by BL0PR1501CA0005.outlook.office365.com
+ (2603:10b6:207:17::18) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.20.9745.25 via Frontend Transport; Sun,
+ 29 Mar 2026 02:02:14 +0000
+Authentication-Results: spf=pass (sender IP is 2a02:16a8:dc51::56)
+ smtp.mailfrom=lists.postgresql.org; dkim=pass (signature was verified)
+ header.d=gmail.com;dmarc=pass action=none header.from=gmail.com;compauth=pass
+ reason=100
+Received-SPF: Pass (protection.outlook.com: domain of lists.postgresql.org
+ designates 2a02:16a8:dc51::56 as permitted sender)
+ receiver=protection.outlook.com; client-ip=2a02:16a8:dc51::56;
+ helo=malur.postgresql.org; pr=C
+Received: from malur.postgresql.org (2a02:16a8:dc51::56) by
+ BN1PEPF00004687.mail.protection.outlook.com (2603:10b6:40f:fc02::144) with
+ Microsoft SMTP Server (version=TLS1_3, cipher=TLS_AES_256_GCM_SHA384) id
+ 15.20.9745.21 via Frontend Transport; Sun, 29 Mar 2026 02:02:14 +0000
+Received: from localhost ([127.0.0.1] helo=malur.postgresql.org)
+	by malur.postgresql.org with esmtp (Exim 4.96)
+	(envelope-from <pgsql-hackers-owner+M91260-745494@lists.postgresql.org>)
+	id 1w6fTg-00FdFz-0V
+	for info@woodfine.co;
+	Sun, 29 Mar 2026 02:02:12 +0000
+Received: from makus.postgresql.org ([2001:4800:3e1:1::229])
+	by malur.postgresql.org with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+	(Exim 4.96)
+	(envelope-from <thomas.munro@gmail.com>)
+	id 1w6fTY-00FbXm-2B
+	for pgsql-hackers@lists.postgresql.org;
+	Sun, 29 Mar 2026 02:02:05 +0000
+Received: from mail-dy1-x1333.google.com ([2607:f8b0:4864:20::1333])
+	by makus.postgresql.org with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+	(Exim 4.98.2)
+	(envelope-from <thomas.munro@gmail.com>)
+	id 1w6fTX-00000001Zvk-1V1O
+	for pgsql-hackers@lists.postgresql.org;
+	Sun, 29 Mar 2026 02:02:04 +0000
+Received: by mail-dy1-x1333.google.com with SMTP id 5a478bee46e88-2c16dc38120so237602eec.3
+        for <pgsql-hackers@lists.postgresql.org>; Sat, 28 Mar 2026 19:02:03 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1774749722; cv=none;
+        d=google.com; s=arc-20240605;
+        b=aY6pn9B4qEZRFVEzKzfVWJyCGs6b26W/tzCnNMEjAcbcFF8a2Q1nyytFDzaBdwWL51
+         Rvjyur9uWXckohl6YvaYetWwruRCQAFhihW6GaqtKgW+bVEF3YLLsAeJvngWNXH/Rwsf
+         oO2WtEUfINQcWW4UVdeFE+X7hmtLS6eEr28DEpQNontOz9e2ll35kJYroNCmC5S2TUxM
+         VxZdpxnbVP+VLhxFzd4SOimQkF8iW6/njVfrWFFwoK9n0MCIySEo4qZumPFsx0jToz83
+         85olPZhd7bJ65MPEUZG06wwr18T+hsKiDv4HS+kRjNwrdiu3qMXoakTwfduoSwAfH+pc
+         WtWQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=S77koDYsrFD4BfSLR0mOASjCT3oMV+ckdq9cHdvm5J4=;
+        fh=bG6JoboGo1FVmo7K/r4nfHZ+qrCq/wKAZ2UGP5doSAQ=;
+        b=BA8pwNXA1cYLaQeEWwrRqappiWpYM8ck0x7XnHAgH+b9+X3bsectxwB8oDfEYRKxiX
+         UNsGyQQjH74zrHlYCJl1aERVJmpR7Y9wbohY6dKBrHm/W0+6Z0JB5vpV4edWr6d29RH+
+         +7K6QA39cvTyYMkxPZv+yszC1gN2ipiywv5hTN5cVaet1UgB3Mc8gmvLDyZ8xRbPSgf/
+         EgP7l9eZNCg072kCyNUr+CidK564XxM0yIoC1YRBJdL/gTzwqUIcR0LD6IuW++hbS0X9
+         WpWeooW/l7zLUZuXXuDo7Pve1kT9qPkC1kT5RamuVvuKYt1TBOtKARh4fzbp9MHaMb0a
+         bFfQ==;
+        darn=lists.postgresql.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1774749722; x=1775354522; darn=lists.postgresql.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=S77koDYsrFD4BfSLR0mOASjCT3oMV+ckdq9cHdvm5J4=;
+        b=Fa+kT3q4vCltE1flCKK/o0jWttD3fpSP1dL8ibW12JfG0cPEWeH3oQCtG+HOzDg00U
+         NQ1UPF1x5V6sceGk9gHg7z8jR858M3RwOXf2Qpg9IvL4OnAuUzN5nT8WpxdSnqaarUaA
+         NZx2bwq+GPRbN7IYbNA1irMGLLQt4XqN/eqc78frJQJXbDeypJOaVEf2rKefua27+bMX
+         n6j1Eo8KuGcTGuZLmb1zARsfGyzEL/dGPwfPtzzsVlbGHR95kh6uybjwRzfZUl5tkmC/
+         RWOa8nurUhlLzD+t6+pp2YX6LoyjNizvUtsGh03zEnlypyOJFFu+qs3JQlAlK//EfYk2
+         KcbA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1774749722; x=1775354522;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=S77koDYsrFD4BfSLR0mOASjCT3oMV+ckdq9cHdvm5J4=;
+        b=DcIlqF6FxC2s+7/+MVxM9OQgf5c9KgdEyArvXR7EmXT1kkfzG7t0p7uqW3kkxXDUTx
+         dRNV+obIwdTALEQslwRwZr/LrKLZmHY9enP2IlT47yu7SFR8PZ5lizHDNVoj4HkGRONn
+         DTmEGbOqqAVdtQlzf76ZMfbGdFHBw4/4OSCeNWR+/LVtLwD0LwPnRKysgsz6n3qJOI96
+         i6FIELpSKBAAujxrH2Klu9EI2WRiDrxeQ0g18U99mLv59Pa3w40jUkeObSxOZW3l6Z7V
+         FiNPfkoTa8to6yPiA7IYmu7fXqsrHR9tiKJq2VJqBvz8XbfncxDoQjfXA4We8OwhPwOp
+         uN1Q==
+X-Forwarded-Encrypted: i=1; AJvYcCVu7aGGzCWnoMLlTZt+sp7e5gaMSK2ZMpjeOkjbTvjx6/vfpVb9Z3nUck7TqxrB05HoeLfadcEB/pblx62v@lists.postgresql.org
+X-Gm-Message-State: AOJu0YwMrqjF3sysUESJlV/my7NbKsAIFzDeP5+sJxuPswkYsltmSeO9
+	AzvK6dvTDUKEfIXCzIJHhPMwqEmOEgYPSmedLiz88SdAcCaOw0PfE6rvRCRUMTariLL2Z4OsOXR
+	SHg8V2z34goFf/tcGbBPPDz+0OSnooQ8=
+X-Gm-Gg: ATEYQzw/23XbcE/60vZSiqPGyAMcwF41lNj2i/TVwe+Szyyi52BWAIFEtlJYpAm+S7v
+	bxL0xbz0t7sKUHCL4OcY1cgDiwG66IMpJv/+YoJ/aZRyDMxOvQgxIrEpB+9T39MZ9+tj7pfEenw
+	YcMZP+qJpJ5aS3JRMzqEAFQqWA/j6IBDvV+uQA/R55rrmh90pq+0Bpvmyzpit02R1QZ3pPzfyGK
+	P9Lri7D7KxHkeVVdA0nhqxL6fhVobIWXnZfiNfjqVJM+dr3wSqUKHgmxQ2xZsudSWyCE+kZniZs
+	n9FkXLgLMUnR7xQvjkK+sATTWI/U/JCa8NhDlwLCdVV5rW7P2kJ9NmTBX5j0q8sN
+X-Received: by 2002:a05:7300:ca7:b0:2c0:c961:4b98 with SMTP id
+ 5a478bee46e88-2c185fd1e4bmr1829957eec.7.1774749722230; Sat, 28 Mar 2026
+ 19:02:02 -0700 (PDT)
+References: <1633233.1774740875@sss.pgh.pa.us> <D9BBAD84-A69C-48BD-9C79-341EA04D8E13@dunslane.net>
+In-Reply-To: <D9BBAD84-A69C-48BD-9C79-341EA04D8E13@dunslane.net>
+From: Thomas Munro <thomas.munro@gmail.com>
+Date: Sun, 29 Mar 2026 15:01:24 +1300
+X-Gm-Features: AQROBzBVckYy52Wm8KmW5EkdTXsqF1vOFU85uplln2q-j5SwwRVmUKcJqUjbQNw
+Message-ID: <CA+hUKGKUboFFAow3zBsFwS3Jw-tehCZAUHHjx81Wie_jGpo+TQ@mail.gmail.com>
+Subject: Re: pg_waldump: support decoding of WAL inside tarfile
+To: Andrew Dunstan <andrew@dunslane.net>
+Cc: Tom Lane <tgl@sss.pgh.pa.us>, Tomas Vondra <tomas@vondra.me>, 
+	Andres Freund <andres@anarazel.de>, Michael Paquier <michael@paquier.xyz>, Amul Sul <sulamul@gmail.com>, 
+	Zsolt Parragi <zsolt.parragi@percona.com>, Robert Haas <robertmhaas@gmail.com>, 
+	Chao Li <li.evan.chao@gmail.com>, 
+	Anthonin Bonnefoy <anthonin.bonnefoy@datadoghq.com>, Masao Fujii <masao.fujii@gmail.com>, 
+	Jakub Wartak <jakub.wartak@enterprisedb.com>, 
+	PostgreSQL Hackers <pgsql-hackers@lists.postgresql.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+List-Id: <pgsql-hackers.lists.postgresql.org>
+List-Help: <https://lists.postgresql.org/manage/>
+List-Subscribe: <https://lists.postgresql.org/manage/>
+List-Post: <mailto:pgsql-hackers@lists.postgresql.org>
+List-Owner: <mailto:pgsql-hackers-owner@lists.postgresql.org>
+List-Archive: <https://www.postgresql.org/list/pgsql-hackers>
+Archived-At: <https://www.postgresql.org/message-id/CA%2BhUKGKUboFFAow3zBsFwS3Jw-tehCZAUHHjx81Wie_jGpo%2BTQ%40mail.gmail.com>
+Precedence: bulk
+List-Unsubscribe: <https://lists.postgresql.org/unsub/36/c9f3835a6050fd40fd2ee4b2559b28212aeb25359957e828f0dab980629c9cca/>
+List-Unsubscribe-Post: List-Unsubscribe=One-Click
+Return-Path: pgsql-hackers-owner+M91260-745494@lists.postgresql.org
+X-MS-Exchange-Organization-ExpirationStartTime: 29 Mar 2026 02:02:14.1758
+ (UTC)
+X-MS-Exchange-Organization-ExpirationStartTimeReason: OriginalSubmit
+X-MS-Exchange-Organization-ExpirationInterval: 1:00:00:00.0000000
+X-MS-Exchange-Organization-ExpirationIntervalReason: OriginalSubmit
+X-MS-Exchange-Organization-Network-Message-Id: 9e332ed9-3f97-49c3-ab82-08de8d37326a
+X-EOPAttributedMessage: 0
+X-EOPTenantAttributedMessage: ce7cb31c-acf7-4351-b0fe-c89cda16c4ab:0
+X-MS-Exchange-Organization-MessageDirectionality: Incoming
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: BN1PEPF00004687:EE_|CO6PR16MB4260:EE_|DM6PR16MB2569:EE_
+X-MS-Exchange-Organization-AuthSource: BN1PEPF00004687.namprd05.prod.outlook.com
+X-MS-Exchange-Organization-AuthAs: Anonymous
+X-MS-Office365-Filtering-Correlation-Id: 9e332ed9-3f97-49c3-ab82-08de8d37326a
+X-MS-Exchange-Organization-SCL: 1
+X-Microsoft-Antispam: BCL:0;ARA:13230040|704161611799003|4022899009|7093399015|18002099003|16102099003|19002099003|22082099003|21082099003|57112099003;
+X-Forefront-Antispam-Report: CIP:2a02:16a8:dc51::56;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:malur.postgresql.org;PTR:malur.postgresql.org;CAT:NONE;SFS:(13230040)(704161611799003)(4022899009)(7093399015)(18002099003)(16102099003)(19002099003)(22082099003)(21082099003)(57112099003);DIR:INB;
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 29 Mar 2026 02:02:14.0085
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 9e332ed9-3f97-49c3-ab82-08de8d37326a
+X-MS-Exchange-CrossTenant-Id: ce7cb31c-acf7-4351-b0fe-c89cda16c4ab
+X-MS-Exchange-CrossTenant-AuthSource: BN1PEPF00004687.namprd05.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: Internet
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CO6PR16MB4260
+X-MS-Exchange-Transport-EndToEndLatency: 00:00:06.2549111
+X-MS-Exchange-Processed-By-BccFoldering: 15.20.9745.023
+X-Microsoft-Antispam-Mailbox-Delivery:
+	rwl:1;ucf:1;jmr:0;auth:0;dest:C;OFR:CustomRules;ENG:(910005)(944506478)(944626604)(920097)(815096)(255002)(410001)(930201)(20251009189)(140003);
+X-Microsoft-Antispam-Message-Info:
+	=?utf-8?B?SjFidWlVdFhzb0F0YXVLUDNvK2pkNFBOMFI1akFzajBGUFh2ekVHSkd0dVl0?=
+ =?utf-8?B?UzNvV3kwZE40TUp3MHBZR2w2bEpkWHZKS1JoVWhaeDBycldUSVFqZStZQ3pp?=
+ =?utf-8?B?SGxTY2gyRVJPM08vNWFwOHo2ZDN6U05ZV0tJQWdvSm1BaXRlSjFReW1pMXpu?=
+ =?utf-8?B?clp5OXFSTkVkUlFNakdnNkczdEQzYldkdG9EWThKTGpxbndmd2RTRWQ5aFRK?=
+ =?utf-8?B?cFBleFAzMytnTE85am5mSzlkME9zSzB2Z3FDSjBHcXIxK211c211ZWZ5L3gy?=
+ =?utf-8?B?WjdZQWNGcDRFZWZGWWpsUVFPb0d0empKc3pucjNBRXp4ZW1VS25WSVMzMU5H?=
+ =?utf-8?B?OHd2NVg5NGg5UUM4dTdKc3lBaWhUMkNPazU1SDdxTWNEVkZYWkpkajlKUFVD?=
+ =?utf-8?B?TnR6NHEwYnFseWo1aGJWd1hQbzZEb3ExeE1tUmZOSFBSYlNQMzl2U2JOV3Zi?=
+ =?utf-8?B?VjRmV0loVC9NU3BZY1l6OFIxRngvK0RiSSs5ZHphM1hJMnJWTWtJOWRuRXh2?=
+ =?utf-8?B?L3RkRFYwbHhkeXg3Ym5IVFArUFVLRmo5cW1zbVBXN2hPTlUyc0R5VTZpQXYv?=
+ =?utf-8?B?bnl5MWoxRUt5RWFZMTd1OG5GWEwrZnRVNFBGT3ltbHBobHlaM1pncGloeWxW?=
+ =?utf-8?B?eUNFOHBOK2JhMnYzaUdaV0dpTDdFQ3pQNHBpYkh4cTJWYW5PalFlb1dpdTZ3?=
+ =?utf-8?B?NkIxZXBuc2lINncyZXZmVm9QTXc0N0p5Zko4eUZGYWhhWWZOSGk3bzQ0WSty?=
+ =?utf-8?B?M0p3KzZ1eEdpYW9HcXpPaU5EbStsRkV0eFhLcWxiVVlweHhZZHUxMWFPT1ZM?=
+ =?utf-8?B?RWQ3TU5FSDhkcnBpb3FoVUVVTVF1UHpVNUhxcHArQW9yR29HQWhiOFNRenEz?=
+ =?utf-8?B?cGEwNGoydWlXVFdiUHFpZmNlUm92RWNaeWorYno4L0xIdGpYTkZTaTE5cEwz?=
+ =?utf-8?B?dmEvWXQ5cDNEanlaSVNXNVdncG1tTDZnK01RcmZYWnN5MG1pTVg3T2h5MVlB?=
+ =?utf-8?B?Q254TThmYVd3SkVubUpudFVWK1Q4U2pGWW8zTW1WcUFEKzI0MmxWU1h4ZGxW?=
+ =?utf-8?B?eFUyRmRRVWdoa2dyRWJOOWgveGl6L1lVdjd4ZmJhVVVYd0NMQ0d0QytKcW1Z?=
+ =?utf-8?B?UmRWL2Z3ZzErRkhYNnZsWWtUVlQycGpONkttVzRpNmRKSWxZOG1kQWdabUdp?=
+ =?utf-8?B?RTJDUk9EQkJDeWxGUStHTCtMVHhXUmFrMHcwSUw5V1RVZkJQSWpWVmNYZTZZ?=
+ =?utf-8?B?U1RhcHBRVjR4aFROUWpCWXArUFBmRFdYd3l4dW80OHRQczZ4bzdnOUlCblhM?=
+ =?utf-8?B?c2Y5b0dKTHdzYTNJVTYwTDQxR1h1bC9ubXZMSGhDUXM0QXJUNXVkMnZYMlM3?=
+ =?utf-8?B?ck5KRjJsSVdRdHF4WnUydFZ5WkVmUmdpdWJZdldZMW9meUJzSFBmSUlya2xF?=
+ =?utf-8?B?citYdjZoL2thVUVRajc1S0ozV0UwNEhmaExrYWVCemtiM0pMR1RGRFdCWVEr?=
+ =?utf-8?B?MWpVaGVQV1B5cGV2OFBublA2NGdnV3M0VkRTdEdwYyt3N2dYMGdhR0w1a3Vq?=
+ =?utf-8?B?RHliQlZENUdFL3RBNnkvS0Y5RjZpOXlReUxYMUk4RVcvSkdLSlZTUEhla0NW?=
+ =?utf-8?B?RlJLTWE3RXViQmx6REVua0xnMjZmWlhqYUtXcXhDd09NcE03bVpYUDlPaWV3?=
+ =?utf-8?B?K0xxOUxia3g0ODFoWCsxVTN6SjdwSERkM3Vqb0xhblVtNWJaR3FMSkRDNC9R?=
+ =?utf-8?B?NUU4REdJMFFxR3pWQXNYU2ovNU5qcEdEZ3JOaXMyYXJQV1dSNk1selNibnhy?=
+ =?utf-8?B?bzVzRm96c1gzYVZpQmkycDBYbjZvMUtvbW1ZMVJGK291MVZESXl2bTVQUEM4?=
+ =?utf-8?B?RkZ3bFZqVHBGaVVlNXRTV2NHTW1POFRyNVB2Y2JhZytKMFRoeXB5NkVSNERT?=
+ =?utf-8?B?ZFNrSWcxQ3FLd0x4VGF5UlNXYkRHb1pjYnpPbE1zQ0p3cEJualA5VmFUVGJS?=
+ =?utf-8?B?TUxub0lJQkg1bEc2QURvaG9JUVEzRGdKcDhJMWNEYXJOanQ5blByV2RYbUMz?=
+ =?utf-8?B?dGU2QThRb3c2amJOSXpPUGNncXNmb2VjRWpPWk9mdjh1cUk1bFFtaTlnTWow?=
+ =?utf-8?B?VFVLMm1vZmN3N2Y2QVUwYTJxUFdGNTB1NmYwREZqRjF5T1o1TFV5UEo3b2U4?=
+ =?utf-8?B?cEZLaFNiRlJyUXpZNG9WOGhXaDJHZkZ3VjdReDFFbFc3THB3alg4YWxMczNV?=
+ =?utf-8?B?NThFclNsYVRxU1pvV1I1aVltVXFqbVBrb1RVSktWNlVGV01PZ01OeXFOeStZ?=
+ =?utf-8?B?TlVIK05ld2cvS0I1MGwzQlpsUWQ3ck9tZmpGbkZ2ZHRDcFdvdWEyUExLNjJW?=
+ =?utf-8?B?NWd4TTVjV2JuQ1p3M0VDcnJKajlBVjNTWkw2Q0pBWXZxYUVZczBJTUNIQzdX?=
+ =?utf-8?B?V3Vpc1Y0WXhlMUVzc0M5bmVZcm9uM0FrOGhKc1h2Uk1ST24yOTNSNmdjMzd6?=
+ =?utf-8?B?YUErL2YyanZXaFp0UkFiUEVtZUwzOXd5VUNhbEg4bXlqb3VxL01DMEZLNzg5?=
+ =?utf-8?B?VlM4NGtLUnIyWXFIR3IzMis0OXFNUDBsWmVtYXhuNmV3VTlRZ2IwKzF3MXc5?=
+ =?utf-8?B?VG1abEpOVkorZFNJaXkySUJrdXBkMEhzZTNHRzFzUmdzUk10c3dRRWIwd3Yr?=
+ =?utf-8?B?ZjhXQmZzQ2ZiMTBUenE2c05NWS9rQ1RoT3E0RzB1OWttVkRKOXl0UlcwOUZ3?=
+ =?utf-8?B?eTlXWmZXbGJhalRoN05MNStMcE95M0JxZVlYMkEzaTRob1pacWVvRG5XRU1J?=
+ =?utf-8?B?SHVheFdZWVVjcEFHeXdkK2l4clUvMmRPMU1RSnhlbkJpbHdEMWNPb1B0dnVw?=
+ =?utf-8?B?aWd1eG1rYkVzcllZTDRXRU9RS3VCZlpVN0gybUJTUVRrZXRrL1VDeCtDYTJR?=
+ =?utf-8?B?OWo0NHc0Z1kxWVl6U1dtTVVwZDY1OTF6aWtCRW5ld3RRVFBZYlVIWWhrWVY3?=
+ =?utf-8?B?NytaejA5MFEwNXZhN0RCTkVwTjRvSUEwNG94dG0xRERVN0ZGVEJIQ0plTHM2?=
+ =?utf-8?B?K1FPK2lHVzZmb1FtakNnS1JYTTBYQjBDRGYxbFluZ0FoemR4bEJHY0JzcC8z?=
+ =?utf-8?B?SFhuOUo1b29vZk5IZCt6QXhNeWV5d0RDN1YvaUw2WHhJeHJQNmxsVllIWXhp?=
+ =?utf-8?B?aElrQXBIT25OZmZETTRpQWZQb3d2TWNiU2lrV3V0cHdUZCtXbk0rRFNMa1Mw?=
+ =?utf-8?B?eXhvR3EzODlGRG01TG9YOUlOY3JhaDZKaEh0dWtSYXBJY05oT1B1anY1UitY?=
+ =?utf-8?B?NHVGd1d0WmFuYUw2OVpWNkpuQVJiak5LS2VGaVdhUWxaelpBVlJ0dDhRbVMz?=
+ =?utf-8?B?NGdzaFViT3Z5dloxVkxuZXdEYld1K01PZXc0UWNBNTkxek5uYTlHM0d0NVN5?=
+ =?utf-8?B?SjVrcFo1aXRrZVdIUzFjeE9USUQwTjIzbDJpWExMNW11ajZ6RmZnZlZrRDNZ?=
+ =?utf-8?B?WW1xMWhMOEhyMkFtSE8xNDJGQlJpb0V1Qm5rNExRUlRvZWZ5VHFZNlduU2RS?=
+ =?utf-8?B?bTVTcE5ncWVzNXJHb25mdlZkZGxucHRoc2EzY2hiWlMwV3lJYzMyYVlTZmND?=
+ =?utf-8?B?RGJQM01OZkx6OWZRZXdGQW1yMWVHTGlhbGRrcmtianYzVGtocGIrbkNmVldC?=
+ =?utf-8?Q?RwVi6MQXEWJCfRKcueTzNDB9TQ1hq8U=3D?=
+MIME-Version: 1.0
+
+On Sun, Mar 29, 2026 at 2:59=E2=80=AFPM Andrew Dunstan <andrew@dunslane.net=
+> wrote:
+> Looks basically ok to me, although I wouldn=E2=80=99t make the variable n=
+ame all caps.
+
+Will fix and push.  Thanks!
+
+
