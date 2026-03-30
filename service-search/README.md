@@ -1,6 +1,6 @@
 # ⚙️ SERVICE-SEARCH: SOVEREIGN INVERTED INDEX
 **Vendor:** PointSav Digital Systems™
-**Standard:** Leapfrog 2050 (3D Asset Tokens & Asymmetric Storage)
+**Standard:** Leapfrog 2050 (Totebox Archives & Asymmetric Storage)
 **Tier:** 5 (Service Logic)
 
 ---

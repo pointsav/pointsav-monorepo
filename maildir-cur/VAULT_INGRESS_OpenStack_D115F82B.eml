@@ -1,0 +1,444 @@
+Received: from IA1PR16MB5382.namprd16.prod.outlook.com (2603:10b6:208:452::9)
+ by DM6PR16MB2569.namprd16.prod.outlook.com with HTTPS; Fri, 27 Mar 2026
+ 15:47:56 +0000
+ARC-Seal: i=2; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=pass;
+ b=LmqPjX1Q6Yedih/AoJUcBLCs0LYJjIEgdMHtxMOUnBvcKbxAqCefWoTbmCVXU2uaBTz4FS+4sQlNAtUdyqPsyW3peuqFa9HHpYvE6j8douC64CW4j78fJ1rfJn3GvruZRdJWZmu/AQzolnqREMXuJvoTkunLZQMkx4tNo+ptgE4hyu7/LZCa7EcRuc2V4x6KeaNehJ7tH3lOq0WYNrtxizj8juqX1voPsDKjWoivnRgwYHnVcPa8qVPDwLxULhPj9l+zDH7qea8ALWHhKqQ3QUrR1xlEn+25yUwYH6LXEdgxBwVdnYWdzJkRT4UQZzf7/bqSkI6SomwiQ0q9XcMIwQ==
+ARC-Message-Signature: i=2; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=mBgULNn1odq8rYcOXFnXJxrumuHEE9MfgNzxhE1t75U=;
+ b=JY+cOz4/DQ/IzJKGUiW2kDnNUHGBgvGL+kpu5xlI/L8E6F7vAsXyJ6lASi5yLYuWe+SALgyyzWj35nj0g3DYcs3EAVurLP4ASNYscHbk1Pa5SOAT65FVQTjU+dHgdScMtpYQFanEfLLisLpsmZpLhdgKtL7wBiUNyfrpRKnNOPlFRwIJQCs2s0Qht3LvlvfMVyEgxUevnnHlSlqzTh+x4TxKhIacRDufXZcotGjHvYj396vMmbn/ZYw4mnT6sTb3s228u5m2h+SZWG23kR2Pg2uWFKXRCSj2ogEM6+icohuD+wrhLh6SKAt3YwEfy/4+0VWiB/UQvsbvryr4KaFnSA==
+ARC-Authentication-Results: i=2; mx.microsoft.com 1; spf=pass (sender ip is
+ 2001:4800:7813:516:be76:4eff:fe04:5423) smtp.rcpttodomain=woodfine.co
+ smtp.mailfrom=lists.openstack.org; dmarc=pass (p=none sp=quarantine pct=100)
+ action=none header.from=gmail.com; dkim=pass (signature was verified)
+ header.d=gmail.com; arc=pass (0 oda=0 ltdi=1)
+Received: from MW4P221CA0012.NAMP221.PROD.OUTLOOK.COM (2603:10b6:303:8b::17)
+ by IA1PR16MB5382.namprd16.prod.outlook.com (2603:10b6:208:452::9) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9745.23; Fri, 27 Mar
+ 2026 15:47:53 +0000
+Received: from CO1PEPF00012E84.namprd03.prod.outlook.com
+ (2603:10b6:303:8b:cafe::b2) by MW4P221CA0012.outlook.office365.com
+ (2603:10b6:303:8b::17) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.20.9745.23 via Frontend Transport; Fri,
+ 27 Mar 2026 15:47:51 +0000
+Authentication-Results: spf=pass (sender IP is
+ 2001:4800:7813:516:be76:4eff:fe04:5423) smtp.mailfrom=lists.openstack.org;
+ dkim=pass (signature was verified) header.d=gmail.com;dmarc=pass action=none
+ header.from=gmail.com;compauth=pass reason=100
+Received-SPF: Pass (protection.outlook.com: domain of lists.openstack.org
+ designates 2001:4800:7813:516:be76:4eff:fe04:5423 as permitted sender)
+ receiver=protection.outlook.com;
+ client-ip=2001:4800:7813:516:be76:4eff:fe04:5423; helo=lists01.opendev.org;
+ pr=C
+Received: from lists01.opendev.org (2001:4800:7813:516:be76:4eff:fe04:5423) by
+ CO1PEPF00012E84.mail.protection.outlook.com (2603:10b6:30f:fff5::44b) with
+ Microsoft SMTP Server (version=TLS1_3, cipher=TLS_AES_256_GCM_SHA384) id
+ 15.20.9745.21 via Frontend Transport; Fri, 27 Mar 2026 15:47:52 +0000
+Received: from localhost ([127.0.0.1] helo=lists01.opendev.org)
+	by lists01.opendev.org with esmtp (Exim 4.95)
+	(envelope-from <openstack-discuss-bounces@lists.openstack.org>)
+	id 1w69P9-00AC1H-7o;
+	Fri, 27 Mar 2026 15:47:23 +0000
+Received: from [2607:f8b0:4864:20::534] (helo=mail-pg1-x534.google.com)
+	by lists01.opendev.org with esmtps  (TLS1.3) tls
+ TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+	(Exim 4.95)
+	(envelope-from <noonedeadpunk@gmail.com>)
+	id 1w69P0-00AC1A-KX
+	for openstack-discuss@lists.openstack.org;
+	Fri, 27 Mar 2026 15:47:14 +0000
+Received: by mail-pg1-x534.google.com with SMTP id
+ 41be03b00d2f7-c70fb6aa323so926718a12.3
+        for <openstack-discuss@lists.openstack.org>;
+ Fri, 27 Mar 2026 08:47:14 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1774626433; cv=none;
+        d=google.com; s=arc-20240605;
+        b=L+XilJMHBQIeayZvcjg58bZ/YPqdrJC7svmnOQ2iGFfOsp7pY8v1Ygav9qNDbZwLHA
+         D8YBxPEMiMP56m8RYfynHyGBURdlV50i0RQZTp1uU459/u+g+LN+tycosb5Jjm2yeNaT
+         5hQGFOg0st8ORNwm1+VdZ0/XN3b8sK6vR7np5Y9yOFDCbAHq0ZpDLumzUX0W88T63xmi
+         6CmbVbVE2dR7JyiueARCur86P9d7xaq+xvvQ4ai/IhrFmXvo7nf/T20K9CMAvHEO2Qxv
+         d6lFAZOVN5vQoa+rz6iT0FiYbCRjHyhuVfTfVuWo0axg2LaNmV7xYNhh0QL7A2naLBXT
+         zsOA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com;
+ s=arc-20240605;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:dkim-signature;
+        bh=mBgULNn1odq8rYcOXFnXJxrumuHEE9MfgNzxhE1t75U=;
+        fh=Qz5vIXnhlpRvzK0eOepbBUbjjXgHxnEVmqMQLvCQEgw=;
+        b=X3cH8+yXXf9IkiReF124qB3tJhNZkvIAY+eryn5ymTtq/bitdBVqE1ANaL7vqFduZS
+         r7GJ8itne1T3iGLv7nAR6/Fw71Z94ii1mlxeUiq5EZHpHsJURCZv6Uosyx0flMJUg46u
+         ySf6ZlYxzgS8SY4YMxQxr2W4+UZ566+tJpsP4EuIuwNze3B4WNAyzHMRDch+OwQ/eSI9
+         owvkzRxIRlME92zwJVPhNaoN1++DXTf1seECvsUwOPnzVO8u6gFjminwBrq5P5HdVn+u
+         QfdyL+OcJNWrC7DJ094JYxsj5EBSCiaQOiyUrycu5WHTZdBM7H0q65Wb27Sx7k8wSThH
+         oF+A==;
+        darn=lists.openstack.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1774626433; x=1775231233;
+ darn=lists.openstack.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=mBgULNn1odq8rYcOXFnXJxrumuHEE9MfgNzxhE1t75U=;
+        b=UhK3XqFiKAD/ErDXg5Yz3SxI3HOGf2CGTeoEKcnr4OJwiH4SjluMmCdFhMc5EhBCX8
+         C6R4LAt9R55K7OdD0yA1+Lj8W3B0gvF3mFqcg3+E+FU21AJQMACM7LqUWPXmRzJCetZD
+         YTfqb0W45Z7vWltmCreAJ8HyCV7lguZcapQfm+A8tPVIP5u0RsMog+wYmt8W5hLwKbx8
+         4fyKOmixBGHPqgtuQg5liBXQ+0yT4DDE2K3Hry7z+rkNeEfoAISIH12CrY03F4AC7S0c
+         mKCUG23yifJi642cqzwsstjZ5Ze+N7MjdPN6Wh/YxXrhyO9WCRGI4n/7Kwqa8W2gtkKR
+         vb9Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1774626433; x=1775231233;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=mBgULNn1odq8rYcOXFnXJxrumuHEE9MfgNzxhE1t75U=;
+        b=e1zRg78MfOR1bKuvNOsihrlGYtBQKzVRTAc/fJuNOalAHiahNNofv8KhdsVPoF/I6Y
+         EdogKIiSQyfy2iiPp4rdY43m+1hZrFL5WGz4vxo5HV25z2zNKEQ4X1HP9RITshXsBdzQ
+         PX1MIC9FY1YOmQjgOgmwgGeIb5O7hrBTMj34UqawmtiGkm0pQ0LgiQ704OWYqaiKcIgW
+         8EE53NbcfA5Ufvt1cdOHA6saZFWYvo0ECs9VCJFM2uVPeyRfITsZv+yuBZ59Y8BdVohQ
+         tiDDcIjAM6MOoz6pMIl9dhaXlOqwVwebFGvGSUb2EiZxw1otOBMy76o78X0UWrZKkWz8
+         soAA==
+X-Gm-Message-State: AOJu0Yz3G3GvfcgVOoIQ1xvVMjrOTNZbQeGtwfvl62yHhtVsiTj+gJCd
+	1QaXlNFoNbGkDqLUPV73h3TDG1RscaALg0RNv3+mSjkBmPZ3g+cucf+GcbY6PekQBdOIIH/UANn
+	vLG4jEsil3dOWiKGpxa2olhgOfoT8jlLgRc6i0XLomu/f3YE=
+X-Gm-Gg: ATEYQzzY/DcDz8SrtWq6fcO/T77wmDIVdj7LPKpT4IVYL25oSFeL2tp7/FCrBowEv/w
+	xTECmpaCzt0oSWxlB++6QEXj2e+JB9SjTS8QZnbLVI0+BUUlb7c0i+wUTKE6/8CV+rR+UfbJlQ1
+	G7k20HN08AbC2Agi/yALwAO9lbKTibh6EeiLRdZKjvw6mQEpJhZdk+FzGCcMhTSUDASUVxWxy6E
+	X/jQB+qZsg7YNcxX7mfnOiIrlA1t2mNZA8pIWDXZayms6P7FoFY6kU1zvK43xbT3W1W3S04y0i+
+	dI/dpsEy9kNxgolfgsVrQcVj5lrccMSVDMFSjs8mfg==
+X-Received: by 2002:a05:6a20:6a22:b0:398:96c6:b8de with SMTP id
+ adf61e73a8af0-39c87af0619mr3465769637.37.1774626433165; Fri, 27 Mar 2026
+ 08:47:13 -0700 (PDT)
+References: <CAPd_6Ato-p9nQSv2eQjtQUdWFAJrG7S9gCtXKGbrW6HG_6kOmg@mail.gmail.com>
+ <CALOt+SRTfk70zMYf94oMtg78MJvehi5Wz3ZZ+nUQLzxxW_sMww@mail.gmail.com>
+In-Reply-To: <CALOt+SRTfk70zMYf94oMtg78MJvehi5Wz3ZZ+nUQLzxxW_sMww@mail.gmail.com>
+From: Dmitriy Rabotyagov <noonedeadpunk@gmail.com>
+Date: Fri, 27 Mar 2026 16:47:02 +0100
+X-Gm-Features: AQROBzB8SlR0Oexu8J23vHW_hpuLNQ7LSc0XJ-Py6fynSCsltfY8jKN2iyxVhfs
+Message-ID: <CAPd_6As0nKmMjubGz2A2=FJx-n8NVFX5Cfdr+2-=RgewRJdLbg@mail.gmail.com>
+Subject: Re: [glance][swift][2026.1] Glance fails on image download from Swift
+To: Abhishek Kekane <akekane@redhat.com>
+Content-Type: multipart/alternative; boundary="000000000000286bd6064e036a32"
+Received-SPF: pass client-ip=2607:f8b0:4864:20::534;
+ envelope-from=noonedeadpunk@gmail.com; helo=mail-pg1-x534.google.com
+Message-ID-Hash: MORFQTQQA4G6PAMV5KJIL2UO76WOWLQQ
+X-Message-ID-Hash: MORFQTQQA4G6PAMV5KJIL2UO76WOWLQQ
+X-MailFrom: noonedeadpunk@gmail.com
+X-Mailman-Rule-Misses: dmarc-mitigation; no-senders; approved; loop;
+ banned-address; emergency; member-moderation; nonmember-moderation;
+ administrivia; implicit-dest; max-recipients; max-size; news-moderation;
+ no-subject; digests; suspicious-header
+CC: openstack-discuss <openstack-discuss@lists.openstack.org>
+X-Mailman-Version: 3.3.10
+Precedence: list
+List-Id: Discussion of OpenStack use and development
+ <openstack-discuss.lists.openstack.org>
+Archived-At: <https://lists.openstack.org/archives/list/openstack-discuss@lists.openstack.org/message/MORFQTQQA4G6PAMV5KJIL2UO76WOWLQQ/>
+List-Archive: <https://lists.openstack.org/archives/list/openstack-discuss@lists.openstack.org/>
+List-Help: <mailto:openstack-discuss-request@lists.openstack.org?subject=help>
+List-Owner: <mailto:openstack-discuss-owner@lists.openstack.org>
+List-Post: <mailto:openstack-discuss@lists.openstack.org>
+List-Subscribe: <mailto:openstack-discuss-join@lists.openstack.org>
+List-Unsubscribe: <mailto:openstack-discuss-leave@lists.openstack.org>
+Errors-To: openstack-discuss-bounces+info=woodfine.co@lists.openstack.org
+Return-Path: openstack-discuss-bounces+info=woodfine.co@lists.openstack.org
+X-MS-Exchange-Organization-ExpirationStartTime: 27 Mar 2026 15:47:52.3697
+ (UTC)
+X-MS-Exchange-Organization-ExpirationStartTimeReason: OriginalSubmit
+X-MS-Exchange-Organization-ExpirationInterval: 1:00:00:00.0000000
+X-MS-Exchange-Organization-ExpirationIntervalReason: OriginalSubmit
+X-MS-Exchange-Organization-Network-Message-Id: 283fd068-b7f2-4d8d-add7-08de8c1834a7
+X-EOPAttributedMessage: 0
+X-EOPTenantAttributedMessage: ce7cb31c-acf7-4351-b0fe-c89cda16c4ab:0
+X-MS-Exchange-Organization-MessageDirectionality: Incoming
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: CO1PEPF00012E84:EE_|IA1PR16MB5382:EE_|DM6PR16MB2569:EE_
+X-MS-Exchange-Organization-AuthSource: CO1PEPF00012E84.namprd03.prod.outlook.com
+X-MS-Exchange-Organization-AuthAs: Anonymous
+X-MS-Office365-Filtering-Correlation-Id: 283fd068-b7f2-4d8d-add7-08de8c1834a7
+X-MS-Exchange-Organization-SCL: 1
+X-Microsoft-Antispam: BCL:0;ARA:13230040|704162211799003|7093399015|4022899009|12012899012|13003099007|22082099003|16102099003|18002099003|19002099003|21082099003|8096899003|57112099003;
+X-Forefront-Antispam-Report: CIP:2001:4800:7813:516:be76:4eff:fe04:5423;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:lists01.opendev.org;PTR:lists01.opendev.org;CAT:NONE;SFS:(13230040)(704162211799003)(7093399015)(4022899009)(12012899012)(13003099007)(22082099003)(16102099003)(18002099003)(19002099003)(21082099003)(8096899003)(57112099003);DIR:INB;
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 27 Mar 2026 15:47:52.0820
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 283fd068-b7f2-4d8d-add7-08de8c1834a7
+X-MS-Exchange-CrossTenant-Id: ce7cb31c-acf7-4351-b0fe-c89cda16c4ab
+X-MS-Exchange-CrossTenant-AuthSource: CO1PEPF00012E84.namprd03.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: Internet
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA1PR16MB5382
+X-MS-Exchange-Transport-EndToEndLatency: 00:00:04.5037329
+X-MS-Exchange-Processed-By-BccFoldering: 15.20.9745.015
+X-Microsoft-Antispam-Mailbox-Delivery:
+	wl:1;pcwl:1;ucf:1;jmr:0;auth:0;dest:C;OFR:CustomRules;ENG:(910005)(944506478)(944626604)(920097)(811242)(255002)(410001)(930201)(20251009189)(140003);
+X-Microsoft-Antispam-Message-Info:
+	=?utf-8?B?U0lRQVUvT3pzWlJJNEx6c242NWN1NmVLQjBGLzQ3aXJSaHp4ellHaFkySk1Q?=
+ =?utf-8?B?aTR0TlpEZktlbnZhZDVjRnl2MkRLSVBObG1ZTE5RY0FCTUdWNm9kbEhiY09a?=
+ =?utf-8?B?QVFmNzBNeWtuZ0dpWkNSdUYzWldNaWgyR2pFcTJYcm95Z0xGUXZSMlEyN25y?=
+ =?utf-8?B?M21TVk0xWmFLWlNSaUNUUlZMakQrVFBLc0tITnVPQlZyN21jN3VES0xTVnho?=
+ =?utf-8?B?azJxOW1GcXJZOHBUVlQxTWkyWnhLK1ArVFJENlpQc1U2Ky9ncVJSZ1FaNGdk?=
+ =?utf-8?B?R1FCYlIyeVJxSmhxd1VEWitIYmlNeEc2Vk4vYkYzdHVJUTI1MUJzNnpWZjBo?=
+ =?utf-8?B?TkdzNEJySjFjc284Ri8wMElwK2xwaENGOU8yZnVEMng5dVEwL2VHUm5RMCtU?=
+ =?utf-8?B?Ynh2R2p4TXBxWTRhcG53L0JEWmZ6Z0QwbGpkSGVBMXZOV1pUTUpDUWVHWXFY?=
+ =?utf-8?B?dU93WUxMdVZ2MmlscExMVzFuNEl0eWJBbms1TGFwZUhYb3o5dFZULzdGWkVj?=
+ =?utf-8?B?M1RadUl6YnNITXpFL2lDb3dHb2pwZGNNR0dQMi9POTRpcG8zRUJ1amZScU5i?=
+ =?utf-8?B?WjYvVnBXeEZXcVBETmg1OXhsL3AvSjhWdC81cG9KOXdRS0l6MklYOFFXaTFv?=
+ =?utf-8?B?OXZnSXlla2s2b2dhV00vdmhUblBxeU14clZnTG9JSEwvVXVzU1BMRTUrdkFk?=
+ =?utf-8?B?ZFYySU40R1NPZUplZmlKbzI2L2lKc2hCUHB6djhkWHRGdDl5bHpacWxOd1k3?=
+ =?utf-8?B?YXhSSU93dy8vSnptZkxtZXdLSVNRZzA4MnhRYlJTamVOUFlGWUV3eUxkTHRG?=
+ =?utf-8?B?WkRSc1ZUcEY3UjdiN21TTE5wUFl3dnRBS1MwY3JMYzNkVllmQWlXcXlxRlZj?=
+ =?utf-8?B?eWNGbFE4alUzMmtpeWI3YktJdEUyTlBqWitJUWVRQ2ZISUVVc0RaSzBZdGJD?=
+ =?utf-8?B?Z3NMWDVYbkNzaHFZbzl6ZXQ4MXowR0hBYm1UYVJPUlVnT2V2dUJtdDMzUFVt?=
+ =?utf-8?B?cThxZm9ETW11SWJZbEwvbC9VNDZzdTU5cWQyT05jTHp6bEd2aGRTSUtzUEtt?=
+ =?utf-8?B?QmJBbGlxbm5mSllMdWtJNGkzR2VSUUJFQW5oNi9EVjdFZUdxV0RzOWVBV0t0?=
+ =?utf-8?B?QjRsbDhJTVJobHdzVVBMVHZ5OEpsUEUvbGRlWmhpazFDb2pyNnlBT1BFN0Iz?=
+ =?utf-8?B?M0t6VUpmNVVSMkdaQjlZbE9PS1hkNDg3SXh4TDRNK3hzUWxvdGpBdlFQN2V3?=
+ =?utf-8?B?U1B4Z2VNQWJ2aFhjUnVSQ0w0eHVFZUdlN1JXQWdlVXh2d0RCQVYyWG5UcGNG?=
+ =?utf-8?B?eU9RdXhRNTE3TTFRaU5JVk5zRGVpbE1jTS85OXoya3MrbmZVdXJEYXc5Qmdq?=
+ =?utf-8?B?NWkvOGplNmNBcGx6NzF6YW5SbWdBWGJka2RPL3l5VE1yNGt3NkhLMTFMaG1l?=
+ =?utf-8?B?UVJvTVZ3SlVOazBzRTFxeGcvL2l0YXVHaWZJNS96dEFWRWNrRHJiR3o1SVJ4?=
+ =?utf-8?B?OGcwUE03eFg3SkYrekdYWlhrc3NrSW8wY0duMjlQZ09vZVpOM013cmtkUW9I?=
+ =?utf-8?B?eDZ1TkNTeDEzZ2YxM1lGYUJVNmt6Ty83Y0lqZFY1VVlhWDhsVUZodmJub3cx?=
+ =?utf-8?B?WjNGTDJFOS9ZQ2NhSU5HazZuZk43VllhbFFIL0NyWVErd2FlTkxyZGhSTGkr?=
+ =?utf-8?B?Q2dwemwwc1JWVENNTlZVVjhRVUxYRWRCbjM0bzdwZ1FndFJiR01lK0lVaHZi?=
+ =?utf-8?B?d200V0tXZG41VDdrdzdkS2w1L3NmQ20yazRUalFNWTRFZW1MYnppT0VXaFFK?=
+ =?utf-8?B?R2NjRmZvQmZWdzhjRVFSTzR4b3Q0cFF2b2NqMitrNXBrdWpBOW0wUkZpTHdt?=
+ =?utf-8?B?MVlvVG5wSFZKejFSOFVhQ3pMOVMwQ0VZL3NQamlBOGQrN3MyT2Y5V0c2S3Mr?=
+ =?utf-8?B?cVc1d3VHaUZKU01SYnVKTGZaMWw0RVhnTnE2K250a1pqTlJhNzE1YUxyZjY2?=
+ =?utf-8?B?YnZFYWNsblNYZDV4OEtPTlkyejJmUmQwd25aMnA2V0l1TDFubEJxYWpjR1li?=
+ =?utf-8?B?SEl3dVBwMmdTQktGcHVrN2xkT2doODZLMjdDQmlvZ0hpandGS0lIS2VmNmVL?=
+ =?utf-8?B?NkpTM0pmczlGUktjV21vL3FtWkFZNm05ZmZCL29TYzh0aXRoK2VydUxHakww?=
+ =?utf-8?B?MlJHUmQva2QzR2N3RUlGbnVWNGdRNy9CVWFuVXdkVHBmUExadzBEUk0wUUox?=
+ =?utf-8?B?cGNjc01uM2pBRW5KbzhGS0g1WnNnN0J6UkRzMUpNNTZBdHIyVXI3TVZMVjZx?=
+ =?utf-8?B?YzBRRm94eUUwSHFuYlRUazNJRU5kaGN4M3hMTUtSb2NRUW8rU0hnbEFQTytk?=
+ =?utf-8?B?eDk2b3I2b1VNVkZHM0FyRStqR01mUjc4TEp0NUFSWm95d0Zjbk1kZ0xGOFRC?=
+ =?utf-8?B?Ny9uc1ZlaVp0VVNhdVFaUzZuZ3ZmeXhncDVXTWFWZ0Q1SWgxaVNHd1FQRUgx?=
+ =?utf-8?B?YUlVZlR0TTN4NExpRFdvSm5ubWF3NmFnSmlwQTIwSW1tK0RvMDFFWkJZdm1P?=
+ =?utf-8?B?azNGS1A4ckxYdXRlRG05aUJ5czVaMDBMTCtweWl1L3RPa1UxUUZxcFdOakU5?=
+ =?utf-8?B?OXo0V3o5dFp0VEtqRVpnVTNUWTF4ZjI3RUlpRmFNcCtYdDlucGlJeVI1cTZD?=
+ =?utf-8?B?b0FqZkpRbGoyWGZIejV1TFFCOFpYVGI4QTdzZkptbVdVeWVOZzlVWTJaRVB2?=
+ =?utf-8?B?N0x4VkRLNTNBSjZzcUhDSThMcitpdkFXVnBTSldVVlc3b25vMk1VK09WU2Rk?=
+ =?utf-8?B?ZThaSks1d3JLaGNwT0t4NVgzY2pDdkMrWmNpNng0QTkwZ2kwZEhuUFhrTmUx?=
+ =?utf-8?B?b05DY2NNM05KNUp6K1JpZTFIdmJkN3NlK2NiOGthTmxuZEdvcTFlb1hXb0Vy?=
+ =?utf-8?B?S1ErZEpCRDA4cHAyNGtJNnpieUVqclNUNmY4QngxSHZKRTNGMXQ0Qi80dHpL?=
+ =?utf-8?B?MjNBaWtnYkZUcUVmZ0QvTGp5T1AxamE1UkhZYy9ZeEJ5bzhBZXRrZFJ2Njd0?=
+ =?utf-8?B?TmJkdWZYM0g1OEtzOER2MExIQ3ZaRnRzbTMxa1c3bG0yS003dWRORUtyc0pq?=
+ =?utf-8?B?TUZldStoVHZpSlY1MkxTVnk4ZUVhUDFLblBEc1BTNStxTXJZWFp3aXlEMXJM?=
+ =?utf-8?B?TS90OTd4YWNUZS9mUVc4WGhHczFsdGhFbTd5SEQ5UnlLRUNVSGN2WDBJSmpP?=
+ =?utf-8?B?T1h5QS9JYjN2TDBKKzNUT3lZNUVhcDN3MGpLWmtJcEdOWVA4a2pDNXZCK2U3?=
+ =?utf-8?B?cm1HQS9JRXpaWjhvbjl5YUVVaENIdUU4R0s0NlgvVVI2NTBoNnJuOVRveW9L?=
+ =?utf-8?B?WVdkNi9rR2ZnTmNzZC9Gb3BBVzZIa2lKZllZUFV3UjV4dEp5ZDdxVHJZNll3?=
+ =?utf-8?B?UmJ3YzB4WmlIZU8xeUVkcE1MUXR4SkhOYTE0bTF5WWZrcXhmNlovc2pZcjBR?=
+ =?utf-8?B?cVMyNm02Mzd6OVNJWEs0b1p6Lyt3TEVnTjJVSlFvWDNSdS9TRUp6M2lSdjRM?=
+ =?utf-8?B?RVR0SHdKOHJ2TThMd01VOW84Z2h5TXZKOW9EMytyVi8vb3hibzA5eGk0cm5V?=
+ =?utf-8?B?aHo3amVYeDVzNXdwN0d3cWk5Zjg2aHJMbVZ2MERTRFdvQ1hsVGNJMnIzQ3Y0?=
+ =?utf-8?B?WlBKRlZhdEwxYytDbzlXV1lOL2o3dDYrNTFHTDNkSkVYaTlRKzFDSks3YlBz?=
+ =?utf-8?B?N0N3dTd3RDN3SHVSckRWNE5sQWpYL2llUzBmUWxTR3RDaERWTGI0aHVPQXRZ?=
+ =?utf-8?B?aG50SEozQTR2R1BqUEtlUVVOamx6UEhBWXl0TVFWWDErb24zQU93bkRwS2lq?=
+ =?utf-8?B?Q0VRPT0=?=
+MIME-Version: 1.0
+
+--000000000000286bd6064e036a32
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+Hi Abhishek!
+
+Thanks for the prompt reply!
+While I think you're on spot with the diagnosis, I am not sure if the path
+is actually working.
+
+I tried to apply the patch, while having `swift_store_retry_get_count =3D 5=
+` in
+the glance-api.conf, and I had exactly the same stack trace, as without the
+patch.
+However, setting swift_store_retry_get_count to 0 has solved the problem
+indeed.
+
+According to what I see in my test environment, your patch solves the issue
+only when swift_store_retry_get_count is not defined at all, but not when
+it's defined to non-zero value.
+
+=D0=BF=D1=82, 27 =D0=BC=D0=B0=D1=80. 2026=E2=80=AF=D0=B3. =D0=B2 16:24, Abh=
+ishek Kekane <akekane@redhat.com>:
+
+> hi Dmitriy,
+>
+> The mentioned bug is reported in LP [1] and I have pushed a fix [2] for i=
+t.
+> As a workaround you can set swift_store_retry_get_count to 0 in the
+> config file.
+>
+> Let me know if mentioned fix [2] works for you.
+>
+> [1] https://bugs.launchpad.net/glance/+bug/2146432
+> [2] https://review.opendev.org/c/openstack/glance_store/+/982221
+>
+> Thanks & Best Regards,
+>
+> Abhishek Kekane
+>
+>
+> On Fri, Mar 27, 2026 at 8:50=E2=80=AFPM Dmitriy Rabotyagov <
+> noonedeadpunk@gmail.com> wrote:
+>
+>> Hi folks,
+>>
+>> I am trying to test out Glance configured with Swift backend on 2026.1
+>> prior to the release, and facing some issues. As we are super close to t=
+he
+>> release, I have decided to pop up with the ML, to ensure it's a "me"
+>> problem, and not a generic bug somewhere.
+>>
+>> So I am using:
+>> - Glance installed from SHA  07dd0a203b6883efa66486035c436b92c83da0f3
+>> - glance-store 5.4.0 (according to U-C)
+>> - Swift installed from SHA 51b068309a626d2228ab69b5158ee857e96d101d
+>>
+>> Image upload works quite well [1], image is appearing in Glance and in
+>> Swift quite correctly.
+>> But whenever I attempt to create an instance from the image, or,
+>> basically, just download image with `openstack image save
+>> a024ca39-42bc-4a0c-bd34-26209bda4008`,I get Glance WSGI crashing,
+>> resulting in 502:
+>> root@aio1-utility-container-20f6bf88:/# openstack image save
+>> a024ca39-42bc-4a0c-bd34-26209bda4008
+>> Unable to download image: checksum mismatch (sha512):
+>> 9a9bce0083a00939ec17c11febbfc767aa211aaa54f51e75c5a8b271a9b5637c77205a51=
+8b7a2007cb391d23cceb01e0e4e8d64832317151bc85b734b92a7be0
+>> !=3D a3b1ae48ab757e1e074c33c3159cb3bc749d0119677446b442
+>> c5568eeaf2a4d741d794ca9750e13c3352b7db073d0f9101670f3cbede942df3f5fdb120=
+24aaca
+>>
+>> <html><body><h1>502 Bad Gateway</h1>
+>> The server returned an invalid or incomplete response.
+>> </body></html>
+>> root@aio1-utility-container-20f6bf88:/#
+>>
+>> The actual crash and stack trace can be seen here [2]. With that, I can
+>> download the image with Swift client without any issues [3], and checksu=
+m
+>> matches.
+>>
+>> This result is pretty much reproducible, and I get it constantly in
+>> OpenStack-Ansible's CI jobs, for example [4]
+>>
+>> With that, I have the impression that something goes terribly wrong on
+>> the Glance side of things in combination with Swift, as CI jobs using Ce=
+ph
+>> or File backends are working normally.
+>>
+>> Given where we are release-wise, I'd love to ask for some help
+>> investigating this problem...
+>>
+>>
+>> [1] https://paste.openstack.org/show/bjdhtY2p33L4g0CTTdqH/
+>> [2] https://paste.openstack.org/show/bRhFaEdoJotDngNXBjlB/
+>> [3] https://paste.openstack.org/show/badVIJc0hwqbsy5X3Iv3/
+>> [4]
+>> https://zuul.opendev.org/t/openstack/build/0be7ba6d8f854c0a88df9f9e33461=
+d20/log/logs/host/glance-api.service.journal-13-50-01.log.txt#1189-1330
+>>
+>
+
+--000000000000286bd6064e036a32
+Content-Type: text/html; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+<meta http-equiv=3D"Content-Type" content=3D"text/html; charset=3Dutf-8"><d=
+iv dir=3D"ltr">Hi Abhishek!<div><br></div><div>Thanks for the prompt reply!=
+</div><div>While I think you're on spot with the diagnosis, I am not sure i=
+f the path is actually working.</div><div><br></div><div>I tried to apply t=
+he patch, while having `<span style=3D"color:rgb(0,0,0);font-family:monospa=
+ce">swift_store_retry_get_count =3D 5`&nbsp;</span>in the glance-api.conf,&=
+nbsp;and I had exactly the same stack trace, as without the patch.</div><di=
+v>However, setting&nbsp;swift_store_retry_get_count to 0 has solved&nbsp;th=
+e problem indeed.</div><div><br></div><div>According to what I see in my te=
+st environment, your patch solves the issue only when&nbsp;swift_store_retr=
+y_get_count is not defined at all, but not when it's defined to non-zero va=
+lue.</div></div><br><div class=3D"gmail_quote gmail_quote_container"><div d=
+ir=3D"ltr" class=3D"gmail_attr">=D0=BF=D1=82, 27 =D0=BC=D0=B0=D1=80. 2026=
+=E2=80=AF=D0=B3. =D0=B2 16:24, Abhishek Kekane &lt;<a href=3D"mailto:akekan=
+e@redhat.com">akekane@redhat.com</a>&gt;:<br></div><blockquote class=3D"gma=
+il_quote" style=3D"margin:0px 0px 0px 0.8ex;border-left:1px solid rgb(204,2=
+04,204);padding-left:1ex"><div dir=3D"ltr"><div><div style=3D"font-family:v=
+erdana,sans-serif" class=3D"gmail_default">hi&nbsp;Dmitriy,</div><div style=
+=3D"font-family:verdana,sans-serif" class=3D"gmail_default"><br></div><div =
+style=3D"font-family:verdana,sans-serif" class=3D"gmail_default">The mentio=
+ned bug is reported in LP [1] and I have pushed a fix [2] for it.</div><div=
+ style=3D"font-family:verdana,sans-serif" class=3D"gmail_default">As a work=
+around you can set&nbsp;<span style=3D"white-space:pre-wrap">swift_store_re=
+try_get_count to 0 in the config file.</span></div><div style=3D"font-famil=
+y:verdana,sans-serif" class=3D"gmail_default"><span style=3D"white-space:pr=
+e-wrap"><br></span></div><div style=3D"font-family:verdana,sans-serif" clas=
+s=3D"gmail_default"><span style=3D"white-space:pre-wrap">Let me know if men=
+tioned fix [2] works for you.</span></div><div style=3D"font-family:verdana=
+,sans-serif" class=3D"gmail_default"><span style=3D"white-space:pre-wrap"><=
+br></span></div><div style=3D"font-family:verdana,sans-serif" class=3D"gmai=
+l_default"><span style=3D"white-space:pre-wrap">[1] </span><a href=3D"https=
+://bugs.launchpad.net/glance/+bug/2146432" target=3D"_blank">https://bugs.l=
+aunchpad.net/glance/+bug/2146432</a></div><div style=3D"font-family:verdana=
+,sans-serif" class=3D"gmail_default"><span style=3D"white-space:pre-wrap">[=
+2] </span><a href=3D"https://review.opendev.org/c/openstack/glance_store/+/=
+982221" target=3D"_blank">https://review.opendev.org/c/openstack/glance_sto=
+re/+/982221</a></div><br clear=3D"all"></div><div><div dir=3D"ltr" class=3D=
+"gmail_signature"><div dir=3D"ltr"><div>Thanks &amp; Best Regards,<br><br><=
+/div>Abhishek Kekane<br></div></div></div><br></div><br><div class=3D"gmail=
+_quote"><div dir=3D"ltr" class=3D"gmail_attr">On Fri, Mar 27, 2026 at 8:50=
+=E2=80=AFPM Dmitriy Rabotyagov &lt;<a href=3D"mailto:noonedeadpunk@gmail.co=
+m" target=3D"_blank">noonedeadpunk@gmail.com</a>&gt; wrote:<br></div><block=
+quote class=3D"gmail_quote" style=3D"margin:0px 0px 0px 0.8ex;border-left:1=
+px solid rgb(204,204,204);padding-left:1ex"><div dir=3D"ltr">Hi folks,<div>=
+<br></div><div>I am trying to test out Glance configured with Swift backend=
+ on 2026.1 prior to the release, and facing some issues. As we are super cl=
+ose to the release, I have decided to pop up with the ML, to ensure it's a =
+&quot;me&quot; problem, and not a generic bug somewhere.</div><div><br></di=
+v><div>So I am using:</div><div>- Glance installed from SHA&nbsp;&nbsp;<spa=
+n style=3D"color:rgb(0,0,0);font-family:monospace">07dd0a203b6883efa6648603=
+5c436b92c83da0f3</span></div>- glance-store&nbsp;<span style=3D"font-family=
+:monospace"><span style=3D"color:rgb(0,0,0)">5.4.0&nbsp;</span></span>(acco=
+rding to U-C) <span style=3D"font-family:monospace"><br></span><div>- Swift=
+ installed from SHA&nbsp;<span style=3D"color:rgb(0,0,0);font-family:monosp=
+ace">51b068309a626d2228ab69b5158ee857e96d101d</span></div><div><br></div><d=
+iv>Image upload works quite well [1], image is appearing in Glance and in S=
+wift quite correctly.</div><div>But whenever I attempt to create an instanc=
+e from the image, or, basically, just download image with `<span style=3D"c=
+olor:rgb(0,0,0);font-family:monospace">openstack image save a024ca39-42bc-4=
+a0c-bd34-26209bda4008`,</span>I get Glance WSGI crashing, resulting in 502:=
+</div><div><span style=3D"font-family:monospace"><span style=3D"color:rgb(0=
+,0,0)">root@aio1-utility-container-20f6bf88:/# openstack image save a024ca3=
+9-42bc-4a0c-bd34-26209bda4008 &nbsp;</span><br>Unable to download image: ch=
+ecksum mismatch (sha512): 9a9bce0083a00939ec17c11febbfc767aa211aaa54f51e75c=
+5a8b271a9b5637c77205a518b7a2007cb391d23cceb01e0e4e8d64832317151bc85b734b92a=
+7be0 !=3D a3b1ae48ab757e1e074c33c3159cb3bc749d0119677446b442<br>c5568eeaf2a=
+4d741d794ca9750e13c3352b7db073d0f9101670f3cbede942df3f5fdb12024aaca
+<br>&lt;html&gt;&lt;body&gt;&lt;h1&gt;502 Bad Gateway&lt;/h1&gt;
+<br>The server returned an invalid or incomplete response.
+<br>&lt;/body&gt;&lt;/html&gt;
+<br>root@aio1-utility-container-20f6bf88:/#<br></span></div><div><span styl=
+e=3D"font-family:monospace"><br></span></div>The actual crash and stack tra=
+ce can be seen here [2]. With that, I can download the image with Swift cli=
+ent without any issues [3], and checksum matches.<div><br></div><div>This r=
+esult is pretty much reproducible, and I get it constantly in OpenStack-Ans=
+ible's&nbsp;CI jobs, for example [4]</div><div><br></div><div>With that, I =
+have the impression that something goes terribly wrong on the Glance side o=
+f things in combination with Swift, as CI jobs using Ceph or File backends =
+are working normally.</div><div><br></div><div>Given where we are release-w=
+ise, I'd love to ask for some help investigating this problem...</div><div>=
+<div><div><br></div><div><br></div><div>[1]&nbsp;<a href=3D"https://paste.o=
+penstack.org/show/bjdhtY2p33L4g0CTTdqH/" target=3D"_blank">https://paste.op=
+enstack.org/show/bjdhtY2p33L4g0CTTdqH/</a></div><div>[2]&nbsp;<a href=3D"ht=
+tps://paste.openstack.org/show/bRhFaEdoJotDngNXBjlB/" target=3D"_blank">htt=
+ps://paste.openstack.org/show/bRhFaEdoJotDngNXBjlB/</a></div><div>[3]&nbsp;=
+<a href=3D"https://paste.openstack.org/show/badVIJc0hwqbsy5X3Iv3/" target=
+=3D"_blank">https://paste.openstack.org/show/badVIJc0hwqbsy5X3Iv3/</a></div=
+><div>[4]&nbsp;<a href=3D"https://zuul.opendev.org/t/openstack/build/0be7ba=
+6d8f854c0a88df9f9e33461d20/log/logs/host/glance-api.service.journal-13-50-0=
+1.log.txt#1189-1330" target=3D"_blank">https://zuul.opendev.org/t/openstack=
+/build/0be7ba6d8f854c0a88df9f9e33461d20/log/logs/host/glance-api.service.jo=
+urnal-13-50-01.log.txt#1189-1330</a></div></div></div></div>
+</blockquote></div>
+</blockquote></div>
+
+--000000000000286bd6064e036a32--
