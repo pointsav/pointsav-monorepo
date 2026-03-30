@@ -1,60 +1,37 @@
-<div align="center">
-
-<img src="https://raw.githubusercontent.com/pointsav/pointsav-media-assets/main/ASSET-SIGNET-MASTER.svg" width="80" alt="PointSav Signet">
-
 # PointSav Monorepo | Código Fuente Soberano
-### *Engineering & Source Code for Sovereign Digital Systems*
-
-[![Architecture](https://img.shields.io/badge/Architecture-seL4_Unikernel-111827?style=flat-square)](#)
-[![Language](https://img.shields.io/badge/Language-Rust_no__std-111827?style=flat-square)](#)
-[![Compliance](https://img.shields.io/badge/Compliance-SOC_3_%7C_DARP-111827?style=flat-square)](#)
-[![Telemetry](https://img.shields.io/badge/Telemetry-Zero_Cookie-111827?style=flat-square)](#)
-
-[ **Documentation Wiki** ](https://github.com/pointsav/content-wiki-documentation) | [ **Design System** ](https://github.com/pointsav/pointsav-design-system) | [ **Live Fleet Manifest** ](https://github.com/woodfine/woodfine-fleet-deployment)
-
-</div>
-
----
+### *Engineering & Source Code for Independent Digital Infrastructure*
 
 > [!NOTE]
 > **OPERATIONAL POSTURE [MARCH 2026]**
-> **Phase:** Production Iteration 1 | **Focus:** 3-Track Architecture & SOC 3 / DARP Compliance | **Estado:** Desarrollo activo de servicios Totebox.
+> **Phase:** Production Iteration 1 | **Focus:** Decentralized Data Vaults & Regulatory Compliance | **Estado:** Desarrollo activo de servicios empresariales.
 
-## 🚀 The Digital First Operating System
-**[ EN ]** PointSav engineers Trustworthy Systems. We build decentralized, mathematically verified operating environments that guarantee structural sovereignty natively, completely bypassing legacy Software-as-a-Service (SaaS) databases.
+### 🚀 The Post-SaaS Operating Environment
+**[ EN ]** PointSav provides the foundational engineering to secure institutional capital. We build decentralized Unikernel operating environments that bypass the vulnerabilities of legacy web applications and commercial hyperscaler infrastructure. By eradicating the generic, multi-tenant Linux OS entirely, our architecture isolates critical workloads—such as cryptographic file systems and cognitive AI routing—into dedicated, memory-safe Unikernels. We guarantee that corporate ledgers remain mathematically sealed from external cyber threats.
 
-**[ ES ]** PointSav diseña Sistemas Confiables. Construimos entornos operativos descentralizados y verificados matemáticamente que garantizan la soberanía estructural de forma nativa.
+> [!WARNING]
+> **SECURITY BOUNDARY DECLARATION**
+> This repository contains the underlying engineering source code. **It contains zero active cryptographic keys, network payloads, or client financial data.**
 
-<details>
-<summary><b>🛡️ VIEW SECURITY BOUNDARY DECLARATION</b></summary>
-<br>
-This repository contains the no_std Rust engineering source code and Capability-Based Manager definitions. <b>It contains zero active cryptographic keys, network payloads, or client data.</b>
-<br><br>
-</details>
-
----
-
-## 📐 The 3-Track Capability Matrix
-Our architecture strictly decouples computational logic from physical hardware, establishing a verifiable, cloud-agnostic operating environment.
-
-### ⚙️ Track 1: Infrastructure (Private Network)
+### ⚙️ Track 1: Infrastructure (The Private Network)
 | Component Directory | Hardware Target | Status |
 | :--- | :--- | :--- |
-| `os-infrastructure` | Intel P8600 (Edge Node) | 🟢 Verified (Multiboot2) |
-| `os-network-admin` | Intel i5-2400S (Command) | 🟡 Active Engineering |
+| `os-infrastructure` | Edge Delivery Nodes | 🟢 `Verified Architecture` |
+| `os-network-admin` | Command & Routing Gateways | 🟡 `Active Engineering` |
 
-### 🧠 Track 2: Totebox Orchestration (Active Services)
-| Component Directory | Payload Engine | Status |
+### 🧠 Track 2: Totebox Orchestration (Active Data Vaults)
+| Component Directory | Enterprise Function | Status |
 | :--- | :--- | :--- |
-| `service-content` | Linguistic compiler & institutional synthesis. | 🟡 Active Engineering |
-| `service-people` | Personnel signal distillation & scoring. | 🟡 Active Engineering |
-| `service-email` | Sovereign Exchange bridge (Maildir local vault). | 🟡 Active Engineering |
+| `service-content` | Institutional knowledge synthesis and automated reporting. | 🟡 `Active Engineering` |
+| `service-people` | Personnel communication filtering and identity management. | 🟡 `Active Engineering` |
+| `service-email` | Secure ingestion and archiving of corporate communications. | 🟡 `Active Engineering` |
+| `service-slm` | Semantic Co-Processor (ALU) & Linguistic Air-Lock. | 🟡 `Active Engineering` |
+| `service-egress` | The Sovereign Release Valve (Asymmetric Physical Backup). | 🟡 `Active Engineering` |
 
-### 🖥️ Track 3: Workplace (Sovereign Desktop)
-| Component Directory | Deterministic File Output | Status |
+### 🖥️ Track 3: Workplace (The Sovereign Desktop)
+| Component Directory | Enterprise Function | Status |
 | :--- | :--- | :--- |
-| `app-workplace-editor` | Markdown, YAML, CSV | 🟡 Active Engineering |
-| `app-workplace-comm` | Maildir local storage | 🟡 Active Engineering |
+| `app-workplace-editor` | State Projection & Asset Rendering (YAML/MD/CSV). Generates PDFs purely as Analog Exhaust. | 🟡 `Active Engineering` |
+| `app-workplace-comm` | Localized, encrypted email and dispatch storage. | 🟡 `Active Engineering` |
 
 ---
 *© 2026 PointSav Digital Systems™*
