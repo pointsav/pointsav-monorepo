@@ -1,31 +1,30 @@
-<div style="width: 100%; height: 100%; display: flex; flex-direction: column; gap: 20px; color: var(--wf-slate); text-transform: none; letter-spacing: normal;">
-    <div style="flex-shrink: 0; border-bottom: 2px solid var(--wf-slate); padding-bottom: 12px; display: flex; justify-content: space-between; align-items: flex-end;">
-        <h2 style="margin: 0; font-size: 18px; text-transform: uppercase; letter-spacing: 1px;">THE COLD ARCHIVE (BASE ASSETS)</h2>
-        <button style="padding: 6px 12px; background: var(--wf-accent); color: #fff; border: none; font-family: var(--font-mono); font-size: 11px; font-weight: bold; cursor: pointer;">[ EXPORT INDEX CARDS (.CSV) ]</button>
+<div style="display: flex; width: 100%; height: 100%;">
+    <div style="flex: 1; border-right: 1px solid var(--wf-border-heavy); display: flex; flex-direction: column; background: var(--wf-card);">
+        <div style="padding: 16px 24px; border-bottom: 1px solid var(--wf-border-heavy); font-weight: bold; font-size: 14px; display: flex; justify-content: space-between;">
+            <span>[F3] BASE ASSET LEDGER</span>
+            <button style="background: var(--wf-slate); color: #fff; border: none; padding: 2px 8px; font-family: var(--font-mono); font-size: 10px; cursor: pointer;">EXPORT .CSV</button>
+        </div>
+        <div style="padding: 16px; border-bottom: 1px solid var(--wf-border);"><input type="text" placeholder="Query Immutable Vault..." style="width: 100%; padding: 8px; border: 1px solid var(--wf-muted); font-family: var(--font-mono); font-size: 12px;"></div>
+        <div style="overflow-y: auto; flex: 1;">
+            <div style="padding: 16px; border-bottom: 1px solid var(--wf-border); cursor: pointer; background: #f0f4f8; border-left: 3px solid var(--wf-accent);">
+                <div style="font-weight: bold; font-size: 13px; margin-bottom: 4px;">Meet Pants On Fire 🔥</div>
+                <div style="font-size: 11px; color: var(--wf-muted);">MyFonts &lt;newsletters-no-reply@...&gt;</div>
+            </div>
+            <div style="padding: 16px; border-bottom: 1px solid var(--wf-border); cursor: pointer;">
+                <div style="font-weight: bold; font-size: 13px; margin-bottom: 4px;">Don’t Tear It Down. Tear It Apart</div>
+                <div style="font-size: 11px; color: var(--wf-muted);">Architect Newswire &lt;architectnewswire@...&gt;</div>
+            </div>
+        </div>
     </div>
-
-    <div style="display: flex; gap: 16px;">
-        <input type="text" placeholder="Omnibar Context: Search Immutable Vault (e.g., 'Find invoice from John')..." style="flex: 1; padding: 12px; font-family: var(--font-mono); border: 1px solid var(--wf-muted); background: #fff;" disabled>
+    <div style="flex: 1; background: var(--wf-canvas); padding: 32px; display: flex; flex-direction: column; overflow-y: auto;">
+        <div style="font-size: 12px; font-weight: bold; color: var(--wf-accent); border-bottom: 1px solid var(--wf-muted); padding-bottom: 8px; margin-bottom: 16px;">ASSET INSPECTOR</div>
+        <div style="font-family: var(--font-mono); font-size: 11px; color: var(--wf-muted); margin-bottom: 16px;">
+            <strong>FILE:</strong> VAULT_INGRESS_totebox-ingress_EB7EA201.eml<br>
+            <strong>EXTRACTED TAGS:</strong> <span style="color: var(--wf-accent);">[Design] [Typography]</span>
+        </div>
+        <div style="background: #fff; border: 1px solid var(--wf-border-heavy); padding: 16px; font-size: 13px; line-height: 1.6; color: var(--wf-slate); flex: 1; overflow-y: auto;">
+            [RAW TEXT PURIFIED FROM HTML NOISE]<br><br>
+            Introducing Pants On Fire. A highly legible, modern sans-serif typeface designed for architectural wayfinding...
+        </div>
     </div>
-
-    <table style="width: 100%; border-collapse: collapse; font-size: 13px; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
-        <tr style="background: var(--wf-slate); color: #fff; text-align: left;">
-            <th style="padding: 12px;">TIMESTAMP</th>
-            <th style="padding: 12px;">FROM / TO</th>
-            <th style="padding: 12px;">SUBJECT</th>
-            <th style="padding: 12px;">CHART OF ACCOUNTS</th>
-        </tr>
-        <tr style="border-bottom: 1px solid var(--wf-border);">
-            <td style="padding: 12px; font-family: var(--font-mono); color: var(--wf-muted);">2026-03-27 14:30</td>
-            <td style="padding: 12px; font-weight: bold;">Michael O'Boyle</td>
-            <td style="padding: 12px;">RE: Bloomberg Mexico Syndication</td>
-            <td style="padding: 12px; font-family: var(--font-mono); color: var(--wf-accent);">[11] Investor Relations</td>
-        </tr>
-        <tr style="border-bottom: 1px solid var(--wf-border); background: var(--wf-canvas);">
-            <td style="padding: 12px; font-family: var(--font-mono); color: var(--wf-muted);">2026-03-26 09:15</td>
-            <td style="padding: 12px; font-weight: bold;">Peter Woodfine</td>
-            <td style="padding: 12px;">Architectural Drawings - Site B</td>
-            <td style="padding: 12px; font-family: var(--font-mono); color: var(--wf-accent);">[09] Construction</td>
-        </tr>
-    </table>
 </div>
