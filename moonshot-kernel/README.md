@@ -30,3 +30,6 @@ Any enterprise executing a digital transformation must track its technical debt.
 ---
 *© 2026 PointSav Digital Systems™.*
 *Public Architectural Blueprint. Governed by the Sovereign Data Protocol.*
+
+## IV. UNIKERNEL ALIGNMENT
+This component is engineered to operate natively within the seL4 Unikernel Substrate, bypassing hyperscaler vulnerabilities.
