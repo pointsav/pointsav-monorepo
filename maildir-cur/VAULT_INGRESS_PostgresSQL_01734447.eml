@@ -1,0 +1,311 @@
+Received: from MW5PR16MB5080.namprd16.prod.outlook.com (2603:10b6:303:1cd::7)
+ by DM6PR16MB2569.namprd16.prod.outlook.com with HTTPS; Mon, 30 Mar 2026
+ 03:59:59 +0000
+ARC-Seal: i=2; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=pass;
+ b=Gkoq1ysSZr66BXUuWy9SYreNeYLHTspwuVC0ZUJt9qmRdfEal765B27idvkUlzwYUrn/O/aUjQNCqzPZCTQdLEpYo1bH8h+tqh+rBLt3Cs8vMnyJhmcHxKDTjdcvN1PZbGY1UktSX/TdNux5PQaVP9Hrayre56/BA674UyIKtK6oljlTwz/XU47iZ5LBoh0eGnxc3GwQZ1iSVM/9mVz60RaUTqyAYHxglxFV5X/LK2YAkgMHvsKxBQjbqLNo90YTGHsdIXkLzACNnxB8apHJrHAN1I+IJBeXXmGb0h5QFNrGX7hK1rGzP58+sHcx/S5E9ySNnMriTrrFHw/xQopEDA==
+ARC-Message-Signature: i=2; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=KYop6F4y2Fg35goBk6z8+Ktxno7qjyYzJialv3hYPFs=;
+ b=xHswNOt4LqUikrQpZneO7hxVTrFl1cwR70TwpkRvVPdUEZlJT0B46Tk7vHX3xjuPN9QyYXK4RdPeDed6HQgvIt9Bm3Wbk3UhF/X1YNsxDvP8srH+gnEaV23JIb0wb03C/gMIS3z5TLtyg6W56d95SeigqibVk2NJ/uH9l6FJxbUyaOsCuzV/3Qsnirx1TyaIXL54qVH6eUDMo+9K8Zf7JTabWFZqttQMXHjnzD8hVjCLaY75KATwwnuVb4l5ZY6wTrRikDblXLLmgFcJaSUSeIRhy/6pn3I7e4684lMPFwGzXDowb4s1mMyEe7633WwchQCNsMDhWsWwYqLz8N4ftw==
+ARC-Authentication-Results: i=2; mx.microsoft.com 1; spf=pass (sender ip is
+ 2a02:16a8:dc51::56) smtp.rcpttodomain=woodfine.co
+ smtp.mailfrom=lists.postgresql.org; dmarc=pass (p=none sp=quarantine pct=100)
+ action=none header.from=gmail.com; dkim=pass (signature was verified)
+ header.d=gmail.com; arc=pass (0 oda=0 ltdi=1)
+Received: from CH5P223CA0016.NAMP223.PROD.OUTLOOK.COM (2603:10b6:610:1f3::21)
+ by MW5PR16MB5080.namprd16.prod.outlook.com (2603:10b6:303:1cd::7) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9745.28; Mon, 30 Mar
+ 2026 03:59:57 +0000
+Received: from CH2PEPF0000014A.namprd02.prod.outlook.com
+ (2603:10b6:610:1f3:cafe::35) by CH5P223CA0016.outlook.office365.com
+ (2603:10b6:610:1f3::21) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.20.9745.28 via Frontend Transport; Mon,
+ 30 Mar 2026 03:59:52 +0000
+Authentication-Results: spf=pass (sender IP is 2a02:16a8:dc51::56)
+ smtp.mailfrom=lists.postgresql.org; dkim=pass (signature was verified)
+ header.d=gmail.com;dmarc=pass action=none header.from=gmail.com;compauth=pass
+ reason=100
+Received-SPF: Pass (protection.outlook.com: domain of lists.postgresql.org
+ designates 2a02:16a8:dc51::56 as permitted sender)
+ receiver=protection.outlook.com; client-ip=2a02:16a8:dc51::56;
+ helo=malur.postgresql.org; pr=C
+Received: from malur.postgresql.org (2a02:16a8:dc51::56) by
+ CH2PEPF0000014A.mail.protection.outlook.com (2603:10b6:61f:fc00::36b) with
+ Microsoft SMTP Server (version=TLS1_3, cipher=TLS_AES_256_GCM_SHA384) id
+ 15.20.9745.21 via Frontend Transport; Mon, 30 Mar 2026 03:59:55 +0000
+Received: from localhost ([127.0.0.1] helo=malur.postgresql.org)
+	by malur.postgresql.org with esmtp (Exim 4.96)
+	(envelope-from <pgsql-hackers-owner+M91260-745708@lists.postgresql.org>)
+	id 1w73n7-00129f-1T
+	for info@woodfine.co;
+	Mon, 30 Mar 2026 03:59:53 +0000
+Received: from magus.postgresql.org ([2a02:c0:301:0:ffff::29])
+	by malur.postgresql.org with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+	(Exim 4.96)
+	(envelope-from <shveta.malik@gmail.com>)
+	id 1w73mz-0010Rr-39
+	for pgsql-hackers@lists.postgresql.org;
+	Mon, 30 Mar 2026 03:59:46 +0000
+Received: from mail-pj1-x1031.google.com ([2607:f8b0:4864:20::1031])
+	by magus.postgresql.org with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+	(Exim 4.98.2)
+	(envelope-from <shveta.malik@gmail.com>)
+	id 1w73mx-00000001vlf-3UL6
+	for pgsql-hackers@lists.postgresql.org;
+	Mon, 30 Mar 2026 03:59:46 +0000
+Received: by mail-pj1-x1031.google.com with SMTP id 98e67ed59e1d1-35d94f4ee36so746314a91.3
+        for <pgsql-hackers@lists.postgresql.org>; Sun, 29 Mar 2026 20:59:43 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1774843182; cv=none;
+        d=google.com; s=arc-20240605;
+        b=OAv4vvvBAMRFGacdu269xk6HPBnar2yilBWBaLMuYqBqmeqvxaEfmTvluCMxHQl4tR
+         kYLaQJGLGn8P3lKsan0x86dnrmoX2GN0URm2CiLWOz6/5zcCW7gk4rP7imX8K3by2XLQ
+         rgmmMbzoi9QiWyQz4JJxh2i+EcUz6nEAceW8T5VPu0jNPshu1ltDxyunrwDHfCeZMdOJ
+         GTmciS16a2kKGs6h6gldDQ8qUTfKGfZAPOb47dSvFn7hSNNPXFEZ+qLO9KYY4vtrUWkx
+         jGQSL4roXs07ZW8rHK5ULMg5WfWgI9kfG26n9CAtESjk3HLbubpZ9e+XgXTk1A90+Ura
+         8oZw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:dkim-signature;
+        bh=KYop6F4y2Fg35goBk6z8+Ktxno7qjyYzJialv3hYPFs=;
+        fh=7SL2PnhNjXwBCHwVO/D1p0xQjL/DnBPcZUEVx5IKpXI=;
+        b=eEVZjNJjCOeYsWu9If6uh0P+P8FgiT2TB8AqvRGThHCC1U8Aqg4CR5+kNR4l4HyK4B
+         EckItUw65IDR4jLZuXNKp08ve+yb28vG8UledtUAQ1Im5gdzNFrHmdQW91NnD+MEwbS/
+         9NTimexkPZ+z2hTc0vJWYEW52VOzyEyc1es0XcrPb4yS2oNVMZCX6t3rtxtXcemLhOm2
+         7kXBSNWZc1i94TvPQ5G/kQ3+sr8VFVkQSb/6yNr+5Dg7F9fEVM2uZGvXKBJTH8Dh9oPE
+         C5grwQ6otzFUSTl9j2OnMoV2WTuI4bh11zZv4stGEvfGEuWk3G4I5imy69/XKrU3rroA
+         mjXg==;
+        darn=lists.postgresql.org
+ARC-Authentication-Results: i=1; mx.google.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20251104; t=1774843182; x=1775447982; darn=lists.postgresql.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=KYop6F4y2Fg35goBk6z8+Ktxno7qjyYzJialv3hYPFs=;
+        b=J95GmpsY5XNVOA5xNBz0thDmdPUWvi3rC64szm4kWiXxUdtLoJ9X/cL990TtZNSrSK
+         64fCgxwJznmBkftvgSzNnt1bQqeTpjRHteOIxxmd36kRxkL3e+vvehZSTEF1g/P7Ge5v
+         +i3/T19orLwQVB2fkqRrP4/gbp/5rplDb11xQ9u4l4UYJHJu4d5bCsVhsb3DksOlOjTb
+         GmjUxVjiyjRVAuuPNtHfrpNr65615setmjXhgTM7qTnja8qmH4eaUTVW/GqPG+LLMHx3
+         TaZRENK/1gTcd0T9BvztRjsli+AwYQBO2FkLd8Jy2oz2Uwu9ADS1vdnptFRHpyz5WRjT
+         j2Xg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20251104; t=1774843182; x=1775447982;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=KYop6F4y2Fg35goBk6z8+Ktxno7qjyYzJialv3hYPFs=;
+        b=H0TvcUV5HcrUEd8z3g4pNCKyY3bDPfg+t0i1cW9cTNv6afnwEUyEz6hWY2jzmxpUno
+         zGRThNQggKs87cf5MzFYMiB45aQCMBNyrCQAkXVu++OuRwOIm9BY3mGJ7h0iYaAxXfhC
+         cD/fEku+JaXFquDapYhwIsUpc0NizO2M+Hbpm29VgUk0dMKn3otPDMTy60kVOmTCSvXZ
+         Oi8fSAB/Y3OgY2BDb7KX17V4i0sDTc3w/NuAmZCz3oOswAIvOhlz+9a/7PbuQkKYzuLu
+         sXLDzgNTEMuMH23WkC9gj56E9psrUxX1ZpnVulxlawx4Nf8OdnqPlvdgsu1/sNThEKbd
+         E2Rw==
+X-Forwarded-Encrypted: i=1; AJvYcCUCjcwz2V9dyZde1J9atIycSG3V6Xoz2H4WvhF+eMpLRaCSP9v58S7dqaAIpPYlDnrO8TfUJtiaBhqI2VUg@lists.postgresql.org
+X-Gm-Message-State: AOJu0Yz0N+fL5CMlkoqEu16m2Bs5fcNw7MYgF3XzQuxu9/mpg7vUrEs8
+	5GDkrIiqgaz5lIuS81zq45A9Aex3CM6Sf5K15VImoBZTtpKFEV+ubkAlMQ2MC3qSCOR5BvwLaUN
+	fwFuybWNoLpGBunvs8uPIv/+O+Ekw4S4=
+X-Gm-Gg: ATEYQzxHNUEBrSkFWL4SDVnhoJbU4mYMBMNL3Bo4Ayj3hYCtVt+XSgyAqiI2nwOr4BL
+	pwZMGC7idgErvlbTS3A5cpx81PyDT3vSOEOFNXrcE1Gv2Zf7Wk50MGJmP9WnUK+fzXK/CDMYD+D
+	FliWpf5mZCx14F/BPIsxoFt52soUveHy3OCCm1ebaL6Vlr5Ym2yAz2Y8KGrPUE24cW6OpDdvfjs
+	HwjumCyp7+vPJ53ItZ1KpsJjDHUm4jKXby811CO/ac7QpGdYfNEBJBAJ61yYSY/nIir7GmayS5P
+	KhdGtvLjBMa0zoE+zNA0Bn7brGBWnJZKUY9OOrFq5J5Gz0+JZI8A5A==
+X-Received: by 2002:a17:90b:2ccb:b0:354:bfb7:db1a with SMTP id
+ 98e67ed59e1d1-35c30145afdmr9769419a91.31.1774843181981; Sun, 29 Mar 2026
+ 20:59:41 -0700 (PDT)
+References: <CAJpy0uB20MhJJEaPJdm31t4fykJ+fChA_76jU2P9HX5knbJvAA@mail.gmail.com>
+ <CAD21AoCC8XuwfX62qKBSfHUAoww_XB3_84HjswgL9jxQy696yw@mail.gmail.com>
+ <OS9PR01MB12149EA0C749BC29C7C949E32F544A@OS9PR01MB12149.jpnprd01.prod.outlook.com>
+ <CAD21AoBbZEshyaK0PeiF_J4_S75EfF=Gcs=C+X-osoVoUnawuQ@mail.gmail.com>
+ <CAHut+PssG+sHeV+Xo0g=S7xBb9FgDPjHYDR4iSuOdYXDq-Psng@mail.gmail.com>
+ <CAA4eK1LaSfAG7UAuy1xpnkWKM_YtrPuhbgAxYBFY3Sp_v_KqoQ@mail.gmail.com>
+ <CAD21AoAb8E8krN63cY_U7RQs9v-zkqUZyKT_UVKDwKfExtvTBg@mail.gmail.com>
+ <CAA4eK1K1GLR7DXSABayQE+pWM=v1ODD6haPYxuDhAYwJN5gjzg@mail.gmail.com>
+ <CALDaNm2kvFahDDvdgCNo=Nv-COz_N5Xw8YmzQBN2bd3g=N81fQ@mail.gmail.com>
+ <CAHut+PsCqTR_kQu5M1TqBjnE6KM5cO22aH8boHfpMa_gSJBmWg@mail.gmail.com>
+ <CALDaNm2OOgmNOPpABUU+AXzHhfrLG9HMfSd3jfNe=t3dc-kp1Q@mail.gmail.com>
+ <CAJpy0uCN4gfP7fSt__KdW5wYQ82650Z6L4YLnjRHZTQ1yir1mg@mail.gmail.com>
+ <CALDaNm32+c6RTE5xR6sJ=MZGgwEtzjkxpov_Hu70MXfbvmN+=Q@mail.gmail.com>
+ <CAHut+PtQbK9USLepyzArXFoNuLok1MsBu_Jg4UT=koZocombFw@mail.gmail.com>
+ <CALDaNm1tKuU479T=winBqoMb3MzO3Mta2juk8W3t2R5ps0_zyg@mail.gmail.com>
+ <CALDaNm3jpYs7ALcU6m5=Li=udidjZoW5dMpyCFs8QHGaf0S8+A@mail.gmail.com>
+ <CAJpy0uCWS=ybBKG-kRAfdWEe1VBNj+VqpAUUoT8MPaNS7EggiA@mail.gmail.com>
+ <CAA4eK1LMM-P4NatbkjG-96B7hHC7KYrJ8XTsCZQy0jLO9Qj4Bw@mail.gmail.com>
+ <CAJpy0uAyf71QSYitBf4WbCYq22HDR6LPdxB12TpTgTRpczwphw@mail.gmail.com>
+ <CAFiTN-s5PW121mBGKin20YEQpZkWefMehmP=v+0onzEaMQpwdw@mail.gmail.com>
+ <CAA4eK1LBf5asit18HcqcFinOkdCjD6Lk2Eid9PDhtH6acwYb8w@mail.gmail.com>
+ <CALDaNm3cdoT58E3QtYCwBbzyxYJjoS2k7Q0EgzR9ta6fyDGHSg@mail.gmail.com>
+ <CAHut+PthJx_gZJNgF=mWSpkWjQJ58KyhrZ7D7CkX_TVq12wv7A@mail.gmail.com>
+ <CANhcyEVLp5kbaVR4=nh1jR4YWqv7YpVx_SnYoshbnOrnY79_fg@mail.gmail.com>
+ <CAA4eK1+4ZNF-MGheeTtYF9TdfNBnKKJ8DivWZsXBnuJVkqfa0g@mail.gmail.com>
+ <CANhcyEUQvEK+HOH6Y8Fy30fNvC631ZopWKhwgskXjKnuXiGV5Q@mail.gmail.com> <CAHut+PuUnDZ4ki8nCK6SkHOn8iP6N1Vm24jzWtEqRG9a_GMxrw@mail.gmail.com>
+In-Reply-To: <CAHut+PuUnDZ4ki8nCK6SkHOn8iP6N1Vm24jzWtEqRG9a_GMxrw@mail.gmail.com>
+From: shveta malik <shveta.malik@gmail.com>
+Date: Mon, 30 Mar 2026 09:29:29 +0530
+X-Gm-Features: AQROBzC6iOIt59SqKvyIhJEhiZ0VpyvBK8aVVL_5QEi3GSDaFixilb4YGC_KHFQ
+Message-ID: <CAJpy0uDfzcW6q1tUedu5aPBf2EjYm_k_JhzFdE0KR2adhWt2fA@mail.gmail.com>
+Subject: Re: Skipping schema changes in publication
+To: Peter Smith <smithpb2250@gmail.com>
+Cc: Shlok Kyal <shlok.kyal.oss@gmail.com>, Amit Kapila <amit.kapila16@gmail.com>, 
+	vignesh C <vignesh21@gmail.com>, Dilip Kumar <dilipbalaut@gmail.com>, 
+	Masahiko Sawada <sawada.mshk@gmail.com>, 
+	"Hayato Kuroda (Fujitsu)" <kuroda.hayato@fujitsu.com>, Nisha Moond <nisha.moond412@gmail.com>, 
+	Ashutosh Sharma <ashu.coek88@gmail.com>, "David G. Johnston" <david.g.johnston@gmail.com>, 
+	"Zhijie Hou (Fujitsu)" <houzj.fnst@fujitsu.com>, YeXiu <1518981153@qq.com>, 
+	Ian Lawrence Barwick <barwick@gmail.com>, 
+	Bharath Rupireddy <bharath.rupireddyforpostgres@gmail.com>, 
+	PostgreSQL Hackers <pgsql-hackers@lists.postgresql.org>, shveta malik <shveta.malik@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+List-Id: <pgsql-hackers.lists.postgresql.org>
+List-Help: <https://lists.postgresql.org/manage/>
+List-Subscribe: <https://lists.postgresql.org/manage/>
+List-Post: <mailto:pgsql-hackers@lists.postgresql.org>
+List-Owner: <mailto:pgsql-hackers-owner@lists.postgresql.org>
+List-Archive: <https://www.postgresql.org/list/pgsql-hackers>
+Archived-At: <https://www.postgresql.org/message-id/CAJpy0uDfzcW6q1tUedu5aPBf2EjYm_k_JhzFdE0KR2adhWt2fA%40mail.gmail.com>
+Precedence: bulk
+List-Unsubscribe: <https://lists.postgresql.org/unsub/36/c9f3835a6050fd40fd2ee4b2559b28212aeb25359957e828f0dab980629c9cca/>
+List-Unsubscribe-Post: List-Unsubscribe=One-Click
+Return-Path: pgsql-hackers-owner+M91260-745708@lists.postgresql.org
+X-MS-Exchange-Organization-ExpirationStartTime: 30 Mar 2026 03:59:55.7135
+ (UTC)
+X-MS-Exchange-Organization-ExpirationStartTimeReason: OriginalSubmit
+X-MS-Exchange-Organization-ExpirationInterval: 1:00:00:00.0000000
+X-MS-Exchange-Organization-ExpirationIntervalReason: OriginalSubmit
+X-MS-Exchange-Organization-Network-Message-Id: 89bb973c-582f-4c57-9269-08de8e10cdd5
+X-EOPAttributedMessage: 0
+X-EOPTenantAttributedMessage: ce7cb31c-acf7-4351-b0fe-c89cda16c4ab:0
+X-MS-Exchange-Organization-MessageDirectionality: Incoming
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: CH2PEPF0000014A:EE_|MW5PR16MB5080:EE_|DM6PR16MB2569:EE_
+X-MS-Exchange-Organization-AuthSource: CH2PEPF0000014A.namprd02.prod.outlook.com
+X-MS-Exchange-Organization-AuthAs: Anonymous
+X-MS-Office365-Filtering-Correlation-Id: 89bb973c-582f-4c57-9269-08de8e10cdd5
+X-MS-Exchange-Organization-SCL: 1
+X-Microsoft-Antispam: BCL:0;ARA:13230040|4022899009|12012899012|7093399015|2092899012|57112099003|16102099003|22082099003|21082099003|18002099003|19002099003;
+X-Forefront-Antispam-Report: CIP:2a02:16a8:dc51::56;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:malur.postgresql.org;PTR:malur.postgresql.org;CAT:NONE;SFS:(13230040)(4022899009)(12012899012)(7093399015)(2092899012)(57112099003)(16102099003)(22082099003)(21082099003)(18002099003)(19002099003);DIR:INB;
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 30 Mar 2026 03:59:55.2085
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 89bb973c-582f-4c57-9269-08de8e10cdd5
+X-MS-Exchange-CrossTenant-Id: ce7cb31c-acf7-4351-b0fe-c89cda16c4ab
+X-MS-Exchange-CrossTenant-AuthSource: CH2PEPF0000014A.namprd02.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: Internet
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MW5PR16MB5080
+X-MS-Exchange-Transport-EndToEndLatency: 00:00:04.6218630
+X-MS-Exchange-Processed-By-BccFoldering: 15.20.9745.023
+X-Microsoft-Antispam-Mailbox-Delivery:
+	ucf:1;jmr:0;auth:0;dest:C;OFR:CustomRules;ENG:(910005)(944506478)(944626604)(920097)(930201)(20251009189)(140003);
+X-Microsoft-Antispam-Message-Info:
+	=?utf-8?B?SWUzOEtLMks1M1FVcWNwQ2lLRThUK0krUDI4L1pjWmpwZ3AxcmJPcUl4RUhZ?=
+ =?utf-8?B?UC9leHVWaEFCZDVTbmVFRERwenA2d1J6cVFvY0tDSFVScUdJbGlvUDJsVnh6?=
+ =?utf-8?B?UERDNUNpczJxWmsvWWNyWXpIemRaaklUTmhvQWI4aVZJTzJrbVljdmpmbTlD?=
+ =?utf-8?B?S2VMUU5qQ0R5a3dJQVhiY3VETE9CbkZCNDdVaWZ3WHp4OTVzNy81NGZVQU5t?=
+ =?utf-8?B?SE8za3pUUXNKSHRPZlpYa2p1bWRWQVdXaG9XWTBHa1EydWZQM2JHdjR3TXBw?=
+ =?utf-8?B?c01vMU9PSUtGcUVldGY1L3AxRHBrQm9wSEhvc2FTdzhhU3dJOGh4YzM5QjJk?=
+ =?utf-8?B?SWdoK2svMXQ0S25lWXBqK3lYdXpKMlFsa0pLNXNVYzVLMXFFVmJ4Z2NTOE5M?=
+ =?utf-8?B?aXVkWDg3NTlObkZiRm5odXZKd3FEOWlXWFVZa0VnMmpxZjlRUGNITnA3aEgv?=
+ =?utf-8?B?dXd3WEZ4WU1rRDZTUjg0aVNhNy83S0M5RGlNZmRTaWVDcVozZStXMjNLN1Uy?=
+ =?utf-8?B?T3VOb1ZITmpmTEprL3U5N01raXpZQS9lTEhZRkJJR0tRaFVSL3ZqdzFTQnpM?=
+ =?utf-8?B?cENXczUzdUlWRDRJdmEyQU1ab0JneU54M3BSL2JBRUlDYUVLSHlwWW1QWm85?=
+ =?utf-8?B?Mkxmd05rdGNDVE5zSzY0UDI1ZVN0aTBCY1hJUnh2L2c3c2tKQmZ3WlF0M0ls?=
+ =?utf-8?B?cll1VFFHWWdhR2xSbHE2dVEyeGp2TkxCNnZYUGp6MkNQSEd5YTlEd3RrUGpy?=
+ =?utf-8?B?T0JDMk5oVHRuVDZhbG5pV3RDVk8zeXIvWFBHOGhzSlFjZ3h1UXFMMmQycXJo?=
+ =?utf-8?B?b09hSVZCb1lUOXNqdEwvL1d3aC9zbFpmd01GaVRDS0trUWNFMmJ2eTVLckpt?=
+ =?utf-8?B?Y3lVMVEzcFVkZVhnUGMzWTRPWHRKN3BFRVE3Rk1xV1J5TGlwWlBYemtpLzVI?=
+ =?utf-8?B?RFp2YVNOMHVMMzVpN1lDdWJ6NVR6cDVaTnVSWWY1ajNVSFJPanNYeGM2Yjh2?=
+ =?utf-8?B?OWVxNGF0YWcrQU14c3cxVTNCak5uWitPVE5sZzNQNm1aY24ycXpZTnVjaUJs?=
+ =?utf-8?B?OGhzbHQwd0hrK2RyL2NyNHUyc1VRMGI3QUkvNWhYNDBsWWErUHVMbUhWK29W?=
+ =?utf-8?B?bHQ2MmFZeG9EMzhpWUZjbXp1VW41cERmYk96UmN3Y3F4YjFubUo1ek93Ti80?=
+ =?utf-8?B?cE9ZYVJiTGE2c0tTbU8wNFB2bTg3RU52bTdXQldjK01JdG1WWHJXQ1Nqa2pW?=
+ =?utf-8?B?UmRSYkRVanRyUGI0N3JKUmtwWlA5dWJpSHFLMm5QV2thVFFqUTFpZmd0bW1E?=
+ =?utf-8?B?MllNS2RaZkllT0JmTDZaSTFqYmhLR0hzOXRlUFVsMnN6Mm9vbzlYMHlZVTRU?=
+ =?utf-8?B?Mit2YjRxbERjQndvRGR3WTIzUjlUMnYwa2xrSzh1Q3crcUFON0w5Y1h5MXZZ?=
+ =?utf-8?B?cVZJTVgwNmliVk1wVWYrSGlOaEN0UmtZSGNWOXNUeGlzTUJNSFcxY0NpeE14?=
+ =?utf-8?B?WXd0ZXEydXJyVE5nS2t2TStVK1M2ekVCeGw3MXBDdWlVc29zV2hFNlFmQXVh?=
+ =?utf-8?B?aWwwb3kyd3hqU0NNMjQ2b0pDdi9aZ3lkeVB1VzRpbjNGL1FwdlBXZmpPaXRt?=
+ =?utf-8?B?Q2EyUEg5VUszRzRoUlVQOSt2L1VxMVQ2UGNSWExLc2ZhZWx2TGpDMVBISmJj?=
+ =?utf-8?B?NkROQUtkT2VnU2tNSkpnc3JRbVNyRWhQNEIwc2hRcHFLYlV1SkoyQk1rc29N?=
+ =?utf-8?B?U1hndnVBb2tweFc0SkxWWHd5c3R5NEU4dmM1NkRhRVdEeHZtNDYzVStqbXho?=
+ =?utf-8?B?TVR3WTdxSDdyWHdsN21jYjVNa3E5ZUVqMXVLa1cvelA4TTlQdUFXTmpud1Vz?=
+ =?utf-8?B?c2lNUm5qT1NCN2hmekZ2NGl0aVFFL0RidWpJNnlrU3pYdlVnKzlNeERLRWxV?=
+ =?utf-8?B?c29WeFlmRjdQVjVxZ3hBejVrc0V0RnVacTBtZzJselYyYVdJQmtDd1lGSi9Y?=
+ =?utf-8?B?aHF5V05HZnllOFBhTUJmTzUxRTQ0MDg1cWIrUXAvNFNwOGg4MW00VWJnQWR1?=
+ =?utf-8?B?allLWmdlTUlKdDU5Wnk5YkxJdHNQRVIzY0dpSjdmOVo1Yjdqalo0dWtKUVUw?=
+ =?utf-8?B?bDNTV3RLb0RRTDBGOEV3ekxBWEp5MEdyWGw1RkNZMHJJM3pQWkJQY0FiWmtG?=
+ =?utf-8?B?VlR6aFNsYkpuT2R6M20vV3NFNGhvdWpUOC9nMWorQVhoajdsUXBqRHdGRmZi?=
+ =?utf-8?B?b0UvMzYyNUJyYkxXc3JrTmM1N1RNbzFKbEtzaGlDZUp5bVcyVjJ1bzVPbWRu?=
+ =?utf-8?B?bUY2NzRYa2tVbXIwcDBpZnNnSXRuNHBBdUZuZnJzeUY3U3puR1JxcERlK3JW?=
+ =?utf-8?B?SGxpdHdjL2VpaDVrQjh0emY4S1dNajJsYzZhTjU1OFMybW5xM2RXT1pOSndO?=
+ =?utf-8?B?aHNtNkRHNFFDYnZHSnl5M2RmT3R6ZUFVbHhSQVB2V0tuSDVQUTdBRWVub0U3?=
+ =?utf-8?B?UCtib3Z1UzJMOWdSNEwrVW5tcEgwVm1pWGJqbHJ3VERYNlJ3QVVaN1lWSVZQ?=
+ =?utf-8?B?MnVxSXNQODRZMzhSTHZ6dytIbjhEak9FdDBxNlpRQVorUjZKWm51OGxSd0pT?=
+ =?utf-8?B?RUM0Y3BVQklsR1Q4KzY4OEtCRmlVcGVnUTROZU1aUDFJZGd4akJzQXJ0N3dW?=
+ =?utf-8?B?cGJqeDUwS25la1dVYk1BMk5pS2htcUEyN2EwZzRLUFZPVVZhTG1OTHZ3WXBh?=
+ =?utf-8?B?d3dMYU5lTnMyU0FpOHFvQWlwRlA3WThCbG41QmVXajM5anNjZnhBdTI2U0x6?=
+ =?utf-8?B?YUIzQUtkZFBMN3Fjb1pFSjY5eDBMZDU3MHkvNHY3a2xHSGpsYlJMbDg1NjdO?=
+ =?utf-8?B?eWFleklyWUlxaUMwdmtXWDIrVFVOQnV1L09kc3dkKzQzVi9YTWlUUkd5Nnh6?=
+ =?utf-8?B?cm5LZWlqUitBeUhVdDhhbUZtQmR4K0FXUXMxRzFIeHhJRGVEUTFEelhadXZL?=
+ =?utf-8?B?emFUcWdlaVVSVlovS0RGV1hzYUVzUGpuQjQ3QWoxTU93OHdYTE1YNktDZzlx?=
+ =?utf-8?B?NHRHUW5uWmMxQ3IydzZyOUVZZzI2NUdGdDVqTHJsVUdLWXZnazk4VzlZZlNG?=
+ =?utf-8?B?SWQvdHBRdDUxWlJwUFNLa1hvTVJBVmYraStucUNRV3c4UFpwdnlENnFNbm1E?=
+ =?utf-8?B?YnNid1lPMmRBOW93Yjd4Q0dsd2ROUlJzYVh6TFVTTnZycW91NFVGNWhkOXUv?=
+ =?utf-8?B?a0dwUmdNNTB2b0RDQ2Y2V2paYUVwSUQ4Z041dUJ0QzR3TjYwV1hDMW5XcnU5?=
+ =?utf-8?B?TFlyMnpQbXhTenhsSWROSG1CZmRuWlNNb2dwbHJiNC9JQWFzWEJXMjlQWlJY?=
+ =?utf-8?B?VkRERmJvR3BjZEdTeVRrdGZGUTVXR1VtTTgvclF5MmtHWjMrLzVFZ1U0Q2Fo?=
+ =?utf-8?B?U200VE1zZ0ZiTFR0dml4SjM1azIrUm9NQWlEWXdHS2docExUNXMxeW9lNnA5?=
+ =?utf-8?B?cGVhRjhqeThHVzM4ekR3T256NW91amIwbUprdS9EK1duOTAxUjJoekpHa2xD?=
+ =?utf-8?B?L2NBUDJkU25TNTdPZ2cwbkZEZyt5TlBvZDluc3hPc09WcngxTGdFMVBnb1d1?=
+ =?utf-8?B?MTdwVm8xa2x0MkcxME1oWm80bHZCSXdVYXIwYkFVV0hHL0tOSWZWRS96VXBm?=
+ =?utf-8?B?QW9ZNWFGZm91MENQZ0VzTENNSExMNU96WTgwUkRJcUlVdm9WZG9GY2ZYaUpY?=
+ =?utf-8?Q?sjehN4J?=
+MIME-Version: 1.0
+
+On Mon, Mar 30, 2026 at 8:02=E2=80=AFAM Peter Smith <smithpb2250@gmail.com>=
+ wrote:
+>
+> Hi Shlok.
+>
+> Here are some review comments for the patch v3-0001.
+>
+> (not yet reviewed the test code)
+>
+>
+> =3D=3D=3D=3D=3D=3D
+> doc/src/sgml/ref/alter_publication.sgml
+>
+> synopsis:
+>
+> 1.
+> -    [ ONLY ] <replaceable class=3D"parameter">table_name</replaceable> [=
+ * ]
+> +    TABLE [ ONLY ] <replaceable
+> class=3D"parameter">table_name</replaceable> [ * ]
+>
+> This is still not correct because it is missing the ellipsis that is
+> needed within 'except_table_object'. e.g, the currently documented
+> synopsis would not permit FOR ALL TABLE EXCEPT (TABLE t1,t2,t3);
+>
+> You might describe that using one of these ways:
+>
+> i)
+> TABLE { [ ONLY ] table_name [ * ] } [, ...]
+>
+
+But isn't '{' is used to indicate a group of options, usually combined
+with | to show choices. Examples:
+
+TABLES IN SCHEMA { schema_name | CURRENT_SCHEMA } [, ... ]
+
+ALTER PUBLICATION name OWNER TO { new_owner | CURRENT_ROLE |
+CURRENT_USER | SESSION_USER }
+
+In our case, I don't see such an option list. Let me know if I have
+misunderstood.
+
+thanks
+Shveta
+
+
