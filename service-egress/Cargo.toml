@@ -1,0 +1,10 @@
+[package]
+name = "service-egress"
+version = "1.0.0"
+edition = "2021"
+authors = ["PointSav Digital Systems"]
+description = "Autonomous Flow-Through Protocol Daemon. Chunks and compresses heavy payloads."
+
+[dependencies]
+
+[workspace]
