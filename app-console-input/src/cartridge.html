@@ -1,22 +1,32 @@
-<div style="width: 100%; height: 100%; display: flex; flex-direction: column; gap: 20px; color: var(--wf-slate); text-transform: none; letter-spacing: normal;">
-    
-    <div style="flex-shrink: 0; border-bottom: 2px solid var(--wf-slate); padding-bottom: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: flex-end;">
-        <h2 style="margin: 0; font-size: 18px; text-transform: uppercase; letter-spacing: 1px;">THE COMMIT GATEWAY (FIDUCIARY AIRGAP)</h2>
-        <div style="font-family: var(--font-mono); font-size: 11px; color: var(--wf-muted); font-weight: bold;">
-            AIRGAP STATUS: <span style="color: #54924E;" id="f12-status">SECURE</span>
-        </div>
-    </div>
-
-    <div id="f12-dropzone" style="flex: 1; border: 2px dashed var(--wf-muted); display: flex; align-items: center; justify-content: center; background: #fff; cursor: crosshair; transition: all 0.2s;">
-        <div style="text-align: center; pointer-events: none;">
-            <div style="font-size: 32px; margin-bottom: 12px; opacity: 0.8;" id="f12-icon">📥</div>
-            <div id="f12-title" style="font-weight: bold; color: var(--wf-accent); font-size: 16px; letter-spacing: 1px; text-transform: uppercase;">DROP VERIFIED 3D ASSET TOKENS TO COMMIT</div>
-            <div id="f12-subtitle" style="font-size: 12px; color: var(--wf-muted); margin-top: 16px; font-family: var(--font-mono); line-height: 1.6;">
-                <strong>Accepted Formats:</strong><br>
-                <code>.md</code> (State Projection -> Overwrites LTS Wiki)<br>
-                <code>.jsonl</code> (Spatial Ledger -> Overwrites Identity Vectors)<br><br>
-                <span style="color: var(--wf-alert); font-weight: bold;">[WARNING] Dropping files here constitutes absolute cryptographic verification.</span>
+<div style="display: flex; width: 100%; height: 100%;">
+    <div style="flex: 1; border-right: 1px solid var(--wf-border-heavy); display: flex; flex-direction: column; background: var(--wf-card);">
+        <div style="padding: 16px 24px; border-bottom: 1px solid var(--wf-border-heavy); font-weight: bold; font-size: 14px;">[F12] THE ANCHOR (PHYSICAL INGRESS)</div>
+        <div id="f12-dropzone" style="flex: 1; margin: 24px; border: 2px dashed var(--wf-muted); display: flex; align-items: center; justify-content: center; background: var(--wf-canvas); cursor: crosshair;">
+            <div style="text-align: center; pointer-events: none;">
+                <div style="font-size: 32px; margin-bottom: 12px; opacity: 0.8;" id="f12-icon">📥</div>
+                <div id="f12-title" style="font-weight: bold; color: var(--wf-accent); font-size: 14px; letter-spacing: 1px;">DROP BASE ASSET HERE</div>
+                <div style="font-size: 11px; color: var(--wf-muted); margin-top: 12px;">.PDF, .CSV, .EML, .DOCX</div>
             </div>
         </div>
+    </div>
+    
+    <div style="flex: 1; background: var(--wf-canvas); padding: 32px; display: flex; flex-direction: column; gap: 24px; overflow-y: auto;">
+        <div style="font-size: 12px; font-weight: bold; color: var(--wf-accent); border-bottom: 1px solid var(--wf-muted); padding-bottom: 8px;">PHYSICAL ROUTING MATRIX</div>
+        
+        <div style="background: #fff; border: 1px solid var(--wf-alert); border-left: 4px solid var(--wf-alert); padding: 12px; font-size: 11px; font-family: var(--font-mono); color: var(--wf-slate);">
+            <strong>[ISOLATION EXCEPTION ACTIVE]</strong> You must explicitly select the target Totebox Archive. Physical mass cannot be federated.
+        </div>
+        
+        <div>
+            <label style="display: block; font-size: 11px; font-weight: bold; margin-bottom: 8px;">Destination Totebox Archive:</label>
+            <select style="width: 100%; padding: 10px; font-family: var(--font-mono); border: 1px solid var(--wf-border-heavy); background: #fff;">
+                <option>cluster-totebox-corporate-1</option>
+                <option>cluster-totebox-personnel-1 (Peter)</option>
+                <option>cluster-totebox-personnel-2 (Jennifer)</option>
+                <option>cluster-totebox-real-property-1</option>
+            </select>
+        </div>
+
+        <button style="margin-top: auto; padding: 12px; background: var(--wf-slate); color: #fff; border: none; font-weight: bold; font-family: var(--font-mono); cursor: pointer; letter-spacing: 1px;">[ EXECUTE CRYPTOGRAPHIC COMMIT ]</button>
     </div>
 </div>

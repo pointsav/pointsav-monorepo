@@ -1,41 +1,39 @@
-<div style="display: flex; width: 100%; height: 100%;">
-    <div style="flex: 1; border-right: 1px solid var(--wf-border-heavy); display: flex; flex-direction: column; background: var(--wf-card);">
-        <div style="padding: 16px 24px; border-bottom: 1px solid var(--wf-border-heavy); font-weight: bold; font-size: 14px; display: flex; justify-content: space-between;">
-            <span>[F5] THE VAULT (SERVICE-FS)</span>
-            <span style="color: #54924E; font-size: 11px;">READ-ONLY</span>
-        </div>
-        <div style="padding: 24px; font-family: var(--font-mono); font-size: 12px; line-height: 1.8; color: var(--wf-slate); overflow-y: auto;">
-            <div>📁 <strong>cluster-totebox-personnel-1</strong></div>
-            <div style="margin-left: 16px; border-left: 1px dashed var(--wf-muted); padding-left: 8px;">
-                <div>📁 service-email</div>
-                <div style="margin-left: 16px; border-left: 1px dashed var(--wf-muted); padding-left: 8px;">
-                    <div>📁 maildir</div>
-                    <div style="margin-left: 16px;">
-                        <div>📄 VAULT_INGRESS_totebox-ingress_EB7EA201.eml</div>
-                        <div>📄 VAULT_INGRESS_totebox-ingress_7FCB5858.eml</div>
-                        <div>📄 VAULT_INGRESS_totebox-ingress_F9B434F1.eml</div>
-                    </div>
-                </div>
-            </div>
-            <div style="margin-left: 16px; border-left: 1px dashed var(--wf-muted); padding-left: 8px; margin-top: 8px;">
-                <div>📁 service-people</div>
-                <div style="margin-left: 16px;">
-                    <div>📁 substrate</div>
-                    <div style="margin-left: 16px;">
-                        <div>📄 anchors.jsonl</div>
-                        <div>📄 claims.jsonl</div>
-                    </div>
-                </div>
-            </div>
+<div style="width: 100%; height: 100%; display: flex; flex-direction: column; gap: 20px; padding: 32px; overflow-y: auto;">
+    <div style="flex-shrink: 0; border-bottom: 2px solid var(--wf-slate); padding-bottom: 12px; display: flex; justify-content: space-between; align-items: flex-end;">
+        <h2 style="margin: 0; font-size: 18px; text-transform: uppercase; letter-spacing: 1px;">THE VAULT (MACHINE READABLE PRIMITIVES)</h2>
+        <div style="font-family: var(--font-mono); font-size: 11px; color: var(--wf-muted); font-weight: bold;">
+            DIMENSION: <span style="color: #54924E;">2D SKELETON</span>
         </div>
     </div>
-    <div style="flex: 1; background: var(--wf-canvas); padding: 32px; display: flex; flex-direction: column; overflow-y: auto;">
-        <div style="font-size: 12px; font-weight: bold; color: var(--wf-accent); border-bottom: 1px solid var(--wf-muted); padding-bottom: 8px; margin-bottom: 24px;">CRYPTOGRAPHIC FILE METADATA</div>
-        <div style="background: #fff; border: 1px solid var(--wf-border-heavy); padding: 16px; font-family: var(--font-mono); font-size: 11px; margin-bottom: 16px;">
-            <div style="color: var(--wf-muted); margin-bottom: 8px;">TARGET: /maildir/VAULT_INGRESS_totebox-ingress_EB7EA201.eml</div>
-            <div><strong>SIZE:</strong> 70K</div>
-            <div><strong>SHA-256:</strong> e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855</div>
-            <div><strong>WORM LOCK:</strong> ACTIVE</div>
+
+    <div style="display: flex; gap: 24px; flex: 1;">
+        <div style="flex: 1; border-right: 1px solid var(--wf-border-heavy); padding-right: 24px; overflow-y: auto;">
+            <div style="font-size: 11px; color: var(--wf-muted); font-weight: bold; margin-bottom: 16px; border-bottom: 1px dashed var(--wf-border); padding-bottom: 8px;">VERIFIED 3D ASSET TOKENS (.MD / .YAML)</div>
+            <ul style="font-family: var(--font-mono); font-size: 13px; color: var(--wf-slate); line-height: 2; list-style-type: none; padding-left: 0;">
+                <li style="cursor: pointer; background: #f0f4f8; border-left: 3px solid var(--wf-accent); padding-left: 8px; margin-bottom: 4px;">TX-9876FEDC_overlay.md</li>
+                <li style="cursor: pointer; padding-left: 8px; margin-bottom: 4px;">TX-1234ABCD_overlay.md</li>
+            </ul>
+        </div>
+
+        <div style="flex: 1.5; display: flex; flex-direction: column;">
+            <div style="font-size: 12px; font-weight: bold; color: var(--wf-slate); border-bottom: 1px solid var(--wf-border); padding-bottom: 8px; margin-bottom: 12px; display: flex; justify-content: space-between;">
+                <span>CRYPTOGRAPHIC FRONTMATTER</span>
+                <span class="prov-tag">TBX-PERS-2 (JENNIFER)</span>
+            </div>
+            
+            <div style="flex-grow: 1; background: var(--wf-slate); color: #fff; padding: 24px; font-family: var(--font-mono); font-size: 13px; line-height: 1.6; overflow-y: auto;">
+---<br>
+asset_id: "TX-9876FEDC"<br>
+source_mass: "VAULT_INGRESS_1.eml"<br>
+sha256_checksum: "a8f5f167f44f4964e6c998dee827110c"<br>
+status: "VERIFIED"<br>
+Archetype: "GUARDIAN"<br>
+Domain: "CORPORATE"<br>
+Sentiment: "NEUTRAL"<br>
+---<br>
+<br>
+[ RAW SKELETON TEXT RENDERED HERE ]
+            </div>
         </div>
     </div>
 </div>

@@ -1,2 +1,18 @@
 target/
 .build_workspace/
+
+# Asymmetric Storage Protocol: Enforce Tier-1 Quarantine
+*.gguf
+**/weights/*
+
+# Asymmetric Storage Protocol: Enforce Tier-1 Quarantine
+*.gguf
+**/weights/*
+
+# Asymmetric Storage Protocol: Enforce Tier-1 Quarantine
+*.gguf
+**/weights/*
+
+# Asymmetric Storage Protocol: Enforce Tier-1 Quarantine
+*.gguf
+**/weights/*
