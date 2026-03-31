@@ -1,0 +1,23 @@
+[package]
+name = "service-email-template"
+version = "1.0.0"
+edition = "2021"
+authors = ["PointSav Digital Systems"]
+description = "Autonomous distribution engine and Silent Sync Graph API compiler for Woodfine Management Corp."
+
+[dependencies]
+# Async Runtime
+tokio = { version = "1.35", features = ["full"] }
+
+# HTTP Client for Microsoft Graph API
+reqwest = { version = "0.11", features = ["json", "rustls-tls"], default-features = false }
+
+# Serialization / Deserialization for manifest.json
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Environment configuration for Identity.env
+dotenv = "0.15"
+
+# MIME email construction
+lettre = { version = "0.11", features = ["builder"] }
