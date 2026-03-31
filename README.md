@@ -11,3 +11,10 @@ The core infrastructure relies on the Asymmetric Storage protocol:
 This bifurcation ensures complete data sovereignty, providing institutional clients with absolute infrastructure optionality and seamless portability across all commercial hyperscaler environments.
 
 
+
+---
+### `service-email-template`
+* **Language:** Rust
+* **Architecture:** Silent Sync Distribution Hub (M365 Graph API)
+* **Customer:** Woodfine Management Corp.
+* **Function:** Compiles operational email templates (text bodies + PDF/image assets) from the local monorepo and silently synchronizes them directly into target Microsoft 365 folders. Bypasses standard SMTP to enforce absolute version control without inbox flooding. Includes a self-distributing, neuro-inclusive `.html` offline catalog.
