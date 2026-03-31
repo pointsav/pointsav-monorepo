@@ -1,10 +1,9 @@
-# ⚙️ SERVICE-SLM: LINGUISTIC AIR-LOCK
+# 🚪 SERVICE-SLM
 **Vendor:** PointSav Digital Systems™
-**Standard:** SYS-ADR-07 (Bifurcated Ingestion)
-**Tier:** 5 (Service Logic)
+**Standard:** The Doorman Protocol
+**Tier:** 5 (API Gateway)
 
 ## I. ARCHITECTURAL MANDATE
-This component acts as the Sovereign Dispatcher. It is a highly controlled, headless bridging environment that sanitizes unstructured human data before it enters the self-healing knowledge graph.
+This component operates strictly as an API Gateway. It is the secure port bridging an external Large Language Model (LLM) to the isolated Totebox Archive. 
 
-## II. THE COGNITIVE FORGE
-The core of this service is the **Cognitive Forge** (`cognitive-forge.rs`), a localized Rust binary that interfaces with a sub-billion parameter Small Language Model. It consumes raw text from the `transient-queues`, extracts facts, and outputs clean Markdown.
+It does not generate text. When queried, it fetches context vectors from the three sovereign ledgers (`service-email`, `service-people`, `service-content`), compiles a dense factual payload, and transmits it to the LLM. 
