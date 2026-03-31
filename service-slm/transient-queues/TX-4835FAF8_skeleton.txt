@@ -1,0 +1,32 @@
+---
+asset_id: "TX-4835FAF8"
+source: "VAULT_INGRESS_PostgresSQL_4CC78F6E.eml"
+system_directive: "Synthesize taxonomy."
+status: "PENDING_COGNITIVE_STATE"
+---
+
+On Sun, Mar 29, 2026 at 6:07 PM Steve Chavez <[steve@supabase.io][1]> wrote:
+
+> When a role `xx` has `grant select (name) on items to xx;`, a generic table-level error is given:
+> 
+> select * from items;
+> ERROR: permission denied for table items
+> 
+> With this patch, we now give:
+> 
+> select * from items;
+> ERROR: permission denied for column "id" of relation "items"
+> 
+
+Not too fond of picking one column as a representative for the error message. Better to say something like:
+
+ERROR: permission denied for column subset of table items
+
+Haven't looked but it should be doable to run a query for a given relation and role and report for each column whether a
+grant is available or not; which would be the one-stop shop for figuring out which columns at least don't have
+permissions granted. The user would still have to know which ones their query is actually using.
+
+David J.
+
+
+[1]: mailto:steve@supabase.io
