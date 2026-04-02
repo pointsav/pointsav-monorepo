@@ -13,28 +13,24 @@
 
 ---
 
-## 1. ENGINEERING MANDATE
+## 1. ENGINEERING STRATEGY & ISOLATION
 
-**[ EN ]** This repository contains the source code and operational logic for the PointSav Digital Systems architecture. The core functional unit is the Totebox Archive. Operational rules enforce the Diode Standard, dictating uni-directional data flow to isolate internal ledgers.
+**[ EN ]** This repository contains the master codebase executing the Asymmetric Storage (Flow-Through Protocol). Incoming legacy analog formats (such as standard emails and PDFs) are processed via Deterministic Parsers—mathematical routing engines that execute on strict lexical grammar rules with zero generative AI dependencies.
 
-> **[ ES ]** *Este repositorio contiene el código fuente y la lógica operativa de la arquitectura PointSav Digital Systems. La unidad funcional principal es el Archivo Totebox. Las reglas operativas imponen el Estándar Diodo, dictando el flujo de datos unidireccional para aislar los libros mayores internos.*
+> **[ ES ]** *Este repositorio contiene el código base maestro que ejecuta el Almacenamiento Asimétrico (Flow-Through Protocol). Los formatos analógicos heredados entrantes (como correos electrónicos estándar y PDF) se procesan a través de Analizadores Deterministas: motores de enrutamiento matemático que se ejecutan bajo estrictas reglas de gramática léxica con cero dependencias de IA generativa.*
 
-## 2. THE ANALOG SHATTER PROTOCOL
+## 2. VENDOR QUARANTINES & MOONSHOT PROJECTS
 
-**[ EN ]** Incoming data formats, including PDF and standard electronic mail, are classified as Analog Exhaust. The Analog Shatter Protocol parses these inputs into native Machine-Readable Files. This procedure removes non-compliant executable code prior to ledger ingestion.
+**[ EN ]** To achieve absolute system sovereignty, legacy software dependencies are actively quarantined and replaced by native "Moonshot" projects built in Rust. 
 
-> **[ ES ]** *Los formatos de datos entrantes, incluidos PDF y correo electrónico estándar, se clasifican como Desechos Analógicos. El Protocolo de Destrucción Analógica analiza estas entradas en Archivos Legibles por Máquina nativos. Este procedimiento elimina el código ejecutable no conforme antes de la ingestión del libro mayor.*
+> **[ ES ]** *Para lograr una soberanía absoluta del sistema, las dependencias de software heredadas se ponen activamente en cuarentena y se reemplazan por proyectos nativos "Moonshot" desarrollados en Rust.*
 
-## 3. THE MASTER LEXICON
-
-| Structural Wordmark | Architectural Definition | Status |
+| Quarantined Component | Functional Role | Active Sovereign Replacement |
 | :--- | :--- | :--- |
-| **Totebox OS** | The baseline digital partition for isolated data storage. | 🟢 Active |
-| **PointSav Console OS** | The aggregation terminal for viewing multiple partitioned ledgers. | 🟢 Active |
-| **PointSav MediaKit OS** | The digital property rendering engine for public disclosure. | 🟢 Active |
-| **PointSav PrivateGit OS** | The sovereign version control system for internal engineering logic. | 🟢 Active |
-| **PointSav Workplace OS** | The visual interface projecting machine data to human operators. | 🟡 Staging |
-| **PointSav Infrastructure OS**| The hypervisor layer installed directly on physical bare-metal hardware. | 🟢 Active |
+| `vendor-sel4-kernel` | Legacy C-Language Microkernel | `moonshot-kernel` (Project Vector: No_std Rust) |
+| `vendor-virtio` | Virtualization Bridge | `moonshot-hypervisor` (Rust VMM) |
+| `vendor-database` | Sled Embedded DB | `moonshot-database` (PSDB Capability-Aware) |
+| `vendor-azure-auth` | Commercial Identity API | Quarantined strictly outside the microkernel |
 
 ---
 
