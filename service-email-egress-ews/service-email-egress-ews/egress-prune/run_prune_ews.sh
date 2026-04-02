@@ -1,3 +1,10 @@
+
+# [SECURITY OVERRIDE 1] Physical Anchor Verification
+if [ ! -f "/Volumes/BACKUP-DRIVE/.pointsav_anchor" ]; then
+    echo "CRITICAL SYSTEM HALT: Physical USB Anchor (.pointsav_anchor) not found!"
+    echo "Aborting to prevent Phantom Drive data bleed to internal SSD."
+    exit 1
+fi
 #!/bin/bash
 set -euo pipefail
 
@@ -139,6 +146,6 @@ rm -f ews_delete_payload.xml "$PRUNE_PARSER_PY"
 echo "SYSTEM EVENT: Phase 3 Archive Egress Complete."
 
 echo "SYSTEM EVENT: Executing Phase 4 (Cold Storage Commit)..."
-mv "$VAULT_NEW"/*.eml "$VAULT_CUR/" 2>/dev/null || true
+rsync -a --remove-source-files "$VAULT_NEW/" "$VAULT_CUR/" 2>/dev/null || true
 echo "SYSTEM EVENT: All physical payloads shifted to Cold Storage (cur)."
 echo "SYSTEM EVENT: Staging folder cleared. Pipeline primed for next cycle."
