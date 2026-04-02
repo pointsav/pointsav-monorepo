@@ -1,25 +1,30 @@
 <div align="center">
 
 # PointSav Digital Systems
-### *Master Monorepo: Hardware-Enforced Infrastructure*
+### *Master System Codebase | Código Base del Sistema Maestro*
 
 [![Architecture](https://img.shields.io/badge/Architecture-os--totebox-111827?style=flat-square)](#)
-[![Substrate](https://img.shields.io/badge/Substrate-Microkernel-111827?style=flat-square)](#)
-[![State](https://img.shields.io/badge/State-WORM_Compliant-111827?style=flat-square)](#)
+[![Security](https://img.shields.io/badge/Security-Hardware_Enforced-111827?style=flat-square)](#)
 
 </div>
 
 ---
 
-## 1. ENGINEERING MANDATE
-PointSav Digital Systems engineers hardware-agnostic infrastructure for institutional asset managers. The primary deliverable is the Federated Storage Matrix—a zero-latency Command Ledger that algorithmically aligns semantic intelligence with absolute physical data custody.
+## 1. WHAT THIS IS | QUÉ ES ESTO
 
-## 2. ARCHITECTURAL BASELINE: V2.0
-The core infrastructure relies on the os-totebox microkernel substrate, shifting from legacy virtual machines to hardware-enforced isolation.
-1. **The Semantic Substrate:** Lightweight indices (`.jsonl`) hosted on isolated execution domains within federated Tier-2 cloud nodes.
-2. **The Base Assets:** Heavy physical mass (`.pdf`, `.eml`) retained strictly in bare-metal WORM storage and state-tethered cold drives.
+**[ EN ]** This is the master blueprint for PointSav Digital Systems. We build secure, private technology infrastructure for financial and real estate companies. Instead of renting standard cloud software, we give our clients absolute ownership and physical control over their data.
+<br><br>
+**[ ES ]** Este es el plan maestro para PointSav Digital Systems. Construimos infraestructura tecnológica segura y privada para empresas financieras e inmobiliarias. En lugar de alquilar software estándar en la nube, brindamos a nuestros clientes propiedad absoluta y control físico sobre sus datos.
 
-> **Institutional Note:** This bifurcation ensures complete data sovereignty, providing clients with absolute infrastructure optionality and seamless portability across all commercial hyperscaler environments.
+## 2. HOW IT WORKS | CÓMO FUNCIONA
+
+**[ EN ]** We use a highly secure foundation called a "microkernel." This means our system relies on physical hardware locks, not just software passwords.
+1. **Smart Organizing:** Data is categorized and searched quickly using lightweight indexes.
+2. **Vault Storage:** The actual important files (like PDFs and emails) are locked in a permanent, unalterable digital vault. They can also overflow safely to physically disconnected backup drives.
+<br><br>
+**[ ES ]** Utilizamos una base altamente segura llamada "micronúcleo". Esto significa que nuestro sistema depende de bloqueos físicos de hardware, no solo de contraseñas de software.
+1. **Organización Inteligente:** Los datos se categorizan y buscan rápidamente.
+2. **Almacenamiento en Bóveda:** Los archivos importantes reales se encierran en una bóveda digital permanente e inalterable. También pueden desbordarse de manera segura a unidades de respaldo desconectadas físicamente.
 
 ---
 *© 2026 PointSav Digital Systems. "PointSav Digital Systems" and "Totebox" are trademarks.*
