@@ -1,22 +1,26 @@
+
+# [SECURITY OVERRIDE 1] Physical Anchor Verification
+if [ ! -f "/Volumes/BACKUP-DRIVE/.pointsav_anchor" ]; then
+    echo "CRITICAL SYSTEM HALT: Physical USB Anchor (.pointsav_anchor) not found!"
+    echo "Aborting to prevent Phantom Drive data bleed to internal SSD."
+    exit 1
+fi
 #!/bin/bash
 set -euo pipefail
 
 # © 2026 PointSav Digital Systems
-# Institutional Brutalism: Phase 2 Resumable Physical Ingress
+# Institutional Brutalism: Phase 2 Resumable Physical Ingress (Hex-Armor & Quarantine Edition)
 
 INDEX_CARD="../totebox-index.env"
 source "$INDEX_CARD"
 
 ROSTER_PATH="../data-ledgers/personnel_roster.jsonl"
+QUARANTINE_PATH="../data-ledgers/quarantine_ledger.jsonl"
 VAULT_NEW="$PHYSICAL_USB_PATH/new"
-
-# Dynamic Process Isolation Variables
-ROSTER_PARSER_PY="ingress_roster_parser_${TARGET_MAILBOX}.py"
-EXTRACTOR_PY="ingress_b64_extractor_${TARGET_MAILBOX}.py"
 
 mkdir -p "$VAULT_NEW"
 
-echo "SYSTEM EVENT: PointSav High-Fidelity JSON Ingress Engine [$TARGET_MAILBOX] (Resumable Architecture)"
+echo "SYSTEM EVENT: PointSav High-Fidelity JSON Ingress Engine (Hex-Armor & Quarantine)"
 
 if [ ! -f "$ROSTER_PATH" ]; then
     echo "FATAL: JSONL Ledger not found."
@@ -30,23 +34,13 @@ TOKEN=$(curl -s -X POST https://login.microsoftonline.com/$AZURE_TENANT_ID/oauth
   --data-urlencode "client_secret=$AZURE_CLIENT_SECRET" \
   -d "scope=https://outlook.office365.com/.default" | grep -o '"access_token":"[^"]*' | grep -o '[^"]*$')
 
-# Python Kernel: Extract Message IDs (Isolated)
-cat << PY_EOF > "$ROSTER_PARSER_PY"
-import sys, json; [sys.stdout.write(json.loads(line).get('MessageID','') + '\n') for line in sys.stdin if line.strip()]
-PY_EOF
-
-# Python Kernel: Base64 Extraction (Isolated)
-cat << PY_EOF > "$EXTRACTOR_PY"
-import xml.etree.ElementTree as ET, base64, sys; tree=ET.parse('ews_raw_response.xml'); mime=tree.find('.//{http://schemas.microsoft.com/exchange/services/2006/types}MimeContent'); sys.stdout.write(base64.b64decode(mime.text)) if mime is not None and mime.text else None
-PY_EOF
-
-MESSAGE_IDS=$(python "$ROSTER_PARSER_PY" < "$ROSTER_PATH")
+MESSAGE_IDS=$(python -c "import sys, json; [sys.stdout.write(json.loads(line).get('MessageID','') + '\n') for line in sys.stdin if line.strip()]" < "$ROSTER_PATH")
 
 for MESSAGE_ID in $MESSAGE_IDS; do
     if [ -z "$MESSAGE_ID" ]; then continue; fi
     
-    # Sanitize the Base64 ID for the macOS physical filesystem
-    SAFE_ID=$(echo "$MESSAGE_ID" | tr '/' '_' | tr '+' '-')
+    # [HEX-ARMOR APPLIED]: Mathematically converts Base64 to Case-Agnostic Hexadecimal
+    SAFE_ID=$(echo -n "$MESSAGE_ID" | md5)
     TARGET_FILE="$VAULT_NEW/${SAFE_ID}.eml"
 
     # [RESUME LOGIC]: If the file exists and is greater than 0 bytes, skip the network call
@@ -93,8 +87,8 @@ XML
           -d @ews_get_payload.xml > ews_raw_response.xml
 
         if grep -q 'ResponseClass="Success"' ews_raw_response.xml; then
-            # macOS Python 2.7 binary bridge (Isolated)
-            python "$EXTRACTOR_PY" > "$TARGET_FILE"
+            # macOS Python 2.7 binary bridge
+            python -c "import xml.etree.ElementTree as ET, base64, sys; tree=ET.parse('ews_raw_response.xml'); mime=tree.find('.//{http://schemas.microsoft.com/exchange/services/2006/types}MimeContent'); sys.stdout.write(base64.b64decode(mime.text)) if mime is not None and mime.text else None" > "$TARGET_FILE"
             
             if [ -s "$TARGET_FILE" ]; then
                 echo "SUCCESS: Asset physically secured to Staging Vault."
@@ -109,13 +103,19 @@ XML
     done
 
     if [ "$SUCCESS" = false ]; then
-        echo "FATAL: Asset ${MESSAGE_ID:0:15}... failed after $NETWORK_RETRY_LIMIT attempts. Halting to preserve data parity."
-        rm -f ews_get_payload.xml ews_raw_response.xml "$ROSTER_PARSER_PY" "$EXTRACTOR_PY"
-        exit 1
+        echo "SYSTEM EVENT: Asset ${MESSAGE_ID:0:15}... failed $NETWORK_RETRY_LIMIT attempts. Rerouting to Quarantine Ledger."
+        echo "{\"MessageID\": \"$MESSAGE_ID\", \"Reason\": \"EWS Extraction Failure\"}" >> "$QUARANTINE_PATH"
+        rm -f ews_get_payload.xml ews_raw_response.xml
+        continue
     fi
 done
 
-rm -f ews_get_payload.xml ews_raw_response.xml "$ROSTER_PARSER_PY" "$EXTRACTOR_PY"
+rm -f ews_get_payload.xml ews_raw_response.xml
 echo "======================================================="
 echo "SYSTEM EVENT: Phase 2 Physical Ingress Complete."
 echo "======================================================="
+
+# [SECURITY OVERRIDE 2] Cryptographic Size Validator
+echo "SYSTEM EVENT: Sweeping for 0-byte network drops..."
+find "$VAULT_NEW" -name "*.eml" -size 0 -delete 2>/dev/null || true
+echo "SYSTEM EVENT: 0-Byte payload trap cleared."
