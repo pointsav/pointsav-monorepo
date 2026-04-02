@@ -1,54 +1,45 @@
 <div align="center">
 
 # PointSav Digital Systems
-### *System Monorepo: The Engine Room*
-### *Monorepositorio del Sistema: La Sala de Máquinas*
+### *PointSav Monorepo: The Engine Room*
 
 [![Storage](https://img.shields.io/badge/Storage-WORM_Vaults-111827?style=flat-square)](#)
 [![Compliance](https://img.shields.io/badge/Compliance-Statutory_Auditability-111827?style=flat-square)](#)
 
-[ **Documentation Wiki** ](https://github.com/pointsav/content-wiki-documentation) | [ **Organization Profile** ](https://github.com/pointsav) | [ **Fleet Deployment** ](https://github.com/woodfine/woodfine-fleet-deployment)
+[ **Organization Profile** ](https://github.com/pointsav) | [ **PointSav Monorepo** ](https://github.com/pointsav/pointsav-monorepo) | [ **Design System** ](https://github.com/pointsav/pointsav-design-system) | [ **Documentation Wiki** ](https://github.com/pointsav/content-wiki-documentation) | [ **Media Assets** ](https://github.com/pointsav/pointsav-media-assets) | [ **Fleet Manifest** ](https://github.com/woodfine/woodfine-fleet-deployment)
 
 </div>
 
 ---
 
-## 1. ENGINEERING MANDATE | MANDATO DE INGENIERÍA
+## 1. ENGINEERING MANDATE
 
-**[ EN ]** This repository contains the master code and engineering laws that govern PointSav Digital Systems. Our primary product is the **Totebox Archive**: a highly secure, isolated data vault designed specifically to protect direct-hold solutions, eliminating the vulnerabilities of legacy corporate IT. 
-<br><br>
-**[ ES ]** Este repositorio contiene el código maestro y las leyes de ingeniería que rigen a PointSav Digital Systems. Nuestro producto principal es el **Archivo Totebox**: una bóveda de datos aislada y altamente segura diseñada específicamente para proteger direct-hold solutions, eliminando las vulnerabilidades de la tecnología de la información corporativa tradicional.
+**[ EN ]** This repository contains the master code and engineering laws that govern PointSav Digital Systems. Our primary product is the Totebox Archive: a highly secure, isolated data vault engineered specifically to protect administrative records for direct-hold solutions.
+<details>
+<summary><b>[ ES ] Traducción al Español</b></summary>
+Este repositorio contiene el código maestro y las leyes de ingeniería que rigen a PointSav Digital Systems. Nuestro producto principal es el Archivo Totebox: una bóveda de datos aislada y altamente segura diseñada específicamente para proteger los registros administrativos de las direct-hold solutions.
+</details>
 
-## 2. ELIMINATING ANALOG LIABILITIES | ELIMINANDO RIESGOS ANALÓGICOS
+## 2. THE ANALOG SHATTER PROTOCOL
 
-**[ EN ]** Legacy corporate systems rely on fragile "Analog Exhaust"—static files like PDFs or Word documents that can be easily forged, edited, or misplaced. The Totebox Archive eliminates this risk by storing strictly **Machine-Readable Files**. 
-* We store the pure, undeniable data logically (using rigid math and text).
-* Visual documents are only generated exactly when needed by regulators or auditors.
-* This creates an impossible-to-forge audit trail that guarantees absolute corporate governance.
-<br><br>
-**[ ES ]** Los sistemas corporativos tradicionales dependen de "Desechos Analógicos" frágiles: archivos estáticos como PDF o documentos de Word que pueden ser fácilmente falsificados, editados o extraviados. El Archivo Totebox elimina este riesgo al almacenar estrictamente **Archivos Legibles por Máquina**.
-* Almacenamos los datos puros e innegables de forma lógica (usando matemáticas rígidas y texto).
-* Los documentos visuales solo se generan exactamente cuando lo necesitan los reguladores o auditores.
-* Esto crea un rastro de auditoría imposible de falsificar que garantiza un gobierno corporativo absoluto.
+**[ EN ]** Legacy corporate systems rely on fragile analog files (such as PDFs) that can be forged or edited. Through the Analog Shatter Protocol, incoming legacy formats are stripped of hidden malicious code and converted into undeniable Machine-Readable Files. Visual documents are only generated exactly when needed by regulators, creating a perfect administrative audit trail.
+<details>
+<summary><b>[ ES ] Traducción al Español</b></summary>
+Los sistemas corporativos tradicionales dependen de archivos analógicos frágiles (como PDF) que pueden ser falsificados o editados. A través del Protocolo de Destrucción Analógica, los formatos tradicionales entrantes son despojados de código malicioso oculto y convertidos en Archivos Legibles por Máquina innegables. Los documentos visuales solo se generan exactamente cuando lo necesitan los reguladores, creando un rastro de auditoría administrativa perfecto.
+</details>
 
-## 3. THE MASTER LEXICON | EL LÉXICO MAESTRO
+## 3. THE MASTER LEXICON
 
-### Operating Systems / Sistemas Operativos
-| System Tag | Execution Role | Status |
+| Structural Wordmark | Execution Role | Status |
 | :--- | :--- | :--- |
-| `os-totebox` | Core foundation. The isolated digital vault dealing strictly in permanent machine files. | 🟢 Active |
-| `os-console` | The lightning-fast transaction ledger operating beneath the desktop. | 🟡 Staging |
-| `os-workplace` | The visual desktop environment projecting machine data to human operators. | 🟡 Staging |
-| `os-network-admin` | Orchestrates the physical hardware map and authorizes private network routing. | 🟢 Active |
-| `os-infrastructure` | The universal foundation installed directly on physical computer hardware. | 🟢 Active |
+| **Totebox OS** | Core foundation. The isolated vault dealing strictly in permanent machine files. | 🟢 Active |
+| **PointSav Console OS** | The aggregation gateway. Pulls data from multiple vaults into a unified view. | 🟢 Active |
+| **PointSav MediaKit OS** | Designed exclusively for secure corporate disclosure and public information. | 🟢 Active |
+| **PointSav PrivateGit OS** | The sovereign version control system for internal engineering. | 🟢 Active |
+| **PointSav Workplace OS** | The visual desktop environment projecting machine data to operators. | 🟡 Staging |
+| **PointSav Infrastructure OS**| The universal foundation installed directly on physical bare-metal hardware. | 🟢 Active |
 
-### Engineering Logic / Lógica de Ingeniería
-| Logic Prefix | Architectural Definition | Status |
-| :--- | :--- | :--- |
-| `service-*` | Autonomous background engines managing records. Operates strictly with zero human interfaces. | 🟢 Active |
-| `app-*` | Packaged, user-facing environments or secure delivery vehicles. | 🟡 Staging |
-| `tool-*` | Manual administrative levers requiring explicit, recorded operator authorization. | 🟢 Active |
-| `moonshot-*` | Strategic Research & Development designed to replace legacy technology with our own code. | 🟡 Staging |
-
----
-*© 2026 PointSav Digital Systems. "PointSav Digital Systems", "Totebox Orchestration", and "Totebox Archives" are trademarks.*
+<br>
+<div align="center">
+<sub><em>Woodfine Capital Projects, Woodfine Management Corp., PointSav Digital Systems, Totebox Orchestration, and Totebox Archive are trademarks owned by Woodfine Capital Projects Inc. This notice serves as a formal declaration of intellectual property rights, asserting continuous use in commerce regardless of the omission of the ™ or ® symbols in the accompanying text. All operational and architectural system designations (including but not limited to PointSav Console OS, PointSav Infrastructure OS, PointSav MediaKit OS, PointSav Network OS, PointSav PrivateGit OS, PointSav Workplace OS, Totebox Integration OS, and Totebox OS) are proprietary structural wordmarks utilized exclusively within the PointSav Digital Systems architecture.</em></sub>
+</div>
