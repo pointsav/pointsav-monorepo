@@ -1,20 +1,25 @@
-# POINTSAV DIGITAL SYSTEMS: MASTER MONOREPO
+<div align="center">
 
-## ENGINEERING MANDATE
-PointSav Digital Systems engineers cryptographic, hardware-agnostic infrastructure for institutional asset managers. The primary deliverable is the Federated Panopticon—a zero-latency Command Ledger that mathematically aligns semantic intelligence with absolute physical data custody.
+# PointSav Digital Systems
+### *Master Monorepo: Hardware-Enforced Infrastructure*
 
-## ARCHITECTURAL BASELINE: V1.8
-The core infrastructure relies on the Asymmetric Storage protocol:
-1. **The Semantic Substrate:** Lightweight indices (`.jsonl`) hosted on federated Tier-2 cloud nodes.
-2. **The Base Assets:** Heavy physical mass (`.pdf`, `.eml`) retained strictly in Tier-1 offline cold storage.
+[![Architecture](https://img.shields.io/badge/Architecture-os--totebox-111827?style=flat-square)](#)
+[![Substrate](https://img.shields.io/badge/Substrate-Microkernel-111827?style=flat-square)](#)
+[![State](https://img.shields.io/badge/State-WORM_Compliant-111827?style=flat-square)](#)
 
-This bifurcation ensures complete data sovereignty, providing institutional clients with absolute infrastructure optionality and seamless portability across all commercial hyperscaler environments.
-
-
+</div>
 
 ---
-### `service-email-template`
-* **Language:** Rust
-* **Architecture:** Silent Sync Distribution Hub (M365 Graph API)
-* **Customer:** Woodfine Management Corp.
-* **Function:** Compiles operational email templates (text bodies + PDF/image assets) from the local monorepo and silently synchronizes them directly into target Microsoft 365 folders. Bypasses standard SMTP to enforce absolute version control without inbox flooding. Includes a self-distributing, neuro-inclusive `.html` offline catalog.
+
+## 1. ENGINEERING MANDATE
+PointSav Digital Systems engineers hardware-agnostic infrastructure for institutional asset managers. The primary deliverable is the Federated Storage Matrix—a zero-latency Command Ledger that algorithmically aligns semantic intelligence with absolute physical data custody.
+
+## 2. ARCHITECTURAL BASELINE: V2.0
+The core infrastructure relies on the os-totebox microkernel substrate, shifting from legacy virtual machines to hardware-enforced isolation.
+1. **The Semantic Substrate:** Lightweight indices (`.jsonl`) hosted on isolated execution domains within federated Tier-2 cloud nodes.
+2. **The Base Assets:** Heavy physical mass (`.pdf`, `.eml`) retained strictly in bare-metal WORM storage and state-tethered cold drives.
+
+> **Institutional Note:** This bifurcation ensures complete data sovereignty, providing clients with absolute infrastructure optionality and seamless portability across all commercial hyperscaler environments.
+
+---
+*© 2026 PointSav Digital Systems. "PointSav Digital Systems" and "Totebox" are trademarks.*
