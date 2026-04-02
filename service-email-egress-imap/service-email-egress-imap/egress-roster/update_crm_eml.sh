@@ -226,3 +226,6 @@ PROCESSED=$(python extract_eml_crm.py "$VAULT_NEW" "$CRM_PATH" "$ROSTER_PATH" "$
 rm extract_eml_crm.py
 
 echo "SYSTEM EVENT: Incremental Provenance Extraction successful on $PROCESSED physical assets."
+
+# [AUTONOMOUS INJECTION] Immutable Ledger Vault Trigger
+./snapshot_ledgers.sh
