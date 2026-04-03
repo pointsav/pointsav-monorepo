@@ -15,22 +15,24 @@
 
 ## 1. ENGINEERING STRATEGY & ISOLATION
 
-**[ EN ]** This repository contains the master codebase executing the Asymmetric Storage (Flow-Through Protocol). Incoming legacy analog formats (such as standard emails and PDFs) are processed via Deterministic Parsers—mathematical routing engines that execute on strict lexical grammar rules with zero generative AI dependencies.
+**[ EN ]** This repository contains the master codebase executing the Asymmetric Storage standard. Incoming legacy analog formats (such as standard emails and PDFs) are processed via Deterministic Parsers—mathematical routing engines that execute strictly on lexical grammar rules with zero generative AI dependencies.
 
-> **[ ES ]** *Este repositorio contiene el código base maestro que ejecuta el Almacenamiento Asimétrico (Flow-Through Protocol). Los formatos analógicos heredados entrantes (como correos electrónicos estándar y PDF) se procesan a través de Analizadores Deterministas: motores de enrutamiento matemático que se ejecutan bajo estrictas reglas de gramática léxica con cero dependencias de IA generativa.*
+> **[ ES ]** *Este repositorio contiene el código base maestro que ejecuta el estándar de Almacenamiento Asimétrico. Los formatos analógicos heredados entrantes (como correos electrónicos estándar y PDF) se procesan a través de Analizadores Deterministas: motores de enrutamiento matemático que se ejecutan estrictamente bajo reglas de gramática léxica con cero dependencias de IA generativa.*
 
 ## 2. VENDOR QUARANTINES & MOONSHOT PROJECTS
 
-**[ EN ]** To achieve absolute system sovereignty, legacy software dependencies are actively quarantined and replaced by native "Moonshot" projects built in Rust. 
+**[ EN ]** To achieve absolute system sovereignty, legacy software dependencies are actively quarantined and systematically replaced by native "Moonshot" projects.
 
-> **[ ES ]** *Para lograr una soberanía absoluta del sistema, las dependencias de software heredadas se ponen activamente en cuarentena y se reemplazan por proyectos nativos "Moonshot" desarrollados en Rust.*
+> **[ ES ]** *Para lograr la soberanía absoluta del sistema, las dependencias de software heredadas se ponen activamente en cuarentena y se reemplazan sistemáticamente por proyectos nativos "Moonshot".*
 
-| Quarantined Component | Functional Role | Active Sovereign Replacement |
+| Component Directory | Functional Role | Integration Status |
 | :--- | :--- | :--- |
-| `vendor-sel4-kernel` | Legacy C-Language Microkernel | `moonshot-kernel` (Project Vector: No_std Rust) |
-| `vendor-virtio` | Virtualization Bridge | `moonshot-hypervisor` (Rust VMM) |
-| `vendor-database` | Sled Embedded DB | `moonshot-database` (PSDB Capability-Aware) |
-| `vendor-azure-auth` | Commercial Identity API | Quarantined strictly outside the microkernel |
+| `vendor-sel4-kernel` | Legacy Microkernel (C-Language) | 🔴 Quarantined |
+| `vendor-virtio` | Virtualization Bridge | 🔴 Quarantined |
+| `vendor-azure-auth` | Commercial Identity API | 🔴 Quarantined |
+| `moonshot-kernel` | Project Vector: No_std Rust Microkernel | 🟡 Staging |
+| `moonshot-hypervisor` | Rust VMM Replacement | 🟡 Staging |
+| `moonshot-database` | PSDB: Capability-aware embedded database | 🟡 Staging |
 
 ---
 
