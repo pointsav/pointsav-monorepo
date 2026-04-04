@@ -1,8 +1,20 @@
 [workspace]
+resolver = "2"
 members = [
     "service-people",
     "service-content",
     "app-console-content",
     "tool-acs-miner",
-    "system-mba-shim"
+    "system-mba-shim",
+    "service-fs",
+    "system-security",
+    "xtask"
 ]
+
+[profile.dev]
+panic = "abort"     # Required for bare-metal evaluation
+
+[profile.release]
+opt-level = "z"     # Optimize for minimum binary size
+lto = true          # Link-time optimization
+panic = "abort"     # Strip panic unwinding overhead
