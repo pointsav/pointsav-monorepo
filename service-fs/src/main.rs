@@ -1,40 +1,26 @@
-use warp::Filter;
-use bytes::Bytes;
-use std::fs;
+#![no_std]
+#![no_main]
 
-const TOTEBOX_ROOT: &str = "/opt/woodfine/cluster-totebox-personnel-1";
-const FS_PORT: u16 = 8095;
+use core::panic::PanicInfo;
 
-#[tokio::main]
-async fn main() {
-    println!("========================================================");
-    println!(" 🗄️ SERVICE-FS: TOTEBOX STORAGE GATEKEEPER ACTIVE");
-    println!("========================================================");
-    println!("[SYSTEM] Listening for internal write intents on 127.0.0.1:{}", FS_PORT);
+/// Entry point for the seL4 Unikernel.
+/// The `system-security` Capability-Based Manager (CBM) routes execution here
+/// after provisioning the isolated memory space.
+#[no_mangle]
+pub extern "C" fn _start() -> ! {
+    // 1. Initialize bare-metal state
+    // 2. Map capability pointers passed by the CBM (Root-Task)
+    
+    // 3. The Sovereign Polling Loop (Gatekeeper State Machine)
+    loop {
+        // Block and wait for Inter-Process Communication (IPC) from system-network-interface
+        // Handle read/write logic strictly within provisioned WORM boundaries
+    }
+}
 
-    // Ensure physical boundaries exist
-    fs::create_dir_all(format!("{}/service-email/maildir/new", TOTEBOX_ROOT)).unwrap();
-    fs::create_dir_all(format!("{}/service-email/maildir/cur", TOTEBOX_ROOT)).unwrap();
-
-    let ingress_route = warp::post()
-        .and(warp::path!("vault" / "ingress"))
-        .and(warp::header::<String>("x-file-name"))
-        .and(warp::body::bytes())
-        .map(|filename: String, body: Bytes| {
-            let safe_name = filename.replace("/", "_").replace("\\", "_");
-            let path = format!("{}/service-email/maildir/new/{}", TOTEBOX_ROOT, safe_name);
-            
-            match fs::write(&path, body) {
-                Ok(_) => {
-                    println!("[SECURED] Base Asset locked to disk: {}", safe_name);
-                    warp::reply::with_status("SECURED", warp::http::StatusCode::OK)
-                },
-                Err(e) => {
-                    eprintln!("[FATAL] Disk write failure: {}", e);
-                    warp::reply::with_status("FAULT", warp::http::StatusCode::INTERNAL_SERVER_ERROR)
-                }
-            }
-        });
-
-    warp::serve(ingress_route).run(([127, 0, 0, 1], FS_PORT)).await;
+/// Bare-metal panic handler. 
+/// In a production environment, this triggers a fault IPC to the system-security Watchdog.
+#[panic_handler]
+fn panic(_info: &PanicInfo) -> ! {
+    loop {}
 }
