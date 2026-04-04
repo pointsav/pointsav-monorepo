@@ -1,13 +1,9 @@
 [package]
 name = "service-fs"
-version = "1.0.0"
+version = "1.0.1"
 edition = "2021"
 authors = ["PointSav Digital Systems"]
-description = "Unikernel-ready file system gatekeeper. Enforces WORM storage boundaries."
-
-[workspace]
+description = "Bare-Metal Unikernel File System Gatekeeper. Enforces WORM storage boundaries."
 
 [dependencies]
-tokio = { version = "1", features = ["full"] }
-warp = "0.3"
-bytes = "1.0"
+# Pure bare-metal enclave. Zero OS dependencies permitted.
