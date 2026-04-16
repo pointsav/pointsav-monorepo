@@ -1,110 +1,142 @@
-use aho_corasick::AhoCorasick;
-use serde_json::Value;
-use std::env;
+use notify::{Watcher, RecursiveMode, Result as NotifyResult, Event};
+use std::path::Path;
+use std::sync::mpsc::channel;
 use std::fs;
+use std::thread;
+use std::time::Duration;
+use serde_json::Value;
 
-/// Recursively hunts through any JSON structure for the "gravity_keywords" array.
-fn extract_keywords(v: &Value, keywords: &mut Vec<String>) {
-    match v {
-        Value::Object(map) => {
-            for (key, val) in map {
-                if key == "gravity_keywords" {
-                    if let Value::Array(arr) = val {
-                        for item in arr {
-                            if let Value::String(s) = item {
-                                keywords.push(s.to_string());
+const BASE_DIR: &str = "/home/mathew/deployments/woodfine-fleet-deployment/cluster-totebox-personnel-1/service-fs/data";
+const SLM_ENDPOINT: &str = "http://127.0.0.1:8082/api/semantic-extract";
+
+fn main() -> NotifyResult<()> {
+    println!("================================================================");
+    println!("[SYSTEM] PointSav Semantic Watcher (Rust Edition) Activated");
+    println!("[SYSTEM] Protocol: Schema Expansion Routing");
+    println!("================================================================");
+
+    let corpus_dir = format!("{}/service-content/ledgers", BASE_DIR);
+    let crm_dir = format!("{}/service-people/ledgers", BASE_DIR);
+
+    if !Path::new(&corpus_dir).exists() { fs::create_dir_all(&corpus_dir).unwrap(); }
+    if !Path::new(&crm_dir).exists() { fs::create_dir_all(&crm_dir).unwrap(); }
+
+    let mut processed_ledgers: Vec<String> = Vec::new();
+
+    if let Ok(entries) = fs::read_dir(Path::new(&corpus_dir)) {
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.extension().and_then(|s| s.to_str()) == Some("json") {
+                let filename = path.file_name().unwrap().to_str().unwrap().to_string();
+                if filename.starts_with("CORPUS_") {
+                    process_corpus(&path, &crm_dir);
+                    processed_ledgers.push(filename);
+                }
+            }
+        }
+    }
+
+    let (tx, rx) = channel();
+    let mut watcher = notify::recommended_watcher(tx)?;
+    watcher.watch(Path::new(&corpus_dir), RecursiveMode::NonRecursive)?;
+
+    println!("================================================================");
+    println!("[SYSTEM] Active Kernel Surveillance Engaged on Corpus Plane...");
+    
+    loop {
+        match rx.recv() {
+            Ok(Ok(Event { paths, .. })) => {
+                for path in paths {
+                    if let Some(extension) = path.extension() {
+                        if extension == "json" {
+                            let filename = path.file_name().unwrap().to_str().unwrap().to_string();
+                            if filename.starts_with("CORPUS_") && !processed_ledgers.contains(&filename) {
+                                println!("\n[WATCHER] New Corpus Detected: {}", filename);
+                                thread::sleep(Duration::from_millis(250)); 
+                                process_corpus(&path, &crm_dir);
+                                processed_ledgers.push(filename);
                             }
                         }
                     }
-                } else {
-                    extract_keywords(val, keywords);
                 }
-            }
+            },
+            Ok(_) => {}
+            Err(_) => {}
         }
-        Value::Array(arr) => {
-            for item in arr {
-                extract_keywords(item, keywords);
-            }
-        }
-        _ => {}
     }
 }
 
-/// Loads all JSON files in the Seed Vault and extracts the intelligence baseline.
-fn load_gravity_seeds(seed_dir: &str) -> Vec<String> {
-    let mut keywords = Vec::new();
-    if let Ok(entries) = fs::read_dir(seed_dir) {
-        for entry in entries.flatten() {
-            if entry.path().extension().map_or(false, |ext| ext == "json") {
-                if let Ok(content) = fs::read_to_string(entry.path()) {
-                    if let Ok(json_val) = serde_json::from_str::<Value>(&content) {
-                        extract_keywords(&json_val, &mut keywords);
+fn process_corpus(filepath: &Path, crm_dir: &str) {
+    let content = match fs::read_to_string(filepath) { Ok(c) => c, Err(_) => return, };
+    let payload: Value = match serde_json::from_str(&content) { Ok(v) => v, Err(_) => return, };
+
+    let worm_id = payload["worm_id"].as_str().unwrap_or("UNKNOWN");
+    let corpus_text = payload["corpus"].as_str().unwrap_or("");
+
+    if corpus_text.is_empty() { return; }
+
+    println!("  -> [WATCHER] Routing payload to SLM Core (Port 8082)...");
+    
+    let client = reqwest::blocking::Client::new();
+    let mut map = std::collections::HashMap::new();
+    map.insert("corpus", corpus_text);
+
+    let res = client.post(SLM_ENDPOINT)
+        .json(&map)
+        .timeout(Duration::from_secs(120))
+        .send();
+
+    match res {
+        Ok(response) => {
+            if response.status().is_success() {
+                if let Ok(semantic_entities) = response.json::<Vec<Value>>() {
+                    let mut enriched_crm = Vec::new();
+                    
+                    for ent in semantic_entities {
+                        let mut new_ent = serde_json::Map::new();
+                        new_ent.insert("entity_name".to_string(), ent["entity_name"].clone());
+                        new_ent.insert("classification".to_string(), ent["classification"].clone());
+                        new_ent.insert("role_vector".to_string(), ent.get("role_vector").cloned().unwrap_or(serde_json::json!("UNVERIFIED")));
+                        new_ent.insert("confidence".to_string(), serde_json::json!(0.95));
+                        new_ent.insert("context_anchor".to_string(), serde_json::json!("SLM NEURAL INFERENCE"));
+                        
+                        // Catch the new Location Vector
+                        let loc = ent.get("location_vector").cloned().unwrap_or(serde_json::json!("UNVERIFIED"));
+                        new_ent.insert("location_vector".to_string(), loc);
+                        
+                        // Catch the Contact Vector and push to Latent Vectors array
+                        let mut latent = Vec::new();
+                        let contact = ent.get("contact_vector").and_then(|v| v.as_str()).unwrap_or("UNVERIFIED");
+                        if contact != "UNVERIFIED" && !contact.is_empty() {
+                            if contact.contains('@') {
+                                latent.push(format!("mailto:{}", contact));
+                            } else {
+                                latent.push(format!("tel:{}", contact));
+                            }
+                        }
+                        new_ent.insert("latent_vectors".to_string(), serde_json::json!(latent));
+                        
+                        enriched_crm.push(Value::Object(new_ent));
                     }
+
+                    let semantic_ledger = serde_json::json!({
+                        "worm_id": format!("{}_SEMANTIC", worm_id),
+                        "source_asset": "SLM_INFERENCE",
+                        "extracted_crm_entities": enriched_crm
+                    });
+
+                    let out_file = format!("{}/SEMANTIC_{}.json", crm_dir, worm_id);
+                    fs::write(&out_file, semantic_ledger.to_string()).unwrap();
+                    println!("  -> [WATCHER] Semantic Integration Complete: {} Nodes Secured.", enriched_crm.len());
+                } else {
+                    println!("  -> [SYS_HALT] SLM Core returned invalid JSON format.");
                 }
+            } else {
+                println!("  -> [SYS_HALT] SLM Core rejected payload: {}", response.status());
             }
+        },
+        Err(e) => {
+            println!("  -> [SYS_HALT] SLM Routing failed: {}", e);
         }
-    }
-    keywords.sort();
-    keywords.dedup();
-    keywords
-}
-
-fn main() {
-    let args: Vec<String> = env::args().collect();
-    if args.len() < 3 {
-        eprintln!("[ERROR] Usage: service-content <SEED_DIRECTORY> <WORM_PAYLOAD>");
-        std::process::exit(1);
-    }
-
-    let seed_dir = &args[1];
-    let file_path = &args[2];
-
-    // 1. Ingest the Customer's JSON Seed Vault
-    let gravity_keywords = load_gravity_seeds(seed_dir);
-    if gravity_keywords.is_empty() {
-        eprintln!("[ERROR] Seed Vault is empty or unreadable.");
-        std::process::exit(1);
-    }
-
-    // 2. Read the Raw Payload
-    let raw_text = fs::read_to_string(file_path)
-        .expect("[ERROR] Could not read WORM payload.");
-
-    let clean_text = raw_text.replace("<br>", "\n").replace("<p>", "\n");
-    let lines: Vec<&str> = clean_text.split('\n').collect();
-
-    // 3. Build the High-Speed Automaton
-    let ac = AhoCorasick::new(&gravity_keywords).expect("Failed to build Automaton");
-
-    let mut gravity_mass = 0;
-    let mut condensed_vector: Vec<String> = Vec::new();
-
-    // 4. Scan for Identity Mass
-    for line in lines {
-        let trimmed = line.trim();
-        if trimmed.is_empty() { continue; }
-
-        let mut matched = false;
-        for mat in ac.find_iter(trimmed) {
-            let keyword = &gravity_keywords[mat.pattern()];
-            gravity_mass += 10; 
-            
-            if !matched {
-                condensed_vector.push(format!("[HIT: {}] {}", keyword, trimmed));
-                matched = true;
-            }
-        }
-    }
-
-    // 5. Output the 99% Digested Payload for the SLM Gatekeeper
-    if gravity_mass > 0 {
-        println!("--- GRAVITY VECTOR ESTABLISHED ---");
-        println!("TOTAL MASS: {}", gravity_mass);
-        println!("CONDENSED PAYLOAD FOR SLM:\n");
-        for vector in condensed_vector.iter().take(5) {
-            println!("{}", vector);
-        }
-    } else {
-        println!("[SYSTEM] Zero Gravity Detected. Payload Ignored.");
     }
 }
