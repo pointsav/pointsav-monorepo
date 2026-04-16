@@ -1,8 +1,0 @@
-[package]
-name = "system-mba-shim"
-version = "1.0.0"
-edition = "2021"
-
-[dependencies]
-tiny_http = "0.12"
-serde_json = "1.0"

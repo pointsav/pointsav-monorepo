@@ -1,9 +1,0 @@
-[package]
-name = "service-terminal"
-version = "0.1.0"
-edition = "2021"
-
-[dependencies]
-tokio = { version = "1.32", features = ["full"] }
-warp = "0.3"
-futures-util = "0.3"
