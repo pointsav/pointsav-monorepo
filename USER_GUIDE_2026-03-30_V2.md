@@ -41,7 +41,7 @@ Four entities make this work:
 | **Woodfine Capital Projects Inc.** | Parent company | The holding company. Real estate firm, not a tech company. |
 | **Woodfine Management Corp.** | Subsidiary. The customer. | The operational arm that manages properties and uses the software daily. |
 | **PointSav Digital Systems** | Subsidiary. The vendor. | The technology arm that builds the software. Follows a cost-plus model (charges for development time, not for value delivered). |
-| **Sovereign Data Foundation** (Denmark) | Equity holder in PointSav | Oversees open-source component integrity and data sovereignty standards. |
+| **Sovereign Data Foundation** (Denmark) | Intended equity holder in PointSav | Planned to oversee open-source component integrity and data sovereignty standards. This arrangement has not yet been formally executed. |
 
 **The key relationship:** PointSav builds the software. Woodfine uses it. Both are owned by the same parent. On GitHub, the `pointsav` organization holds the engineering source code and the `woodfine` organization holds the customer's operational deployments.
 
@@ -87,7 +87,7 @@ The full system breaks into three layers.
 
 **Infrastructure.** Raw computing power. Physical servers, cloud instances, or dedicated hardware that provides CPU, memory, storage, and networking. In the end state, this layer runs a PointSav-built virtualization substrate called InfrastructureOS. In the MVP, it is cloud compute (GCP/AWS).
 
-**Platform.** The operating systems themselves — the ToteboxOS archives (data vaults), the InterfaceOS logic hubs, and the NetworkAdminOS that manages the network. These components run as kernel-isolated virtual machines on top of the infrastructure layer.
+**Platform.** The operating systems themselves — the ToteboxOS archives (data vaults), the OrchestrationOS hubs, and the NetworkAdminOS that manages the network. These components run as kernel-isolated virtual machines on top of the infrastructure layer.
 
 **Delivery.** The ConsoleOS — the software each operator uses at their desk. In the end state, each variant runs as its own virtual machine on the user's workstation. In the MVP, it is a browser-based Heads-Up Display served over the Private Network.
 
@@ -103,7 +103,7 @@ The full system breaks into three layers.
 +--------------------------------------------------+
 |  PLATFORM LAYER                                  |
 |  ToteboxOS archives  (data)                      |
-|  InterfaceOS hubs    (logic)                     |
+|  OrchestrationOS hubs (logic)                    |
 |  NetworkAdminOS      (management)                |
 +--------------------------------------------------+
                         |
@@ -119,7 +119,7 @@ The full system breaks into three layers.
 
 Single-archive use — one person, one Totebox Archive, one ConsoleOS — is completely free and open source. This is the Community Member path.
 
-The moment you need to aggregate across multiple archives (for example, pulling together personnel records and property records for a project team), you need the InterfaceOS, which is proprietary software. This aggregation layer is how PointSav monetizes: it does not charge for sovereign data storage, but it charges for the logic that connects multiple vaults together.
+The moment you need to aggregate across multiple archives (for example, pulling together personnel records and property records for a project team), you need OrchestrationOS, which is proprietary software. This aggregation layer is how PointSav monetizes: it does not charge for private data storage, but it charges for the logic that connects multiple archives together.
 
 This boundary is not just commercial — it is a design constraint. FOSS (free and open source) components must never contain proprietary logic. An independent developer should be able to run a Totebox Archive and a ConsoleOS variant for their own use without touching any proprietary code.
 
@@ -131,7 +131,7 @@ This boundary is not just commercial — it is a design constraint. FOSS (free a
 
 The platform is organized around five named components. These names are canonical — they appear in code, documentation, and conversation. Do not substitute synonyms.
 
-### ToteboxOS (The Data Vault)
+### ToteboxOS (Totebox Archives)
 
 A ToteboxOS instance is a self-contained store for one specific asset. Think of it as a sealed filing cabinet that belongs entirely to one entity — a building, a company, or a person. Everything relating to that entity lives inside it: documents, records, and logs.
 
@@ -145,19 +145,19 @@ There are three preset types of Totebox Archives:
 |---|---|---|
 | PersonnelArchive | SIN or Passport ID | Professional network, identity records, contact history |
 | CorporateArchive | Business Incorporation Number or Tax ID | Financial records, minute books, statutory ledgers, calendars |
-| RealPropertyArchive | Land Title PIN or legal address | Property data, permits, lifecycle logs, BIM drawings, IoT data |
+| PropertyArchive | Land Title PIN or legal address | Property data, permits, lifecycle logs, BIM drawings, IoT data |
 
 The anchor identifier is the universal key. A PersonnelArchive anchored to a SIN number ties together every record about that individual regardless of which system generated it.
 
-### InterfaceOS (The Logic Hub)
+### OrchestrationOS (The Logic Hub)
 
-The InterfaceOS is a stateless layer — it holds no data of its own. Its job is to connect a ConsoleOS to one or more ToteboxOS archives and apply business logic to the combined result.
+OrchestrationOS is a stateless layer — it holds no data of its own. Its job is to connect a ConsoleOS to one or more ToteboxOS archives and apply business logic to the combined result. It also provides the extended compute capacity that the base archive node cannot deliver — BIM rendering, GIS spatial analysis, SLM inference, and data warehouse operations all require OrchestrationOS capacity.
 
-If a user only needs to view one archive, they can connect to it directly from their ConsoleOS. The InterfaceOS becomes necessary when they need to see across multiple archives simultaneously — for example, a project manager who needs to view both the building's records and the personnel records for the project team at the same time.
+If a user only needs to view one archive, they can connect to it directly from their ConsoleOS. OrchestrationOS becomes necessary when they need to see across multiple archives simultaneously — for example, a project manager who needs to view both the building's records and the personnel records for the project team at the same time.
 
 This aggregation function is the monetization boundary. The main variant used by Woodfine is the CommandCentre, which aggregates PersonnelArchives and CorporateArchives.
 
-Other InterfaceOS variants include:
+Other OrchestrationOS variants include:
 
 | Variant | Purpose |
 |---|---|
@@ -171,7 +171,7 @@ Other InterfaceOS variants include:
 
 ### ConsoleOS (The User Interface)
 
-The ConsoleOS is what operators use at their desk. Each variant is purpose-built for a specific workflow and connects to a specific InterfaceOS variant. In the current phase, these are browser-based Heads-Up Displays served via NGINX. In the end state, each variant runs as its own virtual machine on the user's workstation.
+The ConsoleOS is what operators use at their desk. Each variant is purpose-built for a specific workflow and connects to a specific OrchestrationOS variant. In the current phase, these are browser-based Heads-Up Displays served via NGINX. In the end state, each variant runs as its own virtual machine on the user's workstation.
 
 The primary variant is the FKeysConsole — a keyboard-driven interface where each function key activates a different context within the corporate record system. It is designed to be fast, keyboard-driven, and stable across backend upgrades.
 
@@ -189,7 +189,7 @@ Other ConsoleOS variants:
 
 ### InfrastructureOS (The Virtualization Substrate)
 
-InfrastructureOS is the layer that physical hardware runs. It provides the virtualization environment for all other components — the CPU, memory, storage, and networking that ToteboxOS instances and InterfaceOS hubs run on top of.
+InfrastructureOS is the layer that physical hardware runs. It provides the virtualization environment for all other components — the CPU, memory, storage, and networking that ToteboxOS instances and OrchestrationOS hubs run on top of.
 
 In the MVP phase, this is cloud compute (GCP/AWS). In the end state, it is a purpose-built PointSav operating system that can run on on-premises servers, leased dedicated servers, and public cloud simultaneously.
 
@@ -206,14 +206,14 @@ The table below lists canonical names and what NOT to substitute them with. Usin
 | Canonical Name | Do NOT Call It |
 |---|---|
 | ToteboxOS | ArchiveOS, VaultOS, DataNode |
-| InterfaceOS | LogicLayer, AggregationService, MiddleTier |
+| OrchestrationOS | InterfaceOS, LogicLayer, AggregationService, MiddleTier |
 | ConsoleOS | ClientApp, Terminal, Frontend |
 | InfrastructureOS | HypervisorLayer, VMSubstrate |
 | NetworkAdminOS | MeshController, NodeManager |
 | ToteboxArchive | (generic name for any ToteboxOS instance with its data) |
 | PersonnelArchive | HRArchive, PeopleNode |
 | CorporateArchive | FinanceArchive, BusinessNode |
-| RealPropertyArchive | BuildingArchive, AssetNode |
+| PropertyArchive | RealPropertyArchive, BuildingArchive, AssetNode |
 | CommandCentre | OrchestratorHub, AccessGateway |
 | FKeysConsole | MainTerminal, AdminConsole |
 | PairingAsPermission | RBAC, ACL, PermissionSystem |
@@ -239,12 +239,12 @@ This model is called **Pairing as Permission** and it is implemented through **M
 
 Every node in the network has a machine identity — a cryptographic certificate tied to that specific hardware instance. When two nodes are paired, they exchange cryptographic keys and register the pairing in the MBA registry maintained by NetworkAdminOS.
 
-From that point on, the question the system asks is not "Does this user have permission?" but rather "Is this ConsoleOS instance paired with this InterfaceOS instance?" The answer is visible directly from the network topology.
+From that point on, the question the system asks is not "Does this user have permission?" but rather "Is this ConsoleOS instance paired with this OrchestrationOS instance?" The answer is visible directly from the network topology.
 
 **An example:** A project team needs access to two buildings and their associated staff records.
 
-1. Deploy one CommandCentre (InterfaceOS) instance.
-2. Pair it to the two RealPropertyArchive instances for those buildings.
+1. Deploy one CommandCentre (OrchestrationOS) instance.
+2. Pair it to the two PropertyArchive instances for those buildings.
 3. Pair it to the PersonnelArchive instances for the team members.
 4. Pair each team member's FKeysConsole to the CommandCentre.
 
@@ -272,7 +272,7 @@ Because components are physically locked into isolated memory sectors, the syste
 
 The Snap (formally the IssuerSnap) is a verification mechanism that cross-checks records across multiple archives. It is used primarily for producing authenticated quarterly reports as required of Reporting Issuers (publicly-traded limited partnerships).
 
-The MediaKitOS pulls data from Corporate Archives (financial records) and Real Property Archives (property data), cross-references them against Personnel Archives (who is responsible for what), and generates a report whose data chain can be verified end-to-end. Each cross-reference uses the anchor identifiers described in Part III — a Corporate Archive references a person by their SIN, not by a local database ID.
+The MediaKitOS pulls data from Corporate Archives (financial records) and Property Archives (property data), cross-references them against Personnel Archives (who is responsible for what), and generates a report whose data chain can be verified end-to-end. Each cross-reference uses the anchor identifiers described in Part III — a Corporate Archive references a person by their SIN, not by a local database ID.
 
 ---
 
@@ -303,7 +303,7 @@ In the end state, this export artifact is a Bootable Disk Image — a virtual ma
 
 **Important distinction:** A Docker container is NOT Freely Transferable. It requires Docker to run. A bootable disk image requires only a standard hypervisor, which is a universal commodity.
 
-A practical example: When Woodfine sells a building, the entire history of that building — permits, contracts, IoT logs, maintenance records — lives in a RealPropertyArchive. The buyer receives a Bootable Disk Image of that archive. They boot it on their own infrastructure. The complete history is now under their control, with zero ongoing dependency on Woodfine's systems.
+A practical example: When Woodfine sells a building, the entire history of that building — permits, contracts, IoT logs, maintenance records — lives in a PropertyArchive. The buyer receives a Bootable Disk Image of that archive. They boot it on their own infrastructure. The complete history is now under their control, with zero ongoing dependency on Woodfine's systems.
 
 In the MVP phase, "Freely Transferable" means: no proprietary data formats, no vendor lock-in in the data path, and "export this archive" as a tested operation from day one.
 
@@ -325,7 +325,7 @@ This is the WORM principle — Write Once, Read Many. Once a record enters cold 
 
 For public-facing content (such as investor disclosures served through MediaKitOS), the system extends the integrity model to the browser. The JavaScript engine reads the visible text on screen, computes a SHA-256 hash using the browser's native `crypto.subtle.digest` API, and displays the resulting fingerprint live in the interface sidebar. Any institutional investor or auditor can independently copy the text, run their own hash, and verify it matches — proving the disclosure has not been tampered with in transit. This operation occurs 100% client-side with zero server execution.
 
-## The Sovereign Replacement Initiative
+## The Replacement Programme
 
 Any digital transformation begins with a dependency on third-party software. Microsoft 365 for email, cloud providers for hosting, proprietary authentication systems. These dependencies represent a risk: if a vendor changes their terms of service, deprecates an API, or goes out of business, the corporate infrastructure that depends on them breaks.
 
@@ -373,7 +373,7 @@ The data pipeline describes how information from the outside world — primarily
           v                v
     Deterministic    +----------------+
     services         |  service-slm   |
-    (service-people, |  (AI Air-Lock) |
+    (service-people, |  (AI Gateway)  |
      telemetry)      |  Sub-billion   |
                      |  param model.  |
                      |  Extracts facts|
@@ -448,17 +448,25 @@ It then routes the cleaned content based on what type of data it is:
 
 The raw original file is always vaulted before any processing begins. This maintains chain of custody (SYS-ADR-07: forensic chain of custody rule).
 
-## service-slm — The AI Air-Lock
+## service-slm — The AI Gateway
 
-The SLM service (Small Language Model) is an AI component that processes unstructured human text to extract structured facts. "Small Language Model" refers to a compact AI model (sub-one-billion parameters) that runs entirely on the organization's own hardware — no external API calls, no data leaving the network.
+The SLM service is an optional service installed directly on a Totebox Archive node. It requires minimum hardware specifications above the base tier. It operates in two roles simultaneously.
 
-The service's operating principle is: it reads, extracts, and then **shuts down**. It does not maintain a running connection to external AI services. It receives raw text via standard input, produces structured Markdown output, and terminates. This is the "point-in-time execution" model.
+**Role 1 — Local AI processing.** A small, locally-running open-source model — Qwen, Phi, or equivalent — applies AI-assisted processing to unstructured human text within the archive. It reads, extracts structured facts, formats the output as clean Markdown, and terminates. It does not maintain a running connection. It processes one payload and shuts down.
 
-This prevents the two failure modes that plague commercial AI integrations:
+This is the "point-in-time execution" model. It prevents two failure modes that plague commercial AI integrations:
 1. Corporate data being absorbed into a third-party AI provider's training data.
-2. The AI having ongoing influence over stored records (which could introduce invisible errors over time).
+2. The AI having ongoing influence over stored records, which could introduce invisible errors over time.
 
-**Sovereign AI Routing.** When a query requires computational power beyond what the local SLM can provide, the system employs a physical linguistic air-lock. The local SLM first sanitizes the payload — stripping sensitive information, masking PII, removing physical coordinates. Only the anonymized mathematical skeleton of the prompt is allowed to route to an external cloud model. When the external model returns its result, the local router re-hydrates the response with the correct internal context before delivering it to the operator. The external AI model never holds the actual corporate truth in its memory.
+**Role 2 — The Doorman.** `service-slm` is the standardised gateway protocol between the Totebox Archive and any external AI model. Before any content leaves the private network, the local model sanitises the payload — stripping sensitive information, masking personally identifiable data, and removing physical coordinates. Only the anonymised structural skeleton routes outbound. When the external model returns a result, the local router re-hydrates the response with correct internal context before delivering it to the operator. The external model never holds actual corporate records.
+
+**Three paths for AI on the platform:**
+
+| Path | What the operator does | PointSav's role |
+|---|---|---|
+| No AI | Run ToteboxOS at base tier. Full WORM compliance and search with zero AI dependency. | None required |
+| DIY via Doorman | Install `service-slm` and wire any external AI model to the gateway protocol independently. | Provides the open-source doorman standard only |
+| Packaged product | Deploy `app-orchestration-slm` on OrchestrationOS. PointSav provides a packaged, pre-configured open-source model ready to run. | Packaging, configuration, and integration |
 
 ## service-people — The Personnel Ledger
 
@@ -485,7 +493,7 @@ These slow update rates are deliberate. Stability in the taxonomy means that dat
 
 The Verification Surveyor is an intentional bottleneck in the identity resolution pipeline. Before an extracted person record can be committed to the verified ledger, a human operator must confirm it.
 
-The process is deliberately air-gapped: the system does not call the LinkedIn API or any external directory service to verify records. API integrations would require foreign tokens that violate the Sovereign Data Protocol, and high-volume API calls incur SaaS taxation and risk IP bans. Instead, it displays the extracted information at the operator's terminal, and the operator uses their own personal browser to verify the information independently. The machine never touches the external network during verification.
+The process is deliberately air-gapped: the system does not call the LinkedIn API or any external directory service to verify records. API integrations would require foreign tokens that conflict with the platform's data integrity principles, and high-volume API calls incur SaaS taxation and risk IP bans. Instead, it displays the extracted information at the operator's terminal, and the operator uses their own personal browser to verify the information independently. The machine never touches the external network during verification.
 
 A hard throttle of 10 verifications per day is enforced. This is not a technical limitation — it is an intentional design choice. The goal is to make verification a high-value ritual rather than a checkbox exercise. Ten perfect records per day produces 3,650 verified relationships per year with zero data corruption. A higher limit would produce more records but would invite fatigue-driven errors.
 
@@ -507,7 +515,7 @@ This design keeps client-specific operational data (credentials, target URLs) ou
 
 ## The Command Ledger
 
-The operator's primary interface is the Sovereign Command Ledger — accessible at `console.woodfinegroup.com`. It is built as a Heads-Up Display (HUD): a window that routes data between the operator and the underlying archives, not a destination in itself (SYS-ADR-18). The ConsoleOS is explicitly not a "web app" — it is a routing terminal.
+The operator's primary interface is the Command Ledger — accessible at `console.woodfinegroup.com`. It is built as a Heads-Up Display (HUD): a window that routes data between the operator and the underlying archives, not a destination in itself (SYS-ADR-18). The ConsoleOS is explicitly not a "web app" — it is a routing terminal.
 
 The HUD exposes three layers of the Derivative Architecture:
 
@@ -529,13 +537,13 @@ This Zero-Form design eliminates the overhead of navigating through nested menus
 |---|---|---|---|
 | F2 | People | Search and view personnel entities and contact records | CSV "Index Card" to desktop |
 | F3 | Email | View cold-stored base email assets (the originals) | Display / export |
-| F4 | Content Forge | Draft communications with SLM assistance. The SLM passively highlights alignment with active Themes and Archetypes | Markdown file to desktop |
+| F4 | Drafting | Draft communications with SLM assistance. The SLM passively highlights alignment with active Themes and Archetypes | Markdown file to desktop |
 | F8 | Network Command | PPN mesh management. Issue fleet commands. Broadcast network health checks. Isolate nodes | Real-time network action |
 | F12 | Input Machine | The Anchor. Human-in-the-loop gateway for committing base assets to cold storage. Must manually select Destination Totebox, Service, and Chart of Accounts | Immutable ledger entry |
 
 **Critical note on F12:** The Input Machine is the ground truth of the entire system. Nothing enters long-term storage without passing through F12. The SLM may suggest a Chart of Accounts classification, but the human operator must physically authorize the commit. This is the Fiduciary Anchor — the point where a human's judgment becomes the irreversible fact of record.
 
-## The Sovereign Airgap (Git for Knowledge)
+## The Verification Airgap (Git for Knowledge)
 
 The ConsoleOS operates with a Git-like Checkout/Commit model for institutional knowledge (SYS-ADR-19). This is designed to prevent automated AI systems from silently publishing hallucinated content to verified corporate ledgers.
 
@@ -553,7 +561,7 @@ The ConsoleOS is built as a strict two-part system (SYS-ADR-11):
 
 **The Cartridges** (app-console-*): Isolated HTML/JavaScript fragments, one per F-key function. Each cartridge is completely unaware of the broader system. When an operator presses an F-key, the Chassis dynamically fetches and mounts the corresponding cartridge into the viewport using the browser's native fetch() API.
 
-This separation means that a change to the F4 Content Forge cartridge cannot break the F12 Input Machine cartridge. They do not share code. Each cartridge can be updated, replaced, or extended independently.
+This separation means that a change to the F4 Drafting cartridge cannot break the F12 Input Machine cartridge. They do not share code. Each cartridge can be updated, replaced, or extended independently.
 
 **Port splitting (SYS-ADR-14):** The NGINX Cloud Shield routes traffic asymmetrically. Static UI requests go to port 8888 (the Chassis HTML/CSS/JS). API calls go to port 8080 (the Rust backend over WireGuard). This prevents the Rust binaries from acting as file servers, which would violate memory isolation.
 
@@ -569,10 +577,11 @@ Woodfine's fleet consists of three infrastructure tiers. On-premises hardware ha
 
 | Fleet Directory | Role | Current Hardware |
 |---|---|---|
-| fleet-infrastructure-onprem | On-premises operator node. Local operator terminal | MacBook Pro (NODE-LAPTOP-A) — Provisioning |
-| fleet-command-authority | Master routing node. Holds cryptographic keys. Command Authority | iMac 12.1 (NODE-IMAC-12) — Active |
+| fleet-infrastructure-onprem | On-premises hardware nodes | MacBook Pro (NODE-LAPTOP-A) — Provisioning |
 | fleet-infrastructure-cloud | Cloud relay nodes. Operational workloads | GCP e2-micro (NODE-GCP-CORPORATE) — Active Testing |
 | fleet-infrastructure-leased | Dedicated leased servers (future) | — |
+
+The master routing node — iMac 12.1 (NODE-IMAC-12) on the Executive's desk — holds the cryptographic keys for the entire network. It is not a deployable fleet directory. It dials OUT to the cloud relay. The public internet cannot dial IN to it.
 
 ## The PointSav Private Network (PPN) Topology
 
@@ -584,8 +593,8 @@ This means: if the cloud provider disappears tomorrow, the organization retains 
   +----------------------------------------------------+
   |  EXECUTIVE DESK (On-premises)                       |
   |  +-----------------------------+                   |
-  |  |  Node 3: iMac 12.1          |                   |
-  |  |  fleet-command-authority    |                   |
+  |  |  iMac 12.1 (NODE-IMAC-12)   |                   |
+  |  |  Master Routing Node        |                   |
   |  |  Type-II VM running         |                   |
   |  |  os-network-admin           |                   |
   |  |  Holds: cryptographic keys  |                   |
@@ -614,19 +623,19 @@ The full fleet deployment directory maps to the following roles:
 | Directory | Type | Purpose |
 |---|---|---|
 | cluster-totebox-corporate | ToteboxOS | CorporateArchive: financial records, minute books, ledgers |
-| cluster-totebox-personnel-1 | ToteboxOS | PersonnelArchive: contacts, identity records |
-| cluster-totebox-real-property | ToteboxOS | RealPropertyArchive: properties, permits, BIM |
+| cluster-totebox-personnel | ToteboxOS | PersonnelArchive: contacts, identity records |
+| cluster-totebox-property | ToteboxOS | PropertyArchive: properties, permits, BIM |
 | fleet-infrastructure-cloud | InfrastructureOS | Cloud compute nodes |
 | fleet-infrastructure-leased | InfrastructureOS | Dedicated leased server nodes |
 | fleet-infrastructure-onprem | InfrastructureOS | On-premises hardware nodes |
-| gateway-interface-command | InterfaceOS | CommandCentre: aggregates archives for administration |
+| gateway-interface-command | OrchestrationOS | CommandCentre: aggregates archives for administration |
 | media-knowledge-corporate | MediaKitOS | Corporate knowledge wiki |
 | media-knowledge-distribution | MediaKitOS | Distribution / newsroom |
 | media-knowledge-projects | MediaKitOS | Projects wiki |
 | media-marketing-landing | MediaKitOS | Public-facing marketing site |
 | node-console-operator | ConsoleOS | FKeysConsole operator terminal |
 | route-network-admin | NetworkAdminOS | PPN management and MBA registry |
-| vault-privategit-source | PrivateGitOS | Sovereign version control |
+| vault-privategit-source | PrivateGitOS | Air-gapped version control |
 
 ---
 
@@ -679,7 +688,7 @@ When service-people surfaces an unverified identity fragment (extracted from ema
 
 The daily throttle is enforced by the system at 10 verifications per day. When the limit is reached, the system will not accept further verification inputs until the following day. This is intentional — do not attempt to bypass it.
 
-## Sovereign Search
+## Archive Search
 
 To search across all archived files:
 
@@ -839,7 +848,7 @@ The SLM may silently suggest a classification while the operator reviews the doc
 **The decision:** The Totebox Archive is modeled on financial derivatives with three layers:
 - **Base Asset (Ground Truth):** Immutable physical files (.pdf, .eml) locked to disk via F12 Input Machine and service-email cold storage.
 - **First Derivative (Structural Index):** Archetypes, Chart of Accounts, Domains, and Themes — synthesized passively by the SLM reading the Base Assets. A self-healing, autonomous map of the company's reality.
-- **Third Derivative (Output and Utility):** Generated content (memos, emails via F4 Content Forge) and pristine CSV/MD exports for data marketplaces.
+- **Third Derivative (Output and Utility):** Generated content (memos, emails via F4 Drafting) and pristine CSV/MD exports for data marketplaces.
 
 **The implication:** Dynamic taxonomy is the synthesized output of the system, not a manual data-entry requirement. The operator does not maintain the knowledge graph — the system maintains it autonomously from the ground truth.
 
@@ -850,11 +859,11 @@ The SLM may silently suggest a classification while the operator reviews the doc
 **The decision:** The os-console is a strict Heads-Up Display (HUD) — a window that routes physical data between the operator and the underlying Derivative Architecture. Each F-key maps to a specific layer:
 - F12 Input: Grounding Anchor (Base Assets)
 - F3 Email / F2 People: Querying the Index (First Derivative, output as CSV Index Cards)
-- F4 Content: Forging the Third Derivative (output as Markdown files)
+- F4 Drafting: Forging the Third Derivative (output as Markdown files)
 
 **The implication:** The ConsoleOS is not a destination. It is a routing terminal. All outputs are physical files dropped to the operator's desktop.
 
-## SYS-ADR-19: The Sovereign Airgap (Git for Knowledge)
+## SYS-ADR-19: The Verification Airgap (Git for Knowledge)
 
 **The problem:** Autonomous AI systems ("Agentic AI") that can read, write, and publish data are a fiduciary liability. Automated merging introduces invisible hallucination creep into verified corporate ledgers.
 
@@ -873,7 +882,7 @@ The SLM may silently suggest a classification while the operator reviews the doc
 
 Every third-party dependency is a liability. Not a theoretical liability — a practical one. If Microsoft changes its Graph API, `service-email` breaks. If a cloud provider deprecates a service, the infrastructure must be rebuilt. If a hardware vendor's driver stops working, the system stops working.
 
-The Sovereign Replacement Initiative is the ongoing program to eliminate these dependencies one by one. Each dependency is quarantined, tracked, and replaced with a native alternative when that alternative reaches functional parity.
+The Replacement Programme is the ongoing effort to eliminate these dependencies one by one. Each dependency is quarantined, tracked, and replaced with a native alternative when that alternative reaches functional parity.
 
 ## Technical Debt Ledger
 
@@ -881,15 +890,15 @@ The monorepo tracks quarantined vendor dependencies and their corresponding moon
 
 | Quarantined Dependency | Vendor Directory | Replacement Target | Moonshot Directory |
 |---|---|---|---|
-| Microsoft Graph API (email) | `vendor-microsoft-graph` | Native sovereign email transport | `moonshot-protocol` |
+| Microsoft Graph API (email) | `vendor-microsoft-graph` | Native mail transport | `moonshot-protocol` |
 | Azure AD (authentication) | `vendor-azure-auth` | Machine-Based Authorization (MBA) | `system-mba-shim` (active) |
 | systemd (process supervision) | `vendor-linux-systemd` | rc.d or runit on FreeBSD / seL4 | `moonshot-kernel` |
 | GPU drivers | `vendor-gpu-drivers` | Native GPU interface | `moonshot-gpu` |
-| Phi-3 Mini (SLM engine) | `vendor-phi3-mini` | Sovereign language model | `moonshot-toolkit` |
+| Phi-3 Mini (SLM engine) | `vendor-phi3-mini` | Native language model | `moonshot-toolkit` |
 | SLM vendor engine | `vendor-slm-engine` | Native SLM execution | `moonshot-toolkit` |
 | seL4 kernel (reference) | `vendor-sel4-kernel` | Production seL4 VMM integration | `moonshot-sel4-vmm` |
 | VirtIO (virtualization) | `vendor-virtio` | Native hypervisor | `moonshot-hypervisor` |
-| WireGuard (VPN) | `vendor-wireguard` | Native sovereign mesh | `moonshot-network` |
+| WireGuard (VPN) | `vendor-wireguard` | Native private mesh | `moonshot-network` |
 | MaxMind GeoIP | `vendors-maxmind` | Native geographic resolution | `moonshot-index` |
 | Databases (PostgreSQL, etc.) | (classified as debt) | Flat-file state machine (partial parity) | `moonshot-database` |
 
@@ -897,7 +906,7 @@ The monorepo tracks quarantined vendor dependencies and their corresponding moon
 
 For each quarantined dependency, an engineering initiative is underway in the corresponding `moonshot-*` directory. These are real engineering projects — not aspirational notes. When a Moonshot component achieves structural parity with the component it is replacing, it physically replaces the quarantined vendor code.
 
-The Sovereign Data Foundation in Denmark audits this pipeline to verify that the organization is on a credible trajectory toward operational independence.
+The Sovereign Data Foundation in Denmark is intended to audit this pipeline to verify that the organization is on a credible trajectory toward operational independence.
 
 ## Where the Architecture Is Going
 
@@ -917,7 +926,7 @@ None of this requires over-engineering today. It requires awareness: choosing an
 
 | Term | Plain-Language Definition |
 |---|---|
-| Archive Preset | One of three standard ToteboxArchive configurations: PersonnelArchive, CorporateArchive, or RealPropertyArchive. Each is pre-loaded with the right services for its asset type. |
+| Archive Preset | One of three standard ToteboxArchive configurations: PersonnelArchive, CorporateArchive, or PropertyArchive. Each is pre-loaded with the right services for its asset type. |
 | Assignment | What PointSav calls a task or work ticket. Assignments must compile and function before they are considered complete. |
 | Base Asset | The raw, immutable original file — an email (.eml), a contract (.pdf), a spreadsheet (.xlsx). Stored in cold storage via F12. Cannot be altered after entry. |
 | BIM | Building Information Modelling. A digital 3D representation of a physical building that includes structural, mechanical, and spatial data. |
@@ -926,17 +935,17 @@ None of this requires over-engineering today. It requires awareness: choosing an
 | Cartridge | An isolated HTML/JS micro-frontend fragment loaded into the Console OS Chassis on demand via fetch(). Each cartridge is self-contained and unaware of the broader system (SYS-ADR-11). |
 | Chart of Accounts | A structured list of financial and operational categories used to classify every document and transaction. Requires Executive override to change (update rate: 18-24 months). |
 | Chassis | The empty UI frame (os-console) holding CSS, F-Key routing, and MBA parameters. Contains zero business data. The "picture frame" into which Cartridges are mounted (SYS-ADR-11). |
-| CommandCentre | The primary InterfaceOS variant. Aggregates PersonnelArchives and CorporateArchives for administrative use. |
+| CommandCentre | The primary OrchestrationOS variant. Aggregates PersonnelArchives and CorporateArchives for administrative use. |
 | ConsoleOS | The user-facing delivery layer. Each variant is a purpose-built interface for a specific workflow. |
 | Contributor | A PointSav developer or designer. Individual contributors, not agency teams. |
 | Control Valve | One of four CSV ledgers (Archetypes, Chart of Accounts, Domains, Themes) governing the self-healing speed of service-content. Each updates at a different rate to preserve longitudinal data stability. |
 | CorporateArchive | A ToteboxArchive for a legal entity. Anchored to a Business Incorporation Number or Tax ID. Contains financial records, minute books, and statutory ledgers. |
 | CostingEmail | What PointSav calls a statement of work or work order. The commercial document that defines an assignment. |
-| Customer | An organization that pays for industrial-scale Totebox Orchestration using proprietary InterfaceOS components. |
+| Customer | An organization that pays for institutional-scale Totebox Orchestration using proprietary OrchestrationOS components. |
 | DARP | Data Access and Retention Protocol. The compliance standard governing how data must be stored, accessed, and retained. Requires data to be searchable without proprietary software. |
 | Derivative Architecture | The three-tier data model: Base Assets (ground truth) -> First Derivative (indexed knowledge) -> Third Derivative (generated outputs). Defined in SYS-ADR-17. |
 | DiodeStandard | The one-way command flow principle. Data moves in one direction only: from source to destination. No reverse channel. Applies to both the telemetry pull and the overall security architecture. |
-| F-Key | A hardware function key on the keyboard that activates a specific context in the FKeysConsole. F2 = People, F3 = Email, F4 = Content, F8 = Network, F12 = Input Machine. |
+| F-Key | A hardware function key on the keyboard that activates a specific context in the FKeysConsole. F2 = People, F3 = Email, F4 = Drafting, F8 = Network, F12 = Input Machine. |
 | First Derivative | The processed, self-healing knowledge graph derived from Base Assets by service-slm. Contains the organization's current operational reality in a clean, queryable form. Governed by the four Control Valves. |
 | FKeysConsole | The primary ConsoleOS variant for administrative work. A keyboard-driven HUD where each function key activates a different layer of the Derivative Architecture (SYS-ADR-18). |
 | Freely Transferable | The non-negotiable standard that every ToteboxArchive must be exportable as a complete, self-contained package deployable without proprietary runtimes or vendor relationships. |
@@ -944,9 +953,9 @@ None of this requires over-engineering today. It requires awareness: choosing an
 | Geometric Security | Peter Woodfine's term for the Machine-Based Authorization model. The topology of the network defines the access control. |
 | GIS | Geographic Information System. Software for capturing, storing, and analyzing spatial and geographic data. |
 | InfrastructureOS | The virtualization substrate. The operating system that physical hardware runs. Provides the environment for all other components. |
-| InterfaceOS | The stateless logic layer. Holds no data. Aggregates data from multiple ToteboxArchives for ConsoleOS users. Required for multi-archive use cases (the monetization boundary). |
+| OrchestrationOS | The stateless logic and compute layer. Holds no data. Connects ConsoleOS terminals to one or more ToteboxArchives and provides extended compute capacity for BIM, GIS, SLM, and data warehouse operations. Required for multi-archive use cases (the monetization boundary). |
 | Inverted Index | A search structure where each word in a corpus maps to a list of files containing that word — like the index at the back of a textbook. Enables microsecond search without a running database. |
-| IoTConnect | An InterfaceOS variant that bridges IoT sensor data into the ToteboxArchive system. |
+| IoTConnect | An OrchestrationOS variant that bridges IoT sensor data into the ToteboxArchive system. |
 | IssuerSnap | See: TheSnap. |
 | Machine-Based Authorization (MBA) | A security model where access is granted through cryptographic hardware pairing between machines, not through usernames and passwords. |
 | MediaKitOS | The web framework and CMS layer for public-facing web properties and Reporting Issuers' disclosure obligations. |
@@ -958,18 +967,18 @@ None of this requires over-engineering today. It requires awareness: choosing an
 | PairingAsPermission | The core security principle: access is determined by which machines are cryptographically paired to which, not by user credentials or role assignments. |
 | PersonnelArchive | A ToteboxArchive for an individual person. Anchored to a SIN (Social Insurance Number) or Passport ID. Contains professional network records, identity data, and communication history. |
 | PointSav Private Network (PPN) | The encrypted mesh network connecting all fleet nodes. Runs over WireGuard. The master routing node resides on the Executive's physical desk (SYS-ADR-13). |
-| PrivateGitOS | The sovereign version control system. Preferred on-premises for physical IP possession. |
+| PrivateGitOS | The self-hosted version control system. Preferred on-premises for physical IP possession. |
 | RAG | Retrieval-Augmented Generation. An AI technique where a model is given relevant context documents before generating a response, rather than relying solely on its training data. |
-| RealPropertyArchive | A ToteboxArchive for a physical property. Anchored to a Land Title PIN or legal address. Contains permits, lifecycle records, BIM drawings, IoT data, and maintenance history. |
+| PropertyArchive | A ToteboxArchive for a physical property. Anchored to a Land Title PIN or legal address. Contains permits, lifecycle records, BIM drawings, IoT data, lease register, and maintenance history. |
 | Reporting Issuer | A publicly-traded limited partnership that is required by securities law to disclose financial and operational information to investors on a regular schedule. Woodfine LPs are Reporting Issuers. |
 | seL4 | A mathematically proven microkernel. The seL4 security properties have been formally verified using machine-checked mathematical proofs — not just tested but proven. Reference point for the ToteboxOS kernel. |
 | ServiceProvider | External professionals (lawyers, accountants, architects, trades) who interact with the organization. |
 | SLM | Small Language Model. A compact AI model (sub-one-billion parameters) that runs entirely on the organization's own hardware. Used for text extraction and AI routing. Operates as a point-in-time process that terminates after execution. |
-| Sovereign Airgap | A Git-like Checkout/Commit workflow for institutional knowledge. Operators check out AI-staged drafts to their local desktop, verify them, and commit back via F12. Automated AI publishing to verified ledgers is forbidden (SYS-ADR-19). |
-| TheSnap | The cross-archive integrity verification mechanism. Pulls verified data from Corporate and Real Property Archives, cross-references against Personnel Archives, and generates authenticated quarterly reports. Used for Reporting Issuer compliance. |
+| Verification Airgap | A Git-like Checkout/Commit workflow for institutional knowledge. Operators check out AI-staged drafts to their local desktop, verify them, and commit back via F12. Automated AI publishing to verified ledgers is forbidden (SYS-ADR-19). |
+| TheSnap | The cross-archive integrity verification mechanism. Pulls verified data from Corporate and Property Archives, cross-references against Personnel Archives, and generates authenticated quarterly reports. Used for Reporting Issuer compliance. |
 | Third Derivative | Generated outputs synthesized from the First Derivative: drafts, memos, reports, CSV exports for data markets. |
 | ToteboxArchive | A self-contained data store for one specific asset. Contains both the data and the services that process it. The unit of ownership, backup, and export. |
-| ToteboxOrchestration | A complete, interconnected deployment of all platform components — ToteboxOS archives, InterfaceOS hubs, ConsoleOS terminals, and NetworkAdminOS. |
+| ToteboxOrchestration | A complete, interconnected deployment of all platform components — ToteboxOS archives, OrchestrationOS hubs, ConsoleOS terminals, and NetworkAdminOS. |
 | ToteboxOS | The operating system of a ToteboxArchive. In the end state, a unikernel running as a kernel-isolated virtual machine. |
 | Unikernel | A minimal operating system containing only the kernel, the libraries, and the application code needed for one specific purpose. No shell, no package manager, no multi-user support. Fast to boot, tiny attack surface. |
 | Vendor-* | Quarantined third-party dependencies. Isolated in their own directories. Tracked as technical debt with corresponding moonshot replacements. |
