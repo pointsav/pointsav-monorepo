@@ -1,0 +1,642 @@
+/* =============================================================================
+   Workplace*Proforma — Application Chrome Styles
+   Copyright © 2026 PointSav Digital Systems — EUPL-1.2
+   =============================================================================
+   This file styles the application shell: menu bar, toolbar, formula bar,
+   workbook desktop, grid, sheet tabs, and status bar.
+
+   Chrome tokens (colours, typography sizes, layout dimensions) are
+   deliberately aligned with app-workplace-memo so that both applications
+   share a common sovereign visual lineage — the sibling quality lives in the
+   chrome tokens, not in the content surface. Each application is free to
+   evolve its content surface independently toward category-leading UX.
+   ============================================================================= */
+
+/* ─── Custom Properties ──────────────────────────────────────────────────── */
+
+:root {
+  /* Chrome colours — inherited from app-workplace-memo for sibling consistency */
+  --chrome-bg:        #1e1e24;
+  --chrome-surface:   #28282f;
+  --chrome-border:    #38383f;
+  --chrome-hover:     #35353e;
+  --chrome-active:    #44444e;
+  --chrome-text:      #d4d2cc;
+  --chrome-text-dim:  #888880;
+  --chrome-accent:    #c8a96e;  /* PointSav gold */
+
+  /* Workbook desktop */
+  --desktop-bg:       #404048;
+
+  /* Grid — adapted for spreadsheet content */
+  --grid-bg:             #ffffff;
+  --grid-text:           #1a1a1a;
+  --grid-line:           #d8d6d0;
+  --grid-line-heavy:     #a8a6a0;
+  --header-bg:           #f4f2ec;
+  --header-text:         #44403a;
+  --header-active-bg:    #e4e0d2;
+  --cell-selected:       #fcf6e4;
+  --cell-selected-border: #c8a96e;
+  --cell-subtotal-bg:    #faf8f2;
+
+  --num-negative:        #a03028;
+  --num-positive:        #2f5d3a;
+
+  /* Typography */
+  --ui-font:      -apple-system, 'Helvetica Neue', Arial, sans-serif;
+  --ui-size:      12px;
+  --ui-size-s:    11px;
+
+  /* Grid typography — monospace tabular for numbers. System monospace by
+     default. When the design system library is integrated (Phase 2), the
+     grid typography upgrades to embedded OFL monospace fonts analogous to
+     memo's font embedding pattern. */
+  --grid-font:    ui-monospace, 'SF Mono', 'Menlo', 'Consolas', monospace;
+  --grid-size:    12px;
+  --grid-size-s:  11px;
+
+  /* Layout */
+  --menubar-h:    28px;
+  --toolbar-h:    36px;
+  --formulabar-h: 26px;
+  --sheettabs-h:  28px;
+  --statusbar-h:  22px;
+
+  --row-h:        22px;
+  --label-col-w:  280px;
+  --code-col-w:   60px;
+  --year-col-w:   108px;
+  --row-header-w: 44px;
+}
+
+/* ─── Reset ──────────────────────────────────────────────────────────────── */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+  background: var(--desktop-bg);
+  font-family: var(--ui-font);
+  font-size: var(--ui-size);
+  color: var(--chrome-text);
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+}
+
+/* ─── App shell layout ───────────────────────────────────────────────────── */
+
+#app-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ─── Menu bar ───────────────────────────────────────────────────────────── */
+
+#menubar {
+  display: flex;
+  align-items: center;
+  height: var(--menubar-h);
+  background: var(--chrome-bg);
+  border-bottom: 1px solid var(--chrome-border);
+  padding: 0 8px;
+  flex-shrink: 0;
+  gap: 2px;
+  padding-left: max(8px, env(safe-area-inset-left));
+}
+
+.menu-item {
+  background: none;
+  border: none;
+  color: var(--chrome-text);
+  font-family: var(--ui-font);
+  font-size: var(--ui-size);
+  padding: 3px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  outline: none;
+}
+.menu-item:hover  { background: var(--chrome-hover); }
+.menu-item:active { background: var(--chrome-active); }
+.menu-item.open   { background: var(--chrome-active); }
+
+.menubar-spacer { flex: 1; }
+
+.doc-title-display {
+  font-size: var(--ui-size);
+  color: var(--chrome-text);
+  max-width: 400px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.save-state {
+  font-size: var(--ui-size-s);
+  color: var(--chrome-text-dim);
+  min-width: 100px;
+  text-align: right;
+  pointer-events: none;
+}
+
+/* ─── Toolbar ────────────────────────────────────────────────────────────── */
+
+#toolbar {
+  display: flex;
+  align-items: center;
+  height: var(--toolbar-h);
+  background: var(--chrome-surface);
+  border-bottom: 1px solid var(--chrome-border);
+  padding: 0 8px;
+  flex-shrink: 0;
+  gap: 2px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+}
+#toolbar::-webkit-scrollbar { display: none; }
+
+.toolbar-btn {
+  background: none;
+  border: 1px solid transparent;
+  color: var(--chrome-text);
+  font-family: var(--ui-font);
+  font-size: var(--ui-size);
+  min-width: 28px;
+  height: 26px;
+  padding: 0 5px;
+  border-radius: 4px;
+  cursor: pointer;
+  outline: none;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.toolbar-btn:hover   { background: var(--chrome-hover); border-color: var(--chrome-border); }
+.toolbar-btn:active  { background: var(--chrome-active); }
+.toolbar-btn.active  { background: var(--chrome-active); border-color: var(--chrome-accent); color: var(--chrome-accent); }
+
+.toolbar-select {
+  background: var(--chrome-bg);
+  border: 1px solid var(--chrome-border);
+  color: var(--chrome-text);
+  font-family: var(--ui-font);
+  font-size: var(--ui-size);
+  height: 26px;
+  padding: 0 4px;
+  border-radius: 4px;
+  cursor: pointer;
+  outline: none;
+}
+.toolbar-select:hover { border-color: var(--chrome-accent); }
+.size-select          { width: 52px; }
+
+.toolbar-divider {
+  width: 1px;
+  height: 20px;
+  background: var(--chrome-border);
+  margin: 0 4px;
+  flex-shrink: 0;
+}
+
+.toolbar-spacer { flex: 1; }
+
+.action-btn {
+  background: var(--chrome-bg);
+  border-color: var(--chrome-border);
+  font-size: var(--ui-size-s);
+  padding: 0 10px;
+}
+.action-btn:hover { background: var(--chrome-hover); border-color: var(--chrome-accent); color: var(--chrome-accent); }
+
+/* ─── Formula bar ────────────────────────────────────────────────────────── */
+
+#formulabar {
+  display: flex;
+  align-items: center;
+  height: var(--formulabar-h);
+  background: var(--chrome-bg);
+  border-bottom: 1px solid var(--chrome-border);
+  padding: 0 8px;
+  flex-shrink: 0;
+  gap: 8px;
+}
+
+.cell-ref {
+  font-family: var(--grid-font);
+  font-size: var(--ui-size);
+  color: var(--chrome-accent);
+  min-width: 80px;
+  padding: 2px 8px;
+  background: var(--chrome-surface);
+  border: 1px solid var(--chrome-border);
+  border-radius: 3px;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.formula-divider {
+  width: 1px;
+  height: 16px;
+  background: var(--chrome-border);
+  flex-shrink: 0;
+}
+
+.fx-label {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-style: italic;
+  font-size: 13px;
+  color: var(--chrome-text-dim);
+  padding: 0 4px;
+  flex-shrink: 0;
+}
+
+.formula-input {
+  flex: 1;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--chrome-text);
+  font-family: var(--grid-font);
+  font-size: var(--ui-size);
+  height: 20px;
+  padding: 0 6px;
+  outline: none;
+  user-select: text;
+}
+.formula-input:focus {
+  border-color: var(--chrome-accent);
+  background: var(--chrome-surface);
+  border-radius: 3px;
+}
+
+/* ─── Workbook desktop ──────────────────────────────────────────────────── */
+
+#workbook-desktop {
+  flex: 1;
+  overflow: hidden;
+  background: var(--desktop-bg);
+  display: flex;
+  padding: 16px;
+}
+
+#grid-container {
+  flex: 1;
+  background: var(--grid-bg);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.45), 0 0 0 1px rgba(0,0,0,0.15);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+#grid-scroll {
+  flex: 1;
+  overflow: auto;
+}
+
+/* ─── Grid table ─────────────────────────────────────────────────────────── */
+
+#proforma-grid {
+  border-collapse: collapse;
+  font-family: var(--grid-font);
+  font-size: var(--grid-size);
+  color: var(--grid-text);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+  user-select: text;
+  table-layout: fixed;
+}
+
+/* Column headers (A, B, C... and Label, CoA, Y1 etc.) */
+#proforma-grid th {
+  background: var(--header-bg);
+  color: var(--header-text);
+  font-weight: 500;
+  font-size: var(--grid-size-s);
+  text-align: center;
+  padding: 3px 6px;
+  border: 1px solid var(--grid-line);
+  border-top: none;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  height: 22px;
+}
+
+#proforma-grid th.row-header {
+  left: 0;
+  z-index: 3;
+  width: var(--row-header-w);
+  min-width: var(--row-header-w);
+  color: var(--chrome-text-dim);
+}
+
+/* Freeze the label column to the left */
+#proforma-grid td.row-label,
+#proforma-grid td.row-num {
+  position: sticky;
+  left: 0;
+  background: var(--grid-bg);
+  z-index: 1;
+}
+
+#proforma-grid td.row-num {
+  left: 0;
+  width: var(--row-header-w);
+  min-width: var(--row-header-w);
+  background: var(--header-bg);
+  color: var(--chrome-text-dim);
+  font-size: var(--grid-size-s);
+  text-align: center;
+  border: 1px solid var(--grid-line);
+  padding: 2px 4px;
+}
+
+#proforma-grid td.row-label {
+  left: var(--row-header-w);
+  width: var(--label-col-w);
+  min-width: var(--label-col-w);
+  padding: 3px 10px;
+  font-family: var(--ui-font);
+  font-size: var(--grid-size);
+  text-align: left;
+  border: 1px solid var(--grid-line);
+  z-index: 1;
+}
+
+#proforma-grid td.row-label.with-code::after {
+  content: attr(data-code);
+  font-family: var(--grid-font);
+  font-size: 10px;
+  color: var(--chrome-text-dim);
+  margin-left: 8px;
+  float: right;
+}
+
+/* Year columns */
+#proforma-grid th.year-header {
+  min-width: var(--year-col-w);
+  width: var(--year-col-w);
+}
+
+#proforma-grid td.cell {
+  width: var(--year-col-w);
+  min-width: var(--year-col-w);
+  padding: 3px 8px;
+  text-align: right;
+  border: 1px solid var(--grid-line);
+  height: var(--row-h);
+  cursor: cell;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+#proforma-grid td.cell.text {
+  text-align: left;
+  color: var(--grid-text);
+  font-family: var(--ui-font);
+}
+
+/* Selection */
+#proforma-grid td.cell.selected {
+  outline: 2px solid var(--cell-selected-border);
+  outline-offset: -2px;
+  background: var(--cell-selected);
+  z-index: 2;
+  position: relative;
+}
+
+/* Editing mode — cell shows an input */
+#proforma-grid td.cell .cell-editor {
+  width: 100%;
+  height: 100%;
+  border: none;
+  outline: none;
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+  background: var(--grid-bg);
+  padding: 0;
+  margin: 0;
+  text-align: inherit;
+  user-select: text;
+}
+
+/* Section headers inside the grid */
+#proforma-grid tr.section-header td {
+  background: var(--header-bg);
+  font-family: var(--ui-font);
+  font-size: var(--grid-size);
+  font-weight: 600;
+  padding: 8px 10px;
+  color: var(--header-text);
+  border-top: 2px solid var(--grid-line-heavy);
+  border-bottom: 1px solid var(--grid-line-heavy);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 10.5px;
+}
+
+/* Subtotal rows */
+#proforma-grid tr.row-subtotal td {
+  border-top: 1px solid var(--grid-line-heavy);
+  background: var(--cell-subtotal-bg);
+}
+#proforma-grid tr.row-subtotal td.row-label { font-weight: 600; }
+
+/* Total rows (NOI etc.) */
+#proforma-grid tr.row-total td {
+  border-top: 1px solid var(--grid-text);
+  border-bottom: 3px double var(--grid-text);
+  background: var(--cell-subtotal-bg);
+  font-weight: 600;
+}
+
+/* Negative numbers */
+#proforma-grid td.cell.negative { color: var(--num-negative); }
+
+/* Gridlines off state */
+#proforma-grid.no-gridlines td.cell,
+#proforma-grid.no-gridlines td.row-label { border-color: transparent; }
+
+/* ─── Sheet tabs ─────────────────────────────────────────────────────────── */
+
+#sheet-tabs {
+  display: flex;
+  align-items: flex-end;
+  height: var(--sheettabs-h);
+  background: var(--chrome-surface);
+  border-top: 1px solid var(--chrome-border);
+  padding: 0 8px;
+  gap: 1px;
+  flex-shrink: 0;
+}
+
+.sheet-tab {
+  background: var(--chrome-bg);
+  border: 1px solid var(--chrome-border);
+  border-bottom: none;
+  border-radius: 4px 4px 0 0;
+  color: var(--chrome-text-dim);
+  font-family: var(--ui-font);
+  font-size: var(--ui-size-s);
+  padding: 4px 14px;
+  height: 24px;
+  cursor: pointer;
+  outline: none;
+}
+.sheet-tab:hover { color: var(--chrome-text); }
+.sheet-tab.active {
+  background: var(--desktop-bg);
+  color: var(--chrome-accent);
+  border-color: var(--chrome-accent);
+}
+
+.sheet-tab-add {
+  min-width: 24px;
+  padding: 4px 8px;
+  color: var(--chrome-text-dim);
+  font-size: 14px;
+  line-height: 1;
+}
+
+/* ─── Status bar ─────────────────────────────────────────────────────────── */
+
+#statusbar {
+  display: flex;
+  align-items: center;
+  height: var(--statusbar-h);
+  background: var(--chrome-bg);
+  border-top: 1px solid var(--chrome-border);
+  padding: 0 12px;
+  flex-shrink: 0;
+  gap: 6px;
+  font-size: var(--ui-size-s);
+  color: var(--chrome-text-dim);
+}
+.statusbar-sep    { color: var(--chrome-border); }
+.statusbar-spacer { flex: 1; }
+
+/* ─── Dropdowns ──────────────────────────────────────────────────────────── */
+
+#dropdown-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+}
+
+.dropdown {
+  position: fixed;
+  z-index: 100;
+  background: var(--chrome-surface);
+  border: 1px solid var(--chrome-border);
+  border-radius: 6px;
+  padding: 4px 0;
+  min-width: 200px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+}
+
+.dropdown button {
+  display: block;
+  width: 100%;
+  background: none;
+  border: none;
+  color: var(--chrome-text);
+  font-family: var(--ui-font);
+  font-size: var(--ui-size);
+  padding: 6px 16px;
+  text-align: left;
+  cursor: pointer;
+  outline: none;
+}
+.dropdown button:hover { background: var(--chrome-hover); }
+
+.dropdown-sep {
+  height: 1px;
+  background: var(--chrome-border);
+  margin: 4px 0;
+}
+
+/* ─── Utility ────────────────────────────────────────────────────────────── */
+
+.hidden { display: none !important; }
+
+/* ─── Print — hide application chrome ───────────────────────────────────── */
+
+@media print {
+  #menubar,
+  #toolbar,
+  #formulabar,
+  #sheet-tabs,
+  #statusbar,
+  #dropdown-overlay,
+  .dropdown {
+    display: none !important;
+  }
+
+  #workbook-desktop {
+    padding: 0 !important;
+    background: white !important;
+    overflow: visible !important;
+  }
+
+  #grid-container {
+    box-shadow: none !important;
+  }
+
+  #grid-scroll {
+    overflow: visible !important;
+  }
+
+  #proforma-grid td.cell.selected {
+    outline: none !important;
+    background: transparent !important;
+  }
+
+  body {
+    background: white !important;
+    color: black !important;
+    overflow: visible !important;
+  }
+}
+
+/* ─── Blank Grid — Excel-style column headers ─────────────────────────── */
+
+#proforma-grid th.col-header {
+  min-width: 88px;
+  width: 88px;
+  background: var(--header-bg);
+  color: var(--header-text);
+  font-weight: 500;
+  font-size: var(--grid-size-s);
+  text-align: center;
+  padding: 3px 6px;
+  border: 1px solid var(--grid-line);
+  font-family: var(--ui-font);
+}
+
+#proforma-grid td.cell {
+  min-width: 88px;
+  width: 88px;
+}
+
+#proforma-grid td.row-num {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+}
+
+#proforma-grid td.cell.text {
+  text-align: left;
+}
