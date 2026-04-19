@@ -1,0 +1,2149 @@
+Received: from SJ2PR16MB6250.namprd16.prod.outlook.com (2603:10b6:a03:58b::22)
+ by DM6PR16MB2569.namprd16.prod.outlook.com with HTTPS; Mon, 16 Mar 2026
+ 13:11:58 +0000
+Received: from BN1PR10CA0009.namprd10.prod.outlook.com (2603:10b6:408:e0::14)
+ by SJ2PR16MB6250.namprd16.prod.outlook.com (2603:10b6:a03:58b::22) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9700.22; Mon, 16 Mar
+ 2026 13:11:55 +0000
+Received: from BL02EPF00021F68.namprd02.prod.outlook.com
+ (2603:10b6:408:e0:cafe::f2) by BN1PR10CA0009.outlook.office365.com
+ (2603:10b6:408:e0::14) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.20.9700.24 via Frontend Transport; Mon,
+ 16 Mar 2026 13:11:53 +0000
+Authentication-Results: spf=pass (sender IP is 198.2.182.135)
+ smtp.mailfrom=mail135.suw16.rsgsv.net; dkim=pass (signature was verified)
+ header.d=archdaily.com;dmarc=pass action=none
+ header.from=archdaily.com;compauth=pass reason=100
+Received-SPF: Pass (protection.outlook.com: domain of mail135.suw16.rsgsv.net
+ designates 198.2.182.135 as permitted sender)
+ receiver=protection.outlook.com; client-ip=198.2.182.135;
+ helo=mail135.suw16.rsgsv.net; pr=C
+Received: from mail135.suw16.rsgsv.net (198.2.182.135) by
+ BL02EPF00021F68.mail.protection.outlook.com (10.167.249.4) with Microsoft
+ SMTP Server (version=TLS1_3, cipher=TLS_AES_256_GCM_SHA384) id 15.20.9700.17
+ via Frontend Transport; Mon, 16 Mar 2026 13:11:55 +0000
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=archdaily.com; s=k3;
+	t=1773666614; x=1773936614; i=newsletter@archdaily.com;
+	bh=QkeIgC2vwUcySQUrvooJoXXVYZdD6oatTW+xpsGilCY=;
+	h=Subject:From:Reply-To:To:Date:Message-ID:X-MC-User:Feedback-ID:
+	 List-ID:List-Unsubscribe:List-Unsubscribe-Post:Content-Type:
+	 MIME-Version:CC:Date:Subject:From;
+	b=Q9ExeWRDaVuwC+pa0m/tAWeAZlTyYfG/uwRXSpHa16AhjcjRe1rXF5wzYd8eIgBoK
+	 oFanVCz7j81a5e/lBFNEi9swDpvKQvA1y9g+dI2OvyAC72P6AIcmxpLInhzMKWheJr
+	 vRHbBu2P/EVgvugrUDOjr1rwA/9rnl5phGFiVAn6w8wGyQqb40uPatCTeZn7Qgwr5s
+	 WwcfmjfPKTU6NpYO6gL+qCfNNGVu0mNZuLhX2vYmCO2EXErCRVquTVq2l4uyCXNW33
+	 ui/WKrhKXO/Be64e4Bq8njYft/t2mLrk9KOQlJD85vFtCfOqJkmlO/OUAskZg5QA6N
+	 AhYT25WYg/00A==
+Received: from localhost (localhost [127.0.0.1])
+	by mail135.suw16.rsgsv.net (Mailchimp) with ESMTP id 4fZFnL0p3LzLnxN5T
+	for <info@woodfine.co>; Mon, 16 Mar 2026 13:10:14 +0000 (UTC)
+Subject: =?utf-8?Q?The=20Earthen=20Towers=20of=20Shibam=3A=20A=20Vertical=20City=20in=20the=20Yemeni=20Desert?=
+From: ArchDaily <newsletter@archdaily.com>
+Reply-To: <us1-abe5825122-5a6d901bd8@inbound.mailchimpapp.net>
+To: <info@woodfine.co>
+Date: Mon, 16 Mar 2026 13:07:33 +0000
+Message-ID: <240fd05fed14bcc1d00032012.2a0f64bef8.20260316130727.8c942363ca.57e36c46@mail135.suw16.rsgsv.net>
+X-Mailer: Mailchimp Mailer - **CID8c942363ca2a0f64bef8**
+X-Campaign: mailchimp240fd05fed14bcc1d00032012.8c942363ca
+X-campaignid: mailchimp240fd05fed14bcc1d00032012.8c942363ca
+X-Report-Abuse: Please report abuse for this campaign here: https://mailchimp.com/contact/abuse/?u=240fd05fed14bcc1d00032012&id=8c942363ca&e=2a0f64bef8
+X-MC-User: 240fd05fed14bcc1d00032012
+Feedback-ID: 773397:773397.2865036:us1:mc
+List-ID: 240fd05fed14bcc1d00032012mc list <240fd05fed14bcc1d00032012.535830.list-id.mcsv.net>
+Precedence: bulk
+X-Accounttype: pr
+List-Unsubscribe: <https://archdaily.us1.list-manage.com/unsubscribe?u=240fd05fed14bcc1d00032012&id=b5a382da72&t=h&e=2a0f64bef8&c=8c942363ca>, <mailto:unsubscribe-mc.us1_240fd05fed14bcc1d00032012.8c942363ca-2a0f64bef8@unsubscribe.mailchimpapp.net?subject=unsubscribe>
+List-Unsubscribe-Post: List-Unsubscribe=One-Click
+Content-Type: multipart/alternative; boundary="_----------=_MCPart_921132947"
+Return-Path: bounce-mc.us1_773397.2865036-2a0f64bef8@mail135.suw16.rsgsv.net
+X-MS-Exchange-Organization-ExpirationStartTime: 16 Mar 2026 13:11:55.5519
+ (UTC)
+X-MS-Exchange-Organization-ExpirationStartTimeReason: OriginalSubmit
+X-MS-Exchange-Organization-ExpirationInterval: 1:00:00:00.0000000
+X-MS-Exchange-Organization-ExpirationIntervalReason: OriginalSubmit
+X-MS-Exchange-Organization-Network-Message-Id: adcaa690-522b-4fdb-56b9-08de835d9903
+X-EOPAttributedMessage: 0
+X-EOPTenantAttributedMessage: ce7cb31c-acf7-4351-b0fe-c89cda16c4ab:0
+X-MS-Exchange-Organization-MessageDirectionality: Incoming
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: BL02EPF00021F68:EE_|SJ2PR16MB6250:EE_|DM6PR16MB2569:EE_
+X-MS-Exchange-Organization-AuthSource: BL02EPF00021F68.namprd02.prod.outlook.com
+X-MS-Exchange-Organization-AuthAs: Anonymous
+X-MS-Office365-Filtering-Correlation-Id: adcaa690-522b-4fdb-56b9-08de835d9903
+X-MS-Exchange-Organization-SCL: 1
+X-Microsoft-Antispam: BCL:3;ARA:13230040|69100299015|12012899012|7049299003|1032899013|4022899009|3109299003|7149299003|29132699027|2092899012|5062899012|3072899012|3092899012|57112099003|7053199007|16102099003|19002099003|21082099003|20204142999004|20203042999009|13003099007|8096899003|2066899003;
+X-Forefront-Antispam-Report: CIP:198.2.182.135;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail135.suw16.rsgsv.net;PTR:mail135.suw16.rsgsv.net;CAT:NONE;SFS:(13230040)(69100299015)(12012899012)(7049299003)(1032899013)(4022899009)(3109299003)(7149299003)(29132699027)(2092899012)(5062899012)(3072899012)(3092899012)(57112099003)(7053199007)(16102099003)(19002099003)(21082099003)(20204142999004)(20203042999009)(13003099007)(8096899003)(2066899003);DIR:INB;
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 16 Mar 2026 13:11:55.2778
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: adcaa690-522b-4fdb-56b9-08de835d9903
+X-MS-Exchange-CrossTenant-Id: ce7cb31c-acf7-4351-b0fe-c89cda16c4ab
+X-MS-Exchange-CrossTenant-AuthSource: BL02EPF00021F68.namprd02.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: Internet
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ2PR16MB6250
+X-MS-Exchange-Transport-EndToEndLatency: 00:00:02.7727999
+X-MS-Exchange-Processed-By-BccFoldering: 15.20.9700.017
+X-Microsoft-Antispam-Mailbox-Delivery:
+	wl:1;pcwl:1;ucf:0;jmr:0;auth:0;dest:I;ENG:(910005)(944490095)(944506478)(944626604)(920097)(811242)(255002)(410001)(930201)(20251009189)(140003);
+X-Microsoft-Antispam-Message-Info:
+	=?utf-8?B?RHZ2cHBWVnFLeG1LcFhMZjdvczFIYnFlNzFhOGVpZkpPdktJNVdoTkh0Z3Q4?=
+ =?utf-8?B?dk95VUx5NnZTeHB2TnQ3YnNZZlVKK1hYeW4xSHhXV2kyeDhFenkrcWZPaFJQ?=
+ =?utf-8?B?UEw1UUhXODRUTEgwY1R0QXN6M3lQajFxbzNld0FteHdEdUlNTDdEVlNnRkZh?=
+ =?utf-8?B?SnRKUFRtVjF2aXFrbWorSmtZaHpKMkh3UTdmREpXaXp2U2tHRW5yQXJOR2Q0?=
+ =?utf-8?B?S1lGeVY3WGFxY2ExK2dGYTUvNFV2R014UEFGQWp2MW9OZXRJM3ZOY01tNVJI?=
+ =?utf-8?B?b3Fic284WU8wZGFkK1M1MWNMRHJIVkorZWdUNUY4NDhoR0J1VVJ0UDZTY2pR?=
+ =?utf-8?B?aEx2VXNKbmprRXZycnBDcmpwdThTL3BOUnBQM0VxRzBKNkIyMW5ZMnFnL29W?=
+ =?utf-8?B?a2dKR2QzcHErVkcxbHgxMmxTaWpJVmhaZllvSm9TeStkekZ2OUFKQTB4Rnla?=
+ =?utf-8?B?bmMxSlQzY2VLSEpHZzlxT3c4WFRFZGxYRTI5elRuQTRVNlRiRHFrenRPZUY2?=
+ =?utf-8?B?Vk9BNGcyT3FKZk5MM21HMVh5ZWNRK1RZTTFKM01YMkRuMGJiVnY4Ym5wWlR3?=
+ =?utf-8?B?UllWWEhyM1FSNjFDZDZMN3dKblpmYkE0MmZHMzQ1bllpaDR0UGU5ZXNmcjQ5?=
+ =?utf-8?B?N1NBNC9QRG9hME5ZOVlFY1Y1UENIUzQxUGxieGJzZ1psQU1ySnJtVWEyK3pL?=
+ =?utf-8?B?a0p6d1Myd0ZaVmg3b3hrQit4RlcveWdTalZRSE1YZHBrcTNhRy8wZDhtSU1q?=
+ =?utf-8?B?TUxXVURCc3BCT0NmL0w5OWtCdXVNSm5iVXdIZTAzc3BBMXlDeXVScENXazN4?=
+ =?utf-8?B?V3U1aERxVWZrR0tDcXhoejRVcXZMM0Y3ZFhnSzlKTGU1WTZ2K1dSZ3VPT2s3?=
+ =?utf-8?B?S2hnUldDbWZnM3oyOXc1T0x0cE9CcVQ4aExKWmFHSmhFaDYvbUtRNnpoTklO?=
+ =?utf-8?B?d2ppZGF4Z29zeDhYMmNmTUZzam5ZYVVoWmp4Y053STBQbFoyL29MdHdzWTBW?=
+ =?utf-8?B?MG42L3NWY3A5eCs0aTA5MmcxbWpnWGFVWERLTGxsQVpXeUNyajRSbW1hZnJU?=
+ =?utf-8?B?ZTZCV0Y2WE1CSEJrZGs2ZXM0NXdvdC9tZllUb1hyOHhkbXJ4dDM5bTVXc3Y0?=
+ =?utf-8?B?cWlsOVpoZCtIcDl3dGdwQk5HYWxtK0NLZ1BLSkZWUnZqUGZTMUc2bnJGV0Nh?=
+ =?utf-8?B?bnFSemNHQU5FeFN0NkZmOGtHWWdoY29wU1ZEdFZrYkRlbk1BaUI5UTh0clRP?=
+ =?utf-8?B?ckFSTER3aEhWMjdHSy82aWNENjBIWndWdE01WjYzR1ZDYjl2MStIOGQ0SmZ5?=
+ =?utf-8?B?ZWNFMXZFaHJyS2lnMkZSL24zc1YzcVFoL0xaTG1YQVBBNWhHbERVRXpUNHUv?=
+ =?utf-8?B?dTY4R1hOTXdGNEpaa3MrME9PWFlQeXNtYXhPbUcwemtyT202bS9ZTldHREt4?=
+ =?utf-8?B?aHBBU0R6anRYOGl5a3dxOGhNbTlhVVJ6RVROSTNmdVNSdndQSE5iRVJ3TnZ2?=
+ =?utf-8?B?ekFMdllQYWdPYTZJZk9JcFJUK2IrWldKOTc3R1hlWm9HVmFiNCtrZUIrYTkx?=
+ =?utf-8?B?QW5hdXAxNEY0RDR4MkZnTGRDdGJtSlZtRDE4Q1NDSVFnMlNGRE4wYzI0eHhp?=
+ =?utf-8?B?WEVPMVFEQ0RvaGkvYXQ1dlh5d0h2ZFZOc01BT1daM0djaHhJR1R1QzRXRGtn?=
+ =?utf-8?B?UXJUVExUY1JFb2Qyc1ZFSys0VWxjaERueVg3RG1pTHI5RzFaeFYxcm1TSXB2?=
+ =?utf-8?B?NUlDbTRQd1pHRktMcm43MElUOTdZZ1ZyNWVpODNOVko5c1phS2U2enFKZ2xj?=
+ =?utf-8?B?MnpHMFJXY0laVzBDTWNaV3cySGdlZzQ4QVYvU29rQU9yaHdaREU1VXhSaWRy?=
+ =?utf-8?B?aWZnVkIzanAycVZJODhwY0tRMENDU01OejZ4U0dubTUvaWovNXlwSktvSXRJ?=
+ =?utf-8?B?WVh4ZjhQODU5U1QvRGRTNVNFTmIxbXZYVDkyQ1RibXlXd3ZZc0RDWnJNbDd2?=
+ =?utf-8?B?a1dXREIxTzA2UkNsRTdoenJybmJCVU5GSzdvY2JvK1FMeTd5b3lYdWMrb01h?=
+ =?utf-8?B?ZG5KTm5zZndkVVZnVVJ4RTF4Mlc5a25IMGF5RmZwZS8ySzF6WlFHS1pFVVg5?=
+ =?utf-8?B?c3JXUGhQYk5laThoUnlSR0tmakIyaTZHbmYrYlpYYnBZcXcwTHhCK3JGYXlU?=
+ =?utf-8?B?cGVoeWlkdTVxWWUzZGphUUtManUxaW9sWEs4aXlacjJzVXFHSlRVT2lHd3Uv?=
+ =?utf-8?B?VUppWWxSdHY4aC9qeGZ3dDZXVUNwUVlRQ1c3Q3NYTUdZaVdEcUJlZTJxaUlx?=
+ =?utf-8?B?OWR4aEcrVW12SUZWRzRVdUxTTDFzRUIvRWJkQzYxYXhCT0t0a09EZ1VKbUUv?=
+ =?utf-8?B?bTZyWUtqMHFoZlZ6R293eGdGV25aUHROejFqMkozaFp4NzFtVFBkVTM5REJE?=
+ =?utf-8?B?bG5TU3dBMktXYlEreEFNdlZwbndvck5adW0xUHUrRWQzWHhyVG1uMURPb25O?=
+ =?utf-8?B?Y0x4UkJ3QllDWmhUYzNCY3V2MmE1K0VQNktzcU9VMVo4di82d05SVzNBYjM3?=
+ =?utf-8?B?QmZ3V2g5TnBNaGdPSlB2OUlmR1NvUTd0MjhQSHdLTk5URlhxY3hrYTVIeFhX?=
+ =?utf-8?B?ZXluOHpoc0V5UjdCTUhnVVlnWWZMRnhBcDFXWXEyTWl5QmtOM0s3VzV2YXhm?=
+ =?utf-8?B?NFR1L3EvaVY5bGNJRXFOOWd2ckJnM0txTGVtTGVpVm04dnRtZFJzUGFxSHpO?=
+ =?utf-8?B?SzNaNlVWTXdTOHpqQUhCSzc0aHF2Z1NidGJzN2hOVGZlNVBLM1pHMDRWMmpN?=
+ =?utf-8?B?MGtQSm56UFNZdmZOSkxRMnRkQStzamthTlNtUU5aazZGbE1DdzFiZytCTE9Z?=
+ =?utf-8?B?cWYyaEJuNWcvZiswSEJ4QVhZSTdCT2tKeFJ3NjEwMVg0VkN2WVBDUVhFcENi?=
+ =?utf-8?B?cmc3OUhWYW4rZ1JtUXFIcERRQXB3blQrQzAzVkdXUHNhaDVPeWN3bHRvK1Ay?=
+ =?utf-8?B?NC9QMHpZbnFrd3V2RHM4RC8zQmxMM2hYUSswY25xN2hRMG1icWw5bVp2eTNF?=
+ =?utf-8?B?Y0I5ZHVZaHpBYTJpaHpLd3VyZEQxek5vakk3cTJhWXREQ0pHcEFYMWszM3Ro?=
+ =?utf-8?B?TXFGelhEOWhjaWgvMGxsL1kzYVNQUWNXc3Q2N1EwbUxQY3k3K3Q3ZTZVZHU0?=
+ =?utf-8?B?SUtKZ3hBQ01sTTZ2SWxKOVJoTFgreHdVVXVhZXZxbVZTMHY0L1VLTWFjZXEz?=
+ =?utf-8?B?Y0hoYUttSTRCMVN4bWF3a0dzZUpGbGgxeGQxNmVnTXVDY1FLTC83a3dpL2RD?=
+ =?utf-8?B?NFVTTjVmZ1N6MVc1a01rK0ZwTkJzb20rRi9jZ2luNE51dU5TSkM5TW9lVDdL?=
+ =?utf-8?B?ZTZHRDlKRnVVUzNVYy9ueVhyQUJRdFdFdzMwcmFiVHEzSEtaNnZ6aVpaR3Iy?=
+ =?utf-8?B?b2lpV3M4VXM0bklyczNTa2pCeEVmWXNaRzI2WlRkS2dUYXIxUkJ5c0pmUXdh?=
+ =?utf-8?B?UTdxUStKa21FSmJKaHNwcC9CK1VxTGluV3h5WmNPMlVDWXhIZnd6YUNYVlMy?=
+ =?utf-8?B?ZWZNMzJHNjdXTFd0Mng3VVk1TUJRb2FqMDE1dHJnTjJNNDIreitrS0x3UHl3?=
+ =?utf-8?B?RUxhNGNmQVpQVTUxT2ZOWWgzSnlUUHkrN29PNk1PcnBvZFYzUmpKWFJoR1BV?=
+ =?utf-8?B?VnlGR29xQ1FBTk1QbHJza3h4TGZYN2YrclN4MHkxejl0bGFhd2JqV3h6ZFZD?=
+ =?utf-8?B?cDlRTDd0eXBpVlB4M28xNmdLVFBPUE80aEI4bU85WlFicGlJSVFZaGI4SDBZ?=
+ =?utf-8?B?cGNsM1JsK2NBL1I2WStHNHR3blE3R1I4SVdUVjNXckl1ZURMMXczbCtTM09H?=
+ =?utf-8?B?OGxTNlZUWXQrdTBXQXpHTFc5VTBzVjdkSG9aRHU5UkNPUTh5OFhIOStuNytO?=
+ =?utf-8?B?V0E2dEFZT2YvWUJUbGlBeWZnUk9la2NTUnRoeDZrV1hISnFwbWZneXFJcm9R?=
+ =?utf-8?B?NVdPVGpJOFRzSTN5UXdad1luQTloUjlCbXFKOE0rMkVUK0dpdzJxRFZveVNx?=
+ =?utf-8?Q?fjS2Gy1M7odpGYpFZQny6ZLgWJvZns/Hi9qgSk?=
+MIME-Version: 1.0
+
+--_----------=_MCPart_921132947
+Content-Type: text/plain; charset="utf-8"; format="fixed"
+Content-Transfer-Encoding: quoted-printable
+
+This email was sent to info@woodfine.co (mailto:info@woodfine.co)
+why did I get this? (https://archdaily.us1.list-manage.com/about?u=3D240fd=
+05fed14bcc1d00032012&id=3Db5a382da72&e=3D2a0f64bef8&c=3D8c942363ca)     unsu=
+bscribe from this list (https://archdaily.us1.list-manage.com/unsubscribe?=
+u=3D240fd05fed14bcc1d00032012&id=3Db5a382da72&t=3Db&e=3D2a0f64bef8&c=3D8c942=
+363ca)     update subscription preferences (https://archdaily.us1.list-man=
+age.com/profile?u=3D240fd05fed14bcc1d00032012&id=3Db5a382da72&e=3D2a0f64bef8=
+&c=3D8c942363ca)
+ArchDaily=2C part of DAAily Platforms AG . Seehofstrasse 16=2C . Z=C3=BCri=
+ch 8008 . Switzerland
+--_----------=_MCPart_921132947
+Content-Type: text/html; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.=
+w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html lang=3D"en" xmlns=3D"ht=
+tp://www.w3.org/1999/xhtml" xmlns:v=3D"urn:schemas-microsoft-com:vml" xmlns=
+:o=3D"urn:schemas-microsoft-com:office:office"><head><!--[if gte mso 9]>
+      <xml>
+        <o:OfficeDocumentSettings>
+          <o:AllowPNG />
+          <o:PixelsPerInch>96</o:PixelsPerInch>
+        </o:OfficeDocumentSettings>
+      </xml>
+    <![endif]-->
+<meta http-equiv=3D"Content-Type" content=3D"text/html; charset=3Dutf-8">
+    <meta name=3D"viewport" content=3D"width=3Ddevice-width, initial-scale=
+=3D1.0">
+    <meta name=3D"x-apple-disable-message-reformatting">
+    <!--[if !mso]><!-->
+    <meta http-equiv=3D"X-UA-Compatible" content=3D"IE=3Dedge">
+    <!--<![endif]-->
+    <title></title>
+    <meta property=3D"og:title" content=3D"Posts from Urban Preparations fo=
+r Paris 2024 Olympics =E2=80=A2 AI Tools for Architectural Visualization  =
+=E2=80=A2 Steven Holl Architects=E2=80=99 Ostrava Concert Hall">
+    <title>Posts from Urban Preparations for Paris 2024 Olympics =E2=80=A2 =
+AI Tools for
+      Architectural Visualization =E2=80=A2 Steven Holl Architects=E2=80=99=
+ Ostrava Concert Hall</title>
+
+    <!--[if !mso]><!-->
+    <link href=3D"https://fonts.googleapis.com/css?family=3DRoboto:400,400i=
+,700,700i|Source+Sans+Pro:400,400i,700,700i" rel=3D"stylesheet">
+    <!--<![endif]-->
+
+    <!--[if !mso]><!--><link href=3D"https://fonts.googleapis.com/css?famil=
+y=3DRoboto:400,400i,700,700i|Source+Sans+Pro:400,400i,700,700i" rel=3D"styl=
+esheet"><!--<![endif]-->
+
+  <!--[if !mso]><!--><link href=3D"https://fonts.googleapis.com/css?family=
+=3DRoboto:400,400i,700,700i|Source+Sans+Pro:400,400i,700,700i" rel=3D"style=
+sheet"><!--<![endif]-->
+    <!-- Additional styles only for mso -->
+    <!--[if gte mso 9]>
+    <style type=3D"text/css">
+        .article-inner-col,
+        .article-inner-table,
+        .td-bg-container{
+          width: 100% !important;
+          max-width: 640px !important;
+        }
+
+        .article-inner-mso-images {
+          max-width: 640px !important;
+          width: 100% !important;
+          height: auto !important;
+        }
+
+    </style>
+    <![endif]-->
+<style type=3D"text/css">
+		.article-inner-col{
+			padding-right:5px !important;
+			padding-left:5px
+      !important;
+		}
+		h3{
+			font-weight:300 !important;
+			color:#000 !important;
+		}
+		a{
+			text-decoration:none !important;
+		}
+		td,a,p{
+			font-family:"Source Sans Pro",
+      "Roboto", Arial !important;
+		}
+		.ad-content-image{
+			max-width:640px;
+			max-height:500px;
+			width:auto;
+			height:auto;
+		}
+		body{
+			background:white;
+			text-align:center;
+			width:100% !important;
+			-webkit-text-size-adjust:none;
+		}
+	@media only screen and (max-width: 640px){
+		.email-div-wrapper{
+			margin:0
+      !important;
+			padding:0 8px !important;
+			box-sizing:border-box !important;
+		}
+
+}	@media only screen and (max-width: 640px){
+		table,table.main-table{
+			width:100% !important;
+			max-width:100% !important;
+			margin:0 !important;
+			table-layout:fixed;
+		}
+
+}	@media only screen and (max-width: 640px){
+		tr,td{
+			max-width:100% !important;
+		}
+
+}	@media only screen and (max-width: 640px){
+		.project-title{
+			font-size:16px !important;
+			line-height:18px !important;
+		}
+
+}	@media only screen and (max-width: 640px){
+		p.project-description{
+			font-size:14px !important;
+			line-height:16px !important;
+		}
+
+}	@media only
+      screen and (max-width: 640px){
+		.ad-content-image{
+			height:auto !important;
+			max-width:100% !important;
+			width:100% !important;
+		}
+
+}	@media only screen
+      and (max-width: 640px){
+		.table-links,.legal-text-tr{
+			display:table-row
+      !important;
+		}
+
+}	@media only screen and (max-width: 640px){
+		.table-legal-footer{
+			table-layout:auto !important;
+		}
+
+}	@media only screen
+      and (max-width: 640px){
+		.legal-copy{
+			width:100% !important;
+		}
+
+}	@media only screen and (max-width: 640px){
+		.article-content-col .project-link{
+			display:none !important;
+		}
+
+}	@media only screen and (max-width: 640px){
+		.article-content-col,.article-content-col-big{
+			max-width:100% !important;
+			width:100% !important;
+			display:block !important;
+		}
+
+}	@media only screen
+      and (max-width: 640px){
+		.article-content-col-big p{
+			padding-left:0
+      !important;
+			font-size:12px !important;
+			line-height:14px !important;
+		}
+
+}	@media only screen and (max-width: 640px){
+		.article-inner-col{
+			width:50%
+      !important;
+			padding-right:8px !important;
+			padding-left:8px !important;
+			box-sizing:border-box;
+		}
+
+}	@media only screen and (max-width: 320px){
+		.article-inner-col{
+			padding-right:2px !important;
+			padding-left:2px
+      !important;
+		}
+
+}	@media only screen and (max-width: 640px){
+		.td-bg-container{
+			height:150px !important;
+		}
+
+}	@media only screen and (max-width: 640px){
+		.bg-item-image,.inner-wrapper-item-image{
+			width:100% !important;
+			height:240px
+      !important;
+		}
+
+}</style><!--[if !mso]><!--><link href=3D"https://fonts.googleapis.com/css?=
+family=3DRoboto:400,400i,700,700i|Source+Sans+Pro:400,400i,700,700i" rel=3D=
+"stylesheet"><!--<![endif]--></head>
+
+  <body leftmargin=3D"0" marginwidth=3D"0" topmargin=3D"0" marginheight=3D"=
+0" offset=3D"0" style=3D"max-width: 640px;margin: 0 auto !important;backgro=
+und: white;text-align: center;-webkit-text-size-adjust: none;width: 100% !i=
+mportant;" class=3D"email-body">
+
+    <!-- // BIG Wrapper \\ -->
+    <div style=3D"max-width: 640px; width: 100%; margin: 0 auto" class=3D"e=
+mail-div-wrapper">
+      <table role=3D"presentation" cellpadding=3D"0" cellspacing=3D"0" widt=
+h=3D"100%" border=3D"0" style=3D"
+          max-width: 640px;
+          width: 100%;
+          border-collapse: collapse;
+          margin: 0 auto;
+          background: #fff;
+        " class=3D"main-table">
+        <tbody>
+          <!-- // Preheader -->
+          <tr>
+              <td align=3D"center" style=3D"font-family: &quot;Source Sans =
+Pro&quot;,
+      &quot;Roboto&quot;, Arial !important;">
+            <div style=3D"color:#ffffff;font-size:0;visibility:hidden;displ=
+ay:none !important;opacity:0;line-height:1px;overflow:hidden;max-height:0px=
+;max-width:0px;">
+              <span>Plus:  Casa Wabi Mushroom Pavilion / OMA, A New Standar=
+d for High-Performance, Energy-Generating Facades, Architects Office Design=
+s World Trade Center Biotic Mixed-Use Complex in Bras=C3=ADlia=E2=80=99s Pa=
+rque Tecnol=C3=B3gico, Barkly House  / Ha Architecture, Lesley Lokko Receiv=
+es African Cultural Icon Award for Her Contributions to Architectural Educa=
+tion and Discourse, Barcelona Architecture City Guide: 30 Buildings and Pla=
+ces from Gaud=C3=AD to Today, Bottega Bruzziches Headquarters / deltastudio=
+, Gooder Store / studio pheasant, Poetry Anthology of Light / P.M.A.Studio,=
+ Twin Pavilions / Atelier LuxNox + Found Projects, SUBARU Innovation Hub / =
+Nikken Sekkei, ASA Sandra and Albano Studio / 23 SUL, Center for Language a=
+nd Movement / AFF architekten</span>
+            </div>
+          </td></tr>
+          <!-- //END PREHEADER -->
+
+          <!-- browser -->
+<tr>
+  <td style=3D"font-family: &quot;Source Sans Pro&quot;,
+      &quot;Roboto&quot;, Arial !important;">
+    <table border=3D"0" cellpadding=3D"0" cellspacing=3D"0" class=3D"wrappe=
+r" width=3D"100%">
+      <tr>
+        <td valign=3D"middle" height=3D"70" style=3D"text-align: left;font-=
+size: 12px;font-family: &quot;Source Sans Pro&quot;,
+      &quot;Roboto&quot;, Arial !important;" class=3D"ad-display--none">
+          <a href=3D"https://us1.campaign-archive.com/?e=3D2a0f64bef8&amp;u=
+=3D240fd05fed14bcc1d00032012&amp;id=3D8c942363ca" style=3D"color:#303030 !i=
+mportant;font-weight:300;text-decoration:none;-webkit-font-smoothing:antial=
+iased;font-family: 'Source Sans 3', sans-serif; !important;">View it in you=
+r browser</a>
+        </td>
+        <td valign=3D"middle" width=3D"160" style=3D"font-weight: 100;text-=
+align: right;font-size: 11px;font-family: &quot;Source Sans Pro&quot;,
+      &quot;Roboto&quot;, Arial !important;" class=3D"ad-display--none">
+          <span style=3D"color:#303030;font-weight:300;text-decoration:none=
+;-webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;fo=
+nt-family: 'Source Sans 3', sans-serif; !important;">16 March, 2026</span>
+        </td>
+      </tr>
+    </table>
+  </td>
+</tr>
+<!-- end browser -->
+
+          <!-- // Ads \\ -->
+          <tr>
+            <td style=3D"padding: 36px 0 24px 0;font-family: &quot;Source S=
+ans Pro&quot;, &quot;Roboto&quot;, Arial !important;">
+              <table role=3D"presentation" cellpadding=3D"0" cellspacing=3D=
+"0" width=3D"100%" border=3D"0" style=3D"
+                  background-color: #ffffff;
+                  max-width: 640px;
+                  width: 100%;
+                  margin: 0 auto !important;
+                  border-collapse: collapse;
+                " class=3D"project-table">
+                <tbody>
+                  <tr>
+                    <td style=3D"font-family: &quot;Source Sans Pro&quot;, =
+&quot;Roboto&quot;, Arial !important;">
+                     <a mc:disable-tracking=3D"" href=3D"https://archdaily.=
+us1.list-manage.com/track/click?u=3D240fd05fed14bcc1d00032012&amp;id=3Df891=
+239624&amp;e=3D2a0f64bef8" target=3D"_blank" style=3D"font-family: &quot;So=
+urce Sans Pro&quot;,
+      &quot;Roboto&quot;, Arial !important;text-decoration: none !important=
+;">
+                     <img alt=3D"http://newsletter.adsttc.com/us/newsletter=
+/image.jpg?date=3D26-03-16" class=3D"ads-image" height=3D"100" src=3D"http:=
+//newsletter.adsttc.com/us/newsletter/image.jpg?date=3D26-03-16" width=3D"6=
+40" style=3D"
+                          width: 100% !important;
+                          height: auto !important;
+                          max-width: 100% !important;
+                        ">
+                       </a>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </td>
+          </tr>
+
+          <!-- // Special Ads \\ -->
+          <!-- //END Special Ads \\ -->
+          <!-- END ADS // -->
+
+          <!-- ARCHDAILY LOGO-->
+          <tr style=3D"width: 100%">
+            <td style=3D"padding: 45px 0 32px 0;width: 100%;max-width: 640p=
+x !important;font-family: &quot;Source Sans Pro&quot;, &quot;Roboto&quot;, =
+Arial !important;" align=3D"center">
+              <table role=3D"presentation" cellpadding=3D"0" cellspacing=3D=
+"0" width=3D"100%" border=3D"0" style=3D"
+                  background-color: #ffffff;
+                  max-width: 640px;
+                  margin: 0 auto !important;
+                  border-collapse: collapse;
+                " class=3D"project-table">
+                <tbody>
+                  <tr>
+                    <td align=3D"center" style=3D"font-family: &quot;Source=
+ Sans Pro&quot;, &quot;Roboto&quot;, Arial !important;">
+                      <img src=3D"https://assets.adsttc.com/doodles/flat/lo=
+go-blue-full.png" alt=3D"ArchDaily logo" border=3D"0" style=3D"height: 37px=
+; width: 60px; margin: 0; padding: 0;
+                      width: 100px !important;
+                      max-width:100px !important;
+                      height: auto;
+                      max-height: 62px !important;
+                    " width=3D"60" height=3D"37" class=3D"ad-logo">
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </td>
+          </tr>
+
+          <!-- PROJECTS -->
+
+          <!-- PROJECT WITH CONTENT -->
+
+          <tr class=3D"project-content-main-tr">
+            <td style=3D"font-family: 'Source Sans 3', sans-serif; !importa=
+nt;">
+              <table role=3D"presentation" cellpadding=3D"0" cellspacing=3D=
+"0" width=3D"100%" border=3D"0" style=3D"
+                    background-color: #ffffff;
+                    max-width: 640px;
+                    margin: 0 auto 64px auto !important;
+                    border-collapse: collapse;
+                    border-bottom-width:1px;border-bottom-style:solid;borde=
+r-bottom-color: #D8D8D8;
+                  " class=3D"project-table">
+                <tbody>
+                  <tr>
+                    <td align=3D"center" class=3D"project-image" style=3D"f=
+ont-family: 'Source Sans 3', sans-serif; !important;">
+                      <a href=3D"https://archdaily.us1.list-manage.com/trac=
+k/click?u=3D240fd05fed14bcc1d00032012&amp;id=3Da306496147&amp;e=3D2a0f64bef=
+8" target=3D"_blank" style=3D"text-decoration: none;color: #000 !important;=
+width: 100%;font-family: 'Source Sans 3', sans-serif; !important;">
+                        <img src=3D"https://images.adsttc.com/media/images/=
+69a9/be9f/785c/2724/7893/01c4/newsletter/shibam-a-metropole-vertical-mais-a=
+ntiga-do-mundo_4.jpg" alt=3D"https://images.adsttc.com/media/images/69a9/be=
+9f/785c/2724/7893/01c4/newsletter/shibam-a-metropole-vertical-mais-antiga-d=
+o-mundo_4.jpg" width=3D"640" class=3D"ad-content-image" style=3D"max-width:=
+ 640px;border: 0px;margin: 0 auto;width: auto;display: block;max-height: 50=
+0px;height: auto;">
+                      </a>
+                    </td>
+                  </tr>
+                  <tr class=3D"separator">
+                    <td style=3D"padding: 32px 0;font-family: &quot;Source =
+Sans Pro&quot;, &quot;Roboto&quot;, Arial !important;">
+                      <table role=3D"presentation" cellpadding=3D"0" cellsp=
+acing=3D"0" width=3D"100%" border=3D"0" style=3D"
+                    background-color: #ffffff;
+                    max-width: 640px;
+                    margin: 0 auto !important;
+                    border-collapse: collapse;
+                  ">
+                        <tbody>
+                          <tr>
+                            <td align=3D"left" class=3D"article-content-col=
+" style=3D"font-family: 'Source Sans 3', sans-serif; !important; min-width:=
+200px;" width=3D"30%" valign=3D"top">
+                              <a href=3D"https://archdaily.us1.list-manage.=
+com/track/click?u=3D240fd05fed14bcc1d00032012&amp;id=3Ddf302e8380&amp;e=3D2=
+a0f64bef8" target=3D"_blank" style=3D"text-decoration: none !important;colo=
+r: #000 !important;width: 100%;font-weight: 300 !important;font-family: 'So=
+urce Sans 3', sans-serif; !important;">
+                                <h3 style=3D"
+                            color: #000 !important;
+                            font-size: 18px;
+                            font-weight: 300 !important;
+                            line-height: 20px;
+                            margin: 0 0 16px 0 !important;
+                            -webkit-text-size-adjust: none;
+                            mso-line-height-rule: exactly;
+                            text-decoration: none;
+                          " class=3D"project-title">
+
+        The Earthen Towers of Shibam: A Vertical City in the Yemeni Desert
+
+                                </h3>
+                              </a>
+
+                              <a href=3D"https://archdaily.us1.list-manage.=
+com/track/click?u=3D240fd05fed14bcc1d00032012&amp;id=3Dc327b4ea25&amp;e=3D2=
+a0f64bef8" class=3D"project-link" style=3D"
+                          color: #00308e;
+                          text-align: left;
+                          font-family: 'Source Sans Pro', sans-serif;
+                          font-size: 14px;
+                          font-style: normal;
+                          font-weight: 400;
+                          line-height: 14px;
+                          text-decoration: none;
+                          -webkit-text-size-adjust: none;
+                          mso-line-height-rule: exactly;
+                        ">
+                                <!--[if mso]>
+                            <span style=3D"color: #00308E; text-decoration:=
+ none;text-decoration:none; -webkit-text-size-adjust:none; mso-line-height-=
+rule:exactly;">
+                          <![endif]-->
+                                Show more
+                                <!--[if mso]>
+                            </span>
+                          <![endif]-->
+                              </a>
+                            </td>
+                            <td class=3D"article-content-col-big" width=3D"=
+70%" valign=3D"top" style=3D"font-family: &quot;Source Sans Pro&quot;, &quo=
+t;Roboto&quot;, Arial !important;" align=3D"left">
+
+                              <a href=3D"https://archdaily.us1.list-manage.=
+com/track/click?u=3D240fd05fed14bcc1d00032012&amp;id=3Df619c9caf4&amp;e=3D2=
+a0f64bef8" target=3D"_blank" style=3D"
+                          color: #000 !important;
+                          width: 100%;
+                          text-decoration: none;
+                          -webkit-text-size-adjust: none;
+                          mso-line-height-rule: exactly;
+                          font-family: 'Source Sans Pro', 'Roboto', Arial !=
+important;
+                          text-align:left;
+                        "></a><p style=3D"
+                          overflow: hidden;
+                          color: #000;
+                          font-size: 12px;
+                          font-style: normal;
+                          font-weight: 400;
+                          line-height: 20px;
+                          margin: 0 0 16px 0;
+                          width: 100%;
+                          max-width: 424px;
+                          text-decoration: none;
+                          -webkit-text-size-adjust: none;
+                          font-family: 'Source Sans Pro', 'Roboto', Arial !=
+important;
+                          mso-line-height-rule: exactly;
+                          text-align: left !important;
+                          padding-left: 20px;
+                          text-align:left;
+                        " class=3D"project-description">
+                                  Symbols of technological development and =
+urban density, tall buildings as we know them today emerged in the late nin=
+eteenth century, particularly in the United States, as a response to the ra=
+pid expansion of urban commerce and the need to grow cities without occupyi=
+ng additional land. The term skyscraper, for instance, was coined in the 18=
+80s and originally...
+                                </p>
+
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </td>
+                  </tr>
+                  <!--[if (mso)|(IE)]><tr><td align=3D"center"style=3D"heig=
+ht:32px;padding: 0px;border-top: 0px solid transparent;border-left: 0px sol=
+id transparent;border-right: 0px solid transparent;border-bottom: 0px solid=
+ transparent;" valign=3D"top"><tr><![endif]-->
+                </tbody>
+              </table>
+            </td>
+          </tr>
+
+           <!--[if (mso)|(IE)]><tr><td align=3D"center"style=3D"height:32px=
+;padding: 0px;border-top: 0px solid transparent;border-left: 0px solid tran=
+sparent;border-right: 0px solid transparent;border-bottom: 0px solid transp=
+arent;" valign=3D"top"><tr><![endif]-->
+          <!-- END PROJECT WITH CONTENT-->
+          <tr>
+          <td style=3D"font-family: &quot;Source Sans Pro&quot;,
+      &quot;Roboto&quot;, Arial !important;">
+            <table role=3D"presentation" cellpadding=3D"0" cellspacing=3D"0=
+" width=3D"100%" border=3D"0" style=3D"
+                background-color: #ffffff;
+                max-width: 640px;
+                margin: 0 auto !important;
+                border-collapse: collapse;
+              " class=3D"project-wrapper-table">
+
+              <tr class=3D"project-content-main-tr">
+                <td style=3D"font-family: &quot;Source Sans Pro&quot;,
+      &quot;Roboto&quot;, Arial !important;">
+                  <table role=3D"presentation" cellpadding=3D"0" cellspacin=
+g=3D"0" width=3D"100%" border=3D"0" style=3D"
+                      background-color: #ffffff;
+                      max-width: 640px;
+                      margin: 0 auto 72px auto !important;
+                      border-collapse: collapse;
+                    " class=3D"project-table">
+                    <tr>
+                        <td align=3D"left" class=3D"bg-item-image" style=3D=
+"font-family: &quot;Source Sans Pro&quot;, &quot;Roboto&quot;, Arial !impor=
+tant;width:640px;height:480px;background:url('https://images.adsttc.com/med=
+ia/images/69b0/5100/314f/6601/8902/c2d2/newsletter/casa-wabi-mushroom-pavil=
+ion-oma_10.jpg'); background-size:cover !important;background-position: cen=
+ter center !important;height:480px">
+                              <a href=3D"https://archdaily.us1.list-manage.=
+com/track/click?u=3D240fd05fed14bcc1d00032012&amp;id=3D5056e7177e&amp;e=3D2=
+a0f64bef8" target=3D"_blank" style=3D"text-decoration: none !important;colo=
+r: #000 !important;width: 100%;font-family: &quot;Source Sans Pro&quot;, &q=
+uot;Roboto&quot;, Arial !important;">
+                                <div class=3D"inner-wrapper-item-image" sty=
+le=3D"height:480px;width:640px;">
+                                  &nbsp;
+                                </div>
+                                <!--[if gte mso 9]>
+                                  <img src=3D"https://images.adsttc.com/med=
+ia/images/69b0/5100/314f/6601/8902/c2d2/newsletter/casa-wabi-mushroom-pavil=
+ion-oma_10.jpg alt=3D"https://images.adsttc.com/media/images/69b0/5100/314f=
+/6601/8902/c2d2/newsletter/casa-wabi-mushroom-pavilion-oma_10.jpg" " width=
+=3D"640" height=3D"480" style=3D"max-width:640px !important;width:100%;heig=
+ht:auto;" />
+                                <![endif]-->
+                              </a>
+                            </td>
+
+                    </tr>
+                    <tr>
+                      <td align=3D"left" class=3D"td-project-content" style=
+=3D"font-family: &quot;Source Sans Pro&quot;,
+      &quot;Roboto&quot;, Arial !important;">
+                        <a href=3D"https://archdaily.us1.list-manage.com/tr=
+ack/click?u=3D240fd05fed14bcc1d00032012&amp;id=3D7eb5f8f86c&amp;e=3D2a0f64b=
+ef8" target=3D"_blank" style=3D"text-decoration: none !important;color: #00=
+0 !important;width: 100%;font-weight: 300 !important;font-family: &quot;Sou=
+rce Sans Pro&quot;,
+      &quot;Roboto&quot;, Arial !important;">
+                          <h3 style=3D"
+                              color: #000;
+                              font-size: 18px;
+                              font-weight: 300 !important;
+                              line-height: 20px;
+                              margin: 16px 0;
+                              -webkit-text-size-adjust: none;
+                              mso-line-height-rule: exactly;
+                              text-decoration: none;
+                            " class=3D"project-title">
+
+        Casa Wabi Mushroom Pavilion / OMA
+
+                          </h3>
+                        </a>
+                      </td>
+                    </tr>
+                    <!--[if (mso)|(IE)]><tr><td align=3D"center"style=3D"he=
+ight:72px;padding: 0px;border-top: 0px solid transparent;border-left: 0px s=
+olid transparent;border-right: 0px solid transparent;border-bottom: 0px sol=
+id transparent;" valign=3D"top"><tr><![endif]-->
+                  </table>
+                </td>
+              </tr>
+
+              <tr class=3D"project-content-main-tr">
+                <td style=3D"font-family: &quot;Source Sans Pro&quot;,
+      &quot;Roboto&quot;, Arial !important;">
+                  <table role=3D"presentation" cellpadding=3D"0" cellspacin=
+g=3D"0" width=3D"100%" border=3D"0" style=3D"
+                      background-color: #ffffff;
+                      max-width: 640px;
+                      margin: 0 auto 72px auto !important;
+                      border-collapse: collapse;
+                    " class=3D"project-table">
+                    <tr>
+                        <td align=3D"left" class=3D"bg-item-image" style=3D=
+"font-family: &quot;Source Sans Pro&quot;, &quot;Roboto&quot;, Arial !impor=
+tant;width:640px;height:480px;background:url('https://neufert-cdn.archdaily=
+.net/uploads/photo/image/209062/full_Skyfold-Operable-Wall-5.JPG?v=3D160798=
+9261'); background-size:cover !important;background-position: center center=
+ !important;height:480px">
+                              <a href=3D"https://archdaily.us1.list-manage.=
+com/track/click?u=3D240fd05fed14bcc1d00032012&amp;id=3Dba4e97b8e8&amp;e=3D2=
+a0f64bef8" target=3D"_blank" style=3D"text-decoration: none !important;colo=
+r: #000 !important;width: 100%;font-family: &quot;Source Sans Pro&quot;, &q=
+uot;Roboto&quot;, Arial !important;">
+                                <div class=3D"inner-wrapper-item-image" sty=
+le=3D"height:480px;width:640px;">
+                                  &nbsp;
+                                </div>
+                                <!--[if gte mso 9]>
+                                  <img src=3D"https://neufert-cdn.archdaily=
+.net/uploads/photo/image/209062/full_Skyfold-Operable-Wall-5.JPG?v=3D160798=
+9261 alt=3D"https://neufert-cdn.archdaily.net/uploads/photo/image/209062/fu=
+ll_Skyfold-Operable-Wall-5.JPG?v=3D1607989261" " width=3D"640" height=3D"48=
+0" style=3D"max-width:640px !important;width:100%;height:auto;" />
+                                <![endif]-->
+                              </a>
+                            </td>
+
+                    </tr>
+                    <tr>
+                      <td align=3D"left" class=3D"td-project-content" style=
+=3D"font-family: &quot;Source Sans Pro&quot;,
+      &quot;Roboto&quot;, Arial !important;">
+                        <a href=3D"https://archdaily.us1.list-manage.com/tr=
+ack/click?u=3D240fd05fed14bcc1d00032012&amp;id=3Df78a36b07b&amp;e=3D2a0f64b=
+ef8" target=3D"_blank" style=3D"text-decoration: none !important;color: #00=
+0 !important;width: 100%;font-weight: 300 !important;font-family: &quot;Sou=
+rce Sans Pro&quot;,
+      &quot;Roboto&quot;, Arial !important;">
+                          <h3 style=3D"
+                              color: #000;
+                              font-size: 18px;
+                              font-weight: 300 !important;
+                              line-height: 20px;
+                              margin: 16px 0;
+                              -webkit-text-size-adjust: none;
+                              mso-line-height-rule: exactly;
+                              text-decoration: none;
+                            " class=3D"project-title">
+
+        Where to Increase Flexibility in Schools / Skyfold
+
+                          </h3>
+                        </a>
+                      </td>
+                    </tr>
+                    <!--[if (mso)|(IE)]><tr><td align=3D"center"style=3D"he=
+ight:72px;padding: 0px;border-top: 0px solid transparent;border-left: 0px s=
+olid transparent;border-right: 0px solid transparent;border-bottom: 0px sol=
+id transparent;" valign=3D"top"><tr><![endif]-->
+                  </table>
+                </td>
+              </tr>
+
+              <tr class=3D"project-content-main-tr">
+                <td style=3D"font-family: &quot;Source Sans Pro&quot;,
+      &quot;Roboto&quot;, Arial !important;">
+                  <table role=3D"presentation" cellpadding=3D"0" cellspacin=
+g=3D"0" width=3D"100%" border=3D"0" style=3D"
+                      background-color: #ffffff;
+                      max-width: 640px;
+                      margin: 0 auto 72px auto !important;
+                      border-collapse: collapse;
+                    " class=3D"project-table">
+                    <tr>
+                        <td align=3D"left" class=3D"bg-item-image" style=3D=
+"font-family: &quot;Source Sans Pro&quot;, &quot;Roboto&quot;, Arial !impor=
+tant;width:640px;height:480px;background:url('https://images.adsttc.com/med=
+ia/images/699f/32ec/6e4f/1a01/8977/b2ee/newsletter/a-new-standard-for-high-=
+performance-energy-generating-facades_1.jpg'); background-size:cover !impor=
+tant;background-position: center center !important;height:480px">
+                              <a href=3D"https://archdaily.us1.list-manage.=
+com/track/click?u=3D240fd05fed14bcc1d00032012&amp;id=3D3d46dbfce2&amp;e=3D2=
+a0f64bef8" target=3D"_blank" style=3D"text-decoration: none !important;colo=
+r: #000 !important;width: 100%;font-family: &quot;Source Sans Pro&quot;, &q=
+uot;Roboto&quot;, Arial !important;">
+                                <div class=3D"inner-wrapper-item-image" sty=
+le=3D"height:480px;width:640px;">
+                                  &nbsp;
+                                </div>
+                                <!--[if gte mso 9]>
+                                  <img src=3D"https://images.adsttc.com/med=
+ia/images/699f/32ec/6e4f/1a01/8977/b2ee/newsletter/a-new-standard-for-high-=
+performance-energy-generating-facades_1.jpg alt=3D"https://images.adsttc.co=
+m/media/images/699f/32ec/6e4f/1a01/8977/b2ee/newsletter/a-new-standard-for-=
+high-performance-energy-generating-facades_1.jpg" " width=3D"640" height=3D=
+"480" style=3D"max-width:640px !important;width:100%;height:auto;" />
+                                <![endif]-->
+                              </a>
+                            </td>
+
+                    </tr>
+                    <tr>
+                      <td align=3D"left" class=3D"td-project-content" style=
+=3D"font-family: &quot;Source Sans Pro&quot;,
+      &quot;Roboto&quot;, Arial !important;">
+                        <a href=3D"https://archdaily.us1.list-manage.com/tr=
+ack/click?u=3D240fd05fed14bcc1d00032012&amp;id=3Dfd7c39f7a0&amp;e=3D2a0f64b=
+ef8" target=3D"_blank" style=3D"text-decoration: none !important;color: #00=
+0 !important;width: 100%;font-weight: 300 !important;font-family: &quot;Sou=
+rce Sans Pro&quot;,
+      &quot;Roboto&quot;, Arial !important;">
+                          <h3 style=3D"
+                              color: #000;
+                              font-size: 18px;
+                              font-weight: 300 !important;
+                              line-height: 20px;
+                              margin: 16px 0;
+                              -webkit-text-size-adjust: none;
+                              mso-line-height-rule: exactly;
+                              text-decoration: none;
+                            " class=3D"project-title">
+
+        A New Standard for High-Performance, Energy-Generating Facades
+
+                          </h3>
+                        </a>
+                      </td>
+                    </tr>
+                    <!--[if (mso)|(IE)]><tr><td align=3D"center"style=3D"he=
+ight:72px;padding: 0px;border-top: 0px solid transparent;border-left: 0px s=
+olid transparent;border-right: 0px solid transparent;border-bottom: 0px sol=
+id transparent;" valign=3D"top"><tr><![endif]-->
+                  </table>
+                </td>
+              </tr>
+
+              <tr class=3D"project-content-main-tr">
+                <td style=3D"font-family: &quot;Source Sans Pro&quot;,
+      &quot;Roboto&quot;, Arial !important;">
+                  <table role=3D"presentation" cellpadding=3D"0" cellspacin=
+g=3D"0" width=3D"100%" border=3D"0" style=3D"
+                      background-color: #ffffff;
+                      max-width: 640px;
+                      margin: 0 auto 72px auto !important;
+                      border-collapse: collapse;
+                    " class=3D"project-table">
+                    <tr>
+                        <td align=3D"left" class=3D"bg-item-image" style=3D=
+"font-family: &quot;Source Sans Pro&quot;, &quot;Roboto&quot;, Arial !impor=
+tant;width:640px;height:480px;background:url('https://images.adsttc.com/med=
+ia/images/69b7/da6b/314f/664f/06ca/eec5/newsletter/architects-office-design=
+s-world-trade-center-biotic-mixed-use-complex-in-brasilias-parque-tecnologi=
+co_2.jpg'); background-size:cover !important;background-position: center ce=
+nter !important;height:480px">
+                              <a href=3D"https://archdaily.us1.list-manage.=
+com/track/click?u=3D240fd05fed14bcc1d00032012&amp;id=3Dd492412d3f&amp;e=3D2=
+a0f64bef8" target=3D"_blank" style=3D"text-decoration: none !important;colo=
+r: #000 !important;width: 100%;font-family: &quot;Source Sans Pro&quot;, &q=
+uot;Roboto&quot;, Arial !important;">
+                                <div class=3D"inner-wrapper-item-image" sty=
+le=3D"height:480px;width:640px;">
+                                  &nbsp;
+                                </div>
+                                <!--[if gte mso 9]>
+                                  <img src=3D"https://images.adsttc.com/med=
+ia/images/69b7/da6b/314f/664f/06ca/eec5/newsletter/architects-office-design=
+s-world-trade-center-biotic-mixed-use-complex-in-brasilias-parque-tecnologi=
+co_2.jpg alt=3D"https://images.adsttc.com/media/images/69b7/da6b/314f/664f/=
+06ca/eec5/newsletter/architects-office-designs-world-trade-center-biotic-mi=
+xed-use-complex-in-brasilias-parque-tecnologico_2.jpg" " width=3D"640" heig=
+ht=3D"480" style=3D"max-width:640px !important;width:100%;height:auto;" />
+                                <![endif]-->
+                              </a>
+                            </td>
+
+                    </tr>
+                    <tr>
+                      <td align=3D"left" class=3D"td-project-content" style=
+=3D"font-family: &quot;Source Sans Pro&quot;,
+      &quot;Roboto&quot;, Arial !important;">
+                        <a href=3D"https://archdaily.us1.list-manage.com/tr=
+ack/click?u=3D240fd05fed14bcc1d00032012&amp;id=3D1aad9e0499&amp;e=3D2a0f64b=
+ef8" target=3D"_blank" style=3D"text-decoration: none !important;color: #00=
+0 !important;width: 100%;font-weight: 300 !important;font-family: &quot;Sou=
+rce Sans Pro&quot;,
+      &quot;Roboto&quot;, Arial !important;">
+                          <h3 style=3D"
+                              color: #000;
+                              font-size: 18px;
+                              font-weight: 300 !important;
+                              line-height: 20px;
+                              margin: 16px 0;
+                              -webkit-text-size-adjust: none;
+                              mso-line-height-rule: exactly;
+                              text-decoration: none;
+                            " class=3D"project-title">
+
+        Architects Office Designs World Trade Center Biotic Mixed-Use Compl=
+ex in Bras=C3=ADlia=E2=80=99s Parque Tecnol=C3=B3gico
+
+                          </h3>
+                        </a>
+                      </td>
+                    </tr>
+                    <!--[if (mso)|(IE)]><tr><td align=3D"center"style=3D"he=
+ight:72px;padding: 0px;border-top: 0px solid transparent;border-left: 0px s=
+olid transparent;border-right: 0px solid transparent;border-bottom: 0px sol=
+id transparent;" valign=3D"top"><tr><![endif]-->
+                  </table>
+                </td>
+              </tr>
+
+              <tr class=3D"project-content-main-tr">
+                <td style=3D"font-family: &quot;Source Sans Pro&quot;,
+      &quot;Roboto&quot;, Arial !important;">
+                  <table role=3D"presentation" cellpadding=3D"0" cellspacin=
+g=3D"0" width=3D"100%" border=3D"0" style=3D"
+                      background-color: #ffffff;
+                      max-width: 640px;
+                      margin: 0 auto 72px auto !important;
+                      border-collapse: collapse;
+                    " class=3D"project-table">
+                    <tr>
+                        <td align=3D"left" class=3D"bg-item-image" style=3D=
+"font-family: &quot;Source Sans Pro&quot;, &quot;Roboto&quot;, Arial !impor=
+tant;width:640px;height:480px;background:url('https://images.adsttc.com/med=
+ia/images/69b0/4621/3c49/4901/7d2a/f595/newsletter/barkly-house-ha-architec=
+ture_1.jpg'); background-size:cover !important;background-position: center =
+center !important;height:480px">
+                              <a href=3D"https://archdaily.us1.list-manage.=
+com/track/click?u=3D240fd05fed14bcc1d00032012&amp;id=3D799489a532&amp;e=3D2=
+a0f64bef8" target=3D"_blank" style=3D"text-decoration: none !important;colo=
+r: #000 !important;width: 100%;font-family: &quot;Source Sans Pro&quot;, &q=
+uot;Roboto&quot;, Arial !important;">
+                                <div class=3D"inner-wrapper-item-image" sty=
+le=3D"height:480px;width:640px;">
+                                  &nbsp;
+                                </div>
+                                <!--[if gte mso 9]>
+                                  <img src=3D"https://images.adsttc.com/med=
+ia/images/69b0/4621/3c49/4901/7d2a/f595/newsletter/barkly-house-ha-architec=
+ture_1.jpg alt=3D"https://images.adsttc.com/media/images/69b0/4621/3c49/490=
+1/7d2a/f595/newsletter/barkly-house-ha-architecture_1.jpg" " width=3D"640" =
+height=3D"480" style=3D"max-width:640px !important;width:100%;height:auto;"=
+ />
+                                <![endif]-->
+                              </a>
+                            </td>
+
+                    </tr>
+                    <tr>
+                      <td align=3D"left" class=3D"td-project-content" style=
+=3D"font-family: &quot;Source Sans Pro&quot;,
+      &quot;Roboto&quot;, Arial !important;">
+                        <a href=3D"https://archdaily.us1.list-manage.com/tr=
+ack/click?u=3D240fd05fed14bcc1d00032012&amp;id=3D71ebe863dc&amp;e=3D2a0f64b=
+ef8" target=3D"_blank" style=3D"text-decoration: none !important;color: #00=
+0 !important;width: 100%;font-weight: 300 !important;font-family: &quot;Sou=
+rce Sans Pro&quot;,
+      &quot;Roboto&quot;, Arial !important;">
+                          <h3 style=3D"
+                              color: #000;
+                              font-size: 18px;
+                              font-weight: 300 !important;
+                              line-height: 20px;
+                              margin: 16px 0;
+                              -webkit-text-size-adjust: none;
+                              mso-line-height-rule: exactly;
+                              text-decoration: none;
+                            " class=3D"project-title">
+
+        Barkly House  / Ha Architecture
+
+                          </h3>
+                        </a>
+                      </td>
+                    </tr>
+                    <!--[if (mso)|(IE)]><tr><td align=3D"center"style=3D"he=
+ight:72px;padding: 0px;border-top: 0px solid transparent;border-left: 0px s=
+olid transparent;border-right: 0px solid transparent;border-bottom: 0px sol=
+id transparent;" valign=3D"top"><tr><![endif]-->
+                  </table>
+                </td>
+              </tr>
+
+              <tr class=3D"project-content-main-tr">
+                <td style=3D"font-family: &quot;Source Sans Pro&quot;,
+      &quot;Roboto&quot;, Arial !important;">
+                  <table role=3D"presentation" cellpadding=3D"0" cellspacin=
+g=3D"0" width=3D"100%" border=3D"0" style=3D"
+                      background-color: #ffffff;
+                      max-width: 640px;
+                      margin: 0 auto 72px auto !important;
+                      border-collapse: collapse;
+                    " class=3D"project-table">
+                    <tr>
+                        <td align=3D"left" class=3D"bg-item-image" style=3D=
+"font-family: &quot;Source Sans Pro&quot;, &quot;Roboto&quot;, Arial !impor=
+tant;width:640px;height:480px;background:url('https://neufert-cdn.archdaily=
+.net/uploads/photo/image/322779/full_Seattle-Based-Wellness-Company-Photogr=
+apher-Andrew-GiammarcoPrivateer-Offices_AG_005.jpeg?v=3D1769626352'); backg=
+round-size:cover !important;background-position: center center !important;h=
+eight:480px">
+                              <a href=3D"https://archdaily.us1.list-manage.=
+com/track/click?u=3D240fd05fed14bcc1d00032012&amp;id=3Decde7ec264&amp;e=3D2=
+a0f64bef8" target=3D"_blank" style=3D"text-decoration: none !important;colo=
+r: #000 !important;width: 100%;font-family: &quot;Source Sans Pro&quot;, &q=
+uot;Roboto&quot;, Arial !important;">
+                                <div class=3D"inner-wrapper-item-image" sty=
+le=3D"height:480px;width:640px;">
+                                  &nbsp;
+                                </div>
+                                <!--[if gte mso 9]>
+                                  <img src=3D"https://neufert-cdn.archdaily=
+.net/uploads/photo/image/322779/full_Seattle-Based-Wellness-Company-Photogr=
+apher-Andrew-GiammarcoPrivateer-Offices_AG_005.jpeg?v=3D1769626352 alt=3D"h=
+ttps://neufert-cdn.archdaily.net/uploads/photo/image/322779/full_Seattle-Ba=
+sed-Wellness-Company-Photographer-Andrew-GiammarcoPrivateer-Offices_AG_005.=
+jpeg?v=3D1769626352" " width=3D"640" height=3D"480" style=3D"max-width:640p=
+x !important;width:100%;height:auto;" />
+                                <![endif]-->
+                              </a>
+                            </td>
+
+                    </tr>
+                    <tr>
+                      <td align=3D"left" class=3D"td-project-content" style=
+=3D"font-family: &quot;Source Sans Pro&quot;,
+      &quot;Roboto&quot;, Arial !important;">
+                        <a href=3D"https://archdaily.us1.list-manage.com/tr=
+ack/click?u=3D240fd05fed14bcc1d00032012&amp;id=3D9b174015bf&amp;e=3D2a0f64b=
+ef8" target=3D"_blank" style=3D"text-decoration: none !important;color: #00=
+0 !important;width: 100%;font-weight: 300 !important;font-family: &quot;Sou=
+rce Sans Pro&quot;,
+      &quot;Roboto&quot;, Arial !important;">
+                          <h3 style=3D"
+                              color: #000;
+                              font-size: 18px;
+                              font-weight: 300 !important;
+                              line-height: 20px;
+                              margin: 16px 0;
+                              -webkit-text-size-adjust: none;
+                              mso-line-height-rule: exactly;
+                              text-decoration: none;
+                            " class=3D"project-title">
+
+        FabriTRAK=C2=AE System in Seattle-Based Wellness Company / FabriTRA=
+K=C2=AE
+
+                          </h3>
+                        </a>
+                      </td>
+                    </tr>
+                    <!--[if (mso)|(IE)]><tr><td align=3D"center"style=3D"he=
+ight:72px;padding: 0px;border-top: 0px solid transparent;border-left: 0px s=
+olid transparent;border-right: 0px solid transparent;border-bottom: 0px sol=
+id transparent;" valign=3D"top"><tr><![endif]-->
+                  </table>
+                </td>
+              </tr>
+
+              <tr class=3D"project-content-main-tr">
+                <td style=3D"font-family: &quot;Source Sans Pro&quot;,
+      &quot;Roboto&quot;, Arial !important;">
+                  <table role=3D"presentation" cellpadding=3D"0" cellspacin=
+g=3D"0" width=3D"100%" border=3D"0" style=3D"
+                      background-color: #ffffff;
+                      max-width: 640px;
+                      margin: 0 auto 72px auto !important;
+                      border-collapse: collapse;
+                    " class=3D"project-table">
+                    <tr>
+                        <td align=3D"left" class=3D"bg-item-image" style=3D=
+"font-family: &quot;Source Sans Pro&quot;, &quot;Roboto&quot;, Arial !impor=
+tant;width:640px;height:480px;background:url('https://images.adsttc.com/med=
+ia/images/69b6/c892/3c49/4944/8bbc/79cb/newsletter/architect-and-curator-le=
+sley-lokko-receives-the-african-cultural-icon-award_10.jpg'); background-si=
+ze:cover !important;background-position: center center !important;height:48=
+0px">
+                              <a href=3D"https://archdaily.us1.list-manage.=
+com/track/click?u=3D240fd05fed14bcc1d00032012&amp;id=3De6a7e536ad&amp;e=3D2=
+a0f64bef8" target=3D"_blank" style=3D"text-decoration: none !important;colo=
+r: #000 !important;width: 100%;font-family: &quot;Source Sans Pro&quot;, &q=
+uot;Roboto&quot;, Arial !important;">
+                                <div class=3D"inner-wrapper-item-image" sty=
+le=3D"height:480px;width:640px;">
+                                  &nbsp;
+                                </div>
+                                <!--[if gte mso 9]>
+                                  <img src=3D"https://images.adsttc.com/med=
+ia/images/69b6/c892/3c49/4944/8bbc/79cb/newsletter/architect-and-curator-le=
+sley-lokko-receives-the-african-cultural-icon-award_10.jpg alt=3D"https://i=
+mages.adsttc.com/media/images/69b6/c892/3c49/4944/8bbc/79cb/newsletter/arch=
+itect-and-curator-lesley-lokko-receives-the-african-cultural-icon-award_10.=
+jpg" " width=3D"640" height=3D"480" style=3D"max-width:640px !important;wid=
+th:100%;height:auto;" />
+                                <![endif]-->
+                              </a>
+                            </td>
+
+                    </tr>
+                    <tr>
+                      <td align=3D"left" class=3D"td-project-content" style=
+=3D"font-family: &quot;Source Sans Pro&quot;,
+      &quot;Roboto&quot;, Arial !important;">
+                        <a href=3D"https://archdaily.us1.list-manage.com/tr=
+ack/click?u=3D240fd05fed14bcc1d00032012&amp;id=3D098837af2f&amp;e=3D2a0f64b=
+ef8" target=3D"_blank" style=3D"text-decoration: none !important;color: #00=
+0 !important;width: 100%;font-weight: 300 !important;font-family: &quot;Sou=
+rce Sans Pro&quot;,
+      &quot;Roboto&quot;, Arial !important;">
+                          <h3 style=3D"
+                              color: #000;
+                              font-size: 18px;
+                              font-weight: 300 !important;
+                              line-height: 20px;
+                              margin: 16px 0;
+                              -webkit-text-size-adjust: none;
+                              mso-line-height-rule: exactly;
+                              text-decoration: none;
+                            " class=3D"project-title">
+
+        Lesley Lokko Receives African Cultural Icon Award for Her Contribut=
+ions to Architectural Education and Discourse
+
+                          </h3>
+                        </a>
+                      </td>
+                    </tr>
+                    <!--[if (mso)|(IE)]><tr><td align=3D"center"style=3D"he=
+ight:72px;padding: 0px;border-top: 0px solid transparent;border-left: 0px s=
+olid transparent;border-right: 0px solid transparent;border-bottom: 0px sol=
+id transparent;" valign=3D"top"><tr><![endif]-->
+                  </table>
+                </td>
+              </tr>
+
+              <tr class=3D"project-content-main-tr">
+                <td style=3D"font-family: &quot;Source Sans Pro&quot;,
+      &quot;Roboto&quot;, Arial !important;">
+                  <table role=3D"presentation" cellpadding=3D"0" cellspacin=
+g=3D"0" width=3D"100%" border=3D"0" style=3D"
+                      background-color: #ffffff;
+                      max-width: 640px;
+                      margin: 0 auto 72px auto !important;
+                      border-collapse: collapse;
+                    " class=3D"project-table">
+                    <tr>
+                        <td align=3D"left" class=3D"bg-item-image" style=3D=
+"font-family: &quot;Source Sans Pro&quot;, &quot;Roboto&quot;, Arial !impor=
+tant;width:640px;height:480px;background:url('https://images.adsttc.com/med=
+ia/images/69b4/1b5b/3c49/4944/8bbc/761e/newsletter/barcelona-architecture-c=
+ity-guide-30-buildings-and-places-from-gaudi-to-today_34.jpg'); background-=
+size:cover !important;background-position: center center !important;height:=
+480px">
+                              <a href=3D"https://archdaily.us1.list-manage.=
+com/track/click?u=3D240fd05fed14bcc1d00032012&amp;id=3Da924709d43&amp;e=3D2=
+a0f64bef8" target=3D"_blank" style=3D"text-decoration: none !important;colo=
+r: #000 !important;width: 100%;font-family: &quot;Source Sans Pro&quot;, &q=
+uot;Roboto&quot;, Arial !important;">
+                                <div class=3D"inner-wrapper-item-image" sty=
+le=3D"height:480px;width:640px;">
+                                  &nbsp;
+                                </div>
+                                <!--[if gte mso 9]>
+                                  <img src=3D"https://images.adsttc.com/med=
+ia/images/69b4/1b5b/3c49/4944/8bbc/761e/newsletter/barcelona-architecture-c=
+ity-guide-30-buildings-and-places-from-gaudi-to-today_34.jpg alt=3D"https:/=
+/images.adsttc.com/media/images/69b4/1b5b/3c49/4944/8bbc/761e/newsletter/ba=
+rcelona-architecture-city-guide-30-buildings-and-places-from-gaudi-to-today=
+_34.jpg" " width=3D"640" height=3D"480" style=3D"max-width:640px !important=
+;width:100%;height:auto;" />
+                                <![endif]-->
+                              </a>
+                            </td>
+
+                    </tr>
+                    <tr>
+                      <td align=3D"left" class=3D"td-project-content" style=
+=3D"font-family: &quot;Source Sans Pro&quot;,
+      &quot;Roboto&quot;, Arial !important;">
+                        <a href=3D"https://archdaily.us1.list-manage.com/tr=
+ack/click?u=3D240fd05fed14bcc1d00032012&amp;id=3Dd7f2f5d38d&amp;e=3D2a0f64b=
+ef8" target=3D"_blank" style=3D"text-decoration: none !important;color: #00=
+0 !important;width: 100%;font-weight: 300 !important;font-family: &quot;Sou=
+rce Sans Pro&quot;,
+      &quot;Roboto&quot;, Arial !important;">
+                          <h3 style=3D"
+                              color: #000;
+                              font-size: 18px;
+                              font-weight: 300 !important;
+                              line-height: 20px;
+                              margin: 16px 0;
+                              -webkit-text-size-adjust: none;
+                              mso-line-height-rule: exactly;
+                              text-decoration: none;
+                            " class=3D"project-title">
+
+        Barcelona Architecture City Guide: 30 Buildings and Places from Gau=
+d=C3=AD to Today
+
+                          </h3>
+                        </a>
+                      </td>
+                    </tr>
+                    <!--[if (mso)|(IE)]><tr><td align=3D"center"style=3D"he=
+ight:72px;padding: 0px;border-top: 0px solid transparent;border-left: 0px s=
+olid transparent;border-right: 0px solid transparent;border-bottom: 0px sol=
+id transparent;" valign=3D"top"><tr><![endif]-->
+                  </table>
+                </td>
+              </tr>
+
+              <tr class=3D"project-content-main-tr">
+                <td style=3D"font-family: &quot;Source Sans Pro&quot;,
+      &quot;Roboto&quot;, Arial !important;">
+                  <table role=3D"presentation" cellpadding=3D"0" cellspacin=
+g=3D"0" width=3D"100%" border=3D"0" style=3D"
+                      background-color: #ffffff;
+                      max-width: 640px;
+                      margin: 0 auto 72px auto !important;
+                      border-collapse: collapse;
+                    " class=3D"project-table">
+                    <tr>
+                        <td align=3D"left" class=3D"bg-item-image" style=3D=
+"font-family: &quot;Source Sans Pro&quot;, &quot;Roboto&quot;, Arial !impor=
+tant;width:640px;height:480px;background:url('https://images.adsttc.com/med=
+ia/images/69aa/fe98/785c/2724/7893/072f/newsletter/bottega-bruzziches-delta=
+studio_3.jpg'); background-size:cover !important;background-position: cente=
+r center !important;height:480px">
+                              <a href=3D"https://archdaily.us1.list-manage.=
+com/track/click?u=3D240fd05fed14bcc1d00032012&amp;id=3D84e5806a89&amp;e=3D2=
+a0f64bef8" target=3D"_blank" style=3D"text-decoration: none !important;colo=
+r: #000 !important;width: 100%;font-family: &quot;Source Sans Pro&quot;, &q=
+uot;Roboto&quot;, Arial !important;">
+                                <div class=3D"inner-wrapper-item-image" sty=
+le=3D"height:480px;width:640px;">
+                                  &nbsp;
+                                </div>
+                                <!--[if gte mso 9]>
+                                  <img src=3D"https://images.adsttc.com/med=
+ia/images/69aa/fe98/785c/2724/7893/072f/newsletter/bottega-bruzziches-delta=
+studio_3.jpg alt=3D"https://images.adsttc.com/media/images/69aa/fe98/785c/2=
+724/7893/072f/newsletter/bottega-bruzziches-deltastudio_3.jpg" " width=3D"6=
+40" height=3D"480" style=3D"max-width:640px !important;width:100%;height:au=
+to;" />
+                                <![endif]-->
+                              </a>
+                            </td>
+
+                    </tr>
+                    <tr>
+                      <td align=3D"left" class=3D"td-project-content" style=
+=3D"font-family: &quot;Source Sans Pro&quot;,
+      &quot;Roboto&quot;, Arial !important;">
+                        <a href=3D"https://archdaily.us1.list-manage.com/tr=
+ack/click?u=3D240fd05fed14bcc1d00032012&amp;id=3Dd8334c5137&amp;e=3D2a0f64b=
+ef8" target=3D"_blank" style=3D"text-decoration: none !important;color: #00=
+0 !important;width: 100%;font-weight: 300 !important;font-family: &quot;Sou=
+rce Sans Pro&quot;,
+      &quot;Roboto&quot;, Arial !important;">
+                          <h3 style=3D"
+                              color: #000;
+                              font-size: 18px;
+                              font-weight: 300 !important;
+                              line-height: 20px;
+                              margin: 16px 0;
+                              -webkit-text-size-adjust: none;
+                              mso-line-height-rule: exactly;
+                              text-decoration: none;
+                            " class=3D"project-title">
+
+        Bottega Bruzziches Headquarters / deltastudio
+
+                          </h3>
+                        </a>
+                      </td>
+                    </tr>
+                    <!--[if (mso)|(IE)]><tr><td align=3D"center"style=3D"he=
+ight:72px;padding: 0px;border-top: 0px solid transparent;border-left: 0px s=
+olid transparent;border-right: 0px solid transparent;border-bottom: 0px sol=
+id transparent;" valign=3D"top"><tr><![endif]-->
+                  </table>
+                </td>
+              </tr>
+
+              <tr class=3D"project-content-main-tr">
+                <td style=3D"font-family: &quot;Source Sans Pro&quot;,
+      &quot;Roboto&quot;, Arial !important;">
+                  <table role=3D"presentation" cellpadding=3D"0" cellspacin=
+g=3D"0" width=3D"100%" border=3D"0" style=3D"
+                      background-color: #ffffff;
+                      max-width: 640px;
+                      margin: 0 auto 72px auto !important;
+                      border-collapse: collapse;
+                    " class=3D"project-table">
+                    <tr>
+                        <td align=3D"left" class=3D"bg-item-image" style=3D=
+"font-family: &quot;Source Sans Pro&quot;, &quot;Roboto&quot;, Arial !impor=
+tant;width:640px;height:480px;background:url('https://images.adsttc.com/med=
+ia/images/69b2/d7a7/1d07/d400/0132/4429/newsletter/24GOODER_X_S.PH..jpg'); =
+background-size:cover !important;background-position: center center !import=
+ant;height:480px">
+                              <a href=3D"https://archdaily.us1.list-manage.=
+com/track/click?u=3D240fd05fed14bcc1d00032012&amp;id=3D0a4071f03e&amp;e=3D2=
+a0f64bef8" target=3D"_blank" style=3D"text-decoration: none !important;colo=
+r: #000 !important;width: 100%;font-family: &quot;Source Sans Pro&quot;, &q=
+uot;Roboto&quot;, Arial !important;">
+                                <div class=3D"inner-wrapper-item-image" sty=
+le=3D"height:480px;width:640px;">
+                                  &nbsp;
+                                </div>
+                                <!--[if gte mso 9]>
+                                  <img src=3D"https://images.adsttc.com/med=
+ia/images/69b2/d7a7/1d07/d400/0132/4429/newsletter/24GOODER_X_S.PH..jpg alt=
+=3D"https://images.adsttc.com/media/images/69b2/d7a7/1d07/d400/0132/4429/ne=
+wsletter/24GOODER_X_S.PH..jpg" " width=3D"640" height=3D"480" style=3D"max-=
+width:640px !important;width:100%;height:auto;" />
+                                <![endif]-->
+                              </a>
+                            </td>
+
+                    </tr>
+                    <tr>
+                      <td align=3D"left" class=3D"td-project-content" style=
+=3D"font-family: &quot;Source Sans Pro&quot;,
+      &quot;Roboto&quot;, Arial !important;">
+                        <a href=3D"https://archdaily.us1.list-manage.com/tr=
+ack/click?u=3D240fd05fed14bcc1d00032012&amp;id=3Dd4244ca4c2&amp;e=3D2a0f64b=
+ef8" target=3D"_blank" style=3D"text-decoration: none !important;color: #00=
+0 !important;width: 100%;font-weight: 300 !important;font-family: &quot;Sou=
+rce Sans Pro&quot;,
+      &quot;Roboto&quot;, Arial !important;">
+                          <h3 style=3D"
+                              color: #000;
+                              font-size: 18px;
+                              font-weight: 300 !important;
+                              line-height: 20px;
+                              margin: 16px 0;
+                              -webkit-text-size-adjust: none;
+                              mso-line-height-rule: exactly;
+                              text-decoration: none;
+                            " class=3D"project-title">
+
+        Gooder Store / studio pheasant
+
+                          </h3>
+                        </a>
+                      </td>
+                    </tr>
+                    <!--[if (mso)|(IE)]><tr><td align=3D"center"style=3D"he=
+ight:72px;padding: 0px;border-top: 0px solid transparent;border-left: 0px s=
+olid transparent;border-right: 0px solid transparent;border-bottom: 0px sol=
+id transparent;" valign=3D"top"><tr><![endif]-->
+                  </table>
+                </td>
+              </tr>
+
+              <tr class=3D"project-content-main-tr">
+                <td style=3D"font-family: &quot;Source Sans Pro&quot;,
+      &quot;Roboto&quot;, Arial !important;">
+                  <table role=3D"presentation" cellpadding=3D"0" cellspacin=
+g=3D"0" width=3D"100%" border=3D"0" style=3D"
+                      background-color: #ffffff;
+                      max-width: 640px;
+                      margin: 0 auto 72px auto !important;
+                      border-collapse: collapse;
+                    " class=3D"project-table">
+                    <tr>
+                        <td align=3D"left" class=3D"bg-item-image" style=3D=
+"font-family: &quot;Source Sans Pro&quot;, &quot;Roboto&quot;, Arial !impor=
+tant;width:640px;height:480px;background:url('https://images.adsttc.com/med=
+ia/images/6734/26ae/1aab/c500/01a9/c46d/newsletter/Skylight1.jpg'); backgro=
+und-size:cover !important;background-position: center center !important;hei=
+ght:480px">
+                              <a href=3D"https://archdaily.us1.list-manage.=
+com/track/click?u=3D240fd05fed14bcc1d00032012&amp;id=3Df1de12d174&amp;e=3D2=
+a0f64bef8" target=3D"_blank" style=3D"text-decoration: none !important;colo=
+r: #000 !important;width: 100%;font-family: &quot;Source Sans Pro&quot;, &q=
+uot;Roboto&quot;, Arial !important;">
+                                <div class=3D"inner-wrapper-item-image" sty=
+le=3D"height:480px;width:640px;">
+                                  &nbsp;
+                                </div>
+                                <!--[if gte mso 9]>
+                                  <img src=3D"https://images.adsttc.com/med=
+ia/images/6734/26ae/1aab/c500/01a9/c46d/newsletter/Skylight1.jpg alt=3D"htt=
+ps://images.adsttc.com/media/images/6734/26ae/1aab/c500/01a9/c46d/newslette=
+r/Skylight1.jpg" " width=3D"640" height=3D"480" style=3D"max-width:640px !i=
+mportant;width:100%;height:auto;" />
+                                <![endif]-->
+                              </a>
+                            </td>
+
+                    </tr>
+                    <tr>
+                      <td align=3D"left" class=3D"td-project-content" style=
+=3D"font-family: &quot;Source Sans Pro&quot;,
+      &quot;Roboto&quot;, Arial !important;">
+                        <a href=3D"https://archdaily.us1.list-manage.com/tr=
+ack/click?u=3D240fd05fed14bcc1d00032012&amp;id=3D3d58069b87&amp;e=3D2a0f64b=
+ef8" target=3D"_blank" style=3D"text-decoration: none !important;color: #00=
+0 !important;width: 100%;font-weight: 300 !important;font-family: &quot;Sou=
+rce Sans Pro&quot;,
+      &quot;Roboto&quot;, Arial !important;">
+                          <h3 style=3D"
+                              color: #000;
+                              font-size: 18px;
+                              font-weight: 300 !important;
+                              line-height: 20px;
+                              margin: 16px 0;
+                              -webkit-text-size-adjust: none;
+                              mso-line-height-rule: exactly;
+                              text-decoration: none;
+                            " class=3D"project-title">
+
+        Poetry Anthology of Light / P.M.A.Studio
+
+                          </h3>
+                        </a>
+                      </td>
+                    </tr>
+                    <!--[if (mso)|(IE)]><tr><td align=3D"center"style=3D"he=
+ight:72px;padding: 0px;border-top: 0px solid transparent;border-left: 0px s=
+olid transparent;border-right: 0px solid transparent;border-bottom: 0px sol=
+id transparent;" valign=3D"top"><tr><![endif]-->
+                  </table>
+                </td>
+              </tr>
+
+              <tr class=3D"project-content-main-tr">
+                <td style=3D"font-family: &quot;Source Sans Pro&quot;,
+      &quot;Roboto&quot;, Arial !important;">
+                  <table role=3D"presentation" cellpadding=3D"0" cellspacin=
+g=3D"0" width=3D"100%" border=3D"0" style=3D"
+                      background-color: #ffffff;
+                      max-width: 640px;
+                      margin: 0 auto 72px auto !important;
+                      border-collapse: collapse;
+                    " class=3D"project-table">
+                    <tr>
+                        <td align=3D"left" class=3D"bg-item-image" style=3D=
+"font-family: &quot;Source Sans Pro&quot;, &quot;Roboto&quot;, Arial !impor=
+tant;width:640px;height:480px;background:url('https://images.adsttc.com/med=
+ia/images/69b3/e261/1d07/d400/0132/4486/newsletter/03__photo_credit_Atelier=
+_LuxNox_.jpg'); background-size:cover !important;background-position: cente=
+r center !important;height:480px">
+                              <a href=3D"https://archdaily.us1.list-manage.=
+com/track/click?u=3D240fd05fed14bcc1d00032012&amp;id=3Df4d1d6edd0&amp;e=3D2=
+a0f64bef8" target=3D"_blank" style=3D"text-decoration: none !important;colo=
+r: #000 !important;width: 100%;font-family: &quot;Source Sans Pro&quot;, &q=
+uot;Roboto&quot;, Arial !important;">
+                                <div class=3D"inner-wrapper-item-image" sty=
+le=3D"height:480px;width:640px;">
+                                  &nbsp;
+                                </div>
+                                <!--[if gte mso 9]>
+                                  <img src=3D"https://images.adsttc.com/med=
+ia/images/69b3/e261/1d07/d400/0132/4486/newsletter/03__photo_credit_Atelier=
+_LuxNox_.jpg alt=3D"https://images.adsttc.com/media/images/69b3/e261/1d07/d=
+400/0132/4486/newsletter/03__photo_credit_Atelier_LuxNox_.jpg" " width=3D"6=
+40" height=3D"480" style=3D"max-width:640px !important;width:100%;height:au=
+to;" />
+                                <![endif]-->
+                              </a>
+                            </td>
+
+                    </tr>
+                    <tr>
+                      <td align=3D"left" class=3D"td-project-content" style=
+=3D"font-family: &quot;Source Sans Pro&quot;,
+      &quot;Roboto&quot;, Arial !important;">
+                        <a href=3D"https://archdaily.us1.list-manage.com/tr=
+ack/click?u=3D240fd05fed14bcc1d00032012&amp;id=3D73d9a07559&amp;e=3D2a0f64b=
+ef8" target=3D"_blank" style=3D"text-decoration: none !important;color: #00=
+0 !important;width: 100%;font-weight: 300 !important;font-family: &quot;Sou=
+rce Sans Pro&quot;,
+      &quot;Roboto&quot;, Arial !important;">
+                          <h3 style=3D"
+                              color: #000;
+                              font-size: 18px;
+                              font-weight: 300 !important;
+                              line-height: 20px;
+                              margin: 16px 0;
+                              -webkit-text-size-adjust: none;
+                              mso-line-height-rule: exactly;
+                              text-decoration: none;
+                            " class=3D"project-title">
+
+        Twin Pavilions / Atelier LuxNox + Found Projects
+
+                          </h3>
+                        </a>
+                      </td>
+                    </tr>
+                    <!--[if (mso)|(IE)]><tr><td align=3D"center"style=3D"he=
+ight:72px;padding: 0px;border-top: 0px solid transparent;border-left: 0px s=
+olid transparent;border-right: 0px solid transparent;border-bottom: 0px sol=
+id transparent;" valign=3D"top"><tr><![endif]-->
+                  </table>
+                </td>
+              </tr>
+
+              <tr class=3D"project-content-main-tr">
+                <td style=3D"font-family: &quot;Source Sans Pro&quot;,
+      &quot;Roboto&quot;, Arial !important;">
+                  <table role=3D"presentation" cellpadding=3D"0" cellspacin=
+g=3D"0" width=3D"100%" border=3D"0" style=3D"
+                      background-color: #ffffff;
+                      max-width: 640px;
+                      margin: 0 auto 72px auto !important;
+                      border-collapse: collapse;
+                    " class=3D"project-table">
+                    <tr>
+                        <td align=3D"left" class=3D"bg-item-image" style=3D=
+"font-family: &quot;Source Sans Pro&quot;, &quot;Roboto&quot;, Arial !impor=
+tant;width:640px;height:480px;background:url('https://images.adsttc.com/med=
+ia/images/69b4/4930/1d07/d400/0132/45aa/newsletter/_SBRG_91_Koji_Horiuchi_S=
+hin_Shashin_Kobo_.jpg'); background-size:cover !important;background-positi=
+on: center center !important;height:480px">
+                              <a href=3D"https://archdaily.us1.list-manage.=
+com/track/click?u=3D240fd05fed14bcc1d00032012&amp;id=3Deaf94ba231&amp;e=3D2=
+a0f64bef8" target=3D"_blank" style=3D"text-decoration: none !important;colo=
+r: #000 !important;width: 100%;font-family: &quot;Source Sans Pro&quot;, &q=
+uot;Roboto&quot;, Arial !important;">
+                                <div class=3D"inner-wrapper-item-image" sty=
+le=3D"height:480px;width:640px;">
+                                  &nbsp;
+                                </div>
+                                <!--[if gte mso 9]>
+                                  <img src=3D"https://images.adsttc.com/med=
+ia/images/69b4/4930/1d07/d400/0132/45aa/newsletter/_SBRG_91_Koji_Horiuchi_S=
+hin_Shashin_Kobo_.jpg alt=3D"https://images.adsttc.com/media/images/69b4/49=
+30/1d07/d400/0132/45aa/newsletter/_SBRG_91_Koji_Horiuchi_Shin_Shashin_Kobo_=
+.jpg" " width=3D"640" height=3D"480" style=3D"max-width:640px !important;wi=
+dth:100%;height:auto;" />
+                                <![endif]-->
+                              </a>
+                            </td>
+
+                    </tr>
+                    <tr>
+                      <td align=3D"left" class=3D"td-project-content" style=
+=3D"font-family: &quot;Source Sans Pro&quot;,
+      &quot;Roboto&quot;, Arial !important;">
+                        <a href=3D"https://archdaily.us1.list-manage.com/tr=
+ack/click?u=3D240fd05fed14bcc1d00032012&amp;id=3D14141ff2f0&amp;e=3D2a0f64b=
+ef8" target=3D"_blank" style=3D"text-decoration: none !important;color: #00=
+0 !important;width: 100%;font-weight: 300 !important;font-family: &quot;Sou=
+rce Sans Pro&quot;,
+      &quot;Roboto&quot;, Arial !important;">
+                          <h3 style=3D"
+                              color: #000;
+                              font-size: 18px;
+                              font-weight: 300 !important;
+                              line-height: 20px;
+                              margin: 16px 0;
+                              -webkit-text-size-adjust: none;
+                              mso-line-height-rule: exactly;
+                              text-decoration: none;
+                            " class=3D"project-title">
+
+        SUBARU Innovation Hub / Nikken Sekkei
+
+                          </h3>
+                        </a>
+                      </td>
+                    </tr>
+                    <!--[if (mso)|(IE)]><tr><td align=3D"center"style=3D"he=
+ight:72px;padding: 0px;border-top: 0px solid transparent;border-left: 0px s=
+olid transparent;border-right: 0px solid transparent;border-bottom: 0px sol=
+id transparent;" valign=3D"top"><tr><![endif]-->
+                  </table>
+                </td>
+              </tr>
+
+              <tr class=3D"project-content-main-tr">
+                <td style=3D"font-family: &quot;Source Sans Pro&quot;,
+      &quot;Roboto&quot;, Arial !important;">
+                  <table role=3D"presentation" cellpadding=3D"0" cellspacin=
+g=3D"0" width=3D"100%" border=3D"0" style=3D"
+                      background-color: #ffffff;
+                      max-width: 640px;
+                      margin: 0 auto 72px auto !important;
+                      border-collapse: collapse;
+                    " class=3D"project-table">
+                    <tr>
+                        <td align=3D"left" class=3D"bg-item-image" style=3D=
+"font-family: &quot;Source Sans Pro&quot;, &quot;Roboto&quot;, Arial !impor=
+tant;width:640px;height:480px;background:url('https://images.adsttc.com/med=
+ia/images/69b2/24c0/1d07/d400/0132/43c5/newsletter/0384.23Sul.AtelierVilaMa=
+dalena-PKOK8169.jpg'); background-size:cover !important;background-position=
+: center center !important;height:480px">
+                              <a href=3D"https://archdaily.us1.list-manage.=
+com/track/click?u=3D240fd05fed14bcc1d00032012&amp;id=3Dd22e4eef19&amp;e=3D2=
+a0f64bef8" target=3D"_blank" style=3D"text-decoration: none !important;colo=
+r: #000 !important;width: 100%;font-family: &quot;Source Sans Pro&quot;, &q=
+uot;Roboto&quot;, Arial !important;">
+                                <div class=3D"inner-wrapper-item-image" sty=
+le=3D"height:480px;width:640px;">
+                                  &nbsp;
+                                </div>
+                                <!--[if gte mso 9]>
+                                  <img src=3D"https://images.adsttc.com/med=
+ia/images/69b2/24c0/1d07/d400/0132/43c5/newsletter/0384.23Sul.AtelierVilaMa=
+dalena-PKOK8169.jpg alt=3D"https://images.adsttc.com/media/images/69b2/24c0=
+/1d07/d400/0132/43c5/newsletter/0384.23Sul.AtelierVilaMadalena-PKOK8169.jpg=
+" " width=3D"640" height=3D"480" style=3D"max-width:640px !important;width:=
+100%;height:auto;" />
+                                <![endif]-->
+                              </a>
+                            </td>
+
+                    </tr>
+                    <tr>
+                      <td align=3D"left" class=3D"td-project-content" style=
+=3D"font-family: &quot;Source Sans Pro&quot;,
+      &quot;Roboto&quot;, Arial !important;">
+                        <a href=3D"https://archdaily.us1.list-manage.com/tr=
+ack/click?u=3D240fd05fed14bcc1d00032012&amp;id=3D249abb331e&amp;e=3D2a0f64b=
+ef8" target=3D"_blank" style=3D"text-decoration: none !important;color: #00=
+0 !important;width: 100%;font-weight: 300 !important;font-family: &quot;Sou=
+rce Sans Pro&quot;,
+      &quot;Roboto&quot;, Arial !important;">
+                          <h3 style=3D"
+                              color: #000;
+                              font-size: 18px;
+                              font-weight: 300 !important;
+                              line-height: 20px;
+                              margin: 16px 0;
+                              -webkit-text-size-adjust: none;
+                              mso-line-height-rule: exactly;
+                              text-decoration: none;
+                            " class=3D"project-title">
+
+        ASA Sandra and Albano Studio / 23 SUL
+
+                          </h3>
+                        </a>
+                      </td>
+                    </tr>
+                    <!--[if (mso)|(IE)]><tr><td align=3D"center"style=3D"he=
+ight:72px;padding: 0px;border-top: 0px solid transparent;border-left: 0px s=
+olid transparent;border-right: 0px solid transparent;border-bottom: 0px sol=
+id transparent;" valign=3D"top"><tr><![endif]-->
+                  </table>
+                </td>
+              </tr>
+
+              <tr class=3D"project-content-main-tr">
+                <td style=3D"font-family: &quot;Source Sans Pro&quot;,
+      &quot;Roboto&quot;, Arial !important;">
+                  <table role=3D"presentation" cellpadding=3D"0" cellspacin=
+g=3D"0" width=3D"100%" border=3D"0" style=3D"
+                      background-color: #ffffff;
+                      max-width: 640px;
+                      margin: 0 auto 72px auto !important;
+                      border-collapse: collapse;
+                    " class=3D"project-table">
+                    <tr>
+                        <td align=3D"left" class=3D"bg-item-image" style=3D=
+"font-family: &quot;Source Sans Pro&quot;, &quot;Roboto&quot;, Arial !impor=
+tant;width:640px;height:480px;background:url('https://images.adsttc.com/med=
+ia/images/69b0/93b8/3c49/4901/7d2a/f628/newsletter/zentrum-fur-sprache-und-=
+bewegung-aff-architekten_1.jpg'); background-size:cover !important;backgrou=
+nd-position: center center !important;height:480px">
+                              <a href=3D"https://archdaily.us1.list-manage.=
+com/track/click?u=3D240fd05fed14bcc1d00032012&amp;id=3D11485a76f2&amp;e=3D2=
+a0f64bef8" target=3D"_blank" style=3D"text-decoration: none !important;colo=
+r: #000 !important;width: 100%;font-family: &quot;Source Sans Pro&quot;, &q=
+uot;Roboto&quot;, Arial !important;">
+                                <div class=3D"inner-wrapper-item-image" sty=
+le=3D"height:480px;width:640px;">
+                                  &nbsp;
+                                </div>
+                                <!--[if gte mso 9]>
+                                  <img src=3D"https://images.adsttc.com/med=
+ia/images/69b0/93b8/3c49/4901/7d2a/f628/newsletter/zentrum-fur-sprache-und-=
+bewegung-aff-architekten_1.jpg alt=3D"https://images.adsttc.com/media/image=
+s/69b0/93b8/3c49/4901/7d2a/f628/newsletter/zentrum-fur-sprache-und-bewegung=
+-aff-architekten_1.jpg" " width=3D"640" height=3D"480" style=3D"max-width:6=
+40px !important;width:100%;height:auto;" />
+                                <![endif]-->
+                              </a>
+                            </td>
+
+                    </tr>
+                    <tr>
+                      <td align=3D"left" class=3D"td-project-content" style=
+=3D"font-family: &quot;Source Sans Pro&quot;,
+      &quot;Roboto&quot;, Arial !important;">
+                        <a href=3D"https://archdaily.us1.list-manage.com/tr=
+ack/click?u=3D240fd05fed14bcc1d00032012&amp;id=3D427e16fc8b&amp;e=3D2a0f64b=
+ef8" target=3D"_blank" style=3D"text-decoration: none !important;color: #00=
+0 !important;width: 100%;font-weight: 300 !important;font-family: &quot;Sou=
+rce Sans Pro&quot;,
+      &quot;Roboto&quot;, Arial !important;">
+                          <h3 style=3D"
+                              color: #000;
+                              font-size: 18px;
+                              font-weight: 300 !important;
+                              line-height: 20px;
+                              margin: 16px 0;
+                              -webkit-text-size-adjust: none;
+                              mso-line-height-rule: exactly;
+                              text-decoration: none;
+                            " class=3D"project-title">
+
+        Center for Language and Movement / AFF architekten
+
+                          </h3>
+                        </a>
+                      </td>
+                    </tr>
+                    <!--[if (mso)|(IE)]><tr><td align=3D"center"style=3D"he=
+ight:72px;padding: 0px;border-top: 0px solid transparent;border-left: 0px s=
+olid transparent;border-right: 0px solid transparent;border-bottom: 0px sol=
+id transparent;" valign=3D"top"><tr><![endif]-->
+                  </table>
+                </td>
+              </tr>
+
+
+            </table>
+          </td>
+        </tr>
+
+        <!-- END PROJECTS -->
+          <!-- END PROJECTS -->
+          <!-- TAILOR YOUR -->
+          <tr>
+            <td style=3D"font-family: 'Source Sans 3', sans-serif; !importa=
+nt;">
+              <table role=3D"presentation" cellpadding=3D"0" cellspacing=3D=
+"0" width=3D"100%" border=3D"0" style=3D"
+                background-color: #ffffff;
+                max-width: 640px;
+                margin: 0 auto 42px auto !important;
+                border-collapse: collapse;
+              ">
+                <tbody>
+                  <!--[if (mso)|(IE)]><tr><td align=3D"center"style=3D"heig=
+ht:42px;padding: 0px;border-top: 0px solid transparent;border-left: 0px sol=
+id transparent;border-right: 0px solid transparent;border-bottom: 0px solid=
+ transparent;" valign=3D"top"><tr><![endif]-->
+                  <tr>
+                    <td align=3D"center" style=3D"font-family: 'Source Sans=
+ 3', sans-serif; !important;">
+                      <p style=3D"
+                      color: #a6a0a0;
+                      text-align: center;
+                      font-family: 'Source Sans Pro', 'Roboto', Arial !impo=
+rtant;
+                      font-size: 14px;
+                      line-height: 16px;
+                      font-style: normal;
+                      font-weight: 400;
+                      line-height: normal;
+                      margin: 0 0 42px 0;
+                    ">
+                        You=E2=80=99re reading our Daily Newsletter. <a hre=
+f=3D"https://archdaily.us1.list-manage.com/track/click?u=3D240fd05fed14bcc1=
+d00032012&amp;id=3D55d632f27e&amp;e=3D2a0f64bef8" target=3D"_blank" style=
+=3D"
+                      color: #0C308D;
+                      text-align: center;
+                      font-family: 'Source Sans Pro', 'Roboto', Arial !impo=
+rtant;
+                      font-size: 14px;
+                      font-style: normal;
+                      font-weight: 400;
+                      line-height: normal;
+                      text-decoration: unset !important;
+                    ">Discover all the ArchDaily Newsletters.</a>
+                      </p>
+                    </td>
+                  </tr>
+
+                  <!--[if (mso)|(IE)]><tr><td align=3D"center"style=3D"heig=
+ht:42px;padding: 0px;border-top: 0px solid transparent;border-left: 0px sol=
+id transparent;border-right: 0px solid transparent;border-bottom: 0px solid=
+ transparent;" valign=3D"top"><tr><![endif]-->
+                </tbody>
+              </table>
+            </td>
+          </tr>
+          <!-- END TAILOR BUTTON-->
+        </tbody>
+      </table>
+      <!-- FOOTER TABLE -->
+
+           <table class=3D"footer-table-legals" role=3D"presentation" cellp=
+adding=3D"0" cellspacing=3D"0" width=3D"100%" border=3D"0" style=3D"
+              background-color: #F5F5F5;
+              max-width: 640px;
+              margin: 0 auto;
+              margin-bottom: 42px !important;
+              border-collapse: collapse;
+            " align=3D"center">
+        <tbody>
+          <!--[if (mso)|(IE)]><tr><td align=3D"center"style=3D"height:32px;=
+padding: 0px;border-top: 0px solid transparent;border-left: 0px solid trans=
+parent;border-right: 0px solid transparent;border-bottom: 0px solid transpa=
+rent;" colspan=3D"4" valign=3D"top"><tr><![endif]-->
+          <tr>
+            <td colspan=3D"4" width=3D"100%" style=3D"width: 100%;font-fami=
+ly: &quot;Source Sans Pro&quot;,
+      &quot;Roboto&quot;, Arial !important;">
+              <table style=3D"
+              background-color: #F5F5F5;
+              max-width: 640px;
+              margin: 0 auto;
+              margin: 32px 0 !important;
+              border-collapse: collapse;
+              width: 100% !important;
+            " align=3D"center">
+                <tbody><tr>
+                    <td style=3D"font-family: 'Source Sans 3', sans-serif; =
+!important;width:100% !important;" align=3D"center" colspan=3D"4" width=3D"=
+100%">
+                      <a href=3D"https://archdaily.us1.list-manage.com/trac=
+k/click?u=3D240fd05fed14bcc1d00032012&amp;id=3Dfdf4f84c58&amp;e=3D2a0f64bef=
+8" target=3D"_blank" style=3D"text-align: center;font-family: 'Source Sans =
+3', sans-serif;!important: ;text-decoration: none !important;">
+                        <img src=3D"https://assets.adsttc.com/doodles/flat/=
+logo-blue-full.png" alt=3D"ArchDaily logo" border=3D"0" style=3D"height: 62=
+px; width: 100px; margin: 0; padding: 0;
+                      width: 100px !important;
+                      max-width:100px !important;
+                      height: auto;
+                      max-height: 62px !important;
+                    " width=3D"100" height=3D"62" class=3D"ad-logo">
+                      </a>
+                    </td>
+                  </tr>
+                </tbody></table>
+            </td>
+          </tr>
+          <!--[if (mso)|(IE)]><tr><td align=3D"center"style=3D"height:42px;=
+padding: 0px;border-top: 0px solid transparent;border-left: 0px solid trans=
+parent;border-right: 0px solid transparent;border-bottom: 0px solid transpa=
+rent;" valign=3D"top"><tr><![endif]-->
+
+          <tr style=3D"width: 100% !important; text-align: center;" align=
+=3D"center" class=3D"table-links">
+            <td align=3D"center" width=3D"100%" style=3D"font-family: &quot=
+;Source Sans Pro&quot;, &quot;Roboto&quot;, Arial !important;text-align:cen=
+terwidth:100% !important;" colspan=3D"4">
+              <a href=3D"https://archdaily.us1.list-manage.com/track/click?=
+u=3D240fd05fed14bcc1d00032012&amp;id=3D07422a93ab&amp;e=3D2a0f64bef8" style=
+=3D"
+                      color: #00308e;
+                      text-align: center;
+                      font-family: 'Source Sans Pro', 'Roboto', Arial !impo=
+rtant;
+                      font-size: 14px;
+                      font-style: normal;
+                      font-weight: 400;
+                      line-height: normal;
+                      -webkit-text-size-adjust: none;
+                      text-decoration: none;
+                      mso-line-height-rule: exactly;
+                      padding:0  16px 8px 0;
+                    ">Switch to weekly update
+              </a>
+              <a href=3D"https://archdaily.us1.list-manage.com/profile?u=3D=
+240fd05fed14bcc1d00032012&amp;id=3Db5a382da72&amp;e=3D2a0f64bef8&amp;c=3D8c=
+942363ca" style=3D"
+                      color: #00308e;
+                      text-align: center;
+                      font-family: 'Source Sans Pro', 'Roboto', Arial !impo=
+rtant;
+                      font-size: 14px;
+                      font-style: normal;
+                      font-weight: 400;
+                      line-height: normal;
+                      -webkit-text-size-adjust: none;
+                      text-decoration: none;
+                      mso-line-height-rule: exactly;
+                      padding:0  16px 8px 0;
+                    ">&nbsp;Unsubscribe / Update Preferences&nbsp;
+              </a>
+
+              <!--<a href=3D"https://archdaily.us1.list-manage.com/unsubscr=
+ibe?u=3D240fd05fed14bcc1d00032012&id=3Db5a382da72&t=3Db&e=3D2a0f64bef8&c=3D=
+8c942363ca" style=3D"
+                      color: #00308e;
+                      text-align: center;
+                      font-family: 'Source Sans Pro', 'Roboto', Arial !impo=
+rtant;
+                      font-size: 14px;
+                      font-style: normal;
+                      font-weight: 400;
+                      line-height: normal;
+                      -webkit-text-size-adjust: none;
+                      text-decoration: none;
+                      mso-line-height-rule: exactly;
+                      padding:0  16px 8px 0;
+                    ">&nbsp;Unsubscribe
+              </a>-->
+              <a href=3D"https://archdaily.us1.list-manage.com/track/click?=
+u=3D240fd05fed14bcc1d00032012&amp;id=3Dcf86593774&amp;e=3D2a0f64bef8" style=
+=3D"
+                      color: #00308e;
+                      text-align: center;
+                      font-family: 'Source Sans Pro', 'Roboto', Arial !impo=
+rtant;
+                      font-size: 14px;
+                      font-style: normal;
+                      font-weight: 400;
+                      line-height: normal;
+                      -webkit-text-size-adjust: none;
+                      text-decoration: none;
+                      mso-line-height-rule: exactly;
+                    ">&nbsp;Privacy Policy
+              </a>
+            </td>
+
+          </tr>
+
+          <!--[if (mso)|(IE)]><tr><td align=3D"center"style=3D"height:42px;=
+padding: 0px;border-top: 0px solid transparent;border-left: 0px solid trans=
+parent;border-right: 0px solid transparent;border-bottom: 0px solid transpa=
+rent;" valign=3D"top"><tr><![endif]-->
+          <tr style=3D"width: 100% !important; text-align: center;max-width=
+:490px!important;display:block;margin:0 auto!important;" class=3D"legal-tex=
+t-tr">
+            <td align=3D"center" colspan=3D"4" width=3D"80%" style=3D"font-=
+family: 'Source Sans 3', sans-serif; !important; width:80% !important;margi=
+n:0 auto !important;">
+              <p class=3D"legal-copy" style=3D"
+                      color: #a6a0a0;
+                      text-align: center;
+                      font-family: 'Source Sans Pro', 'Roboto', Arial !impo=
+rtant;
+                      font-size: 14px;
+                      font-style: normal;
+                      font-weight: 400;
+                      line-height: normal;
+                      -webkit-text-size-adjust: none;
+                      margin: 0;
+                      padding: 32px 0 42px 0;
+                    ">
+                =C2=A9 All rights reserved. ArchDaily Part of DAAily Platfo=
+rms AG
+                2026. Seehofstrasse 16, 8008 Z=C3=BCrich, Switzerland.
+              </p>
+            </td>
+          </tr>
+          <!--[if (mso)|(IE)]><tr><td align=3D"center"style=3D"height:42px;=
+padding: 0px;border-top: 0px solid transparent;border-left: 0px solid trans=
+parent;border-right: 0px solid transparent;border-bottom: 0px solid transpa=
+rent;" valign=3D"top"><tr><![endif]-->
+        </tbody>
+      </table>
+
+      <!--START FOOTER ADS-->
+      <!-- // Ads \\ -->
+      <table role=3D"presentation" cellpadding=3D"0" cellspacing=3D"0" widt=
+h=3D"100%" border=3D"0" style=3D"
+              background-color: #ffffff;
+              max-width: 640px;
+              width: 100% !imporant;
+              margin: 0 auto !important;
+              border-collapse: collapse;
+            " class=3D"table-footer-ads">
+        <tbody>
+          <!--[if (mso)|(IE)]><tr><td align=3D"center"style=3D"height:42px;=
+padding: 0px;border-top: 0px solid transparent;border-left: 0px solid trans=
+parent;border-right: 0px solid transparent;border-bottom: 0px solid transpa=
+rent;" valign=3D"top"><tr><![endif]-->
+          <tr>
+            <td style=3D"font-family: 'Source Sans 3', sans-serif; !importa=
+nt;">
+              <table border=3D"0" cellpadding=3D"0" cellspacing=3D"0" width=
+=3D"640" style=3D"
+                font-family: 'Source Sans Pro', 'Roboto', Arial;
+                font-size: 16px;
+                width: 640px;
+                color: #303030;
+                margin-left: auto;
+                margin-right: auto;
+                margin-top: 10px;
+                margin: 0 auto;
+              " class=3D"wrapper">
+                <tbody>
+                  <tr>
+                    <td style=3D"text-align: center;width: 100%;font-family=
+: 'Source Sans 3', sans-serif; !important;" width=3D"100%">
+                      <div>
+                        <a mc:disable-tracking=3D"" href=3D"https://archdai=
+ly.us1.list-manage.com/track/click?u=3D240fd05fed14bcc1d00032012&amp;id=3D6=
+0f1cc9911&amp;e=3D2a0f64bef8" target=3D"_blank" style=3D"font-family: &quot=
+;Source Sans Pro&quot;,
+      &quot;Roboto&quot;, Arial !important;text-decoration: none !important=
+;"><img alt=3D"http://newsletter.adsttc.com/us/newsletter/image.jpg?date=3D=
+26-03-16" class=3D"ads-image" height=3D"100" src=3D"http://newsletter.adstt=
+c.com/us/newsletter/image.jpg?date=3D26-03-16" width=3D"640" style=3D"
+                          width: 100% !important;
+                          height: auto !important;
+                          max-width: 100% !important;
+                        "></a>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <!--END FOOTER ADS-->
+    </div>
+
+              <center>
+                <br>
+                <br>
+                <br>
+                <br>
+                <br>
+                <br>
+                <table border=3D"0" cellpadding=3D"0" cellspacing=3D"0" wid=
+th=3D"100%" id=3D"canspamBarWrapper" style=3D"background-color:#FFFFFF; bor=
+der-top:1px solid #E5E5E5;">
+                    <tr>
+                        <td align=3D"center" valign=3D"top" style=3D"paddin=
+g-top: 20px;padding-bottom: 20px;font-family: &quot;Source Sans Pro&quot;,
+      &quot;Roboto&quot;, Arial !important;">
+                            <table border=3D"0" cellpadding=3D"0" cellspaci=
+ng=3D"0" id=3D"canspamBar">
+                                <tr>
+                                    <td align=3D"center" valign=3D"top" sty=
+le=3D"color:#606060; font-family:Helvetica, Arial, sans-serif; font-size:11=
+px; line-height:150%; padding-right:20px; padding-bottom:5px; padding-left:=
+20px; text-align:center;">
+                                        This email was sent to <a href=3D"m=
+ailto:info@woodfine.co" target=3D"_blank" style=3D"color: #404040 !importan=
+t;font-family: &quot;Source Sans Pro&quot;,
+      &quot;Roboto&quot;, Arial !important;text-decoration: none !important=
+;">info@woodfine.co</a>
+                                        <br>
+                                        <a href=3D"https://archdaily.us1.li=
+st-manage.com/about?u=3D240fd05fed14bcc1d00032012&amp;id=3Db5a382da72&amp;e=
+=3D2a0f64bef8&amp;c=3D8c942363ca" target=3D"_blank" style=3D"color: #404040=
+ !important;font-family: &quot;Source Sans Pro&quot;,
+      &quot;Roboto&quot;, Arial !important;text-decoration: none !important=
+;"><em>why did I get this?</em></a>&nbsp;&nbsp;&nbsp;&nbsp;<a href=3D"https=
+://archdaily.us1.list-manage.com/unsubscribe?u=3D240fd05fed14bcc1d00032012&=
+amp;id=3Db5a382da72&amp;t=3Db&amp;e=3D2a0f64bef8&amp;c=3D8c942363ca" style=
+=3D"color: #404040 !important;font-family: &quot;Source Sans Pro&quot;,
+      &quot;Roboto&quot;, Arial !important;text-decoration: none !important=
+;">unsubscribe from this list</a>&nbsp;&nbsp;&nbsp;&nbsp;<a href=3D"https:/=
+/archdaily.us1.list-manage.com/profile?u=3D240fd05fed14bcc1d00032012&amp;id=
+=3Db5a382da72&amp;e=3D2a0f64bef8&amp;c=3D8c942363ca" style=3D"color: #40404=
+0 !important;font-family: &quot;Source Sans Pro&quot;,
+      &quot;Roboto&quot;, Arial !important;text-decoration: none !important=
+;">update subscription preferences</a>
+                                        <br>
+                                        ArchDaily, part of DAAily Platforms=
+ AG =C2=B7 Seehofstrasse 16, =C2=B7 Z=C3=BCrich 8008 =C2=B7 Switzerland
+                                        <br>
+                                        <br>
+
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+                <style type=3D"text/css">
+                    @media only screen and (max-width: 480px){
+                        table#canspamBar td{font-size:14px !important;}
+                        table#canspamBar td a{display:block !important; mar=
+gin-top:10px !important;}
+                    }
+                </style>
+            </center><div style=3D"display:none;"><img src=3D"https://archd=
+aily.us1.list-manage.com/track/open.php?u=3D240fd05fed14bcc1d00032012&amp;i=
+d=3D8c942363ca&amp;e=3D2a0f64bef8" height=3D"1" width=3D"1" style=3D"displa=
+y:none;" alt=3D""></div></body>
+</html>=
+
+--_----------=_MCPart_921132947--

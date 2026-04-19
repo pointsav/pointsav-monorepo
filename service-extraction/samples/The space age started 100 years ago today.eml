@@ -1,0 +1,2032 @@
+Received: from PH7PR16MB5905.namprd16.prod.outlook.com (2603:10b6:510:306::11)
+ by DM6PR16MB2569.namprd16.prod.outlook.com with HTTPS; Mon, 16 Mar 2026
+ 14:18:04 +0000
+Received: from CH2PR18CA0029.namprd18.prod.outlook.com (2603:10b6:610:4f::39)
+ by PH7PR16MB5905.namprd16.prod.outlook.com (2603:10b6:510:306::11) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9700.24; Mon, 16 Mar
+ 2026 14:18:00 +0000
+Received: from CH3PEPF0000000D.namprd04.prod.outlook.com
+ (2603:10b6:610:4f:cafe::4b) by CH2PR18CA0029.outlook.office365.com
+ (2603:10b6:610:4f::39) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.20.9700.25 via Frontend Transport; Mon,
+ 16 Mar 2026 14:17:47 +0000
+Authentication-Results: spf=pass (sender IP is 203.55.21.29)
+ smtp.mailfrom=bounce.theconversation.com; dkim=pass (signature was verified)
+ header.d=theconversation.com;dkim=pass (signature was verified)
+ header.d=cmail2.com;dmarc=pass action=none
+ header.from=theconversation.com;compauth=pass reason=100
+Received-SPF: Pass (protection.outlook.com: domain of
+ bounce.theconversation.com designates 203.55.21.29 as permitted sender)
+ receiver=protection.outlook.com; client-ip=203.55.21.29;
+ helo=mx29.a.outbound.createsend.com; pr=C
+Received: from mx29.a.outbound.createsend.com (203.55.21.29) by
+ CH3PEPF0000000D.mail.protection.outlook.com (10.167.244.43) with Microsoft
+ SMTP Server (version=TLS1_3, cipher=TLS_AES_256_GCM_SHA384) id 15.20.9700.17
+ via Frontend Transport; Mon, 16 Mar 2026 14:17:59 +0000
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; s=cm; d=theconversation.com;
+ h=Subject:From:To:Reply-To:Date:MIME-Version:Content-Type:List-Unsubscribe:
+ List-Unsubscribe-Post:Message-ID; i=us.newsletter@theconversation.com;
+ bh=BJz8xAJ/E5RF8hiOKqy8BVeg69SOtcPO520Ocu9BTdE=;
+ b=SRlENYTJK2YjYZ1RY7sH+swxhntWkgfXYP70YtIKsBkYD1XjR0OiYyGiFhVjx8PuvR9BklRuUz8x
+   SGgMzdUPVhTGyMFvTUHq0OzPlhI8CcBKhL2wRCFRzSH/qqXcF5OVSyMRlCWcCowkwLqvd7VCvpPR
+   +dk0Li0YLpYIsZ4swLY=
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; s=cs2013; d=cmail2.com;
+ h=Subject:From:To:Reply-To:Date:MIME-Version:Content-Type:List-Unsubscribe:
+ List-Unsubscribe-Post:Message-ID;
+ bh=BJz8xAJ/E5RF8hiOKqy8BVeg69SOtcPO520Ocu9BTdE=;
+ b=G7XALuqZfao2HHRABGbdztBX5ggrd8nFspDXBdR+Ppu5gc+sFc5z2FreVSIOZMsHJ4Mm64u+U5N9
+   idPUpK5j2UVzGwUYV68tYh87IO8LjTkgaBZidSDoQR4MOZJPImUq/eEuAb6WDXw87DHYnA/ie2FI
+   hdsW/hEhQ/ByhTvGlgY=
+Subject: The space age started 100 years ago today
+From: "The Conversation" <us.newsletter@theconversation.com> 
+To: "info@woodfine.co" <info@woodfine.co>
+Reply-To: us.newsletter@theconversation.com
+Date: Tue, 17 Mar 2026 01:17:50 +1100
+Content-Type: multipart/alternative;
+ boundary="_c6ac5190-f6b1-4f62-bc63-76d3e7394dfd_"; charset=utf-8
+X-Mailer: Create Send
+X-Complaints-To: abuse@cmail20.com
+X-Feedback-ID: CA1-r-tkuulkut:LI1-r-tuhkkyr:CL1-r-iryhky:createSEND
+List-Unsubscribe: <https://unsub.cmail20.com/t/completeheader/r/tkuulkut/bkdulqlil/c/>,
+ <mailto:unsubscribe-tkuulkut2bkdulqlil2r-8A146408@cmail20.com?subject=Unsubscribe>
+List-Unsubscribe-Post: List-Unsubscribe=One-Click
+Message-ID: <cm.0117506507824.tkuulkut.bkdulqlil.r@cmail20.com>
+Return-Path: TheConversation-tkuulkut1bkdulqlil1r@bounce.theconversation.com
+X-MS-Exchange-Organization-ExpirationStartTime: 16 Mar 2026 14:18:00.6559
+ (UTC)
+X-MS-Exchange-Organization-ExpirationStartTimeReason: OriginalSubmit
+X-MS-Exchange-Organization-ExpirationInterval: 1:00:00:00.0000000
+X-MS-Exchange-Organization-ExpirationIntervalReason: OriginalSubmit
+X-MS-Exchange-Organization-Network-Message-Id: 7b980533-383f-480a-330a-08de8366d466
+X-EOPAttributedMessage: 0
+X-EOPTenantAttributedMessage: ce7cb31c-acf7-4351-b0fe-c89cda16c4ab:0
+X-MS-Exchange-Organization-MessageDirectionality: Incoming
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: CH3PEPF0000000D:EE_|PH7PR16MB5905:EE_|DM6PR16MB2569:EE_
+X-MS-Exchange-Organization-AuthSource: CH3PEPF0000000D.namprd04.prod.outlook.com
+X-MS-Exchange-Organization-AuthAs: Anonymous
+X-MS-Office365-Filtering-Correlation-Id: 7b980533-383f-480a-330a-08de8366d466
+X-MS-Exchange-Organization-SCL: 1
+X-Microsoft-Antispam: BCL:3;ARA:13230040|704160511799003|12012899012|4022899009|29132699027|7049299003|3109299003|7149299003|5062899012|2092899012|3072899012|69100299015|1032899013|19002099003|21082099003|16102099003|57112099003|13003099007|8096899003|2066899003;
+X-Forefront-Antispam-Report: CIP:203.55.21.29;CTRY:AU;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mx29.a.outbound.createsend.com;PTR:mx29.a.outbound.createsend.com;CAT:NONE;SFS:(13230040)(704160511799003)(12012899012)(4022899009)(29132699027)(7049299003)(3109299003)(7149299003)(5062899012)(2092899012)(3072899012)(69100299015)(1032899013)(19002099003)(21082099003)(16102099003)(57112099003)(13003099007)(8096899003)(2066899003);DIR:INB;
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 16 Mar 2026 14:17:59.3225
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 7b980533-383f-480a-330a-08de8366d466
+X-MS-Exchange-CrossTenant-Id: ce7cb31c-acf7-4351-b0fe-c89cda16c4ab
+X-MS-Exchange-CrossTenant-AuthSource: CH3PEPF0000000D.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: Internet
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH7PR16MB5905
+X-MS-Exchange-Transport-EndToEndLatency: 00:00:04.8885627
+X-MS-Exchange-Processed-By-BccFoldering: 15.20.9700.017
+X-Microsoft-Antispam-Mailbox-Delivery:
+	wl:1;pcwl:1;ucf:0;jmr:0;auth:0;dest:I;ENG:(910005)(944490095)(944506478)(944626604)(920097)(811242)(255002)(410001)(930201)(20251009189)(140003);
+X-Microsoft-Antispam-Message-Info:
+	=?utf-8?B?RDFneWVqQmFWMlgzOVlIZ0czZnROM1ZpVGZBcm5IK2dPUW5NRzhhVEt1ekl5?=
+ =?utf-8?B?S0NJZW5zTTIwZ3IxVjZ6Z1BXRk9xaWJZZjYvbkdjcXQrenVZS3FYemkyYTI0?=
+ =?utf-8?B?cG4vR0o0NitjbGNXdlhJRllnZ0txWUtCN1VqcWhvT1FZV256TkdrNHllelNt?=
+ =?utf-8?B?RHBiRm5QUXhEalcyREZ1cmhncm42VmRVaG94Z3hPcnpUSmUxQko4WllVd3g4?=
+ =?utf-8?B?QjJOaWJkSWprVXJHQzFTSjNLc25FN09YRmREVE54Rll3WHI4eW42cGJMQzh2?=
+ =?utf-8?B?TVVHOVZxckdBVXV4VTh0SVFsOXJxZVVPVnN0ajZUZHM3a1BCRlRyYXVPTzN0?=
+ =?utf-8?B?UWR0RTB1V2puUlBkNTkwam82SHJhSURiUmFNZnprOGU4K0V3SHpkSkhMcjJy?=
+ =?utf-8?B?RllteTlESmEyT09hbVovM2lWZUFxQnl2MHhMeGhhMFl3cmNQem1kYlhnMDFm?=
+ =?utf-8?B?U2ZuS1UvbzJaaEVMdzBnM2lMQ0w3WTAwUzQ3OVY3d2hLblZKUnhnbGkwWGtM?=
+ =?utf-8?B?dkJrb0ZoQW5ycU0zQ0pLOG9FRlhtcDAwVG1qY2U4WmFEUEZxbTcwYmh2bWd6?=
+ =?utf-8?B?OWV4NE5BUHRQazZqNWVLOTBVaENLWTZESmhZZW1KOHFDWW44aEZjUmc1MkNO?=
+ =?utf-8?B?M3ZxWk1UWUR5SExWL1JEZTN2MnVnL0tLYVAxb000L3c1dGRBZjBxV0JJOEV4?=
+ =?utf-8?B?NGxoZkd4Z3FlOFY0VHlJbW5FbmlxbW1TRk92YXVueEJxazM0aGthcGJyK25U?=
+ =?utf-8?B?L3AwUG5tV2tJeEtNMFZDZi9nNFVSMHFjT0gwMTV2cDgwVnVLTXUrejFiTEVZ?=
+ =?utf-8?B?dGZ4alJtMXEzTUlKb044UExmSS80cThnQUJFUVdpb1hUdVE0Q0VLWDdOTk94?=
+ =?utf-8?B?QmpLeXlyZDJZR2ZWRHE4aG5FNVM3OVdHZVIvL1RhTGp2KzVwaS9KenUyYmxr?=
+ =?utf-8?B?VlEvemxIM0VFcW1OZHZYVE1rcmN0ajR4Z3NLRFBybE43OUp5c2lCKzBhWjEx?=
+ =?utf-8?B?SzZNa25lU1c5MGVFaEpPZ2lSQnV2blVUN1NaeGh5bGJIQzZ6YWhqRytlMUpG?=
+ =?utf-8?B?WXN1Q2NxdzN6ekI3SFdkM1ZUd1ErT3RwRXJDVndYUUw0MVBBMEk2OTRVR2RN?=
+ =?utf-8?B?RlppQnpZU0d5NFhyVnN3WGt6YXV4ekQxU0U4UEVjNElzT0pxcU1udVFuN28x?=
+ =?utf-8?B?SUNqS0Rqa2VSSmJ6QUduWDlobDQzaDVDNE1QNm1FZzZwWWhTRU56ODcwNy9t?=
+ =?utf-8?B?Yi9nY2t3Ym1KVW1EUFpxQXdyZkxlc3BZbHJnTm9zWjRQRVV3MWpMSlFXb2tu?=
+ =?utf-8?B?eWtKUHVucld2WVNMbElaQWJVMTB5VlRQa0ZtcEJEUFBWTEM5Z21FTU9oaDlx?=
+ =?utf-8?B?Y2hsTDBRbzFsNU9ybzM3MFdiVklQeThRY1FZYVd2TkRxVnJYaC94UEJxaVNi?=
+ =?utf-8?B?NTB0cVArM0lNYkFOeUpidGdRd1UwZFV2eC9xSEw0Tml1QXBsUnNTeWxySTN6?=
+ =?utf-8?B?cFlxTlFyeVk5ckdoeTFtamdaTXUvRmppUm95THk0UkdOdW9JZkxBd041U1Nm?=
+ =?utf-8?B?RS9EL3IveFF4bmtnVC9ueUlSRi9UaWlYMGlmTkNEU2JjSXRpNEg4QW1SRDNE?=
+ =?utf-8?B?NWpKczVMN1R6UVl3MVQ5OTlidmJjVEk0Zk5pYnVpTzFlREc1dTR3QWlRdUxV?=
+ =?utf-8?B?czhaOFVDdHhtK1FOZWdsTlpBOFYvVmt2SER5VU9mQkQ4NHpCMmRpVllVVnIr?=
+ =?utf-8?B?VzVxcjRVWVlycXlWY1RzdDBuWE9udktxWkgxa3dWd1o1OE5rQ2w1ZC9IcWRk?=
+ =?utf-8?B?TTUyK3BuVWRSSEZ0MVFhd1p3c09oZHgrRjFHdG0zM3NvbFhlOUNrNFVsN01V?=
+ =?utf-8?B?TG5LclBYak1obXpqcUVBRkhwMmxTN1d0UnJOalVMcktiSFl3NVhjcDdackhR?=
+ =?utf-8?B?WDF4ODE4MlhDR2MzQmY5UWttemR2aVlodHUwS1hMdTJoZmY0dy9oODBweUs0?=
+ =?utf-8?B?dmswRnAvLy9mb05wSkFFdytCUVQrV3hsc04xeGxoOGNDNjBmK0QwbnIrMGZp?=
+ =?utf-8?B?SmsxL1J5RVJqUUxnSEFhaTJka21meWpEN2ZKNGRIcWNZb0hGM2liMTV6OFdC?=
+ =?utf-8?B?YllyRGlkSlUzL2NGNFdQd3Z6N210SkEzd2RmTDVCem9lSHArZXdQcmlOK0RB?=
+ =?utf-8?B?VHY5V24yek1HSGhlMFBOSjBCYTNPMWp3TjVtNWV1OTBaeWxIK2JDeEszR2pG?=
+ =?utf-8?B?b0k0Vm11RDFERXJSdXk5a3dURU9nUDhGMXpxNUh6R3hPcDdUOUNmeXBKSUww?=
+ =?utf-8?B?MFBXaStSR2JrbFVLK01xRkJzQTRCVk9naHVEWTlvSWVPZG9Nd0dQOFU5WWh0?=
+ =?utf-8?B?UHN4aVFwbTFiYlVOLytVWllreUdQNTFvUDJ3bjdPNHQzUG93VHNORnY4dmpq?=
+ =?utf-8?B?dDVuMGlndCs4YlE2SzQySlQ2VXVuL2hpdUlYMm5xbGNieE9oSXNUdkRUWXcr?=
+ =?utf-8?B?T2FMSGlwMmNuRFRJR3VSbFBwM1JraGk5Tlltb0o5YzRxSmxiYitoLzNmaXdi?=
+ =?utf-8?B?OXJ6eG9HKzFiOTdkWTZtbVA4WXZUcExBWDV2WHE5MmtWTStHdXdVZlVUM2JL?=
+ =?utf-8?B?Ly9YN0U3VHc3dXlNYktCcnBKOXZOeVAyRDZVenpZNTFVQkxyNDRDUGhwc3gz?=
+ =?utf-8?B?VXFXTXRocENGeUVDRmlRVDY5a0Y3S0N3L1FreFN6UDgvUHpja09GQ3U4M1BH?=
+ =?utf-8?B?elMvYlBqMzFEUXpsQlRMWEZwTU5YTkFIbGpNZUpiMDViMWNPL2cxNXhlUlZz?=
+ =?utf-8?B?K3FiKzdwZzZobS80Q1pldng5OGp2cVprTk8ycXp2T0FLNmw3dU1qMk0vNytP?=
+ =?utf-8?B?OGV5ZkdaUSsyeDJlUUwrV2dBZWllbEV2UTI4eTYvSW93ejN4QWdlRFNmL2c3?=
+ =?utf-8?B?eVhvaThLQzdCZmtkenJ1eGdHenF4aFJ1SEw5TldGb1N5SXlHckZvQ01WREF4?=
+ =?utf-8?B?YTVLa2psaFQxeVZ1K2ladzBNQTVDS2lTeVdPb3FxUzdzRmVWeE9CdjAvY2Mw?=
+ =?utf-8?B?YVVZYkRWVjAyZVV1RjEzSEpZZGxrMkVMeGhjUTdBN2liSXFkdy9oV28yMGFh?=
+ =?utf-8?B?YjV1ak5ubnoyT3VMWUxqMjA0VEFKM3RTcXJlWkdvYnR0NGJtSk9HSEVVelFM?=
+ =?utf-8?B?OGdtVTNsTGo5aUxtWU9PUGl2T0loWXpQVjNVNVlxTjNzaVY5SkJUSkJ6WDA5?=
+ =?utf-8?B?OEVvK0o0TnBSWmNaYVlpdU1wR0JwWS9wVzQ3eW9kVGUvT3FJRTd3UlU5RjVp?=
+ =?utf-8?B?YWhmRzFmMHVmd0t1b05SVUljMkQ2cmNCWnl6MlRTbzJNa2tyYWZpZjJ2VnJQ?=
+ =?utf-8?B?cTFPdTRFaXlKL3RNMEFwVEpFK1MwSGVTcWoremhUaGNmRWZWNEUyNVJGN2pP?=
+ =?utf-8?B?QlFCUmU0WjFQek5pbGdTNWN5WmxQYjhmQVJueHlvVW0zd2lzQVlzQWNtdjBh?=
+ =?utf-8?B?a2ZEdzk5YU5wWC9aSFdoaE5tSDlYQndGRGwvQ2t0WTExZ3JMbWMwR2tYS2Nv?=
+ =?utf-8?B?NXdsejJCdTZuTlpSSXdMc0ZUUWh6R055ZE90UW0xc28rczRNQ1RHRU9NOVJW?=
+ =?utf-8?B?RXdXMm5nZ2lRZ3prRWtXN0Y3STg2VEk0VWNFOGIrWEdHcVNSVVlSZXIwV3hO?=
+ =?utf-8?B?Y3NscjhLMERHS3FXMEtGUnF4S1RIV1l3ajF3RGRpdXFwS01EUEl5REV5cmpU?=
+ =?utf-8?B?RzV4U0pVUTlJSzNMb0ZGeUtscFdQWXIvSHBBZnZOWVMxK1BHalAzdUdvQk95?=
+ =?utf-8?B?cE1aRDB0UzJSM0NHUHpTOGtkTmlFRldqS0EwVWFIS0VoUm10dW5IVTEyNXcv?=
+ =?utf-8?B?UlgxWE1kS2x5YnMyZ1JHenhSVktXUldlRnRNVk1TRU9YTVJiUkhaV1VROXB3?=
+ =?utf-8?B?cVVwL21rNjVTd0ZqZDR2azNnRXRWVW41RkdNVm1yYmx2d1p1V2JHK2RUMk1N?=
+ =?utf-8?B?dHd2THJBdExMTDBRazArSEt5U0doYUgyQW01VS9ON0ZzMVJuUG9vRkMwbzlr?=
+ =?utf-8?B?SlpHZ0VhQXZBUGJ5dHRjdldYSVZjTEpCMG5xRnBMM1NZeWZqWmt6M2ZLOHlG?=
+ =?utf-8?B?YzZteE5CeWlkeTdNbWFRPT0=?=
+MIME-Version: 1.0
+
+--_c6ac5190-f6b1-4f62-bc63-76d3e7394dfd_
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+US Edition - Today's top story: The first modern rocket launched 100 years =
+ago, beginning a century of both innovations and challenges for spaceflight=
+   View in browser https://theconversationus.cmail20.com=
+/t/r-e-=
+tkuulkut-bkdulqlil-td/
+
+US Edition | 16 March 2026
+
+Top headlines
+
+Teaching the Iran war and other tough topics in K-12 schools [https://thec=
+onversation.com/iran-war-and-other-tough-topics-give-k-12-teachers-chance-t=
+o-teach-students-how-not-what-to-think-278067]   Having pets can help peopl=
+e stay in homeless shelters [https://theconversation.com/a-pet-friendly-ho=
+meless-shelter-pilot-reduced-the-rate-of-homelessness-among-the-people-it-h=
+elped-in-california-276255]   What to teach college students when AI can wr=
+ite for them [https://theconversation.com/a-writing-professors-new-task-in=
+-the-age-of-ai-teaching-students-when-to-struggle-276590]
+
+Lead story
+
+One hundred years ago today, physicist Robert Goddard launched the first li=
+quid-fueled rocket from a snow-covered field in Auburn, Massachusetts. The =
+10-foot-tall rocket flew for only 42 seconds, but it proved a valuable test=
+ for a technology that would kick off the space age and, decades later, sen=
+d humans to the Moon.
+
+While the space race of the 1950s and =E2=80=9860s brought rapid innovation=
+ in spaceflight, the history of rockets traces back much longer, and, as hi=
+storian Michael Carrafiello described, took off during World War II.
+
+Carrafiello  maps out the century [https://theconversation.com/the-first-m=
+odern-rocket-launched-100-years-ago-beginning-a-century-of-both-innovations=
+-and-challenges-for-spaceflight-269061] between Goddard=E2=80=99s first fli=
+ght and today. Rockets have gotten larger and more reliable in that time, a=
+nd much of their development has shifted from government agencies to the pr=
+ivate sector.
+
+Next month, NASA plans to launch a crew of four on a flyby around the Moon =
+using its Space Launch System, a heavy-lift rocket that can carry tens of t=
+housands of pounds. As Carrafiello writes, =E2=80=9CGoddard=E2=80=99s rocke=
+t was the beginning of a century of innovation.=E2=80=9D
+
+[  Understand what=E2=80=99s going on in Washington and around the world. =
+Get our Politics Weekly newsletter. [https://theconversation.com/us/newsle=
+tters/subscribe/?promoted=3Dpolitics-weekly-74&source=3Dnl-daily-toplink&em=
+ail=3D=
+info@woodfine.co=
+] ]
+
+Mary Magnuson
+
+Associate Science Editor
+
+Robert Goddard, considered the father of modern rocketry, standing with a r=
+ocket in 1935. Esther Goddard/Hulton Archive/Getty Images    The first mode=
+rn rocket launched 100 years ago, beginning a century of both innovations a=
+nd challenges for spaceflight [https://theconversation.com/the-first-moder=
+n-rocket-launched-100-years-ago-beginning-a-century-of-both-innovations-and=
+-challenges-for-spaceflight-269061]
+
+Michael Carrafiello, Miami University
+
+From World War II to the Apollo era, the space shuttle program and today=E2=
+=80=99s privately developed commercial rockets, the landscape of spacefligh=
+t has changed dramatically.
+
+Education         A writing professor=E2=80=99s new task in the age of AI: =
+Teaching students when to struggle [https://theconversation.com/a-writing-=
+professors-new-task-in-the-age-of-ai-teaching-students-when-to-struggle-276=
+590]
+
+Kristi Girdharry, Babson College
+
+How do instructors get students to trust their own thinking and be better t=
+han robots?
+
+Iran war and other tough topics give K-12 teachers chance to teach students=
+ how, not what, to think [https://theconversation.com/iran-war-and-other-t=
+ough-topics-give-k-12-teachers-chance-to-teach-students-how-not-what-to-thi=
+nk-278067]
+
+Boaz Dvir, Penn State
+
+A Penn State training program helps K-12 teachers learn how to give student=
+s the confidence to ask questions and understand various perspectives about=
+ complex topics.
+
+Ethics + Religion         The long history of silent meditation retreats an=
+d the individuals who helped shape them [https://theconversation.com/the-l=
+ong-history-of-silent-meditation-retreats-and-the-individuals-who-helped-sh=
+ape-them-272034]
+
+Daniel M. Stuart, University of South Carolina
+
+The Burmese meditation master Sayagyi U Ba Khin played a key role in shapin=
+g the meditation retreats that are popular today.
+
+Science + Technology         What was the very first plant in the world? [=
+https://theconversation.com/what-was-the-very-first-plant-in-the-world-2718=
+28]
+
+Erin Potter, Binghamton University, State University of New York
+
+Plants changed the atmosphere, built soil and created ecosystems that allow=
+ed animals like us to thrive. But first they had to make their way from the=
+ water to the land.
+
+Paleontologists uncover a new Spinosaurus species by following a clue from =
+a decades-old book into the Sahara Desert [https://theconversation.com/pal=
+eontologists-uncover-a-new-spinosaurus-species-by-following-a-clue-from-a-d=
+ecades-old-book-into-the-sahara-desert-274182]
+
+Paul C. Sereno, University of Chicago
+
+The hunt for a mythicized fossil hot spot took a team of researchers on a j=
+ourney through the Sahara Desert.
+
+Economy + Business         A pet-friendly homeless shelter pilot reduced th=
+e rate of homelessness among the people it helped in California [https://t=
+heconversation.com/a-pet-friendly-homeless-shelter-pilot-reduced-the-rate-o=
+f-homelessness-among-the-people-it-helped-in-california-276255]
+
+Benjamin F. Henwood, University of Southern California
+
+A pilot program in Los Angeles reduced the rate of homelessness among homel=
+ess people with pets.
+
+Controversy over Reese=E2=80=99s ingredients reveals standard food industry=
+ practices most consumers never notice [https://theconversation.com/contro=
+versy-over-reeses-ingredients-reveals-standard-food-industry-practices-most=
+-consumers-never-notice-276808]
+
+Jonathan Deutsch, Drexel University
+
+Product reformulations are common in the food industry, and they can be don=
+e well, or poorly. Who remembers Doritos with olestra?
+
+Health + Medicine         Anxiety and ADHD can overlap =E2=80=93 here=E2=80=
+=99s how to untangle these widespread mental health disorders [https://the=
+conversation.com/anxiety-and-adhd-can-overlap-heres-how-to-untangle-these-w=
+idespread-mental-health-disorders-271124]
+
+Deldhy Nicol=C3=A1s Moya S=C3=A1nchez, Universidad Nacional Aut=C3=B3noma d=
+e M=C3=A9xico (UNAM)
+
+For many adults, anxiety may be the only visible symptom. When it fades, un=
+derlying ADHD, which may have been masked for years, finally becomes clear.
+
+Arts + Culture         What =E2=80=98gooning=E2=80=99 reveals about intimac=
+y in a world cordoned off by screens [https://theconversation.com/what-goo=
+ning-reveals-about-intimacy-in-a-world-cordoned-off-by-screens-273185]
+
+Jennifer Pollitt, Temple University
+
+Relationships with real people can involve rejection, awkwardness, time and=
+ emotional labor. But in the =E2=80=98goonverse,=E2=80=99 desire is predict=
+able, endlessly available and never says no.
+
+The Capture season three: experts in facial recognition and AI decipher the=
+ fact from the fiction [https://theconversation.com/the-capture-season-thr=
+ee-experts-in-facial-recognition-and-ai-decipher-the-fact-from-the-fiction-=
+277292]
+
+Eilidh Noyes, University of Leeds; Walter Scheirer, University of Notre Dam=
+e
+
+It is not feasible, nor indeed ethical, to run a facial recognition system =
+against all images on the internet.
+
+Trending on site         In its hunt for critical minerals, the US is misco=
+nstruing what is and is not America=E2=80=99s [https://theconversation.com=
+/in-its-hunt-for-critical-minerals-the-us-is-misconstruing-what-is-and-is-n=
+ot-americas-278185]      Not just Patriot interceptors: A defense expert ex=
+plains the various weapons US and allies use to defend against missiles and=
+ drones [https://theconversation.com/not-just-patriot-interceptors-a-defen=
+se-expert-explains-the-various-weapons-us-and-allies-use-to-defend-against-=
+missiles-and-drones-278047]      Nearly 1 in 3 missing children in the US a=
+re Black, driving Pennsylvania and other states to propose =E2=80=98Ebony A=
+lerts=E2=80=99 to ensure equal protection and public safety [https://theco=
+nversation.com/nearly-1-in-3-missing-children-in-the-us-are-black-driving-p=
+ennsylvania-and-other-states-to-propose-ebony-alerts-to-ensure-equal-protec=
+tion-and-public-safety-275388]           Today's graphic =F0=9F=93=88    Fr=
+om the story,  Why shadow tankers are the only ships still moving through t=
+he Strait of Hormuz [https://theconversation.com/link-277785]More of The C=
+onversation
+
+Like this newsletter? You might be interested in our other emails:=E2=80=A2=
+  The Afternoon Story [https://theconversationus.substack.com/?r=3D1nuxuf]=
+ (A new daily Substack)
+
+=E2=80=A2  Weekly Highlights [https://theconversation.com/us/newsletters/s=
+ubscribe/?promoted=3Dweekly-highlights-61&utm_medium=3Demail&utm_content=3D=
+footer%20link&utm_campaign=3Dfooter%20link&utm_source=3Dcampaign_monitor_us=
+]=E2=80=A2  Science Editors' Picks [https://theconversation.com/us/newslet=
+ters/subscribe/?promoted=3Dscience-editors'-picks-71&utm_medium=3Demail&utm=
+_content=3Dfooter%20link&utm_campaign=3Dfooter%20link&utm_source=3Dcampaign=
+_monitor_us]
+
+=E2=80=A2  Artificial Intelligence [https://theconversation.com/us/newslet=
+ters?promoted=3Dthe-conversation-ai-173&utm_medium=3Demail&utm_content=3Dfo=
+oter%20link&utm_campaign=3Dfooter%20link&utm_source=3Dcampaign_monitor_us]=E2=
+=80=A2  Giving Today [https://theconversation.com/us/newsletters/subscribe=
+/?promoted=3Dgiving-today-163&utm_medium=3Demail&utm_content=3Dfooter%20lin=
+k&utm_campaign=3Dfooter%20link&utm_source=3Dcampaign_monitor_us]
+
+=E2=80=A2  This Week in Religion [https://theconversation.com/us/newslette=
+rs/subscribe/?promoted=3Dthis-week-in-religion-76&utm_medium=3Demail&utm_co=
+ntent=3Dfooter%20link&utm_campaign=3Dfooter%20link&utm_source=3Dcampaign_mo=
+nitor_us] =E2=80=A2  Politics Weekly [https://theconversation.com/us/newsl=
+etters/subscribe/?promoted=3Dpolitics-weekly-74&utm_medium=3Demail&utm_cont=
+ent=3Dfooter%20link&utm_campaign=3Dfooter%20link&utm_source=3Dcampaign_moni=
+tor_us]
+
+=E2=80=A2  Global Perspectives [https://theconversation.com/us/newsletters=
+/subscribe/?promoted=3Dglobal-6&utm_medium=3Demail&utm_content=3Dfooter%20l=
+ink&utm_campaign=3Dfooter%20link&utm_source=3Dcampaign_monitor_us] =E2=80=A2=
+  Global Economy & Business [https://theconversation.com/us/newsletters/su=
+bscribe/?promoted=3Dglobal-economy-business-115&utm_medium=3Demail&utm_cont=
+ent=3Dfooter%20link&utm_campaign=3Dfooter%20link&utm_source=3Dcampaign_moni=
+tor_us]
+
+Follow us on social media:=E2=80=A2  Bluesky [https://bsky.app/profile/us.=
+theconversation.com] =E2=80=A2  Mastodon [https://newsie.social/@TheConver=
+sationUS]
+
+=E2=80=A2  Threads [https://www.threads.net/@theconversationdotcom] =E2=80=
+=A2  TikTok [https://www.tiktok.com/@theconversation]
+
+=E2=80=A2  LinkedIn [https://www.linkedin.com/company/conversationus] =E2=80=
+=A2  Instagram [https://www.instagram.com/theconversationdotcom/]
+
+=E2=80=A2  Facebook [https://www.facebook.com/theconversationUS/] =E2=80=A2=
+ Or  get a daily text from us [https://theconversation.com/text-with-us-an=
+d-get-one-great-link-every-day-222576?utm_medium=3Demail&utm_content=3Dfoot=
+er%20link&utm_campaign=3Dfooter%20link&utm_source=3Dcampaign_monitor_us]
+
+Tell your friends about us!Forward this email to them so they can sample ou=
+r journalism.
+
+About The Conversation
+
+We're a nonprofit news organization dedicated to bringing you facts and tru=
+stworthy analysis to  help you make sense of our complex world [https://th=
+econversation.com/us/who-we-are?utm_medium=3Demail&utm_content=3Dfooter%20l=
+ink&utm_campaign=3Dfooter%20link&utm_source=3Dcampaign_monitor_us]. We can =
+give away our articles thanks to the help of foundations, universities and =
+readers like you.
+
+Partner with us to bring trustworthy journalism to the public [https://don=
+ate.theconversation.com/us?utm_medium=3Demail&utm_content=3Dfooter%20link&u=
+tm_campaign=3Dfooter%20link&utm_source=3Dcampaign_monitor_us]
+
+You=E2=80=99re receiving this newsletter from  The Conversation [https://t=
+heconversation.com]
+
+303 Wyman Street, Suite 300 Waltham, MA 02451
+
+Forward to a friend https://theconversationus.forwardtomyfriend.com/r-=
+bkdulqlil-8A146408-tkuulkut-l-th  =E2=80=A2   Unsubscribe ht=
+tps://theconversationus.cmail20.com=
+/t/r-u-tkuulkut-=
+bkdulqlil-tk/
+
+--_c6ac5190-f6b1-4f62-bc63-76d3e7394dfd_
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.=
+w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns=3D"http://www.w3.=
+org/1999/xhtml"><head>
+<meta http-equiv=3D"Content-Type" content=3D"text/html; charset=3Dutf-8"><m=
+eta name=3D"viewport" content=3D"initial-scale=3D1">
+<style type=3D"text/css">
+body, table, td, p, a, div, span {
+font-family: "Helvetica Neue", Helvetica, sans-serif;
+}
+a, a:link, a:visited, a:focus, a:hover, a:active {
+text-decoration: none;
+color: #0B6698;
+}
+@media (prefers-color-scheme: dark) {
+a, a:link, a:visited, a:focus, a:hover, a:active, a span {
+color: #5daeff !important;
+}
+}
+blockquote {
+border-left: 5px solid #dddddd;
+margin-left: 0;
+padding-left: 20px;
+}
+.masthead-logo-link {
+text-decoration: none;
+max-width: 348px;
+display: block;
+}
+.dark-color-scheme-wrapper {
+display: none;
+mso-hide: all;
+}
+.dark-color-scheme-logo {
+display: none;
+}
+.light-color-scheme-wrapper,
+.light-color-scheme-logo {
+display: block;
+}
+@media (prefers-color-scheme: light) {
+.dark-color-scheme-wrapper,
+.dark-color-scheme-logo {
+display: none !important;
+}
+.light-color-scheme-wrapper,
+.light-color-scheme-logo {
+display: block !important;
+}
+}
+@media (prefers-color-scheme: dark) {
+.dark-color-scheme-wrapper,
+.dark-color-scheme-logo {
+display: block !important;
+}
+.light-color-scheme-wrapper,
+.light-color-scheme-logo {
+display: none !important;
+}
+h1, h2, h3, h4,
+li,
+table,
+p {
+color: white !important;
+}
+body {
+background: black;
+}
+}
+.masthead-tagline {
+font-size: 11px;
+color: hsl(240, 2%, 30%);
+}
+.call-to-action {
+text-align: center;
+padding: 20px 0;
+}
+.text-block {
+background-color: #f0f0f0;
+border: 1px solid #dddddd;
+padding: 5px 15px;
+margin: 15px 0;
+border-radius: 3px;
+font-size: 0.9em;
+}
+.button {
+background-color: #5499db;
+border-radius: 4px;
+border-color: #5499db;
+border-style: solid;
+border-width: 3px 12px;
+color: #fff;
+cursor: pointer;
+display: inline-block;
+font-size: 12px;
+font-weight: bold !important;
+padding: 0;
+margin-bottom: 0;
+margin-top: 0;
+position: relative;
+}
+.button.small {
+border-radius: 2px;
+border-width: 0 7px;
+font-size: 11px;
+}
+.button.large {
+border-radius: 3px;
+font-size: 14px;
+border-width: 8px 18px;
+}
+.button.x-large {
+border-radius: 4px;
+font-size: 18px;
+border-width: 14px 30px;
+}
+</style>
+<style type=3D"text/css">
+#email-container table {
+width: 100%;
+font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+th, td {
+text-align: left;
+}
+.block {
+margin: 0;
+}
+.full-width {
+width: 460px;
+}
+td.spacer {
+width: 460px;
+height: 50px;
+}
+td.half-spacer {
+width: 460px;
+height: 25px;
+}
+td.top-aligned {
+vertical-align: top;
+}
+td.three-quarters {
+width: 340px;
+}
+td.one-half {
+width: 220px;
+}
+td.one-quarter {
+width: 100px;
+}
+td.two-thirds {
+width: 300px;
+}
+td.one-third {
+width: 140px;
+}
+td.gutter {
+width: 20px;
+}
+.border {
+height: 0px !important;
+border-bottom: 1px solid #eee;
+}
+td.bottom-bordered, tr.bottom-bordered {
+border-bottom: 1px solid #eee;
+}
+td.align-center {
+text-align: center;
+}
+.masthead-logo img,
+.masthead-banner img {
+width: 100% !important;
+}
+</style>
+<!--[if gte mso 9]>
+<style type=3D"text/css">
+.masthead-logo {
+width: 268px !important !important;
+}
+</style>
+<![endif]-->
+<!--[if !IE]><!-- -->
+<!--[if !mso]><!-- -->
+<style type=3D"text/css">
+@media only screen and (max-width: 600px) and (min-width: 320px) {
+#email-container {
+width: 100% !important;
+}
+.full-width {
+width: 100% !important;
+}
+td.three-quarters {
+width: 75% !important;
+}
+td.one-half {
+width: 50% !important;
+}
+td.one-quarter {
+width: 25% !important;
+}
+td.two-thirds {
+width: 66% !important;
+}
+td.one-third {
+width: 33% !important;
+}
+}
+@media only screen and (min-width: 600px) {
+#email-container {
+width: 600px !important;
+}
+.full-width {
+width: 600px !important;
+}
+td.three-quarters {
+width: 445px !important;
+}
+td.one-half {
+width: 290px !important;
+}
+td.one-quarter {
+width: 135px !important;
+}
+td.two-thirds {
+width: 392px !important;
+}
+td.one-third {
+width: 186px !important;
+}
+}
+@media only screen and (max-width: 320px) {
+#email-container {
+width: 300px !important;
+}
+.full-width {
+width: 300px !important;
+}
+td.three-quarters {
+width: 220px !important;
+}
+td.one-half {
+width: 140px !important;
+}
+td.one-quarter {
+width: 60px !important;
+}
+td.two-thirds {
+width: 192px !important;
+}
+td.one-third {
+width: 86px !important;
+}
+}
+</style>
+<!--<![endif]-->
+<style type=3D"text/css">
+div, p, a, li, td { -webkit-text-size-adjust:none; }
+p {
+margin: 0 0 16px 0;
+font-size: 16px;
+color: #202020;
+line-height: 1.4;
+}
+h2 {
+font-size: 18px;
+color: #202020;
+padding: 0;
+margin: 0 0 10px 0;
+}
+h3 {
+font-size: 16px;
+color: #202020;
+padding: 0;
+margin: 10px 0;
+}
+th h2, th h3 {
+text-align: left;
+border-bottom: 4px solid #EEEEEE;
+padding-bottom: 10px;
+}
+th.column-title h2 {
+color: #ccc;
+text-align: center;
+}
+body {
+color: #202020;
+font-family: 'Helvetica Neue', Helvetica, sans-serif;
+font-size: 16px;
+line-height: 23px;
+}
+.masthead-link {
+margin: 0;
+padding-left: 10px;
+}
+.header-image {
+text-align: right;
+}
+.header-image img {
+border: none;
+max-width: 100%;
+}
+.header-logo img {
+max-width: 100%;
+width: 268px;
+}
+div, p, a, li, td { -webkit-text-size-adjust:none; }
+.tagline {
+font-size: 11px;
+margin: 10px 0 40px 0;
+}
+.logo {
+text-align: center;
+}
+.logo img {
+width: 60%;
+}
+#editors-note p {
+font-size: 16px;
+}
+#editor .avatar img {
+border-radius: 27px;
+}
+#editor .description {
+vertical-align: middle;
+}
+#header p {
+font-size: 10px;
+margin-top: 18px;
+}
+#footer p {
+font-size: 11px;
+color: hsl(240, 2%, 30%);
+}
+#footer .footer-message {
+font-size: 17px;
+padding-bottom: 80px;
+width: 100%;
+}
+#footer .logo {
+padding-bottom: 32px;
+width: 100%;
+}
+#footer p {
+color: #202020;
+font-size: 13px;
+margin-bottom: 8px;
+}
+#footer .you-are-receiving-html {
+}
+#footer .office-address {
+}
+#footer .actionable-links {
+}
+#sponsorship-top-link {
+color: hsl(240, 2%, 30%);
+font-size: 11px;
+margin: 0;
+padding-bottom: 28px;
+text-align: center;
+}
+#editor {
+margin-bottom: 32px;
+}
+#editor p {
+margin: 0;
+}
+ul.datarepeater {
+padding: 0;
+margin: 0;
+}
+ul.datarepeater li {
+padding: 0 0 6px;
+margin-left: 0;
+font-size: 16px;
+list-style: none;
+margin-top: 0;
+line-height: 18px;
+color: #383838;
+}
+.top-story img {
+width: 100%;
+}
+p.author {
+color: hsl(240, 2%, 30%);
+font-size: 11px;
+margin: 3px 0;
+line-height: 18px;
+}
+h4,
+h5 {
+font-size: 18px;
+margin: 5px 0;
+padding: 0;
+line-height: 22px;
+}
+h4 a,
+h5 a {
+text-decoration: none;
+color: #006699;
+}
+@media (prefers-color-scheme: dark) {
+h4 a,
+h5 a {
+color: #5daeff;
+}
+}
+.figcaption {
+line-height: 18px;
+font-size: 11px;
+padding-top: 6px;
+color: #666666;
+display: block;
+}
+.figcaption span.source {
+color: #bbb;
+}
+.columnists .columnist-headshot img {
+width: 70px;
+margin: 10px;
+border-radius: 50%;
+border: 1px solid #fff;
+}
+#lead-story-sponsorship {
+text-align: center;
+}
+#lead-story-sponsorship img {
+max-width: 300px;
+border: none;
+}
+#advert {
+text-align: center;
+}
+#advert img {
+max-width: 100%;
+border: none;
+}
+#advert p, #info p {
+margin: 0;
+font-size: 12px;
+line-height: 18px;
+color: hsl(240, 2%, 30%);
+}
+#info p {
+text-align: center;
+}
+.sponsorship-mrec {
+width: 300px;
+}
+.jobs-and-events .item {
+padding: 10px 10px 10px 0;
+border-bottom: 1px solid #eeeeee;
+list-style: none;
+vertical-align: top;
+}
+.jobs-and-events .item-logo {
+padding: 10px;
+border-bottom: 1px solid #eeeeee;
+list-style: none;
+vertical-align: middle;
+}
+.jobs-and-events .item-logo img {
+width: 60px;
+}
+.jobs-and-events .item div {
+padding: 10px;
+}
+.jobs-and-events .item h5 {
+color: #202020;
+font-size: 16px;
+font-weight: normal;
+line-height: 16px;
+margin-bottom: 5px;
+}
+.jobs-and-events .item p {
+color: #202020;
+font-size: 16px;
+line-height: 132%;
+margin: 0;
+}
+.jobs-and-events .view-board {
+display: block;
+padding: 10px 0;
+position: relative;
+}
+.jobs-and-events .view-board span {
+display: block;
+float: left;
+line-height: 1.4;
+padding: 4px;
+}
+.jobs-and-events .view-board span.action {
+letter-spacing: 0;
+font-size: 11px;
+font-weight: bold;
+text-transform: uppercase;
+color: #202020;
+margin: 0;
+}
+.table-cell {
+display: table-cell;
+}
+.float-right {
+float: right;
+}
+.text-right {
+text-align: right;
+}
+.align-top {
+vertical-align: top;
+}
+.align-middle {
+vertical-align: middle;
+}
+.font-normal {
+font-weight: 400;
+}
+.font-bold {
+font-weight: 700;
+}
+.text-base {
+font-size: 16px;
+line-height: 24px;
+}
+.border-collapse {
+border-collapse: collapse;
+}
+.border-b {
+border-width: 0;
+border-bottom-width: 1px;
+}
+.border-b-4 {
+border-width: 0;
+border-bottom-width: 4px;
+}
+.border-solid {
+border-style: solid;
+}
+.border-gray-50 {
+border-color: hsl(240, 4%, 95%);
+}
+.rounded-xl {
+border-radius: 12px;
+}
+.w-4 {
+width: 16px;
+}
+.w-60 {
+width: 160px;
+}
+.p-0 {
+padding: 0;
+}
+.pt-2\.5 {
+padding-top: 10px;
+}
+.pr-2 {
+padding-right: 8px;
+}
+.pb-5 {
+padding-bottom: 20px;
+}
+.py-1\.5 {
+padding-top: 6px;
+padding-bottom: 6px;
+}
+.text-gray-700 {
+color: hsl(240, 2%, 30%);
+}
+.text-blue-700 {
+color: hsl(203, 90%, 30%);
+}
+.text-xs {
+font-size: 13px;
+}
+.underline {
+text-decoration-line: underline;
+}
+.reset-anchor-styling,
+.reset-anchor-styling:link,
+.reset-anchor-styling:visited,
+.reset-anchor-styling:focus,
+.reset-anchor-styling:hover,
+.reset-anchor-styling:active {
+text-decoration: none;
+color: inherit;
+}
+</style>
+</head>
+<body style=3D"margin-top:0;margin-bottom:0;margin-right:0;margin-left:0;he=
+ight:100%;width:100%;padding-top:0;padding-bottom:0;padding-right:0;padding=
+-left:0;color:#202020;font-family:'Helvetica Neue', Helvetica, sans-serif;f=
+ont-size:16px;line-height:23px;"><div style=3D"mso-hide:all;position:fixed;=
+height:0;max-height:0;overflow:hidden;font-size:0;">Plus: Exploring the his=
+tory of silent retreats   =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C=
+ =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=
+=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=
+=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =
+=E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=
+=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=
+=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =
+=E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=
+=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=
+=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =
+=E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=
+=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=
+=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =
+=E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=
+=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=
+=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =
+=E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=
+=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=
+=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =
+=E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=
+=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=
+=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =
+=E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=
+=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=
+=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =
+=E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=
+=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=
+=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =
+=E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=
+=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=
+=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =
+=E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=
+=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=
+=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =E2=80=8C =
+=E2=80=8C =E2=80=8C =E2=80=8C</div>
+<table width=3D"100%" border=3D"0" cellspacing=3D"0" cellpadding=3D"0" styl=
+e=3D"font-family:'Helvetica Neue', Helvetica, sans-serif;font-size:16px;col=
+or:#333333;line-height:23px;">
+<tr>
+<td width=3D"100%" align=3D"center" style=3D"font-family:'Helvetica Neue', =
+Helvetica, sans-serif;text-align:left;-webkit-text-size-adjust:none;">
+<table id=3D"email-container" width=3D"460" border=3D"0" align=3D"center" c=
+ellpadding=3D"0" cellspacing=3D"0" style=3D"padding-top:20px;padding-bottom=
+:20px;padding-right:8px;padding-left:8px;font-family:'Helvetica Neue', Helv=
+etica, sans-serif;">
+<tr>
+<td id=3D"email-header" class=3D"full-width" width=3D"460" style=3D"font-fa=
+mily:'Helvetica Neue', Helvetica, sans-serif;text-align:left;-webkit-text-s=
+ize-adjust:none;width:460px;">
+<table class=3D"block full-width" width=3D"460" cellpadding=3D"0" cellspaci=
+ng=3D"0" id=3D"header" style=3D"margin-top:0;margin-bottom:0;margin-right:0=
+;margin-left:0;width:100%;font-family:'Helvetica Neue', Helvetica, Arial, s=
+ans-serif;">
+<tr>
+<td class=3D"two-thirds" width=3D"300" style=3D"font-family:'Helvetica Neue=
+', Helvetica, sans-serif;text-align:left;-webkit-text-size-adjust:none;widt=
+h:300px;">
+<p style=3D"font-family:'Helvetica Neue', Helvetica, sans-serif;margin-bott=
+om:16px;margin-right:0;margin-left:0;color:#202020;line-height:1.4;-webkit-=
+text-size-adjust:none;font-size:10px;margin-top:18px;">
+<span style=3D"display:none !important;font-family:'Helvetica Neue', Helvet=
+ica, sans-serif;">
+US Edition - Today's top story: The first modern rocket launched 100 years =
+ago, beginning a century of both innovations and challenges for spaceflight
+</span>
+<a href=3D"https://theconversationus.cmail20.com/t/r-e-tkuulkut-bkdulqlil-r=
+/" style=3D"font-family:'Helvetica Neue', Helvetica, sans-serif;text-decora=
+tion:none;color:#0B6698;-webkit-text-size-adjust:none;">View in browser</a>
+</p>
+</td>
+<td class=3D"gutter" width=3D"20" style=3D"font-family:'Helvetica Neue', He=
+lvetica, sans-serif;text-align:left;-webkit-text-size-adjust:none;width:20p=
+x;">&nbsp;</td>
+<td class=3D"one-third align-right" width=3D"140" style=3D"font-family:'Hel=
+vetica Neue', Helvetica, sans-serif;text-align:left;-webkit-text-size-adjus=
+t:none;width:140px;">
+<p style=3D"font-family:'Helvetica Neue', Helvetica, sans-serif;margin-bott=
+om:16px;margin-right:0;margin-left:0;color:#202020;line-height:1.4;-webkit-=
+text-size-adjust:none;font-size:10px;margin-top:18px;">
+US Edition | 16 March 2026
+</p>
+</td>
+</tr>
+</table>
+</td>
+</tr>
+<tr>
+<td class=3D"full-width" width=3D"460" style=3D"font-family:'Helvetica Neue=
+', Helvetica, sans-serif;text-align:left;-webkit-text-size-adjust:none;widt=
+h:460px;">
+<table id=3D"masthead" class=3D"block full-width" width=3D"460" cellpadding=
+=3D"0" cellspacing=3D"0" style=3D"margin-top:0;margin-bottom:0;margin-right=
+:0;margin-left:0;width:100%;font-family:'Helvetica Neue', Helvetica, Arial,=
+ sans-serif;">
+<tr>
+<td class=3D"full_width masthead-banner" width=3D"460" style=3D"font-family=
+:'Helvetica Neue', Helvetica, sans-serif;text-align:left;-webkit-text-size-=
+adjust:none;">
+<a href=3D"https://theconversationus.cmail20.com/t/r-l-tkuulkut-bkdulqlil-t=
+/" style=3D"font-family:'Helvetica Neue', Helvetica, sans-serif;text-decora=
+tion:none;color:#0B6698;-webkit-text-size-adjust:none;">
+<img alt=3D"The Conversation" width=3D"460" src=3D"https://cdn.theconversat=
+ion.com/newsletter_lists/3/logos/banner-1745592734.png?1745592734" style=3D=
+"border-style:none;width:100% !important;">
+</a>
+</td>
+</tr>
+</table>
+</td>
+</tr>
+<tr>
+<td class=3D"full-width" width=3D"460" height=3D"20" style=3D"font-family:'=
+Helvetica Neue', Helvetica, sans-serif;text-align:left;-webkit-text-size-ad=
+just:none;width:460px;"></td>
+</tr>
+<tr>
+<td id=3D"the-newsletter-body" class=3D"full-width" width=3D"460" style=3D"=
+font-family:'Helvetica Neue', Helvetica, sans-serif;text-align:left;-webkit=
+-text-size-adjust:none;width:460px;">
+<table class=3D"block" cellpadding=3D"0" cellspacing=3D"0" style=3D"margin-=
+top:0;margin-bottom:0;margin-right:0;margin-left:0;width:100%;font-family:'=
+Helvetica Neue', Helvetica, Arial, sans-serif;">
+<tr id=3D"editors-note">
+<td style=3D"font-family:'Helvetica Neue', Helvetica, sans-serif;text-align=
+:left;-webkit-text-size-adjust:none;">
+<p style=3D"font-family:'Helvetica Neue', Helvetica, sans-serif;margin-top:=
+0;margin-bottom:16px;margin-right:0;margin-left:0;color:#202020;line-height=
+:1.4;-webkit-text-size-adjust:none;font-size:16px;">
+	<span style=3D"font-size:24px;font-family:'Helvetica Neue', Helvetica, san=
+s-serif;"><strong>Top headlines</strong></span></p>
+<ul>
+	<li style=3D"-webkit-text-size-adjust:none;">
+		<strong><a href=3D"https://theconversationus.cmail20.com/t/r-l-tkuulkut-b=
+kdulqlil-i/" style=3D"font-family:'Helvetica Neue', Helvetica, sans-serif;t=
+ext-decoration:none;color:#0B6698;-webkit-text-size-adjust:none;">Teaching =
+the Iran war and other tough topics in K-12 schools</a></strong></li>
+	<li style=3D"-webkit-text-size-adjust:none;">
+		<strong><a href=3D"https://theconversationus.cmail20.com/t/r-l-tkuulkut-b=
+kdulqlil-d/" style=3D"font-family:'Helvetica Neue', Helvetica, sans-serif;t=
+ext-decoration:none;color:#0B6698;-webkit-text-size-adjust:none;">Having pe=
+ts can help people stay in homeless shelters</a></strong></li>
+	<li style=3D"-webkit-text-size-adjust:none;">
+		<strong><a href=3D"https://theconversationus.cmail20.com/t/r-l-tkuulkut-b=
+kdulqlil-h/" style=3D"font-family:'Helvetica Neue', Helvetica, sans-serif;t=
+ext-decoration:none;color:#0B6698;-webkit-text-size-adjust:none;">What to t=
+each college students when AI can write for them</a></strong></li>
+</ul>
+<p style=3D"font-family:'Helvetica Neue', Helvetica, sans-serif;margin-top:=
+0;margin-bottom:16px;margin-right:0;margin-left:0;color:#202020;line-height=
+:1.4;-webkit-text-size-adjust:none;font-size:16px;">
+	<span style=3D"font-size:24px;font-family:'Helvetica Neue', Helvetica, san=
+s-serif;"><strong>Lead story</strong></span></p>
+<p style=3D"font-family:'Helvetica Neue', Helvetica, sans-serif;margin-top:=
+0;margin-bottom:16px;margin-right:0;margin-left:0;color:#202020;line-height=
+:1.4;-webkit-text-size-adjust:none;font-size:16px;">
+	One hundred years ago today, physicist Robert Goddard launched the first l=
+iquid-fueled rocket from a snow-covered field in Auburn, Massachusetts. The=
+ 10-foot-tall rocket flew for only 42 seconds, but it proved a valuable tes=
+t for a technology that would kick off the space age and, decades later, se=
+nd humans to the Moon.</p>
+<p style=3D"font-family:'Helvetica Neue', Helvetica, sans-serif;margin-top:=
+0;margin-bottom:16px;margin-right:0;margin-left:0;color:#202020;line-height=
+:1.4;-webkit-text-size-adjust:none;font-size:16px;">
+	While the space race of the 1950s and =E2=80=9860s brought rapid innovatio=
+n in spaceflight, the history of rockets traces back much longer, and, as h=
+istorian Michael Carrafiello described, took off during World War II.</p>
+<p style=3D"font-family:'Helvetica Neue', Helvetica, sans-serif;margin-top:=
+0;margin-bottom:16px;margin-right:0;margin-left:0;color:#202020;line-height=
+:1.4;-webkit-text-size-adjust:none;font-size:16px;">
+	Carrafiello <a href=3D"https://theconversationus.cmail20.com/t/r-l-tkuulku=
+t-bkdulqlil-k/" style=3D"font-family:'Helvetica Neue', Helvetica, sans-seri=
+f;text-decoration:none;color:#0B6698;-webkit-text-size-adjust:none;">maps o=
+ut the century</a> between Goddard=E2=80=99s first flight and today. Rocket=
+s have gotten larger and more reliable in that time, and much of their deve=
+lopment has shifted from government agencies to the private sector.</p>
+<p style=3D"font-family:'Helvetica Neue', Helvetica, sans-serif;margin-top:=
+0;margin-bottom:16px;margin-right:0;margin-left:0;color:#202020;line-height=
+:1.4;-webkit-text-size-adjust:none;font-size:16px;">
+	Next month, NASA plans to launch a crew of four on a flyby around the Moon=
+ using its Space Launch System, a heavy-lift rocket that can carry tens of =
+thousands of pounds. As Carrafiello writes, =E2=80=9CGoddard=E2=80=99s rock=
+et was the beginning of a century of innovation.=E2=80=9D</p>
+<p style=3D"font-family:'Helvetica Neue', Helvetica, sans-serif;margin-top:=
+0;margin-bottom:16px;margin-right:0;margin-left:0;color:#202020;line-height=
+:1.4;-webkit-text-size-adjust:none;font-size:16px;">
+	[ <em><a href=3D"https://theconversationus.cmail20.com/t/r-l-tkuulkut-bkdu=
+lqlil-u/" style=3D"font-family:'Helvetica Neue', Helvetica, sans-serif;text=
+-decoration:none;color:#0B6698;-webkit-text-size-adjust:none;">Understand w=
+hat=E2=80=99s going on in Washington and around the world. Get our Politics=
+ Weekly newsletter.</a></em> ]</p>
+</td>
+</tr>
+<tr>
+<td id=3D"editor" style=3D"font-family:'Helvetica Neue', Helvetica, sans-se=
+rif;text-align:left;-webkit-text-size-adjust:none;margin-bottom:32px;">
+<table class=3D"block" cellpadding=3D"0" cellspacing=3D"0" id=3D"editor" st=
+yle=3D"margin-top:0;margin-right:0;margin-left:0;margin-bottom:32px;width:1=
+00%;font-family:'Helvetica Neue', Helvetica, Arial, sans-serif;">
+<tr>
+<td class=3D"avatar" width=3D"65" style=3D"font-family:'Helvetica Neue', He=
+lvetica, sans-serif;text-align:left;-webkit-text-size-adjust:none;">
+<img width=3D"54" height=3D"54" alt=3D"" src=3D"https://storage.theconversa=
+tion.com/zj6k24pwa5yk8v6u5u7dfab14a5p" style=3D"border-radius:27px;">
+</td>
+<td class=3D"description" style=3D"font-family:'Helvetica Neue', Helvetica,=
+ sans-serif;text-align:left;-webkit-text-size-adjust:none;vertical-align:mi=
+ddle;">
+<p class=3D"name" style=3D"font-family:'Helvetica Neue', Helvetica, sans-se=
+rif;font-size:16px;color:#202020;line-height:1.4;-webkit-text-size-adjust:n=
+one;margin-top:0;margin-bottom:0;margin-right:0;margin-left:0;"><strong>Mar=
+y Magnuson</strong></p>
+<p class=3D"title" style=3D"font-family:'Helvetica Neue', Helvetica, sans-s=
+erif;font-size:16px;color:#202020;line-height:1.4;-webkit-text-size-adjust:=
+none;margin-top:0;margin-bottom:0;margin-right:0;margin-left:0;">Associate =
+Science Editor</p>
+</td>
+</tr>
+</table>
+</td>
+</tr>
+<tr class=3D"top-story">
+<td style=3D"padding-bottom:10px;font-family:'Helvetica Neue', Helvetica, s=
+ans-serif;text-align:left;-webkit-text-size-adjust:none;">
+<a href=3D"https://theconversationus.cmail20.com/t/r-l-tkuulkut-bkdulqlil-o=
+/" style=3D"display:block;font-size:0;line-height:normal;font-family:'Helve=
+tica Neue', Helvetica, sans-serif;text-decoration:none;color:#0B6698;-webki=
+t-text-size-adjust:none;">
+<img src=3D"https://images.theconversation.com/files/707175/original/file-2=
+0251208-76-ghukhc.jpg?ixlib=3Drb-4.1.0&amp;rect=3D0%2C516%2C3748%2C2108&amp=
+;q=3D45&amp;auto=3Dformat&amp;w=3D668&amp;fit=3Dclip" border=3D"0" width=3D=
+"468" alt=3D"" style=3D"width:100%;">
+</a>
+<div class=3D"figcaption" style=3D"font-family:'Helvetica Neue', Helvetica,=
+ sans-serif;-webkit-text-size-adjust:none;line-height:18px;font-size:11px;p=
+adding-top:6px;color:#666666;display:block;">
+Robert Goddard, considered the father of modern rocketry, standing with a r=
+ocket in 1935.
+<span class=3D"source" title=3D"Source" style=3D"font-family:'Helvetica Neu=
+e', Helvetica, sans-serif;color:#bbb;">Esther Goddard/Hulton Archive/Getty =
+Images</span>
+</div>
+<h4 style=3D"font-size:18px;margin-top:5px;margin-bottom:5px;margin-right:0=
+;margin-left:0;padding-top:0;padding-bottom:0;padding-right:0;padding-left:=
+0;line-height:22px;">
+<a href=3D"https://theconversationus.cmail20.com/t/r-l-tkuulkut-bkdulqlil-b=
+/" style=3D"font-family:'Helvetica Neue', Helvetica, sans-serif;-webkit-tex=
+t-size-adjust:none;text-decoration:none;color:#006699;">The first modern ro=
+cket launched 100 years ago, beginning a century of both innovations and ch=
+allenges for spaceflight</a>
+</h4>
+<p class=3D"author" style=3D"font-family:'Helvetica Neue', Helvetica, sans-=
+serif;-webkit-text-size-adjust:none;color:hsl(240, 2%, 30%);font-size:11px;=
+margin-top:3px;margin-bottom:3px;margin-right:0;margin-left:0;line-height:1=
+8px;">
+Michael Carrafiello, Miami University
+</p>
+<p style=3D"font-family:'Helvetica Neue', Helvetica, sans-serif;margin-top:=
+0;margin-bottom:16px;margin-right:0;margin-left:0;font-size:16px;color:#202=
+020;line-height:1.4;-webkit-text-size-adjust:none;">From World War II to th=
+e Apollo era, the space shuttle program and today=E2=80=99s privately devel=
+oped commercial rockets, the landscape of spaceflight has changed dramatica=
+lly.</p>
+</td>
+</tr>
+<tr class=3D"latest-articles">
+<td style=3D"font-family:'Helvetica Neue', Helvetica, sans-serif;text-align=
+:left;-webkit-text-size-adjust:none;">
+<table class=3D"block" cellpadding=3D"0" cellspacing=3D"0" style=3D"margin-=
+top:0;margin-bottom:0;margin-right:0;margin-left:0;width:100%;font-family:'=
+Helvetica Neue', Helvetica, Arial, sans-serif;">
+<tr>
+<th style=3D"text-align:left;">
+<h3 style=3D"font-size:16px;color:#202020;padding-top:0;padding-right:0;pad=
+ding-left:0;margin-top:10px;margin-bottom:10px;margin-right:0;margin-left:0=
+;text-align:left;border-bottom-width:4px;border-bottom-style:solid;border-b=
+ottom-color:#EEEEEE;padding-bottom:10px;">Education</h3>
+</th>
+</tr>
+<tr>
+<td style=3D"font-family:'Helvetica Neue', Helvetica, sans-serif;text-align=
+:left;-webkit-text-size-adjust:none;">
+<ul class=3D"datarepeater" style=3D"padding-top:0;padding-bottom:0;padding-=
+right:0;padding-left:0;margin-top:0;margin-bottom:0;margin-right:0;margin-l=
+eft:0;">
+<li style=3D"-webkit-text-size-adjust:none;padding-top:0;padding-bottom:6px=
+;padding-right:0;padding-left:0;margin-left:0;font-size:16px;list-style-typ=
+e:none;list-style-position:outside;list-style-image:none;margin-top:0;line-=
+height:18px;color:#383838;">
+<h4 style=3D"font-size:18px;margin-top:5px;margin-bottom:5px;margin-right:0=
+;margin-left:0;padding-top:0;padding-bottom:0;padding-right:0;padding-left:=
+0;line-height:22px;">
+<a href=3D"https://theconversationus.cmail20.com/t/r-l-tkuulkut-bkdulqlil-n=
+/" style=3D"font-family:'Helvetica Neue', Helvetica, sans-serif;-webkit-tex=
+t-size-adjust:none;text-decoration:none;color:#006699;">A writing professor=
+=E2=80=99s new task in the age of AI: Teaching students when to struggle</a=
+>
+</h4>
+<p class=3D"author" style=3D"font-family:'Helvetica Neue', Helvetica, sans-=
+serif;-webkit-text-size-adjust:none;color:hsl(240, 2%, 30%);font-size:11px;=
+margin-top:3px;margin-bottom:3px;margin-right:0;margin-left:0;line-height:1=
+8px;">
+Kristi Girdharry, Babson College
+</p>
+<p style=3D"font-family:'Helvetica Neue', Helvetica, sans-serif;margin-top:=
+0;margin-bottom:16px;margin-right:0;margin-left:0;font-size:16px;color:#202=
+020;line-height:1.4;-webkit-text-size-adjust:none;">How do instructors get =
+students to trust their own thinking and be better than robots?</p>
+</li>
+<li style=3D"-webkit-text-size-adjust:none;padding-top:0;padding-bottom:6px=
+;padding-right:0;padding-left:0;margin-left:0;font-size:16px;list-style-typ=
+e:none;list-style-position:outside;list-style-image:none;margin-top:0;line-=
+height:18px;color:#383838;">
+<h4 style=3D"font-size:18px;margin-top:5px;margin-bottom:5px;margin-right:0=
+;margin-left:0;padding-top:0;padding-bottom:0;padding-right:0;padding-left:=
+0;line-height:22px;">
+<a href=3D"https://theconversationus.cmail20.com/t/r-l-tkuulkut-bkdulqlil-p=
+/" style=3D"font-family:'Helvetica Neue', Helvetica, sans-serif;-webkit-tex=
+t-size-adjust:none;text-decoration:none;color:#006699;">Iran war and other =
+tough topics give K-12 teachers chance to teach students how, not what, to =
+think</a>
+</h4>
+<p class=3D"author" style=3D"font-family:'Helvetica Neue', Helvetica, sans-=
+serif;-webkit-text-size-adjust:none;color:hsl(240, 2%, 30%);font-size:11px;=
+margin-top:3px;margin-bottom:3px;margin-right:0;margin-left:0;line-height:1=
+8px;">
+Boaz Dvir, Penn State
+</p>
+<p style=3D"font-family:'Helvetica Neue', Helvetica, sans-serif;margin-top:=
+0;margin-bottom:16px;margin-right:0;margin-left:0;font-size:16px;color:#202=
+020;line-height:1.4;-webkit-text-size-adjust:none;">A Penn State training p=
+rogram helps K-12 teachers learn how to give students the confidence to ask=
+ questions and understand various perspectives about complex topics.</p>
+</li>
+</ul>
+</td>
+</tr>
+</table>
+</td>
+</tr>
+<tr class=3D"latest-articles">
+<td style=3D"font-family:'Helvetica Neue', Helvetica, sans-serif;text-align=
+:left;-webkit-text-size-adjust:none;">
+<table class=3D"block" cellpadding=3D"0" cellspacing=3D"0" style=3D"margin-=
+top:0;margin-bottom:0;margin-right:0;margin-left:0;width:100%;font-family:'=
+Helvetica Neue', Helvetica, Arial, sans-serif;">
+<tr>
+<th style=3D"text-align:left;">
+<h3 style=3D"font-size:16px;color:#202020;padding-top:0;padding-right:0;pad=
+ding-left:0;margin-top:10px;margin-bottom:10px;margin-right:0;margin-left:0=
+;text-align:left;border-bottom-width:4px;border-bottom-style:solid;border-b=
+ottom-color:#EEEEEE;padding-bottom:10px;">Ethics + Religion</h3>
+</th>
+</tr>
+<tr>
+<td style=3D"font-family:'Helvetica Neue', Helvetica, sans-serif;text-align=
+:left;-webkit-text-size-adjust:none;">
+<ul class=3D"datarepeater" style=3D"padding-top:0;padding-bottom:0;padding-=
+right:0;padding-left:0;margin-top:0;margin-bottom:0;margin-right:0;margin-l=
+eft:0;">
+<li style=3D"-webkit-text-size-adjust:none;padding-top:0;padding-bottom:6px=
+;padding-right:0;padding-left:0;margin-left:0;font-size:16px;list-style-typ=
+e:none;list-style-position:outside;list-style-image:none;margin-top:0;line-=
+height:18px;color:#383838;">
+<h4 style=3D"font-size:18px;margin-top:5px;margin-bottom:5px;margin-right:0=
+;margin-left:0;padding-top:0;padding-bottom:0;padding-right:0;padding-left:=
+0;line-height:22px;">
+<a href=3D"https://theconversationus.cmail20.com/t/r-l-tkuulkut-bkdulqlil-x=
+/" style=3D"font-family:'Helvetica Neue', Helvetica, sans-serif;-webkit-tex=
+t-size-adjust:none;text-decoration:none;color:#006699;">The long history of=
+ silent meditation retreats and the individuals who helped shape them</a>
+</h4>
+<p class=3D"author" style=3D"font-family:'Helvetica Neue', Helvetica, sans-=
+serif;-webkit-text-size-adjust:none;color:hsl(240, 2%, 30%);font-size:11px;=
+margin-top:3px;margin-bottom:3px;margin-right:0;margin-left:0;line-height:1=
+8px;">
+Daniel M. Stuart, University of South Carolina
+</p>
+<p style=3D"font-family:'Helvetica Neue', Helvetica, sans-serif;margin-top:=
+0;margin-bottom:16px;margin-right:0;margin-left:0;font-size:16px;color:#202=
+020;line-height:1.4;-webkit-text-size-adjust:none;">The Burmese meditation =
+master Sayagyi U Ba Khin played a key role in shaping the meditation retrea=
+ts that are popular today.</p>
+</li>
+</ul>
+</td>
+</tr>
+</table>
+</td>
+</tr>
+<tr class=3D"latest-articles">
+<td style=3D"font-family:'Helvetica Neue', Helvetica, sans-serif;text-align=
+:left;-webkit-text-size-adjust:none;">
+<table class=3D"block" cellpadding=3D"0" cellspacing=3D"0" style=3D"margin-=
+top:0;margin-bottom:0;margin-right:0;margin-left:0;width:100%;font-family:'=
+Helvetica Neue', Helvetica, Arial, sans-serif;">
+<tr>
+<th style=3D"text-align:left;">
+<h3 style=3D"font-size:16px;color:#202020;padding-top:0;padding-right:0;pad=
+ding-left:0;margin-top:10px;margin-bottom:10px;margin-right:0;margin-left:0=
+;text-align:left;border-bottom-width:4px;border-bottom-style:solid;border-b=
+ottom-color:#EEEEEE;padding-bottom:10px;">Science + Technology</h3>
+</th>
+</tr>
+<tr>
+<td style=3D"font-family:'Helvetica Neue', Helvetica, sans-serif;text-align=
+:left;-webkit-text-size-adjust:none;">
+<ul class=3D"datarepeater" style=3D"padding-top:0;padding-bottom:0;padding-=
+right:0;padding-left:0;margin-top:0;margin-bottom:0;margin-right:0;margin-l=
+eft:0;">
+<li style=3D"-webkit-text-size-adjust:none;padding-top:0;padding-bottom:6px=
+;padding-right:0;padding-left:0;margin-left:0;font-size:16px;list-style-typ=
+e:none;list-style-position:outside;list-style-image:none;margin-top:0;line-=
+height:18px;color:#383838;">
+<h4 style=3D"font-size:18px;margin-top:5px;margin-bottom:5px;margin-right:0=
+;margin-left:0;padding-top:0;padding-bottom:0;padding-right:0;padding-left:=
+0;line-height:22px;">
+<a href=3D"https://theconversationus.cmail20.com/t/r-l-tkuulkut-bkdulqlil-m=
+/" style=3D"font-family:'Helvetica Neue', Helvetica, sans-serif;-webkit-tex=
+t-size-adjust:none;text-decoration:none;color:#006699;">What was the very f=
+irst plant in the world?</a>
+</h4>
+<p class=3D"author" style=3D"font-family:'Helvetica Neue', Helvetica, sans-=
+serif;-webkit-text-size-adjust:none;color:hsl(240, 2%, 30%);font-size:11px;=
+margin-top:3px;margin-bottom:3px;margin-right:0;margin-left:0;line-height:1=
+8px;">
+Erin Potter, Binghamton University, State University of New York
+</p>
+<p style=3D"font-family:'Helvetica Neue', Helvetica, sans-serif;margin-top:=
+0;margin-bottom:16px;margin-right:0;margin-left:0;font-size:16px;color:#202=
+020;line-height:1.4;-webkit-text-size-adjust:none;">Plants changed the atmo=
+sphere, built soil and created ecosystems that allowed animals like us to t=
+hrive. But first they had to make their way from the water to the land.</p>
+</li>
+<li style=3D"-webkit-text-size-adjust:none;padding-top:0;padding-bottom:6px=
+;padding-right:0;padding-left:0;margin-left:0;font-size:16px;list-style-typ=
+e:none;list-style-position:outside;list-style-image:none;margin-top:0;line-=
+height:18px;color:#383838;">
+<h4 style=3D"font-size:18px;margin-top:5px;margin-bottom:5px;margin-right:0=
+;margin-left:0;padding-top:0;padding-bottom:0;padding-right:0;padding-left:=
+0;line-height:22px;">
+<a href=3D"https://theconversationus.cmail20.com/t/r-l-tkuulkut-bkdulqlil-c=
+/" style=3D"font-family:'Helvetica Neue', Helvetica, sans-serif;-webkit-tex=
+t-size-adjust:none;text-decoration:none;color:#006699;">Paleontologists unc=
+over a new <em>Spinosaurus</em> species by following a clue from a decades-=
+old book into the Sahara Desert</a>
+</h4>
+<p class=3D"author" style=3D"font-family:'Helvetica Neue', Helvetica, sans-=
+serif;-webkit-text-size-adjust:none;color:hsl(240, 2%, 30%);font-size:11px;=
+margin-top:3px;margin-bottom:3px;margin-right:0;margin-left:0;line-height:1=
+8px;">
+Paul C. Sereno, University of Chicago
+</p>
+<p style=3D"font-family:'Helvetica Neue', Helvetica, sans-serif;margin-top:=
+0;margin-bottom:16px;margin-right:0;margin-left:0;font-size:16px;color:#202=
+020;line-height:1.4;-webkit-text-size-adjust:none;">The hunt for a mythiciz=
+ed fossil hot spot took a team of researchers on a journey through the Saha=
+ra Desert.</p>
+</li>
+</ul>
+</td>
+</tr>
+</table>
+</td>
+</tr>
+<tr class=3D"latest-articles">
+<td style=3D"font-family:'Helvetica Neue', Helvetica, sans-serif;text-align=
+:left;-webkit-text-size-adjust:none;">
+<table class=3D"block" cellpadding=3D"0" cellspacing=3D"0" style=3D"margin-=
+top:0;margin-bottom:0;margin-right:0;margin-left:0;width:100%;font-family:'=
+Helvetica Neue', Helvetica, Arial, sans-serif;">
+<tr>
+<th style=3D"text-align:left;">
+<h3 style=3D"font-size:16px;color:#202020;padding-top:0;padding-right:0;pad=
+ding-left:0;margin-top:10px;margin-bottom:10px;margin-right:0;margin-left:0=
+;text-align:left;border-bottom-width:4px;border-bottom-style:solid;border-b=
+ottom-color:#EEEEEE;padding-bottom:10px;">Economy + Business</h3>
+</th>
+</tr>
+<tr>
+<td style=3D"font-family:'Helvetica Neue', Helvetica, sans-serif;text-align=
+:left;-webkit-text-size-adjust:none;">
+<ul class=3D"datarepeater" style=3D"padding-top:0;padding-bottom:0;padding-=
+right:0;padding-left:0;margin-top:0;margin-bottom:0;margin-right:0;margin-l=
+eft:0;">
+<li style=3D"-webkit-text-size-adjust:none;padding-top:0;padding-bottom:6px=
+;padding-right:0;padding-left:0;margin-left:0;font-size:16px;list-style-typ=
+e:none;list-style-position:outside;list-style-image:none;margin-top:0;line-=
+height:18px;color:#383838;">
+<h4 style=3D"font-size:18px;margin-top:5px;margin-bottom:5px;margin-right:0=
+;margin-left:0;padding-top:0;padding-bottom:0;padding-right:0;padding-left:=
+0;line-height:22px;">
+<a href=3D"https://theconversationus.cmail20.com/t/r-l-tkuulkut-bkdulqlil-q=
+/" style=3D"font-family:'Helvetica Neue', Helvetica, sans-serif;-webkit-tex=
+t-size-adjust:none;text-decoration:none;color:#006699;">A pet-friendly home=
+less shelter pilot reduced the rate of homelessness among the people it hel=
+ped in California</a>
+</h4>
+<p class=3D"author" style=3D"font-family:'Helvetica Neue', Helvetica, sans-=
+serif;-webkit-text-size-adjust:none;color:hsl(240, 2%, 30%);font-size:11px;=
+margin-top:3px;margin-bottom:3px;margin-right:0;margin-left:0;line-height:1=
+8px;">
+Benjamin F. Henwood, University of Southern California
+</p>
+<p style=3D"font-family:'Helvetica Neue', Helvetica, sans-serif;margin-top:=
+0;margin-bottom:16px;margin-right:0;margin-left:0;font-size:16px;color:#202=
+020;line-height:1.4;-webkit-text-size-adjust:none;">A pilot program in Los =
+Angeles reduced the rate of homelessness among homeless people with pets.</=
+p>
+</li>
+<li style=3D"-webkit-text-size-adjust:none;padding-top:0;padding-bottom:6px=
+;padding-right:0;padding-left:0;margin-left:0;font-size:16px;list-style-typ=
+e:none;list-style-position:outside;list-style-image:none;margin-top:0;line-=
+height:18px;color:#383838;">
+<h4 style=3D"font-size:18px;margin-top:5px;margin-bottom:5px;margin-right:0=
+;margin-left:0;padding-top:0;padding-bottom:0;padding-right:0;padding-left:=
+0;line-height:22px;">
+<a href=3D"https://theconversationus.cmail20.com/t/r-l-tkuulkut-bkdulqlil-a=
+/" style=3D"font-family:'Helvetica Neue', Helvetica, sans-serif;-webkit-tex=
+t-size-adjust:none;text-decoration:none;color:#006699;">Controversy over Re=
+ese=E2=80=99s ingredients reveals standard food industry practices most con=
+sumers never notice</a>
+</h4>
+<p class=3D"author" style=3D"font-family:'Helvetica Neue', Helvetica, sans-=
+serif;-webkit-text-size-adjust:none;color:hsl(240, 2%, 30%);font-size:11px;=
+margin-top:3px;margin-bottom:3px;margin-right:0;margin-left:0;line-height:1=
+8px;">
+Jonathan Deutsch, Drexel University
+</p>
+<p style=3D"font-family:'Helvetica Neue', Helvetica, sans-serif;margin-top:=
+0;margin-bottom:16px;margin-right:0;margin-left:0;font-size:16px;color:#202=
+020;line-height:1.4;-webkit-text-size-adjust:none;">Product reformulations =
+are common in the food industry, and they can be done well, or poorly. Who =
+remembers Doritos with olestra?</p>
+</li>
+</ul>
+</td>
+</tr>
+</table>
+</td>
+</tr>
+<tr class=3D"latest-articles">
+<td style=3D"font-family:'Helvetica Neue', Helvetica, sans-serif;text-align=
+:left;-webkit-text-size-adjust:none;">
+<table class=3D"block" cellpadding=3D"0" cellspacing=3D"0" style=3D"margin-=
+top:0;margin-bottom:0;margin-right:0;margin-left:0;width:100%;font-family:'=
+Helvetica Neue', Helvetica, Arial, sans-serif;">
+<tr>
+<th style=3D"text-align:left;">
+<h3 style=3D"font-size:16px;color:#202020;padding-top:0;padding-right:0;pad=
+ding-left:0;margin-top:10px;margin-bottom:10px;margin-right:0;margin-left:0=
+;text-align:left;border-bottom-width:4px;border-bottom-style:solid;border-b=
+ottom-color:#EEEEEE;padding-bottom:10px;">Health + Medicine</h3>
+</th>
+</tr>
+<tr>
+<td style=3D"font-family:'Helvetica Neue', Helvetica, sans-serif;text-align=
+:left;-webkit-text-size-adjust:none;">
+<ul class=3D"datarepeater" style=3D"padding-top:0;padding-bottom:0;padding-=
+right:0;padding-left:0;margin-top:0;margin-bottom:0;margin-right:0;margin-l=
+eft:0;">
+<li style=3D"-webkit-text-size-adjust:none;padding-top:0;padding-bottom:6px=
+;padding-right:0;padding-left:0;margin-left:0;font-size:16px;list-style-typ=
+e:none;list-style-position:outside;list-style-image:none;margin-top:0;line-=
+height:18px;color:#383838;">
+<h4 style=3D"font-size:18px;margin-top:5px;margin-bottom:5px;margin-right:0=
+;margin-left:0;padding-top:0;padding-bottom:0;padding-right:0;padding-left:=
+0;line-height:22px;">
+<a href=3D"https://theconversationus.cmail20.com/t/r-l-tkuulkut-bkdulqlil-f=
+/" style=3D"font-family:'Helvetica Neue', Helvetica, sans-serif;-webkit-tex=
+t-size-adjust:none;text-decoration:none;color:#006699;">Anxiety and ADHD ca=
+n overlap =E2=80=93 here=E2=80=99s how to untangle these widespread mental =
+health disorders</a>
+</h4>
+<p class=3D"author" style=3D"font-family:'Helvetica Neue', Helvetica, sans-=
+serif;-webkit-text-size-adjust:none;color:hsl(240, 2%, 30%);font-size:11px;=
+margin-top:3px;margin-bottom:3px;margin-right:0;margin-left:0;line-height:1=
+8px;">
+Deldhy Nicol=C3=A1s Moya S=C3=A1nchez, Universidad Nacional Aut=C3=B3noma d=
+e M=C3=A9xico (UNAM)
+</p>
+<p style=3D"font-family:'Helvetica Neue', Helvetica, sans-serif;margin-top:=
+0;margin-bottom:16px;margin-right:0;margin-left:0;font-size:16px;color:#202=
+020;line-height:1.4;-webkit-text-size-adjust:none;">For many adults, anxiet=
+y may be the only visible symptom. When it fades, underlying ADHD, which ma=
+y have been masked for years, finally becomes clear.</p>
+</li>
+</ul>
+</td>
+</tr>
+</table>
+</td>
+</tr>
+<tr class=3D"latest-articles">
+<td style=3D"font-family:'Helvetica Neue', Helvetica, sans-serif;text-align=
+:left;-webkit-text-size-adjust:none;">
+<table class=3D"block" cellpadding=3D"0" cellspacing=3D"0" style=3D"margin-=
+top:0;margin-bottom:0;margin-right:0;margin-left:0;width:100%;font-family:'=
+Helvetica Neue', Helvetica, Arial, sans-serif;">
+<tr>
+<th style=3D"text-align:left;">
+<h3 style=3D"font-size:16px;color:#202020;padding-top:0;padding-right:0;pad=
+ding-left:0;margin-top:10px;margin-bottom:10px;margin-right:0;margin-left:0=
+;text-align:left;border-bottom-width:4px;border-bottom-style:solid;border-b=
+ottom-color:#EEEEEE;padding-bottom:10px;">Arts + Culture</h3>
+</th>
+</tr>
+<tr>
+<td style=3D"font-family:'Helvetica Neue', Helvetica, sans-serif;text-align=
+:left;-webkit-text-size-adjust:none;">
+<ul class=3D"datarepeater" style=3D"padding-top:0;padding-bottom:0;padding-=
+right:0;padding-left:0;margin-top:0;margin-bottom:0;margin-right:0;margin-l=
+eft:0;">
+<li style=3D"-webkit-text-size-adjust:none;padding-top:0;padding-bottom:6px=
+;padding-right:0;padding-left:0;margin-left:0;font-size:16px;list-style-typ=
+e:none;list-style-position:outside;list-style-image:none;margin-top:0;line-=
+height:18px;color:#383838;">
+<h4 style=3D"font-size:18px;margin-top:5px;margin-bottom:5px;margin-right:0=
+;margin-left:0;padding-top:0;padding-bottom:0;padding-right:0;padding-left:=
+0;line-height:22px;">
+<a href=3D"https://theconversationus.cmail20.com/t/r-l-tkuulkut-bkdulqlil-z=
+/" style=3D"font-family:'Helvetica Neue', Helvetica, sans-serif;-webkit-tex=
+t-size-adjust:none;text-decoration:none;color:#006699;">What =E2=80=98gooni=
+ng=E2=80=99 reveals about intimacy in a world cordoned off by screens</a>
+</h4>
+<p class=3D"author" style=3D"font-family:'Helvetica Neue', Helvetica, sans-=
+serif;-webkit-text-size-adjust:none;color:hsl(240, 2%, 30%);font-size:11px;=
+margin-top:3px;margin-bottom:3px;margin-right:0;margin-left:0;line-height:1=
+8px;">
+Jennifer Pollitt, Temple University
+</p>
+<p style=3D"font-family:'Helvetica Neue', Helvetica, sans-serif;margin-top:=
+0;margin-bottom:16px;margin-right:0;margin-left:0;font-size:16px;color:#202=
+020;line-height:1.4;-webkit-text-size-adjust:none;">Relationships with real=
+ people can involve rejection, awkwardness, time and emotional labor. But i=
+n the =E2=80=98goonverse,=E2=80=99 desire is predictable, endlessly availab=
+le and never says no.</p>
+</li>
+<li style=3D"-webkit-text-size-adjust:none;padding-top:0;padding-bottom:6px=
+;padding-right:0;padding-left:0;margin-left:0;font-size:16px;list-style-typ=
+e:none;list-style-position:outside;list-style-image:none;margin-top:0;line-=
+height:18px;color:#383838;">
+<h4 style=3D"font-size:18px;margin-top:5px;margin-bottom:5px;margin-right:0=
+;margin-left:0;padding-top:0;padding-bottom:0;padding-right:0;padding-left:=
+0;line-height:22px;">
+<a href=3D"https://theconversationus.cmail20.com/t/r-l-tkuulkut-bkdulqlil-v=
+/" style=3D"font-family:'Helvetica Neue', Helvetica, sans-serif;-webkit-tex=
+t-size-adjust:none;text-decoration:none;color:#006699;">The Capture season =
+three: experts in facial recognition and AI decipher the fact from the fict=
+ion</a>
+</h4>
+<p class=3D"author" style=3D"font-family:'Helvetica Neue', Helvetica, sans-=
+serif;-webkit-text-size-adjust:none;color:hsl(240, 2%, 30%);font-size:11px;=
+margin-top:3px;margin-bottom:3px;margin-right:0;margin-left:0;line-height:1=
+8px;">
+Eilidh Noyes, University of Leeds; Walter Scheirer, University of Notre Dam=
+e
+</p>
+<p style=3D"font-family:'Helvetica Neue', Helvetica, sans-serif;margin-top:=
+0;margin-bottom:16px;margin-right:0;margin-left:0;font-size:16px;color:#202=
+020;line-height:1.4;-webkit-text-size-adjust:none;">It is not feasible, nor=
+ indeed ethical, to run a facial recognition system against all images on t=
+he internet.</p>
+</li>
+</ul>
+</td>
+</tr>
+</table>
+</td>
+</tr>
+<tr class=3D"latest-articles">
+<td style=3D"font-family:'Helvetica Neue', Helvetica, sans-serif;text-align=
+:left;-webkit-text-size-adjust:none;">
+<table class=3D"block" cellpadding=3D"0" cellspacing=3D"0" style=3D"margin-=
+top:0;margin-bottom:0;margin-right:0;margin-left:0;width:100%;font-family:'=
+Helvetica Neue', Helvetica, Arial, sans-serif;">
+<tr>
+<th style=3D"text-align:left;">
+<h3 style=3D"font-size:16px;color:#202020;padding-top:0;padding-right:0;pad=
+ding-left:0;margin-top:10px;margin-bottom:10px;margin-right:0;margin-left:0=
+;text-align:left;border-bottom-width:4px;border-bottom-style:solid;border-b=
+ottom-color:#EEEEEE;padding-bottom:10px;">Trending on site</h3>
+</th>
+</tr>
+<tr>
+<td style=3D"font-family:'Helvetica Neue', Helvetica, sans-serif;text-align=
+:left;-webkit-text-size-adjust:none;">
+<ul class=3D"datarepeater" style=3D"padding-top:0;padding-bottom:0;padding-=
+right:0;padding-left:0;margin-top:0;margin-bottom:0;margin-right:0;margin-l=
+eft:0;">
+<li style=3D"list-style-type:disc;list-style-position:outside;list-style-im=
+age:none;margin-top:6px;margin-bottom:0;margin-right:0;margin-left:18px;col=
+or:#999;-webkit-text-size-adjust:none;padding-top:0;padding-bottom:6px;padd=
+ing-right:0;padding-left:0;font-size:16px;line-height:18px;">
+<h4 style=3D"font-size:18px;margin-top:5px;margin-bottom:5px;margin-right:0=
+;margin-left:0;padding-top:0;padding-bottom:0;padding-right:0;padding-left:=
+0;line-height:22px;">
+<a href=3D"https://theconversationus.cmail20.com/t/r-l-tkuulkut-bkdulqlil-e=
+/" style=3D"font-family:'Helvetica Neue', Helvetica, sans-serif;-webkit-tex=
+t-size-adjust:none;text-decoration:none;color:#006699;">In its hunt for cri=
+tical minerals, the US is misconstruing what is and is not America=E2=80=99=
+s</a>
+</h4>
+</li>
+<li style=3D"list-style-type:disc;list-style-position:outside;list-style-im=
+age:none;margin-top:6px;margin-bottom:0;margin-right:0;margin-left:18px;col=
+or:#999;-webkit-text-size-adjust:none;padding-top:0;padding-bottom:6px;padd=
+ing-right:0;padding-left:0;font-size:16px;line-height:18px;">
+<h4 style=3D"font-size:18px;margin-top:5px;margin-bottom:5px;margin-right:0=
+;margin-left:0;padding-top:0;padding-bottom:0;padding-right:0;padding-left:=
+0;line-height:22px;">
+<a href=3D"https://theconversationus.cmail20.com/t/r-l-tkuulkut-bkdulqlil-s=
+/" style=3D"font-family:'Helvetica Neue', Helvetica, sans-serif;-webkit-tex=
+t-size-adjust:none;text-decoration:none;color:#006699;">Not just Patriot in=
+terceptors: A defense expert explains the various weapons US and allies use=
+ to defend against missiles and drones</a>
+</h4>
+</li>
+<li style=3D"list-style-type:disc;list-style-position:outside;list-style-im=
+age:none;margin-top:6px;margin-bottom:0;margin-right:0;margin-left:18px;col=
+or:#999;-webkit-text-size-adjust:none;padding-top:0;padding-bottom:6px;padd=
+ing-right:0;padding-left:0;font-size:16px;line-height:18px;">
+<h4 style=3D"font-size:18px;margin-top:5px;margin-bottom:5px;margin-right:0=
+;margin-left:0;padding-top:0;padding-bottom:0;padding-right:0;padding-left:=
+0;line-height:22px;">
+<a href=3D"https://theconversationus.cmail20.com/t/r-l-tkuulkut-bkdulqlil-g=
+/" style=3D"font-family:'Helvetica Neue', Helvetica, sans-serif;-webkit-tex=
+t-size-adjust:none;text-decoration:none;color:#006699;">Nearly 1 in 3 missi=
+ng children in the US are Black, driving Pennsylvania and other states to p=
+ropose =E2=80=98Ebony Alerts=E2=80=99 to ensure equal protection and public=
+ safety</a>
+</h4>
+</li>
+</ul>
+</td>
+</tr>
+</table>
+</td>
+</tr>
+<tr class=3D"html-block">
+<td style=3D"font-family:'Helvetica Neue', Helvetica, sans-serif;text-align=
+:left;-webkit-text-size-adjust:none;">
+<table class=3D"block" cellpadding=3D"0" cellspacing=3D"0" style=3D"margin-=
+top:0;margin-bottom:0;margin-right:0;margin-left:0;width:100%;font-family:'=
+Helvetica Neue', Helvetica, Arial, sans-serif;"><tr><th style=3D"text-align=
+:left;"><h3 style=3D"font-size:16px;color:#202020;padding-top:0;padding-rig=
+ht:0;padding-left:0;margin-top:10px;margin-bottom:10px;margin-right:0;margi=
+n-left:0;text-align:left;border-bottom-width:4px;border-bottom-style:solid;=
+border-bottom-color:#EEEEEE;padding-bottom:10px;">Today's graphic =F0=9F=93=
+=88</h3></th></tr><tr><td style=3D"font-family:'Helvetica Neue', Helvetica,=
+ sans-serif;text-align:left;-webkit-text-size-adjust:none;"><ul class=3D"da=
+tarepeater" style=3D"padding-top:0;padding-bottom:0;padding-right:0;padding=
+-left:0;margin-top:0;margin-bottom:0;margin-right:0;margin-left:0;"><li sty=
+le=3D"-webkit-text-size-adjust:none;padding-top:0;padding-bottom:6px;paddin=
+g-right:0;padding-left:0;margin-left:0;font-size:16px;list-style-type:none;=
+list-style-position:outside;list-style-image:none;margin-top:0;line-height:=
+18px;color:#383838;"><table width=3D"100%" border=3D"0" cellpadding=3D"0" c=
+ellspacing=3D"0" role=3D"presentation" style=3D"width:100%;font-family:'Hel=
+vetica Neue', Helvetica, Arial, sans-serif;"><tbody><tr><td style=3D"paddin=
+g-top:0;padding-bottom:0;padding-right:0;padding-left:0;font-family:'Helvet=
+ica Neue', Helvetica, sans-serif;text-align:left;-webkit-text-size-adjust:n=
+one;"> <a href=3D"https://theconversationus.cmail20.com/t/r-l-tkuulkut-bkdu=
+lqlil-w/" target=3D"_blank" style=3D"font-family:'Helvetica Neue', Helvetic=
+a, sans-serif;text-decoration:none;color:#0B6698;-webkit-text-size-adjust:n=
+one;">
+ <img alt=3D"A map highlighting major oil ports along the Strait of Hormuz.=
+" src=3D"https://images.theconversation.com/files/723839/original/file-2026=
+0313-71-p3wgsi.png?ixlib=3Drb-4.1.0&amp;q=3D30&amp;auto=3Dformat&amp;w=3D60=
+0&amp;h=3D643&amp;fit=3Dcrop&amp;dpr=3D2" width=3D"600" style=3D"display:bl=
+ock;width:100%;max-width:600px;height:auto;border-width:0;"></a></td></tr><=
+/tbody></table>
+<table width=3D"100%" border=3D"0" cellpadding=3D"0" cellspacing=3D"0" role=
+=3D"presentation" style=3D"width:100%;font-family:'Helvetica Neue', Helveti=
+ca, Arial, sans-serif;"><tbody><tr><td style=3D"padding-top:5px;padding-bot=
+tom:15px;padding-left:10px;padding-right:10px;font-family:Arial, sans-serif=
+;font-size:14px;color:#333333;line-height:1.4;text-align:left;-webkit-text-=
+size-adjust:none;"> From the story, <a href=3D"https://theconversationus.cm=
+ail20.com/t/r-l-tkuulkut-bkdulqlil-yd/" target=3D"_blank" style=3D"text-dec=
+oration:underline;font-family:'Helvetica Neue', Helvetica, sans-serif;color=
+:#0B6698;-webkit-text-size-adjust:none;">Why shadow tankers are the only sh=
+ips still moving through the Strait of Hormuz</a></td></tr></tbody></table>=
+</li><li style=3D"-webkit-text-size-adjust:none;padding-top:0;padding-botto=
+m:6px;padding-right:0;padding-left:0;margin-left:0;font-size:16px;list-styl=
+e-type:none;list-style-position:outside;list-style-image:none;margin-top:0;=
+line-height:18px;color:#383838;"><h4 style=3D"margin-top:30px;font-size:18p=
+x;margin-bottom:5px;margin-right:0;margin-left:0;padding-top:0;padding-bott=
+om:0;padding-right:0;padding-left:0;line-height:22px;">More of The Conversa=
+tion</h4><p style=3D"line-height:1.4;font-family:'Helvetica Neue', Helvetic=
+a, sans-serif;margin-top:0;margin-bottom:16px;margin-right:0;margin-left:0;=
+font-size:16px;color:#202020;-webkit-text-size-adjust:none;"></p><div style=
+=3D"line-height:1.4;font-family:'Helvetica Neue', Helvetica, sans-serif;-we=
+bkit-text-size-adjust:none;">Like this newsletter? You might be interested =
+in our other emails:</div><div style=3D"line-height:1.4;font-family:'Helvet=
+ica Neue',=20
+Helvetica, sans-serif;-webkit-text-size-adjust:none;">=E2=80=A2&nbsp;<a hre=
+f=3D"https://theconversationus.cmail20.com/t/r-l-tkuulkut-bkdulqlil-yh/" st=
+yle=3D"font-family:'Helvetica Neue', Helvetica, sans-serif;text-decoration:=
+none;color:#0B6698;-webkit-text-size-adjust:none;">The Afternoon Story</a> =
+(A new=20
+daily Substack)<br>
+=E2=80=A2 <a href=3D"https://theconversationus.cmail20.com/t/r-l-tkuulkut-b=
+kdulqlil-yk/" style=3D"font-family:'Helvetica Neue', Helvetica, sans-serif;=
+text-decoration:none;color:#0B6698;-webkit-text-size-adjust:none;">Weekly&n=
+bsp;Highlights</a>=E2=80=A2&nbsp;<a href=3D"https://theconversationus.cmail=
+20.com/t/r-l-tkuulkut-bkdulqlil-yu/" style=3D"font-family:'Helvetica Neue',=
+ Helvetica, sans-serif;text-decoration:none;color:#0B6698;-webkit-text-size=
+-adjust:none;">Science&nbsp;Editors'&nbsp;Picks</a><br>
+=E2=80=A2&nbsp;<a href=3D"https://theconversationus.cmail20.com/t/r-l-tkuul=
+kut-bkdulqlil-jl/" style=3D"font-family:'Helvetica Neue', Helvetica, sans-s=
+erif;text-decoration:none;color:#0B6698;-webkit-text-size-adjust:none;">Art=
+ificial Intelligence</a>=E2=80=A2&nbsp;<a href=3D"https://theconversationus=
+.cmail20.com/t/r-l-tkuulkut-bkdulqlil-jr/" style=3D"font-family:'Helvetica =
+Neue', Helvetica, sans-serif;text-decoration:none;color:#0B6698;-webkit-tex=
+t-size-adjust:none;">Giving&nbsp;Today</a><br>
+=E2=80=A2&nbsp;<a href=3D"https://theconversationus.cmail20.com/t/r-l-tkuul=
+kut-bkdulqlil-jy/" style=3D"font-family:'Helvetica Neue', Helvetica, sans-s=
+erif;text-decoration:none;color:#0B6698;-webkit-text-size-adjust:none;">Thi=
+s&nbsp;Week&nbsp;in&nbsp;Religion</a> =E2=80=A2&nbsp;<a href=3D"https://the=
+conversationus.cmail20.com/t/r-l-tkuulkut-bkdulqlil-jj/" style=3D"font-fami=
+ly:'Helvetica Neue', Helvetica, sans-serif;text-decoration:none;color:#0B66=
+98;-webkit-text-size-adjust:none;">Politics&nbsp;Weekly</a><br>
+=E2=80=A2&nbsp;<a href=3D"https://theconversationus.cmail20.com/t/r-l-tkuul=
+kut-bkdulqlil-jt/" style=3D"font-family:'Helvetica Neue', Helvetica, sans-s=
+erif;text-decoration:none;color:#0B6698;-webkit-text-size-adjust:none;">Glo=
+bal&nbsp;Perspectives</a> =E2=80=A2&nbsp;<a href=3D"https://theconversation=
+us.cmail20.com/t/r-l-tkuulkut-bkdulqlil-ji/" style=3D"font-family:'Helvetic=
+a Neue', Helvetica, sans-serif;text-decoration:none;color:#0B6698;-webkit-t=
+ext-size-adjust:none;">Global Economy&nbsp;&amp;&nbsp;Business</a></div><p =
+style=3D"font-family:'Helvetica Neue', Helvetica, sans-serif;margin-top:0;m=
+argin-bottom:16px;margin-right:0;margin-left:0;font-size:16px;color:#202020=
+;line-height:1.4;-webkit-text-size-adjust:none;"></p><p style=3D"line-heigh=
+t:1.4;font-family:'Helvetica Neue', Helvetica,=20
+sans-serif;margin-top:0;margin-bottom:16px;margin-right:0;margin-left:0;fon=
+t-size:16px;color:#202020;-webkit-text-size-adjust:none;"></p><div style=3D=
+"line-height:1.4;font-family:'Helvetica Neue', Helvetica, sans-serif;-webki=
+t-text-size-adjust:none;">Follow us on social media:</div><div style=3D"lin=
+e-height:1.4;font-family:'Helvetica Neue', Helvetica, sans-serif;-webkit-te=
+xt-size-adjust:none;">=E2=80=A2&nbsp;<a href=3D"https://theconversationus.c=
+mail20.com/t/r-l-tkuulkut-bkdulqlil-jd/" style=3D"font-family:'Helvetica Ne=
+ue', Helvetica, sans-serif;text-decoration:none;color:#0B6698;-webkit-text-=
+size-adjust:none;">Bluesky</a> =E2=80=A2&nbsp;<a href=3D"https://theconvers=
+ationus.cmail20.com/t/r-l-tkuulkut-bkdulqlil-jh/" style=3D"font-family:'Hel=
+vetica Neue', Helvetica, sans-serif;text-decoration:none;color:#0B6698;-web=
+kit-text-size-adjust:none;">Mastodon</a><br>
+=E2=80=A2&nbsp;<a href=3D"https://theconversationus.cmail20.com/t/r-l-tkuul=
+kut-bkdulqlil-jk/" style=3D"font-family:'Helvetica Neue', Helvetica, sans-s=
+erif;text-decoration:none;color:#0B6698;-webkit-text-size-adjust:none;">Thr=
+eads</a> =E2=80=A2&nbsp;<a href=3D"https://theconversationus.cmail20.com/t/=
+r-l-tkuulkut-bkdulqlil-ju/" style=3D"font-family:'Helvetica Neue', Helvetic=
+a, sans-serif;text-decoration:none;color:#0B6698;-webkit-text-size-adjust:n=
+one;">TikTok</a><br>
+=E2=80=A2&nbsp;<a href=3D"https://theconversationus.cmail20.com/t/r-l-tkuul=
+kut-bkdulqlil-tl/" style=3D"font-family:'Helvetica Neue', Helvetica, sans-s=
+erif;text-decoration:none;color:#0B6698;-webkit-text-size-adjust:none;">Lin=
+kedIn</a> =E2=80=A2&nbsp;<a href=3D"https://theconversationus.cmail20.com/t=
+/r-l-tkuulkut-bkdulqlil-tr/" style=3D"font-family:'Helvetica Neue', Helveti=
+ca, sans-serif;text-decoration:none;color:#0B6698;-webkit-text-size-adjust:=
+none;">Instagram</a><br>
+=E2=80=A2&nbsp;<a href=3D"https://theconversationus.cmail20.com/t/r-l-tkuul=
+kut-bkdulqlil-ty/" style=3D"font-family:'Helvetica Neue', Helvetica, sans-s=
+erif;text-decoration:none;color:#0B6698;-webkit-text-size-adjust:none;">Fac=
+ebook</a> =E2=80=A2&nbsp;Or <a href=3D"https://theconversationus.cmail20.co=
+m/t/r-l-tkuulkut-bkdulqlil-tj/" style=3D"font-family:'Helvetica Neue', Helv=
+etica, sans-serif;text-decoration:none;color:#0B6698;-webkit-text-size-adju=
+st:none;">get a daily text from us</a></div><p style=3D"font-family:'Helvet=
+ica Neue', Helvetica, sans-serif;margin-top:0;margin-bottom:16px;margin-rig=
+ht:0;margin-left:0;font-size:16px;color:#202020;line-height:1.4;-webkit-tex=
+t-size-adjust:none;"></p><p style=3D"line-height:1.4;font-family:'Helvetica=
+ Neue', Helvetica,=20
+sans-serif;margin-top:0;margin-bottom:16px;margin-right:0;margin-left:0;fon=
+t-size:16px;color:#202020;-webkit-text-size-adjust:none;"></p><div style=3D=
+"line-height:1.4;font-family:'Helvetica Neue', Helvetica, sans-serif;-webki=
+t-text-size-adjust:none;"><strong>Tell your friends about us!<strong></stro=
+ng></strong></div><div style=3D"line-height:1.4;font-family:'Helvetica Neue=
+', Helvetica, sans-serif;-webkit-text-size-adjust:none;">Forward this email=
+ to them so they can sample our journalism.</div><p style=3D"font-family:'H=
+elvetica Neue', Helvetica, sans-serif;margin-top:0;margin-bottom:16px;margi=
+n-right:0;margin-left:0;font-size:16px;color:#202020;line-height:1.4;-webki=
+t-text-size-adjust:none;"></p></li><li style=3D"-webkit-text-size-adjust:no=
+ne;padding-top:0;padding-bottom:6px;padding-right:0;padding-left:0;margin-l=
+eft:0;font-size:16px;list-style-type:none;list-style-position:outside;list-=
+style-image:none;margin-top:0;line-height:18px;color:#383838;"><h4 style=3D=
+"margin-top:30px;font-size:18px;margin-bottom:5px;margin-right:0;margin-lef=
+t:0;padding-top:0;padding-bottom:0;padding-right:0;padding-left:0;line-heig=
+ht:22px;">About The Conversation</h4><p style=3D"font-family:'Helvetica Neu=
+e', Helvetica, sans-serif;margin-top:0;margin-bottom:16px;margin-right:0;ma=
+rgin-left:0;font-size:16px;color:#202020;line-height:1.4;-webkit-text-size-=
+adjust:none;">We're a nonprofit news organization dedicated to bringing you=
+ facts and trustworthy analysis to <a href=3D"https://theconversationus.cma=
+il20.com/t/r-l-tkuulkut-bkdulqlil-tt/" style=3D"font-family:'Helvetica Neue=
+', Helvetica,=20
+sans-serif;text-decoration:none;color:#0B6698;-webkit-text-size-adjust:none=
+;">help you make sense of our complex world</a>. We can give away our artic=
+les thanks to the help of foundations, universities and readers like you.</=
+p><h4 style=3D"font-size:18px;margin-top:5px;margin-bottom:5px;margin-right=
+:0;margin-left:0;padding-top:0;padding-bottom:0;padding-right:0;padding-lef=
+t:0;line-height:22px;"><a href=3D"https://theconversationus.cmail20.com/t/r=
+-l-tkuulkut-bkdulqlil-ti/" style=3D"font-family:'Helvetica Neue', Helvetica=
+, sans-serif;-webkit-text-size-adjust:none;text-decoration:none;color:#0066=
+99;">Partner with us to bring trustworthy journalism to the public</a></h4>=
+</li></ul> </td></tr></table>
+</td>
+</tr>
+<tr><td class=3D"half-spacer" style=3D"font-family:'Helvetica Neue', Helvet=
+ica, sans-serif;text-align:left;-webkit-text-size-adjust:none;width:460px;h=
+eight:25px;">&nbsp;</td></tr>
+<tr><td class=3D"half-spacer" style=3D"font-family:'Helvetica Neue', Helvet=
+ica, sans-serif;text-align:left;-webkit-text-size-adjust:none;width:460px;h=
+eight:25px;">&nbsp;</td></tr>
+<tr>
+<td height=3D"1" bgcolor=3D"eeeeee" style=3D"height:1px;background-color:#e=
+eeeee;font-size:1px;line-height:1px;font-family:'Helvetica Neue', Helvetica=
+, sans-serif;text-align:left;-webkit-text-size-adjust:none;">&nbsp;</td>
+</tr>
+<tr><td class=3D"half-spacer" style=3D"font-family:'Helvetica Neue', Helvet=
+ica, sans-serif;text-align:left;-webkit-text-size-adjust:none;width:460px;h=
+eight:25px;">&nbsp;</td></tr>
+<tr>
+<td style=3D"font-family:'Helvetica Neue', Helvetica, sans-serif;text-align=
+:left;-webkit-text-size-adjust:none;">
+<table class=3D"block" cellpadding=3D"0" cellspacing=3D"0" id=3D"footer" st=
+yle=3D"margin-top:0;margin-bottom:0;margin-right:0;margin-left:0;width:100%=
+;font-family:'Helvetica Neue', Helvetica, Arial, sans-serif;">
+<tr>
+<td class=3D"logo align-center" style=3D"font-family:'Helvetica Neue', Helv=
+etica, sans-serif;-webkit-text-size-adjust:none;text-align:center;padding-b=
+ottom:32px;width:100%;">
+<a href=3D"https://theconversationus.cmail20.com/t/r-l-tkuulkut-bkdulqlil-t=
+u/" style=3D"font-family:'Helvetica Neue', Helvetica, sans-serif;text-decor=
+ation:none;color:#0B6698;-webkit-text-size-adjust:none;">
+<img alt=3D"The Conversation" width=3D"268" src=3D"https://i1.cmail20.com/t=
+i/r/E9/394/1DC/233254/csimport/logo-en-29eeb4a9f6a6f366205743cb7a641641_0.p=
+ng" style=3D"border-style:none;width:60%;">
+</a>
+</td>
+</tr>
+<tr>
+<td class=3D"you-are-receiving-html align-center" style=3D"font-family:'Hel=
+vetica Neue', Helvetica, sans-serif;-webkit-text-size-adjust:none;text-alig=
+n:center;">
+<p style=3D"font-family:'Helvetica Neue', Helvetica, sans-serif;margin-top:=
+0;margin-right:0;margin-left:0;line-height:1.4;-webkit-text-size-adjust:non=
+e;color:#202020;font-size:13px;margin-bottom:8px;">
+You=E2=80=99re receiving this newsletter from <a href=3D"https://theconvers=
+ationus.cmail20.com/t/r-l-tkuulkut-bkdulqlil-il/" style=3D"font-family:'Hel=
+vetica Neue', Helvetica, sans-serif;text-decoration:none;color:#0B6698;-web=
+kit-text-size-adjust:none;">The Conversation</a><br>
+</p>
+</td>
+</tr>
+<tr>
+<td class=3D"office-address align-center" style=3D"font-family:'Helvetica N=
+eue', Helvetica, sans-serif;-webkit-text-size-adjust:none;text-align:center=
+;">
+<p style=3D"font-family:'Helvetica Neue', Helvetica, sans-serif;margin-top:=
+0;margin-right:0;margin-left:0;line-height:1.4;-webkit-text-size-adjust:non=
+e;color:#202020;font-size:13px;margin-bottom:8px;">
+303 Wyman Street, Suite 300
+Waltham, MA 02451
+</p>
+</td>
+</tr>
+<tr>
+<td class=3D"actionable-links align-center" style=3D"font-family:'Helvetica=
+ Neue', Helvetica, sans-serif;-webkit-text-size-adjust:none;text-align:cent=
+er;">
+<p style=3D"font-family:'Helvetica Neue', Helvetica, sans-serif;margin-top:=
+0;margin-right:0;margin-left:0;line-height:1.4;-webkit-text-size-adjust:non=
+e;color:#202020;font-size:13px;margin-bottom:8px;">
+<a href=3D"https://theconversationus.forwardtomyfriend.com/r-bkdulqlil-8A14=
+6408-tkuulkut-l-y" style=3D"font-family:'Helvetica Neue', Helvetica, sans-s=
+erif;text-decoration:none;color:#0B6698;-webkit-text-size-adjust:none;">For=
+ward to a friend</a>
+&nbsp;=E2=80=A2&nbsp;
+<a href=3D"https://theconversationus.cmail20.com/t/r-u-tkuulkut-bkdulqlil-j=
+/" style=3D"font-family:'Helvetica Neue', Helvetica, sans-serif;text-decora=
+tion:none;color:#0B6698;-webkit-text-size-adjust:none;">Unsubscribe</a>
+</p>
+</td>
+</tr>
+</table>
+</td>
+</tr>
+</table>
+</td>
+</tr>
+<tr>
+<td class=3D"full-width" width=3D"460" height=3D"20" style=3D"font-family:'=
+Helvetica Neue', Helvetica, sans-serif;text-align:left;-webkit-text-size-ad=
+just:none;width:460px;"></td>
+</tr>
+<tr>
+<td class=3D"full-width" width=3D"460" style=3D"font-family:'Helvetica Neue=
+', Helvetica, sans-serif;text-align:left;-webkit-text-size-adjust:none;widt=
+h:460px;">
+</td>
+</tr>
+</table>
+</td>
+</tr>
+</table>
+<img src=3D"https://theconversationus.cmail20.com/t/r-o-tkuulkut-bkdulqlil/=
+o.gif" width=3D"1" height=3D"1" border=3D"0" alt=3D"" style=3D"visibility:h=
+idden !important;display:block !important;height:1px !important;width:1px !=
+important;border-width:0 !important;margin-top:0 !important;margin-bottom:0=
+ !important;margin-right:0 !important;margin-left:0 !important;padding-top:=
+0 !important;padding-bottom:0 !important;padding-right:0 !important;padding=
+-left:0 !important;"></body>
+</html>
+
+
+
+--_c6ac5190-f6b1-4f62-bc63-76d3e7394dfd_--

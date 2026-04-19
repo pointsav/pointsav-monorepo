@@ -1,0 +1,999 @@
+Received: from MW5PR16MB4788.namprd16.prod.outlook.com (2603:10b6:303:1a3::5)
+ by DM6PR16MB2569.namprd16.prod.outlook.com with HTTPS; Mon, 16 Mar 2026
+ 15:07:13 +0000
+Received: from PH8PR02CA0027.namprd02.prod.outlook.com (2603:10b6:510:2da::18)
+ by MW5PR16MB4788.namprd16.prod.outlook.com (2603:10b6:303:1a3::5) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9700.25; Mon, 16 Mar
+ 2026 15:07:10 +0000
+Received: from CY4PEPF0000EDD4.namprd03.prod.outlook.com
+ (2603:10b6:510:2da:cafe::5c) by PH8PR02CA0027.outlook.office365.com
+ (2603:10b6:510:2da::18) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.20.9700.25 via Frontend Transport; Mon,
+ 16 Mar 2026 15:07:10 +0000
+Authentication-Results: spf=pass (sender IP is 192.64.237.49)
+ smtp.mailfrom=mx.sailthru.com; dkim=pass (signature was verified)
+ header.d=mail.myfonts.com;dmarc=pass action=none
+ header.from=mail.myfonts.com;compauth=pass reason=100
+Received-SPF: Pass (protection.outlook.com: domain of mx.sailthru.com
+ designates 192.64.237.49 as permitted sender)
+ receiver=protection.outlook.com; client-ip=192.64.237.49;
+ helo=mta237-49.sailthru.com; pr=C
+Received: from mta237-49.sailthru.com (192.64.237.49) by
+ CY4PEPF0000EDD4.mail.protection.outlook.com (10.167.241.200) with Microsoft
+ SMTP Server (version=TLS1_3, cipher=TLS_AES_256_GCM_SHA384) id 15.20.9700.17
+ via Frontend Transport; Mon, 16 Mar 2026 15:07:09 +0000
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; s=sailthru; d=mail.myfonts.com;
+ h=Date:From:To:Message-ID:Subject:MIME-Version:Content-Type:
+ List-Unsubscribe-Post:List-Unsubscribe;
+ i=newsletters-no-reply@mail.myfonts.com;
+ bh=UiJ/myqADpHkgNHdXjg94BORCijkOXvO9Ouias+5Cdc=;
+ b=chAXtp4olY9v8hVS3s7MvS2cU9Z7VcbMu2BUSwGhzo/q3qvKRDEtOynvp+5oAQ0cERwdrGozcByg
+   khtJlpPWJ3695Rw4651F8WUzEyzxFAUNrwXEyc4SXyVRuUaJMqbAf5rY/I/PNvWBl0j2Tpm+kLRX
+   4vHHAllXnQ1PWiiCL9NoMh8MEUFkwkDWLbzbjAed0zFW0oDvu11jv740KTTbLvkd0zw0yQ4nCqn1
+   j5D1/DdS6HDUtm8wBCoikQTF7iOePYZGaFdQgslZc4ON4w0Nyp6fiiyB+xpGXsdzmfPLxUwkQsPw
+   Xve3McEhYadL0+plIzgkFXAkj7kyF+YXLsUqkw==
+Received: from kumo-mta-relay2.sailthru.cloud (10.55.73.33) by mta237-49.sailthru.com id hn0e9o3791s9 for <info@woodfine.co>; Mon, 16 Mar 2026 10:05:56 -0500 (envelope-from <delivery_20260316110555.44495200.1073103@mx.sailthru.com>)
+Date: Mon, 16 Mar 2026 11:05:55 -0400 (EDT)
+From: MyFonts - fyTi <newsletters-no-reply@mail.myfonts.com>
+To: info@woodfine.co
+Message-ID: <20260316110555.44495200.1073103@sailthru.com>
+Subject: =?utf-8?B?8J+UjiBDaGVjayBvdXQgdGhlc2UgUGVyZmVjdCBQYQ==?=
+ =?utf-8?B?aXJpbmdzIGZvciBUcmFkZSBHb3RoaWMgTmV4dMKu?=
+Content-Type: multipart/alternative; 
+	boundary="----=_Part_82989444_2002048898.1773673555763"
+Precedence: bulk
+x-job: 8946-44495200-20260316
+X-Feedback-ID: 8946:44495200:campaign:sailthru
+X-TM-ID: 20260316110555.44495200.1073103
+X-Info: Message sent by sailthru.com customer Monotype - My Fonts
+X-Info: We do not permit unsolicited commercial email
+X-Info: Please report abuse by forwarding complete headers to
+X-Info: abuse@sailthru.com
+X-Mailer: sailthru.com
+X-JMailer: aws-campaign-mailer-28.sailthru.cloud
+List-Unsubscribe-Post: List-Unsubscribe=One-Click
+X-Unsubscribe-Web: https://link.myfonts.com/oc/6646f41727cb0e38ca0b8b51qhops.n00f/972d3406
+List-Unsubscribe: <https://link.myfonts.com/oc/6646f41727cb0e38ca0b8b51qhops.n00f/972d3406>,<mailto:unsubscribe_20260316110555.44495200.1073103@mx.sailthru.com>
+X-rpcampaign: stngc44495200
+Return-Path: delivery_20260316110555.44495200.1073103@mx.sailthru.com
+X-MS-Exchange-Organization-ExpirationStartTime: 16 Mar 2026 15:07:09.7481
+ (UTC)
+X-MS-Exchange-Organization-ExpirationStartTimeReason: OriginalSubmit
+X-MS-Exchange-Organization-ExpirationInterval: 1:00:00:00.0000000
+X-MS-Exchange-Organization-ExpirationIntervalReason: OriginalSubmit
+X-MS-Exchange-Organization-Network-Message-Id: 3dd0f4b5-1484-4851-f742-08de836db231
+X-EOPAttributedMessage: 0
+X-EOPTenantAttributedMessage: ce7cb31c-acf7-4351-b0fe-c89cda16c4ab:0
+X-MS-Exchange-Organization-MessageDirectionality: Incoming
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: CY4PEPF0000EDD4:EE_|MW5PR16MB4788:EE_|DM6PR16MB2569:EE_
+X-MS-Exchange-Organization-AuthSource: CY4PEPF0000EDD4.namprd03.prod.outlook.com
+X-MS-Exchange-Organization-AuthAs: Anonymous
+X-MS-Office365-Filtering-Correlation-Id: 3dd0f4b5-1484-4851-f742-08de836db231
+X-MS-Exchange-Organization-SCL: 1
+X-Microsoft-Antispam: BCL:3;ARA:13230040|704160211799003|1032899013|69100299015|3072899012|3092899012|2092899012|5062899012|3109299003|4022899009|7149299003|7049299003|12012899012|3122999024|13003099007|8096899003|2066899003|57112099003|16102099003|18002099003|19002099003|21082099003;
+X-Forefront-Antispam-Report: CIP:192.64.237.49;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mta237-49.sailthru.com;PTR:mta237-49.sailthru.com;CAT:NONE;SFS:(13230040)(704160211799003)(1032899013)(69100299015)(3072899012)(3092899012)(2092899012)(5062899012)(3109299003)(4022899009)(7149299003)(7049299003)(12012899012)(3122999024)(13003099007)(8096899003)(2066899003)(57112099003)(16102099003)(18002099003)(19002099003)(21082099003);DIR:INB;
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 16 Mar 2026 15:07:09.4440
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 3dd0f4b5-1484-4851-f742-08de836db231
+X-MS-Exchange-CrossTenant-Id: ce7cb31c-acf7-4351-b0fe-c89cda16c4ab
+X-MS-Exchange-CrossTenant-AuthSource: CY4PEPF0000EDD4.namprd03.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: Internet
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MW5PR16MB4788
+X-MS-Exchange-Transport-EndToEndLatency: 00:00:03.9476905
+X-MS-Exchange-Processed-By-BccFoldering: 15.20.9700.017
+X-Microsoft-Antispam-Mailbox-Delivery:
+	ucf:0;jmr:0;auth:0;dest:I;ENG:(910005)(944490095)(944506478)(944626604)(920097)(930201)(20251009189)(140003);
+X-Microsoft-Antispam-Message-Info:
+	=?utf-8?B?Tk5EQ0VOZEphdEFSbit2bFhyaEIxTFphVlRZS1Y3UlNnODNmVGJsNVVpQXNX?=
+ =?utf-8?B?T0xIY1RyRytZWDA0SlNKc0h0eURKc295UFpKdm1LelFsUEZwalZEcVg1cGlE?=
+ =?utf-8?B?Y2pPa3ZHak1MSjArcndDWTZVMm11Z2FLSVZZY084Zi9GMXJGb2VhQUJySStw?=
+ =?utf-8?B?c212Z25EZWg1cldYZkh1RHBPSUZqQXBpUEdORzY5cTdSUXpKUkZ5UlhTK0FF?=
+ =?utf-8?B?QXRRQTJ5U2ZiV0lVRlUvcXQvM3Y1eUcwb1RtdzdtWjlpWk9CclpFT2J1ZEdY?=
+ =?utf-8?B?N1MyWXFjRWczOHBHRm9ZcnBFUHBDUzdWSzRCNDlQVExrcnBvWmhQVFhBRUZP?=
+ =?utf-8?B?NCswRFBUanlyYnZJTEdmc2w2bnBuVUxpTmZqZ294UVkxTk4yNmtIUGl1NTRW?=
+ =?utf-8?B?bU9lRU9UR043ODdJaWFVY1RzM3MwYXFxMmZieTVwa0JBb2NTalhqQzhIaHNZ?=
+ =?utf-8?B?eWYwUEkzanZJYjUzSkVsWlZMd09pV016Q253VDBHeWJ6VDhWVUNWL2xPRkU3?=
+ =?utf-8?B?ak1hVy9iYWdNa3hXT1E0SWpjVDQ0ZjBHS09KaWh6eG5DVzVpQmdtNVd0S2ky?=
+ =?utf-8?B?WkV3VUhNZ090U2NBbkNEZWVCZ3BJV0RzUktXTGtzTnRJbjdRY21jcU54ZXl1?=
+ =?utf-8?B?cVRsNlprQnBqMEE2VytKVGVrVnRMNlhnRUowTVZEMjRiazZPYjI2SDRrVUdr?=
+ =?utf-8?B?QmpGM0g2cjhUeFh6ZVpXa2ZuOUVSQTh2VEZiZzlDdnh0RFFja1NMQUp1YmQr?=
+ =?utf-8?B?ejEyUkdBY3lxcnJGSDFNTjR4ZXpPbFp1aVI4U3poelQ5TVpZTEhnYU40K25N?=
+ =?utf-8?B?Umh0OTBPdFBwcDRGemZsT1Y2SU55dCtFYjkzcGRIM3Zub1p1ejRoOFpicWU3?=
+ =?utf-8?B?R1Z5V2w3RGtMUHdCMEhhL0NkRmtCdXRKZjVDN2MwanpUMXdueEdhc2Fvd0FO?=
+ =?utf-8?B?Ui9GODJNbHBlL2RGZnRrQUtwWThZQjV0RTRJK0gycEYrSUNIOHBPNjZaZi8v?=
+ =?utf-8?B?R3JwS3QrZWlqVE1ScEtOeWtDSDNLOGp6NzVoK3BtdG10VzhMRTcxQkRSaXpR?=
+ =?utf-8?B?UWYxcUZUcTBkWlVxWk5WMkRZbFViQXRzYXNCUDJDT2RJeDMrbEdiN0QwUWM2?=
+ =?utf-8?B?Y1NhZFpJM3k2THJhTElWQTZRY08yUW9PNldSZTR0cHVpaGJqZWRjNHZDUFlM?=
+ =?utf-8?B?QWZUZUFRL3Z3eWdvMUpUSk9aR0RuSm1mRnJVQXhIVHF1dGVRSFl3Uzk5cy9C?=
+ =?utf-8?B?N1FzRnRMWVd0cXpYdFg5bkJabTBIWGZMblVyQVlociswc3dEeVlCaWJrYm9m?=
+ =?utf-8?B?d3lrVnltK3NVb0lBWllUcTlBK0hocUNVdU4rSlR4UXJFb3p3ZENIcStsSmxa?=
+ =?utf-8?B?L0VuUkxhL2YwblMrWmpBaGRid2J1YU4xZjBETk01RkRLRUdwNGRrKzZXbEtW?=
+ =?utf-8?B?MXBwUi9ZTVVUQ0VyRVgxV2x2S2p2Ni9tUk91VmM2b0ZFV2ZoMmVpaWd5bkdB?=
+ =?utf-8?B?c1NqUThHNDc0UVlnWVdsV3psZzBQYzRTczVlT2hibnphREpwendyVFRqcTJL?=
+ =?utf-8?B?bmJ6SElEamFLcHRSak5mYmxHOFZubG1GaXFDN2VnYnNBdFR0dURrakZvM2Ni?=
+ =?utf-8?B?MHJraVUyb0RvMEgxQkgzcEwvSmhOb3FwdnpDeEkyTlNNemcvS1JmQmcwS1lF?=
+ =?utf-8?B?cTR0ZEthRndWcG9YS1NUakRGd2tNNFVsU2loVXNoSTBZZnAwbm1mVis4SitG?=
+ =?utf-8?B?TTZEWXE1WjVtOVloRHQ1cEtqU3FPWkQ1bmlodERCTldmdHorc1FuaTBQR1pX?=
+ =?utf-8?B?VjA0RlViNzYycHJVd053bnlqUDVtQUk2Sjc1M2drYzFnRXR0TkJYWGYxbEtp?=
+ =?utf-8?B?ejcva3RKdWYveXUxWTJSMC8ySzA1c0lZSWxlNXIrSzMrS2d0VjNIOGZIbDZB?=
+ =?utf-8?B?SWNGQWE0clVrTFZRMGxGRmZOT2UzSHpxa2JZRkNrc3AxamVyMXYzaVJkL2hi?=
+ =?utf-8?B?YUhGOHV1dEM0UHBNaXpZRWtOQW11YmhFaHhGc3pURjJXeU9BbWppUnJ3dFlK?=
+ =?utf-8?B?VG9VZlNFSi8vRmlRT3Vjc1hPb09XNFpLcHh4bEhDWkVHQkFEdEZDTTVKVmRY?=
+ =?utf-8?B?bFZ1TG53aVIyeVJFTXRQeWxpcTYycWVFSkFES29OT01qeE9XaUNkS2prVGJ6?=
+ =?utf-8?B?UjZWeTV4TkxsVE9mVGhHaG1aN1p3RmE3emxnNm0rM0czWXZTbHdOaUNZenNj?=
+ =?utf-8?B?MHoyRUFBQmlhU0NoSEV6UEpWNzFwVTlOUStIcWdXY2hrMVQ4T01ZUklacjZF?=
+ =?utf-8?B?Z3hhbGdhVWFJMVlNcXpqb0xTMk1sdHI5MytnSmlGT0hxQlZGVGF1cTRvOHpL?=
+ =?utf-8?B?SXNtNjVGaVY2ajVkNi9kRWY4WEcyV09Db3I1WjloaFJyRE5FVUFCWllmYXNB?=
+ =?utf-8?B?NUlFZnpmQkRkaEFvbTN3clgranZqOVprbjJ1cUlaMDdZZDVmQkp1eklJL0FD?=
+ =?utf-8?B?U0R2K2FvMys0VENkN2pSNzJyRXVWQmxqSDZCQU4wVzQxUVJEcVo4dWhIMTk1?=
+ =?utf-8?B?N3ZOcGYxZE1YT0lFRmp2SGFaaTJFOFRDdStxek9hVnZUUkFCS1JzS0dEZkxu?=
+ =?utf-8?B?MFZXOWxhTG85d0JmRFZHTXczdVpDMUt5endOcnJ5TWYrUlhYR1dmSVdycEp3?=
+ =?utf-8?B?RVJCWDRtN043NnhkdXNHVUVKdnY2OG5VSjIxSHdBYVlsMnN4bENLc2JXM3dI?=
+ =?utf-8?B?NGF4bU41US9ISysyMVhGaE8vRVE3TkJGS3NxVGJtbXR2NEFXaTBuOGZCdWlx?=
+ =?utf-8?B?dFdjT3d6RVovMEx4ZHkwNDdjT0h4UEFGejRmbjdHYmlqMWlPNnJoTWxTRkVr?=
+ =?utf-8?B?QWNVSk1QTmdINkxsZjlhTnhrWUU2eWtUK2NoS2I4NkZ1VzZ5M2JQaEdJSnQz?=
+ =?utf-8?B?KzNSK0hGNCtHbjNrZ280OXQyWWMvZlBiTlJvUVFiajJGcWJaNkdhUjVnT1VC?=
+ =?utf-8?B?TnV5VGtkWklDWUFuMlJQc2FWdWJyME5DWWtFT0crbG91SEthR2szRVhrUmRm?=
+ =?utf-8?B?SHpLTHZIZDViYktJZGhXeWsyUHk4R1JMOTI1MWxPeUZXNmhzdFA2TFJEdjlz?=
+ =?utf-8?B?clcwWkYrRFRaWjFOUnFIQkY1RUpxOEw0SkVIdzBoZ0pnVlNOcXZUcDNuYmFu?=
+ =?utf-8?B?aUtyU3Fic3JLOEZ4VG0wczJDYnRNQm55NEZEdmgra1ZVa0lmRkNwM1pLdnFG?=
+ =?utf-8?B?WC9CdTZCOEVnSVhUNktiVGlIM2NvdkluOWxRT0I4by9zMjQvZlJ6VTBwK05y?=
+ =?utf-8?B?UjdJVkNOcUNKYXp3dGRLOGVFL3d1QkdjanlGNzF2MWNTbnVOMHk2R0sycFBs?=
+ =?utf-8?B?Y0lucHdyaUdyRDQ1d2dyZW83cUJFNWkwL1UvcXVPeVNlWDZ5STU0b3o0MkFw?=
+ =?utf-8?B?RWQ5VW41WllDbjVZTjNyWEpDa0JkUW03YUg0cVB6Mm5oTHVtTUtQYnNnVWsw?=
+ =?utf-8?B?QmtFYkVha0RVWjJkNXZId21TSTkxWUFabXR4TjlVbDhhdHR3ZnhRdEt1VUh0?=
+ =?utf-8?B?WXJMU3ZCRDNlS2RERHNsVDIyTGZpVGxSOHJvZFpRNTJUb2Z5dEFYUkxTcWJj?=
+ =?utf-8?B?VE9VYStFNFc4Z1FXRnpHN0FuWTdSOEIyVVdlZzNGUXI4LzhET1FSZEtxNDNn?=
+ =?utf-8?B?ZkV0c1BVbGx6WDF6NGVpaWtWajVEQSttTnV0a0RTbVZLOVovekFVL2V1aXFY?=
+ =?utf-8?B?R0x4OVFDME9reVBWamJVSmx4TzFqMmRyZHVSc3VHMUtTVkI0bEVUY0U1eU1E?=
+ =?utf-8?B?QS9aSXpCMGxaa2szdmxuR01DNFlTazdScWlaZDVpTm1mcjZWTFpWbmZXcFps?=
+ =?utf-8?B?WG9CNFBrbDhQZTV2T2pUMkxMS1BwSGNDaDdxTURYZkNJUXl4OC9tME4xeEYz?=
+ =?utf-8?B?d3hVM0xyZlJWak5EZnVvWDY0dnN4Vzlmd0Z4NkRKYXMxV2JNTWx5SkMvZ1dh?=
+ =?utf-8?Q?IYyUscMnrG8NSKAPegc?=
+MIME-Version: 1.0
+
+------=_Part_82989444_2002048898.1773673555763
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN""http://www.w=
+3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns=3D"http://www.w3.o=
+rg/1999/xhtml" style=3D"min-width: 100%" xmlns:v=3D"urn:schemas-microsoft-c=
+om:vml"><head>
+<meta http-equiv=3D"Content-Type" content=3D"text/html; charset=3Dutf-8"><t=
+itle>MyFonts - fyTi</title>
+
+<meta name=3D"viewport" content=3D"width=3Ddevice-width">
+<meta http-equiv=3D"X-UA-Compatible" content=3D"IE=3Dedge">
+<style type=3D"text/css">
+* {
+-ms-text-size-adjust: 100%;
+-webkit-text-size-adjust: none;
+-webkit-text-resize: 100%;
+text-resize: 100%;
+}
+html, body, .wrapper {
+min-width: 100%;
+}
+body, p {
+margin: 0;
+padding: 0;
+}
+th {
+font-weight: initial;
+}
+a {
+color: #1B72E8;
+}
+img {
+display: block;
+}
+.bearCenter {
+text-align: center !important;
+}
+.bearLeft {
+text-align: left !important;
+}
+.bearRight {
+text-align: right !important;
+}
+.inner-wrapper {
+margin: 0 auto;
+max-width: 760px;
+}
+.inner-wrapper__cell {
+padding-left: 55px !important;
+padding-right: 55px !important;
+}
+/* Core */
+#LogoWrapper {
+padding-top: 30px;
+padding-bottom: 30px;
+}
+#Title a, #TitleTextBlock a, #GoWebWrapper a {
+color: #FFF !important;
+}
+/* MyFonts Specific */
+.headerColor{
+background-color:#1B72E8;
+}
+#Title {
+font-size: 52px;
+color: #FFF;
+text-align: left;
+padding-bottom: .5em;
+}
+#TitleTextBlock {
+font-size: 28px;
+line-height: 36px;
+color: #FFF;
+padding-bottom: 1em;
+}
+#GoWebWrapper a, #GoWebWrapperWB a {
+padding-bottom: 2em !important;
+text-decoration: none;
+}
+#GoWebWrapperWB a {
+color: #1B72E8;
+}
+a.menuItem, a.menuItemWB {
+line-height: 21px;
+text-decoration: none;
+font-weight: 400;
+white-space: nowrap;
+display: block;
+padding: 4px 0;
+text-align: left;
+font-size-adjust: 16px;
+font-size: 14px;
+}
+a.menuItem {
+color: #FFF;
+}
+a.menuItemWB {
+color: #666;
+}
+a.menuItem:hover {
+color: #09f;
+}
+a.menuItemWB:hover {
+color: #1B72E8;
+}
+.textBox {
+text-align: left !important;
+color: #000;
+font-size: 16px;
+line-height: 24px;
+}
+.textBox a {
+color: #1B72E8;
+}
+.citations {
+font-size: 12px;
+line-height: 22px;
+}
+.captionBleed, .captionNoBleed {
+white-space: nowrap;
+padding: 26px 0 24px 0;
+font-size: 14px;
+line-height: 22px;
+color: #000;
+text-align: center;
+width:30%;
+max-width:228px
+}
+.vDivider {
+width: 10px;
+text-align: center;
+}
+.twoColTIB{
+}
+.twoColTIBRight{
+}
+.colTitle *, .colBy *, .colView *, .colPrice *, .colTeaserTitle *, .colTeas=
+erView *, .colTitle, .colBy, .colView, .colPrice, .colTeaserTitle, .colTeas=
+erView {
+font-size: 14px !important;
+line-height: 16px !important;
+-webkit-text-size-adjust: none;
+text-size-adjust: none;
+color: #000000;
+}
+.colTitle, .colTitle *, .colTitle p {
+font-size: 16px !important;
+}
+.colTeaserTitle, .colTeaserTitle *, .colTeaserTitle p {
+font-size: 20px !important;
+line-height: 24px !important;
+}
+.colTeaserView, .colTeaserView *, .colTeaserView p {
+font-size: 18px !important;
+line-height: 20px !important;
+}
+td.colTitle {
+height: 48px;
+vertical-align: bottom;
+}
+td.colBy {
+height: 32px;
+vertical-align: top;
+}
+.button {
+font-size: 15px;
+line-height: 42px;
+padding: 0 28px;
+text-decoration: none;
+display: block;
+white-space: nowrap;
+border-radius: 4px;
+color:#FFFFFF !important;
+}
+.button:visited {
+color:#FFFFFF !important;
+}
+.buttonColor{
+background-color:#1B72E8;
+}
+.colPrice {
+color: #d0021b !important;
+}
+.discountedPrice {
+color: #c4001f !important;
+}
+.buttonBlue {
+color: #FFF !important;
+}
+.buttonWhite {
+color: #1B72E8 !important;
+}
+#TwoGridLeft {
+border-right: 1px solid #EEE;
+}
+.borderTop {
+border-top: 1px solid #FFFFFF;
+border-left: 1px solid #FFFFFF;
+border-right: 1px solid #FFFFFF;
+}
+.borderBottom {
+border-bottom: 1px solid #FFFFFF;
+border-left: 1px solid #FFFFFF;
+border-right: 1px solid #FFFFFF;
+}
+#Promo-Grid th.mobile-grid-column {
+border-bottom:1px solid #B7B79E;=20
+border-right:1px solid #B7B79E;
+}
+.bluequote{
+font-size: 24px;
+font-weight:bold;
+line-height:1.25em !important;
+}
+.bluequote, .bluequoter{
+color: #0099ff;
+}
+.disclaimer div {
+color: #F5F4F3;
+}
+.disclaimer img {
+display: block;
+}
+.disclaimer, .disclaimer p, .disclaimer a {
+line-height: 13px;
+color: #000000;
+text-decoration: none;
+font-size: 9px;
+}
+@media only screen and (max-width: 768px) {
+.widthFix {
+width: calc(650px + 6vw) !important;
+}
+th.mobile-grid-column {
+display: block !important;
+width: 100% !important;
+max-width: 100% !important;
+border-left: 0 !important;
+border-right: 0 !important;
+text-align:center;
+}
+#Promo-Grid th.mobile-grid-column{
+border-left: 0 !important;
+border-right: 0 !important;
+}
+.mobile-grid-column-left{
+padding-bottom:78px;
+}
+th.empty-mobile-grid-column {
+display: none !important;
+}
+.restoreWidth{
+width:100% !important;
+max-width:100% !important;
+}
+.padded {
+padding-left: 3vw;
+padding-right: 3vw;
+}
+#TwoGridLeft {
+border-right: none;
+padding-bottom:56px;
+}
+}
+</style>
+<style type=3D"text/css">
+@import url("https://template-webfonts.monotype.com/sailThru.css");
+#Title, .colTitle, .colTitle *, .colTitle p, .colBy, strong, .colTeaserTitl=
+e {
+font-family: "HelveticaNowMTTextBold", Helvetica Neue, Helvetica, Arial, sa=
+ns-serif !important;
+}
+body {
+font-family: "HelveticaNowMTTextRegular", Helvetica Neue, Helvetica, Arial,=
+ sans-serif;
+}
+.disclaimer, .disclaimer p, .disclaimer a {
+font-family:'Helvetica Now MT Micro Regular', Arial, Helvetica, sans-serif;
+}
+</style>
+<!--[if gte mso 9]>
+<style type=3D"text/css">
+body, .textBox, .disclaimer, .disclaimer p, .disclaimer a {
+font-family: Lucida Sans, Helvetica Neue, Helvetica, Arial, sans-serif !imp=
+ortant;
+font-size:10pt;
+}=20
+.colTitle, .colTitle *, .colTitle p, strong {
+font-weight: bold !important;
+}
+li {
+text-indent:-1em;
+margin: 0 1em 0 0 !important;
+}
+.header-wrapper {
+width:100%;
+max-width: 650px;
+}
+a.menuItem {
+font-size-adjust: 14px;
+font-size: 12px;
+}
+.twoColTIB{
+padding-right:12px !important;
+}
+.twoColTIBRight{
+padding-left:13px  !important;
+}
+.button {
+font-size: 15px;
+line-height: 42px;
+padding: 0 28px;
+text-decoration: none;
+color: #FFFFFF !important;
+display: block;
+white-space: nowrap;
+border-radius: 4px;
+}
+.buttonWhite {
+font-size: 15px;
+line-height: 42px;
+padding: 15px 28px;
+color: #1B72E8 !important;
+text-decoration: none;
+display: block;
+white-space: nowrap;
+border-radius: 4px;
+}
+</style>
+<![endif]-->
+</head>
+<body style=3D"text-align:center">
+<div style=3D"display:none;font-size:1px;color:#333333;line-height:1px;max-=
+height:0px;max-width:0px;opacity:0;overflow:hidden;">Serif, Slab Serif &amp=
+; even Old Style typefaces all pair perfectly with Trade Gothic Next! Find =
+out more now...</div>
+<!--[if gte mso 9]>
+<table width=3D"760" border=3D"0" align=3D"center" cellpadding=3D"0" cellsp=
+acing=3D"0"><![endif]-->=20
+<!--[if !mso]><!-->
+<table width=3D"100%" border=3D"0" cellspacing=3D"0" cellpadding=3D"0" clas=
+s=3D"widthFix" align=3D"center">
+<!--<![endif]-->
+<tr>
+<td bgcolor=3D"#FFF"><table width=3D"100%" border=3D"0" cellspacing=3D"0" c=
+ellpadding=3D"0" class=3D"inner-wrapper widthFix" align=3D"center">
+<tr>
+<td class=3D"inner-wrapper__cell"><table width=3D"100%" border=3D"0" cellsp=
+acing=3D"0" cellpadding=3D"0" align=3D"center">
+<tr>
+<td id=3D"LogoWrapper" class=3D"bearLeft"><a href=3D"https://link.myfonts.c=
+om/click/44495200.1073103/aHR0cHM6Ly93d3cubXlmb250cy5jb20v/6646f41727cb0e38=
+ca0b8b51Be1389ec7"><img width=3D"100" src=3D"https://media.sailthru.com/6wi=
+/1k8/5/a/663e98dea49b1.png" alt=3D"MyFonts.com"></a></td>
+<td id=3D"GoWebWrapperWB" style=3D"text-align: right">
+<a href=3D"https://link.myfonts.com/view/6646f41727cb0e38ca0b8b51qhops.n00f=
+/71a0749a">View in Browser</a>  </td>
+</tr>
+</table></td>
+</tr>
+<tr>
+<td class=3D"inner-wrapper__cell" style=3D"padding-top:56px; padding-bottom=
+:2em;"><table width=3D"100%" border=3D"0" cellspacing=3D"0" cellpadding=3D"=
+0" align=3D"center" id=3D"MenuWrapper">
+<tr>
+<td width=3D"130"><a class=3D"menuItemWB" href=3D"https://link.myfonts.com/=
+click/44495200.1073103/aHR0cHM6Ly93d3cubXlmb250cy5jb20vY29sbGVjdGlvbnMvaG90=
+LW5ldy1mb250cw/6646f41727cb0e38ca0b8b51Bf6a95fb7">Hot New Fonts</a></td>
+<td width=3D"109"><a class=3D"menuItemWB" href=3D"https://link.myfonts.com/=
+click/44495200.1073103/aHR0cHM6Ly93d3cubXlmb250cy5jb20vY29sbGVjdGlvbnMvYmVz=
+dC1zZWxsZXI/6646f41727cb0e38ca0b8b51Bda4d1807">Best Sellers</a></td>
+<td width=3D"113"><a class=3D"menuItemWB" href=3D"https://link.myfonts.com/=
+click/44495200.1073103/aHR0cHM6Ly93d3cubXlmb250cy5jb20vY29sbGVjdGlvbnMvd2hh=
+dHMtbmV3Lw/6646f41727cb0e38ca0b8b51B74a4c717">What's New</a></td>
+<td width=3D"123"><a class=3D"menuItemWB" href=3D"https://link.myfonts.com/=
+click/44495200.1073103/aHR0cHM6Ly93d3cubXlmb250cy5jb20vY29sbGVjdGlvbnMvc3Bl=
+Y2lhbC1vZmZlcnM/6646f41727cb0e38ca0b8b51Bdee6bf18">Special Offers</a></td>
+<td width=3D"89"><a class=3D"menuItemWB" href=3D"https://link.myfonts.com/c=
+lick/44495200.1073103/aHR0cHM6Ly93d3cubXlmb250cy5jb20vY29sbGVjdGlvbnMvYnVuZ=
+Gxlcy8/6646f41727cb0e38ca0b8b51B4f026507">Bundles</a></td>
+<td width=3D"86"><a class=3D"menuItemWB" href=3D"https://link.myfonts.com/c=
+lick/44495200.1073103/aHR0cHM6Ly93d3cubXlmb250cy5jb20vcGFnZXMvV2hhdFRoZUZvb=
+nQv/6646f41727cb0e38ca0b8b51B28739098">WhatTheFont</a></td>
+</tr>
+</table></td>
+</tr>
+</table></td>
+</tr>
+</table>
+<!--[if gte mso 9]>
+<table width=3D"760" border=3D"0" align=3D"center" cellpadding=3D"0" cellsp=
+acing=3D"0"><![endif]-->=20
+<!--[if !mso]><!-->
+<table width=3D"100%" border=3D"0" cellspacing=3D"0" cellpadding=3D"0" clas=
+s=3D"widthFix" align=3D"center">
+<!--<![endif]-->
+<tr>
+<td><table width=3D"100%" border=3D"0" cellspacing=3D"0" cellpadding=3D"0" =
+class=3D"inner-wrapper widthFix" align=3D"center">
+<tr>
+<td style=3D"height:26px;"><img src=3D"https://media.sailthru.com/6wi/1k5/2=
+/p/6038624e39b22.png" style=3D"vertical-align:top;" width=3D"20"></td>
+</tr>
+</table></td>
+</tr>
+</table>
+<!--horizontal line-->
+<!--[if gte mso 9]>
+<table width=3D"760" border=3D"0" align=3D"center" cellpadding=3D"0" cellsp=
+acing=3D"0"><![endif]-->=20
+<!--[if !mso]><!-->
+<table width=3D"100%" border=3D"0" cellspacing=3D"0" cellpadding=3D"0" clas=
+s=3D"widthFix" align=3D"center">
+<!--<![endif]-->
+<tr>
+<td><table width=3D"100%" border=3D"0" cellspacing=3D"0" cellpadding=3D"0" =
+class=3D"inner-wrapper widthFix" align=3D"center">
+<tr>
+<td style=3D"height:26px;"><img src=3D"https://media.sailthru.com/6wi/1k5/2=
+/p/6038624e39b22.png" style=3D"vertical-align:top;" width=3D"20"></td>
+</tr>
+</table></td>
+</tr>
+</table>
+<!--[if gte mso 9]>
+<table width=3D"760" border=3D"0" align=3D"center" cellpadding=3D"0" cellsp=
+acing=3D"0"><![endif]-->
+<!--[if !mso]><!-->
+<table width=3D"100%" border=3D"0" cellspacing=3D"0" cellpadding=3D"0" clas=
+s=3D"widthFix" align=3D"center">
+<!--<![endif]-->
+<tr>
+<td>
+<table width=3D"100%" border=3D"0" cellspacing=3D"0" cellpadding=3D"0" clas=
+s=3D"inner-wrapper widthFix" align=3D"center">
+<tr>
+<td>
+<table width=3D"100%" border=3D"0" cellspacing=3D"0" cellpadding=3D"0">
+<tr>
+<td bgcolor=3D"#000000" style=3D"height:8px;"><img src=3D"https://media.sai=
+lthru.com/6wi/1k5/2/p/6038624e39b22.png" width=3D"5" height=3D"5" alt=3D"">=
+</td>
+</tr>
+<tr>
+<td style=3D"font-size: 24px; line-height:54px" class=3D"bearLeft"><strong>=
+Perfect Font Pairings: Trade Gothic Next=C2=AE</strong></td>
+</tr>
+</tbody>
+</table></td>
+</tr>
+</table>
+</td>
+</tr>
+</table>
+<!--[if gte mso 9]>
+<table width=3D"760" border=3D"0" align=3D"center" cellpadding=3D"0" cellsp=
+acing=3D"0"><![endif]-->=20
+<!--[if !mso]><!-->
+<table width=3D"100%" border=3D"0" cellspacing=3D"0" cellpadding=3D"0" clas=
+s=3D"widthFix" align=3D"center">
+<!--<![endif]-->
+<tr>
+<td><table width=3D"100%" border=3D"0" cellspacing=3D"0" cellpadding=3D"0" =
+class=3D"inner-wrapper widthFix" align=3D"center">
+<tr>
+<td style=3D"height:26px;"><img src=3D"https://media.sailthru.com/6wi/1k5/2=
+/p/6038624e39b22.png" style=3D"vertical-align:top;" width=3D"20"></td>
+</tr>
+</table></td>
+</tr>
+</table>
+<!--[if gte mso 9]>
+<table width=3D"650" border=3D"0" align=3D"center" cellpadding=3D"0" cellsp=
+acing=3D"0"><![endif]-->
+<!--[if !mso]><!-->
+<table width=3D"100%" border=3D"0" cellspacing=3D"0" cellpadding=3D"0" clas=
+s=3D"widthFix" align=3D"center">
+<!--<![endif]-->
+<tr>
+<td>
+<table width=3D"100%" border=3D"0" cellspacing=3D"0" cellpadding=3D"0" clas=
+s=3D"inner-wrapper widthFix" align=3D"center">
+<tr>
+<td class=3D"textBox bearLeft inner-wrapper__cell">
+The first Trade Gothic typefaces were released in the late 1940s, by Jackso=
+n Burke. They were condensed sans popular for =E2=80=9Ctrade=E2=80=9D work,=
+ and were just named =E2=80=9CGothic=E2=80=9D with numeric suffixes...
+</td>
+</tr>
+</table>
+</td>
+</tr>
+</table>
+<!--[if gte mso 9]>
+<table width=3D"760" border=3D"0" align=3D"center" cellpadding=3D"0" cellsp=
+acing=3D"0"><![endif]-->=20
+<!--[if !mso]><!-->
+<table width=3D"100%" border=3D"0" cellspacing=3D"0" cellpadding=3D"0" clas=
+s=3D"widthFix" align=3D"center">
+<!--<![endif]-->
+<tr>
+<td><table width=3D"100%" border=3D"0" cellspacing=3D"0" cellpadding=3D"0" =
+class=3D"inner-wrapper widthFix" align=3D"center">
+<tr>
+<td style=3D"height:56px;"><img src=3D"https://media.sailthru.com/6wi/1k5/2=
+/p/6038624e39b22.png" style=3D"vertical-align:top;" width=3D"20"></td>
+</tr>
+</table></td>
+</tr>
+</table>
+<!--[if gte mso 9]>
+<table width=3D"760" border=3D"0" align=3D"center" cellpadding=3D"0" cellsp=
+acing=3D"0"><![endif]-->
+<!--[if !mso]><!-->
+<table width=3D"100%" border=3D"0" cellspacing=3D"0" cellpadding=3D"0" clas=
+s=3D"widthFix" align=3D"center">
+<!--<![endif]-->
+<tr>
+<td>
+<table width=3D"100%" border=3D"0" cellspacing=3D"0" cellpadding=3D"0" clas=
+s=3D"widthFix" align=3D"center">
+<tr>
+<td align=3D"center">
+<a href=3D"https://link.myfonts.com/click/44495200.1073103/aHR0cHM6Ly93d3cu=
+bXlmb250cy5jb20vYS9mb250L2NvbnRlbnQvcGVyZmVjdC1mb250LXBhaXJpbmdzL3RyYWRlLWd=
+vdGhpYy1uZXh0LWZvbnQtbGlub3R5cGU/6646f41727cb0e38ca0b8b51Bf5520a2d"><!--[if=
+ gte mso 9]><img width=3D"760" height=3D"" src=3D"https://media.sailthru.co=
+m/6wi/1ka/3/4/69a88d39f2dac.png" alt=3D"" style=3D"max-width:760px;" />
+<![endif]-->=20
+<!--[if !mso]><!--><img width=3D"100%" src=3D"https://media.sailthru.com/6w=
+i/1ka/3/4/69a88d39f2dac.png" alt=3D"" style=3D"max-width:760px;"><!--<![end=
+if]--></a>
+</td>
+</tr>
+</table>
+</td>
+</tr>
+</table>
+<!--[if gte mso 9]>
+<table width=3D"760" border=3D"0" align=3D"center" cellpadding=3D"0" cellsp=
+acing=3D"0"><![endif]-->=20
+<!--[if !mso]><!-->
+<table width=3D"100%" border=3D"0" cellspacing=3D"0" cellpadding=3D"0" clas=
+s=3D"widthFix" align=3D"center">
+<!--<![endif]-->
+<tr>
+<td><table width=3D"100%" border=3D"0" cellspacing=3D"0" cellpadding=3D"0" =
+class=3D"inner-wrapper widthFix" align=3D"center">
+<tr>
+<td class=3D"inner-wrapper__cell"><table width=3D"100%" border=3D"0" cellsp=
+acing=3D"0" cellpadding=3D"0" align=3D"center">
+<tr>
+<td class=3D"bearLeft">
+<table cellpadding=3D"0" cellspacing=3D"0">
+<tr>
+<td bgcolor=3D"#1B73E8" style=3D"padding:0;border-radius:4px;" align=3D"cen=
+ter">
+<table width=3D"100%" cellpadding=3D"0" cellspacing=3D"0" style=3D"border-r=
+adius:4px;" align=3D"center">
+<tr>
+<td bgcolor=3D"#1B73E8" style=3D"mso-padding-alt:15px 28px 15px 28px; borde=
+r-radius:4px;" align=3D"center"><a href=3D"https://link.myfonts.com/click/4=
+4495200.1073103/aHR0cHM6Ly93d3cubXlmb250cy5jb20vYS9mb250L2NvbnRlbnQvcGVyZmV=
+jdC1mb250LXBhaXJpbmdzL3RyYWRlLWdvdGhpYy1uZXh0LWZvbnQtbGlub3R5cGU/6646f41727=
+cb0e38ca0b8b51Cf5520a2d" class=3D"button" style=3D"color:#FFFFFF !important=
+;" target=3D"_blank">Continue reading</a></td>
+</tr>
+</table>
+</td>
+</tr>
+</table></td>
+</tr>
+</table></td>
+</tr>
+</table></td>
+</tr>
+</table>
+<!--[if gte mso 9]>
+<table width=3D"760" border=3D"0" align=3D"center" cellpadding=3D"0" cellsp=
+acing=3D"0"><![endif]-->=20
+<!--[if !mso]><!-->
+<table width=3D"100%" border=3D"0" cellspacing=3D"0" cellpadding=3D"0" clas=
+s=3D"widthFix" align=3D"center">
+<!--<![endif]-->
+<tr>
+<td><table width=3D"100%" border=3D"0" cellspacing=3D"0" cellpadding=3D"0" =
+class=3D"inner-wrapper widthFix" align=3D"center">
+<tr>
+<td style=3D"height:78px;"><img src=3D"https://media.sailthru.com/6wi/1k5/2=
+/p/6038624e39b22.png" style=3D"vertical-align:top;" width=3D"20"></td>
+</tr>
+</table></td>
+</tr>
+</table>
+<!-- SECTION The Archives -->
+<!--[if gte mso 9]>
+<table width=3D"760" border=3D"0" align=3D"center" cellpadding=3D"0" cellsp=
+acing=3D"0"><![endif]-->
+<!--[if !mso]><!-->
+<table width=3D"100%" border=3D"0" cellspacing=3D"0" cellpadding=3D"0" clas=
+s=3D"widthFix" align=3D"center">
+<!--<![endif]-->
+<tr>
+<td>
+<table width=3D"100%" border=3D"0" cellspacing=3D"0" cellpadding=3D"0" clas=
+s=3D"inner-wrapper widthFix" align=3D"center">
+<tr>
+<td>
+<table width=3D"100%" border=3D"0" cellspacing=3D"0" cellpadding=3D"0">
+<tr>
+<td bgcolor=3D"#000000" style=3D"height:8px;"><img src=3D"https://media.sai=
+lthru.com/6wi/1k5/2/p/6038624e39b22.png" width=3D"5" height=3D"5" alt=3D"">=
+</td>
+</tr>
+<tr>
+<td style=3D"font-size: 24px; line-height:54px" class=3D"bearLeft"><strong>=
+The Archives</strong></td>
+</tr>
+</tbody>
+</table></td>
+</tr>
+</table>
+</td>
+</tr>
+</table>
+<!--[if gte mso 9]>
+<table width=3D"760" border=3D"0" align=3D"center" cellpadding=3D"0" cellsp=
+acing=3D"0"><![endif]-->=20
+<!--[if !mso]><!-->
+<table width=3D"100%" border=3D"0" cellspacing=3D"0" cellpadding=3D"0" clas=
+s=3D"widthFix" align=3D"center">
+<!--<![endif]-->
+<tr>
+<td><table width=3D"100%" border=3D"0" cellspacing=3D"0" cellpadding=3D"0" =
+class=3D"inner-wrapper widthFix" align=3D"center">
+<tr>
+<td style=3D"height:56px;"><img src=3D"https://media.sailthru.com/6wi/1k5/2=
+/p/6038624e39b22.png" style=3D"vertical-align:top;" width=3D"20"></td>
+</tr>
+</table></td>
+</tr>
+</table>
+<!--[if gte mso 9]>
+<table width=3D"650" border=3D"0" align=3D"center" cellpadding=3D"0" cellsp=
+acing=3D"0"><![endif]-->
+<!--[if !mso]><!-->
+<table width=3D"100%" border=3D"0" cellspacing=3D"0" cellpadding=3D"0" clas=
+s=3D"widthFix" align=3D"center">
+<!--<![endif]-->
+<tr>
+<td>
+<table width=3D"100%" border=3D"0" cellspacing=3D"0" cellpadding=3D"0" clas=
+s=3D"inner-wrapper widthFix" align=3D"center">
+<tr>
+<td class=3D"textBox bearLeft inner-wrapper__cell">
+<b>Font Field Guides</b><br>
+<ul><li><a href=3D"https://link.myfonts.com/click/44495200.1073103/aHR0cHM6=
+Ly93d3cubXlmb250cy5jb20vYS9mb250L2NvbnRlbnQvZm9udC1maWVsZC1ndWlkZS9nYXpwYWN=
+oby1mb250LW1vbm90eXBlLWltYWdpbmc/6646f41727cb0e38ca0b8b51B466326d0">Gazpach=
+o Font Field Guide</a>: Drawing inspiration from Windsor=E2=84=A2 and ITC S=
+ouvenir=C2=AE, the Gazpacho typeface family is approachable and friendly, w=
+ithout being saccharine. It has a charmingly quirky personality. If it were=
+ a person, it=E2=80=99d be someone you=E2=80=99d want to hang out with...</=
+li>
+<li><a href=3D"https://link.myfonts.com/click/44495200.1073103/aHR0cHM6Ly93=
+d3cubXlmb250cy5jb20vYS9mb250L2NvbnRlbnQvZm9udC1maWVsZC1ndWlkZS9nb3RoYW0tZm9=
+udC1ob2VmbGVyLWFuZC1jbw/6646f41727cb0e38ca0b8b51Beee9f850">Gotham=C2=AE Fon=
+t Field Guide</a>: Gotham=E2=80=99s unfussy directness and authority, espec=
+ially in its heavier weights, create a brawny mien, while lighter weights a=
+re elegant and stylish...</li></ul>
+</td>
+</tr>
+</table>
+</td>
+</tr>
+</table>
+<!--[if gte mso 9]>
+<table width=3D"760" border=3D"0" align=3D"center" cellpadding=3D"0" cellsp=
+acing=3D"0"><![endif]-->=20
+<!--[if !mso]><!-->
+<table width=3D"100%" border=3D"0" cellspacing=3D"0" cellpadding=3D"0" clas=
+s=3D"widthFix" align=3D"center">
+<!--<![endif]-->
+<tr>
+<td><table width=3D"100%" border=3D"0" cellspacing=3D"0" cellpadding=3D"0" =
+class=3D"inner-wrapper widthFix" align=3D"center">
+<tr>
+<td style=3D"height:56px;"><img src=3D"https://media.sailthru.com/6wi/1k5/2=
+/p/6038624e39b22.png" style=3D"vertical-align:top;" width=3D"20"></td>
+</tr>
+</table></td>
+</tr>
+</table>
+<!-- SECTION Thank you -->
+<!--[if gte mso 9]>
+<table width=3D"650" border=3D"0" align=3D"center" cellpadding=3D"0" cellsp=
+acing=3D"0"><![endif]-->
+<!--[if !mso]><!-->
+<table width=3D"100%" border=3D"0" cellspacing=3D"0" cellpadding=3D"0" clas=
+s=3D"widthFix" align=3D"center">
+<!--<![endif]-->
+<tr>
+<td>
+<table width=3D"100%" border=3D"0" cellspacing=3D"0" cellpadding=3D"0" clas=
+s=3D"inner-wrapper widthFix" align=3D"center">
+<tr>
+<td class=3D"textBox bearLeft inner-wrapper__cell">
+<em>Thanks for spending part of your day with MyFonts.com. See you next tim=
+e. =E2=80=94 MyFonts Team</em>
+</td>
+</tr>
+</table>
+</td>
+</tr>
+</table>
+<!--[if gte mso 9]>
+<table width=3D"760" border=3D"0" align=3D"center" cellpadding=3D"0" cellsp=
+acing=3D"0"><![endif]-->=20
+<!--[if !mso]><!-->
+<table width=3D"100%" border=3D"0" cellspacing=3D"0" cellpadding=3D"0" clas=
+s=3D"widthFix" align=3D"center">
+<!--<![endif]-->
+<tr>
+<td><table width=3D"100%" border=3D"0" cellspacing=3D"0" cellpadding=3D"0" =
+class=3D"inner-wrapper widthFix" align=3D"center">
+<tr>
+<td style=3D"height:56px;"><img src=3D"https://media.sailthru.com/6wi/1k5/2=
+/p/6038624e39b22.png" style=3D"vertical-align:top;" width=3D"20"></td>
+</tr>
+</table></td>
+</tr>
+</table>
+<!--[if gte mso 9]>
+<table width=3D"760" border=3D"0" align=3D"center" cellpadding=3D"0" cellsp=
+acing=3D"0" bgcolor=3D"#F7F8F9"><![endif]-->
+<!--[if !mso]><!-->
+<table width=3D"100%" border=3D"0" cellspacing=3D"0" cellpadding=3D"0" clas=
+s=3D"widthFix" align=3D"center" bgcolor=3D"#F7F8F9">
+<!--<![endif]-->
+<tr>
+<td><table width=3D"100%" border=3D"0" cellspacing=3D"0" cellpadding=3D"0" =
+class=3D"inner-wrapper widthFix" align=3D"center">
+<tr>
+<td class=3D"inner-wrapper__cell"><table width=3D"100%" border=3D"0" cellsp=
+acing=3D"0" cellpadding=3D"0" align=3D"center">
+<tr>
+<td style=3D"padding-top:30px"><table width=3D"100%" border=3D"0" cellspaci=
+ng=3D"0" cellpadding=3D"0" class=3D"centered" align=3D"center">
+<tr>
+<td width=3D"35" height=3D"100"><a href=3D"https://link.myfonts.com/click/4=
+4495200.1073103/aHR0cHM6Ly93d3cuZmFjZWJvb2suY29tL015Rm9udHMv/6646f41727cb0e=
+38ca0b8b51B5ccc8bd9" target=3D"_blank"><img src=3D"https://media.sailthru.c=
+om/6wi/1k5/3/3/603fa2af19617.png" alt=3D"" width=3D"25"></a></td>
+<td width=3D"35"><a href=3D"https://link.myfonts.com/click/44495200.1073103=
+/aHR0cHM6Ly90d2l0dGVyLmNvbS9NeUZvbnRz/6646f41727cb0e38ca0b8b51Bfc576fcd" ta=
+rget=3D"_blank"><img src=3D"https://media.sailthru.com/6wi/1k5/3/3/603fa2ba=
+673fd.png" alt=3D"" width=3D"25"></a></td>
+<td><a href=3D"https://link.myfonts.com/click/44495200.1073103/aHR0cHM6Ly93=
+d3cuaW5zdGFncmFtLmNvbS9teWZvbnRzLw/6646f41727cb0e38ca0b8b51B60147d83" targe=
+t=3D"_blank"><img src=3D"https://media.sailthru.com/6wi/1k5/3/3/603fa2c37b7=
+51.png" alt=3D"" width=3D"25"></a></td>
+</tr>
+</table></td>
+</tr>
+<tr>
+<td>
+<table width=3D"100%" border=3D"0" cellspacing=3D"0" cellpadding=3D"0">
+<tr>
+<td width=3D"160"><a href=3D"https://link.myfonts.com/click/44495200.107310=
+3/aHR0cDovL3d3dy5tb25vdHlwZS5jb20v/6646f41727cb0e38ca0b8b51B5b3af607" targe=
+t=3D"_blank"><img src=3D"https://media.sailthru.com/6wi/1k8/8/k/66c5614ea83=
+d7.png" width=3D"150" height=3D"17.61" alt=3D""></a></td>
+<td width=3D"81"><a href=3D"https://link.myfonts.com/click/44495200.1073103=
+/aHR0cHM6Ly93d3cubXlmb250cy5jb20/6646f41727cb0e38ca0b8b51B2d8bdc90" target=
+=3D"_blank"><img src=3D"https://media.sailthru.com/6wi/1k8/8/k/66c56143c51f=
+b.png" width=3D"81" height=3D"38.6" alt=3D""></a></td>
+<td>&nbsp;</td>
+</tr>
+</table>
+</td>
+</tr>
+<tr>
+<td style=3D"padding-top:1em; padding-bottom:3em;"><table width=3D"100%" bo=
+rder=3D"0" cellspacing=3D"0" cellpadding=3D"0">
+<tr>
+<td width=3D"400" class=3D"disclaimer" style=3D"max-width:380px; text-align=
+:left;"> =20
+MyFonts Inc.<br>
+600 Unicorn Park Drive<br>
+Woburn, MA 01801 USA<br>
+<br>
+The promotions featured in this email newsletter are only valid for purchas=
+es made online at MyFonts.com. MyFonts and MyFonts.com are trademarks of My=
+Fonts Inc. registered in the U.S. Patent and Trademark Office and may be re=
+gistered in certain other jurisdictions. Other technologies, font names, an=
+d brand names are used for information only and remain trademarks or regist=
+ered trademarks of their respective companies.
+<br><br>
+Gotham=C2=AE is a registered trademark of The Hoefler Type Foundry, Inc. Tr=
+ade Gothic Next=C2=AE is a trademark of Monotype GmbH registered in the U.S=
+. Patent and Trademark Office and may be registered in certain other jurisd=
+ictions.
+<br>
+<br>
+<br>
+Prices are shown in our standard currency (USD), may differ in other curren=
+cies, and may also be subject to change due to exchange rate fluctuations. =
+<br>
+<br>
+Helvetica=C2=AE Now is a trademark of Monotype Imaging Inc. registered in t=
+he U.S. Patent and Trademark Office and may be registered in certain other =
+jurisdictions. <br>
+<br>
+=C2=A92026 Monotype. All rights reserved.<br>
+<br>
+The  text in this email is set in Helvetica=C2=AE Now.<br>
+<br>
+<a href=3D"https://link.myfonts.com/oc/6646f41727cb0e38ca0b8b51qhops.n00f/9=
+72d3406">Unsubscribe</a> | <a href=3D"https://link.myfonts.com/oc/6646f4172=
+7cb0e38ca0b8b51qhops.n00f/972d3406">Preferences</a> | <a href=3D"https://li=
+nk.myfonts.com/click/44495200.1073103/aHR0cHM6Ly93d3cubXlmb250cy5jb20vbGVnY=
+Wwvd2Vic2l0ZS11c2UtcHJpdmFjeS1wb2xpY3kv/6646f41727cb0e38ca0b8b51Ba285869b">=
+Privacy Policy</a> | <a href=3D"https://link.myfonts.com/view/6646f41727cb0=
+e38ca0b8b51qhops.n00f/71a0749a">View in Browser</a> </td>
+<td><a href=3D"https://link.myfonts.com/click/44495200.1073103/aHR0cDovL215=
+Zm9udHMuY29t/6646f41727cb0e38ca0b8b51B14f785fe"><img src=3D"https://link.my=
+fonts.com/img/6646f41727cb0e38ca0b8b51qhops.n00f/3e04d9bc.gif" alt=3D"" bor=
+der=3D"0"></a></td>
+</tr>
+</table></td>
+</tr>
+</table></td>
+</tr>
+</table></td>
+</tr>
+</table>
+</body>
+</html>=
+
+------=_Part_82989444_2002048898.1773673555763--

@@ -127,6 +127,7 @@ Woodfine is a subsidiary of the same parent company that owns PointSav. This is 
 |:---|:---|:---|
 | `service-fs` | Immutable ledger — WORM-compliant filesystem | 🟡 Development |
 | `service-email` | Inbound mail processor — transport only | 🟡 Development |
+| `service-input` | F12 Commit Gateway — human-driven ingress | 🟡 Development |
 | `service-extraction` | Deterministic parser — structured and unstructured ingestion | 🟡 Development |
 | `service-slm` | AI Gateway — local model and external doorman | 🟡 Development |
 | `service-people` | Personnel ledger — flat-file state machine | 🟡 Development |

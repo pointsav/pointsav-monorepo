@@ -1,0 +1,1390 @@
+Received: from CH3PR16MB5842.namprd16.prod.outlook.com (2603:10b6:610:1b3::17)
+ by DM6PR16MB2569.namprd16.prod.outlook.com with HTTPS; Mon, 16 Mar 2026
+ 12:11:33 +0000
+Received: from SJ0PR05CA0079.namprd05.prod.outlook.com (2603:10b6:a03:332::24)
+ by CH3PR16MB5842.namprd16.prod.outlook.com (2603:10b6:610:1b3::17) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9700.24; Mon, 16 Mar
+ 2026 12:11:29 +0000
+Received: from CO1PEPF00012E60.namprd05.prod.outlook.com
+ (2603:10b6:a03:332:cafe::c3) by SJ0PR05CA0079.outlook.office365.com
+ (2603:10b6:a03:332::24) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.20.9700.25 via Frontend Transport; Mon,
+ 16 Mar 2026 12:11:29 +0000
+Authentication-Results: spf=pass (sender IP is 54.240.123.115)
+ smtp.mailfrom=dailyupdate.tldrnewsletter.com; dkim=pass (signature was
+ verified) header.d=tldrnewsletter.com;dkim=pass (signature was verified)
+ header.d=amazonses.com;dmarc=pass action=none
+ header.from=tldrnewsletter.com;compauth=pass reason=100
+Received-SPF: Pass (protection.outlook.com: domain of
+ dailyupdate.tldrnewsletter.com designates 54.240.123.115 as permitted sender)
+ receiver=protection.outlook.com; client-ip=54.240.123.115;
+ helo=a123-115.smtp-out.amazonses.com; pr=C
+Received: from a123-115.smtp-out.amazonses.com (54.240.123.115) by
+ CO1PEPF00012E60.mail.protection.outlook.com (10.167.249.69) with Microsoft
+ SMTP Server (version=TLS1_3, cipher=TLS_AES_256_GCM_SHA384) id 15.20.9700.17
+ via Frontend Transport; Mon, 16 Mar 2026 12:11:28 +0000
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
+	s=ygiuxamnxevikrd5dtfwanslhs6b24mt; d=tldrnewsletter.com;
+	t=1773663087;
+	h=From:To:Subject:List-Unsubscribe:List-Unsubscribe-Post:MIME-Version:Date:Message-ID:Content-Type;
+	bh=46LNdtvhccJ9VGs+5xGh8XRYzeMwZ/XSnnMl6eeJ0xc=;
+	b=KTFB9lBF2tNtg5aQeBvXJRgWq25K3NAaAZF7nYUT94STk5hAbvPzXCA0O8ekFVxY
+	FWbKMI2BUYGsbZTpUkEvgnhkcbdcQbR7Dik6DzldgKqPMTrQ3WfrWcv3LC7U7oLoo2I
+	Z3+W9thun+SUyowzVWe4NfVFBcJKmFGC3bxipZ04=
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
+	s=224i4yxa5dv7c2xz3womw6peuasteono; d=amazonses.com; t=1773663087;
+	h=From:To:Subject:List-Unsubscribe:List-Unsubscribe-Post:MIME-Version:Date:Message-ID:Content-Type:Feedback-ID;
+	bh=46LNdtvhccJ9VGs+5xGh8XRYzeMwZ/XSnnMl6eeJ0xc=;
+	b=dSj/k3jmOR2FDIgy/M+/6/5iqoRKApMo36nILYi8YzNVtARHkUT/DJFWV3xALRij
+	Gb4cy43GxUX2FOxGa6XvEmnJFSwpZQls1SIIi7TG6uVeeH/qffDHWY0ie9AYUOJ4bLR
+	W4HOakhDK5BfhxWD0N6ilcOyou9pyGBHvg3Cdk+w=
+From: TLDR IT <dan@tldrnewsletter.com>
+To: info@woodfine.co
+Subject: =?utf-8?Q?Nvidia=E2=80=99s?= Rack Era
+ =?utf-8?Q?=F0=9F=8F=97=EF=B8=8F=2C?= SaaS Faces Agents
+ =?utf-8?Q?=F0=9F=A4=96=2C?= Enterprise AI Hardens =?utf-8?Q?=F0=9F=94=90?=
+X-Entity-Ref-Id: 1f0c0351-8149-478f-8768-38fe19ed2fa0
+X-EmailOctopus-Parent-Id: a72564ac-2118-11f1-9ccf-2f73f070e87a
+X-EmailOctopus-Parent-Type-Id: campaign
+X-EmailOctopus-List-Id: db791bc2-386d-11ee-a768-4730dc8aabb1
+X-EmailOctopus-List-Contact-Id: 1024d97c-3657-11f0-bb9f-9fd22716c11a
+X-EmailOctopus-Started-Preparing-At: 2026-03-16T12:02:21+00:00
+X-EmailOctopus-Sent-At: 2026-03-16T12:11:27+00:00
+X-EmailOctopus-Team-Id: 66987ef2-4f4c-11e9-a3c9-06b79b628af2
+X-EmailOctopus-Version: 4
+List-Unsubscribe: <https://a.tldrnewsletter.com/unsubscribe?ep=1&l=db791bc2-386d-11ee-a768-4730dc8aabb1&lc=1024d97c-3657-11f0-bb9f-9fd22716c11a&p=a72564ac-2118-11f1-9ccf-2f73f070e87a&pt=campaign&pv=4&spa=1773662541&t=1773663087&s=87463de1707056b5b3cab3280eb3b9ec1c6d5c0ab03b62d75c808a5aedbd5d6d>
+List-Unsubscribe-Post: List-Unsubscribe=One-Click
+X-EmailOctopus-Ses-Configuration-Set-Name: emailoctopus-a9f7b12f74f3c968d9408897fb35539c
+Date: Mon, 16 Mar 2026 12:11:27 +0000
+Message-ID: <0100019cf68eeb9d-355bc27e-4b4f-4e57-afa5-e916403af2b1-000000@email.amazonses.com>
+Content-Type: multipart/alternative; boundary=HxfZNdID
+Feedback-ID: ::1.us-east-1.Dj5/7DYmgk+n1sSGGXSQSLIthSjNQ0MGtV5Dro1Tr8U=:AmazonSES
+X-SES-Outgoing: 2026.03.16-54.240.123.115
+Return-Path: 0100019cf68eeb9d-355bc27e-4b4f-4e57-afa5-e916403af2b1-000000@dailyupdate.tldrnewsletter.com
+X-MS-Exchange-Organization-ExpirationStartTime: 16 Mar 2026 12:11:28.9685
+ (UTC)
+X-MS-Exchange-Organization-ExpirationStartTimeReason: OriginalSubmit
+X-MS-Exchange-Organization-ExpirationInterval: 1:00:00:00.0000000
+X-MS-Exchange-Organization-ExpirationIntervalReason: OriginalSubmit
+X-MS-Exchange-Organization-Network-Message-Id: 430ffae9-b449-4572-a15a-08de83552766
+X-EOPAttributedMessage: 0
+X-EOPTenantAttributedMessage: ce7cb31c-acf7-4351-b0fe-c89cda16c4ab:0
+X-MS-Exchange-Organization-MessageDirectionality: Incoming
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: CO1PEPF00012E60:EE_|CH3PR16MB5842:EE_|DM6PR16MB2569:EE_
+X-MS-Exchange-Organization-AuthSource: CO1PEPF00012E60.namprd05.prod.outlook.com
+X-MS-Exchange-Organization-AuthAs: Anonymous
+X-MS-Office365-Filtering-Correlation-Id: 430ffae9-b449-4572-a15a-08de83552766
+X-MS-Exchange-Organization-SCL: 1
+X-Microsoft-Antispam: BCL:5;ARA:13230040|704162211799003|7049299003|13102899012|6062899009|13012899012|5082899009|3109299003|12012899012|4022899009|7149299003|69100299015|1032899013|32142699015|3092899012|5062899012|3072899012|4092899012|2092899012|21082099003|57112099003|16102099003|18002099003|19002099003|5052999003|13003099007|2066899003|4076899003|8096899003;
+X-Forefront-Antispam-Report: CIP:54.240.123.115;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:a123-115.smtp-out.amazonses.com;PTR:a123-115.smtp-out.amazonses.com;CAT:NONE;SFS:(13230040)(704162211799003)(7049299003)(13102899012)(6062899009)(13012899012)(5082899009)(3109299003)(12012899012)(4022899009)(7149299003)(69100299015)(1032899013)(32142699015)(3092899012)(5062899012)(3072899012)(4092899012)(2092899012)(21082099003)(57112099003)(16102099003)(18002099003)(19002099003)(5052999003)(13003099007)(2066899003)(4076899003)(8096899003);DIR:INB;
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 16 Mar 2026 12:11:28.5223
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 430ffae9-b449-4572-a15a-08de83552766
+X-MS-Exchange-CrossTenant-Id: ce7cb31c-acf7-4351-b0fe-c89cda16c4ab
+X-MS-Exchange-CrossTenant-AuthSource: CO1PEPF00012E60.namprd05.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: Internet
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH3PR16MB5842
+X-MS-Exchange-Transport-EndToEndLatency: 00:00:04.5946817
+X-MS-Exchange-Processed-By-BccFoldering: 15.20.9700.017
+X-Microsoft-Antispam-Mailbox-Delivery:
+	ucf:0;jmr:0;auth:0;dest:I;ENG:(910005)(944490095)(944506478)(944626604)(920097)(930201)(20251009189)(140003);
+X-Microsoft-Antispam-Message-Info:
+	=?utf-8?B?bjJrVWRrbjF0VXNzeFF4cTNOVUhRcU5KQ0xmNDB4U091SEsvSWhLOC9yQWF4?=
+ =?utf-8?B?NzJoRFp2UE5XRXBMRTVMejdORWVUaGZFZU4zdEtRa3ZUaExGUjF1Wm15SFRt?=
+ =?utf-8?B?UlVXaGpYL01iblJIekRFTjY2UzRJUVZEMUxYS1ZCREgwYmNhc082OWE1NjhO?=
+ =?utf-8?B?MWRuQTV2TmJyczNSSW5BdXJlVjZ1OUNLYTEzTXBGclRZNGViODJpbFd6ajlj?=
+ =?utf-8?B?ZmdPUUlRcmFCN3ZVbExXbVc4ZytkOHlWTGY0YWNTWnhuR1ZtOFZMRkNNRE1I?=
+ =?utf-8?B?enE5MThmdXVNSkxicytDSDdaTVZjcUkwTDJmV3V5czhuR3czLzg4Y3l2R3hN?=
+ =?utf-8?B?aWxvTnh6R21MMk5VTXJTb1NhQ0tUY3pOZUlaUjlQbkh1eGQ5Y1RTdjZ4dk40?=
+ =?utf-8?B?MHBjYXg5UFlNT0o1cUV0Y1FDd0pIVndnQy9LdGZqUEtmL2dvbzFDZmhVSExt?=
+ =?utf-8?B?K2psbzBETnVQWEtSYkRsaVlQUXROTFpqQTZ6VnU4alFOcGFEdlB0RVMydGhZ?=
+ =?utf-8?B?VVVIWENqM2s4N2w4TVY2WXVJYURCK2ZvZXJrQTRsWkpXWWtKWDRINzdWWDJa?=
+ =?utf-8?B?cFhwRW50eHowM3pUOXpLNFRsMmNpcGpZVWVEQXZjQnhoM3Y3THhiVm1sWkJU?=
+ =?utf-8?B?Qng0Q2orZGZuZTFTdWFDT2VuT0Q3T3RzMWszVnBhWHk0dS8zUEV6UTNxK0RB?=
+ =?utf-8?B?TThydDkrVXYvT3M4bUF4YTMrTE5wZ0ZvQVUrallTQjB3Z2oxT3NBbjYvdTAx?=
+ =?utf-8?B?NitoTFBpTWxoOU5BdXlscWZrWjFuSjR0WEhIYUpMSjgxV3ZLL20weGxJY1JJ?=
+ =?utf-8?B?UzA0enhQdXorNmF1dDR4TWRiNmhNTHpuUitTNm8rZG9PQVd4TmJvVHYvOEp4?=
+ =?utf-8?B?enNFUFdlMWtQbWFFKzhUREIrRW9SREdaN0VycjBPVDZObjlUcml4V1FBTTFt?=
+ =?utf-8?B?MUl4dldINXpScUlkZ2RGeVlRWW5MZnkvQkFvQjU0QUhyeHdHc1NISkYzMGFK?=
+ =?utf-8?B?UXZraTJ4SmNBc1VPbnV3bjNLbWRyTXVkZi9OMjZRcWpUWHBGdzc1V2xqMmU0?=
+ =?utf-8?B?MXhtZ2d1b2crWVFrY05LQVZsbzdqOHAxalRSUlZOQ2hBVS9LMlFCYzlQNkhk?=
+ =?utf-8?B?OFhrcVplVDY3OXhKN2VlR0ZDZXY1M2FNRm9KUjNVVFRzL2J1K1BuSnBNSHAw?=
+ =?utf-8?B?S1NibHdyT1NqUjJ0LzZTeUc4MGtzVmdrUm1MTHpoajVwT3dwdjAyM1dweWc1?=
+ =?utf-8?B?YWtXWitJbHRuK0RrbmtXZ1FsWVEweXVQSmQzdHNrLzRlVGhUaVpXUW55WDdQ?=
+ =?utf-8?B?OHdNNzNkL3B2U1lDd0Jqa2lLaXk2RERqekVnRXdmVXgyZi9uTDArUDRMR3kw?=
+ =?utf-8?B?TjRtZ3d4elA5TFJvMXQxZENOZDNaYm5zb21yUElxL1UyOGN1UTN0YStSZnNY?=
+ =?utf-8?B?dE1PRmxsSHdwU21wZ1JzR3J5SHNlSFRUNGxDR0FCVkFRSXFxdXpncEtjVDBF?=
+ =?utf-8?B?Qytpa0NrREF3KzZQbnJxL2RoOEp5clNRUG82a1BUY2VLWVRrQURGRjFtekhV?=
+ =?utf-8?B?Sy9wa1VyNEp5VXMyVnYzT2F2S2loWnVOM09qV3dLQVVHVld6MFZ5WWo2cHJO?=
+ =?utf-8?B?UXhHRjMxVjkwbE9Bdy9pa252Y3MzZUlnQjRxN01PcDR1aDRhSGg1V1VGVWVV?=
+ =?utf-8?B?cFhnMnltVUo5RjJCOTFwOGVNTXFITmdqWnEvVmdkTlB6d3E2SE5ydzAyb2Vl?=
+ =?utf-8?B?aE1TTFM1TWMxOEdFd1Q5eEhFV1Y0MGhLbW9DZGtQZHlIdVV3ZDBEL2RhcWtS?=
+ =?utf-8?B?ZzBPOWhJZXcwUFltL3o1NVg5cERyaWFFd2FtTit5dHEwVlJldldybWN5VG8z?=
+ =?utf-8?B?c2JWNkJ6ZWZzVXJMQnJPam5Ib1R5MTNHL1VoOFRVL0NhQy9xRjBzMCtiSGVl?=
+ =?utf-8?B?TzRCMDlRYzlaS1N2RmhVcFMxZUlUVVhoam4yV3V6aHNDelcyU3FlekJKWEJ5?=
+ =?utf-8?B?OXlWa2hNTnM2UzVYQ0wwZXliUjV3UEovMWxLZzV0V1lPYkoyenNWYnV6Z0Fm?=
+ =?utf-8?B?N1ZtOXAzUFAzK3ArTEVLVVVaVW9vSmpnUDNqR2lJU1l5aW1MMm9RTk54cjJQ?=
+ =?utf-8?B?a3VwSks2RkJuZ1VPN2orQ2VNWUdwTkRHbktrU3Jtd05nQms5WmJuaEJGbzFH?=
+ =?utf-8?B?Tkw1WklEaE9LbEFHL0VSQWlCNytrWW1iK285bnVIdDRENkdqRmdNRDBQY0h3?=
+ =?utf-8?B?Z0tEbkZnaXBRbWJpSlUrb1N2YVdFaEdCVm5hVHl2cW9BQTBGK3g2dnF6Mk9v?=
+ =?utf-8?B?M01nTUJvaVNOOWZVMFZIY3FDbzFSM1M4VmJRc2VPSTJ1Nmk3U3c2eDd4UjRL?=
+ =?utf-8?B?OU5yWG1RSGFqbFBybVplak9BQzFSd1FHeFh0cXhBR1FKbE4vYk81dEwwcThM?=
+ =?utf-8?B?SUp3OHBnWkhpNy92MFdJUkJnbVhrMXdmKzBkSWY3ZkhmcnhqVDVlVzZHcnpW?=
+ =?utf-8?B?VmVLM2p1NE0rRWZPMUhIUWtaZ0RpRndsMDlORzNyRGxObkdnTXpUSWg3SXkw?=
+ =?utf-8?B?bmRrVDRDbnFIbXQrNnhyR2xXYUtacVUvZWpuV293QXhETHBNYlByYVFXUTNR?=
+ =?utf-8?B?RUpKTnVwaXZvbGJrVWxKZ0hjMmNrbElmNEQ5bzcyWmFyM2FrbWdSOXhiZGdF?=
+ =?utf-8?B?akVmaVExOUFrckNqa2RtVjIvY09SVDVRTzB1aUMzeHBlNTJmZFAxREE4bXF1?=
+ =?utf-8?B?dVh5ZytHd0ZEdTBQTjNOL3BqVnZyOFJKSTV0b0I0eDM4eVRkQ3h3U2E2d2Zq?=
+ =?utf-8?B?SnRwU0t5STZOblZlaFlVRWdPOHJuN213aWd1eXY5SkViVWhOQnZiYkNRSHM0?=
+ =?utf-8?B?M2pwRGVsdzU2bU4xYUJ2ZmdRVTFzdUp5WTlsbjh4N2lDQUo4bG9XNytjdDJD?=
+ =?utf-8?B?Wm1ON2lyblhNK2VISVZScjBZUGtScWR4aFMxS0NkUm93OVQzUyswNFBaRFgz?=
+ =?utf-8?B?ZmNNZGJmWU5QdjIrN0cwRisxNGdhOG85VHZ3UXVEYnBFbDRhSjlRV21PLytU?=
+ =?utf-8?B?ZHVtbm1QV243a29pMlVMNUJnZzQ3Zkd5MHZsblc5YmhLcnNkQTI2UlBXZHUz?=
+ =?utf-8?B?Y1Qwb3g0WjFHWE1JSTFuZDVOV243Qk1BbEtnYWYxZEFKT0x3anBDUklwZm5M?=
+ =?utf-8?B?NVo1eUdBdmJLMjVGa1J2Mkp6QjZzdmdOZ004d3FNZ1UwK09QNndWbW1IN3la?=
+ =?utf-8?B?WWhHMk9VbFJVMjhSUGxVekZZNnozQ29QOG04clo4elBpMUZ0aDNyOUhBZnRi?=
+ =?utf-8?B?SFZ2WWVjV1czUDZPY25xV2J2NUFzTEVpZU5QZWNOaXpmTlZzeDRaRUhSL1l2?=
+ =?utf-8?B?Mi81UjVsWHRmbExFN3owaTV3MHFMRWtUTWFzeml2cnRFQWVIZ1RxK0pWaXdZ?=
+ =?utf-8?B?eGhEejhKeVNhTWxPanNlRXljU0JNT3lqZTRkUXN5SW5rcTI1SlBiZXU2SUtm?=
+ =?utf-8?B?bGRoQnFIODdqZnkvbE1mSUdaNmszMnJTeGlWdUdHUXNZSHRoZnRFNHlDSDZ3?=
+ =?utf-8?B?cWpFeGpJY3hZdG1iTWpocXlsZ1VSRkFhanZyVUhscW9pdDhUajh6akI0Sklj?=
+ =?utf-8?B?UVlQcndwcm5hekZESUdUVFRGMFo5ZzdBTkRnSXoyTU1wS3FDM25hc3VibzVs?=
+ =?utf-8?B?YllicXpWUWpWUnpnTmJLelNvaGg2elljZVJqYTNLOUVEbnVaYXlEeFNyWjla?=
+ =?utf-8?B?dDZKSzFrVTBFRXUxK1ZxY2ZLV3lURUpXVjc4MjBYU0dHYVJ0UngxdGxucEdh?=
+ =?utf-8?B?ek5kS25wbHpEMGpub21hL2JwZUpnU1pEQXV6TUdUMnRKaFl6TWtWUUhQOTZS?=
+ =?utf-8?B?Y2k4MTBGNG8rUkEyS0llTUtBVlVwaGRCNS83Nk5KclZrRVc0Q1hSSjBGUkVF?=
+ =?utf-8?B?TUFRMDNhdFcyMENSTURoL3NRYWdtMzBFdzJBaWNjb0NGNkxmRFh1ZjZCQm9B?=
+ =?utf-8?B?cUQ0V1RKUG5PY2VtY28yTWdld1N0Rm56a3FJWVFVWWV5OFVYajNtTkhKU05h?=
+ =?utf-8?Q?VXmjk1/4zCIOlQW4s=3D?=
+MIME-Version: 1.0
+
+--HxfZNdID
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+Ahead of GTC, the signal for enterprise IT is clear: the next phase of
+AI=
+ is about inference speed, rack density, cooling, and operational
+control=
+=C2=A0=E2=80=8C=C2=A0=E2=80=8C=C2=A0=E2=80=8C=C2=A0=E2=80=8C=C2=A0=E2=80=
+=8C=C2=A0=E2=80=8C=C2=A0=E2=80=8C=C2=A0=E2=80=8C=C2=A0=E2=80=8C=C2=A0=
+=E2=80=8C=C2=A0=E2=80=8C=C2=A0=E2=80=8C=C2=A0=E2=80=8C=C2=A0=E2=80=8C=C2=
+=A0=E2=80=8C=C2=A0=E2=80=8C=C2=A0=E2=80=8C=C2=A0=E2=80=8C=C2=A0=E2=80=8C=
+=C2=A0=E2=80=8C=C2=A0=E2=80=8C=C2=A0=E2=80=8C=C2=A0=E2=80=8C=C2=A0=E2=80=
+=8C=C2=A0=E2=80=8C=C2=A0=E2=80=8C=C2=A0=C2=A0=E2=80=8C=C2=A0=E2=80=8C=C2=
+=A0=E2=80=8C=C2=A0=E2=80=8C=C2=A0=E2=80=8C=C2=A0=E2=80=8C=C2=A0=E2=80=8C=
+=C2=A0=E2=80=8C=C2=A0=E2=80=8C=C2=A0=E2=80=8C=C2=A0=E2=80=8C=C2=A0=E2=80=
+=8C=C2=A0=E2=80=8C=C2=A0=E2=80=8C=C2=A0=E2=80=8C=C2=A0=E2=80=8C=C2=A0=
+=E2=80=8C=C2=A0=E2=80=8C=C2=A0=E2=80=8C=C2=A0=E2=80=8C=C2=A0=E2=80=8C=C2=
+=A0=E2=80=8C=C2=A0=E2=80=8C=C2=A0=E2=80=8C=C2=A0=E2=80=8C=C2=A0=E2=80=8C=
+=C2=A0
+
+
+ Sign Up [1] |Advertise [2]|View Online [3]=20
+
+=09=09TLDR=
+=20
+
+=09=09TOGETHER WITH [Airia] [4]
+
+TLDR IT 2026-03-16
+
+ EVERY =
+MINUTE, A NEW AI AGENT IS BORN SOMEWHERE IN YOUR ENTERPRISE.
+AIRIA GIVES =
+YOU CONTROL (SPONSOR) [4]=20
+
+ Teams are building with Copilot, experimen=
+ting in Bedrock, and
+spinning up agents in Salesforce, n8n, and locally. =
+CIOs can't keep
+up, and chaos inevitably ensues.
+
+Aria [4] unifies AI=
+ orchestration, security, and governance into a
+single control plane so y=
+ou can:
+
+ =09* Discover every AI agent [4] (sanctioned or shadow)
+ =
+=09* Enforce guardrails at runtime
+ =09* Route and monitor models across =
+vendors
+ =09* Generate audit-ready logs automatically
+ =09* Scale AI wi=
+thout increasing risk
+
+Don't slow AI down to stay safe.
+
+Make it sa=
+fe to scale.
+
+=F0=9F=91=89 See how Airia brings AI back under control [=
+4]
+
+=F0=9F=9A=80=20
+
+NEWS & TRENDS
+
+ NVIDIA GTC 2026 PREVIEW: AI =
+INFRA GETS REAL (3 MINUTE READ) [5]=20
+
+ Ahead of GTC, the signal for ent=
+erprise IT is clear: the next phase
+of AI is about inference speed, rack =
+density, cooling, and operational
+control, not just bigger models. Nvidia=
+ is expected to talk up
+Groq-powered inference, Rubin GPUs, Vera CPUs, ag=
+ent frameworks, and
+robotics, all of which matter to CIOs building real A=
+I platforms
+inside the enterprise.=20
+
+ ADOBE REPORTS $6.4 BILLION Q1 R=
+EVENUE AND CEO'S PLANNED DEPARTURE (2
+MINUTE READ) [6]=20
+
+ Adobe excee=
+ded Q1 expectations with $6.4 billion in revenue, a 12%
+year-over-year in=
+crease. While forecasting Q2 revenue up to $6.48
+billion, the company ann=
+ounced longtime CEO Shantanu Narayen will step
+down. The transition follo=
+ws strong financial performance and adjusted
+EPS exceeding analyst estima=
+tes.=20
+
+=F0=9F=A7=A0=20
+
+ANALYSIS & OPINIONS
+
+ THE SAAS EXTINCTION=
+ TEST (5 MINUTE READ) [7]=20
+
+ AI coding agents lower software build cost=
+s, yet incumbents like
+Salesforce remain protected by data gravity and ri=
+sk aversion. While
+pure workflow tools like PagerDuty face disruption, sy=
+stems of record
+survive because the operational complexity of security an=
+d
+infrastructure still outweighs the ease of automated prototyping.=20
+=
+
+ FIXING AI FAILURE: THREE CHANGES ENTERPRISES SHOULD MAKE NOW (4
+MINUT=
+E READ) [8]=20
+
+ As AI project failure rates climb, this piece makes a us=
+eful point
+for enterprise IT leaders: the biggest blockers are often
+or=
+ganizational, not technical. The takeaway is that improving AI
+outcomes m=
+ay depend less on model tuning and more on operating model,
+ownership, an=
+d culture.=20
+
+ B2B SYSTEMS OF RECORD MUST CAPTURE AI AGENT SPEND TO AVOI=
+D STAGNATION
+(5 MINUTE READ) [9]=20
+
+ B2B systems of record face stagna=
+tion as incremental budgets shift to
+AI agents. While gross retention rem=
+ains high, companies like
+Salesforce and ServiceNow are building native A=
+I layers to secure
+130%+ net revenue retention. Failing to own the agent =
+layer risks
+commoditization into low-growth infrastructure.=20
+
+=
+=F0=9F=A4=9D=20
+
+LAUNCHES & PARTNERSHIPS
+
+ GOOGLE INTEGRATES GEMINI A=
+I INTO WORKSPACE FOR AUTOMATED DOCUMENT AND
+SPREADSHEET GENERATION (4 MIN=
+UTE READ) [10]=20
+
+ Google updated Workspace with Gemini AI features for =
+Docs, Sheets,
+Slides, and Drive. Business subscribers can now use natural=
+ language
+to generate formatted drafts and optimize spreadsheets with 70%=
+
+accuracy. The tools synthesize data across Gmail and Drive to
+accelera=
+te enterprise productivity while maintaining existing security
+protocols.=
+=20
+
+ ONYX SECURITY LAUNCHES WITH $40 MILLION IN FUNDING (2 MINUTE READ)=
+
+[11]=20
+
+ Onyx Security launched with $40M in funding to build a contr=
+ol plane
+for governing autonomous AI agents inside the enterprise. For CI=
+Os
+building an AI platforms function, this is high-signal: the market is=
+
+starting to treat agent oversight, posture, and control as a distinct
+=
+enterprise problem, not just an extension of SaaS or security tooling.
+=
+
+
+=F0=9F=8E=81=20
+
+MISCELLANEOUS
+
+ WHAT'S THE BIGGEST BARRIER TO =
+AI SUCCESS? (5 MINUTE READ) [12]=20
+
+ Enterprise AI faces hurdles, includ=
+ing a lack of formal business
+cases and restricted access to core data. S=
+unk infrastructure costs
+and organizational resistance prevent AI from re=
+placing core software.
+Success requires treating AI as a component to aug=
+ment workflows
+rather than a total replacement.=20
+
+ BRIDGING THE ENTER=
+PRISE AI CONTEXT GAP USING INTERNAL KNOWLEDGE
+LAYERS AND RAG (7 MINUTE RE=
+AD) [13]=20
+
+ Foundation models lack institutional knowledge, causing
+h=
+allucinations in enterprise settings. Integrating Stack Overflow
+Internal=
+ with OpenAI via RAG allows companies like Uber to provide
+human-validate=
+d, traceable answers. This context layer ensures AI
+accuracy and producti=
+on-readiness by grounding responses in verified
+internal documentation an=
+d architectural history.=20
+
+=E2=9A=A1=20
+
+QUICK LINKS
+
+ SOLVING RA=
+G APPLICABILITY ISSUES WITH META-KNOWLEDGE MANIFESTS AND
+KNOWLEDGE BASE P=
+ARTITIONING (8 MINUTE READ) [14]=20
+
+ Mature RAG systems often fail by re=
+trieving relevant but inapplicable
+data.=20
+
+ META COULD LAYOFF 20% OF =
+ITS STAFF AND REPLACE MANY OF THEM WITH AI
+WORKERS (1 MINUTE READ) [15] =
+
+
+ Meta is reportedly considering deep layoffs as it ramps AI
+infrast=
+ructure investment, underscoring how AI spending is beginning
+to affect o=
+rg design as much as tooling.=20
+
+ THE NEW STACK: BEGINNERS GUIDE TO VIBE=
+ CODING (5 MINUTE READ) [16]=20
+
+ Vibe coding is becoming real enough to =
+need a beginner's guide.=20
+
+Want to advertise in TLDR? =F0=9F=93=B0
+=
+
+ If your company is interested in reaching an audience of IT
+professio=
+nals and decision makers, you may want to ADVERTISE WITH US
+[17].=20
+
+W=
+ant to work at TLDR? =F0=9F=92=BC
+
+ APPLY HERE [18], CREATE YOUR OWN RO=
+LE [19] or send a friend's resume
+to jobs@tldr.tech and get $1k if we hir=
+e them! TLDR is one of INC.'S
+BEST BOOTSTRAPPED BUSINESSES [20] of 2025. =
+
+
+ If you have any comments or feedback, just respond to this email! =
+
+
+Thanks for reading,=20
+Siddhi Bansal [21], Tongchen Yang [22], & Rush=
+ Deshpande [23]=20
+
+ Manage your subscriptions [24] to our other newslett=
+ers on tech,
+startups, and programming. Or if TLDR IT isn't for you, plea=
+se
+unsubscribe [25].=20
+
+=20
+
+Links:
+------
+[1] https://tldr.tech=
+/it?utm_source=3Dtldrit
+[2] https://advertise.tldr.tech/?utm_source=3Dtld=
+rit&utm_medium=3Dnewsletter&utm_campaign=3Dadvertisetopnav
+[3] https://a.=
+tldrnewsletter.com/web-version?ep=3D1&lc=3D1024d97c-3657-11f0-bb9f-9fd22716=
+c11a&p=3Da72564ac-2118-11f1-9ccf-2f73f070e87a&pt=3Dcampaign&t=3D1773663087&=
+s=3Ddbad6eaa721e644483610c8471078c1b24b4c66ceade74dfb9e0e83869363bc9
+[4] =
+https://airia.com/request-demo/?utm_source=3Dtldr&utm_medium=3Dnewsletter&u=
+tm_campaign=3Dq1demo
+[5] https://www.theregister.com/2026/03/13/nvidia_gt=
+c_2026_preview_tobias_mann_register/?utm_source=3Dtldrit
+[6] https://link=
+s.tldrnewsletter.com/W9XeMj
+[7] https://frontierai.substack.com/p/the-saa=
+s-extinction-test?utm_source=3Dtldrit
+[8] https://venturebeat.com/technol=
+ogy/fixing-ai-failure-three-changes-enterprises-should-make-now?utm_source=
+=3Dtldrit
+[9] https://www.saastr.com/being-a-system-of-record-wont-save-y=
+ou-itll-just-make-your-decline-more-comfortable/?utm_source=3Dtldrit
+[10]=
+ https://www.itpro.com/technology/artificial-intelligence/google-workspace-=
+just-got-a-huge-gemini-update-heres-what-to-expect-with-new-ai-features-in-=
+docs-slides-sheets-and-drive?utm_source=3Dtldrit
+[11] https://links.tldrn=
+ewsletter.com/Ydzavs
+[12] https://www.networkworld.com/article/4144366/wh=
+ats-the-biggest-barrier-to-ai-success.html?utm_source=3Dtldrit
+[13] https=
+://stackoverflow.blog/2026/03/12/enterprise-ai-needs-more-than-foundation-m=
+odels/?utm_source=3Dtldrit
+[14] https://www.pinecone.io/learn/series/beyo=
+nd-retrieval/knowledge-needs-meta-knowledge/?utm_source=3Dtldrit
+[15] htt=
+ps://siliconangle.com/2026/03/15/report-meta-layoff-20-staff-replace-many-a=
+i-workers/?utm_source=3Dtldrit
+[16] https://thenewstack.io/beginners-guid=
+e-to-vibe-coding/?utm_source=3Dtldrit
+[17] https://advertise.tldr.tech/?u=
+tm_source=3Dtldrit&utm_medium=3Dnewsletter&utm_campaign=3Dadvertisecta
+[1=
+8] https://jobs.ashbyhq.com/tldr.tech
+[19] https://jobs.ashbyhq.com/tldr.=
+tech/c227b917-a6a4-40ce-8950-d3e165357871
+[20] https://www.linkedin.com/f=
+eed/update/urn:li:activity:7401699691039830016/
+[21] https://www.linkedin=
+.com/in/siddhibansal/
+[22] https://www.linkedin.com/in/tongchen-yang-8771=
+16216/
+[23] https://www.linkedin.com/in/rushdesh/
+[24] https://tldr.tec=
+h/it/manage?email=3Dinfo%40woodfine.co
+[25] https://a.tldrnewsletter.com/=
+unsubscribe?ep=3D1&l=3Ddb791bc2-386d-11ee-a768-4730dc8aabb1&lc=3D1024d97c-3=
+657-11f0-bb9f-9fd22716c11a&p=3Da72564ac-2118-11f1-9ccf-2f73f070e87a&pt=3Dca=
+mpaign&pv=3D4&spa=3D1773662541&t=3D1773663087&s=3D87463de1707056b5b3cab3280=
+eb3b9ec1c6d5c0ab03b62d75c808a5aedbd5d6d
+--HxfZNdID
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+<!DOCTYPE html><html lang=3D"en"><head>
+<meta http-equiv=3D"Content-Type" content=3D"text/html; charset=3Dutf-8"><m=
+eta name=3D"viewport" content=3D"width=3Ddevice-width"><meta name=3D"x-appl=
+e-disable-message-reformatting"><title>TLDR IT</title><meta name=3D"color-s=
+cheme" content=3D"light dark"><meta name=3D"supported-color-schemes" conten=
+t=3D"light dark"><style type=3D"text/css">
+			:root {
+				color-scheme: light dark; supported-color-schemes: light dark;
+			}
+		=09
+			*,
+			*:after,
+			*:before {
+				-webkit-box-sizing: border-box; -moz-box-sizing: border-box; box-sizing=
+: border-box;
+			}
+		=09
+			* {
+				-ms-text-size-adjust: 100%; -webkit-text-size-adjust: 100%;
+			}
+		=09
+			html,
+			body,
+			.document {
+				width: 100% !important; height: 100% !important; margin: 0; padding: 0;
+			}
+		=09
+			body {
+				-webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale=
+; text-rendering: optimizeLegibility;
+			}
+		=09
+			div[style*=3D"margin: 16px 0"] {
+				margin: 0 !important;
+			}
+		=09
+			table,
+			td {
+				mso-table-lspace: 0pt; mso-table-rspace: 0pt;
+			}
+		=09
+			table {
+				border-spacing: 0; border-collapse: collapse; table-layout: fixed; marg=
+in: 0 auto;
+			}
+		=09
+			img {
+				-ms-interpolation-mode: bicubic; max-width: 100%; border: 0;
+			}
+		=09
+			*[x-apple-data-detectors] {
+				color: inherit !important; text-decoration: none !important;
+			}
+		=09
+			.x-gmail-data-detectors,
+			.x-gmail-data-detectors *,
+			.aBn {
+				border-bottom: 0 !important; cursor: default !important;
+			}
+		=09
+			.btn {
+				-webkit-transition: all 200ms ease; transition: all 200ms ease;
+			}
+		=09
+			.btn:hover {
+				background-color: #f67575; border-color: #f67575;
+			}
+		=09
+			* {
+				font-family: Arial, Helvetica, sans-serif; font-size: 18px;
+			}
+		=09
+			@media screen and (max-width: 600px) {
+				.container {
+					width: 100%; margin: auto;
+				}
+				.stack {
+					display: block!important; width: 100%!important; max-width: 100%!impor=
+tant;
+				}
+				.btn {
+					display: block; width: 100%; text-align: center;
+				}
+			}
+		=09
+			body,
+			p,
+			td,
+			tr,
+			.body,
+			table,
+			h1,
+			h2,
+			h3,
+			h4,
+			h5,
+			h6,
+			div,
+			span {
+				background-color: #FEFEFE !important; color: #010101 !important;
+			}
+		=09
+			@media (prefers-color-scheme: dark) {
+				body,
+				p,
+				td,
+				tr,
+				.body,
+				table,
+				h1,
+				h2,
+				h3,
+				h4,
+				h5,
+				h6,
+				div,
+				span {
+					background-color: #27292D !important; color: #FEFEFE !important;
+				}
+			}
+		=09
+			a {
+				color: inherit !important; text-decoration: underline !important;
+			}
+
+		</style><!--[if mso | ie]>
+		<style type=3D"text/css">
+			a {
+				background-color: #FEFEFE !important; color: #010101 !important;
+			}
+			@media (prefers-color-scheme: dark) {
+				a {
+					background-color: #27292D !important; color: #FEFEFE !important;
+				}
+			}
+	 </style>
+			<![endif]--></head><body class=3D"">
+
+
+
+<div style=3D"display: none; max-height: 0px; overflow: hidden;">Ahead of G=
+TC, the signal for enterprise IT is clear: the next phase of AI is about in=
+ference speed, rack density, cooling, and operational control&nbsp;=E2=80=
+=8C&nbsp;=E2=80=8C&nbsp;=E2=80=8C&nbsp;=E2=80=8C&nbsp;=E2=80=8C&nbsp;=E2=80=
+=8C&nbsp;=E2=80=8C&nbsp;=E2=80=8C&nbsp;=E2=80=8C&nbsp;=E2=80=8C&nbsp;=E2=80=
+=8C&nbsp;=E2=80=8C&nbsp;=E2=80=8C&nbsp;=E2=80=8C&nbsp;=E2=80=8C&nbsp;=E2=80=
+=8C&nbsp;=E2=80=8C&nbsp;=E2=80=8C&nbsp;=E2=80=8C&nbsp;=E2=80=8C&nbsp;=E2=80=
+=8C&nbsp;=E2=80=8C&nbsp;=E2=80=8C&nbsp;=E2=80=8C&nbsp;=E2=80=8C&nbsp;=E2=80=
+=8C&nbsp;&nbsp;=E2=80=8C&nbsp;=E2=80=8C&nbsp;=E2=80=8C&nbsp;=E2=80=8C&nbsp;=
+=E2=80=8C&nbsp;=E2=80=8C&nbsp;=E2=80=8C&nbsp;=E2=80=8C&nbsp;=E2=80=8C&nbsp;=
+=E2=80=8C&nbsp;=E2=80=8C&nbsp;=E2=80=8C&nbsp;=E2=80=8C&nbsp;=E2=80=8C&nbsp;=
+=E2=80=8C&nbsp;=E2=80=8C&nbsp;=E2=80=8C&nbsp;=E2=80=8C&nbsp;=E2=80=8C&nbsp;=
+=E2=80=8C&nbsp;=E2=80=8C&nbsp;=E2=80=8C&nbsp;=E2=80=8C&nbsp;=E2=80=8C&nbsp;=
+=E2=80=8C&nbsp;=E2=80=8C&nbsp;</div>
+
+<div style=3D"display: none; max-height: 0px; overflow: hidden;">
+<br>
+</div>
+
+<table align=3D"center" class=3D"document"><tbody><tr><td valign=3D"top">
+
+<table align=3D"center" border=3D"0" cellpadding=3D"0" cellspacing=3D"0" cl=
+ass=3D"container" width=3D"600"><tbody><tr class=3D"inner-body"><td>
+
+<table align=3D"center" border=3D"0" cellpadding=3D"0" cellspacing=3D"0" wi=
+dth=3D"100%"><tbody><tr class=3D"header"><td bgcolor=3D"" class=3D"containe=
+r">
+
+<table width=3D"100%"><tbody><tr><td class=3D"container">
+
+
+
+<table align=3D"center" bgcolor=3D"" border=3D"0" cellpadding=3D"0" cellspa=
+cing=3D"0" style=3D"margin-top: 0px;" width=3D"100%"><tbody><tr><td style=
+=3D"padding: 0px;">
+
+<table align=3D"center" bgcolor=3D"" border=3D"0" cellpadding=3D"0" cellspa=
+cing=3D"0" width=3D"100%"><tbody><tr><td class=3D"container" style=3D"paddi=
+ng: 15px 15px;">
+<div style=3D"text-align: center;">
+<span style=3D"margin-right: 0px;"><a href=3D"https://tracking.tldrnewslett=
+er.com/CL0/https:%2F%2Ftldr.tech%2Fit%3Futm_source=3Dtldrit/1/0100019cf68ee=
+b9d-355bc27e-4b4f-4e57-afa5-e916403af2b1-000000/jKxS63QnNCtXOJ4ZiaJnNtDPEqH=
+IuUY32LA4bQflluo=3D448" rel=3D"noopener noreferrer" target=3D"_blank"><span=
+>Sign Up</span></a>
+|<span style=3D"margin-right: 2px; margin-left: 2px;"><a href=3D"https://tr=
+acking.tldrnewsletter.com/CL0/https:%2F%2Fadvertise.tldr.tech%2F%3Futm_sour=
+ce=3Dtldrit%26utm_medium=3Dnewsletter%26utm_campaign=3Dadvertisetopnav/1/01=
+00019cf68eeb9d-355bc27e-4b4f-4e57-afa5-e916403af2b1-000000/U3DsvE4KlVU5yOFx=
+1sEA0w-Nqz0fpIODrdIqdh5xSEs=3D448" rel=3D"noopener noreferrer" target=3D"_b=
+lank"><span>Advertise</span></a></span>|<span style=3D"margin-left: 2px;"><=
+a href=3D"https://tracking.tldrnewsletter.com/CL0/https:%2F%2Fa.tldrnewslet=
+ter.com%2Fweb-version%3Fep=3D1%26lc=3D1024d97c-3657-11f0-bb9f-9fd22716c11a%=
+26p=3Da72564ac-2118-11f1-9ccf-2f73f070e87a%26pt=3Dcampaign%26t=3D1773663087=
+%26s=3Ddbad6eaa721e644483610c8471078c1b24b4c66ceade74dfb9e0e83869363bc9/1/0=
+100019cf68eeb9d-355bc27e-4b4f-4e57-afa5-e916403af2b1-000000/SNeXsMh9tXb38QD=
+RCNo3VGcefOjcGkAloSadcqT7rZY=3D448"><span>View Online</span></a></span>
+<br>
+</span></div>
+</td></tr></tbody></table>
+
+<table align=3D"center" bgcolor=3D"" border=3D"0" cellpadding=3D"0" cellspa=
+cing=3D"0" width=3D"100%"><tbody><tr><td class=3D"container" style=3D"text-=
+align: center;"><span data-darkreader-inline-color=3D"" style=3D"--darkread=
+er-inline-color:#3db3ff; color: rgb(51, 175, 255) !important; font-size: 30=
+px;">T</span><span style=3D"font-size: 30px;"><span data-darkreader-inline-=
+color=3D"" style=3D"color: rgb(232, 192, 96) !important; --darkreader-inlin=
+e-color:#e8c163; font-size:30px;">L</span><span data-darkreader-inline-colo=
+r=3D"" style=3D"color: rgb(101, 195, 173) !important; --darkreader-inline-c=
+olor:#6ec7b2; font-size:30px;">D</span></span><span data-darkreader-inline-=
+color=3D"" style=3D"--darkreader-inline-color:#dd6e6e; color: rgb(220, 107,=
+ 107) !important; font-size: 30px;">R</span>
+<br>
+</td></tr></tbody></table>
+
+<br>
+
+<table align=3D"center" bgcolor=3D"" border=3D"0" cellpadding=3D"0" cellspa=
+cing=3D"0" width=3D"100%"><tbody><tr id=3D"together-with"><td align=3D"cent=
+er" height=3D"20" style=3D"vertical-align:middle !important;" valign=3D"mid=
+dle" width=3D"100%"><strong style=3D"vertical-align:middle !important; heig=
+ht: 100%;">Together With </strong>
+<a href=3D"https://tracking.tldrnewsletter.com/CL0/https:%2F%2Fairia.com%2F=
+request-demo%2F%3Futm_source=3Dtldr%26utm_medium=3Dnewsletter%26utm_campaig=
+n=3Dq1demo/1/0100019cf68eeb9d-355bc27e-4b4f-4e57-afa5-e916403af2b1-000000/h=
+pwKrS5ehTcvOrZm_VxiH_6lJ_3u4pCrqupR9xKBKT8=3D448"><img src=3D"https://image=
+s.tldr.tech/airia.png" valign=3D"middle" style=3D"vertical-align: middle !i=
+mportant; height: 100%;" alt=3D"Airia"></a></td></tr></tbody></table>
+
+
+<table style=3D"table-layout: fixed; width:100%;" width=3D"100%"><tbody><tr=
+><td style=3D"padding:0;border-collapse:collapse;border-spacing:0;margin:0;=
+">
+<div style=3D"text-align: center;">
+
+<h1><strong>TLDR IT <span id=3D"date">2026-03-16</span></strong></h1>
+</div>
+</td></tr></tbody></table>
+
+<table style=3D"table-layout: fixed; width:100%;" width=3D"100%"><tbody><tr=
+ id=3D"sponsy-copy"><td class=3D"container" style=3D"padding: 15px 15px;">
+<div class=3D"text-block">
+<span>
+                                <a href=3D"https://tracking.tldrnewsletter.=
+com/CL0/https:%2F%2Fairia.com%2Frequest-demo%2F%3Futm_source=3Dtldr%26utm_m=
+edium=3Dnewsletter%26utm_campaign=3Dq1demo/2/0100019cf68eeb9d-355bc27e-4b4f=
+-4e57-afa5-e916403af2b1-000000/DMCexaYxnCy1PrdgYjy9NHAjEAZohSR4CBUFi7HFnTU=
+=3D448">
+                                    <span>
+                                        <strong>Every minute, a new AI agen=
+t is born somewhere in your enterprise. Airia gives you control (Sponsor)</=
+strong>
+                                    </span>
+</a>
+<br>
+<br>
+<span style=3D"font-family: &quot;Helvetica Neue&quot;, Helvetica, Arial, V=
+erdana, sans-serif;">
+                                    Teams are building with Copilot, experi=
+menting in Bedrock, and spinning up agents in Salesforce, n8n, and locally.=
+ CIOs can't keep up, and chaos inevitably ensues.<p></p><p><a href=3D"https=
+://tracking.tldrnewsletter.com/CL0/https:%2F%2Fairia.com%2Frequest-demo%2F%=
+3Futm_source=3Dtldr%26utm_medium=3Dnewsletter%26utm_campaign=3Dq1demo/3/010=
+0019cf68eeb9d-355bc27e-4b4f-4e57-afa5-e916403af2b1-000000/KmG0XpENnkt3Q9DYh=
+gPPv4H8SQCYCzZGLJ8wqzooikM=3D448" rel=3D"noopener noreferrer nofollow" targ=
+et=3D"_blank"><span>Aria</span></a> unifies AI orchestration, security, and=
+ governance into a single control plane so you can:</p>
+
+<ul>
+<li><a href=3D"https://tracking.tldrnewsletter.com/CL0/https:%2F%2Fairia.co=
+m%2Frequest-demo%2F%3Futm_source=3Dtldr%26utm_medium=3Dnewsletter%26utm_cam=
+paign=3Dq1demo/4/0100019cf68eeb9d-355bc27e-4b4f-4e57-afa5-e916403af2b1-0000=
+00/YFsX9kTQeM9mITLDiO3swuPf7uLjmyr-E9UShmbt0Tg=3D448" rel=3D"noopener noref=
+errer nofollow" target=3D"_blank"><span>Discover every AI agent</span></a> =
+(sanctioned or shadow)</li>
+<li>Enforce guardrails at runtime</li>
+<li>Route and monitor models across vendors</li>
+<li>Generate audit-ready logs automatically</li>
+<li>Scale AI without increasing risk</li>
+</ul>
+
+<p>Don't slow AI down to stay safe.</p>
+
+<p>Make it safe to scale.</p>
+
+<p>=F0=9F=91=89 <a href=3D"https://tracking.tldrnewsletter.com/CL0/https:%2=
+F%2Fairia.com%2Frequest-demo%2F%3Futm_source=3Dtldr%26utm_medium=3Dnewslett=
+er%26utm_campaign=3Dq1demo/5/0100019cf68eeb9d-355bc27e-4b4f-4e57-afa5-e9164=
+03af2b1-000000/9VMQgfI5o5DJk1tROAnL3LL-NJda8hUdzwb8hfrFRqU=3D448" rel=3D"no=
+opener noreferrer nofollow" target=3D"_blank"><span>See how Airia brings AI=
+ back under control</span></a>
+
+
+</p>
+</span></span></div>
+</td></tr></tbody></table>
+</td></tr></tbody></table>
+</td></tr></tbody></table>
+</td></tr>
+<tr bgcolor=3D""><td class=3D"container">
+
+<table align=3D"center" bgcolor=3D"" border=3D"0" cellpadding=3D"0" cellspa=
+cing=3D"0" width=3D"100%"><tbody><tr><td style=3D"padding: 0px;">
+
+<table align=3D"center" bgcolor=3D"" border=3D"0" cellpadding=3D"0" cellspa=
+cing=3D"0" width=3D"100%"><tbody><tr><td class=3D"container" style=3D"paddi=
+ng-top: 0px; padding-bottom: 0px;">
+<div class=3D"text-block">
+<div style=3D"text-align: center;"><span style=3D"font-size: 36px;">=F0=9F=
+=9A=80</span></div></div>
+</td></tr></tbody></table>
+
+<table align=3D"center" bgcolor=3D"" border=3D"0" cellpadding=3D"0" cellspa=
+cing=3D"0" width=3D"100%"><tbody><tr><td class=3D"container" style=3D"paddi=
+ng-top: 0px; padding-bottom: 0px;">
+<div class=3D"text-block">
+<div style=3D"text-align: center;">
+
+<h1><strong>News &amp; Trends</strong></h1>
+</div>
+</div>
+</td></tr></tbody></table>
+
+<table style=3D"table-layout: fixed; width: 100%;" width=3D"100%"><tbody><t=
+r><td style=3D"padding:0;border-collapse:collapse;border-spacing:0;margin:0=
+;" valign=3D"top">
+
+<table align=3D"center" border=3D"0" cellpadding=3D"0" cellspacing=3D"0" wi=
+dth=3D"100%"><tbody><tr><td class=3D"container" style=3D"padding: 15px 15px=
+;">
+<div class=3D"text-block">
+<span>
+                                <a href=3D"https://tracking.tldrnewsletter.=
+com/CL0/https:%2F%2Fwww.theregister.com%2F2026%2F03%2F13%2Fnvidia_gtc_2026_=
+preview_tobias_mann_register%2F%3Futm_source=3Dtldrit/1/0100019cf68eeb9d-35=
+5bc27e-4b4f-4e57-afa5-e916403af2b1-000000/DVVemIo5FVvtg_p1DXszxsw01obcYp1tb=
+q-g6EKM3Kc=3D448">
+                                    <span>
+                                        <strong>Nvidia GTC 2026 Preview: AI=
+ Infra Gets Real (3 minute read)</strong>
+                                    </span>
+</a>
+<br>
+<br>
+<span style=3D"font-family: &quot;Helvetica Neue&quot;, Helvetica, Arial, V=
+erdana, sans-serif;">
+                                    Ahead of GTC, the signal for enterprise=
+ IT is clear: the next phase of AI is about inference speed, rack density, =
+cooling, and operational control, not just bigger models. Nvidia is expecte=
+d to talk up Groq-powered inference, Rubin GPUs, Vera CPUs, agent framework=
+s, and robotics, all of which matter to CIOs building real AI platforms ins=
+ide the enterprise.
+                                </span>
+</span>
+</div>
+</td></tr></tbody></table>
+
+<table align=3D"center" border=3D"0" cellpadding=3D"0" cellspacing=3D"0" wi=
+dth=3D"100%"><tbody><tr><td class=3D"container" style=3D"padding: 15px 15px=
+;">
+<div class=3D"text-block">
+<span>
+                                <a href=3D"https://tracking.tldrnewsletter.=
+com/CL0/https:%2F%2Flinks.tldrnewsletter.com%2FW9XeMj/1/0100019cf68eeb9d-35=
+5bc27e-4b4f-4e57-afa5-e916403af2b1-000000/2keAXELLMxz2vq9JmnU655cnwR1dBMNBb=
+2VoO3NS66A=3D448">
+                                    <span>
+                                        <strong>Adobe reports $6.4 billion =
+Q1 revenue and CEO's planned departure (2 minute read)</strong>
+                                    </span>
+</a>
+<br>
+<br>
+<span style=3D"font-family: &quot;Helvetica Neue&quot;, Helvetica, Arial, V=
+erdana, sans-serif;">
+                                    Adobe exceeded Q1 expectations with $6.=
+4 billion in revenue, a 12% year-over-year increase. While forecasting Q2 r=
+evenue up to $6.48 billion, the company announced longtime CEO Shantanu Nar=
+ayen will step down. The transition follows strong financial performance an=
+d adjusted EPS exceeding analyst estimates.
+                                </span>
+</span>
+</div>
+</td></tr></tbody></table>
+
+</td></tr></tbody></table>
+
+<table align=3D"center" bgcolor=3D"" border=3D"0" cellpadding=3D"0" cellspa=
+cing=3D"0" width=3D"100%"><tbody><tr><td class=3D"container" style=3D"paddi=
+ng-top: 0px; padding-bottom: 0px;">
+<div class=3D"text-block">
+<div style=3D"text-align: center;"><span style=3D"font-size: 36px;">=F0=9F=
+=A7=A0</span></div>
+</div>
+</td></tr></tbody></table>
+
+<table align=3D"center" bgcolor=3D"" border=3D"0" cellpadding=3D"0" cellspa=
+cing=3D"0" width=3D"100%"><tbody><tr><td class=3D"container" style=3D"paddi=
+ng-top: 0px; padding-bottom: 0px;">
+<div class=3D"text-block">
+<div style=3D"text-align: center;">
+
+<h1><strong>Analysis &amp; Opinions</strong></h1>
+</div>
+</div>
+</td></tr></tbody></table>
+
+
+<table style=3D"table-layout: fixed; width: 100%;" width=3D"100%"><tbody><t=
+r><td style=3D"padding:0;border-collapse:collapse;border-spacing:0;margin:0=
+;" valign=3D"top">
+
+<table align=3D"center" border=3D"0" cellpadding=3D"0" cellspacing=3D"0" wi=
+dth=3D"100%"><tbody><tr><td class=3D"container" style=3D"padding: 15px 15px=
+;">
+<div class=3D"text-block">
+<span>
+                                <a href=3D"https://tracking.tldrnewsletter.=
+com/CL0/https:%2F%2Ffrontierai.substack.com%2Fp%2Fthe-saas-extinction-test%=
+3Futm_source=3Dtldrit/1/0100019cf68eeb9d-355bc27e-4b4f-4e57-afa5-e916403af2=
+b1-000000/5WOPOvJJpInlIw2PZsmnjvWAL6ESFe5nKkJPc7jBYMM=3D448">
+                                    <span>
+                                        <strong>The SaaS Extinction Test (5=
+ minute read)</strong>
+                                    </span>
+</a>
+<br>
+<br>
+<span style=3D"font-family: &quot;Helvetica Neue&quot;, Helvetica, Arial, V=
+erdana, sans-serif;">
+                                    AI coding agents lower software build c=
+osts, yet incumbents like Salesforce remain protected by data gravity and r=
+isk aversion. While pure workflow tools like PagerDuty face disruption, sys=
+tems of record survive because the operational complexity of security and i=
+nfrastructure still outweighs the ease of automated prototyping.
+                                </span>
+</span>
+</div>
+</td></tr></tbody></table>
+
+<table align=3D"center" border=3D"0" cellpadding=3D"0" cellspacing=3D"0" wi=
+dth=3D"100%"><tbody><tr><td class=3D"container" style=3D"padding: 15px 15px=
+;">
+<div class=3D"text-block">
+<span>
+                                <a href=3D"https://tracking.tldrnewsletter.=
+com/CL0/https:%2F%2Fventurebeat.com%2Ftechnology%2Ffixing-ai-failure-three-=
+changes-enterprises-should-make-now%3Futm_source=3Dtldrit/1/0100019cf68eeb9=
+d-355bc27e-4b4f-4e57-afa5-e916403af2b1-000000/AQVT6ySi4GQpxDj37vpannjBQAE_x=
+46g2lcS1F42-vw=3D448">
+                                    <span>
+                                        <strong>Fixing AI failure: Three ch=
+anges enterprises should make now (4 minute read)</strong>
+                                    </span>
+</a>
+<br>
+<br>
+<span style=3D"font-family: &quot;Helvetica Neue&quot;, Helvetica, Arial, V=
+erdana, sans-serif;">
+                                    As AI project failure rates climb, this=
+ piece makes a useful point for enterprise IT leaders: the biggest blockers=
+ are often organizational, not technical. The takeaway is that improving AI=
+ outcomes may depend less on model tuning and more on operating model, owne=
+rship, and culture.
+                                </span>
+</span>
+</div>
+</td></tr></tbody></table>
+
+<table align=3D"center" border=3D"0" cellpadding=3D"0" cellspacing=3D"0" wi=
+dth=3D"100%"><tbody><tr><td class=3D"container" style=3D"padding: 15px 15px=
+;">
+<div class=3D"text-block">
+<span>
+                                <a href=3D"https://tracking.tldrnewsletter.=
+com/CL0/https:%2F%2Fwww.saastr.com%2Fbeing-a-system-of-record-wont-save-you=
+-itll-just-make-your-decline-more-comfortable%2F%3Futm_source=3Dtldrit/1/01=
+00019cf68eeb9d-355bc27e-4b4f-4e57-afa5-e916403af2b1-000000/bksvMJW9I4bKFMN5=
+Y38KhhDtpUaCujs_YY7f_CGhpRc=3D448">
+                                    <span>
+                                        <strong>B2B systems of record must =
+capture AI agent spend to avoid stagnation (5 minute read)</strong>
+                                    </span>
+</a>
+<br>
+<br>
+<span style=3D"font-family: &quot;Helvetica Neue&quot;, Helvetica, Arial, V=
+erdana, sans-serif;">
+                                    B2B systems of record face stagnation a=
+s incremental budgets shift to AI agents. While gross retention remains hig=
+h, companies like Salesforce and ServiceNow are building native AI layers t=
+o secure 130%+ net revenue retention. Failing to own the agent layer risks =
+commoditization into low-growth infrastructure.
+                                </span>
+</span>
+</div>
+</td></tr></tbody></table>
+
+</td></tr></tbody></table>
+
+<table align=3D"center" bgcolor=3D"" border=3D"0" cellpadding=3D"0" cellspa=
+cing=3D"0" width=3D"100%"><tbody><tr><td class=3D"container" style=3D"paddi=
+ng-top: 0px; padding-bottom: 0px;">
+<div class=3D"text-block">
+<div style=3D"text-align: center;"><span style=3D"font-size: 36px;">=F0=9F=
+=A4=9D</span></div>
+</div>
+</td></tr></tbody></table>
+
+<table align=3D"center" bgcolor=3D"" border=3D"0" cellpadding=3D"0" cellspa=
+cing=3D"0" width=3D"100%"><tbody><tr><td class=3D"container" style=3D"paddi=
+ng-top: 0px; padding-bottom: 0px;">
+<div class=3D"text-block">
+<div style=3D"text-align: center;">
+
+<h1><strong>Launches &amp; Partnerships</strong></h1>
+</div>
+</div>
+</td></tr></tbody></table>
+
+<table style=3D"table-layout: fixed; width: 100%;" width=3D"100%"><tbody><t=
+r><td style=3D"padding:0;border-collapse:collapse;border-spacing:0;margin:0=
+;" valign=3D"top">
+
+<table align=3D"center" border=3D"0" cellpadding=3D"0" cellspacing=3D"0" wi=
+dth=3D"100%"><tbody><tr><td class=3D"container" style=3D"padding: 15px 15px=
+;">
+<div class=3D"text-block">
+<span>
+                                <a href=3D"https://tracking.tldrnewsletter.=
+com/CL0/https:%2F%2Fwww.itpro.com%2Ftechnology%2Fartificial-intelligence%2F=
+google-workspace-just-got-a-huge-gemini-update-heres-what-to-expect-with-ne=
+w-ai-features-in-docs-slides-sheets-and-drive%3Futm_source=3Dtldrit/1/01000=
+19cf68eeb9d-355bc27e-4b4f-4e57-afa5-e916403af2b1-000000/9semk2tNkeU_YV_937_=
+A1eI907adI1v9QHvPKBXXuGU=3D448">
+                                    <span>
+                                        <strong>Google integrates Gemini AI=
+ into Workspace for automated document and spreadsheet generation (4 minute=
+ read)</strong>
+                                    </span>
+</a>
+<br>
+<br>
+<span style=3D"font-family: &quot;Helvetica Neue&quot;, Helvetica, Arial, V=
+erdana, sans-serif;">
+                                    Google updated Workspace with Gemini AI=
+ features for Docs, Sheets, Slides, and Drive. Business subscribers can now=
+ use natural language to generate formatted drafts and optimize spreadsheet=
+s with 70% accuracy. The tools synthesize data across Gmail and Drive to ac=
+celerate enterprise productivity while maintaining existing security protoc=
+ols.
+                                </span>
+</span>
+</div>
+</td></tr></tbody></table>
+
+<table align=3D"center" border=3D"0" cellpadding=3D"0" cellspacing=3D"0" wi=
+dth=3D"100%"><tbody><tr><td class=3D"container" style=3D"padding: 15px 15px=
+;">
+<div class=3D"text-block">
+<span>
+                                <a href=3D"https://tracking.tldrnewsletter.=
+com/CL0/https:%2F%2Flinks.tldrnewsletter.com%2FYdzavs/1/0100019cf68eeb9d-35=
+5bc27e-4b4f-4e57-afa5-e916403af2b1-000000/quirYo9wOM0QQGWAw63CKa8i2GUXGckRf=
+5b0BRv0a_c=3D448">
+                                    <span>
+                                        <strong>Onyx Security Launches With=
+ $40 Million in Funding (2 minute read)</strong>
+                                    </span>
+</a>
+<br>
+<br>
+<span style=3D"font-family: &quot;Helvetica Neue&quot;, Helvetica, Arial, V=
+erdana, sans-serif;">
+                                    Onyx Security launched with $40M in fun=
+ding to build a control plane for governing autonomous AI agents inside the=
+ enterprise. For CIOs building an AI platforms function, this is high-signa=
+l: the market is starting to treat agent oversight, posture, and control as=
+ a distinct enterprise problem, not just an extension of SaaS or security t=
+ooling.
+                                </span>
+</span>
+</div>
+</td></tr></tbody></table>
+
+</td></tr></tbody></table>
+
+<table align=3D"center" bgcolor=3D"" border=3D"0" cellpadding=3D"0" cellspa=
+cing=3D"0" width=3D"100%"><tbody><tr><td class=3D"container" style=3D"paddi=
+ng-top: 0px; padding-bottom: 0px;">
+<div class=3D"text-block">
+<div style=3D"text-align: center;"><span style=3D"font-size: 36px;">=F0=9F=
+=8E=81</span></div></div>
+</td></tr></tbody></table>
+
+<table align=3D"center" bgcolor=3D"" border=3D"0" cellpadding=3D"0" cellspa=
+cing=3D"0" width=3D"100%"><tbody><tr><td class=3D"container" style=3D"paddi=
+ng-top: 0px; padding-bottom: 0px;">
+<div class=3D"text-block">
+<div style=3D"text-align: center;"><strong><h1>Miscellaneous</h1></strong><=
+/div>
+</div>
+</td></tr></tbody></table>
+
+<table bgcolor=3D"" style=3D"table-layout: fixed; width: 100%;" width=3D"10=
+0%"><tbody><tr><td style=3D"padding:0;border-collapse:collapse;border-spaci=
+ng:0;margin:0;" valign=3D"top">
+
+<table align=3D"center" border=3D"0" cellpadding=3D"0" cellspacing=3D"0" wi=
+dth=3D"100%"><tbody><tr><td class=3D"container" style=3D"padding: 15px 15px=
+;">
+<div class=3D"text-block">
+<span>
+                                <a href=3D"https://tracking.tldrnewsletter.=
+com/CL0/https:%2F%2Fwww.networkworld.com%2Farticle%2F4144366%2Fwhats-the-bi=
+ggest-barrier-to-ai-success.html%3Futm_source=3Dtldrit/1/0100019cf68eeb9d-3=
+55bc27e-4b4f-4e57-afa5-e916403af2b1-000000/iV3HQQkqt6ZzOK3DUYgOIoW6XouDylXt=
+pQD-o5yMg2o=3D448">
+                                    <span>
+                                        <strong>What's the biggest barrier =
+to AI success? (5 minute read)</strong>
+                                    </span>
+</a>
+<br>
+<br>
+<span style=3D"font-family: &quot;Helvetica Neue&quot;, Helvetica, Arial, V=
+erdana, sans-serif;">
+                                    Enterprise AI faces hurdles, including =
+a lack of formal business cases and restricted access to core data. Sunk in=
+frastructure costs and organizational resistance prevent AI from replacing =
+core software. Success requires treating AI as a component to augment workf=
+lows rather than a total replacement.
+                                </span>
+</span>
+</div>
+</td></tr></tbody></table>
+
+<table align=3D"center" border=3D"0" cellpadding=3D"0" cellspacing=3D"0" wi=
+dth=3D"100%"><tbody><tr><td class=3D"container" style=3D"padding: 15px 15px=
+;">
+<div class=3D"text-block">
+<span>
+                                <a href=3D"https://tracking.tldrnewsletter.=
+com/CL0/https:%2F%2Fstackoverflow.blog%2F2026%2F03%2F12%2Fenterprise-ai-nee=
+ds-more-than-foundation-models%2F%3Futm_source=3Dtldrit/1/0100019cf68eeb9d-=
+355bc27e-4b4f-4e57-afa5-e916403af2b1-000000/jYJVw6-lmI4wu_xe3Fl3H-QgmOk7Jl5=
+5tJeEC2JvHMc=3D448">
+                                    <span>
+                                        <strong>Bridging the enterprise AI =
+context gap using internal knowledge layers and RAG (7 minute read)</strong=
+>
+                                    </span>
+</a>
+<br>
+<br>
+<span style=3D"font-family: &quot;Helvetica Neue&quot;, Helvetica, Arial, V=
+erdana, sans-serif;">
+                                    Foundation models lack institutional kn=
+owledge, causing hallucinations in enterprise settings. Integrating Stack O=
+verflow Internal with OpenAI via RAG allows companies like Uber to provide =
+human-validated, traceable answers. This context layer ensures AI accuracy =
+and production-readiness by grounding responses in verified internal docume=
+ntation and architectural history.
+                                </span>
+</span>
+</div>
+</td></tr></tbody></table>
+
+</td></tr></tbody></table>
+
+
+
+<table align=3D"center" bgcolor=3D"" border=3D"0" cellpadding=3D"0" cellspa=
+cing=3D"0" width=3D"100%"><tbody><tr><td class=3D"container" style=3D"paddi=
+ng-top: 0px; padding-bottom: 0px;">
+<div class=3D"text-block">
+<div style=3D"text-align: center;"><span style=3D"font-size: 36px;">=E2=9A=
+=A1</span></div></div>
+</td></tr></tbody></table>
+
+<table align=3D"center" bgcolor=3D"" border=3D"0" cellpadding=3D"0" cellspa=
+cing=3D"0" width=3D"100%"><tbody><tr><td class=3D"container" style=3D"paddi=
+ng-top: 0px; padding-bottom: 0px;">
+<div class=3D"text-block">
+<div style=3D"text-align: center;">
+
+<h1><strong>Quick Links</strong></h1>
+</div>
+</div>
+</td></tr></tbody></table>
+
+<table bgcolor=3D"" style=3D"table-layout: fixed; width: 100%;" width=3D"10=
+0%"><tbody><tr><td style=3D"padding:0;border-collapse:collapse;border-spaci=
+ng:0;margin:0;" valign=3D"top">
+
+<table align=3D"center" border=3D"0" cellpadding=3D"0" cellspacing=3D"0" wi=
+dth=3D"100%"><tbody><tr><td class=3D"container" style=3D"padding: 15px 15px=
+;">
+<div class=3D"text-block">
+<span>
+                                <a href=3D"https://tracking.tldrnewsletter.=
+com/CL0/https:%2F%2Fwww.pinecone.io%2Flearn%2Fseries%2Fbeyond-retrieval%2Fk=
+nowledge-needs-meta-knowledge%2F%3Futm_source=3Dtldrit/1/0100019cf68eeb9d-3=
+55bc27e-4b4f-4e57-afa5-e916403af2b1-000000/wd2MApYrePkXsY1ea2JhTQqDeCaWUivu=
+UPedHIewLn4=3D448">
+                                    <span>
+                                        <strong>Solving RAG applicability i=
+ssues with meta-knowledge manifests and knowledge base partitioning (8 minu=
+te read)</strong>
+                                    </span>
+</a>
+<br>
+<br>
+<span style=3D"font-family: &quot;Helvetica Neue&quot;, Helvetica, Arial, V=
+erdana, sans-serif;">
+                                    Mature RAG systems often fail by retrie=
+ving relevant but inapplicable data.
+                                </span>
+</span>
+</div>
+</td></tr></tbody></table>
+
+<table align=3D"center" border=3D"0" cellpadding=3D"0" cellspacing=3D"0" wi=
+dth=3D"100%"><tbody><tr><td class=3D"container" style=3D"padding: 15px 15px=
+;">
+<div class=3D"text-block">
+<span>
+                                <a href=3D"https://tracking.tldrnewsletter.=
+com/CL0/https:%2F%2Fsiliconangle.com%2F2026%2F03%2F15%2Freport-meta-layoff-=
+20-staff-replace-many-ai-workers%2F%3Futm_source=3Dtldrit/1/0100019cf68eeb9=
+d-355bc27e-4b4f-4e57-afa5-e916403af2b1-000000/Zue7JQVArcu9NdCm5k-lK8pJfztHO=
+AsxYUdcDzMZqfA=3D448">
+                                    <span>
+                                        <strong>Meta could layoff 20% of it=
+s staff and replace many of them with AI workers (1 minute read)</strong>
+                                    </span>
+</a>
+<br>
+<br>
+<span style=3D"font-family: &quot;Helvetica Neue&quot;, Helvetica, Arial, V=
+erdana, sans-serif;">
+                                    Meta is reportedly considering deep lay=
+offs as it ramps AI infrastructure investment, underscoring how AI spending=
+ is beginning to affect org design as much as tooling.
+                                </span>
+</span>
+</div>
+</td></tr></tbody></table>
+
+<table align=3D"center" border=3D"0" cellpadding=3D"0" cellspacing=3D"0" wi=
+dth=3D"100%"><tbody><tr><td class=3D"container" style=3D"padding: 15px 15px=
+;">
+<div class=3D"text-block">
+<span>
+                                <a href=3D"https://tracking.tldrnewsletter.=
+com/CL0/https:%2F%2Fthenewstack.io%2Fbeginners-guide-to-vibe-coding%2F%3Fut=
+m_source=3Dtldrit/1/0100019cf68eeb9d-355bc27e-4b4f-4e57-afa5-e916403af2b1-0=
+00000/fgvjWNhlaguDLONxGDsOfHCe8hzUpu-nPwOh1plmhVI=3D448">
+                                    <span>
+                                        <strong>The New Stack: Beginners Gu=
+ide to Vibe Coding (5 minute read)</strong>
+                                    </span>
+</a>
+<br>
+<br>
+<span style=3D"font-family: &quot;Helvetica Neue&quot;, Helvetica, Arial, V=
+erdana, sans-serif;">
+                                    Vibe coding is becoming real enough to =
+need a beginner's guide.
+                                </span>
+</span>
+</div>
+</td></tr></tbody></table>
+
+</td></tr></tbody></table>
+
+
+
+
+
+
+<table align=3D"center" bgcolor=3D"" border=3D"0" cellpadding=3D"0" cellspa=
+cing=3D"0" width=3D"100%"><tbody><tr><td align=3D"left" style=3D"word-break=
+: break-word; vertical-align: top; padding: 5px 10px;">
+
+<p style=3D"padding: 0; margin: 0; font-size: 22px; color: #000000; line-he=
+ight: 1.6; font-weight: bold;">
+Want to advertise in TLDR? =F0=9F=93=B0
+</p>
+<div class=3D"text-block" style=3D"margin-top: 10px;">
+If your company is interested in reaching an audience of IT professionals a=
+nd decision makers, you may want to <a href=3D"https://tracking.tldrnewslet=
+ter.com/CL0/https:%2F%2Fadvertise.tldr.tech%2F%3Futm_source=3Dtldrit%26utm_=
+medium=3Dnewsletter%26utm_campaign=3Dadvertisecta/1/0100019cf68eeb9d-355bc2=
+7e-4b4f-4e57-afa5-e916403af2b1-000000/YZW_EHOBAqxEYWtpvY8xa2Uz-DX6G3pRQeXVc=
+J2pqgg=3D448"><strong><span>advertise with us</span></strong></a>.
+</div>
+<br>
+
+<!-- New "Want to work at TLDR?" section -->
+
+<p style=3D"padding: 0; margin: 0; font-size: 22px; color: #000000; line-he=
+ight: 1.6; font-weight: bold;">
+Want to work at TLDR? =F0=9F=92=BC
+</p>
+<div class=3D"text-block" style=3D"margin-top: 10px;">
+<a href=3D"https://tracking.tldrnewsletter.com/CL0/https:%2F%2Fjobs.ashbyhq=
+.com%2Ftldr.tech/1/0100019cf68eeb9d-355bc27e-4b4f-4e57-afa5-e916403af2b1-00=
+0000/Tki5sfSEstxlKtA3dggjlk0qnb9Abk7-5eUpbzztYLM=3D448" rel=3D"noopener nor=
+eferrer" style=3D"color: #0000EE; text-decoration: underline;" target=3D"_b=
+lank"><strong>Apply here</strong></a>,
+<a href=3D"https://tracking.tldrnewsletter.com/CL0/https:%2F%2Fjobs.ashbyhq=
+.com%2Ftldr.tech%2Fc227b917-a6a4-40ce-8950-d3e165357871/1/0100019cf68eeb9d-=
+355bc27e-4b4f-4e57-afa5-e916403af2b1-000000/2h5YLqXpwg2Gxg6cfcZF15XZt52fkqb=
+HeZjT2bu5KxQ=3D448" rel=3D"noopener noreferrer" style=3D"color: #0000EE; te=
+xt-decoration: underline;" target=3D"_blank"><strong>create your own role</=
+strong></a> or send a friend's resume to <a href=3D"mailto:jobs@tldr.tech" =
+style=3D"color: #0000EE; text-decoration: underline;">jobs@tldr.tech</a> an=
+d get $1k if we hire them! TLDR is one of <a href=3D"https://tracking.tldrn=
+ewsletter.com/CL0/https:%2F%2Fwww.linkedin.com%2Ffeed%2Fupdate%2Furn:li:act=
+ivity:7401699691039830016%2F/1/0100019cf68eeb9d-355bc27e-4b4f-4e57-afa5-e91=
+6403af2b1-000000/rx8tzjAnlaceF4uNqAJJjQqG7a2QHT3drQz-bT-PjNM=3D448" rel=3D"=
+noopener noreferrer" style=3D"color: #0000EE; text-decoration: underline;" =
+target=3D"_blank"><strong>Inc.'s Best Bootstrapped businesses</strong></a> =
+of 2025.
+</div>
+<br>
+
+<div class=3D"text-block">
+If you have any comments or feedback, just respond to this email!
+<br>
+<br> Thanks for reading,
+<br>
+<a href=3D"https://tracking.tldrnewsletter.com/CL0/https:%2F%2Fwww.linkedin=
+.com%2Fin%2Fsiddhibansal%2F/1/0100019cf68eeb9d-355bc27e-4b4f-4e57-afa5-e916=
+403af2b1-000000/_yBlwEi9JdBtf2hPGthESqbKQQoFcD2ADtxBOAGbkwo=3D448"><span>Si=
+ddhi Bansal</span></a>, <a href=3D"https://tracking.tldrnewsletter.com/CL0/=
+https:%2F%2Fwww.linkedin.com%2Fin%2Ftongchen-yang-877116216%2F/1/0100019cf6=
+8eeb9d-355bc27e-4b4f-4e57-afa5-e916403af2b1-000000/QXCTNiUnpi4PMOnu9KzNbLvW=
+S_6oAFYgeU0Xd7MBjM8=3D448"><span>Tongchen Yang</span></a>, &amp; <a href=3D=
+"https://tracking.tldrnewsletter.com/CL0/https:%2F%2Fwww.linkedin.com%2Fin%=
+2Frushdesh%2F/1/0100019cf68eeb9d-355bc27e-4b4f-4e57-afa5-e916403af2b1-00000=
+0/X5cwyjhsGn8ljc4BAiddAiktvdhOlJ5BRtACp9rszMc=3D448"><span>Rush Deshpande</=
+span></a>
+<br>
+<br>
+</div>
+<br>
+</td></tr></tbody></table>
+
+<table align=3D"center" bgcolor=3D"" border=3D"0" cellpadding=3D"0" cellspa=
+cing=3D"0" width=3D"100%"><tbody><tr><td class=3D"container" style=3D"paddi=
+ng: 15px 15px;">
+<div class=3D"text-block" id=3D"testing-id">
+<a href=3D"https://tracking.tldrnewsletter.com/CL0/https:%2F%2Ftldr.tech%2F=
+it%2Fmanage%3Femail=3Dinfo%2540woodfine.co/1/0100019cf68eeb9d-355bc27e-4b4f=
+-4e57-afa5-e916403af2b1-000000/a8W7MWY8BKdokqx1awzuWn4Pw4W1R3Tc8FIRWJpS35Q=
+=3D448">Manage your subscriptions</a> to our other newsletters on tech, sta=
+rtups, and programming. Or if TLDR IT isn't for you, please <a href=3D"http=
+s://tracking.tldrnewsletter.com/CL0/https:%2F%2Fa.tldrnewsletter.com%2Funsu=
+bscribe%3Fep=3D1%26l=3Ddb791bc2-386d-11ee-a768-4730dc8aabb1%26lc=3D1024d97c=
+-3657-11f0-bb9f-9fd22716c11a%26p=3Da72564ac-2118-11f1-9ccf-2f73f070e87a%26p=
+t=3Dcampaign%26pv=3D4%26spa=3D1773662541%26t=3D1773663087%26s=3D87463de1707=
+056b5b3cab3280eb3b9ec1c6d5c0ab03b62d75c808a5aedbd5d6d/1/0100019cf68eeb9d-35=
+5bc27e-4b4f-4e57-afa5-e916403af2b1-000000/p9InJn7Y9eJ0RluKG8cfzNZDjPdZ8X0pW=
+yHjBhtyqrg=3D448">unsubscribe</a>.
+<br>
+
+</div>
+</td></tr></tbody></table>
+</td></tr></tbody></table>
+</td></tr></tbody></table>
+</td></tr></tbody></table>
+</td></tr></tbody></table>
+
+
+<img alt=3D"" src=3D"http://tracking.tldrnewsletter.com/CI0/0100019cf68eeb9=
+d-355bc27e-4b4f-4e57-afa5-e916403af2b1-000000/Qv_X7WjX7bvr5iRcwSxJvcqPZ9oTk=
+NW4ASiRw5vGMqU=3D448" style=3D"display: none; width: 1px; height: 1px;">
+</body></html>=
+
+--HxfZNdID--
