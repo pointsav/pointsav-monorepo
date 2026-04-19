@@ -1,0 +1,270 @@
+# samples/expected.yaml — ground-truth extraction targets for v0.4 scoring.
+# See VALIDATION.md §"Extraction targets per email" for field definitions.
+# Keys are the actual filesystem filenames (spaces and Unicode preserved);
+# a scoring script can look up records via basename(path) without a
+# translation table.
+#
+# Classification enum (five values): Newsletter, Marketing, Business,
+# Transactional, Personal.
+
+"ask Ryan anything.eml":
+  classification: Newsletter
+  sender_name: Chris Nguyen
+  sender_org: UX Playbook
+  sender_email: hello@uxplaybook.org
+  recipients:
+    - info@woodfine.co
+  body_mentioned_people:
+    - Ryan Rumsey (founder of CDO School; author of "Business Thinking for Designers")
+  body_mentioned_orgs:
+    - UX Playbook
+    - CDO School
+    - Dazl
+  first_party_urls:
+    - https://uxplaybook.org/
+    - https://newsletter.uxplaybook.org/
+    - https://dazl.dev/
+    - https://youtube.com/live/bLOygHa8xfY
+    - https://www.linkedin.com/in/ryanrumsey/
+    - https://www.linkedin.com/in/uxchrisnguyen/
+
+"Culinary Highlights at Schloss Elmau.eml":
+  classification: Marketing
+  sender_name: Schloss Elmau
+  sender_org: Schloss Elmau
+  sender_email: marketing@schloss-elmau.de
+  recipients:
+    - info@woodfine.co
+  body_mentioned_people:
+    - Christoph Rainer (Restaurant IKIGAI, Elmau — two-Michelin-starred host chef)
+    - Silvio Germann (Restaurant Mammertsberg, Freidorf, Switzerland)
+    - Jeremy Chan (Restaurant IKOYI, London)
+    - Guido Braeken (Restaurant CREATE, Eijsden)
+    - Nick Bril (Restaurant THE JANE, Antwerpen)
+    - Heiko Nieder (Dolder Grand / THE RESTAURANT, Zürich)
+    - Silvio Nickol (Restaurant SILVIO NICKOL, Wien)
+    - Christoph Rüffer (Restaurant Haerlin, Hamburg)
+    - Philipp Vogel (Orania.Restaurant, Berlin)
+  body_mentioned_orgs:
+    - Schloss Elmau
+    - Restaurant IKIGAI
+    - Restaurant Mammertsberg
+    - Restaurant IKOYI
+    - Restaurant CREATE
+    - Restaurant THE JANE
+    - Dolder Grand
+    - Restaurant SILVIO NICKOL
+    - Restaurant Haerlin
+    - Orania.Restaurant
+    - Otto Gourmet
+  first_party_urls:
+    - https://www.schloss-elmau.de/
+
+"Nvidia\u2019s Rack Era \U0001F3D7\uFE0F, SaaS Faces Agents \U0001F916, Enterprise AI Hardens \U0001F510.eml":
+  # Filename uses U+2019 RIGHT SINGLE QUOTATION MARK, not ASCII apostrophe.
+  classification: Newsletter
+  sender_name: TLDR IT
+  sender_org: TLDR (tldr.tech)
+  sender_email: dan@tldrnewsletter.com
+  recipients:
+    - info@woodfine.co
+  body_mentioned_people:
+    - Shantanu Narayen (Adobe CEO, stepping down)
+    - Siddhi Bansal (TLDR)
+    - Tongchen Yang (TLDR)
+    - Rush Deshpande (TLDR)
+  body_mentioned_orgs:
+    - Nvidia
+    - Adobe
+    - Salesforce
+    - PagerDuty
+    - ServiceNow
+    - Google
+    - Onyx Security
+    - Meta
+    - Stack Overflow
+    - Uber
+    - OpenAI
+    - Airia
+    - Groq
+  first_party_urls:
+    - https://tldr.tech/it
+    - https://www.theregister.com/2026/03/13/nvidia_gtc_2026_preview_tobias_mann_register/
+    - https://frontierai.substack.com/p/the-saas-extinction-test
+    - https://venturebeat.com/technology/fixing-ai-failure-three-changes-enterprises-should-make-now
+    - https://www.saastr.com/being-a-system-of-record-wont-save-you-itll-just-make-your-decline-more-comfortable/
+    - https://www.itpro.com/technology/artificial-intelligence/google-workspace-just-got-a-huge-gemini-update-heres-what-to-expect-with-new-ai-features-in-docs-slides-sheets-and-drive
+    - https://www.networkworld.com/article/4144366/whats-the-biggest-barrier-to-ai-success.html
+    - https://stackoverflow.blog/2026/03/12/enterprise-ai-needs-more-than-foundation-models/
+    - https://www.pinecone.io/learn/series/beyond-retrieval/knowledge-needs-meta-knowledge/
+    - https://siliconangle.com/2026/03/15/report-meta-layoff-20-staff-replace-many-ai-workers/
+    - https://thenewstack.io/beginners-guide-to-vibe-coding/
+
+"Strahov, Akropolis a most v Ostravě.eml":
+  classification: Newsletter
+  sender_name: Mariana Pančíková
+  sender_org: Stavba / stavbaweb.cz
+  sender_email: newsletter@stavbaweb.cz
+  recipients:
+    - info@woodfine.co
+  body_mentioned_people:
+    - Roman Koucký (architect; designer of new Ostrava bridge)
+    - Mariana Pančíková (šéfredaktorka, časopis Stavba & stavbaweb.cz)
+  body_mentioned_orgs:
+    - stavbaweb.cz
+    - časopis Stavba
+    - PAPUNDEKL ARCHITEKTI
+    - Marco Maio Architects
+    - ČVUT
+  first_party_urls:
+    - https://stavbaweb.cz/
+  # Article-level URLs are obfuscated through stavbaweblinks.seurl.cz tracker
+  # redirects in both text/plain and HTML parts; only the root URL is visible.
+
+"Tender Invitation (Market Screen)_ Global Real Estate, unlisted.eml":
+  classification: Business
+  sender_name: Melina Herzig
+  sender_org: PPCmetrics AG
+  sender_email: noreply@ams.ppcmetrics.ch
+  sender_phone: +41 44 204 31 11
+  recipients:
+    - info@woodfine.co
+  body_mentioned_people: []
+  body_mentioned_orgs:
+    - PPCmetrics AG
+  first_party_urls:
+    - https://www.ppcmetrics.ch
+    - https://twitter.com/PPCmetrics
+    - https://www.linkedin.com/company/ppcmetrics-ag
+  # Body also cites manager.relations@ppcmetrics.ch as the RFP contact
+  # (distinct from the noreply sender address).
+
+"The Earthen Towers of Shibam_ A Vertical City in the Yemeni Desert.eml":
+  classification: Newsletter
+  sender_name: ArchDaily
+  sender_org: ArchDaily (DAAily Platforms AG, Zürich)
+  sender_email: newsletter@archdaily.com
+  recipients:
+    - info@woodfine.co
+  body_mentioned_people:
+    - Lesley Lokko (architect; African Cultural Icon Award recipient)
+    - Steven Holl (architect; Steven Holl Architects)
+  body_mentioned_orgs:
+    - ArchDaily
+    - DAAily Platforms AG
+    - OMA
+    - Ha Architecture
+    - deltastudio
+    - studio pheasant
+    - P.M.A.Studio
+    - Atelier LuxNox
+    - Found Projects
+    - Nikken Sekkei
+    - 23 SUL
+    - AFF architekten
+    - Steven Holl Architects
+    - SUBARU
+  first_party_urls:
+    - https://www.archdaily.com/
+  # Individual article URLs in the body are Mailchimp-wrapped tracker links;
+  # only the root URL is recorded.
+
+"The space age started 100 years ago today.eml":
+  classification: Newsletter
+  sender_name: The Conversation
+  sender_org: The Conversation (US)
+  sender_email: us.newsletter@theconversation.com
+  recipients:
+    - info@woodfine.co
+  body_mentioned_people:
+    - Robert Goddard (physicist; launched the first liquid-fueled rocket, 1926)
+    - Mary Magnuson (Associate Science Editor, The Conversation)
+    - Michael Carrafiello (Miami University)
+    - Kristi Girdharry (Babson College)
+    - Boaz Dvir (Penn State)
+    - Daniel M. Stuart (University of South Carolina)
+    - Erin Potter (Binghamton University, SUNY)
+    - Paul C. Sereno (University of Chicago)
+    - Benjamin F. Henwood (University of Southern California)
+    - Jonathan Deutsch (Drexel University)
+    - Deldhy Nicolás Moya Sánchez (UNAM)
+    - Jennifer Pollitt (Temple University)
+    - Eilidh Noyes (University of Leeds)
+    - Walter Scheirer (University of Notre Dame)
+    - Sayagyi U Ba Khin (Burmese meditation master)
+  body_mentioned_orgs:
+    - The Conversation
+    - NASA
+    - Miami University
+    - Babson College
+    - Penn State
+    - University of South Carolina
+    - Binghamton University
+    - University of Chicago
+    - University of Southern California
+    - Drexel University
+    - Temple University
+    - University of Leeds
+    - University of Notre Dame
+    - UNAM
+  first_party_urls:
+    - https://theconversation.com/
+    - https://theconversation.com/the-first-modern-rocket-launched-100-years-ago-beginning-a-century-of-both-innovations-and-challenges-for-spaceflight-269061
+
+"This week_ Technical Foundations for Content Designers.eml":
+  classification: Marketing
+  sender_name: UX Content Collective
+  sender_org: UX Content Collective
+  sender_email: info@uxcontent.com
+  recipients:
+    - info@woodfine.co
+  body_mentioned_people:
+    - Risi Finkel (UX Writer and Content Designer, Google)
+    - Prasaja Mukti (UX Writer, Govtech Indonesia)
+    - Patrick Stafford (course author)
+    - Dave Connis (course author)
+  body_mentioned_orgs:
+    - UX Content Collective
+    - Google
+    - Govtech Indonesia
+  first_party_urls:
+    - https://uxcontent.com/course-technical-foundations-for-content-designers/
+
+"\U0001F399\uFE0F This week on How I AI_ From Figma to Claude Code and back & From journalist to iOS developer.eml":
+  classification: Newsletter
+  sender_name: Lenny's Newsletter
+  sender_org: Lenny's Newsletter (Substack)
+  sender_email: lenny+how-i-ai@substack.com
+  recipients:
+    - info@woodfine.co
+  body_mentioned_people:
+    - Gui Seiz (designer, Figma)
+    - Alex Kern (engineer, Figma)
+    - Daniel Roth (Editor in Chief and VP of Content Development, LinkedIn)
+  body_mentioned_orgs:
+    - Figma
+    - LinkedIn
+    - Optimizely
+    - WorkOS
+    - Vanta
+  first_party_urls:
+    - https://www.lennysnewsletter.com/p/this-week-on-how-i-ai-from-figma
+
+"\U0001F50E Check out these Perfect Pairings for Trade Gothic Next\u00AE.eml":
+  classification: Marketing
+  sender_name: MyFonts
+  sender_org: MyFonts Inc. (a Monotype company)
+  sender_email: newsletters-no-reply@mail.myfonts.com
+  recipients:
+    - info@woodfine.co
+  body_mentioned_people:
+    - Jackson Burke (designer of the original Trade Gothic typefaces, late 1940s)
+  body_mentioned_orgs:
+    - MyFonts Inc.
+    - Monotype
+    - Monotype GmbH
+    - Monotype Imaging Inc.
+    - The Hoefler Type Foundry, Inc.
+    - Linotype
+  first_party_urls:
+    - https://www.myfonts.com/

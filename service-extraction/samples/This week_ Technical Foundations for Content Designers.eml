@@ -1,0 +1,603 @@
+Received: from SJ0PR16MB4317.namprd16.prod.outlook.com (2603:10b6:a03:325::20)
+ by DM6PR16MB2569.namprd16.prod.outlook.com with HTTPS; Mon, 16 Mar 2026
+ 13:00:57 +0000
+Received: from SN7P222CA0020.NAMP222.PROD.OUTLOOK.COM (2603:10b6:806:124::10)
+ by SJ0PR16MB4317.namprd16.prod.outlook.com (2603:10b6:a03:325::20) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9700.15; Mon, 16 Mar
+ 2026 13:00:55 +0000
+Received: from SN1PEPF0002529E.namprd05.prod.outlook.com
+ (2603:10b6:806:124:cafe::e3) by SN7P222CA0020.outlook.office365.com
+ (2603:10b6:806:124::10) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.20.9700.25 via Frontend Transport; Mon,
+ 16 Mar 2026 13:00:42 +0000
+Authentication-Results: spf=pass (sender IP is 205.201.133.252)
+ smtp.mailfrom=mail252.atl21.rsgsv.net; dkim=pass (signature was verified)
+ header.d=uxcontent.com;dmarc=pass action=none
+ header.from=uxcontent.com;compauth=pass reason=100
+Received-SPF: Pass (protection.outlook.com: domain of mail252.atl21.rsgsv.net
+ designates 205.201.133.252 as permitted sender)
+ receiver=protection.outlook.com; client-ip=205.201.133.252;
+ helo=mail252.atl21.rsgsv.net; pr=C
+Received: from mail252.atl21.rsgsv.net (205.201.133.252) by
+ SN1PEPF0002529E.mail.protection.outlook.com (10.167.242.5) with Microsoft
+ SMTP Server (version=TLS1_3, cipher=TLS_AES_256_GCM_SHA384) id 15.20.9700.17
+ via Frontend Transport; Mon, 16 Mar 2026 13:00:55 +0000
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=uxcontent.com; s=k3;
+	t=1773666054; x=1773936054; i=info@uxcontent.com;
+	bh=h8Zh1IPkm/RDJ2mjmY5cV00R+Mp6R+RDzE70BjTY7Uc=;
+	h=Subject:From:Reply-To:To:Date:Message-ID:X-MC-User:Feedback-ID:
+	 List-ID:List-Unsubscribe:List-Unsubscribe-Post:Content-Type:
+	 MIME-Version:CC:Date:Subject:From;
+	b=DC75kARo5moGYjvL2JhlO7tOH2RTtkIo57C3OYR+YIs65P7kmNN4Mf1Hujv7rtpjC
+	 vXypRmSPuP8hcJdIMs7Ucs5wE6wxaMS8XvuEZx5MzuiQXWTqEUqnkI+USJjTgEpGan
+	 SdFCw9LswmtIXK1JtoSyx5NXpFRiaNhLKOxSkCQZMvS4vjNfDoTKOdKxyTm+wo48UU
+	 Nq+4c3Z7iaJgomHZaxF3WE6nE1W7IVIYVN6ffSPrBMWpBdAoN0iOOQCP78eH8gEdCB
+	 /Oh+b95NbBrTIA39HPokKBDUNjQbmQ2qaME2Vl8kcmsiJwNN4tavOZ7pZm0w8hJmEL
+	 cdUgFYXiyMx4Q==
+Received: from localhost (localhost [127.0.0.1])
+	by mail252.atl21.rsgsv.net (Mailchimp) with ESMTP id 4fZFZZ3CgvzDRT7NH
+	for <info@woodfine.co>; Mon, 16 Mar 2026 13:00:54 +0000 (UTC)
+Subject: =?utf-8?Q?This=20week=3A=20Technical=20Foundations=20for=20Content=20Designers?=
+From: UX Content Collective <info@uxcontent.com>
+Reply-To: =?utf-8?Q?UX=20Content=20Collective?= <info@uxcontent.com>
+To: <info@woodfine.co>
+Date: Mon, 16 Mar 2026 13:00:50 +0000
+Message-ID: <1b99295ee1d98cece933033f4.e70860f789.20260316130041.2a5027831e.776d6b67@mail252.atl21.rsgsv.net>
+X-Mailer: Mailchimp Mailer - **CID2a5027831ee70860f789**
+X-Campaign: mailchimp1b99295ee1d98cece933033f4.2a5027831e
+X-campaignid: mailchimp1b99295ee1d98cece933033f4.2a5027831e
+X-Report-Abuse: Please report abuse for this campaign here: https://mailchimp.com/contact/abuse/?u=1b99295ee1d98cece933033f4&id=2a5027831e&e=e70860f789
+X-MC-User: 1b99295ee1d98cece933033f4
+Feedback-ID: 103687562:103687562.14171522:us19:mc
+List-ID: 1b99295ee1d98cece933033f4mc list <1b99295ee1d98cece933033f4.106329.list-id.mcsv.net>
+X-Accounttype: pr
+List-Unsubscribe: <https://uxcontent.us19.list-manage.com/unsubscribe?u=1b99295ee1d98cece933033f4&id=f73cc32e51&t=h&e=e70860f789&c=2a5027831e>, <mailto:unsubscribe-mc.us19_1b99295ee1d98cece933033f4.2a5027831e-e70860f789@unsubscribe.mailchimpapp.net?subject=unsubscribe>
+List-Unsubscribe-Post: List-Unsubscribe=One-Click
+Content-Type: multipart/alternative; boundary="_----------=_MCPart_471428265"
+Return-Path: bounce-mc.us19_103687562.14171522-e70860f789@mail252.atl21.rsgsv.net
+X-MS-Exchange-Organization-ExpirationStartTime: 16 Mar 2026 13:00:55.1795
+ (UTC)
+X-MS-Exchange-Organization-ExpirationStartTimeReason: OriginalSubmit
+X-MS-Exchange-Organization-ExpirationInterval: 1:00:00:00.0000000
+X-MS-Exchange-Organization-ExpirationIntervalReason: OriginalSubmit
+X-MS-Exchange-Organization-Network-Message-Id: bc1affaf-7b79-433b-83e0-08de835c0f66
+X-EOPAttributedMessage: 0
+X-EOPTenantAttributedMessage: ce7cb31c-acf7-4351-b0fe-c89cda16c4ab:0
+X-MS-Exchange-Organization-MessageDirectionality: Incoming
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: SN1PEPF0002529E:EE_|SJ0PR16MB4317:EE_|DM6PR16MB2569:EE_
+X-MS-Exchange-Organization-AuthSource: SN1PEPF0002529E.namprd05.prod.outlook.com
+X-MS-Exchange-Organization-AuthAs: Anonymous
+X-MS-Office365-Filtering-Correlation-Id: bc1affaf-7b79-433b-83e0-08de835c0f66
+X-MS-Exchange-Organization-SCL: 1
+X-Microsoft-Antispam: BCL:5;ARA:13230040|7049299003|69100299015|29132699027|3109299003|3072899012|4022899009|12012899012|2092899012|7149299003|57112099003|20204142999004|18002099003|16102099003|19002099003|21082099003|13003099007|20203042999009|8096899003;
+X-Forefront-Antispam-Report: CIP:205.201.133.252;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail252.atl21.rsgsv.net;PTR:mail252.atl21.rsgsv.net;CAT:NONE;SFS:(13230040)(7049299003)(69100299015)(29132699027)(3109299003)(3072899012)(4022899009)(12012899012)(2092899012)(7149299003)(57112099003)(20204142999004)(18002099003)(16102099003)(19002099003)(21082099003)(13003099007)(20203042999009)(8096899003);DIR:INB;
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 16 Mar 2026 13:00:55.0120
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: bc1affaf-7b79-433b-83e0-08de835c0f66
+X-MS-Exchange-CrossTenant-Id: ce7cb31c-acf7-4351-b0fe-c89cda16c4ab
+X-MS-Exchange-CrossTenant-AuthSource: SN1PEPF0002529E.namprd05.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: Internet
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ0PR16MB4317
+X-MS-Exchange-Transport-EndToEndLatency: 00:00:02.5580498
+X-MS-Exchange-Processed-By-BccFoldering: 15.20.9700.017
+X-Microsoft-Antispam-Mailbox-Delivery:
+	ucf:0;jmr:0;auth:0;dest:I;ENG:(910005)(944490095)(944506478)(944626604)(920097)(930201)(20251009189)(140003);
+X-Microsoft-Antispam-Message-Info:
+	=?utf-8?B?ZUo0Z3l3RlJLN01ZazZjN1JRYUkyNWp1MVZ6citSdXZ5RklMaTNkaTVpaDBZ?=
+ =?utf-8?B?Tm1mUkZzQ21HUTNSTENsdi9MTjBEWWd2SkVxSGZ1WElCc2MwRG1VT3QxVWVj?=
+ =?utf-8?B?VFZ0V25RSU1uelgxU244ZHZNRFhraXVqSTZrcS9nSVkxVWYzZ3VFZHlPR09a?=
+ =?utf-8?B?aTBYcll5bUNGZnpFQlVFK3NBMXJCR242T3ZRTEhPbU9CZzg0VXRNcWF6R1dQ?=
+ =?utf-8?B?NjVWNlpmQkM4aTF1eUNvVW1XcHJvQVFBN2NSMlJhZCttdWpnZmxybWtNR0pk?=
+ =?utf-8?B?aEJDTnd5UHZMZnNnaEY4cVBHVkNQZG5qZHJpSERZRHFWWjlEaDB0SFUxK2di?=
+ =?utf-8?B?R3NLQ2U1UzhJUzA4MDg1a0Y5Smt4UUFrT2VGT1V3cGJJank4K2dYT2VKSTJM?=
+ =?utf-8?B?N1o4NVk3NFRSMERhVnpoVUhQOVFNbkp0WFBOMDJVMy9IYkg0amQ3dThPWjV0?=
+ =?utf-8?B?aU9VWTlzdkxRSWhUdGNKellXcnQrdnNJU05IKzlSMmdtbUVESXJTL0NDWk5C?=
+ =?utf-8?B?aFhkek9aQ25DM3ZtS0V4R1VOVDBwMzBWNzF3MjRGS3BEVHNnM3B1bkhFcHIr?=
+ =?utf-8?B?UGhBSWkxc0NaSllFWWRjSHJRSHgwc3F5SUh1cDZxeDlwUll3UWY3R2tTYXpu?=
+ =?utf-8?B?RGZISmRUNkZ0MjNMUEFBUVNERGlrbENKZGFjSXZYckpCUzJaTkNvMW1lYWRx?=
+ =?utf-8?B?d2Izc3I5TnRuTGREQ0o4MXk0TVY5SUUwaGUxU2hEeXIzS2pWRDA3WHBncGti?=
+ =?utf-8?B?VlE3SmdOd0wvS2ZmY1ZINlpFMlJhbzFralMwbnRFNTJWWnM1b1JvNTUySlhR?=
+ =?utf-8?B?WktmbTRNOWltMWhDRWxibFN4Vm43UVFMVVRNNlh4Q2Uvc3pFMHFKUjcyeDNu?=
+ =?utf-8?B?T0pQbWV2d3V4a2cwb0p3NkxiWHNTMnpHaklMdE9NYlhoT0NQdGlzWE53RnJH?=
+ =?utf-8?B?akN1RWtJZFRIS0JteU5ZMzNtNkVscTFFYnM2dVpoOEY0RFRsQkphZkwrSGQ3?=
+ =?utf-8?B?SU1IZjlzVjJ0MzF1OUp2MWEwaHkwbE5odCtqUDlxSmtNWmZJR0FtclpXMjc1?=
+ =?utf-8?B?SFo0bmZLVXdqeXlZbXdnWnlza1U5b1pkTkRQMXhkbkp1bmlOSFYwWGN5YThI?=
+ =?utf-8?B?NTA0eTR2Y3o2ZDBWM21Xem91SDlmZk5pTE9XNWVNR0FNVFB3am02K0pZdXRr?=
+ =?utf-8?B?VUpUZUlvcGx0R2NIVjdGcEtQNndIaGh1VjFXLzh4MHJ6VWtQYUxIV0dhZlps?=
+ =?utf-8?B?bWw5RmlSWU9tTlB4UHk0c0Q2dFViQ1VzRDdhNHQrZjRPdExOQUxQeDFMWGVy?=
+ =?utf-8?B?R0I0YVAvVXJSdkdpR0ZEWkUvcXI1YzRYUURGdkg3ZUZ4cUlVdTFhS2NUMmZN?=
+ =?utf-8?B?QllpbE8veEcvcEV3R0UwWjJtZ2YzUjNjOGpuYzFJZTZaL281eEZaaE1uSFI4?=
+ =?utf-8?B?aVY1bStzKzRMUklUY1JveEthV2N1UkpzaFZQY0NQcFVCUGRQUTFHbjRTazFK?=
+ =?utf-8?B?UDUwWis0aXJCNGJrdzhtaDRNbzJSLzlsWHRlbldwREtuWlR1ZHIzSDdRRFNv?=
+ =?utf-8?B?NVp6UFZTVU94M3NjZW14ZDgyNE0wbmNlSk9wSmE3aDErektYUlVqWlBMYTFw?=
+ =?utf-8?B?M3IxeEgrR1dzcDBsZVV1L29WME1sRUlVR3N2dmlkZ240NWtxSjRWMWQ4TzhW?=
+ =?utf-8?B?aE8rUFpFS0w1ckFOU0s2ZzZscTV3TGJYeDdyd0x6TGdLR0RpN0paMEh6elc5?=
+ =?utf-8?B?YldoR1VHaWVrM2pEcnA2dk84VHhQM1hINGROY3NaVkIxYmtCd1gwQkZkY2tk?=
+ =?utf-8?B?QXphWHlmSExUQkZuYzF6WWZYZjkycnBoZW9VRkl6WldSdTBRaVBaNDI3OGNO?=
+ =?utf-8?B?Tm5LaVFFL1gzRE1aTFp6VU1EbWcvSkV4YmpoTkp3enJPRk5nZmY4WWlsQW16?=
+ =?utf-8?B?b0JaZHc1T0Jib0wvNVlSNkY2WDFnajFhYmtOdnhaaUNEWDlzTWsyRDVmV1FK?=
+ =?utf-8?B?bzJkdm4yUWl3N3NFN0dMZlBjdE9FaTZKZzdPbkswcGgycUxWeml1TXBlK2Fs?=
+ =?utf-8?B?NUFwSXI4dGJQejc0TElyMlJPd0l2ZzJNaXUzeTRCKzN6WUp5QlprNjBLd0Uy?=
+ =?utf-8?B?MjFDdFBZNzBFRExZbGJXUXRFTTVCTFhnT3BvSlp6UmVWMHpoSExxbW9LWWU3?=
+ =?utf-8?B?ZTdwVG95TGx3V3lZRnpDZGwrdGkwZ3Nmb2J4MzJTc3hQWU5MTThLYkoyRzVS?=
+ =?utf-8?B?YkNER0lyYS9uZWxaU3R5anpWUlIzZlRIUkZ2WUZJNzFUcmNvUHduczdtTkdB?=
+ =?utf-8?B?a2JleGRCSGlnS0RCU094ZHpoUmFNK2d0bjRJdHZqalJHMEdUV2ViMm81MUFk?=
+ =?utf-8?B?eENLZXppNWk5L3BpbFhkYTlCSEQ1eUpKWWpLTlNNREFoM3puK2FKYVU0VFpu?=
+ =?utf-8?B?ejhCaEcydGhTRU9yc24zRzFRelpRMkg0R3hKZVRGNW16T0FqcHpPcXdOdmhl?=
+ =?utf-8?B?eVRpOC85MURMcWdjbW9oK0hiSVpWV0pnOU9ZenRKQnpKaWpDclJNV3MxemVY?=
+ =?utf-8?B?YjMzWmJmL1RTTmN1MU9DL3RiRDlUSTJ3RGRGTWhBY1JjTTJmdHltWXd4alRL?=
+ =?utf-8?B?VkpPMGFjZkxrY3hSNHY2THdleFNIODc4MkJTN044bTcvS0pjeUEwUmhLQmJL?=
+ =?utf-8?B?emU0MlQycFQyZjJlV3dMeldsSzVMbkxzK3krZlZ2aHpFVXZZR1lFK1luc0E2?=
+ =?utf-8?B?YzhUVk5iZWxqc0N1bm1HTVRSanVjYTFHemF5N25SaGlKOUtNQWVXN0NzeXB5?=
+ =?utf-8?B?c1Zac2dVUFNsMFFWWWZ3cjJiZis0RENCekdNeVV4NjUwRzdMZzVweE1jNlo4?=
+ =?utf-8?B?ckcycXZmSG5YKzk3MFluMW1lVkVjOE4xOFp5ZGpwVEYrSGlxUzJTOTBYNWtt?=
+ =?utf-8?B?Q1daMW8wR0N1dmlrRDBHcFJybGtYMFZqMG9UNFNwWmxmMXZ1L1pPT2VPUlpu?=
+ =?utf-8?B?cFdoNlBuN09XYVpOUTZna2JzV256UnFid3RrSnZJTzZ0QUM2ampwL3ovbDBx?=
+ =?utf-8?B?N29CZ0lqUVpGcUEzTVczRHlNODhTbkQvWVVNVU1IazNGUDFKNnEvV1J1czdK?=
+ =?utf-8?B?dDgvUkkzdUFBWG9FSUZMNjVSWmE4eVY1U1ZvdDlyVjA2azJ5NUNCNFFNZTA0?=
+ =?utf-8?B?c1RCZElnd1NxY2FQdGFWaS96VnRzL1E4NmVXWkRYYm9RMTJQNGFXZENFeW1L?=
+ =?utf-8?B?ZGdXMmtJdUwwRnZwUUNZVzVMS1JIVDFQNmVUKzMzaStUMitxZDBtNFk1c2Fv?=
+ =?utf-8?B?bVAzWUhKeU56aXVQdE0wWXZITWNVT3ZyNk0xaitNV0FiWm8xdVlJWDcxcG9u?=
+ =?utf-8?B?RFN6S2x0OHFDdm5uNEtFTmFxSTNxbW10UUU2MC9ualcyYjdjTFBncWliUTZ1?=
+ =?utf-8?B?OStEc0NtQk9VdVhKNG1iSHg5TkVqZDN6RC9BRWNVY1ByZ0pabDJwcW1VYTBp?=
+ =?utf-8?B?SjRoYVd3TThucUZEYWV1T3BhUVNTZFFmNmhEZWhSZm1tNk9TbCtXS0pGVTl3?=
+ =?utf-8?B?WXRJM09ZQ2xEd3NUZUIrd1JCNDVVdXMwRjRtSXZFYTBMOTMrVlZYT3NmQk1S?=
+ =?utf-8?B?dTFwV2pFak5xTVRacUFYRHN5eXhBVGNTbEpsaFhzL1EwQjdSUlZJLzNKRW9w?=
+ =?utf-8?B?RWJFU29uVGQzWkd5c21RbnFUQ0Y1Ym5OTGhUYndIWU5pYzI5czZ5anBjQ3ox?=
+ =?utf-8?B?OXdOSWpCMkxmR1RKV0RlajgwNnZzQml1Sy9IOWw4M1E0eHRkSXBqbVJIbE1r?=
+ =?utf-8?B?LzkwbHkxR0NJRnMzaVZ3NzYrb3hmT2tEbEE0WGpxQitZS1NmV09WcE5HOVdm?=
+ =?utf-8?B?cm45OC93a2hqMHg1cEVkYzFid080UHdteUo0c2JmMlJjTVZLRWhyTEtMRlJh?=
+ =?utf-8?B?VE5GczR3dGpUWUdIeVNHKzRsaHdFMVFUaC9EQ3ljMWlYd3FvU1pNL3FaZjJU?=
+ =?utf-8?Q?d9XDtlC7babmt1EdIIE?=
+MIME-Version: 1.0
+
+--_----------=_MCPart_471428265
+Content-Type: text/plain; charset="utf-8"; format="fixed"
+Content-Transfer-Encoding: quoted-printable
+
+Navigate codebases=2C read pull requests=2C use the terminal. Pre-order no=
+w for $320 (normally $400).
+
+UX Content Collective
+New Course
+
+
+** Technical Foundations
+launches this week
+
+------------------------------------------------------------
+Technical Foundations for Content Designers
+
+Hey =2C
+
+Our new course=2C Technical Foundations for Content Designers (https://uxc=
+ontent.com/course-technical-foundations-for-content-designers/?mc_cid=3D2a=
+5027831e&mc_eid=3DUNIQID) =2C launches this week - and you can save 20% if=
+ you preorder.
+
+This new course helps close the gap between content and code. You'll learn=
+ to navigate GitHub=2C read strings in code=2C understand JSON=2C use the=
+ terminal to audit content at scale=2C submit pull requests=2C and use AI=
+ to do all that and more.
+
+Preorder before March 18 and save 20%
+
+What you'll be able to do
+Navigate GitHub and submit content changes via pull requests
+Read strings in code
+Use the terminal to search and audit content at scale
+Communicate with devs and engineers
+
+LAUNCHES MARCH 18
+
+Pre-order price: $320 USD
+
+[DEL: $400 :DEL] =C2=B7 Save 20% before launch
+Pre-order for US $320 (https://uxcontent.com/course-technical-foundations-=
+for-content-designers/?mc_cid=3D2a5027831e&mc_eid=3DUNIQID)
+
+From early reviewers
+Risi Finkel
+
+"The course is fantastic=2C easy to understand=2C and simplifies complex t=
+erms. I wish I had access to this course when I started out."
+
+Risi Finkel =C2=B7 UX Writer and Content Designer=2C Google
+Prasaja Mukti
+
+"This course isn't turning content designers into devs. It gives them stru=
+ctural understanding to stop being surprised by complexity."
+
+Prasaja Mukti =C2=B7 UX Writer=2C Govtech Indonesia
+Format Self-paced =C2=B7 10-12 hours
+Structure 3 units=2C 10 lessons + final project
+Authors Patrick Stafford + Dave Connis
+Pre-order for US $320 (https://uxcontent.com/course-technical-foundations-=
+for-content-designers/?mc_cid=3D2a5027831e&mc_eid=3DUNIQID)
+
+Melbourne=2C Australia
+
+Update preferences (https://uxcontent.us19.list-manage.com/profile?u=3D1b9=
+9295ee1d98cece933033f4&id=3Df73cc32e51&e=3De70860f789&c=3D2a5027831e) =C2=B7=
+ Unsubscribe (https://uxcontent.us19.list-manage.com/unsubscribe?u=3D1b992=
+95ee1d98cece933033f4&id=3Df73cc32e51&t=3Db&e=3De70860f789&c=3D2a5027831e)
+
+=C2=A9 2026 UX Content Collective
+--_----------=_MCPart_471428265
+Content-Type: text/html; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+
+<!DOCTYPE html><html lang=3D"en"><head>
+<meta http-equiv=3D"Content-Type" content=3D"text/html; charset=3Dutf-8">
+    <meta name=3D"viewport" content=3D"width=3Ddevice-width, initial-scale=
+=3D1.0">
+    <meta http-equiv=3D"X-UA-Compatible" content=3D"IE=3Dedge">
+    <title>Technical Foundations for Content Designers</title>
+    <!--[if mso]>
+    <noscript>
+        <xml>
+            <o:OfficeDocumentSettings>
+                <o:PixelsPerInch>96</o:PixelsPerInch>
+            </o:OfficeDocumentSettings>
+        </xml>
+    </noscript>
+    <![endif]-->
+    <link href=3D"https://fonts.googleapis.com/css2?family=3DRaleway:wght@7=
+00;800&amp;family=3DPoppins:wght@400;500;600&amp;display=3Dswap" rel=3D"sty=
+lesheet">
+</head>
+<body style=3D"margin: 0; padding: 0; background-color: #f5f5f5; -webkit-fo=
+nt-smoothing: antialiased;">
+
+    <!-- Preheader -->
+    <div style=3D"display: none; max-height: 0px; overflow: hidden; mso-hid=
+e: all;">
+        Navigate codebases, read pull requests, use the terminal. Pre-order=
+ now for $320 (normally $400).
+    </div>
+
+    <center style=3D"width: 100%; background-color: #f5f5f5;">
+
+        <table role=3D"presentation" border=3D"0" cellpadding=3D"0" cellspa=
+cing=3D"0" width=3D"600" style=3D"max-width: 600px; margin: 0 auto; backgro=
+und-color: #ffffff;">
+
+            <!-- Header -->
+            <tr>
+                <td style=3D"padding: 24px 40px; border-bottom: 1px solid #=
+e5e5e5;">
+                    <img src=3D"https://uxcontent.com/wp-content/uploads/20=
+21/11/MASTER-BLACK-UXCC-LOGO.png" alt=3D"UX Content Collective" width=3D"12=
+0" style=3D"display: block;">
+                </td>
+            </tr>
+
+            <!-- Two-column hero -->
+            <tr>
+                <td style=3D"background-color: #ffffff; padding: 40px;">
+                    <table role=3D"presentation" border=3D"0" cellpadding=
+=3D"0" cellspacing=3D"0" width=3D"100%">
+                        <tr>
+                            <td valign=3D"top" style=3D"padding-right: 24px=
+;">
+                                <!-- Label with link blue dash -->
+                                <table role=3D"presentation" border=3D"0" c=
+ellpadding=3D"0" cellspacing=3D"0">
+                                    <tr>
+                                        <td style=3D"padding-bottom: 16px;"=
+>
+                                            <table role=3D"presentation" bo=
+rder=3D"0" cellpadding=3D"0" cellspacing=3D"0">
+                                                <tr>
+                                                    <td style=3D"width: 20p=
+x; height: 2px; background-color: #527EC5;"></td>
+                                                    <td style=3D"padding-le=
+ft: 8px; font-family: 'Poppins', Helvetica, Arial, sans-serif; font-size: 1=
+1px; font-weight: 600; text-transform: uppercase; letter-spacing: 2px; colo=
+r: #527EC5;">
+                                                        New Course
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                </table>
+
+                                <!-- Headline -->
+                                <h1 style=3D"margin: 0; font-family: 'Ralew=
+ay', Helvetica, Arial, sans-serif; font-size: 28px; font-weight: 800; color=
+: #1a1a2e; line-height: 1.2; letter-spacing: -0.5px;">
+                                    Technical Foundations<br>
+                                    <span style=3D"color: #527EC5;">launche=
+s this week</span><br>
+
+                                </h1>
+                            </td>
+                            <td width=3D"200" valign=3D"top" style=3D"paddi=
+ng-top: 0px;">
+                                <img src=3D"https://uxcontent.com/wp-conten=
+t/uploads/2026/03/B2B-1-16.png" alt=3D"Technical Foundations for Content De=
+signers" width=3D"200" style=3D"display: block; width: 200px; height: auto;=
+ border-radius: 8px;">
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+
+            <!-- Body -->
+            <tr>
+                <td style=3D"padding: 0 40px 40px 40px;">
+
+                    <p style=3D"font-family: 'Poppins', Helvetica, Arial, s=
+ans-serif; font-size: 15px; color: #333333; line-height: 1.7; margin: 0 0 2=
+0px 0;">Hey ,</p>
+
+                    <p style=3D"font-family: 'Poppins', Helvetica, Arial, s=
+ans-serif; font-size: 15px; color: #333333; line-height: 1.7; margin: 0 0 2=
+0px 0;">Our new course, <a href=3D"https://uxcontent.us19.list-manage.com/t=
+rack/click?u=3D1b99295ee1d98cece933033f4&amp;id=3D587407299f&amp;e=3De70860=
+f789">Technical Foundations for Content Designers</a>, launches this week -=
+ and you can save 20% if you preorder.</p>
+
+                    <p style=3D"font-family: 'Poppins', Helvetica, Arial, s=
+ans-serif; font-size: 15px; color: #333333; line-height: 1.7; margin: 0 0 2=
+0px 0;">This new course helps close the gap between content and code. You'l=
+l learn to navigate GitHub, read strings in code, understand JSON, use the =
+terminal to audit content at scale, submit pull requests, and use AI to do =
+all that and more.</p>
+
+                                        <p style=3D"font-family: 'Poppins',=
+ Helvetica, Arial, sans-serif; font-size: 15px; color: #333333; line-height=
+: 1.7; margin: 0 0 24px 0;">Preorder before March 18 and save 20%</p>
+
+
+                    <!-- What you'll learn - compact -->
+                    <p style=3D"font-family: 'Poppins', Helvetica, Arial, s=
+ans-serif; font-size: 13px; font-weight: 600; color: #527EC5; text-transfor=
+m: uppercase; letter-spacing: 0.5px; margin: 0 0 12px 0;">What you'll be ab=
+le to do</p>
+
+                    <table role=3D"presentation" border=3D"0" cellpadding=
+=3D"0" cellspacing=3D"0" width=3D"100%" style=3D"margin-bottom: 24px;">
+                        <tr>
+                            <td style=3D"padding: 8px 0; border-bottom: 1px=
+ solid #e5e5e5; font-family: 'Poppins', Helvetica, Arial, sans-serif; font-=
+size: 14px; color: #333333;">
+                                Navigate GitHub and submit content changes =
+via pull requests
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style=3D"padding: 8px 0; border-bottom: 1px=
+ solid #e5e5e5; font-family: 'Poppins', Helvetica, Arial, sans-serif; font-=
+size: 14px; color: #333333;">
+                                Read strings in code
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style=3D"padding: 8px 0; border-bottom: 1px=
+ solid #e5e5e5; font-family: 'Poppins', Helvetica, Arial, sans-serif; font-=
+size: 14px; color: #333333;">
+                                Use the terminal to search and audit conten=
+t at scale
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style=3D"padding: 8px 0; font-family: 'Popp=
+ins', Helvetica, Arial, sans-serif; font-size: 14px; color: #333333;">
+                                Communicate with devs and engineers
+                            </td>
+                        </tr>
+                    </table>
+
+                    <!-- Price callout -->
+                    <table role=3D"presentation" border=3D"0" cellpadding=
+=3D"0" cellspacing=3D"0" width=3D"100%" style=3D"margin-bottom: 24px;">
+                        <tr>
+                            <td style=3D"background-color: #f0fdfa; padding=
+: 20px; border-radius: 8px;">
+                                                            <p style=3D"fon=
+t-family: 'Poppins', Helvetica, Arial, sans-serif; font-size: 14px; font-we=
+ight: 600; color: #1a1a2e; margin: 0 0 4px 0;">LAUNCHES MARCH 18</p>
+
+                                <p style=3D"font-family: 'Poppins', Helveti=
+ca, Arial, sans-serif; font-size: 14px; font-weight: 600; color: #1a1a2e; m=
+argin: 0 0 4px 0;">Pre-order price: $320 USD</p>
+                                <p style=3D"font-family: 'Poppins', Helveti=
+ca, Arial, sans-serif; font-size: 14px; color: #666666; line-height: 1.5; m=
+argin: 0;"><s>$400</s> =C2=B7 Save 20% before launch</p>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <!-- CTA -->
+                    <table role=3D"presentation" border=3D"0" cellpadding=
+=3D"0" cellspacing=3D"0" style=3D"margin: 0 0 32px 0;">
+                        <tr>
+                            <td style=3D"background-color: #1a1a2e; border-=
+radius: 100px;">
+                                <a href=3D"https://uxcontent.us19.list-mana=
+ge.com/track/click?u=3D1b99295ee1d98cece933033f4&amp;id=3D913c0efa98&amp;e=
+=3De70860f789" style=3D"display: inline-block; padding: 14px 32px; font-fam=
+ily: 'Poppins', Helvetica, Arial, sans-serif; font-size: 14px; font-weight:=
+ 600; color: #ffffff; text-decoration: none;">Pre-order for US $320</a>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <!-- Testimonials -->
+                    <p style=3D"font-family: 'Poppins', Helvetica, Arial, s=
+ans-serif; font-size: 13px; font-weight: 600; color: #527EC5; text-transfor=
+m: uppercase; letter-spacing: 0.5px; margin: 0 0 16px 0;">From early review=
+ers</p>
+
+                    <!-- Testimonial 1 -->
+                    <table role=3D"presentation" border=3D"0" cellpadding=
+=3D"0" cellspacing=3D"0" width=3D"100%" style=3D"margin-bottom: 16px;">
+                        <tr>
+                            <td style=3D"background-color: #f8f8f8; padding=
+: 20px; border-radius: 8px;">
+                                <table role=3D"presentation" border=3D"0" c=
+ellpadding=3D"0" cellspacing=3D"0" width=3D"100%">
+                                    <tr>
+                                        <td width=3D"56" valign=3D"top">
+                                            <img src=3D"https://uxcontent.c=
+om/wp-content/uploads/2026/03/Risi-Finkel.jpeg" alt=3D"Risi Finkel" width=
+=3D"48" height=3D"48" style=3D"border-radius: 50%; display: block;">
+                                        </td>
+                                        <td style=3D"padding-left: 12px;" v=
+align=3D"top">
+                                            <p style=3D"font-family: 'Poppi=
+ns', Helvetica, Arial, sans-serif; font-size: 14px; color: #333333; line-he=
+ight: 1.6; margin: 0 0 8px 0; font-style: italic;">&quot;The course is fant=
+astic, easy to understand, and simplifies complex terms. I wish I had acces=
+s to this course when I started out.&quot;</p>
+                                            <p style=3D"font-family: 'Poppi=
+ns', Helvetica, Arial, sans-serif; font-size: 13px; color: #666666; margin:=
+ 0;"><strong style=3D"color: #1a1a2e;">Risi Finkel</strong> =C2=B7 UX Write=
+r and Content Designer, Google</p>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <!-- Testimonial 2 -->
+                    <table role=3D"presentation" border=3D"0" cellpadding=
+=3D"0" cellspacing=3D"0" width=3D"100%" style=3D"margin-bottom: 24px;">
+                        <tr>
+                            <td style=3D"background-color: #f8f8f8; padding=
+: 20px; border-radius: 8px;">
+                                <table role=3D"presentation" border=3D"0" c=
+ellpadding=3D"0" cellspacing=3D"0" width=3D"100%">
+                                    <tr>
+                                        <td width=3D"56" valign=3D"top">
+                                            <img src=3D"https://uxcontent.c=
+om/wp-content/uploads/2026/03/Prasaja-Mukti.jpeg" alt=3D"Prasaja Mukti" wid=
+th=3D"48" height=3D"48" style=3D"border-radius: 50%; display: block;">
+                                        </td>
+                                        <td style=3D"padding-left: 12px;" v=
+align=3D"top">
+                                            <p style=3D"font-family: 'Poppi=
+ns', Helvetica, Arial, sans-serif; font-size: 14px; color: #333333; line-he=
+ight: 1.6; margin: 0 0 8px 0; font-style: italic;">&quot;This course isn't =
+turning content designers into devs. It gives them structural understanding=
+ to stop being surprised by complexity.&quot;</p>
+                                            <p style=3D"font-family: 'Poppi=
+ns', Helvetica, Arial, sans-serif; font-size: 13px; color: #666666; margin:=
+ 0;"><strong style=3D"color: #1a1a2e;">Prasaja Mukti</strong> =C2=B7 UX Wri=
+ter, Govtech Indonesia</p>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <!-- Course details - compact -->
+                    <table role=3D"presentation" border=3D"0" cellpadding=
+=3D"0" cellspacing=3D"0" width=3D"100%" style=3D"margin-bottom: 24px;">
+                        <tr>
+                            <td style=3D"padding: 8px 0; border-bottom: 1px=
+ solid #e5e5e5;">
+                                <span style=3D"font-family: 'Poppins', Helv=
+etica, Arial, sans-serif; font-size: 13px; color: #666666;">Format</span>
+                                <span style=3D"font-family: 'Poppins', Helv=
+etica, Arial, sans-serif; font-size: 13px; color: #1a1a2e; float: right;">S=
+elf-paced =C2=B7 10-12 hours</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style=3D"padding: 8px 0; border-bottom: 1px=
+ solid #e5e5e5;">
+                                <span style=3D"font-family: 'Poppins', Helv=
+etica, Arial, sans-serif; font-size: 13px; color: #666666;">Structure</span=
+>
+                                <span style=3D"font-family: 'Poppins', Helv=
+etica, Arial, sans-serif; font-size: 13px; color: #1a1a2e; float: right;">3=
+ units, 10 lessons + final project</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style=3D"padding: 8px 0;">
+                                <span style=3D"font-family: 'Poppins', Helv=
+etica, Arial, sans-serif; font-size: 13px; color: #666666;">Authors</span>
+                                <span style=3D"font-family: 'Poppins', Helv=
+etica, Arial, sans-serif; font-size: 13px; color: #1a1a2e; float: right;">P=
+atrick Stafford + Dave Connis</span>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <!-- Second CTA -->
+                    <table role=3D"presentation" border=3D"0" cellpadding=
+=3D"0" cellspacing=3D"0" style=3D"margin: 0 0 24px 0;">
+                        <tr>
+                            <td style=3D"background-color: #1a1a2e; border-=
+radius: 100px;">
+                                <a href=3D"https://uxcontent.us19.list-mana=
+ge.com/track/click?u=3D1b99295ee1d98cece933033f4&amp;id=3D6f2628fe63&amp;e=
+=3De70860f789" style=3D"display: inline-block; padding: 14px 32px; font-fam=
+ily: 'Poppins', Helvetica, Arial, sans-serif; font-size: 14px; font-weight:=
+ 600; color: #ffffff; text-decoration: none;">Pre-order for US $320</a>
+                            </td>
+                        </tr>
+                    </table>
+
+                </td>
+            </tr>
+
+            <!-- Footer -->
+            <tr>
+                <td style=3D"background-color: #1a1a2e; padding: 32px 40px;=
+">
+                    <table role=3D"presentation" border=3D"0" cellpadding=
+=3D"0" cellspacing=3D"0" width=3D"100%">
+                        <tr>
+                            <td>
+                                <p style=3D"font-family: 'Poppins', Helveti=
+ca, Arial, sans-serif; font-size: 12px; color: rgba(255,255,255,0.6); line-=
+height: 1.6; margin: 0 0 16px 0;">
+                                    Melbourne, Australia
+                                </p>
+                                <p style=3D"font-family: 'Poppins', Helveti=
+ca, Arial, sans-serif; font-size: 12px; color: rgba(255,255,255,0.6); line-=
+height: 1.6; margin: 0;">
+                                    <a href=3D"https://uxcontent.us19.list-=
+manage.com/profile?u=3D1b99295ee1d98cece933033f4&amp;id=3Df73cc32e51&amp;e=
+=3De70860f789&amp;c=3D2a5027831e" style=3D"color: rgba(255,255,255,0.6); te=
+xt-decoration: underline;">Update preferences</a>
+                                    <span style=3D"padding: 0 8px;">=C2=B7<=
+/span>
+                                    <a href=3D"https://uxcontent.us19.list-=
+manage.com/unsubscribe?u=3D1b99295ee1d98cece933033f4&amp;id=3Df73cc32e51&am=
+p;t=3Db&amp;e=3De70860f789&amp;c=3D2a5027831e" style=3D"color: rgba(255,255=
+,255,0.6); text-decoration: underline;">Unsubscribe</a>
+                                </p>
+                                <p style=3D"font-family: 'Poppins', Helveti=
+ca, Arial, sans-serif; font-size: 12px; color: rgba(255,255,255,0.4); margi=
+n: 16px 0 0 0;">
+                                    =C2=A9 2026 UX Content Collective
+                                </p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+
+        </table>
+
+    </center>
+
+<div style=3D"display:none;"><img src=3D"https://uxcontent.us19.list-manage=
+.com/track/open.php?u=3D1b99295ee1d98cece933033f4&amp;id=3D2a5027831e&amp;e=
+=3De70860f789" height=3D"1" width=3D"1" style=3D"display:none;" alt=3D""></=
+div></body>
+</html>=
+
+--_----------=_MCPart_471428265--

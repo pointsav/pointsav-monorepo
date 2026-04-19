@@ -1,6 +1,6 @@
 # Woodfine / PointSav Platform — User Guide
 
-> Generated: 2026-03-30
+> Generated: 2026-03-30 · Revised: 2026-04-18
 > To regenerate this document, run `/generate-user-guide` in Claude Code.
 
 ---
@@ -339,7 +339,7 @@ When the native replacement reaches parity, it physically replaces the quarantin
 
 ## Overview
 
-The data pipeline describes how information from the outside world — primarily email — enters the ToteboxArchive system, gets processed, and becomes queryable corporate knowledge. This is the first implemented pipeline; additional service pipelines will be developed as the platform matures. There are seven named components in this pipeline.
+The data pipeline describes how information from the outside world — primarily email, plus human-driven F12 commits — enters the ToteboxArchive system, gets processed, and becomes queryable corporate knowledge. This is the first implemented pipeline; additional service pipelines will be developed as the platform matures. The services below are described in the order data flows through them, starting from the WORM storage kernel and ending with outbound messaging.
 
 ```
  +================================+
@@ -358,7 +358,7 @@ The data pipeline describes how information from the outside world — primarily
                  |
                  v
  +-------------------------------+
- |  service-parser               |
+ |  service-extraction           |
  |  (Traffic Controller)         |
  |  Strips MIME/JSON formatting. |
  |  Creates Entity Bundles.      |
@@ -427,6 +427,19 @@ The data pipeline describes how information from the outside world — primarily
                      +----------------+
 ```
 
+## service-fs — The WORM Storage Kernel
+
+All other services persist their data through `service-fs`. It is the filesystem kernel of the Totebox Archive, and it is the reason the append-only, tamper-evident property of every record holds end-to-end.
+
+Every service that owns durable data — `service-email`, `service-input`, `service-extraction`, `service-slm`, `service-people`, `service-content`, `service-search`, `service-egress` — writes into a dedicated subtree under `service-fs/data/<service-name>/`. Each subtree has the same shape:
+
+- `service-fs/data/<service-name>/source/` — raw bytes vaulted before any processing
+- `service-fs/data/<service-name>/ledger/` — append-only transaction log for that service
+
+A developer inspecting an archive can run `tree service-fs/data/` and see exactly which services have written data, and can `cat service-fs/data/<service-name>/ledger/*.csv` to see the complete write history of any one service in isolation. There is no shared global ledger — every service keeps its own audit trail inside `service-fs`'s custody.
+
+`service-fs` itself has no higher-level logic. It does not read content, classify it, or summarise it. It provides the append-only guarantee, the SHA-256 sealing on every write, and the per-service directory isolation. Everything else is pushed up the stack into the services that own the data.
+
 ## service-email — The Transport Interceptor
 
 The email service's only job is to pull email out of the external cloud (Microsoft 365) and write it to a local disk. It uses an OAuth2 cryptographic handshake against the Microsoft Graph API to authenticate. It polls for unread messages, extracts the raw data, writes it to a temporary queue directory (`/assets/tmp-maildir/`), and marks the message as read on the external server to prevent it from being pulled again.
@@ -435,9 +448,19 @@ This service deliberately has no intelligence. It does not read the email conten
 
 The monorepo contains two harvester implementations: an older EWS-based harvester (`ingress-harvester`) and a newer Graph API-based harvester (`master-harvester-rs`). The newer implementation dynamically discovers folder IDs, maintains a deduplication ledger, downloads in parallel, and does not delete messages from the mailbox — making it the operationally safer choice.
 
-## service-parser — The Traffic Controller
+## service-input — The F12 Commit Gateway
 
-The parser receives raw email from the queue and strips the proprietary formatting (MIME multipart, Base64 encoded attachments, JSON wrappers) to produce clean, readable content. It assigns a transaction ID to each email so all downstream artifacts can be traced back to their source.
+`service-email` handles automated ingress from external clients. `service-input` is its counterpart for human-driven ingress: the backside of the F12 Input Machine (see Part VII). When an operator drags a verified file — a PDF, a scanned document, an exported CSV, a photograph from a site inspection — into the F12 drop zone, that file lands in `service-input/source/` with a ledger entry recording who committed it, when, and against which Totebox Archive.
+
+`service-input` has the same shape as `service-email` — a pure transport mechanism that vaults raw files in their original form with a SHA-256 seal, applies zero intelligence, and hands downstream processing to `service-extraction`. The distinction is the trigger: `service-email` is cron-driven and non-interactive; `service-input` is human-driven and always carries an operator signature.
+
+Future ingress channels (`service-iot` for sensor streams is the first planned addition) will follow the same pattern: one service per source type, each with its own ledger, all routing to `service-extraction` as the next stage.
+
+## service-extraction — The Traffic Controller
+
+*(Previously named `service-parser`. Some active code still carries the legacy name; `service-extraction` is the canonical long-term name.)*
+
+The extraction service receives raw email from the queue and strips the proprietary formatting (MIME multipart, Base64 encoded attachments, JSON wrappers) to produce clean, readable content. It assigns a transaction ID to each email so all downstream artifacts can be traced back to their source.
 
 It then routes the cleaned content based on what type of data it is:
 
@@ -502,6 +525,16 @@ A hard throttle of 10 verifications per day is enforced. This is not a technical
 The search service provides rapid retrieval across all files in the archive. It is built using Tantivy, a Rust-based search library, and implements an inverted index — the same underlying structure used by the index at the back of a textbook.
 
 The index is static and binary, meaning it does not require a running database engine. The entire index can be copied to a USB drive and searched instantly on any machine. This is what the DARP (Data Access and Retention Protocol) compliance standard requires: data must be searchable without proprietary software.
+
+## service-egress — Physical Overflow to Paired Media
+
+Not every archive file belongs in the hot storage tier. High-resolution scans, BIM files, IoT bulk dumps, and archived video can run into hundreds of gigabytes per asset — well beyond what a commodity cloud node holds. `service-egress` is the physical overflow valve.
+
+When a payload exceeds the node's retention threshold, `service-egress` compresses it, encrypts it with a key cryptographically paired to a specific external drive, and writes the result to that drive. The drive is unreadable to any other system — it is mathematically entangled with the Totebox Archive it was paired to. If the drive is lost or stolen, the encrypted payload is useless; if the Totebox Archive is lost, the drive becomes useless in parallel.
+
+This is the practical implementation of Asymmetric Storage (the Flow-Through Protocol): the lightweight semantic index and metadata stay inside the Totebox, the heavy payload lives on paired external media. `service-egress` maintains the index of which payloads have been offloaded to which drives so the system knows where to look when a buried file is needed.
+
+Like every other service, `service-egress` persists its ledger inside `service-fs/data/service-egress/` — a complete append-only record of every overflow operation, every drive pairing, and every retrieval.
 
 ## service-message-courier — Outbound Messaging
 
@@ -992,6 +1025,14 @@ None of this requires over-engineering today. It requires awareness: choosing an
 ---
 
 ## CHANGELOG
+
+### 2026-04-18
+- **Added**: `service-fs` section at the top of Part VI describing the WORM storage kernel and the `service-fs/data/<service-name>/{source,ledger}` per-service isolation pattern that all durable services use
+- **Added**: `service-input` section in Part VI describing the human-driven F12 ingress counterpart to `service-email`
+- **Added**: `service-egress` section in Part VI describing physical overflow to cryptographically paired external media
+- **Renamed**: `service-parser` → `service-extraction` throughout Part VI, with a transitional note that the legacy name still appears in active code
+- **Changed**: Part VI overview updated to reflect that ingress covers both automated (email) and human-driven (F12/input) paths; removed stale "seven named components" claim
+- **Rationale**: Aligns the User Guide with the canonical nine-service catalog in MEMO V7 and the Nomenclature Matrix, and documents the per-service directory pattern already present in the live `cluster-totebox-personnel-1` deployment
 
 ### 2026-03-30_14-31-28
 - **Added**: ADRs 13-19 to Part X (Type-II Hypervisor Command Authority, Port Splitting, Cache Busting, Unicast over WireGuard, Derivative Architecture, Command Ledger HUD, Sovereign Airgap)

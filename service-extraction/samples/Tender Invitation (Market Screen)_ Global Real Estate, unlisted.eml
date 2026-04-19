@@ -1,0 +1,626 @@
+Received: from PH0PR16MB4183.namprd16.prod.outlook.com (2603:10b6:510:50::10)
+ by DM6PR16MB2569.namprd16.prod.outlook.com with HTTPS; Mon, 16 Mar 2026
+ 13:06:44 +0000
+Received: from BN1PR10CA0005.namprd10.prod.outlook.com (2603:10b6:408:e0::10)
+ by PH0PR16MB4183.namprd16.prod.outlook.com (2603:10b6:510:50::10) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9700.24; Mon, 16 Mar
+ 2026 13:06:40 +0000
+Received: from BN2PEPF000044A0.namprd02.prod.outlook.com
+ (2603:10b6:408:e0:cafe::e7) by BN1PR10CA0005.outlook.office365.com
+ (2603:10b6:408:e0::10) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.20.9700.25 via Frontend Transport; Mon,
+ 16 Mar 2026 13:06:37 +0000
+Authentication-Results: spf=pass (sender IP is 95.168.204.55)
+ smtp.mailfrom=ams.ppcmetrics.ch; dkim=pass (signature was verified)
+ header.d=ams.ppcmetrics.ch;dmarc=pass action=none
+ header.from=ams.ppcmetrics.ch;compauth=pass reason=100
+Received-SPF: Pass (protection.outlook.com: domain of ams.ppcmetrics.ch
+ designates 95.168.204.55 as permitted sender)
+ receiver=protection.outlook.com; client-ip=95.168.204.55;
+ helo=xpmsp155.xcampaign.ch; pr=C
+Received: from xpmsp155.xcampaign.ch (95.168.204.55) by
+ BN2PEPF000044A0.mail.protection.outlook.com (10.167.243.151) with Microsoft
+ SMTP Server (version=TLS1_3, cipher=TLS_AES_256_GCM_SHA384) id 15.20.9700.17
+ via Frontend Transport; Mon, 16 Mar 2026 13:06:39 +0000
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple; t=1773665936;
+	s=xcampaign; d=ams.ppcmetrics.ch; i=noreply@ams.ppcmetrics.ch;
+	h=From:Reply-To:To:Message-ID:Subject:MIME-Version:Content-Type:X-CSA-Complaints:X-Mailer:User-Agent:CFBL-Address:CFBL-Feedback-ID:List-Id:List-Unsubscribe:List-Unsubscribe-Post:Feedback-ID;
+	bh=KTLlq7XVJYrbjeLXNxsfmg3udnW/sNPI3ADkgev+uSg=;
+	b=omDYGXCxQhH/EB5tVCRa1T2FQ034UJ1V5vlf7wTiHD0B01m1g4R19a4TgkB5lpuZ
+	5ghSUwCiCg1tyWTN8mf12Oj3C5dbSaP3JcSpk/UH35Nkcez5Js8drWY7jldA+gzxHYU
+	N2kZpd/8aAfyJBOX77brPbBe35aWDeD/R0K+6rLQ=
+From: PPCmetrics AG <noreply@ams.ppcmetrics.ch>
+Reply-To: PPCmetrics AG <reply-12260316135810544230.479972@ams.ppcmetrics.ch>
+To: info@woodfine.co
+Message-ID: <260316120132210949.1624922940977.12260316135810544230@ams.ppcmetrics.ch>
+Subject: Tender Invitation (Market Screen): Global Real Estate, unlisted
+Content-Type: multipart/alternative; 
+	boundary="----=_Part_032421_1828730005.1773665890540"
+X-CSA-Complaints: csa-complaints@eco.de
+X-Mailer: XCAMPAIGN Mailer (8.0.0)
+User-Agent: XCAMPAIGN Mailer (8.0.0)
+CFBL-Address: cfbl@ams.ppcmetrics.ch; report=arf
+CFBL-Feedback-ID: 260316120132210949.1624922940977.12260316135810544230@ams.ppcmetrics.ch
+List-Id: <12aa8c6460deec773a67add06e5ed5bd9b76fe69.ams.ppcmetrics.ch>
+List-Unsubscribe: <mailto:unsubscribe-12260316135810544230.479972@ams.ppcmetrics.ch?subject=unsubscribe>,
+ <https://links.ppcmetrics.ch/dispatcher/service?eparams=slJnLkKodmUC9oXFmx1dtWdwfCv%2BiSYSj9cJFJT8fJkRQMNq%2Fcz8FhlbRDG7QUiFrP2yA%2BHaDeGCKKb5AipBSg%3D%3D&lu=t>
+List-Unsubscribe-Post: List-Unsubscribe=One-Click
+Feedback-ID: 260316120132210949:12aa8c6460deec773a67add06e5ed5bd9b76fe69:eymjr-ndqewzmta:xcapp
+Date: Mon, 16 Mar 2026 14:02:09 +0100
+Comments: MADE_MP155_0_260316140209984250
+Return-Path: noreply@ams.ppcmetrics.ch
+X-MS-Exchange-Organization-ExpirationStartTime: 16 Mar 2026 13:06:39.8116
+ (UTC)
+X-MS-Exchange-Organization-ExpirationStartTimeReason: OriginalSubmit
+X-MS-Exchange-Organization-ExpirationInterval: 1:00:00:00.0000000
+X-MS-Exchange-Organization-ExpirationIntervalReason: OriginalSubmit
+X-MS-Exchange-Organization-Network-Message-Id: df4c19fa-f442-406e-3165-08de835cdcd1
+X-EOPAttributedMessage: 0
+X-EOPTenantAttributedMessage: ce7cb31c-acf7-4351-b0fe-c89cda16c4ab:0
+X-MS-Exchange-Organization-MessageDirectionality: Incoming
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: BN2PEPF000044A0:EE_|PH0PR16MB4183:EE_|DM6PR16MB2569:EE_
+X-MS-Exchange-Organization-AuthSource: BN2PEPF000044A0.namprd02.prod.outlook.com
+X-MS-Exchange-Organization-AuthAs: Anonymous
+X-MS-Office365-Filtering-Correlation-Id: df4c19fa-f442-406e-3165-08de835cdcd1
+X-MS-Exchange-Organization-SCL: 1
+X-Microsoft-Antispam: BCL:0;ARA:13230040|704161711799003|704162111799003|69100299015|4022899009|7149299003|12012899012|16102099003|19002099003|21082099003|56012099003|13003099007|8096899003|4076899003;
+X-Forefront-Antispam-Report: CIP:95.168.204.55;CTRY:CZ;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:xpmsp155.xcampaign.ch;PTR:xpmsp155.xcampaign.ch;CAT:NONE;SFS:(13230040)(704161711799003)(704162111799003)(69100299015)(4022899009)(7149299003)(12012899012)(16102099003)(19002099003)(21082099003)(56012099003)(13003099007)(8096899003)(4076899003);DIR:INB;
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 16 Mar 2026 13:06:39.2135
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: df4c19fa-f442-406e-3165-08de835cdcd1
+X-MS-Exchange-CrossTenant-Id: ce7cb31c-acf7-4351-b0fe-c89cda16c4ab
+X-MS-Exchange-CrossTenant-AuthSource: BN2PEPF000044A0.namprd02.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: Internet
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR16MB4183
+X-MS-Exchange-Transport-EndToEndLatency: 00:00:05.0940585
+X-MS-Exchange-Processed-By-BccFoldering: 15.20.9700.017
+X-Microsoft-Antispam-Mailbox-Delivery:
+	ucf:0;jmr:0;auth:0;dest:I;ENG:(910005)(944506478)(944626604)(920097)(930201)(20251009189)(140003);
+X-Microsoft-Antispam-Message-Info:
+	=?utf-8?B?R0FVNlg3ZzJrREN1V1ozTnVrYzI3bE00NVpVUVN5V0lUbVNPNWdoY2dadlEr?=
+ =?utf-8?B?bzZ6QTVTYzhQaHJmVjdwUVFyN1YvYmh0ZS9QN1pTN3lSS0lyblFHK0pieVpV?=
+ =?utf-8?B?UzNsVFE0NVBjSEdKWGdqMG9ETUlMQXQvQzI5Q2Myd1hyYUxPNmd1WjBBUVh4?=
+ =?utf-8?B?SUVURnAwMHhteE4wNU1uMFVZaUV5QkF3OXlLUzc0T3FlTU9TSHlHWGo0NWx4?=
+ =?utf-8?B?NzRmdmkwaGZrcHB0c1RPc3lxUlptOGZWNmtLWnFMbGxuaFlWTHRnK29XQzM2?=
+ =?utf-8?B?ZlMzVkRwdmU5SFNqTHRqVUphVDNNdGxNaWtVMExZQWYwblBjN0ROVSs5bzdq?=
+ =?utf-8?B?ZFBENWZxSGkvSDkvY2RLSXJETWI1TVpXS3R4SG9WWmhpaEVHOWtpcGE4ekRh?=
+ =?utf-8?B?aWk2czBPZWxmdmdJdVVQNHQvcWw3UEZ0WHNmZ3U5SVBZMXk4RDdhZlJvb3Uv?=
+ =?utf-8?B?QmlnUEs5WS9USkFBSGZITkpZM3VSVm5XWTVoVEJObXpUdnAzYnhzNFhJMkNI?=
+ =?utf-8?B?WE50VTlHWnc5V1NHVXlhamEwNnA5YVUwbk9FNFpmUHNQV1BXUCtOcENSVEFx?=
+ =?utf-8?B?TGJVeEhuZjM4MlE5UXpzWXJaYll1ekFHRUJIN2VLTzl3MmJTdHBscHZVK1Vm?=
+ =?utf-8?B?V1BzU2pRd1BsZjRaSnBxODZhd2RUR0xyVGRQd2ZRa0dpZXNUc243cnRlRFVN?=
+ =?utf-8?B?S0dOU1pMaHdsZlBCVE5BclNBL3Uwd0JOYlhFSmpPdS83S0FuZjQ4RWV4OXRu?=
+ =?utf-8?B?RFBZNmhXclZRMHJDYkZsK1l4Q2tMMkd2dndkS2xXeTZQWEhRNTE4dmNoVXoy?=
+ =?utf-8?B?M2RFRnRsWnBETWtYQnN6THZBaTVJL0pQaFJMb2l5V0hmdkFUQVNIb1JMWXdx?=
+ =?utf-8?B?L1laNlNacXVTUUR4ZnJUOUdTMWlrS0pnNk54aWN2Vm9aVVRTeTRRQjMwbW1C?=
+ =?utf-8?B?VlpsSkJZWEV1VGxFZFdzdTg2dE5OajJyRWJ6NWx5RGNNZ2daU2ErbUJLZThB?=
+ =?utf-8?B?c0w5N0tmczNMRGhzenJaR3ZsMzZPM1RjNFZlUGxvMVJlcTFNRDJVMVpTamY0?=
+ =?utf-8?B?MjF6OC9oU1NRVHZHRkxWUW9Kckd3bVhjbUpoM0tPcmJkTkxGQXBaL3hKYWZP?=
+ =?utf-8?B?Uzc1VGg1ejRCdUtSMWt0akhpeitycWVYZ1k2NHJZV0Z5a2pSZ1p3SGc0VEhP?=
+ =?utf-8?B?Y0k5WHg4OUpOSkhUYWErcmlBVkFWS2g2OW9TZDhmNmUxVGlORDV3QUJjLytr?=
+ =?utf-8?B?RHI0ZWdyTHBzaC9xbUc0ZkV1a05DMm5zZEFLV3c1QnVsczVCdS94eE9LMno1?=
+ =?utf-8?B?bmZDWWZ0SXF4OENJcnFhYlpZV203cUVCOFlRQWNQcng0Q0ZCQlpLQm1VMU41?=
+ =?utf-8?B?ZlBWWDAxTjJnUEZJcEJ2WUdndTNjQmM0RHJmenl1aUVtVzk1b29sWHJZaXNQ?=
+ =?utf-8?B?dG92b0xaV2czUVd5eklPUFA5TnNPUFZzdHNzVTZrK3ZiMUl2Vm04a1dYVFRx?=
+ =?utf-8?B?amI0WFFKMzlhQmliY1R3TllWQ2s1MmpKZUVBTnp0MDV1SjRQcWhzekt1RDg2?=
+ =?utf-8?B?Uzc4MkNhZXhOSmR2ZDFpWVMvMDh4T2R4TVlkUlZFb3NzcjlyZitCS3hGeHFs?=
+ =?utf-8?B?M2RWd3BBSGN4VndMcjBsOEpTZGF3cUtWdit5ODZuUDhkQlJNUkYwdzBSMVV2?=
+ =?utf-8?B?bnF0d0E2RFBSck5VVGRHeDc4aFdPSEZHMEVCOVF1VUNRaGNXdXg2VStGTHlX?=
+ =?utf-8?B?eEwyS3Vxc1VvMUFiWWVKZmpLTDlWQ1YycDJGUFlKZnMvRmZuNlZoMzV0NXBh?=
+ =?utf-8?B?ZmhZY1czYlZMMnptT2RlSG9vNlNTRXNjbjJ2V1dQbTB3aFFndE5NaEZBQkFv?=
+ =?utf-8?B?N0g3c2d3cHluRHk3bEY1MXIwOTAxRDQ2S3hnMnJTOE1zZ3VMSzNlSnhNS2xa?=
+ =?utf-8?B?ak11bjJxUG95cU8zZGgvSHRyOXJkdCt1VjdLMnd5dlMxNlJ4L20zV1BTZzJL?=
+ =?utf-8?B?VFFsZWdZYlJVM0hHV0dua0poQURMNVVoUE4vdlYvSVJFdzBzS0RZN2ZGczFm?=
+ =?utf-8?B?NVBTQktnMWtsRzBxR2QwYVA0ZmI5NnBOYXlza2t1RzB6ajVGL1VnRjA3azc2?=
+ =?utf-8?B?blZieDRodVVUNXpNQlltTmpFTnFNbTVQS0NRaFFCdXUweDdGd04rNnU2VFZQ?=
+ =?utf-8?B?R2VEZXFlbmFOTUxkNzU3SmpYa2g3Snd6TjIwVFJNK2pPU3BXOWVsZEtXMi8v?=
+ =?utf-8?B?SjVOdW51ZkZUUmlzMDEydDlLd21OdjRtSGpEZ3JyTDlhNTIwdnh2MDgzbE1n?=
+ =?utf-8?B?ZFRHOWNDaERmQlhFUmhyWW5LU0MxU082cjRUOHZYQm5wOUVjSk9xTzFadjF6?=
+ =?utf-8?B?VCt4T3A4NldTTXIrbTAya3JTQVlqbmhzSWRoemo4b2ZxMVlmNmc0U0p5Si9W?=
+ =?utf-8?B?RWJsK3l4YU0xanhjOC9BZVNlSkpRVlNRa3FpMnhmT2t2QmtiK2xuRnRLMFMv?=
+ =?utf-8?B?M2tJczhLbHUxT1NFSjhjN09NQkxEOVRPdXdtRUFtU2ttWThSdGRVTjFBL1Rv?=
+ =?utf-8?B?d1FkTjVwR2U2Q055bFFqa0NKOUJmM2t6OElyVC9BWmJFY3dzQllNZ3N0bWQ0?=
+ =?utf-8?B?UzNObHAzUlV5U1RUU2s1NytmZmhIZEdCL2ZWRVUyRVRaTXlBU0RPMHNEQVlX?=
+ =?utf-8?B?VnZNUTZqUE5RZlJ4cDY4RFkvNGhBTHRKTmhhdUJTRG9mdnNrOG5uQUNGc2NJ?=
+ =?utf-8?B?cVpwMjdNU2dlV0lWQmhKdzU0QnhTMWREUjNlZ3VNbWNwRzYrWDZMQ05vcEdr?=
+ =?utf-8?B?aktJR3NES2dGRFVDS0VSbTVsRjFQOUg3cXB3eWRMVm43Qmd2cEdrSld2OVNH?=
+ =?utf-8?B?a0NndEhGK2pHb2Y5WTk2eFJiZjRnaW9aTjJxVm9xWlNjSEpJbzVCVWh3N1lG?=
+ =?utf-8?B?T3lMNEd5RXRpMW52dkdiMDg5VHBNbkkzc2ZJVVZ5d1Jla2RqNUFXSEc5azBq?=
+ =?utf-8?B?eWNJeDBRQlExbWdlV013cnVsRVRMOHNqQ1pCQTErQ0ZwcWFvMWxycHQxaDRJ?=
+ =?utf-8?B?Mmh3MEV6dzYvOUdUMnltRFdRc3N5R3RySmxrUEd1ejBvb1RWS2R4UUNCUlFX?=
+ =?utf-8?B?eEhYMmd5YWJqMHVMeTRlbjhYWDRWVFFORUM3ajZKNE12Z3N5RzdxS0h6aTVO?=
+ =?utf-8?B?bFVkUXd4QUFmMFVFVUFxMENlTitkVjdqaFFyYmdJZGpIejNHaFlUaERGTi9l?=
+ =?utf-8?B?N0sxSktFY1kzYld6VUpjR3hRZHV3djliU2xvOUJEeEUwejVOa24zNDcrZXhI?=
+ =?utf-8?B?T2hEUGxMbkR4bEdJeDN2YzBENkJlaGk0WGVQeTZ1dktBZXRCRVV5cFdHMTlp?=
+ =?utf-8?B?YnBsRE56S01McEhIZHE5Zk1iUGFCZThoM3NmYkRaT1dKb0QyMHVxRDZ3ZlZ6?=
+ =?utf-8?B?aUtSVWRvbytlVThoNHF2SGRiOFNOc05Lcm9aby9qY3ROREJLcnUzZllVWHJr?=
+ =?utf-8?B?eW02Q2tCa3djbWlqRW9Vb1BxT2QvVktpQmJ1b3loUnAyT0JKTzF4SW5MVnc2?=
+ =?utf-8?B?S2FPdEI1VWJuTGV6RUF0NmYzNDQwL00vUkNHVUo4clo0V1FiVmFydk1DeU42?=
+ =?utf-8?B?SklwOTZMNGNXT0E5R3kvbU1CN2F4blE0SEViZENXb3VIZCttazlWdlNaKy82?=
+ =?utf-8?B?K2NKNFZmaXU5VWM3dUxObitxS05PcFRMMnZJdHE4WWZzYWk0QVRjRTBVc1Ry?=
+ =?utf-8?B?UHQyekdya1Uzb3BqaFU0Ky9ab2lzS0I3WkkrcnZEZS91TWw5TVUxaXZ6dzJw?=
+ =?utf-8?B?VE1Kakovb0EvOE0yaVNWeGpCTmsxUVo3QU4yMm40dlhvYWQ1L0lvdXVXOHVw?=
+ =?utf-8?B?eFZLMzBZUkx1aElyV01FWDRnV0l5L01vbkM3Z1BSY3pMRm9BYkh5a0tleXdm?=
+ =?utf-8?B?YTNEZjBkOHdKSERlaExEZ2drcDFabzBBWU1nU01FTUEvbWVWaFRhR0F6cWRV?=
+ =?utf-8?B?V3ZhRUlJL2RtaXAxZmZ5bzBxSWVsWkFQbWdyNHNrcnYwMTB0QXdSNkFJUS9H?=
+ =?utf-8?Q?7urSoXGrxjnqOGwPw=3D?=
+MIME-Version: 1.0
+
+------=_Part_032421_1828730005.1773665890540
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+PPCmetrics AG
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+
+
+  Dear Sir or Madam,
+
+       =20
+  We kindly invite you to participate in the following tender: Global=20
+Real Estate, unlisted
+
+Please follow this link to access the tender documents and submit your=20
+response: LINK
+
+If you are not interested in participating, please let us know via the=20
+link above. Deadline for submissions is Tuesday, 31 March 2026 / COB=20
+(Swiss time).
+
+We frequently send invitations to market screens. To ensure you=20
+receive all our emails, please make sure that=20
+noreply@ams.ppcmetrics.ch is on your list of safe senders.
+
+Our market screens (RFIs) form the first stage of our tender process=20
+and apply to multiple client mandates. Submissions are stored for a=20
+minimum of 12 months to ensure systematic consideration for future=20
+tenders. Participation is essential to be invited to the second stage=20
+(RFPs). No individual feedback is given at this stage; we will contact=20
+you if you are selected for an RFP.
+
+Thank you for your cooperation. In case you have any questions, please=20
+do not reply directly to this email but get in touch with us via=20
+manager.relations@ppcmetrics.ch.
+ <a href=3D"" target=3D"_blank"></a>       =20
+       =20
+       =20
+ =20
+Kind regards,       =20
+
+       =20
+  Melina Herzig
+Assistant Asset Manager Selection       =20
+
+=20
+  PPC
+metrics
+PPCmetrics AG
+Investment & Actuarial Consulting,Controlling and=20
+ResearchBadenerstrasse 6PostfachCH-8021 Z=C3=BCrich =20
+
+  =20
+  Telefon:     +41 44 204 31 11
+Website:    www.ppcmetrics.chFollow us:  Twitter | Linkedin
+
+------=_Part_032421_1828730005.1773665890540
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+<!doctype html><html xmlns=3D"http://www.w3.org/1999/xhtml" xmlns:v=3D"urn:=
+schemas-microsoft-com:vml" xmlns:o=3D"urn:schemas-microsoft-com:office:offi=
+ce"><head>
+<meta http-equiv=3D"Content-Type" content=3D"text/html; charset=3Dutf-8"><t=
+itle> PPCMetrics AG </title>
+  <!--[if !mso]><!-->
+  <meta http-equiv=3D"X-UA-Compatible" content=3D"IE=3Dedge">
+  <!--<![endif]-->
+ =20
+  <meta name=3D"viewport" content=3D"width=3Ddevice-width, initial-scale=3D=
+1">
+  <style type=3D"text/css">
+    #outlook a {padding: 0;}
+    body {margin: 0;padding: 0;-webkit-text-size-adjust: 100%;-ms-text-size=
+-adjust: 100%;}
+    table, td {border-collapse: collapse;mso-table-lspace: 0pt;mso-table-rs=
+pace: 0pt;}
+    img {border: 0;height: auto;line-height: 100%;outline: none;text-decora=
+tion: none;-ms-interpolation-mode: bicubic;}
+    p {display: block;margin: 13px 0;}
+  </style>
+  <!--[if mso]>
+        <noscript>
+        <xml>
+        <o:OfficeDocumentSettings>
+          <o:AllowPNG/>
+          <o:PixelsPerInch>96</o:PixelsPerInch>
+        </o:OfficeDocumentSettings>
+        </xml>
+        </noscript>
+        <![endif]-->
+  <!--[if lte mso 11]>
+        <style type=3D"text/css">
+          .mj-outlook-group-fix { width:100% !important; }
+        </style>
+        <![endif]-->
+  <style type=3D"text/css">
+    @media only screen and (min-width:800px) {
+      .mj-column-per-100 {
+        width: 100% !important;
+        max-width: 100%;
+      }
+
+      .mj-column-per-40 {
+        width: 40% !important;
+        max-width: 40%;
+      }
+
+      .mj-column-per-60 {
+        width: 60% !important;
+        max-width: 60%;
+      }
+    }
+  </style>
+  <style media=3D"screen and (min-width:800px)">
+    .moz-text-html .mj-column-per-100 {
+      width: 100% !important;
+      max-width: 100%;
+    }
+
+    .moz-text-html .mj-column-per-40 {
+      width: 40% !important;
+      max-width: 40%;
+    }
+
+    .moz-text-html .mj-column-per-60 {
+      width: 60% !important;
+      max-width: 60%;
+    }
+  </style>
+  <style type=3D"text/css">
+  </style>
+  <style type=3D"text/css">
+    .body-left>div {margin: 0px 20px !important;}
+    a, a:visited, a:hover, a:focus, a:active {color: #0000FF; text-decorati=
+on: underline;}
+    a[x-apple-data-detectors] {text-decoration: underline; font-size: inher=
+it !important; font-family: inherit !important; font-weight: inherit !impor=
+tant;line-height: inherit !important;}
+  </style>
+  <meta name=3D"color-scheme" content=3D"light">
+  <meta name=3D"supported-color-schemes" content=3D"light">
+  <style type=3D"text/css">
+    a {color: #0000FF;}
+  </style>
+  <!-- [if mso]>
+    <style type=3D"text/css">
+    a, a:visited, a:hover, a:focus, a:active {color: #0000FF;text-decoratio=
+n:underline;}
+    </style>
+    <![endif] -->
+</head>
+
+<body style=3D"word-spacing:normal;background-color:#fefefe;">
+  <div class=3D"body-left" style=3D"background-color:#fefefe;">
+    <!-- email main part -->
+    <!--[if mso | IE]><table align=3D"left" border=3D"0" cellpadding=3D"0" =
+cellspacing=3D"0" class=3D"left-align-outlook" style=3D"width:100%;" width=
+=3D"100%" bgcolor=3D"#fefefe" ><tr><td style=3D"line-height:0px;font-size:0=
+px;mso-line-height-rule:exactly;"><![endif]-->
+    <div class=3D"left-align" style=3D"background:#fefefe;background-color:=
+#fefefe;margin:0px auto;max-width:100%;">
+      <table align=3D"left" border=3D"0" cellpadding=3D"0" cellspacing=3D"0=
+" role=3D"presentation" style=3D"background:#fefefe;background-color:#fefef=
+e;width:100%;">
+        <tbody>
+          <tr>
+            <td style=3D"direction:ltr;font-size:0px;padding:0px 20px;text-=
+align:left;">
+              <!--[if mso | IE]><table role=3D"presentation" border=3D"0" c=
+ellpadding=3D"0" cellspacing=3D"0"><tr><td class=3D"left-align-outlook" sty=
+le=3D"vertical-align:top;width:760px;" ><![endif]-->
+              <div class=3D"mj-column-per-100 mj-outlook-group-fix left-ali=
+gn" style=3D"font-size:0px;text-align:left;direction:ltr;display:inline-blo=
+ck;vertical-align:top;width:100%;">
+                <table border=3D"0" cellpadding=3D"0" cellspacing=3D"0" rol=
+e=3D"presentation" width=3D"100%">
+                  <tbody>
+                    <tr>
+                      <td style=3D"vertical-align:top;padding:0px 0px;">
+                        <table border=3D"0" cellpadding=3D"0" cellspacing=
+=3D"0" role=3D"presentation" width=3D"100%">
+                          <tbody>
+                            <tr>
+                              <td style=3D"font-size:0px;padding:0px 0px;wo=
+rd-break:break-word;">
+                                <div style=3D"height:20px;line-height:20px;=
+">=E2=80=8A</div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td align=3D"left" style=3D"font-size:0px;pad=
+ding:10px 0px;word-break:break-word;">
+                                <div style=3D"font-family:Arial, Helvetica,=
+ sans-serif;font-size:13px;line-height:16px;text-align:left;color:#000000;"=
+>Dear Sir or Madam,</div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td align=3D"left" style=3D"font-size:0px;pad=
+ding:10px 0px;word-break:break-word;">
+                                <div style=3D"font-family:Arial, Helvetica,=
+ sans-serif;font-size:13px;line-height:16px;text-align:left;color:#000000;"=
+><span style=3D"font-family:Arial,Helvetica,sans-serif;">We kindly invite y=
+ou to participate in the following tender: <b>Global Real Estate, unlisted<=
+/b><br><br>Please follow this link to access the tender documents and submi=
+t your response: <a href=3D"https://links.ppcmetrics.ch/dispatcher/service?=
+kh=3D260316120456190349&amp;l=3Den&amp;o=3D0&amp;a=3D12260316135810544230">=
+<strong>LINK</strong></a><br><br>If you are <strong>not interested in parti=
+cipating</strong>, please let us know via the link above. Deadline for subm=
+issions is <strong>Tuesday,&nbsp;31 March 2026&nbsp;/ COB (Swiss time)</str=
+ong>.<br><br>We frequently send invitations to market screens. To ensure yo=
+u receive all our emails, please make sure that <strong>noreply@ams.ppcmetr=
+ics.ch</strong> is on your list of <strong>safe senders</strong>.<br><br>Ou=
+r market screens (RFIs) form the first stage of our tender process and appl=
+y to multiple client mandates. Submissions are stored for a minimum of 12 m=
+onths to ensure systematic consideration for future tenders. Participation =
+is essential to be invited to the second stage (RFPs). No individual feedba=
+ck is given at this stage; we will contact you if you are selected for an R=
+FP.<br><br>Thank you for your cooperation.<span style=3D"font-size:14px;"><=
+span style=3D"color:black">&nbsp;</span></span><strong><span style=3D"color=
+:#e74c3c">In case you have any questions, please <u>do not reply directly t=
+o this email</u> but get in touch with us via </span><span style=3D"color:b=
+lack"><a href=3D"https://links.ppcmetrics.ch/dispatcher/service?kh=3D260316=
+120132390974&amp;l=3Den&amp;o=3D0&amp;a=3D12260316135810544230" style=3D"co=
+lor:blue; text-decoration:underline"><span style=3D"color:#e74c3c">manager.=
+relations@ppcmetrics.ch</span></a>.</span></strong></span><br>&nbsp;
+                               =20
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td align=3D"left" style=3D"font-size:0px;pad=
+ding:10px 0px;word-break:break-word;">
+                                <div style=3D"font-family:Arial, Helvetica,=
+ sans-serif;font-size:13px;line-height:16px;text-align:left;color:#000000;"=
+><a href=3D"mailto:manager.relations@ppcmetrics.ch?subject=3DInvitation%20M=
+arket%20Screen Global Real Estate, unlisted (2026-03-31)" target=3D"_blank"=
+>Contact us</a></div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td align=3D"left" style=3D"font-size:0px;pad=
+ding:10px 0px;word-break:break-word;">
+                                <div style=3D"font-family:Arial, Helvetica,=
+ sans-serif;font-size:13px;line-height:16px;text-align:left;color:#000000;"=
+><br>Kind regards,</div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td align=3D"left" style=3D"font-size:0px;pad=
+ding:10px 0px;word-break:break-word;">
+                                <div style=3D"font-family:Arial, Helvetica,=
+ sans-serif;font-size:13px;line-height:16px;text-align:left;color:#000000;"=
+>Melina Herzig<br>Assistant Asset Manager Selection</div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <!--[if mso | IE]></td></tr></table><![endif]-->
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <!--[if mso | IE]></td></tr></table><![endif]-->
+    <!-- /email main part -->
+    <!-- email footer -->
+    <!--[if mso | IE]><table align=3D"left" border=3D"0" cellpadding=3D"0" =
+cellspacing=3D"0" class=3D"" style=3D"width:100%;" width=3D"100%" bgcolor=
+=3D"#fefefe" ><tr><td style=3D"line-height:0px;font-size:0px;mso-line-heigh=
+t-rule:exactly;"><![endif]-->
+    <div style=3D"background:#fefefe;background-color:#fefefe;margin:0px au=
+to;max-width:100%;">
+      <table align=3D"left" border=3D"0" cellpadding=3D"0" cellspacing=3D"0=
+" role=3D"presentation" style=3D"background:#fefefe;background-color:#fefef=
+e;width:100%;">
+        <tbody>
+          <tr>
+            <td style=3D"direction:ltr;font-size:0px;padding:0px 20px;paddi=
+ng-top:20px;text-align:left;">
+              <!--[if mso | IE]><table role=3D"presentation" border=3D"0" c=
+ellpadding=3D"0" cellspacing=3D"0"><tr><td class=3D"" style=3D"vertical-ali=
+gn:top;width:760px;" ><![endif]-->
+              <div class=3D"mj-column-per-100 mj-outlook-group-fix" style=
+=3D"font-size:0px;text-align:left;direction:ltr;display:inline-block;vertic=
+al-align:top;width:100%;">
+                <table border=3D"0" cellpadding=3D"0" cellspacing=3D"0" rol=
+e=3D"presentation" width=3D"100%">
+                  <tbody>
+                    <tr>
+                      <td style=3D"vertical-align:top;padding:0px 0px;">
+                        <table border=3D"0" cellpadding=3D"0" cellspacing=
+=3D"0" role=3D"presentation" style=3D"" width=3D"100%">
+                          <tbody>
+                            <tr>
+                              <td align=3D"left" style=3D"font-size:0px;pad=
+ding:0px 0px 0px 0px;word-break:break-word;">
+                                <p style=3D"border-top:solid 1px #000000;fo=
+nt-size:1px;margin:0px auto;width:100%;">
+                                </p>
+                                <!--[if mso | IE]><table align=3D"left" bor=
+der=3D"0" cellpadding=3D"0" cellspacing=3D"0" style=3D"border-top:solid 1px=
+ #000000;font-size:1px;margin:0px auto;width:760px;" role=3D"presentation" =
+width=3D"760px" ><tr><td style=3D"height:0;line-height:0;"> &nbsp;
+</td></tr></table><![endif]-->
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <!--[if mso | IE]></td></tr></table><![endif]-->
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <!--[if mso | IE]></td></tr></table><table align=3D"left" border=3D"0" =
+cellpadding=3D"0" cellspacing=3D"0" class=3D"" style=3D"width:100%;" width=
+=3D"100%" bgcolor=3D"#fefefe" ><tr><td style=3D"line-height:0px;font-size:0=
+px;mso-line-height-rule:exactly;"><![endif]-->
+    <div style=3D"background:#fefefe;background-color:#fefefe;margin:0px au=
+to;max-width:100%;">
+      <table align=3D"left" border=3D"0" cellpadding=3D"0" cellspacing=3D"0=
+" role=3D"presentation" style=3D"background:#fefefe;background-color:#fefef=
+e;width:100%;">
+        <tbody>
+          <tr>
+            <td style=3D"direction:ltr;font-size:0px;padding:0px 20px;text-=
+align:left;">
+              <!--[if mso | IE]><table role=3D"presentation" border=3D"0" c=
+ellpadding=3D"0" cellspacing=3D"0"><tr><td class=3D"" style=3D"vertical-ali=
+gn:top;width:304px;" ><![endif]-->
+              <div class=3D"mj-column-per-40 mj-outlook-group-fix" style=3D=
+"font-size:0px;text-align:left;direction:ltr;display:inline-block;vertical-=
+align:top;width:100%;">
+                <table border=3D"0" cellpadding=3D"0" cellspacing=3D"0" rol=
+e=3D"presentation" width=3D"100%">
+                  <tbody>
+                    <tr>
+                      <td style=3D"vertical-align:top;padding:0px 0px;">
+                        <table border=3D"0" cellpadding=3D"0" cellspacing=
+=3D"0" role=3D"presentation" style=3D"" width=3D"100%">
+                          <tbody>
+                            <tr>
+                              <td align=3D"left" style=3D"font-size:0px;pad=
+ding:10px 0px;word-break:break-word;">
+                                <div style=3D"font-family:Arial, Helvetica,=
+ sans-serif;font-size:11px;line-height:16px;text-align:left;color:#000000;"=
+><div style=3D"font-family:Arial, Helvetica, sans-serif;font-size:20px;line=
+-height:24px;text-align:left;color:#000000; font-weight:700;">PPC</div><div=
+ style=3D"font-family:Arial, Helvetica, sans-serif;font-size:12px;line-heig=
+ht:16px;text-align:left;color:#000000;">metrics</div><br><b>PPCmetrics AG</=
+b><br>Investment &amp; Actuarial Consulting,<br>Controlling and Research<br=
+>Badenerstrasse 6<br>Postfach<br>CH-8021 Z=C3=BCrich</div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <!--[if mso | IE]></td><td class=3D"" style=3D"vertical-align=
+:top;width:456px;" ><![endif]-->
+              <div class=3D"mj-column-per-60 mj-outlook-group-fix" style=3D=
+"font-size:0px;text-align:left;direction:ltr;display:inline-block;vertical-=
+align:top;width:100%;">
+                <table border=3D"0" cellpadding=3D"0" cellspacing=3D"0" rol=
+e=3D"presentation" width=3D"100%">
+                  <tbody>
+                    <tr>
+                      <td style=3D"vertical-align:top;padding:0px 0px;">
+                        <table border=3D"0" cellpadding=3D"0" cellspacing=
+=3D"0" role=3D"presentation" style=3D"" width=3D"100%">
+                          <tbody>
+                            <tr>
+                              <td align=3D"left" style=3D"font-size:0px;pad=
+ding:10px 0px;word-break:break-word;">
+                                <div style=3D"font-family:Arial, Helvetica,=
+ sans-serif;font-size:11px;line-height:16px;text-align:left;color:#000000;"=
+>Telefon:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+41 44 204 31 11<br>Website:&nbsp;&n=
+bsp;&nbsp;&nbsp;<a href=3D"https://www.ppcmetrics.ch" target=3D"_blank">www=
+.ppcmetrics.ch</a><br>Follow us:&nbsp;&nbsp;<a href=3D"https://twitter.com/=
+PPCmetrics" target=3D"_blank">Twitter</a>&nbsp;|&nbsp;<a href=3D"https://ww=
+w.linkedin.com/company/ppcmetrics-ag" target=3D"_blank">Linkedin</a></div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <!--[if mso | IE]></td></tr></table><![endif]-->
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <!--[if mso | IE]></td></tr></table><table align=3D"left" border=3D"0" =
+cellpadding=3D"0" cellspacing=3D"0" class=3D"" style=3D"width:100%;" width=
+=3D"100%" bgcolor=3D"#fefefe" ><tr><td style=3D"line-height:0px;font-size:0=
+px;mso-line-height-rule:exactly;"><![endif]-->
+    <div style=3D"background:#fefefe;background-color:#fefefe;margin:0px au=
+to;max-width:100%;">
+      <table align=3D"left" border=3D"0" cellpadding=3D"0" cellspacing=3D"0=
+" role=3D"presentation" style=3D"background:#fefefe;background-color:#fefef=
+e;width:100%;">
+        <tbody>
+          <tr>
+            <td style=3D"direction:ltr;font-size:0px;padding:0px 20px;text-=
+align:left;">
+              <!--[if mso | IE]><table role=3D"presentation" border=3D"0" c=
+ellpadding=3D"0" cellspacing=3D"0"><tr><td class=3D"" style=3D"vertical-ali=
+gn:top;width:760px;" ><![endif]-->
+              <div class=3D"mj-column-per-100 mj-outlook-group-fix" style=
+=3D"font-size:0px;text-align:left;direction:ltr;display:inline-block;vertic=
+al-align:top;width:100%;">
+                <table border=3D"0" cellpadding=3D"0" cellspacing=3D"0" rol=
+e=3D"presentation" width=3D"100%">
+                  <tbody>
+                    <tr>
+                      <td style=3D"vertical-align:top;padding:0px 0px;">
+                        <table border=3D"0" cellpadding=3D"0" cellspacing=
+=3D"0" role=3D"presentation" style=3D"" width=3D"100%">
+                          <tbody>
+                            <tr>
+                              <td align=3D"left" style=3D"font-size:0px;pad=
+ding:0px 0px 0px 0px;word-break:break-word;">
+                                <p style=3D"border-top:solid 1px #000000;fo=
+nt-size:1px;margin:0px auto;width:100%;">
+                                </p>
+                                <!--[if mso | IE]><table align=3D"left" bor=
+der=3D"0" cellpadding=3D"0" cellspacing=3D"0" style=3D"border-top:solid 1px=
+ #000000;font-size:1px;margin:0px auto;width:760px;" role=3D"presentation" =
+width=3D"760px" ><tr><td style=3D"height:0;line-height:0;"> &nbsp;
+</td></tr></table><![endif]-->
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <!--[if mso | IE]></td></tr></table><![endif]-->
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <!--[if mso | IE]></td></tr></table><![endif]-->
+    <!-- /email footer -->
+  </div>
+<img src=3D"https://img.ppcmetrics.ch/_xp_mo_12260316135810544230.gif" widt=
+h=3D"1" height=3D"1" alt=3D"" border=3D"0"></body>
+
+</html>
+
+------=_Part_032421_1828730005.1773665890540--

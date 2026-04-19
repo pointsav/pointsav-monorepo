@@ -47,3 +47,6 @@ dist/
 # Working files
 *.bak
 *.tmp
+
+# Local Claude context (not for upload)
+CLAUDE.md

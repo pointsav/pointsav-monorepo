@@ -1,0 +1,3166 @@
+Received: from DS1PR16MB6683.namprd16.prod.outlook.com (2603:10b6:8:1e9::5) by
+ DM6PR16MB2569.namprd16.prod.outlook.com with HTTPS; Mon, 16 Mar 2026 14:06:27
+ +0000
+Received: from BN9P220CA0004.NAMP220.PROD.OUTLOOK.COM (2603:10b6:408:13e::9)
+ by DS1PR16MB6683.namprd16.prod.outlook.com (2603:10b6:8:1e9::5) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9700.22; Mon, 16 Mar
+ 2026 14:06:25 +0000
+Received: from BN3PEPF0000B373.namprd21.prod.outlook.com
+ (2603:10b6:408:13e:cafe::e1) by BN9P220CA0004.outlook.office365.com
+ (2603:10b6:408:13e::9) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.20.9700.24 via Frontend Transport; Mon,
+ 16 Mar 2026 14:06:12 +0000
+Authentication-Results: spf=pass (sender IP is 213.32.151.153)
+ smtp.mailfrom=send.onm.de; dkim=pass (signature was verified)
+ header.d=schloss-elmau.de;dmarc=pass action=none
+ header.from=schloss-elmau.de;compauth=pass reason=100
+Received-SPF: Pass (protection.outlook.com: domain of send.onm.de designates
+ 213.32.151.153 as permitted sender) receiver=protection.outlook.com;
+ client-ip=213.32.151.153; helo=send.onm.de; pr=C
+Received: from send.onm.de (213.32.151.153) by
+ BN3PEPF0000B373.mail.protection.outlook.com (10.167.243.170) with Microsoft
+ SMTP Server (version=TLS1_3, cipher=TLS_AES_256_GCM_SHA384) id 15.20.9745.0
+ via Frontend Transport; Mon, 16 Mar 2026 14:06:24 +0000
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=schloss-elmau.de;
+ q=dns/txt; s=mail; bh=dQupp4fNEBMrkUDUNK2gNqhIf7aZd/IkmXbgmnLqiP0=;
+ h=from:reply-to:subject:date:to:mime-version:content-type:list-unsubscribe:x-csa-complaints:list-unsubscribe-post:message-id:x-sib-id:feedback-id;
+        b=nxgCEc6T2Horg8IHdMzQaNyX3ph122/zLpFsUnOy9dC+H2wHK7yImnaGni7BZpEKV1yZOkJK5Jdm
+        Tb+orfaGgAMgFjQFGjeOS++rcEjHxcGMAPMcYxzO849LzwtjnagTBVcd+86NXXHXWWvsppyqvU0l
+        aBbDaht/CgpdzS8H8ms=
+To: <info@woodfine.co>
+Subject: Culinary Highlights at Schloss Elmau
+X-sib-id: ISbis7X4rgByteUxxyBu9bxRuf66I0VjrCB0dNhdUUJoytAWJaDxddqIrU4XPmtT4E-RE_qQH-9DGwcuDH24rtnew3zq6_K69FlsVMyO02nARVXhxrsd2xLxBvKs1vwEaJxLVBqw3WT3AGZisV_Fdt8hgZSe2zbeHf-O9P0z
+Message-Id: <607db3a0-5068-4d06-ace4-3834e446791c@smtp-relay.sendinblue.com>
+Origin-messageId: <20260316150621.7592441.110.968@mail.hotelsuite.de>
+Reply-To: <marketing@schloss-elmau.de>
+Feedback-ID: 213.32.151.153:1707114_-1:1707114:Sendinblue
+From: "Schloss Elmau" <marketing@schloss-elmau.de>
+X-CSA-Complaints: csa-complaints@eco.de
+X-Mailin-EID: NTY4ODA3Nzh%2BaW5mb0B3b29kZmluZS5jb348MjAyNjAzMTYxNTA2MjEuNzU5MjQ0MS4xMTAuOTY4QG1haWwuaG90ZWxzdWl0ZS5kZT5%2Bc2VuZC5vbm0uZGU%3D
+Date: Mon, 16 Mar 2026 15:06:21 +0100
+List-Unsubscribe: <https://tools.hotelsuite.de/m-elmau/mail/unsub/?email=_Yzc0ZDk3YjBpbmZvQHdvb2RmaW5lLmNvOjo5Njg6Ojc5ODo6MjAyNi0wMy0xNiAxNTowNjoyMQ>
+Content-Type: multipart/alternative; boundary="=_180fda38c0d0b53d1bd41eeec8663b99"
+X-Mailgenerator: netupdater MAIL
+X-Mailer: netupdater MAIL
+List-Unsubscribe-Post: List-Unsubscribe=One-Click
+Sender.ip: 213.32.151.153
+X-Nu-Mail-Id: 968
+X-Mailin-Tag: s110
+Return-Path: bounces-56880778-4027198872@send.onm.de
+X-Mailin-Custom: eyJuZXdzbGV0dGVyX2lkIjogOTY4LCAic3lzdGVtX2lkIjogMTEwfQ==
+X-MS-Exchange-Organization-ExpirationStartTime: 16 Mar 2026 14:06:25.2630
+ (UTC)
+X-MS-Exchange-Organization-ExpirationStartTimeReason: OriginalSubmit
+X-MS-Exchange-Organization-ExpirationInterval: 1:00:00:00.0000000
+X-MS-Exchange-Organization-ExpirationIntervalReason: OriginalSubmit
+X-MS-Exchange-Organization-Network-Message-Id: b3359890-633b-4faf-aa96-08de836535e9
+X-EOPAttributedMessage: 0
+X-EOPTenantAttributedMessage: ce7cb31c-acf7-4351-b0fe-c89cda16c4ab:0
+X-MS-Exchange-Organization-MessageDirectionality: Incoming
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: BN3PEPF0000B373:EE_|DS1PR16MB6683:EE_|DM6PR16MB2569:EE_
+X-MS-Exchange-Organization-AuthSource: BN3PEPF0000B373.namprd21.prod.outlook.com
+X-MS-Exchange-Organization-AuthAs: Anonymous
+X-MS-Office365-Filtering-Correlation-Id: b3359890-633b-4faf-aa96-08de836535e9
+X-MS-Exchange-Organization-SCL: 1
+X-Microsoft-Antispam: BCL:0;ARA:13230040|704161211799003|1032899013|69100299015|7149299003|4022899009|3109299003|2092899012|3072899012|12012899012|7049299003|13003099007|2066899003|8096899003|18002099003|19002099003|21082099003|56012099003|16102099003;
+X-Forefront-Antispam-Report: CIP:213.32.151.153;CTRY:FR;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:send.onm.de;PTR:send.onm.de;CAT:NONE;SFS:(13230040)(704161211799003)(1032899013)(69100299015)(7149299003)(4022899009)(3109299003)(2092899012)(3072899012)(12012899012)(7049299003)(13003099007)(2066899003)(8096899003)(18002099003)(19002099003)(21082099003)(56012099003)(16102099003);DIR:INB;
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 16 Mar 2026 14:06:24.4532
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: b3359890-633b-4faf-aa96-08de836535e9
+X-MS-Exchange-CrossTenant-Id: ce7cb31c-acf7-4351-b0fe-c89cda16c4ab
+X-MS-Exchange-CrossTenant-AuthSource: BN3PEPF0000B373.namprd21.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: Internet
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS1PR16MB6683
+X-MS-Exchange-Transport-EndToEndLatency: 00:00:03.5173286
+X-MS-Exchange-Processed-By-BccFoldering: 15.20.9700.017
+X-Microsoft-Antispam-Mailbox-Delivery:
+	ucf:0;jmr:0;auth:0;dest:I;ENG:(910005)(944506478)(944626604)(920097)(930201)(20251009189)(140003);
+X-Microsoft-Antispam-Message-Info:
+	=?utf-8?B?a3RtaEptVGNXaTYxYjFNOG4ycG1BdndsZGc3MzVLWWlyOE9mcFdKdXEyVE01?=
+ =?utf-8?B?MUpFTTFtRmxoVDNCWnJXVlRnM09NTFpSL25VZHhCOHEvb1Rkc3ZnQ3pDaUEy?=
+ =?utf-8?B?TFoybTJkeXRYL2xzT3Z5Y2Y5dlRHdGprK1VHeGpuYnRaZ2dnSldYS1JGRnFy?=
+ =?utf-8?B?eUhpRnJCNVF0RzRrQml1bG1ONFJFS3o5SWVTTk5Qc1JjTjZTNVVUWWZLbnV4?=
+ =?utf-8?B?aVJQZmVnMVlSMjZSUXdXODBlRTd5OG9UdzRTWnVWQWNuajNmc0JBaVZNNkdQ?=
+ =?utf-8?B?VmZETWhMSk1xRnZ1WTZhV3lTYnh3dk9jS3Z3YXk5a0JUZWxRWitoMkpKOWFP?=
+ =?utf-8?B?bzlaRFRSY1lOSHB0K2IyTGkrU1pDYUlwSEllTHc3Tkl6L0NVMkVoeldOeU5w?=
+ =?utf-8?B?ZDQxSjdHajJka3NCUGliSGVldVE3MGZkOUMzYlBtanVMOUk0djYyMk1HSnli?=
+ =?utf-8?B?NHJvcTkrQVJJUUZRbXVIM0kwUVVOTERhNUlFMzFIYVo4ektra2Rad0xLUHpG?=
+ =?utf-8?B?OTBJWGZKSS9wbS9Yak9Ob043VzROS25HUzc2bmRCS3lJQkk2L1Ayc3k0RDgr?=
+ =?utf-8?B?UTFHRTNXalNhc0RTLzhmTmhtWTA0Rk81L3Q5QkVBS09iOVJYcmZxc1UrZk9W?=
+ =?utf-8?B?TldCTitZeCswN1JLVzhtRUFnb0loVUpBdHlROEgzSGRlMGRUa1MwK2tQOUdC?=
+ =?utf-8?B?RzEvV2xla2ZaTS9rN2tSNWVvdElZTHVEb2cvYitIOGRSZlRKWm5RSkE4Nzg0?=
+ =?utf-8?B?bjhiMjFZblRKN3IrOUVYK2hsdytzM0JCSDJwbTBMajdCd0hVS2RGbGJVcHpV?=
+ =?utf-8?B?Zk1hT0NFQnRZbHZWU1R1V2tPcE51OHpyS292T2EveWxkcklwNElOOHM1OHFD?=
+ =?utf-8?B?M01PL2dORnJLd00zRlFkdCtmenVXSUdud3QrZUswZXhqUkNYVHgrempMZ21Y?=
+ =?utf-8?B?Ym1Pemwwd3Z0K2VNYWN5MUZNdTFBc0ZiU2JxZG5JeFJDTisyMHVncHBQbzBX?=
+ =?utf-8?B?ZkJyZzFGbGdKblpTaS9rVWpTUlhwTGxpMWxwejlkOXVwNVZDUWt3NFJHS0I3?=
+ =?utf-8?B?K0tMMkVZNFMraDdTTC93L2Rzc0lxa2lwbjJrQ1IwMVF6M0RyaWNYams3UWh5?=
+ =?utf-8?B?d2ppWXQ2eUtsbDMwNlVkbzgvazdQclJNMThNNTZicDFYNU1nNUo2cW8yMStv?=
+ =?utf-8?B?blJZQXJ4eVdYbVVWalR5amVqOE50engwUWVyZStDcjdaN2pSWnNEM2F5Tk95?=
+ =?utf-8?B?S3h1Q3kwcEdtVDhkdnR2UjJ0OEphK3Z0SDMwSUJvT055OTErTU01ZGtNNU5q?=
+ =?utf-8?B?V0JyOXZvUUdvUWMydEc0Y1BpRW43cSttWHhydlVLWVdXZFZGZFRXeXZIcVhw?=
+ =?utf-8?B?SGpEd1ROTC9NSVd4UDlvci9EbFhQdlJFUis5eUZvWml4NEQ3ZWF3ZStsZE9k?=
+ =?utf-8?B?dG5vQ2tlNTVJRzNJalVXcU8rczVpY3BvQ2VocGpiT2d0a2xNVTh1KzFrbXRl?=
+ =?utf-8?B?MDB1UWFzaGc2QkE5RzlSZlFVd0hRQm4rM1RwQnZsTWVCZkdOTTlwWGNIUDY1?=
+ =?utf-8?B?dDRDc3ZaNHlHYkVFSHJWWnZMOFpkRE4wWEtKQ0I4dWMweVZ3cXlDT0w5QnI5?=
+ =?utf-8?B?NDlzdkNkQTJURjB1ZFl0UWpYckhYWDlkQmNDNEZya29vdDRHN1NvMERDRXk5?=
+ =?utf-8?B?TGsxZGxDSHJMVzVhUCtCRUR5MGdwR2VDVXdIQmhZeXQ4Z1FxZzV2ZFV1U1U0?=
+ =?utf-8?B?NUl2WkdXK1V1c2xRRzVFYmY0SlNhbHFpMmVzcGwrelVRSU9HUUI2aWlaYVJz?=
+ =?utf-8?B?L2xVamxHTkp2cnFVSmxWUUMrVjBIR085VVl6U1V2UC9pS0VGU2g5SHZWNXJt?=
+ =?utf-8?B?MXBzU2JaaWw2Wjg3WUNUaVpiYkttZFhNZm04UFNqbnU2amRmeWxEM2FZS0w1?=
+ =?utf-8?B?ZmtyTEtOdmJPZ2dHV3BmcWZsK3ZhK3JleGxHamcrU1E2bUFBOUNTanlQRldZ?=
+ =?utf-8?B?dHoyOUFkaUxuQmlYWTVGcVhvWnNBYzQ1Rm4yQWJYd3V1b2lCYU9kQzNHSkds?=
+ =?utf-8?B?UVlNSXRxU1BidTNWTHNiaE5qM29jL0w4ZVZxdVpYdFlqSnFuOStCUGVEM3JN?=
+ =?utf-8?B?SFNsOE5xL01NMzFsRVR2TE9NWWx4UGVyRnVxYmJyQnE5bnNBdFFvRXlvRUlo?=
+ =?utf-8?B?eEtwVlV4bGQyUDJEbVdGNHhSUjB4MXIyMThJNk1GOEhYN3R0L3JXUHRRbHJB?=
+ =?utf-8?B?TlNtd1pGNHp4U01IWU1KeU1qaFlHV1V0dHpHZ2dkbkZoQm9pRWQ2Q1hNd0hv?=
+ =?utf-8?B?T0NPdk05djR2dThENTBjbnhwWG51dE5VZWhHOGNIMFNDOE4rYWxQdVR2blRR?=
+ =?utf-8?B?UHBPUDF3bVNWVk5MMUlzamRIVDF2MmFGRFhHV296blk4RHQvdFd4WXFtRk9K?=
+ =?utf-8?B?VnVCd09DYUlidGJ1N1BJbWZzY2VaVVphTmsvcUQ4a09IWHJWZUNjQmFSeXhS?=
+ =?utf-8?B?dVo2Q0VwRFpTL0JSSGFyajE3NU01KzFJcGNyVFhHZ205ZzJzZEVGaG9YUFM0?=
+ =?utf-8?B?cjExT3ovbGtBYXBKdlpuNDVqYnkxWW4zNE5LRnN2RENwQTRzZVpBV1NHM1JW?=
+ =?utf-8?B?a0MxT0w4ZENabk4xVGJTUFRRb1NBcGJ2VEZNalptbTFjVUM4ZDZpdzZoTEQ3?=
+ =?utf-8?B?R2t4WGJma3Q4dVh4b2ZHZ3BFMGhTUnF2eW5jN3dObVA3S3hYK3JSLysyZ3Y5?=
+ =?utf-8?B?UmdLZE1Ra2xLczBRdEpSL0V2ZDczR3laN2prTXk0Mmg2WHA4cWNHS05NYytz?=
+ =?utf-8?B?Nk5qbG0rOXI1ZWNoTmhmcEZuK1ZJVG90eEZYNWFvNS9uSjBHZWRDQ3lWc0RB?=
+ =?utf-8?B?cGE1T0FVZlBEaURMdXNyWUN5dHJISFNQSVJXQ09yZHdzSGNnTkpFSTI2bXVH?=
+ =?utf-8?B?YzVkOWVFUlVTTXVLNm1QVjQ0b0VJcEZ2YWt2Mk45VDZJdVBmUTNSdnUyL3lQ?=
+ =?utf-8?B?VXpzcmdEcDA3S3RQTmEwV2poVlRiZk50MWI5QXZhMy9TbWVLMkhFNDlwZnV0?=
+ =?utf-8?B?MzVjc1FuQVQ2RHRwamYxRzZoRUdpTTlTd0Fnek9PYjhxclJDeUFJNHpYMWg3?=
+ =?utf-8?B?ZzV6Q2FLNFdZRTlTMzVsdWRETjl2NlQ0R1FKeWUrZWw3T05YYXg1UkV6dTlY?=
+ =?utf-8?B?U0dkUVVUYmxCSlJxZjN3aXo0RHd0b2YvTVNlTzVqaW1Ec2xkVUVBYUxabGgz?=
+ =?utf-8?B?OWRkSjhod3BMcTFhcmVla0FCNXVQeW1ESzBJRW5SaFNqOXJUc09JcENUS21C?=
+ =?utf-8?B?VHdPNGZyRTQ1dFpQVmExTE1DRkRQdU9jcTdGdEpwY0o0STNyd0tKN25mM3hu?=
+ =?utf-8?B?cC9QNXRQUWxIZjR0eG5SSk96K0FlNVhyblZ6cWFGMlR5a0ZFUVpFSkY5SUQr?=
+ =?utf-8?B?dmZDVmhtb25yUXBaWm9JRVlPT29LY0c2Z2I0TTVPQUdDN3lORjQ0clNaQlJm?=
+ =?utf-8?B?MXBKN29wak1PQS9EVTVTUzhDNkh6V2M4ZUZ5enFwTlZYLzhsWEFNV1ZzTXFU?=
+ =?utf-8?B?cFpWSm9zdTNnUkFvRjY3WVY0ODZ5bVRwZ2N1SUJxNldOWFQ0eUJiUng5eHlK?=
+ =?utf-8?B?WWpsbG9PM3NCdS9LNk4xYWdVMjB1OGJCWjdCM1FocEgxYzdhMUxzbkg4UDE1?=
+ =?utf-8?B?SGhUVEpEZXowdlRheTNXTkxkaFYySjRaY2JOaGMxVGdGUG1NZzZJRFJkUlo5?=
+ =?utf-8?B?UGZXTjU4QkJ3UWV6VGwzRW4vMTA0R0YyL3hMMGMweU4yNnNaUGlqR2I5Mnk1?=
+ =?utf-8?B?WEhwNzFHQXZUWHNtay9iMTB3NkxVOHlWNTViQTdRWFU0NHF5R0ZQRDVKRmh1?=
+ =?utf-8?B?MlVKZ1JNd2dYa1RKdUozYWszUDdXU0tNc29VOXdRMERxSlRvM21BUEh2STc4?=
+ =?utf-8?B?VFVYcUdCVUxxYjhidTdBZEd5Zmx0U3FPblBhUld5TmZPeUJTRDd2UmFtUFl1?=
+ =?utf-8?B?OUZTWERpaUhsdE5sUFdXTWtmaENlN3hEOERwSVMydkM5VFVoRWhpOUxvajFr?=
+ =?utf-8?B?NitJeTVDcFQzeTdKMjVGWDlrWXptWkxWbjhMRTJ1WW9xb1pJN0hTbjlIRXkz?=
+ =?utf-8?B?OWJTRWNFRWdTNlY5dUtnYkhtZWdGZU1tR1p3UlNKZjM0TisrelZhRWZyUjBN?=
+ =?utf-8?B?ODdTVDFncmlxU1h4cXQrNzAra3FtWE4wbFlxWC9vRkM5akplbGVVN3NNZmJU?=
+ =?utf-8?Q?g2VF6G6x+6g7GEiSkJfBZdAn97zjbJz?=
+MIME-Version: 1.0
+
+--=_180fda38c0d0b53d1bd41eeec8663b99
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+
+Webansicht: https://tools.hotelsuite.de/m-elmau/mail/web/?wd=3Ds798.126278.=
+5KH2BQ3XvR8J.bcd86847292.0.0
+
+--------------------
+
+Diese E-Mail kann auf Ihrem Ger=C3=A4t leider nicht richtig dargestellt wer=
+den. Benutzen Sie die Webansicht, um den Newsletter anzuzeigen.
+
+--------------------
+
+
+--=_180fda38c0d0b53d1bd41eeec8663b99
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/html; charset=UTF-8
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.=
+w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns=3D"http://www.w3.=
+org/1999/xhtml"><head>
+<meta http-equiv=3D"Content-Type" content=3D"text/html; charset=3Dutf-8">
+    <meta name=3D"viewport" content=3D"width=3Ddevice-width">
+    <meta http-equiv=3D"X-UA-Compatible" content=3D"IE=3Dedge">
+    <meta name=3D"x-apple-disable-message-reformatting">
+    <title>Culinary Highlights at Schloss Elmau</title>
+
+    <!--[if mso]>
+                    <style>
+                        * {
+                            font-family: sans-serif !important;
+                        }
+                    </style>
+                <![endif]-->
+   =20
+        <!--[if !mso]><!-- -->
+            <style>
+               =20
+               =20
+            </style>
+        <!--<![endif]-->
+    <style>html,
+body {
+    margin: 0 auto !important;
+    padding: 0 !important;
+    height: 100% !important;
+    width: 100% !important;
+}
+
+* {
+    -ms-text-size-adjust: 100%;
+    -webkit-text-size-adjust: 100%;
+}
+
+div[style*=3D"margin: 16px 0"] {
+    margin:0 !important;
+}
+
+table,
+td {
+    mso-table-lspace: 0pt !important;
+    mso-table-rspace: 0pt !important;
+}
+       =20
+table {
+    border-spacing: 0 !important;
+    border-collapse: collapse !important;
+    table-layout: fixed !important;
+    margin: 0 auto !important;
+}
+table table table {
+    table-layout: auto;=20
+}
+
+img {
+    -ms-interpolation-mode:bicubic;
+}
+
+p {
+    margin: 0;
+}
+
+.mobile-link--footer a,
+a[x-apple-data-detectors] {
+    color:inherit !important;
+    text-decoration: underline !important;
+}
+
+.button-td,
+.button-a {
+    transition: all 100ms ease-in;
+}
+.button-td:hover,
+.button-a:hover {
+    background: #555555 !important;
+    border-color: #555555 !important;
+}
+
+@media screen and (max-width: 480px) {
+
+    .fluid,
+    .fluid-centered {
+        width: 100% !important;
+        max-width: 100% !important;
+        height: auto !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+    }
+    .fluid-centered {
+        margin-left: auto !important;
+        margin-right: auto !important;
+    }
+    .stack-column,
+    .stack-column-center {
+        display: block !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        direction: ltr !important;
+    }
+    .stack-column-center {
+        text-align: center !important;
+    }
+    .center-on-narrow {
+        text-align: center !important;
+        display: block !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+        float: none !important;
+    }
+    table.center-on-narrow {
+        display: inline-block !important;
+    }
+    .full-width-on-narrow {
+        width:100% !important;
+        max-width: unset !important;
+    }
+    .auto-height-on-narrow {
+        height: 95.48vw !important;
+    }
+}
+
+@media screen and (min-width: 480px) and (max-width: 660px) {
+    .auto-height-on-narrow {
+        height: 46.5vw !important;
+    }
+}.button-td,
+.button-a {
+	background: #222;
+}
+.button-a {
+	border: 15px solid #222222;
+	color: #FFF;
+	text-decoration: none;
+}
+h1 {
+	line-height: 35px;
+}
+h2 {
+	line-height: 30px;
+}
+#contentarea p {
+	margin: 0;
+}
+table {
+    border-spacing: 0 !important;
+    border-collapse: collapse !important;
+    table-layout: fixed !important;
+    margin: 0 auto !important;
+}
+table table table {
+    table-layout: auto;
+}
+=20
+            .position-container {
+                background-color: #EEE9E2 !important;
+            }
+            #contentarea .row.clearfix > table {
+                background-color: #FFFFFF;
+            }
+            #contentarea td {
+                color: #737070 !important;
+            }
+            #contentarea a:not(.button-a):not([style*=3D"color"]) {
+                color: #1c1c1a;
+            }
+            #contentarea a:not([style*=3D"text-decoration"]) {
+                text-decoration: none;
+            }
+            #contentarea h1, #contentarea h2, #contentarea h3, #contentarea=
+ h4, #contentarea h5, #contentarea h6, #contentarea .headline {
+                color: #3c3c3c;
+            }
+            #contentarea .button-td,
+            #contentarea .button-a {
+                background: #ffffff;
+                color: #212529;
+            }
+            #contentarea .button-a {
+                border-color: #ffffff;
+                text-decoration: none;
+            }
+            #contentarea .button-td:hover,
+            #contentarea .button-a:hover {
+                background: #413C3C !important;
+            }
+            #contentarea .button-a:hover {
+                border-color: #413C3C !important;
+            }
+            .button-tr.secondary .button-td,
+            .button-tr.secondary td {
+                border: 1px solid #413C3C;
+                border-radius: 0px !important;
+            }
+            .button-tr.secondary .button-a:hover,
+            .button-tr.secondary a:hover {
+                color: #ffffff;
+            }
+            #contentarea td {
+font-family: sans-serif;
+}
+
+#contentarea .footer a {
+color: #9e9e9e;
+}
+
+#contentarea hr {
+margin: 0 !important;
+}
+
+#contentarea h1,=20
+#contentarea h2,=20
+#contentarea h3,=20
+#contentarea h4,=20
+#contentarea h5,=20
+#contentarea h6,=20
+#contentarea p {
+text-align: center;
+}
+
+#contentarea  .button-td {
+border: 1px solid #666666;
+}
+
+#contentarea  .button-td,
+#contentarea  .button-tr td {
+border-radius: 0px !important;
+}
+
+#contentarea .button-a {
+border: 15px solid #fff;
+}
+
+#contentarea .button-a,
+#contentarea .button-tr td a {
+border-radius: 0px !important;
+}
+#contentarea .button-tr td a {
+line-height: 0.2 !important;
+letter-spacing: 0.15em;
+font-weight: bold !important;
+font-size: 14px !important;
+}
+
+#contentarea .button-fix {
+border: 8px solid #fff;
+padding: 0 7px;
+line-height: 1.2;
+}
+
+#contentarea .button-a:hover {
+color: white !important;
+}
+
+#contentarea .button-a:hover,
+#contentarea .button-tr td a:hover {
+border-radius: 0px !important;
+}
+
+#contentarea .max-width-300 > div {
+max-width: 300px;=20
+margin-right: auto;=20
+margin-left: auto;
+}
+
+#contentarea .max-width-190 > div {
+max-width: 190px;=20
+margin-right: auto;=20
+margin-left: auto;
+}
+
+@media screen and (max-width: 655px) {
+.padding-on-narrow {
+padding-bottom: 5px !important;
+}
+}</style>
+
+</head>
+<body width=3D"100%" bgcolor=3D"#EEE9E2" style=3D"margin: 0;">
+<center style=3D"width: 100%; background: #EEE9E2;">
+    <div style=3D"display: none; font-size: 1px; line-height: 1px; max-heig=
+ht: 0px; max-width: 0px; opacity: 0; overflow: hidden; mso-hide: all; font-=
+family: sans-serif;">
+        THE SCHLOSS ELMAU EXPERIENCE escape. unwind. recharge. CONCERTS TOP=
+ PACKAGES PROGRAM Cooking with Friends at IKIGAI** with Silvio Germann, Res=
+taurant Mammertsberg** in Freidorf, Switzerland Sunday, 29 March Restaurant=
+ Mammertsberg in Freidorf has qui
+    </div>
+    <div id=3D"contentarea" style=3D"max-width: 680px; margin: auto;">
+        <!--[if mso]>
+        <table role=3D"presentation" cellspacing=3D"0" cellpadding=3D"0" bo=
+rder=3D"0" width=3D"680" align=3D"center">
+            <tr>
+                <td>
+        <![endif]-->
+
+        <div class=3D"row clearfix">
+<!--NOWEBVIEW-->		<table role=3D"presentation" style=3D"border-spacing: 0 !=
+important; border-collapse: collapse !important; table-layout: fixed !impor=
+tant; margin: 0 auto !important; background-color: #FFFFFF; max-width: 680p=
+x;" width=3D"100%" cellspacing=3D"0" cellpadding=3D"0" border=3D"0" align=
+=3D"center">
+	<tbody>
+<tr>
+        <td style=3D"color: #737070 !important; font-family: sans-serif;">
+            <table role=3D"presentation" width=3D"100%" cellspacing=3D"0" c=
+ellpadding=3D"0" border=3D"0" style=3D"border-spacing: 0 !important; border=
+-collapse: collapse !important; table-layout: fixed !important; margin: 0 a=
+uto !important;">
+                <tbody>
+<tr>
+                    <td style=3D"color: #737070 !important; padding: 5px 25=
+px; font-family: sans-serif; font-size: 10px; mso-height-rule: exactly; lin=
+e-height: 140%; text-align: center;">
+                        <div>
+                            <p style=3D"margin: 0; text-align: center;">&nb=
+sp;<b><a href=3D"https://tools.hotelsuite.de/m-elmau/mail/web/?wd=3Ds798.12=
+6278.5KH2BQ3XvR8J.bcd86847292.0.0" title=3D"" data-position=3D"O2SwoqxtZvkz=
+" style=3D"text-decoration: none; color: #1c1c1a;">VIEW ONLINE VERSION</a><=
+/b></p>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+</table>
+        </td>
+    </tr>
+</tbody>
+</table>
+		<!--/NOWEBVIEW-->
+</div>																																																																					=
+																																																																											=
+																																																																											=
+																																																																											=
+																																																																											=
+																																																																											=
+																																																																											=
+																																																																											=
+																																																																											=
+																																																																											=
+																																																																											=
+																																																																											=
+																																																																											=
+																																																																											=
+																																																																											=
+																																																																		<div clas=
+s=3D"row clearfix" data-condition=3D"">
+				       =20
+       =20
+<!--[if false]><div style=3D"background-color: #FFFFFF;"><![endif]-->
+<table role=3D"presentation" cellspacing=3D"0" cellpadding=3D"0" border=3D"=
+0" align=3D"center" width=3D"100%" style=3D"border-spacing: 0 !important; b=
+order-collapse: collapse !important; table-layout: fixed !important; margin=
+: 0 auto !important; max-width: 680px; background-color: #FFFFFF;">
+   =20
+    <tbody><tr>
+        <td dir=3D"ltr" align=3D"center" height=3D"100%" valign=3D"center" =
+width=3D"100%" style=3D"color: #737070 !important; font-family: sans-serif;=
+ padding: 10px 0;">
+            <!--[if mso]>
+            <table role=3D"presentation" border=3D"0" cellspacing=3D"0" cel=
+lpadding=3D"0" align=3D"center" width=3D"660">
+            <tr>
+            <td align=3D"center" valign=3D"top" width=3D"660">
+            <![endif]-->
+            <table role=3D"presentation" border=3D"0" cellpadding=3D"0" cel=
+lspacing=3D"0" align=3D"center" width=3D"100%" style=3D"border-spacing: 0 !=
+important; border-collapse: collapse !important; table-layout: fixed !impor=
+tant; margin: 0 auto !important; max-width: 660px;">
+                <tbody><tr>
+                    <td align=3D"center" valign=3D"top" style=3D"color: #73=
+7070 !important; font-family: sans-serif; font-size: 0; padding: 10px 0;">
+                        <!--[if mso]>
+                        <table role=3D"presentation" border=3D"0" cellspaci=
+ng=3D"0" cellpadding=3D"0" align=3D"center" width=3D"660">
+                        <tr>
+                        <td align=3D"left" valign=3D"top" width=3D"660">
+                        <![endif]-->
+                        <div style=3D"display:inline-block; margin: 0; widt=
+h:100%; vertical-align:top;" class=3D"stack-column">
+                            <table role=3D"presentation" cellspacing=3D"0" =
+cellpadding=3D"0" border=3D"0" width=3D"100%" style=3D"border-spacing: 0 !i=
+mportant; border-collapse: collapse !important; table-layout: fixed !import=
+ant; margin: 0 auto !important;">
+                                <tbody><tr>
+                                   =20
+<td class=3D"no-center-on-narrow" dir=3D"ltr" style=3D"color: #737070 !impo=
+rtant; font-family: sans-serif; font-size: 15px; mso-height-rule: exactly; =
+line-height: 140%; text-align: left; padding: 0 10px;">
+    <div>
+        <div>
+            <h1 style=3D"color: #3c3c3c; text-align: center; margin: 0px; l=
+ine-height: 34px;">
+<a href=3D"https://tools.hotelsuite.de/m-elmau/mail/link/?id=3D5KH2oXuMN2j&=
+amp;rd=3D5KH2BQ3XvR8J&amp;sd=3D798" data-position=3D"FNjVj91ztEoL" title=3D=
+"" style=3D"text-decoration: none; color: #1c1c1a;"><span color=3D"#000000"=
+><span style=3D"font-size: 24px; font-weight: 400; color: #000000;">THE SCH=
+LOSS ELMAU EXPERIENCE<br></span></span><span style=3D"color: #000000; font-=
+size: 24px; font-weight: 400;">escape. unwind. recharge.</span></a><br>
+</h1>
+        </div>
+    </div>
+</td>
+
+                                </tr>
+                            </tbody></table>
+                        </div>
+                        <!--[if mso]>
+                        </td>
+                        </tr>
+                        </table>
+                        <![endif]-->
+                    </td>
+                </tr>
+            </tbody></table>
+            <!--[if mso]>
+            </td>
+            </tr>
+            </table>
+            <![endif]-->
+        </td>
+    </tr>
+   =20
+</tbody></table>
+<!--[if false]></div><![endif]-->			</div>
+<div class=3D"row clearfix image-height-tool"><table role=3D"presentation" =
+style=3D"border-spacing: 0 !important; border-collapse: collapse !important=
+; table-layout: fixed !important; margin: 0 auto !important; background-col=
+or: #FFFFFF; max-width: 680px;" width=3D"100%" cellspacing=3D"0" cellpaddin=
+g=3D"0" border=3D"0" align=3D"center">
+    <tbody>
+        <tr>
+            <td style=3D"color: #737070 !important; font-family: sans-serif=
+; padding: 0 25px;">
+                <table role=3D"presentation" style=3D"border-spacing: 0 !im=
+portant; border-collapse: collapse !important; table-layout: fixed !importa=
+nt; margin: 0 auto !important; max-width: 680px;" width=3D"100%" cellspacin=
+g=3D"0" cellpadding=3D"0" border=3D"0" align=3D"center">
+                    <tbody>
+                        <tr>
+                            <td style=3D"color: #737070 !important; font-fa=
+mily: sans-serif; padding: 15px 0px; text-align: center; font-size: 10px; l=
+ine-height: 14px;"><br></td>
+                        </tr>
+                        <tr>
+                            <td width=3D"100%" valign=3D"top" height=3D"100=
+%" align=3D"center" style=3D"color: #737070 !important; font-family: sans-s=
+erif;">
+                                <!--[if mso]>
+                <table role=3D"presentation" border=3D"0" cellspacing=3D"0"=
+ cellpadding=3D"0" align=3D"center">
+                    <tr>
+                        <td align=3D"center" valign=3D"top">
+                <![endif]-->
+                                <table role=3D"presentation" width=3D"100%"=
+ cellspacing=3D"0" cellpadding=3D"0" border=3D"0" align=3D"center" style=3D=
+"border-spacing: 0 !important; border-collapse: collapse !important; table-=
+layout: fixed !important; margin: 0 auto !important;">
+                                    <tbody>
+                                        <tr>
+                                            <td style=3D"color: #737070 !im=
+portant; font-family: sans-serif; font-size: 0;" valign=3D"top" align=3D"ce=
+nter">
+                                                <!--[if mso]>
+                            <table role=3D"presentation" border=3D"0" cells=
+pacing=3D"0" cellpadding=3D"0" align=3D"center">
+                                <tr>
+                            <![endif]-->
+                                                <!--[if mso]>
+                            <td align=3D"left" valign=3D"top" width=3D"200"=
+>
+                            <![endif]-->
+                                                <div style=3D"display:inlin=
+e-block; max-width:32%; vertical-align:top;">
+                                                    <table role=3D"presenta=
+tion" width=3D"100%" cellspacing=3D"0" cellpadding=3D"0" border=3D"0" style=
+=3D"border-spacing: 0 !important; border-collapse: collapse !important; tab=
+le-layout: fixed !important; margin: 0 auto !important;">
+                                                        <tbody>
+                                                            <tr>
+                                                                <td style=
+=3D"color: #737070 !important; font-family: sans-serif;">
+                                                                    <table =
+role=3D"presentation" style=3D"border-spacing: 0 !important; border-collaps=
+e: collapse !important; table-layout: fixed !important; margin: 0 auto !imp=
+ortant; font-size: 12px; text-align: left;" width=3D"100%" cellspacing=3D"0=
+" cellpadding=3D"0" border=3D"0">
+                                                                        <tb=
+ody>
+                                                                           =
+ <tr>
+                                                                           =
+     <td style=3D"color: #737070 !important; font-family: sans-serif; font-=
+size: 14px; mso-height-rule: exactly; line-height: 140%; margin: 10px 0; bo=
+rder-right: 1px solid #000000;" class=3D"stack-column-center">
+                                                                           =
+         <!-- Button : BEGIN -->
+                                                                           =
+         <table class=3D"button" role=3D"presentation" style=3D"border-spac=
+ing: 0 !important; border-collapse: collapse !important; table-layout: fixe=
+d !important; margin: auto;" cellspacing=3D"0" cellpadding=3D"0" border=3D"=
+0" align=3D"center">
+                                                                           =
+             <tbody>
+                                                                           =
+                 <tr>
+                                                                           =
+                     <td style=3D"color: #737070 !important; font-family: s=
+ans-serif; text-align: center; padding: 5px 0;">
+                                                                           =
+                         <span style=3D"color: #000000;">
+                                                                           =
+                             <a href=3D"https://tools.hotelsuite.de/m-elmau=
+/mail/link/?id=3D5KH2oXuM5AB&amp;rd=3D5KH2BQ3XvR8J&amp;sd=3D798" style=3D"c=
+olor: #1c1c1a; padding: 0px 3px; font-family: sans-serif; font-size: 12px; =
+line-height: 1.1; text-align: center; text-decoration: none; display: block=
+; border: 0px; font-weight: bold;" title=3D"" data-position=3D"izr5gEWIVVSA=
+">CONCERTS</a>
+                                                                           =
+                        =20
+                                                                           =
+                     </span>
+</td>
+                                                                           =
+                 </tr>
+                                                                           =
+             </tbody>
+                                                                           =
+         </table>
+                                                                           =
+     </td>
+                                                                           =
+ </tr>
+                                                                        </t=
+body>
+                                                                    </table=
+>
+                                                                </td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                                <!--[if mso]>
+                            </td>
+                            <![endif]-->
+                                                <!--[if mso]>
+                            <td align=3D"left" valign=3D"top" width=3D"200"=
+>
+                            <![endif]-->
+                                                <div style=3D"display:inlin=
+e-block; max-width:32%; vertical-align:top;">
+                                                    <table role=3D"presenta=
+tion" width=3D"100%" cellspacing=3D"0" cellpadding=3D"0" border=3D"0" style=
+=3D"border-spacing: 0 !important; border-collapse: collapse !important; tab=
+le-layout: fixed !important; margin: 0 auto !important;">
+                                                        <tbody>
+                                                            <tr>
+                                                                <td style=
+=3D"color: #737070 !important; font-family: sans-serif;">
+                                                                    <table =
+role=3D"presentation" style=3D"border-spacing: 0 !important; border-collaps=
+e: collapse !important; table-layout: fixed !important; margin: 0 auto !imp=
+ortant; font-size: 12px; text-align: left;" width=3D"100%" cellspacing=3D"0=
+" cellpadding=3D"0" border=3D"0">
+                                                                        <tb=
+ody>
+                                                                           =
+ <tr>
+                                                                           =
+     <td style=3D"color: #737070 !important; font-family: sans-serif; font-=
+size: 14px; mso-height-rule: exactly; line-height: 140%; margin: 10px 0; bo=
+rder-right: 1px solid #000000;" class=3D"stack-column-center">
+                                                                           =
+         <!-- Button : BEGIN -->
+                                                                           =
+         <table class=3D"button" role=3D"presentation" style=3D"border-spac=
+ing: 0 !important; border-collapse: collapse !important; table-layout: fixe=
+d !important; margin: auto;" cellspacing=3D"0" cellpadding=3D"0" border=3D"=
+0" align=3D"center">
+                                                                           =
+             <tbody>
+                                                                           =
+                 <tr>
+                                                                           =
+                     <td style=3D"color: #737070 !important; font-family: s=
+ans-serif; border-radius: 3px; text-align: center; padding: 5px 0;">
+                                                                           =
+                        =20
+                                                                           =
+                             <a href=3D"https://tools.hotelsuite.de/m-elmau=
+/mail/link/?id=3D5KH2Bz1aLIjT&amp;rd=3D5KH2BQ3XvR8J&amp;sd=3D798" style=3D"=
+color: #1c1c1a; padding: 0px 3px; font-family: sans-serif; font-size: 12px;=
+ line-height: 1.1; text-align: center; text-decoration: none; display: bloc=
+k; border: 0px; font-weight: bold;" title=3D"" data-position=3D"rR0eV5lYx01=
+g"><span style=3D"color: #000000;">TOP PACKAGES</span></a>
+                                                                           =
+                        =20
+                                                                           =
+                     </td>
+                                                                           =
+                 </tr>
+                                                                           =
+             </tbody>
+                                                                           =
+         </table>
+                                                                           =
+     </td>
+                                                                           =
+ </tr>
+                                                                        </t=
+body>
+                                                                    </table=
+>
+                                                                </td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                                <!--[if mso]>
+                            </td>
+                            <![endif]-->
+                                                <!--[if mso]>
+                            <td align=3D"left" valign=3D"top" width=3D"200"=
+>
+                            <![endif]-->
+                                                <div style=3D"display:inlin=
+e-block; max-width:32%; vertical-align:top;">
+                                                    <table role=3D"presenta=
+tion" width=3D"100%" cellspacing=3D"0" cellpadding=3D"0" border=3D"0" style=
+=3D"border-spacing: 0 !important; border-collapse: collapse !important; tab=
+le-layout: fixed !important; margin: 0 auto !important;">
+                                                        <tbody>
+                                                            <tr>
+                                                                <td style=
+=3D"color: #737070 !important; font-family: sans-serif;">
+                                                                    <table =
+role=3D"presentation" style=3D"border-spacing: 0 !important; border-collaps=
+e: collapse !important; table-layout: fixed !important; margin: 0 auto !imp=
+ortant; font-size: 12px; text-align: left;" width=3D"100%" cellspacing=3D"0=
+" cellpadding=3D"0" border=3D"0">
+                                                                        <tb=
+ody>
+                                                                           =
+ <tr>
+                                                                           =
+     <td style=3D"color: #737070 !important; font-family: sans-serif; font-=
+size: 14px; mso-height-rule: exactly; line-height: 140%; margin: 10px 0;" c=
+lass=3D"stack-column-center">
+                                                                           =
+         <!-- Button : BEGIN -->
+                                                                           =
+         <table class=3D"button" role=3D"presentation" style=3D"border-spac=
+ing: 0 !important; border-collapse: collapse !important; table-layout: fixe=
+d !important; margin: auto;" cellspacing=3D"0" cellpadding=3D"0" border=3D"=
+0" align=3D"center">
+                                                                           =
+             <tbody>
+                                                                           =
+                 <tr>
+                                                                           =
+                     <td style=3D"color: #737070 !important; font-family: s=
+ans-serif; border-radius: 3px; text-align: center; padding: 5px 0;">
+                                                                           =
+                        =20
+                                                                           =
+                             <a href=3D"https://tools.hotelsuite.de/m-elmau=
+/mail/link/?id=3D5KH2oXuMAACX&amp;rd=3D5KH2BQ3XvR8J&amp;sd=3D798" style=3D"=
+color: #1c1c1a; padding: 0px 3px; font-family: sans-serif; font-size: 12px;=
+ line-height: 1.1; text-align: center; text-decoration: none; display: bloc=
+k; border: 0px; font-weight: bold;" title=3D"" data-position=3D"e4LfAkKNl46=
+Z"><span style=3D"color: #000000;">PROGRAM</span></a>
+                                                                           =
+                        =20
+                                                                           =
+                     </td>
+                                                                           =
+                 </tr>
+                                                                           =
+             </tbody>
+                                                                           =
+         </table>
+                                                                           =
+     </td>
+                                                                           =
+ </tr>
+                                                                        </t=
+body>
+                                                                    </table=
+>
+                                                                </td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                                <!--[if mso]>
+                            </td>
+                            <![endif]-->
+                                                <!--[if mso]>
+                            </tr>
+                            </table>
+                            <![endif]-->
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <!--[if mso]>
+                </td>
+                </tr>
+                </table>
+                <![endif]-->
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </td>
+        </tr>
+    </tbody>
+</table></div>																																																					=09
+=09
+=09
+=09
+
+	<div class=3D"row clearfix image-height-tool">
+				<table role=3D"presentation" style=3D"border-spacing: 0 !important; bor=
+der-collapse: collapse !important; table-layout: fixed !important; margin: =
+0 auto !important; background-color: #FFFFFF; max-width: 680px;" width=3D"1=
+00%" cellspacing=3D"0" cellpadding=3D"0" border=3D"0" align=3D"center">
+	<tbody>
+<tr>
+        <td style=3D"color: #737070 !important; font-family: sans-serif;">
+            <img src=3D"https://r.send.onm.de/im/1707114/928d8b8b1fe4ab75cc=
+e4d4a892a519c3176e1442bc8331ae68266c40ba650ab1.jpg?e=3D9MPhyCOOnZWs2IwS28vm=
+Nsd8cpoPLxbuQqiDcq8OII9GzL0nYas33UaREI5nObiyL5uiNbGf3W0TZWScqmWPoa7pS7jcUOj=
+hqKGJkGYqp1ELzJjDcfw_znz6UwnFlrPwNzX4sFVDokQuvsrG4areJ6sSeb7wUXATJ9x9jh5ppy=
+vG3kD2dmTxvh6pe5xEN_Dws6AWrBB4lmYBKuG0gK6Kfv0UovS-GhfavT0-OiExx3heBqH62-phB=
+kTzD2bZu67x0j-AlUxJPFw" alt=3D"" class=3D"fluid clearimg" style=3D"width: 1=
+00%; max-width: 680px; mso-height-rule: exactly; line-height: 140%;" width=
+=3D"680" border=3D"0" align=3D"middle">
+        </td>
+    </tr>
+</tbody>
+</table>			</div>																																														<div class=
+=3D"row clearfix" data-condition=3D"">
+				       =20
+       =20
+<!--[if false]><div style=3D"background-color: #FFFFFF;"><![endif]-->
+<table role=3D"presentation" cellspacing=3D"0" cellpadding=3D"0" border=3D"=
+0" align=3D"center" width=3D"100%" style=3D"border-spacing: 0 !important; b=
+order-collapse: collapse !important; table-layout: fixed !important; margin=
+: 0 auto !important; max-width: 680px; background-color: #FFFFFF;">
+   =20
+    <tbody><tr>
+        <td dir=3D"ltr" align=3D"center" height=3D"100%" valign=3D"center" =
+width=3D"100%" style=3D"color: #737070 !important; font-family: sans-serif;=
+ padding: 0px 0;">
+            <!--[if mso]>
+            <table role=3D"presentation" border=3D"0" cellspacing=3D"0" cel=
+lpadding=3D"0" align=3D"center" width=3D"680">
+            <tr>
+            <td align=3D"center" valign=3D"top" width=3D"680">
+            <![endif]-->
+            <table role=3D"presentation" border=3D"0" cellpadding=3D"0" cel=
+lspacing=3D"0" align=3D"center" width=3D"100%" style=3D"border-spacing: 0 !=
+important; border-collapse: collapse !important; table-layout: fixed !impor=
+tant; margin: 0 auto !important; max-width: 680px;">
+                <tbody><tr>
+                    <td align=3D"center" valign=3D"top" style=3D"color: #73=
+7070 !important; font-family: sans-serif; font-size: 0; padding: 0px 0;">
+                        <!--[if mso]>
+                        <table role=3D"presentation" border=3D"0" cellspaci=
+ng=3D"0" cellpadding=3D"0" align=3D"center" width=3D"680">
+                        <tr>
+                        <td align=3D"left" valign=3D"top" width=3D"680">
+                        <![endif]-->
+                        <div style=3D"display:inline-block; margin: 0; widt=
+h:100%; vertical-align:top;" class=3D"stack-column">
+                            <table role=3D"presentation" cellspacing=3D"0" =
+cellpadding=3D"0" border=3D"0" width=3D"100%" style=3D"border-spacing: 0 !i=
+mportant; border-collapse: collapse !important; table-layout: fixed !import=
+ant; margin: 0 auto !important;">
+                                <tbody><tr>
+                                   =20
+<td dir=3D"ltr" style=3D"color: #737070 !important; font-family: sans-serif=
+; padding: 0 0px;">
+    <a href=3D"https://tools.hotelsuite.de/m-elmau/mail/link/?id=3D5KH2oXuM=
+QfPr&amp;rd=3D5KH2BQ3XvR8J&amp;sd=3D798" title=3D"" target=3D"_blank" data-=
+position=3D"rPeI4zmtG9AA" style=3D"text-decoration: none; color: #1c1c1a;">=
+<img src=3D"https://r.send.onm.de/im/1707114/1b2b93caa4cf4d2d79502f6c7b6725=
+3975736c7974edb73245f6aabdc40eef18.jpg?e=3DHTY3neKxmlfeQ02lnrG0zcD5TnbcYPVl=
+rX8gMQet-iDlpb7r3SFbucz3tjLsAwNUUoiClZUIKxoyOhd6xOdUzA3zpG1V_ajNxU7jDxR2hRL=
+Qe7URMbuEtyVjft4iq-tMUxSc2aluB_mG8KXldvENCoEkawIv5AjIcTPHv4mjbBPVLF25WQJfHV=
+vlgRabF6JfoQ28pZQ5iZJ6jplfOdxnN5yHJyirxBocBJN_9z_8O5vFTpUlMkcthhFBKbRbbNYn2=
+RFe76RHuKKZCpGWfOjQYWMEnKnerYbM4OXvSMGsu-orjy91cjpwD_i59KkB_s_bDbG43QNq6eSJ=
+j6RFI6QqWD6K8h8kNxrUtEbek2FqTlY6zQ" width=3D"680" border=3D"0" alt=3D"" cla=
+ss=3D"fluid full-width-on-narrow" style=3D"width: 100%;"></a>
+</td>
+
+                                </tr>
+                            </tbody></table>
+                        </div>
+                        <!--[if mso]>
+                        </td>
+                        </tr>
+                        </table>
+                        <![endif]-->
+                    </td>
+                </tr>
+            </tbody></table>
+            <!--[if mso]>
+            </td>
+            </tr>
+            </table>
+            <![endif]-->
+        </td>
+    </tr>
+   =20
+</tbody></table>
+<!--[if false]></div><![endif]-->			</div>
+	<div class=3D"row clearfix" data-condition=3D"">
+				       =20
+       =20
+<!--[if false]><div style=3D"background-color: #FFFFFF;"><![endif]-->
+<table role=3D"presentation" cellspacing=3D"0" cellpadding=3D"0" border=3D"=
+0" align=3D"center" width=3D"100%" style=3D"border-spacing: 0 !important; b=
+order-collapse: collapse !important; table-layout: fixed !important; margin=
+: 0 auto !important; max-width: 680px; background-color: #FFFFFF;">
+   =20
+    <tbody><tr>
+        <td dir=3D"ltr" align=3D"center" height=3D"100%" valign=3D"center" =
+width=3D"100%" style=3D"color: #737070 !important; font-family: sans-serif;=
+ padding: 10px 0;">
+            <!--[if mso]>
+            <table role=3D"presentation" border=3D"0" cellspacing=3D"0" cel=
+lpadding=3D"0" align=3D"center" width=3D"660">
+            <tr>
+            <td align=3D"center" valign=3D"top" width=3D"660">
+            <![endif]-->
+            <table role=3D"presentation" border=3D"0" cellpadding=3D"0" cel=
+lspacing=3D"0" align=3D"center" width=3D"100%" style=3D"border-spacing: 0 !=
+important; border-collapse: collapse !important; table-layout: fixed !impor=
+tant; margin: 0 auto !important; max-width: 660px;">
+                <tbody><tr>
+                    <td align=3D"center" valign=3D"top" style=3D"color: #73=
+7070 !important; font-family: sans-serif; font-size: 0; padding: 10px 0;">
+                        <!--[if mso]>
+                        <table role=3D"presentation" border=3D"0" cellspaci=
+ng=3D"0" cellpadding=3D"0" align=3D"center" width=3D"660">
+                        <tr>
+                        <td align=3D"left" valign=3D"top" width=3D"660">
+                        <![endif]-->
+                        <div style=3D"display:inline-block; margin: 0; widt=
+h:100%; vertical-align:top;" class=3D"stack-column">
+                            <table role=3D"presentation" cellspacing=3D"0" =
+cellpadding=3D"0" border=3D"0" width=3D"100%" style=3D"border-spacing: 0 !i=
+mportant; border-collapse: collapse !important; table-layout: fixed !import=
+ant; margin: 0 auto !important;">
+                                <tbody><tr>
+                                   =20
+<td class=3D"no-center-on-narrow" dir=3D"ltr" style=3D"color: #737070 !impo=
+rtant; font-family: sans-serif; padding: 0 10px;">
+    <table role=3D"presentation" cellspacing=3D"0" cellpadding=3D"0" border=
+=3D"0" width=3D"100%" style=3D"border-spacing: 0 !important; border-collaps=
+e: collapse !important; table-layout: fixed !important; margin: 0 auto !imp=
+ortant;">
+        <tbody><tr>
+            <td style=3D"color: #737070 !important; font-family: sans-serif=
+; font-size: 15px; mso-height-rule: exactly; line-height: 140%;">
+                <div>
+                    <div>
+                        <p style=3D"margin: 0; text-align: center;"><span s=
+tyle=3D"color: #000000;"><b style=3D"font-size: 20px; line-height: 28px;">C=
+ooking with Friends at IKIGAI**</b><br><span style=3D"font-size: 16px; line=
+-height: 22px;">with Silvio Germann, Restaurant Mammertsberg** in Freidorf,=
+ Switzerland<br>Sunday, 29 March<br><br></span><span style=3D"font-size: 14=
+px; line-height: 20px;">Restaurant Mammertsberg in Freidorf has quickly bec=
+ome one of the leading destinations in Swiss fine dining. Silvio Germann ha=
+s been awarded 18 Gault-Millau points and the title of =E2=80=9CChef of the=
+ Year 2024.=E2=80=9D Together with Christoph Rainer and the IKIGAI team, he=
+ will transform this evening into an extraordinary culinary experience.<br>=
+<br>Omakase Zensai | 6-Course Tasting Menu | Omakase Kanmi</span></span></p=
+>
+                    </div>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td class=3D"no-center-on-narrow" style=3D"color: #737070 !impo=
+rtant; font-family: sans-serif; padding-top: 20px;">
+           =20
+<!-- Button : BEGIN -->
+<table class=3D"no-center-on-narrow" role=3D"presentation" style=3D"border-=
+spacing: 0 !important; border-collapse: collapse !important; table-layout: =
+fixed !important; margin: auto; mso-table-lspace: 0; mso-table-rspace: 0;" =
+cellspacing=3D"0" cellpadding=3D"0" border=3D"0" align=3D"center">
+    <tbody>
+    <tr class=3D"button-tr primary">
+        <td class=3D"button-td" style=3D"color: #737070 !important; font-fa=
+mily: sans-serif; background: #ffffff; border: 1px solid #666666; border-ra=
+dius: 3px; text-align: center;">
+            <a data-position=3D"8gocnjWQPu6C" href=3D"https://tools.hotelsu=
+ite.de/m-elmau/mail/link/?id=3D5KH2Bz3kg0Zu&amp;rd=3D5KH2BQ3XvR8J&amp;sd=3D=
+798" class=3D"button-a" title=3D"" style=3D"background: #ffffff; color: #21=
+2529; letter-spacing: 0.15em; background-color: unset !important; border: 1=
+5px solid transparent; font-family: sans-serif; font-size: 13px; line-heigh=
+t: 1.1; text-align: center; text-decoration: none !important; display: bloc=
+k; font-weight: bold; border-radius: 3px; border-width: 15px; border-style:=
+ solid; border-color: transparent;" spellcheck=3D"false">LEARN MORE</a>
+        </td>
+    </tr>
+    </tbody>
+</table>
+<!-- Button : END -->
+
+            </td>
+        </tr>
+    </tbody></table>
+</td>
+
+                                </tr>
+                            </tbody></table>
+                        </div>
+                        <!--[if mso]>
+                        </td>
+                        </tr>
+                        </table>
+                        <![endif]-->
+                    </td>
+                </tr>
+            </tbody></table>
+            <!--[if mso]>
+            </td>
+            </tr>
+            </table>
+            <![endif]-->
+        </td>
+    </tr>
+   =20
+</tbody></table>
+<!--[if false]></div><![endif]-->			</div>
+	<div class=3D"row clearfix content-tool" data-condition=3D"">
+				       =20
+       =20
+<!--[if false]><div style=3D"background-color: #FFFFFF;"><![endif]-->
+<table role=3D"presentation" cellspacing=3D"0" cellpadding=3D"0" border=3D"=
+0" align=3D"center" width=3D"100%" style=3D"border-spacing: 0 !important; b=
+order-collapse: collapse !important; table-layout: fixed !important; margin=
+: 0 auto !important; max-width: 680px; background-color: #FFFFFF;">
+    <tbody><tr>
+        <td dir=3D"ltr" align=3D"center" height=3D"100%" valign=3D"center" =
+width=3D"100%" style=3D"color: #737070 !important; font-family: sans-serif;=
+ padding: 10px 0;">
+            <!--[if mso]>
+            <table role=3D"presentation" border=3D"0" cellspacing=3D"0" cel=
+lpadding=3D"0" align=3D"center" width=3D"660">
+            <tr>
+            <td align=3D"center" valign=3D"top" width=3D"660">
+            <![endif]-->
+            <table role=3D"presentation" border=3D"0" cellpadding=3D"0" cel=
+lspacing=3D"0" align=3D"center" width=3D"100%" style=3D"border-spacing: 0 !=
+important; border-collapse: collapse !important; table-layout: fixed !impor=
+tant; margin: 0 auto !important; max-width: 660px;">
+                <tbody><tr>
+                    <td align=3D"center" valign=3D"top" style=3D"color: #73=
+7070 !important; font-family: sans-serif; font-size: 0;">
+                        <!--[if mso]>
+                        <table role=3D"presentation" border=3D"0" cellspaci=
+ng=3D"0" cellpadding=3D"0" align=3D"center" width=3D"660">
+                        <tr>
+                        <![endif]-->
+                                                                           =
+                                             <!--[if mso]>
+                        <td align=3D"left" valign=3D"top" width=3D"330">
+                        <![endif]-->
+                        <div style=3D"display:inline-block; max-width:50%; =
+vertical-align:top; width:100%;" class=3D"stack-column">
+                            <!--[if false]><div style=3D"display:inline-blo=
+ck; min-width:330px; vertical-align:top; width:100%;" class=3D"stack-column=
+"><![endif]-->
+                            <table role=3D"presentation" cellspacing=3D"0" =
+cellpadding=3D"0" border=3D"0" width=3D"100%" style=3D"border-spacing: 0 !i=
+mportant; border-collapse: collapse !important; table-layout: fixed !import=
+ant; margin: 0 auto !important;">
+                                <tbody><tr>
+                                    <td style=3D"color: #737070 !important;=
+ font-family: sans-serif; padding: 10px 10px;">
+                                        <table role=3D"presentation" cellsp=
+acing=3D"0" cellpadding=3D"0" border=3D"0" width=3D"100%" style=3D"border-s=
+pacing: 0 !important; border-collapse: collapse !important; table-layout: f=
+ixed !important; margin: 0 auto !important;">
+                                            <tbody><tr>
+                                               =20
+<td dir=3D"ltr" style=3D"color: #737070 !important; font-family: sans-serif=
+;">
+    <table role=3D"presentation" cellspacing=3D"0" cellpadding=3D"0" border=
+=3D"0" width=3D"100%" class=3D"" style=3D"border-spacing: 0 !important; bor=
+der-collapse: collapse !important; table-layout: fixed !important; margin: =
+0 auto !important;">
+        <tbody><tr>
+            <td style=3D"color: #737070 !important; font-family: sans-serif=
+; font-size: 0; line-height: 0;">
+                <a href=3D"https://tools.hotelsuite.de/m-elmau/mail/link/?i=
+d=3D5KH2Bz83A5VG&amp;rd=3D5KH2BQ3XvR8J&amp;sd=3D798" title=3D"" target=3D"_=
+blank" data-position=3D"mCjEeE3piS8b" style=3D"text-decoration: none; color=
+: #1c1c1a;"><img src=3D"https://r.send.onm.de/im/1707114/c113e1a2c624d9e775=
+cbb8164a8e84f0d085d4ff231e9582e25df1cac4434813.jpg?e=3Dk4b7UyURip1VX98glaOy=
+hEnzsuYDb7VRPkUWjh0GzpfjGMEtXzmf0NuWiYGd-cFKz4Snb7jV51mt3hWt3VB-xojdPo1DbUV=
+dNSDy_QEzcb-_5IdCm_hKvG5jeKT69y7_mCkmiaIMyvyf01dV-Qhj2LzsaOYjFvZh6DXeJepVB5=
+nx7Fy9xdFLAfKkyzu5KCj7-sWrjqSL2lTuNGvZZ8uZLaJorIjKoOQfHDOtQyvCt4BA9IhT0TZxA=
+1gD6dy5Vsm4mHJxH6iBiyq3i9h_L4qpjMSg_hzKKwa2-k1T9kMFGq_LGOEO5iSrWK7MxUBR19qM=
+hg-ZRn67XVsaIIODKFQc62MHIUQewzZnHx9ymFLh" width=3D"310" border=3D"0" alt=3D=
+"" class=3D"full-width-on-narrow" style=3D"width: 100%;"></a>            </=
+td>
+        </tr>
+        <tr>
+            <td class=3D"no-center-on-narrow" style=3D"color: #737070 !impo=
+rtant; font-family: sans-serif; font-size: 15px; mso-height-rule: exactly; =
+line-height: 140%; padding: 10px 0px 0px;">
+                <div>
+                    <div>
+                        <p style=3D"margin: 0; text-align: center; font-siz=
+e: 14px; line-height: 20px; color: #000000;"><b>Package with 1 <b>night=E2=
+=80=99s stay</b><br>from Sunday, 29 March to Monday, 30 March</b><br>Includ=
+es breakfast, spa &amp; yoga, and the fitness program</p>
+                    </div>
+                </div>
+            </td>
+        </tr>
+    </tbody></table>
+</td>
+
+                                            </tr>
+                                        </tbody></table>
+                                    </td>
+                                </tr>
+                            </tbody></table>
+                            <!--[if false]></div><![endif]-->
+                        </div>
+                        <!--[if mso]>
+                        </td>
+                        <![endif]-->
+                                                                           =
+                                                                     <!--[i=
+f mso]>
+                        <td align=3D"left" valign=3D"top" width=3D"330">
+                        <![endif]-->
+                        <div style=3D"display:inline-block; max-width:50%; =
+vertical-align:top; width:100%;" class=3D"stack-column">
+                            <!--[if false]><div style=3D"display:inline-blo=
+ck; min-width:330px; vertical-align:top; width:100%;" class=3D"stack-column=
+"><![endif]-->
+                            <table role=3D"presentation" cellspacing=3D"0" =
+cellpadding=3D"0" border=3D"0" width=3D"100%" style=3D"border-spacing: 0 !i=
+mportant; border-collapse: collapse !important; table-layout: fixed !import=
+ant; margin: 0 auto !important;">
+                                <tbody><tr>
+                                    <td style=3D"color: #737070 !important;=
+ font-family: sans-serif; padding: 10px 10px;">
+                                        <table role=3D"presentation" cellsp=
+acing=3D"0" cellpadding=3D"0" border=3D"0" width=3D"100%" style=3D"border-s=
+pacing: 0 !important; border-collapse: collapse !important; table-layout: f=
+ixed !important; margin: 0 auto !important;">
+                                            <tbody><tr>
+                                               =20
+<td dir=3D"ltr" style=3D"color: #737070 !important; font-family: sans-serif=
+;">
+    <table role=3D"presentation" cellspacing=3D"0" cellpadding=3D"0" border=
+=3D"0" width=3D"100%" class=3D"" style=3D"border-spacing: 0 !important; bor=
+der-collapse: collapse !important; table-layout: fixed !important; margin: =
+0 auto !important;">
+        <tbody><tr>
+            <td style=3D"color: #737070 !important; font-family: sans-serif=
+; font-size: 0; line-height: 0;">
+                <a href=3D"https://tools.hotelsuite.de/m-elmau/mail/link/?i=
+d=3D5KH2BAGCNuT2&amp;rd=3D5KH2BQ3XvR8J&amp;sd=3D798" title=3D"" target=3D"_=
+blank" data-position=3D"FHIEsdUx9os2" style=3D"text-decoration: none; color=
+: #1c1c1a;"><img src=3D"https://r.send.onm.de/im/1707114/f37ddb289d613225da=
+beb73fd18972e91e53f32e54db1249ee0b232d99cdc836.jpg?e=3DarX5Nl709-WkbzPzXh1k=
+1Qszyc7R4QaCyGSyMbRU3UJ70QM7-6yoCyRRQ0kLwXHrOskTaoL0Au8GhV6Jz31oGWBvXFCQfdo=
+6hhMnZvo3Tkgp4ZJpO7uhjYoxk3S80U5g1rFhwG7PwBfHq9Q3iVmd7R_ST-b0yk17cd5ZK4pOwP=
+Ez939x0C4elVCupv8nGxcsf13_czUEf74tCQFA1pn_30D3A2biP16ebkZ18takEfbGjZj2o5-VH=
+8_WtpjEmESjEopB-2TymkM3LNFBe341nZzkeRgWQRk10ILPUX0ycpQpOA9gekGq3XulP12qPOTy=
+aaRc-diRTWvrZ3d2CzGjSdtjfNO-1LMcQDgpjIGJsMwWxDcuvhw_rPbYOLeihLPkpbpZdIZKbwx=
+nDCWQWgZrfA" width=3D"310" border=3D"0" alt=3D"" class=3D"full-width-on-nar=
+row" style=3D"width: 100%;"></a>            </td>
+        </tr>
+        <tr>
+            <td class=3D"no-center-on-narrow" style=3D"color: #737070 !impo=
+rtant; font-family: sans-serif; font-size: 15px; mso-height-rule: exactly; =
+line-height: 140%; padding: 10px 0px 0px;">
+                <div>
+                    <div>
+                        <p style=3D"margin: 0; text-align: center;"><span s=
+tyle=3D"color: #000000; font-size: 14px; line-height: 20px;"><span style=3D=
+"font-size: 14px; line-height: 20px;"><b style=3D"font-size: 14px; line-hei=
+ght: 20px;">Table reservation<br>without an overnight stay</b></span><br><s=
+pan style=3D"font-size: 14px; line-height: 20px;">345=E2=82=AC per person</=
+span></span></p>
+                    </div>
+                </div>
+            </td>
+        </tr>
+    </tbody></table>
+</td>
+
+                                            </tr>
+                                        </tbody></table>
+                                    </td>
+                                </tr>
+                            </tbody></table>
+                            <!--[if false]></div><![endif]-->
+                        </div>
+                        <!--[if mso]>
+                        </td>
+                        <![endif]-->
+                                                                        <!-=
+-[if mso]>
+                        </tr>
+                        </table>
+                        <![endif]-->
+                    </td>
+                </tr>
+            </tbody></table>
+            <!--[if mso]>
+            </td>
+            </tr>
+            </table>
+            <![endif]-->
+        </td>
+    </tr>
+</tbody></table>
+<!--[if false]></div><![endif]-->			</div>
+	<div class=3D"row clearfix" data-condition=3D"">
+				       =20
+       =20
+<!--[if false]><div style=3D"background-color: #FFFFFF;"><![endif]-->
+<table role=3D"presentation" cellspacing=3D"0" cellpadding=3D"0" border=3D"=
+0" align=3D"center" width=3D"100%" style=3D"border-spacing: 0 !important; b=
+order-collapse: collapse !important; table-layout: fixed !important; margin=
+: 0 auto !important; max-width: 680px; background-color: #FFFFFF;">
+    <tbody><tr>
+        <td dir=3D"ltr" align=3D"center" height=3D"100%" valign=3D"center" =
+width=3D"100%" style=3D"color: #737070 !important; font-family: sans-serif;=
+ padding: 10px 0;">
+            <!--[if mso]>
+            <table role=3D"presentation" border=3D"0" cellspacing=3D"0" cel=
+lpadding=3D"0" align=3D"center" width=3D"660">
+            <tr>
+            <td align=3D"center" valign=3D"top" width=3D"660">
+            <![endif]-->
+            <table role=3D"presentation" border=3D"0" cellpadding=3D"0" cel=
+lspacing=3D"0" align=3D"center" width=3D"100%" style=3D"border-spacing: 0 !=
+important; border-collapse: collapse !important; table-layout: fixed !impor=
+tant; margin: 0 auto !important; max-width: 660px;">
+                <tbody><tr>
+                    <td align=3D"center" valign=3D"top" style=3D"color: #73=
+7070 !important; font-family: sans-serif; font-size: 0;">
+                        <!--[if mso]>
+                        <table role=3D"presentation" border=3D"0" cellspaci=
+ng=3D"0" cellpadding=3D"0" align=3D"center" width=3D"660">
+                        <tr>
+                        <![endif]-->
+                                                                           =
+                                             <!--[if mso]>
+                        <td align=3D"left" valign=3D"top" width=3D"330">
+                        <![endif]-->
+                        <div style=3D"display:inline-block; max-width:50%; =
+vertical-align:top; width:100%;" class=3D"stack-column">
+                            <!--[if false]><div style=3D"display:inline-blo=
+ck; min-width:330px; vertical-align:top; width:100%;" class=3D"stack-column=
+"><![endif]-->
+                            <table role=3D"presentation" cellspacing=3D"0" =
+cellpadding=3D"0" border=3D"0" width=3D"100%" style=3D"border-spacing: 0 !i=
+mportant; border-collapse: collapse !important; table-layout: fixed !import=
+ant; margin: 0 auto !important;">
+                                <tbody><tr>
+                                    <td style=3D"color: #737070 !important;=
+ font-family: sans-serif; padding: 10px 10px;">
+                                        <table role=3D"presentation" cellsp=
+acing=3D"0" cellpadding=3D"0" border=3D"0" width=3D"100%" style=3D"border-s=
+pacing: 0 !important; border-collapse: collapse !important; table-layout: f=
+ixed !important; margin: 0 auto !important;">
+                                            <tbody><tr>
+                                               =20
+<td dir=3D"ltr" class=3D"no-center-on-narrow" style=3D"color: #737070 !impo=
+rtant; font-family: sans-serif;">
+   =20
+<!-- Button : BEGIN -->
+<table class=3D"no-center-on-narrow" role=3D"presentation" style=3D"border-=
+spacing: 0 !important; border-collapse: collapse !important; table-layout: =
+fixed !important; margin: auto; mso-table-lspace: 0; mso-table-rspace: 0;" =
+cellspacing=3D"0" cellpadding=3D"0" border=3D"0" align=3D"center">
+    <tbody>
+    <tr class=3D"button-tr primary">
+        <td class=3D"button-td" style=3D"color: #737070 !important; font-fa=
+mily: sans-serif; background: #ffffff; border: 1px solid #666666; border-ra=
+dius: 3px; text-align: center;">
+            <a data-position=3D"FOJlEtMHCCuF" href=3D"https://tools.hotelsu=
+ite.de/m-elmau/mail/link/?id=3D5KH2Bz7OFJDn&amp;rd=3D5KH2BQ3XvR8J&amp;sd=3D=
+798" class=3D"button-a" title=3D"" style=3D"background: #ffffff; color: #21=
+2529; letter-spacing: 0.15em; background-color: unset !important; border: 1=
+5px solid transparent; font-family: sans-serif; font-size: 13px; line-heigh=
+t: 1.1; text-align: center; text-decoration: none !important; display: bloc=
+k; font-weight: bold; border-radius: 3px; border-width: 15px; border-style:=
+ solid; border-color: transparent;" spellcheck=3D"false">BOOK</a>
+        </td>
+    </tr>
+    </tbody>
+</table>
+<!-- Button : END -->
+
+</td>
+
+                                            </tr>
+                                        </tbody></table>
+                                    </td>
+                                </tr>
+                            </tbody></table>
+                            <!--[if false]></div><![endif]-->
+                        </div>
+                        <!--[if mso]>
+                        </td>
+                        <![endif]-->
+                                                                           =
+                                                                     <!--[i=
+f mso]>
+                        <td align=3D"left" valign=3D"top" width=3D"330">
+                        <![endif]-->
+                        <div style=3D"display:inline-block; max-width:50%; =
+vertical-align:top; width:100%;" class=3D"stack-column">
+                            <!--[if false]><div style=3D"display:inline-blo=
+ck; min-width:330px; vertical-align:top; width:100%;" class=3D"stack-column=
+"><![endif]-->
+                            <table role=3D"presentation" cellspacing=3D"0" =
+cellpadding=3D"0" border=3D"0" width=3D"100%" style=3D"border-spacing: 0 !i=
+mportant; border-collapse: collapse !important; table-layout: fixed !import=
+ant; margin: 0 auto !important;">
+                                <tbody><tr>
+                                    <td style=3D"color: #737070 !important;=
+ font-family: sans-serif; padding: 10px 10px;">
+                                        <table role=3D"presentation" cellsp=
+acing=3D"0" cellpadding=3D"0" border=3D"0" width=3D"100%" style=3D"border-s=
+pacing: 0 !important; border-collapse: collapse !important; table-layout: f=
+ixed !important; margin: 0 auto !important;">
+                                            <tbody><tr>
+                                               =20
+<td dir=3D"ltr" class=3D"no-center-on-narrow" style=3D"color: #737070 !impo=
+rtant; font-family: sans-serif;">
+   =20
+<!-- Button : BEGIN -->
+<table class=3D"no-center-on-narrow" role=3D"presentation" style=3D"border-=
+spacing: 0 !important; border-collapse: collapse !important; table-layout: =
+fixed !important; margin: auto; mso-table-lspace: 0; mso-table-rspace: 0;" =
+cellspacing=3D"0" cellpadding=3D"0" border=3D"0" align=3D"center">
+    <tbody>
+    <tr class=3D"button-tr primary">
+        <td class=3D"button-td" style=3D"color: #737070 !important; font-fa=
+mily: sans-serif; background: #ffffff; border: 1px solid #666666; border-ra=
+dius: 3px; text-align: center;">
+            <a data-position=3D"TSNaHWxNmCEN" href=3D"https://tools.hotelsu=
+ite.de/m-elmau/mail/link/?id=3D5KH2BAGCMkGZ&amp;rd=3D5KH2BQ3XvR8J&amp;sd=3D=
+798" class=3D"button-a" title=3D"" style=3D"background: #ffffff; color: #21=
+2529; letter-spacing: 0.15em; background-color: unset !important; border: 1=
+5px solid transparent; font-family: sans-serif; font-size: 13px; line-heigh=
+t: 1.1; text-align: center; text-decoration: none !important; display: bloc=
+k; font-weight: bold; border-radius: 3px; border-width: 15px; border-style:=
+ solid; border-color: transparent;" spellcheck=3D"false">RESERVE</a>
+        </td>
+    </tr>
+    </tbody>
+</table>
+<!-- Button : END -->
+
+</td>
+
+                                            </tr>
+                                        </tbody></table>
+                                    </td>
+                                </tr>
+                            </tbody></table>
+                            <!--[if false]></div><![endif]-->
+                        </div>
+                        <!--[if mso]>
+                        </td>
+                        <![endif]-->
+                                                                        <!-=
+-[if mso]>
+                        </tr>
+                        </table>
+                        <![endif]-->
+                    </td>
+                </tr>
+            </tbody></table>
+            <!--[if mso]>
+            </td>
+            </tr>
+            </table>
+            <![endif]-->
+        </td>
+    </tr>
+</tbody></table>
+<!--[if false]></div><![endif]-->			</div>
+	<div class=3D"row clearfix" data-condition=3D"">
+				       =20
+                                   =20
+<!--[if false]><div style=3D"background-color: #FFFFFF;"><![endif]-->
+<table role=3D"presentation" cellspacing=3D"0" cellpadding=3D"0" border=3D"=
+0" align=3D"center" width=3D"100%" style=3D"border-spacing: 0 !important; b=
+order-collapse: collapse !important; table-layout: fixed !important; margin=
+: 0 auto !important; max-width: 680px; background-color: #FFFFFF;">
+   =20
+    <tbody><tr>
+        <td dir=3D"ltr" align=3D"center" height=3D"100%" valign=3D"center" =
+width=3D"100%" style=3D"color: #737070 !important; font-family: sans-serif;=
+ padding: 10px 0;">
+            <!--[if mso]>
+            <table role=3D"presentation" border=3D"0" cellspacing=3D"0" cel=
+lpadding=3D"0" align=3D"center" width=3D"570">
+            <tr>
+            <td align=3D"center" valign=3D"top" width=3D"570">
+            <![endif]-->
+            <table role=3D"presentation" border=3D"0" cellpadding=3D"0" cel=
+lspacing=3D"0" align=3D"center" width=3D"100%" style=3D"border-spacing: 0 !=
+important; border-collapse: collapse !important; table-layout: fixed !impor=
+tant; margin: 0 auto !important; max-width: 570px;">
+                <tbody><tr>
+                    <td align=3D"center" valign=3D"top" style=3D"color: #73=
+7070 !important; font-family: sans-serif; font-size: 0; padding: 10px 0;">
+                        <!--[if mso]>
+                        <table role=3D"presentation" border=3D"0" cellspaci=
+ng=3D"0" cellpadding=3D"0" align=3D"center" width=3D"570">
+                        <tr>
+                        <td align=3D"left" valign=3D"top" width=3D"570">
+                        <![endif]-->
+                        <div style=3D"display:inline-block; margin: 0; widt=
+h:100%; vertical-align:top;" class=3D"stack-column">
+                            <table role=3D"presentation" cellspacing=3D"0" =
+cellpadding=3D"0" border=3D"0" width=3D"100%" style=3D"border-spacing: 0 !i=
+mportant; border-collapse: collapse !important; table-layout: fixed !import=
+ant; margin: 0 auto !important;">
+                                <tbody><tr>
+                                   =20
+<td dir=3D"ltr" style=3D"color: #737070 !important; font-family: sans-serif=
+; padding: 0 25px;">
+    <!--[if mso]>
+    <table role=3D"presentation" border=3D"0" cellspacing=3D"0" cellpadding=
+=3D"0" align=3D"center" width=3D"520">
+        <tr>
+            <td align=3D"center" valign=3D"top" width=3D"520">
+    <![endif]-->
+                <div>
+                    <hr style=3D"margin: 0 !important; border: none; border=
+-top: 1px solid; height: 1px;">
+                </div>
+    <!--[if mso]>
+            </td>
+        </tr>
+    </table>
+    <![endif]-->
+</td>
+
+                                </tr>
+                            </tbody></table>
+                        </div>
+                        <!--[if mso]>
+                        </td>
+                        </tr>
+                        </table>
+                        <![endif]-->
+                    </td>
+                </tr>
+            </tbody></table>
+            <!--[if mso]>
+            </td>
+            </tr>
+            </table>
+            <![endif]-->
+        </td>
+    </tr>
+   =20
+</tbody></table>
+<!--[if false]></div><![endif]-->			</div>
+	<div class=3D"row clearfix" data-condition=3D"">
+				       =20
+       =20
+<!--[if false]><div style=3D"background-color: #FFFFFF;"><![endif]-->
+<table role=3D"presentation" cellspacing=3D"0" cellpadding=3D"0" border=3D"=
+0" align=3D"center" width=3D"100%" style=3D"border-spacing: 0 !important; b=
+order-collapse: collapse !important; table-layout: fixed !important; margin=
+: 0 auto !important; max-width: 680px; background-color: #FFFFFF;">
+   =20
+    <tbody><tr>
+        <td dir=3D"ltr" align=3D"center" height=3D"100%" valign=3D"center" =
+width=3D"100%" style=3D"color: #737070 !important; font-family: sans-serif;=
+ padding: 10px 0;">
+            <!--[if mso]>
+            <table role=3D"presentation" border=3D"0" cellspacing=3D"0" cel=
+lpadding=3D"0" align=3D"center" width=3D"660">
+            <tr>
+            <td align=3D"center" valign=3D"top" width=3D"660">
+            <![endif]-->
+            <table role=3D"presentation" border=3D"0" cellpadding=3D"0" cel=
+lspacing=3D"0" align=3D"center" width=3D"100%" style=3D"border-spacing: 0 !=
+important; border-collapse: collapse !important; table-layout: fixed !impor=
+tant; margin: 0 auto !important; max-width: 660px;">
+                <tbody><tr>
+                    <td align=3D"center" valign=3D"top" style=3D"color: #73=
+7070 !important; font-family: sans-serif; font-size: 0; padding: 10px 0;">
+                        <!--[if mso]>
+                        <table role=3D"presentation" border=3D"0" cellspaci=
+ng=3D"0" cellpadding=3D"0" align=3D"center" width=3D"660">
+                        <tr>
+                        <td align=3D"left" valign=3D"top" width=3D"660">
+                        <![endif]-->
+                        <div style=3D"display:inline-block; margin: 0; widt=
+h:100%; vertical-align:top;" class=3D"stack-column">
+                            <table role=3D"presentation" cellspacing=3D"0" =
+cellpadding=3D"0" border=3D"0" width=3D"100%" style=3D"border-spacing: 0 !i=
+mportant; border-collapse: collapse !important; table-layout: fixed !import=
+ant; margin: 0 auto !important;">
+                                <tbody><tr>
+                                   =20
+<td class=3D"no-center-on-narrow" dir=3D"ltr" style=3D"color: #737070 !impo=
+rtant; font-family: sans-serif; padding: 0 10px;">
+    <table role=3D"presentation" cellspacing=3D"0" cellpadding=3D"0" border=
+=3D"0" width=3D"100%" style=3D"border-spacing: 0 !important; border-collaps=
+e: collapse !important; table-layout: fixed !important; margin: 0 auto !imp=
+ortant;">
+        <tbody><tr>
+            <td style=3D"color: #737070 !important; font-family: sans-serif=
+; font-size: 15px; mso-height-rule: exactly; line-height: 140%;">
+                <div>
+                    <div>
+                        <p style=3D"margin: 0; text-align: center; color: #=
+000000;">Read <b>the review</b>&nbsp;by &quot;Bernd Grill&quot; on the prev=
+ious edition<br><b>Cooking with friends with Reto&nbsp;Br=C3=A4ndli</b>, Re=
+staurant ECCO** in St. Moritz, Switzerland (Winter) / Restaurant ECCO** in =
+Giardino, Switzerland (Sommer)</p>
+                    </div>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td class=3D"no-center-on-narrow" style=3D"color: #737070 !impo=
+rtant; font-family: sans-serif; padding-top: 20px;">
+           =20
+<!-- Button : BEGIN -->
+<table class=3D"no-center-on-narrow" role=3D"presentation" style=3D"border-=
+spacing: 0 !important; border-collapse: collapse !important; table-layout: =
+fixed !important; margin: auto; mso-table-lspace: 0; mso-table-rspace: 0;" =
+cellspacing=3D"0" cellpadding=3D"0" border=3D"0" align=3D"center">
+    <tbody>
+    <tr class=3D"button-tr primary">
+        <td class=3D"button-td" style=3D"color: #737070 !important; font-fa=
+mily: sans-serif; background: #ffffff; border: 1px solid #666666; border-ra=
+dius: 3px; text-align: center;">
+            <a data-position=3D"rLfaygefs2lI" href=3D"https://tools.hotelsu=
+ite.de/m-elmau/mail/link/?id=3D5KH2oXuMvPc3&amp;rd=3D5KH2BQ3XvR8J&amp;sd=3D=
+798" class=3D"button-a" title=3D"" style=3D"background: #ffffff; color: #21=
+2529; letter-spacing: 0.15em; background-color: unset !important; border: 1=
+5px solid transparent; font-family: sans-serif; font-size: 13px; line-heigh=
+t: 1.1; text-align: center; text-decoration: none !important; display: bloc=
+k; font-weight: bold; border-radius: 3px; border-width: 15px; border-style:=
+ solid; border-color: transparent;" spellcheck=3D"false">TO THE ARTICLE (IN=
+ GERMAN)</a>
+        </td>
+    </tr>
+    </tbody>
+</table>
+<!-- Button : END -->
+
+            </td>
+        </tr>
+    </tbody></table>
+</td>
+
+                                </tr>
+                            </tbody></table>
+                        </div>
+                        <!--[if mso]>
+                        </td>
+                        </tr>
+                        </table>
+                        <![endif]-->
+                    </td>
+                </tr>
+            </tbody></table>
+            <!--[if mso]>
+            </td>
+            </tr>
+            </table>
+            <![endif]-->
+        </td>
+    </tr>
+   =20
+</tbody></table>
+<!--[if false]></div><![endif]-->			</div>
+	<div class=3D"row clearfix" data-condition=3D"">
+				       =20
+                                   =20
+<!--[if false]><div style=3D"background-color: #FFFFFF;"><![endif]-->
+<table role=3D"presentation" cellspacing=3D"0" cellpadding=3D"0" border=3D"=
+0" align=3D"center" width=3D"100%" style=3D"border-spacing: 0 !important; b=
+order-collapse: collapse !important; table-layout: fixed !important; margin=
+: 0 auto !important; max-width: 680px; background-color: #FFFFFF;">
+   =20
+    <tbody><tr>
+        <td dir=3D"ltr" align=3D"center" height=3D"100%" valign=3D"center" =
+width=3D"100%" style=3D"color: #737070 !important; font-family: sans-serif;=
+ padding: 10px 0;">
+            <!--[if mso]>
+            <table role=3D"presentation" border=3D"0" cellspacing=3D"0" cel=
+lpadding=3D"0" align=3D"center" width=3D"570">
+            <tr>
+            <td align=3D"center" valign=3D"top" width=3D"570">
+            <![endif]-->
+            <table role=3D"presentation" border=3D"0" cellpadding=3D"0" cel=
+lspacing=3D"0" align=3D"center" width=3D"100%" style=3D"border-spacing: 0 !=
+important; border-collapse: collapse !important; table-layout: fixed !impor=
+tant; margin: 0 auto !important; max-width: 570px;">
+                <tbody><tr>
+                    <td align=3D"center" valign=3D"top" style=3D"color: #73=
+7070 !important; font-family: sans-serif; font-size: 0; padding: 10px 0;">
+                        <!--[if mso]>
+                        <table role=3D"presentation" border=3D"0" cellspaci=
+ng=3D"0" cellpadding=3D"0" align=3D"center" width=3D"570">
+                        <tr>
+                        <td align=3D"left" valign=3D"top" width=3D"570">
+                        <![endif]-->
+                        <div style=3D"display:inline-block; margin: 0; widt=
+h:100%; vertical-align:top;" class=3D"stack-column">
+                            <table role=3D"presentation" cellspacing=3D"0" =
+cellpadding=3D"0" border=3D"0" width=3D"100%" style=3D"border-spacing: 0 !i=
+mportant; border-collapse: collapse !important; table-layout: fixed !import=
+ant; margin: 0 auto !important;">
+                                <tbody><tr>
+                                   =20
+<td dir=3D"ltr" style=3D"color: #737070 !important; font-family: sans-serif=
+; padding: 0 25px;">
+    <!--[if mso]>
+    <table role=3D"presentation" border=3D"0" cellspacing=3D"0" cellpadding=
+=3D"0" align=3D"center" width=3D"520">
+        <tr>
+            <td align=3D"center" valign=3D"top" width=3D"520">
+    <![endif]-->
+                <div>
+                    <hr style=3D"margin: 0 !important; border: none; border=
+-top: 1px solid; height: 1px;">
+                </div>
+    <!--[if mso]>
+            </td>
+        </tr>
+    </table>
+    <![endif]-->
+</td>
+
+                                </tr>
+                            </tbody></table>
+                        </div>
+                        <!--[if mso]>
+                        </td>
+                        </tr>
+                        </table>
+                        <![endif]-->
+                    </td>
+                </tr>
+            </tbody></table>
+            <!--[if mso]>
+            </td>
+            </tr>
+            </table>
+            <![endif]-->
+        </td>
+    </tr>
+   =20
+</tbody></table>
+<!--[if false]></div><![endif]-->			</div>
+<div class=3D"row clearfix image-height-tool">
+				<table role=3D"presentation" style=3D"border-spacing: 0 !important; bor=
+der-collapse: collapse !important; table-layout: fixed !important; margin: =
+0 auto !important; background-color: #FFFFFF; max-width: 680px;" width=3D"1=
+00%" cellspacing=3D"0" cellpadding=3D"0" border=3D"0" align=3D"center">
+	<tbody>
+<tr>
+        <td style=3D"color: #737070 !important; font-family: sans-serif;">
+            <img src=3D"https://r.send.onm.de/im/1707114/928d8b8b1fe4ab75cc=
+e4d4a892a519c3176e1442bc8331ae68266c40ba650ab1.jpg?e=3DuHExnhkNtmE4WtZrT8HY=
+BegjvaKwut1qUnHP6kVvJ7pO63EDvusQZ4sAEC2wtYLUedz_6xJLjHsqmv9zLICoUL0hFCLCy8G=
+1dP5F26SAw6KEgPwSUGXWAB0-vwz6tjEr7p7qJUFusRmYsMmaBazLcxt0TOZkqQvvaJ8P63VHQz=
+bbQhN0ZJ2HNs0B5JmM_falMW0YKb-Fd2U3xUuIfVj-qJWIg7HF1YTpqJn9qC_hPBTaHJMOteQtj=
+tpMs8Sm-aw65QKOGg7KPWU" alt=3D"" class=3D"fluid clearimg" style=3D"width: 1=
+00%; max-width: 680px; mso-height-rule: exactly; line-height: 140%;" width=
+=3D"680" border=3D"0" align=3D"middle">
+        </td>
+    </tr>
+</tbody>
+</table>			</div>																																																										=
+																																																					<div class=3D"row clea=
+rfix" data-condition=3D"">
+				       =20
+       =20
+<!--[if false]><div style=3D"background-color: #FFFFFF;"><![endif]-->
+<table role=3D"presentation" cellspacing=3D"0" cellpadding=3D"0" border=3D"=
+0" align=3D"center" width=3D"100%" style=3D"border-spacing: 0 !important; b=
+order-collapse: collapse !important; table-layout: fixed !important; margin=
+: 0 auto !important; max-width: 680px; background-color: #FFFFFF;">
+   =20
+    <tbody><tr>
+        <td dir=3D"ltr" align=3D"center" height=3D"100%" valign=3D"center" =
+width=3D"100%" style=3D"color: #737070 !important; font-family: sans-serif;=
+ padding: 0px 0;">
+            <!--[if mso]>
+            <table role=3D"presentation" border=3D"0" cellspacing=3D"0" cel=
+lpadding=3D"0" align=3D"center" width=3D"680">
+            <tr>
+            <td align=3D"center" valign=3D"top" width=3D"680">
+            <![endif]-->
+            <table role=3D"presentation" border=3D"0" cellpadding=3D"0" cel=
+lspacing=3D"0" align=3D"center" width=3D"100%" style=3D"border-spacing: 0 !=
+important; border-collapse: collapse !important; table-layout: fixed !impor=
+tant; margin: 0 auto !important; max-width: 680px;">
+                <tbody><tr>
+                    <td align=3D"center" valign=3D"top" style=3D"color: #73=
+7070 !important; font-family: sans-serif; font-size: 0; padding: 0px 0;">
+                        <!--[if mso]>
+                        <table role=3D"presentation" border=3D"0" cellspaci=
+ng=3D"0" cellpadding=3D"0" align=3D"center" width=3D"680">
+                        <tr>
+                        <td align=3D"left" valign=3D"top" width=3D"680">
+                        <![endif]-->
+                        <div style=3D"display:inline-block; margin: 0; widt=
+h:100%; vertical-align:top;" class=3D"stack-column">
+                            <table role=3D"presentation" cellspacing=3D"0" =
+cellpadding=3D"0" border=3D"0" width=3D"100%" style=3D"border-spacing: 0 !i=
+mportant; border-collapse: collapse !important; table-layout: fixed !import=
+ant; margin: 0 auto !important;">
+                                <tbody><tr>
+                                   =20
+<td dir=3D"ltr" style=3D"color: #737070 !important; font-family: sans-serif=
+; padding: 0 0px;">
+    <a href=3D"https://tools.hotelsuite.de/m-elmau/mail/link/?id=3D5KH2oXuM=
+acRL&amp;rd=3D5KH2BQ3XvR8J&amp;sd=3D798" title=3D"" target=3D"_blank" data-=
+position=3D"vgk4Zdjdi1Vb" style=3D"text-decoration: none; color: #1c1c1a;">=
+<img src=3D"https://r.send.onm.de/im/1707114/661caf1d7c40b384be5e2d99cf0372=
+38a7be855abcbf7651c3f18b7446ae5cdf.jpg?e=3DoHZQJvxh8xjqwdxlEqxZG4Sfzq9YLZb8=
+3siXg3IMkra63hm1ekbR7qdCu0EwdfHNKPbM5Qwz7T_g6tmO8Efyi2pCjxdpPtejMV03-5ehxL5=
+6-SjU6Pu5-D6if_U3zLZvdaAwbnj2CO1JXRtu-wyGFpuXSCYAJFnRmUKl7D43fLDkUo7jdtCDot=
+zfPY0e6EGhQNjPZDbIrrUKQqN4RFRKiqWbPyQF9oQXwndE6A8IfR_MFLCCz4xryKtu_yg_7LXxV=
+vhTOU10QuoRLoYgqVoZWvjieNH7zbcvw2Gc6rrINh9ATyzsC8ds4cwZAkihj0HfeDaLVkjaz0v-=
+NGjOyTT6AOW-zTGrJbfqv9EPGxzPLkgiQxE3ubbTpLEw0Xh3o-EQ-zpOQIWCnjiQI2s" width=
+=3D"680" border=3D"0" alt=3D"" class=3D"fluid full-width-on-narrow" style=
+=3D"width: 100%;"></a>
+</td>
+
+                                </tr>
+                            </tbody></table>
+                        </div>
+                        <!--[if mso]>
+                        </td>
+                        </tr>
+                        </table>
+                        <![endif]-->
+                    </td>
+                </tr>
+            </tbody></table>
+            <!--[if mso]>
+            </td>
+            </tr>
+            </table>
+            <![endif]-->
+        </td>
+    </tr>
+   =20
+</tbody></table>
+<!--[if false]></div><![endif]-->			</div>
+	<div class=3D"row clearfix" data-condition=3D"">
+				       =20
+       =20
+<!--[if false]><div style=3D"background-color: #FFFFFF;"><![endif]-->
+<table role=3D"presentation" cellspacing=3D"0" cellpadding=3D"0" border=3D"=
+0" align=3D"center" width=3D"100%" style=3D"border-spacing: 0 !important; b=
+order-collapse: collapse !important; table-layout: fixed !important; margin=
+: 0 auto !important; max-width: 680px; background-color: #FFFFFF;">
+   =20
+    <tbody><tr>
+        <td dir=3D"ltr" align=3D"center" height=3D"100%" valign=3D"center" =
+width=3D"100%" style=3D"color: #737070 !important; font-family: sans-serif;=
+ padding: 10px 0;">
+            <!--[if mso]>
+            <table role=3D"presentation" border=3D"0" cellspacing=3D"0" cel=
+lpadding=3D"0" align=3D"center" width=3D"660">
+            <tr>
+            <td align=3D"center" valign=3D"top" width=3D"660">
+            <![endif]-->
+            <table role=3D"presentation" border=3D"0" cellpadding=3D"0" cel=
+lspacing=3D"0" align=3D"center" width=3D"100%" style=3D"border-spacing: 0 !=
+important; border-collapse: collapse !important; table-layout: fixed !impor=
+tant; margin: 0 auto !important; max-width: 660px;">
+                <tbody><tr>
+                    <td align=3D"center" valign=3D"top" style=3D"color: #73=
+7070 !important; font-family: sans-serif; font-size: 0; padding: 10px 0;">
+                        <!--[if mso]>
+                        <table role=3D"presentation" border=3D"0" cellspaci=
+ng=3D"0" cellpadding=3D"0" align=3D"center" width=3D"660">
+                        <tr>
+                        <td align=3D"left" valign=3D"top" width=3D"660">
+                        <![endif]-->
+                        <div style=3D"display:inline-block; margin: 0; widt=
+h:100%; vertical-align:top;" class=3D"stack-column">
+                            <table role=3D"presentation" cellspacing=3D"0" =
+cellpadding=3D"0" border=3D"0" width=3D"100%" style=3D"border-spacing: 0 !i=
+mportant; border-collapse: collapse !important; table-layout: fixed !import=
+ant; margin: 0 auto !important;">
+                                <tbody><tr>
+                                   =20
+<td class=3D"no-center-on-narrow" dir=3D"ltr" style=3D"color: #737070 !impo=
+rtant; font-family: sans-serif; padding: 0 10px;">
+    <table role=3D"presentation" cellspacing=3D"0" cellpadding=3D"0" border=
+=3D"0" width=3D"100%" style=3D"border-spacing: 0 !important; border-collaps=
+e: collapse !important; table-layout: fixed !important; margin: 0 auto !imp=
+ortant;">
+        <tbody><tr>
+            <td style=3D"color: #737070 !important; font-family: sans-serif=
+; font-size: 15px; mso-height-rule: exactly; line-height: 140%;">
+                <div>
+                    <div>
+                        <p style=3D"margin: 0; text-align: center;"><b styl=
+e=3D"color: #000000; font-size: 20px; line-height: 28px;">Culinary G7 Summi=
+t<br>Edition II =E2=80=93 Europe</b><br><span style=3D"font-size: 16px; lin=
+e-height: 22px;"><span style=3D"color: #000000;">15 Michelin Stars United</=
+span><br><span style=3D"color: #000000;">Sunday, 28 June</span><br></span><=
+/p>
+<p style=3D"margin: 0; text-align: center;"><span style=3D"font-size: 14px;=
+ line-height: 20px; color: #000000;"><br>Two-Michelin-starred chef Christop=
+h Rainer welcomes seven top chefs from Europe to the Hideaway Schloss Elmau=
+. Enjoy the chefs=E2=80=99 creations at various cooking stations and watch =
+them at work. Look forward to an exciting program presented by our premium =
+partners and winemakers, accompanied by music.<br><br></span><span style=3D=
+"font-size: 14px; line-height: 20px; color: #000000;">Includes finger food,=
+ a walking dinner served at the stations, a BBQ station, a dessert buffet, =
+a champagne reception, wine stations &amp; non-alcoholic alternatives, a di=
+gestif, and the Smokers Lounge</span><span style=3D"line-height: 20px; colo=
+r: #000000;"><br><span style=3D"font-size: 14px;">&nbsp;</span><br><span st=
+yle=3D"font-size: 14px;">with</span><br><span style=3D"font-size: 14px;">Je=
+remy Chan**, Restaurant IKOYI =E2=80=93 London / UK&nbsp;</span><br><span s=
+tyle=3D"font-size: 14px;">Guido Braeken**, Restaurant CREATE - Eijsden / NL=
+</span><br><span style=3D"font-size: 14px;">Nick Bril**, Restaurant THE JAN=
+E =E2=80=93 Antwerpen / BE</span><br><span style=3D"font-size: 14px;">Heiko=
+ Nieder**, Dolder Grand / THE RESTAURANT =E2=80=93 Z=C3=BCrich / CH</span><=
+br><span style=3D"font-size: 14px;">Silvio Nickol**, Restaurant SILVIO NICK=
+OL =E2=80=93 Wien / AUS</span><br><span style=3D"font-size: 14px; line-heig=
+ht: 20px;">Christoph R=C3=BCffer***, Restaurant Haerlin =E2=80=93 Hamburg /=
+ GER<br></span></span><span style=3D"font-size: 14px; line-height: 20px;"><=
+span style=3D"color: #000000;">Philipp Vogel, Orania.Restaurant =E2=80=93 B=
+erlin / DE</span><span style=3D"line-height: 20px; color: #000000;"><br>Chr=
+istoph Rainer**, Restaurant IKIGAI =E2=80=93 Elmau / GER<br></span></span><=
+br></p>
+                    </div>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td class=3D"no-center-on-narrow" style=3D"color: #737070 !impo=
+rtant; font-family: sans-serif; padding-top: 20px;">
+           =20
+<!-- Button : BEGIN -->
+<table class=3D"no-center-on-narrow" role=3D"presentation" style=3D"border-=
+spacing: 0 !important; border-collapse: collapse !important; table-layout: =
+fixed !important; margin: auto; mso-table-lspace: 0; mso-table-rspace: 0;" =
+cellspacing=3D"0" cellpadding=3D"0" border=3D"0" align=3D"center">
+    <tbody>
+    <tr class=3D"button-tr primary">
+        <td class=3D"button-td" style=3D"color: #737070 !important; font-fa=
+mily: sans-serif; background: #ffffff; border: 1px solid #666666; border-ra=
+dius: 3px; text-align: center;">
+            <a data-position=3D"zAi1yhWhQeyU" href=3D"https://tools.hotelsu=
+ite.de/m-elmau/mail/link/?id=3D5KH2BAkldIT3&amp;rd=3D5KH2BQ3XvR8J&amp;sd=3D=
+798" class=3D"button-a" title=3D"" style=3D"background: #ffffff; color: #21=
+2529; letter-spacing: 0.15em; background-color: unset !important; border: 1=
+5px solid transparent; font-family: sans-serif; font-size: 13px; line-heigh=
+t: 1.1; text-align: center; text-decoration: none !important; display: bloc=
+k; font-weight: bold; border-radius: 3px; border-width: 15px; border-style:=
+ solid; border-color: transparent;" spellcheck=3D"false">LEARN MORE</a>
+        </td>
+    </tr>
+    </tbody>
+</table>
+<!-- Button : END -->
+
+            </td>
+        </tr>
+    </tbody></table>
+</td>
+
+                                </tr>
+                            </tbody></table>
+                        </div>
+                        <!--[if mso]>
+                        </td>
+                        </tr>
+                        </table>
+                        <![endif]-->
+                    </td>
+                </tr>
+            </tbody></table>
+            <!--[if mso]>
+            </td>
+            </tr>
+            </table>
+            <![endif]-->
+        </td>
+    </tr>
+   =20
+</tbody></table>
+<!--[if false]></div><![endif]-->			</div>
+<div class=3D"row clearfix" style=3D"text-align: center; font-size: 14px; l=
+ine-height: 20px;"><table role=3D"presentation" style=3D"border-spacing: 0 =
+!important; border-collapse: collapse !important; table-layout: fixed !impo=
+rtant; margin: 0 auto !important; background-color: #FFFFFF; max-width: 680=
+px;" width=3D"100%" cellspacing=3D"0" cellpadding=3D"0" border=3D"0" align=
+=3D"center">
+    <tbody>
+        <tr>
+            <td style=3D"color: #737070 !important; font-family: sans-serif=
+;">
+<b style=3D"color: #000000;"><br>Preliminary schedule for the evening:</b><=
+br><span style=3D"color: #000000;"><span style=3D"font-size: 14px; line-hei=
+ght: 20px;">5:30 PM =E2=80=93 Doors open &amp; get-together with aperitifs =
+and finger food<br>6:30 PM =E2=80=93 </span><span style=3D"font-size: 14px;=
+ line-height: 20px;">Introduction of the participating top chefs&nbsp;&nbsp=
+;<br>and the evening=E2=80=99s premium culinary partners<br>7:00 PM =E2=80=
+=93 Opening of the cooking stations and sushi bar<br>8:30 PM =E2=80=93 Dess=
+ert Lounge<br>9:00 PM =E2=80=93 BBQ Station: Hot Duck by Philipp Vogel, Ora=
+nia.Berlin &amp; Otto Gourmet</span></span><br><br>
+</td>
+</tr>
+</tbody>
+</table></div>
+																											=09
+																																																															<div class=
+=3D"row clearfix content-tool" data-condition=3D"">
+				       =20
+       =20
+<!--[if false]><div style=3D"background-color: #FFFFFF;"><![endif]-->
+<table role=3D"presentation" cellspacing=3D"0" cellpadding=3D"0" border=3D"=
+0" align=3D"center" width=3D"100%" style=3D"border-spacing: 0 !important; b=
+order-collapse: collapse !important; table-layout: fixed !important; margin=
+: 0 auto !important; max-width: 680px; background-color: #FFFFFF;">
+    <tbody><tr>
+        <td dir=3D"ltr" align=3D"center" height=3D"100%" valign=3D"center" =
+width=3D"100%" style=3D"color: #737070 !important; font-family: sans-serif;=
+ padding: 10px 0;">
+            <!--[if mso]>
+            <table role=3D"presentation" border=3D"0" cellspacing=3D"0" cel=
+lpadding=3D"0" align=3D"center" width=3D"660">
+            <tr>
+            <td align=3D"center" valign=3D"top" width=3D"660">
+            <![endif]-->
+            <table role=3D"presentation" border=3D"0" cellpadding=3D"0" cel=
+lspacing=3D"0" align=3D"center" width=3D"100%" style=3D"border-spacing: 0 !=
+important; border-collapse: collapse !important; table-layout: fixed !impor=
+tant; margin: 0 auto !important; max-width: 660px;">
+                <tbody><tr>
+                    <td align=3D"center" valign=3D"top" style=3D"color: #73=
+7070 !important; font-family: sans-serif; font-size: 0;">
+                        <!--[if mso]>
+                        <table role=3D"presentation" border=3D"0" cellspaci=
+ng=3D"0" cellpadding=3D"0" align=3D"center" width=3D"660">
+                        <tr>
+                        <![endif]-->
+                                                                           =
+                                             <!--[if mso]>
+                        <td align=3D"left" valign=3D"top" width=3D"330">
+                        <![endif]-->
+                        <div style=3D"display:inline-block; max-width:50%; =
+vertical-align:top; width:100%;" class=3D"stack-column">
+                            <!--[if false]><div style=3D"display:inline-blo=
+ck; min-width:330px; vertical-align:top; width:100%;" class=3D"stack-column=
+"><![endif]-->
+                            <table role=3D"presentation" cellspacing=3D"0" =
+cellpadding=3D"0" border=3D"0" width=3D"100%" style=3D"border-spacing: 0 !i=
+mportant; border-collapse: collapse !important; table-layout: fixed !import=
+ant; margin: 0 auto !important;">
+                                <tbody><tr>
+                                    <td style=3D"color: #737070 !important;=
+ font-family: sans-serif; padding: 10px 10px;">
+                                        <table role=3D"presentation" cellsp=
+acing=3D"0" cellpadding=3D"0" border=3D"0" width=3D"100%" style=3D"border-s=
+pacing: 0 !important; border-collapse: collapse !important; table-layout: f=
+ixed !important; margin: 0 auto !important;">
+                                            <tbody><tr>
+                                               =20
+<td dir=3D"ltr" style=3D"color: #737070 !important; font-family: sans-serif=
+;">
+    <table role=3D"presentation" cellspacing=3D"0" cellpadding=3D"0" border=
+=3D"0" width=3D"100%" class=3D"" style=3D"border-spacing: 0 !important; bor=
+der-collapse: collapse !important; table-layout: fixed !important; margin: =
+0 auto !important;">
+        <tbody><tr>
+            <td style=3D"color: #737070 !important; font-family: sans-serif=
+; font-size: 0; line-height: 0;">
+                <a href=3D"https://tools.hotelsuite.de/m-elmau/mail/link/?i=
+d=3D5KH2BAnMC6ik&amp;rd=3D5KH2BQ3XvR8J&amp;sd=3D798" title=3D"" target=3D"_=
+blank" data-position=3D"6UFOK152Hz5V" style=3D"text-decoration: none; color=
+: #1c1c1a;"><img src=3D"https://r.send.onm.de/im/1707114/a61ec201cdeaa1581e=
+4ec67174e88b8b29023b4b2ccc7e98825a2e247a8ac5e6.jpg?e=3DmkRvUEwVwOXtUtH22q41=
+qKj7913OlUVdPMyPsVKJQ9t2HMzLy4-1K_NkQJ_DOgYbiek9xloxTfcoL9N7_qrUsefWorohZEu=
+ybEuUs9KaMec7pBoyaSIUZX_aXbcefMSotZLlKcb4qSslV9jIZTPD1mhyrPKp12jahXQ5RKRyen=
+cOr77FGOu8v7752itSbqu3d_HIBEcFgcy3OkGE43MtSALIwhlBu15sHgbUTTnhvY1GulRh2h8Ef=
+YPQ37dD1nZQ5xeojfRsDrc9TgwWiIh72uEv5wXUvmGPRrXoOLAgyE6E7etmq3NjP_vh2lAU0Q8t=
+wzOkdUd7f_XCiagQtcHFg_4p1ImEraMHztwIjISQg3xv56op-7jCIuKh8sY0mHMP6r1PU_4f8df=
+uFoW9kY8n5gVuTiXe0WPJPA" width=3D"310" border=3D"0" alt=3D"" class=3D"full-=
+width-on-narrow" style=3D"width: 100%;"></a>            </td>
+        </tr>
+        <tr>
+            <td class=3D"no-center-on-narrow" style=3D"color: #737070 !impo=
+rtant; font-family: sans-serif; font-size: 15px; mso-height-rule: exactly; =
+line-height: 140%; padding: 10px 0px 0px;">
+                <div>
+                    <div>
+                        <p style=3D"margin: 0; text-align: center; font-siz=
+e: 14px; line-height: 20px; color: #000000;"><b></b><b>Package Including 1 =
+Night=E2=80=99s Stay<br>from Sunday, 28 June to Monday, 29 June</b><br>Incl=
+udes breakfast, spa &amp; yoga, and the sports program</p>
+                    </div>
+                </div>
+            </td>
+        </tr>
+    </tbody></table>
+</td>
+
+                                            </tr>
+                                        </tbody></table>
+                                    </td>
+                                </tr>
+                            </tbody></table>
+                            <!--[if false]></div><![endif]-->
+                        </div>
+                        <!--[if mso]>
+                        </td>
+                        <![endif]-->
+                                                                           =
+                                                                     <!--[i=
+f mso]>
+                        <td align=3D"left" valign=3D"top" width=3D"330">
+                        <![endif]-->
+                        <div style=3D"display:inline-block; max-width:50%; =
+vertical-align:top; width:100%;" class=3D"stack-column">
+                            <!--[if false]><div style=3D"display:inline-blo=
+ck; min-width:330px; vertical-align:top; width:100%;" class=3D"stack-column=
+"><![endif]-->
+                            <table role=3D"presentation" cellspacing=3D"0" =
+cellpadding=3D"0" border=3D"0" width=3D"100%" style=3D"border-spacing: 0 !i=
+mportant; border-collapse: collapse !important; table-layout: fixed !import=
+ant; margin: 0 auto !important;">
+                                <tbody><tr>
+                                    <td style=3D"color: #737070 !important;=
+ font-family: sans-serif; padding: 10px 10px;">
+                                        <table role=3D"presentation" cellsp=
+acing=3D"0" cellpadding=3D"0" border=3D"0" width=3D"100%" style=3D"border-s=
+pacing: 0 !important; border-collapse: collapse !important; table-layout: f=
+ixed !important; margin: 0 auto !important;">
+                                            <tbody><tr>
+                                               =20
+<td dir=3D"ltr" style=3D"color: #737070 !important; font-family: sans-serif=
+;">
+    <table role=3D"presentation" cellspacing=3D"0" cellpadding=3D"0" border=
+=3D"0" width=3D"100%" class=3D"" style=3D"border-spacing: 0 !important; bor=
+der-collapse: collapse !important; table-layout: fixed !important; margin: =
+0 auto !important;">
+        <tbody><tr>
+            <td style=3D"color: #737070 !important; font-family: sans-serif=
+; font-size: 0; line-height: 0;">
+                <a href=3D"https://tools.hotelsuite.de/m-elmau/mail/link/?i=
+d=3D5KH2BAnMniMi&amp;rd=3D5KH2BQ3XvR8J&amp;sd=3D798" title=3D"" target=3D"_=
+blank" data-position=3D"lm6BtwecXODI" style=3D"text-decoration: none; color=
+: #1c1c1a;"><img src=3D"https://r.send.onm.de/im/1707114/bfe2f44fb6afef8220=
+1151c4b3883f64a57594b5bafec06e19d7a8468351fefd.jpg?e=3DpWOVum7zvIeGRLDjHp2-=
+zyp3eCgidgwi83bmq9TwN3NCD7rZbZh0FIhs63rz8HRS8PSvziwXzMdO5IfgApy0Apt8WIiALs7=
+Yhn4KZJdjE0OR1yckHVxdnGbyvLldz8wyzlWa8TV_JDuwhVw7FABB2h2JX4B9FJtg0oPVW04wMY=
+0p8Hqy5v4GdnTdDXmiTuvautTVKp_b3-cEsVS9ZHUEzaDtNBqQwH-voFS2hiAGg3sTKdzr4Cok9=
+DfQvy4fMHD5hVObzg83vpGW8gr55DLLAwAfDQb2PvfRHfkAx8DOHQaguupXts87QZYE8i3Hs3Fx=
+zwquFETAaTAtWGoHAztBtD49dQOKrUISg1Hk0PD8aqw2Ov5O3eUiV75ow5S70qBsLA1Q56Gw4X0=
+NJeLHPdT91c12ijQ2Wo2Ltl3yHBnKwVUrzl1ioKlcBZ9fjtv2" width=3D"310" border=3D"=
+0" alt=3D"" class=3D"full-width-on-narrow" style=3D"width: 100%;"></a>     =
+       </td>
+        </tr>
+        <tr>
+            <td class=3D"no-center-on-narrow" style=3D"color: #737070 !impo=
+rtant; font-family: sans-serif; font-size: 15px; mso-height-rule: exactly; =
+line-height: 140%; padding: 10px 0px 0px;">
+                <div>
+                    <div>
+                        <p style=3D"margin: 0; text-align: center;"><span s=
+tyle=3D"font-size: 14px; line-height: 20px;"><span style=3D"color: #000000;=
+ font-size: 14px; line-height: 20px;"><b style=3D"font-size: 14px; line-hei=
+ght: 20px;">Participation without an overnight stay</b></span><br><span sty=
+le=3D"font-size: 14px; line-height: 20px;"><span style=3D"color: #000000;">=
+349=E2=82=AC per person<br></span></span></span></p>
+                    </div>
+                </div>
+            </td>
+        </tr>
+    </tbody></table>
+</td>
+
+                                            </tr>
+                                        </tbody></table>
+                                    </td>
+                                </tr>
+                            </tbody></table>
+                            <!--[if false]></div><![endif]-->
+                        </div>
+                        <!--[if mso]>
+                        </td>
+                        <![endif]-->
+                                                                        <!-=
+-[if mso]>
+                        </tr>
+                        </table>
+                        <![endif]-->
+                    </td>
+                </tr>
+            </tbody></table>
+            <!--[if mso]>
+            </td>
+            </tr>
+            </table>
+            <![endif]-->
+        </td>
+    </tr>
+</tbody></table>
+<!--[if false]></div><![endif]-->			</div>
+	<div class=3D"row clearfix" data-condition=3D"">
+				       =20
+       =20
+<!--[if false]><div style=3D"background-color: #FFFFFF;"><![endif]-->
+<table role=3D"presentation" cellspacing=3D"0" cellpadding=3D"0" border=3D"=
+0" align=3D"center" width=3D"100%" style=3D"border-spacing: 0 !important; b=
+order-collapse: collapse !important; table-layout: fixed !important; margin=
+: 0 auto !important; max-width: 680px; background-color: #FFFFFF;">
+    <tbody><tr>
+        <td dir=3D"ltr" align=3D"center" height=3D"100%" valign=3D"center" =
+width=3D"100%" style=3D"color: #737070 !important; font-family: sans-serif;=
+ padding: 10px 0;">
+            <!--[if mso]>
+            <table role=3D"presentation" border=3D"0" cellspacing=3D"0" cel=
+lpadding=3D"0" align=3D"center" width=3D"660">
+            <tr>
+            <td align=3D"center" valign=3D"top" width=3D"660">
+            <![endif]-->
+            <table role=3D"presentation" border=3D"0" cellpadding=3D"0" cel=
+lspacing=3D"0" align=3D"center" width=3D"100%" style=3D"border-spacing: 0 !=
+important; border-collapse: collapse !important; table-layout: fixed !impor=
+tant; margin: 0 auto !important; max-width: 660px;">
+                <tbody><tr>
+                    <td align=3D"center" valign=3D"top" style=3D"color: #73=
+7070 !important; font-family: sans-serif; font-size: 0;">
+                        <!--[if mso]>
+                        <table role=3D"presentation" border=3D"0" cellspaci=
+ng=3D"0" cellpadding=3D"0" align=3D"center" width=3D"660">
+                        <tr>
+                        <![endif]-->
+                                                                           =
+                                             <!--[if mso]>
+                        <td align=3D"left" valign=3D"top" width=3D"330">
+                        <![endif]-->
+                        <div style=3D"display:inline-block; max-width:50%; =
+vertical-align:top; width:100%;" class=3D"stack-column">
+                            <!--[if false]><div style=3D"display:inline-blo=
+ck; min-width:330px; vertical-align:top; width:100%;" class=3D"stack-column=
+"><![endif]-->
+                            <table role=3D"presentation" cellspacing=3D"0" =
+cellpadding=3D"0" border=3D"0" width=3D"100%" style=3D"border-spacing: 0 !i=
+mportant; border-collapse: collapse !important; table-layout: fixed !import=
+ant; margin: 0 auto !important;">
+                                <tbody><tr>
+                                    <td style=3D"color: #737070 !important;=
+ font-family: sans-serif; padding: 10px 10px;">
+                                        <table role=3D"presentation" cellsp=
+acing=3D"0" cellpadding=3D"0" border=3D"0" width=3D"100%" style=3D"border-s=
+pacing: 0 !important; border-collapse: collapse !important; table-layout: f=
+ixed !important; margin: 0 auto !important;">
+                                            <tbody><tr>
+                                               =20
+<td dir=3D"ltr" class=3D"no-center-on-narrow" style=3D"color: #737070 !impo=
+rtant; font-family: sans-serif;">
+   =20
+<!-- Button : BEGIN -->
+<table class=3D"no-center-on-narrow" role=3D"presentation" style=3D"border-=
+spacing: 0 !important; border-collapse: collapse !important; table-layout: =
+fixed !important; margin: auto; mso-table-lspace: 0; mso-table-rspace: 0;" =
+cellspacing=3D"0" cellpadding=3D"0" border=3D"0" align=3D"center">
+    <tbody>
+    <tr class=3D"button-tr primary">
+        <td class=3D"button-td" style=3D"color: #737070 !important; font-fa=
+mily: sans-serif; background: #ffffff; border: 1px solid #666666; border-ra=
+dius: 3px; text-align: center;">
+            <a data-position=3D"lRsPZ3yQUNuQ" href=3D"https://tools.hotelsu=
+ite.de/m-elmau/mail/link/?id=3D5KH2BAnMYlGd&amp;rd=3D5KH2BQ3XvR8J&amp;sd=3D=
+798" class=3D"button-a" title=3D"" style=3D"background: #ffffff; color: #21=
+2529; letter-spacing: 0.15em; background-color: unset !important; border: 1=
+5px solid transparent; font-family: sans-serif; font-size: 13px; line-heigh=
+t: 1.1; text-align: center; text-decoration: none !important; display: bloc=
+k; font-weight: bold; border-radius: 3px; border-width: 15px; border-style:=
+ solid; border-color: transparent;" spellcheck=3D"false">OVERNIGHT STAY</a>
+        </td>
+    </tr>
+    </tbody>
+</table>
+<!-- Button : END -->
+
+</td>
+
+                                            </tr>
+                                        </tbody></table>
+                                    </td>
+                                </tr>
+                            </tbody></table>
+                            <!--[if false]></div><![endif]-->
+                        </div>
+                        <!--[if mso]>
+                        </td>
+                        <![endif]-->
+                                                                           =
+                                                                     <!--[i=
+f mso]>
+                        <td align=3D"left" valign=3D"top" width=3D"330">
+                        <![endif]-->
+                        <div style=3D"display:inline-block; max-width:50%; =
+vertical-align:top; width:100%;" class=3D"stack-column">
+                            <!--[if false]><div style=3D"display:inline-blo=
+ck; min-width:330px; vertical-align:top; width:100%;" class=3D"stack-column=
+"><![endif]-->
+                            <table role=3D"presentation" cellspacing=3D"0" =
+cellpadding=3D"0" border=3D"0" width=3D"100%" style=3D"border-spacing: 0 !i=
+mportant; border-collapse: collapse !important; table-layout: fixed !import=
+ant; margin: 0 auto !important;">
+                                <tbody><tr>
+                                    <td style=3D"color: #737070 !important;=
+ font-family: sans-serif; padding: 10px 10px;">
+                                        <table role=3D"presentation" cellsp=
+acing=3D"0" cellpadding=3D"0" border=3D"0" width=3D"100%" style=3D"border-s=
+pacing: 0 !important; border-collapse: collapse !important; table-layout: f=
+ixed !important; margin: 0 auto !important;">
+                                            <tbody><tr>
+                                               =20
+<td dir=3D"ltr" class=3D"no-center-on-narrow" style=3D"color: #737070 !impo=
+rtant; font-family: sans-serif;">
+   =20
+<!-- Button : BEGIN -->
+<table class=3D"no-center-on-narrow" role=3D"presentation" style=3D"border-=
+spacing: 0 !important; border-collapse: collapse !important; table-layout: =
+fixed !important; margin: auto; mso-table-lspace: 0; mso-table-rspace: 0;" =
+cellspacing=3D"0" cellpadding=3D"0" border=3D"0" align=3D"center">
+    <tbody>
+    <tr class=3D"button-tr primary">
+        <td class=3D"button-td" style=3D"color: #737070 !important; font-fa=
+mily: sans-serif; background: #ffffff; border: 1px solid #666666; border-ra=
+dius: 3px; text-align: center;">
+            <a data-position=3D"jLkqMDFE0j3h" href=3D"https://tools.hotelsu=
+ite.de/m-elmau/mail/link/?id=3D5KH2BAnMdJWF&amp;rd=3D5KH2BQ3XvR8J&amp;sd=3D=
+798" class=3D"button-a" title=3D"" style=3D"background: #ffffff; color: #21=
+2529; letter-spacing: 0.15em; background-color: unset !important; border: 1=
+5px solid transparent; font-family: sans-serif; font-size: 13px; line-heigh=
+t: 1.1; text-align: center; text-decoration: none !important; display: bloc=
+k; font-weight: bold; border-radius: 3px; border-width: 15px; border-style:=
+ solid; border-color: transparent;" spellcheck=3D"false">SECURE YOUR SPOT</=
+a>
+        </td>
+    </tr>
+    </tbody>
+</table>
+<!-- Button : END -->
+
+</td>
+
+                                            </tr>
+                                        </tbody></table>
+                                    </td>
+                                </tr>
+                            </tbody></table>
+                            <!--[if false]></div><![endif]-->
+                        </div>
+                        <!--[if mso]>
+                        </td>
+                        <![endif]-->
+                                                                        <!-=
+-[if mso]>
+                        </tr>
+                        </table>
+                        <![endif]-->
+                    </td>
+                </tr>
+            </tbody></table>
+            <!--[if mso]>
+            </td>
+            </tr>
+            </table>
+            <![endif]-->
+        </td>
+    </tr>
+</tbody></table>
+<!--[if false]></div><![endif]-->			</div>
+	<div class=3D"row clearfix" data-condition=3D"">
+				       =20
+                                   =20
+<!--[if false]><div style=3D"background-color: #FFFFFF;"><![endif]-->
+<table role=3D"presentation" cellspacing=3D"0" cellpadding=3D"0" border=3D"=
+0" align=3D"center" width=3D"100%" style=3D"border-spacing: 0 !important; b=
+order-collapse: collapse !important; table-layout: fixed !important; margin=
+: 0 auto !important; max-width: 680px; background-color: #FFFFFF;">
+   =20
+    <tbody><tr>
+        <td dir=3D"ltr" align=3D"center" height=3D"100%" valign=3D"center" =
+width=3D"100%" style=3D"color: #737070 !important; font-family: sans-serif;=
+ padding: 10px 0;">
+            <!--[if mso]>
+            <table role=3D"presentation" border=3D"0" cellspacing=3D"0" cel=
+lpadding=3D"0" align=3D"center" width=3D"570">
+            <tr>
+            <td align=3D"center" valign=3D"top" width=3D"570">
+            <![endif]-->
+            <table role=3D"presentation" border=3D"0" cellpadding=3D"0" cel=
+lspacing=3D"0" align=3D"center" width=3D"100%" style=3D"border-spacing: 0 !=
+important; border-collapse: collapse !important; table-layout: fixed !impor=
+tant; margin: 0 auto !important; max-width: 570px;">
+                <tbody><tr>
+                    <td align=3D"center" valign=3D"top" style=3D"color: #73=
+7070 !important; font-family: sans-serif; font-size: 0; padding: 10px 0;">
+                        <!--[if mso]>
+                        <table role=3D"presentation" border=3D"0" cellspaci=
+ng=3D"0" cellpadding=3D"0" align=3D"center" width=3D"570">
+                        <tr>
+                        <td align=3D"left" valign=3D"top" width=3D"570">
+                        <![endif]-->
+                        <div style=3D"display:inline-block; margin: 0; widt=
+h:100%; vertical-align:top;" class=3D"stack-column">
+                            <table role=3D"presentation" cellspacing=3D"0" =
+cellpadding=3D"0" border=3D"0" width=3D"100%" style=3D"border-spacing: 0 !i=
+mportant; border-collapse: collapse !important; table-layout: fixed !import=
+ant; margin: 0 auto !important;">
+                                <tbody><tr>
+                                   =20
+<td dir=3D"ltr" style=3D"color: #737070 !important; font-family: sans-serif=
+; padding: 0 25px;">
+    <!--[if mso]>
+    <table role=3D"presentation" border=3D"0" cellspacing=3D"0" cellpadding=
+=3D"0" align=3D"center" width=3D"520">
+        <tr>
+            <td align=3D"center" valign=3D"top" width=3D"520">
+    <![endif]-->
+                <div>
+                    <hr style=3D"margin: 0 !important; border: none; border=
+-top: 1px solid; height: 1px;">
+                </div>
+    <!--[if mso]>
+            </td>
+        </tr>
+    </table>
+    <![endif]-->
+</td>
+
+                                </tr>
+                            </tbody></table>
+                        </div>
+                        <!--[if mso]>
+                        </td>
+                        </tr>
+                        </table>
+                        <![endif]-->
+                    </td>
+                </tr>
+            </tbody></table>
+            <!--[if mso]>
+            </td>
+            </tr>
+            </table>
+            <![endif]-->
+        </td>
+    </tr>
+   =20
+</tbody></table>
+<!--[if false]></div><![endif]-->			</div>
+<div class=3D"row clearfix image-height-tool">
+				<table role=3D"presentation" style=3D"border-spacing: 0 !important; bor=
+der-collapse: collapse !important; table-layout: fixed !important; margin: =
+0 auto !important; background-color: #FFFFFF; max-width: 680px;" width=3D"1=
+00%" cellspacing=3D"0" cellpadding=3D"0" border=3D"0" align=3D"center">
+	<tbody>
+<tr>
+        <td style=3D"color: #737070 !important; font-family: sans-serif;">
+            <img src=3D"https://r.send.onm.de/im/1707114/928d8b8b1fe4ab75cc=
+e4d4a892a519c3176e1442bc8331ae68266c40ba650ab1.jpg?e=3Df4QjHCRdTf4Jt3x_oh0g=
+8x_3bqxEzQXBDfU5bXBdPFZAJbtXm6-fiNlgVOpVhS5eApMbJMGbo5LZJpOIUKmphYytu8rfr4M=
+ZSNEigJLcYEbFzs83E5c0nqpaOHIKgnl7QF-6MFTvXAfQG7UiY8ZuwUicj7MY21p0zu40yLE4NH=
+UeBXkH6_gjAFU6hyWX27uoSvKm7bvGapI9_R92gZiumksJZ6dWUr8OM-XcmkV1qv39hRlFWVaHo=
+OuqL-mNVTN8kfbuSdDOgro" alt=3D"" class=3D"fluid clearimg" style=3D"width: 1=
+00%; max-width: 680px; mso-height-rule: exactly; line-height: 140%;" width=
+=3D"680" border=3D"0" align=3D"middle">
+        </td>
+    </tr>
+</tbody>
+</table>			</div>																																																										=
+							=09
+=09
+																													=09
+=09
+=09
+=09
+																																																																											=
+																																																			<div class=3D"row clearf=
+ix" data-condition=3D"">
+				       =20
+       =20
+<!--[if false]><div style=3D"background-color: #FFFFFF;"><![endif]-->
+<table role=3D"presentation" cellspacing=3D"0" cellpadding=3D"0" border=3D"=
+0" align=3D"center" width=3D"100%" style=3D"border-spacing: 0 !important; b=
+order-collapse: collapse !important; table-layout: fixed !important; margin=
+: 0 auto !important; max-width: 680px; background-color: #FFFFFF;">
+   =20
+    <tbody><tr>
+        <td dir=3D"ltr" align=3D"center" height=3D"100%" valign=3D"center" =
+width=3D"100%" style=3D"color: #737070 !important; font-family: sans-serif;=
+ padding: 0px 0;">
+            <!--[if mso]>
+            <table role=3D"presentation" border=3D"0" cellspacing=3D"0" cel=
+lpadding=3D"0" align=3D"center" width=3D"680">
+            <tr>
+            <td align=3D"center" valign=3D"top" width=3D"680">
+            <![endif]-->
+            <table role=3D"presentation" border=3D"0" cellpadding=3D"0" cel=
+lspacing=3D"0" align=3D"center" width=3D"100%" style=3D"border-spacing: 0 !=
+important; border-collapse: collapse !important; table-layout: fixed !impor=
+tant; margin: 0 auto !important; max-width: 680px;">
+                <tbody><tr>
+                    <td align=3D"center" valign=3D"top" style=3D"color: #73=
+7070 !important; font-family: sans-serif; font-size: 0; padding: 0px 0;">
+                        <!--[if mso]>
+                        <table role=3D"presentation" border=3D"0" cellspaci=
+ng=3D"0" cellpadding=3D"0" align=3D"center" width=3D"680">
+                        <tr>
+                        <td align=3D"left" valign=3D"top" width=3D"680">
+                        <![endif]-->
+                        <div style=3D"display:inline-block; margin: 0; widt=
+h:100%; vertical-align:top;" class=3D"stack-column">
+                            <table role=3D"presentation" cellspacing=3D"0" =
+cellpadding=3D"0" border=3D"0" width=3D"100%" style=3D"border-spacing: 0 !i=
+mportant; border-collapse: collapse !important; table-layout: fixed !import=
+ant; margin: 0 auto !important;">
+                                <tbody><tr>
+                                   =20
+<td dir=3D"ltr" style=3D"color: #737070 !important; font-family: sans-serif=
+; padding: 0 0px;">
+    <a href=3D"https://tools.hotelsuite.de/m-elmau/mail/link/?id=3D5KH2oXuM=
+pTpt&amp;rd=3D5KH2BQ3XvR8J&amp;sd=3D798" title=3D"" target=3D"_blank" data-=
+position=3D"RuvhL5w5mwpC" style=3D"text-decoration: none; color: #1c1c1a;">=
+<img src=3D"https://r.send.onm.de/im/1707114/b9b114bedcc91ea3afcaf177df129b=
+0841913845da1962ac6ac8a23458520d45.jpg?e=3D1wYsKOscaZaYDTgHGOLrtTqLAoLtV2UF=
+5nfQoNe-ylzTBNaRiFjoG-L_dGbCfG6sdthiHeyry3tfGpPNEhHK1yU48LPvard-t7ksBVp5l2k=
+nEWTcsu50P-Q-8mRZrOg4mSSOQXbOsN2KLBg9qSvKrCWDYSvndROsDrT-CKNehVNW2mFXHvASdO=
+XxCnHCdoW9qM9v2bMu9WsnyLmLcOZwDkvrteqFwlBtnQQzChA9UUb5QTim1grgfl9cwQJ7aZtEN=
+cpeH3nw2D3XV_-hyvPcsa-Oe9PrW_XFWee5Bxn6c8NtfFiFxQMK4Lg6IJiEjxP5qzRNjEvFL-Xt=
+hcT_NHJ4wI7HjV1P8K5i8Qjpy7U0-x61WIvMyxEx1K967LskfF8G5UP4EcVllr4_TlfC4EVhM3y=
+K7Oet5IBq9sfQ9pJGOKnKNw" width=3D"680" border=3D"0" alt=3D"" class=3D"fluid=
+ full-width-on-narrow" style=3D"width: 100%;"></a>
+</td>
+
+                                </tr>
+                            </tbody></table>
+                        </div>
+                        <!--[if mso]>
+                        </td>
+                        </tr>
+                        </table>
+                        <![endif]-->
+                    </td>
+                </tr>
+            </tbody></table>
+            <!--[if mso]>
+            </td>
+            </tr>
+            </table>
+            <![endif]-->
+        </td>
+    </tr>
+   =20
+</tbody></table>
+<!--[if false]></div><![endif]-->			</div>
+	<div class=3D"row clearfix" data-condition=3D"">
+				       =20
+       =20
+<!--[if false]><div style=3D"background-color: #FFFFFF;"><![endif]-->
+<table role=3D"presentation" cellspacing=3D"0" cellpadding=3D"0" border=3D"=
+0" align=3D"center" width=3D"100%" style=3D"border-spacing: 0 !important; b=
+order-collapse: collapse !important; table-layout: fixed !important; margin=
+: 0 auto !important; max-width: 680px; background-color: #FFFFFF;">
+   =20
+    <tbody><tr>
+        <td dir=3D"ltr" align=3D"center" height=3D"100%" valign=3D"center" =
+width=3D"100%" style=3D"color: #737070 !important; font-family: sans-serif;=
+ padding: 10px 0;">
+            <!--[if mso]>
+            <table role=3D"presentation" border=3D"0" cellspacing=3D"0" cel=
+lpadding=3D"0" align=3D"center" width=3D"660">
+            <tr>
+            <td align=3D"center" valign=3D"top" width=3D"660">
+            <![endif]-->
+            <table role=3D"presentation" border=3D"0" cellpadding=3D"0" cel=
+lspacing=3D"0" align=3D"center" width=3D"100%" style=3D"border-spacing: 0 !=
+important; border-collapse: collapse !important; table-layout: fixed !impor=
+tant; margin: 0 auto !important; max-width: 660px;">
+                <tbody><tr>
+                    <td align=3D"center" valign=3D"top" style=3D"color: #73=
+7070 !important; font-family: sans-serif; font-size: 0; padding: 10px 0;">
+                        <!--[if mso]>
+                        <table role=3D"presentation" border=3D"0" cellspaci=
+ng=3D"0" cellpadding=3D"0" align=3D"center" width=3D"660">
+                        <tr>
+                        <td align=3D"left" valign=3D"top" width=3D"660">
+                        <![endif]-->
+                        <div style=3D"display:inline-block; margin: 0; widt=
+h:100%; vertical-align:top;" class=3D"stack-column">
+                            <table role=3D"presentation" cellspacing=3D"0" =
+cellpadding=3D"0" border=3D"0" width=3D"100%" style=3D"border-spacing: 0 !i=
+mportant; border-collapse: collapse !important; table-layout: fixed !import=
+ant; margin: 0 auto !important;">
+                                <tbody><tr>
+                                   =20
+<td class=3D"no-center-on-narrow" dir=3D"ltr" style=3D"color: #737070 !impo=
+rtant; font-family: sans-serif; padding: 0 10px;">
+    <table role=3D"presentation" cellspacing=3D"0" cellpadding=3D"0" border=
+=3D"0" width=3D"100%" style=3D"border-spacing: 0 !important; border-collaps=
+e: collapse !important; table-layout: fixed !important; margin: 0 auto !imp=
+ortant;">
+        <tbody><tr>
+            <td style=3D"color: #737070 !important; font-family: sans-serif=
+; font-size: 15px; mso-height-rule: exactly; line-height: 140%;">
+                <div>
+                    <div>
+                        <p style=3D"margin: 0; text-align: center;"><span s=
+tyle=3D"line-height: 28px;"><b style=3D"font-size: 20px;"><span style=3D"co=
+lor: #000000; font-size: 20px; line-height: 28px;">Fine Dining &amp; Overni=
+ght Stay<br></span></b></span></p>
+<p style=3D"margin: 0; text-align: center; font-size: 14px; line-height: 20=
+px;"><span style=3D"font-size: 14px; line-height: 20px; color: #000000;"><b=
+><br></b></span><span style=3D"color: #000000;"><b>5-Course Gourmet Dinner =
+with Champagne at the IKIGAI**<br>followed by an overnight stay </b>at Schl=
+oss Elmau Hideaway or Retreat<br></span><br></p>
+<p style=3D"margin: 0; text-align: center; font-size: 14px; line-height: 20=
+px;"><span style=3D"color: #000000;">Arrival on:<b><br></b>Wednesday, 25 Ma=
+rch / Thursday, 26 March<br>Wednesday, 13 May / Wednesday, 20 May / Thursda=
+y, 21 May</span></p>
+<p style=3D"margin: 0; text-align: center; font-size: 14px; line-height: 20=
+px;"><span style=3D"color: #000000;">&nbsp;</span></p>
+<p style=3D"margin: 0; text-align: center; font-size: 14px; line-height: 20=
+px;"><span style=3D"color: #000000;">The room rate also includes breakfast,=
+ spa &amp; yoga, the sports program, and more.</span></p>
+                    </div>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td class=3D"no-center-on-narrow" style=3D"color: #737070 !impo=
+rtant; font-family: sans-serif; padding-top: 20px;">
+           =20
+<!-- Button : BEGIN -->
+<table class=3D"no-center-on-narrow" role=3D"presentation" style=3D"border-=
+spacing: 0 !important; border-collapse: collapse !important; table-layout: =
+fixed !important; margin: auto; mso-table-lspace: 0; mso-table-rspace: 0;" =
+cellspacing=3D"0" cellpadding=3D"0" border=3D"0" align=3D"center">
+    <tbody>
+    <tr class=3D"button-tr primary">
+        <td class=3D"button-td" style=3D"color: #737070 !important; font-fa=
+mily: sans-serif; background: #ffffff; border: 1px solid #666666; border-ra=
+dius: 3px; text-align: center;">
+            <a data-position=3D"eZTJ1WBIAlMg" href=3D"https://tools.hotelsu=
+ite.de/m-elmau/mail/link/?id=3D5KH2oXuMuuhV&amp;rd=3D5KH2BQ3XvR8J&amp;sd=3D=
+798" class=3D"button-a" title=3D"" style=3D"background: #ffffff; color: #21=
+2529; letter-spacing: 0.15em; background-color: unset !important; border: 1=
+5px solid transparent; font-family: sans-serif; font-size: 13px; line-heigh=
+t: 1.1; text-align: center; text-decoration: none !important; display: bloc=
+k; font-weight: bold; border-radius: 3px; border-width: 15px; border-style:=
+ solid; border-color: transparent;" spellcheck=3D"false">BOOK YOUR PACKAGE<=
+/a>
+        </td>
+    </tr>
+    </tbody>
+</table>
+<!-- Button : END -->
+
+            </td>
+        </tr>
+    </tbody></table>
+</td>
+
+                                </tr>
+                            </tbody></table>
+                        </div>
+                        <!--[if mso]>
+                        </td>
+                        </tr>
+                        </table>
+                        <![endif]-->
+                    </td>
+                </tr>
+            </tbody></table>
+            <!--[if mso]>
+            </td>
+            </tr>
+            </table>
+            <![endif]-->
+        </td>
+    </tr>
+   =20
+</tbody></table>
+<!--[if false]></div><![endif]-->			</div>
+	<div class=3D"row clearfix" data-condition=3D"">
+				       =20
+                                   =20
+<!--[if false]><div style=3D"background-color: #FFFFFF;"><![endif]-->
+<table role=3D"presentation" cellspacing=3D"0" cellpadding=3D"0" border=3D"=
+0" align=3D"center" width=3D"100%" style=3D"border-spacing: 0 !important; b=
+order-collapse: collapse !important; table-layout: fixed !important; margin=
+: 0 auto !important; max-width: 680px; background-color: #FFFFFF;">
+   =20
+    <tbody><tr>
+        <td dir=3D"ltr" align=3D"center" height=3D"100%" valign=3D"center" =
+width=3D"100%" style=3D"color: #737070 !important; font-family: sans-serif;=
+ padding: 10px 0;">
+            <!--[if mso]>
+            <table role=3D"presentation" border=3D"0" cellspacing=3D"0" cel=
+lpadding=3D"0" align=3D"center" width=3D"570">
+            <tr>
+            <td align=3D"center" valign=3D"top" width=3D"570">
+            <![endif]-->
+            <table role=3D"presentation" border=3D"0" cellpadding=3D"0" cel=
+lspacing=3D"0" align=3D"center" width=3D"100%" style=3D"border-spacing: 0 !=
+important; border-collapse: collapse !important; table-layout: fixed !impor=
+tant; margin: 0 auto !important; max-width: 570px;">
+                <tbody><tr>
+                    <td align=3D"center" valign=3D"top" style=3D"color: #73=
+7070 !important; font-family: sans-serif; font-size: 0; padding: 10px 0;">
+                        <!--[if mso]>
+                        <table role=3D"presentation" border=3D"0" cellspaci=
+ng=3D"0" cellpadding=3D"0" align=3D"center" width=3D"570">
+                        <tr>
+                        <td align=3D"left" valign=3D"top" width=3D"570">
+                        <![endif]-->
+                        <div style=3D"display:inline-block; margin: 0; widt=
+h:100%; vertical-align:top;" class=3D"stack-column">
+                            <table role=3D"presentation" cellspacing=3D"0" =
+cellpadding=3D"0" border=3D"0" width=3D"100%" style=3D"border-spacing: 0 !i=
+mportant; border-collapse: collapse !important; table-layout: fixed !import=
+ant; margin: 0 auto !important;">
+                                <tbody><tr>
+                                   =20
+<td dir=3D"ltr" style=3D"color: #737070 !important; font-family: sans-serif=
+; padding: 0 25px;">
+    <!--[if mso]>
+    <table role=3D"presentation" border=3D"0" cellspacing=3D"0" cellpadding=
+=3D"0" align=3D"center" width=3D"520">
+        <tr>
+            <td align=3D"center" valign=3D"top" width=3D"520">
+    <![endif]-->
+                <div>
+                    <hr style=3D"margin: 0 !important; border: none; border=
+-top: 1px solid; height: 1px;">
+                </div>
+    <!--[if mso]>
+            </td>
+        </tr>
+    </table>
+    <![endif]-->
+</td>
+
+                                </tr>
+                            </tbody></table>
+                        </div>
+                        <!--[if mso]>
+                        </td>
+                        </tr>
+                        </table>
+                        <![endif]-->
+                    </td>
+                </tr>
+            </tbody></table>
+            <!--[if mso]>
+            </td>
+            </tr>
+            </table>
+            <![endif]-->
+        </td>
+    </tr>
+   =20
+</tbody></table>
+<!--[if false]></div><![endif]-->			</div>
+<div class=3D"row clearfix image-height-tool">
+				<table role=3D"presentation" style=3D"border-spacing: 0 !important; bor=
+der-collapse: collapse !important; table-layout: fixed !important; margin: =
+0 auto !important; background-color: #FFFFFF; max-width: 680px;" width=3D"1=
+00%" cellspacing=3D"0" cellpadding=3D"0" border=3D"0" align=3D"center">
+	<tbody>
+<tr>
+        <td style=3D"color: #737070 !important; font-family: sans-serif;">
+            <img src=3D"https://r.send.onm.de/im/1707114/928d8b8b1fe4ab75cc=
+e4d4a892a519c3176e1442bc8331ae68266c40ba650ab1.jpg?e=3DNC6JdUL9tpdGwMqKhEhk=
+kUn21AdKTmF1XCycJg96EfVNcdd6eWIGX1snqld2ni5vkbYWeIP2U0WskL5-S6ikZYLZU1N-hSS=
+HKYlPxWMj11XkX0wopVOuoaVFUynIGTgUKV93maplthhrF8263nrb8Hee9bH2NzI5BNQu6ZlkM5=
+fhxUnOW3JPd8bR0jm-3W3wcYYNGowNW-i7m3MNK-2outcqJxkU8XaCAJOuYUI4kpktLKLNZ8l4j=
+gAycOY2LM7WltSgZlOlJNg" alt=3D"" class=3D"fluid clearimg" style=3D"width: 1=
+00%; max-width: 680px; mso-height-rule: exactly; line-height: 140%;" width=
+=3D"680" border=3D"0" align=3D"middle">
+        </td>
+    </tr>
+</tbody>
+</table>			</div>	=09
+																																																																											=
+																																															<div class=3D"row clearfix" =
+data-condition=3D"">
+				       =20
+       =20
+<!--[if false]><div style=3D"background-color: #FFFFFF;"><![endif]-->
+<table role=3D"presentation" cellspacing=3D"0" cellpadding=3D"0" border=3D"=
+0" align=3D"center" width=3D"100%" style=3D"border-spacing: 0 !important; b=
+order-collapse: collapse !important; table-layout: fixed !important; margin=
+: 0 auto !important; max-width: 680px; background-color: #FFFFFF;">
+   =20
+    <tbody><tr>
+        <td dir=3D"ltr" align=3D"center" height=3D"100%" valign=3D"center" =
+width=3D"100%" style=3D"color: #737070 !important; font-family: sans-serif;=
+ padding: 0px 0;">
+            <!--[if mso]>
+            <table role=3D"presentation" border=3D"0" cellspacing=3D"0" cel=
+lpadding=3D"0" align=3D"center" width=3D"680">
+            <tr>
+            <td align=3D"center" valign=3D"top" width=3D"680">
+            <![endif]-->
+            <table role=3D"presentation" border=3D"0" cellpadding=3D"0" cel=
+lspacing=3D"0" align=3D"center" width=3D"100%" style=3D"border-spacing: 0 !=
+important; border-collapse: collapse !important; table-layout: fixed !impor=
+tant; margin: 0 auto !important; max-width: 680px;">
+                <tbody><tr>
+                    <td align=3D"center" valign=3D"top" style=3D"color: #73=
+7070 !important; font-family: sans-serif; font-size: 0; padding: 0px 0;">
+                        <!--[if mso]>
+                        <table role=3D"presentation" border=3D"0" cellspaci=
+ng=3D"0" cellpadding=3D"0" align=3D"center" width=3D"680">
+                        <tr>
+                        <td align=3D"left" valign=3D"top" width=3D"680">
+                        <![endif]-->
+                        <div style=3D"display:inline-block; margin: 0; widt=
+h:100%; vertical-align:top;" class=3D"stack-column">
+                            <table role=3D"presentation" cellspacing=3D"0" =
+cellpadding=3D"0" border=3D"0" width=3D"100%" style=3D"border-spacing: 0 !i=
+mportant; border-collapse: collapse !important; table-layout: fixed !import=
+ant; margin: 0 auto !important;">
+                                <tbody><tr>
+                                   =20
+<td dir=3D"ltr" style=3D"color: #737070 !important; font-family: sans-serif=
+; padding: 0 0px;">
+    <a href=3D"https://tools.hotelsuite.de/m-elmau/mail/link/?id=3D5KH2BAJC=
+EzBU&amp;rd=3D5KH2BQ3XvR8J&amp;sd=3D798" title=3D"" target=3D"_blank" data-=
+position=3D"l8WPulS9v7Dj" style=3D"text-decoration: none; color: #1c1c1a;">=
+<img src=3D"https://r.send.onm.de/im/1707114/572f42b47b537cc92c4e623e09cc95=
+3e848483855baa5a21ebe1a6b9590c6ae3.jpg?e=3DGHOIMUt26qzA-A999LWbuG3YnEn-S1RR=
+nkRHHr6c33WI4YiJvyuS0mWLZurF2A7DIPHpvTxzQMjubfDla4Rebm9ldm-ZR0yl6eYdYVLYfH0=
+gGG5RXMN0lGEI29iPVcqJMM927XvsGzwemQ0lv1lZDcYBwww87LU2YkSM3Xt5EKPE-6Q8qsO_QM=
+i2B6XHSe2cqKX1FFp1o4Ss_aVdCu4XokTqW_F_3jj5bQsNKKL-qtIU4juValewPrYt-4B9rawMo=
+byNwWPqOFZwwLlBusXKkrTBIBYGfSzvS6mqM2WzVyV8gr2rnNsGH7ybkv8fFDG7enlfHPyyehA1=
+1YgFRETEdb6jiIHelVFFU96Q3wdw3IyBkw" width=3D"680" border=3D"0" alt=3D"" cla=
+ss=3D"fluid full-width-on-narrow" style=3D"width: 100%;"></a>
+</td>
+
+                                </tr>
+                            </tbody></table>
+                        </div>
+                        <!--[if mso]>
+                        </td>
+                        </tr>
+                        </table>
+                        <![endif]-->
+                    </td>
+                </tr>
+            </tbody></table>
+            <!--[if mso]>
+            </td>
+            </tr>
+            </table>
+            <![endif]-->
+        </td>
+    </tr>
+   =20
+</tbody></table>
+<!--[if false]></div><![endif]-->			</div>
+	<div class=3D"row clearfix" data-condition=3D"">
+				       =20
+       =20
+<!--[if false]><div style=3D"background-color: #FFFFFF;"><![endif]-->
+<table role=3D"presentation" cellspacing=3D"0" cellpadding=3D"0" border=3D"=
+0" align=3D"center" width=3D"100%" style=3D"border-spacing: 0 !important; b=
+order-collapse: collapse !important; table-layout: fixed !important; margin=
+: 0 auto !important; max-width: 680px; background-color: #FFFFFF;">
+   =20
+    <tbody><tr>
+        <td dir=3D"ltr" align=3D"center" height=3D"100%" valign=3D"center" =
+width=3D"100%" style=3D"color: #737070 !important; font-family: sans-serif;=
+ padding: 10px 0;">
+            <!--[if mso]>
+            <table role=3D"presentation" border=3D"0" cellspacing=3D"0" cel=
+lpadding=3D"0" align=3D"center" width=3D"660">
+            <tr>
+            <td align=3D"center" valign=3D"top" width=3D"660">
+            <![endif]-->
+            <table role=3D"presentation" border=3D"0" cellpadding=3D"0" cel=
+lspacing=3D"0" align=3D"center" width=3D"100%" style=3D"border-spacing: 0 !=
+important; border-collapse: collapse !important; table-layout: fixed !impor=
+tant; margin: 0 auto !important; max-width: 660px;">
+                <tbody><tr>
+                    <td align=3D"center" valign=3D"top" style=3D"color: #73=
+7070 !important; font-family: sans-serif; font-size: 0; padding: 10px 0;">
+                        <!--[if mso]>
+                        <table role=3D"presentation" border=3D"0" cellspaci=
+ng=3D"0" cellpadding=3D"0" align=3D"center" width=3D"660">
+                        <tr>
+                        <td align=3D"left" valign=3D"top" width=3D"660">
+                        <![endif]-->
+                        <div style=3D"display:inline-block; margin: 0; widt=
+h:100%; vertical-align:top;" class=3D"stack-column">
+                            <table role=3D"presentation" cellspacing=3D"0" =
+cellpadding=3D"0" border=3D"0" width=3D"100%" style=3D"border-spacing: 0 !i=
+mportant; border-collapse: collapse !important; table-layout: fixed !import=
+ant; margin: 0 auto !important;">
+                                <tbody><tr>
+                                   =20
+<td class=3D"no-center-on-narrow" dir=3D"ltr" style=3D"color: #737070 !impo=
+rtant; font-family: sans-serif; padding: 0 10px;">
+    <table role=3D"presentation" cellspacing=3D"0" cellpadding=3D"0" border=
+=3D"0" width=3D"100%" style=3D"border-spacing: 0 !important; border-collaps=
+e: collapse !important; table-layout: fixed !important; margin: 0 auto !imp=
+ortant;">
+        <tbody><tr>
+            <td style=3D"color: #737070 !important; font-family: sans-serif=
+; font-size: 15px; mso-height-rule: exactly; line-height: 140%;">
+                <div>
+                    <div>
+                        <p style=3D"margin: 0; text-align: center;"><span s=
+tyle=3D"color: #000000;"><b style=3D"font-size: 20px; line-height: 28px;">H=
+ighlight: Two-Star Dining at Elmauer Alm</b><span style=3D"font-size: 16px;=
+ line-height: 22px;"><br><br></span><span style=3D"font-size: 14px; line-he=
+ight: 20px;">Enjoy an exclusive two-star dinner at the idyllically situated=
+ Elmauer Alm. Exquisite cuisine, impressive Alpine scenery, and a special a=
+tmosphere make this an unforgettable evening.<br><br></span><span style=3D"=
+font-size: 14px; line-height: 20px;">Multiple dates available:<br>Tuesday, =
+14 July / 21 July<br>Tuesday, 4 August / 11 August / 18 August / 25 August<=
+br>Tuesday, 1 September</span></span></p>
+                    </div>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td class=3D"no-center-on-narrow" style=3D"color: #737070 !impo=
+rtant; font-family: sans-serif; padding-top: 20px;">
+           =20
+<!-- Button : BEGIN -->
+<table class=3D"no-center-on-narrow" role=3D"presentation" style=3D"border-=
+spacing: 0 !important; border-collapse: collapse !important; table-layout: =
+fixed !important; margin: auto; mso-table-lspace: 0; mso-table-rspace: 0;" =
+cellspacing=3D"0" cellpadding=3D"0" border=3D"0" align=3D"center">
+    <tbody>
+    <tr class=3D"button-tr primary">
+        <td class=3D"button-td" style=3D"color: #737070 !important; font-fa=
+mily: sans-serif; background: #ffffff; border: 1px solid #666666; border-ra=
+dius: 3px; text-align: center;">
+            <a data-position=3D"QaKJ36Z2FtcA" href=3D"https://tools.hotelsu=
+ite.de/m-elmau/mail/link/?id=3D5KH2BAskm4Rj&amp;rd=3D5KH2BQ3XvR8J&amp;sd=3D=
+798" class=3D"button-a" title=3D"" style=3D"background: #ffffff; color: #21=
+2529; letter-spacing: 0.15em; background-color: unset !important; border: 1=
+5px solid transparent; font-family: sans-serif; font-size: 13px; line-heigh=
+t: 1.1; text-align: center; text-decoration: none !important; display: bloc=
+k; font-weight: bold; border-radius: 3px; border-width: 15px; border-style:=
+ solid; border-color: transparent;" spellcheck=3D"false">LEARN MORE</a>
+        </td>
+    </tr>
+    </tbody>
+</table>
+<!-- Button : END -->
+
+            </td>
+        </tr>
+    </tbody></table>
+</td>
+
+                                </tr>
+                            </tbody></table>
+                        </div>
+                        <!--[if mso]>
+                        </td>
+                        </tr>
+                        </table>
+                        <![endif]-->
+                    </td>
+                </tr>
+            </tbody></table>
+            <!--[if mso]>
+            </td>
+            </tr>
+            </table>
+            <![endif]-->
+        </td>
+    </tr>
+   =20
+</tbody></table>
+<!--[if false]></div><![endif]-->			</div>
+<div class=3D"row clearfix image-height-tool">
+				<table role=3D"presentation" style=3D"border-spacing: 0 !important; bor=
+der-collapse: collapse !important; table-layout: fixed !important; margin: =
+0 auto !important; background-color: #FFFFFF; max-width: 680px;" width=3D"1=
+00%" cellspacing=3D"0" cellpadding=3D"0" border=3D"0" align=3D"center">
+	<tbody>
+<tr>
+        <td style=3D"color: #737070 !important; font-family: sans-serif;">
+            <img src=3D"https://r.send.onm.de/im/1707114/928d8b8b1fe4ab75cc=
+e4d4a892a519c3176e1442bc8331ae68266c40ba650ab1.jpg?e=3Deo-8-rdtIYa4XaZ_KKcw=
+Q4sCWt9meTVWRnpMBADDleOMSeuyg9-qeJ8zk-ufmdh0x_hTOVWMsuxjyGDMoN2iKCSzjUii0L6=
+IrQp8NXevOn3f1G_9qN4xEQ1jNnjOKLYe0lpHexHjQ3go1QLnDCsQe-SVjR5yVm-kqonPGxTXJF=
+xfJ4VKgx-a0OGjaSPyHuKDcAiqavY7s3y0lXkbzPmtcjHEelPq9dUwuhHRYxaKVg5SYifub7QaH=
+voos0naGPwdHuiZD3gMyf0" alt=3D"" class=3D"fluid clearimg" style=3D"width: 1=
+00%; max-width: 680px; mso-height-rule: exactly; line-height: 140%;" width=
+=3D"680" border=3D"0" align=3D"middle">
+        </td>
+    </tr>
+</tbody>
+</table>			</div>
+<div class=3D"row clearfix"><table role=3D"presentation" style=3D"border-sp=
+acing: 0 !important; border-collapse: collapse !important; table-layout: fi=
+xed !important; margin: 0 auto !important; background-color: #FFFFFF; max-w=
+idth: 680px;" width=3D"100%" cellspacing=3D"0" cellpadding=3D"0" border=3D"=
+0" align=3D"center">
+    <tbody>
+        <tr>
+            <td style=3D"color: #737070 !important; font-family: sans-serif=
+; padding: 0 25px;">
+                <table role=3D"presentation" style=3D"border-spacing: 0 !im=
+portant; border-collapse: collapse !important; table-layout: fixed !importa=
+nt; margin: 0 auto !important; border-top: 1px solid #000;" width=3D"100%" =
+cellspacing=3D"0" cellpadding=3D"0" border=3D"0">
+                    <tbody>
+                        <tr>
+                            <td style=3D"color: #737070 !important; font-fa=
+mily: sans-serif; font-size: 15px; mso-height-rule: exactly; line-height: 1=
+40%; text-align: center; padding: 8px;" align=3D"center">
+                                <table role=3D"presentation" width=3D"280px=
+" cellspacing=3D"0" cellpadding=3D"5" border=3D"0" align=3D"center" style=
+=3D"border-spacing: 0 !important; border-collapse: collapse !important; tab=
+le-layout: fixed !important; margin: 0 auto !important;">
+                                    <tbody>
+                                        <tr>
+                                            <td style=3D"color: #737070 !im=
+portant; font-family: sans-serif;">
+                                                <p style=3D"margin: 0; text=
+-align: center; font-family: sans-serif; letter-spacing: 0.10em; font-size:=
+ 14px; color: #3c3c3c;">
+                                                    <b>FOLLOW US ON</b>
+                                                </p>
+                                            </td>
+                                            <td style=3D"color: #737070 !im=
+portant; font-family: sans-serif;">
+                                                <a href=3D"https://tools.ho=
+telsuite.de/m-elmau/mail/link/?id=3D5KH2BAu8G0j3&amp;rd=3D5KH2BQ3XvR8J&amp;=
+sd=3D798" title=3D"" style=3D"color: #1c1c1a; text-decoration: none;" data-=
+position=3D"dTT6KrScvaCg">
+                                                    <img src=3D"https://r.s=
+end.onm.de/im/1707114/c4e51289e8ee8d241b7a7533a07e882b07052a98728dc8b86e08d=
+e1896ba135d.png?e=3DaC4F5GlMQMozT7KQLfFNLQGQQEZmUTwejuAyAgnJjoUtf7p2eecfwB0=
+ivDlVe41jaOQjcrcJ5F0Ajx1qFnlR-o9uL3W4DNgKQxxTqKhZgm6l0AZopQlogbUOLV_yLdm9rD=
+tW06tm38_i2eL9mq1sTNnPAQU07Ttxiaq10nhDyeA_vMQ_octFMf419TCxyFCL8moL8nbUM9Xh0=
+4SsEpOAMJ-zyzsLvJ0Shn7_eorKq8HY7C_EEyuEBW-V6UFUaBsxOLxGrtEJku-qMBeizskWnHPL=
+G-E4tBM-bZxVPrnHCn4" alt=3D"" style=3D"height: 100%; max-width: 30px; font-=
+family: sans-serif; font-size: 15px; mso-height-rule: exactly; line-height:=
+ 140%;color: #555555;min-width: 30px;min-height: 30px;" width=3D"30" height=
+=3D"30" border=3D"0">
+                                                </a>
+                                                &nbsp;&nbsp;&nbsp;
+                                                <a href=3D"https://tools.ho=
+telsuite.de/m-elmau/mail/link/?id=3D5KH2BAu8oAAH&amp;rd=3D5KH2BQ3XvR8J&amp;=
+sd=3D798" title=3D"" style=3D"color: #1c1c1a; text-decoration: none;" data-=
+position=3D"3k39i1YR6tlT">
+                                                    <img src=3D"https://r.s=
+end.onm.de/im/1707114/ff997b58cdcafd66b1ffef08254ccbbd348af1bb25bcaec639867=
+175e3269ece.png?e=3DEgr4Hd7zKdHu0qh-_cceZPNGSg3FKo4uM78mj37bhLvGfu3Cm36d_2p=
+BEE9kupiLD3rq0KtOLVxd_2zI57s8r_TPZI99G0P3FqqeMQSSrXRKem9GY66ScVh7mIXIC08TaT=
+gSehligcdEtHBBkOW-wXXF5TTG8MLkelrKhU7HUKTk_7B9xGJRUEr093-5g3MZlr8J_564RTItD=
+RjcWOjR9OXVfO5PZUTZ0yHQmTSQp3W_4A1AX73ZBDwKFMbMWgFEJkjrMauCxvcYgmhTPahK4NlR=
+pRTOu_EsI4TsDpRla6P7kyf3" alt=3D"" style=3D"height: 100%; max-width: 30px; =
+font-family: sans-serif; font-size: 15px; mso-height-rule: exactly; line-he=
+ight: 140%;color: #555555;min-width: 30px;min-height: 30px;" width=3D"30" h=
+eight=3D"30" border=3D"0">
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style=3D"color: #737070 !important; padding=
+: 0 10px 20px 10px; width: 100%; font-size: 12px; font-family: sans-serif; =
+mso-height-rule: exactly; line-height: 18px; text-align: center;">
+                                <div>
+                                    <p style=3D"margin: 0; text-align: cent=
+er; color: #3c3c3c;">
+                                        <span>
+                                            Schloss Elmau |&nbsp;
+                                            <span class=3D"mobile-link--foo=
+ter">82493 Elmau |&nbsp;</span>
+                                        </span>
+                                        <span>Germany |&nbsp;</span>
+                                        <span>
+                                            <a href=3D"mailto:info@schloss-=
+elmau.de" data-position=3D"LXDlZ0f8VLhF" style=3D"text-decoration: none; co=
+lor: #1c1c1a;">info@schloss-elmau.de</a>
+                                            |&nbsp; Phone</span><a href=3D"=
+tel:+4908823180" title=3D"" data-position=3D"BRtx0u000JHw" style=3D"text-de=
+coration: none; color: #1c1c1a;">&nbsp;+49 (0) 8823 18-0</a>
+                                    </p>
+                                    <p style=3D"margin: 0; text-align: cent=
+er; color: #3c3c3c;"><a href=3D"https://tools.hotelsuite.de/m-elmau/mail/un=
+sub/?email=3D_Yzc0ZDk3YjBpbmZvQHdvb2RmaW5lLmNvOjo5Njg6Ojc5ODo6MjAyNi0wMy0xN=
+iAxNTowNjoyMQ" title=3D"" style=3D"text-decoration: none; color: #1c1c1a;" =
+data-position=3D"hb7A9cLGVHL6">Unsubscribe from newsletter</a>&nbsp;<span>|
+                                            <a href=3D"https://tools.hotels=
+uite.de/m-elmau/mail/link/?id=3D5KH2BAu8JAV9&amp;rd=3D5KH2BQ3XvR8J&amp;sd=
+=3D798" title=3D"" data-position=3D"AHqYCpVqedyL" style=3D"text-decoration:=
+ none; color: #1c1c1a;">Publishing credits                                 =
+         </a>
+                                            |
+                                        </span>
+                                        <a href=3D"https://tools.hotelsuite=
+.de/m-elmau/mail/link/?id=3D5KH2BAu8GJeL&amp;rd=3D5KH2BQ3XvR8J&amp;sd=3D798=
+" title=3D"" data-position=3D"LlqalpnC4tqF" style=3D"text-decoration: none;=
+ color: #1c1c1a;">Privacy                                       </a>
+                                        <br>
+                                    </p>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </td>
+        </tr>
+    </tbody>
+</table></div>
+																																																												=09
+=09
+																																																																											=
+																																																					=09
+=09
+																																																										=09
+=09
+																																								=09
+=09
+<div class=3D"row clearfix">
+<table role=3D"presentation" style=3D"border-spacing: 0 !important; border-=
+collapse: collapse !important; table-layout: fixed !important; margin: 0 au=
+to !important; background-color: #FFFFFF; max-width: 680px;" width=3D"100%"=
+ cellspacing=3D"0" cellpadding=3D"0" border=3D"0" align=3D"center">
+    <tbody>
+        <tr>
+            <td style=3D"color: #737070 !important; font-family: sans-serif=
+;"></td>
+</tr>
+</tbody>
+</table>
+</div>
+
+       =20
+        <!--[if mso]>
+        </td>
+        </tr>
+        </table>
+        <![endif]-->
+    </div>
+</center>
+<img src=3D"https://r.send.onm.de/im/1707114/c1357776ad56a545917ea62959f7dc=
+d3f1077157be2bf46f583671a9a2c34a30.jpg?e=3DaCylYr0Q0yfexFK96wfe2dzY_j3U_Lzq=
+wTb7-e5TEEWYypThzHwwITNIkx54lTvkza0UcSzqPA_7xIxM7RH9ivic1wBqCpYpUDiUieFR48I=
+m6J9e0TTvSHS66DvLlStaSUO8oopeyYETerXBL_yUnK4CgDTaJ7tE1kLZPdouu4MxXcWejWlXfY=
+WCWLHIU73-ldWLbXfQzzUERm9_MzOnC41c3r5HvFO6kd5fiE6Kg8Kkqa25SJgfLWHkeZ927-xMq=
+R3iqw" width=3D"1" height=3D"1" style=3D"visibility: hidden;" alt=3D"">
+
+</body></html>
+
+--=_180fda38c0d0b53d1bd41eeec8663b99--
