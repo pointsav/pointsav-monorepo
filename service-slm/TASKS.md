@@ -59,13 +59,13 @@ opusplan-enabled variant) in your shell before launching `claude`.
 ## P0 — Phase 2 kickoff (must land before any other P1 work)
 
 ### [1] Verify workspace builds green on a clean host
-- Status: in-progress
+- Status: done
 - Priority: p0
 - Crate: workspace
 - Model: sonnet
 - Context: First push to origin must prove the scaffold is buildable. Run `./scripts/check-all.sh` on a fresh checkout.
 - Acceptance: CI green on `main` for all of fmt, clippy, test, audit, deny.
-- Note: Local checks (fmt, clippy, test) pass as of 2026-04-20. cargo-audit and cargo-deny not installed locally; verified in CI. Awaiting first push to main to close.
+- Note: Merged audit-layer-1-findings to main on 2026-04-20. CI verified green: fmt, clippy, test, audit, deny all pass.
 
 ### [2] Peter rewrites ADR-0003 rationale
 - Status: open
