@@ -121,12 +121,62 @@ html, body {
 #canvas-area {
   flex: 1;
   background: var(--desktop-bg);
-  overflow: auto;
+  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--chrome-text-dim);
   font-size: 14px;
+}
+
+/* ─── Slide stage and canvas ────────────────────────────────────────────────
+   The stage is a wrapper sized to the scaled canvas so the flex-centred
+   #canvas-area letterboxes cleanly. The canvas itself is the 1100 x 850
+   logical sheet (US Letter landscape at 100 dpi, ADR-PR-09) and is scaled
+   via CSS transform by canvas.js on load and on window resize.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+.slide-stage {
+  position: relative;
+  display: block;
+  flex: 0 0 auto;
+}
+
+.slide-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  background: #ffffff;
+  color: #1e1e24;
+  box-shadow: 0 2px 14px rgba(0, 0, 0, 0.35);
+  transform-origin: top left;
+  cursor: default;
+  user-select: text;
+  font-family: 'Source Sans 3', -apple-system, 'Helvetica Neue', Arial, sans-serif;
+}
+
+.slide-element {
+  outline: none;
+  cursor: text;
+  line-height: 1.3;
+  padding: 4px;
+  border: 1px solid transparent;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+}
+
+.slide-element[data-type="text"] {
+  font-size: 24pt;
+}
+
+.slide-element:focus,
+.slide-element:hover {
+  border-color: rgba(200, 169, 110, 0.4);
+}
+
+.slide-element:focus {
+  border-color: var(--chrome-accent);
+  box-shadow: 0 0 0 2px rgba(200, 169, 110, 0.25);
 }
 
 /* Right pane — code view (hidden by default) */

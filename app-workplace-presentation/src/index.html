@@ -26,16 +26,20 @@
     <!-- Three-pane workspace -->
     <div id="workspace">
       <div id="slide-navigator">Slides</div>
-      <div id="canvas-area">Canvas</div>
+      <div id="canvas-area"></div>
       <div id="code-view">Code</div>
     </div>
 
     <!-- Status bar -->
     <div id="statusbar">
-      <span>Slide 1 of 1</span>
+      <span data-status="slide-count">Slide 1 of 1</span>
       <span class="statusbar-sep">·</span>
-      <span>100%</span>
+      <span data-status="zoom">100%</span>
     </div>
   </div>
+
+  <script src="js/schema.js"></script>
+  <script src="js/canvas.js"></script>
+  <script src="js/editor.js"></script>
 </body>
 </html>
