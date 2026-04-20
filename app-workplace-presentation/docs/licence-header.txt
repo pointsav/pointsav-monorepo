@@ -1,0 +1,17 @@
+// Copyright (C) 2026 PointSav Digital Systems
+// Licensed under the European Union Public Licence v. 1.2 (EUPL-1.2).
+// See LICENCE in the project root or https://eupl.eu/1.2/en/ for the full text.
+
+/* HTML/CSS variant:
+<!--
+  Copyright (C) 2026 PointSav Digital Systems
+  Licensed under the European Union Public Licence v. 1.2 (EUPL-1.2).
+  See LICENCE in the project root or https://eupl.eu/1.2/en/ for the full text.
+-->
+*/
+
+/* Shell-script variant:
+# Copyright (C) 2026 PointSav Digital Systems
+# Licensed under the European Union Public Licence v. 1.2 (EUPL-1.2).
+# See LICENCE in the project root or https://eupl.eu/1.2/en/ for the full text.
+*/
