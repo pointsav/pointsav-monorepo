@@ -128,6 +128,19 @@ is a standard PowerPoint feature. Deferred. Requires the speaker notes
 feature above as a prerequisite.
 Resolution target: post-speaker-notes.
 
+### [2026-04-20] Element selection, deletion, and move/resize — OPEN
+Category: UX
+Phase 2 shipped click-to-insert text boxes but no way to select an
+existing element without entering its text, no keyboard shortcut to
+delete an inserted element, and no drag-to-move or handle-to-resize.
+A user who misplaces a click cannot recover the stray empty text box
+except by clicking into it and deleting its content via the caret.
+Phases 3–7 do not address this either — Phase 3 is the slide
+navigator, Phase 4 is the code view, Phases 5–7 are file I/O,
+slideshow, and print. Element-manipulation UX belongs in a
+post-Phase-7 pass, logically bundled with the undo/redo work.
+Resolution target: post-Phase-7, alongside undo/redo.
+
 ---
 
 ## How to close an item

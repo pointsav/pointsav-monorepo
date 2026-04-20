@@ -4,69 +4,66 @@
 
 ---
 
-## Immediate — Phase 1: Fork from memo
+## Immediate — Phase 3: Slide navigator
 
-Claude Code's first session should fork `app-workplace-memo` into this repo without introducing anything presentation-specific. Verify the forked-but-inert shell compiles and launches before any presentation code lands.
+Phase 2 shipped a blank canvas with text-box-on-click and keyboard navigation. Next is the left pane — live thumbnails, click-to-jump, drag-to-reorder, right-click context menu. No Phase 4 (code view) or Phase 5 (save-to-disk) yet.
 
-### Paste this into Claude Code to start Phase 1:
+### Paste this into Claude Code to start Phase 3:
 
 ```
-Read CLAUDE.md, ROADMAP.md, and NEXT.md first.
+Phase 3 task: slide navigator with live thumbnails and reordering.
 
-Phase 1 task: fork the sibling app `app-workplace-memo` into this repo as
-the foundation for `app-workplace-presentation`. Do not add any
-presentation-specific features yet. Goal: a forked shell that compiles
-and launches, showing a placeholder window.
+Read CLAUDE.md and ROADMAP.md Phase 3 section.
 
-Steps:
+Build src/js/slides.js per the specification. Wire it into
+src/index.html's left pane (replacing the Phase 1 placeholder).
 
-1. Copy unchanged from ../app-workplace-memo/:
-   - src-tauri/src/main.rs (the four IPC commands are identical)
-   - scripts/download-deps.sh
-   - scripts/embed-fonts.sh
-   - docs/licence-header.txt (if it exists; otherwise create one)
+Thumbnail rendering strategy: clone the slide DOM, scale with CSS
+transform. Do not maintain separate thumbnail DOMs — one source of
+truth.
 
-2. Adapt these files from memo, changing only what identifies the app:
-   - src-tauri/Cargo.toml → package.name = "app-workplace-presentation"
-     Make sure the file ends with an empty [workspace] table.
-   - src-tauri/tauri.conf.json → productName, identifier
-     (com.pointsav.workplace.presentation), window title
-   - package.json → name field only
+Drag-and-drop: use native HTML5 drag-and-drop (dragstart, dragover,
+drop). No library.
 
-3. Copy PointSav gold chrome tokens from ../app-workplace-memo/src/styles/app.css
-   into src/styles/app.css. Keep the tokens identical (colour, spacing, typography).
-   Remove memo-specific layout rules.
+Context menu: vanilla JS. Right-click opens a small positioned div
+with Duplicate / Delete / New Slide After.
 
-4. Create src/index.html as a minimal three-pane shell:
-   - Left pane (200px wide): slide navigator placeholder with text "Slides"
-   - Centre pane (flex): canvas placeholder with text "Canvas"
-   - Right pane (hidden by default): code view placeholder with text "Code"
-   - Top menubar: File / Home / Insert / Design / Slide Show / View
-   - Status bar bottom: "Slide 1 of 1 · 100%"
+Ask before deviating from this list.
 
-5. Generate icons:
-   - Create src-tauri/icons/icon-source.png as 1024×1024 PointSav gold (#c8a96e)
-     solid square (ImageMagick one-liner is fine).
-   - Run: npx tauri icon src-tauri/icons/icon-source.png
-   - The derived files are gitignored; only icon-source.png is committed.
+Commit as: feat(slides): navigator with thumbnails and reorder
 
-6. Verify:
-   - Run `make setup` (or `npm install`)
-   - Run `make dev` (or `npm run tauri dev`)
-   - App launches. Window title reads "Workplace Presentation".
-     Three panes visible. No console errors.
+---
 
-7. Commit as a single commit:
-   chore(init): fork from app-workplace-memo — Phase 1 shell
+End-of-phase housekeeping (run before concluding the session):
 
-Ask before deviating from this list. Do not start Phase 2 yet.
+When the work above is verified running, perform these file updates
+in a single separate commit before ending the session:
+
+1. CHANGELOG.md — under [Unreleased] → Added, append a bullet for
+   Phase 3 describing what shipped (slides.js, live thumbnail
+   navigator, drag-and-drop reorder, right-click context menu with
+   duplicate/delete/new-slide-after).
+
+2. NEXT.md — replace the "Immediate — Phase 3" block with the
+   Phase 4 commission prompt from ROADMAP.md (split-screen code
+   view). Append the same end-of-phase housekeeping block to that
+   prompt, updated for Phase 4. Move the Phase 3 record into the
+   session log at the bottom with today's date.
+
+3. CLAUDE.md — update the "Last updated" line at the top to today's
+   date. Update "Current phase" to Phase 4. No other changes.
+
+4. Commit the doc updates as:
+   docs: update tracking for Phase 3 completion
+
+Ask before deviating from this list.
 ```
 
 ---
 
-## After Phase 1 is verified running
+## After Phase 3 is verified running
 
-Update this file. Replace the Phase 1 block above with the Phase 2 commission prompt from `ROADMAP.md`.
+Claude Code performs the end-of-phase housekeeping above as part of the Phase 3 session. This file will already contain the Phase 4 commission prompt when the next session begins — no manual edit required.
 
 ---
 
@@ -89,8 +86,27 @@ Update this file. Replace the Phase 1 block above with the Phase 2 commission pr
 
 ## Session log
 
+### 2026-04-20 — Phase 2 complete: blank slide canvas
+- Added `src/js/schema.js` (document model with `newDocument()`, `newSlide()`, `newElement()`, three layouts registered and Blank as the startup default), `src/js/canvas.js` (renders active slide at 1100×850 logical units, CSS-transform scaling so the centre pane letterboxes cleanly on any window size, click-to-insert text box with viewport→logical coord translation, contenteditable blur commits content), `src/js/editor.js` (state, active-slide index, dirty flag, keyboard wiring, `insertTextBox`, `markDirty`).
+- Wired the three scripts into `src/index.html` at the end of `<body>` in order (schema → canvas → editor). Emptied the Phase 1 canvas-area placeholder. Added `data-status` hooks on status-bar spans so the slide counter can be updated without brittle `firstElementChild` lookups.
+- Extended `src/styles/app.css` with `.slide-stage`, `.slide-canvas` (white sheet with transform-origin top-left and a dark drop shadow), and `.slide-element` (24pt Source Sans 3 default, PointSav-gold focus ring). Flipped `#canvas-area` overflow from `auto` to `hidden` so a fractional-pixel fit miscalc can't trigger scrollbars.
+- Keyboard model chosen: inside a focused text box, Enter commits and blurs (PowerPoint title-cell behaviour); outside any editable, Enter adds a new slide after the active one. This matches the "Enter twice → new slide" cadence in the ROADMAP — first Enter commits, second Enter creates. Shift+Enter inside a text box inserts a line break as usual. Arrow keys navigate slides only when no contenteditable has focus.
+- Verified with `make dev` on Linux Mint 22. Blank US Letter landscape slide renders letterboxed on the dark desktop, click inserts a text box, typing works, Enter commits and then Enter adds a new slide, arrow keys navigate, status bar counter updates.
+- Environment note: needed `source ~/.bashrc` to load nvm and `PKG_CONFIG_PATH` (webkit 4.0→4.1 shim) — the terminal had opened as a login shell and skipped the rc file. Not a project issue; shell-config nuance.
+- One new deferred item logged in CLEANUP_LOG.md: element selection, deletion, and move/resize (post-Phase-7, alongside undo/redo).
+- Not committed this session (skipped by user request).
+
+### 2026-04-19 — Phase 1 complete: shell forked from memo
+- Forked unchanged from app-workplace-memo: `src-tauri/src/main.rs` (four IPC commands), `scripts/download-deps.sh`, `scripts/embed-fonts.sh`, `docs/licence-header.txt`.
+- Adapted with app-identity changes only: `src-tauri/Cargo.toml` (package name + `[workspace]` opt-out verified), `src-tauri/tauri.conf.json` (productName, identifier `com.pointsav.workplace.presentation`, window title), `package.json` name field.
+- PointSav gold chrome tokens copied from memo `src/styles/app.css`; memo-specific layout rules removed.
+- `src/index.html` scaffolded as three-pane shell: 200px left pane (navigator placeholder), flex centre pane (canvas placeholder), right pane hidden by default (code view placeholder). Flat menubar (File / Home / Insert / Design / Slide Show / View). Status bar showing "Slide 1 of 1 · 100%".
+- Icons generated from placeholder gold `icon-source.png` via `npx tauri icon`.
+- `make setup` and `make dev` verified. Window launches titled "Workplace Presentation". Three panes visibly distinct. No console errors.
+- Committed as: `chore(init): fork from app-workplace-memo — Phase 1 shell`.
+
 ### 2026-04-19 — Project scaffolded + design decisions locked
-- Created repo scaffold: CLAUDE.md, NEXT.md, ROADMAP.md, CLEANUP_LOG.md, ARCHITECTURE.md, DEVELOPMENT.md, README.md (bilingual), LICENCE, CHANGELOG.md, Makefile, package.json, .gitignore, src-tauri/Cargo.toml, src-tauri/tauri.conf.json, src-tauri/src/main.rs
+- Created repo scaffold: CLAUDE.md, NEXT.md, ROADMAP.md, CLEANUP_LOG.md, ARCHITECTURE.md, DEVELOPMENT.md, README.md (bilingual), LICENCE, CHANGELOG.md, Makefile, package.json, .gitignore, src-tauri/Cargo.toml, src-tauri/tauri.conf.json, src-tauri/src/main.rs.
 - Four design decisions resolved: aspect ratio = US Letter landscape (ADR-PR-09), fonts = Source Sans 3 24/40pt, three ship layouts (Title/Content/Blank), code view ships plain without highlighter.
 - No source frontend code written yet. That is Phase 1 work.
-- Phase 1 commission prompt drafted above.
+- Phase 1 commission prompt drafted.
