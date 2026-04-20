@@ -1,0 +1,225 @@
+/* =============================================================================
+   Workplace*Presentation — Application Chrome Styles
+   Copyright © 2026 PointSav Digital Systems — EUPL-1.2
+   =============================================================================
+   This file styles the application shell: menu bar, three-pane workspace,
+   and status bar. It does NOT style slide content — that is the
+   responsibility of the canvas and export modules.
+   ============================================================================= */
+
+/* ─── Custom Properties ──────────────────────────────────────────────────── */
+
+:root {
+  /* Chrome colours */
+  --chrome-bg:        #1e1e24;
+  --chrome-surface:   #28282f;
+  --chrome-border:    #38383f;
+  --chrome-hover:     #35353e;
+  --chrome-active:    #44444e;
+  --chrome-text:      #d4d2cc;
+  --chrome-text-dim:  #888880;
+  --chrome-accent:    #c8a96e;  /* PointSav gold */
+
+  /* Desktop background behind canvas */
+  --desktop-bg:       #404048;
+
+  /* Typography */
+  --ui-font:   -apple-system, 'Helvetica Neue', Arial, sans-serif;
+  --ui-size:   12px;
+  --ui-size-s: 11px;
+
+  /* Layout */
+  --menubar-h:    28px;
+  --statusbar-h:  22px;
+  --navigator-w: 200px;
+}
+
+/* ─── Reset ──────────────────────────────────────────────────────────────── */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+  background: var(--desktop-bg);
+  font-family: var(--ui-font);
+  font-size: var(--ui-size);
+  color: var(--chrome-text);
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+}
+
+/* ─── App shell layout ───────────────────────────────────────────────────── */
+
+#app-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ─── Menu bar ───────────────────────────────────────────────────────────── */
+
+#menubar {
+  display: flex;
+  align-items: center;
+  height: var(--menubar-h);
+  background: var(--chrome-bg);
+  border-bottom: 1px solid var(--chrome-border);
+  padding: 0 8px;
+  flex-shrink: 0;
+  gap: 2px;
+  /* macOS: leave room for traffic lights */
+  padding-left: max(8px, env(safe-area-inset-left));
+}
+
+.menu-item {
+  background: none;
+  border: none;
+  color: var(--chrome-text);
+  font-family: var(--ui-font);
+  font-size: var(--ui-size);
+  padding: 3px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  outline: none;
+}
+.menu-item:hover  { background: var(--chrome-hover); }
+.menu-item:active { background: var(--chrome-active); }
+.menu-item.open   { background: var(--chrome-active); }
+
+.menubar-spacer { flex: 1; }
+
+/* ─── Three-pane workspace ──────────────────────────────────────────────── */
+
+#workspace {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* Left pane — slide navigator */
+#slide-navigator {
+  width: var(--navigator-w);
+  min-width: var(--navigator-w);
+  background: var(--chrome-surface);
+  border-right: 1px solid var(--chrome-border);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--chrome-text-dim);
+  font-size: var(--ui-size);
+}
+
+/* Centre pane — active slide canvas */
+#canvas-area {
+  flex: 1;
+  background: var(--desktop-bg);
+  overflow: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--chrome-text-dim);
+  font-size: 14px;
+}
+
+/* Right pane — code view (hidden by default) */
+#code-view {
+  width: 0;
+  min-width: 0;
+  background: var(--chrome-bg);
+  border-left: 1px solid var(--chrome-border);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--chrome-text-dim);
+  font-size: var(--ui-size);
+}
+
+#code-view.open {
+  width: 50%;
+  min-width: 280px;
+  overflow-y: auto;
+}
+
+/* ─── Status bar ─────────────────────────────────────────────────────────── */
+
+#statusbar {
+  display: flex;
+  align-items: center;
+  height: var(--statusbar-h);
+  background: var(--chrome-bg);
+  border-top: 1px solid var(--chrome-border);
+  padding: 0 12px;
+  flex-shrink: 0;
+  gap: 6px;
+  font-size: var(--ui-size-s);
+  color: var(--chrome-text-dim);
+}
+
+.statusbar-sep   { color: var(--chrome-border); }
+.statusbar-spacer { flex: 1; }
+
+/* ─── Dropdowns ──────────────────────────────────────────────────────────── */
+
+#dropdown-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+}
+
+.dropdown {
+  position: fixed;
+  z-index: 100;
+  background: var(--chrome-surface);
+  border: 1px solid var(--chrome-border);
+  border-radius: 6px;
+  padding: 4px 0;
+  min-width: 180px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+}
+
+.dropdown button {
+  display: block;
+  width: 100%;
+  background: none;
+  border: none;
+  color: var(--chrome-text);
+  font-family: var(--ui-font);
+  font-size: var(--ui-size);
+  padding: 6px 16px;
+  text-align: left;
+  cursor: pointer;
+  outline: none;
+}
+.dropdown button:hover { background: var(--chrome-hover); }
+
+.dropdown-sep {
+  height: 1px;
+  background: var(--chrome-border);
+  margin: 4px 0;
+}
+
+/* ─── Utility ────────────────────────────────────────────────────────────── */
+
+.hidden { display: none !important; }
+
+/* ─── Print — hide application chrome ───────────────────────────────────── */
+
+@media print {
+  #menubar,
+  #statusbar,
+  #slide-navigator,
+  #code-view,
+  #dropdown-overlay,
+  .dropdown { display: none !important; }
+
+  #workspace { background: none !important; }
+}
