@@ -17,7 +17,7 @@ Status levels:
 | slm-ledger | alpha | 2026-04-20 | `SQLite` mirror (future work) |
 | slm-compute | alpha | 2026-04-20 | Cloud Run driver, warm-pool toggle, Secret Manager |
 | slm-memory-kv | scaffold | 2026-04-20 | Deterministic block hash |
-| slm-memory-adapters | scaffold | 2026-04-20 | Registry YAML parser |
+| slm-memory-adapters | alpha | 2026-04-21 | OCI fetch, Sigstore verification |
 | slm-inference-local | scaffold | 2026-04-20 | RAM probe + quantisation selector |
 | slm-inference-remote | alpha | 2026-04-20 | Retry/backoff + JOB_*/TEARDOWN_*/PREEMPTION events |
 | slm-api | alpha | 2026-04-20 | Additional routes as library crates mature |

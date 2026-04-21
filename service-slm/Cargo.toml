@@ -110,6 +110,7 @@ clap = { version = "4.5", features = ["derive", "env", "wrap_help"] }
 chrono = { version = "0.4", default-features = false, features = ["serde", "std", "clock"] }
 uuid = { version = "1.11", features = ["v7", "serde"] }
 blake3 = "1.5"
+semver = { version = "1", features = ["serde"] }
 sha2 = "0.10"
 
 # ─── Test-only ─────────────────────────────────────────────────────────────

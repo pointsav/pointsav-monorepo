@@ -8,25 +8,11 @@
 //!
 //! Ring 3b `LoRA` adapter registry and loader for service-slm.
 //!
-//! ## Role in service-slm
-//!
-//! `LoRA` adapter registry, loader, and versioning. Adapters are the cross-project skill library — the compounding commercial asset.
-//!
-//! ## Boundaries
-//!
-//! This crate does not own behaviour that belongs to other crates in the
-//! workspace. Refer to the per-crate `CLAUDE.md` and to
-//! [`../../specs/SLM-STACK.md`] and [`../../specs/YOYO-COMPUTE.md`] for the
-//! full responsibility map.
-//!
-//! ## Status
-//!
-//! Scaffold only. No business logic has been written yet. See
-//! [`../../STATUS.md`] for the machine-readable status of every crate in
-//! the workspace and [`../../TASKS.md`] for the ordered work queue.
+//! The adapter library is the compounding commercial asset: every project
+//! leaves behind a versioned, Sigstore-signed `LoRA` adapter stored as an OCI
+//! Artifact. This crate owns the registry schema, validation, OCI fetch, and
+//! Sigstore verification. See `specs/YOYO-COMPUTE.md §4` for the full design.
 
-/// Placeholder entry point to keep the crate compiling during scaffolding.
-///
-/// Remove this once real items are added. Tests importing it should be
-/// deleted at the same time.
-pub fn __scaffold_placeholder() {}
+mod registry;
+
+pub use registry::{AdapterEntry, Registry, RegistryError};
