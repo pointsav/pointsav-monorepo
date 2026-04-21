@@ -6,11 +6,14 @@
 
 //! # slm-api
 //!
-//! HTTP/gRPC API surface for service-slm.
+//! HTTP API surface for service-slm.
 //!
 //! ## Role in service-slm
 //!
-//! axum HTTP server exposing the doorman endpoints to service-content, os-console, and the verification UI.
+//! Owns the axum router, handler signatures, tower middleware stack, and
+//! health/readiness/metrics endpoints. Handlers stay thin — they parse
+//! input, call one library crate, and format the response. Real work lives
+//! in the library crates.
 //!
 //! ## Boundaries
 //!
@@ -21,12 +24,12 @@
 //!
 //! ## Status
 //!
-//! Scaffold only. No business logic has been written yet. See
-//! [`../../STATUS.md`] for the machine-readable status of every crate in
-//! the workspace and [`../../TASKS.md`] for the ordered work queue.
+//! Alpha. Router skeleton with `GET /health` and a [`tower_http`] tracing
+//! layer. Additional routes are added as library crates reach alpha status.
+//! See [`../../STATUS.md`] for the machine-readable status of every crate
+//! and [`../../TASKS.md`] for the ordered work queue.
 
-/// Placeholder entry point to keep the crate compiling during scaffolding.
-///
-/// Remove this once real items are added. Tests importing it should be
-/// deleted at the same time.
-pub fn __scaffold_placeholder() {}
+mod health;
+mod router;
+
+pub use router::router;

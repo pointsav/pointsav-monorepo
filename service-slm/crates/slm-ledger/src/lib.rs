@@ -10,7 +10,10 @@
 //!
 //! ## Role in service-slm
 //!
-//! Append-only CSV ledger plus `SQLite` mirror for audit queries. Every inference event, every adapter load, every teardown writes a row. This is the SOC3 processing-integrity artefact.
+//! Owns the [`Event`] type and its ten [`EventType`] variants, an append-only
+//! CSV writer with fsync semantics, and a `SQLite` mirror for audit queries.
+//! Every inference event, every adapter load, every teardown writes a row.
+//! This is the SOC3 processing-integrity artefact described in YOYO-COMPUTE §5.
 //!
 //! ## Boundaries
 //!
@@ -21,12 +24,17 @@
 //!
 //! ## Status
 //!
-//! Scaffold only. No business logic has been written yet. See
-//! [`../../STATUS.md`] for the machine-readable status of every crate in
-//! the workspace and [`../../TASKS.md`] for the ordered work queue.
+//! Alpha. [`Event`], [`EventType`], and [`LedgerWriter`] are implemented.
+//! The `SQLite` mirror is future work. See [`../../STATUS.md`] for the
+//! machine-readable status of every crate and [`../../TASKS.md`] for the
+//! ordered work queue.
 
-/// Placeholder entry point to keep the crate compiling during scaffolding.
-///
-/// Remove this once real items are added. Tests importing it should be
-/// deleted at the same time.
-pub fn __scaffold_placeholder() {}
+mod error;
+mod event;
+mod event_type;
+mod writer;
+
+pub use error::LedgerError;
+pub use event::Event;
+pub use event_type::{EventType, EventTypeParseError};
+pub use writer::LedgerWriter;

@@ -10,7 +10,10 @@
 //!
 //! ## Role in service-slm
 //!
-//! Implements the doorman protocol: sanitise outbound, send, await, receive, rehydrate. This is the crate that every external call to service-slm ultimately flows through.
+//! Every external call to service-slm flows through this crate. It owns the
+//! five-step doorman protocol, the sanitisation rules (what fields are stripped
+//! before data crosses the trust boundary), the rehydration logic (what fields
+//! are re-attached on return), and the retry, timeout, and backoff policies.
 //!
 //! ## Boundaries
 //!
@@ -21,12 +24,14 @@
 //!
 //! ## Status
 //!
-//! Scaffold only. No business logic has been written yet. See
-//! [`../../STATUS.md`] for the machine-readable status of every crate in
-//! the workspace and [`../../TASKS.md`] for the ordered work queue.
+//! Alpha. [`SanitisationPolicy`] trait and [`NoOp`] pass-through implementation
+//! are present with property tests. The full five-step cycle, ledger integration,
+//! and retry/backoff policies are future work. See [`../../STATUS.md`] for the
+//! machine-readable status of every crate and [`../../TASKS.md`] for the ordered
+//! work queue.
 
-/// Placeholder entry point to keep the crate compiling during scaffolding.
-///
-/// Remove this once real items are added. Tests importing it should be
-/// deleted at the same time.
-pub fn __scaffold_placeholder() {}
+mod error;
+mod policy;
+
+pub use error::SanitisationError;
+pub use policy::{NoOp, SanitisationPolicy};
