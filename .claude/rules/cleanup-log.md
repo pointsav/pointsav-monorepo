@@ -102,6 +102,11 @@ Newest on top. Append a dated block when a session includes meaningful cleanup w
   - **[33]** — `advisories` subcommand fails because `cargo-deny 0.18.3` cannot parse CVSS-4.0 vector strings present in recent RUSTSEC advisories. Fixed in `0.19.x` but that requires Rust 1.88. Lifts naturally on the next MSRV bump.
 - **Two follow-up work items surfaced and added** to `TASKS.md` for the crate's next-wave work: **[25]** retry + exponential-backoff policy (crate CLAUDE.md invariant 3) and **[26]** `JOB_*` / `TEARDOWN_*` / `PREEMPTION` events (remaining YOYO-COMPUTE §5 event types; `TEARDOWN_COMPLETE` also needs Cloud Run billing-API integration for `gpu_seconds` + `cost_usd`).
 - No monorepo-wide renames or deprecations touched.
+- **Hand-off for next session** (session ended mid-branch, not yet merged):
+  - Branch: `audit-layer-1-findings`, one commit ahead of previous tip (`08dab64 feat(slm-inference-remote): boot probe + BOOT_* ledger events`). Not pushed.
+  - Natural next task on resumption is **[25]** (retry/backoff) or **[26]** (`JOB_*` / `TEARDOWN_*` / `PREEMPTION` events). Both are p2 and either is a reasonable continuation. `/next-task` should pick one automatically.
+  - **Uncommitted working-tree noise to disregard** (not part of task [20]; appeared during the session from elsewhere): `LICENCE_Research_Report.md` deletion + `LICENCE_Research_Report_2026-04-20.md` at monorepo root; `app-workplace-presentation/` modifications (`NEXT.md`, `src/index.html`, `src/js/editor.js`, `src/js/schema.js`, `src/js/slides.js`, `src/styles/app.css`); `service-slm/.claude/scheduled_tasks.lock` (transient). Next session must not conflate these with task [20] or roll them into a task-scoped commit.
+  - **Unresolved from 2026-04-20 slm-core session**: the proposed `#![cfg_attr(test, allow(clippy::disallowed_methods))]` repo-wide fix (see that entry). Hit again in this session — `tests/boot.rs` carries an explicit `#![allow(clippy::disallowed_methods)]` as a workaround. A standalone PR touching the ten crates' `lib.rs` files is still the right shape; it has not been filed as a formal task in `TASKS.md` because the fix crosses ten crates and is infrastructure, not feature work. Worth scoping when bandwidth allows.
 
 ---
 
