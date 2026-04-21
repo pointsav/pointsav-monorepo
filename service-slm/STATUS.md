@@ -19,7 +19,7 @@ Status levels:
 | slm-memory-kv | scaffold | 2026-04-20 | Deterministic block hash |
 | slm-memory-adapters | scaffold | 2026-04-20 | Registry YAML parser |
 | slm-inference-local | scaffold | 2026-04-20 | RAM probe + quantisation selector |
-| slm-inference-remote | scaffold | 2026-04-20 | HTTP client + BOOT_* ledger events |
+| slm-inference-remote | alpha | 2026-04-20 | Retry/backoff + JOB_*/TEARDOWN_*/PREEMPTION events |
 | slm-api | alpha | 2026-04-20 | Additional routes as library crates mature |
 | slm-cli | scaffold | 2026-04-20 | Wire subcommands to stubbed crate calls |
 

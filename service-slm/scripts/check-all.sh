@@ -26,8 +26,10 @@ else
 fi
 
 if command -v cargo-deny >/dev/null 2>&1; then
-    echo "→ cargo deny check"
-    cargo deny check
+    # Matches .github/workflows/ci.yml: runs `bans` and `sources` only.
+    # `licenses` and `advisories` are deferred — see TASKS.md [30] and [33].
+    echo "→ cargo deny check bans sources"
+    cargo deny check bans sources
 else
     echo "→ cargo deny check (skipped: not installed; \`cargo install cargo-deny\`)"
 fi

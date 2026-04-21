@@ -88,6 +88,10 @@ license-files = [
 [bans]
 multiple-versions = "warn"
 wildcards = "deny"
+# Workspace path deps (`slm-cli → slm-api`, `slm-ledger → slm-core`, etc.)
+# would otherwise trip the wildcard ban. This setting scopes the ban to
+# external wildcards only, which is the actual policy concern.
+allow-wildcard-paths = true
 highlight = "all"
 workspace-default-features = "allow"
 external-default-features = "allow"
@@ -97,6 +101,19 @@ deny = [
     # mupdf: AGPL-3.0 (SLM-STACK §3.4 explicitly forbids)
     { crate = "mupdf", reason = "AGPL-3.0; use pdfium-render or oxidize-pdf" },
     { crate = "mupdf-rs", reason = "AGPL-3.0; use pdfium-render or oxidize-pdf" },
+    # ─── MSRV chain ────────────────────────────────────────────────────────
+    # Workspace MSRV is 1.85 (Cargo.toml workspace.package.rust-version).
+    # idna_adapter >= 1.2 routes to icu_normalizer >= 2.2, which requires
+    # rustc 1.86. url 2.5.8+ and idna 1.1+ pull idna_adapter 1.2. The
+    # lockfile holds the compatible set (url 2.5.4, idna 1.0.3,
+    # idna_adapter 1.1.0); these bans prevent a future `cargo update` from
+    # walking any of them forward and re-triggering the trap. Precedent:
+    # task [15] in TASKS.md and .claude/rules/cleanup-log.md §2026-04-20.
+    # Remove these three entries only when the workspace MSRV is bumped
+    # to 1.86 via an ADR.
+    { crate = "idna_adapter:>=1.2.0", reason = "transitively requires Rust 1.86; workspace MSRV is 1.85" },
+    { crate = "icu_collections:>=2.2.0", reason = "requires Rust 1.86; workspace MSRV is 1.85" },
+    { crate = "icu_normalizer:>=2.2.0", reason = "requires Rust 1.86; workspace MSRV is 1.85" },
     # openssl-sys pulls in non-vendored OpenSSL by default; prefer rustls.
     # Not a hard ban, but flag to force conscious review:
     # { crate = "openssl-sys", reason = "prefer rustls; discuss in ADR if needed" },

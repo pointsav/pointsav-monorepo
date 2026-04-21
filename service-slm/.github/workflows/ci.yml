@@ -81,3 +81,23 @@ jobs:
         uses: fsfe/reuse-action@v3
         with:
           args: --root service-slm lint
+
+  deny:
+    name: cargo-deny (bans + sources)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      # cargo-deny 0.18.3 is the latest release compatible with workspace MSRV
+      # 1.85. 0.19.x requires Rust 1.88. Precompiled binary via taiki-e keeps
+      # the CI job fast (no source build).
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-deny@0.18.3
+      # The `licenses` and `advisories` subcommands are intentionally omitted:
+      # * `licenses`: workspace crates are AGPL-3.0-only; `deny.toml`
+      #   exceptions list is empty. Tracked as follow-up task [30].
+      # * `advisories`: cargo-deny 0.18.3 cannot parse CVSS-4.0 vector
+      #   strings present in recent RUSTSEC advisories; fixed in 0.19.x.
+      #   Tracked as follow-up task [33] (depends on MSRV bump).
+      - run: cargo deny check bans sources

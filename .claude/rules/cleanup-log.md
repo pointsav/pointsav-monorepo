@@ -92,6 +92,19 @@ Newest on top. Append a dated block when a session includes meaningful cleanup w
 
 ---
 
+## 2026-04-20 — service-slm: slm-inference-remote boot+ledger lands (task [20])
+
+- First real implementation in `slm-inference-remote`. Crate moves scaffold → alpha. `RemoteInferenceClient::boot(&mut LedgerWriter)` probes `/healthz` and emits `BOOT_REQUEST` + `BOOT_COMPLETE` rows with `completion_status` / `error_code` populated correctly on success and on failure. Two wiremock-driven integration tests cover happy path (200 + `node_id`) and transport failure (503 → `error_code=HTTP_503`). Scaffold placeholder removed from `lib.rs`; `tests/smoke.rs` deleted. Error surface is `RemoteInferenceError` with a `ledger_code()` helper producing stable strings.
+- **MSRV trap resolved:** `reqwest` pulls `url → idna → idna_adapter → icu_normalizer`; `idna_adapter 1.2+` routes to `icu_normalizer 2.2+` which requires Rust 1.86 (workspace MSRV is 1.85). Separately, `wiremock 0.6.3+` uses let-chains (Rust 1.88). Fixed with four precise lockfile pins (`url=2.5.4`, `idna=1.0.3`, `idna_adapter=1.1.0`, `wiremock=0.6.2`) **plus** three `cargo-deny` ban rules with version ranges (`idna_adapter:>=1.2.0`, `icu_collections:>=2.2.0`, `icu_normalizer:>=2.2.0`) so that `cargo update` cannot walk the tree forward and silently re-trigger the trap. The `wiremock` pin is exact-pinned with `=0.6.2` in `[workspace.dependencies]`. Rules reference each other in the comments so future maintainers find the full context from any one entry point. Precedent: task [15] `validator` removal (same MSRV chain, different surface).
+- **`cargo-deny` wired into CI for the first time.** New `deny` job in `.github/workflows/ci.yml` uses `taiki-e/install-action@v2` to pull `cargo-deny@0.18.3` (0.19.x requires Rust 1.88). Runs `cargo deny check bans sources` only. `deny.toml` gained `allow-wildcard-paths = true` under `[bans]` — without it, workspace path deps (`slm-cli → slm-api`, etc.) tripped the external-wildcard ban. `scripts/check-all.sh` aligned to match CI (was running all subcommands and would have failed on the two deferred checks).
+- **Two `cargo-deny` checks intentionally deferred**, tracked as explicit follow-up tasks:
+  - **[30]** — `licenses` subcommand fails because 10 workspace crates declare `license = "AGPL-3.0-only"` (ADR-0003) but `deny.toml [licenses].exceptions` is empty. Fix is to add a bounded exception row per workspace crate. Preserves the SLM-STACK §7 "We Own It" discipline for all non-workspace deps.
+  - **[33]** — `advisories` subcommand fails because `cargo-deny 0.18.3` cannot parse CVSS-4.0 vector strings present in recent RUSTSEC advisories. Fixed in `0.19.x` but that requires Rust 1.88. Lifts naturally on the next MSRV bump.
+- **Two follow-up work items surfaced and added** to `TASKS.md` for the crate's next-wave work: **[25]** retry + exponential-backoff policy (crate CLAUDE.md invariant 3) and **[26]** `JOB_*` / `TEARDOWN_*` / `PREEMPTION` events (remaining YOYO-COMPUTE §5 event types; `TEARDOWN_COMPLETE` also needs Cloud Run billing-API integration for `gpu_seconds` + `cost_usd`).
+- No monorepo-wide renames or deprecations touched.
+
+---
+
 ## 2026-04-20 — service-slm: realigned to AGPL-3.0-only + CLA (task [2])
 
 - Licence flip EUPL-1.2 → AGPL-3.0-only per `factory-release-engineering/README.md §3` canonical mapping for `service-*` repos. 56 files' SPDX headers swept; `LICENSE` replaced with verbatim FSF AGPL-3.0 text from `factory-release-engineering/licenses/AGPL-3.0.txt`; REUSE plumbing (`LICENSES/`, `.reuse/dep5`) updated; `docs/adr/0003` renamed `0003-eupl-for-own-code` → `0003-agpl3-for-own-code` and rewritten with editor's-note block removed; `Cargo.toml` workspace `license` field flipped; `CLAUDE.md` Invariant 1 updated.
