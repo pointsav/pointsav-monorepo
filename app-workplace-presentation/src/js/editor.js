@@ -35,6 +35,8 @@
     dirty: false,
   };
 
+  let _viewDropdownAnchor = null;
+
   function start() {
     if (!window.PresentationSchema || !window.PresentationCanvas) {
       console.error('[editor] schema.js and canvas.js must load before editor.js');
@@ -44,8 +46,66 @@
     state.activeSlide = 0;
     state.dirty       = false;
 
+    setupMenubar();
     renderAll();
     window.addEventListener('keydown', onKeyDown);
+  }
+
+  function setupMenubar() {
+    var btns = document.querySelectorAll('#menubar .menu-item');
+    for (var i = 0; i < btns.length; i++) {
+      if (btns[i].textContent.trim() === 'View') {
+        btns[i].addEventListener('click', onViewMenuClick);
+      }
+    }
+  }
+
+  function onViewMenuClick(e) {
+    openViewDropdown(e.currentTarget);
+  }
+
+  function openViewDropdown(anchor) {
+    closeViewDropdown();
+    var rect = anchor.getBoundingClientRect();
+
+    var overlay = document.createElement('div');
+    overlay.id = 'dropdown-overlay';
+    overlay.addEventListener('mousedown', closeViewDropdown);
+
+    var menu = document.createElement('div');
+    menu.className = 'dropdown';
+    menu.id = 'view-dropdown';
+    menu.style.left = rect.left + 'px';
+    menu.style.top  = (rect.bottom + 2) + 'px';
+
+    var codeViewEl = document.getElementById('code-view');
+    var codeViewOpen = codeViewEl && codeViewEl.classList.contains('open');
+
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.textContent = (codeViewOpen ? '✓  ' : '    ') + 'Split Code View';
+    btn.addEventListener('click', function () {
+      closeViewDropdown();
+      if (window.PresentationCodeView) window.PresentationCodeView.toggle();
+    });
+
+    menu.appendChild(btn);
+    document.body.appendChild(overlay);
+    document.body.appendChild(menu);
+
+    anchor.classList.add('open');
+    _viewDropdownAnchor = anchor;
+  }
+
+  function closeViewDropdown() {
+    var overlay = document.getElementById('dropdown-overlay');
+    if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay);
+    var menu = document.getElementById('view-dropdown');
+    if (menu && menu.parentNode) menu.parentNode.removeChild(menu);
+    if (_viewDropdownAnchor) {
+      _viewDropdownAnchor.classList.remove('open');
+      _viewDropdownAnchor = null;
+    }
   }
 
   function insertTextBox(x, y) {
@@ -152,6 +212,9 @@
     if (window.PresentationNavigator) {
       window.PresentationNavigator.render(state);
     }
+    if (window.PresentationCodeView) {
+      window.PresentationCodeView.render(state);
+    }
     updateStatusBar();
   }
 
@@ -192,6 +255,13 @@
     if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'd') {
       e.preventDefault();
       duplicateSlide(state.activeSlide);
+      return;
+    }
+
+    // Ctrl+/ — toggle split code view (Phase 4)
+    if ((e.ctrlKey || e.metaKey) && e.key === '/') {
+      e.preventDefault();
+      if (window.PresentationCodeView) window.PresentationCodeView.toggle();
       return;
     }
 

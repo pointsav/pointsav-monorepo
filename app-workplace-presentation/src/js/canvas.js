@@ -110,6 +110,9 @@
         window.PresentationEditor.markDirty();
       }
     }
+    if (window.PresentationCodeView && currentState) {
+      window.PresentationCodeView.notifyElementCommit(currentState);
+    }
   }
 
   function fit() {

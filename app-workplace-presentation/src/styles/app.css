@@ -256,8 +256,7 @@ html, body {
   border-left: 1px solid var(--chrome-border);
   overflow: hidden;
   display: flex;
-  align-items: center;
-  justify-content: center;
+  flex-direction: column;
   color: var(--chrome-text-dim);
   font-size: var(--ui-size);
 }
@@ -265,6 +264,33 @@ html, body {
 #code-view.open {
   width: 50%;
   min-width: 280px;
+  overflow: hidden;
+}
+
+.codeview-warning {
+  flex-shrink: 0;
+  background: #7a3c3c;
+  color: #f4d0d0;
+  font-size: var(--ui-size-s);
+  padding: 5px 12px;
+}
+
+.codeview-textarea {
+  flex: 1;
+  width: 100%;
+  background: var(--chrome-bg);
+  color: var(--chrome-text);
+  border: none;
+  resize: none;
+  outline: none;
+  font-family: 'Courier New', 'Menlo', 'Consolas', monospace;
+  font-size: 11px;
+  line-height: 1.5;
+  padding: 12px;
+  tab-size: 2;
+  white-space: pre;
+  overflow-wrap: normal;
+  overflow-x: auto;
   overflow-y: auto;
 }
 
