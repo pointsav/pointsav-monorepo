@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# Copyright (c) 2026 Woodfine Capital Projects Inc.
+#
+# Workspace-local Cargo configuration.
+#
+# This file is committed to the repository so every contributor and CI
+# runner shares the same build environment. User-specific overrides belong
+# in ~/.cargo/config.toml, not here.
+
+[build]
+# Shared target directory for all crates in the workspace. Can be
+# overridden by CARGO_TARGET_DIR environment variable.
+# target-dir = "target"
+
+# If sccache is installed, it will be used automatically. See
+# docs/dev-guide/local-toolchain.md for setup.
+# rustc-wrapper = "sccache"
+
+[net]
+git-fetch-with-cli = true
+
+[registries.crates-io]
+protocol = "sparse"
+
+# Per-target linker tweaks for faster link times in development.
+[target.x86_64-unknown-linux-gnu]
+# Uncomment if lld is installed and preferred:
+# linker = "clang"
+# rustflags = ["-C", "link-arg=-fuse-ld=lld"]
+
+[target.aarch64-apple-darwin]
+# rustflags = ["-C", "link-arg=-fuse-ld=/opt/homebrew/opt/llvm/bin/ld64.lld"]
+
+# Convenience aliases. Invoke as `cargo xtask`, `cargo check-all`, etc.
+[alias]
+xtask = "run --package xtask --"
+check-all = "check --workspace --all-targets --all-features"
+test-all  = "test  --workspace --all-features"

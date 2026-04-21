@@ -1,0 +1,22 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# Copyright (c) 2026 Woodfine Capital Projects Inc.
+#
+# rustfmt configuration. Kept intentionally minimal: we follow the community
+# default style with small, justified deviations only.
+
+edition = "2021"
+max_width = 100
+hard_tabs = false
+tab_spaces = 4
+newline_style = "Unix"
+use_field_init_shorthand = true
+use_try_shorthand = true
+
+# Import grouping: std first, then external, then workspace.
+imports_granularity = "Crate"
+group_imports = "StdExternalCrate"
+
+# Format code in doc comments.
+format_code_in_doc_comments = true
+format_macro_matchers = true
+format_strings = false

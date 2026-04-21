@@ -92,6 +92,29 @@ Newest on top. Append a dated block when a session includes meaningful cleanup w
 
 ---
 
+## 2026-04-20 — service-slm: realigned to AGPL-3.0-only + CLA (task [2])
+
+- Licence flip EUPL-1.2 → AGPL-3.0-only per `factory-release-engineering/README.md §3` canonical mapping for `service-*` repos. 56 files' SPDX headers swept; `LICENSE` replaced with verbatim FSF AGPL-3.0 text from `factory-release-engineering/licenses/AGPL-3.0.txt`; REUSE plumbing (`LICENSES/`, `.reuse/dep5`) updated; `docs/adr/0003` renamed `0003-eupl-for-own-code` → `0003-agpl3-for-own-code` and rewritten with editor's-note block removed; `Cargo.toml` workspace `license` field flipped; `CLAUDE.md` Invariant 1 updated.
+- Contribution certification flipped DCO → CLA per `factory-release-engineering/README.md §2` policy for AGPLv3 repos. `CLAUDE.md` Invariant 4 updated; CI `dco:` job removed from `.github/workflows/ci.yml`; PR template DCO checkbox → CLA checkbox; `CONTRIBUTING.md` workflow step 5 rewritten; `scripts/bootstrap.sh` DCO git-hook installation removed.
+- Root-level `SLM-STACK.md` and `YOYO-COMPUTE.md` duplicates deleted (orphans with no references; `specs/` copies remain canonical and read-only).
+- `NOTICE` edited manually by Peter (the `.claude/settings.json` `deny` list has `Edit(NOTICE)` as a legal-review guardrail; guardrail preserved).
+- **Future cleanup surfaced (track in next sessions):**
+  - `specs/SLM-STACK.md` lines 279 (DCO guidance) and 413 (D45 Apache-2.0 + DCO decision record) still reference pre-alignment state. Per CLAUDE.md invariant, `specs/` is read-only; fix at monorepo master per Q1(A+B) decision and re-copy to `service-slm/specs/`. Target: supersession markers pointing to ADR-0003 and `factory-release-engineering/README.md §3`.
+  - CLA Assistant tooling activation on GitHub depends on `factory-release-engineering/cla/cla-assistant-config.yml` shipping (factory-release-engineering §4 Phase 7). Until then, documented CLA policy runs ahead of CI enforcement; contributors aren't yet auto-prompted.
+  - `service-slm-PRE-COMMIT-CHECKLIST.md` and `PRE-COMMIT-CHECKLIST.md` have identical content (6068 bytes each). Dedupe or symlink in a follow-up PR.
+  - `.claude/settings.json:37` permission `Bash(git commit --no-sign-off *)` is harmless residue after the DCO flip; remove in a housekeeping PR.
+  - `factory-release-engineering/` `headers/`, `cla/`, `readmes/`, `mapping/`, `scripts/propagate-licenses.sh` artefacts don't exist yet; when they ship, re-verify service-slm against the canonical artefacts and align where needed.
+
+---
+
+## 2026-04-20 — service-slm: slm-core ModuleId lands (task [10])
+
+- First real implementation in service-slm. `slm-core` moves scaffold → alpha: `ModuleId` newtype with validation, `Display`/`FromStr`, serde round-trip, 17 tests. Placeholder `__scaffold_placeholder` removed from `crates/slm-core/src/lib.rs`.
+- **New open question surfaced (project config):** `service-slm/clippy.toml` has a comment saying `.unwrap()`/`.expect()` are disallowed "outside tests," but clippy's `disallowed-methods` config has no test-scoping mechanism. The lint fires against `--all-targets`. Worked around locally by adding `#[allow(clippy::disallowed_methods)]` at two test sites. Proposed follow-up: add `#![cfg_attr(test, allow(clippy::disallowed_methods))]` at each crate's `lib.rs` in a separate PR rather than annotating every test file — touches ~10 crates and belongs in its own change.
+- No monorepo-wide renames or deprecations touched.
+
+---
+
 ## 2026-04-18 — Layer 1 structural audit — findings
 
 - **Headline finding:** Workspace `Cargo.toml` declares only 8 of ~70+ crates as members. Everything else is treated as standalone workspaces, which explains the 23 stray `Cargo.lock` files scattered through the repo. `cargo build --workspace` will skip almost everything; profile/edition inheritance is not reaching most crates.
