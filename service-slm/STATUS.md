@@ -12,7 +12,7 @@ Status levels:
 
 | Crate | Status | Last touched | Next milestone |
 |---|---|---|---|
-| slm-core | scaffold | 2026-04-20 | ModuleId newtype + serde tests |
+| slm-core | alpha | 2026-04-20 | Shared Error type + RF2 envelope |
 | slm-doorman | scaffold | 2026-04-20 | SanitisationPolicy type + pass-through |
 | slm-ledger | scaffold | 2026-04-20 | Event struct with 10 variants |
 | slm-compute | scaffold | 2026-04-20 | Parse compute/manifest.yaml |

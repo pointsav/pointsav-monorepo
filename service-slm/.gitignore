@@ -1,0 +1,48 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# Copyright (c) 2026 Woodfine Capital Projects Inc.
+
+# Rust
+/target/
+**/*.rs.bk
+Cargo.lock.bak
+
+# IDEs and editors
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Env and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets/
+
+# Build outputs and SBOMs (generated at release time into /dist)
+/dist/
+*.sbom.json
+*.bundle
+
+# Local sccache
+.sccache/
+
+# Python venvs that may appear during tooling or local experiments
+.venv/
+__pycache__/
+*.pyc
+
+# Per-developer notes
+NOTES.local.md
+TODO.local.md
+
+# Coverage
+/coverage/
+*.profraw
+tarpaulin-report.html
+
+# Claude Code local state
+.claude/local.json

@@ -1,0 +1,53 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# Copyright (c) 2026 Woodfine Capital Projects Inc.
+
+[package]
+name = "slm-cli"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "Operator CLI and the single binary produced by the service-slm workspace."
+readme = "README.md"
+publish = false
+
+[[bin]]
+name = "slm-cli"
+path = "src/main.rs"
+
+[lints.rust]
+unsafe_code = "forbid"
+missing_docs = "warn"
+
+[lints.clippy]
+all = { level = "warn", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
+module_name_repetitions = "allow"
+
+[dependencies]
+# End-user CLI: anyhow is acceptable here per CONTRIBUTING.md because error
+# messages are consumed by humans, not by programmatic callers.
+anyhow.workspace = true
+clap.workspace = true
+tokio = { workspace = true, features = ["rt-multi-thread", "macros", "signal"] }
+tracing.workspace = true
+tracing-subscriber.workspace = true
+
+# All workspace library crates live here. As each ships real functionality,
+# the CLI gains new subcommands.
+slm-core = { path = "../slm-core" }
+slm-doorman = { path = "../slm-doorman" }
+slm-ledger = { path = "../slm-ledger" }
+slm-compute = { path = "../slm-compute" }
+slm-memory-kv = { path = "../slm-memory-kv" }
+slm-memory-adapters = { path = "../slm-memory-adapters" }
+slm-inference-local = { path = "../slm-inference-local" }
+slm-inference-remote = { path = "../slm-inference-remote" }
+slm-api = { path = "../slm-api" }
+
+[dev-dependencies]
+assert_cmd = "2"
+predicates = "3"

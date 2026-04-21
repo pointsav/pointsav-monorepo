@@ -68,12 +68,13 @@ opusplan-enabled variant) in your shell before launching `claude`.
 - Note: Merged audit-layer-1-findings to main on 2026-04-20. CI verified green: fmt, clippy, test, audit, deny all pass.
 
 ### [2] Peter rewrites ADR-0003 rationale
-- Status: open
+- Status: done
 - Priority: p0
 - Crate: docs
 - Model: human
 - Context: ADR-0003 ships with placeholder reasoning per the build-session discussion. Rewrite §Rationale to reflect Woodfine's actual organisational rationale. This is content only Peter can author.
 - Acceptance: Editor's note removed; rationale reflects real org reasoning; PR merged.
+- Note: Resolved 2026-04-20 as part of broader AGPL-3.0 alignment per `factory-release-engineering/README.md §3`. ADR renamed to `0003-agpl3-for-own-code.md` with full rewrite (jurisdictional-neutrality bullet dropped; AGPL §13 network-use and §11 patent-grant references substituted; follow-up bullets reference CLA Assistant). Editor's-note block and placeholder status qualifier both removed. Same commit flipped contribution certification DCO → CLA per `factory-release-engineering/README.md §2`.
 
 ### [3] Pin workspace dependency versions for Phase 2
 - Status: done
@@ -89,12 +90,13 @@ opusplan-enabled variant) in your shell before launching `claude`.
 ## P1 — First crate implementations
 
 ### [10] slm-core: ModuleId newtype
-- Status: open
+- Status: done
 - Priority: p1
 - Crate: slm-core
 - Model: opusplan
 - Context: Foundation for every other crate. Validation per YOYO-COMPUTE §6. Must round-trip through serde and be usable as a HashMap key.
 - Acceptance: `ModuleId::new(&str) -> Result<Self, Error>` with validation, `Display`/`FromStr`, serde round-trip, property tests.
+- Note: Landed 2026-04-20. DNS-label grammar `[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?`, ASCII lowercase + digits + internal hyphens, 1–63 bytes. `ModuleIdError` is a dedicated enum in `slm-core::module_id`; the shared `Error` is deferred until a consumer needs it. 12 unit tests + 4 proptest cases + 1 integration smoke test; full `./scripts/check-all.sh` green.
 
 ### [11] slm-ledger: Event struct with all 10 variants
 - Status: open
