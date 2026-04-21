@@ -148,10 +148,13 @@ opusplan-enabled variant) in your shell before launching `claude`.
 ## P2 — Second wave
 
 ### [20] slm-inference-remote: HTTP client skeleton + BOOT_* events
-- Status: open
+- Status: done
 - Priority: p2
 - Crate: slm-inference-remote
 - Model: opusplan
+- Context: First real implementation in `slm-inference-remote`. Drive the Cloud Run `/healthz` boot probe with `reqwest`, emit `BOOT_REQUEST` / `BOOT_COMPLETE` via `slm-ledger`, and thread the `ModuleId` through both rows per YOYO-COMPUTE §5/§6. Retry policy and `JOB_*`/`TEARDOWN_*` events deferred to [25]/[26].
+- Acceptance: `RemoteInferenceClient::boot(&mut LedgerWriter)` returns `Ok(NodeHandle)` on 2xx `/healthz` with `node_id` populated, returns `Err(RemoteStatus)` on non-success with `BOOT_COMPLETE` recorded as `FAILED` + `error_code = HTTP_<status>`; wiremock-driven integration tests cover both paths; `cargo clippy --all-targets -- -D warnings` clean.
+- Note: Landed 2026-04-20. `RemoteInferenceConfig` validates URL scheme is http/https; `RemoteInferenceError::ledger_code()` maps variants to stable strings (`HTTP_TRANSPORT`, `HTTP_<status>`, `LEDGER_FAILURE`, `CONFIG_ERROR`). MSRV trap resolved with lockfile pins (`url=2.5.4`, `idna=1.0.3`, `idna_adapter=1.1.0`, `wiremock=0.6.2`) + `cargo-deny` bans preventing forward walk. CI gained `deny` job running `bans sources` (`licenses` and `advisories` deferred to [30]/[33]). `scripts/check-all.sh` aligned. Two wiremock-driven integration tests green; full `check-all.sh` green.
 
 ### [21] slm-memory-kv: deterministic block hash
 - Status: open
@@ -178,6 +181,38 @@ opusplan-enabled variant) in your shell before launching `claude`.
 - Crate: slm-cli
 - Model: sonnet
 - Context: CLI wiring is mechanical once the library crate is alpha-ready.
+
+### [25] slm-inference-remote: retry + exponential-backoff policy
+- Status: open
+- Priority: p2
+- Crate: slm-inference-remote
+- Model: opusplan
+- Context: Crate CLAUDE.md invariant 3: retries bounded at 5 attempts by default, configurable; exhausted retries are hard failures. Apply to the boot probe and to future `JOB_*` calls. Candidate dep: `backoff` (already in `[workspace.dependencies]`).
+- Acceptance: `RetryPolicy` type with configurable attempt ceiling; `boot()` retries transport errors (not 4xx); ledger still emits exactly one `BOOT_REQUEST` + one `BOOT_COMPLETE` (successful attempt or final failure); integration test proves exhaustion returns `Err` and does not duplicate rows.
+
+### [26] slm-inference-remote: JOB_* / TEARDOWN_* / PREEMPTION events
+- Status: open
+- Priority: p2
+- Crate: slm-inference-remote
+- Model: opusplan
+- Context: Extend the client beyond boot to cover the rest of the YOYO-COMPUTE §5 event set. `TEARDOWN_COMPLETE` carries `gpu_seconds` + `cost_usd` pulled from the Cloud Run billing API per crate CLAUDE.md invariant 2.
+- Acceptance: `job_start` / `job_complete` / `teardown` / handler for preemption signals, each writing the matching ledger row with `node_id`, `job_id`, and cost fields populated; integration tests cover happy path + preemption mid-job.
+
+### [30] deny.toml: add AGPL-3.0-only exception for workspace crates
+- Status: open
+- Priority: p2
+- Crate: workspace
+- Model: sonnet
+- Context: Surfaced by task [20]. `cargo-deny check licenses` currently fails because the 10 workspace crates declare `license = "AGPL-3.0-only"` (ADR-0003) but `deny.toml [licenses].exceptions` is empty. CI only runs `bans sources` as a workaround. Add one `{ allow = ["AGPL-3.0-only"], crate = "<name>" }` row per workspace member, then re-enable the `licenses` subcommand in `.github/workflows/ci.yml` and `scripts/check-all.sh`.
+- Acceptance: `cargo deny check licenses` passes locally and in CI; the AGPL-3.0-only exception is bounded to workspace-internal crates only (no upstream leakage); SLM-STACK §7 "We Own It" discipline preserved for all non-workspace deps.
+
+### [33] cargo-deny: bump to 0.19.x on MSRV ≥ 1.88
+- Status: open
+- Priority: p2
+- Crate: workspace
+- Model: haiku
+- Context: Surfaced by task [20]. `cargo-deny 0.18.3` (current pin in CI + local install) cannot parse CVSS-4.0 vector strings in recent RUSTSEC advisories; fix shipped in `0.19.x` but requires Rust 1.88. Depends on a prior MSRV bump ADR. Once MSRV ≥ 1.88, bump the `taiki-e/install-action` pin in `.github/workflows/ci.yml` and re-enable the `advisories` subcommand there and in `scripts/check-all.sh`.
+- Acceptance: `cargo deny check advisories` passes locally and in CI; RUSTSEC advisories with CVSS-4.0 vectors no longer error; MSRV chain bans in `deny.toml` (`idna_adapter`, `icu_collections`, `icu_normalizer`) reviewed for continued necessity.
 
 ---
 

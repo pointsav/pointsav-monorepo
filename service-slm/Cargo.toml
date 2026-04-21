@@ -118,6 +118,12 @@ tokio-test = "0.4"
 proptest = "1.5"
 tempfile = "3.12"
 insta = { version = "1.41", features = ["yaml", "json"] }
+# wiremock: exact-pinned to 0.6.2. Versions 0.6.3+ use `if let … && let …`
+# let-chains, which were stabilised in Rust 1.88; workspace MSRV is 1.85.
+# See `deny.toml` [bans] for the matching enforcement rule on the
+# idna_adapter/icu_* MSRV chain this crate's deps also touch, and
+# `.claude/rules/cleanup-log.md` §2026-04-20 for precedent on the same trap.
+wiremock = "=0.6.2"
 
 [profile.dev]
 opt-level = 0
