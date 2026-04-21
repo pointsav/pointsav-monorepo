@@ -1483,6 +1483,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "assert_cmd",
+ "chrono",
  "clap",
  "predicates",
  "slm-api",
@@ -1494,6 +1495,7 @@ dependencies = [
  "slm-ledger",
  "slm-memory-adapters",
  "slm-memory-kv",
+ "tempfile",
  "tokio",
  "tracing",
  "tracing-subscriber",

@@ -177,11 +177,12 @@ opusplan-enabled variant) in your shell before launching `claude`.
 - Model: opusplan
 
 ### [24] slm-cli: wire `slm-cli ledger tail` to slm-ledger
-- Status: open
+- Status: done
 - Priority: p2
 - Crate: slm-cli
 - Model: sonnet
 - Context: CLI wiring is mechanical once the library crate is alpha-ready.
+- Note: Landed 2026-04-21. `slm_ledger::tail_events(path, n)` added to slm-ledger (`reader.rs`); reads entire CSV and returns trailing `n` rows. `Ledger` command gained `--path` / `SLM_LEDGER_PATH` argument shared by `tail` and `export`. `tail` arm prints one line per event with timestamp, event_type, module_id, node_id, job_id, completion_status. 4 integration tests via `assert_cmd`; `check-all.sh` green.
 
 ### [25] slm-inference-remote: retry + exponential-backoff policy
 - Status: open

@@ -21,7 +21,7 @@ Status levels:
 | slm-inference-local | scaffold | 2026-04-20 | RAM probe + quantisation selector |
 | slm-inference-remote | alpha | 2026-04-20 | Retry/backoff + JOB_*/TEARDOWN_*/PREEMPTION events |
 | slm-api | alpha | 2026-04-20 | Additional routes as library crates mature |
-| slm-cli | scaffold | 2026-04-20 | Wire subcommands to stubbed crate calls |
+| slm-cli | alpha | 2026-04-21 | Wire remaining subcommands as library crates mature |
 
 ## Workspace-level checks
 

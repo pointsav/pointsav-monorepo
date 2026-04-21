@@ -32,9 +32,11 @@
 mod error;
 mod event;
 mod event_type;
+mod reader;
 mod writer;
 
 pub use error::LedgerError;
 pub use event::Event;
 pub use event_type::{EventType, EventTypeParseError};
+pub use reader::tail as tail_events;
 pub use writer::LedgerWriter;
