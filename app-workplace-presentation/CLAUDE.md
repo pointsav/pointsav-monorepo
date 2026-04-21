@@ -1,8 +1,8 @@
 # CLAUDE.md — Workplace✦Presentation
 
 > Project memory for Claude Code. Auto-loads on every session launch from this repo root.
-> Last updated: 2026-04-20
-> Current phase: Phase 3 — slide navigator (see NEXT.md for the commission prompt)
+> Last updated: 2026-04-21
+> Current phase: Phase 4 — split-screen code view (see NEXT.md for the commission prompt)
 
 ---
 
