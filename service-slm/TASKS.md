@@ -99,44 +99,49 @@ opusplan-enabled variant) in your shell before launching `claude`.
 - Note: Landed 2026-04-20. DNS-label grammar `[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?`, ASCII lowercase + digits + internal hyphens, 1–63 bytes. `ModuleIdError` is a dedicated enum in `slm-core::module_id`; the shared `Error` is deferred until a consumer needs it. 12 unit tests + 4 proptest cases + 1 integration smoke test; full `./scripts/check-all.sh` green.
 
 ### [11] slm-ledger: Event struct with all 10 variants
-- Status: open
+- Status: done
 - Priority: p1
 - Crate: slm-ledger
 - Model: opusplan
 - Context: Schema is specified in YOYO-COMPUTE §5. Build the typed enum first; append-only writer comes next.
 - Acceptance: All 10 event_type variants represented as enum; CSV round-trip tested; column order matches spec.
+- Note: Landed 2026-04-20. `EventType` enum with 10 SCREAMING_SNAKE_CASE variants (Display + FromStr + serde); `Event` struct with 15 fields in spec column order (`moduleId` serde rename preserved); `csv` crate (MIT) added as dep; 17 unit tests + 2 integration tests; `check-all.sh` green.
 
 ### [12] slm-doorman: SanitisationPolicy type + pass-through impl
-- Status: open
+- Status: done
 - Priority: p1
 - Crate: slm-doorman
 - Model: opusplan
 - Context: The type that defines which fields are stripped. A pass-through implementation (strips nothing) is fine for the first iteration; property test the round-trip.
 - Acceptance: `SanitisationPolicy` trait + `NoOp` impl + property test that sanitise ∘ rehydrate = identity.
+- Note: Landed 2026-04-20. `SanitisationError` enum (`Refused`, `Rehydration`); `SanitisationPolicy` trait with `Payload` and `Context` associated types; `NoOp` impl (`Payload = String`, `Context = ()`); proptest on identity property + 3 deterministic unit tests + 2 integration tests; `check-all.sh` green.
 
 ### [13] slm-ledger: append-only CSV writer with fsync
-- Status: open
+- Status: done
 - Priority: p1
 - Crate: slm-ledger
 - Model: opusplan
 - Context: Follows [11]. Crash-safe writer with fsync on commit. Durability semantics are subtle; `opusplan` ensures the plan phase thinks carefully before code generation begins.
 - Acceptance: Writer integration test that kills the process between write and sync and proves no row loss.
+- Note: Landed 2026-04-20. `LedgerWriter::open()` checks file length to suppress duplicate headers on reopen; `append()` sequence is serialize → flush → sync_all(); `LedgerError` wraps `io::Error` and `csv::Error`. Two integration tests: `data_is_durable_after_each_append` (reads via fresh file handle after each append, then drops writer mid-session) and `reopen_does_not_duplicate_header`. `check-all.sh` green.
 
 ### [14] slm-api: router skeleton with /health
-- Status: open
+- Status: done
 - Priority: p1
 - Crate: slm-api
 - Model: sonnet
 - Context: Thinnest possible axum server, to be expanded as other crates ship. Mostly boilerplate; minimal planning needed.
 - Acceptance: `/health` returns 200; tower tracing layer installed; unit test via `tower::ServiceExt`.
+- Note: Landed 2026-04-20. `router()` returns axum `Router` with `GET /health` → `StatusCode::OK` and `tower_http::trace::TraceLayer`; two `ServiceExt::oneshot` integration tests (`health_returns_200`, `unknown_route_returns_404`); `check-all.sh` green.
 
 ### [15] slm-compute: parse compute/manifest.yaml
-- Status: open
+- Status: done
 - Priority: p1
 - Crate: slm-compute
 - Model: opusplan
 - Context: Typed `ComputeManifest` with `validator` rules. Input format spec is YOYO-COMPUTE §2.
 - Acceptance: YAML round-trip; validator rejects malformed input with clear error messages.
+- Note: Landed 2026-04-20. `validator` crate removed after MSRV conflict (transitively required Rust 1.86 via `icu_collections@2.2.0`; workspace pins 1.85). Manual validation via `validate_fields()` used instead — produces `ManifestError::InvalidField(String)` and `ManifestError::InvalidRange(String)` with clear messages. `GpuTier::RtxPro6000` carries explicit `#[serde(rename = "rtx_pro_6000")]` because serde's snake_case does not insert underscore before digits. 8 unit tests + 3 integration tests; `check-all.sh` green.
 
 ---
 

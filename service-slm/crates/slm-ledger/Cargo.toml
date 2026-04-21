@@ -24,10 +24,16 @@ pedantic = { level = "warn", priority = -1 }
 module_name_repetitions = "allow"
 
 [dependencies]
-# Crate-specific dependencies are added as the crate is implemented.
-# Shared workspace dependencies are pulled via `.workspace = true`.
+slm-core = { path = "../slm-core" }
+serde.workspace = true
+chrono.workspace = true
+uuid.workspace = true
+csv = "1.3"
 tracing.workspace = true
 thiserror.workspace = true
 
 [dev-dependencies]
 tokio-test.workspace = true
+serde_json.workspace = true
+proptest.workspace = true
+tempfile.workspace = true
