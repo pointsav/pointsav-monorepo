@@ -1,0 +1,46 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# Copyright (c) 2026 Woodfine Capital Projects Inc.
+
+version: 2
+updates:
+  - package-ecosystem: cargo
+    directory: "/service-slm"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "04:00"
+      timezone: "America/Vancouver"
+    open-pull-requests-limit: 10
+    reviewers:
+      - pwoodfine
+      - jwoodfine
+    labels:
+      - dependencies
+      - rust
+    commit-message:
+      prefix: "deps"
+      include: scope
+    groups:
+      minor-and-patch:
+        applies-to: version-updates
+        update-types:
+          - minor
+          - patch
+
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "04:00"
+      timezone: "America/Vancouver"
+    open-pull-requests-limit: 5
+    reviewers:
+      - pwoodfine
+      - jwoodfine
+    labels:
+      - dependencies
+      - github-actions
+    commit-message:
+      prefix: "ci"
+      include: scope

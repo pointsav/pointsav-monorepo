@@ -1,0 +1,50 @@
+# CODEOWNERS
+#
+# GitHub reads this file to auto-assign reviewers. Matching is last-match-
+# wins and uses the same syntax as .gitignore.
+#
+# The people listed here are the humans of record for each path. They must
+# also appear in MAINTAINERS.md. Do not add a GitHub handle here that is not
+# reflected in MAINTAINERS.md; CODEOWNERS is not where appointments happen —
+# governance is.
+#
+# SPDX-License-Identifier: AGPL-3.0-only
+# Copyright (c) 2026 Woodfine Capital Projects Inc.
+
+# Default owners for everything in this repository.
+* @pwoodfine @jwoodfine
+
+# Specifications are high-friction. Changes require both steward and a
+# second maintainer to review because they propagate across the whole
+# monorepo.
+/specs/                @pwoodfine @jwoodfine
+
+# Architecture decisions follow the ADR process in GOVERNANCE.md §2.2.
+# Listing both maintainers ensures both are auto-requested.
+/docs/adr/             @pwoodfine @jwoodfine
+
+# Governance, licence, security files require steward approval.
+/GOVERNANCE.md         @pwoodfine
+/MAINTAINERS.md        @pwoodfine
+/CODEOWNERS            @pwoodfine
+/LICENSE               @pwoodfine
+/NOTICE                @pwoodfine
+/SECURITY.md           @pwoodfine
+
+# CI, release, supply-chain: steward + any maintainer.
+/.github/              @pwoodfine @jwoodfine
+/deny.toml             @pwoodfine @jwoodfine
+/Cargo.toml            @pwoodfine @jwoodfine
+
+# Per-crate ownership (all maintainers on every crate while the team is
+# small; split this out as the team grows).
+/crates/slm-core/                  @pwoodfine @jwoodfine
+/crates/slm-doorman/               @pwoodfine @jwoodfine
+/crates/slm-ledger/                @pwoodfine @jwoodfine
+/crates/slm-compute/               @pwoodfine @jwoodfine
+/crates/slm-memory-kv/             @pwoodfine @jwoodfine
+/crates/slm-memory-adapters/       @pwoodfine @jwoodfine
+/crates/slm-inference-local/       @pwoodfine @jwoodfine
+/crates/slm-inference-remote/      @pwoodfine @jwoodfine
+/crates/slm-api/                   @pwoodfine @jwoodfine
+/crates/slm-cli/                   @pwoodfine @jwoodfine

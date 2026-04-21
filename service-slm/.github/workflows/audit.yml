@@ -1,0 +1,39 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# Copyright (c) 2026 Woodfine Capital Projects Inc.
+#
+# cargo-audit: check for known CVEs in dependencies.
+# Runs on PRs and on a nightly schedule so new CVEs are caught even
+# when the dependency tree is stable.
+
+name: audit
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "service-slm/Cargo.toml"
+      - "service-slm/Cargo.lock"
+      - "service-slm/crates/**/Cargo.toml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "service-slm/Cargo.toml"
+      - "service-slm/Cargo.lock"
+      - "service-slm/crates/**/Cargo.toml"
+  schedule:
+    # Nightly at 04:17 UTC.
+    - cron: "17 4 * * *"
+
+defaults:
+  run:
+    working-directory: service-slm
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: rustsec/audit-check@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          working-directory: service-slm

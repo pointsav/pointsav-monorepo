@@ -1,0 +1,42 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# Copyright (c) 2026 Woodfine Capital Projects Inc.
+#
+# cargo-deny: enforce the dependency licence allow-list and banned-crate
+# policy from deny.toml. This is the automated guarantee of the "We Own It"
+# discipline from SLM-STACK §7.
+
+name: deny
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "service-slm/Cargo.toml"
+      - "service-slm/Cargo.lock"
+      - "service-slm/deny.toml"
+      - "service-slm/crates/**/Cargo.toml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "service-slm/Cargo.toml"
+      - "service-slm/Cargo.lock"
+      - "service-slm/deny.toml"
+      - "service-slm/crates/**/Cargo.toml"
+
+defaults:
+  run:
+    working-directory: service-slm
+
+jobs:
+  deny:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        check: [advisories, bans, licenses, sources]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: EmbarkStudios/cargo-deny-action@v2
+        with:
+          command: check ${{ matrix.check }}
+          manifest-path: service-slm/Cargo.toml

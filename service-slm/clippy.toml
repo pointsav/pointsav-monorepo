@@ -1,0 +1,34 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# Copyright (c) 2026 Woodfine Capital Projects Inc.
+#
+# clippy configuration.
+#
+# Lint severity is set in each crate's lib.rs or via CI command-line flags:
+# `cargo clippy --all-targets --all-features -- -D warnings`. This file is
+# for lint-specific configuration options.
+
+cognitive-complexity-threshold = 30
+too-many-arguments-threshold = 8
+type-complexity-threshold = 250
+single-char-binding-names-threshold = 4
+
+avoid-breaking-exported-api = true
+
+# Disallow `.unwrap()` and `.expect()` outside tests. The idiomatic pattern
+# is `?` with a typed error. `panic!()` is still allowed for genuinely-
+# unreachable states, which should carry a `// SAFETY:` or `// INVARIANT:`
+# comment explaining why.
+disallowed-methods = [
+    { path = "std::result::Result::unwrap", reason = "use `?` with a typed error" },
+    { path = "std::option::Option::unwrap", reason = "use `?` or `ok_or_else`" },
+    { path = "std::result::Result::expect", reason = "use `?` with a typed error" },
+    { path = "std::option::Option::expect", reason = "use `?` or `ok_or_else`" },
+]
+
+disallowed-macros = [
+    { path = "log::trace", reason = "use `tracing::trace!` per observability policy" },
+    { path = "log::debug", reason = "use `tracing::debug!` per observability policy" },
+    { path = "log::info",  reason = "use `tracing::info!` per observability policy" },
+    { path = "log::warn",  reason = "use `tracing::warn!` per observability policy" },
+    { path = "log::error", reason = "use `tracing::error!` per observability policy" },
+]

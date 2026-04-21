@@ -1,0 +1,26 @@
+service-slm
+Copyright (c) 2026 Woodfine Capital Projects Inc.
+
+This product is licensed under the GNU Affero General Public License, version 3
+(AGPL-3.0-only). See the LICENSE file at the root of this repository for the full
+licence text.
+
+Contact: Peter M. Woodfine, Executive Officer
+         peter@woodfinegroup.com
+         +1 604-375-1196
+
+This product includes software developed by third parties under permissive
+open-source licences (MIT, Apache-2.0, BSD-2-Clause, BSD-3-Clause, ISC,
+Unicode-DFS, MPL-2.0 at the file level, Zlib). A complete list of third-party
+components, their versions, their licences, and their copyright notices is
+generated at build time by `cargo about generate about.hbs` and shipped
+alongside every release as THIRD-PARTY-NOTICES.md. The list is machine-
+verified by `cargo deny check licenses` in CI on every commit per deny.toml.
+
+---
+
+PointSav is a product brand of Woodfine Capital Projects Inc. All trademarks
+used in this repository are the property of their respective owners. Use of
+"PointSav" or "Woodfine" in association with this software is permitted only
+as required for reasonable and customary use in describing the origin of the
+Work.

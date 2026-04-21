@@ -1,0 +1,16 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# Copyright (c) 2026 Woodfine Capital Projects Inc.
+#
+# Pinned Rust toolchain. Bumping this requires a PR and CI pass on the new
+# version across all workspace targets.
+
+[toolchain]
+channel = "1.85.0"
+components = ["rustfmt", "clippy", "rust-src"]
+targets = [
+    "x86_64-unknown-linux-gnu",
+    "aarch64-unknown-linux-gnu",
+    "x86_64-apple-darwin",
+    "aarch64-apple-darwin",
+]
+profile = "minimal"

@@ -1,0 +1,18 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# Copyright (c) 2026 Woodfine Capital Projects Inc.
+
+* text=auto eol=lf
+
+*.rs       text eol=lf diff=rust
+*.toml     text eol=lf
+*.yaml     text eol=lf
+*.yml      text eol=lf
+*.md       text eol=lf
+*.sh       text eol=lf
+*.py       text eol=lf
+
+# Binary file types
+*.png      binary
+*.jpg      binary
+*.pdf      binary
+*.woff2    binary

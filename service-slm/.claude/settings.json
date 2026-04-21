@@ -1,0 +1,45 @@
+{
+  "_comment": [
+    "SPDX-License-Identifier: AGPL-3.0-only",
+    "Copyright (c) 2026 Woodfine Capital Projects Inc.",
+    "",
+    "Claude Code project settings for service-slm.",
+    "This file is version-controlled; per-user overrides live in .claude/local.json,",
+    "which is gitignored."
+  ],
+  "permissions": {
+    "allow": [
+      "Bash(cargo *)",
+      "Bash(git status)",
+      "Bash(git diff *)",
+      "Bash(git log *)",
+      "Bash(git show *)",
+      "Bash(rg *)",
+      "Bash(./scripts/check-all.sh)",
+      "Bash(./scripts/bootstrap.sh)",
+      "Edit(**/*.rs)",
+      "Edit(**/*.toml)",
+      "Edit(**/*.md)",
+      "Edit(**/*.yaml)",
+      "Edit(**/*.yml)",
+      "Edit(STATUS.md)",
+      "Edit(TASKS.md)",
+      "Edit(CHANGELOG.md)"
+    ],
+    "deny": [
+      "Edit(specs/**)",
+      "Edit(LICENSE)",
+      "Edit(NOTICE)",
+      "Edit(CODEOWNERS)",
+      "Edit(GOVERNANCE.md)",
+      "Edit(MAINTAINERS.md)",
+      "Bash(git push *)",
+      "Bash(git commit --no-sign-off *)",
+      "Bash(cargo publish *)",
+      "Bash(rm -rf *)",
+      "Bash(curl *)",
+      "Bash(wget *)"
+    ]
+  },
+  "defaultMode": "plan"
+}

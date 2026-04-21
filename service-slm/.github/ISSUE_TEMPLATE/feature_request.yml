@@ -1,0 +1,28 @@
+name: Feature request
+description: Propose a capability service-slm should have.
+title: "[feat] <short description>"
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        For changes that shape the project beyond a single release, consider
+        an [RFC](../../docs/rfcs/) or [ADR](../../docs/adr/) instead.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+    validations:
+      required: false

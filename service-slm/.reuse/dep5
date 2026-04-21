@@ -1,0 +1,45 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: service-slm
+Upstream-Contact: Peter M. Woodfine <peter@woodfinegroup.com>
+Source: https://github.com/woodfinegroup/pointsav-monorepo
+
+# Files that cannot carry an inline SPDX header either because they are
+# themselves licence texts, or because their format makes an inline
+# comment impractical.
+
+Files: LICENSE NOTICE
+Copyright: 2026 Woodfine Capital Projects Inc.
+License: AGPL-3.0-only
+
+Files: CODEOWNERS
+Copyright: 2026 Woodfine Capital Projects Inc.
+License: AGPL-3.0-only
+
+Files: .cargo/config.toml
+Copyright: 2026 Woodfine Capital Projects Inc.
+License: AGPL-3.0-only
+
+Files: README.md CLAUDE.md AGENTS.md CONTRIBUTING.md CODE_OF_CONDUCT.md SECURITY.md GOVERNANCE.md MAINTAINERS.md STATUS.md TASKS.md ROADMAP.md CHANGELOG.md
+Copyright: 2026 Woodfine Capital Projects Inc.
+License: AGPL-3.0-only
+
+Files: docs/**
+Copyright: 2026 Woodfine Capital Projects Inc.
+License: AGPL-3.0-only
+
+Files: specs/**
+Copyright: 2026 Woodfine Capital Projects Inc.
+License: AGPL-3.0-only
+Comment: Verbatim copies of monorepo-root specifications, maintained as read-only within this repository.
+
+Files: crates/*/README.md crates/*/CLAUDE.md
+Copyright: 2026 Woodfine Capital Projects Inc.
+License: AGPL-3.0-only
+
+Files: .github/**
+Copyright: 2026 Woodfine Capital Projects Inc.
+License: AGPL-3.0-only
+
+Files: .claude/**
+Copyright: 2026 Woodfine Capital Projects Inc.
+License: AGPL-3.0-only

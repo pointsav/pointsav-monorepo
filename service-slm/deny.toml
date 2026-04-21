@@ -1,0 +1,126 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+# Copyright (c) 2026 Woodfine Capital Projects Inc.
+#
+# cargo-deny configuration.
+#
+# This file enforces the "We Own It" licence discipline from SLM-STACK §7:
+# every direct and transitive dependency must be under a permissive OSI
+# licence. Copyleft is blocked at the dependency level even though PointSav's
+# own code is AGPL-3.0-only (see ADR-0003).
+#
+# This file is run by `cargo deny check` in CI on every commit. If the check
+# fails, fix the dependency tree — never the policy.
+
+[graph]
+targets = [
+    { triple = "x86_64-unknown-linux-gnu" },
+    { triple = "aarch64-unknown-linux-gnu" },
+    { triple = "x86_64-apple-darwin" },
+    { triple = "aarch64-apple-darwin" },
+]
+all-features = false
+no-default-features = false
+
+[output]
+feature-depth = 1
+
+# ──────────────────────────────────────────────────────────────────────────
+# Advisory database (CVEs)
+# ──────────────────────────────────────────────────────────────────────────
+[advisories]
+db-path = "~/.cargo/advisory-db"
+db-urls = ["https://github.com/rustsec/advisory-db"]
+ignore = [
+    # List of advisories to ignore, each with an explanation and an
+    # expected re-review date. Leave this empty in the common case; every
+    # entry here is a technical debt marker.
+    # Example:
+    # { id = "RUSTSEC-2024-XXXX", reason = "…", expires = "2026-09-01" },
+]
+
+# ──────────────────────────────────────────────────────────────────────────
+# Licence allow-list
+# ──────────────────────────────────────────────────────────────────────────
+# Per SLM-STACK §7, the allow-list for dependencies is exactly:
+#   MIT, Apache-2.0, BSD-2-Clause, BSD-3-Clause, ISC, Unicode-DFS,
+#   MPL-2.0 (file-level only), Zlib.
+#
+# Everything else is denied. This is intentionally strict.
+[licenses]
+version = 2
+confidence-threshold = 0.92
+allow = [
+    "MIT",
+    "MIT-0",
+    "Apache-2.0",
+    "Apache-2.0 WITH LLVM-exception",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "ISC",
+    "Unicode-DFS-2016",
+    "Unicode-3.0",
+    "MPL-2.0",
+    "Zlib",
+    "CC0-1.0",         # public-domain dedication; narrow use
+    "0BSD",            # equivalent to MIT in effect
+    "Unlicense",       # public-domain style; narrow use
+]
+# The PointSav code in this repository is itself AGPL-3.0-only, but
+# AGPL-3.0-only is explicitly *not* allowed for dependencies — we consume
+# permissive, publish copyleft. This is deliberate per ADR-0003.
+exceptions = [
+    # Example (use sparingly, each exception needs an ADR):
+    # { allow = ["AGPL-3.0-only"], crate = "some-crate-we-author-internally" },
+]
+
+# Crates that are missing SPDX metadata but whose licence is known from
+# upstream inspection. Keep this list near-empty.
+[[licenses.clarify]]
+crate = "ring"
+expression = "ISC AND MIT AND OpenSSL"
+license-files = [
+    { path = "LICENSE", hash = 0xbd0eed23 },
+]
+
+# ──────────────────────────────────────────────────────────────────────────
+# Banned crates
+# ──────────────────────────────────────────────────────────────────────────
+[bans]
+multiple-versions = "warn"
+wildcards = "deny"
+highlight = "all"
+workspace-default-features = "allow"
+external-default-features = "allow"
+
+# Explicitly-banned crates for licence, security, or maintenance reasons.
+deny = [
+    # mupdf: AGPL-3.0 (SLM-STACK §3.4 explicitly forbids)
+    { crate = "mupdf", reason = "AGPL-3.0; use pdfium-render or oxidize-pdf" },
+    { crate = "mupdf-rs", reason = "AGPL-3.0; use pdfium-render or oxidize-pdf" },
+    # openssl-sys pulls in non-vendored OpenSSL by default; prefer rustls.
+    # Not a hard ban, but flag to force conscious review:
+    # { crate = "openssl-sys", reason = "prefer rustls; discuss in ADR if needed" },
+]
+
+skip = [
+    # Allow specific duplicate versions during migrations.
+]
+
+skip-tree = [
+    # Allow whole subtrees of duplicate versions when the upstream chain
+    # has not yet consolidated.
+]
+
+# ──────────────────────────────────────────────────────────────────────────
+# Sources
+# ──────────────────────────────────────────────────────────────────────────
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]
+allow-git = [
+    # Keep this list empty when possible. Every git dependency is technical
+    # debt: it cannot be audited by crates.io, cannot be yanked, and makes
+    # reproducible builds harder. When a git dep is truly necessary, record
+    # the reason in an ADR and add an expiry comment here.
+]
