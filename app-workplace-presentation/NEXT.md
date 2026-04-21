@@ -94,7 +94,7 @@ Claude Code performs the end-of-phase housekeeping above as part of the Phase 3 
 - Verified with `make dev` on Linux Mint 22. Blank US Letter landscape slide renders letterboxed on the dark desktop, click inserts a text box, typing works, Enter commits and then Enter adds a new slide, arrow keys navigate, status bar counter updates.
 - Environment note: needed `source ~/.bashrc` to load nvm and `PKG_CONFIG_PATH` (webkit 4.0→4.1 shim) — the terminal had opened as a login shell and skipped the rc file. Not a project issue; shell-config nuance.
 - One new deferred item logged in CLEANUP_LOG.md: element selection, deletion, and move/resize (post-Phase-7, alongside undo/redo).
-- Not committed this session (skipped by user request).
+- Not committed in the Phase 2 working session per user request; files were subsequently picked up in a manual SYS-SYNC cryptographic ledger sweep (commit ec28a08, 2026-04-20) alongside unrelated service-content-graph and service-slm changes. No standalone `feat(canvas): …` commit exists for Phase 2.
 
 ### 2026-04-19 — Phase 1 complete: shell forked from memo
 - Forked unchanged from app-workplace-memo: `src-tauri/src/main.rs` (four IPC commands), `scripts/download-deps.sh`, `scripts/embed-fonts.sh`, `docs/licence-header.txt`.

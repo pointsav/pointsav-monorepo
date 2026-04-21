@@ -68,6 +68,25 @@
     };
   }
 
+  function cloneSlide(source) {
+    return {
+      id:       uid('sl'),
+      layout:   source.layout,
+      elements: source.elements.map(function (el) {
+        return {
+          id:      uid('el'),
+          type:    el.type,
+          x:       el.x,
+          y:       el.y,
+          width:   el.width,
+          height:  el.height,
+          content: el.content,
+          style:   Object.assign({}, el.style || {}),
+        };
+      }),
+    };
+  }
+
   function newDocument() {
     const now = new Date().toISOString();
     return {
@@ -88,6 +107,7 @@
     CANVAS_LOGICAL_HEIGHT,
     newElement,
     newSlide,
+    cloneSlide,
     newDocument,
   });
 })();
