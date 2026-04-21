@@ -4,36 +4,43 @@
 
 ---
 
-## Immediate — Phase 4: Split-screen code view
+## Immediate — Phase 5: Save as self-contained .html
 
-Phase 3 shipped the slide navigator with live thumbnails, drag-to-reorder, and right-click context menu. Next is the right pane — toggle it open to see and edit the active slide's raw HTML.
+Phase 4 shipped the split-screen code view with blur-driven sync. Next is file save — the output is a single `.html` file that opens standalone in any browser and runs as a slideshow.
 
-### Paste this into Claude Code to start Phase 4:
+### Paste this into Claude Code to start Phase 5:
 
 ```
-Phase 4 task: split-screen code view.
+Phase 5 task: save as self-contained single-file .html
 
-Read CLAUDE.md and ROADMAP.md Phase 4 section.
+Read CLAUDE.md and ROADMAP.md Phase 5 section.
 
-Build src/js/codeview.js per the specification. Wire it into
-src/index.html's right pane.
+Build src/js/export.js per the specification. Wire File → Save and
+File → Save As menu items, plus Ctrl+S and Ctrl+Shift+S.
 
-Toggle mechanism: View menu item "Split Code View" and keyboard
-shortcut Ctrl+/. When active, right pane takes 50% of the horizontal
-space; when inactive, canvas takes 100%.
+Use the existing save_file IPC command in src-tauri/src/main.rs
+unchanged. The JavaScript calls Tauri's invoke('save_file', { path, contents }).
 
-Sync strategy: blur-driven, not keystroke-driven. On canvas element
-blur, regenerate the active slide's HTML string and replace code
-pane contents. On code pane blur, parse contents with
-DOMParser('text/html'), validate it has a single root element,
-replace slide's element DOM if valid, show warning strip if not.
+Embed fonts by reading base64 data from src/js/font-data.js (populated by
+scripts/embed-fonts.sh). Include only fonts actually used in the deck —
+inspect each slide's text elements for font-family, build a set, embed
+that set.
 
-No syntax highlighting in this phase. Ship as plain monospace text
-first. See NEXT.md open decisions for the highlighter question.
+The slideshow runtime in the saved file must be independent of the
+editor. When the file is opened in a browser, only the runtime loads.
+No editor code leaks into the saved artefact.
+
+SHA-256: compute over the <body>...</body> content after final
+assembly, write hash into the meta tag. Use the Web Crypto API
+(crypto.subtle.digest).
+
+Also build src/js/slideshow.js now — a minimal self-contained runtime
+(arrow keys, F for fullscreen, Esc to exit) that export.js inlines
+into the saved file's <script> block. Keep it under ~100 lines.
 
 Ask before deviating from this list.
 
-Commit as: feat(codeview): split-screen HTML source with blur sync
+Commit as: feat(export): save as self-contained single-file .html
 
 ---
 
@@ -43,30 +50,30 @@ When the work above is verified running, perform these file updates
 in a single separate commit before ending the session:
 
 1. CHANGELOG.md — under [Unreleased] → Added, append a bullet for
-   Phase 4 describing what shipped (codeview.js, toggle via View menu
-   and Ctrl+/, blur-driven sync canvas↔code, invalid-HTML warning
-   strip).
+   Phase 5 describing what shipped (export.js, slideshow.js runtime,
+   File → Save / Save As, Ctrl+S / Ctrl+Shift+S, SHA-256 seal,
+   font embedding).
 
-2. NEXT.md — replace the "Immediate — Phase 4" block with the
-   Phase 5 commission prompt from ROADMAP.md (save as self-contained
-   .html). Append the same end-of-phase housekeeping block to that
-   prompt, updated for Phase 5. Move the Phase 4 record into the
-   session log at the bottom with today's date.
+2. NEXT.md — replace the "Immediate — Phase 5" block with the
+   Phase 6 commission prompt from ROADMAP.md (F5 slideshow mode).
+   Append the same end-of-phase housekeeping block to that prompt,
+   updated for Phase 6. Move the Phase 5 record into the session log
+   at the bottom with today's date.
 
 3. CLAUDE.md — update the "Last updated" line at the top to today's
-   date. Update "Current phase" to Phase 5. No other changes.
+   date. Update "Current phase" to Phase 6. No other changes.
 
 4. Commit the doc updates as:
-   docs: update tracking for Phase 4 completion
+   docs: update tracking for Phase 5 completion
 
 Ask before deviating from this list.
 ```
 
 ---
 
-## After Phase 4 is verified running
+## After Phase 5 is verified running
 
-Claude Code performs the end-of-phase housekeeping above as part of the Phase 4 session. This file will already contain the Phase 5 commission prompt when the next session begins — no manual edit required.
+Claude Code performs the end-of-phase housekeeping above as part of the Phase 5 session. This file will already contain the Phase 6 commission prompt when the next session begins — no manual edit required.
 
 ---
 
@@ -88,6 +95,14 @@ Claude Code performs the end-of-phase housekeeping above as part of the Phase 4 
 ---
 
 ## Session log
+
+### 2026-04-21 — Phase 4 complete: split-screen code view
+- Added `src/js/codeview.js`: right pane renders the active slide serialised as `<section class="slide">` HTML in a monospace textarea. Toggle via View menu → Split Code View or Ctrl+/. Canvas refit triggered via `window.dispatchEvent(new Event('resize'))` on toggle.
+- Canvas → code sync: `canvas.js commitElement()` calls `PresentationCodeView.notifyElementCommit(currentState)` after any element blur. Code view refreshes unless textarea has focus.
+- Code → canvas sync: textarea blur runs `DOMParser('text/html')`, validates single `<section>` root and only `ELEMENT_NODE` children. On valid parse, replaces `slide.elements`, calls `markDirty()`, re-renders canvas and navigator. On invalid parse, shows warning strip and discards edit.
+- `editor.js` gains View menu dropdown (opened on View button click) with a checkmark toggling "Split Code View", and Ctrl+/ shortcut. `renderAll()` now calls `PresentationCodeView.render(state)`.
+- CSS adds `.codeview-warning` (dark red strip) and `.codeview-textarea` (monospace, full-height flex). `#code-view` changed to `flex-direction: column`.
+- Committed as: `feat(codeview): split-screen HTML source with blur sync` (0a32e7b).
 
 ### 2026-04-21 — Phase 3 complete: slide navigator
 - Added `src/js/slides.js`: live thumbnail navigator in the left pane. Thumbnails rendered from the document model at 0.145× scale via CSS transform (no separate thumbnail DOM). Click-to-jump, native HTML5 drag-and-drop reorder (no library), right-click context menu (Duplicate / Delete / New Slide After). Active slide highlighted with PointSav-gold border. Delete disabled when only one slide remains.

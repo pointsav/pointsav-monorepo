@@ -2,7 +2,7 @@
 
 > Project memory for Claude Code. Auto-loads on every session launch from this repo root.
 > Last updated: 2026-04-21
-> Current phase: Phase 4 — split-screen code view (see NEXT.md for the commission prompt)
+> Current phase: Phase 5 — save as self-contained .html (see NEXT.md for the commission prompt)
 
 ---
 
