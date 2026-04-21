@@ -44,8 +44,7 @@
     state.activeSlide = 0;
     state.dirty       = false;
 
-    window.PresentationCanvas.render(state);
-    updateStatusBar();
+    renderAll();
     window.addEventListener('keydown', onKeyDown);
   }
 
@@ -61,7 +60,7 @@
     });
     state.document.slides[state.activeSlide].elements.push(el);
     markDirty();
-    window.PresentationCanvas.render(state);
+    renderAll();
     // Focus on next frame so the newly rendered node is in the DOM.
     requestAnimationFrame(function () {
       window.PresentationCanvas.focusElement(el.id);
@@ -69,25 +68,90 @@
   }
 
   function addSlideAfterActive() {
-    const slide = window.PresentationSchema.newSlide();
-    state.document.slides.splice(state.activeSlide + 1, 0, slide);
-    state.activeSlide += 1;
-    markDirty();
-    window.PresentationCanvas.render(state);
-    updateStatusBar();
+    addSlideAfter(state.activeSlide);
   }
 
   function gotoPreviousSlide() {
     if (state.activeSlide <= 0) return;
     state.activeSlide -= 1;
-    window.PresentationCanvas.render(state);
-    updateStatusBar();
+    renderAll();
   }
 
   function gotoNextSlide() {
     if (state.activeSlide >= state.document.slides.length - 1) return;
     state.activeSlide += 1;
+    renderAll();
+  }
+
+  function setActiveSlide(index) {
+    const slides = state.document.slides;
+    if (index < 0 || index >= slides.length) return;
+    if (state.activeSlide === index) return;
+    state.activeSlide = index;
+    renderAll();
+  }
+
+  function addSlideAfter(index) {
+    const slides = state.document.slides;
+    if (index < 0 || index >= slides.length) return;
+    const slide = window.PresentationSchema.newSlide();
+    slides.splice(index + 1, 0, slide);
+    state.activeSlide = index + 1;
+    markDirty();
+    renderAll();
+  }
+
+  function duplicateSlide(index) {
+    const slides = state.document.slides;
+    if (index < 0 || index >= slides.length) return;
+    const clone = window.PresentationSchema.cloneSlide(slides[index]);
+    slides.splice(index + 1, 0, clone);
+    state.activeSlide = index + 1;
+    markDirty();
+    renderAll();
+  }
+
+  function deleteSlide(index) {
+    const slides = state.document.slides;
+    if (slides.length <= 1) return;
+    if (index < 0 || index >= slides.length) return;
+    slides.splice(index, 1);
+    if (state.activeSlide > index) {
+      state.activeSlide -= 1;
+    } else if (state.activeSlide === index) {
+      state.activeSlide = Math.min(state.activeSlide, slides.length - 1);
+    }
+    markDirty();
+    renderAll();
+  }
+
+  function reorderSlide(from, to) {
+    if (from === to) return;
+    const slides = state.document.slides;
+    if (from < 0 || from >= slides.length) return;
+    if (to   < 0 || to   >= slides.length) return;
+
+    const moved = slides.splice(from, 1)[0];
+    slides.splice(to, 0, moved);
+
+    // Keep activeSlide pointing at the same logical slide after the move.
+    if (state.activeSlide === from) {
+      state.activeSlide = to;
+    } else if (from < state.activeSlide && to >= state.activeSlide) {
+      state.activeSlide -= 1;
+    } else if (from > state.activeSlide && to <= state.activeSlide) {
+      state.activeSlide += 1;
+    }
+
+    markDirty();
+    renderAll();
+  }
+
+  function renderAll() {
     window.PresentationCanvas.render(state);
+    if (window.PresentationNavigator) {
+      window.PresentationNavigator.render(state);
+    }
     updateStatusBar();
   }
 
@@ -114,6 +178,20 @@
     if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 's') {
       e.preventDefault();
       console.log('[Ctrl+S] save-to-disk wired in Phase 5; dirty =', state.dirty);
+      return;
+    }
+
+    // Ctrl+M — new blank slide after active (Phase 3)
+    if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'm') {
+      e.preventDefault();
+      addSlideAfterActive();
+      return;
+    }
+
+    // Ctrl+D — duplicate active slide (Phase 3)
+    if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'd') {
+      e.preventDefault();
+      duplicateSlide(state.activeSlide);
       return;
     }
 
@@ -157,6 +235,11 @@
   window.PresentationEditor = {
     start,
     insertTextBox,
+    setActiveSlide,
+    addSlideAfter,
+    duplicateSlide,
+    deleteSlide,
+    reorderSlide,
     markDirty,
     _state: state,  // read-only peek for debugging; do not mutate from outside
   };
