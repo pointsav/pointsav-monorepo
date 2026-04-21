@@ -58,6 +58,10 @@ enum Command {
 
     /// Inspect or export the audit ledger.
     Ledger {
+        /// Path to the ledger CSV file.
+        #[arg(short, long, env = "SLM_LEDGER_PATH")]
+        path: std::path::PathBuf,
+
         #[command(subcommand)]
         action: LedgerAction,
     },
@@ -136,9 +140,25 @@ fn main() -> anyhow::Result<()> {
             "doorman",
             &format!("slm-doorman end-to-end cycle for {}", input.display()),
         ),
-        Command::Ledger { action } => match action {
+        Command::Ledger { path, action } => match action {
             LedgerAction::Tail { n } => {
-                unimplemented("ledger tail", &format!("tail {n} events via slm-ledger"))
+                let events = slm_ledger::tail_events(&path, n)?;
+                if events.is_empty() {
+                    println!("(no events)");
+                } else {
+                    for e in &events {
+                        println!(
+                            "{} | {:<20} | {:<24} | node={} job={} status={}",
+                            e.timestamp_utc.format("%Y-%m-%dT%H:%M:%SZ"),
+                            e.event_type.to_string(),
+                            e.module_id.to_string(),
+                            e.node_id.as_deref().unwrap_or("-"),
+                            e.job_id.as_deref().unwrap_or("-"),
+                            e.completion_status.as_deref().unwrap_or("-"),
+                        );
+                    }
+                }
+                Ok(())
             }
             LedgerAction::Export { out } => {
                 unimplemented("ledger export", &format!("export to {}", out.display()))
