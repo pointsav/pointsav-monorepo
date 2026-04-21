@@ -4,33 +4,36 @@
 
 ---
 
-## Immediate — Phase 3: Slide navigator
+## Immediate — Phase 4: Split-screen code view
 
-Phase 2 shipped a blank canvas with text-box-on-click and keyboard navigation. Next is the left pane — live thumbnails, click-to-jump, drag-to-reorder, right-click context menu. No Phase 4 (code view) or Phase 5 (save-to-disk) yet.
+Phase 3 shipped the slide navigator with live thumbnails, drag-to-reorder, and right-click context menu. Next is the right pane — toggle it open to see and edit the active slide's raw HTML.
 
-### Paste this into Claude Code to start Phase 3:
+### Paste this into Claude Code to start Phase 4:
 
 ```
-Phase 3 task: slide navigator with live thumbnails and reordering.
+Phase 4 task: split-screen code view.
 
-Read CLAUDE.md and ROADMAP.md Phase 3 section.
+Read CLAUDE.md and ROADMAP.md Phase 4 section.
 
-Build src/js/slides.js per the specification. Wire it into
-src/index.html's left pane (replacing the Phase 1 placeholder).
+Build src/js/codeview.js per the specification. Wire it into
+src/index.html's right pane.
 
-Thumbnail rendering strategy: clone the slide DOM, scale with CSS
-transform. Do not maintain separate thumbnail DOMs — one source of
-truth.
+Toggle mechanism: View menu item "Split Code View" and keyboard
+shortcut Ctrl+/. When active, right pane takes 50% of the horizontal
+space; when inactive, canvas takes 100%.
 
-Drag-and-drop: use native HTML5 drag-and-drop (dragstart, dragover,
-drop). No library.
+Sync strategy: blur-driven, not keystroke-driven. On canvas element
+blur, regenerate the active slide's HTML string and replace code
+pane contents. On code pane blur, parse contents with
+DOMParser('text/html'), validate it has a single root element,
+replace slide's element DOM if valid, show warning strip if not.
 
-Context menu: vanilla JS. Right-click opens a small positioned div
-with Duplicate / Delete / New Slide After.
+No syntax highlighting in this phase. Ship as plain monospace text
+first. See NEXT.md open decisions for the highlighter question.
 
 Ask before deviating from this list.
 
-Commit as: feat(slides): navigator with thumbnails and reorder
+Commit as: feat(codeview): split-screen HTML source with blur sync
 
 ---
 
@@ -40,30 +43,30 @@ When the work above is verified running, perform these file updates
 in a single separate commit before ending the session:
 
 1. CHANGELOG.md — under [Unreleased] → Added, append a bullet for
-   Phase 3 describing what shipped (slides.js, live thumbnail
-   navigator, drag-and-drop reorder, right-click context menu with
-   duplicate/delete/new-slide-after).
+   Phase 4 describing what shipped (codeview.js, toggle via View menu
+   and Ctrl+/, blur-driven sync canvas↔code, invalid-HTML warning
+   strip).
 
-2. NEXT.md — replace the "Immediate — Phase 3" block with the
-   Phase 4 commission prompt from ROADMAP.md (split-screen code
-   view). Append the same end-of-phase housekeeping block to that
-   prompt, updated for Phase 4. Move the Phase 3 record into the
+2. NEXT.md — replace the "Immediate — Phase 4" block with the
+   Phase 5 commission prompt from ROADMAP.md (save as self-contained
+   .html). Append the same end-of-phase housekeeping block to that
+   prompt, updated for Phase 5. Move the Phase 4 record into the
    session log at the bottom with today's date.
 
 3. CLAUDE.md — update the "Last updated" line at the top to today's
-   date. Update "Current phase" to Phase 4. No other changes.
+   date. Update "Current phase" to Phase 5. No other changes.
 
 4. Commit the doc updates as:
-   docs: update tracking for Phase 3 completion
+   docs: update tracking for Phase 4 completion
 
 Ask before deviating from this list.
 ```
 
 ---
 
-## After Phase 3 is verified running
+## After Phase 4 is verified running
 
-Claude Code performs the end-of-phase housekeeping above as part of the Phase 3 session. This file will already contain the Phase 4 commission prompt when the next session begins — no manual edit required.
+Claude Code performs the end-of-phase housekeeping above as part of the Phase 4 session. This file will already contain the Phase 5 commission prompt when the next session begins — no manual edit required.
 
 ---
 
@@ -85,6 +88,13 @@ Claude Code performs the end-of-phase housekeeping above as part of the Phase 3 
 ---
 
 ## Session log
+
+### 2026-04-21 — Phase 3 complete: slide navigator
+- Added `src/js/slides.js`: live thumbnail navigator in the left pane. Thumbnails rendered from the document model at 0.145× scale via CSS transform (no separate thumbnail DOM). Click-to-jump, native HTML5 drag-and-drop reorder (no library), right-click context menu (Duplicate / Delete / New Slide After). Active slide highlighted with PointSav-gold border. Delete disabled when only one slide remains.
+- `schema.js` gains `cloneSlide()` used by the Duplicate path.
+- `editor.js` wires `PresentationNavigator.render()` into `renderAll()` and adds Phase 3 keyboard shortcuts: Ctrl+M (new blank slide after active), Ctrl+D (duplicate active slide).
+- `app.css` adds all navigator chrome: `.slide-thumb-row`, `.slide-thumb`, `.slide-canvas-mini`, drag/drop visual states, context menu disabled-button style.
+- Committed as: `feat(slides): navigator with thumbnails and reorder` (b7c4a8c).
 
 ### 2026-04-20 — Phase 2 complete: blank slide canvas
 - Added `src/js/schema.js` (document model with `newDocument()`, `newSlide()`, `newElement()`, three layouts registered and Blank as the startup default), `src/js/canvas.js` (renders active slide at 1100×850 logical units, CSS-transform scaling so the centre pane letterboxes cleanly on any window size, click-to-insert text box with viewport→logical coord translation, contenteditable blur commits content), `src/js/editor.js` (state, active-slide index, dirty flag, keyboard wiring, `insertTextBox`, `markDirty`).
