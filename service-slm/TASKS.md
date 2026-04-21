@@ -199,12 +199,13 @@ opusplan-enabled variant) in your shell before launching `claude`.
 - Acceptance: `job_start` / `job_complete` / `teardown` / handler for preemption signals, each writing the matching ledger row with `node_id`, `job_id`, and cost fields populated; integration tests cover happy path + preemption mid-job.
 
 ### [30] deny.toml: add AGPL-3.0-only exception for workspace crates
-- Status: open
+- Status: done
 - Priority: p2
 - Crate: workspace
 - Model: sonnet
 - Context: Surfaced by task [20]. `cargo-deny check licenses` currently fails because the 10 workspace crates declare `license = "AGPL-3.0-only"` (ADR-0003) but `deny.toml [licenses].exceptions` is empty. CI only runs `bans sources` as a workaround. Add one `{ allow = ["AGPL-3.0-only"], crate = "<name>" }` row per workspace member, then re-enable the `licenses` subcommand in `.github/workflows/ci.yml` and `scripts/check-all.sh`.
 - Acceptance: `cargo deny check licenses` passes locally and in CI; the AGPL-3.0-only exception is bounded to workspace-internal crates only (no upstream leakage); SLM-STACK §7 "We Own It" discipline preserved for all non-workspace deps.
+- Note: Landed 2026-04-21. 11 AGPL-3.0 exception rows added (one per workspace member; cargo-deny 0.18.x requires bare `AGPL-3.0` not `AGPL-3.0-only` in exception allow lists). `webpki-roots v1.0.7` (CDLA-Permissive-2.0) surfaced as a previously-hidden licence finding; resolved with a bounded exception (Mozilla CA bundle, permissive, transitive via reqwest → hyper-rustls). `licenses` subcommand re-enabled in CI and `check-all.sh`. `cargo deny check bans sources licenses` passes locally.
 
 ### [33] cargo-deny: bump to 0.19.x on MSRV ≥ 1.88
 - Status: open
