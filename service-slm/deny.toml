@@ -69,8 +69,23 @@ allow = [
 # AGPL-3.0-only is explicitly *not* allowed for dependencies — we consume
 # permissive, publish copyleft. This is deliberate per ADR-0003.
 exceptions = [
-    # Example (use sparingly, each exception needs an ADR):
-    # { allow = ["AGPL-3.0-only"], crate = "some-crate-we-author-internally" },
+    # Workspace-internal crates are AGPL-3.0-only (ADR-0003).
+    # Each entry is bounded to the named crate; no upstream dependency may be AGPL.
+    { allow = ["AGPL-3.0"], crate = "slm-api" },
+    { allow = ["AGPL-3.0"], crate = "slm-cli" },
+    { allow = ["AGPL-3.0"], crate = "slm-compute" },
+    { allow = ["AGPL-3.0"], crate = "slm-core" },
+    { allow = ["AGPL-3.0"], crate = "slm-doorman" },
+    { allow = ["AGPL-3.0"], crate = "slm-inference-local" },
+    { allow = ["AGPL-3.0"], crate = "slm-inference-remote" },
+    { allow = ["AGPL-3.0"], crate = "slm-ledger" },
+    { allow = ["AGPL-3.0"], crate = "slm-memory-adapters" },
+    { allow = ["AGPL-3.0"], crate = "slm-memory-kv" },
+    { allow = ["AGPL-3.0"], crate = "xtask" },
+    # webpki-roots bundles the Mozilla CA certificate trust store under
+    # CDLA-Permissive-2.0 (Linux Foundation). Permissive; no copyleft.
+    # Pulled transitively via reqwest → hyper-rustls → webpki-roots.
+    { allow = ["CDLA-Permissive-2.0"], crate = "webpki-roots" },
 ]
 
 # Crates that are missing SPDX metadata but whose licence is known from
