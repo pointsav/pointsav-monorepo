@@ -164,10 +164,11 @@ opusplan-enabled variant) in your shell before launching `claude`.
 - Context: Hash stability across processes is a subtle invariant. Plan carefully before code generation.
 
 ### [22] slm-memory-adapters: Registry YAML parser
-- Status: open
+- Status: done
 - Priority: p2
 - Crate: slm-memory-adapters
 - Model: sonnet
+- Note: Landed 2026-04-21. `Registry::from_yaml(&str)` parses the adapter catalogue via a private two-pass shape (raw serde structs → validated public types). Validation: `semver::Version::parse` rejects non-semver strings (bare two-part versions, `v`-prefixed); `HashSet<(adapter_id, version)>` rejects duplicates. `RegistryError` has three variants: `Yaml`, `InvalidVersion`, `DuplicateEntry`. `semver = { version = "1", features = ["serde"] }` added to workspace deps (MIT/Apache-2.0). 6 integration tests; `check-all.sh` green.
 
 ### [23] slm-inference-local: RAM probe + quantisation selector
 - Status: open
