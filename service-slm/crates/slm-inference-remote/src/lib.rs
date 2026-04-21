@@ -10,7 +10,10 @@
 //!
 //! ## Role in service-slm
 //!
-//! GCP yo-yo driver: spin up, run job, tear down, record ledger entries. The remote counterpart to slm-inference-local.
+//! GCP yo-yo driver: spin up, run job, tear down, record ledger entries.
+//! The remote counterpart to `slm-inference-local`. This crate owns the
+//! HTTP client, the phase-transition ledger rows (boot / job / teardown /
+//! preemption), and the retry / backoff policy.
 //!
 //! ## Boundaries
 //!
@@ -21,12 +24,16 @@
 //!
 //! ## Status
 //!
-//! Scaffold only. No business logic has been written yet. See
+//! Alpha. [`RemoteInferenceClient::boot`] is implemented and writes
+//! `BOOT_REQUEST` / `BOOT_COMPLETE` rows via `slm-ledger`. Retry policy,
+//! `JOB_*`, `TEARDOWN_*`, and `PREEMPTION` events are future work. See
 //! [`../../STATUS.md`] for the machine-readable status of every crate in
 //! the workspace and [`../../TASKS.md`] for the ordered work queue.
 
-/// Placeholder entry point to keep the crate compiling during scaffolding.
-///
-/// Remove this once real items are added. Tests importing it should be
-/// deleted at the same time.
-pub fn __scaffold_placeholder() {}
+mod client;
+mod config;
+mod error;
+
+pub use client::{NodeHandle, RemoteInferenceClient};
+pub use config::{ConfigError, RemoteInferenceConfig};
+pub use error::RemoteInferenceError;
