@@ -13,14 +13,14 @@ Status levels:
 | Crate | Status | Last touched | Next milestone |
 |---|---|---|---|
 | slm-core | alpha | 2026-04-20 | Shared Error type + RF2 envelope |
-| slm-doorman | scaffold | 2026-04-20 | SanitisationPolicy type + pass-through |
-| slm-ledger | scaffold | 2026-04-20 | Event struct with 10 variants |
-| slm-compute | scaffold | 2026-04-20 | Parse compute/manifest.yaml |
+| slm-doorman | alpha | 2026-04-20 | Full five-step cycle + ledger integration |
+| slm-ledger | alpha | 2026-04-20 | `SQLite` mirror (future work) |
+| slm-compute | alpha | 2026-04-20 | Cloud Run driver, warm-pool toggle, Secret Manager |
 | slm-memory-kv | scaffold | 2026-04-20 | Deterministic block hash |
 | slm-memory-adapters | scaffold | 2026-04-20 | Registry YAML parser |
 | slm-inference-local | scaffold | 2026-04-20 | RAM probe + quantisation selector |
 | slm-inference-remote | scaffold | 2026-04-20 | HTTP client + BOOT_* ledger events |
-| slm-api | scaffold | 2026-04-20 | Router skeleton + /health |
+| slm-api | alpha | 2026-04-20 | Additional routes as library crates mature |
 | slm-cli | scaffold | 2026-04-20 | Wire subcommands to stubbed crate calls |
 
 ## Workspace-level checks

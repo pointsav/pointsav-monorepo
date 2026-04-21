@@ -6,11 +6,15 @@
 
 //! # slm-compute
 //!
-//! Ring 1 bootstrap layer for service-slm — Cloud Run GPU driver and container management.
+//! Ring 1 bootstrap layer for service-slm — Cloud Run `GPU` driver and
+//! container management.
 //!
 //! ## Role in service-slm
 //!
-//! Cloud Run driver: provisioning, container management, scale-to-zero, warm-pool control. Talks to Google Cloud via google-cloud-rust.
+//! Owns Cloud Run spin-up and tear-down, container manifest parsing, weights
+//! registry loading, warm-pool toggle, and Secret Manager reference
+//! resolution. Every bootstrap operation emits `BOOT_REQUEST` and
+//! `BOOT_COMPLETE` (or an error row) via `slm-ledger`.
 //!
 //! ## Boundaries
 //!
@@ -21,12 +25,13 @@
 //!
 //! ## Status
 //!
-//! Scaffold only. No business logic has been written yet. See
-//! [`../../STATUS.md`] for the machine-readable status of every crate in
-//! the workspace and [`../../TASKS.md`] for the ordered work queue.
+//! Alpha. [`ComputeManifest`] parsing and validation are implemented.
+//! Cloud Run driver, warm-pool toggle, and Secret Manager integration are
+//! future work. See [`../../STATUS.md`] for the machine-readable status of
+//! every crate and [`../../TASKS.md`] for the ordered work queue.
 
-/// Placeholder entry point to keep the crate compiling during scaffolding.
-///
-/// Remove this once real items are added. Tests importing it should be
-/// deleted at the same time.
-pub fn __scaffold_placeholder() {}
+mod error;
+mod manifest;
+
+pub use error::ManifestError;
+pub use manifest::{ComputeManifest, GpuTier};
