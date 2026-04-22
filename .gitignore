@@ -16,3 +16,4 @@ target/
 # Asymmetric Storage Protocol: Enforce Tier-1 Quarantine
 *.gguf
 **/weights/*
+.DS_Store
