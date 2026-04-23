@@ -60,7 +60,7 @@ Pending confirmations that affect how Claude should describe or reason about par
 
 | Question | Current handling |
 |---|---|
-| Verification Surveyor daily throttle number | Under operational review. Do not cite a specific number. Refer to it as "a system-enforced daily limit" until confirmed in a future MEMO version. |
+| Verification Surveyor daily throttle number | Under operational review. Do not cite a specific number. Refer to it as "a system-enforced daily limit" until confirmed in a future MEMO version. **Code reference (2026-04-23):** `app-console-content/scripts/surveyor.py` hard-codes `MAX_DAILY_VERIFICATIONS = 10`; whether this value is authoritative or drift is the pending decision. |
 | User Guide language on Sovereign Data Foundation | The User Guide contains language treating the Foundation as a current equity holder and active auditor. Requires a language review pass before any User Guide content is reused in public-facing materials. Flag any passage that describes the Foundation as current or active. |
 | `service-search` inclusion in the next MEMO | Confirmed for inclusion in the next MEMO version. Treat as canonical in code; note the doc catch-up is pending. |
 | Is the per-crate independent workspace pattern intentional (some crates meant to be extractable and published separately) or accidental drift? | Pending decision — do not act on related findings until answered. |
@@ -112,10 +112,17 @@ Newest on top. Append a dated block when a session includes meaningful cleanup w
   - `USER_GUIDE_2026-03-30_V2.md` (tracked, at repo root) → queued
     move to `content-wiki-documentation/` with `_V2` dropped, per
     CLAUDE.md §6 edit-in-place rule.
-  - `app-console-content/src/{pointsav-surveyor.sh,surveyor.py}` →
-    queued move to `app-console-content/scripts/`. `surveyor.py` is
-    the Verification Surveyor operational tool, misfiled alongside
-    Rust crate source.
+  - ~~`app-console-content/src/{pointsav-surveyor.sh,surveyor.py}` →
+    queued move to `app-console-content/scripts/`~~ **Closed
+    2026-04-23** — both files moved via `git mv` (recognised as
+    100% renames). Shell wrapper uses `$(dirname "$0")/surveyor.py`
+    (relative) so the pair moves together without edits. Python
+    script uses absolute paths into `woodfine-fleet-deployment` so
+    location-independent. Zero intra-repo runtime callers; no cron
+    entries found. The clone at `~/Foundry/clones/service-slm/`
+    retains its copy on branch `cluster/service-slm` (separate
+    `.git/`) and is unaffected by this move on `main`; it will
+    receive the change only when that branch merges.
   - ~~`os-infrastructure/build_iso/forge_iso.sh` → queued rename to
     `os-infrastructure/build_iso/compile_binary.sh`~~ **Closed
     2026-04-23** — renamed via `git mv`; in-file header comment
