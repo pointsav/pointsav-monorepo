@@ -16,6 +16,7 @@ Last updated: 2026-04-22.
 
 | Project | State | Type | Notes |
 |---|---|---|---|
+| app-console-bim | Reserved-folder | app-console | 1 file (RESEARCH.md); research phase |
 | app-console-bookkeeper | Reserved-folder | app-console | READMEs only |
 | app-console-content | Scaffold-coded | app-console | 8 files; in workspace members |
 | app-console-email | Scaffold-coded | app-console | 4 files |
@@ -49,6 +50,12 @@ Last updated: 2026-04-22.
 | app-network-radar | Reserved-folder | app-network | Placeholder |
 | app-network-vault | Reserved-folder | app-network | Placeholder |
 
+## App — Orchestration surface (`app-orchestration-*`)
+
+| Project | State | Type | Notes |
+|---|---|---|---|
+| app-orchestration-bim | Reserved-folder | app-orchestration | 1 file (RESEARCH.md); triggered taxonomy expansion to seventh in-force domain on 2026-04-22 |
+
 ## App — PrivateGit surface (`app-privategit-*`)
 
 | Project | State | Type | Notes |
@@ -67,6 +74,7 @@ Last updated: 2026-04-22.
 
 | Project | State | Type | Notes |
 |---|---|---|---|
+| app-workplace-bim | Reserved-folder | app-workplace | 1 file (RESEARCH.md); research phase |
 | app-workplace-memo | Scaffold-coded | app-workplace | 47 files; running on Linux Mint per sibling's doc; CLAUDE.md + NEXT.md pending for Active |
 | app-workplace-presentation | Active | app-workplace | 52 files; CLAUDE.md present; Phase 5 |
 | app-workplace-proforma | Active | app-workplace | 45 files; CLAUDE.md present but marked "local-only"; conformance pending |
@@ -107,6 +115,7 @@ Last updated: 2026-04-22.
 
 | Project | State | Type | Notes |
 |---|---|---|---|
+| service-bim | Reserved-folder | service | 1 file (RESEARCH.md); research phase |
 | service-content | Scaffold-coded | service | 37 files; in workspace members |
 | service-egress | Scaffold-coded | service | 4 files |
 | service-email | Scaffold-coded | service | 18 files |
@@ -179,10 +188,10 @@ Last updated: 2026-04-22.
 
 - **Active:** 3 (`app-workplace-presentation`, `app-workplace-proforma`, `service-extraction`)
 - **Scaffold-coded:** 51
-- **Reserved-folder:** 33
+- **Reserved-folder:** 37
 - **Defect:** 5 (`pointsav-pty-bridge`, `service-parser`, `service-email-egress-ews`, `service-email-egress-imap`, `vendors-maxmind`)
 - **Not-a-project:** 2 (`discovery-queue`, `target`)
 - **Dormant:** 0
 - **Archived:** 0
 
-**Total rows:** 96.
+**Total rows:** 100.
