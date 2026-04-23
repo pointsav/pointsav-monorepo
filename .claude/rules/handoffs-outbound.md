@@ -52,3 +52,8 @@ it up.
   a Root Claude in the destination repo should flag the content as
   pending review in its own `cleanup-log.md` at add-side commit
   time.
+- **In-transit edit 2026-04-23:** line 902 updated to reflect the
+  `vendors-maxmind` → `app-mediakit-telemetry/assets/` reclass
+  that happened in the monorepo the same day. The destination
+  Root Claude will receive the corrected path; no separate
+  follow-up needed on that line.
