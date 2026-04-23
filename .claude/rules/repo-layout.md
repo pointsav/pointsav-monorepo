@@ -70,6 +70,8 @@ is a defect. Move to a subfolder or delete.
 | `docs/` | Detailed documentation |
 | `tests/` | Tests |
 | `build/` | Build output (gitignored) |
+| `assets/` | Vendored data, reference files, or non-code resources consumed by this project |
+| `data/` | Runtime or reference data owned by this project (distinct from `assets/`: data is typically produced or consumed operationally; assets are static inputs) |
 
 `engine/`, `relay/`, or other names are acceptable when they carry
 domain meaning (e.g. `os-console/engine/`, `os-console/relay/`). The
