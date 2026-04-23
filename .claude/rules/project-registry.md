@@ -127,6 +127,7 @@ Last updated: 2026-04-23.
 | service-http | Scaffold-coded | service | 9 files |
 | service-message-courier | Reserved-folder | service | 1 file |
 | service-people | Scaffold-coded | service | 17 files; in workspace members |
+| service-pty-bridge | Scaffold-coded | service | Renamed 2026-04-23 from `pointsav-pty-bridge` (brand-prefix violation resolved); 1 source file (`src/main.rs`); not a workspace member |
 | service-search | Reserved-folder | service | 1 file |
 | service-slm | Scaffold-coded | service | 14 files |
 | service-totebox-egress | Scaffold-coded | service | 18 files |
@@ -177,7 +178,6 @@ Last updated: 2026-04-23.
 | Project | State | Type | Notes |
 |---|---|---|---|
 | discovery-queue | Not-a-project | runtime data | 22 `TX-*_identity.json` files; gitignore + move to `service-fs/data/` |
-| pointsav-pty-bridge | Defect → `service-pty-bridge` | service | Brand-prefix violation; rename pending (user-approved) |
 | target | Not-a-project | build output | Rust cargo output; in .gitignore |
 | xtask | Scaffold-coded | xtask | 2 files; in workspace members; Rust xtask convention |
 
@@ -186,9 +186,9 @@ Last updated: 2026-04-23.
 ## Summary (2026-04-23)
 
 - **Active:** 4 (`app-console-bookkeeper`, `app-workplace-presentation`, `app-workplace-proforma`, `service-extraction`)
-- **Scaffold-coded:** 51
+- **Scaffold-coded:** 52
 - **Reserved-folder:** 36
-- **Defect:** 4 (`pointsav-pty-bridge`, `service-email-egress-ews`, `service-email-egress-imap`, `vendors-maxmind`)
+- **Defect:** 3 (`service-email-egress-ews`, `service-email-egress-imap`, `vendors-maxmind`)
 - **Not-a-project:** 2 (`discovery-queue`, `target`)
 - **Dormant:** 0
 - **Archived:** 0
