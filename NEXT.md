@@ -6,11 +6,42 @@
 > Read at session start when a Root Claude opens in this repo. Update
 > at session end when repo-scope open items change.
 
-Last updated: 2026-04-22.
+Last updated: 2026-04-23.
 
 ---
 
 ## Currently open
+
+### Layout hygiene — defect closures queued
+
+Rule source: `.claude/rules/repo-layout.md` (introduced 2026-04-23).
+Each item below is a separate commit via `tool-commit-as-next.sh`.
+
+- **Move `force_build.sh`** → `vendor-sel4-kernel/scripts/` (its
+  body operates entirely on that directory).
+- **Move `GUIDE-OPERATIONS.md`** → `content-wiki-documentation/`
+  (cross-repo move; commit in each repo).
+- **Move `USER_GUIDE_2026-03-30_V2.md`** →
+  `content-wiki-documentation/` with `_V2` suffix dropped per
+  CLAUDE.md §6. BCSC-language review of the User Guide content
+  remains a separate open question (see cleanup-log).
+- **Move `app-console-content/src/{pointsav-surveyor.sh,surveyor.py}`**
+  → `app-console-content/scripts/`. `surveyor.py` is the live
+  Verification Surveyor operational tool; check callers before
+  move. Reconcile the `MAX_DAILY_VERIFICATIONS = 10` value with
+  the corresponding cleanup-log open question in the same commit.
+- **Rename `os-infrastructure/build_iso/forge_iso.sh`** →
+  `os-infrastructure/build_iso/compile_binary.sh` (resolve
+  duplicate-filename collision with the sibling ISO-assembly
+  script at the project root).
+- **Project-root scripts → `scripts/` subfolders** (separate
+  commit per project): `service-vpn` (5 scripts),
+  `service-email` (`spool-daemon.sh`), `service-slm`
+  (`cognitive-bridge.sh`), `service-content` (`forge-seeds.sh`),
+  `os-network-admin` (2 scripts), `os-totebox` (1 script),
+  `tool-cognitive-forge` (1 script), `vendor-phi3-mini` (2
+  scripts), `app-mediakit-telemetry` (5 generic scaffold
+  scripts).
 
 ### Framework follow-ups
 
@@ -86,6 +117,15 @@ Last updated: 2026-04-22.
 - `stash@{1}` — pre-existing — "On service-extraction-v04: main:
   registry + BIM untracked — parked before task [21] resume".
 
+## Recently closed (2026-04-23)
+
+- Repo-layout rule introduced — `.claude/rules/repo-layout.md`
+  codifies allowed files at the monorepo root and at each project
+  directory root; names the sibling repos
+  (`content-wiki-documentation`, `pointsav-design-system`, etc.)
+  where cross-cutting content belongs. Anchor for the "Layout
+  hygiene" queue above.
+
 ## Recently closed (2026-04-22)
 
 - Audit cleanup — removed 2 `__MACOSX/` directories and 16 tracked
@@ -104,3 +144,4 @@ Last updated: 2026-04-22.
 - Workspace changelog: `~/Foundry/CHANGELOG.md`
 - Project registry: `.claude/rules/project-registry.md`
 - Cleanup log: `.claude/rules/cleanup-log.md`
+- Repo layout rule: `.claude/rules/repo-layout.md`
