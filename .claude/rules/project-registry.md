@@ -17,7 +17,7 @@ Last updated: 2026-04-22.
 | Project | State | Type | Notes |
 |---|---|---|---|
 | app-console-bim | Reserved-folder | app-console | 1 file (RESEARCH.md); research phase |
-| app-console-bookkeeper | Reserved-folder | app-console | READMEs only |
+| app-console-bookkeeper | Active | app-console | Activated 2026-04-22 via framework §8 (pilot); HTML-plugin pattern (view + cartridge); registry row was originally mis-classified; `README.*` and data-binding pending |
 | app-console-content | Scaffold-coded | app-console | 8 files; in workspace members |
 | app-console-email | Scaffold-coded | app-console | 4 files |
 | app-console-help | Reserved-folder | app-console | READMEs only |
@@ -186,9 +186,9 @@ Last updated: 2026-04-22.
 
 ## Summary (2026-04-22 baseline)
 
-- **Active:** 3 (`app-workplace-presentation`, `app-workplace-proforma`, `service-extraction`)
+- **Active:** 4 (`app-console-bookkeeper`, `app-workplace-presentation`, `app-workplace-proforma`, `service-extraction`)
 - **Scaffold-coded:** 51
-- **Reserved-folder:** 37
+- **Reserved-folder:** 36
 - **Defect:** 5 (`pointsav-pty-bridge`, `service-parser`, `service-email-egress-ews`, `service-email-egress-imap`, `vendors-maxmind`)
 - **Not-a-project:** 2 (`discovery-queue`, `target`)
 - **Dormant:** 0
