@@ -128,14 +128,27 @@ Newest on top. Append a dated block when a session includes meaningful cleanup w
     2026-04-23** — renamed via `git mv`; in-file header comment
     updated to reflect the new name and record the rename
     rationale. Zero external callers.
-- **Project-root scripts flagged (not yet moved):** ~15 scripts sit
+- ~~**Project-root scripts flagged (not yet moved):** ~15 scripts sit
   at project root instead of under `scripts/` across `service-vpn`
   (5 generator scripts), `service-email` (`spool-daemon.sh`),
   `service-slm` (`cognitive-bridge.sh`), `service-content`
   (`forge-seeds.sh`), `os-network-admin` (2 scripts),
   `os-totebox` (1), `tool-cognitive-forge` (1),
   `vendor-phi3-mini` (2), `app-mediakit-telemetry` (5 generic
-  scaffold scripts). Each project is a separate closure task.
+  scaffold scripts). Each project is a separate closure task.~~
+  **Closed 2026-04-23** — all 9 projects relocated in 9 separate
+  `git mv` commits (18 files total, every one a 100% rename).
+  Commit chain: `8f5cc48` os-totebox → `2456ea6` service-content
+  → `30ff629` service-email → `cda2ce5` service-slm → `654d255`
+  tool-cognitive-forge → `503f922` os-network-admin → `6df4be0`
+  vendor-phi3-mini → `6f95279` service-vpn → `faae141`
+  app-mediakit-telemetry. No callers needed updating; the only
+  in-script references found were self-usage strings that remain
+  valid after the move.
+- **Stray runtime log surfaced.** `tool-cognitive-forge/llama.log`
+  at project root — runtime log, almost certainly should be
+  gitignored (and removed from tracking if tracked). Not addressed
+  in this session. Added to `NEXT.md` as a separate item.
 - **Open question surfaced.** `surveyor.py` hard-codes
   `MAX_DAILY_VERIFICATIONS = 10`. The existing cleanup-log open
   question — "Verification Surveyor daily throttle number — Under
