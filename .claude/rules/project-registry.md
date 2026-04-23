@@ -8,7 +8,7 @@ must be closed.
 
 State vocabulary — see `~/Foundry/CLAUDE.md` §8 for definitions.
 
-Last updated: 2026-04-22.
+Last updated: 2026-04-23.
 
 ---
 
@@ -129,7 +129,7 @@ Last updated: 2026-04-22.
 | service-parser | Defect → remove | service | Legacy name; canonical is `service-extraction`; removal pending |
 | service-people | Scaffold-coded | service | 17 files; in workspace members |
 | service-search | Reserved-folder | service | 1 file |
-| service-slm | Scaffold-coded | service | 14 files |
+| service-slm | Active | service | 14 files; activated 2026-04-23 via framework §8 (cluster/service-slm first-live); CLAUDE.md / NEXT.md / ARCHITECTURE.md / DEVELOPMENT.md present |
 | service-totebox-egress | Scaffold-coded | service | 18 files |
 | service-vpn | Scaffold-coded | service | 11 files |
 
@@ -186,8 +186,8 @@ Last updated: 2026-04-22.
 
 ## Summary (2026-04-22 baseline)
 
-- **Active:** 4 (`app-console-bookkeeper`, `app-workplace-presentation`, `app-workplace-proforma`, `service-extraction`)
-- **Scaffold-coded:** 51
+- **Active:** 5 (`app-console-bookkeeper`, `app-workplace-presentation`, `app-workplace-proforma`, `service-extraction`, `service-slm`)
+- **Scaffold-coded:** 50
 - **Reserved-folder:** 36
 - **Defect:** 5 (`pointsav-pty-bridge`, `service-parser`, `service-email-egress-ews`, `service-email-egress-imap`, `vendors-maxmind`)
 - **Not-a-project:** 2 (`discovery-queue`, `target`)
