@@ -154,6 +154,29 @@ Newest on top. Append a dated block when a session includes meaningful cleanup w
   intentional (operator-gated two-step) or drift (should become a
   single driver script)? Pending decision before next pipeline
   refactor.
+- **Handoff-outbound pattern piloted.** Added
+  `.claude/rules/handoffs-outbound.md` as a cross-repo file-move
+  outbox. Two entries lodged: `GUIDE-OPERATIONS.md` and
+  `USER_GUIDE_2026-03-30_V2.md` both → `content-wiki-documentation`.
+  Both files remain in place in this repo until a Root Claude in
+  the destination repo commits the add-side; only then does a
+  follow-up Root Claude session here commit the source-remove.
+  The pattern is passive — an outbox entry waits for pickup.
+- **Surfaced for Master Claude** (workspace-scope changes, outside
+  Root Claude's write lane per §9):
+  1. Formalise the cross-repo handoff pattern as an addendum in
+     `~/Foundry/CLAUDE.md` §9. Current §9 stops at clone
+     provisioning; the handoff mechanic is the natural extension
+     for file movement between engineering repos.
+  2. Extend `~/Foundry/CLAUDE.md` §10's `.claude/rules/` canonical
+     list from three files to four — add `handoffs-outbound.md`
+     alongside `repo-layout.md`, `project-registry.md`, and
+     `cleanup-log.md`.
+  3. Propagate both the `repo-layout.md` rule (§10 already names
+     the monorepo as reference implementation) and the new
+     `handoffs-outbound.md` pattern to the other engineering repos
+     over time. Order of propagation is `~/Foundry/NEXT.md`'s
+     concern.
 
 ---
 
