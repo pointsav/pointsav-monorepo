@@ -66,7 +66,7 @@ Pending confirmations that affect how Claude should describe or reason about par
 | Are `app-console-*` and `app-network-*` directories without `Cargo.toml` intentional scaffolding for planned work, or abandoned attempts? | Pending decision — do not act on related findings until answered. |
 | Should the doubly-nested `service-email-egress-{ews,imap}` structure be flattened, or does the nesting reflect a real protocol-implementation hierarchy? | Pending decision — do not act on related findings until answered. |
 | What is `discovery-queue` — runtime data that should be gitignored, reference data that belongs elsewhere, or a misplaced crate? | Pending decision — do not act on related findings until answered. |
-| Does `vendors-maxmind` (containing a GeoLite2 database, not code) belong as a `vendor-*` crate at all, or should it move to a non-workspace data directory? | Pending decision — do not act on related findings until answered. |
+| ~~Does `vendors-maxmind` (containing a GeoLite2 database, not code) belong as a `vendor-*` crate at all, or should it move to a non-workspace data directory?~~ | **Answered 2026-04-23:** non-workspace data directory. Moved to `app-mediakit-telemetry/assets/` (matching the authoritative target path already documented in the vendor's README). `vendor-*` crate framing rejected: the directory contained only data, no code. |
 
 ---
 
@@ -78,6 +78,7 @@ Migrations fully resolved in the repo. Moved here from **Active legacy-to-canoni
 |---|---|---|---|
 | `service-parser` | `service-extraction` | 2026-04-23 | Legacy-era scaffold containing only a README that described an AI-routing architecture since superseded by `service-extraction`'s deterministic Parser-Combinators approach. Zero runtime references, never a workspace member, one commit in history. No code or data to recycle into `service-extraction`; README deleted without migration. |
 | `pointsav-pty-bridge` | `service-pty-bridge` | 2026-04-23 | Prefix-violation defect flagged in 2026-04-18 audit (brand prefix `pointsav-` not one of the seven canonical prefixes). Canonical target `service-pty-bridge` fits the daemon runtime role. Working Rust crate with one source file; directory renamed via `git mv`, `Cargo.toml` `name` field updated in the same commit. Not a workspace member, zero external import references, no callers needed updating. |
+| `vendors-maxmind` | `app-mediakit-telemetry/assets/` | 2026-04-23 | Not a rename but a reclassification: the `vendors-maxmind` directory was a data container holding `GeoLite2-City.mmdb` + READMEs, no code. The vendor's own README already named `app-mediakit-telemetry/assets/` as the intended location — the monorepo had never realised that path. Moved the `.mmdb` + READMEs into their documented target; deleted the empty `vendors-maxmind/` directory. Monorepo `README.md` line 151 and `USER_GUIDE_2026-03-30_V2.md` line 902 updated to the new path. `repo-layout.md` extended to name `assets/` as a conventional project subfolder. Python script reference in `app-mediakit-telemetry/scripts/generic-omni-matrix-engine.py` left unchanged — it reads a deployment-side path relative to CWD, not the monorepo-side path. Separate `.mmdb` → build-time-fetch task remains open under Structural defects. |
 
 ---
 
@@ -171,6 +172,26 @@ Newest on top. Append a dated block when a session includes meaningful cleanup w
   workspace member. Stray `Cargo.lock` inside the renamed
   directory remains — resolves with workspace `Cargo.toml`
   unification (separate open structural defect).
+- **Third rename-series closure: `vendors-maxmind` reclassified
+  to `app-mediakit-telemetry/assets/`.** Not a rename but a
+  data-reclass: the directory held only the 63.5 MB
+  `GeoLite2-City.mmdb` + READMEs with no code. The vendor's own
+  README already named `app-mediakit-telemetry/assets/` as the
+  intended target path — the monorepo had never realised that
+  path. Moved the `.mmdb` + both READMEs into the documented
+  target; removed `vendors-maxmind/.keep`; empty directory
+  auto-removed by git. Closed the related "does it belong as a
+  `vendor-*` crate at all?" open question (answer: no;
+  non-workspace data directory). Updated monorepo `README.md`
+  line 151 and `USER_GUIDE_2026-03-30_V2.md` line 902 (in-transit
+  edit travels with the cross-repo handoff). Extended
+  `repo-layout.md` to name `assets/` and `data/` as conventional
+  project subfolders. Registry row removed; Defect 3 → 2, Total
+  rows 99 → 98. Python script reference in
+  `app-mediakit-telemetry/scripts/generic-omni-matrix-engine.py`
+  left unchanged (it refers to deployment-side path relative to
+  CWD — independent of monorepo-side layout). Separate `.mmdb` →
+  build-time-fetch task remains open under Structural defects.
 - **Open question surfaced.** `surveyor.py` hard-codes
   `MAX_DAILY_VERIFICATIONS = 10`. The existing cleanup-log open
   question — "Verification Surveyor daily throttle number — Under
