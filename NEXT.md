@@ -56,8 +56,9 @@ the source-remove.
 
 ### Rename series (active — see `.claude/rules/cleanup-log.md`)
 
-- `vendors-maxmind` → `vendor-maxmind` (typo) + data-category
-  reclass (move `.mmdb` out of Git to build-time fetch).
+- `.mmdb` → build-time fetch (previously bundled with
+  `vendors-maxmind`; now at `app-mediakit-telemetry/assets/`
+  since 2026-04-23 data reclass). 63.5 MB currently in Git.
 - `service-email-egress-{ews,imap}` → `service-email-egress`
   (consolidate per Q3a decision).
 - `tool-cognitive-forge` → rename pending ("Cognitive Forge" on
@@ -169,6 +170,19 @@ the source-remove.
   (Defect 4 → 3, Scaffold-coded 51 → 52). Zero external import
   references; not a workspace member; stray `Cargo.lock` left
   in place (resolves with workspace unification).
+- `vendors-maxmind` reclassified to
+  `app-mediakit-telemetry/assets/` — third rename-series closure.
+  Data-only directory moved to the authoritative path already
+  documented in the vendor's README; `.mmdb` (63.5 MB) + both
+  READMEs travelled together; empty `vendors-maxmind/` removed.
+  Open question "does it belong as a `vendor-*` crate at all?"
+  closed (answer: no; non-workspace data directory).
+  `repo-layout.md` extended to name `assets/` and `data/` as
+  conventional subfolders. Registry Defect 3 → 2, Total rows
+  99 → 98. In-transit edit to `USER_GUIDE_2026-03-30_V2.md`
+  line 902 updates the path reference — travels with the pending
+  cross-repo handoff. Separate `.mmdb` → build-time-fetch task
+  remains open under Structural defects.
 
 ## Recently closed (2026-04-22)
 
