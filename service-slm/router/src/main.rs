@@ -9,7 +9,7 @@ const SLM_SERVER_URL: &str = "http://127.0.0.1:8080/v1/chat/completions";
 async fn main() {
     let args: Vec<String> = env::args().collect();
     if args.len() != 2 {
-        eprintln!("[ERROR] Usage: cognitive-forge <TOTEBOX_ROOT>");
+        eprintln!("[ERROR] Usage: router <TOTEBOX_ROOT>");
         std::process::exit(1);
     }
     let totebox_root = &args[1];
