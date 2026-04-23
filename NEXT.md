@@ -54,20 +54,11 @@ the source-remove.
   whether source data, extraction seed, or stray; gitignore or
   delete.
 
-### Rename series (active — see `.claude/rules/cleanup-log.md`)
+### Rename series
 
-- `.mmdb` → build-time fetch (previously bundled with
-  `vendors-maxmind`; now at `app-mediakit-telemetry/assets/`
-  since 2026-04-23 data reclass). 63.5 MB currently in Git.
-- `tool-cognitive-forge` → rename pending ("Cognitive Forge" on
-  Do-Not-Use list).
-
-### Housekeeping — surfaced but unaddressed
-
-- **`tool-cognitive-forge/llama.log`** at project root — runtime
-  log file, tracked or not TBD. Should be gitignored and, if
-  tracked, removed from the index. Not addressed in the
-  2026-04-23 Tier-2 batch.
+*(queue empty — all five rename-series items closed 2026-04-23;
+see Recently closed below and `cleanup-log.md` Completed
+migrations)*
 
 ### Structural defects
 
@@ -79,12 +70,21 @@ the source-remove.
 - **Monorepo `.gitignore` deduplication** — the "Asymmetric Storage
   Protocol: Enforce Tier-1 Quarantine" block is duplicated four
   times. Normalise to a single copy.
-- **Large binaries** — candidates for build-time fetch or removal:
-  `vendor-maxmind/GeoLite2-City.mmdb` (63.5 MB),
-  `tool-cognitive-forge/engine/llamafile` (66 MB),
-  `tool-cognitive-forge/engine/weights/qwen2.5-coder-1.5b.gguf`
-  (15 MB), and ISO / IMG artefacts in `os-infrastructure/`,
-  `os-network-admin/`, `os-totebox/` (tracking status TBD).
+- **Large binaries** — tracked artefacts that should move to
+  build-time fetch:
+  - `app-mediakit-telemetry/assets/GeoLite2-City.mmdb` (63.5 MB)
+    — **still tracked**. Next candidate for fetch-at-build
+    treatment. Paths reclassified 2026-04-23.
+  - `service-slm/router-trainer/engine/llamafile` (35 MB) —
+    **untracked since 2026-04-23** via `git rm --cached` + new
+    `.gitignore` pattern. Physical file remains at path for the
+    Python workflow. History still contains the blob; shrinking
+    the repo requires `git-filter-repo`, separate task.
+  - `service-slm/router-trainer/engine/weights/qwen2.5-coder-1.5b.gguf`
+    (15 MB) — already covered by existing `**/weights/*` +
+    `*.gguf` ignore patterns. Same history-blob caveat applies.
+  - ISO / IMG artefacts in `os-infrastructure/`,
+    `os-network-admin/`, `os-totebox/` (tracking status TBD).
 
 ### Conformance and activations
 
@@ -168,6 +168,20 @@ the source-remove.
   (Defect 4 → 3, Scaffold-coded 51 → 52). Zero external import
   references; not a workspace member; stray `Cargo.lock` left
   in place (resolves with workspace unification).
+- Fifth (final) rename-series closure — Cognitive Forge term
+  retired in one commit. `service-slm/cognitive-forge/` renamed
+  to `service-slm/router/`; former top-level `tool-cognitive-forge/`
+  moved to `service-slm/router-trainer/`. Rust runtime
+  (`router/`) and Python distillation workflow
+  (`router-trainer/`) now live together as producer/consumer.
+  Cargo.toml `name` + `main.rs` usage string updated.
+  `distill_knowledge.py` moved from non-canonical `src/` to
+  `scripts/`. Three binary/log files untracked via `git rm
+  --cached` + new `.gitignore` patterns (llamafile 35 MB,
+  engine.log, llama.log) — physical files remain at new paths.
+  Registry Scaffold-coded 54 → 53, Total 98 → 97. Closes the
+  rename-series queue entirely (5 of 5) and the separate
+  `llama.log` housekeeping item.
 - `service-email-egress-{ews,imap}` wrappers flattened — fourth
   rename-series closure. Consolidation-to-`service-email-egress`
   plan reversed after sub-crate review: EWS and IMAP are two

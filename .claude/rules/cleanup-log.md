@@ -78,6 +78,7 @@ Migrations fully resolved in the repo. Moved here from **Active legacy-to-canoni
 |---|---|---|---|
 | `service-parser` | `service-extraction` | 2026-04-23 | Legacy-era scaffold containing only a README that described an AI-routing architecture since superseded by `service-extraction`'s deterministic Parser-Combinators approach. Zero runtime references, never a workspace member, one commit in history. No code or data to recycle into `service-extraction`; README deleted without migration. |
 | `pointsav-pty-bridge` | `service-pty-bridge` | 2026-04-23 | Prefix-violation defect flagged in 2026-04-18 audit (brand prefix `pointsav-` not one of the seven canonical prefixes). Canonical target `service-pty-bridge` fits the daemon runtime role. Working Rust crate with one source file; directory renamed via `git mv`, `Cargo.toml` `name` field updated in the same commit. Not a workspace member, zero external import references, no callers needed updating. |
+| `tool-cognitive-forge` + `service-slm/cognitive-forge` | `service-slm/router-trainer/` + `service-slm/router/` | 2026-04-23 | Closes the last rename-series item and removes the "Cognitive Forge" Do-Not-Use term in one commit. The Rust runtime sub-crate at `service-slm/cognitive-forge/` renamed to `service-slm/router/` (Cargo.toml `name` field + `main.rs` usage string updated). The Python distillation workflow at `tool-cognitive-forge/` moved in to `service-slm/router-trainer/`, joining the runtime as producer/consumer pair. Rationale for split naming: the runtime is a router (of messages to service handlers); the trainer distils knowledge to produce the routing model. Inside `router-trainer/`, `distill_knowledge.py` moved from a non-canonical `src/` into `scripts/` alongside `ignite_teacher.sh`. Three binary/log files untracked from Git and covered by new `.gitignore` patterns (still physically present at new paths for the Python workflow): 35 MB `engine/llamafile`, 22 KB `engine/engine.log`, 89 B `llama.log`. The 15 MB `engine/weights/qwen2.5-coder-1.5b.gguf` was already covered by the existing `**/weights/*` + `*.gguf` patterns — no new ignore needed. Git history retains all blobs; shrinking history is separate `git-filter-repo` work. Registry: `tool-cognitive-forge` row removed; Scaffold-coded 54 → 53, Total 98 → 97. `llama.log` surfaced earlier in this session is closed by this commit. |
 | `vendors-maxmind` | `app-mediakit-telemetry/assets/` | 2026-04-23 | Not a rename but a reclassification: the `vendors-maxmind` directory was a data container holding `GeoLite2-City.mmdb` + READMEs, no code. The vendor's own README already named `app-mediakit-telemetry/assets/` as the intended location — the monorepo had never realised that path. Moved the `.mmdb` + READMEs into their documented target; deleted the empty `vendors-maxmind/` directory. Monorepo `README.md` line 151 and `USER_GUIDE_2026-03-30_V2.md` line 902 updated to the new path. `repo-layout.md` extended to name `assets/` as a conventional project subfolder. Python script reference in `app-mediakit-telemetry/scripts/generic-omni-matrix-engine.py` left unchanged — it reads a deployment-side path relative to CWD, not the monorepo-side path. Separate `.mmdb` → build-time-fetch task remains open under Structural defects. |
 
 ---
@@ -172,6 +173,23 @@ Newest on top. Append a dated block when a session includes meaningful cleanup w
   workspace member. Stray `Cargo.lock` inside the renamed
   directory remains — resolves with workspace `Cargo.toml`
   unification (separate open structural defect).
+- **Fifth (final) rename-series closure: Cognitive Forge term
+  retired.** `service-slm/cognitive-forge/` renamed to
+  `service-slm/router/`; former top-level `tool-cognitive-forge/`
+  moved in as `service-slm/router-trainer/`. Producer/consumer
+  now live together under `service-slm`. Rust Cargo.toml `name`
+  field + `main.rs` usage string updated. Python
+  `distill_knowledge.py` relocated from non-canonical `src/` to
+  `scripts/` alongside `ignite_teacher.sh`. Three binary/log
+  files stopped being tracked (`llamafile` 35 MB, `engine.log`,
+  `llama.log`) via `git rm --cached` + new `.gitignore` section;
+  physical files remain at new paths so the Python workflow still
+  finds them. The 15 MB `qwen2.5-coder-1.5b.gguf` under `weights/`
+  was already ignored. Registry Scaffold-coded 54 → 53, Total
+  98 → 97 (one top-level project absorbed into `service-slm`).
+  This closes the rename-series queue (5 of 5 done) and the
+  separate `llama.log` stray item surfaced earlier in this
+  session.
 - **Fourth rename-series closure: `service-email-egress-{ews,imap}`
   wrappers flattened; consolidation plan reversed.** After
   reviewing sub-crate contents, EWS and IMAP are two
