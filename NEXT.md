@@ -17,14 +17,8 @@ Last updated: 2026-04-23.
 Rule source: `.claude/rules/repo-layout.md` (introduced 2026-04-23).
 Each item below is a separate commit via `tool-commit-as-next.sh`.
 
-- **Project-root scripts → `scripts/` subfolders** (separate
-  commit per project): `service-vpn` (5 scripts),
-  `service-email` (`spool-daemon.sh`), `service-slm`
-  (`cognitive-bridge.sh`), `service-content` (`forge-seeds.sh`),
-  `os-network-admin` (2 scripts), `os-totebox` (1 script),
-  `tool-cognitive-forge` (1 script), `vendor-phi3-mini` (2
-  scripts), `app-mediakit-telemetry` (5 generic scaffold
-  scripts).
+*(queue empty — Tier-2 project-root scripts closed 2026-04-23;
+see Recently closed below and `cleanup-log.md`)*
 
 ### Awaiting cross-repo handoff
 
@@ -72,6 +66,13 @@ the source-remove.
   (consolidate per Q3a decision).
 - `tool-cognitive-forge` → rename pending ("Cognitive Forge" on
   Do-Not-Use list).
+
+### Housekeeping — surfaced but unaddressed
+
+- **`tool-cognitive-forge/llama.log`** at project root — runtime
+  log file, tracked or not TBD. Should be gitignored and, if
+  tracked, removed from the index. Not addressed in the
+  2026-04-23 Tier-2 batch.
 
 ### Structural defects
 
@@ -147,6 +148,15 @@ the source-remove.
   `content-wiki-documentation`). Formalisation of the pattern in
   `~/Foundry/CLAUDE.md` §9 and §10 surfaced for Master Claude in
   `cleanup-log.md`.
+- Tier-2 project-root scripts relocated — 18 files across 9
+  projects moved to their respective `scripts/` subfolders in 9
+  separate commits (`8f5cc48` through `faae141`). Every file
+  registered as a 100% rename; no callers needed updating.
+  Projects touched: `os-totebox`, `service-content`,
+  `service-email`, `service-slm`, `tool-cognitive-forge`,
+  `os-network-admin`, `vendor-phi3-mini`, `service-vpn`,
+  `app-mediakit-telemetry`. Stray `tool-cognitive-forge/llama.log`
+  surfaced as a separate housekeeping item.
 
 ## Recently closed (2026-04-22)
 
