@@ -899,7 +899,7 @@ The monorepo tracks quarantined vendor dependencies and their corresponding moon
 | seL4 kernel (reference) | `vendor-sel4-kernel` | Production seL4 VMM integration | `moonshot-sel4-vmm` |
 | VirtIO (virtualization) | `vendor-virtio` | Native hypervisor | `moonshot-hypervisor` |
 | WireGuard (VPN) | `vendor-wireguard` | Native private mesh | `moonshot-network` |
-| MaxMind GeoIP | `vendors-maxmind` | Native geographic resolution | `moonshot-index` |
+| MaxMind GeoIP | `app-mediakit-telemetry/assets/` (GeoLite2) | Native geographic resolution | `moonshot-index` |
 | Databases (PostgreSQL, etc.) | (classified as debt) | Flat-file state machine (partial parity) | `moonshot-database` |
 
 ## The Moonshot Pipeline
