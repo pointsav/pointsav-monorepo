@@ -25,7 +25,6 @@ These substitutions are known and in progress. Canonical names are from the Nome
 
 | Legacy | Canonical | Status | Notes |
 |---|---|---|---|
-| `service-parser` | `service-extraction` | In flight — both names present | Working name still used in portions of the active codebase. Canonical name is the long-term target. Consolidation planned for a future release. |
 | `service-llm` | `service-slm` | Documentation-only inconsistency | Code references are correct. Legacy appearances in docs should be read as `service-slm`. |
 | `cluster-totebox-real-property` | `cluster-totebox-property` | In flight | Appears in older deployment manifests and doc references. |
 | `os-interface`, `os-integration` | `os-orchestration` | In flight | Legacy names predate the current three-layer stack nomenclature. |
@@ -75,7 +74,9 @@ Pending confirmations that affect how Claude should describe or reason about par
 
 Migrations fully resolved in the repo. Moved here from **Active legacy-to-canonical renames** when the last occurrence of the legacy name is removed. Empty for now.
 
-*(none yet — move rows here as migrations close out)*
+| Legacy | Canonical | Closed | Notes |
+|---|---|---|---|
+| `service-parser` | `service-extraction` | 2026-04-23 | Legacy-era scaffold containing only a README that described an AI-routing architecture since superseded by `service-extraction`'s deterministic Parser-Combinators approach. Zero runtime references, never a workspace member, one commit in history. No code or data to recycle into `service-extraction`; README deleted without migration. |
 
 ---
 
@@ -149,6 +150,13 @@ Newest on top. Append a dated block when a session includes meaningful cleanup w
   at project root — runtime log, almost certainly should be
   gitignored (and removed from tracking if tracked). Not addressed
   in this session. Added to `NEXT.md` as a separate item.
+- **First rename-series closure: `service-parser` removed.**
+  `service-parser/` directory deleted (`git rm -r`); contained
+  only a README describing an abandoned AI-routing framing — no
+  code, no data, no subdirectories. Zero runtime references
+  anywhere in the repo. Rename-table row moved to Completed
+  migrations; registry row removed; registry Defect count updated
+  from 5 to 4 and Total rows from 100 to 99.
 - **Open question surfaced.** `surveyor.py` hard-codes
   `MAX_DAILY_VERIFICATIONS = 10`. The existing cleanup-log open
   question — "Verification Surveyor daily throttle number — Under
