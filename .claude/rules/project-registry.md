@@ -8,7 +8,7 @@ must be closed.
 
 State vocabulary — see `~/Foundry/CLAUDE.md` §8 for definitions.
 
-Last updated: 2026-04-22.
+Last updated: 2026-04-23.
 
 ---
 
@@ -126,7 +126,6 @@ Last updated: 2026-04-22.
 | service-fs | Scaffold-coded | service | 3 files; in workspace members |
 | service-http | Scaffold-coded | service | 9 files |
 | service-message-courier | Reserved-folder | service | 1 file |
-| service-parser | Defect → remove | service | Legacy name; canonical is `service-extraction`; removal pending |
 | service-people | Scaffold-coded | service | 17 files; in workspace members |
 | service-search | Reserved-folder | service | 1 file |
 | service-slm | Scaffold-coded | service | 14 files |
@@ -184,14 +183,14 @@ Last updated: 2026-04-22.
 
 ---
 
-## Summary (2026-04-22 baseline)
+## Summary (2026-04-23)
 
 - **Active:** 4 (`app-console-bookkeeper`, `app-workplace-presentation`, `app-workplace-proforma`, `service-extraction`)
 - **Scaffold-coded:** 51
 - **Reserved-folder:** 36
-- **Defect:** 5 (`pointsav-pty-bridge`, `service-parser`, `service-email-egress-ews`, `service-email-egress-imap`, `vendors-maxmind`)
+- **Defect:** 4 (`pointsav-pty-bridge`, `service-email-egress-ews`, `service-email-egress-imap`, `vendors-maxmind`)
 - **Not-a-project:** 2 (`discovery-queue`, `target`)
 - **Dormant:** 0
 - **Archived:** 0
 
-**Total rows:** 100.
+**Total rows:** 99.
