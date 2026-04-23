@@ -28,10 +28,6 @@ Each item below is a separate commit via `tool-commit-as-next.sh`.
   Verification Surveyor operational tool; check callers before
   move. Reconcile the `MAX_DAILY_VERIFICATIONS = 10` value with
   the corresponding cleanup-log open question in the same commit.
-- **Rename `os-infrastructure/build_iso/forge_iso.sh`** →
-  `os-infrastructure/build_iso/compile_binary.sh` (resolve
-  duplicate-filename collision with the sibling ISO-assembly
-  script at the project root).
 - **Project-root scripts → `scripts/` subfolders** (separate
   commit per project): `service-vpn` (5 scripts),
   `service-email` (`spool-daemon.sh`), `service-slm`
@@ -127,6 +123,12 @@ Each item below is a separate commit via `tool-commit-as-next.sh`.
   Zero runtime callers; script uses absolute paths so no content
   edits were needed. Repo root is now one file lighter against the
   new rule.
+- `os-infrastructure/build_iso/forge_iso.sh` renamed to
+  `compile_binary.sh` — resolves filename collision with the
+  sibling ISO-assembly script at the project root. In-file header
+  updated. Zero external callers. New open question logged in
+  `cleanup-log.md`: the compile and assembly scripts are not wired
+  together.
 
 ## Recently closed (2026-04-22)
 
