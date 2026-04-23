@@ -92,6 +92,51 @@ Newest on top. Append a dated block when a session includes meaningful cleanup w
 
 ---
 
+## 2026-04-23
+
+- **Repo-layout rule introduced.** Added
+  `.claude/rules/repo-layout.md` codifying the allowed file set at
+  the monorepo root and at each project directory root, and naming
+  the sibling repos where cross-cutting content belongs (user guides,
+  ADRs, design-system material). Anchor for the file-relocation work
+  queued behind it (see `NEXT.md`).
+- **Defects surfaced at root by this rule** — staged for separate
+  commits, not moved in this session:
+  - `force_build.sh` (tracked, at repo root) → queued move to
+    `vendor-sel4-kernel/scripts/` (its entire body operates on that
+    directory).
+  - `GUIDE-OPERATIONS.md` (tracked, at repo root) → queued move to
+    `content-wiki-documentation/`.
+  - `USER_GUIDE_2026-03-30_V2.md` (tracked, at repo root) → queued
+    move to `content-wiki-documentation/` with `_V2` dropped, per
+    CLAUDE.md §6 edit-in-place rule.
+  - `app-console-content/src/{pointsav-surveyor.sh,surveyor.py}` →
+    queued move to `app-console-content/scripts/`. `surveyor.py` is
+    the Verification Surveyor operational tool, misfiled alongside
+    Rust crate source.
+  - `os-infrastructure/build_iso/forge_iso.sh` → queued rename to
+    `os-infrastructure/build_iso/compile_binary.sh` (resolves
+    duplicate-filename collision with the sibling ISO-assembly
+    script at the project root).
+- **Project-root scripts flagged (not yet moved):** ~15 scripts sit
+  at project root instead of under `scripts/` across `service-vpn`
+  (5 generator scripts), `service-email` (`spool-daemon.sh`),
+  `service-slm` (`cognitive-bridge.sh`), `service-content`
+  (`forge-seeds.sh`), `os-network-admin` (2 scripts),
+  `os-totebox` (1), `tool-cognitive-forge` (1),
+  `vendor-phi3-mini` (2), `app-mediakit-telemetry` (5 generic
+  scaffold scripts). Each project is a separate closure task.
+- **Open question surfaced.** `surveyor.py` hard-codes
+  `MAX_DAILY_VERIFICATIONS = 10`. The existing cleanup-log open
+  question — "Verification Surveyor daily throttle number — Under
+  operational review. Do not cite a specific number" — must
+  reconcile: either the code is authoritative (close the question,
+  value is 10) or the doc is authoritative (the code is out of step
+  and needs updating). Do not cite the number externally until
+  resolved.
+
+---
+
 ## 2026-04-22
 
 - **Project framework bootstrap.** Added `.claude/rules/project-registry.md`
