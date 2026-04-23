@@ -60,8 +60,6 @@ the source-remove.
   reclass (move `.mmdb` out of Git to build-time fetch).
 - `pointsav-pty-bridge` → `service-pty-bridge` (brand-prefix
   violation; daemon runtime fits `service-*`).
-- `service-parser` → remove (legacy name; canonical is
-  `service-extraction`).
 - `service-email-egress-{ews,imap}` → `service-email-egress`
   (consolidate per Q3a decision).
 - `tool-cognitive-forge` → rename pending ("Cognitive Forge" on
@@ -157,6 +155,14 @@ the source-remove.
   `os-network-admin`, `vendor-phi3-mini`, `service-vpn`,
   `app-mediakit-telemetry`. Stray `tool-cognitive-forge/llama.log`
   surfaced as a separate housekeeping item.
+- `service-parser/` removed — first rename-series closure.
+  Directory contained only a README describing a superseded
+  AI-routing framing; zero runtime references, never a workspace
+  member, one commit in history. Nothing recyclable into
+  `service-extraction` (which describes a different, deterministic
+  Parser-Combinators approach). Rename-table row moved to
+  Completed migrations; registry row removed (Defect count
+  5 → 4, Total rows 100 → 99).
 
 ## Recently closed (2026-04-22)
 
