@@ -102,9 +102,11 @@ Newest on top. Append a dated block when a session includes meaningful cleanup w
   queued behind it (see `NEXT.md`).
 - **Defects surfaced at root by this rule** — staged for separate
   commits, not moved in this session:
-  - `force_build.sh` (tracked, at repo root) → queued move to
-    `vendor-sel4-kernel/scripts/` (its entire body operates on that
-    directory).
+  - ~~`force_build.sh` (tracked, at repo root) → queued move to
+    `vendor-sel4-kernel/scripts/`~~ **Closed 2026-04-23** — moved
+    via `git mv` in a follow-up commit within this session. Zero
+    runtime callers; script body uses absolute paths so no content
+    edits required.
   - `GUIDE-OPERATIONS.md` (tracked, at repo root) → queued move to
     `content-wiki-documentation/`.
   - `USER_GUIDE_2026-03-30_V2.md` (tracked, at repo root) → queued
