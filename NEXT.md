@@ -58,8 +58,6 @@ the source-remove.
 
 - `vendors-maxmind` → `vendor-maxmind` (typo) + data-category
   reclass (move `.mmdb` out of Git to build-time fetch).
-- `pointsav-pty-bridge` → `service-pty-bridge` (brand-prefix
-  violation; daemon runtime fits `service-*`).
 - `service-email-egress-{ews,imap}` → `service-email-egress`
   (consolidate per Q3a decision).
 - `tool-cognitive-forge` → rename pending ("Cognitive Forge" on
@@ -163,6 +161,14 @@ the source-remove.
   Parser-Combinators approach). Rename-table row moved to
   Completed migrations; registry row removed (Defect count
   5 → 4, Total rows 100 → 99).
+- `pointsav-pty-bridge` → `service-pty-bridge` — second
+  rename-series closure. Directory renamed via `git mv` (4 files,
+  all 100% renames); `Cargo.toml` `name` field updated in the
+  same commit. Registry row moved from "Other / special" into
+  the Service table; reclassified Defect → Scaffold-coded
+  (Defect 4 → 3, Scaffold-coded 51 → 52). Zero external import
+  references; not a workspace member; stray `Cargo.lock` left
+  in place (resolves with workspace unification).
 
 ## Recently closed (2026-04-22)
 
