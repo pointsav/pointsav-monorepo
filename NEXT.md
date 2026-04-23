@@ -17,8 +17,6 @@ Last updated: 2026-04-23.
 Rule source: `.claude/rules/repo-layout.md` (introduced 2026-04-23).
 Each item below is a separate commit via `tool-commit-as-next.sh`.
 
-- **Move `force_build.sh`** → `vendor-sel4-kernel/scripts/` (its
-  body operates entirely on that directory).
 - **Move `GUIDE-OPERATIONS.md`** → `content-wiki-documentation/`
   (cross-repo move; commit in each repo).
 - **Move `USER_GUIDE_2026-03-30_V2.md`** →
@@ -125,6 +123,10 @@ Each item below is a separate commit via `tool-commit-as-next.sh`.
   (`content-wiki-documentation`, `pointsav-design-system`, etc.)
   where cross-cutting content belongs. Anchor for the "Layout
   hygiene" queue above.
+- `force_build.sh` relocated — root → `vendor-sel4-kernel/scripts/`.
+  Zero runtime callers; script uses absolute paths so no content
+  edits were needed. Repo root is now one file lighter against the
+  new rule.
 
 ## Recently closed (2026-04-22)
 
