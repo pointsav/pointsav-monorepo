@@ -119,8 +119,8 @@ Last updated: 2026-04-23.
 | service-content | Scaffold-coded | service | 37 files; in workspace members |
 | service-egress | Scaffold-coded | service | 4 files |
 | service-email | Scaffold-coded | service | 18 files |
-| service-email-egress-ews | Defect → `service-email-egress` | service | Doubly-nested; 6 sub-crates; consolidation pending |
-| service-email-egress-imap | Defect → `service-email-egress` | service | Same consolidation |
+| service-email-egress-ews | Scaffold-coded | service | EWS protocol adapter; doubly-nested wrapper flattened 2026-04-23 (prior "consolidation" plan reversed — kept separate from `-imap` because they are two protocol-specific implementations, not duplicates); 6 sub-crates including EWS-only `egress-prune` and `egress-balancer`; Cargo.toml name mismatches (13 total across both) remain as separate audit finding |
+| service-email-egress-imap | Scaffold-coded | service | IMAP protocol adapter; doubly-nested wrapper flattened 2026-04-23; 4 sub-crates; parallel structure to `-ews` but without prune/balancer |
 | service-email-template | Scaffold-coded | service | 5 files |
 | service-extraction | Active | service | 21 files; CLAUDE.md present but stale (see NEXT.md Item 9) |
 | service-fs | Scaffold-coded | service | 3 files; in workspace members |
@@ -185,9 +185,9 @@ Last updated: 2026-04-23.
 ## Summary (2026-04-23)
 
 - **Active:** 4 (`app-console-bookkeeper`, `app-workplace-presentation`, `app-workplace-proforma`, `service-extraction`)
-- **Scaffold-coded:** 52
+- **Scaffold-coded:** 54
 - **Reserved-folder:** 36
-- **Defect:** 2 (`service-email-egress-ews`, `service-email-egress-imap`)
+- **Defect:** 0
 - **Not-a-project:** 2 (`discovery-queue`, `target`)
 - **Dormant:** 0
 - **Archived:** 0
