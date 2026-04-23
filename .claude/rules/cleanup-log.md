@@ -173,6 +173,17 @@ Newest on top. Append a dated block when a session includes meaningful cleanup w
   workspace member. Stray `Cargo.lock` inside the renamed
   directory remains — resolves with workspace `Cargo.toml`
   unification (separate open structural defect).
+- **Handoffs-outbound entries made self-executing.** Each outbox
+  entry now carries a "Prescriptive actions" subsection with the
+  exact commands a destination Root Claude can run mechanically —
+  `cp` commands from source absolute path, `git add`, commit
+  message, any in-transit edits, and the completion-signal commit
+  pattern. Header also describes the convention so future outboxes
+  follow the same shape. Two existing entries for
+  `GUIDE-OPERATIONS.md` and `USER_GUIDE_2026-03-30_V2.md` updated
+  with their prescriptive actions. This lets a cold-start Root
+  Claude session in `content-wiki-documentation/` execute the
+  handoffs without reading anything from this session's context.
 - **Fifth (final) rename-series closure: Cognitive Forge term
   retired.** `service-slm/cognitive-forge/` renamed to
   `service-slm/router/`; former top-level `tool-cognitive-forge/`
