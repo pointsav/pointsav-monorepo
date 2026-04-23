@@ -15,13 +15,24 @@ outbox entry is passive state: it describes intent, but nothing
 moves until Master Claude, a Root Claude, or a Task Claude picks
 it up.
 
+Each entry carries a **Prescriptive actions** subsection — exact
+commands the destination Root Claude can execute mechanically
+without needing context from this session. A destination Root
+Claude starting cold in the target repo can read this file, find
+its repo name in the destination field, and run the listed
+commands. Completion is signalled by a commit whose message
+matches the pattern named in the entry's closing step; a future
+Root Claude session in this repo grep-detects that pattern in the
+destination repo's `git log` and then closes the outbox entry
+with the source-side `git rm` commit.
+
 ---
 
 ## GUIDE-OPERATIONS.md → content-wiki-documentation
 
-- **Source path:** `GUIDE-OPERATIONS.md` (this repo root)
+- **Source path:** `GUIDE-OPERATIONS.md` (pointsav-monorepo repo root)
 - **Destination repo:** `content-wiki-documentation`
-- **Destination path:** `GUIDE-OPERATIONS.md` (destination root)
+- **Destination path:** `GUIDE-OPERATIONS.md` (destination repo root)
 - **Rationale:** Operations guide is cross-cutting documentation;
   per `repo-layout.md` sibling-repo table, documentation of this
   kind belongs in `content-wiki-documentation`. Not allowed at the
@@ -29,6 +40,36 @@ it up.
 - **State:** `pending-destination-commit`
 - **Opened:** 2026-04-23 by Root Claude
 - **Notes:** Plain move — no rename, no content change.
+
+### Prescriptive actions for a Root Claude in content-wiki-documentation
+
+Run these from working directory
+`/home/mathew/Foundry/factory-pointsav/content-wiki-documentation/`.
+
+1. Copy the source file into the destination repo:
+   ```
+   cp /home/mathew/Foundry/factory-pointsav/pointsav-monorepo/GUIDE-OPERATIONS.md ./GUIDE-OPERATIONS.md
+   ```
+
+2. Stage it:
+   ```
+   git add GUIDE-OPERATIONS.md
+   ```
+
+3. Commit via the staging-tier helper:
+   ```
+   ~/Foundry/tool-commit-as-next.sh "receive GUIDE-OPERATIONS.md from pointsav-monorepo — operations-guide relocation per repo-layout sibling-repo table"
+   ```
+
+4. No in-transit content edits. No callers in this repo. No
+   registry updates needed (this repo has no project registry;
+   content-wiki repos are flat collections of topics).
+
+5. When complete, the source-side `git rm` will be committed in a
+   future Root Claude session in pointsav-monorepo. That session
+   detects completion by grepping this repo's `git log` for the
+   commit-message pattern `"receive GUIDE-OPERATIONS.md from
+   pointsav-monorepo"`.
 
 ---
 
@@ -57,3 +98,46 @@ it up.
   that happened in the monorepo the same day. The destination
   Root Claude will receive the corrected path; no separate
   follow-up needed on that line.
+
+### Prescriptive actions for a Root Claude in content-wiki-documentation
+
+Run these from working directory
+`/home/mathew/Foundry/factory-pointsav/content-wiki-documentation/`.
+
+1. Copy the source file into the destination repo **with the
+   `_V2` suffix dropped** (rename-on-transit per CLAUDE.md §6
+   edit-in-place rule):
+   ```
+   cp /home/mathew/Foundry/factory-pointsav/pointsav-monorepo/USER_GUIDE_2026-03-30_V2.md ./USER_GUIDE_2026-03-30.md
+   ```
+
+2. Stage it:
+   ```
+   git add USER_GUIDE_2026-03-30.md
+   ```
+
+3. Commit via the staging-tier helper:
+   ```
+   ~/Foundry/tool-commit-as-next.sh "receive USER_GUIDE_2026-03-30 from pointsav-monorepo — user-guide relocation; _V2 suffix dropped per CLAUDE.md §6 edit-in-place rule"
+   ```
+
+4. In-transit content edits have already been applied in the
+   source repo (line 902 path reference updated 2026-04-23). No
+   further edits needed at receipt.
+
+5. **Flag: BCSC disclosure review required before any public
+   reuse.** The User Guide contains language treating the
+   Sovereign Data Foundation as a current equity holder and
+   active auditor. Per CLAUDE.md §6 BCSC disclosure rule, the
+   Foundation must be referred to in planned / intended terms
+   only. If this repo has a `NEXT.md` or `.claude/rules/cleanup-log.md`,
+   log an entry flagging that a language-review pass is required
+   before any public reuse of this document. **Do not perform
+   the review in this commit** — only flag. The review is a
+   separate editorial task.
+
+6. When complete, the source-side `git rm` will be committed in
+   a future Root Claude session in pointsav-monorepo. That
+   session detects completion by grepping this repo's `git log`
+   for the commit-message pattern `"receive USER_GUIDE_2026-03-30
+   from pointsav-monorepo"`.
