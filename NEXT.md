@@ -23,11 +23,6 @@ Each item below is a separate commit via `tool-commit-as-next.sh`.
   `content-wiki-documentation/` with `_V2` suffix dropped per
   CLAUDE.md §6. BCSC-language review of the User Guide content
   remains a separate open question (see cleanup-log).
-- **Move `app-console-content/src/{pointsav-surveyor.sh,surveyor.py}`**
-  → `app-console-content/scripts/`. `surveyor.py` is the live
-  Verification Surveyor operational tool; check callers before
-  move. Reconcile the `MAX_DAILY_VERIFICATIONS = 10` value with
-  the corresponding cleanup-log open question in the same commit.
 - **Project-root scripts → `scripts/` subfolders** (separate
   commit per project): `service-vpn` (5 scripts),
   `service-email` (`spool-daemon.sh`), `service-slm`
@@ -129,6 +124,13 @@ Each item below is a separate commit via `tool-commit-as-next.sh`.
   updated. Zero external callers. New open question logged in
   `cleanup-log.md`: the compile and assembly scripts are not wired
   together.
+- `app-console-content/src/{pointsav-surveyor.sh,surveyor.py}`
+  relocated to `app-console-content/scripts/`. Both files moved as
+  100% renames. Shell wrapper is relative (`$(dirname "$0")`),
+  Python script uses absolute paths — neither needed content
+  edits. Throttle open-question row in `cleanup-log.md` updated
+  with a code-reference pointer to the new path; the operator
+  decision on `MAX_DAILY_VERIFICATIONS = 10` remains open.
 
 ## Recently closed (2026-04-22)
 
