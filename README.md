@@ -148,7 +148,7 @@ Every third-party dependency is tracked as formal technical debt. For each quara
 | `vendor-linux-systemd` | `moonshot-kernel` — rc.d / runit on FreeBSD / seL4 |
 | `vendor-wireguard` | `moonshot-network` — native private mesh |
 | `vendor-phi3-mini` | `moonshot-toolkit` — native SLM execution |
-| `vendors-maxmind` | `moonshot-index` — native geographic resolution |
+| `app-mediakit-telemetry/assets/` (MaxMind GeoLite2) | `moonshot-index` — native geographic resolution |
 
 ---
 
