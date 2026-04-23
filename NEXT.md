@@ -17,12 +17,6 @@ Last updated: 2026-04-23.
 Rule source: `.claude/rules/repo-layout.md` (introduced 2026-04-23).
 Each item below is a separate commit via `tool-commit-as-next.sh`.
 
-- **Move `GUIDE-OPERATIONS.md`** → `content-wiki-documentation/`
-  (cross-repo move; commit in each repo).
-- **Move `USER_GUIDE_2026-03-30_V2.md`** →
-  `content-wiki-documentation/` with `_V2` suffix dropped per
-  CLAUDE.md §6. BCSC-language review of the User Guide content
-  remains a separate open question (see cleanup-log).
 - **Project-root scripts → `scripts/` subfolders** (separate
   commit per project): `service-vpn` (5 scripts),
   `service-email` (`spool-daemon.sh`), `service-slm`
@@ -31,6 +25,20 @@ Each item below is a separate commit via `tool-commit-as-next.sh`.
   `tool-cognitive-forge` (1 script), `vendor-phi3-mini` (2
   scripts), `app-mediakit-telemetry` (5 generic scaffold
   scripts).
+
+### Awaiting cross-repo handoff
+
+Entries lodged in `.claude/rules/handoffs-outbound.md`. Pattern is
+passive — nothing moves until Master Claude or a Root Claude in
+the destination repo picks up the entry and commits the add-side.
+Source files remain in place here until the destination has
+committed; only then does a follow-up Root Claude session commit
+the source-remove.
+
+- **`GUIDE-OPERATIONS.md` → `content-wiki-documentation`** — see
+  outbox for destination path and rationale.
+- **`USER_GUIDE_2026-03-30_V2.md` → `content-wiki-documentation`**
+  (with `_V2` dropped in transit) — see outbox.
 
 ### Framework follow-ups
 
@@ -131,6 +139,14 @@ Each item below is a separate commit via `tool-commit-as-next.sh`.
   edits. Throttle open-question row in `cleanup-log.md` updated
   with a code-reference pointer to the new path; the operator
   decision on `MAX_DAILY_VERIFICATIONS = 10` remains open.
+- Handoff-outbound pattern introduced —
+  `.claude/rules/handoffs-outbound.md` logs cross-repo file moves
+  kept in place here until a Root Claude in the destination repo
+  commits them. Two entries lodged (`GUIDE-OPERATIONS.md`,
+  `USER_GUIDE_2026-03-30_V2.md`, both to
+  `content-wiki-documentation`). Formalisation of the pattern in
+  `~/Foundry/CLAUDE.md` §9 and §10 surfaced for Master Claude in
+  `cleanup-log.md`.
 
 ## Recently closed (2026-04-22)
 
@@ -151,3 +167,4 @@ Each item below is a separate commit via `tool-commit-as-next.sh`.
 - Project registry: `.claude/rules/project-registry.md`
 - Cleanup log: `.claude/rules/cleanup-log.md`
 - Repo layout rule: `.claude/rules/repo-layout.md`
+- Handoffs outbound: `.claude/rules/handoffs-outbound.md`
