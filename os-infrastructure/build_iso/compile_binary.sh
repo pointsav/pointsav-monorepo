@@ -1,8 +1,11 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# Script: forge_iso.sh (Workspace-Aware Assembly)
+# Script: compile_binary.sh (Workspace-Aware Compile)
 # Product: os-infrastructure (Node 1 - Muscle)
 # Purpose: Compiles and extracts the binary from the Workspace Root.
+# Renamed 2026-04-23 from forge_iso.sh to resolve filename collision
+# with ../forge_iso.sh (ISO assembly). This script is the compile
+# step; the sibling at the project root is the assembly step.
 # ==============================================================================
 
 set -euo pipefail
