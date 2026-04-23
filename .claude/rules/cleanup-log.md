@@ -92,6 +92,48 @@ Newest on top. Append a dated block when a session includes meaningful cleanup w
 
 ---
 
+## 2026-04-23 — service-slm activation (framework §8)
+
+- **`service-slm` activated via framework §8.** First-live
+  cluster occupation on `cluster/service-slm` (Task Claude in
+  `~/Foundry/clones/service-slm/`). Added per-project
+  `CLAUDE.md`, `NEXT.md`, `ARCHITECTURE.md`, `DEVELOPMENT.md`.
+  Registry row flipped Scaffold-coded → Active; summary count
+  4 → 5. Commit `32e51e4`, Peter-authored, held locally
+  (no push) per workspace `CLAUDE.md` §7 Stage-6 hold.
+- **Four defects newly surfaced at service-slm project level** —
+  added to `service-slm/NEXT.md` Queue, not yet closed:
+  - `cognitive-bridge.sh` at project root (layout defect;
+    already flagged in monorepo `NEXT.md` layout-hygiene list).
+  - `transient-queues/` holds runtime payload state in Git,
+    mirroring the `discovery-queue` "Not-a-project" pattern.
+    Triage pending.
+  - `cognitive-forge/` subcrate carries the Do-Not-Use term
+    "Cognitive Forge." Inherits the rename concern queued
+    against sibling `tool-cognitive-forge`; pair both in one
+    decision.
+  - `cognitive-forge → content-compiler` wire format
+    inconsistent — writer emits `.md`, reader parses `.json`.
+    Not interoperating today.
+- **Open architectural question surfaced — standalone vs nested
+  cargo workspace.** SLM-STACK.md lays `service-slm` out as its
+  own cargo workspace with `crates/`. The monorepo
+  workspace-under-declaration (2026-04-18 audit finding) has a
+  pending unification decision. Which wins — standalone per
+  SLM-STACK, or nested member of a unified monorepo workspace?
+  Recorded in `service-slm/ARCHITECTURE.md` §6 "Open question";
+  scaffolding waits for resolution.
+- **Workspace-root → sibling/cluster handoff pattern first
+  applied.** New workspace `CLAUDE.md` §9 "Workspace-root
+  source files" subsection is the tracking mechanism for
+  `SLM-STACK.md` / `YOYO-COMPUTE.md` rehoming. The Task-scope
+  half landed in commit `32e51e4`; the Root-scope half (wiki
+  `topic-*.md` files) remains open for a Root Claude session
+  in `content-wiki-documentation/`. Workspace-root originals
+  stay in place until every destination has committed.
+
+---
+
 ## 2026-04-23
 
 - **Repo-layout rule introduced.** Added
