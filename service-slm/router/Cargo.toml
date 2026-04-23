@@ -1,5 +1,5 @@
 [package]
-name = "cognitive-forge"
+name = "router"
 version = "1.0.0"
 edition = "2021"
 

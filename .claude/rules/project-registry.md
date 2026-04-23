@@ -129,7 +129,7 @@ Last updated: 2026-04-23.
 | service-people | Scaffold-coded | service | 17 files; in workspace members |
 | service-pty-bridge | Scaffold-coded | service | Renamed 2026-04-23 from `pointsav-pty-bridge` (brand-prefix violation resolved); 1 source file (`src/main.rs`); not a workspace member |
 | service-search | Reserved-folder | service | 1 file |
-| service-slm | Scaffold-coded | service | 14 files |
+| service-slm | Scaffold-coded | service | Contains `router/` (Rust runtime, renamed 2026-04-23 from `cognitive-forge/`) and `router-trainer/` (Python distillation workflow, moved in 2026-04-23 from former top-level `tool-cognitive-forge/`); both names replace the retired "cognitive-forge" term per Do-Not-Use list |
 | service-totebox-egress | Scaffold-coded | service | 18 files |
 | service-vpn | Scaffold-coded | service | 11 files |
 
@@ -153,7 +153,6 @@ Last updated: 2026-04-23.
 |---|---|---|---|
 | tool-acs-miner | Scaffold-coded | tool | 3 files; in workspace members |
 | tool-archive-rescue | Reserved-folder | tool | 3 files |
-| tool-cognitive-forge | Scaffold-coded | tool | 8 files; "Cognitive Forge" is a retired term per Do-Not-Use list — rename pending |
 | tool-edgar-extractor | Reserved-folder | tool | 2 files |
 | tool-egress-pull | Scaffold-coded | tool | 4 files |
 | tool-template-rescue | Reserved-folder | tool | 3 files |
@@ -185,11 +184,11 @@ Last updated: 2026-04-23.
 ## Summary (2026-04-23)
 
 - **Active:** 4 (`app-console-bookkeeper`, `app-workplace-presentation`, `app-workplace-proforma`, `service-extraction`)
-- **Scaffold-coded:** 54
+- **Scaffold-coded:** 53
 - **Reserved-folder:** 36
 - **Defect:** 0
 - **Not-a-project:** 2 (`discovery-queue`, `target`)
 - **Dormant:** 0
 - **Archived:** 0
 
-**Total rows:** 98.
+**Total rows:** 97.
