@@ -77,6 +77,7 @@ Migrations fully resolved in the repo. Moved here from **Active legacy-to-canoni
 | Legacy | Canonical | Closed | Notes |
 |---|---|---|---|
 | `service-parser` | `service-extraction` | 2026-04-23 | Legacy-era scaffold containing only a README that described an AI-routing architecture since superseded by `service-extraction`'s deterministic Parser-Combinators approach. Zero runtime references, never a workspace member, one commit in history. No code or data to recycle into `service-extraction`; README deleted without migration. |
+| `pointsav-pty-bridge` | `service-pty-bridge` | 2026-04-23 | Prefix-violation defect flagged in 2026-04-18 audit (brand prefix `pointsav-` not one of the seven canonical prefixes). Canonical target `service-pty-bridge` fits the daemon runtime role. Working Rust crate with one source file; directory renamed via `git mv`, `Cargo.toml` `name` field updated in the same commit. Not a workspace member, zero external import references, no callers needed updating. |
 
 ---
 
@@ -157,6 +158,19 @@ Newest on top. Append a dated block when a session includes meaningful cleanup w
   anywhere in the repo. Rename-table row moved to Completed
   migrations; registry row removed; registry Defect count updated
   from 5 to 4 and Total rows from 100 to 99.
+- **Second rename-series closure: `pointsav-pty-bridge` →
+  `service-pty-bridge`.** Directory renamed via `git mv` (four
+  100% renames: `.gitignore`, `Cargo.toml`, `Cargo.lock`,
+  `src/main.rs`); `target/` left in place because it is gitignored
+  build output. `Cargo.toml` `name` field updated in the same
+  commit. Registry row moved from "Other / special" to the
+  Service section, alphabetically between `service-people` and
+  `service-search`, reclassified Defect → Scaffold-coded. Summary
+  counters: Defect 4 → 3, Scaffold-coded 51 → 52, Total stays 99.
+  Zero external Rust imports, no callers needed updating; not a
+  workspace member. Stray `Cargo.lock` inside the renamed
+  directory remains — resolves with workspace `Cargo.toml`
+  unification (separate open structural defect).
 - **Open question surfaced.** `surveyor.py` hard-codes
   `MAX_DAILY_VERIFICATIONS = 10`. The existing cleanup-log open
   question — "Verification Surveyor daily throttle number — Under
