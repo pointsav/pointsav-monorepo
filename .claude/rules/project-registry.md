@@ -171,7 +171,6 @@ Last updated: 2026-04-23.
 | vendor-slm-engine | Reserved-folder | vendor | 3 files |
 | vendor-virtio | Reserved-folder | vendor | 1 file |
 | vendor-wireguard | Reserved-folder | vendor | 1 file |
-| vendors-maxmind | Defect → `vendor-maxmind` + data-reclass | vendor | Typo (plural); plus .mmdb belongs at build-time-fetch, not in Git |
 
 ## Other / special
 
@@ -188,9 +187,9 @@ Last updated: 2026-04-23.
 - **Active:** 4 (`app-console-bookkeeper`, `app-workplace-presentation`, `app-workplace-proforma`, `service-extraction`)
 - **Scaffold-coded:** 52
 - **Reserved-folder:** 36
-- **Defect:** 3 (`service-email-egress-ews`, `service-email-egress-imap`, `vendors-maxmind`)
+- **Defect:** 2 (`service-email-egress-ews`, `service-email-egress-imap`)
 - **Not-a-project:** 2 (`discovery-queue`, `target`)
 - **Dormant:** 0
 - **Archived:** 0
 
-**Total rows:** 99.
+**Total rows:** 98.
