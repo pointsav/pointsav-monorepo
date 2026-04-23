@@ -116,10 +116,11 @@ Newest on top. Append a dated block when a session includes meaningful cleanup w
     queued move to `app-console-content/scripts/`. `surveyor.py` is
     the Verification Surveyor operational tool, misfiled alongside
     Rust crate source.
-  - `os-infrastructure/build_iso/forge_iso.sh` → queued rename to
-    `os-infrastructure/build_iso/compile_binary.sh` (resolves
-    duplicate-filename collision with the sibling ISO-assembly
-    script at the project root).
+  - ~~`os-infrastructure/build_iso/forge_iso.sh` → queued rename to
+    `os-infrastructure/build_iso/compile_binary.sh`~~ **Closed
+    2026-04-23** — renamed via `git mv`; in-file header comment
+    updated to reflect the new name and record the rename
+    rationale. Zero external callers.
 - **Project-root scripts flagged (not yet moved):** ~15 scripts sit
   at project root instead of under `scripts/` across `service-vpn`
   (5 generator scripts), `service-email` (`spool-daemon.sh`),
@@ -136,6 +137,16 @@ Newest on top. Append a dated block when a session includes meaningful cleanup w
   value is 10) or the doc is authoritative (the code is out of step
   and needs updating). Do not cite the number externally until
   resolved.
+- **Second open question surfaced (os-infrastructure build
+  pipeline).** The two scripts `os-infrastructure/forge_iso.sh`
+  (ISO assembly) and `os-infrastructure/build_iso/compile_binary.sh`
+  (binary compile, renamed this session) are sequential build
+  stages but are not wired together — the assembly script does not
+  invoke the compile script, and there is no Makefile or top-level
+  driver. Operator must run them manually in order. Is this
+  intentional (operator-gated two-step) or drift (should become a
+  single driver script)? Pending decision before next pipeline
+  refactor.
 
 ---
 
