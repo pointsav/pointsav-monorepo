@@ -59,8 +59,6 @@ the source-remove.
 - `.mmdb` → build-time fetch (previously bundled with
   `vendors-maxmind`; now at `app-mediakit-telemetry/assets/`
   since 2026-04-23 data reclass). 63.5 MB currently in Git.
-- `service-email-egress-{ews,imap}` → `service-email-egress`
-  (consolidate per Q3a decision).
 - `tool-cognitive-forge` → rename pending ("Cognitive Forge" on
   Do-Not-Use list).
 
@@ -170,6 +168,16 @@ the source-remove.
   (Defect 4 → 3, Scaffold-coded 51 → 52). Zero external import
   references; not a workspace member; stray `Cargo.lock` left
   in place (resolves with workspace unification).
+- `service-email-egress-{ews,imap}` wrappers flattened — fourth
+  rename-series closure. Consolidation-to-`service-email-egress`
+  plan reversed after sub-crate review: EWS and IMAP are two
+  protocol adapters, not duplicates, and merging them would erase
+  the architectural distinction. Instead, the redundant
+  doubly-nested wrapper directories were flattened — 73 files
+  promoted up one level. Registry reclassified both from
+  Defect → Scaffold-coded; Defect count 2 → 0 (registry is now
+  Defect-free). The 13 dir-name / Cargo-name mismatches from the
+  2026-04-18 audit remain separate.
 - `vendors-maxmind` reclassified to
   `app-mediakit-telemetry/assets/` — third rename-series closure.
   Data-only directory moved to the authoritative path already

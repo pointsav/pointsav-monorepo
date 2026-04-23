@@ -172,6 +172,25 @@ Newest on top. Append a dated block when a session includes meaningful cleanup w
   workspace member. Stray `Cargo.lock` inside the renamed
   directory remains — resolves with workspace `Cargo.toml`
   unification (separate open structural defect).
+- **Fourth rename-series closure: `service-email-egress-{ews,imap}`
+  wrappers flattened; consolidation plan reversed.** After
+  reviewing sub-crate contents, EWS and IMAP are two
+  protocol-specific adapters — not duplicates. Shared sub-crates:
+  `egress-ingress`, `egress-ledger`, `egress-roster`,
+  `data-ledgers/`. Protocol-specific: `egress-archive-ews` /
+  `egress-archive-imap`; EWS-only: `egress-prune`,
+  `egress-balancer`. Merging them would erase that architectural
+  distinction. Instead, flattened the redundant
+  `service-email-egress-ews/service-email-egress-ews/` wrapper
+  (and the imap equivalent) — 73 files promoted up one level.
+  Relative `../data-ledgers/` paths in Rust sources remain valid
+  because crate dirs and `data-ledgers/` both moved together.
+  Registry reclassified both from Defect → Scaffold-coded;
+  Defect count 2 → 0 (registry is now Defect-free); Scaffold-coded
+  52 → 54. The 13 dir-name / Cargo-name mismatches the 2026-04-18
+  audit flagged (e.g., dir `egress-ingress` containing
+  `Cargo.toml` with `name = "service-email-batch-ingress"`) are
+  unaddressed and remain as a separate audit finding.
 - **Third rename-series closure: `vendors-maxmind` reclassified
   to `app-mediakit-telemetry/assets/`.** Not a rename but a
   data-reclass: the directory held only the 63.5 MB
