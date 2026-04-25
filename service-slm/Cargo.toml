@@ -1,0 +1,52 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/slm-core",
+    "crates/slm-doorman",
+    "crates/slm-doorman-server",
+]
+exclude = [
+    "cognitive-forge",
+]
+
+[workspace.package]
+edition = "2021"
+license = "Apache-2.0 OR MIT"
+rust-version = "1.85"
+
+[workspace.dependencies]
+slm-core = { path = "crates/slm-core" }
+slm-doorman = { path = "crates/slm-doorman" }
+
+# Async runtime
+tokio = { version = "1.40", features = ["full"] }
+
+# HTTP
+axum = "0.8"
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+
+# Serialisation
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# Identifiers, time
+uuid = { version = "1.10", features = ["v7", "serde"] }
+chrono = { version = "0.4", default-features = false, features = ["clock", "serde"] }
+
+# Errors
+anyhow = "1"
+thiserror = "2"
+
+# Observability
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
+strip = "symbols"
+
+[profile.dev]
+opt-level = 0
+debug = true
