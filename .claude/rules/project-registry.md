@@ -8,7 +8,7 @@ must be closed.
 
 State vocabulary — see `~/Foundry/CLAUDE.md` §8 for definitions.
 
-Last updated: 2026-04-23.
+Last updated: 2026-04-25.
 
 ---
 
@@ -129,7 +129,7 @@ Last updated: 2026-04-23.
 | service-parser | Defect → remove | service | Legacy name; canonical is `service-extraction`; removal pending |
 | service-people | Scaffold-coded | service | 17 files; in workspace members |
 | service-search | Reserved-folder | service | 1 file |
-| service-slm | Active | service | 14 files; activated 2026-04-23 via framework §8 (cluster/service-slm first-live); CLAUDE.md / NEXT.md / ARCHITECTURE.md / DEVELOPMENT.md present |
+| service-slm | Active | service | B1 Doorman scaffold landed 2026-04-25 (standalone cargo workspace; `crates/slm-core`, `slm-doorman`, `slm-doorman-server`); 6/6 tests; `cognitive-forge/` excluded pending rename |
 | service-totebox-egress | Scaffold-coded | service | 18 files |
 | service-vpn | Scaffold-coded | service | 11 files |
 

@@ -1,6 +1,6 @@
 # CLAUDE.md — service-slm
 
-> **State:** Active  —  **Last updated:** 2026-04-23
+> **State:** Active  —  **Last updated:** 2026-04-25
 > **Registry row:** `pointsav-monorepo/.claude/rules/project-registry.md`
 >
 > When state changes, update this header AND the registry row in the
@@ -22,12 +22,34 @@ service-content — see `ARCHITECTURE.md` Ring 3a.
 ## Current state
 
 **Scaffold-coded → Active on 2026-04-23** as part of the
-`cluster/service-slm` first-live cluster. The only code present is
-the nested `cognitive-forge/` subcrate (tokio-based binary that POSTs
-payloads to `http://127.0.0.1:8080/v1/chat/completions` and writes
-output into `service-content/knowledge-graph/`). There is no
-project-root `Cargo.toml` yet — the Rust workspace shape specified in
-`ARCHITECTURE.md` is not scaffolded.
+`cluster/service-slm` first-live cluster (now `cluster/project-slm`
+per the v0.0.7 cluster handoff).
+
+**B1 scaffolded on 2026-04-25** (Phase B Doorman task list, inbox
+v0.0.7). The standalone-vs-nested workspace question is closed —
+service-slm is its own cargo workspace at `service-slm/Cargo.toml`
+with three crates under `crates/`:
+
+- `slm-core` — shared types: `ModuleId`, `RequestId` (UUIDv7), `Tier`
+  enum (Local / Yoyo / External), `Complexity`, `ComputeRequest`,
+  `ComputeResponse`, error types. No async, no I/O.
+- `slm-doorman` (lib) — three-tier router skeleton (`router.rs`),
+  three tier-client modules (`tier/local.rs`, `tier/yoyo.rs`,
+  `tier/external.rs`), append-only JSONL audit ledger
+  (`ledger.rs`). Tier A makes real HTTP calls against an
+  OpenAI-compatible endpoint; Tier B (`B2`) and Tier C (`B4`) are
+  stubs that return `DoormanError::NotImplemented`.
+- `slm-doorman-server` (bin) — axum HTTP server. Endpoints:
+  `/healthz`, `/readyz`, `/v1/contract`, `POST /v1/chat/completions`.
+  Boots cleanly with no Yo-Yo configured (community-tier mode per
+  Optional Intelligence; `B5` verification path).
+
+The pre-existing `cognitive-forge/` subcrate remains in place but
+is `exclude`d from the workspace; its rename (paired with
+`tool-cognitive-forge`) is unchanged.
+
+Three known defects at project root remain unchanged (queued
+separately):
 
 Three known defects at project root:
 
@@ -57,40 +79,65 @@ roadmap.
 
 ## Build and test
 
-No build step at project root yet — no `Cargo.toml`. The nested
-subcrate builds in isolation:
+```
+cargo check --workspace                # Phase 1: ~1m40s cold, seconds incremental
+cargo test  --workspace                # 6 unit tests as of B1
+cargo clippy --workspace --all-targets -- -D warnings
+cargo fmt   --all -- --check
+```
+
+End-to-end against a real Tier A endpoint:
+
+```
+SLM_LOCAL_ENDPOINT=http://127.0.0.1:8080 \
+SLM_BIND_ADDR=127.0.0.1:9080 \
+    cargo run -p slm-doorman-server
+```
+
+`SLM_YOYO_ENDPOINT` is intentionally unset by default — community-
+tier mode. Setting it activates Tier B (currently a stub returning
+`NotImplemented` until B2 lands). The legacy `cognitive-forge/`
+subcrate still builds in isolation:
 
 ```
 cargo build --manifest-path cognitive-forge/Cargo.toml
 ```
 
-End-to-end execution requires a running SLM endpoint on
-`http://127.0.0.1:8080/v1/chat/completions` and a Totebox root
-directory containing `service-slm/transient-queues/` with payload
-files. Not run end-to-end from this clone.
-
 ## File layout
 
 ```
 service-slm/
-├── README.md                 English README
-├── README.es.md              Spanish README
-├── CLAUDE.md                 this file
-├── NEXT.md                   open items
-├── ARCHITECTURE.md           three-ring model, stack, target file tree
-├── DEVELOPMENT.md            build/CI policy, migration phases, blockers
-├── cognitive-bridge.sh       placeholder — defect, queued for scripts/
-├── cognitive-forge/          Rust subcrate — current extraction worker
+├── README.md                  English README
+├── README.es.md               Spanish README
+├── CLAUDE.md                  this file
+├── NEXT.md                    open items
+├── ARCHITECTURE.md            three-ring model, stack, target file tree
+├── DEVELOPMENT.md             build/CI policy, migration phases, blockers
+├── Cargo.toml                 workspace manifest (B1, 2026-04-25)
+├── deny.toml                  licence policy per DEVELOPMENT.md §2.1
+├── rust-toolchain.toml        stable channel pin
+├── .gitignore                 target/, swap files
+├── crates/
+│   ├── slm-core/              shared types, moduleId discipline
+│   ├── slm-doorman/           three-tier router + audit ledger (lib)
+│   └── slm-doorman-server/    axum HTTP entry point (bin)
+├── cognitive-bridge.sh        placeholder — defect, queued for scripts/
+├── cognitive-forge/           legacy subcrate — workspace `exclude`
 │   ├── Cargo.toml
 │   ├── Cargo.lock
-│   └── src/main.rs           tokio + reqwest + serde_json
-└── transient-queues/         runtime payload bleed — defect, triage pending
-    └── TX-*_skeleton.txt     (8 files)
+│   └── src/main.rs            tokio + reqwest + serde_json
+└── transient-queues/          runtime payload bleed — defect, triage pending
+    └── TX-*_skeleton.txt      (8 files)
 ```
 
-The target layout after Phase 2 — cargo workspace with `crates/`,
-`memory/`, `compute/`, `ledger/` — is in `ARCHITECTURE.md` §File
-tree. None of that exists yet.
+Still missing relative to `ARCHITECTURE.md` §File tree:
+`memory/{kv,adapters}/`, `compute/`, `outbound/`, `inbound/`,
+`log/`, `ledger/`, plus the remaining crates (`slm-ledger`,
+`slm-compute`, `slm-memory-kv`, `slm-memory-adapters`,
+`slm-inference-local`, `slm-inference-remote`, `slm-api`,
+`slm-cli`). Phase-1 additions land as the Phase B task list
+progresses (B2 fills `slm-doorman/src/tier/yoyo.rs`; B4 fills
+`tier/external.rs`).
 
 ## Hard constraints — do not violate
 
