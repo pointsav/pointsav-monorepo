@@ -92,6 +92,58 @@ Newest on top. Append a dated block when a session includes meaningful cleanup w
 
 ---
 
+## 2026-04-25 — B1 Doorman scaffold (Phase B, inbox v0.0.7)
+
+- **service-slm scaffolded as standalone cargo workspace.** New
+  `service-slm/Cargo.toml` (workspace), `deny.toml` (per
+  `service-slm/DEVELOPMENT.md` §2.1), `rust-toolchain.toml`
+  (stable), `.gitignore`. Three workspace members under
+  `crates/`: `slm-core` (shared types + moduleId discipline),
+  `slm-doorman` (lib: three-tier router + JSONL audit ledger),
+  `slm-doorman-server` (axum bin: `/healthz`, `/readyz`,
+  `/v1/contract`, `POST /v1/chat/completions`). Existing
+  `cognitive-forge/` subcrate remains untouched, listed under
+  workspace `exclude`. `cargo check`, `cargo test`,
+  `cargo clippy --all-targets -- -D warnings`, and `cargo fmt`
+  all clean; 6/6 unit tests pass.
+- **Standalone-vs-nested workspace question closed** in
+  `service-slm/ARCHITECTURE.md` §6. Standalone chosen because it
+  touches no code outside `service-slm/` and leaves the monorepo
+  unification cleanup (2026-04-18 audit, 8 of ~70+ crates declared)
+  to be settled separately. Conversion to nested later is
+  mechanical (move members up; drop nested `Cargo.toml`).
+- **B5 verification path covered structurally.** The
+  `slm-doorman-server` env-var contract (omit `SLM_YOYO_ENDPOINT`)
+  realises the "Doorman boots without Yo-Yo" requirement per
+  Optional Intelligence (`conventions/three-ring-architecture.md`).
+  End-to-end smoke against a live Tier A endpoint is queued in
+  `service-slm/NEXT.md` Right-now and depends on Master's B3
+  systemd unit landing on the workspace VM.
+- **Tier B (B2) and Tier C (B4) deferred per inbox brief** —
+  client interfaces and request-shape stubs are in
+  `tier/yoyo.rs` and `tier/external.rs`; `complete()` returns
+  `DoormanError::NotImplemented { filled_in_by: "B2" | "B4" }`
+  so the router exercises the fallback path without confusion.
+- **Layout-rule question to surface to Root Claude.** Two
+  files at `service-slm/` project root are not in
+  `.claude/rules/repo-layout.md`'s project-root allowed list but
+  are mandated by `service-slm/DEVELOPMENT.md` §2.1 / standard
+  cargo conventions: `deny.toml`, `rust-toolchain.toml`. Either
+  the rule's project-root allowed-files list extends to admit
+  these two filenames for crates that are themselves cargo
+  workspaces, or a different home is named. Recommendation
+  (Task scope, not action): admit both at the project root,
+  scoped to projects that are workspaces.
+- **Convention-drift item surfaced into NEXT.md.**
+  `service-slm/ARCHITECTURE.md` §7 references
+  `compute/container/Dockerfile` and `requirements.txt` — both
+  predate `conventions/zero-container-runtime.md` (ratified
+  2026-04-25). Architecture text needs rewriting before
+  scaffolding the `compute/` directory; queued as a NEXT.md
+  item, not closed here.
+
+---
+
 ## 2026-04-23 — service-slm activation (framework §8)
 
 - **`service-slm` activated via framework §8.** First-live
