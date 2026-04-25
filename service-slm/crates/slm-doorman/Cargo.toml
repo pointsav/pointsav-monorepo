@@ -1,0 +1,27 @@
+[package]
+name = "slm-doorman"
+version = "0.1.0"
+description = "Doorman library: three-tier compute router and append-only audit ledger for service-slm."
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+slm-core = { workspace = true }
+
+# Async runtime + HTTP client (used by tier clients; real wire logic lands in B2/B4)
+tokio = { workspace = true }
+reqwest = { workspace = true }
+
+# Serialisation
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+# Time
+chrono = { workspace = true }
+
+# Errors
+thiserror = { workspace = true }
+
+# Observability
+tracing = { workspace = true }
