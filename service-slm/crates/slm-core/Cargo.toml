@@ -1,0 +1,14 @@
+[package]
+name = "slm-core"
+version = "0.1.0"
+description = "Shared types for service-slm: ModuleId, RequestId, Tier, ComputeRequest/Response."
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+uuid = { workspace = true }
+chrono = { workspace = true }
+thiserror = { workspace = true }
