@@ -295,14 +295,17 @@ service-slm/
 One binary produced (`slm-cli`). Shared crates above. Zero
 microservice sprawl.
 
-**Open question — standalone vs nested workspace.** This layout
-assumes `service-slm` as a self-contained cargo workspace. The
-monorepo root `Cargo.toml` currently under-declares members (see
-monorepo `cleanup-log.md`, 2026-04-18 audit — 8 of ~70+ crates
-declared). Whether `service-slm` becomes a nested workspace under
-a unified monorepo root, or stays self-contained for later
-extraction, depends on the monorepo unification decision. Full
-scaffolding of this layout waits for that decision.
+**Resolved 2026-04-25 — standalone workspace.** B1 scaffolding
+(`crates/slm-core`, `crates/slm-doorman`, `crates/slm-doorman-server`)
+landed under a self-contained `service-slm/Cargo.toml`. The decision
+was the lowest-blast-radius path: it touches no code outside
+`service-slm/` and leaves the monorepo unification cleanup item
+(2026-04-18 audit, 8 of ~70+ crates declared) to be settled
+separately. Conversion to a nested layout later — making
+`service-slm/crates/*` members of a unified monorepo workspace — is
+mechanical (move members up, drop nested `Cargo.toml`). The existing
+`cognitive-forge/` subcrate remains an `exclude` member until its
+rename is paired with `tool-cognitive-forge` per `NEXT.md`.
 
 ---
 
