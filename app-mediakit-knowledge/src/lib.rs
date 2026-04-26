@@ -12,3 +12,4 @@ pub mod error;
 pub mod jsonld;
 pub mod render;
 pub mod server;
+pub mod squiggle;
