@@ -50,6 +50,12 @@ pub struct ComputeRequest {
     /// payload per the Doorman Protocol (`ARCHITECTURE.md` §1).
     #[serde(default)]
     pub sanitised_outbound: bool,
+    /// Required to dispatch to Tier C (External API). The Doorman
+    /// refuses any request hinted at Tier C without an allowlisted
+    /// label per `~/Foundry/conventions/llm-substrate-decision.md`.
+    /// Optional for Tier A and Tier B.
+    #[serde(default)]
+    pub tier_c_label: Option<String>,
 }
 
 /// Response returned through the Doorman.
