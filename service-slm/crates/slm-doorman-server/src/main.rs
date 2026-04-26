@@ -29,6 +29,12 @@
 //!   SLM_BRIEF_TIER_B_THRESHOLD_CHARS
 //!                             char-budget proxy for Tier-B routing on
 //!                             /v1/brief; default 8000 (~2000 tokens).
+//!   FOUNDRY_ALLOWED_SIGNERS   path to allowed_signers used by AS-3
+//!                             ssh-keygen -Y verify; default
+//!                             ${FOUNDRY_ROOT}/identity/allowed_signers.
+//!   FOUNDRY_DOCTRINE_VERSION  doctrine version embedded in apprenticeship
+//!                             corpus tuples; default 0.0.7.
+//!   FOUNDRY_TENANT            tenant tag on corpus tuples; default pointsav.
 //!   RUST_LOG                  default slm_doorman=info,slm_doorman_server=info
 //!
 //! Per `conventions/three-ring-architecture.md` the Doorman boots fine
@@ -45,7 +51,10 @@ use slm_doorman::tier::{
     BearerTokenProvider, LocalTierClient, LocalTierConfig, PricingConfig, StaticBearer,
     YoYoTierClient, YoYoTierConfig,
 };
-use slm_doorman::{ApprenticeshipConfig, AuditLedger, Doorman, DoormanConfig};
+use slm_doorman::{
+    ApprenticeshipConfig, AuditLedger, BriefCache, Doorman, DoormanConfig, PromotionLedger,
+    SshKeygenVerifier, VerdictDispatcher, VerdictVerifier,
+};
 use tracing::info;
 
 #[tokio::main]
@@ -59,9 +68,16 @@ async fn main() -> anyhow::Result<()> {
 
     let doorman = build_doorman()?;
     let apprenticeship = build_apprenticeship_config();
+    let brief_cache = Arc::new(BriefCache::default());
+    let verdict_dispatcher = match apprenticeship.as_ref() {
+        Some(cfg) => Some(build_verdict_dispatcher(cfg, brief_cache.clone())?),
+        None => None,
+    };
     let state = Arc::new(http::AppState {
         doorman,
         apprenticeship,
+        brief_cache,
+        verdict_dispatcher,
     });
 
     info!(
@@ -140,6 +156,33 @@ fn build_apprenticeship_config() -> Option<ApprenticeshipConfig> {
         return None;
     }
     Some(ApprenticeshipConfig::from_env())
+}
+
+/// Build the AS-3 verdict dispatcher: shells out to `ssh-keygen -Y
+/// verify` against `${FOUNDRY_ROOT}/identity/allowed_signers` (or
+/// `FOUNDRY_ALLOWED_SIGNERS` override per design-pass Q1) and writes
+/// corpus tuples + ledger events under `${FOUNDRY_ROOT}/data/`.
+fn build_verdict_dispatcher(
+    cfg: &ApprenticeshipConfig,
+    cache: Arc<BriefCache>,
+) -> anyhow::Result<VerdictDispatcher> {
+    let allowed_signers = std::env::var_os("FOUNDRY_ALLOWED_SIGNERS")
+        .map(std::path::PathBuf::from)
+        .unwrap_or_else(|| cfg.foundry_root.join("identity").join("allowed_signers"));
+    let verifier: Arc<dyn VerdictVerifier> = Arc::new(SshKeygenVerifier::new(allowed_signers));
+    let ledger_dir = cfg.foundry_root.join("data").join("apprenticeship");
+    let ledger = PromotionLedger::new(ledger_dir).context("create promotion ledger dir")?;
+    let doctrine_version =
+        std::env::var("FOUNDRY_DOCTRINE_VERSION").unwrap_or_else(|_| "0.0.7".to_string());
+    let tenant = std::env::var("FOUNDRY_TENANT").unwrap_or_else(|_| "pointsav".to_string());
+    Ok(VerdictDispatcher {
+        verifier,
+        cache,
+        ledger,
+        corpus_root: cfg.foundry_root.clone(),
+        doctrine_version,
+        tenant,
+    })
 }
 
 fn init_tracing() {
