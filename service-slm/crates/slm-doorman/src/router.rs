@@ -187,9 +187,10 @@ fn classify_error(e: &DoormanError) -> CompletionStatus {
             CompletionStatus::TierUnavailable
         }
         DoormanError::ExternalNotAllowlisted { .. } => CompletionStatus::PolicyDenied,
-        DoormanError::Upstream(_) | DoormanError::UpstreamShape(_) => {
-            CompletionStatus::UpstreamError
-        }
+        DoormanError::Upstream(_)
+        | DoormanError::UpstreamShape(_)
+        | DoormanError::ContractMajorMismatch { .. }
+        | DoormanError::BearerToken(_) => CompletionStatus::UpstreamError,
         DoormanError::LedgerIo(_) | DoormanError::LedgerSerde(_) | DoormanError::HomeUnset => {
             CompletionStatus::UpstreamError
         }
@@ -243,11 +244,14 @@ mod tests {
         // Pure selection logic — no network. We construct a Doorman with
         // a Yo-Yo config that points at a bogus endpoint; select_tier
         // does not hit the network.
-        let yoyo = YoYoTierClient::new(crate::tier::YoYoTierConfig {
-            endpoint: "http://invalid.example".into(),
-            default_model: "Olmo-3-1125-32B-Think".into(),
-            contract_version: crate::YOYO_CONTRACT_VERSION.into(),
-        });
+        let yoyo = YoYoTierClient::new(
+            crate::tier::YoYoTierConfig {
+                endpoint: "http://invalid.example".into(),
+                default_model: "Olmo-3-1125-32B-Think".into(),
+                contract_version: crate::YOYO_CONTRACT_VERSION.into(),
+            },
+            std::sync::Arc::new(crate::tier::StaticBearer::new("unused-in-selection-test")),
+        );
         let doorman = Doorman::new(
             DoormanConfig {
                 local: None,

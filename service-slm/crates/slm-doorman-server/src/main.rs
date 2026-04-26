@@ -12,6 +12,9 @@
 //!   SLM_LOCAL_MODEL           default olmo-3-7b-instruct
 //!   SLM_YOYO_ENDPOINT         optional; absent = no Yo-Yo (community-tier mode)
 //!   SLM_YOYO_MODEL            default Olmo-3-1125-32B-Think
+//!   SLM_YOYO_BEARER           static bearer token used by Tier B (B2);
+//!                             real deployments swap StaticBearer for a
+//!                             provider-specific BearerTokenProvider impl
 //!   RUST_LOG                  default slm_doorman=info,slm_doorman_server=info
 //!
 //! Per `conventions/three-ring-architecture.md` the Doorman boots fine
@@ -24,7 +27,10 @@ use std::net::SocketAddr;
 use std::sync::Arc;
 
 use anyhow::Context;
-use slm_doorman::tier::{LocalTierClient, LocalTierConfig, YoYoTierClient, YoYoTierConfig};
+use slm_doorman::tier::{
+    BearerTokenProvider, LocalTierClient, LocalTierConfig, StaticBearer, YoYoTierClient,
+    YoYoTierConfig,
+};
 use slm_doorman::{AuditLedger, Doorman, DoormanConfig};
 use tracing::info;
 
@@ -68,12 +74,19 @@ fn build_doorman() -> anyhow::Result<Doorman> {
     }));
 
     let yoyo = match std::env::var("SLM_YOYO_ENDPOINT") {
-        Ok(endpoint) if !endpoint.is_empty() => Some(YoYoTierClient::new(YoYoTierConfig {
-            endpoint,
-            default_model: std::env::var("SLM_YOYO_MODEL")
-                .unwrap_or_else(|_| "Olmo-3-1125-32B-Think".to_string()),
-            contract_version: slm_doorman::YOYO_CONTRACT_VERSION.to_string(),
-        })),
+        Ok(endpoint) if !endpoint.is_empty() => {
+            let bearer_token = std::env::var("SLM_YOYO_BEARER").unwrap_or_default();
+            let bearer: Arc<dyn BearerTokenProvider> = Arc::new(StaticBearer::new(bearer_token));
+            Some(YoYoTierClient::new(
+                YoYoTierConfig {
+                    endpoint,
+                    default_model: std::env::var("SLM_YOYO_MODEL")
+                        .unwrap_or_else(|_| "Olmo-3-1125-32B-Think".to_string()),
+                    contract_version: slm_doorman::YOYO_CONTRACT_VERSION.to_string(),
+                },
+                bearer,
+            ))
+        }
         _ => None,
     };
 
