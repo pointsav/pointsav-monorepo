@@ -29,6 +29,10 @@ pub enum WikiError {
     /// Phase 2 Step 5: citation registry file could not be read or parsed.
     #[error("citation registry load failed: {0}")]
     CitationLoadFailed(String),
+
+    /// Phase 3 Step 3.1: tantivy index build, query, or reindex failed.
+    #[error("search failed: {0}")]
+    SearchFailed(String),
 }
 
 impl IntoResponse for WikiError {
@@ -38,6 +42,7 @@ impl IntoResponse for WikiError {
             WikiError::SlugInvalid(_) => StatusCode::BAD_REQUEST,
             WikiError::AlreadyExists(_) => StatusCode::CONFLICT,
             WikiError::CitationLoadFailed(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            WikiError::SearchFailed(_) => StatusCode::INTERNAL_SERVER_ERROR,
             _ => StatusCode::INTERNAL_SERVER_ERROR,
         };
         tracing::warn!(error = %self, "request error");
