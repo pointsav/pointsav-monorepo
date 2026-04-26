@@ -92,6 +92,40 @@ Newest on top. Append a dated block when a session includes meaningful cleanup w
 
 ---
 
+## 2026-04-26 — B5 verification end-to-end (Tier A live)
+
+- **B5 PASSED.** Doorman release binary booted against Master's
+  `local-slm.service` (delivered B3 in workspace v0.0.11
+  `68e7c16`; D1 done operator-side prior). Verification trail
+  captured in `service-slm/NEXT.md` Recently-done and in the
+  archived inbox message. One audit-ledger entry at
+  `~/.service-slm/audit/2026-04-26.jsonl` for request_id
+  `b2e10115-c747-4fc8-b571-80484db7276e`:
+  `tier:"local"`, `model:"Olmo-3-1125-7B-Think-Q4_K_M.gguf"`,
+  `inference_ms:43914`, `cost_usd:0.0`,
+  `completion_status:"ok"`.
+- **No code change in this commit** — the binary was built from
+  `78031c4` (B1 scaffold). The release binary at
+  `service-slm/target/release/slm-doorman-server` is gitignored
+  per `service-slm/.gitignore`.
+- **Doctrine v0.0.2 deltas read but not absorbed into code.**
+  Per Master's inbox brief, no behavioural change for B5.
+  §IV.c cluster manifest now lives at `.claude/manifest.md`
+  (backfilled by Master); §XV trajectory-substrate hooks are
+  workspace-tier responsibility (Master's L1 capture, not Task).
+  Adapter Composition Algebra (§XIV) note: the Doorman is
+  structurally aligned but the composition logic is not in B1
+  scope — pickup once L3 constitutional adapter exists.
+- **Three follow-ups from prior session closed by Master:**
+  standalone-vs-nested workspace decision confirmed (no edit
+  needed); deny.toml/rust-toolchain.toml repo-layout question
+  deferred to next Root Claude in `pointsav-monorepo`;
+  `ARCHITECTURE.md` §7 zero-container rewrite explicitly
+  authorised as Task scope (queued as next Right-now item in
+  `service-slm/NEXT.md`, separate atomic commit).
+
+---
+
 ## 2026-04-25 — B1 Doorman scaffold (Phase B, inbox v0.0.7)
 
 - **service-slm scaffolded as standalone cargo workspace.** New
