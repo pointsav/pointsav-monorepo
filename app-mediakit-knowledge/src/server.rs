@@ -48,6 +48,12 @@ pub fn router(state: AppState) -> Router {
             get(crate::edit::get_edit).post(crate::edit::post_edit),
         )
         .route("/create", post(crate::edit::post_create))
+        // Phase 2 Step 4 — SAA squiggle rules (deterministic; Phase 9 CCA
+        // adds dynamic per-jurisdiction packs)
+        .route(
+            "/api/squiggle-rules",
+            get(crate::squiggle::get_squiggle_rules),
+        )
         .with_state(Arc::new(state))
 }
 
