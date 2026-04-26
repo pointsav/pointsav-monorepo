@@ -20,11 +20,22 @@ serde_json = { workspace = true }
 # Time
 chrono = { workspace = true }
 
+# UUIDv7 for apprenticeship attempt_ids
+uuid = { workspace = true }
+
 # Errors
 thiserror = { workspace = true }
 
 # Async trait support
 async-trait = { workspace = true }
+
+# Apprenticeship Substrate (AS-2..AS-4):
+# - regex: redact + parse apprentice frontmatter/diff fences
+# - fs2:   flock(2) on the promotion ledger
+# - base64: signature transport on the verdict wire
+regex = { workspace = true }
+fs2 = { workspace = true }
+base64 = { workspace = true }
 
 # Observability
 tracing = { workspace = true }
