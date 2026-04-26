@@ -8,16 +8,26 @@
 
 ## Right now
 
-- **B4 — Tier C client with narrow-precision allowlist** (next
-  natural pickup; same mock-only posture as B2 per Master's
-  2026-04-26 brief — no real API key consumption, no live calls
-  to Anthropic / Gemini). B2 (Yo-Yo client) and the second-pass
-  zero-container drift cleanup landed this session. After B4,
-  the Doorman is structurally complete for v0.1.x.
+- **WAITING — Master holds B7 (Doorman as systemd unit on
+  workspace VM).** Outboxed 2026-04-26 11:00 UTC per operator
+  direction. Mirrors B3's `local-slm.service` pattern; same
+  Doctrine §V VM-sysadmin scope reasoning. Cluster `project-slm`
+  Task work is otherwise structurally complete for v0.1.x —
+  see "Recently done" section. Holding for Master to install +
+  ping back when service is live.
+- **GUIDE-doorman-deployment.md (Customer-tier draft)** —
+  Master's manifest update names this as Task work in the
+  customer-tier "leg-pending" item. Drafts under
+  `customer/woodfine-fleet-deployment/<deployment-name>/`.
+  Cross-repo handoff per workspace `CLAUDE.md` §11 — needs
+  outbox to Master to land in `vendor/pointsav-fleet-deployment`
+  catalog first; Task here drafts the content per the §9
+  workspace-root variant of the §11 outbox pattern. Hold until
+  destination catalog subfolder is provisioned.
 
 ## Earlier-stage items
 
-- **(deferred to B4)** Fill
+- **(historical — referenced by B4 work below)** Fill
   `crates/slm-doorman/src/tier/yoyo.rs` per
   `infrastructure/slm-yoyo/CONTRACT.md`. Required: bearer-token
   acquisition (GCP Workload Identity for `*.run.app`; provider API
@@ -137,6 +147,43 @@
 
 ## Recently done
 
+- **2026-04-26 — B4 Tier C client landed (mock-only).**
+  `crates/slm-doorman/src/tier/external.rs` filled per
+  `~/Foundry/conventions/llm-substrate-decision.md` and
+  Master's 2026-04-26 brief Answer 3. Compile-time
+  `&'static [&'static str]` allowlist (`ExternalAllowlist`);
+  `FOUNDRY_DEFAULT_ALLOWLIST` carries the three labels
+  documented in the substrate decision (citation-grounding,
+  initial-graph-build, entity-disambiguation). `TierCProvider`
+  enum (Anthropic / Gemini / Openai) with model-prefix parsing
+  (`anthropic:claude-haiku-4-5` form). `TierCPricing` per-token
+  rates extending `PricingConfig` semantics. `complete()` runs
+  the allowlist check + provider parse BEFORE any network
+  attempt, then POSTs OpenAI-compatible chat-completions with
+  `X-Foundry-Module-ID`, `X-Foundry-Request-ID`, and
+  `X-Foundry-Tier-C-Label` headers. `slm-doorman-server` HTTP
+  layer now parses an `X-Foundry-Tier-C-Label` request header
+  onto `ComputeRequest::tier_c_label`. Six wiremock-based unit
+  tests covering happy path with cost computation, unallowlisted
+  label denial (verifies zero network calls landed at the mock
+  server), missing label denial, unknown provider prefix, model
+  prefix parsing, and pricing arithmetic. Workspace tests
+  12/12 → 19/19 passing; clippy + fmt clean.
+- **2026-04-26 — PricingConfig in YoYoTierConfig (cost-field
+  path a).** Doorman now computes `cost_usd` from
+  `inference_ms × per-provider hourly rate`. New
+  `SLM_YOYO_HOURLY_USD` env var on the server. Two unit tests
+  cover the arithmetic + the default-zero invariant.
+- **2026-04-26 — third-pass zero-container drift cleanup
+  (Master Answer 1).** ARCH §5.10 SkyPilot row dropped outright;
+  ARCH §2 Ring 1 Bootstrap items 3+4 rewritten to GCE
+  start/stop ceremony per the convention's trade-off section.
+  Cluster manifest also tracked here with Master's Doctrine
+  v0.0.4 triad-schema backfill.
+- **2026-04-26 — B7 outbox priority ask + housekeeping.**
+  Asked Master to install Doorman as systemd unit on workspace
+  VM so other clusters can feed into it; archived Master's
+  10:30 reply + moved prior outbox to archive.
 - **2026-04-26 — B2 Yo-Yo HTTP client landed (mock-only).**
   `crates/slm-doorman/src/tier/yoyo.rs` filled out per
   `infrastructure/slm-yoyo/CONTRACT.md`. `BearerTokenProvider`

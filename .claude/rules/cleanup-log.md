@@ -92,6 +92,80 @@ Newest on top. Append a dated block when a session includes meaningful cleanup w
 
 ---
 
+## 2026-04-26 — B4 Tier C client (mock-only per operator guardrail) + PricingConfig
+
+- **B4 Tier C client implemented end-to-end as code + tests, zero
+  live network.** Per Master's 2026-04-26 10:30 inbox brief
+  Answer 3 and the operator's relayed cost guardrail.
+  `crates/slm-doorman/src/tier/external.rs` rewrite:
+  - `ExternalAllowlist` switched from runtime `HashSet<String>`
+    to compile-time `&'static [&'static str]` per the brief.
+    `EMPTY` const default; `from_static` const constructor;
+    `FOUNDRY_DEFAULT_ALLOWLIST` carries the three labels
+    documented in `llm-substrate-decision.md` §"Three compute
+    tiers" (citation-grounding, initial-graph-build,
+    entity-disambiguation).
+  - `TierCProvider` enum (Anthropic / Gemini / Openai). Model
+    identifier carries a `provider:` prefix; `parse_model_id`
+    splits and matches.
+  - `TierCPricing` struct holds per-provider per-mtok input/
+    output rates. `cost_usd(provider, prompt_toks,
+    completion_toks)` does the per-call computation.
+  - `ExternalTierConfig` grows `provider_endpoints:
+    HashMap<TierCProvider, String>`, `provider_api_keys`, and
+    `pricing`.
+  - `ExternalTierClient::complete()` enforces invariants in
+    order: (1) allowlist check, (2) provider parsing, (3)
+    endpoint+key lookup, (4) network call, (5) cost computation
+    from response usage. Failure at steps 1-3 returns BEFORE any
+    network attempt — verified by tests asserting
+    `server.received_requests()` length 0.
+- **`slm-core::ComputeRequest` extended with `tier_c_label:
+  Option<String>`** (serde default; backward-compatible). Server
+  HTTP layer parses `X-Foundry-Tier-C-Label` request header onto
+  this field.
+- **Six wiremock-based unit tests covering all wire paths**:
+  happy_path_allowlist_match_returns_content_and_cost,
+  unallowlisted_label_refuses_before_any_network_call,
+  missing_label_refuses_before_any_network_call,
+  unknown_provider_prefix_surfaces_upstream_shape,
+  provider_parses_known_prefixes,
+  foundry_default_allowlist_contains_documented_labels,
+  tier_c_pricing_arithmetic. Total workspace tests 12/12 → 19/19.
+- **Server wiring not in this commit.** `slm-doorman-server`
+  still passes `external: None` to `DoormanConfig`. The
+  ExternalTierClient is buildable from env vars (per-provider
+  endpoint / key / pricing) but the env-var parsing surface is
+  follow-up work — not specifically named in Master's brief.
+  Surfaced in NEXT.md.
+- **PricingConfig (Master Answer 2) landed in same session** as
+  a prior commit (`8c2418d`); see that commit's cleanup-log
+  entry for the Yo-Yo cost-field arithmetic.
+- **Operator guardrail observed:** no live API calls to
+  Anthropic / Gemini / OpenAI; no provider-SDK installs (used
+  raw `reqwest` so the endpoint is mockable); no auto-promotion
+  of any request to Tier C without the explicit allowlist
+  label. v0.0.10 hard rule #4 preserved end-to-end.
+
+---
+
+## 2026-04-26 — PricingConfig in YoYoTierConfig (Master Answer 2)
+
+(Brief entry — full detail in commit `8c2418d` body.)
+
+- Added `PricingConfig` struct to
+  `crates/slm-doorman/src/tier/yoyo.rs`. `yoyo_hourly_usd: f64`
+  default zero. Method `yoyo_cost_usd(inference_ms)` computes
+  `(hourly_usd / 3_600_000) × inference_ms`.
+- `YoYoTierConfig` grows `pricing` field.
+- `YoYoTierClient::complete()` sets `cost_usd:
+  self.config.pricing.yoyo_cost_usd(inference_ms)`.
+- Server reads `SLM_YOYO_HOURLY_USD` env var (default 0.0).
+- Two unit tests: arithmetic verification + default-zero
+  invariant.
+
+---
+
 ## 2026-04-26 — third-pass zero-container cleanup (Master-authorised)
 
 - **Two surviving drift sites resolved per Master's 2026-04-26

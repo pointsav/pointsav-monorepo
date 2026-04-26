@@ -11,6 +11,9 @@ mod external;
 mod local;
 mod yoyo;
 
-pub use external::{ExternalAllowlist, ExternalTierClient, ExternalTierConfig};
+pub use external::{
+    ExternalAllowlist, ExternalTierClient, ExternalTierConfig, TierCPricing, TierCProvider,
+    FOUNDRY_DEFAULT_ALLOWLIST,
+};
 pub use local::{LocalTierClient, LocalTierConfig};
 pub use yoyo::{BearerTokenProvider, PricingConfig, StaticBearer, YoYoTierClient, YoYoTierConfig};
