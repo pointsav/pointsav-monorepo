@@ -13,13 +13,21 @@
 //! `~/Foundry/conventions/three-ring-architecture.md` (Ring 3 — Optional
 //! Intelligence). Audit ledger discipline is doctrinal — see Doctrine §V.
 
+pub mod apprenticeship;
+pub mod citations;
 pub mod error;
 pub mod ledger;
+pub mod redact;
 pub mod router;
 pub mod tier;
 
+pub use apprenticeship::{
+    apprentice_prompt, build_attempt, parse_attempt_content, pick_tier_for_brief,
+    ApprenticeshipConfig, ApprenticeshipDispatcher, ParsedAttempt, APPRENTICE_SYSTEM_PROMPT,
+};
 pub use error::{DoormanError, Result};
 pub use ledger::{AuditEntry, AuditLedger};
+pub use redact::sanitize;
 pub use router::{Doorman, DoormanConfig};
 pub use tier::{
     BearerTokenProvider, ExternalAllowlist, ExternalTierClient, ExternalTierConfig,

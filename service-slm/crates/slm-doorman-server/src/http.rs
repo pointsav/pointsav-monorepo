@@ -24,11 +24,18 @@ use axum::response::{IntoResponse, Json};
 use axum::routing::{get, post};
 use axum::Router;
 use serde::{Deserialize, Serialize};
-use slm_core::{ChatMessage, Complexity, ComputeRequest, ComputeResponse, ModuleId, RequestId};
-use slm_doorman::{Doorman, DoormanError};
+use slm_core::{
+    ApprenticeshipAttempt, ApprenticeshipBrief, ChatMessage, Complexity, ComputeRequest,
+    ComputeResponse, ModuleId, RequestId,
+};
+use slm_doorman::{ApprenticeshipConfig, ApprenticeshipDispatcher, Doorman, DoormanError};
 
 pub struct AppState {
     pub doorman: Doorman,
+    /// `Some` when `SLM_APPRENTICESHIP_ENABLED=true` at boot; `None`
+    /// disables the three apprenticeship endpoints (they return 404).
+    /// Per design-pass Q9 + Master's brief.
+    pub apprenticeship: Option<ApprenticeshipConfig>,
 }
 
 pub fn router(state: Arc<AppState>) -> Router {
@@ -37,6 +44,7 @@ pub fn router(state: Arc<AppState>) -> Router {
         .route("/readyz", get(readyz))
         .route("/v1/contract", get(contract))
         .route("/v1/chat/completions", post(chat_completions))
+        .route("/v1/brief", post(brief))
         .with_state(state)
 }
 
@@ -144,6 +152,18 @@ async fn chat_completions(
         .map_err(Into::into)
 }
 
+async fn brief(
+    State(state): State<Arc<AppState>>,
+    Json(brief): Json<ApprenticeshipBrief>,
+) -> Result<Json<ApprenticeshipAttempt>, ApiError> {
+    let cfg = state.apprenticeship.as_ref().ok_or_else(|| {
+        ApiError::not_found("apprenticeship endpoints disabled (SLM_APPRENTICESHIP_ENABLED unset)")
+    })?;
+    let dispatcher = ApprenticeshipDispatcher::new(&state.doorman, cfg.clone());
+    let attempt = dispatcher.dispatch_brief(&brief).await?;
+    Ok(Json(attempt))
+}
+
 struct ApiError {
     status: StatusCode,
     body: serde_json::Value,
@@ -153,6 +173,13 @@ impl ApiError {
     fn bad_request(msg: impl Into<String>) -> Self {
         Self {
             status: StatusCode::BAD_REQUEST,
+            body: serde_json::json!({ "error": { "message": msg.into() } }),
+        }
+    }
+
+    fn not_found(msg: impl Into<String>) -> Self {
+        Self {
+            status: StatusCode::NOT_FOUND,
             body: serde_json::json!({ "error": { "message": msg.into() } }),
         }
     }
