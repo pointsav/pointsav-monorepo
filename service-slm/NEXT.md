@@ -8,18 +8,9 @@
 
 ## Right now
 
-- **ARCHITECTURE.md §7 zero-container rewrite** (Master-authorised
-  Task scope per inbox 2026-04-26 brief). Replace
-  `compute/container/Dockerfile` with `compute/systemd/`; replace
-  `requirements.txt` with `Cargo.toml` (or `pyproject.toml` for
-  Python distillation); distribution model = native binary + GCE
-  image. Reference `conventions/zero-container-runtime.md`. Use
-  `~/Foundry/infrastructure/local-slm/` (the v0.0.11 Tier A
-  deployment) as the reference implementation for the Tier A side
-  and `~/Foundry/infrastructure/slm-yoyo/tofu/` for the Tier B
-  side. If structurally larger than expected, stop and surface via
-  outbox before committing.
-- **B2 — Yo-Yo HTTP client** (next after §7 rewrite). Fill
+- **B2 — Yo-Yo HTTP client.** §7 zero-container rewrite landed in
+  the narrow Master-authorised form (file-tree subtree only, per
+  brief). B2 is the natural next pickup. Fill
   `crates/slm-doorman/src/tier/yoyo.rs` per
   `infrastructure/slm-yoyo/CONTRACT.md`. Required: bearer-token
   acquisition (GCP Workload Identity for `*.run.app`; provider API
@@ -35,6 +26,25 @@
 
 ## Queue
 
+- **ARCHITECTURE.md / DEVELOPMENT.md remaining zero-container
+  drift (Master sign-off needed before second-pass).** Eight
+  references survived the §7 narrow rewrite, in adjacent
+  sections Master told me not to touch without going back to
+  outbox first: §2 Ring 1 Bootstrap "Pre-built container in
+  Artifact Registry" (rewrite to "pre-built ELF binary +
+  systemd unit in GCE image"); §2 memory-tier table row
+  ("Container image + GCS-cached weights" → "Native binary +
+  GCS-cached weights"); §4 moduleId table row ("which container
+  variant to boot" → "which binary variant to boot"); §5.9
+  Sigstore description; §6 `slm-compute` crate description
+  ("Cloud Run driver, container mgmt" → "GCE driver, lifecycle
+  mgmt"); §8 event vocabulary `BOOT_REQUEST` SkyPilot reference;
+  §10 2030 headroom SkyPilot row; plus three references in
+  `DEVELOPMENT.md` (§1.1 Release-build container signing; §4
+  Phase 1 "Python, vLLM, SkyPilot, dbt, Dagster"; §4 Phase 2
+  "container-side for remote"; §5 B2 blocker row "SkyPilot pool
+  with min_replicas=1"). Coalesce into one second-pass commit
+  once Master approves expanding scope.
 - **B4 — Tier C client with narrow-precision allowlist.** Fill
   `crates/slm-doorman/src/tier/external.rs`. Implement per-provider
   HTTP wiring (Anthropic Claude, Google Gemini, OpenAI). Hard-code
