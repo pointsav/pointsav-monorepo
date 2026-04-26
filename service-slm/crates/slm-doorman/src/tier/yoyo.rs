@@ -71,6 +71,32 @@ impl BearerTokenProvider for StaticBearer {
     }
 }
 
+/// Per-provider pricing for Tier B cost computation. CONTRACT.md does
+/// not carry a cost field on the wire; the Doorman computes cost
+/// deterministically as `(hourly_usd / 3_600_000) × inference_ms`
+/// from operator-supplied configuration. Defaults are zero — meaning
+/// "unknown / dev" — and the audit-ledger entry records `cost_usd:
+/// 0.0` until the operator wires real rates per their cloud provider.
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+pub struct PricingConfig {
+    /// Hourly USD rate for the configured Yo-Yo provider (e.g.
+    /// `0.84` for GCP Cloud Run GPU L4, `0.34` for RunPod L4, per
+    /// `~/Foundry/conventions/llm-substrate-decision.md` §"Three
+    /// compute tiers"). Multiplied by inference-ms to produce the
+    /// per-call cost recorded in the audit ledger.
+    pub yoyo_hourly_usd: f64,
+}
+
+impl PricingConfig {
+    /// Compute Tier B cost in USD from inference time in milliseconds.
+    /// Returns 0.0 when `yoyo_hourly_usd` is zero (the dev default —
+    /// "unknown" rather than mis-attributed).
+    pub fn yoyo_cost_usd(&self, inference_ms: u64) -> f64 {
+        const MS_PER_HOUR: f64 = 3_600_000.0;
+        (self.yoyo_hourly_usd / MS_PER_HOUR) * inference_ms as f64
+    }
+}
+
 #[derive(Clone, Debug)]
 pub struct YoYoTierConfig {
     /// Base URL of the Yo-Yo node (e.g. `https://yoyo-foundry.run.app`).
@@ -81,6 +107,9 @@ pub struct YoYoTierConfig {
     /// Contract version this client speaks. Sent in
     /// `X-Foundry-Contract-Version` per CONTRACT.md.
     pub contract_version: String,
+    /// Per-provider pricing for Tier B cost computation. Empty default
+    /// means cost_usd is 0.0 (community-tier / dev mode).
+    pub pricing: PricingConfig,
 }
 
 impl Default for YoYoTierConfig {
@@ -89,6 +118,7 @@ impl Default for YoYoTierConfig {
             endpoint: String::new(),
             default_model: "Olmo-3-1125-32B-Think".to_string(),
             contract_version: crate::YOYO_CONTRACT_VERSION.to_string(),
+            pricing: PricingConfig::default(),
         }
     }
 }
@@ -164,13 +194,7 @@ impl YoYoTierClient {
             model,
             content,
             inference_ms,
-            // CONTRACT.md does not carry a cost field on the wire; the
-            // Doorman computes Tier B cost from inference_ms × per-
-            // provider hourly rate. That `PricingConfig` lands in a
-            // follow-up; for B1+B2 we leave 0 so the audit-ledger
-            // entry is correct (cost is unknown rather than mis-
-            // attributed).
-            cost_usd: 0.0,
+            cost_usd: self.config.pricing.yoyo_cost_usd(inference_ms),
             upstream_version,
         })
     }
@@ -334,11 +358,16 @@ mod tests {
     }
 
     fn client(server_uri: String) -> YoYoTierClient {
+        client_with_pricing(server_uri, PricingConfig::default())
+    }
+
+    fn client_with_pricing(server_uri: String, pricing: PricingConfig) -> YoYoTierClient {
         YoYoTierClient::new(
             YoYoTierConfig {
                 endpoint: server_uri,
                 default_model: "Olmo-3-1125-32B-Think".into(),
                 contract_version: crate::YOYO_CONTRACT_VERSION.into(),
+                pricing,
             },
             Arc::new(StaticBearer::new("test-token-v1")),
         )
@@ -462,6 +491,7 @@ mod tests {
                 endpoint: server.uri(),
                 default_model: "Olmo-3-1125-32B-Think".into(),
                 contract_version: crate::YOYO_CONTRACT_VERSION.into(),
+                pricing: PricingConfig::default(),
             },
             bearer.clone(),
         );
@@ -472,6 +502,63 @@ mod tests {
             .expect("retry after 401 should succeed");
         assert_eq!(resp.content, "PONG");
         assert_eq!(bearer.refreshed.load(Ordering::SeqCst), 1);
+    }
+
+    /// PricingConfig produces non-zero cost_usd for a configured rate
+    /// and a measurable inference-ms; verifies the cost arithmetic
+    /// `(hourly_usd / 3_600_000) × inference_ms`.
+    #[tokio::test]
+    async fn pricing_config_computes_non_zero_cost_for_configured_rate() {
+        let server = MockServer::start().await;
+        Mock::given(method("POST"))
+            .and(path("/v1/chat/completions"))
+            .respond_with(
+                ResponseTemplate::new(200)
+                    // 1 hour of inference billed at $0.84/h (GCP L4 rate
+                    // per substrate decision) → $0.84 cost.
+                    .insert_header("x-foundry-inference-ms", "3600000")
+                    .set_body_json(ok_body()),
+            )
+            .expect(1)
+            .mount(&server)
+            .await;
+
+        let pricing = PricingConfig {
+            yoyo_hourly_usd: 0.84,
+        };
+        let client = client_with_pricing(server.uri(), pricing.clone());
+        let resp = client.complete(&req()).await.expect("happy path 200");
+        // Tolerate fp imprecision: equal to within 1e-9.
+        assert!(
+            (resp.cost_usd - 0.84).abs() < 1e-9,
+            "expected $0.84, got ${}",
+            resp.cost_usd
+        );
+
+        // And the unit method itself is exercised independently:
+        assert_eq!(pricing.yoyo_cost_usd(0), 0.0);
+        assert!((pricing.yoyo_cost_usd(1_800_000) - 0.42).abs() < 1e-9);
+    }
+
+    /// Default PricingConfig (operator hasn't configured a rate) keeps
+    /// cost_usd at 0.0 — accurate as "unknown" rather than mis-attributed.
+    #[tokio::test]
+    async fn pricing_config_default_keeps_cost_zero() {
+        let server = MockServer::start().await;
+        Mock::given(method("POST"))
+            .and(path("/v1/chat/completions"))
+            .respond_with(
+                ResponseTemplate::new(200)
+                    .insert_header("x-foundry-inference-ms", "9999999")
+                    .set_body_json(ok_body()),
+            )
+            .expect(1)
+            .mount(&server)
+            .await;
+
+        let client = client(server.uri());
+        let resp = client.complete(&req()).await.expect("happy path 200");
+        assert_eq!(resp.cost_usd, 0.0);
     }
 
     /// 410 MAJOR contract mismatch: client must NOT retry and must

@@ -15,6 +15,10 @@
 //!   SLM_YOYO_BEARER           static bearer token used by Tier B (B2);
 //!                             real deployments swap StaticBearer for a
 //!                             provider-specific BearerTokenProvider impl
+//!   SLM_YOYO_HOURLY_USD       per-provider hourly USD rate used to
+//!                             compute Tier B cost_usd in the audit
+//!                             ledger; default 0.0 (unknown/dev).
+//!                             Example: 0.84 for GCP L4, 0.34 for RunPod L4
 //!   RUST_LOG                  default slm_doorman=info,slm_doorman_server=info
 //!
 //! Per `conventions/three-ring-architecture.md` the Doorman boots fine
@@ -28,8 +32,8 @@ use std::sync::Arc;
 
 use anyhow::Context;
 use slm_doorman::tier::{
-    BearerTokenProvider, LocalTierClient, LocalTierConfig, StaticBearer, YoYoTierClient,
-    YoYoTierConfig,
+    BearerTokenProvider, LocalTierClient, LocalTierConfig, PricingConfig, StaticBearer,
+    YoYoTierClient, YoYoTierConfig,
 };
 use slm_doorman::{AuditLedger, Doorman, DoormanConfig};
 use tracing::info;
@@ -77,12 +81,17 @@ fn build_doorman() -> anyhow::Result<Doorman> {
         Ok(endpoint) if !endpoint.is_empty() => {
             let bearer_token = std::env::var("SLM_YOYO_BEARER").unwrap_or_default();
             let bearer: Arc<dyn BearerTokenProvider> = Arc::new(StaticBearer::new(bearer_token));
+            let yoyo_hourly_usd = std::env::var("SLM_YOYO_HOURLY_USD")
+                .ok()
+                .and_then(|s| s.parse::<f64>().ok())
+                .unwrap_or(0.0);
             Some(YoYoTierClient::new(
                 YoYoTierConfig {
                     endpoint,
                     default_model: std::env::var("SLM_YOYO_MODEL")
                         .unwrap_or_else(|_| "Olmo-3-1125-32B-Think".to_string()),
                     contract_version: slm_doorman::YOYO_CONTRACT_VERSION.to_string(),
+                    pricing: PricingConfig { yoyo_hourly_usd },
                 },
                 bearer,
             ))
