@@ -11,7 +11,7 @@ triad:
     - repo: pointsav-monorepo
       path: ./
       upstream: vendor/pointsav-monorepo
-      focus: service-slm/ (Doorman + slm-core + slm-doorman + slm-doorman-server)
+      focus: service-slm/ (Doorman + slm-core + slm-doorman + slm-doorman-server), Apprenticeship Substrate routing endpoints (claim #32)
   customer:
     - fleet_deployment_repo: vendor/pointsav-fleet-deployment
       catalog_subfolder: vault-privategit-source/
@@ -36,7 +36,20 @@ clones:
     path: ./
     upstream: vendor/pointsav-monorepo
 trajectory_capture: pending
-adapter_target: cluster-project-slm
+
+adapter_routing:
+  trains:
+    - cluster-project-slm        # own cluster adapter (Doorman + Yo-Yo client + Tier C)
+    - engineering-pointsav       # Vendor engineering corpus (Ring 2+3 services)
+    - apprenticeship-pointsav    # apprenticeship corpus (claim #32; AS-3/AS-4 produce its tuples)
+  consumes:
+    - constitutional-doctrine    # always
+    - engineering-pointsav       # always — Vendor knowledge
+    - cluster-project-slm        # own cluster context
+    - role-task                  # current role
+    - apprenticeship-pointsav    # apprenticeship adapter — composed alongside engineering at request time per claim #22
+    # NOTE: no tenant-* adapter — this cluster is Vendor engineering only;
+    # service-slm is multi-tenant via moduleId at runtime, not at training time
 ---
 
 # Cluster manifest — project-slm
