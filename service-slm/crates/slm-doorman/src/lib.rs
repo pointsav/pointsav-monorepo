@@ -22,7 +22,8 @@ pub use error::{DoormanError, Result};
 pub use ledger::{AuditEntry, AuditLedger};
 pub use router::{Doorman, DoormanConfig};
 pub use tier::{
-    BearerTokenProvider, ExternalTierClient, LocalTierClient, StaticBearer, YoYoTierClient,
+    BearerTokenProvider, ExternalTierClient, LocalTierClient, PricingConfig, StaticBearer,
+    YoYoTierClient,
 };
 
 /// Wire version of the Yo-Yo HTTP API contract this Doorman speaks
