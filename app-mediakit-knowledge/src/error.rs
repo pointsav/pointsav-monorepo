@@ -25,6 +25,10 @@ pub enum WikiError {
     /// Phase 2: `/create` invoked with a slug that already exists on disk.
     #[error("already exists: {0}")]
     AlreadyExists(String),
+
+    /// Phase 2 Step 5: citation registry file could not be read or parsed.
+    #[error("citation registry load failed: {0}")]
+    CitationLoadFailed(String),
 }
 
 impl IntoResponse for WikiError {
@@ -33,6 +37,7 @@ impl IntoResponse for WikiError {
             WikiError::NotFound(_) => StatusCode::NOT_FOUND,
             WikiError::SlugInvalid(_) => StatusCode::BAD_REQUEST,
             WikiError::AlreadyExists(_) => StatusCode::CONFLICT,
+            WikiError::CitationLoadFailed(_) => StatusCode::INTERNAL_SERVER_ERROR,
             _ => StatusCode::INTERNAL_SERVER_ERROR,
         };
         tracing::warn!(error = %self, "request error");

@@ -20,6 +20,7 @@ async fn fixture_state() -> (AppState, tempfile::TempDir) {
     .unwrap();
     let state = AppState {
         content_dir: dir.path().to_path_buf(),
+        citations_yaml: std::path::PathBuf::from("/nonexistent/citations.yaml"),
     };
     (state, dir)
 }
@@ -91,6 +92,7 @@ async fn get_edit_initial_json_round_trips_special_chars() {
         .unwrap();
     let state = AppState {
         content_dir: dir.path().to_path_buf(),
+        citations_yaml: std::path::PathBuf::from("/nonexistent/citations.yaml"),
     };
     let app = router(state);
     let resp = app
