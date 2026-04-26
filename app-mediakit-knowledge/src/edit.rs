@@ -24,7 +24,7 @@ use axum::{
     response::{IntoResponse, Response},
     Json,
 };
-use maud::{html, Markup, DOCTYPE};
+use maud::{html, Markup, PreEscaped, DOCTYPE};
 use serde::Deserialize;
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -56,21 +56,36 @@ pub fn validate_slug(slug: &str) -> Result<(), WikiError> {
     Ok(())
 }
 
-/// Editor HTML page. Phase 2 Step 2 returns a minimal placeholder confirming
-/// routing + slug validation. Step 3 replaces the body with the CodeMirror 6
-/// surface from the vendored bundle.
+/// Editor HTML page. Phase 2 Step 3 renders the CodeMirror 6 surface from
+/// the vendored bundle (`/static/vendor/cm-saa.bundle.js`). The first-party
+/// glue (`/static/saa-init.js`) reads `window.SAA_SLUG` + `window.SAA_INITIAL`
+/// and instantiates an EditorView in `<div id="saa-editor">`. Save POSTs the
+/// editor's current doc to `/edit/{slug}` (the route above).
+///
+/// The initial doc is JSON-encoded into a `<script>` block so multi-line
+/// markdown bodies, quotes, and special characters round-trip cleanly without
+/// HTML-attribute escaping headaches.
 pub async fn get_edit(
     State(state): State<Arc<AppState>>,
     Path(slug): Path<String>,
 ) -> Result<Markup, WikiError> {
     validate_slug(&slug)?;
     let path = state.content_dir.join(format!("{slug}.md"));
-    let exists = path.is_file();
-    let existing = if exists {
+    let initial = if path.is_file() {
         tokio::fs::read_to_string(&path).await.unwrap_or_default()
     } else {
         String::new()
     };
+    // Escape `</` → `<\/` in the JSON literals so a markdown body containing
+    // `</script>` cannot prematurely close the script tag (XSS hardening).
+    // `\/` is a valid JSON escape for `/`, so the round-trip is preserved.
+    let initial_json = serde_json::to_string(&initial)
+        .unwrap_or_else(|_| "\"\"".to_string())
+        .replace("</", "<\\/");
+    let slug_json = serde_json::to_string(&slug)
+        .unwrap_or_else(|_| "\"\"".to_string())
+        .replace("</", "<\\/");
+
     Ok(html! {
         (DOCTYPE)
         html lang="en" {
@@ -81,19 +96,30 @@ pub async fn get_edit(
                 link rel="stylesheet" href="/static/style.css";
             }
             body {
-                main.editor-placeholder {
-                    h1 { "Edit " (slug) }
-                    p {
-                        "Phase 2 Step 2 placeholder. CodeMirror 6 surface "
-                        "lands in Step 3."
+                header.editor-header {
+                    a.site-title href="/" { "PointSav Knowledge" }
+                    div.editor-title-block {
+                        span.editor-label { "Edit:" }
+                        span.editor-slug { (slug) }
                     }
-                    @if exists {
-                        p { "File exists; current size: " (existing.len()) " bytes." }
-                    } @else {
-                        p { "File does not exist. POST /create to add a new TOPIC." }
+                    div.editor-actions {
+                        a.editor-cancel href={ "/wiki/" (slug) } { "← back" }
+                        button #saa-save.editor-save { "Save" }
                     }
-                    p { a href={ "/wiki/" (slug) } { "← back to article" } }
                 }
+                main.editor-shell {
+                    div #saa-editor data-slug=(slug) {}
+                    div #saa-status.saa-status {}
+                }
+                // Inject editor state before the bundle + glue scripts load.
+                script {
+                    (PreEscaped(format!(
+                        "window.SAA_SLUG={};window.SAA_INITIAL={};",
+                        slug_json, initial_json
+                    )))
+                }
+                script src="/static/vendor/cm-saa.bundle.js" defer {}
+                script src="/static/saa-init.js" defer {}
             }
         }
     })
