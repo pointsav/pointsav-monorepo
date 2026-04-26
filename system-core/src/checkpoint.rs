@@ -1,0 +1,447 @@
+//! C2SP signed-note checkpoint primitive — the apex-cosigning substrate.
+//!
+//! Per `~/Foundry/conventions/system-substrate-doctrine.md` §4: the
+//! deed-transfer ceremony is one signed ledger entry. C2SP signed-note
+//! explicitly supports multi-signature on the same checkpoint, enabling
+//! "previous apex revokes; new apex co-signs" without state migration.
+//!
+//! Format reference: https://github.com/C2SP/C2SP/blob/main/signed-note.md
+//! and tlog-checkpoint.md. This module implements the body+signature
+//! wire format and ed25519 verification; signing is performed by the
+//! apex via its own keying surface (Sigstore Cosign, ssh-keygen, or
+//! direct ed25519 — the format is signer-agnostic).
+//!
+//! # Wire format
+//!
+//! ```text
+//! <origin>
+//! <tree-size>
+//! <base64-root-hash>
+//! [<extension>...]
+//!
+//! — <signer-name> <base64(key-hash[4] || ed25519-sig[64])>
+//! [— <signer-name> ...additional signatures...]
+//! ```
+//!
+//! Body and signature block are separated by a blank line. The body
+//! ends with `\n`; signature lines each end with `\n`.
+//!
+//! # Multi-signature (apex co-signing)
+//!
+//! Multiple signature lines on the same body realise the apex-rotation
+//! primitive (convention §4): at the handover checkpoint, both P-old
+//! and P-new sign the same body. The kernel verifier accepts the
+//! handover when both signatures verify; subsequent checkpoints
+//! require only P-new.
+
+use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _};
+use ed25519_dalek::{Signature as EdSignature, Verifier, VerifyingKey, SIGNATURE_LENGTH};
+use sha2::{Digest, Sha256};
+
+use crate::Hash256;
+
+/// One C2SP signed-note checkpoint body. Maps to a Merkle log state
+/// at a specific tree size.
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct Checkpoint {
+    /// Origin string identifying the log (e.g.,
+    /// `foundry.<module-id>.capability-ledger`).
+    pub origin: String,
+    /// Number of entries committed to the log at this checkpoint.
+    pub tree_size: u64,
+    /// Merkle root hash at `tree_size`.
+    pub root_hash: Hash256,
+    /// Optional extension lines per the signed-note spec (e.g.,
+    /// timestamp, doctrine version). Each line MUST NOT contain `\n`
+    /// or start with `—`. Empty = no extensions.
+    pub extensions: Vec<String>,
+}
+
+impl Checkpoint {
+    /// Canonical body bytes per the spec — what gets signed.
+    /// Lines: origin, tree_size (decimal), base64(root_hash),
+    /// extensions...; each terminated by `\n`.
+    pub fn body_bytes(&self) -> Vec<u8> {
+        let mut s = String::new();
+        s.push_str(&self.origin);
+        s.push('\n');
+        s.push_str(&self.tree_size.to_string());
+        s.push('\n');
+        s.push_str(&BASE64.encode(self.root_hash));
+        s.push('\n');
+        for ext in &self.extensions {
+            s.push_str(ext);
+            s.push('\n');
+        }
+        s.into_bytes()
+    }
+
+    /// Parse a checkpoint body from its canonical bytes.
+    pub fn parse_body(body: &[u8]) -> Result<Self, ParseError> {
+        let text = std::str::from_utf8(body).map_err(|_| ParseError::NotUtf8)?;
+        let mut lines = text.split_inclusive('\n');
+
+        let origin = lines
+            .next()
+            .ok_or(ParseError::Truncated)?
+            .strip_suffix('\n')
+            .ok_or(ParseError::MissingNewline)?
+            .to_string();
+        let tree_size_line = lines
+            .next()
+            .ok_or(ParseError::Truncated)?
+            .strip_suffix('\n')
+            .ok_or(ParseError::MissingNewline)?;
+        let tree_size: u64 = tree_size_line
+            .parse()
+            .map_err(|_| ParseError::BadTreeSize)?;
+        let root_hash_line = lines
+            .next()
+            .ok_or(ParseError::Truncated)?
+            .strip_suffix('\n')
+            .ok_or(ParseError::MissingNewline)?;
+        let root_bytes = BASE64
+            .decode(root_hash_line)
+            .map_err(|_| ParseError::BadRootHash)?;
+        if root_bytes.len() != 32 {
+            return Err(ParseError::BadRootHashLength);
+        }
+        let mut root_hash = [0u8; 32];
+        root_hash.copy_from_slice(&root_bytes);
+
+        let extensions: Vec<String> = lines
+            .filter_map(|l| l.strip_suffix('\n').map(|s| s.to_string()))
+            .filter(|s| !s.is_empty())
+            .collect();
+
+        Ok(Checkpoint {
+            origin,
+            tree_size,
+            root_hash,
+            extensions,
+        })
+    }
+}
+
+/// One signature line on a signed-note. Multiple lines = multi-sig
+/// (apex co-signing).
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct NoteSignature {
+    /// Human-readable signer identity (e.g., `apex-acme-corp`).
+    pub signer_name: String,
+    /// First 4 bytes of `SHA-256("<signer-name>\nED25519\n<32-byte-pubkey>")`.
+    pub key_hash: [u8; 4],
+    /// 64-byte ed25519 signature over `Checkpoint::body_bytes()`.
+    pub signature: [u8; SIGNATURE_LENGTH],
+}
+
+impl NoteSignature {
+    /// Compute the 4-byte key hash that prefixes a signature line per
+    /// the C2SP signed-note spec.
+    pub fn derive_key_hash(signer_name: &str, pubkey: &[u8; 32]) -> [u8; 4] {
+        let mut hasher = Sha256::new();
+        hasher.update(signer_name.as_bytes());
+        hasher.update(b"\n");
+        hasher.update(b"ED25519\n");
+        hasher.update(pubkey);
+        let full = hasher.finalize();
+        let mut out = [0u8; 4];
+        out.copy_from_slice(&full[..4]);
+        out
+    }
+
+    /// Render this signature as a single signed-note line (terminating
+    /// `\n` included).
+    pub fn to_line(&self) -> String {
+        let mut payload = Vec::with_capacity(4 + SIGNATURE_LENGTH);
+        payload.extend_from_slice(&self.key_hash);
+        payload.extend_from_slice(&self.signature);
+        format!("\u{2014} {} {}\n", self.signer_name, BASE64.encode(payload))
+    }
+
+    /// Parse a single signature line.
+    pub fn parse_line(line: &str) -> Result<Self, ParseError> {
+        let line = line.strip_suffix('\n').unwrap_or(line);
+        let after = line
+            .strip_prefix("\u{2014} ")
+            .ok_or(ParseError::MissingEmDash)?;
+        let (name, b64) = after.split_once(' ').ok_or(ParseError::MalformedSignature)?;
+        let bytes = BASE64
+            .decode(b64)
+            .map_err(|_| ParseError::MalformedSignature)?;
+        if bytes.len() != 4 + SIGNATURE_LENGTH {
+            return Err(ParseError::MalformedSignature);
+        }
+        let mut key_hash = [0u8; 4];
+        key_hash.copy_from_slice(&bytes[..4]);
+        let mut signature = [0u8; SIGNATURE_LENGTH];
+        signature.copy_from_slice(&bytes[4..]);
+        Ok(NoteSignature {
+            signer_name: name.to_string(),
+            key_hash,
+            signature,
+        })
+    }
+}
+
+/// A signed checkpoint — body + ≥ 1 signature line. Multi-sig
+/// realises the apex co-signing primitive (convention §4).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SignedCheckpoint {
+    pub checkpoint: Checkpoint,
+    pub signatures: Vec<NoteSignature>,
+}
+
+impl SignedCheckpoint {
+    /// Render full wire format: body + blank line separator +
+    /// signature lines. Per spec, the body ends with `\n`; an
+    /// additional `\n` separates body from signature block.
+    pub fn to_wire(&self) -> String {
+        let mut out = String::from_utf8(self.checkpoint.body_bytes())
+            .expect("body is valid UTF-8 by construction");
+        out.push('\n');
+        for sig in &self.signatures {
+            out.push_str(&sig.to_line());
+        }
+        out
+    }
+
+    /// Parse a wire-format signed-note. Body is everything before the
+    /// blank-line separator; signature block follows.
+    pub fn parse(wire: &str) -> Result<Self, ParseError> {
+        let sep_idx = wire
+            .find("\n\n")
+            .ok_or(ParseError::MissingSignatureSeparator)?;
+        let body = &wire[..=sep_idx]; // include trailing \n
+        let sig_block = &wire[sep_idx + 2..];
+        let checkpoint = Checkpoint::parse_body(body.as_bytes())?;
+        let mut signatures = Vec::new();
+        for line in sig_block.split_inclusive('\n') {
+            if line.trim().is_empty() {
+                continue;
+            }
+            signatures.push(NoteSignature::parse_line(line)?);
+        }
+        if signatures.is_empty() {
+            return Err(ParseError::NoSignatures);
+        }
+        Ok(SignedCheckpoint {
+            checkpoint,
+            signatures,
+        })
+    }
+
+    /// Verify a specific signer's signature over the checkpoint body.
+    /// Returns `Ok(true)` if any signature line matches `(signer_name,
+    /// pubkey)` and verifies; `Ok(false)` if no matching key-hash
+    /// found; `Err(_)` on cryptographic failure.
+    pub fn verify_signer(
+        &self,
+        signer_name: &str,
+        pubkey: &[u8; 32],
+    ) -> Result<bool, VerifyError> {
+        let expected_kh = NoteSignature::derive_key_hash(signer_name, pubkey);
+        let body = self.checkpoint.body_bytes();
+        let vk = VerifyingKey::from_bytes(pubkey).map_err(|_| VerifyError::BadPublicKey)?;
+        for sig in &self.signatures {
+            if sig.signer_name == signer_name && sig.key_hash == expected_kh {
+                let edsig = EdSignature::from_bytes(&sig.signature);
+                return Ok(vk.verify(&body, &edsig).is_ok());
+            }
+        }
+        Ok(false)
+    }
+
+    /// Verify that BOTH (P-old, P-new) signatures appear and verify on
+    /// the same body — the apex-rotation handover predicate per
+    /// convention §4.
+    pub fn verify_apex_handover(
+        &self,
+        old_apex_name: &str,
+        old_apex_pubkey: &[u8; 32],
+        new_apex_name: &str,
+        new_apex_pubkey: &[u8; 32],
+    ) -> Result<bool, VerifyError> {
+        Ok(self.verify_signer(old_apex_name, old_apex_pubkey)?
+            && self.verify_signer(new_apex_name, new_apex_pubkey)?)
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ParseError {
+    NotUtf8,
+    Truncated,
+    MissingNewline,
+    BadTreeSize,
+    BadRootHash,
+    BadRootHashLength,
+    MissingSignatureSeparator,
+    MissingEmDash,
+    MalformedSignature,
+    NoSignatures,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum VerifyError {
+    BadPublicKey,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ed25519_dalek::{Signer, SigningKey};
+
+    fn fixture_checkpoint() -> Checkpoint {
+        Checkpoint {
+            origin: "foundry.test.capability-ledger".to_string(),
+            tree_size: 100,
+            root_hash: [0xCC; 32],
+            extensions: vec![],
+        }
+    }
+
+    fn fixed_keypair(seed: u8) -> (SigningKey, [u8; 32]) {
+        let sk = SigningKey::from_bytes(&[seed; 32]);
+        let pk_bytes = sk.verifying_key().to_bytes();
+        (sk, pk_bytes)
+    }
+
+    fn sign(checkpoint: &Checkpoint, signer_name: &str, sk: &SigningKey) -> NoteSignature {
+        let pk = sk.verifying_key().to_bytes();
+        let key_hash = NoteSignature::derive_key_hash(signer_name, &pk);
+        let sig = sk.sign(&checkpoint.body_bytes());
+        NoteSignature {
+            signer_name: signer_name.to_string(),
+            key_hash,
+            signature: sig.to_bytes(),
+        }
+    }
+
+    #[test]
+    fn checkpoint_body_round_trip() {
+        let cp = fixture_checkpoint();
+        let bytes = cp.body_bytes();
+        let restored = Checkpoint::parse_body(&bytes).unwrap();
+        assert_eq!(cp, restored);
+    }
+
+    #[test]
+    fn checkpoint_with_extensions_round_trip() {
+        let cp = Checkpoint {
+            origin: "foundry.test.x".to_string(),
+            tree_size: 42,
+            root_hash: [0xDD; 32],
+            extensions: vec!["timestamp 1730000000".to_string()],
+        };
+        let bytes = cp.body_bytes();
+        let restored = Checkpoint::parse_body(&bytes).unwrap();
+        assert_eq!(cp, restored);
+    }
+
+    #[test]
+    fn key_hash_derivation_is_deterministic() {
+        let pk = [0xEE; 32];
+        let h1 = NoteSignature::derive_key_hash("apex-acme", &pk);
+        let h2 = NoteSignature::derive_key_hash("apex-acme", &pk);
+        assert_eq!(h1, h2);
+    }
+
+    #[test]
+    fn key_hash_changes_with_name() {
+        let pk = [0xEE; 32];
+        let h1 = NoteSignature::derive_key_hash("apex-acme", &pk);
+        let h2 = NoteSignature::derive_key_hash("apex-other", &pk);
+        assert_ne!(h1, h2);
+    }
+
+    #[test]
+    fn signed_checkpoint_wire_round_trip_single_sig() {
+        let (sk, _pk) = fixed_keypair(7);
+        let cp = fixture_checkpoint();
+        let sig = sign(&cp, "apex-test", &sk);
+        let signed = SignedCheckpoint {
+            checkpoint: cp,
+            signatures: vec![sig],
+        };
+        let wire = signed.to_wire();
+        let restored = SignedCheckpoint::parse(&wire).unwrap();
+        assert_eq!(signed, restored);
+    }
+
+    #[test]
+    fn single_signature_verifies() {
+        let (sk, pk) = fixed_keypair(11);
+        let cp = fixture_checkpoint();
+        let sig = sign(&cp, "apex-acme", &sk);
+        let signed = SignedCheckpoint {
+            checkpoint: cp,
+            signatures: vec![sig],
+        };
+        assert!(signed.verify_signer("apex-acme", &pk).unwrap());
+    }
+
+    #[test]
+    fn signature_fails_under_wrong_pubkey() {
+        let (sk, _pk_correct) = fixed_keypair(11);
+        let (_, pk_wrong) = fixed_keypair(13);
+        let cp = fixture_checkpoint();
+        let sig = sign(&cp, "apex-acme", &sk);
+        let signed = SignedCheckpoint {
+            checkpoint: cp,
+            signatures: vec![sig],
+        };
+        // Wrong pubkey — key_hash won't match, so we get false (no
+        // matching signer), not an error.
+        assert!(!signed.verify_signer("apex-acme", &pk_wrong).unwrap());
+    }
+
+    #[test]
+    fn multi_sig_apex_handover_round_trip() {
+        let (sk_old, pk_old) = fixed_keypair(17);
+        let (sk_new, pk_new) = fixed_keypair(19);
+        let cp = fixture_checkpoint();
+        let sig_old = sign(&cp, "apex-old", &sk_old);
+        let sig_new = sign(&cp, "apex-new", &sk_new);
+        let signed = SignedCheckpoint {
+            checkpoint: cp,
+            signatures: vec![sig_old, sig_new],
+        };
+        let wire = signed.to_wire();
+        let restored = SignedCheckpoint::parse(&wire).unwrap();
+        assert_eq!(signed, restored);
+        assert!(restored
+            .verify_apex_handover("apex-old", &pk_old, "apex-new", &pk_new)
+            .unwrap());
+    }
+
+    #[test]
+    fn handover_fails_if_only_one_signs() {
+        let (sk_old, pk_old) = fixed_keypair(17);
+        let (_, pk_new) = fixed_keypair(19);
+        let cp = fixture_checkpoint();
+        let sig_old = sign(&cp, "apex-old", &sk_old);
+        // P-new did NOT sign.
+        let signed = SignedCheckpoint {
+            checkpoint: cp,
+            signatures: vec![sig_old],
+        };
+        assert!(!signed
+            .verify_apex_handover("apex-old", &pk_old, "apex-new", &pk_new)
+            .unwrap());
+    }
+
+    #[test]
+    fn body_tampering_breaks_signature() {
+        let (sk, pk) = fixed_keypair(23);
+        let cp = fixture_checkpoint();
+        let sig = sign(&cp, "apex-test", &sk);
+        // Tamper with the checkpoint after signing.
+        let mut tampered = cp.clone();
+        tampered.tree_size = 999;
+        let signed = SignedCheckpoint {
+            checkpoint: tampered,
+            signatures: vec![sig],
+        };
+        assert!(!signed.verify_signer("apex-test", &pk).unwrap());
+    }
+}
