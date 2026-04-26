@@ -313,6 +313,27 @@ rename is paired with `tool-cognitive-forge` per `NEXT.md`.
 
 Full target layout, showing Phase-1 scope vs later phases.
 
+Distribution model is **native ELF binary plus systemd unit on a
+plain Linux host**, packaged as a GCE custom image for cloud
+deployment and as a `.deb` (or raw `cargo install`) for on-prem.
+No container runtime — `~/Foundry/conventions/zero-container-runtime.md`
+is structural doctrine, ratified 2026-04-25 and reinforced by
+Doctrine §I Pillar 1 (plain text only) and §II Leapfrog Claim #2
+(100-year readability). The two reference implementations that
+this layout dogfoods are named explicitly so a fresh reader can
+look at working examples:
+
+- **Tier A — local inference** mirrors
+  `~/Foundry/infrastructure/local-slm/` (workspace v0.0.11
+  `68e7c16` — `bootstrap.sh` builds llama-server from source,
+  installs to `/usr/local/bin/`, lays down `local-slm.service`
+  bound to `127.0.0.1:8080`; B5 verified 2026-04-26).
+- **Tier B — Yo-Yo cloud burst** mirrors
+  `~/Foundry/infrastructure/slm-yoyo/tofu/` (eight-`.tf` OpenTofu
+  module; outputs `yoyo_endpoint` + a Secret-Manager bearer secret
+  the Doorman's Yo-Yo client consumes; Cloud Functions Gen2
+  budget killswitch ships in the same module).
+
 ```
 service-slm/
 ├── README.md                     bilingual (English)
@@ -334,18 +355,24 @@ service-slm/
 ├── inbound/                      Phase 1: received graph deltas
 ├── log/                          Phase 1: doorman transaction log
 │
-├── compute/                      Phase 1: Ring 1 artefacts
-│   ├── manifest.yaml             current GCP node config
-│   ├── container/
-│   │   ├── Dockerfile
-│   │   ├── requirements.txt      Phase-1 reference path only
-│   │   └── build.sh
+├── compute/                      Phase 1: Ring 1 artefacts (no containers)
+│   ├── manifest.yaml             current GCP node config (machine type,
+│   │                             zone, GPU SKU; consumed by tofu/)
+│   ├── systemd/                  Tier A native-binary unit (mirrors
+│   │   │                         infrastructure/local-slm/)
+│   │   ├── local-slm.service     systemd unit, binds 127.0.0.1:8080,
+│   │   │                         loopback only
+│   │   └── deploy.sh             idempotent installer: build llama-server
+│   │                             (or mistralrs-server when its install
+│   │                             path is sorted), drop unit, no pull
 │   ├── weights/
-│   │   └── registry.yaml         GCS paths for each model
-│   ├── sky/
-│   │   ├── ingest.yaml
-│   │   ├── warmpool.yaml
-│   │   └── teardown.yaml
+│   │   └── registry.yaml         GCS paths for each model checkpoint
+│   ├── tofu/                     Tier B Yo-Yo OpenTofu module (mirrors
+│   │   │                         infrastructure/slm-yoyo/tofu/)
+│   │   ├── main.tf               GCE VM + L4 GPU + image family
+│   │   ├── variables.tf
+│   │   ├── outputs.tf            yoyo_endpoint, bearer-secret name
+│   │   └── killswitch/           Cloud Functions Gen2 budget cap
 │   └── keys/
 │       └── secret-refs.yaml      Secret Manager references (not keys)
 │
@@ -358,6 +385,9 @@ service-slm/
 │   └── adapters/                 LoRA skill library
 │       ├── registry.yaml         catalogue: adapter_id, version, signature
 │       ├── train/                training scripts per adapter
+│       │                         (Python; pyproject.toml + uv lockfile
+│       │                         per the router-trainer/ precedent —
+│       │                         no Python in the runtime path)
 │       └── ledger/
 │           └── training.csv      append-only training provenance
 │
@@ -369,6 +399,15 @@ service-slm/
 Only `compute/`, `outbound/`, `inbound/`, `log/`, `ledger/`, plus
 the doorman / ledger / api crates, fall in Phase 1 scope.
 `memory/kv/` is Phase 2. `memory/adapters/` is Phase 3.
+
+The `compute/systemd/` and `compute/tofu/` subtrees are structural
+mirrors of the existing Tier A and Tier B reference implementations,
+not duplicates — the in-tree files are the per-deployment overrides
+that compose with the upstream module / unit-template defaults. A
+service-slm release ships the binary and the `compute/` subtree as
+a single GCE image (Tier A) or a single OpenTofu module invocation
+(Tier B). Customer SMB deployments consume the published image /
+module rather than rebuilding from source.
 
 ---
 
