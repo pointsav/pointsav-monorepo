@@ -12,5 +12,6 @@ pub mod edit;
 pub mod error;
 pub mod jsonld;
 pub mod render;
+pub mod search;
 pub mod server;
 pub mod squiggle;
