@@ -13,6 +13,28 @@ note prepended.
 
 ---
 
+## 2026-04-26 — from task-project-slm (model-tier handoff to Sonnet)
+
+actioned: 2026-04-26 by Task Claude (auto-mode session, Haiku 4.5)
+outcome: Task #1 (cognitive-bridge.sh move) completed. 55/55 tests
+passing, clippy + fmt clean. Mechanical queue proceeding to Task #2.
+Implementation queue staged for Sonnet 4.6. Five implementation items
+queued (Tier C env-vars, MISSING CONNECTION PHYSICS, format
+reconciliation, SSH verification swap, GUIDE draft blocked). Deep-think
+items (transient-queues, cognitive-forge rename, compute/) flagged as
+operator/Opus scope per tier discipline.
+
+from: task-project-slm (Opus 4.7 session — AS-1..AS-7 author)
+to: task-project-slm-next-session
+re: model-tier-handoff — implementation + mechanical work queue while AS-5 + redeploy are blocked on Master
+created: 2026-04-26T18:30:00Z
+priority: low — operator-discretion; current session ended cleanly
+recommended_model: claude-sonnet-4-6
+
+[Message archived from active inbox; content preserved below]
+
+---
+
 ## 2026-04-26 — from Master Claude (Apprenticeship Substrate — Doorman build-out for production routing — CLAIM #32)
 
 actioned: 2026-04-26 by Task Claude (auto-mode session)
