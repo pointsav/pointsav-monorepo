@@ -1,6 +1,6 @@
 # NEXT.md — service-slm
 
-> Last updated: 2026-04-25
+> Last updated: 2026-04-26
 > Read at session start. Update before session end so the next
 > session knows where to pick up.
 
@@ -8,29 +8,18 @@
 
 ## Right now
 
-- **WAITING — Master must land B3 (and D1 if needed) first.** Per
-  operator direction (jmwoodfine, 2026-04-25 23:48 UTC) Task is
-  idle here until Master delivers a local OpenAI-compatible
-  inference server (llama-server preferred per v0.0.9 runtime
-  pivot) as a systemd unit on the workspace VM at
-  `127.0.0.1:8080`. D1 (e2-medium → e2-standard-4) is a
-  prerequisite if VM RAM is currently too tight. Pointed ask sent
-  via `.claude/outbox.md` (high priority). Task will pick up B5
-  end-to-end immediately on Master's "B3 live" signal.
-- **B5 — verify Doorman boots end-to-end against Tier A** (waiting
-  on Master B3). Structural half is already covered by the
-  `slm-doorman-server` env-var contract: omit `SLM_YOYO_ENDPOINT`
-  and the bin runs in community-tier mode. Once B3 is live the
-  verification sequence is:
-  1. Boot `slm-doorman-server` foreground with
-     `SLM_LOCAL_ENDPOINT=http://127.0.0.1:8080`.
-  2. Probe `/healthz`, `/readyz` (expect `has_yoyo: false`),
-     `/v1/contract`.
-  3. `POST /v1/chat/completions` with one user message; expect a
-     content string back from OLMo 3 7B Q4.
-  4. Inspect `~/.service-slm/audit/<date>.jsonl` for one
-     `tier: "local"` entry per call.
-- **B2 — Yo-Yo HTTP client** (queued behind B5). Fill
+- **ARCHITECTURE.md §7 zero-container rewrite** (Master-authorised
+  Task scope per inbox 2026-04-26 brief). Replace
+  `compute/container/Dockerfile` with `compute/systemd/`; replace
+  `requirements.txt` with `Cargo.toml` (or `pyproject.toml` for
+  Python distillation); distribution model = native binary + GCE
+  image. Reference `conventions/zero-container-runtime.md`. Use
+  `~/Foundry/infrastructure/local-slm/` (the v0.0.11 Tier A
+  deployment) as the reference implementation for the Tier A side
+  and `~/Foundry/infrastructure/slm-yoyo/tofu/` for the Tier B
+  side. If structurally larger than expected, stop and surface via
+  outbox before committing.
+- **B2 — Yo-Yo HTTP client** (next after §7 rewrite). Fill
   `crates/slm-doorman/src/tier/yoyo.rs` per
   `infrastructure/slm-yoyo/CONTRACT.md`. Required: bearer-token
   acquisition (GCP Workload Identity for `*.run.app`; provider API
@@ -137,6 +126,19 @@
 
 ## Recently done
 
+- **2026-04-26 — B5 verification PASSED end-to-end.** Doorman
+  release binary booted against Master's `local-slm.service`
+  (Tier A backend, llama-server, OLMo 3 7B Q4 on port 8080). All
+  three control endpoints returned 200; `/readyz` confirmed
+  community-tier mode (`has_local:true, has_yoyo:false,
+  has_external:false`). One real `POST /v1/chat/completions` with
+  `X-Foundry-Module-ID` and `X-Foundry-Request-ID` headers landed
+  a content string from the model in 43.9 s (CPU-only on
+  e2-standard-4; expected). Audit ledger at
+  `~/.service-slm/audit/2026-04-26.jsonl` carries one entry as
+  specified — `tier:"local"`, `cost_usd:0`, non-zero
+  `inference_ms`, `completion_status:"ok"`. B3 was delivered by
+  Master in v0.0.11 (`68e7c16`); D1 done operator-side prior.
 - **2026-04-25 — B1 Doorman scaffold landed.** `service-slm/` is now
   a self-contained cargo workspace with `slm-core`, `slm-doorman`
   (lib with three-tier router + JSONL audit ledger), and
