@@ -1,6 +1,51 @@
+# Standalone workspace marker. The parent monorepo Cargo.toml declares
+# only 8 of ~70 crates as workspace members (Layer 1 audit finding,
+# cleanup-log.md 2026-04-18); until that's resolved at repo level by a
+# Root Claude, this crate operates as its own workspace boundary.
+[workspace]
+
 [package]
 name = "app-mediakit-knowledge"
 version = "0.1.0"
 edition = "2021"
+rust-version = "1.80"
+description = "PointSav knowledge platform — wiki engine. Single-binary, flat-file Markdown source-of-truth, Git-versioned, AI-optional."
+license = "Apache-2.0"
+publish = false
 
+[[bin]]
+name = "app-mediakit-knowledge"
+path = "src/main.rs"
+
+[lib]
+path = "src/lib.rs"
+
+# Phase 1 deps only. Phases 3 (search), 4 (git), 5 (auth), 7 (federation),
+# 8 (disclosure mode) add more deps as they land. See ARCHITECTURE.md.
 [dependencies]
+axum = "0.8"
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "signal", "fs"] }
+tower = "0.5"
+tower-http = { version = "0.6", features = ["trace", "set-header", "compression-br", "compression-gzip"] }
+comrak = "0.29"
+maud = { version = "0.27", features = ["axum"] }
+rust-embed = { version = "8", features = ["compression"] }
+mime_guess = "2"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+clap = { version = "4", features = ["derive", "env"] }
+serde = { version = "1", features = ["derive"] }
+serde_yaml = "0.9"
+anyhow = "1"
+thiserror = "2"
+
+[dev-dependencies]
+tower = { version = "0.5", features = ["util"] }
+http-body-util = "0.1"
+tempfile = "3"
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
+strip = "symbols"
