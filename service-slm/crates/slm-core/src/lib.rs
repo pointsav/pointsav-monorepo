@@ -6,11 +6,17 @@
 //! runtime, no HTTP client, no I/O. Crates that route, log, or serve HTTP
 //! depend on this crate; nothing in this crate depends on them.
 
+pub mod apprenticeship;
 pub mod error;
 pub mod module_id;
 pub mod request_id;
 pub mod tier;
 
+pub use apprenticeship::{
+    ApprenticeshipAttempt, ApprenticeshipBrief, ApprenticeshipVerdict, BriefScope, SeniorRole,
+    VerdictOutcome, APPRENTICE_ESCALATE_THRESHOLD, DEFAULT_BRIEF_TIER_B_THRESHOLD_CHARS,
+    VERDICT_BATCH_NAMESPACE, VERDICT_NAMESPACE,
+};
 pub use error::{CoreError, Result};
 pub use module_id::ModuleId;
 pub use request_id::RequestId;
