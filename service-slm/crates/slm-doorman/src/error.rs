@@ -36,4 +36,16 @@ pub enum DoormanError {
 
     #[error("upstream response could not be parsed as OpenAI-compatible: {0}")]
     UpstreamShape(String),
+
+    #[error(
+        "Yo-Yo contract MAJOR-version mismatch: remote returned {remote_status} \
+         (Doorman speaks contract {doorman_version}); refusing to retry"
+    )]
+    ContractMajorMismatch {
+        remote_status: u16,
+        doorman_version: &'static str,
+    },
+
+    #[error("Yo-Yo bearer-token provider returned no token: {0}")]
+    BearerToken(String),
 }
