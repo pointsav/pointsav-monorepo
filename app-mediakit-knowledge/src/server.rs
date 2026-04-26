@@ -28,6 +28,7 @@ use tokio::fs;
 
 use crate::assets::StaticAsset;
 use crate::error::WikiError;
+use crate::jsonld::jsonld_for_topic;
 use crate::render::{extract_headings, inject_edit_pencils, parse_page, render_html_raw, Frontmatter};
 
 #[derive(Clone)]
@@ -168,6 +169,10 @@ fn wiki_chrome(
                 meta name="viewport" content="width=device-width, initial-scale=1";
                 title { (title) " — PointSav Knowledge" }
                 link rel="stylesheet" href="/static/style.css";
+                // JSON-LD baseline (Phase 2 Step 1) — schema.org TechArticle /
+                // DefinedTerm. Cumulative across phases; AEO crawlers + downstream
+                // consumers ingest the structured data.
+                (PreEscaped(jsonld_for_topic(&fm, slug)))
             }
             body {
                 // Top site header — unchanged from Phase 1
