@@ -73,12 +73,22 @@ Four pre-staged artefacts in cheap cold storage, pulled on boot:
 2. Pre-downloaded model weights in GCS (e.g.
    `gs://dka-checkpoints/models/gemma-4-26b-a4b/`), mounted via
    Cloud Storage FUSE or `rsync`'d on boot.
-3. Cloud Run GPU scale-to-zero with drivers pre-installed.
-4. Warm pool opt-in via `min-instances=1` only for sustained-load
-   windows.
+3. GCE GPU instance with `idle_shutdown_minutes=N` per
+   `infrastructure/slm-yoyo/tofu/`. The OpenTofu module manages
+   provision-on-demand and tears the instance down after N
+   minutes of inactivity. CUDA drivers ship in the
+   `pointsav-public` GCE image family per the convention's
+   trade-off section (`~/Foundry/conventions/zero-container-runtime.md`,
+   "What is used instead" table).
+4. Warm-VM mode opt-in: hold the GCE instance running between
+   requests within a configurable window (default 15 min) when
+   latency-critical. Operator extends `idle_shutdown_minutes`
+   per workload; Doorman may also start the VM ahead of an
+   anticipated burst (predictive warm-up). Per the convention's
+   "Cold-start: the only honest concern" section.
 
-Bill-per-second for request processing; zero idle cost outside
-explicitly-opened warm windows.
+Bill-per-second for request processing; zero idle cost once the
+`idle_shutdown_minutes=N` timer fires and the instance stops.
 
 ### Ring 2 — Working (KV cache)
 
@@ -268,10 +278,9 @@ client.
 |---|---|---|---|
 | LMCache + Mooncake Store | Python + C++ (RDMA) | No Rust equivalent in 2026 | HTTP metadata + raw TCP/RDMA data-transfer |
 | vLLM (Phase 1 only) | Python | Phase-1 reference path | HTTP — replaced by `mistral.rs` in Phase 2 |
-| SkyPilot (if used) | Python | Multi-cloud abstraction, overkill for Phase 1 single-cloud | External driver, not linked |
 
-All three are Apache-2.0 and forkable. The Rust binary calls them.
-None of them infects this binary's licence or build chain.
+Both are Apache-2.0 and forkable. The Rust binary calls them.
+Neither infects this binary's licence or build chain.
 
 ---
 
