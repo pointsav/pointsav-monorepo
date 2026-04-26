@@ -48,4 +48,22 @@ pub enum DoormanError {
 
     #[error("Yo-Yo bearer-token provider returned no token: {0}")]
     BearerToken(String),
+
+    #[error("verdict signature verification failed: {0}")]
+    VerifySignature(String),
+
+    #[error("apprenticeship ledger lock or write failed: {0}")]
+    LedgerLock(String),
+
+    #[error("apprenticeship corpus write failed at {path}: {reason}")]
+    CorpusWrite { path: String, reason: String },
+
+    #[error("verdict body could not be parsed: {0}")]
+    VerdictParse(String),
+
+    #[error(
+        "verdict POST referenced an unknown (brief_id, attempt_id) — \
+             brief cache miss; senior must reissue the brief"
+    )]
+    BriefCacheMiss,
 }
