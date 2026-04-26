@@ -96,6 +96,62 @@ Newest on top. Append a dated block when a session includes meaningful cleanup w
 
 ---
 
+## 2026-04-26
+
+- **Phase 1.1 Wikipedia muscle-memory chrome shipped on
+  `app-mediakit-knowledge`** (project-knowledge cluster session 3,
+  Track A). Additive UI/template/CSS only over Phase 1; the four
+  Phase 1 routes (`/`, `/wiki/{slug}`, `/static/{*path}`,
+  `/healthz`) and their responses are unchanged. Wikipedia muscle-
+  memory inventory items 1 (Article/Talk tabs), 2 (Read/Edit/View
+  history tabs), 3 (per-section [edit] pencils), 5 (end-of-article
+  ordering), 6 (hatnote), 8 (lead first-sentence), 9 (tagline),
+  12 (collapsible left-rail TOC), 14 (language switcher),
+  15 (footer convention) are added per UX-DESIGN.md §1. IVC
+  masthead band placeholder (UX-DESIGN.md §4.5) and reader density
+  toggle (§4.6) ship as visual surfaces only — no IVC machinery
+  until Phase 7. Diff: `src/render.rs` +240, `src/server.rs` +444,
+  `static/style.css` +428, `static/wiki.js` new (~120),
+  `tests/fixtures/content/topic-hello.md` extended with the new
+  optional frontmatter fields. Test count 8 → 19, all passing.
+- **Three compile-time / test-correctness fixes applied to
+  Sonnet sub-agent's draft before commit.**
+  - `render.rs` PENCIL constant: raw-string delimiter mismatch —
+    the inner `href="#"` closes a single-hash raw string early;
+    bumped to double-hash (`r##"…"##`).
+  - `extract_headings`: was searching for `id="` in the heading's
+    opening tag, but comrak with `header_ids: Some(...)` emits the
+    id on the inner anchor (`<h2><a id="h-…"></a>Alpha</h2>`).
+    Rewrote to scan inside the full heading element.
+  - IVC masthead band test: was case-sensitive on placeholder copy
+    (`"verification"` vs rendered `"Verification"`); switched to
+    structural class-name check (`wiki-ivc-band`) for stability.
+- **Open question surfaced for ARCHITECTURE.md.** Three new
+  optional frontmatter fields used by Phase 1.1 chrome (`hatnote`,
+  `translations`, `categories`) are not listed in §6 schema.
+  Either (a) extend §6 to enumerate them, or (b) treat the §6
+  field list as required-only with the `extra: BTreeMap` catch-
+  all sufficient for optional fields. Recommendation: extend §6
+  (explicit > implicit). Operator/Master to decide.
+- **Phase 2 implementation plan landed for BP1 review** (sibling
+  commit, same session, Track B BP1). Wrote
+  `app-mediakit-knowledge/docs/PHASE-2-PLAN.md` (~480 lines) —
+  operator-reviewable artefact for Breakpoint 1 in the project-
+  knowledge AUTO workflow. Plan covers: 7-step implementation
+  order (JSON-LD baseline → edit endpoint → CodeMirror vendoring
+  → SAA squiggles → citation autocomplete → 3-keystroke ladder
+  stubs → optional collab); vendoring strategy (pre-build JS
+  out-of-tree, commit artefacts to `static/vendor/`); file map
+  (15 new + 6 modified); 8 new endpoints; test plan; six open
+  questions for operator at BP1. No implementation code touched
+  in the BP1 commit; Phase 2 impl waits on operator clearing BP1.
+- **L1 trajectory capture** writes one corpus record per commit
+  to `~/Foundry/data/training-corpus/engineering/project-
+  knowledge/<sha>.jsonl` per cluster manifest. Two records added
+  this session under this repo (Track A + BP1).
+
+---
+
 ## 2026-04-23
 
 - **Repo-layout rule introduced.** Added

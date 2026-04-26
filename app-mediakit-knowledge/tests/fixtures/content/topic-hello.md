@@ -6,6 +6,12 @@ slug: topic-hello
 language: en
 forward_looking: false
 disclosure_class: narrative
+hatnote: "For the deployment guide, see the ARCHITECTURE.md document in the crate root."
+translations:
+  es: topic-hello.es
+categories:
+  - Phase 1 fixtures
+  - Wiki engine
 ---
 
 # Hello
