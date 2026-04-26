@@ -249,6 +249,7 @@ mod tests {
                 endpoint: "http://invalid.example".into(),
                 default_model: "Olmo-3-1125-32B-Think".into(),
                 contract_version: crate::YOYO_CONTRACT_VERSION.into(),
+                pricing: crate::tier::PricingConfig::default(),
             },
             std::sync::Arc::new(crate::tier::StaticBearer::new("unused-in-selection-test")),
         );
