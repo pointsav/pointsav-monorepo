@@ -195,3 +195,431 @@ article table th { background: var(--bg-chrome); font-weight: 600; }
   font-family: var(--sans);
   font-size: 0.875rem;
 }
+
+/* =====================================================================
+ * Phase 1.1 — Wikipedia muscle-memory chrome (additive)
+ *
+ * All rules below are additive over Phase 1. No existing rule is
+ * modified or removed. Vector 2022 design contract: every addition
+ * is an extension, never a replacement.
+ * ===================================================================== */
+
+/* --- Additional CSS variables for Phase 1.1 chrome --- */
+:root {
+  --toc-width: 14em;
+  --toc-bg: #f8f9fa;
+  --ivc-band-bg: #f0f4f8;
+  --ivc-band-border: #c8d6e5;
+  --tab-active-border: #3366cc;
+  --tab-hover-bg: #eaecf0;
+  --density-btn-bg: #eaecf0;
+  --density-btn-active-bg: #3366cc;
+  --density-btn-active-fg: #ffffff;
+  --hatnote-color: #54595d;
+  --cat-bg: #f8f9fa;
+}
+
+/* --- Two-column wiki layout: left TOC rail + article main --- */
+
+.wiki-layout {
+  display: flex;
+  align-items: flex-start;
+  max-width: var(--max-content-width);
+  margin: 0 auto;
+  padding: 0;
+  gap: 0;
+}
+
+/* --- Left-rail collapsible TOC (Vector 2022 sticky pattern) --- */
+
+.wiki-toc {
+  flex: 0 0 var(--toc-width);
+  width: var(--toc-width);
+  min-width: var(--toc-width);
+  position: sticky;
+  top: 1rem;
+  align-self: flex-start;
+  background: var(--toc-bg);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  margin: 1.25rem 0 1.25rem 1.25rem;
+  padding: 0.5rem 0;
+  font-family: var(--sans);
+  font-size: 0.875rem;
+}
+
+.toc-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.25rem 0.75rem;
+  gap: 0.5rem;
+}
+
+.toc-title {
+  font-weight: 700;
+  font-size: 0.875rem;
+}
+
+.toc-toggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--link);
+  font-size: 0.8125rem;
+  padding: 0;
+  text-decoration: underline;
+  font-family: inherit;
+}
+
+.toc-toggle:hover { color: var(--link-visited); }
+
+.toc-list {
+  list-style: none;
+  padding: 0.25rem 0;
+  margin: 0;
+}
+
+.toc-list li {
+  padding: 0;
+  border: none;
+  margin: 0;
+}
+
+.toc-list a {
+  display: block;
+  color: var(--link);
+  text-decoration: none;
+  padding: 0.15rem 0.75rem;
+  line-height: 1.4;
+}
+
+.toc-list a:hover { text-decoration: underline; }
+.toc-list a:visited { color: var(--link-visited); }
+
+/* Indent sub-headings visually */
+.toc-level-2 a { padding-left: 0.75rem; }
+.toc-level-3 a { padding-left: 1.5rem; }
+.toc-level-4 a { padding-left: 2.25rem; }
+.toc-level-5 a { padding-left: 3rem; }
+.toc-level-6 a { padding-left: 3.75rem; }
+
+/* When the TOC is collapsed (JS sets aria-expanded=false), hide the list */
+.wiki-toc.toc-collapsed .toc-list { display: none; }
+
+/* --- Main article column --- */
+
+.wiki-main {
+  flex: 1 1 0%;
+  min-width: 0;
+  padding: 1.25rem 1.5rem 3rem 1.5rem;
+}
+
+/* --- Title row: tabs + title + action tabs --- */
+
+.wiki-title-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 0.75rem;
+  flex-wrap: wrap;
+}
+
+/* Article / Talk tabs — top-left (item 1) */
+.wiki-page-tabs {
+  display: flex;
+  align-items: flex-end;
+  gap: 0;
+  margin-right: auto;
+  flex-shrink: 0;
+}
+
+/* Read / Edit / View history tabs — top-right (item 2) */
+.wiki-action-tabs {
+  display: flex;
+  align-items: flex-end;
+  gap: 0;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.wiki-tab {
+  display: inline-block;
+  padding: 0.35rem 0.75rem;
+  font-family: var(--sans);
+  font-size: 0.875rem;
+  color: var(--link);
+  text-decoration: none;
+  border: 1px solid var(--border);
+  border-bottom: none;
+  border-radius: 2px 2px 0 0;
+  background: var(--bg-chrome);
+  line-height: 1.4;
+  margin-right: 2px;
+  cursor: pointer;
+}
+
+.wiki-tab:hover { background: var(--tab-hover-bg); text-decoration: none; }
+
+.wiki-tab-active {
+  background: var(--bg);
+  border-bottom: 2px solid var(--bg);
+  color: var(--fg);
+  font-weight: 500;
+  position: relative;
+  z-index: 1;
+  margin-bottom: -1px;
+}
+
+/* Title block: h1 + tagline + language switcher */
+.wiki-title-block {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.wiki-title-inner {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+/* Override page-title margin when inside the title-row layout */
+.wiki-title-block .page-title {
+  border-bottom: none;
+  margin-bottom: 0.125rem;
+  padding-bottom: 0;
+}
+
+/* Tagline: "From PointSav Knowledge" (item 9) */
+.wiki-tagline {
+  font-family: var(--sans);
+  font-size: 0.8125rem;
+  color: var(--fg-muted);
+  margin: 0 0 0.35rem 0;
+}
+
+/* Language switcher button(s) next to title (item 14) */
+.wiki-lang-switcher {
+  display: flex;
+  gap: 0.25rem;
+  align-items: baseline;
+}
+
+.wiki-lang-btn {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  font-family: var(--sans);
+  font-size: 0.8125rem;
+  color: var(--link);
+  text-decoration: none;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  background: var(--bg-chrome);
+}
+
+.wiki-lang-btn:hover { background: var(--tab-hover-bg); text-decoration: none; }
+
+/* --- IVC masthead band (UX-DESIGN.md §4.5) --- */
+
+.wiki-ivc-band {
+  background: var(--ivc-band-bg);
+  border: 1px solid var(--ivc-band-border);
+  border-radius: 2px;
+  padding: 0.4rem 0.75rem;
+  margin-bottom: 0.75rem;
+  font-family: var(--sans);
+  font-size: 0.8125rem;
+  color: var(--fg-muted);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.ivc-band-text {
+  font-style: italic;
+  flex: 1 1 auto;
+}
+
+/* --- Reader density toggle (UX-DESIGN.md §4.6) --- */
+
+.wiki-density-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.density-label {
+  font-size: 0.8125rem;
+  color: var(--fg-muted);
+  white-space: nowrap;
+}
+
+.density-btn {
+  padding: 0.2rem 0.5rem;
+  font-size: 0.75rem;
+  font-family: var(--sans);
+  background: var(--density-btn-bg);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  cursor: pointer;
+  color: var(--fg);
+  line-height: 1.3;
+}
+
+.density-btn:hover { background: var(--tab-hover-bg); }
+
+.density-btn-active {
+  background: var(--density-btn-active-bg);
+  color: var(--density-btn-active-fg);
+  border-color: var(--density-btn-active-bg);
+}
+
+/* --- Hatnote (item 6): italic, indented, top of article --- */
+
+.wiki-hatnote {
+  font-style: italic;
+  margin: 0 0 1rem 1.5rem;
+  color: var(--fg-muted);
+  font-family: var(--sans);
+  font-size: 0.9375rem;
+}
+
+/* --- Article wrapper inside wiki-main --- */
+
+.wiki-article {
+  /* Inherits article styles from Phase 1 */
+}
+
+/* --- Per-section [edit] pencils (item 3) --- */
+
+/* The edit pencil is right-floated inside each heading.
+ * comrak emits headings as: <h2 id="…"><span class="edit-pencil">…</span>text
+ * We float it so the heading text stays on the left.
+ */
+.edit-pencil {
+  float: right;
+  font-size: 0.75rem;
+  font-weight: 400;
+  font-family: var(--sans);
+  margin-left: 0.5rem;
+  line-height: inherit;
+}
+
+.edit-pencil a {
+  color: var(--fg-muted);
+  text-decoration: none;
+}
+
+.edit-pencil a:hover {
+  color: var(--link);
+  text-decoration: underline;
+}
+
+/* --- End-of-article footer block (items 5 + 15) --- */
+
+.wiki-article-footer {
+  border-top: 1px solid var(--border);
+  margin-top: 2.5rem;
+  padding-top: 1rem;
+  font-family: var(--sans);
+  font-size: 0.875rem;
+}
+
+/* Categories (item 15) */
+.wiki-categories {
+  background: var(--cat-bg);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  padding: 0.4rem 0.75rem;
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.cats-label {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.cats-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.cats-list li { margin: 0; padding: 0; border: none; }
+
+.cats-list a {
+  color: var(--link);
+  text-decoration: none;
+  font-size: 0.875rem;
+}
+
+.cats-list a:visited { color: var(--link-visited); }
+.cats-list a:hover { text-decoration: underline; }
+
+.wiki-footer-meta {
+  color: var(--fg-muted);
+  font-size: 0.8125rem;
+  margin-top: 0.75rem;
+}
+
+.wiki-license { margin: 0 0 0.25rem; }
+.wiki-license a { color: var(--link); }
+
+.wiki-footer-links a {
+  color: var(--link);
+  text-decoration: none;
+}
+
+.wiki-footer-links a:hover { text-decoration: underline; }
+
+/* --- Mobile responsive overrides for Phase 1.1 chrome --- */
+
+@media (max-width: 768px) {
+  .wiki-layout {
+    flex-direction: column;
+  }
+
+  .wiki-toc {
+    position: static;
+    width: auto;
+    min-width: 0;
+    flex: none;
+    margin: 0.75rem 0.75rem 0;
+    order: 2; /* TOC appears below the title row on mobile */
+  }
+
+  .wiki-main {
+    order: 1;
+    padding: 0.75rem;
+  }
+
+  .wiki-title-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+
+  .wiki-page-tabs,
+  .wiki-action-tabs {
+    margin: 0;
+    flex-wrap: wrap;
+  }
+
+  .wiki-ivc-band {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+}
