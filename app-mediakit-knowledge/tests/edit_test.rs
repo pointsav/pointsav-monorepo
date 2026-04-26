@@ -40,21 +40,24 @@ async fn get_edit_returns_editor_page_for_existing_slug() {
     assert_eq!(resp.status(), StatusCode::OK);
     let body = resp.into_body().collect().await.unwrap().to_bytes();
     let html = std::str::from_utf8(&body).unwrap();
+    assert!(html.contains("topic-existing"), "slug: {html}");
+    assert!(html.contains(r#"id="saa-editor""#), "editor mount slot missing");
     assert!(
-        html.contains("topic-existing"),
-        "editor page should mention slug: {html}"
+        html.contains("/static/vendor/cm-saa.bundle.js"),
+        "vendor bundle script tag missing"
     );
+    assert!(html.contains("/static/saa-init.js"), "init script missing");
+    assert!(html.contains("window.SAA_SLUG"), "SAA_SLUG injection missing");
     assert!(
-        html.contains("Edit"),
-        "editor page should contain Edit chrome: {html}"
+        html.contains("window.SAA_INITIAL"),
+        "SAA_INITIAL injection missing"
     );
 }
 
 #[tokio::test]
 async fn get_edit_returns_editor_page_for_nonexistent_slug() {
-    // GET /edit/<new-slug> should return the editor (so the user can start
-    // typing before /create is called); the placeholder explains the file
-    // doesn't exist yet.
+    // GET /edit/<new-slug> returns the editor (so the user can start typing
+    // before /create is called). Initial doc is empty.
     let (state, _dir) = fixture_state().await;
     let app = router(state);
     let resp = app
@@ -69,10 +72,48 @@ async fn get_edit_returns_editor_page_for_nonexistent_slug() {
     assert_eq!(resp.status(), StatusCode::OK);
     let body = resp.into_body().collect().await.unwrap().to_bytes();
     let html = std::str::from_utf8(&body).unwrap();
+    assert!(html.contains(r#"id="saa-editor""#), "editor mount slot missing");
+    // Initial doc for a nonexistent slug serialises to "" (empty string).
     assert!(
-        html.contains("does not exist"),
-        "editor for nonexistent slug should say so: {html}"
+        html.contains(r#"window.SAA_INITIAL="""#),
+        "SAA_INITIAL should be empty string for nonexistent slug: {html}"
     );
+}
+
+#[tokio::test]
+async fn get_edit_initial_json_round_trips_special_chars() {
+    // Markdown body with quotes, backslashes, and newlines must JSON-encode
+    // cleanly into the editor state.
+    let dir = tempfile::tempdir().unwrap();
+    let body = "---\ntitle: \"Quotes\"\nslug: tricky\n---\nLine 1\nLine 2 with \"quotes\"\nBackslash\\here\n";
+    tokio::fs::write(dir.path().join("tricky.md"), body)
+        .await
+        .unwrap();
+    let state = AppState {
+        content_dir: dir.path().to_path_buf(),
+    };
+    let app = router(state);
+    let resp = app
+        .oneshot(
+            Request::builder()
+                .uri("/edit/tricky")
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+    let html_bytes = resp.into_body().collect().await.unwrap().to_bytes();
+    let html = std::str::from_utf8(&html_bytes).unwrap();
+
+    // Find the SAA_INITIAL assignment and parse the JSON literal that follows.
+    let needle = "window.SAA_INITIAL=";
+    let start = html.find(needle).expect("SAA_INITIAL not present") + needle.len();
+    // The script body looks like: window.SAA_SLUG="...";window.SAA_INITIAL="...";
+    let semi = html[start..].find(';').expect("missing terminator");
+    let json_literal = &html[start..start + semi];
+    let decoded: String =
+        serde_json::from_str(json_literal).expect("SAA_INITIAL must be valid JSON string");
+    assert_eq!(decoded, body);
 }
 
 #[tokio::test]
