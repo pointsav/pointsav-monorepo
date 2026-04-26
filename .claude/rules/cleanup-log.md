@@ -92,6 +92,41 @@ Newest on top. Append a dated block when a session includes meaningful cleanup w
 
 ---
 
+## 2026-04-26 — ARCHITECTURE.md §7 zero-container rewrite (Master-authorised)
+
+- **Scope of this commit (narrow, per brief).** Rewrote §7 file
+  tree only: `compute/container/{Dockerfile,requirements.txt,
+  build.sh}` → `compute/systemd/{local-slm.service,deploy.sh}`;
+  `compute/sky/{ingest,warmpool,teardown}.yaml` →
+  `compute/tofu/{main,variables,outputs}.tf` plus
+  `tofu/killswitch/`. Added preface paragraph that names the two
+  reference implementations the layout dogfoods
+  (`infrastructure/local-slm/` for Tier A, B5-verified today;
+  `infrastructure/slm-yoyo/tofu/` for Tier B). Added trailing
+  paragraph clarifying the in-tree subtrees are per-deployment
+  overrides composed against upstream defaults. Cited
+  `conventions/zero-container-runtime.md` as the structural
+  authority. `memory/adapters/train/` annotated as Python via
+  `pyproject.toml + uv` per the `router-trainer/` precedent
+  (Master's brief).
+- **Adjacent drift NOT touched in this commit (surfaced to
+  Master via outbox + NEXT.md):** eight more container /
+  SkyPilot references remain in `service-slm/ARCHITECTURE.md`
+  (§2 Ring 1 Bootstrap "Pre-built container in Artifact
+  Registry"; §2 memory-tier table; §4 moduleId table; §5.9
+  Sigstore "container images"; §6 `slm-compute` crate
+  description "Cloud Run driver, container mgmt"; §8 event
+  vocabulary `BOOT_REQUEST — SkyPilot asked to spin up`; §10
+  2030 headroom "SkyPilot 0.11"; plus three more in
+  `service-slm/DEVELOPMENT.md` §1.1, §4 Phase 1, §4 Phase 2,
+  §5 B2 row). Per Master's "stop and surface if structurally
+  larger than expected" caveat in the brief, I did NOT expand
+  the rewrite to cover them; the §7 commit is the narrow
+  Master-authorised change. A second-pass session needs an
+  explicit go-ahead to consolidate the rest.
+
+---
+
 ## 2026-04-26 — B5 verification end-to-end (Tier A live)
 
 - **B5 PASSED.** Doorman release binary booted against Master's
