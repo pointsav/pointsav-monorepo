@@ -8,23 +8,41 @@
 
 ## Right now
 
-- **B2 — Yo-Yo HTTP client.** Fill `crates/slm-doorman/src/tier/yoyo.rs`
-  per `infrastructure/slm-yoyo/CONTRACT.md`. Required: bearer-token
+- **WAITING — Master must land B3 (and D1 if needed) first.** Per
+  operator direction (jmwoodfine, 2026-04-25 23:48 UTC) Task is
+  idle here until Master delivers a local OpenAI-compatible
+  inference server (llama-server preferred per v0.0.9 runtime
+  pivot) as a systemd unit on the workspace VM at
+  `127.0.0.1:8080`. D1 (e2-medium → e2-standard-4) is a
+  prerequisite if VM RAM is currently too tight. Pointed ask sent
+  via `.claude/outbox.md` (high priority). Task will pick up B5
+  end-to-end immediately on Master's "B3 live" signal.
+- **B5 — verify Doorman boots end-to-end against Tier A** (waiting
+  on Master B3). Structural half is already covered by the
+  `slm-doorman-server` env-var contract: omit `SLM_YOYO_ENDPOINT`
+  and the bin runs in community-tier mode. Once B3 is live the
+  verification sequence is:
+  1. Boot `slm-doorman-server` foreground with
+     `SLM_LOCAL_ENDPOINT=http://127.0.0.1:8080`.
+  2. Probe `/healthz`, `/readyz` (expect `has_yoyo: false`),
+     `/v1/contract`.
+  3. `POST /v1/chat/completions` with one user message; expect a
+     content string back from OLMo 3 7B Q4.
+  4. Inspect `~/.service-slm/audit/<date>.jsonl` for one
+     `tier: "local"` entry per call.
+- **B2 — Yo-Yo HTTP client** (queued behind B5). Fill
+  `crates/slm-doorman/src/tier/yoyo.rs` per
+  `infrastructure/slm-yoyo/CONTRACT.md`. Required: bearer-token
   acquisition (GCP Workload Identity for `*.run.app`; provider API
-  keys from Secret Manager for RunPod / Modal; customer mTLS / shared
-  secret for on-prem), POST `/v1/chat/completions` with the four
-  required `X-Foundry-*` headers, retry-on-503 honouring
+  keys from Secret Manager for RunPod / Modal; customer mTLS /
+  shared secret for on-prem), POST `/v1/chat/completions` with the
+  four required `X-Foundry-*` headers, retry-on-503 honouring
   `Retry-After`, auth-refresh on 401/403, MAJOR mismatch on 410.
   Wire format already laid out in `tier/yoyo.rs::YoYoTierConfig`;
-  the `complete()` body is the only stub left to fill.
-- **B5 — verify Doorman boots without Yo-Yo.** Already covered by
-  the existing `slm-doorman-server` env-var contract: omit
-  `SLM_YOYO_ENDPOINT` and the bin runs in community-tier mode.
-  Smoke-test by booting against a llama-server on port 8080 (per
-  Master's v0.0.9 runtime-pivot recommendation) and verifying
-  `GET /readyz` returns `has_yoyo: false`. Needs the Tier A
-  endpoint actually running — coordinate with Master once B3
-  (systemd unit for mistral.rs / llama.cpp on workspace VM) lands.
+  the `complete()` body is the only stub left to fill. Holds
+  until Tier A is verified working — per
+  `conventions/customer-first-ordering.md`, build in the order the
+  customer will install.
 
 ## Queue
 
