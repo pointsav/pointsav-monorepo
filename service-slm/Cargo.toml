@@ -40,6 +40,19 @@ thiserror = "2"
 # Async trait support (BearerTokenProvider in slm-doorman)
 async-trait = "0.1"
 
+# Regex (used by slm-doorman::redact for sanitize-outbound parity with
+# bin/capture-edit.py REDACTIONS; and by slm-doorman::apprenticeship for
+# parsing the apprentice's YAML-frontmatter / fenced-diff response shape)
+regex = "1"
+
+# File locking for the apprenticeship promotion ledger (single-writer
+# serialisation across processes per design-pass Q3)
+fs2 = "0.4"
+
+# Base64 for the SSH signature blob carried in `ApprenticeshipVerdict`
+# wire shape (design-pass Q5)
+base64 = "0.22"
+
 # Observability
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
