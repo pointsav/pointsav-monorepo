@@ -96,6 +96,48 @@ Newest on top. Append a dated block when a session includes meaningful cleanup w
 
 ---
 
+## 2026-04-26 — Task `cluster/project-system`
+
+- **`system-core` activated; Phase 1A increment 1 landed.** Per the
+  cluster brief at
+  `~/Foundry/clones/project-system/.claude/inbox.md` (Phase 0
+  hygiene interleaved with Phase 1A). Files added to `system-core/`:
+  `CLAUDE.md`, `AGENTS.md`, `NEXT.md`, `ARCHITECTURE.md` (per
+  framework §9 Tier 2 + ARCHITECTURE.md skeleton citing claims
+  #33/#34 + `system-substrate-doctrine.md` §3.1+§5). Files modified:
+  `Cargo.toml` (added `serde`/`serde_json`/`sha2` deps),
+  `src/lib.rs` (replaced 1-function scaffold with `Capability` +
+  `WitnessRecord` + `LedgerAnchor` + `CapabilityType` + `Right`
+  types per convention §5.1 schema; six unit tests covering
+  serialisation round-trips and hash determinism), `README.md` +
+  `README.es.md` (stripped "Pending Engineering Cycle" placeholder
+  language; bilingual pair updated to Active state).
+- **Workspace `[members]` updated.** `system-core` added to monorepo
+  `Cargo.toml` `[workspace] members =`. Total members: 8 → 9. List
+  of canonical/in-workspace `system-*` projects: 2 → 3 (joins
+  `system-gateway-mba` + `system-security`). 11 system-* and 9
+  moonshot-* remain to be added across future Phase 0 / Phase 1
+  increments.
+- **Registry updated.** `system-core` row Scaffold-coded → Active;
+  Active count 4 → 5; Scaffold-coded 53 → 52; Total 97 unchanged.
+- **Open architecture question surfaced.** Where does the kernel-side
+  ledger-consultation logic live: extension of `system-substrate` or
+  a new `system-capability-ledger` / `system-ledger` crate?
+  Documented in `system-core/ARCHITECTURE.md` §3; will resolve in the
+  next Phase 1A increment (consultation simulator). Not blocking.
+- **Residual sketch left in place.** `system-core/master-relay.rs`
+  shells out to nonexistent `/bin/service-*` binaries and predates
+  this cluster. Not a binary target, not in `Cargo.toml [[bin]]`.
+  Tracked in `system-core/NEXT.md` deferred queue and surfaced as a
+  per-project defect-closure pass that should audit all top-level
+  `*.rs` files in projects against `repo-layout.md`. Not blocking
+  Phase 1A.
+- **Verification.** `cargo check -p system-core` and
+  `cargo test -p system-core` both pass on Rust stable in workspace
+  context. Six tests; zero warnings on the new code.
+
+---
+
 ## 2026-04-23
 
 - **Repo-layout rule introduced.** Added
