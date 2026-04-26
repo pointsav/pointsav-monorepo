@@ -29,6 +29,15 @@ enum Command {
         /// Address to bind. Defaults to loopback.
         #[arg(long, env = "WIKI_BIND", default_value = "127.0.0.1:9090")]
         bind: SocketAddr,
+
+        /// Path to the Foundry citation registry YAML file.
+        /// Exposed via GET /api/citations for SAA editor autocomplete.
+        #[arg(
+            long,
+            env = "WIKI_CITATIONS_YAML",
+            default_value = "/srv/foundry/citations.yaml"
+        )]
+        citations_yaml: PathBuf,
     },
 }
 
@@ -42,20 +51,32 @@ async fn main() -> Result<()> {
 
     let cli = Cli::parse();
     match cli.command {
-        Command::Serve { content_dir, bind } => serve(content_dir, bind).await,
+        Command::Serve {
+            content_dir,
+            bind,
+            citations_yaml,
+        } => serve(content_dir, bind, citations_yaml).await,
     }
 }
 
-async fn serve(content_dir: PathBuf, bind: SocketAddr) -> Result<()> {
+async fn serve(content_dir: PathBuf, bind: SocketAddr, citations_yaml: PathBuf) -> Result<()> {
     if !content_dir.is_dir() {
         bail!(
             "content directory does not exist or is not a directory: {}",
             content_dir.display()
         );
     }
-    tracing::info!(content_dir = %content_dir.display(), %bind, "starting wiki engine");
+    tracing::info!(
+        content_dir = %content_dir.display(),
+        citations_yaml = %citations_yaml.display(),
+        %bind,
+        "starting wiki engine"
+    );
 
-    let state = AppState { content_dir };
+    let state = AppState {
+        content_dir,
+        citations_yaml,
+    };
     let app = router(state);
     let listener = tokio::net::TcpListener::bind(bind).await?;
     tracing::info!(addr = %bind, "listening");
