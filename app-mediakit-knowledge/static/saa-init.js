@@ -17,6 +17,63 @@
 
 'use strict';
 
+// SAA squiggle rule set — fetched once at editor init from
+// /api/squiggle-rules. Cached for the lifetime of the page. Each rule has
+// shape { id, severity, pattern, flags, message, citation }; severity is
+// 'error' | 'warning' | 'info' | 'hint' which CodeMirror's lint accepts
+// directly. See PHASE-2-PLAN.md §1 Step 4 + UX-DESIGN.md §5.3.
+var squiggleRules = [];
+var squiggleRulesFetched = false;
+
+function fetchSquiggleRules() {
+  return fetch('/api/squiggle-rules')
+    .then(function (resp) { return resp.ok ? resp.json() : []; })
+    .then(function (rules) {
+      squiggleRules = rules.map(function (r) {
+        try {
+          return Object.assign({}, r, { regex: new RegExp(r.pattern, r.flags || 'g') });
+        } catch (e) {
+          // Invalid regex on the server side — skip the rule rather than
+          // crashing the linter. Surface in console for operator visibility.
+          console.warn('SAA squiggle: invalid regex for rule', r.id, e);
+          return null;
+        }
+      }).filter(Boolean);
+      squiggleRulesFetched = true;
+    })
+    .catch(function (e) {
+      console.warn('SAA squiggle: rule fetch failed', e);
+      squiggleRulesFetched = true;
+    });
+}
+
+// CodeMirror linter source — runs each rule's regex against the editor doc
+// and emits Diagnostic[] with severity + message + citation appended.
+function makeSquiggleLinter() {
+  return function (view) {
+    if (!squiggleRulesFetched) return [];
+    var doc = view.state.doc.toString();
+    var diagnostics = [];
+    for (var i = 0; i < squiggleRules.length; i++) {
+      var rule = squiggleRules[i];
+      var re = rule.regex;
+      re.lastIndex = 0;
+      var m;
+      while ((m = re.exec(doc)) !== null) {
+        diagnostics.push({
+          from: m.index,
+          to: m.index + m[0].length,
+          severity: rule.severity,
+          message: rule.message + '  [' + rule.citation + ']',
+          source: rule.id,
+        });
+        if (m.index === re.lastIndex) re.lastIndex++;  // avoid infinite loop on zero-width matches
+      }
+    }
+    return diagnostics;
+  };
+}
+
 (function () {
   document.addEventListener('DOMContentLoaded', function () {
     var slot = document.getElementById('saa-editor');
@@ -26,17 +83,25 @@
     var slug = window.SAA_SLUG;
     var initialDoc = (typeof window.SAA_INITIAL === 'string') ? window.SAA_INITIAL : '';
 
+    // Kick off rule fetch in parallel; the lint extension reads from the
+    // module-level `squiggleRules` once the fetch resolves.
+    fetchSquiggleRules();
+
+    var extensions = [
+      CMSAA.commands.history(),
+      CMSAA.langMarkdown.markdown(),
+      CMSAA.view.lineNumbers(),
+      CMSAA.view.EditorView.lineWrapping,
+      CMSAA.view.keymap.of(
+        CMSAA.commands.defaultKeymap.concat(CMSAA.commands.historyKeymap)
+      ),
+      CMSAA.lint.lintGutter(),
+      CMSAA.lint.linter(makeSquiggleLinter(), { delay: 250 }),
+    ];
+
     var view = new CMSAA.view.EditorView({
       doc: initialDoc,
-      extensions: [
-        CMSAA.commands.history(),
-        CMSAA.langMarkdown.markdown(),
-        CMSAA.view.lineNumbers(),
-        CMSAA.view.EditorView.lineWrapping,
-        CMSAA.view.keymap.of(
-          CMSAA.commands.defaultKeymap.concat(CMSAA.commands.historyKeymap)
-        ),
-      ],
+      extensions: extensions,
       parent: slot,
     });
 
