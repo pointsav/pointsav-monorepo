@@ -92,6 +92,70 @@ Newest on top. Append a dated block when a session includes meaningful cleanup w
 
 ---
 
+## 2026-04-26 — second-pass: eleven zero-container drift sites (Master-authorised)
+
+- Per Master's 2026-04-26 07:50 inbox brief (4a "GO AHEAD") and
+  the per-site replacement text Master supplied, applied eleven
+  prose edits across `service-slm/ARCHITECTURE.md` and
+  `service-slm/DEVELOPMENT.md` in a single commit:
+  - ARCH §2 memory-tier table row 1 storage column (line 56)
+    "Container image + GCS-cached weights" → "systemd-unit
+    `ReadWritePaths` + GCS-cached weights"
+  - ARCH §2 Ring 1 Bootstrap item 1 (line 67-68) "Pre-built
+    container in Artifact Registry" → "Pre-built native binary
+    in the `pointsav-public` GCE image family per
+    `infrastructure/slm-yoyo/tofu/` precedent" with citation of
+    `conventions/zero-container-runtime.md`
+  - ARCH §4 moduleId table row 1 (line 145) "which container
+    variant to boot" → "which `systemd` unit `ExecStart` per
+    `moduleId`"
+  - ARCH §5.9 Sigstore (line 252) "container images and OCI
+    artefacts" → "native binaries and unit files; SSH commit
+    signing per workspace `CLAUDE.md` §3 is the primary
+    commit-time authority, with `sigstore` reserved for
+    release-artefact signing"
+  - ARCH §6 `slm-compute` crate (line 285) "Cloud Run driver,
+    container mgmt" → "GCE driver, systemd lifecycle"
+  - ARCH §8 event vocabulary (line 427) "BOOT_REQUEST —
+    SkyPilot asked to spin up" → "BOOT_REQUEST — OpenTofu
+    provisioning kicked off via `tofu apply`"
+  - ARCH §10 2030 headroom — dropped the "Distributed KV across
+    clouds (SkyPilot 0.11 + Mooncake)" row entirely
+  - DEV §1 release-build (line 116) "release-build container
+    signing" → "release-build SSH commit + tag signing on top
+    of `sigstore` binary signing; no container images produced"
+  - DEV §4 Phase 1 (line 159) "Python, vLLM, SkyPilot, dbt,
+    Dagster" → "Python, vLLM (multi-LoRA), OpenTofu, dbt,
+    Dagster" with `conventions/adapter-composition.md` citation
+    for the vLLM-stays decision
+  - DEV §4 Phase 2 (line 176-178) "container-side for remote"
+    → "remote-side native binary delivered via the
+    `pointsav-public` GCE image"
+  - DEV §5 B2 row "SkyPilot pool with `min_replicas=1`" →
+    "OpenTofu module with `idle_shutdown_minutes=N` per
+    `infrastructure/slm-yoyo/tofu/`"
+- **Additional drift surfaced — NOT touched in this commit.**
+  `service-slm/ARCHITECTURE.md` §5.10 "Not-Rust components,
+  behind network protocols" table contains a row
+  `| SkyPilot (if used) | Python | Multi-cloud abstraction,
+  overkill for Phase 1 single-cloud | External driver, not
+  linked |`. With §10's SkyPilot row dropped, this §5.10 row
+  reads as orphaned ("if used" but no remaining call-site).
+  Master did not list §5.10 in the eleven-site brief; per the
+  "stop and surface if structurally larger" caveat, leaving it
+  for next-pass authorisation. Recommendation: drop the row.
+- **Cloud Run reference at §2 Ring 1 Bootstrap item 3** ("Cloud
+  Run GPU scale-to-zero with drivers pre-installed") and the
+  surrounding paragraphs about "warm pool opt-in" and
+  "Bill-per-second for request processing" also reference
+  Cloud Run — a containerised runtime per the convention's
+  "What this rules out" list. Master did not list these; same
+  caveat applies. Suggest dropping the Cloud Run mention in
+  favour of GCE start/stop ceremony per the convention's
+  trade-off section. Surface for next-pass authorisation.
+
+---
+
 ## 2026-04-26 — ARCHITECTURE.md §7 zero-container rewrite (Master-authorised)
 
 - **Scope of this commit (narrow, per brief).** Rewrote §7 file
