@@ -53,7 +53,7 @@ between runaway cost (over-persistence) and silent knowledge loss
 
 | Ring | Name | Storage | Rebuild cost | Survives teardown? | Governed by |
 |---|---|---|---|---|---|
-| 1 | Bootstrap | Container image + GCS-cached weights + Secret Manager | ~5–15 s | Yes (as artefacts) | `service-slm/compute/` |
+| 1 | Bootstrap | systemd-unit `ReadWritePaths` + GCS-cached weights + Secret Manager | ~5–15 s | Yes (as artefacts) | `service-slm/compute/` |
 | 2 | Working (KV cache) | LMCache + Mooncake Store → object storage | Near-zero on cache hit | Yes (pooled) | `service-slm/memory/kv/` |
 | 3a | Long-term — graph | LadybugDB in `service-content` | None (query-time) | Yes (authoritative) | `service-content` (read-only from here) |
 | 3b | Long-term — skill | LoRA adapter stack, OCI Artifacts | One-time per project | Yes (portable) | `service-slm/memory/adapters/` |
@@ -64,8 +64,12 @@ Everything else is ephemeral and intentionally discarded.
 
 Four pre-staged artefacts in cheap cold storage, pulled on boot:
 
-1. Pre-built container in Artifact Registry (Phase 1 vLLM-based,
-   ~15 GB; Phase 2 `mistral.rs` binary, ~200 MB).
+1. Pre-built native binary in the `pointsav-public` GCE image
+   family per `infrastructure/slm-yoyo/tofu/` precedent (Phase 1
+   `llama-server` ELF + GGUF weights pulled at boot; Phase 2
+   `mistralrs-server` ELF, ~200 MB). No container runtime —
+   `~/Foundry/conventions/zero-container-runtime.md` is structural
+   doctrine.
 2. Pre-downloaded model weights in GCS (e.g.
    `gs://dka-checkpoints/models/gemma-4-26b-a4b/`), mounted via
    Cloud Storage FUSE or `rsync`'d on boot.
@@ -142,7 +146,7 @@ through:
 
 | Ring / layer | Job |
 |---|---|
-| 1 — Bootstrap | Selects which container variant to boot (usually same across projects) |
+| 1 — Bootstrap | Selects which `systemd` unit `ExecStart` per `moduleId` (usually same across projects) |
 | 2 — KV cache | Namespaces Mooncake block hashes so Project A never sees Project B's blocks |
 | 3a — Graph | Scopes the traversal to the right `moduleId` partition of LadybugDB |
 | 3b — Adapters | Selects which LoRA adapter stack to activate |
@@ -249,7 +253,7 @@ no `instructor` runtime.
 
 | Crate | Role | Licence |
 |---|---|---|
-| `sigstore` | Keyless signing for container images and OCI artefacts (adapter releases) | Apache-2.0 |
+| `sigstore` | Keyless signing for native binaries and unit files; SSH commit signing per workspace `CLAUDE.md` §3 is the primary commit-time authority, with `sigstore` reserved for release-artefact signing (adapter releases) | Apache-2.0 |
 
 See `DEVELOPMENT.md` for `cargo-audit`, `cargo-deny`, and
 `cargo-sbom` invocation in CI.
@@ -282,7 +286,7 @@ service-slm/
 │   ├── slm-core/               shared types, errors, moduleId discipline
 │   ├── slm-doorman/            sanitise / send / receive / rehydrate protocol
 │   ├── slm-ledger/             append-only CSV + SQLite audit trail
-│   ├── slm-compute/            Ring 1 bootstrap (Cloud Run driver, container mgmt)
+│   ├── slm-compute/            Ring 1 bootstrap (GCE driver, systemd lifecycle)
 │   ├── slm-memory-kv/          Ring 2 client (Mooncake + LMCache wire protocol)
 │   ├── slm-memory-adapters/    Ring 3b adapter registry and loader
 │   ├── slm-inference-local/    mistral.rs-backed local inference
@@ -424,7 +428,7 @@ gpu_seconds, cost_usd, completion_status, error_code, operator_id
 
 `event_type` vocabulary:
 
-- `BOOT_REQUEST` — SkyPilot asked to spin up
+- `BOOT_REQUEST` — OpenTofu provisioning kicked off via `tofu apply`
 - `BOOT_COMPLETE` — node is serving
 - `JOB_START` — ingest or query job submitted
 - `JOB_COMPLETE` — job finished, delta returned
@@ -475,7 +479,6 @@ addition, not a refactor.
 |---|---|
 | CUDA checkpoint/restore (vLLM RFC #34303) | Ring 1: optional checkpoint bundle as bootstrap input |
 | C-LoRA single-adapter (arXiv 2502.17920) | Ring 3b: registry schema migration from dual → single |
-| Distributed KV across clouds (SkyPilot 0.11 + Mooncake) | Ring 2: Mooncake master on multi-cloud pool |
 | FP8 KV-cache quantisation | Ring 2: config flag (`KV_CACHE_DTYPE=fp8`) |
 | Sleep-time compute (async memory management) | Ring 3b: nightly LoRA retraining on Batch API |
 | Encode-Prefill-Decode disaggregation (SGLang + Mooncake) | Ring 2 evolution: separate prefill and decode pools |

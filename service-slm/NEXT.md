@@ -26,25 +26,19 @@
 
 ## Queue
 
-- **ARCHITECTURE.md / DEVELOPMENT.md remaining zero-container
-  drift (Master sign-off needed before second-pass).** Eight
-  references survived the §7 narrow rewrite, in adjacent
-  sections Master told me not to touch without going back to
-  outbox first: §2 Ring 1 Bootstrap "Pre-built container in
-  Artifact Registry" (rewrite to "pre-built ELF binary +
-  systemd unit in GCE image"); §2 memory-tier table row
-  ("Container image + GCS-cached weights" → "Native binary +
-  GCS-cached weights"); §4 moduleId table row ("which container
-  variant to boot" → "which binary variant to boot"); §5.9
-  Sigstore description; §6 `slm-compute` crate description
-  ("Cloud Run driver, container mgmt" → "GCE driver, lifecycle
-  mgmt"); §8 event vocabulary `BOOT_REQUEST` SkyPilot reference;
-  §10 2030 headroom SkyPilot row; plus three references in
-  `DEVELOPMENT.md` (§1.1 Release-build container signing; §4
-  Phase 1 "Python, vLLM, SkyPilot, dbt, Dagster"; §4 Phase 2
-  "container-side for remote"; §5 B2 blocker row "SkyPilot pool
-  with min_replicas=1"). Coalesce into one second-pass commit
-  once Master approves expanding scope.
+- **ARCHITECTURE.md §5.10 + §2 Cloud Run zero-container drift
+  (third-pass — Master sign-off needed).** Eleven sites cleared
+  in second-pass commit; two additional drift surfaces remain:
+  - ARCH §5.10 "Not-Rust components" table SkyPilot row (now
+    orphaned — "if used" with no remaining call-site after the
+    §10 drop). Recommendation: drop the row.
+  - ARCH §2 Ring 1 Bootstrap items 3 + 4 reference Cloud Run
+    GPU scale-to-zero and warm-pool. Cloud Run is in the
+    convention's "What this rules out" list. Recommendation:
+    rewrite to GCE start/stop ceremony per the convention's
+    trade-off section.
+  Surface to Master in next outbox; do not act without
+  authorisation.
 - **B4 — Tier C client with narrow-precision allowlist.** Fill
   `crates/slm-doorman/src/tier/external.rs`. Implement per-provider
   HTTP wiring (Anthropic Claude, Google Gemini, OpenAI). Hard-code
