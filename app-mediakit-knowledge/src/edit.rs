@@ -128,6 +128,11 @@ pub async fn get_edit(
 /// Atomic write of edited TOPIC body to an existing file. Returns 404 if the
 /// target does not exist (use `/create` for new TOPICs — separate route to
 /// avoid accidental creation via PUT-shaped POST).
+///
+/// On successful write, asynchronously triggers a tantivy reindex of the
+/// slug. Reindex failures are logged but do NOT roll back the disk write —
+/// the search index is derived state per ARCHITECTURE.md §1; the on-disk
+/// file is canonical.
 pub async fn post_edit(
     State(state): State<Arc<AppState>>,
     Path(slug): Path<String>,
@@ -139,6 +144,9 @@ pub async fn post_edit(
         return Err(WikiError::NotFound(slug));
     }
     atomic_write(&state.content_dir, &target, &body).await?;
+    if let Err(e) = crate::search::reindex_topic(&state.search, &slug, &body) {
+        tracing::warn!(slug = %slug, error = %e, "search reindex failed after edit");
+    }
     Ok((StatusCode::OK, "saved").into_response())
 }
 
@@ -170,6 +178,9 @@ pub async fn post_create(
         slug
     );
     atomic_write(&state.content_dir, &target, &body).await?;
+    if let Err(e) = crate::search::reindex_topic(&state.search, &slug, &body) {
+        tracing::warn!(slug = %slug, error = %e, "search reindex failed after create");
+    }
     Ok((StatusCode::CREATED, slug).into_response())
 }
 

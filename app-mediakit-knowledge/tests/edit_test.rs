@@ -4,30 +4,37 @@
 use http_body_util::BodyExt;
 use tower::ServiceExt;
 
+use app_mediakit_knowledge::search;
 use app_mediakit_knowledge::server::{router, AppState};
 use axum::{
     body::Body,
     http::{Request, StatusCode},
 };
+use std::sync::Arc;
 
-async fn fixture_state() -> (AppState, tempfile::TempDir) {
+async fn fixture_state() -> (AppState, tempfile::TempDir, tempfile::TempDir) {
     let dir = tempfile::tempdir().unwrap();
+    let state_dir = tempfile::tempdir().unwrap();
     tokio::fs::write(
         dir.path().join("topic-existing.md"),
         "---\ntitle: Existing\nslug: topic-existing\n---\n# Original\n",
     )
     .await
     .unwrap();
+    let index = search::build_index(dir.path(), state_dir.path())
+        .await
+        .unwrap();
     let state = AppState {
         content_dir: dir.path().to_path_buf(),
         citations_yaml: std::path::PathBuf::from("/nonexistent/citations.yaml"),
+        search: Arc::new(index),
     };
-    (state, dir)
+    (state, dir, state_dir)
 }
 
 #[tokio::test]
 async fn get_edit_returns_editor_page_for_existing_slug() {
-    let (state, _dir) = fixture_state().await;
+    let (state, _dir, _state_dir) = fixture_state().await;
     let app = router(state);
     let resp = app
         .oneshot(
@@ -59,7 +66,7 @@ async fn get_edit_returns_editor_page_for_existing_slug() {
 async fn get_edit_returns_editor_page_for_nonexistent_slug() {
     // GET /edit/<new-slug> returns the editor (so the user can start typing
     // before /create is called). Initial doc is empty.
-    let (state, _dir) = fixture_state().await;
+    let (state, _dir, _state_dir) = fixture_state().await;
     let app = router(state);
     let resp = app
         .oneshot(
@@ -86,13 +93,18 @@ async fn get_edit_initial_json_round_trips_special_chars() {
     // Markdown body with quotes, backslashes, and newlines must JSON-encode
     // cleanly into the editor state.
     let dir = tempfile::tempdir().unwrap();
+    let state_dir = tempfile::tempdir().unwrap();
     let body = "---\ntitle: \"Quotes\"\nslug: tricky\n---\nLine 1\nLine 2 with \"quotes\"\nBackslash\\here\n";
     tokio::fs::write(dir.path().join("tricky.md"), body)
+        .await
+        .unwrap();
+    let index = search::build_index(dir.path(), state_dir.path())
         .await
         .unwrap();
     let state = AppState {
         content_dir: dir.path().to_path_buf(),
         citations_yaml: std::path::PathBuf::from("/nonexistent/citations.yaml"),
+        search: Arc::new(index),
     };
     let app = router(state);
     let resp = app
@@ -120,7 +132,7 @@ async fn get_edit_initial_json_round_trips_special_chars() {
 
 #[tokio::test]
 async fn post_edit_writes_to_existing_file_atomically() {
-    let (state, dir) = fixture_state().await;
+    let (state, dir, _state_dir) = fixture_state().await;
     let new_content = "---\ntitle: Updated\nslug: topic-existing\n---\n# New body\n";
     let app = router(state);
     let resp = app
@@ -142,7 +154,7 @@ async fn post_edit_writes_to_existing_file_atomically() {
 
 #[tokio::test]
 async fn post_edit_404_for_nonexistent_file() {
-    let (state, _dir) = fixture_state().await;
+    let (state, _dir, _state_dir) = fixture_state().await;
     let app = router(state);
     let resp = app
         .oneshot(
@@ -159,7 +171,7 @@ async fn post_edit_404_for_nonexistent_file() {
 
 #[tokio::test]
 async fn post_edit_rejects_invalid_slug_shape() {
-    let (state, _dir) = fixture_state().await;
+    let (state, _dir, _state_dir) = fixture_state().await;
     let app = router(state);
     let resp = app
         .oneshot(
@@ -177,7 +189,7 @@ async fn post_edit_rejects_invalid_slug_shape() {
 
 #[tokio::test]
 async fn post_create_writes_new_file_with_explicit_slug() {
-    let (state, dir) = fixture_state().await;
+    let (state, dir, _state_dir) = fixture_state().await;
     let app = router(state);
     let body = serde_json::json!({
         "title": "Brand New Topic",
@@ -205,7 +217,7 @@ async fn post_create_writes_new_file_with_explicit_slug() {
 
 #[tokio::test]
 async fn post_create_409_if_already_exists() {
-    let (state, _dir) = fixture_state().await;
+    let (state, _dir, _state_dir) = fixture_state().await;
     let app = router(state);
     let body = serde_json::json!({
         "title": "Already Exists",
@@ -228,7 +240,7 @@ async fn post_create_409_if_already_exists() {
 
 #[tokio::test]
 async fn post_create_derives_slug_from_title() {
-    let (state, dir) = fixture_state().await;
+    let (state, dir, _state_dir) = fixture_state().await;
     let app = router(state);
     let body = serde_json::json!({
         "title": "Auto Slug Test"
