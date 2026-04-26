@@ -73,6 +73,18 @@ pub fn router(state: AppState) -> Router {
         .route("/api/doorman/instruct", post(doorman_stub))
         // Phase 3 Step 3.2 — full-text search HTML page over the tantivy index
         .route("/search", get(search_page))
+        // Phase 3 Step 3.3 — Atom + JSON Feed syndication
+        .route("/feed.atom", get(crate::feeds::get_atom))
+        .route("/feed.json", get(crate::feeds::get_json_feed))
+        // Phase 3 Step 3.4 — crawler discovery + raw Markdown source
+        .route("/sitemap.xml", get(sitemap_xml))
+        .route("/robots.txt", get(robots_txt))
+        .route("/llms.txt", get(llms_txt))
+        // axum 0.8 doesn't allow a literal `.md` suffix after a dynamic
+        // segment, so the route captures `{slug}` as a single segment and
+        // the handler strips an optional trailing `.md` for the
+        // git-clone-style UX (`/git/topic-foo.md` or `/git/topic-foo`).
+        .route("/git/{slug}", get(git_markdown))
         .with_state(Arc::new(state))
 }
 
@@ -473,6 +485,197 @@ fn wiki_chrome(
             }
         }
     }
+}
+
+// ─── Phase 3 Step 3.4 handlers ─────────────────────────────────────────────
+
+/// `GET /sitemap.xml` — sitemaps.org standard XML sitemap.
+///
+/// Walks `content_dir`, emits one `<url>` per TOPIC (excluding `*.es.md`
+/// bilingual siblings). Content-Type: `application/xml; charset=utf-8`.
+async fn sitemap_xml(State(state): State<Arc<AppState>>) -> Result<Response, WikiError> {
+    let mut entries = fs::read_dir(&state.content_dir).await?;
+    let mut slugs: Vec<String> = Vec::new();
+
+    while let Some(entry) = entries.next_entry().await? {
+        let name = entry.file_name();
+        let name = name.to_string_lossy();
+        if let Some(slug) = name.strip_suffix(".md") {
+            if !slug.ends_with(".es") {
+                slugs.push(slug.to_string());
+            }
+        }
+    }
+    slugs.sort();
+
+    let mut xml = String::from(
+        "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\
+         <urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n",
+    );
+    for slug in &slugs {
+        xml.push_str(&format!(
+            "  <url><loc>/wiki/{slug}</loc></url>\n"
+        ));
+    }
+    xml.push_str("</urlset>\n");
+
+    let mut resp = xml.into_response();
+    resp.headers_mut().insert(
+        header::CONTENT_TYPE,
+        header::HeaderValue::from_static("application/xml; charset=utf-8"),
+    );
+    Ok(resp)
+}
+
+/// `GET /robots.txt` — static crawl-permission declaration.
+///
+/// Allows all crawlers and declares the sitemap location.
+/// Content-Type: `text/plain; charset=utf-8`.
+async fn robots_txt() -> Response {
+    let body = "User-agent: *\nAllow: /\nSitemap: /sitemap.xml\n";
+    let mut resp = body.into_response();
+    resp.headers_mut().insert(
+        header::CONTENT_TYPE,
+        header::HeaderValue::from_static("text/plain; charset=utf-8"),
+    );
+    resp
+}
+
+/// `GET /llms.txt` — emerging LLM-readable site manifest convention.
+///
+/// Per the llmstxt.org convention (informal, 2025–2026). Lists all TOPICs
+/// with a one-line snippet, and points crawlers at the structured data
+/// surfaces (JSON-LD, Atom, JSON Feed, sitemap). Content-Type:
+/// `text/markdown; charset=utf-8`.
+async fn llms_txt(State(state): State<Arc<AppState>>) -> Result<Response, WikiError> {
+    let mut entries = fs::read_dir(&state.content_dir).await?;
+    let mut slugs: Vec<String> = Vec::new();
+
+    while let Some(entry) = entries.next_entry().await? {
+        let name = entry.file_name();
+        let name = name.to_string_lossy();
+        if let Some(slug) = name.strip_suffix(".md") {
+            if !slug.ends_with(".es") {
+                slugs.push(slug.to_string());
+            }
+        }
+    }
+    slugs.sort();
+
+    // Read each TOPIC to extract a one-line title + snippet directly from the
+    // parsed body — avoids a second directory traversal compared to calling
+    // `collect_recent_items`.
+    let mut topic_lines: Vec<String> = Vec::new();
+    for slug in &slugs {
+        let path = state.content_dir.join(format!("{slug}.md"));
+        let text = match fs::read_to_string(&path).await {
+            Ok(t) => t,
+            Err(_) => continue,
+        };
+        let parsed = match crate::render::parse_page(&text) {
+            Ok(p) => p,
+            Err(_) => continue,
+        };
+        let title = parsed.frontmatter.title.unwrap_or_else(|| slug.clone());
+
+        // Build a ~120-character snippet from the first non-heading body line.
+        let body_snippet = llms_txt_snippet(&parsed.body_md, 120);
+
+        topic_lines.push(format!("- [{title}](/wiki/{slug}): {body_snippet}"));
+    }
+
+    let topics_section = topic_lines.join("\n");
+
+    let body = format!(
+        "# PointSav Knowledge\n\
+         \n\
+         > Single-binary Markdown wiki engine; flat-file source-of-truth, \
+         AI-optional, Wikipedia-shaped UX. Substrate substitution per \
+         DOCTRINE claim #29.\n\
+         \n\
+         ## TOPICs\n\
+         \n\
+         {topics_section}\n\
+         \n\
+         ## Structured data\n\
+         \n\
+         - JSON-LD: every TOPIC `<head>` carries schema.org `TechArticle` / `DefinedTerm`\n\
+         - Atom feed: `/feed.atom`\n\
+         - JSON Feed: `/feed.json`\n\
+         - Sitemap: `/sitemap.xml`\n"
+    );
+
+    let mut resp = body.into_response();
+    resp.headers_mut().insert(
+        header::CONTENT_TYPE,
+        header::HeaderValue::from_static("text/markdown; charset=utf-8"),
+    );
+    Ok(resp)
+}
+
+/// Extract a plain-text snippet for llms.txt, capped at `max_chars`.
+/// Skips heading, blank, and HR lines; strips crude Markdown punctuation.
+fn llms_txt_snippet(body_md: &str, max_chars: usize) -> String {
+    let first = body_md
+        .lines()
+        .filter(|l| {
+            let t = l.trim();
+            !t.is_empty() && !t.starts_with('#') && !t.starts_with("---")
+        })
+        .next()
+        .unwrap_or("");
+    let clean: String = first
+        .trim_start_matches(|c| matches!(c, '-' | '*' | '+' | '>' | ' '))
+        .chars()
+        .filter(|&c| c != '`' && c != '*' && c != '_')
+        .collect();
+    let clean = clean.trim();
+    if clean.len() <= max_chars {
+        clean.to_string()
+    } else {
+        let boundary = clean[..max_chars].rfind(' ').unwrap_or(max_chars);
+        format!("{}…", &clean[..boundary])
+    }
+}
+
+/// `GET /git/{slug}.md` — raw Markdown source for `git clone`-style ingestion.
+///
+/// Validates the slug via `crate::edit::validate_slug`, reads
+/// `<content_dir>/<slug>.md` from disk, and returns the raw bytes with
+/// Content-Type `text/markdown; charset=utf-8`. Phase 4 upgrades this to a
+/// full read-only Git remote.
+///
+/// Axum 0.8 captures the `{slug}` parameter **without** the `.md` suffix
+/// when the route pattern is `/git/{slug}.md` — the literal `.md` in the
+/// pattern is consumed by the router and not included in the extract.
+async fn git_markdown(
+    State(state): State<Arc<AppState>>,
+    Path(raw): Path<String>,
+) -> Result<Response, WikiError> {
+    // Accept both `/git/topic-foo` and `/git/topic-foo.md` — strip an
+    // optional `.md` suffix before slug validation. The `.md` extension
+    // surfaces in the URL for consumer convenience (looks like a static
+    // file under `git clone` mirror semantics) but is not part of the slug.
+    let slug = raw.strip_suffix(".md").unwrap_or(&raw).to_string();
+
+    // Slug validation rejects path traversal, uppercase, and other illegal forms.
+    crate::edit::validate_slug(&slug)?;
+
+    let path = state.content_dir.join(format!("{slug}.md"));
+    let bytes = match fs::read(&path).await {
+        Ok(b) => b,
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
+            return Err(WikiError::NotFound(slug));
+        }
+        Err(e) => return Err(e.into()),
+    };
+
+    let mut resp = bytes.into_response();
+    resp.headers_mut().insert(
+        header::CONTENT_TYPE,
+        header::HeaderValue::from_static("text/markdown; charset=utf-8"),
+    );
+    Ok(resp)
 }
 
 /// Shared shell for non-article pages (index, errors).
