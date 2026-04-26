@@ -46,6 +46,11 @@ tempfile = "3"
 # <state_dir>/search/; rebuilt on startup from a tree walk; incremental
 # reindex on edit. ~50 MB writer heap default.
 tantivy = "0.24"
+# Phase 3 Step 3.3: Atom feed generation (RFC 4287). chrono is a transitive
+# dep of atom_syndication; declared directly so DateTime<Utc> is available
+# for mtime → FixedDateTime conversions in feeds.rs.
+atom_syndication = "0.12"
+chrono = "0.4"
 
 [dev-dependencies]
 tower = { version = "0.5", features = ["util"] }
