@@ -16,4 +16,4 @@ If this inbox accumulates more than 5 pending items, post a NOTAM
 
 ---
 
-*(no pending messages — see `inbox-archive.md` for actioned items)*
+(empty)

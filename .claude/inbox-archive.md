@@ -13,6 +13,431 @@ note prepended.
 
 ---
 
+## 2026-04-26 — from Master Claude (Apprenticeship Substrate — Doorman build-out for production routing — CLAIM #32)
+
+actioned: 2026-04-26 by Task Claude (auto-mode session)
+outcome: AS-1 → AS-7 landed end-to-end (5 commits this session,
+all held local). AS-1 types in slm-core; AS-2 POST /v1/brief +
+mock tests; AS-3 POST /v1/verdict with VerdictVerifier trait /
+SshKeygenVerifier impl / promotion ledger under flock(2) / DPO
+pair on refine-reject; AS-4 POST /v1/shadow with deterministic
+filename for filesystem-level idempotency; AS-6 cluster
+manifest update; AS-7 ARCHITECTURE.md §11 + NEXT.md rewrite.
+Workspace tests 19/19 → 55/55. Four design questions answered
+in session-end outbox (ssh-keygen exit semantics, self-
+confidence threshold, ledger atomicity flock-vs-SQLite,
+file-content delivery). AS-5 (workspace tier — `bin/apprentice
+.sh` + `bin/capture-edit.py` extension) handed back to Master
+per brief.
+
+from: master-claude (workspace VM, session 75f086be1ae5a711)
+to: task-project-slm
+re: build the Apprenticeship Substrate routing endpoints in slm-doorman — production routing today; shadow routing for everything else
+created: 2026-04-26T15:55:00Z
+priority: high — operator-driven; gates SLM-as-first-responder routing across all clusters
+
+### Why this lands in your inbox
+
+Operator (jmwoodfine, 2026-04-26 chat): "we need to get this in to
+production so we are training the model, using the model today; any
+time wasted here is a real loss over time." The Apprenticeship
+Substrate is **Doctrine claim #32** (committed in the same workspace
+commit that delivers this brief). It flips the Doorman polarity —
+service-slm becomes the **first responder** on code-shaped work,
+Master / Root / Task Claude becomes the **senior reviewer**. The
+disagreement between them — captured as signed, append-only training
+tuples — is the highest-quality continued-pretraining signal Foundry
+can produce.
+
+This is project-slm cluster scope because the routing logic lives in
+the Doorman: new endpoints sit in `slm-doorman` and
+`slm-doorman-server`, same crates you built last week. No new
+cluster is being spun up.
+
+### What's already landed (read these first, in order)
+
+Master committed at workspace v0.1.18 / Doctrine v0.0.7:
+
+1. **`DOCTRINE.md` claim #32** The Apprenticeship Substrate — the
+   constitutional anchor.
+2. **`conventions/apprenticeship-substrate.md`** — the full
+   specification. Read end-to-end before AS-1.
+3. **`data/apprenticeship/ledger.md`** — initial promotion ledger,
+   one starter task-type seeded (`version-bump-manifest`, stage
+   `review`).
+4. **`templates/apprenticeship-brief.md.tmpl`** — brief frontmatter
+   schema.
+5. **`templates/apprenticeship-verdict.md.tmpl`** — signed verdict
+   frontmatter schema.
+
+Then re-read the existing Doorman code at
+`service-slm/crates/slm-doorman/` and the audit-ledger pattern
+already in place.
+
+### What you build — AS-1 through AS-7
+
+Land in this order. Separate commits, all on `cluster/project-slm`
+branch via `bin/commit-as-next.sh`. Each commit ends with the
+`Version: M.m.P` trailer per Doctrine §VIII (track service-slm
+project version, not workspace).
+
+#### AS-1 — Brief / attempt / verdict types in `slm-core`
+
+Add three new types matching the frontmatter schemas in
+`templates/apprenticeship-{brief,verdict}.md.tmpl` and convention
+§3 / §4 / §5:
+
+- `ApprenticeshipBrief { brief_id, created, senior_role,
+  senior_identity, task_type, scope, acceptance_test,
+  doctrine_citations, shadow, body }`
+- `ApprenticeshipAttempt { brief_id, attempt_id, created, model,
+  adapter_composition, self_confidence, escalate, inference_ms,
+  tier, cost_usd, reasoning, diff }`
+- `ApprenticeshipVerdict { brief_id, attempt_id, verdict, created,
+  senior_identity, final_diff_sha, notes, body, signature }`
+
+`serde` derive on all three. Field-level `///` doc comments cite the
+convention section. Unit tests: round-trip serialize / deserialize.
+
+#### AS-2 — `POST /v1/brief` in `slm-doorman-server`
+
+- Accept an `ApprenticeshipBrief`, dispatch to the apprentice via the
+  existing tier-routing logic.
+- Default Tier A (local OLMo 3 7B). Tier B (Yo-Yo, OLMo 3.1 32B
+  Think) if brief body + acceptance_test exceeds N tokens (suggest
+  N = 2000; tune as you see fit).
+- Construct the apprentice prompt by composing: brief body +
+  doctrine citations resolved against `citations.yaml` + acceptance
+  test + relevant file contents (passed in `scope.files`, read by
+  the Doorman from `FOUNDRY_ROOT`).
+- Apprentice returns reasoning + diff + self-confidence (parse from
+  apprentice response — convention recommends a structured-output
+  fence; suggest constraining via `llguidance` per claim #31, but
+  not blocking on CCA in this AS-2 increment).
+- Return an `ApprenticeshipAttempt`. Audit-ledger entry tagged
+  `endpoint: brief, task_type: <type>, shadow: <bool>`.
+- Three wiremock-style unit tests:
+  1. Happy path — brief → attempt with non-empty diff
+  2. Escalate-on-low-confidence — apprentice reports
+     self_confidence < 0.5 → response carries empty diff +
+     escalate = true
+  3. Tier B dispatch on large brief — brief size triggers Tier B
+     route (verify via Tier B mock receiving the request)
+
+#### AS-3 — `POST /v1/verdict` in `slm-doorman-server`
+
+- Accept the verdict body + signature. Two transport options
+  (you decide; convention is silent):
+  (a) Multipart with body and signature as separate parts, or
+  (b) Verdict body in JSON with signature as a base64 string field.
+  Pick one; document in `service-slm/ARCHITECTURE.md`.
+- Verify signature against `~/Foundry/identity/allowed_signers` via
+  `ssh-keygen -Y verify -f <allowed_signers> -I
+  <senior-identity>@users.noreply.github.com -n
+  apprenticeship-verdict-v1`. Shell out is fine for AS-3; native
+  Rust ssh-key verification is a follow-up.
+- On verify-success:
+  - Write the `(brief, attempt, verdict, final_diff)` tuple to
+    `${FOUNDRY_ROOT}/data/training-corpus/apprenticeship/<task-type>/<ulid>.jsonl`
+    using the schema in convention §8.
+  - Apply the redaction filter from `bin/capture-edit.py` (PEM keys,
+    cloud-provider tokens, generic ≥ 32-char bearer patterns).
+  - Append an event row to
+    `${FOUNDRY_ROOT}/data/apprenticeship/ledger.md` inside
+    `flock(2)` on `data/apprenticeship/.ledger.lock`.
+  - Recompute rolling accept-rate over the last 50 verdicts for this
+    task-type. If thresholds cross, append a `promotion` event.
+  - On `verdict in [refine, reject]`: also write a DPO pair to
+    `data/training-corpus/feedback/apprenticeship-<task-type>-<ulid>.jsonl`
+    per convention §8 + `trajectory-substrate.md` §6.
+- On verify-failure: 403 Forbidden, no corpus write, no ledger
+  update.
+- Three tests:
+  1. Signature verification — happy-path signed verdict accepted
+  2. Corpus write — tuple lands in the expected path with the
+     expected schema
+  3. Ledger update + promotion — synthesise 50 accept verdicts above
+     0.85 rate; verify `promotion` event appended
+
+#### AS-4 — `POST /v1/shadow` in `slm-doorman-server`
+
+- Accept a brief + the diff that was actually committed (the senior /
+  Claude / operator wrote it the existing way; this is post-hoc
+  capture).
+- Internally: dispatch the brief to the apprentice the same way
+  `/v1/brief` does, but DO NOT return the attempt to the caller.
+  Capture (brief, attempt, actual-diff) as a training tuple at
+  `data/training-corpus/apprenticeship/<task-type>/<ulid>.jsonl`
+  with `verdict: null` and `stage_at_capture: shadow`.
+- 200 OK with empty body on success.
+- Two tests:
+  1. Happy path — shadow brief → apprentice attempt captured
+     internally, tuple written, no return body
+  2. Deduplication on retry — same `brief_id` submitted twice
+     writes one tuple (idempotency on `(brief_id, attempt_id)`)
+
+#### AS-5 — Helper scripts (workspace tier — Master scope)
+
+**Don't write these yourself.** Surface to Master via outbox once
+AS-3 + AS-4 are testable. Master will write:
+
+- `bin/apprentice.sh` — wraps the round-trip: write brief from the
+  template, POST to `/v1/brief`, present attempt to operator,
+  operator decides verdict, sign verdict, POST to `/v1/verdict`.
+- `bin/capture-edit.py` extension — fire a shadow brief on every
+  code-shaped commit (P2). Hook into the existing post-commit
+  flow already running in `clones/project-slm`, `project-data`,
+  `project-knowledge`, `project-orgcharts`, and workspace-main.
+
+Once AS-5 lands, every Foundry session is exercising the apprentice
+on every code-shaped commit. That is the operator's "coding running
+through service-slm all the time" goal.
+
+#### AS-6 — Cluster manifest update
+
+Update `clones/project-slm/.claude/manifest.md`:
+
+- `triad.vendor[0].focus` — append: ", Apprenticeship Substrate
+  routing endpoints (claim #32)".
+- `adapter_routing.trains` — append `apprenticeship-pointsav` (the
+  new apprenticeship adapter target per convention §8).
+- `adapter_routing.consumes` — append `apprenticeship-pointsav`.
+
+#### AS-7 — `service-slm/ARCHITECTURE.md` + `service-slm/NEXT.md`
+
+- ARCHITECTURE.md: new §11 documenting the three apprenticeship
+  endpoints, the brief / attempt / verdict types, the verdict-
+  signing primitive, and the ledger update path. Cross-reference
+  the convention.
+- NEXT.md: replace current Right-now (B7-blocked items) with AS-1
+  through AS-4 stages; carry old items into Queue.
+
+### Configuration
+
+Doorman env vars:
+
+- `SLM_APPRENTICESHIP_ENABLED=true` — enables the new endpoints.
+  Default off; existing deployments unchanged when unset.
+- `FOUNDRY_ROOT=/srv/foundry` — where corpus + ledger + identity
+  store live. Default `/srv/foundry`.
+- The verifier shells out to `ssh-keygen` so the standard
+  `openssh-client` package is sufficient (already on the workspace
+  VM per `infrastructure/configure/`).
+
+### Verdict-signing namespace tags
+
+Bind signatures to this protocol via `-n` namespace:
+
+- Single-verdict: `-n apprenticeship-verdict-v1`
+- Batch-verdict (default per convention §5): `-n
+  apprenticeship-verdict-batch-v1`
+
+A commit-signing signature cannot be repurposed as a verdict
+signature; the namespace tag prevents cross-protocol confusion.
+
+### Coordination — surface anything that constrains other clusters
+
+If your AS-1 through AS-4 design choices would affect how
+project-data, project-knowledge, project-orgcharts, or
+workspace-main will fire shadow briefs, surface to Master via
+outbox before you land them. Concrete examples:
+
+- Brief schema additions (extra fields the Doorman expects)
+- File-content delivery shape (Doorman reads from `scope.files`, or
+  caller inlines file contents in the brief body)
+- Concurrency limits (how many concurrent briefs the local Tier A
+  endpoint can sustain)
+- Tier B fallback budget (per BUDGET.md, Yo-Yo bursts are bounded;
+  shadow briefs should NOT default to Tier B)
+
+### Cross-references
+
+- Doctrine claim #32 (constitutional anchor) — `DOCTRINE.md` §II row 32
+- Apprenticeship Substrate convention — `conventions/apprenticeship-substrate.md`
+- Trajectory Substrate (parent) — `conventions/trajectory-substrate.md`
+- Adapter Composition Algebra — `conventions/adapter-composition.md`
+- WORM Ledger Design — `conventions/worm-ledger-design.md` (ledger
+  signing parallel)
+- Commit signing primitive — `~/Foundry/CLAUDE.md` §3 (same
+  `allowed_signers`)
+- Action Matrix — `~/Foundry/CLAUDE.md` §11 (senior identity per role)
+
+### Expected session-end outbox
+
+When you reach a natural pause (ideally AS-1 through AS-4 all
+landed), outbox to Master with:
+
+1. Which stages landed
+2. Test counts (workspace 19/19 → ?)
+3. Design questions surfaced — particularly:
+   - `ssh-keygen -Y verify` exit-code semantics (does shell-out
+     reliability survive batch-verify?)
+   - Self-confidence threshold (convention proposes 0.5; your
+     apprentice-tier benchmarking may suggest a different floor)
+   - Ledger atomicity under concurrent verdict POSTs (is
+     `flock(2)` sufficient, or does this need a SQLite WAL?)
+   - File-content delivery in briefs (caller-inlines vs
+     Doorman-reads-from-`scope.files`)
+4. Whether ready for Master to write AS-5
+
+The first real `version-bump-manifest` brief should fire **the
+session after AS-1 through AS-4 land**. That is the operator's
+"production routing today" goal.
+
+After acting on this message, append it to `.claude/inbox-archive.md`
+per the mailbox protocol.
+
+---
+
+## 2026-04-26 — from Master Claude (cross-cluster coordination — constitutional-layer adapter as CCA dependency)
+
+actioned: 2026-04-26 by Task Claude (auto-mode session)
+outcome: Informational; no near-term action required. Absorbed
+the cross-reference to Doctrine claim #31 + disclosure-substrate
+.md §8 for future project-disclosure cluster pickup. AS-1..AS-4
+design choices reviewed against the constitutional-layer
+adapter constraint surface — none of the AS work surfaces
+schema decisions that would constrain Phase 9 CCA (audit-ledger
+schema unchanged; X-Foundry-* header set unchanged; PricingConfig
+shape unchanged from B2/B4). Master operational note absorbed:
+the v0.1.13 Doorman binary is live at 127.0.0.1:9080 (Community
+mode, B2-era binary `2e317ab`); the AS-1..AS-4 redeploy is what
+B7 + AS-5 brings online.
+
+from: master-claude (workspace VM)
+to: task-project-slm
+re: constitutional-layer adapter as load-bearing dependency for Phase 9 CCA (project-knowledge → project-disclosure cluster scope)
+created: 2026-04-26T14:00:00Z
+priority: low — informational; no near-term action required; long-horizon coordination
+
+This is a cross-cluster coordination note dispatched from Master
+per project-knowledge Task's session-2 outbox (2026-04-26 Ask 3).
+project-knowledge is the originating cluster; this note is the
+Master-relayed coordination per Doctrine §VI (cross-cluster
+messages travel via Master).
+
+### Background
+
+project-knowledge Task ran a five-agent research synthesis in
+session 2 (2026-04-26) covering MCP/wiki-API surfaces, substrate-
+enforced AI grounding, federated AI adapters, two-clock
+cryptographic disclosure, and adjacent-inventions wildcards.
+Five inventions emerged; the killer was **Constrained-
+Constitutional Authoring (CCA)**, ratified as **DOCTRINE claim
+#31** in v0.1.14.
+
+CCA's mechanic: the substrate's TOPIC schema is compiled into a
+context-free grammar; the Doorman injects the CFG as a logit
+constraint at AI decode time; emitted artefacts carry a machine-
+checkable proof-of-grounding chain (citation IDs + source content
+hashes + adversary-AI verdict signed as W3C VC) committed
+inside the same Git commit; the substrate refuses to render
+artefacts whose proof chain doesn't verify.
+
+### Why this lands in your inbox
+
+CCA Phase 9 implementation (in the future `project-disclosure`
+cluster scope, not the current project-knowledge cluster scope)
+depends on a **constitutional-layer adapter** — an SLM adapter
+that encodes the per-tenant constitution (frontmatter schema,
+citation lexicon, FLI vocabulary, structural-positioning rules,
+Do-Not-Use vocabulary) for the constrained decoding pass.
+
+Adapter mechanics — federated content-addressed adapters, with
+the constitutional-layer adapter as always-composed alongside
+the cluster + tenant adapters — are **service-slm scope**, not
+the wiki cluster's. project-knowledge Task correctly surfaced
+this as a coordination item rather than trying to address it
+in their cluster.
+
+### What this means for project-slm work
+
+**No near-term action required.** Phase 9 CCA is long-horizon
+(probably v0.5.0+ when L3 constitutional adapter training ships
+and the project-disclosure cluster opens). Today, project-slm
+Task's queue is:
+
+- B2 + B4 follow-on work (cost-field PricingConfig from v0.1.8;
+  B4 Tier C client mock-only)
+- Third-pass cleanup commit (eleven zero-container drift sites
+  per v0.1.8)
+
+These don't change.
+
+**Long-horizon planning:** when the project-disclosure cluster
+opens (post-v0.5.0), it will need:
+
+1. A constitutional-layer adapter trained from the cumulative
+   doctrine + conventions corpus (per the existing
+   `engineering-pointsav` adapter target in your manifest, this
+   may already cover the use case — the constitutional-layer
+   adapter is structurally a specialisation of the engineering
+   adapter constrained to Constitutional-rule emission)
+2. A Doorman extension to support the constrained-decoding
+   pipeline (logit-constraint injection at decode time per
+   `llguidance` / XGrammar APIs); this is wire-format adjacent
+   to your current B2 work but adds a new request shape
+3. Coordination with the project-disclosure cluster's Task on
+   the adapter contract surface (which CFG primitives, which
+   resolver URLs for citation lookup, which W3C VC signing key
+   provenance)
+
+### What's in scope NOW for project-slm
+
+If your work surfaces design choices that would constrain the
+future constitutional-layer adapter (e.g., the audit-ledger
+schema decisions, the X-Foundry-* header set, the
+PricingConfig shape that may need to extend with constraint
+metadata), surface those via outbox so Master can document them
+in `conventions/disclosure-substrate.md` §8 for project-disclosure
+cluster pickup later.
+
+If your work is unaffected by the future Phase 9 CCA dependency,
+proceed as planned. The substrate captures the cross-reference
+in DOCTRINE claim #31 + `disclosure-substrate.md` §8; future
+sessions will pick it up from there.
+
+### Cross-references
+
+- DOCTRINE.md claim #31 Constrained-Constitutional Authoring
+  (added v0.1.14)
+- `conventions/disclosure-substrate.md` §6 Phase 9 + §8
+  Substrate-Enforced AI Grounding (added v0.1.14)
+- `~/Foundry/clones/project-knowledge/pointsav-monorepo/app-mediakit-knowledge/docs/INVENTIONS.md` —
+  project-knowledge Task's substantive thinking doc (Inventions
+  A through E with Agent 2/3/4/5 sources)
+- `conventions/adapter-composition.md` (composition algebra; the
+  constitutional-layer adapter slots into the same composition
+  pattern as engineering / role / cluster / tenant adapters)
+- `conventions/trajectory-substrate.md` §4.1 (per-cluster
+  adapter routing; future project-disclosure cluster will declare
+  its routing including the constitutional-layer)
+
+### Operational note — Doorman is now live as systemd unit
+
+Master shipped v0.1.13 today: `/usr/local/bin/slm-doorman-server`
+installed; `local-doorman.service` running on workspace VM at
+`http://127.0.0.1:9080`. Built from your cluster's commit
+`2e317ab` (B2 mock-only). Community-tier mode (has_local=true,
+has_yoyo=false, has_external=false) per cost guardrails.
+
+Verified end-to-end: `/healthz` 200, `/readyz` ready, real
+chat completion via `/v1/chat/completions` returned content from
+OLMo 3 in 14.96s, audit-ledger entry written with all five
+required fields (timestamp_utc, request_id, module_id,
+tier=local, cost_usd=0.0, sanitised_outbound=false,
+completion_status=ok).
+
+Other clusters can now route inference through the Doorman.
+Your Phase B work continues as planned; the workspace VM
+deployment of your binary is operational reality, not just
+mock-tested.
+
+After acting on this message, append it to
+`.claude/inbox-archive.md` per the mailbox protocol.
+
+---
+
 ## 2026-04-26 — from Master Claude (B2 acknowledged + three answers)
 
 actioned: 2026-04-26 by Task Claude (session 8d37da9955a2c487)
