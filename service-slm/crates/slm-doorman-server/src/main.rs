@@ -19,6 +19,16 @@
 //!                             compute Tier B cost_usd in the audit
 //!                             ledger; default 0.0 (unknown/dev).
 //!                             Example: 0.84 for GCP L4, 0.34 for RunPod L4
+//!   SLM_APPRENTICESHIP_ENABLED  AS-2..AS-4 endpoints (POST /v1/brief,
+//!                             /v1/verdict, /v1/shadow). Default off.
+//!                             Set to `true` or `1` to enable.
+//!   FOUNDRY_ROOT              workspace root used by the apprenticeship
+//!                             dispatcher to resolve scope.files paths
+//!                             and read citations.yaml; default
+//!                             /srv/foundry.
+//!   SLM_BRIEF_TIER_B_THRESHOLD_CHARS
+//!                             char-budget proxy for Tier-B routing on
+//!                             /v1/brief; default 8000 (~2000 tokens).
 //!   RUST_LOG                  default slm_doorman=info,slm_doorman_server=info
 //!
 //! Per `conventions/three-ring-architecture.md` the Doorman boots fine
@@ -35,7 +45,7 @@ use slm_doorman::tier::{
     BearerTokenProvider, LocalTierClient, LocalTierConfig, PricingConfig, StaticBearer,
     YoYoTierClient, YoYoTierConfig,
 };
-use slm_doorman::{AuditLedger, Doorman, DoormanConfig};
+use slm_doorman::{ApprenticeshipConfig, AuditLedger, Doorman, DoormanConfig};
 use tracing::info;
 
 #[tokio::main]
@@ -48,7 +58,11 @@ async fn main() -> anyhow::Result<()> {
         .context("SLM_BIND_ADDR must be a socket address")?;
 
     let doorman = build_doorman()?;
-    let state = Arc::new(http::AppState { doorman });
+    let apprenticeship = build_apprenticeship_config();
+    let state = Arc::new(http::AppState {
+        doorman,
+        apprenticeship,
+    });
 
     info!(
         version = slm_doorman::DOORMAN_VERSION,
@@ -56,6 +70,7 @@ async fn main() -> anyhow::Result<()> {
         has_local = state.doorman.has_local(),
         has_yoyo = state.doorman.has_yoyo(),
         has_external = state.doorman.has_external(),
+        apprenticeship_enabled = state.apprenticeship.is_some(),
         "service-slm Doorman starting"
     );
 
@@ -110,6 +125,21 @@ fn build_doorman() -> anyhow::Result<Doorman> {
         },
         ledger,
     ))
+}
+
+/// Build the apprenticeship config when `SLM_APPRENTICESHIP_ENABLED=true`.
+/// Default off — existing deployments keep their existing behaviour
+/// (the three apprenticeship endpoints return 404). Per design-pass Q9
+/// + Master's brief.
+fn build_apprenticeship_config() -> Option<ApprenticeshipConfig> {
+    let enabled = std::env::var("SLM_APPRENTICESHIP_ENABLED")
+        .ok()
+        .map(|s| s.eq_ignore_ascii_case("true") || s == "1")
+        .unwrap_or(false);
+    if !enabled {
+        return None;
+    }
+    Some(ApprenticeshipConfig::from_env())
 }
 
 fn init_tracing() {
