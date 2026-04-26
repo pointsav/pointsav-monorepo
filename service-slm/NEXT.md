@@ -88,10 +88,10 @@
 - Move `cognitive-bridge.sh` → `scripts/` — layout-hygiene defect
   queued in monorepo `NEXT.md`. Single `git mv`; script body uses
   positional args only, no caller audit needed.
-- Triage `transient-queues/` — mirrors the `discovery-queue`
-  "Not-a-project" pattern in the registry. Decide: gitignore and
-  relocate live state to `service-fs/data/`, or confirm as
-  deliberate fixture. Do not alter until decided.
+- ~~Triage `transient-queues/`~~ **CLOSED (2026-04-26).** Mirrors `discovery-queue`
+  pattern (Not-a-project runtime data). Removed skeleton fixtures, added
+  .gitignore rule, documented lifecycle in README.md. Runtime payloads
+  never committed; persistent state moves to `service-fs/data/`.
 - Reconcile `cognitive-forge` → `content-compiler` wire format —
   writer emits `.md` files (markdown bullets); reader only
   consumes `.json`. They do not interoperate today. Pick one
