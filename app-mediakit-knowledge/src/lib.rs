@@ -10,6 +10,7 @@ pub mod assets;
 pub mod citations;
 pub mod edit;
 pub mod error;
+pub mod feeds;
 pub mod jsonld;
 pub mod render;
 pub mod search;
