@@ -23,5 +23,13 @@ chrono = { workspace = true }
 # Errors
 thiserror = { workspace = true }
 
+# Async trait support
+async-trait = { workspace = true }
+
 # Observability
 tracing = { workspace = true }
+
+[dev-dependencies]
+# Mock HTTP server for Yo-Yo client unit tests (B2)
+wiremock = "0.6"
+tokio = { workspace = true }
