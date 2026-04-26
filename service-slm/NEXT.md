@@ -14,14 +14,15 @@
   detail. End-to-end verification waits on Master shipping
   AS-5 (helper scripts) plus the systemd unit redeployment so
   `SLM_APPRENTICESHIP_ENABLED=true` lands on the workspace VM.
-- **WAITING — Master holds B7 (Doorman as systemd unit on
-  workspace VM).** Outboxed 2026-04-26 11:00 UTC per operator
-  direction. Mirrors B3's `local-slm.service` pattern; same
-  Doctrine §V VM-sysadmin scope reasoning. After AS-1..AS-4
-  the Doorman binary now requires the systemd unit redeploy
-  before it can serve apprenticeship traffic — and per
-  Master's brief AS-5 (`bin/apprentice.sh` +
-  `bin/capture-edit.py` extension) is workspace-tier scope.
+- **WAITING — workspace VM Doorman redeploy.** Master's
+  2026-04-26T14:00 cross-cluster inbox note recorded that the
+  systemd unit was delivered as v0.1.13: `local-doorman.service`
+  serves at `http://127.0.0.1:9080` from B2-era commit
+  `2e317ab` (community-tier mode). After AS-1..AS-4 a rebuild
+  from current `cluster/project-slm` HEAD plus
+  `SLM_APPRENTICESHIP_ENABLED=true` in the unit Environment=
+  block is required before the Doorman serves apprenticeship
+  traffic. Workspace-tier scope (Doctrine §V VM sysadmin).
 - **WAITING — Master holds AS-5** — `bin/apprentice.sh` (round-
   trip helper) and `bin/capture-edit.py` extension (post-commit
   shadow firing). Per Master's brief: "Don't write these
