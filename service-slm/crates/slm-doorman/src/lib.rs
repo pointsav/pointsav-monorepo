@@ -14,25 +14,33 @@
 //! Intelligence). Audit ledger discipline is doctrinal — see Doctrine §V.
 
 pub mod apprenticeship;
+pub mod brief_cache;
 pub mod citations;
 pub mod error;
 pub mod ledger;
+pub mod promotion_ledger;
 pub mod redact;
 pub mod router;
 pub mod tier;
+pub mod verdict;
 
 pub use apprenticeship::{
     apprentice_prompt, build_attempt, parse_attempt_content, pick_tier_for_brief,
     ApprenticeshipConfig, ApprenticeshipDispatcher, ParsedAttempt, APPRENTICE_SYSTEM_PROMPT,
 };
+pub use brief_cache::{BriefCache, CachedBrief};
 pub use error::{DoormanError, Result};
 pub use ledger::{AuditEntry, AuditLedger};
+pub use promotion_ledger::{PromotionLedger, PromotionOutcome, Stage, StatRow};
 pub use redact::sanitize;
 pub use router::{Doorman, DoormanConfig};
 pub use tier::{
     BearerTokenProvider, ExternalAllowlist, ExternalTierClient, ExternalTierConfig,
     LocalTierClient, PricingConfig, StaticBearer, TierCPricing, TierCProvider, YoYoTierClient,
     FOUNDRY_DEFAULT_ALLOWLIST,
+};
+pub use verdict::{
+    SshKeygenVerifier, VerdictDispatchOutcome, VerdictDispatcher, VerdictVerifier, VerdictWireBody,
 };
 
 /// Wire version of the Yo-Yo HTTP API contract this Doorman speaks
