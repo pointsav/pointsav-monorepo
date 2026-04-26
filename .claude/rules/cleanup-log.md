@@ -96,7 +96,73 @@ Newest on top. Append a dated block when a session includes meaningful cleanup w
 
 ---
 
-## 2026-04-26
+## 2026-04-26 — Phase 2 implementation complete (Steps 1-6)
+
+- **Phase 2 of `app-mediakit-knowledge` shipped end-to-end** —
+  5 commits on `cluster/project-knowledge` covering Steps 1-6 of
+  `docs/PHASE-2-PLAN.md` §1; tests grew from 19 → 57 across the
+  session. Step 7 (collab via yjs) deferred to Phase 2.x per BP1
+  §8 default.
+
+  | Commit  | Step                               | Tests after |
+  |---------|------------------------------------|-------------|
+  | b8580f9 | Step 1 — JSON-LD baseline          | 28          |
+  | 69e5610 | Step 2 — edit endpoint + atomic write + path hardening | 39 |
+  | 8f5f010 | Step 3 — vendor CodeMirror 6 bundle + base editor | 40 |
+  | fd1adf9 | Step 4 — SAA squiggle framework (7 deterministic rules) | 47 |
+  | 2bd74e9 | Steps 5+6 — citation autocomplete + 3-keystroke ladder stubs | 57 |
+
+- **End-to-end editor surface at `/edit/{slug}`**: CodeMirror 6 +
+  Markdown highlight + line numbers/wrap + history + atomic save +
+  squiggle linting with cited authority + `[`-triggered citation
+  autocomplete fed by `/srv/foundry/citations.yaml` + Tab/Cmd-K
+  Doorman affordances (501 stubs until Phase 4 wires the MCP
+  integration). JSON-LD baseline in every TOPIC `<head>`.
+
+- **Mid-session demo verified** — operator browsed the wiki via
+  SSH tunnel (`gcloud compute ssh -- -L 9090:localhost:9090`) on
+  the debug binary; 30+ existing TOPICs + the 5 new fixtures
+  rendered correctly through Phase 1.1 chrome. Server then killed
+  per operator instruction.
+
+- **Sonnet sub-agent participation** — Steps 5+6 drafted by a
+  Sonnet sub-agent in background (cost discipline per
+  `conventions/model-tier-discipline.md`); Opus reviewed, found
+  two issues, fixed, committed:
+  1. `AppState` constructors in pre-existing test files
+     (`jsonld_test.rs`, `edit_test.rs`, `squiggle_test.rs`) needed
+     the new `citations_yaml` field — Sonnet only updated tests it
+     authored.
+  2. `/srv/foundry/citations.yaml` opens with a YAML-frontmatter
+     metadata block (`---...---`) before the `citations:` document.
+     Sonnet's parser hit the frontmatter as document 1 and failed
+     to find `citations:`. Added `strip_prefix("---\\n")` logic
+     to skip frontmatter when present (parallels
+     `render::parse_page` for TOPIC files).
+
+- **OPEN QUESTIONS surfaced this session for operator/Master:**
+  1. **ARCHITECTURE.md §6 schema extension** — three Phase 1.1
+     frontmatter fields (`hatnote`, `translations`, `categories`)
+     not formally enumerated; also `disclosure_class: glossary`
+     enum extension introduced for Phase 2 JSON-LD profile
+     selection. Recommendation: extend §6 (explicit > implicit).
+  2. **Phase 2 Step 7** (collab via `yjs` + `y-codemirror.next`
+     + self-hosted `y-websocket`) deferred — operator can ship at
+     any time without other Phase 2 work blocking. Step 7 brief
+     remains in `PHASE-2-PLAN.md` §1.
+  3. **Cargo `openssl-sys` at monorepo root** — running cargo from
+     the monorepo root pulls `service-content`'s reqwest →
+     openssl-sys, which needs `libssl-dev`. The crate-scoped
+     `cd app-mediakit-knowledge && cargo` is a workaround.
+     Permanent fix is either (a) install `libssl-dev` on the VM,
+     or (b) switch service-content from reqwest's default
+     `native-tls` feature to `rustls`. Surface for next
+     service-content touch.
+  4. **Production deployment** at `documentation.pointsav.com` —
+     separate outbox message to Master in
+     `~/Foundry/clones/project-knowledge/.claude/outbox.md` with
+     concrete 11-step runbook (DNS, TLS, reverse proxy, systemd,
+     BCSC content review pre-flip, `libssl-dev` install).
 
 - **Phase 1.1 Wikipedia muscle-memory chrome shipped on
   `app-mediakit-knowledge`** (project-knowledge cluster session 3,
