@@ -3,6 +3,12 @@
 //! Implements [`Capability`] per Doctrine claim #33 and [`WitnessRecord`]
 //! per Mechanism A (Time-Bound Capabilities). Specification:
 //! `~/Foundry/conventions/system-substrate-doctrine.md` §3.1 + §5.
+//!
+//! The [`checkpoint`] submodule implements the C2SP signed-note
+//! checkpoint primitive (apex-cosigning per convention §4).
+
+pub mod checkpoint;
+pub use checkpoint::{Checkpoint, NoteSignature, SignedCheckpoint};
 
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};

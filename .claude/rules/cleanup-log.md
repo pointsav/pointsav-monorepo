@@ -96,6 +96,50 @@ Newest on top. Append a dated block when a session includes meaningful cleanup w
 
 ---
 
+## 2026-04-26 — Task `cluster/project-system` (continued)
+
+- **`system-core` Phase 1A increment 2 landed: C2SP signed-note
+  checkpoint primitive.** New module `src/checkpoint.rs` (~290 LoC
+  source + tests). Implements:
+  - `Checkpoint { origin, tree_size, root_hash, extensions }` —
+    body data per the C2SP signed-note spec, with `body_bytes()` /
+    `parse_body()` for canonical-bytes round-trip.
+  - `NoteSignature` — one signature line including the 4-byte
+    key-hash prefix `SHA-256("<name>\nED25519\n<32-byte-pubkey>")[..4]`
+    per spec, with `to_line()` / `parse_line()`.
+  - `SignedCheckpoint` — body + ≥ 1 signature lines, with `to_wire()`
+    / `parse()` for full wire format (em-dash signature lines, blank
+    line separator).
+  - `verify_signer()` — ed25519 verification of a specific signer's
+    signature against the body via `ed25519-dalek`.
+  - `verify_apex_handover()` — both-signatures-required predicate
+    realising convention §4 ownership-transfer ceremony.
+- **Dependencies added.** `ed25519-dalek = "2"` (no_std-capable;
+  `std` feature kept default for v0.1.x), `base64 = "0.22"`. Total
+  system-core deps: 5 (serde, serde_json, sha2, ed25519-dalek,
+  base64). New transitive crates: ed25519, signature, subtle,
+  zeroize, curve25519-dalek, semver, rustc_version.
+- **Tests.** 10 new tests in `checkpoint::tests` covering body
+  round-trip, key-hash determinism, key-hash sensitivity to name,
+  single-sig wire round-trip, single-sig verification, wrong-pubkey
+  rejection, multi-sig wire round-trip, apex-handover predicate
+  positive case, apex-handover predicate negative case (only one
+  signs), body-tampering rejection. Crate total: 16 tests, all
+  passing on `cargo test -p system-core`.
+- **What's still open downstream.** The state machine ("subsequent
+  checkpoints require only P-new" — convention §4 height-N+3+
+  invariant) is NOT in this commit. The cryptographic primitive that
+  enables it lives here; the policy / cache that consumes it needs
+  a home crate (architecture question still open in
+  `system-core/ARCHITECTURE.md` §3).
+- **Honest scope.** Merkle-log inclusion/consistency proofs (RFC
+  9162 + C2SP tlog-tiles half of the capability ledger) are NOT in
+  this commit either. Tracked in `system-core/NEXT.md` queue.
+- **Verification.** `cargo check -p system-core` and
+  `cargo test -p system-core` both pass on Rust stable. Zero
+  warnings on the new module.
+- **Version bump.** `system-core/Cargo.toml` 0.1.1 → 0.1.2.
+
 ## 2026-04-26 — Task `cluster/project-system`
 
 - **`system-core` activated; Phase 1A increment 1 landed.** Per the
