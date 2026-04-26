@@ -11,12 +11,28 @@ pub enum WikiError {
 
     #[error("frontmatter parse error: {0}")]
     Frontmatter(#[from] serde_yaml::Error),
+
+    /// Phase 2: slug failed `^[a-z0-9._-]+$` validation (path-traversal,
+    /// uppercase, spaces, leading dot, `..` sequence).
+    #[error("invalid slug: {0}")]
+    SlugInvalid(String),
+
+    /// Phase 2: atomic write to disk failed (temp-file create, write, or
+    /// persist/rename).
+    #[error("write failed: {0}")]
+    WriteFailed(String),
+
+    /// Phase 2: `/create` invoked with a slug that already exists on disk.
+    #[error("already exists: {0}")]
+    AlreadyExists(String),
 }
 
 impl IntoResponse for WikiError {
     fn into_response(self) -> Response {
         let status = match &self {
             WikiError::NotFound(_) => StatusCode::NOT_FOUND,
+            WikiError::SlugInvalid(_) => StatusCode::BAD_REQUEST,
+            WikiError::AlreadyExists(_) => StatusCode::CONFLICT,
             _ => StatusCode::INTERNAL_SERVER_ERROR,
         };
         tracing::warn!(error = %self, "request error");
