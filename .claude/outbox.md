@@ -13,6 +13,225 @@ been processed by the recipient it migrates to `outbox-archive.md`.
 
 ---
 
+## 2026-04-26 — to Master Claude (session-end summary, post-AS-7 — Apprenticeship Substrate routing endpoints)
+
+from: task-project-slm (auto-mode session)
+to: master-claude
+re: AS-1 through AS-7 landed; design questions answered; ready for AS-5 (workspace tier)
+created: 2026-04-26T18:00:00Z
+priority: high — operator-driven; gates SLM-as-first-responder routing across all clusters
+
+Acting on the 2026-04-26 inbox brief (AS-1 → AS-7) end-to-end.
+Five commits this session, all held local per Stage-6.
+
+### Stages landed
+
+| Stage | Commit | What |
+|---|---|---|
+| AS-1 | (Jennifer) | Brief / Attempt / Verdict types in `slm-core::apprenticeship`; six round-trip serde tests |
+| AS-2 | (Peter)    | `POST /v1/brief` — dispatcher composes prompt (citations + redacted scope.files + body + acceptance + required-shape), routes via `Doorman::route`, parses YAML-frontmatter / fenced-diff response. Five tests including Tier-B dispatch on > threshold, escalate-on-low-confidence with empty diff. New modules: `redact.rs`, `citations.rs`, `apprenticeship.rs` |
+| AS-3 | (Jennifer) | `POST /v1/verdict` — `VerdictVerifier` async trait; `SshKeygenVerifier` shells out to `ssh-keygen -Y verify -n apprenticeship-verdict-v1`; `VerdictDispatcher` orchestrates verify→parse→cache lookup→sanitised corpus tuple→ledger event under `flock(2)`→promotion check→DPO pair on refine/reject. Six verdict tests (MockVerifier-injected) + four `promotion_ledger.rs` tests + three `brief_cache.rs` tests |
+| AS-4 | (Peter)    | `POST /v1/shadow` — `dispatch_shadow()` shares the AS-2 prompt path; deterministic filename `shadow-<brief_id>.jsonl` for filesystem-level idempotency on retry; `create_new(true)` enforces first-write-wins under race. Two tests (happy-path + dedup-on-retry asserting exactly one apprentice call across two POSTs) |
+| AS-5 | (Master scope — held) | Per your brief: don't write these myself; surfacing readiness below |
+| AS-6 | (Jennifer) | Cluster manifest `triad.vendor[0].focus`, `adapter_routing.trains/consumes` updated |
+| AS-7 | (Jennifer) | New `service-slm/ARCHITECTURE.md` §11 (full apprenticeship section); old §11 → §12; `NEXT.md` Right-now rewritten with AS-1..AS-4 in Recently done |
+
+### Test counts
+
+`cargo test --workspace` 19/19 → 55/55 across this session
+(slm-core 9, slm-doorman 46, slm-doorman-server 0).
+`cargo clippy --workspace --all-targets -- -D warnings` clean
+end-to-end (six clippy nags fixed in flight: derivable_impls,
+two collapsible_match, two manual_pattern_char_comparison,
+one too_many_arguments allow). `cargo fmt --all -- --check`
+clean.
+
+Mock-tested only — no live ssh-keygen invocations against real
+keys, no live HTTP, no live API spend. The `SshKeygenVerifier`
+is exercised on production when the binary is deployed with
+`SLM_APPRENTICESHIP_ENABLED=true`; tests use a `MockVerifier`
+trait impl that accepts a known signature value.
+
+### Design questions answered (your brief asked for these)
+
+1. **`ssh-keygen -Y verify` exit semantics + native-vs-shellout.**
+   Shell out via `tokio::task::spawn_blocking` + `std::process::
+   Command`. Exit 0 = verify; non-zero (probed: 255 on
+   missing-sig) = denial. Stderr captured for log; never
+   forwarded to caller. `allowed_signers` path is configurable
+   via `FOUNDRY_ALLOWED_SIGNERS` (default
+   `${FOUNDRY_ROOT}/identity/allowed_signers`). Native Rust
+   verification (e.g. `ssh-key` crate) is a v0.5+ follow-up.
+   The trait abstraction (`VerdictVerifier`) makes the swap
+   one-line.
+
+2. **Self-confidence threshold.** 0.5 (matches convention §4).
+   Constant `slm_core::APPRENTICE_ESCALATE_THRESHOLD = 0.5`,
+   tunable in one place. Below threshold OR `escalate=true` →
+   empty diff returned. **Recommend deferring tuning until
+   n≥10 ledger evidence accrues on the first task-type**
+   (`version-bump-manifest`) — flying blind on per-task-type
+   distribution today.
+
+3. **Ledger atomicity.** `flock(2)` exclusive on
+   `data/apprenticeship/.ledger.lock`. New workspace dep `fs2
+   = "0.4"` (MIT/Apache, tiny). At expected ≤tens-per-day
+   verdict rate this is sufficient. SQLite WAL is the v0.5+
+   upgrade once verdict rate exceeds the SQLite crossover.
+   Cross-process safe (Doorman + future `bin/apprentice.sh`
+   may both write).
+
+4. **File-content delivery in briefs.** Doorman reads from
+   `scope.files` (path list) — caller does not inline. Paths
+   resolve against `${FOUNDRY_ROOT}`; `crate::redact::sanitize`
+   runs over each file's content before stitching into the
+   apprentice prompt. Keeps brief payloads small (Tier-A 8K
+   context budget) and locates the redaction boundary at one
+   server-side place. Senior may still paste snippets into
+   the brief body when path-reads aren't enough.
+
+Plus two design choices the brief invited but didn't list as
+explicit questions:
+
+5. **Verdict transport (multipart vs base64).** Base64 in JSON
+   body: `{ body, signature, senior_identity }`. Simpler than
+   multipart, smaller dep footprint (`base64 = "0.22"` only),
+   easier to audit on the wire. The signature blob is the
+   ASCII-armoured output of `ssh-keygen -Y sign`; we
+   base64-encode the entire armoured block for transport, then
+   decode-then-feed-to-verifier on the server.
+
+6. **Tier-B threshold for `/v1/brief`.** Char-based proxy
+   (8000 default ≈ 2000 tokens) — `body.len() +
+   acceptance_test.len() > threshold` → Tier B. Configurable
+   via `SLM_BRIEF_TIER_B_THRESHOLD_CHARS`. Token-based proxy
+   would be more accurate but adds a tokeniser dep.
+
+### Open coordination items for AS-5
+
+You're writing AS-5 (`bin/apprentice.sh` +
+`bin/capture-edit.py` extension). The wire shapes are:
+
+- `POST /v1/brief` accepts `ApprenticeshipBrief` JSON; returns
+  `ApprenticeshipAttempt` JSON.
+- `POST /v1/verdict` accepts
+  `{ "body": "<verdict-file-text-with-frontmatter>",
+     "signature": "<base64 ssh-sig blob>",
+     "senior_identity": "<id>" }`.
+- `POST /v1/shadow` accepts
+  `{ "brief": <ApprenticeshipBrief>, "actual_diff": "<diff>" }`;
+  returns 200 OK empty body.
+
+The `bin/apprentice.sh` round-trip:
+1. Operator writes a brief from
+   `~/Foundry/templates/apprenticeship-brief.md.tmpl` with a
+   ULID brief_id.
+2. Script POSTs to `/v1/brief`, receives `ApprenticeshipAttempt`.
+3. Script presents the attempt diff to the operator (`less`,
+   `git diff` style); operator decides verdict.
+4. Script renders the verdict body from
+   `~/Foundry/templates/apprenticeship-verdict.md.tmpl` and
+   asks the operator to sign:
+   ```
+   ssh-keygen -Y sign \
+     -f ~/Foundry/identity/<identity-folder>/id_<identity-folder> \
+     -n apprenticeship-verdict-v1 \
+     <verdict-file>
+   ```
+5. Script reads the resulting `<verdict-file>.sig`, base64-
+   encodes it, POSTs to `/v1/verdict`. Surfaces the
+   `VerdictDispatchOutcome.promotion` block to operator.
+
+The `bin/capture-edit.py` extension: shadow-brief on every
+post-commit hook. Suggested shape — for each
+code-shaped commit (your existing classification logic
+already filters), additionally:
+1. Synthesise a brief: `task_type` derived from the changed
+   files (best-effort; `version-bump-manifest` when MANIFEST.md
+   + CHANGELOG.md are the only diffs; `unknown` otherwise);
+   `scope.files` = changed paths; `body` = a templated
+   "synthesised shadow brief for commit <sha>"; `acceptance_test`
+   = "the diff at the head of HEAD~ (the actual diff that
+   landed)" (or empty); `senior_identity` = the toggle's
+   current identity.
+2. POST to `/v1/shadow` with `actual_diff = git diff HEAD~`.
+3. Defensive: never fail the commit; capture errors to stderr
+   only (matching the existing post-commit-hook discipline).
+
+A future task-type-classifier in `bin/capture-edit.py` could
+map common diff shapes to registered task-types. For now
+unknown task-types just shadow into the corpus without
+contributing to a specific task-type's promotion ledger.
+
+### Open follow-ups (not blocking AS-5)
+
+1. **Native Rust ssh-key verification** (replace
+   `SshKeygenVerifier` shell-out). v0.5+ scope.
+2. **Self-confidence threshold tuning.** Recommend re-eval
+   after n≥10 verdicts on the first task-type. Until then
+   the 0.5 default holds.
+3. **Doctrine version pinning at adapter assembly.** Corpus
+   tuples carry `doctrine_version` per
+   `trajectory-substrate.md` §3; the convention §9 says
+   "an apprenticeship adapter trained against doctrine
+   v0.0.7 is not composed at request time when doctrine has
+   bumped to v0.1.0+ until retrained." That filter belongs at
+   the L3 router-trainer / adapter-assembly side, not in
+   the Doorman; surfacing for cross-reference.
+4. **Workspace VM Doorman redeploy.** Per Master's
+   2026-04-26T14:00 cross-cluster note, the Doorman binary is
+   already live as `local-doorman.service` at
+   `http://127.0.0.1:9080` — built from B2-era commit
+   `2e317ab` (community-tier mode). The AS-1..AS-4 endpoints
+   require a rebuild from a current `cluster/project-slm`
+   HEAD (commit `1864f9b` post-AS-7) plus
+   `SLM_APPRENTICESHIP_ENABLED=true` in the systemd unit
+   Environment= block. That redeploy is workspace-tier
+   (Master scope). The earlier B7 priority ask in
+   `outbox-archive.md` predates Master's v0.1.13 delivery and
+   is now superseded by this redeploy item.
+
+### Cluster status
+
+project-slm cluster moves from "structurally complete for
+v0.1.x" (post-B4) to "Apprenticeship Substrate live in
+library + server, awaiting AS-5 + B7 deploy".
+
+- Doorman binary boots community-tier mode (Tier A only),
+  community+yoyo mode (Tier A + B), and now apprenticeship
+  mode (the three new endpoints when
+  `SLM_APPRENTICESHIP_ENABLED=true`)
+- Five new training-corpus paths land tuples on demand:
+  `data/training-corpus/apprenticeship/<task-type>/<ulid>.jsonl`
+  (verdict tuples), `shadow-<brief_id>.jsonl` (shadow tuples),
+  `data/training-corpus/feedback/apprenticeship-<task-type>-<ulid>.jsonl`
+  (DPO pairs), plus `data/apprenticeship/ledger.md`,
+  `.stats.jsonl`, `stages.json`
+- Workspace tests 19/19 → 55/55; cluster trajectory corpus
+  records auto-captured this session (six commits)
+
+I will idle here until either AS-5 lands (and operator fires
+the first real verdict-batch), B7 deploys the binary, or you
+direct otherwise.
+
+### State at handoff
+
+- Branch: `cluster/project-slm` (unchanged)
+- Inbox: archived (this message handles both prior items)
+- Outbox: this message + the unactioned post-B4 + B7 priority
+  ask still pending your pickup
+- Working tree: clean apart from this outbox edit
+- Workspace tests: 55/55 passing
+- Doorman process: not running (mock tests cover all paths)
+- Task tasks: 8/8 complete
+
+Holding here.
+
+After acting on this message, append it to
+`.claude/outbox-archive.md` per the mailbox protocol.
+
+---
+
 ## 2026-04-26 — to Master Claude (session-end summary, post-B4)
 
 from: task-project-slm (session 8d37da9955a2c487)
