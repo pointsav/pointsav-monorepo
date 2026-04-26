@@ -74,16 +74,42 @@ impl ApprenticeshipConfig {
 pub struct ApprenticeshipDispatcher<'a> {
     doorman: &'a Doorman,
     config: ApprenticeshipConfig,
+    /// In-process brief / attempt cache, populated on every successful
+    /// dispatch_brief so the AS-3 verdict path can recover the
+    /// `(brief, attempt)` pair by `(brief_id, attempt_id)`. Optional —
+    /// AS-2 unit tests construct without one when they only care
+    /// about the routing path.
+    cache: Option<std::sync::Arc<crate::brief_cache::BriefCache>>,
 }
 
 impl<'a> ApprenticeshipDispatcher<'a> {
     pub fn new(doorman: &'a Doorman, config: ApprenticeshipConfig) -> Self {
-        Self { doorman, config }
+        Self {
+            doorman,
+            config,
+            cache: None,
+        }
+    }
+
+    /// Like [`new`] but also wires a brief cache so the produced
+    /// attempt becomes recoverable by the AS-3 verdict path.
+    pub fn with_cache(
+        doorman: &'a Doorman,
+        config: ApprenticeshipConfig,
+        cache: std::sync::Arc<crate::brief_cache::BriefCache>,
+    ) -> Self {
+        Self {
+            doorman,
+            config,
+            cache: Some(cache),
+        }
     }
 
     /// AS-2 entry point. Compose the apprentice prompt from `brief`,
     /// dispatch through `Doorman::route`, parse the response,
-    /// return an `ApprenticeshipAttempt`.
+    /// return an `ApprenticeshipAttempt`. Inserts `(brief, attempt)`
+    /// into the configured cache so AS-3 can recover them at verdict
+    /// time.
     pub async fn dispatch_brief(
         &self,
         brief: &ApprenticeshipBrief,
@@ -137,6 +163,9 @@ impl<'a> ApprenticeshipDispatcher<'a> {
         let resp = self.doorman.route(&req).await?;
         let parsed = parse_attempt_content(&resp.content);
         let attempt = build_attempt(brief, &resp, parsed);
+        if let Some(cache) = &self.cache {
+            cache.insert(brief.clone(), attempt.clone());
+        }
         Ok(attempt)
     }
 }

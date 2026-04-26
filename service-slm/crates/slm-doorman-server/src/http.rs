@@ -28,7 +28,10 @@ use slm_core::{
     ApprenticeshipAttempt, ApprenticeshipBrief, ChatMessage, Complexity, ComputeRequest,
     ComputeResponse, ModuleId, RequestId,
 };
-use slm_doorman::{ApprenticeshipConfig, ApprenticeshipDispatcher, Doorman, DoormanError};
+use slm_doorman::{
+    ApprenticeshipConfig, ApprenticeshipDispatcher, BriefCache, Doorman, DoormanError,
+    VerdictDispatchOutcome, VerdictDispatcher, VerdictWireBody,
+};
 
 pub struct AppState {
     pub doorman: Doorman,
@@ -36,6 +39,11 @@ pub struct AppState {
     /// disables the three apprenticeship endpoints (they return 404).
     /// Per design-pass Q9 + Master's brief.
     pub apprenticeship: Option<ApprenticeshipConfig>,
+    pub brief_cache: Arc<BriefCache>,
+    /// AS-3 verdict pipeline. `Some` only when apprenticeship is
+    /// enabled (the dispatcher's verifier needs the workspace
+    /// `allowed_signers` to be discoverable).
+    pub verdict_dispatcher: Option<VerdictDispatcher>,
 }
 
 pub fn router(state: Arc<AppState>) -> Router {
@@ -45,6 +53,7 @@ pub fn router(state: Arc<AppState>) -> Router {
         .route("/v1/contract", get(contract))
         .route("/v1/chat/completions", post(chat_completions))
         .route("/v1/brief", post(brief))
+        .route("/v1/verdict", post(verdict))
         .with_state(state)
 }
 
@@ -159,9 +168,24 @@ async fn brief(
     let cfg = state.apprenticeship.as_ref().ok_or_else(|| {
         ApiError::not_found("apprenticeship endpoints disabled (SLM_APPRENTICESHIP_ENABLED unset)")
     })?;
-    let dispatcher = ApprenticeshipDispatcher::new(&state.doorman, cfg.clone());
+    let dispatcher = ApprenticeshipDispatcher::with_cache(
+        &state.doorman,
+        cfg.clone(),
+        state.brief_cache.clone(),
+    );
     let attempt = dispatcher.dispatch_brief(&brief).await?;
     Ok(Json(attempt))
+}
+
+async fn verdict(
+    State(state): State<Arc<AppState>>,
+    Json(wire): Json<VerdictWireBody>,
+) -> Result<Json<VerdictDispatchOutcome>, ApiError> {
+    let dispatcher = state.verdict_dispatcher.as_ref().ok_or_else(|| {
+        ApiError::not_found("apprenticeship endpoints disabled (SLM_APPRENTICESHIP_ENABLED unset)")
+    })?;
+    let outcome = dispatcher.dispatch(wire).await?;
+    Ok(Json(outcome))
 }
 
 struct ApiError {
@@ -191,14 +215,20 @@ impl From<DoormanError> for ApiError {
             DoormanError::TierUnavailable(_) | DoormanError::NotImplemented { .. } => {
                 StatusCode::SERVICE_UNAVAILABLE
             }
-            DoormanError::ExternalNotAllowlisted { .. } => StatusCode::FORBIDDEN,
+            DoormanError::ExternalNotAllowlisted { .. } | DoormanError::VerifySignature(_) => {
+                StatusCode::FORBIDDEN
+            }
             DoormanError::Upstream(_)
             | DoormanError::UpstreamShape(_)
             | DoormanError::ContractMajorMismatch { .. }
             | DoormanError::BearerToken(_) => StatusCode::BAD_GATEWAY,
-            DoormanError::LedgerIo(_) | DoormanError::LedgerSerde(_) | DoormanError::HomeUnset => {
-                StatusCode::INTERNAL_SERVER_ERROR
-            }
+            DoormanError::VerdictParse(_) => StatusCode::BAD_REQUEST,
+            DoormanError::BriefCacheMiss => StatusCode::GONE,
+            DoormanError::LedgerIo(_)
+            | DoormanError::LedgerSerde(_)
+            | DoormanError::HomeUnset
+            | DoormanError::LedgerLock(_)
+            | DoormanError::CorpusWrite { .. } => StatusCode::INTERNAL_SERVER_ERROR,
         };
         Self {
             status,
