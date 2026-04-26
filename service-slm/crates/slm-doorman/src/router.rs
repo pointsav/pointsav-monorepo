@@ -186,14 +186,20 @@ fn classify_error(e: &DoormanError) -> CompletionStatus {
         DoormanError::TierUnavailable(_) | DoormanError::NotImplemented { .. } => {
             CompletionStatus::TierUnavailable
         }
-        DoormanError::ExternalNotAllowlisted { .. } => CompletionStatus::PolicyDenied,
+        DoormanError::ExternalNotAllowlisted { .. } | DoormanError::VerifySignature(_) => {
+            CompletionStatus::PolicyDenied
+        }
         DoormanError::Upstream(_)
         | DoormanError::UpstreamShape(_)
         | DoormanError::ContractMajorMismatch { .. }
         | DoormanError::BearerToken(_) => CompletionStatus::UpstreamError,
-        DoormanError::LedgerIo(_) | DoormanError::LedgerSerde(_) | DoormanError::HomeUnset => {
-            CompletionStatus::UpstreamError
-        }
+        DoormanError::LedgerIo(_)
+        | DoormanError::LedgerSerde(_)
+        | DoormanError::HomeUnset
+        | DoormanError::LedgerLock(_)
+        | DoormanError::CorpusWrite { .. }
+        | DoormanError::VerdictParse(_)
+        | DoormanError::BriefCacheMiss => CompletionStatus::UpstreamError,
     }
 }
 
