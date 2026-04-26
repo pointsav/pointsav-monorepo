@@ -218,6 +218,7 @@ mod tests {
             max_tokens: None,
             temperature: None,
             sanitised_outbound: true,
+            tier_c_label: None,
         }
     }
 
