@@ -10,6 +10,7 @@ async fn fixture_state() -> (AppState, tempfile::TempDir) {
     let dir = tempfile::tempdir().unwrap();
     let state = AppState {
         content_dir: dir.path().to_path_buf(),
+        citations_yaml: std::path::PathBuf::from("/nonexistent/citations.yaml"),
     };
     (state, dir)
 }

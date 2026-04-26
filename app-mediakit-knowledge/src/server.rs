@@ -19,9 +19,10 @@ use axum::{
     http::{header, HeaderValue, StatusCode},
     response::{IntoResponse, Response},
     routing::{get, post},
-    Router,
+    Json, Router,
 };
 use maud::{html, Markup, PreEscaped, DOCTYPE};
+use serde_json::json;
 use std::path::PathBuf;
 use std::sync::Arc;
 use tokio::fs;
@@ -34,6 +35,10 @@ use crate::render::{extract_headings, inject_edit_pencils, parse_page, render_ht
 #[derive(Clone)]
 pub struct AppState {
     pub content_dir: PathBuf,
+    /// Path to the workspace citation registry YAML file.
+    /// Defaults to `/srv/foundry/citations.yaml`; overridable via
+    /// `--citations-yaml` / `WIKI_CITATIONS_YAML`.
+    pub citations_yaml: PathBuf,
 }
 
 pub fn router(state: AppState) -> Router {
@@ -54,11 +59,33 @@ pub fn router(state: AppState) -> Router {
             "/api/squiggle-rules",
             get(crate::squiggle::get_squiggle_rules),
         )
+        // Phase 2 Step 5 — citation registry for autocomplete
+        .route("/api/citations", get(crate::citations::get_citations))
+        // Phase 2 Step 6 — three-keystroke ladder stubs (501 until Phase 4
+        // wires the Doorman MCP server)
+        .route("/api/doorman/complete", post(doorman_stub))
+        .route("/api/doorman/instruct", post(doorman_stub))
         .with_state(Arc::new(state))
 }
 
 async fn healthz() -> &'static str {
     "ok"
+}
+
+/// Stub handler for Phase 2 Step 6 Doorman endpoints.
+///
+/// Returns `501 Not Implemented` with a JSON body indicating that the full
+/// Doorman MCP integration lands in Phase 4. The client-side handlers in
+/// `saa-init.js` check for this status and display a one-time toast rather
+/// than treating it as an error.
+async fn doorman_stub() -> impl IntoResponse {
+    (
+        StatusCode::NOT_IMPLEMENTED,
+        Json(json!({
+            "phase": 4,
+            "reason": "Doorman MCP integration deferred to Phase 4"
+        })),
+    )
 }
 
 async fn index(State(state): State<Arc<AppState>>) -> Result<Markup, WikiError> {
@@ -413,6 +440,11 @@ mod tests {
         (
             AppState {
                 content_dir: dir.path().to_path_buf(),
+                // Use a path that does not exist; citation tests live in
+                // tests/citations_test.rs where they control this path.
+                // Server tests do not exercise /api/citations so the missing
+                // file never triggers a load.
+                citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
             },
             dir,
         )
@@ -562,7 +594,10 @@ mod tests {
         )
         .await
         .unwrap();
-        let state = AppState { content_dir: dir.path().to_path_buf() };
+        let state = AppState {
+            content_dir: dir.path().to_path_buf(),
+            citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
+        };
         let app = router(state);
         let resp = app
             .oneshot(
@@ -617,7 +652,10 @@ mod tests {
         )
         .await
         .unwrap();
-        let state = AppState { content_dir: dir.path().to_path_buf() };
+        let state = AppState {
+            content_dir: dir.path().to_path_buf(),
+            citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
+        };
         let app = router(state);
         let resp = app
             .oneshot(
@@ -650,7 +688,10 @@ mod tests {
         )
         .await
         .unwrap();
-        let state = AppState { content_dir: dir.path().to_path_buf() };
+        let state = AppState {
+            content_dir: dir.path().to_path_buf(),
+            citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
+        };
         let app = router(state);
         let resp = app
             .oneshot(
