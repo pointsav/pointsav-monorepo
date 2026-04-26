@@ -47,6 +47,14 @@ pub struct ApprenticeshipConfig {
     /// acceptance_test.len()` exceeds this threshold dispatch to
     /// Tier B. Design-pass Q6.
     pub brief_tier_b_threshold_chars: usize,
+    /// Embedded in apprenticeship corpus tuples per
+    /// `trajectory-substrate.md` §3 + `apprenticeship-substrate.md`
+    /// §8. Used by the shadow path here and the verdict path in
+    /// `verdict.rs`.
+    pub doctrine_version: String,
+    /// Tenant tag on corpus tuples. Vendor work defaults to
+    /// `pointsav` per `apprenticeship-substrate.md` §8.
+    pub tenant: String,
 }
 
 impl ApprenticeshipConfig {
@@ -63,10 +71,15 @@ impl ApprenticeshipConfig {
             .ok()
             .and_then(|s| s.parse::<usize>().ok())
             .unwrap_or(DEFAULT_BRIEF_TIER_B_THRESHOLD_CHARS);
+        let doctrine_version =
+            std::env::var("FOUNDRY_DOCTRINE_VERSION").unwrap_or_else(|_| "0.0.7".to_string());
+        let tenant = std::env::var("FOUNDRY_TENANT").unwrap_or_else(|_| "pointsav".to_string());
         Self {
             foundry_root,
             citations_path,
             brief_tier_b_threshold_chars: threshold,
+            doctrine_version,
+            tenant,
         }
     }
 }
@@ -168,6 +181,199 @@ impl<'a> ApprenticeshipDispatcher<'a> {
         }
         Ok(attempt)
     }
+
+    /// AS-4 entry point — `POST /v1/shadow`. Apprentice is dispatched
+    /// the same way as `/v1/brief`, but the attempt is NOT returned to
+    /// the caller. The (brief, attempt, actual-diff) tuple is captured
+    /// as a training row at
+    /// `${FOUNDRY_ROOT}/data/training-corpus/apprenticeship/<task-type>/shadow-<brief_id>.jsonl`
+    /// with `verdict: null` and `stage_at_capture: "shadow"` per
+    /// convention §7 path P2 + §8.
+    ///
+    /// Idempotency on `(brief_id, attempt_id)` is realised by the
+    /// deterministic filename: the shadow tuple is keyed by `brief_id`
+    /// alone, and a re-POST of the same `brief_id` is a no-op (the
+    /// existing tuple is preserved). Survives process restart.
+    pub async fn dispatch_shadow(
+        &self,
+        brief: &ApprenticeshipBrief,
+        actual_diff: &str,
+    ) -> Result<ShadowOutcome> {
+        let dir = self
+            .config
+            .foundry_root
+            .join("data")
+            .join("training-corpus")
+            .join("apprenticeship")
+            .join(&brief.task_type);
+        let path = dir.join(format!("shadow-{}.jsonl", brief.brief_id));
+        if path.exists() {
+            return Ok(ShadowOutcome {
+                brief_id: brief.brief_id.clone(),
+                corpus_path: path.display().to_string(),
+                already_captured: true,
+            });
+        }
+
+        // Same routing as dispatch_brief.
+        let prompt = apprentice_prompt(&self.config, brief);
+        let tier_hint = pick_tier_for_brief(brief, self.config.brief_tier_b_threshold_chars);
+        let module_id = brief
+            .scope
+            .cluster
+            .as_deref()
+            .and_then(|c| ModuleId::from_str(c).ok())
+            .unwrap_or_else(|| {
+                ModuleId::from_str("foundry").expect("compile-time-valid default moduleId")
+            });
+        let req = ComputeRequest {
+            request_id: RequestId::new(),
+            module_id,
+            model: None,
+            messages: vec![
+                ChatMessage {
+                    role: "system".into(),
+                    content: APPRENTICE_SYSTEM_PROMPT.to_string(),
+                },
+                ChatMessage {
+                    role: "user".into(),
+                    content: prompt,
+                },
+            ],
+            complexity: match tier_hint {
+                Tier::Yoyo => Complexity::High,
+                _ => Complexity::Medium,
+            },
+            tier_hint: Some(tier_hint),
+            stream: false,
+            max_tokens: None,
+            temperature: Some(0.0),
+            sanitised_outbound: true,
+            tier_c_label: None,
+        };
+
+        info!(
+            target: "slm_doorman::apprenticeship",
+            brief_id = %brief.brief_id,
+            task_type = %brief.task_type,
+            tier = tier_hint.as_str(),
+            "dispatching shadow brief"
+        );
+
+        let resp = self.doorman.route(&req).await?;
+        let parsed = parse_attempt_content(&resp.content);
+        let attempt = build_attempt(brief, &resp, parsed);
+
+        write_shadow_tuple(
+            &self.config.foundry_root,
+            brief,
+            &attempt,
+            actual_diff,
+            &self.config.doctrine_version,
+            &self.config.tenant,
+        )?;
+
+        Ok(ShadowOutcome {
+            brief_id: brief.brief_id.clone(),
+            corpus_path: path.display().to_string(),
+            already_captured: false,
+        })
+    }
+}
+
+/// Outcome of `POST /v1/shadow`. Master's brief specifies an empty
+/// 200 OK body; this struct lives in the library for tests + future
+/// reuse, while the http handler returns just an HTTP 200.
+#[derive(Clone, Debug, serde::Serialize)]
+pub struct ShadowOutcome {
+    pub brief_id: String,
+    pub corpus_path: String,
+    /// `true` when an earlier shadow POST already wrote this tuple;
+    /// the redundant POST is a no-op (idempotency on brief_id).
+    pub already_captured: bool,
+}
+
+fn write_shadow_tuple(
+    corpus_root: &Path,
+    brief: &ApprenticeshipBrief,
+    attempt: &ApprenticeshipAttempt,
+    actual_diff: &str,
+    doctrine_version: &str,
+    tenant: &str,
+) -> Result<()> {
+    let dir = corpus_root
+        .join("data")
+        .join("training-corpus")
+        .join("apprenticeship")
+        .join(&brief.task_type);
+    std::fs::create_dir_all(&dir).map_err(|e| DoormanError::CorpusWrite {
+        path: dir.display().to_string(),
+        reason: e.to_string(),
+    })?;
+    let path = dir.join(format!("shadow-{}.jsonl", brief.brief_id));
+
+    // Idempotency belt-and-braces: another writer may have raced past
+    // the existence check above. Use create_new to refuse to clobber.
+    use std::io::Write;
+    let mut f = match std::fs::OpenOptions::new()
+        .create_new(true)
+        .write(true)
+        .open(&path)
+    {
+        Ok(f) => f,
+        Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => return Ok(()),
+        Err(e) => {
+            return Err(DoormanError::CorpusWrite {
+                path: path.display().to_string(),
+                reason: e.to_string(),
+            })
+        }
+    };
+
+    let sanitized_brief = sanitize_brief_for_corpus(brief);
+    let sanitized_attempt = sanitize_attempt_for_corpus(attempt);
+    let record = serde_json::json!({
+        "tuple_type": "apprenticeship",
+        "doctrine_version": doctrine_version,
+        "task_type": brief.task_type,
+        "stage_at_capture": "shadow",
+        "brief": sanitized_brief,
+        "attempt": sanitized_attempt,
+        "verdict": serde_json::Value::Null,
+        "final_diff": crate::redact::sanitize(actual_diff),
+        "redaction_class": "internal",
+        "evidence_class": "primary",
+        "tenant": tenant,
+        "cluster": brief.scope.cluster,
+        "session_id": serde_json::Value::Null,
+        "created": chrono::Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Secs, true),
+    });
+    let line = serde_json::to_string(&record).map_err(|e| DoormanError::CorpusWrite {
+        path: path.display().to_string(),
+        reason: e.to_string(),
+    })?;
+    f.write_all(line.as_bytes())
+        .and_then(|_| f.write_all(b"\n"))
+        .and_then(|_| f.flush())
+        .map_err(|e| DoormanError::CorpusWrite {
+            path: path.display().to_string(),
+            reason: e.to_string(),
+        })?;
+    Ok(())
+}
+
+fn sanitize_brief_for_corpus(b: &ApprenticeshipBrief) -> ApprenticeshipBrief {
+    let mut clone = b.clone();
+    clone.body = crate::redact::sanitize(&clone.body);
+    clone.acceptance_test = crate::redact::sanitize(&clone.acceptance_test);
+    clone
+}
+
+fn sanitize_attempt_for_corpus(a: &ApprenticeshipAttempt) -> ApprenticeshipAttempt {
+    let mut clone = a.clone();
+    clone.reasoning = crate::redact::sanitize(&clone.reasoning);
+    clone.diff = crate::redact::sanitize(&clone.diff);
+    clone
 }
 
 /// System message prepended to every apprentice prompt. Frames the
@@ -450,6 +656,8 @@ mod tests {
             citations_path: root.join("citations.yaml"),
             foundry_root: root,
             brief_tier_b_threshold_chars: 100, // small for tests
+            doctrine_version: "0.0.7".into(),
+            tenant: "pointsav".into(),
         }
     }
 
@@ -715,5 +923,143 @@ OK.
         b.body = "x".repeat(51);
         // 51 + 50 = 101, exceeds 100 → Tier B
         assert_eq!(pick_tier_for_brief(&b, 100), Tier::Yoyo);
+    }
+
+    // ── AS-4 dispatch_shadow tests ───────────────────────────────────
+
+    /// Happy path — shadow brief dispatches to apprentice, captures the
+    /// (brief, attempt, actual_diff) tuple at the deterministic shadow
+    /// path, no apprentice attempt returned to caller.
+    #[tokio::test]
+    async fn shadow_happy_path_writes_tuple_and_does_not_return_attempt() {
+        let server = MockServer::start().await;
+        let apprentice_response = "\
+---
+self_confidence: 0.7
+escalate: false
+---
+
+## Reasoning
+
+Shadow attempt for the apprentice.
+
+## Diff
+
+```diff
+--- a/MANIFEST.md
++++ b/MANIFEST.md
+@@ -1 +1 @@
+-x
++y
+```
+";
+        Mock::given(method("POST"))
+            .and(path("/v1/chat/completions"))
+            .respond_with(
+                ResponseTemplate::new(200).set_body_json(ok_completion(apprentice_response)),
+            )
+            .expect(1)
+            .mount(&server)
+            .await;
+
+        let local = LocalTierClient::new(LocalTierConfig {
+            endpoint: server.uri(),
+            default_model: "olmo-3-1125-7b-q4".into(),
+        });
+        let doorman = Doorman::new(
+            DoormanConfig {
+                local: Some(local),
+                yoyo: None,
+                external: None,
+            },
+            ledger(),
+        );
+
+        let dir = tmp_dir("shadow-foundry");
+        let cfg = dispatcher_config(dir.clone());
+        let dispatcher = ApprenticeshipDispatcher::new(&doorman, cfg);
+
+        let brief = brief_for("small body");
+        let actual_diff = "--- a/MANIFEST.md\n+++ b/MANIFEST.md\n@@ -1 +1 @@\n-x\n+ACTUAL_y\n";
+        let outcome = dispatcher
+            .dispatch_shadow(&brief, actual_diff)
+            .await
+            .expect("shadow happy path");
+        assert!(!outcome.already_captured);
+        assert_eq!(outcome.brief_id, brief.brief_id);
+
+        // Tuple lands at the deterministic path.
+        let expected = dir
+            .join("data")
+            .join("training-corpus")
+            .join("apprenticeship")
+            .join("version-bump-manifest")
+            .join(format!("shadow-{}.jsonl", brief.brief_id));
+        let body = std::fs::read_to_string(&expected).expect("shadow tuple written");
+        let row: serde_json::Value = serde_json::from_str(body.trim()).unwrap();
+        assert_eq!(row["tuple_type"], "apprenticeship");
+        assert_eq!(row["stage_at_capture"], "shadow");
+        assert!(row["verdict"].is_null(), "shadow tuple has null verdict");
+        assert!(row["final_diff"].as_str().unwrap().contains("ACTUAL_y"));
+        assert_eq!(row["brief"]["brief_id"], brief.brief_id);
+        let sc = row["attempt"]["self_confidence"].as_f64().unwrap();
+        assert!((sc - 0.7).abs() < 1e-3, "got {sc}");
+    }
+
+    /// Idempotency on retry — same brief_id submitted twice writes
+    /// exactly one tuple. The second POST is a no-op (apprentice is
+    /// NOT redispatched).
+    #[tokio::test]
+    async fn shadow_dedupes_on_repeat_brief_id() {
+        let server = MockServer::start().await;
+        Mock::given(method("POST"))
+            .and(path("/v1/chat/completions"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(ok_completion(
+                "---\nself_confidence: 0.8\nescalate: false\n---\n\n## Reasoning\nx\n## Diff\n```diff\n--- a\n+++ a\n```\n",
+            )))
+            .expect(1) // exactly one apprentice call across both POSTs
+            .mount(&server)
+            .await;
+
+        let local = LocalTierClient::new(LocalTierConfig {
+            endpoint: server.uri(),
+            default_model: "olmo-3-1125-7b-q4".into(),
+        });
+        let doorman = Doorman::new(
+            DoormanConfig {
+                local: Some(local),
+                yoyo: None,
+                external: None,
+            },
+            ledger(),
+        );
+
+        let dir = tmp_dir("shadow-dedup");
+        let cfg = dispatcher_config(dir.clone());
+        let dispatcher = ApprenticeshipDispatcher::new(&doorman, cfg);
+
+        let brief = brief_for("body");
+        let first = dispatcher.dispatch_shadow(&brief, "diff-1").await.unwrap();
+        assert!(!first.already_captured);
+
+        let second = dispatcher
+            .dispatch_shadow(&brief, "diff-2") // same brief, different actual_diff
+            .await
+            .unwrap();
+        assert!(second.already_captured, "second POST must be a no-op");
+
+        // Exactly one tuple file in the corpus directory.
+        let dir = dir
+            .join("data")
+            .join("training-corpus")
+            .join("apprenticeship")
+            .join("version-bump-manifest");
+        let entries: Vec<_> = std::fs::read_dir(&dir).unwrap().collect();
+        assert_eq!(entries.len(), 1);
+        // First-write wins — actual_diff is "diff-1", not "diff-2".
+        let p = entries.into_iter().next().unwrap().unwrap().path();
+        let body = std::fs::read_to_string(&p).unwrap();
+        let row: serde_json::Value = serde_json::from_str(body.trim()).unwrap();
+        assert_eq!(row["final_diff"], "diff-1");
     }
 }
