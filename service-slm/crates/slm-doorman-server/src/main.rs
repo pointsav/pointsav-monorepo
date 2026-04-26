@@ -48,8 +48,9 @@ use std::sync::Arc;
 
 use anyhow::Context;
 use slm_doorman::tier::{
-    BearerTokenProvider, LocalTierClient, LocalTierConfig, PricingConfig, StaticBearer,
-    YoYoTierClient, YoYoTierConfig,
+    BearerTokenProvider, ExternalTierClient, ExternalTierConfig, LocalTierClient, LocalTierConfig,
+    PricingConfig, StaticBearer, TierCPricing, TierCProvider, YoYoTierClient, YoYoTierConfig,
+    FOUNDRY_DEFAULT_ALLOWLIST,
 };
 use slm_doorman::{
     ApprenticeshipConfig, AuditLedger, BriefCache, Doorman, DoormanConfig, PromotionLedger,
@@ -130,6 +131,8 @@ fn build_doorman() -> anyhow::Result<Doorman> {
         _ => None,
     };
 
+    let external = build_external_tier_client();
+
     let ledger = AuditLedger::default_for_user()
         .context("failed to open audit ledger; ensure HOME is set")?;
 
@@ -137,10 +140,97 @@ fn build_doorman() -> anyhow::Result<Doorman> {
         DoormanConfig {
             local,
             yoyo,
-            external: None, // wired by B4
+            external,
         },
         ledger,
     ))
+}
+
+/// Build the Tier C (external API) client from env vars. Returns `None`
+/// if no provider endpoints are configured — operator cost guardrail
+/// ensures no Tier C dispatch happens unless explicitly enabled.
+///
+/// Env var format per provider:
+///   SLM_TIER_C_ANTHROPIC_ENDPOINT      base URL (e.g., https://api.anthropic.com)
+///   SLM_TIER_C_ANTHROPIC_API_KEY       API key (can be empty in dev/mock mode)
+///   SLM_TIER_C_ANTHROPIC_INPUT_PER_MTOK_USD    pricing (default 0.0)
+///   SLM_TIER_C_ANTHROPIC_OUTPUT_PER_MTOK_USD   pricing (default 0.0)
+/// Same pattern for GEMINI and OPENAI.
+fn build_external_tier_client() -> Option<ExternalTierClient> {
+    let mut endpoints = std::collections::HashMap::new();
+    let mut api_keys = std::collections::HashMap::new();
+    let mut pricing = TierCPricing::default();
+
+    // Anthropic
+    if let Ok(endpoint) = std::env::var("SLM_TIER_C_ANTHROPIC_ENDPOINT") {
+        if !endpoint.is_empty() {
+            endpoints.insert(TierCProvider::Anthropic, endpoint);
+            api_keys.insert(
+                TierCProvider::Anthropic,
+                std::env::var("SLM_TIER_C_ANTHROPIC_API_KEY").unwrap_or_default(),
+            );
+            pricing.anthropic_input_per_mtok_usd = std::env::var("SLM_TIER_C_ANTHROPIC_INPUT_PER_MTOK_USD")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(0.0);
+            pricing.anthropic_output_per_mtok_usd = std::env::var("SLM_TIER_C_ANTHROPIC_OUTPUT_PER_MTOK_USD")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(0.0);
+        }
+    }
+
+    // Gemini
+    if let Ok(endpoint) = std::env::var("SLM_TIER_C_GEMINI_ENDPOINT") {
+        if !endpoint.is_empty() {
+            endpoints.insert(TierCProvider::Gemini, endpoint);
+            api_keys.insert(
+                TierCProvider::Gemini,
+                std::env::var("SLM_TIER_C_GEMINI_API_KEY").unwrap_or_default(),
+            );
+            pricing.gemini_input_per_mtok_usd = std::env::var("SLM_TIER_C_GEMINI_INPUT_PER_MTOK_USD")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(0.0);
+            pricing.gemini_output_per_mtok_usd = std::env::var("SLM_TIER_C_GEMINI_OUTPUT_PER_MTOK_USD")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(0.0);
+        }
+    }
+
+    // OpenAI
+    if let Ok(endpoint) = std::env::var("SLM_TIER_C_OPENAI_ENDPOINT") {
+        if !endpoint.is_empty() {
+            endpoints.insert(TierCProvider::Openai, endpoint);
+            api_keys.insert(
+                TierCProvider::Openai,
+                std::env::var("SLM_TIER_C_OPENAI_API_KEY").unwrap_or_default(),
+            );
+            pricing.openai_input_per_mtok_usd = std::env::var("SLM_TIER_C_OPENAI_INPUT_PER_MTOK_USD")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(0.0);
+            pricing.openai_output_per_mtok_usd = std::env::var("SLM_TIER_C_OPENAI_OUTPUT_PER_MTOK_USD")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(0.0);
+        }
+    }
+
+    // Only build the client if at least one provider is configured.
+    if endpoints.is_empty() {
+        return None;
+    }
+
+    let config = ExternalTierConfig {
+        allowlist: FOUNDRY_DEFAULT_ALLOWLIST,
+        provider_endpoints: endpoints,
+        provider_api_keys: api_keys,
+        pricing,
+    };
+
+    Some(ExternalTierClient::new(config))
 }
 
 /// Build the apprenticeship config when `SLM_APPRENTICESHIP_ENABLED=true`.
