@@ -7,6 +7,7 @@
 //! disclosure mode (iXBRL + OpenTimestamps + RFC 3161).
 
 pub mod assets;
+pub mod edit;
 pub mod error;
 pub mod jsonld;
 pub mod render;
