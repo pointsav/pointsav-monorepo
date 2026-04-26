@@ -13,4 +13,4 @@ mod yoyo;
 
 pub use external::{ExternalAllowlist, ExternalTierClient, ExternalTierConfig};
 pub use local::{LocalTierClient, LocalTierConfig};
-pub use yoyo::{YoYoTierClient, YoYoTierConfig};
+pub use yoyo::{BearerTokenProvider, StaticBearer, YoYoTierClient, YoYoTierConfig};

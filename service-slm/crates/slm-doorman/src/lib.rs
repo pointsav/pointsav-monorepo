@@ -21,7 +21,9 @@ pub mod tier;
 pub use error::{DoormanError, Result};
 pub use ledger::{AuditEntry, AuditLedger};
 pub use router::{Doorman, DoormanConfig};
-pub use tier::{ExternalTierClient, LocalTierClient, YoYoTierClient};
+pub use tier::{
+    BearerTokenProvider, ExternalTierClient, LocalTierClient, StaticBearer, YoYoTierClient,
+};
 
 /// Wire version of the Yo-Yo HTTP API contract this Doorman speaks
 /// (`infrastructure/slm-yoyo/CONTRACT.md`). Sent in
