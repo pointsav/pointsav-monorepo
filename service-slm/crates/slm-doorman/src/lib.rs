@@ -26,7 +26,8 @@ pub mod verdict;
 
 pub use apprenticeship::{
     apprentice_prompt, build_attempt, parse_attempt_content, pick_tier_for_brief,
-    ApprenticeshipConfig, ApprenticeshipDispatcher, ParsedAttempt, APPRENTICE_SYSTEM_PROMPT,
+    ApprenticeshipConfig, ApprenticeshipDispatcher, ParsedAttempt, ShadowOutcome,
+    APPRENTICE_SYSTEM_PROMPT,
 };
 pub use brief_cache::{BriefCache, CachedBrief};
 pub use error::{DoormanError, Result};
