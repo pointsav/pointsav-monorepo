@@ -113,10 +113,14 @@ cargo deny check licenses advisories bans sources
 cargo sbom > sbom/service-slm.spdx.json
 ```
 
-Release builds additionally sign the binary and container image
-via the `sigstore` crate invoked from release automation in
-`xtask/`. Verification uses the same crate at runtime for adapter
-signatures (Ring 3b, OCI Artifacts).
+Release builds additionally sign the binary via the `sigstore`
+crate invoked from release automation in `xtask/`, on top of the
+SSH commit + tag signing that workspace `CLAUDE.md` §3 mandates
+for every Foundry commit. No container images are produced —
+distribution is the GCE custom image plus `.deb` per
+`~/Foundry/conventions/zero-container-runtime.md`. Verification
+uses the same `sigstore` crate at runtime for adapter signatures
+(Ring 3b, OCI Artifacts).
 
 ---
 
@@ -156,7 +160,11 @@ not required to finish the next one.
 
 ### Phase 1 — Python trial (current)
 
-- Python, vLLM, SkyPilot, `dbt`, Dagster per the trial spec
+- Python, vLLM (multi-LoRA serving primitive per
+  `~/Foundry/conventions/adapter-composition.md`), OpenTofu, `dbt`,
+  Dagster per the trial spec (no SkyPilot — OpenTofu is the
+  provisioning surface per
+  `~/Foundry/conventions/zero-container-runtime.md`)
 - Goal: validate the architecture, not the language choice
 - A Rust migration during Phase 1 would add risk without
   validating anything
@@ -175,7 +183,8 @@ Order of work:
    `crates/slm-inference-remote`)
 6. Replace vLLM with `mistral.rs` on the yo-yo node
    (`crates/slm-inference-local` for local-host paths;
-   container-side for remote)
+   remote-side native binary delivered via the
+   `pointsav-public` GCE image)
 
 **Success criterion:** the Rust `service-slm` passes the same
 Phase-1 test suite as the Python version. Parity before cutover.
@@ -206,7 +215,7 @@ feature it gates can be scaffolded.
 | # | Blocker | Gates | Status |
 |---|---|---|---|
 | B1 | Mooncake + LMCache licence audit at adoption time | Ring 2 scaffolding in `memory/kv/` | Open — pending operator review |
-| B2 | Mooncake master hosting decision (small GCE VM / Totebox co-host / SkyPilot pool with `min_replicas=1`) | Ring 2 deployment | Open — working recommendation: small GCE VM for Phase 2; revisit once Totebox stabilises |
+| B2 | Mooncake master hosting decision (small GCE VM / Totebox co-host / OpenTofu module with `idle_shutdown_minutes=N` per `infrastructure/slm-yoyo/tofu/`) | Ring 2 deployment | Open — working recommendation: small GCE VM for Phase 2; revisit once Totebox stabilises |
 | B3 | Adapter training hardware allocation (A100 40 GB, ~4 hrs per adapter, ~$30 via Batch API) | Ring 3b first training run | Open |
 | B4 | Adapter evaluation protocol defined | Ring 3b registry populates | Open — depends on a separate operator decision on archetype promotion thresholds |
 | B5 | Secret Manager key-management migration (Phase 1 uses SSH env vars) | Phase 2 operational hardening | Open |
