@@ -96,6 +96,75 @@ Newest on top. Append a dated block when a session includes meaningful cleanup w
 
 ---
 
+## 2026-04-26 — Phase 3 implementation complete (Steps 3.1–3.4)
+
+- **Phase 3 of `app-mediakit-knowledge` shipped end-to-end** —
+  3 commits on `cluster/project-knowledge` covering Steps 3.1–3.4
+  of ARCHITECTURE.md §3 Phase 3. Tests grew 57 → 90 across the
+  Phase 3 work (+33 across 3 commits).
+
+  | Commit  | Step                                  | Tests after |
+  |---------|---------------------------------------|-------------|
+  | 0ace07e | Step 3.1 — Tantivy search backend     | 64          |
+  | 72c4756 | Step 3.2 — search route + edit-triggers-reindex | 69 |
+  | bbd995a | Steps 3.3+3.4 — feeds + crawler discovery + git/markdown | 90 |
+
+- **Engine surface now covers ARCHITECTURE.md §3 Phase 3 fully**:
+  on-disk Tantivy index at `<state_dir>/search/`, rebuilt on
+  startup; `GET /search?q=` HTML page over BM25; edit-triggers-
+  reindex via `crate::search::reindex_topic`; `GET /feed.atom`
+  (RFC 4287); `GET /feed.json` (JSON Feed 1.1); `GET /sitemap.xml`
+  (sitemaps.org); `GET /robots.txt`; `GET /llms.txt` (llmstxt.org
+  emerging convention); `GET /git/{slug}` raw Markdown source for
+  git-clone-style ingestion.
+
+- **Resumed mid-session after a Bash-tool failure** that
+  interrupted the original Step 3.1 commit. Plan-mode plan at
+  `~/.claude/plans/eager-watching-leaf.md` captured the resume
+  sequencing; Explore agent verified on-disk survival before
+  resumption; Sonnet sub-agent drafted Steps 3.3+3.4 and Opus
+  reviewed + committed.
+
+- **Three Opus fixes applied to Sonnet drafts during Phase 3:**
+  1. `tantivy::schema::Document::get_first` returns
+     `CompactDocValue` in tantivy 0.24 (not `OwnedValue`); used
+     `tantivy::schema::Value::as_str()` trait method instead of
+     a match arm against `OwnedValue::Str`.
+  2. `ReloadPolicy::OnCommitWithDelay` reader is asynchronous;
+     the `reindex_replaces_existing_entry` test searched before
+     reload completed. Added explicit `reader.reload()` in
+     `reindex_topic` after the writer commit (and `drop(writer)`
+     to release the mutex first).
+  3. axum 0.8 panics on a literal `.md` suffix after a dynamic
+     route segment (`/git/{slug}.md` blew up at router build).
+     Changed route to `/git/{slug}`; handler strips an optional
+     `.md` suffix from the captured value to preserve both UX
+     shapes (with and without `.md`).
+
+- **OPEN QUESTIONS surfaced this Phase 3 segment for operator/Master:**
+  1. **`disclosure_class: glossary` enum extension** still
+     pending from Phase 2 (Step 1 JSON-LD profile selection +
+     ARCH §6 schema).
+  2. **Track Z2 BCSC review report** at
+     `~/Foundry/clones/project-knowledge/.claude/bcsc-review-2026-04-26.md`
+     — 6 contested operator-decision items; bulk-fix application
+     waits on those answers.
+  3. **`apt install libssl-dev`** still pending — release binary
+     build (`cargo build --release`) blocks until the
+     workspace-side openssl-sys system lib lands. Debug binary
+     suffices for demo + tests.
+  4. **Phase 2 Step 7 (collab via yjs + y-codemirror.next)** —
+     still deferred per BP1 §8 default; operator can ship at any
+     time as a single Task session.
+  5. **Cargo workspace coupling at monorepo root**: `cargo` from
+     `pointsav-monorepo/` pulls `service-content`'s reqwest →
+     openssl-sys, which fails without `libssl-dev`. Crate-scoped
+     `cd app-mediakit-knowledge && cargo` is the working path.
+     Permanent fix: switch service-content to rustls OR install
+     libssl-dev OR re-tighten the parent workspace's `members`.
+
+- **2026-04-26 — Phase 2 implementation complete (Steps 1-6)** below.
+
 ## 2026-04-26 — Phase 2 implementation complete (Steps 1-6)
 
 - **Phase 2 of `app-mediakit-knowledge` shipped end-to-end** —
