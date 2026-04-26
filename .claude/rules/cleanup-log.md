@@ -92,6 +92,60 @@ Newest on top. Append a dated block when a session includes meaningful cleanup w
 
 ---
 
+## 2026-04-26 — B2 Yo-Yo HTTP client (mock-only per operator guardrail)
+
+- **B2 implemented end-to-end as code + tests, zero live
+  network.** Per Master's 2026-04-26 07:50 inbox brief and the
+  operator's relayed cost posture
+  ("There is no reason to run a Yo-Yo yet and it should not be
+  costing us any money for now"), the implementation is purely a
+  code/mock exercise:
+  - `BearerTokenProvider` async trait + `StaticBearer` impl in
+    `crates/slm-doorman/src/tier/yoyo.rs`. Real provider impls
+    (GCP Workload Identity, RunPod / Modal Secret Manager,
+    customer mTLS) implement the trait but are NOT wired in this
+    commit — they are future work the trait keeps open.
+  - `YoYoTierClient::complete()` does POST `/v1/chat/completions`
+    with `Authorization: Bearer <token>` plus four
+    `X-Foundry-*` headers (`Request-ID`, `Module-ID`,
+    `Contract-Version`, `Complexity`) per
+    `infrastructure/slm-yoyo/CONTRACT.md`.
+  - Retry policy:
+    - 503 + `Retry-After`: sleep `min(retry_after, 60)` seconds
+      then retry once
+    - 401 / 403: refresh token, retry once with fresh token
+    - 410: surface `DoormanError::ContractMajorMismatch`, no
+      retry (CONTRACT.md MAJOR-version mismatch is loud-fail)
+    - other non-2xx: surface `UpstreamShape` with body preview
+  - Response metadata: capture `X-Foundry-Inference-Ms` (else
+    fall back to wall-clock) and `X-Foundry-Yoyo-Version` for
+    the audit ledger.
+- **Cost field deferred.** CONTRACT.md does not carry a cost
+  field on the wire. Doorman computes Tier B cost from
+  `inference_ms × per-provider hourly rate`; that
+  `PricingConfig` lands in a follow-up. For B2 the audit-ledger
+  `cost_usd` is 0 — accurate as "unknown" rather than
+  mis-attributed.
+- **Two error variants added to `DoormanError`:**
+  `ContractMajorMismatch { remote_status, doorman_version }` and
+  `BearerToken(String)`. Both classify as `UpstreamError` in the
+  audit ledger and `BAD_GATEWAY` in the inbound HTTP layer.
+- **Tests.** Four `wiremock`-based async tests covering happy
+  path 200, 503 retry, 401 auth refresh, 410 mismatch. Workspace
+  total 6/6 → 10/10 unit tests passing. `cargo clippy
+  --all-targets -- -D warnings` clean; `cargo fmt --all --
+  --check` clean.
+- **Server wiring.** `slm-doorman-server` env-var contract
+  extended with `SLM_YOYO_BEARER` (static-bearer dev path).
+  `SLM_YOYO_ENDPOINT` empty → community-tier mode unchanged
+  (B5 pattern preserved).
+- **Operator guardrail observed:** no `tofu apply`, no live
+  HTTP calls against any deployed Yo-Yo, no real bearer-token
+  consumption against any provider, no CUDA / GPU runtime
+  installs. v0.0.10 hard rule #4 preserved end-to-end.
+
+---
+
 ## 2026-04-26 — second-pass: eleven zero-container drift sites (Master-authorised)
 
 - Per Master's 2026-04-26 07:50 inbox brief (4a "GO AHEAD") and

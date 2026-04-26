@@ -8,9 +8,16 @@
 
 ## Right now
 
-- **B2 — Yo-Yo HTTP client.** §7 zero-container rewrite landed in
-  the narrow Master-authorised form (file-tree subtree only, per
-  brief). B2 is the natural next pickup. Fill
+- **B4 — Tier C client with narrow-precision allowlist** (next
+  natural pickup; same mock-only posture as B2 per Master's
+  2026-04-26 brief — no real API key consumption, no live calls
+  to Anthropic / Gemini). B2 (Yo-Yo client) and the second-pass
+  zero-container drift cleanup landed this session. After B4,
+  the Doorman is structurally complete for v0.1.x.
+
+## Earlier-stage items
+
+- **(deferred to B4)** Fill
   `crates/slm-doorman/src/tier/yoyo.rs` per
   `infrastructure/slm-yoyo/CONTRACT.md`. Required: bearer-token
   acquisition (GCP Workload Identity for `*.run.app`; provider API
@@ -130,6 +137,28 @@
 
 ## Recently done
 
+- **2026-04-26 — B2 Yo-Yo HTTP client landed (mock-only).**
+  `crates/slm-doorman/src/tier/yoyo.rs` filled out per
+  `infrastructure/slm-yoyo/CONTRACT.md`. `BearerTokenProvider`
+  async trait + `StaticBearer` impl. `complete()` does POST
+  `/v1/chat/completions` with the four required `X-Foundry-*`
+  headers, retries once on 503 (honouring `Retry-After`,
+  capped at 60s), refreshes once on 401/403, refuses 410 with
+  `ContractMajorMismatch` (no retry). Captures
+  `X-Foundry-Inference-Ms` and `X-Foundry-Yoyo-Version`
+  response headers for the audit ledger. Four wiremock unit
+  tests cover happy path, 503 retry, 401 refresh, 410 mismatch
+  — all passing. `slm-doorman-server` env-var contract extended
+  with `SLM_YOYO_BEARER` (static-bearer dev path; real
+  deployments swap in provider-specific `BearerTokenProvider`
+  impls). Workspace test count 6/6 → 10/10. No live calls, no
+  `tofu apply` per operator cost guardrail.
+- **2026-04-26 — second-pass zero-container drift cleanup
+  (4a).** Eleven sites consolidated into one commit per
+  Master's per-site replacement text. Two additional drift
+  surfaces (ARCH §5.10 SkyPilot row now orphaned, ARCH §2 Cloud
+  Run scale-to-zero) queued in NEXT.md Queue for third-pass
+  authorisation.
 - **2026-04-26 — B5 verification PASSED end-to-end.** Doorman
   release binary booted against Master's `local-slm.service`
   (Tier A backend, llama-server, OLMo 3 7B Q4 on port 8080). All

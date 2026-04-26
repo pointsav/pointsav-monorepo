@@ -160,7 +160,10 @@ impl From<DoormanError> for ApiError {
                 StatusCode::SERVICE_UNAVAILABLE
             }
             DoormanError::ExternalNotAllowlisted { .. } => StatusCode::FORBIDDEN,
-            DoormanError::Upstream(_) | DoormanError::UpstreamShape(_) => StatusCode::BAD_GATEWAY,
+            DoormanError::Upstream(_)
+            | DoormanError::UpstreamShape(_)
+            | DoormanError::ContractMajorMismatch { .. }
+            | DoormanError::BearerToken(_) => StatusCode::BAD_GATEWAY,
             DoormanError::LedgerIo(_) | DoormanError::LedgerSerde(_) | DoormanError::HomeUnset => {
                 StatusCode::INTERNAL_SERVER_ERROR
             }
