@@ -42,6 +42,10 @@ thiserror = "2"
 # Phase 2 Step 2: tempfile moved from [dev-dependencies] to [dependencies]
 # for use in src/edit.rs (atomic write via NamedTempFile::persist).
 tempfile = "3"
+# Phase 3 Step 3.1: tantivy full-text search backend. On-disk index at
+# <state_dir>/search/; rebuilt on startup from a tree walk; incremental
+# reindex on edit. ~50 MB writer heap default.
+tantivy = "0.24"
 
 [dev-dependencies]
 tower = { version = "0.5", features = ["util"] }
