@@ -3,11 +3,14 @@
 use http_body_util::BodyExt;
 use tower::ServiceExt;
 
+use app_mediakit_knowledge::search;
 use app_mediakit_knowledge::server::{router, AppState};
 use axum::{body::Body, http::Request};
+use std::sync::Arc;
 
-async fn fixture_state() -> (AppState, tempfile::TempDir) {
+async fn fixture_state() -> (AppState, tempfile::TempDir, tempfile::TempDir) {
     let dir = tempfile::tempdir().unwrap();
+    let state_dir = tempfile::tempdir().unwrap();
     let path = dir.path().join("topic-test.md");
     tokio::fs::write(
         &path,
@@ -15,16 +18,20 @@ async fn fixture_state() -> (AppState, tempfile::TempDir) {
     )
     .await
     .unwrap();
+    let index = search::build_index(dir.path(), state_dir.path())
+        .await
+        .unwrap();
     let state = AppState {
         content_dir: dir.path().to_path_buf(),
         citations_yaml: std::path::PathBuf::from("/nonexistent/citations.yaml"),
+        search: Arc::new(index),
     };
-    (state, dir)
+    (state, dir, state_dir)
 }
 
 #[tokio::test]
 async fn rendered_page_carries_jsonld_script() {
-    let (state, _dir) = fixture_state().await;
+    let (state, _dir, _state_dir) = fixture_state().await;
     let app = router(state);
     let resp = app
         .oneshot(
@@ -61,15 +68,20 @@ async fn rendered_page_carries_jsonld_script() {
 #[tokio::test]
 async fn fli_topic_carries_additional_property() {
     let dir = tempfile::tempdir().unwrap();
+    let state_dir = tempfile::tempdir().unwrap();
     tokio::fs::write(
         dir.path().join("topic-fli.md"),
         "---\ntitle: \"FLI Test\"\nslug: topic-fli\nforward_looking: true\n---\n# Body\n",
     )
     .await
     .unwrap();
+    let index = search::build_index(dir.path(), state_dir.path())
+        .await
+        .unwrap();
     let state = AppState {
         content_dir: dir.path().to_path_buf(),
         citations_yaml: std::path::PathBuf::from("/nonexistent/citations.yaml"),
+        search: Arc::new(index),
     };
     let app = router(state);
     let resp = app
