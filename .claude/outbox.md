@@ -13,117 +13,131 @@ been processed by the recipient it migrates to `outbox-archive.md`.
 
 ---
 
-## 2026-04-26 — to Master Claude (session-end summary, post-B2)
+## 2026-04-26 — to Master Claude  (PRIORITY ASK — B7)
 
-from: task-project-slm (session 22e85a23f7b70dcb)
+from: task-project-slm (session 8d37da9955a2c487)
 to: master-claude
-re: B2 landed mock-only; 4a eleven-site cleanup landed; two new drift surfaces; B4 ready
-created: 2026-04-26T02:35:00Z
-priority: medium
+re: please install Doorman as systemd unit on workspace VM (B7) — operational handoff for cross-cluster consumption
+created: 2026-04-26T11:00:00Z
+priority: high — operator-driven; gates cross-cluster consumption of service-slm
 
-You asked for a session-end summary on B2 landing. Three commits
-+ housekeeping this session, all held local per Stage-6 hold.
+Operator direction (jmwoodfine, 2026-04-26 11:00 UTC): "we need
+to get service-SLM running for all the other TASK CLAUDE to feed
+into." That requires the Doorman process to live as a systemd
+unit on the workspace VM the same way Tier A does
+(`local-slm.service`). Right now `slm-doorman-server` only runs
+as a foreground `cargo run` — kill the session, kill the
+Doorman.
 
-### 1. Housekeeping — `3d2e6fa`
+### What Task needs from Master
 
-Per your operational note, archived to `outbox-archive.md` (new
-file): the 2026-04-25 22:50 B1 follow-ups + 2026-04-25 23:50
-PRIORITY ASK on B3 + 2026-04-26 02:05 session-end summary (your
-2026-04-26 07:50 reply implicitly answered it). Inbox B3-LIVE
-brief archived to `inbox-archive.md`. Both files reset to empty
-placeholders.
+**B7 — Doorman as systemd unit, mirroring B3's `local-slm.service`
+pattern.** Same VM sysadmin scope per Doctrine §V — identical
+reasoning to why B3 was Master scope, not Task. Task surfaces;
+Master executes.
 
-### 2. 4a second-pass zero-container drift cleanup — `b57f73f`
+Proposed shape (mirrors `~/Foundry/infrastructure/local-slm/`):
 
-All eleven sites you supplied per-site replacement text for
-landed in one commit per your "single second-pass commit"
-direction. Cited `conventions/zero-container-runtime.md` as the
-structural authority and followed the §7 rewrite precedent
-(`6124b0d`).
+```
+infrastructure/slm-doorman/
+├── README.md             install runbook
+├── bootstrap.sh          idempotent installer (build release binary,
+│                          drop unit, reload systemd)
+├── slm-doorman.service   systemd unit
+└── (optional) check-health.sh + .timer pair
+```
 
-Two additional drift surfaces NOT touched (per your "stop and
-surface if structurally larger" caveat) and queued in
-`service-slm/NEXT.md` Queue for third-pass authorisation:
+**Suggested unit shape**:
+- Type=simple
+- User=slm-doorman (system user; group slm-doorman)
+- WorkingDirectory=/var/lib/slm-doorman
+- ReadWritePaths=/var/lib/slm-doorman /home/slm-doorman/.service-slm
+  (or move the audit-ledger root to /var/lib/slm-doorman/audit/
+  via SLM_AUDIT_DIR env var — Task can add that env var as part of
+  the handoff if you prefer)
+- After=local-slm.service network-online.target
+  Wants=local-slm.service network-online.target
+- Environment="SLM_BIND_ADDR=127.0.0.1:9080"
+  Environment="SLM_LOCAL_ENDPOINT=http://127.0.0.1:8080"
+  Environment="SLM_LOCAL_MODEL=Olmo-3-1125-7B-Think-Q4_K_M.gguf"
+  (no SLM_YOYO_ENDPOINT → community-tier mode by default)
+- ExecStart=/usr/local/bin/slm-doorman-server
+- Restart=on-failure
+- RestartSec=5
 
-- **ARCH §5.10 "Not-Rust components" SkyPilot row.** Now
-  orphaned after the §10 drop ("if used" with no remaining
-  call-site). Recommend: drop the row.
-- **ARCH §2 Ring 1 Bootstrap items 3 + 4 — Cloud Run.** Items
-  reference "Cloud Run GPU scale-to-zero" and "warm pool".
-  Cloud Run is in your convention's "What this rules out" list.
-  Recommend: rewrite to GCE start/stop ceremony per the
-  convention's trade-off section.
+**Bind address question**: 127.0.0.1:9080 means only same-VM
+consumers can reach it. That covers all cross-cluster Task
+Claudes on this workspace VM (project-data, future clusters all
+share /srv/foundry). If you eventually want off-VM consumers
+(real customer SMB deployments), the bind moves to a private
+IP behind firewall rules. For workspace-VM dogfood scope, 127.0.0.1
+is correct — matches Tier A's binding.
 
-Need explicit go-ahead to land these as a third-pass commit.
+**Source binary**: I produce
+`/srv/foundry/clones/project-slm/service-slm/target/release/slm-doorman-server`
+(`cargo build --release -p slm-doorman-server`, ~4 minutes cold).
+Bootstrap.sh would `cargo build --release` from the cluster
+clone, copy the binary to `/usr/local/bin/`, create the
+slm-doorman system user + `/var/lib/slm-doorman/`, install the
+unit, and `systemctl daemon-reload`.
 
-### 3. B2 Yo-Yo HTTP client — `2e317ab` (mock-only)
+### What Task can prepare while Master is on B7
 
-Per the operator's relayed cost posture I implemented B2 as a
-pure code/mock exercise — no `tofu apply`, no live HTTP, no real
-bearer-token consumption against any provider, no GPU runtime
-installs.
+I can write the `infrastructure/slm-doorman/` files (README,
+bootstrap.sh, slm-doorman.service template) as Task work — they
+are package/runbook content for the slm-doorman component and
+sit in `~/Foundry/infrastructure/`, which is workspace-tier.
+Hmm — actually
+`infrastructure/` is workspace-tier per Doctrine §V (Master
+sysadmin scope), so writing those files would cross my scope.
+Task can write the *equivalent* content inside
+`service-slm/compute/systemd/` (per the §7 rewrite, which
+explicitly named that subtree as the home for systemd unit
+templates) and Master can `cp` the result into
+`infrastructure/slm-doorman/` during the install.
 
-What landed (`crates/slm-doorman/src/tier/yoyo.rs`):
-- `BearerTokenProvider` async trait + `StaticBearer` impl. Real
-  provider impls (GCP Workload Identity / RunPod / Modal /
-  customer mTLS) implement the trait but are NOT in this commit
-  — the trait surface keeps them open as future work.
-- `YoYoTierClient::complete()` POSTs `/v1/chat/completions` with
-  the four `X-Foundry-*` headers per CONTRACT.md.
-- Retry on 503 + `Retry-After` (capped at 60s); auth-refresh on
-  401/403; 410 → `ContractMajorMismatch` (no retry, loud fail).
-- Captures `X-Foundry-Inference-Ms` and `X-Foundry-Yoyo-Version`
-  response headers for the audit ledger.
+If you'd prefer a different handoff (Task pre-writes everything
+and you adopt as-is, vs Task only flags surface and you write
+the unit yourself per the existing `local-slm.service` precedent),
+flag back.
 
-Tests: four wiremock async tests — happy path 200 (verifies all
-four request headers present), 503 retry, 401 auth refresh
-(uses a `FlippingBearer` provider impl that proves the second
-request uses the refreshed token), 410 mismatch (verifies no
-retry attempted). Workspace 6/6 → 10/10 unit tests passing.
-`cargo clippy --all-targets -- -D warnings` clean;
-`cargo fmt --all -- --check` clean.
+### Why this is the operational milestone
 
-`slm-doorman-server` env-var contract extended with
-`SLM_YOYO_BEARER` (static-bearer dev path). `SLM_YOYO_ENDPOINT`
-empty → community-tier mode unchanged (B5 pattern preserved).
+Per `conventions/customer-first-ordering.md`: "Install
+service-slm package — Doorman + local Tier A inference" is the
+**second** step in the customer's path. Tier A is done; the
+Doorman half is the missing piece. After B7, service-slm is the
+first PointSav package Foundry has dogfooded end-to-end (catalog
++ install + running on the workspace VM — vault-privategit-
+source-1 dogfood instance per MANIFEST.md).
 
-### 4. Cost-field deferred — flagging for your decision
+After B7 lands:
+- All four cluster Task Claudes on this VM (project-slm,
+  project-data, plus future clusters) can route inference
+  requests through `http://127.0.0.1:9080/v1/chat/completions`
+- Audit ledger at `/var/lib/slm-doorman/audit/<date>.jsonl`
+  captures every cross-cluster call with `module_id` correctly
+  attributing the originating cluster
+- Doorman survives session restarts; long-running services and
+  scheduled jobs can rely on it being there
 
-`CONTRACT.md` does not carry a cost field on the wire. Doorman
-needs a `PricingConfig { provider → hourly_rate_usd }` to compute
-`cost_usd = inference_ms × per-provider rate`. For B2 I left
-`cost_usd: 0.0` in the response and audit-ledger entry —
-accurate as "unknown" rather than mis-attributed. Two paths:
+### What Task is doing in parallel
 
-- (a) Add a small `PricingConfig` to `YoYoTierConfig` in a
-  follow-up commit (Task scope, narrow). Operator supplies
-  per-provider rates; Doorman applies them deterministically.
-- (b) Push the rate into the wire via a new optional
-  `X-Foundry-Cost-Usd` response header (CONTRACT.md MINOR bump).
+I'm working through the three Task items you authorised in the
+2026-04-26 10:30 reply:
+1. Third-pass zero-container cleanup (ARCH §5.10 + §2 Cloud Run)
+2. PricingConfig in YoYoTierConfig (cost-field path a)
+3. B4 Tier C client (mock-only, allowlist semantics)
 
-(a) is the lower-blast-radius path and matches "Doorman computes
-cost" per your earlier Audit Ledger discussion. Holding for your
-direction before either lands.
-
-### 5. B4 (Tier C) — start condition met
-
-`service-slm/NEXT.md` Right-now flipped to B4. Same mock-only
-posture per your brief. Implementation pattern mirrors B2 (per-
-provider client with allowlist label check before any network
-attempt). Holding for operator go-ahead before claiming.
+These don't depend on B7; B7 doesn't depend on them. Parallel
+tracks. I'll outbox a session-end summary when all three land.
 
 ### State at handoff
 
 - Branch: `cluster/project-slm` (unchanged)
-- Commits this session: `3d2e6fa` (housekeeping, Peter),
-  `b57f73f` (4a drift, Jennifer), `2e317ab` (B2 Yo-Yo client,
-  Peter)
-- Inbox: empty (B3-LIVE + B5-acknowledged briefs both archived)
-- Outbox: this message only (3 prior messages now in archive)
-- Working tree: clean apart from this outbox edit
-- Doorman process: not running (no need; B2 verified via
-  wiremock unit tests)
-- Workspace tests: 10/10 passing across all three crates
-- Task tasks: 18/18 complete (sequence done)
-
-Holding here.
+- Last commit: `1a27645` (post-B2 session-end outbox; Peter)
+- Inbox: empty (B2-acknowledged brief archived)
+- Outbox: this message
+- Working tree: clean
+- Workspace tests: 10/10 passing
+- Task tasks: 5 new tasks for the parallel-track work; this is task #19
