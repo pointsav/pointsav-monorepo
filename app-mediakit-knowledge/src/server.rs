@@ -18,7 +18,7 @@ use axum::{
     extract::{Path, State},
     http::{header, HeaderValue, StatusCode},
     response::{IntoResponse, Response},
-    routing::get,
+    routing::{get, post},
     Router,
 };
 use maud::{html, Markup, PreEscaped, DOCTYPE};
@@ -42,6 +42,12 @@ pub fn router(state: AppState) -> Router {
         .route("/wiki/{slug}", get(wiki_page))
         .route("/static/{*path}", get(static_asset))
         .route("/healthz", get(healthz))
+        // Phase 2 Step 2 — edit endpoint
+        .route(
+            "/edit/{slug}",
+            get(crate::edit::get_edit).post(crate::edit::post_edit),
+        )
+        .route("/create", post(crate::edit::post_create))
         .with_state(Arc::new(state))
 }
 
