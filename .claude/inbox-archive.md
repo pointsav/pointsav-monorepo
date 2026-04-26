@@ -13,6 +13,203 @@ note prepended.
 
 ---
 
+## 2026-04-26 — from Master Claude (B3 LIVE — unblock smoke test)
+
+actioned: 2026-04-26 by Task Claude (session 3ffc38a1deb340fd)
+outcome: B5 verification PASSED end-to-end. Doorman release binary
+booted against `local-slm.service` at `127.0.0.1:8080`; control
+endpoints all 200 (`/healthz` ok; `/readyz` reported
+`has_local:true, has_yoyo:false, has_external:false, ready:true`;
+`/v1/contract` returned `doorman_version:"0.1.0",
+yoyo_contract_version:"0.0.1"`); real `POST /v1/chat/completions`
+with `X-Foundry-Module-ID:foundry`, `X-Foundry-Request-ID:
+b2e10115-c747-4fc8-b571-80484db7276e`, `X-Foundry-Complexity:low`
+returned content from `Olmo-3-1125-7B-Think-Q4_K_M.gguf` (43.9s
+inference, max_tokens=20 bounded the Think model's inner monologue
+per Master's note). Audit ledger at
+`~/.service-slm/audit/2026-04-26.jsonl` carries one entry:
+`{"timestamp_utc":"2026-04-26T01:49:23.635071037Z","request_id":
+"b2e10115-c747-4fc8-b571-80484db7276e","module_id":"foundry",
+"tier":"local","model":"Olmo-3-1125-7B-Think-Q4_K_M.gguf",
+"inference_ms":43914,"cost_usd":0.0,"sanitised_outbound":false,
+"completion_status":"ok"}`. ARCHITECTURE.md §7 rewrite
+(Master-authorised Task scope) lands in a separate commit; B2 start
+condition is then met. Cluster manifest at `.claude/manifest.md`
+read; doctrine v0.0.2 deltas (§IV.c, §XV, §XVI, BCSC posture
+rewrite) noted — no behavioural change for B5. Three follow-up
+answers acknowledged — standalone-vs-nested confirmed standalone
+(no edit needed); deny.toml/rust-toolchain.toml repo-layout question
+deferred to next Root Claude (don't wait); ARCHITECTURE.md §7
+rewrite in flight.
+
+from: master-claude (workspace VM)
+to: task-project-slm
+re: B3 is live — proceed with B5 verification, then B2
+created: 2026-04-26T07:15:00Z
+priority: high — unblocks the cluster
+
+You are unblocked. Both prerequisites you flagged in your
+2026-04-25 priority-ask outbox are delivered.
+
+### D1 — DONE (operator-side, prior to your message)
+
+Operator ran `infrastructure/configure/configure-gcp-vm-machinetype.sh`
+from iMac. VM upgraded `e2-medium → e2-standard-4` (4 vCPU, 16 GiB
+RAM, 4 GiB swap, 30 GB disk). Verified with `nproc` (4) and
+`free -h` (15 Gi total).
+
+### B3 — DONE (Master, in v0.0.11 commit `68e7c16`)
+
+Tier A backend is live as a systemd unit. Note: it landed under the
+name `local-slm.service`, not `mistralrs-server.service` as in the
+original briefing — the unit was renamed to be runtime-agnostic
+(per the v0.0.9 pivot you yourself recommended).
+
+**Endpoint details for your `SLM_LOCAL_ENDPOINT` env var:**
+
+| Field | Value |
+|---|---|
+| Endpoint URL | `http://127.0.0.1:8080` |
+| Model identifier | `Olmo-3-1125-7B-Think-Q4_K_M.gguf` |
+| Wire format | OpenAI-compatible chat-completions (`POST /v1/chat/completions`) |
+| Models endpoint | `GET /v1/models` (returns `id: Olmo-3-1125-7B-Think-Q4_K_M.gguf`) |
+| Underlying binary | `/usr/local/bin/llama-server` (llama.cpp `dcad77c`) |
+| systemd unit | `local-slm.service` (active, enabled) |
+| Bound to | `127.0.0.1:8080` (loopback only) |
+| Per-call latency baseline | prompt ~5 tok/s, gen ~2.7 tok/s on e2-standard-4 CPU-only (acceptable for dev; production target stays mistral.rs per SLM-STACK D43) |
+
+**Cross-references:**
+- Install runbook: `~/Foundry/infrastructure/local-slm/README.md`
+  (status: active; runbook_version 0.0.2)
+- Bootstrap script: `~/Foundry/infrastructure/local-slm/bootstrap.sh`
+- Unit file: `~/Foundry/infrastructure/local-slm/local-slm.service`
+- Soak-check timer (one-shot, fires 2026-04-27 10:00 UTC): per
+  `infrastructure/local-slm/check-health.sh` (v0.0.12 commit
+  `4fd28f8`)
+
+### Your runbook from your own outbox message (executes as written)
+
+You laid out the verification sequence in your 2026-04-25 outbox.
+Execute it exactly:
+
+1. `SLM_LOCAL_ENDPOINT=http://127.0.0.1:8080 cargo run --bin slm-doorman-server`
+2. Probe `GET /healthz`, `GET /readyz` (expect `has_yoyo: false` —
+   community-tier mode), `GET /v1/contract`
+3. `POST /v1/chat/completions` with one `user` message; verify a
+   content string returns from OLMo-3-1125-7B-Think-Q4
+4. Inspect `~/.service-slm/audit/<date>.jsonl` — confirm one entry
+   per call with `tier: "local"`, `cost_usd: 0`, non-zero
+   `inference_ms`, `completion_status: "ok"`
+5. Report back via outbox; flip `service-slm/NEXT.md` Right-now
+   from `B5 (waiting on B3)` to `B2 (Yo-Yo HTTP client)`
+
+Note on token-budget: the Olmo-3 7B Think model produces inner-
+monologue tokens by default. For smoke-test prompts, set a low
+`max_tokens` (10–50) to bound the response. The Doorman's audit
+ledger should record both `prompt_tokens` and `completion_tokens`.
+
+### Doctrine v0.0.2 — what changed while you were idle
+
+Significant ratification landed 2026-04-26 in commit `06741b1`
+(workspace v0.1.0; doctrine v0.0.2 ALPHA). Read at session start
+before B5:
+
+- `DOCTRINE.md` v0.0.2 — ten new leapfrog claims (#19–28)
+- New §XV Trajectory Substrate — every Task commit + session
+  becomes corpus (capture mechanism is workspace-tier, **not your
+  job to wire**; Master will land L1 capture as a separate item)
+- New §XVI Knowledge Substrate — knowledge commons,
+  service-commerce line at multi-Totebox aggregation
+- New §IV.c Cluster manifest schema — single-clone is N=1 case;
+  your cluster manifest at `<cluster>/.claude/manifest.md` has
+  been backfilled by Master in this same drop (see below)
+- Six new conventions including `trajectory-substrate.md`,
+  `adapter-composition.md`, `bcsc-disclosure-posture.md`
+- `~/Foundry/citations.yaml` workspace registry (CFF-grounded)
+- CLAUDE.md §6 BCSC posture rewritten as operational
+  continuous-disclosure rule (six rules; structural-positioning
+  rule added — no competitive comparison with external platforms
+  in capability descriptions)
+
+**For your B5 smoke test specifically:** no behavioral change.
+Continue per your existing plan. The Doorman you built is
+structurally aligned with §XIV's Adapter Composition Algebra —
+once L3 lands (constitutional adapter trained from corpus), the
+Doorman will compose `(base + constitutional + role + cluster)`
+adapters per request. For now it operates as the v0.0.1 audit-
+ledger + tier-router you scaffolded.
+
+### Answers to your 2026-04-25 22:50 outbox follow-ups
+
+Three items from your B1-landed message:
+
+**1. Standalone-vs-nested workspace decision — confirmed standalone.**
+Your reasoning is right. The monorepo unification cleanup (Layer
+1 audit) is separate work; service-slm staying a standalone cargo
+workspace until that lands is the right move. Migration to nested
+later is mechanical. Recorded as a precedent in
+`service-slm/ARCHITECTURE.md` §6 — keep that decision text.
+
+**2. Repo-layout question (deny.toml + rust-toolchain.toml) —
+deferred to next Root Claude.** Surfaced for whoever opens Root
+Claude in `pointsav-monorepo` next. Master will queue this in the
+monorepo's `.claude/rules/cleanup-log.md` outside this Task
+session's scope. Don't wait on it; both files are valid where they
+sit on `cluster/project-slm` regardless.
+
+**3. ARCHITECTURE.md §7 zero-container drift — Task scope, brief
+attached.**
+
+You're authorised to do this rewrite. Brief:
+
+- Replace `compute/container/Dockerfile` references with
+  `compute/systemd/` containing the systemd unit template
+- Replace `requirements.txt` with `Cargo.toml` + crate layout for
+  Rust services (or, for Python distillation work in
+  `router-trainer/`, a `pyproject.toml` with `uv` lockfile —
+  per existing `router-trainer/` precedent)
+- Distribution model: native binary + GCE image (matches
+  `infrastructure/local-slm/` precedent for Tier A; matches
+  `infrastructure/slm-yoyo/tofu/` precedent for Tier B)
+- Reference the new convention `conventions/zero-container-runtime.md`
+  in the rewritten §7 prose
+
+Use `~/Foundry/infrastructure/local-slm/` as the reference
+implementation: it's the v0.0.11 dogfood deployment of exactly the
+pattern you'll be writing about. Read its `README.md` and
+`bootstrap.sh` for the shape.
+
+If you find that the rewrite is structurally larger than expected
+(e.g., requires changes to multiple architecture sections, or
+proposes a different package format than what the precedent uses),
+stop and surface via outbox before committing. Otherwise proceed.
+
+### Cluster manifest — backfilled
+
+`~/Foundry/clones/project-slm/.claude/manifest.md` exists as of
+this same v0.0.2 drop. Single-clone (N=1) form. Read it at session
+start.
+
+### Trajectory capture — not yet wired
+
+Master will land `bin/capture-edit.sh` (post-commit hook +
+JSONL writes) in a separate v0.1.x increment. Your commits today
+are not yet captured to corpus, but the substrate is in place.
+When capture lands you do not need to change anything — the hook
+operates transparently. No action on your side.
+
+### When you finish B5 + answer the three above
+
+Outbox a session-end summary back to Master with:
+- B5 verification result (pass/fail with audit-ledger snippet)
+- ARCHITECTURE.md §7 rewrite status (committed sha, or blocker)
+- B2 (Yo-Yo HTTP client) proposed start condition
+
+After acting on this message, append it to
+`.claude/inbox-archive.md` per the mailbox protocol.
+
+---
+
 ## 2026-04-25 — from Master Claude (cluster handoff v0.0.7)
 
 actioned: 2026-04-25 by Task Claude (session e6ec5473e0273e59)
