@@ -8,13 +8,25 @@
 
 ## Right now
 
+- **AS-1 → AS-4 landed** — Apprenticeship Substrate routing
+  endpoints live in `slm-doorman` + `slm-doorman-server`,
+  mock-tested. See "Recently done" section for per-stage
+  detail. End-to-end verification waits on Master shipping
+  AS-5 (helper scripts) plus the systemd unit redeployment so
+  `SLM_APPRENTICESHIP_ENABLED=true` lands on the workspace VM.
 - **WAITING — Master holds B7 (Doorman as systemd unit on
   workspace VM).** Outboxed 2026-04-26 11:00 UTC per operator
   direction. Mirrors B3's `local-slm.service` pattern; same
-  Doctrine §V VM-sysadmin scope reasoning. Cluster `project-slm`
-  Task work is otherwise structurally complete for v0.1.x —
-  see "Recently done" section. Holding for Master to install +
-  ping back when service is live.
+  Doctrine §V VM-sysadmin scope reasoning. After AS-1..AS-4
+  the Doorman binary now requires the systemd unit redeploy
+  before it can serve apprenticeship traffic — and per
+  Master's brief AS-5 (`bin/apprentice.sh` +
+  `bin/capture-edit.py` extension) is workspace-tier scope.
+- **WAITING — Master holds AS-5** — `bin/apprentice.sh` (round-
+  trip helper) and `bin/capture-edit.py` extension (post-commit
+  shadow firing). Per Master's brief: "Don't write these
+  yourself." Once AS-5 lands, every cluster Task Claude on the
+  VM exercises the apprentice on every code-shaped commit.
 - **GUIDE-doorman-deployment.md (Customer-tier draft)** —
   Master's manifest update names this as Task work in the
   customer-tier "leg-pending" item. Drafts under
@@ -147,6 +159,68 @@
 
 ## Recently done
 
+- **2026-04-26 — AS-4 POST /v1/shadow endpoint landed
+  (mock-only).** `ApprenticeshipDispatcher::dispatch_shadow()`
+  added — same prompt + dispatch as `/v1/brief` but the
+  attempt is not returned to the caller. Tuple captured at
+  the deterministic path
+  `${FOUNDRY_ROOT}/data/training-corpus/apprenticeship/<task-type>/shadow-<brief_id>.jsonl`
+  with `verdict: null` + `stage_at_capture: shadow`. Idempotent
+  on `brief_id`: filesystem `create_new(true)` enforces
+  first-write-wins even under race. Two new tests cover
+  happy-path internal capture + dedup-on-retry (mock asserts
+  exactly one apprentice call across two POSTs of the same
+  brief_id). HTTP layer mounts `POST /v1/shadow` returning
+  200 OK with empty body per Master's brief. Workspace tests
+  53/53 → 55/55.
+- **2026-04-26 — AS-3 POST /v1/verdict endpoint landed
+  (mock-only).** New crates inside `slm-doorman`:
+  - `verdict.rs` — `VerdictVerifier` async trait with
+    `SshKeygenVerifier` impl (shells out to `ssh-keygen -Y
+    verify -n apprenticeship-verdict-v1` against
+    `${FOUNDRY_ROOT}/identity/allowed_signers`; tokio
+    `spawn_blocking` keeps the stdin write off the runtime).
+    Tests inject a `MockVerifier`. `VerdictDispatcher`
+    orchestrates: verify → parse → cache lookup →
+    sanitised corpus tuple write → ledger event under
+    `flock(2)` → promotion check → DPO pair on refine/reject.
+  - `promotion_ledger.rs` — `PromotionLedger { dir }` writes
+    `ledger.md` + `.stats.jsonl` + `stages.json` (atomic
+    rename) under one `flock(2)`. `next_stage()` applies
+    convention §2 thresholds (review→spot-check at n≥50 +
+    accept-rate ≥0.85; spot-check→autonomous at n≥100 +
+    accept-rate ≥0.95).
+  - `brief_cache.rs` — in-process FIFO from
+    `(brief_id, attempt_id)` to `(brief, attempt)`; populated
+    on `/v1/brief`, read on `/v1/verdict`. Default cap 1024.
+  Wire shape per design-pass Q5: JSON `{ body, signature
+  (base64), senior_identity }`. Six new verdict tests +
+  three brief-cache tests + four promotion-ledger tests; all
+  53/53 passing. Server-side: AS-3 endpoint returns 403 on
+  signature failure, 410 on cache miss, 400 on parse failure.
+- **2026-04-26 — AS-2 POST /v1/brief endpoint landed
+  (mock-only).** `ApprenticeshipDispatcher::dispatch_brief()`
+  composes the apprentice prompt (resolved citations +
+  redacted scope.files contents + brief body + acceptance
+  test + required-response shape), routes through
+  `Doorman::route` so audit-ledger entries are captured,
+  parses YAML-frontmatter / fenced-diff response, returns
+  `ApprenticeshipAttempt`. Tier-B routing on chars
+  > `SLM_BRIEF_TIER_B_THRESHOLD_CHARS` (default 8000 ~
+  2000 tokens). Three modules added to slm-doorman:
+  `redact.rs` (Rust port of `bin/capture-edit.py`
+  REDACTIONS), `citations.rs` (best-effort registry resolver
+  — no `serde_yaml` dep), `apprenticeship.rs` (dispatcher).
+  Five new tests; workspace 25/25 → 40/40.
+- **2026-04-26 — AS-1 apprenticeship types in slm-core
+  landed.** Three serde wire types per convention §3-§5:
+  `ApprenticeshipBrief`, `ApprenticeshipAttempt`,
+  `ApprenticeshipVerdict`. Plus `SeniorRole`,
+  `VerdictOutcome`, `BriefScope`,
+  `APPRENTICE_ESCALATE_THRESHOLD = 0.5`,
+  `DEFAULT_BRIEF_TIER_B_THRESHOLD_CHARS = 8000`,
+  `VERDICT_NAMESPACE` / `VERDICT_BATCH_NAMESPACE`. Six
+  round-trip serde tests; workspace 19/19 → 25/25.
 - **2026-04-26 — B4 Tier C client landed (mock-only).**
   `crates/slm-doorman/src/tier/external.rs` filled per
   `~/Foundry/conventions/llm-substrate-decision.md` and
