@@ -54,6 +54,7 @@ pub fn router(state: Arc<AppState>) -> Router {
         .route("/v1/chat/completions", post(chat_completions))
         .route("/v1/brief", post(brief))
         .route("/v1/verdict", post(verdict))
+        .route("/v1/shadow", post(shadow))
         .with_state(state)
 }
 
@@ -186,6 +187,36 @@ async fn verdict(
     })?;
     let outcome = dispatcher.dispatch(wire).await?;
     Ok(Json(outcome))
+}
+
+/// `POST /v1/shadow` wire shape — brief + actual_diff.
+#[derive(Deserialize)]
+struct ShadowWireBody {
+    brief: ApprenticeshipBrief,
+    /// The diff that the senior actually committed (the post-hoc
+    /// reference). Convention §7 path P2.
+    actual_diff: String,
+}
+
+async fn shadow(
+    State(state): State<Arc<AppState>>,
+    Json(wire): Json<ShadowWireBody>,
+) -> Result<StatusCode, ApiError> {
+    let cfg = state.apprenticeship.as_ref().ok_or_else(|| {
+        ApiError::not_found("apprenticeship endpoints disabled (SLM_APPRENTICESHIP_ENABLED unset)")
+    })?;
+    let dispatcher = ApprenticeshipDispatcher::with_cache(
+        &state.doorman,
+        cfg.clone(),
+        state.brief_cache.clone(),
+    );
+    // Per Master's brief: 200 OK with empty body on success.
+    // ShadowOutcome is captured internally; idempotency on retry is
+    // a no-op same-200.
+    let _outcome = dispatcher
+        .dispatch_shadow(&wire.brief, &wire.actual_diff)
+        .await?;
+    Ok(StatusCode::OK)
 }
 
 struct ApiError {
