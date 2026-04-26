@@ -17,6 +17,7 @@ async fn fixture_state() -> (AppState, tempfile::TempDir) {
     .unwrap();
     let state = AppState {
         content_dir: dir.path().to_path_buf(),
+        citations_yaml: std::path::PathBuf::from("/nonexistent/citations.yaml"),
     };
     (state, dir)
 }
@@ -68,6 +69,7 @@ async fn fli_topic_carries_additional_property() {
     .unwrap();
     let state = AppState {
         content_dir: dir.path().to_path_buf(),
+        citations_yaml: std::path::PathBuf::from("/nonexistent/citations.yaml"),
     };
     let app = router(state);
     let resp = app
