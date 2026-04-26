@@ -496,7 +496,110 @@ None of these require rewriting `service-slm`.
 
 ---
 
-## 11. Cross-references
+## 11. Apprenticeship Substrate (Doctrine claim #32)
+
+The Doorman flips polarity for code-shaped work. Service-slm becomes
+the **first responder**; Master / Root / Task Claude becomes the
+**senior reviewer**. The disagreement between them — captured as
+signed, append-only training tuples — is the highest-quality
+continued-pretraining signal Foundry produces. Specification at
+`~/Foundry/conventions/apprenticeship-substrate.md`. Convention
+ratified 2026-04-26 in Doctrine v0.0.7.
+
+Three new endpoints (gated behind `SLM_APPRENTICESHIP_ENABLED=true`;
+404 when unset so existing deployments are unchanged):
+
+| Endpoint | Purpose | Returns |
+|---|---|---|
+| `POST /v1/brief` | Senior posts an `ApprenticeshipBrief`; Doorman dispatches the apprentice; returns the parsed `ApprenticeshipAttempt` | `ApprenticeshipAttempt` (with `escalate=true` when self-confidence < 0.5 per design-pass Q2) |
+| `POST /v1/verdict` | Senior posts the signed verdict body + base64 SSH signature; Doorman verifies via `ssh-keygen -Y verify -n apprenticeship-verdict-v1`, writes the apprenticeship corpus tuple, appends the ledger event under `flock(2)`, and on threshold cross appends a `promotion` event | `VerdictDispatchOutcome` |
+| `POST /v1/shadow` | Senior posts a brief + the actual diff committed the existing way; Doorman dispatches the apprentice internally and captures the (brief, attempt, actual_diff) tuple as `stage_at_capture: shadow`. Idempotent on `brief_id` | `200 OK` empty body |
+
+### Wire types (`slm-core::apprenticeship`)
+
+- `ApprenticeshipBrief { brief_id, created, senior_role, senior_identity, task_type, scope { cluster, files }, acceptance_test, doctrine_citations, shadow, body }`
+- `ApprenticeshipAttempt { brief_id, attempt_id, created, model, adapter_composition, self_confidence, escalate, inference_ms, tier, cost_usd, reasoning, diff }`
+- `ApprenticeshipVerdict { brief_id, attempt_id, verdict, created, senior_identity, final_diff_sha, notes, body, signature }` — `signature` is base64-encoded for JSON transport (design-pass Q5)
+
+### Verdict signing
+
+`ssh-keygen -Y sign -n apprenticeship-verdict-v1` against the senior's
+key under `~/Foundry/identity/<id>/id_<id>`. Verification on the
+Doorman side shells out to `ssh-keygen -Y verify -n
+apprenticeship-verdict-v1` against `${FOUNDRY_ROOT}/identity/allowed_signers`.
+Per design-pass Q1 the shell-out is the v0.1 path; native Rust
+verification is a v0.5+ follow-up. The namespace tag prevents
+re-using a commit-signing signature as a verdict.
+
+### Promotion ledger
+
+`${FOUNDRY_ROOT}/data/apprenticeship/ledger.md` (markdown event log,
+one row per verdict-batch + one row per promotion event), plus a
+sidecar `.stats.jsonl` (one row per verdict for cheap rolling-rate
+computation) and `stages.json` (current stage per task-type). All
+writes happen under `flock(2)` on `.ledger.lock` (design-pass Q3).
+Promotion thresholds per convention §2: review→spot-check at n≥50
++ accept-rate ≥0.85; spot-check→autonomous at n≥100 + accept-rate
+≥0.95.
+
+### Corpus tuple paths
+
+- Production routing (verdict accepted/refined/rejected/deferred):
+  `${FOUNDRY_ROOT}/data/training-corpus/apprenticeship/<task-type>/<ulid>.jsonl`
+- Shadow routing: `${FOUNDRY_ROOT}/data/training-corpus/apprenticeship/<task-type>/shadow-<brief_id>.jsonl`
+- DPO pair (refine / reject only, per convention §8 +
+  `trajectory-substrate.md` §6):
+  `${FOUNDRY_ROOT}/data/training-corpus/feedback/apprenticeship-<task-type>-<ulid>.jsonl`
+
+Every body field passes through the `crate::redact::sanitize` filter
+(Rust port of `bin/capture-edit.py` REDACTIONS) before write per
+convention §9 sanitize-outbound rule.
+
+### In-process state
+
+`BriefCache` — in-process FIFO from `(brief_id, attempt_id)` to the
+brief / attempt produced by `/v1/brief`. The verdict path looks the
+pair up by key; cache miss surfaces as `BriefCacheMiss` (HTTP 410
+Gone) and the senior reissues. Process restart loses pending briefs;
+SQLite-backed durability is a v0.5+ upgrade.
+
+### Configuration
+
+| Env var | Default | Purpose |
+|---|---|---|
+| `SLM_APPRENTICESHIP_ENABLED` | unset (off) | Gates the three endpoints; `true` or `1` to enable |
+| `FOUNDRY_ROOT` | `/srv/foundry` | Resolves `scope.files`, `citations.yaml`, ledger / corpus paths |
+| `FOUNDRY_ALLOWED_SIGNERS` | `${FOUNDRY_ROOT}/identity/allowed_signers` | Path passed to `ssh-keygen -Y verify -f` |
+| `FOUNDRY_DOCTRINE_VERSION` | `0.0.7` | Embedded in corpus tuples |
+| `FOUNDRY_TENANT` | `pointsav` | Tenant tag on corpus tuples |
+| `SLM_BRIEF_TIER_B_THRESHOLD_CHARS` | `8000` | Char-budget proxy for Tier-B routing on `/v1/brief` |
+
+### Crate layout
+
+```
+crates/slm-core/src/apprenticeship.rs   # wire types + namespace constants
+crates/slm-doorman/src/apprenticeship.rs   # AS-2 dispatcher + AS-4 shadow path
+crates/slm-doorman/src/verdict.rs          # AS-3 verdict pipeline + verifier trait
+crates/slm-doorman/src/promotion_ledger.rs # ledger.md + stats sidecar + stages.json
+crates/slm-doorman/src/brief_cache.rs      # in-process FIFO cache
+crates/slm-doorman/src/redact.rs           # sanitize-outbound (port of capture-edit.py)
+crates/slm-doorman/src/citations.rs        # best-effort citations.yaml resolver
+```
+
+### Cross-references
+
+- Doctrine claim #32 — constitutional anchor
+- `~/Foundry/conventions/apprenticeship-substrate.md` — full spec
+- `~/Foundry/conventions/trajectory-substrate.md` — corpus typology
+- `~/Foundry/conventions/adapter-composition.md` — claim #22 algebra
+- `~/Foundry/templates/apprenticeship-brief.md.tmpl` — brief shape
+- `~/Foundry/templates/apprenticeship-verdict.md.tmpl` — verdict shape
+- `~/Foundry/data/apprenticeship/ledger.md` — promotion ledger
+- `~/Foundry/CLAUDE.md` §3 — same SSH-signing primitive as commits
+
+---
+
+## 12. Cross-references
 
 - `CLAUDE.md` — state header, hard constraints, project-layer rules
 - `NEXT.md` — in-flight work and blocking items
