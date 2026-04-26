@@ -12,7 +12,7 @@ the kernel verifier downstream.
 
 ## 1. Scope
 
-`system-core` is the data-primitive crate. It owns:
+`system-core` is the data-primitive + format-primitive crate. It owns:
 
 - The [`Capability`] type — kernel-mediated authorisation token,
   ledger-bound, with `(cap_type, rights, expiry_t, witness_pubkey,
@@ -22,18 +22,28 @@ the kernel verifier downstream.
 - The [`LedgerAnchor`] type — references a C2SP signed-note
   checkpoint by `(origin, tree_size, root_hash)` per
   `worm-ledger-design.md` §3 D2.
+- The [`Checkpoint`], [`NoteSignature`], [`SignedCheckpoint`] types
+  in the [`checkpoint`] submodule — full C2SP signed-note wire
+  format (parse + render) plus ed25519 verification, including
+  multi-sig support that realises the apex-cosigning ceremony per
+  convention §4.
 - Supporting enums (`CapabilityType`, `Right`) and the `Hash256`
   alias.
 
 It does NOT own (and must not absorb):
 
-- Kernel-side ledger consultation logic — that's `system-substrate`
-  or a new `system-capability-ledger` / `system-ledger` crate (open
-  architecture question; see §3 below).
-- WORM tile storage — `service-fs` per
-  `worm-ledger-design.md` §5.
-- Witness-signature verification — that wraps `ssh-keygen -Y verify`
-  and lives wherever the consultation logic lives.
+- Kernel-side ledger consultation **state machine** (which apex is
+  current; which capabilities are revoked; cache of recent
+  checkpoints) — that's `system-substrate` or a new
+  `system-capability-ledger` / `system-ledger` crate (open
+  architecture question; see §3 below). The crypto primitive lives
+  here; the policy lives downstream.
+- WORM tile storage — `service-fs` per `worm-ledger-design.md` §5.
+- `ssh-keygen -Y verify` wrapper for witness-record signatures —
+  that's a deploy-side concern; the data shape only is here. Note
+  that witness records use the SSH-signing primitive (per
+  `apprenticeship-substrate.md` §5) while checkpoints use raw C2SP
+  ed25519 — two different signing surfaces, both supported.
 
 ## 2. Why these types live here
 
@@ -92,14 +102,32 @@ when the decision is made; surface to Master via outbox.
 
 ## 5. Verification
 
-Six unit tests in `src/lib.rs` cover:
-- Round-trip serialisation for `Capability`, `WitnessRecord`,
-  `LedgerAnchor`
-- Hash determinism for `Capability::hash()`
-- Hash sensitivity to `expiry_t` and `ledger_anchor` fields
+16 unit tests on `cargo test -p system-core` (Rust stable):
 
-Tests pass on `cargo test -p system-core` (Rust stable).
+**Capability data-shape (`tests`):**
+- `capability_serialises_round_trip`
+- `capability_hash_is_deterministic`
+- `capability_hash_changes_with_expiry`
+- `capability_hash_changes_with_anchor`
+- `witness_record_serialises_round_trip`
+- `ledger_anchor_serialises_round_trip`
 
-These cover the data-shape invariants. Cryptographic-correctness
-fixtures (signature round-trips, Merkle inclusion proofs, apex-cosign
-ceremony replay) live downstream where the consultation logic does.
+**C2SP signed-note + apex-cosigning (`checkpoint::tests`):**
+- `checkpoint_body_round_trip`
+- `checkpoint_with_extensions_round_trip`
+- `key_hash_derivation_is_deterministic`
+- `key_hash_changes_with_name`
+- `signed_checkpoint_wire_round_trip_single_sig`
+- `single_signature_verifies`
+- `signature_fails_under_wrong_pubkey`
+- `multi_sig_apex_handover_round_trip` — both P-old + P-new signatures
+  parse, render, and verify on the same checkpoint body
+- `handover_fails_if_only_one_signs` — handover predicate refuses
+  when only one apex signs
+- `body_tampering_breaks_signature` — modifying the checkpoint after
+  signing makes verification fail
+
+Merkle inclusion / consistency proofs and the higher-level "subsequent
+checkpoints require only P-new" state machine live downstream where
+the consultation logic does — covered when that crate / extension is
+chosen and built.
