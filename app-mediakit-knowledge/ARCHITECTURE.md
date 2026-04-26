@@ -1,16 +1,18 @@
 ---
 schema: foundry-doc-v1
-document_version: 0.2.0
+document_version: 0.3.0
 component: app-mediakit-knowledge
-status: design — Phase 1 shipped 2026-04-26 (commit 722ae18); Phase 2 paused pending Master review of session-2 outbox
+status: design — Phase 1 shipped 2026-04-26 (commit 722ae18); Phase 2 + catalog work green-lit per Master v0.1.14 ratification
 last_updated: 2026-04-26
 session: 2
 companion_docs:
   - docs/INVENTIONS.md
+  - docs/UX-DESIGN.md
 upstream_doctrine:
   - DOCTRINE.md claim #29 Substrate Substitution (v0.0.5)
   - DOCTRINE.md claim #30 Project Triad Discipline (v0.0.4)
-  - conventions/disclosure-substrate.md
+  - DOCTRINE.md claim #31 Constrained-Constitutional Authoring (v0.0.6, ratified 2026-04-26)
+  - conventions/disclosure-substrate.md (v0.1.14 — Action API shim dropped; §5.1 substrate-native API surface set added; §6 cadence extended; §8 Substrate-Enforced AI Grounding added)
   - conventions/knowledge-commons.md
   - conventions/zero-container-runtime.md
   - conventions/citation-substrate.md
@@ -45,19 +47,20 @@ are documented separately in [`docs/INVENTIONS.md`](docs/INVENTIONS.md).
 | 5 — auth + webhooks | designed | project-knowledge |
 | 6 — wikilink resolution + portable identity | designed | project-knowledge |
 | 7 — federation seam (blake3 + ActivityPub) | designed | project-knowledge |
-| 8 — disclosure mode | per Master v0.1.10 ratification, **migrates to a future `project-disclosure` cluster** | project-disclosure (TBD) |
-| 9 — Constrained-Constitutional Authoring (CCA) | proposed in session-2 outbox to Master; pending doctrine touch | project-disclosure (TBD) |
+| 8 — disclosure mode | per Master v0.1.10 ratification, **migrates to a future `project-disclosure` cluster**; convention extended in v0.1.14 with §6 cadence sub-bullets for two-clock + Disclosure-Diff + Subscriber Proof-of-Receipt | project-disclosure (TBD) |
+| 9 — Constrained-Constitutional Authoring (CCA) | **ratified as DOCTRINE claim #31 in v0.0.6**; `disclosure-substrate.md` §6 cadence Phase 9 declared; depends on constitutional-layer adapter from project-slm cluster (coordination dispatched per Master v0.1.14) | project-disclosure (TBD) |
 
-Session-2 also surfaced a conflict: `conventions/disclosure-substrate.md`
-§5 retains the `mediawiki-action-api-shim` as a Phase 8 artefact,
-while operator's session-2 direction is to drop the shim entirely
-in favour of substrate-native API surfaces (MCP + REST + Atom +
-JSON-LD + ActivityPub + Git remote + Markdown bulk export). The
-engine ARCHITECTURE.md adopts the substrate-native surface set as
-the working assumption (§3 phases below + §11 API surface set);
-the convention conflict is briefed to Master via the cluster
-outbox for resolution. The engine writes no Action API shim code
-in any phase under this ARCHITECTURE.md.
+The session-2 conflict on the `mediawiki-action-api-shim` was
+**resolved in Master's v0.1.14 commit**: the convention's §5
+migration adapters table no longer lists the shim;
+`conventions/disclosure-substrate.md` §5.1 was added naming the
+8 substrate-native surfaces (MCP + REST/OpenAPI + Atom/JSON Feed
++ JSON-LD/Schema.org + ActivityPub/WebFinger + `.well-known/api-catalog`
+RFC 9727 + read-only Git remote + Markdown bulk export); the
+`mediawiki-xml-dump` import tool (one-shot migration) is kept.
+The engine ARCHITECTURE.md is now aligned with the convention; no
+Action API shim code is written in any phase. Pywikibot ecosystem
+migration is out-of-tree Customer or community work.
 
 ## 1. Source-of-truth inversion
 
@@ -101,7 +104,12 @@ time and document chosen version in `Cargo.toml` comments.
 | Logging | `tracing` + `tracing-subscriber` | 1 |
 | CLI | `clap` 4 | 1 |
 | Frontmatter | `serde` + `serde_yaml` | 1 |
-| In-browser editor | CodeMirror 6 (embedded JS asset) | 2 |
+| In-browser editor core | `@codemirror/state` + `@codemirror/view` + `@codemirror/commands` (CodeMirror 6) | 2 |
+| Editor language | `@codemirror/lang-markdown` | 2 |
+| Editor lint (squiggles) | `@codemirror/lint` | 2 |
+| Editor autocomplete (citations) | `@codemirror/autocomplete` | 2 |
+| Editor Live Preview | `codemirror-rich-markdoc` or `ixora` | 2 |
+| Real-time collab | `y-codemirror.next` + `yjs` + self-hosted `y-websocket` | 2.x (opt-in flag) |
 | Search | `tantivy` 0.24+ | 3 |
 | Feed generation | `atom_syndication` + `serde_json` | 3 |
 | JSON-LD serialisation | `serde_json` (typed schema.org structs) | 3 (baseline from 1) |
@@ -151,23 +159,135 @@ Smallest binary that validates the toolchain.
 Shipped: `src/{main,server,render,error,assets}.rs` + `static/style.css`
 + `tests/fixtures/content/topic-hello.md`. Approximately 400 lines.
 
-### Phase 2 — edit endpoint + JSON-LD baseline
+### Phase 1.1 — Wikipedia muscle-memory chrome (additive)
 
-- `GET /edit/{slug}` — markdown source in a `<textarea>` upgraded
-  by CodeMirror 6 (loaded as embedded static asset; no CDN)
-- `POST /edit/{slug}` — atomic write to disk (temp + rename)
-- `POST /create` — new page from title
-- **JSON-LD `<script type="application/ld+json">` in every
-  rendered page from Phase 2 onward.** Schema.org `TechArticle` /
-  `DefinedTerm` profile. Cumulative — costs nothing in later
-  phases, accumulates AEO-eligibility.
-- Path-traversal hardening already in Phase 1 (`..` and nested
-  paths rejected); extended for the write side
-- New TOPIC fixtures committed alongside: redirect + bilingual
-  sibling test; FLI-true rendering test (cautionary banner)
+Per `docs/UX-DESIGN.md` §1, eighteen Wikipedia patterns trained
+~2 billion monthly readers. Phase 1 chrome covers items 4
+(footnotes), 7 (infobox capability), 10 (link colours), 11
+(typography), 13 (search placeholder), 16 (mobile chrome). Phase
+1.1 adds the remaining sacred patterns as additive UI work — no
+new logic, just chrome:
+
+- Article / Talk tab pair (top-left of title row)
+- Read / Edit / View history tabs (top-right)
+- Per-section `[edit]` pencils right-floated on every heading
+- End-of-article ordering (See also → Notes → References →
+  Further reading → External links → Categories)
+- Hatnote placement (italic, indented, top of article)
+- Lead first-sentence convention (bolded subject + copula + definition)
+- "From PointSav Knowledge"-equivalent tagline
+- Collapsible left-rail TOC following scroll (Vector 2022 pattern)
+- Language switcher as button next to title
+- Footer convention (categories → license → about / contact)
+
+Plus two **IVC chrome placeholders** (no machinery yet — just the
+visual surface for Phase 7 to light up):
+
+- **Page-level masthead band** — single horizontal strip at the
+  top of every TOPIC, just below the title row. Phase 1.1 ships
+  with placeholder text ("verification not yet available — Phase
+  7"). Phase 7 fills with the live verification summary.
+  Reference: UX-DESIGN.md §4.5.
+- **Reader density toggle** — preference UI with three options
+  (Off / Exceptions only / All); default *Exceptions only*; setting
+  persists across sessions. No machinery to honour the setting
+  until Phase 7. Reference: UX-DESIGN.md §4.6.
+
+Vector 2022's design contract applies: every Phase 1.1 addition
+is additive over Phase 1 — no removal, no behaviour change to
+existing routes.
+
+### Phase 2 — edit endpoint + JSON-LD baseline + IDE-grade authoring
+
+The Phase 2 deliverable is **Substrate-Aware Authoring (SAA)** per
+`docs/UX-DESIGN.md` §5. Stack converged decisively per session-2
+research:
+
+- **CodeMirror 6** core — `@codemirror/state` + `@codemirror/view`
+  + `@codemirror/commands`. ~300 KB tree-shaken. Mobile and
+  accessibility first-class. Embedded as static asset; no CDN.
+- **`@codemirror/lang-markdown`** — Markdown parsing
+- **`codemirror-rich-markdoc`** (or `ixora`) — Obsidian Live
+  Preview pattern (tokens hide on blur, reveal on cursor entry).
+  The only WYSIWYG-Markdown hybrid that doesn't lie about
+  what's on disk.
+
+**HTTP routes:**
+- `GET /edit/{slug}` — editor surface; in-place (no page navigation
+  away from the article view); the page never reloads, the editor
+  IS the page (Notion's UX pattern, Confluence's commit gate per
+  UX-DESIGN.md §5.9)
+- `POST /edit/{slug}` — atomic write to disk (temp + rename) on
+  explicit commit gate (§5.7); explicit user action only, never
+  auto-commit
+- `POST /create` — new page from title; SAA opens immediately
+
+**SAA inline-validator (substrate squiggles, Grammarly pattern per
+UX-DESIGN.md §5.3):**
+- 🔴 red — hard substrate violation (commit blocked)
+- 🟠 amber — unsourced claim
+- 🔵 blue — unlabelled FLI
+- ⚪ gray (hint) — style-guide drift
+- Hover any squiggle → tooltip cites the rule
+  (`[ni-51-102 §4A.2]`); diagnostic itself is grounded (the
+  substrate's discipline applied to its own UI)
+
+Diagnostic source consumes:
+- `~/Foundry/citations.yaml` (citation registry)
+- `conventions/bcsc-disclosure-posture.md` (FLI label patterns)
+- Per-tenant constitution (Phase 9 CCA — placeholder lint rules
+  in Phase 2 for the deterministic patterns)
+
+**SAA citation autocomplete:**
+- `[` triggers `@codemirror/autocomplete` source over
+  `~/Foundry/citations.yaml`; fuzzy match; insert as `[citation-id]`
+- Already-cited registry entries (in frontmatter `cites:`) ranked first
+
+**SAA three-keystroke ladder (Cursor pattern per UX-DESIGN.md §5.2):**
+- **Tab** — passive ghost-text completion via Doorman (Phase 2
+  delivers a stub that surfaces the affordance; full Doorman
+  integration depends on Phase 4 MCP server)
+- **Cmd-K** — selection + natural-language instruction → diff
+  overlay → accept/reject (Phase 2 ships the affordance; full
+  AI behind it lights up after Phase 4)
+- **Composer** — multi-file changes; deferred to Phase 4 (depends
+  on Doorman MCP)
+
+**SAA real-time collab (opt-in flag, UX-DESIGN.md §5.8):**
+- `y-codemirror.next` + `yjs` + self-hosted `y-websocket`
+- Y.Text awareness protocol → shared cursors at zero extra cost
+- **Git remains source of truth** (CRDT is session-ephemeral
+  state); commit serializes Y.Text → Markdown → file →
+  `bin/commit-as-next.sh`
+- Default: collab disabled; opt-in via `--enable-collab` flag for
+  trusted multi-user deployments
+
+**JSON-LD baseline (per Agent 1 research):**
+- `<script type="application/ld+json">` in every rendered page
+  from Phase 2 onward
+- Schema.org `TechArticle` / `DefinedTerm` profile
+- Cumulative — costs nothing in later phases, accumulates
+  AEO-eligibility
+
+**Path-traversal hardening:**
+- Already in Phase 1 (`..` and nested paths rejected); extended
+  for the write side
+
+**New TOPIC fixtures committed alongside:**
+- redirect + bilingual sibling test
+- FLI-true rendering test (cautionary banner verification)
+- citation-graph exercise (verifies `cites:` resolution against
+  workspace registry)
+
+Note: Phase 2 ships SAA as the editor surface; the citation graph
+backend (Phase 4) and AI integration (Phase 4 MCP server, Phase 9
+CCA) light up later. Phase 2 is the affordance; Phase 4+ is the
+machinery behind it.
 
 No revision history yet; the next save just overwrites. Phase 4
-adds the Git layer that turns each save into a commit.
+adds the Git layer that turns each save into a commit; until then,
+Phase 2 commits via `bin/commit-as-next.sh` invoked through the
+SAA explicit commit gate.
 
 ### Phase 3 — search + syndication feeds + crawler discovery
 
@@ -333,11 +453,17 @@ content" use case substantially better than the Action API
 without needing to look like MediaWiki. Surfaced to Master via
 cluster outbox 2026-04-26 session-2 for convention amendment.
 
-### Phase 9 — Constrained-Constitutional Authoring (CCA) — proposed
+### Phase 9 — Constrained-Constitutional Authoring (CCA) — ratified DOCTRINE claim #31 (v0.0.6)
 
-The killer invention emerging from session-2 research. See
+The killer invention emerging from session-2 research, **ratified
+as DOCTRINE claim #31 in workspace v0.1.14 / Doctrine v0.0.6**.
+First operational application sits in `disclosure-substrate.md` §8
+(Substrate-Enforced AI Grounding); CCA generalises beyond
+disclosure to any cluster's quality discipline. See
 [`docs/INVENTIONS.md`](docs/INVENTIONS.md) §5 for the full
-thinking; engineering summary here.
+thinking and [`docs/UX-DESIGN.md`](docs/UX-DESIGN.md) §5.3 for
+how SAA squiggles get jurisdictional rule packs from the
+constitutional-layer adapter; engineering summary here.
 
 The substrate's TOPIC frontmatter schema, citation-ID syntax, FLI
 label vocabulary, and BCSC structural-positioning rules are
@@ -407,6 +533,17 @@ at a reverse proxy that proxies to the loopback unit, not by
 binding the wiki to a public address.
 
 ## 5. Data layout on disk
+
+For the **PointSav deployment instance** at
+`~/Foundry/deployments/media-knowledge-documentation-1/`, the
+`<content_dir>` is the `content-wiki-documentation` checkout —
+all PointSav TOPICs live in that single Git repository per
+operator confirmation 2026-04-26. Other deployment instances
+(future Customer-tenant) will read from their own respective
+content-tree checkouts (e.g., a Woodfine-tenant instance would
+point at `vendor/content-wiki-corporate/` or a tenant-specific
+fork). The engine itself is content-tree-agnostic — it serves
+whatever directory `--content-dir` points at.
 
 ```
 <content_dir>/                         (Git-tracked; canonical)
@@ -490,14 +627,20 @@ addressed by:
   page, one commit per revision, preserves authorship and
   timestamp. **Operator-confirmed in scope.**
 
-- **No MediaWiki Action API shim.** Operator's session-2 direction
-  drops the shim entirely. Pywikibot users who want to migrate
-  their automation either (a) rewrite their bots to call our
-  REST/MCP surface (which is structurally cleaner — see Agent-1
-  session-2 research), or (b) write a thin Python translation
-  layer out of tree. The substrate does not pretend to be
-  MediaWiki. Conflict with `conventions/disclosure-substrate.md`
-  §5 surfaced to Master via cluster outbox 2026-04-26 session-2.
+- **No MediaWiki Action API shim.** Per operator's session-2
+  direction and Master's v0.1.14 ratification, the shim is
+  dropped from `conventions/disclosure-substrate.md` §5 entirely.
+  §5.1 was added naming the eight substrate-native surfaces
+  (MCP server / REST + OpenAPI / Atom + JSON Feed / JSON-LD +
+  Schema.org / ActivityPub + WebFinger / `.well-known/api-catalog`
+  RFC 9727 / read-only Git remote / Markdown bulk export) which
+  cover the "let others syndicate the content" use case
+  substantially better than the Action API. Pywikibot users who
+  want to migrate either (a) rewrite their bots to call our
+  REST/MCP surface (which is structurally cleaner), or (b) write
+  a thin Python translation layer out of tree (Customer or
+  community work, not built-in). **The substrate does not pretend
+  to be MediaWiki.**
 
 The substrate is **what a wiki engine looks like when it is born
 MCP-native, federation-native, AI-citation-native** — not a
@@ -570,6 +713,7 @@ alongside the binary.
 | **`iroh://{hash}`** (opt-in) | Decentralised peer discovery | Peers | iroh / libp2p | 7+ |
 | **Markdown bulk export** | Offline / grep-able snapshot | Operators, audit | filesystem layout doc | 1+ |
 | **`.well-known/api-catalog`** | Discoverability of all the above | Anyone | RFC 9727 | 7+ |
+| **`verify://` URL scheme** | Side-loaded local verifier (Sigstore-style independent verification) | Auditors, regulators | UX-DESIGN.md §4.8 | 7+ |
 
 Surface set chosen to:
 
@@ -585,6 +729,8 @@ Rationale and prior-art positioning per session-2 research-agent
 report on API surfaces (see §13 source ledger).
 
 ## 12. Inventions catalogue
+
+### Substrate inventions (engineering)
 
 Five candidate inventions surfaced from session-2 research,
 documented in [`docs/INVENTIONS.md`](docs/INVENTIONS.md):
@@ -604,11 +750,34 @@ documented in [`docs/INVENTIONS.md`](docs/INVENTIONS.md):
 5. **Constrained-Constitutional Authoring (CCA)** — the substrate's
    schema becomes a CFG constraining AI decoding; AI cannot emit
    a TOPIC that fails the schema; every emitted TOPIC carries a
-   machine-checkable proof-of-grounding chain. **The killer
-   invention.**
+   machine-checkable proof-of-grounding chain. **Ratified as
+   DOCTRINE claim #31 in v0.0.6.**
 
 INVENTIONS.md carries the prior-art positioning, novelty kernel,
 engineering seams, citations, and rationale for each.
+
+### UX inventions (reading + editing surfaces)
+
+Two UX inventions ride on the substrate, documented in
+[`docs/UX-DESIGN.md`](docs/UX-DESIGN.md):
+
+- **IVC — Inline Verifiable Citations** (reading): per-claim
+  verification badges baked into the reading view; default
+  neutral grey (TLS padlock lesson — universal verification
+  becomes noise); colour reserved for exceptions (drift, missing,
+  FLI). Plus adjacent inventions: diff-since-citation inline view;
+  `verify://` URL scheme + side-loaded local verifier (Sigstore-
+  style independent verification).
+- **SAA — Substrate-Aware Authoring** (editing): IDE-grade
+  in-place editor (CodeMirror 6 + Cursor's three-keystroke ladder
+  + Grammarly's color-coded squiggles + citation autocomplete +
+  Yjs collab + explicit commit gate). The editor cites the rule
+  it's enforcing (squiggle tooltips show `[ni-51-102 §4A.2]` etc.).
+
+Together: **Wikipedia-grade reading + IDE-grade editing +
+Perplexity-grade citation transparency, with all three properties
+stored as first-class graph data rather than rendering tricks.**
+No surveyed incumbent ships this combination.
 
 ## 13. Research source ledger (session-2)
 
@@ -628,12 +797,13 @@ high-level provenance.
 
 - [DOCTRINE.md](../../../../DOCTRINE.md) — constitutional charter
 - [CLAUDE.md](../../../../CLAUDE.md) — workspace operational guide
-- [conventions/disclosure-substrate.md](../../../../conventions/disclosure-substrate.md) — landing point for this engine's strategic positioning (note: §5 retains `mediawiki-action-api-shim`; conflict surfaced to Master 2026-04-26 session-2)
+- [conventions/disclosure-substrate.md](../../../../conventions/disclosure-substrate.md) — landing point for this engine's strategic positioning. v0.1.14 amendment: §5 dropped `mediawiki-action-api-shim`; §5.1 added substrate-native API surface set; §6 cadence extended with two-clock + Disclosure-Diff + Subscriber Proof-of-Receipt sub-bullets; §8 Substrate-Enforced AI Grounding added (operationalises Invention A in the wiki engine)
 - [conventions/knowledge-commons.md](../../../../conventions/knowledge-commons.md) §3 Three-Tier Contributor Model
 - [conventions/zero-container-runtime.md](../../../../conventions/zero-container-runtime.md) — systemd, no Docker
 - [conventions/citation-substrate.md](../../../../conventions/citation-substrate.md) — frontmatter discipline
 - [conventions/bcsc-disclosure-posture.md](../../../../conventions/bcsc-disclosure-posture.md) — Phase 8 source
 - [conventions/compounding-substrate.md](../../../../conventions/compounding-substrate.md) — Three-Ring + Doorman composition
 - [conventions/trajectory-substrate.md](../../../../conventions/trajectory-substrate.md) — every commit feeds the cluster adapter
-- Cluster manifest: `~/Foundry/clones/project-knowledge/.claude/manifest.md` (triad declaration backfilled per Doctrine v0.0.4)
-- Companion design doc: [`docs/INVENTIONS.md`](docs/INVENTIONS.md)
+- Cluster manifest: `~/Foundry/clones/project-knowledge/.claude/manifest.md` (triad declaration backfilled per Doctrine v0.0.4; `adapter_routing:` field added per Doctrine v0.1.12)
+- Companion design doc — substrate inventions: [`docs/INVENTIONS.md`](docs/INVENTIONS.md)
+- Companion design doc — UX surfaces: [`docs/UX-DESIGN.md`](docs/UX-DESIGN.md)
