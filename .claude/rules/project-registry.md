@@ -8,7 +8,7 @@ must be closed.
 
 State vocabulary — see `~/Foundry/CLAUDE.md` §8 for definitions.
 
-Last updated: 2026-04-23.
+Last updated: 2026-04-26.
 
 ---
 
@@ -97,7 +97,7 @@ Last updated: 2026-04-23.
 | Project | State | Type | Notes |
 |---|---|---|---|
 | system-audit | Reserved-folder | system | 2 files |
-| system-core | Scaffold-coded | system | 5 files |
+| system-core | Active | system | Activated 2026-04-26 via framework §9; Phase 1A increment 1 of `cluster/project-system` (Capability + WitnessRecord + LedgerAnchor types per Doctrine claim #33 + system-substrate-doctrine §3.1+§5); workspace member as of v0.1.20; 6 unit tests passing |
 | system-gateway-mba | Scaffold-coded | system | 8 files; in workspace members |
 | system-interface | Scaffold-coded | system | 4 files |
 | system-network-interface | Scaffold-coded | system | 6 files |
@@ -181,10 +181,10 @@ Last updated: 2026-04-23.
 
 ---
 
-## Summary (2026-04-23)
+## Summary (2026-04-26)
 
-- **Active:** 4 (`app-console-bookkeeper`, `app-workplace-presentation`, `app-workplace-proforma`, `service-extraction`)
-- **Scaffold-coded:** 53
+- **Active:** 5 (`app-console-bookkeeper`, `app-workplace-presentation`, `app-workplace-proforma`, `service-extraction`, `system-core`)
+- **Scaffold-coded:** 52
 - **Reserved-folder:** 36
 - **Defect:** 0
 - **Not-a-project:** 2 (`discovery-queue`, `target`)
