@@ -92,6 +92,37 @@ Newest on top. Append a dated block when a session includes meaningful cleanup w
 
 ---
 
+## 2026-04-26 — third-pass zero-container cleanup (Master-authorised)
+
+- **Two surviving drift sites resolved per Master's 2026-04-26
+  10:30 inbox brief Answer 1.**
+  - `ARCHITECTURE.md` §5.10 "Not-Rust components" SkyPilot row
+    dropped outright (orphaned after the §10 SkyPilot drop;
+    table now enumerates only LMCache+Mooncake and vLLM, both
+    actively in the architecture).
+  - `ARCHITECTURE.md` §2 Ring 1 Bootstrap items 3+4 rewritten
+    to GCE start/stop ceremony per the convention's "What is
+    used instead" + "Cold-start: the only honest concern"
+    sections. Item 3: "Cloud Run GPU scale-to-zero" → "GCE GPU
+    instance with `idle_shutdown_minutes=N` per
+    `infrastructure/slm-yoyo/tofu/`". Item 4: "Warm pool opt-in
+    via min-instances=1" → "Warm-VM mode opt-in: hold the GCE
+    instance running between requests within a configurable
+    window".
+  - Closing line "Bill-per-second for request processing; zero
+    idle cost outside explicitly-opened warm windows" updated
+    to "zero idle cost once the `idle_shutdown_minutes=N` timer
+    fires and the instance stops" — same economics, GCE
+    nomenclature.
+- **Cluster manifest also updated by Master in parallel
+  (Doctrine v0.0.4 triad schema)** — committed in same commit per
+  the cluster-manifest-tracking pattern Master confirmed in B5
+  reply (4d). Manifest's customer-tier "leg-pending" item names
+  `GUIDE-doorman-deployment.md` as Task work to draft —
+  surfacing for follow-up; not in this commit's scope.
+
+---
+
 ## 2026-04-26 — B2 Yo-Yo HTTP client (mock-only per operator guardrail)
 
 - **B2 implemented end-to-end as code + tests, zero live

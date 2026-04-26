@@ -3,15 +3,40 @@ schema: foundry-cluster-manifest-v1
 cluster_name: project-slm
 cluster_branch: cluster/project-slm
 created: 2026-04-23
-backfilled: 2026-04-26
+backfilled: 2026-04-26 (manifest schema), 2026-04-26 (triad per Doctrine v0.0.4)
 state: active
+
+triad:
+  vendor:
+    - repo: pointsav-monorepo
+      path: ./
+      upstream: vendor/pointsav-monorepo
+      focus: service-slm/ (Doorman + slm-core + slm-doorman + slm-doorman-server)
+  customer:
+    - fleet_deployment_repo: vendor/pointsav-fleet-deployment
+      catalog_subfolder: vault-privategit-source/
+      tenant: pointsav
+      purpose: documentation-of-Doorman-installation-on-the-workspace-VM
+      status: leg-pending — Task to draft GUIDE-doorman-deployment.md
+  deployment:
+    - path: /srv/foundry  # vault-privategit-source-1 (the workspace itself)
+      tenant: pointsav
+      shape: long-running-service
+      shared_with: [project-data]   # workspace VM hosts both Ring 1 (project-data) and Ring 2+3 (project-slm) services
+      runtime_artifacts:
+        - /usr/local/bin/llama-server (v0.0.11)
+        - /etc/systemd/system/local-slm.service (v0.0.11)
+        - /var/lib/local-slm/weights/Olmo-3-1125-7B-Think-Q4_K_M.gguf
+        - (planned) /usr/local/bin/slm-doorman-server + local-doorman.service
+      status: tier-A-live; Doorman deployment pending K4-equivalent
+
 clones:
   - repo: pointsav-monorepo
     role: primary
     path: ./
     upstream: vendor/pointsav-monorepo
-deployment_instance: null
 trajectory_capture: pending
+adapter_target: cluster-project-slm
 ---
 
 # Cluster manifest — project-slm
