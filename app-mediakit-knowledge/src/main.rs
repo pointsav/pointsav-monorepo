@@ -6,9 +6,11 @@ use anyhow::{bail, Result};
 use clap::{Parser, Subcommand};
 use std::net::SocketAddr;
 use std::path::PathBuf;
+use std::sync::Arc;
 use tokio::signal;
 use tracing_subscriber::EnvFilter;
 
+use app_mediakit_knowledge::search;
 use app_mediakit_knowledge::server::{router, AppState};
 
 #[derive(Parser)]
@@ -38,6 +40,16 @@ enum Command {
             default_value = "/srv/foundry/citations.yaml"
         )]
         citations_yaml: PathBuf,
+
+        /// Path to the persistent state directory (search index, future KV).
+        /// Per Track D `guide-provision-node.md`, the canonical production
+        /// location is `/var/lib/local-knowledge/state`.
+        #[arg(
+            long,
+            env = "WIKI_STATE_DIR",
+            default_value = "/var/lib/local-knowledge/state"
+        )]
+        state_dir: PathBuf,
     },
 }
 
@@ -55,11 +67,17 @@ async fn main() -> Result<()> {
             content_dir,
             bind,
             citations_yaml,
-        } => serve(content_dir, bind, citations_yaml).await,
+            state_dir,
+        } => serve(content_dir, bind, citations_yaml, state_dir).await,
     }
 }
 
-async fn serve(content_dir: PathBuf, bind: SocketAddr, citations_yaml: PathBuf) -> Result<()> {
+async fn serve(
+    content_dir: PathBuf,
+    bind: SocketAddr,
+    citations_yaml: PathBuf,
+    state_dir: PathBuf,
+) -> Result<()> {
     if !content_dir.is_dir() {
         bail!(
             "content directory does not exist or is not a directory: {}",
@@ -68,14 +86,22 @@ async fn serve(content_dir: PathBuf, bind: SocketAddr, citations_yaml: PathBuf) 
     }
     tracing::info!(
         content_dir = %content_dir.display(),
+        state_dir = %state_dir.display(),
         citations_yaml = %citations_yaml.display(),
         %bind,
         "starting wiki engine"
     );
 
+    // Phase 3 Step 3.1+3.2 — build the search index on startup. Tree walk
+    // over content_dir; on-disk index at <state_dir>/search/.
+    tracing::info!("building search index");
+    let search_index = search::build_index(&content_dir, &state_dir).await?;
+    tracing::info!("search index ready");
+
     let state = AppState {
         content_dir,
         citations_yaml,
+        search: Arc::new(search_index),
     };
     let app = router(state);
     let listener = tokio::net::TcpListener::bind(bind).await?;

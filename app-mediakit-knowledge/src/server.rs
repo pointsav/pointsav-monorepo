@@ -15,13 +15,14 @@
 //! The existing `chrome()` function is retained for the index page.
 
 use axum::{
-    extract::{Path, State},
+    extract::{Path, Query, State},
     http::{header, HeaderValue, StatusCode},
     response::{IntoResponse, Response},
     routing::{get, post},
     Json, Router,
 };
 use maud::{html, Markup, PreEscaped, DOCTYPE};
+use serde::Deserialize;
 use serde_json::json;
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -31,6 +32,7 @@ use crate::assets::StaticAsset;
 use crate::error::WikiError;
 use crate::jsonld::jsonld_for_topic;
 use crate::render::{extract_headings, inject_edit_pencils, parse_page, render_html_raw, Frontmatter};
+use crate::search::{search as run_search, SearchIndex};
 
 #[derive(Clone)]
 pub struct AppState {
@@ -39,6 +41,10 @@ pub struct AppState {
     /// Defaults to `/srv/foundry/citations.yaml`; overridable via
     /// `--citations-yaml` / `WIKI_CITATIONS_YAML`.
     pub citations_yaml: PathBuf,
+    /// Phase 3 Step 3.2: tantivy full-text search index. Built on
+    /// startup from a tree walk of `content_dir`; reindexed on every
+    /// successful edit / create. Clone-cheap (Arc-wrapped internals).
+    pub search: Arc<SearchIndex>,
 }
 
 pub fn router(state: AppState) -> Router {
@@ -65,11 +71,89 @@ pub fn router(state: AppState) -> Router {
         // wires the Doorman MCP server)
         .route("/api/doorman/complete", post(doorman_stub))
         .route("/api/doorman/instruct", post(doorman_stub))
+        // Phase 3 Step 3.2 — full-text search HTML page over the tantivy index
+        .route("/search", get(search_page))
         .with_state(Arc::new(state))
 }
 
 async fn healthz() -> &'static str {
     "ok"
+}
+
+#[derive(Deserialize)]
+struct SearchQueryParams {
+    #[serde(default)]
+    q: String,
+}
+
+/// Phase 3 Step 3.2 — `GET /search?q=...` HTML results page.
+///
+/// Empty query → empty results + the search form. Renders within the
+/// existing `chrome()` shell for layout consistency with the index page.
+/// Phase 3.x may upgrade to autocomplete + image previews per UX-DESIGN.md
+/// §1 item 13; Phase 3.2 ships the basic form + ranked result list.
+async fn search_page(
+    State(state): State<Arc<AppState>>,
+    Query(params): Query<SearchQueryParams>,
+) -> Result<Markup, WikiError> {
+    let query = params.q.trim().to_string();
+    let hits = if query.is_empty() {
+        Vec::new()
+    } else {
+        run_search(&state.search, &query, 25)?
+    };
+
+    Ok(chrome(
+        if query.is_empty() {
+            "Search".to_string()
+        } else {
+            format!("Search: {query}")
+        }
+        .as_str(),
+        html! {
+            h1 { "Search" }
+            form.search-form action="/search" method="get" {
+                input
+                    type="search"
+                    name="q"
+                    value=(query)
+                    placeholder="Search TOPICs"
+                    autocomplete="off"
+                    autofocus?[query.is_empty()];
+                button type="submit" { "Search" }
+            }
+            @if !query.is_empty() {
+                @if hits.is_empty() {
+                    p.search-empty {
+                        "No results for "
+                        em { (query) }
+                        "."
+                    }
+                } @else {
+                    p.search-summary {
+                        (hits.len())
+                        " result" @if hits.len() != 1 { "s" }
+                        " for "
+                        em { (query) }
+                        "."
+                    }
+                    ol.search-results {
+                        @for hit in &hits {
+                            li.search-hit {
+                                a.search-hit-title href={ "/wiki/" (hit.slug) } {
+                                    (hit.title)
+                                }
+                                span.search-hit-slug { (hit.slug) }
+                                @if !hit.snippet.is_empty() {
+                                    p.search-hit-snippet { (hit.snippet) }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+    ))
 }
 
 /// Stub handler for Phase 2 Step 6 Doorman endpoints.
@@ -429,14 +513,18 @@ mod tests {
     use http_body_util::BodyExt;
     use tower::ServiceExt;
 
-    async fn fixture_state() -> (AppState, tempfile::TempDir) {
+    async fn fixture_state() -> (AppState, tempfile::TempDir, tempfile::TempDir) {
         let dir = tempfile::tempdir().unwrap();
+        let state_dir = tempfile::tempdir().unwrap();
         tokio::fs::write(
             dir.path().join("topic-test.md"),
             "---\ntitle: Test Topic\n---\n# Heading\n\nbody with [[Other]] link.\n",
         )
         .await
         .unwrap();
+        let index = crate::search::build_index(dir.path(), state_dir.path())
+            .await
+            .unwrap();
         (
             AppState {
                 content_dir: dir.path().to_path_buf(),
@@ -445,14 +533,16 @@ mod tests {
                 // Server tests do not exercise /api/citations so the missing
                 // file never triggers a load.
                 citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
+                search: Arc::new(index),
             },
             dir,
+            state_dir,
         )
     }
 
     #[tokio::test]
     async fn healthz_responds_ok() {
-        let (state, _dir) = fixture_state().await;
+        let (state, _dir, _state_dir) = fixture_state().await;
         let app = router(state);
         let resp = app
             .oneshot(Request::builder().uri("/healthz").body(Body::empty()).unwrap())
@@ -463,7 +553,7 @@ mod tests {
 
     #[tokio::test]
     async fn renders_known_page() {
-        let (state, _dir) = fixture_state().await;
+        let (state, _dir, _state_dir) = fixture_state().await;
         let app = router(state);
         let resp = app
             .oneshot(
@@ -483,7 +573,7 @@ mod tests {
 
     #[tokio::test]
     async fn returns_404_for_unknown_page() {
-        let (state, _dir) = fixture_state().await;
+        let (state, _dir, _state_dir) = fixture_state().await;
         let app = router(state);
         let resp = app
             .oneshot(
@@ -499,7 +589,7 @@ mod tests {
 
     #[tokio::test]
     async fn rejects_path_traversal() {
-        let (state, _dir) = fixture_state().await;
+        let (state, _dir, _state_dir) = fixture_state().await;
         let app = router(state);
         let resp = app
             .oneshot(
@@ -519,7 +609,7 @@ mod tests {
     /// Read / Edit / View history tabs (items 1 and 2 in the UX inventory).
     #[tokio::test]
     async fn wiki_page_has_navigation_tabs() {
-        let (state, _dir) = fixture_state().await;
+        let (state, _dir, _state_dir) = fixture_state().await;
         let app = router(state);
         let resp = app
             .oneshot(
@@ -543,7 +633,7 @@ mod tests {
     /// Verify that the tagline appears below the page title (item 9).
     #[tokio::test]
     async fn wiki_page_has_tagline() {
-        let (state, _dir) = fixture_state().await;
+        let (state, _dir, _state_dir) = fixture_state().await;
         let app = router(state);
         let resp = app
             .oneshot(
@@ -565,7 +655,7 @@ mod tests {
     /// Verify that the IVC masthead band placeholder renders on every TOPIC.
     #[tokio::test]
     async fn wiki_page_has_ivc_masthead_band() {
-        let (state, _dir) = fixture_state().await;
+        let (state, _dir, _state_dir) = fixture_state().await;
         let app = router(state);
         let resp = app
             .oneshot(
@@ -588,15 +678,20 @@ mod tests {
     #[tokio::test]
     async fn wiki_page_renders_hatnote() {
         let dir = tempfile::tempdir().unwrap();
+        let state_dir = tempfile::tempdir().unwrap();
         tokio::fs::write(
             dir.path().join("with-hatnote.md"),
             "---\ntitle: Hatnote Test\nhatnote: \"See also the companion page.\"\n---\n# Body\n",
         )
         .await
         .unwrap();
+        let index = crate::search::build_index(dir.path(), state_dir.path())
+            .await
+            .unwrap();
         let state = AppState {
             content_dir: dir.path().to_path_buf(),
             citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
+            search: Arc::new(index),
         };
         let app = router(state);
         let resp = app
@@ -624,7 +719,7 @@ mod tests {
     /// Verify that the reader density toggle buttons render (UX-DESIGN.md §4.6).
     #[tokio::test]
     async fn wiki_page_has_density_toggle() {
-        let (state, _dir) = fixture_state().await;
+        let (state, _dir, _state_dir) = fixture_state().await;
         let app = router(state);
         let resp = app
             .oneshot(
@@ -646,15 +741,20 @@ mod tests {
     #[tokio::test]
     async fn wiki_page_has_edit_pencils() {
         let dir = tempfile::tempdir().unwrap();
+        let state_dir = tempfile::tempdir().unwrap();
         tokio::fs::write(
             dir.path().join("sections.md"),
             "---\ntitle: Sections\n---\n## First section\n\nText.\n\n## Second section\n\nMore.\n",
         )
         .await
         .unwrap();
+        let index = crate::search::build_index(dir.path(), state_dir.path())
+            .await
+            .unwrap();
         let state = AppState {
             content_dir: dir.path().to_path_buf(),
             citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
+            search: Arc::new(index),
         };
         let app = router(state);
         let resp = app
@@ -682,15 +782,20 @@ mod tests {
     #[tokio::test]
     async fn wiki_page_renders_categories() {
         let dir = tempfile::tempdir().unwrap();
+        let state_dir = tempfile::tempdir().unwrap();
         tokio::fs::write(
             dir.path().join("cats.md"),
             "---\ntitle: Cats\ncategories:\n  - Alpha\n  - Beta\n---\n# Body\n",
         )
         .await
         .unwrap();
+        let index = crate::search::build_index(dir.path(), state_dir.path())
+            .await
+            .unwrap();
         let state = AppState {
             content_dir: dir.path().to_path_buf(),
             citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
+            search: Arc::new(index),
         };
         let app = router(state);
         let resp = app

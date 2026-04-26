@@ -9,32 +9,40 @@
 //! a known-stable ID (`ni-51-102`) gives meaningful end-to-end confidence that
 //! the YAML is being parsed correctly.
 
+use app_mediakit_knowledge::search;
 use app_mediakit_knowledge::server::{router, AppState};
 use axum::body::Body;
 use axum::http::{Request, StatusCode};
 use http_body_util::BodyExt;
 use std::path::PathBuf;
+use std::sync::Arc;
 use tower::ServiceExt;
 
 /// Build a minimal AppState for citation tests.
 ///
 /// `content_dir` is a scratch directory (no pages needed for this test path).
 /// `citations_yaml` points to the real workspace registry.
-async fn citation_state() -> (AppState, tempfile::TempDir) {
+async fn citation_state() -> (AppState, tempfile::TempDir, tempfile::TempDir) {
     let dir = tempfile::tempdir().unwrap();
+    let state_dir = tempfile::tempdir().unwrap();
+    let index = search::build_index(dir.path(), state_dir.path())
+        .await
+        .unwrap();
     (
         AppState {
             content_dir: dir.path().to_path_buf(),
             citations_yaml: PathBuf::from("/srv/foundry/citations.yaml"),
+            search: Arc::new(index),
         },
         dir,
+        state_dir,
     )
 }
 
 /// `GET /api/citations` returns HTTP 200 with Content-Type application/json.
 #[tokio::test]
 async fn get_citations_returns_json() {
-    let (state, _dir) = citation_state().await;
+    let (state, _dir, _state_dir) = citation_state().await;
     let app = router(state);
     let resp = app
         .oneshot(
@@ -66,7 +74,7 @@ async fn get_citations_returns_json() {
 /// `GET /api/citations` returns a JSON array (not null, not an object).
 #[tokio::test]
 async fn get_citations_returns_array() {
-    let (state, _dir) = citation_state().await;
+    let (state, _dir, _state_dir) = citation_state().await;
     let app = router(state);
     let resp = app
         .oneshot(
@@ -101,7 +109,7 @@ async fn get_citations_returns_array() {
 /// present in `/srv/foundry/citations.yaml`.
 #[tokio::test]
 async fn get_citations_contains_ni_51_102() {
-    let (state, _dir) = citation_state().await;
+    let (state, _dir, _state_dir) = citation_state().await;
     let app = router(state);
     let resp = app
         .oneshot(
@@ -131,7 +139,7 @@ async fn get_citations_contains_ni_51_102() {
 /// Every entry in the array has at minimum `id` and `title` string fields.
 #[tokio::test]
 async fn every_citation_entry_has_id_and_title() {
-    let (state, _dir) = citation_state().await;
+    let (state, _dir, _state_dir) = citation_state().await;
     let app = router(state);
     let resp = app
         .oneshot(
