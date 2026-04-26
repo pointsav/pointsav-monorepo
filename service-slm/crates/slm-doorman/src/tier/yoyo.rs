@@ -346,6 +346,7 @@ mod tests {
             max_tokens: Some(20),
             temperature: Some(0.0),
             sanitised_outbound: true,
+            tier_c_label: None,
         }
     }
 
