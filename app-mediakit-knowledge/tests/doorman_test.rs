@@ -3,29 +3,37 @@
 //! Verifies that `POST /api/doorman/complete` and `POST /api/doorman/instruct`
 //! both return `501 Not Implemented` with the expected JSON body shape.
 
+use app_mediakit_knowledge::search;
 use app_mediakit_knowledge::server::{router, AppState};
 use axum::body::Body;
 use axum::http::{Request, StatusCode};
 use http_body_util::BodyExt;
 use std::path::PathBuf;
+use std::sync::Arc;
 use tower::ServiceExt;
 
 /// Build a minimal AppState for doorman stub tests.
-async fn doorman_state() -> (AppState, tempfile::TempDir) {
+async fn doorman_state() -> (AppState, tempfile::TempDir, tempfile::TempDir) {
     let dir = tempfile::tempdir().unwrap();
+    let state_dir = tempfile::tempdir().unwrap();
+    let index = search::build_index(dir.path(), state_dir.path())
+        .await
+        .unwrap();
     (
         AppState {
             content_dir: dir.path().to_path_buf(),
             citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
+            search: Arc::new(index),
         },
         dir,
+        state_dir,
     )
 }
 
 /// `POST /api/doorman/complete` returns 501 Not Implemented.
 #[tokio::test]
 async fn doorman_complete_returns_501() {
-    let (state, _dir) = doorman_state().await;
+    let (state, _dir, _state_dir) = doorman_state().await;
     let app = router(state);
     let resp = app
         .oneshot(
@@ -49,7 +57,7 @@ async fn doorman_complete_returns_501() {
 /// `POST /api/doorman/instruct` returns 501 Not Implemented.
 #[tokio::test]
 async fn doorman_instruct_returns_501() {
-    let (state, _dir) = doorman_state().await;
+    let (state, _dir, _state_dir) = doorman_state().await;
     let app = router(state);
     let resp = app
         .oneshot(
@@ -75,7 +83,7 @@ async fn doorman_instruct_returns_501() {
 #[tokio::test]
 async fn doorman_stubs_return_correct_json_shape() {
     for path in ["/api/doorman/complete", "/api/doorman/instruct"] {
-        let (state, _dir) = doorman_state().await;
+        let (state, _dir, _state_dir) = doorman_state().await;
         let app = router(state);
         let resp = app
             .oneshot(
