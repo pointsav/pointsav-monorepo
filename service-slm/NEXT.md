@@ -56,14 +56,21 @@
 
 ## Queue
 
-- **AS-2 grammar artefact** — author the `llguidance` Lark
-  grammar at `vendor/pointsav-monorepo/service-content/schemas/banned-vocab.lark`
-  (top-level rule `response`; validate with Python `lark` before
-  shipping; JSON-Schema sibling + usage `.md` if needed). Per
-  Master's 2026-04-27 v0.1.26 ack of the AS-2 library decision:
-  3-4 week implementation timeline, develops independently of
-  project-language Phase 1B. Surface to Master via outbox only
-  if anything changes that would affect the contract.
+- **AS-2 implementation — scope correction pending Master
+  ack.** Sonnet research (sub-agent chunk #1, 2026-04-27)
+  found the `llguidance` Rust crate is decode-time only and
+  has no integration point in our HTTP-relay Doorman shape.
+  Corrected scope: thin wire-format adapter — Tier B sends
+  Lark grammars in `extra_body.structured_outputs.grammar`
+  (vLLM ≥0.12); Tier A accepts only GBNF / JSON Schema (not
+  Lark) per llama-server HTTP API; Tier C no grammar; optional
+  llguidance dep for Doorman-side Lark validation only.
+  Surfaced to Master via outbox 2026-04-27 with two questions
+  (Tier A grammar asymmetry; vLLM version target). HOLD all
+  code work until Master ack. Note: authoring of the actual
+  Lark grammar file (`service-content/schemas/banned-vocab.lark`)
+  is project-language Phase 1B scope per Master's 2026-04-27
+  v0.1.26 brief — NOT this cluster's work.
 - **ARCH/DEVELOPMENT.md zero-container drift FOURTH-pass —
   Master sign-off needed.** Third-pass scope (§5.10 SkyPilot
   row + §2 Bootstrap items 3+4) was cleared by commit
