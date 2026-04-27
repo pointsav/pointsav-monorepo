@@ -146,7 +146,7 @@ Last updated: 2026-04-27.
 | moonshot-network | Scaffold-coded | moonshot | 4 files |
 | moonshot-protocol | Scaffold-coded | moonshot | 4 files |
 | moonshot-sel4-vmm | Scaffold-coded | moonshot | 4 files |
-| moonshot-toolkit | Scaffold-coded | moonshot | 5 files; Rust-only build orchestrator per repo CLAUDE.md |
+| moonshot-toolkit | Active | moonshot | Activated 2026-04-27 per framework §9 (Master Option A lean + operator confirmation); workspace member; Phase 1B Rust-only build orchestrator replacing Microkit Python/CMake per MEMO §7; CLI rewrite (validate/plan/build) lands in subsequent commits this AUTO session; actual seL4 cross-compile + QEMU AArch64 boot is FUTURE task #14 |
 
 ## Tool (`tool-*`)
 
@@ -182,10 +182,10 @@ Last updated: 2026-04-27.
 
 ---
 
-## Summary (2026-04-27)
+## Summary (2026-04-27 — afternoon)
 
-- **Active:** 6 (`app-console-bookkeeper`, `app-workplace-presentation`, `app-workplace-proforma`, `service-extraction`, `system-core`, `system-ledger`)
-- **Scaffold-coded:** 52
+- **Active:** 7 (`app-console-bookkeeper`, `app-workplace-presentation`, `app-workplace-proforma`, `service-extraction`, `system-core`, `system-ledger`, `moonshot-toolkit`)
+- **Scaffold-coded:** 51
 - **Reserved-folder:** 36
 - **Defect:** 0
 - **Not-a-project:** 2 (`discovery-queue`, `target`)
