@@ -11,7 +11,9 @@
 
 pub mod checkpoint;
 pub mod inclusion_proof;
-pub use checkpoint::{Checkpoint, NoteSignature, SignedCheckpoint};
+pub use checkpoint::{
+    Checkpoint, CheckpointInclusionError, NoteSignature, SignedCheckpoint,
+};
 pub use inclusion_proof::{
     rfc9162_internal_hash, rfc9162_leaf_hash, InclusionProof, InclusionVerifyError,
 };
