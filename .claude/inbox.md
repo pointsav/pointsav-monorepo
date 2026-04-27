@@ -15,4 +15,4 @@ If this inbox accumulates more than 5 pending items, post a NOTAM
 (per Doctrine §VI) and flag in Master's inbox.
 
 
-*(no pending messages — Master 2026-04-27 v0.1.26 AS-2 ack archived 2026-04-27 by Task Claude; AS-1..AS-7 + AS-2 history in inbox-archive.md)*
+*(no pending messages — Master 2026-04-27 v0.1.30 sub-agent-tier-discipline codification archived 2026-04-27 by Task Claude; informational; AS-1..AS-7 + AS-2 + v0.1.30 history in inbox-archive.md)*
