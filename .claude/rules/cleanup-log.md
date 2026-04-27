@@ -92,6 +92,146 @@ Newest on top. Append a dated block when a session includes meaningful cleanup w
 
 ---
 
+## 2026-04-27 — Master ratification cascade (v0.1.31 / v0.1.33 / v0.1.36 / v0.1.42)
+
+Single-pass housekeeping: archived 5 inbox messages from
+Master in chronological order; reset placeholder; updated
+existing tasks #1/#4/#13/#14/#15/#16; added new tasks #17-#20
+for SLM operationalization plan items PS.1/PS.2/PS.4/PS.5.
+
+### v0.1.31 (18:55Z) — Reverse-Funnel Editorial Pattern
+
+Doctrine claim #35 ratified. Cluster Tasks no longer
+self-refine wiki content; ship bulk drafts forward to
+project-language (editorial gateway). New input port at
+`~/Foundry/clones/project-slm/.claude/drafts-outbound/`.
+Frontmatter contract: `foundry-draft-v1`. project-language
+enforces register / banned-vocab / BCSC / bilingual /
+citation-ID resolution; cluster authors author bulk content
+only. Apprenticeship corpus emits JSONL `draft-created`
+event; project-language emits `draft-refined`; originating
+cluster emits `creative-edited` on Creative Contributor edit.
+Tasks have explicit write permission to
+`~/Foundry/data/training-corpus/apprenticeship/prose-edit/<tenant>/<draft-id>.jsonl`
+per CLAUDE.md §11 v0.1.31 amendment.
+
+### v0.1.31 (19:00Z) — AS-2 second consumer
+
+service-language editorial gateway is the second primary
+AS-2 consumer (alongside service-proofreader). Volume:
+70-100 drafts/week × 7 clusters × 5 sessions/week = dominant
+Doorman-mediated load once project-language Task starts
+sweeping. Per-request grammar passing accommodates both
+consumers trivially; no design change anticipated.
+
+### v0.1.33 (19:55Z) — BIG ACK — four tracks ratified
+
+(A) **AS-2 scope correction RATIFIED.** Sonnet finding
+right; corrected scope (wire-format adapter, not crate
+integration) right; 1-2 weeks realistic. Q1: accept Tier A
+grammar asymmetry — apprentice on Tier A unconstrained;
+Lark grammars are EDITORIAL floor on Tier B (per Doctrine
+claim #35). Q2: pin to vLLM ≥0.12 envelope
+(`extra_body.structured_outputs.grammar`); CONTRACT.md
+MINOR bump 0.0.1 → 0.1.0.
+
+(B) **GUIDE-doorman Q1-Q4 answered.** Q1: catalog name
+`local-doorman/` (matches existing
+`infrastructure/local-doorman/` + running
+`local-doorman.service` unit; symmetric with `local-fs/`,
+`local-proofreader/`, `local-knowledge/` precedents). Q2:
+wire `SLM_AUDIT_DIR` in slm-doorman-server::main.rs (~10
+lines; default `/var/lib/slm-doorman/audit/` per unit;
+multi-instance override-friendly). Q3: GUIDE shows both
+tenant defaults with operator-picks-per-deployment note.
+Q4: same deployment as `local-doorman.service` — unit name
+throughout GUIDE is `local-doorman.service`. Refined draft
+go-ahead: apply Q1-Q4 answers; cross-repo handoff via
+outbox mechanism per CLAUDE.md §11 to
+`customer/woodfine-fleet-deployment/local-doorman/GUIDE-doorman-deployment.md`.
+
+(C) **5th-pass drift bundle authorized** — initially framed
+Master-scope (corrected in v0.1.36 to cluster-scope).
+
+(D) **Three sub-agent briefs A/B/C RATIFIED.** Pass §1A
+confidence gate. Cluster-scope so not in workspace queue.
+Dispatch authority: operator green-light to this Task
+session via Agent tool with `model:"sonnet"`. A first
+(factory dependency); B+C independent after; foreground+
+serial per §1A rule 2.
+
+### v0.1.36 (20:35Z) — CLUSTER scope correction
+
+Correction to v0.1.33 §C framing. The 8 zero-container drift
+sites (3 from 4th-pass + 5 from 5th-pass) live in
+`service-slm/ARCHITECTURE.md` + `DEVELOPMENT.md` — files
+inside this cluster's clone. Master editing them at
+workspace tier crosses layer scope per CLAUDE.md §11 action
+matrix. Bundle stays pre-authorized; cluster Task dispatches
+the prose-edit when operator green-lights, with the per-site
+replacement text from earlier outbox messages.
+
+### v0.1.42 (22:50Z) — SLM OPERATIONALIZATION PLAN
+
+`conventions/service-slm-operationalization-plan.md` ratified.
+This cluster on critical path. Healing-effect framing: once
+service-slm contributes alongside Claude, errors heal via
+verdict signing → corpus → continued LoRA training loop.
+Sonnet output today is acceptable because the loop heals it
+tomorrow. **Prioritize Sonnet over Opus on bulk work.** Opus
+stays for architectural decisions.
+
+Eight items (PS.1..PS.8) prioritized:
+- PS.1 (Opus, ~30 min, GATE) — Yo-Yo deploy readiness
+- PS.2 (Sonnet, ~2hr) — Multi-LoRA + structured-outputs
+  verification on Yo-Yo (resolves Risk 1)
+- PS.3 (Sonnet, ~1-2 weeks) — AS-2 wire-format adapter
+- PS.4 (Sonnet, ~3-5 days) — A-1 Doorman audit_proxy +
+  audit_capture endpoints (parallel with PS.3)
+- PS.5 (Sonnet, ~1 week) — AS-6/AS-7 P1 production routing
+  on version-bump-manifest task type
+- PS.6 (Sonnet × 3, ~9-12hr total) — three coverage briefs
+- PS.7 (Sonnet, ~30 min) — 4th+5th-pass prose-edit
+- PS.8 (Opus + Sonnet, ~1 hour) — GUIDE-doorman handoff
+
+Critical sequence: PS.1 → Yo-Yo MIN deploy → PS.2 → PS.4
+parallel → PS.3 → PS.5. Yo-Yo MIN: A100 80GB preemptible
+(~$0.50-0.70/hr); 30-min daily window initially → ~$7-8/month;
+fixed UTC hour (e.g., 02:00 UTC off-peak); quality gate
+project-language verdict accept-rate ≥0.6 over rolling 50 →
+continue, below → abort.
+
+### Cross-cluster dependencies (recorded)
+
+- A-4 (project-language adapter) depends on PS.4
+- A-5 (project-data anchor-emitter audit-ledger module-id)
+  depends on PS.4
+- service-language refinement at scale waits on Tier B
+  (Yo-Yo) + AS-2 to scale beyond hand-refinement
+
+### Task list state
+
+Updated #1 (PS.3), #4 (PS.8), #13 (PS.7), #14 (PS.6), #16
+(folded into PS.3 step 6). Closed #15 (GUIDE refinement Q1-Q4
+answered). Added #17 (PS.1), #18 (PS.2), #19 (PS.4),
+#20 (PS.5). Outbox has 6 messages from prior session, all
+acked by Master in v0.1.33/v0.1.36; migration to
+outbox-archive deferred to next housekeeping pass.
+
+### NEXT.md rewritten
+
+Right-now section captures the v0.1.42 plan; Critical sequence
+explicit; Cross-cluster dependencies listed. Pre-authorized
+for operator green-light: PS.7 (fastest), PS.6 (highest test-
+coverage value). PS.1 startable in this Opus session; not
+sub-agent-deferrable.
+
+### No code changes
+
+Tests still 46/46. Working tree clean post-commit.
+
+---
+
 ## 2026-04-27 — v0.1.30 codifies sub-agent-as-tier-discipline (this cluster cited as operational precedent)
 
 - **Master message archived (workspace v0.1.30, 2026-04-27T17:00:00Z).**

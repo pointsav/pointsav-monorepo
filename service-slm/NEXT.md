@@ -1,42 +1,85 @@
 # NEXT.md — service-slm
 
-> Last updated: 2026-04-27
+> Last updated: 2026-04-27 (post-v0.1.42 SLM operationalization plan)
 > Read at session start. Update before session end so the next
 > session knows where to pick up.
 
 ---
 
-## Right now
+## Right now — SLM Operationalization Plan (v0.1.42, ratified)
 
-- **AS-1 → AS-4 landed** — Apprenticeship Substrate routing
-  endpoints live in `slm-doorman` + `slm-doorman-server`,
-  mock-tested. See "Recently done" section for per-stage
-  detail. End-to-end verification waits on Master shipping
-  AS-5 (helper scripts) plus the systemd unit redeployment so
-  `SLM_APPRENTICESHIP_ENABLED=true` lands on the workspace VM.
-- **WAITING — workspace VM Doorman redeploy.** Master's
-  2026-04-26T14:00 cross-cluster inbox note recorded that the
-  systemd unit was delivered as v0.1.13: `local-doorman.service`
-  serves at `http://127.0.0.1:9080` from B2-era commit
-  `2e317ab` (community-tier mode). After AS-1..AS-4 a rebuild
-  from current `cluster/project-slm` HEAD plus
-  `SLM_APPRENTICESHIP_ENABLED=true` in the unit Environment=
-  block is required before the Doorman serves apprenticeship
-  traffic. Workspace-tier scope (Doctrine §V VM sysadmin).
-- **WAITING — Master holds AS-5** — `bin/apprentice.sh` (round-
-  trip helper) and `bin/capture-edit.py` extension (post-commit
-  shadow firing). Per Master's brief: "Don't write these
-  yourself." Once AS-5 lands, every cluster Task Claude on the
-  VM exercises the apprentice on every code-shaped commit.
-- **GUIDE-doorman-deployment.md (Customer-tier draft)** —
-  Master's manifest update names this as Task work in the
-  customer-tier "leg-pending" item. Drafts under
-  `customer/woodfine-fleet-deployment/<deployment-name>/`.
-  Cross-repo handoff per workspace `CLAUDE.md` §11 — needs
-  outbox to Master to land in `vendor/pointsav-fleet-deployment`
-  catalog first; Task here drafts the content per the §9
-  workspace-root variant of the §11 outbox pattern. Hold until
-  destination catalog subfolder is provisioned.
+This cluster is on the critical path for service-slm
+productionization. Eight prioritized items (PS.1..PS.8) per
+`conventions/service-slm-operationalization-plan.md`.
+Healing-effect framing per operator: prioritize Sonnet over
+Opus on bulk work; Opus stays for architectural decisions.
+
+**Pre-authorized for operator green-light (no further Master
+ratification needed):**
+
+- **PS.7 — 4th+5th-pass zero-container prose-edit** (~30 min).
+  Sonnet sub-agent. 8 sites total per per-site replacement
+  text in this cluster's outbox. Single commit on
+  `cluster/project-slm` via `bin/commit-as-next.sh`. Fastest
+  cluster-internal cleanup.
+- **PS.6 — Three coverage briefs A/B/C** (~9-12hr Sonnet
+  total). A first (factory dependency for B/C); B+C
+  independent after. http.rs test factory (~3-4hr; ≥10 tests),
+  tier/local.rs unit tests (~1-2hr; ≥4 tests), VerdictOutcome
+  Reject+DeferTierC dispatcher (~1hr; 2 tests).
+
+**Ready to start in this Opus session (not Sonnet-deferrable):**
+
+- **PS.1 — Yo-Yo deploy readiness review** (~30 min, Opus
+  judgment, GATE). Review `infrastructure/slm-yoyo/tofu/` for
+  post-2025 OpenTofu / GCE A100 changes; surface blockers via
+  outbox. Yo-Yo MIN parameters: A100 80GB preemptible
+  (~$0.50-0.70/hr); 30-min daily window → ~$7-8/month;
+  quality gate project-language verdict accept-rate ≥0.6 over
+  rolling 50.
+
+**Critical sequence:**
+
+1. PS.1 (Opus) → surface deploy blockers OR signal ready
+2. Yo-Yo MIN deploy (operator-gate; Master orchestrates)
+3. PS.2 (Sonnet test, ~2hr) — verify multi-LoRA + structured-
+   outputs combo on Yo-Yo; resolves Risk 1
+4. PS.4 (Sonnet, ~3-5 days) — A-1 audit_proxy + audit_capture
+   endpoints; **parallel** with PS.2 (don't wait)
+5. PS.3 (Sonnet, ~1-2 weeks) — AS-2 wire-format adapter; only
+   after PS.2 confirms combo
+6. PS.5 (Sonnet, ~1 week) — P1 production routing on
+   version-bump-manifest once corpus accumulates threshold
+7. PS.8 (Opus + Sonnet, ~1hr) — GUIDE-doorman cross-repo
+   handoff to local-doorman/ catalog (bounded; can run
+   parallel to PS.3+)
+
+## Cross-cluster dependencies
+
+- A-4 (project-language adapter) DEPENDS ON PS.4
+- A-5 (project-data anchor-emitter audit-ledger module-id)
+  DEPENDS ON PS.4
+- service-language refinement at scale (project-language
+  editorial gateway, dominant Doorman load 70-100 drafts/wk
+  × 7 clusters × 5 sessions/wk per Doctrine claim #35) waits
+  on Tier B (Yo-Yo) + AS-2 to scale beyond hand-refinement
+
+## v0.1.31 / v0.1.33 / v0.1.36 / v0.1.42 ratifications captured
+
+- AS-2 scope correction RATIFIED (Q1: Tier A grammar
+  asymmetry accepted; Q2: vLLM ≥0.12 envelope; CONTRACT.md
+  MINOR bump 0.0.1→0.1.0). Two consumers per v0.1.31:
+  service-proofreader + service-language editorial gateway.
+- GUIDE-doorman Q1-Q4 answered (Q1: catalog `local-doorman/`;
+  Q2: wire SLM_AUDIT_DIR; Q3: both tenants with operator-
+  picks note; Q4: same deployment as local-doorman.service).
+- 8-site zero-container drift bundle authorized (4th+5th-pass
+  combined; cluster-scope per v0.1.36 correction).
+- Three coverage briefs A/B/C ratified (cluster-scope, not
+  workspace queue; operator green-lights dispatch).
+- Reverse-Funnel Editorial Pattern (Doctrine claim #35);
+  drafts-outbound input port at
+  `~/Foundry/clones/project-slm/.claude/drafts-outbound/`.
 
 ## Earlier-stage items
 
