@@ -96,6 +96,73 @@ Newest on top. Append a dated block when a session includes meaningful cleanup w
 
 ---
 
+## 2026-04-27 — Task `cluster/project-system` (Phase 1A.3 module impls + benchmarks)
+
+Continuation of the 2026-04-27 entry below; this session landed
+five more commits filling out the system-ledger crate after the
+skeleton commit.
+
+- **`ae3dbb9`** — cache.rs + revocation.rs implementations.
+  CheckpointCache: LRU bounded, lookup by tree_size + by
+  root_hash, eviction at capacity. RevocationSet: HashSet for O(1)
+  membership + sidecar HashMap for audit detail; idempotent replay.
+  12 tests (7 cache + 5 revocation).
+- **`c378eaa`** — apex.rs (apex history + post-handover invariant).
+  ApexEntry { name, pubkey, effective_from, effective_until };
+  ApexHistory with record_genesis / apply_handover / current /
+  check_height. ApexVerdict: NoApex / Single / Handover. Closes
+  the apex-history half of inbox brief Phase 1A item 4. 10 apex
+  tests (22 total).
+- **`f614ca2`** — witness.rs (ssh-keygen -Y verify wrapper).
+  Real shellout to /usr/bin/ssh-keygen via std::process::Command;
+  tempfiles for signature + allowed_signers; payload to stdin.
+  WITNESS_NAMESPACE = "capability-witness-v1" prevents
+  cross-namespace replay against commit-signing or apprenticeship-
+  verdict signatures. 5 tests including the cross-namespace
+  rejection security property (27 total).
+- **`b0dba5e`** — LedgerConsumer impl on InMemoryLedger +
+  END-TO-END handover ceremony fixture. The `full_handover_
+  ceremony_end_to_end` test asserts: pre-handover P-old
+  checkpoint allows; revocation entry by P-old applies; handover
+  with both P-old + P-new sigs accepts; post-handover P-new-only
+  accepts; post-handover P-old-only REFUSED with StaleApex. The
+  §4 N+3+ invariant works end-to-end. Also added
+  `apply_witness_record` API + InMemoryLedger.witnessed HashSet
+  for "is this witness logged in the ledger?" check (will be
+  replaced with Merkle inclusion-proof check once system-core
+  ships RFC 9162 proof machinery). 13 lib tests (40 total).
+- **`f35ebf7`** — criterion benchmarks for Master 4b deliverable.
+  `system-ledger/benches/consult.rs`. Six measurements (release
+  profile; opt-level=z; x86 GCP n2-class hardware):
+
+  | Benchmark | Median |
+  |---|---|
+  | Capability::hash | 5.0 μs |
+  | SignedCheckpoint::verify_signer (1-sig) | 3.40 ms |
+  | SignedCheckpoint::verify_apex_handover (2-sig) | 6.80 ms |
+  | cache lookup hit (most-recent) | 8.08 ns |
+  | cache lookup miss (full 64-entry scan) | 338 ns |
+  | consult_capability (Allow path) | 3.39 ms |
+
+  Cache hit is ~420,000× faster than ed25519 verify. Cache is
+  architecturally critical. Full consult cost is dominated by
+  apex-verify (orchestration overhead in measurement noise).
+  ARM embedded targets will be 10-50× slower per the
+  curve25519-dalek perf data — surface to Master in outbox.
+
+- **Crate state:** system-ledger version 0.1.5, 40 unit/integration
+  tests + 6 criterion benchmarks, cargo check + cargo test +
+  cargo bench all clean, zero warnings.
+- **Tasks deferred to natural-touch session:**
+  - #22 system-substrate hygiene — Master suggested as natural
+    neighbour; not touched this session because Phase 1A.3
+    deliverables fit cleanly inside system-core + system-ledger
+    only. Activate when seL4 CDT integration (Phase 4+) crosses
+    into system-substrate territory.
+  - #23 system-security hygiene — same; will activate naturally
+    when capability-handshake / cryptographic-pairing work crosses
+    Phase 1A's primitive surface.
+
 ## 2026-04-27 — Task `cluster/project-system` (Phase 1A increment 3 — system-ledger crate created)
 
 - **Master directive received + actioned.** Master Claude reply
