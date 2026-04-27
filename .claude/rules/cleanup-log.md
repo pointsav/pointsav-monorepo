@@ -92,6 +92,47 @@ Newest on top. Append a dated block when a session includes meaningful cleanup w
 
 ---
 
+## 2026-04-27 — Fifth-pass zero-container drift + §11 verification (Sonnet sub-agents chunks #2 + #3)
+
+- **Chunk #2 — five new drift sites caught.** Foreground
+  Sonnet research agent audited
+  `service-slm/ARCHITECTURE.md` + `DEVELOPMENT.md` against
+  `conventions/zero-container-runtime.md`. Five sites
+  beyond fourth-pass:
+  - ARCH §2 line 59 Ring 3b memory table — "OCI Artifacts"
+    (structural).
+  - ARCH §3b line 118 — "stored as an OCI Artifact"
+    (structural; couples with previous).
+  - DEV §2.2 line 122-124 — "OCI Artifacts" signing
+    description (prose; couples with previous two).
+  - DEV §6 line 237 — `cargo-chef` for Docker layer
+    caching (prose).
+  - DEV §7 line 289 — declared workspace dep
+    `google-cloud-run = "*"` (structural — would pull
+    Cloud Run client bindings at compile time).
+  Eight sites total bundled with fourth-pass in outbox
+  for single Master-authorised prose-edit commit.
+- **Chunk #3 — §11 cross-references VERIFIED CLEAN.**
+  Foreground Sonnet research agent verified every file
+  path, type name, enum variant, constant, env var, HTTP
+  endpoint, ledger path, corpus path, and promotion
+  threshold cited in `ARCHITECTURE.md` §11 (the
+  apprenticeship section added in AS-7) against the
+  current code state under `service-slm/crates/`. **All
+  OK.** No stale references, no mismatches. One
+  observation: `VERDICT_BATCH_NAMESPACE` is exported but
+  never used in the verify path — §11 does not claim it
+  is wired, so not §11 drift; surfaced here as a future
+  follow-up if batch verification becomes desirable. The
+  doc terminology shorthand `<ulid>` vs the code's
+  `UUIDv7` is consistent across both surfaces.
+  §11 is reliable as a spec reference for the current
+  code state.
+- **No code changes** in either audit. Tests still 46/46
+  in slm-doorman.
+
+---
+
 ## 2026-04-27 — AS-2 scope correction surfaced to Master (Sonnet sub-agent chunk #1)
 
 - **Model-tier-discipline applied.** Per
