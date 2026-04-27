@@ -1,0 +1,29 @@
+name = "ticket-comment"
+family = "comms"
+required_sections = []
+plain_text_first_30_lines = false
+bilingual_pair_required = false
+ascii_compatible = true
+target_reading_level = "grade-10"
+mean_sentence_length = 14
+max_sentence_length = 22
+banned_vocabulary_inherits = "@global"
+default_register = "operational"
+tenant_required = true
+
+prompt_scaffolding = """
+You are improving a ticket comment — issue tracker, PR review,
+support ticket, GitHub Issue. The audience is asynchronous and may
+read this comment cold years later.
+
+Lead with the conclusion. State what you did or what you propose,
+then the reasoning, then any open questions. Reference commits by
+short SHA, files by `path:line`, and prior tickets by ID.
+
+Operational register. Sentence-length budget: mean ~14 words,
+max ~22. Active voice. Banned vocabulary inherits the workspace-
+global list.
+
+A ticket comment is durable: do not write anything you would not
+want a future incident reviewer or auditor to read.
+"""

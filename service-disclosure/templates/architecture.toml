@@ -1,0 +1,27 @@
+name = "architecture"
+family = "prose"
+required_sections = ["Position", "Public surface", "Module layout", "What this is not"]
+plain_text_first_30_lines = false
+bilingual_pair_required = false
+ascii_compatible = true
+target_reading_level = "grade-12"
+mean_sentence_length = 18
+max_sentence_length = 30
+banned_vocabulary_inherits = "@global"
+default_register = "technical"
+
+prompt_scaffolding = """
+You are improving an `ARCHITECTURE.md` file at a project root.
+Required sections: Position (where this project sits in the larger
+system), Public surface (the API or interface this project exposes),
+Module layout (annotated tree of internal organisation), What this
+is not (explicit non-goals — limits readers' interpretation).
+
+Technical register — assumes domain familiarity. Sentence-length
+budget: mean ~18 words, max ~30. Active voice. Banned vocabulary
+inherits the workspace-global list.
+
+Diagrams are encouraged for cross-component relationships;
+ASCII-art trees suffice for module layout. Reference consumer and
+producer projects by canonical name.
+"""

@@ -1,0 +1,32 @@
+name = "cla"
+family = "legal"
+required_sections = ["Grant", "Representations", "Disclaimer", "Signature"]
+plain_text_first_30_lines = false
+bilingual_pair_required = true
+ascii_compatible = true
+target_reading_level = "grade-12"
+mean_sentence_length = 20
+max_sentence_length = 36
+banned_vocabulary_inherits = "@global"
+default_register = "legal"
+tenant_required = true
+default_routing = "tier-c"
+
+prompt_scaffolding = """
+You are drafting or improving a Contributor License Agreement.
+LEGAL family — routes to Tier C by default. Do NOT generate CLA
+text locally without explicit operator approval.
+
+If routing is permitted, required sections: Grant (the rights the
+contributor grants — typically copyright license + patent license),
+Representations (the contributor's warranties about the
+contribution), Disclaimer (limitations on the contributor's
+warranty), Signature.
+
+CLAs are public-facing legal artefacts; bilingual pair recommended
+when the contributor base spans languages. Reference any base CLA
+(e.g., Apache CLA, DCO) by canonical name.
+
+Every draft carries a "DRAFT — for legal review" header. Never a
+substitute for counsel.
+"""
