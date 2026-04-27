@@ -92,6 +92,82 @@ Newest on top. Append a dated block when a session includes meaningful cleanup w
 
 ---
 
+## 2026-04-27 — PS.1 Yo-Yo deploy readiness review (Opus judgment, ~30 min)
+
+Read every file in `infrastructure/slm-yoyo/tofu/`
+end-to-end + CONTRACT.md + tofu/README.md. Module authored
+2026-04-25; no post-authoring commits. Surfaced 4 blockers
+and 7 warnings to Master via outbox 2026-04-27T23:30Z.
+
+### Blockers (apply will fail or produce wrong shape)
+
+- **B1**: `preemptible = false` hard-coded in compute.tf
+  line 40; PS.1 brief specifies preemptible MIN. Cost
+  diverges 5× (target $7-8/mo → actual ~$50/mo).
+- **B2**: `quota.tf` requests only `GPUS-ALL-REGIONS-per-project`;
+  A100 deploy needs `NVIDIA_A100_GPUS_per-region` (40GB) or
+  `NVIDIA_A100_80GB_GPUS_per-region` separately.
+- **B3**: `pointsav-public:slm-yoyo` GCE image existence
+  unverified; lookup fails apply if image not published.
+- **B4**: vLLM vs mistral.rs runtime mismatch — CONTRACT.md
+  + variables.tf describe mistral.rs; PS.2 brief specifies
+  vLLM flags. Resolve before PS.2.
+
+### Warnings (deploy succeeds but operational concerns)
+
+- **W1**: variables.tf cost-math drift (on-demand prices in
+  doc vs preemptible prices in PS.1 brief).
+- **W2**: `gcloud beta quotas` may have moved to GA; test
+  before relying on auto-request.
+- **W3**: PS.1 brief "30-min daily window" semantics
+  mismatch with module's idle-shutdown-on-inactivity
+  pattern; pick one.
+- **W4**: `https://${IP}:${PORT}` in outputs.tf, but
+  mistral.rs/vLLM don't terminate TLS by default; either
+  image has nginx (undocumented) or URL should be `http://`.
+- **W5**: `doorman_ip_cidrs = ["0.0.0.0/0"]` open-internet
+  default; tighten to `/32` for workspace VM dogfood.
+- **W6**: Operator hand-stitches Doorman config from
+  outputs; a `local-doorman.env` output snippet would close
+  the deploy → Doorman-config gap.
+- **W7**: Kill-switch Cloud Function source is dynamic
+  archive; first-time end-to-end run worth a separate
+  verification brief.
+
+### Structurally sound
+
+Versions pinned and current; IAM minimum-viable; budget cap
++ kill-switch defense-in-depth solid; static external IP for
+endpoint stability; `desired_status = TERMINATED` +
+`lifecycle.ignore_changes` correctly models on-demand
+pattern; secrets pre-provisioned in Secret Manager;
+service-account scopes match CLAUDE.md §3 GCP identity model.
+
+### Sub-agent brief candidates surfaced
+
+- (1) Module update for B1+B2 (Sonnet ~1-2hr; bounded; no
+  apply).
+- (2) `local-doorman.env` output snippet (Sonnet ~30 min).
+- (3) B4 runtime-resolution research (Sonnet ~30 min).
+
+### Recommended sequence
+
+1. Resolve B4 first (PS.2 target is undefined without).
+2. Resolve B3 in parallel (image existence).
+3. Resolve B1+B2 as one module update.
+4. Address W3+W4 (Master ratification calls).
+5. Test apply with `monthly_cap_usd=10` to prove
+   kill-switch before MIN.
+
+### State after PS.1
+
+Task #17 closed. Outbox carries PS.1 readiness review as
+high-priority message. Yo-Yo MIN deploy gated on Master
++ operator answering B1-B4 + W3-W4. PS.2 (multi-LoRA +
+structured-outputs verification) gated specifically on B4.
+
+---
+
 ## 2026-04-27 — Master ratification cascade (v0.1.31 / v0.1.33 / v0.1.36 / v0.1.42)
 
 Single-pass housekeeping: archived 5 inbox messages from
