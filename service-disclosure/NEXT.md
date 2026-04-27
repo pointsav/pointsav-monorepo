@@ -17,11 +17,6 @@ Phase 1B is blocked on a cross-cluster decision (see Blocked).
 - Emit schema-stable signal to project-proofreader Task once
   Phase 1B lands AND Master ratifies the public surface. Until
   then, `service-proofreader` runs on hardcoded protocol templates.
-- Add JSONL corpus-schema spec for editorial-apprenticeship tuples
-  — either a `CORPUS-SCHEMA.md` at this directory root or an
-  appended section in `ARCHITECTURE.md`. Coordinate with the
-  apprenticeship-corpus directory scaffold (Phase 3 of the cluster
-  brief).
 - Author Phase 1B banned-vocabulary CFG once the library question
   resolves. Round-trip test: a synthetic prose sample containing
   `leverage` rejected at decode time; same sample without
@@ -47,6 +42,8 @@ Phase 1B is blocked on a cross-cluster decision (see Blocked).
 
 ## Recently done
 
+- 2026-04-27: v0.2.1 — `CORPUS-SCHEMA.md` documents the JSONL
+  tuple shape for editorial-apprenticeship records.
 - 2026-04-27: v0.2.0 — Phase 1C genre-template registry. 18 .toml +
   18 .md template pairs, `get_template` and
   `get_template_description` lookup functions, 7 new
