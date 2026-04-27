@@ -92,6 +92,49 @@ Newest on top. Append a dated block when a session includes meaningful cleanup w
 
 ---
 
+## 2026-04-27 — v0.1.30 codifies sub-agent-as-tier-discipline (this cluster cited as operational precedent)
+
+- **Master message archived (workspace v0.1.30, 2026-04-27T17:00:00Z).**
+  Informational; no action required. Inbox placeholder reset.
+- **Behavioural change for future sessions in this cluster.** The
+  exit+re-enter pattern in `conventions/model-tier-discipline.md`
+  §1 is now deprecated for tier-discipline purposes
+  (operator-elective only — e.g., operator wants to converse with
+  a different model directly). Sub-agent dispatch via the Agent
+  tool is THE tier-discipline mechanism going forward. Six rules
+  at `conventions/model-tier-discipline.md` §1A:
+  1. Bounded brief (one task, one result, file paths, capped
+     response length).
+  2. Foreground + serial when writing (`.git/index` race);
+     read-only sub-agents MAY parallelise.
+  3. ≥80% confidence gate. Pass: mechanical edits, well-specified
+     implementations, read-only research. Fail: architectural
+     decisions, doctrine drafting, cross-layer coordination.
+  4. Layer scope preserved — Task sub-agents stay in Task scope.
+     Cross-layer asks travel via mailbox.
+  5. Anti-slop — must contribute to a real next step.
+  6. One brief → one result → parent reviews → commit OR queue
+     next. Parent never delegates the commit decision.
+- **Self-dispatch now requires Master ratification.** When this
+  Task is waiting on Master / operator / cross-cluster and wants
+  to propose more sub-agent work, the proposal goes via outbox.md
+  for Master to ratify into `~/Foundry/.claude/sub-agent-queue.md`.
+  Operator-directed dispatches (e.g., the operator says "launch
+  chunk #N") remain fine — that's explicit ratification.
+- **Operational precedent recorded.** Master's brief explicitly
+  cites this cluster as the operational origin of the codified
+  pattern: *"`project-slm` Task has been operating this pattern
+  organically since 2026-04-26 — see their cluster cleanup-log for
+  examples (three-parallel research-only Sonnet pass on 2026-04-27
+  closed chunks #6 + #7 + #8 without writes; AS-2 scope correction
+  on 2026-04-27 saved 3-4 weeks of misdirected implementation).
+  v0.1.30 codifies that practice as workspace-wide convention."*
+  This cluster's cleanup-log entries from 2026-04-27 are now
+  doctrinal precedent.
+- **No code changes.** Tests still 46/46.
+
+---
+
 ## 2026-04-27 — Three-parallel Sonnet research pass (chunks #6 + #7 + #8)
 
 Three foreground research-only Sonnet sub-agents, launched
