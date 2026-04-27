@@ -8,7 +8,7 @@ must be closed.
 
 State vocabulary — see `~/Foundry/CLAUDE.md` §8 for definitions.
 
-Last updated: 2026-04-23.
+Last updated: 2026-04-27.
 
 ---
 
@@ -117,6 +117,7 @@ Last updated: 2026-04-23.
 |---|---|---|---|
 | service-bim | Reserved-folder | service | 1 file (RESEARCH.md); research phase |
 | service-content | Scaffold-coded | service | 37 files; in workspace members |
+| service-disclosure | Active | service | Activated 2026-04-27 on `cluster/project-language` (workspace v0.1.22 / Doctrine v0.0.8). Schema substrate for Foundry editorial work — 4-family adapter taxonomy + frontmatter validator + BANNED_VOCABULARY. Phase 1A only; Phase 1B (CFG) and 1C (template registry) queued in NEXT.md. In workspace members. |
 | service-egress | Scaffold-coded | service | 4 files |
 | service-email | Scaffold-coded | service | 18 files |
 | service-email-egress-ews | Scaffold-coded | service | EWS protocol adapter; doubly-nested wrapper flattened 2026-04-23 (prior "consolidation" plan reversed — kept separate from `-imap` because they are two protocol-specific implementations, not duplicates); 6 sub-crates including EWS-only `egress-prune` and `egress-balancer`; Cargo.toml name mismatches (13 total across both) remain as separate audit finding |
@@ -181,9 +182,9 @@ Last updated: 2026-04-23.
 
 ---
 
-## Summary (2026-04-23)
+## Summary (2026-04-27)
 
-- **Active:** 4 (`app-console-bookkeeper`, `app-workplace-presentation`, `app-workplace-proforma`, `service-extraction`)
+- **Active:** 5 (`app-console-bookkeeper`, `app-workplace-presentation`, `app-workplace-proforma`, `service-disclosure`, `service-extraction`)
 - **Scaffold-coded:** 53
 - **Reserved-folder:** 36
 - **Defect:** 0
@@ -191,4 +192,4 @@ Last updated: 2026-04-23.
 - **Dormant:** 0
 - **Archived:** 0
 
-**Total rows:** 97.
+**Total rows:** 98.
