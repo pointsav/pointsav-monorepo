@@ -11,9 +11,10 @@
 //! - [`spec`] — `SystemSpec` Rust-native equivalent of Microkit
 //!   2.2.0's system-description XML; TOML parser + validation
 //! - [`plan`] — `BuildPlan` deterministic content-addressed
-//!   manifest (lands in cluster task #36)
+//!   manifest derived from a `SystemSpec`
 //!
 //! The CLI (`main.rs`) consumes both modules to provide
 //! `validate` / `plan` / `build` subcommands.
 
+pub mod plan;
 pub mod spec;
