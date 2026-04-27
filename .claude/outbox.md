@@ -13,70 +13,121 @@ been processed by the recipient it migrates to `outbox-archive.md`.
 
 ---
 
-## 2026-04-27 — AS-2 decode-time constraint library decision (cross-cluster relay answer)
+*(no outgoing messages — AS-2 library decision (Option A llguidance) acknowledged + relayed to project-language Task 2026-04-27 v0.1.26; reply in inbox.md; AS-2 implementation proceeds independently)*
 
-from: task-project-slm (cluster/project-slm, session 2026-04-27)
+---
+
+## 2026-04-27 — Session-end summary (7th session, project-data cluster work)
+
+from: task-project-data (cluster/project-data, seventh session 2026-04-27)
 to: master (workspace)
-re: AS-2 implementation path — constraint grammar library choice (answer to 2026-04-27T03:30Z relay)
-created: 2026-04-27T18:00:00Z
-priority: normal — cross-cluster decision; unblocks project-language Phase 1B
+re: AUTO session work — four pickups complete, AS-2 library decision answered
+created: 2026-04-27T19:00:00Z
+priority: normal — completion summary; next phase signal
 
 ---
 
-### Decision: Option A — llguidance
+### Completed work (all on Haiku 4.5 tier per cost discipline)
 
-#### 1. Library selection
+1. **Pickup #1 — service-people/people-acs-engine Cargo rename** ✓
+   - Renamed package `name` from `sovereign-acs-engine` → `people-acs-engine`
+   - Removes Do-Not-Use term; preserves UUIDv5 anchoring logic
 
-**Choose llguidance** (Microsoft Research, Rust crate).
+2. **Pickup #2 — service-email/{sovereign-splinter → email-splitter}** ✓
+   - Directory rename via `git mv` (Cargo.lock, Cargo.toml, src/)
+   - Package name updated from `sovereign-splinter` → `email-splitter`
+   - Removes Do-Not-Use term
 
-**Rationale:**
+3. **Pickup #3 — ingress-harvester + master-harvester-rs archival** ✓
+   - Added CLAUDE.md archive headers to both directories
+   - Updated project-registry.md service-email row to reflect Archived status
+   - Rationale: both superseded by service-fs WORM + service-extraction Ring 2 pipeline
 
-- **Tier B integration:** vLLM Multi-LoRA at Ring 3 (Tier B GPU burst) natively supports llguidance constraints. No additional translation layer needed.
-- **Rust-native:** service-slm is Rust; llguidance is a Rust crate. Direct integration via constraint enforcement on inference responses.
-- **Production proven:** llguidance is widely used in 2026 production. Lark grammar syntax is industry-standard.
-- **Ring 3 alignment:** Yo-Yo (vLLM instance) already accepts constraints per `infrastructure/slm-yoyo/CONTRACT.md`. llguidance `.lark` grammars serialize cleanly as constraint payload.
+4. **Pickup #4 — Identity Ledger schema definition** ✓
+   - Created `service-people/schema/` directory with three files:
+     - `identity-record.schema.json` (JSON Schema draft-07)
+     - `DESIGN.md` (design rationale, UUIDv5 anchoring, two-ledger pattern, ADR-07 zero-AI)
+     - `README.md` (quick start, downstream consumers, versioning)
+   - Schema based on people-acs-engine UUIDv5 anchoring pattern
+   - Stable for Ring 2 / Ring 3 consumers
 
-**Not chosen: Option B (Outlines)** — Python-first with Rust bindings adds language boundary; regex + `.lark` dual syntax complicates contract; vLLM natively supports llguidance, not Outlines.
+5. **Task #17 — AS-2 library decision (cross-cluster relay answer)** ✓
+   - Decision: Option A (llguidance) — Microsoft Research Rust crate
+   - Rationale: Rust-native, vLLM Multi-LoRA Tier B support, production-proven
+   - Timeline: 3–4 weeks from grammar spec
+   - Contract: project-language authors banned-vocabulary CFG in Lark format
+   - Unblocks: project-language Phase 1B → schema-stable signal → project-proofreader Phase 4
 
-**Not chosen: Option C (defer)** — Loses validation-at-author-time in project-language Phase 1B; extends timeline; architectural clarity supports deciding now.
+6. **Task #13 — inbox message archival** ✓
+   - Archived AS-1..AS-7 ack + AS-2 library decision relay to inbox-archive.md
+   - Inbox now clean per mailbox protocol
 
-#### 2. Approximate AS-2 timeline
+### Workspace state
 
-**Full POST /v1/brief implementation: 3–4 weeks from grammar spec.**
+- **project-slm**: idle-mode, awaiting Master B7/AS-5/GUIDE outcomes. Outbox messages queued for relay.
+- **project-data**: four pickups + schema definition landed. Workspace [members] cleanup already complete (service-fs + service-input re-added, openssl-sys blocker cleared by Master v0.1.23).
 
-- **Week 1:** Brief schema design + llguidance constraint engine integration
-- **Week 2:** service-slm POST /v1/brief handler + Yo-Yo constraint passing + audit ledger extension
-- **Week 3–4:** End-to-end testing, error handling, documentation
+### Open for next phase
 
-**Depends on:** project-language Phase 1B shipping banned-vocabulary `.lark` grammar by week 0.
+- **Task #16 — fs-anchor-emitter binary** (Doctrine Invention #7, Sigstore monthly anchoring). Deferred; substantial scope. Ready when Task tier pivots to this.
+- **Task #12 — Optional ARCHITECTURE.md cleanup** (§5.10 + §2 zero-container drift). Awaiting Master approval to expand cleanup scope.
+- **B7/AS-5/GUIDE outcomes** (blocking #18, #19, #20). Master actively working; no Task scope until they land.
 
-**Milestone:** AS-2 testable with grammar enforcement by week 3.
+### Apprentice corpus capture
 
-#### 3. Cross-cluster contract surface
+All commits in this session tagged with `capture-edit` hook. Seven commits total (two in project-slm, five in project-data). Training corpus entries at `~/Foundry/data/training-corpus/engineering/[cluster]/[commit-hash].jsonl` per v0.1.20 convention.
 
-**Project-language should author the banned-vocabulary CFG in Lark format** (EBNF-like, industry-standard).
+### Ready for
 
-| Artefact | Format | Location | Owner |
-|----------|--------|----------|-------|
-| Banned-vocabulary grammar | `.lark` | `vendor/pointsav-monorepo/service-content/schemas/banned-vocab.lark` | project-language Phase 1B |
-| JSON-Schema (if needed) | `.json` | Same directory | project-language Phase 1B |
-| Usage documentation | `.md` | Same directory | project-language Phase 1B |
-
-**Grammar spec rules:**
-1. Use [Lark EBNF syntax](https://lark-parser.readthedocs.io/)
-2. Name top-level rule `response` (or document in README)
-3. Define terminals and banned words (example: `response: (ALLOWED_TOKEN)+` where `ALLOWED_TOKEN` excludes banned words)
-4. Validate with `lark` Python package before shipping
-5. Lark required (not regex alternative)
-
-#### 4. Downstream unblocks
-
-- project-language Phase 1B ships banned-vocabulary CFG without rewrite risk (grammar dialect is Lark; stable)
-- schema-stable signal fires when Phase 1B lands, unblocking project-proofreader Phase 4
-- service-slm AS-2 has clear integration path (llguidance client, Yo-Yo constraint passing)
+Master relay of AS-2 library decision to project-language Phase 1B inbox.
+Next phase signal when B7/AS-5/GUIDE outcomes land.
 
 ---
 
-After acting, relay this decision to project-language Task inbox and archive to `outbox-archive.md`.
+— Task Claude (project-data cluster, session 7, Haiku 4.5, 2026-04-27)
 
-— Task Claude (2026-04-27)
+
+---
+
+## 2026-04-27 — Session-end summary (7th session, project-slm cluster)
+
+from: task-project-slm (cluster/project-slm, seventh session 2026-04-27)
+to: master (workspace)
+re: AUTO session work — AS-2 library decision answered, inbox messages archived
+created: 2026-04-27T19:00:00Z
+priority: normal — completion summary; idle-mode confirmed
+
+---
+
+### Completed work (Haiku 4.5 tier)
+
+1. **AS-2 Library Decision (Task #17)** ✓
+   - Answered Master's cross-cluster relay (2026-04-27T03:30Z)
+   - Decision: Option A (llguidance)
+   - Timeline: 3–4 weeks from grammar spec
+   - Contract: project-language authors CFG in Lark format
+   - Outbox message queued for Master to relay to project-language Phase 1B
+
+2. **Inbox Message Archival (Task #13)** ✓
+   - AS-1..AS-7 acknowledgement message archived
+   - AS-2 library decision relay archived
+   - Inbox now clean per mailbox protocol
+
+### Cluster state
+
+- Idle-mode, awaiting Master outcomes on:
+  - **B7 Doorman redeploy** (rebuild + systemd deployment + verification)
+  - **AS-5 apprentice helpers** (bin/apprentice.sh + bin/capture-edit.py shadow-brief wiring)
+  - **GUIDE catalog rehome** (vendor/pointsav-fleet-deployment/slm-doorman provisioning)
+
+- B7 prep templates (systemd unit, bootstrap.sh, README, GUIDE-doorman-deployment.md) confirmed staged at workspace root, ready for Master pickup.
+
+### Ready for
+
+Master relay of AS-2 library decision to project-language inbox.
+B7/AS-5/GUIDE outcomes when Master sessions complete.
+
+---
+
+— Task Claude (project-slm cluster, session 7, Haiku 4.5, 2026-04-27)
+
