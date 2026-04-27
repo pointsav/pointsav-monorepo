@@ -34,10 +34,10 @@ It does NOT own (and must not absorb):
 
 - Kernel-side ledger consultation **state machine** (which apex is
   current; which capabilities are revoked; cache of recent
-  checkpoints) — that's `system-substrate` or a new
-  `system-capability-ledger` / `system-ledger` crate (open
-  architecture question; see §3 below). The crypto primitive lives
-  here; the policy lives downstream.
+  checkpoints) — that's the new sibling crate **`system-ledger`**
+  (architecture decision resolved in §3 below; Master directive
+  2026-04-26). The crypto primitive lives here; the policy lives
+  downstream.
 - WORM tile storage — `service-fs` per `worm-ledger-design.md` §5.
 - `ssh-keygen -Y verify` wrapper for witness-record signatures —
   that's a deploy-side concern; the data shape only is here. Note
@@ -59,33 +59,56 @@ the trait. `system-core` plays the same role for the capability-
 ledger primitive: the schema lives here, the implementations live in
 the consumers.
 
-## 3. Open architecture question — kernel binding location
+## 3. Architecture decision — kernel binding lives in `system-ledger`
 
-Per the cluster brief (Phase 1A item 3), the kernel-side ledger
-consultation logic — given a capability invocation, verify against
-the current Merkle root before honoring — needs to live somewhere.
-Two candidates:
+**Resolved 2026-04-26 (Master Claude reply, archived inbox):**
+**Option B** — the kernel-side ledger consultation state machine
+lives in a new sibling crate **`system-ledger`** that depends on
+`system-core` for the data-primitive types. `system-substrate`
+keeps its hardware-bridge focus per its registry description.
 
-**Option A** — extend `system-substrate`. The substrate crate already
-owns the kernel binding for hardware bridges (per registry
-descriptions). Adding a `ledger_consultation` module keeps the
-kernel-binding code colocated.
+Rationale (Master + Task agreed):
 
-**Option B** — new crate `system-capability-ledger` (or shorter
-`system-ledger`). Carves the substrate-level WORM-ledger consumer
-out as a focused unit. Mirrors the `service-fs` model where the
-WORM primitive is its own concern.
+- **Clean crate boundary for non-trivial state.** Checkpoint cache
+  + revocation set + apex-history + post-handover invariant
+  enforcement is a state machine that deserves a focused unit.
+- **Mirrors the service-fs pattern.** `worm-ledger-design.md` puts
+  the WORM primitive in `service-fs`; the substrate-tier consumer
+  parallels in `system-ledger`. Two crates, same C2SP signed-note
+  format, decoupled by layer.
+- **`system-substrate` keeps hardware-bridge focus.** Conflating
+  ledger consultation with hardware bridges would muddy the
+  substrate crate's identity.
+- **Convention §3.1 alignment.** The convention specifies "extend
+  the seL4 capability-derivation tree (CDT) to carry a
+  `ledger_anchor` field per capability" — that extension code is
+  ledger-side consumer logic, naturally lives in `system-ledger`.
+  Convention text remains as-written; the crate boundary is
+  refinement below the convention's altitude.
 
-Decision criteria:
-- Does the kernel-side cache (per convention §3.1) have non-trivial
-  state? If yes → carve to dedicated crate (Option B).
-- Does seL4 CDT integration (Phase 4+) cleanly compose with
-  hardware-bridge code in `system-substrate`? If yes → keep in
-  `system-substrate` (Option A).
+### Module layout in `system-ledger`
 
-**Status:** undecided. Will be resolved when the consultation
-simulator is sketched (next Phase 1A increment). Update this section
-when the decision is made; surface to Master via outbox.
+| Module | Owns |
+|---|---|
+| `cache.rs` | Recent-N checkpoint cache; lookup by `(origin, tree_size)` and `(origin, root_hash)`; LRU eviction at N entries |
+| `revocation.rs` | Revoked-capability set keyed by `capability_hash`; `apply_revocation`, `is_revoked` |
+| `apex.rs` | Apex history; post-handover invariant ("only P-new accepted from N+3+"); `apply_apex_handover` |
+| `witness.rs` | `ssh-keygen -Y verify` wrapper for witness-record signatures (namespace `capability-witness-v1`); shells out via `tokio::spawn_blocking` per the apprenticeship VerdictVerifier pattern in project-slm |
+| `lib.rs` | `LedgerConsumer` trait; `consult_capability(cap, current_root) -> Result<Verdict>`; in-memory impl `InMemoryLedger` for v0.1.x |
+
+`system-ledger` depends on `system-core` for `Capability`,
+`WitnessRecord`, `SignedCheckpoint`, `LedgerAnchor`. Workspace
+member.
+
+Trait keeps the door open for `MoonshotDatabaseLedger` future
+MINOR (mirrors the `LedgerBackend` trait pattern in
+`worm-ledger-design.md` §3 D7).
+
+### Status
+
+`system-ledger` not yet created — Phase 1A increment 3 builds it.
+This section will be updated to "RESOLVED + IMPLEMENTED" when the
+crate lands.
 
 ## 4. Cross-references
 
@@ -93,12 +116,18 @@ when the decision is made; surface to Master via outbox.
 - `~/Foundry/conventions/system-substrate-doctrine.md` §3.1 (kernel
   binding), §5.1 (Mechanism A schemas)
 - `~/Foundry/conventions/worm-ledger-design.md` §2 (four-layer stack
-  — `system-core` is L0 schema; `service-fs` carries L1+L2)
+  — `system-core` is L0 schema; `service-fs` carries L1+L2 for the
+  application-tier WORM ledger; `system-ledger` carries the
+  substrate-tier consumer of the same format)
 - `~/Foundry/RESEARCH-system-substrate.md` §1.1 + §2 (the leapfrog
   framing) and Appendix E (capability-as-ledger-entry as the
   structural-slot novelty)
 - `~/Foundry/CLAUDE.md` §3 (`allowed_signers` SSH-signing primitive
-  generalised here for `capability-witness-v1` namespace)
+  generalised here for `capability-witness-v1` namespace; `ssh-keygen
+  -Y verify` wrapper lives in `system-ledger/src/witness.rs`)
+- **Sibling crate `system-ledger`** (Phase 1A increment 3) — the
+  state-machine consumer of these primitives. Owns checkpoint cache,
+  revocation set, apex history, witness verification.
 
 ## 5. Verification
 
