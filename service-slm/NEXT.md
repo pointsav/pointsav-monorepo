@@ -71,23 +71,25 @@
   Lark grammar file (`service-content/schemas/banned-vocab.lark`)
   is project-language Phase 1B scope per Master's 2026-04-27
   v0.1.26 brief — NOT this cluster's work.
-- **ARCH/DEVELOPMENT.md zero-container drift FOURTH-pass —
-  Master sign-off needed.** Third-pass scope (§5.10 SkyPilot
-  row + §2 Bootstrap items 3+4) was cleared by commit
-  `8c3212e` (2026-04-26); this NEXT.md was stale. Three new
-  drift sites surfaced 2026-04-27 the third-pass missed:
-  - ARCHITECTURE.md §3 line 132: "External calls (Cloud Run,
-    Mooncake sidecar, Claude API, LadybugDB ...)" — generic
-    mention; suggest drop "Cloud Run" or replace with "GCE
-    instances".
-  - ARCHITECTURE.md §5.2 line 197 — `hyper` crate role:
-    "HTTP client (Cloud Run, Claude API, LMCache master)";
-    suggest replace "Cloud Run" with "Yo-Yo GCE endpoints".
-  - DEVELOPMENT.md §4 Phase 2 step 5: "Port the Cloud Run
-    driver (`crates/slm-compute`, `crates/slm-inference-remote`)";
-    suggest "Port the GCE compute driver".
-  Surface to Master in next outbox; do not act without
-  authorisation per the third-pass pattern.
+- **ARCH/DEVELOPMENT.md zero-container drift FOURTH +
+  FIFTH-pass — Master sign-off needed.** Third-pass cleared
+  by commit `8c3212e` (2026-04-26); fourth-pass surfaced
+  three sites (ARCH §3 line 132 "External calls (Cloud Run,
+  ...)", ARCH §5.2 line 197 hyper-crate role "(Cloud Run,
+  ...)", DEV §4 Phase 2 step 5 "Port the Cloud Run
+  driver"). Sonnet sub-agent audit 2026-04-27 surfaced five
+  more sites (fifth-pass): ARCH §2 line 59 Ring 3b memory
+  table "OCI Artifacts" (structural; couples with §3b line
+  118 "stored as an OCI Artifact" and DEV §2.2 line 122-124
+  "OCI Artifacts" in signing description — three coupled
+  references to same Ring 3b adapter-storage decision); DEV
+  §6 line 237 `cargo-chef` for Docker layer caching
+  (prose); DEV §7 line 289 declared workspace dep
+  `google-cloud-run = "*"` (structural — would compile-time
+  pull Cloud Run client bindings). Eight sites total bundled
+  in outbox 2026-04-27 for one Master-authorised prose-edit
+  commit (same pattern as 4a eleven-site / third-pass two-
+  site bundles). Do not act without authorisation.
 - **Workspace-root handoff in flight.** The 2026-04-23 activation
   commit was the Task-scope half of the `SLM-STACK.md` /
   `YOYO-COMPUTE.md` rehoming (workspace `CLAUDE.md` §9 variant).
