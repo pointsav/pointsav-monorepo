@@ -38,6 +38,7 @@ use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _};
 use ed25519_dalek::{Signature as EdSignature, Verifier, VerifyingKey, SIGNATURE_LENGTH};
 use sha2::{Digest, Sha256};
 
+use crate::inclusion_proof::{InclusionProof, InclusionVerifyError};
 use crate::Hash256;
 
 /// One C2SP signed-note checkpoint body. Maps to a Merkle log state
@@ -265,6 +266,54 @@ impl SignedCheckpoint {
         Ok(self.verify_signer(old_apex_name, old_apex_pubkey)?
             && self.verify_signer(new_apex_name, new_apex_pubkey)?)
     }
+
+    /// Composed kernel-facing primitive (Master directive
+    /// 2026-04-27): verify both that this checkpoint is validly
+    /// signed by `(signer_name, signer_pubkey)` AND that `leaf_hash`
+    /// is included in the checkpoint's Merkle root via `proof`.
+    ///
+    /// Use this instead of calling [`InclusionProof::verify`]
+    /// directly. Treating signature + inclusion as a single
+    /// load-bearing primitive avoids "verified-inclusion-against-
+    /// untrusted-root" footguns.
+    ///
+    /// Order: tree-size match → signature verification → inclusion
+    /// verification. Returns the first-encountered failure; on
+    /// success returns `Ok(())`.
+    pub fn verify_inclusion_proof(
+        &self,
+        proof: &InclusionProof,
+        leaf_hash: &Hash256,
+        signer_name: &str,
+        signer_pubkey: &[u8; 32],
+    ) -> Result<(), CheckpointInclusionError> {
+        if proof.tree_size != self.checkpoint.tree_size {
+            return Err(CheckpointInclusionError::TreeSizeMismatch);
+        }
+        let sig_ok = self
+            .verify_signer(signer_name, signer_pubkey)
+            .map_err(|_| CheckpointInclusionError::BadSignerPublicKey)?;
+        if !sig_ok {
+            return Err(CheckpointInclusionError::SignatureInvalid);
+        }
+        proof
+            .verify(leaf_hash, &self.checkpoint.root_hash)
+            .map_err(CheckpointInclusionError::Inclusion)
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum CheckpointInclusionError {
+    /// Proof's `tree_size` doesn't match this checkpoint's `tree_size`.
+    TreeSizeMismatch,
+    /// `signer_pubkey` couldn't be parsed as an ed25519 public key.
+    BadSignerPublicKey,
+    /// No signature line under `signer_name` matched, or the
+    /// signature failed cryptographic verification.
+    SignatureInvalid,
+    /// The Merkle inclusion proof failed against the checkpoint's
+    /// root.
+    Inclusion(InclusionVerifyError),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -443,5 +492,167 @@ mod tests {
             signatures: vec![sig],
         };
         assert!(!signed.verify_signer("apex-test", &pk).unwrap());
+    }
+
+    // ---------- verify_inclusion_proof composed-primitive tests ----------
+
+    use crate::inclusion_proof::{rfc9162_internal_hash, rfc9162_leaf_hash, InclusionProof};
+
+    fn build_root(leaf_hashes: &[Hash256]) -> Hash256 {
+        let mut layer = leaf_hashes.to_vec();
+        while layer.len() > 1 {
+            let mut next = Vec::with_capacity(layer.len().div_ceil(2));
+            let mut i = 0;
+            while i < layer.len() {
+                if i + 1 < layer.len() {
+                    next.push(rfc9162_internal_hash(&layer[i], &layer[i + 1]));
+                } else {
+                    next.push(layer[i]);
+                }
+                i += 2;
+            }
+            layer = next;
+        }
+        layer.into_iter().next().expect("≥ 1 leaf")
+    }
+
+    fn make_proof(leaf_hashes: &[Hash256], leaf_index: u64) -> InclusionProof {
+        let mut path = Vec::new();
+        let mut layer = leaf_hashes.to_vec();
+        let mut idx = leaf_index as usize;
+        while layer.len() > 1 {
+            let sibling_idx = idx ^ 1;
+            if sibling_idx < layer.len() {
+                path.push(layer[sibling_idx]);
+            }
+            let mut next = Vec::with_capacity(layer.len().div_ceil(2));
+            let mut i = 0;
+            while i < layer.len() {
+                if i + 1 < layer.len() {
+                    next.push(rfc9162_internal_hash(&layer[i], &layer[i + 1]));
+                } else {
+                    next.push(layer[i]);
+                }
+                i += 2;
+            }
+            idx /= 2;
+            layer = next;
+        }
+        InclusionProof {
+            leaf_index,
+            tree_size: leaf_hashes.len() as u64,
+            sibling_hashes: path,
+        }
+    }
+
+    fn signed_checkpoint_with_root(
+        tree_size: u64,
+        root_hash: Hash256,
+        signer_name: &str,
+        sk: &ed25519_dalek::SigningKey,
+    ) -> SignedCheckpoint {
+        let cp = Checkpoint {
+            origin: "foundry.test.cap-ledger".to_string(),
+            tree_size,
+            root_hash,
+            extensions: vec![],
+        };
+        let pk = sk.verifying_key().to_bytes();
+        let key_hash = NoteSignature::derive_key_hash(signer_name, &pk);
+        let sig = sk.sign(&cp.body_bytes()).to_bytes();
+        SignedCheckpoint {
+            checkpoint: cp,
+            signatures: vec![NoteSignature {
+                signer_name: signer_name.to_string(),
+                key_hash,
+                signature: sig,
+            }],
+        }
+    }
+
+    #[test]
+    fn inclusion_proof_with_valid_sig_and_proof_accepts() {
+        let (sk, pk) = fixed_keypair(31);
+        let leaves: Vec<Hash256> = (0..4u64)
+            .map(|i| rfc9162_leaf_hash(format!("witness-{i}").as_bytes()))
+            .collect();
+        let root = build_root(&leaves);
+        let signed = signed_checkpoint_with_root(4, root, "apex", &sk);
+
+        for i in 0..4u64 {
+            let proof = make_proof(&leaves, i);
+            let r = signed.verify_inclusion_proof(&proof, &leaves[i as usize], "apex", &pk);
+            assert!(
+                r.is_ok(),
+                "leaf {i}: should accept; got {r:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn inclusion_proof_with_tampered_signature_rejects() {
+        let (sk, _pk_correct) = fixed_keypair(31);
+        let (_sk_other, pk_wrong) = fixed_keypair(33);
+        let leaves: Vec<Hash256> = (0..4u64)
+            .map(|i| rfc9162_leaf_hash(format!("w{i}").as_bytes()))
+            .collect();
+        let root = build_root(&leaves);
+        let signed = signed_checkpoint_with_root(4, root, "apex", &sk);
+        let proof = make_proof(&leaves, 1);
+
+        // Wrong pubkey → key_hash mismatch → SignatureInvalid.
+        let r = signed.verify_inclusion_proof(&proof, &leaves[1], "apex", &pk_wrong);
+        assert_eq!(r, Err(CheckpointInclusionError::SignatureInvalid));
+    }
+
+    #[test]
+    fn inclusion_proof_with_tampered_proof_rejects() {
+        let (sk, pk) = fixed_keypair(31);
+        let leaves: Vec<Hash256> = (0..4u64)
+            .map(|i| rfc9162_leaf_hash(format!("w{i}").as_bytes()))
+            .collect();
+        let root = build_root(&leaves);
+        let signed = signed_checkpoint_with_root(4, root, "apex", &sk);
+        let mut proof = make_proof(&leaves, 1);
+        proof.sibling_hashes[0] = [0xFF; 32]; // tamper
+
+        let r = signed.verify_inclusion_proof(&proof, &leaves[1], "apex", &pk);
+        assert!(
+            matches!(r, Err(CheckpointInclusionError::Inclusion(_))),
+            "expected Inclusion error, got {r:?}"
+        );
+    }
+
+    #[test]
+    fn inclusion_proof_with_tree_size_mismatch_rejects() {
+        let (sk, pk) = fixed_keypair(31);
+        let leaves: Vec<Hash256> = (0..4u64)
+            .map(|i| rfc9162_leaf_hash(format!("w{i}").as_bytes()))
+            .collect();
+        let root = build_root(&leaves);
+        // Checkpoint claims tree_size = 8; proof is for tree of 4.
+        let signed = signed_checkpoint_with_root(8, root, "apex", &sk);
+        let proof = make_proof(&leaves, 1);
+
+        let r = signed.verify_inclusion_proof(&proof, &leaves[1], "apex", &pk);
+        assert_eq!(r, Err(CheckpointInclusionError::TreeSizeMismatch));
+    }
+
+    #[test]
+    fn inclusion_proof_with_wrong_leaf_hash_rejects() {
+        let (sk, pk) = fixed_keypair(31);
+        let leaves: Vec<Hash256> = (0..4u64)
+            .map(|i| rfc9162_leaf_hash(format!("w{i}").as_bytes()))
+            .collect();
+        let root = build_root(&leaves);
+        let signed = signed_checkpoint_with_root(4, root, "apex", &sk);
+        let proof = make_proof(&leaves, 1);
+        let wrong_leaf = [0xCC; 32];
+
+        let r = signed.verify_inclusion_proof(&proof, &wrong_leaf, "apex", &pk);
+        assert!(
+            matches!(r, Err(CheckpointInclusionError::Inclusion(_))),
+            "expected Inclusion error, got {r:?}"
+        );
     }
 }
