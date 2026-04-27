@@ -50,6 +50,16 @@ enum Command {
             default_value = "/var/lib/local-knowledge/state"
         )]
         state_dir: PathBuf,
+
+        /// Phase 2 Step 7: enable real-time collaborative editing via
+        /// y-codemirror.next + a tokio broadcast WebSocket relay at
+        /// `/ws/collab/{slug}`. Default off; the route is only mounted
+        /// when this flag is set, and `cm-collab.bundle.js` is only
+        /// loaded by the editor when `window.WIKI_COLLAB_ENABLED` is
+        /// templated by the server. Two operators editing the same
+        /// TOPIC see each other's cursors.
+        #[arg(long, env = "WIKI_ENABLE_COLLAB")]
+        enable_collab: bool,
     },
 }
 
@@ -68,7 +78,8 @@ async fn main() -> Result<()> {
             bind,
             citations_yaml,
             state_dir,
-        } => serve(content_dir, bind, citations_yaml, state_dir).await,
+            enable_collab,
+        } => serve(content_dir, bind, citations_yaml, state_dir, enable_collab).await,
     }
 }
 
@@ -77,6 +88,7 @@ async fn serve(
     bind: SocketAddr,
     citations_yaml: PathBuf,
     state_dir: PathBuf,
+    enable_collab: bool,
 ) -> Result<()> {
     if !content_dir.is_dir() {
         bail!(
@@ -98,10 +110,15 @@ async fn serve(
     let search_index = search::build_index(&content_dir, &state_dir).await?;
     tracing::info!("search index ready");
 
+    if enable_collab {
+        tracing::info!("collab WebSocket relay enabled at /ws/collab/{{slug}}");
+    }
     let state = AppState {
         content_dir,
         citations_yaml,
         search: Arc::new(search_index),
+        collab: Arc::new(app_mediakit_knowledge::collab::CollabRooms::new()),
+        enable_collab,
     };
     let app = router(state);
     let listener = tokio::net::TcpListener::bind(bind).await?;
