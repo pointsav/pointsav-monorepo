@@ -8,8 +8,8 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use ed25519_dalek::{Signer, SigningKey};
 use system_core::{
-    Capability, CapabilityType, Checkpoint, LedgerAnchor, NoteSignature, Right,
-    SignedCheckpoint,
+    rfc9162_internal_hash, rfc9162_leaf_hash, Capability, CapabilityType, Checkpoint,
+    InclusionProof, LedgerAnchor, NoteSignature, Right, SignedCheckpoint, WitnessRecord,
 };
 use system_ledger::{InMemoryLedger, LedgerConsumer};
 
@@ -139,6 +139,178 @@ fn bench_consult_capability_allow(c: &mut Criterion) {
     });
 }
 
+// ---------- Phase 1A.4 inclusion-proof benchmarks ----------
+
+fn build_merkle_root(leaves: &[[u8; 32]]) -> [u8; 32] {
+    let mut layer = leaves.to_vec();
+    while layer.len() > 1 {
+        let mut next = Vec::with_capacity(layer.len().div_ceil(2));
+        let mut i = 0;
+        while i < layer.len() {
+            if i + 1 < layer.len() {
+                next.push(rfc9162_internal_hash(&layer[i], &layer[i + 1]));
+            } else {
+                next.push(layer[i]);
+            }
+            i += 2;
+        }
+        layer = next;
+    }
+    layer.into_iter().next().unwrap()
+}
+
+fn make_inclusion_proof(leaves: &[[u8; 32]], leaf_index: u64) -> InclusionProof {
+    let mut path = Vec::new();
+    let mut layer = leaves.to_vec();
+    let mut idx = leaf_index as usize;
+    while layer.len() > 1 {
+        let sibling_idx = idx ^ 1;
+        if sibling_idx < layer.len() {
+            path.push(layer[sibling_idx]);
+        }
+        let mut next = Vec::with_capacity(layer.len().div_ceil(2));
+        let mut i = 0;
+        while i < layer.len() {
+            if i + 1 < layer.len() {
+                next.push(rfc9162_internal_hash(&layer[i], &layer[i + 1]));
+            } else {
+                next.push(layer[i]);
+            }
+            i += 2;
+        }
+        idx /= 2;
+        layer = next;
+    }
+    InclusionProof {
+        leaf_index,
+        tree_size: leaves.len() as u64,
+        sibling_hashes: path,
+    }
+}
+
+fn bench_verify_inclusion_proof_raw_8_leaves(c: &mut Criterion) {
+    let leaves: Vec<[u8; 32]> = (0..8u64)
+        .map(|i| rfc9162_leaf_hash(format!("leaf-{i}").as_bytes()))
+        .collect();
+    let root = build_merkle_root(&leaves);
+    let proof = make_inclusion_proof(&leaves, 4);
+    c.bench_function(
+        "InclusionProof::verify (raw, tree-size 8 — 3-hash path)",
+        |b| b.iter(|| black_box(proof.verify(&leaves[4], &root).unwrap())),
+    );
+}
+
+fn bench_verify_inclusion_proof_raw_1024_leaves(c: &mut Criterion) {
+    let leaves: Vec<[u8; 32]> = (0..1024u64)
+        .map(|i| rfc9162_leaf_hash(format!("leaf-{i}").as_bytes()))
+        .collect();
+    let root = build_merkle_root(&leaves);
+    let proof = make_inclusion_proof(&leaves, 512);
+    c.bench_function(
+        "InclusionProof::verify (raw, tree-size 1024 — 10-hash path)",
+        |b| b.iter(|| black_box(proof.verify(&leaves[512], &root).unwrap())),
+    );
+}
+
+fn bench_signed_checkpoint_verify_inclusion_proof(c: &mut Criterion) {
+    let (sk, pk) = keypair(0x55);
+    let leaves: Vec<[u8; 32]> = (0..1024u64)
+        .map(|i| rfc9162_leaf_hash(format!("leaf-{i}").as_bytes()))
+        .collect();
+    let root = build_merkle_root(&leaves);
+    let proof = make_inclusion_proof(&leaves, 512);
+    let cp = Checkpoint {
+        origin: "foundry.bench.cap-ledger".to_string(),
+        tree_size: 1024,
+        root_hash: root,
+        extensions: vec![],
+    };
+    let body = cp.body_bytes();
+    let key_hash = NoteSignature::derive_key_hash("apex", &pk);
+    let sig = sk.sign(&body).to_bytes();
+    let signed = SignedCheckpoint {
+        checkpoint: cp,
+        signatures: vec![NoteSignature {
+            signer_name: "apex".to_string(),
+            key_hash,
+            signature: sig,
+        }],
+    };
+    c.bench_function(
+        "SignedCheckpoint::verify_inclusion_proof (composed, 1024-leaf tree)",
+        |b| {
+            b.iter(|| {
+                black_box(
+                    signed
+                        .verify_inclusion_proof(&proof, &leaves[512], "apex", &pk)
+                        .unwrap(),
+                )
+            })
+        },
+    );
+}
+
+fn bench_apply_witness_record_with_proof(c: &mut Criterion) {
+    let (sk, pk) = keypair(0x66);
+    let witness = WitnessRecord {
+        capability_hash: [0xBB; 32],
+        new_expiry_t: 5000,
+        signature: vec![],
+    };
+    // Compute leaf hash matching InMemoryLedger::witness_record_leaf_hash.
+    let bytes = serde_json::to_vec(&witness).expect("serializable");
+    let witness_leaf = rfc9162_leaf_hash(&bytes);
+
+    // Build a 1024-leaf tree with our witness at index 512.
+    let mut leaves: Vec<[u8; 32]> = (0..1024u64)
+        .map(|i| rfc9162_leaf_hash(format!("filler-{i}").as_bytes()))
+        .collect();
+    leaves[512] = witness_leaf;
+    let root = build_merkle_root(&leaves);
+    let proof = make_inclusion_proof(&leaves, 512);
+
+    // Build the signed checkpoint at this root.
+    let cp = Checkpoint {
+        origin: "foundry.bench.cap-ledger".to_string(),
+        tree_size: 1024,
+        root_hash: root,
+        extensions: vec![],
+    };
+    let body = cp.body_bytes();
+    let key_hash = NoteSignature::derive_key_hash("apex", &pk);
+    let sig = sk.sign(&body).to_bytes();
+    let signed_cp = SignedCheckpoint {
+        checkpoint: cp,
+        signatures: vec![NoteSignature {
+            signer_name: "apex".to_string(),
+            key_hash,
+            signature: sig,
+        }],
+    };
+
+    c.bench_function(
+        "apply_witness_record (full path: verify_inclusion_proof + insert)",
+        |b| {
+            b.iter_batched(
+                || {
+                    let mut ledger = InMemoryLedger::new();
+                    ledger.apex.record_genesis("apex", pk, 0).unwrap();
+                    ledger.set_current_checkpoint(signed_cp.clone());
+                    ledger
+                },
+                |mut ledger| {
+                    black_box(
+                        ledger
+                            .apply_witness_record(witness.clone(), proof.clone())
+                            .unwrap(),
+                    )
+                },
+                criterion::BatchSize::SmallInput,
+            )
+        },
+    );
+}
+
 criterion_group!(
     benches,
     bench_capability_hash,
@@ -147,5 +319,9 @@ criterion_group!(
     bench_cache_hit,
     bench_cache_miss,
     bench_consult_capability_allow,
+    bench_verify_inclusion_proof_raw_8_leaves,
+    bench_verify_inclusion_proof_raw_1024_leaves,
+    bench_signed_checkpoint_verify_inclusion_proof,
+    bench_apply_witness_record_with_proof,
 );
 criterion_main!(benches);
