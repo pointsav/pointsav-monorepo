@@ -270,6 +270,120 @@ function makeSquiggleLinter() {
   };
 }
 
+// ── Step 7: collab bundle lazy-load ──────────────────────────────────────────
+// When --enable-collab is set on the server, the editor page templates
+// `window.WIKI_COLLAB_ENABLED = true`.  We then load cm-collab.bundle.js
+// (yjs + y-codemirror.next + y-websocket) on demand so production deploys
+// without the flag never pull yjs.
+function loadCollabBundle() {
+  return new Promise(function (resolve, reject) {
+    if (typeof CMCOLLAB !== 'undefined') return resolve();
+    var s = document.createElement('script');
+    s.src = '/static/vendor/cm-collab.bundle.js';
+    s.async = false;
+    s.onload = function () { resolve(); };
+    s.onerror = function () { reject(new Error('failed to load cm-collab.bundle.js')); };
+    document.head.appendChild(s);
+  });
+}
+
+// Construct the SAA editor — reused by both the collab-on and collab-off
+// paths.  The collab branch wires a Y.Doc + WebsocketProvider + the
+// y-codemirror.next yCollab() extension at editor-creation time
+// (CodeMirror 6 extensions can't be cleanly bolted on after construction).
+function buildSaaEditor(slot, slug, initialDoc, collabEnabled) {
+  var extensions = [
+    CMSAA.commands.history(),
+    CMSAA.langMarkdown.markdown(),
+    CMSAA.view.lineNumbers(),
+    CMSAA.view.EditorView.lineWrapping,
+    // Step 4 + Step 6 keymaps: history first, then doorman Tab / Cmd-K,
+    // then CodeMirror defaults.  Order matters: first handler that returns
+    // true wins.  handleTab intentionally returns false so default indent
+    // remains available.
+    CMSAA.view.keymap.of(
+      CMSAA.commands.historyKeymap.concat([
+        { key: 'Tab', run: handleTab },
+        { key: 'Mod-k', run: handleCmdK },
+      ]).concat(CMSAA.commands.defaultKeymap)
+    ),
+    CMSAA.lint.lintGutter(),
+    CMSAA.lint.linter(makeSquiggleLinter(), { delay: 250 }),
+    // Step 5 — citation autocomplete on `[` trigger.
+    CMSAA.autocomplete.autocompletion({
+      override: [citationCompletionSource],
+      activateOnTyping: true,
+    }),
+  ];
+
+  // Step 7 — collab branch.  Y.Doc + WebsocketProvider + yCollab.  The
+  // initial doc seeds Y.Text only when the room is empty (so a second
+  // client joining doesn't double-insert the seed).  WebsocketProvider's
+  // URL = serverUrl + '/' + room, so serverUrl is the route prefix and
+  // room is the slug.
+  if (collabEnabled && typeof CMCOLLAB !== 'undefined') {
+    var ydoc = new CMCOLLAB.yjs.Doc();
+    var protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+    var wsBase = protocol + '//' + location.host + '/ws/collab';
+    var provider = new CMCOLLAB.ywebsocket.WebsocketProvider(wsBase, slug, ydoc);
+    var ytext = ydoc.getText('saa');
+    provider.on('synced', function (isSynced) {
+      if (isSynced && ytext.length === 0 && initialDoc.length > 0) {
+        ytext.insert(0, initialDoc);
+      }
+    });
+    extensions.push(CMCOLLAB.ycm.yCollab(ytext, provider.awareness));
+  }
+
+  var view = new CMSAA.view.EditorView({
+    // When collab is on, leave the initial doc empty — Y.Text seeds it
+    // after the synced event so we don't double-insert across clients.
+    doc: collabEnabled ? '' : initialDoc,
+    extensions: extensions,
+    parent: slot,
+  });
+
+  // Save button — POSTs the current doc.  Works for both paths; the relay
+  // keeps state in-memory only, so save is the only persistence path.
+  var saveBtn = document.getElementById('saa-save');
+  var statusEl = document.getElementById('saa-status');
+
+  function setStatus(msg, ok) {
+    if (!statusEl) return;
+    statusEl.textContent = msg || '';
+    statusEl.className = 'saa-status' + (ok === false ? ' saa-status-error' : '');
+  }
+
+  if (saveBtn) {
+    saveBtn.addEventListener('click', function () {
+      saveBtn.disabled = true;
+      var prevLabel = saveBtn.textContent;
+      saveBtn.textContent = 'Saving…';
+      setStatus('');
+      var body = view.state.doc.toString();
+      fetch('/edit/' + encodeURIComponent(slug), {
+        method: 'POST',
+        headers: { 'content-type': 'text/plain' },
+        body: body,
+      })
+        .then(function (resp) {
+          if (!resp.ok) throw new Error('HTTP ' + resp.status);
+          return resp.text();
+        })
+        .then(function () {
+          saveBtn.textContent = prevLabel;
+          saveBtn.disabled = false;
+          setStatus('Saved at ' + new Date().toLocaleTimeString(), true);
+        })
+        .catch(function (e) {
+          saveBtn.textContent = prevLabel;
+          saveBtn.disabled = false;
+          setStatus('Save failed: ' + e.message, false);
+        });
+    });
+  }
+}
+
 (function () {
   document.addEventListener('DOMContentLoaded', function () {
     var slot = document.getElementById('saa-editor');
@@ -284,72 +398,18 @@ function makeSquiggleLinter() {
     fetchSquiggleRules();
     fetchCitationRegistry();
 
-    var extensions = [
-      CMSAA.commands.history(),
-      CMSAA.langMarkdown.markdown(),
-      CMSAA.view.lineNumbers(),
-      CMSAA.view.EditorView.lineWrapping,
-      // Step 4 + Step 6 keymaps: history bindings first, then the doorman
-      // Tab / Cmd-K handlers, then CodeMirror defaults.  Order matters: the
-      // first handler that returns true wins.  handleTab intentionally returns
-      // false so the default indent behaviour remains available.
-      CMSAA.view.keymap.of(
-        CMSAA.commands.historyKeymap.concat([
-          { key: 'Tab', run: handleTab },
-          { key: 'Mod-k', run: handleCmdK },
-        ]).concat(CMSAA.commands.defaultKeymap)
-      ),
-      CMSAA.lint.lintGutter(),
-      CMSAA.lint.linter(makeSquiggleLinter(), { delay: 250 }),
-      // Step 5 — citation autocomplete on `[` trigger.
-      CMSAA.autocomplete.autocompletion({
-        override: [citationCompletionSource],
-        activateOnTyping: true,
-      }),
-    ];
-
-    var view = new CMSAA.view.EditorView({
-      doc: initialDoc,
-      extensions: extensions,
-      parent: slot,
-    });
-
-    var saveBtn = document.getElementById('saa-save');
-    var statusEl = document.getElementById('saa-status');
-
-    function setStatus(msg, ok) {
-      if (!statusEl) return;
-      statusEl.textContent = msg || '';
-      statusEl.className = 'saa-status' + (ok === false ? ' saa-status-error' : '');
+    // Step 7 — collab gate.  When --enable-collab is set on the server,
+    // lazy-load cm-collab.bundle.js and construct the editor with the
+    // yCollab extension; otherwise build the standard editor.
+    if (window.WIKI_COLLAB_ENABLED) {
+      loadCollabBundle()
+        .then(function () { buildSaaEditor(slot, slug, initialDoc, true); })
+        .catch(function (e) {
+          console.warn('SAA collab: bundle load failed; starting without collab', e);
+          buildSaaEditor(slot, slug, initialDoc, false);
+        });
+      return;
     }
-
-    if (saveBtn) {
-      saveBtn.addEventListener('click', function () {
-        saveBtn.disabled = true;
-        var prevLabel = saveBtn.textContent;
-        saveBtn.textContent = 'Saving…';
-        setStatus('');
-        var body = view.state.doc.toString();
-        fetch('/edit/' + encodeURIComponent(slug), {
-          method: 'POST',
-          headers: { 'content-type': 'text/plain' },
-          body: body,
-        })
-          .then(function (resp) {
-            if (!resp.ok) throw new Error('HTTP ' + resp.status);
-            return resp.text();
-          })
-          .then(function () {
-            saveBtn.textContent = prevLabel;
-            saveBtn.disabled = false;
-            setStatus('Saved at ' + new Date().toLocaleTimeString(), true);
-          })
-          .catch(function (e) {
-            saveBtn.textContent = prevLabel;
-            saveBtn.disabled = false;
-            setStatus('Save failed: ' + e.message, false);
-          });
-      });
-    }
+    buildSaaEditor(slot, slug, initialDoc, false);
   });
 }());

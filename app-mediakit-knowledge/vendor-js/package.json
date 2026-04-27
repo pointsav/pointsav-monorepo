@@ -14,7 +14,11 @@
     "@codemirror/language": "^6.10.0",
     "@codemirror/lint": "^6.8.0",
     "@codemirror/state": "^6.5.0",
-    "@codemirror/view": "^6.36.0"
+    "@codemirror/view": "^6.36.0",
+    "yjs": "^13.6.0",
+    "y-codemirror.next": "^0.3.0",
+    "y-websocket": "^2.0.0",
+    "y-protocols": "^1.0.0"
   },
   "devDependencies": {
     "esbuild": "^0.25.0"

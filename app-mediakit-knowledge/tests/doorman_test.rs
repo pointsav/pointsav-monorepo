@@ -24,6 +24,8 @@ async fn doorman_state() -> (AppState, tempfile::TempDir, tempfile::TempDir) {
             content_dir: dir.path().to_path_buf(),
             citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
             search: Arc::new(index),
+            collab: Arc::new(app_mediakit_knowledge::collab::CollabRooms::new()),
+            enable_collab: false,
         },
         dir,
         state_dir,

@@ -23,7 +23,7 @@ path = "src/lib.rs"
 # Phase 1 deps only. Phases 3 (search), 4 (git), 5 (auth), 7 (federation),
 # 8 (disclosure mode) add more deps as they land. See ARCHITECTURE.md.
 [dependencies]
-axum = "0.8"
+axum = { version = "0.8", features = ["ws"] }
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "signal", "fs"] }
 tower = "0.5"
 tower-http = { version = "0.6", features = ["trace", "set-header", "compression-br", "compression-gzip"] }
@@ -51,6 +51,12 @@ tantivy = "0.24"
 # for mtime → FixedDateTime conversions in feeds.rs.
 atom_syndication = "0.12"
 chrono = "0.4"
+# Phase 2 Step 7: real-time collab via yjs (client-side); server is a
+# passthrough WebSocket relay (per-slug rooms via tokio::sync::broadcast).
+# No yrs/Yjs Rust port needed for the relay; persistence is via the
+# existing /edit POST when user clicks save. futures-util pulls in the
+# StreamExt::split needed for axum WebSocket sender/receiver split.
+futures-util = "0.3"
 
 [dev-dependencies]
 tower = { version = "0.5", features = ["util"] }

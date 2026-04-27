@@ -28,6 +28,8 @@ async fn fixture_state() -> (AppState, tempfile::TempDir, tempfile::TempDir) {
         content_dir: dir.path().to_path_buf(),
         citations_yaml: std::path::PathBuf::from("/nonexistent/citations.yaml"),
         search: Arc::new(index),
+        collab: Arc::new(app_mediakit_knowledge::collab::CollabRooms::new()),
+        enable_collab: false,
     };
     (state, dir, state_dir)
 }
@@ -105,6 +107,8 @@ async fn get_edit_initial_json_round_trips_special_chars() {
         content_dir: dir.path().to_path_buf(),
         citations_yaml: std::path::PathBuf::from("/nonexistent/citations.yaml"),
         search: Arc::new(index),
+        collab: Arc::new(app_mediakit_knowledge::collab::CollabRooms::new()),
+        enable_collab: false,
     };
     let app = router(state);
     let resp = app
