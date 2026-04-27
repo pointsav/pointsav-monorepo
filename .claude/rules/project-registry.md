@@ -8,7 +8,7 @@ must be closed.
 
 State vocabulary — see `~/Foundry/CLAUDE.md` §8 for definitions.
 
-Last updated: 2026-04-26.
+Last updated: 2026-04-27.
 
 ---
 
@@ -100,6 +100,7 @@ Last updated: 2026-04-26.
 | system-core | Active | system | Activated 2026-04-26 via framework §9; Phase 1A increment 1 of `cluster/project-system` (Capability + WitnessRecord + LedgerAnchor types per Doctrine claim #33 + system-substrate-doctrine §3.1+§5); workspace member as of v0.1.20; 6 unit tests passing |
 | system-gateway-mba | Scaffold-coded | system | 8 files; in workspace members |
 | system-interface | Scaffold-coded | system | 4 files |
+| system-ledger | Active | system | NEW 2026-04-27 — Phase 1A increment 3 of `cluster/project-system` (Master Option B); state-machine consumer of system-core's Capability Ledger Substrate primitives; activated per framework §9 at creation; workspace member; skeleton (trait + module stubs); module impls pending #18/#19/#11/#12/#20/#21 |
 | system-network-interface | Scaffold-coded | system | 6 files |
 | system-resolution | Reserved-folder | system | 2 files |
 | system-security | Scaffold-coded | system | 22 files; in workspace members |
@@ -181,9 +182,9 @@ Last updated: 2026-04-26.
 
 ---
 
-## Summary (2026-04-26)
+## Summary (2026-04-27)
 
-- **Active:** 5 (`app-console-bookkeeper`, `app-workplace-presentation`, `app-workplace-proforma`, `service-extraction`, `system-core`)
+- **Active:** 6 (`app-console-bookkeeper`, `app-workplace-presentation`, `app-workplace-proforma`, `service-extraction`, `system-core`, `system-ledger`)
 - **Scaffold-coded:** 52
 - **Reserved-folder:** 36
 - **Defect:** 0
@@ -191,4 +192,4 @@ Last updated: 2026-04-26.
 - **Dormant:** 0
 - **Archived:** 0
 
-**Total rows:** 97.
+**Total rows:** 98 (system-ledger added 2026-04-27).
