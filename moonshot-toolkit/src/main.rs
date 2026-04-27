@@ -3,8 +3,8 @@ use std::fs;
 fn main() {
     println!("🚀 Forging Managed Substrate for Laptop B...");
     
-    // 1. Read the Blueprint
-    let xml_data = fs::read_to_string("system-substrate.xml")
+    // 1. Read the Blueprint (legacy stub; replaced by clap CLI in next commit per cluster task #37)
+    let _xml_data = fs::read_to_string("system-substrate.xml")
         .expect("Failed to read hardware blueprint");
 
     // 2. Logic to inject IP/MAC into the Substrate Source 
