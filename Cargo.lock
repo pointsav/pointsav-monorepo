@@ -1902,6 +1902,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "system-ledger"
+version = "0.1.0"
+dependencies = [
+ "system-core",
+]
+
+[[package]]
 name = "system-security"
 version = "0.1.0"
 
