@@ -96,6 +96,80 @@ Newest on top. Append a dated block when a session includes meaningful cleanup w
 
 ---
 
+## 2026-04-27 — Phase 2 Step 7 (collab) + Phase 4 plan + HTTPS-launch coordination
+
+- **Phase 2 implementation now COMPLETE end-to-end** — Step 7
+  (collab via yjs) shipped (commit `05f1dab`, Peter). Default-off
+  behind `--enable-collab` CLI flag; production deploys without
+  the flag never load the 302 KB collab JS bundle and never expose
+  the WebSocket route. Server is a passthrough relay
+  (`tokio::sync::broadcast` per-slug rooms; no `yrs`/Yjs Rust port
+  needed because the relay carries no doc state). Client uses
+  `yjs` + `y-codemirror.next` + `y-websocket` lazy-loaded from
+  `cm-collab.bundle.js`. Test count: 90 → 97 (3 unit + 4
+  integration). Manual two-client smoke (operators editing the
+  same TOPIC and seeing each other's cursors) is needed before
+  ratification but the unit/integration coverage proves the
+  framework is wired correctly.
+
+- **Phase 4 implementation plan landed for BP1 review** — commit
+  `73e931e` (Jennifer). `docs/PHASE-4-PLAN.md` (~340 lines)
+  covers 8 sequenced steps (git2 wiring + commit-on-edit; GET
+  /history + /blame via gix; GET /diff; redb link-graph + GET
+  /backlinks; blake3 federation-seam baseline; MCP server via
+  rmcp; read-only Git remote via smart-HTTP; OpenAPI 3.1 spec).
+  File map, route table, CLI flag additions, deferred items,
+  test plan, **seven open questions for operator at BP1** (MCP
+  transport, git remote protocol, --enable-mcp default,
+  project-slm coordination for Step 4.6, gix vs git2 split,
+  libgit2-dev system-lib install, OpenAPI hand-author vs codegen).
+
+- **HTTPS-launch coordination** (cross-cluster, cross-sub-clone)
+  — operator decided 2026-04-27 to push HTTPS live at
+  `documentation.pointsav.com` immediately, served from a
+  minimal placeholder content set (NOT the legacy 30+ TOPIC
+  corpus, which will be re-written in a separate `project-language`
+  cluster effort). Four BCSC-clean placeholder TOPICs authored
+  in `content-wiki-documentation/launch-placeholder/` (commit
+  `6f14f06` in content-wiki-documentation, Jennifer). Outbox
+  message dispatched to Master for the redeploy + certbot session.
+  Collapses the BCSC pre-flip concern (placeholder content has
+  no SDF current-tense framings, no unlabelled FLI, no Do-Not-Use
+  vocabulary). Production HTTPS-flip blocked on Master executing
+  the queued redeploy (build from cluster HEAD; install binary
+  with `--citations-yaml` + `--state-dir` + optional
+  `--enable-collab` flags; switch systemd unit's `--content-dir`
+  to `launch-placeholder/`; `certbot --nginx`).
+
+- **Sonnet usage in this segment**: zero. All three tracks
+  (placeholder content, Step 7 collab, Phase 4 plan) executed
+  Opus-direct because each was either (a) requiring tight
+  judgment on novel structure (Step 7 collab integration with
+  CodeMirror's create-time extension constraint), or (b) doc
+  authoring where context preservation matters more than
+  per-token cost (Phase 4 plan).
+
+- **OPEN QUESTIONS still pending operator/Master from prior
+  Phase 3 segment** (carried forward; this segment did not close
+  any of them):
+  1. ARCH §6 schema extension (hatnote, translations, categories,
+     disclosure_class: glossary)
+  2. Z2 BCSC bulk-fix decisions (6 contested items) — DEFERRED to
+     project-language cluster; this cluster's launch-placeholder
+     bypasses
+  3. `apt install libssl-dev` + (Phase 4 brings) `libgit2-dev` —
+     production binary build pre-requisites
+  4. cargo workspace coupling at monorepo root —
+     service-content's reqwest pulls openssl-sys; permanent fix
+     out-of-cluster scope
+
+- **NEW OPEN QUESTIONS surfaced this segment:**
+  1. Phase 4 BP1 — 7 questions in PHASE-4-PLAN.md §7 awaiting
+     operator clearance before Phase 4 implementation begins
+  2. Phase 2 Step 7 collab — manual two-client smoke verification
+     needed; operator decision on whether to enable in production
+     deploy
+
 ## 2026-04-26 — Phase 3 implementation complete (Steps 3.1–3.4)
 
 - **Phase 3 of `app-mediakit-knowledge` shipped end-to-end** —
