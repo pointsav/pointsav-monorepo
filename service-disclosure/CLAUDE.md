@@ -1,7 +1,7 @@
 # CLAUDE.md — service-disclosure
 
 > **State:** Active  —  **Last updated:** 2026-04-27
-> **Version:** 0.1.0  (per `~/Foundry/CLAUDE.md` §7 and DOCTRINE.md §VIII)
+> **Version:** 0.2.0  (per `~/Foundry/CLAUDE.md` §7 and DOCTRINE.md §VIII)
 > **Registry row:** `pointsav-monorepo/.claude/rules/project-registry.md`
 >
 > When state changes, update this header AND the registry row in the
@@ -22,30 +22,26 @@ Operational anchor: `~/Foundry/conventions/language-protocol-substrate.md`.
 
 ## Current state
 
-Phase 1A landed in v0.1.0:
+Phase 1A and Phase 1C landed:
 
-- `Family` enum with four variants (Prose, Comms, Legal, Translate)
-- `GenreTemplate` enum with eighteen variants partitioned across
-  Prose (10), Comms (4), and Legal (4)
-- `ProtocolRequest` and `Frontmatter` structs with full serde
-  round-trip coverage
-- `Register` enum with five variants
-- `validate_frontmatter` with universal and per-genre rules,
-  returning every error in one pass
-- `BANNED_VOCABULARY` constant with eight cross-genre prohibited
-  terms
+- v0.1.0 (Phase 1A): `Family` (4 variants), `GenreTemplate` (18
+  variants), `ProtocolRequest`, `Frontmatter`, `Register`,
+  `validate_frontmatter`, `BANNED_VOCABULARY` (8 terms).
+- v0.2.0 (Phase 1C): genre-template registry. Eighteen `.toml` +
+  `.md` pairs under `templates/`. Public functions `get_template`
+  and `get_template_description` return `&'static str` via
+  `include_str!`. `templates::ALL` lists every variant.
 
-Nineteen unit tests pass. `cargo check -p service-disclosure` and
+Twenty-six unit tests pass. `cargo check -p service-disclosure` and
 `cargo check --workspace` are green.
 
-Phase 1B (banned-vocabulary CFG export for `llguidance` or Outlines)
-and Phase 1C (genre-template registry with `.toml` + `.md`
-fragments per template) are queued — see `NEXT.md`.
-
-The schema-stable signal that unblocks `service-proofreader` from
-its hardcoded-protocol-templates stub has NOT yet been emitted.
-That signal lands when Phase 1B and Phase 1C ship and Master
-ratifies the public surface.
+Phase 1B (banned-vocabulary CFG export for `llguidance` or
+Outlines) is the remaining blocker before the schema-stable signal
+to `service-proofreader` can be emitted. Phase 1B itself is
+blocked on a cross-cluster decision: which decode-time constraint
+library does `service-slm` integrate with in the project-slm
+cluster's AS-2 implementation? Surfaced to Master via outbox on
+2026-04-27.
 
 ## Build and test
 
@@ -75,8 +71,9 @@ service-disclosure/
 │   ├── genre.rs        # Family + GenreTemplate
 │   ├── request.rs      # ProtocolRequest + Register
 │   ├── frontmatter.rs  # Frontmatter
+│   ├── templates.rs    # get_template + get_template_description + ALL
 │   └── validate.rs     # validate_frontmatter + ValidationError
-└── templates/          # Phase 1C target (empty until then)
+└── templates/          # 18 .toml + 18 .md (one pair per GenreTemplate)
 ```
 
 ## Hard constraints — do not violate

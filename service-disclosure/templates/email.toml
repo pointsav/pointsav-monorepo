@@ -1,0 +1,28 @@
+name = "email"
+family = "comms"
+required_sections = ["Subject", "Body", "Sign-off"]
+plain_text_first_30_lines = false
+bilingual_pair_required = false
+ascii_compatible = true
+target_reading_level = "grade-10"
+mean_sentence_length = 14
+max_sentence_length = 22
+banned_vocabulary_inherits = "@global"
+default_register = "bloomberg"
+tenant_required = true
+
+prompt_scaffolding = """
+You are improving an outbound email. Required parts: Subject (one
+line, specific, no clickbait), Body (the message; one idea per
+paragraph), Sign-off (the sender's name and role; no automated
+disclaimer unless legal requires).
+
+Honour the tenant's voice — Foundry routes per-tenant adapters at
+request time, so the tone aligns to the tenant slug. Do not
+generate marketing-grade prose; emails are personal communication.
+
+Sentence-length budget: mean ~14 words, max ~22 — emails are
+shorter than articles. Active voice. Banned vocabulary inherits
+the workspace-global list. Avoid hedging adverbs ("just", "simply",
+"basically") that telegraph diffidence.
+"""

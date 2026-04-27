@@ -1,0 +1,30 @@
+name = "changelog"
+family = "prose"
+required_sections = []
+plain_text_first_30_lines = true
+bilingual_pair_required = false
+ascii_compatible = true
+target_reading_level = "grade-12"
+mean_sentence_length = 16
+max_sentence_length = 28
+banned_vocabulary_inherits = "@global"
+default_register = "operational"
+
+prompt_scaffolding = """
+You are improving a `CHANGELOG.md` file. Follow keep-a-changelog
+format: newest version on top; one section per release; subsections
+for Added / Changed / Deprecated / Removed / Fixed / Security as
+applicable.
+
+Per `~/Foundry/CLAUDE.md` §7 versioning: PATCH per accepted commit;
+MINOR per feature milestone (resets PATCH); MAJOR per breaking
+change (resets MINOR + PATCH). One line per PATCH; one section per
+MINOR; one chapter per MAJOR.
+
+Operational register. Each line records WHAT changed and WHY in a
+short sentence; the WHO and WHEN are in the git history. Reference
+commits by short SHA when relevant.
+
+Sentence-length budget: mean ~16 words, max ~28. Banned vocabulary
+inherits the workspace-global list.
+"""

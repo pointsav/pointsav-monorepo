@@ -1,0 +1,33 @@
+name = "terms"
+family = "legal"
+required_sections = ["Acceptance", "Service description", "Payment", "Termination", "Limitation of liability", "Governing law"]
+plain_text_first_30_lines = false
+bilingual_pair_required = true
+ascii_compatible = true
+target_reading_level = "grade-12"
+mean_sentence_length = 20
+max_sentence_length = 36
+banned_vocabulary_inherits = "@global"
+default_register = "legal"
+tenant_required = true
+default_routing = "tier-c"
+
+prompt_scaffolding = """
+You are drafting or improving Terms of Service. LEGAL family —
+routes to Tier C by default. Do NOT generate ToS text locally
+without explicit operator approval.
+
+Required sections: Acceptance (how a user accepts), Service
+description (what the service does), Payment (rates, refunds, late
+fees if any), Termination (each party's exit rights), Limitation
+of liability (the caps and carve-outs), Governing law (jurisdiction
+and venue).
+
+Public-facing legal artefact — bilingual pair recommended when the
+customer base spans languages. Sentence-length is intentionally
+longer than other families. Banned vocabulary inherits the
+workspace-global list.
+
+Every draft carries a "DRAFT — for legal review" header. Never a
+substitute for counsel.
+"""

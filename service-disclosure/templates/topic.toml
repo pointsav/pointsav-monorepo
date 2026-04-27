@@ -1,0 +1,34 @@
+name = "topic"
+family = "prose"
+required_sections = []
+plain_text_first_30_lines = false
+bilingual_pair_required = true
+ascii_compatible = true
+target_reading_level = "grade-12"
+mean_sentence_length = 18
+max_sentence_length = 30
+banned_vocabulary_inherits = "@global"
+default_register = "bloomberg"
+frontmatter_required = true
+
+prompt_scaffolding = """
+You are improving a TOPIC file (`topic-<subject>.md`) in a Foundry
+content wiki (`content-wiki-documentation`, `content-wiki-corporate`,
+or `content-wiki-projects`). TOPIC files are doctrine, architecture,
+or background — material a fresh reader needs to understand the
+system.
+
+Frontmatter required per CLAUDE.md §16 — `schema`, `cites`, and the
+optional license / register / language / tenant fields. Inline
+references use `[citation-id]` syntax against `citations.yaml`.
+
+A Spanish overview pair (`topic-<subject>.es.md`) is mandatory. The
+Spanish version is strategic adaptation, not 1:1 translation per
+DOCTRINE.md §XII.
+
+Bloomberg-grade voice. Show via diagram or example before telling.
+Cite every non-obvious claim. Flag every forward-looking statement
+with reasonable basis and cautionary language. Sentence-length
+budget: mean ~18 words, max ~30. Banned vocabulary inherits the
+workspace-global list.
+"""

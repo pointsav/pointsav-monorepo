@@ -1,0 +1,29 @@
+name = "memo"
+family = "prose"
+required_sections = ["Background", "Decision", "Consequences"]
+plain_text_first_30_lines = false
+bilingual_pair_required = false
+ascii_compatible = true
+target_reading_level = "grade-12"
+mean_sentence_length = 18
+max_sentence_length = 30
+banned_vocabulary_inherits = "@global"
+default_register = "bloomberg"
+frontmatter_required = true
+
+prompt_scaffolding = """
+You are improving a MEMO file — an internal architecture or
+decision record. Required sections: Background (the problem and
+relevant constraints), Decision (what was chosen and the reasoning),
+Consequences (what changes downstream and what trade-offs are
+accepted).
+
+Frontmatter required (`schema`, `cites`, `forward_looking`).
+Bloomberg-grade voice. Cite every non-obvious claim. Flag every
+forward-looking statement with reasonable basis. Sentence-length
+budget: mean ~18 words, max ~30. Banned vocabulary inherits the
+workspace-global list.
+
+Reference prior MEMOs by canonical name when relevant. Do not
+restart numbering for revisions — edit in place per CLAUDE.md §6.
+"""
