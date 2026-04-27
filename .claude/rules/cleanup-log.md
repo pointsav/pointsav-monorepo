@@ -92,6 +92,48 @@ Newest on top. Append a dated block when a session includes meaningful cleanup w
 
 ---
 
+## 2026-04-27 — AS-2 scope correction surfaced to Master (Sonnet sub-agent chunk #1)
+
+- **Model-tier-discipline applied.** Per
+  `conventions/model-tier-discipline.md`, ran a research-only
+  Sonnet sub-agent (foreground; same Opus session, no
+  `.git/index` race) to verify the `llguidance` crate API
+  surface before scaffolding the AS-2 integration. Cost:
+  one foreground Agent invocation (~3 minutes wall, ~58k
+  Sonnet tokens). Saved: committing to a 3-4 week
+  implementation against a wrong design.
+- **Finding.** `llguidance` is real (v1.7.4, MIT, pure
+  Rust, actively maintained) but is decode-time
+  infrastructure that needs to be in the LLM sampler loop.
+  Our Doorman is HTTP-only — no integration point on
+  Tier A or Tier B for the Rust crate itself. The
+  decision-rationale committed in `9c99af5` is sound for
+  the *protocol* choice (vLLM does support llguidance
+  natively as a sampling backend), but the "Rust-native"
+  benefit accrues to the vLLM server, not to Doorman code.
+- **Per-tier reality:**
+  - Tier A llama-server HTTP API: only `grammar` (GBNF) +
+    `json_schema` fields. Lark NOT accepted on the wire.
+  - Tier B vLLM HTTP API: Lark via
+    `extra_body.structured_outputs.grammar` (vLLM ≥0.12)
+    or legacy `extra_body.guided_grammar`. vLLM internally
+    applies llguidance.
+  - Tier C: no arbitrary grammar support (vendor-specific
+    JSON-mode at best).
+- **Outbox to Master.** Surfaced the correction with two
+  questions: (Q1) is Tier A grammar asymmetry acceptable
+  — apprentice on Tier A produces unconstrained output,
+  Lark only enforced when escalated to Tier B? (Q2) what's
+  the vLLM version target for the Doorman wire layer? Hold
+  on all AS-2 code work until Master ack.
+- **NEXT.md AS-2 entry rewritten** with corrected scope
+  and the HOLD-pending-Master-ack note.
+- **Task #1 description updated** with corrected scope.
+- **No code changes.** Tests still 46/46 passing in
+  slm-doorman.
+
+---
+
 ## 2026-04-27 — NEXT.md Queue refresh + fourth-pass zero-container drift surfaced
 
 - **NEXT.md sweep against committed reality.** Session-start
