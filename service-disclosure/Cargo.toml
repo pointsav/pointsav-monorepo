@@ -1,6 +1,6 @@
 [package]
 name = "service-disclosure"
-version = "0.2.0"
+version = "0.2.1"
 edition = "2021"
 description = "Schema + CFG substrate for Foundry editorial work — 4-family adapter taxonomy, genre-template registry, frontmatter validators, banned-vocabulary CFG"
 license = "Apache-2.0"

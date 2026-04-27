@@ -3,6 +3,19 @@
 Newest on top. PATCH per accepted commit; MINOR per feature; MAJOR
 per breaking change. Per `~/Foundry/CLAUDE.md` §7.
 
+## v0.2.1 — 2026-04-27
+
+- Added `CORPUS-SCHEMA.md` documenting the JSONL tuple shape for
+  the editorial-apprenticeship corpus. Specialises the substrate
+  convention's code-shaped tuple to the eight editorial task-types
+  declared by the cluster manifest, adding `language_protocol` and
+  `banned_vocabulary_hits` fields without forking the record schema.
+  Includes the closed `doctrine_violation_tag` set for DPO triples
+  on `refine` / `reject` verdicts. Documents the migration from the
+  v0.1 stub (`-v1-stub` schemas remain valid until schema-stable
+  signal lands).
+- No code change — PATCH bump per `~/Foundry/CLAUDE.md` §7.
+
 ## v0.2.0 — 2026-04-27
 
 - Phase 1C — genre-template registry. Eighteen `.toml` + `.md`
