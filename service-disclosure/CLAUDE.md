@@ -1,7 +1,7 @@
 # CLAUDE.md — service-disclosure
 
 > **State:** Active  —  **Last updated:** 2026-04-27
-> **Version:** 0.2.1  (per `~/Foundry/CLAUDE.md` §7 and DOCTRINE.md §VIII)
+> **Version:** 0.3.0  (per `~/Foundry/CLAUDE.md` §7 and DOCTRINE.md §VIII)
 > **Registry row:** `pointsav-monorepo/.claude/rules/project-registry.md`
 >
 > When state changes, update this header AND the registry row in the
