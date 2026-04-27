@@ -1,0 +1,13 @@
+[package]
+name = "service-disclosure"
+version = "0.1.0"
+edition = "2021"
+description = "Schema + CFG substrate for Foundry editorial work — 4-family adapter taxonomy, genre-template registry, frontmatter validators, banned-vocabulary CFG"
+license = "Apache-2.0"
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_yaml = "0.9"
+
+[dev-dependencies]
+serde_json = "1.0"
