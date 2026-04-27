@@ -146,7 +146,7 @@ Last updated: 2026-04-27.
 | moonshot-network | Scaffold-coded | moonshot | 4 files |
 | moonshot-protocol | Scaffold-coded | moonshot | 4 files |
 | moonshot-sel4-vmm | Scaffold-coded | moonshot | 4 files |
-| moonshot-toolkit | Active | moonshot | Activated 2026-04-27 per framework §9 (Master Option A lean + operator confirmation); workspace member; Phase 1B Rust-only build orchestrator replacing Microkit Python/CMake per MEMO §7; CLI rewrite (validate/plan/build) lands in subsequent commits this AUTO session; actual seL4 cross-compile + QEMU AArch64 boot is FUTURE task #14 |
+| moonshot-toolkit | Active | moonshot | Activated 2026-04-27 per framework §9 (Master Option A; Phase 1B greenlit); workspace member; Phase 1B Rust-only build orchestrator replacing Microkit Python/CMake per MEMO §7; v0.1.3 — `validate`/`plan`/`build` clap CLI shipped; `build` is stub printing `would run X` per step; crate test count: 30 (22 lib + 8 main) — including 12 spec.rs tests, 10 plan.rs tests, 8 main.rs CLI tests; FUTURE task #14: actual seL4 cross-compile + QEMU AArch64 boot — needs cross-compile toolchain installation + seL4 source vendoring strategy decisions |
 
 ## Tool (`tool-*`)
 

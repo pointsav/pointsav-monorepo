@@ -96,6 +96,87 @@ Newest on top. Append a dated block when a session includes meaningful cleanup w
 
 ---
 
+## 2026-04-27 — Task `cluster/project-system` (Phase 1B moonshot-toolkit activation + CLI rewrite; system-core 1A.4 hotfix)
+
+Continuous Phase 1B work across a token-budget gap. Six commits; two
+clusters of related work combined into one entry.
+
+- **`b809cbc`** (Peter Woodfine) — system-ledger: rustdoc on
+  `apply_witness_record` naming the handover-height inclusion-proof
+  verify semantics. Master's only concrete ask from the v0.1.26 reply:
+  document which apex signs at handover height so consumers do not
+  re-litigate the policy. No functional change; zero new tests.
+
+- **`ba34cd8`** (Peter Woodfine) — moonshot-toolkit activation per
+  framework §9 (Master Option A; Phase 1B greenlit). Files added:
+  `CLAUDE.md`, `AGENTS.md`, `NEXT.md`, `ARCHITECTURE.md`, bilingual
+  `README.md` + `README.es.md`, workspace-member entry in root
+  `Cargo.toml`, registry row. Activated against the prior 14-line
+  legacy stub `src/main.rs` and shell sketch `build-totebox.sh` —
+  both preserved in place pending the CLI rewrite in subsequent
+  commits.
+
+- **`045e5cc`** (Jennifer Woodfine) — moonshot-toolkit: `src/spec.rs`
+  SystemSpec + TOML parser. Microkit-equivalent system-description
+  schema. Invariants enforced: PD count ≤ 63, channels-per-PD ≤ 63,
+  no PD name collisions, channel endpoints reference declared PDs.
+  12 tests; crate total 12.
+
+- **`59d1fc0`** (Peter Woodfine) — moonshot-toolkit: `src/plan.rs`
+  BuildPlan deterministic generator. Content-addressed inputs via
+  SHA-256 hash per input file; BuildPlan body bytes canonical →
+  plan_hash is deterministic across runs given same SystemSpec.
+  10 tests; crate total 22.
+
+- **`abef0e3`** (Peter Woodfine) — system-core: re-export
+  `CheckpointInclusionError` at crate root to fix system-ledger build.
+  Phase 1A.4 regression: system-ledger imports the type from
+  `system_core` top-level but the `lib.rs` re-export was missing;
+  HEAD was broken for commits `9b5e4fd`–`59d1fc0`. system-core
+  0.1.3 → 0.1.4 PATCH. Cargo.lock also updated to HEAD's
+  moonshot-toolkit 0.1.2 (lockfile-refresh oversight from `045e5cc`
+  that silently persisted until caught here).
+
+- **`af6073f`** (Peter Woodfine) — moonshot-toolkit: `src/main.rs`
+  CLI rewrite (clap; `validate` / `plan` / `build` subcommands).
+  `build` is a stub that prints `would run X` per step — Phase 1B
+  v0.1.x scope by design; actual cross-compile is FUTURE task #14.
+  8 inline tests using `tempfile`. Adds `clap = "4"` +
+  `tempfile = "3"` dev-dependency. moonshot-toolkit 0.1.2 → 0.1.3.
+  Total 30 tests in crate (22 lib + 8 main).
+
+**Alternation drift observation.** The final three commits
+(`59d1fc0`, `abef0e3`, `af6073f`) are consecutive Peter Woodfine
+commits. This is identity-toggle drift from the workspace-wide
+`~/Foundry/identity/.toggle` being modified by concurrent commits in
+other clusters between this Task's commits. The toggle is intentionally
+global per CLAUDE.md §8; concurrent-cluster activity between Task
+commits can shift the expected alternation. Not a defect in this
+cluster's work — an operational-substrate observation.
+
+**Phase 1B v0.1.x scope closed.** validate/plan/build CLI working;
+build is stub. Phase 1A is structurally complete on the v0.2.x scope:
+system-core 0.1.4 + system-ledger 0.2.1 + moonshot-toolkit 0.1.3.
+
+**Tasks deferred / explicit FUTURE.**
+- Task #14 (actual seL4 cross-compile + QEMU AArch64 boot): FUTURE —
+  requires decisions on cross-compile toolchain (Nix vs Bazel
+  reproducible-build harness?), seL4 source vendoring strategy (git
+  submodule vs Cargo build.rs fetch vs vendor-sel4-kernel snapshot?),
+  and toolchain installation responsibility (operator vs Master vs
+  Task). Decision points surfaced for Master direction.
+- Tasks #22 (system-substrate hygiene) + #23 (system-security hygiene)
+  remain deferred per Master's "natural-touch session" framing — neither
+  was crossed by Phase 1B work.
+
+**Cross-cluster Cargo dep visibility.** A writeup at
+`/srv/foundry/clones/project-system/.claude/STAGING-cargo-dep-options.md`
+covers four resolution options (Cargo patch, submodule, branch merge,
+promote-then-consume). To be surfaced in the session-end outbox for
+Master direction.
+
+**Verification.** `cargo test -p moonshot-toolkit -p system-core -p system-ledger`: 30 + 35 + 44 = 109 tests passing, zero warnings.
+
 ## 2026-04-27 — Task `cluster/project-system` (Phase 1A.4 — Merkle inclusion proofs; v0.1.x → v0.2.x)
 
 Phase 1A.4 closes the v0.1.x structural-completion gap Master
