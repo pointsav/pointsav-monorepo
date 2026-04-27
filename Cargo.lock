@@ -1903,8 +1903,11 @@ dependencies = [
 
 [[package]]
 name = "system-ledger"
-version = "0.1.2"
+version = "0.1.3"
 dependencies = [
+ "ed25519-dalek",
+ "serde_json",
+ "sha2",
  "system-core",
  "tempfile",
 ]
