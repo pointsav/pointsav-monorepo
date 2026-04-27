@@ -8,29 +8,23 @@
 
 ## Right now
 
-Nothing in progress — Phase 1A and Phase 1C landed
-(v0.1.0 and v0.2.0). Next pickup is Phase 1B from the Queue, but
-Phase 1B is blocked on a cross-cluster decision (see Blocked).
+Phase 1A, Phase 1C, and Phase 1B all landed. The
+schema-stable-ratification trigger phrase has been emitted in the
+cluster outbox awaiting Master's ratification pass. On
+ratification, `service-disclosure` jumps v0.2.1 → v0.3.0 and the
+upgrade procedure relays to `project-proofreader` Task.
 
 ## Queue
 
-- Emit schema-stable signal to project-proofreader Task once
-  Phase 1B lands AND Master ratifies the public surface. Until
-  then, `service-proofreader` runs on hardcoded protocol templates.
-- Author Phase 1B banned-vocabulary CFG once the library question
-  resolves. Round-trip test: a synthetic prose sample containing
-  `leverage` rejected at decode time; same sample without
-  `leverage` passes. Document the CFG schema in `ARCHITECTURE.md`.
 - Author worked-example documents demonstrating each genre
-  template — useful for the Phase 2 style-guide TOPICs and for the
-  apprenticeship-corpus seed.
-
-## Blocked
-
-- Phase 1B CFG-format choice — Blocked on: confirmation of which
-  decode-time constraint library `service-slm` integrates with in
-  the project-slm cluster's AS-2 implementation (`llguidance` or
-  Outlines). Surfaced to Master via outbox 2026-04-27.
+  template — useful for apprenticeship-corpus seed material.
+- Phase 3 — apprenticeship corpus directory scaffold. Surface
+  `.gitignore` patterns to Master before authoring (Master
+  lands the workspace-tier `.gitignore` edit; Task commits the
+  per-task-type / per-tenant tree on `cluster/project-language`).
+- Phase 5 — factory-release-engineering propose-via-outbox.
+  Read-mode only; never commit there. Pickup if a future TOPIC
+  surfaces a needed governance edit candidate.
 
 ## Deferred
 
@@ -42,6 +36,12 @@ Phase 1B is blocked on a cross-cluster decision (see Blocked).
 
 ## Recently done
 
+- 2026-04-27: Phase 1B — `banned-vocab.lark` shipped at
+  `service-content/schemas/banned-vocab.lark` (Lark EBNF +
+  `llguidance` per Master's v0.1.26 spec). `validate.py` runs
+  in dual mode (Lark when available; regex fallback otherwise).
+  pass-fixture = 0 hits; fail-fixture = 10 hits. Schema-stable
+  ratification trigger phrase emitted in cluster outbox.
 - 2026-04-27: v0.2.1 — `CORPUS-SCHEMA.md` documents the JSONL
   tuple shape for editorial-apprenticeship records.
 - 2026-04-27: v0.2.0 — Phase 1C genre-template registry. 18 .toml +

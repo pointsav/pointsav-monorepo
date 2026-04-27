@@ -1,0 +1,20 @@
+Foundry's substrate makes editorial work an audited per-tenant practice.
+The four-family taxonomy — PROSE, COMMS, LEGAL, TRANSLATE — composes at
+request time with the tenant adapter and the genre template registry.
+
+Three adapters at most per request. Five or more crosses into multi-task
+interference territory per the 2025 LoRA literature; the substrate stays
+at three by design.
+
+A customer can swap any single service without touching the rest. Replace
+the inference router with a customer-owned GPU host while keeping the
+data substrate. Replace the data substrate with the customer's existing
+knowledge graph while keeping the inference router. The contract between
+services is the only thing that needs to hold.
+
+Per-tenant adapters live in the customer's filesystem. Audit ledgers
+anchor at the customer's substrate. Continued pretraining runs on the
+customer's metal. The trajectory: every editorial action a Foundry-shaped
+deployment performs becomes one tuple of training data for the customer's
+adapter. The customer's voice deepens over time without their text
+ever leaving their substrate.
