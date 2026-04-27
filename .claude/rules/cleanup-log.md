@@ -92,6 +92,113 @@ Newest on top. Append a dated block when a session includes meaningful cleanup w
 
 ---
 
+## 2026-04-27 — Three-parallel Sonnet research pass (chunks #6 + #7 + #8)
+
+Three foreground research-only Sonnet sub-agents, launched
+in parallel (no `.git/index` race — none did writes). All
+durable knowledge for future Task work; chunk #7 surfaced
+to Master via outbox.
+
+### Chunk #6 — slm-doorman test coverage gaps
+
+46 tests across 10 modules (healthy baseline). Three
+priority gaps:
+
+1. **`slm-doorman-server/src/http.rs` has ZERO automated
+   tests.** Every `DoormanError` → HTTP status mapping,
+   the `SLM_APPRENTICESHIP_ENABLED=false` 404 path,
+   malformed-header 400 paths — all unverified by
+   automated tests. Highest operational impact (silent
+   regression risk). Effort: moderate (needs `AppState`
+   factory; cases easy after that).
+2. **`tier/local.rs` has no unit tests at all.** Only
+   indirect coverage via AS-2 dispatcher. `empty choices →
+   UpstreamShape` and `error_for_status` paths dark.
+   Effort: easy — wiremock + factory pattern reusable
+   from yoyo/external tests.
+3. **`VerdictOutcome::Reject` + `DeferTierC` not
+   exercised through `VerdictDispatcher::dispatch`.**
+   `Reject` is in promotion stats tests but not full
+   dispatch; `DeferTierC` not tested anywhere at
+   dispatcher level. Effort: easy — same shape as
+   existing `refine_verdict_writes_dpo_pair`.
+
+Lower-priority gaps in same audit: BearerToken provider
+failures, audit-ledger error paths (HOME unset, dir not
+writable), redaction patterns `gho_` / `xox-`,
+citations-resolver edge cases. Tracked as task #14.
+
+### Chunk #7 — GUIDE-doorman-deployment.md refinement
+
+Audited the staged `/srv/foundry/GUIDE-doorman-deployment.md`
+(workspace-root draft from B7 prep, commit `6937a95`)
+against current ARCH/DEV.md / systemd unit + bootstrap.sh
+/ conventions. Significant drift:
+
+- Wrong catalog path (`vendor/` should be `customer/`).
+- Audit ledger path mismatch — unit declares
+  `SLM_AUDIT_DIR` but server code uses
+  `$HOME/.service-slm/audit/`; env var is
+  declared-but-unused.
+- Tier B section names "GCP Cloud Run" — ruled out by
+  zero-container-runtime convention.
+- References nonexistent `infrastructure/slm-doorman/`
+  bootstrap path.
+- Missing `SLM_BRIEF_TIER_B_THRESHOLD_CHARS` env var,
+  missing `flock(2)` + BriefCache process-restart
+  caveat, missing GCE cold-start in troubleshooting.
+- Tone/scope drift toward architectural prose
+  (`What is the Doorman`, `Integration with Totebox`).
+- Apprenticeship Substrate framed as v0.1.x+ future; in
+  reality endpoints exist now (404 when disabled).
+
+Refined ~400-line draft surfaced inline in outbox to
+Master 2026-04-27 with four open questions: (Q1) catalog
+subfolder name; (Q2) audit ledger path policy
+(accept code path or wire `SLM_AUDIT_DIR`); (Q3) tenant
+default in unit file; (Q4) relationship to existing
+`infrastructure/local-doorman/`. Tracked as task #15.
+
+### Chunk #8 — CONTRACT.md MINOR-bump prep
+
+Researched `infrastructure/slm-yoyo/CONTRACT.md` (current
+v0.0.1) versioning rules + field-placement conventions
+ahead of future AS-2 wire-format addition. Findings:
+
+- MINOR semantics are header-centric ("new optional
+  headers or endpoints") — does not explicitly address
+  body fields.
+- Principle 1 says "metadata in headers, never body" —
+  direct tension with vLLM `extra_body.structured_outputs.
+  grammar` placement. But `extra_body` is vLLM's
+  inference-engine extension slot, arguably not "PointSav
+  metadata", so Principle 1 may not bind.
+- 410 MAJOR-mismatch is contract-level (line 149), not
+  Doorman invention.
+- No `cites:` frontmatter; doesn't claim convention
+  status.
+
+Recommendation when AS-2 scope ack lands: MINOR bump
+0.0.1 → 0.1.0 with three changes: (1) optional grammar
+field at `extra_body.structured_outputs.grammar` with
+default null + min-vLLM annotation; (2) add
+`supports_structured_outputs: bool` to `/v1/contract`
+discovery (matches existing `supports_lora` /
+`supports_streaming` pattern); (3) one-line addition to
+versioning section acknowledging optional body extensions
+as MINOR category. Tracked as task #16.
+
+### Cumulative session state
+
+Six commits this session, no code changes. Tests still
+46/46 in slm-doorman. Outbox: five messages awaiting
+Master pickup (AS-2 scope, fifth-pass drift, fourth-pass
+drift, NEXT.md sweep, GUIDE refinement). Inbox: empty.
+All Sonnet research findings landed as durable cleanup-log
+entries.
+
+---
+
 ## 2026-04-27 — Fifth-pass zero-container drift + §11 verification (Sonnet sub-agents chunks #2 + #3)
 
 - **Chunk #2 — five new drift sites caught.** Foreground
