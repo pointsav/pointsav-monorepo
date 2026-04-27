@@ -8,6 +8,7 @@
 
 pub mod assets;
 pub mod citations;
+pub mod collab;
 pub mod edit;
 pub mod error;
 pub mod feeds;

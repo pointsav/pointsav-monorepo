@@ -112,10 +112,19 @@ pub async fn get_edit(
                     div #saa-status.saa-status {}
                 }
                 // Inject editor state before the bundle + glue scripts load.
+                // Phase 2 Step 7: when --enable-collab is set, also template
+                // window.WIKI_COLLAB_ENABLED so saa-init.js lazy-loads the
+                // collab bundle and switches the editor into Y.Doc-backed mode.
                 script {
                     (PreEscaped(format!(
-                        "window.SAA_SLUG={};window.SAA_INITIAL={};",
-                        slug_json, initial_json
+                        "window.SAA_SLUG={};window.SAA_INITIAL={};{}",
+                        slug_json,
+                        initial_json,
+                        if state.enable_collab {
+                            "window.WIKI_COLLAB_ENABLED=true;"
+                        } else {
+                            ""
+                        }
                     )))
                 }
                 script src="/static/vendor/cm-saa.bundle.js" defer {}
