@@ -96,6 +96,70 @@ Newest on top. Append a dated block when a session includes meaningful cleanup w
 
 ---
 
+## 2026-04-27 — Task `cluster/project-system` (Phase 1A.4 — Merkle inclusion proofs; v0.1.x → v0.2.x)
+
+Phase 1A.4 closes the v0.1.x structural-completion gap Master
+flagged: the substrate's apply-side no longer relies on consumer
+good behaviour — Merkle inclusion proofs gate witness arrivals.
+Three commits + cleanup-log update.
+
+- **`9b5e4fd`** — system-core Phase 1A.4 increment: new
+  `inclusion_proof.rs` module per RFC 9162 v2 (rfc9162_leaf_hash
+  with 0x00 prefix; rfc9162_internal_hash with 0x01 prefix;
+  InclusionProof + verify; 14 tests). Composed kernel-facing
+  primitive `SignedCheckpoint::verify_inclusion_proof(proof,
+  leaf_hash, signer_name, signer_pubkey)` per Master directive
+  ("don't expose raw InclusionProof::verify as the kernel-facing
+  API"; 5 tests). Re-exports at crate root. system-core 0.1.2 →
+  0.1.3; 30 → 35 tests.
+- **`2b9ca9c`** — system-ledger Phase 1A.4: LedgerConsumer trait
+  signature change for `apply_witness_record` (now takes
+  InclusionProof). InMemoryLedger.current_checkpoint field +
+  set_current_checkpoint setter. witness_record_leaf_hash uses
+  rfc9162_leaf_hash (matches Merkle leaf format). LedgerError
+  additions: NoCurrentCheckpoint, WitnessNotInRoot(...),
+  NoApexForCheckpoint. apply_witness_record_unchecked
+  `#[cfg(test)]` shortcut for backward compat. 4 new lib tests
+  + 1 migrated test. system-ledger 0.1.5 → **0.2.0** (MINOR bump:
+  breaking trait-signature change).
+- **`0d6da97`** — Phase 1A.4 benchmarks. 4 new criterion benches
+  (raw inclusion-proof verify @ 8-leaf and 1024-leaf trees;
+  composed verify_inclusion_proof @ 1024-leaf; full
+  apply_witness_record path). Numbers run with VM under heavier
+  load than the 1A.3 session; absolute values ~50-150% higher
+  across the board, but the architectural shape holds:
+  - Raw inclusion verify ~6-20 μs (Master expectation 10-100 μs
+    confirmed)
+  - Composed verify ≈ verify_signer + 0.4% inclusion overhead
+    (verify-dominated as Master predicted)
+  - apply_witness_record full path tracks composed verify cost
+  - Cache + inclusion proofs are complementary, not redundant
+  system-ledger 0.2.0 → 0.2.1 PATCH bump.
+
+Phase 1A is now structurally complete on v0.1.x → v0.2.x scope:
+- system-core (0.1.3): Capability + WitnessRecord + LedgerAnchor
+  + C2SP signed-note + apex-cosigning predicate + Merkle
+  inclusion proofs (35 tests)
+- system-ledger (0.2.1): cache + revocation + apex history +
+  ssh-keygen witness verify + LedgerConsumer trait + InMemoryLedger
+  with proof-validated apply_witness_record (44 tests + 10
+  benchmarks)
+- End-to-end §4 N+3+ ceremony works: pre-handover P-old allows;
+  handover with both sigs accepts; post-handover P-new-only
+  accepts; post-handover P-old-only REFUSED with StaleApex
+- Witness-record arrival is gated by Merkle inclusion proof
+  against the current root — no more "trust shortcut"
+
+Total Phase 1A.3 + 1A.4 commits: 11 (cdbed97 → 0d6da97 in this
+session-block plus the prior-session cdbed97 + dcca616 + ae3dbb9
++ c378eaa + f614ca2 + b0dba5e + f35ebf7 + 9a361de). Total cluster
+commits since session 1: 13.
+
+Tasks #22 (system-substrate hygiene) + #23 (system-security
+hygiene) remain deferred per Master ("natural-touch session").
+Tasks #13 + #14 (moonshot-toolkit Phase 1B) remain deferred per
+Master ("no urgency from operator").
+
 ## 2026-04-27 — Task `cluster/project-system` (Phase 1A.3 module impls + benchmarks)
 
 Continuation of the 2026-04-27 entry below; this session landed
