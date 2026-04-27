@@ -61,23 +61,49 @@ constants (`BANNED_VOCABULARY`, `VERSION`). Per-concern modules:
 The split lets a future Phase 1B add `cfg.rs` without touching the
 existing modules.
 
-## Phase 1B — banned-vocabulary CFG
+## Phase 1B — banned-vocabulary CFG (shipped 2026-04-27)
 
-Phase 1B will export `BANNED_VOCABULARY` as a CFG fragment in either
-`llguidance` or Outlines format, chosen to match the decode-time
-constraint library that `service-slm` already integrates with in
-the project-slm cluster's AS-2 implementation. The CFG must:
+Phase 1B exports `BANNED_VOCABULARY` as a Lark EBNF grammar
+consumed by `llguidance` at decode time. Library and dialect
+chosen by `project-slm` Task in the AS-2 cross-cluster relay
+(`llguidance`, Microsoft Research Rust crate, Lark EBNF;
+vLLM Multi-LoRA at Tier B accepts it natively).
 
-- Allow all reasonable English prose except the banned tokens in
-  standalone form
-- Permit banned tokens inside backtick-quoted citations or
-  prior-art examples (escape rule: backtick-quoted is fine,
-  bare-word is refused at decode time)
-- Be regenerated deterministically from `BANNED_VOCABULARY` so a
-  future addition to the list propagates without manual CFG edits
+The grammar lives with the data substrate, not this crate:
 
-The CFG schema and the regeneration entry-point land in this file
-when Phase 1B ships.
+```
+pointsav-monorepo/service-content/schemas/
+├── banned-vocab.lark        # Lark EBNF; top-level rule `response`
+├── README.md                # usage docs + escape rule + cross-refs
+├── test-prose-pass.txt      # synthetic clean prose; parses cleanly
+├── test-prose-fail.txt      # contains every banned word; rejected
+└── validate.py              # dual-mode validator (Lark + regex fallback)
+```
+
+Path scope: the grammar is shared **data** across all tenants
+under `moduleId` namespacing — not per-tenant code — so it lives
+with `service-content` (the data substrate), not with
+`service-disclosure` (the schema crate). `service-disclosure`'s
+`BANNED_VOCABULARY` constant remains the authoritative list; the
+`.lark` grammar mirrors it. Drift between the two is a defect
+closed by editing both in lockstep.
+
+The escape rule (backtick-quoted citations may contain banned
+words) implements the `attempt.banned_vocabulary_hits` invariant
+declared in `CORPUS-SCHEMA.md` §5.
+
+The validation harness runs in two modes — Lark when the Python
+`lark` package is installed on the host, regex-fallback otherwise.
+The fallback is conceptually equivalent for the banned-vocab use
+case because Lark itself uses Python's `re` module for terminal
+matching. Production use on Tier A and Tier B requires the full
+Lark grammar loaded by `llguidance` at inference time.
+
+Schema-stable ratification: when Master ratifies in the next
+Master pass, `service-disclosure` jumps v0.2.1 → v0.3.0 (semver
+MINOR for the public contract addition); the `project-proofreader`
+Task receives the Cargo dep upgrade procedure in the same
+relay.
 
 ## Phase 1C — genre-template registry (shipped v0.2.0)
 

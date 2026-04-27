@@ -1,0 +1,13 @@
+Our cutting-edge platform is industry-leading. The seamless integration
+empowers your team to leverage robust next-generation tooling for a
+world-class experience.
+
+Each banned word above appears in bare form and must be rejected at
+decode time. The same words quoted as prior-art examples remain
+permitted: the editorial substrate explicitly flags `leverage`,
+`empower`, `next-generation`, `industry-leading`, `seamless`, `robust`,
+`cutting-edge`, and `world-class` as banned vocabulary, and the
+backtick-quoted form is the documented escape per CORPUS-SCHEMA §5.
+
+Mixed-case variants like Leverage, EMPOWER, and Cutting-Edge must also
+be rejected by the case-insensitive word-boundary match.
