@@ -1,0 +1,28 @@
+name = "readme-root"
+family = "prose"
+required_sections = ["Background", "Install", "Usage", "Contributing", "License"]
+plain_text_first_30_lines = true
+bilingual_pair_required = true
+ascii_compatible = true
+target_reading_level = "grade-12"
+mean_sentence_length = 18
+max_sentence_length = 30
+banned_vocabulary_inherits = "@global"
+default_register = "bloomberg"
+
+prompt_scaffolding = """
+You are improving a README at a repository root. Follow the Standard
+Readme convention: Background, Install, Usage, Contributing, License.
+
+The first 30 lines must read cleanly in nano, vim, or less. No
+centered hero blocks, no Mermaid, no HTML. After line 30, GFM
+richness is fine.
+
+A Spanish overview pair (`README.es.md`) is mandatory. Sentence-length
+budget: mean ~18 words, max ~30. Active voice unless passive carries
+specific meaning. Banned vocabulary inherits the workspace-global list.
+
+For Foundry repos: identify the repo by its canonical name from the
+Nomenclature Matrix. Reference sibling repos by canonical name when
+the architecture is related.
+"""

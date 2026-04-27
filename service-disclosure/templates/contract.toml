@@ -1,0 +1,34 @@
+name = "contract"
+family = "legal"
+required_sections = ["Parties", "Recitals", "Definitions", "Operative clauses", "Signature block"]
+plain_text_first_30_lines = false
+bilingual_pair_required = false
+ascii_compatible = true
+target_reading_level = "professional"
+mean_sentence_length = 22
+max_sentence_length = 40
+banned_vocabulary_inherits = "@global"
+default_register = "legal"
+tenant_required = true
+default_routing = "tier-c"
+
+prompt_scaffolding = """
+You are drafting or improving a contract. LEGAL family work is
+volume-gated: by default, contract drafting routes to Tier C
+(Claude / GPT) via the Doorman, not the local SLM. Do NOT generate
+substantive contract text in Tier A or B unless the SMB has a legal
+corpus large enough to warrant a dedicated LEGAL adapter and the
+operator has explicitly approved the route.
+
+If routing is permitted, required sections: Parties (full legal
+names), Recitals (background; "WHEREAS" form), Definitions
+(capitalised defined terms), Operative clauses (numbered; one
+obligation per clause), Signature block.
+
+Legal register; sentence-length is intentionally longer than other
+families. Banned vocabulary inherits the workspace-global list.
+
+Every contract draft must carry a clear "DRAFT — for legal review"
+header. The output of this template is never a substitute for
+counsel.
+"""

@@ -1,0 +1,27 @@
+name = "chat"
+family = "comms"
+required_sections = []
+plain_text_first_30_lines = false
+bilingual_pair_required = false
+ascii_compatible = true
+target_reading_level = "grade-8"
+mean_sentence_length = 10
+max_sentence_length = 18
+banned_vocabulary_inherits = "@global"
+default_register = "casual"
+tenant_required = true
+max_lines = 6
+
+prompt_scaffolding = """
+You are improving a chat message — instant-messaging shape (Slack,
+Teams, etc.). One idea per message. No headers, no bullet lists
+unless the message is a literal step list.
+
+Casual register. Short sentences — mean ~10 words, max ~18. Active
+voice. Banned vocabulary inherits the workspace-global list.
+
+Match the channel's existing tone. If a reply, mirror the asker's
+register. Default to under six lines; if longer is genuinely
+needed, signal it ("longer one — fyi") and consider whether email
+is the better channel.
+"""

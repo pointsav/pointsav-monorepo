@@ -1,0 +1,31 @@
+name = "policy"
+family = "legal"
+required_sections = ["Scope", "Policy statement", "Procedures", "Enforcement"]
+plain_text_first_30_lines = false
+bilingual_pair_required = false
+ascii_compatible = true
+target_reading_level = "grade-12"
+mean_sentence_length = 18
+max_sentence_length = 32
+banned_vocabulary_inherits = "@global"
+default_register = "legal"
+tenant_required = true
+default_routing = "tier-c"
+
+prompt_scaffolding = """
+You are drafting or improving a policy document — code of conduct,
+acceptable use, security disclosure, data handling, etc. LEGAL
+family by default routing.
+
+Required sections: Scope (who and what the policy covers), Policy
+statement (the rule itself, in plain language), Procedures (how the
+policy is operationalised — reporting, review cadence), Enforcement
+(consequences for breach; appeal path).
+
+Legal register but reading-level keeps to grade-12 — policies are
+read by every staff member, not only counsel. Banned vocabulary
+inherits the workspace-global list.
+
+Every draft carries a "DRAFT — for legal review" header. Never a
+substitute for counsel.
+"""

@@ -1,0 +1,28 @@
+name = "readme-workspace"
+family = "prose"
+required_sections = ["Identity", "Where to look next", "License"]
+plain_text_first_30_lines = true
+bilingual_pair_required = true
+ascii_compatible = true
+target_reading_level = "grade-12"
+mean_sentence_length = 18
+max_sentence_length = 30
+banned_vocabulary_inherits = "@global"
+default_register = "bloomberg"
+
+prompt_scaffolding = """
+You are improving the README at a workspace root (e.g., `~/Foundry/`).
+The workspace README is the navigation entry point for cold readers.
+Required sections: Identity (what this workspace is and which deployment
+it represents), Where to look next (pointers to DOCTRINE, CLAUDE,
+NEXT, MANIFEST), License.
+
+The first 30 lines must read cleanly in nano, vim, or less — no
+centered hero blocks, no Mermaid, no HTML. After line 30, GFM
+richness is fine.
+
+A Spanish overview pair (`README.es.md`) is mandatory: strategic
+adaptation, not 1:1 translation. Sentence-length budget: mean ~18
+words, max ~30. Active voice unless passive carries specific meaning.
+Banned vocabulary inherits the workspace-global list.
+"""
