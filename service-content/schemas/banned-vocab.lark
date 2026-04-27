@@ -1,0 +1,76 @@
+// banned-vocab.lark — decode-time constraint grammar for service-slm Doorman
+//
+// Lark EBNF grammar enforcing the cross-genre banned-vocabulary list from
+// `service-disclosure::BANNED_VOCABULARY`. Loaded by `llguidance` at
+// inference time on Tier B (Yo-Yo) and Tier A (local OLMo); refuses any
+// generation that would emit a bare-word banned token, accepts the same
+// token inside a backtick-quoted citation per the CORPUS-SCHEMA escape
+// rule.
+//
+// Usage:
+//   - Top-level rule is `response`.
+//   - Validate via `validate.py` in this directory (uses Python lark
+//     when available; regex fallback otherwise).
+//   - The eight banned terms must stay in lockstep with
+//     `pointsav-monorepo/service-disclosure/src/lib.rs::BANNED_VOCABULARY`.
+//     A drift between the two is a defect; surface it as a cleanup-log
+//     entry rather than letting one form supersede the other silently.
+//
+// SPDX-License-Identifier: Apache-2.0
+
+
+// Top-level rule per Master's 2026-04-27 v0.1.26 spec rule 2.
+//
+// A response is any sequence of allowed tokens, whitespace, punctuation,
+// and backtick-quoted citations. The grammar is intentionally permissive
+// outside the banned-word constraint — the goal is to allow all
+// reasonable English prose, not to enforce a sentence-level structure.
+response: (token | quoted | ws | punct | newline)+
+
+
+// An allowed word: any alphanumeric word that is NOT one of the eight
+// banned terms (case-insensitive, word-boundary).
+//
+// The negative lookahead `(?!...)` is anchored on a word boundary `\b`
+// so the banned form is rejected only when it appears as a standalone
+// token. Substrings inside other words (e.g. `leverages` if it ever
+// arose) are NOT in scope of the v0.1.0 banned list — exact-form
+// matching only, per the discipline's documented baseline.
+//
+// Lark uses Python's `re` module; the syntax is Python-regex.
+ALLOWED_WORD: /(?i)\b(?!(?:leverage|empower|next-generation|industry-leading|seamless|robust|cutting-edge|world-class)\b)[a-zA-Z][a-zA-Z'\-]*\b/
+
+token: ALLOWED_WORD | NUMBER
+
+NUMBER: /-?\d+(\.\d+)?/
+
+
+// Backtick-quoted citation: explicitly permitted to contain any text,
+// including banned words used as prior-art examples or quoted from
+// external documents. This is the CORPUS-SCHEMA escape rule —
+// `service-disclosure::CORPUS-SCHEMA.md` §5 documents the editorial
+// invariant that banned-word HITS are surfaced as
+// `attempt.banned_vocabulary_hits`, but a quoted occurrence does not
+// count as a hit.
+//
+// The grammar permits a backtick-quoted segment to span any non-backtick
+// content. Multi-line backtick-quoted blocks (triple-backtick fenced
+// code) are ALSO permitted because they are a strict superset of the
+// inline single-backtick form.
+QUOTED_INLINE: /`[^`\n]*`/
+QUOTED_BLOCK: /```[^`]*(?:`[^`]+)*```/
+quoted: QUOTED_INLINE | QUOTED_BLOCK
+
+
+// Punctuation that may appear between tokens. Includes the en-dash and
+// em-dash because Bloomberg-grade prose uses both.
+PUNCT: /[.,;:!?'"()\[\]{}\-—–]/
+punct: PUNCT
+
+
+// Whitespace. Newlines are tracked separately because some downstream
+// constraint logic counts paragraph breaks.
+WS: /[ \t]+/
+NEWLINE: /\r?\n/
+ws: WS
+newline: NEWLINE

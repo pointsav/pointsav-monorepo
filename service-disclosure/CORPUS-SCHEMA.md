@@ -146,11 +146,16 @@ doctrine clauses.>
 
 `banned_vocabulary_hits` lists any banned-vocabulary terms the
 apprentice's draft would have introduced (per
-`BANNED_VOCABULARY` in `service-disclosure`). When Phase 1B's
-decode-time CFG ships, this field becomes structurally
-unreachable — the constraint blocks the tokens before generation.
-Until then, the field surfaces what the prompt-only constraint
-missed and feeds DPO refinement.
+`BANNED_VOCABULARY` in `service-disclosure`). With Phase 1B's
+decode-time grammar shipped at
+`pointsav-monorepo/service-content/schemas/banned-vocab.lark`,
+this field becomes structurally unreachable on Tier A and Tier B
+where the `llguidance` constraint runs — the grammar refuses
+banned-word tokens before generation completes. The field
+remains in the record schema for two reasons: backward
+compatibility with the v0.1 stub-schema migration window, and
+auditability for Tier C external-API generations where decode-
+time enforcement does not run.
 
 ## 5. The `verdict` payload — editorial specialisation
 
