@@ -1,7 +1,7 @@
 # CLAUDE.md — system-core
 
-> **State:** Active  —  **Last updated:** 2026-04-26
-> **Version:** 0.1.0  (per `~/Foundry/CLAUDE.md` §7 and DOCTRINE.md §VIII)
+> **State:** Active  —  **Last updated:** 2026-04-27
+> **Version:** 0.1.4  (per `~/Foundry/CLAUDE.md` §7 and DOCTRINE.md §VIII)
 > **Registry row:** `pointsav-monorepo/.claude/rules/project-registry.md`
 
 ---
