@@ -30,8 +30,10 @@ pub mod revocation;
 pub mod witness;
 
 use std::collections::HashSet;
-use system_core::{Capability, Hash256, SignedCheckpoint, WitnessRecord};
-use sha2::{Digest, Sha256};
+use system_core::{
+    Capability, CheckpointInclusionError, Hash256, InclusionProof, SignedCheckpoint,
+    WitnessRecord,
+};
 
 /// Kernel verifier verdict on a capability invocation.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -84,6 +86,18 @@ pub enum LedgerError {
     InvalidHandover(String),
     /// Revocation event references an unknown capability.
     UnknownCapability,
+    /// `apply_witness_record` was called but the ledger has no
+    /// current checkpoint set — the consumer must call
+    /// [`InMemoryLedger::set_current_checkpoint`] (or equivalent on
+    /// other implementors) before applying witness records.
+    NoCurrentCheckpoint,
+    /// `apply_witness_record` proof failed to verify against the
+    /// current checkpoint's root.
+    WitnessNotInRoot(CheckpointInclusionError),
+    /// The current checkpoint's apex pubkey hasn't been recorded —
+    /// the consumer must `apply_apex_handover` (or `record_genesis`)
+    /// before applying witness records.
+    NoApexForCheckpoint,
 }
 
 /// Kernel-facing consumer of the Capability Ledger Substrate. The
@@ -125,13 +139,26 @@ pub trait LedgerConsumer {
     ) -> Result<(), LedgerError>;
 
     /// Record a witness record as having been logged in the ledger.
-    /// This is a precondition for [`consult_capability`] to honor
-    /// a witness-extension verdict — per Mechanism A the witness's
-    /// hash MUST appear in the current Merkle root before the
-    /// kernel honors the extension. The substrate-tier consumer
-    /// calls this when an apex-cosigned witness entry has been
-    /// committed to the WORM ledger.
-    fn apply_witness_record(&mut self, record: WitnessRecord) -> Result<(), LedgerError>;
+    ///
+    /// Per Master directive 2026-04-27 (Phase 1A.4): the production
+    /// path takes an [`InclusionProof`] proving the record's leaf
+    /// hash is in the implementor's current ledger root. The
+    /// implementor uses the composed
+    /// [`SignedCheckpoint::verify_inclusion_proof`] primitive to
+    /// validate before recording.
+    ///
+    /// Returns:
+    /// - `Ok(())` on successful verification + insert (or idempotent
+    ///   replay; replay tolerance is implementor-defined).
+    /// - `Err(LedgerError::NoCurrentCheckpoint)` if the implementor
+    ///   has no current root to validate against.
+    /// - `Err(LedgerError::WitnessNotInRoot(_))` if the proof fails
+    ///   against the current root.
+    fn apply_witness_record(
+        &mut self,
+        record: WitnessRecord,
+        proof: InclusionProof,
+    ) -> Result<(), LedgerError>;
 }
 
 /// In-memory [`LedgerConsumer`] for v0.1.x. Single-writer; not
@@ -145,12 +172,20 @@ pub struct InMemoryLedger {
     /// Hashes of witness records known to be in the current ledger
     /// Merkle root. Per Mechanism A, the kernel verifier honors a
     /// witness extension only if the record's hash appears in the
-    /// current root. v0.1.x relies on the consumer to call
-    /// [`apply_witness_record`] when an entry lands; future MINOR
-    /// will replace this with a Merkle inclusion-proof check
-    /// against [`SignedCheckpoint`] once
-    /// [`system-core`] gains the proof machinery.
+    /// current root. v0.1.4+: the production path verifies an
+    /// [`InclusionProof`] against [`current_checkpoint`] before
+    /// inserting; the `#[cfg(test)]`
+    /// [`InMemoryLedger::apply_witness_record_unchecked`] shortcut
+    /// preserves backward compatibility for tests that don't
+    /// construct full proofs.
     witnessed: HashSet<Hash256>,
+    /// The current ledger root checkpoint. Set by
+    /// [`set_current_checkpoint`] when a normal checkpoint lands;
+    /// also set by [`apply_apex_handover`] when a handover lands.
+    /// `None` means no checkpoint has been observed yet — calls
+    /// to [`apply_witness_record`] return
+    /// [`LedgerError::NoCurrentCheckpoint`].
+    current_checkpoint: Option<SignedCheckpoint>,
     /// Identity used in the `allowed_signers` lookup for witness
     /// signature verification. v0.1.x: a fixed `"witness"` label;
     /// the actual binding is via the SSH-format pubkey carried on
@@ -165,22 +200,44 @@ impl InMemoryLedger {
             revocations: revocation::RevocationSet::new(),
             apex: apex::ApexHistory::new(),
             witnessed: HashSet::new(),
+            current_checkpoint: None,
             witness_identity: "witness".to_string(),
         }
     }
 
-    /// Hash a witness record to its canonical 32-byte identity.
-    /// SHA-256 of the JSON serialisation; matches the
-    /// `Capability::hash` discipline.
-    fn witness_record_hash(record: &WitnessRecord) -> Hash256 {
+    /// Set the current ledger root checkpoint. The consumer calls
+    /// this when a new checkpoint arrives via the WORM ledger
+    /// stream. Subsequent [`apply_witness_record`] calls verify
+    /// inclusion proofs against this checkpoint's Merkle root.
+    pub fn set_current_checkpoint(&mut self, checkpoint: SignedCheckpoint) {
+        self.cache.insert(checkpoint.clone());
+        self.current_checkpoint = Some(checkpoint);
+    }
+
+    /// Compute the canonical leaf hash for a witness record per
+    /// RFC 9162 §2.1 (SHA-256(0x00 || serialized_bytes)). This is
+    /// the value that gets committed to the ledger's Merkle tree
+    /// AND used as the lookup key in [`witnessed`].
+    fn witness_record_leaf_hash(record: &WitnessRecord) -> Hash256 {
         let bytes = serde_json::to_vec(record).expect("WitnessRecord serializable");
-        let mut hasher = Sha256::new();
-        hasher.update(&bytes);
-        hasher.finalize().into()
+        system_core::rfc9162_leaf_hash(&bytes)
     }
 
     fn is_witness_logged(&self, record: &WitnessRecord) -> bool {
-        self.witnessed.contains(&Self::witness_record_hash(record))
+        self.witnessed
+            .contains(&Self::witness_record_leaf_hash(record))
+    }
+
+    /// Test-only shortcut: insert a witness record into the
+    /// `witnessed` set WITHOUT verifying an inclusion proof. Used
+    /// by tests that exercise the consult-side decision logic
+    /// without constructing full Merkle fixtures. Production code
+    /// must use [`LedgerConsumer::apply_witness_record`] which
+    /// validates against the current root.
+    #[cfg(test)]
+    pub fn apply_witness_record_unchecked(&mut self, record: WitnessRecord) {
+        let h = Self::witness_record_leaf_hash(&record);
+        self.witnessed.insert(h);
     }
 }
 
@@ -313,14 +370,56 @@ impl LedgerConsumer for InMemoryLedger {
         self.apex
             .apply_handover(old_apex_pubkey, new_apex_name, *new_apex_pubkey, height)
             .map_err(|e| LedgerError::InvalidHandover(format!("apex.apply_handover: {e:?}")))?;
-        // Cache the handover checkpoint for fast subsequent lookup.
+        // Cache + set as current checkpoint.
         self.cache.insert(handover_checkpoint.clone());
+        self.current_checkpoint = Some(handover_checkpoint.clone());
         Ok(())
     }
 
-    fn apply_witness_record(&mut self, record: WitnessRecord) -> Result<(), LedgerError> {
-        let h = Self::witness_record_hash(&record);
-        self.witnessed.insert(h);
+    fn apply_witness_record(
+        &mut self,
+        record: WitnessRecord,
+        proof: InclusionProof,
+    ) -> Result<(), LedgerError> {
+        // Production path per Master directive 2026-04-27: verify
+        // the inclusion proof against the current root before
+        // inserting. The unchecked shortcut for tests is the
+        // inherent #[cfg(test)] method `apply_witness_record_unchecked`.
+        let current = self
+            .current_checkpoint
+            .as_ref()
+            .ok_or(LedgerError::NoCurrentCheckpoint)?;
+
+        // Determine which apex signed the current checkpoint via
+        // apex history.
+        let height = current.checkpoint.tree_size;
+        let apex_verdict = self.apex.check_height(height);
+        let leaf_hash = Self::witness_record_leaf_hash(&record);
+
+        match apex_verdict {
+            apex::ApexVerdict::NoApex => {
+                return Err(LedgerError::NoApexForCheckpoint);
+            }
+            apex::ApexVerdict::Single { apex } => current
+                .verify_inclusion_proof(&proof, &leaf_hash, &apex.name, &apex.pubkey)
+                .map_err(LedgerError::WitnessNotInRoot)?,
+            apex::ApexVerdict::Handover {
+                old_apex,
+                new_apex: _,
+            } => {
+                // At a handover height, both apexes are valid; we
+                // verify under the OLD apex (the verify_signer call
+                // accepts the first matching signature, so any
+                // valid signer works). For a strict policy that
+                // requires both to be present, the consumer should
+                // confirm via verify_apex_handover separately.
+                current
+                    .verify_inclusion_proof(&proof, &leaf_hash, &old_apex.name, &old_apex.pubkey)
+                    .map_err(LedgerError::WitnessNotInRoot)?;
+            }
+        }
+
+        self.witnessed.insert(leaf_hash);
         Ok(())
     }
 }
@@ -533,7 +632,7 @@ mod tests {
             new_expiry_t: 1000, // EARLIER than current expiry
             signature: vec![],
         };
-        ledger.apply_witness_record(witness.clone()).unwrap();
+        ledger.apply_witness_record_unchecked(witness.clone());
         let root = signed_checkpoint(5, 0xAA, &[("apex", &sk_apex)]);
         let v = ledger
             .consult_capability(&cap, &root, 2000, Some(&witness))
@@ -583,6 +682,204 @@ mod tests {
             &handover,
         );
         assert!(matches!(r, Err(LedgerError::InvalidHandover(_))));
+    }
+
+    // ---------- apply_witness_record with InclusionProof tests ----------
+
+    use system_core::{rfc9162_internal_hash, rfc9162_leaf_hash};
+
+    fn build_merkle_root(leaves: &[[u8; 32]]) -> [u8; 32] {
+        let mut layer = leaves.to_vec();
+        while layer.len() > 1 {
+            let mut next = Vec::with_capacity(layer.len().div_ceil(2));
+            let mut i = 0;
+            while i < layer.len() {
+                if i + 1 < layer.len() {
+                    next.push(rfc9162_internal_hash(&layer[i], &layer[i + 1]));
+                } else {
+                    next.push(layer[i]);
+                }
+                i += 2;
+            }
+            layer = next;
+        }
+        layer.into_iter().next().unwrap()
+    }
+
+    fn make_inclusion_proof(leaves: &[[u8; 32]], leaf_index: u64) -> InclusionProof {
+        let mut path = Vec::new();
+        let mut layer = leaves.to_vec();
+        let mut idx = leaf_index as usize;
+        while layer.len() > 1 {
+            let sibling_idx = idx ^ 1;
+            if sibling_idx < layer.len() {
+                path.push(layer[sibling_idx]);
+            }
+            let mut next = Vec::with_capacity(layer.len().div_ceil(2));
+            let mut i = 0;
+            while i < layer.len() {
+                if i + 1 < layer.len() {
+                    next.push(rfc9162_internal_hash(&layer[i], &layer[i + 1]));
+                } else {
+                    next.push(layer[i]);
+                }
+                i += 2;
+            }
+            idx /= 2;
+            layer = next;
+        }
+        InclusionProof {
+            leaf_index,
+            tree_size: leaves.len() as u64,
+            sibling_hashes: path,
+        }
+    }
+
+    fn witness_leaf_hash(record: &WitnessRecord) -> [u8; 32] {
+        let bytes = serde_json::to_vec(record).expect("serializable");
+        rfc9162_leaf_hash(&bytes)
+    }
+
+    #[test]
+    fn apply_witness_record_with_no_current_checkpoint_errors() {
+        let (sk, _pk) = keypair(0x11);
+        let mut ledger = ledger_with_genesis("apex", &sk);
+        let witness = WitnessRecord {
+            capability_hash: [0xAA; 32],
+            new_expiry_t: 2000,
+            signature: vec![],
+        };
+        let proof = InclusionProof {
+            leaf_index: 0,
+            tree_size: 1,
+            sibling_hashes: vec![],
+        };
+        let r = ledger.apply_witness_record(witness, proof);
+        assert_eq!(r, Err(LedgerError::NoCurrentCheckpoint));
+    }
+
+    #[test]
+    fn apply_witness_record_with_valid_proof_succeeds() {
+        let (sk, _pk) = keypair(0x11);
+        let mut ledger = ledger_with_genesis("apex", &sk);
+
+        // Build a Merkle tree where leaf 0 is our witness record.
+        let witness = WitnessRecord {
+            capability_hash: [0xBB; 32],
+            new_expiry_t: 5000,
+            signature: vec![1, 2, 3],
+        };
+        let leaf0 = witness_leaf_hash(&witness);
+        let other_leaves = [[0x10; 32], [0x20; 32], [0x30; 32]];
+        let leaves = [leaf0, other_leaves[0], other_leaves[1], other_leaves[2]];
+        let root = build_merkle_root(&leaves);
+        let proof = make_inclusion_proof(&leaves, 0);
+
+        // Set the current checkpoint to one signed at this root.
+        let cp = signed_checkpoint(50, 0, &[("apex", &sk)]);
+        // signed_checkpoint hardcodes root_byte; need a custom one
+        // with the actual Merkle root.
+        let custom_cp = SignedCheckpoint {
+            checkpoint: Checkpoint {
+                origin: "foundry.test.cap-ledger".to_string(),
+                tree_size: 4,
+                root_hash: root,
+                extensions: vec![],
+            },
+            signatures: {
+                let pk = sk.verifying_key().to_bytes();
+                let body = Checkpoint {
+                    origin: "foundry.test.cap-ledger".to_string(),
+                    tree_size: 4,
+                    root_hash: root,
+                    extensions: vec![],
+                }
+                .body_bytes();
+                let key_hash = NoteSignature::derive_key_hash("apex", &pk);
+                let sig = sk.sign(&body).to_bytes();
+                vec![NoteSignature {
+                    signer_name: "apex".to_string(),
+                    key_hash,
+                    signature: sig,
+                }]
+            },
+        };
+        ledger.set_current_checkpoint(custom_cp);
+        let _ = cp; // unused for this test
+
+        let r = ledger.apply_witness_record(witness.clone(), proof);
+        assert!(r.is_ok(), "valid proof should succeed; got {r:?}");
+
+        // Subsequent is_witness_logged should reflect the insertion.
+        // (Use the consult flow indirectly via the witnessed set.)
+        assert!(ledger.is_witness_logged(&witness));
+    }
+
+    #[test]
+    fn apply_witness_record_with_tampered_proof_fails() {
+        let (sk, _pk) = keypair(0x11);
+        let mut ledger = ledger_with_genesis("apex", &sk);
+
+        let witness = WitnessRecord {
+            capability_hash: [0xCC; 32],
+            new_expiry_t: 5000,
+            signature: vec![],
+        };
+        let leaf0 = witness_leaf_hash(&witness);
+        let leaves = [leaf0, [0x10; 32], [0x20; 32], [0x30; 32]];
+        let root = build_merkle_root(&leaves);
+        let mut proof = make_inclusion_proof(&leaves, 0);
+        proof.sibling_hashes[0] = [0xFF; 32]; // tamper
+
+        let custom_cp = SignedCheckpoint {
+            checkpoint: Checkpoint {
+                origin: "foundry.test.cap-ledger".to_string(),
+                tree_size: 4,
+                root_hash: root,
+                extensions: vec![],
+            },
+            signatures: {
+                let pk = sk.verifying_key().to_bytes();
+                let body = Checkpoint {
+                    origin: "foundry.test.cap-ledger".to_string(),
+                    tree_size: 4,
+                    root_hash: root,
+                    extensions: vec![],
+                }
+                .body_bytes();
+                let key_hash = NoteSignature::derive_key_hash("apex", &pk);
+                let sig = sk.sign(&body).to_bytes();
+                vec![NoteSignature {
+                    signer_name: "apex".to_string(),
+                    key_hash,
+                    signature: sig,
+                }]
+            },
+        };
+        ledger.set_current_checkpoint(custom_cp);
+
+        let r = ledger.apply_witness_record(witness.clone(), proof);
+        assert!(
+            matches!(r, Err(LedgerError::WitnessNotInRoot(_))),
+            "tampered proof should fail; got {r:?}"
+        );
+        // Witness must NOT have been recorded.
+        assert!(!ledger.is_witness_logged(&witness));
+    }
+
+    #[test]
+    fn apply_witness_record_unchecked_still_works_for_tests() {
+        // Backward-compat: existing test path.
+        let (sk, _pk) = keypair(0x11);
+        let mut ledger = ledger_with_genesis("apex", &sk);
+        let witness = WitnessRecord {
+            capability_hash: [0xDD; 32],
+            new_expiry_t: 5000,
+            signature: vec![],
+        };
+        // No current checkpoint, no proof needed for unchecked.
+        ledger.apply_witness_record_unchecked(witness.clone());
+        assert!(ledger.is_witness_logged(&witness));
     }
 
     #[test]
