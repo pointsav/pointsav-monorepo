@@ -96,7 +96,47 @@ Newest on top. Append a dated block when a session includes meaningful cleanup w
 
 ---
 
-## 2026-04-26 — Task `cluster/project-system` (continued)
+## 2026-04-27 — Task `cluster/project-system` (Phase 1A increment 3 — system-ledger crate created)
+
+- **Master directive received + actioned.** Master Claude reply
+  archived 2026-04-27 (Option B resolution: kernel-side state
+  machine in new `system-ledger` crate, not extension of
+  `system-substrate`).
+- **`system-core/ARCHITECTURE.md` updated** per Master directive
+  (§3 rewritten from "Open architecture question" to "RESOLVED
+  Option B"; §4 cross-references add system-ledger pointer; §1
+  "what does NOT live here" reference clarified). Convention text
+  stays as-written per Master's instruction. Cargo.lock catches
+  up to system-core 0.1.2 (regression from c3766de).
+- **`system-ledger` crate created and activated.** New workspace
+  member at row 9 of `[workspace] members =`. Activated per
+  framework §9 at creation: CLAUDE.md + AGENTS.md + NEXT.md +
+  ARCHITECTURE.md + bilingual README pair. Registry row added
+  Active from creation; Active count 5 → 6; Total rows 97 → 98.
+- **Module skeletons in place.** Four module files created with
+  type definitions but no functional impls:
+  - `cache.rs` — `CheckpointCache` struct with `with_capacity` /
+    `len` / `is_empty`; LRU implementation pending #18
+  - `revocation.rs` — `RevocationSet` + `RevocationEvent` with
+    `contains` / `len`; `apply_revocation` API pending #19
+  - `apex.rs` — `ApexHistory` + `ApexEntry` with `current` / `len`;
+    `apply_apex_handover` pending #11
+  - `witness.rs` — `WITNESS_NAMESPACE` constant +
+    `verify_witness_signature` stub returning `NotImplemented`;
+    real shell-out lands per #12
+  - `lib.rs` — `LedgerConsumer` trait + `Verdict` /
+    `RefuseReason` / `ConsultError` / `LedgerError` enums +
+    `InMemoryLedger` struct (impl pending #20)
+- **Verification.** `cargo check -p system-ledger` passes; zero
+  warnings on the new code. No tests yet (tests land alongside
+  each module impl).
+- **Dependency footprint.** Just `system-core` (workspace path
+  dep). Zero external transitive crates beyond what system-core
+  already pulls. Future deps as modules need them: tokio /
+  std::process for witness.rs, criterion for benchmarks (#21),
+  tempfile for witness tests (#12).
+
+
 
 - **`system-core` Phase 1A increment 2 landed: C2SP signed-note
   checkpoint primitive.** New module `src/checkpoint.rs` (~290 LoC

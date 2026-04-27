@@ -6,6 +6,7 @@ members = [
     "app-console-content",
     "tool-acs-miner",
     "system-core",
+    "system-ledger",
     "system-gateway-mba",
     "service-fs",
     "system-security",
