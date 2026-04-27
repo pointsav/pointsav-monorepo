@@ -1,6 +1,6 @@
 # NEXT.md — service-slm
 
-> Last updated: 2026-04-26
+> Last updated: 2026-04-27
 > Read at session start. Update before session end so the next
 > session knows where to pick up.
 
@@ -56,25 +56,31 @@
 
 ## Queue
 
-- **ARCHITECTURE.md §5.10 + §2 Cloud Run zero-container drift
-  (third-pass — Master sign-off needed).** Eleven sites cleared
-  in second-pass commit; two additional drift surfaces remain:
-  - ARCH §5.10 "Not-Rust components" table SkyPilot row (now
-    orphaned — "if used" with no remaining call-site after the
-    §10 drop). Recommendation: drop the row.
-  - ARCH §2 Ring 1 Bootstrap items 3 + 4 reference Cloud Run
-    GPU scale-to-zero and warm-pool. Cloud Run is in the
-    convention's "What this rules out" list. Recommendation:
-    rewrite to GCE start/stop ceremony per the convention's
-    trade-off section.
+- **AS-2 grammar artefact** — author the `llguidance` Lark
+  grammar at `vendor/pointsav-monorepo/service-content/schemas/banned-vocab.lark`
+  (top-level rule `response`; validate with Python `lark` before
+  shipping; JSON-Schema sibling + usage `.md` if needed). Per
+  Master's 2026-04-27 v0.1.26 ack of the AS-2 library decision:
+  3-4 week implementation timeline, develops independently of
+  project-language Phase 1B. Surface to Master via outbox only
+  if anything changes that would affect the contract.
+- **ARCH/DEVELOPMENT.md zero-container drift FOURTH-pass —
+  Master sign-off needed.** Third-pass scope (§5.10 SkyPilot
+  row + §2 Bootstrap items 3+4) was cleared by commit
+  `8c3212e` (2026-04-26); this NEXT.md was stale. Three new
+  drift sites surfaced 2026-04-27 the third-pass missed:
+  - ARCHITECTURE.md §3 line 132: "External calls (Cloud Run,
+    Mooncake sidecar, Claude API, LadybugDB ...)" — generic
+    mention; suggest drop "Cloud Run" or replace with "GCE
+    instances".
+  - ARCHITECTURE.md §5.2 line 197 — `hyper` crate role:
+    "HTTP client (Cloud Run, Claude API, LMCache master)";
+    suggest replace "Cloud Run" with "Yo-Yo GCE endpoints".
+  - DEVELOPMENT.md §4 Phase 2 step 5: "Port the Cloud Run
+    driver (`crates/slm-compute`, `crates/slm-inference-remote`)";
+    suggest "Port the GCE compute driver".
   Surface to Master in next outbox; do not act without
-  authorisation.
-- **B4 — Tier C client with narrow-precision allowlist.** Fill
-  `crates/slm-doorman/src/tier/external.rs`. Implement per-provider
-  HTTP wiring (Anthropic Claude, Google Gemini, OpenAI). Hard-code
-  the allowlist of task labels permitted to use Tier C; never
-  default-fallback. Confirm with Master what the initial label set
-  is before extending the allowlist.
+  authorisation per the third-pass pattern.
 - **Workspace-root handoff in flight.** The 2026-04-23 activation
   commit was the Task-scope half of the `SLM-STACK.md` /
   `YOYO-COMPUTE.md` rehoming (workspace `CLAUDE.md` §9 variant).
@@ -85,23 +91,6 @@
 - **B6 — Doorman GCE lifecycle controller.** Deferred until A3
   viability spike validates L4 + 32B Q4 (per inbox v0.0.9: A3
   measurement still pending at handoff).
-- Move `cognitive-bridge.sh` → `scripts/` — layout-hygiene defect
-  queued in monorepo `NEXT.md`. Single `git mv`; script body uses
-  positional args only, no caller audit needed.
-- ~~Triage `transient-queues/`~~ **CLOSED (2026-04-26).** Mirrors `discovery-queue`
-  pattern (Not-a-project runtime data). Removed skeleton fixtures, added
-  .gitignore rule, documented lifecycle in README.md. Runtime payloads
-  never committed; persistent state moves to `service-fs/data/`.
-- Reconcile `cognitive-forge` → `content-compiler` wire format —
-  writer emits `.md` files (markdown bullets); reader only
-  consumes `.json`. They do not interoperate today. Pick one
-  format and land the contract.
-- Close "MISSING CONNECTION PHYSICS" — define the concrete wire
-  from `cognitive-bridge.sh` to the local SLM. With B1 in place
-  the answer is now: `POST $SLM_BIND_ADDR/v1/chat/completions`
-  through the Doorman, not directly to the Tier A endpoint.
-  Replace the placeholder
-  `RESPONSE="[UNVERIFIED STAGING OVERLAY]..."` with the real call.
 - Rename the `cognitive-forge/` subcrate — inherits the Do-Not-Use
   "Forge" concern. Pair with the sibling `tool-cognitive-forge`
   rename queued in the monorepo `NEXT.md` rename series so one
@@ -114,29 +103,19 @@
   `slm-inference-local`, `slm-inference-remote`, `slm-api`,
   `slm-cli`. Each waits for a real consumer before scaffolding.
 - Build out `compute/` directory per Ring 1 spec in
-  `ARCHITECTURE.md` — `manifest.yaml`, `container/Dockerfile`,
-  `weights/registry.yaml`, `sky/*.yaml`, `keys/secret-refs.yaml`.
-  Note: `conventions/zero-container-runtime.md` (ratified
-  2026-04-25) prohibits `Dockerfile` in any deployment path —
-  reconcile with `ARCHITECTURE.md` §7 before scaffolding this
-  directory; the references to `container/Dockerfile` and
-  `requirements.txt` in §7 predate the convention and need
-  rewriting in a follow-up edit.
+  `ARCHITECTURE.md` — `manifest.yaml`, `weights/registry.yaml`,
+  `keys/secret-refs.yaml`, plus the OpenTofu module shape per
+  `conventions/zero-container-runtime.md` (replacing the
+  pre-convention `container/Dockerfile` + `sky/*.yaml`
+  references that the §7 third-pass rewrite already cleared).
+  Blocks on consumer materialising.
 - Build out `ledger/events.csv` per `ARCHITECTURE.md` §8 once a
   consumer (Ring 1 `service-fs` proxy or SOC3 export job)
   materialises. The current B1 JSONL log at
   `~/.service-slm/audit/<date>.jsonl` is the v0.1 substrate.
-- Land `cargo deny check licenses` in CI per `DEVELOPMENT.md`
-  §2.2. `deny.toml` is in place; the CI driver isn't.
 
 ## Blocked
 
-- **system-slm connection protocol.** Largely closed by B1 —
-  `slm-doorman-server` exposes the OpenAI-compatible HTTP surface
-  the bridge can call. The remaining decision is whether
-  `cognitive-bridge.sh` calls the Doorman or a raw Tier A endpoint.
-  Once the bridge is migrated to call the Doorman, this blocker
-  lifts.
 - **Mooncake / LMCache licence audit for Ring 2.** Blocked on:
   operator confirmation at adoption time.
 - **Mooncake master hosting.** Blocked on: choice between small
@@ -160,6 +139,31 @@
 
 ## Recently done
 
+- **2026-04-27 — NEXT.md Queue refresh.** Six items closed by
+  recent commits but still listed under Queue have been moved
+  here: cognitive-bridge.sh → scripts/ (`badd447`); cargo deny
+  check in CI (`d97a994`); MISSING CONNECTION PHYSICS in
+  cognitive-bridge.sh (`3c0c8e5`); cognitive-forge ↔
+  content-compiler wire format reconciliation (`5da4676`); B4
+  Tier C client mock-only (`d8ef1ec` + server-side env-var
+  wiring `fab047e`); ARCH §5.10/§2 third-pass zero-container
+  drift (`8c3212e`). Three new drift sites the third-pass
+  missed (ARCH §3 line 132, ARCH §5.2 line 197, DEVELOPMENT.md
+  §4 Phase 2 step 5) added as a fourth-pass Queue item pending
+  Master sign-off.
+- **2026-04-26 — Move `cognitive-bridge.sh` → `scripts/`
+  (`badd447`).** Layout-hygiene defect closed; positional-args
+  script body needed no caller audit.
+- **2026-04-26 — Land `cargo deny check licenses` in CI
+  (`d97a994`).** `deny.toml` policy now enforced in CI driver
+  per `DEVELOPMENT.md` §2.2.
+- **2026-04-26 — Close MISSING CONNECTION PHYSICS in
+  `cognitive-bridge.sh` (`3c0c8e5`).** Bridge now calls the
+  Doorman at `POST $SLM_BIND_ADDR/v1/chat/completions`
+  (replacing the `[UNVERIFIED STAGING OVERLAY]` placeholder).
+- **2026-04-26 — Reconcile `cognitive-forge` ↔
+  `content-compiler` wire format (`5da4676`).** Format
+  contract landed; writer and reader interoperate.
 - **2026-04-26 — AS-4 POST /v1/shadow endpoint landed
   (mock-only).** `ApprenticeshipDispatcher::dispatch_shadow()`
   added — same prompt + dispatch as `/v1/brief` but the

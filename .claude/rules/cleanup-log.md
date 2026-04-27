@@ -92,6 +92,53 @@ Newest on top. Append a dated block when a session includes meaningful cleanup w
 
 ---
 
+## 2026-04-27 — NEXT.md Queue refresh + fourth-pass zero-container drift surfaced
+
+- **NEXT.md sweep against committed reality.** Session-start
+  read flagged that `service-slm/NEXT.md` Queue still listed
+  six items already closed in commit history. Moved them to
+  "Recently done" with commit refs:
+  - `cognitive-bridge.sh → scripts/` (`badd447`, 2026-04-26)
+  - `cargo deny check licenses` in CI (`d97a994`, 2026-04-26)
+  - `MISSING CONNECTION PHYSICS` in `cognitive-bridge.sh`
+    (`3c0c8e5`, 2026-04-26) — also lifted the corresponding
+    `system-slm connection protocol` entry from the Blocked
+    section since the bridge now calls the Doorman.
+  - `cognitive-forge ↔ content-compiler` wire format
+    reconciliation (`5da4676`, 2026-04-26)
+  - B4 Tier C client mock-only (`d8ef1ec` + server-side
+    env-var wiring `fab047e`, 2026-04-26) — was already in
+    "Recently done" but also still in Queue.
+  - ARCH §5.10 + §2 zero-container third-pass cleanup
+    (`8c3212e`, 2026-04-26) — Queue text mis-implied the
+    third-pass was still pending Master sign-off.
+- **Fourth-pass zero-container drift sites surfaced to
+  Master via outbox.** Verifying the §5.10 / §2 third-pass
+  against the live file turned up three new sites the
+  third-pass scope did not cover:
+  - ARCHITECTURE.md §3 line 132: "External calls (Cloud Run,
+    Mooncake sidecar, Claude API, ...)"
+  - ARCHITECTURE.md §5.2 line 197: `hyper` crate role
+    "(Cloud Run, Claude API, LMCache master)"
+  - DEVELOPMENT.md §4 Phase 2 step 5: "Port the Cloud Run
+    driver (`crates/slm-compute`, ...)"
+  Per the established third-pass pattern (do not act without
+  Master authorisation), these are surfaced via outbox with
+  per-site replacement-text recommendations and queued in
+  NEXT.md as a fourth-pass Queue item. No prose edits in
+  this commit — drift-flagging only.
+- **AS-2 inbox ack.** Master 2026-04-27 v0.1.26 message
+  acknowledging the AS-2 library decision (`llguidance`)
+  archived to inbox-archive.md per the mailbox protocol.
+  AS-2 grammar implementation queued as a multi-week Queue
+  item in NEXT.md; develops independently of project-language
+  Phase 1B per Master's brief.
+- **NEXT.md `Last updated` bumped to 2026-04-27.**
+- **No code changes; tests still 46/46 passing in
+  slm-doorman.**
+
+---
+
 ## 2026-04-26 — B4 Tier C client (mock-only per operator guardrail) + PricingConfig
 
 - **B4 Tier C client implemented end-to-end as code + tests, zero
