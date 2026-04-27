@@ -5,10 +5,16 @@
 //! `~/Foundry/conventions/system-substrate-doctrine.md` §3.1 + §5.
 //!
 //! The [`checkpoint`] submodule implements the C2SP signed-note
-//! checkpoint primitive (apex-cosigning per convention §4).
+//! checkpoint primitive (apex-cosigning per convention §4). The
+//! [`inclusion_proof`] submodule implements RFC 9162 v2 Merkle
+//! inclusion proofs (compatible with C2SP tlog-tiles).
 
 pub mod checkpoint;
+pub mod inclusion_proof;
 pub use checkpoint::{Checkpoint, NoteSignature, SignedCheckpoint};
+pub use inclusion_proof::{
+    rfc9162_internal_hash, rfc9162_leaf_hash, InclusionProof, InclusionVerifyError,
+};
 
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
