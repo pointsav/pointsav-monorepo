@@ -154,6 +154,30 @@ pub trait LedgerConsumer {
     ///   has no current root to validate against.
     /// - `Err(LedgerError::WitnessNotInRoot(_))` if the proof fails
     ///   against the current root.
+    ///
+    /// # Handover-height policy
+    ///
+    /// At a handover height (per `system-substrate-doctrine.md` §4),
+    /// **either apex's signature is sufficient for inclusion-proof
+    /// verification**. The check this method performs is structural
+    /// (chain-state attestation), not governance: a checkpoint at
+    /// the handover height is a valid attestation of the ledger
+    /// state regardless of which of the two valid apexes signed it.
+    ///
+    /// Strict "both-signatures-required-at-handover" is a separate
+    /// consumer-side check via
+    /// [`SignedCheckpoint::verify_apex_handover`] before the
+    /// inclusion call. Layered policies (auditor-grade evidence
+    /// that the handover ceremony completed correctly, not just
+    /// that one party is willing to sign) belong above this method,
+    /// not buried inside it.
+    ///
+    /// The §4 N+3+ post-handover invariant — "P-old's signature on
+    /// checkpoints at heights AFTER the handover MUST be refused" —
+    /// is a separate property, covered end-to-end by
+    /// [`apply_apex_handover`] + [`consult_capability`] together.
+    /// It is verified at the integration-test level
+    /// (`full_handover_ceremony_end_to_end`).
     fn apply_witness_record(
         &mut self,
         record: WitnessRecord,
