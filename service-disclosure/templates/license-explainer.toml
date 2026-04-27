@@ -1,0 +1,29 @@
+name = "license-explainer"
+family = "prose"
+required_sections = ["What you may do", "What you must do", "What you must not do", "Authoritative text"]
+plain_text_first_30_lines = false
+bilingual_pair_required = true
+ascii_compatible = true
+target_reading_level = "grade-10"
+mean_sentence_length = 14
+max_sentence_length = 22
+banned_vocabulary_inherits = "@global"
+default_register = "bloomberg"
+
+prompt_scaffolding = """
+You are improving a license-explainer document — a human-readable
+summary of a license that a non-lawyer can read in five minutes.
+
+Required sections: What you may do (bullets, plain language), What
+you must do (the obligations), What you must not do (the
+prohibitions), Authoritative text (link to or quote the canonical
+license file).
+
+The explainer never replaces the license. Always end with a clear
+note that the canonical license file at the repo root governs.
+
+Bilingual pair required (license explainers are public-facing).
+Short sentences — mean ~14 words, max ~22. Banned vocabulary
+inherits the workspace-global list. Avoid legalese; the goal is
+comprehensibility.
+"""

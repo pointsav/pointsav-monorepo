@@ -13,11 +13,13 @@
 pub mod frontmatter;
 pub mod genre;
 pub mod request;
+pub mod templates;
 pub mod validate;
 
 pub use frontmatter::Frontmatter;
 pub use genre::{Family, GenreTemplate};
 pub use request::{ProtocolRequest, Register};
+pub use templates::{get_template, get_template_description};
 pub use validate::{validate_frontmatter, ValidationError};
 
 /// Crate semantic version exposed for downstream version assertions.

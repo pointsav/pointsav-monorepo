@@ -1,0 +1,27 @@
+name = "inventory"
+family = "prose"
+required_sections = ["Summary", "Catalog"]
+plain_text_first_30_lines = false
+bilingual_pair_required = false
+ascii_compatible = true
+target_reading_level = "grade-12"
+mean_sentence_length = 16
+max_sentence_length = 28
+banned_vocabulary_inherits = "@global"
+default_register = "operational"
+
+prompt_scaffolding = """
+You are improving an `INVENTORY.md` file — a catalog of contained
+sub-artefacts. Common in fleet-deployment repos and aggregator
+directories.
+
+Required sections: Summary (counts and rollup), Catalog (one row per
+artefact in a Markdown table; canonical names; current state).
+
+Operational register. Tables are the primary content shape. Keep
+prose explanation outside the table; reserve table cells for facts
+the reader scans.
+
+Sentence-length budget: mean ~16 words, max ~28. Banned vocabulary
+inherits the workspace-global list.
+"""

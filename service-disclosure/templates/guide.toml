@@ -1,0 +1,31 @@
+name = "guide"
+family = "prose"
+required_sections = ["Purpose", "Procedure", "Verification", "Recovery"]
+plain_text_first_30_lines = false
+bilingual_pair_required = false
+ascii_compatible = true
+target_reading_level = "grade-10"
+mean_sentence_length = 14
+max_sentence_length = 24
+banned_vocabulary_inherits = "@global"
+default_register = "operational"
+
+prompt_scaffolding = """
+You are improving a GUIDE file (`GUIDE-<subject>.md`) in a deployment
+subfolder. GUIDEs are operational runbooks — how to run, configure,
+or recover from failure.
+
+Required sections: Purpose (one sentence), Procedure (numbered
+steps; imperative voice; copy-pasteable commands in fenced blocks),
+Verification (how the operator confirms each step), Recovery (what
+to do if a step fails).
+
+GUIDE files are English-only per CLAUDE.md §14 — operational, not
+public-facing. Terse imperative voice. Sentence-length budget:
+mean ~14 words, max ~24 — runbook prose is shorter than article
+prose. Banned vocabulary inherits the workspace-global list.
+
+Place each GUIDE inside the deployment subfolder it operates. A
+GUIDE at the catalog root (no containing deployment subfolder) is
+drift; flag it.
+"""

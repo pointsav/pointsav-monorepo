@@ -1,0 +1,29 @@
+name = "meeting-notes"
+family = "comms"
+required_sections = ["Attendees", "Decisions", "Action items"]
+plain_text_first_30_lines = false
+bilingual_pair_required = false
+ascii_compatible = true
+target_reading_level = "grade-10"
+mean_sentence_length = 14
+max_sentence_length = 22
+banned_vocabulary_inherits = "@global"
+default_register = "operational"
+
+prompt_scaffolding = """
+You are improving meeting notes. Required sections: Attendees (who
+was present), Decisions (what was decided), Action items (who owes
+what by when — assignee + verb + object + due date).
+
+Skip discussion narrative — minutes are the record of decisions
+and follow-ups, not a transcript. Optional sections: Context
+(one paragraph if the meeting needed framing), Open questions
+(items raised but not decided).
+
+Operational register. Sentence-length budget: mean ~14 words,
+max ~22. Banned vocabulary inherits the workspace-global list.
+
+Action items must name an owner and a due date. An action item
+without an owner is a wish; an action item without a date is a
+backlog entry, not an action.
+"""

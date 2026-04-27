@@ -23,19 +23,24 @@ imports it to compose prompts at request time;
 `service-proofreader` imports it to validate inbound requests and
 outbound diffs.
 
-## Public surface — Phase 1A
+## Public surface
+
+Phase 1A (v0.1.0) and Phase 1C (v0.2.0) shipped:
 
 ```text
 service_disclosure::
-    Family               (enum, 4 variants)
-    GenreTemplate        (enum, 18 variants)
-    ProtocolRequest      (struct, 6 fields)
-    Frontmatter          (struct, 8 fields)
-    Register             (enum, 5 variants)
-    ValidationError      (enum)
-    validate_frontmatter (fn)
-    BANNED_VOCABULARY    (&[&str], 8 entries)
-    VERSION              (&str, from CARGO_PKG_VERSION)
+    Family                       (enum, 4 variants)
+    GenreTemplate                (enum, 18 variants)
+    ProtocolRequest              (struct, 6 fields)
+    Frontmatter                  (struct, 8 fields)
+    Register                     (enum, 5 variants)
+    ValidationError              (enum)
+    validate_frontmatter         (fn)
+    get_template                 (fn) -> &'static str  (TOML)
+    get_template_description     (fn) -> &'static str  (Markdown)
+    BANNED_VOCABULARY            (&[&str], 8 entries)
+    VERSION                      (&str, from CARGO_PKG_VERSION)
+    templates::ALL               (&[GenreTemplate], 18 entries)
 ```
 
 Anything not listed above is implementation detail and may move
@@ -49,12 +54,12 @@ constants (`BANNED_VOCABULARY`, `VERSION`). Per-concern modules:
 - `genre.rs` — Family, GenreTemplate, partition test
 - `request.rs` — ProtocolRequest, Register, round-trip tests
 - `frontmatter.rs` — Frontmatter, optional-field elision tests
+- `templates.rs` — get_template, get_template_description, ALL,
+  registry-completeness and well-formedness tests
 - `validate.rs` — validate_frontmatter, per-genre rule tests
 
 The split lets a future Phase 1B add `cfg.rs` without touching the
-type modules, and Phase 1C add `templates.rs` (or a `templates/`
-subdirectory of compiled-in `.toml` fragments) without touching
-either.
+existing modules.
 
 ## Phase 1B — banned-vocabulary CFG
 
@@ -74,17 +79,40 @@ the project-slm cluster's AS-2 implementation. The CFG must:
 The CFG schema and the regeneration entry-point land in this file
 when Phase 1B ships.
 
-## Phase 1C — genre-template registry
+## Phase 1C — genre-template registry (shipped v0.2.0)
 
-Each `GenreTemplate` variant pairs with one `.toml` describing the
-template parameters and one `.md` describing the genre to humans.
-Both ship under `service-disclosure/templates/`. The crate exposes
-`fn get_template(template: GenreTemplate) -> &'static str`
-returning the rendered template fragment ready for Doorman
-composition.
+Each `GenreTemplate` variant pairs with one `.toml` and one `.md`
+under `service-disclosure/templates/`. Both files are baked into
+the binary at compile time via `include_str!`; no runtime
+filesystem access. `get_template` returns the TOML; the Doorman
+parses it at request time using the `toml` crate.
 
-The TOML shape is anchored in convention §2.2 — required sections,
-register parameters, bilingual-pair convention, frontmatter schema.
+TOML shape (anchored in convention §2.2):
+
+| Field | Required | Notes |
+|---|---|---|
+| `name` | yes | Matches the kebab-case serde form of the variant. |
+| `family` | yes | One of `prose` / `comms` / `legal` / `translate`. |
+| `prompt_scaffolding` | yes | The template fragment the Doorman composes into the request prompt. |
+| `required_sections` | optional | Array of section headings the genre demands. |
+| `bilingual_pair_required` | optional | True for public-facing genres. |
+| `target_reading_level` | optional | Style budget. |
+| `mean_sentence_length` | optional | Style budget. |
+| `max_sentence_length` | optional | Style budget. |
+| `banned_vocabulary_inherits` | optional | Defaults to `@global`. |
+| `default_register` | optional | Bloomberg / operational / technical / casual / legal. |
+| `tenant_required` | optional | Genre needs a tenant slug to route per-tenant adapters. |
+| `default_routing` | optional | LEGAL family carries `tier-c` to mean Doorman routes to external API by default. |
+| `frontmatter_required` | optional | Document genre carries YAML frontmatter (TOPIC, MEMO). |
+| `max_lines` | optional | Short-form length cap (e.g., chat). |
+| `plain_text_first_30_lines` | optional | README convention — readable in nano/vim/less. |
+| `ascii_compatible` | optional | Default `true`. |
+
+The `name` and `family` fields are validated by `templates.rs`
+unit tests: `name` must match the variant's kebab-case serde form,
+and `family` must match the genre partition declared by
+`GenreTemplate::family()`. New variants therefore land with their
+template files in the same commit.
 
 ## Apprenticeship corpus schema
 
