@@ -1,47 +1,35 @@
 # NEXT.md — service-slm
 
-> Last updated: 2026-04-28 (session-end snapshot post-Sonnet-batch + PS.3 step 1)
+> Last updated: 2026-04-28 (long-running Sonnet pipeline iter-1 = PS.3 step 2)
 > Read at session start. Update before session end so the next
 > session knows where to pick up.
 
 ---
 
-## Right now — session-end snapshot 2026-04-28
+## Right now — long-running Sonnet pipeline active
 
-**Tests:** 79/79 passing across slm-core (14) + slm-doorman (53) +
-slm-doorman-server (12). Working tree clean. Last commit
-`9803193` (PS.3 step 1).
+**Status:** Iteration 1 complete. PS.3 step 2 landed cleanly. Pipeline
+self-paces via `/loop` dynamic mode; next iteration scheduled.
 
-**This session landed (10 commits, +33 tests, all coordination + 4
-research dispatches):**
-- Manifest tetrad upgrade (Doctrine claim #37) + 3 TOPIC skeletons
-- PS.1 Yo-Yo deploy readiness review (4 blockers + 7 warnings)
-- PS.1-1 image verification — `pointsav-public` doesn't exist; D4 is upstream blocker
-- PS.7 — 8 zero-container drift edits (doc-only)
-- A/B/C coverage briefs (PS.6) — http.rs test factory + tier/local.rs + verdict dispatcher (+19 tests)
-- PS.3 step 1 — `grammar: Option<GrammarConstraint>` on `ComputeRequest` + 5 round-trip tests
+**Tests:** 83/83 passing across slm-core (14) + slm-doorman (57) +
+slm-doorman-server (12). Working tree clean post-state-file commit.
+Last code commit `266fa4d` (PS.3 step 2 — Yo-Yo grammar serialisation).
 
-**Pre-authorized cluster-scope work still dispatchable
-(operator-direct sub-agent dispatch, no Master ratification
-needed):**
+**Pipeline operator-directed dispatch sequence (in flight):**
+1. **PS.3 step 2** — Yo-Yo grammar serialisation ✅ `266fa4d`
+2. **PS.3 step 3** — Tier A reject Lark, pass GBNF/JsonSchema (next)
+3. **PS.3 step 4** — Tier C reject all grammar variants
+4. **PS.3 step 5** — `llguidance` Doorman-side Lark validation
+5. **PS.4 step 1..N** — A-1 audit_proxy + audit_capture endpoints
+   (multi-step; cross-cluster gate for project-language A-4 +
+   project-data A-5)
 
-- **PS.3 step 2** (~2-3hr Sonnet) — Tier B client serialise
-  grammar → `extra_body.structured_outputs.{grammar,json_schema}`
-  per vLLM ≥0.12 envelope; wiremock test of request body shape
-- **PS.3 step 3** (~2hr Sonnet) — Tier A client: reject Lark
-  with clear error; pass GBNF / JsonSchema natively
-- **PS.3 step 4** (~30 min Sonnet) — Tier C client: reject all
-  grammar variants (smallest chunk)
-- **PS.3 step 5** (~1-2hr Sonnet) — optional `llguidance` crate
-  dep for Doorman-side Lark validation (fail-fast on malformed
-  Lark before relay)
-- **PS.4** (~3-5 days Sonnet) — A-1 Doorman `audit_proxy` +
-  `audit_capture` endpoints; cross-cluster (project-language A-4
-  + project-data A-5 both depend on this)
-- **PS.8** (~1hr Opus + Sonnet) — apply Q1-Q4 answers to staged
-  `/srv/foundry/GUIDE-doorman-deployment.md` + cross-repo
-  handoff to `customer/woodfine-fleet-deployment/local-doorman/`
-  (workspace-tier portion; layer-scope same as PS.1-3)
+**Deliberately skipped (layer-scope pending Master):**
+- PS.8 (GUIDE-doorman cross-repo handoff)
+- PS.1-2/-3/-4 (Yo-Yo module + doc updates)
+
+All four sit at workspace-repo / infrastructure path; outbox
+2026-04-28T02:30Z still awaiting Master reply. Pipeline excludes them.
 
 **Awaiting Master input (10 messages in outbox):**
 
