@@ -152,6 +152,38 @@ once operator green-lights.
 
 ## Completed
 
+### 2026-04-28 — Iter-15 entry_type discriminator on all 4 ledger entry kinds [COMPLETED commit `442e161`]
+
+Long-running Sonnet pipeline iteration 15. Closes the future-direction note
+from PS.4 step 5; cross-cluster consumers (project-language A-4 + project-data
+A-5 + project-bim service-codes) can now discriminate entry kind via a single
+explicit field instead of field-presence inference.
+
+- **Outcome**: 3 new tests. Tests 124 → 127. Commit `442e161` (Jennifer
+  Woodfine).
+- **Canonical strings**: `chat-completion` / `audit-proxy-stub` /
+  `audit-proxy` / `audit-capture`. Kebab-case, no version suffix.
+- **Backwards-compat strategy**: `#[serde(default = "default_entry_type_<kind>")]`
+  on each struct's new `entry_type` field. Deserialisation of old JSONL
+  (missing field) defaults to the correct canonical value per struct type.
+  `AuditLedger::append_*` methods clone the entry and force the canonical
+  constant before serialising, so callers can't accidentally write a wrong
+  tag.
+- **Contract doc**: `service-slm/docs/audit-endpoints-contract.md` MINOR
+  bump v0.1.0 → v0.2.0. §3.1 gains canonical-string table. §3.2 rewritten:
+  explicit entry_type tag is canonical; field-presence remains
+  backwards-compat fallback. §5 records version-history rationale.
+- **Tests**:
+  - **Added**: `entry_type_tag_discriminates_all_entry_kinds` (integration,
+    builds all 4 via ledger API, reads back JSONL, asserts canonical
+    strings).
+  - **Added**: `audit_entry_missing_entry_type_field_deserialises_with_correct_default`
+    + `all_entry_types_default_correctly_when_entry_type_field_absent` (unit
+    tests covering serde-default backwards-compat for all 4 structs).
+  - **Preserved**: `mixed_entry_types_in_jsonl_stream_distinguishable_by_field_presence`
+    — passes unchanged (proof that the field-presence fallback still works).
+- **Build hygiene**: cargo test 127/127; clippy + fmt clean.
+
 ### 2026-04-28 — Iter-13 SLM_AUDIT_DIR cluster-scope wiring [COMPLETED commit `5812501`]
 
 - **Cluster-scope** (NOT admin-tier). `service-slm/crates/slm-doorman-server/

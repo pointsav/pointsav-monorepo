@@ -147,6 +147,28 @@ operator-presence pass; cluster-Task waits.
 - Post-commit grep `mistral` across `infrastructure/slm-yoyo/` returns
   zero hits. PS.1-3 scope fully closed.
 
+### Iter-15 — entry_type discriminator on all 4 ledger entry kinds (operator-recommended hardening)
+
+Operator asked for next-step recommendation post-iter-14 session-end with
+queue effectively exhausted at operationalization-plan scope. Recommended
+the deferred entry_type discriminator from PS.4 step 5 — single bounded
+chunk with high cross-cluster value (project-language A-4 + project-data
+A-5 + project-bim service-codes all about to consume the ledger). Operator
+said "go".
+
+- **Cluster commit**: `442e161` (Jennifer Woodfine). +3 tests (124 → 127).
+- **Contract bump**: v0.1.0 → v0.2.0 (MINOR per the additive-field rule
+  in §5 versioning).
+- **Canonical strings** chosen: `chat-completion` / `audit-proxy-stub` /
+  `audit-proxy` / `audit-capture`.
+- **Backwards-compat preserved**: `#[serde(default = "...")]` per struct
+  + canonical-constant force on append. Old JSONL entries (no field)
+  deserialise correctly; new entries always carry the field; field-
+  presence discrimination test still passes.
+- **Build hygiene**: cargo test 127/127; clippy `-D warnings` clean;
+  fmt clean.
+- **Wall time**: ~8 minutes; ~134k Sonnet tokens.
+
 ### Pipeline session-end (2nd) — option-A iterations 10-14 complete
 
 Five iterations under operator option-A delivered the four admin-tier
