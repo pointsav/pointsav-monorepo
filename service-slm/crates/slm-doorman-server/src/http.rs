@@ -33,8 +33,9 @@ use slm_core::{
     ComputeRequest, ComputeResponse, ModuleId, RequestId,
 };
 use slm_doorman::{
-    ApprenticeshipConfig, ApprenticeshipDispatcher, AuditProxyStubEntry, BriefCache, Doorman,
-    DoormanError, VerdictDispatchOutcome, VerdictDispatcher, VerdictWireBody,
+    ApprenticeshipConfig, ApprenticeshipDispatcher, AuditProxyClient, AuditProxyEntry,
+    AuditProxyStubEntry, BriefCache, Doorman, DoormanError, VerdictDispatchOutcome,
+    VerdictDispatcher, VerdictWireBody,
 };
 
 pub struct AppState {
@@ -48,6 +49,11 @@ pub struct AppState {
     /// enabled (the dispatcher's verifier needs the workspace
     /// `allowed_signers` to be discoverable).
     pub verdict_dispatcher: Option<VerdictDispatcher>,
+    /// `POST /v1/audit/proxy` relay client (PS.4 step 2). `Some` when at
+    /// least one Tier C provider (Anthropic / Gemini / OpenAI) is configured
+    /// via `SLM_TIER_C_*_ENDPOINT` env vars at boot; `None` returns 503 with
+    /// an "unconfigured" message rather than the step-1 placeholder message.
+    pub audit_proxy_client: Option<AuditProxyClient>,
 }
 
 pub fn router(state: Arc<AppState>) -> Router {
@@ -225,21 +231,22 @@ async fn shadow(
     Ok(StatusCode::OK)
 }
 
-/// `POST /v1/audit/proxy` — audited external provider call (PS.4 step 1).
+/// `POST /v1/audit/proxy` — audited external provider call (PS.4 step 2).
 ///
-/// This handler scaffolds the endpoint shape + input validation + ledger stub.
-/// The upstream provider relay is not yet wired (PS.4 step 2). In the scaffold
-/// phase:
-///   1. Parse and validate the request (module_id, provider, purpose, messages).
-///   2. Generate a UUIDv7 `audit_id`.
-///   3. Write a stub entry to the audit ledger capturing the inbound request
-///      shape (status: "scaffold-stub-no-relay-yet").
-///   4. Return `503 SERVICE_UNAVAILABLE` with the `audit_id` and a clear
-///      "pending PS.4 step 2" message. Callers see 503 rather than 501 because
-///      the service IS available — it processes the request through to the
-///      ledger — but the upstream relay specifically is not yet implemented.
-///      501 would imply the endpoint does not exist at all; 503 communicates
-///      "known limitation, retry after step 2 is deployed."
+/// Two-entry ledger design:
+///   1. Stub entry written immediately after validation, before the upstream
+///      call. Status: "inbound". This ensures a paper trail exists for every
+///      inbound attempt even if the upstream call fails or the process
+///      crashes mid-relay.
+///   2. Full `AuditProxyEntry` written after the upstream call returns (Ok or
+///      Err). Status: "ok" or "upstream-error". This entry carries token
+///      counts, cost, latency, and (on error) the error message.
+///
+/// When `AppState.audit_proxy_client` is `None` (no Tier C providers
+/// configured at startup): step 1 stub is still written, then a 503 with
+/// "audit_proxy unconfigured" is returned. The "pending PS.4 step 2"
+/// message from the scaffold phase is retired; callers now see a clear
+/// configuration-gap message instead.
 ///
 /// Validation failures return `400 BAD_REQUEST` with a descriptive message.
 async fn audit_proxy(
@@ -264,11 +271,11 @@ async fn audit_proxy(
         return err.into_response();
     }
 
-    // 1c. Validate purpose — non-empty (allowlist enforcement is PS.4 step 2).
+    // 1c. Validate purpose — non-empty (allowlist enforcement is PS.4 step 3).
     if body.purpose.trim().is_empty() {
         return ApiError::bad_request(
             "audit_proxy purpose must be non-empty; \
-             allowlist enforcement lands in PS.4 step 2",
+             allowlist enforcement lands in PS.4 step 3",
         )
         .into_response();
     }
@@ -282,34 +289,111 @@ async fn audit_proxy(
     let audit_id = RequestId::new().to_string();
     let inbound_at = Utc::now();
 
-    // 3. Write the ledger stub entry so we have a paper trail for every
-    //    attempted proxy call even during the scaffold phase.
+    // 3. Write the ledger stub entry (entry #1 of the two-entry design).
+    //    Written before the upstream call so we have a paper trail even if
+    //    the relay call fails or the process crashes.
     let stub = AuditProxyStubEntry {
         audit_id: audit_id.clone(),
         inbound_at,
-        module_id,
+        module_id: module_id.clone(),
         purpose: body.purpose.clone(),
-        provider: provider_lc,
+        provider: provider_lc.clone(),
         model: body.model.clone(),
         caller_request_id: body.caller_request_id.clone(),
         request_messages_count: body.messages.len(),
-        status: "scaffold-stub-no-relay-yet".to_string(),
+        status: "inbound".to_string(),
     };
     if let Err(e) = state.doorman.ledger().append_proxy_stub(&stub) {
         let err: ApiError = e.into();
         return err.into_response();
     }
 
-    // 4. Return 503 — step 2 converts this placeholder to a live response.
-    (
-        StatusCode::SERVICE_UNAVAILABLE,
-        Json(serde_json::json!({
-            "audit_id": audit_id,
-            "caller_request_id": body.caller_request_id,
-            "error": "audit_proxy upstream relay pending PS.4 step 2"
-        })),
-    )
-        .into_response()
+    // 4. Relay or return unconfigured 503.
+    let client = match &state.audit_proxy_client {
+        Some(c) => c,
+        None => {
+            // No Tier C providers configured at startup. The stub entry was
+            // already written (preserves inbound paper trail). Return 503
+            // with a clear configuration-gap message.
+            return (
+                StatusCode::SERVICE_UNAVAILABLE,
+                Json(serde_json::json!({
+                    "audit_id": audit_id,
+                    "caller_request_id": body.caller_request_id,
+                    "error": "audit_proxy unconfigured: no Tier C providers found in environment"
+                })),
+            )
+                .into_response();
+        }
+    };
+
+    // 5. Call the relay. Capture start time for latency.
+    let relay_start = std::time::Instant::now();
+    let relay_result = client.relay(&body, &audit_id).await;
+    let latency_ms = relay_start.elapsed().as_millis() as u64;
+    let completed_at = Utc::now();
+
+    // 6. Write the final outcome entry (entry #2 of the two-entry design).
+    match &relay_result {
+        Ok(resp) => {
+            let entry = AuditProxyEntry {
+                audit_id: audit_id.clone(),
+                completed_at,
+                module_id: module_id.clone(),
+                purpose: body.purpose.clone(),
+                provider: provider_lc,
+                model: body.model.clone(),
+                caller_request_id: body.caller_request_id.clone(),
+                prompt_tokens: resp.usage.prompt_tokens,
+                completion_tokens: resp.usage.completion_tokens,
+                cost_usd: resp.usage.cost_usd,
+                latency_ms,
+                status: "ok".to_string(),
+                error_message: None,
+            };
+            if let Err(e) = state.doorman.ledger().append_proxy_entry(&entry) {
+                // Ledger write failure after a successful relay: surface as
+                // 500. The response content is discarded to avoid sending a
+                // success response without a corresponding ledger entry.
+                let err: ApiError = e.into();
+                return err.into_response();
+            }
+            (
+                StatusCode::OK,
+                Json(serde_json::to_value(resp).expect("AuditProxyResponse is serialisable")),
+            )
+                .into_response()
+        }
+        Err(e) => {
+            let entry = AuditProxyEntry {
+                audit_id: audit_id.clone(),
+                completed_at,
+                module_id: module_id.clone(),
+                purpose: body.purpose.clone(),
+                provider: provider_lc,
+                model: body.model.clone(),
+                caller_request_id: body.caller_request_id.clone(),
+                prompt_tokens: 0,
+                completion_tokens: 0,
+                cost_usd: 0.0,
+                latency_ms,
+                status: "upstream-error".to_string(),
+                error_message: Some(e.to_string()),
+            };
+            // Best-effort final ledger write on error. Log but do not
+            // shadow the original error if the ledger write also fails.
+            if let Err(ledger_err) = state.doorman.ledger().append_proxy_entry(&entry) {
+                tracing::warn!(
+                    target: "slm_doorman::audit_proxy",
+                    audit_id = %audit_id,
+                    error = %ledger_err,
+                    "failed to append final audit_proxy entry after upstream error"
+                );
+            }
+            let api_err: ApiError = DoormanError::UpstreamShape(e.to_string()).into();
+            api_err.into_response()
+        }
+    }
 }
 
 struct ApiError {
@@ -361,6 +445,10 @@ impl From<DoormanError> for ApiError {
             // Caller submitted an unrecognised provider string to audit_proxy
             // (PS.4 step 1). Error is entirely on the caller's side.
             DoormanError::AuditProxyInvalidProvider { .. } => StatusCode::BAD_REQUEST,
+            // The audit_proxy targeted a provider that is not configured at
+            // startup (PS.4 step 2). Server-side configuration gap — 503
+            // SERVICE_UNAVAILABLE (not 403; the caller did nothing wrong).
+            DoormanError::AuditProxyProviderUnavailable { .. } => StatusCode::SERVICE_UNAVAILABLE,
             DoormanError::BriefCacheMiss => StatusCode::GONE,
             DoormanError::LedgerIo(_)
             | DoormanError::LedgerSerde(_)
