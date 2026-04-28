@@ -89,4 +89,15 @@ pub enum DoormanError {
         /// Human-readable advice for the caller.
         advice: &'static str,
     },
+
+    /// The caller supplied a Lark grammar that failed to compile at the
+    /// Doorman boundary (PS.3 step 5). The error message from llguidance
+    /// includes line/column context so the caller can fix the grammar
+    /// without needing to route to a backend at all.
+    #[error("Lark grammar failed pre-validation: {reason}")]
+    MalformedLarkGrammar {
+        /// Parse-error message from llguidance's Lark compiler, including
+        /// line/column context and a snippet of the offending input.
+        reason: String,
+    },
 }

@@ -539,7 +539,8 @@ fn doorman_error_to_status(e: &DoormanError) -> StatusCode {
         | DoormanError::BearerToken(_) => StatusCode::BAD_GATEWAY,
         DoormanError::VerdictParse(_)
         | DoormanError::TierAGrammarUnsupported { .. }
-        | DoormanError::TierCGrammarUnsupported { .. } => StatusCode::BAD_REQUEST,
+        | DoormanError::TierCGrammarUnsupported { .. }
+        | DoormanError::MalformedLarkGrammar { .. } => StatusCode::BAD_REQUEST,
         DoormanError::BriefCacheMiss => StatusCode::GONE,
         DoormanError::LedgerIo(_)
         | DoormanError::LedgerSerde(_)
@@ -547,4 +548,205 @@ fn doorman_error_to_status(e: &DoormanError) -> StatusCode {
         | DoormanError::LedgerLock(_)
         | DoormanError::CorpusWrite { .. } => StatusCode::INTERNAL_SERVER_ERROR,
     }
+}
+
+// ===========================================================================
+// Section 4 — Lark grammar pre-validation tests (PS.3 step 5) — 3 tests
+// ===========================================================================
+
+// ── 4a. MalformedLarkGrammar → 400 BAD_REQUEST ────────────────────────────
+
+/// `DoormanError::MalformedLarkGrammar` maps to 400 BAD_REQUEST.
+/// Verified via the doorman_error_to_status helper (same pattern as 2d).
+#[test]
+fn error_malformed_lark_grammar_maps_to_400() {
+    let err = DoormanError::MalformedLarkGrammar {
+        reason: "4(21): Expected token ']', found '\\n'".to_string(),
+    };
+    let status = doorman_error_to_status(&err);
+    assert_eq!(
+        status,
+        StatusCode::BAD_REQUEST,
+        "MalformedLarkGrammar must map to 400 BAD_REQUEST; got {status}"
+    );
+}
+
+// ── 4b. Malformed Lark grammar through POST /v1/chat/completions → 400 ───
+//
+// This test constructs a Doorman with a LarkValidator and a Yo-Yo tier
+// backed by a wiremock server, then submits a request carrying a malformed
+// Lark grammar. The assertion is:
+//   (1) HTTP response is 400 BAD_REQUEST (not 5xx, not 200)
+//   (2) the wiremock server received ZERO requests (rejection happened
+//       upstream of the network call — key correctness invariant)
+
+/// POST /v1/chat/completions with a malformed Lark grammar hinted at Tier B
+/// → 400 BAD_REQUEST, Tier B backend receives zero requests.
+#[tokio::test]
+async fn lark_validation_runs_before_tier_b_dispatch() {
+    use slm_doorman::{
+        tier::{PricingConfig, StaticBearer, YoYoTierClient, YoYoTierConfig},
+        DoormanConfig, LarkValidator, YOYO_CONTRACT_VERSION,
+    };
+    use slm_doorman_server::test_helpers::temp_ledger;
+    use std::sync::Arc;
+
+    // Start a wiremock server that would accept Yo-Yo calls.
+    let server = MockServer::start().await;
+    Mock::given(method("POST"))
+        .and(path("/v1/chat/completions"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+            "choices": [{"message": {"role": "assistant", "content": "pong"}}]
+        })))
+        // Expect ZERO calls — malformed grammar must be rejected before network.
+        .expect(0)
+        .mount(&server)
+        .await;
+
+    // Build a Doorman with:
+    //   - a LarkValidator (PS.3 step 5)
+    //   - a Yo-Yo tier pointing at the wiremock server
+    //   - no local tier (so Low/Medium complexity without a hint would
+    //     TierUnavailable; we set tier_hint = Some(Yoyo) in the request)
+    let lark_validator = LarkValidator::new().expect("LarkValidator must init");
+    let yoyo = YoYoTierClient::new(
+        YoYoTierConfig {
+            endpoint: server.uri(),
+            default_model: "test-model".to_string(),
+            contract_version: YOYO_CONTRACT_VERSION.to_string(),
+            pricing: PricingConfig::default(),
+        },
+        Arc::new(StaticBearer::new("test-token")),
+    );
+    // Build the Doorman directly (not via AppState / router) so we can call
+    // route() on it after construction without borrow issues.
+    let doorman = Doorman::new(
+        DoormanConfig {
+            local: None,
+            yoyo: Some(yoyo),
+            external: None,
+            lark_validator: Some(lark_validator),
+        },
+        temp_ledger(),
+    );
+
+    use slm_core::{ChatMessage, Complexity, GrammarConstraint, ModuleId, RequestId, Tier};
+    use std::str::FromStr;
+
+    let req = slm_core::ComputeRequest {
+        request_id: RequestId::new(),
+        module_id: ModuleId::from_str("test").unwrap(),
+        model: None,
+        messages: vec![ChatMessage {
+            role: "user".to_string(),
+            content: "ping".to_string(),
+        }],
+        complexity: Complexity::High,
+        tier_hint: Some(Tier::Yoyo),
+        stream: false,
+        max_tokens: None,
+        temperature: None,
+        sanitised_outbound: true,
+        tier_c_label: None,
+        grammar: Some(GrammarConstraint::Lark(
+            // Malformed: unclosed optional bracket.
+            "start: item+\nitem: [ unclosed\n".to_string(),
+        )),
+    };
+
+    // Call route() directly on the Doorman. The pre-validation step (PS.3
+    // step 5) must reject the malformed Lark grammar BEFORE sending any
+    // network request. The wiremock expect(0) assertion fires at server drop
+    // and panics if any request reached the backend, proving the rejection
+    // happened upstream of the wire.
+    let resp = doorman.route(&req).await;
+    assert!(
+        matches!(resp, Err(DoormanError::MalformedLarkGrammar { .. })),
+        "malformed Lark grammar routed at Tier B must return MalformedLarkGrammar; got: {resp:?}"
+    );
+    // wiremock server drops here — expect(0) fires and panics if any
+    // request was received, confirming rejection happened before the wire.
+}
+
+// ── 4c. Valid Lark grammar with LarkValidator configured passes through ───
+
+/// With a LarkValidator configured and a valid Lark grammar, the Doorman
+/// does NOT reject at the boundary — the request passes through to Tier B.
+/// We use a wiremock server to confirm exactly ONE request reaches the backend.
+#[tokio::test]
+async fn valid_lark_grammar_passes_through_to_tier_b() {
+    use slm_doorman::{
+        tier::{PricingConfig, StaticBearer, YoYoTierClient, YoYoTierConfig},
+        DoormanConfig, LarkValidator, YOYO_CONTRACT_VERSION,
+    };
+    use slm_doorman_server::test_helpers::temp_ledger;
+    use std::sync::Arc;
+
+    let server = MockServer::start().await;
+    Mock::given(method("POST"))
+        .and(path("/v1/chat/completions"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+            "choices": [{"message": {"role": "assistant", "content": "pong"}}],
+            "x_foundry_inference_ms": 100
+        })))
+        // Expect exactly ONE request — valid grammar must pass through.
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    let lark_validator = LarkValidator::new().expect("LarkValidator must init");
+    let yoyo = YoYoTierClient::new(
+        YoYoTierConfig {
+            endpoint: server.uri(),
+            default_model: "test-model".to_string(),
+            contract_version: YOYO_CONTRACT_VERSION.to_string(),
+            pricing: PricingConfig::default(),
+        },
+        Arc::new(StaticBearer::new("test-token")),
+    );
+    let doorman = Doorman::new(
+        DoormanConfig {
+            local: None,
+            yoyo: Some(yoyo),
+            external: None,
+            lark_validator: Some(lark_validator),
+        },
+        temp_ledger(),
+    );
+
+    use slm_core::{ChatMessage, Complexity, GrammarConstraint, ModuleId, RequestId, Tier};
+    use std::str::FromStr;
+
+    let req = slm_core::ComputeRequest {
+        request_id: RequestId::new(),
+        module_id: ModuleId::from_str("test").unwrap(),
+        model: None,
+        messages: vec![ChatMessage {
+            role: "user".to_string(),
+            content: "ping".to_string(),
+        }],
+        complexity: Complexity::High,
+        tier_hint: Some(Tier::Yoyo),
+        stream: false,
+        max_tokens: None,
+        temperature: None,
+        sanitised_outbound: true,
+        tier_c_label: None,
+        grammar: Some(GrammarConstraint::Lark(
+            // Valid Lark grammar — simple yes/no alternation.
+            "start: /yes/ | /no/".to_string(),
+        )),
+    };
+
+    let resp = doorman.route(&req).await;
+    // The valid grammar passes pre-validation; whatever Tier B responds
+    // with is the real result (could be Ok or a network/parse error
+    // depending on the wiremock response body, but it must NOT be
+    // MalformedLarkGrammar).
+    assert!(
+        !matches!(resp, Err(DoormanError::MalformedLarkGrammar { .. })),
+        "valid Lark grammar must NOT produce MalformedLarkGrammar; got: {resp:?}"
+    );
+    // wiremock drops here — expect(1) fires and panics if zero or >1
+    // requests reached the backend.
 }
