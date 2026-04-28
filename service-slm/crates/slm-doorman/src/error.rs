@@ -111,4 +111,19 @@ pub enum DoormanError {
         /// The provider string the caller submitted.
         provider: String,
     },
+
+    /// `POST /v1/audit/proxy` targeted a provider that has no configured
+    /// endpoint or API key at Doorman startup (PS.4 step 2). This is a
+    /// server-side configuration gap, not a caller policy violation —
+    /// hence 503 SERVICE_UNAVAILABLE rather than 403.
+    #[error(
+        "audit_proxy provider {provider:?} is not configured; \
+         set SLM_TIER_C_{PROVIDER}_ENDPOINT and SLM_TIER_C_{PROVIDER}_API_KEY \
+         to enable this provider",
+        PROVIDER = provider.to_ascii_uppercase()
+    )]
+    AuditProxyProviderUnavailable {
+        /// The provider string (e.g. "anthropic", "gemini", "openai").
+        provider: String,
+    },
 }
