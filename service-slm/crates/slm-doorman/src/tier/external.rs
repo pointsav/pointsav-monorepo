@@ -26,7 +26,7 @@ use std::sync::Arc;
 use std::time::Instant;
 
 use serde::{Deserialize, Serialize};
-use slm_core::{ChatMessage, ComputeRequest, ComputeResponse, Tier};
+use slm_core::{ChatMessage, ComputeRequest, ComputeResponse, GrammarConstraint, Tier};
 use tracing::debug;
 
 use crate::error::{DoormanError, Result};
@@ -215,7 +215,31 @@ impl ExternalTierClient {
                 })?;
         self.check_label(label)?;
 
-        // 2. Provider routing — model identifier carries `provider:`.
+        // 2. Grammar rejection — Tier C providers (Anthropic / Gemini /
+        //    OpenAI) do not accept arbitrary grammar constraints on the wire.
+        //    Reject all grammar variants BEFORE any network call.
+        //
+        //    Ordering rationale: allowlist check (step 1) is the more
+        //    fundamental gate — an unallowlisted request should never proceed
+        //    regardless of grammar. Grammar check follows as the second
+        //    fail-fast pre-flight, also before any network or I/O.
+        if let Some(grammar) = &req.grammar {
+            const ADVICE: &str = "Tier C providers do not accept arbitrary grammars; \
+                route Lark to Tier B (Yo-Yo, vLLM+llguidance), \
+                GBNF/JsonSchema to Tier A (local llama-server), \
+                or remove the grammar constraint and rely on prompt-engineering";
+            let dialect = match grammar {
+                GrammarConstraint::Lark(_) => "Lark",
+                GrammarConstraint::Gbnf(_) => "GBNF",
+                GrammarConstraint::JsonSchema(_) => "JsonSchema",
+            };
+            return Err(DoormanError::TierCGrammarUnsupported {
+                dialect,
+                advice: ADVICE,
+            });
+        }
+
+        // 4. Provider routing — model identifier carries `provider:`.
         let model_id = req.model.as_deref().ok_or_else(|| {
             DoormanError::UpstreamShape(
                 "Tier C request missing `model` field; expected `<provider>:<model>` form".into(),
@@ -229,7 +253,7 @@ impl ExternalTierClient {
                 ))
             })?;
 
-        // 3. Provider config — endpoint + key.
+        // 5. Provider config — endpoint + key.
         let endpoint = self
             .config
             .provider_endpoints
@@ -248,7 +272,7 @@ impl ExternalTierClient {
             .cloned()
             .unwrap_or_default();
 
-        // 4. Wire — OpenAI-compatible POST. (All three providers expose
+        // 6. Wire — OpenAI-compatible POST. (All three providers expose
         //    OpenAI-compatible shims in 2026; native per-provider
         //    request shapes can land in a follow-up if needed.)
         let body = OpenAiChatRequest {
@@ -514,6 +538,110 @@ mod tests {
         assert_eq!(
             server.received_requests().await.unwrap_or_default().len(),
             0
+        );
+    }
+
+    // -----------------------------------------------------------------------
+    // Grammar rejection tests — PS.3 step 4
+    //
+    // All three grammar variants must be rejected by Tier C BEFORE any
+    // network call. Each test: (1) starts a wiremock server with no mocks
+    // mounted, (2) builds a request with a valid allowlisted label so
+    // the allowlist check passes, (3) sets a grammar variant, (4) calls
+    // complete(), (5) asserts TierCGrammarUnsupported, and (6) asserts
+    // zero HTTP requests reached the mock server.
+    // -----------------------------------------------------------------------
+
+    /// Lark grammar → TierCGrammarUnsupported before any network call.
+    #[tokio::test]
+    async fn grammar_lark_rejected_before_any_network_call() {
+        let server = MockServer::start().await;
+        let client = anthropic_client(server.uri(), TierCPricing::default());
+
+        let mut req = req_for(
+            Some("citation-grounding"),
+            Some("anthropic:claude-haiku-4-5"),
+        );
+        req.grammar = Some(slm_core::GrammarConstraint::Lark(
+            "start: /[a-z]+/".to_string(),
+        ));
+
+        let err = client
+            .complete(&req)
+            .await
+            .expect_err("Lark grammar must be rejected on Tier C");
+        match err {
+            DoormanError::TierCGrammarUnsupported { dialect, .. } => {
+                assert_eq!(dialect, "Lark");
+            }
+            other => panic!("expected TierCGrammarUnsupported, got {other:?}"),
+        }
+        assert_eq!(
+            server.received_requests().await.unwrap_or_default().len(),
+            0,
+            "Tier C MUST NOT issue any network call when grammar is present"
+        );
+    }
+
+    /// GBNF grammar → TierCGrammarUnsupported before any network call.
+    #[tokio::test]
+    async fn grammar_gbnf_rejected_before_any_network_call() {
+        let server = MockServer::start().await;
+        let client = anthropic_client(server.uri(), TierCPricing::default());
+
+        let mut req = req_for(
+            Some("citation-grounding"),
+            Some("anthropic:claude-haiku-4-5"),
+        );
+        req.grammar = Some(slm_core::GrammarConstraint::Gbnf(
+            r#"root ::= "yes" | "no""#.to_string(),
+        ));
+
+        let err = client
+            .complete(&req)
+            .await
+            .expect_err("GBNF grammar must be rejected on Tier C");
+        match err {
+            DoormanError::TierCGrammarUnsupported { dialect, .. } => {
+                assert_eq!(dialect, "GBNF");
+            }
+            other => panic!("expected TierCGrammarUnsupported, got {other:?}"),
+        }
+        assert_eq!(
+            server.received_requests().await.unwrap_or_default().len(),
+            0,
+            "Tier C MUST NOT issue any network call when grammar is present"
+        );
+    }
+
+    /// JsonSchema grammar → TierCGrammarUnsupported before any network call.
+    #[tokio::test]
+    async fn grammar_json_schema_rejected_before_any_network_call() {
+        let server = MockServer::start().await;
+        let client = anthropic_client(server.uri(), TierCPricing::default());
+
+        let mut req = req_for(
+            Some("citation-grounding"),
+            Some("anthropic:claude-haiku-4-5"),
+        );
+        req.grammar = Some(slm_core::GrammarConstraint::JsonSchema(
+            serde_json::json!({"type": "object", "properties": {"name": {"type": "string"}}}),
+        ));
+
+        let err = client
+            .complete(&req)
+            .await
+            .expect_err("JsonSchema grammar must be rejected on Tier C");
+        match err {
+            DoormanError::TierCGrammarUnsupported { dialect, .. } => {
+                assert_eq!(dialect, "JsonSchema");
+            }
+            other => panic!("expected TierCGrammarUnsupported, got {other:?}"),
+        }
+        assert_eq!(
+            server.received_requests().await.unwrap_or_default().len(),
+            0,
+            "Tier C MUST NOT issue any network call when grammar is present"
         );
     }
 
