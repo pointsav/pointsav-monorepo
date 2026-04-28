@@ -222,6 +222,96 @@ than the routing policy itself.
 Next: PS.3 step 5 (`llguidance` crate dep + Doorman-side Lark validation;
 ~1-2hr Sonnet).
 
+### Iteration 4 outcome — PS.3 step 5 — llguidance Lark validation
+
+- **Commit**: `978ab79` (Peter Woodfine)
+- **Tests**: 90 → 97 (+7). Four new tests in `grammar_validation::tests`
+  (valid simple grammar / valid alternation / malformed / garbage input);
+  three new in `slm-doorman-server::tests::http_test`
+  (`error_malformed_lark_grammar_maps_to_400`,
+  `lark_validation_runs_before_tier_b_dispatch` — the key wiremock
+  expect(0) proof, `valid_lark_grammar_passes_through_to_tier_b` —
+  wiremock expect(1) confirming valid Lark reaches Tier B).
+- **llguidance**: pinned `"1.7"` (locks to 1.7.4). 20 new packages locked
+  via Cargo.lock (toktrie, derivre, rayon, referencing, plus transitive
+  deps).
+- **Binary size delta**: +1.4 MB (6.3 MB → 7.7 MB stripped release).
+  Well within the 20 MB threshold flagged in the brief.
+- **Validation pattern**: `ApproximateTokEnv::single_byte_env()` wrapped
+  in `ParserFactory` (the llguidance standalone-validation pattern; no
+  LLM tokenizer required). `LarkValidator` exposes a single
+  `validate(&str) -> Result<(), String>`.
+- **Wired into**: `DoormanConfig.lark_validator: Option<LarkValidator>`;
+  pre-validation guard runs before Tier B dispatch in `router.rs`. New
+  error variant `DoormanError::MalformedLarkGrammar { reason }` mirrors
+  the Tier-A/Tier-C unsupported-dialect pattern (400 BAD_REQUEST,
+  `PolicyDenied`).
+- **Server wiring**: enabled by default in `slm-doorman-server::main`;
+  `SLM_LARK_VALIDATION_ENABLED=false` opt-out; non-fatal on init failure
+  (server boots without validator if init fails).
+- **Latency**: ~1 ms/call release; `Arc<ParserFactory>` shared across
+  requests.
+- **No layer-scope concerns**; substantial Sonnet effort (~25 min wall,
+  ~152k tokens, 132 tool uses) — biggest iteration to date but landed
+  cleanly in one commit.
+
+### Doorman grammar substrate — PS.3 sequence COMPLETE
+
+Five commits across the long-running pipeline iterations 1-4 deliver the
+full grammar handling substrate:
+
+| Step | Commit | Tests | Outcome |
+|---|---|---|---|
+| step 1 | `9803193` | +5 | `ComputeRequest.grammar` field added |
+| step 2 | `266fa4d` | +4 | Tier B serialise to vLLM ≥0.12 envelope |
+| step 3 | `9f9f37b` | +4 | Tier A native GBNF/JsonSchema; Lark→400 |
+| step 4 | `fdee78f` | +3 | Tier C all rejected→400 |
+| step 5 | `978ab79` | +7 | Doorman-side Lark validation (fail-fast) |
+
+Cumulative: 74 → 97 tests (+23). Three new typed `DoormanError` variants
+(`TierAGrammarUnsupported`, `TierCGrammarUnsupported`, `MalformedLarkGrammar`)
+all mapping uniformly to 400 BAD_REQUEST + `CompletionStatus::PolicyDenied`.
+Three-tier grammar policy fully realised: Tier A (GBNF/JsonSchema native),
+Tier B (Lark/GBNF/JsonSchema via vLLM `extra_body.structured_outputs`),
+Tier C (all rejected). Plus fail-fast Lark syntax validation upstream of
+Tier B relay.
+
+The project-language editorial gateway (Doctrine claim #35; PROSE-* drafts
+refinement at scale) and any other future Lark-grammar consumer can now rely
+on:
+- Submitting Lark gets enforced if and only if Tier B is reachable.
+- Malformed Lark fails fast at the Doorman boundary with line/column
+  diagnostics, not as a confusing Tier B response.
+- GBNF/JsonSchema work uniformly on Tier A and Tier B (Tier A skips Lark).
+- Tier C never sees grammar — caller-side awareness baked into the error
+  message.
+
+### Master message archived during iteration 4
+
+Workspace v0.1.58 / doctrine 0.0.12 ratifies **Doctrine claim #39 —
+Research-Trail Substrate**. Five mandatory frontmatter fields on every
+`foundry-draft-v1` draft going forward; `## Research trail` body section
+when `research_inline: true`. Per Master's "backfill is opportunistic, not
+mandatory" framing, the cluster's six pre-v0.1.58 staged drafts in
+`.claude/drafts-outbound/` are NOT backfilled now — when substance lands
+at refinement time, the new frontmatter + body section will be added in
+the same edit. Acknowledgment to Master via outbox 2026-04-28T17:50Z;
+flagged the structural alignment with the cluster's apprenticeship-pointsav
+adapter training pipeline (the `(raw + research-trail → refined +
+gateway-consulted-research)` DPO tuple shape directly relevant to claim
+#32 substrate).
+
+### Pipeline continues — iteration 5
+
+Next: **PS.4 step 1** (A-1 audit_proxy + audit_capture endpoints; first
+chunk of the multi-day, multi-step PS.4 work). PS.4 is described in the
+v0.1.42 plan as ~3-5 days Sonnet total; iteration-5 dispatches the first
+slice (likely scaffold + audit_proxy endpoint shape; ~3-4hr).
+
+PS.4 is the cross-cluster gate: project-language A-4 (project-language
+adapter loading via Doorman audit-mediated Tier C) and project-data A-5
+(anchor-emitter audit-ledger module-id) both depend on this landing.
+
 ---
 
 ## 2026-04-28 — Sonnet batch wrap-up (PS.7 + A/B/C + layer-scope flag) — 5 commits, +19 tests
