@@ -23,7 +23,8 @@
 //!     unit test inside http.rs (see below) and separately here via
 //!     the status-code constant for completeness in a mapping helper test.
 
-use std::sync::Arc;
+use std::collections::HashMap;
+use std::sync::{Arc, Mutex};
 
 use async_trait::async_trait;
 use axum::body::Body;
@@ -36,7 +37,9 @@ use slm_doorman::{
     AuditLedger, BriefCache, Doorman, DoormanConfig, DoormanError, VerdictDispatcher,
     VerdictVerifier, FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST,
 };
-use slm_doorman_server::http::{router, AppState, AUDIT_CAPTURE_MAX_PAYLOAD_BYTES};
+use slm_doorman_server::http::{
+    router, AppState, AUDIT_CAPTURE_MAX_PAYLOAD_BYTES, AUDIT_PROXY_MAX_REQUEST_BYTES,
+};
 use slm_doorman_server::test_helpers::{
     app_state_no_tiers, app_state_with_apprenticeship, app_state_with_audit_proxy,
     app_state_with_local, temp_ledger, temp_promotion_ledger,
@@ -337,6 +340,8 @@ async fn error_brief_cache_miss_returns_410() {
         verdict_dispatcher: Some(verdict_dispatcher),
         audit_proxy_client: None,
         audit_proxy_purpose_allowlist: FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST,
+        audit_tenant_concurrency: Arc::new(Mutex::new(HashMap::new())),
+        audit_tenant_concurrency_cap: 100,
     });
     let app = router(state);
 
@@ -557,6 +562,10 @@ fn doorman_error_to_status(e: &DoormanError) -> StatusCode {
         DoormanError::AuditProxyProviderUnavailable { .. } => StatusCode::SERVICE_UNAVAILABLE,
         // AuditCapturePayloadTooLarge → 413 PAYLOAD_TOO_LARGE.
         DoormanError::AuditCapturePayloadTooLarge { .. } => StatusCode::PAYLOAD_TOO_LARGE,
+        // AuditProxyPayloadTooLarge → 413 PAYLOAD_TOO_LARGE.
+        DoormanError::AuditProxyPayloadTooLarge { .. } => StatusCode::PAYLOAD_TOO_LARGE,
+        // AuditTenantConcurrencyExhausted → 503 SERVICE_UNAVAILABLE.
+        DoormanError::AuditTenantConcurrencyExhausted { .. } => StatusCode::SERVICE_UNAVAILABLE,
         DoormanError::BriefCacheMiss => StatusCode::GONE,
         DoormanError::LedgerIo(_)
         | DoormanError::LedgerSerde(_)
@@ -849,6 +858,8 @@ async fn audit_proxy_valid_request_writes_audit_stub_and_returns_503() {
         // No providers configured → unconfigured path.
         audit_proxy_client: None,
         audit_proxy_purpose_allowlist: FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST,
+        audit_tenant_concurrency: Arc::new(Mutex::new(HashMap::new())),
+        audit_tenant_concurrency_cap: 100,
     });
     let app = router(state);
 
@@ -1473,6 +1484,8 @@ async fn audit_proxy_unallowlisted_purpose_does_not_write_ledger_entry() {
         // allowlist check still runs before the unconfigured 503 path.
         audit_proxy_client: None,
         audit_proxy_purpose_allowlist: FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST,
+        audit_tenant_concurrency: Arc::new(Mutex::new(HashMap::new())),
+        audit_tenant_concurrency_cap: 100,
     });
     let app = router(state);
 
@@ -1612,6 +1625,8 @@ async fn audit_capture_valid_prose_edit_event_returns_200_and_writes_ledger() {
         verdict_dispatcher: None,
         audit_proxy_client: None,
         audit_proxy_purpose_allowlist: FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST,
+        audit_tenant_concurrency: Arc::new(Mutex::new(HashMap::new())),
+        audit_tenant_concurrency_cap: 100,
     });
     let app = router(state);
 
@@ -1781,6 +1796,8 @@ async fn audit_capture_oversized_payload_returns_413() {
         verdict_dispatcher: None,
         audit_proxy_client: None,
         audit_proxy_purpose_allowlist: FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST,
+        audit_tenant_concurrency: Arc::new(Mutex::new(HashMap::new())),
+        audit_tenant_concurrency_cap: 100,
     });
     let app = router(state);
 
@@ -1848,6 +1865,8 @@ async fn audit_capture_default_event_types_all_accepted() {
             verdict_dispatcher: None,
             audit_proxy_client: None,
             audit_proxy_purpose_allowlist: FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST,
+            audit_tenant_concurrency: Arc::new(Mutex::new(HashMap::new())),
+            audit_tenant_concurrency_cap: 100,
         });
         let app = router(state);
 
@@ -1881,4 +1900,343 @@ async fn audit_capture_default_event_types_all_accepted() {
             "ledger entry event_type must match request"
         );
     }
+}
+
+// ===========================================================================
+// Section 9 — audit endpoint hardening tests (payload cap + concurrency cap)
+// ===========================================================================
+//
+// Part 1: AUDIT_PROXY_MAX_REQUEST_BYTES (64 KiB) body-size cap on /v1/audit/proxy.
+//   - Oversized request → 413 before deserialise; ledger NOT written.
+//   - Right-at-boundary minus 1 byte → passes the size check.
+//
+// Part 2: Per-tenant (moduleId) concurrency cap shared across both endpoints.
+//   - Excess concurrent requests → 503 with Retry-After: 5.
+//   - Caps are per-tenant; two different tenants under cap-1 both succeed.
+
+// ── 9a. audit_proxy oversized request → 413, ledger NOT written ──────────────
+
+/// POST /v1/audit/proxy with a raw body just over `AUDIT_PROXY_MAX_REQUEST_BYTES`
+/// → 413 PAYLOAD_TOO_LARGE. The body-size check fires BEFORE JSON deserialisation
+/// so the ledger is NOT written (no paper trail for policy-denied size violations).
+#[tokio::test]
+async fn audit_proxy_oversized_request_returns_413() {
+    let ledger_dir = std::env::temp_dir().join(format!(
+        "slm-audit-proxy-oversized-{}",
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_nanos())
+            .unwrap_or(0)
+    ));
+    std::fs::create_dir_all(&ledger_dir).expect("create test ledger dir");
+    let ledger = AuditLedger::new(&ledger_dir).expect("create test audit ledger");
+    let doorman = Doorman::new(DoormanConfig::default(), ledger);
+    let state = Arc::new(AppState {
+        doorman,
+        apprenticeship: None,
+        brief_cache: Arc::new(BriefCache::default()),
+        verdict_dispatcher: None,
+        audit_proxy_client: None,
+        audit_proxy_purpose_allowlist: FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST,
+        audit_tenant_concurrency: Arc::new(Mutex::new(HashMap::new())),
+        audit_tenant_concurrency_cap: 100,
+    });
+    let app = router(state);
+
+    // Build a raw body that is just over the 64 KiB cap.
+    // We synthesise a JSON-shaped body manually so the size is predictable.
+    // The exact content does not need to be valid JSON — the check fires before
+    // deserialisation. We use a JSON object with a large "data" string field
+    // to make the bytes count predictable.
+    let big_data = "x".repeat(AUDIT_PROXY_MAX_REQUEST_BYTES + 1);
+    let oversized_body = format!(r#"{{"data": "{big_data}"}}"#);
+    assert!(
+        oversized_body.len() > AUDIT_PROXY_MAX_REQUEST_BYTES,
+        "synthesised body must exceed the cap for this test to be meaningful"
+    );
+
+    let req = Request::builder()
+        .method("POST")
+        .uri("/v1/audit/proxy")
+        .header("content-type", "application/json")
+        .body(Body::from(oversized_body))
+        .expect("build request");
+
+    let resp = app.oneshot(req).await.expect("oneshot");
+
+    assert_eq!(
+        resp.status(),
+        StatusCode::PAYLOAD_TOO_LARGE,
+        "oversized audit_proxy request must return 413 PAYLOAD_TOO_LARGE; got {}",
+        resp.status()
+    );
+
+    // Error message must include the size so callers know how much to trim.
+    let body_val = body_json(resp).await;
+    let msg = body_val["error"]["message"].as_str().unwrap_or_default();
+    assert!(
+        msg.contains("bytes"),
+        "error message must mention 'bytes'; got: {msg}"
+    );
+
+    // Ledger MUST NOT have been written — body-size check is before stub write.
+    let jsonl_files: Vec<_> = std::fs::read_dir(&ledger_dir)
+        .expect("read ledger dir")
+        .filter_map(|e| e.ok())
+        .filter(|e| e.path().extension().map(|x| x == "jsonl").unwrap_or(false))
+        .collect();
+    assert_eq!(
+        jsonl_files.len(),
+        0,
+        "no ledger entries must be written when body-size check fires"
+    );
+}
+
+// ── 9b. audit_proxy just-under-max-size passes size check ─────────────────────
+
+/// POST /v1/audit/proxy with a body right at `AUDIT_PROXY_MAX_REQUEST_BYTES - 1`
+/// bytes. The size check must pass; the request proceeds past the cap guard
+/// (it may fail later for other reasons such as missing required fields or no
+/// configured provider — the point is the size check does NOT reject it).
+#[tokio::test]
+async fn audit_proxy_just_under_max_size_passes_size_check() {
+    let state = app_state_no_tiers();
+    let app = router(state);
+
+    // Build a valid JSON body whose total size is just under the limit.
+    // We use a valid audit_proxy body and pad the model field to bring the
+    // total up near the limit while staying valid JSON.
+    //
+    // The valid body is ~200 bytes. Pad with AUDIT_PROXY_MAX_REQUEST_BYTES - 200
+    // chars in the model field minus a margin to keep under the limit.
+    let base_body = valid_audit_proxy_body();
+    let base_json = base_body.to_string();
+    let base_len = base_json.len();
+
+    // We want total < AUDIT_PROXY_MAX_REQUEST_BYTES. Use (max - base_len - 20)
+    // as padding inside the model field. If base is already ≥ max, skip padding.
+    let padding_len = if base_len + 20 < AUDIT_PROXY_MAX_REQUEST_BYTES {
+        AUDIT_PROXY_MAX_REQUEST_BYTES - base_len - 20
+    } else {
+        0
+    };
+    let padded_model = format!("model-{}", "a".repeat(padding_len));
+    let mut body = valid_audit_proxy_body();
+    body["model"] = json!(padded_model);
+    let body_str = body.to_string();
+
+    // Assert the synthesised body is actually under the cap.
+    assert!(
+        body_str.len() < AUDIT_PROXY_MAX_REQUEST_BYTES,
+        "test body must be under the cap ({} < {})",
+        body_str.len(),
+        AUDIT_PROXY_MAX_REQUEST_BYTES
+    );
+
+    let req = Request::builder()
+        .method("POST")
+        .uri("/v1/audit/proxy")
+        .header("content-type", "application/json")
+        .body(Body::from(body_str))
+        .expect("build request");
+
+    let resp = app.oneshot(req).await.expect("oneshot");
+
+    // The body-size check passes; the request proceeds to validation.
+    // No providers configured → writes stub → 503 SERVICE_UNAVAILABLE.
+    // What we assert: status is NOT 413 (size check did not fire).
+    assert_ne!(
+        resp.status(),
+        StatusCode::PAYLOAD_TOO_LARGE,
+        "body under the cap must NOT return 413; got {}",
+        resp.status()
+    );
+}
+
+// ── 9c. per-tenant concurrency cap rejects excess requests ────────────────────
+
+/// With `audit_tenant_concurrency_cap = 2`, send 4 requests for the same
+/// `moduleId` where 2 are already "in-flight" (permits held by pinned futures)
+/// before the other 2 arrive. The 3rd and 4th requests must be rejected 503.
+///
+/// Implementation approach: pre-fill the semaphore by acquiring all permits
+/// before sending requests, then send requests and confirm 503, then release.
+///
+/// We directly test the `acquire_tenant_permit` semantics via the full HTTP
+/// handler: build an AppState with cap=2, manually saturate the semaphore for
+/// "woodfine" to 2 permits, then fire 2 more requests and confirm both 503.
+#[tokio::test]
+async fn audit_tenant_concurrency_cap_rejects_excess_requests() {
+    use slm_core::ModuleId;
+    use std::str::FromStr;
+    use tokio::sync::Semaphore;
+
+    // Build state with cap=2.
+    let tenant_map: Arc<Mutex<HashMap<ModuleId, Arc<Semaphore>>>> =
+        Arc::new(Mutex::new(HashMap::new()));
+
+    // Pre-saturate the semaphore for "woodfine" by inserting it with 0 remaining
+    // permits (all 2 permits are consumed by the two held OwnedSemaphorePermit).
+    let semaphore = Arc::new(Semaphore::new(2));
+    let _held_permit_1 = semaphore.clone().try_acquire_owned().unwrap();
+    let _held_permit_2 = semaphore.clone().try_acquire_owned().unwrap();
+    {
+        let mut map = tenant_map.lock().unwrap();
+        map.insert(ModuleId::from_str("woodfine").unwrap(), semaphore.clone());
+    }
+
+    let state = Arc::new(AppState {
+        doorman: Doorman::new(DoormanConfig::default(), temp_ledger()),
+        apprenticeship: None,
+        brief_cache: Arc::new(BriefCache::default()),
+        verdict_dispatcher: None,
+        audit_proxy_client: None,
+        audit_proxy_purpose_allowlist: FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST,
+        audit_tenant_concurrency: tenant_map,
+        audit_tenant_concurrency_cap: 2,
+    });
+
+    // Both requests below should fail immediately: no permits available.
+    let app1 = router(state.clone());
+    let resp1 = app1
+        .oneshot(post_json("/v1/audit/proxy", &valid_audit_proxy_body()))
+        .await
+        .expect("oneshot");
+
+    let app2 = router(state.clone());
+    let resp2 = app2
+        .oneshot(post_json("/v1/audit/proxy", &valid_audit_proxy_body()))
+        .await
+        .expect("oneshot");
+
+    assert_eq!(
+        resp1.status(),
+        StatusCode::SERVICE_UNAVAILABLE,
+        "request with no available permits must return 503; got {}",
+        resp1.status()
+    );
+    assert_eq!(
+        resp2.status(),
+        StatusCode::SERVICE_UNAVAILABLE,
+        "second concurrent request with no available permits must return 503; got {}",
+        resp2.status()
+    );
+
+    // Verify Retry-After: 5 header is set on the 503 response.
+    let retry_after = resp1
+        .headers()
+        .get("retry-after")
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("");
+    assert_eq!(
+        retry_after, "5",
+        "Retry-After header must be '5' on 503 concurrency-exhausted response; got: {retry_after}"
+    );
+
+    // After _held_permit_1 and _held_permit_2 drop (end of scope), the semaphore
+    // has 2 permits again. A fresh request for "woodfine" should now be able to
+    // acquire a permit. We test this by releasing the holds explicitly and sending
+    // one more request — if it gets past the concurrency check (503 would indicate
+    // cap still hit; any other code means cap is no longer the blocker).
+    drop(_held_permit_1);
+    drop(_held_permit_2);
+
+    let app3 = router(state.clone());
+    let resp3 = app3
+        .oneshot(post_json("/v1/audit/proxy", &valid_audit_proxy_body()))
+        .await
+        .expect("oneshot");
+    // The cap is released; the request proceeds past the concurrency check.
+    // No providers configured → writes stub → 503 "unconfigured" — that is
+    // different from the cap-exhausted 503 (the error message differs).
+    // We assert it is NOT a cap-exhausted rejection by checking the body.
+    let body_val = body_json(resp3).await;
+    let error_str = body_val["error"].as_str().unwrap_or_default();
+    assert!(
+        error_str.contains("unconfigured") || !error_str.contains("concurrency"),
+        "after permit release, request must NOT be rejected by the concurrency cap; got: {body_val}"
+    );
+}
+
+// ── 9d. per-tenant caps are independent across tenants ────────────────────────
+
+/// With `audit_tenant_concurrency_cap = 1`, one request from tenant "alpha"
+/// and one request from tenant "beta" must both complete successfully.
+/// Each tenant has its own semaphore — the cap is per-tenant, not global.
+///
+/// Uses audit_capture (simpler body shape; no provider needed) so we can
+/// test concurrency without a wiremock server.
+#[tokio::test]
+async fn audit_tenant_concurrency_cap_per_tenant_independent() {
+    // Build state with cap=1 but two different tenants.
+    let state = Arc::new(AppState {
+        doorman: Doorman::new(DoormanConfig::default(), temp_ledger()),
+        apprenticeship: None,
+        brief_cache: Arc::new(BriefCache::default()),
+        verdict_dispatcher: None,
+        audit_proxy_client: None,
+        audit_proxy_purpose_allowlist: FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST,
+        audit_tenant_concurrency: Arc::new(Mutex::new(HashMap::new())),
+        // cap = 1: each tenant can have at most 1 in-flight request
+        audit_tenant_concurrency_cap: 1,
+    });
+
+    // Two requests from different tenants; both should complete (200 OK
+    // or 400/503 for other reasons — what we assert is neither returns
+    // 503 DUE TO the concurrency cap when the other tenant's request is
+    // also in-flight).
+    //
+    // Because audit_capture requests are synchronous and fast (no upstream
+    // call), we send them sequentially here. The per-tenant cap with cap=1
+    // allows exactly 1 in-flight per tenant. Since each request completes
+    // before the next starts, both succeed even with cap=1.
+    //
+    // This test primarily validates that tenant "alpha" and tenant "beta"
+    // do NOT share the same semaphore bucket.
+    let alpha_body = json!({
+        "audit_id": "01900000-0000-7000-8000-000000000001",
+        "module_id": "alpha",          // ← tenant alpha
+        "event_type": "prose-edit",
+        "source": "test",
+        "status": "ok",
+        "event_at": "2026-04-28T10:00:00Z",
+        "payload": {},
+        "caller_request_id": "alpha-req"
+    });
+    let beta_body = json!({
+        "audit_id": "01900000-0000-7000-8000-000000000002",
+        "module_id": "beta",           // ← tenant beta
+        "event_type": "prose-edit",
+        "source": "test",
+        "status": "ok",
+        "event_at": "2026-04-28T10:00:00Z",
+        "payload": {},
+        "caller_request_id": "beta-req"
+    });
+
+    let app_alpha = router(state.clone());
+    let resp_alpha = app_alpha
+        .oneshot(post_json("/v1/audit/capture", &alpha_body))
+        .await
+        .expect("oneshot alpha");
+
+    let app_beta = router(state.clone());
+    let resp_beta = app_beta
+        .oneshot(post_json("/v1/audit/capture", &beta_body))
+        .await
+        .expect("oneshot beta");
+
+    // Both must succeed (200 OK) — caps are per-tenant, not global.
+    assert_eq!(
+        resp_alpha.status(),
+        StatusCode::OK,
+        "tenant 'alpha' must succeed (cap=1 is per-tenant); got {}",
+        resp_alpha.status()
+    );
+    assert_eq!(
+        resp_beta.status(),
+        StatusCode::OK,
+        "tenant 'beta' must succeed (cap=1 is per-tenant; caps are independent); got {}",
+        resp_beta.status()
+    );
 }

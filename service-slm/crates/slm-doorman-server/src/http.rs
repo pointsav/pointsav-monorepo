@@ -19,9 +19,11 @@
 //! ad-hoc curl probes work in development; production callers SHOULD
 //! supply them per CONTRACT.md.
 
+use std::collections::HashMap;
 use std::str::FromStr;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
+use axum::body::Bytes;
 use axum::extract::State;
 use axum::http::{HeaderMap, StatusCode};
 use axum::response::{IntoResponse, Json};
@@ -42,6 +44,7 @@ use slm_doorman::{
     AuditProxyEntry, AuditProxyPurposeAllowlist, AuditProxyStubEntry, BriefCache, Doorman,
     DoormanError, VerdictDispatchOutcome, VerdictDispatcher, VerdictWireBody,
 };
+use tokio::sync::Semaphore;
 
 pub struct AppState {
     pub doorman: Doorman,
@@ -66,6 +69,20 @@ pub struct AppState {
     /// Empty allowlist = fail-closed: all purposes are denied. Use
     /// `FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST` for the four documented purposes.
     pub audit_proxy_purpose_allowlist: AuditProxyPurposeAllowlist,
+    /// Per-tenant (moduleId) in-flight request semaphores shared across BOTH
+    /// `/v1/audit/proxy` AND `/v1/audit/capture`.
+    ///
+    /// Keyed by `ModuleId`. The inner `Arc<Semaphore>` holds N permits where N
+    /// is `SLM_AUDIT_TENANT_CONCURRENCY_CAP` (default 4). A new entry is
+    /// created lazily on the first request from a tenant (`lazy-init`).
+    ///
+    /// Using `Arc<Mutex<HashMap<...>>>` (no new dep; `dashmap` is not in the
+    /// workspace). The lock is held only for map lookup / insertion (O(1)); it
+    /// is released before the semaphore acquire, so no long-held lock.
+    pub audit_tenant_concurrency: Arc<Mutex<HashMap<ModuleId, Arc<Semaphore>>>>,
+    /// Maximum number of concurrent in-flight audit requests per tenant.
+    /// Configurable via `SLM_AUDIT_TENANT_CONCURRENCY_CAP`; default 4.
+    pub audit_tenant_concurrency_cap: u32,
 }
 
 pub fn router(state: Arc<AppState>) -> Router {
@@ -244,6 +261,48 @@ async fn shadow(
     Ok(StatusCode::OK)
 }
 
+/// Attempt to acquire a per-tenant concurrency permit for the audit endpoints.
+///
+/// Both `/v1/audit/proxy` and `/v1/audit/capture` share the same per-tenant
+/// semaphore map. The total count of in-flight requests across BOTH endpoints
+/// counts against the per-tenant cap (`audit_tenant_concurrency_cap`).
+///
+/// Implementation:
+///   1. Lock the map (O(1) lookup), retrieve or lazily-create the tenant's
+///      `Arc<Semaphore>`.
+///   2. Release the map lock immediately so we do not hold it during the
+///      semaphore acquire.
+///   3. Call `try_acquire_owned()` — non-blocking; fails immediately if no
+///      permits available.
+///   4. On failure, return `DoormanError::AuditTenantConcurrencyExhausted`.
+///
+/// The returned `OwnedSemaphorePermit` is held for the rest of the caller's
+/// scope and is automatically released (RAII) when the handler returns.
+fn acquire_tenant_permit(
+    state: &AppState,
+    module_id: &ModuleId,
+) -> Result<tokio::sync::OwnedSemaphorePermit, DoormanError> {
+    let semaphore = {
+        let mut map = state
+            .audit_tenant_concurrency
+            .lock()
+            .expect("audit_tenant_concurrency Mutex poisoned");
+        map.entry(module_id.clone())
+            .or_insert_with(|| {
+                Arc::new(Semaphore::new(state.audit_tenant_concurrency_cap as usize))
+            })
+            .clone()
+        // map lock released here
+    };
+
+    semaphore
+        .try_acquire_owned()
+        .map_err(|_| DoormanError::AuditTenantConcurrencyExhausted {
+            module_id: module_id.to_string(),
+            cap: state.audit_tenant_concurrency_cap,
+        })
+}
+
 /// `POST /v1/audit/proxy` — audited external provider call (PS.4 step 2).
 ///
 /// Two-entry ledger design:
@@ -261,16 +320,58 @@ async fn shadow(
 /// message from the scaffold phase is retired; callers now see a clear
 /// configuration-gap message instead.
 ///
+/// Hardening (added post-PS.4):
+///   - `AUDIT_PROXY_MAX_REQUEST_BYTES` (64 KiB) raw body-size cap checked
+///     BEFORE JSON deserialisation → 413 on violation.
+///   - Per-tenant (moduleId) in-flight concurrency cap (default 4) shared
+///     with `/v1/audit/capture`. Excess → 503 with `Retry-After: 5`.
+///
 /// Validation failures return `400 BAD_REQUEST` with a descriptive message.
-async fn audit_proxy(
-    State(state): State<Arc<AppState>>,
-    Json(body): Json<AuditProxyRequest>,
-) -> impl IntoResponse {
+async fn audit_proxy(State(state): State<Arc<AppState>>, raw: Bytes) -> impl IntoResponse {
+    // 0. Body-size cap — checked BEFORE deserialisation.
+    //    This is the primary DoS guard: reject oversized bodies early without
+    //    allocating heap memory for the JSON value. `Bytes` extraction does
+    //    NOT allocate a serde tree; the size check is O(1) against the buffer
+    //    length already present in the pre-read bytes.
+    if raw.len() > AUDIT_PROXY_MAX_REQUEST_BYTES {
+        let err: ApiError = DoormanError::AuditProxyPayloadTooLarge {
+            size_bytes: raw.len(),
+            max_bytes: AUDIT_PROXY_MAX_REQUEST_BYTES,
+        }
+        .into();
+        return err.into_response();
+    }
+
+    // Deserialise from the raw bytes.
+    let body: AuditProxyRequest = match serde_json::from_slice(&raw) {
+        Ok(b) => b,
+        Err(e) => {
+            return ApiError::bad_request(format!("invalid JSON body: {e}")).into_response();
+        }
+    };
+
     // 1a. Validate module_id.
     let module_id = match ModuleId::from_str(&body.module_id) {
         Ok(mid) => mid,
         Err(e) => {
             return ApiError::bad_request(format!("invalid module_id: {e}")).into_response();
+        }
+    };
+
+    // 1a'. Acquire per-tenant concurrency permit.
+    //     Checked immediately after module_id is parsed (so we have a valid
+    //     ModuleId key) and before any expensive work — purpose validation,
+    //     audit_id generation, ledger writes, and upstream call. The permit is
+    //     held for the rest of the handler's lifetime (RAII drop on return).
+    let _permit = match acquire_tenant_permit(&state, &module_id) {
+        Ok(p) => p,
+        Err(e) => {
+            let mut resp = ApiError::from(e).into_response();
+            resp.headers_mut().insert(
+                axum::http::header::RETRY_AFTER,
+                axum::http::HeaderValue::from_static("5"),
+            );
+            return resp;
         }
     };
 
@@ -435,6 +536,13 @@ async fn audit_proxy(
     }
 }
 
+/// Maximum permitted raw body size for `POST /v1/audit/proxy` requests.
+/// Set at 64 KiB — 4× `AUDIT_CAPTURE_MAX_PAYLOAD_BYTES` because the proxy
+/// carries full chat-completion `messages` arrays with potentially long user
+/// prompts. The check fires BEFORE JSON deserialisation so an oversized request
+/// is rejected early without allocating heap memory for the payload.
+pub const AUDIT_PROXY_MAX_REQUEST_BYTES: usize = 64 * 1024; // 64 KiB
+
 /// Maximum permitted size of the `payload` field in an `AuditCaptureRequest`.
 /// Payloads larger than this limit are rejected 413 PAYLOAD_TOO_LARGE before
 /// any ledger write, preventing denial-of-service via giant payloads.
@@ -477,6 +585,21 @@ async fn audit_capture(
         Ok(mid) => mid,
         Err(e) => {
             return ApiError::bad_request(format!("invalid module_id: {e}")).into_response();
+        }
+    };
+
+    // 1'. Acquire per-tenant concurrency permit — shared with audit_proxy.
+    //     Both audit endpoints count against the same per-tenant cap so a
+    //     tenant flooding either endpoint is rate-limited across both.
+    let _permit = match acquire_tenant_permit(&state, &module_id) {
+        Ok(p) => p,
+        Err(e) => {
+            let mut resp = ApiError::from(e).into_response();
+            resp.headers_mut().insert(
+                axum::http::header::RETRY_AFTER,
+                axum::http::HeaderValue::from_static("5"),
+            );
+            return resp;
         }
     };
 
@@ -615,6 +738,12 @@ impl From<DoormanError> for ApiError {
             DoormanError::AuditCapturePayloadTooLarge { .. } => StatusCode::PAYLOAD_TOO_LARGE,
             // Unparseable timestamp → 400 BAD_REQUEST.
             DoormanError::AuditCaptureInvalidTimestamp { .. } => StatusCode::BAD_REQUEST,
+            // audit_proxy request body too large → 413 PAYLOAD_TOO_LARGE.
+            DoormanError::AuditProxyPayloadTooLarge { .. } => StatusCode::PAYLOAD_TOO_LARGE,
+            // Per-tenant concurrency cap hit → 503 SERVICE_UNAVAILABLE.
+            // The caller may retry after in-flight requests from the same
+            // tenant complete; Retry-After: 5 header is set by the handler.
+            DoormanError::AuditTenantConcurrencyExhausted { .. } => StatusCode::SERVICE_UNAVAILABLE,
             DoormanError::BriefCacheMiss => StatusCode::GONE,
             DoormanError::LedgerIo(_)
             | DoormanError::LedgerSerde(_)

@@ -21,7 +21,7 @@
 //! No live API calls per the standing operator guardrail.
 
 use std::collections::HashMap;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 use axum::body::Body;
 use axum::http::{Request, StatusCode};
@@ -109,6 +109,8 @@ fn app_state_with_proxy_and_ledger_dir(
         verdict_dispatcher: None,
         audit_proxy_client: Some(audit_client),
         audit_proxy_purpose_allowlist: FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST,
+        audit_tenant_concurrency: Arc::new(Mutex::new(HashMap::new())),
+        audit_tenant_concurrency_cap: 100,
     })
 }
 

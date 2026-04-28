@@ -43,6 +43,12 @@
 //!   SLM_LARK_VALIDATION_ENABLED  pre-validate Lark grammars at the Doorman
 //!                             boundary using llguidance (PS.3 step 5).
 //!                             Default true. Set to `false` or `0` to disable.
+//!   SLM_AUDIT_TENANT_CONCURRENCY_CAP
+//!                             maximum number of concurrent in-flight audit
+//!                             requests per tenant (moduleId) across BOTH
+//!                             /v1/audit/proxy and /v1/audit/capture. Excess
+//!                             requests → 503 SERVICE_UNAVAILABLE with
+//!                             Retry-After: 5. Default 4.
 //!   RUST_LOG                  default slm_doorman=info,slm_doorman_server=info
 //!
 //! Per `conventions/three-ring-architecture.md` the Doorman boots fine
@@ -51,8 +57,9 @@
 
 use slm_doorman_server::http;
 
+use std::collections::HashMap;
 use std::net::SocketAddr;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 use anyhow::Context;
 use slm_doorman::tier::{
@@ -84,6 +91,14 @@ async fn main() -> anyhow::Result<()> {
         None => None,
     };
     let audit_proxy_client = build_audit_proxy_client();
+
+    // SLM_AUDIT_TENANT_CONCURRENCY_CAP — maximum in-flight audit requests per
+    // tenant across both /v1/audit/proxy and /v1/audit/capture. Default 4.
+    let audit_tenant_concurrency_cap: u32 = std::env::var("SLM_AUDIT_TENANT_CONCURRENCY_CAP")
+        .ok()
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(4);
+
     let state = Arc::new(http::AppState {
         doorman,
         apprenticeship,
@@ -94,6 +109,10 @@ async fn main() -> anyhow::Result<()> {
         // Operator overrides by replacing with a custom const via deployment
         // env config (compile-time extension per doctrine).
         audit_proxy_purpose_allowlist: FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST,
+        // Per-tenant concurrency semaphore map — lazily populated on first
+        // request from each tenant.
+        audit_tenant_concurrency: Arc::new(Mutex::new(HashMap::new())),
+        audit_tenant_concurrency_cap,
     });
 
     info!(
