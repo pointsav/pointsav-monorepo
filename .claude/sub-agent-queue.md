@@ -99,14 +99,7 @@ PS.4 was originally framed as a single ~3-5 day brief. Breaking into discrete
 chunks for the pipeline:
 
 - **PS.4 step 1 — audit_proxy endpoint scaffold** ✅ commit `40dc18e`
-- **PS.4 step 2 — audit_proxy upstream provider relay** (~3-4hr Sonnet)
-  Wires Tier C provider HTTP calls (Anthropic / Gemini / OpenAI) into the
-  audit_proxy handler. Reads `SLM_TIER_C_*` env vars for API keys (pattern
-  established by `ExternalTierClient`). Updates the stub ledger entry to
-  carry real `prompt_tokens`, `completion_tokens`, `cost_usd`, `latency_ms`,
-  and final status ("ok" | "upstream-error"). Replaces 503 placeholder with
-  live response. Wiremock tests for happy path + each provider's error
-  shapes. NEXT after step 1.
+- **PS.4 step 2 — audit_proxy upstream provider relay** ✅ commit `028c411`
 - **PS.4 step 3 — purpose allowlist enforcement** (~1-2hr Sonnet)
   Add a configurable allowlist for the `purpose` field (similar to
   `ExternalAllowlist` for Tier C labels). Reject unallowlisted purposes
@@ -155,6 +148,44 @@ once operator green-lights.
 ---
 
 ## Completed
+
+### 2026-04-28 — PS.4 step 2 (audit_proxy upstream provider relay) [COMPLETED commit `028c411`]
+
+Long-running Sonnet pipeline iteration 6. Mock-only per standing B4 operator
+guardrail (no live API calls; wiremock; no provider-SDK installs).
+
+- **Outcome**: 9 new tests across slm-doorman + slm-doorman-server. Tests
+  102 → 111. Commit `028c411` (Peter Woodfine).
+- **Resumption note**: First dispatch hit API 500 at ~7.5min/49 tool uses,
+  with substantial uncommitted work in tree. Resumed via SendMessage to
+  the same agent for completion (3 compile errors in tests file:
+  ledger_dir binding-name mismatch in two tests; missing
+  `audit_proxy_client: None` in one AppState literal). Resume took ~3.5min.
+- **New module**: `crates/slm-doorman/src/audit_proxy.rs` — `AuditProxyClient`
+  parallel to `ExternalTierClient`. Same env-var contract (`SLM_TIER_C_*`
+  for Anthropic / Gemini / OpenAI endpoints + keys); same `TierCPricing`
+  arithmetic; raw `reqwest` (mockable). Per-provider request body +
+  authentication header construction (Anthropic `x-api-key` +
+  `anthropic-version`; Gemini `x-goog-api-key`; OpenAI `Authorization:
+  Bearer`).
+- **Two-entry ledger design**: handler writes a `AuditProxyStubEntry` on
+  validation success (preserved from step 1); after relay completes (ok or
+  upstream-error), writes a SECOND entry with prompt_tokens,
+  completion_tokens, cost_usd, latency_ms, status. Audit trail of attempted
+  call survives even if upstream fails.
+- **New error variant**: `DoormanError::AuditProxyProviderUnavailable
+  { provider: String }`. HTTP 503 SERVICE_UNAVAILABLE.
+  `CompletionStatus::UpstreamError` (server-side config gap, not caller-side
+  rule violation).
+- **AppState change**: added `audit_proxy_client: Option<AuditProxyClient>`.
+  `slm-doorman-server::main` reads `SLM_TIER_C_*` env vars per provider;
+  builds the client only if at least one provider has both endpoint + key.
+  None means audit_proxy returns 503 with "unconfigured" message.
+- **Test helpers**: new `app_state_with_audit_proxy(...)` helper takes
+  wiremock URL + provider variant.
+- **Build hygiene**: cargo test 111/111; clippy + fmt clean.
+- **Operator guardrail observed**: no live API calls; no provider-SDK
+  installs.
 
 ### 2026-04-28 — PS.4 step 1 (audit_proxy endpoint scaffold) [COMPLETED commit `40dc18e`]
 
