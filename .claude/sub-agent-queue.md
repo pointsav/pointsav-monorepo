@@ -152,6 +152,34 @@ once operator green-lights.
 
 ## Completed
 
+### 2026-04-28 — Iter-13 SLM_AUDIT_DIR cluster-scope wiring [COMPLETED commit `5812501`]
+
+- **Cluster-scope** (NOT admin-tier). `service-slm/crates/slm-doorman-server/
+  src/main.rs` reads `SLM_AUDIT_DIR` env var; falls back to existing
+  `$HOME/.service-slm/audit/` default when unset.
+- **Pattern**: env var present → `create_dir_all` first (warn-and-fallback
+  on failure) → `AuditLedger::new()`; env var unset → `default_for_user()`.
+  Either path emits a single startup `info!` line confirming chosen
+  directory.
+- **Tests**: 124/124 still passing — `temp_ledger` test helpers call
+  `AuditLedger::new()` directly; main.rs change doesn't reach them.
+- Pairs with PS.8 GUIDE-doorman handoff (still parked on Master catalog
+  provisioning).
+- Commit `5812501` (Peter Woodfine).
+
+### 2026-04-28 — Iter-14 mistral cleanup tail (workspace tier) [COMPLETED commit `278b4ab`]
+
+- **Admin-tier** (workspace repo). Closes the last two `mistral`
+  references that fell outside PS.1-3's three-file scope:
+  `CUSTOMER-RUNBOOK.es.md` line 30 (Spanish sibling) and
+  `tofu/README.md` line 208.
+- **Bonus accuracy**: es.md license note updated from "MIT" (mistral.rs's
+  license) to "Apache 2.0" (vLLM's actual license) — Sonnet caught the
+  license mismatch and corrected.
+- **Final grep**: zero `mistral` hits across entire `infrastructure/
+  slm-yoyo/` subtree post-commit.
+- Workspace commit `278b4ab` (`ps-administrator`).
+
 ### 2026-04-28 — PS.1-2 + PS.1-3 + PS.1-4 batch (workspace-tier, admin-tier procedure) [COMPLETED]
 
 Long-running Sonnet pipeline iterations 10-12. First operator option-A
