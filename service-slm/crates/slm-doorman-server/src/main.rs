@@ -41,7 +41,7 @@
 //! with no Yo-Yo configured (Optional Intelligence). B5 verifies this
 //! end-to-end.
 
-mod http;
+use slm_doorman_server::http;
 
 use std::net::SocketAddr;
 use std::sync::Arc;
@@ -169,14 +169,16 @@ fn build_external_tier_client() -> Option<ExternalTierClient> {
                 TierCProvider::Anthropic,
                 std::env::var("SLM_TIER_C_ANTHROPIC_API_KEY").unwrap_or_default(),
             );
-            pricing.anthropic_input_per_mtok_usd = std::env::var("SLM_TIER_C_ANTHROPIC_INPUT_PER_MTOK_USD")
-                .ok()
-                .and_then(|s| s.parse().ok())
-                .unwrap_or(0.0);
-            pricing.anthropic_output_per_mtok_usd = std::env::var("SLM_TIER_C_ANTHROPIC_OUTPUT_PER_MTOK_USD")
-                .ok()
-                .and_then(|s| s.parse().ok())
-                .unwrap_or(0.0);
+            pricing.anthropic_input_per_mtok_usd =
+                std::env::var("SLM_TIER_C_ANTHROPIC_INPUT_PER_MTOK_USD")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(0.0);
+            pricing.anthropic_output_per_mtok_usd =
+                std::env::var("SLM_TIER_C_ANTHROPIC_OUTPUT_PER_MTOK_USD")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(0.0);
         }
     }
 
@@ -188,14 +190,16 @@ fn build_external_tier_client() -> Option<ExternalTierClient> {
                 TierCProvider::Gemini,
                 std::env::var("SLM_TIER_C_GEMINI_API_KEY").unwrap_or_default(),
             );
-            pricing.gemini_input_per_mtok_usd = std::env::var("SLM_TIER_C_GEMINI_INPUT_PER_MTOK_USD")
-                .ok()
-                .and_then(|s| s.parse().ok())
-                .unwrap_or(0.0);
-            pricing.gemini_output_per_mtok_usd = std::env::var("SLM_TIER_C_GEMINI_OUTPUT_PER_MTOK_USD")
-                .ok()
-                .and_then(|s| s.parse().ok())
-                .unwrap_or(0.0);
+            pricing.gemini_input_per_mtok_usd =
+                std::env::var("SLM_TIER_C_GEMINI_INPUT_PER_MTOK_USD")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(0.0);
+            pricing.gemini_output_per_mtok_usd =
+                std::env::var("SLM_TIER_C_GEMINI_OUTPUT_PER_MTOK_USD")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(0.0);
         }
     }
 
@@ -207,14 +211,16 @@ fn build_external_tier_client() -> Option<ExternalTierClient> {
                 TierCProvider::Openai,
                 std::env::var("SLM_TIER_C_OPENAI_API_KEY").unwrap_or_default(),
             );
-            pricing.openai_input_per_mtok_usd = std::env::var("SLM_TIER_C_OPENAI_INPUT_PER_MTOK_USD")
-                .ok()
-                .and_then(|s| s.parse().ok())
-                .unwrap_or(0.0);
-            pricing.openai_output_per_mtok_usd = std::env::var("SLM_TIER_C_OPENAI_OUTPUT_PER_MTOK_USD")
-                .ok()
-                .and_then(|s| s.parse().ok())
-                .unwrap_or(0.0);
+            pricing.openai_input_per_mtok_usd =
+                std::env::var("SLM_TIER_C_OPENAI_INPUT_PER_MTOK_USD")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(0.0);
+            pricing.openai_output_per_mtok_usd =
+                std::env::var("SLM_TIER_C_OPENAI_OUTPUT_PER_MTOK_USD")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(0.0);
         }
     }
 
