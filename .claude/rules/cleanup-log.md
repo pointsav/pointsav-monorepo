@@ -25,7 +25,6 @@ These substitutions are known and in progress. Canonical names are from the Nome
 
 | Legacy | Canonical | Status | Notes |
 |---|---|---|---|
-| `service-llm` | `service-slm` | Documentation-only inconsistency | Code references are correct. Legacy appearances in docs should be read as `service-slm`. |
 | `cluster-totebox-real-property` | `cluster-totebox-property` | In flight | Appears in older deployment manifests and doc references. |
 | `os-interface`, `os-integration` | `os-orchestration` | In flight | Legacy names predate the current three-layer stack nomenclature. |
 | `RealPropertyArchive` | `PropertyArchive` | In flight | Appears in older archive-type documentation and possibly in legacy code comments. |
@@ -50,6 +49,7 @@ Items that may look like candidates for cleanup but are intentionally preserved 
 |---|---|
 | `cluster-totebox-personnel-1` and other numbered personnel instances | Exist locally but intentionally absent from GitHub and the MEMO. Not a naming error. Do not flag as legacy. |
 | Two ConsoleOS operating patterns (multi-service `node-console-operator` and single-service nodes) | Both patterns are valid. The MEMO documents `node-console-operator` only, by design, to keep official documentation clean. Do not flag the single-service pattern as an inconsistency. |
+| `service-llm` references in legacy docs | Legacy documentation predates `service-slm` naming; read as `service-slm`. Code is correct (code references are already `service-slm`). No migration action needed — this is a permanent documentation-reading convention, not an in-flight rename. Reclassified from Active renames to here per Brief 8 audit 2026-04-28. |
 
 ---
 
@@ -61,10 +61,9 @@ Pending confirmations that affect how Claude should describe or reason about par
 |---|---|
 | Verification Surveyor daily throttle number | Under operational review. Do not cite a specific number. Refer to it as "a system-enforced daily limit" until confirmed in a future MEMO version. **Code reference (2026-04-23):** `app-console-content/scripts/surveyor.py` hard-codes `MAX_DAILY_VERIFICATIONS = 10`; whether this value is authoritative or drift is the pending decision. |
 | User Guide language on Sovereign Data Foundation | The User Guide contains language treating the Foundation as a current equity holder and active auditor. Requires a language review pass before any User Guide content is reused in public-facing materials. Flag any passage that describes the Foundation as current or active. |
-| `service-search` inclusion in the next MEMO | Confirmed for inclusion in the next MEMO version. Treat as canonical in code; note the doc catch-up is pending. |
 | Is the per-crate independent workspace pattern intentional (some crates meant to be extractable and published separately) or accidental drift? | Pending decision — do not act on related findings until answered. |
 | Are `app-console-*` and `app-network-*` directories without `Cargo.toml` intentional scaffolding for planned work, or abandoned attempts? | Pending decision — do not act on related findings until answered. |
-| Should the doubly-nested `service-email-egress-{ews,imap}` structure be flattened, or does the nesting reflect a real protocol-implementation hierarchy? | Pending decision — do not act on related findings until answered. |
+| ~~Should the doubly-nested `service-email-egress-{ews,imap}` structure be flattened, or does the nesting reflect a real protocol-implementation hierarchy?~~ | **Answered 2026-04-23:** wrappers flattened; two crates kept separate (distinct protocol adapters, not duplicates). 13 Cargo.toml name mismatches remain as separate structural audit finding (not an open question — a known defect). Reclassified per Brief 8 audit 2026-04-28. |
 | What is `discovery-queue` — runtime data that should be gitignored, reference data that belongs elsewhere, or a misplaced crate? | Pending decision — do not act on related findings until answered. |
 | ~~Does `vendors-maxmind` (containing a GeoLite2 database, not code) belong as a `vendor-*` crate at all, or should it move to a non-workspace data directory?~~ | **Answered 2026-04-23:** non-workspace data directory. Moved to `app-mediakit-telemetry/assets/` (matching the authoritative target path already documented in the vendor's README). `vendor-*` crate framing rejected: the directory contained only data, no code. |
 
@@ -95,6 +94,85 @@ Newest on top. Append a dated block when a session includes meaningful cleanup w
 ```
 
 ---
+
+## 2026-04-28 — Read-only audit batch (Briefs 5-8) — applied bounded fixes per parent review
+
+- **Cluster sub-agent queue** created at
+  `~/Foundry/clones/project-knowledge/.claude/sub-agent-queue.md`
+  per Master ratification 2026-04-28T04:00Z (workspace v0.1.30
+  §1A.4 layer-scope rule: cluster-scope briefs go in cluster's
+  own queue, not Master's workspace queue). Operator
+  authorization framing 2026-04-28 "take care of all open
+  issues". Queue holds 8 ratified briefs across 3 sections
+  (Phase 4 — operator-gated; Wiki-leg expansion ×3; Read-only
+  audits ×4 parallelisable).
+
+- **Read-only batch dispatched (4 parallel, per §1A rule 2)**.
+  All 4 returned with high-quality reports.
+  - **Brief 5** (JSONL corpus integrity audit, Sonnet) — all 6
+    JSONL files in `prose-edit/pointsav/` clean against the
+    foundry-draft-v1 schema; byte-for-byte match confirmed
+    against staged drafts. Corpus ready for Stage-1 DPO pair
+    construction. No action needed.
+  - **Brief 6** (frontmatter validation pass, Sonnet) — 5 of
+    6 drafts compliant; 1 FAIL: `topic-collab-via-passthrough-relay.es.draft.md`
+    missing `references:` field. **Fix applied** (mirror English
+    sibling's references, 9 entries). 5 drafts carry inline-comment
+    WARN on `target_path` (parser-stripped; not FAIL).
+  - **Brief 7** (static/ asset audit, Haiku — Master concurred
+    on tier) — 1 unused class found: `wikilink-redlink` (line
+    135) + `--link-redlink` variable (line 21). **Fix applied**
+    (both removed); per CLAUDE.md §6 "don't design for
+    hypothetical future requirements" — re-add when Phase 4's
+    wikilink graph emits red-link rendering. 42/43 CSS used; 4
+    JS files referenced; 0 dead font refs; vendored bundles
+    current.
+  - **Brief 8** (cleanup-log triage, Sonnet) — A:3 / B:3 /
+    C:5 / D:10 categorisation. **Category A fixes applied
+    this commit**:
+    - A1: `app-mediakit-knowledge` registry row state
+      `Scaffold-coded` → `Active` with annotation listing
+      shipped phases + flagging project-root CLAUDE.md/NEXT.md
+      activation defect.
+    - A2: `service-search` row removed from Open questions
+      (answer was already embedded in row text — confirmed for
+      next MEMO, doc catch-up is NEXT.md item).
+    - A3: `service-llm` reclassified from Active legacy-to-canonical
+      renames table to Intentional exceptions table — it's a
+      permanent documentation-reading convention (code is
+      already `service-slm`), not an in-flight rename.
+    - Category B item answered-but-still-listed:
+      `doubly-nested service-email-egress-{ews,imap}` open
+      question struck through with "Answered 2026-04-23" note
+      (wrappers flattened in 2026-04-23 session; Cargo.toml
+      name mismatches remain as separate structural defect).
+
+- **Categories B/C carried for later sessions:**
+  - B2: `disclosure_class: glossary` schema extension needs
+    re-triage against `conventions/reverse-funnel-editorial-pattern.md`
+    claim #35 enum when ARCH §6 operator decision lands.
+  - C1: `cluster-totebox-real-property` rename — to be
+    actioned as in-transit edit when `USER_GUIDE_2026-03-30_V2.md`
+    handoff to content-wiki-documentation executes.
+  - C2/C3: `os-interface`/`os-integration` → `os-orchestration`
+    + `RealPropertyArchive` → `PropertyArchive` renames stale 4
+    sessions; should be grep-confirmed before Phase 4 touches
+    related code.
+  - C4: `discovery-queue` open question — registry row already
+    has operational disposition (gitignore + move to
+    `service-fs/data/`); open-questions row should be closed in
+    a future session.
+  - C5: `os-infrastructure` two-script pipeline question
+    unanswered — needs resolution before Phase 4 build pipeline
+    work.
+
+- **Sonnet sub-agent dispatch pattern operating cleanly.**
+  All 4 sub-agents returned within budget (Brief 7 ~3 min;
+  others ~1-2 min). Parent (Opus) review pass identified
+  Brief 7's "future-feature" framing risk (red-link CSS as
+  forward-looking infrastructure) and applied per CLAUDE.md
+  §6 discipline. Parent never delegated commit decision per
+  v0.1.30 §1A rule 6.
 
 ## 2026-04-28 — Tetrad upgrade + PK.1/PK.4 prep commits + skeleton TOPIC pair
 
