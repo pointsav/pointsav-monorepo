@@ -120,6 +120,36 @@ once operator green-lights.
 
 ## Completed
 
+### 2026-04-28 — PS.3 step 5 (llguidance Doorman-side Lark validation) [COMPLETED commit `978ab79`]
+
+Long-running Sonnet pipeline iteration 4. Optional fail-fast layer on top of
+the three-tier grammar policy.
+
+- **Outcome**: 7 new tests (4 in `grammar_validation::tests`, 3 in
+  `slm-doorman-server` http_test wiremock + status mapping). Tests 90 → 97.
+  Commit `978ab79` (Peter Woodfine).
+- **llguidance version pinned**: `1.7` (locks to 1.7.4). No extra feature
+  flags; default features include the Lark compiler and toktrie. Binary
+  size delta +1.4 MB (6.3 → 7.7 MB stripped release).
+- **Validation entry point**: `LarkValidator::new()` wraps
+  `Arc<ParserFactory>` initialised with `ApproximateTokEnv::single_byte_env()`
+  (the standalone-validation pattern from `llguidance/sample_parser/src/
+  minimal.rs` — no real LLM tokenizer required). `validate(&str)` returns
+  `Result<(), String>` with line/column-annotated error message on
+  malformed Lark.
+- **Wired into router**: `DoormanConfig.lark_validator: Option<LarkValidator>`;
+  pre-validation guard before Tier B dispatch; new variant
+  `DoormanError::MalformedLarkGrammar { reason }` → 400 BAD_REQUEST →
+  `CompletionStatus::PolicyDenied`. `slm-doorman-server::main` enables by
+  default with `SLM_LARK_VALIDATION_ENABLED=false` opt-out; non-fatal on
+  init failure.
+- **Latency**: ~1 ms/call in release mode; factory shared across requests
+  via `Arc`.
+- **Tests of note**: `lark_validation_runs_before_tier_b_dispatch` is the
+  critical wiremock proof — malformed Lark + Tier B routing produces zero
+  network requests.
+- **Build hygiene**: cargo test 97/97; clippy + fmt clean.
+
 ### 2026-04-28 — PS.3 step 4 (Tier C rejects all grammar variants) [COMPLETED commit `fdee78f`]
 
 Long-running Sonnet pipeline iteration 3. Smallest chunk in PS.3 sequence.
