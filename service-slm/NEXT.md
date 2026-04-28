@@ -8,21 +8,27 @@
 
 ## Right now — long-running Sonnet pipeline active
 
-**Status:** Iteration 1 complete. PS.3 step 2 landed cleanly. Pipeline
+**Status:** Iteration 2 complete. PS.3 step 3 landed cleanly. Pipeline
 self-paces via `/loop` dynamic mode; next iteration scheduled.
 
-**Tests:** 83/83 passing across slm-core (14) + slm-doorman (57) +
-slm-doorman-server (12). Working tree clean post-state-file commit.
-Last code commit `266fa4d` (PS.3 step 2 — Yo-Yo grammar serialisation).
+**Tests:** 87/87 passing across slm-core (14) + slm-doorman (61) +
+slm-doorman-server (12). Last code commit `9f9f37b` (PS.3 step 3 — Tier A
+grammar handling).
 
 **Pipeline operator-directed dispatch sequence (in flight):**
 1. **PS.3 step 2** — Yo-Yo grammar serialisation ✅ `266fa4d`
-2. **PS.3 step 3** — Tier A reject Lark, pass GBNF/JsonSchema (next)
-3. **PS.3 step 4** — Tier C reject all grammar variants
+2. **PS.3 step 3** — Tier A reject Lark, pass GBNF/JsonSchema ✅ `9f9f37b`
+3. **PS.3 step 4** — Tier C reject all grammar variants (next)
 4. **PS.3 step 5** — `llguidance` Doorman-side Lark validation
 5. **PS.4 step 1..N** — A-1 audit_proxy + audit_capture endpoints
    (multi-step; cross-cluster gate for project-language A-4 +
    project-data A-5)
+
+**New `DoormanError` variant added by step 3:** `TierAGrammarUnsupported
+{ dialect, advice }` → HTTP 400 BAD_REQUEST → `CompletionStatus::PolicyDenied`.
+Future Tier C step (PS.3 step 4) likely adds an analogous
+`TierCGrammarUnsupported` variant since Tier C external API providers
+don't accept arbitrary grammars either.
 
 **Deliberately skipped (layer-scope pending Master):**
 - PS.8 (GUIDE-doorman cross-repo handoff)
