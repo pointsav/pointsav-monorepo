@@ -92,6 +92,67 @@ Newest on top. Append a dated block when a session includes meaningful cleanup w
 
 ---
 
+## 2026-04-28 — Sonnet batch wrap-up (PS.7 + A/B/C + layer-scope flag) — 5 commits, +19 tests
+
+Operator green-light "set it up to do all the recommendations"
+2026-04-28. Five foreground-serial Sonnet sub-agent dispatches
+in sequence (each blocking the next per §1A.2 git-index race
+discipline). Workspace tests 55 → 74 (+19).
+
+Order landed:
+
+1. **PS.7** `472e44a` — 8 zero-container drift edits in
+   service-slm/ARCH+DEV.md. Doc-only.
+2. **Layer-scope flag** `962c329` — pre-dispatch sweep on
+   PS.1-2/-3/-4 found workspace-repo file paths. Per
+   CLAUDE.md §11 action matrix, infrastructure/ is
+   Master-tier. Three queue entries marked LAYER-SCOPE
+   PENDING; surfaced via outbox 2026-04-28T02:30Z.
+3. **Brief A** `d9ea19d` + `35a0c64` — http.rs test factory
+   + 12 tests (4 smoke + 5 error-mapping + 3
+   apprenticeship-disabled). Structural change: slm-doorman-
+   server gained `src/lib.rs` with `pub mod http` +
+   `pub mod test_helpers` for integration-test imports.
+4. **Brief B** `97f360e` — tier/local.rs unit tests (5)
+   modeled on yoyo wiremock pattern.
+5. **Brief C** `5087a2c` — VerdictDispatcher Reject +
+   DeferTierC tests (2). Reject DOES produce DPO pair
+   (matches Refine); DeferTierC does NOT (escalation not
+   refinement).
+
+### Layer-scope status
+
+PS.1-2 / PS.1-3 / PS.1-4 NOT executed — workspace-repo
+files. Master clarification pending. The recommendation
+list I gave the operator included these without checking
+file paths; queueing-discipline error to flag.
+
+### SSH-perm regression — third occurrence
+
+Three sub-agent runs found keys reverted from 0600 to 0640
+between commits. Both Jennifer + Peter regress
+simultaneously. Sub-agents applied chmod 600 as workaround.
+Surfaced to Master via outbox 2026-04-28T03:30Z with four
+recommendations (audit jennifer-user processes; umask 077;
+perm assertion in commit-as-next.sh; document chmod-600
+floor in CLAUDE.md §3).
+
+### PS.6 (task #14) closed; #13 (PS.7) closed
+
+All three coverage briefs landed. Cluster sub-agent-queue
+entries A/B/C marked COMPLETED with commit refs + outcomes.
+Queue still carries PS.1-2/-3/-4 (LAYER-SCOPE PENDING) and
+PS.1-5 (BLOCKED on D4). Coverage-track is done; PS.3 / PS.4
+/ PS.8 remain as the major dispatchable cluster work.
+
+### AS-5 trajectory captures
+
+Each commit fired AS-5 shadow brief dispatch — apprenticeship
+corpus capturing live. No commit-failure interruptions today
+(workaround held).
+
+---
+
 ## 2026-04-28 — PS.7 4th+5th-pass zero-container drift (8 sites, 2 files)
 
 - Applied 8 prose edits to `service-slm/ARCHITECTURE.md` and
