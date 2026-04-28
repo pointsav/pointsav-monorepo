@@ -540,7 +540,8 @@ fn doorman_error_to_status(e: &DoormanError) -> StatusCode {
         DoormanError::VerdictParse(_)
         | DoormanError::TierAGrammarUnsupported { .. }
         | DoormanError::TierCGrammarUnsupported { .. }
-        | DoormanError::MalformedLarkGrammar { .. } => StatusCode::BAD_REQUEST,
+        | DoormanError::MalformedLarkGrammar { .. }
+        | DoormanError::AuditProxyInvalidProvider { .. } => StatusCode::BAD_REQUEST,
         DoormanError::BriefCacheMiss => StatusCode::GONE,
         DoormanError::LedgerIo(_)
         | DoormanError::LedgerSerde(_)
@@ -666,6 +667,233 @@ async fn lark_validation_runs_before_tier_b_dispatch() {
     );
     // wiremock server drops here — expect(0) fires and panics if any
     // request was received, confirming rejection happened before the wire.
+}
+
+// ===========================================================================
+// Section 5 — audit_proxy endpoint scaffold tests (PS.4 step 1) — 5 tests
+// ===========================================================================
+//
+// All five tests exercise the new POST /v1/audit/proxy endpoint added in
+// PS.4 step 1. Validation failures return 400; a valid request writes a
+// ledger stub and returns 503 SERVICE_UNAVAILABLE (upstream relay is pending
+// PS.4 step 2).
+
+/// Build a valid audit_proxy request body. Individual tests override fields
+/// to exercise specific validation paths.
+fn valid_audit_proxy_body() -> serde_json::Value {
+    json!({
+        "module_id": "woodfine",
+        "purpose": "editorial-grammar-check",
+        "provider": "anthropic",
+        "model": "claude-opus-4-7",
+        "messages": [{"role": "user", "content": "Please review this paragraph."}],
+        "max_tokens": 512,
+        "caller_request_id": "caller-abc-123"
+    })
+}
+
+// ── 5a. invalid module_id → 400 ──────────────────────────────────────────
+
+/// POST /v1/audit/proxy with an uppercase module_id → 400 BAD_REQUEST.
+/// ModuleId only accepts [a-z0-9-]; uppercase violates the constraint.
+#[tokio::test]
+async fn audit_proxy_invalid_module_id_returns_400() {
+    let state = app_state_no_tiers();
+    let app = router(state);
+
+    let mut body = valid_audit_proxy_body();
+    body["module_id"] = json!("INVALID-UPPERCASE");
+
+    let resp = app
+        .oneshot(post_json("/v1/audit/proxy", &body))
+        .await
+        .expect("oneshot");
+
+    assert_eq!(
+        resp.status(),
+        StatusCode::BAD_REQUEST,
+        "invalid module_id must return 400 BAD_REQUEST"
+    );
+}
+
+// ── 5b. unknown provider → 400 ──────────────────────────────────────────
+
+/// POST /v1/audit/proxy with an unrecognised provider string → 400 BAD_REQUEST.
+/// Accepted values: "anthropic", "gemini", "openai".
+#[tokio::test]
+async fn audit_proxy_unknown_provider_returns_400() {
+    let state = app_state_no_tiers();
+    let app = router(state);
+
+    let mut body = valid_audit_proxy_body();
+    body["provider"] = json!("not-a-real-provider");
+
+    let resp = app
+        .oneshot(post_json("/v1/audit/proxy", &body))
+        .await
+        .expect("oneshot");
+
+    assert_eq!(
+        resp.status(),
+        StatusCode::BAD_REQUEST,
+        "unknown provider must return 400 BAD_REQUEST"
+    );
+    let body_json = body_json(resp).await;
+    // The error message must name the unrecognised provider.
+    let msg = body_json["error"]["message"].as_str().unwrap_or_default();
+    assert!(
+        msg.contains("not-a-real-provider"),
+        "error message must include the bad provider string; got: {msg}"
+    );
+}
+
+// ── 5c. empty purpose → 400 ──────────────────────────────────────────────
+
+/// POST /v1/audit/proxy with an empty purpose string → 400 BAD_REQUEST.
+#[tokio::test]
+async fn audit_proxy_empty_purpose_returns_400() {
+    let state = app_state_no_tiers();
+    let app = router(state);
+
+    let mut body = valid_audit_proxy_body();
+    body["purpose"] = json!("");
+
+    let resp = app
+        .oneshot(post_json("/v1/audit/proxy", &body))
+        .await
+        .expect("oneshot");
+
+    assert_eq!(
+        resp.status(),
+        StatusCode::BAD_REQUEST,
+        "empty purpose must return 400 BAD_REQUEST"
+    );
+}
+
+// ── 5d. empty messages → 400 ─────────────────────────────────────────────
+
+/// POST /v1/audit/proxy with an empty messages array → 400 BAD_REQUEST.
+#[tokio::test]
+async fn audit_proxy_empty_messages_returns_400() {
+    let state = app_state_no_tiers();
+    let app = router(state);
+
+    let mut body = valid_audit_proxy_body();
+    body["messages"] = json!([]);
+
+    let resp = app
+        .oneshot(post_json("/v1/audit/proxy", &body))
+        .await
+        .expect("oneshot");
+
+    assert_eq!(
+        resp.status(),
+        StatusCode::BAD_REQUEST,
+        "empty messages must return 400 BAD_REQUEST"
+    );
+}
+
+// ── 5e. valid request → writes audit stub + returns 503 ──────────────────
+
+/// POST /v1/audit/proxy with a fully valid request body:
+///   - writes a scaffold stub entry to the audit ledger (status:
+///     "scaffold-stub-no-relay-yet")
+///   - returns 503 SERVICE_UNAVAILABLE with an audit_id and the
+///     "pending PS.4 step 2" message
+///
+/// The audit ledger is backed by a temp directory. After the request we read
+/// the JSONL file back to confirm the stub entry is present.
+#[tokio::test]
+async fn audit_proxy_valid_request_writes_audit_stub_and_returns_503() {
+    use slm_doorman::{AuditLedger, Doorman, DoormanConfig};
+    use slm_doorman_server::http::AppState;
+
+    // Build a state with a ledger rooted at a known temp directory so we
+    // can inspect the written JSONL after the request.
+    let ledger_dir = std::env::temp_dir().join(format!(
+        "slm-audit-proxy-test-{}",
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_nanos())
+            .unwrap_or(0)
+    ));
+    std::fs::create_dir_all(&ledger_dir).expect("create test ledger dir");
+    let ledger = AuditLedger::new(&ledger_dir).expect("create test audit ledger");
+    let doorman = Doorman::new(DoormanConfig::default(), ledger);
+    let state = Arc::new(AppState {
+        doorman,
+        apprenticeship: None,
+        brief_cache: Arc::new(slm_doorman::BriefCache::default()),
+        verdict_dispatcher: None,
+    });
+    let app = router(state);
+
+    let body = valid_audit_proxy_body();
+    let resp = app
+        .oneshot(post_json("/v1/audit/proxy", &body))
+        .await
+        .expect("oneshot");
+
+    // 1. Status must be 503 SERVICE_UNAVAILABLE.
+    assert_eq!(
+        resp.status(),
+        StatusCode::SERVICE_UNAVAILABLE,
+        "valid audit_proxy request must return 503 in PS.4 step 1 scaffold"
+    );
+
+    // 2. Response body must carry an audit_id and the pending message.
+    let resp_body = body_json(resp).await;
+    let audit_id = resp_body["audit_id"]
+        .as_str()
+        .expect("audit_id must be present in 503 response body");
+    assert!(!audit_id.is_empty(), "audit_id must be non-empty");
+    assert_eq!(
+        resp_body["caller_request_id"].as_str().unwrap_or(""),
+        "caller-abc-123",
+        "caller_request_id must be echoed back"
+    );
+    let error_msg = resp_body["error"].as_str().unwrap_or_default();
+    assert!(
+        error_msg.contains("PS.4 step 2"),
+        "error message must reference PS.4 step 2; got: {error_msg}"
+    );
+
+    // 3. Audit ledger must contain the stub entry.
+    // Find the JSONL file in the temp dir (there will be one dated today).
+    let jsonl_files: Vec<_> = std::fs::read_dir(&ledger_dir)
+        .expect("read ledger dir")
+        .filter_map(|e| e.ok())
+        .filter(|e| e.path().extension().map(|x| x == "jsonl").unwrap_or(false))
+        .collect();
+    assert_eq!(jsonl_files.len(), 1, "exactly one JSONL file must exist");
+
+    let contents = std::fs::read_to_string(jsonl_files[0].path()).expect("read JSONL");
+    let lines: Vec<_> = contents.lines().collect();
+    assert_eq!(lines.len(), 1, "exactly one ledger line must be written");
+
+    let entry: serde_json::Value = serde_json::from_str(lines[0]).expect("valid JSONL");
+    assert_eq!(
+        entry["audit_id"].as_str().unwrap_or_default(),
+        audit_id,
+        "ledger audit_id must match response audit_id"
+    );
+    assert_eq!(entry["module_id"].as_str().unwrap_or(""), "woodfine");
+    assert_eq!(
+        entry["purpose"].as_str().unwrap_or(""),
+        "editorial-grammar-check"
+    );
+    assert_eq!(entry["provider"].as_str().unwrap_or(""), "anthropic");
+    assert_eq!(entry["model"].as_str().unwrap_or(""), "claude-opus-4-7");
+    assert_eq!(entry["request_messages_count"].as_u64().unwrap_or(0), 1);
+    assert_eq!(
+        entry["status"].as_str().unwrap_or(""),
+        "scaffold-stub-no-relay-yet",
+        "ledger status must be the scaffold placeholder"
+    );
+    assert_eq!(
+        entry["caller_request_id"].as_str().unwrap_or(""),
+        "caller-abc-123"
+    );
 }
 
 // ── 4c. Valid Lark grammar with LarkValidator configured passes through ───

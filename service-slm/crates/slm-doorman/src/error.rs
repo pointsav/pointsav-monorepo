@@ -100,4 +100,15 @@ pub enum DoormanError {
         /// line/column context and a snippet of the offending input.
         reason: String,
     },
+
+    /// `POST /v1/audit/proxy` caller supplied an unrecognised provider string
+    /// (PS.4). Accepted values: "anthropic", "gemini", "openai". 400 BAD_REQUEST.
+    #[error(
+        "audit_proxy provider {provider:?} is not recognised; \
+         accepted values: anthropic, gemini, openai"
+    )]
+    AuditProxyInvalidProvider {
+        /// The provider string the caller submitted.
+        provider: String,
+    },
 }

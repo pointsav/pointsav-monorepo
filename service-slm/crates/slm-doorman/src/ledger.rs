@@ -99,6 +99,45 @@ impl AuditLedger {
     }
 }
 
+/// Audit ledger entry for a `POST /v1/audit/proxy` call captured in the
+/// scaffold phase (PS.4 step 1). Written before the upstream provider is
+/// called so we have a paper trail even during the scaffold phase when the
+/// upstream relay is not yet wired.
+///
+/// The `status` field holds `"scaffold-stub-no-relay-yet"` in step 1;
+/// PS.4 step 2 will replace this with `"ok"` or `"upstream-error"` once
+/// the provider call is wired.
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct AuditProxyStubEntry {
+    pub audit_id: String,
+    pub inbound_at: DateTime<Utc>,
+    pub module_id: ModuleId,
+    pub purpose: String,
+    pub provider: String,
+    pub model: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub caller_request_id: Option<String>,
+    pub request_messages_count: usize,
+    pub status: String,
+}
+
+impl AuditLedger {
+    /// Write a stub entry for a `POST /v1/audit/proxy` call. This is the
+    /// PS.4 step 1 paper trail: we capture the inbound request shape before
+    /// attempting (or declining) the upstream call.
+    pub fn append_proxy_stub(&self, entry: &AuditProxyStubEntry) -> Result<()> {
+        let path = self.path_for(&entry.inbound_at);
+        let line = serde_json::to_vec(entry)?;
+        let _guard = self.inner.lock().expect("audit ledger mutex poisoned");
+        let file = OpenOptions::new().create(true).append(true).open(&path)?;
+        let mut writer = BufWriter::new(file);
+        writer.write_all(&line)?;
+        writer.write_all(b"\n")?;
+        writer.flush()?;
+        Ok(())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

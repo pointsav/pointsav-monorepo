@@ -238,6 +238,71 @@ mod tests {
     }
 }
 
+// ---------------------------------------------------------------------------
+// audit_proxy wire shapes (PS.4)
+// ---------------------------------------------------------------------------
+
+/// Request body for `POST /v1/audit/proxy`.
+///
+/// The caller (e.g., project-language editorial gateway) holds no provider
+/// API keys. It submits a structured request to the Doorman; the Doorman
+/// authenticates with the provider, captures the full request + response +
+/// cost into the audit ledger, and returns the response.
+///
+/// PS.4 step 2 wires the upstream provider call; step 1 (this commit)
+/// scaffolds validation + ledger stub + 503 placeholder response.
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct AuditProxyRequest {
+    /// Tenant identifier (e.g., "pointsav", "woodfine"). Validated as
+    /// [`ModuleId`] — only `[a-z0-9-]`, 1..=64 chars.
+    pub module_id: String,
+    /// Audit purpose label — must match an entry in the Doorman's
+    /// audit-purpose allowlist (PS.4 step 2 enforces the allowlist;
+    /// step 1 only requires non-empty).
+    pub purpose: String,
+    /// Provider identifier. Accepted values: "anthropic", "gemini", "openai".
+    pub provider: String,
+    /// Model identifier on the provider (e.g., "claude-opus-4-7",
+    /// "gemini-2.5-pro"). No `provider:` prefix required here — the
+    /// provider field is already explicit.
+    pub model: String,
+    /// OpenAI-compatible chat-completion messages. Must be non-empty.
+    pub messages: Vec<ChatMessage>,
+    /// Optional sampling parameters.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub max_tokens: Option<u32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub temperature: Option<f32>,
+    /// Caller's request correlation ID for cross-system tracing. Doorman
+    /// echoes it back in the response and records it in the audit ledger.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub caller_request_id: Option<String>,
+}
+
+/// Response body for `POST /v1/audit/proxy` (step 1: scaffold / stub).
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct AuditProxyResponse {
+    /// Doorman-generated UUIDv7 audit-ledger entry ID. Present even when
+    /// the upstream call is pending (stub phase), so paper trails exist
+    /// for attempted proxy calls.
+    pub audit_id: String,
+    /// Echoed from the request's `caller_request_id` field.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub caller_request_id: Option<String>,
+    /// Response content (provider's reply). Empty / placeholder in step 1.
+    pub content: String,
+    /// Token / cost accounting.
+    pub usage: AuditUsage,
+}
+
+/// Token usage and cost breakdown for an audit proxy call.
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+pub struct AuditUsage {
+    pub prompt_tokens: u32,
+    pub completion_tokens: u32,
+    pub cost_usd: f64,
+}
+
 /// Response returned through the Doorman.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ComputeResponse {
