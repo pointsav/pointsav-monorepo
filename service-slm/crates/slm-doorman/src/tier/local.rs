@@ -11,7 +11,7 @@
 use std::time::Instant;
 
 use serde::{Deserialize, Serialize};
-use slm_core::{ChatMessage, ComputeRequest, ComputeResponse, Tier};
+use slm_core::{ChatMessage, ComputeRequest, ComputeResponse, GrammarConstraint, Tier};
 use tracing::debug;
 
 use crate::error::{DoormanError, Result};
@@ -48,12 +48,36 @@ impl LocalTierClient {
             .model
             .clone()
             .unwrap_or_else(|| self.config.default_model.clone());
+
+        // Translate GrammarConstraint → llama-server wire fields.
+        // llama-server (llama.cpp HTTP API) accepts:
+        //   `grammar`     — GBNF string at the top level of the request body
+        //   `json_schema` — JSON Schema object at the top level
+        // It does NOT accept Lark grammars (llama-server does not ship
+        // llguidance). Lark is rejected here before any network call so the
+        // caller can escalate to Tier B (vLLM ≥0.12, which supports Lark via
+        // llguidance) or supply a GBNF equivalent. Per v0.1.33 Q1 ratification.
+        let (grammar_field, json_schema_field) = match req.grammar.as_ref() {
+            None => (None, None),
+            Some(GrammarConstraint::Gbnf(s)) => (Some(s.clone()), None),
+            Some(GrammarConstraint::JsonSchema(v)) => (None, Some(v.clone())),
+            Some(GrammarConstraint::Lark(_)) => {
+                return Err(DoormanError::TierAGrammarUnsupported {
+                    dialect: "Lark",
+                    advice: "escalate to Tier B (Yo-Yo) which supports Lark via llguidance, \
+                             or provide a GBNF equivalent for Tier A",
+                });
+            }
+        };
+
         let body = OpenAiChatRequest {
             model: model.clone(),
             messages: req.messages.clone(),
             stream: req.stream,
             max_tokens: req.max_tokens,
             temperature: req.temperature,
+            grammar: grammar_field,
+            json_schema: json_schema_field,
         };
         let url = format!(
             "{}/v1/chat/completions",
@@ -104,6 +128,14 @@ struct OpenAiChatRequest {
     max_tokens: Option<u32>,
     #[serde(skip_serializing_if = "Option::is_none")]
     temperature: Option<f32>,
+    /// GBNF grammar string. Top-level llama-server field (NOT inside
+    /// `extra_body`). Absent when `None`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    grammar: Option<String>,
+    /// JSON Schema for structured output. Top-level llama-server field.
+    /// Absent when `None`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    json_schema: Option<serde_json::Value>,
 }
 
 #[derive(Deserialize)]
@@ -123,7 +155,9 @@ fn is_false(b: &bool) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use slm_core::{ChatMessage, Complexity, ComputeRequest, ModuleId, RequestId, Tier};
+    use slm_core::{
+        ChatMessage, Complexity, ComputeRequest, GrammarConstraint, ModuleId, RequestId, Tier,
+    };
     use std::str::FromStr;
     use wiremock::matchers::{method, path};
     use wiremock::{Mock, MockServer, ResponseTemplate};
@@ -292,6 +326,165 @@ mod tests {
         assert!(
             matches!(err, DoormanError::Upstream(_)),
             "expected DoormanError::Upstream for JSON parse failure, got {err:?}"
+        );
+    }
+
+    // ── Grammar serialisation tests ────────────────────────────────────────
+
+    /// When `grammar` is `None` the upstream body must contain neither
+    /// `"grammar"` nor `"json_schema"` keys. Absence is verified both by
+    /// parsing the captured body and by checking that the mock received
+    /// exactly one request (sanity).
+    #[tokio::test]
+    async fn grammar_none_omits_all_grammar_fields() {
+        let server = MockServer::start().await;
+        Mock::given(method("POST"))
+            .and(path("/v1/chat/completions"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(ok_body()))
+            .expect(1)
+            .mount(&server)
+            .await;
+
+        let client = client(server.uri());
+        let mut r = req();
+        r.grammar = None;
+        client.complete(&r).await.expect("none grammar happy path");
+
+        let requests = server.received_requests().await.unwrap();
+        assert_eq!(requests.len(), 1, "expected exactly one upstream request");
+        let body: serde_json::Value =
+            serde_json::from_slice(&requests[0].body).expect("request body must be valid JSON");
+        assert!(
+            body.get("grammar").is_none(),
+            "body must not contain 'grammar' key when grammar is None"
+        );
+        assert!(
+            body.get("json_schema").is_none(),
+            "body must not contain 'json_schema' key when grammar is None"
+        );
+    }
+
+    /// When `grammar` is `Some(Gbnf(...))` the upstream body must contain
+    /// `"grammar": "<gbnf string>"` at the top level (NOT inside
+    /// `extra_body`), and must NOT contain `"json_schema"`.
+    #[tokio::test]
+    async fn grammar_gbnf_serialises_into_top_level_grammar_field() {
+        let server = MockServer::start().await;
+        Mock::given(method("POST"))
+            .and(path("/v1/chat/completions"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(ok_body()))
+            .expect(1)
+            .mount(&server)
+            .await;
+
+        let client = client(server.uri());
+        let mut r = req();
+        let gbnf = r#"root ::= "yes" | "no""#;
+        r.grammar = Some(GrammarConstraint::Gbnf(gbnf.to_string()));
+        client.complete(&r).await.expect("gbnf grammar happy path");
+
+        let requests = server.received_requests().await.unwrap();
+        assert_eq!(requests.len(), 1);
+        let body: serde_json::Value =
+            serde_json::from_slice(&requests[0].body).expect("request body must be valid JSON");
+        assert_eq!(
+            body.get("grammar").and_then(|v| v.as_str()),
+            Some(gbnf),
+            "body must contain top-level 'grammar' with the GBNF string"
+        );
+        assert!(
+            body.get("json_schema").is_none(),
+            "body must not contain 'json_schema' when grammar is Gbnf"
+        );
+        // Must NOT be nested inside extra_body (llama-server native field)
+        assert!(
+            body.get("extra_body").is_none(),
+            "Tier A must NOT use extra_body; grammar goes at top level"
+        );
+    }
+
+    /// When `grammar` is `Some(JsonSchema(...))` the upstream body must
+    /// contain `"json_schema": <value>` at the top level and must NOT
+    /// contain a `"grammar"` key.
+    #[tokio::test]
+    async fn grammar_json_schema_serialises_into_top_level_json_schema_field() {
+        let server = MockServer::start().await;
+        Mock::given(method("POST"))
+            .and(path("/v1/chat/completions"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(ok_body()))
+            .expect(1)
+            .mount(&server)
+            .await;
+
+        let client = client(server.uri());
+        let mut r = req();
+        let schema = serde_json::json!({
+            "type": "object",
+            "properties": {
+                "answer": {"type": "string"}
+            },
+            "required": ["answer"]
+        });
+        r.grammar = Some(GrammarConstraint::JsonSchema(schema.clone()));
+        client
+            .complete(&r)
+            .await
+            .expect("json_schema grammar happy path");
+
+        let requests = server.received_requests().await.unwrap();
+        assert_eq!(requests.len(), 1);
+        let body: serde_json::Value =
+            serde_json::from_slice(&requests[0].body).expect("request body must be valid JSON");
+        assert_eq!(
+            body.get("json_schema"),
+            Some(&schema),
+            "body must contain top-level 'json_schema' with the schema value"
+        );
+        assert!(
+            body.get("grammar").is_none(),
+            "body must not contain 'grammar' key when grammar is JsonSchema"
+        );
+        assert!(
+            body.get("extra_body").is_none(),
+            "Tier A must NOT use extra_body; json_schema goes at top level"
+        );
+    }
+
+    /// When `grammar` is `Some(Lark(...))` the call must return a typed
+    /// `DoormanError::TierAGrammarUnsupported` error BEFORE making any
+    /// network call. The wiremock server must have received zero requests.
+    #[tokio::test]
+    async fn grammar_lark_rejected_before_any_network_call() {
+        let server = MockServer::start().await;
+        // No mock registered — any request reaching the server would be
+        // an unexpected call and cause the test to fail at server drop.
+
+        let client = client(server.uri());
+        let mut r = req();
+        r.grammar = Some(GrammarConstraint::Lark("start: /[a-z]+/".to_string()));
+        let err = client
+            .complete(&r)
+            .await
+            .expect_err("Lark grammar must be rejected");
+
+        assert!(
+            matches!(
+                err,
+                DoormanError::TierAGrammarUnsupported {
+                    dialect: "Lark",
+                    ..
+                }
+            ),
+            "expected TierAGrammarUnsupported with dialect=Lark, got {err:?}"
+        );
+
+        // Critical: no upstream call must have been made.
+        let received = server.received_requests().await.unwrap();
+        assert!(
+            received.is_empty(),
+            "Lark rejection must happen before any network call; \
+             wiremock received {} request(s)",
+            received.len()
         );
     }
 }
