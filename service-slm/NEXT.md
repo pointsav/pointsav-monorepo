@@ -8,10 +8,10 @@
 
 ## Right now — long-running Sonnet pipeline active
 
-**Status:** Iteration 9 complete. **PS.4 multi-day work CLOSED.**
-**Long-running Sonnet pipeline session-end** — queue effectively
-exhausted at cluster-Task scope. Loop terminates pending operator +
-Master input.
+**Status:** Pipeline resumed under operator option-A. Iterations 10-12
+landed three admin-tier briefs at workspace tier (PS.1-3 `d6c2af6`,
+PS.1-4 `bb85219`, PS.1-2 `a268215`). Pipeline continues with
+SLM_AUDIT_DIR cluster-scope wiring next.
 
 **Tests:** 124/124 passing. Last code commit `e4cb8a8` (PS.4 step 5 —
 integration tests + cross-cluster contract doc).
