@@ -1,6 +1,6 @@
 ---
 schema: foundry-doc-v1
-document_version: 0.1.0
+document_version: 0.2.0
 research_done_count: 0
 research_suggested_count: 0
 open_questions_count: 0
@@ -9,15 +9,15 @@ research_inline: false
 cites: []
 ---
 
-# Audit Endpoints Contract — v0.1.0
+# Audit Endpoints Contract — v0.2.0
 
 Wire contract for `POST /v1/audit/proxy` and `POST /v1/audit/capture`.
 Audience: project-language Task (A-4 editorial gateway adapter loading
 via Doorman audit-mediated Tier C); project-data Task (A-5 anchor-emitter
-audit-ledger module-id); any future cross-cluster consumer that needs to
-reach the Doorman's audit surface.
+audit-ledger module-id); project-bim (service-codes consumer); any future
+cross-cluster consumer that needs to reach the Doorman's audit surface.
 
-**Stability:** v0.1.0. PATCH per clarification / non-breaking field
+**Stability:** v0.2.0. PATCH per clarification / non-breaking field
 addition; MINOR per new endpoints, new event_types, or new error
 variants; MAJOR per breaking changes (renamed fields, removed endpoints,
 status code changes). Versioning follows workspace `CLAUDE.md` §7.
@@ -339,37 +339,82 @@ default).
 Each line is one JSON object. Lines from different entry types
 interleave in the same file.
 
-### 3.1 Five entry types
+### 3.1 Entry types
 
-The JSONL stream contains five entry types. There is no explicit
-`entry_type` discriminator field today; consumers identify entry shape
-by field presence (see §3.2).
+The JSONL stream contains four entry types. As of contract v0.2.0, all
+four carry an explicit `entry_type: string` discriminator field. The
+canonical strings are:
 
-**AuditEntry** — chat-completion routed via `POST /v1/chat/completions`.
-Key fields: `timestamp_utc`, `request_id`, `module_id`, `tier`,
-`model`, `inference_ms`, `cost_usd`, `sanitised_outbound`,
-`completion_status`.
+| Entry type | `entry_type` value |
+|---|---|
+| `AuditEntry` (chat-completion routing) | `"chat-completion"` |
+| `AuditProxyStubEntry` (proxy inbound stub) | `"audit-proxy-stub"` |
+| `AuditProxyEntry` (proxy final outcome) | `"audit-proxy"` |
+| `AuditCaptureEntry` (local-work capture) | `"audit-capture"` |
 
-**AuditProxyStubEntry** — inbound stub for `POST /v1/audit/proxy`,
-written before the upstream call. Key fields: `audit_id`, `inbound_at`,
-`module_id`, `purpose`, `provider`, `model`, `caller_request_id`,
-`request_messages_count`, `status` (value: `"inbound"`).
+The field is set by `AuditLedger::append_*` at write time regardless of
+what the caller placed in the struct. Cross-cluster consumers SHOULD use
+the `entry_type` field as the primary discriminator (see §3.2).
 
-**AuditProxyEntry** — final outcome for `POST /v1/audit/proxy`, written
-after the upstream call. Key fields: `audit_id`, `completed_at`,
-`module_id`, `purpose`, `provider`, `model`, `caller_request_id`,
-`prompt_tokens`, `completion_tokens`, `cost_usd`, `latency_ms`,
-`status` (`"ok"` or `"upstream-error"`), `error_message` (optional).
+**AuditEntry** (`entry_type: "chat-completion"`) — chat-completion
+routed via `POST /v1/chat/completions`. Key fields: `entry_type`,
+`timestamp_utc`, `request_id`, `module_id`, `tier`, `model`,
+`inference_ms`, `cost_usd`, `sanitised_outbound`, `completion_status`.
 
-**AuditCaptureEntry** — local-work event pushed via
-`POST /v1/audit/capture`. Key fields: `audit_id`, `module_id`,
-`event_type`, `source`, `status`, `event_at`, `captured_at`, `payload`,
-`caller_request_id` (optional).
+**AuditProxyStubEntry** (`entry_type: "audit-proxy-stub"`) — inbound
+stub for `POST /v1/audit/proxy`, written before the upstream call. Key
+fields: `entry_type`, `audit_id`, `inbound_at`, `module_id`, `purpose`,
+`provider`, `model`, `caller_request_id`, `request_messages_count`,
+`status` (value: `"inbound"`).
 
-### 3.2 Distinguishing entry types by field presence
+**AuditProxyEntry** (`entry_type: "audit-proxy"`) — final outcome for
+`POST /v1/audit/proxy`, written after the upstream call. Key fields:
+`entry_type`, `audit_id`, `completed_at`, `module_id`, `purpose`,
+`provider`, `model`, `caller_request_id`, `prompt_tokens`,
+`completion_tokens`, `cost_usd`, `latency_ms`, `status` (`"ok"` or
+`"upstream-error"`), `error_message` (optional).
 
-Consumers use field-presence discrimination because there is no
-explicit `entry_type` tag today:
+**AuditCaptureEntry** (`entry_type: "audit-capture"`) — local-work
+event pushed via `POST /v1/audit/capture`. Key fields: `entry_type`,
+`audit_id`, `module_id`, `event_type` (capture vocabulary, e.g.
+`"prose-edit"`), `source`, `status`, `event_at`, `captured_at`,
+`payload`, `caller_request_id` (optional).
+
+Note: `AuditCaptureEntry` has two string fields whose names are similar
+but distinct. `entry_type` (`"audit-capture"`) identifies the JSONL
+entry kind; `event_type` (e.g. `"prose-edit"`) identifies the captured
+local-work kind and comes from the caller's request.
+
+### 3.2 Distinguishing entry types
+
+#### Canonical path (contract v0.2.0 and later): explicit `entry_type` tag
+
+All four entry types carry an `entry_type: string` field. Read the
+`entry_type` field to determine entry kind:
+
+| `entry_type` value | Entry type |
+|---|---|
+| `"chat-completion"` | `AuditEntry` |
+| `"audit-proxy-stub"` | `AuditProxyStubEntry` |
+| `"audit-proxy"` | `AuditProxyEntry` (final outcome) |
+| `"audit-capture"` | `AuditCaptureEntry` |
+
+**Cross-cluster consumers (project-language A-4, project-data A-5,
+project-bim service-codes) SHOULD use `entry_type` as the primary
+discriminator.** It is a single field read without combinatorial
+logic, stable across PATCH versions, and present in every entry
+written by code at or after contract v0.2.0.
+
+**Executable form:** `audit_endpoints_integration.rs` test
+`entry_type_tag_discriminates_all_entry_kinds` verifies that all four
+entry kinds carry the correct `entry_type` value when written via
+`AuditLedger::append_*`.
+
+#### Fallback path: field-presence discrimination (for entries predating v0.2.0)
+
+Entries written by code predating contract v0.2.0 lack the `entry_type`
+field. Consumers reading historical JSONL files MUST support field-presence
+discrimination as a fallback:
 
 | Discriminating field(s) | Entry type |
 |---|---|
@@ -378,20 +423,25 @@ explicit `entry_type` tag today:
 | `provider` field present AND `prompt_tokens` field present | `AuditProxyEntry` (final) |
 | None of the above | `AuditEntry` (chat-completion) |
 
-Apply the checks in the order above; the first match wins.
+Apply the checks in order; the first match wins.
 
 **Executable form:** `audit_endpoints_integration.rs` test
 `mixed_entry_types_in_jsonl_stream_distinguishable_by_field_presence`
-implements this discrimination logic as a passing test. Consumers
-should replicate this logic rather than pattern-matching on specific
-field values that may change between PATCH versions.
+implements this fallback logic as a passing test. The test still passes
+on v0.2.0+ entries: both algorithms produce the same answer when
+`entry_type` is present.
 
-**Future direction:** a future MINOR version may add an explicit
-`entry_type: string` field to all entry types, serialised with a
-`#[serde(default)]` attribute so existing readers that do not use the
-field are unaffected. Present-day consumers MUST use field-presence
-discrimination. When the explicit tag lands, field-presence
-discrimination will continue to work as a fallback.
+#### Recommended consumer implementation
+
+```
+if entry.entry_type is present:
+    identify by entry.entry_type (canonical strings above)
+else:
+    identify by field-presence (fallback algorithm above)
+```
+
+This two-branch approach handles both old and new entries in a single
+reader without requiring a schema migration.
 
 ### 3.3 Correlation
 
@@ -435,7 +485,7 @@ Error response body shape (all codes):
 
 ## 5. Versioning and stability
 
-This contract carries version 0.1.0 per workspace `CLAUDE.md` §7:
+This contract carries version 0.2.0 per workspace `CLAUDE.md` §7:
 
 ```
 PATCH  +1 per clarification / non-breaking field addition
@@ -448,8 +498,26 @@ MAJOR  +1 per breaking change: renamed fields, removed endpoints,
 The contract document lives at
 `service-slm/docs/audit-endpoints-contract.md` (cluster-internal;
 not a wiki TOPIC). Cross-cluster consumers (project-language A-4,
-project-data A-5) pin to the MAJOR version and adapt to MINOR/PATCH
-changes at their next sprint boundary.
+project-data A-5, project-bim service-codes) pin to the MAJOR version
+and adapt to MINOR/PATCH changes at their next sprint boundary.
 
-Current version: **0.1.0**. Previous: none (first publication, PS.4
-step 5, 2026-04-28).
+### Version history
+
+**0.2.0** — 2026-04-28. Added explicit `entry_type: string` discriminator
+field to all four entry types (`AuditEntry`, `AuditProxyStubEntry`,
+`AuditProxyEntry`, `AuditCaptureEntry`). Canonical kebab-case strings:
+`"chat-completion"`, `"audit-proxy-stub"`, `"audit-proxy"`,
+`"audit-capture"`. Field uses `#[serde(default)]` for backwards
+compatibility — old JSONL entries lacking the field still deserialise
+correctly. `AuditLedger::append_*` methods force the canonical value at
+write time. §3.1 updated with the canonical string table; §3.2 rewritten
+with explicit-tag as canonical path and field-presence as fallback.
+Closes the future-direction note from v0.1.0 §3.2. Consumer rationale:
+project-language A-4, project-data A-5, project-bim service-codes can
+now identify entry kind from a single field read.
+
+**0.1.0** — 2026-04-28. First publication, PS.4 step 5. Established the
+two-endpoint contract (`audit_proxy` + `audit_capture`), two-entry ledger
+design for proxy, single-entry ledger design for capture, purpose
+allowlist, event_type vocabulary, and field-presence discrimination
+algorithm as the initial discrimination mechanism.

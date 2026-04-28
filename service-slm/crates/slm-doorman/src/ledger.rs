@@ -11,6 +11,24 @@
 //! captures only the fields the inbox brief named (request-id, moduleId,
 //! tier, inference-ms, cost-usd, sanitised-outbound). The remaining
 //! fields fold in as later phases add the data sources for them.
+//!
+//! ## entry_type discriminator (contract v0.2.0)
+//!
+//! All four entry types carry `entry_type: String` with a canonical
+//! kebab-case value set by each `AuditLedger::append_*` method at write
+//! time:
+//!
+//! | Struct | `entry_type` value |
+//! |---|---|
+//! | `AuditEntry` | `"chat-completion"` |
+//! | `AuditProxyStubEntry` | `"audit-proxy-stub"` |
+//! | `AuditProxyEntry` | `"audit-proxy"` |
+//! | `AuditCaptureEntry` | `"audit-capture"` |
+//!
+//! Backwards compatibility: the field uses `#[serde(default = "...")]`
+//! so old JSONL entries that pre-date contract v0.2.0 (i.e. that lack
+//! the field) still deserialise correctly — each struct's default
+//! function returns its own canonical string.
 
 use std::fs::{self, OpenOptions};
 use std::io::{BufWriter, Write};
@@ -23,8 +41,46 @@ use slm_core::{ModuleId, RequestId, Tier};
 
 use crate::error::{DoormanError, Result};
 
+// ---------------------------------------------------------------------------
+// Canonical entry_type strings and serde default functions
+// ---------------------------------------------------------------------------
+
+/// Canonical `entry_type` string for `AuditEntry` (chat-completion routing).
+pub const ENTRY_TYPE_CHAT_COMPLETION: &str = "chat-completion";
+/// Canonical `entry_type` string for `AuditProxyStubEntry`.
+pub const ENTRY_TYPE_AUDIT_PROXY_STUB: &str = "audit-proxy-stub";
+/// Canonical `entry_type` string for `AuditProxyEntry` (final outcome).
+pub const ENTRY_TYPE_AUDIT_PROXY: &str = "audit-proxy";
+/// Canonical `entry_type` string for `AuditCaptureEntry`.
+pub const ENTRY_TYPE_AUDIT_CAPTURE: &str = "audit-capture";
+
+// Serde default fns — used in `#[serde(default = "...")]` on each struct's
+// `entry_type` field so that old JSONL entries that pre-date contract v0.2.0
+// and therefore lack the field still deserialise to the correct value.
+fn default_entry_type_chat_completion() -> String {
+    ENTRY_TYPE_CHAT_COMPLETION.to_string()
+}
+fn default_entry_type_audit_proxy_stub() -> String {
+    ENTRY_TYPE_AUDIT_PROXY_STUB.to_string()
+}
+fn default_entry_type_audit_proxy() -> String {
+    ENTRY_TYPE_AUDIT_PROXY.to_string()
+}
+fn default_entry_type_audit_capture() -> String {
+    ENTRY_TYPE_AUDIT_CAPTURE.to_string()
+}
+
+// ---------------------------------------------------------------------------
+// Entry structs
+// ---------------------------------------------------------------------------
+
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct AuditEntry {
+    /// Explicit discriminator field (contract v0.2.0). Always `"chat-completion"`.
+    /// `#[serde(default)]` ensures old JSONL entries lacking the field still
+    /// deserialise correctly.
+    #[serde(default = "default_entry_type_chat_completion")]
+    pub entry_type: String,
     pub timestamp_utc: DateTime<Utc>,
     pub request_id: RequestId,
     pub module_id: ModuleId,
@@ -77,9 +133,17 @@ impl AuditLedger {
     /// would be safe at the kernel level for writes under PIPE_BUF, but
     /// in-process serialisation via the mutex keeps lines whole even for
     /// large entries.
+    ///
+    /// The `entry_type` field is forced to the canonical value
+    /// `"chat-completion"` at write time regardless of what the caller
+    /// placed in the struct, so cross-cluster consumers always see the
+    /// correct discriminator.
     pub fn append(&self, entry: &AuditEntry) -> Result<()> {
+        // Force the canonical entry_type at write time (contract v0.2.0).
+        let mut entry = entry.clone();
+        entry.entry_type = ENTRY_TYPE_CHAT_COMPLETION.to_string();
         let path = self.path_for(&entry.timestamp_utc);
-        let line = serde_json::to_vec(entry)?;
+        let line = serde_json::to_vec(&entry)?;
         let _guard = self.inner.lock().expect("audit ledger mutex poisoned");
         let file = OpenOptions::new().create(true).append(true).open(&path)?;
         let mut writer = BufWriter::new(file);
@@ -113,6 +177,9 @@ impl AuditLedger {
 /// trail even when the upstream call fails partway through.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct AuditProxyStubEntry {
+    /// Explicit discriminator field (contract v0.2.0). Always `"audit-proxy-stub"`.
+    #[serde(default = "default_entry_type_audit_proxy_stub")]
+    pub entry_type: String,
     pub audit_id: String,
     pub inbound_at: DateTime<Utc>,
     pub module_id: ModuleId,
@@ -136,6 +203,9 @@ pub struct AuditProxyStubEntry {
 /// records the outcome — success or failure — plus token counts and cost.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct AuditProxyEntry {
+    /// Explicit discriminator field (contract v0.2.0). Always `"audit-proxy"`.
+    #[serde(default = "default_entry_type_audit_proxy")]
+    pub entry_type: String,
     pub audit_id: String,
     pub completed_at: DateTime<Utc>,
     pub module_id: ModuleId,
@@ -165,10 +235,22 @@ pub struct AuditProxyEntry {
 /// The `captured_at` field is the Doorman's receipt timestamp; `event_at` is
 /// the caller's timestamp from the request. Both are preserved so downstream
 /// analysis can detect clock skew between clusters.
+///
+/// Note: this struct has two distinct string fields whose names are similar but
+/// carry different semantics:
+/// - `entry_type`: discriminator for the JSONL entry kind; always `"audit-capture"`.
+/// - `event_type`: the kind of local work that was captured (e.g. `"prose-edit"`,
+///   `"anchor-event"`). This is the caller-supplied vocabulary from the request.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct AuditCaptureEntry {
+    /// Explicit discriminator field (contract v0.2.0). Always `"audit-capture"`.
+    /// Distinct from `event_type` (which describes the captured local-work kind).
+    #[serde(default = "default_entry_type_audit_capture")]
+    pub entry_type: String,
     pub audit_id: String,
     pub module_id: ModuleId,
+    /// The kind of local work captured (e.g. `"prose-edit"`, `"anchor-event"`).
+    /// Not the same as `entry_type`; this comes from the caller's request.
     pub event_type: String,
     pub source: String,
     pub status: String,
@@ -189,9 +271,14 @@ impl AuditLedger {
     /// Write a stub entry for a `POST /v1/audit/proxy` call. This is the
     /// PS.4 step 1 paper trail: we capture the inbound request shape before
     /// attempting (or declining) the upstream call.
+    ///
+    /// The `entry_type` field is forced to `"audit-proxy-stub"` at write time.
     pub fn append_proxy_stub(&self, entry: &AuditProxyStubEntry) -> Result<()> {
+        // Force the canonical entry_type at write time (contract v0.2.0).
+        let mut entry = entry.clone();
+        entry.entry_type = ENTRY_TYPE_AUDIT_PROXY_STUB.to_string();
         let path = self.path_for(&entry.inbound_at);
-        let line = serde_json::to_vec(entry)?;
+        let line = serde_json::to_vec(&entry)?;
         let _guard = self.inner.lock().expect("audit ledger mutex poisoned");
         let file = OpenOptions::new().create(true).append(true).open(&path)?;
         let mut writer = BufWriter::new(file);
@@ -207,9 +294,14 @@ impl AuditLedger {
     ///
     /// `completed_at` is supplied by the caller (the handler) so the timestamp
     /// records when the relay call returned, not when the ledger write happened.
+    ///
+    /// The `entry_type` field is forced to `"audit-proxy"` at write time.
     pub fn append_proxy_entry(&self, entry: &AuditProxyEntry) -> Result<()> {
+        // Force the canonical entry_type at write time (contract v0.2.0).
+        let mut entry = entry.clone();
+        entry.entry_type = ENTRY_TYPE_AUDIT_PROXY.to_string();
         let path = self.path_for(&entry.completed_at);
-        let line = serde_json::to_vec(entry)?;
+        let line = serde_json::to_vec(&entry)?;
         let _guard = self.inner.lock().expect("audit ledger mutex poisoned");
         let file = OpenOptions::new().create(true).append(true).open(&path)?;
         let mut writer = BufWriter::new(file);
@@ -223,9 +315,14 @@ impl AuditLedger {
     /// (PS.4 step 4). Unlike the two-entry proxy design, capture writes exactly
     /// one entry — the work already happened locally; there is no upstream call
     /// to instrument. `captured_at` is the Doorman's clock at receipt time.
+    ///
+    /// The `entry_type` field is forced to `"audit-capture"` at write time.
     pub fn append_capture_entry(&self, entry: &AuditCaptureEntry) -> Result<()> {
+        // Force the canonical entry_type at write time (contract v0.2.0).
+        let mut entry = entry.clone();
+        entry.entry_type = ENTRY_TYPE_AUDIT_CAPTURE.to_string();
         let path = self.path_for(&entry.captured_at);
-        let line = serde_json::to_vec(entry)?;
+        let line = serde_json::to_vec(&entry)?;
         let _guard = self.inner.lock().expect("audit ledger mutex poisoned");
         let file = OpenOptions::new().create(true).append(true).open(&path)?;
         let mut writer = BufWriter::new(file);
@@ -246,6 +343,7 @@ mod tests {
         let tmp = tempdir();
         let ledger = AuditLedger::new(tmp.clone()).unwrap();
         let entry = AuditEntry {
+            entry_type: ENTRY_TYPE_CHAT_COMPLETION.to_string(),
             timestamp_utc: Utc::now(),
             request_id: RequestId::new(),
             module_id: ModuleId::from_str("foundry").unwrap(),
@@ -264,8 +362,91 @@ mod tests {
         let contents = std::fs::read_to_string(&path).unwrap();
         assert_eq!(contents.lines().count(), 2);
         for line in contents.lines() {
-            let _: AuditEntry = serde_json::from_str(line).unwrap();
+            let parsed: AuditEntry = serde_json::from_str(line).unwrap();
+            assert_eq!(
+                parsed.entry_type, ENTRY_TYPE_CHAT_COMPLETION,
+                "serialised AuditEntry must carry entry_type = 'chat-completion'"
+            );
         }
+    }
+
+    /// Verify that an `AuditEntry` serialised WITHOUT the `entry_type` field
+    /// (as old JSONL written before contract v0.2.0 would look) still
+    /// deserialises correctly, defaulting to the canonical value.
+    #[test]
+    fn audit_entry_missing_entry_type_field_deserialises_with_correct_default() {
+        // Minimal AuditEntry JSON without the entry_type field — simulates an
+        // entry written by code predating contract v0.2.0.
+        let old_json = r#"{
+            "timestamp_utc": "2026-04-28T00:00:00Z",
+            "request_id": "01930000-0000-7000-0000-000000000001",
+            "module_id": "foundry",
+            "tier": "local",
+            "model": "olmo-3-7b-q4",
+            "inference_ms": 412,
+            "cost_usd": 0.0,
+            "sanitised_outbound": true,
+            "completion_status": "ok"
+        }"#;
+        let parsed: AuditEntry =
+            serde_json::from_str(old_json).expect("old AuditEntry JSON must deserialise");
+        assert_eq!(
+            parsed.entry_type, ENTRY_TYPE_CHAT_COMPLETION,
+            "old AuditEntry lacking entry_type must default to 'chat-completion'"
+        );
+    }
+
+    /// Verify that old JSONL entries for the other three entry types also
+    /// deserialise correctly with correct defaults when entry_type is absent.
+    #[test]
+    fn all_entry_types_default_correctly_when_entry_type_field_absent() {
+        // AuditProxyStubEntry without entry_type.
+        let stub_json = r#"{
+            "audit_id": "stub-001",
+            "inbound_at": "2026-04-28T00:00:00Z",
+            "module_id": "foundry",
+            "purpose": "editorial-refinement",
+            "provider": "anthropic",
+            "model": "claude-opus-4-7",
+            "request_messages_count": 1,
+            "status": "inbound"
+        }"#;
+        let stub: AuditProxyStubEntry =
+            serde_json::from_str(stub_json).expect("old stub JSON must deserialise");
+        assert_eq!(stub.entry_type, ENTRY_TYPE_AUDIT_PROXY_STUB);
+
+        // AuditProxyEntry without entry_type.
+        let proxy_json = r#"{
+            "audit_id": "stub-001",
+            "completed_at": "2026-04-28T00:00:01Z",
+            "module_id": "foundry",
+            "purpose": "editorial-refinement",
+            "provider": "anthropic",
+            "model": "claude-opus-4-7",
+            "prompt_tokens": 80,
+            "completion_tokens": 32,
+            "cost_usd": 0.0001,
+            "latency_ms": 500,
+            "status": "ok"
+        }"#;
+        let proxy: AuditProxyEntry =
+            serde_json::from_str(proxy_json).expect("old proxy JSON must deserialise");
+        assert_eq!(proxy.entry_type, ENTRY_TYPE_AUDIT_PROXY);
+
+        // AuditCaptureEntry without entry_type.
+        let capture_json = r#"{
+            "audit_id": "cap-001",
+            "module_id": "foundry",
+            "event_type": "anchor-event",
+            "source": "project-data",
+            "status": "ok",
+            "event_at": "2026-04-28T00:00:00Z",
+            "captured_at": "2026-04-28T00:00:01Z",
+            "payload": {}
+        }"#;
+        let capture: AuditCaptureEntry =
+            serde_json::from_str(capture_json).expect("old capture JSON must deserialise");
+        assert_eq!(capture.entry_type, ENTRY_TYPE_AUDIT_CAPTURE);
     }
 
     fn tempdir() -> PathBuf {

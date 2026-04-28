@@ -26,6 +26,10 @@ use std::sync::Arc;
 use axum::body::Body;
 use axum::http::{Request, StatusCode};
 use serde_json::json;
+use slm_doorman::ledger::{
+    ENTRY_TYPE_AUDIT_CAPTURE, ENTRY_TYPE_AUDIT_PROXY, ENTRY_TYPE_AUDIT_PROXY_STUB,
+    ENTRY_TYPE_CHAT_COMPLETION,
+};
 use slm_doorman::tier::{TierCPricing, TierCProvider};
 use slm_doorman::{
     AuditCaptureEntry, AuditLedger, AuditProxyClient, AuditProxyConfig, AuditProxyEntry,
@@ -511,6 +515,7 @@ fn mixed_entry_types_in_jsonl_stream_distinguishable_by_field_presence() {
     // ── Entry A: AuditEntry (chat-completion routing) ─────────────────────────
 
     let chat_entry = AuditEntry {
+        entry_type: ENTRY_TYPE_CHAT_COMPLETION.to_string(),
         timestamp_utc: now,
         request_id: RequestId::new(),
         module_id: module_id.clone(),
@@ -527,6 +532,7 @@ fn mixed_entry_types_in_jsonl_stream_distinguishable_by_field_presence() {
     // ── Entry B: AuditProxyStubEntry ──────────────────────────────────────────
 
     let stub = AuditProxyStubEntry {
+        entry_type: ENTRY_TYPE_AUDIT_PROXY_STUB.to_string(),
         audit_id: "stub-audit-id-001".to_string(),
         inbound_at: now,
         module_id: module_id.clone(),
@@ -544,6 +550,7 @@ fn mixed_entry_types_in_jsonl_stream_distinguishable_by_field_presence() {
     // ── Entry C: AuditProxyEntry (final outcome, success) ────────────────────
 
     let proxy_final = AuditProxyEntry {
+        entry_type: ENTRY_TYPE_AUDIT_PROXY.to_string(),
         audit_id: "stub-audit-id-001".to_string(),
         completed_at: now,
         module_id: module_id.clone(),
@@ -565,6 +572,7 @@ fn mixed_entry_types_in_jsonl_stream_distinguishable_by_field_presence() {
     // ── Entry D: AuditCaptureEntry ────────────────────────────────────────────
 
     let capture = AuditCaptureEntry {
+        entry_type: ENTRY_TYPE_AUDIT_CAPTURE.to_string(),
         audit_id: "capture-audit-id-001".to_string(),
         module_id: module_id.clone(),
         event_type: "verdict-issued".to_string(),
@@ -626,4 +634,129 @@ fn discriminate_entry_type(entry: &serde_json::Value) -> &'static str {
     }
     // Rule 4: fallback — AuditEntry (chat-completion routing).
     "AuditEntry"
+}
+
+// ---------------------------------------------------------------------------
+// Test 4 — explicit entry_type tag discriminates all four entry kinds
+// ---------------------------------------------------------------------------
+//
+// Canonical path per contract doc §3.2 v0.2.0: the `entry_type` field
+// provides a single-field discriminator for all four entry types. This test
+// verifies that:
+//   1. The ledger writes the correct canonical string for each entry type.
+//   2. Consumers reading the JSONL stream can identify entry kind from a
+//      single `entry_type` field without field-presence inference.
+//   3. The canonical strings are:
+//      - AuditEntry:           "chat-completion"
+//      - AuditProxyStubEntry:  "audit-proxy-stub"
+//      - AuditProxyEntry:      "audit-proxy"
+//      - AuditCaptureEntry:    "audit-capture"
+
+/// Build one entry of each kind via the ledger API; verify the serialised
+/// `entry_type` field matches the canonical string for that kind.
+#[test]
+fn entry_type_tag_discriminates_all_entry_kinds() {
+    use chrono::Utc;
+    use slm_core::{ModuleId, RequestId, Tier};
+    use slm_doorman::ledger::{AuditEntry, CompletionStatus};
+    use std::str::FromStr;
+
+    let ledger_dir = unique_ledger_dir("entry-type-tag");
+    let ledger = AuditLedger::new(&ledger_dir).expect("create ledger");
+
+    let module_id = ModuleId::from_str("woodfine").unwrap();
+    let now = Utc::now();
+
+    // Write one entry of each kind via the append_* API.
+    // The append_* methods force the canonical entry_type at write time;
+    // the value in the struct literal is irrelevant — the canonical constant
+    // is what will appear in the serialised JSONL.
+
+    // AuditEntry
+    ledger
+        .append(&AuditEntry {
+            entry_type: ENTRY_TYPE_CHAT_COMPLETION.to_string(),
+            timestamp_utc: now,
+            request_id: RequestId::new(),
+            module_id: module_id.clone(),
+            tier: Tier::Local,
+            model: "olmo-3-7b-q4".to_string(),
+            inference_ms: 200,
+            cost_usd: 0.0,
+            sanitised_outbound: false,
+            completion_status: CompletionStatus::Ok,
+            error_message: None,
+        })
+        .expect("append AuditEntry");
+
+    // AuditProxyStubEntry
+    ledger
+        .append_proxy_stub(&AuditProxyStubEntry {
+            entry_type: ENTRY_TYPE_AUDIT_PROXY_STUB.to_string(),
+            audit_id: "tag-test-audit-001".to_string(),
+            inbound_at: now,
+            module_id: module_id.clone(),
+            purpose: "citation-grounding".to_string(),
+            provider: "anthropic".to_string(),
+            model: "claude-opus-4-7".to_string(),
+            caller_request_id: None,
+            request_messages_count: 2,
+            status: "inbound".to_string(),
+        })
+        .expect("append AuditProxyStubEntry");
+
+    // AuditProxyEntry (final)
+    ledger
+        .append_proxy_entry(&AuditProxyEntry {
+            entry_type: ENTRY_TYPE_AUDIT_PROXY.to_string(),
+            audit_id: "tag-test-audit-001".to_string(),
+            completed_at: now,
+            module_id: module_id.clone(),
+            purpose: "citation-grounding".to_string(),
+            provider: "anthropic".to_string(),
+            model: "claude-opus-4-7".to_string(),
+            caller_request_id: None,
+            prompt_tokens: 100,
+            completion_tokens: 40,
+            cost_usd: 0.00005,
+            latency_ms: 350,
+            status: "ok".to_string(),
+            error_message: None,
+        })
+        .expect("append AuditProxyEntry");
+
+    // AuditCaptureEntry
+    ledger
+        .append_capture_entry(&AuditCaptureEntry {
+            entry_type: ENTRY_TYPE_AUDIT_CAPTURE.to_string(),
+            audit_id: "tag-test-cap-001".to_string(),
+            module_id: module_id.clone(),
+            event_type: "anchor-event".to_string(),
+            source: "project-data".to_string(),
+            status: "ok".to_string(),
+            event_at: now,
+            captured_at: now,
+            payload: json!({"batch_size": 64}),
+            caller_request_id: None,
+        })
+        .expect("append AuditCaptureEntry");
+
+    // Read back the JSONL stream and assert the entry_type field.
+    let lines = read_ledger_lines(&ledger_dir);
+    assert_eq!(lines.len(), 4, "ledger must have exactly 4 entries");
+
+    let expected_tags = [
+        ENTRY_TYPE_CHAT_COMPLETION,
+        ENTRY_TYPE_AUDIT_PROXY_STUB,
+        ENTRY_TYPE_AUDIT_PROXY,
+        ENTRY_TYPE_AUDIT_CAPTURE,
+    ];
+
+    for (i, (line, expected_tag)) in lines.iter().zip(expected_tags.iter()).enumerate() {
+        let actual_tag = line["entry_type"].as_str().unwrap_or("<field missing>");
+        assert_eq!(
+            actual_tag, *expected_tag,
+            "entry {i}: entry_type must be {expected_tag:?}; got {actual_tag:?}"
+        );
+    }
 }
