@@ -120,6 +120,26 @@ once operator green-lights.
 
 ## Completed
 
+### 2026-04-28 — PS.3 step 4 (Tier C rejects all grammar variants) [COMPLETED commit `fdee78f`]
+
+Long-running Sonnet pipeline iteration 3. Smallest chunk in PS.3 sequence.
+
+- **Outcome**: 3 new tests in `tier::external::tests` (Lark / GBNF / JsonSchema
+  rejection, all asserting zero network requests). Tests 87 → 90. Commit
+  `fdee78f` (Peter Woodfine).
+- **New error variant**: `DoormanError::TierCGrammarUnsupported { dialect:
+  &'static str, advice: &'static str }`. Mirrors `TierAGrammarUnsupported`
+  pattern exactly: `CompletionStatus::PolicyDenied` (router) → 400 BAD_REQUEST
+  (HTTP).
+- **Ordering decision**: grammar check runs AFTER allowlist check (step 2 of
+  6 in `complete()`). Allowlist is the more fundamental gate — an
+  unallowlisted request must be refused regardless of grammar.
+- **Files touched** (5, all cluster-scope): `crates/slm-doorman/src/error.rs`,
+  `tier/external.rs`, `router.rs` (classify_error arm), `slm-doorman-server/
+  src/http.rs` (From<DoormanError> arm), `tests/http_test.rs` (mirror match).
+- **Build hygiene**: cargo test 90/90; clippy + fmt clean.
+- No surprises; no layer-scope concerns; no deviations from brief.
+
 ### 2026-04-28 — PS.3 step 3 (Tier A rejects Lark, passes GBNF/JsonSchema) [COMPLETED commit `9f9f37b`]
 
 Long-running Sonnet pipeline iteration 2.

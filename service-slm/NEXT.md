@@ -8,27 +8,30 @@
 
 ## Right now — long-running Sonnet pipeline active
 
-**Status:** Iteration 2 complete. PS.3 step 3 landed cleanly. Pipeline
-self-paces via `/loop` dynamic mode; next iteration scheduled.
+**Status:** Iteration 3 complete. PS.3 step 4 landed cleanly. **Doorman
+three-tier grammar routing policy now complete.** Pipeline self-paces
+via `/loop` dynamic mode; iteration 4 scheduled.
 
-**Tests:** 87/87 passing across slm-core (14) + slm-doorman (61) +
-slm-doorman-server (12). Last code commit `9f9f37b` (PS.3 step 3 — Tier A
-grammar handling).
+**Tests:** 90/90 passing across slm-core (14) + slm-doorman (64) +
+slm-doorman-server (12). Last code commit `fdee78f` (PS.3 step 4 — Tier C
+grammar rejection).
 
 **Pipeline operator-directed dispatch sequence (in flight):**
 1. **PS.3 step 2** — Yo-Yo grammar serialisation ✅ `266fa4d`
 2. **PS.3 step 3** — Tier A reject Lark, pass GBNF/JsonSchema ✅ `9f9f37b`
-3. **PS.3 step 4** — Tier C reject all grammar variants (next)
-4. **PS.3 step 5** — `llguidance` Doorman-side Lark validation
+3. **PS.3 step 4** — Tier C reject all grammar variants ✅ `fdee78f`
+4. **PS.3 step 5** — `llguidance` Doorman-side Lark validation (next, ~1-2hr)
 5. **PS.4 step 1..N** — A-1 audit_proxy + audit_capture endpoints
    (multi-step; cross-cluster gate for project-language A-4 +
    project-data A-5)
 
-**New `DoormanError` variant added by step 3:** `TierAGrammarUnsupported
-{ dialect, advice }` → HTTP 400 BAD_REQUEST → `CompletionStatus::PolicyDenied`.
-Future Tier C step (PS.3 step 4) likely adds an analogous
-`TierCGrammarUnsupported` variant since Tier C external API providers
-don't accept arbitrary grammars either.
+**Three-tier grammar policy summary (post-step-4):**
+- Tier A: GBNF + JsonSchema native; Lark → 400 BAD_REQUEST.
+- Tier B: All three serialised to vLLM ≥0.12 `extra_body.structured_outputs`.
+- Tier C: All three rejected → 400 BAD_REQUEST.
+
+Two new error variants in this round: `TierAGrammarUnsupported` and
+`TierCGrammarUnsupported`, both → 400 + `PolicyDenied`. Symmetric pattern.
 
 **Deliberately skipped (layer-scope pending Master):**
 - PS.8 (GUIDE-doorman cross-repo handoff)
