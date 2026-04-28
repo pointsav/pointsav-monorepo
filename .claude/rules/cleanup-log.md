@@ -312,6 +312,57 @@ PS.4 is the cross-cluster gate: project-language A-4 (project-language
 adapter loading via Doorman audit-mediated Tier C) and project-data A-5
 (anchor-emitter audit-ledger module-id) both depend on this landing.
 
+### Iteration 5 outcome — PS.4 step 1 — audit_proxy endpoint scaffold
+
+- **Commit**: `40dc18e` (Peter Woodfine)
+- **Tests**: 97 → 102 (+5). Five new tests in `slm-doorman-server::tests::
+  http_test` covering invalid module_id / unknown provider / empty purpose
+  / empty messages / valid-request-stubs-and-503.
+- **New endpoint**: `POST /v1/audit/proxy` — distinct from
+  `/v1/chat/completions`. The latter is internal compute routing
+  (Doorman picks Tier A/B/C based on complexity + allowlist); the former
+  is explicit "I want to call provider X for purpose Y, fully audited"
+  for cross-cluster callers (project-language, project-data) that don't
+  hold provider API keys.
+- **Cross-cluster type sharing**: `AuditProxyRequest`, `AuditProxyResponse`,
+  `AuditUsage` defined in `slm-core/src/lib.rs` so other clusters can
+  import via `slm_core::AuditProxyRequest`. ChatMessage was already in
+  slm-core.
+- **Audit-ledger stub**: new `AuditProxyStubEntry` struct (separate from
+  `AuditEntry` because it has no tier / inference_ms / cost_usd /
+  completion_status — those only exist post-upstream-call). Written via
+  new `AuditLedger::append_proxy_stub()` method to the same daily JSONL
+  file. Status field "scaffold-stub-no-relay-yet" until step 2.
+- **New error variant**: `AuditProxyInvalidProvider { provider: String }`.
+  HTTP 400 BAD_REQUEST. `PolicyDenied` classification. Pattern matches
+  the Tier-A/Tier-C unsupported-dialect family.
+- **HTTP status for "pending step 2"**: 503 SERVICE_UNAVAILABLE chosen
+  over 501 NOT_IMPLEMENTED — the endpoint IS functional (validates,
+  writes audit_id, echoes back caller_request_id); only the upstream
+  relay is pending. Response body: `{audit_id, caller_request_id,
+  error: "audit_proxy upstream relay pending PS.4 step 2"}`.
+- **Files touched** (8, all cluster-scope): `slm-core/src/lib.rs`
+  (types), `slm-doorman/src/error.rs`, `ledger.rs`, `lib.rs`, `router.rs`,
+  `slm-doorman-server/Cargo.toml` (chrono dev → runtime),
+  `slm-doorman-server/src/http.rs`, `tests/http_test.rs`.
+- **Build hygiene**: cargo test 102/102; clippy `-D warnings` clean;
+  fmt clean.
+- **No layer-scope concerns**.
+- **Wall time**: ~7 minutes; ~147k Sonnet tokens.
+
+### PS.4 multi-step plan documented
+
+The v0.1.42 PS.4 description ("~3-5 days Sonnet, multi-step") is now
+broken into discrete chunks recorded in `sub-agent-queue.md` PS.4
+section: step 1 (scaffold ✅), step 2 (upstream relay), step 3 (purpose
+allowlist), step 4 (audit_capture scaffold), step 5 (integration tests +
+cross-cluster contract docs). Each chunk is ~1-4hr Sonnet, foreground+
+serial via the long-running pipeline.
+
+### Pipeline continues — iteration 6
+
+Next: **PS.4 step 2** (audit_proxy upstream provider relay).
+
 ---
 
 ## 2026-04-28 — Sonnet batch wrap-up (PS.7 + A/B/C + layer-scope flag) — 5 commits, +19 tests
