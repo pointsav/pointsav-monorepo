@@ -92,6 +92,109 @@ Newest on top. Append a dated block when a session includes meaningful cleanup w
 
 ---
 
+## 2026-04-28 — PS.1-1 image verification dispatched + 12th blocker D4 surfaced
+
+Operator green-lit dispatch of PS.1-1 (image verification)
+2026-04-28 post-Tetrad-housekeeping. Sonnet sub-agent
+foreground; ~30 min wall, ~70k tokens. Major finding:
+
+### Headline: pointsav-public project does not exist
+
+Two independent gcloud probes (`compute images list
+--project=pointsav-public`,
+`compute images describe-from-family slm-yoyo
+--project=pointsav-public`) return `The resource
+'projects/pointsav-public' was not found` — not
+permissions; the project has never been created.
+Workspace SA confirmed active with cloud-platform scope
+on `woodfine-node-gcp-free` (the one project visible).
+
+The slm-yoyo `tofu/README.md` "PointSav GCE image
+versions" table corroborates: `slm-yoyo | First seen:
+pending — first build via Task D4`. Task D4 has not been
+dispatched. Image-build pipeline source is not in the
+workspace (`find` for `*.pkr.hcl` / `packer.json` /
+`build-image*` returned nothing).
+
+### D4 surfaces as 12th blocker upstream of all PS.1 items
+
+`tofu apply` fails immediately at the
+`data "google_compute_image" "yoyo"` lookup regardless
+of what comes after. D4 is workspace-tier scope per
+CLAUDE.md §11 (Master executes; Task flags). Master
+needs to: (1) create `pointsav-public` GCP project; (2)
+author / restore / locate the image-build pipeline; (3)
+build image with vLLM ≥0.12 + nginx TLS terminator +
+Let's Encrypt + idle-shutdown timer + systemd unit + CUDA
++ Ubuntu 24.04; (4) publish to slm-yoyo family; (5) IAM
+binding for customer image-read.
+
+### Cluster sub-agent-queue.md updated
+
+- PS.1-1 marked **COMPLETED** with outcome ref.
+- PS.1-3 scope **EXPANDED** to also cover
+  `CUSTOMER-RUNBOOK.md` lines 29 + 194-209 (`systemctl
+  status mistralrs`, `/var/lib/mistralrs/weights/`,
+  `mistralrs-idle.timer`); version-pin caveat added (do
+  not pin patch; "vLLM ≥0.12" floor only).
+- PS.1-5 marked **BLOCKED on D4** (kill-switch
+  verification needs `tofu apply` working).
+- Coverage A/B/C unaffected; PS.1-2 / PS.1-3 / PS.1-4
+  still dispatchable.
+
+### Adjacent finding — nginx absent from spec
+
+Master's v0.1.42 §W4 ack assumed image ships nginx with
+Let's Encrypt cert. PS.1-1 finds **no nginx mention in
+any current slm-yoyo artefact** (variables.tf,
+CUSTOMER-RUNBOOK.md, CONTRACT.md, tofu/README.md). Only
+nginx in workspace is `local-proofreader` /
+`local-knowledge`. nginx layer needs design pass before
+D4's image build.
+
+### Adjacent finding — broader rename scope than B4
+
+Master's §B4 ack named CONTRACT.md + variables.tf for the
+mistral.rs → vLLM rename. PS.1-1 found mistral.rs naming
+also in CUSTOMER-RUNBOOK.md (3 sites). Folded into PS.1-3
+expanded scope. systemd unit names + weight paths are
+config-set-by-image-builder (D4) — no current files to
+rename for those.
+
+### State after dispatch
+
+- Tasks: #18 (PS.2) marked blocked-on-D4. New #23 (D4
+  Master-tier flagging) added. PS.1-1 finding doesn't
+  warrant own task — outcome captured in
+  `sub-agent-queue.md` Completed section + this log.
+- Outbox: PS.1-1 finding outbox message + Tetrad
+  confirmation = 9 messages awaiting Master pickup.
+- Inbox: empty.
+- No code changes; tests still 46/46.
+
+### What dispatchable next under operator green-light
+
+- **PS.1-2** (B1+B2+W1 module update; no image dependency)
+- **PS.1-3** (mistral.rs → vLLM doc rename, expanded scope,
+  no patch pin)
+- **PS.1-4** (local-doorman.env output snippet)
+- **A** (http.rs test factory) → then **B** + **C** in
+  parallel (coverage briefs; cluster-internal; no Yo-Yo
+  dependency)
+- **PS.3** (AS-2 wire-format adapter; ~1-2 weeks Sonnet;
+  Doorman side; mock-tested)
+- **PS.4** (A-1 audit endpoints; ~3-5 days Sonnet; Doorman
+  side)
+- **PS.8** (GUIDE-doorman cross-repo handoff; ~1 hour
+  Opus + Sonnet; bounded)
+
+The operationalization plan's critical sequence shifts:
+without the Yo-Yo deploy path, the parallel paths
+(Doorman-side AS-2/A-1 + cluster tests + GUIDE handoff)
+become higher-leverage until Master ships D4.
+
+---
+
 ## 2026-04-28 — Tetrad upgrade + PS.1 ack housekeeping
 
 Single-pass housekeeping for the two Master inbox messages
