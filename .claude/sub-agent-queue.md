@@ -152,6 +152,41 @@ once operator green-lights.
 
 ## Completed
 
+### 2026-04-28 — Iter-16 audit endpoint hardening (payload cap + per-tenant concurrency) [COMPLETED commit `6e47d27`]
+
+Long-running Sonnet pipeline iteration 16. Production-grade DoS/abuse
+hardening on the audit endpoints we shipped in PS.4.
+
+- **Outcome**: 4 new tests in `slm-doorman-server::tests::http_test`. Tests
+  127 → 131. Commit `6e47d27` (Jennifer Woodfine).
+- **Payload cap**: `AUDIT_PROXY_MAX_REQUEST_BYTES = 64 * 1024` in `http.rs`.
+  Fires BEFORE deserialise via `Bytes` extractor (cheaper rejection).
+- **Per-tenant concurrency**: `Arc<Mutex<HashMap<ModuleId, Arc<Semaphore>>>>`
+  on `AppState`. `tokio::sync::Semaphore::try_acquire_owned()` (non-blocking,
+  fail-fast). RAII permit-release on handler exit. Lazy-init per tenant.
+  Default cap 4; configurable via `SLM_AUDIT_TENANT_CONCURRENCY_CAP`.
+- **Two new error variants**:
+  - `AuditProxyPayloadTooLarge { size_bytes, max_bytes }` → 413 →
+    `PolicyDenied`.
+  - `AuditTenantConcurrencyExhausted { module_id, cap }` → 503 +
+    `Retry-After: 5` header → `PolicyDenied`. Retryable; not permanent.
+- **Threat model**: single tenant flooding either endpoint exhausting Doorman
+  resources (long-running Tier C calls especially). Per-tenant counts protect
+  neighbouring tenants without rejecting low-volume callers.
+- **Tests**: oversized 413; just-under-boundary passes; concurrency-cap
+  rejects excess (pre-saturated semaphore strategy avoids `AppState: Clone +
+  Send + 'static` requirement); per-tenant independence (cap=1 per tenant
+  doesn't block other tenants).
+- **Build hygiene**: cargo test 131/131; clippy + fmt clean.
+- **Open hardening items for future iterations**:
+  - Per-tenant semaphore map grows unboundedly (one entry per ModuleId
+    seen). Closed-tenant-set deployments unaffected; future hardening could
+    add eviction if dynamic tenant sets become common.
+  - `SLM_AUDIT_TENANT_CONCURRENCY_CAP` default 4 — high-volume tenants may
+    need to tune at deploy time. Note in GUIDE-doorman when PS.8 lands.
+  - Per-tenant request rate limit (requests-per-second) is a separate
+    concern from in-flight count and not addressed in this iter.
+
 ### 2026-04-28 — Iter-15 entry_type discriminator on all 4 ledger entry kinds [COMPLETED commit `442e161`]
 
 Long-running Sonnet pipeline iteration 15. Closes the future-direction note
