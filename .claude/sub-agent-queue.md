@@ -101,6 +101,7 @@ chunks for the pipeline:
 - **PS.4 step 1 — audit_proxy endpoint scaffold** ✅ commit `40dc18e`
 - **PS.4 step 2 — audit_proxy upstream provider relay** ✅ commit `028c411`
 - **PS.4 step 3 — purpose allowlist enforcement** ✅ commit `acee9f7`
+- **PS.4 step 4 — audit_capture endpoint scaffold** ✅ commit `36d4fab`
 - **PS.4 step 3 — purpose allowlist enforcement** (~1-2hr Sonnet)
   Add a configurable allowlist for the `purpose` field (similar to
   `ExternalAllowlist` for Tier C labels). Reject unallowlisted purposes
@@ -149,6 +150,45 @@ once operator green-lights.
 ---
 
 ## Completed
+
+### 2026-04-28 — PS.4 step 4 (audit_capture endpoint scaffold) [COMPLETED commit `36d4fab`]
+
+Long-running Sonnet pipeline iteration 8. The inverse direction of audit_proxy:
+Ring 1/2/3 producers push audit events for work done locally without going
+through the Doorman.
+
+- **Outcome**: 6 new tests in `slm-doorman-server::tests::http_test`. Tests
+  115 → 121. Commit `36d4fab` (Peter Woodfine).
+- **New endpoint**: `POST /v1/audit/capture`. Accepts `AuditCaptureRequest`
+  with caller-generated `audit_id` (UUID, any version), `module_id`,
+  `event_type`, `source`, `status`, `event_at` (caller's clock), `payload`
+  (untyped JSON object), optional `caller_request_id`. Writes
+  `AuditCaptureEntry` to the same daily JSONL ledger; returns 200 with
+  `AuditCaptureResponse { audit_id, caller_request_id, status: "captured" }`.
+- **Cross-cluster types**: `AuditCaptureRequest` / `AuditCaptureResponse`
+  in `slm-core/src/lib.rs` for project-language A-4 + project-data A-5
+  import.
+- **Five accepted event types**: `prose-edit`, `design-edit`, `graph-
+  mutation`, `anchor-event`, `verdict-issued`. Validated against
+  `AUDIT_CAPTURE_VALID_EVENT_TYPES` const slice in `http.rs`.
+- **Payload cap**: `AUDIT_CAPTURE_MAX_PAYLOAD_BYTES = 16 * 1024` (16 KiB).
+  DoS-prevention floor.
+- **Single-entry design** (vs audit_proxy's stub + final pair): work
+  already happened upstream of capture; no two-phase commit needed.
+  `AuditCaptureEntry` carries `event_type`, `source`, `event_at`
+  (caller clock), `captured_at` (Doorman clock), `payload`. No
+  token/cost/provider fields (those are proxy-specific).
+- **Three new error variants**:
+  - `AuditCaptureUnknownEventType { event_type }` → 400 BAD_REQUEST
+  - `AuditCapturePayloadTooLarge { size_bytes, max_bytes }` → 413
+    PAYLOAD_TOO_LARGE
+  - `AuditCaptureInvalidTimestamp { value }` → 400 BAD_REQUEST
+- **Build hygiene**: cargo test 121/121; clippy + fmt clean.
+- **For step 5**: no explicit `entry_type` discriminator field exists in
+  the JSONL stream today — consumers distinguish by field presence (e.g.,
+  `event_type` indicates capture; `provider` indicates proxy). Worth
+  documenting in the cross-cluster contract doc; hardening (adding an
+  explicit type tag) is optional for step 5 or later.
 
 ### 2026-04-28 — PS.4 step 3 (audit_proxy purpose allowlist) [COMPLETED commit `acee9f7`]
 
