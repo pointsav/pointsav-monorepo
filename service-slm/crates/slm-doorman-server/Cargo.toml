@@ -10,6 +10,10 @@ rust-version.workspace = true
 name = "slm-doorman-server"
 path = "src/main.rs"
 
+[lib]
+name = "slm_doorman_server"
+path = "src/lib.rs"
+
 [dependencies]
 slm-core = { workspace = true }
 slm-doorman = { workspace = true }
@@ -24,3 +28,19 @@ tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 
 anyhow = { workspace = true }
+
+[dev-dependencies]
+# Integration test framework — test axum routes without binding a port.
+# Uses tower::ServiceExt::oneshot + axum::body::Body (both already
+# transitive workspace deps; listed here to make them explicit for tests).
+tower = { version = "0.5", features = ["util"] }
+# Mock HTTP server — same dep used by slm-doorman for Yo-Yo / Tier C tests.
+wiremock = "0.6"
+tokio = { workspace = true }
+serde_json = { workspace = true }
+# Async trait support for MockVerifier in tests.
+async-trait = { workspace = true }
+# Base64 encoding for verdict wire tests (signature blob transport).
+base64 = { workspace = true }
+# Chrono for ApprenticeshipAttempt/Brief construction in tests.
+chrono = { workspace = true }
