@@ -33,7 +33,7 @@ pub use apprenticeship::{
 pub use brief_cache::{BriefCache, CachedBrief};
 pub use error::{DoormanError, Result};
 pub use grammar_validation::LarkValidator;
-pub use ledger::{AuditEntry, AuditLedger};
+pub use ledger::{AuditEntry, AuditLedger, AuditProxyStubEntry};
 pub use promotion_ledger::{PromotionLedger, PromotionOutcome, Stage, StatRow};
 pub use redact::sanitize;
 pub use router::{Doorman, DoormanConfig};

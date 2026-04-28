@@ -234,7 +234,10 @@ fn classify_error(e: &DoormanError) -> CompletionStatus {
         // Caller submitted a syntactically malformed Lark grammar. The Doorman
         // rejected it at the boundary (PS.3 step 5) before any upstream call.
         // Classified as PolicyDenied: the error is entirely on the caller's side.
-        | DoormanError::MalformedLarkGrammar { .. } => {
+        | DoormanError::MalformedLarkGrammar { .. }
+        // Caller supplied an unrecognised provider string to audit_proxy (PS.4).
+        // The request violated input policy — classified as PolicyDenied.
+        | DoormanError::AuditProxyInvalidProvider { .. } => {
             CompletionStatus::PolicyDenied
         }
         DoormanError::Upstream(_)
