@@ -8,6 +8,9 @@
 //!   GET  /v1/contract            → Doorman version + YoYo contract version
 //!                                  + tier configuration summary
 //!   POST /v1/chat/completions    → forwards through Doorman::route
+//!   POST /v1/audit/proxy         → audited external provider call (PS.4;
+//!                                  step 1 scaffold — upstream relay pending
+//!                                  PS.4 step 2; returns 503 placeholder)
 //!
 //! The /v1/chat/completions handler accepts an OpenAI-compatible body
 //! plus optional X-Foundry-* headers (Module-ID, Request-ID,
@@ -23,14 +26,15 @@ use axum::http::{HeaderMap, StatusCode};
 use axum::response::{IntoResponse, Json};
 use axum::routing::{get, post};
 use axum::Router;
+use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use slm_core::{
-    ApprenticeshipAttempt, ApprenticeshipBrief, ChatMessage, Complexity, ComputeRequest,
-    ComputeResponse, ModuleId, RequestId,
+    ApprenticeshipAttempt, ApprenticeshipBrief, AuditProxyRequest, ChatMessage, Complexity,
+    ComputeRequest, ComputeResponse, ModuleId, RequestId,
 };
 use slm_doorman::{
-    ApprenticeshipConfig, ApprenticeshipDispatcher, BriefCache, Doorman, DoormanError,
-    VerdictDispatchOutcome, VerdictDispatcher, VerdictWireBody,
+    ApprenticeshipConfig, ApprenticeshipDispatcher, AuditProxyStubEntry, BriefCache, Doorman,
+    DoormanError, VerdictDispatchOutcome, VerdictDispatcher, VerdictWireBody,
 };
 
 pub struct AppState {
@@ -55,6 +59,7 @@ pub fn router(state: Arc<AppState>) -> Router {
         .route("/v1/brief", post(brief))
         .route("/v1/verdict", post(verdict))
         .route("/v1/shadow", post(shadow))
+        .route("/v1/audit/proxy", post(audit_proxy))
         .with_state(state)
 }
 
@@ -220,6 +225,93 @@ async fn shadow(
     Ok(StatusCode::OK)
 }
 
+/// `POST /v1/audit/proxy` — audited external provider call (PS.4 step 1).
+///
+/// This handler scaffolds the endpoint shape + input validation + ledger stub.
+/// The upstream provider relay is not yet wired (PS.4 step 2). In the scaffold
+/// phase:
+///   1. Parse and validate the request (module_id, provider, purpose, messages).
+///   2. Generate a UUIDv7 `audit_id`.
+///   3. Write a stub entry to the audit ledger capturing the inbound request
+///      shape (status: "scaffold-stub-no-relay-yet").
+///   4. Return `503 SERVICE_UNAVAILABLE` with the `audit_id` and a clear
+///      "pending PS.4 step 2" message. Callers see 503 rather than 501 because
+///      the service IS available — it processes the request through to the
+///      ledger — but the upstream relay specifically is not yet implemented.
+///      501 would imply the endpoint does not exist at all; 503 communicates
+///      "known limitation, retry after step 2 is deployed."
+///
+/// Validation failures return `400 BAD_REQUEST` with a descriptive message.
+async fn audit_proxy(
+    State(state): State<Arc<AppState>>,
+    Json(body): Json<AuditProxyRequest>,
+) -> impl IntoResponse {
+    // 1a. Validate module_id.
+    let module_id = match ModuleId::from_str(&body.module_id) {
+        Ok(mid) => mid,
+        Err(e) => {
+            return ApiError::bad_request(format!("invalid module_id: {e}")).into_response();
+        }
+    };
+
+    // 1b. Validate provider — "anthropic", "gemini", or "openai".
+    let provider_lc = body.provider.to_ascii_lowercase();
+    if !matches!(provider_lc.as_str(), "anthropic" | "gemini" | "openai") {
+        let err: ApiError = DoormanError::AuditProxyInvalidProvider {
+            provider: body.provider.clone(),
+        }
+        .into();
+        return err.into_response();
+    }
+
+    // 1c. Validate purpose — non-empty (allowlist enforcement is PS.4 step 2).
+    if body.purpose.trim().is_empty() {
+        return ApiError::bad_request(
+            "audit_proxy purpose must be non-empty; \
+             allowlist enforcement lands in PS.4 step 2",
+        )
+        .into_response();
+    }
+
+    // 1d. Validate messages — at least one required.
+    if body.messages.is_empty() {
+        return ApiError::bad_request("audit_proxy messages must be non-empty").into_response();
+    }
+
+    // 2. Generate a UUIDv7 audit_id.
+    let audit_id = RequestId::new().to_string();
+    let inbound_at = Utc::now();
+
+    // 3. Write the ledger stub entry so we have a paper trail for every
+    //    attempted proxy call even during the scaffold phase.
+    let stub = AuditProxyStubEntry {
+        audit_id: audit_id.clone(),
+        inbound_at,
+        module_id,
+        purpose: body.purpose.clone(),
+        provider: provider_lc,
+        model: body.model.clone(),
+        caller_request_id: body.caller_request_id.clone(),
+        request_messages_count: body.messages.len(),
+        status: "scaffold-stub-no-relay-yet".to_string(),
+    };
+    if let Err(e) = state.doorman.ledger().append_proxy_stub(&stub) {
+        let err: ApiError = e.into();
+        return err.into_response();
+    }
+
+    // 4. Return 503 — step 2 converts this placeholder to a live response.
+    (
+        StatusCode::SERVICE_UNAVAILABLE,
+        Json(serde_json::json!({
+            "audit_id": audit_id,
+            "caller_request_id": body.caller_request_id,
+            "error": "audit_proxy upstream relay pending PS.4 step 2"
+        })),
+    )
+        .into_response()
+}
+
 struct ApiError {
     status: StatusCode,
     body: serde_json::Value,
@@ -266,6 +358,9 @@ impl From<DoormanError> for ApiError {
             // the response body so the caller can fix the grammar without
             // re-routing. 400 BAD_REQUEST: error is entirely on the caller's side.
             DoormanError::MalformedLarkGrammar { .. } => StatusCode::BAD_REQUEST,
+            // Caller submitted an unrecognised provider string to audit_proxy
+            // (PS.4 step 1). Error is entirely on the caller's side.
+            DoormanError::AuditProxyInvalidProvider { .. } => StatusCode::BAD_REQUEST,
             DoormanError::BriefCacheMiss => StatusCode::GONE,
             DoormanError::LedgerIo(_)
             | DoormanError::LedgerSerde(_)
