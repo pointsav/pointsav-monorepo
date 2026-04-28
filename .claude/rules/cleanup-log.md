@@ -92,6 +92,112 @@ Newest on top. Append a dated block when a session includes meaningful cleanup w
 
 ---
 
+## 2026-04-28 — Tetrad upgrade + PS.1 ack housekeeping
+
+Single-pass housekeeping for the two Master inbox messages
+arriving overnight: the Tetrad Discipline upgrade (Doctrine
+v0.0.10 / claim #37) and the PS.1 readiness review ack.
+
+### Tetrad upgrade — required actions all completed
+
+- **Read** `conventions/project-tetrad-discipline.md` — ratified
+  2026-04-28 under doctrine v0.0.10 — fourth structural leg
+  (wiki TOPIC contribution to `vendor/content-wiki-documentation`)
+  added to the existing vendor + customer + deployment Triad.
+- **Manifest amended** at `.claude/manifest.md`: rename
+  `triad:` → `tetrad:`; new `wiki:` leg block declares
+  drafts_via path, project-language gateway, three planned
+  TOPIC priorities, status `leg-pending` (substance lands
+  as cluster milestones progress).
+- **Three TOPIC skeletons + Spanish pairs staged** in
+  `.claude/drafts-outbound/` (six files total):
+  - `topic-doorman-protocol.md` + `.es.md` — Doorman as
+    security boundary + three-tier compute routing pattern.
+  - `topic-apprenticeship-substrate.md` + `.es.md` — Doctrine
+    claim #32 originated this cluster; cited as workspace-wide
+    precedent for sub-agent-as-tier-discipline at v0.1.30.
+  - `topic-zero-container-inference.md` + `.es.md` — SMB GPU
+    economics + idle-shutdown pattern; BCSC class
+    forward-looking until Yo-Yo MIN deploys.
+- All six skeletons carry `foundry-draft-v1` frontmatter
+  per convention; section headings + `(draft-pending —
+  substance follows in milestone N+1)` markers.
+- Outbox confirmation message to Master sent (optional but
+  encouraged per brief).
+
+### PS.1 ack — 4 blockers + 7 warnings called by Master
+
+All called; sub-agent dispatch pre-authorised under operator
+green-light:
+
+- **B1 preemptible**: add `variable "preemptible" { default
+  = false }`; use `provisioning_model = SPOT/STANDARD`;
+  flip `automatic_restart = !var.preemptible`.
+- **B2 A100 quota**: extend `null_resource.gpu_quota_request`
+  for `NVIDIA_A100_GPUS_per-region` (40GB) or
+  `NVIDIA_A100_80GB_GPUS_per-region` (80GB) per gpu_class.
+- **B3 image existence**: own sub-agent verification brief
+  BEFORE B4. Quick `gcloud compute images list`.
+- **B4 vLLM (authoritative call)**: per v0.1.33 Q2; mistral.rs
+  framing in CONTRACT.md + variables.tf is stale. Update
+  CONTRACT.md + variables.tf to name vLLM.
+- **W1 cost-math**: bundle into B1 with both on-demand + Spot
+  prices per gpu_class.
+- **W2 gcloud beta GA**: test on workspace VM at brief
+  landing time; fall back to GA path if beta drops.
+- **W3 idle-shutdown wins**: drop "30-min daily window"
+  framing; idle-shutdown is the correct shape.
+- **W4 nginx in image**: GCE image must terminate TLS via
+  nginx + Let's Encrypt cert keyed to static IP reverse-DNS;
+  endpoint URL stays HTTPS. **Never HTTP-on-the-wire across
+  a public network** — structural rule.
+- **W5 firewall default**: module default 0.0.0.0/0 stays for
+  SMB; tighten via deployment-instance vars for workspace
+  dogfood. Document in CUSTOMER-RUNBOOK §"Hardening for
+  static-IP operators".
+- **W6 local-doorman.env output snippet**: yes; sub-agent
+  brief candidate.
+- **W7 kill-switch first-run verification**: standalone
+  sub-agent brief OR PS.2 prefix.
+
+### Sub-agent-queue.md created at cluster level
+
+Per Master's instruction "write them into your cluster's
+.claude/sub-agent-queue.md and dispatch when operator
+green-lights". Eight ratified briefs entered:
+
+- **A/B/C** — three coverage briefs (PS.6 in v0.1.42 plan):
+  http.rs test factory + smoke (~3-4hr); tier/local.rs unit
+  tests (~1-2hr); VerdictDispatcher Reject/DeferTierC
+  (~1hr). A first (factory dependency); B/C independent.
+- **PS.1-1..5** — five PS.1 follow-ups: image verification
+  (must-first); module update for B1+B2+W1; B4 doc rename
+  mistral.rs→vLLM; local-doorman.env output snippet;
+  kill-switch first-run verification.
+
+Suggested dispatch sequence per Master: PS.1-1 → PS.1-2 →
+PS.1-3 → PS.1-4 → PS.1-5; coverage A/B/C parallel-able.
+
+Yo-Yo MIN deploy itself stays gated per operator direction
+("wait on launching the Yo-Yo until we have more of the
+coding in place"). All sub-agent dispatches above are prep
+work, not deployment work.
+
+### State after housekeeping
+
+- Inbox: empty (placeholder reset).
+- Outbox: 7 messages from prior session + new Tetrad
+  confirmation = 8 messages awaiting Master pickup.
+- Tasks: #15 + #17 closed; new tasks for Tetrad upgrade
+  and queue creation (will be added to local task list);
+  20 total (15 active).
+- New file: `.claude/drafts-outbound/` with 6 TOPIC skeletons.
+- New file: `.claude/sub-agent-queue.md` with 8 briefs.
+- No code changes; tests still 46/46.
+- Working tree clean post-commit.
+
+---
+
 ## 2026-04-27 — PS.1 Yo-Yo deploy readiness review (Opus judgment, ~30 min)
 
 Read every file in `infrastructure/slm-yoyo/tofu/`
