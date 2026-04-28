@@ -93,6 +93,42 @@ Source: Master's v0.1.42-pending PS.1 ack reply (inbox 2026-04-28T00:21Z).
 - **Constraint**: foreground; pure outputs.tf addition
 - **Brief text**: see outbox `2026-04-27T23:30:00Z` candidate (2)
 
+### PS.4 multi-step plan (long-running pipeline; sequential dispatches)
+
+PS.4 was originally framed as a single ~3-5 day brief. Breaking into discrete
+chunks for the pipeline:
+
+- **PS.4 step 1 — audit_proxy endpoint scaffold** ✅ commit `40dc18e`
+- **PS.4 step 2 — audit_proxy upstream provider relay** (~3-4hr Sonnet)
+  Wires Tier C provider HTTP calls (Anthropic / Gemini / OpenAI) into the
+  audit_proxy handler. Reads `SLM_TIER_C_*` env vars for API keys (pattern
+  established by `ExternalTierClient`). Updates the stub ledger entry to
+  carry real `prompt_tokens`, `completion_tokens`, `cost_usd`, `latency_ms`,
+  and final status ("ok" | "upstream-error"). Replaces 503 placeholder with
+  live response. Wiremock tests for happy path + each provider's error
+  shapes. NEXT after step 1.
+- **PS.4 step 3 — purpose allowlist enforcement** (~1-2hr Sonnet)
+  Add a configurable allowlist for the `purpose` field (similar to
+  `ExternalAllowlist` for Tier C labels). Reject unallowlisted purposes
+  with a typed error before any upstream call. Tests + default allowlist
+  matching documented audit purposes (e.g., `editorial-refinement`,
+  `citation-grounding`, `entity-disambiguation`).
+- **PS.4 step 4 — audit_capture endpoint scaffold** (~3-4hr Sonnet)
+  Inverse direction: lets Ring 1 producers (project-data anchor-emitter,
+  project-language gateway) push audit events for work done locally
+  without going through the Doorman. New `POST /v1/audit/capture` endpoint;
+  request shape with audit_id (caller-generated UUIDv7 — caller is the
+  source of truth for its own work), module_id, purpose, status (ok |
+  policy-denied | upstream-error | etc.), prose-edit / design-edit /
+  graph-mutation / etc. event-type discriminator, and event-specific
+  payload. Validates + appends to ledger. Tests for shape + ledger
+  write.
+- **PS.4 step 5 — integration tests + cross-cluster contract docs** (~2-3hr)
+  End-to-end tests: audit_proxy + audit_capture exercised together;
+  ledger query helpers; cross-cluster contract document at
+  `service-slm/docs/audit-endpoints-contract.md` for project-language A-4
+  + project-data A-5 to consume.
+
 ### Brief PS.1-5 — Kill-switch first-time-run verification (W7) [BLOCKED on D4 per PS.1-1]
 
 - **Effort**: ~30 minutes Sonnet (mostly waiting; wall time longer)
@@ -119,6 +155,32 @@ once operator green-lights.
 ---
 
 ## Completed
+
+### 2026-04-28 — PS.4 step 1 (audit_proxy endpoint scaffold) [COMPLETED commit `40dc18e`]
+
+Long-running Sonnet pipeline iteration 5. First slice of multi-day PS.4 work.
+
+- **Outcome**: 5 new tests in `slm-doorman-server::tests::http_test`. Tests
+  97 → 102. Commit `40dc18e` (Peter Woodfine).
+- **New endpoint**: `POST /v1/audit/proxy` — accepts an `AuditProxyRequest`
+  with `module_id`, `purpose`, `provider` ("anthropic" | "gemini" | "openai"),
+  `model`, `messages`, optional sampling params, and `caller_request_id`.
+  Validates shape; on success writes a stub audit-ledger entry and returns
+  503 SERVICE_UNAVAILABLE with `{audit_id, caller_request_id, error: "audit_proxy
+  upstream relay pending PS.4 step 2"}`.
+- **Request/response types**: defined in `slm-core/src/lib.rs` so other clusters
+  (project-language, project-data) can import as typed clients.
+- **Audit-ledger stub**: new `AuditProxyStubEntry` struct (not a variant of
+  `AuditEntry`) written to the same daily JSONL file via new
+  `AuditLedger::append_proxy_stub()` method. Status field carries
+  "scaffold-stub-no-relay-yet" until step 2 upgrades to "ok" or
+  "upstream-error".
+- **New error variant**: `DoormanError::AuditProxyInvalidProvider { provider:
+  String }`. HTTP 400, `PolicyDenied` classification.
+- **HTTP status choice**: 503 not 501 — the endpoint IS functional (it
+  validates, writes the audit_id, echoes back); only the upstream relay is
+  pending.
+- **Build hygiene**: cargo test 102/102; clippy + fmt clean.
 
 ### 2026-04-28 — PS.3 step 5 (llguidance Doorman-side Lark validation) [COMPLETED commit `978ab79`]
 
