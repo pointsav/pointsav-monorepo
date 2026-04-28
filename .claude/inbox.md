@@ -15,5 +15,5 @@ If this inbox accumulates more than 5 pending items, post a NOTAM
 (per Doctrine §VI) and flag in Master's inbox.
 
 
-*(no pending messages — Master v0.1.59 sweep [19-commit pipeline ratified + layer-scope option (a) decided + SSH-perm chattr +i resolved + D4 stays operator-presence + GUIDE-doorman catalog provisioning queued] archived 2026-04-28; full history in inbox-archive.md)*
+*(no pending messages — Master project-bim heads-up [low priority; no service-slm changes requested; project-bim consumes existing PS.3/PS.4/AS-5 surfaces] archived 2026-04-28; full history in inbox-archive.md)*
 
