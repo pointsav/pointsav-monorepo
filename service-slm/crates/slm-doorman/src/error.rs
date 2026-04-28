@@ -126,4 +126,19 @@ pub enum DoormanError {
         /// The provider string (e.g. "anthropic", "gemini", "openai").
         provider: String,
     },
+
+    /// `POST /v1/audit/proxy` caller supplied a purpose that is not on the
+    /// server's `AuditProxyPurposeAllowlist` (PS.4 step 3). This is a
+    /// caller-side policy violation — the purpose is not documented as
+    /// permissible on this deployment. 403 FORBIDDEN (same classification
+    /// as `ExternalNotAllowlisted`, which mirrors this pattern for Tier C
+    /// task labels).
+    #[error(
+        "audit_proxy purpose {purpose:?} is not on the purpose allowlist; \
+         see AuditProxyConfig::purpose_allowlist for documented purposes"
+    )]
+    AuditProxyPurposeNotAllowlisted {
+        /// The purpose string the caller submitted.
+        purpose: String,
+    },
 }
