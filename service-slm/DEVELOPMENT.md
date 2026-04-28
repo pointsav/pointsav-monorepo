@@ -1,50 +1,71 @@
+---
+schema: foundry-doc-v1
+document_version: 1.0.0
+research_provenance: tacit
+research_inline: false
+cites: []
+---
+
 # DEVELOPMENT.md — service-slm
 
-**Scope.** Build commands, CI policy, licence enforcement,
-migration roadmap, and blocking items. The architectural *shape*
-of the system is in `ARCHITECTURE.md`; strategic reasoning for the
-choices here lives in
+**Scope.** Build commands, CI policy, licence enforcement, current
+shipped state, phase roadmap, and blocking items. The architectural
+*shape* of the system is in `ARCHITECTURE.md`; strategic reasoning for
+the choices here lives in
 `content-wiki-documentation/topic-service-slm.md`.
 
 ---
 
 ## 1. Build and test
 
-### Phase 1 — current
+The `service-slm/` directory is a standalone Rust cargo workspace
+(resolved 2026-04-25) with three workspace members:
+`slm-core`, `slm-doorman`, `slm-doorman-server`.
 
-The Rust workspace in `ARCHITECTURE.md` §6 is not yet scaffolded.
-Only the nested `cognitive-forge/` subcrate exists. Build it in
-isolation:
+### 1.1 Standard commands
 
-```
-cargo build --manifest-path cognitive-forge/Cargo.toml
-cargo test  --manifest-path cognitive-forge/Cargo.toml
-```
-
-End-to-end execution requires:
-
-- a running SLM endpoint on `http://127.0.0.1:8080/v1/chat/completions`
-- a Totebox root directory containing `service-slm/transient-queues/`
-
-Neither has been run end-to-end from this clone.
-
-### Phase 2+ — target
-
-Once the workspace `Cargo.toml` lands (`NEXT.md` Queue):
+Run all of the following from inside `service-slm/`:
 
 ```
-cargo build  --workspace --release
-cargo test   --workspace
-cargo clippy --workspace -- -D warnings
+cargo build  --workspace                  # debug build (~30–40s cold)
+cargo build  --workspace --release        # release build (opt-level 3, LTO thin)
+cargo test   --workspace                  # 143 tests; all pass
+cargo clippy --workspace --all-targets -- -D warnings
 cargo fmt    --all -- --check
 ```
 
-Binary output: `target/release/slm-cli`. Single binary, no
-additional runtime dependencies beyond the host's TLS roots.
+Current test distribution (as of iter-17):
 
-### Cross-compilation
+| Suite | Count | Notes |
+|---|---|---|
+| `slm_core` unit tests | 14 | Serde round-trips for `ComputeRequest`, `GrammarConstraint` variants |
+| `slm_doorman` unit tests | 85 | Tier clients (local, yoyo, external), ledger, audit_proxy, grammar_validation, apprenticeship, verdict, citations, redact |
+| `slm_doorman_server/tests/audit_endpoints_integration.rs` | 4 | Entry-type discriminator verification for all four ledger entry kinds |
+| `slm_doorman_server/tests/http_test.rs` | 40 | Axum integration tests: smoke (4), error-mapping (5), apprenticeship-disabled 404 (3), audit_proxy (14), audit_capture (14) |
+| **Total** | **143** | All passing |
 
-Appliance targets (see `ARCHITECTURE.md` §9):
+### 1.2 End-to-end against a live Tier A endpoint
+
+The `local-doorman.service` + `local-slm.service` systemd units on
+the workspace VM (`foundry-workspace`) provide a live Tier A
+environment (B5 verified 2026-04-26):
+
+```bash
+# Start the Doorman manually (if not using systemd):
+SLM_LOCAL_ENDPOINT=http://127.0.0.1:8080 \
+SLM_BIND_ADDR=127.0.0.1:9080 \
+SLM_AUDIT_DIR=/var/lib/slm-doorman/audit \
+    cargo run -p slm-doorman-server
+```
+
+`SLM_YOYO_ENDPOINT` is intentionally unset by default — community-tier
+mode (Tier A only). Setting it activates Tier B. The `local-doorman.env`
+output from `infrastructure/slm-yoyo/tofu/` provides the correct Yo-Yo
+config block.
+
+### 1.3 Cross-compilation
+
+Appliance targets (see `ARCHITECTURE.md` §12):
 
 ```
 cargo build --target aarch64-unknown-linux-gnu --release
@@ -73,11 +94,11 @@ Forbidden:
   distinct from code)
 - **CC-BY-NC** — non-commercial, incompatible with commercial DKA
 
-### 2.1 `deny.toml` skeleton
+### 2.1 `deny.toml`
 
-Lives at project root once the workspace exists. CI runs
-`cargo deny check licenses` on every commit; build fails on any
-new transitive dep with a disallowed licence.
+Lives at `service-slm/deny.toml`. CI runs `cargo deny check
+licenses` on every commit; build fails on any new transitive dep
+with a disallowed licence.
 
 ```toml
 [licenses]
@@ -129,7 +150,7 @@ uses the same `sigstore` crate at runtime for adapter signatures
 Every `.rs` file carries an SPDX identifier in its first comment:
 
 ```rust
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: Apache-2.0 OR MIT
 ```
 
 The project follows the [REUSE Specification](https://reuse.software/)
@@ -153,76 +174,93 @@ contribution and add legal overhead the project does not need.
 
 ---
 
-## 4. Migration roadmap
+## 4. Shipped state and remaining gates
 
-Four phases. Each phase is independently valuable; the project is
-not required to finish the next one.
+The Doorman is in production service on the workspace VM. The
+B1–B7 task list from the original scaffolding brief is summarised
+here with current disposition.
 
-### Phase 1 — Python trial (current)
+### Landed
 
-- Python, vLLM (multi-LoRA serving primitive per
-  `~/Foundry/conventions/adapter-composition.md`), OpenTofu, `dbt`,
-  Dagster per the trial spec (no SkyPilot — OpenTofu is the
-  provisioning surface per
-  `~/Foundry/conventions/zero-container-runtime.md`)
-- Goal: validate the architecture, not the language choice
-- A Rust migration during Phase 1 would add risk without
-  validating anything
+| Item | Description | Status |
+|---|---|---|
+| B1 | Doorman scaffold — three-crate workspace, six unit tests | Landed 2026-04-25 |
+| B2 | Tier B (Yo-Yo) HTTP client with bearer-token auth, retry policy, mock tests | Landed 2026-04-26 |
+| B3 | `local-slm.service` systemd unit on workspace VM | Landed by Master (workspace v0.0.11) |
+| B4 | Tier C (external API) client with compile-time allowlist, pricing, mock tests | Landed 2026-04-26 |
+| B5 | End-to-end Tier A verification against live llama-server | Verified 2026-04-26; audit-ledger entry confirmed |
+| B6 | `cognitive-bridge.sh` → `scripts/`; `system-slm` connection via Doorman HTTP | Landed 2026-04-26 |
+| PS.3 | AS-2 wire-format adapter (grammar substrate): `GrammarConstraint` type, per-tier serialisation, `LarkValidator` pre-validation, Tier A rejection, Tier C rejection | Landed steps 1–5 across iters 1–4 |
+| PS.4 | Audit substrate: `/v1/audit/proxy` + `/v1/audit/capture`; `AuditProxyClient`; purpose allowlist; `entry_type` discriminator (contract v0.2.0); 64 KiB + 16 KiB caps; per-tenant concurrency cap | Landed steps 1–5 across iters 5–17 |
+| PS.6 | Coverage briefs A/B/C: http.rs test factory + 12 integration tests; tier/local.rs unit tests; VerdictDispatcher Reject + DeferTierC tests | Landed 2026-04-28 |
+| PS.7 | Zero-container drift cleanup (ARCHITECTURE.md + DEVELOPMENT.md 4th + 5th pass) | Landed 2026-04-28 |
 
-### Phase 2 — Rust rewrite (after trial passes)
+### Remaining gates
 
-Order of work:
-
-1. Fresh cargo workspace per `ARCHITECTURE.md` §6
-2. Port the doorman protocol (`crates/slm-doorman`) — sanitise /
-   send / receive / rehydrate
-3. `service-content` is out of scope for this migration; it is a
-   different service
-4. Port the ledger (`crates/slm-ledger`)
-5. Port the GCE compute driver (`crates/slm-compute`,
-   `crates/slm-inference-remote`) per `infrastructure/slm-yoyo/tofu/`
-6. Replace vLLM with `mistral.rs` on the yo-yo node
-   (`crates/slm-inference-local` for local-host paths;
-   remote-side native binary delivered via the
-   `pointsav-public` GCE image)
-
-**Success criterion:** the Rust `service-slm` passes the same
-Phase-1 test suite as the Python version. Parity before cutover.
-
-### Phase 3 — os-totebox integration
-
-- Cross-compile for Totebox targets (x86_64, aarch64)
-- Integrate with os-totebox init / systemd
-- Sign releases with Sigstore per §2.2
-- Ship as appliance component
-
-### Phase 4 — Optional open-source release
-
-- Apply the licence / header / DCO checks in §2, §3
-- Publish to GitHub under the `pointsav` org
-- Write a launch post
-
-No timeline commitment on Phase 4. The option stays open.
+| Item | Description | Gate |
+|---|---|---|
+| B7 | Re-deploy `local-doorman.service` on workspace VM with `SLM_APPRENTICESHIP_ENABLED=true` | Master-tier action (operator decision) |
+| D4 | `pointsav-public` GCP project creation + image-build pipeline (vLLM ≥0.12, nginx TLS, idle-shutdown timer, CUDA, Ubuntu 24.04) | Master + operator pair; unblocks PS.1 / PS.2 / Yo-Yo MIN deploy |
+| PS.1 | Yo-Yo deploy readiness (preemptible flag, A100 quota, image verification, vLLM framing) | Gated on D4 |
+| PS.2 | Multi-LoRA + structured-outputs verification on Yo-Yo | Gated on D4 |
+| PS.5 | AS-6/AS-7 P1 production routing on `version-bump-manifest` task type | Corpus-threshold gate (accept-rate ≥0.6 over rolling 50) |
 
 ---
 
-## 5. Blockers before Phase 2 build-out
+## 5. Workspace dependencies (current)
 
-These do not block the Phase-1 trial — they block Ring 2 / Ring 3b
-expansion in Phase 2 and beyond. Each must resolve before the
-feature it gates can be scaffolded.
+The actual workspace `Cargo.toml` carries these deps. All entries
+MIT or Apache-2.0.
 
-| # | Blocker | Gates | Status |
+```toml
+[workspace.dependencies]
+slm-core   = { path = "crates/slm-core" }
+slm-doorman = { path = "crates/slm-doorman" }
+
+# Async runtime
+tokio = { version = "1.40", features = ["full"] }
+
+# HTTP
+axum    = "0.8"
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+
+# Serialisation
+serde      = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# Identifiers, time
+uuid   = { version = "1.10", features = ["v7", "serde"] }
+chrono = { version = "0.4", default-features = false, features = ["clock", "serde"] }
+
+# Errors
+anyhow    = "1"
+thiserror = "2"
+
+# Async trait support (BearerTokenProvider in slm-doorman)
+async-trait = "0.1"
+
+# Regex (redact sanitize-outbound; apprenticeship YAML-frontmatter parsing)
+regex = "1"
+
+# File locking for apprenticeship promotion ledger (flock(2) per design-pass Q3)
+fs2 = "0.4"
+
+# Base64 for SSH signature blob in ApprenticeshipVerdict wire shape (design-pass Q5)
+base64 = "0.22"
+
+# Observability
+tracing            = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+```
+
+Additional direct dependencies on individual crates (not declared
+at workspace level):
+
+| Crate | Where used | Version | Purpose |
 |---|---|---|---|
-| B1 | Mooncake + LMCache licence audit at adoption time | Ring 2 scaffolding in `memory/kv/` | Open — pending operator review |
-| B2 | Mooncake master hosting decision (small GCE VM / Totebox co-host / OpenTofu module with `idle_shutdown_minutes=N` per `infrastructure/slm-yoyo/tofu/`) | Ring 2 deployment | Open — working recommendation: small GCE VM for Phase 2; revisit once Totebox stabilises |
-| B3 | Adapter training hardware allocation (A100 40 GB, ~4 hrs per adapter, ~$30 via Batch API) | Ring 3b first training run | Open |
-| B4 | Adapter evaluation protocol defined | Ring 3b registry populates | Open — depends on a separate operator decision on archetype promotion thresholds |
-| B5 | Secret Manager key-management migration (Phase 1 uses SSH env vars) | Phase 2 operational hardening | Open |
-| B6 | system-slm connection protocol decision (OpenAI-compatible HTTP vs local CLI binary) | Phase-1 bridge goes live | Open — see `NEXT.md` Blocked |
-
-Each blocker that moves to "Resolved" migrates to `CHANGELOG.md`
-or `NEXT.md` Recently done — not kept here.
+| `llguidance` | `slm-doorman` | 1.7 | Lark grammar pre-validation (PS.3 step 5) |
+| `wiremock` | `slm-doorman` (dev), `slm-doorman-server` (dev) | 0.6 | Mock HTTP server for tier client + http.rs tests |
+| `tower` | `slm-doorman-server` (dev) | matching axum | `TestClient` in test_helpers |
 
 ---
 
@@ -234,79 +272,32 @@ in `content-wiki-documentation/topic-service-slm.md`.
 | Risk | Mitigation |
 |---|---|
 | **`cargo deny` flags unexpected transitive licences.** New transitive deps with AGPL / GPL / BSL enter the tree through upstream updates. | Run `cargo deny` in CI from the first commit of the workspace. Fix licence drift at the merge that introduced it; do not defer to release. |
-| **Rust build times long relative to Python dev loop.** CUDA-adjacent crates (`mistralrs`) compile slowly. | `sccache` for compiler cache; separate the inference crate from the doorman crate so doorman rebuilds do not rebuild CUDA kernels. |
-| **`mistral.rs` maintenance concentration.** Small-team upstream. | `candle` (Hugging Face, larger team) sits underneath and is the fallback. Pin `mistralrs` to a known-good commit if the maintainer disengages; carry patches. |
+| **Rust build times long relative to Python dev loop.** CUDA-adjacent crates compile slowly when added to the workspace. | `sccache` for compiler cache; keep the inference crate (future) separate from the Doorman crate so Doorman rebuilds do not rebuild CUDA kernels. |
+| **`llguidance` API surface.** Minor-version updates to `llguidance` may shift the `ParserFactory` / `TopLevelGrammar` API used by `grammar_validation.rs`. | Pinned to `"1.7"` in `slm-doorman/Cargo.toml`; update explicitly and re-run the Lark validation test suite. |
 | **LadybugDB is a fork of post-acquisition Kuzu.** Maintenance signal unclear. | MIT-licensed; worst case is carrying patches. Monitor for six months; contribute upstream fixes to build relationship. |
-
-Risks that are strategic rather than operational (hiring-pool
-width, research parity with Python ecosystem) belong in the wiki
-topic doc, not here.
 
 ---
 
-## 7. Workspace dependencies (appendix)
+## 7. Apprenticeship substrate — enablement
 
-Indicative minimums as of April 2026. Pin to latest compatible at
-the start of Phase 2. All entries MIT or Apache-2.0.
+The three apprenticeship endpoints (`/v1/brief`, `/v1/verdict`,
+`/v1/shadow`) are disabled by default. The `local-doorman.service`
+unit on the workspace VM runs without `SLM_APPRENTICESHIP_ENABLED`,
+so the current production deployment returns 404 on all three.
 
-```toml
-[workspace.dependencies]
-# HTTP / async
-axum = "0.8"
-tower = "0.5"
-tokio = { version = "1.40", features = ["full"] }
-hyper = "1.5"
-reqwest = { version = "0.12", features = ["json", "rustls-tls"] }
+To enable:
 
-# Storage
-sqlx = { version = "0.8", features = ["sqlite", "runtime-tokio-rustls"] }
-object_store = { version = "0.11", features = ["gcp", "aws"] }
-
-# LadybugDB bindings
-kuzu = "0.11"        # or lbug crate if migrating
-
-# Inference
-mistralrs = { version = "0.8", features = ["cuda", "flash-attn"] }
-candle-core = "0.9"
-candle-nn = "0.9"
-
-# Documents
-oxidize-pdf = "2.5"
-docx-rust = "0.3"
-pulldown-cmark = "0.12"
-calamine = "0.26"
-
-# Orchestration
-apalis = { version = "0.7", features = ["limit"] }
-apalis-sqlite = "0.7"
-apalis-workflow = "0.1"
-backoff = "0.4"
-
-# Networking
-russh = "0.46"
-rustls = "0.23"
-google-cloud-storage = "0.23"
-google-cloud-compute = "*"
-
-# Serde + validation
-serde = { version = "1", features = ["derive"] }
-serde_json = "1"
-serde_yaml = "0.9"
-validator = { version = "0.19", features = ["derive"] }
-schemars = "0.8"
-
-# Observability
-tracing = "0.1"
-tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
-opentelemetry = "0.27"
-
-# Signing
-sigstore = "0.10"
-
-# Errors
-anyhow = "1"
-thiserror = "2"
+```env
+SLM_APPRENTICESHIP_ENABLED=true
+FOUNDRY_ROOT=/srv/foundry
+FOUNDRY_ALLOWED_SIGNERS=/srv/foundry/identity/allowed_signers
+FOUNDRY_DOCTRINE_VERSION=0.0.7
+FOUNDRY_TENANT=pointsav
+SLM_BRIEF_TIER_B_THRESHOLD_CHARS=8000
 ```
+
+B7 (re-deploy with the flag set) is the next action in this chain.
+It is a Master-tier deployment action; the code is ready.
 
 ---
 
@@ -314,7 +305,10 @@ thiserror = "2"
 
 - `CLAUDE.md` — state header, hard constraints
 - `NEXT.md` — queue, blocked items, deferred
-- `ARCHITECTURE.md` — workspace shape, three-ring model, stack by role
+- `ARCHITECTURE.md` — workspace shape, three-ring model, endpoint table, tier routing policy
+- `service-slm/docs/audit-endpoints-contract.md` — canonical wire contract for audit endpoints (v0.2.0)
 - Workspace `CLAUDE.md` — identity store, commit flow, ADR hard rules
 - `content-wiki-documentation/topic-service-slm.md` — strategic
   rationale, open-source posture *(destination not yet committed)*
+- `~/Foundry/conventions/zero-container-runtime.md` — deployment model doctrine
+- `~/Foundry/conventions/apprenticeship-substrate.md` — full apprenticeship spec
