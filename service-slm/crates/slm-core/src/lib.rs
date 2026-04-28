@@ -303,6 +303,64 @@ pub struct AuditUsage {
     pub cost_usd: f64,
 }
 
+// ---------------------------------------------------------------------------
+// audit_capture wire shapes (PS.4 step 4)
+// ---------------------------------------------------------------------------
+
+/// Request body for `POST /v1/audit/capture`.
+///
+/// The inverse direction of `audit_proxy`: cross-cluster callers push audit
+/// events to the Doorman for work they did LOCALLY without going through the
+/// Doorman. The Doorman validates, writes to the central audit ledger, and
+/// returns 200.
+///
+/// Used by:
+///   - project-data anchor-emitter (event_type: "anchor-event")
+///   - project-language editorial gateway (event_type: "prose-edit")
+///   - Any Ring 1/2/3 producer that does work the audit ledger should record
+///     but that did not route through the Doorman.
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct AuditCaptureRequest {
+    /// Caller-generated UUID (any version). Caller is the source of truth for
+    /// its own audit_id (the work happened locally; Doorman is downstream).
+    pub audit_id: String,
+    /// Tenant identifier; validated as [`ModuleId`] — only `[a-z0-9-]`,
+    /// 1..=64 chars.
+    pub module_id: String,
+    /// Event taxonomy discriminator. Accepted values:
+    /// "prose-edit" | "design-edit" | "graph-mutation" | "anchor-event" |
+    /// "verdict-issued".
+    pub event_type: String,
+    /// Caller's component / cluster identifier for traceability (e.g.
+    /// "project-language", "project-data:anchor-emitter"). Free-form; must
+    /// be non-empty.
+    pub source: String,
+    /// Status of the work the caller did. Same vocabulary as audit_proxy final
+    /// entries: "ok" | "policy-denied" | "upstream-error" | other. Free-form;
+    /// must be non-empty.
+    pub status: String,
+    /// ISO 8601 / RFC 3339 timestamp of the event (caller's clock).
+    pub event_at: String,
+    /// Event-specific payload (untyped JSON object). Future steps may
+    /// validate per-event-type schemas; step 4 accepts any JSON value.
+    pub payload: serde_json::Value,
+    /// Optional caller request correlation ID for cross-system tracing.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub caller_request_id: Option<String>,
+}
+
+/// Response body for `POST /v1/audit/capture`.
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct AuditCaptureResponse {
+    /// Echoed from the request — confirms the Doorman accepted and wrote.
+    pub audit_id: String,
+    /// Echoed from the request.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub caller_request_id: Option<String>,
+    /// "captured" on success.
+    pub status: String,
+}
+
 /// Response returned through the Doorman.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ComputeResponse {

@@ -141,4 +141,43 @@ pub enum DoormanError {
         /// The purpose string the caller submitted.
         purpose: String,
     },
+
+    /// `POST /v1/audit/capture` caller supplied an event_type that is not one
+    /// of the five accepted values (PS.4 step 4). Accepted values:
+    /// "prose-edit", "design-edit", "graph-mutation", "anchor-event",
+    /// "verdict-issued". 400 BAD_REQUEST.
+    #[error(
+        "audit_capture event_type {event_type:?} is not recognised; \
+         accepted values: prose-edit, design-edit, graph-mutation, anchor-event, verdict-issued"
+    )]
+    AuditCaptureUnknownEventType {
+        /// The event_type string the caller submitted.
+        event_type: String,
+    },
+
+    /// `POST /v1/audit/capture` caller submitted a payload larger than the
+    /// maximum permitted size (`AUDIT_CAPTURE_MAX_PAYLOAD_BYTES`). 413
+    /// PAYLOAD_TOO_LARGE. Classified as PolicyDenied — the caller must shrink
+    /// the payload before retrying.
+    #[error(
+        "audit_capture payload is {size_bytes} bytes, exceeding the {max_bytes}-byte limit; \
+         reduce the payload size before retrying"
+    )]
+    AuditCapturePayloadTooLarge {
+        /// Serialised payload size in bytes.
+        size_bytes: usize,
+        /// Maximum permitted size in bytes.
+        max_bytes: usize,
+    },
+
+    /// `POST /v1/audit/capture` caller supplied an `event_at` timestamp that
+    /// does not parse as RFC 3339 / ISO 8601. 400 BAD_REQUEST.
+    #[error(
+        "audit_capture event_at {value:?} is not a valid RFC 3339 timestamp; \
+         use format YYYY-MM-DDTHH:MM:SSZ or YYYY-MM-DDTHH:MM:SS+HH:MM"
+    )]
+    AuditCaptureInvalidTimestamp {
+        /// The raw string the caller submitted.
+        value: String,
+    },
 }
