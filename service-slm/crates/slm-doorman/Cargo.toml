@@ -13,6 +13,15 @@ slm-core = { workspace = true }
 tokio = { workspace = true }
 reqwest = { workspace = true }
 
+# Lark grammar pre-validation (PS.3 step 5): compile the Lark string at the
+# Doorman boundary before relaying to Tier B so malformed grammars produce a
+# typed 400 error instead of an opaque upstream failure.
+# Pin to "1.7" (SemVer-minor compatible with 1.7.4). No extra feature flags —
+# llguidance default features include the Lark compiler path we need.
+# ApproximateTokEnv::single_byte_env() (from the re-exported toktrie crate)
+# lets us construct a ParserFactory for validation without a real tokenizer.
+llguidance = "1.7"
+
 # Serialisation
 serde = { workspace = true }
 serde_json = { workspace = true }
