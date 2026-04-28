@@ -147,6 +147,37 @@ operator-presence pass; cluster-Task waits.
 - Post-commit grep `mistral` across `infrastructure/slm-yoyo/` returns
   zero hits. PS.1-3 scope fully closed.
 
+### Iter-16 — audit endpoint hardening (payload cap + per-tenant concurrency)
+
+Operator confirmed iter-16 on the recommendation queue (endpoint hardening
+named as second item after iter-15 entry_type discriminator).
+
+- **Cluster commit**: `6e47d27` (Jennifer Woodfine). +4 tests (127 → 131).
+- **Payload cap**: `AUDIT_PROXY_MAX_REQUEST_BYTES = 64 * 1024` (4× the
+  audit_capture cap; proxy carries chat-completion messages with longer
+  prompts). Body-size check via `Bytes` extractor before deserialise.
+- **Per-tenant concurrency**: `Arc<Mutex<HashMap<ModuleId, Arc<Semaphore>>>>`
+  on `AppState`. tokio Semaphore + `try_acquire_owned()` non-blocking.
+  RAII permit lifecycle; default cap 4; env-configurable via
+  `SLM_AUDIT_TENANT_CONCURRENCY_CAP`.
+- **Two new DoormanError variants**: `AuditProxyPayloadTooLarge` → 413 →
+  PolicyDenied; `AuditTenantConcurrencyExhausted` → 503 + Retry-After: 5
+  → PolicyDenied (retryable).
+- **Test strategy notes**: concurrency-cap test uses pre-saturated semaphore
+  rather than live concurrent tokio tasks (avoided `AppState: Clone + Send
+  + 'static` requirement). Per-tenant independence test confirms caps are
+  isolated by ModuleId.
+- **Open hardening items** (logged for future iters):
+  - Semaphore map unbounded growth (one entry per ModuleId; eviction
+    needed only if tenant set becomes dynamic).
+  - Cap default 4 — note in GUIDE-doorman for high-volume operator tuning.
+  - Per-tenant rate limit (req/s) not addressed; separate from in-flight
+    count.
+- **Build hygiene**: cargo test 131/131; clippy `-D warnings` clean;
+  fmt clean.
+- **Wall time**: ~11 minutes; ~60k Sonnet tokens (lean — tight scope, real
+  production-grade decisions per commit).
+
 ### Iter-15 — entry_type discriminator on all 4 ledger entry kinds (operator-recommended hardening)
 
 Operator asked for next-step recommendation post-iter-14 session-end with
