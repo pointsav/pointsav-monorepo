@@ -8,30 +8,43 @@
 
 ## Right now — long-running Sonnet pipeline active
 
-**Status:** Iteration 3 complete. PS.3 step 4 landed cleanly. **Doorman
-three-tier grammar routing policy now complete.** Pipeline self-paces
-via `/loop` dynamic mode; iteration 4 scheduled.
+**Status:** Iteration 4 complete. PS.3 step 5 landed cleanly.
+**PS.3 sequence COMPLETE — Doorman grammar substrate fully realised.**
+Pipeline self-paces via `/loop` dynamic mode; iteration 5 scheduled.
 
-**Tests:** 90/90 passing across slm-core (14) + slm-doorman (64) +
-slm-doorman-server (12). Last code commit `fdee78f` (PS.3 step 4 — Tier C
-grammar rejection).
+**Tests:** 97/97 passing across slm-core (14) + slm-doorman (68 incl.
+4 new in `grammar_validation::tests`) + slm-doorman-server (15 incl. 3
+new in http_test). Last code commit `978ab79` (PS.3 step 5 — llguidance
+Lark validation). Stripped release binary 7.7 MB (+1.4 MB from llguidance).
 
-**Pipeline operator-directed dispatch sequence (in flight):**
+**Pipeline operator-directed dispatch sequence:**
 1. **PS.3 step 2** — Yo-Yo grammar serialisation ✅ `266fa4d`
 2. **PS.3 step 3** — Tier A reject Lark, pass GBNF/JsonSchema ✅ `9f9f37b`
 3. **PS.3 step 4** — Tier C reject all grammar variants ✅ `fdee78f`
-4. **PS.3 step 5** — `llguidance` Doorman-side Lark validation (next, ~1-2hr)
+4. **PS.3 step 5** — llguidance Doorman-side Lark validation ✅ `978ab79`
 5. **PS.4 step 1..N** — A-1 audit_proxy + audit_capture endpoints
-   (multi-step; cross-cluster gate for project-language A-4 +
-   project-data A-5)
+   (next; multi-step ~3-5 days; cross-cluster gate for project-language
+   A-4 + project-data A-5)
 
-**Three-tier grammar policy summary (post-step-4):**
-- Tier A: GBNF + JsonSchema native; Lark → 400 BAD_REQUEST.
-- Tier B: All three serialised to vLLM ≥0.12 `extra_body.structured_outputs`.
-- Tier C: All three rejected → 400 BAD_REQUEST.
+**Doorman grammar substrate — full picture post-PS.3:**
+- Tier A (local llama-server): GBNF + JsonSchema native; Lark → 400.
+- Tier B (Yo-Yo / vLLM): all three via `extra_body.structured_outputs`
+  envelope (vLLM ≥0.12).
+- Tier C (external API): all three rejected → 400.
+- Doorman-side fail-fast: malformed Lark caught upstream of Tier B
+  relay via llguidance compile (`MalformedLarkGrammar { reason }` →
+  400 with line/col diagnostics; ~1ms/call; opt-out via
+  `SLM_LARK_VALIDATION_ENABLED=false`).
 
-Two new error variants in this round: `TierAGrammarUnsupported` and
-`TierCGrammarUnsupported`, both → 400 + `PolicyDenied`. Symmetric pattern.
+Three new typed error variants this round (`TierAGrammarUnsupported`,
+`TierCGrammarUnsupported`, `MalformedLarkGrammar`) — all → 400 +
+`PolicyDenied`. Symmetric pattern.
+
+**Master messages archived during iterations 1+4** (no blocking action):
+- v0.1.57 COMPONENT-* draft pipeline (no UI work in flight)
+- v0.1.58 Research-Trail Substrate (no backfill of pre-v0.1.58 drafts)
+
+Both acked via outbox.
 
 **Deliberately skipped (layer-scope pending Master):**
 - PS.8 (GUIDE-doorman cross-repo handoff)
