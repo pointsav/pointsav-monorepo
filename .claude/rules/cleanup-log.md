@@ -153,6 +153,34 @@ Next iteration: PS.3 step 3 (Tier A reject Lark, pass GBNF/JsonSchema natively).
 Self-pacing via ScheduleWakeup; will resume once this iteration's commit is
 landed.
 
+### Iteration 2 outcome — PS.3 step 3 — Tier A grammar handling
+
+- **Commit**: `9f9f37b` (Peter Woodfine)
+- **Tests**: 83 → 87. Four new tests in `tier::local::tests`:
+  None / GBNF / JsonSchema / Lark→error.
+- **Wire fields**: GBNF serialises to top-level `grammar` (llama-server's
+  native field). JsonSchema serialises to top-level `json_schema`. Lark
+  rejected at the Doorman boundary BEFORE any network call (test asserts
+  wiremock server received zero requests).
+- **New error variant**: `DoormanError::TierAGrammarUnsupported { dialect,
+  advice }`. HTTP mapping: 400 BAD_REQUEST. `CompletionStatus::PolicyDenied`.
+  Per v0.1.33 Q1 ratification: Tier A grammar asymmetry accepted — apprentice
+  on Tier A produces unconstrained output OR uses GBNF/JsonSchema only;
+  Lark enforced only when escalated to Tier B (Yo-Yo via llguidance).
+- **Build hygiene**: cargo test 87/87; clippy `-D warnings` clean; fmt clean.
+- **No layer-scope concerns**.
+- **Wall time**: ~4 minutes; ~95k Sonnet tokens.
+- **Surprise**: router.rs `classify_error()` and the slm-doorman-server
+  `tests/http_test.rs::doorman_error_to_status` mirror match both required
+  updates (exhaustive matches on the `DoormanError` enum). Sonnet caught and
+  fixed both cleanly. The mirror-match pattern in test code is worth
+  documenting — it's a maintenance burden when adding new error variants.
+
+### Pipeline continues — iteration 3
+
+Next: PS.3 step 4 (Tier C reject all grammar variants — smallest chunk;
+~30 min Sonnet).
+
 ---
 
 ## 2026-04-28 — Sonnet batch wrap-up (PS.7 + A/B/C + layer-scope flag) — 5 commits, +19 tests
