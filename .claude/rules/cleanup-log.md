@@ -92,6 +92,48 @@ Newest on top. Append a dated block when a session includes meaningful cleanup w
 
 ---
 
+## 2026-04-28 — Pipeline resumed under operator option-A — three PS.1-* admin-tier dispatches landed at workspace tier
+
+Operator confirmed option-A 2026-04-28 post-v0.1.59 sweep — pipeline boundary
+relaxed to permit workspace-repo edits via CLAUDE.md §8 admin-tier procedure
+(`ps-administrator` author identity, SSH-signed via the pointsav-administrator
+key). Three iterations dispatched in sequence (smallest-first to validate the
+admin-tier procedure on first re-use):
+
+| Iter | Brief | Workspace commit | Description |
+|---|---|---|---|
+| 10 | PS.1-3 | `d6c2af6` | mistral.rs → vLLM rename (3 files; CONTRACT.md + variables.tf + CUSTOMER-RUNBOOK.md) |
+| 11 | PS.1-4 | `bb85219` | tofu/outputs.tf — local-doorman.env snippet (W6 fix) + outputs.tf mistralrs log filter rename |
+| 12 | PS.1-2 | `a268215` | tofu module — preemptible flag (B1) + A100 quota auto-request (B2) + cost-math docs (W1) |
+
+Each commit verified `Good "git" signature for ps-administrator@users.noreply.github.com
+with ED25519 key SHA256:APVrt+kKC1bgKTszRBHc+5ZXdxIFD8GdGwzjCOU1LXw`. None
+pushed (Stage 6 hold per workspace `CLAUDE.md` §7).
+
+**Admin-tier procedure validated on first re-use** — three back-to-back
+commits without env-var or signing-key issues. The `chattr +i` defensive
+lock at workspace v0.1.55 confirmed effective; no chmod-600 workaround
+needed in the briefs.
+
+**Mistral cleanup tail** (deferred to separate small follow-up):
+- `infrastructure/slm-yoyo/CUSTOMER-RUNBOOK.es.md` line 30 (Spanish sibling)
+- `infrastructure/slm-yoyo/tofu/README.md` line 190 (tofu README)
+
+Both are doc-only renames; admin-tier procedure same as above. Can land
+together as a small batch.
+
+**SLM_AUDIT_DIR cluster-scope chunk** (PS.8 dependency per Master v0.1.59):
+~10 lines in `service-slm/crates/slm-doorman-server/src/main.rs` to read
+SLM_AUDIT_DIR env var and pass it to AuditLedger initialisation. Cluster-
+scope (cluster clone, normal `bin/commit-as-next.sh`). Dispatches in next
+iteration.
+
+**PS.8 GUIDE-doorman handoff** stays parked — Master will provision
+`customer/woodfine-fleet-deployment/local-doorman/` catalog subfolder at
+operator-presence pass; cluster-Task waits.
+
+---
+
 ## 2026-04-28 — Master v0.1.59 sweep arrived post-pipeline-end; boundary conflict surfaced for operator
 
 After the long-running Sonnet pipeline session-end commit `375e9a6`, a
