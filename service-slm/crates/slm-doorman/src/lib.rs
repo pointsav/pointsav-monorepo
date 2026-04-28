@@ -14,6 +14,7 @@
 //! Intelligence). Audit ledger discipline is doctrinal — see Doctrine §V.
 
 pub mod apprenticeship;
+pub mod audit_proxy;
 pub mod brief_cache;
 pub mod citations;
 pub mod error;
@@ -30,10 +31,11 @@ pub use apprenticeship::{
     ApprenticeshipConfig, ApprenticeshipDispatcher, ParsedAttempt, ShadowOutcome,
     APPRENTICE_SYSTEM_PROMPT,
 };
+pub use audit_proxy::{AuditProxyClient, AuditProxyConfig};
 pub use brief_cache::{BriefCache, CachedBrief};
 pub use error::{DoormanError, Result};
 pub use grammar_validation::LarkValidator;
-pub use ledger::{AuditEntry, AuditLedger, AuditProxyStubEntry};
+pub use ledger::{AuditEntry, AuditLedger, AuditProxyEntry, AuditProxyStubEntry};
 pub use promotion_ledger::{PromotionLedger, PromotionOutcome, Stage, StatRow};
 pub use redact::sanitize;
 pub use router::{Doorman, DoormanConfig};
