@@ -152,6 +152,28 @@ once operator green-lights.
 
 ## Completed
 
+### 2026-04-28 — Iter-17 PS.6 chunk #6 tail coverage gaps [COMPLETED commit `436cb4f`]
+
+Long-running Sonnet pipeline iteration 17. Closes lower-priority coverage
+gaps from the original PS.6 chunk #6 audit deferred from A/B/C briefs.
+
+- **Outcome**: 22 new tests across 4 modules. Tests 131 → 153. Commit
+  `436cb4f` (Jennifer Woodfine).
+- **All four sections applied** — codebase had all relevant layers:
+  - `tier::yoyo::tests`: BearerTokenProvider failure (provider err / empty
+    token + 401 refresh path) — 2 tests.
+  - `ledger::tests`: HOME unset + readonly-parent + readonly-dir-append — 3 tests.
+  - `redact::tests`: gho_ / xox- / false-positive prevention — 3 tests.
+  - `citations::tests`: partial blocks / empty IDs / duplicates — 4 tests.
+  - Plus 10 additional tests within sections covering edge cases the agent
+    found during inspection.
+- **No new error variants** — coverage on existing code paths.
+- **Discovery**: existing `redact.rs` covered `ghp_` (GitHub PAT) but NOT
+  `gho_` (GitHub OAuth — distinct token type). Pattern was wired but
+  untested. New test confirms the path works; no bug, but a real coverage
+  gap that's now closed.
+- **Build hygiene**: cargo test 153/153; clippy + fmt clean.
+
 ### 2026-04-28 — Iter-16 audit endpoint hardening (payload cap + per-tenant concurrency) [COMPLETED commit `6e47d27`]
 
 Long-running Sonnet pipeline iteration 16. Production-grade DoS/abuse
