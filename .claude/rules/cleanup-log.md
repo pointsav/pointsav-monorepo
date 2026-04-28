@@ -147,6 +147,29 @@ operator-presence pass; cluster-Task waits.
 - Post-commit grep `mistral` across `infrastructure/slm-yoyo/` returns
   zero hits. PS.1-3 scope fully closed.
 
+### Iter-17 — PS.6 chunk #6 tail coverage gaps closed
+
+Auto-mode advance through the recommendation queue. All four PS.6 tail
+sections applied (BearerTokenProvider failures, audit-ledger error paths,
+redaction patterns, citations-resolver edge cases) — codebase had all
+relevant layers, so no section was skipped.
+
+- **Cluster commit**: `436cb4f` (Jennifer Woodfine). +22 tests (131 → 153)
+  — bigger landing than the brief targeted (4-11) because the agent
+  exercised additional edge cases within each section.
+- **Modules touched**: `tier::yoyo::tests` (+2), `ledger::tests` (+3),
+  `redact::tests` (+3), `citations::tests` (+4), plus 10 additional
+  edge-case tests within sections.
+- **Discovery**: existing `redact.rs` had `ghp_` (GitHub PAT) coverage but
+  NOT `gho_` (GitHub OAuth — distinct token kind). Pattern was wired in
+  the regex set but untested. New `redacts_github_oauth_prefix_gho` test
+  confirms the path works; no bug found but a real coverage gap that's
+  now closed.
+- **No new error variants** — pure coverage on existing code paths.
+- **Build hygiene**: cargo test 153/153; clippy `-D warnings` clean;
+  fmt clean.
+- **Wall time**: ~4.5 minutes; ~114k Sonnet tokens.
+
 ### Iter-16 — audit endpoint hardening (payload cap + per-tenant concurrency)
 
 Operator confirmed iter-16 on the recommendation queue (endpoint hardening
