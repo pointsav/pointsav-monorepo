@@ -8,23 +8,30 @@
 
 ## Right now — long-running Sonnet pipeline active
 
-**Status:** Iteration 4 complete. PS.3 step 5 landed cleanly.
-**PS.3 sequence COMPLETE — Doorman grammar substrate fully realised.**
-Pipeline self-paces via `/loop` dynamic mode; iteration 5 scheduled.
+**Status:** Iteration 5 complete. PS.4 step 1 landed cleanly.
+**PS.4 multi-step work begun** (cross-cluster audit endpoints).
+Pipeline self-paces via `/loop` dynamic mode; iteration 6 scheduled.
 
-**Tests:** 97/97 passing across slm-core (14) + slm-doorman (68 incl.
-4 new in `grammar_validation::tests`) + slm-doorman-server (15 incl. 3
-new in http_test). Last code commit `978ab79` (PS.3 step 5 — llguidance
-Lark validation). Stripped release binary 7.7 MB (+1.4 MB from llguidance).
+**Tests:** 102/102 passing across slm-core (14) + slm-doorman (68) +
+slm-doorman-server (20 incl. 5 new audit_proxy tests). Last code commit
+`40dc18e` (PS.4 step 1 — audit_proxy scaffold).
+
+**New endpoint live**: `POST /v1/audit/proxy` accepts validated requests,
+writes stub audit-ledger entries, returns 503 placeholder until step 2
+wires upstream provider relay. Cross-cluster types
+(`AuditProxyRequest`/`Response`/`Usage`) live in `slm-core` for
+project-language / project-data import.
 
 **Pipeline operator-directed dispatch sequence:**
 1. **PS.3 step 2** — Yo-Yo grammar serialisation ✅ `266fa4d`
 2. **PS.3 step 3** — Tier A reject Lark, pass GBNF/JsonSchema ✅ `9f9f37b`
 3. **PS.3 step 4** — Tier C reject all grammar variants ✅ `fdee78f`
 4. **PS.3 step 5** — llguidance Doorman-side Lark validation ✅ `978ab79`
-5. **PS.4 step 1..N** — A-1 audit_proxy + audit_capture endpoints
-   (next; multi-step ~3-5 days; cross-cluster gate for project-language
-   A-4 + project-data A-5)
+5. **PS.4 step 1** — audit_proxy endpoint scaffold ✅ `40dc18e`
+6. **PS.4 step 2** — audit_proxy upstream provider relay (next, ~3-4hr)
+7. **PS.4 step 3** — purpose allowlist enforcement (~1-2hr)
+8. **PS.4 step 4** — audit_capture endpoint scaffold (~3-4hr)
+9. **PS.4 step 5** — integration tests + cross-cluster contract doc (~2-3hr)
 
 **Doorman grammar substrate — full picture post-PS.3:**
 - Tier A (local llama-server): GBNF + JsonSchema native; Lark → 400.
