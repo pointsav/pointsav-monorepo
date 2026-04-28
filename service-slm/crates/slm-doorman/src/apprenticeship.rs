@@ -163,6 +163,7 @@ impl<'a> ApprenticeshipDispatcher<'a> {
             temperature: Some(0.0),
             sanitised_outbound: true,
             tier_c_label: None,
+            grammar: None,
         };
 
         info!(
@@ -250,6 +251,7 @@ impl<'a> ApprenticeshipDispatcher<'a> {
             temperature: Some(0.0),
             sanitised_outbound: true,
             tier_c_label: None,
+            grammar: None,
         };
 
         info!(

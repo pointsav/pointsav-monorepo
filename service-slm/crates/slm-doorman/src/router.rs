@@ -225,6 +225,7 @@ mod tests {
             temperature: None,
             sanitised_outbound: true,
             tier_c_label: None,
+            grammar: None,
         }
     }
 
