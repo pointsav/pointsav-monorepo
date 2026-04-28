@@ -56,13 +56,14 @@ Source: PS.6 in v0.1.42 plan; original Sonnet chunk #6 audit.
 
 Source: Master's v0.1.42-pending PS.1 ack reply (inbox 2026-04-28T00:21Z).
 
-### Brief PS.1-1 — `pointsav-public:slm-yoyo` GCE image existence verification (B3)
+### Brief PS.1-1 — `pointsav-public:slm-yoyo` GCE image existence verification (B3) [COMPLETED 2026-04-28]
 
 - **Effort**: ~30 minutes Sonnet
 - **Acceptance**: written brief reporting whether the image family exists, what it ships (vLLM vs mistral.rs vs both), what its description metadata says, what tools/binaries/services are baked in
 - **Constraint**: foreground; runs gcloud-describe + optional one-shot test-VM boot
 - **Sequence**: must run FIRST in the PS.1 follow-up sequence
 - **Brief text**: see outbox `2026-04-27T23:30:00Z` candidate (3)
+- **Outcome**: Project `pointsav-public` does NOT exist in GCP; image has never been built. Surfaces D4 (Master-tier image-build pipeline) as 12th blocker upstream of all PS.1 B/W items. PS.1-5 + PS.2 + Yo-Yo-MIN are now blocked on D4. PS.1-2 + PS.1-3 + PS.1-4 still proceed. CUSTOMER-RUNBOOK.md added to PS.1-3 rename scope. nginx TLS layer absent from any artefact — needs Master-tier design pass before D4 ships. Surfaced to Master via outbox 2026-04-28T01:30Z.
 
 ### Brief PS.1-2 — Module update for B1 + B2 + W1
 
@@ -71,13 +72,13 @@ Source: Master's v0.1.42-pending PS.1 ack reply (inbox 2026-04-28T00:21Z).
 - **Constraint**: foreground + serial; pure module edit; tests not applicable
 - **Brief text**: see outbox `2026-04-27T23:30:00Z` candidate (1)
 
-### Brief PS.1-3 — B4 doc update (mistral.rs → vLLM rename in CONTRACT.md + variables.tf)
+### Brief PS.1-3 — B4 doc update (mistral.rs → vLLM rename in CONTRACT.md + variables.tf + CUSTOMER-RUNBOOK.md) [scope expanded post-PS.1-1]
 
 - **Effort**: ~30 minutes Sonnet
-- **Acceptance**: `infrastructure/slm-yoyo/CONTRACT.md` + `tofu/variables.tf` `image_family` description updated to name vLLM as the runtime; `X-Foundry-Yoyo-Version` example updated from `mistralrs:0.8` → `vllm:0.12.0` (or current version per Brief PS.1-1 image inspection); wire format unchanged (vLLM's OpenAI-compatible endpoint serves the same shape)
+- **Acceptance**: rename mistral.rs → vLLM in: (1) `infrastructure/slm-yoyo/CONTRACT.md` (lines 18, 66, 100 + any others); (2) `infrastructure/slm-yoyo/tofu/variables.tf` `image_family` description; (3) `infrastructure/slm-yoyo/CUSTOMER-RUNBOOK.md` (lines 29, 194-209: `systemctl status mistralrs`, `/var/lib/mistralrs/weights/`, `mistralrs-idle.timer`). Wire format unchanged. **DO NOT pin a specific vLLM patch version** — PS.1-1 finds image doesn't exist yet; pin to "vLLM ≥0.12" floor only. Patch pin lands when D4 builds the actual image.
 - **Constraint**: foreground; doc edit only
-- **Sequence**: depends on PS.1-1 outcome (image inspection confirms exact vLLM version to pin)
-- **Brief text**: derived from Master's v0.1.42 §"B4 — vLLM" call
+- **Sequence**: independent now (was PS.1-1 dependent; resolved with version-pin caveat)
+- **Brief text**: derived from Master's v0.1.42 §"B4 — vLLM" call + PS.1-1 finding
 
 ### Brief PS.1-4 — `local-doorman.env` output snippet (W6)
 
@@ -86,12 +87,12 @@ Source: Master's v0.1.42-pending PS.1 ack reply (inbox 2026-04-28T00:21Z).
 - **Constraint**: foreground; pure outputs.tf addition
 - **Brief text**: see outbox `2026-04-27T23:30:00Z` candidate (2)
 
-### Brief PS.1-5 — Kill-switch first-time-run verification (W7)
+### Brief PS.1-5 — Kill-switch first-time-run verification (W7) [BLOCKED on D4 per PS.1-1]
 
 - **Effort**: ~30 minutes Sonnet (mostly waiting; wall time longer)
 - **Acceptance**: written verification that the kill-switch fires when budget cap breached. Procedure: apply test mode (`tofu apply -var monthly_cap_usd=1`); start the GCE VM; let one inference call accrue cost (or simulate via a Pub/Sub manual publish); confirm Cloud Function fires and stops VM; `tofu destroy` to clean up.
 - **Constraint**: foreground + serial; runs `tofu apply`/`destroy` in test mode; needs operator attention or pre-authorisation for the apply
-- **Sequence**: independent of PS.1-1..PS.1-4; can run any time before MIN deploy
+- **Sequence**: BLOCKED on D4 (image-build pipeline) — `tofu apply` fails at `data "google_compute_image" "yoyo"` lookup until image exists in `pointsav-public`
 - **Brief text**: see outbox `2026-04-27T23:30:00Z` candidate (W7 verification)
 
 ---
@@ -113,4 +114,9 @@ once operator green-lights.
 
 ## Completed
 
-*(none yet — queue created 2026-04-28; first dispatches pending operator green-light)*
+### 2026-04-28 — PS.1-1 image verification
+
+- Dispatched 2026-04-28 by Task Claude (operator green-light "yes")
+- Sonnet sub-agent foreground; ~30 min wall time; ~70k tokens
+- Outcome: GCP project `pointsav-public` does NOT exist; image has never been built; D4 image-build pipeline never dispatched. Surfaced to Master via outbox 2026-04-28T01:30Z. See sub-agent transcript in session log.
+- Knock-on effects: PS.1-3 scope expanded (CUSTOMER-RUNBOOK.md added); PS.1-5 + PS.2 + Yo-Yo-MIN blocked on D4; nginx TLS layer absent from any artefact (Master-tier design pass needed before D4).
