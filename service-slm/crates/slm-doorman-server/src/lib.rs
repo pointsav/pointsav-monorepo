@@ -77,6 +77,7 @@ pub mod test_helpers {
                 local: Some(local),
                 yoyo: None,
                 external: None,
+                lark_validator: None,
             },
             temp_ledger(),
         );
@@ -98,6 +99,7 @@ pub mod test_helpers {
                 local: None,
                 yoyo: None,
                 external: Some(external),
+                lark_validator: None,
             },
             temp_ledger(),
         );
