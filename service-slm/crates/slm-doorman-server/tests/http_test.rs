@@ -537,7 +537,9 @@ fn doorman_error_to_status(e: &DoormanError) -> StatusCode {
         | DoormanError::UpstreamShape(_)
         | DoormanError::ContractMajorMismatch { .. }
         | DoormanError::BearerToken(_) => StatusCode::BAD_GATEWAY,
-        DoormanError::VerdictParse(_) => StatusCode::BAD_REQUEST,
+        DoormanError::VerdictParse(_) | DoormanError::TierAGrammarUnsupported { .. } => {
+            StatusCode::BAD_REQUEST
+        }
         DoormanError::BriefCacheMiss => StatusCode::GONE,
         DoormanError::LedgerIo(_)
         | DoormanError::LedgerSerde(_)
