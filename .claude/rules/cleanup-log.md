@@ -92,6 +92,69 @@ Newest on top. Append a dated block when a session includes meaningful cleanup w
 
 ---
 
+## 2026-04-28 — Long-running Sonnet pipeline activated (operator-directed); iteration 1 = PS.3 step 2
+
+Operator green-light "set up a long running pipeline for Sonnet to run on auto"
+2026-04-28. Goal per operator: drive service-slm toward usable-for-coding-and-
+writing state and feed apprenticeship corpus via commit cadence; reduce pressure
+on Claude usage; service-slm trains pointsav-llm in parallel. Explicit ratification
+per `conventions/model-tier-discipline.md` §1A.6 (operator-directed dispatches).
+
+Self-paced via `/loop` skill in dynamic mode (no fixed interval). Each iteration:
+read inbox → check git/tests clean → dispatch one cluster-scope Sonnet brief
+(foreground+serial) → verify → update state files → commit → ScheduleWakeup for
+next iteration.
+
+**In-scope queue (cluster-scope, no Master gate):**
+- PS.3 step 2 — Tier B (Yo-Yo) grammar serialisation **(this iteration)**
+- PS.3 step 3 — Tier A reject Lark, pass GBNF/JsonSchema
+- PS.3 step 4 — Tier C reject all grammar variants
+- PS.3 step 5 — `llguidance` Doorman-side Lark validation
+- PS.4 step 1..N — A-1 audit_proxy + audit_capture endpoints (multi-step;
+  cross-cluster gate for project-language A-4 + project-data A-5)
+
+**Deliberately skipped (layer-scope pending Master clarification):**
+- PS.8, PS.1-2/-3/-4 — workspace-repo files; outbox 2026-04-28T02:30Z still
+  awaiting reply.
+
+**Workspace-tier blocked (Master scope, can't unblock from cluster):**
+- D4 image-build pipeline (gates Yo-Yo MIN + PS.2 + PS.1-5)
+- B7 Doorman redeploy with `SLM_APPRENTICESHIP_ENABLED=true`
+
+### Iteration 1 outcome — PS.3 step 2 — Yo-Yo client grammar serialisation
+
+- **Commit**: `266fa4d` (Peter Woodfine)
+- **Tests**: 79 → 83. Four new wiremock tests in `tier::yoyo::tests`:
+  Lark / GBNF / JsonSchema / None.
+- **Wire envelope**: vLLM ≥0.12 `extra_body.structured_outputs.{grammar, json_schema}`
+  per v0.1.33 Q2 ratification. Lark and GBNF both serialise to the same `grammar`
+  field; vLLM's llguidance backend auto-detects format. JsonSchema lands on the
+  `json_schema` sibling. `None` omits the envelope entirely (no empty objects).
+- **Build hygiene**: cargo test clean; clippy `-D warnings` clean; fmt clean.
+- **No layer-scope concerns** raised by the Sonnet agent.
+- Wall time: ~3.5 minutes; ~100k Sonnet tokens.
+
+### Master message archived during iteration
+
+Master inbox message at 2026-04-28T17:09Z: workspace v0.1.57 ratified
+`conventions/cluster-design-draft-pipeline.md` (COMPONENT-* draft pipeline). No
+immediate action — message explicitly notes "clusters with no UI surface skip
+cleanly" and project-slm has no UI work in flight. Acknowledgment added to
+outbox 2026-04-28T17:30Z; original archived to `inbox-archive.md`. The five
+forward-looking UI surfaces in the message (tier-routing dashboard, audit-ledger
+viewer, adapter chain inspector, API-key rotation panels, cost-tier chips) are
+recorded for whenever a future cluster milestone introduces a UI surface; most
+plausible first candidate is the audit-ledger viewer once PS.4 lands and
+project-language consumes the proxy.
+
+### Pipeline continues
+
+Next iteration: PS.3 step 3 (Tier A reject Lark, pass GBNF/JsonSchema natively).
+Self-pacing via ScheduleWakeup; will resume once this iteration's commit is
+landed.
+
+---
+
 ## 2026-04-28 — Sonnet batch wrap-up (PS.7 + A/B/C + layer-scope flag) — 5 commits, +19 tests
 
 Operator green-light "set it up to do all the recommendations"
