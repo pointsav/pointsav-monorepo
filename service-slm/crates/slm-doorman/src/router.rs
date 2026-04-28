@@ -248,7 +248,15 @@ fn classify_error(e: &DoormanError) -> CompletionStatus {
         // caller errors — classified as PolicyDenied.
         | DoormanError::AuditCaptureUnknownEventType { .. }
         | DoormanError::AuditCapturePayloadTooLarge { .. }
-        | DoormanError::AuditCaptureInvalidTimestamp { .. } => {
+        | DoormanError::AuditCaptureInvalidTimestamp { .. }
+        // audit_proxy oversized request body — caller must reduce the request
+        // size. Classified as PolicyDenied (same classification as the
+        // audit_capture payload cap variant above).
+        | DoormanError::AuditProxyPayloadTooLarge { .. }
+        // Per-tenant (moduleId) concurrency cap hit on the audit endpoints.
+        // The caller may retry; classified as PolicyDenied because the
+        // Doorman is enforcing a per-tenant resource policy.
+        | DoormanError::AuditTenantConcurrencyExhausted { .. } => {
             CompletionStatus::PolicyDenied
         }
         // The audit_proxy targeted a provider that is not configured at startup
