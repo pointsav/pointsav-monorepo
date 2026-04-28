@@ -102,6 +102,7 @@ chunks for the pipeline:
 - **PS.4 step 2 — audit_proxy upstream provider relay** ✅ commit `028c411`
 - **PS.4 step 3 — purpose allowlist enforcement** ✅ commit `acee9f7`
 - **PS.4 step 4 — audit_capture endpoint scaffold** ✅ commit `36d4fab`
+- **PS.4 step 5 — integration tests + cross-cluster contract doc** ✅ commit `e4cb8a8` — **PS.4 CLOSED**
 - **PS.4 step 3 — purpose allowlist enforcement** (~1-2hr Sonnet)
   Add a configurable allowlist for the `purpose` field (similar to
   `ExternalAllowlist` for Tier C labels). Reject unallowlisted purposes
@@ -150,6 +151,38 @@ once operator green-lights.
 ---
 
 ## Completed
+
+### 2026-04-28 — PS.4 step 5 (integration tests + cross-cluster contract doc) [COMPLETED commit `e4cb8a8`]
+
+Long-running Sonnet pipeline iteration 9 — **FINAL slice of PS.4 multi-day
+work**. PS.4 sequence now CLOSED.
+
+- **Outcome**: 3 new integration tests in
+  `slm-doorman-server/tests/audit_endpoints_integration.rs` (new file).
+  Tests 121 → 124. Commit `e4cb8a8` (Peter Woodfine).
+- **Contract doc**: `service-slm/docs/audit-endpoints-contract.md` (NEW).
+  Five sections: POST /v1/audit/proxy, POST /v1/audit/capture, audit
+  ledger format, error handling table, versioning + stability.
+  v0.1.0 baseline; PATCH/MINOR/MAJOR rules per workspace `CLAUDE.md` §7.
+  Frontmatter includes the v0.1.58 Research-Trail fields with
+  `research_provenance: tacit` (honest declaration — contract derives
+  directly from implementation, not external research).
+- **Integration tests**:
+  - `audit_capture_then_audit_proxy_round_trip` — prose-edit capture +
+    citation-grounding proxy; verifies 3 entries (1 capture + 1 proxy
+    stub + 1 proxy final) land in same JSONL file, distinct audit_ids,
+    correct field presence.
+  - `audit_proxy_failure_records_stub_only_then_capture_succeeds_independently` —
+    upstream 500 produces stub + final-with-error; subsequent
+    anchor-event capture still writes correctly.
+  - `mixed_entry_types_in_jsonl_stream_distinguishable_by_field_presence` —
+    executable form of contract-doc §3.2; synthesises all four entry
+    types directly via ledger API and verifies field-presence
+    discrimination correctly tags each.
+- **`entry_type` discriminator NOT added** (deferred per brief; named
+  as future direction in contract doc §3.2). Adding it later would be
+  a MINOR contract bump.
+- **Build hygiene**: cargo test 124/124; clippy + fmt clean.
 
 ### 2026-04-28 — PS.4 step 4 (audit_capture endpoint scaffold) [COMPLETED commit `36d4fab`]
 
