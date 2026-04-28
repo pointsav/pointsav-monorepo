@@ -188,10 +188,12 @@ fn classify_error(e: &DoormanError) -> CompletionStatus {
         }
         DoormanError::ExternalNotAllowlisted { .. }
         | DoormanError::VerifySignature(_)
-        // Caller submitted a grammar dialect unsupported on the selected tier
-        // (e.g. Lark on Tier A). Classified as PolicyDenied — the request
-        // violated the per-tier input policy.
-        | DoormanError::TierAGrammarUnsupported { .. } => {
+        // Caller submitted a grammar dialect unsupported on the selected tier.
+        // Both Tier A (e.g. Lark) and Tier C (any grammar) violations are
+        // classified as PolicyDenied — the request violated the per-tier
+        // input policy.
+        | DoormanError::TierAGrammarUnsupported { .. }
+        | DoormanError::TierCGrammarUnsupported { .. } => {
             CompletionStatus::PolicyDenied
         }
         DoormanError::Upstream(_)
