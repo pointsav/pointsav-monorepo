@@ -817,6 +817,45 @@ entries.
 
 ---
 
+## 2026-04-28 — Brief A: http.rs test factory + 12 integration tests (PS.6 sub-brief #1)
+
+- **slm-doorman-server gains a library target** (`src/lib.rs`). Required
+  because `http.rs` is private to the binary; integration tests under
+  `tests/` cannot import from a binary crate's `src/` directly. The `[lib]`
+  target exposes `pub mod http` (containing `AppState` and `router`) and
+  `pub mod test_helpers` (factory helpers for tests). `main.rs` updated to
+  `use slm_doorman_server::http` instead of the inline `mod http`.
+- **`slm-doorman-server/tests/http_test.rs` created.** 12 new tests
+  covering three categories:
+  - Smoke (4): `smoke_healthz_returns_200_ok`,
+    `smoke_readyz_returns_200_with_tier_flags`,
+    `smoke_contract_returns_200_with_version_fields`,
+    `smoke_chat_completions_happy_path_returns_200_with_content`
+  - Error-mapping (5): `error_tier_unavailable_returns_503`,
+    `error_brief_cache_miss_returns_410`,
+    `error_verify_signature_returns_403`,
+    `error_external_not_allowlisted_maps_to_403`,
+    `error_malformed_module_id_header_returns_400`
+  - Apprenticeship-disabled 404 (3): `apprenticeship_disabled_brief_returns_404`,
+    `apprenticeship_disabled_verdict_returns_404`,
+    `apprenticeship_disabled_shadow_returns_404`
+- **Workspace tests 55/55 → 67/67.** All existing 55 pass; 12 new pass.
+  Clippy clean; fmt clean. Committed `d9ea19d` (Peter-authored).
+- **Deviation from brief noted**: `TierUnavailable` maps to 503
+  `SERVICE_UNAVAILABLE` (not 502 `BAD_GATEWAY` as the brief listed). Tested
+  against the actual code mapping. `ExternalNotAllowlisted` cannot be
+  triggered through the HTTP handler (tier_hint is hardcoded None); covered
+  via a `From<DoormanError>` mapping assertion rather than a full HTTP
+  round-trip.
+- **Dev-deps added** to `slm-doorman-server/Cargo.toml`: tower, wiremock,
+  tokio, serde_json, async-trait, base64, chrono (all dev-only).
+- **Test helpers in lib.rs reusable by Briefs B and C** (next two PS.6
+  coverage briefs): `temp_ledger`, `temp_promotion_ledger`,
+  `app_state_no_tiers`, `app_state_with_local`, `app_state_with_external`,
+  `app_state_with_apprenticeship`.
+
+---
+
 ## 2026-04-26 — B4 Tier C client (mock-only per operator guardrail) + PricingConfig
 
 - **B4 Tier C client implemented end-to-end as code + tests, zero
