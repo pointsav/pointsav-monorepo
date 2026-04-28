@@ -38,6 +38,7 @@ use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _};
 use ed25519_dalek::{Signature as EdSignature, Verifier, VerifyingKey, SIGNATURE_LENGTH};
 use sha2::{Digest, Sha256};
 
+use crate::consistency_proof::{ConsistencyProof, ConsistencyVerifyError};
 use crate::inclusion_proof::{InclusionProof, InclusionVerifyError};
 use crate::Hash256;
 
@@ -300,6 +301,64 @@ impl SignedCheckpoint {
             .verify(leaf_hash, &self.checkpoint.root_hash)
             .map_err(CheckpointInclusionError::Inclusion)
     }
+
+    /// Composed kernel-facing primitive: verify that
+    /// `old_signed_checkpoint` is a consistent prefix of `self`,
+    /// with both signed by `(signer_name, signer_pubkey)`.
+    ///
+    /// Use this instead of calling [`ConsistencyProof::verify`]
+    /// directly. Treating signature + consistency as a single
+    /// primitive avoids "verified-consistency-against-untrusted-
+    /// root" footguns — both roots are authenticated before the
+    /// proof is checked.
+    ///
+    /// Check order (first failure returns):
+    /// 1. `old_signed_checkpoint.tree_size == proof.old_size` — [`CheckpointConsistencyError::OldTreeSizeMismatch`]
+    /// 2. `self.tree_size == proof.new_size` — [`CheckpointConsistencyError::NewTreeSizeMismatch`]
+    /// 3. old checkpoint signature valid — [`CheckpointConsistencyError::BadSignerPublicKey`] / [`CheckpointConsistencyError::OldSignatureInvalid`]
+    /// 4. new checkpoint (self) signature valid — [`CheckpointConsistencyError::BadSignerPublicKey`] / [`CheckpointConsistencyError::NewSignatureInvalid`]
+    /// 5. `proof.verify(old_root, old_size, new_root, new_size)` — [`CheckpointConsistencyError::Consistency`]
+    pub fn verify_consistency_proof(
+        &self,
+        proof: &ConsistencyProof,
+        old_size: u64,
+        new_size: u64,
+        old_signed_checkpoint: &SignedCheckpoint,
+        signer_name: &str,
+        signer_pubkey: &[u8; 32],
+    ) -> Result<(), CheckpointConsistencyError> {
+        // Step 1 — old tree-size match.
+        if old_signed_checkpoint.checkpoint.tree_size != old_size {
+            return Err(CheckpointConsistencyError::OldTreeSizeMismatch);
+        }
+        // Step 2 — new tree-size match.
+        if self.checkpoint.tree_size != new_size {
+            return Err(CheckpointConsistencyError::NewTreeSizeMismatch);
+        }
+        // Step 3 — old checkpoint signature.
+        let old_sig_ok = old_signed_checkpoint
+            .verify_signer(signer_name, signer_pubkey)
+            .map_err(|_| CheckpointConsistencyError::BadSignerPublicKey)?;
+        if !old_sig_ok {
+            return Err(CheckpointConsistencyError::OldSignatureInvalid);
+        }
+        // Step 4 — new checkpoint (self) signature.
+        let new_sig_ok = self
+            .verify_signer(signer_name, signer_pubkey)
+            .map_err(|_| CheckpointConsistencyError::BadSignerPublicKey)?;
+        if !new_sig_ok {
+            return Err(CheckpointConsistencyError::NewSignatureInvalid);
+        }
+        // Step 5 — raw consistency proof.
+        proof
+            .verify(
+                old_signed_checkpoint.checkpoint.root_hash,
+                old_size,
+                self.checkpoint.root_hash,
+                new_size,
+            )
+            .map_err(CheckpointConsistencyError::Consistency)
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -314,6 +373,23 @@ pub enum CheckpointInclusionError {
     /// The Merkle inclusion proof failed against the checkpoint's
     /// root.
     Inclusion(InclusionVerifyError),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum CheckpointConsistencyError {
+    /// `old_signed_checkpoint.tree_size` does not match `old_size`.
+    OldTreeSizeMismatch,
+    /// `self.checkpoint.tree_size` does not match `new_size`.
+    NewTreeSizeMismatch,
+    /// `signer_pubkey` couldn't be parsed as an ed25519 public key.
+    BadSignerPublicKey,
+    /// Old checkpoint signature did not verify under
+    /// `(signer_name, signer_pubkey)`.
+    OldSignatureInvalid,
+    /// New checkpoint (self) signature did not verify.
+    NewSignatureInvalid,
+    /// Raw consistency proof verification failed.
+    Consistency(ConsistencyVerifyError),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -653,6 +729,169 @@ mod tests {
         assert!(
             matches!(r, Err(CheckpointInclusionError::Inclusion(_))),
             "expected Inclusion error, got {r:?}"
+        );
+    }
+
+    // ---------- verify_consistency_proof composed-primitive tests ----------
+
+    use crate::consistency_proof::ConsistencyProof;
+
+    /// Build a consistency proof from old_leaves → new_leaves using the
+    /// same oracle pattern as `consistency_proof::tests::make_consistency_proof`.
+    /// Simplified inline version to keep the test module self-contained.
+    fn make_consistency_proof_for_test(old_n: usize, new_n: usize) -> ConsistencyProof {
+        if old_n == new_n {
+            return ConsistencyProof { hashes: vec![] };
+        }
+        let new_leaves: Vec<Hash256> = (0..new_n as u64)
+            .map(|i| rfc9162_leaf_hash(format!("leaf-{i}").as_bytes()))
+            .collect();
+        let old_leaves: Vec<Hash256> = new_leaves[..old_n].to_vec();
+
+        // Build all layers for old and new trees.
+        let build_layers_local = |leaves: &[Hash256]| -> Vec<Vec<Hash256>> {
+            let mut layers: Vec<Vec<Hash256>> = vec![leaves.to_vec()];
+            while layers.last().unwrap().len() > 1 {
+                let prev = layers.last().unwrap().clone();
+                let mut next = Vec::with_capacity(prev.len().div_ceil(2));
+                let mut i = 0;
+                while i < prev.len() {
+                    if i + 1 < prev.len() {
+                        next.push(rfc9162_internal_hash(&prev[i], &prev[i + 1]));
+                    } else {
+                        next.push(prev[i]);
+                    }
+                    i += 2;
+                }
+                layers.push(next);
+            }
+            layers
+        };
+
+        let new_layers = build_layers_local(&new_leaves);
+        let old_layers = build_layers_local(&old_leaves);
+
+        let get_new = |lv: usize, idx: usize| -> Option<Hash256> {
+            new_layers.get(lv).and_then(|l| l.get(idx)).copied()
+        };
+        let get_old = |lv: usize, idx: usize| -> Option<Hash256> {
+            old_layers.get(lv).and_then(|l| l.get(idx)).copied()
+        };
+
+        let mut path: Vec<Hash256> = Vec::new();
+        path.push(get_old(0, old_n - 1).expect("old tree anchor"));
+
+        let mut n_loop = (old_n - 1) as u64;
+        let mut ln_loop = (new_n - 1) as u64;
+        let mut lv: usize = 0;
+
+        while ln_loop != 0 {
+            if n_loop & 1 == 1 || n_loop == ln_loop {
+                let mut n_stripped = n_loop;
+                let mut _ln_stripped = ln_loop;
+                let mut lv_stripped = lv;
+                while n_stripped & 1 == 0 && n_stripped != 0 {
+                    n_stripped >>= 1;
+                    _ln_stripped >>= 1;
+                    lv_stripped += 1;
+                }
+                let sibling_idx = (n_stripped ^ 1) as usize;
+                let p = get_new(lv_stripped, sibling_idx)
+                    .or_else(|| get_old(lv_stripped, sibling_idx))
+                    .expect("sibling exists");
+                path.push(p);
+                while n_loop & 1 == 0 && n_loop != 0 {
+                    n_loop >>= 1;
+                    ln_loop >>= 1;
+                    lv += 1;
+                }
+            } else {
+                let sibling_idx = (n_loop ^ 1) as usize;
+                let p = get_new(lv, sibling_idx).expect("sibling exists");
+                path.push(p);
+            }
+            n_loop >>= 1;
+            ln_loop >>= 1;
+            lv += 1;
+        }
+        ConsistencyProof { hashes: path }
+    }
+
+    fn signed_checkpoint_n_leaves(
+        n: u64,
+        signer_name: &str,
+        sk: &ed25519_dalek::SigningKey,
+    ) -> (SignedCheckpoint, Vec<Hash256>) {
+        let leaves: Vec<Hash256> = (0..n)
+            .map(|i| rfc9162_leaf_hash(format!("leaf-{i}").as_bytes()))
+            .collect();
+        let root = build_root(&leaves);
+        let sc = signed_checkpoint_with_root(n, root, signer_name, sk);
+        (sc, leaves)
+    }
+
+    #[test]
+    fn consistency_proof_valid_accepts() {
+        let (sk, pk) = fixed_keypair(41);
+        let (old_sc, _old_leaves) = signed_checkpoint_n_leaves(4, "apex", &sk);
+        let (new_sc, _new_leaves) = signed_checkpoint_n_leaves(7, "apex", &sk);
+        let proof = make_consistency_proof_for_test(4, 7);
+
+        let r = new_sc.verify_consistency_proof(&proof, 4, 7, &old_sc, "apex", &pk);
+        assert_eq!(r, Ok(()), "4→7 consistency proof should accept; got {r:?}");
+    }
+
+    #[test]
+    fn consistency_proof_old_tree_size_mismatch_rejects() {
+        let (sk, pk) = fixed_keypair(41);
+        let (old_sc, _) = signed_checkpoint_n_leaves(4, "apex", &sk);
+        let (new_sc, _) = signed_checkpoint_n_leaves(7, "apex", &sk);
+        let proof = make_consistency_proof_for_test(4, 7);
+
+        // Pass old_size=5 but old_sc.tree_size=4 → OldTreeSizeMismatch.
+        let r = new_sc.verify_consistency_proof(&proof, 5, 7, &old_sc, "apex", &pk);
+        assert_eq!(r, Err(CheckpointConsistencyError::OldTreeSizeMismatch));
+    }
+
+    #[test]
+    fn consistency_proof_new_tree_size_mismatch_rejects() {
+        let (sk, pk) = fixed_keypair(41);
+        let (old_sc, _) = signed_checkpoint_n_leaves(4, "apex", &sk);
+        let (new_sc, _) = signed_checkpoint_n_leaves(7, "apex", &sk);
+        let proof = make_consistency_proof_for_test(4, 7);
+
+        // Pass new_size=8 but new_sc.tree_size=7 → NewTreeSizeMismatch.
+        let r = new_sc.verify_consistency_proof(&proof, 4, 8, &old_sc, "apex", &pk);
+        assert_eq!(r, Err(CheckpointConsistencyError::NewTreeSizeMismatch));
+    }
+
+    #[test]
+    fn consistency_proof_wrong_signer_pubkey_rejects() {
+        let (sk, _pk_correct) = fixed_keypair(41);
+        let (_, pk_wrong) = fixed_keypair(43);
+        let (old_sc, _) = signed_checkpoint_n_leaves(4, "apex", &sk);
+        let (new_sc, _) = signed_checkpoint_n_leaves(7, "apex", &sk);
+        let proof = make_consistency_proof_for_test(4, 7);
+
+        // Wrong pubkey → key_hash mismatch → OldSignatureInvalid
+        // (verify_signer returns Ok(false), not Err).
+        let r = new_sc.verify_consistency_proof(&proof, 4, 7, &old_sc, "apex", &pk_wrong);
+        assert_eq!(r, Err(CheckpointConsistencyError::OldSignatureInvalid));
+    }
+
+    #[test]
+    fn consistency_proof_corrupt_hash_rejects() {
+        let (sk, pk) = fixed_keypair(41);
+        let (old_sc, _) = signed_checkpoint_n_leaves(4, "apex", &sk);
+        let (new_sc, _) = signed_checkpoint_n_leaves(7, "apex", &sk);
+        let mut proof = make_consistency_proof_for_test(4, 7);
+        assert!(!proof.hashes.is_empty());
+        proof.hashes[0] = [0xFFu8; 32]; // corrupt
+
+        let r = new_sc.verify_consistency_proof(&proof, 4, 7, &old_sc, "apex", &pk);
+        assert!(
+            matches!(r, Err(CheckpointConsistencyError::Consistency(_))),
+            "expected Consistency error, got {r:?}"
         );
     }
 }
