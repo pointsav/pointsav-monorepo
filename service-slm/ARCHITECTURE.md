@@ -1,3 +1,11 @@
+---
+schema: foundry-doc-v1
+document_version: 1.0.0
+research_provenance: tacit
+research_inline: false
+cites: []
+---
+
 # ARCHITECTURE.md — service-slm
 
 **Scope.** This document specifies the internal architecture of
@@ -10,8 +18,14 @@ rationale, licence discipline, open-source posture) and
 `content-wiki-documentation/topic-yoyo-compute.md` (three-ring model
 rationale, audit-ledger commercial argument, 2030 headroom).
 
-Target-state document. The code does not yet match this shape — see
-`NEXT.md` for the scaffolding sequence.
+**Current state.** The Doorman is in production service on the
+workspace VM (`local-doorman.service` systemd unit). Tier A
+(local llama-server, `local-slm.service`) is live and verified (B5,
+2026-04-26). Tier B (Yo-Yo GCE burst) is module-spec ready; the
+`infrastructure/slm-yoyo/tofu/` OpenTofu module is authored but
+`tofu apply` is gated on the D4 image-build pipeline (a Master-tier
+action). Tier C (external API) is wired with mock-only tests per the
+operator cost guardrail.
 
 ---
 
@@ -26,7 +40,7 @@ Four operations:
 1. **Sanitise outbound.** Strip direct identifiers and structured
    data from the payload; emit prose the external model can process.
 2. **Route compute.** Local when the host has resources; remote
-   (the yo-yo substrate on GCP) when it does not. The caller does
+   (the Yo-Yo substrate on GCP) when it does not. The caller does
    not see the difference.
 3. **Receive deltas.** Structured responses — graph deltas, wiki
    drafts, extracted entities — return from compute.
@@ -35,9 +49,10 @@ Four operations:
    store.
 
 Nothing inside this service generates text. Generation happens
-externally (Claude API in Phase 1; `mistral.rs` on the yo-yo node in
-Phase 2). If code in this project starts producing text directly, it
-has exceeded its remit — see `CLAUDE.md` Hard constraints.
+externally (local llama-server on Tier A; vLLM on the Yo-Yo node on
+Tier B; Anthropic / Gemini / OpenAI on Tier C). If code in this
+project starts producing text directly, it has exceeded its remit —
+see `CLAUDE.md` Hard constraints.
 
 SYS-ADR-07 applies without exception: structured data never routes
 through the external LLM. Prose only.
@@ -65,9 +80,9 @@ Everything else is ephemeral and intentionally discarded.
 Four pre-staged artefacts in cheap cold storage, pulled on boot:
 
 1. Pre-built native binary in the `pointsav-public` GCE image
-   family per `infrastructure/slm-yoyo/tofu/` precedent (Phase 1
-   `llama-server` ELF + GGUF weights pulled at boot; Phase 2
-   `mistralrs-server` ELF, ~200 MB). No container runtime —
+   family per `infrastructure/slm-yoyo/tofu/` precedent (Tier A
+   `llama-server` ELF + GGUF weights pulled at boot; Tier B
+   `vLLM` server). No container runtime —
    `~/Foundry/conventions/zero-container-runtime.md` is structural
    doctrine.
 2. Pre-downloaded model weights in GCS (e.g.
@@ -100,7 +115,8 @@ repeated-prefix (every document processed shares ~2,000 tokens of
 Chart-of-Accounts spine and prompt scaffolding), so cache hit rates
 compound rapidly.
 
-Phase 1 skips this ring. Phase 2 adds it.
+Ring 2 is not active in the current implementation. It is planned
+for the phase following the first commercial deployment.
 
 ### Ring 3a — Long-term graph (read-only from here)
 
@@ -120,7 +136,7 @@ via the sigstore crate, SLSA-attested), and loaded at inference boot.
 `moduleId` (§4) selects which adapter stack activates for a given
 call.
 
-Phase 3 scope — first adapters train after the first commercial
+Ring 3b is planned for the phase following the first commercial
 deployment beyond Woodfine.
 
 ---
@@ -130,8 +146,8 @@ deployment beyond Woodfine.
 `service-slm` is one Rust binary running as a systemd unit (or
 os-totebox init service). Inside the binary, logical modules talk
 via Rust function calls, not RPC. External calls (GCE Yo-Yo instances,
-Mooncake sidecar, Claude API, LadybugDB in `service-content`) are
-the only network boundaries.
+Claude API, LadybugDB in `service-content`) are the only network
+boundaries.
 
 Consequences:
 
@@ -180,12 +196,14 @@ policy file itself.
 
 | Crate | Role | Licence |
 |---|---|---|
-| `mistralrs` | GPU/CPU LLM inference engine; OpenAI-compatible HTTP server built in | MIT |
-| `candle-core` | Foundation ML framework underlying `mistralrs` | Apache-2.0 / MIT |
+| `vLLM` (non-Rust, Tier B) | GPU/CPU LLM inference engine; OpenAI-compatible HTTP server | Apache-2.0 |
+| `candle-core` | Foundation ML framework (potential future Tier A path) | Apache-2.0 / MIT |
 
-`mistral.rs` replaces Python + vLLM in Phase 2. Ships as a
-statically-linked Rust binary plus CUDA kernels — ~200 MB, no GIL,
-no Python runtime.
+Tier A uses llama-server (llama.cpp) deployed as a native binary via
+`infrastructure/local-slm/bootstrap.sh`. Tier B uses vLLM (≥0.12)
+deployed on a GCE GPU instance via `infrastructure/slm-yoyo/tofu/`.
+The Doorman communicates with both over HTTP; neither is a Rust
+dependency of `service-slm`.
 
 ### 5.2 HTTP / RPC layer (the Doorman's wire)
 
@@ -193,12 +211,23 @@ no Python runtime.
 |---|---|---|
 | `axum` | HTTP server (inbound from `service-content`, `os-console`, verification UI) | MIT |
 | `tower` | Service middleware (retries, timeouts, backpressure) | MIT |
-| `tokio` | Async runtime | MIT |
-| `hyper` | HTTP client (Yo-Yo GCE endpoints, Claude API, LMCache master) | MIT |
-| `reqwest` | High-level HTTP client | MIT / Apache-2.0 |
-| `tonic` | gRPC (only if Mooncake Transfer Engine requires it) | MIT |
+| `tokio` | Async runtime; `tokio::sync::Semaphore` for per-tenant concurrency caps on audit endpoints | MIT |
+| `hyper` | HTTP client (Yo-Yo GCE endpoints, Mooncake master) | MIT |
+| `reqwest` | High-level HTTP client (tier/local, tier/yoyo, tier/external, audit_proxy) | MIT / Apache-2.0 |
 
-### 5.3 Storage and state
+### 5.3 Grammar substrate (PS.3)
+
+| Crate | Role | Licence |
+|---|---|---|
+| `llguidance` 1.7 | Lark grammar pre-validation at the Doorman boundary; `ParserFactory::create_parser` for compile-time error detection | MIT |
+
+The `llguidance` crate is a decode-time library for LLM samplers.
+The Doorman uses only its Lark compilation surface (`TopLevelGrammar::from_lark`)
+to pre-validate caller-submitted Lark grammars before relaying to
+Tier B. No sampler loop integration exists in the Doorman; vLLM applies
+`llguidance` natively on its own sampler side.
+
+### 5.4 Storage and state
 
 | Crate | Role | Licence |
 |---|---|---|
@@ -207,7 +236,7 @@ no Python runtime.
 | `kuzu` | LadybugDB client bindings (Rust API) | MIT |
 | `object_store` | Cloud object storage abstraction (GCS, S3, Azure) | Apache-2.0 |
 
-### 5.4 Document processing
+### 5.5 Document processing
 
 | Crate | Role | Licence |
 |---|---|---|
@@ -219,7 +248,7 @@ no Python runtime.
 `mupdf-rs` is not permitted — AGPL-3.0. `pdfium-render`
 (Apache-2.0) is the fallback if `oxidize-pdf` hits a wall.
 
-### 5.5 Orchestration
+### 5.6 Orchestration
 
 | Crate | Role | Licence |
 |---|---|---|
@@ -228,15 +257,15 @@ no Python runtime.
 | `apalis-sqlite` | Persistence backend | MIT |
 | `backoff` | Exponential backoff for yo-yo recovery | MIT / Apache-2.0 |
 
-### 5.6 Networking, SSH, cloud
+### 5.7 Networking, SSH, cloud
 
 | Crate | Role | Licence |
 |---|---|---|
 | `russh` | Pure-Rust SSH | Apache-2.0 |
 | `rustls` | Pure-Rust TLS | Apache-2.0 / MIT / ISC |
-| `google-cloud-*` | Official Google Cloud SDK for Rust | Apache-2.0 |
+| `google-cloud-compute` | GCE instance lifecycle for Tier B management | Apache-2.0 |
 
-### 5.7 Serialisation, validation, citation grounding
+### 5.8 Serialisation, validation, citation grounding
 
 | Crate | Role | Licence |
 |---|---|---|
@@ -250,7 +279,7 @@ on a struct, pass the JSON Schema to the external LLM as
 `response_format`, reject on parse-or-validate failure. No Python,
 no `instructor` runtime.
 
-### 5.8 Observability
+### 5.9 Observability
 
 | Crate | Role | Licence |
 |---|---|---|
@@ -259,7 +288,7 @@ no `instructor` runtime.
 | `opentelemetry` | OpenTelemetry for SOC3 audit export | Apache-2.0 |
 | `metrics-exporter-prometheus` | Prometheus metrics | MIT / Apache-2.0 |
 
-### 5.9 Supply-chain security
+### 5.10 Supply-chain security
 
 | Crate | Role | Licence |
 |---|---|---|
@@ -268,16 +297,15 @@ no `instructor` runtime.
 See `DEVELOPMENT.md` for `cargo-audit`, `cargo-deny`, and
 `cargo-sbom` invocation in CI.
 
-### 5.10 Not-Rust components, behind network protocols
+### 5.11 Not-Rust components, behind network protocols
 
-Three components sit outside the Rust ecosystem. All three are
-behind stable network protocols; `service-slm` talks to them as a
-client.
+Two components sit outside the Rust ecosystem. Both are behind
+stable network protocols; `service-slm` talks to them as a client.
 
 | Component | Language | Why kept | Integration |
 |---|---|---|---|
 | LMCache + Mooncake Store | Python + C++ (RDMA) | No Rust equivalent in 2026 | HTTP metadata + raw TCP/RDMA data-transfer |
-| vLLM (Phase 1 only) | Python | Phase-1 reference path | HTTP — replaced by `mistral.rs` in Phase 2 |
+| vLLM ≥0.12 | Python | Multi-LoRA serving + structured-output grammar support | HTTP (OpenAI-compatible) — Tier B compute |
 
 Both are Apache-2.0 and forkable. The Rust binary calls them.
 Neither infects this binary's licence or build chain.
@@ -286,213 +314,219 @@ Neither infects this binary's licence or build chain.
 
 ## 6. Cargo workspace
 
+Standalone workspace resolved 2026-04-25. The decision was the
+lowest-blast-radius path: it touches no code outside `service-slm/`
+and leaves the monorepo unification cleanup item (2026-04-18 audit,
+8 of ~70+ crates declared) to be settled separately. The existing
+`cognitive-forge/` subcrate remains an `exclude` member until its
+rename is paired with `tool-cognitive-forge`.
+
 ```
 service-slm/
-├── Cargo.toml                  workspace manifest
+├── Cargo.toml                  workspace manifest (resolver = "2")
 ├── deny.toml                   licence policy (block AGPL/GPL/BSL)
-├── rust-toolchain.toml         pin compiler version
+├── rust-toolchain.toml         pin compiler version (stable channel)
 ├── crates/
 │   ├── slm-core/               shared types, errors, moduleId discipline
-│   ├── slm-doorman/            sanitise / send / receive / rehydrate protocol
-│   ├── slm-ledger/             append-only CSV + SQLite audit trail
-│   ├── slm-compute/            Ring 1 bootstrap (GCE driver, systemd lifecycle)
-│   ├── slm-memory-kv/          Ring 2 client (Mooncake + LMCache wire protocol)
-│   ├── slm-memory-adapters/    Ring 3b adapter registry and loader
-│   ├── slm-inference-local/    mistral.rs-backed local inference
-│   ├── slm-inference-remote/   GCP yo-yo driver
-│   ├── slm-api/                axum server: inbound endpoints
-│   └── slm-cli/                operator CLI (main binary entry point)
-└── xtask/                      build helpers, release automation
+│   ├── slm-doorman/            sanitise / route / receive / rehydrate (lib)
+│   └── slm-doorman-server/     axum HTTP server entry point (bin + lib)
+└── cognitive-forge/            legacy subcrate — workspace `exclude`
 ```
 
-One binary produced (`slm-cli`). Shared crates above. Zero
-microservice sprawl.
-
-**Resolved 2026-04-25 — standalone workspace.** B1 scaffolding
-(`crates/slm-core`, `crates/slm-doorman`, `crates/slm-doorman-server`)
-landed under a self-contained `service-slm/Cargo.toml`. The decision
-was the lowest-blast-radius path: it touches no code outside
-`service-slm/` and leaves the monorepo unification cleanup item
-(2026-04-18 audit, 8 of ~70+ crates declared) to be settled
-separately. Conversion to a nested layout later — making
-`service-slm/crates/*` members of a unified monorepo workspace — is
-mechanical (move members up, drop nested `Cargo.toml`). The existing
-`cognitive-forge/` subcrate remains an `exclude` member until its
-rename is paired with `tool-cognitive-forge` per `NEXT.md`.
+Three workspace members. The broader `slm-ledger`, `slm-compute`,
+`slm-memory-kv`, `slm-memory-adapters`, `slm-inference-local`,
+`slm-inference-remote`, `slm-api`, `slm-cli` crates described in
+prior versions of this document are planned but not yet scaffolded.
+The current implementation delivers the Doorman protocol end-to-end
+through the three members above.
 
 ---
 
-## 7. File tree
+## 7. Crate responsibilities
 
-Full target layout, showing Phase-1 scope vs later phases.
+### `slm-core`
 
-Distribution model is **native ELF binary plus systemd unit on a
-plain Linux host**, packaged as a GCE custom image for cloud
-deployment and as a `.deb` (or raw `cargo install`) for on-prem.
-No container runtime — `~/Foundry/conventions/zero-container-runtime.md`
-is structural doctrine, ratified 2026-04-25 and reinforced by
-Doctrine §I Pillar 1 (plain text only) and §II Leapfrog Claim #2
-(100-year readability). The two reference implementations that
-this layout dogfoods are named explicitly so a fresh reader can
-look at working examples:
+Shared types and small value-objects. No async runtime, no HTTP
+client, no I/O. All crates that route, log, or serve HTTP depend on
+this crate; nothing in this crate depends on them.
 
-- **Tier A — local inference** mirrors
-  `~/Foundry/infrastructure/local-slm/` (workspace v0.0.11
-  `68e7c16` — `bootstrap.sh` builds llama-server from source,
-  installs to `/usr/local/bin/`, lays down `local-slm.service`
-  bound to `127.0.0.1:8080`; B5 verified 2026-04-26).
-- **Tier B — Yo-Yo cloud burst** mirrors
-  `~/Foundry/infrastructure/slm-yoyo/tofu/` (eight-`.tf` OpenTofu
-  module; outputs `yoyo_endpoint` + a Secret-Manager bearer secret
-  the Doorman's Yo-Yo client consumes; Cloud Functions Gen2
-  budget killswitch ships in the same module).
+Public types:
 
-```
-service-slm/
-├── README.md                     bilingual (English)
-├── README.es.md                  bilingual (Spanish)
-├── CLAUDE.md
-├── NEXT.md
-├── ARCHITECTURE.md               this file
-├── DEVELOPMENT.md                build/CI policy, migration phases
-├── Cargo.toml                    workspace manifest (Phase 1)
-├── deny.toml                     licence policy (Phase 1)
-├── rust-toolchain.toml
-│
-├── scripts/                      operator helpers, not production code
-│   └── cognitive-bridge.sh       to be moved from project root
-│
-├── crates/                       see §6
-│
-├── outbound/                     Phase 1: sanitised payloads pending send
-├── inbound/                      Phase 1: received graph deltas
-├── log/                          Phase 1: doorman transaction log
-│
-├── compute/                      Phase 1: Ring 1 artefacts (no containers)
-│   ├── manifest.yaml             current GCP node config (machine type,
-│   │                             zone, GPU SKU; consumed by tofu/)
-│   ├── systemd/                  Tier A native-binary unit (mirrors
-│   │   │                         infrastructure/local-slm/)
-│   │   ├── local-slm.service     systemd unit, binds 127.0.0.1:8080,
-│   │   │                         loopback only
-│   │   └── deploy.sh             idempotent installer: build llama-server
-│   │                             (or mistralrs-server when its install
-│   │                             path is sorted), drop unit, no pull
-│   ├── weights/
-│   │   └── registry.yaml         GCS paths for each model checkpoint
-│   ├── tofu/                     Tier B Yo-Yo OpenTofu module (mirrors
-│   │   │                         infrastructure/slm-yoyo/tofu/)
-│   │   ├── main.tf               GCE VM + L4 GPU + image family
-│   │   ├── variables.tf
-│   │   ├── outputs.tf            yoyo_endpoint, bearer-secret name
-│   │   └── killswitch/           Cloud Functions Gen2 budget cap
-│   └── keys/
-│       └── secret-refs.yaml      Secret Manager references (not keys)
-│
-├── memory/                       Phase 2+: Rings 2 and 3b
-│   ├── kv/
-│   │   ├── config.yaml           LMCache + Mooncake master config
-│   │   ├── hash-seed
-│   │   ├── master.yaml           Mooncake master deployment spec
-│   │   └── stats.csv             append-only cache hit/miss log
-│   └── adapters/                 LoRA skill library
-│       ├── registry.yaml         catalogue: adapter_id, version, signature
-│       ├── train/                training scripts per adapter
-│       │                         (Python; pyproject.toml + uv lockfile
-│       │                         per the router-trainer/ precedent —
-│       │                         no Python in the runtime path)
-│       └── ledger/
-│           └── training.csv      append-only training provenance
-│
-└── ledger/                       Phase 1: yo-yo audit log
-    ├── events.csv                master append-only ledger
-    └── schema.md                 ledger schema documentation
-```
-
-Only `compute/`, `outbound/`, `inbound/`, `log/`, `ledger/`, plus
-the doorman / ledger / api crates, fall in Phase 1 scope.
-`memory/kv/` is Phase 2. `memory/adapters/` is Phase 3.
-
-The `compute/systemd/` and `compute/tofu/` subtrees are structural
-mirrors of the existing Tier A and Tier B reference implementations,
-not duplicates — the in-tree files are the per-deployment overrides
-that compose with the upstream module / unit-template defaults. A
-service-slm release ships the binary and the `compute/` subtree as
-a single GCE image (Tier A) or a single OpenTofu module invocation
-(Tier B). Customer SMB deployments consume the published image /
-module rather than rebuilding from source.
-
----
-
-## 8. Audit ledger
-
-Every yo-yo event is logged. Append-only CSV, never modified after
-write. Schema:
-
-```
-event_id, timestamp_utc, event_type, moduleId, node_id, job_id,
-input_hash, adapter_versions, cache_hit_ratio, tokens_processed,
-gpu_seconds, cost_usd, completion_status, error_code, operator_id
-```
-
-`event_type` vocabulary:
-
-- `BOOT_REQUEST` — OpenTofu provisioning kicked off via `tofu apply`
-- `BOOT_COMPLETE` — node is serving
-- `JOB_START` — ingest or query job submitted
-- `JOB_COMPLETE` — job finished, delta returned
-- `CHECKPOINT` — GCS checkpoint written
-- `TEARDOWN_REQUEST` — explicit tear-down issued
-- `TEARDOWN_COMPLETE` — node is gone, final cost recorded
-- `PREEMPTION` — spot instance preempted
-- `ADAPTER_LOAD` — LoRA adapter activated for a request
-- `KV_POOL_SYNC` — Mooncake Store reconciliation event
-
-The ledger is a SOC3 Processing Integrity artefact. Every wiki
-page, every Data Marketplace export, every Ad Exchange segment
-traces back through this ledger to the exact compute event that
-produced it, the exact adapter versions, the exact source chunks.
-Doctrine rationale for why this matters commercially lives in
-`content-wiki-documentation/topic-yoyo-compute.md`; this document
-specifies only schema and vocabulary.
-
----
-
-## 9. os-totebox integration
-
-`service-slm` is the prototype os-totebox service component. The
-flat-binary / pure-Rust-where-feasible pattern should template
-future os-totebox services. Rationale for why Rust specifically
-fits the appliance envelope (static binary, no GC, small attack
-surface, deterministic memory footprint, true parallelism without
-GIL, cross-compilation to ARM) lives in
-`content-wiki-documentation/topic-service-slm.md`.
-
-Implementation detail: cross-compilation targets include
-`aarch64-unknown-linux-gnu` (ARM Toteboxes) and
-`x86_64-unknown-linux-gnu`. The binding constraint for Laptop-A
-hosts is the 4 GB RAM envelope — a Python + PyTorch + vLLM stack
-is non-starter; a Rust binary with a quantised `mistral.rs`
-runtime fits. This is the proof-of-need for the Rust path on
-resource-constrained Toteboxes specifically.
-
----
-
-## 10. 2030 headroom
-
-Primitives that are still research or RFC today slot into this
-architecture without rewriting it. Each is a config or subdirectory
-addition, not a refactor.
-
-| Primitive | Hook |
+| Type | Purpose |
 |---|---|
-| CUDA checkpoint/restore (vLLM RFC #34303) | Ring 1: optional checkpoint bundle as bootstrap input |
-| C-LoRA single-adapter (arXiv 2502.17920) | Ring 3b: registry schema migration from dual → single |
-| FP8 KV-cache quantisation | Ring 2: config flag (`KV_CACHE_DTYPE=fp8`) |
-| Sleep-time compute (async memory management) | Ring 3b: nightly LoRA retraining on Batch API |
-| Encode-Prefill-Decode disaggregation (SGLang + Mooncake) | Ring 2 evolution: separate prefill and decode pools |
+| `ModuleId` | Multi-tenant namespace tag; validated `[a-z0-9-]` 1–64 chars |
+| `RequestId` | UUIDv7 request correlator |
+| `Tier` | `Local \| Yoyo \| External` — three compute tiers |
+| `Complexity` | `Low \| Medium \| High` — advisory routing hint |
+| `GrammarConstraint` | Adjacent-tagged enum: `Lark(String) \| Gbnf(String) \| JsonSchema(Value)` (PS.3 step 1) |
+| `ComputeRequest` | Request crossing the Doorman boundary; carries `grammar: Option<GrammarConstraint>` |
+| `ComputeResponse` | Response returned through the Doorman; carries `tier_used`, `cost_usd` |
+| `ChatMessage` | OpenAI-compatible `{role, content}` message |
+| `AuditProxyRequest` / `AuditProxyResponse` / `AuditUsage` | Wire shapes for `POST /v1/audit/proxy` (PS.4 step 1) |
+| `AuditCaptureRequest` / `AuditCaptureResponse` | Wire shapes for `POST /v1/audit/capture` (PS.4 step 4) |
+| Apprenticeship types | `ApprenticeshipBrief`, `ApprenticeshipAttempt`, `ApprenticeshipVerdict` (§11) |
 
-None of these require rewriting `service-slm`.
+### `slm-doorman` (lib)
+
+Three-tier router and all business logic. Source modules:
+
+| Module | Responsibility |
+|---|---|
+| `router.rs` | `Doorman::route()` — selects tier, calls tier client, writes ledger entry |
+| `tier/local.rs` | Tier A HTTP client — llama-server; serialises GBNF/JsonSchema grammar; rejects Lark |
+| `tier/yoyo.rs` | Tier B HTTP client — vLLM ≥0.12; serialises all three grammar variants via `extra_body.structured_outputs`; bearer-token auth with retry |
+| `tier/external.rs` | Tier C HTTP client — Anthropic / Gemini / OpenAI; rejects all grammar variants; compile-time `ExternalAllowlist` label gate |
+| `ledger.rs` | Append-only JSONL audit ledger; four entry types with `entry_type` discriminator |
+| `audit_proxy.rs` | `AuditProxyClient` — relay surface for `POST /v1/audit/proxy`; `AuditProxyPurposeAllowlist` and `FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST` |
+| `grammar_validation.rs` | `LarkValidator` — `llguidance` pre-validation of Lark grammars; shared `Arc<ParserFactory>` |
+| `apprenticeship.rs` | AS-2 dispatcher — `ApprenticeshipDispatcher::dispatch_brief()` + shadow path |
+| `verdict.rs` | AS-3 verdict pipeline — signature verify + DPO pair write + promotion ledger |
+| `promotion_ledger.rs` | Append-only `ledger.md` + stats sidecar + `stages.json`; `flock(2)` serialisation |
+| `brief_cache.rs` | In-process FIFO `(brief_id, attempt_id)` → `(brief, attempt)` cache |
+| `redact.rs` | Sanitise-outbound filter; port of `bin/capture-edit.py` REDACTIONS |
+| `citations.rs` | Best-effort `citations.yaml` resolver |
+| `error.rs` | `DoormanError` enum (all error variants; maps to HTTP status codes in server) |
+
+### `slm-doorman-server` (bin + lib)
+
+Axum HTTP server. The `[lib]` target (`src/lib.rs`) exposes
+`pub mod http` (containing `AppState` and `router`) and
+`pub mod test_helpers` (factory helpers for tests). `main.rs`
+imports from `slm_doorman_server::http`. The split is required so
+integration tests under `tests/` can import from the server crate,
+which is otherwise a binary target.
+
+---
+
+## 8. HTTP endpoints
+
+All endpoints are served by the `slm-doorman-server` binary.
+
+| Endpoint | Method | Purpose | Notes |
+|---|---|---|---|
+| `/healthz` | GET | Liveness — always 200 | No auth; safe for load-balancer probes |
+| `/readyz` | GET | Readiness — returns tier flags | Body: `{ready, has_local, has_yoyo, has_external}` |
+| `/v1/contract` | GET | Doorman version + contract versions + tier summary | Body: `ContractInfo` |
+| `/v1/chat/completions` | POST | Route an inference request through the Doorman | OpenAI-compatible body + optional `X-Foundry-*` headers; respects `grammar` field on `ComputeRequest` |
+| `/v1/brief` | POST | Submit an `ApprenticeshipBrief` | Gated: `SLM_APPRENTICESHIP_ENABLED=true`; 404 otherwise |
+| `/v1/verdict` | POST | Submit a signed verdict | Gated: same |
+| `/v1/shadow` | POST | Submit a brief + actual diff for shadow capture | Gated: same; 200 empty body on success |
+| `/v1/audit/proxy` | POST | Audited external provider call (PS.4) | Body: `AuditProxyRequest`; response: `AuditProxyResponse`; two-entry ledger design |
+| `/v1/audit/capture` | POST | Cross-cluster local-work audit event push (PS.4) | Body: `AuditCaptureRequest`; response: `AuditCaptureResponse`; single-entry ledger |
+
+### X-Foundry-* request headers for `/v1/chat/completions`
+
+| Header | Type | Required | Notes |
+|---|---|---|---|
+| `X-Foundry-Module-ID` | string | no | Validated as `ModuleId`; defaults to `"foundry"` |
+| `X-Foundry-Request-ID` | string | no | UUIDv7; generated server-side if absent |
+| `X-Foundry-Complexity` | string | no | `"low" \| "medium" \| "high"`; advisory routing hint |
+| `X-Foundry-Tier-C-Label` | string | no | Required for Tier C dispatch; must match the compile-time `ExternalAllowlist` |
+
+Production callers SHOULD supply all four headers per CONTRACT.md.
+Ad-hoc `curl` probes work without headers — server generates safe
+defaults.
+
+---
+
+## 9. Three-tier routing and grammar handling
+
+The Doorman selects a compute tier per `ComputeRequest` and
+translates the optional `GrammarConstraint` into the tier's native
+wire format.
+
+### Tier A — local llama-server
+
+- HTTP endpoint: `SLM_LOCAL_ENDPOINT` (default `http://127.0.0.1:8080`)
+- Grammar handling:
+  - `Gbnf(s)` → `{ "grammar": s }` in the request body
+  - `JsonSchema(v)` → `{ "json_schema": v }` in the request body
+  - `Lark(s)` → **rejected** immediately with `DoormanError::TierAGrammarUnsupported` (HTTP 400). llama-server does not accept Lark grammars on its wire protocol.
+
+### Tier B — Yo-Yo / vLLM ≥0.12
+
+- HTTP endpoint: `SLM_YOYO_ENDPOINT`; bearer-token auth via `SLM_YOYO_BEARER`
+- Grammar handling (all three variants accepted):
+  - `Lark(s)` → **pre-validated** via `LarkValidator` (llguidance); `MalformedLarkGrammar` (HTTP 400) if compilation fails with parse-error location in the response body. On valid parse → `extra_body.structured_outputs.grammar = s`
+  - `Gbnf(s)` → `extra_body.structured_outputs.grammar = s`
+  - `JsonSchema(v)` → `extra_body.structured_outputs.json_schema = v`
+- Additional `X-Foundry-*` headers forwarded to the Yo-Yo server per CONTRACT.md: `Request-ID`, `Module-ID`, `Contract-Version`, `Complexity`
+- Retry policy: 503 + `Retry-After` → retry once; 401/403 → refresh bearer token, retry once; 410 → `DoormanError::ContractMajorMismatch` (loud fail, no retry)
+- Deployment gated on D4 image-build pipeline (Master-tier action)
+
+### Tier C — external API
+
+- Providers: Anthropic, Gemini, OpenAI; configured via `SLM_TIER_C_{PROVIDER}_ENDPOINT` + `SLM_TIER_C_{PROVIDER}_API_KEY`
+- Grammar handling: **all three variants rejected** with `DoormanError::TierCGrammarUnsupported` (HTTP 400). External vendors offer no arbitrary grammar support.
+- Dispatch requires `tier_c_label` matching a compile-time `ExternalAllowlist` entry; otherwise `DoormanError::ExternalNotAllowlisted` (HTTP 403)
+- Implemented with wiremock-only tests per operator cost guardrail; no live provider calls
+
+---
+
+## 10. Audit substrate
+
+Wire contract: `service-slm/docs/audit-endpoints-contract.md` v0.2.0.
+That document is the canonical reference for request/response shapes,
+validation order, HTTP status codes, purpose allowlist, event_type
+vocabulary, and the two-entry ledger design. This section provides
+the architectural overview; callers and implementers should read the
+contract doc.
+
+### Audit ledger
+
+Per-day JSONL files at `<ledger_base_dir>/<YYYY-MM-DD>.jsonl`.
+Default base: `$HOME/.service-slm/audit/`; `SLM_AUDIT_DIR` env var
+overrides (wired in `slm-doorman-server/src/main.rs`; the
+`infrastructure/local-doorman/` systemd unit sets a stable path).
+
+Four entry types coexist in the same JSONL stream, distinguished
+by the `entry_type` string discriminator field (added in contract
+v0.2.0 / iter-15):
+
+| Entry type | `entry_type` value | Written by |
+|---|---|---|
+| `AuditEntry` | `"chat-completion"` | `POST /v1/chat/completions` |
+| `AuditProxyStubEntry` | `"audit-proxy-stub"` | `POST /v1/audit/proxy` (before relay) |
+| `AuditProxyEntry` | `"audit-proxy"` | `POST /v1/audit/proxy` (after relay) |
+| `AuditCaptureEntry` | `"audit-capture"` | `POST /v1/audit/capture` |
+
+The `entry_type` field is set by `AuditLedger::append_*` at write
+time regardless of what the caller placed in the struct. This is
+the canonical discrimination path; a field-presence fallback covers
+entries predating contract v0.2.0 (see contract doc §3.2).
+
+### `POST /v1/audit/proxy`
+
+Cross-cluster callers (e.g., project-language editorial gateway)
+hold no provider API keys. They submit an `AuditProxyRequest` to
+the Doorman; the Doorman authenticates with the named provider,
+writes two ledger entries, and returns the provider's response.
+
+Two-entry ledger design: (1) stub entry written immediately after
+validation, before the upstream call — guarantees a paper trail
+even if the process crashes mid-relay; (2) final `AuditProxyEntry`
+written after the upstream call returns with token counts, cost,
+latency, and status.
+
+Purpose allowlist (`FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST`): four
+documented purposes — `"editorial-refinement"`,
+`"citation-grounding"`, `"entity-disambiguation"`,
+`"initial-graph-build"`. Unenumerated purposes are rejected 403.
+Compile-time allowlist; extensions require code review.
+
+Hardening (iter-16): 64 KiB raw-body cap (checked before JSON
+deserialisation); per-tenant `tokio::sync::Semaphore` concurrency
+cap (default 4, shared with `/v1/audit/capture`) via
+`SLM_AUDIT_TENANT_CONCURRENCY_CAP`.
+
+### `POST /v1/audit/capture`
+
+Inverse direction: cross-cluster callers push audit events for
+work they performed locally. Five accepted `event_type` values:
+`"prose-edit"`, `"design-edit"`, `"graph-mutation"`,
+`"anchor-event"`, `"verdict-issued"`. Single-entry ledger design.
+16 KiB payload cap. Same per-tenant concurrency cap as
+`/v1/audit/proxy`.
 
 ---
 
@@ -506,8 +540,11 @@ continued-pretraining signal Foundry produces. Specification at
 `~/Foundry/conventions/apprenticeship-substrate.md`. Convention
 ratified 2026-04-26 in Doctrine v0.0.7.
 
-Three new endpoints (gated behind `SLM_APPRENTICESHIP_ENABLED=true`;
-404 when unset so existing deployments are unchanged):
+Three endpoints gated behind `SLM_APPRENTICESHIP_ENABLED=true`;
+404 when unset so existing deployments are unchanged. Currently
+disabled on the workspace VM (`local-doorman.service` runs with
+the env var unset; B7 re-deploy with the flag set is a pending
+Master-tier action).
 
 | Endpoint | Purpose | Returns |
 |---|---|---|
@@ -574,36 +611,52 @@ SQLite-backed durability is a v0.5+ upgrade.
 | `FOUNDRY_TENANT` | `pointsav` | Tenant tag on corpus tuples |
 | `SLM_BRIEF_TIER_B_THRESHOLD_CHARS` | `8000` | Char-budget proxy for Tier-B routing on `/v1/brief` |
 
-### Crate layout
+---
 
-```
-crates/slm-core/src/apprenticeship.rs   # wire types + namespace constants
-crates/slm-doorman/src/apprenticeship.rs   # AS-2 dispatcher + AS-4 shadow path
-crates/slm-doorman/src/verdict.rs          # AS-3 verdict pipeline + verifier trait
-crates/slm-doorman/src/promotion_ledger.rs # ledger.md + stats sidecar + stages.json
-crates/slm-doorman/src/brief_cache.rs      # in-process FIFO cache
-crates/slm-doorman/src/redact.rs           # sanitize-outbound (port of capture-edit.py)
-crates/slm-doorman/src/citations.rs        # best-effort citations.yaml resolver
-```
+## 12. os-totebox integration
 
-### Cross-references
+`service-slm` is the prototype os-totebox service component. The
+flat-binary / pure-Rust-where-feasible pattern should template
+future os-totebox services. Rationale for why Rust specifically
+fits the appliance envelope (static binary, no GC, small attack
+surface, deterministic memory footprint, true parallelism without
+GIL, cross-compilation to ARM) lives in
+`content-wiki-documentation/topic-service-slm.md`.
 
-- Doctrine claim #32 — constitutional anchor
-- `~/Foundry/conventions/apprenticeship-substrate.md` — full spec
-- `~/Foundry/conventions/trajectory-substrate.md` — corpus typology
-- `~/Foundry/conventions/adapter-composition.md` — claim #22 algebra
-- `~/Foundry/templates/apprenticeship-brief.md.tmpl` — brief shape
-- `~/Foundry/templates/apprenticeship-verdict.md.tmpl` — verdict shape
-- `~/Foundry/data/apprenticeship/ledger.md` — promotion ledger
-- `~/Foundry/CLAUDE.md` §3 — same SSH-signing primitive as commits
+Implementation detail: cross-compilation targets include
+`aarch64-unknown-linux-gnu` (ARM Toteboxes) and
+`x86_64-unknown-linux-gnu`. The binding constraint for Laptop-A
+hosts is the 4 GB RAM envelope — a Python + PyTorch + vLLM stack
+is non-starter; a Rust binary with a quantised llama-server runtime
+fits. This is the proof-of-need for the Rust path on
+resource-constrained Toteboxes specifically.
 
 ---
 
-## 12. Cross-references
+## 13. 2030 headroom
+
+Primitives that are still research or RFC today slot into this
+architecture without rewriting it. Each is a config or subdirectory
+addition, not a refactor.
+
+| Primitive | Hook |
+|---|---|
+| CUDA checkpoint/restore (vLLM RFC #34303) | Ring 1: optional checkpoint bundle as bootstrap input |
+| C-LoRA single-adapter (arXiv 2502.17920) | Ring 3b: registry schema migration from dual → single |
+| FP8 KV-cache quantisation | Ring 2: config flag (`KV_CACHE_DTYPE=fp8`) |
+| Sleep-time compute (async memory management) | Ring 3b: nightly LoRA retraining on Batch API |
+| Encode-Prefill-Decode disaggregation (SGLang + Mooncake) | Ring 2 evolution: separate prefill and decode pools |
+
+None of these require rewriting `service-slm`.
+
+---
+
+## 14. Cross-references
 
 - `CLAUDE.md` — state header, hard constraints, project-layer rules
 - `NEXT.md` — in-flight work and blocking items
 - `DEVELOPMENT.md` — build, CI, licence policy, phase roadmap
+- `service-slm/docs/audit-endpoints-contract.md` v0.2.0 — canonical wire contract for `POST /v1/audit/proxy` + `POST /v1/audit/capture` (request/response shapes, validation order, ledger schema, error table)
 - `content-wiki-documentation/topic-service-slm.md` — Rust-native
   stack rationale, licence discipline, open-source posture
   *(destination not yet committed — see workspace `NEXT.md`)*
@@ -612,3 +665,6 @@ crates/slm-doorman/src/citations.rs        # best-effort citations.yaml resolver
   differentiators *(destination not yet committed)*
 - Workspace `CLAUDE.md` — identity store, commit flow, cluster
   session pattern, ADR hard rules
+- `~/Foundry/conventions/apprenticeship-substrate.md` — full spec for §11
+- `~/Foundry/conventions/zero-container-runtime.md` — structural doctrine for the deployment model
+- `~/Foundry/conventions/three-ring-architecture.md` — ring model rationale
