@@ -34,6 +34,9 @@ use slm_core::{
     AuditProxyRequest, ChatMessage, Complexity, ComputeRequest, ComputeResponse, ModuleId,
     RequestId,
 };
+use slm_doorman::ledger::{
+    ENTRY_TYPE_AUDIT_CAPTURE, ENTRY_TYPE_AUDIT_PROXY, ENTRY_TYPE_AUDIT_PROXY_STUB,
+};
 use slm_doorman::{
     ApprenticeshipConfig, ApprenticeshipDispatcher, AuditCaptureEntry, AuditProxyClient,
     AuditProxyEntry, AuditProxyPurposeAllowlist, AuditProxyStubEntry, BriefCache, Doorman,
@@ -326,6 +329,7 @@ async fn audit_proxy(
     //    Written before the upstream call so we have a paper trail even if
     //    the relay call fails or the process crashes.
     let stub = AuditProxyStubEntry {
+        entry_type: ENTRY_TYPE_AUDIT_PROXY_STUB.to_string(),
         audit_id: audit_id.clone(),
         inbound_at,
         module_id: module_id.clone(),
@@ -370,6 +374,7 @@ async fn audit_proxy(
     match &relay_result {
         Ok(resp) => {
             let entry = AuditProxyEntry {
+                entry_type: ENTRY_TYPE_AUDIT_PROXY.to_string(),
                 audit_id: audit_id.clone(),
                 completed_at,
                 module_id: module_id.clone(),
@@ -399,6 +404,7 @@ async fn audit_proxy(
         }
         Err(e) => {
             let entry = AuditProxyEntry {
+                entry_type: ENTRY_TYPE_AUDIT_PROXY.to_string(),
                 audit_id: audit_id.clone(),
                 completed_at,
                 module_id: module_id.clone(),
@@ -519,6 +525,7 @@ async fn audit_capture(
     // 7. Write the capture entry to the ledger.
     let captured_at = Utc::now();
     let entry = AuditCaptureEntry {
+        entry_type: ENTRY_TYPE_AUDIT_CAPTURE.to_string(),
         audit_id: body.audit_id.clone(),
         module_id,
         event_type: body.event_type.clone(),
