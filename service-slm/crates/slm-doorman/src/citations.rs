@@ -184,6 +184,71 @@ mod tests {
         assert!(r[1].title.is_none() && r[1].url.is_none());
     }
 
+    // ---- Citations edge-case tests (PS.6 chunk #6 tail) ----
+
+    /// A citation block that has `title` but no `url` resolves with
+    /// `title = Some(...)` and `url = None` — the resolver must not
+    /// require both fields to be present.
+    #[test]
+    fn partial_block_title_only_resolves_with_url_none() {
+        let path = write_tmp(
+            "citations:\n  title-only:\n    type: article\n    title: Just A Title\n  other:\n    title: Other\n    url: https://other\n",
+        );
+        let r = resolve(&path, &["title-only".to_string()]);
+        assert_eq!(r.len(), 1);
+        assert_eq!(r[0].title.as_deref(), Some("Just A Title"));
+        assert!(
+            r[0].url.is_none(),
+            "url must be None for a block with only title"
+        );
+    }
+
+    /// A citation block that has `url` but no `title` resolves with
+    /// `url = Some(...)` and `title = None`.
+    #[test]
+    fn partial_block_url_only_resolves_with_title_none() {
+        let path = write_tmp(
+            "citations:\n  url-only:\n    type: article\n    url: https://example.com/spec\n  other:\n    title: Other\n",
+        );
+        let r = resolve(&path, &["url-only".to_string()]);
+        assert_eq!(r.len(), 1);
+        assert!(
+            r[0].title.is_none(),
+            "title must be None for a block with only url"
+        );
+        assert_eq!(r[0].url.as_deref(), Some("https://example.com/spec"));
+    }
+
+    /// Resolving an empty ID slice against any registry must return an
+    /// empty `Vec` — no panic, no allocation for phantom entries.
+    #[test]
+    fn empty_ids_slice_returns_empty_vec() {
+        let path = write_tmp("citations:\n  foo:\n    title: Foo\n    url: https://foo\n");
+        let r = resolve(&path, &[]);
+        assert!(r.is_empty(), "empty IDs must yield empty result vec");
+
+        // Also confirm the missing-file path handles the empty slice.
+        let r2 = resolve(std::path::Path::new("/nonexistent/citations.yaml"), &[]);
+        assert!(r2.is_empty());
+    }
+
+    /// When the same ID appears multiple times in the registry file, the
+    /// resolver must return the first match — later duplicates are ignored.
+    #[test]
+    fn duplicate_id_in_registry_resolves_first_occurrence() {
+        // Two blocks with the same ID; the first has title "First" and the
+        // second has title "Second".
+        let yaml = "citations:\n  dupe-id:\n    title: First\n    url: https://first\n  dupe-id:\n    title: Second\n    url: https://second\n";
+        let path = write_tmp(yaml);
+        let r = resolve(&path, &["dupe-id".to_string()]);
+        assert_eq!(r.len(), 1);
+        assert_eq!(
+            r[0].title.as_deref(),
+            Some("First"),
+            "first occurrence of a duplicate ID should win"
+        );
+    }
+
     #[test]
     fn renders_resolved_and_unresolved_entries() {
         let cs = vec![
