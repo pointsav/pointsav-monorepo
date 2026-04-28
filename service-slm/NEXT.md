@@ -8,18 +8,32 @@
 
 ## Right now — long-running Sonnet pipeline active
 
-**Status:** Iteration 8 complete. PS.4 step 4 landed cleanly.
-**audit_capture endpoint live** (inverse direction of audit_proxy).
-Pipeline self-paces via `/loop` dynamic mode; iteration 9 scheduled.
+**Status:** Iteration 9 complete. **PS.4 multi-day work CLOSED.**
+**Long-running Sonnet pipeline session-end** — queue effectively
+exhausted at cluster-Task scope. Loop terminates pending operator +
+Master input.
 
-**Tests:** 121/121 passing. Last code commit `36d4fab` (PS.4 step 4 —
-audit_capture scaffold).
+**Tests:** 124/124 passing. Last code commit `e4cb8a8` (PS.4 step 5 —
+integration tests + cross-cluster contract doc).
 
-**audit_capture functional**: `POST /v1/audit/capture` accepts caller-
-generated audit_id + module_id + event_type (5 enumerated) + source +
-status + event_at + 16 KiB payload cap. Single-entry write to the
-shared daily JSONL ledger. Cross-cluster `AuditCaptureRequest`/`Response`
-types in `slm-core` for project-language A-4 + project-data A-5 import.
+**Pipeline summary** (operator-directed, 2026-04-28):
+- 9 iterations / 19 commits / +50 tests (74 → 124)
+- PS.3 sequence (iter 1-4): three-tier grammar policy + Doorman-side
+  Lark fail-fast validation. 5 commits, +23 tests.
+- PS.4 sequence (iter 5-9): cross-cluster audit substrate (audit_proxy
+  + audit_capture endpoints + contract doc). 5 commits, +27 tests.
+- 9 state-file commits per iteration.
+- AS-5 shadow brief fired every commit → apprenticeship corpus
+  accumulated 19 JSONL events.
+
+**Cross-cluster shipping surface ready**:
+- `service-slm/docs/audit-endpoints-contract.md` v0.1.0 — wire contract
+  for project-language A-4 + project-data A-5.
+- `slm-core` exports: `AuditProxyRequest/Response/Usage`,
+  `AuditCaptureRequest/Response`, `ChatMessage`, `GrammarConstraint`.
+- Endpoints live: `POST /v1/chat/completions`, `POST /v1/audit/proxy`,
+  `POST /v1/audit/capture`. All with mock-only test coverage per B4
+  operator guardrail.
 
 **audit_proxy now functional (against mocks)**: handler validates →
 writes stub ledger entry → calls AuditProxyClient.relay() →
@@ -43,7 +57,30 @@ at least one provider has both endpoint + key.
 6. **PS.4 step 2** — audit_proxy upstream provider relay ✅ `028c411`
 7. **PS.4 step 3** — purpose allowlist enforcement ✅ `acee9f7`
 8. **PS.4 step 4** — audit_capture endpoint scaffold ✅ `36d4fab`
-9. **PS.4 step 5** — integration tests + cross-cluster contract doc (next, ~2-3hr)
+9. **PS.4 step 5** — integration tests + cross-cluster contract doc ✅ `e4cb8a8`
+
+**PS.4 CLOSED.** PS.3 + PS.4 both complete. Pipeline session ends.
+
+## Next pipeline restart points (require operator + Master input)
+
+**Master-blocked** (cluster cannot dispatch):
+- **D4** image-build pipeline → unblocks PS.1-5, PS.2, Yo-Yo MIN deploy
+- **B7** Doorman redeploy with `SLM_APPRENTICESHIP_ENABLED=true` →
+  apprenticeship corpus starts feeding from production traffic
+- **Layer-scope clarification** (outbox 2026-04-28T02:30Z) → unblocks
+  PS.1-2/-3/-4 + PS.8 (workspace-repo edits via admin-tier procedure)
+
+**Threshold-blocked** (depends on accumulation):
+- **PS.5** (graduate task-types to service-slm-first production
+  routing) — depends on B7 + apprenticeship corpus reaching tuning
+  threshold
+
+**Cluster-Task dispatchable but lower-leverage** (if no Master input
+arrives):
+- Add explicit `entry_type` discriminator to ledger entries (deferred
+  from PS.4 step 5; MINOR contract bump). Hardening sweep.
+- Substance authoring on the three pre-v0.1.58 TOPIC skeletons
+  (probably premature; substance should follow cluster milestones).
 
 **Doorman grammar substrate — full picture post-PS.3:**
 - Tier A (local llama-server): GBNF + JsonSchema native; Lark → 400.
