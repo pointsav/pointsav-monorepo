@@ -56,7 +56,7 @@ between runaway cost (over-persistence) and silent knowledge loss
 | 1 | Bootstrap | systemd-unit `ReadWritePaths` + GCS-cached weights + Secret Manager | ~5–15 s | Yes (as artefacts) | `service-slm/compute/` |
 | 2 | Working (KV cache) | LMCache + Mooncake Store → object storage | Near-zero on cache hit | Yes (pooled) | `service-slm/memory/kv/` |
 | 3a | Long-term — graph | LadybugDB in `service-content` | None (query-time) | Yes (authoritative) | `service-content` (read-only from here) |
-| 3b | Long-term — skill | LoRA adapter stack, OCI Artifacts | One-time per project | Yes (portable) | `service-slm/memory/adapters/` |
+| 3b | Long-term — skill | LoRA adapter stack, GCS-archived (signed, SLSA-attested) | One-time per project | Yes (portable) | `service-slm/memory/adapters/` |
 
 Everything else is ephemeral and intentionally discarded.
 
@@ -115,8 +115,8 @@ rehydrate cycle completes.
 Small, versioned, frozen-weight modules that sit on top of the base
 model and encode task-specific behaviour (CoA classification,
 archetype detection, entity resolution, wiki synthesis). Each
-adapter is trained once, versioned, stored as an OCI Artifact
-(Sigstore-signed, SLSA-attested), and loaded at inference boot.
+adapter is trained once, versioned, stored as a GCS object (Sigstore-signed
+via the sigstore crate, SLSA-attested), and loaded at inference boot.
 `moduleId` (§4) selects which adapter stack activates for a given
 call.
 
@@ -129,7 +129,7 @@ deployment beyond Woodfine.
 
 `service-slm` is one Rust binary running as a systemd unit (or
 os-totebox init service). Inside the binary, logical modules talk
-via Rust function calls, not RPC. External calls (Cloud Run,
+via Rust function calls, not RPC. External calls (GCE Yo-Yo instances,
 Mooncake sidecar, Claude API, LadybugDB in `service-content`) are
 the only network boundaries.
 
@@ -194,7 +194,7 @@ no Python runtime.
 | `axum` | HTTP server (inbound from `service-content`, `os-console`, verification UI) | MIT |
 | `tower` | Service middleware (retries, timeouts, backpressure) | MIT |
 | `tokio` | Async runtime | MIT |
-| `hyper` | HTTP client (Cloud Run, Claude API, LMCache master) | MIT |
+| `hyper` | HTTP client (Yo-Yo GCE endpoints, Claude API, LMCache master) | MIT |
 | `reqwest` | High-level HTTP client | MIT / Apache-2.0 |
 | `tonic` | gRPC (only if Mooncake Transfer Engine requires it) | MIT |
 
