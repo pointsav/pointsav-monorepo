@@ -1,0 +1,158 @@
+// SPDX-License-Identifier: Apache-2.0 OR MIT
+
+//! Library surface for `slm-doorman-server`.
+//!
+//! Exposes `AppState` and `router` so integration tests under `tests/`
+//! can build a real axum `Router` with injected tier configs and exercise
+//! the full HTTP → Doorman → HTTP response path without starting a live
+//! TCP listener.
+//!
+//! The `main.rs` binary target uses this library via `slm_doorman_server::http`.
+
+pub mod http;
+
+/// Test helpers — factory functions shared across integration test files.
+///
+/// Only compiled for `#[cfg(test)]` consumers; the module itself is always
+/// present at the crate boundary so `tests/` crates can import it regardless
+/// of the feature set.
+pub mod test_helpers {
+    use std::sync::Arc;
+
+    use slm_doorman::tier::{ExternalTierClient, LocalTierClient, LocalTierConfig};
+    use slm_doorman::{
+        AuditLedger, BriefCache, Doorman, DoormanConfig, PromotionLedger, VerdictDispatcher,
+        VerdictVerifier,
+    };
+
+    use crate::http::AppState;
+
+    /// Construct a temporary `AuditLedger` under `$TMPDIR`.
+    /// Each call returns a unique directory so parallel tests do not race.
+    pub fn temp_ledger() -> AuditLedger {
+        let dir = std::env::temp_dir().join(format!(
+            "slm-doorman-http-test-{}",
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .map(|d| d.as_nanos())
+                .unwrap_or(0)
+        ));
+        AuditLedger::new(dir).expect("temp audit ledger")
+    }
+
+    /// Construct a temporary `PromotionLedger` under `$TMPDIR`.
+    pub fn temp_promotion_ledger() -> PromotionLedger {
+        let dir = std::env::temp_dir().join(format!(
+            "slm-doorman-promo-test-{}",
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .map(|d| d.as_nanos())
+                .unwrap_or(0)
+        ));
+        PromotionLedger::new(dir).expect("temp promotion ledger")
+    }
+
+    /// Build an `AppState` with no tiers configured and apprenticeship disabled.
+    /// Use when you need a Doorman that refuses every chat-completions call with
+    /// `TierUnavailable`.
+    pub fn app_state_no_tiers() -> Arc<AppState> {
+        let doorman = Doorman::new(DoormanConfig::default(), temp_ledger());
+        Arc::new(AppState {
+            doorman,
+            apprenticeship: None,
+            brief_cache: Arc::new(BriefCache::default()),
+            verdict_dispatcher: None,
+        })
+    }
+
+    /// Build an `AppState` backed by a local tier that hits the given
+    /// `local_endpoint`. Apprenticeship disabled.
+    pub fn app_state_with_local(local_endpoint: impl Into<String>) -> Arc<AppState> {
+        let local = LocalTierClient::new(LocalTierConfig {
+            endpoint: local_endpoint.into(),
+            default_model: "test-model".to_string(),
+        });
+        let doorman = Doorman::new(
+            DoormanConfig {
+                local: Some(local),
+                yoyo: None,
+                external: None,
+            },
+            temp_ledger(),
+        );
+        Arc::new(AppState {
+            doorman,
+            apprenticeship: None,
+            brief_cache: Arc::new(BriefCache::default()),
+            verdict_dispatcher: None,
+        })
+    }
+
+    /// Build an `AppState` with an external tier client configured.
+    /// The external client uses `FOUNDRY_DEFAULT_ALLOWLIST` so requests
+    /// without a valid label are refused before any network call.
+    /// Apprenticeship disabled.
+    pub fn app_state_with_external(external: ExternalTierClient) -> Arc<AppState> {
+        let doorman = Doorman::new(
+            DoormanConfig {
+                local: None,
+                yoyo: None,
+                external: Some(external),
+            },
+            temp_ledger(),
+        );
+        Arc::new(AppState {
+            doorman,
+            apprenticeship: None,
+            brief_cache: Arc::new(BriefCache::default()),
+            verdict_dispatcher: None,
+        })
+    }
+
+    /// Build an `AppState` with apprenticeship enabled and a custom
+    /// `VerdictVerifier` injected. The local tier is absent (apprenticeship
+    /// tests do not need inference routing). The corpus root is `$TMPDIR`.
+    pub fn app_state_with_apprenticeship(verifier: Arc<dyn VerdictVerifier>) -> Arc<AppState> {
+        use slm_doorman::ApprenticeshipConfig;
+        use std::path::PathBuf;
+
+        let tmp = std::env::temp_dir();
+        let foundry_root: PathBuf = tmp.join(format!(
+            "slm-doorman-foundry-test-{}",
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .map(|d| d.as_nanos())
+                .unwrap_or(0)
+        ));
+        std::fs::create_dir_all(&foundry_root).expect("create test foundry root");
+
+        let cfg = ApprenticeshipConfig {
+            foundry_root: foundry_root.clone(),
+            citations_path: foundry_root.join("citations.yaml"),
+            brief_tier_b_threshold_chars: 8000,
+            doctrine_version: "0.0.1".to_string(),
+            tenant: "test-tenant".to_string(),
+        };
+
+        let brief_cache = Arc::new(BriefCache::default());
+        let ledger = temp_promotion_ledger();
+
+        let verdict_dispatcher = VerdictDispatcher {
+            verifier,
+            cache: brief_cache.clone(),
+            ledger,
+            corpus_root: foundry_root,
+            doctrine_version: "0.0.1".to_string(),
+            tenant: "test-tenant".to_string(),
+        };
+
+        let doorman = Doorman::new(DoormanConfig::default(), temp_ledger());
+
+        Arc::new(AppState {
+            doorman,
+            apprenticeship: Some(cfg),
+            brief_cache,
+            verdict_dispatcher: Some(verdict_dispatcher),
+        })
+    }
+}
