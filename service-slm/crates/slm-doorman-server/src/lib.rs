@@ -17,12 +17,15 @@ pub mod http;
 /// present at the crate boundary so `tests/` crates can import it regardless
 /// of the feature set.
 pub mod test_helpers {
+    use std::collections::HashMap;
     use std::sync::Arc;
 
-    use slm_doorman::tier::{ExternalTierClient, LocalTierClient, LocalTierConfig};
+    use slm_doorman::tier::{
+        ExternalTierClient, LocalTierClient, LocalTierConfig, TierCPricing, TierCProvider,
+    };
     use slm_doorman::{
-        AuditLedger, BriefCache, Doorman, DoormanConfig, PromotionLedger, VerdictDispatcher,
-        VerdictVerifier,
+        AuditLedger, AuditProxyClient, AuditProxyConfig, BriefCache, Doorman, DoormanConfig,
+        PromotionLedger, VerdictDispatcher, VerdictVerifier,
     };
 
     use crate::http::AppState;
@@ -62,6 +65,7 @@ pub mod test_helpers {
             apprenticeship: None,
             brief_cache: Arc::new(BriefCache::default()),
             verdict_dispatcher: None,
+            audit_proxy_client: None,
         })
     }
 
@@ -86,6 +90,7 @@ pub mod test_helpers {
             apprenticeship: None,
             brief_cache: Arc::new(BriefCache::default()),
             verdict_dispatcher: None,
+            audit_proxy_client: None,
         })
     }
 
@@ -108,6 +113,7 @@ pub mod test_helpers {
             apprenticeship: None,
             brief_cache: Arc::new(BriefCache::default()),
             verdict_dispatcher: None,
+            audit_proxy_client: None,
         })
     }
 
@@ -155,6 +161,52 @@ pub mod test_helpers {
             apprenticeship: Some(cfg),
             brief_cache,
             verdict_dispatcher: Some(verdict_dispatcher),
+            audit_proxy_client: None,
         })
+    }
+
+    /// Build an `AppState` with an `AuditProxyClient` pointing at the given
+    /// mock server URI. The Doorman has no compute tiers (audit_proxy tests
+    /// do not need inference routing).
+    ///
+    /// Returns `(state, ledger_dir)` where `ledger_dir` is the base directory
+    /// of the test audit ledger so callers can inspect written JSONL files.
+    /// `AuditLedger` is not `Clone`, so we return the path instead of the
+    /// ledger object itself.
+    pub fn app_state_with_audit_proxy(
+        provider: TierCProvider,
+        server_uri: impl Into<String>,
+        pricing: TierCPricing,
+    ) -> (Arc<AppState>, std::path::PathBuf) {
+        let ledger_dir = std::env::temp_dir().join(format!(
+            "slm-audit-proxy-helper-test-{}",
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .map(|d| d.as_nanos())
+                .unwrap_or(0)
+        ));
+        std::fs::create_dir_all(&ledger_dir).expect("create test audit ledger dir");
+        let ledger = AuditLedger::new(&ledger_dir).expect("create test audit ledger");
+
+        let mut endpoints = HashMap::new();
+        endpoints.insert(provider, server_uri.into());
+        let mut keys = HashMap::new();
+        keys.insert(provider, "sk-test-DO-NOT-USE-LIVE".to_string());
+        let audit_config = AuditProxyConfig {
+            provider_endpoints: endpoints,
+            provider_api_keys: keys,
+            pricing,
+        };
+        let audit_client = AuditProxyClient::new(audit_config);
+
+        let doorman = Doorman::new(DoormanConfig::default(), ledger);
+        let state = Arc::new(AppState {
+            doorman,
+            apprenticeship: None,
+            brief_cache: Arc::new(BriefCache::default()),
+            verdict_dispatcher: None,
+            audit_proxy_client: Some(audit_client),
+        });
+        (state, ledger_dir)
     }
 }

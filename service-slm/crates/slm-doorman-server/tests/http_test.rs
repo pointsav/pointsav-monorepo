@@ -31,13 +31,14 @@ use axum::http::{Request, StatusCode};
 use base64::engine::general_purpose::STANDARD as B64;
 use base64::Engine as _;
 use serde_json::json;
+use slm_doorman::tier::{TierCPricing, TierCProvider};
 use slm_doorman::{
     BriefCache, Doorman, DoormanConfig, DoormanError, VerdictDispatcher, VerdictVerifier,
 };
 use slm_doorman_server::http::{router, AppState};
 use slm_doorman_server::test_helpers::{
-    app_state_no_tiers, app_state_with_apprenticeship, app_state_with_local, temp_ledger,
-    temp_promotion_ledger,
+    app_state_no_tiers, app_state_with_apprenticeship, app_state_with_audit_proxy,
+    app_state_with_local, temp_ledger, temp_promotion_ledger,
 };
 use tower::ServiceExt;
 use wiremock::matchers::{method, path};
@@ -333,6 +334,7 @@ async fn error_brief_cache_miss_returns_410() {
         apprenticeship: Some(cfg),
         brief_cache,
         verdict_dispatcher: Some(verdict_dispatcher),
+        audit_proxy_client: None,
     });
     let app = router(state);
 
@@ -542,6 +544,9 @@ fn doorman_error_to_status(e: &DoormanError) -> StatusCode {
         | DoormanError::TierCGrammarUnsupported { .. }
         | DoormanError::MalformedLarkGrammar { .. }
         | DoormanError::AuditProxyInvalidProvider { .. } => StatusCode::BAD_REQUEST,
+        // AuditProxyProviderUnavailable → 503: server-side configuration gap,
+        // not a caller policy violation.
+        DoormanError::AuditProxyProviderUnavailable { .. } => StatusCode::SERVICE_UNAVAILABLE,
         DoormanError::BriefCacheMiss => StatusCode::GONE,
         DoormanError::LedgerIo(_)
         | DoormanError::LedgerSerde(_)
@@ -793,16 +798,20 @@ async fn audit_proxy_empty_messages_returns_400() {
     );
 }
 
-// ── 5e. valid request → writes audit stub + returns 503 ──────────────────
+// ── 5e. valid request (no providers configured) → writes audit stub + returns 503 unconfigured ──
 
-/// POST /v1/audit/proxy with a fully valid request body:
-///   - writes a scaffold stub entry to the audit ledger (status:
-///     "scaffold-stub-no-relay-yet")
+/// POST /v1/audit/proxy with a fully valid request body and no providers
+/// configured (`audit_proxy_client = None`):
+///   - writes a stub entry to the audit ledger (status: "inbound")
 ///   - returns 503 SERVICE_UNAVAILABLE with an audit_id and the
-///     "pending PS.4 step 2" message
+///     "unconfigured" message (PS.4 step 2 replaces the old step-1
+///     "pending PS.4 step 2" placeholder)
 ///
 /// The audit ledger is backed by a temp directory. After the request we read
 /// the JSONL file back to confirm the stub entry is present.
+///
+/// Note: `app_state_no_tiers()` sets `audit_proxy_client = None`, which
+/// triggers the unconfigured path (same 503 status; different message).
 #[tokio::test]
 async fn audit_proxy_valid_request_writes_audit_stub_and_returns_503() {
     use slm_doorman::{AuditLedger, Doorman, DoormanConfig};
@@ -825,6 +834,8 @@ async fn audit_proxy_valid_request_writes_audit_stub_and_returns_503() {
         apprenticeship: None,
         brief_cache: Arc::new(slm_doorman::BriefCache::default()),
         verdict_dispatcher: None,
+        // No providers configured → unconfigured path.
+        audit_proxy_client: None,
     });
     let app = router(state);
 
@@ -838,10 +849,11 @@ async fn audit_proxy_valid_request_writes_audit_stub_and_returns_503() {
     assert_eq!(
         resp.status(),
         StatusCode::SERVICE_UNAVAILABLE,
-        "valid audit_proxy request must return 503 in PS.4 step 1 scaffold"
+        "valid audit_proxy request with no providers configured must return 503"
     );
 
-    // 2. Response body must carry an audit_id and the pending message.
+    // 2. Response body must carry an audit_id and the "unconfigured" message
+    //    (PS.4 step 2 retired the old "pending PS.4 step 2" placeholder).
     let resp_body = body_json(resp).await;
     let audit_id = resp_body["audit_id"]
         .as_str()
@@ -854,12 +866,12 @@ async fn audit_proxy_valid_request_writes_audit_stub_and_returns_503() {
     );
     let error_msg = resp_body["error"].as_str().unwrap_or_default();
     assert!(
-        error_msg.contains("PS.4 step 2"),
-        "error message must reference PS.4 step 2; got: {error_msg}"
+        error_msg.contains("unconfigured"),
+        "error message must say 'unconfigured'; got: {error_msg}"
     );
 
-    // 3. Audit ledger must contain the stub entry.
-    // Find the JSONL file in the temp dir (there will be one dated today).
+    // 3. Audit ledger must contain the stub entry (still written even when
+    //    the provider is unconfigured — this preserves the paper trail).
     let jsonl_files: Vec<_> = std::fs::read_dir(&ledger_dir)
         .expect("read ledger dir")
         .filter_map(|e| e.ok())
@@ -885,10 +897,11 @@ async fn audit_proxy_valid_request_writes_audit_stub_and_returns_503() {
     assert_eq!(entry["provider"].as_str().unwrap_or(""), "anthropic");
     assert_eq!(entry["model"].as_str().unwrap_or(""), "claude-opus-4-7");
     assert_eq!(entry["request_messages_count"].as_u64().unwrap_or(0), 1);
+    // Stub status is now "inbound" (PS.4 step 2 update).
     assert_eq!(
         entry["status"].as_str().unwrap_or(""),
-        "scaffold-stub-no-relay-yet",
-        "ledger status must be the scaffold placeholder"
+        "inbound",
+        "ledger status must be 'inbound'"
     );
     assert_eq!(
         entry["caller_request_id"].as_str().unwrap_or(""),
@@ -977,4 +990,350 @@ async fn valid_lark_grammar_passes_through_to_tier_b() {
     );
     // wiremock drops here — expect(1) fires and panics if zero or >1
     // requests reached the backend.
+}
+
+// ===========================================================================
+// Section 6 — audit_proxy upstream relay tests (PS.4 step 2) — 6 tests
+// ===========================================================================
+//
+// These tests exercise the new upstream provider relay wired in PS.4 step 2.
+// All use wiremock; no live API calls per the standing operator guardrail.
+//
+// Test helper: `app_state_with_audit_proxy(provider, server_uri, pricing)`
+// constructs an AppState with an AuditProxyClient pointing at the given
+// mock server URI plus a known-path temp ledger returned as the second tuple
+// element. The Doorman has no compute tiers (audit_proxy tests do not need
+// inference routing).
+
+/// Helper: valid audit_proxy request body targeting "anthropic".
+fn valid_audit_proxy_relay_body() -> serde_json::Value {
+    json!({
+        "module_id": "woodfine",
+        "purpose": "editorial-grammar-check",
+        "provider": "anthropic",
+        "model": "claude-opus-4-7",
+        "messages": [{"role": "user", "content": "Please review this paragraph."}],
+        "max_tokens": 100,
+        "caller_request_id": "relay-caller-abc"
+    })
+}
+
+/// Standard upstream response shape returned by the mock server.
+fn upstream_ok_body(prompt_tokens: u32, completion_tokens: u32) -> serde_json::Value {
+    json!({
+        "choices": [
+            { "message": { "role": "assistant", "content": "relay-response-content" } }
+        ],
+        "usage": {
+            "prompt_tokens": prompt_tokens,
+            "completion_tokens": completion_tokens
+        }
+    })
+}
+
+// ── 6a. Anthropic happy path → 200 + ledger has stub + final "ok" entry ────
+
+/// POST /v1/audit/proxy (Anthropic provider):
+///   - wiremock returns Anthropic-shaped JSON
+///   - response is 200 with content and usage
+///   - ledger has TWO entries: stub (status "inbound") + final (status "ok")
+#[tokio::test]
+async fn audit_proxy_anthropic_happy_path_returns_200_with_content_and_logs_full_entry() {
+    let server = MockServer::start().await;
+    Mock::given(method("POST"))
+        .and(path("/v1/chat/completions"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(upstream_ok_body(50, 20)))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    let pricing = TierCPricing {
+        anthropic_input_per_mtok_usd: 0.25,
+        anthropic_output_per_mtok_usd: 1.25,
+        ..Default::default()
+    };
+    let (state, ledger_dir) =
+        app_state_with_audit_proxy(TierCProvider::Anthropic, server.uri(), pricing);
+    let app = router(state);
+
+    let resp = app
+        .oneshot(post_json(
+            "/v1/audit/proxy",
+            &valid_audit_proxy_relay_body(),
+        ))
+        .await
+        .expect("oneshot");
+
+    // 1. HTTP 200 OK.
+    assert_eq!(resp.status(), StatusCode::OK);
+
+    // 2. Response body carries content, audit_id, usage.
+    let body = body_json(resp).await;
+    let audit_id = body["audit_id"].as_str().expect("audit_id must be present");
+    assert!(!audit_id.is_empty());
+    assert_eq!(
+        body["content"].as_str().unwrap_or(""),
+        "relay-response-content"
+    );
+    assert_eq!(
+        body["caller_request_id"].as_str().unwrap_or(""),
+        "relay-caller-abc"
+    );
+    assert_eq!(body["usage"]["prompt_tokens"].as_u64().unwrap_or(0), 50);
+    assert_eq!(body["usage"]["completion_tokens"].as_u64().unwrap_or(0), 20);
+    // 50 in × $0.25/M + 20 out × $1.25/M = 0.0000375
+    let cost = body["usage"]["cost_usd"].as_f64().unwrap_or(-1.0);
+    assert!(
+        (cost - 0.0000375).abs() < 1e-10,
+        "expected cost ~$0.0000375, got ${cost}"
+    );
+
+    // 3. Ledger must contain BOTH entries for the same audit_id.
+    let jsonl_files: Vec<_> = std::fs::read_dir(&ledger_dir)
+        .expect("read ledger dir")
+        .filter_map(|e| e.ok())
+        .filter(|e| e.path().extension().map(|x| x == "jsonl").unwrap_or(false))
+        .collect();
+    assert_eq!(jsonl_files.len(), 1, "exactly one JSONL file");
+    let contents = std::fs::read_to_string(jsonl_files[0].path()).expect("read JSONL");
+    let lines: Vec<serde_json::Value> = contents
+        .lines()
+        .map(|l| serde_json::from_str(l).expect("valid JSON line"))
+        .collect();
+    assert_eq!(lines.len(), 2, "two ledger entries: stub + final");
+
+    // First entry is the stub.
+    let stub = &lines[0];
+    assert_eq!(stub["audit_id"].as_str().unwrap_or(""), audit_id);
+    assert_eq!(stub["status"].as_str().unwrap_or(""), "inbound");
+    assert_eq!(stub["module_id"].as_str().unwrap_or(""), "woodfine");
+
+    // Second entry is the final outcome.
+    let final_entry = &lines[1];
+    assert_eq!(final_entry["audit_id"].as_str().unwrap_or(""), audit_id);
+    assert_eq!(final_entry["status"].as_str().unwrap_or(""), "ok");
+    assert_eq!(final_entry["prompt_tokens"].as_u64().unwrap_or(0), 50);
+    assert_eq!(final_entry["completion_tokens"].as_u64().unwrap_or(0), 20);
+    assert!(
+        final_entry["error_message"].is_null(),
+        "no error_message on ok"
+    );
+}
+
+// ── 6b. Gemini happy path → 200 ─────────────────────────────────────────────
+
+/// POST /v1/audit/proxy (Gemini provider) → 200 with content.
+#[tokio::test]
+async fn audit_proxy_gemini_happy_path_returns_200() {
+    let server = MockServer::start().await;
+    Mock::given(method("POST"))
+        .and(path("/v1/chat/completions"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(upstream_ok_body(30, 10)))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    let (state, _ledger) =
+        app_state_with_audit_proxy(TierCProvider::Gemini, server.uri(), TierCPricing::default());
+    let app = router(state);
+
+    let mut body = valid_audit_proxy_relay_body();
+    body["provider"] = json!("gemini");
+    body["model"] = json!("gemini-2.5-pro");
+
+    let resp = app
+        .oneshot(post_json("/v1/audit/proxy", &body))
+        .await
+        .expect("oneshot");
+
+    assert_eq!(resp.status(), StatusCode::OK);
+    let resp_body = body_json(resp).await;
+    assert_eq!(
+        resp_body["content"].as_str().unwrap_or(""),
+        "relay-response-content"
+    );
+    assert_eq!(
+        resp_body["usage"]["prompt_tokens"].as_u64().unwrap_or(0),
+        30
+    );
+}
+
+// ── 6c. OpenAI happy path → 200 ─────────────────────────────────────────────
+
+/// POST /v1/audit/proxy (OpenAI provider) → 200 with content.
+#[tokio::test]
+async fn audit_proxy_openai_happy_path_returns_200() {
+    let server = MockServer::start().await;
+    Mock::given(method("POST"))
+        .and(path("/v1/chat/completions"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(upstream_ok_body(40, 15)))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    let (state, _ledger) =
+        app_state_with_audit_proxy(TierCProvider::Openai, server.uri(), TierCPricing::default());
+    let app = router(state);
+
+    let mut body = valid_audit_proxy_relay_body();
+    body["provider"] = json!("openai");
+    body["model"] = json!("gpt-4o-mini");
+
+    let resp = app
+        .oneshot(post_json("/v1/audit/proxy", &body))
+        .await
+        .expect("oneshot");
+
+    assert_eq!(resp.status(), StatusCode::OK);
+    let resp_body = body_json(resp).await;
+    assert_eq!(
+        resp_body["content"].as_str().unwrap_or(""),
+        "relay-response-content"
+    );
+    assert_eq!(
+        resp_body["usage"]["completion_tokens"]
+            .as_u64()
+            .unwrap_or(0),
+        15
+    );
+}
+
+// ── 6d. Unconfigured client → 503 with "unconfigured" message ───────────────
+
+/// POST /v1/audit/proxy with `audit_proxy_client = None` (no providers
+/// configured at startup) → 503 SERVICE_UNAVAILABLE with the "unconfigured"
+/// message (not the old "pending PS.4 step 2" message).
+#[tokio::test]
+async fn audit_proxy_provider_unconfigured_returns_503_unconfigured() {
+    // app_state_no_tiers() sets audit_proxy_client: None.
+    let state = app_state_no_tiers();
+    let app = router(state);
+
+    let resp = app
+        .oneshot(post_json(
+            "/v1/audit/proxy",
+            &valid_audit_proxy_relay_body(),
+        ))
+        .await
+        .expect("oneshot");
+
+    assert_eq!(
+        resp.status(),
+        StatusCode::SERVICE_UNAVAILABLE,
+        "unconfigured audit_proxy must return 503 SERVICE_UNAVAILABLE"
+    );
+    let body = body_json(resp).await;
+    let error = body["error"].as_str().unwrap_or_default();
+    assert!(
+        error.contains("unconfigured"),
+        "error message must contain 'unconfigured'; got: {error}"
+    );
+    // Must NOT contain "PS.4 step 2" (that was the scaffold placeholder).
+    assert!(
+        !error.contains("PS.4 step 2"),
+        "error message must not contain 'PS.4 step 2' (scaffold message retired); got: {error}"
+    );
+}
+
+// ── 6e. Upstream 500 → logged as upstream-error in ledger ───────────────────
+
+/// POST /v1/audit/proxy where the upstream returns 500:
+///   - response is a 502 BAD_GATEWAY (UpstreamShape error)
+///   - ledger has TWO entries: stub (status "inbound") + final (status "upstream-error")
+#[tokio::test]
+async fn audit_proxy_provider_returns_500_logged_as_upstream_error() {
+    let server = MockServer::start().await;
+    Mock::given(method("POST"))
+        .and(path("/v1/chat/completions"))
+        .respond_with(ResponseTemplate::new(500).set_body_string("upstream failure"))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    let (state, ledger_dir) = app_state_with_audit_proxy(
+        TierCProvider::Anthropic,
+        server.uri(),
+        TierCPricing::default(),
+    );
+    let app = router(state);
+
+    let resp = app
+        .oneshot(post_json(
+            "/v1/audit/proxy",
+            &valid_audit_proxy_relay_body(),
+        ))
+        .await
+        .expect("oneshot");
+
+    // The relay converts UpstreamShape to 502 BAD_GATEWAY.
+    assert_eq!(resp.status(), StatusCode::BAD_GATEWAY);
+
+    // Ledger must have both stub + final "upstream-error" entries.
+    let jsonl_files: Vec<_> = std::fs::read_dir(&ledger_dir)
+        .expect("read ledger dir")
+        .filter_map(|e| e.ok())
+        .filter(|e| e.path().extension().map(|x| x == "jsonl").unwrap_or(false))
+        .collect();
+    assert_eq!(jsonl_files.len(), 1);
+    let contents = std::fs::read_to_string(jsonl_files[0].path()).expect("read JSONL");
+    let lines: Vec<serde_json::Value> = contents
+        .lines()
+        .map(|l| serde_json::from_str(l).expect("valid JSON line"))
+        .collect();
+    assert_eq!(lines.len(), 2, "two ledger entries: stub + final");
+    assert_eq!(lines[0]["status"].as_str().unwrap_or(""), "inbound");
+    assert_eq!(lines[1]["status"].as_str().unwrap_or(""), "upstream-error");
+    // Final entry must carry an error_message.
+    let err_msg = lines[1]["error_message"].as_str().unwrap_or_default();
+    assert!(
+        !err_msg.is_empty(),
+        "error_message must be non-empty on upstream-error"
+    );
+}
+
+// ── 6f. Cost arithmetic matches pricing config ───────────────────────────────
+
+/// POST /v1/audit/proxy with known token counts + configured pricing:
+///   - assert cost_usd = prompt × input_per_mtok + completion × output_per_mtok
+///   - arithmetic matches the same formula used by TierCPricing::cost_usd
+#[tokio::test]
+async fn audit_proxy_cost_arithmetic_matches_pricing_config() {
+    let server = MockServer::start().await;
+    // Return exactly 100 prompt + 50 completion tokens.
+    Mock::given(method("POST"))
+        .and(path("/v1/chat/completions"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(upstream_ok_body(100, 50)))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    // Rates: Anthropic $1.00/mtok in, $4.00/mtok out.
+    // Expected: (100/1_000_000) * 1.00 + (50/1_000_000) * 4.00
+    //         = 0.0001 + 0.0002 = 0.0003
+    let pricing = TierCPricing {
+        anthropic_input_per_mtok_usd: 1.0,
+        anthropic_output_per_mtok_usd: 4.0,
+        ..Default::default()
+    };
+    let (state, _ledger) =
+        app_state_with_audit_proxy(TierCProvider::Anthropic, server.uri(), pricing);
+    let app = router(state);
+
+    let resp = app
+        .oneshot(post_json(
+            "/v1/audit/proxy",
+            &valid_audit_proxy_relay_body(),
+        ))
+        .await
+        .expect("oneshot");
+
+    assert_eq!(resp.status(), StatusCode::OK);
+    let body = body_json(resp).await;
+    let cost = body["usage"]["cost_usd"].as_f64().unwrap_or(-1.0);
+    assert!(
+        (cost - 0.0003).abs() < 1e-9,
+        "expected cost $0.0003, got ${cost}"
+    );
+    assert_eq!(body["usage"]["prompt_tokens"].as_u64().unwrap_or(0), 100);
+    assert_eq!(body["usage"]["completion_tokens"].as_u64().unwrap_or(0), 50);
 }

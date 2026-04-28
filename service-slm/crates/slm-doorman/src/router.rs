@@ -240,6 +240,10 @@ fn classify_error(e: &DoormanError) -> CompletionStatus {
         | DoormanError::AuditProxyInvalidProvider { .. } => {
             CompletionStatus::PolicyDenied
         }
+        // The audit_proxy targeted a provider that is not configured at startup
+        // (PS.4 step 2). Server-side configuration gap — classified as UpstreamError
+        // (not PolicyDenied; the caller did nothing wrong). HTTP 503.
+        DoormanError::AuditProxyProviderUnavailable { .. } => CompletionStatus::UpstreamError,
         DoormanError::Upstream(_)
         | DoormanError::UpstreamShape(_)
         | DoormanError::ContractMajorMismatch { .. }
