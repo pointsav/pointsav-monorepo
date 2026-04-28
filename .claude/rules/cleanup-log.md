@@ -92,6 +92,26 @@ Newest on top. Append a dated block when a session includes meaningful cleanup w
 
 ---
 
+## 2026-04-28 — PS.7 4th+5th-pass zero-container drift (8 sites, 2 files)
+
+- Applied 8 prose edits to `service-slm/ARCHITECTURE.md` and
+  `service-slm/DEVELOPMENT.md` per Master v0.1.33 §C bundle
+  authorisation + v0.1.36 framing correction + operator green-light.
+- **4th-pass (3 sites):**
+  - ARCH §3 line 132: "Cloud Run," → "GCE Yo-Yo instances,"
+  - ARCH §5.2 line 197: `hyper` crate role "Cloud Run" → "Yo-Yo GCE endpoints"
+  - DEV §4 Phase 2 step 5: "Port the Cloud Run driver" → "Port the GCE compute driver … per `infrastructure/slm-yoyo/tofu/`"
+- **5th-pass (5 sites):**
+  - ARCH §2 Ring 3b table storage cell: "OCI Artifacts" → "GCS-archived (signed, SLSA-attested)"
+  - ARCH §3b para: "stored as an OCI Artifact (Sigstore-signed, SLSA-attested)" → "stored as a GCS object (Sigstore-signed via the sigstore crate, SLSA-attested)"
+  - DEV §2.2: "(Ring 3b, OCI Artifacts)" → "(Ring 3b, GCS-stored adapters)"
+  - DEV §6 build-time risks table: dropped `cargo-chef` Docker layer caching mention; kept `sccache`
+  - DEV §7 workspace deps: `google-cloud-run = "*"` → `google-cloud-compute = "*"` (GCE start/stop ceremony crate)
+- `cargo check --workspace` clean post-edit (Finished, no errors/warnings).
+- No open questions surfaced. Sonnet's fifth-pass judgment ("substantially clean") stands.
+
+---
+
 ## 2026-04-28 — PS.1-1 image verification dispatched + 12th blocker D4 surfaced
 
 Operator green-lit dispatch of PS.1-1 (image verification)
