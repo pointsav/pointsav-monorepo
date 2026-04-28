@@ -105,8 +105,12 @@ impl AuditLedger {
 /// upstream relay is not yet wired.
 ///
 /// The `status` field holds `"scaffold-stub-no-relay-yet"` in step 1;
-/// PS.4 step 2 will replace this with `"ok"` or `"upstream-error"` once
-/// the provider call is wired.
+/// PS.4 step 2 writes a second entry (see `AuditProxyEntry`) with the final
+/// outcome: `"ok"` or `"upstream-error"`.
+///
+/// Two-entry design: every inbound request writes a stub first, then a
+/// final entry after the upstream call completes. This preserves the paper
+/// trail even when the upstream call fails partway through.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct AuditProxyStubEntry {
     pub audit_id: String,
@@ -121,12 +125,60 @@ pub struct AuditProxyStubEntry {
     pub status: String,
 }
 
+/// Full audit ledger entry written AFTER the upstream provider call completes
+/// (PS.4 step 2). Written as the second JSONL line for the same `audit_id`
+/// — the stub entry (status: "scaffold-stub-no-relay-yet" / "inbound") is
+/// the first line; this is the second.
+///
+/// The two-entry design is deliberate: if the relay client panics after
+/// the stub is written but before this entry is written, the audit trail
+/// still captures that the inbound request was received. The final entry
+/// records the outcome — success or failure — plus token counts and cost.
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct AuditProxyEntry {
+    pub audit_id: String,
+    pub completed_at: DateTime<Utc>,
+    pub module_id: ModuleId,
+    pub purpose: String,
+    pub provider: String,
+    pub model: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub caller_request_id: Option<String>,
+    pub prompt_tokens: u32,
+    pub completion_tokens: u32,
+    pub cost_usd: f64,
+    pub latency_ms: u64,
+    /// `"ok"` on success; `"upstream-error"` when the relay call failed.
+    pub status: String,
+    /// Present when `status == "upstream-error"`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub error_message: Option<String>,
+}
+
 impl AuditLedger {
     /// Write a stub entry for a `POST /v1/audit/proxy` call. This is the
     /// PS.4 step 1 paper trail: we capture the inbound request shape before
     /// attempting (or declining) the upstream call.
     pub fn append_proxy_stub(&self, entry: &AuditProxyStubEntry) -> Result<()> {
         let path = self.path_for(&entry.inbound_at);
+        let line = serde_json::to_vec(entry)?;
+        let _guard = self.inner.lock().expect("audit ledger mutex poisoned");
+        let file = OpenOptions::new().create(true).append(true).open(&path)?;
+        let mut writer = BufWriter::new(file);
+        writer.write_all(&line)?;
+        writer.write_all(b"\n")?;
+        writer.flush()?;
+        Ok(())
+    }
+
+    /// Write the final outcome entry for a `POST /v1/audit/proxy` call (PS.4
+    /// step 2). This is the second JSONL line for the same `audit_id`; the
+    /// stub entry is always written first.
+    ///
+    /// `completed_at` is supplied by the caller (the handler) so the timestamp
+    /// records when the relay call returned, not when the ledger write happened.
+    pub fn append_proxy_entry(&self, entry: &AuditProxyEntry) -> Result<()> {
+        let path = self.path_for(&entry.completed_at);
         let line = serde_json::to_vec(entry)?;
         let _guard = self.inner.lock().expect("audit ledger mutex poisoned");
         let file = OpenOptions::new().create(true).append(true).open(&path)?;

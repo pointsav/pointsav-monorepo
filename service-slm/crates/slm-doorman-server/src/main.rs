@@ -56,8 +56,9 @@ use slm_doorman::tier::{
     FOUNDRY_DEFAULT_ALLOWLIST,
 };
 use slm_doorman::{
-    ApprenticeshipConfig, AuditLedger, BriefCache, Doorman, DoormanConfig, LarkValidator,
-    PromotionLedger, SshKeygenVerifier, VerdictDispatcher, VerdictVerifier,
+    ApprenticeshipConfig, AuditLedger, AuditProxyClient, AuditProxyConfig, BriefCache, Doorman,
+    DoormanConfig, LarkValidator, PromotionLedger, SshKeygenVerifier, VerdictDispatcher,
+    VerdictVerifier,
 };
 use tracing::info;
 
@@ -77,11 +78,13 @@ async fn main() -> anyhow::Result<()> {
         Some(cfg) => Some(build_verdict_dispatcher(cfg, brief_cache.clone())?),
         None => None,
     };
+    let audit_proxy_client = build_audit_proxy_client();
     let state = Arc::new(http::AppState {
         doorman,
         apprenticeship,
         brief_cache,
         verdict_dispatcher,
+        audit_proxy_client,
     });
 
     info!(
@@ -91,6 +94,7 @@ async fn main() -> anyhow::Result<()> {
         has_yoyo = state.doorman.has_yoyo(),
         has_external = state.doorman.has_external(),
         apprenticeship_enabled = state.apprenticeship.is_some(),
+        audit_proxy_enabled = state.audit_proxy_client.is_some(),
         "service-slm Doorman starting"
     );
 
@@ -268,6 +272,92 @@ fn build_external_tier_client() -> Option<ExternalTierClient> {
     };
 
     Some(ExternalTierClient::new(config))
+}
+
+/// Build the audit proxy client from env vars. Reuses the same
+/// `SLM_TIER_C_*` namespace as `build_external_tier_client()` — the
+/// audit_proxy relay and the Tier C compute routing share provider
+/// config so operators only need one set of env vars.
+///
+/// Returns `None` if no providers are configured. An absent client causes
+/// `POST /v1/audit/proxy` to return 503 with a clear "unconfigured" message.
+fn build_audit_proxy_client() -> Option<AuditProxyClient> {
+    let mut endpoints = std::collections::HashMap::new();
+    let mut api_keys = std::collections::HashMap::new();
+    let mut pricing = TierCPricing::default();
+
+    // Anthropic
+    if let Ok(endpoint) = std::env::var("SLM_TIER_C_ANTHROPIC_ENDPOINT") {
+        if !endpoint.is_empty() {
+            endpoints.insert(TierCProvider::Anthropic, endpoint);
+            api_keys.insert(
+                TierCProvider::Anthropic,
+                std::env::var("SLM_TIER_C_ANTHROPIC_API_KEY").unwrap_or_default(),
+            );
+            pricing.anthropic_input_per_mtok_usd =
+                std::env::var("SLM_TIER_C_ANTHROPIC_INPUT_PER_MTOK_USD")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(0.0);
+            pricing.anthropic_output_per_mtok_usd =
+                std::env::var("SLM_TIER_C_ANTHROPIC_OUTPUT_PER_MTOK_USD")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(0.0);
+        }
+    }
+
+    // Gemini
+    if let Ok(endpoint) = std::env::var("SLM_TIER_C_GEMINI_ENDPOINT") {
+        if !endpoint.is_empty() {
+            endpoints.insert(TierCProvider::Gemini, endpoint);
+            api_keys.insert(
+                TierCProvider::Gemini,
+                std::env::var("SLM_TIER_C_GEMINI_API_KEY").unwrap_or_default(),
+            );
+            pricing.gemini_input_per_mtok_usd =
+                std::env::var("SLM_TIER_C_GEMINI_INPUT_PER_MTOK_USD")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(0.0);
+            pricing.gemini_output_per_mtok_usd =
+                std::env::var("SLM_TIER_C_GEMINI_OUTPUT_PER_MTOK_USD")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(0.0);
+        }
+    }
+
+    // OpenAI
+    if let Ok(endpoint) = std::env::var("SLM_TIER_C_OPENAI_ENDPOINT") {
+        if !endpoint.is_empty() {
+            endpoints.insert(TierCProvider::Openai, endpoint);
+            api_keys.insert(
+                TierCProvider::Openai,
+                std::env::var("SLM_TIER_C_OPENAI_API_KEY").unwrap_or_default(),
+            );
+            pricing.openai_input_per_mtok_usd =
+                std::env::var("SLM_TIER_C_OPENAI_INPUT_PER_MTOK_USD")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(0.0);
+            pricing.openai_output_per_mtok_usd =
+                std::env::var("SLM_TIER_C_OPENAI_OUTPUT_PER_MTOK_USD")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(0.0);
+        }
+    }
+
+    if endpoints.is_empty() {
+        return None;
+    }
+
+    Some(AuditProxyClient::new(AuditProxyConfig {
+        provider_endpoints: endpoints,
+        provider_api_keys: api_keys,
+        pricing,
+    }))
 }
 
 /// Build the apprenticeship config when `SLM_APPRENTICESHIP_ENABLED=true`.
