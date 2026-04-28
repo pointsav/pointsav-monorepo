@@ -8,13 +8,18 @@
 
 ## Right now — long-running Sonnet pipeline active
 
-**Status:** Iteration 7 complete. PS.4 step 3 landed cleanly. Audit_proxy
-now has purpose-allowlist enforcement (4 documented purposes; 403 on
-unallowlisted). Pipeline self-paces via `/loop` dynamic mode; iteration 8
-scheduled.
+**Status:** Iteration 8 complete. PS.4 step 4 landed cleanly.
+**audit_capture endpoint live** (inverse direction of audit_proxy).
+Pipeline self-paces via `/loop` dynamic mode; iteration 9 scheduled.
 
-**Tests:** 115/115 passing. Last code commit `acee9f7` (PS.4 step 3 —
-purpose allowlist).
+**Tests:** 121/121 passing. Last code commit `36d4fab` (PS.4 step 4 —
+audit_capture scaffold).
+
+**audit_capture functional**: `POST /v1/audit/capture` accepts caller-
+generated audit_id + module_id + event_type (5 enumerated) + source +
+status + event_at + 16 KiB payload cap. Single-entry write to the
+shared daily JSONL ledger. Cross-cluster `AuditCaptureRequest`/`Response`
+types in `slm-core` for project-language A-4 + project-data A-5 import.
 
 **audit_proxy now functional (against mocks)**: handler validates →
 writes stub ledger entry → calls AuditProxyClient.relay() →
@@ -37,8 +42,8 @@ at least one provider has both endpoint + key.
 5. **PS.4 step 1** — audit_proxy endpoint scaffold ✅ `40dc18e`
 6. **PS.4 step 2** — audit_proxy upstream provider relay ✅ `028c411`
 7. **PS.4 step 3** — purpose allowlist enforcement ✅ `acee9f7`
-8. **PS.4 step 4** — audit_capture endpoint scaffold (next, ~3-4hr)
-9. **PS.4 step 5** — integration tests + cross-cluster contract doc (~2-3hr)
+8. **PS.4 step 4** — audit_capture endpoint scaffold ✅ `36d4fab`
+9. **PS.4 step 5** — integration tests + cross-cluster contract doc (next, ~2-3hr)
 
 **Doorman grammar substrate — full picture post-PS.3:**
 - Tier A (local llama-server): GBNF + JsonSchema native; Lark → 400.
