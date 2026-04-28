@@ -757,6 +757,113 @@ mod tests {
         );
     }
 
+    // ---- BearerTokenProvider failure-path tests (PS.6 chunk #6 tail) ----
+
+    /// When `BearerTokenProvider::token()` returns an error, `complete()`
+    /// must surface `DoormanError::BearerToken` immediately — no network
+    /// requests should be made.
+    #[tokio::test]
+    async fn bearer_token_provider_error_surfaces_typed_error_with_zero_network_calls() {
+        #[derive(Debug)]
+        struct FailingBearer;
+        #[async_trait]
+        impl BearerTokenProvider for FailingBearer {
+            async fn token(&self) -> Result<String> {
+                Err(DoormanError::BearerToken(
+                    "identity provider offline".into(),
+                ))
+            }
+            async fn refresh(&self) -> Result<String> {
+                Err(DoormanError::BearerToken(
+                    "identity provider offline".into(),
+                ))
+            }
+        }
+
+        let server = MockServer::start().await;
+        // No mocks registered — any request reaching the server would fail the expectation.
+
+        let client = YoYoTierClient::new(
+            YoYoTierConfig {
+                endpoint: server.uri(),
+                default_model: "Olmo-3-1125-32B-Think".into(),
+                contract_version: crate::YOYO_CONTRACT_VERSION.into(),
+                pricing: PricingConfig::default(),
+            },
+            Arc::new(FailingBearer),
+        );
+
+        let err = client
+            .complete(&req())
+            .await
+            .expect_err("failing bearer must return error");
+        match err {
+            DoormanError::BearerToken(msg) => {
+                assert!(
+                    msg.contains("offline"),
+                    "error message should preserve provider detail: {msg}"
+                );
+            }
+            other => panic!("expected BearerToken error, got {other:?}"),
+        }
+        // Verify zero network requests (no mock was mounted; wiremock would panic on receipt).
+        assert_eq!(server.received_requests().await.unwrap().len(), 0);
+    }
+
+    /// When `BearerTokenProvider::token()` returns `Ok(String::new())`, the
+    /// client sends an empty bearer token. The server will return 401 —
+    /// triggering `refresh()`, which also returns empty. The second request
+    /// (with the refresh result) also fails. Final error must be `UpstreamShape`
+    /// from the failed-retry branch (not a panic or unwrap).
+    #[tokio::test]
+    async fn bearer_empty_string_causes_auth_failure_path() {
+        #[derive(Debug)]
+        struct EmptyBearer;
+        #[async_trait]
+        impl BearerTokenProvider for EmptyBearer {
+            async fn token(&self) -> Result<String> {
+                Ok(String::new())
+            }
+            async fn refresh(&self) -> Result<String> {
+                Ok(String::new())
+            }
+        }
+
+        let server = MockServer::start().await;
+        // The server always returns 401 for any request (empty bearer included).
+        Mock::given(method("POST"))
+            .and(path("/v1/chat/completions"))
+            .respond_with(ResponseTemplate::new(401))
+            .expect(2) // initial request + one retry-after-refresh
+            .mount(&server)
+            .await;
+
+        let client = YoYoTierClient::new(
+            YoYoTierConfig {
+                endpoint: server.uri(),
+                default_model: "Olmo-3-1125-32B-Think".into(),
+                contract_version: crate::YOYO_CONTRACT_VERSION.into(),
+                pricing: PricingConfig::default(),
+            },
+            Arc::new(EmptyBearer),
+        );
+
+        let err = client
+            .complete(&req())
+            .await
+            .expect_err("empty bearer leading to repeated 401 must return error");
+        // The retry-after-auth-refresh path returns UpstreamShape.
+        match err {
+            DoormanError::UpstreamShape(msg) => {
+                assert!(
+                    msg.contains("401"),
+                    "UpstreamShape message should mention the status: {msg}"
+                );
+            }
+            other => panic!("expected UpstreamShape from failed auth retry, got {other:?}"),
+        }
+    }
+
     /// 410 MAJOR contract mismatch: client must NOT retry and must
     /// surface `ContractMajorMismatch`.
     #[tokio::test]

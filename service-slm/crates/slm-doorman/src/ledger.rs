@@ -449,6 +449,104 @@ mod tests {
         assert_eq!(capture.entry_type, ENTRY_TYPE_AUDIT_CAPTURE);
     }
 
+    // ---- Audit-ledger error-path tests (PS.6 chunk #6 tail) ----
+
+    /// When `HOME` is unset, `AuditLedger::default_for_user()` must return
+    /// `DoormanError::HomeUnset` — not panic.
+    ///
+    /// The test saves and restores the `HOME` env var around the assertion so
+    /// it does not leak mutations to other tests running in the same process.
+    /// Note: Rust test threads share the process env; this test is deliberately
+    /// single-threaded (no async, no `tokio::test`) so there is no race window
+    /// with other tests that read `HOME`. The save-and-restore is a best-effort
+    /// courtesy for tests that run in this same binary.
+    #[test]
+    fn default_for_user_with_home_unset_returns_home_unset_error() {
+        let saved = std::env::var_os("HOME");
+        std::env::remove_var("HOME");
+        let result = AuditLedger::default_for_user();
+        // Restore HOME before any assertions (so a panic doesn't leak the unset state).
+        if let Some(v) = saved {
+            std::env::set_var("HOME", v);
+        }
+        // If HOME was already unset before this test, nothing to restore.
+        match result {
+            Err(crate::error::DoormanError::HomeUnset) => {}
+            Err(other) => panic!("expected HomeUnset, got {other:?}"),
+            Ok(_) => panic!("expected HomeUnset error but got Ok"),
+        }
+    }
+
+    /// When the ledger directory path cannot be created (parent is
+    /// read-only), `AuditLedger::new()` must return a `DoormanError::LedgerIo`
+    /// — not panic.
+    #[test]
+    fn new_with_readonly_parent_returns_ledger_io_error() {
+        let parent = tempdir();
+        // Make the parent read-only so subdirectory creation fails.
+        let metadata = std::fs::metadata(&parent).unwrap();
+        let mut perms = metadata.permissions();
+        use std::os::unix::fs::PermissionsExt;
+        perms.set_mode(0o555);
+        std::fs::set_permissions(&parent, perms.clone()).unwrap();
+
+        let unreachable_child = parent.join("audit-subdir");
+        let result = AuditLedger::new(&unreachable_child);
+
+        // Restore write permissions so the TempDir cleanup can delete it.
+        perms.set_mode(0o755);
+        std::fs::set_permissions(&parent, perms).unwrap();
+
+        match result {
+            Err(crate::error::DoormanError::LedgerIo(_)) => {}
+            Err(other) => panic!("expected LedgerIo, got {other:?}"),
+            Ok(_) => panic!("expected LedgerIo error but got Ok (maybe running as root?)"),
+        }
+    }
+
+    /// When the ledger directory exists but the JSONL file inside it is not
+    /// writable, `AuditLedger::append()` must return a `DoormanError::LedgerIo`
+    /// — not panic.
+    #[test]
+    fn append_to_readonly_directory_returns_ledger_io_error() {
+        use std::os::unix::fs::PermissionsExt;
+
+        // Create the ledger with a valid (writable) directory first.
+        let dir = tempdir();
+        let ledger = AuditLedger::new(dir.clone()).unwrap();
+
+        let entry = AuditEntry {
+            entry_type: ENTRY_TYPE_CHAT_COMPLETION.to_string(),
+            timestamp_utc: Utc::now(),
+            request_id: RequestId::new(),
+            module_id: ModuleId::from_str("foundry").unwrap(),
+            tier: Tier::Local,
+            model: "olmo-3-7b-q4".into(),
+            inference_ms: 1,
+            cost_usd: 0.0,
+            sanitised_outbound: true,
+            completion_status: CompletionStatus::Ok,
+            error_message: None,
+        };
+
+        // Now make the directory read-only so subsequent file opens fail.
+        let mut perms = std::fs::metadata(&dir).unwrap().permissions();
+        perms.set_mode(0o555);
+        std::fs::set_permissions(&dir, perms.clone()).unwrap();
+
+        let result = ledger.append(&entry);
+
+        // Restore write permissions so TempDir cleanup succeeds.
+        perms.set_mode(0o755);
+        std::fs::set_permissions(&dir, perms).unwrap();
+
+        match result {
+            Err(crate::error::DoormanError::LedgerIo(_)) => {}
+            Err(other) => panic!("expected LedgerIo, got {other:?}"),
+            Ok(()) => panic!("expected LedgerIo error but got Ok (maybe running as root?)"),
+        }
+    }
+
     fn tempdir() -> PathBuf {
         let dir =
             std::env::temp_dir().join(format!("slm-doorman-ledger-test-{}", uuid_like_suffix()));
