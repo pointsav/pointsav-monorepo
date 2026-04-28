@@ -8,14 +8,13 @@
 
 ## Right now — long-running Sonnet pipeline active
 
-**Status:** Iteration 6 complete. PS.4 step 2 landed cleanly (mock-only
-per B4 guardrail). Pipeline self-paces via `/loop` dynamic mode;
-iteration 7 scheduled.
+**Status:** Iteration 7 complete. PS.4 step 3 landed cleanly. Audit_proxy
+now has purpose-allowlist enforcement (4 documented purposes; 403 on
+unallowlisted). Pipeline self-paces via `/loop` dynamic mode; iteration 8
+scheduled.
 
-**Tests:** 111/111 passing across slm-core (14) + slm-doorman (71 incl.
-3 new audit_proxy unit tests) + slm-doorman-server (26 incl. 6 new
-audit_proxy integration tests). Last code commit `028c411` (PS.4 step 2 —
-upstream relay).
+**Tests:** 115/115 passing. Last code commit `acee9f7` (PS.4 step 3 —
+purpose allowlist).
 
 **audit_proxy now functional (against mocks)**: handler validates →
 writes stub ledger entry → calls AuditProxyClient.relay() →
@@ -37,8 +36,8 @@ at least one provider has both endpoint + key.
 4. **PS.3 step 5** — llguidance Doorman-side Lark validation ✅ `978ab79`
 5. **PS.4 step 1** — audit_proxy endpoint scaffold ✅ `40dc18e`
 6. **PS.4 step 2** — audit_proxy upstream provider relay ✅ `028c411`
-7. **PS.4 step 3** — purpose allowlist enforcement (next, ~1-2hr)
-8. **PS.4 step 4** — audit_capture endpoint scaffold (~3-4hr)
+7. **PS.4 step 3** — purpose allowlist enforcement ✅ `acee9f7`
+8. **PS.4 step 4** — audit_capture endpoint scaffold (next, ~3-4hr)
 9. **PS.4 step 5** — integration tests + cross-cluster contract doc (~2-3hr)
 
 **Doorman grammar substrate — full picture post-PS.3:**
