@@ -3,10 +3,10 @@ schema: foundry-cluster-manifest-v1
 cluster_name: project-slm
 cluster_branch: cluster/project-slm
 created: 2026-04-23
-backfilled: 2026-04-26 (manifest schema), 2026-04-26 (triad per Doctrine v0.0.4)
+backfilled: 2026-04-26 (manifest schema), 2026-04-26 (triad per Doctrine v0.0.4), 2026-04-28 (tetrad per Doctrine v0.0.10 claim #37)
 state: active
 
-triad:
+tetrad:
   vendor:
     - repo: pointsav-monorepo
       path: ./
@@ -17,7 +17,7 @@ triad:
       catalog_subfolder: vault-privategit-source/
       tenant: pointsav
       purpose: documentation-of-Doorman-installation-on-the-workspace-VM
-      status: leg-pending — Task to draft GUIDE-doorman-deployment.md
+      status: leg-pending — Task to draft GUIDE-doorman-deployment.md (PS.8 in v0.1.42 plan; Q1-Q4 answered)
   deployment:
     - path: /srv/foundry  # vault-privategit-source-1 (the workspace itself)
       tenant: pointsav
@@ -28,7 +28,16 @@ triad:
         - /etc/systemd/system/local-slm.service (v0.0.11)
         - /var/lib/local-slm/weights/Olmo-3-1125-7B-Think-Q4_K_M.gguf
         - (planned) /usr/local/bin/slm-doorman-server + local-doorman.service
-      status: tier-A-live; Doorman deployment pending K4-equivalent
+      status: tier-A-live; Doorman deployment pending B7 redeploy with SLM_APPRENTICESHIP_ENABLED=true
+  wiki:
+    - repo: vendor/content-wiki-documentation
+      drafts_via: clones/project-slm/.claude/drafts-outbound/
+      gateway: project-language Task
+      planned_topics:
+        - topic-doorman-protocol.md           # the Doorman as security boundary + three-tier compute routing
+        - topic-apprenticeship-substrate.md    # service-slm as first responder + signed-verdict corpus loop (claim #32)
+        - topic-zero-container-inference.md    # native-binary + GCE start/stop + idle-shutdown for SMB GPU economics
+      status: leg-pending — three TOPIC skeletons staged 2026-04-28 in drafts-outbound/; substance lands as service-slm milestones progress (PS.3 AS-2 implementation, PS.4 A-1 endpoints, Yo-Yo MIN deploy)
 
 clones:
   - repo: pointsav-monorepo
