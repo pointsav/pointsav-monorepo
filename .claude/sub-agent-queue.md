@@ -65,23 +65,26 @@ Source: Master's v0.1.42-pending PS.1 ack reply (inbox 2026-04-28T00:21Z).
 - **Brief text**: see outbox `2026-04-27T23:30:00Z` candidate (3)
 - **Outcome**: Project `pointsav-public` does NOT exist in GCP; image has never been built. Surfaces D4 (Master-tier image-build pipeline) as 12th blocker upstream of all PS.1 B/W items. PS.1-5 + PS.2 + Yo-Yo-MIN are now blocked on D4. PS.1-2 + PS.1-3 + PS.1-4 still proceed. CUSTOMER-RUNBOOK.md added to PS.1-3 rename scope. nginx TLS layer absent from any artefact — needs Master-tier design pass before D4 ships. Surfaced to Master via outbox 2026-04-28T01:30Z.
 
-### Brief PS.1-2 — Module update for B1 + B2 + W1
+### Brief PS.1-2 — Module update for B1 + B2 + W1 [LAYER-SCOPE PENDING — Master clarification 2026-04-28]
 
+- **Layer concern**: edits files in `/srv/foundry/infrastructure/slm-yoyo/` which is workspace-repo per CLAUDE.md §11. Surfaced to Master via outbox 2026-04-28T02:30Z. Hold dispatch until Master confirms cluster-Task delegation OR takes brief as Master-tier work.
 - **Effort**: ~1-2 hours Sonnet
 - **Acceptance**: `infrastructure/slm-yoyo/tofu/` patches: (a) add `variable "preemptible"` default false; use `provisioning_model = var.preemptible ? "SPOT" : "STANDARD"` and `automatic_restart = !var.preemptible`; (b) extend `null_resource.gpu_quota_request` to file `NVIDIA_A100_GPUS_per-region` (when `var.gpu_class == "a100-40gb"`) or `NVIDIA_A100_80GB_GPUS_per-region` (when `a100-80gb`); (c) update `variable "gpu_class"` description to include both on-demand and Spot prices per class; document SLA in W2 README. NO `tofu apply` — module-spec edit only.
 - **Constraint**: foreground + serial; pure module edit; tests not applicable
 - **Brief text**: see outbox `2026-04-27T23:30:00Z` candidate (1)
 
-### Brief PS.1-3 — B4 doc update (mistral.rs → vLLM rename in CONTRACT.md + variables.tf + CUSTOMER-RUNBOOK.md) [scope expanded post-PS.1-1]
+### Brief PS.1-3 — B4 doc update (mistral.rs → vLLM rename in CONTRACT.md + variables.tf + CUSTOMER-RUNBOOK.md) [LAYER-SCOPE PENDING — Master clarification 2026-04-28]
 
+- **Layer concern**: same as PS.1-2 — workspace-repo files. Surfaced 2026-04-28T02:30Z.
 - **Effort**: ~30 minutes Sonnet
 - **Acceptance**: rename mistral.rs → vLLM in: (1) `infrastructure/slm-yoyo/CONTRACT.md` (lines 18, 66, 100 + any others); (2) `infrastructure/slm-yoyo/tofu/variables.tf` `image_family` description; (3) `infrastructure/slm-yoyo/CUSTOMER-RUNBOOK.md` (lines 29, 194-209: `systemctl status mistralrs`, `/var/lib/mistralrs/weights/`, `mistralrs-idle.timer`). Wire format unchanged. **DO NOT pin a specific vLLM patch version** — PS.1-1 finds image doesn't exist yet; pin to "vLLM ≥0.12" floor only. Patch pin lands when D4 builds the actual image.
 - **Constraint**: foreground; doc edit only
 - **Sequence**: independent now (was PS.1-1 dependent; resolved with version-pin caveat)
 - **Brief text**: derived from Master's v0.1.42 §"B4 — vLLM" call + PS.1-1 finding
 
-### Brief PS.1-4 — `local-doorman.env` output snippet (W6)
+### Brief PS.1-4 — `local-doorman.env` output snippet (W6) [LAYER-SCOPE PENDING — Master clarification 2026-04-28]
 
+- **Layer concern**: edits `infrastructure/slm-yoyo/tofu/outputs.tf` (workspace-repo). Surfaced 2026-04-28T02:30Z.
 - **Effort**: ~30 minutes Sonnet
 - **Acceptance**: extend `infrastructure/slm-yoyo/tofu/outputs.tf` with envsubst-ready Doorman config snippet keyed to selected `gpu_class` (which determines `SLM_YOYO_HOURLY_USD`); operator pastes into local-doorman.service `Environment=` block after `tofu apply`
 - **Constraint**: foreground; pure outputs.tf addition
