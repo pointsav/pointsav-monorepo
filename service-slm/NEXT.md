@@ -13,6 +13,23 @@ go-aheads now that operationalization-plan scope is exhausted; operator
 asks for next-step recommendation, agent recommends, operator confirms,
 agent dispatches.
 
+**Iter-19 outcome — B7 deploy-readiness package** (cluster `72f4100`):
+- 4 new files: `service-slm/docs/deploy/local-doorman.env.example`,
+  `service-slm/docs/deploy/deploy-doorman-workspace-vm.md`,
+  `service-slm/scripts/smoke-test-doorman.sh`,
+  `service-slm/scripts/corpus-stats.sh`.
+- Binary built + verified (7.5 MB stripped). NOT committed.
+- 17 env vars documented; SLM_TIER_C_* commented-out for Anthropic-key
+  TODO; workspace-dogfood defaults applied.
+- Runbook uses systemd `service.d/env-file.conf` drop-in pattern (avoids
+  editing existing workspace-tier unit at `infrastructure/local-doorman/`).
+- After Master executes the runbook, stage 2 of "the flow" turns on:
+  every commit across the 8 active clusters feeds apprenticeship corpus
+  in addition to existing engineering capture (84 tuples already in
+  `~/Foundry/data/training-corpus/engineering/project-slm/`).
+
+---
+
 **Iter-15 + Iter-16 + Iter-17 + Iter-18 outcomes** (post-iter-14 hardening sweep):
 - **Iter-15** `442e161` — entry_type discriminator on all 4 ledger entry
   kinds. Contract v0.1.0 → v0.2.0 MINOR. Tests 124 → 127.
