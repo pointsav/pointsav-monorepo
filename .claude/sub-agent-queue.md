@@ -26,29 +26,32 @@ commit reference and outcome note.
 
 Source: PS.6 in v0.1.42 plan; original Sonnet chunk #6 audit.
 
-### Brief A — `slm-doorman-server::http.rs` test factory + smoke + error mapping + apprenticeship-disabled
+### Brief A — `slm-doorman-server::http.rs` test factory + smoke + error mapping + apprenticeship-disabled [COMPLETED 2026-04-28 commit `d9ea19d` + `35a0c64`]
 
 - **Effort**: ~3-4 hours Sonnet
 - **Acceptance**: ≥10 new passing tests; clippy + fmt clean; existing 46 tests still pass
 - **Constraint**: foreground + serial (writes git index); MUST run before B/C (factory dependency)
 - **Files**: new `slm-doorman-server/tests/http_test.rs`; minor edits to expose `AppState` builder if needed
 - **Brief text**: see outbox `2026-04-27T19:30:00Z` sub-agent-queue proposal
+- **Outcome**: 12 new tests (4 smoke + 5 error-mapping + 3 apprenticeship-disabled). Tests 55 → 67. Structural change: slm-doorman-server gained `src/lib.rs` exposing `pub mod http` + `pub mod test_helpers` so integration tests can import. Test helpers reusable by B/C: `temp_ledger`, `temp_promotion_ledger`, `app_state_no_tiers`, `app_state_with_local`, `app_state_with_external`, `app_state_with_apprenticeship`. Two minor brief deviations: `TierUnavailable` maps to 503 not 502 (code authoritative); `ExternalNotAllowlisted` covered as unit-mapping assertion (router can't auto-select Tier C via /v1/chat/completions). Used `tower::ServiceExt::oneshot` (already transitive); added `wiremock` to slm-doorman-server dev-deps.
 
-### Brief B — `tier/local.rs` unit tests
+### Brief B — `tier/local.rs` unit tests [COMPLETED 2026-04-28 commit `97f360e`]
 
 - **Effort**: ~1-2 hours Sonnet
 - **Acceptance**: ≥4 new passing tests in `tier::local::tests`
 - **Constraint**: foreground + serial; independent after A
 - **Files**: new `#[cfg(test)]` block in `crates/slm-doorman/src/tier/local.rs`
 - **Brief text**: see outbox `2026-04-27T19:30:00Z`
+- **Outcome**: 5 new tests (happy path 200; default model fallback when ComputeRequest::model is None; 5xx → Upstream; empty choices → UpstreamShape; malformed JSON → Upstream). Tests 67 → 72. No unexpected findings; local.rs is straightforward (no retry/auth/custom headers). wiremock pattern reused from yoyo.rs / external.rs.
 
-### Brief C — `VerdictOutcome::Reject` + `DeferTierC` dispatcher tests
+### Brief C — `VerdictOutcome::Reject` + `DeferTierC` dispatcher tests [COMPLETED 2026-04-28 commit `5087a2c`]
 
 - **Effort**: ~1 hour Sonnet
 - **Acceptance**: 2 new passing tests in `verdict::tests`
 - **Constraint**: foreground + serial; independent after A
 - **Files**: addition to `crates/slm-doorman/src/verdict.rs::tests`
 - **Brief text**: see outbox `2026-04-27T19:30:00Z`
+- **Outcome**: 2 new tests. Tests 72 → 74. Behaviour-vs-brief: Reject DOES produce DPO pair (`produces_dpo_pair()` matches `Refine`); DeferTierC does NOT (escalation not refinement). Both write corpus tuples; both record non-accept ledger events.
 
 ---
 
@@ -116,6 +119,16 @@ once operator green-lights.
 ---
 
 ## Completed
+
+### 2026-04-28 — Coverage briefs A/B/C (PS.6) — all three landed cleanly
+
+Operator green-light "set it up to do all the recommendations" 2026-04-28. Three foreground-serial Sonnet sub-agent dispatches; each agent committed via `bin/commit-as-next.sh`. Workspace tests 55 → 74 (+19) across the batch. PS.6 (task #14 in local list) closed.
+
+- A: `d9ea19d` + `35a0c64`. 12 tests; structural addition of `src/lib.rs` to slm-doorman-server.
+- B: `97f360e`. 5 tests in `tier::local::tests`.
+- C: `5087a2c`. 2 tests in `verdict::tests` covering Reject + DeferTierC.
+
+Recurring SSH-perm issue: agents had to chmod 600 the staging-tier keys *three times* across this batch (back to 0640 between commits — some workspace process is touching them). Flagged to Master in outbox 2026-04-28T03:30Z (separate from PS.1-1 / layer-scope outboxes earlier today).
 
 ### 2026-04-28 — PS.1-1 image verification
 
