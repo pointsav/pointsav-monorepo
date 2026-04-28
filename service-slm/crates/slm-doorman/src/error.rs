@@ -180,4 +180,37 @@ pub enum DoormanError {
         /// The raw string the caller submitted.
         value: String,
     },
+
+    /// `POST /v1/audit/proxy` caller submitted a raw request body that exceeds
+    /// `AUDIT_PROXY_MAX_REQUEST_BYTES` (64 KiB). Checked BEFORE JSON
+    /// deserialisation so an oversized request is rejected early without
+    /// allocating heap memory for the payload. 413 PAYLOAD_TOO_LARGE.
+    /// Classified as PolicyDenied — the caller must reduce the request size.
+    #[error(
+        "audit_proxy request is {size_bytes} bytes, exceeding the {max_bytes}-byte limit; \
+         reduce the request size before retrying"
+    )]
+    AuditProxyPayloadTooLarge {
+        /// Raw body size in bytes.
+        size_bytes: usize,
+        /// Maximum permitted size in bytes (`AUDIT_PROXY_MAX_REQUEST_BYTES`).
+        max_bytes: usize,
+    },
+
+    /// A tenant's (`moduleId`) in-flight request count for the audit endpoints
+    /// (`/v1/audit/proxy` and `/v1/audit/capture`) has reached
+    /// `SLM_AUDIT_TENANT_CONCURRENCY_CAP` (default 4). The per-tenant
+    /// `Semaphore` has no permits available. 503 SERVICE_UNAVAILABLE with
+    /// `Retry-After: 5`. Classified as PolicyDenied — the caller may retry
+    /// once an in-flight request from the same tenant completes.
+    #[error(
+        "audit tenant {module_id:?} has reached the concurrency cap of {cap} \
+         in-flight requests; retry after in-flight requests complete"
+    )]
+    AuditTenantConcurrencyExhausted {
+        /// The `moduleId` that hit the cap.
+        module_id: String,
+        /// The configured cap value (`SLM_AUDIT_TENANT_CONCURRENCY_CAP`).
+        cap: u32,
+    },
 }
