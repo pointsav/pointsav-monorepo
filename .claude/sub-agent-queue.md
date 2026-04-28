@@ -152,6 +152,52 @@ once operator green-lights.
 
 ## Completed
 
+### 2026-04-28 — Iter-19 B7 deploy-readiness package [COMPLETED commit `72f4100`]
+
+Long-running Sonnet pipeline iteration 19. Operator-directed in response to
+"get the flow in place so we're not wasting any of the daily corpus
+training data". Cluster-Task contribution that takes B7 from "Master
+figures out how to deploy" to "Master copies binary and runs systemctl
+daemon-reload + restart".
+
+- **Outcome**: 4 new files. No code changes. Tests still 143/143. Commit
+  `72f4100` (Peter Woodfine).
+- **Binary verified**: `cargo build --release -p slm-doorman-server`
+  produces `service-slm/target/release/slm-doorman-server` (7.5 MB
+  stripped). Binary NOT committed (target/ gitignored); runbook
+  documents scp transfer.
+- **`service-slm/docs/deploy/local-doorman.env.example`**: 17 env vars
+  documented across 5 groups (server bind, Tier A, Tier B, Tier C,
+  apprenticeship + audit ledger). SLM_TIER_C_* commented-out with TODO
+  for when operator wires Anthropic key. Workspace-dogfood defaults
+  applied (`SLM_AUDIT_TENANT_CONCURRENCY_CAP=16`,
+  `SLM_AUDIT_DIR=/var/lib/local-doorman/audit/`,
+  `SLM_LARK_VALIDATION_ENABLED=true`, etc.).
+- **`service-slm/docs/deploy/deploy-doorman-workspace-vm.md`**: 8-step
+  runbook from prerequisites through rollback + troubleshooting.
+  Frontmatter includes v0.1.58 Research-Trail fields.
+- **`service-slm/scripts/smoke-test-doorman.sh`** (mode 0755): 8 endpoint
+  tests; `DOORMAN_URL` configurable; advisory mode (always exits 0).
+- **`service-slm/scripts/corpus-stats.sh`** (mode 0755): surveys
+  `~/Foundry/data/training-corpus/engineering/<cluster>/` and
+  `~/Foundry/data/training-corpus/apprenticeship/`. Reports tuple count,
+  date range, schema sanity-check on most recent 5 events.
+- **Surprises/discoveries**:
+  - 3 env-var groups not listed in original brief: `SLM_LOCAL_MODEL`,
+    `SLM_YOYO_MODEL`+`SLM_YOYO_HOURLY_USD`, full FOUNDRY_* namespace
+    (FOUNDRY_ROOT / FOUNDRY_ALLOWED_SIGNERS / FOUNDRY_DOCTRINE_VERSION /
+    FOUNDRY_TENANT). Agent enumerated them by grep against main.rs and
+    documented all 17 in env example.
+  - Existing systemd unit at `infrastructure/local-doorman/` already
+    carries `SLM_APPRENTICESHIP_ENABLED=true` inline. Runbook uses
+    `service.d/env-file.conf` drop-in pattern instead of editing the
+    unit — simpler.
+  - SLM_TIER_C_* namespace SHARED between Tier C compute routing AND
+    audit_proxy (one env block enables both surfaces).
+  - Corpus directory check found **84 tuples in engineering corpus**
+    (2026-04-26 → 2026-04-28; ~30 added today via this pipeline).
+- **Build hygiene**: cargo test 143/143; clippy + fmt clean.
+
 ### 2026-04-28 — Iter-18 ARCHITECTURE.md + DEVELOPMENT.md refresh [COMPLETED commit `93718c2`]
 
 Long-running Sonnet pipeline iteration 18. Doc-only refresh syncing both
