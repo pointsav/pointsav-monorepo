@@ -240,7 +240,13 @@ fn classify_error(e: &DoormanError) -> CompletionStatus {
         | DoormanError::AuditProxyInvalidProvider { .. }
         // Caller supplied an un-allowlisted purpose to audit_proxy (PS.4 step 3).
         // The request violated input policy — classified as PolicyDenied.
-        | DoormanError::AuditProxyPurposeNotAllowlisted { .. } => {
+        | DoormanError::AuditProxyPurposeNotAllowlisted { .. }
+        // audit_capture caller-side policy violations (PS.4 step 4): unknown
+        // event_type, oversized payload, or unparseable timestamp. All are
+        // caller errors — classified as PolicyDenied.
+        | DoormanError::AuditCaptureUnknownEventType { .. }
+        | DoormanError::AuditCapturePayloadTooLarge { .. }
+        | DoormanError::AuditCaptureInvalidTimestamp { .. } => {
             CompletionStatus::PolicyDenied
         }
         // The audit_proxy targeted a provider that is not configured at startup

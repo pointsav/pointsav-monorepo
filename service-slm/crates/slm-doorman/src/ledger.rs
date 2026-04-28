@@ -155,6 +155,36 @@ pub struct AuditProxyEntry {
     pub error_message: Option<String>,
 }
 
+/// Single audit ledger entry for a `POST /v1/audit/capture` call (PS.4 step 4).
+///
+/// Written when a cross-cluster caller pushes a local-work event to the Doorman
+/// for central audit-trail recording. Unlike the two-entry proxy design (stub +
+/// final), capture is single-entry: the work already happened locally; there is
+/// no upstream call to instrument.
+///
+/// The `captured_at` field is the Doorman's receipt timestamp; `event_at` is
+/// the caller's timestamp from the request. Both are preserved so downstream
+/// analysis can detect clock skew between clusters.
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct AuditCaptureEntry {
+    pub audit_id: String,
+    pub module_id: ModuleId,
+    pub event_type: String,
+    pub source: String,
+    pub status: String,
+    /// Caller's clock at the time the local work occurred (RFC 3339, parsed
+    /// from the request's `event_at` field).
+    pub event_at: DateTime<Utc>,
+    /// Doorman's clock at the time the capture request was received.
+    pub captured_at: DateTime<Utc>,
+    /// Event-specific payload (untyped JSON object; future steps may validate
+    /// per-event-type schemas).
+    pub payload: serde_json::Value,
+    /// Optional caller request correlation ID for cross-system tracing.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub caller_request_id: Option<String>,
+}
+
 impl AuditLedger {
     /// Write a stub entry for a `POST /v1/audit/proxy` call. This is the
     /// PS.4 step 1 paper trail: we capture the inbound request shape before
@@ -179,6 +209,22 @@ impl AuditLedger {
     /// records when the relay call returned, not when the ledger write happened.
     pub fn append_proxy_entry(&self, entry: &AuditProxyEntry) -> Result<()> {
         let path = self.path_for(&entry.completed_at);
+        let line = serde_json::to_vec(entry)?;
+        let _guard = self.inner.lock().expect("audit ledger mutex poisoned");
+        let file = OpenOptions::new().create(true).append(true).open(&path)?;
+        let mut writer = BufWriter::new(file);
+        writer.write_all(&line)?;
+        writer.write_all(b"\n")?;
+        writer.flush()?;
+        Ok(())
+    }
+
+    /// Write a single audit capture entry for a `POST /v1/audit/capture` call
+    /// (PS.4 step 4). Unlike the two-entry proxy design, capture writes exactly
+    /// one entry — the work already happened locally; there is no upstream call
+    /// to instrument. `captured_at` is the Doorman's clock at receipt time.
+    pub fn append_capture_entry(&self, entry: &AuditCaptureEntry) -> Result<()> {
+        let path = self.path_for(&entry.captured_at);
         let line = serde_json::to_vec(entry)?;
         let _guard = self.inner.lock().expect("audit ledger mutex poisoned");
         let file = OpenOptions::new().create(true).append(true).open(&path)?;

@@ -8,9 +8,10 @@
 //!   GET  /v1/contract            → Doorman version + YoYo contract version
 //!                                  + tier configuration summary
 //!   POST /v1/chat/completions    → forwards through Doorman::route
-//!   POST /v1/audit/proxy         → audited external provider call (PS.4;
-//!                                  step 1 scaffold — upstream relay pending
-//!                                  PS.4 step 2; returns 503 placeholder)
+//!   POST /v1/audit/proxy         → audited external provider call (PS.4
+//!                                  steps 1-3); two-entry ledger design
+//!   POST /v1/audit/capture       → caller pushes local-work audit event
+//!                                  (PS.4 step 4); single-entry ledger write
 //!
 //! The /v1/chat/completions handler accepts an OpenAI-compatible body
 //! plus optional X-Foundry-* headers (Module-ID, Request-ID,
@@ -29,13 +30,14 @@ use axum::Router;
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use slm_core::{
-    ApprenticeshipAttempt, ApprenticeshipBrief, AuditProxyRequest, ChatMessage, Complexity,
-    ComputeRequest, ComputeResponse, ModuleId, RequestId,
+    ApprenticeshipAttempt, ApprenticeshipBrief, AuditCaptureRequest, AuditCaptureResponse,
+    AuditProxyRequest, ChatMessage, Complexity, ComputeRequest, ComputeResponse, ModuleId,
+    RequestId,
 };
 use slm_doorman::{
-    ApprenticeshipConfig, ApprenticeshipDispatcher, AuditProxyClient, AuditProxyEntry,
-    AuditProxyPurposeAllowlist, AuditProxyStubEntry, BriefCache, Doorman, DoormanError,
-    VerdictDispatchOutcome, VerdictDispatcher, VerdictWireBody,
+    ApprenticeshipConfig, ApprenticeshipDispatcher, AuditCaptureEntry, AuditProxyClient,
+    AuditProxyEntry, AuditProxyPurposeAllowlist, AuditProxyStubEntry, BriefCache, Doorman,
+    DoormanError, VerdictDispatchOutcome, VerdictDispatcher, VerdictWireBody,
 };
 
 pub struct AppState {
@@ -73,6 +75,7 @@ pub fn router(state: Arc<AppState>) -> Router {
         .route("/v1/verdict", post(verdict))
         .route("/v1/shadow", post(shadow))
         .route("/v1/audit/proxy", post(audit_proxy))
+        .route("/v1/audit/capture", post(audit_capture))
         .with_state(state)
 }
 
@@ -426,6 +429,120 @@ async fn audit_proxy(
     }
 }
 
+/// Maximum permitted size of the `payload` field in an `AuditCaptureRequest`.
+/// Payloads larger than this limit are rejected 413 PAYLOAD_TOO_LARGE before
+/// any ledger write, preventing denial-of-service via giant payloads.
+pub const AUDIT_CAPTURE_MAX_PAYLOAD_BYTES: usize = 16 * 1024; // 16 KiB
+
+/// Accepted `event_type` values for `POST /v1/audit/capture`.
+const AUDIT_CAPTURE_VALID_EVENT_TYPES: &[&str] = &[
+    "prose-edit",
+    "design-edit",
+    "graph-mutation",
+    "anchor-event",
+    "verdict-issued",
+];
+
+/// `POST /v1/audit/capture` — caller pushes a local-work audit event (PS.4
+/// step 4).
+///
+/// The inverse direction of `audit_proxy`: cross-cluster callers push audit
+/// events to the Doorman for work they performed LOCALLY without routing
+/// through the Doorman. Examples:
+///   - project-data anchor-emitter ingesting a new file batch
+///   - project-language editorial gateway running a local prose-edit pass
+///
+/// Validation order:
+///   1. Parse `module_id` as `ModuleId`; reject 400 on failure.
+///   2. Validate `event_type` against the five accepted values; reject 400.
+///   3. Validate `source` is non-empty; reject 400.
+///   4. Validate `status` is non-empty; reject 400.
+///   5. Parse `event_at` as RFC 3339; reject 400 on failure.
+///   6. Check payload size ≤ `AUDIT_CAPTURE_MAX_PAYLOAD_BYTES`; reject 413.
+///
+/// On success: write one `AuditCaptureEntry` to the ledger; return 200 with
+/// `AuditCaptureResponse { audit_id, caller_request_id, status: "captured" }`.
+async fn audit_capture(
+    State(state): State<Arc<AppState>>,
+    Json(body): Json<AuditCaptureRequest>,
+) -> impl IntoResponse {
+    // 1. Validate module_id.
+    let module_id = match ModuleId::from_str(&body.module_id) {
+        Ok(mid) => mid,
+        Err(e) => {
+            return ApiError::bad_request(format!("invalid module_id: {e}")).into_response();
+        }
+    };
+
+    // 2. Validate event_type.
+    if !AUDIT_CAPTURE_VALID_EVENT_TYPES.contains(&body.event_type.as_str()) {
+        let err: ApiError = DoormanError::AuditCaptureUnknownEventType {
+            event_type: body.event_type.clone(),
+        }
+        .into();
+        return err.into_response();
+    }
+
+    // 3. Validate source is non-empty.
+    if body.source.trim().is_empty() {
+        return ApiError::bad_request("audit_capture source must be non-empty").into_response();
+    }
+
+    // 4. Validate status is non-empty.
+    if body.status.trim().is_empty() {
+        return ApiError::bad_request("audit_capture status must be non-empty").into_response();
+    }
+
+    // 5. Parse event_at as RFC 3339.
+    let event_at: chrono::DateTime<Utc> = match body.event_at.parse() {
+        Ok(ts) => ts,
+        Err(_) => {
+            let err: ApiError = DoormanError::AuditCaptureInvalidTimestamp {
+                value: body.event_at.clone(),
+            }
+            .into();
+            return err.into_response();
+        }
+    };
+
+    // 6. Check payload size.
+    let payload_bytes = body.payload.to_string().len();
+    if payload_bytes > AUDIT_CAPTURE_MAX_PAYLOAD_BYTES {
+        let err: ApiError = DoormanError::AuditCapturePayloadTooLarge {
+            size_bytes: payload_bytes,
+            max_bytes: AUDIT_CAPTURE_MAX_PAYLOAD_BYTES,
+        }
+        .into();
+        return err.into_response();
+    }
+
+    // 7. Write the capture entry to the ledger.
+    let captured_at = Utc::now();
+    let entry = AuditCaptureEntry {
+        audit_id: body.audit_id.clone(),
+        module_id,
+        event_type: body.event_type.clone(),
+        source: body.source.clone(),
+        status: body.status.clone(),
+        event_at,
+        captured_at,
+        payload: body.payload.clone(),
+        caller_request_id: body.caller_request_id.clone(),
+    };
+    if let Err(e) = state.doorman.ledger().append_capture_entry(&entry) {
+        let err: ApiError = e.into();
+        return err.into_response();
+    }
+
+    // 8. Return 200 with confirmation.
+    let resp = AuditCaptureResponse {
+        audit_id: body.audit_id,
+        caller_request_id: body.caller_request_id,
+        status: "captured".to_string(),
+    };
+    (StatusCode::OK, Json(resp)).into_response()
+}
+
 struct ApiError {
     status: StatusCode,
     body: serde_json::Value,
@@ -484,6 +601,13 @@ impl From<DoormanError> for ApiError {
             // classification as ExternalNotAllowlisted which mirrors this
             // pattern for Tier C task labels.
             DoormanError::AuditProxyPurposeNotAllowlisted { .. } => StatusCode::FORBIDDEN,
+            // audit_capture validation failures (PS.4 step 4).
+            // Unknown event_type → 400 BAD_REQUEST (caller-side input error).
+            DoormanError::AuditCaptureUnknownEventType { .. } => StatusCode::BAD_REQUEST,
+            // Oversized payload → 413 PAYLOAD_TOO_LARGE.
+            DoormanError::AuditCapturePayloadTooLarge { .. } => StatusCode::PAYLOAD_TOO_LARGE,
+            // Unparseable timestamp → 400 BAD_REQUEST.
+            DoormanError::AuditCaptureInvalidTimestamp { .. } => StatusCode::BAD_REQUEST,
             DoormanError::BriefCacheMiss => StatusCode::GONE,
             DoormanError::LedgerIo(_)
             | DoormanError::LedgerSerde(_)
