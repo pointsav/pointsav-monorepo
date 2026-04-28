@@ -17,6 +17,7 @@ pub mod apprenticeship;
 pub mod brief_cache;
 pub mod citations;
 pub mod error;
+pub mod grammar_validation;
 pub mod ledger;
 pub mod promotion_ledger;
 pub mod redact;
@@ -31,6 +32,7 @@ pub use apprenticeship::{
 };
 pub use brief_cache::{BriefCache, CachedBrief};
 pub use error::{DoormanError, Result};
+pub use grammar_validation::LarkValidator;
 pub use ledger::{AuditEntry, AuditLedger};
 pub use promotion_ledger::{PromotionLedger, PromotionOutcome, Stage, StatRow};
 pub use redact::sanitize;

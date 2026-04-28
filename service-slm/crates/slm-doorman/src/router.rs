@@ -12,10 +12,11 @@
 //! deterministic processing" decision.
 
 use chrono::Utc;
-use slm_core::{Complexity, ComputeRequest, ComputeResponse, Tier};
+use slm_core::{Complexity, ComputeRequest, ComputeResponse, GrammarConstraint, Tier};
 use tracing::{info, warn};
 
 use crate::error::{DoormanError, Result};
+use crate::grammar_validation::LarkValidator;
 use crate::ledger::{AuditEntry, AuditLedger, CompletionStatus};
 use crate::tier::{ExternalTierClient, LocalTierClient, YoYoTierClient};
 
@@ -24,6 +25,12 @@ pub struct DoormanConfig {
     pub local: Option<LocalTierClient>,
     pub yoyo: Option<YoYoTierClient>,
     pub external: Option<ExternalTierClient>,
+    /// Optional Lark grammar pre-validator (PS.3 step 5). When `Some`,
+    /// the router validates any Lark grammar before dispatching to Tier B.
+    /// `None` disables the validation step (opt-out for callers that do not
+    /// have the llguidance init overhead or for testing). Set via
+    /// `LarkValidator::new()` at Doorman startup.
+    pub lark_validator: Option<LarkValidator>,
 }
 
 pub struct Doorman {
@@ -31,6 +38,7 @@ pub struct Doorman {
     yoyo: Option<YoYoTierClient>,
     external: Option<ExternalTierClient>,
     ledger: AuditLedger,
+    lark_validator: Option<LarkValidator>,
 }
 
 impl Doorman {
@@ -40,6 +48,7 @@ impl Doorman {
             yoyo: config.yoyo,
             external: config.external,
             ledger,
+            lark_validator: config.lark_validator,
         }
     }
 
@@ -116,6 +125,34 @@ impl Doorman {
             tier = tier.as_str(),
             "dispatching"
         );
+
+        // PS.3 step 5 — pre-validate Lark grammar before Tier B dispatch.
+        //
+        // Tier B (vLLM ≥0.12) accepts Lark grammars. A malformed Lark string
+        // relayed to vLLM produces an opaque upstream 400/500 with no useful
+        // error message. We validate at the boundary so callers get a typed
+        // 400 MalformedLarkGrammar with parse-error location instead.
+        //
+        // Only runs when:
+        //   (a) a LarkValidator is configured (lark_validator.is_some()), AND
+        //   (b) the selected tier is Tier B (Yoyo), AND
+        //   (c) the request carries GrammarConstraint::Lark.
+        //
+        // Tier A rejects Lark in its own grammar-policy check (steps 2-4).
+        // Tier C rejects all grammars (steps 2-4). Neither path reaches here
+        // with a Lark grammar under normal routing. The guard on Tier::Yoyo
+        // is defensive; it makes the semantics explicit rather than relying on
+        // routing invariants.
+        if tier == Tier::Yoyo {
+            if let (Some(validator), Some(GrammarConstraint::Lark(lark_src))) =
+                (&self.lark_validator, &req.grammar)
+            {
+                if let Err(reason) = validator.validate(lark_src) {
+                    return Err(DoormanError::MalformedLarkGrammar { reason });
+                }
+            }
+        }
+
         match tier {
             Tier::Local => {
                 self.local
@@ -193,7 +230,11 @@ fn classify_error(e: &DoormanError) -> CompletionStatus {
         // classified as PolicyDenied — the request violated the per-tier
         // input policy.
         | DoormanError::TierAGrammarUnsupported { .. }
-        | DoormanError::TierCGrammarUnsupported { .. } => {
+        | DoormanError::TierCGrammarUnsupported { .. }
+        // Caller submitted a syntactically malformed Lark grammar. The Doorman
+        // rejected it at the boundary (PS.3 step 5) before any upstream call.
+        // Classified as PolicyDenied: the error is entirely on the caller's side.
+        | DoormanError::MalformedLarkGrammar { .. } => {
             CompletionStatus::PolicyDenied
         }
         DoormanError::Upstream(_)
@@ -273,6 +314,7 @@ mod tests {
                 local: None,
                 yoyo: Some(yoyo),
                 external: None,
+                lark_validator: None,
             },
             ledger(),
         );
