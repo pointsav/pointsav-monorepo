@@ -152,6 +152,7 @@ async fn chat_completions(
         temperature: body.temperature,
         sanitised_outbound: false,
         tier_c_label,
+        grammar: None,
     };
 
     state
