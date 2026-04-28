@@ -77,4 +77,16 @@ pub enum DoormanError {
         /// Human-readable advice for the caller.
         advice: &'static str,
     },
+
+    #[error(
+        "Tier C (external API) does not accept {dialect} grammars; \
+         {advice}"
+    )]
+    TierCGrammarUnsupported {
+        /// The grammar dialect that was rejected, e.g. `"Lark"`, `"GBNF"`,
+        /// or `"JsonSchema"`.
+        dialect: &'static str,
+        /// Human-readable advice for the caller.
+        advice: &'static str,
+    },
 }
