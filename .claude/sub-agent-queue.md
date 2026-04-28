@@ -68,9 +68,10 @@ Source: Master's v0.1.42-pending PS.1 ack reply (inbox 2026-04-28T00:21Z).
 - **Brief text**: see outbox `2026-04-27T23:30:00Z` candidate (3)
 - **Outcome**: Project `pointsav-public` does NOT exist in GCP; image has never been built. Surfaces D4 (Master-tier image-build pipeline) as 12th blocker upstream of all PS.1 B/W items. PS.1-5 + PS.2 + Yo-Yo-MIN are now blocked on D4. PS.1-2 + PS.1-3 + PS.1-4 still proceed. CUSTOMER-RUNBOOK.md added to PS.1-3 rename scope. nginx TLS layer absent from any artefact — needs Master-tier design pass before D4 ships. Surfaced to Master via outbox 2026-04-28T01:30Z.
 
-### Brief PS.1-2 — Module update for B1 + B2 + W1 [LAYER-SCOPE PENDING — Master clarification 2026-04-28]
+### Brief PS.1-2 — Module update for B1 + B2 + W1 [HOLD — pipeline boundary; Master decision recorded]
 
-- **Layer concern**: edits files in `/srv/foundry/infrastructure/slm-yoyo/` which is workspace-repo per CLAUDE.md §11. Surfaced to Master via outbox 2026-04-28T02:30Z. Hold dispatch until Master confirms cluster-Task delegation OR takes brief as Master-tier work.
+- **Master decision (recorded; not yet absorbed into /loop instructions)**: 2026-04-28T19:50Z v0.1.59 sweep delegated PS.1-2/-3/-4/PS.8 as cluster-Task work via CLAUDE.md §8 admin-tier procedure (`ps-administrator` author identity; SSH alias `github.com-pointsav-administrator`).
+- **Why HOLD**: original `/loop` input explicitly listed PS.1-2 in its "Skip" set and stated "Layer rule: cluster-scope only — never edit /srv/foundry/infrastructure/". Operator must explicitly relax that boundary (next /loop input that drops the skip list) before this brief becomes dispatchable. Inbox-derived authorization is insufficient on its own.
 - **Effort**: ~1-2 hours Sonnet
 - **Acceptance**: `infrastructure/slm-yoyo/tofu/` patches: (a) add `variable "preemptible"` default false; use `provisioning_model = var.preemptible ? "SPOT" : "STANDARD"` and `automatic_restart = !var.preemptible`; (b) extend `null_resource.gpu_quota_request` to file `NVIDIA_A100_GPUS_per-region` (when `var.gpu_class == "a100-40gb"`) or `NVIDIA_A100_80GB_GPUS_per-region` (when `a100-80gb`); (c) update `variable "gpu_class"` description to include both on-demand and Spot prices per class; document SLA in W2 README. NO `tofu apply` — module-spec edit only.
 - **Constraint**: foreground + serial; pure module edit; tests not applicable
