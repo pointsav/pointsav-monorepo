@@ -18,7 +18,7 @@ pub mod http;
 /// of the feature set.
 pub mod test_helpers {
     use std::collections::HashMap;
-    use std::sync::Arc;
+    use std::sync::{Arc, Mutex};
 
     use slm_doorman::tier::{
         ExternalTierClient, LocalTierClient, LocalTierConfig, TierCPricing, TierCProvider,
@@ -28,8 +28,23 @@ pub mod test_helpers {
         Doorman, DoormanConfig, PromotionLedger, VerdictDispatcher, VerdictVerifier,
         FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST,
     };
+    use tokio::sync::Semaphore;
 
     use crate::http::AppState;
+
+    /// Default per-tenant concurrency cap used in test helpers.
+    ///
+    /// Set to 100 so the cap never interferes with tests that are not
+    /// specifically testing the concurrency limit. Tests that exercise the
+    /// cap explicitly use a low value (e.g. 1 or 2) via
+    /// `app_state_with_audit_proxy_capped`.
+    const TEST_AUDIT_CONCURRENCY_CAP: u32 = 100;
+
+    /// Build an `Arc<Mutex<HashMap>>` for `audit_tenant_concurrency` with no
+    /// pre-populated entries (lazy-init; tenants are added on first request).
+    fn empty_concurrency_map() -> Arc<Mutex<HashMap<slm_core::ModuleId, Arc<Semaphore>>>> {
+        Arc::new(Mutex::new(HashMap::new()))
+    }
 
     /// Construct a temporary `AuditLedger` under `$TMPDIR`.
     /// Each call returns a unique directory so parallel tests do not race.
@@ -68,6 +83,8 @@ pub mod test_helpers {
             verdict_dispatcher: None,
             audit_proxy_client: None,
             audit_proxy_purpose_allowlist: FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST,
+            audit_tenant_concurrency: empty_concurrency_map(),
+            audit_tenant_concurrency_cap: TEST_AUDIT_CONCURRENCY_CAP,
         })
     }
 
@@ -94,6 +111,8 @@ pub mod test_helpers {
             verdict_dispatcher: None,
             audit_proxy_client: None,
             audit_proxy_purpose_allowlist: FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST,
+            audit_tenant_concurrency: empty_concurrency_map(),
+            audit_tenant_concurrency_cap: TEST_AUDIT_CONCURRENCY_CAP,
         })
     }
 
@@ -118,6 +137,8 @@ pub mod test_helpers {
             verdict_dispatcher: None,
             audit_proxy_client: None,
             audit_proxy_purpose_allowlist: FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST,
+            audit_tenant_concurrency: empty_concurrency_map(),
+            audit_tenant_concurrency_cap: TEST_AUDIT_CONCURRENCY_CAP,
         })
     }
 
@@ -167,6 +188,8 @@ pub mod test_helpers {
             verdict_dispatcher: Some(verdict_dispatcher),
             audit_proxy_client: None,
             audit_proxy_purpose_allowlist: FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST,
+            audit_tenant_concurrency: empty_concurrency_map(),
+            audit_tenant_concurrency_cap: TEST_AUDIT_CONCURRENCY_CAP,
         })
     }
 
@@ -178,10 +201,29 @@ pub mod test_helpers {
     /// of the test audit ledger so callers can inspect written JSONL files.
     /// `AuditLedger` is not `Clone`, so we return the path instead of the
     /// ledger object itself.
+    ///
+    /// The concurrency cap is set to `TEST_AUDIT_CONCURRENCY_CAP` (100) so
+    /// it does not interfere with tests that are not testing the cap. Use
+    /// `app_state_with_audit_proxy_capped` to inject a low cap for concurrency
+    /// limit tests.
     pub fn app_state_with_audit_proxy(
         provider: TierCProvider,
         server_uri: impl Into<String>,
         pricing: TierCPricing,
+    ) -> (Arc<AppState>, std::path::PathBuf) {
+        app_state_with_audit_proxy_capped(provider, server_uri, pricing, TEST_AUDIT_CONCURRENCY_CAP)
+    }
+
+    /// Build an `AppState` with an `AuditProxyClient` and a custom per-tenant
+    /// concurrency cap. Used by tests that exercise
+    /// `AuditTenantConcurrencyExhausted`.
+    ///
+    /// Returns `(state, ledger_dir)`.
+    pub fn app_state_with_audit_proxy_capped(
+        provider: TierCProvider,
+        server_uri: impl Into<String>,
+        pricing: TierCPricing,
+        concurrency_cap: u32,
     ) -> (Arc<AppState>, std::path::PathBuf) {
         let ledger_dir = std::env::temp_dir().join(format!(
             "slm-audit-proxy-helper-test-{}",
@@ -213,6 +255,8 @@ pub mod test_helpers {
             verdict_dispatcher: None,
             audit_proxy_client: Some(audit_client),
             audit_proxy_purpose_allowlist: FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST,
+            audit_tenant_concurrency: empty_concurrency_map(),
+            audit_tenant_concurrency_cap: concurrency_cap,
         });
         (state, ledger_dir)
     }
@@ -257,6 +301,8 @@ pub mod test_helpers {
             verdict_dispatcher: None,
             audit_proxy_client: Some(audit_client),
             audit_proxy_purpose_allowlist: purpose_allowlist,
+            audit_tenant_concurrency: empty_concurrency_map(),
+            audit_tenant_concurrency_cap: TEST_AUDIT_CONCURRENCY_CAP,
         });
         (state, ledger_dir)
     }
