@@ -96,6 +96,160 @@ Newest on top. Append a dated block when a session includes meaningful cleanup w
 
 ---
 
+## 2026-04-28 — Task `cluster/project-system` (Phase 1A.5 RFC 9162 §2.1.4 consistency proofs + Tetrad Discipline upgrade + identity-key perms incident)
+
+Three things landed this session-block: Phase 1A.5 closes the
+RFC 9162 §2 surface in system-core (consistency proofs follow
+the Phase 1A.4 inclusion-proof primitive); Tetrad Discipline
+backfill per Master v0.0.10/claim #37 broadcast; and a workspace-
+wide identity-key permissions incident that briefly blocked all
+staging-tier commits.
+
+### Phase 1A.5 — `system-core` consistency proofs
+
+- **`82b659f`** (Jennifer Woodfine) — system-core: RFC 9162
+  §2.1.4 consistency proofs implementation. Per Master Plan §4
+  SY.2 (workspace v0.1.42); follows the SY.1 sketch delivered
+  earlier this session at `.claude/SKETCH-consistency-proofs.md`.
+  Implementation by Sonnet sub-agent against the SY.1 spec;
+  parent-Task verification: 51 passing tests + workspace cargo
+  check clean + zero warnings.
+
+  - New module `src/consistency_proof.rs` (506 lines):
+    `ConsistencyProof { hashes }` + `verify(old_root, old_size,
+    new_root, new_size)` per RFC 9162 §2.1.4 verbatim;
+    `ConsistencyVerifyError` (9 variants); reuses
+    `rfc9162_internal_hash` from `inclusion_proof.rs` (does NOT
+    duplicate the helper); 11 unit tests including full grid
+    1..=8 verification.
+  - Composed primitive in `src/checkpoint.rs` (+239 lines):
+    `CheckpointConsistencyError` (6 variants);
+    `SignedCheckpoint::verify_consistency_proof(proof,
+    old_signed_checkpoint, signer_name, signer_pubkey)` chains
+    tree-size invariants → both signature verifies → raw proof
+    verify; 5 tests covering valid extension, size mismatches,
+    signature failures, proof corruption.
+  - Re-exports in `src/lib.rs`: `pub mod consistency_proof`,
+    `ConsistencyProof`, `ConsistencyVerifyError`,
+    `CheckpointConsistencyError` at crate root.
+
+  system-core 0.1.4 → **0.2.0** (MINOR: new public API surface;
+  matches Master's v0.1.28 framing of v0.2.x as the structurally-
+  complete substrate scope).
+
+  System-core public-API surface for v0.2.x is now structurally
+  complete: Capability + WitnessRecord + LedgerAnchor +
+  SignedCheckpoint + InclusionProof + ConsistencyProof. Stage-6
+  promotion path is unblocked structurally; v1.0.0 awaits
+  test-coverage + bench-numbers ratification per Master.
+
+### Tetrad Discipline upgrade (Master v0.0.10 / claim #37)
+
+Per `~/Foundry/conventions/project-tetrad-discipline.md` §"Backfill
+from Triad". Cluster manifest at `.claude/manifest.md` amended:
+
+- `triad:` field renamed → `tetrad:`
+- New `wiki:` leg block added with `repo:
+  vendor/content-wiki-documentation`, `drafts_via:
+  clones/project-system/.claude/drafts-outbound/`, `gateway:
+  project-language Task`, `status: leg-pending`, and three
+  `planned_topics`:
+  - `topic-merkle-proofs-as-substrate-primitive.md` (Phase
+    1A.4 + 1A.5 milestone; RFC 9162 §2 grounding)
+  - `topic-capability-ledger-substrate.md` (Doctrine claim
+    #33 architecture decision; Phase 1A structurally complete)
+  - `topic-two-bottoms-sovereign-substrate.md` (Doctrine
+    claim #34 seL4-native + NetBSD-compat composition; future-
+    leaning as Phase 2 lands)
+
+TOPIC skeleton staged at `clones/project-system/.claude/drafts-
+outbound/`:
+
+- `topic-merkle-proofs-as-substrate-primitive.md` (160 lines;
+  English canonical; foundry-draft-v1 frontmatter + 8 section
+  headings + `(draft-pending — substance follows in milestone
+  N+1)` markers per the convention's Backfill step 3)
+- `topic-merkle-proofs-as-substrate-primitive.es.md` (54 lines;
+  Spanish overview per DOCTRINE.md §XII strategic-adaptation
+  pattern, NOT 1:1 translation; section headings mirror English)
+
+Note on tracking scope: the manifest and the drafts-outbound
+files are at the cluster `.claude/` path which is gitignored at
+workspace root (`/*` pattern). They are local-only operational
+state, like the mailbox. project-language Task reads them
+directly via filesystem. This cleanup-log entry is the tracked
+record of the Tetrad upgrade milestone on `cluster/project-
+system`; the operational artefacts themselves do not enter git
+history.
+
+### Identity-key perms incident (workspace-wide signal)
+
+Mid-session (between commit `9da020c` at 19:15 UTC and the SY.2
+commit attempt at ~00:35 UTC), an unidentified process chmod'd
+`/srv/foundry/identity/{jwoodfine,pwoodfine}/id_*` from 0600 to
+0640. Both keys touched at the same nanosecond
+(`2026-04-28 00:35:27.055196052`) — scripted action, single atomic
+command. SSH refuses 0640 private keys, blocking
+`bin/commit-as-next.sh` workspace-wide.
+
+This Task surfaced via outbox to Master rather than crossing
+layer-scope to chmod the workspace identity store. Master
+restored perms at `00:54:18 UTC` (visible in the keys' Change
+time today). Origin investigation inconclusive: no hooks /
+timers / cron / sudo / ACLs / shell-snapshot match the
+timestamp. Pattern observed: 2nd revert event in <12 hours
+(project-knowledge cluster hit it first ~19:55 Apr 27); the
+loosener has not been identified. Operator flagged "something
+is up with chmod" before any cluster surfaced — direct operator
+knowledge may resolve when surfaced.
+
+Until origin is identified, expect recurrence. Per Master's
+guidance: re-stat keys at session start; if revert mid-session,
+STOP + outbox immediately + do NOT chmod from Task scope.
+
+### AS-5 observed live
+
+The SY.2 commit `82b659f`'s `commit-as-next.sh` output included:
+`capture-edit: shadow brief 01KQ8SYP73TF25GESHC2C6Z8QB
+dispatched to Doorman (fire-and-forget)`. Per Master plan §4
+(workspace v0.1.42), this is the AS-5 shadow-routing path: every
+`cluster/project-system` commit now auto-fires a shadow brief to
+Doorman /v1/shadow which captures into the apprenticeship corpus.
+No behavior change required from this Task; corpus production
+became automatic between v0.1.42 (when Master named it as future)
+and this session (when it landed).
+
+### Verification
+
+- `cargo test -p system-core`: 51 passed (35 prior + 11 new
+  consistency_proof + 5 new composed-primitive)
+- `cargo test -p system-ledger`: 44 passed (unchanged from
+  Phase 1A.4)
+- `cargo test -p moonshot-toolkit`: 30 passed (unchanged from
+  Phase 1B)
+- `cargo check -p system-core -p system-ledger`: zero warnings
+- Total cluster-tracked tests: 109 → **125 passing**
+
+### Tasks deferred / explicit FUTURE
+
+- **Tetrad wiki leg**: `leg-pending` per the convention; substantive
+  bulk for the staged TOPIC follows in milestone N+1. The two
+  remaining `planned_topics` (capability-ledger-substrate,
+  two-bottoms-sovereign-substrate) skeleton-stage when Phase 2
+  begins or when project-language signals via outbox.
+- **#14 moonshot-toolkit Phase 1C** (actual seL4 cross-compile +
+  QEMU AArch64 boot): FUTURE; still blocked on Master direction
+  for the three decisions named in the Phase 1B outbox §5.
+- **#22 / #23 system-substrate + system-security hygiene**:
+  natural-touch-deferred per Master's prior framing; not crossed
+  this session.
+- **S6 audit follow-up**: the architecture-vs-CLI alignment audit
+  at `clones/project-system/.claude/AUDIT-moonshot-toolkit-arch-
+  vs-cli.md` surfaces 4 drift items + 7 undocumented-behaviour
+  additions for `moonshot-toolkit/ARCHITECTURE.md`. Not Master-
+  asked; deferred until a moonshot-toolkit-touch session naturally
+  crosses the doc.
+
 ## 2026-04-27 — Task `cluster/project-system` (Phase 1B moonshot-toolkit activation + CLI rewrite; system-core 1A.4 hotfix)
 
 Continuous Phase 1B work across a token-budget gap. Six commits; two
