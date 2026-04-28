@@ -13,13 +13,16 @@ go-aheads now that operationalization-plan scope is exhausted; operator
 asks for next-step recommendation, agent recommends, operator confirms,
 agent dispatches.
 
-**Iter-15 outcome** (cluster commit `442e161`):
-- entry_type discriminator on all 4 ledger entry kinds (canonical strings
-  `chat-completion` / `audit-proxy-stub` / `audit-proxy` / `audit-capture`).
-- Contract bump v0.1.0 → v0.2.0 (MINOR; additive field per §5 rules).
-- Backwards-compat preserved via `#[serde(default = ...)]`; existing
-  field-presence discrimination test still passes alongside new
-  explicit-tag test. Tests 124 → 127.
+**Iter-15 + Iter-16 outcomes** (post-iter-14 hardening sweep):
+- **Iter-15** `442e161` — entry_type discriminator on all 4 ledger entry
+  kinds. Canonical kebab strings; contract v0.1.0 → v0.2.0 MINOR; backwards
+  compat preserved. Tests 124 → 127.
+- **Iter-16** `6e47d27` — audit endpoint hardening: payload cap on
+  /v1/audit/proxy (64 KiB; 4× capture's cap because proxy carries longer
+  messages); per-tenant concurrency cap on both endpoints (default 4 via
+  `SLM_AUDIT_TENANT_CONCURRENCY_CAP`); two new error variants
+  (`AuditProxyPayloadTooLarge` → 413; `AuditTenantConcurrencyExhausted`
+  → 503 + Retry-After). Tests 127 → 131.
 
 **Iter-13 + Iter-14 outcomes:**
 - Iter-13 cluster `5812501` — SLM_AUDIT_DIR env var wired in
