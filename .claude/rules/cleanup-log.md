@@ -401,6 +401,44 @@ Next: **PS.4 step 2** (audit_proxy upstream provider relay).
 
 Next: **PS.4 step 3** (purpose allowlist enforcement; ~1-2hr Sonnet).
 
+### Iteration 7 outcome — PS.4 step 3 — audit_proxy purpose allowlist
+
+- **Commit**: `acee9f7` (Peter Woodfine)
+- **Tests**: 111 → 115 (+4). Four new in `slm-doorman-server::tests::http_test`
+  covering 403 status / no-upstream-call / no-ledger-pollution / four-
+  documented-purposes accepted.
+- **Allowlist**: `AuditProxyPurposeAllowlist` in
+  `crates/slm-doorman/src/audit_proxy.rs`. Mirrors
+  `tier::external::ExternalAllowlist` pattern exactly (compile-time
+  `&'static [&'static str]`).
+- **Default purposes** (`FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST`):
+  `editorial-refinement`, `citation-grounding`, `entity-disambiguation`,
+  `initial-graph-build`. Sourced from `conventions/llm-substrate-decision.md`.
+- **Empty-list semantic**: fail-closed — all purposes denied. Documented
+  inline.
+- **Ordering**: allowlist check BEFORE audit_id generation / stub-ledger
+  write. Policy-denied requests don't pollute the audit trail.
+- **New error variant**: `AuditProxyPurposeNotAllowlisted { purpose }` →
+  403 FORBIDDEN → `PolicyDenied`. Pattern matches `ExternalNotAllowlisted`.
+- **Architectural note**: AppState carries `audit_proxy_purpose_allowlist`
+  as a separate field; the handler consults that directly rather than the
+  copy inside `AuditProxyConfig`. Deliberate separation enables per-
+  deployment allowlist configuration independent of relay-client config.
+- **Existing fixture rename**: test bodies switched from
+  `"editorial-grammar-check"` → `"editorial-refinement"` (which IS on the
+  default list).
+- **Build hygiene**: cargo test 115/115; clippy `-D warnings` clean;
+  fmt clean.
+- **No layer-scope concerns**.
+- **Wall time**: ~8 minutes; ~150k Sonnet tokens.
+
+### Pipeline continues — iteration 8
+
+Next: **PS.4 step 4** (audit_capture endpoint scaffold — inverse direction;
+~3-4hr Sonnet). Lets Ring 1 producers (project-data anchor-emitter,
+project-language gateway) push audit events for work done locally without
+going through the Doorman.
+
 ---
 
 ## 2026-04-28 — Sonnet batch wrap-up (PS.7 + A/B/C + layer-scope flag) — 5 commits, +19 tests

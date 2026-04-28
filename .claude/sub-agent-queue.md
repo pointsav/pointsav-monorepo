@@ -100,6 +100,7 @@ chunks for the pipeline:
 
 - **PS.4 step 1 — audit_proxy endpoint scaffold** ✅ commit `40dc18e`
 - **PS.4 step 2 — audit_proxy upstream provider relay** ✅ commit `028c411`
+- **PS.4 step 3 — purpose allowlist enforcement** ✅ commit `acee9f7`
 - **PS.4 step 3 — purpose allowlist enforcement** (~1-2hr Sonnet)
   Add a configurable allowlist for the `purpose` field (similar to
   `ExternalAllowlist` for Tier C labels). Reject unallowlisted purposes
@@ -148,6 +149,39 @@ once operator green-lights.
 ---
 
 ## Completed
+
+### 2026-04-28 — PS.4 step 3 (audit_proxy purpose allowlist) [COMPLETED commit `acee9f7`]
+
+Long-running Sonnet pipeline iteration 7. Enforces a configurable allowlist
+on the `purpose` field of `AuditProxyRequest`.
+
+- **Outcome**: 4 new tests in `slm-doorman-server::tests::http_test`. Tests
+  111 → 115. Commit `acee9f7` (Peter Woodfine).
+- **Allowlist type**: `AuditProxyPurposeAllowlist` in
+  `crates/slm-doorman/src/audit_proxy.rs`. `&'static [&'static str]` with
+  `EMPTY` const and `from_static` constructor — mirrors
+  `tier::external::ExternalAllowlist` pattern exactly.
+- **Default purposes** (in `FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST`):
+  `editorial-refinement`, `citation-grounding`, `entity-disambiguation`,
+  `initial-graph-build`. Sourced from `conventions/llm-substrate-decision.md`.
+- **Empty-allowlist semantic**: fail-closed — all purposes denied.
+  Documented in `EMPTY` doc comment + handler logic.
+- **Ordering**: allowlist check runs BEFORE audit_id generation /
+  stub-ledger write. Rationale: policy-denied requests should not pollute
+  the audit trail. Tests verify zero JSONL entries on rejection.
+- **New error variant**: `AuditProxyPurposeNotAllowlisted { purpose: String }`.
+  HTTP 403 FORBIDDEN. `CompletionStatus::PolicyDenied`. Same classification
+  as `ExternalNotAllowlisted`.
+- **AppState change**: `audit_proxy_purpose_allowlist:
+  AuditProxyPurposeAllowlist` added as a separate field from
+  `audit_proxy_client`. The handler uses `state.audit_proxy_purpose_allowlist`
+  directly; the allowlist field on `AuditProxyConfig` is kept for client-side
+  symmetry but not consulted by the handler. Deliberate separation enables
+  per-deployment allowlist configuration independent of relay-client config.
+- **Existing test fixture rename**: `valid_audit_proxy_body()` /
+  `valid_audit_proxy_relay_body()` switched from `"editorial-grammar-check"`
+  to `"editorial-refinement"` (which IS on the default allowlist).
+- **Build hygiene**: cargo test 115/115; clippy + fmt clean.
 
 ### 2026-04-28 — PS.4 step 2 (audit_proxy upstream provider relay) [COMPLETED commit `028c411`]
 
