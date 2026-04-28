@@ -96,6 +96,73 @@ Newest on top. Append a dated block when a session includes meaningful cleanup w
 
 ---
 
+## 2026-04-28 — Tetrad upgrade + PK.1/PK.4 prep commits + skeleton TOPIC pair
+
+- **Tetrad Discipline backfill** for the project-knowledge cluster
+  per Doctrine claim #37 / doctrine v0.0.10 / convention
+  `~/Foundry/conventions/project-tetrad-discipline.md` ratified
+  2026-04-28. Cluster manifest at
+  `~/Foundry/clones/project-knowledge/.claude/manifest.md` amended:
+  `triad:` → `tetrad:`; new `wiki:` leg added with declared
+  `planned_topics:` listing 3 substantive bulk drafts already
+  staged 2026-04-27 (`topic-app-mediakit-knowledge`,
+  `topic-documentation-pointsav-com-launch-2026-04-27`,
+  `topic-substrate-native-compatibility`) + 1 skeleton staged
+  this commit (`topic-collab-via-passthrough-relay`) + 2 future
+  planned (`topic-source-of-truth-inversion`,
+  `topic-wikipedia-leapfrog-design`). Status active. Vendor +
+  customer + deployment legs status updated to active to reflect
+  the v0.1.29 HTTPS launch state.
+
+- **Skeleton TOPIC pair authored** at
+  `~/Foundry/clones/project-knowledge/.claude/drafts-outbound/`:
+  `topic-collab-via-passthrough-relay.draft.md` (English canonical,
+  ~85 lines, 7 sections with `(draft-pending — substance follows
+  in milestone N+1)` placeholders per convention §4 backfill
+  procedure) + `topic-collab-via-passthrough-relay.es.draft.md`
+  (Spanish overview sibling, mirrored section structure). Pair
+  demonstrates Tetrad-leg intent for milestone N+1; substance
+  lands when this cluster next touches Step 7 or a related collab
+  topic. JSONL `draft-created` events emitted for both at
+  `~/Foundry/data/training-corpus/apprenticeship/prose-edit/pointsav/`
+  (`draft-2026-04-28-topic-collab-via-passthrough-relay.jsonl` +
+  `-es.jsonl`).
+
+- **PK.1 + PK.4 prep work committed** (was authored 2026-04-27 but
+  blocked on identity-key SSH-strict permissions; Master fixed
+  the keys 2026-04-28T00:22Z chmod 0600 across all 4 canonical
+  store keys).
+  - `e09d9a8` (Peter) — `app-mediakit-knowledge/docs/BP1-DECISION-PACKET.md`
+    (304 lines): restructures PHASE-4-PLAN.md §7's 7 BP1 questions
+    in a 15-min operator-review format. Six recommendations to
+    confirm-or-override; only Q4 (project-slm coordination order)
+    is genuinely open. Accelerates PK.1 from ~1 hr to ~15 min per
+    SLM Operationalization Plan §4 v0.1.42.
+  - `ea26118` (Jennifer) — `app-mediakit-knowledge/docs/STEP-7-COLLAB-SMOKE.md`
+    (324 lines): full PK.4 runbook covering pre-smoke build + SSH
+    tunnel; 7-step manual two-client smoke procedure with pass
+    criteria; pre-staged systemd unit unified diff for production
+    enable; rollback procedure; sign-off table.
+
+- **4 substantive bulk drafts forwarded to project-language**
+  (Master action 2026-04-28T00:22Z per outbox in_reply_to):
+  drafts staged 2026-04-27 at
+  `clones/project-knowledge/.claude/drafts-outbound/`
+  (`topic-app-mediakit-knowledge.draft.md`,
+  `topic-documentation-pointsav-com-launch-2026-04-27.draft.md`,
+  `topic-substrate-native-compatibility.draft.md`,
+  `GUIDE-operate-knowledge-wiki.draft.md`) — Master forwarded
+  the pickup notification to project-language inbox; PL.6 in
+  the SLM Operationalization Plan §4 picks up via
+  `bin/draft-sweep.sh` at next session start, daily-velocity per
+  cluster-wiki-draft-pipeline.md §3.1.
+
+- **No new open questions surfaced this session.** All 7 BP1
+  questions remain pending operator decision (now with the
+  decision packet to accelerate). The 4 deployment-side carried
+  questions remain pending. PK.2/PK.3 sub-agent dispatch
+  proposals still hold for after PK.1 clears.
+
 ## 2026-04-27 — Phase 2 Step 7 (collab) + Phase 4 plan + HTTPS-launch coordination
 
 - **Phase 2 implementation now COMPLETE end-to-end** — Step 7
