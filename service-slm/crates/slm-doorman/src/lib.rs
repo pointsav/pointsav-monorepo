@@ -31,7 +31,10 @@ pub use apprenticeship::{
     ApprenticeshipConfig, ApprenticeshipDispatcher, ParsedAttempt, ShadowOutcome,
     APPRENTICE_SYSTEM_PROMPT,
 };
-pub use audit_proxy::{AuditProxyClient, AuditProxyConfig};
+pub use audit_proxy::{
+    AuditProxyClient, AuditProxyConfig, AuditProxyPurposeAllowlist,
+    FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST,
+};
 pub use brief_cache::{BriefCache, CachedBrief};
 pub use error::{DoormanError, Result};
 pub use grammar_validation::LarkValidator;

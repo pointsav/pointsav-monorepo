@@ -237,7 +237,10 @@ fn classify_error(e: &DoormanError) -> CompletionStatus {
         | DoormanError::MalformedLarkGrammar { .. }
         // Caller supplied an unrecognised provider string to audit_proxy (PS.4).
         // The request violated input policy — classified as PolicyDenied.
-        | DoormanError::AuditProxyInvalidProvider { .. } => {
+        | DoormanError::AuditProxyInvalidProvider { .. }
+        // Caller supplied an un-allowlisted purpose to audit_proxy (PS.4 step 3).
+        // The request violated input policy — classified as PolicyDenied.
+        | DoormanError::AuditProxyPurposeNotAllowlisted { .. } => {
             CompletionStatus::PolicyDenied
         }
         // The audit_proxy targeted a provider that is not configured at startup
