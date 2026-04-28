@@ -733,6 +733,7 @@ Bumping MANIFEST.md per ni-51-102 forward-looking marker.
                 local: Some(local),
                 yoyo: None,
                 external: None,
+                lark_validator: None,
             },
             ledger(),
         );
@@ -800,6 +801,7 @@ I'm not sure how to apply this safely.
                 local: Some(local),
                 yoyo: None,
                 external: None,
+                lark_validator: None,
             },
             ledger(),
         );
@@ -881,6 +883,7 @@ OK.
                 local: Some(local),
                 yoyo: Some(yoyo),
                 external: None,
+                lark_validator: None,
             },
             ledger(),
         );
@@ -973,6 +976,7 @@ Shadow attempt for the apprentice.
                 local: Some(local),
                 yoyo: None,
                 external: None,
+                lark_validator: None,
             },
             ledger(),
         );
@@ -1032,6 +1036,7 @@ Shadow attempt for the apprentice.
                 local: Some(local),
                 yoyo: None,
                 external: None,
+                lark_validator: None,
             },
             ledger(),
         );
