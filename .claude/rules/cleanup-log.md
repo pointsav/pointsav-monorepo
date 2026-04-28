@@ -132,6 +132,52 @@ iteration.
 `customer/woodfine-fleet-deployment/local-doorman/` catalog subfolder at
 operator-presence pass; cluster-Task waits.
 
+### Iter-13 — SLM_AUDIT_DIR wiring landed cleanly
+
+- Cluster commit `5812501` (Peter Woodfine). 44 insertions / 2 deletions in
+  `slm-doorman-server::main.rs`. Pattern: env var present → `create_dir_all`
+  → `AuditLedger::new()`; failure → warn + fallback to default. Tests
+  124/124 still passing.
+
+### Iter-14 — Mistral cleanup tail landed (workspace tier)
+
+- Workspace commit `278b4ab` (ps-administrator). CUSTOMER-RUNBOOK.es.md
+  line 30 + tofu/README.md line 208. Sonnet bonus: license note
+  corrected from MIT (mistral.rs) to Apache 2.0 (vLLM actual license).
+- Post-commit grep `mistral` across `infrastructure/slm-yoyo/` returns
+  zero hits. PS.1-3 scope fully closed.
+
+### Pipeline session-end (2nd) — option-A iterations 10-14 complete
+
+Five iterations under operator option-A delivered the four admin-tier
+PS.1-* briefs + SLM_AUDIT_DIR cluster-scope wiring + mistral cleanup tail:
+
+| Iter | Tier | Commit | Outcome |
+|---|---|---|---|
+| 10 | workspace (admin) | `d6c2af6` | PS.1-3 mistral.rs → vLLM rename (3 files) |
+| 11 | workspace (admin) | `bb85219` | PS.1-4 local-doorman.env output snippet + outputs.tf rename |
+| 12 | workspace (admin) | `a268215` | PS.1-2 preemptible + A100 quota + cost docs |
+| 13 | cluster | `5812501` | SLM_AUDIT_DIR env-var wiring in main.rs |
+| 14 | workspace (admin) | `278b4ab` | mistral cleanup tail (es.md + tofu/README.md) |
+
+**Pipeline-session totals (combined session 2026-04-28)**:
+- 14 iterations / 26 commits / +50 tests (124/124).
+- 4 admin-tier workspace commits (ps-administrator, ED25519-signed, none
+  pushed per Stage 6 hold).
+- 19+ AS-5 shadow-brief events into the apprenticeship corpus.
+- All Master v0.1.59 sweep action items absorbed (admin-tier delegations
+  done; SLM_AUDIT_DIR wired; mistral cleanup closed).
+
+**Cluster-Task queue exhausted again**:
+- PS.8 GUIDE-doorman: Master must provision
+  `customer/woodfine-fleet-deployment/local-doorman/` catalog subfolder
+  first.
+- PS.5 production routing: threshold-blocked on B7 (Master) + corpus
+  accumulation.
+- PS.1-5 / PS.2 / Yo-Yo MIN deploy: D4-blocked (Master).
+
+Loop terminates at this session-end pending operator + Master input.
+
 ---
 
 ## 2026-04-28 — Master v0.1.59 sweep arrived post-pipeline-end; boundary conflict surfaced for operator

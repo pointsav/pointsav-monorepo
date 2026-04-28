@@ -8,10 +8,23 @@
 
 ## Right now — long-running Sonnet pipeline active
 
-**Status:** Pipeline resumed under operator option-A. Iterations 10-12
-landed three admin-tier briefs at workspace tier (PS.1-3 `d6c2af6`,
-PS.1-4 `bb85219`, PS.1-2 `a268215`). Pipeline continues with
-SLM_AUDIT_DIR cluster-scope wiring next.
+**Status:** Pipeline session-end (2nd). Iterations 10-14 under operator
+option-A delivered all four admin-tier PS.1-* + cluster-scope SLM_AUDIT_DIR
+wiring + mistral cleanup tail. Cluster-Task queue exhausted again pending
+Master action on PS.8 catalog provisioning + D4 image-build + B7 deploy.
+
+**Iter-13 + Iter-14 outcomes:**
+- Iter-13 cluster `5812501` — SLM_AUDIT_DIR env var wired in
+  slm-doorman-server::main.rs (env present → create_dir_all → ledger;
+  failure → warn + fallback to default; startup info! line).
+- Iter-14 workspace `278b4ab` — mistral cleanup tail (CUSTOMER-RUNBOOK.es.md
+  + tofu/README.md). Zero `mistral` hits remain in slm-yoyo subtree.
+
+**Combined session totals (2026-04-28)**: 14 iterations, 26 commits
+(20 cluster + 6 workspace admin-tier ps-administrator-signed), +50 tests
+(74 → 124), 19+ AS-5 corpus events. Cumulative Master sweep absorbed:
+v0.1.57 COMPONENT-pipeline ack, v0.1.58 Research-Trail ack, v0.1.59
+ratification + option-A action items.
 
 **Tests:** 124/124 passing. Last code commit `e4cb8a8` (PS.4 step 5 —
 integration tests + cross-cluster contract doc).
