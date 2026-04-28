@@ -33,10 +33,10 @@ use base64::Engine as _;
 use serde_json::json;
 use slm_doorman::tier::{TierCPricing, TierCProvider};
 use slm_doorman::{
-    BriefCache, Doorman, DoormanConfig, DoormanError, VerdictDispatcher, VerdictVerifier,
-    FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST,
+    AuditLedger, BriefCache, Doorman, DoormanConfig, DoormanError, VerdictDispatcher,
+    VerdictVerifier, FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST,
 };
-use slm_doorman_server::http::{router, AppState};
+use slm_doorman_server::http::{router, AppState, AUDIT_CAPTURE_MAX_PAYLOAD_BYTES};
 use slm_doorman_server::test_helpers::{
     app_state_no_tiers, app_state_with_apprenticeship, app_state_with_audit_proxy,
     app_state_with_local, temp_ledger, temp_promotion_ledger,
@@ -548,10 +548,15 @@ fn doorman_error_to_status(e: &DoormanError) -> StatusCode {
         | DoormanError::TierAGrammarUnsupported { .. }
         | DoormanError::TierCGrammarUnsupported { .. }
         | DoormanError::MalformedLarkGrammar { .. }
-        | DoormanError::AuditProxyInvalidProvider { .. } => StatusCode::BAD_REQUEST,
+        | DoormanError::AuditProxyInvalidProvider { .. }
+        // audit_capture caller validation errors (PS.4 step 4) → 400 BAD_REQUEST.
+        | DoormanError::AuditCaptureUnknownEventType { .. }
+        | DoormanError::AuditCaptureInvalidTimestamp { .. } => StatusCode::BAD_REQUEST,
         // AuditProxyProviderUnavailable → 503: server-side configuration gap,
         // not a caller policy violation.
         DoormanError::AuditProxyProviderUnavailable { .. } => StatusCode::SERVICE_UNAVAILABLE,
+        // AuditCapturePayloadTooLarge → 413 PAYLOAD_TOO_LARGE.
+        DoormanError::AuditCapturePayloadTooLarge { .. } => StatusCode::PAYLOAD_TOO_LARGE,
         DoormanError::BriefCacheMiss => StatusCode::GONE,
         DoormanError::LedgerIo(_)
         | DoormanError::LedgerSerde(_)
@@ -1547,5 +1552,333 @@ async fn audit_proxy_default_allowlist_accepts_documented_purposes() {
         // wiremock drops here — expect(1) fires and panics if the request
         // did not reach the upstream, confirming the purpose was allowed
         // and the relay was executed.
+    }
+}
+
+// ===========================================================================
+// Section 8 — audit_capture endpoint tests (PS.4 step 4) — 6 tests
+// ===========================================================================
+//
+// These tests exercise the new POST /v1/audit/capture endpoint added in
+// PS.4 step 4. Validation failures return 400 (or 413 for oversized
+// payloads); a valid request writes a single capture entry to the audit
+// ledger and returns 200 with an AuditCaptureResponse body.
+
+/// Build a valid audit_capture request body. Individual tests override
+/// fields to exercise specific validation paths.
+fn valid_audit_capture_body() -> serde_json::Value {
+    json!({
+        "audit_id": "01900000-0000-7000-8000-000000000001",
+        "module_id": "woodfine",
+        "event_type": "prose-edit",
+        "source": "project-language",
+        "status": "ok",
+        "event_at": "2026-04-28T10:00:00Z",
+        "payload": {
+            "draft_id": "d-001",
+            "from_state": "draft-created",
+            "to_state": "draft-refined"
+        },
+        "caller_request_id": "caller-capture-001"
+    })
+}
+
+// ── 8a. happy path → 200, ledger entry written ────────────────────────────
+
+/// POST /v1/audit/capture with a fully valid prose-edit body:
+///   - returns 200 with AuditCaptureResponse shape
+///   - audit_id echoed back
+///   - caller_request_id echoed back
+///   - status in response is "captured"
+///   - ledger has exactly ONE entry with expected fields
+#[tokio::test]
+async fn audit_capture_valid_prose_edit_event_returns_200_and_writes_ledger() {
+    use slm_doorman_server::http::AppState;
+
+    let ledger_dir = std::env::temp_dir().join(format!(
+        "slm-audit-capture-happy-{}",
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_nanos())
+            .unwrap_or(0)
+    ));
+    std::fs::create_dir_all(&ledger_dir).expect("create test ledger dir");
+    let ledger = AuditLedger::new(&ledger_dir).expect("create test audit ledger");
+    let doorman = Doorman::new(DoormanConfig::default(), ledger);
+    let state = Arc::new(AppState {
+        doorman,
+        apprenticeship: None,
+        brief_cache: Arc::new(BriefCache::default()),
+        verdict_dispatcher: None,
+        audit_proxy_client: None,
+        audit_proxy_purpose_allowlist: FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST,
+    });
+    let app = router(state);
+
+    let body = valid_audit_capture_body();
+    let resp = app
+        .oneshot(post_json("/v1/audit/capture", &body))
+        .await
+        .expect("oneshot");
+
+    // 1. HTTP 200 OK.
+    assert_eq!(
+        resp.status(),
+        StatusCode::OK,
+        "valid audit_capture request must return 200 OK"
+    );
+
+    // 2. Response body carries expected AuditCaptureResponse fields.
+    let resp_body = body_json(resp).await;
+    assert_eq!(
+        resp_body["audit_id"].as_str().unwrap_or(""),
+        "01900000-0000-7000-8000-000000000001",
+        "audit_id must be echoed from request"
+    );
+    assert_eq!(
+        resp_body["caller_request_id"].as_str().unwrap_or(""),
+        "caller-capture-001",
+        "caller_request_id must be echoed from request"
+    );
+    assert_eq!(
+        resp_body["status"].as_str().unwrap_or(""),
+        "captured",
+        "response status must be 'captured'"
+    );
+
+    // 3. Ledger must contain exactly ONE entry.
+    let jsonl_files: Vec<_> = std::fs::read_dir(&ledger_dir)
+        .expect("read ledger dir")
+        .filter_map(|e| e.ok())
+        .filter(|e| e.path().extension().map(|x| x == "jsonl").unwrap_or(false))
+        .collect();
+    assert_eq!(jsonl_files.len(), 1, "exactly one JSONL file must exist");
+
+    let contents = std::fs::read_to_string(jsonl_files[0].path()).expect("read JSONL");
+    let lines: Vec<_> = contents.lines().collect();
+    assert_eq!(lines.len(), 1, "exactly one ledger entry must be written");
+
+    let entry: serde_json::Value = serde_json::from_str(lines[0]).expect("valid JSON line");
+    assert_eq!(
+        entry["audit_id"].as_str().unwrap_or(""),
+        "01900000-0000-7000-8000-000000000001"
+    );
+    assert_eq!(entry["module_id"].as_str().unwrap_or(""), "woodfine");
+    assert_eq!(entry["event_type"].as_str().unwrap_or(""), "prose-edit");
+    assert_eq!(entry["source"].as_str().unwrap_or(""), "project-language");
+    assert_eq!(entry["status"].as_str().unwrap_or(""), "ok");
+    assert!(
+        entry["captured_at"].is_string(),
+        "captured_at must be a timestamp string"
+    );
+    assert_eq!(
+        entry["caller_request_id"].as_str().unwrap_or(""),
+        "caller-capture-001"
+    );
+    // Payload fields must be preserved.
+    assert_eq!(entry["payload"]["draft_id"].as_str().unwrap_or(""), "d-001");
+}
+
+// ── 8b. invalid module_id → 400 ───────────────────────────────────────────
+
+/// POST /v1/audit/capture with an uppercase module_id → 400 BAD_REQUEST.
+#[tokio::test]
+async fn audit_capture_invalid_module_id_returns_400() {
+    let state = app_state_no_tiers();
+    let app = router(state);
+
+    let mut body = valid_audit_capture_body();
+    body["module_id"] = json!("INVALID-UPPERCASE");
+
+    let resp = app
+        .oneshot(post_json("/v1/audit/capture", &body))
+        .await
+        .expect("oneshot");
+
+    assert_eq!(
+        resp.status(),
+        StatusCode::BAD_REQUEST,
+        "invalid module_id must return 400 BAD_REQUEST"
+    );
+}
+
+// ── 8c. unknown event_type → 400 with event_type in error ─────────────────
+
+/// POST /v1/audit/capture with an unrecognised event_type → 400 BAD_REQUEST.
+/// The error message must name the rejected event_type.
+#[tokio::test]
+async fn audit_capture_unknown_event_type_returns_400() {
+    let state = app_state_no_tiers();
+    let app = router(state);
+
+    let mut body = valid_audit_capture_body();
+    body["event_type"] = json!("not-a-real-event-type");
+
+    let resp = app
+        .oneshot(post_json("/v1/audit/capture", &body))
+        .await
+        .expect("oneshot");
+
+    assert_eq!(
+        resp.status(),
+        StatusCode::BAD_REQUEST,
+        "unknown event_type must return 400 BAD_REQUEST"
+    );
+    let resp_body = body_json(resp).await;
+    let msg = resp_body["error"]["message"].as_str().unwrap_or_default();
+    assert!(
+        msg.contains("not-a-real-event-type"),
+        "error message must include the rejected event_type; got: {msg}"
+    );
+}
+
+// ── 8d. invalid timestamp → 400 ───────────────────────────────────────────
+
+/// POST /v1/audit/capture with a non-RFC-3339 event_at → 400 BAD_REQUEST.
+#[tokio::test]
+async fn audit_capture_invalid_timestamp_returns_400() {
+    let state = app_state_no_tiers();
+    let app = router(state);
+
+    let mut body = valid_audit_capture_body();
+    // Not RFC 3339: missing time component, no timezone.
+    body["event_at"] = json!("28 April 2026");
+
+    let resp = app
+        .oneshot(post_json("/v1/audit/capture", &body))
+        .await
+        .expect("oneshot");
+
+    assert_eq!(
+        resp.status(),
+        StatusCode::BAD_REQUEST,
+        "invalid RFC 3339 timestamp must return 400 BAD_REQUEST"
+    );
+}
+
+// ── 8e. oversized payload → 413, ledger NOT updated ───────────────────────
+
+/// POST /v1/audit/capture with a payload larger than AUDIT_CAPTURE_MAX_PAYLOAD_BYTES
+/// → 413 PAYLOAD_TOO_LARGE; no ledger entry written.
+#[tokio::test]
+async fn audit_capture_oversized_payload_returns_413() {
+    use slm_doorman_server::http::AppState;
+
+    let ledger_dir = std::env::temp_dir().join(format!(
+        "slm-audit-capture-oversized-{}",
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_nanos())
+            .unwrap_or(0)
+    ));
+    std::fs::create_dir_all(&ledger_dir).expect("create test ledger dir");
+    let ledger = AuditLedger::new(&ledger_dir).expect("create test audit ledger");
+    let doorman = Doorman::new(DoormanConfig::default(), ledger);
+    let state = Arc::new(AppState {
+        doorman,
+        apprenticeship: None,
+        brief_cache: Arc::new(BriefCache::default()),
+        verdict_dispatcher: None,
+        audit_proxy_client: None,
+        audit_proxy_purpose_allowlist: FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST,
+    });
+    let app = router(state);
+
+    // Build a payload that exceeds the 16 KiB limit.
+    // Each character in a JSON string is 1 byte; we overshoot by a margin.
+    let oversized_string = "x".repeat(AUDIT_CAPTURE_MAX_PAYLOAD_BYTES + 512);
+    let mut body = valid_audit_capture_body();
+    body["payload"] = json!({ "data": oversized_string });
+
+    let resp = app
+        .oneshot(post_json("/v1/audit/capture", &body))
+        .await
+        .expect("oneshot");
+
+    assert!(
+        resp.status() == StatusCode::PAYLOAD_TOO_LARGE || resp.status() == StatusCode::BAD_REQUEST,
+        "oversized payload must return 413 PAYLOAD_TOO_LARGE or 400 BAD_REQUEST; got {}",
+        resp.status()
+    );
+
+    // Ledger must NOT have been updated.
+    let jsonl_files: Vec<_> = std::fs::read_dir(&ledger_dir)
+        .expect("read ledger dir")
+        .filter_map(|e| e.ok())
+        .filter(|e| e.path().extension().map(|x| x == "jsonl").unwrap_or(false))
+        .collect();
+    assert_eq!(
+        jsonl_files.len(),
+        0,
+        "no ledger entries must be written for an oversized payload"
+    );
+}
+
+// ── 8f. all five event_types accepted ─────────────────────────────────────
+
+/// All five documented event_type values must pass validation and return 200.
+#[tokio::test]
+async fn audit_capture_default_event_types_all_accepted() {
+    use slm_doorman_server::http::AppState;
+
+    let accepted_event_types = [
+        "prose-edit",
+        "design-edit",
+        "graph-mutation",
+        "anchor-event",
+        "verdict-issued",
+    ];
+
+    for event_type in accepted_event_types {
+        let ledger_dir = std::env::temp_dir().join(format!(
+            "slm-audit-capture-evtype-{}-{}",
+            event_type,
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .map(|d| d.as_nanos())
+                .unwrap_or(0)
+        ));
+        std::fs::create_dir_all(&ledger_dir).expect("create test ledger dir");
+        let ledger = AuditLedger::new(&ledger_dir).expect("create test audit ledger");
+        let doorman = Doorman::new(DoormanConfig::default(), ledger);
+        let state = Arc::new(AppState {
+            doorman,
+            apprenticeship: None,
+            brief_cache: Arc::new(BriefCache::default()),
+            verdict_dispatcher: None,
+            audit_proxy_client: None,
+            audit_proxy_purpose_allowlist: FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST,
+        });
+        let app = router(state);
+
+        let mut body = valid_audit_capture_body();
+        body["event_type"] = json!(event_type);
+
+        let resp = app
+            .oneshot(post_json("/v1/audit/capture", &body))
+            .await
+            .expect("oneshot");
+
+        assert_eq!(
+            resp.status(),
+            StatusCode::OK,
+            "event_type {event_type:?} must be accepted (200 OK); got {}",
+            resp.status()
+        );
+        // Verify the ledger entry records the correct event_type.
+        let jsonl_files: Vec<_> = std::fs::read_dir(&ledger_dir)
+            .expect("read ledger dir")
+            .filter_map(|e| e.ok())
+            .filter(|e| e.path().extension().map(|x| x == "jsonl").unwrap_or(false))
+            .collect();
+        assert_eq!(jsonl_files.len(), 1, "one JSONL file for {event_type:?}");
+        let contents = std::fs::read_to_string(jsonl_files[0].path()).expect("read JSONL");
+        let entry: serde_json::Value =
+            serde_json::from_str(contents.lines().next().unwrap()).expect("valid JSON");
+        assert_eq!(
+            entry["event_type"].as_str().unwrap_or(""),
+            event_type,
+            "ledger entry event_type must match request"
+        );
     }
 }
