@@ -271,15 +271,17 @@ The seven decisions above shape eight briefs:
 
 ## §9 Operator decision record
 
+Cleared 2026-04-28 by operator via Master Claude (workspace pass v0.1.54).
+
 | # | Question | Decision | Notes |
 |---|---|---|---|
-| 1 | MCP server transport | _________ | |
-| 2 | Read-only Git remote protocol | _________ | |
-| 3 | `--enable-mcp` default | _________ | |
-| 4 | Step 4.6 project-slm coordination | _________ | |
-| 5 | `gix` vs `git2` split | _________ | |
-| 6 | `libgit2-dev` install path | _________ | |
-| 7 | OpenAPI 3.1 hand-author vs codegen | _________ | |
+| 1 | MCP server transport | **HTTP on `/mcp`** | Per plan recommendation; substrate is server-shaped |
+| 2 | Read-only Git remote protocol | **smart-HTTP via the same axum server** | Per plan recommendation; piggybacks on existing TLS |
+| 3 | `--enable-mcp` default | **off** | Per plan recommendation; matches `--enable-collab` Phase 2 Step 7 default-off pattern |
+| 4 | Step 4.6 project-slm coordination | **outbox-first** | Draft auth + rate-limit contract; outbox to project-slm Task; ~1 session round-trip; iterate; implement. Aligns with v0.1.52 "everything routes through service-slm" intent (claim #32 Apprenticeship Substrate composition) |
+| 5 | `gix` vs `git2` split | **mixed — `git2` for write side, `gix` for read side** | Per plan recommendation; matches gitoxide maintainer's published roadmap |
+| 6 | `libgit2-dev` install path | **bundle with `libssl-dev` in PK.3 single Master pass** | Per plan recommendation; PK.3 in SLM Operationalization Plan §4 names this exact bundle |
+| 7 | OpenAPI 3.1 hand-author vs codegen | **hand-author for Phase 4** | Per plan recommendation; revisit `utoipa` as cleanup later if spec drift becomes real |
 
 After completing the table, this packet flows back to
 project-knowledge cluster Task via inbox; that Task drafts the
