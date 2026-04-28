@@ -34,8 +34,8 @@ use slm_core::{
 };
 use slm_doorman::{
     ApprenticeshipConfig, ApprenticeshipDispatcher, AuditProxyClient, AuditProxyEntry,
-    AuditProxyStubEntry, BriefCache, Doorman, DoormanError, VerdictDispatchOutcome,
-    VerdictDispatcher, VerdictWireBody,
+    AuditProxyPurposeAllowlist, AuditProxyStubEntry, BriefCache, Doorman, DoormanError,
+    VerdictDispatchOutcome, VerdictDispatcher, VerdictWireBody,
 };
 
 pub struct AppState {
@@ -54,6 +54,13 @@ pub struct AppState {
     /// via `SLM_TIER_C_*_ENDPOINT` env vars at boot; `None` returns 503 with
     /// an "unconfigured" message rather than the step-1 placeholder message.
     pub audit_proxy_client: Option<AuditProxyClient>,
+    /// Purpose allowlist for `POST /v1/audit/proxy` (PS.4 step 3).
+    /// Requests with a purpose not in this list are rejected 403 FORBIDDEN
+    /// BEFORE any upstream provider call or audit-ledger stub write.
+    ///
+    /// Empty allowlist = fail-closed: all purposes are denied. Use
+    /// `FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST` for the four documented purposes.
+    pub audit_proxy_purpose_allowlist: AuditProxyPurposeAllowlist,
 }
 
 pub fn router(state: Arc<AppState>) -> Router {
@@ -271,16 +278,39 @@ async fn audit_proxy(
         return err.into_response();
     }
 
-    // 1c. Validate purpose — non-empty (allowlist enforcement is PS.4 step 3).
+    // 1c. Validate purpose — non-empty.
     if body.purpose.trim().is_empty() {
-        return ApiError::bad_request(
-            "audit_proxy purpose must be non-empty; \
-             allowlist enforcement lands in PS.4 step 3",
-        )
-        .into_response();
+        return ApiError::bad_request("audit_proxy purpose must be non-empty").into_response();
     }
 
-    // 1d. Validate messages — at least one required.
+    // 1d. Purpose allowlist check (PS.4 step 3).
+    //
+    // Runs AFTER the non-empty check (an empty purpose is a separate
+    // validation error) and BEFORE audit_id generation / stub ledger write.
+    //
+    // Ordering rationale: an un-allowlisted purpose means "this call
+    // should not be recorded as a legitimate audit entry". Writing a stub
+    // ledger entry for every policy-denied request would pollute the audit
+    // trail with noise. The allowlist check is the caller-side policy gate;
+    // the stub write is the server-side paper trail for calls that pass
+    // policy. The two are in the correct order.
+    //
+    // When audit_proxy_client is None (503-unconfigured path), the allowlist
+    // check still runs: a request with an un-allowlisted purpose is 403 even
+    // if no providers are configured. This prevents callers from probing the
+    // allowlist via the unconfigured path.
+    if !state
+        .audit_proxy_purpose_allowlist
+        .is_allowed(&body.purpose)
+    {
+        let err: ApiError = DoormanError::AuditProxyPurposeNotAllowlisted {
+            purpose: body.purpose.clone(),
+        }
+        .into();
+        return err.into_response();
+    }
+
+    // 1e. Validate messages — at least one required.
     if body.messages.is_empty() {
         return ApiError::bad_request("audit_proxy messages must be non-empty").into_response();
     }
@@ -449,6 +479,11 @@ impl From<DoormanError> for ApiError {
             // startup (PS.4 step 2). Server-side configuration gap — 503
             // SERVICE_UNAVAILABLE (not 403; the caller did nothing wrong).
             DoormanError::AuditProxyProviderUnavailable { .. } => StatusCode::SERVICE_UNAVAILABLE,
+            // Caller submitted a purpose not on the purpose allowlist (PS.4
+            // step 3). Caller-side policy violation — 403 FORBIDDEN, same
+            // classification as ExternalNotAllowlisted which mirrors this
+            // pattern for Tier C task labels.
+            DoormanError::AuditProxyPurposeNotAllowlisted { .. } => StatusCode::FORBIDDEN,
             DoormanError::BriefCacheMiss => StatusCode::GONE,
             DoormanError::LedgerIo(_)
             | DoormanError::LedgerSerde(_)

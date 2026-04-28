@@ -34,6 +34,7 @@ use serde_json::json;
 use slm_doorman::tier::{TierCPricing, TierCProvider};
 use slm_doorman::{
     BriefCache, Doorman, DoormanConfig, DoormanError, VerdictDispatcher, VerdictVerifier,
+    FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST,
 };
 use slm_doorman_server::http::{router, AppState};
 use slm_doorman_server::test_helpers::{
@@ -335,6 +336,7 @@ async fn error_brief_cache_miss_returns_410() {
         brief_cache,
         verdict_dispatcher: Some(verdict_dispatcher),
         audit_proxy_client: None,
+        audit_proxy_purpose_allowlist: FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST,
     });
     let app = router(state);
 
@@ -532,9 +534,12 @@ fn doorman_error_to_status(e: &DoormanError) -> StatusCode {
         DoormanError::TierUnavailable(_) | DoormanError::NotImplemented { .. } => {
             StatusCode::SERVICE_UNAVAILABLE
         }
-        DoormanError::ExternalNotAllowlisted { .. } | DoormanError::VerifySignature(_) => {
-            StatusCode::FORBIDDEN
-        }
+        DoormanError::ExternalNotAllowlisted { .. }
+        | DoormanError::VerifySignature(_)
+        // Caller submitted a purpose not on the audit_proxy purpose allowlist
+        // (PS.4 step 3). Caller-side policy violation — 403 FORBIDDEN, same
+        // as ExternalNotAllowlisted which mirrors this pattern for Tier C labels.
+        | DoormanError::AuditProxyPurposeNotAllowlisted { .. } => StatusCode::FORBIDDEN,
         DoormanError::Upstream(_)
         | DoormanError::UpstreamShape(_)
         | DoormanError::ContractMajorMismatch { .. }
@@ -684,11 +689,13 @@ async fn lark_validation_runs_before_tier_b_dispatch() {
 // PS.4 step 2).
 
 /// Build a valid audit_proxy request body. Individual tests override fields
-/// to exercise specific validation paths.
+/// to exercise specific validation paths. Uses `editorial-refinement` as the
+/// default purpose — one of the four documented purposes in
+/// `FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST`.
 fn valid_audit_proxy_body() -> serde_json::Value {
     json!({
         "module_id": "woodfine",
-        "purpose": "editorial-grammar-check",
+        "purpose": "editorial-refinement",
         "provider": "anthropic",
         "model": "claude-opus-4-7",
         "messages": [{"role": "user", "content": "Please review this paragraph."}],
@@ -836,6 +843,7 @@ async fn audit_proxy_valid_request_writes_audit_stub_and_returns_503() {
         verdict_dispatcher: None,
         // No providers configured → unconfigured path.
         audit_proxy_client: None,
+        audit_proxy_purpose_allowlist: FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST,
     });
     let app = router(state);
 
@@ -892,7 +900,7 @@ async fn audit_proxy_valid_request_writes_audit_stub_and_returns_503() {
     assert_eq!(entry["module_id"].as_str().unwrap_or(""), "woodfine");
     assert_eq!(
         entry["purpose"].as_str().unwrap_or(""),
-        "editorial-grammar-check"
+        "editorial-refinement"
     );
     assert_eq!(entry["provider"].as_str().unwrap_or(""), "anthropic");
     assert_eq!(entry["model"].as_str().unwrap_or(""), "claude-opus-4-7");
@@ -1005,11 +1013,13 @@ async fn valid_lark_grammar_passes_through_to_tier_b() {
 // element. The Doorman has no compute tiers (audit_proxy tests do not need
 // inference routing).
 
-/// Helper: valid audit_proxy request body targeting "anthropic".
+/// Helper: valid audit_proxy request body targeting "anthropic". Uses
+/// `editorial-refinement` as the purpose — one of the four documented
+/// purposes in `FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST`.
 fn valid_audit_proxy_relay_body() -> serde_json::Value {
     json!({
         "module_id": "woodfine",
-        "purpose": "editorial-grammar-check",
+        "purpose": "editorial-refinement",
         "provider": "anthropic",
         "model": "claude-opus-4-7",
         "messages": [{"role": "user", "content": "Please review this paragraph."}],
@@ -1336,4 +1346,206 @@ async fn audit_proxy_cost_arithmetic_matches_pricing_config() {
     );
     assert_eq!(body["usage"]["prompt_tokens"].as_u64().unwrap_or(0), 100);
     assert_eq!(body["usage"]["completion_tokens"].as_u64().unwrap_or(0), 50);
+}
+
+// ===========================================================================
+// Section 7 — audit_proxy purpose allowlist tests (PS.4 step 3) — 4 tests
+// ===========================================================================
+//
+// These tests exercise the new purpose-allowlist enforcement added in PS.4
+// step 3. The allowlist check runs AFTER the non-empty purpose validation and
+// BEFORE audit_id generation / stub ledger write.
+//
+// Ordering invariant tested:
+//   - An un-allowlisted purpose returns 403 FORBIDDEN.
+//   - No upstream provider call is made for un-allowlisted purposes.
+//   - No stub ledger entry is written for un-allowlisted purposes
+//     (because the check runs before the stub write).
+//   - All four documented default purposes pass the allowlist check.
+
+// ── 7a. Unallowlisted purpose → 403 FORBIDDEN ─────────────────────────────
+
+/// POST /v1/audit/proxy with an un-allowlisted purpose (e.g. "ad-hoc-call")
+/// → 403 FORBIDDEN. The error message must name the rejected purpose.
+#[tokio::test]
+async fn audit_proxy_unallowlisted_purpose_returns_403() {
+    // app_state_no_tiers() uses FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST which does
+    // not include "ad-hoc-call".
+    let state = app_state_no_tiers();
+    let app = router(state);
+
+    let mut body = valid_audit_proxy_body();
+    body["purpose"] = json!("ad-hoc-call");
+
+    let resp = app
+        .oneshot(post_json("/v1/audit/proxy", &body))
+        .await
+        .expect("oneshot");
+
+    assert_eq!(
+        resp.status(),
+        StatusCode::FORBIDDEN,
+        "un-allowlisted purpose must return 403 FORBIDDEN"
+    );
+    let resp_body = body_json(resp).await;
+    let msg = resp_body["error"]["message"].as_str().unwrap_or_default();
+    assert!(
+        msg.contains("ad-hoc-call"),
+        "error message must name the rejected purpose; got: {msg}"
+    );
+}
+
+// ── 7b. Unallowlisted purpose does not call upstream ──────────────────────
+
+/// POST /v1/audit/proxy with an un-allowlisted purpose and a configured
+/// provider: the wiremock server must receive ZERO requests — the allowlist
+/// check runs before any upstream call.
+#[tokio::test]
+async fn audit_proxy_unallowlisted_purpose_does_not_call_upstream() {
+    let server = MockServer::start().await;
+    // No mocks mounted — wiremock would record any requests that land.
+
+    // Use the default allowlist (FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST).
+    let (state, _ledger_dir) = app_state_with_audit_proxy(
+        TierCProvider::Anthropic,
+        server.uri(),
+        TierCPricing::default(),
+    );
+    let app = router(state);
+
+    let mut body = valid_audit_proxy_relay_body();
+    body["purpose"] = json!("forbidden-purpose");
+
+    let resp = app
+        .oneshot(post_json("/v1/audit/proxy", &body))
+        .await
+        .expect("oneshot");
+
+    assert_eq!(
+        resp.status(),
+        StatusCode::FORBIDDEN,
+        "un-allowlisted purpose must return 403 FORBIDDEN"
+    );
+
+    // Assert zero requests reached the mock server.
+    let received = server.received_requests().await.unwrap_or_default();
+    assert_eq!(
+        received.len(),
+        0,
+        "Doorman MUST NOT issue an upstream call before the purpose allowlist check"
+    );
+}
+
+// ── 7c. Unallowlisted purpose does not write a ledger entry ───────────────
+
+/// POST /v1/audit/proxy with an un-allowlisted purpose: no stub or final
+/// ledger entry must be written. The allowlist check runs before the
+/// stub write so the audit trail is not polluted by policy-denied requests.
+#[tokio::test]
+async fn audit_proxy_unallowlisted_purpose_does_not_write_ledger_entry() {
+    use slm_doorman::{AuditLedger, Doorman, DoormanConfig};
+    use slm_doorman_server::http::AppState;
+
+    // Build a state with a ledger rooted at a known temp directory so we can
+    // confirm NO JSONL files are written after the rejected request.
+    let ledger_dir = std::env::temp_dir().join(format!(
+        "slm-audit-proxy-allowlist-ledger-test-{}",
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_nanos())
+            .unwrap_or(0)
+    ));
+    std::fs::create_dir_all(&ledger_dir).expect("create test ledger dir");
+    let ledger = AuditLedger::new(&ledger_dir).expect("create test audit ledger");
+    let doorman = Doorman::new(DoormanConfig::default(), ledger);
+
+    let state = Arc::new(AppState {
+        doorman,
+        apprenticeship: None,
+        brief_cache: Arc::new(slm_doorman::BriefCache::default()),
+        verdict_dispatcher: None,
+        // No providers configured (audit_proxy_client = None), but the
+        // allowlist check still runs before the unconfigured 503 path.
+        audit_proxy_client: None,
+        audit_proxy_purpose_allowlist: FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST,
+    });
+    let app = router(state);
+
+    let mut body = valid_audit_proxy_body();
+    body["purpose"] = json!("not-on-allowlist");
+
+    let resp = app
+        .oneshot(post_json("/v1/audit/proxy", &body))
+        .await
+        .expect("oneshot");
+
+    assert_eq!(
+        resp.status(),
+        StatusCode::FORBIDDEN,
+        "un-allowlisted purpose must return 403 FORBIDDEN; got {}",
+        resp.status()
+    );
+
+    // Assert NO ledger files were written (ordering: allowlist check is BEFORE
+    // the stub write, so a policy-denied request never reaches the write step).
+    let jsonl_files: Vec<_> = std::fs::read_dir(&ledger_dir)
+        .expect("read ledger dir")
+        .filter_map(|e| e.ok())
+        .filter(|e| e.path().extension().map(|x| x == "jsonl").unwrap_or(false))
+        .collect();
+    assert_eq!(
+        jsonl_files.len(),
+        0,
+        "no JSONL ledger entries must be written for un-allowlisted purposes"
+    );
+}
+
+// ── 7d. Default allowlist accepts all four documented purposes ─────────────
+
+/// The four documented default purposes all pass the allowlist check.
+/// Tests each via a wiremock-backed round trip returning 200 to confirm
+/// that none of the documented purposes is rejected at the HTTP layer.
+#[tokio::test]
+async fn audit_proxy_default_allowlist_accepts_documented_purposes() {
+    let documented_purposes = [
+        "editorial-refinement",
+        "citation-grounding",
+        "entity-disambiguation",
+        "initial-graph-build",
+    ];
+
+    for purpose in documented_purposes {
+        let server = MockServer::start().await;
+        Mock::given(method("POST"))
+            .and(path("/v1/chat/completions"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(upstream_ok_body(10, 5)))
+            .expect(1)
+            .mount(&server)
+            .await;
+
+        let (state, _ledger_dir) = app_state_with_audit_proxy(
+            TierCProvider::Anthropic,
+            server.uri(),
+            TierCPricing::default(),
+        );
+        let app = router(state);
+
+        let mut body = valid_audit_proxy_relay_body();
+        body["purpose"] = json!(purpose);
+
+        let resp = app
+            .oneshot(post_json("/v1/audit/proxy", &body))
+            .await
+            .expect("oneshot");
+
+        assert_eq!(
+            resp.status(),
+            StatusCode::OK,
+            "documented purpose {purpose:?} must be accepted (200 OK); got {}",
+            resp.status()
+        );
+        // wiremock drops here — expect(1) fires and panics if the request
+        // did not reach the upstream, confirming the purpose was allowed
+        // and the relay was executed.
+    }
 }

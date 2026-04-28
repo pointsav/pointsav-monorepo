@@ -24,8 +24,9 @@ pub mod test_helpers {
         ExternalTierClient, LocalTierClient, LocalTierConfig, TierCPricing, TierCProvider,
     };
     use slm_doorman::{
-        AuditLedger, AuditProxyClient, AuditProxyConfig, BriefCache, Doorman, DoormanConfig,
-        PromotionLedger, VerdictDispatcher, VerdictVerifier,
+        AuditLedger, AuditProxyClient, AuditProxyConfig, AuditProxyPurposeAllowlist, BriefCache,
+        Doorman, DoormanConfig, PromotionLedger, VerdictDispatcher, VerdictVerifier,
+        FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST,
     };
 
     use crate::http::AppState;
@@ -66,6 +67,7 @@ pub mod test_helpers {
             brief_cache: Arc::new(BriefCache::default()),
             verdict_dispatcher: None,
             audit_proxy_client: None,
+            audit_proxy_purpose_allowlist: FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST,
         })
     }
 
@@ -91,6 +93,7 @@ pub mod test_helpers {
             brief_cache: Arc::new(BriefCache::default()),
             verdict_dispatcher: None,
             audit_proxy_client: None,
+            audit_proxy_purpose_allowlist: FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST,
         })
     }
 
@@ -114,6 +117,7 @@ pub mod test_helpers {
             brief_cache: Arc::new(BriefCache::default()),
             verdict_dispatcher: None,
             audit_proxy_client: None,
+            audit_proxy_purpose_allowlist: FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST,
         })
     }
 
@@ -162,6 +166,7 @@ pub mod test_helpers {
             brief_cache,
             verdict_dispatcher: Some(verdict_dispatcher),
             audit_proxy_client: None,
+            audit_proxy_purpose_allowlist: FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST,
         })
     }
 
@@ -196,6 +201,7 @@ pub mod test_helpers {
             provider_endpoints: endpoints,
             provider_api_keys: keys,
             pricing,
+            purpose_allowlist: FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST,
         };
         let audit_client = AuditProxyClient::new(audit_config);
 
@@ -206,6 +212,51 @@ pub mod test_helpers {
             brief_cache: Arc::new(BriefCache::default()),
             verdict_dispatcher: None,
             audit_proxy_client: Some(audit_client),
+            audit_proxy_purpose_allowlist: FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST,
+        });
+        (state, ledger_dir)
+    }
+
+    /// Build an `AppState` with an `AuditProxyClient` and a custom
+    /// `AuditProxyPurposeAllowlist`. Used by PS.4 step 3 tests that need
+    /// to inject a specific allowlist (e.g., with a documented purpose or
+    /// with an empty allowlist for fail-closed testing).
+    pub fn app_state_with_audit_proxy_and_allowlist(
+        provider: TierCProvider,
+        server_uri: impl Into<String>,
+        pricing: TierCPricing,
+        purpose_allowlist: AuditProxyPurposeAllowlist,
+    ) -> (Arc<AppState>, std::path::PathBuf) {
+        let ledger_dir = std::env::temp_dir().join(format!(
+            "slm-audit-proxy-allowlist-test-{}",
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .map(|d| d.as_nanos())
+                .unwrap_or(0)
+        ));
+        std::fs::create_dir_all(&ledger_dir).expect("create test audit ledger dir");
+        let ledger = AuditLedger::new(&ledger_dir).expect("create test audit ledger");
+
+        let mut endpoints = HashMap::new();
+        endpoints.insert(provider, server_uri.into());
+        let mut keys = HashMap::new();
+        keys.insert(provider, "sk-test-DO-NOT-USE-LIVE".to_string());
+        let audit_config = AuditProxyConfig {
+            provider_endpoints: endpoints,
+            provider_api_keys: keys,
+            pricing,
+            purpose_allowlist: FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST,
+        };
+        let audit_client = AuditProxyClient::new(audit_config);
+
+        let doorman = Doorman::new(DoormanConfig::default(), ledger);
+        let state = Arc::new(AppState {
+            doorman,
+            apprenticeship: None,
+            brief_cache: Arc::new(BriefCache::default()),
+            verdict_dispatcher: None,
+            audit_proxy_client: Some(audit_client),
+            audit_proxy_purpose_allowlist: purpose_allowlist,
         });
         (state, ledger_dir)
     }
