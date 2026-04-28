@@ -142,4 +142,77 @@ mod tests {
         assert_eq!(sanitize("hello world"), "hello world");
         assert_eq!(sanitize("token=short"), "token=short"); // < 32 chars
     }
+
+    // ---- Redaction-pattern tests (PS.6 chunk #6 tail) ----
+
+    /// `gho_` prefix (GitHub OAuth token) must be redacted to
+    /// `[REDACTED GITHUB OAUTH]`. This is distinct from `ghp_` (GitHub PAT)
+    /// which maps to `[REDACTED GITHUB TOKEN]`.
+    #[test]
+    fn redacts_github_oauth_prefix_gho() {
+        let s = "export GITHUB_TOKEN=gho_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+        let out = sanitize(s);
+        assert!(
+            out.contains("[REDACTED GITHUB OAUTH]"),
+            "gho_ prefix must produce REDACTED GITHUB OAUTH; got: {out}"
+        );
+        assert!(
+            !out.contains("gho_aaaaaa"),
+            "raw gho_ token must not appear in sanitised output"
+        );
+    }
+
+    /// `xox[abprs]-` prefix (Slack API token) must be redacted to
+    /// `[REDACTED SLACK TOKEN]`.
+    #[test]
+    fn redacts_slack_token_prefix_xox() {
+        // xoxa- is the Slack legacy token prefix; xoxb- is a Bot token;
+        // xoxp- is a User token; xoxr- is a refresh token; xoxs- is a
+        // service token. Test three representative forms.
+        let inputs = [
+            "config.slack_token = xoxb-11111111111-22222222222-zzzzzzzzzzzz",
+            "oauth_token: xoxp-11111111111-22222222222-zzzzzzzzzzzz-aaaaaa",
+            "refresh = xoxr-11111111111-22222222222-zzzzzzzzzzzz",
+        ];
+        for s in inputs {
+            let out = sanitize(s);
+            assert!(
+                out.contains("[REDACTED SLACK TOKEN]"),
+                "xox* prefix must produce REDACTED SLACK TOKEN for input: {s}\ngot: {out}"
+            );
+            assert!(
+                !out.contains("xox"),
+                "raw xox token must not appear in sanitised output: {out}"
+            );
+        }
+    }
+
+    /// Strings that superficially resemble token prefixes but fall outside the
+    /// regex constraints must NOT be redacted (false-positive prevention).
+    #[test]
+    fn does_not_redact_similar_but_benign_strings() {
+        // "gho" as part of a normal word — no underscore, no 36+ char suffix.
+        let prose = "The XOX protocol is discussed in section 4; beware of ghosts and ghouls.";
+        assert_eq!(
+            sanitize(prose),
+            prose,
+            "prose containing XOX and gho sub-strings must not be redacted"
+        );
+
+        // Short gho_ that doesn't meet the 36-char minimum.
+        let short_gho = "gho_tooshort123";
+        assert_eq!(
+            sanitize(short_gho),
+            short_gho,
+            "gho_ with fewer than 36 chars must not be redacted"
+        );
+
+        // xox without a recognised suffix letter (e.g. xoxz-) should pass through.
+        let bad_slack = "xoxz-11111111111-22222222222-zzzzzzzzzzzz";
+        assert_eq!(
+            sanitize(bad_slack),
+            bad_slack,
+            "xox with unrecognised suffix letter must not be redacted"
+        );
+    }
 }
