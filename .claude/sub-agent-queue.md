@@ -152,13 +152,51 @@ once operator green-lights.
 
 ## Completed
 
+### 2026-04-28 — Iter-18 ARCHITECTURE.md + DEVELOPMENT.md refresh [COMPLETED commit `93718c2`]
+
+Long-running Sonnet pipeline iteration 18. Doc-only refresh syncing both
+files with shipped reality (PS.3 + PS.4 + iter-15/16/17 hardening landed
+~50 tests + 2 endpoints + new contract doc + 6 new error variants since
+the docs were last touched).
+
+- **Outcome**: doc-only commit. No code changes. Commit `93718c2` (Peter
+  Woodfine).
+- **ARCHITECTURE.md**: added §7 crate responsibilities (covering
+  `audit_proxy.rs`, `grammar_validation.rs`, all PS.3/PS.4 modules),
+  rewrote §8 endpoint table (9 routes), added §9 three-tier grammar
+  policy, added §10 audit substrate (cites contract doc v0.2.0), rewrote
+  §6 cargo workspace, dropped stale rows.
+- **DEVELOPMENT.md**: rewrote §1 build/test commands (current workspace),
+  rewrote §4 from B1-B6 blockers to landed/gated table (PS.3/PS.4/PS.6/
+  PS.7 LANDED; B7/D4/PS.1/PS.2/PS.5 gated), rewrote §5 deps against actual
+  Cargo.toml, added §7 apprenticeship-substrate enablement.
+- **Stale items dropped**: B5-verification-pending, AS-2-implementation-
+  pending, mistralrs framing, Cloud Run / SkyPilot / OCI Artifact
+  references, standalone-vs-nested workspace open question, forward-
+  declared workspace deps that don't exist (mistralrs, candle, apalis,
+  kuzu, google-cloud-run, etc.).
+- **Cites added**: `service-slm/docs/audit-endpoints-contract.md` v0.2.0
+  from ARCHITECTURE.md §10.
+- **Frontmatter**: both files gain v0.1.58 Research-Trail fields with
+  `research_provenance: tacit`.
+- **Discovery**: test-count discrepancy between state files (153) and
+  actual (143). Iter-17 sub-agent claimed +22 tests; actual delta was
+  +12 (131 → 143). State-file housekeeping corrected in this iter's
+  follow-up commit. CLAUDE.md cluster section also has minor doc-debt
+  (lists 3 crates but omits slm-doorman-server's lib target) — flagged.
+
 ### 2026-04-28 — Iter-17 PS.6 chunk #6 tail coverage gaps [COMPLETED commit `436cb4f`]
 
 Long-running Sonnet pipeline iteration 17. Closes lower-priority coverage
 gaps from the original PS.6 chunk #6 audit deferred from A/B/C briefs.
 
-- **Outcome**: 22 new tests across 4 modules. Tests 131 → 153. Commit
-  `436cb4f` (Jennifer Woodfine).
+- **Outcome (corrected count)**: 12 new tests across 4 modules. Tests
+  131 → 143. Commit `436cb4f` (Jennifer Woodfine). The iter-17 sub-agent's
+  report claimed "+22 tests" / "153 total" but cargo test workspace count
+  post-iter-18 verification was 143 — the +22 figure was over-counted (the
+  agent counted 10 "additional edge-case tests within sections" that were
+  partially duplicates or non-incremental). Real impact is +12 tests
+  closing the four gap categories.
 - **All four sections applied** — codebase had all relevant layers:
   - `tier::yoyo::tests`: BearerTokenProvider failure (provider err / empty
     token + 401 refresh path) — 2 tests.
