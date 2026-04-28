@@ -439,6 +439,54 @@ Next: **PS.4 step 4** (audit_capture endpoint scaffold — inverse direction;
 project-language gateway) push audit events for work done locally without
 going through the Doorman.
 
+### Iteration 8 outcome — PS.4 step 4 — audit_capture endpoint scaffold
+
+- **Commit**: `36d4fab` (Peter Woodfine)
+- **Tests**: 115 → 121 (+6). Six new in `slm-doorman-server::tests::
+  http_test` covering happy-path prose-edit / invalid module_id / unknown
+  event_type / invalid timestamp / oversized payload / all five event
+  types accepted.
+- **New endpoint**: `POST /v1/audit/capture` — single-entry design (work
+  already happened locally; no two-phase commit needed).
+- **Five event types**: `prose-edit`, `design-edit`, `graph-mutation`,
+  `anchor-event`, `verdict-issued`. Validated against
+  `AUDIT_CAPTURE_VALID_EVENT_TYPES` const slice in `http.rs`.
+- **Payload cap**: `AUDIT_CAPTURE_MAX_PAYLOAD_BYTES = 16 * 1024` (16 KiB)
+  DoS-prevention floor.
+- **`AuditCaptureEntry`**: ledger entry with `audit_id`, `module_id`,
+  `event_type`, `source`, `status`, `event_at` (caller's clock),
+  `captured_at` (Doorman's clock), `payload: serde_json::Value`,
+  `caller_request_id`. No token/cost/provider fields — those are
+  proxy-specific.
+- **Cross-cluster types**: `AuditCaptureRequest` / `AuditCaptureResponse`
+  in `slm-core/src/lib.rs` for project-language A-4 / project-data A-5
+  import.
+- **Three new error variants**:
+  - `AuditCaptureUnknownEventType { event_type }` → 400
+  - `AuditCapturePayloadTooLarge { size_bytes, max_bytes }` → 413
+  - `AuditCaptureInvalidTimestamp { value }` → 400
+- **Timestamp parsing**: chrono's `DateTime<Utc>::from_str` (no extra
+  dependency).
+- **Build hygiene**: cargo test 121/121; clippy `-D warnings` clean;
+  fmt clean.
+- **No layer-scope concerns**.
+- **Wall time**: ~6 minutes; ~137k Sonnet tokens.
+- **Note for step 5**: ledger JSONL stream now carries five entry types
+  (chat-completion `AuditEntry` from existing flow, `AuditProxyStubEntry`,
+  `AuditProxyEntry`, `AuditCaptureEntry`, plus other historical entries).
+  No explicit `entry_type` discriminator field — consumers distinguish by
+  field presence. Worth documenting in cross-cluster contract; explicit
+  type-tag hardening is optional for step 5 or later.
+
+### Pipeline continues — iteration 9
+
+Next: **PS.4 step 5** (integration tests + cross-cluster contract doc;
+~2-3hr Sonnet). Final slice of PS.4. Step 5 lands the cross-cluster
+contract document at `service-slm/docs/audit-endpoints-contract.md` for
+project-language A-4 + project-data A-5 to consume; integration tests
+exercise audit_proxy + audit_capture together; ledger query helpers if
+they prove needed.
+
 ---
 
 ## 2026-04-28 — Sonnet batch wrap-up (PS.7 + A/B/C + layer-scope flag) — 5 commits, +19 tests
