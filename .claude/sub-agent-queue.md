@@ -120,6 +120,26 @@ once operator green-lights.
 
 ## Completed
 
+### 2026-04-28 — PS.3 step 2 (Yo-Yo client grammar serialisation) [COMPLETED commit `266fa4d`]
+
+Long-running Sonnet pipeline iteration 1. Operator-directed; explicit ratification
+per `conventions/model-tier-discipline.md` §1A.6.
+
+- **Outcome**: 4 new tests in `tier::yoyo::tests` (Lark / GBNF / JsonSchema / None).
+  Tests 79 → 83. Commit `266fa4d` (Peter Woodfine).
+- **Implementation**: Added `extra_body: Option<serde_json::Value>` to private
+  `OpenAiChatRequest` struct with `skip_serializing_if = "Option::is_none"`. The
+  `complete()` method maps `ComputeRequest.grammar` to vLLM ≥0.12 envelope:
+  - `GrammarConstraint::Lark(s)` → `extra_body.structured_outputs.grammar = s`
+  - `GrammarConstraint::Gbnf(s)` → `extra_body.structured_outputs.grammar = s`
+    (vLLM's llguidance backend auto-detects Lark vs GBNF; no separate format hint
+    field needed per the agent's research)
+  - `GrammarConstraint::JsonSchema(v)` → `extra_body.structured_outputs.json_schema = v`
+  - `None` → no `extra_body.structured_outputs` field at all (no empty objects emitted)
+- **Build hygiene**: clippy + fmt clean post-commit.
+- **No layer-scope concerns**: edits confined to
+  `service-slm/crates/slm-doorman/src/tier/yoyo.rs`.
+
 ### 2026-04-28 — Coverage briefs A/B/C (PS.6) — all three landed cleanly
 
 Operator green-light "set it up to do all the recommendations" 2026-04-28. Three foreground-serial Sonnet sub-agent dispatches; each agent committed via `bin/commit-as-next.sh`. Workspace tests 55 → 74 (+19) across the batch. PS.6 (task #14 in local list) closed.
