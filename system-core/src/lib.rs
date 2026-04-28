@@ -7,13 +7,19 @@
 //! The [`checkpoint`] submodule implements the C2SP signed-note
 //! checkpoint primitive (apex-cosigning per convention §4). The
 //! [`inclusion_proof`] submodule implements RFC 9162 v2 Merkle
-//! inclusion proofs (compatible with C2SP tlog-tiles).
+//! inclusion proofs (compatible with C2SP tlog-tiles). The
+//! [`consistency_proof`] submodule implements RFC 9162 v2 Merkle
+//! consistency proofs for ledger-mirror catch-up and multi-witness
+//! checkpoint advancement.
 
 pub mod checkpoint;
+pub mod consistency_proof;
 pub mod inclusion_proof;
 pub use checkpoint::{
-    Checkpoint, CheckpointInclusionError, NoteSignature, SignedCheckpoint,
+    CheckpointConsistencyError, CheckpointInclusionError, Checkpoint, NoteSignature,
+    SignedCheckpoint,
 };
+pub use consistency_proof::{ConsistencyProof, ConsistencyVerifyError};
 pub use inclusion_proof::{
     rfc9162_internal_hash, rfc9162_leaf_hash, InclusionProof, InclusionVerifyError,
 };
