@@ -120,6 +120,27 @@ once operator green-lights.
 
 ## Completed
 
+### 2026-04-28 — PS.3 step 3 (Tier A rejects Lark, passes GBNF/JsonSchema) [COMPLETED commit `9f9f37b`]
+
+Long-running Sonnet pipeline iteration 2.
+
+- **Outcome**: 4 new tests in `tier::local::tests` (None / GBNF / JsonSchema /
+  Lark→error). Tests 83 → 87. Commit `9f9f37b` (Peter Woodfine).
+- **New error variant**: `DoormanError::TierAGrammarUnsupported { dialect:
+  &'static str, advice: &'static str }`. HTTP mapping: 400 BAD_REQUEST.
+  Classified as `CompletionStatus::PolicyDenied` in router.
+- **Wire fields**: GBNF serialises to top-level `grammar` (NOT inside extra_body
+  — that's vLLM-specific; llama-server uses native field). JsonSchema serialises
+  to top-level `json_schema`. Lark rejected before any network call (test asserts
+  zero requests received).
+- **Build hygiene**: cargo test 87/87; clippy + fmt clean.
+- **Files touched** (all cluster-scope): `crates/slm-doorman/src/error.rs`,
+  `tier/local.rs`, `router.rs` (exhaustive match update), `slm-doorman-server/
+  src/http.rs`, `tests/http_test.rs` (mirror match).
+- **Surprises**: router.rs `classify_error()` and `tests/http_test.rs`
+  `doorman_error_to_status` mirror match both required updates beyond the brief
+  scope — exhaustive matches on `DoormanError` enum. Sonnet handled cleanly.
+
 ### 2026-04-28 — PS.3 step 2 (Yo-Yo client grammar serialisation) [COMPLETED commit `266fa4d`]
 
 Long-running Sonnet pipeline iteration 1. Operator-directed; explicit ratification
