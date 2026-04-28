@@ -874,6 +874,131 @@ mod tests {
         assert_eq!(p.notes.as_deref(), Some("LGTM"));
     }
 
+    /// Reject verdict writes both a corpus tuple AND a DPO pair (same as
+    /// refine); the rejection event is recorded in the stats ledger,
+    /// lowering the rolling accept-rate.
+    #[tokio::test]
+    async fn reject_verdict_writes_corpus_tuple_and_dpo_pair() {
+        let corpus = tmp_dir("corpus-reject");
+        let ledger_dir = tmp_dir("ledger-reject");
+        let cache = Arc::new(BriefCache::new(8));
+        cache.insert(brief("b-rej"), attempt("b-rej", "a-rej"));
+        let dispatcher = dispatcher(corpus.clone(), ledger_dir.clone(), cache);
+
+        let body = verdict_body_text("b-rej", "a-rej", "reject");
+        let sig_b64 = B64.encode("TRUSTED-SIGNATURE-BLOB".as_bytes());
+        let outcome = dispatcher
+            .dispatch(VerdictWireBody {
+                body,
+                signature: sig_b64,
+                senior_identity: "ps-administrator".into(),
+            })
+            .await
+            .unwrap();
+
+        // Outcome carries Reject.
+        assert_eq!(outcome.verdict, VerdictOutcome::Reject);
+
+        // DPO pair is produced — reject is treated identically to refine
+        // per `VerdictOutcome::produces_dpo_pair()`.
+        let dpo_path = outcome.dpo_pair_path.expect("reject must write DPO pair");
+        let dpo_content = std::fs::read_to_string(&dpo_path).unwrap();
+        let dpo_row: serde_json::Value = serde_json::from_str(dpo_content.trim()).unwrap();
+        assert_eq!(dpo_row["tuple_type"], "apprenticeship-feedback");
+        assert_eq!(dpo_row["task_type"], "version-bump-manifest");
+        assert_eq!(dpo_row["brief_id"], "b-rej");
+        assert_eq!(dpo_row["attempt_id"], "a-rej");
+
+        // Corpus tuple is also written.
+        let corpus_dir = corpus
+            .join("data")
+            .join("training-corpus")
+            .join("apprenticeship")
+            .join("version-bump-manifest");
+        let entries: Vec<_> = std::fs::read_dir(&corpus_dir).unwrap().collect();
+        assert_eq!(entries.len(), 1, "exactly one corpus row for the rejection");
+        let corpus_content =
+            std::fs::read_to_string(entries.into_iter().next().unwrap().unwrap().path()).unwrap();
+        let corpus_row: serde_json::Value = serde_json::from_str(corpus_content.trim()).unwrap();
+        assert_eq!(corpus_row["verdict"]["verdict"], "reject");
+
+        // Ledger stats row recorded; rejection counts against accept_rate
+        // (n increments, accepts does not) — the ledger file must exist.
+        assert!(
+            ledger_dir.join("ledger.md").exists(),
+            "rejection verdict must write a ledger row"
+        );
+        assert!(
+            ledger_dir.join(".stats.jsonl").exists(),
+            "rejection verdict must write a stats row"
+        );
+        // With 1 verdict and 0 accepts the accept_rate is 0.0 — verify via
+        // the PromotionOutcome fields.
+        assert!((outcome.promotion.accept_rate - 0.0).abs() < 1e-6);
+        assert_eq!(outcome.promotion.n_verdicts, 1);
+        assert!(!outcome.promotion.promoted);
+    }
+
+    /// DeferTierC verdict writes a corpus tuple but NO DPO pair — it is
+    /// an escalation signal, not a refinement; there is no corrected diff
+    /// to pair. The defer event is recorded in the stats ledger.
+    #[tokio::test]
+    async fn defer_tier_c_verdict_writes_corpus_tuple_no_dpo_pair() {
+        let corpus = tmp_dir("corpus-defer");
+        let ledger_dir = tmp_dir("ledger-defer");
+        let cache = Arc::new(BriefCache::new(8));
+        cache.insert(brief("b-def"), attempt("b-def", "a-def"));
+        let dispatcher = dispatcher(corpus.clone(), ledger_dir.clone(), cache);
+
+        let body = verdict_body_text("b-def", "a-def", "defer-tier-c");
+        let sig_b64 = B64.encode("TRUSTED-SIGNATURE-BLOB".as_bytes());
+        let outcome = dispatcher
+            .dispatch(VerdictWireBody {
+                body,
+                signature: sig_b64,
+                senior_identity: "ps-administrator".into(),
+            })
+            .await
+            .unwrap();
+
+        // Outcome carries DeferTierC.
+        assert_eq!(outcome.verdict, VerdictOutcome::DeferTierC);
+
+        // No DPO pair — escalation is not refinement.
+        assert!(
+            outcome.dpo_pair_path.is_none(),
+            "defer-tier-c must NOT write a DPO pair"
+        );
+
+        // Corpus tuple IS written (every verdict captures a training tuple).
+        let corpus_dir = corpus
+            .join("data")
+            .join("training-corpus")
+            .join("apprenticeship")
+            .join("version-bump-manifest");
+        let entries: Vec<_> = std::fs::read_dir(&corpus_dir).unwrap().collect();
+        assert_eq!(entries.len(), 1, "exactly one corpus row for the deferral");
+        let corpus_content =
+            std::fs::read_to_string(entries.into_iter().next().unwrap().unwrap().path()).unwrap();
+        let corpus_row: serde_json::Value = serde_json::from_str(corpus_content.trim()).unwrap();
+        assert_eq!(corpus_row["verdict"]["verdict"], "defer-tier-c");
+
+        // Ledger stats row recorded; DeferTierC counts against accept_rate
+        // (n increments, accepts does not) — no different from reject at
+        // the rolling-stats level.
+        assert!(
+            ledger_dir.join("ledger.md").exists(),
+            "defer-tier-c verdict must write a ledger row"
+        );
+        assert!(
+            ledger_dir.join(".stats.jsonl").exists(),
+            "defer-tier-c verdict must write a stats row"
+        );
+        assert!((outcome.promotion.accept_rate - 0.0).abs() < 1e-6);
+        assert_eq!(outcome.promotion.n_verdicts, 1);
+        assert!(!outcome.promotion.promoted);
+    }
+
     /// Brief-cache miss surfaces as `BriefCacheMiss`.
     #[tokio::test]
     async fn cache_miss_surfaces_briefly() {
