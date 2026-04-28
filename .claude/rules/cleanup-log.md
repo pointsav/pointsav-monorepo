@@ -181,6 +181,47 @@ landed.
 Next: PS.3 step 4 (Tier C reject all grammar variants — smallest chunk;
 ~30 min Sonnet).
 
+### Iteration 3 outcome — PS.3 step 4 — Tier C grammar rejection
+
+- **Commit**: `fdee78f` (Peter Woodfine)
+- **Tests**: 87 → 90. Three new tests in `tier::external::tests`
+  (Lark / GBNF / JsonSchema rejection, each asserting zero network
+  requests via wiremock).
+- **New error variant**: `DoormanError::TierCGrammarUnsupported { dialect,
+  advice }`. HTTP 400 BAD_REQUEST. `PolicyDenied` classification. Mirrors
+  Tier-A pattern exactly. Per v0.1.33 Q1 ratification: grammar enforcement
+  is Tier A (GBNF/JsonSchema) and Tier B (Lark via llguidance) only;
+  Tier C providers don't accept user-supplied grammars.
+- **Ordering**: grammar check runs AFTER allowlist check in `complete()`.
+  Allowlist is the more fundamental gate — unallowlisted requests refused
+  regardless of grammar.
+- **Build hygiene**: cargo test 90/90; clippy `-D warnings` clean; fmt clean.
+- **No layer-scope concerns**; no surprises; Sonnet handled exhaustive-match
+  symmetry cleanly (no catch-all `_` arms used).
+- **Wall time**: ~4 minutes; ~105k Sonnet tokens.
+
+### Doorman three-tier grammar policy now complete
+
+With PS.3 steps 2-4 landed, the Doorman's grammar handling is uniform across
+all three tiers:
+- **Tier A (local llama-server)**: GBNF + JsonSchema natively; Lark rejected
+  with `TierAGrammarUnsupported` → 400 BAD_REQUEST + escalate-advice.
+- **Tier B (Yo-Yo vLLM)**: All three variants serialised to vLLM ≥0.12
+  envelope `extra_body.structured_outputs.{grammar, json_schema}`. Lark/GBNF
+  share the `grammar` field (llguidance auto-detects).
+- **Tier C (external API)**: All grammar variants rejected with
+  `TierCGrammarUnsupported` → 400 BAD_REQUEST + escalate-advice.
+
+PS.3 step 5 (`llguidance` Doorman-side Lark validation) is the optional
+fail-fast layer on TOP of this — pre-validate Lark syntax at the Doorman
+boundary so malformed Lark is caught before Tier B relay. Lower-priority
+than the routing policy itself.
+
+### Pipeline continues — iteration 4
+
+Next: PS.3 step 5 (`llguidance` crate dep + Doorman-side Lark validation;
+~1-2hr Sonnet).
+
 ---
 
 ## 2026-04-28 — Sonnet batch wrap-up (PS.7 + A/B/C + layer-scope flag) — 5 commits, +19 tests
