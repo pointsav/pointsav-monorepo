@@ -66,4 +66,15 @@ pub enum DoormanError {
              brief cache miss; senior must reissue the brief"
     )]
     BriefCacheMiss,
+
+    #[error(
+        "Tier A (llama-server) does not accept {dialect} grammars; \
+         {advice}"
+    )]
+    TierAGrammarUnsupported {
+        /// The grammar dialect that was rejected, e.g. `"Lark"`.
+        dialect: &'static str,
+        /// Human-readable advice for the caller.
+        advice: &'static str,
+    },
 }
