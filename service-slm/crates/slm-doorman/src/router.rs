@@ -17,7 +17,7 @@ use tracing::{info, warn};
 
 use crate::error::{DoormanError, Result};
 use crate::grammar_validation::LarkValidator;
-use crate::ledger::{AuditEntry, AuditLedger, CompletionStatus};
+use crate::ledger::{AuditEntry, AuditLedger, CompletionStatus, ENTRY_TYPE_CHAT_COMPLETION};
 use crate::tier::{ExternalTierClient, LocalTierClient, YoYoTierClient};
 
 #[derive(Default)]
@@ -181,6 +181,7 @@ impl Doorman {
     fn write_audit(&self, req: &ComputeRequest, tier: Tier, result: &Result<ComputeResponse>) {
         let entry = match result {
             Ok(resp) => AuditEntry {
+                entry_type: ENTRY_TYPE_CHAT_COMPLETION.to_string(),
                 timestamp_utc: Utc::now(),
                 request_id: req.request_id,
                 module_id: req.module_id.clone(),
@@ -193,6 +194,7 @@ impl Doorman {
                 error_message: None,
             },
             Err(e) => AuditEntry {
+                entry_type: ENTRY_TYPE_CHAT_COMPLETION.to_string(),
                 timestamp_utc: Utc::now(),
                 request_id: req.request_id,
                 module_id: req.module_id.clone(),
