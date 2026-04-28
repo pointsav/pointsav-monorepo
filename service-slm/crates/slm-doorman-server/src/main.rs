@@ -35,6 +35,11 @@
 //!   FOUNDRY_DOCTRINE_VERSION  doctrine version embedded in apprenticeship
 //!                             corpus tuples; default 0.0.7.
 //!   FOUNDRY_TENANT            tenant tag on corpus tuples; default pointsav.
+//!   SLM_AUDIT_DIR             directory for the append-only JSONL audit ledger.
+//!                             If unset, defaults to $HOME/.service-slm/audit/.
+//!                             The directory is created on startup if absent.
+//!                             A creation failure is non-fatal: the server logs
+//!                             a warning and falls back to the default location.
 //!   SLM_LARK_VALIDATION_ENABLED  pre-validate Lark grammars at the Doorman
 //!                             boundary using llguidance (PS.3 step 5).
 //!                             Default true. Set to `false` or `0` to disable.
@@ -171,8 +176,45 @@ fn build_doorman() -> anyhow::Result<Doorman> {
         }
     };
 
-    let ledger = AuditLedger::default_for_user()
-        .context("failed to open audit ledger; ensure HOME is set")?;
+    // Resolve the audit ledger directory.  SLM_AUDIT_DIR takes precedence;
+    // fall back to the $HOME/.service-slm/audit/ default on any error.
+    let ledger = match std::env::var_os("SLM_AUDIT_DIR") {
+        Some(path) if !path.is_empty() => {
+            let dir = std::path::PathBuf::from(&path);
+            match std::fs::create_dir_all(&dir) {
+                Ok(()) => match AuditLedger::new(&dir) {
+                    Ok(l) => {
+                        info!(audit_dir = %dir.display(), "audit ledger directory (SLM_AUDIT_DIR)");
+                        l
+                    }
+                    Err(e) => {
+                        tracing::warn!(
+                            audit_dir = %dir.display(),
+                            error = %e,
+                            "SLM_AUDIT_DIR unusable; falling back to default"
+                        );
+                        AuditLedger::default_for_user()
+                            .context("failed to open fallback audit ledger; ensure HOME is set")?
+                    }
+                },
+                Err(e) => {
+                    tracing::warn!(
+                        audit_dir = %dir.display(),
+                        error = %e,
+                        "SLM_AUDIT_DIR create_dir_all failed; falling back to default"
+                    );
+                    AuditLedger::default_for_user()
+                        .context("failed to open fallback audit ledger; ensure HOME is set")?
+                }
+            }
+        }
+        _ => {
+            let l = AuditLedger::default_for_user()
+                .context("failed to open audit ledger; ensure HOME is set")?;
+            info!(audit_dir = %l.base_dir().display(), "audit ledger directory (default)");
+            l
+        }
+    };
 
     Ok(Doorman::new(
         DoormanConfig {
