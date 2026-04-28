@@ -487,6 +487,97 @@ project-language A-4 + project-data A-5 to consume; integration tests
 exercise audit_proxy + audit_capture together; ledger query helpers if
 they prove needed.
 
+### Iteration 9 outcome — PS.4 step 5 — integration tests + cross-cluster contract doc — PS.4 CLOSED
+
+- **Commit**: `e4cb8a8` (Peter Woodfine)
+- **Tests**: 121 → 124 (+3 integration tests in new file
+  `slm-doorman-server/tests/audit_endpoints_integration.rs`).
+- **Contract doc**: NEW file at `service-slm/docs/audit-endpoints-
+  contract.md`. v0.1.0. Five sections covering both endpoints + ledger
+  format + error table + versioning rules. Frontmatter with v0.1.58
+  Research-Trail fields (research_provenance: tacit).
+- **Integration tests**: round-trip capture+proxy, upstream-failure +
+  capture independence, mixed-entry-type discrimination algorithm.
+  Third test serves as executable form of contract-doc §3.2 (the
+  field-presence discrimination convention).
+- **Future direction in contract**: explicit `entry_type` discriminator
+  field on ledger entries — deferred (MINOR contract bump when added).
+- **Build hygiene**: cargo test 124/124; clippy `-D warnings` clean;
+  fmt clean.
+
+### PS.4 multi-day work CLOSED
+
+Five commits across iterations 5-9 deliver the cross-cluster audit
+substrate:
+
+| Step | Commit | Tests | Outcome |
+|---|---|---|---|
+| step 1 | `40dc18e` | +5 | audit_proxy endpoint scaffold + 503 placeholder |
+| step 2 | `028c411` | +9 | audit_proxy upstream relay (mock-only per B4 guardrail) |
+| step 3 | `acee9f7` | +4 | purpose allowlist enforcement (4 documented purposes) |
+| step 4 | `36d4fab` | +6 | audit_capture endpoint scaffold (inverse direction, 5 event types) |
+| step 5 | `e4cb8a8` | +3 | integration tests + cross-cluster contract doc |
+
+Cumulative: 102 → 124 tests (+22). Six new typed `DoormanError` variants
+(`AuditProxyInvalidProvider`, `AuditProxyProviderUnavailable`,
+`AuditProxyPurposeNotAllowlisted`, `AuditCaptureUnknownEventType`,
+`AuditCapturePayloadTooLarge`, `AuditCaptureInvalidTimestamp`).
+
+Cross-cluster shipping surface for **project-language A-4** (editorial
+gateway adapter loading via Doorman audit-mediated Tier C) and
+**project-data A-5** (anchor-emitter audit-ledger module-id) is now
+implementable. Contract document at
+`service-slm/docs/audit-endpoints-contract.md` is the canonical wire
+reference.
+
+### Pipeline session-end snapshot — queue effectively exhausted at cluster-Task scope
+
+Long-running Sonnet pipeline that started with operator green-light
+2026-04-28 has shipped:
+
+| | Commits | Tests added | Outcome |
+|---|---|---|---|
+| **PS.3 sequence (iter 1-4)** | 5 | +23 (74 → 97) | Three-tier grammar policy + Doorman-side Lark fail-fast validation |
+| **PS.4 sequence (iter 5-9)** | 5 | +27 (97 → 124) | Cross-cluster audit substrate (proxy + capture endpoints + contract doc) |
+| **State-file commits** | 9 | n/a | Queue / cleanup-log / NEXT housekeeping per iteration |
+
+Total: 19 commits, +50 tests across 9 iterations. AS-5 shadow brief
+fired on every commit — apprenticeship corpus accumulated 19 JSONL
+events at `data/training-corpus/engineering/project-slm/`.
+
+What's left in the queue at cluster-Task scope:
+
+- **PS.5** (graduate task-types to service-slm-first production routing) —
+  blocked on (a) B7 Doorman redeploy with `SLM_APPRENTICESHIP_ENABLED=true`
+  on workspace VM, (b) apprenticeship corpus accumulating to threshold
+  (continued pretraining tuning data). Both Master-tier prerequisites.
+- **PS.1-2 / PS.1-3 / PS.1-4** — workspace-tier layer-scope still pending
+  Master clarification (per outbox 2026-04-28T02:30Z).
+- **PS.1-5 / PS.2 / Yo-Yo MIN deploy** — blocked on D4 image-build
+  pipeline (Master-tier; per outbox 2026-04-28T01:30Z).
+- **PS.8** — workspace-repo layer-scope (same shape as PS.1-2/-3/-4);
+  pending Master clarification.
+
+The pipeline's stop condition "queue exhausted" is reached. Loop
+terminates here pending operator + Master input on the blocked items.
+
+When the pipeline resumes (next operator `/loop` invocation), candidate
+restart points:
+- **If Master replied on layer-scope**: dispatch PS.1-2 → PS.1-3 →
+  PS.1-4 → PS.8 sequence (workspace-repo edits via admin-tier procedure
+  per CLAUDE.md §8).
+- **If Master shipped D4**: dispatch PS.1-5 + PS.2 (Yo-Yo deploy
+  verification; needs operator presence for `tofu apply`).
+- **If Master shipped B7**: pipeline starts feeding the apprenticeship
+  corpus from operational service-slm; PS.5 dispatchable once corpus
+  threshold reached.
+- **Otherwise**: cluster-Task work that remains useful = (a) optional
+  hardening sweeps on existing endpoints (e.g., adding the explicit
+  `entry_type` discriminator deferred from PS.4 step 5), (b) draft
+  refinement of the three TOPIC skeletons in `.claude/drafts-outbound/`
+  if substance can be authored (probably premature; substance follows
+  cluster milestones).
+
 ---
 
 ## 2026-04-28 — Sonnet batch wrap-up (PS.7 + A/B/C + layer-scope flag) — 5 commits, +19 tests
