@@ -261,6 +261,11 @@ impl From<DoormanError> for ApiError {
             // either change the grammar dialect or route to a supported tier.
             DoormanError::TierAGrammarUnsupported { .. }
             | DoormanError::TierCGrammarUnsupported { .. } => StatusCode::BAD_REQUEST,
+            // Caller submitted a syntactically malformed Lark grammar (PS.3
+            // step 5). The parse-error message from llguidance is included in
+            // the response body so the caller can fix the grammar without
+            // re-routing. 400 BAD_REQUEST: error is entirely on the caller's side.
+            DoormanError::MalformedLarkGrammar { .. } => StatusCode::BAD_REQUEST,
             DoormanError::BriefCacheMiss => StatusCode::GONE,
             DoormanError::LedgerIo(_)
             | DoormanError::LedgerSerde(_)
