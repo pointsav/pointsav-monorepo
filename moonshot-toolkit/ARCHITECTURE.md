@@ -61,8 +61,9 @@ Rust struct equivalent of Microkit's system-description XML schema.
 Fields:
 
 - `protection_domains: Vec<ProtectionDomain>` (max 63 per Microkit)
-  - `name`, `entry_points` (init/notified/protected/fault),
-    `priority`, `assigned_memory_regions`, `assigned_channels`
+  - `name` (String), `binary` (path to PD binary; resolved at build
+    time), `priority` (u8; 0 = highest; matches Microkit/seL4),
+    `stack_bytes` (u64; default 4 KiB per Microkit)
 - `channels: Vec<Channel>` — point-to-point PPC or notification;
   max 63 per PD
 - `memory_regions: Vec<MemoryRegion>` — caching + permissions +
@@ -77,22 +78,25 @@ Validation rules enforced at parse time:
 - No overlapping memory regions (by address range)
 - IRQ targets must reference declared PDs
 - Channel endpoints must reference declared PDs
+- No duplicate PD names
 
 ### `src/plan.rs` — BuildPlan generation
 
 Given a parsed SystemSpec, derives a `BuildPlan`:
 
 ```rust
-struct BuildPlan {
-    spec_hash: Hash256,         // SHA-256 of canonical SystemSpec bytes
-    input_hashes: Vec<Hash256>, // each declared input file
-    steps: Vec<BuildStep>,      // ordered (inputs, command, outputs)
-    plan_hash: Hash256,         // SHA-256 of all of the above canonical bytes
+pub struct BuildPlan {
+    pub spec_hash: Hash256,   // SHA-256 of canonical TOML rendering of SystemSpec
+    pub steps: Vec<BuildStep>, // ordered compile steps (per-PD) + final assemble
+    pub plan_hash: Hash256,   // SHA-256 of canonical JSON of (spec_hash, steps)
 }
 ```
 
-Determinism: same SystemSpec → same input_hashes → same steps →
-same plan_hash. Tested via duplicate-spec-same-plan-hash assertion.
+Determinism: same SystemSpec → same steps → same plan_hash.
+Tested via duplicate-spec-same-plan-hash assertion.
+
+Rejects a spec with no protection domains
+(`PlanGenerationError::EmptySpec`).
 
 The plan is the manifest a reproducible-build harness replays.
 v0.1.x ships the plan generator only; actual command execution
@@ -103,12 +107,21 @@ v0.1.x ships the plan generator only; actual command execution
 clap-based subcommands:
 
 - `validate <spec.toml>` — parse the TOML; reject on invariant
-  violation; exit 0 on valid.
+  violation; exit 0 on valid. On valid, prints a one-line summary
+  to stdout: `✓ <path> — N protection_domain(s), N channel(s),
+  N memory_region(s), N irq_delivery`.
 - `plan <spec.toml>` — parse + generate BuildPlan + print
-  canonical TOML / JSON representation.
+  BuildPlan as JSON. Output format controlled by `--format json`
+  (default) or `--format pretty-json`; rendered via `serde_json`.
 - `build <spec.toml>` — parse + plan + STUB execute (prints
-  "would run: <command>" for each step; exit 0). Actual
-  execution lands in future task #14.
+  "would run: <command>" for each step; exit 0). The stub header
+  line prints the plan_hash (first 8 bytes hex, `…` suffix) before
+  the per-step lines. Actual execution lands in future task #14.
+
+Exit codes: 0 on success for all three subcommands; non-zero on
+any I/O, parse, or plan-generation error. Successful output
+(validate summary, plan JSON) goes to stdout; errors and the
+build stub scope note go to stderr (`eprintln!`).
 
 ## 4. Hash function
 
@@ -133,10 +146,13 @@ BLAKE3 / SHA-3 alongside SHA-256 (algorithm-agile from day one).
 
 ## 6. Verification
 
-Activation commit: `cargo check -p moonshot-toolkit` passes
-(legacy stub + framework §9 docs only). 0 tests at activation;
-tests land alongside each module impl per cluster tasks #35 / #36
-/ #37.
+Phase 1B ships 30 tests: 12 in `src/spec.rs` (SystemSpec parse +
+invariant coverage), 10 in `src/plan.rs` (determinism, step
+generation, hash sensitivity), 8 in `src/main.rs` (CLI integration
+via `tempfile` fixtures). `cargo test -p moonshot-toolkit` passes
+clean at v0.1.3. CLI integration tests use `tempfile` (dev-
+dependency) to write ephemeral spec fixtures; no fixture files are
+committed.
 
 ## 7. Future work (out of v0.1.x scope)
 
