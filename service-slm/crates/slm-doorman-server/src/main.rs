@@ -35,6 +35,9 @@
 //!   FOUNDRY_DOCTRINE_VERSION  doctrine version embedded in apprenticeship
 //!                             corpus tuples; default 0.0.7.
 //!   FOUNDRY_TENANT            tenant tag on corpus tuples; default pointsav.
+//!   SLM_LARK_VALIDATION_ENABLED  pre-validate Lark grammars at the Doorman
+//!                             boundary using llguidance (PS.3 step 5).
+//!                             Default true. Set to `false` or `0` to disable.
 //!   RUST_LOG                  default slm_doorman=info,slm_doorman_server=info
 //!
 //! Per `conventions/three-ring-architecture.md` the Doorman boots fine
@@ -53,8 +56,8 @@ use slm_doorman::tier::{
     FOUNDRY_DEFAULT_ALLOWLIST,
 };
 use slm_doorman::{
-    ApprenticeshipConfig, AuditLedger, BriefCache, Doorman, DoormanConfig, PromotionLedger,
-    SshKeygenVerifier, VerdictDispatcher, VerdictVerifier,
+    ApprenticeshipConfig, AuditLedger, BriefCache, Doorman, DoormanConfig, LarkValidator,
+    PromotionLedger, SshKeygenVerifier, VerdictDispatcher, VerdictVerifier,
 };
 use tracing::info;
 
@@ -133,6 +136,33 @@ fn build_doorman() -> anyhow::Result<Doorman> {
 
     let external = build_external_tier_client();
 
+    // PS.3 step 5 — Lark grammar pre-validation.
+    // Enabled by default; set SLM_LARK_VALIDATION_ENABLED=false to disable
+    // (e.g., if the llguidance init overhead is undesirable in a test
+    // environment that never submits Lark grammars).
+    let lark_validator = {
+        let enabled = std::env::var("SLM_LARK_VALIDATION_ENABLED")
+            .map(|v| !matches!(v.trim(), "false" | "0"))
+            .unwrap_or(true);
+        if enabled {
+            match LarkValidator::new() {
+                Ok(v) => {
+                    info!("Lark grammar pre-validation enabled (PS.3 step 5)");
+                    Some(v)
+                }
+                Err(e) => {
+                    // Validation init failure is non-fatal — the Doorman
+                    // starts without it and logs a warning.
+                    tracing::warn!("LarkValidator init failed (Lark pre-validation disabled): {e}");
+                    None
+                }
+            }
+        } else {
+            info!("Lark grammar pre-validation disabled (SLM_LARK_VALIDATION_ENABLED=false)");
+            None
+        }
+    };
+
     let ledger = AuditLedger::default_for_user()
         .context("failed to open audit ledger; ensure HOME is set")?;
 
@@ -141,6 +171,7 @@ fn build_doorman() -> anyhow::Result<Doorman> {
             local,
             yoyo,
             external,
+            lark_validator,
         },
         ledger,
     ))
