@@ -25,7 +25,7 @@ use std::time::{Duration, Instant};
 
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
-use slm_core::{ChatMessage, ComputeRequest, ComputeResponse, Tier};
+use slm_core::{ChatMessage, ComputeRequest, ComputeResponse, GrammarConstraint, Tier};
 use tracing::{debug, warn};
 
 use crate::error::{DoormanError, Result};
@@ -151,12 +151,31 @@ impl YoYoTierClient {
             .model
             .clone()
             .unwrap_or_else(|| self.config.default_model.clone());
+
+        // Translate GrammarConstraint → vLLM ≥0.12 wire envelope.
+        // vLLM's llguidance backend auto-detects Lark vs GBNF from the grammar
+        // string; both variants go in the same `grammar` field. JsonSchema goes
+        // in the sibling `json_schema` field per the vLLM structured-outputs
+        // API surface. When no grammar is set the `extra_body` field is absent
+        // (skip_serializing_if = "Option::is_none") — no empty objects emitted.
+        // Legacy `extra_body.guided_grammar` form deliberately NOT used (pinned
+        // to vLLM ≥0.12 envelope per v0.1.33 Q2 ratification).
+        let extra_body: Option<serde_json::Value> = req.grammar.as_ref().map(|g| match g {
+            GrammarConstraint::Lark(s) | GrammarConstraint::Gbnf(s) => {
+                serde_json::json!({ "structured_outputs": { "grammar": s } })
+            }
+            GrammarConstraint::JsonSchema(v) => {
+                serde_json::json!({ "structured_outputs": { "json_schema": v } })
+            }
+        });
+
         let body = OpenAiChatRequest {
             model: model.clone(),
             messages: req.messages.clone(),
             stream: req.stream,
             max_tokens: req.max_tokens,
             temperature: req.temperature,
+            extra_body,
         };
         let url = format!(
             "{}/v1/chat/completions",
@@ -306,6 +325,12 @@ struct OpenAiChatRequest {
     max_tokens: Option<u32>,
     #[serde(skip_serializing_if = "Option::is_none")]
     temperature: Option<f32>,
+    /// vLLM ≥0.12 structured-outputs envelope. Absent when no grammar is
+    /// requested (skip_serializing_if); never emits an empty object.
+    /// Shape: `{"structured_outputs": {"grammar": "<s>"}}` for Lark/GBNF,
+    ///        `{"structured_outputs": {"json_schema": {...}}}` for JSON Schema.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    extra_body: Option<serde_json::Value>,
 }
 
 #[derive(Deserialize)]
@@ -561,6 +586,175 @@ mod tests {
         let client = client(server.uri());
         let resp = client.complete(&req()).await.expect("happy path 200");
         assert_eq!(resp.cost_usd, 0.0);
+    }
+
+    // ---- Grammar serialisation tests (PS.3 step 2) ----
+
+    /// Lark grammar serialises into `extra_body.structured_outputs.grammar`.
+    /// vLLM ≥0.12 with the llguidance backend accepts Lark strings in this
+    /// field; the backend auto-detects the grammar dialect.
+    #[tokio::test]
+    async fn grammar_lark_serialises_into_extra_body_structured_outputs() {
+        use std::sync::Mutex;
+
+        let captured: Arc<Mutex<Option<serde_json::Value>>> = Arc::new(Mutex::new(None));
+        let captured_clone = captured.clone();
+
+        let server = MockServer::start().await;
+        Mock::given(method("POST"))
+            .and(path("/v1/chat/completions"))
+            .respond_with(move |req: &Request| {
+                let body: serde_json::Value = serde_json::from_slice(&req.body).unwrap_or_default();
+                *captured_clone.lock().unwrap() = Some(body);
+                ResponseTemplate::new(200)
+                    .insert_header("x-foundry-inference-ms", "100")
+                    .set_body_json(ok_body())
+            })
+            .expect(1)
+            .mount(&server)
+            .await;
+
+        let client = client(server.uri());
+        let mut r = req();
+        r.grammar = Some(slm_core::GrammarConstraint::Lark(
+            "start: /[a-z]+/".to_string(),
+        ));
+        client.complete(&r).await.expect("lark grammar happy path");
+
+        let body = captured.lock().unwrap().clone().expect("body captured");
+        assert_eq!(
+            body["extra_body"]["structured_outputs"]["grammar"],
+            serde_json::json!("start: /[a-z]+/"),
+            "Lark grammar must be in extra_body.structured_outputs.grammar"
+        );
+        // json_schema field must NOT appear for a Lark constraint.
+        assert!(
+            body["extra_body"]["structured_outputs"]["json_schema"].is_null(),
+            "json_schema field must be absent for Lark constraint"
+        );
+    }
+
+    /// GBNF grammar also serialises into `extra_body.structured_outputs.grammar`.
+    /// vLLM's llguidance backend auto-detects Lark vs GBNF from the string;
+    /// both variants share the same wire field.
+    #[tokio::test]
+    async fn grammar_gbnf_serialises_into_extra_body_structured_outputs() {
+        use std::sync::Mutex;
+
+        let captured: Arc<Mutex<Option<serde_json::Value>>> = Arc::new(Mutex::new(None));
+        let captured_clone = captured.clone();
+
+        let server = MockServer::start().await;
+        Mock::given(method("POST"))
+            .and(path("/v1/chat/completions"))
+            .respond_with(move |req: &Request| {
+                let body: serde_json::Value = serde_json::from_slice(&req.body).unwrap_or_default();
+                *captured_clone.lock().unwrap() = Some(body);
+                ResponseTemplate::new(200)
+                    .insert_header("x-foundry-inference-ms", "100")
+                    .set_body_json(ok_body())
+            })
+            .expect(1)
+            .mount(&server)
+            .await;
+
+        let client = client(server.uri());
+        let mut r = req();
+        r.grammar = Some(slm_core::GrammarConstraint::Gbnf(
+            r#"root ::= "yes" | "no""#.to_string(),
+        ));
+        client.complete(&r).await.expect("gbnf grammar happy path");
+
+        let body = captured.lock().unwrap().clone().expect("body captured");
+        assert_eq!(
+            body["extra_body"]["structured_outputs"]["grammar"],
+            serde_json::json!(r#"root ::= "yes" | "no""#),
+            "GBNF grammar must be in extra_body.structured_outputs.grammar"
+        );
+    }
+
+    /// JSON Schema serialises into `extra_body.structured_outputs.json_schema`.
+    #[tokio::test]
+    async fn grammar_json_schema_serialises_into_extra_body_structured_outputs() {
+        use std::sync::Mutex;
+
+        let captured: Arc<Mutex<Option<serde_json::Value>>> = Arc::new(Mutex::new(None));
+        let captured_clone = captured.clone();
+
+        let server = MockServer::start().await;
+        Mock::given(method("POST"))
+            .and(path("/v1/chat/completions"))
+            .respond_with(move |req: &Request| {
+                let body: serde_json::Value = serde_json::from_slice(&req.body).unwrap_or_default();
+                *captured_clone.lock().unwrap() = Some(body);
+                ResponseTemplate::new(200)
+                    .insert_header("x-foundry-inference-ms", "100")
+                    .set_body_json(ok_body())
+            })
+            .expect(1)
+            .mount(&server)
+            .await;
+
+        let schema = serde_json::json!({
+            "type": "object",
+            "properties": { "result": { "type": "string" } },
+            "required": ["result"]
+        });
+        let client = client(server.uri());
+        let mut r = req();
+        r.grammar = Some(slm_core::GrammarConstraint::JsonSchema(schema.clone()));
+        client
+            .complete(&r)
+            .await
+            .expect("json_schema grammar happy path");
+
+        let body = captured.lock().unwrap().clone().expect("body captured");
+        assert_eq!(
+            body["extra_body"]["structured_outputs"]["json_schema"], schema,
+            "JSON Schema must be in extra_body.structured_outputs.json_schema"
+        );
+        // grammar field must NOT appear for a JsonSchema constraint.
+        assert!(
+            body["extra_body"]["structured_outputs"]["grammar"].is_null(),
+            "grammar field must be absent for JsonSchema constraint"
+        );
+    }
+
+    /// When grammar is None, the request body must have no `extra_body`
+    /// field at all — no empty objects emitted to the wire.
+    #[tokio::test]
+    async fn grammar_none_omits_extra_body_structured_outputs() {
+        use std::sync::Mutex;
+
+        let captured: Arc<Mutex<Option<serde_json::Value>>> = Arc::new(Mutex::new(None));
+        let captured_clone = captured.clone();
+
+        let server = MockServer::start().await;
+        Mock::given(method("POST"))
+            .and(path("/v1/chat/completions"))
+            .respond_with(move |req: &Request| {
+                let body: serde_json::Value = serde_json::from_slice(&req.body).unwrap_or_default();
+                *captured_clone.lock().unwrap() = Some(body);
+                ResponseTemplate::new(200)
+                    .insert_header("x-foundry-inference-ms", "100")
+                    .set_body_json(ok_body())
+            })
+            .expect(1)
+            .mount(&server)
+            .await;
+
+        let client = client(server.uri());
+        // req() factory sets grammar: None by default.
+        client
+            .complete(&req())
+            .await
+            .expect("none grammar happy path");
+
+        let body = captured.lock().unwrap().clone().expect("body captured");
+        assert!(
+            body.get("extra_body").is_none(),
+            "extra_body field must be absent when grammar is None; got body: {body}"
+        );
     }
 
     /// 410 MAJOR contract mismatch: client must NOT retry and must
