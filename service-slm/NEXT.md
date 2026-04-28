@@ -1,58 +1,90 @@
 # NEXT.md — service-slm
 
-> Last updated: 2026-04-27 (post-v0.1.42 SLM operationalization plan)
+> Last updated: 2026-04-28 (session-end snapshot post-Sonnet-batch + PS.3 step 1)
 > Read at session start. Update before session end so the next
 > session knows where to pick up.
 
 ---
 
-## Right now — SLM Operationalization Plan (v0.1.42, ratified)
+## Right now — session-end snapshot 2026-04-28
 
-This cluster is on the critical path for service-slm
-productionization. Eight prioritized items (PS.1..PS.8) per
-`conventions/service-slm-operationalization-plan.md`.
-Healing-effect framing per operator: prioritize Sonnet over
-Opus on bulk work; Opus stays for architectural decisions.
+**Tests:** 79/79 passing across slm-core (14) + slm-doorman (53) +
+slm-doorman-server (12). Working tree clean. Last commit
+`9803193` (PS.3 step 1).
 
-**Pre-authorized for operator green-light (no further Master
-ratification needed):**
+**This session landed (10 commits, +33 tests, all coordination + 4
+research dispatches):**
+- Manifest tetrad upgrade (Doctrine claim #37) + 3 TOPIC skeletons
+- PS.1 Yo-Yo deploy readiness review (4 blockers + 7 warnings)
+- PS.1-1 image verification — `pointsav-public` doesn't exist; D4 is upstream blocker
+- PS.7 — 8 zero-container drift edits (doc-only)
+- A/B/C coverage briefs (PS.6) — http.rs test factory + tier/local.rs + verdict dispatcher (+19 tests)
+- PS.3 step 1 — `grammar: Option<GrammarConstraint>` on `ComputeRequest` + 5 round-trip tests
 
-- **PS.7 — 4th+5th-pass zero-container prose-edit** (~30 min).
-  Sonnet sub-agent. 8 sites total per per-site replacement
-  text in this cluster's outbox. Single commit on
-  `cluster/project-slm` via `bin/commit-as-next.sh`. Fastest
-  cluster-internal cleanup.
-- **PS.6 — Three coverage briefs A/B/C** (~9-12hr Sonnet
-  total). A first (factory dependency for B/C); B+C
-  independent after. http.rs test factory (~3-4hr; ≥10 tests),
-  tier/local.rs unit tests (~1-2hr; ≥4 tests), VerdictOutcome
-  Reject+DeferTierC dispatcher (~1hr; 2 tests).
+**Pre-authorized cluster-scope work still dispatchable
+(operator-direct sub-agent dispatch, no Master ratification
+needed):**
 
-**Ready to start in this Opus session (not Sonnet-deferrable):**
+- **PS.3 step 2** (~2-3hr Sonnet) — Tier B client serialise
+  grammar → `extra_body.structured_outputs.{grammar,json_schema}`
+  per vLLM ≥0.12 envelope; wiremock test of request body shape
+- **PS.3 step 3** (~2hr Sonnet) — Tier A client: reject Lark
+  with clear error; pass GBNF / JsonSchema natively
+- **PS.3 step 4** (~30 min Sonnet) — Tier C client: reject all
+  grammar variants (smallest chunk)
+- **PS.3 step 5** (~1-2hr Sonnet) — optional `llguidance` crate
+  dep for Doorman-side Lark validation (fail-fast on malformed
+  Lark before relay)
+- **PS.4** (~3-5 days Sonnet) — A-1 Doorman `audit_proxy` +
+  `audit_capture` endpoints; cross-cluster (project-language A-4
+  + project-data A-5 both depend on this)
+- **PS.8** (~1hr Opus + Sonnet) — apply Q1-Q4 answers to staged
+  `/srv/foundry/GUIDE-doorman-deployment.md` + cross-repo
+  handoff to `customer/woodfine-fleet-deployment/local-doorman/`
+  (workspace-tier portion; layer-scope same as PS.1-3)
 
-- **PS.1 — Yo-Yo deploy readiness review** (~30 min, Opus
-  judgment, GATE). Review `infrastructure/slm-yoyo/tofu/` for
-  post-2025 OpenTofu / GCE A100 changes; surface blockers via
-  outbox. Yo-Yo MIN parameters: A100 80GB preemptible
-  (~$0.50-0.70/hr); 30-min daily window → ~$7-8/month;
-  quality gate project-language verdict accept-rate ≥0.6 over
-  rolling 50.
+**Awaiting Master input (10 messages in outbox):**
 
-**Critical sequence:**
+- **PS.1-1 finding** (high priority) — D4 image-build pipeline
+  is upstream blocker for all Yo-Yo deploy work; nginx TLS layer
+  absent from spec; CUSTOMER-RUNBOOK.md added to PS.1-3 rename
+  scope
+- **PS.1-2/-3/-4 layer-scope** — workspace-repo files; three
+  resolution paths proposed (delegate, take as Master, or
+  hybrid); cluster lean: delegate
+- **SSH-perm regression** — third occurrence today; staging-tier
+  keys keep reverting from 0600 to 0640; four recommendations
+  (audit jennifer-user processes; umask 077; perm assertion in
+  commit-as-next.sh; document chmod-600 floor in CLAUDE.md §3)
 
-1. PS.1 (Opus) → surface deploy blockers OR signal ready
-2. Yo-Yo MIN deploy (operator-gate; Master orchestrates)
-3. PS.2 (Sonnet test, ~2hr) — verify multi-LoRA + structured-
-   outputs combo on Yo-Yo; resolves Risk 1
-4. PS.4 (Sonnet, ~3-5 days) — A-1 audit_proxy + audit_capture
-   endpoints; **parallel** with PS.2 (don't wait)
-5. PS.3 (Sonnet, ~1-2 weeks) — AS-2 wire-format adapter; only
-   after PS.2 confirms combo
-6. PS.5 (Sonnet, ~1 week) — P1 production routing on
-   version-bump-manifest once corpus accumulates threshold
-7. PS.8 (Opus + Sonnet, ~1hr) — GUIDE-doorman cross-repo
-   handoff to local-doorman/ catalog (bounded; can run
-   parallel to PS.3+)
+**Workspace-tier blocked (Master scope):**
+
+- **D4** image-build pipeline — gates Yo-Yo MIN deploy + PS.2 +
+  PS.1-5
+- **B7** Doorman redeploy with `SLM_APPRENTICESHIP_ENABLED=true`
+  on workspace VM (AS-5 helpers may have landed — observed by
+  shadow-brief firing on every commit this session)
+- **PS.2** Multi-LoRA + structured-outputs verification — needs
+  Yo-Yo running
+
+## Critical sequence (revised post-PS.1-1)
+
+1. **D4** (Master) → create `pointsav-public` GCP project + build
+   first slm-yoyo image (vLLM ≥0.12 + nginx TLS + CUDA + Ubuntu 24.04)
+2. **Yo-Yo MIN deploy** (operator-gate; Master orchestrates) —
+   only after D4
+3. **PS.2** (Sonnet test, ~2hr) — verify multi-LoRA +
+   structured-outputs combo on the live Yo-Yo
+4. **PS.1-5** (Sonnet, ~30 min) — kill-switch first-time-run
+   verification
+5. Yo-Yo path opens; PS.5 (P1 production routing) eligible once
+   corpus accumulates threshold
+
+**In parallel with the Yo-Yo path** (no Yo-Yo dependency):
+- PS.3 steps 2-5 (Doorman tier-client grammar wiring)
+- PS.4 (A-1 audit endpoints; gates project-language A-4 +
+  project-data A-5)
+- PS.8 (GUIDE-doorman cross-repo handoff; bounded ~1hr)
 
 ## Cross-cluster dependencies
 
