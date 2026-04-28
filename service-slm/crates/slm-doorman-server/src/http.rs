@@ -255,6 +255,11 @@ impl From<DoormanError> for ApiError {
             | DoormanError::ContractMajorMismatch { .. }
             | DoormanError::BearerToken(_) => StatusCode::BAD_GATEWAY,
             DoormanError::VerdictParse(_) => StatusCode::BAD_REQUEST,
+            // Caller submitted an unsupported grammar dialect for the selected
+            // tier (e.g. Lark on Tier A). 400 BAD_REQUEST: the error is on the
+            // caller's side — they must either change the grammar dialect or
+            // escalate to a tier that supports it.
+            DoormanError::TierAGrammarUnsupported { .. } => StatusCode::BAD_REQUEST,
             DoormanError::BriefCacheMiss => StatusCode::GONE,
             DoormanError::LedgerIo(_)
             | DoormanError::LedgerSerde(_)
