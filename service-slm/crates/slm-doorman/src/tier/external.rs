@@ -377,6 +377,7 @@ mod tests {
             temperature: Some(0.0),
             sanitised_outbound: true,
             tier_c_label: label.map(|s| s.to_string()),
+            grammar: None,
         }
     }
 
