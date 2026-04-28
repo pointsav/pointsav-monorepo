@@ -147,6 +147,56 @@ operator-presence pass; cluster-Task waits.
 - Post-commit grep `mistral` across `infrastructure/slm-yoyo/` returns
   zero hits. PS.1-3 scope fully closed.
 
+### Iter-18 — ARCHITECTURE.md + DEVELOPMENT.md doc refresh
+
+Both docs predated PS.3 + PS.4 + iter-15/16/17 hardening. Doc-only refresh
+syncs them with shipped reality.
+
+- **Cluster commit**: `93718c2` (Peter Woodfine). No code changes.
+- **ARCHITECTURE.md**: new §7 crate responsibilities, §8 endpoint table
+  (9 routes covering `/v1/audit/proxy`, `/v1/audit/capture`, apprenticeship
+  endpoints), §9 three-tier grammar policy, §10 audit substrate citing
+  `service-slm/docs/audit-endpoints-contract.md` v0.2.0.
+- **DEVELOPMENT.md**: §1 current build/test, §4 landed/gated table
+  (PS.3/PS.4/PS.6/PS.7 LANDED; B7/D4/PS.1/PS.2/PS.5 gated), §5 actual deps
+  (drops mistralrs / candle / apalis / kuzu / google-cloud-run forward-
+  declarations).
+- **Both files**: gained v0.1.58 Research-Trail frontmatter with
+  `research_provenance: tacit`.
+- **Stale items dropped**: B5-pending, AS-2-pending, mistralrs framing,
+  Cloud Run / SkyPilot / OCI Artifact references, standalone-vs-nested
+  open question, forward-declared deps not in Cargo.toml.
+
+#### Discovery — test-count discrepancy in state files
+
+Iter-17 sub-agent's report claimed "131 → 153 (+22)"; that count
+propagated into sub-agent-queue.md and cleanup-log.md and
+service-slm/NEXT.md.
+
+Iter-18 sub-agent ran `cargo test --workspace` and counted **143** total.
+Verification confirms: 14 (slm-core) + 85 (slm-doorman) + 4
+(audit_endpoints_integration) + 40 (http_test) = 143.
+
+The "+22" figure was over-counted. The agent's "10 additional edge-case
+tests within sections" were either partial-counts of tests that already
+existed OR not actually incremental. Real iter-17 delta: +12 (131 → 143)
+closing four gap categories (BearerToken / ledger / redaction /
+citations).
+
+State files corrected in this housekeeping pass. **No bug in the code**;
+the work landed correctly and tests pass. Only the accounting was off.
+Lesson logged: when sub-agent reports test counts, run `cargo test
+--workspace | grep '^test result'` once to verify before propagating
+the count to durable state files.
+
+#### CLAUDE.md cluster-section doc-debt flagged
+
+Iter-18 sub-agent noted: cluster CLAUDE.md "current state" section lists
+three crates in the build but omits the `slm-doorman-server` lib target
+that was added in Brief A (iter-pre-pipeline `d9ea19d`). Minor doc-debt;
+not addressed in this iter (would require touching CLAUDE.md which has
+its own conventions).
+
 ### Iter-17 — PS.6 chunk #6 tail coverage gaps closed
 
 Auto-mode advance through the recommendation queue. All four PS.6 tail

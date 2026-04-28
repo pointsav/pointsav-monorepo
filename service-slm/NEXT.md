@@ -13,7 +13,7 @@ go-aheads now that operationalization-plan scope is exhausted; operator
 asks for next-step recommendation, agent recommends, operator confirms,
 agent dispatches.
 
-**Iter-15 + Iter-16 + Iter-17 outcomes** (post-iter-14 hardening sweep):
+**Iter-15 + Iter-16 + Iter-17 + Iter-18 outcomes** (post-iter-14 hardening sweep):
 - **Iter-15** `442e161` — entry_type discriminator on all 4 ledger entry
   kinds. Contract v0.1.0 → v0.2.0 MINOR. Tests 124 → 127.
 - **Iter-16** `6e47d27` — audit endpoint hardening: 64 KiB payload cap on
@@ -22,7 +22,16 @@ agent dispatches.
   variants. Tests 127 → 131.
 - **Iter-17** `436cb4f` — PS.6 chunk #6 tail coverage: BearerToken
   failures + ledger error paths + redaction patterns (gho_/xox-) +
-  citations-resolver edge cases. Tests 131 → 153 (+22).
+  citations-resolver edge cases. Tests 131 → 143 (+12; original
+  sub-agent report over-counted to 153 — corrected in iter-18).
+- **Iter-18** `93718c2` — ARCHITECTURE.md + DEVELOPMENT.md refresh
+  (doc-only). Both files synced with shipped reality; v0.1.58 Research-
+  Trail frontmatter added; stale framings dropped (B5-pending,
+  AS-2-pending, mistralrs, Cloud Run, SkyPilot, OCI Artifact, etc.);
+  cites contract doc v0.2.0.
+
+**Verified test count**: 143/143 (slm-core 14 + slm-doorman 85 +
+audit_endpoints_integration 4 + http_test 40).
 
 **Iter-13 + Iter-14 outcomes:**
 - Iter-13 cluster `5812501` — SLM_AUDIT_DIR env var wired in
