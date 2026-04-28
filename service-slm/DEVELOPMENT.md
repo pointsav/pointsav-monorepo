@@ -120,7 +120,7 @@ for every Foundry commit. No container images are produced —
 distribution is the GCE custom image plus `.deb` per
 `~/Foundry/conventions/zero-container-runtime.md`. Verification
 uses the same `sigstore` crate at runtime for adapter signatures
-(Ring 3b, OCI Artifacts).
+(Ring 3b, GCS-stored adapters).
 
 ---
 
@@ -179,8 +179,8 @@ Order of work:
 3. `service-content` is out of scope for this migration; it is a
    different service
 4. Port the ledger (`crates/slm-ledger`)
-5. Port the Cloud Run driver (`crates/slm-compute`,
-   `crates/slm-inference-remote`)
+5. Port the GCE compute driver (`crates/slm-compute`,
+   `crates/slm-inference-remote`) per `infrastructure/slm-yoyo/tofu/`
 6. Replace vLLM with `mistral.rs` on the yo-yo node
    (`crates/slm-inference-local` for local-host paths;
    remote-side native binary delivered via the
@@ -234,7 +234,7 @@ in `content-wiki-documentation/topic-service-slm.md`.
 | Risk | Mitigation |
 |---|---|
 | **`cargo deny` flags unexpected transitive licences.** New transitive deps with AGPL / GPL / BSL enter the tree through upstream updates. | Run `cargo deny` in CI from the first commit of the workspace. Fix licence drift at the merge that introduced it; do not defer to release. |
-| **Rust build times long relative to Python dev loop.** CUDA-adjacent crates (`mistralrs`) compile slowly. | `sccache` for compiler cache; `cargo-chef` for Docker layer caching; separate the inference crate from the doorman crate so doorman rebuilds do not rebuild CUDA kernels. |
+| **Rust build times long relative to Python dev loop.** CUDA-adjacent crates (`mistralrs`) compile slowly. | `sccache` for compiler cache; separate the inference crate from the doorman crate so doorman rebuilds do not rebuild CUDA kernels. |
 | **`mistral.rs` maintenance concentration.** Small-team upstream. | `candle` (Hugging Face, larger team) sits underneath and is the fallback. Pin `mistralrs` to a known-good commit if the maintainer disengages; carry patches. |
 | **LadybugDB is a fork of post-acquisition Kuzu.** Maintenance signal unclear. | MIT-licensed; worst case is carrying patches. Monitor for six months; contribute upstream fixes to build relationship. |
 
@@ -286,7 +286,7 @@ backoff = "0.4"
 russh = "0.46"
 rustls = "0.23"
 google-cloud-storage = "0.23"
-google-cloud-run = "*"
+google-cloud-compute = "*"
 
 # Serde + validation
 serde = { version = "1", features = ["derive"] }
