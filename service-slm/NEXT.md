@@ -8,10 +8,18 @@
 
 ## Right now — long-running Sonnet pipeline active
 
-**Status:** Pipeline session-end (2nd). Iterations 10-14 under operator
-option-A delivered all four admin-tier PS.1-* + cluster-scope SLM_AUDIT_DIR
-wiring + mistral cleanup tail. Cluster-Task queue exhausted again pending
-Master action on PS.8 catalog provisioning + D4 image-build + B7 deploy.
+**Status:** Iter-15 hardening landed. Pipeline self-paces between operator
+go-aheads now that operationalization-plan scope is exhausted; operator
+asks for next-step recommendation, agent recommends, operator confirms,
+agent dispatches.
+
+**Iter-15 outcome** (cluster commit `442e161`):
+- entry_type discriminator on all 4 ledger entry kinds (canonical strings
+  `chat-completion` / `audit-proxy-stub` / `audit-proxy` / `audit-capture`).
+- Contract bump v0.1.0 → v0.2.0 (MINOR; additive field per §5 rules).
+- Backwards-compat preserved via `#[serde(default = ...)]`; existing
+  field-presence discrimination test still passes alongside new
+  explicit-tag test. Tests 124 → 127.
 
 **Iter-13 + Iter-14 outcomes:**
 - Iter-13 cluster `5812501` — SLM_AUDIT_DIR env var wired in
