@@ -8,19 +8,27 @@
 
 ## Right now — long-running Sonnet pipeline active
 
-**Status:** Iteration 5 complete. PS.4 step 1 landed cleanly.
-**PS.4 multi-step work begun** (cross-cluster audit endpoints).
-Pipeline self-paces via `/loop` dynamic mode; iteration 6 scheduled.
+**Status:** Iteration 6 complete. PS.4 step 2 landed cleanly (mock-only
+per B4 guardrail). Pipeline self-paces via `/loop` dynamic mode;
+iteration 7 scheduled.
 
-**Tests:** 102/102 passing across slm-core (14) + slm-doorman (68) +
-slm-doorman-server (20 incl. 5 new audit_proxy tests). Last code commit
-`40dc18e` (PS.4 step 1 — audit_proxy scaffold).
+**Tests:** 111/111 passing across slm-core (14) + slm-doorman (71 incl.
+3 new audit_proxy unit tests) + slm-doorman-server (26 incl. 6 new
+audit_proxy integration tests). Last code commit `028c411` (PS.4 step 2 —
+upstream relay).
 
-**New endpoint live**: `POST /v1/audit/proxy` accepts validated requests,
-writes stub audit-ledger entries, returns 503 placeholder until step 2
-wires upstream provider relay. Cross-cluster types
-(`AuditProxyRequest`/`Response`/`Usage`) live in `slm-core` for
-project-language / project-data import.
+**audit_proxy now functional (against mocks)**: handler validates →
+writes stub ledger entry → calls AuditProxyClient.relay() →
+Anthropic/Gemini/OpenAI HTTP via raw `reqwest` (mockable) → writes
+final ledger entry with token counts + cost + latency + status →
+returns 200 with `AuditProxyResponse`. Two-entry ledger preserves
+audit trail of attempted calls even on upstream failure. New
+`AuditProxyProviderUnavailable` → 503 when provider unconfigured at
+startup.
+
+**Provider env-var contract** reuses existing `SLM_TIER_C_*` namespace
+(per B4 / `ExternalTierClient`); main.rs builds the client only when
+at least one provider has both endpoint + key.
 
 **Pipeline operator-directed dispatch sequence:**
 1. **PS.3 step 2** — Yo-Yo grammar serialisation ✅ `266fa4d`
@@ -28,8 +36,8 @@ project-language / project-data import.
 3. **PS.3 step 4** — Tier C reject all grammar variants ✅ `fdee78f`
 4. **PS.3 step 5** — llguidance Doorman-side Lark validation ✅ `978ab79`
 5. **PS.4 step 1** — audit_proxy endpoint scaffold ✅ `40dc18e`
-6. **PS.4 step 2** — audit_proxy upstream provider relay (next, ~3-4hr)
-7. **PS.4 step 3** — purpose allowlist enforcement (~1-2hr)
+6. **PS.4 step 2** — audit_proxy upstream provider relay ✅ `028c411`
+7. **PS.4 step 3** — purpose allowlist enforcement (next, ~1-2hr)
 8. **PS.4 step 4** — audit_capture endpoint scaffold (~3-4hr)
 9. **PS.4 step 5** — integration tests + cross-cluster contract doc (~2-3hr)
 
