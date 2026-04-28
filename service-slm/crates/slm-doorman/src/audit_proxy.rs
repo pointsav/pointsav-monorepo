@@ -29,6 +29,86 @@ use tracing::debug;
 use crate::error::{DoormanError, Result};
 use crate::tier::{TierCPricing, TierCProvider};
 
+/// Compile-time allowlist of purposes permitted to use `POST /v1/audit/proxy`.
+///
+/// Mirrors `ExternalAllowlist` from `tier::external` exactly — same shape,
+/// same `&'static [&'static str]` backing, same const-fn constructor, same
+/// `is_allowed` method name. Different list (purposes vs Tier C task labels)
+/// but the same family of types.
+///
+/// **Empty-list semantic: fail-closed.** An empty `AuditProxyPurposeAllowlist`
+/// rejects ALL purpose values. This is intentional: an allowlist without any
+/// entries means "no audit_proxy calls are authorised on this deployment",
+/// which is a stricter, safer default than "allow everything". Use
+/// `FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST` for the standard four documented
+/// purposes, or `from_static` to provide a deployment-specific override.
+///
+/// Operator extends by editing `FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST` (or a
+/// per-deployment override constant) and recompiling. Runtime extension is
+/// not supported — per `conventions/llm-substrate-decision.md` the allowlist
+/// is compile-time to make extensions visible in code review.
+#[derive(Clone, Copy, Debug)]
+pub struct AuditProxyPurposeAllowlist {
+    purposes: &'static [&'static str],
+}
+
+impl AuditProxyPurposeAllowlist {
+    /// Empty allowlist — no `audit_proxy` purpose permitted. Default when
+    /// no explicit allowlist is provided.
+    ///
+    /// An empty allowlist is **fail-closed**: every purpose is denied.
+    /// This is stricter than "allow all" and is the correct posture for
+    /// a deployment that has not opted into audit_proxy calls.
+    pub const EMPTY: Self = Self { purposes: &[] };
+
+    /// Build from a `&'static [&'static str]` slice. Used by both the
+    /// hardcoded `FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST` below and any per-
+    /// deployment override (still compile-time per the doctrine).
+    pub const fn from_static(purposes: &'static [&'static str]) -> Self {
+        Self { purposes }
+    }
+
+    /// Return `true` if `purpose` is present in the allowlist.
+    pub fn is_allowed(&self, purpose: &str) -> bool {
+        self.purposes.contains(&purpose)
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.purposes.is_empty()
+    }
+
+    pub fn as_slice(&self) -> &'static [&'static str] {
+        self.purposes
+    }
+}
+
+impl Default for AuditProxyPurposeAllowlist {
+    fn default() -> Self {
+        Self::EMPTY
+    }
+}
+
+/// Foundry's default purpose allowlist for `POST /v1/audit/proxy`.
+///
+/// The four entries are the documented purposes from
+/// `~/Foundry/conventions/llm-substrate-decision.md` §"Three compute tiers":
+///   - `editorial-refinement`   — project-language gateway refining drafts
+///   - `citation-grounding`     — verifying citations against external sources
+///   - `entity-disambiguation`  — resolving named entities
+///   - `initial-graph-build`    — bootstrapping a fresh service-content graph
+///
+/// An unenumerated purpose is rejected (403 FORBIDDEN). This prevents
+/// ad-hoc external calls that would slip past the audit-trail intent, and
+/// prevents auto-promotion to live Tier C without explicit operator awareness
+/// (per v0.0.10 hard rule #4).
+pub const FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST: AuditProxyPurposeAllowlist =
+    AuditProxyPurposeAllowlist::from_static(&[
+        "editorial-refinement",
+        "citation-grounding",
+        "entity-disambiguation",
+        "initial-graph-build",
+    ]);
+
 /// Configuration for the audit proxy client.
 ///
 /// Mirrors `ExternalTierConfig` shape intentionally: the env-var contract
@@ -36,7 +116,7 @@ use crate::tier::{TierCPricing, TierCProvider};
 /// `AuditProxyClient`. Both read the same per-provider endpoint + key env
 /// vars at startup; having one set of env vars avoids per-surface
 /// configuration divergence.
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug)]
 pub struct AuditProxyConfig {
     /// Per-provider base URL (no trailing slash). Map key is the provider.
     pub provider_endpoints: HashMap<TierCProvider, String>,
@@ -46,6 +126,23 @@ pub struct AuditProxyConfig {
     pub provider_api_keys: HashMap<TierCProvider, String>,
     /// Per-provider per-token pricing for cost computation.
     pub pricing: TierCPricing,
+    /// Purpose allowlist. Requests with a purpose not in this list are
+    /// rejected BEFORE any upstream provider call.
+    ///
+    /// **Empty list = fail-closed**: all purposes are denied.
+    /// Default: `FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST` (four documented purposes).
+    pub purpose_allowlist: AuditProxyPurposeAllowlist,
+}
+
+impl Default for AuditProxyConfig {
+    fn default() -> Self {
+        Self {
+            provider_endpoints: HashMap::new(),
+            provider_api_keys: HashMap::new(),
+            pricing: TierCPricing::default(),
+            purpose_allowlist: FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST,
+        }
+    }
 }
 
 /// Doorman-mediated relay client for `POST /v1/audit/proxy`.
@@ -269,6 +366,7 @@ mod tests {
             provider_endpoints: endpoints,
             provider_api_keys: keys,
             pricing,
+            purpose_allowlist: FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST,
         })
     }
 

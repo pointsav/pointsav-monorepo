@@ -58,7 +58,7 @@ use slm_doorman::tier::{
 use slm_doorman::{
     ApprenticeshipConfig, AuditLedger, AuditProxyClient, AuditProxyConfig, BriefCache, Doorman,
     DoormanConfig, LarkValidator, PromotionLedger, SshKeygenVerifier, VerdictDispatcher,
-    VerdictVerifier,
+    VerdictVerifier, FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST,
 };
 use tracing::info;
 
@@ -85,6 +85,10 @@ async fn main() -> anyhow::Result<()> {
         brief_cache,
         verdict_dispatcher,
         audit_proxy_client,
+        // PS.4 step 3 — purpose allowlist. Default: four documented purposes.
+        // Operator overrides by replacing with a custom const via deployment
+        // env config (compile-time extension per doctrine).
+        audit_proxy_purpose_allowlist: FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST,
     });
 
     info!(
@@ -357,6 +361,8 @@ fn build_audit_proxy_client() -> Option<AuditProxyClient> {
         provider_endpoints: endpoints,
         provider_api_keys: api_keys,
         pricing,
+        // PS.4 step 3 — default to the four documented purposes.
+        purpose_allowlist: FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST,
     }))
 }
 
