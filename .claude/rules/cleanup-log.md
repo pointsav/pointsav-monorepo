@@ -363,6 +363,44 @@ serial via the long-running pipeline.
 
 Next: **PS.4 step 2** (audit_proxy upstream provider relay).
 
+### Iteration 6 outcome — PS.4 step 2 — audit_proxy upstream relay (mock-only)
+
+- **Commit**: `028c411` (Peter Woodfine)
+- **Tests**: 102 → 111 (+9). Six new in `slm-doorman-server::tests::http_test`
+  covering each provider happy path + unconfigured + upstream-error +
+  cost-arithmetic; three additional in `slm-doorman/audit_proxy::tests`
+  for unit-level relay coverage.
+- **New module**: `crates/slm-doorman/src/audit_proxy.rs` —
+  `AuditProxyClient` parallel to `ExternalTierClient`. Same env-var
+  contract (`SLM_TIER_C_*`); same `TierCPricing`; raw `reqwest`.
+  Per-provider request shapes + auth headers.
+- **Two-entry ledger pattern**: stub on inbound validation success;
+  final entry post-relay with token counts + cost + latency + status
+  ("ok" | "upstream-error"). Audit trail of attempted calls survives
+  upstream failures.
+- **New error variant**: `AuditProxyProviderUnavailable { provider }`
+  → 503 SERVICE_UNAVAILABLE → `UpstreamError` (server-side config gap,
+  distinct from caller-side `PolicyDenied`).
+- **AppState**: `audit_proxy_client: Option<AuditProxyClient>`; main.rs
+  builds only when at least one provider has both endpoint + key in env.
+- **Operator guardrail observed**: no live API calls; wiremock
+  exclusively; no provider-SDK installs (Anthropic/Gemini/OpenAI all
+  via raw reqwest). Consistent with B4 Tier C client posture from
+  2026-04-26.
+- **Resumption pattern**: first dispatch hit API 500 mid-flight (49 tool
+  uses, 8 modified files + 1 new file uncommitted). SendMessage to same
+  agent picked up cleanly — three trivial compile errors in tests file
+  fixed in ~3.5min. **Lesson**: SendMessage-resume preserves design
+  context; faster than fresh restart for late-failure cases.
+- **Build hygiene**: cargo test 111/111; clippy `-D warnings` clean;
+  fmt clean.
+- **Wall time**: ~11 minutes total (7.5 first-dispatch + 3.5
+  resume); ~234k tokens combined.
+
+### Pipeline continues — iteration 7
+
+Next: **PS.4 step 3** (purpose allowlist enforcement; ~1-2hr Sonnet).
+
 ---
 
 ## 2026-04-28 — Sonnet batch wrap-up (PS.7 + A/B/C + layer-scope flag) — 5 commits, +19 tests
