@@ -147,6 +147,52 @@ operator-presence pass; cluster-Task waits.
 - Post-commit grep `mistral` across `infrastructure/slm-yoyo/` returns
   zero hits. PS.1-3 scope fully closed.
 
+### Iter-19 — B7 deploy-readiness package shipped (4 new artefacts)
+
+Operator framing: "adjust the todo list to focus on getting service-SLM up
+and running, even if not perfect, so that we are not wasting any of all
+the work we are doing each day as training for both woodfine and pointsav
+adapters and PointSav-LLM as the long term goal." Honest assessment given:
+stage 1 of the flow (local engineering corpus capture) already works
+without B7; stage 2 (apprenticeship arm via shadow brief → Doorman →
+verdict) is broken until B7 lands the new Doorman binary.
+
+The cluster-Task contribution to B7 is to make Master's deploy painless.
+Single iter delivered the package.
+
+- **Cluster commit**: `72f4100` (Peter Woodfine). 4 new files; binary NOT
+  committed.
+- **Binary build verified**: 7.5 MB stripped release; cargo test 143/143.
+- **17 env vars** enumerated by grep against main.rs (3 groups not in
+  original brief surfaced during pre-edit reads — SLM_LOCAL_MODEL, the
+  Tier B price/model pair, full FOUNDRY_* apprenticeship namespace).
+- **8-step runbook** from prerequisites through rollback. Master can
+  execute without external context.
+- **Drop-in env-file pattern**: existing systemd unit at
+  `infrastructure/local-doorman/` already has `SLM_APPRENTICESHIP_ENABLED=true`
+  inline. The runbook uses `service.d/env-file.conf` drop-in rather than
+  editing the unit — cleaner separation between workspace-tier unit
+  ownership and operator-tier env config.
+- **Corpus check**: engineering corpus directory has **84 tuples**
+  spanning 2026-04-26 → 2026-04-28; today's pipeline added ~30. All
+  schema-valid (fields: tuple_type, cluster, source_commit, commit_msg,
+  tenant, doctrine_version).
+- **Wall time**: ~7 minutes; ~110k Sonnet tokens.
+
+### "The flow" status post-iter-19
+
+| Stage | Description | Status |
+|---|---|---|
+| 1 | Commit → engineering corpus JSONL via capture-edit hook | ✅ working (84 tuples) |
+| 2 | Commit → shadow brief → Doorman → apprenticeship corpus | 🔒 gates on B7 deploy (Master action ready) |
+| 3 | Apprenticeship corpus → trainer → adapter weights | 📅 separate substrate (router-trainer) |
+| 4 | Adapter weights → service-slm production routing | 📅 PS.5 (corpus threshold gate) |
+
+**Cluster-Task scope is now exhausted for the flow.** Stage 2 unlocks when
+Master executes the runbook. After that, every commit across the 8 active
+clusters starts feeding the apprenticeship arm. PointSav-LLM training
+becomes a function of corpus accumulation rate × time.
+
 ### Iter-18 — ARCHITECTURE.md + DEVELOPMENT.md doc refresh
 
 Both docs predated PS.3 + PS.4 + iter-15/16/17 hardening. Doc-only refresh
