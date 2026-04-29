@@ -745,6 +745,13 @@ impl From<DoormanError> for ApiError {
             // tenant complete; Retry-After: 5 header is set by the handler.
             DoormanError::AuditTenantConcurrencyExhausted { .. } => StatusCode::SERVICE_UNAVAILABLE,
             DoormanError::BriefCacheMiss => StatusCode::GONE,
+            // No shadow corpus tuple exists for the brief_id in the
+            // verdict POST. Per §7B, no tuple is created; the caller
+            // should ensure the shadow brief was dispatched before
+            // signing a verdict. HTTP 410 GONE — the resource was never
+            // captured (same as BriefCacheMiss; the distinction is
+            // caller-visible via the error message).
+            DoormanError::OrphanVerdictNoCorpusTuple { .. } => StatusCode::GONE,
             DoormanError::LedgerIo(_)
             | DoormanError::LedgerSerde(_)
             | DoormanError::HomeUnset
