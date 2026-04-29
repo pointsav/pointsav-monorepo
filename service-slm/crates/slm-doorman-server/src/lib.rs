@@ -10,6 +10,13 @@
 //! The `main.rs` binary target uses this library via `slm_doorman_server::http`.
 
 pub mod http;
+/// Brief Queue Substrate (apprenticeship-substrate.md §7C).
+///
+/// File-backed durable queue that decouples brief acceptance from
+/// apprentice execution, providing tolerance for Tier A CPU latency and
+/// Yo-Yo idle-shutdown preemption. See `queue.rs` module-level docs for
+/// the full design.
+pub mod queue;
 
 /// Test helpers — factory functions shared across integration test files.
 ///

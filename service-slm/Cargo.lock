@@ -1469,6 +1469,7 @@ dependencies = [
  "axum",
  "base64",
  "chrono",
+ "fs2",
  "serde",
  "serde_json",
  "slm-core",
