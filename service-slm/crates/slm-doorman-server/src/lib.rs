@@ -38,6 +38,7 @@ pub mod test_helpers {
     use tokio::sync::Semaphore;
 
     use crate::http::AppState;
+    use crate::queue::QueueConfig;
 
     /// Default per-tenant concurrency cap used in test helpers.
     ///
@@ -51,6 +52,20 @@ pub mod test_helpers {
     /// pre-populated entries (lazy-init; tenants are added on first request).
     fn empty_concurrency_map() -> Arc<Mutex<HashMap<slm_core::ModuleId, Arc<Semaphore>>>> {
         Arc::new(Mutex::new(HashMap::new()))
+    }
+
+    /// Construct a `QueueConfig` pointing at a unique temporary directory.
+    /// Each call returns a distinct path so parallel tests do not race on the
+    /// queue lock sentinel or queue files.
+    pub fn temp_queue_config() -> Arc<QueueConfig> {
+        let dir = std::env::temp_dir().join(format!(
+            "slm-doorman-queue-test-{}",
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .map(|d| d.as_nanos())
+                .unwrap_or(0)
+        ));
+        Arc::new(QueueConfig::with_base_dir(dir))
     }
 
     /// Construct a temporary `AuditLedger` under `$TMPDIR`.
@@ -92,6 +107,7 @@ pub mod test_helpers {
             audit_proxy_purpose_allowlist: FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST,
             audit_tenant_concurrency: empty_concurrency_map(),
             audit_tenant_concurrency_cap: TEST_AUDIT_CONCURRENCY_CAP,
+            queue_config: temp_queue_config(),
         })
     }
 
@@ -120,6 +136,7 @@ pub mod test_helpers {
             audit_proxy_purpose_allowlist: FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST,
             audit_tenant_concurrency: empty_concurrency_map(),
             audit_tenant_concurrency_cap: TEST_AUDIT_CONCURRENCY_CAP,
+            queue_config: temp_queue_config(),
         })
     }
 
@@ -146,6 +163,7 @@ pub mod test_helpers {
             audit_proxy_purpose_allowlist: FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST,
             audit_tenant_concurrency: empty_concurrency_map(),
             audit_tenant_concurrency_cap: TEST_AUDIT_CONCURRENCY_CAP,
+            queue_config: temp_queue_config(),
         })
     }
 
@@ -197,6 +215,7 @@ pub mod test_helpers {
             audit_proxy_purpose_allowlist: FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST,
             audit_tenant_concurrency: empty_concurrency_map(),
             audit_tenant_concurrency_cap: TEST_AUDIT_CONCURRENCY_CAP,
+            queue_config: temp_queue_config(),
         })
     }
 
@@ -264,6 +283,7 @@ pub mod test_helpers {
             audit_proxy_purpose_allowlist: FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST,
             audit_tenant_concurrency: empty_concurrency_map(),
             audit_tenant_concurrency_cap: concurrency_cap,
+            queue_config: temp_queue_config(),
         });
         (state, ledger_dir)
     }
@@ -310,6 +330,7 @@ pub mod test_helpers {
             audit_proxy_purpose_allowlist: purpose_allowlist,
             audit_tenant_concurrency: empty_concurrency_map(),
             audit_tenant_concurrency_cap: TEST_AUDIT_CONCURRENCY_CAP,
+            queue_config: temp_queue_config(),
         });
         (state, ledger_dir)
     }
