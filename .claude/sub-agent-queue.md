@@ -152,6 +152,64 @@ once operator green-lights.
 
 ## Completed
 
+### 2026-04-29 — Iter-23 §7C step 3 — shadow_handler async-202 + worker-side corpus write [COMPLETED commit `66790b8`]
+
+Closes cluster-Task scope of the Brief Queue Substrate. shadow_handler
+no longer dispatches apprentice synchronously; enqueues the brief +
+returns 202 ACCEPTED with `{audit_id, queue_position, brief_id}`. Worker
+(iter-22 drain task) drains the queue + dispatches to apprentice +
+writes corpus tuple on completion (preserves v0.0.13 capture-on-
+completion semantics from iter-21).
+
+- **Outcome**: 2 new tests; tests 152 → 154. Commit `66790b8` (Jennifer
+  Woodfine).
+- **`queue.rs` extended** with `ShadowQueueEntry` (carries actual_diff
+  through the queue), `LeasedShadowEntry`, `enqueue_shadow()`,
+  `dequeue_shadow()`, `pending_count()` (for queue_position best-effort),
+  `release_shadow()`.
+- **`http.rs::shadow()`**: replaced synchronous `dispatch_shadow()` call
+  with `enqueue_shadow()` + 202 response. Validation and
+  audit_id-generation preserved. Audit-ledger write deferred to worker
+  side (option b — single entry per brief; matches §7C "queue file IS
+  the boundary" framing).
+- **`main.rs`**: drain worker updated to use `dequeue_shadow` /
+  `release_shadow` and pass `leased.entry.actual_diff` to
+  `dispatch_shadow()`. Fixed scope bug — `queue_cfg` declared before
+  `AppState` construction.
+- **`AppState`**: gains `queue_config: Arc<QueueConfig>`. New
+  `temp_queue_config()` test helper. All 9 inline AppState test
+  constructions updated.
+- **2 new tests**:
+  `shadow_with_apprenticeship_enabled_returns_202_with_body_shape`,
+  `shadow_enqueued_brief_file_exists_at_queue_path`.
+- **Build hygiene**: cargo test 154/154 verified; clippy + fmt clean.
+
+**HTTP-handler latency contract changed**: synchronous (could block
+5+ minutes on slow apprentice) → 202 in milliseconds. Capture-edit.py
+300s timeout no longer fires; corpus growth happens async on worker
+cadence.
+
+### 2026-04-29 — Iter-22 §7C steps 1+2+5 — Brief Queue Substrate [COMPLETED commit `03b0b78`]
+
+queue.rs module + drain worker + 5 §7C-required tests.
+
+- **Outcome**: 5 new tests; tests 147 → 152. Commit `03b0b78` (Peter).
+- **`queue.rs` (new, ~870 lines)**: `enqueue/dequeue/release/
+  reap_expired_leases` API; flock(2) sentinel + atomic rename for
+  no-double-lease; deterministic `<brief_id>.brief.jsonl` filenames
+  for idempotent enqueue.
+- **`main.rs`**: tokio drain worker (default 30s poll;
+  `SLM_QUEUE_DRAIN_INTERVAL_SEC` override); reaper task (every 60s;
+  `SLM_QUEUE_LEASE_EXPIRY_SEC` default 300s).
+- **`error.rs`** + 3 mirror sites: 3 new variants
+  (`QueueIo`, `QueueLockFailed`, `QueueMalformedBrief`).
+- **5 §7C tests**: enqueue_dequeue_round_trip;
+  lease_expiration_returns_brief_to_queue;
+  concurrent_workers_dont_double_lease;
+  poison_bucket_catches_malformed_brief;
+  queue_drain_resumes_after_doorman_restart.
+- **Lock crate**: `fs2 = "0.4"` (try_lock_exclusive on `.queue.lock`).
+
 ### 2026-04-29 — Iter-21 AS-3 fix — capture-on-completion + promote-on-verdict [COMPLETED commit `a161992`]
 
 Operator-directed urgent implementation. Master ratified Path α at workspace
