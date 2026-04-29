@@ -12,7 +12,7 @@
 //! - Reader density toggle (Off / Exceptions only / All; persisted to localStorage)
 //! - Per-section [edit] pencils (injected by render::inject_edit_pencils)
 //! - Footer convention (categories → license → about/contact links)
-//! The existing `chrome()` function is retained for the index page.
+//! - The existing `chrome()` function is retained for the index page.
 
 use axum::{
     extract::{Path, Query, State},
@@ -24,7 +24,8 @@ use axum::{
 use maud::{html, Markup, PreEscaped, DOCTYPE};
 use serde::Deserialize;
 use serde_json::json;
-use std::path::PathBuf;
+use std::collections::BTreeMap;
+use std::path::{Path as FsPath, PathBuf};
 use std::sync::Arc;
 use tokio::fs;
 
@@ -200,7 +201,402 @@ async fn doorman_stub() -> impl IntoResponse {
     )
 }
 
-async fn index(State(state): State<Arc<AppState>>) -> Result<Markup, WikiError> {
+// ─── Home-page data types ───────────────────────────────────────────────────
+
+/// Summary of a single TOPIC used in the home-page category panels and
+/// recent-additions feed.
+#[derive(Debug, Clone)]
+pub struct TopicSummary {
+    /// Slug (filename without `.md`).
+    pub slug: String,
+    /// Title from frontmatter, or the slug when absent.
+    pub title: String,
+    /// `last_edited:` frontmatter value; may be None if not set.
+    pub last_edited: Option<String>,
+    /// First non-blank, non-heading line of the body Markdown.
+    pub lede_first_line: String,
+    /// Absolute path to the source file on disk (used for git fallback).
+    pub file_path: PathBuf,
+}
+
+/// Featured TOPIC slot above the category grid.
+#[derive(Debug, Clone)]
+pub struct FeaturedTopic {
+    pub slug: String,
+    pub title: String,
+    /// Auto-extracted first paragraph lede from the TOPIC body.
+    pub lede: String,
+}
+
+/// Category buckets: `BTreeMap<category_name, Vec<TopicSummary>>`.
+pub type CategoryBuckets = BTreeMap<String, Vec<TopicSummary>>;
+
+/// Deserialization shape for `featured-topic.yaml`.
+#[derive(Debug, Deserialize)]
+struct FeaturedTopicYaml {
+    slug: Option<String>,
+    #[allow(dead_code)]
+    since: Option<String>,
+    #[allow(dead_code)]
+    note: Option<String>,
+}
+
+/// Ratified category set in render order.
+/// Per naming-convention.md §10 Q5-A operator ratification 2026-04-28.
+const RATIFIED_CATEGORIES: &[&str] = &[
+    "architecture",
+    "services",
+    "systems",
+    "applications",
+    "governance",
+    "infrastructure",
+    "company",
+    "reference",
+    "help",
+];
+
+// ─── Home-page helpers ──────────────────────────────────────────────────────
+
+/// Walk `content_dir`, parse every `*.md` file (skipping `*.es.md` bilingual
+/// siblings, `index.md`, and files starting with `_`), and group them into
+/// a `BTreeMap<category, Vec<TopicSummary>>`.
+///
+/// Files with no `category:` frontmatter, or whose category is `root`, are
+/// bucketed under `"uncategorised"`.
+async fn bucket_topics_by_category(content_dir: &FsPath) -> std::io::Result<CategoryBuckets> {
+    let mut entries = fs::read_dir(content_dir).await?;
+    let mut buckets: CategoryBuckets = BTreeMap::new();
+
+    while let Some(entry) = entries.next_entry().await? {
+        let name = entry.file_name();
+        let name_str = name.to_string_lossy();
+
+        // Only process `.md` files.
+        let slug = match name_str.strip_suffix(".md") {
+            Some(s) => s.to_string(),
+            None => continue,
+        };
+
+        // Skip bilingual siblings (`*.es.md` → slug ends with `.es`).
+        if slug.ends_with(".es") {
+            continue;
+        }
+        // Skip `index.md`.
+        if slug == "index" {
+            continue;
+        }
+        // Skip hidden/system files starting with `_`.
+        if slug.starts_with('_') {
+            continue;
+        }
+
+        let file_path = content_dir.join(format!("{slug}.md"));
+        let text = match fs::read_to_string(&file_path).await {
+            Ok(t) => t,
+            Err(_) => continue,
+        };
+
+        let parsed = match crate::render::parse_page(&text) {
+            Ok(p) => p,
+            Err(_) => continue,
+        };
+
+        let title = parsed
+            .frontmatter
+            .title
+            .clone()
+            .unwrap_or_else(|| slug.clone());
+
+        let category = match parsed.frontmatter.category.as_deref() {
+            None | Some("root") | Some("") => "uncategorised".to_string(),
+            Some(c) => c.to_string(),
+        };
+
+        let lede_first_line = first_body_line(&parsed.body_md);
+        let last_edited = parsed.frontmatter.last_edited.clone();
+
+        let summary = TopicSummary {
+            slug,
+            title,
+            last_edited,
+            lede_first_line,
+            file_path,
+        };
+
+        buckets.entry(category).or_default().push(summary);
+    }
+
+    // Sort each bucket by slug for deterministic output.
+    for topics in buckets.values_mut() {
+        topics.sort_by(|a, b| a.slug.cmp(&b.slug));
+    }
+
+    Ok(buckets)
+}
+
+/// Extract a lede from the first non-blank, non-heading Markdown line.
+fn first_body_line(body_md: &str) -> String {
+    body_md
+        .lines()
+        .find(|l| {
+            let t = l.trim();
+            !t.is_empty() && !t.starts_with('#') && !t.starts_with("---")
+        })
+        .map(|l| l.trim().to_string())
+        .unwrap_or_default()
+}
+
+/// Flatten all buckets, sort by `last_edited` descending (filename ascending
+/// as tiebreaker), and return the top `n` entries.
+///
+/// Topics with `last_edited: None` fall back to git-commit-date via
+/// `git log -1 --format=%cI -- <path>`. If that fails, falls back to
+/// filesystem mtime. Topics that cannot produce any date sort last.
+fn recent_topics_by_last_edited(buckets: &CategoryBuckets, n: usize) -> Vec<TopicSummary> {
+    let mut all: Vec<TopicSummary> = buckets.values().flatten().cloned().collect();
+
+    // Resolve a sort key for each entry: prefer `last_edited`, then git, then mtime.
+    // We use a String key so ISO-8601 lexicographic order == chronological order.
+    let key_for = |t: &TopicSummary| -> String {
+        if let Some(ref d) = t.last_edited {
+            return d.clone();
+        }
+        // Try git commit date.
+        if let Ok(output) = std::process::Command::new("git")
+            .args(["log", "-1", "--format=%cI", "--", t.file_path.to_str().unwrap_or("")])
+            .output()
+        {
+            let s = String::from_utf8_lossy(&output.stdout).trim().to_string();
+            if !s.is_empty() {
+                return s;
+            }
+        }
+        // Fall back to filesystem mtime.
+        if let Ok(meta) = std::fs::metadata(&t.file_path) {
+            if let Ok(modified) = meta.modified() {
+                // Convert to a rough ISO string for comparison.
+                let dur = modified
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .unwrap_or_default();
+                return format!("{}", dur.as_secs());
+            }
+        }
+        String::new()
+    };
+
+    all.sort_by(|a, b| {
+        let ka = key_for(a);
+        let kb = key_for(b);
+        // Descending by date, ascending by slug as tiebreaker.
+        kb.cmp(&ka).then_with(|| a.slug.cmp(&b.slug))
+    });
+
+    all.truncate(n);
+    all
+}
+
+/// Read and validate `<content_dir>/featured-topic.yaml`.
+///
+/// Returns `None` silently if the file is absent. Logs a warning via
+/// `tracing::warn!` if the file is present but unparseable or if the slug
+/// cannot be found in `buckets`.
+async fn read_featured_topic(
+    content_dir: &FsPath,
+    buckets: &CategoryBuckets,
+) -> Option<FeaturedTopic> {
+    let yaml_path = content_dir.join("featured-topic.yaml");
+
+    let text = match fs::read_to_string(&yaml_path).await {
+        Ok(t) => t,
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => return None,
+        Err(e) => {
+            tracing::warn!("featured-topic.yaml read error: {e}");
+            return None;
+        }
+    };
+
+    let featured_yaml: FeaturedTopicYaml = match serde_yaml::from_str(&text) {
+        Ok(f) => f,
+        Err(e) => {
+            tracing::warn!("featured-topic.yaml parse error: {e}");
+            return None;
+        }
+    };
+
+    let slug = match featured_yaml.slug.as_deref() {
+        Some(s) if !s.is_empty() => s.to_string(),
+        _ => {
+            tracing::warn!("featured-topic.yaml: slug field missing or empty");
+            return None;
+        }
+    };
+
+    // Find the topic in the buckets.
+    let summary = buckets
+        .values()
+        .flatten()
+        .find(|t| t.slug == slug)
+        .cloned();
+
+    match summary {
+        Some(t) => Some(FeaturedTopic {
+            slug: t.slug,
+            title: t.title,
+            lede: t.lede_first_line,
+        }),
+        None => {
+            tracing::warn!("featured-topic.yaml: slug '{slug}' not found in topic buckets");
+            None
+        }
+    }
+}
+
+// ─── Home-page chrome ───────────────────────────────────────────────────────
+
+/// Render the home-page shell.
+///
+/// Structure:
+/// - Site header (reuses `chrome()` pattern)
+/// - Lede (rendered body Markdown from `index.md`)
+/// - Optional featured TOPIC panel (above the grid)
+/// - By-category 3×3 grid (all 9 ratified categories; empty ones show
+///   "0 articles — in preparation")
+/// - Recent-additions feed (top 5, sorted by `last_edited` descending)
+/// - Site footer
+fn home_chrome(
+    home_fm: &crate::render::Frontmatter,
+    home_html: &str,
+    featured: Option<&FeaturedTopic>,
+    buckets: &CategoryBuckets,
+    recent: &[TopicSummary],
+) -> Markup {
+    let title = home_fm
+        .title
+        .as_deref()
+        .unwrap_or("PointSav Knowledge");
+
+    html! {
+        (DOCTYPE)
+        html lang="en" {
+            head {
+                meta charset="utf-8";
+                meta name="viewport" content="width=device-width, initial-scale=1";
+                title { (title) " — PointSav Knowledge" }
+                link rel="stylesheet" href="/static/style.css";
+            }
+            body {
+                header.site-header {
+                    a.site-title href="/" { "PointSav Knowledge" }
+                    nav.site-nav {
+                        a href="/" { "Home" }
+                        a href="/search" { "Search" }
+                    }
+                }
+                main.site-main {
+                    // Lede — rendered body from index.md
+                    @if !home_html.is_empty() {
+                        div.wiki-home-lede {
+                            (PreEscaped(home_html))
+                        }
+                    }
+
+                    // Featured TOPIC panel — above the grid when present
+                    @if let Some(feat) = featured {
+                        div.wiki-home-featured {
+                            div.wiki-home-featured-inner {
+                                span.wiki-home-featured-label { "Featured article" }
+                                h2.wiki-home-featured-title {
+                                    a href={ "/wiki/" (feat.slug) } { (feat.title) }
+                                }
+                                @if !feat.lede.is_empty() {
+                                    p.wiki-home-featured-lede { (feat.lede) }
+                                }
+                                a.wiki-home-featured-read href={ "/wiki/" (feat.slug) } {
+                                    "→ Read"
+                                }
+                            }
+                        }
+                    }
+
+                    // By-category 3×3 grid — all 9 ratified categories
+                    h2.wiki-home-section-title { "Browse by category" }
+                    div.wiki-home-grid {
+                        @for cat in RATIFIED_CATEGORIES {
+                            @let topics = buckets.get(*cat).map(|v| v.as_slice()).unwrap_or(&[]);
+                            @let count = topics.len();
+                            div.wiki-home-cat-card {
+                                h3.wiki-home-cat-title {
+                                    a href={ "/search?q=category:" (cat) } {
+                                        (capitalise(cat))
+                                    }
+                                }
+                                @if count == 0 {
+                                    p.wiki-home-cat-empty {
+                                        "0 articles — in preparation"
+                                    }
+                                } @else {
+                                    p.wiki-home-cat-count {
+                                        (count)
+                                        " article" @if count != 1 { "s" }
+                                    }
+                                    ul.wiki-home-cat-list {
+                                        @for t in topics.iter().take(3) {
+                                            li {
+                                                a href={ "/wiki/" (t.slug) } { (t.title) }
+                                            }
+                                        }
+                                    }
+                                    @if count > 3 {
+                                        a.wiki-home-cat-more href={ "/search?q=category:" (cat) } {
+                                            "More →"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // Recent additions — top 5 sorted by last_edited desc
+                    @if !recent.is_empty() {
+                        h2.wiki-home-section-title { "Recent additions" }
+                        ul.wiki-home-recent {
+                            @for t in recent {
+                                li.wiki-home-recent-item {
+                                    @if let Some(ref d) = t.last_edited {
+                                        span.wiki-home-recent-date { (d) }
+                                    }
+                                    a href={ "/wiki/" (t.slug) } { (t.title) }
+                                }
+                            }
+                        }
+                    }
+                }
+                footer.site-footer {
+                    p { "PointSav Knowledge — "
+                        a href="/" { "Home" }
+                        " · Engine: app-mediakit-knowledge — see "
+                        a href="https://github.com/pointsav/pointsav-monorepo" { "ARCHITECTURE.md" }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/// Capitalise the first character of a category name for display.
+fn capitalise(s: &str) -> String {
+    let mut c = s.chars();
+    match c.next() {
+        None => String::new(),
+        Some(f) => f.to_uppercase().to_string() + c.as_str(),
+    }
+}
+
+// ─── Placeholder index (index.md absent) ───────────────────────────────────
+
+/// Current flat-listing index behaviour, preserved for the absent-`index.md`
+/// case. Extracted verbatim from the pre-iteration-1 `index()` handler.
+async fn placeholder_index(state: &AppState) -> Result<Markup, WikiError> {
     let mut entries = fs::read_dir(&state.content_dir).await?;
     let mut pages: Vec<String> = Vec::new();
     while let Some(entry) = entries.next_entry().await? {
@@ -237,6 +633,29 @@ async fn index(State(state): State<Arc<AppState>>) -> Result<Markup, WikiError> 
                 }
             }
         },
+    ))
+}
+
+// ─── index handler ──────────────────────────────────────────────────────────
+
+async fn index(State(state): State<Arc<AppState>>) -> Result<Markup, WikiError> {
+    let home_path = state.content_dir.join("index.md");
+    if !home_path.exists() {
+        return placeholder_index(&state).await;
+    }
+
+    let home_text = fs::read_to_string(&home_path).await?;
+    let home_parsed = crate::render::parse_page(&home_text)?;
+    let buckets = bucket_topics_by_category(&state.content_dir).await?;
+    let featured = read_featured_topic(&state.content_dir, &buckets).await;
+    let recent = recent_topics_by_last_edited(&buckets, 5);
+    let home_html = crate::render::render_html_raw(&home_parsed.body_md);
+    Ok(home_chrome(
+        &home_parsed.frontmatter,
+        &home_html,
+        featured.as_ref(),
+        &buckets,
+        &recent,
     ))
 }
 
