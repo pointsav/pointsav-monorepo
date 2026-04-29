@@ -13,6 +13,22 @@ go-aheads now that operationalization-plan scope is exhausted; operator
 asks for next-step recommendation, agent recommends, operator confirms,
 agent dispatches.
 
+**Iter-20 — trainer-scoping comprehensive doc** (cluster `562baa0`):
+- New file at `service-slm/docs/trainer-scoping.md` — ~3,200 words,
+  11 sections, 13 open operator questions, $0 Phase 0 recommendation.
+- Honest inventory of pre-framework trainer artefact at
+  `vendor/pointsav-monorepo/service-slm/router-trainer/` (Qwen2.5
+  email-routing distillation; wrong schema; not reusable but precedent).
+- 5 deployment options framed with tradeoffs (Workspace VM CPU /
+  Yo-Yo GPU / Customer GPU / Hyperscaler API / Federated).
+- Phase 0 = $0, ~4-8hr cluster-Task implementation + 8-24hr CPU
+  background training; produces proof-of-life adapter at
+  `data/adapters/`; does NOT deploy.
+- Operator + Master should read the doc and answer the 13 questions
+  before any trainer implementation begins.
+
+---
+
 **B7 LIVE 2026-04-29T00:22:25Z — workspace v0.1.68 closes B7.**
 **The flow is now flowing.**
 
