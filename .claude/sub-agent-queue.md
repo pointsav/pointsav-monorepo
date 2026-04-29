@@ -152,6 +152,63 @@ once operator green-lights.
 
 ## Completed
 
+### 2026-04-29 — Iter-20 trainer-scoping comprehensive doc [COMPLETED commit `562baa0`]
+
+Operator-directed Path A — comprehensive trainer scoping post-B7-LIVE.
+Apprenticeship corpus is now flowing but no trainer exists to consume it.
+This doc is the cluster's input to the trainer-substrate conversation.
+
+- **Outcome**: 1 new file (`service-slm/docs/trainer-scoping.md`); ~3,200
+  words / 1,047 lines / 11 sections. Commit `562baa0` (Peter Woodfine).
+- **Doc-only**: tests still 143/143; no code changes.
+- **Frontmatter**: v0.1.58 Research-Trail fields with research_done_count
+  14 / research_suggested_count 9 / open_questions_count 13;
+  research_provenance: direct-consultation.
+
+**Key findings from the research:**
+
+1. **One pre-framework trainer artefact exists**: `vendor/pointsav-monorepo/
+   service-slm/router-trainer/` — knowledge-distillation script from iMac
+   era, Qwen2.5 Coder 1.5B via llamafile, 15 email-routing tuples.
+   Schema, model family, and task type all incompatible with current
+   corpus. NOT directly reusable. Establishes local-distillation
+   precedent.
+2. **`data/adapters/` directory is declared in two conventions** but
+   doesn't exist. No adapters have ever been trained against the
+   current corpus.
+3. **1.07 GB Qwen weight file** lives in tracked Git at the
+   `router-trainer/` path — layout-rule violation predating the rule.
+   Surfaced for cleanup; not acted on (outside cluster scope).
+4. **`apprenticeship/prose-edit/woodfine/` tenant shard** has 1 tuple
+   on day zero — tenant-isolation rule means this must be excluded
+   from Vendor-side training; flagged in research trail.
+5. **llama-server LoRA support unverified** — potential Phase 1 blocker
+   depending on whether the deployed binary supports runtime adapter
+   loading.
+6. **Doctrine claim #14 (federated marketplace)** is the explicit
+   mechanism for cross-Customer adapter sharing; currently
+   unimplemented.
+
+**5 deployment options enumerated** with tradeoffs (Workspace VM CPU,
+Yo-Yo GPU, Customer GPU, Hyperscaler API, Federated). Yo-Yo gated on
+D4. Workspace VM CPU viable for Phase 0 only. Hyperscaler is fastest-
+to-first-adapter but conflicts with sovereignty framing.
+
+**13 explicit open questions for operator** (§9 of doc). Each
+answerable in a sentence; each changes implementation shape.
+
+**Phased recommendation**:
+- **Phase 0** ($0, ~4-8hr impl + 8-24hr background CPU training):
+  Python SFT script reading 87 engineering tuples; QLoRA 4-bit OLMo 3
+  7B via bitsandbytes; 10-20 training steps; produces adapter at
+  `data/adapters/`. **Do NOT deploy** — proof of life only.
+- **Phase 1**: minimum-viable adapter; real training run on chosen
+  deployment option; Doorman hot-reload + composition.
+- **Phase 2**: trigger model (threshold or cron); validation gates;
+  promotion criteria.
+- **Phase 3**: multi-adapter composition per task-type; PS.5
+  graduation operational.
+
 ### 2026-04-29 — B7 LIVE — Doorman redeployed with apprenticeship_enabled=true [Master action; workspace v0.1.68]
 
 **MAJOR MILESTONE — Stage 2 of the flow is operational.**
