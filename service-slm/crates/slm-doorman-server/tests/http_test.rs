@@ -574,7 +574,13 @@ fn doorman_error_to_status(e: &DoormanError) -> StatusCode {
         | DoormanError::LedgerSerde(_)
         | DoormanError::HomeUnset
         | DoormanError::LedgerLock(_)
-        | DoormanError::CorpusWrite { .. } => StatusCode::INTERNAL_SERVER_ERROR,
+        | DoormanError::CorpusWrite { .. }
+        // Brief Queue Substrate (§7C) — I/O failures are server-side errors.
+        | DoormanError::QueueIo { .. } => StatusCode::INTERNAL_SERVER_ERROR,
+        // Queue lock contention is transient — 503 SERVICE_UNAVAILABLE.
+        DoormanError::QueueLockFailed { .. } => StatusCode::SERVICE_UNAVAILABLE,
+        // Malformed brief detected and moved to poison bucket — 400 BAD_REQUEST.
+        DoormanError::QueueMalformedBrief { .. } => StatusCode::BAD_REQUEST,
     }
 }
 

@@ -279,6 +279,14 @@ fn classify_error(e: &DoormanError) -> CompletionStatus {
         // — the caller should verify the shadow brief was dispatched
         // before signing a verdict. HTTP 410 in the HTTP layer.
         DoormanError::OrphanVerdictNoCorpusTuple { .. } => CompletionStatus::PolicyDenied,
+        // Brief Queue Substrate (apprenticeship-substrate.md §7C):
+        //   QueueIo       — file-system I/O failure; UpstreamError (server-side)
+        //   QueueLockFailed — transient lock contention; UpstreamError (server-side)
+        //   QueueMalformedBrief — caller-side malformed content; PolicyDenied
+        DoormanError::QueueIo { .. } | DoormanError::QueueLockFailed { .. } => {
+            CompletionStatus::UpstreamError
+        }
+        DoormanError::QueueMalformedBrief { .. } => CompletionStatus::PolicyDenied,
     }
 }
 
