@@ -95,6 +95,85 @@ Newest on top. Append a dated block when a session includes meaningful cleanup w
 
 ---
 
+## 2026-04-28 — documentation.pointsav.com home-page iteration 1 — engine MUST features shipped
+
+- **Engine implementation pass** for documentation.pointsav.com home
+  page iteration 1 against the engine-spec relayed from
+  project-language by Master 2026-04-28T22:40Z. Followed the scoping
+  doc at `app-mediakit-knowledge/docs/HOMEPAGE-IMPL-PLAN.md`
+  (committed `10e0073` earlier this session).
+
+- **Sonnet sub-agent dispatch** under operator-override "yes keep
+  going" pattern (memory:
+  `feedback_operator_override_sonnet_dispatch.md`). Brief authored
+  by Opus parent + parent-reviewed before commit per CLAUDE.md §11
+  v0.1.30 §1A.6. Sonnet ran ~17 minutes, returned 104 tests passing
+  (97 → 104; +7 new in `tests/home_test.rs`), 0 net clippy delta
+  (14 baseline warnings in pre-existing edit.rs/feeds.rs/search.rs
+  unchanged; new code clean per `cargo clippy --all-targets`
+  inspection).
+
+- **6 MUST features delivered:**
+  - `index.md` routing with placeholder fallback (absent
+    `index.md` preserves the pre-iteration-1 file-listing chrome via
+    extracted `placeholder_index()` helper)
+  - `category:` + `last_edited:` promoted from
+    `Frontmatter.extra` to first-class `Option<String>` fields
+    (render.rs +18 lines)
+  - By-category 3×3 grid using the operator-ratified 9-category
+    set (architecture / services / systems / applications /
+    governance / infrastructure / company / reference / help) per
+    `naming-convention.md` §10 Q5-A; "0 articles — in preparation"
+    placeholder for empty categories
+  - Featured TOPIC pin reading
+    `<content-dir>/featured-topic.yaml` (slug + optional since +
+    optional note); silent suppress on absent; warn-and-suppress on
+    parse-fail or unresolvable slug
+  - Recent-additions feed (top-5 by `last_edited:` desc; git
+    shell-out fallback when frontmatter date absent; mtime fallback
+    when git fails) — iteration-1 git-shell-out chosen to avoid
+    pulling Phase 4 `git2` dep forward
+  - Wikilink resolution in home body (already handled by
+    existing `parse_page` + render pipeline per content-contract.md
+    §5.1; no engine changes needed)
+
+- **File touches:** `src/render.rs` +18 lines (Frontmatter struct);
+  `src/server.rs` +422 lines (handler + helpers + types +
+  home_chrome + placeholder_index extraction); `static/style.css`
+  +218 lines appended (`.wiki-home-*` BEM classes + 3-col → 2-col →
+  1-col responsive grid); `tests/home_test.rs` new file 305 lines
+  (7 integration tests via tempdir fixture + oneshot router
+  pattern mirroring `tests/feeds_test.rs`).
+
+- **Iteration-1 deferrals** documented in HOMEPAGE-IMPL-PLAN.md §9:
+  Spanish home routing (`/es` → `index.es.md`), search-box on home,
+  `/wanted` page, featured-rotation logic, date-tagged
+  announcements. Did You Know? / On This Day cut by spec.
+
+- **Minor concerns flagged by parent review** (acceptable for
+  iteration 1; tracked for iteration 2):
+  - Category-card title links to `/search?q=category:<name>` —
+    BM25 search backend doesn't natively support `category:`
+    syntax; this matches the literal token. Iteration 2 wires
+    `/<category>` route per content-contract.md §7.
+  - Sort-key in `recent_topics_by_last_edited` mixes ISO 8601
+    strings and Unix epoch seconds (mtime fallback) in the same
+    lexicographic compare — fragile but acceptable for the
+    49-TOPIC current corpus.
+  - `bucket_topics_by_category` parses every TOPIC on every `/`
+    request; iteration-2 cache (60s TTL) per HOMEPAGE-IMPL-PLAN §13.
+
+- **DESIGN-* discipline triggered** per v0.1.57: cluster ships UI
+  work today (the new home-page chrome). Plan:
+  `component-home-grid` DESIGN draft staged to
+  `~/Foundry/clones/project-knowledge/.claude/drafts-outbound/`
+  for project-design pickup per
+  `conventions/cluster-design-draft-pipeline.md` (claim #38).
+
+- **Open question carried** (none new this session): all 7 BP1
+  questions still pending operator decision; the iteration-1 home
+  page does NOT depend on BP1.
+
 ## 2026-04-28 — Read-only audit batch (Briefs 5-8) — applied bounded fixes per parent review
 
 - **Cluster sub-agent queue** created at
