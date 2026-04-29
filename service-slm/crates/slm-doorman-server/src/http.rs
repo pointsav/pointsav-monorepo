@@ -756,7 +756,12 @@ impl From<DoormanError> for ApiError {
             | DoormanError::LedgerSerde(_)
             | DoormanError::HomeUnset
             | DoormanError::LedgerLock(_)
-            | DoormanError::CorpusWrite { .. } => StatusCode::INTERNAL_SERVER_ERROR,
+            | DoormanError::CorpusWrite { .. }
+            | DoormanError::QueueIo { .. } => StatusCode::INTERNAL_SERVER_ERROR,
+            // Queue lock unavailable — transient; caller may retry.
+            DoormanError::QueueLockFailed { .. } => StatusCode::SERVICE_UNAVAILABLE,
+            // Malformed brief detected and moved to poison bucket.
+            DoormanError::QueueMalformedBrief { .. } => StatusCode::BAD_REQUEST,
         };
         Self {
             status,
