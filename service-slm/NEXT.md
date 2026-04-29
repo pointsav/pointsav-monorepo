@@ -29,8 +29,27 @@ agent dispatches.
 
 ---
 
+**Correction 2026-04-29T03:00Z** — yesterday's session-end framing
+("14 apprenticeship tuples already accumulating; Stage 2 OPERATIONAL")
+was wrong. Master diagnosed at 02:05Z: those 14 tuples are from
+project-language editorial Stage-1 Pattern A, NOT Doorman shadow flow.
+Doorman shadow flow has ZERO corpus growth since B7 — tuples sit in
+BriefCache (in-memory), evicted on restart, because no senior verdict
+has been signed.
+
+**AS-3 verdict-signing fix** dispatched to Master via outbox `7c947a7`
+with operator green-light. Recommendation: O3 (capture-on-apprentice-
+completion) + O2 (Master signs at sweep cadence) + doctrine MINOR
+amendment to claim #32. Implementation scope ~3-5hr Sonnet bounded in
+`service-slm/crates/slm-doorman/{apprenticeship.rs, verdict.rs}`.
+HOLD pending Master ratification.
+
+---
+
 **B7 LIVE 2026-04-29T00:22:25Z — workspace v0.1.68 closes B7.**
-**The flow is now flowing.**
+Doorman is up and healthy. Engineering corpus capture works
+(87+ tuples). Apprenticeship arm via Doorman shadow flow is the
+broken layer; AS-3 fix above addresses it.
 
 Master executed the iter-19 runbook end-to-end in ~5min wall time
 (operator chat-authorized 00:21Z; deploy 00:22Z; LIVE confirmation 00:25Z).
