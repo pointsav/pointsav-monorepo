@@ -147,6 +147,77 @@ operator-presence pass; cluster-Task waits.
 - Post-commit grep `mistral` across `infrastructure/slm-yoyo/` returns
   zero hits. PS.1-3 scope fully closed.
 
+## 2026-04-29 — Iter-21 AS-3 fix LANDED (capture-on-completion + promote-on-verdict)
+
+Doctrine v0.0.13 ratified at workspace tier 03:13Z (claim #32 amended;
+convention §7B added; AS-3/4/5 marked Live in §10). Cluster-Task green-lit;
+implementation dispatched immediately per operator urgency.
+
+- **Cluster commit**: `a161992` (Peter Woodfine). +5 tests (142 → 147
+  verified via cargo test --workspace).
+- **`apprenticeship.rs::dispatch_shadow`**: writes corpus tuple immediately
+  on apprentice completion. Path: `data/training-corpus/apprenticeship/
+  <task-type>/<tenant>/shadow-<brief_id>.jsonl`. Fields per §7B:
+  `stage_at_capture: "review"`, `actual_diff` set, `verdict / final_diff /
+  promoted_at: null`. `doctrine_version: "0.0.13"`. Deterministic filename
+  prevents duplicates.
+- **`verdict.rs::dispatch`**: changed from create-on-verdict to
+  promote-existing-tuple. Reads existing shadow JSONL, merges verdict block,
+  sets `promoted_at` + `final_diff`, atomically overwrites via temp+rename.
+  Cache miss triggers `locate_corpus_tuple_by_brief_id()` scan for
+  post-restart recovery (the bug class that motivated the fix).
+- **New error variant**: `OrphanVerdictNoCorpusTuple { brief_id,
+  corpus_path }` → HTTP 410 GONE → `CompletionStatus::PolicyDenied`. Wired
+  in router.rs::classify_error + http.rs::From<DoormanError> + http_test.rs
+  mirror match (no catch-all `_` arms).
+- **BriefCache retained** for in-flight verdict-binding within session
+  window. Corpus tuple is now canonical record; cache holds session
+  metadata.
+- **5 new tests**:
+  - `orphan_verdict_no_corpus_tuple_surfaces_correct_error`
+  - `verdict_signing_promotes_in_place_no_duplicate`
+  - `post_restart_recovery_verdict_promotes_from_disk`
+  - `apprentice_completion_review_stage_schema_matches_spec`
+  - `corpus_tuple_carries_doctrine_version_0_0_13`
+- **Build hygiene**: cargo test 14 + 89 + 4 + 40 = 147 passed; clippy
+  `-D warnings` clean; fmt clean.
+- **Wall time**: ~12 minutes; ~88k Sonnet tokens.
+
+### What's now operational at the cluster layer
+
+When Master rebuilds + restarts the Doorman binary:
+- Every commit's shadow brief (already firing per existing capture-edit
+  hook) → apprentice dispatched → tuple written at `review` stage immediately
+- BriefCache eviction on restart no longer destroys training signal
+- Verdict signing (when it eventually happens) promotes existing tuples
+  in-place; no duplicate creation; no orphan state
+
+### Awaiting Master post-implementation sequence
+
+Master's 03:13Z message named the workspace-tier sequence:
+1. Master ratifies cluster-side
+2. Stage-6 promote `cluster/project-slm` → canonical (operator authorizes)
+3. Master rebuilds `slm-doorman-server` from canonical HEAD
+4. Master `sudo install` + `systemctl restart local-doorman.service`
+5. Verify post-restart shadow brief lands in corpus at review stage
+6. Soak: monitor next 10 cluster commits across all sub-clones
+7. Master commit + version bump
+
+Operator preference per memory `feedback_visible_operational_first.md`:
+Fast deploy with Soak-as-we-go. I recommended this in the 03:00Z outbox;
+Master concurred in 03:13Z reply.
+
+### Test count drift discovered (logged for clarity)
+
+Iter-18 verified test count was 143/143. Iter-21 sub-agent reported "142
+baseline" — slight off-by-one but sub-agent's reported new total of 147 is
+correct (verified via cargo test). Final post-iter-21 count is **147/147**.
+The 14 + 89 + 4 + 40 distribution across slm-core / slm-doorman /
+audit_endpoints_integration / http_test confirms the 5 new tests landed in
+slm-doorman (89 = 84 from iter-18-baseline + 5 new in iter-21).
+
+---
+
 ## 2026-04-29 — AS-3 verdict-signing diagnosis + recommendation surfaced (post-B7 reality check)
 
 ### What I told the operator yesterday was wrong
