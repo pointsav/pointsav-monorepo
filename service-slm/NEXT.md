@@ -13,20 +13,34 @@ go-aheads now that operationalization-plan scope is exhausted; operator
 asks for next-step recommendation, agent recommends, operator confirms,
 agent dispatches.
 
+**B7 LIVE 2026-04-29T00:22:25Z — workspace v0.1.68 closes B7.**
+**The flow is now flowing.**
+
+Master executed the iter-19 runbook end-to-end in ~5min wall time
+(operator chat-authorized 00:21Z; deploy 00:22Z; LIVE confirmation 00:25Z).
+Doorman startup log confirms `apprenticeship_enabled=true`. Smoke test
+7/8 PASS (1 advisory timeout on Tier A cold-path). corpus-stats:
+**86 engineering + 14 apprenticeship tuples** at flow-online moment.
+
+Every commit across all 8 active clusters (project-slm + project-data +
+project-orgcharts + project-language + project-proofreader +
+project-system + project-knowledge + project-bim) now feeds both arms of
+the corpus:
+- Engineering arm: `capture-edit` hook → engineering corpus JSONL
+- Apprenticeship arm: shadow brief → Doorman `/v1/shadow` → apprenticeship corpus
+
+PS.5 graduate-task-types-to-service-slm-first becomes incrementally
+feasible as DPO tuples accumulate. PointSav-LLM continued-pretraining +
+`apprenticeship-pointsav` / `apprenticeship-woodfine` LoRA training data
+starts compounding from this moment.
+
 **Iter-19 outcome — B7 deploy-readiness package** (cluster `72f4100`):
-- 4 new files: `service-slm/docs/deploy/local-doorman.env.example`,
-  `service-slm/docs/deploy/deploy-doorman-workspace-vm.md`,
-  `service-slm/scripts/smoke-test-doorman.sh`,
-  `service-slm/scripts/corpus-stats.sh`.
+- 4 new files: env example + runbook + smoke-test + corpus-stats.
 - Binary built + verified (7.5 MB stripped). NOT committed.
 - 17 env vars documented; SLM_TIER_C_* commented-out for Anthropic-key
   TODO; workspace-dogfood defaults applied.
-- Runbook uses systemd `service.d/env-file.conf` drop-in pattern (avoids
+- Runbook used systemd `service.d/env-file.conf` drop-in pattern (avoided
   editing existing workspace-tier unit at `infrastructure/local-doorman/`).
-- After Master executes the runbook, stage 2 of "the flow" turns on:
-  every commit across the 8 active clusters feeds apprenticeship corpus
-  in addition to existing engineering capture (84 tuples already in
-  `~/Foundry/data/training-corpus/engineering/project-slm/`).
 
 ---
 
