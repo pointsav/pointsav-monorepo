@@ -48,6 +48,22 @@ pub struct Frontmatter {
     #[serde(default)]
     pub categories: Option<Vec<String>>,
 
+    /// Home-page bucketing category per
+    /// `content-wiki-documentation/.claude/rules/content-contract.md` §4.
+    /// One of the 9 ratified categories (architecture, services, systems,
+    /// applications, governance, infrastructure, company, reference, help)
+    /// per naming-convention.md §10 Q5-A. The value `root` is reserved for
+    /// `index.md` itself and is suppressed from category-panel bucketing.
+    #[serde(default)]
+    pub category: Option<String>,
+
+    /// Date of the last meaningful edit in `YYYY-MM-DD` format.
+    /// Drives the recent-additions feed on the home page. When absent,
+    /// the engine falls back to git-commit-date via a shell-out to
+    /// `git log -1 --format=%cI -- <path>`, then to filesystem mtime.
+    #[serde(default)]
+    pub last_edited: Option<String>,
+
     #[serde(flatten)]
     pub extra: BTreeMap<String, serde_yaml::Value>,
 }
