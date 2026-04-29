@@ -28,8 +28,8 @@ pub mod verdict;
 
 pub use apprenticeship::{
     apprentice_prompt, build_attempt, parse_attempt_content, pick_tier_for_brief,
-    ApprenticeshipConfig, ApprenticeshipDispatcher, ParsedAttempt, ShadowOutcome,
-    APPRENTICE_SYSTEM_PROMPT,
+    shadow_corpus_path, ApprenticeshipConfig, ApprenticeshipDispatcher, ParsedAttempt,
+    ShadowOutcome, APPRENTICE_SYSTEM_PROMPT,
 };
 pub use audit_proxy::{
     AuditProxyClient, AuditProxyConfig, AuditProxyPurposeAllowlist,

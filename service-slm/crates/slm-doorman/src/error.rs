@@ -67,6 +67,25 @@ pub enum DoormanError {
     )]
     BriefCacheMiss,
 
+    /// A verdict arrived for a `brief_id` that has no corpus tuple on
+    /// disk (i.e., the shadow brief was never dispatched or was never
+    /// captured). Per apprenticeship-substrate.md §7B: verdicts only
+    /// promote existing tuples; orphan verdicts are logged and no-op'd.
+    /// HTTP 410 — the caller should verify the shadow brief was posted
+    /// before attempting to sign a verdict.
+    #[error(
+        "verdict POST for brief_id {brief_id:?} found no corpus tuple at \
+         {corpus_path}; shadow brief may not have been dispatched or \
+         captured. Per §7B, verdict signing only promotes existing tuples \
+         — no orphan corpus row is created"
+    )]
+    OrphanVerdictNoCorpusTuple {
+        /// The `brief_id` from the verdict frontmatter.
+        brief_id: String,
+        /// The canonical corpus path that was checked.
+        corpus_path: String,
+    },
+
     #[error(
         "Tier A (llama-server) does not accept {dialect} grammars; \
          {advice}"
