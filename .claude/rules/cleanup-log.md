@@ -147,6 +147,87 @@ operator-presence pass; cluster-Task waits.
 - Post-commit grep `mistral` across `infrastructure/slm-yoyo/` returns
   zero hits. PS.1-3 scope fully closed.
 
+## 2026-04-29 — AS-3 verdict-signing diagnosis + recommendation surfaced (post-B7 reality check)
+
+### What I told the operator yesterday was wrong
+
+Yesterday's session-end message said "14 apprenticeship tuples already
+accumulating; Stage 2 of the flow is OPERATIONAL". I conflated two
+different sources of those 14 tuples. Master diagnosed at 02:05Z that:
+
+- Those 14 tuples came from project-language editorial Stage-1 Pattern A
+  (sweep helpers writing directly to corpus). NOT from the Doorman
+  shadow-brief flow.
+- The actual Doorman shadow-brief path has produced ZERO corpus growth
+  since B7. Tuples sit in BriefCache (in-memory) → evicted on restart.
+- AS-3 verdict-signing requires `ssh-keygen -Y verify` against
+  `identity/allowed_signers`. No verdicts have been signed. None of the
+  shadow-brief tuples have promoted to corpus.
+
+The architectural promise — "every commit feeds the corpus" — is unmet
+at this layer. Honest correction logged. Operator informed at chat
+surface; not happy (correctly so).
+
+### Master's three resolution paths, my read
+
+- **O1** (operator signs verdict batches manually) — doesn't scale.
+- **O2** (Master signs at sweep cadence) — preserves claim #32 semantics
+  but puts Master in the loop on every commit's verdict-signing.
+- **O3** (capture-on-apprentice-completion at `review` stage; verdict
+  becomes a separate promotion step) — unblocks corpus growth NOW;
+  preserves verdict mechanism for quality-graduation; requires doctrine
+  MINOR amendment.
+
+**My recommendation**: O3 + O2 hybrid + doctrine MINOR amendment.
+- O3 unblocks corpus growth on every commit immediately.
+- O2 in parallel produces verdict-signed quality subset for DPO.
+- Doctrine MINOR amends claim #32 from "verdict-signed = corpus" to
+  "corpus admits captured tuples at review; verdicts promote quality
+  subset" — additive, backwards-compatible.
+
+### Operator green-light at 03:00Z
+
+Operator: *"we need to move forward with your recommendation now and
+send MASTER the document you already made, not make a new one, we need
+to get this working right away."*
+
+Outbox message to Master committed `7c947a7`. References existing
+trainer-scoping doc at `service-slm/docs/trainer-scoping.md` (commit
+`562baa0`) for substrate context — no new Q-pack drafted per operator
+direction.
+
+Two paths surfaced to Master:
+- α: Master ratifies doctrine MINOR + cluster-Task implements (~4-6hr)
+- β: Operator-presence ratification first; cluster-Task holds
+
+Operator's framing strongly favors α.
+
+### Implementation scope outlined
+
+Bounded in `service-slm/crates/slm-doorman/`:
+- `apprenticeship.rs`: write tuple at `review` stage on apprentice
+  completion, verdict fields null/pending
+- `verdict.rs` + `VerdictDispatcher`: change from create-tuple to
+  promote-tuple semantics
+- Tests: extend apprenticeship suite; verify review-stage capture +
+  verdict promote-in-place
+
+~3-5hr Sonnet on Master ratification. HOLD until Master replies.
+
+### What's true about cluster status now
+
+- Doorman is up + healthy (B7 success unchanged)
+- engineering corpus capture: ✓ working (every commit fires
+  capture-edit; 87+ tuples in `engineering/project-slm/`)
+- apprenticeship corpus via Doorman shadow flow: ✗ broken at AS-3
+  verdict-signing step (zero growth since B7)
+- 14 corpus tuples that DO exist: from project-language editorial
+  Stage-1 Pattern A, not Doorman shadow flow
+
+The fix is structural and bounded. Awaiting Master.
+
+---
+
 ## 2026-04-29 — Iter-20 trainer-scoping comprehensive doc (Path A)
 
 Operator-directed Path A post-B7. Question: now that the apprenticeship
