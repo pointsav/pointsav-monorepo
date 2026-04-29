@@ -71,8 +71,12 @@ impl ApprenticeshipConfig {
             .ok()
             .and_then(|s| s.parse::<usize>().ok())
             .unwrap_or(DEFAULT_BRIEF_TIER_B_THRESHOLD_CHARS);
+        // Default to v0.0.13 per the capture-vs-promote amendment
+        // (apprenticeship-substrate.md §7B, ratified 2026-04-29).
+        // Override via FOUNDRY_DOCTRINE_VERSION env var if a future
+        // doctrine version supersedes this default.
         let doctrine_version =
-            std::env::var("FOUNDRY_DOCTRINE_VERSION").unwrap_or_else(|_| "0.0.7".to_string());
+            std::env::var("FOUNDRY_DOCTRINE_VERSION").unwrap_or_else(|_| "0.0.13".to_string());
         let tenant = std::env::var("FOUNDRY_TENANT").unwrap_or_else(|_| "pointsav".to_string());
         Self {
             foundry_root,
@@ -185,15 +189,18 @@ impl<'a> ApprenticeshipDispatcher<'a> {
 
     /// AS-4 entry point — `POST /v1/shadow`. Apprentice is dispatched
     /// the same way as `/v1/brief`, but the attempt is NOT returned to
-    /// the caller. The (brief, attempt, actual-diff) tuple is captured
-    /// as a training row at
+    /// the caller. The (brief, attempt, actual_diff) tuple is captured
+    /// immediately as a training row at
     /// `${FOUNDRY_ROOT}/data/training-corpus/apprenticeship/<task-type>/shadow-<brief_id>.jsonl`
-    /// with `verdict: null` and `stage_at_capture: "shadow"` per
-    /// convention §7 path P2 + §8.
+    /// with `verdict: null`, `stage_at_capture: "review"`, and
+    /// `promoted_at: null` per convention §7B + §8 (v0.0.13 amendment).
     ///
-    /// Idempotency on `(brief_id, attempt_id)` is realised by the
-    /// deterministic filename: the shadow tuple is keyed by `brief_id`
-    /// alone, and a re-POST of the same `brief_id` is a no-op (the
+    /// The `actual_diff` field carries the diff that actually landed in
+    /// the source commit; the `attempt.diff` carries what the apprentice
+    /// would have done. Both fields are preserved for the DPO pipeline.
+    ///
+    /// Idempotency on `brief_id` is realised by the deterministic
+    /// filename: a re-POST of the same `brief_id` is a no-op (the
     /// existing tuple is preserved). Survives process restart.
     pub async fn dispatch_shadow(
         &self,
@@ -334,21 +341,31 @@ fn write_shadow_tuple(
 
     let sanitized_brief = sanitize_brief_for_corpus(brief);
     let sanitized_attempt = sanitize_attempt_for_corpus(attempt);
+    // Per apprenticeship-substrate.md §7B + §8 (v0.0.13 amendment):
+    //   - stage_at_capture: "review" (not "shadow"; "review" is the
+    //     starting stage for every new task-type per §2)
+    //   - actual_diff: the human-committed diff (new required field)
+    //   - promoted_at: null (set to ISO 8601 timestamp when verdict
+    //     signing promotes this tuple)
+    //   - verdict: null (updated in-place by VerdictDispatcher on promotion)
+    //   - doctrine_version: "0.0.13" (pinned at capture time per §9)
     let record = serde_json::json!({
         "tuple_type": "apprenticeship",
         "doctrine_version": doctrine_version,
         "task_type": brief.task_type,
-        "stage_at_capture": "shadow",
+        "stage_at_capture": "review",
         "brief": sanitized_brief,
         "attempt": sanitized_attempt,
         "verdict": serde_json::Value::Null,
-        "final_diff": crate::redact::sanitize(actual_diff),
+        "actual_diff": crate::redact::sanitize(actual_diff),
+        "final_diff": serde_json::Value::Null,
         "redaction_class": "internal",
         "evidence_class": "primary",
         "tenant": tenant,
         "cluster": brief.scope.cluster,
         "session_id": serde_json::Value::Null,
         "created": chrono::Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Secs, true),
+        "promoted_at": serde_json::Value::Null,
     });
     let line = serde_json::to_string(&record).map_err(|e| DoormanError::CorpusWrite {
         path: path.display().to_string(),
@@ -362,6 +379,18 @@ fn write_shadow_tuple(
             reason: e.to_string(),
         })?;
     Ok(())
+}
+
+/// Resolve the corpus file path for a shadow tuple given the corpus root
+/// and brief. Public so `VerdictDispatcher` can locate the tuple by
+/// `brief_id` for in-place promotion.
+pub fn shadow_corpus_path(corpus_root: &Path, task_type: &str, brief_id: &str) -> PathBuf {
+    corpus_root
+        .join("data")
+        .join("training-corpus")
+        .join("apprenticeship")
+        .join(task_type)
+        .join(format!("shadow-{brief_id}.jsonl"))
 }
 
 fn sanitize_brief_for_corpus(b: &ApprenticeshipBrief) -> ApprenticeshipBrief {
@@ -1004,9 +1033,16 @@ Shadow attempt for the apprentice.
         let body = std::fs::read_to_string(&expected).expect("shadow tuple written");
         let row: serde_json::Value = serde_json::from_str(body.trim()).unwrap();
         assert_eq!(row["tuple_type"], "apprenticeship");
-        assert_eq!(row["stage_at_capture"], "shadow");
-        assert!(row["verdict"].is_null(), "shadow tuple has null verdict");
-        assert!(row["final_diff"].as_str().unwrap().contains("ACTUAL_y"));
+        assert_eq!(row["stage_at_capture"], "review");
+        assert!(
+            row["verdict"].is_null(),
+            "review-stage tuple has null verdict at capture"
+        );
+        assert!(row["actual_diff"].as_str().unwrap().contains("ACTUAL_y"));
+        assert!(
+            row["final_diff"].is_null(),
+            "final_diff is null at capture (set on promotion)"
+        );
         assert_eq!(row["brief"]["brief_id"], brief.brief_id);
         let sc = row["attempt"]["self_confidence"].as_f64().unwrap();
         assert!((sc - 0.7).abs() < 1e-3, "got {sc}");
@@ -1064,9 +1100,11 @@ Shadow attempt for the apprentice.
         let entries: Vec<_> = std::fs::read_dir(&dir).unwrap().collect();
         assert_eq!(entries.len(), 1);
         // First-write wins — actual_diff is "diff-1", not "diff-2".
+        // final_diff is null at capture (set on promotion per §7B).
         let p = entries.into_iter().next().unwrap().unwrap().path();
         let body = std::fs::read_to_string(&p).unwrap();
         let row: serde_json::Value = serde_json::from_str(body.trim()).unwrap();
-        assert_eq!(row["final_diff"], "diff-1");
+        assert_eq!(row["actual_diff"], "diff-1");
+        assert!(row["final_diff"].is_null(), "final_diff is null at capture");
     }
 }
