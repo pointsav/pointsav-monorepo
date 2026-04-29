@@ -152,6 +152,38 @@ once operator green-lights.
 
 ## Completed
 
+### 2026-04-29 — B7 LIVE — Doorman redeployed with apprenticeship_enabled=true [Master action; workspace v0.1.68]
+
+**MAJOR MILESTONE — Stage 2 of the flow is operational.**
+
+Operator authorized "go" at chat surface 00:21Z; Master executed iter-19
+runbook end-to-end in ~5min wall time. All 8 steps landed cleanly:
+
+| Step | Result |
+|---|---|
+| 1 | Pre-built binary verified at `service-slm/target/release/slm-doorman-server` (7.9 MB) |
+| 2 | `sudo install -m 0755` to `/usr/local/bin/slm-doorman-server` (root:root) |
+| 3 | `sudo install -m 0640` env file to `/etc/local-doorman/local-doorman.env` (root:local-doorman) |
+| 4 | `mkdir + chown` audit-ledger dir at `/var/lib/local-doorman/audit/` (750 local-doorman:local-doorman) |
+| 5 | Drop-in landed at `/etc/systemd/system/local-doorman.service.d/env-file.conf` |
+| 6 | `systemctl daemon-reload + restart local-doorman.service` — active(running) since 00:22:25Z |
+| 7 | Smoke test 7 PASS / 1 client-side timeout (Tier A cold-path > curl default; advisory) |
+| 8 | corpus-stats: **86 engineering + 14 apprenticeship tuples** |
+
+**Doorman startup log confirms the load-bearing flag**:
+- `apprenticeship_enabled=true` ✓
+- `audit_dir=/var/lib/local-doorman/audit/` ✓
+- `bind_addr=127.0.0.1:9080` + `has_local=true` ✓
+- Lark grammar pre-validation enabled (PS.3 step 5) ✓
+
+Every commit across all 8 active clusters now feeds the apprenticeship
+arm AND engineering arm. PS.5 graduate-task-types-to-service-slm-first
+becomes incrementally feasible as DPO tuples accumulate.
+
+Small follow-up logged: smoke-test script's curl timeout is shorter than
+Olmo 3 7B Q4 cold-path. Could extend `--max-time` for the chat-completions
+test. Minor; not blocking; queued for future iter.
+
 ### 2026-04-28 — Iter-19 B7 deploy-readiness package [COMPLETED commit `72f4100`]
 
 Long-running Sonnet pipeline iteration 19. Operator-directed in response to

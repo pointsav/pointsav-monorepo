@@ -147,6 +147,73 @@ operator-presence pass; cluster-Task waits.
 - Post-commit grep `mistral` across `infrastructure/slm-yoyo/` returns
   zero hits. PS.1-3 scope fully closed.
 
+## 2026-04-29 — B7 LIVE — flow Stage 2 OPERATIONAL — major milestone
+
+Master executed the iter-19 runbook end-to-end in ~5min wall time.
+Operator authorized "go" at chat surface 00:21Z; Master sent 00:25Z
+confirmation message detailing 8/8 steps complete + smoke test + corpus-
+stats verification + Doorman startup log.
+
+### Doorman redeployed; flag is on
+
+```
+slm_doorman_server: Lark grammar pre-validation enabled (PS.3 step 5)
+slm_doorman_server: audit ledger directory (SLM_AUDIT_DIR) audit_dir=/var/lib/local-doorman/audit/
+slm_doorman_server: service-slm Doorman starting version="0.1.0" bind_addr=127.0.0.1:9080
+                    has_local=true has_yoyo=false has_external=false
+                    apprenticeship_enabled=true audit_proxy_enabled=false
+```
+
+`apprenticeship_enabled=true` is the load-bearing flag. Stage 2 of the
+flow (commit → shadow brief → Doorman → apprenticeship corpus) is
+operational.
+
+### Corpus already accumulating
+
+| Corpus | Tuples | Notes |
+|---|---|---|
+| Engineering | 86 | (up from 84 at v0.1.59; capture-edit hook on every commit) |
+| **Apprenticeship** | **14** | (NEW — populated by `/v1/verdict` and `/v1/shadow` since 00:22:25Z) |
+
+The 14 apprenticeship tuples are the structural input PS.5 needs.
+PointSav-LLM continued-pretraining + apprenticeship-pointsav /
+apprenticeship-woodfine LoRA training data starts compounding now.
+
+### What's now flowing
+
+Every commit on the 8 active clusters → both arms of the corpus:
+
+- Engineering arm: `capture-edit` hook → `~/Foundry/data/training-corpus/engineering/<cluster>/<sha>.jsonl`
+- Apprenticeship arm: `capture-edit` shadow brief → Doorman `/v1/shadow` → `~/Foundry/data/training-corpus/apprenticeship/`
+
+Active clusters whose commits feed the corpus: project-slm, project-data,
+project-orgcharts, project-language, project-proofreader, project-system,
+project-knowledge, project-bim.
+
+### Smoke test posture validated
+
+The advisory smoke-test design (always exits 0; reports per-endpoint)
+caught the Tier A cold-path timeout cleanly without blocking deploy.
+Tier A inference takes 30-60s on first request after restart (Olmo 3
+7B Q4 cold path); curl default timeout is shorter. Small follow-up
+logged: extend `--max-time` for the chat-completions test in
+smoke-test-doorman.sh.
+
+### Operator workflow validated
+
+The v0.1.65 substrate-substantiation discipline worked correctly: Master's
+first response (00:15Z) HELD pending explicit operator authorization on
+chat surface, declined to act on cluster-Task outbox claims of operator
+ratification. Operator gave explicit "go" at chat surface 00:21Z. Master
+then executed at 00:22Z. Same shape harness flagged earlier today on
+PS.1-2 layer-scope decision — discipline is consistent.
+
+### Cluster-Task standing posture
+
+Hardening-sweep candidates queued; at-rest until operator next directs.
+Tests still 143/143; no code changes from this milestone (B7 was
+workspace-tier deploy execution, not cluster code).
+
 ### Iter-19 — B7 deploy-readiness package shipped (4 new artefacts)
 
 Operator framing: "adjust the todo list to focus on getting service-SLM up
