@@ -37,12 +37,16 @@ Doorman shadow flow has ZERO corpus growth since B7 — tuples sit in
 BriefCache (in-memory), evicted on restart, because no senior verdict
 has been signed.
 
-**AS-3 verdict-signing fix** dispatched to Master via outbox `7c947a7`
-with operator green-light. Recommendation: O3 (capture-on-apprentice-
-completion) + O2 (Master signs at sweep cadence) + doctrine MINOR
-amendment to claim #32. Implementation scope ~3-5hr Sonnet bounded in
-`service-slm/crates/slm-doorman/{apprenticeship.rs, verdict.rs}`.
-HOLD pending Master ratification.
+**AS-3 fix LANDED** — cluster commit `a161992` 2026-04-29T~03:30Z.
+Master ratified Path α at workspace tier (doctrine v0.0.13;
+convention §7B; AS-3/4/5 marked Live). Tests **147/147** (+5).
+`apprenticeship.rs::dispatch_shadow` now writes corpus tuple at
+`stage_at_capture: "review"` immediately on apprentice completion.
+`verdict.rs::dispatch` changed to promote-existing-tuple semantics.
+New `OrphanVerdictNoCorpusTuple` → 410 error variant. BriefCache
+retained for session-window verdict-binding context. Awaiting Master
+Stage-6 promote + binary rebuild + systemctl restart sequence per
+03:13Z reply.
 
 ---
 
