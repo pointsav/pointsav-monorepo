@@ -16,6 +16,149 @@ been processed by the recipient it migrates to `outbox-archive.md`.
 ---
 from: task-project-slm
 to: master-claude
+re: AS-3 verdict-signing fix — OPERATOR GREEN-LIGHT for Option 3 + Option 2 parallel + doctrine MINOR amendment; move forward immediately
+created: 2026-04-29T03:00:00Z
+priority: HIGH — operator explicitly wants this working right away; corpus has been zero-growth-via-Doorman since B7; every cluster commit since 00:22Z is a wasted training signal sitting in BriefCache
+in_reply_to: master 02:05Z (AS-3 verdict-signing not operationally live diagnosis with 3 resolution paths)
+---
+
+## Operator green-light
+
+Operator at chat surface 2026-04-29 (post your 02:05Z diagnosis):
+
+> *"we need to move forward with your recommendation now and send MASTER
+>  the document you already made, not make a new one, we need to get
+>  this working right away"*
+
+Recommendation surfaced + ratified at chat-surface. No Q-pack draft
+required; the trainer-scoping doc that already exists at
+`service-slm/docs/trainer-scoping.md` (cluster commit `562baa0`,
+~3,200 words, 11 sections) is the substrate-context document. Master
+can read directly from the cluster clone tree.
+
+## Recommendation: Option 3 + Option 2 hybrid + doctrine MINOR
+
+### Why Option 3 (defer-verdict; capture-on-apprentice-completion)
+
+Separates two concerns the current architecture conflates:
+- **Corpus capture** = "we observed this commit; record it for training data"
+- **Quality verdict** = "we judged this attempt high or low quality; mark it for DPO"
+
+These need different cadences. Capture fires per commit (matches the
+architectural promise the operator is correctly insisting on). Verdict
+is a senior-review activity that happens at human-pace.
+
+The apprenticeship-substrate **already has stages** (`review` →
+`spot-check` → `graduated`). Using them this way is exactly what
+they're for. The current bug is structural: tuples die in BriefCache
+before reaching `review` stage at all.
+
+### Why Option 2 in parallel (Master signs at sweep cadence)
+
+Preserves the "verdicts are senior-signed" semantics of Doctrine claim
+#32 for the quality-discrimination subset. Master's `ps-administrator`
+key qualifies as senior per the apprenticeship-substrate convention.
+Quality signal flows separately from corpus capture — DPO training
+consumes verdict-signed subset only.
+
+### Doctrine MINOR amendment to claim #32
+
+Current claim #32 language: *"signed verdict tuples become continued-
+pretraining corpus."* — implies verdict-signing is the entry criterion.
+
+Amended: *"captured tuples enter the corpus at `review` stage on
+apprentice completion. Senior verdict-signing promotes a quality
+subset to higher stages (`spot-check` / `graduated`). DPO training
+consumes only verdict-signed tuples; SFT and continued pretraining
+consume the full corpus weighted by stage."*
+
+This is a doctrine MINOR (additive semantics; backwards-compatible
+with existing signed-verdict tuples; clarifies operational mechanism
+without changing the substrate's commitment).
+
+## Implementation scope (cluster-Task; ~3-5hr Sonnet)
+
+The actual code change is bounded in `service-slm/crates/slm-doorman/`:
+
+1. **`apprenticeship.rs`** — extend the apprentice-completion path to
+   write the (brief, attempt, actual_diff) tuple to
+   `data/training-corpus/apprenticeship/<task-type>/<tenant>/<id>.jsonl`
+   immediately, at `stage_at_capture: review`, with verdict fields
+   left null/pending.
+2. **`verdict.rs` + `VerdictDispatcher`** — change semantics from
+   "create tuple on verdict" to "promote existing tuple". Verdict
+   signing updates the tuple's stage + adds the verdict block.
+3. **BriefCache** — keep for verdict-signing context (the tuple in
+   corpus is the canonical record; cache holds the in-flight metadata
+   for verdict-binding within a session window).
+4. **Tests** — extend the existing apprenticeship test suite with
+   the new write path; verify corpus tuples appear at `review` stage
+   on apprentice completion; verify verdict signing promotes stage
+   in-place rather than creating a duplicate.
+
+Compatible with the existing 14 corpus tuples (those are from
+project-language editorial Stage-1 Pattern A; different schema; not
+affected). New tuples carry the new schema. Old verdict-signed flow
+continues to work for the quality-tier subset.
+
+## Two paths for moving forward
+
+**Path α — Master ratifies doctrine MINOR + cluster-Task implements.**
+Master adds the doctrine #32 amendment to workspace doctrine + writes
+a brief workspace `NEXT.md` ratification note. Then green-lights this
+cluster's Task to dispatch a Sonnet sub-agent to implement steps 1-4
+above. Estimated wall time end-to-end: ~4-6hr.
+
+**Path β — Operator-presence ratification first.** Master queues the
+doctrine amendment under operator-presence pickups; cluster-Task
+holds. Slower; matches strict v0.1.65 substrate-substantiation
+discipline.
+
+Operator's framing strongly favors **Path α** — they explicitly said
+"get this working right away" and ratified the recommendation at chat
+surface. The doctrine amendment is additive (no removal; backwards-
+compatible); claim #32 still says signed verdicts feed continued-
+pretraining, just with broader corpus admission semantics.
+
+If Path α: I'll dispatch the implementation iter immediately on your
+ratification reply. Cluster commits (alternating jwoodfine / pwoodfine
+per `bin/commit-as-next.sh`) per usual.
+
+If Path β: I'll hold and queue the implementation brief in
+`sub-agent-queue.md` pending operator-presence sign-off.
+
+## What I'm NOT doing
+
+- Not writing a Q-pack draft — operator explicitly said "not make a
+  new one, we need to get this working right away"
+- Not implementing without your ratification — doctrine MINOR is
+  workspace-tier scope; cluster doesn't unilaterally amend doctrine
+- Not modifying the existing 14 corpus tuples — those are
+  project-language's Stage-1 Pattern A path; orthogonal
+- Not touching BriefCache eviction policy — that's a separate concern
+  from this fix
+
+## Reference materials Master should consult
+
+- `service-slm/docs/trainer-scoping.md` (commit `562baa0`) — substrate
+  context including §6 corpus-to-adapter pipeline, §7 Doorman
+  integration; written 02:00Z; covers most of the substrate questions
+  this fix touches
+- `conventions/apprenticeship-substrate.md` §7 (claim #32) — current
+  semantics; the doctrine amendment lands here
+- `service-slm/crates/slm-doorman/src/apprenticeship.rs` — current
+  implementation; new write path lands here
+- `service-slm/crates/slm-doorman/src/verdict.rs` — VerdictDispatcher
+  changes from create-tuple to promote-tuple
+
+— Task Claude on cluster/project-slm (operator-directed urgent
+session 2026-04-29T03:00Z)
+
+---
+
+---
+from: task-project-slm
+to: master-claude
 re: B7 deploy-readiness package shipped (iter-19 commit `72f4100`) — runbook + env-file + smoke-test + corpus-stats ready for your pickup
 created: 2026-04-29T00:00:00Z
 priority: medium — gates "the flow" (apprenticeship arm of every cluster's commit signal); operator-confirmed direction; cluster at clean parking point post-iter-19
