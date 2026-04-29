@@ -147,6 +147,70 @@ operator-presence pass; cluster-Task waits.
 - Post-commit grep `mistral` across `infrastructure/slm-yoyo/` returns
   zero hits. PS.1-3 scope fully closed.
 
+## 2026-04-29 — Iter-20 trainer-scoping comprehensive doc (Path A)
+
+Operator-directed Path A post-B7. Question: now that the apprenticeship
+corpus is flowing, where does the trainer that consumes it live? No
+trainer exists. This iter produces the cluster's comprehensive scoping
+input to the conversation.
+
+- **Cluster commit**: `562baa0` (Peter Woodfine). 1 new file;
+  ~3,200 words / 1,047 lines / 11 sections. Doc-only; tests 143/143.
+- **File**: `service-slm/docs/trainer-scoping.md`
+- **Frontmatter**: v0.1.58 Research-Trail Substrate compliant.
+  research_done (14) / research_suggested (9) / open_questions (13).
+  research_provenance: direct-consultation.
+
+### Surprises from the research
+
+1. Pre-framework trainer artefact exists at `vendor/pointsav-monorepo/
+   service-slm/router-trainer/` (Qwen2.5 Coder 1.5B email-routing
+   distillation). Wrong schema / wrong model / wrong task type. NOT
+   directly reusable but establishes local-distillation precedent.
+2. `data/adapters/` is declared in two conventions but does not exist
+   on disk. Convention-vs-reality drift.
+3. 1.07 GB Qwen weight file lives in tracked Git at the router-trainer
+   path. Layout-rule violation predating the rule. Surfaced; not acted
+   on (outside cluster scope).
+4. `apprenticeship/prose-edit/woodfine/` has 1 tuple on day zero —
+   tenant isolation means Vendor-side training must filter it out.
+5. llama-server LoRA support unverified — potential Phase 1 blocker.
+6. Doctrine claim #14 (federated marketplace) is the explicit
+   cross-Customer adapter-sharing mechanism; unimplemented.
+
+### Phase 0 named for operator green-light
+
+$0 cost. ~4-8hr Python SFT script implementation + 8-24hr background
+CPU training. Cluster-scope (script under `service-slm/scripts/`).
+Reads 87 engineering tuples; QLoRA 4-bit OLMo 3 7B via bitsandbytes;
+10-20 training steps; produces adapter at `data/adapters/`. **Does NOT
+deploy** — proof of life only. Validates the corpus → adapter pipeline
+works end-to-end before committing to a real training cycle.
+
+### 13 operator-decision questions (full list in §9 of the doc)
+
+Each answerable in a sentence. Topics: deployment-option preference;
+minimum-viable-adapter scope; cost budget; existing trainer-codebase
+awareness elsewhere; Hyperscaler-API tradeoff vs sovereignty framing;
+federated-training timeline; trigger-model preference; promotion-gate
+criteria; storage-substrate (workspace vs GCS vs Sigstore Rekor);
+adapter-versioning shape; verdict-feedback loop integration; Yo-Yo
+GPU vs CPU first-cycle; LoRA inference path on llama-server.
+
+### Why this is the next strategic question
+
+Without a trainer, the corpus accumulates forever and never closes the
+loop into a smarter service-SLM. PS.5 graduate-task-types-to-service-
+slm-first depends on adapters existing. Production routing depends on
+PS.5. The whole "service-SLM helps with coding and writing" arc
+depends on this scoping conversation reaching ratification.
+
+The doc is comprehensive precisely because the operator + Master need
+a complete starting point — partial scoping produces partial decisions
+which produce rework.
+
+---
+
 ## 2026-04-29 — B7 LIVE — flow Stage 2 OPERATIONAL — major milestone
 
 Master executed the iter-19 runbook end-to-end in ~5min wall time.
