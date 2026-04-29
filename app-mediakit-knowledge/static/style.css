@@ -621,3 +621,221 @@ article table th { background: var(--bg-chrome); font-weight: 600; }
     gap: 0.5rem;
   }
 }
+
+/* ─── Home-page chrome ─────────────────────────────────────────────────────── */
+
+/* Lede block — rendered body from index.md */
+.wiki-home-lede {
+  margin-bottom: 2rem;
+  font-size: 1rem;
+  line-height: 1.7;
+  color: var(--fg);
+}
+
+.wiki-home-lede p:first-child {
+  font-size: 1.0625rem;
+  color: var(--fg-muted);
+}
+
+/* Section headings above the grid and recent feed */
+.wiki-home-section-title {
+  font-family: var(--sans);
+  font-weight: 400;
+  font-size: 1.375rem;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.25rem;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  color: var(--fg);
+}
+
+/* Featured panel — full-width banner above the category grid */
+.wiki-home-featured {
+  background: var(--bg-aside);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--link);
+  border-radius: 3px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.wiki-home-featured-inner {
+  max-width: 48rem;
+}
+
+.wiki-home-featured-label {
+  display: block;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--fg-muted);
+  margin-bottom: 0.4rem;
+}
+
+.wiki-home-featured-title {
+  font-family: var(--sans);
+  font-weight: 400;
+  font-size: 1.375rem;
+  margin: 0 0 0.5rem;
+}
+
+.wiki-home-featured-title a {
+  color: var(--fg);
+  text-decoration: none;
+}
+
+.wiki-home-featured-title a:hover {
+  color: var(--link);
+  text-decoration: underline;
+}
+
+.wiki-home-featured-lede {
+  color: var(--fg-muted);
+  margin: 0 0 0.75rem;
+  line-height: 1.6;
+}
+
+.wiki-home-featured-read {
+  font-size: 0.9375rem;
+  color: var(--link);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.wiki-home-featured-read:hover {
+  text-decoration: underline;
+}
+
+/* Category grid — 3 columns desktop, 2 at <960px, 1 at <600px */
+.wiki-home-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 0;
+}
+
+@media (max-width: 960px) {
+  .wiki-home-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .wiki-home-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Category card */
+.wiki-home-cat-card {
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 1rem;
+  background: var(--bg);
+  transition: border-color 0.15s ease;
+}
+
+.wiki-home-cat-card:hover {
+  border-color: var(--link);
+}
+
+.wiki-home-cat-title {
+  font-family: var(--sans);
+  font-weight: 600;
+  font-size: 1rem;
+  margin: 0 0 0.5rem;
+}
+
+.wiki-home-cat-title a {
+  color: var(--fg);
+  text-decoration: none;
+}
+
+.wiki-home-cat-title a:hover {
+  color: var(--link);
+  text-decoration: underline;
+}
+
+.wiki-home-cat-count {
+  font-size: 0.8125rem;
+  color: var(--fg-muted);
+  margin: 0 0 0.5rem;
+}
+
+.wiki-home-cat-empty {
+  font-size: 0.8125rem;
+  color: var(--fg-muted);
+  font-style: italic;
+  margin: 0;
+}
+
+.wiki-home-cat-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 0.5rem;
+}
+
+.wiki-home-cat-list li {
+  padding: 0.125rem 0;
+  font-size: 0.875rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wiki-home-cat-list a {
+  color: var(--link);
+  text-decoration: none;
+}
+
+.wiki-home-cat-list a:hover {
+  text-decoration: underline;
+}
+
+.wiki-home-cat-more {
+  font-size: 0.8125rem;
+  color: var(--link);
+  text-decoration: none;
+}
+
+.wiki-home-cat-more:hover {
+  text-decoration: underline;
+}
+
+/* Recent additions feed — simple vertical list with monospace date column */
+.wiki-home-recent {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.wiki-home-recent-item {
+  display: flex;
+  gap: 0.75rem;
+  align-items: baseline;
+  padding: 0.375rem 0;
+  border-bottom: 1px dotted var(--border);
+  font-size: 0.9375rem;
+}
+
+.wiki-home-recent-item:last-child {
+  border-bottom: none;
+}
+
+.wiki-home-recent-date {
+  font-family: var(--mono);
+  font-size: 0.8125rem;
+  color: var(--fg-muted);
+  white-space: nowrap;
+  min-width: 6.5rem;
+}
+
+.wiki-home-recent-item a {
+  color: var(--link);
+  text-decoration: none;
+}
+
+.wiki-home-recent-item a:hover {
+  text-decoration: underline;
+}
+}
