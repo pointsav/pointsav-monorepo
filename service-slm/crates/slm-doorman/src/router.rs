@@ -274,6 +274,11 @@ fn classify_error(e: &DoormanError) -> CompletionStatus {
         | DoormanError::CorpusWrite { .. }
         | DoormanError::VerdictParse(_)
         | DoormanError::BriefCacheMiss => CompletionStatus::UpstreamError,
+        // Orphan verdict: no shadow corpus tuple exists for this brief_id.
+        // Per §7B, no corpus row is created. Classified as PolicyDenied
+        // — the caller should verify the shadow brief was dispatched
+        // before signing a verdict. HTTP 410 in the HTTP layer.
+        DoormanError::OrphanVerdictNoCorpusTuple { .. } => CompletionStatus::PolicyDenied,
     }
 }
 
