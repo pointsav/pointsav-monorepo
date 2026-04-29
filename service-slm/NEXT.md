@@ -37,6 +37,21 @@ Doorman shadow flow has ZERO corpus growth since B7 — tuples sit in
 BriefCache (in-memory), evicted on restart, because no senior verdict
 has been signed.
 
+**Iter-22 + Iter-23 LANDED** — Brief Queue Substrate cluster-Task scope
+COMPLETE per apprenticeship-substrate.md §7C (doctrine v0.0.14).
+
+- iter-22 `03b0b78` — queue.rs module (~870 lines) + drain worker + 5
+  §7C-required tests (147 → 152). flock(2) + atomic rename; idempotent
+  enqueue; reaper sweeps long-leased briefs.
+- iter-23 `66790b8` — shadow_handler async-202 (no more 300s capture-edit
+  timeout); worker drains queue + dispatches to apprentice + writes
+  corpus tuple on completion (preserves v0.0.13 capture-on-completion
+  semantics from iter-21). Tests 152 → 154.
+
+**Cluster posture**: 154/154 verified. This is the structural moment per
+Master 04:05Z: "service-SLM crosses from 'configured but not training' to
+'actually training continuously.'"
+
 **AS-3 fix LANDED** — cluster commit `a161992` 2026-04-29T~03:30Z.
 Master ratified Path α at workspace tier (doctrine v0.0.13;
 convention §7B; AS-3/4/5 marked Live). Tests **147/147** (+5).
