@@ -159,6 +159,43 @@ pub struct LeasedBrief {
     pub base_filename: String,
 }
 
+/// Shadow-specific queue entry that bundles a brief with the actual diff
+/// from the senior's commit. Written by `enqueue_shadow()` and dequeued
+/// by `dequeue_shadow()`.
+///
+/// Using a wider type than `ApprenticeshipBrief` lets the drain worker
+/// pass the `actual_diff` to `dispatch_shadow()` without needing to carry
+/// it out-of-band or embed it in the brief body text.
+///
+/// File naming follows the same `<brief_id>.brief.jsonl` convention as
+/// plain `enqueue()` so the reaper, poison bucket, and release paths are
+/// identical.
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct ShadowQueueEntry {
+    /// The apprenticeship brief (identifies task-type, scope, body, etc.).
+    pub brief: ApprenticeshipBrief,
+    /// The unified diff that the senior actually committed (the post-hoc
+    /// reference). Empty string signals "unknown diff" (e.g. in tests or
+    /// for briefs promoted to the queue from capture-edit.py direct writes
+    /// before this field was introduced).
+    pub actual_diff: String,
+}
+
+/// A leased shadow entry returned by [`dequeue_shadow`].
+#[derive(Clone, Debug)]
+pub struct LeasedShadowEntry {
+    /// Parsed shadow entry (brief + actual_diff).
+    pub entry: ShadowQueueEntry,
+    /// Worker identifier embedded in the lease filename.
+    pub worker_id: String,
+    /// Nanosecond timestamp embedded in the lease filename (for reap).
+    pub lease_ts_nanos: u128,
+    /// Absolute path to the lease file in `queue-in-flight/`.
+    pub lease_path: PathBuf,
+    /// Base filename (`<brief_id>.brief.jsonl`) used to rename back.
+    pub base_filename: String,
+}
+
 /// Outcome passed to [`release`] after the worker finishes with a leased brief.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ReleaseOutcome {
@@ -188,6 +225,26 @@ pub fn ensure_dirs(cfg: &QueueConfig) -> QueueResult<()> {
         })?;
     }
     Ok(())
+}
+
+/// Count of pending `.brief.jsonl` files in `queue/` at the moment of
+/// the call. Used by `shadow_handler` to populate the `queue_position`
+/// field in the 202 ACCEPTED response.
+///
+/// Best-effort: concurrent enqueues between the `enqueue()` write and
+/// this call can produce a count that is off by ±N. The value is a
+/// useful hint for callers; it is not a reservation.
+///
+/// Returns 0 on any I/O error (the caller still gets a valid 202; the
+/// position field is "unknown but queue accepted").
+pub fn pending_count(cfg: &QueueConfig) -> usize {
+    match fs::read_dir(cfg.queue_dir()) {
+        Ok(entries) => entries
+            .filter_map(|e| e.ok())
+            .filter(|e| e.file_name().to_string_lossy().ends_with(".brief.jsonl"))
+            .count(),
+        Err(_) => 0,
+    }
 }
 
 // ── API ───────────────────────────────────────────────────────────────────────
@@ -255,6 +312,221 @@ pub fn enqueue(cfg: &QueueConfig, brief: &ApprenticeshipBrief) -> QueueResult<Qu
         brief_id: brief.brief_id.clone(),
         queue_path,
     })
+}
+
+/// Write a `ShadowQueueEntry` (brief + actual_diff) to
+/// `queue/<brief_id>.brief.jsonl`.
+///
+/// Same idempotency and atomicity semantics as [`enqueue`]; the only
+/// difference is the serialised payload is a `ShadowQueueEntry` rather
+/// than a bare `ApprenticeshipBrief`.
+///
+/// Returns a [`QueueEntry`] with the path on success.
+pub fn enqueue_shadow(cfg: &QueueConfig, entry: &ShadowQueueEntry) -> QueueResult<QueueEntry> {
+    ensure_dirs(cfg)?;
+
+    let brief_id = &entry.brief.brief_id;
+    let filename = brief_filename(brief_id);
+    let queue_path = cfg.queue_dir().join(&filename);
+
+    // Idempotency: already in-flight or done → skip overwrite.
+    let in_flight_path = cfg.in_flight_dir().join(&filename);
+    let done_path = cfg.done_dir().join(&filename);
+    if in_flight_path.exists() || done_path.exists() {
+        debug!(
+            brief_id = %brief_id,
+            "enqueue_shadow: brief already in-flight or done; skipping overwrite"
+        );
+        return Ok(QueueEntry {
+            brief_id: brief_id.clone(),
+            queue_path,
+        });
+    }
+
+    let line = serde_json::to_string(entry).map_err(|e| DoormanError::QueueIo {
+        path: queue_path.display().to_string(),
+        reason: format!("shadow entry serialisation failed: {e}"),
+    })?;
+
+    let mut f = OpenOptions::new()
+        .create(true)
+        .write(true)
+        .truncate(true)
+        .open(&queue_path)
+        .map_err(|e| DoormanError::QueueIo {
+            path: queue_path.display().to_string(),
+            reason: e.to_string(),
+        })?;
+    f.write_all(line.as_bytes())
+        .and_then(|_| f.write_all(b"\n"))
+        .and_then(|_| f.flush())
+        .map_err(|e| DoormanError::QueueIo {
+            path: queue_path.display().to_string(),
+            reason: e.to_string(),
+        })?;
+
+    info!(
+        brief_id = %brief_id,
+        queue_path = %queue_path.display(),
+        "shadow brief enqueued"
+    );
+    Ok(QueueEntry {
+        brief_id: brief_id.clone(),
+        queue_path,
+    })
+}
+
+/// Atomically take the next available `ShadowQueueEntry` from `queue/`
+/// as a lease.
+///
+/// Same locking and rename semantics as [`dequeue`]; the parsed payload
+/// is a `ShadowQueueEntry` (brief + actual_diff) rather than a bare
+/// `ApprenticeshipBrief`. Files written by [`enqueue_shadow`] use this
+/// path; files written by the legacy [`enqueue`] can also be read here
+/// by wrapping them in a `ShadowQueueEntry` with `actual_diff: ""`
+/// (backwards-compatible).
+///
+/// Returns:
+/// - `Ok(Some(LeasedShadowEntry))` — a shadow entry was dequeued and leased.
+/// - `Ok(None)` — the queue was empty at this moment.
+/// - `Err(_)` — I/O or lock failure.
+pub fn dequeue_shadow(
+    cfg: &QueueConfig,
+    worker_id: &str,
+) -> QueueResult<Option<LeasedShadowEntry>> {
+    ensure_dirs(cfg)?;
+
+    let lock_file = acquire_lock(cfg)?;
+
+    let entry = {
+        let mut entries = fs::read_dir(cfg.queue_dir()).map_err(|e| DoormanError::QueueIo {
+            path: cfg.queue_dir().display().to_string(),
+            reason: e.to_string(),
+        })?;
+
+        let mut candidates: Vec<std::path::PathBuf> = Vec::new();
+        for entry in entries.by_ref() {
+            let e = entry.map_err(|e| DoormanError::QueueIo {
+                path: cfg.queue_dir().display().to_string(),
+                reason: e.to_string(),
+            })?;
+            let fname = e.file_name();
+            let fname_str = fname.to_string_lossy();
+            if fname_str.ends_with(".brief.jsonl") {
+                candidates.push(e.path());
+            }
+        }
+        candidates.sort();
+        candidates.into_iter().next()
+    };
+
+    let Some(queue_path) = entry else {
+        drop(lock_file);
+        return Ok(None);
+    };
+
+    let base_filename = queue_path
+        .file_name()
+        .expect("queue path has filename")
+        .to_string_lossy()
+        .into_owned();
+    let ts_nanos = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|d| d.as_nanos())
+        .unwrap_or(0);
+    let lease_filename = format!(
+        "{}.lease.{}.{}",
+        base_filename,
+        sanitise_worker_id(worker_id),
+        ts_nanos
+    );
+    let lease_path = cfg.in_flight_dir().join(&lease_filename);
+
+    fs::rename(&queue_path, &lease_path).map_err(|e| DoormanError::QueueIo {
+        path: format!("{} → {}", queue_path.display(), lease_path.display()),
+        reason: e.to_string(),
+    })?;
+
+    drop(lock_file);
+
+    let raw = fs::read_to_string(&lease_path).map_err(|e| DoormanError::QueueIo {
+        path: lease_path.display().to_string(),
+        reason: e.to_string(),
+    })?;
+
+    // Try to parse as ShadowQueueEntry first; fall back to bare
+    // ApprenticeshipBrief (for entries written by legacy `enqueue()`).
+    let shadow_entry: ShadowQueueEntry = match serde_json::from_str::<ShadowQueueEntry>(raw.trim())
+    {
+        Ok(e) => e,
+        Err(_) => {
+            // Attempt legacy parse as bare ApprenticeshipBrief.
+            match serde_json::from_str::<ApprenticeshipBrief>(raw.trim()) {
+                Ok(brief) => ShadowQueueEntry {
+                    brief,
+                    actual_diff: String::new(),
+                },
+                Err(e) => {
+                    let poison_path = cfg.poison_dir().join(&base_filename);
+                    let _ = fs::rename(&lease_path, &poison_path);
+                    return Err(DoormanError::QueueMalformedBrief {
+                        path: lease_path.display().to_string(),
+                        reason: e.to_string(),
+                    });
+                }
+            }
+        }
+    };
+
+    debug!(
+        brief_id = %shadow_entry.brief.brief_id,
+        lease_path = %lease_path.display(),
+        worker_id,
+        "shadow entry dequeued and leased"
+    );
+
+    Ok(Some(LeasedShadowEntry {
+        entry: shadow_entry,
+        worker_id: worker_id.to_string(),
+        lease_ts_nanos: ts_nanos,
+        lease_path,
+        base_filename,
+    }))
+}
+
+/// Release a `LeasedShadowEntry` lease. Identical semantics to
+/// [`release`] but takes the shadow-specific lease handle.
+pub fn release_shadow(
+    cfg: &QueueConfig,
+    lease: &LeasedShadowEntry,
+    outcome: ReleaseOutcome,
+) -> QueueResult<()> {
+    if !lease.lease_path.exists() {
+        debug!(
+            brief_id = %lease.entry.brief.brief_id,
+            "release_shadow: lease file no longer present; skipping"
+        );
+        return Ok(());
+    }
+
+    let dest = match outcome {
+        ReleaseOutcome::Done => cfg.done_dir().join(&lease.base_filename),
+        ReleaseOutcome::Retry => cfg.queue_dir().join(&lease.base_filename),
+        ReleaseOutcome::Poison => cfg.poison_dir().join(&lease.base_filename),
+    };
+
+    fs::rename(&lease.lease_path, &dest).map_err(|e| DoormanError::QueueIo {
+        path: format!("{} → {}", lease.lease_path.display(), dest.display()),
+        reason: e.to_string(),
+    })?;
+
+    info!(
+        brief_id = %lease.entry.brief.brief_id,
+        outcome = ?outcome,
+        dest = %dest.display(),
+        "shadow entry released"
+    );
+    Ok(())
 }
 
 /// Atomically take the next available brief from `queue/` as a lease.
