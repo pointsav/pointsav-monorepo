@@ -42,7 +42,7 @@ use slm_doorman_server::http::{
 };
 use slm_doorman_server::test_helpers::{
     app_state_no_tiers, app_state_with_apprenticeship, app_state_with_audit_proxy,
-    app_state_with_local, temp_ledger, temp_promotion_ledger,
+    app_state_with_local, temp_ledger, temp_promotion_ledger, temp_queue_config,
 };
 use tower::ServiceExt;
 use wiremock::matchers::{method, path};
@@ -342,6 +342,7 @@ async fn error_brief_cache_miss_returns_410() {
         audit_proxy_purpose_allowlist: FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST,
         audit_tenant_concurrency: Arc::new(Mutex::new(HashMap::new())),
         audit_tenant_concurrency_cap: 100,
+        queue_config: temp_queue_config(),
     });
     let app = router(state);
 
@@ -525,6 +526,170 @@ async fn apprenticeship_disabled_shadow_returns_404() {
         resp.status(),
         StatusCode::NOT_FOUND,
         "/v1/shadow must return 404 when apprenticeship is disabled"
+    );
+}
+
+// ===========================================================================
+// Section 3b — Shadow enqueue tests (§7C step 3 — iter-23)
+//
+// These tests verify the new async-202 contract introduced in iter-23:
+//   - Apprenticeship enabled + valid brief → 202 ACCEPTED with correct body
+//   - The queue file lands at <queue_dir>/<brief_id>.brief.jsonl
+//   - The 404 path (apprenticeship disabled) is unchanged (section 3 above)
+// ===========================================================================
+
+/// POST /v1/shadow with apprenticeship enabled → 202 ACCEPTED.
+/// Response body must carry `audit_id`, `queue_position`, and `brief_id`
+/// all matching the submitted brief_id.
+#[tokio::test]
+async fn shadow_with_apprenticeship_enabled_returns_202_with_body_shape() {
+    let verifier: Arc<dyn VerdictVerifier> = Arc::new(RejectVerifier);
+    let state = app_state_with_apprenticeship(verifier);
+    let app = router(state);
+
+    let brief_id = "shadow-enqueue-test-001";
+    let req_body = json!({
+        "brief": {
+            "brief_id": brief_id,
+            "created": "2026-04-28T00:00:00Z",
+            "senior_role": "task",
+            "senior_identity": "jwoodfine",
+            "task_type": "version-bump-manifest",
+            "scope": {},
+            "acceptance_test": "cargo test --workspace",
+            "body": "bump Cargo.toml version to 0.1.0"
+        },
+        "actual_diff": "- version = \"0.0.9\"\n+ version = \"0.1.0\"\n"
+    });
+
+    let resp = app
+        .oneshot(post_json("/v1/shadow", &req_body))
+        .await
+        .expect("oneshot");
+
+    assert_eq!(
+        resp.status(),
+        StatusCode::ACCEPTED,
+        "/v1/shadow must return 202 ACCEPTED when apprenticeship is enabled"
+    );
+
+    let body = body_json(resp).await;
+
+    // audit_id must match brief_id (handler preserves caller's brief_id).
+    assert_eq!(
+        body["audit_id"].as_str().unwrap_or(""),
+        brief_id,
+        "audit_id must echo the brief_id from the request"
+    );
+
+    // brief_id must be present and match.
+    assert_eq!(
+        body["brief_id"].as_str().unwrap_or(""),
+        brief_id,
+        "brief_id field must be present in the 202 response body"
+    );
+
+    // queue_position must be a non-negative integer (0 = first in queue).
+    assert!(
+        body["queue_position"].is_u64(),
+        "queue_position must be a non-negative integer; got {:?}",
+        body["queue_position"]
+    );
+}
+
+/// POST /v1/shadow with apprenticeship enabled → the queue file lands at
+/// `<queue_dir>/<brief_id>.brief.jsonl` relative to the injected queue_config.
+///
+/// Verifies the durable-disk-write contract: if the handler returns 202,
+/// the queue file exists and is readable as a ShadowQueueEntry JSON line.
+#[tokio::test]
+async fn shadow_enqueued_brief_file_exists_at_queue_path() {
+    let queue_cfg = temp_queue_config();
+    let queue_dir = queue_cfg.base_dir.join("queue");
+
+    // Build AppState with the same queue_config so we can inspect the
+    // queue directory after the request.
+    let verifier: Arc<dyn VerdictVerifier> = Arc::new(RejectVerifier);
+    let base_state = app_state_with_apprenticeship(verifier);
+
+    // Override queue_config with our inspectable one by rebuilding AppState.
+    // AppState is not Clone, but Arc<AppState> fields are accessible
+    // directly. We build a new Arc with the queue_config replaced.
+    use slm_doorman::{BriefCache, Doorman, DoormanConfig};
+    use slm_doorman_server::http::AppState;
+    use std::collections::HashMap;
+    use std::sync::{Arc, Mutex};
+
+    let queue_dir_clone = queue_dir.clone();
+
+    // Build a fresh state inheriting the same apprenticeship config and
+    // injecting our inspectable queue_config.
+    let state_with_queue = Arc::new(AppState {
+        doorman: Doorman::new(DoormanConfig::default(), temp_ledger()),
+        apprenticeship: base_state.apprenticeship.clone(),
+        brief_cache: Arc::new(BriefCache::default()),
+        verdict_dispatcher: None,
+        audit_proxy_client: None,
+        audit_proxy_purpose_allowlist: FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST,
+        audit_tenant_concurrency: Arc::new(Mutex::new(HashMap::new())),
+        audit_tenant_concurrency_cap: 100,
+        queue_config: queue_cfg,
+    });
+
+    let app = router(state_with_queue);
+
+    let brief_id = "shadow-file-existence-check-001";
+    let req_body = json!({
+        "brief": {
+            "brief_id": brief_id,
+            "created": "2026-04-28T01:00:00Z",
+            "senior_role": "task",
+            "senior_identity": "pwoodfine",
+            "task_type": "version-bump-manifest",
+            "scope": {},
+            "acceptance_test": "cargo test --workspace",
+            "body": "implement shadow enqueue"
+        },
+        "actual_diff": "+ enqueue_shadow()\n"
+    });
+
+    let resp = app
+        .oneshot(post_json("/v1/shadow", &req_body))
+        .await
+        .expect("oneshot");
+
+    assert_eq!(
+        resp.status(),
+        StatusCode::ACCEPTED,
+        "/v1/shadow must return 202 ACCEPTED; got {}",
+        resp.status()
+    );
+
+    // The queue file must exist at <queue_dir>/<brief_id>.brief.jsonl.
+    let expected_file = queue_dir_clone.join(format!("{brief_id}.brief.jsonl"));
+    assert!(
+        expected_file.exists(),
+        "queue file must exist at {} after a 202 response",
+        expected_file.display()
+    );
+
+    // The file must contain valid JSON with `brief.brief_id` matching.
+    let contents = std::fs::read_to_string(&expected_file).expect("read queue file");
+    let first_line = contents
+        .lines()
+        .next()
+        .expect("queue file must have at least one line");
+    let entry: serde_json::Value =
+        serde_json::from_str(first_line).expect("queue file must be valid JSON");
+    assert_eq!(
+        entry["brief"]["brief_id"].as_str().unwrap_or(""),
+        brief_id,
+        "queue file must contain the correct brief_id"
+    );
+    assert_eq!(
+        entry["actual_diff"].as_str().unwrap_or(""),
+        "+ enqueue_shadow()\n",
+        "queue file must preserve the actual_diff"
     );
 }
 
@@ -869,6 +1034,7 @@ async fn audit_proxy_valid_request_writes_audit_stub_and_returns_503() {
         audit_proxy_purpose_allowlist: FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST,
         audit_tenant_concurrency: Arc::new(Mutex::new(HashMap::new())),
         audit_tenant_concurrency_cap: 100,
+        queue_config: temp_queue_config(),
     });
     let app = router(state);
 
@@ -1495,6 +1661,7 @@ async fn audit_proxy_unallowlisted_purpose_does_not_write_ledger_entry() {
         audit_proxy_purpose_allowlist: FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST,
         audit_tenant_concurrency: Arc::new(Mutex::new(HashMap::new())),
         audit_tenant_concurrency_cap: 100,
+        queue_config: temp_queue_config(),
     });
     let app = router(state);
 
@@ -1636,6 +1803,7 @@ async fn audit_capture_valid_prose_edit_event_returns_200_and_writes_ledger() {
         audit_proxy_purpose_allowlist: FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST,
         audit_tenant_concurrency: Arc::new(Mutex::new(HashMap::new())),
         audit_tenant_concurrency_cap: 100,
+        queue_config: temp_queue_config(),
     });
     let app = router(state);
 
@@ -1807,6 +1975,7 @@ async fn audit_capture_oversized_payload_returns_413() {
         audit_proxy_purpose_allowlist: FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST,
         audit_tenant_concurrency: Arc::new(Mutex::new(HashMap::new())),
         audit_tenant_concurrency_cap: 100,
+        queue_config: temp_queue_config(),
     });
     let app = router(state);
 
@@ -1876,6 +2045,7 @@ async fn audit_capture_default_event_types_all_accepted() {
             audit_proxy_purpose_allowlist: FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST,
             audit_tenant_concurrency: Arc::new(Mutex::new(HashMap::new())),
             audit_tenant_concurrency_cap: 100,
+            queue_config: temp_queue_config(),
         });
         let app = router(state);
 
@@ -1949,6 +2119,7 @@ async fn audit_proxy_oversized_request_returns_413() {
         audit_proxy_purpose_allowlist: FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST,
         audit_tenant_concurrency: Arc::new(Mutex::new(HashMap::new())),
         audit_tenant_concurrency_cap: 100,
+        queue_config: temp_queue_config(),
     });
     let app = router(state);
 
@@ -2103,6 +2274,7 @@ async fn audit_tenant_concurrency_cap_rejects_excess_requests() {
         audit_proxy_purpose_allowlist: FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST,
         audit_tenant_concurrency: tenant_map,
         audit_tenant_concurrency_cap: 2,
+        queue_config: temp_queue_config(),
     });
 
     // Both requests below should fail immediately: no permits available.
@@ -2188,6 +2360,7 @@ async fn audit_tenant_concurrency_cap_per_tenant_independent() {
         audit_tenant_concurrency: Arc::new(Mutex::new(HashMap::new())),
         // cap = 1: each tenant can have at most 1 in-flight request
         audit_tenant_concurrency_cap: 1,
+        queue_config: temp_queue_config(),
     });
 
     // Two requests from different tenants; both should complete (200 OK

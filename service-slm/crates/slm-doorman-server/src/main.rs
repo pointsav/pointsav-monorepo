@@ -57,7 +57,7 @@
 
 use slm_doorman_server::http;
 use slm_doorman_server::queue::{
-    dequeue, ensure_dirs, reap_expired_leases, QueueConfig, ReleaseOutcome,
+    dequeue_shadow, ensure_dirs, reap_expired_leases, release_shadow, QueueConfig, ReleaseOutcome,
 };
 
 use std::collections::HashMap;
@@ -103,6 +103,10 @@ async fn main() -> anyhow::Result<()> {
         .and_then(|s| s.parse().ok())
         .unwrap_or(4);
 
+    // Brief Queue Substrate (§7C) — build QueueConfig before constructing
+    // AppState so both the handler and the drain worker share the same config.
+    let queue_cfg = QueueConfig::from_env();
+
     let state = Arc::new(http::AppState {
         doorman,
         apprenticeship,
@@ -117,6 +121,9 @@ async fn main() -> anyhow::Result<()> {
         // request from each tenant.
         audit_tenant_concurrency: Arc::new(Mutex::new(HashMap::new())),
         audit_tenant_concurrency_cap,
+        // Brief Queue Substrate (§7C) — shadow_handler enqueues here;
+        // drain worker reads from the same config.
+        queue_config: Arc::new(queue_cfg.clone()),
     });
 
     info!(
@@ -148,8 +155,6 @@ async fn main() -> anyhow::Result<()> {
     //   SLM_QUEUE_DRAIN_INTERVAL_SEC   drain poll interval; default 30s
     //   SLM_QUEUE_LEASE_EXPIRY_SEC     lease age before reaper reclaims; default 300s
     {
-        let queue_cfg = QueueConfig::from_env();
-
         // Ensure queue directories exist at startup so the background tasks
         // can scan them immediately.  A creation failure is non-fatal (we log
         // and continue); the tasks will retry on each cycle.
@@ -179,17 +184,17 @@ async fn main() -> anyhow::Result<()> {
             );
 
             loop {
-                match dequeue(&drain_cfg, &worker_id) {
+                match dequeue_shadow(&drain_cfg, &worker_id) {
                     Ok(None) => {
                         // Queue empty; sleep and poll again.
                         tokio::time::sleep(drain_interval).await;
                     }
                     Ok(Some(leased)) => {
-                        let brief_id = leased.brief.brief_id.clone();
+                        let brief_id = leased.entry.brief.brief_id.clone();
                         info!(
                             brief_id = %brief_id,
-                            task_type = %leased.brief.task_type,
-                            "drain worker: dispatching queued brief"
+                            task_type = %leased.entry.brief.task_type,
+                            "drain worker: dispatching queued shadow brief"
                         );
 
                         // Only dispatch if apprenticeship is enabled.
@@ -200,7 +205,13 @@ async fn main() -> anyhow::Result<()> {
                                 cfg.clone(),
                                 Arc::clone(&drain_doorman_arc.brief_cache),
                             );
-                            match dispatcher.dispatch_shadow(&leased.brief, "").await {
+                            // Pass the actual_diff from the queue entry so the
+                            // corpus tuple carries the senior's real committed diff
+                            // (per §7B capture-on-completion semantics).
+                            match dispatcher
+                                .dispatch_shadow(&leased.entry.brief, &leased.entry.actual_diff)
+                                .await
+                            {
                                 Ok(_) => {
                                     info!(brief_id = %brief_id, "drain worker: shadow dispatch ok");
                                     ReleaseOutcome::Done
@@ -233,13 +244,11 @@ async fn main() -> anyhow::Result<()> {
                             ReleaseOutcome::Retry
                         };
 
-                        if let Err(e) =
-                            slm_doorman_server::queue::release(&drain_cfg, &leased, outcome)
-                        {
+                        if let Err(e) = release_shadow(&drain_cfg, &leased, outcome) {
                             tracing::warn!(
                                 brief_id = %brief_id,
                                 error = %e,
-                                "drain worker: release failed"
+                                "drain worker: release_shadow failed"
                             );
                         }
 
