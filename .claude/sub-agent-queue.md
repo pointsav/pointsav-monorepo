@@ -150,6 +150,50 @@ once operator green-lights.
 
 ---
 
+## Pending Master ratification
+
+### 2026-04-29 — AS-3 verdict-signing fix — Option 3 + Option 2 hybrid + doctrine MINOR amendment
+
+Master 02:05Z diagnosed the apprenticeship-arm root cause: Doorman shadow
+flow is structurally broken at the AS-3 verdict-signing step. Apprentice-
+completion tuples sit in BriefCache (in-memory), evicted on Doorman
+restart. The 14 "apprenticeship" corpus tuples are from a DIFFERENT path
+(project-language editorial Stage-1 Pattern A); the shadow-brief-via-
+Doorman path has produced ZERO corpus growth since B7.
+
+Operator green-lit recommendation at chat surface 03:00Z; outbox message
+to Master committed `7c947a7`.
+
+**Recommendation**: Option 3 (capture-on-apprentice-completion at `review`
+stage) + Option 2 (Master signs at sweep cadence in parallel) + doctrine
+MINOR amendment to claim #32 (additive semantics: corpus admits captured
+tuples; verdicts promote to higher quality tiers).
+
+**Implementation scope** (cluster-Task; ~3-5hr Sonnet; dispatchable on
+Master ratification):
+
+1. `apprenticeship.rs` — extend apprentice-completion path to write tuple
+   to `data/training-corpus/apprenticeship/<task-type>/<tenant>/<id>.jsonl`
+   immediately at `stage_at_capture: review`, verdict fields null/pending.
+2. `verdict.rs` + `VerdictDispatcher` — change semantics from "create
+   tuple on verdict" to "promote existing tuple". Verdict signing updates
+   stage + adds verdict block.
+3. BriefCache — keep for verdict-binding session window context.
+4. Tests — extend apprenticeship test suite; verify corpus tuples appear
+   at `review` stage; verify verdict promotes in-place.
+
+**Two paths surfaced** (operator favors α):
+- α: Master ratifies doctrine MINOR + cluster-Task implements ~4-6hr
+  end-to-end.
+- β: Operator-presence ratification first; cluster-Task holds.
+
+**HOLD until Master replies.** Implementation cannot proceed without
+doctrine MINOR — the change touches the entry semantics of training
+corpus per claim #32, which is workspace-tier scope.
+
+Reference doc for substrate context: `service-slm/docs/trainer-scoping.md`
+commit `562baa0` (3,200 words, 11 sections).
+
 ## Completed
 
 ### 2026-04-29 — Iter-20 trainer-scoping comprehensive doc [COMPLETED commit `562baa0`]
