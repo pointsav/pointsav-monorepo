@@ -567,6 +567,9 @@ fn doorman_error_to_status(e: &DoormanError) -> StatusCode {
         // AuditTenantConcurrencyExhausted → 503 SERVICE_UNAVAILABLE.
         DoormanError::AuditTenantConcurrencyExhausted { .. } => StatusCode::SERVICE_UNAVAILABLE,
         DoormanError::BriefCacheMiss => StatusCode::GONE,
+        // OrphanVerdictNoCorpusTuple → 410 GONE: verdict for a brief_id
+        // that was never captured to corpus (§7B promote-not-create semantics).
+        DoormanError::OrphanVerdictNoCorpusTuple { .. } => StatusCode::GONE,
         DoormanError::LedgerIo(_)
         | DoormanError::LedgerSerde(_)
         | DoormanError::HomeUnset
