@@ -96,6 +96,67 @@ Newest on top. Append a dated block when a session includes meaningful cleanup w
 
 ---
 
+## 2026-04-30 — Phase 1 COMPLETE — service-content Doorman refactor + slm-chat.sh REPL
+
+Session opened with Master iter-24 ratification message in inbox (all 6 §9 proposals
+decided; Phase 1 + Phase 2 authorized). Session-start housekeeping (prior session) had
+already cleared 5 stale outbox messages and dispatched Brief A + B.
+
+### Brief A — service-content Doorman refactor (`8b9a1b6`, Peter Woodfine)
+
+`service-content/src/main.rs` completely rerouted from legacy port 8082 to Doorman:
+
+- Removed: hardcoded `BASE_DIR` constant + hardcoded `SLM_ENDPOINT` pointing to
+  `http://127.0.0.1:8082/api/semantic-extract`
+- Added: env-var overrides via `SLM_DOORMAN_ENDPOINT` (default 9080),
+  `SERVICE_CONTENT_BASE_DIR`, `SERVICE_CONTENT_MODULE_ID`
+- Wire format change: `{"corpus": text}` POST to legacy → OpenAI-compatible
+  chat-completions with system prompt + user message containing corpus text
+- Response parsing: now extracts from `choices[0].message.content`; strips
+  markdown code fences (```json...```) before parsing as `Vec<Value>`
+- Foundry headers added: `X-Foundry-Module-ID`, `X-Foundry-Request-ID`,
+  `X-Foundry-Complexity: medium`
+- `cargo check` from `service-content/` directory: PASSED (standalone crate,
+  not in service-slm workspace)
+- Closes the Single-Boundary Compute gap identified in iter-24 §4.1 (Finding 1)
+
+### Brief B — slm-chat.sh REPL (`4ecf80a`, Peter Woodfine)
+
+New `service-slm/scripts/slm-chat.sh` (68 lines):
+- Bash REPL with multi-turn conversation history via jq JSON array
+- `SLM_DOORMAN_ENDPOINT` env-var configurable (default 9080); module_id as arg
+- Graceful handling: Doorman unavailable → advisory message, continue; non-2xx → error message
+- `bash -n` syntax check passed; `chmod +x` applied
+- Phase 1 deliverable B (proof-of-life CLI for the Doorman)
+
+### State files and structural updates (this commit)
+
+- Inbox cleared (iter-24 ratification message archived to inbox-archive.md)
+- Outbox cleared (iter-24 research message archived to outbox-archive.md;
+  actioned by Master session 90701278f84a1323 at workspace v0.1.96)
+- Manifest: service-content explicitly added to vendor leg (P4 ratification)
+- `service-slm/ARCHITECTURE.md`:
+  - Ring 3a: GraphStore trait discipline section added (Phase 2 boundary rule)
+  - §5.4: `kuzu` row → `ladybugdb` (or successor) with moonshot-database note
+- `service-slm/NEXT.md`: updated to reflect Phase 1 COMPLETE status
+
+### Open questions resolved this session
+
+| Question | Resolution |
+|---|---|
+| KuzuDB / graph DB for Phase 2 | **LadybugDB Phase 2; moonshot-database long-term** (Master F2 decision 2026-04-30) |
+| service-content cluster-scope formalisation | **Ratified P4** — service-content now formally in project-slm vendor leg |
+| Doctrine claims #43/#44/#45 | Staging in doctrine v0.1.0 batch (not a separate action) |
+| Yo-Yo training cadence | **P6 ratified** — 50-tuple trigger; Sunday 02:00 UTC fallback; ~$1-2/cycle L4 |
+
+### Pending (operator-presence gated)
+
+- Yo-Yo idle-shutdown timer (runbook step 8) — still ~$520/mo without it
+- Stage-6 promote (8 commits ahead of origin/main)
+- Phase 2 LadybugDB implementation (on operator go-ahead)
+
+---
+
 ## 2026-04-28 — Pipeline resumed under operator option-A — three PS.1-* admin-tier dispatches landed at workspace tier
 
 Operator confirmed option-A 2026-04-28 post-v0.1.59 sweep — pipeline boundary

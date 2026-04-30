@@ -126,6 +126,15 @@ memory. `service-slm` reads from it at context-assembly time.
 `service-content`'s own ingest path after the sanitise / compute /
 rehydrate cycle completes.
 
+**Phase 2 GraphStore trait discipline (Master-ratified 2026-04-30):**
+The graph dependency MUST be wrapped behind a `GraphStore` trait
+injected at startup. Business logic calls the trait; the concrete
+implementation is LadybugDB today, `moonshot-database` when it
+matures. No direct LadybugDB API calls in business logic. This is
+the same boundary discipline as the Doorman pattern — one interface
+swap should be sufficient to migrate the graph substrate without
+touching the calling code.
+
 ### Ring 3b — Long-term skill (LoRA adapter stack)
 
 Small, versioned, frozen-weight modules that sit on top of the base
@@ -233,7 +242,7 @@ Tier B. No sampler loop integration exists in the Doorman; vLLM applies
 |---|---|---|
 | `sqlx` | SQL — SQLite for the ledger, optional Postgres | MIT / Apache-2.0 |
 | `sled` | Embedded KV store (optional, fast local queues) | MIT / Apache-2.0 |
-| `kuzu` | LadybugDB client bindings (Rust API) | MIT |
+| `ladybugdb` (or successor) | Graph DB client — LadybugDB Phase 2; `moonshot-database` long-term | MIT |
 | `object_store` | Cloud object storage abstraction (GCS, S3, Azure) | Apache-2.0 |
 
 ### 5.5 Document processing
