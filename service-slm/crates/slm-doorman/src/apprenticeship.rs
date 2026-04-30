@@ -763,6 +763,7 @@ Bumping MANIFEST.md per ni-51-102 forward-looking marker.
                 yoyo: None,
                 external: None,
                 lark_validator: None,
+                graph_context_client: None,
             },
             ledger(),
         );
@@ -831,6 +832,7 @@ I'm not sure how to apply this safely.
                 yoyo: None,
                 external: None,
                 lark_validator: None,
+                graph_context_client: None,
             },
             ledger(),
         );
@@ -913,6 +915,7 @@ OK.
                 yoyo: Some(yoyo),
                 external: None,
                 lark_validator: None,
+                graph_context_client: None,
             },
             ledger(),
         );
@@ -1006,6 +1009,7 @@ Shadow attempt for the apprentice.
                 yoyo: None,
                 external: None,
                 lark_validator: None,
+                graph_context_client: None,
             },
             ledger(),
         );
@@ -1073,6 +1077,7 @@ Shadow attempt for the apprentice.
                 yoyo: None,
                 external: None,
                 lark_validator: None,
+                graph_context_client: None,
             },
             ledger(),
         );

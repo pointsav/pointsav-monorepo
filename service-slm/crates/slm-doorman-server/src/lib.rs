@@ -124,6 +124,7 @@ pub mod test_helpers {
                 yoyo: None,
                 external: None,
                 lark_validator: None,
+                graph_context_client: None,
             },
             temp_ledger(),
         );
@@ -151,6 +152,7 @@ pub mod test_helpers {
                 yoyo: None,
                 external: Some(external),
                 lark_validator: None,
+                graph_context_client: None,
             },
             temp_ledger(),
         );
