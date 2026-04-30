@@ -95,6 +95,91 @@ Newest on top. Append a dated block when a session includes meaningful cleanup w
 
 ---
 
+## 2026-04-30 — leapfrog-iteration-2 batch — research, design substrate, stats banner
+
+- **Operator-direction session**: "do come rearech on the home page for
+  documentation.pointsav.com ... iterate forwards a bit ... leapfrog 2030
+  original copy that preserves Wikipedia muscle memory ... add as tokens in
+  pointsav-design-system ... deep think, do reashc with sonnet ... win an
+  award for cleaning up Wikipedia." Cluster session executed in 4 phases.
+
+- **Phase 1 — Sonnet sub-agent dispatch (parallel, foreground)** under
+  operator-override authorization (memory: `feedback_operator_override_sonnet_dispatch.md`).
+  4 agents returned within budget with high-quality structured reports:
+  (A) Wikipedia Main Page primitive-level inventory; (B) article-shell
+  anatomy + leapfrog candidates under Vector 2022; (C) competitive
+  landscape audit across 25 wiki/knowledge-base/docs-generator/PKM
+  providers; (D) DTCG token-vocabulary anchored to Carbon v10 + Wikimedia
+  Codex. Master ratifies post-hoc per v0.1.30 §1A.6.
+
+- **Phase 2 — 9 drafts staged** at
+  `~/Foundry/clones/project-knowledge/.claude/drafts-outbound/`:
+  - 5 DESIGN drafts for project-design gateway pickup:
+    `research-wikipedia-leapfrog-2030.md` (DESIGN-RESEARCH; 600+ lines),
+    `component-citation-authority-ribbon.md` (DESIGN-COMPONENT),
+    `component-research-trail-footer.md` (DESIGN-COMPONENT; Doctrine claim
+    #39 at article scale), `component-freshness-ribbon.md` (DESIGN-COMPONENT),
+    `token-knowledge-wiki-baseline.md` (DESIGN-TOKEN-CHANGE — pending
+    Master cosign per cluster-design-draft-pipeline.md §3).
+  - 4 PROSE drafts for project-language gateway pickup:
+    `topic-knowledge-wiki-home-page-design.md` (PROSE-TOPIC public-facing
+    home-page narrative), `topic-article-shell-leapfrog.md` (PROSE-TOPIC
+    article-shell leapfrog narrative), `topic-wiki-provider-landscape.md`
+    (PROSE-TOPIC 25-provider competitive-landscape audit),
+    `guide-keep-the-home-page-the-gold-standard.md` (PROSE-GUIDE
+    operational; English-only; deployment-subfolder per CLAUDE.md §14).
+  - All 9 drafts carry `foundry-draft-v1` frontmatter with research-trail
+    discipline (5 frontmatter fields + body Research-trail section per
+    Doctrine claim #39 / draft-research-trail-discipline.md).
+
+- **Phase 3 — Apprenticeship-corpus events emitted**: 9 `draft-created`
+  JSONL events written to
+  `~/Foundry/data/training-corpus/apprenticeship/prose-edit/pointsav/`,
+  208,262 bytes total. Available for Stage-1/Stage-2 DPO pair construction
+  per apprenticeship-substrate.md §7A and cluster-wiki-draft-pipeline.md §7.
+
+- **Phase 4 — engine iteration shipped on cluster branch (commit b694127,
+  Jennifer)**: home-page stats banner ("N articles across N categories —
+  last updated YYYY-MM-DD."). New `HomeStats` struct + `compute_home_stats(buckets)`
+  function in `src/server.rs`; `home_chrome()` signature extended with
+  `&HomeStats` parameter; `<p class="wiki-home-stats">` rendered between
+  lede and featured panel; suppressed entirely when `article_count == 0`.
+  `.wiki-home-stats` CSS in `static/style.css` (+18 lines); system-sans,
+  muted-foreground, tabular-nums on the `<time>` element.
+  Specced in `content-wiki-documentation/index.md` as a pending ENGINE
+  comment for some time; this session implements it.
+
+- **Test results**: `cargo check` clean (3m12s); `cargo test --test home_test`
+  passes 7/7 in 13.10s. Change is purely additive — existing
+  integration tests run without modification (no test asserts absence of
+  the new element).
+
+- **Stage-6 promotion ask**: outbox to Master 2026-04-30T01:50Z requests
+  Master operator-presence cycle to Stage-6 promote `cluster/project-knowledge`
+  HEAD to canonical `pointsav/pointsav-monorepo` main, rebuild binary,
+  restart `local-knowledge.service` to make stats banner visible at
+  documentation.pointsav.com.
+
+- **Cluster manifest updated**: `~/Foundry/clones/project-knowledge/.claude/manifest.md`
+  extended with 4 new wiki TOPICs in `wiki:` leg's `planned_topics:`, and a
+  new `design:` section paralleling the wiki leg (5 new design drafts +
+  triggers enumeration). This is not a Tetrad amendment (Tetrad has 4
+  legs); it is the design-leg participation declaration per v0.1.57
+  cluster-design-draft-pipeline.
+
+- **Open questions surfaced** (none new for monorepo cleanup-log):
+  - Master cosign request on token-knowledge-wiki-baseline DESIGN-TOKEN-CHANGE:
+    (1) `wiki.*` semantic namespace (governance scope), (2) FLI-banner
+    colour register amber-vs-neutral (BCSC posture), (3) variable-font
+    loading vs system-stack (sovereignty-vs-consistency).
+  - Engine work for per-section JSON-LD emission (citation-authority
+    ribbon, research-trail footer, freshness-ribbon — the three
+    first-class leapfrog primitives from research §6) is tracked for a
+    future project-knowledge iteration. Substrate-side recipes ship
+    when project-design refines the staged DESIGN-COMPONENT drafts;
+    engine-side rendering follows when the substrate token bundle is
+    ratified.
+
 ## 2026-04-28 — documentation.pointsav.com home-page iteration 1 — engine MUST features shipped
 
 - **Engine implementation pass** for documentation.pointsav.com home
