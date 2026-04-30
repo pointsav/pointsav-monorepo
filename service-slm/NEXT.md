@@ -37,6 +37,29 @@ Doorman shadow flow has ZERO corpus growth since B7 — tuples sit in
 BriefCache (in-memory), evicted on restart, because no senior verdict
 has been signed.
 
+**Session-end snapshot 2026-04-30.** Operator-directed exit prep.
+Working tree clean (only gitignored scheduled_tasks.lock). main at
+`5a43fda`; 2 commits ahead of origin/main. 154/154 tests.
+
+**Resume on next session:**
+1. Read inbox at session start (use `head` per Master v0.1.84
+   process-improvement note for cluster outbox newest-on-top
+   convention)
+2. Read this NEXT.md + cleanup-log session-end-snapshot entry
+3. Read iter-24 research doc (`service-slm/docs/yoyo-training-
+   substrate-and-service-content-integration.md`) if not already
+4. Sweep cluster outbox to archive items #2-4 already actioned by
+   Master (Q1/Q3/Q4 absorbed v0.1.84; §7C signal-complete actioned
+   v0.1.85; AS-3 signal-complete actioned v0.1.77)
+5. Standing by for Master's response to iter-24 §9 proposals + any
+   operator chat-surface direction
+
+**Two-day arc**: 24 iterations + 18+ Master coordinations; cluster
+substrate crossed from "configured" to "training-pipeline-operationally-
+live" between 2026-04-28 and 2026-04-30.
+
+---
+
 **Iter-24 LANDED** — operator-directed deep-research scoping doc at
 `service-slm/docs/yoyo-training-substrate-and-service-content-integration.md`
 (commit `8ce4fce`). 10,837 words; 11 sections; 22 external sources;
