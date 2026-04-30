@@ -16,7 +16,7 @@ Last updated: 2026-04-23.
 
 | Project | State | Type | Notes |
 |---|---|---|---|
-| app-console-bim | Reserved-folder | app-console | 1 file (RESEARCH.md); research phase |
+| app-console-bim | Reserved-folder | app-console | 2 files (CLAUDE.md + RESEARCH.md shared with app-orchestration-bim); research phase; directory created 2026-04-23 (closes registry drift) |
 | app-console-bookkeeper | Active | app-console | Activated 2026-04-22 via framework §8 (pilot); HTML-plugin pattern (view + cartridge); registry row was originally mis-classified; `README.*` and data-binding pending |
 | app-console-content | Scaffold-coded | app-console | 8 files; in workspace members |
 | app-console-email | Scaffold-coded | app-console | 4 files |
@@ -54,7 +54,7 @@ Last updated: 2026-04-23.
 
 | Project | State | Type | Notes |
 |---|---|---|---|
-| app-orchestration-bim | Reserved-folder | app-orchestration | 1 file (RESEARCH.md); triggered taxonomy expansion to seventh in-force domain on 2026-04-22 |
+| app-orchestration-bim | Reserved-folder | app-orchestration | 2 files (CLAUDE.md + RESEARCH.md byte-identical to app-console-bim copy, Task Claude — BIM to rationalise); triggered taxonomy expansion to seventh in-force domain on 2026-04-22; directory created 2026-04-23 (closes registry drift) |
 
 ## App — PrivateGit surface (`app-privategit-*`)
 
@@ -74,7 +74,7 @@ Last updated: 2026-04-23.
 
 | Project | State | Type | Notes |
 |---|---|---|---|
-| app-workplace-bim | Reserved-folder | app-workplace | 1 file (RESEARCH.md); research phase |
+| app-workplace-bim | Reserved-folder | app-workplace | 2 files (CLAUDE.md + RESEARCH.md); research phase; directory created 2026-04-23 (closes registry drift) |
 | app-workplace-memo | Scaffold-coded | app-workplace | 47 files; running on Linux Mint per sibling's doc; CLAUDE.md + NEXT.md pending for Active |
 | app-workplace-presentation | Active | app-workplace | 52 files; CLAUDE.md present; Phase 5 |
 | app-workplace-proforma | Active | app-workplace | 45 files; CLAUDE.md present but marked "local-only"; conformance pending |
@@ -115,7 +115,7 @@ Last updated: 2026-04-23.
 
 | Project | State | Type | Notes |
 |---|---|---|---|
-| service-bim | Reserved-folder | service | 1 file (RESEARCH.md); research phase |
+| service-bim | Reserved-folder | service | 2 files (CLAUDE.md + RESEARCH.md); research phase; directory created 2026-04-23 (closes registry drift) |
 | service-content | Scaffold-coded | service | 37 files; in workspace members |
 | service-egress | Scaffold-coded | service | 4 files |
 | service-email | Scaffold-coded | service | 18 files |
