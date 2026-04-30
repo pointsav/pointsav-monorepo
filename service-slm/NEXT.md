@@ -6,57 +6,52 @@
 
 ---
 
-## Right now — long-running Sonnet pipeline active
+## Right now — Phase 1 COMPLETE; awaiting Phase 2 authorization
 
-**Status:** Iter-15 hardening landed. Pipeline self-paces between operator
-go-aheads now that operationalization-plan scope is exhausted; operator
-asks for next-step recommendation, agent recommends, operator confirms,
-agent dispatches.
+**Session 2026-04-30 (current):**
+- Master iter-24 ratification message received + actioned (inbox cleared)
+- Iter-24 outbox archived (all 6 proposals decided)
+- **Brief A** `8b9a1b6` — `service-content/src/main.rs` Doorman refactor
+  (port 8082 → port 9080 via OpenAI-compatible `/v1/chat/completions`);
+  env-var driven (`SLM_DOORMAN_ENDPOINT`, `SERVICE_CONTENT_BASE_DIR`,
+  `SERVICE_CONTENT_MODULE_ID`). Single-Boundary gap closed.
+- **Brief B** `4ecf80a` — `service-slm/scripts/slm-chat.sh` proof-of-life
+  REPL (68 lines bash; curl + jq; multi-turn conversation history;
+  graceful error handling; `SLM_DOORMAN_ENDPOINT` env-var configurable)
+- Manifest updated: service-content formally in vendor leg (P4 ratification)
+- `ARCHITECTURE.md` updated: GraphStore trait discipline noted for Phase 2;
+  `kuzu` → `ladybugdb` crate row clarified
 
-**Iter-20 — trainer-scoping comprehensive doc** (cluster `562baa0`):
-- New file at `service-slm/docs/trainer-scoping.md` — ~3,200 words,
-  11 sections, 13 open operator questions, $0 Phase 0 recommendation.
-- Honest inventory of pre-framework trainer artefact at
-  `vendor/pointsav-monorepo/service-slm/router-trainer/` (Qwen2.5
-  email-routing distillation; wrong schema; not reusable but precedent).
-- 5 deployment options framed with tradeoffs (Workspace VM CPU /
-  Yo-Yo GPU / Customer GPU / Hyperscaler API / Federated).
-- Phase 0 = $0, ~4-8hr cluster-Task implementation + 8-24hr CPU
-  background training; produces proof-of-life adapter at
-  `data/adapters/`; does NOT deploy.
-- Operator + Master should read the doc and answer the 13 questions
-  before any trainer implementation begins.
+**Phase 1 deliverables — DONE:**
+1. service-content routes through Doorman ✓ (commit `8b9a1b6`)
+2. slm-chat.sh proof-of-life REPL ✓ (commit `4ecf80a`)
 
----
+**Phase 2 — awaiting operator-presence authorization:**
+- LadybugDB graph engine for service-content
+- `GraphStore` trait interface (wraps LadybugDB; swappable to
+  `moonshot-database` when that matures)
+- service-content HTTP server (`/v1/graph/context`, `/v1/graph/mutate`)
+- Doorman `GraphContextAssembler` queries graph before inference
+- forge-seeds.sh path generalization (hardcoded `/home/mathew/Foundry/factory-pointsav/...`)
 
-**Correction 2026-04-29T03:00Z** — yesterday's session-end framing
-("14 apprenticeship tuples already accumulating; Stage 2 OPERATIONAL")
-was wrong. Master diagnosed at 02:05Z: those 14 tuples are from
-project-language editorial Stage-1 Pattern A, NOT Doorman shadow flow.
-Doorman shadow flow has ZERO corpus growth since B7 — tuples sit in
-BriefCache (in-memory), evicted on restart, because no senior verdict
-has been signed.
+**Phase 3 — threshold training + cron (P6 cadence ratified):**
+- 50-tuple trigger per adapter corpus bucket
+- Sunday 02:00 UTC fallback cron
+- First adapter: `engineering-pointsav`
+- Quality gate: ≥60% validation acceptance rate
 
-**Session-end snapshot 2026-04-30.** Operator-directed exit prep.
-Working tree clean (only gitignored scheduled_tasks.lock). main at
-`5a43fda`; 2 commits ahead of origin/main. 154/154 tests.
+**Operator-presence carries (urgent):**
+- Yo-Yo idle-shutdown timer (runbook step 8) — 5 min; closes $520/mo → $130/mo
+- Stage-6 promote authorization (cluster now 8 commits ahead of origin/main)
 
 **Resume on next session:**
-1. Read inbox at session start (use `head` per Master v0.1.84
-   process-improvement note for cluster outbox newest-on-top
-   convention)
-2. Read this NEXT.md + cleanup-log session-end-snapshot entry
-3. Read iter-24 research doc (`service-slm/docs/yoyo-training-
-   substrate-and-service-content-integration.md`) if not already
-4. Sweep cluster outbox to archive items #2-4 already actioned by
-   Master (Q1/Q3/Q4 absorbed v0.1.84; §7C signal-complete actioned
-   v0.1.85; AS-3 signal-complete actioned v0.1.77)
-5. Standing by for Master's response to iter-24 §9 proposals + any
-   operator chat-surface direction
+1. Read inbox (will be empty unless Master sends; Phase 2 content work
+   begins when operator green-lights LadybugDB scope)
+2. Phase 2 dispatch on operator go-ahead
 
 **Two-day arc**: 24 iterations + 18+ Master coordinations; cluster
 substrate crossed from "configured" to "training-pipeline-operationally-
-live" between 2026-04-28 and 2026-04-30.
+live" between 2026-04-28 and 2026-04-30. Phase 1 closed this session.
 
 ---
 
