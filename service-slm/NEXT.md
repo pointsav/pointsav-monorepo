@@ -37,6 +37,19 @@ Doorman shadow flow has ZERO corpus growth since B7 — tuples sit in
 BriefCache (in-memory), evicted on restart, because no senior verdict
 has been signed.
 
+**Iter-24 LANDED** — operator-directed deep-research scoping doc at
+`service-slm/docs/yoyo-training-substrate-and-service-content-integration.md`
+(commit `8ce4fce`). 10,837 words; 11 sections; 22 external sources;
+14 operator open questions. Three urgent findings: service-content
+bypasses Doorman (Phase 1 fix); KuzuDB acquired by Apple Oct 2025
+(Phase 2 graph DB decision needed); OLMo 3 32B Think has NO commercial
+API (validates Yo-Yo investment). Three Doctrine claim candidates
+proposed (#43 Single-Boundary Compute Discipline; #44 Knowledge-Graph-
+Grounded Apprenticeship; #45 TUI-as-Corpus-Producer). Phased Phase 0-6
+roadmap. 6 Master-ratification proposals queued in outbox followup.
+
+---
+
 **Iter-22 + Iter-23 LANDED** — Brief Queue Substrate cluster-Task scope
 COMPLETE per apprenticeship-substrate.md §7C (doctrine v0.0.14).
 
