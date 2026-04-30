@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # Generates the JSON Seed Vault using live Woodfine/PointSav definitions
 
-TARGET_DIR="/home/mathew/Foundry/factory-pointsav/pointsav-monorepo/service-content/seeds"
+# Resolve target directory from env var or default to adjacent seeds/ directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+TARGET_DIR="${SERVICE_CONTENT_SEEDS_DIR:-${SCRIPT_DIR}/../seeds}"
 mkdir -p "$TARGET_DIR"
 
 cat << 'EOF' > "$TARGET_DIR/Archetypes.json"
