@@ -17,6 +17,7 @@ use tracing::{info, warn};
 
 use crate::error::{DoormanError, Result};
 use crate::grammar_validation::LarkValidator;
+use crate::graph::GraphContextClient;
 use crate::ledger::{AuditEntry, AuditLedger, CompletionStatus, ENTRY_TYPE_CHAT_COMPLETION};
 use crate::tier::{ExternalTierClient, LocalTierClient, YoYoTierClient};
 
@@ -31,6 +32,14 @@ pub struct DoormanConfig {
     /// have the llguidance init overhead or for testing). Set via
     /// `LarkValidator::new()` at Doorman startup.
     pub lark_validator: Option<LarkValidator>,
+    /// Optional graph context client (Brief E). When `Some`, the router
+    /// queries `service-content`'s `/v1/graph/context` endpoint before
+    /// dispatching to any tier, injecting matching entity rows as a
+    /// `[ENTITY CONTEXT]` system message prepended to the message list.
+    /// Non-fatal: if the client is absent or the query returns no results,
+    /// the request proceeds without context injection.
+    /// Set via `SERVICE_CONTENT_ENDPOINT` env var at Doorman startup.
+    pub graph_context_client: Option<GraphContextClient>,
 }
 
 pub struct Doorman {
@@ -39,6 +48,7 @@ pub struct Doorman {
     external: Option<ExternalTierClient>,
     ledger: AuditLedger,
     lark_validator: Option<LarkValidator>,
+    graph_context_client: Option<GraphContextClient>,
 }
 
 impl Doorman {
@@ -49,6 +59,7 @@ impl Doorman {
             external: config.external,
             ledger,
             lark_validator: config.lark_validator,
+            graph_context_client: config.graph_context_client,
         }
     }
 
@@ -72,9 +83,58 @@ impl Doorman {
     /// is honoured when the named tier is configured; otherwise the
     /// router maps `complexity` to a default tier and probes for the
     /// best configured option.
+    ///
+    /// When a `graph_context_client` is configured, the router queries
+    /// `service-content` for entity context matching the last user message
+    /// (first 200 chars) before dispatching. Matching entities are prepended
+    /// as a `[ENTITY CONTEXT]` system message. The query is non-fatal: if
+    /// service-content is unavailable or returns no results, the request
+    /// proceeds without modification.
     pub async fn route(&self, req: &ComputeRequest) -> Result<ComputeResponse> {
         let target = self.select_tier(req)?;
-        let result = self.dispatch(target, req).await;
+
+        // Graph context injection (Brief E).
+        //
+        // When service-content is configured and the request contains a user
+        // message, fetch matching entity rows and prepend them as a system
+        // message. The owned `effective_req` must be declared before the
+        // conditional block so its lifetime covers the dispatch call below.
+        let effective_req: ComputeRequest;
+        let req_ref: &ComputeRequest = if let Some(ref gc) = self.graph_context_client {
+            let query = req
+                .messages
+                .iter()
+                .rev()
+                .find(|m| m.role == "user")
+                .map(|m| m.content.chars().take(200).collect::<String>())
+                .unwrap_or_default();
+
+            if !query.is_empty() {
+                if let Some(ctx) = gc
+                    .fetch_context(req.module_id.as_str(), &query, 5)
+                    .await
+                {
+                    let mut cloned = req.clone();
+                    cloned.messages.insert(
+                        0,
+                        slm_core::ChatMessage {
+                            role: "system".to_string(),
+                            content: format!("[ENTITY CONTEXT]\n{}", ctx),
+                        },
+                    );
+                    effective_req = cloned;
+                    &effective_req
+                } else {
+                    req
+                }
+            } else {
+                req
+            }
+        } else {
+            req
+        };
+
+        let result = self.dispatch(target, req_ref).await;
         self.write_audit(req, target, &result);
         result
     }
@@ -354,6 +414,7 @@ mod tests {
                 yoyo: Some(yoyo),
                 external: None,
                 lark_validator: None,
+                graph_context_client: None,
             },
             ledger(),
         );
