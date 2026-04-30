@@ -151,6 +151,118 @@ operator-presence pass; cluster-Task waits.
 - Post-commit grep `mistral` across `infrastructure/slm-yoyo/` returns
   zero hits. PS.1-3 scope fully closed.
 
+## 2026-04-30 — Iter-24 deep research — Yo-Yo training + TUI + service-content + service-slm-IS-Yo-Yo convention
+
+Operator-directed comprehensive scoping research following Master v0.1.85
+§7C LIVE + Yo-Yo Phase 2 in-flight. Operator framing: *"deep research,
+cross check the web, check other industries, we really need something
+special... we need new 'inventions' here or what is the point."*
+
+- **Cluster commit**: `8ce4fce` (Peter Woodfine). Doc-only; tests 154/154
+  unchanged.
+- **File**: `service-slm/docs/yoyo-training-substrate-and-service-content-
+  integration.md`. 10,837 words; 11 sections; 22 external sources cited.
+
+### Three urgent findings worth surfacing to Master immediately
+
+1. **service-content bypasses the Doorman**. `service-content/src/main.rs`
+   routes LLM calls to a legacy hardcoded endpoint at
+   `http://127.0.0.1:8082/api/semantic-extract` — NOT through the Doorman
+   (9080). Every service-content inference call is invisible to the audit
+   ledger AND the apprenticeship corpus. Once §7C drains briefs to
+   apprenticeship corpus on every commit, this gap becomes the dominant
+   missed-signal: service-content is a high-volume LLM consumer.
+
+   Fix scope: cluster-Task ~3-4 days. Phase 1 priority.
+
+2. **KuzuDB acquired by Apple October 2025**; project archived. Cluster
+   `service-slm/ARCHITECTURE.md` §5.4 names the kuzu crate as the graph
+   DB. **LadybugDB** (MIT licensed, Cypher dialect, Rust SDK,
+   ladybugdb.com) is the explicit successor named in research but is
+   early-stage (post-fork from Kuzu's last open release). Master decision
+   needed before any Phase 2 graph investment.
+
+3. **OLMo 3 32B Think has NO commercial API anywhere**. Per Artificial
+   Analysis (cite in §2.4 of the doc): "no API providers available; must
+   self-host." This validates the Yo-Yo investment directly — Yo-Yo is
+   the only way to use the Think variant for training-substrate purposes.
+
+### Three Doctrine claim candidates (proposed at §7 of doc)
+
+- **Claim #43 — Single-Boundary Compute Discipline**: the Doorman is the
+  only path to inference compute. Bearer tokens and API keys live
+  exclusively at the Doorman boundary. Bypass is an audit violation, not
+  a convenience. Operationally enforced via firewall (Yo-Yo VM accepts
+  only workspace VM as inbound; already done v0.1.85). Convention text
+  ready for Master to drop into apprenticeship-substrate.md or as new
+  conventions/single-boundary-compute-discipline.md.
+
+- **Claim #44 — Knowledge-Graph-Grounded Apprenticeship**: service-slm
+  queries the service-content graph before every substantive inference.
+  The atomic training tuple becomes (query, graph-context, response,
+  verdict). The graph and the adapter co-evolve, compounding together.
+  Cross-industry analog: Microsoft GraphRAG. Specific to Foundry: the
+  graph is per-tenant (Woodfine + PointSav); adapters compose with
+  graph context per claim #22 adapter-composition.
+
+- **Claim #45 — TUI-as-Corpus-Producer**: every TUI sysadmin interaction
+  is a curated training tuple. The TUI session state IS the apprenticeship
+  brief. ~200-500 explicit-verdict IT-support interactions may be
+  sufficient for a production IT-support adapter (narrow domain; small-
+  data DPO viable).
+
+### Cross-industry analogs cited
+
+- ServiceNow CMDB as single source of truth for IT asset state →
+  service-content datagraph for the Totebox Archive
+- Splunk Universal Forwarder as canonical log path → Doorman as
+  canonical inference path
+- Kubernetes service mesh (Istio/Linkerd) where ALL traffic routes
+  through sidecars → service-slm as the "sidecar" for inference
+
+### Cost analysis findings
+
+- L4 spot in us-west1 at ~$0.18/hr (confirmed via yoyo-manual runbook
+  inspection)
+- RunPod A100 80GB: $1.19 spot / $1.99 on-demand
+- Claude Sonnet 4.6: $3.00 / $15.00 per million tokens (input/output)
+- Effective Yo-Yo cost-per-million-tokens (blended I/O at L4 spot):
+  ~$0.25-0.40
+- **15-60x cheaper than Claude depending on tier**
+- ROI for G1 (decrease Claude token spend): positive within month 1
+  of operational training
+
+### Phased roadmap surfaced
+
+| Phase | Effort | Outcome |
+|---|---|---|
+| 0 (now) | doc + outbox | this iter; surfaces findings to operator + Master |
+| 1 (1-2 weeks) | ~3-4 days Task | service-content Doorman refactor + slm-cli proof-of-life |
+| 2 (2-4 weeks) | ~2 weeks Task + 1 day Master | LadybugDB decision + graph foundation + per-tenant isolation |
+| 3 (2-3 weeks) | ~5 days Task + $1-2 Yo-Yo + Master broadcast | routing-through-service-slm convention + first LoRA training |
+| 4 (3-4 weeks) | ~3 weeks Task | full slm-cli TUI |
+| 5 (4-6 weeks) | ongoing operator + weekly training | IT-support corpus loop |
+| 6 (Year 2) | ~$1,500 burst GPU + operator capital | PointSav-LLM CPT v0 release |
+
+### Master outbox follow-up drafted same commit
+
+Six concrete §9 proposals for Master ratification queued to outbox in
+the same housekeeping commit. Operator's framing "we need to let the
+master know this" addressed structurally.
+
+### Surprises / discoveries
+
+- service-content's `scripts/forge-seeds.sh` still hardcodes legacy
+  deployment paths (`/home/mathew/Foundry/factory-pointsav/...`). Phase
+  1 refactor should generalize.
+- The Yo-Yo's economic argument is stronger than the trainer-scoping
+  doc (commit `562baa0`) initially framed. The 15-60x cost ratio +
+  no-commercial-API-for-Think + Doctrine-claim-#34-sovereign-substrate
+  alignment make Yo-Yo the dominant choice for any training cycle that
+  needs OLMo 3 32B Think.
+
+---
+
 ## 2026-04-29 — Iter-22 + Iter-23 — Brief Queue Substrate cluster-Task scope COMPLETE (§7C steps 1+2+3+5)
 
 Doctrine v0.0.14 §7C ratified at workspace v0.1.78; Master dispatched to
