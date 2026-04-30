@@ -1,0 +1,230 @@
+use anyhow::{anyhow, Result};
+use lbug::{Connection, Database, SystemConfig, Value};
+use serde::{Deserialize, Serialize};
+use std::sync::Arc;
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GraphEntity {
+    pub entity_name: String,
+    pub classification: String, // Person|Company|Project|Account|Location
+    pub role_vector: Option<String>,
+    pub location_vector: Option<String>,
+    pub contact_vector: Option<String>,
+    pub module_id: String,
+    pub confidence: f64,
+}
+
+pub trait GraphStore: Send + Sync {
+    fn init_schema(&self) -> Result<()>;
+    fn upsert_entities(&self, module_id: &str, entities: &[GraphEntity]) -> Result<usize>;
+    fn query_context(&self, module_id: &str, query: &str, limit: usize) -> Result<Vec<GraphEntity>>;
+    fn list_entities(&self, module_id: &str) -> Result<Vec<GraphEntity>>;
+}
+
+pub struct LbugGraphStore {
+    db: Arc<Database>,
+}
+
+impl LbugGraphStore {
+    pub fn new(db_path: &str) -> Result<Self> {
+        let db = Database::new(db_path, SystemConfig::default())
+            .map_err(|e| anyhow!("Failed to open LadybugDB at {}: {}", db_path, e))?;
+        Ok(Self { db: Arc::new(db) })
+    }
+
+    /// Create a new connection from the stored database reference.
+    /// Connection borrows `&Database`; since `Arc<Database>` keeps the Database alive
+    /// and we hold a reference for the duration of the call, this is safe.
+    fn conn(&self) -> Result<Connection<'_>> {
+        Connection::new(&self.db).map_err(|e| anyhow!("Failed to create DB connection: {}", e))
+    }
+}
+
+impl GraphStore for LbugGraphStore {
+    fn init_schema(&self) -> Result<()> {
+        let conn = self.conn()?;
+        conn.query(
+            "CREATE NODE TABLE IF NOT EXISTS Entity(\
+                id STRING PRIMARY KEY, \
+                entity_name STRING, \
+                classification STRING, \
+                role_vector STRING, \
+                location_vector STRING, \
+                contact_vector STRING, \
+                module_id STRING, \
+                confidence DOUBLE, \
+                created_at STRING\
+            )",
+        )
+        .map_err(|e| anyhow!("init_schema Entity table failed: {}", e))?;
+
+        conn.query(
+            "CREATE REL TABLE IF NOT EXISTS RelatedTo(\
+                FROM Entity TO Entity, \
+                relation_type STRING\
+            )",
+        )
+        .map_err(|e| anyhow!("init_schema RelatedTo table failed: {}", e))?;
+
+        Ok(())
+    }
+
+    fn upsert_entities(&self, module_id: &str, entities: &[GraphEntity]) -> Result<usize> {
+        let conn = self.conn()?;
+
+        // Prepare the MERGE statement once, then execute per entity.
+        // LadybugDB MERGE semantics: create-or-match on primary key; SET updates fields on match.
+        let mut stmt = conn
+            .prepare(
+                "MERGE (e:Entity {id: $id}) \
+                 SET e.entity_name = $entity_name, \
+                     e.classification = $classification, \
+                     e.role_vector = $role_vector, \
+                     e.location_vector = $location_vector, \
+                     e.contact_vector = $contact_vector, \
+                     e.module_id = $module_id, \
+                     e.confidence = $confidence, \
+                     e.created_at = $created_at",
+            )
+            .map_err(|e| anyhow!("Failed to prepare upsert statement: {}", e))?;
+
+        let now = chrono::Utc::now().to_rfc3339();
+        let mut count = 0usize;
+
+        for entity in entities {
+            let id = format!(
+                "{}__{}",
+                module_id,
+                entity.entity_name.to_lowercase().replace(' ', "_")
+            );
+
+            conn.execute(
+                &mut stmt,
+                vec![
+                    ("id", Value::String(id)),
+                    ("entity_name", Value::String(entity.entity_name.clone())),
+                    ("classification", Value::String(entity.classification.clone())),
+                    ("role_vector", Value::String(entity.role_vector.clone().unwrap_or_default())),
+                    ("location_vector", Value::String(entity.location_vector.clone().unwrap_or_default())),
+                    ("contact_vector", Value::String(entity.contact_vector.clone().unwrap_or_default())),
+                    ("module_id", Value::String(entity.module_id.clone())),
+                    ("confidence", Value::Double(entity.confidence)),
+                    ("created_at", Value::String(now.clone())),
+                ],
+            )
+            .map_err(|e| anyhow!("Failed to upsert entity '{}': {}", entity.entity_name, e))?;
+
+            count += 1;
+        }
+
+        Ok(count)
+    }
+
+    fn query_context(&self, module_id: &str, query: &str, limit: usize) -> Result<Vec<GraphEntity>> {
+        let conn = self.conn()?;
+        let q_lower = query.to_lowercase();
+
+        let mut stmt = conn
+            .prepare(
+                "MATCH (e:Entity) \
+                 WHERE e.module_id = $module_id \
+                   AND lower(e.entity_name) CONTAINS $query \
+                 RETURN e.entity_name, e.classification, e.role_vector, \
+                        e.location_vector, e.contact_vector, e.module_id, e.confidence \
+                 LIMIT $limit",
+            )
+            .map_err(|e| anyhow!("Failed to prepare query_context statement: {}", e))?;
+
+        let result = conn
+            .execute(
+                &mut stmt,
+                vec![
+                    ("module_id", Value::String(module_id.to_string())),
+                    ("query", Value::String(q_lower)),
+                    ("limit", Value::Int64(limit as i64)),
+                ],
+            )
+            .map_err(|e| anyhow!("Failed to execute query_context: {}", e))?;
+
+        rows_to_entities(result)
+    }
+
+    fn list_entities(&self, module_id: &str) -> Result<Vec<GraphEntity>> {
+        let conn = self.conn()?;
+
+        let mut stmt = conn
+            .prepare(
+                "MATCH (e:Entity) \
+                 WHERE e.module_id = $module_id \
+                 RETURN e.entity_name, e.classification, e.role_vector, \
+                        e.location_vector, e.contact_vector, e.module_id, e.confidence",
+            )
+            .map_err(|e| anyhow!("Failed to prepare list_entities statement: {}", e))?;
+
+        let result = conn
+            .execute(
+                &mut stmt,
+                vec![("module_id", Value::String(module_id.to_string()))],
+            )
+            .map_err(|e| anyhow!("Failed to execute list_entities: {}", e))?;
+
+        rows_to_entities(result)
+    }
+}
+
+/// Extract a `String` from a `Value::String`, or return empty string.
+fn val_to_string(v: &Value) -> String {
+    match v {
+        Value::String(s) => s.clone(),
+        _ => String::new(),
+    }
+}
+
+/// Extract an `f64` from `Value::Double` or `Value::Float`, or return 0.0.
+fn val_to_f64(v: &Value) -> f64 {
+    match v {
+        Value::Double(f) => *f,
+        Value::Float(f) => *f as f64,
+        _ => 0.0,
+    }
+}
+
+/// Convert a `QueryResult` iterator into `Vec<GraphEntity>`.
+/// Each row yields 7 columns in RETURN order:
+/// 0 entity_name, 1 classification, 2 role_vector, 3 location_vector,
+/// 4 contact_vector, 5 module_id, 6 confidence
+fn rows_to_entities(result: lbug::QueryResult<'_>) -> Result<Vec<GraphEntity>> {
+    let mut out = Vec::new();
+    for row in result {
+        if row.len() < 7 {
+            continue;
+        }
+        let entity_name = val_to_string(&row[0]);
+        let classification = val_to_string(&row[1]);
+        let role_vector = {
+            let s = val_to_string(&row[2]);
+            if s.is_empty() { None } else { Some(s) }
+        };
+        let location_vector = {
+            let s = val_to_string(&row[3]);
+            if s.is_empty() { None } else { Some(s) }
+        };
+        let contact_vector = {
+            let s = val_to_string(&row[4]);
+            if s.is_empty() { None } else { Some(s) }
+        };
+        let module_id = val_to_string(&row[5]);
+        let confidence = val_to_f64(&row[6]);
+
+        out.push(GraphEntity {
+            entity_name,
+            classification,
+            role_vector,
+            location_vector,
+            contact_vector,
+            module_id,
+            confidence,
+        });
+    }
+    Ok(out)
+}
