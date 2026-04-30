@@ -1,0 +1,376 @@
+// SPDX-License-Identifier: Apache-2.0 OR MIT
+
+//! Shared types for service-slm.
+//!
+//! `slm-core` holds only types and small value-objects. It has no async
+//! runtime, no HTTP client, no I/O. Crates that route, log, or serve HTTP
+//! depend on this crate; nothing in this crate depends on them.
+
+pub mod apprenticeship;
+pub mod error;
+pub mod module_id;
+pub mod request_id;
+pub mod tier;
+
+pub use apprenticeship::{
+    ApprenticeshipAttempt, ApprenticeshipBrief, ApprenticeshipVerdict, BriefScope, SeniorRole,
+    VerdictOutcome, APPRENTICE_ESCALATE_THRESHOLD, DEFAULT_BRIEF_TIER_B_THRESHOLD_CHARS,
+    VERDICT_BATCH_NAMESPACE, VERDICT_NAMESPACE,
+};
+pub use error::{CoreError, Result};
+pub use module_id::ModuleId;
+pub use request_id::RequestId;
+pub use tier::{Complexity, Tier};
+
+use serde::{Deserialize, Serialize};
+
+/// One inbound message in OpenAI chat-completions shape.
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct ChatMessage {
+    pub role: String,
+    pub content: String,
+}
+
+/// Decode-time grammar constraint that the caller wants the Doorman to
+/// enforce on the backend's output.
+///
+/// Wire shape (adjacent-tagged, matching OpenAI `function_call` / `tool_choice`
+/// conventions):
+///
+/// ```json
+/// {"type": "lark",        "value": "start: ..."}
+/// {"type": "gbnf",        "value": "root ::= ..."}
+/// {"type": "json-schema", "value": {"type": "object", ...}}
+/// ```
+///
+/// Tier translation policy:
+/// - **Tier A** (llama-server): `gbnf` and `json-schema` accepted natively;
+///   `lark` rejected (llama-server HTTP API does not accept Lark grammars).
+/// - **Tier B** (vLLM ≥0.12): all three variants forwarded via
+///   `extra_body.structured_outputs.{grammar,json_schema}`.
+/// - **Tier C** (external API): all variants rejected — no arbitrary grammar
+///   support across vendors. Steps 2-5 (PS.3) wire the per-tier logic.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(tag = "type", content = "value", rename_all = "kebab-case")]
+pub enum GrammarConstraint {
+    /// Lark EBNF grammar string.
+    Lark(String),
+    /// GBNF grammar string (llama.cpp native format).
+    Gbnf(String),
+    /// JSON Schema object. Version not pinned at the type level; schema
+    /// validity is the backend's responsibility.
+    JsonSchema(serde_json::Value),
+}
+
+/// Request crossing the Doorman boundary.
+///
+/// `request_id` and `module_id` are mandatory — they tag every audit-ledger
+/// entry and every multi-tenant routing decision. `tier_hint` is advisory;
+/// the router may override based on budget caps and request shape.
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct ComputeRequest {
+    pub request_id: RequestId,
+    pub module_id: ModuleId,
+    pub model: Option<String>,
+    pub messages: Vec<ChatMessage>,
+    #[serde(default)]
+    pub complexity: Complexity,
+    #[serde(default)]
+    pub tier_hint: Option<Tier>,
+    #[serde(default)]
+    pub stream: bool,
+    #[serde(default)]
+    pub max_tokens: Option<u32>,
+    #[serde(default)]
+    pub temperature: Option<f32>,
+    /// True if the caller has already sanitised identifiers out of the
+    /// payload per the Doorman Protocol (`ARCHITECTURE.md` §1).
+    #[serde(default)]
+    pub sanitised_outbound: bool,
+    /// Required to dispatch to Tier C (External API). The Doorman
+    /// refuses any request hinted at Tier C without an allowlisted
+    /// label per `~/Foundry/conventions/llm-substrate-decision.md`.
+    /// Optional for Tier A and Tier B.
+    #[serde(default)]
+    pub tier_c_label: Option<String>,
+    /// Optional decode-time grammar constraint. When present the Doorman
+    /// translates the constraint into the backend-specific wire format for
+    /// the selected tier. Absent from most requests; omitted from the
+    /// serialised form when `None` so existing callers are unaffected.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub grammar: Option<GrammarConstraint>,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Build a minimal `ComputeRequest` with only mandatory fields.
+    fn minimal_request() -> ComputeRequest {
+        use std::str::FromStr;
+        ComputeRequest {
+            request_id: RequestId::new(),
+            module_id: ModuleId::from_str("test-module").unwrap(),
+            model: None,
+            messages: vec![ChatMessage {
+                role: "user".to_string(),
+                content: "hello".to_string(),
+            }],
+            complexity: Complexity::default(),
+            tier_hint: None,
+            stream: false,
+            max_tokens: None,
+            temperature: None,
+            sanitised_outbound: false,
+            tier_c_label: None,
+            grammar: None,
+        }
+    }
+
+    #[test]
+    fn compute_request_serde_round_trip_no_grammar() {
+        let req = minimal_request();
+        let json = serde_json::to_string(&req).unwrap();
+        // grammar field must be absent when None (skip_serializing_if)
+        assert!(
+            !json.contains("grammar"),
+            "serialised form must not contain 'grammar' key when grammar is None; got: {json}"
+        );
+        let req2: ComputeRequest = serde_json::from_str(&json).unwrap();
+        assert!(req2.grammar.is_none());
+    }
+
+    #[test]
+    fn compute_request_serde_round_trip_lark() {
+        let grammar_str = r#"start: /[a-z]+/ NEWLINE?"#;
+        let mut req = minimal_request();
+        req.grammar = Some(GrammarConstraint::Lark(grammar_str.to_string()));
+
+        let json = serde_json::to_string(&req).unwrap();
+        // Wire shape must contain the lark type discriminant.
+        assert!(
+            json.contains(r#""type":"lark""#),
+            "expected lark type discriminant; got: {json}"
+        );
+        // The grammar string value must survive in the serialised form.
+        assert!(
+            json.contains(grammar_str),
+            "grammar string must survive serialisation; got: {json}"
+        );
+
+        // Round-trip: deserialise back and check equality.
+        let req2: ComputeRequest = serde_json::from_str(&json).unwrap();
+        assert_eq!(
+            req2.grammar,
+            Some(GrammarConstraint::Lark(grammar_str.to_string()))
+        );
+    }
+
+    #[test]
+    fn compute_request_serde_round_trip_gbnf() {
+        let grammar_str = r#"root ::= "yes" | "no""#;
+        let mut req = minimal_request();
+        req.grammar = Some(GrammarConstraint::Gbnf(grammar_str.to_string()));
+
+        let json = serde_json::to_string(&req).unwrap();
+        assert!(
+            json.contains(r#""type":"gbnf""#),
+            "expected gbnf type discriminant; got: {json}"
+        );
+
+        let req2: ComputeRequest = serde_json::from_str(&json).unwrap();
+        assert_eq!(
+            req2.grammar,
+            Some(GrammarConstraint::Gbnf(grammar_str.to_string()))
+        );
+    }
+
+    #[test]
+    fn compute_request_serde_round_trip_json_schema() {
+        let schema: serde_json::Value = serde_json::json!({
+            "type": "object",
+            "properties": {
+                "name": {"type": "string"},
+                "age":  {"type": "integer"}
+            },
+            "required": ["name"]
+        });
+        let mut req = minimal_request();
+        req.grammar = Some(GrammarConstraint::JsonSchema(schema.clone()));
+
+        let json = serde_json::to_string(&req).unwrap();
+        assert!(
+            json.contains(r#""type":"json-schema""#),
+            "expected json-schema type discriminant; got: {json}"
+        );
+
+        let req2: ComputeRequest = serde_json::from_str(&json).unwrap();
+        match req2.grammar {
+            Some(GrammarConstraint::JsonSchema(v)) => {
+                assert_eq!(v, schema, "JSON Schema value must be preserved exactly");
+            }
+            other => panic!("expected JsonSchema variant, got: {other:?}"),
+        }
+    }
+
+    #[test]
+    fn compute_request_default_grammar_is_none() {
+        // Construct a request without setting grammar; verify the field is None.
+        let req = minimal_request();
+        assert!(
+            req.grammar.is_none(),
+            "grammar must default to None when not set"
+        );
+
+        // Also verify that deserialising a JSON object that lacks the grammar
+        // key produces grammar: None (serde default attribute).
+        let json_without_grammar = serde_json::json!({
+            "request_id": req.request_id,
+            "module_id": req.module_id,
+            "messages": [{"role": "user", "content": "test"}],
+        })
+        .to_string();
+        let req2: ComputeRequest = serde_json::from_str(&json_without_grammar).unwrap();
+        assert!(
+            req2.grammar.is_none(),
+            "grammar must default to None when absent from JSON"
+        );
+    }
+}
+
+// ---------------------------------------------------------------------------
+// audit_proxy wire shapes (PS.4)
+// ---------------------------------------------------------------------------
+
+/// Request body for `POST /v1/audit/proxy`.
+///
+/// The caller (e.g., project-language editorial gateway) holds no provider
+/// API keys. It submits a structured request to the Doorman; the Doorman
+/// authenticates with the provider, captures the full request + response +
+/// cost into the audit ledger, and returns the response.
+///
+/// PS.4 step 2 wires the upstream provider call; step 1 (this commit)
+/// scaffolds validation + ledger stub + 503 placeholder response.
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct AuditProxyRequest {
+    /// Tenant identifier (e.g., "pointsav", "woodfine"). Validated as
+    /// [`ModuleId`] — only `[a-z0-9-]`, 1..=64 chars.
+    pub module_id: String,
+    /// Audit purpose label — must match an entry in the Doorman's
+    /// audit-purpose allowlist (PS.4 step 2 enforces the allowlist;
+    /// step 1 only requires non-empty).
+    pub purpose: String,
+    /// Provider identifier. Accepted values: "anthropic", "gemini", "openai".
+    pub provider: String,
+    /// Model identifier on the provider (e.g., "claude-opus-4-7",
+    /// "gemini-2.5-pro"). No `provider:` prefix required here — the
+    /// provider field is already explicit.
+    pub model: String,
+    /// OpenAI-compatible chat-completion messages. Must be non-empty.
+    pub messages: Vec<ChatMessage>,
+    /// Optional sampling parameters.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub max_tokens: Option<u32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub temperature: Option<f32>,
+    /// Caller's request correlation ID for cross-system tracing. Doorman
+    /// echoes it back in the response and records it in the audit ledger.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub caller_request_id: Option<String>,
+}
+
+/// Response body for `POST /v1/audit/proxy` (step 1: scaffold / stub).
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct AuditProxyResponse {
+    /// Doorman-generated UUIDv7 audit-ledger entry ID. Present even when
+    /// the upstream call is pending (stub phase), so paper trails exist
+    /// for attempted proxy calls.
+    pub audit_id: String,
+    /// Echoed from the request's `caller_request_id` field.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub caller_request_id: Option<String>,
+    /// Response content (provider's reply). Empty / placeholder in step 1.
+    pub content: String,
+    /// Token / cost accounting.
+    pub usage: AuditUsage,
+}
+
+/// Token usage and cost breakdown for an audit proxy call.
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+pub struct AuditUsage {
+    pub prompt_tokens: u32,
+    pub completion_tokens: u32,
+    pub cost_usd: f64,
+}
+
+// ---------------------------------------------------------------------------
+// audit_capture wire shapes (PS.4 step 4)
+// ---------------------------------------------------------------------------
+
+/// Request body for `POST /v1/audit/capture`.
+///
+/// The inverse direction of `audit_proxy`: cross-cluster callers push audit
+/// events to the Doorman for work they did LOCALLY without going through the
+/// Doorman. The Doorman validates, writes to the central audit ledger, and
+/// returns 200.
+///
+/// Used by:
+///   - project-data anchor-emitter (event_type: "anchor-event")
+///   - project-language editorial gateway (event_type: "prose-edit")
+///   - Any Ring 1/2/3 producer that does work the audit ledger should record
+///     but that did not route through the Doorman.
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct AuditCaptureRequest {
+    /// Caller-generated UUID (any version). Caller is the source of truth for
+    /// its own audit_id (the work happened locally; Doorman is downstream).
+    pub audit_id: String,
+    /// Tenant identifier; validated as [`ModuleId`] — only `[a-z0-9-]`,
+    /// 1..=64 chars.
+    pub module_id: String,
+    /// Event taxonomy discriminator. Accepted values:
+    /// "prose-edit" | "design-edit" | "graph-mutation" | "anchor-event" |
+    /// "verdict-issued".
+    pub event_type: String,
+    /// Caller's component / cluster identifier for traceability (e.g.
+    /// "project-language", "project-data:anchor-emitter"). Free-form; must
+    /// be non-empty.
+    pub source: String,
+    /// Status of the work the caller did. Same vocabulary as audit_proxy final
+    /// entries: "ok" | "policy-denied" | "upstream-error" | other. Free-form;
+    /// must be non-empty.
+    pub status: String,
+    /// ISO 8601 / RFC 3339 timestamp of the event (caller's clock).
+    pub event_at: String,
+    /// Event-specific payload (untyped JSON object). Future steps may
+    /// validate per-event-type schemas; step 4 accepts any JSON value.
+    pub payload: serde_json::Value,
+    /// Optional caller request correlation ID for cross-system tracing.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub caller_request_id: Option<String>,
+}
+
+/// Response body for `POST /v1/audit/capture`.
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct AuditCaptureResponse {
+    /// Echoed from the request — confirms the Doorman accepted and wrote.
+    pub audit_id: String,
+    /// Echoed from the request.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub caller_request_id: Option<String>,
+    /// "captured" on success.
+    pub status: String,
+}
+
+/// Response returned through the Doorman.
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct ComputeResponse {
+    pub request_id: RequestId,
+    pub tier_used: Tier,
+    pub model: String,
+    pub content: String,
+    pub inference_ms: u64,
+    pub cost_usd: f64,
+    /// Yo-Yo or external-API implementation version, opaque string.
+    #[serde(default)]
+    pub upstream_version: Option<String>,
+}
