@@ -56,10 +56,14 @@
 //! end-to-end.
 
 use slm_doorman_server::http;
+use slm_doorman_server::queue::{
+    dequeue_shadow, ensure_dirs, reap_expired_leases, release_shadow, QueueConfig, ReleaseOutcome,
+};
 
 use std::collections::HashMap;
 use std::net::SocketAddr;
 use std::sync::{Arc, Mutex};
+use std::time::Duration;
 
 use anyhow::Context;
 use slm_doorman::tier::{
@@ -99,6 +103,10 @@ async fn main() -> anyhow::Result<()> {
         .and_then(|s| s.parse().ok())
         .unwrap_or(4);
 
+    // Brief Queue Substrate (§7C) — build QueueConfig before constructing
+    // AppState so both the handler and the drain worker share the same config.
+    let queue_cfg = QueueConfig::from_env();
+
     let state = Arc::new(http::AppState {
         doorman,
         apprenticeship,
@@ -113,6 +121,9 @@ async fn main() -> anyhow::Result<()> {
         // request from each tenant.
         audit_tenant_concurrency: Arc::new(Mutex::new(HashMap::new())),
         audit_tenant_concurrency_cap,
+        // Brief Queue Substrate (§7C) — shadow_handler enqueues here;
+        // drain worker reads from the same config.
+        queue_config: Arc::new(queue_cfg.clone()),
     });
 
     info!(
@@ -125,6 +136,166 @@ async fn main() -> anyhow::Result<()> {
         audit_proxy_enabled = state.audit_proxy_client.is_some(),
         "service-slm Doorman starting"
     );
+
+    // ── Brief Queue Substrate (apprenticeship-substrate.md §7C) ─────────
+    //
+    // Spawn two background tokio tasks:
+    //   1. `queue_drain_worker` — polls queue/ at configurable interval and
+    //      dispatches briefs to the apprentice via dispatch_shadow.
+    //   2. `queue_reaper`       — reclaims expired leases from queue-in-flight/
+    //      so crashed workers' briefs are retried.
+    //
+    // Both tasks run regardless of SLM_APPRENTICESHIP_ENABLED.  If
+    // apprenticeship is disabled the drain worker finds no briefs in the queue
+    // (capture-edit.py also checks the flag before writing) and exits each
+    // poll cycle immediately.  This keeps the queue infrastructure live and
+    // ready for the flag to be enabled without a restart.
+    //
+    // Env vars:
+    //   SLM_QUEUE_DRAIN_INTERVAL_SEC   drain poll interval; default 30s
+    //   SLM_QUEUE_LEASE_EXPIRY_SEC     lease age before reaper reclaims; default 300s
+    {
+        // Ensure queue directories exist at startup so the background tasks
+        // can scan them immediately.  A creation failure is non-fatal (we log
+        // and continue); the tasks will retry on each cycle.
+        if let Err(e) = ensure_dirs(&queue_cfg) {
+            tracing::warn!(error = %e, "brief queue directory bootstrap failed; retrying lazily");
+        }
+
+        // ── Drain worker ─────────────────────────────────────────────────
+        let drain_interval_secs: u64 = std::env::var("SLM_QUEUE_DRAIN_INTERVAL_SEC")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(30);
+        let drain_interval = Duration::from_secs(drain_interval_secs);
+
+        // Clone only what the drain worker needs.
+        let drain_cfg = queue_cfg.clone();
+        let drain_doorman_arc = Arc::clone(&state);
+
+        tokio::spawn(async move {
+            // Worker identifier — use the process PID so lease filenames are
+            // unique across Doorman restarts without any coordination.
+            let worker_id = format!("drain-{}", std::process::id());
+            info!(
+                %worker_id,
+                drain_interval_secs,
+                "brief queue drain worker started"
+            );
+
+            loop {
+                match dequeue_shadow(&drain_cfg, &worker_id) {
+                    Ok(None) => {
+                        // Queue empty; sleep and poll again.
+                        tokio::time::sleep(drain_interval).await;
+                    }
+                    Ok(Some(leased)) => {
+                        let brief_id = leased.entry.brief.brief_id.clone();
+                        info!(
+                            brief_id = %brief_id,
+                            task_type = %leased.entry.brief.task_type,
+                            "drain worker: dispatching queued shadow brief"
+                        );
+
+                        // Only dispatch if apprenticeship is enabled.
+                        let outcome = if let Some(cfg) = drain_doorman_arc.apprenticeship.as_ref() {
+                            use slm_doorman::ApprenticeshipDispatcher;
+                            let dispatcher = ApprenticeshipDispatcher::with_cache(
+                                &drain_doorman_arc.doorman,
+                                cfg.clone(),
+                                Arc::clone(&drain_doorman_arc.brief_cache),
+                            );
+                            // Pass the actual_diff from the queue entry so the
+                            // corpus tuple carries the senior's real committed diff
+                            // (per §7B capture-on-completion semantics).
+                            match dispatcher
+                                .dispatch_shadow(&leased.entry.brief, &leased.entry.actual_diff)
+                                .await
+                            {
+                                Ok(_) => {
+                                    info!(brief_id = %brief_id, "drain worker: shadow dispatch ok");
+                                    ReleaseOutcome::Done
+                                }
+                                Err(e) => {
+                                    tracing::warn!(
+                                        brief_id = %brief_id,
+                                        error = %e,
+                                        "drain worker: shadow dispatch failed; retry"
+                                    );
+                                    // Check for malformed-brief class errors that should
+                                    // not be retried — move to poison instead.
+                                    if matches!(
+                                        e,
+                                        slm_doorman::DoormanError::QueueMalformedBrief { .. }
+                                    ) {
+                                        ReleaseOutcome::Poison
+                                    } else {
+                                        ReleaseOutcome::Retry
+                                    }
+                                }
+                            }
+                        } else {
+                            // Apprenticeship disabled — re-queue the brief for when
+                            // the operator enables the flag without restarting.
+                            tracing::debug!(
+                                brief_id = %brief_id,
+                                "drain worker: apprenticeship disabled; re-queuing brief"
+                            );
+                            ReleaseOutcome::Retry
+                        };
+
+                        if let Err(e) = release_shadow(&drain_cfg, &leased, outcome) {
+                            tracing::warn!(
+                                brief_id = %brief_id,
+                                error = %e,
+                                "drain worker: release_shadow failed"
+                            );
+                        }
+
+                        // Do NOT sleep between briefs — drain the queue as fast as
+                        // the apprentice tier allows.  The poll sleep only fires when
+                        // the queue is empty.
+                    }
+                    Err(slm_doorman::DoormanError::QueueLockFailed { .. }) => {
+                        // Another worker (or the reaper) holds the lock.  Back off
+                        // and retry after a short interval.
+                        tokio::time::sleep(Duration::from_secs(2)).await;
+                    }
+                    Err(e) => {
+                        tracing::warn!(error = %e, "drain worker: dequeue error; sleeping");
+                        tokio::time::sleep(drain_interval).await;
+                    }
+                }
+            }
+        });
+
+        // ── Reaper task ───────────────────────────────────────────────────
+        let reap_interval = Duration::from_secs(60);
+        let lease_expiry_secs: u64 = std::env::var("SLM_QUEUE_LEASE_EXPIRY_SEC")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(300);
+        let lease_expiry = Duration::from_secs(lease_expiry_secs);
+
+        let reap_cfg = queue_cfg.clone();
+
+        tokio::spawn(async move {
+            info!(
+                lease_expiry_secs,
+                reap_interval_secs = reap_interval.as_secs(),
+                "brief queue reaper started"
+            );
+            loop {
+                tokio::time::sleep(reap_interval).await;
+                match reap_expired_leases(&reap_cfg, lease_expiry) {
+                    Ok(0) => {} // nothing to do
+                    Ok(n) => info!(reclaimed = n, "reaper: reclaimed expired leases"),
+                    Err(e) => tracing::warn!(error = %e, "reaper: reap_expired_leases failed"),
+                }
+            }
+        });
+    }
+    // ────────────────────────────────────────────────────────────────────
 
     let app = http::router(state);
     let listener = tokio::net::TcpListener::bind(bind_addr)
