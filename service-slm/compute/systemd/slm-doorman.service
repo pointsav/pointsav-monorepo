@@ -1,0 +1,70 @@
+[Unit]
+Description=service-slm Doorman (three-tier LLM router: Tier A local, Tier B Yo-Yo GPU burst, Tier C external API)
+Documentation=file:///srv/foundry/infrastructure/slm-doorman/README.md
+After=local-slm.service network-online.target
+Wants=local-slm.service network-online.target
+
+[Service]
+Type=simple
+User=slm-doorman
+Group=slm-doorman
+
+WorkingDirectory=/var/lib/slm-doorman
+
+# Bind address: 127.0.0.1:9080 (loopback only; same-VM consumers)
+# All environment variables tunable per §2 of slm-doorman-server main.rs docs
+Environment="SLM_BIND_ADDR=127.0.0.1:9080"
+
+# Tier A (Local): OLMo 3 7B Q4 on this VM via local-slm.service
+Environment="SLM_LOCAL_ENDPOINT=http://127.0.0.1:8080"
+Environment="SLM_LOCAL_MODEL=Olmo-3-1125-7B-Think-Q4_K_M.gguf"
+
+# Tier B (Yo-Yo): disabled by default; populate when ready
+# Environment="SLM_YOYO_ENDPOINT=<GCP Cloud Run / RunPod / Modal URL>"
+# Environment="SLM_YOYO_BEARER=<bearer token from provider>"
+# Environment="SLM_YOYO_HOURLY_USD=0.84"  (GCP L4 example rate)
+# Environment="SLM_YOYO_MODEL=Olmo-3-1125-32B-Think"
+
+# Tier C (External API): disabled by default; allowlist + cost guardrail
+# Environment="SLM_TIER_C_ANTHROPIC_ENDPOINT=https://api.anthropic.com"
+# Environment="SLM_TIER_C_ANTHROPIC_API_KEY=sk-..."
+# Environment="SLM_TIER_C_ANTHROPIC_INPUT_PER_MTOK_USD=0.0003"
+# Environment="SLM_TIER_C_ANTHROPIC_OUTPUT_PER_MTOK_USD=0.0015"
+# Same pattern for GEMINI and OPENAI
+
+# Apprenticeship Substrate (AS-5+): signed verdict pipeline for model training
+# Set to true once Master ships bin/apprentice.sh + bin/capture-edit.py
+Environment="SLM_APPRENTICESHIP_ENABLED=false"
+Environment="FOUNDRY_ROOT=/srv/foundry"
+Environment="FOUNDRY_ALLOWED_SIGNERS=/srv/foundry/identity/allowed_signers"
+Environment="FOUNDRY_DOCTRINE_VERSION=0.0.7"
+Environment="FOUNDRY_TENANT=pointsav"
+
+# Logging: RUST_LOG controls tracing output level
+Environment="RUST_LOG=slm_doorman=info,slm_doorman_server=info,axum=warn"
+
+# Audit ledger: append-only JSONL record of every inference call
+Environment="SLM_AUDIT_DIR=/var/lib/slm-doorman/audit"
+
+ExecStart=/usr/local/bin/slm-doorman-server
+
+Restart=on-failure
+RestartSec=5s
+
+# Resource limits — lightweight gateway, Tier A does the heavy lifting
+MemoryMax=512M
+CPUQuota=100%
+
+# Hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/var/lib/slm-doorman /srv/foundry/data /srv/foundry/identity
+
+# journald captures stdout/stderr
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
