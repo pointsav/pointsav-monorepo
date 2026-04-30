@@ -151,6 +151,88 @@ operator-presence pass; cluster-Task waits.
 - Post-commit grep `mistral` across `infrastructure/slm-yoyo/` returns
   zero hits. PS.1-3 scope fully closed.
 
+## 2026-04-30 — Session-end snapshot (operator exit prep)
+
+Operator-directed session close at chat surface. Working tree clean
+(only gitignored `.claude/scheduled_tasks.lock`). main at `5a43fda`.
+2 commits ahead of `origin/main` (the iter-24 research doc +
+state-file followup); Stage-6 push to canonical pending operator-
+presence authorization on next session.
+
+### Two-day session arc summary (2026-04-28 → 2026-04-30)
+
+The cluster shipped the substrate-arc from "configured but not training"
+to "training pipeline operationally live; corpus accumulating; first
+adapter cycle scoped and ready to dispatch":
+
+| Iter | Date | Commit | Outcome |
+|---|---|---|---|
+| 1-9 | 2026-04-28 | various | PS.3 grammar substrate + PS.4 audit substrate (cross-cluster contract v0.2.0) |
+| 10-14 | 2026-04-28 | workspace + cluster admin-tier batch | PS.1-2/-3/-4 admin-tier + SLM_AUDIT_DIR cluster + mistral cleanup tail |
+| 15-18 | 2026-04-28 | various | hardening sweep (entry_type discriminator + audit endpoint hardening + PS.6 tail coverage + ARCH/DEV doc refresh) |
+| 19 | 2026-04-28 | `72f4100` | B7 deploy-readiness package (env example + runbook + smoke-test + corpus-stats) |
+| — | 2026-04-29 | Master `ba6eda1` v0.1.68 | B7 LIVE — Doorman redeployed with apprenticeship_enabled=true |
+| 20 | 2026-04-29 | `562baa0` | trainer-scoping comprehensive doc (3,200 words) |
+| 21 | 2026-04-29 | `a161992` | AS-3 fix — capture-on-completion + promote-on-verdict (doctrine v0.0.13 §7B) |
+| — | 2026-04-29 | Master `160f04f` v0.1.77 | Stage-6 first push since Apr-17 + AS-3 deploy + Tier A latency surfaced |
+| 22 | 2026-04-29 | `03b0b78` | Brief Queue Substrate (queue.rs + drain worker + 5 §7C tests) |
+| 23 | 2026-04-29 | `66790b8` | shadow_handler async-202 + worker-side corpus write |
+| — | 2026-04-29 | Master `738e73d` v0.1.85 | §7C LIVE on workspace VM (full lifecycle proven E2E; reaper reclaimed expired lease) |
+| 24 | 2026-04-30 | `8ce4fce` + `5a43fda` | comprehensive deep research doc + Master outbox followup (10,837 words; 22 external sources; 3 Doctrine claim candidates #43/#44/#45) |
+
+### Cumulative session totals
+
+- **Cluster commits**: 30+ across iter-1 through iter-24 + housekeeping
+- **Tests**: 74 baseline → **154/154** verified
+- **Workspace tier coordination**: 18+ Master v0.1.* commits absorbed
+- **Doctrine versions ratified during arc**: v0.0.12 → v0.0.13 → v0.0.14
+- **New conventions ratified**: §7B capture-vs-promote (claim #32);
+  §7C Brief Queue Substrate; four-tier-slm-substrate.md (claim #40);
+  api-key-boundary-discipline.md
+- **Apprenticeship corpus state**: 14 prose-edit tuples (Stage-1 Pattern A);
+  shadow-route now operationally live since Master v0.1.85; first
+  shadow-route tuples expected once Yo-Yo Phase 3 activates (Master
+  v0.1.86 expected ~19:00Z 2026-04-29)
+
+### Outstanding Master-pickup queue
+
+Cluster outbox carries (newest-on-top) at session-end:
+1. **Iter-24 research signal-complete + 6 §9 ratification proposals**
+   (commit `5a43fda`; this session's load-bearing handback)
+2. Q1/Q3/Q4 capture-edit.py envelope confirmation (commit `e19b1f2`;
+   already absorbed into Master v0.1.84 but not yet archived)
+3. §7C Brief Queue Substrate signal-complete (commit `0e4f6b4`;
+   already actioned via Master v0.1.85)
+4. AS-3 fix signal-complete (commit `7126528`; already actioned via
+   Master v0.1.77)
+
+Items #2-4 could be archived to outbox-archive.md in next session's
+opening housekeeping; #1 is the actionable item awaiting Master.
+
+### Operator-presence carries (per Master v0.1.85 NEXT.md)
+
+- **#11 Yo-Yo idle-shutdown timer** (runbook step 8) — ~5 min;
+  brings cost ceiling ~$520/mo → ~$130/mo
+- **KuzuDB / LadybugDB / Neo4j / Jena decision** — gates Phase 2 graph
+  investment per iter-24 §10 OQ #1
+- **Six §9 ratification asks** from iter-24 outbox followup
+
+### Standing posture at exit
+
+- Cluster main at `5a43fda` (clean working tree)
+- 154/154 tests verified
+- §7C operationally live on workspace VM since Master v0.1.85
+- Yo-Yo Phase 2 in flight per Master 18:50Z (us-west4-a; bootstrap
+  in progress; v0.1.86 expected within ~1 hour of 18:50Z)
+- All cluster-Task work for the §7C Brief Queue Substrate is done;
+  cluster scope of the Yo-Yo training arc is complete pending Master's
+  Phase 3 activation + operator-presence ratification of iter-24
+  proposals
+- Resume on next session by reading inbox + this cleanup-log entry +
+  iter-24 research doc
+
+---
+
 ## 2026-04-30 — Iter-24 deep research — Yo-Yo training + TUI + service-content + service-slm-IS-Yo-Yo convention
 
 Operator-directed comprehensive scoping research following Master v0.1.85
