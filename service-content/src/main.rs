@@ -1,7 +1,11 @@
-use notify::{Watcher, RecursiveMode, Result as NotifyResult, Event};
-use std::path::Path;
-use std::sync::mpsc::channel;
+mod graph;
+mod http;
+
+use graph::{GraphEntity, GraphStore, LbugGraphStore};
+use notify::{Event, RecursiveMode, Result as NotifyResult, Watcher};
 use std::fs;
+use std::path::Path;
+use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
 use serde_json::Value;
@@ -29,6 +33,31 @@ fn main() -> NotifyResult<()> {
     if !Path::new(&corpus_dir).exists() { fs::create_dir_all(&corpus_dir).unwrap(); }
     if !Path::new(&crm_dir).exists() { fs::create_dir_all(&crm_dir).unwrap(); }
 
+    // ── Graph store initialisation ────────────────────────────────────────────
+    let graph_dir = std::env::var("SERVICE_CONTENT_GRAPH_DIR")
+        .unwrap_or_else(|_| format!("{}/service-content/graph", base_dir));
+    fs::create_dir_all(&graph_dir).unwrap();
+    let graph_db_path = format!("{}/entities.lbug", graph_dir);
+
+    let graph_store: Arc<dyn GraphStore> = Arc::new(
+        LbugGraphStore::new(&graph_db_path)
+            .expect("[SYSTEM] Failed to open LadybugDB graph store"),
+    );
+    graph_store.init_schema().expect("[SYSTEM] Failed to initialise graph schema");
+    println!("[SYSTEM] Graph store ready: {}", graph_db_path);
+
+    // ── HTTP server (dedicated thread + own tokio runtime) ───────────────────
+    // Cannot use reqwest::blocking inside a #[tokio::main] context (nested
+    // runtime panic). Keep main synchronous; HTTP server owns its own runtime.
+    let http_bind = std::env::var("SERVICE_CONTENT_HTTP_BIND")
+        .unwrap_or_else(|_| "127.0.0.1:9081".to_string());
+    let graph_for_http = Arc::clone(&graph_store);
+    std::thread::spawn(move || {
+        let rt = tokio::runtime::Runtime::new().expect("Failed to build HTTP tokio runtime");
+        rt.block_on(http::run_server(graph_for_http, http_bind));
+    });
+
+    // ── Process any pre-existing CORPUS_* files ───────────────────────────────
     let mut processed_ledgers: Vec<String> = Vec::new();
 
     if let Ok(entries) = fs::read_dir(Path::new(&corpus_dir)) {
@@ -37,14 +66,17 @@ fn main() -> NotifyResult<()> {
             if path.extension().and_then(|s| s.to_str()) == Some("json") {
                 let filename = path.file_name().unwrap().to_str().unwrap().to_string();
                 if filename.starts_with("CORPUS_") {
-                    process_corpus(&path, &crm_dir, &doorman_endpoint, &module_id);
+                    process_corpus(&path, &crm_dir, &doorman_endpoint, &module_id, &graph_store);
                     processed_ledgers.push(filename);
                 }
             }
         }
     }
 
-    let (tx, rx) = channel();
+    // ── Watcher loop (blocking — runs on the main task) ───────────────────────
+    // std::sync::mpsc is fine here; recv() blocks the main async task's thread
+    // but the HTTP server lives on a separate tokio worker thread.
+    let (tx, rx) = std::sync::mpsc::channel();
     let mut watcher = notify::recommended_watcher(tx)?;
     watcher.watch(Path::new(&corpus_dir), RecursiveMode::NonRecursive)?;
 
@@ -61,22 +93,28 @@ fn main() -> NotifyResult<()> {
                             if filename.starts_with("CORPUS_") && !processed_ledgers.contains(&filename) {
                                 println!("\n[WATCHER] New Corpus Detected: {}", filename);
                                 thread::sleep(Duration::from_millis(250));
-                                process_corpus(&path, &crm_dir, &doorman_endpoint, &module_id);
+                                process_corpus(&path, &crm_dir, &doorman_endpoint, &module_id, &graph_store);
                                 processed_ledgers.push(filename);
                             }
                         }
                     }
                 }
-            },
+            }
             Ok(_) => {}
             Err(_) => {}
         }
     }
 }
 
-fn process_corpus(filepath: &Path, crm_dir: &str, doorman_endpoint: &str, module_id: &str) {
-    let content = match fs::read_to_string(filepath) { Ok(c) => c, Err(_) => return, };
-    let payload: Value = match serde_json::from_str(&content) { Ok(v) => v, Err(_) => return, };
+fn process_corpus(
+    filepath: &Path,
+    crm_dir: &str,
+    doorman_endpoint: &str,
+    module_id: &str,
+    graph_store: &Arc<dyn GraphStore>,
+) {
+    let content = match fs::read_to_string(filepath) { Ok(c) => c, Err(_) => return };
+    let payload: Value = match serde_json::from_str(&content) { Ok(v) => v, Err(_) => return };
 
     let worm_id = payload["worm_id"].as_str().unwrap_or("UNKNOWN");
     let corpus_text = payload["corpus"].as_str().unwrap_or("");
@@ -85,7 +123,8 @@ fn process_corpus(filepath: &Path, crm_dir: &str, doorman_endpoint: &str, module
 
     println!("  -> [WATCHER] Routing payload to Doorman ({})/v1/chat/completions...", doorman_endpoint);
 
-    let request_id = format!("sc-{}-{}", worm_id,
+    let request_id = format!("sc-{}-{}",
+        worm_id,
         std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap_or_default()
@@ -137,23 +176,51 @@ fn process_corpus(filepath: &Path, crm_dir: &str, doorman_endpoint: &str, module
 
                     if let Ok(semantic_entities) = serde_json::from_str::<Vec<Value>>(content) {
                         let mut enriched_crm = Vec::new();
+                        let mut graph_entities: Vec<GraphEntity> = Vec::new();
 
-                        for ent in semantic_entities {
+                        for ent in &semantic_entities {
+                            let entity_name = ent["entity_name"].as_str().unwrap_or("").to_string();
+                            let classification = ent["classification"].as_str().unwrap_or("").to_string();
+                            let role_vector = ent.get("role_vector")
+                                .and_then(|v| v.as_str())
+                                .filter(|s| !s.is_empty() && *s != "null")
+                                .map(str::to_string);
+                            let location_vector = ent.get("location_vector")
+                                .and_then(|v| v.as_str())
+                                .filter(|s| !s.is_empty() && *s != "null")
+                                .map(str::to_string);
+                            let contact_vector = ent.get("contact_vector")
+                                .and_then(|v| v.as_str())
+                                .filter(|s| !s.is_empty() && *s != "null")
+                                .map(str::to_string);
+
+                            // Build GraphEntity for the graph write path
+                            graph_entities.push(GraphEntity {
+                                entity_name: entity_name.clone(),
+                                classification: classification.clone(),
+                                role_vector: role_vector.clone(),
+                                location_vector: location_vector.clone(),
+                                contact_vector: contact_vector.clone(),
+                                module_id: module_id.to_string(),
+                                confidence: 0.95,
+                            });
+
+                            // Build the legacy JSON CRM record
                             let mut new_ent = serde_json::Map::new();
-                            new_ent.insert("entity_name".to_string(), ent["entity_name"].clone());
-                            new_ent.insert("classification".to_string(), ent["classification"].clone());
-                            new_ent.insert("role_vector".to_string(), ent.get("role_vector").cloned().unwrap_or(serde_json::json!("UNVERIFIED")));
+                            new_ent.insert("entity_name".to_string(), serde_json::json!(entity_name));
+                            new_ent.insert("classification".to_string(), serde_json::json!(classification));
+                            new_ent.insert("role_vector".to_string(),
+                                role_vector.as_deref().map(|s| serde_json::json!(s))
+                                    .unwrap_or(serde_json::json!("UNVERIFIED")));
                             new_ent.insert("confidence".to_string(), serde_json::json!(0.95));
                             new_ent.insert("context_anchor".to_string(), serde_json::json!("SLM NEURAL INFERENCE"));
 
-                            // Catch the new Location Vector
-                            let loc = ent.get("location_vector").cloned().unwrap_or(serde_json::json!("UNVERIFIED"));
+                            let loc = location_vector.as_deref().map(|s| serde_json::json!(s))
+                                .unwrap_or(serde_json::json!("UNVERIFIED"));
                             new_ent.insert("location_vector".to_string(), loc);
 
-                            // Catch the Contact Vector and push to Latent Vectors array
                             let mut latent = Vec::new();
-                            let contact = ent.get("contact_vector").and_then(|v| v.as_str()).unwrap_or("UNVERIFIED");
-                            if contact != "UNVERIFIED" && !contact.is_empty() {
+                            if let Some(contact) = contact_vector.as_deref() {
                                 if contact.contains('@') {
                                     latent.push(format!("mailto:{}", contact));
                                 } else {
@@ -174,6 +241,13 @@ fn process_corpus(filepath: &Path, crm_dir: &str, doorman_endpoint: &str, module
                         let out_file = format!("{}/SEMANTIC_{}.json", crm_dir, worm_id);
                         fs::write(&out_file, semantic_ledger.to_string()).unwrap();
                         println!("  -> [WATCHER] Semantic Integration Complete: {} Nodes Secured.", enriched_crm.len());
+
+                        // ── Graph write path ──────────────────────────────────
+                        if let Err(e) = graph_store.upsert_entities(module_id, &graph_entities) {
+                            println!("  -> [GRAPH] Write failed: {}", e);
+                        } else {
+                            println!("  -> [GRAPH] {} entities written to graph.", graph_entities.len());
+                        }
                     } else {
                         println!("  -> [SYS_HALT] Doorman response was not a valid entity JSON array.");
                     }
@@ -183,7 +257,7 @@ fn process_corpus(filepath: &Path, crm_dir: &str, doorman_endpoint: &str, module
             } else {
                 println!("  -> [SYS_HALT] Doorman rejected payload: {}", response.status());
             }
-        },
+        }
         Err(e) => {
             println!("  -> [SYS_HALT] Doorman routing failed: {}", e);
         }
