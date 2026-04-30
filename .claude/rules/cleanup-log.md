@@ -151,6 +151,89 @@ operator-presence pass; cluster-Task waits.
 - Post-commit grep `mistral` across `infrastructure/slm-yoyo/` returns
   zero hits. PS.1-3 scope fully closed.
 
+## 2026-04-29 — Iter-22 + Iter-23 — Brief Queue Substrate cluster-Task scope COMPLETE (§7C steps 1+2+3+5)
+
+Doctrine v0.0.14 §7C ratified at workspace v0.1.78; Master dispatched to
+project-slm via outbox 04:05Z with verbatim implementation scope. Operator
+chat-surface authorization "we need to get this up and running now" =
+pre-authorization for direct Sonnet sub-agent dispatch. Two iterations
+landed back-to-back.
+
+### Iter-22 — Queue infrastructure (`03b0b78`)
+
+- New `service-slm/crates/slm-doorman-server/src/queue.rs` (~870 lines):
+  `enqueue / dequeue / release / reap_expired_leases` public API;
+  `flock(2)` sentinel + atomic rename for single-writer / no-double-lease;
+  deterministic filenames for idempotent enqueue. Lock crate: `fs2 = "0.4"`.
+- `main.rs`: tokio drain worker (30s default poll;
+  `SLM_QUEUE_DRAIN_INTERVAL_SEC`) + reaper (every 60s; lease expiry
+  `SLM_QUEUE_LEASE_EXPIRY_SEC` default 300s).
+- 3 new error variants (QueueIo, QueueLockFailed, QueueMalformedBrief)
+  with full exhaustive-match wiring.
+- 5 §7C tests landed (enqueue_dequeue_round_trip, lease_expiration_*,
+  concurrent_workers_dont_double_lease, poison_bucket_catches_*,
+  queue_drain_resumes_after_doorman_restart).
+- Tests 147 → 152.
+
+### Iter-23 — Async-202 handler (`66790b8`)
+
+- `queue.rs` extended with shadow-specific path: `ShadowQueueEntry`
+  (carries `actual_diff` through queue files), `LeasedShadowEntry`,
+  `enqueue_shadow / dequeue_shadow / pending_count / release_shadow`.
+- `http.rs::shadow()`: synchronous `dispatch_shadow()` call replaced
+  with `enqueue_shadow()` + 202 ACCEPTED `{audit_id, queue_position,
+  brief_id}`. Validation preserved.
+- `main.rs`: drain worker switched to `dequeue_shadow / release_shadow`;
+  passes `leased.entry.actual_diff` to `dispatch_shadow()`. Fixed scope
+  bug (queue_cfg declaration order).
+- AppState gains `queue_config: Arc<QueueConfig>`; all 9 inline test
+  constructions updated; new `temp_queue_config()` test helper.
+- 2 new integration tests
+  (`shadow_with_apprenticeship_enabled_returns_202_with_body_shape`,
+  `shadow_enqueued_brief_file_exists_at_queue_path`).
+- Tests 152 → 154.
+- Audit-ledger write consolidated to worker side (option b — single
+  entry per brief; matches §7C "queue file IS the boundary").
+
+### What's now operational at the cluster code layer
+
+When Master rebuilds + restarts the Doorman:
+- shadow handler returns 202 in milliseconds (no more 300s capture-edit
+  timeout firing)
+- briefs durably persisted to `data/apprenticeship/queue/` immediately
+  on every commit's hook fire
+- worker drains queue at apprentice cadence (30s poll default)
+- corpus tuples land on apprentice completion via iter-21's
+  capture-on-completion path
+- briefs survive idle / cold-start / preemption with zero loss
+- reaper sweeps long-leased briefs back to queue/ if a worker dies
+  mid-dispatch
+
+### Master's post-implementation sequence (per 04:05Z message)
+
+1. ✅ Cluster-Task implementation — DONE iter-22 (`03b0b78`) + iter-23
+   (`66790b8`)
+2. ⏳ Stage-6 promote `cluster/project-slm` → canonical (operator
+   authorizes; same pattern as v0.1.77)
+3. ⏳ Master rebuilds `slm-doorman-server` from canonical HEAD
+4. ⏳ Master commits `bin/capture-edit.py` direct-queue-write change
+   at workspace tier (replaces HTTP fire-and-forget with file write)
+5. ⏳ Master `sudo install` + `systemctl restart local-doorman.service`
+6. ⏳ Trigger smoke commit; observe queue + drain working
+7. ⏳ Master version bump (~v0.1.80 or later)
+8. ⏳ When Yo-Yo manual provision lands (operator-presence parallel),
+   Master verifies E2E shadow corpus growth
+
+### Cluster posture
+
+154/154 tests verified. Working tree clean. Sub-agent-queue updated.
+Stage 6 hold preserved (not pushed). This is the structural moment
+Master named in 04:05Z: "service-SLM crosses from 'configured but not
+training' to 'actually training continuously.'" Cluster-Task scope
+complete; Master + operator own the workspace-tier completion of the arc.
+
+---
+
 ## 2026-04-29 — Iter-21 AS-3 fix LANDED (capture-on-completion + promote-on-verdict)
 
 Doctrine v0.0.13 ratified at workspace tier 03:13Z (claim #32 amended;

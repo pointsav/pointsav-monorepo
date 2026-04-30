@@ -31,6 +31,12 @@ tracing-subscriber = { workspace = true }
 
 anyhow = { workspace = true }
 
+# File locking for the brief queue (apprenticeship-substrate.md §7C).
+# Already a workspace dep used by slm-doorman for the promotion ledger;
+# re-declared here explicitly so the server crate does not rely on
+# transitive resolution for a direct dependency.
+fs2 = { version = "0.4" }
+
 [dev-dependencies]
 # Integration test framework — test axum routes without binding a port.
 # Uses tower::ServiceExt::oneshot + axum::body::Body (both already

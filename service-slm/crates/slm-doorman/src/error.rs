@@ -232,4 +232,39 @@ pub enum DoormanError {
         /// The configured cap value (`SLM_AUDIT_TENANT_CONCURRENCY_CAP`).
         cap: u32,
     },
+
+    // ── Brief Queue Substrate (apprenticeship-substrate.md §7C) ─────────
+    /// A file-system I/O error occurred while operating on the brief queue
+    /// (enqueue, dequeue, lease rename, release, or reap). 500
+    /// INTERNAL_SERVER_ERROR.
+    #[error("brief queue I/O error at {path}: {reason}")]
+    QueueIo {
+        /// Filesystem path where the operation failed.
+        path: String,
+        /// Human-readable description of the failure.
+        reason: String,
+    },
+
+    /// A brief queue directory lock could not be acquired (another process
+    /// or the reaper holds the `.lock` sentinel). The caller should retry
+    /// after a short delay. 503 SERVICE_UNAVAILABLE.
+    #[error("brief queue lock unavailable at {path}: {reason}")]
+    QueueLockFailed {
+        /// Path to the `.lock` sentinel file.
+        path: String,
+        /// Human-readable description (e.g. "EWOULDBLOCK").
+        reason: String,
+    },
+
+    /// A queue entry file could not be parsed as a valid
+    /// `ApprenticeshipBrief` JSONL record. The entry has been moved to the
+    /// `queue-poison/` bucket. 400 BAD_REQUEST when surfaced via HTTP;
+    /// background worker logs and continues.
+    #[error("brief queue entry at {path} is malformed and was moved to queue-poison: {reason}")]
+    QueueMalformedBrief {
+        /// Path of the malformed brief file (original location).
+        path: String,
+        /// Parse-error description.
+        reason: String,
+    },
 }
