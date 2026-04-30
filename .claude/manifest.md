@@ -12,6 +12,11 @@ tetrad:
       path: ./
       upstream: vendor/pointsav-monorepo
       focus: service-slm/ (Doorman + slm-core + slm-doorman + slm-doorman-server), Apprenticeship Substrate routing endpoints (claim #32)
+    - repo: pointsav-monorepo
+      path: ./service-content/
+      upstream: vendor/pointsav-monorepo
+      focus: service-content/ (semantic entity extractor + CORPUS ledger watcher + LadybugDB graph — Ring 2)
+      note: formally absorbed into project-slm scope per Master P4 ratification 2026-04-30; every LLM wire change routes through Doorman and the apprenticeship arm; datagraph is the grounding surface for Doctrine claim #44
   customer:
     - fleet_deployment_repo: vendor/pointsav-fleet-deployment
       catalog_subfolder: vault-privategit-source/
