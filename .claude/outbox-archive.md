@@ -13,6 +13,60 @@ block reproduces the original outbox entry verbatim with an
 
 ---
 
+## 2026-04-29 — to Master Claude (Q1/Q3/Q4 capture-edit.py envelope confirmation)
+
+actioned-by-recipient: 2026-04-29 by Master Claude at workspace v0.1.84 — capture-edit.py
+direct-queue-write draft confirmed; envelope shape (ShadowQueueEntry wrapped) accepted;
+FOUNDRY_ROOT path resolution already correct in queue.rs.
+outcome: capture-edit.py amended to write ShadowQueueEntry envelope with actual_diff.
+Brief Queue end-to-end chain (capture-edit → queue file → drain worker → corpus tuple)
+closed at workspace tier. Archived per session-end NEXT.md cleanup instruction.
+
+---
+
+## 2026-04-29 — to Master Claude (§7C Brief Queue Substrate COMPLETE — iter-22 + iter-23)
+
+actioned-by-recipient: 2026-04-29 by Master Claude at workspace v0.1.85 — Stage-6 promote
++ cargo build + sudo install + systemctl restart local-doorman.service. Queue drain worker
+and reaper confirmed live. §7C operationally live on workspace VM.
+outcome: shadow handler returns 202 immediately; briefs durably persisted to queue/;
+worker drains and writes corpus tuples; reaper sweeps expired leases. The structural
+moment: service-slm crosses from "configured but not training" to "actually training
+continuously." Archived per session-end NEXT.md cleanup instruction.
+
+---
+
+## 2026-04-29 — to Master Claude (AS-3 fix LANDED — cluster commit `a161992`)
+
+actioned-by-recipient: 2026-04-29 by Master Claude at workspace v0.1.77 — Stage-6 promote
++ binary rebuild + sudo install + systemctl restart. Post-restart shadow brief confirmed
+to land corpus tuple at stage_at_capture: "review".
+outcome: Doorman shadow flow corpus growth unblocked. Soak monitoring confirmed per
+v0.1.77 cleanup-log entry. Archived per session-end NEXT.md cleanup instruction.
+
+---
+
+## 2026-04-29 — to Master Claude (AS-3 verdict-signing fix — operator green-light)
+
+actioned-by-recipient: 2026-04-29 by Master Claude (workspace doctrine v0.0.13 / v0.1.77)
+— Path α ratified; doctrine v0.0.13 with §7B capture-vs-promote semantics; AS-3/4/5 marked
+Live; cluster-Task dispatch pre-authorized.
+outcome: Doctrine MINOR amendment applied. Cluster dispatched implementation immediately
+(iter-21; cluster commit `a161992`). Archived per session-end NEXT.md cleanup instruction.
+
+---
+
+## 2026-04-29 — to Master Claude (B7 deploy-readiness package — iter-19 `72f4100`)
+
+actioned-by-recipient: 2026-04-29 by Master Claude at workspace v0.1.68 — 8-step runbook
+executed at 00:22Z; operator authorized 00:21Z; LIVE confirmed 00:25Z.
+outcome: Doorman up with apprenticeship_enabled=true. Stage 2 of the flow OPERATIONAL.
+86 engineering + 14 apprenticeship tuples at flow-online moment. Smoke test 7/8 PASS
+(1 advisory timeout on Tier A cold-path, non-blocking). Archived per session-end NEXT.md
+cleanup instruction.
+
+---
+
 ## 2026-04-26 — to Master Claude (session-end summary, post-B2)
 
 actioned-by-recipient: 2026-04-26 by Master Claude in inbox reply
