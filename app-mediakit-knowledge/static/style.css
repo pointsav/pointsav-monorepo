@@ -637,6 +637,24 @@ article table th { background: var(--bg-chrome); font-weight: 600; }
   color: var(--fg-muted);
 }
 
+/* Stats banner — Wikipedia welcome-banner pattern.
+   "N articles across N categories — last updated YYYY-MM-DD."
+   Sits between the lede and the featured panel. Visually subordinate
+   to the lede; structurally signals the corpus's scale and freshness. */
+.wiki-home-stats {
+  margin: -1rem 0 2rem;
+  font-family: var(--sans);
+  font-size: 0.9375rem;
+  color: var(--fg-muted);
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.75rem;
+}
+
+.wiki-home-stats time {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
 /* Section headings above the grid and recent feed */
 .wiki-home-section-title {
   font-family: var(--sans);
