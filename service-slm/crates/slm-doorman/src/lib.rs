@@ -19,6 +19,7 @@ pub mod brief_cache;
 pub mod citations;
 pub mod error;
 pub mod grammar_validation;
+pub mod graph;
 pub mod ledger;
 pub mod promotion_ledger;
 pub mod redact;
@@ -38,6 +39,7 @@ pub use audit_proxy::{
 pub use brief_cache::{BriefCache, CachedBrief};
 pub use error::{DoormanError, Result};
 pub use grammar_validation::LarkValidator;
+pub use graph::GraphContextClient;
 pub use ledger::{
     AuditCaptureEntry, AuditEntry, AuditLedger, AuditProxyEntry, AuditProxyStubEntry,
 };
