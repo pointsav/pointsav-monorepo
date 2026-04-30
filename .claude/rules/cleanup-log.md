@@ -96,6 +96,68 @@ Newest on top. Append a dated block when a session includes meaningful cleanup w
 
 ---
 
+## 2026-04-30 — Phase 2 Briefs C + D — forge-seeds.sh generalization + LadybugDB graph engine
+
+Session resumed from prior context. Operator said "go" → Phase 2 execution underway.
+Tests stable at 154/154 (slm-doorman workspace). service-content is a standalone crate
+(not in slm-doorman workspace); `cargo check` from service-content/ confirms.
+
+### Brief C — forge-seeds.sh path generalization (`f2e158f`, Peter Woodfine)
+
+`service-content/scripts/forge-seeds.sh` had hardcoded legacy path:
+`TARGET_DIR="/home/mathew/Foundry/factory-pointsav/pointsav-monorepo/service-content/seeds"`
+
+Replaced with env-var override pattern:
+```bash
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+TARGET_DIR="${SERVICE_CONTENT_SEEDS_DIR:-${SCRIPT_DIR}/../seeds}"
+```
+Default now resolves relative to the script, making it deployment-independent.
+`SERVICE_CONTENT_SEEDS_DIR` env var allows override without editing the script.
+
+### Brief D — LadybugDB graph engine + HTTP server (`6f664f9`, Jennifer Woodfine)
+
+Three new/updated files in `service-content/`:
+
+- **`src/graph.rs`** (230 lines, new): `GraphStore` trait + `GraphEntity` struct +
+  `LbugGraphStore` implementing full embedded graph via `lbug = "0.16"` (LadybugDB).
+  - `init_schema()`: CREATE NODE TABLE Entity (id PK, entity_name, classification,
+    role_vector, location_vector, contact_vector, module_id, confidence, created_at)
+    + CREATE REL TABLE RelatedTo (FROM Entity TO Entity, relation_type).
+  - `upsert_entities()`: MERGE on `id = "{module_id}__{entity_name.lower().replace(' ','_')}"`
+    — per-tenant isolation + idempotent.
+  - `query_context()`: MATCH WHERE module_id=$mid AND lower(entity_name) CONTAINS $query LIMIT $limit
+  - `list_entities()`: MATCH WHERE module_id=$mid
+  - `Connection` created fresh per method call (Connection not thread-safe).
+  - Dead code warning on `list_entities` expected (not yet wired; future HTTP exposure).
+
+- **`src/http.rs`** (89 lines, new): axum HTTP server on `SERVICE_CONTENT_HTTP_BIND`
+  (default `127.0.0.1:9081`). Routes: `GET /healthz`, `GET /v1/graph/context?q=TEXT&module_id=MID&limit=N`,
+  `POST /v1/graph/mutate`. State: `Arc<dyn GraphStore>`. Shared with main via Arc clone.
+
+- **`src/main.rs`** (updated — CRITICAL RUNTIME FIX): Changed from `#[tokio::main] async fn main()`
+  to synchronous `fn main()`. HTTP server runs in `std::thread::spawn` with its own
+  `tokio::runtime::Runtime`. Fix reason: `reqwest::blocking::Client` panics at runtime
+  when called from inside a tokio async context. `cargo check` does not catch this —
+  it's a runtime panic. The fix keeps the watcher loop synchronous and gives HTTP its own
+  isolated tokio runtime.
+
+- **`Cargo.toml`** (updated): added `lbug = "0.16"`, `axum = {version = "0.7", features = ["json"]}`,
+  `tokio = {version = "1", features = ["full"]}`, `anyhow = "1.0"`,
+  `chrono = {version = "0.4", features = ["serde"]}`.
+
+**cargo check** from `service-content/` directory: `Finished` with 1 dead_code warning, no errors.
+
+### Next — Brief E
+
+Doorman `GraphContextClient`: new `crates/slm-doorman/src/graph.rs` querying
+`GET {SERVICE_CONTENT_ENDPOINT}/v1/graph/context`. Wire into `router.rs` `route()`:
+fetch context before dispatch; inject as system message; non-fatal if service-content
+is unavailable. `SERVICE_CONTENT_ENDPOINT` env var in main.rs (default `http://127.0.0.1:9081`).
+Baseline: 154/154 tests. Target: +3 wiremock tests minimum.
+
+---
+
 ## 2026-04-30 — Phase 1 COMPLETE — service-content Doorman refactor + slm-chat.sh REPL
 
 Session opened with Master iter-24 ratification message in inbox (all 6 §9 proposals

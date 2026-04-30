@@ -1,38 +1,32 @@
 # NEXT.md — service-slm
 
-> Last updated: 2026-04-28 (long-running Sonnet pipeline iter-1 = PS.3 step 2)
+> Last updated: 2026-04-30 (Phase 2 in progress — Brief E next)
 > Read at session start. Update before session end so the next
 > session knows where to pick up.
 
 ---
 
-## Right now — Phase 1 COMPLETE; awaiting Phase 2 authorization
+## Right now — Phase 2 in progress — Brief E: Doorman GraphContextAssembler
 
-**Session 2026-04-30 (current):**
-- Master iter-24 ratification message received + actioned (inbox cleared)
-- Iter-24 outbox archived (all 6 proposals decided)
-- **Brief A** `8b9a1b6` — `service-content/src/main.rs` Doorman refactor
-  (port 8082 → port 9080 via OpenAI-compatible `/v1/chat/completions`);
-  env-var driven (`SLM_DOORMAN_ENDPOINT`, `SERVICE_CONTENT_BASE_DIR`,
-  `SERVICE_CONTENT_MODULE_ID`). Single-Boundary gap closed.
-- **Brief B** `4ecf80a` — `service-slm/scripts/slm-chat.sh` proof-of-life
-  REPL (68 lines bash; curl + jq; multi-turn conversation history;
-  graceful error handling; `SLM_DOORMAN_ENDPOINT` env-var configurable)
-- Manifest updated: service-content formally in vendor leg (P4 ratification)
-- `ARCHITECTURE.md` updated: GraphStore trait discipline noted for Phase 2;
-  `kuzu` → `ladybugdb` crate row clarified
+**Phase 1 — COMPLETE:**
+- **Brief A** `8b9a1b6` — `service-content/src/main.rs` Doorman refactor (port 8082 → 9080)
+- **Brief B** `4ecf80a` — `service-slm/scripts/slm-chat.sh` proof-of-life REPL
 
-**Phase 1 deliverables — DONE:**
-1. service-content routes through Doorman ✓ (commit `8b9a1b6`)
-2. slm-chat.sh proof-of-life REPL ✓ (commit `4ecf80a`)
-
-**Phase 2 — awaiting operator-presence authorization:**
-- LadybugDB graph engine for service-content
-- `GraphStore` trait interface (wraps LadybugDB; swappable to
-  `moonshot-database` when that matures)
-- service-content HTTP server (`/v1/graph/context`, `/v1/graph/mutate`)
-- Doorman `GraphContextAssembler` queries graph before inference
-- forge-seeds.sh path generalization (hardcoded `/home/mathew/Foundry/factory-pointsav/...`)
+**Phase 2 — IN PROGRESS:**
+- **Brief C** `f2e158f` — `service-content/scripts/forge-seeds.sh` path generalization ✓
+- **Brief D** `6f664f9` — LadybugDB graph engine + HTTP server:
+  - `service-content/src/graph.rs` — `GraphStore` trait + `LbugGraphStore` (230 lines)
+  - `service-content/src/http.rs` — axum server on port 9081 (`/healthz`, `/v1/graph/context`, `/v1/graph/mutate`)
+  - `service-content/src/main.rs` — sync main, graph init, HTTP server in own tokio thread
+  - `service-content/Cargo.toml` — added `lbug`, `axum`, `tokio`, `anyhow`, `chrono`
+  - `cargo check` clean (1 dead_code warning on `list_entities`)
+- **Brief E** — Doorman `GraphContextClient` (CURRENT):
+  - New `crates/slm-doorman/src/graph.rs` — `GraphContextClient` querying
+    `GET {SERVICE_CONTENT_ENDPOINT}/v1/graph/context?q=...&module_id=...`
+  - Wire into `router.rs` `route()`: fetch context before dispatch, inject into messages
+  - Non-fatal: service-content unavailable → proceed without context
+  - `SERVICE_CONTENT_ENDPOINT` env var in `slm-doorman-server/src/main.rs` (default `http://127.0.0.1:9081`)
+  - 3+ wiremock tests; 154/154 baseline must remain green
 
 **Phase 3 — threshold training + cron (P6 cadence ratified):**
 - 50-tuple trigger per adapter corpus bucket
