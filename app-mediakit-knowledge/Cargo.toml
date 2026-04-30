@@ -2,5 +2,62 @@
 name = "app-mediakit-knowledge"
 version = "0.1.0"
 edition = "2021"
+authors = ["PointSav Digital Systems"]
+description = "Wikipedia-pattern HTTP viewer for content-wiki-documentation. Serves flat Markdown files from a Git repository as a knowledge wiki on os-mediakit."
+license = "Apache-2.0"
+repository = "https://github.com/pointsav/pointsav-monorepo"
+
+[[bin]]
+name = "app-mediakit-knowledge"
+path = "src/main.rs"
 
 [dependencies]
+# HTTP server
+axum = { version = "0.7", features = ["macros"] }
+tokio = { version = "1", features = ["full"] }
+tower = "0.4"
+tower-http = { version = "0.5", features = ["fs", "compression-gzip", "trace"] }
+
+# Markdown rendering
+pulldown-cmark = { version = "0.11", default-features = false, features = ["html"] }
+syntect = { version = "5", default-features = false, features = ["default-syntaxes", "html"] }
+
+# Front matter parsing
+gray_matter = "0.2"
+serde = { version = "1", features = ["derive"] }
+serde_yaml = "0.9"
+serde_json = "1"
+
+# Full-text search
+tantivy = "0.22"
+
+# Git operations
+git2 = { version = "0.19", default-features = false }
+
+# Template rendering
+tera = "1"
+
+# Caching
+lru = "0.12"
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# Utilities
+anyhow = "1"
+thiserror = "1"
+walkdir = "2"
+once_cell = "1"
+regex = "1"
+urlencoding = "2"
+
+[dev-dependencies]
+tokio-test = "0.4"
+tempfile = "3"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+strip = true
