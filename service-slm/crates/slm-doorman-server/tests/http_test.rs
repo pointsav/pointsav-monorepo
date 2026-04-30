@@ -825,6 +825,7 @@ async fn lark_validation_runs_before_tier_b_dispatch() {
             yoyo: Some(yoyo),
             external: None,
             lark_validator: Some(lark_validator),
+            graph_context_client: None,
         },
         temp_ledger(),
     );
@@ -1150,6 +1151,7 @@ async fn valid_lark_grammar_passes_through_to_tier_b() {
             yoyo: Some(yoyo),
             external: None,
             lark_validator: Some(lark_validator),
+            graph_context_client: None,
         },
         temp_ledger(),
     );

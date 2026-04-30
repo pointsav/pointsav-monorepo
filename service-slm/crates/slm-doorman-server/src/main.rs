@@ -43,6 +43,9 @@
 //!   SLM_LARK_VALIDATION_ENABLED  pre-validate Lark grammars at the Doorman
 //!                             boundary using llguidance (PS.3 step 5).
 //!                             Default true. Set to `false` or `0` to disable.
+//!   SERVICE_CONTENT_ENDPOINT  service-content graph API base URL
+//!                             (e.g. http://127.0.0.1:9081). When absent
+//!                             the Doorman proceeds without graph context.
 //!   SLM_AUDIT_TENANT_CONCURRENCY_CAP
 //!                             maximum number of concurrent in-flight audit
 //!                             requests per tenant (moduleId) across BOTH
@@ -73,8 +76,8 @@ use slm_doorman::tier::{
 };
 use slm_doorman::{
     ApprenticeshipConfig, AuditLedger, AuditProxyClient, AuditProxyConfig, BriefCache, Doorman,
-    DoormanConfig, LarkValidator, PromotionLedger, SshKeygenVerifier, VerdictDispatcher,
-    VerdictVerifier, FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST,
+    DoormanConfig, GraphContextClient, LarkValidator, PromotionLedger, SshKeygenVerifier,
+    VerdictDispatcher, VerdictVerifier, FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST,
 };
 use tracing::info;
 
@@ -406,12 +409,25 @@ fn build_doorman() -> anyhow::Result<Doorman> {
         }
     };
 
+    // Graph context (service-content Ring 2 — Brief E).
+    // When SERVICE_CONTENT_ENDPOINT is set, the Doorman queries the
+    // service-content graph before each inference call and injects matching
+    // entity rows as a system message. Non-fatal if absent.
+    let graph_context_client =
+        std::env::var("SERVICE_CONTENT_ENDPOINT")
+            .ok()
+            .map(|ep| {
+                info!("Graph context enabled; service-content endpoint: {}", ep);
+                GraphContextClient::new(ep)
+            });
+
     Ok(Doorman::new(
         DoormanConfig {
             local,
             yoyo,
             external,
             lark_validator,
+            graph_context_client,
         },
         ledger,
     ))
