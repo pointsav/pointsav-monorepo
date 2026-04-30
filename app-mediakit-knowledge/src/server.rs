@@ -228,6 +228,17 @@ pub struct FeaturedTopic {
     pub lede: String,
 }
 
+/// Wikipedia-style stats banner shown immediately under the welcome lede.
+/// Renders as: "N articles across N categories — last updated YYYY-MM-DD."
+/// Per `content-wiki-documentation/index.md` ENGINE comment + iteration-2
+/// home-page leapfrog primitive (Wikipedia welcome-banner pattern preserved).
+#[derive(Debug, Clone)]
+pub struct HomeStats {
+    pub article_count: usize,
+    pub category_count: usize,
+    pub last_updated: Option<String>,
+}
+
 /// Category buckets: `BTreeMap<category_name, Vec<TopicSummary>>`.
 pub type CategoryBuckets = BTreeMap<String, Vec<TopicSummary>>;
 
@@ -400,6 +411,35 @@ fn recent_topics_by_last_edited(buckets: &CategoryBuckets, n: usize) -> Vec<Topi
 /// Returns `None` silently if the file is absent. Logs a warning via
 /// `tracing::warn!` if the file is present but unparseable or if the slug
 /// cannot be found in `buckets`.
+/// Compute home-page stats banner contents.
+///
+/// `article_count` is the total number of bucketed topics across all
+/// categories (excludes `index.md`, `_index.md`, and `*.es.md` siblings,
+/// matching `bucket_topics_by_category()` discipline).
+///
+/// `category_count` is `RATIFIED_CATEGORIES.len()` — always 9, signalling
+/// the platform's intended scope rather than only categories with
+/// articles.
+///
+/// `last_updated` is the maximum `last_edited:` ISO-8601 string across
+/// all bucketed topics. Returns `None` if no topic carries the field
+/// (the banner suppresses the date in that case rather than rendering an
+/// empty value).
+fn compute_home_stats(buckets: &CategoryBuckets) -> HomeStats {
+    let article_count: usize = buckets.values().map(|v| v.len()).sum();
+    let last_updated = buckets
+        .values()
+        .flatten()
+        .filter_map(|t| t.last_edited.as_deref())
+        .max()
+        .map(|s| s.to_string());
+    HomeStats {
+        article_count,
+        category_count: RATIFIED_CATEGORIES.len(),
+        last_updated,
+    }
+}
+
 async fn read_featured_topic(
     content_dir: &FsPath,
     buckets: &CategoryBuckets,
@@ -469,6 +509,7 @@ fn home_chrome(
     featured: Option<&FeaturedTopic>,
     buckets: &CategoryBuckets,
     recent: &[TopicSummary],
+    stats: &HomeStats,
 ) -> Markup {
     let title = home_fm
         .title
@@ -497,6 +538,25 @@ fn home_chrome(
                     @if !home_html.is_empty() {
                         div.wiki-home-lede {
                             (PreEscaped(home_html))
+                        }
+                    }
+
+                    // Stats banner — Wikipedia welcome-banner pattern.
+                    // "N articles across N categories — last updated YYYY-MM-DD."
+                    // Suppress entirely when corpus is empty (no articles, no date).
+                    @if stats.article_count > 0 {
+                        p.wiki-home-stats aria-label="Knowledge wiki structural scale" {
+                            (stats.article_count)
+                            " article"
+                            @if stats.article_count != 1 { "s" }
+                            " across "
+                            (stats.category_count)
+                            " categories"
+                            @if let Some(ref d) = stats.last_updated {
+                                " — last updated "
+                                time datetime=(d) { (d) }
+                            }
+                            "."
                         }
                     }
 
@@ -649,6 +709,7 @@ async fn index(State(state): State<Arc<AppState>>) -> Result<Markup, WikiError> 
     let buckets = bucket_topics_by_category(&state.content_dir).await?;
     let featured = read_featured_topic(&state.content_dir, &buckets).await;
     let recent = recent_topics_by_last_edited(&buckets, 5);
+    let stats = compute_home_stats(&buckets);
     let home_html = crate::render::render_html_raw(&home_parsed.body_md);
     Ok(home_chrome(
         &home_parsed.frontmatter,
@@ -656,6 +717,7 @@ async fn index(State(state): State<Arc<AppState>>) -> Result<Markup, WikiError> 
         featured.as_ref(),
         &buckets,
         &recent,
+        &stats,
     ))
 }
 
