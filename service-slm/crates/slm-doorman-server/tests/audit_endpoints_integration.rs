@@ -36,6 +36,7 @@ use slm_doorman::{
     AuditProxyStubEntry, BriefCache, Doorman, DoormanConfig, FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST,
 };
 use slm_doorman_server::http::{router, AppState};
+use slm_doorman_server::test_helpers::temp_queue_config;
 use tower::ServiceExt;
 use wiremock::matchers::{method, path};
 use wiremock::{Mock, MockServer, ResponseTemplate};
@@ -111,6 +112,7 @@ fn app_state_with_proxy_and_ledger_dir(
         audit_proxy_purpose_allowlist: FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST,
         audit_tenant_concurrency: Arc::new(Mutex::new(HashMap::new())),
         audit_tenant_concurrency_cap: 100,
+        queue_config: temp_queue_config(),
     })
 }
 
