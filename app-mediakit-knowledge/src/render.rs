@@ -9,6 +9,10 @@
 //! - `hatnote`: optional italic note rendered above the article body
 //! - `translations`: optional map of language code → slug for language switcher
 //! - `categories`: optional list of category labels for footer rendering
+//!
+//! Iteration-2 additions (additive — no removals):
+//! - `short_description`: one-sentence article summary; rendered as italic
+//!   subtitle below the H1 (Wikipedia Vector 2022 article-subtitle pattern)
 
 use comrak::{markdown_to_html, Options};
 use serde::Deserialize;
@@ -63,6 +67,13 @@ pub struct Frontmatter {
     /// `git log -1 --format=%cI -- <path>`, then to filesystem mtime.
     #[serde(default)]
     pub last_edited: Option<String>,
+
+    /// One-sentence article summary. Rendered as `<p class="topic-short-description"><em>…</em></p>`
+    /// immediately below the article H1, matching Wikipedia Vector 2022's italic subtitle
+    /// pattern. Also used in the featured-article panel on the home page.
+    /// Omitted gracefully when absent.
+    #[serde(default)]
+    pub short_description: Option<String>,
 
     #[serde(flatten)]
     pub extra: BTreeMap<String, serde_yaml::Value>,
@@ -360,5 +371,16 @@ mod tests {
         assert_eq!(cats, vec!["Foo", "Bar"]);
         let trans = parsed.frontmatter.translations.unwrap();
         assert_eq!(trans.get("es").map(|s| s.as_str()), Some("test.es"));
+    }
+
+    /// `short_description` field deserialises from frontmatter.
+    #[test]
+    fn parses_short_description() {
+        let text = "---\ntitle: Substrate\nshort_description: \"The five structural properties that define the platform.\"\n---\nbody\n";
+        let parsed = parse_page(text).unwrap();
+        assert_eq!(
+            parsed.frontmatter.short_description.as_deref(),
+            Some("The five structural properties that define the platform.")
+        );
     }
 }
