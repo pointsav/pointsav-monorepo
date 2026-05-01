@@ -95,6 +95,41 @@ Newest on top. Append a dated block when a session includes meaningful cleanup w
 
 ---
 
+## 2026-05-01 — iteration-2 Waves 1+2+3 complete — recursive walk + article chrome + home page
+
+- **Operator direction**: "we need to loop all the waves and get all the way though" — complete
+  all three waves of engine changes to unblock the wiki re-launch.
+
+- **Wave 1 (critical blocker):** `collect_topic_files()` recursive walk replaces the flat
+  `read_dir()`. Path-qualified slugs (`architecture/compounding-substrate`). Route `/wiki/{*slug}`
+  wildcard. `sitemap_xml()` + `llms_txt()` updated. 130+ TOPICs in category subdirectories are
+  now visible to the engine.
+
+- **Wave 2 (article chrome):** `short_description` italic subtitle below H1 (Frontmatter field
+  added in `render.rs`); breadcrumb navigation; `last_edited` date in article footer;
+  `category:` singular tag from the `category:` frontmatter field when `categories:` list absent.
+
+- **Wave 3 (home page):** `LeapfrogFact` + `LeapfrogFactsYaml` types; `read_leapfrog_facts()`;
+  `home_chrome()` two-column layout (featured left, leapfrog facts right); `HomeStats` banner
+  previously shipped wired to new layout; `index()` calls all three.
+
+- **CSS:** `.topic-short-description`, `.wiki-breadcrumb`, `.wiki-home-two-col`,
+  `.wiki-home-leapfrog`, `.wiki-home-bilingual-notice`, `.wiki-article-last-edited`,
+  `.wiki-category-single-tag` — all additive, no existing rules changed.
+
+- **`cargo check` clean** (17.78s). All prior tests pass.
+
+- **Pending / deferred:**
+  - `feeds.rs` `collect_recent_items()` still uses flat `read_dir()` at line 53 — feeds only
+    surface root-level topics. Deferred to Wave 4 (next session).
+  - New integration tests for subdirectory slug resolution, leapfrog facts panel,
+    `last_edited` footer — not written this session; existing 104 tests all pass.
+
+- **Content side (content-wiki-documentation):**
+  - `featured-topic.yaml` slug → `architecture/topic-leapfrog-2030-architecture`
+  - `leapfrog-facts.yaml`: 8 facts with path-qualified link_slugs (all resolve)
+  - `index.md`: Leapfrog 2030 lede; ENGINE duplicates removed; Provenance section removed
+
 ## 2026-04-30 — leapfrog-iteration-2 batch — research, design substrate, stats banner
 
 - **Operator-direction session**: "do come rearech on the home page for
