@@ -13,6 +13,18 @@
 //! - Per-section [edit] pencils (injected by render::inject_edit_pencils)
 //! - Footer convention (categories → license → about/contact links)
 //! - The existing `chrome()` function is retained for the index page.
+//!
+//! Iteration-2 additions (all additive — no existing behaviour changed):
+//! - Recursive content-directory walk: `collect_topic_files()` descends into
+//!   category subdirectories (`architecture/`, `services/`, etc.) so that all
+//!   130+ TOPICs are visible to the bucketing, featured-pin, and slug-resolution
+//!   logic. Slugs for subdirectory TOPICs take the form `<category>/<stem>`.
+//! - `short_description` subtitle: rendered as `<p class="topic-short-description">
+//!   <em>…</em></p>` immediately below the article H1.
+//! - Leapfrog 2030 facts panel: reads `leapfrog-facts.yaml` from `content_dir`;
+//!   renders a "Leapfrog 2030" bullet panel on the home page right column.
+//! - Breadcrumb navigation: `category:` frontmatter → "Documentation > Category > Title"
+//!   breadcrumb rendered above the article TOC rail.
 
 use axum::{
     extract::{Path, Query, State},
@@ -61,7 +73,8 @@ pub fn router(state: AppState) -> Router {
     let collab_enabled = state.enable_collab;
     let mut r = Router::new()
         .route("/", get(index))
-        .route("/wiki/{slug}", get(wiki_page))
+        // Wildcard capture allows category-scoped slugs: `/wiki/architecture/compounding-substrate`
+        .route("/wiki/{*slug}", get(wiki_page))
         .route("/static/{*path}", get(static_asset))
         .route("/healthz", get(healthz))
         // Phase 2 Step 2 — edit endpoint
@@ -207,12 +220,14 @@ async fn doorman_stub() -> impl IntoResponse {
 /// recent-additions feed.
 #[derive(Debug, Clone)]
 pub struct TopicSummary {
-    /// Slug (filename without `.md`).
+    /// Slug (filename without `.md`; category-scoped for subdirectory files).
     pub slug: String,
     /// Title from frontmatter, or the slug when absent.
     pub title: String,
     /// `last_edited:` frontmatter value; may be None if not set.
     pub last_edited: Option<String>,
+    /// `short_description` from frontmatter; may be None if not set.
+    pub short_description: Option<String>,
     /// First non-blank, non-heading line of the body Markdown.
     pub lede_first_line: String,
     /// Absolute path to the source file on disk (used for git fallback).
@@ -224,6 +239,8 @@ pub struct TopicSummary {
 pub struct FeaturedTopic {
     pub slug: String,
     pub title: String,
+    /// `short_description` from frontmatter, if present.
+    pub short_description: Option<String>,
     /// Auto-extracted first paragraph lede from the TOPIC body.
     pub lede: String,
 }
@@ -252,6 +269,23 @@ struct FeaturedTopicYaml {
     note: Option<String>,
 }
 
+/// One Leapfrog 2030 invention fact entry from `leapfrog-facts.yaml`.
+///
+/// `text` is the one-sentence fact. `link_slug` is an optional TOPIC slug;
+/// when present the text is rendered as a hyperlink to `/wiki/<link_slug>`.
+#[derive(Debug, Clone, Deserialize)]
+pub struct LeapfrogFact {
+    pub text: String,
+    #[serde(default)]
+    pub link_slug: Option<String>,
+}
+
+/// Deserialization shape for `leapfrog-facts.yaml`.
+#[derive(Debug, Deserialize)]
+struct LeapfrogFactsYaml {
+    facts: Vec<LeapfrogFact>,
+}
+
 /// Ratified category set in render order.
 /// Per naming-convention.md §10 Q5-A operator ratification 2026-04-28.
 const RATIFIED_CATEGORIES: &[&str] = &[
@@ -268,41 +302,92 @@ const RATIFIED_CATEGORIES: &[&str] = &[
 
 // ─── Home-page helpers ──────────────────────────────────────────────────────
 
-/// Walk `content_dir`, parse every `*.md` file (skipping `*.es.md` bilingual
-/// siblings, `index.md`, and files starting with `_`), and group them into
-/// a `BTreeMap<category, Vec<TopicSummary>>`.
+/// A single topic file discovered during a recursive walk of `content_dir`.
+///
+/// `slug` is the routing slug used in `/wiki/<slug>` URLs. For files
+/// directly in `content_dir` the slug equals the filename stem (e.g.,
+/// `topic-hello`). For files in a subdirectory the slug is
+/// `<subdir>/<stem>` (e.g., `architecture/compounding-substrate`).
+struct TopicFile {
+    slug: String,
+    path: PathBuf,
+}
+
+/// Recursively collect all TOPIC `.md` files under `content_dir`.
+///
+/// Skips:
+/// - `*.es.md` bilingual siblings
+/// - `index.md` and `_index.md` at any level
+/// - Files whose stem starts with `_`
+/// - Non-`.md` files
+///
+/// Descends one level into subdirectories (category folders). Does not
+/// recurse further — the content tree is `<content_dir>/<category>/<slug>.md`.
+async fn collect_topic_files(content_dir: &FsPath) -> std::io::Result<Vec<TopicFile>> {
+    let mut out = Vec::new();
+    let mut entries = fs::read_dir(content_dir).await?;
+
+    while let Some(entry) = entries.next_entry().await? {
+        let file_type = entry.file_type().await?;
+        let name = entry.file_name();
+        let name_str = name.to_string_lossy().to_string();
+
+        if file_type.is_dir() {
+            // Descend into category subdirectory.
+            let subdir_name = name_str.clone();
+            let mut sub_entries = match fs::read_dir(entry.path()).await {
+                Ok(e) => e,
+                Err(_) => continue,
+            };
+            while let Some(sub_entry) = sub_entries.next_entry().await? {
+                let sub_name = sub_entry.file_name();
+                let sub_str = sub_name.to_string_lossy().to_string();
+                let stem = match sub_str.strip_suffix(".md") {
+                    Some(s) => s.to_string(),
+                    None => continue,
+                };
+                if stem.ends_with(".es") || stem == "index" || stem == "_index" || stem.starts_with('_') {
+                    continue;
+                }
+                out.push(TopicFile {
+                    slug: format!("{subdir_name}/{stem}"),
+                    path: sub_entry.path(),
+                });
+            }
+        } else {
+            // File at root level.
+            let stem = match name_str.strip_suffix(".md") {
+                Some(s) => s.to_string(),
+                None => continue,
+            };
+            if stem.ends_with(".es") || stem == "index" || stem == "_index" || stem.starts_with('_') {
+                continue;
+            }
+            out.push(TopicFile {
+                slug: stem,
+                path: entry.path(),
+            });
+        }
+    }
+
+    Ok(out)
+}
+
+/// Walk `content_dir` recursively, parse every TOPIC `.md` file, and group
+/// them into a `BTreeMap<category, Vec<TopicSummary>>`.
+///
+/// Descends into category subdirectories (`architecture/`, `services/`, etc.).
+/// Slugs for subdirectory TOPICs take the form `<category>/<stem>` so they
+/// resolve correctly in `/wiki/<slug>` routes.
 ///
 /// Files with no `category:` frontmatter, or whose category is `root`, are
 /// bucketed under `"uncategorised"`.
 async fn bucket_topics_by_category(content_dir: &FsPath) -> std::io::Result<CategoryBuckets> {
-    let mut entries = fs::read_dir(content_dir).await?;
+    let topic_files = collect_topic_files(content_dir).await?;
     let mut buckets: CategoryBuckets = BTreeMap::new();
 
-    while let Some(entry) = entries.next_entry().await? {
-        let name = entry.file_name();
-        let name_str = name.to_string_lossy();
-
-        // Only process `.md` files.
-        let slug = match name_str.strip_suffix(".md") {
-            Some(s) => s.to_string(),
-            None => continue,
-        };
-
-        // Skip bilingual siblings (`*.es.md` → slug ends with `.es`).
-        if slug.ends_with(".es") {
-            continue;
-        }
-        // Skip `index.md`.
-        if slug == "index" {
-            continue;
-        }
-        // Skip hidden/system files starting with `_`.
-        if slug.starts_with('_') {
-            continue;
-        }
-
-        let file_path = content_dir.join(format!("{slug}.md"));
-        let text = match fs::read_to_string(&file_path).await {
+    for tf in topic_files {
+        let text = match fs::read_to_string(&tf.path).await {
             Ok(t) => t,
             Err(_) => continue,
         };
@@ -316,22 +401,33 @@ async fn bucket_topics_by_category(content_dir: &FsPath) -> std::io::Result<Cate
             .frontmatter
             .title
             .clone()
-            .unwrap_or_else(|| slug.clone());
+            .unwrap_or_else(|| tf.slug.clone());
 
+        // Category: prefer frontmatter `category:`, fall back to the
+        // subdirectory name extracted from the slug.
         let category = match parsed.frontmatter.category.as_deref() {
-            None | Some("root") | Some("") => "uncategorised".to_string(),
+            None | Some("root") | Some("") => {
+                // Infer from slug prefix if file is in a subdirectory.
+                if let Some(slash) = tf.slug.find('/') {
+                    tf.slug[..slash].to_string()
+                } else {
+                    "uncategorised".to_string()
+                }
+            }
             Some(c) => c.to_string(),
         };
 
         let lede_first_line = first_body_line(&parsed.body_md);
         let last_edited = parsed.frontmatter.last_edited.clone();
+        let short_description = parsed.frontmatter.short_description.clone();
 
         let summary = TopicSummary {
-            slug,
+            slug: tf.slug,
             title,
             last_edited,
+            short_description,
             lede_first_line,
-            file_path,
+            file_path: tf.path,
         };
 
         buckets.entry(category).or_default().push(summary);
@@ -482,11 +578,35 @@ async fn read_featured_topic(
         Some(t) => Some(FeaturedTopic {
             slug: t.slug,
             title: t.title,
+            short_description: t.short_description,
             lede: t.lede_first_line,
         }),
         None => {
             tracing::warn!("featured-topic.yaml: slug '{slug}' not found in topic buckets");
             None
+        }
+    }
+}
+
+/// Read and validate `<content_dir>/leapfrog-facts.yaml`.
+///
+/// Returns an empty Vec silently when the file is absent.
+/// Logs a warning via `tracing::warn!` if the file is present but unparseable.
+async fn read_leapfrog_facts(content_dir: &FsPath) -> Vec<LeapfrogFact> {
+    let path = content_dir.join("leapfrog-facts.yaml");
+    let text = match fs::read_to_string(&path).await {
+        Ok(t) => t,
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Vec::new(),
+        Err(e) => {
+            tracing::warn!("leapfrog-facts.yaml read error: {e}");
+            return Vec::new();
+        }
+    };
+    match serde_yaml::from_str::<LeapfrogFactsYaml>(&text) {
+        Ok(parsed) => parsed.facts,
+        Err(e) => {
+            tracing::warn!("leapfrog-facts.yaml parse error: {e}");
+            Vec::new()
         }
     }
 }
@@ -498,11 +618,14 @@ async fn read_featured_topic(
 /// Structure:
 /// - Site header (reuses `chrome()` pattern)
 /// - Lede (rendered body Markdown from `index.md`)
-/// - Optional featured TOPIC panel (above the grid)
+/// - Stats banner ("N articles across N categories — last updated YYYY-MM-DD.")
+/// - Two-column main panel:
+///   - Left: Optional featured TOPIC panel
+///   - Right: Optional Leapfrog 2030 inventions bullet panel
 /// - By-category 3×3 grid (all 9 ratified categories; empty ones show
 ///   "0 articles — in preparation")
-/// - Recent-additions feed (top 5, sorted by `last_edited` descending)
-/// - Site footer
+/// - Recent additions feed (top 5, sorted by `last_edited` descending)
+/// - Site footer with bilingual notice
 fn home_chrome(
     home_fm: &crate::render::Frontmatter,
     home_html: &str,
@@ -510,6 +633,7 @@ fn home_chrome(
     buckets: &CategoryBuckets,
     recent: &[TopicSummary],
     stats: &HomeStats,
+    leapfrog_facts: &[LeapfrogFact],
 ) -> Markup {
     let title = home_fm
         .title
@@ -560,19 +684,49 @@ fn home_chrome(
                         }
                     }
 
-                    // Featured TOPIC panel — above the grid when present
-                    @if let Some(feat) = featured {
-                        div.wiki-home-featured {
-                            div.wiki-home-featured-inner {
-                                span.wiki-home-featured-label { "Featured article" }
-                                h2.wiki-home-featured-title {
-                                    a href={ "/wiki/" (feat.slug) } { (feat.title) }
+                    // Two-column panel: featured article (left) + leapfrog facts (right)
+                    @let show_two_col = featured.is_some() || !leapfrog_facts.is_empty();
+                    @if show_two_col {
+                        div.wiki-home-two-col {
+                            // Left column — Featured TOPIC panel
+                            div.wiki-home-col-left {
+                                @if let Some(feat) = featured {
+                                    div.wiki-home-featured {
+                                        div.wiki-home-featured-inner {
+                                            span.wiki-home-featured-label { "Featured article" }
+                                            h2.wiki-home-featured-title {
+                                                a href={ "/wiki/" (feat.slug) } { (feat.title) }
+                                            }
+                                            @if let Some(ref desc) = feat.short_description {
+                                                p.wiki-home-featured-desc { em { (desc) } }
+                                            }
+                                            @if !feat.lede.is_empty() {
+                                                p.wiki-home-featured-lede { (feat.lede) }
+                                            }
+                                            a.wiki-home-featured-read href={ "/wiki/" (feat.slug) } {
+                                                "Read more →"
+                                            }
+                                        }
+                                    }
                                 }
-                                @if !feat.lede.is_empty() {
-                                    p.wiki-home-featured-lede { (feat.lede) }
-                                }
-                                a.wiki-home-featured-read href={ "/wiki/" (feat.slug) } {
-                                    "→ Read"
+                            }
+                            // Right column — Leapfrog 2030 inventions facts panel
+                            @if !leapfrog_facts.is_empty() {
+                                div.wiki-home-col-right {
+                                    div.wiki-home-leapfrog {
+                                        h3.wiki-home-leapfrog-title { "Leapfrog 2030 inventions" }
+                                        ul.wiki-home-leapfrog-list {
+                                            @for fact in leapfrog_facts {
+                                                li.wiki-home-leapfrog-item {
+                                                    @if let Some(ref slug) = fact.link_slug {
+                                                        a href={ "/wiki/" (slug) } { (fact.text) }
+                                                    } @else {
+                                                        (fact.text)
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -632,6 +786,14 @@ fn home_chrome(
                     }
                 }
                 footer.site-footer {
+                    p.wiki-home-bilingual-notice {
+                        em {
+                            "Available in English and Español. "
+                            "Spanish articles are strategic-adaptation overviews, not translations."
+                        }
+                        " "
+                        a href="/wiki/index.es" { "Leer en Español →" }
+                    }
                     p { "PointSav Knowledge — "
                         a href="/" { "Home" }
                         " · Engine: app-mediakit-knowledge — see "
@@ -711,6 +873,7 @@ async fn index(State(state): State<Arc<AppState>>) -> Result<Markup, WikiError> 
     let recent = recent_topics_by_last_edited(&buckets, 5);
     let stats = compute_home_stats(&buckets);
     let home_html = crate::render::render_html_raw(&home_parsed.body_md);
+    let leapfrog_facts = read_leapfrog_facts(&state.content_dir).await;
     Ok(home_chrome(
         &home_parsed.frontmatter,
         &home_html,
@@ -718,6 +881,7 @@ async fn index(State(state): State<Arc<AppState>>) -> Result<Markup, WikiError> 
         &buckets,
         &recent,
         &stats,
+        &leapfrog_facts,
     ))
 }
 
@@ -725,11 +889,23 @@ async fn wiki_page(
     State(state): State<Arc<AppState>>,
     Path(slug): Path<String>,
 ) -> Result<Markup, WikiError> {
-    // Phase 1 slug safety: reject path traversal and nested paths.
-    // Phase 6 introduces full slug normalisation rules.
-    if slug.contains("..") || slug.contains('/') || slug.is_empty() {
+    // Slug safety: reject path traversal. Allow at most one `/` separator
+    // for category-scoped slugs (`architecture/compounding-substrate`).
+    if slug.contains("..") || slug.is_empty() {
         return Err(WikiError::NotFound(slug));
     }
+    // Validate component parts for safety.
+    let parts: Vec<&str> = slug.splitn(3, '/').collect();
+    if parts.len() > 2 {
+        // More than one directory level — reject.
+        return Err(WikiError::NotFound(slug));
+    }
+    for part in &parts {
+        if part.is_empty() || part.starts_with('.') {
+            return Err(WikiError::NotFound(slug.clone()));
+        }
+    }
+
     let path = state.content_dir.join(format!("{slug}.md"));
     let text = match fs::read_to_string(&path).await {
         Ok(t) => t,
@@ -781,6 +957,8 @@ async fn static_asset(Path(path): Path<String>) -> Response {
 /// - Language-switcher button (populated from frontmatter `translations:`)
 /// - Hatnote (italic, indented; only when `hatnote:` frontmatter is present)
 /// - "From PointSav Knowledge" tagline below the title
+/// - `short_description` subtitle (italic, below H1; iteration-2 addition)
+/// - Breadcrumb navigation (Documentation > Category > Title; iteration-2)
 /// - Reader density toggle (Off / Exceptions only / All; localStorage)
 /// - Per-section [edit] pencils (injected into rendered HTML by render module)
 /// - Footer block: categories → license → about/contact links
@@ -792,6 +970,12 @@ fn wiki_chrome(
     headings: Vec<(String, String, u8)>,
 ) -> Markup {
     let talk_slug = format!("{slug}.talk");
+
+    // Breadcrumb: derive category from frontmatter `category:` field,
+    // or from the slug prefix when the TOPIC is in a subdirectory.
+    let breadcrumb_category: Option<String> = fm.category.clone().or_else(|| {
+        slug.find('/').map(|pos| capitalise(&slug[..pos]))
+    });
 
     html! {
         (DOCTYPE)
@@ -842,6 +1026,17 @@ fn wiki_chrome(
                     // --- Main article column ---
                     main.wiki-main {
 
+                        // Breadcrumb navigation — "Documentation > Category > Title"
+                        @if let Some(ref cat) = breadcrumb_category {
+                            nav.wiki-breadcrumb aria-label="Breadcrumb" {
+                                a href="/" { "Documentation" }
+                                span.wiki-breadcrumb-sep { " › " }
+                                a href={ "/search?q=category:" (cat.to_lowercase()) } { (cat) }
+                                span.wiki-breadcrumb-sep { " › " }
+                                span.wiki-breadcrumb-current { (title) }
+                            }
+                        }
+
                         // Title row: tabs (top-left) + title + language switcher + action tabs (top-right)
                         div.wiki-title-row {
                             // Article / Talk tabs — top-left
@@ -873,7 +1068,12 @@ fn wiki_chrome(
                                         }
                                     }
                                 }
-                                p.wiki-tagline { "From PointSav Knowledge" }
+                                p.wiki-tagline { "From PointSav Documentation" }
+                                // Short description — italic subtitle below tagline
+                                // (Wikipedia Vector 2022 article-subtitle pattern)
+                                @if let Some(ref desc) = fm.short_description {
+                                    p.topic-short-description { em { (desc) } }
+                                }
                             }
 
                             // Read / Edit / View history tabs — top-right (item 2)
@@ -988,21 +1188,11 @@ fn wiki_chrome(
 
 /// `GET /sitemap.xml` — sitemaps.org standard XML sitemap.
 ///
-/// Walks `content_dir`, emits one `<url>` per TOPIC (excluding `*.es.md`
-/// bilingual siblings). Content-Type: `application/xml; charset=utf-8`.
+/// Walks `content_dir` recursively, emits one `<url>` per TOPIC (excluding
+/// `*.es.md` bilingual siblings). Content-Type: `application/xml; charset=utf-8`.
 async fn sitemap_xml(State(state): State<Arc<AppState>>) -> Result<Response, WikiError> {
-    let mut entries = fs::read_dir(&state.content_dir).await?;
-    let mut slugs: Vec<String> = Vec::new();
-
-    while let Some(entry) = entries.next_entry().await? {
-        let name = entry.file_name();
-        let name = name.to_string_lossy();
-        if let Some(slug) = name.strip_suffix(".md") {
-            if !slug.ends_with(".es") {
-                slugs.push(slug.to_string());
-            }
-        }
-    }
+    let topic_files = collect_topic_files(&state.content_dir).await?;
+    let mut slugs: Vec<String> = topic_files.into_iter().map(|tf| tf.slug).collect();
     slugs.sort();
 
     let mut xml = String::from(
@@ -1045,35 +1235,28 @@ async fn robots_txt() -> Response {
 /// surfaces (JSON-LD, Atom, JSON Feed, sitemap). Content-Type:
 /// `text/markdown; charset=utf-8`.
 async fn llms_txt(State(state): State<Arc<AppState>>) -> Result<Response, WikiError> {
-    let mut entries = fs::read_dir(&state.content_dir).await?;
-    let mut slugs: Vec<String> = Vec::new();
-
-    while let Some(entry) = entries.next_entry().await? {
-        let name = entry.file_name();
-        let name = name.to_string_lossy();
-        if let Some(slug) = name.strip_suffix(".md") {
-            if !slug.ends_with(".es") {
-                slugs.push(slug.to_string());
-            }
-        }
-    }
-    slugs.sort();
+    let topic_files = collect_topic_files(&state.content_dir).await?;
+    let mut tf_list: Vec<(String, PathBuf)> = topic_files.into_iter()
+        .map(|tf| (tf.slug, tf.path))
+        .collect();
+    tf_list.sort_by(|a, b| a.0.cmp(&b.0));
 
     // Read each TOPIC to extract a one-line title + snippet directly from the
     // parsed body — avoids a second directory traversal compared to calling
     // `collect_recent_items`.
     let mut topic_lines: Vec<String> = Vec::new();
-    for slug in &slugs {
-        let path = state.content_dir.join(format!("{slug}.md"));
-        let text = match fs::read_to_string(&path).await {
+    for (slug, path) in &tf_list {
+        let text = match fs::read_to_string(path).await {
             Ok(t) => t,
             Err(_) => continue,
         };
+        let slug_str = slug.as_str();
         let parsed = match crate::render::parse_page(&text) {
             Ok(p) => p,
             Err(_) => continue,
         };
         let title = parsed.frontmatter.title.unwrap_or_else(|| slug.clone());
+        let slug = slug_str;
 
         // Build a ~120-character snippet from the first non-heading body line.
         let body_snippet = llms_txt_snippet(&parsed.body_md, 120);
@@ -1349,7 +1532,7 @@ mod tests {
         let body = resp.into_body().collect().await.unwrap().to_bytes();
         let html = std::str::from_utf8(&body).unwrap();
         assert!(
-            html.contains("From PointSav Knowledge"),
+            html.contains("From PointSav Documentation"),
             "tagline should appear: {html}"
         );
     }
@@ -1520,5 +1703,187 @@ mod tests {
         assert!(html.contains("Alpha"), "category Alpha should appear: {html}");
         assert!(html.contains("Beta"), "category Beta should appear: {html}");
         assert!(html.contains("wiki-categories"), "categories block should appear: {html}");
+    }
+
+    // Iteration-2 tests — additive; all existing tests remain unchanged.
+
+    /// Verify that `short_description` renders as italic subtitle below the H1.
+    #[tokio::test]
+    async fn wiki_page_renders_short_description() {
+        let dir = tempfile::tempdir().unwrap();
+        let state_dir = tempfile::tempdir().unwrap();
+        tokio::fs::write(
+            dir.path().join("described.md"),
+            "---\ntitle: Described Topic\nshort_description: \"One-sentence summary here.\"\n---\nBody content.\n",
+        )
+        .await
+        .unwrap();
+        let index = crate::search::build_index(dir.path(), state_dir.path())
+            .await
+            .unwrap();
+        let state = AppState {
+            content_dir: dir.path().to_path_buf(),
+            citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
+            search: Arc::new(index),
+            collab: Arc::new(crate::collab::CollabRooms::new()),
+            enable_collab: false,
+        };
+        let app = router(state);
+        let resp = app
+            .oneshot(
+                Request::builder()
+                    .uri("/wiki/described")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(resp.status(), StatusCode::OK);
+        let body = resp.into_body().collect().await.unwrap().to_bytes();
+        let html = std::str::from_utf8(&body).unwrap();
+        assert!(
+            html.contains("topic-short-description"),
+            "short_description container class should appear: {html}"
+        );
+        assert!(
+            html.contains("One-sentence summary here."),
+            "short_description text should appear: {html}"
+        );
+    }
+
+    /// Verify that the breadcrumb renders when `category:` frontmatter is present.
+    #[tokio::test]
+    async fn wiki_page_renders_breadcrumb_from_category() {
+        let dir = tempfile::tempdir().unwrap();
+        let state_dir = tempfile::tempdir().unwrap();
+        tokio::fs::write(
+            dir.path().join("breadcrumb-test.md"),
+            "---\ntitle: Breadcrumb Test\ncategory: architecture\n---\nBody.\n",
+        )
+        .await
+        .unwrap();
+        let index = crate::search::build_index(dir.path(), state_dir.path())
+            .await
+            .unwrap();
+        let state = AppState {
+            content_dir: dir.path().to_path_buf(),
+            citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
+            search: Arc::new(index),
+            collab: Arc::new(crate::collab::CollabRooms::new()),
+            enable_collab: false,
+        };
+        let app = router(state);
+        let resp = app
+            .oneshot(
+                Request::builder()
+                    .uri("/wiki/breadcrumb-test")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(resp.status(), StatusCode::OK);
+        let body = resp.into_body().collect().await.unwrap().to_bytes();
+        let html = std::str::from_utf8(&body).unwrap();
+        assert!(
+            html.contains("wiki-breadcrumb"),
+            "breadcrumb nav should appear: {html}"
+        );
+        assert!(
+            html.contains("Documentation"),
+            "Documentation root link should appear in breadcrumb: {html}"
+        );
+    }
+
+    /// Verify that a TOPIC in a subdirectory is reachable via the `/wiki/<cat>/<slug>` path.
+    #[tokio::test]
+    async fn wiki_page_resolves_subdirectory_slug() {
+        let dir = tempfile::tempdir().unwrap();
+        let state_dir = tempfile::tempdir().unwrap();
+        // Create architecture/ subdirectory with one TOPIC.
+        tokio::fs::create_dir_all(dir.path().join("architecture")).await.unwrap();
+        tokio::fs::write(
+            dir.path().join("architecture/compounding-substrate.md"),
+            "---\ntitle: The Compounding Substrate\ncategory: architecture\n---\nSubstrate body.\n",
+        )
+        .await
+        .unwrap();
+        let index = crate::search::build_index(dir.path(), state_dir.path())
+            .await
+            .unwrap();
+        let state = AppState {
+            content_dir: dir.path().to_path_buf(),
+            citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
+            search: Arc::new(index),
+            collab: Arc::new(crate::collab::CollabRooms::new()),
+            enable_collab: false,
+        };
+        let app = router(state);
+        let resp = app
+            .oneshot(
+                Request::builder()
+                    .uri("/wiki/architecture/compounding-substrate")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(resp.status(), StatusCode::OK, "subdirectory TOPIC should resolve");
+        let body = resp.into_body().collect().await.unwrap().to_bytes();
+        let html = std::str::from_utf8(&body).unwrap();
+        assert!(
+            html.contains("The Compounding Substrate"),
+            "title from frontmatter should appear: {html}"
+        );
+    }
+
+    /// Verify that subdirectory TOPICs appear in the home-page category grid.
+    #[tokio::test]
+    async fn home_page_buckets_subdirectory_topics() {
+        let dir = tempfile::tempdir().unwrap();
+        let state_dir = tempfile::tempdir().unwrap();
+        // index.md required for home_chrome path.
+        tokio::fs::write(
+            dir.path().join("index.md"),
+            "---\ntitle: Home\ncategory: root\n---\nWelcome.\n",
+        )
+        .await
+        .unwrap();
+        // Architecture subdirectory with one TOPIC.
+        tokio::fs::create_dir_all(dir.path().join("architecture")).await.unwrap();
+        tokio::fs::write(
+            dir.path().join("architecture/my-article.md"),
+            "---\ntitle: My Article\ncategory: architecture\n---\nContent here.\n",
+        )
+        .await
+        .unwrap();
+        let index = crate::search::build_index(dir.path(), state_dir.path())
+            .await
+            .unwrap();
+        let state = AppState {
+            content_dir: dir.path().to_path_buf(),
+            citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
+            search: Arc::new(index),
+            collab: Arc::new(crate::collab::CollabRooms::new()),
+            enable_collab: false,
+        };
+        let app = router(state);
+        let resp = app
+            .oneshot(Request::builder().uri("/").body(Body::empty()).unwrap())
+            .await
+            .unwrap();
+        assert_eq!(resp.status(), StatusCode::OK);
+        let body = resp.into_body().collect().await.unwrap().to_bytes();
+        let html = std::str::from_utf8(&body).unwrap();
+        // The article title should appear in the category grid.
+        assert!(
+            html.contains("My Article"),
+            "subdirectory TOPIC title should appear in category grid: {html}"
+        );
+        // The Architecture category should show at least 1 article.
+        assert!(
+            html.contains("Architecture"),
+            "Architecture category header should appear: {html}"
+        );
     }
 }

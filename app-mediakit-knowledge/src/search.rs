@@ -140,36 +140,67 @@ pub async fn build_index(
     })
 }
 
-/// Walk `content_dir` and collect `(slug, title, body)` triples for every
-/// non-bilingual TOPIC. Frontmatter is parsed; body is the markdown source
-/// after the frontmatter delimiters.
+/// Walk `content_dir` recursively and collect `(slug, title, body)` triples
+/// for every non-bilingual TOPIC. Descends one level into category subdirs.
+/// Frontmatter is parsed; body is the markdown source after the delimiters.
+/// Slugs for subdirectory files use `<category>/<stem>` form.
 async fn collect_topics(content_dir: &Path) -> Result<Vec<(String, String, String)>, WikiError> {
     let mut out = Vec::new();
     let mut entries = tokio::fs::read_dir(content_dir).await?;
+
     while let Some(entry) = entries.next_entry().await? {
+        let file_type = entry.file_type().await?;
         let path = entry.path();
-        if path.extension().and_then(|s| s.to_str()) != Some("md") {
-            continue;
+
+        if file_type.is_dir() {
+            // Descend into one-level subdirectory (category folder).
+            let subdir_name = path.file_name()
+                .and_then(|s| s.to_str())
+                .unwrap_or("")
+                .to_string();
+            let mut sub_entries = match tokio::fs::read_dir(&path).await {
+                Ok(e) => e,
+                Err(_) => continue,
+            };
+            while let Some(sub_entry) = sub_entries.next_entry().await? {
+                let sub_path = sub_entry.path();
+                if sub_path.extension().and_then(|s| s.to_str()) != Some("md") {
+                    continue;
+                }
+                let Some(stem) = sub_path.file_stem().and_then(|s| s.to_str()) else {
+                    continue;
+                };
+                if stem.ends_with(".es") || stem == "index" || stem == "_index" || stem.starts_with('_') {
+                    continue;
+                }
+                let slug = format!("{subdir_name}/{stem}");
+                let text = match tokio::fs::read_to_string(&sub_path).await {
+                    Ok(t) => t,
+                    Err(_) => continue,
+                };
+                let parsed = parse_page(&text)?;
+                let title = parsed.frontmatter.title.clone().unwrap_or_else(|| stem.to_string());
+                out.push((slug, title, parsed.body_md));
+            }
+        } else {
+            // File at root level.
+            if path.extension().and_then(|s| s.to_str()) != Some("md") {
+                continue;
+            }
+            let Some(stem) = path.file_stem().and_then(|s| s.to_str()) else {
+                continue;
+            };
+            if stem.ends_with(".es") || stem == "index" || stem == "_index" || stem.starts_with('_') {
+                continue;
+            }
+            let text = match tokio::fs::read_to_string(&path).await {
+                Ok(t) => t,
+                Err(_) => continue,
+            };
+            let parsed = parse_page(&text)?;
+            let title = parsed.frontmatter.title.clone().unwrap_or_else(|| stem.to_string());
+            out.push((stem.to_string(), title, parsed.body_md));
         }
-        let Some(stem) = path.file_stem().and_then(|s| s.to_str()) else {
-            continue;
-        };
-        // Skip bilingual sibling files — they share the canonical TOPIC's
-        // identity. The English file carries the indexed body.
-        if stem.ends_with(".es") {
-            continue;
-        }
-        let text = match tokio::fs::read_to_string(&path).await {
-            Ok(t) => t,
-            Err(_) => continue, // skip unreadable files; not a fatal error for index build
-        };
-        let parsed = parse_page(&text)?;
-        let title = parsed
-            .frontmatter
-            .title
-            .clone()
-            .unwrap_or_else(|| stem.to_string());
-        out.push((stem.to_string(), title, parsed.body_md));
     }
     Ok(out)
 }
