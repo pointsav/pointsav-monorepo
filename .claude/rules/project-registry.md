@@ -33,7 +33,7 @@ Last updated: 2026-04-25.
 | Project | State | Type | Notes |
 |---|---|---|---|
 | app-mediakit-distributions | Scaffold-coded | app-mediakit | 4 files |
-| app-mediakit-knowledge | Scaffold-coded | app-mediakit | 4 files |
+| app-mediakit-knowledge | Active | app-mediakit | Phases 1, 1.1, 2 (Steps 1-7), 3 (Steps 3.1-3.4) shipped; Phase 4 plan + BP1 decision packet + Step 7 smoke runbook landed; project-root CLAUDE.md + NEXT.md activation defect — add before Phase 4 implementation begins |
 | app-mediakit-marketing | Scaffold-coded | app-mediakit | 4 files |
 | app-mediakit-telemetry | Scaffold-coded | app-mediakit | 14 files; MaxMind `.mmdb` pending move to build-time fetch |
 
