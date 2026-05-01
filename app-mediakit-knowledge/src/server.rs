@@ -25,6 +25,11 @@
 //!   renders a "Leapfrog 2030" bullet panel on the home page right column.
 //! - Breadcrumb navigation: `category:` frontmatter → "Documentation > Category > Title"
 //!   breadcrumb rendered above the article TOC rail.
+//! - Language toggle auto-detection (Item 11): `wiki_page()` checks for a `.es.md`
+//!   sibling on disk and auto-injects the EN↔ES toggle without requiring explicit
+//!   `translations:` frontmatter. EN articles get an "es" link; ES articles (`*.es`)
+//!   get an "en" link back to the base slug. Explicit `translations:` frontmatter
+//!   takes precedence over auto-detection when present and non-empty.
 
 use axum::{
     extract::{Path, Query, State},
@@ -45,7 +50,7 @@ use crate::assets::StaticAsset;
 use crate::collab::CollabRooms;
 use crate::error::WikiError;
 use crate::jsonld::jsonld_for_topic;
-use crate::render::{extract_headings, inject_edit_pencils, parse_page, render_html_raw, Frontmatter};
+use crate::render::{extract_headings, inject_edit_pencils, parse_page, render_html_raw, Frontmatter, TranslationMap};
 use crate::search::{search as run_search, SearchIndex};
 
 #[derive(Clone)]
@@ -914,7 +919,45 @@ async fn wiki_page(
         }
         Err(e) => return Err(e.into()),
     };
-    let parsed = parse_page(&text)?;
+    let mut parsed = parse_page(&text)?;
+
+    // ── Item 11: Language toggle auto-detection ───────────────────────────
+    //
+    // If `translations:` frontmatter is absent or empty, check whether a
+    // bilingual sibling exists on disk and inject the toggle automatically.
+    //
+    // Two cases:
+    //   (A) Viewing the EN article (slug does NOT end in `.es`):
+    //       Look for `<slug>.es.md`; if present, inject { "es" → "<slug>.es" }.
+    //   (B) Viewing the ES article (slug ends in `.es`):
+    //       Derive the base slug by stripping `.es`; if `<base>.md` exists,
+    //       inject { "en" → "<base>" }.
+    //
+    // This means every article that has a sibling gets the language toggle
+    // without requiring the content author to maintain `translations:` by hand.
+    if parsed.frontmatter.translations.as_ref().map(|t| t.is_empty()).unwrap_or(true) {
+        let is_es = slug.ends_with(".es");
+        if is_es {
+            // Case B: we're on an ES article; offer EN link.
+            let base_slug = slug.trim_end_matches(".es");
+            let base_path = state.content_dir.join(format!("{base_slug}.md"));
+            if base_path.exists() {
+                let mut map = TranslationMap::new();
+                map.insert("en".to_string(), base_slug.to_string());
+                parsed.frontmatter.translations = Some(map);
+            }
+        } else {
+            // Case A: we're on an EN article; offer ES link if sibling exists.
+            let es_slug = format!("{slug}.es");
+            let es_path = state.content_dir.join(format!("{es_slug}.md"));
+            if es_path.exists() {
+                let mut map = TranslationMap::new();
+                map.insert("es".to_string(), es_slug);
+                parsed.frontmatter.translations = Some(map);
+            }
+        }
+    }
+
     // Two-step render: extract headings from clean comrak output (no edit pencils),
     // then inject pencils for the final body HTML. This keeps TOC text clean.
     let raw_html = render_html_raw(&parsed.body_md);
@@ -1054,7 +1097,10 @@ fn wiki_chrome(
                             div.wiki-title-block {
                                 div.wiki-title-inner {
                                     h1.page-title { (title) }
-                                    // Language switcher — next to title (item 14)
+                                    // Language switcher — next to title (item 14 + item 11)
+                                    // Auto-detected from `.es.md` siblings when `translations:`
+                                    // frontmatter is absent. Shows uppercase language codes
+                                    // (EN / ES) following Wikipedia's sidebar convention.
                                     @if let Some(translations) = &fm.translations {
                                         @if !translations.is_empty() {
                                             div.wiki-lang-switcher {
@@ -1062,7 +1108,8 @@ fn wiki_chrome(
                                                     a.wiki-lang-btn
                                                         href={ "/wiki/" (lang_slug) }
                                                         lang=(lang)
-                                                    { (lang) }
+                                                        title={ "Read in " (lang.to_uppercase()) }
+                                                    { (lang.to_uppercase()) }
                                                 }
                                             }
                                         }
@@ -1903,6 +1950,155 @@ mod tests {
         assert!(
             html.contains("Architecture"),
             "Architecture category header should appear: {html}"
+        );
+    }
+
+    // Iteration-2 Item 11 tests — language toggle auto-detection.
+
+    /// EN article with a `.es.md` sibling gets an ES toggle auto-injected.
+    #[tokio::test]
+    async fn wiki_page_auto_detects_es_sibling() {
+        let dir = tempfile::tempdir().unwrap();
+        let state_dir = tempfile::tempdir().unwrap();
+        // EN article
+        tokio::fs::write(
+            dir.path().join("my-topic.md"),
+            "---\ntitle: My Topic\ncategory: architecture\n---\nEN content.\n",
+        )
+        .await
+        .unwrap();
+        // ES sibling
+        tokio::fs::write(
+            dir.path().join("my-topic.es.md"),
+            "---\ntitle: Mi Tema\ncategory: architecture\n---\nContenido ES.\n",
+        )
+        .await
+        .unwrap();
+        let index = crate::search::build_index(dir.path(), state_dir.path())
+            .await
+            .unwrap();
+        let state = AppState {
+            content_dir: dir.path().to_path_buf(),
+            citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
+            search: Arc::new(index),
+            collab: Arc::new(crate::collab::CollabRooms::new()),
+            enable_collab: false,
+        };
+        let app = router(state);
+        let resp = app
+            .oneshot(
+                Request::builder()
+                    .uri("/wiki/my-topic")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(resp.status(), StatusCode::OK);
+        let body = resp.into_body().collect().await.unwrap().to_bytes();
+        let html = std::str::from_utf8(&body).unwrap();
+        // Should show ES toggle
+        assert!(
+            html.contains("wiki-lang-switcher"),
+            "language switcher should appear when .es.md sibling exists: {html}"
+        );
+        assert!(
+            html.contains("/wiki/my-topic.es"),
+            "ES sibling link should appear in language switcher: {html}"
+        );
+    }
+
+    /// ES article auto-gets an EN link back to the base slug.
+    #[tokio::test]
+    async fn wiki_page_es_article_gets_en_toggle() {
+        let dir = tempfile::tempdir().unwrap();
+        let state_dir = tempfile::tempdir().unwrap();
+        // EN base article
+        tokio::fs::write(
+            dir.path().join("my-topic.md"),
+            "---\ntitle: My Topic\ncategory: architecture\n---\nEN content.\n",
+        )
+        .await
+        .unwrap();
+        // ES sibling
+        tokio::fs::write(
+            dir.path().join("my-topic.es.md"),
+            "---\ntitle: Mi Tema\ncategory: architecture\n---\nContenido ES.\n",
+        )
+        .await
+        .unwrap();
+        let index = crate::search::build_index(dir.path(), state_dir.path())
+            .await
+            .unwrap();
+        let state = AppState {
+            content_dir: dir.path().to_path_buf(),
+            citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
+            search: Arc::new(index),
+            collab: Arc::new(crate::collab::CollabRooms::new()),
+            enable_collab: false,
+        };
+        let app = router(state);
+        let resp = app
+            .oneshot(
+                Request::builder()
+                    .uri("/wiki/my-topic.es")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(resp.status(), StatusCode::OK);
+        let body = resp.into_body().collect().await.unwrap().to_bytes();
+        let html = std::str::from_utf8(&body).unwrap();
+        // ES article should show EN toggle back to base
+        assert!(
+            html.contains("wiki-lang-switcher"),
+            "language switcher should appear on ES article: {html}"
+        );
+        assert!(
+            html.contains("/wiki/my-topic\""),
+            "EN base link should appear in language switcher on ES article: {html}"
+        );
+    }
+
+    /// EN article WITHOUT an ES sibling should NOT show the language switcher.
+    #[tokio::test]
+    async fn wiki_page_no_toggle_when_sibling_absent() {
+        let dir = tempfile::tempdir().unwrap();
+        let state_dir = tempfile::tempdir().unwrap();
+        tokio::fs::write(
+            dir.path().join("solo-topic.md"),
+            "---\ntitle: Solo Topic\ncategory: architecture\n---\nBody only.\n",
+        )
+        .await
+        .unwrap();
+        // No .es.md sibling written.
+        let index = crate::search::build_index(dir.path(), state_dir.path())
+            .await
+            .unwrap();
+        let state = AppState {
+            content_dir: dir.path().to_path_buf(),
+            citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
+            search: Arc::new(index),
+            collab: Arc::new(crate::collab::CollabRooms::new()),
+            enable_collab: false,
+        };
+        let app = router(state);
+        let resp = app
+            .oneshot(
+                Request::builder()
+                    .uri("/wiki/solo-topic")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(resp.status(), StatusCode::OK);
+        let body = resp.into_body().collect().await.unwrap().to_bytes();
+        let html = std::str::from_utf8(&body).unwrap();
+        assert!(
+            !html.contains("wiki-lang-switcher"),
+            "language switcher should NOT appear when no sibling exists: {html}"
         );
     }
 }
