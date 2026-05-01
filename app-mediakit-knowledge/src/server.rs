@@ -1129,17 +1129,36 @@ fn wiki_chrome(
 
                         // End-of-article footer block (item 5 + item 15)
                         footer.wiki-article-footer {
-                            // Categories (item 15 / item 5 — last section before page footer)
+                            // Categories list (from `categories:` array — item 15)
                             @if let Some(cats) = &fm.categories {
                                 @if !cats.is_empty() {
                                     div.wiki-categories {
                                         span.cats-label { "Categories:" }
                                         ul.cats-list {
                                             @for cat in cats {
-                                                li { a href="#" { (cat) } }
+                                                li { a href={ "/search?q=category:" (cat.to_lowercase()) } { (cat) } }
                                             }
                                         }
                                     }
+                                }
+                            }
+                            // Singular category tag from `category:` field when `categories:` absent
+                            @else if let Some(ref cat) = fm.category {
+                                @if cat != "root" {
+                                    div.wiki-categories {
+                                        span.cats-label { "Category:" }
+                                        span.wiki-category-single-tag {
+                                            a href={ "/search?q=category:" (cat) } { (capitalise(cat)) }
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Last-edited date — Wikipedia footer convention
+                            @if let Some(ref date) = fm.last_edited {
+                                div.wiki-article-last-edited {
+                                    "Last edited: "
+                                    time datetime=(date) { (date) }
                                 }
                             }
 
