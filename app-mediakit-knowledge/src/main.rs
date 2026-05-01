@@ -1,65 +1,152 @@
-use anyhow::Result;
+//! Wiki engine binary entry.
+//!
+//! See ARCHITECTURE.md for the build-phase plan.
+
+use anyhow::{bail, Result};
+use clap::{Parser, Subcommand};
+use std::net::SocketAddr;
+use std::path::PathBuf;
 use std::sync::Arc;
-use tokio::sync::broadcast;
-use tracing::info;
+use tokio::signal;
+use tracing_subscriber::EnvFilter;
 
-mod config;
-mod editor;
-mod renderer;
-mod search;
-mod server;
-mod sync;
+use app_mediakit_knowledge::search;
+use app_mediakit_knowledge::server::{router, AppState};
 
-use config::Config;
-use search::SearchIndex;
-use sync::SyncEvent;
+#[derive(Parser)]
+#[command(name = "app-mediakit-knowledge", version, about)]
+struct Cli {
+    #[command(subcommand)]
+    command: Command,
+}
 
-/// Shared application state passed to every Axum handler.
-#[derive(Clone)]
-pub struct AppState {
-    pub config: Arc<Config>,
-    pub search: Arc<SearchIndex>,
-    pub render_cache: Arc<renderer::Cache>,
+#[derive(Subcommand)]
+enum Command {
+    /// Run the wiki engine HTTP server.
+    Serve {
+        /// Path to the directory holding Markdown content.
+        #[arg(long, env = "WIKI_CONTENT_DIR")]
+        content_dir: PathBuf,
+
+        /// Address to bind. Defaults to loopback.
+        #[arg(long, env = "WIKI_BIND", default_value = "127.0.0.1:9090")]
+        bind: SocketAddr,
+
+        /// Path to the Foundry citation registry YAML file.
+        /// Exposed via GET /api/citations for SAA editor autocomplete.
+        #[arg(
+            long,
+            env = "WIKI_CITATIONS_YAML",
+            default_value = "/srv/foundry/citations.yaml"
+        )]
+        citations_yaml: PathBuf,
+
+        /// Path to the persistent state directory (search index, future KV).
+        /// Per Track D `guide-provision-node.md`, the canonical production
+        /// location is `/var/lib/local-knowledge/state`.
+        #[arg(
+            long,
+            env = "WIKI_STATE_DIR",
+            default_value = "/var/lib/local-knowledge/state"
+        )]
+        state_dir: PathBuf,
+
+        /// Phase 2 Step 7: enable real-time collaborative editing via
+        /// y-codemirror.next + a tokio broadcast WebSocket relay at
+        /// `/ws/collab/{slug}`. Default off; the route is only mounted
+        /// when this flag is set, and `cm-collab.bundle.js` is only
+        /// loaded by the editor when `window.WIKI_COLLAB_ENABLED` is
+        /// templated by the server. Two operators editing the same
+        /// TOPIC see each other's cursors.
+        #[arg(long, env = "WIKI_ENABLE_COLLAB")]
+        enable_collab: bool,
+    },
 }
 
 #[tokio::main]
 async fn main() -> Result<()> {
     tracing_subscriber::fmt()
         .with_env_filter(
-            tracing_subscriber::EnvFilter::from_default_env()
-                .add_directive("app_mediakit_knowledge=info".parse()?),
+            EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info")),
         )
         .init();
 
-    let config = Arc::new(Config::from_env()?);
-    info!(content_path = %config.content_path.display(), "starting app-mediakit-knowledge");
+    let cli = Cli::parse();
+    match cli.command {
+        Command::Serve {
+            content_dir,
+            bind,
+            citations_yaml,
+            state_dir,
+            enable_collab,
+        } => serve(content_dir, bind, citations_yaml, state_dir, enable_collab).await,
+    }
+}
 
-    let search = Arc::new(SearchIndex::build(&config.content_path)?);
-    info!("search index built");
+async fn serve(
+    content_dir: PathBuf,
+    bind: SocketAddr,
+    citations_yaml: PathBuf,
+    state_dir: PathBuf,
+    enable_collab: bool,
+) -> Result<()> {
+    if !content_dir.is_dir() {
+        bail!(
+            "content directory does not exist or is not a directory: {}",
+            content_dir.display()
+        );
+    }
+    tracing::info!(
+        content_dir = %content_dir.display(),
+        state_dir = %state_dir.display(),
+        citations_yaml = %citations_yaml.display(),
+        %bind,
+        "starting wiki engine"
+    );
 
-    let render_cache = Arc::new(renderer::Cache::new(config.cache_size));
+    // Phase 3 Step 3.1+3.2 — build the search index on startup. Tree walk
+    // over content_dir; on-disk index at <state_dir>/search/.
+    tracing::info!("building search index");
+    let search_index = search::build_index(&content_dir, &state_dir).await?;
+    tracing::info!("search index ready");
 
-    let (sync_tx, _sync_rx) = broadcast::channel::<SyncEvent>(16);
-
-    let sync_config = Arc::clone(&config);
-    let sync_search = Arc::clone(&search);
-    let sync_cache  = Arc::clone(&render_cache);
-    let sync_tx2    = sync_tx.clone();
-    tokio::spawn(async move {
-        sync::run(sync_config, sync_search, sync_cache, sync_tx2).await;
-    });
-
+    if enable_collab {
+        tracing::info!("collab WebSocket relay enabled at /ws/collab/{{slug}}");
+    }
     let state = AppState {
-        config: Arc::clone(&config),
-        search: Arc::clone(&search),
-        render_cache: Arc::clone(&render_cache),
+        content_dir,
+        citations_yaml,
+        search: Arc::new(search_index),
+        collab: Arc::new(app_mediakit_knowledge::collab::CollabRooms::new()),
+        enable_collab,
     };
-
-    let app  = server::build_router(state);
-    let addr = config.bind_addr;
-    info!(%addr, "listening");
-
-    let listener = tokio::net::TcpListener::bind(addr).await?;
-    axum::serve(listener, app).await?;
+    let app = router(state);
+    let listener = tokio::net::TcpListener::bind(bind).await?;
+    tracing::info!(addr = %bind, "listening");
+    axum::serve(listener, app)
+        .with_graceful_shutdown(shutdown_signal())
+        .await?;
+    tracing::info!("shut down cleanly");
     Ok(())
+}
+
+async fn shutdown_signal() {
+    let ctrl_c = async {
+        signal::ctrl_c().await.expect("install ctrl-c handler");
+    };
+    #[cfg(unix)]
+    let terminate = async {
+        signal::unix::signal(signal::unix::SignalKind::terminate())
+            .expect("install SIGTERM handler")
+            .recv()
+            .await;
+    };
+    #[cfg(not(unix))]
+    let terminate = std::future::pending::<()>();
+
+    tokio::select! {
+        _ = ctrl_c => {}
+        _ = terminate => {}
+    }
+    tracing::info!("shutdown signal received");
 }
