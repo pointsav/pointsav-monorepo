@@ -100,6 +100,8 @@ pub fn router(state: AppState) -> Router {
         // wires the Doorman MCP server)
         .route("/api/doorman/complete", post(doorman_stub))
         .route("/api/doorman/instruct", post(doorman_stub))
+        // Wave 5B — category listing pages
+        .route("/category/{name}", get(category_page))
         // Phase 3 Step 3.2 — full-text search HTML page over the tantivy index
         .route("/search", get(search_page))
         // Phase 3 Step 3.3 — Atom + JSON Feed syndication
@@ -239,17 +241,6 @@ pub struct TopicSummary {
     pub file_path: PathBuf,
 }
 
-/// Featured TOPIC slot above the category grid.
-#[derive(Debug, Clone)]
-pub struct FeaturedTopic {
-    pub slug: String,
-    pub title: String,
-    /// `short_description` from frontmatter, if present.
-    pub short_description: Option<String>,
-    /// Auto-extracted first paragraph lede from the TOPIC body.
-    pub lede: String,
-}
-
 /// Wikipedia-style stats banner shown immediately under the welcome lede.
 /// Renders as: "N articles across N categories — last updated YYYY-MM-DD."
 /// Per `content-wiki-documentation/index.md` ENGINE comment + iteration-2
@@ -263,33 +254,6 @@ pub struct HomeStats {
 
 /// Category buckets: `BTreeMap<category_name, Vec<TopicSummary>>`.
 pub type CategoryBuckets = BTreeMap<String, Vec<TopicSummary>>;
-
-/// Deserialization shape for `featured-topic.yaml`.
-#[derive(Debug, Deserialize)]
-struct FeaturedTopicYaml {
-    slug: Option<String>,
-    #[allow(dead_code)]
-    since: Option<String>,
-    #[allow(dead_code)]
-    note: Option<String>,
-}
-
-/// One Leapfrog 2030 invention fact entry from `leapfrog-facts.yaml`.
-///
-/// `text` is the one-sentence fact. `link_slug` is an optional TOPIC slug;
-/// when present the text is rendered as a hyperlink to `/wiki/<link_slug>`.
-#[derive(Debug, Clone, Deserialize)]
-pub struct LeapfrogFact {
-    pub text: String,
-    #[serde(default)]
-    pub link_slug: Option<String>,
-}
-
-/// Deserialization shape for `leapfrog-facts.yaml`.
-#[derive(Debug, Deserialize)]
-struct LeapfrogFactsYaml {
-    facts: Vec<LeapfrogFact>,
-}
 
 /// Ratified category set in render order.
 /// Per naming-convention.md §10 Q5-A operator ratification 2026-04-28.
@@ -541,81 +505,6 @@ fn compute_home_stats(buckets: &CategoryBuckets) -> HomeStats {
     }
 }
 
-async fn read_featured_topic(
-    content_dir: &FsPath,
-    buckets: &CategoryBuckets,
-) -> Option<FeaturedTopic> {
-    let yaml_path = content_dir.join("featured-topic.yaml");
-
-    let text = match fs::read_to_string(&yaml_path).await {
-        Ok(t) => t,
-        Err(e) if e.kind() == std::io::ErrorKind::NotFound => return None,
-        Err(e) => {
-            tracing::warn!("featured-topic.yaml read error: {e}");
-            return None;
-        }
-    };
-
-    let featured_yaml: FeaturedTopicYaml = match serde_yaml::from_str(&text) {
-        Ok(f) => f,
-        Err(e) => {
-            tracing::warn!("featured-topic.yaml parse error: {e}");
-            return None;
-        }
-    };
-
-    let slug = match featured_yaml.slug.as_deref() {
-        Some(s) if !s.is_empty() => s.to_string(),
-        _ => {
-            tracing::warn!("featured-topic.yaml: slug field missing or empty");
-            return None;
-        }
-    };
-
-    // Find the topic in the buckets.
-    let summary = buckets
-        .values()
-        .flatten()
-        .find(|t| t.slug == slug)
-        .cloned();
-
-    match summary {
-        Some(t) => Some(FeaturedTopic {
-            slug: t.slug,
-            title: t.title,
-            short_description: t.short_description,
-            lede: t.lede_first_line,
-        }),
-        None => {
-            tracing::warn!("featured-topic.yaml: slug '{slug}' not found in topic buckets");
-            None
-        }
-    }
-}
-
-/// Read and validate `<content_dir>/leapfrog-facts.yaml`.
-///
-/// Returns an empty Vec silently when the file is absent.
-/// Logs a warning via `tracing::warn!` if the file is present but unparseable.
-async fn read_leapfrog_facts(content_dir: &FsPath) -> Vec<LeapfrogFact> {
-    let path = content_dir.join("leapfrog-facts.yaml");
-    let text = match fs::read_to_string(&path).await {
-        Ok(t) => t,
-        Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Vec::new(),
-        Err(e) => {
-            tracing::warn!("leapfrog-facts.yaml read error: {e}");
-            return Vec::new();
-        }
-    };
-    match serde_yaml::from_str::<LeapfrogFactsYaml>(&text) {
-        Ok(parsed) => parsed.facts,
-        Err(e) => {
-            tracing::warn!("leapfrog-facts.yaml parse error: {e}");
-            Vec::new()
-        }
-    }
-}
-
 // ─── Home-page chrome ───────────────────────────────────────────────────────
 
 /// Render the home-page shell.
@@ -631,14 +520,48 @@ async fn read_leapfrog_facts(content_dir: &FsPath) -> Vec<LeapfrogFact> {
 ///   "0 articles — in preparation")
 /// - Recent additions feed (top 5, sorted by `last_edited` descending)
 /// - Site footer with bilingual notice
+/// How many articles to preview per category before showing "All N →".
+/// Categories with ≤ PREVIEW_LIMIT articles always show the full list.
+const PREVIEW_LIMIT: usize = 8;
+
+/// Operational guides surfaced on the home page.
+/// (title, deployment area, GitHub URL)
+const KEY_GUIDES: &[(&str, &str, &str)] = &[
+    // AI & SLM
+    ("Operating the service-slm Doorman", "vault-privategit-source", "https://github.com/woodfine/woodfine-fleet-deployment/blob/main/vault-privategit-source/guide-doorman.md"),
+    ("Operating the Yo-Yo Tier B Deployment", "vault-privategit-source", "https://github.com/woodfine/woodfine-fleet-deployment/blob/main/vault-privategit-source/guide-operating-yoyo.md"),
+    ("Operating the Tier A Sysadmin TUI", "vault-privategit-source", "https://github.com/woodfine/woodfine-fleet-deployment/blob/main/vault-privategit-source/guide-tier-a-sysadmin-tui.md"),
+    // Personnel cluster
+    ("SLM Execution — Personnel Cluster", "cluster-totebox-personnel", "https://github.com/woodfine/woodfine-fleet-deployment/blob/main/cluster-totebox-personnel/guide-slm-execution.md"),
+    ("Sovereign Search Operations", "cluster-totebox-personnel", "https://github.com/woodfine/woodfine-fleet-deployment/blob/main/cluster-totebox-personnel/guide-sovereign-search.md"),
+    ("Microsoft Entra ID Sovereignty", "cluster-totebox-personnel", "https://github.com/woodfine/woodfine-fleet-deployment/blob/main/cluster-totebox-personnel/guide-msft-entra-id.md"),
+    ("Ingress Operations & Self-Healing Loop", "cluster-totebox-personnel", "https://github.com/woodfine/woodfine-fleet-deployment/blob/main/cluster-totebox-personnel/guide-ingress-operations.md"),
+    ("Totebox Orchestration & Autonomous Synthesis", "cluster-totebox-personnel", "https://github.com/woodfine/woodfine-fleet-deployment/blob/main/cluster-totebox-personnel/guide-totebox-orchestration.md"),
+    ("LinkedIn Adapter (service-message-courier)", "cluster-totebox-personnel", "https://github.com/woodfine/woodfine-fleet-deployment/blob/main/cluster-totebox-personnel/guide-linkedin-adapter.md"),
+    ("Physical Egress — Cold Storage Backup", "cluster-totebox-personnel", "https://github.com/woodfine/woodfine-fleet-deployment/blob/main/cluster-totebox-personnel/guide-cold-storage-sync.md"),
+    ("Personnel Ledger Operations", "cluster-totebox-personnel", "https://github.com/woodfine/woodfine-fleet-deployment/blob/main/cluster-totebox-personnel/guide-personnel-ledger.md"),
+    // Network & command
+    ("PointSav Private Network Orchestration", "route-network-admin", "https://github.com/woodfine/woodfine-fleet-deployment/blob/main/route-network-admin/guide-mesh-orchestration.md"),
+    ("Unified Command Ledger Operations", "node-console-operator", "https://github.com/woodfine/woodfine-fleet-deployment/blob/main/node-console-operator/guide-command-ledger.md"),
+    // Infrastructure
+    ("Bare-Metal Provisioning & Mesh Fusion", "fleet-infrastructure-onprem", "https://github.com/woodfine/woodfine-fleet-deployment/blob/main/fleet-infrastructure-onprem/guide-provision-onprem.md"),
+    ("LXC Network Ledger Provisioning", "fleet-infrastructure-onprem", "https://github.com/woodfine/woodfine-fleet-deployment/blob/main/fleet-infrastructure-onprem/guide-lxc-network-admin.md"),
+    ("PPN Cloud Anchor Ignition", "fleet-infrastructure-cloud", "https://github.com/woodfine/woodfine-fleet-deployment/blob/main/fleet-infrastructure-cloud/guide-provision-relay.md"),
+    ("Sovereign VPN Deployment", "fleet-infrastructure-leased", "https://github.com/woodfine/woodfine-fleet-deployment/blob/main/fleet-infrastructure-leased/guide-deploy-vpn.md"),
+    ("Standalone Bare-Metal Provisioning", "fleet-infrastructure-leased", "https://github.com/woodfine/woodfine-fleet-deployment/blob/main/fleet-infrastructure-leased/guide-provision-standalone.md"),
+    // Fleet-wide operations
+    ("Physical Egress — Regulatory Printing", "woodfine-fleet-deployment", "https://github.com/woodfine/woodfine-fleet-deployment/blob/main/guide-physical-egress.md"),
+    ("Woodfine Telemetry Operations", "woodfine-fleet-deployment", "https://github.com/woodfine/woodfine-fleet-deployment/blob/main/guide-telemetry-operations.md"),
+    ("Operating the Knowledge Wiki", "media-knowledge-documentation", "https://github.com/woodfine/woodfine-fleet-deployment/blob/main/media-knowledge-documentation/guide-operate-knowledge-wiki.md"),
+    ("Telemetry Engine Integration", "media-marketing-landing", "https://github.com/pointsav/pointsav-fleet-deployment/blob/main/media-marketing-landing/guide-telemetry-integration.md"),
+];
+
 fn home_chrome(
     home_fm: &crate::render::Frontmatter,
     home_html: &str,
-    featured: Option<&FeaturedTopic>,
     buckets: &CategoryBuckets,
     recent: &[TopicSummary],
     stats: &HomeStats,
-    leapfrog_facts: &[LeapfrogFact],
 ) -> Markup {
     let title = home_fm
         .title
@@ -657,77 +580,64 @@ fn home_chrome(
             body {
                 header.site-header {
                     a.site-title href="/" { "PointSav Knowledge" }
+                    form.header-search action="/search" method="get" {
+                        input type="search" name="q" placeholder="Search articles…" autocomplete="off";
+                        button type="submit" { "Search" }
+                    }
                     nav.site-nav {
                         a href="/" { "Home" }
-                        a href="/search" { "Search" }
                     }
                 }
                 main.site-main {
-                    // Lede — rendered body from index.md
+                    // Lede from index.md
                     @if !home_html.is_empty() {
-                        div.wiki-home-lede {
-                            (PreEscaped(home_html))
-                        }
+                        div.wiki-home-lede { (PreEscaped(home_html)) }
                     }
 
-                    // Stats banner — Wikipedia welcome-banner pattern.
-                    // "N articles across N categories — last updated YYYY-MM-DD."
-                    // Suppress entirely when corpus is empty (no articles, no date).
+                    // Stats banner
                     @if stats.article_count > 0 {
-                        p.wiki-home-stats aria-label="Knowledge wiki structural scale" {
-                            (stats.article_count)
-                            " article"
+                        p.wiki-home-stats aria-label="Knowledge wiki scale" {
+                            (stats.article_count) " article"
                             @if stats.article_count != 1 { "s" }
-                            " across "
-                            (stats.category_count)
-                            " categories"
+                            " across " (stats.category_count) " categories"
                             @if let Some(ref d) = stats.last_updated {
-                                " — last updated "
-                                time datetime=(d) { (d) }
+                                " — last updated " time datetime=(d) { (d) }
                             }
                             "."
                         }
                     }
 
-                    // Two-column panel: featured article (left) + leapfrog facts (right)
-                    @let show_two_col = featured.is_some() || !leapfrog_facts.is_empty();
-                    @if show_two_col {
-                        div.wiki-home-two-col {
-                            // Left column — Featured TOPIC panel
-                            div.wiki-home-col-left {
-                                @if let Some(feat) = featured {
-                                    div.wiki-home-featured {
-                                        div.wiki-home-featured-inner {
-                                            span.wiki-home-featured-label { "Featured article" }
-                                            h2.wiki-home-featured-title {
-                                                a href={ "/wiki/" (feat.slug) } { (feat.title) }
-                                            }
-                                            @if let Some(ref desc) = feat.short_description {
-                                                p.wiki-home-featured-desc { em { (desc) } }
-                                            }
-                                            @if !feat.lede.is_empty() {
-                                                p.wiki-home-featured-lede { (feat.lede) }
-                                            }
-                                            a.wiki-home-featured-read href={ "/wiki/" (feat.slug) } {
-                                                "Read more →"
-                                            }
+                    // Category sections — show all articles for small categories,
+                    // PREVIEW_LIMIT + "All N →" for larger ones.
+                    div.wiki-home-categories {
+                        @for cat in RATIFIED_CATEGORIES {
+                            @let topics = buckets.get(*cat).map(|v| v.as_slice()).unwrap_or(&[]);
+                            @let count = topics.len();
+                            div.wiki-home-cat-section {
+                                div.wiki-home-cat-section-head {
+                                    h2 {
+                                        a href={ "/category/" (cat) } { (capitalise(cat)) }
+                                    }
+                                    @if count > 0 {
+                                        span.wiki-home-cat-section-count {
+                                            (count) " article" @if count != 1 { "s" }
+                                        }
+                                    }
+                                    @if count > PREVIEW_LIMIT {
+                                        a.wiki-home-cat-section-all href={ "/category/" (cat) } {
+                                            "All " (count) " →"
                                         }
                                     }
                                 }
-                            }
-                            // Right column — Leapfrog 2030 inventions facts panel
-                            @if !leapfrog_facts.is_empty() {
-                                div.wiki-home-col-right {
-                                    div.wiki-home-leapfrog {
-                                        h3.wiki-home-leapfrog-title { "Leapfrog 2030 inventions" }
-                                        ul.wiki-home-leapfrog-list {
-                                            @for fact in leapfrog_facts {
-                                                li.wiki-home-leapfrog-item {
-                                                    @if let Some(ref slug) = fact.link_slug {
-                                                        a href={ "/wiki/" (slug) } { (fact.text) }
-                                                    } @else {
-                                                        (fact.text)
-                                                    }
+                                @if count == 0 {
+                                    p.wiki-home-cat-in-prep { "In preparation." }
+                                } @else {
+                                    ul.wiki-home-cat-articles {
+                                        @for t in topics.iter().take(PREVIEW_LIMIT) {
+                                            li.wiki-home-cat-article {
+                                                a href={ "/wiki/" (t.slug) } { (t.title) }
+                                                @if let Some(ref desc) = t.short_description {
+                                                    p.wiki-home-cat-article-desc { (desc) }
                                                 }
                                             }
                                         }
@@ -737,45 +647,41 @@ fn home_chrome(
                         }
                     }
 
-                    // By-category 3×3 grid — all 9 ratified categories
-                    h2.wiki-home-section-title { "Browse by category" }
-                    div.wiki-home-grid {
-                        @for cat in RATIFIED_CATEGORIES {
-                            @let topics = buckets.get(*cat).map(|v| v.as_slice()).unwrap_or(&[]);
-                            @let count = topics.len();
-                            div.wiki-home-cat-card {
-                                h3.wiki-home-cat-title {
-                                    a href={ "/search?q=category:" (cat) } {
-                                        (capitalise(cat))
-                                    }
-                                }
-                                @if count == 0 {
-                                    p.wiki-home-cat-empty {
-                                        "0 articles — in preparation"
-                                    }
-                                } @else {
-                                    p.wiki-home-cat-count {
-                                        (count)
-                                        " article" @if count != 1 { "s" }
-                                    }
-                                    ul.wiki-home-cat-list {
-                                        @for t in topics.iter().take(3) {
-                                            li {
-                                                a href={ "/wiki/" (t.slug) } { (t.title) }
-                                            }
-                                        }
-                                    }
-                                    @if count > 3 {
-                                        a.wiki-home-cat-more href={ "/search?q=category:" (cat) } {
-                                            "More →"
-                                        }
-                                    }
+                    // Operational guides (Wave 5D) — key runbooks from both fleet repos
+                    div.wiki-home-guides {
+                        div.wiki-home-guides-head {
+                            h2 { "Operational guides" }
+                        }
+                        p.wiki-home-guides-note {
+                            "Deployment and operations runbooks from "
+                            a href="https://github.com/woodfine/woodfine-fleet-deployment" { "woodfine-fleet-deployment" }
+                            " and "
+                            a href="https://github.com/pointsav/pointsav-fleet-deployment" { "pointsav-fleet-deployment" }
+                            ". Opens on GitHub."
+                        }
+                        ul.wiki-home-guides-list {
+                            @for (title_g, area, url) in KEY_GUIDES {
+                                li.wiki-home-guides-item {
+                                    a href=(url) target="_blank" rel="noopener" { (title_g) }
+                                    " "
+                                    span style="font-size:0.75rem;color:var(--fg-muted)" { (area) }
                                 }
                             }
                         }
                     }
 
-                    // Recent additions — top 5 sorted by last_edited desc
+                    // Other areas — GitHub and related resources
+                    div.wiki-home-other {
+                        h2 { "Other areas" }
+                        ul {
+                            li { a href="https://github.com/pointsav" { "PointSav on GitHub" } " — canonical vendor-tier source" }
+                            li { a href="https://github.com/woodfine" { "Woodfine Management Corp. on GitHub" } " — customer-tier mirror" }
+                            li { a href="https://github.com/pointsav/pointsav-design-system" { "Design system" } " — visual tokens, component recipes, brand conventions" }
+                            li { a href="https://github.com/pointsav/factory-release-engineering" { "factory-release-engineering" } " — licensing matrix, contributor agreements, governance" }
+                        }
+                    }
+
+                    // Recent additions — top 10 by last_edited
                     @if !recent.is_empty() {
                         h2.wiki-home-section-title { "Recent additions" }
                         ul.wiki-home-recent {
@@ -863,6 +769,46 @@ async fn placeholder_index(state: &AppState) -> Result<Markup, WikiError> {
     ))
 }
 
+// ─── Category listing handler (Wave 5B) ─────────────────────────────────────
+
+async fn category_page(
+    State(state): State<Arc<AppState>>,
+    Path(name): Path<String>,
+) -> Result<Markup, WikiError> {
+    let buckets = bucket_topics_by_category(&state.content_dir).await?;
+    let empty: Vec<TopicSummary> = Vec::new();
+    let topics = buckets.get(&name).unwrap_or(&empty);
+    let display = capitalise(&name);
+    let count = topics.len();
+
+    Ok(chrome(
+        &format!("{display} — PointSav Knowledge"),
+        html! {
+            h1.wiki-cat-page-title { (display) }
+            @if count == 0 {
+                p.wiki-cat-page-empty { "No articles in this category yet." }
+            } @else {
+                p.wiki-cat-page-count {
+                    (count) " article" @if count != 1 { "s" }
+                }
+                ul.wiki-cat-page-list {
+                    @for t in topics {
+                        li.wiki-cat-page-item {
+                            a.wiki-cat-page-item-title href={ "/wiki/" (t.slug) } { (t.title) }
+                            @if let Some(ref d) = t.last_edited {
+                                span.wiki-cat-page-item-date { (d) }
+                            }
+                            @if let Some(ref desc) = t.short_description {
+                                p.wiki-cat-page-item-desc { (desc) }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+    ))
+}
+
 // ─── index handler ──────────────────────────────────────────────────────────
 
 async fn index(State(state): State<Arc<AppState>>) -> Result<Markup, WikiError> {
@@ -874,19 +820,15 @@ async fn index(State(state): State<Arc<AppState>>) -> Result<Markup, WikiError> 
     let home_text = fs::read_to_string(&home_path).await?;
     let home_parsed = crate::render::parse_page(&home_text)?;
     let buckets = bucket_topics_by_category(&state.content_dir).await?;
-    let featured = read_featured_topic(&state.content_dir, &buckets).await;
-    let recent = recent_topics_by_last_edited(&buckets, 5);
+    let recent = recent_topics_by_last_edited(&buckets, 10);
     let stats = compute_home_stats(&buckets);
     let home_html = crate::render::render_html_raw(&home_parsed.body_md);
-    let leapfrog_facts = read_leapfrog_facts(&state.content_dir).await;
     Ok(home_chrome(
         &home_parsed.frontmatter,
         &home_html,
-        featured.as_ref(),
         &buckets,
         &recent,
         &stats,
-        &leapfrog_facts,
     ))
 }
 
@@ -1034,11 +976,14 @@ fn wiki_chrome(
                 (PreEscaped(jsonld_for_topic(&fm, slug)))
             }
             body {
-                // Top site header — unchanged from Phase 1
                 header.site-header {
                     a.site-title href="/" { "PointSav Knowledge" }
+                    form.header-search action="/search" method="get" {
+                        input type="search" name="q" placeholder="Search articles…" autocomplete="off";
+                        button type="submit" { "Search" }
+                    }
                     nav.site-nav {
-                        a href="/" { "Index" }
+                        a href="/" { "Home" }
                     }
                 }
 
@@ -1074,7 +1019,7 @@ fn wiki_chrome(
                             nav.wiki-breadcrumb aria-label="Breadcrumb" {
                                 a href="/" { "Documentation" }
                                 span.wiki-breadcrumb-sep { " › " }
-                                a href={ "/search?q=category:" (cat.to_lowercase()) } { (cat) }
+                                a href={ "/category/" (cat.to_lowercase()) } { (cat) }
                                 span.wiki-breadcrumb-sep { " › " }
                                 span.wiki-breadcrumb-current { (title) }
                             }
@@ -1183,7 +1128,7 @@ fn wiki_chrome(
                                         span.cats-label { "Categories:" }
                                         ul.cats-list {
                                             @for cat in cats {
-                                                li { a href={ "/search?q=category:" (cat.to_lowercase()) } { (cat) } }
+                                                li { a href={ "/category/" (cat.to_lowercase()) } { (cat) } }
                                             }
                                         }
                                     }
@@ -1195,7 +1140,7 @@ fn wiki_chrome(
                                     div.wiki-categories {
                                         span.cats-label { "Category:" }
                                         span.wiki-category-single-tag {
-                                            a href={ "/search?q=category:" (cat) } { (capitalise(cat)) }
+                                            a href={ "/category/" (cat) } { (capitalise(cat)) }
                                         }
                                     }
                                 }
@@ -1439,15 +1384,19 @@ fn chrome(title: &str, body: Markup) -> Markup {
             body {
                 header.site-header {
                     a.site-title href="/" { "PointSav Knowledge" }
+                    form.header-search action="/search" method="get" {
+                        input type="search" name="q" placeholder="Search articles…" autocomplete="off";
+                        button type="submit" { "Search" }
+                    }
                     nav.site-nav {
-                        a href="/" { "Index" }
+                        a href="/" { "Home" }
                     }
                 }
                 main.site-main {
                     (body)
                 }
                 footer.site-footer {
-                    p { "Engine: app-mediakit-knowledge — Phase 1 — see ARCHITECTURE.md" }
+                    p { "PointSav Knowledge — " a href="/" { "Home" } " · Engine: app-mediakit-knowledge" }
                 }
             }
         }
