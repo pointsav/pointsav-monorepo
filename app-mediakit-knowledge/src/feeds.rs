@@ -39,9 +39,13 @@ pub struct FeedItem {
     pub summary: String,
 }
 
-/// Walk `content_dir`, parse frontmatter via `crate::render::parse_page`,
-/// filter out `*.es.md` bilingual siblings, sort by file mtime descending,
-/// and return the top `limit` items.
+/// Walk `content_dir` recursively (one level of category subdirectories),
+/// parse frontmatter via `crate::render::parse_page`, filter out `*.es.md`
+/// bilingual siblings and `index` / `_`-prefixed files, sort by file mtime
+/// descending, and return the top `limit` items.
+///
+/// Subdirectory TOPICs get path-qualified slugs (`<category>/<stem>`) so the
+/// feed links resolve correctly against the `/wiki/{*slug}` wildcard route.
 ///
 /// IO errors on individual files are silently skipped (consistent with how
 /// the index page handles unreadable entries). A parse error on a TOPIC file
@@ -50,26 +54,62 @@ pub async fn collect_recent_items(
     content_dir: &Path,
     limit: usize,
 ) -> Result<Vec<FeedItem>, WikiError> {
-    let mut entries = tokio::fs::read_dir(content_dir).await?;
-    let mut items: Vec<FeedItem> = Vec::new();
+    // Phase 1: collect (path, slug) pairs via a two-level walk.
+    let mut candidates: Vec<(std::path::PathBuf, String)> = Vec::new();
+    let mut top_entries = tokio::fs::read_dir(content_dir).await?;
 
-    while let Some(entry) = entries.next_entry().await? {
-        let name = entry.file_name();
-        let name = name.to_string_lossy();
-
-        // Must end in `.md`.
-        let slug = match name.strip_suffix(".md") {
-            Some(s) => s.to_string(),
-            None => continue,
+    while let Some(entry) = top_entries.next_entry().await? {
+        let file_type = match entry.file_type().await {
+            Ok(ft) => ft,
+            Err(_) => continue,
         };
+        let name = entry.file_name();
+        let name_str = name.to_string_lossy().to_string();
 
-        // Skip bilingual siblings (`*.es.md` → slug ends with `.es`).
-        if slug.ends_with(".es") {
-            continue;
+        if file_type.is_dir() {
+            // Descend one level into a category subdirectory.
+            let subdir_name = name_str;
+            let mut sub_entries = match tokio::fs::read_dir(entry.path()).await {
+                Ok(e) => e,
+                Err(_) => continue,
+            };
+            while let Some(sub) = sub_entries.next_entry().await? {
+                let sub_name = sub.file_name();
+                let sub_str = sub_name.to_string_lossy().to_string();
+                let stem = match sub_str.strip_suffix(".md") {
+                    Some(s) => s.to_string(),
+                    None => continue,
+                };
+                if stem.ends_with(".es")
+                    || stem == "index"
+                    || stem == "_index"
+                    || stem.starts_with('_')
+                {
+                    continue;
+                }
+                candidates.push((sub.path(), format!("{subdir_name}/{stem}")));
+            }
+        } else {
+            // Root-level file.
+            let stem = match name_str.strip_suffix(".md") {
+                Some(s) => s.to_string(),
+                None => continue,
+            };
+            if stem.ends_with(".es")
+                || stem == "index"
+                || stem == "_index"
+                || stem.starts_with('_')
+            {
+                continue;
+            }
+            candidates.push((entry.path(), stem));
         }
+    }
 
-        // File mtime — fall back to Unix epoch if the OS doesn't support it.
-        let meta = match entry.metadata().await {
+    // Phase 2: stat + parse each candidate.
+    let mut items: Vec<FeedItem> = Vec::new();
+    for (path, slug) in candidates {
+        let meta = match tokio::fs::metadata(&path).await {
             Ok(m) => m,
             Err(_) => continue,
         };
@@ -78,8 +118,6 @@ pub async fn collect_recent_items(
             Err(_) => DateTime::<Utc>::from(std::time::UNIX_EPOCH),
         };
 
-        // Read and parse the file.
-        let path = content_dir.join(entry.file_name());
         let text = match tokio::fs::read_to_string(&path).await {
             Ok(t) => t,
             Err(_) => continue,
@@ -94,8 +132,6 @@ pub async fn collect_recent_items(
             .title
             .clone()
             .unwrap_or_else(|| slug.clone());
-
-        // Build a ~180-character snippet from the first non-empty body paragraph.
         let summary = first_paragraph_snippet(&parsed.body_md, 180);
 
         items.push(FeedItem {
