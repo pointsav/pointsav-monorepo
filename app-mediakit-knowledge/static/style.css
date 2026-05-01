@@ -982,3 +982,30 @@ article table th { background: var(--bg-chrome); font-weight: 600; }
 .wiki-home-bilingual-notice a:hover {
   text-decoration: underline;
 }
+
+/* --- Article footer: last-edited date --- */
+.wiki-article-last-edited {
+  font-size: 0.8125rem;
+  color: var(--fg-muted);
+  font-family: var(--sans);
+  margin: 0.5rem 0 0;
+}
+
+.wiki-article-last-edited time {
+  font-family: var(--mono);
+}
+
+/* --- Article footer: singular category tag (from `category:` field) --- */
+.wiki-category-single-tag {
+  display: inline;
+  font-size: 0.875rem;
+}
+
+.wiki-category-single-tag a {
+  color: var(--link);
+  text-decoration: none;
+}
+
+.wiki-category-single-tag a:hover {
+  text-decoration: underline;
+}
