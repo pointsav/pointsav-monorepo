@@ -214,14 +214,11 @@ async fn featured_topic_yaml_present_renders_panel() {
     let (status, html) = get_home(state).await;
 
     assert_eq!(status, StatusCode::OK);
-    assert!(
-        html.contains("wiki-home-featured"),
-        "featured panel must be present when yaml is valid: snippet={}",
-        &html[..html.len().min(1000)]
-    );
+    // Featured panel removed in Wave 5C; topic should appear in category grid instead.
     assert!(
         html.contains("Three-Layer Architecture"),
-        "featured panel must contain the topic title"
+        "topic title must appear in category sections: snippet={}",
+        &html[..html.len().min(1000)]
     );
 }
 
@@ -328,15 +325,15 @@ async fn category_with_zero_articles_renders_placeholder() {
 
     assert_eq!(status, StatusCode::OK);
 
-    // The placeholder copy must appear for empty categories.
+    // Empty categories show "In preparation." (Wave 5C text).
     assert!(
-        html.contains("0 articles — in preparation"),
+        html.contains("In preparation."),
         "placeholder text must appear for empty categories: snippet={}",
         &html[..html.len().min(1500)]
     );
 
     // Count occurrences — there should be exactly 6 (the 6 empty categories).
-    let placeholder_count = html.matches("0 articles — in preparation").count();
+    let placeholder_count = html.matches("In preparation.").count();
     assert_eq!(
         placeholder_count, 6,
         "expected 6 empty-category placeholders, got {placeholder_count}"
