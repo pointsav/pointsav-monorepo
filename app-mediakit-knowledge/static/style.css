@@ -622,6 +622,55 @@ article table th { background: var(--bg-chrome); font-weight: 600; }
   }
 }
 
+/* ─── Wave 5A: Persistent header search bar ───────────────────────────────── */
+
+.header-search {
+  flex: 1 1 auto;
+  max-width: 28rem;
+  display: flex;
+  align-items: center;
+  margin: 0 1rem;
+}
+
+.header-search input[type="search"] {
+  flex: 1;
+  font-family: var(--sans);
+  font-size: 0.875rem;
+  padding: 0.3rem 0.6rem;
+  border: 1px solid var(--border);
+  border-right: none;
+  border-radius: 3px 0 0 3px;
+  background: var(--bg);
+  color: var(--fg);
+  outline: none;
+  min-width: 0;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.header-search input[type="search"]:focus {
+  border-color: var(--link);
+  box-shadow: 0 0 0 2px rgba(51,102,204,0.15);
+}
+
+.header-search button {
+  font-family: var(--sans);
+  font-size: 0.875rem;
+  padding: 0.3rem 0.65rem;
+  border: 1px solid var(--border);
+  border-radius: 0 3px 3px 0;
+  background: var(--bg-chrome);
+  color: var(--fg);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.header-search button:hover { background: var(--border); }
+
+@media (max-width: 600px) {
+  .header-search { display: none; }
+}
+
 /* ─── Home-page chrome ─────────────────────────────────────────────────────── */
 
 /* Lede block — rendered body from index.md */
@@ -1008,4 +1057,200 @@ article table th { background: var(--bg-chrome); font-weight: 600; }
 
 .wiki-category-single-tag a:hover {
   text-decoration: underline;
+}
+
+/* ─── Wave 5C: New home-page category sections ─────────────────────────────── */
+
+.wiki-home-categories { margin: 1.5rem 0 0.5rem; }
+
+.wiki-home-cat-section { margin-bottom: 1.75rem; }
+
+.wiki-home-cat-section-head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.2rem;
+  margin-bottom: 0.6rem;
+}
+
+.wiki-home-cat-section-head h2 {
+  font-family: var(--sans);
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.wiki-home-cat-section-head h2 a {
+  color: var(--fg);
+  text-decoration: none;
+}
+
+.wiki-home-cat-section-head h2 a:hover {
+  color: var(--link);
+  text-decoration: underline;
+}
+
+.wiki-home-cat-section-count {
+  font-size: 0.8125rem;
+  color: var(--fg-muted);
+}
+
+.wiki-home-cat-section-all {
+  font-size: 0.8125rem;
+  color: var(--link);
+  text-decoration: none;
+  margin-left: auto;
+}
+
+.wiki-home-cat-section-all:hover { text-decoration: underline; }
+
+.wiki-home-cat-articles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 0.15rem 1.5rem;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.wiki-home-cat-article { padding: 0.25rem 0; }
+
+.wiki-home-cat-article a {
+  color: var(--link);
+  text-decoration: none;
+  font-size: 0.9375rem;
+}
+
+.wiki-home-cat-article a:hover { text-decoration: underline; }
+.wiki-home-cat-article a:visited { color: var(--link-visited); }
+
+.wiki-home-cat-article-desc {
+  color: var(--fg-muted);
+  font-size: 0.8rem;
+  margin: 0.05rem 0 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wiki-home-cat-in-prep {
+  color: var(--fg-muted);
+  font-style: italic;
+  font-size: 0.875rem;
+  padding: 0.25rem 0;
+}
+
+/* ─── Wave 5D: Guides section ──────────────────────────────────────────────── */
+
+.wiki-home-guides { margin: 2rem 0 1.75rem; }
+
+.wiki-home-guides-head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.2rem;
+  margin-bottom: 0.5rem;
+}
+
+.wiki-home-guides-head h2 {
+  font-family: var(--sans);
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.wiki-home-guides-note {
+  font-size: 0.8125rem;
+  color: var(--fg-muted);
+  margin: 0 0 0.75rem;
+}
+
+.wiki-home-guides-group { margin-bottom: 1.25rem; }
+
+.wiki-home-guides-group-title {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--fg-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin: 0 0 0.4rem;
+}
+
+.wiki-home-guides-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 0.2rem 1.5rem;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.wiki-home-guides-item { padding: 0.2rem 0; font-size: 0.9375rem; }
+
+.wiki-home-guides-item a {
+  color: var(--link);
+  text-decoration: none;
+}
+
+.wiki-home-guides-item a:hover { text-decoration: underline; }
+
+/* ─── Wave 5B: Category listing page ───────────────────────────────────────── */
+
+.wiki-cat-page-title {
+  font-family: var(--sans);
+  font-weight: 400;
+  font-size: 1.75rem;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.5rem;
+  margin: 0 0 0.5rem;
+}
+
+.wiki-cat-page-count {
+  font-size: 0.9375rem;
+  color: var(--fg-muted);
+  margin: 0 0 1.5rem;
+}
+
+.wiki-cat-page-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.wiki-cat-page-item {
+  padding: 0.8rem 0;
+  border-bottom: 1px dotted var(--border);
+}
+
+.wiki-cat-page-item:last-child { border-bottom: none; }
+
+.wiki-cat-page-item-title {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--link);
+  text-decoration: none;
+  display: inline;
+}
+
+.wiki-cat-page-item-title:hover { text-decoration: underline; }
+.wiki-cat-page-item-title:visited { color: var(--link-visited); }
+
+.wiki-cat-page-item-date {
+  font-size: 0.8rem;
+  color: var(--fg-muted);
+  font-family: var(--mono);
+  margin-left: 0.6rem;
+}
+
+.wiki-cat-page-item-desc {
+  font-size: 0.875rem;
+  color: var(--fg-muted);
+  margin: 0.25rem 0 0;
+}
+
+.wiki-cat-page-empty {
+  color: var(--fg-muted);
+  font-style: italic;
 }
