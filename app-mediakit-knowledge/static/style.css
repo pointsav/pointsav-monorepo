@@ -857,3 +857,128 @@ article table th { background: var(--bg-chrome); font-weight: 600; }
   text-decoration: underline;
 }
 }
+
+/* ============================================================
+ * Iteration-2 additions — all additive; no existing rules changed.
+ * ============================================================ */
+
+/* --- Short description subtitle (below article H1) --- */
+.topic-short-description {
+  font-family: var(--sans);
+  font-size: 0.9375rem;
+  color: var(--fg-muted);
+  font-style: italic;
+  margin: 0.125rem 0 0.75rem;
+  line-height: 1.4;
+}
+
+/* --- Breadcrumb navigation (above TOC / article) --- */
+.wiki-breadcrumb {
+  font-size: 0.8125rem;
+  color: var(--fg-muted);
+  padding: 0.375rem 0 0.625rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.1rem;
+}
+
+.wiki-breadcrumb a {
+  color: var(--link);
+  text-decoration: none;
+}
+
+.wiki-breadcrumb a:hover {
+  text-decoration: underline;
+}
+
+.wiki-breadcrumb-sep {
+  color: var(--fg-muted);
+  padding: 0 0.1rem;
+}
+
+.wiki-breadcrumb-current {
+  color: var(--fg-muted);
+  font-weight: 500;
+}
+
+/* --- Home page two-column layout (featured + leapfrog) --- */
+.wiki-home-two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin: 1.25rem 0;
+}
+
+@media (max-width: 640px) {
+  .wiki-home-two-col {
+    grid-template-columns: 1fr;
+  }
+}
+
+.wiki-home-col-left,
+.wiki-home-col-right {
+  min-width: 0;
+}
+
+/* --- Leapfrog 2030 inventions panel --- */
+.wiki-home-leapfrog {
+  background: var(--bg-chrome);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1rem 1.25rem;
+  height: 100%;
+}
+
+.wiki-home-leapfrog-title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--fg);
+  margin: 0 0 0.75rem;
+  font-family: var(--sans);
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.wiki-home-leapfrog-list {
+  list-style: disc;
+  padding-left: 1.25rem;
+  margin: 0;
+}
+
+.wiki-home-leapfrog-item {
+  font-size: 0.875rem;
+  line-height: 1.5;
+  padding: 0.25rem 0;
+  color: var(--fg);
+}
+
+.wiki-home-leapfrog-item a {
+  color: var(--link);
+  text-decoration: none;
+}
+
+.wiki-home-leapfrog-item a:hover {
+  text-decoration: underline;
+}
+
+/* --- Bilingual notice (home page footer) --- */
+.wiki-home-bilingual-notice {
+  font-size: 0.8125rem;
+  color: var(--fg-muted);
+  text-align: center;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 0.5rem;
+}
+
+.wiki-home-bilingual-notice a {
+  color: var(--link);
+  text-decoration: none;
+}
+
+.wiki-home-bilingual-notice a:hover {
+  text-decoration: underline;
+}
