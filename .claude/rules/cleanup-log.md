@@ -96,6 +96,49 @@ Newest on top. Append a dated block when a session includes meaningful cleanup w
 
 ---
 
+## 2026-05-01 — Session-end snapshot — Phase 2 COMPLETE
+
+Operator-directed session close. Working tree clean. All state files updated.
+
+### Phase 2 final commit sequence
+
+| Commit | Author | Description |
+|---|---|---|
+| `f2e158f` | Peter Woodfine | Brief C — forge-seeds.sh path generalization |
+| `6f664f9` | Jennifer Woodfine | Brief D — LadybugDB graph engine + HTTP server (port 9081) |
+| `ad5e1d7` | Peter Woodfine | State files: Brief C+D recorded; NEXT.md → Brief E |
+| `624828d` | Jennifer Woodfine | Brief E — Doorman GraphContextClient (Ring 2→3 graph grounding) |
+| (this commit) | Peter Woodfine | Session-end snapshot |
+
+### Test posture at exit
+
+157/157 tests verified (14 slm-core + 92 slm-doorman + 5 audit_endpoints + 4 queue + 42 http). Clippy clean on service-slm workspace.
+
+### What Phase 2 built
+
+**Ring 2 (service-content):**
+- `GraphStore` trait + `LbugGraphStore` (LadybugDB embedded graph, `lbug = "0.16"`)
+- Cypher schema: `Entity` node table (per-tenant `module_id` + 5 semantic fields) + `RelatedTo` rel table
+- HTTP server on port 9081: `/healthz`, `GET /v1/graph/context`, `POST /v1/graph/mutate`
+- Every CORPUS_* ledger file processed by service-content now writes extracted entities into the graph (dual output: JSON CRM files + graph)
+
+**Ring 3 (Doorman):**
+- `GraphContextClient` in `slm-doorman/src/graph.rs` — queries Ring 2 before every inference call
+- `router.rs` `route()`: fetches context from last user message (first 200 chars); injects as `[ENTITY CONTEXT]\n{...}` system message; non-fatal if service-content down
+- `SERVICE_CONTENT_ENDPOINT` env var (default `http://127.0.0.1:9081`)
+
+### Outstanding operator-presence carries
+
+1. **Yo-Yo idle-shutdown** (step 8) — ~5 min; ~$520/mo → ~$130/mo
+2. **Stage-6 promote** — 12 commits ahead of origin/main
+3. **cmake + C++ compiler** on workspace VM — `lbug = "0.16"` requires C++ build at `cargo build` time (service-content standalone crate; `cargo check` passes without it)
+
+### Phase 3 scope (next session, operator go-ahead required)
+
+Training threshold detection + cron: 50-tuple trigger per adapter corpus bucket; Sunday 02:00 UTC fallback; first adapter `engineering-pointsav`; ≥60% validation acceptance rate quality gate.
+
+---
+
 ## 2026-04-30 — Phase 2 Briefs C + D — forge-seeds.sh generalization + LadybugDB graph engine
 
 Session resumed from prior context. Operator said "go" → Phase 2 execution underway.

@@ -1,51 +1,42 @@
 # NEXT.md — service-slm
 
-> Last updated: 2026-04-30 (Phase 2 in progress — Brief E next)
+> Last updated: 2026-05-01 (Phase 2 COMPLETE — Phase 3 next)
 > Read at session start. Update before session end so the next
 > session knows where to pick up.
 
 ---
 
-## Right now — Phase 2 in progress — Brief E: Doorman GraphContextAssembler
+## Right now — Phase 2 COMPLETE — Phase 3 next (operator green-light required)
 
 **Phase 1 — COMPLETE:**
-- **Brief A** `8b9a1b6` — `service-content/src/main.rs` Doorman refactor (port 8082 → 9080)
+- **Brief A** `8b9a1b6` — service-content Doorman refactor (port 8082 → 9080)
 - **Brief B** `4ecf80a` — `service-slm/scripts/slm-chat.sh` proof-of-life REPL
 
-**Phase 2 — IN PROGRESS:**
-- **Brief C** `f2e158f` — `service-content/scripts/forge-seeds.sh` path generalization ✓
-- **Brief D** `6f664f9` — LadybugDB graph engine + HTTP server:
-  - `service-content/src/graph.rs` — `GraphStore` trait + `LbugGraphStore` (230 lines)
-  - `service-content/src/http.rs` — axum server on port 9081 (`/healthz`, `/v1/graph/context`, `/v1/graph/mutate`)
-  - `service-content/src/main.rs` — sync main, graph init, HTTP server in own tokio thread
-  - `service-content/Cargo.toml` — added `lbug`, `axum`, `tokio`, `anyhow`, `chrono`
-  - `cargo check` clean (1 dead_code warning on `list_entities`)
-- **Brief E** — Doorman `GraphContextClient` (CURRENT):
-  - New `crates/slm-doorman/src/graph.rs` — `GraphContextClient` querying
-    `GET {SERVICE_CONTENT_ENDPOINT}/v1/graph/context?q=...&module_id=...`
-  - Wire into `router.rs` `route()`: fetch context before dispatch, inject into messages
-  - Non-fatal: service-content unavailable → proceed without context
-  - `SERVICE_CONTENT_ENDPOINT` env var in `slm-doorman-server/src/main.rs` (default `http://127.0.0.1:9081`)
-  - 3+ wiremock tests; 154/154 baseline must remain green
+**Phase 2 — COMPLETE (2026-05-01):**
+- **Brief C** `f2e158f` — `service-content/scripts/forge-seeds.sh` path generalization
+- **Brief D** `6f664f9` — LadybugDB graph engine + HTTP server on port 9081
+  (`GraphStore` trait + `LbugGraphStore`; `/v1/graph/context` + `/v1/graph/mutate`)
+- **Brief E** `624828d` — Doorman `GraphContextClient` wired into `router.rs`
+  (Ring 2 → Ring 3 graph grounding; non-fatal; `SERVICE_CONTENT_ENDPOINT` env var)
+- **Tests: 157/157** (14 slm-core + 92 slm-doorman + 5 audit_endpoints + 4 queue + 42 http)
+- Doctrine claim #44 (Knowledge-Graph-Grounded Apprenticeship) operational at code layer
 
-**Phase 3 — threshold training + cron (P6 cadence ratified):**
-- 50-tuple trigger per adapter corpus bucket
+**Phase 3 — awaiting operator green-light:**
+- Training threshold detection: 50-tuple trigger per adapter corpus bucket
 - Sunday 02:00 UTC fallback cron
 - First adapter: `engineering-pointsav`
 - Quality gate: ≥60% validation acceptance rate
 
 **Operator-presence carries (urgent):**
 - Yo-Yo idle-shutdown timer (runbook step 8) — 5 min; closes $520/mo → $130/mo
-- Stage-6 promote authorization (cluster now 8 commits ahead of origin/main)
+- Stage-6 promote authorization (cluster now 12 commits ahead of origin/main)
+- `cmake` + C++ compiler on workspace VM — required for `lbug = "0.16"` to compile
+  (LadybugDB uses a C++ build; `cargo check` passes but full `cargo build` of
+  service-content needs cmake present)
 
 **Resume on next session:**
-1. Read inbox (will be empty unless Master sends; Phase 2 content work
-   begins when operator green-lights LadybugDB scope)
-2. Phase 2 dispatch on operator go-ahead
-
-**Two-day arc**: 24 iterations + 18+ Master coordinations; cluster
-substrate crossed from "configured" to "training-pipeline-operationally-
-live" between 2026-04-28 and 2026-04-30. Phase 1 closed this session.
+1. Read inbox
+2. Phase 3 on operator go-ahead; operator-presence carries above first
 
 ---
 
