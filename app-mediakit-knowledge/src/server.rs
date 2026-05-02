@@ -600,7 +600,7 @@ fn home_chrome(
             head {
                 meta charset="utf-8";
                 meta name="viewport" content="width=device-width, initial-scale=1";
-                title { (title) " — PointSav Documentation Wiki | documentation.pointsav.com" }
+                title { "PointSav Documentation Wiki | documentation.pointsav.com" }
                 link rel="stylesheet" href="/static/style.css";
             }
             body {
@@ -1003,7 +1003,7 @@ fn wiki_chrome(
             head {
                 meta charset="utf-8";
                 meta name="viewport" content="width=device-width, initial-scale=1";
-                title { (title) " — PointSav Documentation Wiki | documentation.pointsav.com" }
+                title { "PointSav Documentation Wiki | documentation.pointsav.com" }
                 link rel="stylesheet" href="/static/style.css";
                 // JSON-LD baseline (Phase 2 Step 1) — schema.org TechArticle /
                 // DefinedTerm. Cumulative across phases; AEO crawlers + downstream
@@ -1427,7 +1427,7 @@ fn chrome(title: &str, body: Markup) -> Markup {
             head {
                 meta charset="utf-8";
                 meta name="viewport" content="width=device-width, initial-scale=1";
-                title { (title) " — PointSav Documentation Wiki | documentation.pointsav.com" }
+                title { "PointSav Documentation Wiki | documentation.pointsav.com" }
                 link rel="stylesheet" href="/static/style.css";
             }
             body {
