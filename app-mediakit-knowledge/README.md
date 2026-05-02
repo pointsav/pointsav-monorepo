@@ -1,6 +1,9 @@
 # app-mediakit-knowledge
 
-<div align="center">
+Wikipedia-pattern HTTP knowledge wiki for `os-mediakit`. Serves the
+`content-wiki-documentation` repository as a fully navigable wiki at
+`documentation.pointsav.com`. Built in Rust. No database. No runtime
+dependencies beyond the compiled binary.
 
 [ 🇪🇸 Leer este documento en Español ](./README.es.md)
 
