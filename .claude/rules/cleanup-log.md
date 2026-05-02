@@ -95,6 +95,24 @@ Newest on top. Append a dated block when a session includes meaningful cleanup w
 
 ---
 
+## 2026-05-02 — system file filter + site_title + guide_dir_2 + service rename
+
+- **System file filter**: `SYSTEM_FILE_STEMS` const added to `server.rs` (13 stems: README, CHANGELOG, MANIFEST, CLAUDE, NEXT, NOTAM, TRADEMARK, CODE_OF_CONDUCT, BUDGET, DOCTRINE, LICENSE, CONTRIBUTING, SECURITY). Filter applied at both root and subdirectory level in `collect_topic_files()`. Closes UX issue where repo-management files appeared in "All articles" catch-all section.
+
+- **`site_title` field**: `AppState.site_title: String` + `--site-title` / `WIKI_SITE_TITLE` CLI/env arg. Same binary now serves multiple wiki instances with distinct branding. All three chrome functions updated. Default preserves existing value ("PointSav Documentation Wiki").
+
+- **`guide_dir_2` field**: `AppState.guide_dir_2: Option<PathBuf>` + `--guide-dir-2` / `WIKI_GUIDE_DIR_2`. `collect_all_topic_files()` signature changed from `(content_dir, guide_dir: Option<&FsPath>)` to `(content_dir, guide_dirs: &[Option<&FsPath>])`. All call sites updated: `index()`, `sitemap_xml()`, `llms_txt()`, `wiki_page()` fallback chain. `bucket_topics_by_category()` takes both guide dirs. 11 inline test fixtures and 12 external test `AppState` constructions updated (Python script for both).
+
+- **Service rename**: `local-knowledge.service` stopped, disabled, and superseded by `local-knowledge-documentation.service`. New unit adds `WIKI_GUIDE_DIR_2=/srv/foundry/customer/woodfine-fleet-deployment` and `WIKI_SITE_TITLE`. New `local-knowledge-projects.service` added for Woodfine Projects Wiki at port 9093.
+
+- **New deployment instance**: `~/Foundry/deployments/media-knowledge-projects-1/` with MANIFEST.md, README.md, README.es.md for `projects.woodfinegroup.com`. nginx vhost written and enabled. DNS + certbot pending.
+
+- **Commit**: `ea4ad77` (Peter Woodfine) on `cluster/project-knowledge`. `cargo check` clean; all 110+ tests pass.
+
+- **Pending**: Stage-6 promotion to canonical main (Master scope). DNS A record for `projects.woodfinegroup.com` + certbot after DNS propagation.
+
+---
+
 ## 2026-05-01 — iteration-2 Waves 1+2+3 complete — recursive walk + article chrome + home page
 
 - **Operator direction**: "we need to loop all the waves and get all the way though" — complete
