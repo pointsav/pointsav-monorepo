@@ -890,6 +890,111 @@ Newest on top. Append a dated block when a session includes meaningful cleanup w
      `handoffs-outbound.md` pattern to the other engineering repos
      over time. Order of propagation is `~/Foundry/NEXT.md`'s
      concern.
+- **`app-mediakit-knowledge/` populated from cross-repo zip.** The
+  zip `content-wiki-documentation/app-mediakit-knowledge.zip`
+  (42 KB, 44 entries) extracted into the existing Scaffold-coded
+  `app-mediakit-knowledge/` directory, promoting it from a 4-file
+  scaffold to a working-looking Rust crate skeleton: `src/` with
+  5 modules (`editor/`, `renderer/`, `search/`, `server/`,
+  `sync/`) plus `main.rs` and `config.rs`; `templates/` (4 HTML
+  files); `static/` (13 KB `wiki.js` + 19 KB `style.css`);
+  `tests/fixtures/architecture/` with 2 markdown fixtures;
+  `.gitignore` (46 B). `Cargo.toml` and `README.md` were
+  overwritten (93 B → 1,470 B; 751 B → 8,243 B). A garbage
+  top-level directory literally named `{src` — containing a
+  four-level chain of brace-expansion artefacts from how the zip
+  was originally created (quoted `mkdir` blocked shell expansion)
+  — was removed before any git operation. Nothing staged or
+  committed in the extraction step itself.
+- **Open follow-ups from the extraction (not acted on this
+  session):**
+  - `README.es.md` (403 B scaffold) is now out of sync with the
+    new 8,243 B English README — CLAUDE.md §6 bilingual-pair rule
+    in violation until a refresh pass lands. Editorial work;
+    track as open item rather than inline.
+  - `.gitkeep` at project root is redundant now that `src/` has
+    real files; remove at next commit touching this project.
+  - Registry row (`app-mediakit-knowledge` under `app-mediakit`)
+    currently reads "Scaffold-coded, 4 files" — state remains
+    Scaffold-coded per §8 (never run end-to-end) but file count
+    and notes need updating.
+  - Source-side disposition of
+    `content-wiki-documentation/app-mediakit-knowledge.zip`
+    undecided: delete from the sibling repo (cross-repo move,
+    separate commit there), or retain as an archive. Not
+    recorded in this repo's `handoffs-outbound.md` since the
+    direction is inbound, not outbound.
+- **BIM product family handoff landed — four project directories
+  created, rules extension added.** The zip
+  `/home/mathew/Documents/pointsav-bim-handoff.zip` (44 KB, 10
+  files) was unpacked into a `/tmp` staging area and 9 files were
+  placed into the monorepo:
+  - Four new project directories each with `CLAUDE.md` +
+    `RESEARCH.md`: `app-console-bim/`, `app-orchestration-bim/`,
+    `app-workplace-bim/`, `service-bim/`.
+  - One new `.claude/rules/` file:
+    `.claude/rules/bim-product-family.md` (9,238 B) — a new
+    *category* of rules file (product-family rules), outside the
+    four named in `~/Foundry/CLAUDE.md` §10. Surfaced to Master
+    Claude as a potential §10 extension.
+  - Joint research file placed as `RESEARCH.md` in **both**
+    `app-console-bim/` and `app-orchestration-bim/` — intentional
+    duplication for Task Claude — BIM to rationalise during its
+    cleanup pass, not prematurely.
+  - `RESEARCH-BIM-MARKET.md` not placed in the monorepo (already
+    present in `content-wiki-documentation/` at repo root,
+    byte-identical; per `repo-layout.md` sibling-repo rule, market
+    research belongs in content-wiki only).
+  - `CLAUDE-root-additions.md` held back — it describes patches to
+    a monorepo root `CLAUDE.md` that does not exist. Zip retained
+    at source path; Master Claude applies when the root CLAUDE.md
+    is created.
+- **Registry drift closed (four rows without directories).** The
+  2026-04-22 bootstrap registered the four BIM dirs as
+  Reserved-folder with "1 file (RESEARCH.md)" notes, but
+  `git ls-tree` showed no trace on any branch. The rows were
+  aspirational; the directories were never created. This session
+  creates them for the first time. Registry rows updated to
+  reflect the actual contents (2 files each). State remains
+  Reserved-folder (§8: Scaffold-coded requires a `Cargo.toml`
+  skeleton; these are research-phase, no code yet).
+- **Cross-repo BIM handover outbox entry opened.** Single
+  consolidated entry in `handoffs-outbound.md` headed "BIM
+  material → content-wiki-documentation", labelled as a **pattern
+  variant: raw-material handover, not a file move** — source files
+  remain in the monorepo permanently. Destination Root Claude
+  transforms the material into proper wiki topics per its own
+  repo-layout. Detection pattern for closure:
+  `"receive BIM material from pointsav-monorepo"` in the
+  destination repo's git log.
+- **Surfaced for Master Claude (workspace-scope follow-ups):**
+  1. **Root `CLAUDE.md` for `pointsav-monorepo` is missing.**
+     Required per §10 to wire the `.claude/rules/*` files into
+     Claude sessions. `CLAUDE-root-additions.md` in the handoff
+     zip (location:
+     `/home/mathew/Documents/pointsav-bim-handoff.zip` →
+     `CLAUDE-root-additions.md`, 1,594 B) describes four targeted
+     additions (`.claude/rules/bim-product-family.md` reference,
+     four BIM dirs in Repo structure, canonical-name guards,
+     IFC/F12 rules). Apply when the root CLAUDE.md is first
+     drafted.
+  2. **§10 canonical list may need to grow.**
+     `bim-product-family.md` is a fifth type of `.claude/rules/`
+     file beyond the four listed in §10. Decision: enumerate,
+     generalise, or name as a subcategory.
+  3. **`cluster-bim` clone provisioning pending.** Per §9, Master
+     Claude provisions clones. A future Task Claude — BIM needs
+     `~/Foundry/clones/cluster-bim/` with feature branch
+     `cluster/bim` and a `PROJECT-CLONES.md` row before it can
+     activate the four BIM projects.
+  4. **Stale paths in existing outbox entries.** The two prior
+     entries in `handoffs-outbound.md` use
+     `/home/mathew/Foundry/factory-pointsav/...` paths (non-
+     existent on disk) and helper `~/Foundry/tool-commit-as-next.sh`
+     (§7 canonical is `~/Foundry/bin/commit-as-next.sh`). A
+     destination Root Claude running the prescribed commands
+     verbatim would hit failures. Needs correction before
+     pickup. This session's new BIM entry uses correct paths.
 
 ---
 

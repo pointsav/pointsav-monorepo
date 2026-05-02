@@ -1,0 +1,55 @@
+[package]
+name = "slm-doorman"
+version = "0.1.0"
+description = "Doorman library: three-tier compute router and append-only audit ledger for service-slm."
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+slm-core = { workspace = true }
+
+# Async runtime + HTTP client (used by tier clients; real wire logic lands in B2/B4)
+tokio = { workspace = true }
+reqwest = { workspace = true }
+
+# Lark grammar pre-validation (PS.3 step 5): compile the Lark string at the
+# Doorman boundary before relaying to Tier B so malformed grammars produce a
+# typed 400 error instead of an opaque upstream failure.
+# Pin to "1.7" (SemVer-minor compatible with 1.7.4). No extra feature flags —
+# llguidance default features include the Lark compiler path we need.
+# ApproximateTokEnv::single_byte_env() (from the re-exported toktrie crate)
+# lets us construct a ParserFactory for validation without a real tokenizer.
+llguidance = "1.7"
+
+# Serialisation
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+# Time
+chrono = { workspace = true }
+
+# UUIDv7 for apprenticeship attempt_ids
+uuid = { workspace = true }
+
+# Errors
+thiserror = { workspace = true }
+
+# Async trait support
+async-trait = { workspace = true }
+
+# Apprenticeship Substrate (AS-2..AS-4):
+# - regex: redact + parse apprentice frontmatter/diff fences
+# - fs2:   flock(2) on the promotion ledger
+# - base64: signature transport on the verdict wire
+regex = { workspace = true }
+fs2 = { workspace = true }
+base64 = { workspace = true }
+
+# Observability
+tracing = { workspace = true }
+
+[dev-dependencies]
+# Mock HTTP server for Yo-Yo client unit tests (B2)
+wiremock = "0.6"
+tokio = { workspace = true }
