@@ -24,6 +24,7 @@ async fn fixture_state() -> (AppState, tempfile::TempDir, tempfile::TempDir) {
     let state = AppState {
         content_dir: dir.path().to_path_buf(),
         guide_dir: None,
+        guide_dir_2: None,
         citations_yaml: std::path::PathBuf::from("/nonexistent/citations.yaml"),
         search: Arc::new(index),
         collab: Arc::new(app_mediakit_knowledge::collab::CollabRooms::new()),
@@ -85,6 +86,7 @@ async fn fli_topic_carries_additional_property() {
     let state = AppState {
         content_dir: dir.path().to_path_buf(),
         guide_dir: None,
+        guide_dir_2: None,
         citations_yaml: std::path::PathBuf::from("/nonexistent/citations.yaml"),
         search: Arc::new(index),
         collab: Arc::new(app_mediakit_knowledge::collab::CollabRooms::new()),
