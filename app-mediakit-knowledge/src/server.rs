@@ -56,6 +56,11 @@ use crate::search::{search as run_search, SearchIndex};
 #[derive(Clone)]
 pub struct AppState {
     pub content_dir: PathBuf,
+    /// Optional extra directory of GUIDE-* Markdown files (e.g. a fleet-deployment
+    /// repo). When set, the engine walks this dir alongside `content_dir` and
+    /// serves files at `/wiki/<slug>` just like TOPICs.
+    /// Set via `--guide-dir` / `WIKI_GUIDE_DIR`.
+    pub guide_dir: Option<PathBuf>,
     /// Path to the workspace citation registry YAML file.
     /// Defaults to `/srv/foundry/citations.yaml`; overridable via
     /// `--citations-yaml` / `WIKI_CITATIONS_YAML`.
@@ -342,8 +347,26 @@ async fn collect_topic_files(content_dir: &FsPath) -> std::io::Result<Vec<TopicF
     Ok(out)
 }
 
-/// Walk `content_dir` recursively, parse every TOPIC `.md` file, and group
-/// them into a `BTreeMap<category, Vec<TopicSummary>>`.
+/// Collect topic files from `content_dir` and optionally a second `guide_dir`.
+/// Slugs are unique within each dir; guide slugs are prefixed by their subdir
+/// name so they don't collide with content slugs.
+async fn collect_all_topic_files(
+    content_dir: &FsPath,
+    guide_dir: Option<&FsPath>,
+) -> std::io::Result<Vec<TopicFile>> {
+    let mut files = collect_topic_files(content_dir).await?;
+    if let Some(gd) = guide_dir {
+        if gd.is_dir() {
+            if let Ok(guide_files) = collect_topic_files(gd).await {
+                files.extend(guide_files);
+            }
+        }
+    }
+    Ok(files)
+}
+
+/// Walk `content_dir` (and optional `guide_dir`) recursively, parse every `.md`
+/// file, and group them into a `BTreeMap<category, Vec<TopicSummary>>`.
 ///
 /// Descends into category subdirectories (`architecture/`, `services/`, etc.).
 /// Slugs for subdirectory TOPICs take the form `<category>/<stem>` so they
@@ -351,8 +374,11 @@ async fn collect_topic_files(content_dir: &FsPath) -> std::io::Result<Vec<TopicF
 ///
 /// Files with no `category:` frontmatter, or whose category is `root`, are
 /// bucketed under `"uncategorised"`.
-async fn bucket_topics_by_category(content_dir: &FsPath) -> std::io::Result<CategoryBuckets> {
-    let topic_files = collect_topic_files(content_dir).await?;
+async fn bucket_topics_by_category(
+    content_dir: &FsPath,
+    guide_dir: Option<&FsPath>,
+) -> std::io::Result<CategoryBuckets> {
+    let topic_files = collect_all_topic_files(content_dir, guide_dir).await?;
     let mut buckets: CategoryBuckets = BTreeMap::new();
 
     for tf in topic_files {
@@ -566,7 +592,7 @@ fn home_chrome(
     let title = home_fm
         .title
         .as_deref()
-        .unwrap_or("PointSav Knowledge");
+        .unwrap_or("PointSav Documentation Wiki");
 
     html! {
         (DOCTYPE)
@@ -574,12 +600,12 @@ fn home_chrome(
             head {
                 meta charset="utf-8";
                 meta name="viewport" content="width=device-width, initial-scale=1";
-                title { (title) " — PointSav Knowledge" }
+                title { (title) " — PointSav Documentation Wiki | documentation.pointsav.com" }
                 link rel="stylesheet" href="/static/style.css";
             }
             body {
                 header.site-header {
-                    a.site-title href="/" { "PointSav Knowledge" }
+                    a.site-title href="/" { "PointSav Documentation Wiki" }
                     form.header-search action="/search" method="get" {
                         input type="search" name="q" placeholder="Search articles…" autocomplete="off";
                         button type="submit" { "Search" }
@@ -705,7 +731,7 @@ fn home_chrome(
                         " "
                         a href="/wiki/index.es" { "Leer en Español →" }
                     }
-                    p { "PointSav Knowledge — "
+                    p { "PointSav Documentation Wiki — "
                         a href="/" { "Home" }
                         " · Engine: app-mediakit-knowledge — see "
                         a href="https://github.com/pointsav/pointsav-monorepo" { "ARCHITECTURE.md" }
@@ -775,14 +801,14 @@ async fn category_page(
     State(state): State<Arc<AppState>>,
     Path(name): Path<String>,
 ) -> Result<Markup, WikiError> {
-    let buckets = bucket_topics_by_category(&state.content_dir).await?;
+    let buckets = bucket_topics_by_category(&state.content_dir, state.guide_dir.as_deref()).await?;
     let empty: Vec<TopicSummary> = Vec::new();
     let topics = buckets.get(&name).unwrap_or(&empty);
     let display = capitalise(&name);
     let count = topics.len();
 
     Ok(chrome(
-        &format!("{display} — PointSav Knowledge"),
+        &format!("{display} — PointSav Documentation Wiki"),
         html! {
             h1.wiki-cat-page-title { (display) }
             @if count == 0 {
@@ -819,7 +845,7 @@ async fn index(State(state): State<Arc<AppState>>) -> Result<Markup, WikiError> 
 
     let home_text = fs::read_to_string(&home_path).await?;
     let home_parsed = crate::render::parse_page(&home_text)?;
-    let buckets = bucket_topics_by_category(&state.content_dir).await?;
+    let buckets = bucket_topics_by_category(&state.content_dir, state.guide_dir.as_deref()).await?;
     let recent = recent_topics_by_last_edited(&buckets, 10);
     let stats = compute_home_stats(&buckets);
     let home_html = crate::render::render_html_raw(&home_parsed.body_md);
@@ -853,11 +879,20 @@ async fn wiki_page(
         }
     }
 
-    let path = state.content_dir.join(format!("{slug}.md"));
-    let text = match fs::read_to_string(&path).await {
+    // Try content_dir first; if not found, try guide_dir as fallback.
+    let primary_path = state.content_dir.join(format!("{slug}.md"));
+    let text = match fs::read_to_string(&primary_path).await {
         Ok(t) => t,
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
-            return Err(WikiError::NotFound(slug));
+            if let Some(ref gd) = state.guide_dir {
+                let guide_path = gd.join(format!("{slug}.md"));
+                match fs::read_to_string(&guide_path).await {
+                    Ok(t) => t,
+                    Err(_) => return Err(WikiError::NotFound(slug)),
+                }
+            } else {
+                return Err(WikiError::NotFound(slug));
+            }
         }
         Err(e) => return Err(e.into()),
     };
@@ -968,7 +1003,7 @@ fn wiki_chrome(
             head {
                 meta charset="utf-8";
                 meta name="viewport" content="width=device-width, initial-scale=1";
-                title { (title) " — PointSav Knowledge" }
+                title { (title) " — PointSav Documentation Wiki | documentation.pointsav.com" }
                 link rel="stylesheet" href="/static/style.css";
                 // JSON-LD baseline (Phase 2 Step 1) — schema.org TechArticle /
                 // DefinedTerm. Cumulative across phases; AEO crawlers + downstream
@@ -977,7 +1012,7 @@ fn wiki_chrome(
             }
             body {
                 header.site-header {
-                    a.site-title href="/" { "PointSav Knowledge" }
+                    a.site-title href="/" { "PointSav Documentation Wiki" }
                     form.header-search action="/search" method="get" {
                         input type="search" name="q" placeholder="Search articles…" autocomplete="off";
                         button type="submit" { "Search" }
@@ -1033,8 +1068,9 @@ fn wiki_chrome(
                                     href={ "/wiki/" (slug) }
                                     aria-current="page"
                                 { "Article" }
-                                a.wiki-tab
-                                    href={ "/wiki/" (talk_slug) }
+                                span.wiki-tab.wiki-tab-disabled
+                                    aria-disabled="true"
+                                    title="Talk pages coming soon"
                                 { "Talk" }
                             }
 
@@ -1081,8 +1117,14 @@ fn wiki_chrome(
                                     href={ "/wiki/" (slug) }
                                     aria-current="page"
                                 { "Read" }
-                                a.wiki-tab href="#" { "Edit" }
-                                a.wiki-tab href="#" { "View history" }
+                                span.wiki-tab.wiki-tab-disabled
+                                    aria-disabled="true"
+                                    title="Editing coming soon"
+                                { "Edit" }
+                                span.wiki-tab.wiki-tab-disabled
+                                    aria-disabled="true"
+                                    title="History coming soon"
+                                { "View history" }
                             }
                         }
 
@@ -1185,9 +1227,9 @@ fn wiki_chrome(
                 // Bottom page footer — unchanged structure, updated copy
                 footer.site-footer {
                     p {
-                        "PointSav Knowledge — "
+                        "PointSav Documentation Wiki — "
                         a href="/" { "Index" }
-                        " · Engine: app-mediakit-knowledge Phase 1.1 — see "
+                        " · Engine: app-mediakit-knowledge — see "
                         a href="https://github.com/pointsav/pointsav-monorepo" {
                             "ARCHITECTURE.md"
                         }
@@ -1209,7 +1251,7 @@ fn wiki_chrome(
 /// Walks `content_dir` recursively, emits one `<url>` per TOPIC (excluding
 /// `*.es.md` bilingual siblings). Content-Type: `application/xml; charset=utf-8`.
 async fn sitemap_xml(State(state): State<Arc<AppState>>) -> Result<Response, WikiError> {
-    let topic_files = collect_topic_files(&state.content_dir).await?;
+    let topic_files = collect_all_topic_files(&state.content_dir, state.guide_dir.as_deref()).await?;
     let mut slugs: Vec<String> = topic_files.into_iter().map(|tf| tf.slug).collect();
     slugs.sort();
 
@@ -1253,7 +1295,7 @@ async fn robots_txt() -> Response {
 /// surfaces (JSON-LD, Atom, JSON Feed, sitemap). Content-Type:
 /// `text/markdown; charset=utf-8`.
 async fn llms_txt(State(state): State<Arc<AppState>>) -> Result<Response, WikiError> {
-    let topic_files = collect_topic_files(&state.content_dir).await?;
+    let topic_files = collect_all_topic_files(&state.content_dir, state.guide_dir.as_deref()).await?;
     let mut tf_list: Vec<(String, PathBuf)> = topic_files.into_iter()
         .map(|tf| (tf.slug, tf.path))
         .collect();
@@ -1385,12 +1427,12 @@ fn chrome(title: &str, body: Markup) -> Markup {
             head {
                 meta charset="utf-8";
                 meta name="viewport" content="width=device-width, initial-scale=1";
-                title { (title) " — PointSav Knowledge" }
+                title { (title) " — PointSav Documentation Wiki | documentation.pointsav.com" }
                 link rel="stylesheet" href="/static/style.css";
             }
             body {
                 header.site-header {
-                    a.site-title href="/" { "PointSav Knowledge" }
+                    a.site-title href="/" { "PointSav Documentation Wiki" }
                     form.header-search action="/search" method="get" {
                         input type="search" name="q" placeholder="Search articles…" autocomplete="off";
                         button type="submit" { "Search" }
@@ -1403,7 +1445,7 @@ fn chrome(title: &str, body: Markup) -> Markup {
                     (body)
                 }
                 footer.site-footer {
-                    p { "PointSav Knowledge — " a href="/" { "Home" } " · Engine: app-mediakit-knowledge" }
+                    p { "PointSav Documentation Wiki — " a href="/" { "Home" } " · Engine: app-mediakit-knowledge" }
                 }
             }
         }
@@ -1433,6 +1475,7 @@ mod tests {
         (
             AppState {
                 content_dir: dir.path().to_path_buf(),
+                guide_dir: None,
                 // Use a path that does not exist; citation tests live in
                 // tests/citations_test.rs where they control this path.
                 // Server tests do not exercise /api/citations so the missing
@@ -1597,6 +1640,7 @@ mod tests {
             .unwrap();
         let state = AppState {
             content_dir: dir.path().to_path_buf(),
+            guide_dir: None,
             citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
             search: Arc::new(index),
             collab: Arc::new(crate::collab::CollabRooms::new()),
@@ -1662,6 +1706,7 @@ mod tests {
             .unwrap();
         let state = AppState {
             content_dir: dir.path().to_path_buf(),
+            guide_dir: None,
             citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
             search: Arc::new(index),
             collab: Arc::new(crate::collab::CollabRooms::new()),
@@ -1705,6 +1750,7 @@ mod tests {
             .unwrap();
         let state = AppState {
             content_dir: dir.path().to_path_buf(),
+            guide_dir: None,
             citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
             search: Arc::new(index),
             collab: Arc::new(crate::collab::CollabRooms::new()),
@@ -1745,6 +1791,7 @@ mod tests {
             .unwrap();
         let state = AppState {
             content_dir: dir.path().to_path_buf(),
+            guide_dir: None,
             citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
             search: Arc::new(index),
             collab: Arc::new(crate::collab::CollabRooms::new()),
@@ -1789,6 +1836,7 @@ mod tests {
             .unwrap();
         let state = AppState {
             content_dir: dir.path().to_path_buf(),
+            guide_dir: None,
             citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
             search: Arc::new(index),
             collab: Arc::new(crate::collab::CollabRooms::new()),
@@ -1835,6 +1883,7 @@ mod tests {
             .unwrap();
         let state = AppState {
             content_dir: dir.path().to_path_buf(),
+            guide_dir: None,
             citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
             search: Arc::new(index),
             collab: Arc::new(crate::collab::CollabRooms::new()),
@@ -1884,6 +1933,7 @@ mod tests {
             .unwrap();
         let state = AppState {
             content_dir: dir.path().to_path_buf(),
+            guide_dir: None,
             citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
             search: Arc::new(index),
             collab: Arc::new(crate::collab::CollabRooms::new()),
@@ -1935,6 +1985,7 @@ mod tests {
             .unwrap();
         let state = AppState {
             content_dir: dir.path().to_path_buf(),
+            guide_dir: None,
             citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
             search: Arc::new(index),
             collab: Arc::new(crate::collab::CollabRooms::new()),
@@ -1988,6 +2039,7 @@ mod tests {
             .unwrap();
         let state = AppState {
             content_dir: dir.path().to_path_buf(),
+            guide_dir: None,
             citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
             search: Arc::new(index),
             collab: Arc::new(crate::collab::CollabRooms::new()),
@@ -2034,6 +2086,7 @@ mod tests {
             .unwrap();
         let state = AppState {
             content_dir: dir.path().to_path_buf(),
+            guide_dir: None,
             citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
             search: Arc::new(index),
             collab: Arc::new(crate::collab::CollabRooms::new()),

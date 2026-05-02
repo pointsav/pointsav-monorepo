@@ -54,6 +54,7 @@ async fn build_state(
         .unwrap();
     let state = AppState {
         content_dir: content_dir.to_path_buf(),
+        guide_dir: None,
         citations_yaml: std::path::PathBuf::from("/nonexistent/citations.yaml"),
         search: Arc::new(index),
         collab: Arc::new(app_mediakit_knowledge::collab::CollabRooms::new()),
