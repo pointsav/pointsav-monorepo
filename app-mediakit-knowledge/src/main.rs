@@ -58,6 +58,11 @@ enum Command {
         #[arg(long, env = "WIKI_GUIDE_DIR")]
         guide_dir: Option<PathBuf>,
 
+        /// Optional second guide directory (e.g. woodfine-fleet-deployment). When
+        /// set, the engine walks this alongside `guide_dir` and `content_dir`.
+        #[arg(long, env = "WIKI_GUIDE_DIR_2")]
+        guide_dir_2: Option<PathBuf>,
+
         /// Phase 2 Step 7: enable real-time collaborative editing via
         /// y-codemirror.next + a tokio broadcast WebSocket relay at
         /// `/ws/collab/{slug}`. Default off; the route is only mounted
@@ -96,15 +101,17 @@ async fn main() -> Result<()> {
             citations_yaml,
             state_dir,
             guide_dir,
+            guide_dir_2,
             enable_collab,
             site_title,
-        } => serve(content_dir, guide_dir, bind, citations_yaml, state_dir, enable_collab, site_title).await,
+        } => serve(content_dir, guide_dir, guide_dir_2, bind, citations_yaml, state_dir, enable_collab, site_title).await,
     }
 }
 
 async fn serve(
     content_dir: PathBuf,
     guide_dir: Option<PathBuf>,
+    guide_dir_2: Option<PathBuf>,
     bind: SocketAddr,
     citations_yaml: PathBuf,
     state_dir: PathBuf,
@@ -122,6 +129,12 @@ async fn serve(
             bail!("guide directory does not exist or is not a directory: {}", gd.display());
         }
         tracing::info!(guide_dir = %gd.display(), "guide directory enabled");
+    }
+    if let Some(ref gd2) = guide_dir_2 {
+        if !gd2.is_dir() {
+            bail!("guide directory 2 does not exist or is not a directory: {}", gd2.display());
+        }
+        tracing::info!(guide_dir_2 = %gd2.display(), "guide directory 2 enabled");
     }
     tracing::info!(
         content_dir = %content_dir.display(),
@@ -143,6 +156,7 @@ async fn serve(
     let state = AppState {
         content_dir,
         guide_dir,
+        guide_dir_2,
         citations_yaml,
         search: Arc::new(search_index),
         collab: Arc::new(app_mediakit_knowledge::collab::CollabRooms::new()),
