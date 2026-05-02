@@ -36,6 +36,7 @@ async fn citation_state() -> (AppState, tempfile::TempDir, tempfile::TempDir) {
             search: Arc::new(index),
             collab: Arc::new(app_mediakit_knowledge::collab::CollabRooms::new()),
             enable_collab: false,
+            site_title: "PointSav Documentation Wiki".to_string(),
         },
         dir,
         state_dir,
