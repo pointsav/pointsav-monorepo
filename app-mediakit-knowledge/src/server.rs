@@ -794,7 +794,7 @@ fn home_chrome(
                         " "
                         a href="/wiki/index.es" { "Leer en Español →" }
                     }
-                    p { "PointSav Documentation Wiki — "
+                    p { (site_title) " — "
                         a href="/" { "Home" }
                         " · Engine: app-mediakit-knowledge — see "
                         a href="https://github.com/pointsav/pointsav-monorepo" { "ARCHITECTURE.md" }
@@ -825,9 +825,8 @@ async fn placeholder_index(state: &AppState) -> Result<Markup, WikiError> {
         let name = entry.file_name();
         let name = name.to_string_lossy();
         if let Some(slug) = name.strip_suffix(".md") {
-            // Skip the bilingual sibling files (`*.es.md`) for the index;
-            // they're addressable directly by full slug if needed.
-            if !slug.ends_with(".es") {
+            // Skip bilingual siblings, system/repo files.
+            if !slug.ends_with(".es") && !SYSTEM_FILE_STEMS.contains(&slug) {
                 pages.push(slug.to_string());
             }
         }
@@ -1312,7 +1311,7 @@ fn wiki_chrome(
                 // Bottom page footer — unchanged structure, updated copy
                 footer.site-footer {
                     p {
-                        "PointSav Documentation Wiki — "
+                        (site_title) " — "
                         a href="/" { "Index" }
                         " · Engine: app-mediakit-knowledge — see "
                         a href="https://github.com/pointsav/pointsav-monorepo" {
@@ -1412,7 +1411,7 @@ async fn llms_txt(State(state): State<Arc<AppState>>) -> Result<Response, WikiEr
     let topics_section = topic_lines.join("\n");
 
     let body = format!(
-        "# PointSav Knowledge\n\
+        "# {site_title}\n\
          \n\
          > Single-binary Markdown wiki engine; flat-file source-of-truth, \
          AI-optional, Wikipedia-shaped UX. Substrate substitution per \
@@ -1427,7 +1426,9 @@ async fn llms_txt(State(state): State<Arc<AppState>>) -> Result<Response, WikiEr
          - JSON-LD: every TOPIC `<head>` carries schema.org `TechArticle` / `DefinedTerm`\n\
          - Atom feed: `/feed.atom`\n\
          - JSON Feed: `/feed.json`\n\
-         - Sitemap: `/sitemap.xml`\n"
+         - Sitemap: `/sitemap.xml`\n",
+        site_title = state.site_title,
+        topics_section = topics_section,
     );
 
     let mut resp = body.into_response();
@@ -1529,7 +1530,7 @@ fn chrome(title: &str, body: Markup, site_title: &str) -> Markup {
                     (body)
                 }
                 footer.site-footer {
-                    p { "PointSav Documentation Wiki — " a href="/" { "Home" } " · Engine: app-mediakit-knowledge" }
+                    p { (site_title) " — " a href="/" { "Home" } " · Engine: app-mediakit-knowledge" }
                 }
             }
         }
