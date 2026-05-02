@@ -287,12 +287,32 @@ struct TopicFile {
     path: PathBuf,
 }
 
+/// Repo-management files that are not wiki content. Filtered out at the
+/// root level of any content directory so they never appear in article
+/// listings or the "All articles" catch-all section.
+const SYSTEM_FILE_STEMS: &[&str] = &[
+    "README",
+    "CHANGELOG",
+    "MANIFEST",
+    "CLAUDE",
+    "NEXT",
+    "NOTAM",
+    "TRADEMARK",
+    "CODE_OF_CONDUCT",
+    "BUDGET",
+    "DOCTRINE",
+    "LICENSE",
+    "CONTRIBUTING",
+    "SECURITY",
+];
+
 /// Recursively collect all TOPIC `.md` files under `content_dir`.
 ///
 /// Skips:
 /// - `*.es.md` bilingual siblings
 /// - `index.md` and `_index.md` at any level
 /// - Files whose stem starts with `_`
+/// - Repo-management files listed in `SYSTEM_FILE_STEMS`
 /// - Non-`.md` files
 ///
 /// Descends one level into subdirectories (category folders). Does not
@@ -320,7 +340,12 @@ async fn collect_topic_files(content_dir: &FsPath) -> std::io::Result<Vec<TopicF
                     Some(s) => s.to_string(),
                     None => continue,
                 };
-                if stem.ends_with(".es") || stem == "index" || stem == "_index" || stem.starts_with('_') {
+                if stem.ends_with(".es")
+                    || stem == "index"
+                    || stem == "_index"
+                    || stem.starts_with('_')
+                    || SYSTEM_FILE_STEMS.contains(&stem.as_str())
+                {
                     continue;
                 }
                 out.push(TopicFile {
@@ -334,7 +359,12 @@ async fn collect_topic_files(content_dir: &FsPath) -> std::io::Result<Vec<TopicF
                 Some(s) => s.to_string(),
                 None => continue,
             };
-            if stem.ends_with(".es") || stem == "index" || stem == "_index" || stem.starts_with('_') {
+            if stem.ends_with(".es")
+                || stem == "index"
+                || stem == "_index"
+                || stem.starts_with('_')
+                || SYSTEM_FILE_STEMS.contains(&stem.as_str())
+            {
                 continue;
             }
             out.push(TopicFile {
