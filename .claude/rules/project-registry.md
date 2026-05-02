@@ -8,7 +8,7 @@ must be closed.
 
 State vocabulary — see `~/Foundry/CLAUDE.md` §8 for definitions.
 
-Last updated: 2026-04-23.
+Last updated: 2026-04-25.
 
 ---
 
@@ -16,7 +16,7 @@ Last updated: 2026-04-23.
 
 | Project | State | Type | Notes |
 |---|---|---|---|
-| app-console-bim | Reserved-folder | app-console | 1 file (RESEARCH.md); research phase |
+| app-console-bim | Reserved-folder | app-console | 2 files (CLAUDE.md + RESEARCH.md shared with app-orchestration-bim); research phase; directory created 2026-04-23 (closes registry drift) |
 | app-console-bookkeeper | Active | app-console | Activated 2026-04-22 via framework §8 (pilot); HTML-plugin pattern (view + cartridge); registry row was originally mis-classified; `README.*` and data-binding pending |
 | app-console-content | Scaffold-coded | app-console | 8 files; in workspace members |
 | app-console-email | Scaffold-coded | app-console | 4 files |
@@ -54,7 +54,7 @@ Last updated: 2026-04-23.
 
 | Project | State | Type | Notes |
 |---|---|---|---|
-| app-orchestration-bim | Reserved-folder | app-orchestration | 1 file (RESEARCH.md); triggered taxonomy expansion to seventh in-force domain on 2026-04-22 |
+| app-orchestration-bim | Reserved-folder | app-orchestration | 2 files (CLAUDE.md + RESEARCH.md byte-identical to app-console-bim copy, Task Claude — BIM to rationalise); triggered taxonomy expansion to seventh in-force domain on 2026-04-22; directory created 2026-04-23 (closes registry drift) |
 
 ## App — PrivateGit surface (`app-privategit-*`)
 
@@ -74,7 +74,7 @@ Last updated: 2026-04-23.
 
 | Project | State | Type | Notes |
 |---|---|---|---|
-| app-workplace-bim | Reserved-folder | app-workplace | 1 file (RESEARCH.md); research phase |
+| app-workplace-bim | Reserved-folder | app-workplace | 2 files (CLAUDE.md + RESEARCH.md); research phase; directory created 2026-04-23 (closes registry drift) |
 | app-workplace-memo | Scaffold-coded | app-workplace | 47 files; running on Linux Mint per sibling's doc; CLAUDE.md + NEXT.md pending for Active |
 | app-workplace-presentation | Active | app-workplace | 52 files; CLAUDE.md present; Phase 5 |
 | app-workplace-proforma | Active | app-workplace | 45 files; CLAUDE.md present but marked "local-only"; conformance pending |
@@ -115,21 +115,21 @@ Last updated: 2026-04-23.
 
 | Project | State | Type | Notes |
 |---|---|---|---|
-| service-bim | Reserved-folder | service | 1 file (RESEARCH.md); research phase |
+| service-bim | Reserved-folder | service | 2 files (CLAUDE.md + RESEARCH.md); research phase; directory created 2026-04-23 (closes registry drift) |
 | service-content | Scaffold-coded | service | 37 files; in workspace members |
 | service-egress | Scaffold-coded | service | 4 files |
 | service-email | Scaffold-coded | service | 18 files |
-| service-email-egress-ews | Scaffold-coded | service | EWS protocol adapter; doubly-nested wrapper flattened 2026-04-23 (prior "consolidation" plan reversed — kept separate from `-imap` because they are two protocol-specific implementations, not duplicates); 6 sub-crates including EWS-only `egress-prune` and `egress-balancer`; Cargo.toml name mismatches (13 total across both) remain as separate audit finding |
-| service-email-egress-imap | Scaffold-coded | service | IMAP protocol adapter; doubly-nested wrapper flattened 2026-04-23; 4 sub-crates; parallel structure to `-ews` but without prune/balancer |
+| service-email-egress-ews | Defect → `service-email-egress` | service | Doubly-nested; 6 sub-crates; consolidation pending |
+| service-email-egress-imap | Defect → `service-email-egress` | service | Same consolidation |
 | service-email-template | Scaffold-coded | service | 5 files |
 | service-extraction | Active | service | 21 files; CLAUDE.md present but stale (see NEXT.md Item 9) |
 | service-fs | Scaffold-coded | service | 3 files; in workspace members |
 | service-http | Scaffold-coded | service | 9 files |
 | service-message-courier | Reserved-folder | service | 1 file |
+| service-parser | Defect → remove | service | Legacy name; canonical is `service-extraction`; removal pending |
 | service-people | Scaffold-coded | service | 17 files; in workspace members |
-| service-pty-bridge | Scaffold-coded | service | Renamed 2026-04-23 from `pointsav-pty-bridge` (brand-prefix violation resolved); 1 source file (`src/main.rs`); not a workspace member |
 | service-search | Reserved-folder | service | 1 file |
-| service-slm | Scaffold-coded | service | Contains `router/` (Rust runtime, renamed 2026-04-23 from `cognitive-forge/`) and `router-trainer/` (Python distillation workflow, moved in 2026-04-23 from former top-level `tool-cognitive-forge/`); both names replace the retired "cognitive-forge" term per Do-Not-Use list |
+| service-slm | Active | service | B1 Doorman scaffold landed 2026-04-25 (standalone cargo workspace; `crates/slm-core`, `slm-doorman`, `slm-doorman-server`); 6/6 tests; `cognitive-forge/` excluded pending rename |
 | service-totebox-egress | Scaffold-coded | service | 18 files |
 | service-vpn | Scaffold-coded | service | 11 files |
 
@@ -153,6 +153,7 @@ Last updated: 2026-04-23.
 |---|---|---|---|
 | tool-acs-miner | Scaffold-coded | tool | 3 files; in workspace members |
 | tool-archive-rescue | Reserved-folder | tool | 3 files |
+| tool-cognitive-forge | Scaffold-coded | tool | 8 files; "Cognitive Forge" is a retired term per Do-Not-Use list — rename pending |
 | tool-edgar-extractor | Reserved-folder | tool | 2 files |
 | tool-egress-pull | Scaffold-coded | tool | 4 files |
 | tool-template-rescue | Reserved-folder | tool | 3 files |
@@ -170,25 +171,27 @@ Last updated: 2026-04-23.
 | vendor-slm-engine | Reserved-folder | vendor | 3 files |
 | vendor-virtio | Reserved-folder | vendor | 1 file |
 | vendor-wireguard | Reserved-folder | vendor | 1 file |
+| vendors-maxmind | Defect → `vendor-maxmind` + data-reclass | vendor | Typo (plural); plus .mmdb belongs at build-time-fetch, not in Git |
 
 ## Other / special
 
 | Project | State | Type | Notes |
 |---|---|---|---|
 | discovery-queue | Not-a-project | runtime data | 22 `TX-*_identity.json` files; gitignore + move to `service-fs/data/` |
+| pointsav-pty-bridge | Defect → `service-pty-bridge` | service | Brand-prefix violation; rename pending (user-approved) |
 | target | Not-a-project | build output | Rust cargo output; in .gitignore |
 | xtask | Scaffold-coded | xtask | 2 files; in workspace members; Rust xtask convention |
 
 ---
 
-## Summary (2026-04-23)
+## Summary (2026-04-22 baseline)
 
-- **Active:** 4 (`app-console-bookkeeper`, `app-workplace-presentation`, `app-workplace-proforma`, `service-extraction`)
-- **Scaffold-coded:** 53
+- **Active:** 5 (`app-console-bookkeeper`, `app-workplace-presentation`, `app-workplace-proforma`, `service-extraction`, `service-slm`)
+- **Scaffold-coded:** 50
 - **Reserved-folder:** 36
-- **Defect:** 0
+- **Defect:** 5 (`pointsav-pty-bridge`, `service-parser`, `service-email-egress-ews`, `service-email-egress-imap`, `vendors-maxmind`)
 - **Not-a-project:** 2 (`discovery-queue`, `target`)
 - **Dormant:** 0
 - **Archived:** 0
 
-**Total rows:** 97.
+**Total rows:** 100.
