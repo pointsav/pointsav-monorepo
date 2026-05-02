@@ -28,6 +28,7 @@ async fn build_state(enable_collab: bool) -> (AppState, tempfile::TempDir, tempf
         search: Arc::new(index),
         collab: Arc::new(app_mediakit_knowledge::collab::CollabRooms::new()),
         enable_collab,
+        site_title: "PointSav Documentation Wiki".to_string(),
     };
     (state, dir, state_dir)
 }

@@ -65,6 +65,10 @@ pub struct AppState {
     /// Defaults to `/srv/foundry/citations.yaml`; overridable via
     /// `--citations-yaml` / `WIKI_CITATIONS_YAML`.
     pub citations_yaml: PathBuf,
+    /// Display name for this wiki instance, shown in the browser tab, site
+    /// header, and home-page H1 fallback. Set via `--site-title` /
+    /// `WIKI_SITE_TITLE`. Default: `"PointSav Documentation Wiki"`.
+    pub site_title: String,
     /// Phase 3 Step 3.2: tantivy full-text search index. Built on
     /// startup from a tree walk of `content_dir`; reindexed on every
     /// successful edit / create. Clone-cheap (Arc-wrapped internals).
@@ -207,6 +211,7 @@ async fn search_page(
                 }
             }
         },
+        &state.site_title,
     ))
 }
 
@@ -621,11 +626,9 @@ fn home_chrome(
     recent: &[TopicSummary],
     stats: &HomeStats,
     guides: &[TopicSummary],
+    site_title: &str,
 ) -> Markup {
-    let title = home_fm
-        .title
-        .as_deref()
-        .unwrap_or("PointSav Documentation Wiki");
+    let title = home_fm.title.as_deref().unwrap_or(site_title);
 
     // Articles in non-ratified buckets (not already shown as guides) so that
     // every TOPIC and GUIDE is reachable from the home page.
@@ -647,12 +650,12 @@ fn home_chrome(
             head {
                 meta charset="utf-8";
                 meta name="viewport" content="width=device-width, initial-scale=1";
-                title { "PointSav Documentation Wiki" }
+                title { (site_title) }
                 link rel="stylesheet" href="/static/style.css";
             }
             body {
                 header.site-header {
-                    a.site-title href="/" { "PointSav Documentation Wiki" }
+                    a.site-title href="/" { (site_title) }
                     form.header-search action="/search" method="get" {
                         input type="search" name="q" placeholder="Search articles…" autocomplete="off";
                         button type="submit" { "Search" }
@@ -852,6 +855,7 @@ async fn placeholder_index(state: &AppState) -> Result<Markup, WikiError> {
                 }
             }
         },
+        &state.site_title,
     ))
 }
 
@@ -868,7 +872,7 @@ async fn category_page(
     let count = topics.len();
 
     Ok(chrome(
-        &format!("{display} — PointSav Documentation Wiki"),
+        &format!("{display} — {}", state.site_title),
         html! {
             h1.wiki-cat-page-title { (display) }
             @if count == 0 {
@@ -892,6 +896,7 @@ async fn category_page(
                 }
             }
         },
+        &state.site_title,
     ))
 }
 
@@ -933,6 +938,7 @@ async fn index(State(state): State<Arc<AppState>>) -> Result<Markup, WikiError> 
         &recent,
         &stats,
         &guide_summaries,
+        &state.site_title,
     ))
 }
 
@@ -1023,7 +1029,7 @@ async fn wiki_page(
         .title
         .clone()
         .unwrap_or_else(|| slug.clone());
-    Ok(wiki_chrome(&title, &slug, parsed.frontmatter, &body_html, headings))
+    Ok(wiki_chrome(&title, &slug, parsed.frontmatter, &body_html, headings, &state.site_title))
 }
 
 async fn static_asset(Path(path): Path<String>) -> Response {
@@ -1066,6 +1072,7 @@ fn wiki_chrome(
     fm: Frontmatter,
     body_html: &str,
     headings: Vec<(String, String, u8)>,
+    site_title: &str,
 ) -> Markup {
     let talk_slug = format!("{slug}.talk");
 
@@ -1081,7 +1088,7 @@ fn wiki_chrome(
             head {
                 meta charset="utf-8";
                 meta name="viewport" content="width=device-width, initial-scale=1";
-                title { "PointSav Documentation Wiki" }
+                title { (site_title) }
                 link rel="stylesheet" href="/static/style.css";
                 // JSON-LD baseline (Phase 2 Step 1) — schema.org TechArticle /
                 // DefinedTerm. Cumulative across phases; AEO crawlers + downstream
@@ -1090,7 +1097,7 @@ fn wiki_chrome(
             }
             body {
                 header.site-header {
-                    a.site-title href="/" { "PointSav Documentation Wiki" }
+                    a.site-title href="/" { (site_title) }
                     form.header-search action="/search" method="get" {
                         input type="search" name="q" placeholder="Search articles…" autocomplete="off";
                         button type="submit" { "Search" }
@@ -1496,21 +1503,20 @@ async fn git_markdown(
     Ok(resp)
 }
 
-/// Shared shell for non-article pages (index, errors).
-/// Retained exactly from Phase 1 — no changes.
-fn chrome(title: &str, body: Markup) -> Markup {
+/// Shared shell for non-article pages (search, category, errors).
+fn chrome(title: &str, body: Markup, site_title: &str) -> Markup {
     html! {
         (DOCTYPE)
         html lang="en" {
             head {
                 meta charset="utf-8";
                 meta name="viewport" content="width=device-width, initial-scale=1";
-                title { "PointSav Documentation Wiki" }
+                title { (site_title) }
                 link rel="stylesheet" href="/static/style.css";
             }
             body {
                 header.site-header {
-                    a.site-title href="/" { "PointSav Documentation Wiki" }
+                    a.site-title href="/" { (site_title) }
                     form.header-search action="/search" method="get" {
                         input type="search" name="q" placeholder="Search articles…" autocomplete="off";
                         button type="submit" { "Search" }
@@ -1562,6 +1568,7 @@ mod tests {
                 search: Arc::new(index),
                 collab: Arc::new(crate::collab::CollabRooms::new()),
                 enable_collab: false,
+                site_title: "PointSav Documentation Wiki".to_string(),
             },
             dir,
             state_dir,
@@ -1723,6 +1730,7 @@ mod tests {
             search: Arc::new(index),
             collab: Arc::new(crate::collab::CollabRooms::new()),
             enable_collab: false,
+            site_title: "PointSav Documentation Wiki".to_string(),
         };
         let app = router(state);
         let resp = app
@@ -1789,6 +1797,7 @@ mod tests {
             search: Arc::new(index),
             collab: Arc::new(crate::collab::CollabRooms::new()),
             enable_collab: false,
+            site_title: "PointSav Documentation Wiki".to_string(),
         };
         let app = router(state);
         let resp = app
@@ -1833,6 +1842,7 @@ mod tests {
             search: Arc::new(index),
             collab: Arc::new(crate::collab::CollabRooms::new()),
             enable_collab: false,
+            site_title: "PointSav Documentation Wiki".to_string(),
         };
         let app = router(state);
         let resp = app
@@ -1874,6 +1884,7 @@ mod tests {
             search: Arc::new(index),
             collab: Arc::new(crate::collab::CollabRooms::new()),
             enable_collab: false,
+            site_title: "PointSav Documentation Wiki".to_string(),
         };
         let app = router(state);
         let resp = app
@@ -1919,6 +1930,7 @@ mod tests {
             search: Arc::new(index),
             collab: Arc::new(crate::collab::CollabRooms::new()),
             enable_collab: false,
+            site_title: "PointSav Documentation Wiki".to_string(),
         };
         let app = router(state);
         let resp = app
@@ -1966,6 +1978,7 @@ mod tests {
             search: Arc::new(index),
             collab: Arc::new(crate::collab::CollabRooms::new()),
             enable_collab: false,
+            site_title: "PointSav Documentation Wiki".to_string(),
         };
         let app = router(state);
         let resp = app
@@ -2016,6 +2029,7 @@ mod tests {
             search: Arc::new(index),
             collab: Arc::new(crate::collab::CollabRooms::new()),
             enable_collab: false,
+            site_title: "PointSav Documentation Wiki".to_string(),
         };
         let app = router(state);
         let resp = app
@@ -2068,6 +2082,7 @@ mod tests {
             search: Arc::new(index),
             collab: Arc::new(crate::collab::CollabRooms::new()),
             enable_collab: false,
+            site_title: "PointSav Documentation Wiki".to_string(),
         };
         let app = router(state);
         let resp = app
@@ -2122,6 +2137,7 @@ mod tests {
             search: Arc::new(index),
             collab: Arc::new(crate::collab::CollabRooms::new()),
             enable_collab: false,
+            site_title: "PointSav Documentation Wiki".to_string(),
         };
         let app = router(state);
         let resp = app
@@ -2169,6 +2185,7 @@ mod tests {
             search: Arc::new(index),
             collab: Arc::new(crate::collab::CollabRooms::new()),
             enable_collab: false,
+            site_title: "PointSav Documentation Wiki".to_string(),
         };
         let app = router(state);
         let resp = app
