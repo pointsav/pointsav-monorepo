@@ -1038,31 +1038,38 @@ fn wiki_chrome(
                                 { "Talk" }
                             }
 
-                            // Page title + tagline + language switcher (centre)
+                            // Page title + language switcher + tagline (centre)
+                            // Language button sits BELOW the H1, left-aligned —
+                            // matching MediaWiki Vector 2022 (.mw-portlet-lang placement).
                             div.wiki-title-block {
-                                div.wiki-title-inner {
-                                    h1.page-title { (title) }
-                                    // Language switcher — next to title (item 14 + item 11)
-                                    // Auto-detected from `.es.md` siblings when `translations:`
-                                    // frontmatter is absent. Shows uppercase language codes
-                                    // (EN / ES) following Wikipedia's sidebar convention.
-                                    @if let Some(translations) = &fm.translations {
-                                        @if !translations.is_empty() {
-                                            div.wiki-lang-switcher {
-                                                @for (lang, lang_slug) in translations {
-                                                    a.wiki-lang-btn
-                                                        href={ "/wiki/" (lang_slug) }
-                                                        lang=(lang)
-                                                        title={ "Read in " (lang.to_uppercase()) }
-                                                    { (lang.to_uppercase()) }
-                                                }
+                                h1.page-title { (title) }
+                                @if let Some(translations) = &fm.translations {
+                                    @if !translations.is_empty() {
+                                        div.wiki-lang-switcher {
+                                            span.wiki-lang-globe aria-hidden="true" { "🌐" }
+                                            @for (lang, lang_slug) in translations {
+                                                @let lang_label = match lang.as_str() {
+                                                    "es" => "Español",
+                                                    "en" => "English",
+                                                    "fr" => "Français",
+                                                    "de" => "Deutsch",
+                                                    "pt" => "Português",
+                                                    "zh" => "中文",
+                                                    "ja" => "日本語",
+                                                    "ar" => "العربية",
+                                                    _ => lang.as_str(),
+                                                };
+                                                a.wiki-lang-btn
+                                                    href={ "/wiki/" (lang_slug) }
+                                                    lang=(lang)
+                                                    hreflang=(lang)
+                                                    title={ "Read in " (lang_label) }
+                                                { (lang_label) }
                                             }
                                         }
                                     }
                                 }
                                 p.wiki-tagline { "From PointSav Documentation" }
-                                // Short description — italic subtitle below tagline
-                                // (Wikipedia Vector 2022 article-subtitle pattern)
                                 @if let Some(ref desc) = fm.short_description {
                                     p.topic-short-description { em { (desc) } }
                                 }
