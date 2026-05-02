@@ -27,31 +27,55 @@ while true; do
             
             # 1. Read the YAML Frontmatter & Body
             PAYLOAD_CONTENT=$(cat "$TXT_FILE")
+
+            # 2. Route through the Doorman at SLM_BIND_ADDR (default 127.0.0.1:9080)
+            # Per service-slm/ARCHITECTURE.md: Doorman is the boundary, not raw LLM.
+            SLM_ENDPOINT="${SLM_BIND_ADDR:-127.0.0.1:9080}"
+
+            echo "[SYSTEM] Routing through Doorman at http://$SLM_ENDPOINT..."
+
+            # Construct request JSON with payload content as user message.
+            # Module ID 'foundry' identifies this as internal bridge traffic.
+            REQUEST_JSON=$(cat <<EOF
+{
+  "model": "olmo-3-7b-instruct",
+  "messages": [
+    {"role": "user", "content": "$PAYLOAD_CONTENT"}
+  ],
+  "max_tokens": 1024,
+  "temperature": 0.7
+}
+EOF
+)
+
+            # POST to Doorman /v1/chat/completions with Foundry module ID
+            RESPONSE=$(curl -s -X POST "http://$SLM_ENDPOINT/v1/chat/completions" \
+              -H "Content-Type: application/json" \
+              -H "X-Foundry-Module-ID: foundry" \
+              -d "$REQUEST_JSON")
+
+            # Extract content from response; handle curl errors gracefully
+            if [ $? -ne 0 ]; then
+              echo "[ERROR] Doorman request failed for $FILENAME"
+              continue
+            fi
+
+            # Parse the response content (expected: OpenAI-compatible format)
+            CONTENT=$(echo "$RESPONSE" | jq -r '.choices[0].message.content // "[ERROR] No content in response"' 2>/dev/null)
+            if [ -z "$CONTENT" ] || [ "$CONTENT" = "[ERROR] No content in response" ]; then
+              echo "[WARNING] Empty or malformed Doorman response for $FILENAME"
+              CONTENT="[ERROR] Doorman returned empty response"
+            fi
+
+            RESPONSE="$CONTENT"
             
-            # ==============================================================================
-            # ⚠️ MISSING CONNECTION PHYSICS: system-slm
-            # ==============================================================================
-            # We need the exact command to pipe $PAYLOAD_CONTENT into system-slm.
-            # 
-            # Example A (HTTP API - Ollama/vLLM):
-            # RESPONSE=$(curl -s -X POST http://localhost:11434/api/generate -d "{\"model\": \"qwen2-0.5b\", \"prompt\": \"$PAYLOAD_CONTENT\", \"stream\": false}" | jq -r '.response')
-            # 
-            # Example B (Local CLI Binary):
-            # RESPONSE=$(/opt/system-slm/bin/generate-text --input "$TXT_FILE")
-            # ==============================================================================
-            
-            echo "[SYSTEM] Awaiting Connection Vector definition..."
-            
-            # Placeholder Output (Until physics are supplied)
-            RESPONSE="[UNVERIFIED STAGING OVERLAY]\n\nThis is a temporary placeholder. The SLM bridge requires the connection vector to system-slm to generate the actual Overlay against the Domain Glossaries."
-            
-            # 2. Forge the unverified Markdown Overlay
+            # 3. Forge the Markdown Overlay from Doorman response
             OUT_FILE="$OUT_QUEUE/${TX_ID}_overlay.md"
             echo -e "$RESPONSE" > "$OUT_FILE"
+
+            echo "[ROUTED] Overlay from Doorman -> $OUT_FILE"
             
-            echo "[ROUTED] Staging Overlay generated -> $OUT_FILE (Awaiting Checkout)"
-            
-            # 3. Vault the processed payload to prevent loops
+            # 4. Vault the processed payload to prevent loops
             mv "$TXT_FILE" "$ARCHIVE_DIR/"
             echo "--------------------------------------------------------"
         fi
