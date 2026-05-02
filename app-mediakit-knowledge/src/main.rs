@@ -67,6 +67,16 @@ enum Command {
         /// TOPIC see each other's cursors.
         #[arg(long, env = "WIKI_ENABLE_COLLAB")]
         enable_collab: bool,
+
+        /// Display name shown in the browser tab, site header, and home-page
+        /// H1 fallback. Allows the same binary to serve multiple wiki
+        /// instances with different branding.
+        #[arg(
+            long,
+            env = "WIKI_SITE_TITLE",
+            default_value = "PointSav Documentation Wiki"
+        )]
+        site_title: String,
     },
 }
 
@@ -87,7 +97,8 @@ async fn main() -> Result<()> {
             state_dir,
             guide_dir,
             enable_collab,
-        } => serve(content_dir, guide_dir, bind, citations_yaml, state_dir, enable_collab).await,
+            site_title,
+        } => serve(content_dir, guide_dir, bind, citations_yaml, state_dir, enable_collab, site_title).await,
     }
 }
 
@@ -98,6 +109,7 @@ async fn serve(
     citations_yaml: PathBuf,
     state_dir: PathBuf,
     enable_collab: bool,
+    site_title: String,
 ) -> Result<()> {
     if !content_dir.is_dir() {
         bail!(
@@ -135,6 +147,7 @@ async fn serve(
         search: Arc::new(search_index),
         collab: Arc::new(app_mediakit_knowledge::collab::CollabRooms::new()),
         enable_collab,
+        site_title,
     };
     let app = router(state);
     let listener = tokio::net::TcpListener::bind(bind).await?;
