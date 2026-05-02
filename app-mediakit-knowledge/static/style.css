@@ -376,12 +376,7 @@ article table th { background: var(--bg-chrome); font-weight: 600; }
   min-width: 0;
 }
 
-.wiki-title-inner {
-  display: flex;
-  align-items: baseline;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-}
+/* .wiki-title-inner no longer used — lang switcher moved below H1 */
 
 /* Override page-title margin when inside the title-row layout */
 .wiki-title-block .page-title {
@@ -398,26 +393,40 @@ article table th { background: var(--bg-chrome); font-weight: 600; }
   margin: 0 0 0.35rem 0;
 }
 
-/* Language switcher button(s) next to title (item 14) */
+/* Language switcher — below H1, left-aligned (MediaWiki Vector 2022 pattern) */
 .wiki-lang-switcher {
   display: flex;
-  gap: 0.25rem;
-  align-items: baseline;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0.2rem 0 0.5rem 0;
+}
+
+.wiki-lang-globe {
+  font-size: 0.9rem;
+  color: var(--fg-muted);
+  line-height: 1;
 }
 
 .wiki-lang-btn {
-  display: inline-block;
-  padding: 0.15rem 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.65rem;
   font-family: var(--sans);
   font-size: 0.8125rem;
   color: var(--link);
   text-decoration: none;
-  border: 1px solid var(--border);
+  border: 1px solid var(--link);
   border-radius: 2px;
-  background: var(--bg-chrome);
+  background: transparent;
+  font-weight: 500;
+  letter-spacing: 0.01em;
 }
 
-.wiki-lang-btn:hover { background: var(--tab-hover-bg); text-decoration: none; }
+.wiki-lang-btn:hover {
+  background: var(--link);
+  color: #fff;
+  text-decoration: none;
+}
 
 /* --- IVC masthead band (UX-DESIGN.md §4.5) --- */
 
