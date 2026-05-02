@@ -590,11 +590,26 @@ fn home_chrome(
     buckets: &CategoryBuckets,
     recent: &[TopicSummary],
     stats: &HomeStats,
+    guides: &[TopicSummary],
 ) -> Markup {
     let title = home_fm
         .title
         .as_deref()
         .unwrap_or("PointSav Documentation Wiki");
+
+    // Articles in non-ratified buckets (not already shown as guides) so that
+    // every TOPIC and GUIDE is reachable from the home page.
+    let guide_slug_set: std::collections::HashSet<&str> =
+        guides.iter().map(|g| g.slug.as_str()).collect();
+    let mut uncategorised: Vec<&TopicSummary> = buckets
+        .iter()
+        .filter(|(cat, _)| {
+            !RATIFIED_CATEGORIES.contains(&cat.as_str()) && cat.as_str() != "root"
+        })
+        .flat_map(|(_, topics)| topics.iter())
+        .filter(|t| !guide_slug_set.contains(t.slug.as_str()))
+        .collect();
+    uncategorised.sort_by(|a, b| a.title.cmp(&b.title));
 
     html! {
         (DOCTYPE)
@@ -669,6 +684,42 @@ fn home_chrome(
                                                 }
                                             }
                                         }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // Operational guides — served locally via guide_dir
+                    @if !guides.is_empty() {
+                        div.wiki-home-guides {
+                            div.wiki-home-guides-head {
+                                h2 { "Operational guides" }
+                            }
+                            ul.wiki-home-guides-list {
+                                @for g in guides {
+                                    li.wiki-home-guides-item {
+                                        a href={ "/wiki/" (g.slug) } { (g.title) }
+                                        @if let Some(ref desc) = g.short_description {
+                                            span.wiki-home-guides-desc { " — " (desc) }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // Catch-all: every TOPIC/GUIDE not in a ratified category
+                    @if !uncategorised.is_empty() {
+                        div.wiki-home-uncategorised {
+                            h2 { "All articles" }
+                            p.wiki-home-uncategorised-note {
+                                "Articles not yet sorted into a category."
+                            }
+                            ul.wiki-home-uncategorised-list {
+                                @for t in &uncategorised {
+                                    li {
+                                        a href={ "/wiki/" (t.slug) } { (t.title) }
                                     }
                                 }
                             }
@@ -828,12 +879,30 @@ async fn index(State(state): State<Arc<AppState>>) -> Result<Markup, WikiError> 
     let recent = recent_topics_by_last_edited(&buckets, 10);
     let stats = compute_home_stats(&buckets);
     let home_html = crate::render::render_html_raw(&home_parsed.body_md);
+
+    // Collect guide summaries for the dedicated guides section.
+    // A guide is any entry whose filename stem starts with "guide-".
+    let mut guide_summaries: Vec<TopicSummary> = buckets
+        .values()
+        .flatten()
+        .filter(|t| {
+            t.slug
+                .split('/')
+                .last()
+                .map(|s| s.starts_with("guide-"))
+                .unwrap_or(false)
+        })
+        .cloned()
+        .collect();
+    guide_summaries.sort_by(|a, b| a.title.cmp(&b.title));
+
     Ok(home_chrome(
         &home_parsed.frontmatter,
         &home_html,
         &buckets,
         &recent,
         &stats,
+        &guide_summaries,
     ))
 }
 
