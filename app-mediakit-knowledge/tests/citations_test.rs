@@ -32,6 +32,7 @@ async fn citation_state() -> (AppState, tempfile::TempDir, tempfile::TempDir) {
         AppState {
             content_dir: dir.path().to_path_buf(),
         guide_dir: None,
+        guide_dir_2: None,
             citations_yaml: PathBuf::from("/srv/foundry/citations.yaml"),
             search: Arc::new(index),
             collab: Arc::new(app_mediakit_knowledge::collab::CollabRooms::new()),
