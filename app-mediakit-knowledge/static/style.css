@@ -1214,6 +1214,43 @@ article table th { background: var(--bg-chrome); font-weight: 600; }
 
 .wiki-home-guides-item a:hover { text-decoration: underline; }
 
+.wiki-home-guides-desc {
+  font-size: 0.8125rem;
+  color: var(--fg-muted);
+}
+
+/* ─── Catch-all: uncategorised articles ─────────────────────────────────────── */
+
+.wiki-home-uncategorised { margin: 2rem 0 1.75rem; }
+
+.wiki-home-uncategorised h2 {
+  font-family: var(--sans);
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin: 0 0 0.25rem;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.2rem;
+}
+
+.wiki-home-uncategorised-note {
+  font-size: 0.8125rem;
+  color: var(--fg-muted);
+  margin: 0 0 0.6rem;
+}
+
+.wiki-home-uncategorised-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 0.2rem 1.5rem;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  font-size: 0.9375rem;
+}
+
+.wiki-home-uncategorised-list a { color: var(--link); text-decoration: none; }
+.wiki-home-uncategorised-list a:hover { text-decoration: underline; }
+
 /* ─── Wave 5B: Category listing page ───────────────────────────────────────── */
 
 .wiki-cat-page-title {
