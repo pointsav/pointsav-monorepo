@@ -550,8 +550,10 @@ fn compute_home_stats(buckets: &CategoryBuckets) -> HomeStats {
 /// Categories with ≤ PREVIEW_LIMIT articles always show the full list.
 const PREVIEW_LIMIT: usize = 8;
 
-/// Operational guides surfaced on the home page.
-/// (title, deployment area, GitHub URL)
+// KEY_GUIDES removed — guides now served in-wiki via guide_dir and appear in
+// the Help category grid alongside TOPICs. No external GitHub links on home page.
+// Retained as dead code until woodfine-fleet-deployment is added to the cluster.
+#[allow(dead_code)]
 const KEY_GUIDES: &[(&str, &str, &str)] = &[
     // AI & SLM
     ("Operating the service-slm Doorman", "vault-privategit-source", "https://github.com/woodfine/woodfine-fleet-deployment/blob/main/vault-privategit-source/guide-doorman.md"),
@@ -600,7 +602,7 @@ fn home_chrome(
             head {
                 meta charset="utf-8";
                 meta name="viewport" content="width=device-width, initial-scale=1";
-                title { "PointSav Documentation Wiki | documentation.pointsav.com" }
+                title { "PointSav Documentation Wiki" }
                 link rel="stylesheet" href="/static/style.css";
             }
             body {
@@ -668,29 +670,6 @@ fn home_chrome(
                                             }
                                         }
                                     }
-                                }
-                            }
-                        }
-                    }
-
-                    // Operational guides (Wave 5D) — key runbooks from both fleet repos
-                    div.wiki-home-guides {
-                        div.wiki-home-guides-head {
-                            h2 { "Operational guides" }
-                        }
-                        p.wiki-home-guides-note {
-                            "Deployment and operations runbooks from "
-                            a href="https://github.com/woodfine/woodfine-fleet-deployment" { "woodfine-fleet-deployment" }
-                            " and "
-                            a href="https://github.com/pointsav/pointsav-fleet-deployment" { "pointsav-fleet-deployment" }
-                            ". Opens on GitHub."
-                        }
-                        ul.wiki-home-guides-list {
-                            @for (title_g, area, url) in KEY_GUIDES {
-                                li.wiki-home-guides-item {
-                                    a href=(url) target="_blank" rel="noopener" { (title_g) }
-                                    " "
-                                    span style="font-size:0.75rem;color:var(--fg-muted)" { (area) }
                                 }
                             }
                         }
@@ -1003,7 +982,7 @@ fn wiki_chrome(
             head {
                 meta charset="utf-8";
                 meta name="viewport" content="width=device-width, initial-scale=1";
-                title { "PointSav Documentation Wiki | documentation.pointsav.com" }
+                title { "PointSav Documentation Wiki" }
                 link rel="stylesheet" href="/static/style.css";
                 // JSON-LD baseline (Phase 2 Step 1) — schema.org TechArticle /
                 // DefinedTerm. Cumulative across phases; AEO crawlers + downstream
@@ -1427,7 +1406,7 @@ fn chrome(title: &str, body: Markup) -> Markup {
             head {
                 meta charset="utf-8";
                 meta name="viewport" content="width=device-width, initial-scale=1";
-                title { "PointSav Documentation Wiki | documentation.pointsav.com" }
+                title { "PointSav Documentation Wiki" }
                 link rel="stylesheet" href="/static/style.css";
             }
             body {
