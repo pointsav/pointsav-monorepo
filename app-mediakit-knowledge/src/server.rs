@@ -61,6 +61,10 @@ pub struct AppState {
     /// serves files at `/wiki/<slug>` just like TOPICs.
     /// Set via `--guide-dir` / `WIKI_GUIDE_DIR`.
     pub guide_dir: Option<PathBuf>,
+    /// Second optional guide directory. Allows a documentation wiki to serve
+    /// guides from two separate fleet-deployment repos simultaneously.
+    /// Set via `--guide-dir-2` / `WIKI_GUIDE_DIR_2`.
+    pub guide_dir_2: Option<PathBuf>,
     /// Path to the workspace citation registry YAML file.
     /// Defaults to `/srv/foundry/citations.yaml`; overridable via
     /// `--citations-yaml` / `WIKI_CITATIONS_YAML`.
@@ -382,18 +386,20 @@ async fn collect_topic_files(content_dir: &FsPath) -> std::io::Result<Vec<TopicF
     Ok(out)
 }
 
-/// Collect topic files from `content_dir` and optionally a second `guide_dir`.
+/// Collect topic files from `content_dir` and zero or more `guide_dirs`.
 /// Slugs are unique within each dir; guide slugs are prefixed by their subdir
 /// name so they don't collide with content slugs.
 async fn collect_all_topic_files(
     content_dir: &FsPath,
-    guide_dir: Option<&FsPath>,
+    guide_dirs: &[Option<&FsPath>],
 ) -> std::io::Result<Vec<TopicFile>> {
     let mut files = collect_topic_files(content_dir).await?;
-    if let Some(gd) = guide_dir {
-        if gd.is_dir() {
-            if let Ok(guide_files) = collect_topic_files(gd).await {
-                files.extend(guide_files);
+    for gd_opt in guide_dirs {
+        if let Some(gd) = gd_opt {
+            if gd.is_dir() {
+                if let Ok(guide_files) = collect_topic_files(gd).await {
+                    files.extend(guide_files);
+                }
             }
         }
     }
@@ -412,8 +418,9 @@ async fn collect_all_topic_files(
 async fn bucket_topics_by_category(
     content_dir: &FsPath,
     guide_dir: Option<&FsPath>,
+    guide_dir_2: Option<&FsPath>,
 ) -> std::io::Result<CategoryBuckets> {
-    let topic_files = collect_all_topic_files(content_dir, guide_dir).await?;
+    let topic_files = collect_all_topic_files(content_dir, &[guide_dir, guide_dir_2]).await?;
     let mut buckets: CategoryBuckets = BTreeMap::new();
 
     for tf in topic_files {
@@ -864,7 +871,7 @@ async fn category_page(
     State(state): State<Arc<AppState>>,
     Path(name): Path<String>,
 ) -> Result<Markup, WikiError> {
-    let buckets = bucket_topics_by_category(&state.content_dir, state.guide_dir.as_deref()).await?;
+    let buckets = bucket_topics_by_category(&state.content_dir, state.guide_dir.as_deref(), state.guide_dir_2.as_deref()).await?;
     let empty: Vec<TopicSummary> = Vec::new();
     let topics = buckets.get(&name).unwrap_or(&empty);
     let display = capitalise(&name);
@@ -909,7 +916,7 @@ async fn index(State(state): State<Arc<AppState>>) -> Result<Markup, WikiError> 
 
     let home_text = fs::read_to_string(&home_path).await?;
     let home_parsed = crate::render::parse_page(&home_text)?;
-    let buckets = bucket_topics_by_category(&state.content_dir, state.guide_dir.as_deref()).await?;
+    let buckets = bucket_topics_by_category(&state.content_dir, state.guide_dir.as_deref(), state.guide_dir_2.as_deref()).await?;
     let recent = recent_topics_by_last_edited(&buckets, 10);
     let stats = compute_home_stats(&buckets);
     let home_html = crate::render::render_html_raw(&home_parsed.body_md);
@@ -962,19 +969,25 @@ async fn wiki_page(
         }
     }
 
-    // Try content_dir first; if not found, try guide_dir as fallback.
+    // Try content_dir first; if not found, try guide_dir then guide_dir_2.
     let primary_path = state.content_dir.join(format!("{slug}.md"));
     let text = match fs::read_to_string(&primary_path).await {
         Ok(t) => t,
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
-            if let Some(ref gd) = state.guide_dir {
-                let guide_path = gd.join(format!("{slug}.md"));
-                match fs::read_to_string(&guide_path).await {
-                    Ok(t) => t,
-                    Err(_) => return Err(WikiError::NotFound(slug)),
+            let guide_dirs: &[Option<&PathBuf>] = &[state.guide_dir.as_ref(), state.guide_dir_2.as_ref()];
+            let mut found: Option<String> = None;
+            for gd_opt in guide_dirs {
+                if let Some(gd) = gd_opt {
+                    let gp = gd.join(format!("{slug}.md"));
+                    if let Ok(t) = fs::read_to_string(&gp).await {
+                        found = Some(t);
+                        break;
+                    }
                 }
-            } else {
-                return Err(WikiError::NotFound(slug));
+            }
+            match found {
+                Some(t) => t,
+                None => return Err(WikiError::NotFound(slug)),
             }
         }
         Err(e) => return Err(e.into()),
@@ -1335,7 +1348,7 @@ fn wiki_chrome(
 /// Walks `content_dir` recursively, emits one `<url>` per TOPIC (excluding
 /// `*.es.md` bilingual siblings). Content-Type: `application/xml; charset=utf-8`.
 async fn sitemap_xml(State(state): State<Arc<AppState>>) -> Result<Response, WikiError> {
-    let topic_files = collect_all_topic_files(&state.content_dir, state.guide_dir.as_deref()).await?;
+    let topic_files = collect_all_topic_files(&state.content_dir, &[state.guide_dir.as_deref(), state.guide_dir_2.as_deref()]).await?;
     let mut slugs: Vec<String> = topic_files.into_iter().map(|tf| tf.slug).collect();
     slugs.sort();
 
@@ -1379,7 +1392,7 @@ async fn robots_txt() -> Response {
 /// surfaces (JSON-LD, Atom, JSON Feed, sitemap). Content-Type:
 /// `text/markdown; charset=utf-8`.
 async fn llms_txt(State(state): State<Arc<AppState>>) -> Result<Response, WikiError> {
-    let topic_files = collect_all_topic_files(&state.content_dir, state.guide_dir.as_deref()).await?;
+    let topic_files = collect_all_topic_files(&state.content_dir, &[state.guide_dir.as_deref(), state.guide_dir_2.as_deref()]).await?;
     let mut tf_list: Vec<(String, PathBuf)> = topic_files.into_iter()
         .map(|tf| (tf.slug, tf.path))
         .collect();
@@ -1561,6 +1574,7 @@ mod tests {
             AppState {
                 content_dir: dir.path().to_path_buf(),
                 guide_dir: None,
+                guide_dir_2: None,
                 // Use a path that does not exist; citation tests live in
                 // tests/citations_test.rs where they control this path.
                 // Server tests do not exercise /api/citations so the missing
@@ -1727,6 +1741,7 @@ mod tests {
         let state = AppState {
             content_dir: dir.path().to_path_buf(),
             guide_dir: None,
+            guide_dir_2: None,
             citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
             search: Arc::new(index),
             collab: Arc::new(crate::collab::CollabRooms::new()),
@@ -1794,6 +1809,7 @@ mod tests {
         let state = AppState {
             content_dir: dir.path().to_path_buf(),
             guide_dir: None,
+            guide_dir_2: None,
             citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
             search: Arc::new(index),
             collab: Arc::new(crate::collab::CollabRooms::new()),
@@ -1839,6 +1855,7 @@ mod tests {
         let state = AppState {
             content_dir: dir.path().to_path_buf(),
             guide_dir: None,
+            guide_dir_2: None,
             citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
             search: Arc::new(index),
             collab: Arc::new(crate::collab::CollabRooms::new()),
@@ -1881,6 +1898,7 @@ mod tests {
         let state = AppState {
             content_dir: dir.path().to_path_buf(),
             guide_dir: None,
+            guide_dir_2: None,
             citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
             search: Arc::new(index),
             collab: Arc::new(crate::collab::CollabRooms::new()),
@@ -1927,6 +1945,7 @@ mod tests {
         let state = AppState {
             content_dir: dir.path().to_path_buf(),
             guide_dir: None,
+            guide_dir_2: None,
             citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
             search: Arc::new(index),
             collab: Arc::new(crate::collab::CollabRooms::new()),
@@ -1975,6 +1994,7 @@ mod tests {
         let state = AppState {
             content_dir: dir.path().to_path_buf(),
             guide_dir: None,
+            guide_dir_2: None,
             citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
             search: Arc::new(index),
             collab: Arc::new(crate::collab::CollabRooms::new()),
@@ -2026,6 +2046,7 @@ mod tests {
         let state = AppState {
             content_dir: dir.path().to_path_buf(),
             guide_dir: None,
+            guide_dir_2: None,
             citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
             search: Arc::new(index),
             collab: Arc::new(crate::collab::CollabRooms::new()),
@@ -2079,6 +2100,7 @@ mod tests {
         let state = AppState {
             content_dir: dir.path().to_path_buf(),
             guide_dir: None,
+            guide_dir_2: None,
             citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
             search: Arc::new(index),
             collab: Arc::new(crate::collab::CollabRooms::new()),
@@ -2134,6 +2156,7 @@ mod tests {
         let state = AppState {
             content_dir: dir.path().to_path_buf(),
             guide_dir: None,
+            guide_dir_2: None,
             citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
             search: Arc::new(index),
             collab: Arc::new(crate::collab::CollabRooms::new()),
@@ -2182,6 +2205,7 @@ mod tests {
         let state = AppState {
             content_dir: dir.path().to_path_buf(),
             guide_dir: None,
+            guide_dir_2: None,
             citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
             search: Arc::new(index),
             collab: Arc::new(crate::collab::CollabRooms::new()),
