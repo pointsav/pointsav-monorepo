@@ -173,3 +173,10 @@ Every third-party dependency is tracked as formal technical debt. For each quara
 *© 2026 PointSav Digital Systems™. Apache 2.0 licensed components are governed by the terms of that licence. Proprietary components are all rights reserved.*
 
 *→ Versión en español: [README.es.md](./README.es.md)*
+
+
+---
+
+*Copyright © 2026 Woodfine Capital Projects Inc. See [LICENSE](LICENSE) for terms.*
+
+*Woodfine Capital Projects™, Woodfine Management Corp™, PointSav Digital Systems™, Totebox Orchestration™, and Totebox Archive™ are trademarks of Woodfine Capital Projects Inc., used in Canada, the United States, Latin America, and Europe. All other trademarks are the property of their respective owners.*
