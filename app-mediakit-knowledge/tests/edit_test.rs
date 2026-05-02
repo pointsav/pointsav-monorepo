@@ -26,6 +26,7 @@ async fn fixture_state() -> (AppState, tempfile::TempDir, tempfile::TempDir) {
         .unwrap();
     let state = AppState {
         content_dir: dir.path().to_path_buf(),
+        guide_dir: None,
         citations_yaml: std::path::PathBuf::from("/nonexistent/citations.yaml"),
         search: Arc::new(index),
         collab: Arc::new(app_mediakit_knowledge::collab::CollabRooms::new()),
@@ -105,6 +106,7 @@ async fn get_edit_initial_json_round_trips_special_chars() {
         .unwrap();
     let state = AppState {
         content_dir: dir.path().to_path_buf(),
+        guide_dir: None,
         citations_yaml: std::path::PathBuf::from("/nonexistent/citations.yaml"),
         search: Arc::new(index),
         collab: Arc::new(app_mediakit_knowledge::collab::CollabRooms::new()),

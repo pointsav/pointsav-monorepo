@@ -51,6 +51,13 @@ enum Command {
         )]
         state_dir: PathBuf,
 
+        /// Optional extra directory of GUIDE-* Markdown files (e.g. a
+        /// fleet-deployment repo). When set, the engine walks this directory
+        /// alongside `content_dir` and serves files at `/wiki/<slug>` URLs,
+        /// appearing in categories on the home page just like TOPICs.
+        #[arg(long, env = "WIKI_GUIDE_DIR")]
+        guide_dir: Option<PathBuf>,
+
         /// Phase 2 Step 7: enable real-time collaborative editing via
         /// y-codemirror.next + a tokio broadcast WebSocket relay at
         /// `/ws/collab/{slug}`. Default off; the route is only mounted
@@ -78,13 +85,15 @@ async fn main() -> Result<()> {
             bind,
             citations_yaml,
             state_dir,
+            guide_dir,
             enable_collab,
-        } => serve(content_dir, bind, citations_yaml, state_dir, enable_collab).await,
+        } => serve(content_dir, guide_dir, bind, citations_yaml, state_dir, enable_collab).await,
     }
 }
 
 async fn serve(
     content_dir: PathBuf,
+    guide_dir: Option<PathBuf>,
     bind: SocketAddr,
     citations_yaml: PathBuf,
     state_dir: PathBuf,
@@ -95,6 +104,12 @@ async fn serve(
             "content directory does not exist or is not a directory: {}",
             content_dir.display()
         );
+    }
+    if let Some(ref gd) = guide_dir {
+        if !gd.is_dir() {
+            bail!("guide directory does not exist or is not a directory: {}", gd.display());
+        }
+        tracing::info!(guide_dir = %gd.display(), "guide directory enabled");
     }
     tracing::info!(
         content_dir = %content_dir.display(),
@@ -115,6 +130,7 @@ async fn serve(
     }
     let state = AppState {
         content_dir,
+        guide_dir,
         citations_yaml,
         search: Arc::new(search_index),
         collab: Arc::new(app_mediakit_knowledge::collab::CollabRooms::new()),

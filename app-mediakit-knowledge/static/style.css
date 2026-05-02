@@ -370,6 +370,15 @@ article table th { background: var(--bg-chrome); font-weight: 600; }
   margin-bottom: -1px;
 }
 
+.wiki-tab-disabled {
+  color: var(--fg-muted);
+  background: var(--bg-chrome);
+  border-color: var(--border);
+  cursor: default;
+  opacity: 0.55;
+  pointer-events: none;
+}
+
 /* Title block: h1 + tagline + language switcher */
 .wiki-title-block {
   flex: 1 1 auto;
