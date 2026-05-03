@@ -70,7 +70,7 @@ while true; do
     continue
   fi
 
-  assistant_msg=$(echo "$response_body" | jq -r '.choices[0].message.content // "Error: no response"')
+  assistant_msg=$(echo "$response_body" | jq -r '.content // "Error: no response"')
   echo "$assistant_msg"
 
   history=$(echo "$history" | jq --arg msg "$assistant_msg" '. + [{"role":"assistant","content":$msg}]')
