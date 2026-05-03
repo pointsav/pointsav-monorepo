@@ -153,6 +153,17 @@ pub async fn post_edit(
         return Err(WikiError::NotFound(slug));
     }
     atomic_write(&state.content_dir, &target, &body).await?;
+
+    // Phase 4 Step 4.1: commit to git. Failures are logged but not fatal.
+    {
+        let git_repo = state.git.lock().map_err(|e| WikiError::WriteFailed(format!("git lock failed: {e}")))?;
+        let _ = crate::git::ensure_commit_identity_from_env(&git_repo);
+        match crate::git::commit_topic(&git_repo, &slug, &body, "", "", &format!("edit: {slug}")) {
+            Ok(_) => tracing::info!(slug = %slug, "committed edit to git"),
+            Err(e) => tracing::warn!(slug = %slug, error = %e, "git commit failed after edit"),
+        }
+    }
+
     if let Err(e) = crate::search::reindex_topic(&state.search, &slug, &body) {
         tracing::warn!(slug = %slug, error = %e, "search reindex failed after edit");
     }
@@ -187,6 +198,17 @@ pub async fn post_create(
         slug
     );
     atomic_write(&state.content_dir, &target, &body).await?;
+
+    // Phase 4 Step 4.1: commit to git. Failures are logged but not fatal.
+    {
+        let git_repo = state.git.lock().map_err(|e| WikiError::WriteFailed(format!("git lock failed: {e}")))?;
+        let _ = crate::git::ensure_commit_identity_from_env(&git_repo);
+        match crate::git::commit_topic(&git_repo, &slug, &body, "", "", &format!("create: {slug}")) {
+            Ok(_) => tracing::info!(slug = %slug, "committed create to git"),
+            Err(e) => tracing::warn!(slug = %slug, error = %e, "git commit failed after create"),
+        }
+    }
+
     if let Err(e) = crate::search::reindex_topic(&state.search, &slug, &body) {
         tracing::warn!(slug = %slug, error = %e, "search reindex failed after create");
     }

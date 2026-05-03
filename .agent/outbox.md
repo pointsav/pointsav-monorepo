@@ -752,3 +752,7 @@ Operator's next direction is the gate. Standing by.
 
 ---
 
+[31mGemini CLI is not running in a trusted directory. To proceed, either use `--skip-trust`, set the `GEMINI_CLI_TRUST_WORKSPACE=true` environment variable, or trust this directory in interactive mode. For more details, see https://geminicli.com/docs/cli/trusted-folders/#headless-and-automated-environments[0m
+
+[Task completed by Gemini Engine: 2026-05-02T17:12:36Z]
+---

@@ -16,7 +16,7 @@ use axum::{
     http::{Request, StatusCode},
 };
 use http_body_util::BodyExt;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use tower::ServiceExt;
 
 async fn fixture_state() -> (AppState, tempfile::TempDir, tempfile::TempDir) {
@@ -44,12 +44,14 @@ async fn fixture_state() -> (AppState, tempfile::TempDir, tempfile::TempDir) {
     let index = search::build_index(dir.path(), state_dir.path())
         .await
         .unwrap();
+    let repo = app_mediakit_knowledge::git::open_or_init(dir.path()).unwrap();
     let state = AppState {
         content_dir: dir.path().to_path_buf(),
         guide_dir: None,
         guide_dir_2: None,
         citations_yaml: std::path::PathBuf::from("/nonexistent/citations.yaml"),
         search: Arc::new(index),
+        git: Arc::new(Mutex::new(repo)),
         collab: Arc::new(app_mediakit_knowledge::collab::CollabRooms::new()),
         enable_collab: false,
         site_title: "PointSav Documentation Wiki".to_string(),
