@@ -4,6 +4,12 @@
 
 use serde::{Deserialize, Serialize};
 
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct SpeculationRequest {
+    pub draft_model: String,
+    pub draft_token_budget: u32,
+}
+
 /// Three compute tiers. The Doorman may pick a different tier than the
 /// caller's hint based on budget caps, request shape, and warm-VM state.
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Hash, Serialize, Deserialize)]
