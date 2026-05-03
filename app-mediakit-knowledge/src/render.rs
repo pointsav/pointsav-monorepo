@@ -138,7 +138,37 @@ pub fn render_html_raw(body_md: &str) -> String {
     options.extension.header_ids = Some("h-".to_string());
     // unsafe_ stays false; we don't want raw HTML from authors yet.
     options.render.unsafe_ = false;
-    markdown_to_html(body_md, &options)
+    let raw = markdown_to_html(body_md, &options);
+    inject_wiki_prefixes(&raw)
+}
+
+/// Walk rendered HTML and prefix any `href="slug" data-wikilink="true"` generated
+/// by comrak with `/wiki/` so they route correctly.
+fn inject_wiki_prefixes(html: &str) -> String {
+    // Comrak emits: <a href="slug" data-wikilink="true">
+    // We split on the marker and reconstruct.
+    let mut out = String::with_capacity(html.len() + 128);
+    let mut rest = html;
+    
+    while let Some(pos) = rest.find(" data-wikilink=\"true\">") {
+        // Look backwards for the href="
+        let before_marker = &rest[..pos];
+        if let Some(href_pos) = before_marker.rfind("href=\"") {
+            let prefix = &before_marker[..href_pos + 6]; // up to href="
+            let slug = &before_marker[href_pos + 6..];
+            out.push_str(prefix);
+            out.push_str("/wiki/");
+            out.push_str(slug);
+            out.push_str(" data-wikilink=\"true\">");
+        } else {
+            // Malformed, just copy
+            out.push_str(before_marker);
+            out.push_str(" data-wikilink=\"true\">");
+        }
+        rest = &rest[pos + 22..]; // length of marker
+    }
+    out.push_str(rest);
+    out
 }
 
 /// Walk rendered HTML and insert a right-floated `[edit]` span after every
