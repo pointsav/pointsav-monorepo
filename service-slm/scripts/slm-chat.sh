@@ -25,6 +25,17 @@ echo "================================================================"
 
 history='[{"role":"system","content":"You are the service-slm system administrator assistant for the Totebox Archive. Answer questions about the archive'\''s services, configurations, and operations concisely and accurately."}]'
 
+if [[ -d ".agent" ]]; then
+  agent_context="LOCAL AGENT CONTEXT:\\n"
+  if [[ -f ".agent/manifest.md" ]]; then
+    agent_context+="--- .agent/manifest.md ---\\n$(head -n 100 .agent/manifest.md)\\n"
+  fi
+  if [[ -f ".agent/inbox.md" ]]; then
+    agent_context+="--- .agent/inbox.md ---\\n$(head -n 100 .agent/inbox.md)\\n"
+  fi
+  history=$(echo "$history" | jq --arg ctx "$agent_context" '.[0].content += "\\n\\n" + $ctx')
+fi
+
 while true; do
   printf '> '
   if ! read -r line; then
@@ -39,7 +50,7 @@ while true; do
 
   body=$(echo "$history" | jq -c '{"model":"local","messages":.,"temperature":0.7,"max_tokens":1024}')
 
-  request_id="chat-$(date +%s%N 2>/dev/null | head -c 16 || date +%s | head -c 10)xx"
+  request_id=$(uuidgen)
 
   raw=$(curl -s -w "\n%{http_code}" --max-time 120 -X POST \
     -H "Content-Type: application/json" \
