@@ -48,6 +48,7 @@ git2 = "0.20"
 # Phase 4 Step 4.2: gix (read-side) for history and blame.
 gix = "0.83"
 gix-blame = "0.13"
+similar = { version = "2.7", features = ["inline"] }
 # Phase 3 Step 3.1: tantivy full-text search backend. On-disk index at
 # <state_dir>/search/; rebuilt on startup from a tree walk; incremental
 # reindex on edit. ~50 MB writer heap default.
