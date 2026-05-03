@@ -1,7 +1,7 @@
 # CLAUDE.md — service-slm
 
 > **State:** Active  —  **Last updated:** 2026-04-25
-> **Registry row:** `pointsav-monorepo/.claude/rules/project-registry.md`
+> **Registry row:** `pointsav-monorepo/.agent/rules/project-registry.md`
 >
 > When state changes, update this header AND the registry row in the
 > same commit. Drift between the two is a documentation defect.
@@ -175,7 +175,7 @@ progresses (B2 fills `slm-doorman/src/tier/yoyo.rs`; B4 fills
 
 - **Repo-level:** `pointsav-monorepo/CLAUDE.md` does not yet exist
   (tracked in workspace `NEXT.md` as a documentation-debt item).
-  In its absence, the monorepo's `.claude/rules/` carries local
+  In its absence, the monorepo's `.agent/rules/` carries local
   conventions: `repo-layout.md`, `project-registry.md`,
   `cleanup-log.md`, `handoffs-outbound.md`.
 - **Workspace-level:** `~/Foundry/CLAUDE.md` — identity store,
