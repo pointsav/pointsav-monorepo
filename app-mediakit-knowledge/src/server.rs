@@ -43,7 +43,7 @@ use serde::Deserialize;
 use serde_json::json;
 use std::collections::BTreeMap;
 use std::path::{Path as FsPath, PathBuf};
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use tokio::fs;
 
 use crate::assets::StaticAsset;
@@ -77,6 +77,9 @@ pub struct AppState {
     /// startup from a tree walk of `content_dir`; reindexed on every
     /// successful edit / create. Clone-cheap (Arc-wrapped internals).
     pub search: Arc<SearchIndex>,
+    /// Phase 4 Step 4.1: git2 repository for content versioning. Mutex-wrapped
+    /// because Repository is not thread-safe for mutating operations.
+    pub git: Arc<Mutex<git2::Repository>>,
     /// Phase 2 Step 7: per-slug collab WebSocket rooms. Always present
     /// (cheap empty default); only the `/ws/collab/{slug}` route uses
     /// it, and that route is only mounted when `enable_collab` is true.
@@ -124,6 +127,9 @@ pub fn router(state: AppState) -> Router {
         .route("/sitemap.xml", get(sitemap_xml))
         .route("/robots.txt", get(robots_txt))
         .route("/llms.txt", get(llms_txt))
+        // Phase 4 Step 4.2 — history and blame
+        .route("/history/{*slug}", get(history_page))
+        .route("/blame/{*slug}", get(blame_page))
         // axum 0.8 doesn't allow a literal `.md` suffix after a dynamic
         // segment, so the route captures `{slug}` as a single segment and
         // the handler strips an optional trailing `.md` for the
@@ -1214,13 +1220,11 @@ fn wiki_chrome(
                                     href={ "/wiki/" (slug) }
                                     aria-current="page"
                                 { "Read" }
-                                span.wiki-tab.wiki-tab-disabled
-                                    aria-disabled="true"
-                                    title="Editing coming soon"
+                                a.wiki-tab
+                                    href={ "/edit/" (slug) }
                                 { "Edit" }
-                                span.wiki-tab.wiki-tab-disabled
-                                    aria-disabled="true"
-                                    title="History coming soon"
+                                a.wiki-tab
+                                    href={ "/history/" (slug) }
                                 { "View history" }
                             }
                         }
@@ -1517,6 +1521,91 @@ async fn git_markdown(
     Ok(resp)
 }
 
+async fn history_page(
+    State(state): State<Arc<AppState>>,
+    Path(slug): Path<String>,
+) -> Result<Markup, WikiError> {
+    crate::edit::validate_slug(&slug)?;
+    let path = state.content_dir.join(format!("{slug}.md"));
+    if !path.is_file() {
+        return Err(WikiError::NotFound(slug));
+    }
+    let history = crate::history::topic_history(&state.content_dir, &slug, 50)?;
+
+    let body = html! {
+        h1 { "History: " (slug) }
+        @if history.is_empty() {
+            p { "No revision history yet." }
+        } @else {
+            table.history-table style="width: 100%; border-collapse: collapse; margin-top: 1em;" {
+                thead {
+                    tr style="border-bottom: 2px solid #eee; text-align: left;" {
+                        th style="padding: 8px;" { "SHA" }
+                        th style="padding: 8px;" { "Author" }
+                        th style="padding: 8px;" { "Date" }
+                        th style="padding: 8px;" { "Message" }
+                    }
+                }
+                tbody {
+                    @for entry in history {
+                        tr style="border-bottom: 1px solid #eee;" {
+                            td style="padding: 8px; font-family: monospace;" {
+                                a href=(format!("/diff/{}?b={}&a={}~", slug, entry.sha, entry.sha)) {
+                                    @if entry.sha.len() >= 7 {
+                                        (entry.sha[..7].to_string())
+                                    } @else {
+                                        (entry.sha)
+                                    }
+                                }
+                            }
+                            td style="padding: 8px;" { (entry.author) }
+                            td style="padding: 8px; color: #666; font-size: 0.9em;" { (entry.timestamp_iso) }
+                            td style="padding: 8px;" { (entry.message) }
+                        }
+                    }
+                }
+            }
+        }
+    };
+
+    Ok(chrome(&format!("History: {}", slug), body, &state.site_title))
+}
+
+async fn blame_page(
+    State(state): State<Arc<AppState>>,
+    Path(slug): Path<String>,
+) -> Result<Markup, WikiError> {
+    crate::edit::validate_slug(&slug)?;
+    let path = state.content_dir.join(format!("{slug}.md"));
+    if !path.is_file() {
+        return Err(WikiError::NotFound(slug));
+    }
+    let blame = crate::history::topic_blame(&state.content_dir, &slug)?;
+
+    let body = html! {
+        h1 { "Blame: " (slug) }
+        div.blame-container style="background: #f9f9f9; padding: 1em; border-radius: 4px; overflow-x: auto;" {
+            pre style="margin: 0; font-family: monospace; font-size: 0.9em; line-height: 1.5;" {
+                @for line in blame {
+                    div.blame-line style="display: flex;" {
+                        span.blame-meta style="color: #999; width: 200px; flex-shrink: 0; user-select: none; border-right: 1px solid #ddd; margin-right: 1em;" {
+                            @if line.sha.len() >= 7 {
+                                (line.sha[..7].to_string())
+                            } @else {
+                                (line.sha)
+                            }
+                            " " (line.author)
+                        }
+                        span.blame-text { (line.line_text) }
+                    }
+                }
+            }
+        }
+    };
+
+    Ok(chrome(&format!("Blame: {}", slug), body, &state.site_title))
+}
+
 /// Shared shell for non-article pages (search, category, errors).
 fn chrome(title: &str, body: Markup, site_title: &str) -> Markup {
     html! {
@@ -1570,6 +1659,7 @@ mod tests {
         let index = crate::search::build_index(dir.path(), state_dir.path())
             .await
             .unwrap();
+        let repo = crate::git::open_or_init(dir.path()).unwrap();
         (
             AppState {
                 content_dir: dir.path().to_path_buf(),
@@ -1581,6 +1671,7 @@ mod tests {
                 // file never triggers a load.
                 citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
                 search: Arc::new(index),
+                git: Arc::new(Mutex::new(repo)),
                 collab: Arc::new(crate::collab::CollabRooms::new()),
                 enable_collab: false,
                 site_title: "PointSav Documentation Wiki".to_string(),
@@ -1738,12 +1829,14 @@ mod tests {
         let index = crate::search::build_index(dir.path(), state_dir.path())
             .await
             .unwrap();
+        let repo = crate::git::open_or_init(dir.path()).unwrap();
         let state = AppState {
             content_dir: dir.path().to_path_buf(),
             guide_dir: None,
             guide_dir_2: None,
             citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
             search: Arc::new(index),
+            git: Arc::new(Mutex::new(repo)),
             collab: Arc::new(crate::collab::CollabRooms::new()),
             enable_collab: false,
             site_title: "PointSav Documentation Wiki".to_string(),
@@ -1806,12 +1899,14 @@ mod tests {
         let index = crate::search::build_index(dir.path(), state_dir.path())
             .await
             .unwrap();
+        let repo = crate::git::open_or_init(dir.path()).unwrap();
         let state = AppState {
             content_dir: dir.path().to_path_buf(),
             guide_dir: None,
             guide_dir_2: None,
             citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
             search: Arc::new(index),
+            git: Arc::new(Mutex::new(repo)),
             collab: Arc::new(crate::collab::CollabRooms::new()),
             enable_collab: false,
             site_title: "PointSav Documentation Wiki".to_string(),
@@ -1852,12 +1947,14 @@ mod tests {
         let index = crate::search::build_index(dir.path(), state_dir.path())
             .await
             .unwrap();
+        let repo = crate::git::open_or_init(dir.path()).unwrap();
         let state = AppState {
             content_dir: dir.path().to_path_buf(),
             guide_dir: None,
             guide_dir_2: None,
             citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
             search: Arc::new(index),
+            git: Arc::new(Mutex::new(repo)),
             collab: Arc::new(crate::collab::CollabRooms::new()),
             enable_collab: false,
             site_title: "PointSav Documentation Wiki".to_string(),
@@ -1895,12 +1992,14 @@ mod tests {
         let index = crate::search::build_index(dir.path(), state_dir.path())
             .await
             .unwrap();
+        let repo = crate::git::open_or_init(dir.path()).unwrap();
         let state = AppState {
             content_dir: dir.path().to_path_buf(),
             guide_dir: None,
             guide_dir_2: None,
             citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
             search: Arc::new(index),
+            git: Arc::new(Mutex::new(repo)),
             collab: Arc::new(crate::collab::CollabRooms::new()),
             enable_collab: false,
             site_title: "PointSav Documentation Wiki".to_string(),
@@ -1942,12 +2041,14 @@ mod tests {
         let index = crate::search::build_index(dir.path(), state_dir.path())
             .await
             .unwrap();
+        let repo = crate::git::open_or_init(dir.path()).unwrap();
         let state = AppState {
             content_dir: dir.path().to_path_buf(),
             guide_dir: None,
             guide_dir_2: None,
             citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
             search: Arc::new(index),
+            git: Arc::new(Mutex::new(repo)),
             collab: Arc::new(crate::collab::CollabRooms::new()),
             enable_collab: false,
             site_title: "PointSav Documentation Wiki".to_string(),
@@ -1991,12 +2092,14 @@ mod tests {
         let index = crate::search::build_index(dir.path(), state_dir.path())
             .await
             .unwrap();
+        let repo = crate::git::open_or_init(dir.path()).unwrap();
         let state = AppState {
             content_dir: dir.path().to_path_buf(),
             guide_dir: None,
             guide_dir_2: None,
             citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
             search: Arc::new(index),
+            git: Arc::new(Mutex::new(repo)),
             collab: Arc::new(crate::collab::CollabRooms::new()),
             enable_collab: false,
             site_title: "PointSav Documentation Wiki".to_string(),
@@ -2043,12 +2146,14 @@ mod tests {
         let index = crate::search::build_index(dir.path(), state_dir.path())
             .await
             .unwrap();
+        let repo = crate::git::open_or_init(dir.path()).unwrap();
         let state = AppState {
             content_dir: dir.path().to_path_buf(),
             guide_dir: None,
             guide_dir_2: None,
             citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
             search: Arc::new(index),
+            git: Arc::new(Mutex::new(repo)),
             collab: Arc::new(crate::collab::CollabRooms::new()),
             enable_collab: false,
             site_title: "PointSav Documentation Wiki".to_string(),
@@ -2097,12 +2202,14 @@ mod tests {
         let index = crate::search::build_index(dir.path(), state_dir.path())
             .await
             .unwrap();
+        let repo = crate::git::open_or_init(dir.path()).unwrap();
         let state = AppState {
             content_dir: dir.path().to_path_buf(),
             guide_dir: None,
             guide_dir_2: None,
             citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
             search: Arc::new(index),
+            git: Arc::new(Mutex::new(repo)),
             collab: Arc::new(crate::collab::CollabRooms::new()),
             enable_collab: false,
             site_title: "PointSav Documentation Wiki".to_string(),
@@ -2153,12 +2260,14 @@ mod tests {
         let index = crate::search::build_index(dir.path(), state_dir.path())
             .await
             .unwrap();
+        let repo = crate::git::open_or_init(dir.path()).unwrap();
         let state = AppState {
             content_dir: dir.path().to_path_buf(),
             guide_dir: None,
             guide_dir_2: None,
             citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
             search: Arc::new(index),
+            git: Arc::new(Mutex::new(repo)),
             collab: Arc::new(crate::collab::CollabRooms::new()),
             enable_collab: false,
             site_title: "PointSav Documentation Wiki".to_string(),
@@ -2202,12 +2311,14 @@ mod tests {
         let index = crate::search::build_index(dir.path(), state_dir.path())
             .await
             .unwrap();
+        let repo = crate::git::open_or_init(dir.path()).unwrap();
         let state = AppState {
             content_dir: dir.path().to_path_buf(),
             guide_dir: None,
             guide_dir_2: None,
             citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
             search: Arc::new(index),
+            git: Arc::new(Mutex::new(repo)),
             collab: Arc::new(crate::collab::CollabRooms::new()),
             enable_collab: false,
             site_title: "PointSav Documentation Wiki".to_string(),
