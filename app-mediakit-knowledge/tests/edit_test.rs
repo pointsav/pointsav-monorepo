@@ -10,7 +10,7 @@ use axum::{
     body::Body,
     http::{Request, StatusCode},
 };
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 async fn fixture_state() -> (AppState, tempfile::TempDir, tempfile::TempDir) {
     let dir = tempfile::tempdir().unwrap();
@@ -24,12 +24,14 @@ async fn fixture_state() -> (AppState, tempfile::TempDir, tempfile::TempDir) {
     let index = search::build_index(dir.path(), state_dir.path())
         .await
         .unwrap();
+    let repo = app_mediakit_knowledge::git::open_or_init(dir.path()).unwrap();
     let state = AppState {
         content_dir: dir.path().to_path_buf(),
         guide_dir: None,
         guide_dir_2: None,
         citations_yaml: std::path::PathBuf::from("/nonexistent/citations.yaml"),
         search: Arc::new(index),
+        git: Arc::new(Mutex::new(repo)),
         collab: Arc::new(app_mediakit_knowledge::collab::CollabRooms::new()),
         enable_collab: false,
         site_title: "PointSav Documentation Wiki".to_string(),
@@ -106,12 +108,14 @@ async fn get_edit_initial_json_round_trips_special_chars() {
     let index = search::build_index(dir.path(), state_dir.path())
         .await
         .unwrap();
+    let repo = app_mediakit_knowledge::git::open_or_init(dir.path()).unwrap();
     let state = AppState {
         content_dir: dir.path().to_path_buf(),
         guide_dir: None,
         guide_dir_2: None,
         citations_yaml: std::path::PathBuf::from("/nonexistent/citations.yaml"),
         search: Arc::new(index),
+        git: Arc::new(Mutex::new(repo)),
         collab: Arc::new(app_mediakit_knowledge::collab::CollabRooms::new()),
         enable_collab: false,
         site_title: "PointSav Documentation Wiki".to_string(),
