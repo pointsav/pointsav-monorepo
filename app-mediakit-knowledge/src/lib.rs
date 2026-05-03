@@ -14,6 +14,7 @@ pub mod edit;
 pub mod error;
 pub mod feeds;
 pub mod git;
+pub mod glossary;
 pub mod history;
 pub mod jsonld;
 pub mod render;

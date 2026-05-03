@@ -1321,3 +1321,73 @@ article table th { background: var(--bg-chrome); font-weight: 600; }
   color: var(--fg-muted);
   font-style: italic;
 }
+
+/* ─── Leapfrog 2030 Enhancements ───────────────────────────────────────────── */
+
+/* Red Links */
+a.wiki-redlink {
+  color: #ba0000;
+}
+a.wiki-redlink:visited {
+  color: #a55858;
+}
+
+/* Glossary Tooltips */
+.wiki-glossary-term {
+  border-bottom: 1px dashed var(--border);
+  cursor: help;
+  position: relative;
+}
+
+/* Backlinks Footer */
+.wiki-backlinks {
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+.wiki-backlinks h2 {
+  font-family: var(--sans);
+  font-size: 1.25rem;
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+  border-bottom: none;
+}
+.wiki-backlinks ul {
+  list-style: none;
+  padding-left: 0;
+  margin: 0;
+}
+.wiki-backlinks li {
+  margin-bottom: 0.25rem;
+}
+
+/* Page Preview Hover Card */
+.wiki-hover-card {
+  position: absolute;
+  z-index: 1000;
+  width: 320px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  padding: 1rem;
+  font-family: var(--sans);
+  font-size: 0.875rem;
+  color: var(--fg);
+}
+.wiki-hover-card strong {
+  display: block;
+  font-family: var(--serif);
+  font-size: 1.125rem;
+  margin-bottom: 0.5rem;
+}
+.wiki-hover-card p {
+  margin: 0;
+  font-family: var(--sans);
+  line-height: 1.4;
+  color: var(--fg-muted);
+}
+.wiki-hover-card .hover-loading {
+  font-style: italic;
+  color: var(--fg-muted);
+}

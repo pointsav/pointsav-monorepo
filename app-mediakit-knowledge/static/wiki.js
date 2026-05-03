@@ -105,12 +105,83 @@
   }
 
   /* ------------------------------------------------------------------ *
+   * 3. Page Previews (Hover Cards)                                       *
+   * ------------------------------------------------------------------ */
+  function initHoverCards() {
+    var card = document.createElement('div');
+    card.className = 'wiki-hover-card';
+    card.style.display = 'none';
+    document.body.appendChild(card);
+
+    var currentTarget = null;
+    var hideTimeout = null;
+    var fetchCache = {};
+
+    var links = document.querySelectorAll('a[data-wikilink="true"]:not(.wiki-redlink)');
+    links.forEach(function(link) {
+      link.addEventListener('mouseenter', function(e) {
+        clearTimeout(hideTimeout);
+        var href = link.getAttribute('href');
+        if (!href || !href.startsWith('/wiki/')) return;
+        var slug = href.substring(6);
+        currentTarget = link;
+
+        var rect = link.getBoundingClientRect();
+        card.style.left = Math.max(10, rect.left + window.scrollX) + 'px';
+        card.style.top = rect.bottom + window.scrollY + 5 + 'px';
+        
+        if (fetchCache[slug]) {
+          renderCard(fetchCache[slug]);
+        } else {
+          card.innerHTML = '<div class="hover-loading">Loading...</div>';
+          card.style.display = 'block';
+          
+          fetch('/api/preview/' + slug)
+            .then(res => res.json())
+            .then(data => {
+              fetchCache[slug] = data;
+              if (currentTarget === link) renderCard(data);
+            })
+            .catch(() => {
+              card.style.display = 'none';
+            });
+        }
+      });
+
+      link.addEventListener('mouseleave', function() {
+        hideTimeout = setTimeout(function() {
+          card.style.display = 'none';
+          currentTarget = null;
+        }, 200);
+      });
+    });
+
+    card.addEventListener('mouseenter', function() {
+      clearTimeout(hideTimeout);
+    });
+
+    card.addEventListener('mouseleave', function() {
+      hideTimeout = setTimeout(function() {
+        card.style.display = 'none';
+        currentTarget = null;
+      }, 200);
+    });
+
+    function renderCard(data) {
+      var snip = data.snippet || "No summary available.";
+      card.innerHTML = '<strong>' + data.title + '</strong><p>' + snip + '</p>';
+      card.style.display = 'block';
+    }
+  }
+
+  /* ------------------------------------------------------------------ *
    * Boot                                                                 *
    * ------------------------------------------------------------------ */
 
   document.addEventListener('DOMContentLoaded', function () {
     initToc();
     initDensityToggle();
+    initHoverCards();
   });
 
 }());
