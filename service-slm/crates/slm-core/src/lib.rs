@@ -8,6 +8,7 @@
 
 pub mod apprenticeship;
 pub mod error;
+pub mod mesh;
 pub mod module_id;
 pub mod request_id;
 pub mod tier;
@@ -18,9 +19,10 @@ pub use apprenticeship::{
     VERDICT_BATCH_NAMESPACE, VERDICT_NAMESPACE,
 };
 pub use error::{CoreError, Result};
+pub use mesh::{EnergySource, EnvironmentMetadata, NodeDescriptor, NodeId};
 pub use module_id::ModuleId;
 pub use request_id::RequestId;
-pub use tier::{Complexity, Tier};
+pub use tier::{Complexity, SpeculationRequest, Tier};
 
 use serde::{Deserialize, Serialize};
 
@@ -99,6 +101,9 @@ pub struct ComputeRequest {
     /// serialised form when `None` so existing callers are unaffected.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub grammar: Option<GrammarConstraint>,
+    /// Optional speculative decoding configuration.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub speculation: Option<SpeculationRequest>,
 }
 
 #[cfg(test)]

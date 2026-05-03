@@ -19,6 +19,7 @@ use crate::error::{DoormanError, Result};
 use crate::grammar_validation::LarkValidator;
 use crate::graph::GraphContextClient;
 use crate::ledger::{AuditEntry, AuditLedger, CompletionStatus, ENTRY_TYPE_CHAT_COMPLETION};
+use crate::mesh::MeshRegistry;
 use crate::tier::{ExternalTierClient, LocalTierClient, YoYoTierClient};
 
 #[derive(Default)]
@@ -42,6 +43,10 @@ pub struct DoormanConfig {
     pub graph_context_client: Option<GraphContextClient>,
 }
 
+pub struct Orchestrator {
+    pub registry: Box<dyn MeshRegistry>,
+}
+
 pub struct Doorman {
     local: Option<LocalTierClient>,
     yoyo: Option<YoYoTierClient>,
@@ -49,6 +54,7 @@ pub struct Doorman {
     ledger: AuditLedger,
     lark_validator: Option<LarkValidator>,
     graph_context_client: Option<GraphContextClient>,
+    pub orchestrator: Option<Orchestrator>,
 }
 
 impl Doorman {
@@ -60,7 +66,22 @@ impl Doorman {
             ledger,
             lark_validator: config.lark_validator,
             graph_context_client: config.graph_context_client,
+            orchestrator: None,
         }
+    }
+
+    pub async fn route_async(&self, req: &ComputeRequest) -> Result<ComputeResponse> {
+        if let Some(ref orch) = self.orchestrator {
+            info!(target: "slm_doorman::router", request_id = %req.request_id, "dispatching via orchestrator");
+            
+            if let Some(node) = orch.registry.select_optimal(req).await {
+                info!(target: "slm_doorman::router", node_id = %node.id.0, "selected node");
+                // Here we would dispatch to node.endpoint
+                // For Phase 1, we continue to delegate to existing dispatch path 
+                // but node-aware dispatch logic goes here in future steps.
+            }
+        }
+        self.route(req).await
     }
 
     pub fn has_local(&self) -> bool {
@@ -373,6 +394,7 @@ mod tests {
             sanitised_outbound: true,
             tier_c_label: None,
             grammar: None,
+            speculation: None,
         }
     }
 

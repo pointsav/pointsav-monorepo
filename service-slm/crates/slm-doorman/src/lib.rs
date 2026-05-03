@@ -21,6 +21,7 @@ pub mod error;
 pub mod grammar_validation;
 pub mod graph;
 pub mod ledger;
+pub mod mesh;
 pub mod promotion_ledger;
 pub mod redact;
 pub mod router;
