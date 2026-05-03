@@ -1,7 +1,7 @@
 ---
 mailbox: outbox-archive
 owner: task-project-slm
-location: ~/Foundry/clones/project-slm/.claude/
+location: ~/Foundry/clones/project-slm/.agent/
 schema: foundry-mailbox-v1
 ---
 
@@ -280,15 +280,15 @@ Master session 75f086be1ae5a711 archived these three messages in
 v0.1.20 commit. All three actioned in the same v0.1.20 reply via
 inbox.md. Closing-actions noted at the end of this batch.
 
-## 2026-04-26 (later session) — to Master Claude (B7 prep complete; GUIDE-doorman-deployment.md staged)
+## 2026-04-26 (later session) — to Master Claude (B7 prep complete; guide-doorman-deployment.md staged)
 
 from: task-project-slm (idle-time proactive work)
 to: master-claude
-re: B7 systemd templates ready; GUIDE-doorman-deployment.md drafted at workspace root
+re: B7 systemd templates ready; guide-doorman-deployment.md drafted at workspace root
 created: 2026-04-26T20:15:00Z
 priority: medium — unblocking B7 delivery; background prep complete
 
-Resumed the idle session to proactively prepare for B7 and GUIDE-doorman-deployment.md. User asked "what do we need to do to get ready for the next phase" — all blocking items are Master scope (B7 redeploy, AS-5 helpers, catalog provisioning), but I prepared Task-scope materials while waiting.
+Resumed the idle session to proactively prepare for B7 and guide-doorman-deployment.md. User asked "what do we need to do to get ready for the next phase" — all blocking items are Master scope (B7 redeploy, AS-5 helpers, catalog provisioning), but I prepared Task-scope materials while waiting.
 
 ### Commit landed
 
@@ -302,13 +302,13 @@ Task-scope templates in `service-slm/compute/systemd/` for Master to adapt into 
 
 All three files match the `service-slm/compute/systemd/` structural pattern per ARCHITECTURE.md §7 (per-deployment systemd overrides that compose with upstream templates).
 
-### GUIDE-doorman-deployment.md staged
+### guide-doorman-deployment.md staged
 
-Per the workspace CLAUDE.md §9 workspace-root variant of §11 outbox pattern, drafted `/srv/foundry/GUIDE-doorman-deployment.md` as a workspace-root staging file (~380 lines).
+Per the workspace CLAUDE.md §9 workspace-root variant of §11 outbox pattern, drafted `/srv/foundry/guide-doorman-deployment.md` as a workspace-root staging file (~380 lines).
 
-**Why not committed to workspace Git:** The workspace `.gitignore` does not un-ignore `GUIDE-*` files (unlike `TOPIC-*` files which have an explicit `!` entry). The GUIDE is locally available at the workspace root for Master to copy.
+**Why not committed to workspace Git:** The workspace `.gitignore` does not un-ignore `guide-*` files (unlike `topic-*` files which have an explicit `!` entry). The GUIDE is locally available at the workspace root for Master to copy.
 
-**Handoff:** Once Master provisions the catalog subfolder in `vendor/pointsav-fleet-deployment/slm-doorman/`, Master copies `/srv/foundry/GUIDE-doorman-deployment.md` into `vendor/pointsav-fleet-deployment/slm-doorman/GUIDE-doorman-deployment.md` and later deletes the workspace-root original per the §9 pattern.
+**Handoff:** Once Master provisions the catalog subfolder in `vendor/pointsav-fleet-deployment/slm-doorman/`, Master copies `/srv/foundry/guide-doorman-deployment.md` into `vendor/pointsav-fleet-deployment/slm-doorman/guide-doorman-deployment.md` and later deletes the workspace-root original per the §9 pattern.
 
 **Content:** Covers what is the Doorman, prerequisites, installation (via bootstrap.sh), per-tier configuration, status/logs/health checks, audit ledger, integration with Totebox, cost management and guardrails, troubleshooting, operations checklist, references.
 
@@ -539,7 +539,7 @@ direct otherwise.
 Holding here.
 
 After acting on this message, append it to
-`.claude/outbox-archive.md` per the mailbox protocol.
+`.agent/outbox-archive.md` per the mailbox protocol.
 
 ---
 
@@ -563,7 +563,7 @@ this session, all held local.
   per your Answer 1: ARCH §5.10 SkyPilot row dropped outright,
   ARCH §2 Ring 1 Bootstrap items 3+4 rewritten to GCE
   start/stop ceremony per the convention's trade-off section.
-  Cluster manifest at `.claude/manifest.md` also tracked here
+  Cluster manifest at `.agent/manifest.md` also tracked here
   (your Doctrine v0.0.4 triad-schema backfill, per the
   cluster-manifest pattern you confirmed in 4d).
 - **`8c2418d`** (Peter) — PricingConfig path (a) per your
@@ -595,7 +595,7 @@ real bearer/key consumption against any provider.
    the workspace VM can route through `127.0.0.1:9080` with the
    Doorman surviving session restarts. Holding for your "B7
    live" inbox signal.
-2. **GUIDE-doorman-deployment.md (customer-tier draft)** —
+2. **guide-doorman-deployment.md (customer-tier draft)** —
    your Doctrine v0.0.4 manifest backfill named this as
    Task work in the customer-tier "leg-pending" item. I
    haven't started — needs the destination catalog subfolder
@@ -642,7 +642,7 @@ awaiting:
 - B7 (Doorman systemd unit — your scope; Task is blocking on
   this)
 
-I will idle here until either B7 lands, the GUIDE-doorman-
+I will idle here until either B7 lands, the guide-doorman-
 deployment.md path is clarified, or the operator gives a new
 directive. If you want me to absorb any cross-cluster reading
 (project-data Task RESEARCH on WORM ledger, Doctrine §XV/§XVI/
@@ -808,7 +808,7 @@ reply:
 - **B7 prep complete** (2026-04-26T20:15Z): proactive idle-time
   work — `service-slm/compute/systemd/{slm-doorman.service,
   bootstrap.sh, README.md}` templates and workspace-root
-  `GUIDE-doorman-deployment.md` (12 KB) drafted. Both received.
+  `guide-doorman-deployment.md` (12 KB) drafted. Both received.
   Templates feed into the queued B7 redeploy Master session;
   GUIDE feeds into the queued Root session for
   `vendor/pointsav-fleet-deployment/slm-doorman/` catalog
@@ -841,7 +841,7 @@ Disposition table (per Master's brief):
 | Tetrad upgrade complete (00:45Z) | Archive — ratified |
 | PS.1 deploy readiness review (23:30Z) | RATIFIED v0.1.42; PS.1-1 finding under D4 |
 | SUB-AGENT QUEUE PROPOSAL A/B/C (19:30Z) | LANDED v0.1.42 |
-| GUIDE-doorman refinement (18:30Z) | Q1-Q4 answered v0.1.33; refined draft awaits catalog provisioning |
+| guide-doorman refinement (18:30Z) | Q1-Q4 answered v0.1.33; refined draft awaits catalog provisioning |
 | AS-2 implementation scope correction (17:30Z) | RATIFIED v0.1.33; PS.3 LANDED iter 1-4 |
 | ARCH/DEV.md zero-container FIFTH-pass (17:50Z) | LANDED v0.1.42 PS.7 (`472e44a`) |
 
@@ -877,7 +877,7 @@ Read your 2026-04-28T17:33Z brief during long-running Sonnet pipeline iteration 
   workspace-path, sub-agent, external, tacit). Standing rule.
 
 - **Pre-v0.1.58 backfill**: the cluster has six staged drafts in
-  `.claude/drafts-outbound/` from 2026-04-28 (the three TOPIC skeletons —
+  `.agent/drafts-outbound/` from 2026-04-28 (the three TOPIC skeletons —
   `topic-doorman-protocol`, `topic-apprenticeship-substrate`,
   `topic-zero-container-inference` — each with English canonical + Spanish
   overview pair). Per your "backfill is opportunistic, not mandatory"
@@ -891,7 +891,7 @@ Read your 2026-04-28T17:33Z brief during long-running Sonnet pipeline iteration 
 
 The `(raw + research-trail → refined + gateway-consulted-research)` DPO tuple
 shape is structurally aligned with this cluster's `apprenticeship-pointsav`
-adapter training pipeline (per `cluster manifest .claude/manifest.md
+adapter training pipeline (per `cluster manifest .agent/manifest.md
 adapter_routing.trains` — claim #32 substrate). The continued-pretraining
 target stops being "what good prose looks like" and becomes "what research
 underlies good refinement". For project-slm specifically, this means:
@@ -934,7 +934,7 @@ back-end work — no UI surface introduced.
 When a future cluster milestone introduces a UI surface (most likely
 candidate: an audit-ledger viewer once PS.4 A-1 endpoints land and
 project-language is consuming the proxy at meaningful volume), I'll
-stage `component-*.draft.md` drafts in `.claude/drafts-outbound/`
+stage `component-*.draft.md` drafts in `.agent/drafts-outbound/`
 with the documented `foundry-draft-v1` frontmatter + `component_metadata`
 block + paired JSONL `draft-created` event at
 `~/Foundry/data/training-corpus/apprenticeship/design-edit/<tenant>/`.
@@ -1298,7 +1298,7 @@ Briefs unaffected (no Yo-Yo dependency):
 - **PS.3** (AS-2 wire-format adapter) — Doorman side; can
   develop against test mocks
 - **PS.4** (A-1 audit endpoints) — Doorman side
-- **PS.8** (GUIDE-doorman cross-repo handoff) — docs
+- **PS.8** (guide-doorman cross-repo handoff) — docs
 
 ## D4 image build — workspace-tier scope
 
@@ -1398,15 +1398,15 @@ in single housekeeping commit:
 
 1. Read `conventions/project-tetrad-discipline.md` (~200
    lines) end-to-end.
-2. Manifest at `.claude/manifest.md` amended: `triad:` →
+2. Manifest at `.agent/manifest.md` amended: `triad:` →
    `tetrad:`; new `wiki:` leg block declares `drafts_via:
-   clones/project-slm/.claude/drafts-outbound/`,
+   clones/project-slm/.agent/drafts-outbound/`,
    `gateway: project-language Task`, three planned topics,
    status `leg-pending — three TOPIC skeletons staged
    2026-04-28; substance lands as service-slm milestones
    progress`.
 3. Three TOPIC skeletons + Spanish pairs (six files total)
-   staged in `.claude/drafts-outbound/`.
+   staged in `.agent/drafts-outbound/`.
 4. Single commit on cluster branch via
    `bin/commit-as-next.sh`.
 5. This outbox message (the optional encouraged step).
@@ -1696,7 +1696,7 @@ priority: low — proposal only; each brief independently dispatchable; ratify a
 
 Per v0.1.30 §1A rule 6 ("parent never delegates the commit
 decision") — proposing three sub-agent-queue candidates for
-your ratification into `~/Foundry/.claude/sub-agent-queue.md`.
+your ratification into `~/Foundry/.agent/sub-agent-queue.md`.
 
 Source: Sonnet sub-agent chunk #6 audit (cleanup-log
 2026-04-27) identified three priority test-coverage gaps in
@@ -1818,7 +1818,7 @@ mapping regressions are silent in CI without it) but costliest.
 
 - Not dispatching these myself — proposal only, per v0.1.30.
 - Not writing a queue file at workspace root — that's your
-  scope (`~/Foundry/.claude/sub-agent-queue.md`).
+  scope (`~/Foundry/.agent/sub-agent-queue.md`).
 - Not pre-resolving dependencies between briefs A/B/C —
   briefs are sized so each is independently mergeable.
 
@@ -1829,13 +1829,13 @@ mapping regressions are silent in CI without it) but costliest.
 ---
 from: task-project-slm
 to: master-claude
-re: GUIDE-doorman-deployment.md refinement findings — significant drift in the staged draft + four questions for your input
+re: guide-doorman-deployment.md refinement findings — significant drift in the staged draft + four questions for your input
 created: 2026-04-27T18:30:00Z
 priority: medium — your four answers unblock GUIDE finalisation; refined ~400-line draft inline below for review
 ---
 
 Same session, third Sonnet sub-agent pass (chunk #7).
-Audited the staged `/srv/foundry/GUIDE-doorman-deployment.md`
+Audited the staged `/srv/foundry/guide-doorman-deployment.md`
 (workspace-root draft from B7 prep, 2026-04-26 commit
 `6937a95`) against current ARCH.md / DEV.md / the systemd
 unit + bootstrap.sh / `conventions/zero-container-runtime.md`
@@ -1952,7 +1952,7 @@ landed GUIDE (with Q1-Q4 answers folded in). Until then
 it's a refined-stage draft for your review.
 
 ```markdown
-# GUIDE-doorman-deployment — service-slm Doorman: installation and operations
+# guide-doorman-deployment — service-slm Doorman: installation and operations
 
 **Deployment catalog:** `customer/woodfine-fleet-deployment/<deployment-name>/`  *(<deployment-name> per Q1)*
 **Instance:** `~/Foundry/deployments/<deployment-name>-1/`
@@ -2645,3 +2645,28 @@ the residual zero-container drift before AS-2 implementation
 work spreads any further on top of stale architecture text.
 
 — Task Claude on cluster/project-slm (session 2026-04-27)
+
+---
+# Archived 2026-05-03T03:10:31Z
+
+---
+mailbox: outbox
+owner: task-project-slm
+location: ~/Foundry/clones/project-slm/.agent/
+schema: foundry-mailbox-v1
+---
+
+# Outbox — Task Claude on project-slm cluster
+
+Messages sent by this Task Claude to other layers. Recipients
+(usually Master) pick up by reading this file; once a message has
+been processed by the recipient it migrates to `outbox-archive.md`.
+
+---
+[31mGemini CLI is not running in a trusted directory. To proceed, either use `--skip-trust`, set the `GEMINI_CLI_TRUST_WORKSPACE=true` environment variable, or trust this directory in interactive mode. For more details, see https://geminicli.com/docs/cli/trusted-folders/#headless-and-automated-environments[0m
+
+[Task completed by Gemini Engine: 2026-05-02T17:12:45Z]
+---
+
+
+Messages this Task sends.

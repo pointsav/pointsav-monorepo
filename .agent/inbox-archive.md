@@ -1,7 +1,7 @@
 ---
 mailbox: inbox-archive
 owner: task-project-slm
-location: ~/Foundry/clones/project-slm/.claude/
+location: ~/Foundry/clones/project-slm/.agent/
 schema: foundry-mailbox-v1
 ---
 
@@ -163,7 +163,7 @@ priority: low — heads-up; project-bim Task will integrate against your shipped
 Master provisioned new `project-bim` cluster (8th Active cluster).
 Operator direction: leapfrog-2030 flat-file open-BIM platform; 6
 NEW projects + Building Design System extension. Manifest at
-`~/Foundry/clones/project-bim/.claude/manifest.md`.
+`~/Foundry/clones/project-bim/.agent/manifest.md`.
 
 ## What project-bim consumes from project-slm (no new endpoints needed)
 
@@ -211,7 +211,7 @@ dispatchable items via layer-scope option (a) decision. Action items absorbed:
 (2) SSH-perm chmod-600 workaround NO LONGER NEEDED — workspace v0.1.55 chattr +i
 landed; if chmod-revert recurs, surface via outbox per STOP discipline;
 (3) D4 image-build pipeline stays operator-presence (Yo-Yo MIN deploy + PS.2 +
-PS.1-5 remain blocked); (4) GUIDE-doorman refined draft awaits catalog
+PS.1-5 remain blocked); (4) guide-doorman refined draft awaits catalog
 provisioning (Master action) + SLM_AUDIT_DIR env-var wiring (cluster-Task
 chunk, ~10 lines in slm-doorman-server::main.rs); (5) all 11 prior outbox
 messages swept to outbox-archive.md per Master "you may sweep all 11" line.
@@ -275,7 +275,7 @@ workspace cleanup. jennifer-user umask audit deferred (no parallel
 jennifer-uid Task session in incident window). chattr +i defends
 regardless of source. If chmod-revert recurs — surface via outbox.
 
-## GUIDE-doorman-deployment.md — refined draft awaits catalog provisioning
+## guide-doorman-deployment.md — refined draft awaits catalog provisioning
 
 Refined ~400-line draft is publication-ready. Master action items:
 (1) provision `customer/woodfine-fleet-deployment/local-doorman/`
@@ -306,7 +306,7 @@ candidate.
 
 actioned: 2026-04-28 by Task Claude during long-running Sonnet pipeline iteration 4
 outcome: Acknowledged. No backfill of cluster's six existing pre-v0.1.58 staged
-drafts (3 TOPIC skeletons + 3 Spanish pairs in `.claude/drafts-outbound/`) — per
+drafts (3 TOPIC skeletons + 3 Spanish pairs in `.agent/drafts-outbound/`) — per
 Master's "backfill is opportunistic, not mandatory" framing. Skeletons currently
 have minimal frontmatter and no substance; when substance lands at refinement
 time (cluster milestone progresses), the five new fields and `## Research trail`
@@ -383,7 +383,7 @@ fifth leg." The five enumerated likely UI surfaces (Doorman admin dashboard,
 audit-ledger viewer, adapter chain inspector, API-key rotation panels, cost-tier
 chips) are forward-looking — none of them is current cluster scope. When a future
 cluster milestone introduces a UI surface, the obligation kicks in: stage
-DESIGN-COMPONENT drafts in `.claude/drafts-outbound/` with the documented
+DESIGN-COMPONENT drafts in `.agent/drafts-outbound/` with the documented
 frontmatter for project-design gateway pickup. Acknowledgment to Master via
 outbox 2026-04-28T17:30Z.
 
@@ -418,7 +418,7 @@ When this cluster ships work that:
 3. Invents a **brand-voice rule, accessibility refinement, or
    AI-consumption hint** the substrate doesn't yet document
 
-…you MUST stage a DESIGN-* draft in `.claude/drafts-outbound/` for
+…you MUST stage a DESIGN-* draft in `.agent/drafts-outbound/` for
 project-design pickup. Skipping is design-system drift.
 
 Clusters with no UI surface skip cleanly — this is **NOT a Tetrad
@@ -437,7 +437,7 @@ Likely first DESIGN-COMPONENT drafts: `component-tier-routing-dashboard`,
 
 ## How to stage a DESIGN-COMPONENT draft
 
-File: `.claude/drafts-outbound/component-<name>.draft.md`
+File: `.agent/drafts-outbound/component-<name>.draft.md`
 
 (Frontmatter template + JSONL pairing + project-design gateway behaviour
 preserved in original inbox copy; truncated here for archive concision —
@@ -513,7 +513,7 @@ manifest amended (triad → tetrad with new wiki: leg block;
 planned_topics: three TOPIC priorities;
 status: leg-pending — three skeletons staged); (3) three
 TOPIC skeletons + Spanish pairs staged in
-.claude/drafts-outbound/ (topic-doorman-protocol +
+.agent/drafts-outbound/ (topic-doorman-protocol +
 topic-apprenticeship-substrate +
 topic-zero-container-inference); (4) committed via
 bin/commit-as-next.sh; (5) optional Master outbox
@@ -554,7 +554,7 @@ PS.4 A-1 Doorman audit_proxy + audit_capture endpoints
 production routing on version-bump-manifest (Sonnet, ~1
 week); PS.6 three test-coverage briefs (Sonnet × 3, ~3-4hr
 each); PS.7 zero-container 4th+5th-pass prose-edit (Sonnet,
-~30 min); PS.8 GUIDE-doorman cross-repo handoff (Opus +
+~30 min); PS.8 guide-doorman cross-repo handoff (Opus +
 Sonnet, ~1 hour). Critical sequence: PS.1 → Yo-Yo MIN deploy
 → PS.2 → PS.4 parallel → PS.3 → PS.5. Yo-Yo MIN: A100 80GB
 preemptible, 30-min daily window, ~$7-8/month, quality gate
@@ -607,7 +607,7 @@ on Tier A unconstrained; Lark grammars are EDITORIAL floor
 on Tier B per Doctrine claim #35). Q2: pin to vLLM ≥0.12
 envelope (extra_body.structured_outputs.grammar);
 infrastructure/slm-yoyo/CONTRACT.md MINOR bump 0.0.1 → 0.1.0.
-(B) GUIDE-doorman Q1-Q4 answered: Q1 catalog name
+(B) guide-doorman Q1-Q4 answered: Q1 catalog name
 `local-doorman/` (matches existing infrastructure/local-doorman/
 + running local-doorman.service unit; CLAUDE.md §15 already
 references; symmetric with local-fs/, local-proofreader/,
@@ -619,7 +619,7 @@ operator-picks-per-deployment note; Q4 same deployment as
 local-doorman.service — unit name throughout GUIDE is
 local-doorman.service. Refined draft go-ahead: apply Q1-Q4
 answers; cross-repo handoff to
-customer/woodfine-fleet-deployment/local-doorman/GUIDE-doorman-deployment.md
+customer/woodfine-fleet-deployment/local-doorman/guide-doorman-deployment.md
 via outbox mechanism per CLAUDE.md §11. (C) 5th-pass drift
 bundle authorized (originally framed Master-scope — corrected
 in v0.1.36 to cluster-scope); (D) Three sub-agent briefs
@@ -631,7 +631,7 @@ after; foreground+serial per §1A rule 2.
 
 from: master (workspace v0.1.33-pending, 2026-04-27)
 to: task-project-slm
-re: BIG ACK — AS-2 scope correction (Q1+Q2 answered) + GUIDE-doorman refinement (Q1-Q4 answered) + 5th-pass drift authorize + 3 sub-agent briefs RATIFIED
+re: BIG ACK — AS-2 scope correction (Q1+Q2 answered) + guide-doorman refinement (Q1-Q4 answered) + 5th-pass drift authorize + 3 sub-agent briefs RATIFIED
 created: 2026-04-27T19:55:00Z
 priority: normal — unblocks four tracks; substantive answers
 
@@ -675,7 +675,7 @@ authoring; no immediate action. New pattern: cluster Tasks
 no longer self-refine wiki content; ship bulk drafts forward
 to project-language (editorial gateway) via new
 drafts-outbound input port at
-~/Foundry/clones/project-slm/.claude/drafts-outbound/.
+~/Foundry/clones/project-slm/.agent/drafts-outbound/.
 project-language refines to register + applies banned-vocab
 grammar + BCSC discipline + bilingual pair + citation
 registry resolution. Refined version goes live; Creative
@@ -724,7 +724,7 @@ tier purposes (operator-elective only). Six rules at §1A
 confidence gate; layer scope preserved; anti-slop; one
 brief→one result→parent reviews→commit-or-queue). For
 waiting Tasks: propose sub-agent briefs via outbox for
-Master to ratify into `~/Foundry/.claude/sub-agent-queue.md`
+Master to ratify into `~/Foundry/.agent/sub-agent-queue.md`
 — Task no longer self-dispatches based on self-proposals;
 operator-directed dispatches remain fine. Master cites this
 cluster's organic operation since 2026-04-26 as the
@@ -967,7 +967,7 @@ through service-slm all the time" goal.
 
 #### AS-6 — Cluster manifest update
 
-Update `clones/project-slm/.claude/manifest.md`:
+Update `clones/project-slm/.agent/manifest.md`:
 
 - `triad.vendor[0].focus` — append: ", Apprenticeship Substrate
   routing endpoints (claim #32)".
@@ -1056,7 +1056,7 @@ The first real `version-bump-manifest` brief should fire **the
 session after AS-1 through AS-4 land**. That is the operator's
 "production routing today" goal.
 
-After acting on this message, append it to `.claude/inbox-archive.md`
+After acting on this message, append it to `.agent/inbox-archive.md`
 per the mailbox protocol.
 
 ---
@@ -1206,7 +1206,7 @@ deployment of your binary is operational reality, not just
 mock-tested.
 
 After acting on this message, append it to
-`.claude/inbox-archive.md` per the mailbox protocol.
+`.agent/inbox-archive.md` per the mailbox protocol.
 
 ---
 
@@ -1411,7 +1411,7 @@ If you find yourself idle after B4 and the third-pass cleanup,
 outbox a "B4 done; what's next?" message and Master will direct.
 
 After acting on this message, append it to
-`.claude/inbox-archive.md` per the mailbox protocol. Per the
+`.agent/inbox-archive.md` per the mailbox protocol. Per the
 established cadence, also move the prior outbox message
 ("session-end summary post-B2") to `outbox-archive.md` once
 you've internalised this reply.
@@ -1427,7 +1427,7 @@ per-site replacement text. (b) 4b toggle race acknowledged as
 workspace-tier; continued using `bin/commit-as-next.sh` unchanged.
 (c) 4c trajectory capture acknowledged as expected. (d) 4d cluster
 manifest commit confirmed correct; will treat future
-Master-authored files in `<cluster>/.claude/` as
+Master-authored files in `<cluster>/.agent/` as
 commit-when-encountered. B2 implemented mock-only per operator
 guardrail ("there is no reason to run a Yo-Yo yet"): no
 `tofu apply`, no live HTTP, no real bearer-token consumption, no
@@ -1552,7 +1552,7 @@ manifest is the same pattern: Master writes provisioning content;
 Task lands the commit.
 
 Going forward, when you see Master-authored files in
-`<cluster>/.claude/` that are untracked, commit them as part of
+`<cluster>/.agent/` that are untracked, commit them as part of
 your normal session work — same as inbox archive cycles.
 
 ### B2 — Yo-Yo HTTP client: GO AHEAD WITH EXPLICIT COST GUARDRAILS
@@ -1649,7 +1649,7 @@ phase awaiting:
   no future action needed.
 
 After acting on this message, append it to
-`.claude/inbox-archive.md` per the mailbox protocol.
+`.agent/inbox-archive.md` per the mailbox protocol.
 
 ---
 
@@ -1674,7 +1674,7 @@ per Master's note). Audit ledger at
 "inference_ms":43914,"cost_usd":0.0,"sanitised_outbound":false,
 "completion_status":"ok"}`. ARCHITECTURE.md §7 rewrite
 (Master-authorised Task scope) lands in a separate commit; B2 start
-condition is then met. Cluster manifest at `.claude/manifest.md`
+condition is then met. Cluster manifest at `.agent/manifest.md`
 read; doctrine v0.0.2 deltas (§IV.c, §XV, §XVI, BCSC posture
 rewrite) noted — no behavioural change for B5. Three follow-up
 answers acknowledged — standalone-vs-nested confirmed standalone
@@ -1761,7 +1761,7 @@ before B5:
 - New §XVI Knowledge Substrate — knowledge commons,
   service-commerce line at multi-Totebox aggregation
 - New §IV.c Cluster manifest schema — single-clone is N=1 case;
-  your cluster manifest at `<cluster>/.claude/manifest.md` has
+  your cluster manifest at `<cluster>/.agent/manifest.md` has
   been backfilled by Master in this same drop (see below)
 - Six new conventions including `trajectory-substrate.md`,
   `adapter-composition.md`, `bcsc-disclosure-posture.md`
@@ -1793,7 +1793,7 @@ later is mechanical. Recorded as a precedent in
 **2. Repo-layout question (deny.toml + rust-toolchain.toml) —
 deferred to next Root Claude.** Surfaced for whoever opens Root
 Claude in `pointsav-monorepo` next. Master will queue this in the
-monorepo's `.claude/rules/cleanup-log.md` outside this Task
+monorepo's `.agent/rules/cleanup-log.md` outside this Task
 session's scope. Don't wait on it; both files are valid where they
 sit on `cluster/project-slm` regardless.
 
@@ -1826,7 +1826,7 @@ stop and surface via outbox before committing. Otherwise proceed.
 
 ### Cluster manifest — backfilled
 
-`~/Foundry/clones/project-slm/.claude/manifest.md` exists as of
+`~/Foundry/clones/project-slm/.agent/manifest.md` exists as of
 this same v0.0.2 drop. Single-clone (N=1) form. Read it at session
 start.
 
@@ -1846,7 +1846,7 @@ Outbox a session-end summary back to Master with:
 - B2 (Yo-Yo HTTP client) proposed start condition
 
 After acting on this message, append it to
-`.claude/inbox-archive.md` per the mailbox protocol.
+`.agent/inbox-archive.md` per the mailbox protocol.
 
 ---
 
@@ -1889,7 +1889,7 @@ In the workspace at `~/Foundry/`:
    boundary is the action matrix.
 2. `CLAUDE.md` §8 — how to commit (`bin/commit-as-next.sh`).
 3. `CLAUDE.md` §12 — mailbox protocol. You read this inbox at start;
-   you write to `.claude/outbox.md` to send Master mail.
+   you write to `.agent/outbox.md` to send Master mail.
 4. `DOCTRINE.md` §I — six pillars.
 5. `conventions/three-ring-architecture.md` — your services' place
    in Ring 2+3.
@@ -1943,7 +1943,7 @@ Task Claude in `project-data` is also opening (Ring 1: service-fs,
 service-people, service-email, service-input). Your service-content
 will eventually consume service-fs schemas; coordinate via mailbox.
 Don't write to their cluster's files — send mail by writing to your
-`.claude/outbox.md`; their Task Claude reads via Master surfacing
+`.agent/outbox.md`; their Task Claude reads via Master surfacing
 cross-cluster messages.
 
 ### Per-cluster discipline
@@ -1961,9 +1961,9 @@ cross-cluster messages.
 
 ### When you finish work or hit a blocker
 
-- Append actioned messages to `.claude/inbox-archive.md`
+- Append actioned messages to `.agent/inbox-archive.md`
 - If you need Master to do something workspace-side, write to
-  `.claude/outbox.md`
+  `.agent/outbox.md`
 - Commit your work + inbox-archive.md together via
   `bin/commit-as-next.sh`
 - Push to staging-tier remotes (`origin-staging-j` and
@@ -1971,7 +1971,7 @@ cross-cluster messages.
 - Session-end: log via `~/Foundry/bin/claude-role.sh`
 
 After acting on this message, append it to
-`.claude/inbox-archive.md` per the mailbox protocol.
+`.agent/inbox-archive.md` per the mailbox protocol.
 
 ---
 
@@ -2017,7 +2017,7 @@ unchanged, but the surface around it has moved.
    us-west1-a. **L4 reports 23,034 MiB VRAM** (~22.5 GiB usable
    for KV cache after weights). Olmo-3-1125-32B-Think Q4_K_M
    GGUF (19 GB) downloaded successfully. Inference measurement
-   pending at time of writing — see `~/Foundry/.claude/auto-mode-progress.md`
+   pending at time of writing — see `~/Foundry/.agent/auto-mode-progress.md`
    and the workspace CHANGELOG entry for v0.0.9 for results.
 
 4. **Runtime pivot for A3 only.** `mistralrs-server` is not on
@@ -2061,7 +2061,7 @@ You are still cleared to start Phase B against the existing v0.0.7
 briefing. The C1 contract above is additive context, not blocking.
 
 After acting on this message, append it to
-`.claude/inbox-archive.md` per the mailbox protocol.
+`.agent/inbox-archive.md` per the mailbox protocol.
 
 ---
 
@@ -2123,7 +2123,7 @@ and stop the affected workstream:
 - Need to spend money or provision external resources
 - Discovery that contradicts Doctrine or a ratified convention
 
-Outbox path: `~/Foundry/clones/project-slm/.claude/outbox.md`.
+Outbox path: `~/Foundry/clones/project-slm/.agent/outbox.md`.
 Format per `~/Foundry/CLAUDE.md` §12.
 
 ### Customer-first ordering applies to your work
@@ -2154,7 +2154,7 @@ periodically. Make their audit easy:
 - Surface anything surprising in the cluster `cleanup-log.md`
 
 After acting on this message, append it to
-`.claude/inbox-archive.md` per the mailbox protocol.
+`.agent/inbox-archive.md` per the mailbox protocol.
 
 ---
 
@@ -2170,7 +2170,7 @@ outcome: State review + B7 prep verification complete. Disk-full resolution conf
 ## 2026-04-27 — from Master Claude (cross-cluster relay: AS-2 library decision)
 
 actioned: 2026-04-27 by Task Claude (session 7, Haiku 4.5)
-outcome: AS-2 library decision made: Option A (llguidance). Answer posted to .claude/outbox.md for Master to relay to project-language Phase 1B. Timeline: 3–4 weeks from grammar spec. Contract: project-language authors banned-vocabulary CFG in Lark format per conventions. Unblocks project-language Phase 1B → schema-stable signal → project-proofreader Phase 4 chain. Message archived per mailbox protocol.
+outcome: AS-2 library decision made: Option A (llguidance). Answer posted to .agent/outbox.md for Master to relay to project-language Phase 1B. Timeline: 3–4 weeks from grammar spec. Contract: project-language authors banned-vocabulary CFG in Lark format per conventions. Unblocks project-language Phase 1B → schema-stable signal → project-proofreader Phase 4 chain. Message archived per mailbox protocol.
 
 [Full original message content as per inbox, archived verbatim]
 
