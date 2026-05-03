@@ -691,30 +691,37 @@ article table th { background: var(--bg-chrome); font-weight: 600; }
 
 /* ─── Home-page chrome ─────────────────────────────────────────────────────── */
 
+.wiki-home-welcome {
+  background: var(--bg-chrome);
+  border: 1px solid var(--border);
+  padding: 1rem 1.5rem;
+  margin-bottom: 1.25rem;
+  border-radius: 2px;
+}
+
+.wiki-home-welcome h1 {
+  font-family: var(--sans);
+  font-size: 1.5rem;
+  font-weight: 400;
+  margin: 0 0 0.5rem;
+}
+
 /* Lede block — rendered body from index.md */
 .wiki-home-lede {
-  margin-bottom: 2rem;
-  font-size: 1rem;
-  line-height: 1.7;
-  color: var(--fg);
-}
-
-.wiki-home-lede p:first-child {
-  font-size: 1.0625rem;
-  color: var(--fg-muted);
-}
-
-/* Stats banner — Wikipedia welcome-banner pattern.
-   "N articles across N categories — last updated YYYY-MM-DD."
-   Sits between the lede and the featured panel. Visually subordinate
-   to the lede; structurally signals the corpus's scale and freshness. */
-.wiki-home-stats {
-  margin: -1rem 0 2rem;
-  font-family: var(--sans);
   font-size: 0.9375rem;
+  line-height: 1.5;
+  color: var(--fg);
+  margin-bottom: 0.5rem;
+}
+
+.wiki-home-lede p { margin: 0; }
+
+/* Stats banner — Wikipedia welcome-banner pattern. */
+.wiki-home-stats {
+  margin: 0;
+  font-family: var(--sans);
+  font-size: 0.8125rem;
   color: var(--fg-muted);
-  border-bottom: 1px solid var(--border);
-  padding-bottom: 0.75rem;
 }
 
 .wiki-home-stats time {
@@ -730,72 +737,77 @@ article table th { background: var(--bg-chrome); font-weight: 600; }
   border-bottom: 1px solid var(--border);
   padding-bottom: 0.25rem;
   margin-top: 2rem;
-  margin-bottom: 1rem;
+  margin-bottom: 1.25rem;
   color: var(--fg);
 }
 
-/* Featured panel — full-width banner above the category grid */
+/* Top panels (Featured + DYK) — 60/40 split on desktop */
+.wiki-home-top-panels {
+  display: flex;
+  gap: 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
 .wiki-home-featured {
-  background: var(--bg-aside);
+  flex: 3; /* 60% approx */
   border: 1px solid var(--border);
-  border-left: 4px solid var(--link);
-  border-radius: 3px;
-  padding: 1.25rem 1.5rem;
-  margin-bottom: 2rem;
+  border-radius: 2px;
+  background: #f8f9fa; /* Wikipedia Featured Article background */
 }
 
-.wiki-home-featured-inner {
-  max-width: 48rem;
+.wiki-home-dyk {
+  flex: 2; /* 40% approx */
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  background: #fff;
 }
 
-.wiki-home-featured-label {
-  display: block;
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--fg-muted);
-  margin-bottom: 0.4rem;
-}
-
-.wiki-home-featured-title {
+.wiki-home-featured h2, .wiki-home-dyk h2 {
   font-family: var(--sans);
-  font-weight: 400;
-  font-size: 1.375rem;
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  background: #eaecf0; /* Wikipedia panel header color */
+  border-bottom: 1px solid var(--border);
+}
+
+.featured-content, .wiki-home-dyk ul {
+  padding: 0.75rem 1rem;
+}
+
+.featured-content h3 {
+  font-size: 1.125rem;
   margin: 0 0 0.5rem;
 }
 
-.wiki-home-featured-title a {
-  color: var(--fg);
-  text-decoration: none;
-}
-
-.wiki-home-featured-title a:hover {
-  color: var(--link);
-  text-decoration: underline;
-}
-
-.wiki-home-featured-lede {
-  color: var(--fg-muted);
-  margin: 0 0 0.75rem;
-  line-height: 1.6;
-}
-
-.wiki-home-featured-read {
+.featured-content p {
+  font-family: var(--serif);
   font-size: 0.9375rem;
-  color: var(--link);
-  text-decoration: none;
-  font-weight: 500;
+  margin: 0;
+  line-height: 1.5;
 }
 
-.wiki-home-featured-read:hover {
-  text-decoration: underline;
+.wiki-home-dyk ul {
+  list-style: disc;
+  margin: 0;
+  padding-left: 2rem;
+}
+
+.wiki-home-dyk li {
+  font-size: 0.875rem;
+  margin-bottom: 0.5rem;
+}
+
+@media (max-width: 960px) {
+  .wiki-home-top-panels { flex-direction: column; }
 }
 
 /* Category grid — 3 columns desktop, 2 at <960px, 1 at <600px */
 .wiki-home-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 1rem;
+  gap: 1.25rem;
   margin-bottom: 0;
 }
 
