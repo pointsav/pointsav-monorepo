@@ -49,7 +49,7 @@ pub fn validate_slug(slug: &str) -> Result<(), WikiError> {
     }
     for c in slug.chars() {
         match c {
-            'a'..='z' | '0'..='9' | '.' | '-' | '_' => {}
+            'a'..='z' | '0'..='9' | '.' | '-' | '_' | '/' => {}
             _ => return Err(WikiError::SlugInvalid(slug.into())),
         }
     }
@@ -266,6 +266,7 @@ mod tests {
         assert!(validate_slug("a.b.c").is_ok());
         assert!(validate_slug("foo_bar").is_ok());
         assert!(validate_slug("topic-redirect-bilingual-test.es").is_ok());
+        assert!(validate_slug("foo/bar").is_ok());
     }
 
     #[test]
@@ -273,7 +274,6 @@ mod tests {
         assert!(validate_slug("").is_err());
         assert!(validate_slug("Foo Bar").is_err());
         assert!(validate_slug("../etc/passwd").is_err());
-        assert!(validate_slug("foo/bar").is_err());
         assert!(validate_slug("foo\\bar").is_err());
         assert!(validate_slug(".hidden").is_err());
         assert!(validate_slug("foo..bar").is_err());
