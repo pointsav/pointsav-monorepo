@@ -164,11 +164,12 @@ impl<'a> ApprenticeshipDispatcher<'a> {
             tier_hint: Some(tier_hint),
             stream: false,
             max_tokens: None,
-            temperature: Some(0.0),
+            temperature: None,
             sanitised_outbound: true,
             tier_c_label: None,
             grammar: None,
-        };
+            speculation: None,
+            };
 
         info!(
             target: "slm_doorman::apprenticeship",
@@ -255,11 +256,12 @@ impl<'a> ApprenticeshipDispatcher<'a> {
             tier_hint: Some(tier_hint),
             stream: false,
             max_tokens: None,
-            temperature: Some(0.0),
+            temperature: None,
             sanitised_outbound: true,
             tier_c_label: None,
             grammar: None,
-        };
+            speculation: None,
+            };
 
         info!(
             target: "slm_doorman::apprenticeship",

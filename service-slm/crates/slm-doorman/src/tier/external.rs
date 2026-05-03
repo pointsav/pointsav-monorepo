@@ -402,6 +402,7 @@ mod tests {
             sanitised_outbound: true,
             tier_c_label: label.map(|s| s.to_string()),
             grammar: None,
+            speculation: None,
         }
     }
 
