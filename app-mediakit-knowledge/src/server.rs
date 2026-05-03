@@ -88,6 +88,8 @@ pub struct AppState {
     /// and template `window.WIKI_COLLAB_ENABLED = true` into the editor
     /// page so `saa-init.js` lazy-loads the collab JS bundle.
     pub enable_collab: bool,
+    /// Phase 10: Leapfrog 2030 glossary auto-linker.
+    pub glossary: Arc<crate::glossary::Glossary>,
 }
 
 pub fn router(state: AppState) -> Router {
@@ -116,6 +118,8 @@ pub fn router(state: AppState) -> Router {
         // wires the Doorman MCP server)
         .route("/api/doorman/complete", post(doorman_stub))
         .route("/api/doorman/instruct", post(doorman_stub))
+        // Leapfrog: Page Preview hover endpoint
+        .route("/api/preview/{*slug}", get(preview_api))
         // Wave 5B — category listing pages
         .route("/category/{name}", get(category_page))
         // Phase 3 Step 3.2 — full-text search HTML page over the tantivy index
@@ -143,6 +147,31 @@ pub fn router(state: AppState) -> Router {
         r = r.route("/ws/collab/{slug}", get(crate::collab::ws_collab));
     }
     r.with_state(Arc::new(state))
+}
+
+async fn preview_api(
+    State(state): State<Arc<AppState>>,
+    Path(slug): Path<String>,
+) -> Result<Json<serde_json::Value>, WikiError> {
+    if slug.contains("..") || slug.is_empty() {
+        return Err(WikiError::NotFound(slug));
+    }
+    
+    let path = state.content_dir.join(format!("{slug}.md"));
+    let text = match fs::read_to_string(&path).await {
+        Ok(t) => t,
+        Err(_) => return Err(WikiError::NotFound(slug)),
+    };
+    
+    let parsed = parse_page(&text)?;
+    let title = parsed.frontmatter.title.unwrap_or_else(|| slug.clone());
+    let snippet = crate::feeds::first_paragraph_snippet(&parsed.body_md, 300);
+    
+    Ok(Json(json!({
+        "title": title,
+        "snippet": snippet,
+        "slug": slug
+    })))
 }
 
 async fn healthz() -> &'static str {
@@ -858,6 +887,12 @@ fn home_chrome(
                         }
                     }
 
+                    // Platform Telemetry (Placeholder for Phase 10 integration)
+                    h2.wiki-home-section-title { "Platform Telemetry" }
+                    div.wiki-home-telemetry style="background: #f8f9fa; border: 1px solid #a2a9b1; padding: 1rem; border-radius: 2px;" {
+                        p style="margin: 0; font-family: monospace; color: #54595d;" { "Awaiting telemetry endpoint connection... " code { "schema: region-v1" } " payload expected." }
+                    }
+
                     // Catch-all: every TOPIC/GUIDE not in a ratified category
                     @if !uncategorised.is_empty() {
                         div.wiki-home-uncategorised {
@@ -1028,7 +1063,8 @@ async fn index(State(state): State<Arc<AppState>>) -> Result<Markup, WikiError> 
     let buckets = bucket_topics_by_category(&state.content_dir, state.guide_dir.as_deref(), state.guide_dir_2.as_deref()).await?;
     let recent = recent_topics_by_last_edited(&buckets, 10);
     let stats = compute_home_stats(&buckets);
-    let home_html = crate::render::render_html_raw(&home_parsed.body_md);
+    let home_html = crate::render::render_html_raw(&home_parsed.body_md, &state.content_dir);
+    let home_html = crate::glossary::inject_glossary_tooltips(&home_html, &state.glossary);
     let featured = load_featured(&state.content_dir, &buckets).await;
     let dyk = load_dyk(&state.content_dir).await;
 
@@ -1146,7 +1182,8 @@ async fn wiki_page(
 
     // Two-step render: extract headings from clean comrak output (no edit pencils),
     // then inject pencils for the final body HTML. This keeps TOC text clean.
-    let raw_html = render_html_raw(&parsed.body_md);
+    let raw_html = render_html_raw(&parsed.body_md, &state.content_dir);
+    let mut raw_html = crate::glossary::inject_glossary_tooltips(&raw_html, &state.glossary);
     let headings = extract_headings(&raw_html);
     let body_html = inject_edit_pencils(&raw_html);
     let title = parsed
@@ -1154,7 +1191,26 @@ async fn wiki_page(
         .title
         .clone()
         .unwrap_or_else(|| slug.clone());
-    Ok(wiki_chrome(&title, &slug, parsed.frontmatter, &body_html, headings, &state.site_title))
+        
+    // Retrieve Backlinks (What Links Here)
+    let backlinks_query = format!("\"{}\"", slug.split('/').last().unwrap_or(&slug));
+    let mut backlinks = Vec::new();
+    if let Ok(hits) = run_search(&state.search, &backlinks_query, 50) {
+        for hit in hits {
+            if hit.slug != slug {
+                backlinks.push(TopicSummary {
+                    slug: hit.slug,
+                    title: hit.title,
+                    last_edited: None,
+                    short_description: None,
+                    lede_first_line: "".to_string(),
+                    file_path: PathBuf::new(),
+                });
+            }
+        }
+    }
+        
+    Ok(wiki_chrome(&title, &slug, parsed.frontmatter, &body_html, headings, &backlinks, &state.site_title))
 }
 
 async fn static_asset(Path(path): Path<String>) -> Response {
@@ -1197,6 +1253,7 @@ fn wiki_chrome(
     fm: Frontmatter,
     body_html: &str,
     headings: Vec<(String, String, u8)>,
+    backlinks: &[TopicSummary],
     site_title: &str,
 ) -> Markup {
     let talk_slug = format!("{slug}.talk");
@@ -1373,6 +1430,20 @@ fn wiki_chrome(
                         article.wiki-article {
                             div.page-body {
                                 (PreEscaped(body_html))
+                            }
+                        }
+                        
+                        // Backlinks footer
+                        @if !backlinks.is_empty() {
+                            section.wiki-backlinks {
+                                h2 { "What links here" }
+                                ul {
+                                    @for link in backlinks {
+                                        li {
+                                            a href={ "/wiki/" (link.slug) } { (link.title) }
+                                        }
+                                    }
+                                }
                             }
                         }
 

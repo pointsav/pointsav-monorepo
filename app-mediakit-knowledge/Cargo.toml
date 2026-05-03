@@ -64,6 +64,8 @@ chrono = "0.4"
 # existing /edit POST when user clicks save. futures-util pulls in the
 # StreamExt::split needed for axum WebSocket sender/receiver split.
 futures-util = "0.3"
+csv = "1.3"
+regex = "1.10"
 
 [dev-dependencies]
 tower = { version = "0.5", features = ["util"] }
