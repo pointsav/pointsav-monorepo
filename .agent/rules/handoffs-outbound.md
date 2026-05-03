@@ -28,11 +28,11 @@ with the source-side `git rm` commit.
 
 ---
 
-## GUIDE-OPERATIONS.md → content-wiki-documentation
+## guide-operations.md → content-wiki-documentation
 
-- **Source path:** `GUIDE-OPERATIONS.md` (pointsav-monorepo repo root)
+- **Source path:** `guide-operations.md` (pointsav-monorepo repo root)
 - **Destination repo:** `content-wiki-documentation`
-- **Destination path:** `GUIDE-OPERATIONS.md` (destination repo root)
+- **Destination path:** `guide-operations.md` (destination repo root)
 - **Rationale:** Operations guide is cross-cutting documentation;
   per `repo-layout.md` sibling-repo table, documentation of this
   kind belongs in `content-wiki-documentation`. Not allowed at the
@@ -48,17 +48,17 @@ Run these from working directory
 
 1. Copy the source file into the destination repo:
    ```
-   cp /home/mathew/Foundry/factory-pointsav/pointsav-monorepo/GUIDE-OPERATIONS.md ./GUIDE-OPERATIONS.md
+   cp /home/mathew/Foundry/factory-pointsav/pointsav-monorepo/guide-operations.md ./guide-operations.md
    ```
 
 2. Stage it:
    ```
-   git add GUIDE-OPERATIONS.md
+   git add guide-operations.md
    ```
 
 3. Commit via the staging-tier helper:
    ```
-   ~/Foundry/tool-commit-as-next.sh "receive GUIDE-OPERATIONS.md from pointsav-monorepo — operations-guide relocation per repo-layout sibling-repo table"
+   ~/Foundry/tool-commit-as-next.sh "receive guide-operations.md from pointsav-monorepo — operations-guide relocation per repo-layout sibling-repo table"
    ```
 
 4. No in-transit content edits. No callers in this repo. No
@@ -68,7 +68,7 @@ Run these from working directory
 5. When complete, the source-side `git rm` will be committed in a
    future Root Claude session in pointsav-monorepo. That session
    detects completion by grepping this repo's `git log` for the
-   commit-message pattern `"receive GUIDE-OPERATIONS.md from
+   commit-message pattern `"receive guide-operations.md from
    pointsav-monorepo"`.
 
 ---
@@ -130,7 +130,7 @@ Run these from working directory
    Sovereign Data Foundation as a current equity holder and
    active auditor. Per CLAUDE.md §6 BCSC disclosure rule, the
    Foundation must be referred to in planned / intended terms
-   only. If this repo has a `NEXT.md` or `.claude/rules/cleanup-log.md`,
+   only. If this repo has a `NEXT.md` or `.agent/rules/cleanup-log.md`,
    log an entry flagging that a language-review pass is required
    before any public reuse of this document. **Do not perform
    the review in this commit** — only flag. The review is a

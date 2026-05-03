@@ -14,7 +14,7 @@ Last updated: 2026-04-23.
 
 ### Layout hygiene — defect closures queued
 
-Rule source: `.claude/rules/repo-layout.md` (introduced 2026-04-23).
+Rule source: `.agent/rules/repo-layout.md` (introduced 2026-04-23).
 Each item below is a separate commit via `tool-commit-as-next.sh`.
 
 *(queue empty — Tier-2 project-root scripts closed 2026-04-23;
@@ -22,14 +22,14 @@ see Recently closed below and `cleanup-log.md`)*
 
 ### Awaiting cross-repo handoff
 
-Entries lodged in `.claude/rules/handoffs-outbound.md`. Pattern is
+Entries lodged in `.agent/rules/handoffs-outbound.md`. Pattern is
 passive — nothing moves until Master Claude or a Root Claude in
 the destination repo picks up the entry and commits the add-side.
 Source files remain in place here until the destination has
 committed; only then does a follow-up Root Claude session commit
 the source-remove.
 
-- **`GUIDE-OPERATIONS.md` → `content-wiki-documentation`** — see
+- **`guide-operations.md` → `content-wiki-documentation`** — see
   outbox for destination path and rationale.
 - **`USER_GUIDE_2026-03-30_V2.md` → `content-wiki-documentation`**
   (with `_V2` dropped in transit) — see outbox.
@@ -112,7 +112,7 @@ migrations)*
 
 ## Recently closed (2026-04-23)
 
-- Repo-layout rule introduced — `.claude/rules/repo-layout.md`
+- Repo-layout rule introduced — `.agent/rules/repo-layout.md`
   codifies allowed files at the monorepo root and at each project
   directory root; names the sibling repos
   (`content-wiki-documentation`, `pointsav-design-system`, etc.)
@@ -136,9 +136,9 @@ migrations)*
   with a code-reference pointer to the new path; the operator
   decision on `MAX_DAILY_VERIFICATIONS = 10` remains open.
 - Handoff-outbound pattern introduced —
-  `.claude/rules/handoffs-outbound.md` logs cross-repo file moves
+  `.agent/rules/handoffs-outbound.md` logs cross-repo file moves
   kept in place here until a Root Claude in the destination repo
-  commits them. Two entries lodged (`GUIDE-OPERATIONS.md`,
+  commits them. Two entries lodged (`guide-operations.md`,
   `USER_GUIDE_2026-03-30_V2.md`, both to
   `content-wiki-documentation`). Formalisation of the pattern in
   `~/Foundry/CLAUDE.md` §9 and §10 surfaced for Master Claude in
@@ -222,7 +222,7 @@ migrations)*
 
 - Workspace-level open items: `~/Foundry/NEXT.md`
 - Workspace changelog: `~/Foundry/CHANGELOG.md`
-- Project registry: `.claude/rules/project-registry.md`
-- Cleanup log: `.claude/rules/cleanup-log.md`
-- Repo layout rule: `.claude/rules/repo-layout.md`
-- Handoffs outbound: `.claude/rules/handoffs-outbound.md`
+- Project registry: `.agent/rules/project-registry.md`
+- Cleanup log: `.agent/rules/cleanup-log.md`
+- Repo layout rule: `.agent/rules/repo-layout.md`
+- Handoffs outbound: `.agent/rules/handoffs-outbound.md`

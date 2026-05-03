@@ -100,6 +100,6 @@ that sibling rather than accumulating in the monorepo.
 3. Move with `git mv` for intra-repo moves; for cross-repo moves, add
    in the destination and remove in the source with one commit each.
 4. Update any callers that reference the old path.
-5. Log the change in `.claude/rules/cleanup-log.md`.
+5. Log the change in `.agent/rules/cleanup-log.md`.
 
 Do not loosen this rule to accommodate a misplaced file — move the file.

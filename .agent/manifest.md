@@ -22,7 +22,7 @@ tetrad:
       catalog_subfolder: vault-privategit-source/
       tenant: pointsav
       purpose: documentation-of-Doorman-installation-on-the-workspace-VM
-      status: leg-pending — Task to draft GUIDE-doorman-deployment.md (PS.8 in v0.1.42 plan; Q1-Q4 answered)
+      status: leg-pending — Task to draft guide-doorman-deployment.md (PS.8 in v0.1.42 plan; Q1-Q4 answered)
   deployment:
     - path: /srv/foundry  # vault-privategit-source-1 (the workspace itself)
       tenant: pointsav
@@ -36,7 +36,7 @@ tetrad:
       status: tier-A-live; Doorman deployment pending B7 redeploy with SLM_APPRENTICESHIP_ENABLED=true
   wiki:
     - repo: vendor/content-wiki-documentation
-      drafts_via: clones/project-slm/.claude/drafts-outbound/
+      drafts_via: clones/project-slm/.agent/drafts-outbound/
       gateway: project-language Task
       planned_topics:
         - topic-doorman-protocol.md           # the Doorman as security boundary + three-tier compute routing
@@ -131,9 +131,9 @@ are not yet flowing to corpus; behavioural changes for Task: none.
 
 ## Mailbox
 
-- Inbox: `~/Foundry/clones/project-slm/.claude/inbox.md`
-- Outbox: `~/Foundry/clones/project-slm/.claude/outbox.md`
-- Trajectory log: `~/Foundry/clones/project-slm/.claude/trajectory-log.md`
+- Inbox: `~/Foundry/clones/project-slm/.agent/inbox.md`
+- Outbox: `~/Foundry/clones/project-slm/.agent/outbox.md`
+- Trajectory log: `~/Foundry/clones/project-slm/.agent/trajectory-log.md`
   (created on first capture — see L1 wiring)
 
 ## State as of backfill (2026-04-26)
