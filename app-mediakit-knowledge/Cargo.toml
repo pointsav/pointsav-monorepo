@@ -42,6 +42,12 @@ thiserror = "2"
 # Phase 2 Step 2: tempfile moved from [dev-dependencies] to [dependencies]
 # for use in src/edit.rs (atomic write via NamedTempFile::persist).
 tempfile = "3"
+# Phase 4 Step 4.1: git2 integration for versioned content. libgit2-dev
+# system library required at link time (bundled with libssl-dev in PK.3).
+git2 = "0.20"
+# Phase 4 Step 4.2: gix (read-side) for history and blame.
+gix = "0.83"
+gix-blame = "0.13"
 # Phase 3 Step 3.1: tantivy full-text search backend. On-disk index at
 # <state_dir>/search/; rebuilt on startup from a tree walk; incremental
 # reindex on edit. ~50 MB writer heap default.
