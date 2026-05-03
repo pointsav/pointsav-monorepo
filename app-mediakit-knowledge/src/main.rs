@@ -152,6 +152,9 @@ async fn serve(
 
     // Phase 4 Step 4.1: open or init git repo. Fail fast if broken.
     tracing::info!("opening git repository");
+    let _ = std::process::Command::new("git")
+        .args(["config", "--global", "--add", "safe.directory", "*"])
+        .status();
     let git_repo = app_mediakit_knowledge::git::open_or_init(&content_dir)?;
     tracing::info!("git repository ready");
 
