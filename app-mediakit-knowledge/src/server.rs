@@ -39,7 +39,7 @@ use axum::{
     Json, Router,
 };
 use maud::{html, Markup, PreEscaped, DOCTYPE};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::collections::BTreeMap;
 use std::path::{Path as FsPath, PathBuf};
@@ -130,6 +130,7 @@ pub fn router(state: AppState) -> Router {
         // Phase 4 Step 4.2 — history and blame
         .route("/history/{*slug}", get(history_page))
         .route("/blame/{*slug}", get(blame_page))
+        .route("/diff/{*slug}", get(diff_page))
         // axum 0.8 doesn't allow a literal `.md` suffix after a dynamic
         // segment, so the route captures `{slug}` as a single segment and
         // the handler strips an optional trailing `.md` for the
@@ -270,6 +271,30 @@ pub struct HomeStats {
     pub article_count: usize,
     pub category_count: usize,
     pub last_updated: Option<String>,
+}
+
+#[derive(Clone, Serialize, Deserialize)]
+struct FeaturedTopicPin {
+    slug: String,
+    since: Option<String>,
+    note: Option<String>,
+}
+
+struct FeaturedArticle {
+    title: String,
+    slug: String,
+    snippet: String,
+}
+
+#[derive(Deserialize)]
+struct LeapfrogFacts {
+    facts: Vec<LeapfrogFact>,
+}
+
+#[derive(Deserialize)]
+struct LeapfrogFact {
+    text: String,
+    link_slug: Option<String>,
 }
 
 /// Category buckets: `BTreeMap<category_name, Vec<TopicSummary>>`.
@@ -550,6 +575,46 @@ fn recent_topics_by_last_edited(buckets: &CategoryBuckets, n: usize) -> Vec<Topi
 /// Returns `None` silently if the file is absent. Logs a warning via
 /// `tracing::warn!` if the file is present but unparseable or if the slug
 /// cannot be found in `buckets`.
+async fn load_featured(content_dir: &FsPath, buckets: &CategoryBuckets) -> Option<FeaturedArticle> {
+    let path = content_dir.join("featured-topic.yaml");
+    let text = fs::read_to_string(path).await.ok()?;
+    let pin: FeaturedTopicPin = serde_yaml::from_str(&text).ok()?;
+    
+    // Find the topic summary in buckets to get title and snippet
+    let summary = buckets.values().flatten().find(|t| t.slug == pin.slug)?;
+    
+    Some(FeaturedArticle {
+        title: summary.title.clone(),
+        slug: summary.slug.clone(),
+        snippet: summary.short_description.clone().unwrap_or_default(),
+    })
+}
+
+async fn load_dyk(content_dir: &FsPath) -> Option<LeapfrogFacts> {
+    let path = content_dir.join("leapfrog-facts.yaml");
+    let text = fs::read_to_string(path).await.ok()?;
+    serde_yaml::from_str(&text).ok()
+}
+
+fn bucket_guides_by_domain(guides: &[TopicSummary]) -> BTreeMap<String, Vec<TopicSummary>> {
+    let mut map = BTreeMap::new();
+    for g in guides {
+        let domain = if g.slug.contains("slm") || g.slug.contains("doorman") {
+            "AI & SLM"
+        } else if g.slug.contains("personnel") || g.slug.contains("entra") || g.slug.contains("linkedin") {
+            "Personnel"
+        } else if g.slug.contains("network") || g.slug.contains("mesh") || g.slug.contains("command") {
+            "Network & Command"
+        } else if g.slug.contains("infrastructure") || g.slug.contains("provision") || g.slug.contains("lxc") {
+            "Infrastructure"
+        } else {
+            "General"
+        };
+        map.entry(domain.to_string()).or_insert_with(Vec::new).push(g.clone());
+    }
+    map
+}
+
 /// Compute home-page stats banner contents.
 ///
 /// `article_count` is the total number of bucketed topics across all
@@ -639,9 +704,11 @@ fn home_chrome(
     recent: &[TopicSummary],
     stats: &HomeStats,
     guides: &[TopicSummary],
+    featured: Option<FeaturedArticle>,
+    dyk: Option<LeapfrogFacts>,
     site_title: &str,
 ) -> Markup {
-    let title = home_fm.title.as_deref().unwrap_or(site_title);
+    let _title = home_fm.title.as_deref().unwrap_or(site_title);
 
     // Articles in non-ratified buckets (not already shown as guides) so that
     // every TOPIC and GUIDE is reachable from the home page.
@@ -696,6 +763,35 @@ fn home_chrome(
                         }
                     }
 
+                    // Wikipedia-style top section: Featured (Left) + Did You Know (Right)
+                    div.wiki-home-top-panels {
+                        @if let Some(featured) = featured {
+                            div.wiki-home-featured {
+                                h2 { "Featured article" }
+                                div.featured-content {
+                                    h3 { a href={ "/wiki/" (featured.slug) } { (featured.title) } }
+                                    p { (featured.snippet) " " a href={ "/wiki/" (featured.slug) } { "Read more →" } }
+                                }
+                            }
+                        }
+
+                        @if let Some(dyk) = dyk {
+                            div.wiki-home-dyk {
+                                h2 { "Did you know..." }
+                                ul {
+                                    @for fact in &dyk.facts {
+                                        li {
+                                            (fact.text)
+                                            @if let Some(ref slug) = fact.link_slug {
+                                                " " a href={ "/wiki/" (slug) } { "[more]" }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
                     // Category sections — show all articles for small categories,
                     // PREVIEW_LIMIT + "All N →" for larger ones.
                     div.wiki-home-grid {
@@ -736,18 +832,21 @@ fn home_chrome(
                         }
                     }
 
-                    // Operational guides — served locally via guide_dir
+                    // Operational guides — grouped by domain
                     @if !guides.is_empty() {
+                        @let domains = bucket_guides_by_domain(guides);
                         div.wiki-home-guides {
-                            div.wiki-home-guides-head {
-                                h2 { "Operational guides" }
-                            }
-                            ul.wiki-home-guides-list {
-                                @for g in guides {
-                                    li.wiki-home-guides-item {
-                                        a href={ "/wiki/" (g.slug) } { (g.title) }
-                                        @if let Some(ref desc) = g.short_description {
-                                            span.wiki-home-guides-desc { " — " (desc) }
+                            h2 { "Operational guides" }
+                            div.wiki-home-guides-grid {
+                                @for (domain, items) in domains {
+                                    div.wiki-home-guide-domain {
+                                        h3 { (domain) }
+                                        ul.wiki-home-guides-list {
+                                            @for g in items {
+                                                li.wiki-home-guides-item {
+                                                    a href={ "/wiki/" (g.slug) } { (g.title) }
+                                                }
+                                            }
                                         }
                                     }
                                 }
@@ -926,6 +1025,8 @@ async fn index(State(state): State<Arc<AppState>>) -> Result<Markup, WikiError> 
     let recent = recent_topics_by_last_edited(&buckets, 10);
     let stats = compute_home_stats(&buckets);
     let home_html = crate::render::render_html_raw(&home_parsed.body_md);
+    let featured = load_featured(&state.content_dir, &buckets).await;
+    let dyk = load_dyk(&state.content_dir).await;
 
     // Collect guide summaries for the dedicated guides section.
     // A guide is any entry whose filename stem starts with "guide-".
@@ -950,6 +1051,8 @@ async fn index(State(state): State<Arc<AppState>>) -> Result<Markup, WikiError> 
         &recent,
         &stats,
         &guide_summaries,
+        featured,
+        dyk,
         &state.site_title,
     ))
 }
@@ -1604,6 +1707,51 @@ async fn blame_page(
     };
 
     Ok(chrome(&format!("Blame: {}", slug), body, &state.site_title))
+}
+
+#[derive(Deserialize)]
+struct DiffQueryParams {
+    a: Option<String>,
+    b: Option<String>,
+}
+
+async fn diff_page(
+    State(state): State<Arc<AppState>>,
+    Path(slug): Path<String>,
+    Query(query): Query<DiffQueryParams>,
+) -> Result<Markup, WikiError> {
+    crate::edit::validate_slug(&slug)?;
+    let a_sha = query.a.unwrap_or_default();
+    let b_sha = query.b.unwrap_or_else(|| "HEAD".to_string());
+    
+    let diff = crate::history::topic_diff(&state.content_dir, &slug, &a_sha, &b_sha)?;
+
+    let body = html! {
+        h1 { "Diff: " (slug) }
+        p { "Comparing " code { (a_sha) } " to " code { (b_sha) } }
+        div.diff-container style="background: #f9f9f9; padding: 1em; border-radius: 4px; overflow-x: auto;" {
+            pre style="margin: 0; font-family: monospace; font-size: 0.9em; line-height: 1.5;" {
+                @for line in diff {
+                    @let line_class = match line.change {
+                        '+' => "diff-add",
+                        '-' => "diff-sub",
+                        _ => "diff-equal",
+                    };
+                    @let line_style = match line.change {
+                        '+' => "background: #e6ffec; color: #22863a;",
+                        '-' => "background: #ffeef0; color: #cb2431;",
+                        _ => "",
+                    };
+                    div class=(line_class) style=(line_style) {
+                        span style="user-select: none; margin-right: 1em; color: #999;" { (line.change) }
+                        (line.text)
+                    }
+                }
+            }
+        }
+    };
+
+    Ok(chrome(&format!("Diff: {}", slug), body, &state.site_title))
 }
 
 /// Shared shell for non-article pages (search, category, errors).
