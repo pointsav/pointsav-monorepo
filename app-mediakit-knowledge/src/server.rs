@@ -100,7 +100,7 @@ pub fn router(state: AppState) -> Router {
         .route("/healthz", get(healthz))
         // Phase 2 Step 2 — edit endpoint
         .route(
-            "/edit/{slug}",
+            "/edit/{*slug}",
             get(crate::edit::get_edit).post(crate::edit::post_edit),
         )
         .route("/create", post(crate::edit::post_create))
