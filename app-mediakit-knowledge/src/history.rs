@@ -133,6 +133,78 @@ pub fn topic_blame(
     Ok(lines)
 }
 
+pub struct DiffLine {
+    pub change: char, // ' ', '+', '-'
+    pub text: String,
+}
+
+pub fn topic_diff(
+    content_dir: &Path,
+    slug: &str,
+    a_sha: &str,
+    b_sha: &str,
+) -> Result<Vec<DiffLine>, WikiError> {
+    let repo = gix::open(content_dir).map_err(|e| WikiError::WriteFailed(format!("gix open failed: {e}")))?;
+    let path = Path::new(slug).with_extension("md");
+
+    let get_content = |sha: &str| -> Result<String, WikiError> {
+        if sha == "" || sha == "0000000000000000000000000000000000000000" {
+            return Ok(String::new());
+        }
+        
+        // Handle ~ suffix for parent
+        let (actual_sha, is_parent) = if sha.ends_with('~') {
+            (&sha[..sha.len()-1], true)
+        } else {
+            (sha, false)
+        };
+
+        let id = repo.rev_parse_single(actual_sha)
+            .map_err(|e| WikiError::WriteFailed(format!("gix rev-parse failed: {e}")))?;
+        
+        let commit = id.object().map_err(|e| WikiError::WriteFailed(format!("gix commit object failed: {e}")))?
+            .try_into_commit().map_err(|e| WikiError::WriteFailed(format!("gix not a commit: {e}")))?;
+        
+        let target_commit = if is_parent {
+            let parent_id = commit.parent_ids().next()
+                .ok_or_else(|| WikiError::WriteFailed("no parent found".to_string()))?;
+            parent_id.object().map_err(|e| WikiError::WriteFailed(format!("gix parent object failed: {e}")))?
+                .try_into_commit().map_err(|e| WikiError::WriteFailed(format!("gix parent not a commit: {e}")))?
+        } else {
+            commit
+        };
+
+        let tree = target_commit.tree().map_err(|e| WikiError::WriteFailed(format!("gix tree failed: {e}")))?;
+        let entry = tree.lookup_entry_by_path(&path)
+            .map_err(|e| WikiError::WriteFailed(format!("gix path lookup failed: {e}")))?
+            .ok_or_else(|| WikiError::NotFound(slug.to_string()))?;
+        
+        let blob = entry.object().map_err(|e| WikiError::WriteFailed(format!("gix blob object failed: {e}")))?
+            .into_blob();
+        Ok(String::from_utf8_lossy(&blob.data).to_string())
+    };
+
+    let content_a = get_content(a_sha).unwrap_or_default();
+    let content_b = get_content(b_sha).unwrap_or_default();
+
+    let mut lines = Vec::new();
+    let diff = similar::TextDiff::from_lines(&content_a, &content_b);
+    
+    for change in diff.iter_all_changes() {
+        let tag = match change.tag() {
+            similar::ChangeTag::Delete => '-',
+            similar::ChangeTag::Insert => '+',
+            similar::ChangeTag::Equal => ' ',
+        };
+        lines.push(DiffLine {
+            change: tag,
+            text: change.to_string(),
+        });
+    }
+
+    Ok(lines)
+}
+
 fn format_time(time: gix::date::Time) -> String {
     let dt = Utc.timestamp_opt(time.seconds, 0).unwrap();
     dt.to_rfc3339()
