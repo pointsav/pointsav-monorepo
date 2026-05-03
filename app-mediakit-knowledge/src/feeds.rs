@@ -153,7 +153,7 @@ pub async fn collect_recent_items(
 /// Markdown body. Strips Markdown syntax crudely (no full parse — just skip
 /// headings, list bullets, HR, and backtick/emphasis characters). Caps at
 /// `max_chars` characters. Returns an empty string when the body is empty.
-fn first_paragraph_snippet(body_md: &str, max_chars: usize) -> String {
+pub fn first_paragraph_snippet(body_md: &str, max_chars: usize) -> String {
     let para = body_md
         .lines()
         .filter(|l| {
