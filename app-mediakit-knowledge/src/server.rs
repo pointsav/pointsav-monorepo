@@ -698,7 +698,7 @@ fn home_chrome(
 
                     // Category sections — show all articles for small categories,
                     // PREVIEW_LIMIT + "All N →" for larger ones.
-                    div.wiki-home-categories {
+                    div.wiki-home-grid {
                         @for cat in RATIFIED_CATEGORIES {
                             @let topics = buckets.get(*cat).map(|v| v.as_slice()).unwrap_or(&[]);
                             @let count = topics.len();
