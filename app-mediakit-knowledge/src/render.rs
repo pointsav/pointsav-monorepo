@@ -120,14 +120,14 @@ pub fn parse_page(text: &str) -> Result<ParsedPage, serde_yaml::Error> {
 /// for the final body HTML — or use the convenience wrapper pair
 /// `render_html_with_toc`. The edit-pencil pass happens after heading
 /// extraction so that TOC text is clean (no "[edit]" fragments).
-pub fn render_html(body_md: &str) -> String {
-    let raw = render_html_raw(body_md);
+pub fn render_html(body_md: &str, content_dir: &std::path::Path) -> String {
+    let raw = render_html_raw(body_md, content_dir);
     inject_edit_pencils(&raw)
 }
 
 /// Like `render_html` but returns the raw comrak output without edit-pencil
 /// injection. Use this as the input to `extract_headings` for TOC generation.
-pub fn render_html_raw(body_md: &str) -> String {
+pub fn render_html_raw(body_md: &str, content_dir: &std::path::Path) -> String {
     let mut options = Options::default();
     options.extension.wikilinks_title_after_pipe = true;
     options.extension.table = true;
@@ -139,12 +139,12 @@ pub fn render_html_raw(body_md: &str) -> String {
     // unsafe_ stays false; we don't want raw HTML from authors yet.
     options.render.unsafe_ = false;
     let raw = markdown_to_html(body_md, &options);
-    inject_wiki_prefixes(&raw)
+    inject_wiki_prefixes(&raw, content_dir)
 }
 
 /// Walk rendered HTML and prefix any `href="slug" data-wikilink="true"` generated
-/// by comrak with `/wiki/` so they route correctly.
-fn inject_wiki_prefixes(html: &str) -> String {
+/// by comrak with `/wiki/` so they route correctly. Also marks non-existent targets as red links.
+fn inject_wiki_prefixes(html: &str, content_dir: &std::path::Path) -> String {
     // Comrak emits: <a href="slug" data-wikilink="true">
     // We split on the marker and reconstruct.
     let mut out = String::with_capacity(html.len() + 128);
@@ -155,11 +155,24 @@ fn inject_wiki_prefixes(html: &str) -> String {
         let before_marker = &rest[..pos];
         if let Some(href_pos) = before_marker.rfind("href=\"") {
             let prefix = &before_marker[..href_pos + 6]; // up to href="
-            let slug = &before_marker[href_pos + 6..];
+            let mut slug = &before_marker[href_pos + 6..];
+            
+            // Check if it's already got the wiki prefix from previous scripts
+            if slug.starts_with("/wiki/") {
+                slug = &slug[6..];
+            } else if slug.starts_with("/category/") {
+                // If it's a category link, just leave it as is, but it shouldn't have data-wikilink true
+            }
+            
+            let is_redlink = !content_dir.join(format!("{}.md", slug)).exists();
+            let redlink_class = if is_redlink { " class=\"wiki-redlink\"" } else { "" };
+            
             out.push_str(prefix);
             out.push_str("/wiki/");
             out.push_str(slug);
-            out.push_str(" data-wikilink=\"true\">");
+            out.push_str("\" data-wikilink=\"true\"");
+            out.push_str(redlink_class);
+            out.push_str(">");
         } else {
             // Malformed, just copy
             out.push_str(before_marker);
