@@ -298,7 +298,7 @@ SLM_AUDIT_DIR env var and pass it to AuditLedger initialisation. Cluster-
 scope (cluster clone, normal `bin/commit-as-next.sh`). Dispatches in next
 iteration.
 
-**PS.8 GUIDE-doorman handoff** stays parked — Master will provision
+**PS.8 guide-doorman handoff** stays parked — Master will provision
 `customer/woodfine-fleet-deployment/local-doorman/` catalog subfolder at
 operator-presence pass; cluster-Task waits.
 
@@ -320,7 +320,7 @@ operator-presence pass; cluster-Task waits.
 ## 2026-04-30 — Session-end snapshot (operator exit prep)
 
 Operator-directed session close at chat surface. Working tree clean
-(only gitignored `.claude/scheduled_tasks.lock`). main at `5a43fda`.
+(only gitignored `.agent/scheduled_tasks.lock`). main at `5a43fda`.
 2 commits ahead of `origin/main` (the iter-24 research doc +
 state-file followup); Stage-6 push to canonical pending operator-
 presence authorization on next session.
@@ -1019,7 +1019,7 @@ named as second item after iter-15 entry_type discriminator).
 - **Open hardening items** (logged for future iters):
   - Semaphore map unbounded growth (one entry per ModuleId; eviction
     needed only if tenant set becomes dynamic).
-  - Cap default 4 — note in GUIDE-doorman for high-volume operator tuning.
+  - Cap default 4 — note in guide-doorman for high-volume operator tuning.
   - Per-tenant rate limit (req/s) not addressed; separate from in-flight
     count.
 - **Build hygiene**: cargo test 131/131; clippy `-D warnings` clean;
@@ -1071,7 +1071,7 @@ PS.1-* briefs + SLM_AUDIT_DIR cluster-scope wiring + mistral cleanup tail:
   done; SLM_AUDIT_DIR wired; mistral cleanup closed).
 
 **Cluster-Task queue exhausted again**:
-- PS.8 GUIDE-doorman: Master must provision
+- PS.8 guide-doorman: Master must provision
   `customer/woodfine-fleet-deployment/local-doorman/` catalog subfolder
   first.
 - PS.5 production routing: threshold-blocked on B7 (Master) + corpus
@@ -1107,7 +1107,7 @@ sweep). Notable items:
    + nginx + Let's Encrypt + idle-shutdown + systemd + CUDA + Ubuntu 24.04
    bake; (4) IAM `compute.imageUser` binding; (5) nginx layer authoring
    (cert-renewal + 127.0.0.1:8080 upstream).
-5. **GUIDE-doorman**: Master will provision catalog subfolder
+5. **guide-doorman**: Master will provision catalog subfolder
    `customer/woodfine-fleet-deployment/local-doorman/` and land the GUIDE
    at operator-presence pass. Cluster-Task chunk follows: wire
    `SLM_AUDIT_DIR` env-var consumption in slm-doorman-server::main.rs
@@ -1358,7 +1358,7 @@ Research-Trail Substrate**. Five mandatory frontmatter fields on every
 `foundry-draft-v1` draft going forward; `## Research trail` body section
 when `research_inline: true`. Per Master's "backfill is opportunistic, not
 mandatory" framing, the cluster's six pre-v0.1.58 staged drafts in
-`.claude/drafts-outbound/` are NOT backfilled now — when substance lands
+`.agent/drafts-outbound/` are NOT backfilled now — when substance lands
 at refinement time, the new frontmatter + body section will be added in
 the same edit. Acknowledgment to Master via outbox 2026-04-28T17:50Z;
 flagged the structural alignment with the cluster's apprenticeship-pointsav
@@ -1639,7 +1639,7 @@ restart points:
 - **Otherwise**: cluster-Task work that remains useful = (a) optional
   hardening sweeps on existing endpoints (e.g., adding the explicit
   `entry_type` discriminator deferred from PS.4 step 5), (b) draft
-  refinement of the three TOPIC skeletons in `.claude/drafts-outbound/`
+  refinement of the three TOPIC skeletons in `.agent/drafts-outbound/`
   if substance can be authored (probably premature; substance follows
   cluster milestones).
 
@@ -1819,7 +1819,7 @@ rename for those.
   Doorman side; mock-tested)
 - **PS.4** (A-1 audit endpoints; ~3-5 days Sonnet; Doorman
   side)
-- **PS.8** (GUIDE-doorman cross-repo handoff; ~1 hour
+- **PS.8** (guide-doorman cross-repo handoff; ~1 hour
   Opus + Sonnet; bounded)
 
 The operationalization plan's critical sequence shifts:
@@ -1841,13 +1841,13 @@ v0.0.10 / claim #37) and the PS.1 readiness review ack.
   2026-04-28 under doctrine v0.0.10 — fourth structural leg
   (wiki TOPIC contribution to `vendor/content-wiki-documentation`)
   added to the existing vendor + customer + deployment Triad.
-- **Manifest amended** at `.claude/manifest.md`: rename
+- **Manifest amended** at `.agent/manifest.md`: rename
   `triad:` → `tetrad:`; new `wiki:` leg block declares
   drafts_via path, project-language gateway, three planned
   TOPIC priorities, status `leg-pending` (substance lands
   as cluster milestones progress).
 - **Three TOPIC skeletons + Spanish pairs staged** in
-  `.claude/drafts-outbound/` (six files total):
+  `.agent/drafts-outbound/` (six files total):
   - `topic-doorman-protocol.md` + `.es.md` — Doorman as
     security boundary + three-tier compute routing pattern.
   - `topic-apprenticeship-substrate.md` + `.es.md` — Doctrine
@@ -1900,7 +1900,7 @@ green-light:
 ### Sub-agent-queue.md created at cluster level
 
 Per Master's instruction "write them into your cluster's
-.claude/sub-agent-queue.md and dispatch when operator
+.agent/sub-agent-queue.md and dispatch when operator
 green-lights". Eight ratified briefs entered:
 
 - **A/B/C** — three coverage briefs (PS.6 in v0.1.42 plan):
@@ -1928,8 +1928,8 @@ work, not deployment work.
 - Tasks: #15 + #17 closed; new tasks for Tetrad upgrade
   and queue creation (will be added to local task list);
   20 total (15 active).
-- New file: `.claude/drafts-outbound/` with 6 TOPIC skeletons.
-- New file: `.claude/sub-agent-queue.md` with 8 briefs.
+- New file: `.agent/drafts-outbound/` with 6 TOPIC skeletons.
+- New file: `.agent/sub-agent-queue.md` with 8 briefs.
 - No code changes; tests still 46/46.
 - Working tree clean post-commit.
 
@@ -2023,7 +2023,7 @@ for SLM operationalization plan items PS.1/PS.2/PS.4/PS.5.
 Doctrine claim #35 ratified. Cluster Tasks no longer
 self-refine wiki content; ship bulk drafts forward to
 project-language (editorial gateway). New input port at
-`~/Foundry/clones/project-slm/.claude/drafts-outbound/`.
+`~/Foundry/clones/project-slm/.agent/drafts-outbound/`.
 Frontmatter contract: `foundry-draft-v1`. project-language
 enforces register / banned-vocab / BCSC / bilingual /
 citation-ID resolution; cluster authors author bulk content
@@ -2054,7 +2054,7 @@ claim #35). Q2: pin to vLLM ≥0.12 envelope
 (`extra_body.structured_outputs.grammar`); CONTRACT.md
 MINOR bump 0.0.1 → 0.1.0.
 
-(B) **GUIDE-doorman Q1-Q4 answered.** Q1: catalog name
+(B) **guide-doorman Q1-Q4 answered.** Q1: catalog name
 `local-doorman/` (matches existing
 `infrastructure/local-doorman/` + running
 `local-doorman.service` unit; symmetric with `local-fs/`,
@@ -2067,7 +2067,7 @@ Q4: same deployment as `local-doorman.service` — unit name
 throughout GUIDE is `local-doorman.service`. Refined draft
 go-ahead: apply Q1-Q4 answers; cross-repo handoff via
 outbox mechanism per CLAUDE.md §11 to
-`customer/woodfine-fleet-deployment/local-doorman/GUIDE-doorman-deployment.md`.
+`customer/woodfine-fleet-deployment/local-doorman/guide-doorman-deployment.md`.
 
 (C) **5th-pass drift bundle authorized** — initially framed
 Master-scope (corrected in v0.1.36 to cluster-scope).
@@ -2111,7 +2111,7 @@ Eight items (PS.1..PS.8) prioritized:
   on version-bump-manifest task type
 - PS.6 (Sonnet × 3, ~9-12hr total) — three coverage briefs
 - PS.7 (Sonnet, ~30 min) — 4th+5th-pass prose-edit
-- PS.8 (Opus + Sonnet, ~1 hour) — GUIDE-doorman handoff
+- PS.8 (Opus + Sonnet, ~1 hour) — guide-doorman handoff
 
 Critical sequence: PS.1 → Yo-Yo MIN deploy → PS.2 → PS.4
 parallel → PS.3 → PS.5. Yo-Yo MIN: A100 80GB preemptible
@@ -2177,7 +2177,7 @@ Tests still 46/46. Working tree clean post-commit.
 - **Self-dispatch now requires Master ratification.** When this
   Task is waiting on Master / operator / cross-cluster and wants
   to propose more sub-agent work, the proposal goes via outbox.md
-  for Master to ratify into `~/Foundry/.claude/sub-agent-queue.md`.
+  for Master to ratify into `~/Foundry/.agent/sub-agent-queue.md`.
   Operator-directed dispatches (e.g., the operator says "launch
   chunk #N") remain fine — that's explicit ratification.
 - **Operational precedent recorded.** Master's brief explicitly
@@ -2230,9 +2230,9 @@ failures, audit-ledger error paths (HOME unset, dir not
 writable), redaction patterns `gho_` / `xox-`,
 citations-resolver edge cases. Tracked as task #14.
 
-### Chunk #7 — GUIDE-doorman-deployment.md refinement
+### Chunk #7 — guide-doorman-deployment.md refinement
 
-Audited the staged `/srv/foundry/GUIDE-doorman-deployment.md`
+Audited the staged `/srv/foundry/guide-doorman-deployment.md`
 (workspace-root draft from B7 prep, commit `6937a95`)
 against current ARCH/DEV.md / systemd unit + bootstrap.sh
 / conventions. Significant drift:
@@ -2570,7 +2570,7 @@ entries.
   (Doctrine v0.0.4 triad schema)** — committed in same commit per
   the cluster-manifest-tracking pattern Master confirmed in B5
   reply (4d). Manifest's customer-tier "leg-pending" item names
-  `GUIDE-doorman-deployment.md` as Task work to draft —
+  `guide-doorman-deployment.md` as Task work to draft —
   surfacing for follow-up; not in this commit's scope.
 
 ---
@@ -2746,7 +2746,7 @@ entries.
   per `service-slm/.gitignore`.
 - **Doctrine v0.0.2 deltas read but not absorbed into code.**
   Per Master's inbox brief, no behavioural change for B5.
-  §IV.c cluster manifest now lives at `.claude/manifest.md`
+  §IV.c cluster manifest now lives at `.agent/manifest.md`
   (backfilled by Master); §XV trajectory-substrate hooks are
   workspace-tier responsibility (Master's L1 capture, not Task).
   Adapter Composition Algebra (§XIV) note: the Doorman is
@@ -2796,7 +2796,7 @@ entries.
   so the router exercises the fallback path without confusion.
 - **Layout-rule question to surface to Root Claude.** Two
   files at `service-slm/` project root are not in
-  `.claude/rules/repo-layout.md`'s project-root allowed list but
+  `.agent/rules/repo-layout.md`'s project-root allowed list but
   are mandated by `service-slm/DEVELOPMENT.md` §2.1 / standard
   cargo conventions: `deny.toml`, `rust-toolchain.toml`. Either
   the rule's project-root allowed-files list extends to admit
@@ -2859,7 +2859,7 @@ entries.
 ## 2026-04-23
 
 - **Repo-layout rule introduced.** Added
-  `.claude/rules/repo-layout.md` codifying the allowed file set at
+  `.agent/rules/repo-layout.md` codifying the allowed file set at
   the monorepo root and at each project directory root, and naming
   the sibling repos where cross-cutting content belongs (user guides,
   ADRs, design-system material). Anchor for the file-relocation work
@@ -2871,7 +2871,7 @@ entries.
     via `git mv` in a follow-up commit within this session. Zero
     runtime callers; script body uses absolute paths so no content
     edits required.
-  - `GUIDE-OPERATIONS.md` (tracked, at repo root) → queued move to
+  - `guide-operations.md` (tracked, at repo root) → queued move to
     `content-wiki-documentation/`.
   - `USER_GUIDE_2026-03-30_V2.md` (tracked, at repo root) → queued
     move to `content-wiki-documentation/` with `_V2` dropped, per
@@ -2940,7 +2940,7 @@ entries.
   message, any in-transit edits, and the completion-signal commit
   pattern. Header also describes the convention so future outboxes
   follow the same shape. Two existing entries for
-  `GUIDE-OPERATIONS.md` and `USER_GUIDE_2026-03-30_V2.md` updated
+  `guide-operations.md` and `USER_GUIDE_2026-03-30_V2.md` updated
   with their prescriptive actions. This lets a cold-start Root
   Claude session in `content-wiki-documentation/` execute the
   handoffs without reading anything from this session's context.
@@ -3019,8 +3019,8 @@ entries.
   single driver script)? Pending decision before next pipeline
   refactor.
 - **Handoff-outbound pattern piloted.** Added
-  `.claude/rules/handoffs-outbound.md` as a cross-repo file-move
-  outbox. Two entries lodged: `GUIDE-OPERATIONS.md` and
+  `.agent/rules/handoffs-outbound.md` as a cross-repo file-move
+  outbox. Two entries lodged: `guide-operations.md` and
   `USER_GUIDE_2026-03-30_V2.md` both → `content-wiki-documentation`.
   Both files remain in place in this repo until a Root Claude in
   the destination repo commits the add-side; only then does a
@@ -3032,7 +3032,7 @@ entries.
      `~/Foundry/CLAUDE.md` §9. Current §9 stops at clone
      provisioning; the handoff mechanic is the natural extension
      for file movement between engineering repos.
-  2. Extend `~/Foundry/CLAUDE.md` §10's `.claude/rules/` canonical
+  2. Extend `~/Foundry/CLAUDE.md` §10's `.agent/rules/` canonical
      list from three files to four — add `handoffs-outbound.md`
      alongside `repo-layout.md`, `project-registry.md`, and
      `cleanup-log.md`.
@@ -3046,7 +3046,7 @@ entries.
 
 ## 2026-04-22
 
-- **Project framework bootstrap.** Added `.claude/rules/project-registry.md`
+- **Project framework bootstrap.** Added `.agent/rules/project-registry.md`
   with 100-row inventory of every top-level directory, classified by
   state per `~/Foundry/CLAUDE.md` §8 (Reserved-folder /
   Scaffold-coded / Active / Defect / Not-a-project). Framework docs,
