@@ -150,6 +150,11 @@ async fn serve(
     let search_index = search::build_index(&content_dir, &state_dir).await?;
     tracing::info!("search index ready");
 
+    // Phase 4 Step 4.1: open or init git repo. Fail fast if broken.
+    tracing::info!("opening git repository");
+    let git_repo = app_mediakit_knowledge::git::open_or_init(&content_dir)?;
+    tracing::info!("git repository ready");
+
     if enable_collab {
         tracing::info!("collab WebSocket relay enabled at /ws/collab/{{slug}}");
     }
@@ -159,6 +164,7 @@ async fn serve(
         guide_dir_2,
         citations_yaml,
         search: Arc::new(search_index),
+        git: Arc::new(std::sync::Mutex::new(git_repo)),
         collab: Arc::new(app_mediakit_knowledge::collab::CollabRooms::new()),
         enable_collab,
         site_title,
