@@ -9,9 +9,12 @@
 pub mod assets;
 pub mod citations;
 pub mod collab;
+pub mod config;
 pub mod edit;
 pub mod error;
 pub mod feeds;
+pub mod git;
+pub mod history;
 pub mod jsonld;
 pub mod render;
 pub mod search;
