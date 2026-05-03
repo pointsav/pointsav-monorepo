@@ -373,6 +373,7 @@ mod tests {
             sanitised_outbound: true,
             tier_c_label: None,
             grammar: None,
+            speculation: None,
         }
     }
 
