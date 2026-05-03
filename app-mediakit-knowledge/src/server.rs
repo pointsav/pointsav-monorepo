@@ -745,21 +745,24 @@ fn home_chrome(
                     }
                 }
                 main.site-main {
-                    // Lede from index.md
-                    @if !home_html.is_empty() {
-                        div.wiki-home-lede { (PreEscaped(home_html)) }
-                    }
+                    // Wikipedia-style welcome banner
+                    div.wiki-home-welcome {
+                        h1 { "Welcome to PointSav Knowledge" }
+                        @if !home_html.is_empty() {
+                            div.wiki-home-lede { (PreEscaped(home_html)) }
+                        }
 
-                    // Stats banner
-                    @if stats.article_count > 0 {
-                        p.wiki-home-stats aria-label="Knowledge wiki scale" {
-                            (stats.article_count) " article"
-                            @if stats.article_count != 1 { "s" }
-                            " across " (stats.category_count) " categories"
-                            @if let Some(ref d) = stats.last_updated {
-                                " — last updated " time datetime=(d) { (d) }
+                        // Stats banner
+                        @if stats.article_count > 0 {
+                            p.wiki-home-stats aria-label="Knowledge wiki scale" {
+                                (stats.article_count) " article"
+                                @if stats.article_count != 1 { "s" }
+                                " across " (stats.category_count) " categories"
+                                @if let Some(ref d) = stats.last_updated {
+                                    " — last updated " time datetime=(d) { (d) }
+                                }
+                                "."
                             }
-                            "."
                         }
                     }
 
@@ -767,10 +770,10 @@ fn home_chrome(
                     div.wiki-home-top-panels {
                         @if let Some(featured) = featured {
                             div.wiki-home-featured {
-                                h2 { "Featured article" }
+                                h2 { "From today's featured article" }
                                 div.featured-content {
                                     h3 { a href={ "/wiki/" (featured.slug) } { (featured.title) } }
-                                    p { (featured.snippet) " " a href={ "/wiki/" (featured.slug) } { "Read more →" } }
+                                    p { (featured.snippet) " " a href={ "/wiki/" (featured.slug) } { "Read more..." } }
                                 }
                             }
                         }
@@ -792,8 +795,9 @@ fn home_chrome(
                         }
                     }
 
-                    // Category sections — show all articles for small categories,
-                    // PREVIEW_LIMIT + "All N →" for larger ones.
+                    // Category sections (Wikipedia "Portals" style) — show all articles
+                    // for small categories, PREVIEW_LIMIT + "All N →" for larger ones.
+                    h2.wiki-home-section-title { "Platform areas" }
                     div.wiki-home-grid {
                         @for cat in RATIFIED_CATEGORIES {
                             @let topics = buckets.get(*cat).map(|v| v.as_slice()).unwrap_or(&[]);
