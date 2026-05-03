@@ -158,6 +158,8 @@ async fn serve(
     let git_repo = app_mediakit_knowledge::git::open_or_init(&content_dir)?;
     tracing::info!("git repository ready");
 
+    let glossary = app_mediakit_knowledge::glossary::load_glossary(&content_dir);
+
     if enable_collab {
         tracing::info!("collab WebSocket relay enabled at /ws/collab/{{slug}}");
     }
@@ -171,6 +173,7 @@ async fn serve(
         collab: Arc::new(app_mediakit_knowledge::collab::CollabRooms::new()),
         enable_collab,
         site_title,
+        glossary: Arc::new(glossary),
     };
     let app = router(state);
     let listener = tokio::net::TcpListener::bind(bind).await?;
