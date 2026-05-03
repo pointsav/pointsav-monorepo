@@ -4,7 +4,7 @@ use serde::{Serialize, Deserialize};
 use chrono::Utc;
 
 /// PointSav Digital Systems: Zero-Broker UDP Mesh
-/// Standard: TOPIC-SYSTEM-UDP
+/// Standard: topic-system-udp
 
 #[derive(Serialize, Deserialize, Debug)]
 struct MeshPayload {

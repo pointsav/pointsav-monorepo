@@ -115,7 +115,7 @@ adapter classes, in order of value and corpus readiness:
 | `constitutional-doctrine-v0.0.12.lora` | Doctrine corpus | Supervised on clause × role × scope | Pending doctrine-corpus population |
 | `tenant-woodfine-vK.lora` | Per-tenant corpus inside Customer Totebox | Per-tenant SFT or DPO | Must stay inside Woodfine Totebox per doctrine §IV.b isolation |
 
-The cluster manifest at `.claude/manifest.md` declares this cluster
+The cluster manifest at `.agent/manifest.md` declares this cluster
 trains: `cluster-project-slm`, `engineering-pointsav`,
 `apprenticeship-pointsav`. Those are the three adapters this cluster's
 work is intended to produce.
@@ -989,7 +989,7 @@ operational.
 - [service-slm/crates/slm-doorman/src/apprenticeship.rs] — AS-2
   implementation; shadow tuple write path; `data/training-corpus/apprenticeship/`
   paths are live
-- [clones/project-slm/.claude/manifest.md] — `adapter_routing.trains`
+- [clones/project-slm/.agent/manifest.md] — `adapter_routing.trains`
   declares 3 adapters: cluster-project-slm, engineering-pointsav,
   apprenticeship-pointsav
 - [vendor/pointsav-monorepo/service-slm/router-trainer/] — existing

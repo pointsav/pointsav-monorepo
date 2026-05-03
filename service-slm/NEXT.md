@@ -237,7 +237,7 @@ Three new typed error variants this round (`TierAGrammarUnsupported`,
 Both acked via outbox.
 
 **Deliberately skipped (layer-scope pending Master):**
-- PS.8 (GUIDE-doorman cross-repo handoff)
+- PS.8 (guide-doorman cross-repo handoff)
 - PS.1-2/-3/-4 (Yo-Yo module + doc updates)
 
 All four sit at workspace-repo / infrastructure path; outbox
@@ -284,7 +284,7 @@ All four sit at workspace-repo / infrastructure path; outbox
 - PS.3 steps 2-5 (Doorman tier-client grammar wiring)
 - PS.4 (A-1 audit endpoints; gates project-language A-4 +
   project-data A-5)
-- PS.8 (GUIDE-doorman cross-repo handoff; bounded ~1hr)
+- PS.8 (guide-doorman cross-repo handoff; bounded ~1hr)
 
 ## Cross-cluster dependencies
 
@@ -302,7 +302,7 @@ All four sit at workspace-repo / infrastructure path; outbox
   asymmetry accepted; Q2: vLLM ≥0.12 envelope; CONTRACT.md
   MINOR bump 0.0.1→0.1.0). Two consumers per v0.1.31:
   service-proofreader + service-language editorial gateway.
-- GUIDE-doorman Q1-Q4 answered (Q1: catalog `local-doorman/`;
+- guide-doorman Q1-Q4 answered (Q1: catalog `local-doorman/`;
   Q2: wire SLM_AUDIT_DIR; Q3: both tenants with operator-
   picks note; Q4: same deployment as local-doorman.service).
 - 8-site zero-container drift bundle authorized (4th+5th-pass
@@ -311,7 +311,7 @@ All four sit at workspace-repo / infrastructure path; outbox
   workspace queue; operator green-lights dispatch).
 - Reverse-Funnel Editorial Pattern (Doctrine claim #35);
   drafts-outbound input port at
-  `~/Foundry/clones/project-slm/.claude/drafts-outbound/`.
+  `~/Foundry/clones/project-slm/.agent/drafts-outbound/`.
 
 ## Earlier-stage items
 

@@ -1,7 +1,7 @@
 # CLAUDE.md — app-console-bookkeeper
 
 > **State:** Active  —  **Last updated:** 2026-04-22
-> **Registry row:** `../.claude/rules/project-registry.md`
+> **Registry row:** `../.agent/rules/project-registry.md`
 >
 > When state changes, update this header AND the registry row in the
 > same commit. Drift between the two is a documentation defect.

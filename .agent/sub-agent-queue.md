@@ -2,7 +2,7 @@
 schema: foundry-cluster-queue-v1
 owner: task-project-slm
 created: 2026-04-28
-location: ~/Foundry/clones/project-slm/.claude/sub-agent-queue.md
+location: ~/Foundry/clones/project-slm/.agent/sub-agent-queue.md
 ---
 
 # Sub-agent Queue — Task Claude on project-slm cluster
@@ -519,7 +519,7 @@ hardening on the audit endpoints we shipped in PS.4.
     seen). Closed-tenant-set deployments unaffected; future hardening could
     add eviction if dynamic tenant sets become common.
   - `SLM_AUDIT_TENANT_CONCURRENCY_CAP` default 4 — high-volume tenants may
-    need to tune at deploy time. Note in GUIDE-doorman when PS.8 lands.
+    need to tune at deploy time. Note in guide-doorman when PS.8 lands.
   - Per-tenant request rate limit (requests-per-second) is a separate
     concern from in-flight count and not addressed in this iter.
 
@@ -566,7 +566,7 @@ explicit field instead of field-presence inference.
   directory.
 - **Tests**: 124/124 still passing — `temp_ledger` test helpers call
   `AuditLedger::new()` directly; main.rs change doesn't reach them.
-- Pairs with PS.8 GUIDE-doorman handoff (still parked on Master catalog
+- Pairs with PS.8 guide-doorman handoff (still parked on Master catalog
   provisioning).
 - Commit `5812501` (Peter Woodfine).
 

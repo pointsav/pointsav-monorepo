@@ -736,7 +736,7 @@ The instruction mechanism is cluster `CLAUDE.md` files. Master action items (§9
    of whether the commit was code or documentation.
 
 The broadcast mechanism for cross-cluster convention changes is the inbox broadcast pattern
-(Master writes to each cluster's `.claude/inbox.md`). The Tetrad upgrade (iter-17) used this
+(Master writes to each cluster's `.agent/inbox.md`). The Tetrad upgrade (iter-17) used this
 pattern successfully — the same broadcast should carry the service-slm first-responder rule
 to all 9 active clusters.
 
@@ -1198,7 +1198,7 @@ Add to workspace `CLAUDE.md` §6 (Rules of Engagement):
 ### Proposal 4 — service-content scope ratification: Tetrad wiki leg
 
 Formally absorb service-content into the project-slm cluster's Tetrad manifest
-(`clones/project-slm/.claude/manifest.md`). The integration design in §4 generates three
+(`clones/project-slm/.agent/manifest.md`). The integration design in §4 generates three
 TOPIC drafts for the wiki leg:
 
 - `topic-service-content-knowledge-graph.md` — what the datagraph is and how it co-evolves
@@ -1206,7 +1206,7 @@ TOPIC drafts for the wiki leg:
 - `topic-single-boundary-compute-discipline.md` — the service-slm-IS-the-Yo-Yo convention
 - `topic-tui-system-administrator.md` — the slm-cli design and corpus production pattern
 
-Stage in `.claude/drafts-outbound/` per §11 convention after operator green-light.
+Stage in `.agent/drafts-outbound/` per §11 convention after operator green-light.
 
 ### Proposal 5 — KuzuDB abandonment surface to Master
 
