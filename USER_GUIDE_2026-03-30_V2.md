@@ -1008,7 +1008,7 @@ None of this requires over-engineering today. It requires awareness: choosing an
 - **Changed**: MBA shim noted as active workspace crate (system-mba-shim) providing conventional auth behind clean interface
 - **Changed**: Verification Surveyor section expanded with API-avoidance rationale from topic-verification-surveyor.md
 - **Removed**: Generic moonshot-message-transport, moonshot-auth, moonshot-unikernel, vendor-database, vendor-containers entries that did not correspond to actual monorepo directories
-- **Sources**: All 12 ADR files (sys-adr-06 through sys-adr-19), 20 topic files, monorepo Cargo.toml and directory structure, TOPIC_TELEMETRY_ARCHITECTURE.md, topic-crypto-attestation.md, topic-sovereign-ai-routing.md
+- **Sources**: All 12 ADR files (sys-adr-06 through sys-adr-19), 20 topic files, monorepo Cargo.toml and directory structure, topic-telemetry-architecture.md, topic-crypto-attestation.md, topic-sovereign-ai-routing.md
 
 ---
 
