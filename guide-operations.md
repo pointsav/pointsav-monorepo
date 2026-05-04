@@ -15,3 +15,18 @@ Operators apply compute at specific depths to optimize resource allocation betwe
 * **[L1] SYNTAX:** Low-compute typographical correction.
 * **[L2] STRUCTURE:** Medium-compute logical realignment.
 * **[L3] FULL PROTOCOL:** High-compute execution of the Linguistic Domain.
+
+## MULTI-YO-YO DEPLOYMENT & BATCH EXTRACTION
+
+### OPERATIONAL POSTURE
+The Doorman supports multiple remote Tier B instances. These are grouped into specialized roles to optimize the cost-to-intelligence ratio.
+
+#### NODE ALPHA: THE TRAINER (L4 SPOT)
+- **Deployment:** Continuous Spot instance.
+- **Workflow:** SFT / LoRA adapter training from shadow-brief tuples.
+- **Maintenance:** Automatically monitored by `mistralrs-idle.timer`. Ensure `SLM_YOYO_TRAINER_ENDPOINT` is configured in the environment.
+
+#### NODE BETA: THE GRAPH EXTRACTOR (H100 DEDICATED)
+- **Deployment:** On-demand batch instance.
+- **Workflow:** Massive parallel extraction of LadybugDB datagraph relationships.
+- **Maintenance:** Spin up manually for archives exceeding 10M tokens. Destroy immediately upon completion of extraction phase to stop high-cost billing. Ensure `SLM_YOYO_GRAPH_ENDPOINT` is active during the batch run.

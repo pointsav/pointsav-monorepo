@@ -51,16 +51,15 @@ egress path, every egress path needs its own audit, and the
 sanitise/rehydrate discipline (SYS-ADR-07) becomes per-service
 discipline rather than substrate discipline.
 
-## Three-tier compute routing
+## Three-tier compute routing and the Multi-Yo-Yo Pool
 
-(draft-pending — substance follows in milestone N+1)
+The Doorman acts as the central router across three tiers of compute:
 
-Tier A (local) on the host. Tier B (Yo-Yo GPU burst) on a remote
-GCE VM with idle-shutdown. Tier C (external API) for narrow-
-precision tasks behind a hard-coded allowlist. Cost guardrails
-hardwired: Tier B disabled when `SLM_YOYO_ENDPOINT` unset; Tier C
-disabled when no provider endpoint set; no silent fallback if
-Tier A unreachable.
+1. **Tier A (Local):** Executes on the host VM using CPU/RAM for fast, immediate responses (e.g., `OLMo-2-0425-1B-Instruct`).
+2. **Tier B (Multi-Yo-Yo Pool):** Routes intensive workloads to dedicated GPU instances on Google Cloud. This tier is split into two specialized hardware profiles:
+   - **Yo-Yo #1 (The Trainer):** Runs on a single L4 GPU Spot Instance (`g2-standard-4`). It boots automatically during off-peak hours (e.g., 11 PM to 6 AM) to process the engineering tuples gathered throughout the day, executing cost-optimized SFT and LoRA training cycles. It uses an `idle_shutdown_minutes` timer to stop billing the moment the queue is empty.
+   - **Yo-Yo #2 (The Extractor):** Runs on a massive H100 Dedicated Instance (`a3-highgpu-1g`). It is spun up manually by the Operator to ingest massive archives (e.g., processing 1,600+ deployment files into the LadybugDB datagraph). It uses frontier-level open-weights reasoning (Llama 3.3 70B) to ensure 120% quality while keeping all corporate data strictly private.
+3. **Tier C (External API Proxy):** Routes specialized linguistic refinement and formatting tasks to frontier models like Claude 3.5 Sonnet. The Doorman enforces strict cost guardrails and injects predefined Service-Content ontologies to ensure output strictly matches PointSav's Chart of Accounts.
 
 ## The audit ledger
 
