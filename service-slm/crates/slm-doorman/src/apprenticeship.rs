@@ -167,6 +167,7 @@ impl<'a> ApprenticeshipDispatcher<'a> {
             temperature: None,
             sanitised_outbound: true,
             tier_c_label: None,
+            yoyo_label: None,
             grammar: None,
             speculation: None,
             };
@@ -259,6 +260,7 @@ impl<'a> ApprenticeshipDispatcher<'a> {
             temperature: None,
             sanitised_outbound: true,
             tier_c_label: None,
+            yoyo_label: None,
             grammar: None,
             speculation: None,
             };
@@ -762,7 +764,7 @@ Bumping MANIFEST.md per ni-51-102 forward-looking marker.
         let doorman = Doorman::new(
             DoormanConfig {
                 local: Some(local),
-                yoyo: None,
+                yoyo: std::collections::HashMap::new(),
                 external: None,
                 lark_validator: None,
                 graph_context_client: None,
@@ -831,7 +833,7 @@ I'm not sure how to apply this safely.
         let doorman = Doorman::new(
             DoormanConfig {
                 local: Some(local),
-                yoyo: None,
+                yoyo: std::collections::HashMap::new(),
                 external: None,
                 lark_validator: None,
                 graph_context_client: None,
@@ -914,7 +916,11 @@ OK.
         let doorman = Doorman::new(
             DoormanConfig {
                 local: Some(local),
-                yoyo: Some(yoyo),
+                yoyo: {
+                    let mut m = std::collections::HashMap::new();
+                    m.insert("default".to_string(), yoyo);
+                    m
+                },
                 external: None,
                 lark_validator: None,
                 graph_context_client: None,
@@ -1008,7 +1014,7 @@ Shadow attempt for the apprentice.
         let doorman = Doorman::new(
             DoormanConfig {
                 local: Some(local),
-                yoyo: None,
+                yoyo: std::collections::HashMap::new(),
                 external: None,
                 lark_validator: None,
                 graph_context_client: None,
@@ -1076,7 +1082,7 @@ Shadow attempt for the apprentice.
         let doorman = Doorman::new(
             DoormanConfig {
                 local: Some(local),
-                yoyo: None,
+                yoyo: std::collections::HashMap::new(),
                 external: None,
                 lark_validator: None,
                 graph_context_client: None,

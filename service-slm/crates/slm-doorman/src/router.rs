@@ -22,10 +22,12 @@ use crate::ledger::{AuditEntry, AuditLedger, CompletionStatus, ENTRY_TYPE_CHAT_C
 use crate::mesh::MeshRegistry;
 use crate::tier::{ExternalTierClient, LocalTierClient, YoYoTierClient};
 
+use std::collections::HashMap;
+
 #[derive(Default)]
 pub struct DoormanConfig {
     pub local: Option<LocalTierClient>,
-    pub yoyo: Option<YoYoTierClient>,
+    pub yoyo: HashMap<String, YoYoTierClient>,
     pub external: Option<ExternalTierClient>,
     /// Optional Lark grammar pre-validator (PS.3 step 5). When `Some`,
     /// the router validates any Lark grammar before dispatching to Tier B.
@@ -49,7 +51,7 @@ pub struct Orchestrator {
 
 pub struct Doorman {
     local: Option<LocalTierClient>,
-    yoyo: Option<YoYoTierClient>,
+    yoyo: HashMap<String, YoYoTierClient>,
     external: Option<ExternalTierClient>,
     ledger: AuditLedger,
     lark_validator: Option<LarkValidator>,
@@ -89,7 +91,7 @@ impl Doorman {
     }
 
     pub fn has_yoyo(&self) -> bool {
-        self.yoyo.is_some()
+        !self.yoyo.is_empty()
     }
 
     pub fn has_external(&self) -> bool {
@@ -162,7 +164,7 @@ impl Doorman {
 
     fn select_tier(&self, req: &ComputeRequest) -> Result<Tier> {
         if let Some(hint) = req.tier_hint {
-            return self.confirm_tier(hint);
+            return self.confirm_tier_with_req(hint, req);
         }
         // Default policy: low / medium → local, high → yoyo if configured
         // else local. Tier C is never a default — callers must hint it
@@ -170,20 +172,26 @@ impl Doorman {
         let preferred = match req.complexity {
             Complexity::Low | Complexity::Medium => Tier::Local,
             Complexity::High => {
-                if self.yoyo.is_some() {
+                if !self.yoyo.is_empty() {
                     Tier::Yoyo
                 } else {
                     Tier::Local
                 }
             }
         };
-        self.confirm_tier(preferred)
+        self.confirm_tier_with_req(preferred, req)
     }
 
-    fn confirm_tier(&self, tier: Tier) -> Result<Tier> {
+    fn confirm_tier_with_req(&self, tier: Tier, req: &ComputeRequest) -> Result<Tier> {
         let configured = match tier {
             Tier::Local => self.local.is_some(),
-            Tier::Yoyo => self.yoyo.is_some(),
+            Tier::Yoyo => {
+                if let Some(ref label) = req.yoyo_label {
+                    self.yoyo.contains_key(label)
+                } else {
+                    !self.yoyo.is_empty()
+                }
+            }
             Tier::External => self.external.is_some(),
         };
         if configured {
@@ -192,6 +200,7 @@ impl Doorman {
             warn!(
                 target: "slm_doorman::router",
                 ?tier,
+                yoyo_label = ?req.yoyo_label,
                 "tier not configured — community-tier mode may be active"
             );
             Err(DoormanError::TierUnavailable(tier))
@@ -243,11 +252,21 @@ impl Doorman {
                     .await
             }
             Tier::Yoyo => {
-                self.yoyo
-                    .as_ref()
-                    .ok_or(DoormanError::TierUnavailable(Tier::Yoyo))?
-                    .complete(req)
-                    .await
+                let client = if let Some(ref label) = req.yoyo_label {
+                    self.yoyo.get(label).ok_or_else(|| {
+                        warn!(target: "slm_doorman::router", label, "requested Yo-Yo label not configured");
+                        DoormanError::TierUnavailable(Tier::Yoyo)
+                    })?
+                } else {
+                    // Default to the first configured Yo-Yo if no label provided.
+                    // If multiple are configured and no label is provided, the
+                    // behavior is non-deterministic (HashMap order) but safe.
+                    // Operator should always use labels for Multi-Yo-Yo.
+                    self.yoyo.values().next().ok_or_else(|| {
+                        DoormanError::TierUnavailable(Tier::Yoyo)
+                    })?
+                };
+                client.complete(req).await
             }
             Tier::External => {
                 self.external
@@ -377,7 +396,7 @@ mod tests {
     use slm_core::{ChatMessage, ModuleId, RequestId};
     use std::str::FromStr;
 
-    fn req(complexity: Complexity, hint: Option<Tier>) -> ComputeRequest {
+    fn req(complexity: Complexity, hint: Option<Tier>, yoyo_label: Option<String>) -> ComputeRequest {
         ComputeRequest {
             request_id: RequestId::new(),
             module_id: ModuleId::from_str("foundry").unwrap(),
@@ -393,6 +412,7 @@ mod tests {
             temperature: None,
             sanitised_outbound: true,
             tier_c_label: None,
+            yoyo_label,
             grammar: None,
             speculation: None,
         }
@@ -409,7 +429,7 @@ mod tests {
     #[tokio::test]
     async fn unconfigured_router_refuses_with_tier_unavailable() {
         let doorman = Doorman::new(DoormanConfig::default(), ledger());
-        let result = doorman.route(&req(Complexity::Medium, None)).await;
+        let result = doorman.route(&req(Complexity::Medium, None, None)).await;
         match result {
             Err(DoormanError::TierUnavailable(Tier::Local)) => {}
             other => panic!("expected TierUnavailable(Local), got {other:?}"),
@@ -430,10 +450,12 @@ mod tests {
             },
             std::sync::Arc::new(crate::tier::StaticBearer::new("unused-in-selection-test")),
         );
+        let mut yoyo_map = HashMap::new();
+        yoyo_map.insert("default".to_string(), yoyo);
         let doorman = Doorman::new(
             DoormanConfig {
                 local: None,
-                yoyo: Some(yoyo),
+                yoyo: yoyo_map,
                 external: None,
                 lark_validator: None,
                 graph_context_client: None,
@@ -441,7 +463,7 @@ mod tests {
             ledger(),
         );
         let picked = doorman
-            .select_tier(&req(Complexity::High, None))
+            .select_tier(&req(Complexity::High, None, None))
             .expect("should pick yoyo");
         assert_eq!(picked, Tier::Yoyo);
     }
