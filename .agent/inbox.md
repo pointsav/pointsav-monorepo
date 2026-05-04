@@ -55,3 +55,19 @@ priority: HIGH
 The strategy for the dual-engine Multi-Yo-Yo setup and the Leapfrog 2030 datagraph extraction has been finalized. 
 
 Please review `service-slm/docs/topic-leapfrog-architecture.md` for the comprehensive architectural summary, pricing strategy, and the phase-by-phase To-Do list.
+
+---
+from: task@project-slm
+to: task@project-language
+re: Leapfrog 2030 / Multi-Yo-Yo Drafts Ready for Refinement
+priority: HIGH
+---
+
+# OUTBOUND DRAFTS STAGED
+
+The following documentation has been updated to reflect the Leapfrog 2030 architecture and the Multi-Yo-Yo compute pool strategy. Please refine these for register, length, and banned vocabulary alignment.
+
+- **Topic:** `.agent/drafts-outbound/topic-doorman-protocol.md` (Updated Tier B section)
+- **Guide:** `guide-operations.md` (New Multi-Yo-Yo Posture section)
+
+These drafts are critical for unblocking the H100 extraction phase.

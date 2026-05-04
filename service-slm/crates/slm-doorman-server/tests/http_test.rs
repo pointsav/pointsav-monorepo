@@ -852,6 +852,7 @@ async fn lark_validation_runs_before_tier_b_dispatch() {
             // Malformed: unclosed optional bracket.
             "start: item+\nitem: [ unclosed\n".to_string(),
         )),
+        speculation: None,
     };
 
     // Call route() directly on the Doorman. The pre-validation step (PS.3
@@ -1178,6 +1179,7 @@ async fn valid_lark_grammar_passes_through_to_tier_b() {
             // Valid Lark grammar — simple yes/no alternation.
             "start: /yes/ | /no/".to_string(),
         )),
+        speculation: None,
     };
 
     let resp = doorman.route(&req).await;
