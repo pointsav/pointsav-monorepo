@@ -140,6 +140,26 @@ fn process_corpus(
         contact_vector (string: email address or phone number or null). \
         Return ONLY a valid JSON array with no explanation or markdown.";
 
+    // JSON Schema enforced by Yo-Yo #2 (Graph Extractor, H100/Llama 3.3 70B)
+    // via Doorman grammar substrate (PS.3 Tier B path).
+    let entity_schema = serde_json::json!({
+        "type": "array",
+        "items": {
+            "type": "object",
+            "properties": {
+                "entity_name": {"type": "string"},
+                "classification": {
+                    "type": "string",
+                    "enum": ["Person", "Company", "Project", "Account", "Location"]
+                },
+                "role_vector": {"type": ["string", "null"]},
+                "location_vector": {"type": ["string", "null"]},
+                "contact_vector": {"type": ["string", "null"]}
+            },
+            "required": ["entity_name", "classification"]
+        }
+    });
+
     let body = serde_json::json!({
         "model": "local",
         "messages": [
@@ -147,7 +167,8 @@ fn process_corpus(
             {"role": "user", "content": corpus_text}
         ],
         "temperature": 0.1,
-        "max_tokens": 2048
+        "max_tokens": 2048,
+        "grammar": {"type": "json-schema", "value": entity_schema}
     });
 
     let url = format!("{}/v1/chat/completions", doorman_endpoint);
@@ -155,7 +176,8 @@ fn process_corpus(
     let res = client.post(&url)
         .header("X-Foundry-Module-ID", module_id)
         .header("X-Foundry-Request-ID", &request_id)
-        .header("X-Foundry-Complexity", "medium")
+        .header("X-Foundry-Complexity", "high")
+        .header("X-Foundry-Yoyo-Label", "graph")
         .json(&body)
         .timeout(Duration::from_secs(300))
         .send();
