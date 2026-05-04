@@ -1,6 +1,6 @@
 ---
 schema: foundry-doc-v1
-document_version: 1.0.0
+document_version: 1.1.0
 research_provenance: tacit
 research_inline: false
 cites: []
@@ -21,11 +21,16 @@ rationale, audit-ledger commercial argument, 2030 headroom).
 **Current state.** The Doorman is in production service on the
 workspace VM (`local-doorman.service` systemd unit). Tier A
 (local llama-server, `local-slm.service`) is live and verified (B5,
-2026-04-26). Tier B (Yo-Yo GCE burst) is module-spec ready; the
+2026-04-26). Tier B (Yo-Yo GCE burst) is code-complete with
+multi-Yo-Yo HashMap routing (§9); the
 `infrastructure/slm-yoyo/tofu/` OpenTofu module is authored but
 `tofu apply` is gated on the D4 image-build pipeline (a Master-tier
 action). Tier C (external API) is wired with mock-only tests per the
-operator cost guardrail.
+operator cost guardrail. The mesh discovery framework (§9.4) is
+scaffolded; `route_async()` is a Phase 1 stub. Apprenticeship
+substrate (§11) is code-complete but disabled on the workspace VM
+(`SLM_APPRENTICESHIP_ENABLED` unset; re-enable is a pending
+Master-tier action).
 
 ---
 
@@ -121,8 +126,13 @@ for the phase following the first commercial deployment.
 ### Ring 3a — Long-term graph (read-only from here)
 
 The LadybugDB graph in `service-content` is the long-term semantic
-memory. `service-slm` reads from it at context-assembly time.
-`service-slm` never writes to it directly — writes flow through
+memory. `service-slm` reads from it at context-assembly time via the
+`GraphContextClient` in `slm-doorman/src/graph.rs` — it queries
+`GET {SERVICE_CONTENT_ENDPOINT}/v1/graph/context` before every inference
+call and prepends a `[ENTITY CONTEXT]` system message. Non-fatal if
+`service-content` is unavailable (WARN + proceed).
+
+`service-slm` never writes to the graph directly — writes flow through
 `service-content`'s own ingest path after the sanitise / compute /
 rehydrate cycle completes.
 
@@ -134,6 +144,15 @@ matures. No direct LadybugDB API calls in business logic. This is
 the same boundary discipline as the Doorman pattern — one interface
 swap should be sufficient to migrate the graph substrate without
 touching the calling code.
+
+**Planned Phase 4 — service-content Tier C drafting pipeline:**
+`service-content` will query LadybugDB for a ~2K-token entity context
+payload, assemble a structured prose prompt, and route it to Claude 3.5
+Sonnet via the Doorman's `POST /v1/audit/proxy` (Tier C,
+`"initial-graph-build"` purpose). The grammar constraint injection path
+(service-content JSON Schema → Doorman `grammar` field → Yo-Yo #2 for
+ontological strictness) is designed but not yet implemented. This is
+Leapfrog 2030 Phase 4; see §9.2 Tier B and `service-slm/docs/topic-leapfrog-architecture.md`.
 
 ### Ring 3b — Long-term skill (LoRA adapter stack)
 
@@ -368,12 +387,13 @@ Public types:
 | `Tier` | `Local \| Yoyo \| External` — three compute tiers |
 | `Complexity` | `Low \| Medium \| High` — advisory routing hint |
 | `GrammarConstraint` | Adjacent-tagged enum: `Lark(String) \| Gbnf(String) \| JsonSchema(Value)` (PS.3 step 1) |
-| `ComputeRequest` | Request crossing the Doorman boundary; carries `grammar: Option<GrammarConstraint>` |
+| `ComputeRequest` | Request crossing the Doorman boundary; carries `grammar: Option<GrammarConstraint>`, `yoyo_label: Option<String>` (selects named Yo-Yo node; §9.2) |
 | `ComputeResponse` | Response returned through the Doorman; carries `tier_used`, `cost_usd` |
 | `ChatMessage` | OpenAI-compatible `{role, content}` message |
 | `AuditProxyRequest` / `AuditProxyResponse` / `AuditUsage` | Wire shapes for `POST /v1/audit/proxy` (PS.4 step 1) |
 | `AuditCaptureRequest` / `AuditCaptureResponse` | Wire shapes for `POST /v1/audit/capture` (PS.4 step 4) |
 | Apprenticeship types | `ApprenticeshipBrief`, `ApprenticeshipAttempt`, `ApprenticeshipVerdict` (§11) |
+| Mesh types | `NodeId`, `NodeDescriptor`, `EnvironmentMetadata`, `EnergySource` — compute node identity and environmental metadata (§9.4) |
 
 ### `slm-doorman` (lib)
 
@@ -381,7 +401,8 @@ Three-tier router and all business logic. Source modules:
 
 | Module | Responsibility |
 |---|---|
-| `router.rs` | `Doorman::route()` — selects tier, calls tier client, writes ledger entry |
+| `router.rs` | `Doorman::route()` — selects tier, calls tier client, writes ledger entry; `Doorman::route_async()` — mesh-aware dispatch stub (§9.4); `Orchestrator` wraps `Box<dyn MeshRegistry>` |
+| `mesh.rs` | `MeshRegistry` trait + `DiscoveryProvider` trait + `DynamicRegistry` struct (background tokio polling; `Arc<RwLock<Vec<NodeDescriptor>>>`) |
 | `tier/local.rs` | Tier A HTTP client — llama-server; serialises GBNF/JsonSchema grammar; rejects Lark |
 | `tier/yoyo.rs` | Tier B HTTP client — vLLM ≥0.12; serialises all three grammar variants via `extra_body.structured_outputs`; bearer-token auth with retry |
 | `tier/external.rs` | Tier C HTTP client — Anthropic / Gemini / OpenAI; rejects all grammar variants; compile-time `ExternalAllowlist` label gate |
@@ -454,12 +475,26 @@ wire format.
 
 ### Tier B — Yo-Yo / vLLM ≥0.12
 
-- HTTP endpoint: `SLM_YOYO_ENDPOINT`; bearer-token auth via `SLM_YOYO_BEARER`
+**Multi-Yo-Yo routing (landed 2026-05-04):**  
+`DoormanConfig.yoyo` is a `HashMap<String, YoYoTierClient>` — one entry per named
+Yo-Yo node. `slm-doorman-server/src/main.rs` inserts three entries on startup:
+
+| Key | Env vars | Intended role |
+|---|---|---|
+| `"default"` | `SLM_YOYO_ENDPOINT`, `SLM_YOYO_BEARER`, `SLM_YOYO_MODEL`, `SLM_YOYO_HOURLY_USD` | Fallback / general-purpose burst |
+| `"trainer"` | `SLM_YOYO_TRAINER_ENDPOINT`, `SLM_YOYO_TRAINER_BEARER`, `SLM_YOYO_TRAINER_MODEL`, `SLM_YOYO_TRAINER_HOURLY_USD` | Yo-Yo #1 — training workloads (L4, OLMo 3 32B-Think, night-shift) |
+| `"graph"` | `SLM_YOYO_GRAPH_ENDPOINT`, `SLM_YOYO_GRAPH_BEARER`, `SLM_YOYO_GRAPH_MODEL`, `SLM_YOYO_GRAPH_HOURLY_USD` | Yo-Yo #2 — graph extraction (H100, Llama 3.3 70B, manual batch) |
+
+Dispatch logic: `ComputeRequest.yoyo_label: Option<String>` selects the target entry
+by key. No label → first entry in map insertion order (deterministic at current
+scale; callers should always set a label in production). Unrecognised label →
+`DoormanError::TierUnavailable`.
+
 - Grammar handling (all three variants accepted):
   - `Lark(s)` → **pre-validated** via `LarkValidator` (llguidance); `MalformedLarkGrammar` (HTTP 400) if compilation fails with parse-error location in the response body. On valid parse → `extra_body.structured_outputs.grammar = s`
   - `Gbnf(s)` → `extra_body.structured_outputs.grammar = s`
   - `JsonSchema(v)` → `extra_body.structured_outputs.json_schema = v`
-- Additional `X-Foundry-*` headers forwarded to the Yo-Yo server per CONTRACT.md: `Request-ID`, `Module-ID`, `Contract-Version`, `Complexity`
+- Additional `X-Foundry-*` headers forwarded per CONTRACT.md: `Request-ID`, `Module-ID`, `Contract-Version`, `Complexity`
 - Retry policy: 503 + `Retry-After` → retry once; 401/403 → refresh bearer token, retry once; 410 → `DoormanError::ContractMajorMismatch` (loud fail, no retry)
 - Deployment gated on D4 image-build pipeline (Master-tier action)
 
@@ -469,6 +504,53 @@ wire format.
 - Grammar handling: **all three variants rejected** with `DoormanError::TierCGrammarUnsupported` (HTTP 400). External vendors offer no arbitrary grammar support.
 - Dispatch requires `tier_c_label` matching a compile-time `ExternalAllowlist` entry; otherwise `DoormanError::ExternalNotAllowlisted` (HTTP 403)
 - Implemented with wiremock-only tests per operator cost guardrail; no live provider calls
+
+### 9.4 Mesh Discovery (Phase 1 scaffold — stub dispatch)
+
+The mesh discovery framework provides a trait-based abstraction for dynamic
+compute node registration and selection. It is scaffolded in the current codebase
+but the dispatch path is a stub.
+
+**Types (in `slm-core/src/mesh.rs`):**
+
+| Type | Purpose |
+|---|---|
+| `NodeId` | Opaque string identifier for a compute node |
+| `NodeDescriptor` | `{ id, endpoint, capabilities: Vec<String>, environment }` — full node description |
+| `EnvironmentMetadata` | `{ carbon_intensity: u32, energy_source: EnergySource }` — for future energy-aware routing |
+| `EnergySource` | `Grid \| Solar \| Wind \| Geothermal` |
+
+**Traits (in `slm-doorman/src/mesh.rs`):**
+
+| Trait / Type | Responsibility |
+|---|---|
+| `DiscoveryProvider: Send + Sync` | `async fn poll_nodes() -> Result<Vec<NodeDescriptor>>` — pluggable back end for node enumeration |
+| `MeshRegistry: Send + Sync` | `async fn discover_nodes()` + `async fn select_optimal(req) -> Option<NodeDescriptor>` |
+| `DynamicRegistry` | Concrete `MeshRegistry` impl; spawns a background tokio task that polls a `DiscoveryProvider` at a configurable interval and stores results in `Arc<RwLock<Vec<NodeDescriptor>>>`. `select_optimal` returns the first node (Phase 1 naive implementation). |
+
+**`route_async()` on `Doorman` (Phase 1 stub):**
+
+```rust
+pub async fn route_async(&self, req: &ComputeRequest) -> Result<ComputeResponse> {
+    if let Some(ref orch) = self.orchestrator {
+        if let Some(node) = orch.registry.select_optimal(req).await {
+            info!("selected node: {}", node.id.0);
+            // Phase 1: logs selected node; does NOT use node.endpoint
+        }
+    }
+    self.route(req).await   // falls through to existing tier dispatch
+}
+```
+
+`Doorman.orchestrator: Option<Orchestrator>` is `None` in the current server
+configuration. No `DiscoveryProvider` implementation exists yet (no HTTP
+provider, no static-config provider). The trait boundary is in place so a
+concrete provider can be wired in without touching the router.
+
+**What is missing before mesh dispatch is real:**
+1. A concrete `DiscoveryProvider` implementation (HTTP endpoint poller or static config)
+2. `route_async()` must use `node.endpoint` to select the target Yo-Yo client by endpoint URL, not fall through to `route()`
+3. Callers (service-content, other services) must set `yoyo_label` OR the orchestrator must override the label from the selected node
 
 ---
 
@@ -550,10 +632,15 @@ continued-pretraining signal Foundry produces. Specification at
 ratified 2026-04-26 in Doctrine v0.0.7.
 
 Three endpoints gated behind `SLM_APPRENTICESHIP_ENABLED=true`;
-404 when unset so existing deployments are unchanged. Currently
-disabled on the workspace VM (`local-doorman.service` runs with
-the env var unset; B7 re-deploy with the flag set is a pending
-Master-tier action).
+404 when unset so existing deployments are unchanged.
+
+**Current on-VM state:** disabled. The workspace `local-doorman.service` unit runs
+with `SLM_APPRENTICESHIP_ENABLED` unset. The B7 re-deploy (2026-04-29, Master
+v0.1.68) set the flag; a subsequent service restart left the flag unset again.
+Re-enabling requires an operator-presence pass: update the
+`infrastructure/local-doorman/service.d/env-file.conf` drop-in and restart the
+unit. The corpus capture path (brief queue §11 configuration below) is fully
+implemented and will resume accumulating tuples immediately once the flag is set.
 
 | Endpoint | Purpose | Returns |
 |---|---|---|
@@ -657,6 +744,34 @@ addition, not a refactor.
 | Encode-Prefill-Decode disaggregation (SGLang + Mooncake) | Ring 2 evolution: separate prefill and decode pools |
 
 None of these require rewriting `service-slm`.
+
+### Leapfrog 2030 — named Yo-Yo node profiles
+
+The multi-Yo-Yo HashMap (§9.2) is designed to support two permanent named
+nodes alongside any number of ephemeral burst nodes. Current target profiles:
+
+**Yo-Yo #1 — Trainer** (`key: "trainer"`)
+
+| Field | Value |
+|---|---|
+| Machine | `g2-standard-4` (1× L4 24 GB VRAM) |
+| Model | OLMo 3 32B-Think Q4 (no commercial API; must self-host) |
+| Schedule | Night-shift 23:00–06:00 PT (`idle_shutdown_minutes` clears at 06:00) |
+| Cost | ~$0.18/hr spot (us-west1); ~$0.45/hr on-demand |
+| Purpose | QLoRA fine-tuning on the apprenticeship corpus; produces `engineering-pointsav` adapter |
+
+**Yo-Yo #2 — Graph Extractor** (`key: "graph"`)
+
+| Field | Value |
+|---|---|
+| Machine | `a3-highgpu-1g` (1× H100 80 GB VRAM) |
+| Model | Llama 3.3 70B Instruct (broad general capability) |
+| Schedule | Manual batch — operator spins up; idle-shutdown after batch completes |
+| Purpose | Ontologically-strict entity extraction for Ring 3a graph; will accept grammar constraints from service-content JSON Schema via `extra_body.structured_outputs` |
+
+Full phase roadmap: `service-slm/docs/topic-leapfrog-architecture.md`.
+Phase 3 (training threshold detection + cron trigger) has not started;
+gated on operator go-ahead and Phase 3 scoping.
 
 ---
 
