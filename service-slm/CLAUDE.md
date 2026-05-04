@@ -1,6 +1,6 @@
 # CLAUDE.md — service-slm
 
-> **State:** Active  —  **Last updated:** 2026-04-25
+> **State:** Active  —  **Last updated:** 2026-05-04
 > **Registry row:** `pointsav-monorepo/.agent/rules/project-registry.md`
 >
 > When state changes, update this header AND the registry row in the
@@ -21,67 +21,40 @@ service-content — see `ARCHITECTURE.md` Ring 3a.
 
 ## Current state
 
-**Scaffold-coded → Active on 2026-04-23** as part of the
-`cluster/service-slm` first-live cluster (now `cluster/project-slm`
-per the v0.0.7 cluster handoff).
+**Active.** Doorman in production on workspace VM (`local-doorman.service`).
+Tier A (llama-server, OLMo 3 7B Q4) live and verified. **157/157 tests.**
 
-**B1 scaffolded on 2026-04-25** (Phase B Doorman task list, inbox
-v0.0.7). The standalone-vs-nested workspace question is closed —
-service-slm is its own cargo workspace at `service-slm/Cargo.toml`
-with three crates under `crates/`:
+As of 2026-05-04 (commit `764636b`):
 
-- `slm-core` — shared types: `ModuleId`, `RequestId` (UUIDv7), `Tier`
-  enum (Local / Yoyo / External), `Complexity`, `ComputeRequest`,
-  `ComputeResponse`, error types. No async, no I/O.
-- `slm-doorman` (lib) — three-tier router skeleton (`router.rs`),
-  three tier-client modules (`tier/local.rs`, `tier/yoyo.rs`,
-  `tier/external.rs`), append-only JSONL audit ledger
-  (`ledger.rs`). Tier A makes real HTTP calls against an
-  OpenAI-compatible endpoint; Tier B (`B2`) and Tier C (`B4`) are
-  stubs that return `DoormanError::NotImplemented`.
-- `slm-doorman-server` (bin) — axum HTTP server. Endpoints:
-  `/healthz`, `/readyz`, `/v1/contract`, `POST /v1/chat/completions`.
-  Boots cleanly with no Yo-Yo configured (community-tier mode per
-  Optional Intelligence; `B5` verification path).
-
-The pre-existing `cognitive-forge/` subcrate remains in place but
-is `exclude`d from the workspace; its rename (paired with
-`tool-cognitive-forge`) is unchanged.
-
-Three known defects at project root remain unchanged (queued
-separately):
-
-Three known defects at project root:
-
-1. `cognitive-bridge.sh` is a placeholder carrying an explicit
-   "MISSING CONNECTION PHYSICS: system-slm" block (lines 31–46). It
-   does not route payloads to an SLM — the connection vector is
-   undefined. Layout-hygiene defect queued in the monorepo `NEXT.md`
-   for move to `scripts/`.
-2. `transient-queues/` contains eight `TX-*_skeleton.txt` files that
-   mirror the `discovery-queue` "Not-a-project" pattern in the
-   registry — runtime payload state bleeding into Git. Triage
-   pending; see `NEXT.md`.
-3. The `cognitive-forge/` subcrate carries the term "Cognitive
-   Forge," which is on the project's Do-Not-Use list per the
-   cleanup-log. The sibling `tool-cognitive-forge` has a rename
-   queued in the monorepo `NEXT.md` rename series; this subcrate is
-   not yet flagged but inherits the same concern.
-
-The handoff between `cognitive-forge` (writes markdown) and
-`service-content/content-compiler` (parses JSON) is currently
-inconsistent — the writer and reader do not interoperate as-is.
-Flagged for reconciliation; see `NEXT.md`.
-
-Yo-Yo Compute Phase 1 has not started in code form. `ARCHITECTURE.md`
-captures the target shape; `DEVELOPMENT.md` captures the migration
-roadmap.
+- **Tier A** — live; GBNF/JsonSchema grammar; Lark rejected pre-flight.
+- **Tier B** — code-complete; multi-Yo-Yo `HashMap<String, YoYoTierClient>`;
+  named nodes `"default"`, `"trainer"` (L4/OLMo 3 32B-Think), `"graph"`
+  (H100/Llama 3.3 70B); `yoyo_label` on `ComputeRequest` selects target;
+  deploy gated on D4 image-build pipeline.
+- **Tier C** — code-complete; compile-time `ExternalAllowlist`; mock-only
+  tests per operator cost guardrail.
+- **Grammar substrate (PS.3)** — complete; Doorman-side Lark validation
+  via `llguidance`; all three variants routed per tier.
+- **Audit substrate (PS.4)** — complete; `POST /v1/audit/proxy` +
+  `POST /v1/audit/capture`; contract v0.2.0; four `entry_type`
+  discriminators.
+- **Apprenticeship (AS-2..AS-7 + §7C brief queue)** — code-complete;
+  **disabled on workspace VM** (`SLM_APPRENTICESHIP_ENABLED` unset;
+  operator-presence re-enable pending).
+- **Graph context (Ring 2→3)** — `GraphContextClient` queries
+  `service-content` before every inference; injects `[ENTITY CONTEXT]`
+  system message; non-fatal if service-content is down.
+- **Mesh discovery** — `MeshRegistry`/`DiscoveryProvider`/`DynamicRegistry`
+  scaffolded; `route_async()` is a Phase 1 stub (logs selected node,
+  falls through to `route()`); no concrete `DiscoveryProvider` yet.
+- **Phase 3** (training threshold detection) — not started; gated on
+  operator go-ahead and D4 deployment.
 
 ## Build and test
 
 ```
-cargo check --workspace                # Phase 1: ~1m40s cold, seconds incremental
-cargo test  --workspace                # 6 unit tests as of B1
+cargo check --workspace                # seconds incremental
+cargo test  --workspace                # 157 tests (14 slm-core + 92 slm-doorman + 5 audit + 4 queue + 42 http)
 cargo clippy --workspace --all-targets -- -D warnings
 cargo fmt   --all -- --check
 ```
