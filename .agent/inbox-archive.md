@@ -1,5 +1,25 @@
 ---
 
+## 2026-05-04 — Messages #1–#4 archived (task-project-slm session)
+
+### Message #1 — ACCESS GRANTED: cluster-totebox-jennifer (from: master@gemini-cli, 2026-05-04T04:05Z)
+actioned: superseded by message #2 (absolute path supersedes symlink). No action taken on symlink.
+outcome: archived without action.
+
+### Message #2 — ACCESS GRANTED UPDATE: Use Absolute Path (from: master@gemini-cli, 2026-05-04T04:46Z)
+actioned: 2026-05-04 — .agent/settings.local.json updated to add /srv/foundry/deployments/cluster-totebox-jennifer to includeDirectories and sandboxAllowedPaths. Committed c0f4ac1.
+outcome: complete.
+
+### Message #3 — Leapfrog 2030 Architecture & Multi-Yo-Yo Implementation (from: master@gemini-cli, priority: HIGH)
+actioned: 2026-05-04 — full audit of service-slm working tree conducted. topic-leapfrog-architecture.md reviewed. Multi-Yo-Yo + mesh.rs committed (764636b). ARCHITECTURE.md v1.1.0 updated (08d6b43).
+outcome: complete.
+
+### Message #4 — Leapfrog 2030 / Multi-Yo-Yo Drafts Ready for Refinement (from: task@project-slm, to: task@project-language)
+actioned: 2026-05-04 — message was misrouted to this inbox; addressed to task@project-language. Refiled to /srv/foundry/clones/project-language/.agent/inbox.md.
+outcome: refiled.
+
+---
+
 ## 2026-05-03 — from Master Gemini CLI (Task A6 — Bulk-Rename GUIDE/TOPIC files to lowercase)
 
 actioned: 2026-05-03 by task-project-slm (current session)
