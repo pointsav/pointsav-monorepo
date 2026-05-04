@@ -33,8 +33,8 @@ use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use slm_core::{
     ApprenticeshipAttempt, ApprenticeshipBrief, AuditCaptureRequest, AuditCaptureResponse,
-    AuditProxyRequest, ChatMessage, Complexity, ComputeRequest, ComputeResponse, ModuleId,
-    RequestId,
+    AuditProxyRequest, ChatMessage, Complexity, ComputeRequest, ComputeResponse, GrammarConstraint,
+    ModuleId, RequestId,
 };
 use slm_doorman::ledger::{
     ENTRY_TYPE_AUDIT_CAPTURE, ENTRY_TYPE_AUDIT_PROXY, ENTRY_TYPE_AUDIT_PROXY_STUB,
@@ -151,6 +151,11 @@ struct ChatCompletionsBody {
     max_tokens: Option<u32>,
     #[serde(default)]
     temperature: Option<f32>,
+    /// Optional decode-time grammar constraint forwarded to the selected
+    /// tier backend. Callers that don't set this field get `None` (the
+    /// default), leaving tier routing behaviour unchanged.
+    #[serde(default)]
+    grammar: Option<GrammarConstraint>,
 }
 
 async fn chat_completions(
@@ -205,7 +210,7 @@ async fn chat_completions(
         sanitised_outbound: false,
         tier_c_label,
         yoyo_label,
-        grammar: None,
+        grammar: body.grammar,
         speculation: None,
     };
 

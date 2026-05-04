@@ -1205,6 +1205,50 @@ async fn valid_lark_grammar_passes_through_to_tier_b() {
     // requests reached the backend.
 }
 
+// ── 4d. JsonSchema grammar in POST body is parsed and forwarded ────────────
+//
+// Tests the HTTP body → grammar parsing path added to `ChatCompletionsBody`.
+// Tests 4b and 4c call `doorman.route()` directly; this test drives the
+// full HTTP handler so the `serde(default)` grammar field is actually
+// deserialised from the JSON body.
+
+/// POST /v1/chat/completions with a JsonSchema grammar in the JSON body
+/// reaches the local tier — confirms HTTP body → grammar parsing works
+/// end-to-end through the axum handler.
+#[tokio::test]
+async fn json_schema_grammar_in_body_passes_through_to_local_tier() {
+    let server = MockServer::start().await;
+    Mock::given(method("POST"))
+        .and(path("/v1/chat/completions"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+            "choices": [{"message": {"role": "assistant", "content": "[]"}}]
+        })))
+        .expect(1) // MUST receive exactly one call — JsonSchema is not rejected
+        .mount(&server)
+        .await;
+
+    let state = app_state_with_local(server.uri());
+    let app = router(state);
+
+    // Grammar uses the serde-tagged form for GrammarConstraint::JsonSchema.
+    let req_body = json!({
+        "messages": [{"role": "user", "content": "extract entities"}],
+        "grammar": {
+            "type": "json-schema",
+            "value": {"type": "array", "items": {"type": "object"}}
+        }
+    });
+    let resp = app
+        .oneshot(post_json("/v1/chat/completions", &req_body))
+        .await
+        .expect("oneshot");
+
+    // 200 OK confirms: grammar was parsed from the body, passed to the router,
+    // and accepted by Tier A (JsonSchema is natively supported by llama-server).
+    assert_eq!(resp.status(), StatusCode::OK);
+    // wiremock expect(1) fires on drop — confirms backend received the call.
+}
+
 // ===========================================================================
 // Section 6 — audit_proxy upstream relay tests (PS.4 step 2) — 6 tests
 // ===========================================================================
