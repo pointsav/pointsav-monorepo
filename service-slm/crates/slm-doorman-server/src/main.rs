@@ -318,27 +318,38 @@ fn build_doorman() -> anyhow::Result<Doorman> {
             .unwrap_or_else(|_| "olmo-3-7b-instruct".to_string()),
     }));
 
-    let yoyo = match std::env::var("SLM_YOYO_ENDPOINT") {
-        Ok(endpoint) if !endpoint.is_empty() => {
-            let bearer_token = std::env::var("SLM_YOYO_BEARER").unwrap_or_default();
-            let bearer: Arc<dyn BearerTokenProvider> = Arc::new(StaticBearer::new(bearer_token));
-            let yoyo_hourly_usd = std::env::var("SLM_YOYO_HOURLY_USD")
-                .ok()
-                .and_then(|s| s.parse::<f64>().ok())
-                .unwrap_or(0.0);
-            Some(YoYoTierClient::new(
-                YoYoTierConfig {
-                    endpoint,
-                    default_model: std::env::var("SLM_YOYO_MODEL")
-                        .unwrap_or_else(|_| "Olmo-3-1125-32B-Think".to_string()),
-                    contract_version: slm_doorman::YOYO_CONTRACT_VERSION.to_string(),
-                    pricing: PricingConfig { yoyo_hourly_usd },
-                },
-                bearer,
-            ))
-        }
-        _ => None,
-    };
+    let mut yoyo = std::collections::HashMap::new();
+
+    // 1. Check for legacy SLM_YOYO_ENDPOINT (mapped to "default")
+    if let Some(client) = build_yoyo_client(
+        "SLM_YOYO_ENDPOINT",
+        "SLM_YOYO_MODEL",
+        "SLM_YOYO_BEARER",
+        "SLM_YOYO_HOURLY_USD",
+    ) {
+        yoyo.insert("default".to_string(), client);
+    }
+
+    // 2. Check for specialized Multi-Yo-Yo endpoints (Leapfrog 2030)
+    if let Some(client) = build_yoyo_client(
+        "SLM_YOYO_TRAINER_ENDPOINT",
+        "SLM_YOYO_TRAINER_MODEL",
+        "SLM_YOYO_TRAINER_BEARER",
+        "SLM_YOYO_TRAINER_HOURLY_USD",
+    ) {
+        info!("Yo-Yo 'trainer' node configured");
+        yoyo.insert("trainer".to_string(), client);
+    }
+
+    if let Some(client) = build_yoyo_client(
+        "SLM_YOYO_GRAPH_ENDPOINT",
+        "SLM_YOYO_GRAPH_MODEL",
+        "SLM_YOYO_GRAPH_BEARER",
+        "SLM_YOYO_GRAPH_HOURLY_USD",
+    ) {
+        info!("Yo-Yo 'graph' node configured");
+        yoyo.insert("graph".to_string(), client);
+    }
 
     let external = build_external_tier_client();
 
@@ -431,6 +442,35 @@ fn build_doorman() -> anyhow::Result<Doorman> {
         },
         ledger,
     ))
+}
+
+fn build_yoyo_client(
+    env_endpoint: &str,
+    env_model: &str,
+    env_bearer: &str,
+    env_hourly: &str,
+) -> Option<YoYoTierClient> {
+    match std::env::var(env_endpoint) {
+        Ok(endpoint) if !endpoint.is_empty() => {
+            let bearer_token = std::env::var(env_bearer).unwrap_or_default();
+            let bearer: Arc<dyn BearerTokenProvider> = Arc::new(StaticBearer::new(bearer_token));
+            let yoyo_hourly_usd = std::env::var(env_hourly)
+                .ok()
+                .and_then(|s| s.parse::<f64>().ok())
+                .unwrap_or(0.0);
+            Some(YoYoTierClient::new(
+                YoYoTierConfig {
+                    endpoint,
+                    default_model: std::env::var(env_model)
+                        .unwrap_or_else(|_| "Olmo-3-1125-32B-Think".to_string()),
+                    contract_version: slm_doorman::YOYO_CONTRACT_VERSION.to_string(),
+                    pricing: PricingConfig { yoyo_hourly_usd },
+                },
+                bearer,
+            ))
+        }
+        _ => None,
+    }
 }
 
 /// Build the Tier C (external API) client from env vars. Returns `None`

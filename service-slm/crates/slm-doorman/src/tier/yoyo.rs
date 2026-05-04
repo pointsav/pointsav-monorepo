@@ -372,6 +372,7 @@ mod tests {
             temperature: Some(0.0),
             sanitised_outbound: true,
             tier_c_label: None,
+            yoyo_label: None,
             grammar: None,
             speculation: None,
         }

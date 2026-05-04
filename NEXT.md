@@ -12,6 +12,11 @@ Last updated: 2026-04-23.
 
 ## Currently open
 
+### Leapfrog 2030 Architecture & Multi-Yo-Yo Roadmap
+- **Execute 4-Phase Roadmap** — See `service-slm/NEXT.md` for the active Task agent queue.
+  - Active: Software Configuration (Multi-Yo-Yo endpoints, Tier C Auth, Seed Alignment).
+  - Deferred: Infrastructure Provisioning (GCP Project, D4 Image, VM Deployment).
+
 ### Layout hygiene — defect closures queued
 
 Rule source: `.agent/rules/repo-layout.md` (introduced 2026-04-23).

@@ -188,6 +188,10 @@ async fn chat_completions(
         .get("x-foundry-tier-c-label")
         .and_then(|v| v.to_str().ok())
         .map(|s| s.to_string());
+    let yoyo_label = headers
+        .get("x-foundry-yoyo-label")
+        .and_then(|v| v.to_str().ok())
+        .map(|s| s.to_string());
     let req = ComputeRequest {
         request_id,
         module_id,
@@ -200,6 +204,7 @@ async fn chat_completions(
         temperature: body.temperature,
         sanitised_outbound: false,
         tier_c_label,
+        yoyo_label,
         grammar: None,
         speculation: None,
     };

@@ -822,7 +822,11 @@ async fn lark_validation_runs_before_tier_b_dispatch() {
     let doorman = Doorman::new(
         DoormanConfig {
             local: None,
-            yoyo: Some(yoyo),
+            yoyo: {
+                let mut m = std::collections::HashMap::new();
+                m.insert("default".to_string(), yoyo);
+                m
+            },
             external: None,
             lark_validator: Some(lark_validator),
             graph_context_client: None,
@@ -848,6 +852,7 @@ async fn lark_validation_runs_before_tier_b_dispatch() {
         temperature: None,
         sanitised_outbound: true,
         tier_c_label: None,
+        yoyo_label: None,
         grammar: Some(GrammarConstraint::Lark(
             // Malformed: unclosed optional bracket.
             "start: item+\nitem: [ unclosed\n".to_string(),
@@ -1149,7 +1154,11 @@ async fn valid_lark_grammar_passes_through_to_tier_b() {
     let doorman = Doorman::new(
         DoormanConfig {
             local: None,
-            yoyo: Some(yoyo),
+            yoyo: {
+                let mut m = std::collections::HashMap::new();
+                m.insert("default".to_string(), yoyo);
+                m
+            },
             external: None,
             lark_validator: Some(lark_validator),
             graph_context_client: None,
@@ -1175,6 +1184,7 @@ async fn valid_lark_grammar_passes_through_to_tier_b() {
         temperature: None,
         sanitised_outbound: true,
         tier_c_label: None,
+        yoyo_label: None,
         grammar: Some(GrammarConstraint::Lark(
             // Valid Lark grammar — simple yes/no alternation.
             "start: /yes/ | /no/".to_string(),

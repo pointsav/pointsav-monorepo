@@ -95,6 +95,10 @@ pub struct ComputeRequest {
     /// Optional for Tier A and Tier B.
     #[serde(default)]
     pub tier_c_label: Option<String>,
+    /// Optional identifier for Multi-Yo-Yo routing. When multiple Tier B
+    /// endpoints are configured, this selects which Yo-Yo instance to use.
+    #[serde(default)]
+    pub yoyo_label: Option<String>,
     /// Optional decode-time grammar constraint. When present the Doorman
     /// translates the constraint into the backend-specific wire format for
     /// the selected tier. Absent from most requests; omitted from the
@@ -128,6 +132,7 @@ mod tests {
             temperature: None,
             sanitised_outbound: false,
             tier_c_label: None,
+            yoyo_label: None,
             grammar: None,
             speculation: None,
         }
