@@ -6,13 +6,29 @@
 
 ---
 
-## Right now — Phase 2 COMPLETE — Phase 3 next (operator green-light required)
+## Right now — LEAPFROG 2030 ARCHITECTURE & MULTI-YO-YO DEPLOYMENT
 
-**Phase 1 — COMPLETE:**
-- **Brief A** `8b9a1b6` — service-content Doorman refactor (port 8082 → 9080)
-- **Brief B** `4ecf80a` — `service-slm/scripts/slm-chat.sh` proof-of-life REPL
+The strategy for the dual-engine Multi-Yo-Yo setup and the Leapfrog 2030 datagraph extraction has been finalized. 
+Reference: `service-slm/docs/topic-leapfrog-architecture.md`
 
-**Phase 2 — COMPLETE (2026-05-01):**
+**Active Phase: Software Configuration (Task Agent Queue)**
+- [ ] **Multi-Yo-Yo Support:** Refactor `service-slm/crates/slm-doorman-server/src/main.rs` to support multiple endpoints (e.g., `SLM_YOYO_TRAINER_ENDPOINT` and `SLM_YOYO_GRAPH_ENDPOINT`).
+- [ ] **Tier C Auth:** Add billing-capped API keys for Claude/Gemini to `/etc/local-doorman/local-doorman.env` to enable the `audit_proxy` for service-content polishing.
+- [ ] **Grammar Constraints:** Ensure `service-slm` can read the JSON/CSV seeds from `service-content` and pass them as explicit `grammar` rules to Yo-Yo #2 during graph extraction.
+- [ ] **Seed Alignment:** Verify `Archetypes.json`, `Domains.json`, and `Themes.json` are fully locked and exported for `service-slm` consumption.
+- [ ] **Tier C Drafting Pipeline:** Configure `service-content`'s output compiler to query LadybugDB, package the subgraph into a 2,000-token payload, and proxy it to Claude 3.5 Sonnet (via Doorman Tier C) for final document generation.
+
+**Deferred Phase: Infrastructure Provisioning (Master Authorization Required)**
+- [ ] **Create GCP Project:** Physically create the `pointsav-public` GCP project.
+- [ ] **Author D4 Image Pipeline:** Write the Packer/OpenTofu pipeline to build the base GCE image for the Yo-Yo fleet (Ubuntu 24.04 + CUDA + vLLM >= 0.12 + Nginx TLS + `idle_shutdown_minutes` systemd timer).
+- [ ] **Bake and Publish Image:** Run the D4 pipeline to publish the image to the `pointsav-public` family.
+- [ ] **Deploy Yo-Yo #1 (Trainer):** Apply the OpenTofu module configuring `g2-standard-4` as a Spot instance. Verify the night-shift schedule and idle-shutdown timer are operational.
+- [ ] **Deploy Yo-Yo #2 (Extractor):** Author a secondary OpenTofu profile for the `a3-highgpu-1g` Dedicated instance. Deploy only when ready to process `cluster-totebox-jennifer`.
+- [ ] **Batch Ingestion:** Feed the 1,600+ deployment files into Yo-Yo #2 and monitor LadybugDB graph generation.
+
+---
+
+## Previous Phase — Phase 2 COMPLETE (2026-05-01):
 - **Brief C** `f2e158f` — `service-content/scripts/forge-seeds.sh` path generalization
 - **Brief D** `6f664f9` — LadybugDB graph engine + HTTP server on port 9081
   (`GraphStore` trait + `LbugGraphStore`; `/v1/graph/context` + `/v1/graph/mutate`)

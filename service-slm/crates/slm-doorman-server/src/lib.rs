@@ -121,7 +121,7 @@ pub mod test_helpers {
         let doorman = Doorman::new(
             DoormanConfig {
                 local: Some(local),
-                yoyo: None,
+                yoyo: std::collections::HashMap::new(),
                 external: None,
                 lark_validator: None,
                 graph_context_client: None,
@@ -149,7 +149,7 @@ pub mod test_helpers {
         let doorman = Doorman::new(
             DoormanConfig {
                 local: None,
-                yoyo: None,
+                yoyo: std::collections::HashMap::new(),
                 external: Some(external),
                 lark_validator: None,
                 graph_context_client: None,
