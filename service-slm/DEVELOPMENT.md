@@ -1,6 +1,6 @@
 ---
 schema: foundry-doc-v1
-document_version: 1.0.0
+document_version: 1.1.0
 research_provenance: tacit
 research_inline: false
 cites: []
@@ -29,20 +29,21 @@ Run all of the following from inside `service-slm/`:
 ```
 cargo build  --workspace                  # debug build (~30–40s cold)
 cargo build  --workspace --release        # release build (opt-level 3, LTO thin)
-cargo test   --workspace                  # 143 tests; all pass
+cargo test   --workspace                  # 157 tests; all pass
 cargo clippy --workspace --all-targets -- -D warnings
 cargo fmt    --all -- --check
 ```
 
-Current test distribution (as of iter-17):
+Current test distribution (as of 2026-05-04):
 
 | Suite | Count | Notes |
 |---|---|---|
-| `slm_core` unit tests | 14 | Serde round-trips for `ComputeRequest`, `GrammarConstraint` variants |
-| `slm_doorman` unit tests | 85 | Tier clients (local, yoyo, external), ledger, audit_proxy, grammar_validation, apprenticeship, verdict, citations, redact |
+| `slm_core` unit tests | 14 | Serde round-trips for `ComputeRequest`, `GrammarConstraint` variants, mesh types |
+| `slm_doorman` unit tests | 92 | Tier clients (local, yoyo, external), ledger, audit_proxy, grammar_validation, apprenticeship, verdict, brief queue, citations, redact |
 | `slm_doorman_server/tests/audit_endpoints_integration.rs` | 4 | Entry-type discriminator verification for all four ledger entry kinds |
-| `slm_doorman_server/tests/http_test.rs` | 40 | Axum integration tests: smoke (4), error-mapping (5), apprenticeship-disabled 404 (3), audit_proxy (14), audit_capture (14) |
-| **Total** | **143** | All passing |
+| `slm_doorman_server/tests/queue_tests` | 5 | Brief queue §7C: enqueue/dequeue round-trip, lease expiry, concurrent workers, poison bucket, drain-after-restart |
+| `slm_doorman_server/tests/http_test.rs` | 42 | Axum integration tests: smoke (4), error-mapping (5), apprenticeship-disabled 404 (3), audit_proxy (14), audit_capture (14), shadow 202 (2) |
+| **Total** | **157** | All passing |
 
 ### 1.2 End-to-end against a live Tier A endpoint
 
@@ -182,28 +183,37 @@ here with current disposition.
 
 ### Landed
 
-| Item | Description | Status |
+| Item | Description | Date |
 |---|---|---|
-| B1 | Doorman scaffold — three-crate workspace, six unit tests | Landed 2026-04-25 |
-| B2 | Tier B (Yo-Yo) HTTP client with bearer-token auth, retry policy, mock tests | Landed 2026-04-26 |
-| B3 | `local-slm.service` systemd unit on workspace VM | Landed by Master (workspace v0.0.11) |
-| B4 | Tier C (external API) client with compile-time allowlist, pricing, mock tests | Landed 2026-04-26 |
-| B5 | End-to-end Tier A verification against live llama-server | Verified 2026-04-26; audit-ledger entry confirmed |
-| B6 | `cognitive-bridge.sh` → `scripts/`; `system-slm` connection via Doorman HTTP | Landed 2026-04-26 |
-| PS.3 | AS-2 wire-format adapter (grammar substrate): `GrammarConstraint` type, per-tier serialisation, `LarkValidator` pre-validation, Tier A rejection, Tier C rejection | Landed steps 1–5 across iters 1–4 |
-| PS.4 | Audit substrate: `/v1/audit/proxy` + `/v1/audit/capture`; `AuditProxyClient`; purpose allowlist; `entry_type` discriminator (contract v0.2.0); 64 KiB + 16 KiB caps; per-tenant concurrency cap | Landed steps 1–5 across iters 5–17 |
-| PS.6 | Coverage briefs A/B/C: http.rs test factory + 12 integration tests; tier/local.rs unit tests; VerdictDispatcher Reject + DeferTierC tests | Landed 2026-04-28 |
-| PS.7 | Zero-container drift cleanup (ARCHITECTURE.md + DEVELOPMENT.md 4th + 5th pass) | Landed 2026-04-28 |
+| B1 | Doorman scaffold — three-crate workspace | 2026-04-25 |
+| B2 | Tier B (Yo-Yo) HTTP client, bearer-token auth, retry policy, mock tests | 2026-04-26 |
+| B3 | `local-slm.service` systemd unit on workspace VM | Master workspace v0.0.11 |
+| B4 | Tier C (external API) client, compile-time allowlist, pricing, mock tests | 2026-04-26 |
+| B5 | End-to-end Tier A verification against live llama-server | 2026-04-26 |
+| B6 | `cognitive-bridge.sh` → `scripts/`; Doorman HTTP wiring | 2026-04-26 |
+| PS.3 | Grammar substrate: `GrammarConstraint` type, per-tier serialisation, `LarkValidator` (llguidance), Tier A/C rejection | 2026-04-28 (iters 1–4) |
+| PS.4 | Audit substrate: `/v1/audit/proxy` + `/v1/audit/capture`; `entry_type` discriminator (contract v0.2.0); caps; concurrency | 2026-04-28 (iters 5–9) |
+| PS.6 | Coverage: http.rs test factory + integration tests; tier/local unit tests; VerdictDispatcher Reject/DeferTierC | 2026-04-28 |
+| PS.7 | Zero-container drift cleanup (ARCHITECTURE.md + DEVELOPMENT.md) | 2026-04-28 |
+| AS-2..7 | Apprenticeship substrate: brief/verdict/shadow endpoints; corpus capture; verdict promotion; redact filter | 2026-04-28/29 |
+| §7C | Brief queue substrate: `queue.rs`, drain worker, lease reaper, 5 tests | 2026-04-29 |
+| Phase 2 | service-content Ring 2: LadybugDB graph + HTTP server (port 9081); GraphContextClient in Doorman; Ring 2→3 graph grounding | 2026-04-30 |
+| Multi-Yo-Yo | `HashMap<String, YoYoTierClient>`; named nodes `"default"`, `"trainer"`, `"graph"`; `yoyo_label` on `ComputeRequest` | 2026-05-04 |
+| Mesh scaffold | `slm-core/src/mesh.rs` + `slm-doorman/src/mesh.rs`; `MeshRegistry`/`DiscoveryProvider`/`DynamicRegistry`; `route_async()` stub | 2026-05-04 |
 
 ### Remaining gates
 
 | Item | Description | Gate |
 |---|---|---|
-| B7 | Re-deploy `local-doorman.service` on workspace VM with `SLM_APPRENTICESHIP_ENABLED=true` | Master-tier action (operator decision) |
-| D4 | `pointsav-public` GCP project creation + image-build pipeline (vLLM ≥0.12, nginx TLS, idle-shutdown timer, CUDA, Ubuntu 24.04) | Master + operator pair; unblocks PS.1 / PS.2 / Yo-Yo MIN deploy |
-| PS.1 | Yo-Yo deploy readiness (preemptible flag, A100 quota, image verification, vLLM framing) | Gated on D4 |
-| PS.2 | Multi-LoRA + structured-outputs verification on Yo-Yo | Gated on D4 |
-| PS.5 | AS-6/AS-7 P1 production routing on `version-bump-manifest` task type | Corpus-threshold gate (accept-rate ≥0.6 over rolling 50) |
+| Apprenticeship re-enable | Restart `local-doorman.service` with `SLM_APPRENTICESHIP_ENABLED=true` | Operator-presence (~5 min) |
+| cmake on VM | `apt install cmake build-essential` — required for service-content `cargo build` (lbug) | Operator-presence (~2 min) |
+| Phase 3 | Training threshold detection (50-tuple trigger, Sunday 02:00 UTC cron, engineering-pointsav adapter, ≥60% acceptance gate) | Operator go-ahead; also needs D4 for live Yo-Yo training |
+| Mesh DiscoveryProvider | Concrete `StaticConfigProvider` or `HttpDiscoveryProvider`; wire `route_async()` to actually dispatch to `node.endpoint` | Task scope |
+| Grammar injection | service-content sets `yoyo_label="graph"` + `grammar=JsonSchema(schema)` on requests; Yo-Yo #2 enforces ontological strictness | Task scope; needs D4 for Yo-Yo #2 |
+| D4 | `pointsav-public` GCP project + image-build pipeline (vLLM ≥0.12, nginx TLS, CUDA, Ubuntu 24.04) | Master + operator; unblocks all Tier B real deploy |
+| PS.1 | Yo-Yo deploy readiness (preemptible flag, A100 quota, image verification) | Gated on D4 |
+| PS.2 | Multi-LoRA + structured-outputs verification on live Yo-Yo | Gated on D4 |
+| PS.5 | Production routing on `version-bump-manifest` task type | Corpus-threshold gate (accept-rate ≥0.6 over rolling 50) |
 
 ---
 
@@ -296,8 +306,10 @@ FOUNDRY_TENANT=pointsav
 SLM_BRIEF_TIER_B_THRESHOLD_CHARS=8000
 ```
 
-B7 (re-deploy with the flag set) is the next action in this chain.
-It is a Master-tier deployment action; the code is ready.
+B7 ran (Master v0.1.68, 2026-04-29) and briefly set the flag; a
+subsequent service restart left the env var unset. The code is ready.
+Re-enable by updating `infrastructure/local-doorman/service.d/env-file.conf`
+and restarting the unit — ~5 minutes operator-presence.
 
 ---
 
