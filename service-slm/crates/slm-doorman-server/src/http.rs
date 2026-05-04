@@ -201,6 +201,7 @@ async fn chat_completions(
         sanitised_outbound: false,
         tier_c_label,
         grammar: None,
+        speculation: None,
     };
 
     state
