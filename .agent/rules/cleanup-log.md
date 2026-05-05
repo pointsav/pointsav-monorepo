@@ -96,6 +96,51 @@ Newest on top. Append a dated block when a session includes meaningful cleanup w
 
 ---
 
+## 2026-05-05 — Taxonomy config layer — Archetypes, COA, Domains, Glossary, Themes, Topics as HTTP-editable CSV config
+
+Session built the full taxonomy config layer for service-content in response to operator's request: *"these are the .config files for service-content."*
+
+### What landed this session — commit `18f37c2` (Jennifer Woodfine)
+
+**Phase 0 — ontology CSVs replaced/created (12 files):**
+- `ontology/archetypes.csv`: 11 archetypes with `signature`, `healing_trigger`, `gravity_keywords` columns
+- `ontology/chart_of_accounts.csv`: 50+ reference-numbered entries from Excel CRM tab (1000s Personal, 2000s Compliance, 3000s Real Estate, 4000s Collaborators, 5000s Finance, 6000s IT Support) — replaces old 13-row stub
+- `ontology/themes.csv`: 11 themes with `scope` column — 4 tactical + 7 strategic merged from two separate locations; each strategic theme carries a `thesis` field (one-sentence narrative)
+- `ontology/domains/domain_{corporate,documentation,projects}.csv`: thesis + gravity_keywords added to all three
+- `ontology/glossary/glossary_{corporate,documentation,projects}.csv`: 1,029 terms promoted from jennifer deployment `/srv/foundry/deployments/cluster-totebox-jennifer/service-content/domains/`; `domain` column added; Python csv library used to handle quoted fields (awk comma-split would break on embedded commas)
+- `ontology/topics/topics_{corporate,documentation,projects}.csv`: stub topic maps, 5 rows each
+
+**Phase 1 — `service-content/src/graph.rs`:** Two new methods on `GraphStore` trait + `LbugGraphStore` impl:
+- `delete_by_classification(module_id, classification) -> Result<usize>`
+- `delete_by_classification_and_location(module_id, classification, location) -> Result<usize>`
+
+**Phase 2 — `service-content/src/taxonomy.rs` (new, ~420 lines):** 6 row types (`ArchetypeRow`, `CoaRow`, `DomainRow`, `GlossaryRow`, `ThemeRow`, `TopicRow`), `TaxonomyBundle`, `parse_*` / `serialize_*` / `*_to_entities` converters per type, `load_taxonomy_from_dir()`, `bundle_to_entities()`, `skip_header_owned()`. All taxonomy entities use `module_id = "__taxonomy__"` and `confidence = 1.0`.
+
+**Phase 3 — `service-content/src/config_http.rs` (new, ~200 lines):** 12 GET/POST `/v1/config/*` endpoints:
+- GET returns raw CSV from disk (text/csv response, round-trip start)
+- POST parses CSV body, calls `delete_by_classification`, upserts entities → `{"loaded": N, "classification": "..."}`
+- Routes: `/v1/config/archetypes`, `/v1/config/coa`, `/v1/config/domains`, `/v1/config/themes`, `/v1/config/glossary/:domain`, `/v1/config/topics/:domain`
+
+**Phase 4 — wiring:** `main.rs` gains `SERVICE_CONTENT_ONTOLOGY_DIR` env var + startup taxonomy load into `__taxonomy__` namespace; `http.rs` HttpState gains `ontology_dir: String`; `config_routes()` merged into axum Router; `Cargo.toml` adds `csv = "1.3"`.
+
+**Build:** `cargo check` clean (1 pre-existing dead_code warning on `list_entities`); `cargo build --release` succeeded.
+
+### Design decisions recorded
+
+- **`__taxonomy__` isolation**: taxonomy entities live under `module_id = "__taxonomy__"` separate from tenant queries (`woodfine`). Open question: should taxonomy also appear in tenant context queries? Not resolved — separate decision before wiring GraphContextClient.
+- **Thesis as first-class field**: "Thesis" was not previously defined anywhere in the architecture. Defined as a one-sentence declarative claim per domain/theme, now stored in the domain CSVs and themes.csv.
+- **Two-theme system resolved**: tactical themes (4, from `seeds/Themes.json`) + strategic themes (7, from jennifer `themes.md`) merged into single `themes.csv` with `scope` column.
+- **Glossary source of truth promoted**: authoritative glossary moved from jennifer deployment path to `service-content/ontology/glossary/` in the source repo. `ingest-jennifer.py` still loads from the old path — needs update to load from ontology/.
+
+### What is pending
+
+- `ingest-jennifer.py` glossary load path: should load from `service-content/ontology/glossary/` instead of jennifer deployment `domains/` — the two are now in sync but the old path will diverge on next edit
+- Phase 5 (operator-presence gated): `.eml` MIME parser for git-documentation-wiki.zip (246 self-notes emails → `notes-document` classification); template loader for service-email-template_V5.zip (420 templates → `communication-template` classification)
+- Service restart with `SERVICE_CONTENT_ONTOLOGY_DIR` set to verify startup taxonomy load and test `/v1/config/*` endpoints
+- Stage-6 promote: 38 commits ahead of origin/main
+
+---
+
 ## 2026-05-05 — Ontological Data Graph full corpus expansion — all jennifer markdown sources loaded
 
 Session continued from prior context. Prior session had loaded 9,999 entities (people.csv + corporate.csv). This session expanded to full corpus.
