@@ -169,9 +169,47 @@
 
     function renderCard(data) {
       var snip = data.snippet || "No summary available.";
-      card.innerHTML = '<strong>' + data.title + '</strong><p>' + snip + '</p>';
+      var imgHtml = data.image_url ? '<img src="' + data.image_url + '" alt="">' : '';
+      card.innerHTML = imgHtml + '<strong>' + data.title + '</strong><p>' + snip + '</p>';
       card.style.display = 'block';
     }
+  }
+
+  /* ------------------------------------------------------------------ *
+   * 4. Glossary Tooltips                                                 *
+   * ------------------------------------------------------------------ */
+  function initGlossaryTooltips() {
+    var tooltip = document.createElement('div');
+    tooltip.className = 'wiki-glossary-tooltip';
+    tooltip.style.display = 'none';
+    document.body.appendChild(tooltip);
+
+    var terms = document.querySelectorAll('.wiki-glossary-term');
+    terms.forEach(function(term) {
+      term.addEventListener('mouseenter', function() {
+        var defn = term.getAttribute('title');
+        if (!defn) return;
+        
+        // Temporarily remove title to prevent native tooltip
+        term.dataset.title = defn;
+        term.removeAttribute('title');
+        
+        tooltip.textContent = defn;
+        tooltip.style.display = 'block';
+        
+        var rect = term.getBoundingClientRect();
+        // Position above the term
+        tooltip.style.left = rect.left + window.scrollX + 'px';
+        tooltip.style.top = (rect.top + window.scrollY - tooltip.offsetHeight - 5) + 'px';
+      });
+
+      term.addEventListener('mouseleave', function() {
+        tooltip.style.display = 'none';
+        if (term.dataset.title) {
+          term.setAttribute('title', term.dataset.title);
+        }
+      });
+    });
   }
 
   /* ------------------------------------------------------------------ *
@@ -182,6 +220,7 @@
     initToc();
     initDensityToggle();
     initHoverCards();
+    initGlossaryTooltips();
   });
 
 }());
