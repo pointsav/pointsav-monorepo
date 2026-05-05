@@ -1,0 +1,30 @@
+# training-trigger.service — Phase 3 corpus threshold watcher (forced Sunday run)
+#
+# Installs to: /etc/systemd/system/training-trigger.service
+# Companion:   training-trigger.timer
+#
+# The service runs corpus-threshold.py --force, which triggers training
+# regardless of threshold (the timer is the fallback for weeks when no
+# commit-time threshold check ran or no adapter crossed 50 tuples).
+#
+# Environment:
+#   FOUNDRY_ROOT                 default ~/Foundry; override if non-standard
+#   SLM_YOYO_TRAINER_ENDPOINT   set post-D4; unset = marker-only mode
+#
+# For on-demand checks (triggered by corpus accumulation, not cron):
+#   sudo -u mathew python3 /srv/foundry/clones/project-slm/service-slm/scripts/corpus-threshold.py
+# or with --dry-run to preview counts without writing markers:
+#   sudo -u mathew python3 /srv/foundry/clones/project-slm/service-slm/scripts/corpus-threshold.py --dry-run
+
+[Unit]
+Description=Phase 3 corpus threshold check (forced — Sunday cron)
+After=network.target
+
+[Service]
+Type=oneshot
+User=mathew
+ExecStart=/usr/bin/python3 /srv/foundry/clones/project-slm/service-slm/scripts/corpus-threshold.py --force
+Environment=FOUNDRY_ROOT=/home/mathew/Foundry
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=training-trigger
