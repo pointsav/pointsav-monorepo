@@ -63,6 +63,9 @@ async fn build_state(
         collab: Arc::new(app_mediakit_knowledge::collab::CollabRooms::new()),
         enable_collab: false,
         site_title: "PointSav Documentation Wiki".to_string(),
+        git_tenant: "pointsav".to_string(),
+        glossary: Arc::new(app_mediakit_knowledge::glossary::Glossary::default()),
+                db: None,
     };
     (state, state_dir)
 }
