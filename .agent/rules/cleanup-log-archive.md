@@ -1,0 +1,735 @@
+# Cleanup Log Archive — project-system/pointsav-monorepo
+
+Archived session entries from `cleanup-log.md`. Newest on top.
+Active config sections remain in `cleanup-log.md`.
+
+---
+
+## 2026-04-28 — Task `cluster/project-system` (Phase 1A.5 RFC 9162 §2.1.4 consistency proofs + Tetrad Discipline upgrade + identity-key perms incident)
+
+Three things landed this session-block: Phase 1A.5 closes the
+RFC 9162 §2 surface in system-core (consistency proofs follow
+the Phase 1A.4 inclusion-proof primitive); Tetrad Discipline
+backfill per Master v0.0.10/claim #37 broadcast; and a workspace-
+wide identity-key permissions incident that briefly blocked all
+staging-tier commits.
+
+### Phase 1A.5 — `system-core` consistency proofs
+
+- **`82b659f`** (Jennifer Woodfine) — system-core: RFC 9162
+  §2.1.4 consistency proofs implementation. Per Master Plan §4
+  SY.2 (workspace v0.1.42); follows the SY.1 sketch delivered
+  earlier this session at `.claude/SKETCH-consistency-proofs.md`.
+  Implementation by Sonnet sub-agent against the SY.1 spec;
+  parent-Task verification: 51 passing tests + workspace cargo
+  check clean + zero warnings.
+
+  - New module `src/consistency_proof.rs` (506 lines):
+    `ConsistencyProof { hashes }` + `verify(old_root, old_size,
+    new_root, new_size)` per RFC 9162 §2.1.4 verbatim;
+    `ConsistencyVerifyError` (9 variants); reuses
+    `rfc9162_internal_hash` from `inclusion_proof.rs` (does NOT
+    duplicate the helper); 11 unit tests including full grid
+    1..=8 verification.
+  - Composed primitive in `src/checkpoint.rs` (+239 lines):
+    `CheckpointConsistencyError` (6 variants);
+    `SignedCheckpoint::verify_consistency_proof(proof,
+    old_signed_checkpoint, signer_name, signer_pubkey)` chains
+    tree-size invariants → both signature verifies → raw proof
+    verify; 5 tests covering valid extension, size mismatches,
+    signature failures, proof corruption.
+  - Re-exports in `src/lib.rs`: `pub mod consistency_proof`,
+    `ConsistencyProof`, `ConsistencyVerifyError`,
+    `CheckpointConsistencyError` at crate root.
+
+  system-core 0.1.4 → **0.2.0** (MINOR: new public API surface;
+  matches Master's v0.1.28 framing of v0.2.x as the structurally-
+  complete substrate scope).
+
+  System-core public-API surface for v0.2.x is now structurally
+  complete: Capability + WitnessRecord + LedgerAnchor +
+  SignedCheckpoint + InclusionProof + ConsistencyProof. Stage-6
+  promotion path is unblocked structurally; v1.0.0 awaits
+  test-coverage + bench-numbers ratification per Master.
+
+### Tetrad Discipline upgrade (Master v0.0.10 / claim #37)
+
+Per `~/Foundry/conventions/project-tetrad-discipline.md` §"Backfill
+from Triad". Cluster manifest at `.claude/manifest.md` amended:
+
+- `triad:` field renamed → `tetrad:`
+- New `wiki:` leg block added with `repo:
+  vendor/content-wiki-documentation`, `drafts_via:
+  clones/project-system/.claude/drafts-outbound/`, `gateway:
+  project-language Task`, `status: leg-pending`, and three
+  `planned_topics`:
+  - `topic-merkle-proofs-as-substrate-primitive.md` (Phase
+    1A.4 + 1A.5 milestone; RFC 9162 §2 grounding)
+  - `topic-capability-ledger-substrate.md` (Doctrine claim
+    #33 architecture decision; Phase 1A structurally complete)
+  - `topic-two-bottoms-sovereign-substrate.md` (Doctrine
+    claim #34 seL4-native + NetBSD-compat composition; future-
+    leaning as Phase 2 lands)
+
+TOPIC skeleton staged at `clones/project-system/.claude/drafts-
+outbound/`:
+
+- `topic-merkle-proofs-as-substrate-primitive.md` (160 lines;
+  English canonical; foundry-draft-v1 frontmatter + 8 section
+  headings + `(draft-pending — substance follows in milestone
+  N+1)` markers per the convention's Backfill step 3)
+- `topic-merkle-proofs-as-substrate-primitive.es.md` (54 lines;
+  Spanish overview per DOCTRINE.md §XII strategic-adaptation
+  pattern, NOT 1:1 translation; section headings mirror English)
+
+Note on tracking scope: the manifest and the drafts-outbound
+files are at the cluster `.claude/` path which is gitignored at
+workspace root (`/*` pattern). They are local-only operational
+state, like the mailbox. project-language Task reads them
+directly via filesystem. This cleanup-log entry is the tracked
+record of the Tetrad upgrade milestone on `cluster/project-
+system`; the operational artefacts themselves do not enter git
+history.
+
+### Identity-key perms incident (workspace-wide signal)
+
+Mid-session (between commit `9da020c` at 19:15 UTC and the SY.2
+commit attempt at ~00:35 UTC), an unidentified process chmod'd
+`/srv/foundry/identity/{jwoodfine,pwoodfine}/id_*` from 0600 to
+0640. Both keys touched at the same nanosecond
+(`2026-04-28 00:35:27.055196052`) — scripted action, single atomic
+command. SSH refuses 0640 private keys, blocking
+`bin/commit-as-next.sh` workspace-wide.
+
+This Task surfaced via outbox to Master rather than crossing
+layer-scope to chmod the workspace identity store. Master
+restored perms at `00:54:18 UTC` (visible in the keys' Change
+time today). Origin investigation inconclusive: no hooks /
+timers / cron / sudo / ACLs / shell-snapshot match the
+timestamp. Pattern observed: 2nd revert event in <12 hours
+(project-knowledge cluster hit it first ~19:55 Apr 27); the
+loosener has not been identified. Operator flagged "something
+is up with chmod" before any cluster surfaced — direct operator
+knowledge may resolve when surfaced.
+
+Until origin is identified, expect recurrence. Per Master's
+guidance: re-stat keys at session start; if revert mid-session,
+STOP + outbox immediately + do NOT chmod from Task scope.
+
+### AS-5 observed live
+
+The SY.2 commit `82b659f`'s `commit-as-next.sh` output included:
+`capture-edit: shadow brief 01KQ8SYP73TF25GESHC2C6Z8QB
+dispatched to Doorman (fire-and-forget)`. Per Master plan §4
+(workspace v0.1.42), this is the AS-5 shadow-routing path: every
+`cluster/project-system` commit now auto-fires a shadow brief to
+Doorman /v1/shadow which captures into the apprenticeship corpus.
+No behavior change required from this Task; corpus production
+became automatic between v0.1.42 (when Master named it as future)
+and this session (when it landed).
+
+### Verification
+
+- `cargo test -p system-core`: 51 passed (35 prior + 11 new
+  consistency_proof + 5 new composed-primitive)
+- `cargo test -p system-ledger`: 44 passed (unchanged from
+  Phase 1A.4)
+- `cargo test -p moonshot-toolkit`: 30 passed (unchanged from
+  Phase 1B)
+- `cargo check -p system-core -p system-ledger`: zero warnings
+- Total cluster-tracked tests: 109 → **125 passing**
+
+### Tasks deferred / explicit FUTURE
+
+- **Tetrad wiki leg**: `leg-pending` per the convention; substantive
+  bulk for the staged TOPIC follows in milestone N+1. The two
+  remaining `planned_topics` (capability-ledger-substrate,
+  two-bottoms-sovereign-substrate) skeleton-stage when Phase 2
+  begins or when project-language signals via outbox.
+- **#14 moonshot-toolkit Phase 1C** (actual seL4 cross-compile +
+  QEMU AArch64 boot): FUTURE; still blocked on Master direction
+  for the three decisions named in the Phase 1B outbox §5.
+- **#22 / #23 system-substrate + system-security hygiene**:
+  natural-touch-deferred per Master's prior framing; not crossed
+  this session.
+- **S6 audit follow-up**: the architecture-vs-CLI alignment audit
+  at `clones/project-system/.claude/AUDIT-moonshot-toolkit-arch-
+  vs-cli.md` surfaces 4 drift items + 7 undocumented-behaviour
+  additions for `moonshot-toolkit/ARCHITECTURE.md`. Not Master-
+  asked; deferred until a moonshot-toolkit-touch session naturally
+  crosses the doc.
+
+## 2026-04-27 — Task `cluster/project-system` (Phase 1B moonshot-toolkit activation + CLI rewrite; system-core 1A.4 hotfix)
+
+Continuous Phase 1B work across a token-budget gap. Six commits; two
+clusters of related work combined into one entry.
+
+- **`b809cbc`** (Peter Woodfine) — system-ledger: rustdoc on
+  `apply_witness_record` naming the handover-height inclusion-proof
+  verify semantics. Master's only concrete ask from the v0.1.26 reply:
+  document which apex signs at handover height so consumers do not
+  re-litigate the policy. No functional change; zero new tests.
+
+- **`ba34cd8`** (Peter Woodfine) — moonshot-toolkit activation per
+  framework §9 (Master Option A; Phase 1B greenlit). Files added:
+  `CLAUDE.md`, `AGENTS.md`, `NEXT.md`, `ARCHITECTURE.md`, bilingual
+  `README.md` + `README.es.md`, workspace-member entry in root
+  `Cargo.toml`, registry row. Activated against the prior 14-line
+  legacy stub `src/main.rs` and shell sketch `build-totebox.sh` —
+  both preserved in place pending the CLI rewrite in subsequent
+  commits.
+
+- **`045e5cc`** (Jennifer Woodfine) — moonshot-toolkit: `src/spec.rs`
+  SystemSpec + TOML parser. Microkit-equivalent system-description
+  schema. Invariants enforced: PD count ≤ 63, channels-per-PD ≤ 63,
+  no PD name collisions, channel endpoints reference declared PDs.
+  12 tests; crate total 12.
+
+- **`59d1fc0`** (Peter Woodfine) — moonshot-toolkit: `src/plan.rs`
+  BuildPlan deterministic generator. Content-addressed inputs via
+  SHA-256 hash per input file; BuildPlan body bytes canonical →
+  plan_hash is deterministic across runs given same SystemSpec.
+  10 tests; crate total 22.
+
+- **`abef0e3`** (Peter Woodfine) — system-core: re-export
+  `CheckpointInclusionError` at crate root to fix system-ledger build.
+  Phase 1A.4 regression: system-ledger imports the type from
+  `system_core` top-level but the `lib.rs` re-export was missing;
+  HEAD was broken for commits `9b5e4fd`–`59d1fc0`. system-core
+  0.1.3 → 0.1.4 PATCH. Cargo.lock also updated to HEAD's
+  moonshot-toolkit 0.1.2 (lockfile-refresh oversight from `045e5cc`
+  that silently persisted until caught here).
+
+- **`af6073f`** (Peter Woodfine) — moonshot-toolkit: `src/main.rs`
+  CLI rewrite (clap; `validate` / `plan` / `build` subcommands).
+  `build` is a stub that prints `would run X` per step — Phase 1B
+  v0.1.x scope by design; actual cross-compile is FUTURE task #14.
+  8 inline tests using `tempfile`. Adds `clap = "4"` +
+  `tempfile = "3"` dev-dependency. moonshot-toolkit 0.1.2 → 0.1.3.
+  Total 30 tests in crate (22 lib + 8 main).
+
+**Alternation drift observation.** The final three commits
+(`59d1fc0`, `abef0e3`, `af6073f`) are consecutive Peter Woodfine
+commits. This is identity-toggle drift from the workspace-wide
+`~/Foundry/identity/.toggle` being modified by concurrent commits in
+other clusters between this Task's commits. The toggle is intentionally
+global per CLAUDE.md §8; concurrent-cluster activity between Task
+commits can shift the expected alternation. Not a defect in this
+cluster's work — an operational-substrate observation.
+
+**Phase 1B v0.1.x scope closed.** validate/plan/build CLI working;
+build is stub. Phase 1A is structurally complete on the v0.2.x scope:
+system-core 0.1.4 + system-ledger 0.2.1 + moonshot-toolkit 0.1.3.
+
+**Tasks deferred / explicit FUTURE.**
+- Task #14 (actual seL4 cross-compile + QEMU AArch64 boot): FUTURE —
+  requires decisions on cross-compile toolchain (Nix vs Bazel
+  reproducible-build harness?), seL4 source vendoring strategy (git
+  submodule vs Cargo build.rs fetch vs vendor-sel4-kernel snapshot?),
+  and toolchain installation responsibility (operator vs Master vs
+  Task). Decision points surfaced for Master direction.
+- Tasks #22 (system-substrate hygiene) + #23 (system-security hygiene)
+  remain deferred per Master's "natural-touch session" framing — neither
+  was crossed by Phase 1B work.
+
+**Cross-cluster Cargo dep visibility.** A writeup at
+`/srv/foundry/clones/project-system/.claude/STAGING-cargo-dep-options.md`
+covers four resolution options (Cargo patch, submodule, branch merge,
+promote-then-consume). To be surfaced in the session-end outbox for
+Master direction.
+
+**Verification.** `cargo test -p moonshot-toolkit -p system-core -p system-ledger`: 30 + 35 + 44 = 109 tests passing, zero warnings.
+
+## 2026-04-27 — Task `cluster/project-system` (Phase 1A.4 — Merkle inclusion proofs; v0.1.x → v0.2.x)
+
+Phase 1A.4 closes the v0.1.x structural-completion gap Master
+flagged: the substrate's apply-side no longer relies on consumer
+good behaviour — Merkle inclusion proofs gate witness arrivals.
+Three commits + cleanup-log update.
+
+- **`9b5e4fd`** — system-core Phase 1A.4 increment: new
+  `inclusion_proof.rs` module per RFC 9162 v2 (rfc9162_leaf_hash
+  with 0x00 prefix; rfc9162_internal_hash with 0x01 prefix;
+  InclusionProof + verify; 14 tests). Composed kernel-facing
+  primitive `SignedCheckpoint::verify_inclusion_proof(proof,
+  leaf_hash, signer_name, signer_pubkey)` per Master directive
+  ("don't expose raw InclusionProof::verify as the kernel-facing
+  API"; 5 tests). Re-exports at crate root. system-core 0.1.2 →
+  0.1.3; 30 → 35 tests.
+- **`2b9ca9c`** — system-ledger Phase 1A.4: LedgerConsumer trait
+  signature change for `apply_witness_record` (now takes
+  InclusionProof). InMemoryLedger.current_checkpoint field +
+  set_current_checkpoint setter. witness_record_leaf_hash uses
+  rfc9162_leaf_hash (matches Merkle leaf format). LedgerError
+  additions: NoCurrentCheckpoint, WitnessNotInRoot(...),
+  NoApexForCheckpoint. apply_witness_record_unchecked
+  `#[cfg(test)]` shortcut for backward compat. 4 new lib tests
+  + 1 migrated test. system-ledger 0.1.5 → **0.2.0** (MINOR bump:
+  breaking trait-signature change).
+- **`0d6da97`** — Phase 1A.4 benchmarks. 4 new criterion benches
+  (raw inclusion-proof verify @ 8-leaf and 1024-leaf trees;
+  composed verify_inclusion_proof @ 1024-leaf; full
+  apply_witness_record path). Numbers run with VM under heavier
+  load than the 1A.3 session; absolute values ~50-150% higher
+  across the board, but the architectural shape holds:
+  - Raw inclusion verify ~6-20 μs (Master expectation 10-100 μs
+    confirmed)
+  - Composed verify ≈ verify_signer + 0.4% inclusion overhead
+    (verify-dominated as Master predicted)
+  - apply_witness_record full path tracks composed verify cost
+  - Cache + inclusion proofs are complementary, not redundant
+  system-ledger 0.2.0 → 0.2.1 PATCH bump.
+
+Phase 1A is now structurally complete on v0.1.x → v0.2.x scope:
+- system-core (0.1.3): Capability + WitnessRecord + LedgerAnchor
+  + C2SP signed-note + apex-cosigning predicate + Merkle
+  inclusion proofs (35 tests)
+- system-ledger (0.2.1): cache + revocation + apex history +
+  ssh-keygen witness verify + LedgerConsumer trait + InMemoryLedger
+  with proof-validated apply_witness_record (44 tests + 10
+  benchmarks)
+- End-to-end §4 N+3+ ceremony works: pre-handover P-old allows;
+  handover with both sigs accepts; post-handover P-new-only
+  accepts; post-handover P-old-only REFUSED with StaleApex
+- Witness-record arrival is gated by Merkle inclusion proof
+  against the current root — no more "trust shortcut"
+
+Total Phase 1A.3 + 1A.4 commits: 11 (cdbed97 → 0d6da97 in this
+session-block plus the prior-session cdbed97 + dcca616 + ae3dbb9
++ c378eaa + f614ca2 + b0dba5e + f35ebf7 + 9a361de). Total cluster
+commits since session 1: 13.
+
+Tasks #22 (system-substrate hygiene) + #23 (system-security
+hygiene) remain deferred per Master ("natural-touch session").
+Tasks #13 + #14 (moonshot-toolkit Phase 1B) remain deferred per
+Master ("no urgency from operator").
+
+## 2026-04-27 — Task `cluster/project-system` (Phase 1A.3 module impls + benchmarks)
+
+Continuation of the 2026-04-27 entry below; this session landed
+five more commits filling out the system-ledger crate after the
+skeleton commit.
+
+- **`ae3dbb9`** — cache.rs + revocation.rs implementations.
+  CheckpointCache: LRU bounded, lookup by tree_size + by
+  root_hash, eviction at capacity. RevocationSet: HashSet for O(1)
+  membership + sidecar HashMap for audit detail; idempotent replay.
+  12 tests (7 cache + 5 revocation).
+- **`c378eaa`** — apex.rs (apex history + post-handover invariant).
+  ApexEntry { name, pubkey, effective_from, effective_until };
+  ApexHistory with record_genesis / apply_handover / current /
+  check_height. ApexVerdict: NoApex / Single / Handover. Closes
+  the apex-history half of inbox brief Phase 1A item 4. 10 apex
+  tests (22 total).
+- **`f614ca2`** — witness.rs (ssh-keygen -Y verify wrapper).
+  Real shellout to /usr/bin/ssh-keygen via std::process::Command;
+  tempfiles for signature + allowed_signers; payload to stdin.
+  WITNESS_NAMESPACE = "capability-witness-v1" prevents
+  cross-namespace replay against commit-signing or apprenticeship-
+  verdict signatures. 5 tests including the cross-namespace
+  rejection security property (27 total).
+- **`b0dba5e`** — LedgerConsumer impl on InMemoryLedger +
+  END-TO-END handover ceremony fixture. The `full_handover_
+  ceremony_end_to_end` test asserts: pre-handover P-old
+  checkpoint allows; revocation entry by P-old applies; handover
+  with both P-old + P-new sigs accepts; post-handover P-new-only
+  accepts; post-handover P-old-only REFUSED with StaleApex. The
+  §4 N+3+ invariant works end-to-end. Also added
+  `apply_witness_record` API + InMemoryLedger.witnessed HashSet
+  for "is this witness logged in the ledger?" check (will be
+  replaced with Merkle inclusion-proof check once system-core
+  ships RFC 9162 proof machinery). 13 lib tests (40 total).
+- **`f35ebf7`** — criterion benchmarks for Master 4b deliverable.
+  `system-ledger/benches/consult.rs`. Six measurements (release
+  profile; opt-level=z; x86 GCP n2-class hardware):
+
+  | Benchmark | Median |
+  |---|---|
+  | Capability::hash | 5.0 μs |
+  | SignedCheckpoint::verify_signer (1-sig) | 3.40 ms |
+  | SignedCheckpoint::verify_apex_handover (2-sig) | 6.80 ms |
+  | cache lookup hit (most-recent) | 8.08 ns |
+  | cache lookup miss (full 64-entry scan) | 338 ns |
+  | consult_capability (Allow path) | 3.39 ms |
+
+  Cache hit is ~420,000× faster than ed25519 verify. Cache is
+  architecturally critical. Full consult cost is dominated by
+  apex-verify (orchestration overhead in measurement noise).
+  ARM embedded targets will be 10-50× slower per the
+  curve25519-dalek perf data — surface to Master in outbox.
+
+- **Crate state:** system-ledger version 0.1.5, 40 unit/integration
+  tests + 6 criterion benchmarks, cargo check + cargo test +
+  cargo bench all clean, zero warnings.
+- **Tasks deferred to natural-touch session:**
+  - #22 system-substrate hygiene — Master suggested as natural
+    neighbour; not touched this session because Phase 1A.3
+    deliverables fit cleanly inside system-core + system-ledger
+    only. Activate when seL4 CDT integration (Phase 4+) crosses
+    into system-substrate territory.
+  - #23 system-security hygiene — same; will activate naturally
+    when capability-handshake / cryptographic-pairing work crosses
+    Phase 1A's primitive surface.
+
+## 2026-04-27 — Task `cluster/project-system` (Phase 1A increment 3 — system-ledger crate created)
+
+- **Master directive received + actioned.** Master Claude reply
+  archived 2026-04-27 (Option B resolution: kernel-side state
+  machine in new `system-ledger` crate, not extension of
+  `system-substrate`).
+- **`system-core/ARCHITECTURE.md` updated** per Master directive
+  (§3 rewritten from "Open architecture question" to "RESOLVED
+  Option B"; §4 cross-references add system-ledger pointer; §1
+  "what does NOT live here" reference clarified). Convention text
+  stays as-written per Master's instruction. Cargo.lock catches
+  up to system-core 0.1.2 (regression from c3766de).
+- **`system-ledger` crate created and activated.** New workspace
+  member at row 9 of `[workspace] members =`. Activated per
+  framework §9 at creation: CLAUDE.md + AGENTS.md + NEXT.md +
+  ARCHITECTURE.md + bilingual README pair. Registry row added
+  Active from creation; Active count 5 → 6; Total rows 97 → 98.
+- **Module skeletons in place.** Four module files created with
+  type definitions but no functional impls:
+  - `cache.rs` — `CheckpointCache` struct with `with_capacity` /
+    `len` / `is_empty`; LRU implementation pending #18
+  - `revocation.rs` — `RevocationSet` + `RevocationEvent` with
+    `contains` / `len`; `apply_revocation` API pending #19
+  - `apex.rs` — `ApexHistory` + `ApexEntry` with `current` / `len`;
+    `apply_apex_handover` pending #11
+  - `witness.rs` — `WITNESS_NAMESPACE` constant +
+    `verify_witness_signature` stub returning `NotImplemented`;
+    real shell-out lands per #12
+  - `lib.rs` — `LedgerConsumer` trait + `Verdict` /
+    `RefuseReason` / `ConsultError` / `LedgerError` enums +
+    `InMemoryLedger` struct (impl pending #20)
+- **Verification.** `cargo check -p system-ledger` passes; zero
+  warnings on the new code. No tests yet (tests land alongside
+  each module impl).
+- **Dependency footprint.** Just `system-core` (workspace path
+  dep). Zero external transitive crates beyond what system-core
+  already pulls. Future deps as modules need them: tokio /
+  std::process for witness.rs, criterion for benchmarks (#21),
+  tempfile for witness tests (#12).
+
+
+
+- **`system-core` Phase 1A increment 2 landed: C2SP signed-note
+  checkpoint primitive.** New module `src/checkpoint.rs` (~290 LoC
+  source + tests). Implements:
+  - `Checkpoint { origin, tree_size, root_hash, extensions }` —
+    body data per the C2SP signed-note spec, with `body_bytes()` /
+    `parse_body()` for canonical-bytes round-trip.
+  - `NoteSignature` — one signature line including the 4-byte
+    key-hash prefix `SHA-256("<name>\nED25519\n<32-byte-pubkey>")[..4]`
+    per spec, with `to_line()` / `parse_line()`.
+  - `SignedCheckpoint` — body + ≥ 1 signature lines, with `to_wire()`
+    / `parse()` for full wire format (em-dash signature lines, blank
+    line separator).
+  - `verify_signer()` — ed25519 verification of a specific signer's
+    signature against the body via `ed25519-dalek`.
+  - `verify_apex_handover()` — both-signatures-required predicate
+    realising convention §4 ownership-transfer ceremony.
+- **Dependencies added.** `ed25519-dalek = "2"` (no_std-capable;
+  `std` feature kept default for v0.1.x), `base64 = "0.22"`. Total
+  system-core deps: 5 (serde, serde_json, sha2, ed25519-dalek,
+  base64). New transitive crates: ed25519, signature, subtle,
+  zeroize, curve25519-dalek, semver, rustc_version.
+- **Tests.** 10 new tests in `checkpoint::tests` covering body
+  round-trip, key-hash determinism, key-hash sensitivity to name,
+  single-sig wire round-trip, single-sig verification, wrong-pubkey
+  rejection, multi-sig wire round-trip, apex-handover predicate
+  positive case, apex-handover predicate negative case (only one
+  signs), body-tampering rejection. Crate total: 16 tests, all
+  passing on `cargo test -p system-core`.
+- **What's still open downstream.** The state machine ("subsequent
+  checkpoints require only P-new" — convention §4 height-N+3+
+  invariant) is NOT in this commit. The cryptographic primitive that
+  enables it lives here; the policy / cache that consumes it needs
+  a home crate (architecture question still open in
+  `system-core/ARCHITECTURE.md` §3).
+- **Honest scope.** Merkle-log inclusion/consistency proofs (RFC
+  9162 + C2SP tlog-tiles half of the capability ledger) are NOT in
+  this commit either. Tracked in `system-core/NEXT.md` queue.
+- **Verification.** `cargo check -p system-core` and
+  `cargo test -p system-core` both pass on Rust stable. Zero
+  warnings on the new module.
+- **Version bump.** `system-core/Cargo.toml` 0.1.1 → 0.1.2.
+
+## 2026-04-26 — Task `cluster/project-system`
+
+- **`system-core` activated; Phase 1A increment 1 landed.** Per the
+  cluster brief at
+  `~/Foundry/clones/project-system/.claude/inbox.md` (Phase 0
+  hygiene interleaved with Phase 1A). Files added to `system-core/`:
+  `CLAUDE.md`, `AGENTS.md`, `NEXT.md`, `ARCHITECTURE.md` (per
+  framework §9 Tier 2 + ARCHITECTURE.md skeleton citing claims
+  #33/#34 + `system-substrate-doctrine.md` §3.1+§5). Files modified:
+  `Cargo.toml` (added `serde`/`serde_json`/`sha2` deps),
+  `src/lib.rs` (replaced 1-function scaffold with `Capability` +
+  `WitnessRecord` + `LedgerAnchor` + `CapabilityType` + `Right`
+  types per convention §5.1 schema; six unit tests covering
+  serialisation round-trips and hash determinism), `README.md` +
+  `README.es.md` (stripped "Pending Engineering Cycle" placeholder
+  language; bilingual pair updated to Active state).
+- **Workspace `[members]` updated.** `system-core` added to monorepo
+  `Cargo.toml` `[workspace] members =`. Total members: 8 → 9. List
+  of canonical/in-workspace `system-*` projects: 2 → 3 (joins
+  `system-gateway-mba` + `system-security`). 11 system-* and 9
+  moonshot-* remain to be added across future Phase 0 / Phase 1
+  increments.
+- **Registry updated.** `system-core` row Scaffold-coded → Active;
+  Active count 4 → 5; Scaffold-coded 53 → 52; Total 97 unchanged.
+- **Open architecture question surfaced.** Where does the kernel-side
+  ledger-consultation logic live: extension of `system-substrate` or
+  a new `system-capability-ledger` / `system-ledger` crate?
+  Documented in `system-core/ARCHITECTURE.md` §3; will resolve in the
+  next Phase 1A increment (consultation simulator). Not blocking.
+- **Residual sketch left in place.** `system-core/master-relay.rs`
+  shells out to nonexistent `/bin/service-*` binaries and predates
+  this cluster. Not a binary target, not in `Cargo.toml [[bin]]`.
+  Tracked in `system-core/NEXT.md` deferred queue and surfaced as a
+  per-project defect-closure pass that should audit all top-level
+  `*.rs` files in projects against `repo-layout.md`. Not blocking
+  Phase 1A.
+- **Verification.** `cargo check -p system-core` and
+  `cargo test -p system-core` both pass on Rust stable in workspace
+  context. Six tests; zero warnings on the new code.
+
+---
+
+## 2026-04-23
+
+- **Repo-layout rule introduced.** Added
+  `.claude/rules/repo-layout.md` codifying the allowed file set at
+  the monorepo root and at each project directory root, and naming
+  the sibling repos where cross-cutting content belongs (user guides,
+  ADRs, design-system material). Anchor for the file-relocation work
+  queued behind it (see `NEXT.md`).
+- **Defects surfaced at root by this rule** — staged for separate
+  commits, not moved in this session:
+  - ~~`force_build.sh` (tracked, at repo root) → queued move to
+    `vendor-sel4-kernel/scripts/`~~ **Closed 2026-04-23** — moved
+    via `git mv` in a follow-up commit within this session. Zero
+    runtime callers; script body uses absolute paths so no content
+    edits required.
+  - `GUIDE-OPERATIONS.md` (tracked, at repo root) → queued move to
+    `content-wiki-documentation/`.
+  - `USER_GUIDE_2026-03-30_V2.md` (tracked, at repo root) → queued
+    move to `content-wiki-documentation/` with `_V2` dropped, per
+    CLAUDE.md §6 edit-in-place rule.
+  - ~~`app-console-content/src/{pointsav-surveyor.sh,surveyor.py}` →
+    queued move to `app-console-content/scripts/`~~ **Closed
+    2026-04-23** — both files moved via `git mv` (recognised as
+    100% renames). Shell wrapper uses `$(dirname "$0")/surveyor.py`
+    (relative) so the pair moves together without edits. Python
+    script uses absolute paths into `woodfine-fleet-deployment` so
+    location-independent. Zero intra-repo runtime callers; no cron
+    entries found. The clone at `~/Foundry/clones/service-slm/`
+    retains its copy on branch `cluster/service-slm` (separate
+    `.git/`) and is unaffected by this move on `main`; it will
+    receive the change only when that branch merges.
+  - ~~`os-infrastructure/build_iso/forge_iso.sh` → queued rename to
+    `os-infrastructure/build_iso/compile_binary.sh`~~ **Closed
+    2026-04-23** — renamed via `git mv`; in-file header comment
+    updated to reflect the new name and record the rename
+    rationale. Zero external callers.
+- ~~**Project-root scripts flagged (not yet moved):** ~15 scripts sit
+  at project root instead of under `scripts/` across `service-vpn`
+  (5 generator scripts), `service-email` (`spool-daemon.sh`),
+  `service-slm` (`cognitive-bridge.sh`), `service-content`
+  (`forge-seeds.sh`), `os-network-admin` (2 scripts),
+  `os-totebox` (1), `tool-cognitive-forge` (1),
+  `vendor-phi3-mini` (2), `app-mediakit-telemetry` (5 generic
+  scaffold scripts). Each project is a separate closure task.~~
+  **Closed 2026-04-23** — all 9 projects relocated in 9 separate
+  `git mv` commits (18 files total, every one a 100% rename).
+  Commit chain: `8f5cc48` os-totebox → `2456ea6` service-content
+  → `30ff629` service-email → `cda2ce5` service-slm → `654d255`
+  tool-cognitive-forge → `503f922` os-network-admin → `6df4be0`
+  vendor-phi3-mini → `6f95279` service-vpn → `faae141`
+  app-mediakit-telemetry. No callers needed updating; the only
+  in-script references found were self-usage strings that remain
+  valid after the move.
+- **Stray runtime log surfaced.** `tool-cognitive-forge/llama.log`
+  at project root — runtime log, almost certainly should be
+  gitignored (and removed from tracking if tracked). Not addressed
+  in this session. Added to `NEXT.md` as a separate item.
+- **First rename-series closure: `service-parser` removed.**
+  `service-parser/` directory deleted (`git rm -r`); contained
+  only a README describing an abandoned AI-routing framing — no
+  code, no data, no subdirectories. Zero runtime references
+  anywhere in the repo. Rename-table row moved to Completed
+  migrations; registry row removed; registry Defect count updated
+  from 5 to 4 and Total rows from 100 to 99.
+- **Second rename-series closure: `pointsav-pty-bridge` →
+  `service-pty-bridge`.** Directory renamed via `git mv` (four
+  100% renames: `.gitignore`, `Cargo.toml`, `Cargo.lock`,
+  `src/main.rs`); `target/` left in place because it is gitignored
+  build output. `Cargo.toml` `name` field updated in the same
+  commit. Registry row moved from "Other / special" to the
+  Service section, alphabetically between `service-people` and
+  `service-search`, reclassified Defect → Scaffold-coded. Summary
+  counters: Defect 4 → 3, Scaffold-coded 51 → 52, Total stays 99.
+  Zero external Rust imports, no callers needed updating; not a
+  workspace member. Stray `Cargo.lock` inside the renamed
+  directory remains — resolves with workspace `Cargo.toml`
+  unification (separate open structural defect).
+- **Handoffs-outbound entries made self-executing.** Each outbox
+  entry now carries a "Prescriptive actions" subsection with the
+  exact commands a destination Root Claude can run mechanically —
+  `cp` commands from source absolute path, `git add`, commit
+  message, any in-transit edits, and the completion-signal commit
+  pattern. Header also describes the convention so future outboxes
+  follow the same shape. Two existing entries for
+  `GUIDE-OPERATIONS.md` and `USER_GUIDE_2026-03-30_V2.md` updated
+  with their prescriptive actions. This lets a cold-start Root
+  Claude session in `content-wiki-documentation/` execute the
+  handoffs without reading anything from this session's context.
+- **Fifth (final) rename-series closure: Cognitive Forge term
+  retired.** `service-slm/cognitive-forge/` renamed to
+  `service-slm/router/`; former top-level `tool-cognitive-forge/`
+  moved in as `service-slm/router-trainer/`. Producer/consumer
+  now live together under `service-slm`. Rust Cargo.toml `name`
+  field + `main.rs` usage string updated. Python
+  `distill_knowledge.py` relocated from non-canonical `src/` to
+  `scripts/` alongside `ignite_teacher.sh`. Three binary/log
+  files stopped being tracked (`llamafile` 35 MB, `engine.log`,
+  `llama.log`) via `git rm --cached` + new `.gitignore` section;
+  physical files remain at new paths so the Python workflow still
+  finds them. The 15 MB `qwen2.5-coder-1.5b.gguf` under `weights/`
+  was already ignored. Registry Scaffold-coded 54 → 53, Total
+  98 → 97 (one top-level project absorbed into `service-slm`).
+  This closes the rename-series queue (5 of 5 done) and the
+  separate `llama.log` stray item surfaced earlier in this
+  session.
+- **Fourth rename-series closure: `service-email-egress-{ews,imap}`
+  wrappers flattened; consolidation plan reversed.** After
+  reviewing sub-crate contents, EWS and IMAP are two
+  protocol-specific adapters — not duplicates. Shared sub-crates:
+  `egress-ingress`, `egress-ledger`, `egress-roster`,
+  `data-ledgers/`. Protocol-specific: `egress-archive-ews` /
+  `egress-archive-imap`; EWS-only: `egress-prune`,
+  `egress-balancer`. Merging them would erase that architectural
+  distinction. Instead, flattened the redundant
+  `service-email-egress-ews/service-email-egress-ews/` wrapper
+  (and the imap equivalent) — 73 files promoted up one level.
+  Relative `../data-ledgers/` paths in Rust sources remain valid
+  because crate dirs and `data-ledgers/` both moved together.
+  Registry reclassified both from Defect → Scaffold-coded;
+  Defect count 2 → 0 (registry is now Defect-free); Scaffold-coded
+  52 → 54. The 13 dir-name / Cargo-name mismatches the 2026-04-18
+  audit flagged (e.g., dir `egress-ingress` containing
+  `Cargo.toml` with `name = "service-email-batch-ingress"`) are
+  unaddressed and remain as a separate audit finding.
+- **Third rename-series closure: `vendors-maxmind` reclassified
+  to `app-mediakit-telemetry/assets/`.** Not a rename but a
+  data-reclass: the directory held only the 63.5 MB
+  `GeoLite2-City.mmdb` + READMEs with no code. The vendor's own
+  README already named `app-mediakit-telemetry/assets/` as the
+  intended target path — the monorepo had never realised that
+  path. Moved the `.mmdb` + both READMEs into the documented
+  target; removed `vendors-maxmind/.keep`; empty directory
+  auto-removed by git. Closed the related "does it belong as a
+  `vendor-*` crate at all?" open question (answer: no;
+  non-workspace data directory). Updated monorepo `README.md`
+  line 151 and `USER_GUIDE_2026-03-30_V2.md` line 902 (in-transit
+  edit travels with the cross-repo handoff). Extended
+  `repo-layout.md` to name `assets/` and `data/` as conventional
+  project subfolders. Registry row removed; Defect 3 → 2, Total
+  rows 99 → 98. Python script reference in
+  `app-mediakit-telemetry/scripts/generic-omni-matrix-engine.py`
+  left unchanged (it refers to deployment-side path relative to
+  CWD — independent of monorepo-side layout). Separate `.mmdb` →
+  build-time-fetch task remains open under Structural defects.
+- **Open question surfaced.** `surveyor.py` hard-codes
+  `MAX_DAILY_VERIFICATIONS = 10`. The existing cleanup-log open
+  question — "Verification Surveyor daily throttle number — Under
+  operational review. Do not cite a specific number" — must
+  reconcile: either the code is authoritative (close the question,
+  value is 10) or the doc is authoritative (the code is out of step
+  and needs updating). Do not cite the number externally until
+  resolved.
+- **Second open question surfaced (os-infrastructure build
+  pipeline).** The two scripts `os-infrastructure/forge_iso.sh`
+  (ISO assembly) and `os-infrastructure/build_iso/compile_binary.sh`
+  (binary compile, renamed this session) are sequential build
+  stages but are not wired together — the assembly script does not
+  invoke the compile script, and there is no Makefile or top-level
+  driver. Operator must run them manually in order. Is this
+  intentional (operator-gated two-step) or drift (should become a
+  single driver script)? Pending decision before next pipeline
+  refactor.
+- **Handoff-outbound pattern piloted.** Added
+  `.claude/rules/handoffs-outbound.md` as a cross-repo file-move
+  outbox. Two entries lodged: `GUIDE-OPERATIONS.md` and
+  `USER_GUIDE_2026-03-30_V2.md` both → `content-wiki-documentation`.
+  Both files remain in place in this repo until a Root Claude in
+  the destination repo commits the add-side; only then does a
+  follow-up Root Claude session here commit the source-remove.
+  The pattern is passive — an outbox entry waits for pickup.
+- **Surfaced for Master Claude** (workspace-scope changes, outside
+  Root Claude's write lane per §9):
+  1. Formalise the cross-repo handoff pattern as an addendum in
+     `~/Foundry/CLAUDE.md` §9. Current §9 stops at clone
+     provisioning; the handoff mechanic is the natural extension
+     for file movement between engineering repos.
+  2. Extend `~/Foundry/CLAUDE.md` §10's `.claude/rules/` canonical
+     list from three files to four — add `handoffs-outbound.md`
+     alongside `repo-layout.md`, `project-registry.md`, and
+     `cleanup-log.md`.
+  3. Propagate both the `repo-layout.md` rule (§10 already names
+     the monorepo as reference implementation) and the new
+     `handoffs-outbound.md` pattern to the other engineering repos
+     over time. Order of propagation is `~/Foundry/NEXT.md`'s
+     concern.
+
+---
+
+## 2026-04-22
+
+- **Project framework bootstrap.** Added `.claude/rules/project-registry.md`
+  with 100-row inventory of every top-level directory, classified by
+  state per `~/Foundry/CLAUDE.md` §8 (Reserved-folder /
+  Scaffold-coded / Active / Defect / Not-a-project). Framework docs,
+  templates, and activation procedure live workspace-level. This
+  cleanup-log was also introduced onto `main` today (previously
+  present only on feature branches — drift closed).
+- **Taxonomy expanded to seven domains.** Added `app-orchestration-*`
+  to the in-force `app-[os]-*` list in
+  `~/Foundry/IT_SUPPORT_Nomenclature_Matrix_V8.md` §3. Triggered by
+  `app-orchestration-bim` appearing during the session — would have
+  been an unmatched-prefix defect under the original six-domain
+  rule. Now conformant; `os-orchestration` already exists as a
+  Systemic Wordmark (§2).
+- **Four BIM-research directories registered.** `app-console-bim`,
+  `app-orchestration-bim`, `app-workplace-bim`, `service-bim` — each
+  with a single `RESEARCH.md`. Classified as Reserved-folder pending
+  decision to activate.
+- **Audit cleanup.** Removed 2 `__MACOSX/` directories and 16
+  tracked `.DS_Store` / AppleDouble files from extraction-artefact
+  scaffolding in the egress crates. Added `.DS_Store` to
+  `.gitignore`.
+
+---
+
+## 2026-04-18 — Layer 1 structural audit — findings
+
+- **Headline finding:** Workspace `Cargo.toml` declares only 8 of ~70+ crates as members. Everything else is treated as standalone workspaces, which explains the 23 stray `Cargo.lock` files scattered through the repo. `cargo build --workspace` will skip almost everything; profile/edition inheritance is not reaching most crates.
+- **Severity counts:** 1 Critical, 1 High, 4 Medium, 1 Low.
+  - Critical: workspace under-declaration (8 of ~70+ crates).
+  - High: 23 stray `Cargo.lock` files inside member crates.
+  - Medium: prefix violations (2); dir-name vs `Cargo.toml` name mismatches (13); doubly-nested `service-email-egress-{ews,imap}` scaffolding; many `app-console-*` / `app-network-*` directories without `Cargo.toml`.
+  - Low: `discovery-queue` orphan data directory at root.
+- **Good news on prefix adherence:** across ~85 directories, adherence to the seven canonical prefixes is approximately 97.6%. Only two violations found: `pointsav-pty-bridge` (no recognized prefix) and `vendors-maxmind` (plural form instead of canonical `vendor-`).
+- **Nested redundancy:** `service-email-egress-ews` and `service-email-egress-imap` both contain a redundant intermediate directory of the same name — a doubly-nested copy-paste scaffolding pattern producing depth-3 crates. All 13 directory-name / `Cargo.toml`-name mismatches are concentrated in these nested egress areas (short dir names like `egress-ingress` aliasing qualified crate names like `service-email-batch-ingress`).
+- **No modifications were made in this session — audit only.**
+- **Next:** Open Questions section of this log to be updated separately with five new questions raised by the audit.
+
+---
+
+## 2026-04-18
+
+- Initialized this cleanup log. Seeded active renames, deprecations, intentional exceptions, and open questions from Section 13 of the PointSav Project Instructions.
+- Established the session-start / session-end read-and-update pattern in CLAUDE.md.
+- No code changes in this session. Next session should confirm the active renames table against a fresh grep of the repo to establish a baseline count of remaining occurrences per legacy term.
+- Open question surfaced: whether the `service-parser` / `service-extraction` consolidation is scoped for a specific MEMO version or tracked informally. Answer will determine how we prioritize closing that migration.
