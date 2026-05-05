@@ -1,30 +1,47 @@
 # NEXT.md — service-slm
 
-> Last updated: 2026-05-01 (Phase 2 COMPLETE — Phase 3 next)
+> Last updated: 2026-05-05 (Phase 3 scripting complete — operator deploys remaining infra)
 > Read at session start. Update before session end so the next
 > session knows where to pick up.
 
 ---
 
-## Right now — LEAPFROG 2030 ARCHITECTURE & MULTI-YO-YO DEPLOYMENT
+## Right now — OPERATOR-PRESENCE REQUIRED (all code tasks complete)
 
-The strategy for the dual-engine Multi-Yo-Yo setup and the Leapfrog 2030 datagraph extraction has been finalized. 
+All software-layer tasks from the Leapfrog 2030 architecture are now complete.
 Reference: `service-slm/docs/topic-leapfrog-architecture.md`
 
-**Active Phase: Software Configuration (Task Agent Queue)**
-- [ ] **Multi-Yo-Yo Support:** Refactor `service-slm/crates/slm-doorman-server/src/main.rs` to support multiple endpoints (e.g., `SLM_YOYO_TRAINER_ENDPOINT` and `SLM_YOYO_GRAPH_ENDPOINT`).
-- [ ] **Tier C Auth:** Add billing-capped API keys for Claude/Gemini to `/etc/local-doorman/local-doorman.env` to enable the `audit_proxy` for service-content polishing.
-- [ ] **Grammar Constraints:** Ensure `service-slm` can read the JSON/CSV seeds from `service-content` and pass them as explicit `grammar` rules to Yo-Yo #2 during graph extraction.
-- [ ] **Seed Alignment:** Verify `Archetypes.json`, `Domains.json`, and `Themes.json` are fully locked and exported for `service-slm` consumption.
-- [ ] **Tier C Drafting Pipeline:** Configure `service-content`'s output compiler to query LadybugDB, package the subgraph into a 2,000-token payload, and proxy it to Claude 3.5 Sonnet (via Doorman Tier C) for final document generation.
+**Software Configuration (ALL DONE — commits `6bbbe49` → `378ccb0`):**
+- [x] **Multi-Yo-Yo Support:** `main.rs` supports `SLM_YOYO_TRAINER_ENDPOINT` +
+  `SLM_YOYO_GRAPH_ENDPOINT`; `HashMap<String, YoYoTierClient>` routes by label.
+- [x] **Grammar Constraints:** `service-content` passes entity JSON Schema as `grammar`
+  field + `X-Foundry-Yoyo-Label: graph` header; Doorman deserializes and routes to Yo-Yo #2.
+- [x] **Seed Alignment:** `Archetypes.json`, `Domains.json`, `Themes.json` present in
+  `service-content/seeds/` (3 domains, 4 themes, 5 archetypes — verified 2026-05-05).
+- [x] **Tier C Drafting Pipeline:** `service-content POST /v1/draft/generate` wired;
+  queries LadybugDB graph → ≤2K-token prompt → Doorman `/v1/audit/proxy` → Claude Sonnet.
+- [x] **Phase 3 threshold watcher:** `service-slm/scripts/corpus-threshold.py` + systemd
+  timer `training-trigger.timer` (Sunday 02:00 UTC); marker-only mode pre-D4.
 
-**Deferred Phase: Infrastructure Provisioning (Master Authorization Required)**
-- [ ] **Create GCP Project:** Physically create the `pointsav-public` GCP project.
-- [ ] **Author D4 Image Pipeline:** Write the Packer/OpenTofu pipeline to build the base GCE image for the Yo-Yo fleet (Ubuntu 24.04 + CUDA + vLLM >= 0.12 + Nginx TLS + `idle_shutdown_minutes` systemd timer).
-- [ ] **Bake and Publish Image:** Run the D4 pipeline to publish the image to the `pointsav-public` family.
-- [ ] **Deploy Yo-Yo #1 (Trainer):** Apply the OpenTofu module configuring `g2-standard-4` as a Spot instance. Verify the night-shift schedule and idle-shutdown timer are operational.
-- [ ] **Deploy Yo-Yo #2 (Extractor):** Author a secondary OpenTofu profile for the `a3-highgpu-1g` Dedicated instance. Deploy only when ready to process `cluster-totebox-jennifer`.
-- [ ] **Batch Ingestion:** Feed the 1,600+ deployment files into Yo-Yo #2 and monitor LadybugDB graph generation.
+**Infrastructure Provisioning (Master Authorization Required — none can proceed without D4):**
+- [ ] **Tier C Auth:** Add billing-capped Anthropic API key to `/etc/local-doorman/local-doorman.env`
+  (`SLM_TIER_C_ANTHROPIC_ENDPOINT` + `SLM_TIER_C_ANTHROPIC_KEY`) — enables `audit_proxy`
+  and `service-content POST /v1/draft/generate`. Requires operator API key management.
+- [ ] **Re-enable apprenticeship:** Set `SLM_APPRENTICESHIP_ENABLED=true` in Doorman env
+  (was disabled post Phase 2).
+- [ ] **Yo-Yo idle-shutdown timer:** Runbook step 8 — ~$390/mo savings; 5 min operator time.
+- [ ] **Stage-6 promote:** 30+ commits ahead of origin/main; operator authorization needed.
+- [ ] **cmake + C++ compiler:** `apt install cmake build-essential` on workspace VM
+  (required for `lbug = "0.16"` to compile at `cargo build` time in service-content).
+- [ ] **Create GCP Project:** Physically create the `pointsav-public` GCP project (D4 gate).
+- [ ] **D4 Image Pipeline:** Packer/OpenTofu pipeline → Ubuntu 24.04 + CUDA + vLLM ≥ 0.12
+  + Nginx TLS + idle-shutdown systemd timer. Bake → publish to `slm-yoyo` family.
+- [ ] **Deploy Yo-Yo #1 (Trainer):** `g2-standard-4` Spot; night-shift schedule; verify
+  idle-shutdown operational.
+- [ ] **Deploy Yo-Yo #2 (Extractor):** `a3-highgpu-1g` Dedicated; deploy when ready to
+  process `cluster-totebox-jennifer`.
+- [ ] **Batch Ingestion:** Feed 1,600+ deployment files into Yo-Yo #2; monitor LadybugDB
+  graph growth.
 
 ---
 
