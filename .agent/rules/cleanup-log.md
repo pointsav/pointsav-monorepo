@@ -96,6 +96,48 @@ Newest on top. Append a dated block when a session includes meaningful cleanup w
 
 ---
 
+## 2026-05-05 — Ontological Data Graph full corpus expansion — all jennifer markdown sources loaded
+
+Session continued from prior context. Prior session had loaded 9,999 entities (people.csv + corporate.csv). This session expanded to full corpus.
+
+### What landed this session
+
+**ingest-jennifer.py expanded** (`service-content/scripts/ingest-jennifer.py`, `89d2813`):
+- Added `MARKDOWN_SOURCES` — 9 directory/classification/confidence tuples covering every document type in cluster-totebox-jennifer
+- `_title_from_filename` — comprehensive regex rewrite handling 8+ Bloomberg filename patterns (RESEARCH_, PUBLISHED_, date variants, space- and underscore-delimited, `.pdf copy N` suffixes, ` - Bloomberg` suffix, `COLOUR_PORTRAIT_` prefix)
+- `_extract_md_role_vector` — extracts first meaningful paragraph from markdown, stripping frontmatter, URLs, timestamps, copyright footers
+- `load_markdown_dir` / `load_documents` — batch-load all markdown sources; enriches existing entities via MERGE
+- `--skip-documents` flag to skip document loading for faster people-only reloads
+- Total entities loaded: **10,414** across 7 classifications
+  - person: 4,680 | company: 4,833 | organization: 62
+  - domain-term: 424 | research-document: 455+ | corporate-document: 43
+  - regulatory-document: 7 | architecture-reference: 19 | technical-reference: 10
+
+**Outbox to project-editorial updated** (`.agent/outbox.md`):
+- Full entity inventory with all 7 classifications
+- Expanded query examples organized by TOPIC area (corporate architecture, flow-through, co-location, Broadcom, compliance)
+- Corrected query syntax note: `q` is a continuous substring match — use single keywords or short exact phrases
+
+**Confirmed graph is live and queryable:**
+- `?q=woodfine` → Woodfine people/companies
+- `?q=flow-through` → domain-term and research-document entities
+- `?q=co-location` → mandate-related entities
+- `?q=broadcom` → digital infrastructure entities
+- `?q=exempt+market` → regulatory/compliance entities
+
+### What is pending
+
+- TOPIC authoring: project-editorial's scope (Doctrine claim #35). 5 suggested topics staged in outbox.
+- service-slm Yo-Yo #2 and Doorman Tier C auth: operator-presence gated (unchanged).
+- Stage-6 promote: 36 commits ahead of origin/main.
+- graph is live only while service-content process is running; restart command documented in outbox.
+
+### Tests
+
+162/162 passing (unchanged — no Rust code modified this session).
+
+---
+
 ## 2026-05-05 — Ontological Data Graph light run — cluster-totebox-jennifer
 
 Session opened with housekeeping (cluster rename project-slm → project-intelligence committed in `9de72da`; manifest + .gitignore + outbox-archive updated).
