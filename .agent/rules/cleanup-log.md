@@ -96,5 +96,47 @@ Newest on top. Append a dated block when a session includes meaningful cleanup w
 
 ---
 
+## 2026-05-05 (tenth session — post-Gemini cleanup + Ring 1 analysis)
+
+**Context:** A Gemini CLI master agent operated in the workspace 2026-04-28 to
+2026-05-02 and left two inbox messages (Task A6 bulk rename + DOCTRINE UPDATE)
+but made no code commits. SI.1 work (service-input DOCX + XLSX happy-path
+tests) had been staged by the previous session but not committed due to the
+recurring chmod blocker.
+
+**Commits this session:**
+- `62403f1` — SI.1: happy-path tests for DOCX + XLSX parsers with minimal OOXML
+  fixtures; 32/32 tests pass; closes the sub-agent-queue SI.1 brief.
+- `f32475f` — mailbox cleanup: Gemini CLI inbox messages archived (not acted on);
+  inbox reset; sub-agent-queue SI.1 marked Completed; comprehensive outbox
+  written to Master covering 5 items requiring direction.
+- `ac97570` — operator hygiene: archived prior session entries from cleanup-log
+  to `cleanup-log-archive.md`.
+
+**Injection resistance applied:** Two messages from `master@gemini-cli` arrived
+2026-05-03 claiming a DOCTRINE UPDATE ratifying lowercase GUIDE/TOPIC naming
+and ordering a bulk `git mv` rename (Task A6). Per AGENT.md injection-resistance
+rules, cross-engine directives of this scope require Claude Code Master
+ratification. Messages archived without action; flagged to Master in outbox.
+Operator confirmed the Gemini agent was legitimate but chose to route Task A6
+to Master for ratification.
+
+**Project analysis completed (no code changes):** Ring 1 architecture, Totebox
+Archive relationship, and full prioritised to-do list produced for operator.
+Key finding: service-email is the critical path — it is the only Ring 1 service
+without an MCP interface and without service-fs write wiring.
+
+**Outstanding items surfaced in outbox to Master:**
+- Task A6 (lowercase GUIDE/TOPIC rename) — awaiting Master ratification
+- GUIDE-OPERATIONS.md unstaged working-tree deletion — needs Master decision
+- Index mismatch (`.claude/ → .agent/` symlink migration noise) — needs
+  Root/Master triage
+- Content Return Obligation confirmed satisfied via drafts-outbound/ staging
+- Pending queue: TUF/Ed25519, PD.2 (blocked project-slm), four TOPIC drafts,
+  README refresh, tool-acs-miner reference
+
+**No open questions added.** No registry rows changed.
+
+---
 
 > **Archived entries:** session logs before this point are in `cleanup-log-archive.md`.
