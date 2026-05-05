@@ -356,24 +356,45 @@ function buildSaaEditor(slot, slug, initialDoc, collabEnabled) {
 
   if (saveBtn) {
     saveBtn.addEventListener('click', function () {
+      var body = view.state.doc.toString();
+      var userRole = (typeof window.WIKI_USER_ROLE === 'string') ? window.WIKI_USER_ROLE : 'admin';
+      var editSummary = '';
+
+      if (userRole !== 'admin') {
+        // Editors must supply an edit summary before submitting.
+        var prompted = window.prompt(
+          'Describe your change (required for editors):\nExample: "Corrected terminology per glossary v3"'
+        );
+        if (!prompted || !prompted.trim()) {
+          setStatus('Edit summary required.', false);
+          return;
+        }
+        editSummary = prompted.trim();
+      }
+
       saveBtn.disabled = true;
       var prevLabel = saveBtn.textContent;
       saveBtn.textContent = 'Saving…';
       setStatus('');
-      var body = view.state.doc.toString();
+
       fetch('/edit/' + encodeURIComponent(slug), {
         method: 'POST',
-        headers: { 'content-type': 'text/plain' },
-        body: body,
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ body: body, edit_summary: editSummary }),
       })
         .then(function (resp) {
+          if (resp.status === 202) {
+            saveBtn.textContent = prevLabel;
+            saveBtn.disabled = false;
+            setStatus('Your edit has been submitted for review.', true);
+            return;
+          }
           if (!resp.ok) throw new Error('HTTP ' + resp.status);
-          return resp.text();
-        })
-        .then(function () {
-          saveBtn.textContent = prevLabel;
-          saveBtn.disabled = false;
-          setStatus('Saved at ' + new Date().toLocaleTimeString(), true);
+          return resp.text().then(function () {
+            saveBtn.textContent = prevLabel;
+            saveBtn.disabled = false;
+            setStatus('Saved at ' + new Date().toLocaleTimeString(), true);
+          });
         })
         .catch(function (e) {
           saveBtn.textContent = prevLabel;
