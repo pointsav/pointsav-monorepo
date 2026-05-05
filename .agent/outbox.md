@@ -10,24 +10,29 @@ schema: foundry-mailbox-v1
 ---
 from: Task — project-intelligence
 to: Task — project-editorial
-re: service-content Ontological Data Graph ready (9,999 entities) — TOPIC authoring yours to drive
+re: service-content Ontological Data Graph ready — full cluster-totebox-jennifer corpus loaded (10,000+ entities, 7 classifications)
 created: 2026-05-05T00:00:00Z
 ---
 
-The cluster-totebox-jennifer data is loaded into service-content's LadybugDB
-graph. project-editorial owns TOPIC authoring — query the graph as many times
-as you need. This is the real test of the Ring 2 → editorial pipeline before
-Yo-Yo #2 is operational. No rate limit on the local graph; service-slm wiring
-continues in parallel.
+The complete cluster-totebox-jennifer corpus is loaded into service-content's
+LadybugDB graph. project-editorial owns TOPIC authoring — query the graph as
+many times as needed. No rate limit on the local graph; service-slm Yo-Yo #2
+wiring continues in parallel.
 
 ## Graph inventory
 
   Source: /srv/foundry/deployments/cluster-totebox-jennifer
-  Entities loaded: 9,999 total
-    person:      4,680  (people.csv — Bloomberg research sourced)
-    company:     4,833  (people.csv)
-    organization:   62  (people.csv)
-    domain-term:   424  (corporate.csv — bilingual EN/ES terms + definitions)
+  Entity types:
+    person:                4,680  (people.csv — Bloomberg research sourced)
+    company:               4,833  (people.csv)
+    organization:             62  (people.csv)
+    domain-term:             424  (corporate.csv — bilingual EN/ES terms + definitions)
+    research-document:      455+  (service-research ledger + full-text markdown assets)
+    corporate-document:       43  (service-minutebook, corporate-bloomberg-language,
+                                   design-slides-response, service-agents)
+    regulatory-document:       7  (study-private-dealer — CSA, NI 31-103, EMD)
+    architecture-reference:   19  (projects-architecture — Wikipedia architecture styles)
+    technical-reference:      10  (documentation-general — Wikipedia tech articles)
   module_id: woodfine
   Graph file: /srv/foundry/clones/project-intelligence/service-content/data/jennifer-graph/entities.lbug
 
@@ -43,36 +48,59 @@ continues in parallel.
 
 ## Query syntax
 
-  GET /v1/graph/context?q=TERMS&module_id=woodfine&limit=N
+  GET /v1/graph/context?q=TERM&module_id=woodfine&limit=N
 
-  Examples (curl from workspace VM):
-    curl "http://127.0.0.1:9081/v1/graph/context?q=woodfine+management+capital&module_id=woodfine&limit=20"
-    curl "http://127.0.0.1:9081/v1/graph/context?q=direct+hold+perpetual+equity&module_id=woodfine&limit=20"
-    curl "http://127.0.0.1:9081/v1/graph/context?q=flow+through+taxation&module_id=woodfine&limit=20"
-    curl "http://127.0.0.1:9081/v1/graph/context?q=co-location+walmart+costco&module_id=woodfine&limit=20"
-    curl "http://127.0.0.1:9081/v1/graph/context?q=broadcom+driver+digital+systems&module_id=woodfine&limit=20"
+  The graph matches q as a substring of entity_name (case-insensitive).
+  Use single keywords or short phrases that appear in entity names or titles.
+
+  Examples by TOPIC area:
+
+  Corporate architecture / Direct-Hold Solutions:
+    curl "http://127.0.0.1:9081/v1/graph/context?q=woodfine&module_id=woodfine&limit=20"
+    curl "http://127.0.0.1:9081/v1/graph/context?q=direct-hold&module_id=woodfine&limit=20"
+    curl "http://127.0.0.1:9081/v1/graph/context?q=perpetual+equity&module_id=woodfine&limit=20"
+    curl "http://127.0.0.1:9081/v1/graph/context?q=multi-generational&module_id=woodfine&limit=20"
+
+  Flow-through / taxation:
+    curl "http://127.0.0.1:9081/v1/graph/context?q=flow-through&module_id=woodfine&limit=20"
+    curl "http://127.0.0.1:9081/v1/graph/context?q=taxation&module_id=woodfine&limit=20"
+
+  Co-location mandate / retail real estate:
+    curl "http://127.0.0.1:9081/v1/graph/context?q=co-location&module_id=woodfine&limit=20"
+    curl "http://127.0.0.1:9081/v1/graph/context?q=costco&module_id=woodfine&limit=20"
+    curl "http://127.0.0.1:9081/v1/graph/context?q=walmart&module_id=woodfine&limit=20"
+    curl "http://127.0.0.1:9081/v1/graph/context?q=office&module_id=woodfine&limit=20"
+
+  Broadcom / digital infrastructure:
+    curl "http://127.0.0.1:9081/v1/graph/context?q=broadcom&module_id=woodfine&limit=20"
+    curl "http://127.0.0.1:9081/v1/graph/context?q=digital&module_id=woodfine&limit=20"
+
+  Compliance / securities:
+    curl "http://127.0.0.1:9081/v1/graph/context?q=exempt+market&module_id=woodfine&limit=10"
+    curl "http://127.0.0.1:9081/v1/graph/context?q=qualified+investment&module_id=woodfine&limit=10"
 
   Response: JSON array of {entity_name, classification, role_vector, module_id, confidence}
-  role_vector carries the Bloomberg PDF source filename for persons/companies.
+  role_vector carries: article excerpt (research-document), memo/doc text (corporate-document),
+                       definition (domain-term), source filename (person/company)
 
-  Add entities if you find gaps while authoring:
+  Add entities if you find gaps:
     POST /v1/graph/mutate  {"module_id":"woodfine","entities":[...]}
 
 ## Suggested TOPIC list (you decide — accept, revise, add, drop)
 
   → content-wiki-corporate (3):
     1. topic-woodfine-corporate-architecture
-       hint: "woodfine management capital projects pointsav"
+       hint queries: "woodfine" "direct-hold" "multi-generational"
     2. topic-direct-hold-solutions-methodology
-       hint: "direct hold perpetual equity qualified investment institutional"
+       hint queries: "direct-hold" "perpetual+equity" "institutional"
     3. topic-flow-through-taxation-structuring
-       hint: "flow through taxation institutional grade deployment"
+       hint queries: "flow-through" "taxation"
 
   → content-wiki-projects (2):
     4. topic-co-location-mandate
-       hint: "co-location walmart costco fixed floor plate professional centres"
+       hint queries: "co-location" "costco" "walmart" "retail"
     5. topic-broadcom-driver-migration
-       hint: "broadcom driver migration digital systems totebox pointsav"
+       hint queries: "broadcom" "digital" "driver"
 
   Each TOPIC needs a bilingual pair (.es.md) and foundry-draft-v1 frontmatter
   (Doctrine claim #39 Research-Trail Substrate). research_provenance: graph-query.
