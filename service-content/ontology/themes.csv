@@ -1,5 +1,12 @@
-Theme_ID,Theme_Name,Active_State
-THM-01,Co-Location Mandate Expansion,Active
-THM-02,Flow-Through Taxation Structuring,Active
-THM-03,Broadcom Driver Migration,Active
-THM-04,Q3 Capital Procurement,Active
+id,name,scope,thesis,gravity_keywords,active_state
+THM-01,Co-Location Mandate Expansion,tactical,Co-location with key tenants reduces operating friction and strengthens renewal rates by embedding services within the building ecosystem.,co-location|mandate|tenant|proximity|anchor|retention,active
+THM-02,Flow-Through Taxation Structuring,tactical,Flow-through structures pass income directly to investors at personal tax rates while avoiding corporate-level taxation drag.,flow-through|taxation|trust|income|investor|distribution|tax efficiency,active
+THM-03,Broadcom Driver Migration,tactical,Migrating from proprietary Broadcom drivers to open standards reduces vendor lock-in and enables sovereign infrastructure operations.,broadcom|driver|migration|open source|sovereign|infrastructure|vendor,active
+THM-04,Q3 Capital Procurement,tactical,Q3 capital procurement timing aligns investment deployment with market conditions and investor availability cycles.,capital|procurement|q3|timing|investment|market|deployment,active
+THM-A,Growth Strategy,strategic,Woodfine acquires undervalued assets in secondary markets structured as perpetual-equity direct-hold vehicles with exchange-traded debt frameworks.,direct-hold|growth|acquisition|perpetual equity|legal chassis|velocity of capital|flow-through,active
+THM-B,ESG Direct-Hold Solutions,strategic,Direct-hold solutions align developer and investor interests through equity-based compensation and mandated regulated reporting standards.,esg|direct-hold|alignment|governance|transparency|reporting|social contract,active
+THM-C,ESG Woodfine Buildings,strategic,Woodfine buildings achieve industrial efficiency through standardized floor plates and regional professional anchoring for dual-mandate certification.,esg|buildings|industrial efficiency|floor plates|distributed economy|dual mandate|physical,active
+THM-D,Mix-of-Use,strategic,Mix-of-use developments create recession-resistant ecosystems through curated tenant diversity adjacent to established power centres.,mix-of-use|product market fit|gravity|urban infill|power centre|ecosystem|tenant,active
+THM-E,Income Solution,strategic,Perpetual equity and retained income provide structural capital reserves while organic deleveraging reduces debt via net operating income.,income|compounding|structural reserve|deleveraging|net operating income|stability,active
+THM-F,Self-Similar Governance,strategic,Universal governing documents deliver superior investor protections and cross-border compliance versus legacy joint venture structures.,governance|investor protection|governing documents|transferability|joint venture|compliance|structural,active
+THM-G,Capital Framework,strategic,The capital framework integrates domestic investor alignment with jurisdictional diversification through club deals and special purpose vehicles.,capital framework|diversification|foreign capital|domestic|spv|club deal|jurisdictional,active

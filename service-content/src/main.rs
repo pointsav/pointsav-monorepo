@@ -1,5 +1,7 @@
+mod config_http;
 mod graph;
 mod http;
+mod taxonomy;
 
 use graph::{GraphEntity, GraphStore, LbugGraphStore};
 use notify::{Event, RecursiveMode, Result as NotifyResult, Watcher};
@@ -23,9 +25,21 @@ fn main() -> NotifyResult<()> {
     let module_id = std::env::var("SERVICE_CONTENT_MODULE_ID")
         .unwrap_or_else(|_| "woodfine".to_string());
 
+    // Ontology directory: service-content/ontology/ relative to the binary's parent,
+    // or overridden via SERVICE_CONTENT_ONTOLOGY_DIR.
+    let ontology_dir = std::env::var("SERVICE_CONTENT_ONTOLOGY_DIR").unwrap_or_else(|_| {
+        // Default: sibling ontology/ directory relative to the binary location.
+        std::env::current_exe()
+            .ok()
+            .and_then(|p| p.parent().map(|p| p.to_path_buf()))
+            .map(|p| p.join("ontology").to_string_lossy().to_string())
+            .unwrap_or_else(|| "ontology".to_string())
+    });
+
     println!("[SYSTEM] Doorman endpoint: {}", doorman_endpoint);
     println!("[SYSTEM] Base dir: {}", base_dir);
     println!("[SYSTEM] Module ID: {}", module_id);
+    println!("[SYSTEM] Ontology dir: {}", ontology_dir);
 
     let corpus_dir = format!("{}/service-content/ledgers", base_dir);
     let crm_dir = format!("{}/service-people/ledgers", base_dir);
@@ -46,6 +60,30 @@ fn main() -> NotifyResult<()> {
     graph_store.init_schema().expect("[SYSTEM] Failed to initialise graph schema");
     println!("[SYSTEM] Graph store ready: {}", graph_db_path);
 
+    // ── Startup taxonomy load ─────────────────────────────────────────────────
+    match taxonomy::load_taxonomy_from_dir(&ontology_dir) {
+        Ok(bundle) => {
+            let entities = taxonomy::bundle_to_entities(&bundle);
+            let total = entities.len();
+            match graph_store.upsert_entities("__taxonomy__", &entities) {
+                Ok(n) => println!(
+                    "[TAXONOMY] Loaded: {} archetypes, {} coa-profiles, {} domains, \
+                     {} glossary-terms, {} themes, {} topics → {} entities upserted",
+                    bundle.archetypes.len(),
+                    bundle.coa.len(),
+                    bundle.domains.len(),
+                    bundle.glossary.len(),
+                    bundle.themes.len(),
+                    bundle.topics.len(),
+                    n
+                ),
+                Err(e) => println!("[TAXONOMY] Graph write failed: {}", e),
+            }
+            let _ = total;
+        }
+        Err(e) => println!("[TAXONOMY] Load failed (non-fatal): {}", e),
+    }
+
     // ── HTTP server (dedicated thread + own tokio runtime) ───────────────────
     // Cannot use reqwest::blocking inside a #[tokio::main] context (nested
     // runtime panic). Keep main synchronous; HTTP server owns its own runtime.
@@ -53,9 +91,10 @@ fn main() -> NotifyResult<()> {
         .unwrap_or_else(|_| "127.0.0.1:9081".to_string());
     let graph_for_http = Arc::clone(&graph_store);
     let doorman_for_http = doorman_endpoint.clone();
+    let ontology_for_http = ontology_dir.clone();
     std::thread::spawn(move || {
         let rt = tokio::runtime::Runtime::new().expect("Failed to build HTTP tokio runtime");
-        rt.block_on(http::run_server(graph_for_http, http_bind, doorman_for_http));
+        rt.block_on(http::run_server(graph_for_http, http_bind, doorman_for_http, ontology_for_http));
     });
 
     // ── Process any pre-existing CORPUS_* files ───────────────────────────────
