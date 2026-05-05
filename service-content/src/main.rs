@@ -52,9 +52,10 @@ fn main() -> NotifyResult<()> {
     let http_bind = std::env::var("SERVICE_CONTENT_HTTP_BIND")
         .unwrap_or_else(|_| "127.0.0.1:9081".to_string());
     let graph_for_http = Arc::clone(&graph_store);
+    let doorman_for_http = doorman_endpoint.clone();
     std::thread::spawn(move || {
         let rt = tokio::runtime::Runtime::new().expect("Failed to build HTTP tokio runtime");
-        rt.block_on(http::run_server(graph_for_http, http_bind));
+        rt.block_on(http::run_server(graph_for_http, http_bind, doorman_for_http));
     });
 
     // ── Process any pre-existing CORPUS_* files ───────────────────────────────
