@@ -82,6 +82,23 @@ enum Command {
             default_value = "PointSav Documentation Wiki"
         )]
         site_title: String,
+
+        /// Phase 4 Step 4.7: tenant name for the read-only git remote.
+        /// Served at /git-server/{tenant}/...
+        #[arg(long, env = "WIKI_GIT_TENANT", default_value = "pointsav")]
+        git_tenant: String,
+
+        /// Phase 5: admin username for initial seed. When set alongside
+        /// WIKI_ADMIN_PASSWORD_HASH and the users table is empty, creates
+        /// the first admin account automatically on startup.
+        #[arg(long, env = "WIKI_ADMIN_USERNAME")]
+        admin_username: Option<String>,
+
+        /// Phase 5: pre-hashed argon2id password for the initial admin seed.
+        /// Generate with: `echo -n "password" | argon2 salt -id -e`
+        /// or via the argon2 crate's own CLI.
+        #[arg(long, env = "WIKI_ADMIN_PASSWORD_HASH")]
+        admin_password_hash: Option<String>,
     },
 }
 
@@ -104,7 +121,10 @@ async fn main() -> Result<()> {
             guide_dir_2,
             enable_collab,
             site_title,
-        } => serve(content_dir, guide_dir, guide_dir_2, bind, citations_yaml, state_dir, enable_collab, site_title).await,
+            git_tenant,
+            admin_username,
+            admin_password_hash,
+        } => serve(content_dir, guide_dir, guide_dir_2, bind, citations_yaml, state_dir, enable_collab, site_title, git_tenant, admin_username, admin_password_hash).await,
     }
 }
 
@@ -117,6 +137,9 @@ async fn serve(
     state_dir: PathBuf,
     enable_collab: bool,
     site_title: String,
+    git_tenant: String,
+    admin_username: Option<String>,
+    admin_password_hash: Option<String>,
 ) -> Result<()> {
     if !content_dir.is_dir() {
         bail!(
@@ -160,9 +183,25 @@ async fn serve(
 
     let glossary = app_mediakit_knowledge::glossary::load_glossary(&content_dir);
 
+    // Phase 5: open SQLite DB when admin credentials are configured.
+    let db = if admin_username.is_some() || admin_password_hash.is_some() {
+        let db_path = state_dir.join("wiki.db");
+        tracing::info!(path = %db_path.display(), "opening auth database");
+        let conn = rusqlite::Connection::open(&db_path)?;
+        app_mediakit_knowledge::users::init_schema(&conn)?;
+        if let (Some(ref uname), Some(ref phash)) = (&admin_username, &admin_password_hash) {
+            app_mediakit_knowledge::users::seed_admin_if_empty(&conn, uname, phash)?;
+        }
+        Some(std::sync::Arc::new(std::sync::Mutex::new(conn)))
+    } else {
+        tracing::info!("auth not configured (WIKI_ADMIN_USERNAME not set) — running without login");
+        None
+    };
+
     if enable_collab {
         tracing::info!("collab WebSocket relay enabled at /ws/collab/{{slug}}");
     }
+    tracing::info!(git_tenant = %git_tenant, "git remote enabled at /git-server/{}/info/refs", git_tenant);
     let state = AppState {
         content_dir,
         guide_dir,
@@ -173,7 +212,9 @@ async fn serve(
         collab: Arc::new(app_mediakit_knowledge::collab::CollabRooms::new()),
         enable_collab,
         site_title,
+        git_tenant,
         glossary: Arc::new(glossary),
+        db,
     };
     let app = router(state);
     let listener = tokio::net::TcpListener::bind(bind).await?;
