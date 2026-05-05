@@ -187,6 +187,13 @@ pub fn first_paragraph_snippet(body_md: &str, max_chars: usize) -> String {
     }
 }
 
+/// Extract the URL of the first image found in the Markdown body.
+/// Returns None if no images are found.
+pub fn first_image_url(body_md: &str) -> Option<String> {
+    let re_img = regex::Regex::new(r"!\[.*?\]\((.*?)\)").unwrap();
+    re_img.captures(body_md).map(|caps| caps[1].to_string())
+}
+
 /// Render an RFC 4287 Atom feed XML string from a slice of `FeedItem`s.
 ///
 /// Uses `atom_syndication` 0.12. `FixedDateTime` is

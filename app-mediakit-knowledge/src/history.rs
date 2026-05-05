@@ -111,23 +111,38 @@ pub fn topic_blame(
         .into_blob();
     let content = String::from_utf8_lossy(&blob.data);
     
-    let author = commit.author().map_err(|e| WikiError::WriteFailed(format!("gix author failed: {e}")))?;
-    let author_name = author.name.to_string();
-    let sha = id.to_string();
-    let time = commit.time().map_err(|e| WikiError::WriteFailed(format!("gix time failed: {e}")))?;
-    let timestamp_iso = format_time(time);
-    
-    // TODO: Implement actual per-line blame using gix-blame 0.13.0
-    // For now, return lines annotated with the HEAD commit as a high-fidelity placeholder
+    let blame_res = repo.blame_file(
+        gix::path::into_bstr(&path).as_ref(),
+        id,
+        Default::default(),
+    ).map_err(|e| WikiError::WriteFailed(format!("gix blame failed: {e}")))?;
+
     let mut lines = Vec::new();
-    for (i, line) in content.lines().enumerate() {
-        lines.push(BlameLine {
-            line_number: i + 1,
-            line_text: line.to_string(),
-            sha: sha.clone(),
-            author: author_name.clone(),
-            timestamp_iso: timestamp_iso.clone(),
-        });
+    let content_lines: Vec<&str> = content.lines().collect();
+
+    for entry in blame_res.entries {
+        let commit_obj = repo.find_object(entry.commit_id)
+            .map_err(|e| WikiError::WriteFailed(format!("gix find commit failed: {e}")))?;
+        let commit = commit_obj.try_into_commit()
+            .map_err(|e| WikiError::WriteFailed(format!("gix not a commit: {e}")))?;
+        
+        let author = commit.author().map_err(|e| WikiError::WriteFailed(format!("gix author failed: {e}")))?;
+        let time = commit.time().map_err(|e| WikiError::WriteFailed(format!("gix time failed: {e}")))?;
+        let timestamp_iso = format_time(time);
+        let author_name = author.name.to_string();
+        let sha = entry.commit_id.to_string();
+
+        for i in (entry.start_in_blamed_file as usize)..(entry.start_in_blamed_file as usize + entry.len.get() as usize) {
+            if i < content_lines.len() {
+                lines.push(BlameLine {
+                    line_number: i + 1,
+                    line_text: content_lines[i].to_string(),
+                    sha: sha.clone(),
+                    author: author_name.clone(),
+                    timestamp_iso: timestamp_iso.clone(),
+                });
+            }
+        }
     }
     
     Ok(lines)

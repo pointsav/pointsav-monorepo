@@ -341,7 +341,7 @@ mod tests {
 
     #[test]
     fn renders_wikilinks() {
-        let html = render_html("see [[Other Page]] for context");
+        let html = render_html("see [[Other Page]] for context", std::path::Path::new("."));
         assert!(html.contains("Other Page"), "wikilink text should be in output: {html}");
         assert!(html.contains("href"), "wikilink should produce an anchor: {html}");
     }
@@ -349,7 +349,7 @@ mod tests {
     #[test]
     fn renders_gfm_table() {
         let md = "| a | b |\n|---|---|\n| 1 | 2 |\n";
-        let html = render_html(md);
+        let html = render_html(md, std::path::Path::new("."));
         assert!(html.contains("<table>"), "GFM table should render: {html}");
     }
 
@@ -359,7 +359,7 @@ mod tests {
     #[test]
     fn edit_pencils_injected_on_h2_not_h1() {
         let md = "# Title\n\n## Section\n\ntext\n";
-        let html = render_html(md);
+        let html = render_html(md, std::path::Path::new("."));
         // The h1 should not carry an edit pencil.
         let h1_pos = html.find("<h1").unwrap();
         let h1_end = html[h1_pos..].find("</h1>").unwrap() + h1_pos;
@@ -378,7 +378,7 @@ mod tests {
     #[test]
     fn extracts_headings_from_html() {
         let md = "## Alpha\n\ntext\n\n### Beta\n\nmore\n";
-        let raw = render_html_raw(md);
+        let raw = render_html_raw(md, std::path::Path::new("."));
         let headings = extract_headings(&raw);
         assert_eq!(headings.len(), 2, "should extract 2 headings: {:?}", headings);
         assert_eq!(headings[0].1, "Alpha");
@@ -391,7 +391,7 @@ mod tests {
     #[test]
     fn toc_text_has_no_edit_fragments() {
         let md = "## A Section\n\ntext\n";
-        let raw = render_html_raw(md);
+        let raw = render_html_raw(md, std::path::Path::new("."));
         let headings = extract_headings(&raw);
         assert_eq!(headings.len(), 1);
         assert!(
