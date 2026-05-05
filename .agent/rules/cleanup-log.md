@@ -96,6 +96,31 @@ Newest on top. Append a dated block when a session includes meaningful cleanup w
 
 ---
 
+## 2026-05-05 — Email template ingest — V5 catalog JSON DATA format (420 communication-template entities)
+
+Session fixed `load_email_templates()` in `service-content/scripts/ingest-jennifer.py` to handle the V5 catalog format.
+
+### Problem
+
+The V5 ZIP catalog (`catalog_base.html`) is a JavaScript SPA — template records are embedded as `const DATA = [{...}, ...];` in a `<script>` block. The original parser used `HTMLParser` to walk `.card` HTML divs, which only exist in the older v1 static catalog. V5 produced 0 entities.
+
+### Fix — commit `c140c3c` (Peter Woodfine)
+
+`load_email_templates()` updated with two-path logic:
+1. **V5 path (primary):** `re.search(r'const DATA = (\[.*?\]);', html, re.DOTALL)` + `json.loads()`. Entity mapping: `entity_name` ← `subject`, `role_vector` ← `cat | subName | desc`, `location_vector` ← `code` (e.g., `WMCTCOLFLUP001`), `contact_vector` ← `body[:300]`.
+2. **v1 HTML fallback:** `_EmailCatalogParser` HTML card-div parser retained for older static catalogs.
+
+### Outcome
+
+420 `communication-template` entities loaded into the graph at `module_id=woodfine`. Graph is queryable at `http://127.0.0.1:9081`. Entity names are email subject lines; `location_vector` carries the `WMCT{CAT}{TYPE}{NNN}` code for exact-match lookup.
+
+### Pending
+
+- Catalog extracted to `/tmp/email-template-v5/` — temporary; will not survive reboots. Re-run ingest from that path if service-content is restarted on a fresh VM.
+- Phase 5 deferred: `.eml` MIME parser for `git-documentation-wiki.zip` (246 self-notes emails → `notes-document` classification).
+
+---
+
 ## 2026-05-05 — Taxonomy config layer — Archetypes, COA, Domains, Glossary, Themes, Topics as HTTP-editable CSV config
 
 Session built the full taxonomy config layer for service-content in response to operator's request: *"these are the .config files for service-content."*
