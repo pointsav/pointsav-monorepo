@@ -13,3 +13,4 @@ axum = { version = "0.7", features = ["json"] }
 tokio = { version = "1", features = ["full"] }
 anyhow = "1.0"
 chrono = { version = "0.4", features = ["serde"] }
+csv = "1.3"

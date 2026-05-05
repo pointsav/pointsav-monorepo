@@ -1,5 +1,2 @@
-Term_EN,Term_ES,Definition
-Fixed Floor Plate,Placa de Piso Fija,"The standardized structural base."
-Co-location,Coubicación,"Proximity strategy validating physical footprints of major retailers."
-Geometry of Sustainability,Geometría de la Sostenibilidad,"Design methodology reducing OpEx by ~30% via geometry."
-Woodfine Professional Centres,Centros Profesionales Woodfine,"3-5 storey office buildings; strictly located within 1 km of a Power Centre."
+domain_id,domain_name,category,thesis,gravity_keywords
+projects,Projects,real-estate,"Every Woodfine project is designed as a self-similar operating unit — replicable across geographies with predictable yield-on-cost and a defined path to stabilization.",project|building|construction|floor plate|co-location|professional centre|site|development|woodfine

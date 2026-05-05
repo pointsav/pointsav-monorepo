@@ -1,0 +1,6 @@
+topic_id,title,domain,wiki_repo,wiki_path,active_state
+topic-ontological-data-graph,Ontological Data Graph,documentation,content-wiki-documentation,topics/topic-ontological-data-graph.md,pending
+topic-doorman-protocol,Doorman Protocol,documentation,content-wiki-documentation,topics/topic-doorman-protocol.md,pending
+topic-knowledge-graph-architecture,Knowledge Graph Architecture,documentation,content-wiki-documentation,topics/topic-knowledge-graph-architecture.md,pending
+topic-semantic-entity-extraction,Semantic Entity Extraction,documentation,content-wiki-documentation,topics/topic-semantic-entity-extraction.md,pending
+topic-taxonomy-bootstrap,Taxonomy Bootstrap,documentation,content-wiki-documentation,topics/topic-taxonomy-bootstrap.md,pending

@@ -10,12 +10,14 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use crate::graph::{GraphEntity, GraphStore};
+use crate::config_http::config_routes;
 
 // ── shared server state ───────────────────────────────────────────────────────
 
 pub struct HttpState {
     pub graph: Arc<dyn GraphStore>,
     pub doorman_endpoint: String,
+    pub ontology_dir: String,
 }
 
 // ── request / response types ──────────────────────────────────────────────────
@@ -248,10 +250,11 @@ fn format_entity_block(entities: &[GraphEntity]) -> String {
 
 // ── server entrypoint ─────────────────────────────────────────────────────────
 
-pub async fn run_server(store: Arc<dyn GraphStore>, bind_addr: String, doorman_endpoint: String) {
+pub async fn run_server(store: Arc<dyn GraphStore>, bind_addr: String, doorman_endpoint: String, ontology_dir: String) {
     let state = Arc::new(HttpState {
         graph: store,
         doorman_endpoint,
+        ontology_dir,
     });
 
     let app = Router::new()
@@ -259,6 +262,7 @@ pub async fn run_server(store: Arc<dyn GraphStore>, bind_addr: String, doorman_e
         .route("/v1/graph/context", get(graph_context))
         .route("/v1/graph/mutate", post(graph_mutate))
         .route("/v1/draft/generate", post(draft_generate))
+        .merge(config_routes())
         .with_state(state);
 
     let listener = match tokio::net::TcpListener::bind(&bind_addr).await {
