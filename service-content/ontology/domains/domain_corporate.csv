@@ -1,5 +1,2 @@
-Term_EN,Term_ES,Definition
-Qualified Investment,Inversión Calificada,"In relation to a WOODFINE PROFESSIONAL CENTRE, one or more contiguous parcels of property..."
-Direct-Hold Solutions,Soluciones de Tenencia Directa,"The foundational operating entities..."
-Perpetual Equity,Capital Perpetuo,"Long-term value creation over short-term liquidity."
-Flow-Through Taxation,Tributación de Flujo Directo,"Income passed directly to Investors, avoiding corporate-level taxation."
+domain_id,domain_name,category,thesis,gravity_keywords
+corporate,Corporate,governance,"Woodfine builds perpetual-equity real estate through direct-hold structures that pass income directly to investors while avoiding corporate-level taxation drag.",real estate|property|corporate|equity|investor|direct-hold|trust|flow-through

@@ -1,5 +1,2 @@
-Term_EN,Term_ES,Definition
-PointSav Digital Systems AG,PointSav Digital Systems AG,"The proprietary Trade Name of the digital infrastructure entity."
-Totebox Archive,Archivo Totebox,"An isolated container for a specific data entity."
-Sovereign Telemetry,Telemetría Soberana,"Zero-cookie, mathematically absolute intelligence ledger."
-Capability-Based Manager,Gestor Basado en Capacidades,"Microkernel lock replacing traditional operating systems."
+domain_id,domain_name,category,thesis,gravity_keywords
+documentation,Documentation,knowledge,"Woodfine's documentation system turns institutional knowledge into queryable, versioned, bilingual assets that any authorized actor can retrieve without asking a person.",documentation|knowledge|wiki|topic|guide|bilingual|versioned|queryable|institutional

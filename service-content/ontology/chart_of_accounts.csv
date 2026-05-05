@@ -1,14 +1,54 @@
-id,profile,domain,sub_domain
-1,Compliance,Counsel,Legal Representation
-2,Compliance,Accounting,Fiscal Oversight
-3,Compliance,Auditor,Independent Review
-4,Compliance,Bank,Institutional Custodian
-5,Real Estate,Leasing,Office
-6,Real Estate,Leasing,Industrial
-7,Real Estate,Leasing,Retail
-8,Real Estate,Municipalities,Local Authority
-9,Construction,Collaborators,Control Architect
-10,IT Support,Contributors,Software Architect
-11,Investor Relations,Finance,Portfolio Managers
-12,Personnel,Governance,Supervisory Board
-13,Local Administration,Professional Services,Local Accountant
+reference_number,category,type,gravity_keywords
+1001,Personal,Director,director|board|chair|governor
+1002,Personal,Officer,officer|ceo|cfo|coo|president|vp
+1003,Personal,Employee,employee|staff|associate|team member
+2001,Compliance,Counsel,counsel|lawyer|attorney|solicitor|legal
+2002,Compliance,Accounting,accounting|accountant|cpa|bookkeeper|fiscal
+2003,Compliance,Auditor,auditor|audit|review|independent review|assurance
+2004,Compliance,Bank,bank|banking|financial institution|custodian
+2005,Compliance,Local Accountant,local accountant|regional accounting|local fiscal
+2006,Compliance,Local Counsel,local counsel|local lawyer|regional legal|local solicitor
+2007,Compliance,Local Bank,local bank|regional bank|community bank
+3002,Real Estate,Agents,agent|broker|realtor|listing|sales representative
+3003,Real Estate,Office Leasing,office leasing|office tenant|commercial lease|office space
+3004,Real Estate,Industrial Leasing,industrial leasing|warehouse|industrial tenant|logistics
+3005,Real Estate,Retail Leasing,retail leasing|retail tenant|storefront|commercial retail
+3006,Real Estate,Tenants (Office),office tenant|lessee|occupant|commercial occupant
+3007,Real Estate,Tenants (Industrial),industrial tenant|warehouse tenant|manufacturing tenant
+3008,Real Estate,Tenants (Retail),retail tenant|shop tenant|retail occupant
+3009,Real Estate,Municipality,municipality|city|municipal|local government|civic authority
+4001,Collaborators,Control Architect,control architect|architect of record|prime consultant
+4002,Collaborators,Building Design,building design|architect|design consultant|architectural design
+4003,Collaborators,Floor Plates,floor plates|space planning|interior layout|floor plan
+4004,Collaborators,Façade,façade|cladding|exterior|curtain wall|building skin
+4005,Collaborators,Landscape,landscape|landscaping|site design|exterior amenity
+4006,Collaborators,Parking Lot,parking|parking lot|surface parking|structured parking
+4007,Collaborators,Digital Systems,digital systems|technology|ict|smart building|it infrastructure
+4008,Collaborators,Project Architect,project architect|design lead|design architect
+4009,Collaborators,Structural,structural|structural engineer|engineer of record|structure
+4010,Collaborators,Wayfinding,wayfinding|signage|navigation|building signage
+4050,Collaborators,Trades,trades|contractor|subcontractor|subtrade|trade
+4075,Collaborators,Suppliers,supplier|vendor|material supplier|product vendor
+5005,Finance,Bankers,banker|investment banker|lender|debt provider|capital markets
+5006,Finance,Advisors,advisor|financial advisor|investment advisor|consultant
+5025,Finance,Marketing,marketing|communications|brand|outreach|promotion
+5026,Finance,Photography,photography|photographer|visual media|imagery
+5027,Finance,Copy Editing,copy editing|copywriter|editor|content writer|proofreader
+5075,Finance,Professionals,professional|specialist|expert|professional services
+5076,Finance,Academics,academic|researcher|professor|university|faculty
+5077,Finance,Media,media|press|journalist|publication|news
+5078,Finance,Politician,politician|elected official|government official|minister|legislator
+6001,IT Support,Project Architect,it architect|solution architect|enterprise architect|technical lead
+6002,IT Support,DevOps,devops|deployment|infrastructure|ci/cd|release engineering
+6003,IT Support,Networking,networking|network engineer|network infrastructure|connectivity
+6004,IT Support,QA,qa|quality assurance|testing|test engineer|quality control
+6005,IT Support,Database,database|dba|data engineer|data architecture|storage
+6006,IT Support,Software Integration,software integration|integration|api|middleware|systems integration
+6007,IT Support,Security,security|cybersecurity|information security|infosec|penetration testing
+6008,IT Support,UI/UX,ui|ux|user interface|user experience|design|frontend design
+6009,IT Support,Data Science,data science|machine learning|ml|ai|analytics|data analysis
+6010,IT Support,BIM,bim|building information modeling|digital twin|revit|ifc
+6011,IT Support,Mobile,mobile|ios|android|mobile application|app development
+6012,IT Support,IoT,iot|internet of things|sensors|edge computing|embedded systems
+6013,IT Support,Back-End,back-end|backend|server|api development|microservices
+6014,IT Support,GIS,gis|geographic information systems|mapping|spatial data|geospatial
