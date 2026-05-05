@@ -497,7 +497,11 @@ class _EmailCatalogParser(HTMLParser):
 
 
 def load_email_templates(catalog_html_path: str) -> list:
-    """Parse catalog_base.html from service-email-template_V5 into communication-template entities."""
+    """Parse catalog_base.html from service-email-template_V5 into communication-template entities.
+
+    V5 catalogs embed all records as `const DATA = [...];` JSON (JavaScript SPA format).
+    Falls back to HTML card-div parsing for older v1 static catalogs.
+    """
     if not os.path.isfile(catalog_html_path):
         print(f"  (catalog not found at {catalog_html_path} — skipping templates)", file=sys.stderr)
         return []
@@ -505,12 +509,46 @@ def load_email_templates(catalog_html_path: str) -> list:
     with open(catalog_html_path, encoding="utf-8", errors="replace") as f:
         html = f.read()
 
-    parser = _EmailCatalogParser()
-    parser.feed(html)
-
     now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     entities = []
-    for t in parser.templates:
+
+    # V5 format: const DATA = [{...}, ...]; embedded in <script>
+    m = re.search(r"const DATA = (\[.*?\]);", html, re.DOTALL)
+    if m:
+        try:
+            data = json.loads(m.group(1))
+        except json.JSONDecodeError as e:
+            print(f"  (V5 DATA parse error: {e} — falling back to HTML parser)", file=sys.stderr)
+            data = []
+        for t in data:
+            subject = (t.get("subject") or "").strip()
+            if not subject:
+                continue
+            cat = (t.get("cat") or "").strip()
+            sub_name = (t.get("subName") or "").strip()
+            desc = (t.get("desc") or "").strip()
+            code = (t.get("code") or "").strip()
+            body = (t.get("body") or "").strip()
+            role_parts = [p for p in [cat, sub_name, desc] if p]
+            role = " | ".join(role_parts)
+            entities.append({
+                "id": normalize_id(MODULE_ID, subject),
+                "entity_name": subject,
+                "classification": "communication-template",
+                "role_vector": role[:220],
+                "location_vector": code,
+                "contact_vector": body[:300],
+                "module_id": MODULE_ID,
+                "confidence": 0.95,
+                "created_at": now,
+            })
+        if entities:
+            return entities
+
+    # v1 fallback: static HTML card divs
+    html_parser = _EmailCatalogParser()
+    html_parser.feed(html)
+    for t in html_parser.templates:
         title = t["title"].strip()
         if not title:
             continue
