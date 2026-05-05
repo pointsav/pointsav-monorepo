@@ -8,6 +8,7 @@ Sources:
   3. service-research/ledger/*.yaml           → research-document entities (article metadata)
   4. Markdown document sources (multiple dirs) → research-document, corporate-document,
      regulatory-document, architecture-reference, technical-reference entities
+  5. catalog_base.html (service-email-template_V5) → communication-template entities
 
 Bypasses the Doorman/LLM extraction step — entities are pre-extracted or derived
 directly from structured data. POSTs in batches to POST /v1/graph/mutate.
@@ -15,11 +16,17 @@ directly from structured data. POSTs in batches to POST /v1/graph/mutate.
 Usage:
   python3 ingest-jennifer.py [--endpoint URL] [--jennifer-dir PATH] [--dry-run]
                              [--skip-research] [--skip-people] [--skip-corporate]
-                             [--skip-documents]
+                             [--skip-documents] [--skip-templates]
+                             [--templates-catalog PATH]
 
 Defaults:
   --endpoint     http://127.0.0.1:9081
   --jennifer-dir /srv/foundry/deployments/cluster-totebox-jennifer
+
+Email templates require the catalog_base.html extracted from service-email-template_V5.zip:
+  sudo unzip /home/jennifer/sandbox/inputs/service-email-template_V5.zip -d /tmp/email-template-v5/
+  python3 ingest-jennifer.py --templates-catalog /tmp/email-template-v5/templates/catalog_base.html \\
+    --skip-people --skip-corporate --skip-research --skip-documents
 """
 
 import argparse
@@ -31,6 +38,7 @@ import sys
 import urllib.error
 import urllib.request
 from datetime import datetime, timezone
+from html.parser import HTMLParser
 
 
 PEOPLE_CSV_RELPATH = "service-people/people.csv"
@@ -404,6 +412,127 @@ def load_corporate(jennifer_dir: str) -> list:
     return entities
 
 
+class _EmailCatalogParser(HTMLParser):
+    """Parse catalog_base.html produced by service-email-template. Extracts each .card div."""
+
+    def __init__(self):
+        super().__init__()
+        self.templates: list = []
+        self._card: dict = {}
+        self._div_depth: int = 0        # depth inside .card div
+        self._in_card: bool = False
+        self._in_title: bool = False
+        self._in_key: bool = False
+        self._in_telemetry: bool = False
+        self._in_body: bool = False
+        self._body_depth: int = 0
+
+    def handle_starttag(self, tag, attrs):
+        attrs_dict = dict(attrs)
+        css = attrs_dict.get("class", "")
+        classes = css.split()
+
+        if tag == "div" and "card" in classes and "card-header" not in css \
+                and "card-body" not in css and "card-footer" not in css \
+                and "card-category" not in css and "card-key-display" not in css:
+            # Top-level .card container
+            if "card" in classes and not self._in_card:
+                self._in_card = True
+                self._div_depth = 1
+                category = attrs_dict.get("data-category", "").strip()
+                self._card = {"category": category, "title": "", "key": "", "subject": "", "body_text": ""}
+                return
+
+        if self._in_card:
+            if tag == "div":
+                self._div_depth += 1
+            if tag == "h3" and "card-title" in classes:
+                self._in_title = True
+            if tag == "div" and "card-key-display" in classes:
+                self._in_key = True
+            if tag == "div" and "card-body" in classes:
+                self._in_body = True
+                self._body_depth = self._div_depth
+            if tag == "div" and "telemetry-block" in classes:
+                self._in_telemetry = True
+
+    def handle_endtag(self, tag):
+        if not self._in_card:
+            return
+        if tag == "h3":
+            self._in_title = False
+        if tag == "div":
+            if self._in_telemetry:
+                self._in_telemetry = False
+            elif self._in_body and self._div_depth == self._body_depth:
+                self._in_body = False
+            elif self._in_key:
+                self._in_key = False
+            self._div_depth -= 1
+            if self._div_depth == 0:
+                # Leaving the top-level .card div
+                self._in_card = False
+                if self._card.get("title"):
+                    self.templates.append(self._card)
+                self._card = {}
+
+    def handle_data(self, data):
+        if not self._in_card:
+            return
+        text = data.strip()
+        if not text:
+            return
+        if self._in_title:
+            self._card["title"] += text
+        elif self._in_key:
+            self._card["key"] += text
+        elif self._in_telemetry:
+            # Extract SUBJ line: "SUBJ: compliance - Direct-Hold Solutions Rider"
+            for line in text.splitlines():
+                if line.strip().startswith("SUBJ:"):
+                    subj = line.strip()[5:].strip()
+                    self._card["subject"] = subj
+        elif self._in_body:
+            self._card["body_text"] += " " + text
+
+
+def load_email_templates(catalog_html_path: str) -> list:
+    """Parse catalog_base.html from service-email-template_V5 into communication-template entities."""
+    if not os.path.isfile(catalog_html_path):
+        print(f"  (catalog not found at {catalog_html_path} — skipping templates)", file=sys.stderr)
+        return []
+
+    with open(catalog_html_path, encoding="utf-8", errors="replace") as f:
+        html = f.read()
+
+    parser = _EmailCatalogParser()
+    parser.feed(html)
+
+    now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    entities = []
+    for t in parser.templates:
+        title = t["title"].strip()
+        if not title:
+            continue
+        category = t["category"]
+        subject = t["subject"]
+        role = f"{category} | {subject}" if subject else category
+        body_preview = t["body_text"].strip()[:300]
+        key = t["key"].strip()
+        entities.append({
+            "id": normalize_id(MODULE_ID, title),
+            "entity_name": title,
+            "classification": "communication-template",
+            "role_vector": role[:220],
+            "location_vector": key,
+            "contact_vector": body_preview,
+            "module_id": MODULE_ID,
+            "confidence": 0.95,
+            "created_at": now,
+        })
+    return entities
+
+
 def run_ingest(
     endpoint: str,
     jennifer_dir: str,
@@ -412,6 +541,8 @@ def run_ingest(
     skip_corporate: bool = False,
     skip_research: bool = False,
     skip_documents: bool = False,
+    skip_templates: bool = False,
+    templates_catalog: str = "",
 ) -> None:
     print(f"ingest-jennifer: source={jennifer_dir}")
     print(f"ingest-jennifer: endpoint={endpoint}  module_id={MODULE_ID}  dry_run={dry_run}")
@@ -442,6 +573,12 @@ def run_ingest(
         docs = load_documents(jennifer_dir)
         print(f"  → {len(docs)} entities (documents)")
         all_entities.extend(docs)
+
+    if not skip_templates and templates_catalog:
+        print(f"Loading email templates from {templates_catalog} ...")
+        templates = load_email_templates(templates_catalog)
+        print(f"  → {len(templates)} entities (communication-template)")
+        all_entities.extend(templates)
 
     print(f"\nTotal: {len(all_entities)} entities to upsert\n")
 
@@ -482,6 +619,9 @@ def main() -> None:
     parser.add_argument("--skip-corporate", action="store_true", help="skip corporate.csv (domain-term)")
     parser.add_argument("--skip-research", action="store_true", help="skip service-research/ledger YAMLs")
     parser.add_argument("--skip-documents", action="store_true", help="skip markdown document sources")
+    parser.add_argument("--templates-catalog", default="", metavar="PATH",
+                        help="path to catalog_base.html from service-email-template_V5.zip")
+    parser.add_argument("--skip-templates", action="store_true", help="skip email template catalog")
     args = parser.parse_args()
     run_ingest(
         args.endpoint,
@@ -491,6 +631,8 @@ def main() -> None:
         skip_corporate=args.skip_corporate,
         skip_research=args.skip_research,
         skip_documents=args.skip_documents,
+        skip_templates=args.skip_templates,
+        templates_catalog=args.templates_catalog,
     )
 
 
