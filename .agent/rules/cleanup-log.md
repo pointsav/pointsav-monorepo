@@ -201,6 +201,79 @@ Baseline: 154/154 tests. Target: +3 wiremock tests minimum.
 
 ---
 
+## 2026-05-05 — Session-end snapshot — Leapfrog 2030 software layer COMPLETE
+
+All code tasks from the NEXT.md "Right now" list are now committed. The entire
+software-configuration phase of the Leapfrog 2030 architecture is done. Only
+infrastructure provisioning (operator-presence items) remains.
+
+### Commits this session (newest first)
+
+| Commit | Author | Description |
+|---|---|---|
+| `84b89f1` | Jennifer Woodfine | docs: CLAUDE.md + NEXT.md session-end update |
+| `378ccb0` | Peter Woodfine | feat: Tier C drafting pipeline (service-content POST /v1/draft/generate) |
+| `6ba6685` | Jennifer Woodfine | feat: Phase 3 corpus threshold watcher + Sunday training cron |
+| `6bbbe49` | Peter Woodfine | feat: grammar constraint injection — service-content schema → Doorman body → Yo-Yo #2 |
+
+(Session resumed from prior context-truncated conversation that had already committed
+Multi-Yo-Yo refactor + mesh discovery at commits `764636b` et al.)
+
+### What landed
+
+**Grammar constraint injection (commit `6bbbe49`):**
+- `ChatCompletionsBody` in `slm-doorman-server/src/http.rs` now accepts
+  `grammar: Option<GrammarConstraint>` from the JSON body (was hardcoded `None`)
+- `service-content/src/main.rs` sends entity JSON Schema as `"grammar": {"type":
+  "json-schema", "value": {...}}` and `X-Foundry-Yoyo-Label: graph` header to route
+  to Yo-Yo #2 (H100/Llama 3.3 70B)
+- New http_test: `json_schema_grammar_in_body_passes_through_to_local_tier`
+- Tests: 161 → 162
+
+**Phase 3 corpus threshold watcher (commit `6ba6685`):**
+- `service-slm/scripts/corpus-threshold.py` — counts JSONL tuples per adapter bucket;
+  writes pending marker when threshold reached; `--force` for Sunday cron mode;
+  `--dry-run` for safe preview
+- `service-slm/docs/deploy/training-trigger.timer` — `OnCalendar=Sun *-*-* 02:00:00 UTC`
+- `service-slm/docs/deploy/training-trigger.service` — `ExecStart=corpus-threshold.py --force`
+- Dry-run verified: 453 engineering + 137 apprenticeship tuples → both past 50-tuple threshold
+- Pre-D4: marker-only mode (writes to `~/Foundry/data/training-pending/`); post-D4 TODO stubs
+
+**Tier C Drafting Pipeline (commit `378ccb0`):**
+- `service-content/src/http.rs` refactored to `HttpState { graph, doorman_endpoint }`
+  (previously state was bare `Arc<dyn GraphStore>`)
+- New endpoint `POST /v1/draft/generate`:
+  - Queries LadybugDB graph for entities matching module_id + query_hint
+  - Packages into ≤8 000-char / ≤2 000-token entity block
+  - POSTs to Doorman `/v1/audit/proxy` with `purpose: "initial-graph-build"`,
+    `model: "anthropic:claude-haiku-4-5-20251001"`, `provider: "anthropic"`
+  - Returns `{draft, entity_count, audit_id}`; propagates Doorman error status
+- Pre-D4: returns 503 (Tier C auth not configured); post-D4: live once operator
+  adds `SLM_TIER_C_ANTHROPIC_ENDPOINT` + `SLM_TIER_C_ANTHROPIC_KEY` to Doorman env
+
+### Test posture at exit
+
+162/162 tests (14 slm-core + 96 slm-doorman + 5 queue + 4 audit + 43 http).
+Pre-existing flaky test: `concurrent_workers_dont_double_lease` — flock(2) timing
+race; passes on second run; unrelated to this session.
+
+### Seed alignment verified
+
+`service-content/seeds/`: `Domains.json` (3), `Themes.json` (4), `Archetypes.json` (5)
+items respectively — all present, valid JSON, correct schema. Not in cluster-totebox-jennifer
+deployment (no seeds dir there); seeds live in the monorepo at their canonical location.
+
+### Operator-presence carries (cannot proceed without these)
+
+1. **Tier C Auth** — `SLM_TIER_C_ANTHROPIC_KEY` in Doorman env → activates drafting pipeline
+2. **Re-enable apprenticeship** — `SLM_APPRENTICESHIP_ENABLED=true` in Doorman env
+3. **Yo-Yo idle-shutdown** — runbook step 8, ~$390/mo savings
+4. **Stage-6 promote** — 31 commits ahead of origin/main
+5. **cmake + build-essential** — `lbug` C++ build on workspace VM
+6. **D4** — `pointsav-public` GCP project + slm-yoyo image pipeline (gates everything Tier B)
+
+---
+
 ## 2026-04-30 — Phase 1 COMPLETE — service-content Doorman refactor + slm-chat.sh REPL
 
 Session opened with Master iter-24 ratification message in inbox (all 6 §9 proposals
