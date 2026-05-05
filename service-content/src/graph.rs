@@ -19,6 +19,11 @@ pub trait GraphStore: Send + Sync {
     fn upsert_entities(&self, module_id: &str, entities: &[GraphEntity]) -> Result<usize>;
     fn query_context(&self, module_id: &str, query: &str, limit: usize) -> Result<Vec<GraphEntity>>;
     fn list_entities(&self, module_id: &str) -> Result<Vec<GraphEntity>>;
+    /// Delete all entities matching module_id + classification. Returns count deleted.
+    fn delete_by_classification(&self, module_id: &str, classification: &str) -> Result<usize>;
+    /// Delete entities matching module_id + classification + location_vector (used for
+    /// per-domain glossary/topic reloads where classification is shared across domains).
+    fn delete_by_classification_and_location(&self, module_id: &str, classification: &str, location: &str) -> Result<usize>;
 }
 
 pub struct LbugGraphStore {
@@ -169,6 +174,49 @@ impl GraphStore for LbugGraphStore {
             .map_err(|e| anyhow!("Failed to execute list_entities: {}", e))?;
 
         rows_to_entities(result)
+    }
+
+    fn delete_by_classification(&self, module_id: &str, classification: &str) -> Result<usize> {
+        let conn = self.conn()?;
+        let mut stmt = conn
+            .prepare(
+                "MATCH (e:Entity) \
+                 WHERE e.module_id = $module_id AND e.classification = $cls \
+                 DELETE e",
+            )
+            .map_err(|e| anyhow!("Failed to prepare delete_by_classification: {}", e))?;
+        conn.execute(
+            &mut stmt,
+            vec![
+                ("module_id", Value::String(module_id.to_string())),
+                ("cls", Value::String(classification.to_string())),
+            ],
+        )
+        .map_err(|e| anyhow!("Failed to execute delete_by_classification: {}", e))?;
+        Ok(0)
+    }
+
+    fn delete_by_classification_and_location(&self, module_id: &str, classification: &str, location: &str) -> Result<usize> {
+        let conn = self.conn()?;
+        let mut stmt = conn
+            .prepare(
+                "MATCH (e:Entity) \
+                 WHERE e.module_id = $module_id \
+                   AND e.classification = $cls \
+                   AND e.location_vector = $loc \
+                 DELETE e",
+            )
+            .map_err(|e| anyhow!("Failed to prepare delete_by_classification_and_location: {}", e))?;
+        conn.execute(
+            &mut stmt,
+            vec![
+                ("module_id", Value::String(module_id.to_string())),
+                ("cls", Value::String(classification.to_string())),
+                ("loc", Value::String(location.to_string())),
+            ],
+        )
+        .map_err(|e| anyhow!("Failed to execute delete_by_classification_and_location: {}", e))?;
+        Ok(0)
     }
 }
 
