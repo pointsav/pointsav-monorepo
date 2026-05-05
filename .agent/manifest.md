@@ -1,7 +1,9 @@
 ---
 schema: foundry-cluster-manifest-v1
-cluster_name: project-slm
-cluster_branch: cluster/project-slm
+cluster_name: project-intelligence
+cluster_branch: cluster/project-intelligence
+renamed_from: project-slm
+renamed: 2026-05-05
 created: 2026-04-23
 backfilled: 2026-04-26 (manifest schema), 2026-04-26 (triad per Doctrine v0.0.4), 2026-04-28 (tetrad per Doctrine v0.0.10 claim #37)
 state: active
@@ -49,6 +51,12 @@ clones:
     role: primary
     path: ./
     upstream: vendor/pointsav-monorepo
+  - repo: woodfine-fleet-deployment
+    role: secondary
+    path: ./woodfine-fleet-deployment/
+    upstream: customer/woodfine-fleet-deployment
+    focus: vault-privategit-source/ (Doorman deployment GUIDEs + Yo-Yo runbooks)
+    added: 2026-05-05
 trajectory_capture: pending
 
 adapter_routing:

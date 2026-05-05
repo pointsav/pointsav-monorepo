@@ -23,3 +23,6 @@ target/
 # the filesystem. See cleanup-log.md 2026-04-23 entry for rationale.
 service-slm/router-trainer/engine/llamafile
 service-slm/router-trainer/**/*.log
+
+# Multi-clone cluster — secondary clone is a separate git repo; excluded from outer tracking
+woodfine-fleet-deployment/
