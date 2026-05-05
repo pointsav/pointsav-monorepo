@@ -1,6 +1,6 @@
 # CLAUDE.md — service-slm
 
-> **State:** Active  —  **Last updated:** 2026-05-04
+> **State:** Active  —  **Last updated:** 2026-05-05
 > **Registry row:** `pointsav-monorepo/.agent/rules/project-registry.md`
 >
 > When state changes, update this header AND the registry row in the
@@ -22,9 +22,9 @@ service-content — see `ARCHITECTURE.md` Ring 3a.
 ## Current state
 
 **Active.** Doorman in production on workspace VM (`local-doorman.service`).
-Tier A (llama-server, OLMo 3 7B Q4) live and verified. **157/157 tests.**
+Tier A (llama-server, OLMo 3 7B Q4) live and verified. **162/162 tests.**
 
-As of 2026-05-04 (commit `764636b`):
+As of 2026-05-05 (commit `378ccb0`):
 
 - **Tier A** — live; GBNF/JsonSchema grammar; Lark rejected pre-flight.
 - **Tier B** — code-complete; multi-Yo-Yo `HashMap<String, YoYoTierClient>`;
@@ -45,16 +45,26 @@ As of 2026-05-04 (commit `764636b`):
   `service-content` before every inference; injects `[ENTITY CONTEXT]`
   system message; non-fatal if service-content is down.
 - **Mesh discovery** — `MeshRegistry`/`DiscoveryProvider`/`DynamicRegistry`
-  scaffolded; `route_async()` is a Phase 1 stub (logs selected node,
-  falls through to `route()`); no concrete `DiscoveryProvider` yet.
-- **Phase 3** (training threshold detection) — not started; gated on
-  operator go-ahead and D4 deployment.
+  scaffolded; `StaticDiscoveryProvider` + `DynamicRegistry` fully wired;
+  `route_async()` selects node by label; concrete provider reads from
+  `SLM_MESH_NODES` env var at startup.
+- **Grammar constraint injection** — service-content passes `"grammar":
+  {"type": "json-schema", "value": entity_schema}` + `X-Foundry-Yoyo-Label:
+  graph` header; Doorman deserializes `GrammarConstraint` from body and routes
+  to named Yo-Yo #2 node. Full end-to-end path is wired; active on D4.
+- **Phase 3 (training threshold detection)** — `corpus-threshold.py` script +
+  Sunday 02:00 UTC systemd timer/service units; marker-only mode pre-D4;
+  453 engineering + 137 apprenticeship tuples already above threshold.
+- **Tier C Drafting Pipeline** — `service-content POST /v1/draft/generate`;
+  queries LadybugDB graph → packages ≤2K-token entity prompt → proxies to
+  Claude via Doorman `/v1/audit/proxy`; returns draft + audit_id; 503 pre-D4
+  (Doorman unconfigured for Tier C auth).
 
 ## Build and test
 
 ```
 cargo check --workspace                # seconds incremental
-cargo test  --workspace                # 157 tests (14 slm-core + 92 slm-doorman + 5 audit + 4 queue + 42 http)
+cargo test  --workspace                # 162 tests (14 slm-core + 96 slm-doorman + 5 queue + 4 audit + 43 http)
 cargo clippy --workspace --all-targets -- -D warnings
 cargo fmt   --all -- --check
 ```
