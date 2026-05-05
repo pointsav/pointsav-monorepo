@@ -24,7 +24,7 @@ path = "src/lib.rs"
 # 8 (disclosure mode) add more deps as they land. See ARCHITECTURE.md.
 [dependencies]
 axum = { version = "0.8", features = ["ws"] }
-tokio = { version = "1", features = ["rt-multi-thread", "macros", "signal", "fs"] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "signal", "fs", "process"] }
 tower = "0.5"
 tower-http = { version = "0.6", features = ["trace", "set-header", "compression-br", "compression-gzip"] }
 comrak = "0.29"
@@ -39,6 +39,7 @@ serde_json = "1"
 serde_yaml = "0.9"
 anyhow = "1"
 thiserror = "2"
+tokio-util = { version = "0.7", features = ["io"] }
 # Phase 2 Step 2: tempfile moved from [dev-dependencies] to [dependencies]
 # for use in src/edit.rs (atomic write via NamedTempFile::persist).
 tempfile = "3"
@@ -46,7 +47,7 @@ tempfile = "3"
 # system library required at link time (bundled with libssl-dev in PK.3).
 git2 = "0.20"
 # Phase 4 Step 4.2: gix (read-side) for history and blame.
-gix = "0.83"
+gix = { version = "0.83", features = ["blame"] }
 gix-blame = "0.13"
 similar = { version = "2.7", features = ["inline"] }
 # Phase 3 Step 3.1: tantivy full-text search backend. On-disk index at
@@ -66,6 +67,11 @@ chrono = "0.4"
 futures-util = "0.3"
 csv = "1.3"
 regex = "1.10"
+# Phase 5: auth + edit review. argon2id password hashing; rusqlite (bundled
+# SQLite, no system dep) for users/sessions/pending edits; uuid for tokens.
+argon2 = "0.5"
+rusqlite = { version = "0.32", features = ["bundled"] }
+uuid = { version = "1", features = ["v4"] }
 
 [dev-dependencies]
 tower = { version = "0.5", features = ["util"] }

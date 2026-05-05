@@ -47,11 +47,13 @@ use std::sync::{Arc, Mutex};
 use tokio::fs;
 
 use crate::assets::StaticAsset;
+use crate::auth::CurrentUser;
 use crate::collab::CollabRooms;
 use crate::error::WikiError;
 use crate::jsonld::jsonld_for_topic;
 use crate::render::{extract_headings, inject_edit_pencils, parse_page, render_html_raw, Frontmatter, TranslationMap};
 use crate::search::{search as run_search, SearchIndex};
+use crate::users::User;
 
 #[derive(Clone)]
 pub struct AppState {
@@ -88,8 +90,13 @@ pub struct AppState {
     /// and template `window.WIKI_COLLAB_ENABLED = true` into the editor
     /// page so `saa-init.js` lazy-loads the collab JS bundle.
     pub enable_collab: bool,
+    /// Phase 4 Step 4.7: tenant name for the read-only git remote.
+    pub git_tenant: String,
     /// Phase 10: Leapfrog 2030 glossary auto-linker.
     pub glossary: Arc<crate::glossary::Glossary>,
+    /// Phase 5: SQLite connection for users/sessions/pending-edits.
+    /// None when auth is not configured (no WIKI_ADMIN_USERNAME set).
+    pub db: Option<Arc<Mutex<rusqlite::Connection>>>,
 }
 
 pub fn router(state: AppState) -> Router {
@@ -135,6 +142,18 @@ pub fn router(state: AppState) -> Router {
         .route("/history/{*slug}", get(history_page))
         .route("/blame/{*slug}", get(blame_page))
         .route("/diff/{*slug}", get(diff_page))
+        // Phase 5 — auth + edit review
+        .route("/special/login", get(crate::auth::get_login).post(crate::auth::post_login))
+        .route("/special/logout", post(crate::auth::post_logout))
+        .route("/special/create-account", get(crate::auth::get_create_account).post(crate::auth::post_create_account))
+        .route("/special/pending-changes", get(crate::pending::review_queue))
+        .route("/special/pending/{id}", get(crate::pending::review_detail))
+        .route("/special/pending/{id}/accept", post(crate::pending::accept_edit))
+        .route("/special/pending/{id}/reject", post(crate::pending::reject_edit))
+        .route("/special/contributions/{username}", get(crate::pending::contributions))
+        // Phase 4 Step 4.7 — read-only git remote (smart-HTTP)
+        .route("/git-server/{tenant}/info/refs", get(crate::git_protocol::info_refs))
+        .route("/git-server/{tenant}/git-upload-pack", post(crate::git_protocol::upload_pack))
         // axum 0.8 doesn't allow a literal `.md` suffix after a dynamic
         // segment, so the route captures `{slug}` as a single segment and
         // the handler strips an optional trailing `.md` for the
@@ -166,10 +185,12 @@ async fn preview_api(
     let parsed = parse_page(&text)?;
     let title = parsed.frontmatter.title.unwrap_or_else(|| slug.clone());
     let snippet = crate::feeds::first_paragraph_snippet(&parsed.body_md, 300);
+    let image_url = crate::feeds::first_image_url(&parsed.body_md);
     
     Ok(Json(json!({
         "title": title,
         "snippet": snippet,
+        "image_url": image_url,
         "slug": slug
     })))
 }
@@ -193,6 +214,7 @@ struct SearchQueryParams {
 async fn search_page(
     State(state): State<Arc<AppState>>,
     Query(params): Query<SearchQueryParams>,
+    CurrentUser(maybe_user): CurrentUser,
 ) -> Result<Markup, WikiError> {
     let query = params.q.trim().to_string();
     let hits = if query.is_empty() {
@@ -201,6 +223,7 @@ async fn search_page(
         run_search(&state.search, &query, 25)?
     };
 
+    let pending_count = pending_count_for(&state, maybe_user.as_ref()).await;
     Ok(chrome(
         if query.is_empty() {
             "Search".to_string()
@@ -252,6 +275,8 @@ async fn search_page(
             }
         },
         &state.site_title,
+        maybe_user.as_ref(),
+        pending_count,
     ))
 }
 
@@ -736,6 +761,8 @@ fn home_chrome(
     featured: Option<FeaturedArticle>,
     dyk: Option<LeapfrogFacts>,
     site_title: &str,
+    user: Option<&User>,
+    pending_count: i64,
 ) -> Markup {
     let _title = home_fm.title.as_deref().unwrap_or(site_title);
 
@@ -771,6 +798,7 @@ fn home_chrome(
                     }
                     nav.site-nav {
                         a href="/" { "Home" }
+                        (auth_nav_widget(user, pending_count))
                     }
                 }
                 main.site-main {
@@ -969,7 +997,7 @@ fn capitalise(s: &str) -> String {
 
 /// Current flat-listing index behaviour, preserved for the absent-`index.md`
 /// case. Extracted verbatim from the pre-iteration-1 `index()` handler.
-async fn placeholder_index(state: &AppState) -> Result<Markup, WikiError> {
+async fn placeholder_index(state: &AppState, user: Option<&User>, pending_count: i64) -> Result<Markup, WikiError> {
     let mut entries = fs::read_dir(&state.content_dir).await?;
     let mut pages: Vec<String> = Vec::new();
     while let Some(entry) = entries.next_entry().await? {
@@ -1006,6 +1034,8 @@ async fn placeholder_index(state: &AppState) -> Result<Markup, WikiError> {
             }
         },
         &state.site_title,
+        user,
+        pending_count,
     ))
 }
 
@@ -1014,7 +1044,9 @@ async fn placeholder_index(state: &AppState) -> Result<Markup, WikiError> {
 async fn category_page(
     State(state): State<Arc<AppState>>,
     Path(name): Path<String>,
+    CurrentUser(maybe_user): CurrentUser,
 ) -> Result<Markup, WikiError> {
+    let pending_count = pending_count_for(&state, maybe_user.as_ref()).await;
     let buckets = bucket_topics_by_category(&state.content_dir, state.guide_dir.as_deref(), state.guide_dir_2.as_deref()).await?;
     let empty: Vec<TopicSummary> = Vec::new();
     let topics = buckets.get(&name).unwrap_or(&empty);
@@ -1047,15 +1079,21 @@ async fn category_page(
             }
         },
         &state.site_title,
+        maybe_user.as_ref(),
+        pending_count,
     ))
 }
 
 // ─── index handler ──────────────────────────────────────────────────────────
 
-async fn index(State(state): State<Arc<AppState>>) -> Result<Markup, WikiError> {
+async fn index(
+    State(state): State<Arc<AppState>>,
+    CurrentUser(maybe_user): CurrentUser,
+) -> Result<Markup, WikiError> {
+    let pending_count = pending_count_for(&state, maybe_user.as_ref()).await;
     let home_path = state.content_dir.join("index.md");
     if !home_path.exists() {
-        return placeholder_index(&state).await;
+        return placeholder_index(&state, maybe_user.as_ref(), pending_count).await;
     }
 
     let home_text = fs::read_to_string(&home_path).await?;
@@ -1094,12 +1132,15 @@ async fn index(State(state): State<Arc<AppState>>) -> Result<Markup, WikiError> 
         featured,
         dyk,
         &state.site_title,
+        maybe_user.as_ref(),
+        pending_count,
     ))
 }
 
 async fn wiki_page(
     State(state): State<Arc<AppState>>,
     Path(slug): Path<String>,
+    CurrentUser(maybe_user): CurrentUser,
 ) -> Result<Markup, WikiError> {
     // Slug safety: reject path traversal. Allow at most one `/` separator
     // for category-scoped slugs (`architecture/compounding-substrate`).
@@ -1183,7 +1224,7 @@ async fn wiki_page(
     // Two-step render: extract headings from clean comrak output (no edit pencils),
     // then inject pencils for the final body HTML. This keeps TOC text clean.
     let raw_html = render_html_raw(&parsed.body_md, &state.content_dir);
-    let mut raw_html = crate::glossary::inject_glossary_tooltips(&raw_html, &state.glossary);
+    let raw_html = crate::glossary::inject_glossary_tooltips(&raw_html, &state.glossary);
     let headings = extract_headings(&raw_html);
     let body_html = inject_edit_pencils(&raw_html);
     let title = parsed
@@ -1210,7 +1251,8 @@ async fn wiki_page(
         }
     }
         
-    Ok(wiki_chrome(&title, &slug, parsed.frontmatter, &body_html, headings, &backlinks, &state.site_title))
+    let pending_count = pending_count_for(&state, maybe_user.as_ref()).await;
+    Ok(wiki_chrome(&title, &slug, parsed.frontmatter, &body_html, headings, &backlinks, &state.site_title, maybe_user.as_ref(), pending_count))
 }
 
 async fn static_asset(Path(path): Path<String>) -> Response {
@@ -1255,8 +1297,10 @@ fn wiki_chrome(
     headings: Vec<(String, String, u8)>,
     backlinks: &[TopicSummary],
     site_title: &str,
+    user: Option<&User>,
+    pending_count: i64,
 ) -> Markup {
-    let talk_slug = format!("{slug}.talk");
+    let _talk_slug = format!("{slug}.talk");
 
     // Breadcrumb: derive category from frontmatter `category:` field,
     // or from the slug prefix when the TOPIC is in a subdirectory.
@@ -1286,6 +1330,7 @@ fn wiki_chrome(
                     }
                     nav.site-nav {
                         a href="/" { "Home" }
+                        (auth_nav_widget(user, pending_count))
                     }
                 }
 
@@ -1384,9 +1429,11 @@ fn wiki_chrome(
                                     href={ "/wiki/" (slug) }
                                     aria-current="page"
                                 { "Read" }
-                                a.wiki-tab
-                                    href={ "/edit/" (slug) }
-                                { "Edit" }
+                                @if user.is_some() {
+                                    a.wiki-tab href={ "/edit/" (slug) } { "Edit" }
+                                } @else {
+                                    a.wiki-tab href={ "/git/" (slug) } title="Log in to edit" { "View source" }
+                                }
                                 a.wiki-tab
                                     href={ "/history/" (slug) }
                                 { "View history" }
@@ -1702,6 +1749,7 @@ async fn git_markdown(
 async fn history_page(
     State(state): State<Arc<AppState>>,
     Path(slug): Path<String>,
+    CurrentUser(maybe_user): CurrentUser,
 ) -> Result<Markup, WikiError> {
     crate::edit::validate_slug(&slug)?;
     let path = state.content_dir.join(format!("{slug}.md"));
@@ -1746,12 +1794,14 @@ async fn history_page(
         }
     };
 
-    Ok(chrome(&format!("History: {}", slug), body, &state.site_title))
+    let pending_count = pending_count_for(&state, maybe_user.as_ref()).await;
+    Ok(chrome(&format!("History: {}", slug), body, &state.site_title, maybe_user.as_ref(), pending_count))
 }
 
 async fn blame_page(
     State(state): State<Arc<AppState>>,
     Path(slug): Path<String>,
+    CurrentUser(maybe_user): CurrentUser,
 ) -> Result<Markup, WikiError> {
     crate::edit::validate_slug(&slug)?;
     let path = state.content_dir.join(format!("{slug}.md"));
@@ -1781,7 +1831,8 @@ async fn blame_page(
         }
     };
 
-    Ok(chrome(&format!("Blame: {}", slug), body, &state.site_title))
+    let pending_count = pending_count_for(&state, maybe_user.as_ref()).await;
+    Ok(chrome(&format!("Blame: {}", slug), body, &state.site_title, maybe_user.as_ref(), pending_count))
 }
 
 #[derive(Deserialize)]
@@ -1794,6 +1845,7 @@ async fn diff_page(
     State(state): State<Arc<AppState>>,
     Path(slug): Path<String>,
     Query(query): Query<DiffQueryParams>,
+    CurrentUser(maybe_user): CurrentUser,
 ) -> Result<Markup, WikiError> {
     crate::edit::validate_slug(&slug)?;
     let a_sha = query.a.unwrap_or_default();
@@ -1826,11 +1878,12 @@ async fn diff_page(
         }
     };
 
-    Ok(chrome(&format!("Diff: {}", slug), body, &state.site_title))
+    let pending_count = pending_count_for(&state, maybe_user.as_ref()).await;
+    Ok(chrome(&format!("Diff: {}", slug), body, &state.site_title, maybe_user.as_ref(), pending_count))
 }
 
 /// Shared shell for non-article pages (search, category, errors).
-fn chrome(title: &str, body: Markup, site_title: &str) -> Markup {
+fn chrome(_title: &str, body: Markup, site_title: &str, user: Option<&User>, pending_count: i64) -> Markup {
     html! {
         (DOCTYPE)
         html lang="en" {
@@ -1849,6 +1902,7 @@ fn chrome(title: &str, body: Markup, site_title: &str) -> Markup {
                     }
                     nav.site-nav {
                         a href="/" { "Home" }
+                        (auth_nav_widget(user, pending_count))
                     }
                 }
                 main.site-main {
@@ -1860,6 +1914,43 @@ fn chrome(title: &str, body: Markup, site_title: &str) -> Markup {
             }
         }
     }
+}
+
+fn auth_nav_widget(user: Option<&User>, pending_count: i64) -> Markup {
+    html! {
+        @if let Some(u) = user {
+            " · "
+            span.nav-username { (u.username) }
+            @if u.is_admin() && pending_count > 0 {
+                " "
+                a.pending-badge href="/special/pending-changes" {
+                    (pending_count) " pending"
+                }
+            }
+            " · "
+            form method="post" action="/special/logout" style="display:inline;" {
+                button.nav-logout-btn type="submit" { "Log out" }
+            }
+        } @else {
+            " · "
+            a href="/special/login" { "Log in" }
+        }
+    }
+}
+
+async fn pending_count_for(state: &AppState, user: Option<&User>) -> i64 {
+    let Some(u) = user else { return 0; };
+    if !u.is_admin() {
+        return 0;
+    }
+    let Some(db) = &state.db else { return 0; };
+    let db = db.clone();
+    tokio::task::spawn_blocking(move || {
+        let conn = db.lock().unwrap();
+        crate::pending::count_pending(&conn).unwrap_or(0)
+    })
+    .await
+    .unwrap_or(0)
 }
 
 #[cfg(test)]
@@ -1898,6 +1989,9 @@ mod tests {
                 collab: Arc::new(crate::collab::CollabRooms::new()),
                 enable_collab: false,
                 site_title: "PointSav Documentation Wiki".to_string(),
+                git_tenant: "pointsav".to_string(),
+                glossary: Arc::new(crate::glossary::Glossary::default()),
+                db: None,
             },
             dir,
             state_dir,
@@ -1990,7 +2084,7 @@ mod tests {
         assert!(html.contains("Article"), "Article tab should appear: {html}");
         assert!(html.contains("Talk"), "Talk tab should appear: {html}");
         assert!(html.contains("Read"), "Read tab should appear: {html}");
-        assert!(html.contains("Edit"), "Edit tab should appear: {html}");
+        assert!(html.contains("View source"), "View source tab should appear (unauthenticated): {html}");
         assert!(html.contains("View history"), "View history tab should appear: {html}");
     }
 
@@ -2063,6 +2157,9 @@ mod tests {
             collab: Arc::new(crate::collab::CollabRooms::new()),
             enable_collab: false,
             site_title: "PointSav Documentation Wiki".to_string(),
+            git_tenant: "pointsav".to_string(),
+            glossary: Arc::new(crate::glossary::Glossary::default()),
+                db: None,
         };
         let app = router(state);
         let resp = app
@@ -2133,6 +2230,9 @@ mod tests {
             collab: Arc::new(crate::collab::CollabRooms::new()),
             enable_collab: false,
             site_title: "PointSav Documentation Wiki".to_string(),
+            git_tenant: "pointsav".to_string(),
+            glossary: Arc::new(crate::glossary::Glossary::default()),
+                db: None,
         };
         let app = router(state);
         let resp = app
@@ -2181,6 +2281,9 @@ mod tests {
             collab: Arc::new(crate::collab::CollabRooms::new()),
             enable_collab: false,
             site_title: "PointSav Documentation Wiki".to_string(),
+            git_tenant: "pointsav".to_string(),
+            glossary: Arc::new(crate::glossary::Glossary::default()),
+                db: None,
         };
         let app = router(state);
         let resp = app
@@ -2226,6 +2329,9 @@ mod tests {
             collab: Arc::new(crate::collab::CollabRooms::new()),
             enable_collab: false,
             site_title: "PointSav Documentation Wiki".to_string(),
+            git_tenant: "pointsav".to_string(),
+            glossary: Arc::new(crate::glossary::Glossary::default()),
+                db: None,
         };
         let app = router(state);
         let resp = app
@@ -2275,6 +2381,9 @@ mod tests {
             collab: Arc::new(crate::collab::CollabRooms::new()),
             enable_collab: false,
             site_title: "PointSav Documentation Wiki".to_string(),
+            git_tenant: "pointsav".to_string(),
+            glossary: Arc::new(crate::glossary::Glossary::default()),
+                db: None,
         };
         let app = router(state);
         let resp = app
@@ -2326,6 +2435,9 @@ mod tests {
             collab: Arc::new(crate::collab::CollabRooms::new()),
             enable_collab: false,
             site_title: "PointSav Documentation Wiki".to_string(),
+            git_tenant: "pointsav".to_string(),
+            glossary: Arc::new(crate::glossary::Glossary::default()),
+                db: None,
         };
         let app = router(state);
         let resp = app
@@ -2380,6 +2492,9 @@ mod tests {
             collab: Arc::new(crate::collab::CollabRooms::new()),
             enable_collab: false,
             site_title: "PointSav Documentation Wiki".to_string(),
+            git_tenant: "pointsav".to_string(),
+            glossary: Arc::new(crate::glossary::Glossary::default()),
+                db: None,
         };
         let app = router(state);
         let resp = app
@@ -2436,6 +2551,9 @@ mod tests {
             collab: Arc::new(crate::collab::CollabRooms::new()),
             enable_collab: false,
             site_title: "PointSav Documentation Wiki".to_string(),
+            git_tenant: "pointsav".to_string(),
+            glossary: Arc::new(crate::glossary::Glossary::default()),
+                db: None,
         };
         let app = router(state);
         let resp = app
@@ -2494,6 +2612,9 @@ mod tests {
             collab: Arc::new(crate::collab::CollabRooms::new()),
             enable_collab: false,
             site_title: "PointSav Documentation Wiki".to_string(),
+            git_tenant: "pointsav".to_string(),
+            glossary: Arc::new(crate::glossary::Glossary::default()),
+                db: None,
         };
         let app = router(state);
         let resp = app
@@ -2545,6 +2666,9 @@ mod tests {
             collab: Arc::new(crate::collab::CollabRooms::new()),
             enable_collab: false,
             site_title: "PointSav Documentation Wiki".to_string(),
+            git_tenant: "pointsav".to_string(),
+            glossary: Arc::new(crate::glossary::Glossary::default()),
+                db: None,
         };
         let app = router(state);
         let resp = app
