@@ -96,5 +96,42 @@ Newest on top. Append a dated block when a session includes meaningful cleanup w
 
 ---
 
+## 2026-05-05 — Ontological Data Graph light run — cluster-totebox-jennifer
+
+Session opened with housekeeping (cluster rename project-slm → project-intelligence committed in `9de72da`; manifest + .gitignore + outbox-archive updated).
+
+### What landed this session
+
+**ingest-jennifer.py** (`service-content/scripts/ingest-jennifer.py`, new):
+- Reads `cluster-totebox-jennifer/service-people/people.csv` (9,575 entities: 4,680 person, 4,833 company, 62 organization) + `service-content/domains/corporate.csv` (424 domain-term entities)
+- Batches in chunks of 100; POSTs to `POST /v1/graph/mutate`
+- 100/100 batches HTTP 200; 9,999 entities loaded, all `module_id=woodfine`
+- Graph persists at `service-content/data/jennifer-graph/entities.lbug` (gitignored)
+- `--dry-run` flag for safe preview without a running server
+
+**service-content graph verified live:**
+- `GET /v1/graph/context?q=woodfine&module_id=woodfine&limit=5` → Mathew Woodfine, Peter M. Woodfine, Jennifer M. Woodfine, Woodfine Management Corp., Woodfine Capital Projects Inc.
+- cmake + g++ (build-essential) confirmed present on workspace VM — NEXT.md "operator-presence carry" for cmake was already resolved; updated accordingly
+
+**Guide path fix** (`woodfine-fleet-deployment/vault-privategit-source/guide-doorman-deployment.md`):
+- Two stale `/srv/foundry/clones/project-slm/` path references → `/srv/foundry/clones/project-intelligence/`
+- Preserved `"module_id": "project-slm"` in sample audit-ledger entry (historical runtime data, not a path)
+
+**.gitignore** updated: added `service-content/data/` exclusion with comment.
+
+**Outbox to project-editorial**: message prepended to `.agent/outbox.md` with entity inventory, binary start command, full query syntax + 5 example curls, suggested TOPIC list (5 topics, destination repos), BCSC posture reminder, and note that querying is unrestricted while Yo-Yo #2 continues.
+
+### What is pending
+
+- TOPIC authoring: project-editorial's scope (Doctrine claim #35). 5 suggested topics staged in outbox.
+- service-slm Yo-Yo #2 and Doorman Tier C auth: operator-presence gated (unchanged from previous session).
+- cmake availability confirmed — remove that item from NEXT.md operator-presence list on next NEXT.md update pass.
+
+### Tests
+
+162/162 passing (14 slm-core + 96 slm-doorman + 5 queue + 4 audit + 43 http). Pre-existing flaky `concurrent_workers_dont_double_lease` failed first run; passed on retry (flock timing race, documented).
+
+---
+
 
 > **Archived entries:** session logs before this point are in `cleanup-log-archive.md`.
