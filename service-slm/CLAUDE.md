@@ -22,7 +22,7 @@ service-content — see `ARCHITECTURE.md` Ring 3a.
 ## Current state
 
 **Active.** Doorman in production on workspace VM (`local-doorman.service`).
-Tier A (llama-server, OLMo 3 7B Q4) live and verified. **162/162 tests.**
+Tier A (llama-server, OLMo 3 7B Q4) live and verified. **167/167 tests.**
 
 As of 2026-05-05 (commit `378ccb0`):
 
@@ -59,12 +59,18 @@ As of 2026-05-05 (commit `378ccb0`):
   queries LadybugDB graph → packages ≤2K-token entity prompt → proxies to
   Claude via Doorman `/v1/audit/proxy`; returns draft + audit_id; 503 pre-D4
   (Doorman unconfigured for Tier C auth).
+- **DataGraph proxy (datagraph-access-discipline)** — `POST /v1/graph/query`
+  proxies to service-content `GET /v1/graph/context`; `POST /v1/graph/mutate`
+  proxies to service-content `POST /v1/graph/mutate`; both require
+  `X-Foundry-Module-ID` header and audit-log every call as `event_type:
+  graph-query` / `graph-mutation`; `SERVICE_CONTENT_ENDPOINT` env var
+  (default `http://127.0.0.1:9081`).
 
 ## Build and test
 
 ```
 cargo check --workspace                # seconds incremental
-cargo test  --workspace                # 162 tests (14 slm-core + 96 slm-doorman + 5 queue + 4 audit + 43 http)
+cargo test  --workspace                # 167 tests (14 slm-core + 96 slm-doorman + 5 queue + 4 audit + 48 http)
 cargo clippy --workspace --all-targets -- -D warnings
 cargo fmt   --all -- --check
 ```
