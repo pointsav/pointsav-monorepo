@@ -59,6 +59,7 @@
 //! end-to-end.
 
 use slm_doorman_server::http;
+use slm_doorman_server::idle_monitor::IdleMonitorConfig;
 use slm_doorman_server::queue::{
     dequeue_shadow, ensure_dirs, reap_expired_leases, release_shadow, QueueConfig, ReleaseOutcome,
 };
@@ -305,6 +306,22 @@ async fn main() -> anyhow::Result<()> {
                 }
             }
         });
+    }
+    // ────────────────────────────────────────────────────────────────────
+
+    // ── Yo-Yo idle monitor (B5) ─────────────────────────────────────────
+    //
+    // Polls llama-server /metrics every 5 min. After SLM_YOYO_IDLE_MINUTES
+    // (default 30) of zero active slots, sends a GCP instances.stop request
+    // via the workspace SA ADC token from the GCE metadata server.
+    // Requires all four GCP env vars — absent any, the monitor does not start.
+    if let Some(idle_cfg) = IdleMonitorConfig::from_env() {
+        info!(
+            idle_threshold_secs = idle_cfg.idle_threshold.as_secs(),
+            gcp_instance = %idle_cfg.gcp_instance,
+            "Yo-Yo idle monitor enabled"
+        );
+        tokio::spawn(slm_doorman_server::idle_monitor::run_idle_monitor(idle_cfg));
     }
     // ────────────────────────────────────────────────────────────────────
 
