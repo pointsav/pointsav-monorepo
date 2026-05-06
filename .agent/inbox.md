@@ -1,11 +1,11 @@
 
 ---
 mailbox: inbox
-owner: task-project-slm
-location: ~/Foundry/clones/project-slm/.agent/
+owner: task-project-intelligence
+location: ~/Foundry/clones/project-intelligence/.agent/
 schema: foundry-mailbox-v1
 ---
 
-# Inbox — task-project-slm
+# Inbox — task-project-intelligence
 
-*(empty — all messages actioned 2026-05-04; see inbox-archive.md)*
+_(empty — all messages archived 2026-05-06)_
