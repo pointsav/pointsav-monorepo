@@ -10,6 +10,7 @@
 //! The `main.rs` binary target uses this library via `slm_doorman_server::http`.
 
 pub mod http;
+pub mod idle_monitor;
 /// Brief Queue Substrate (apprenticeship-substrate.md §7C).
 ///
 /// File-backed durable queue that decouples brief acceptance from

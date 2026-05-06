@@ -40,7 +40,7 @@ use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use slm_core::{
     ApprenticeshipAttempt, ApprenticeshipBrief, AuditCaptureRequest, AuditCaptureResponse,
-    AuditProxyRequest, ChatMessage, Complexity, ComputeRequest, ComputeResponse, GrammarConstraint,
+    AuditProxyRequest, ChatMessage, Complexity, ComputeRequest, GrammarConstraint,
     ModuleId, RequestId,
 };
 use slm_doorman::ledger::{
@@ -177,7 +177,7 @@ async fn chat_completions(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
     Json(body): Json<ChatCompletionsBody>,
-) -> Result<Json<ComputeResponse>, ApiError> {
+) -> Result<impl IntoResponse, ApiError> {
     let module_id = match headers
         .get("x-foundry-module-id")
         .and_then(|v| v.to_str().ok())
@@ -229,12 +229,13 @@ async fn chat_completions(
         speculation: None,
     };
 
-    state
-        .doorman
-        .route(&req)
-        .await
-        .map(Json)
-        .map_err(Into::into)
+    let resp = state.doorman.route(&req).await.map_err(ApiError::from)?;
+    let tier_str = resp.tier_used.as_str().to_string();
+    let mut resp_headers = HeaderMap::new();
+    if let Ok(v) = tier_str.parse() {
+        resp_headers.insert("x-foundry-tier-used", v);
+    }
+    Ok((resp_headers, Json(resp)))
 }
 
 async fn brief(
@@ -1076,6 +1077,13 @@ impl From<DoormanError> for ApiError {
             // Graph proxy — service-content is unreachable or unconfigured.
             // Server-side transient condition; caller may retry.
             DoormanError::GraphProxyServiceUnavailable => StatusCode::SERVICE_UNAVAILABLE,
+            // Tier B resilience — circuit open or outer deadline fired.
+            // In the normal path these are caught by the router and trigger
+            // Tier A fallback; they surface here only when Tier A is also
+            // absent. 503 SERVICE_UNAVAILABLE; caller may retry.
+            DoormanError::TierBTimeout | DoormanError::TierBCircuitOpen => {
+                StatusCode::SERVICE_UNAVAILABLE
+            }
         };
         Self {
             status,

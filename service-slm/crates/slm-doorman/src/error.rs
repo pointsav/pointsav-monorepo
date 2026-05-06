@@ -233,6 +233,21 @@ pub enum DoormanError {
         cap: u32,
     },
 
+    // ── Tier B resilience ────────────────────────────────────────────────
+
+    /// Tier B (Yo-Yo) request timed out. The 90-second outer deadline
+    /// (tokio::time::timeout) fired before the response completed — including
+    /// any 503 Retry-After cold-start sleep. The router treats this as a
+    /// transient upstream failure and may fall back to Tier A.
+    #[error("Tier B request timed out (90 s outer deadline exceeded)")]
+    TierBTimeout,
+
+    /// Tier B (Yo-Yo) circuit breaker is open. Five consecutive failures
+    /// occurred and the 5-minute cooldown has not yet elapsed. No HTTP
+    /// request was made. The router falls back to Tier A immediately.
+    #[error("Tier B circuit breaker is open; cooling down after consecutive failures")]
+    TierBCircuitOpen,
+
     // ── Graph proxy (conventions/datagraph-access-discipline.md) ────────
     /// `POST /v1/graph/query` or `POST /v1/graph/mutate` — caller omitted the
     /// mandatory `X-Foundry-Module-ID` header. 400 BAD_REQUEST.

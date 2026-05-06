@@ -266,7 +266,30 @@ impl Doorman {
                         DoormanError::TierUnavailable(Tier::Yoyo)
                     })?
                 };
-                client.complete(req).await
+
+                // B4: fast-path health + circuit check before making any HTTP call.
+                if !client.allow_request() {
+                    warn!(
+                        target: "slm_doorman::router",
+                        request_id = %req.request_id,
+                        "Tier B unavailable (health probe down or circuit open); falling back to Tier A"
+                    );
+                    return self.try_local_fallback(req).await;
+                }
+
+                match client.complete(req).await {
+                    Ok(resp) => Ok(resp),
+                    Err(e) if is_transient_tier_b_failure(&e) => {
+                        warn!(
+                            target: "slm_doorman::router",
+                            request_id = %req.request_id,
+                            reason = %e,
+                            "Tier B transient failure; falling back to Tier A"
+                        );
+                        self.try_local_fallback(req).await
+                    }
+                    Err(e) => Err(e),
+                }
             }
             Tier::External => {
                 self.external
@@ -285,7 +308,7 @@ impl Doorman {
                 timestamp_utc: Utc::now(),
                 request_id: req.request_id,
                 module_id: req.module_id.clone(),
-                tier,
+                tier: resp.tier_used,
                 model: resp.model.clone(),
                 inference_ms: resp.inference_ms,
                 cost_usd: resp.cost_usd,
@@ -318,6 +341,32 @@ impl Doorman {
             );
         }
     }
+}
+
+impl Doorman {
+    async fn try_local_fallback(&self, req: &ComputeRequest) -> Result<ComputeResponse> {
+        match &self.local {
+            Some(local) => {
+                info!(
+                    target: "slm_doorman::router",
+                    request_id = %req.request_id,
+                    "Tier A fallback active"
+                );
+                local.complete(req).await
+            }
+            None => Err(DoormanError::TierUnavailable(Tier::Local)),
+        }
+    }
+}
+
+fn is_transient_tier_b_failure(e: &DoormanError) -> bool {
+    matches!(
+        e,
+        DoormanError::TierBTimeout
+            | DoormanError::TierBCircuitOpen
+            | DoormanError::Upstream(_)
+            | DoormanError::UpstreamShape(_)
+    )
 }
 
 fn classify_error(e: &DoormanError) -> CompletionStatus {
@@ -363,6 +412,14 @@ fn classify_error(e: &DoormanError) -> CompletionStatus {
         // (PS.4 step 2). Server-side configuration gap — classified as UpstreamError
         // (not PolicyDenied; the caller did nothing wrong). HTTP 503.
         DoormanError::AuditProxyProviderUnavailable { .. } => CompletionStatus::UpstreamError,
+        // Tier B resilience errors — the circuit or deadline fired. Classified
+        // as UpstreamError so the audit ledger reflects upstream unavailability.
+        // In the normal routing path these are caught by is_transient_tier_b_failure
+        // and trigger Tier A fallback; they reach classify_error only when
+        // local is also unavailable.
+        DoormanError::TierBTimeout | DoormanError::TierBCircuitOpen => {
+            CompletionStatus::UpstreamError
+        }
         DoormanError::Upstream(_)
         | DoormanError::UpstreamShape(_)
         | DoormanError::ContractMajorMismatch { .. }

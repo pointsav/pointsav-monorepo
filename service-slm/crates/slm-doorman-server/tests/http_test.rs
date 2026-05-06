@@ -753,6 +753,9 @@ fn doorman_error_to_status(e: &DoormanError) -> StatusCode {
         // is unreachable/unconfigured (503).
         DoormanError::GraphProxyMissingModuleId => StatusCode::BAD_REQUEST,
         DoormanError::GraphProxyServiceUnavailable => StatusCode::SERVICE_UNAVAILABLE,
+        DoormanError::TierBTimeout | DoormanError::TierBCircuitOpen => {
+            StatusCode::SERVICE_UNAVAILABLE
+        }
     }
 }
 
