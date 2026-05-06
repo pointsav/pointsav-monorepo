@@ -7,6 +7,7 @@
 //! (`conventions/three-ring-architecture.md`), the system functions
 //! without them and the router routes around them.
 
+mod circuit_breaker;
 mod external;
 mod local;
 mod yoyo;

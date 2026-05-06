@@ -14,21 +14,47 @@
 //! - Capture of `X-Foundry-Inference-Ms` and `X-Foundry-Yoyo-Version`
 //!   response headers for the audit ledger
 //!
+//! Resilience stack (added 2026-05-06):
+//! - 60 s reqwest socket timeout + 90 s tokio outer deadline
+//! - Three-state circuit breaker (Closed → Open → HalfOpen → Closed)
+//! - Background health probe: polls /health every 30 s; marks
+//!   `health_up` false after 3 consecutive failures
+//! - Both guards checked before every dispatch; fast path is two atomic loads
+//!
 //! Per operator direction relayed via Master 2026-04-26: this code is
 //! mock-tested only — no `tofu apply`, no live HTTP, no real
 //! bearer-token consumption against any provider. Live Yo-Yo
 //! deployments are a separate Master-scope decision with explicit
 //! cost-cap configuration.
 
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use slm_core::{ChatMessage, ComputeRequest, ComputeResponse, GrammarConstraint, Tier};
-use tracing::{debug, warn};
+use tracing::{debug, info, warn};
 
 use crate::error::{DoormanError, Result};
+use crate::tier::circuit_breaker::CircuitBreaker;
+
+// ── Timeouts ─────────────────────────────────────────────────────────────────
+/// Per-socket read timeout on the reqwest client. Covers slow body reads and
+/// stalled TCP connections. Combined with the outer tokio deadline below.
+const SOCKET_TIMEOUT: Duration = Duration::from_secs(60);
+
+/// Hard outer deadline wrapping the entire complete() call, including any
+/// 503 Retry-After sleep. Fires DoormanError::TierBTimeout to caller.
+const OUTER_DEADLINE: Duration = Duration::from_secs(90);
+
+// ── Health probe ──────────────────────────────────────────────────────────────
+/// How often the health probe polls /health.
+const HEALTH_PROBE_INTERVAL: Duration = Duration::from_secs(30);
+/// How many consecutive failures before health_up is set false.
+const HEALTH_FAILURE_THRESHOLD: u32 = 3;
+/// Timeout for each /health probe request (short — we don't want to block).
+const HEALTH_PROBE_TIMEOUT: Duration = Duration::from_secs(2);
 
 /// Bearer-token source for Tier B requests. Real implementations
 /// (GCP Workload Identity, RunPod / Modal API key from Secret
@@ -127,14 +153,38 @@ pub struct YoYoTierClient {
     config: YoYoTierConfig,
     http: reqwest::Client,
     bearer: Arc<dyn BearerTokenProvider>,
+    /// True when the background health probe last saw /health return 200.
+    /// Three consecutive failures flip this to false; one recovery resets.
+    /// Checked by the router before dispatching — single atomic load.
+    pub health_up: Arc<AtomicBool>,
+    /// Three-state circuit breaker driven by actual request outcomes.
+    /// Shared with no other task; updated only by complete() return path.
+    pub circuit: Arc<CircuitBreaker>,
 }
 
 impl YoYoTierClient {
     pub fn new(config: YoYoTierConfig, bearer: Arc<dyn BearerTokenProvider>) -> Self {
+        let health_up = Arc::new(AtomicBool::new(true));
+        let circuit = Arc::new(CircuitBreaker::new());
+
+        // Spawn background health probe if a tokio runtime is available.
+        // guard with try_current() so unit tests that call new() outside
+        // a runtime don't panic.
+        if let Ok(handle) = tokio::runtime::Handle::try_current() {
+            let health_up_clone = Arc::clone(&health_up);
+            let endpoint = config.endpoint.clone();
+            handle.spawn(run_health_probe(endpoint, health_up_clone));
+        }
+
         Self {
             config,
-            http: reqwest::Client::new(),
+            http: reqwest::Client::builder()
+                .timeout(SOCKET_TIMEOUT)
+                .build()
+                .unwrap_or_default(),
             bearer,
+            health_up,
+            circuit,
         }
     }
 
@@ -146,20 +196,71 @@ impl YoYoTierClient {
         &self.config.contract_version
     }
 
+    /// Returns true if both the health probe and circuit breaker allow a request.
+    pub fn allow_request(&self) -> bool {
+        self.health_up.load(Ordering::Relaxed) && self.circuit.allow_request()
+    }
+
+    /// Route one request to Tier B with full resilience stack:
+    /// circuit breaker check → 90 s outer deadline → 60 s socket timeout
+    /// → 503 cold-start retry → 401/403 auth refresh.
+    #[tracing::instrument(
+        skip(self, req),
+        fields(
+            tier = "yoyo",
+            model = tracing::field::Empty,
+            request_id = %req.request_id,
+            latency_ms = tracing::field::Empty,
+            prompt_tokens = tracing::field::Empty,
+            completion_tokens = tracing::field::Empty,
+            cold_start = false,
+            circuit_open = false,
+        )
+    )]
     pub async fn complete(&self, req: &ComputeRequest) -> Result<ComputeResponse> {
+        // Circuit breaker fast path — no HTTP if the breaker is open.
+        if !self.circuit.allow_request() {
+            tracing::Span::current().record("circuit_open", true);
+            return Err(DoormanError::TierBCircuitOpen);
+        }
+
+        let started = Instant::now();
+        let span = tracing::Span::current();
+
+        let result = tokio::time::timeout(OUTER_DEADLINE, self.inner_complete(req)).await;
+
+        let elapsed_ms = started.elapsed().as_millis() as u64;
+        span.record("latency_ms", elapsed_ms);
+
+        match result {
+            Ok(Ok(resp)) => {
+                self.circuit.record_success();
+                span.record("model", resp.model.as_str());
+                Ok(resp)
+            }
+            Ok(Err(e)) => {
+                self.circuit.record_failure();
+                Err(e)
+            }
+            Err(_elapsed) => {
+                self.circuit.record_failure();
+                warn!(
+                    target: "slm_doorman::tier::yoyo",
+                    latency_ms = elapsed_ms,
+                    "Tier B: outer 90 s deadline exceeded"
+                );
+                Err(DoormanError::TierBTimeout)
+            }
+        }
+    }
+
+    async fn inner_complete(&self, req: &ComputeRequest) -> Result<ComputeResponse> {
         let model = req
             .model
             .clone()
             .unwrap_or_else(|| self.config.default_model.clone());
 
         // Translate GrammarConstraint → vLLM ≥0.12 wire envelope.
-        // vLLM's llguidance backend auto-detects Lark vs GBNF from the grammar
-        // string; both variants go in the same `grammar` field. JsonSchema goes
-        // in the sibling `json_schema` field per the vLLM structured-outputs
-        // API surface. When no grammar is set the `extra_body` field is absent
-        // (skip_serializing_if = "Option::is_none") — no empty objects emitted.
-        // Legacy `extra_body.guided_grammar` form deliberately NOT used (pinned
-        // to vLLM ≥0.12 envelope per v0.1.33 Q2 ratification).
         let extra_body: Option<serde_json::Value> = req.grammar.as_ref().map(|g| match g {
             GrammarConstraint::Lark(s) | GrammarConstraint::Gbnf(s) => {
                 serde_json::json!({ "structured_outputs": { "grammar": s } })
@@ -224,6 +325,10 @@ impl YoYoTierClient {
     /// - 401 / 403: refresh token, retry once with fresh token
     /// - 410: contract MAJOR mismatch — refuse, no retry
     /// - other: surface as `UpstreamShape`
+    ///
+    /// Note: the 60 s Retry-After cap is intentional — the 90 s outer
+    /// deadline in `complete()` bounds the worst-case total latency including
+    /// the sleep, so the cap keeps the sleep well within budget.
     async fn send_with_retries(
         &self,
         url: &str,
@@ -248,6 +353,7 @@ impl YoYoTierClient {
                     retry_after_s = retry_after,
                     "503 cold start; sleeping then retrying once"
                 );
+                tracing::Span::current().record("cold_start", true);
                 tokio::time::sleep(Duration::from_secs(retry_after)).await;
                 let resp2 = self.send_once(url, body, req, &token).await?;
                 if resp2.status().is_success() {
@@ -293,6 +399,8 @@ impl YoYoTierClient {
         }
     }
 
+    /// Single authenticated POST. `send_once` is the sole point where
+    /// the bearer token is injected — all retry paths funnel through here.
     async fn send_once(
         &self,
         url: &str,
@@ -312,6 +420,65 @@ impl YoYoTierClient {
             .send()
             .await?;
         Ok(resp)
+    }
+}
+
+/// Background health probe task. Spawned once per `YoYoTierClient::new()`.
+/// Polls `<endpoint>/health` every 30 s with a 2 s timeout.
+/// Three consecutive failures set `health_up` to false; one recovery resets.
+async fn run_health_probe(endpoint: String, health_up: Arc<AtomicBool>) {
+    let http = reqwest::Client::builder()
+        .timeout(HEALTH_PROBE_TIMEOUT)
+        .build()
+        .unwrap_or_default();
+
+    let mut consecutive_failures: u32 = 0;
+    let url = format!("{}/health", endpoint.trim_end_matches('/'));
+
+    info!(
+        target: "slm_doorman::tier::yoyo",
+        %url,
+        interval_s = HEALTH_PROBE_INTERVAL.as_secs(),
+        "health probe started"
+    );
+
+    loop {
+        tokio::time::sleep(HEALTH_PROBE_INTERVAL).await;
+
+        let ok = http
+            .get(&url)
+            .send()
+            .await
+            .map(|r| r.status().is_success())
+            .unwrap_or(false);
+
+        if ok {
+            if consecutive_failures > 0 {
+                info!(
+                    target: "slm_doorman::tier::yoyo",
+                    prev_failures = consecutive_failures,
+                    "health probe: Tier B recovered"
+                );
+            }
+            consecutive_failures = 0;
+            health_up.store(true, Ordering::Relaxed);
+        } else {
+            consecutive_failures += 1;
+            if consecutive_failures >= HEALTH_FAILURE_THRESHOLD {
+                warn!(
+                    target: "slm_doorman::tier::yoyo",
+                    consecutive_failures,
+                    "health probe: Tier B marked unavailable"
+                );
+                health_up.store(false, Ordering::Relaxed);
+            } else {
+                debug!(
+                    target: "slm_doorman::tier::yoyo",
+                    consecutive_failures,
+                    "health probe: transient failure (not yet marking unavailable)"
+                );
+            }
+        }
     }
 }
 
@@ -471,8 +638,6 @@ mod tests {
     /// once with the fresh token.
     #[tokio::test]
     async fn auth_failure_401_refreshes_and_retries() {
-        // Bearer provider that flips its token on refresh, so we can
-        // verify the second request uses the refreshed value.
         #[derive(Debug)]
         struct FlippingBearer {
             v1: String,
@@ -543,8 +708,6 @@ mod tests {
             .and(path("/v1/chat/completions"))
             .respond_with(
                 ResponseTemplate::new(200)
-                    // 1 hour of inference billed at $0.84/h (GCP L4 rate
-                    // per substrate decision) → $0.84 cost.
                     .insert_header("x-foundry-inference-ms", "3600000")
                     .set_body_json(ok_body()),
             )
@@ -557,14 +720,12 @@ mod tests {
         };
         let client = client_with_pricing(server.uri(), pricing.clone());
         let resp = client.complete(&req()).await.expect("happy path 200");
-        // Tolerate fp imprecision: equal to within 1e-9.
         assert!(
             (resp.cost_usd - 0.84).abs() < 1e-9,
             "expected $0.84, got ${}",
             resp.cost_usd
         );
 
-        // And the unit method itself is exercised independently:
         assert_eq!(pricing.yoyo_cost_usd(0), 0.0);
         assert!((pricing.yoyo_cost_usd(1_800_000) - 0.42).abs() < 1e-9);
     }
@@ -590,11 +751,8 @@ mod tests {
         assert_eq!(resp.cost_usd, 0.0);
     }
 
-    // ---- Grammar serialisation tests (PS.3 step 2) ----
+    // ---- Grammar serialisation tests ----
 
-    /// Lark grammar serialises into `extra_body.structured_outputs.grammar`.
-    /// vLLM ≥0.12 with the llguidance backend accepts Lark strings in this
-    /// field; the backend auto-detects the grammar dialect.
     #[tokio::test]
     async fn grammar_lark_serialises_into_extra_body_structured_outputs() {
         use std::sync::Mutex;
@@ -626,19 +784,11 @@ mod tests {
         let body = captured.lock().unwrap().clone().expect("body captured");
         assert_eq!(
             body["extra_body"]["structured_outputs"]["grammar"],
-            serde_json::json!("start: /[a-z]+/"),
-            "Lark grammar must be in extra_body.structured_outputs.grammar"
+            serde_json::json!("start: /[a-z]+/")
         );
-        // json_schema field must NOT appear for a Lark constraint.
-        assert!(
-            body["extra_body"]["structured_outputs"]["json_schema"].is_null(),
-            "json_schema field must be absent for Lark constraint"
-        );
+        assert!(body["extra_body"]["structured_outputs"]["json_schema"].is_null());
     }
 
-    /// GBNF grammar also serialises into `extra_body.structured_outputs.grammar`.
-    /// vLLM's llguidance backend auto-detects Lark vs GBNF from the string;
-    /// both variants share the same wire field.
     #[tokio::test]
     async fn grammar_gbnf_serialises_into_extra_body_structured_outputs() {
         use std::sync::Mutex;
@@ -670,12 +820,10 @@ mod tests {
         let body = captured.lock().unwrap().clone().expect("body captured");
         assert_eq!(
             body["extra_body"]["structured_outputs"]["grammar"],
-            serde_json::json!(r#"root ::= "yes" | "no""#),
-            "GBNF grammar must be in extra_body.structured_outputs.grammar"
+            serde_json::json!(r#"root ::= "yes" | "no""#)
         );
     }
 
-    /// JSON Schema serialises into `extra_body.structured_outputs.json_schema`.
     #[tokio::test]
     async fn grammar_json_schema_serialises_into_extra_body_structured_outputs() {
         use std::sync::Mutex;
@@ -711,19 +859,10 @@ mod tests {
             .expect("json_schema grammar happy path");
 
         let body = captured.lock().unwrap().clone().expect("body captured");
-        assert_eq!(
-            body["extra_body"]["structured_outputs"]["json_schema"], schema,
-            "JSON Schema must be in extra_body.structured_outputs.json_schema"
-        );
-        // grammar field must NOT appear for a JsonSchema constraint.
-        assert!(
-            body["extra_body"]["structured_outputs"]["grammar"].is_null(),
-            "grammar field must be absent for JsonSchema constraint"
-        );
+        assert_eq!(body["extra_body"]["structured_outputs"]["json_schema"], schema);
+        assert!(body["extra_body"]["structured_outputs"]["grammar"].is_null());
     }
 
-    /// When grammar is None, the request body must have no `extra_body`
-    /// field at all — no empty objects emitted to the wire.
     #[tokio::test]
     async fn grammar_none_omits_extra_body_structured_outputs() {
         use std::sync::Mutex;
@@ -746,7 +885,6 @@ mod tests {
             .await;
 
         let client = client(server.uri());
-        // req() factory sets grammar: None by default.
         client
             .complete(&req())
             .await
@@ -755,15 +893,12 @@ mod tests {
         let body = captured.lock().unwrap().clone().expect("body captured");
         assert!(
             body.get("extra_body").is_none(),
-            "extra_body field must be absent when grammar is None; got body: {body}"
+            "extra_body must be absent when grammar is None"
         );
     }
 
-    // ---- BearerTokenProvider failure-path tests (PS.6 chunk #6 tail) ----
+    // ---- BearerTokenProvider failure-path tests ----
 
-    /// When `BearerTokenProvider::token()` returns an error, `complete()`
-    /// must surface `DoormanError::BearerToken` immediately — no network
-    /// requests should be made.
     #[tokio::test]
     async fn bearer_token_provider_error_surfaces_typed_error_with_zero_network_calls() {
         #[derive(Debug)]
@@ -783,7 +918,6 @@ mod tests {
         }
 
         let server = MockServer::start().await;
-        // No mocks registered — any request reaching the server would fail the expectation.
 
         let client = YoYoTierClient::new(
             YoYoTierConfig {
@@ -801,22 +935,13 @@ mod tests {
             .expect_err("failing bearer must return error");
         match err {
             DoormanError::BearerToken(msg) => {
-                assert!(
-                    msg.contains("offline"),
-                    "error message should preserve provider detail: {msg}"
-                );
+                assert!(msg.contains("offline"), "error message should preserve provider detail: {msg}");
             }
             other => panic!("expected BearerToken error, got {other:?}"),
         }
-        // Verify zero network requests (no mock was mounted; wiremock would panic on receipt).
         assert_eq!(server.received_requests().await.unwrap().len(), 0);
     }
 
-    /// When `BearerTokenProvider::token()` returns `Ok(String::new())`, the
-    /// client sends an empty bearer token. The server will return 401 —
-    /// triggering `refresh()`, which also returns empty. The second request
-    /// (with the refresh result) also fails. Final error must be `UpstreamShape`
-    /// from the failed-retry branch (not a panic or unwrap).
     #[tokio::test]
     async fn bearer_empty_string_causes_auth_failure_path() {
         #[derive(Debug)]
@@ -832,11 +957,10 @@ mod tests {
         }
 
         let server = MockServer::start().await;
-        // The server always returns 401 for any request (empty bearer included).
         Mock::given(method("POST"))
             .and(path("/v1/chat/completions"))
             .respond_with(ResponseTemplate::new(401))
-            .expect(2) // initial request + one retry-after-refresh
+            .expect(2)
             .mount(&server)
             .await;
 
@@ -854,13 +978,9 @@ mod tests {
             .complete(&req())
             .await
             .expect_err("empty bearer leading to repeated 401 must return error");
-        // The retry-after-auth-refresh path returns UpstreamShape.
         match err {
             DoormanError::UpstreamShape(msg) => {
-                assert!(
-                    msg.contains("401"),
-                    "UpstreamShape message should mention the status: {msg}"
-                );
+                assert!(msg.contains("401"), "UpstreamShape message should mention the status: {msg}");
             }
             other => panic!("expected UpstreamShape from failed auth retry, got {other:?}"),
         }
@@ -893,5 +1013,47 @@ mod tests {
             }
             other => panic!("expected ContractMajorMismatch, got {other:?}"),
         }
+    }
+
+    /// Circuit breaker opens after FAILURE_THRESHOLD consecutive failures
+    /// and subsequent complete() returns TierBCircuitOpen immediately.
+    #[tokio::test]
+    async fn circuit_breaker_opens_after_consecutive_failures() {
+        let server = MockServer::start().await;
+        Mock::given(method("POST"))
+            .and(path("/v1/chat/completions"))
+            .respond_with(ResponseTemplate::new(500))
+            .mount(&server)
+            .await;
+
+        let client = client(server.uri());
+
+        // Drive failures until circuit opens (FAILURE_THRESHOLD = 5)
+        for _ in 0..5 {
+            let _ = client.complete(&req()).await;
+        }
+
+        // Next call should be rejected by circuit breaker, not by HTTP
+        let err = client.complete(&req()).await.expect_err("circuit open");
+        assert!(
+            matches!(err, DoormanError::TierBCircuitOpen),
+            "expected TierBCircuitOpen, got {err:?}"
+        );
+    }
+
+    /// health_up starts true; can be manually flipped and back.
+    #[test]
+    fn health_up_atomic_default_true() {
+        let server_uri = "http://127.0.0.1:1".to_string(); // unreachable; no probe spawned in sync test
+        let client = YoYoTierClient::new(
+            YoYoTierConfig {
+                endpoint: server_uri,
+                ..YoYoTierConfig::default()
+            },
+            Arc::new(StaticBearer::new("tok")),
+        );
+        assert!(client.health_up.load(Ordering::Relaxed));
+        client.health_up.store(false, Ordering::Relaxed);
+        assert!(!client.health_up.load(Ordering::Relaxed));
     }
 }
