@@ -110,6 +110,12 @@ async fn main() -> anyhow::Result<()> {
     // AppState so both the handler and the drain worker share the same config.
     let queue_cfg = QueueConfig::from_env();
 
+    // Graph proxy — reuse the SERVICE_CONTENT_ENDPOINT already consumed by
+    // GraphContextClient above. Default to 127.0.0.1:9081 if unset so the
+    // proxy is available in community-tier deployments without extra config.
+    let service_content_endpoint = std::env::var("SERVICE_CONTENT_ENDPOINT")
+        .unwrap_or_else(|_| http::DEFAULT_SERVICE_CONTENT_ENDPOINT.to_string());
+
     let state = Arc::new(http::AppState {
         doorman,
         apprenticeship,
@@ -127,6 +133,8 @@ async fn main() -> anyhow::Result<()> {
         // Brief Queue Substrate (§7C) — shadow_handler enqueues here;
         // drain worker reads from the same config.
         queue_config: Arc::new(queue_cfg.clone()),
+        // Graph proxy — base URL for service-content (datagraph-access-discipline).
+        service_content_endpoint,
     });
 
     info!(

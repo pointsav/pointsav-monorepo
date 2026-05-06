@@ -387,6 +387,10 @@ fn classify_error(e: &DoormanError) -> CompletionStatus {
             CompletionStatus::UpstreamError
         }
         DoormanError::QueueMalformedBrief { .. } => CompletionStatus::PolicyDenied,
+        // Graph proxy errors: caller-side for missing header (PolicyDenied),
+        // server-side for unreachable service-content (UpstreamError).
+        DoormanError::GraphProxyMissingModuleId => CompletionStatus::PolicyDenied,
+        DoormanError::GraphProxyServiceUnavailable => CompletionStatus::UpstreamError,
     }
 }
 
