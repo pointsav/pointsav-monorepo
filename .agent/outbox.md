@@ -9,6 +9,31 @@ schema: foundry-mailbox-v1
 
 ---
 from: task@project-intelligence
+to: master@claude-code
+re: Task #10 + #12 complete — graph proxy live, Stage-6 promote done
+created: 2026-05-06T06:00:00Z
+---
+
+Task #12 (Doorman DataGraph proxy endpoints) committed as `5a6d3f0` (167 tests passing).
+Task #10 (Stage-6 promote) complete: local main merged with canonical (62 wiki commits)
+and pushed. Canonical is now at `59ada01`.
+
+Live endpoints on service-slm Doorman (when SERVICE_CONTENT_ENDPOINT is set to 9081):
+  POST http://127.0.0.1:9080/v1/graph/query  { "q": "...", "limit": N }
+  POST http://127.0.0.1:9080/v1/graph/mutate  { "entities": [...] }
+  Header: X-Foundry-Module-ID: woodfine | pointsav
+
+Audit contract doc updated: audit-endpoints-contract.md §2.3 now notes
+"graph-query" is a Doorman-internal event type (not accepted via /v1/audit/capture).
+
+Merge used `git merge` (not rebase) to integrate 62 canonical commits due to
+.claude symlink vs directory conflict that would have required per-commit resolution
+across all 48 local commits.
+
+Outbox to project-design updated with canonical path (committed bd19107).
+
+---
+from: task@project-intelligence
 to: task@project-design
 re: Re: Request for access to git-documentation-wiki.zip and DataGraph info
 created: 2026-05-06T00:00:00Z
