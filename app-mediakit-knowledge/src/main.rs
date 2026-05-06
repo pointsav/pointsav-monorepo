@@ -4,10 +4,12 @@
 
 use anyhow::{bail, Result};
 use clap::{Parser, Subcommand};
+use notify::{EventKind, RecommendedWatcher, RecursiveMode, Watcher};
 use std::net::SocketAddr;
-use std::path::PathBuf;
+use std::path::{Path as FsPath, PathBuf};
 use std::sync::Arc;
 use tokio::signal;
+use tokio::sync::mpsc;
 use tracing_subscriber::EnvFilter;
 
 use app_mediakit_knowledge::search;
@@ -172,6 +174,49 @@ async fn serve(
     tracing::info!("building search index");
     let search_index = search::build_index(&content_dir, &state_dir).await?;
     tracing::info!("search index ready");
+    let search_arc = Arc::new(search_index);
+
+    // Incremental search reindex: watch content_dir for .md changes and
+    // call reindex_topic() without restarting the server.
+    {
+        let (tx, mut rx) = mpsc::channel::<notify::Result<notify::Event>>(64);
+        let mut watcher: RecommendedWatcher = Watcher::new(
+            move |res| { let _ = tx.blocking_send(res); },
+            notify::Config::default(),
+        )?;
+        watcher.watch(&content_dir, RecursiveMode::Recursive)?;
+        let idx = Arc::clone(&search_arc);
+        let cdir = content_dir.clone();
+        tokio::spawn(async move {
+            let _w = watcher; // keep alive in this task
+            while let Some(event) = rx.recv().await {
+                let Ok(ev) = event else { continue };
+                let is_write = matches!(
+                    ev.kind,
+                    EventKind::Create(_) | EventKind::Modify(_)
+                );
+                let is_remove = matches!(ev.kind, EventKind::Remove(_));
+                if !is_write && !is_remove { continue }
+                for path in &ev.paths {
+                    if path.extension().map(|e| e == "md").unwrap_or(false) {
+                        let slug = content_path_to_slug(&cdir, path);
+                        if is_write {
+                            if let Ok(text) = std::fs::read_to_string(path) {
+                                if let Err(e) = search::reindex_topic(&idx, &slug, &text) {
+                                    tracing::warn!(slug, error = %e, "reindex failed");
+                                }
+                            }
+                        }
+                        // Remove events: the slug is gone; reindex with empty
+                        // body so it is deleted from the index.
+                        if is_remove {
+                            let _ = search::reindex_topic(&idx, &slug, "");
+                        }
+                    }
+                }
+            }
+        });
+    }
 
     // Phase 4 Step 4.1: open or init git repo. Fail fast if broken.
     tracing::info!("opening git repository");
@@ -207,7 +252,7 @@ async fn serve(
         guide_dir,
         guide_dir_2,
         citations_yaml,
-        search: Arc::new(search_index),
+        search: search_arc,
         git: Arc::new(std::sync::Mutex::new(git_repo)),
         collab: Arc::new(app_mediakit_knowledge::collab::CollabRooms::new()),
         enable_collab,
@@ -224,6 +269,23 @@ async fn serve(
         .await?;
     tracing::info!("shut down cleanly");
     Ok(())
+}
+
+/// Derive a search slug from an absolute filesystem path relative to
+/// content_dir. Strips the content_dir prefix and the `.md` extension.
+/// Returns the path stem joined with `/` for category-scoped articles
+/// (e.g. `architecture/compounding-substrate`).
+fn content_path_to_slug(content_dir: &FsPath, path: &FsPath) -> String {
+    path.strip_prefix(content_dir)
+        .ok()
+        .and_then(|rel| rel.to_str())
+        .map(|s| s.trim_end_matches(".md").replace('\\', "/"))
+        .unwrap_or_else(|| {
+            path.file_stem()
+                .and_then(|s| s.to_str())
+                .unwrap_or("unknown")
+                .to_string()
+        })
 }
 
 async fn shutdown_signal() {
