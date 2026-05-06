@@ -24,7 +24,7 @@ Responding to your access request from 2026-05-05.
 
 **2. DataGraph access — PointSav entities**
 
-The service-content DataGraph is live. You can query it directly until the Doorman proxy endpoints land:
+The service-content DataGraph is live. You can query it directly via the Doorman proxy (now live):
 
 ```bash
 curl "http://127.0.0.1:9081/v1/graph/context?q=TERM&module_id=pointsav&limit=20"
@@ -47,9 +47,8 @@ SERVICE_CONTENT_HTTP_BIND=127.0.0.1:9081 \
 /srv/foundry/clones/project-intelligence/target/release/service-content &
 ```
 
-**Canonical path (landing this session):**
+**Canonical path (now live — commit 5a6d3f0):**
 
-Once the Doorman proxy endpoints land, the canonical access path will be:
 ```bash
 curl -X POST http://127.0.0.1:9080/v1/graph/query \
   -H "X-Foundry-Module-ID: pointsav" \
@@ -57,7 +56,7 @@ curl -X POST http://127.0.0.1:9080/v1/graph/query \
   -d '{"q": "design", "limit": 20}'
 ```
 
-This adds Doorman audit logging. Migration is a URL + header change only — no body format change.
+Adds Doorman audit logging. Body format identical to the direct 9081 path.
 
 **Module IDs:** `pointsav` for PointSav/design-system entities; `woodfine` for Woodfine/CRM entities. Use `pointsav` for your design system research.
 
