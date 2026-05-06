@@ -38,6 +38,7 @@ use axum::{
     routing::{get, post},
     Json, Router,
 };
+use regex::Regex;
 use maud::{html, Markup, PreEscaped, DOCTYPE};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -131,6 +132,8 @@ pub fn router(state: AppState) -> Router {
         .route("/category/{name}", get(category_page))
         // Phase 3 Step 3.2 — full-text search HTML page over the tantivy index
         .route("/search", get(search_page))
+        .route("/wanted", get(wanted_page))
+        .route("/mcp", post(mcp_handler))
         // Phase 3 Step 3.3 — Atom + JSON Feed syndication
         .route("/feed.atom", get(crate::feeds::get_atom))
         .route("/feed.json", get(crate::feeds::get_json_feed))
@@ -203,6 +206,237 @@ async fn healthz() -> &'static str {
 struct SearchQueryParams {
     #[serde(default)]
     q: String,
+}
+
+/// `POST /mcp` — Minimal MCP (Model Context Protocol) JSON-RPC 2.0 endpoint.
+///
+/// Resources:
+///   - `article`  — full article HTML + frontmatter JSON by slug
+///   - `category` — article list for a category
+///   - `search`   — Tantivy full-text query, returns hits with title+snippet+slug
+///   - `wanted`   — redlink table (missing slug → source slugs)
+///
+/// Auth: open read-only, consistent with auth-less wiki mode.
+async fn mcp_handler(
+    State(state): State<Arc<AppState>>,
+    Json(req): Json<serde_json::Value>,
+) -> impl IntoResponse {
+    let id = req.get("id").cloned().unwrap_or(serde_json::Value::Null);
+    let method = req
+        .get("method")
+        .and_then(|v| v.as_str())
+        .unwrap_or("")
+        .to_string();
+    let params = req
+        .get("params")
+        .cloned()
+        .unwrap_or(serde_json::Value::Object(serde_json::Map::new()));
+
+    let result = mcp_dispatch(&state, &method, &params).await;
+
+    let body = match result {
+        Ok(v) => json!({ "jsonrpc": "2.0", "id": id, "result": v }),
+        Err(msg) => json!({
+            "jsonrpc": "2.0",
+            "id": id,
+            "error": { "code": -32000, "message": msg }
+        }),
+    };
+
+    (
+        [(header::CONTENT_TYPE, HeaderValue::from_static("application/json"))],
+        axum::Json(body),
+    )
+}
+
+async fn mcp_dispatch(
+    state: &AppState,
+    method: &str,
+    params: &serde_json::Value,
+) -> Result<serde_json::Value, String> {
+    match method {
+        "article" => {
+            let slug = params
+                .get("slug")
+                .and_then(|v| v.as_str())
+                .ok_or("missing param: slug")?;
+            if slug.contains("..") {
+                return Err("invalid slug".into());
+            }
+            let path = state.content_dir.join(format!("{slug}.md"));
+            let text = tokio::fs::read_to_string(&path)
+                .await
+                .map_err(|_| format!("article not found: {slug}"))?;
+            let parsed = crate::render::parse_page(&text)
+                .map_err(|e| format!("parse error: {e}"))?;
+            let html = crate::render::render_html_raw(&parsed.body_md, &state.content_dir);
+            Ok(json!({
+                "slug": slug,
+                "title": parsed.frontmatter.title,
+                "category": parsed.frontmatter.category,
+                "last_edited": parsed.frontmatter.last_edited,
+                "quality": parsed.frontmatter.quality,
+                "status": parsed.frontmatter.status,
+                "short_description": parsed.frontmatter.short_description,
+                "html": html,
+            }))
+        }
+        "category" => {
+            let name = params
+                .get("name")
+                .and_then(|v| v.as_str())
+                .ok_or("missing param: name")?;
+            let buckets = crate::server::bucket_topics_by_category(
+                &state.content_dir,
+                state.guide_dir.as_deref(),
+                state.guide_dir_2.as_deref(),
+            )
+            .await
+            .map_err(|e| format!("error: {e}"))?;
+            let empty = Vec::new();
+            let topics = buckets.get(name).unwrap_or(&empty);
+            let items: Vec<serde_json::Value> = topics
+                .iter()
+                .map(|t| json!({
+                    "slug": t.slug,
+                    "title": t.title,
+                    "last_edited": t.last_edited,
+                    "short_description": t.short_description,
+                }))
+                .collect();
+            Ok(json!({ "category": name, "count": items.len(), "articles": items }))
+        }
+        "search" => {
+            let q = params
+                .get("q")
+                .and_then(|v| v.as_str())
+                .ok_or("missing param: q")?;
+            let limit = params
+                .get("limit")
+                .and_then(|v| v.as_u64())
+                .unwrap_or(10) as usize;
+            let hits = crate::search::search(&state.search, q, limit)
+                .map_err(|e| format!("search error: {e}"))?;
+            let items: Vec<serde_json::Value> = hits
+                .iter()
+                .map(|h| json!({
+                    "slug": h.slug,
+                    "title": h.title,
+                    "snippet": h.snippet,
+                }))
+                .collect();
+            Ok(json!({ "query": q, "count": items.len(), "hits": items }))
+        }
+        "wanted" => {
+            let re = Regex::new(r#"href="/wiki/([^"]+)"[^>]*class="wiki-redlink""#)
+                .expect("static regex");
+            let topic_files = collect_all_topic_files(
+                &state.content_dir,
+                &[state.guide_dir.as_deref(), state.guide_dir_2.as_deref()],
+            )
+            .await
+            .map_err(|e| format!("error: {e}"))?;
+            let mut wanted: BTreeMap<String, Vec<String>> = BTreeMap::new();
+            for tf in &topic_files {
+                if let Ok(text) = tokio::fs::read_to_string(&tf.path).await {
+                    let html = crate::render::render_html_raw(&text, &state.content_dir);
+                    for cap in re.captures_iter(&html) {
+                        wanted
+                            .entry(cap[1].to_string())
+                            .or_default()
+                            .push(tf.slug.clone());
+                    }
+                }
+            }
+            let mut rows: Vec<serde_json::Value> = wanted
+                .into_iter()
+                .map(|(slug, sources)| json!({ "missing_slug": slug, "linked_from": sources }))
+                .collect();
+            rows.sort_by(|a, b| {
+                let la = a["linked_from"].as_array().map(|v| v.len()).unwrap_or(0);
+                let lb = b["linked_from"].as_array().map(|v| v.len()).unwrap_or(0);
+                lb.cmp(&la)
+            });
+            Ok(json!({ "count": rows.len(), "wanted": rows }))
+        }
+        _ => Err(format!("unknown method: {method}")),
+    }
+}
+
+/// `GET /wanted` — "Wanted articles" page.
+///
+/// Walks every .md file in content_dir, renders each, and collects all
+/// anchors tagged with `class="wiki-redlink"`. Returns a table sorted by
+/// inbound-link count (most-wanted first), matching Wikipedia's Special:WantedPages.
+async fn wanted_page(
+    State(state): State<Arc<AppState>>,
+    CurrentUser(maybe_user): CurrentUser,
+) -> Result<Markup, WikiError> {
+    let pending_count = pending_count_for(&state, maybe_user.as_ref()).await;
+    let re = Regex::new(r#"href="/wiki/([^"]+)"[^>]*class="wiki-redlink""#).expect("static regex");
+
+    // Walk all topic files and collect redlinks.
+    let topic_files = collect_all_topic_files(
+        &state.content_dir,
+        &[state.guide_dir.as_deref(), state.guide_dir_2.as_deref()],
+    )
+    .await?;
+
+    let mut wanted: BTreeMap<String, Vec<String>> = BTreeMap::new();
+    for tf in &topic_files {
+        if let Ok(text) = fs::read_to_string(&tf.path).await {
+            let html = crate::render::render_html_raw(&text, &state.content_dir);
+            for cap in re.captures_iter(&html) {
+                let missing = cap[1].to_string();
+                wanted.entry(missing).or_default().push(tf.slug.clone());
+            }
+        }
+    }
+
+    // Sort by inbound count descending.
+    let mut rows: Vec<(String, Vec<String>)> = wanted.into_iter().collect();
+    rows.sort_by(|a, b| b.1.len().cmp(&a.1.len()).then(a.0.cmp(&b.0)));
+
+    Ok(chrome(
+        &format!("Wanted articles — {}", state.site_title),
+        html! {
+            h1 { "Wanted articles" }
+            p.wiki-wanted-intro {
+                "Articles linked from other pages that do not yet exist. "
+                "Most-linked first."
+            }
+            @if rows.is_empty() {
+                p { em { "No wanted articles — all wikilinks resolve." } }
+            } @else {
+                table.wiki-wanted-table {
+                    thead {
+                        tr {
+                            th { "Missing article" }
+                            th { "Links in" }
+                            th { "Linked from" }
+                        }
+                    }
+                    tbody {
+                        @for (slug, sources) in &rows {
+                            tr {
+                                td { (slug) }
+                                td.wanted-count { (sources.len()) }
+                                td.wanted-sources {
+                                    @for (i, src) in sources.iter().enumerate() {
+                                        @if i > 0 { ", " }
+                                        a href={ "/wiki/" (src) } { (src) }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        &state.site_title,
+        maybe_user.as_ref(),
+        pending_count,
+    ))
 }
 
 /// Phase 3 Step 3.2 — `GET /search?q=...` HTML results page.
@@ -1019,10 +1253,34 @@ async fn category_page(
     let display = capitalise(&name);
     let count = topics.len();
 
+    // Render _index.md MOC prose above the auto-list when present.
+    let moc_html: Option<String> = {
+        let index_path = state.content_dir.join(&name).join("_index.md");
+        if index_path.exists() {
+            match fs::read_to_string(&index_path).await {
+                Ok(text) => {
+                    if let Ok(parsed) = crate::render::parse_page(&text) {
+                        Some(crate::render::render_html_raw(&parsed.body_md, &state.content_dir))
+                    } else {
+                        None
+                    }
+                }
+                Err(_) => None,
+            }
+        } else {
+            None
+        }
+    };
+
     Ok(chrome(
         &format!("{display} — {}", state.site_title),
         html! {
             h1.wiki-cat-page-title { (display) }
+            @if let Some(ref moc) = moc_html {
+                div.wiki-cat-moc {
+                    (PreEscaped(moc))
+                }
+            }
             @if count == 0 {
                 p.wiki-cat-page-empty { "No articles in this category yet." }
             } @else {
@@ -1298,7 +1556,26 @@ fn wiki_chrome(
                         a href="/" { "Home" }
                         (auth_nav_widget(user, pending_count))
                     }
+                    button.nav-toggle-btn #nav-toggle
+                        aria-label="Toggle navigation"
+                        aria-expanded="false"
+                        aria-controls="mobile-nav-drawer"
+                    { "☰" }
                 }
+
+                // Mobile nav drawer — hidden on desktop, toggled by hamburger button
+                nav.mobile-nav-drawer #mobile-nav-drawer aria-hidden="true" {
+                    div.mobile-nav-header {
+                        a.site-title href="/" { (site_title) }
+                        button.mobile-nav-close #mobile-nav-close aria-label="Close navigation" { "✕" }
+                    }
+                    ul.mobile-nav-list {
+                        li { a href="/" { "Home" } }
+                        li { a href="/search" { "Search" } }
+                        li { a href="/wanted" { "Wanted articles" } }
+                    }
+                }
+                div.mobile-nav-overlay #mobile-nav-overlay aria-hidden="true" {}
 
                 // Article-page two-column layout: left TOC rail + article body
                 div.wiki-layout {
@@ -1356,7 +1633,12 @@ fn wiki_chrome(
                             // Language button sits BELOW the H1, left-aligned —
                             // matching MediaWiki Vector 2022 (.mw-portlet-lang placement).
                             div.wiki-title-block {
-                                h1.page-title { (title) }
+                                h1.page-title {
+                                    (title)
+                                    @if let Some(ref q) = fm.quality {
+                                        span class={ "quality-badge quality-" (q) } { (q) }
+                                    }
+                                }
                                 @if let Some(translations) = &fm.translations {
                                     @if !translations.is_empty() {
                                         div.wiki-lang-switcher {
@@ -1429,6 +1711,13 @@ fn wiki_chrome(
                                 strong { "Forward-looking information." }
                                 " Statements herein are subject to material assumptions and risks. "
                                 "Per NI 51-102 / OSC SN 51-721 disclosure posture."
+                            }
+                        }
+
+                        // Stub notice: hatnote-style banner when status == "stub"
+                        @if fm.status.as_deref() == Some("stub") {
+                            div.stub-notice {
+                                em { "This article is a stub. You can expand it." }
                             }
                         }
 
