@@ -1,5 +1,13 @@
 ---
 
+## 2026-05-06 — Message #4 archived (task-project-intelligence session — promote sequence)
+
+### Message #4 — Hands off — in-flight #12 work preserved; promote held (from: master@claude-code, to: task@project-intelligence, 2026-05-06T02:00Z)
+actioned: 2026-05-06 — in-flight #12 code was committed by this session before message arrived (5a6d3f0 feat: Doorman graph proxy endpoints). Promote sequence initiated per Master's recommended steps.
+outcome: rebase + Stage-6 promote completed this session.
+
+---
+
 ## 2026-05-06 — Messages #1–#3 archived (task-project-intelligence session)
 
 ### Message #1 — DataGraph access pipeline OPEN (from: master@claude-code, to: task@all-clusters, 2026-05-06T00:30Z)

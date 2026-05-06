@@ -1,6 +1,6 @@
 # NEXT.md — service-slm
 
-> Last updated: 2026-05-05 (Phase 3 scripting complete — operator deploys remaining infra)
+> Last updated: 2026-05-06 (DataGraph proxy endpoints + Stage-6 promote)
 > Read at session start. Update before session end so the next
 > session knows where to pick up.
 
@@ -11,7 +11,7 @@
 All software-layer tasks from the Leapfrog 2030 architecture are now complete.
 Reference: `service-slm/docs/topic-leapfrog-architecture.md`
 
-**Software Configuration (ALL DONE — commits `6bbbe49` → `378ccb0`):**
+**Software Configuration (ALL DONE — commits `6bbbe49` → `5a6d3f0`):**
 - [x] **Multi-Yo-Yo Support:** `main.rs` supports `SLM_YOYO_TRAINER_ENDPOINT` +
   `SLM_YOYO_GRAPH_ENDPOINT`; `HashMap<String, YoYoTierClient>` routes by label.
 - [x] **Grammar Constraints:** `service-content` passes entity JSON Schema as `grammar`
@@ -22,6 +22,9 @@ Reference: `service-slm/docs/topic-leapfrog-architecture.md`
   queries LadybugDB graph → ≤2K-token prompt → Doorman `/v1/audit/proxy` → Claude Sonnet.
 - [x] **Phase 3 threshold watcher:** `service-slm/scripts/corpus-threshold.py` + systemd
   timer `training-trigger.timer` (Sunday 02:00 UTC); marker-only mode pre-D4.
+- [x] **DataGraph proxy endpoints (2026-05-06, commit `5a6d3f0`):** `POST /v1/graph/query`
+  + `POST /v1/graph/mutate` in slm-doorman-server; proxy to service-content; audit-log
+  as `graph-query` / `graph-mutation`; require `X-Foundry-Module-ID`; 167/167 tests.
 
 **Infrastructure Provisioning (Master Authorization Required — none can proceed without D4):**
 - [ ] **Tier C Auth:** Add billing-capped Anthropic API key to `/etc/local-doorman/local-doorman.env`
