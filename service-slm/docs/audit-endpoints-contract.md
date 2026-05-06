@@ -280,11 +280,10 @@ Example:
 
 ### 2.3 Accepted event_types
 
-Five values are accepted. The wire contract treats `event_type` as a
-string with a documented vocabulary; future MINOR versions may extend
-the vocabulary by adding entries to
-`AUDIT_CAPTURE_VALID_EVENT_TYPES` in
-`slm-doorman-server/src/http.rs`.
+Five values are accepted by `POST /v1/audit/capture` from external callers.
+The wire contract treats `event_type` as a string with a documented
+vocabulary; future MINOR versions may extend the vocabulary by adding entries
+to `AUDIT_CAPTURE_VALID_EVENT_TYPES` in `slm-doorman-server/src/http.rs`.
 
 | `event_type` | Primary producer | Notes |
 |---|---|---|
@@ -293,6 +292,12 @@ the vocabulary by adding entries to
 | `"graph-mutation"` | service-content | Knowledge-graph add/update/delete |
 | `"anchor-event"` | project-data anchor-emitter | Sigstore Rekor anchoring batch |
 | `"verdict-issued"` | Any Ring 3 senior | Apprenticeship-corpus verdict committed |
+
+**Doorman-internal event type (not accepted via `/v1/audit/capture`):**
+
+| `event_type` | Written by | Notes |
+|---|---|---|
+| `"graph-query"` | Doorman `POST /v1/graph/query` handler | Logged internally on each DataGraph proxy read; callers may not submit this type via `/v1/audit/capture` |
 
 ### 2.4 Validation order
 
