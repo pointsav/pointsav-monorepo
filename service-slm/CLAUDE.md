@@ -22,7 +22,7 @@ service-content — see `ARCHITECTURE.md` Ring 3a.
 ## Current state
 
 **Active.** Doorman in production on workspace VM (`local-doorman.service`).
-Tier A (llama-server, OLMo 3 7B Q4) live and verified. **167/167 tests.**
+Tier A (llama-server, OLMo 3 7B Q4) live and verified. **175/175 tests.**
 
 As of 2026-05-05 (commit `378ccb0`):
 
@@ -30,7 +30,11 @@ As of 2026-05-05 (commit `378ccb0`):
 - **Tier B** — code-complete; multi-Yo-Yo `HashMap<String, YoYoTierClient>`;
   named nodes `"default"`, `"trainer"` (L4/OLMo 3 32B-Think), `"graph"`
   (H100/Llama 3.3 70B); `yoyo_label` on `ComputeRequest` selects target;
-  deploy gated on D4 image-build pipeline.
+  deploy gated on D4 image-build pipeline. Resilience stack complete:
+  60 s socket + 90 s outer deadline; 3-state circuit breaker; background
+  `/health` probe every 30 s; Tier A fallback on timeout/open/upstream
+  error; `X-Foundry-Tier-Used` header; Rust idle monitor (replaces shell
+  scripts) stops GCP VM after 30 min idle via Compute Engine API.
 - **Tier C** — code-complete; compile-time `ExternalAllowlist`; mock-only
   tests per operator cost guardrail.
 - **Grammar substrate (PS.3)** — complete; Doorman-side Lark validation
@@ -70,7 +74,7 @@ As of 2026-05-05 (commit `378ccb0`):
 
 ```
 cargo check --workspace                # seconds incremental
-cargo test  --workspace                # 167 tests (14 slm-core + 96 slm-doorman + 5 queue + 4 audit + 48 http)
+cargo test  --workspace                # 175 tests (14 slm-core + 102 slm-doorman + 8 server-lib + 4 audit + 48 http + 3 idle-monitor)
 cargo clippy --workspace --all-targets -- -D warnings
 cargo fmt   --all -- --check
 ```
