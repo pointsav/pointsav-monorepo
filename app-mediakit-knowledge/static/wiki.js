@@ -213,6 +213,43 @@
   }
 
   /* ------------------------------------------------------------------ *
+   * 4. Mobile nav drawer toggle                                          *
+   * ------------------------------------------------------------------ */
+
+  function initMobileNav() {
+    var btn     = document.getElementById('nav-toggle');
+    var drawer  = document.getElementById('mobile-nav-drawer');
+    var overlay = document.getElementById('mobile-nav-overlay');
+    var closeBtn = document.getElementById('mobile-nav-close');
+
+    if (!btn || !drawer || !overlay) return;
+
+    function openNav() {
+      document.body.setAttribute('data-nav-open', 'true');
+      drawer.removeAttribute('aria-hidden');
+      overlay.removeAttribute('aria-hidden');
+      btn.setAttribute('aria-expanded', 'true');
+    }
+
+    function closeNav() {
+      document.body.removeAttribute('data-nav-open');
+      drawer.setAttribute('aria-hidden', 'true');
+      overlay.setAttribute('aria-hidden', 'true');
+      btn.setAttribute('aria-expanded', 'false');
+    }
+
+    btn.addEventListener('click', openNav);
+    overlay.addEventListener('click', closeNav);
+    if (closeBtn) closeBtn.addEventListener('click', closeNav);
+
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && document.body.hasAttribute('data-nav-open')) {
+        closeNav();
+      }
+    });
+  }
+
+  /* ------------------------------------------------------------------ *
    * Boot                                                                 *
    * ------------------------------------------------------------------ */
 
@@ -221,6 +258,7 @@
     initDensityToggle();
     initHoverCards();
     initGlossaryTooltips();
+    initMobileNav();
   });
 
 }());
