@@ -245,5 +245,44 @@ Session opened with housekeeping (cluster rename project-slm → project-intelli
 
 ---
 
+## 2026-05-06 — Doorman DataGraph proxy endpoints + Stage-6 promote
+
+### What landed this session
+
+**Inbox housekeeping (commit `f8e21d0`, Jennifer Woodfine):**
+- 3 Master inbox messages archived (DataGraph broadcast, proxy task, project-design request)
+- Outbox reply to task@project-design: git-documentation-wiki.zip outside Foundry authority; DataGraph interim at port 9081; canonical Doorman path landing this session
+
+**Doorman graph proxy endpoints (commit `5a6d3f0`, Peter Woodfine):**
+- `POST /v1/graph/query` — proxies to `GET {SERVICE_CONTENT_ENDPOINT}/v1/graph/context`
+- `POST /v1/graph/mutate` — proxies to `POST {SERVICE_CONTENT_ENDPOINT}/v1/graph/mutate`
+- Both require `X-Foundry-Module-ID` header (400 if absent); 503 if endpoint unconfigured
+- Audit-log every call via `AuditLedger::append_capture_entry()` with `event_type: "graph-query"` / `"graph-mutation"` (non-fatal)
+- New error variants: `GraphProxyMissingModuleId` (400), `GraphProxyServiceUnavailable` (503)
+- New `app_state_with_service_content()` test helper
+- 5 new wiremock tests; 162 → 167 tests total
+
+**State file updates (commit `bd19107`, Jennifer Woodfine):**
+- `service-slm/CLAUDE.md`: test count 162→167 + DataGraph proxy section
+- `.agent/outbox.md`: canonical path confirmed live (commit hash, no longer "landing this session")
+
+**Stage-6 promote (this commit):**
+- Archived Master's `2026-05-06T02:00Z` "hands off" message; code was already committed
+- `service-slm/NEXT.md` updated: DataGraph proxy added to completed software items
+- `service-slm/docs/audit-endpoints-contract.md` §2.3 updated: `graph-query` noted as Doorman-internal
+- Rebased local main on canonical origin/main; resolved conflicts
+- Pushed to staging mirrors + ran `promote.sh`
+
+### Tests
+
+167/167 passing (14 slm-core + 96 slm-doorman + 5 queue + 4 audit + 48 http). Pre-existing flaky `concurrent_workers_dont_double_lease` (flock timing race) passes on retry; unrelated to this session.
+
+### Pending
+
+- All software tasks complete. Remaining work is operator-presence infra (Tier C auth, Yo-Yo deploy, cmake, D4 image pipeline).
+- `service-slm/docs/audit-endpoints-contract.md` is at v0.2.0; the graph proxy handlers write `graph-query` entries internally (not via `/v1/audit/capture`). Contract §2.3 now carries a note.
+
+---
+
 
 > **Archived entries:** session logs before this point are in `cleanup-log-archive.md`.
