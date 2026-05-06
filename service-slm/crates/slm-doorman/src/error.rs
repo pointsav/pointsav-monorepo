@@ -233,6 +233,25 @@ pub enum DoormanError {
         cap: u32,
     },
 
+    // ── Graph proxy (conventions/datagraph-access-discipline.md) ────────
+    /// `POST /v1/graph/query` or `POST /v1/graph/mutate` — caller omitted the
+    /// mandatory `X-Foundry-Module-ID` header. 400 BAD_REQUEST.
+    #[error(
+        "graph proxy requires the X-Foundry-Module-ID header; \
+         use 'woodfine' or 'pointsav'"
+    )]
+    GraphProxyMissingModuleId,
+
+    /// `POST /v1/graph/query` or `POST /v1/graph/mutate` — service-content
+    /// is not reachable at `SERVICE_CONTENT_ENDPOINT` or the endpoint is
+    /// unconfigured. 503 SERVICE_UNAVAILABLE (transient; caller may retry
+    /// once service-content is running).
+    #[error(
+        "graph proxy: service-content is unreachable or not configured; \
+         ensure SERVICE_CONTENT_ENDPOINT is set and service-content is running"
+    )]
+    GraphProxyServiceUnavailable,
+
     // ── Brief Queue Substrate (apprenticeship-substrate.md §7C) ─────────
     /// A file-system I/O error occurred while operating on the brief queue
     /// (enqueue, dequeue, lease rename, release, or reap). 500

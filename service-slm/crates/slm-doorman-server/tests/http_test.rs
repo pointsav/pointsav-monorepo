@@ -42,7 +42,8 @@ use slm_doorman_server::http::{
 };
 use slm_doorman_server::test_helpers::{
     app_state_no_tiers, app_state_with_apprenticeship, app_state_with_audit_proxy,
-    app_state_with_local, temp_ledger, temp_promotion_ledger, temp_queue_config,
+    app_state_with_local, app_state_with_service_content, temp_ledger, temp_promotion_ledger,
+    temp_queue_config,
 };
 use tower::ServiceExt;
 use wiremock::matchers::{method, path};
@@ -343,6 +344,7 @@ async fn error_brief_cache_miss_returns_410() {
         audit_tenant_concurrency: Arc::new(Mutex::new(HashMap::new())),
         audit_tenant_concurrency_cap: 100,
         queue_config: temp_queue_config(),
+        service_content_endpoint: String::new(),
     });
     let app = router(state);
 
@@ -634,6 +636,7 @@ async fn shadow_enqueued_brief_file_exists_at_queue_path() {
         audit_tenant_concurrency: Arc::new(Mutex::new(HashMap::new())),
         audit_tenant_concurrency_cap: 100,
         queue_config: queue_cfg,
+        service_content_endpoint: String::new(),
     });
 
     let app = router(state_with_queue);
@@ -746,6 +749,10 @@ fn doorman_error_to_status(e: &DoormanError) -> StatusCode {
         DoormanError::QueueLockFailed { .. } => StatusCode::SERVICE_UNAVAILABLE,
         // Malformed brief detected and moved to poison bucket — 400 BAD_REQUEST.
         DoormanError::QueueMalformedBrief { .. } => StatusCode::BAD_REQUEST,
+        // Graph proxy — caller omitted module-id header (400) or service-content
+        // is unreachable/unconfigured (503).
+        DoormanError::GraphProxyMissingModuleId => StatusCode::BAD_REQUEST,
+        DoormanError::GraphProxyServiceUnavailable => StatusCode::SERVICE_UNAVAILABLE,
     }
 }
 
@@ -1042,6 +1049,7 @@ async fn audit_proxy_valid_request_writes_audit_stub_and_returns_503() {
         audit_tenant_concurrency: Arc::new(Mutex::new(HashMap::new())),
         audit_tenant_concurrency_cap: 100,
         queue_config: temp_queue_config(),
+        service_content_endpoint: String::new(),
     });
     let app = router(state);
 
@@ -1720,6 +1728,7 @@ async fn audit_proxy_unallowlisted_purpose_does_not_write_ledger_entry() {
         audit_tenant_concurrency: Arc::new(Mutex::new(HashMap::new())),
         audit_tenant_concurrency_cap: 100,
         queue_config: temp_queue_config(),
+        service_content_endpoint: String::new(),
     });
     let app = router(state);
 
@@ -1862,6 +1871,7 @@ async fn audit_capture_valid_prose_edit_event_returns_200_and_writes_ledger() {
         audit_tenant_concurrency: Arc::new(Mutex::new(HashMap::new())),
         audit_tenant_concurrency_cap: 100,
         queue_config: temp_queue_config(),
+        service_content_endpoint: String::new(),
     });
     let app = router(state);
 
@@ -2034,6 +2044,7 @@ async fn audit_capture_oversized_payload_returns_413() {
         audit_tenant_concurrency: Arc::new(Mutex::new(HashMap::new())),
         audit_tenant_concurrency_cap: 100,
         queue_config: temp_queue_config(),
+        service_content_endpoint: String::new(),
     });
     let app = router(state);
 
@@ -2104,6 +2115,7 @@ async fn audit_capture_default_event_types_all_accepted() {
             audit_tenant_concurrency: Arc::new(Mutex::new(HashMap::new())),
             audit_tenant_concurrency_cap: 100,
             queue_config: temp_queue_config(),
+            service_content_endpoint: String::new(),
         });
         let app = router(state);
 
@@ -2178,6 +2190,7 @@ async fn audit_proxy_oversized_request_returns_413() {
         audit_tenant_concurrency: Arc::new(Mutex::new(HashMap::new())),
         audit_tenant_concurrency_cap: 100,
         queue_config: temp_queue_config(),
+        service_content_endpoint: String::new(),
     });
     let app = router(state);
 
@@ -2333,6 +2346,7 @@ async fn audit_tenant_concurrency_cap_rejects_excess_requests() {
         audit_tenant_concurrency: tenant_map,
         audit_tenant_concurrency_cap: 2,
         queue_config: temp_queue_config(),
+        service_content_endpoint: String::new(),
     });
 
     // Both requests below should fail immediately: no permits available.
@@ -2419,6 +2433,7 @@ async fn audit_tenant_concurrency_cap_per_tenant_independent() {
         // cap = 1: each tenant can have at most 1 in-flight request
         audit_tenant_concurrency_cap: 1,
         queue_config: temp_queue_config(),
+        service_content_endpoint: String::new(),
     });
 
     // Two requests from different tenants; both should complete (200 OK
@@ -2478,5 +2493,205 @@ async fn audit_tenant_concurrency_cap_per_tenant_independent() {
         StatusCode::OK,
         "tenant 'beta' must succeed (cap=1 is per-tenant; caps are independent); got {}",
         resp_beta.status()
+    );
+}
+
+// ===========================================================================
+// Graph proxy — POST /v1/graph/query + POST /v1/graph/mutate
+// (conventions/datagraph-access-discipline.md — Doorman is the single
+// boundary for all DataGraph access; every call audit-logged).
+// ===========================================================================
+
+/// POST /v1/graph/query happy path — proxies to service-content and returns
+/// the entity array verbatim. Mock service-content returns a two-entity JSON
+/// array; Doorman must forward it with HTTP 200.
+#[tokio::test]
+async fn graph_query_proxies_to_service_content_returns_200() {
+    let mock_sc = MockServer::start().await;
+
+    let entities = serde_json::json!([
+        {
+            "entity_name": "Woodfine Management Corp.",
+            "classification": "company",
+            "role_vector": "real estate developer",
+            "module_id": "woodfine",
+            "confidence": 0.95
+        },
+        {
+            "entity_name": "Jennifer M. Woodfine",
+            "classification": "person",
+            "role_vector": "principal",
+            "module_id": "woodfine",
+            "confidence": 0.97
+        }
+    ]);
+
+    Mock::given(method("GET"))
+        .and(path("/v1/graph/context"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(&entities))
+        .mount(&mock_sc)
+        .await;
+
+    let state = app_state_with_service_content(mock_sc.uri());
+    let app = router(state);
+
+    let req = Request::builder()
+        .method("POST")
+        .uri("/v1/graph/query")
+        .header("content-type", "application/json")
+        .header("x-foundry-module-id", "woodfine")
+        .body(Body::from(
+            serde_json::json!({"q": "woodfine", "limit": 5}).to_string(),
+        ))
+        .expect("build request");
+
+    let resp = app.oneshot(req).await.expect("oneshot");
+    assert_eq!(
+        resp.status(),
+        StatusCode::OK,
+        "graph_query happy path must return 200; got {}",
+        resp.status()
+    );
+
+    let body = body_json(resp).await;
+    assert!(
+        body.is_array(),
+        "graph_query response body must be a JSON array; got: {body}"
+    );
+    assert_eq!(
+        body.as_array().unwrap().len(),
+        2,
+        "expected 2 entities forwarded verbatim from service-content"
+    );
+}
+
+/// POST /v1/graph/mutate happy path — forwards body to service-content and
+/// returns the confirmation response verbatim. Mock service-content returns
+/// `{"loaded": 1}`; Doorman must forward it with HTTP 200.
+#[tokio::test]
+async fn graph_mutate_proxies_to_service_content_returns_200() {
+    let mock_sc = MockServer::start().await;
+
+    Mock::given(method("POST"))
+        .and(path("/v1/graph/mutate"))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .set_body_json(serde_json::json!({"loaded": 1})),
+        )
+        .mount(&mock_sc)
+        .await;
+
+    let state = app_state_with_service_content(mock_sc.uri());
+    let app = router(state);
+
+    let req_body = serde_json::json!({
+        "module_id": "woodfine",
+        "entities": [
+            {
+                "entity_name": "Test Entity",
+                "classification": "company",
+                "confidence": 0.9
+            }
+        ]
+    });
+
+    let req = Request::builder()
+        .method("POST")
+        .uri("/v1/graph/mutate")
+        .header("content-type", "application/json")
+        .header("x-foundry-module-id", "woodfine")
+        .body(Body::from(req_body.to_string()))
+        .expect("build request");
+
+    let resp = app.oneshot(req).await.expect("oneshot");
+    assert_eq!(
+        resp.status(),
+        StatusCode::OK,
+        "graph_mutate happy path must return 200; got {}",
+        resp.status()
+    );
+
+    let body = body_json(resp).await;
+    assert_eq!(
+        body["loaded"],
+        serde_json::json!(1),
+        "graph_mutate must forward service-content response verbatim"
+    );
+}
+
+/// POST /v1/graph/query — missing X-Foundry-Module-ID header returns 400.
+#[tokio::test]
+async fn graph_query_missing_module_id_returns_400() {
+    let state = app_state_with_service_content("http://127.0.0.1:9081");
+    let app = router(state);
+
+    let req = Request::builder()
+        .method("POST")
+        .uri("/v1/graph/query")
+        .header("content-type", "application/json")
+        // deliberately omit x-foundry-module-id
+        .body(Body::from(
+            serde_json::json!({"q": "woodfine", "limit": 5}).to_string(),
+        ))
+        .expect("build request");
+
+    let resp = app.oneshot(req).await.expect("oneshot");
+    assert_eq!(
+        resp.status(),
+        StatusCode::BAD_REQUEST,
+        "graph_query without module_id header must return 400; got {}",
+        resp.status()
+    );
+}
+
+/// POST /v1/graph/mutate — missing X-Foundry-Module-ID header returns 400.
+#[tokio::test]
+async fn graph_mutate_missing_module_id_returns_400() {
+    let state = app_state_with_service_content("http://127.0.0.1:9081");
+    let app = router(state);
+
+    let req = Request::builder()
+        .method("POST")
+        .uri("/v1/graph/mutate")
+        .header("content-type", "application/json")
+        // deliberately omit x-foundry-module-id
+        .body(Body::from(
+            serde_json::json!({"module_id": "woodfine", "entities": []}).to_string(),
+        ))
+        .expect("build request");
+
+    let resp = app.oneshot(req).await.expect("oneshot");
+    assert_eq!(
+        resp.status(),
+        StatusCode::BAD_REQUEST,
+        "graph_mutate without module_id header must return 400; got {}",
+        resp.status()
+    );
+}
+
+/// POST /v1/graph/query — service-content endpoint unconfigured (empty
+/// string) returns 503 SERVICE_UNAVAILABLE.
+#[tokio::test]
+async fn graph_proxy_service_content_unconfigured_returns_503() {
+    // Empty endpoint string means the proxy is unconfigured.
+    let state = app_state_with_service_content("");
+    let app = router(state);
+
+    let req = Request::builder()
+        .method("POST")
+        .uri("/v1/graph/query")
+        .header("content-type", "application/json")
+        .header("x-foundry-module-id", "woodfine")
+        .body(Body::from(
+            serde_json::json!({"q": "woodfine", "limit": 5}).to_string(),
+        ))
+        .expect("build request");
+
+    let resp = app.oneshot(req).await.expect("oneshot");
+    assert_eq!(
+        resp.status(),
+        StatusCode::SERVICE_UNAVAILABLE,
+        "graph_query with unconfigured service-content must return 503; got {}",
+        resp.status()
     );
 }
