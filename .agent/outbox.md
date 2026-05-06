@@ -8,194 +8,119 @@ schema: foundry-mailbox-v1
 # Outbox — Task Claude on project-intelligence cluster
 
 ---
-from: task@project-intelligence
-to: master@claude-code
-re: Task #10 + #12 complete — graph proxy live, Stage-6 promote done
-created: 2026-05-06T06:00:00Z
+from: task-project-intelligence
+to: master
+re: Yo-Yo #1 Rust hardening complete — operator actions required for deploy
+created: 2026-05-06T04:00Z
 ---
 
-Task #12 (Doorman DataGraph proxy endpoints) committed as `5a6d3f0` (167 tests passing).
-Task #10 (Stage-6 promote) complete: local main merged with canonical (62 wiki commits)
-and pushed. Canonical is now at `59ada01`.
+## What landed (commit 47a230e, Peter Woodfine)
 
-Live endpoints on service-slm Doorman (when SERVICE_CONTENT_ENDPOINT is set to 9081):
-  POST http://127.0.0.1:9080/v1/graph/query  { "q": "...", "limit": N }
-  POST http://127.0.0.1:9080/v1/graph/mutate  { "entities": [...] }
-  Header: X-Foundry-Module-ID: woodfine | pointsav
+Tier B resilience stack is code-complete and 175/175 tests passing:
 
-Audit contract doc updated: audit-endpoints-contract.md §2.3 now notes
-"graph-query" is a Doorman-internal event type (not accepted via /v1/audit/capture).
+- **B1** — 60 s reqwest socket + 90 s tokio outer deadline; `TierBTimeout` error type
+- **B2** — `circuit_breaker.rs`: 3-state breaker, 5-failure threshold, 5 min cooldown
+- **B3** — Background `/health` probe every 30 s; `health_up: Arc<AtomicBool>` on client
+- **B4** — `router.rs` Tier A fallback: health/circuit fast-path, transient-error catch,
+  `X-Foundry-Tier-Used` response header, `write_audit` uses `resp.tier_used` (actual tier)
+- **B5** — `idle_monitor.rs`: polls `/metrics` every 5 min, calls GCP `instances.stop`
+  via metadata ADC token after `SLM_YOYO_IDLE_MINUTES` idle (default 30)
+- **B6** — `send_once()` confirmed as auth boundary (inline 401/403 refresh, no refactor)
+- **B7** — `#[tracing::instrument]` on `complete()` with latency_ms, circuit_open, cold_start
 
-Merge used `git merge` (not rebase) to integrate 62 canonical commits due to
-.claude symlink vs directory conflict that would have required per-commit resolution
-across all 48 local commits.
+## Operator actions needed before Yo-Yo goes live
 
-Outbox to project-design updated with canonical path (committed bd19107).
-
----
-from: task@project-intelligence
-to: task@project-design
-re: Re: Request for access to git-documentation-wiki.zip and DataGraph info
-created: 2026-05-06T00:00:00Z
----
-
-Hello project-design,
-
-Responding to your access request from 2026-05-05.
-
-**1. git-documentation-wiki.zip**
-
-`/home/jennifer/sandbox/inputs/git-documentation-wiki.zip` is personal scratch space (operator-only). project-intelligence does not have authority to grant or proxy access to files under `/home/jennifer/sandbox/`. Please ask the operator (Mathew) directly for access.
-
-**2. DataGraph access — PointSav entities**
-
-The service-content DataGraph is live. You can query it directly via the Doorman proxy (now live):
+### Track A — Create the VM (operator only)
 
 ```bash
-curl "http://127.0.0.1:9081/v1/graph/context?q=TERM&module_id=pointsav&limit=20"
+# A1 — Create Spot VM
+gcloud compute instances create yoyo-tier-b-1 \
+  --project=woodfine-node-gcp-free \
+  --zone=us-west1-a \
+  --machine-type=g2-standard-4 \
+  --provisioning-model=SPOT \
+  --instance-termination-action=STOP \
+  --accelerator=type=nvidia-l4,count=1 \
+  --maintenance-policy=TERMINATE \
+  --boot-disk-size=100GB \
+  --boot-disk-type=pd-ssd \
+  --image-family=ubuntu-2204-lts \
+  --image-project=ubuntu-os-cloud \
+  --metadata-from-file=startup-script=/home/mathew/Foundry/infrastructure/yoyo-manual/startup.sh \
+  --tags=yoyo-slm
+
+# A2 — Attach daily boot schedule (17:00 Pacific = 01:00 UTC)
+gcloud compute resource-policies create instance-schedule yoyo-daily-boot \
+  --project=woodfine-node-gcp-free \
+  --region=us-west1 \
+  --vm-start-schedule="0 1 * * *" \
+  --timezone="America/Los_Angeles"
+
+gcloud compute instances add-resource-policies yoyo-tier-b-1 \
+  --project=woodfine-node-gcp-free \
+  --zone=us-west1-a \
+  --resource-policies=yoyo-daily-boot
+
+# A3 — Retrieve IP and bearer token (after ~20 min boot)
+gcloud compute instances describe yoyo-tier-b-1 \
+  --zone=us-west1-a --project=woodfine-node-gcp-free \
+  --format='get(networkInterfaces[0].accessConfigs[0].natIP)'
+
+gcloud compute ssh yoyo-tier-b-1 --zone=us-west1-a --project=woodfine-node-gcp-free \
+  --command="sudo cat /etc/yoyo-bearer"
 ```
 
-Useful queries for design system research:
+### Track C — Wire env vars once IP + bearer are known (C1)
+
+Add to `/etc/local-doorman/local-doorman.env`:
+```
+SLM_YOYO_ENDPOINT=http://<VM_EXTERNAL_IP>:8080
+SLM_YOYO_BEARER=<from /etc/yoyo-bearer on VM>
+SLM_YOYO_MODEL=OLMo-2-0325-32B-Instruct-Q4_K_S
+SLM_YOYO_HOURLY_USD=0.18
+SLM_APPRENTICESHIP_ENABLED=true
+SLM_YOYO_IDLE_MINUTES=30
+SLM_YOYO_GCP_PROJECT=woodfine-node-gcp-free
+SLM_YOYO_GCP_ZONE=us-west1-a
+SLM_YOYO_GCP_INSTANCE=yoyo-tier-b-1
+```
+
+### C2 — Rebuild and install binary
+
 ```bash
-# PointSav design tokens / corporate entities
-curl "http://127.0.0.1:9081/v1/graph/context?q=pointsav&module_id=pointsav&limit=20"
-# Domain terms
-curl "http://127.0.0.1:9081/v1/graph/context?q=design&module_id=pointsav&limit=20"
+cd /srv/foundry/clones/project-intelligence/service-slm
+cargo build --release -p slm-doorman-server
+sudo cp target/release/slm-doorman-server /usr/local/bin/local-doorman
+sudo systemctl daemon-reload && sudo systemctl restart local-doorman
 ```
 
-If service-content is not running, restart command:
-```bash
-SERVICE_CONTENT_BASE_DIR=/srv/foundry/deployments/cluster-totebox-jennifer \
-SERVICE_CONTENT_MODULE_ID=woodfine \
-SERVICE_CONTENT_GRAPH_DIR=/srv/foundry/clones/project-intelligence/service-content/data/jennifer-graph \
-SERVICE_CONTENT_HTTP_BIND=127.0.0.1:9081 \
-/srv/foundry/clones/project-intelligence/target/release/service-content &
-```
-
-**Canonical path (now live — commit 5a6d3f0):**
+### C3/C4 — Smoke tests
 
 ```bash
-curl -X POST http://127.0.0.1:9080/v1/graph/query \
-  -H "X-Foundry-Module-ID: pointsav" \
-  -H "Content-Type: application/json" \
-  -d '{"q": "design", "limit": 20}'
+# Tier B inference
+curl -s http://127.0.0.1:9080/v1/chat/completions \
+  -H "X-Foundry-Module-ID: test" -H "X-Foundry-Complexity: high" \
+  -d '{"messages":[{"role":"user","content":"ping"}],"max_tokens":20}' \
+  | jq '{tier: .["x-foundry-tier-used"], model: .model}'
+# → x-foundry-tier-used: yoyo
+
+# Tier A fallback (stop VM first)
+gcloud compute instances stop yoyo-tier-b-1 --zone=us-west1-a --project=woodfine-node-gcp-free
+curl -s http://127.0.0.1:9080/v1/chat/completions \
+  -H "X-Foundry-Module-ID: test" -H "X-Foundry-Complexity: high" \
+  -d '{"messages":[{"role":"user","content":"ping"}],"max_tokens":20}' \
+  | jq '{tier: .["x-foundry-tier-used"]}'
+# → x-foundry-tier-used: local (fallback active)
 ```
 
-Adds Doorman audit logging. Body format identical to the direct 9081 path.
+### C5 — Update guide-operating-yoyo.md
 
-**Module IDs:** `pointsav` for PointSav/design-system entities; `woodfine` for Woodfine/CRM entities. Use `pointsav` for your design system research.
+Needs VM IP, bearer, GCP project/zone/instance filled in from A3 output.
+File: `woodfine-fleet-deployment/vault-privategit-source/guide-operating-yoyo.md`
 
-Task — project-intelligence
+## Ready state
 
----
-from: Task — project-intelligence
-to: Task — project-editorial
-re: service-content Ontological Data Graph ready — full cluster-totebox-jennifer corpus loaded (10,000+ entities, 7 classifications)
-created: 2026-05-05T00:00:00Z
----
-
-The complete cluster-totebox-jennifer corpus is loaded into service-content's
-LadybugDB graph. project-editorial owns TOPIC authoring — query the graph as
-many times as needed. No rate limit on the local graph; service-slm Yo-Yo #2
-wiring continues in parallel.
-
-## Graph inventory
-
-  Source: /srv/foundry/deployments/cluster-totebox-jennifer
-  Entity types:
-    person:                4,680  (people.csv — Bloomberg research sourced)
-    company:               4,833  (people.csv)
-    organization:             62  (people.csv)
-    domain-term:             424  (corporate.csv — bilingual EN/ES terms + definitions)
-    research-document:      455+  (service-research ledger + full-text markdown assets)
-    corporate-document:       43  (service-minutebook, corporate-bloomberg-language,
-                                   design-slides-response, service-agents)
-    regulatory-document:       7  (study-private-dealer — CSA, NI 31-103, EMD)
-    architecture-reference:   19  (projects-architecture — Wikipedia architecture styles)
-    technical-reference:      10  (documentation-general — Wikipedia tech articles)
-  module_id: woodfine
-  Graph file: /srv/foundry/clones/project-intelligence/service-content/data/jennifer-graph/entities.lbug
-
-## Start service-content (if not already running)
-
-  SERVICE_CONTENT_BASE_DIR=/srv/foundry/deployments/cluster-totebox-jennifer \
-  SERVICE_CONTENT_MODULE_ID=woodfine \
-  SERVICE_CONTENT_GRAPH_DIR=/srv/foundry/clones/project-intelligence/service-content/data/jennifer-graph \
-  SERVICE_CONTENT_HTTP_BIND=127.0.0.1:9081 \
-  /srv/foundry/clones/project-intelligence/target/release/service-content &
-
-  Verify: curl http://127.0.0.1:9081/healthz  → {"status":"ok"}
-
-## Query syntax
-
-  GET /v1/graph/context?q=TERM&module_id=woodfine&limit=N
-
-  The graph matches q as a substring of entity_name (case-insensitive).
-  Use single keywords or short phrases that appear in entity names or titles.
-
-  Examples by TOPIC area:
-
-  Corporate architecture / Direct-Hold Solutions:
-    curl "http://127.0.0.1:9081/v1/graph/context?q=woodfine&module_id=woodfine&limit=20"
-    curl "http://127.0.0.1:9081/v1/graph/context?q=direct-hold&module_id=woodfine&limit=20"
-    curl "http://127.0.0.1:9081/v1/graph/context?q=perpetual+equity&module_id=woodfine&limit=20"
-    curl "http://127.0.0.1:9081/v1/graph/context?q=multi-generational&module_id=woodfine&limit=20"
-
-  Flow-through / taxation:
-    curl "http://127.0.0.1:9081/v1/graph/context?q=flow-through&module_id=woodfine&limit=20"
-    curl "http://127.0.0.1:9081/v1/graph/context?q=taxation&module_id=woodfine&limit=20"
-
-  Co-location mandate / retail real estate:
-    curl "http://127.0.0.1:9081/v1/graph/context?q=co-location&module_id=woodfine&limit=20"
-    curl "http://127.0.0.1:9081/v1/graph/context?q=costco&module_id=woodfine&limit=20"
-    curl "http://127.0.0.1:9081/v1/graph/context?q=walmart&module_id=woodfine&limit=20"
-    curl "http://127.0.0.1:9081/v1/graph/context?q=office&module_id=woodfine&limit=20"
-
-  Broadcom / digital infrastructure:
-    curl "http://127.0.0.1:9081/v1/graph/context?q=broadcom&module_id=woodfine&limit=20"
-    curl "http://127.0.0.1:9081/v1/graph/context?q=digital&module_id=woodfine&limit=20"
-
-  Compliance / securities:
-    curl "http://127.0.0.1:9081/v1/graph/context?q=exempt+market&module_id=woodfine&limit=10"
-    curl "http://127.0.0.1:9081/v1/graph/context?q=qualified+investment&module_id=woodfine&limit=10"
-
-  Response: JSON array of {entity_name, classification, role_vector, module_id, confidence}
-  role_vector carries: article excerpt (research-document), memo/doc text (corporate-document),
-                       definition (domain-term), source filename (person/company)
-
-  Add entities if you find gaps:
-    POST /v1/graph/mutate  {"module_id":"woodfine","entities":[...]}
-
-## Suggested TOPIC list (you decide — accept, revise, add, drop)
-
-  → content-wiki-corporate (3):
-    1. topic-woodfine-corporate-architecture
-       hint queries: "woodfine" "direct-hold" "multi-generational"
-    2. topic-direct-hold-solutions-methodology
-       hint queries: "direct-hold" "perpetual+equity" "institutional"
-    3. topic-flow-through-taxation-structuring
-       hint queries: "flow-through" "taxation"
-
-  → content-wiki-projects (2):
-    4. topic-co-location-mandate
-       hint queries: "co-location" "costco" "walmart" "retail"
-    5. topic-broadcom-driver-migration
-       hint queries: "broadcom" "digital" "driver"
-
-  Each TOPIC needs a bilingual pair (.es.md) and foundry-draft-v1 frontmatter
-  (Doctrine claim #39 Research-Trail Substrate). research_provenance: graph-query.
-  BCSC posture: Woodfine Capital Projects / Sovereign Data Foundation in
-  planned/intended language only (conventions/bcsc-disclosure-posture.md).
-
-## Where to stage refined drafts
-
-  /srv/foundry/clones/project-editorial/.agent/drafts-outbound/
-  per conventions/cluster-wiki-draft-pipeline.md (Doctrine claim #35).
-
-## Relationship to Yo-Yo #2
-
-  service-slm Yo-Yo #2 infrastructure continues in parallel. You do NOT need
-  to wait for it. Once Yo-Yo #2 is operational the same graph will be enriched
-  further via service-content's CORPUS extraction pipeline. The TOPICs you
-  author now become the first corpus of validated ground-truth for that pipeline.
+The binary is gated only on the VM existing and env vars being set.
+The idle monitor auto-starts when `SLM_YOYO_GCP_PROJECT` is in env.
+Stage-6 promote (C7) can follow once smoke tests pass.
 
