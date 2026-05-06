@@ -7,7 +7,7 @@
 //! - Featured-topic YAML present and valid → featured panel renders.
 //! - Featured-topic YAML with unresolvable slug → featured panel suppressed.
 //! - Recent feed sorts by `last_edited:` descending.
-//! - Category grid always shows all 9 ratified categories; empty ones render
+//! - Category grid always shows all 10 ratified categories; empty ones render
 //!   placeholder copy.
 
 use app_mediakit_knowledge::search;
@@ -120,8 +120,8 @@ async fn home_renders_with_index_md_present() {
     // Site title.
     assert!(html.contains("PointSav Knowledge"), "title should appear: snippet={}", &html[..html.len().min(500)]);
 
-    // All 9 ratified category names must appear in the grid.
-    for cat in &["Architecture", "Services", "Systems", "Applications", "Governance", "Infrastructure", "Company", "Reference", "Help"] {
+    // All 10 ratified category names must appear in the grid.
+    for cat in &["Architecture", "Services", "Systems", "Applications", "Governance", "Infrastructure", "Company", "Reference", "Help", "Design-system"] {
         assert!(html.contains(cat), "category '{cat}' should appear in grid");
     }
 
@@ -340,10 +340,10 @@ async fn category_with_zero_articles_renders_placeholder() {
         &html[..html.len().min(1500)]
     );
 
-    // Count occurrences — there should be exactly 6 (the 6 empty categories).
+    // Count occurrences — there should be exactly 7 (the 7 empty categories; 10 total, 3 populated).
     let placeholder_count = html.matches("In preparation.").count();
     assert_eq!(
-        placeholder_count, 6,
-        "expected 6 empty-category placeholders, got {placeholder_count}"
+        placeholder_count, 7,
+        "expected 7 empty-category placeholders, got {placeholder_count}"
     );
 }
