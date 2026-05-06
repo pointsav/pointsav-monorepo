@@ -108,6 +108,7 @@ pub mod test_helpers {
             audit_tenant_concurrency: empty_concurrency_map(),
             audit_tenant_concurrency_cap: TEST_AUDIT_CONCURRENCY_CAP,
             queue_config: temp_queue_config(),
+            service_content_endpoint: String::new(),
         })
     }
 
@@ -138,6 +139,7 @@ pub mod test_helpers {
             audit_tenant_concurrency: empty_concurrency_map(),
             audit_tenant_concurrency_cap: TEST_AUDIT_CONCURRENCY_CAP,
             queue_config: temp_queue_config(),
+            service_content_endpoint: String::new(),
         })
     }
 
@@ -166,6 +168,7 @@ pub mod test_helpers {
             audit_tenant_concurrency: empty_concurrency_map(),
             audit_tenant_concurrency_cap: TEST_AUDIT_CONCURRENCY_CAP,
             queue_config: temp_queue_config(),
+            service_content_endpoint: String::new(),
         })
     }
 
@@ -218,6 +221,7 @@ pub mod test_helpers {
             audit_tenant_concurrency: empty_concurrency_map(),
             audit_tenant_concurrency_cap: TEST_AUDIT_CONCURRENCY_CAP,
             queue_config: temp_queue_config(),
+            service_content_endpoint: String::new(),
         })
     }
 
@@ -286,6 +290,7 @@ pub mod test_helpers {
             audit_tenant_concurrency: empty_concurrency_map(),
             audit_tenant_concurrency_cap: concurrency_cap,
             queue_config: temp_queue_config(),
+            service_content_endpoint: String::new(),
         });
         (state, ledger_dir)
     }
@@ -333,7 +338,29 @@ pub mod test_helpers {
             audit_tenant_concurrency: empty_concurrency_map(),
             audit_tenant_concurrency_cap: TEST_AUDIT_CONCURRENCY_CAP,
             queue_config: temp_queue_config(),
+            service_content_endpoint: String::new(),
         });
         (state, ledger_dir)
+    }
+
+    /// Build an `AppState` with a service-content endpoint configured.
+    /// Used by graph proxy tests that need a Doorman pointing at a mock
+    /// service-content server.
+    pub fn app_state_with_service_content(
+        service_content_endpoint: impl Into<String>,
+    ) -> Arc<AppState> {
+        let doorman = Doorman::new(DoormanConfig::default(), temp_ledger());
+        Arc::new(AppState {
+            doorman,
+            apprenticeship: None,
+            brief_cache: Arc::new(BriefCache::default()),
+            verdict_dispatcher: None,
+            audit_proxy_client: None,
+            audit_proxy_purpose_allowlist: FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST,
+            audit_tenant_concurrency: empty_concurrency_map(),
+            audit_tenant_concurrency_cap: TEST_AUDIT_CONCURRENCY_CAP,
+            queue_config: temp_queue_config(),
+            service_content_endpoint: service_content_endpoint.into(),
+        })
     }
 }

@@ -12,6 +12,12 @@
 //!                                  steps 1-3); two-entry ledger design
 //!   POST /v1/audit/capture       → caller pushes local-work audit event
 //!                                  (PS.4 step 4); single-entry ledger write
+//!   POST /v1/graph/query         → graph-context proxy; forwards to
+//!                                  service-content /v1/graph/context and
+//!                                  audit-logs as event_type=graph-query
+//!   POST /v1/graph/mutate        → graph-mutate proxy; forwards to
+//!                                  service-content /v1/graph/mutate and
+//!                                  audit-logs as event_type=graph-mutation
 //!
 //! The /v1/chat/completions handler accepts an OpenAI-compatible body
 //! plus optional X-Foundry-* headers (Module-ID, Request-ID,
@@ -29,6 +35,7 @@ use axum::http::{HeaderMap, StatusCode};
 use axum::response::{IntoResponse, Json};
 use axum::routing::{get, post};
 use axum::Router;
+use reqwest::Client as ReqwestClient;
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use slm_core::{
@@ -90,6 +97,12 @@ pub struct AppState {
     /// Injected so tests can use a tempdir-backed queue without coupling to
     /// `SLM_APPRENTICESHIP_BASE_DIR` / `FOUNDRY_ROOT` env vars.
     pub queue_config: Arc<QueueConfig>,
+    /// Base URL for service-content's HTTP API used by the graph proxy
+    /// handlers (`POST /v1/graph/query` and `POST /v1/graph/mutate`).
+    /// Defaults to `http://127.0.0.1:9081` when `SERVICE_CONTENT_ENDPOINT`
+    /// is not set. Set to an empty string to mark the proxy as unconfigured
+    /// (handlers return 503 with `GraphProxyServiceUnavailable`).
+    pub service_content_endpoint: String,
 }
 
 pub fn router(state: Arc<AppState>) -> Router {
@@ -103,6 +116,8 @@ pub fn router(state: Arc<AppState>) -> Router {
         .route("/v1/shadow", post(shadow))
         .route("/v1/audit/proxy", post(audit_proxy))
         .route("/v1/audit/capture", post(audit_capture))
+        .route("/v1/graph/query", post(graph_query))
+        .route("/v1/graph/mutate", post(graph_mutate))
         .with_state(state)
 }
 
@@ -781,6 +796,191 @@ async fn audit_capture(
     (StatusCode::OK, Json(resp)).into_response()
 }
 
+// ── Graph proxy constants ─────────────────────────────────────────────────────
+
+/// Default service-content endpoint used when `SERVICE_CONTENT_ENDPOINT` is absent.
+pub const DEFAULT_SERVICE_CONTENT_ENDPOINT: &str = "http://127.0.0.1:9081";
+
+// ── Graph proxy request types ────────────────────────────────────────────────
+
+/// Body for `POST /v1/graph/query`. The `module_id` comes from the mandatory
+/// `X-Foundry-Module-ID` header; it is injected as a query parameter when
+/// forwarding to service-content's GET `/v1/graph/context`.
+#[derive(Deserialize)]
+struct GraphQueryBody {
+    q: String,
+    #[serde(default = "default_graph_query_limit")]
+    limit: u32,
+}
+
+fn default_graph_query_limit() -> u32 {
+    10
+}
+
+/// `POST /v1/graph/query` — proxy to service-content `/v1/graph/context`.
+///
+/// 1. Requires `X-Foundry-Module-ID` header → 400 if absent.
+/// 2. Parses `{"q": "...", "limit": N}` body.
+/// 3. Forwards to `{service_content_endpoint}/v1/graph/context?q=…&module_id=…&limit=…`.
+/// 4. Audit-logs as `event_type = "graph-query"` via `AuditCaptureEntry`.
+/// 5. Returns service-content response verbatim.
+async fn graph_query(
+    State(state): State<Arc<AppState>>,
+    headers: HeaderMap,
+    Json(body): Json<GraphQueryBody>,
+) -> impl IntoResponse {
+    // 1. Module-ID is mandatory.
+    let module_id = match headers
+        .get("x-foundry-module-id")
+        .and_then(|v| v.to_str().ok())
+    {
+        Some(s) if !s.is_empty() => s.to_string(),
+        _ => {
+            let err: ApiError = DoormanError::GraphProxyMissingModuleId.into();
+            return err.into_response();
+        }
+    };
+
+    // 2. Service-content must be configured.
+    if state.service_content_endpoint.is_empty() {
+        let err: ApiError = DoormanError::GraphProxyServiceUnavailable.into();
+        return err.into_response();
+    }
+
+    let url = format!(
+        "{}/v1/graph/context?q={}&module_id={}&limit={}",
+        state.service_content_endpoint,
+        urlencoding_encode(&body.q),
+        urlencoding_encode(&module_id),
+        body.limit,
+    );
+
+    // 3. Forward to service-content.
+    let client = ReqwestClient::new();
+    let sc_resp = match client.get(&url).send().await {
+        Ok(r) => r,
+        Err(_) => {
+            let err: ApiError = DoormanError::GraphProxyServiceUnavailable.into();
+            return err.into_response();
+        }
+    };
+
+    let sc_status = sc_resp.status();
+    let sc_body: serde_json::Value = match sc_resp.json().await {
+        Ok(v) => v,
+        Err(_) => serde_json::Value::Array(vec![]),
+    };
+
+    // 4. Audit-log (non-fatal — proxy succeeds even if ledger write fails).
+    let entry = AuditCaptureEntry {
+        entry_type: ENTRY_TYPE_AUDIT_CAPTURE.to_string(),
+        audit_id: RequestId::new().to_string(),
+        module_id: slm_core::ModuleId::from_str(&module_id)
+            .unwrap_or_else(|_| slm_core::ModuleId::from_str("unknown").unwrap()),
+        event_type: "graph-query".to_string(),
+        source: format!("graph-proxy:{}", body.q),
+        status: if sc_status.is_success() { "ok" } else { "upstream-error" }.to_string(),
+        event_at: Utc::now(),
+        captured_at: Utc::now(),
+        payload: serde_json::json!({ "q": body.q, "limit": body.limit, "module_id": module_id }),
+        caller_request_id: None,
+    };
+    let _ = state.doorman.ledger().append_capture_entry(&entry);
+
+    // 5. Return service-content response.
+    let status = StatusCode::from_u16(sc_status.as_u16()).unwrap_or(StatusCode::BAD_GATEWAY);
+    (status, Json(sc_body)).into_response()
+}
+
+/// `POST /v1/graph/mutate` — proxy to service-content `/v1/graph/mutate`.
+///
+/// 1. Requires `X-Foundry-Module-ID` header → 400 if absent.
+/// 2. Forwards body verbatim to service-content.
+/// 3. Audit-logs as `event_type = "graph-mutation"` via `AuditCaptureEntry`.
+/// 4. Returns service-content response verbatim.
+async fn graph_mutate(
+    State(state): State<Arc<AppState>>,
+    headers: HeaderMap,
+    body_bytes: Bytes,
+) -> impl IntoResponse {
+    // 1. Module-ID is mandatory.
+    let module_id = match headers
+        .get("x-foundry-module-id")
+        .and_then(|v| v.to_str().ok())
+    {
+        Some(s) if !s.is_empty() => s.to_string(),
+        _ => {
+            let err: ApiError = DoormanError::GraphProxyMissingModuleId.into();
+            return err.into_response();
+        }
+    };
+
+    // 2. Service-content must be configured.
+    if state.service_content_endpoint.is_empty() {
+        let err: ApiError = DoormanError::GraphProxyServiceUnavailable.into();
+        return err.into_response();
+    }
+
+    let url = format!("{}/v1/graph/mutate", state.service_content_endpoint);
+
+    // 3. Forward body to service-content.
+    let client = ReqwestClient::new();
+    let sc_resp = match client
+        .post(&url)
+        .header("Content-Type", "application/json")
+        .body(body_bytes.to_vec())
+        .send()
+        .await
+    {
+        Ok(r) => r,
+        Err(_) => {
+            let err: ApiError = DoormanError::GraphProxyServiceUnavailable.into();
+            return err.into_response();
+        }
+    };
+
+    let sc_status = sc_resp.status();
+    let sc_body: serde_json::Value = match sc_resp.json().await {
+        Ok(v) => v,
+        Err(_) => serde_json::json!({}),
+    };
+
+    // 4. Audit-log (non-fatal).
+    let entry = AuditCaptureEntry {
+        entry_type: ENTRY_TYPE_AUDIT_CAPTURE.to_string(),
+        audit_id: RequestId::new().to_string(),
+        module_id: slm_core::ModuleId::from_str(&module_id)
+            .unwrap_or_else(|_| slm_core::ModuleId::from_str("unknown").unwrap()),
+        event_type: "graph-mutation".to_string(),
+        source: "graph-proxy".to_string(),
+        status: if sc_status.is_success() { "ok" } else { "upstream-error" }.to_string(),
+        event_at: Utc::now(),
+        captured_at: Utc::now(),
+        payload: serde_json::json!({ "module_id": module_id }),
+        caller_request_id: None,
+    };
+    let _ = state.doorman.ledger().append_capture_entry(&entry);
+
+    // 5. Return service-content response.
+    let status = StatusCode::from_u16(sc_status.as_u16()).unwrap_or(StatusCode::BAD_GATEWAY);
+    (status, Json(sc_body)).into_response()
+}
+
+/// Simple percent-encoding for URL query parameters (encodes spaces, special chars).
+fn urlencoding_encode(s: &str) -> String {
+    let mut out = String::with_capacity(s.len());
+    for b in s.bytes() {
+        match b {
+            b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'-' | b'_' | b'.' | b'~' => {
+                out.push(b as char);
+            }
+            b' ' => out.push('+'),
+            b => out.push_str(&format!("%{:02X}", b)),
+        }
+    }
+    out
+}
+
 struct ApiError {
     status: StatusCode,
     body: serde_json::Value,
@@ -870,6 +1070,12 @@ impl From<DoormanError> for ApiError {
             DoormanError::QueueLockFailed { .. } => StatusCode::SERVICE_UNAVAILABLE,
             // Malformed brief detected and moved to poison bucket.
             DoormanError::QueueMalformedBrief { .. } => StatusCode::BAD_REQUEST,
+            // Graph proxy — caller omitted the mandatory X-Foundry-Module-ID
+            // header. Error is on the caller's side.
+            DoormanError::GraphProxyMissingModuleId => StatusCode::BAD_REQUEST,
+            // Graph proxy — service-content is unreachable or unconfigured.
+            // Server-side transient condition; caller may retry.
+            DoormanError::GraphProxyServiceUnavailable => StatusCode::SERVICE_UNAVAILABLE,
         };
         Self {
             status,
