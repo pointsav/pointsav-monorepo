@@ -1470,6 +1470,7 @@ dependencies = [
  "base64",
  "chrono",
  "fs2",
+ "reqwest",
  "serde",
  "serde_json",
  "slm-core",
