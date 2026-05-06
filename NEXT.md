@@ -91,6 +91,28 @@ migrations)*
   - ISO / IMG artefacts in `os-infrastructure/`,
     `os-network-admin/`, `os-totebox/` (tracking status TBD).
 
+### New projects to register — Reverse-Flow Substrate (Doctrine claim #52)
+
+Six new Reserved-folder projects are named in DOCTRINE.md claim #52
+(ratified 2026-04-30) and `conventions/reverse-flow-substrate.md`.
+Create directory + bilingual READMEs + registry row in one commit per
+project (workspace §9: directory creation and registry row must land
+together). Activation to Active follows the standard framework §8
+procedure (CLAUDE.md + NEXT.md + registry row update).
+
+| Project | Prefix type | App OS | Notes |
+|---|---|---|---|
+| `service-market` | `service-*` | `os-totebox` | Ring 2 data marketplace — outbound connectors (Snowflake, AWS Data Exchange, LiveRamp) + inbound Delta Sharing API |
+| `service-exchange` | `service-*` | `os-totebox` | Ring 2 ad exchange — IAB OpenRTB 2.6; SSP + DSP bidirectional; Prebid Server sidecar; `iab-specs-openrtb` crate |
+| `app-orchestration-market` | `app-orchestration-*` | `os-orchestration` | Browser marketplace storefront; deployed as `gateway-orchestration-market-N` |
+| `app-orchestration-exchange` | `app-orchestration-*` | `os-orchestration` | Browser ad campaign UI; deployed as `gateway-orchestration-exchange-N` |
+| `app-console-market` | `app-console-*` | `os-console` | Secure TUI for industries where web delivery is too risky (financial, health, legal data) |
+| `app-console-exchange` | `app-console-*` | `os-console` | Secure TUI ad exchange surface; same risk-profile rationale |
+
+Also note: `app-orchestration-gis` (from `project-gis` cluster,
+deployed as `gateway-orchestration-gis-1`) is absent from the project
+registry — close this registry drift in the same pass.
+
 ### Conformance and activations
 
 - **`app-workplace-memo` activation.** Scaffold-coded with 47 files,
