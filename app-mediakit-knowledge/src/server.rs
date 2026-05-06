@@ -366,6 +366,7 @@ const RATIFIED_CATEGORIES: &[&str] = &[
     "company",
     "reference",
     "help",
+    "design-system",
 ];
 
 // ─── Home-page helpers ──────────────────────────────────────────────────────
@@ -675,7 +676,7 @@ fn bucket_guides_by_domain(guides: &[TopicSummary]) -> BTreeMap<String, Vec<Topi
 /// categories (excludes `index.md`, `_index.md`, and `*.es.md` siblings,
 /// matching `bucket_topics_by_category()` discipline).
 ///
-/// `category_count` is `RATIFIED_CATEGORIES.len()` — always 9, signalling
+/// `category_count` is `RATIFIED_CATEGORIES.len()` — always 10, signalling
 /// the platform's intended scope rather than only categories with
 /// articles.
 ///
@@ -709,47 +710,13 @@ fn compute_home_stats(buckets: &CategoryBuckets) -> HomeStats {
 /// - Two-column main panel:
 ///   - Left: Optional featured TOPIC panel
 ///   - Right: Optional Leapfrog 2030 inventions bullet panel
-/// - By-category 3×3 grid (all 9 ratified categories; empty ones show
+/// - By-category grid (all 10 ratified categories; empty ones show
 ///   "0 articles — in preparation")
 /// - Recent additions feed (top 5, sorted by `last_edited` descending)
 /// - Site footer with bilingual notice
 /// How many articles to preview per category before showing "All N →".
 /// Categories with ≤ PREVIEW_LIMIT articles always show the full list.
 const PREVIEW_LIMIT: usize = 8;
-
-// KEY_GUIDES removed — guides now served in-wiki via guide_dir and appear in
-// the Help category grid alongside TOPICs. No external GitHub links on home page.
-// Retained as dead code until woodfine-fleet-deployment is added to the cluster.
-#[allow(dead_code)]
-const KEY_GUIDES: &[(&str, &str, &str)] = &[
-    // AI & SLM
-    ("Operating the service-slm Doorman", "vault-privategit-source", "https://github.com/woodfine/woodfine-fleet-deployment/blob/main/vault-privategit-source/guide-doorman.md"),
-    ("Operating the Yo-Yo Tier B Deployment", "vault-privategit-source", "https://github.com/woodfine/woodfine-fleet-deployment/blob/main/vault-privategit-source/guide-operating-yoyo.md"),
-    ("Operating the Tier A Sysadmin TUI", "vault-privategit-source", "https://github.com/woodfine/woodfine-fleet-deployment/blob/main/vault-privategit-source/guide-tier-a-sysadmin-tui.md"),
-    // Personnel cluster
-    ("SLM Execution — Personnel Cluster", "cluster-totebox-personnel", "https://github.com/woodfine/woodfine-fleet-deployment/blob/main/cluster-totebox-personnel/guide-slm-execution.md"),
-    ("Sovereign Search Operations", "cluster-totebox-personnel", "https://github.com/woodfine/woodfine-fleet-deployment/blob/main/cluster-totebox-personnel/guide-sovereign-search.md"),
-    ("Microsoft Entra ID Sovereignty", "cluster-totebox-personnel", "https://github.com/woodfine/woodfine-fleet-deployment/blob/main/cluster-totebox-personnel/guide-msft-entra-id.md"),
-    ("Ingress Operations & Self-Healing Loop", "cluster-totebox-personnel", "https://github.com/woodfine/woodfine-fleet-deployment/blob/main/cluster-totebox-personnel/guide-ingress-operations.md"),
-    ("Totebox Orchestration & Autonomous Synthesis", "cluster-totebox-personnel", "https://github.com/woodfine/woodfine-fleet-deployment/blob/main/cluster-totebox-personnel/guide-totebox-orchestration.md"),
-    ("LinkedIn Adapter (service-message-courier)", "cluster-totebox-personnel", "https://github.com/woodfine/woodfine-fleet-deployment/blob/main/cluster-totebox-personnel/guide-linkedin-adapter.md"),
-    ("Physical Egress — Cold Storage Backup", "cluster-totebox-personnel", "https://github.com/woodfine/woodfine-fleet-deployment/blob/main/cluster-totebox-personnel/guide-cold-storage-sync.md"),
-    ("Personnel Ledger Operations", "cluster-totebox-personnel", "https://github.com/woodfine/woodfine-fleet-deployment/blob/main/cluster-totebox-personnel/guide-personnel-ledger.md"),
-    // Network & command
-    ("PointSav Private Network Orchestration", "route-network-admin", "https://github.com/woodfine/woodfine-fleet-deployment/blob/main/route-network-admin/guide-mesh-orchestration.md"),
-    ("Unified Command Ledger Operations", "node-console-operator", "https://github.com/woodfine/woodfine-fleet-deployment/blob/main/node-console-operator/guide-command-ledger.md"),
-    // Infrastructure
-    ("Bare-Metal Provisioning & Mesh Fusion", "fleet-infrastructure-onprem", "https://github.com/woodfine/woodfine-fleet-deployment/blob/main/fleet-infrastructure-onprem/guide-provision-onprem.md"),
-    ("LXC Network Ledger Provisioning", "fleet-infrastructure-onprem", "https://github.com/woodfine/woodfine-fleet-deployment/blob/main/fleet-infrastructure-onprem/guide-lxc-network-admin.md"),
-    ("PPN Cloud Anchor Ignition", "fleet-infrastructure-cloud", "https://github.com/woodfine/woodfine-fleet-deployment/blob/main/fleet-infrastructure-cloud/guide-provision-relay.md"),
-    ("Sovereign VPN Deployment", "fleet-infrastructure-leased", "https://github.com/woodfine/woodfine-fleet-deployment/blob/main/fleet-infrastructure-leased/guide-deploy-vpn.md"),
-    ("Standalone Bare-Metal Provisioning", "fleet-infrastructure-leased", "https://github.com/woodfine/woodfine-fleet-deployment/blob/main/fleet-infrastructure-leased/guide-provision-standalone.md"),
-    // Fleet-wide operations
-    ("Physical Egress — Regulatory Printing", "woodfine-fleet-deployment", "https://github.com/woodfine/woodfine-fleet-deployment/blob/main/guide-physical-egress.md"),
-    ("Woodfine Telemetry Operations", "woodfine-fleet-deployment", "https://github.com/woodfine/woodfine-fleet-deployment/blob/main/guide-telemetry-operations.md"),
-    ("Operating the Knowledge Wiki", "media-knowledge-documentation", "https://github.com/woodfine/woodfine-fleet-deployment/blob/main/media-knowledge-documentation/guide-operate-knowledge-wiki.md"),
-    ("Telemetry Engine Integration", "media-marketing-landing", "https://github.com/pointsav/pointsav-fleet-deployment/blob/main/media-marketing-landing/guide-telemetry-integration.md"),
-];
 
 fn home_chrome(
     home_fm: &crate::render::Frontmatter,
@@ -818,7 +785,6 @@ fn home_chrome(
                                 @if let Some(ref d) = stats.last_updated {
                                     " — last updated " time datetime=(d) { (d) }
                                 }
-                                "."
                             }
                         }
                     }
@@ -1364,7 +1330,7 @@ fn wiki_chrome(
                         // Breadcrumb navigation — "Documentation > Category > Title"
                         @if let Some(ref cat) = breadcrumb_category {
                             nav.wiki-breadcrumb aria-label="Breadcrumb" {
-                                a href="/" { "Documentation" }
+                                a href="/" { (site_title) }
                                 span.wiki-breadcrumb-sep { " › " }
                                 a href={ "/category/" (cat.to_lowercase()) } { (cat) }
                                 span.wiki-breadcrumb-sep { " › " }
