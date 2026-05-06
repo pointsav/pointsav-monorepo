@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ article.meta.title }} — {{ site_title }}</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="wiki-body">
+
+  <header class="wiki-header" id="wiki-header">
+    <div class="wiki-header-inner">
+      <a class="wiki-wordmark" href="/">{{ site_title }}</a>
+      <form class="wiki-search-form" action="/search" method="get" role="search">
+        <input id="wiki-search-input" class="wiki-search-input" type="search" name="q"
+          placeholder="Search documentation" autocomplete="off" aria-label="Search">
+        <div id="wiki-search-suggestions" class="wiki-search-suggestions" hidden></div>
+      </form>
+      {% if editor_enabled %}
+      <a class="wiki-header-edit"
+         href="/edit/{{ article.meta.category }}/{{ article.meta.slug }}">Edit</a>
+      {% endif %}
+    </div>
+  </header>
+
+  <div class="wiki-layout">
+
+    <nav class="wiki-toc-sidebar" id="wiki-toc" aria-label="Table of contents">
+      <div class="wiki-toc-header">Contents</div>
+      {% if article.toc %}
+      <ol class="wiki-toc-list">
+        {% for entry in article.toc %}
+        <li class="wiki-toc-item wiki-toc-level-{{ entry.level }}">
+          <a class="wiki-toc-link" href="#{{ entry.id }}">{{ entry.title }}</a>
+          {% if entry.children %}
+          <ol class="wiki-toc-sublist">
+            {% for child in entry.children %}
+            <li class="wiki-toc-item wiki-toc-level-{{ child.level }}">
+              <a class="wiki-toc-link" href="#{{ child.id }}">{{ child.title }}</a>
+            </li>
+            {% endfor %}
+          </ol>
+          {% endif %}
+        </li>
+        {% endfor %}
+        {% if article.references %}
+        <li class="wiki-toc-item wiki-toc-level-2">
+          <a class="wiki-toc-link" href="#references">References</a>
+        </li>
+        {% endif %}
+      </ol>
+      {% endif %}
+    </nav>
+
+    <main class="wiki-article" id="wiki-article" role="main">
+
+      <h1 class="wiki-article-title">{{ article.meta.title }}</h1>
+
+      {% if article.meta.status == "draft" %}
+      <div class="wiki-notice wiki-notice-draft">
+        This article is a draft. Content may be incomplete or subject to change.
+      </div>
+      {% elif article.meta.status == "pre-build" %}
+      <div class="wiki-notice wiki-notice-prebuild">
+        This article describes a component that is planned but not yet built.
+      </div>
+      {% endif %}
+
+      <div class="wiki-article-body">
+        {{ article.body_html | safe }}
+      </div>
+
+      {% if article.meta.category %}
+      <div class="wiki-categories">
+        <span class="wiki-categories-label">Category:</span>
+        <a class="wiki-category-link" href="/{{ article.meta.category }}">
+          {{ article.meta.category }}
+        </a>
+        {% if article.meta.subcategory %}
+        &nbsp;›&nbsp;
+        <span>{{ article.meta.subcategory }}</span>
+        {% endif %}
+      </div>
+      {% endif %}
+
+      {% if article.meta.last_edited %}
+      <div class="wiki-lastmod">
+        Last edited: {{ article.meta.last_edited }}
+        {% if article.meta.editor %} by {{ article.meta.editor }}{% endif %}
+      </div>
+      {% endif %}
+
+    </main>
+  </div>
+
+  <script src="/static/wiki.js"></script>
+</body>
+</html>
