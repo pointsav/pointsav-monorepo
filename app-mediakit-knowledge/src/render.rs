@@ -75,6 +75,16 @@ pub struct Frontmatter {
     #[serde(default)]
     pub short_description: Option<String>,
 
+    /// Article quality grade. Closed enum: `complete | core | stub`.
+    /// Rendered as a badge adjacent to the article title in wiki_chrome().
+    #[serde(default)]
+    pub quality: Option<String>,
+
+    /// Article lifecycle status. Closed enum: `stable | pre-build | draft | stub`.
+    /// When `stub`, a hatnote notice is injected below the FLI banner.
+    #[serde(default)]
+    pub status: Option<String>,
+
     #[serde(flatten)]
     pub extra: BTreeMap<String, serde_yaml::Value>,
 }
