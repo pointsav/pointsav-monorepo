@@ -85,6 +85,17 @@ pub struct Frontmatter {
     #[serde(default)]
     pub status: Option<String>,
 
+    /// Redirect target slug. When set, `wiki_page()` issues a 301 to `/wiki/<target>`
+    /// before any rendering occurs. Allows content authors to define redirects with
+    /// a single frontmatter field: `redirect_to: "canonical-slug"`.
+    #[serde(default)]
+    pub redirect_to: Option<String>,
+
+    /// Marks this page as a disambiguation page. When true, a hatnote notice is
+    /// rendered above the article body.
+    #[serde(default)]
+    pub disambig: Option<bool>,
+
     #[serde(flatten)]
     pub extra: BTreeMap<String, serde_yaml::Value>,
 }
@@ -144,6 +155,7 @@ pub fn render_html_raw(body_md: &str, content_dir: &std::path::Path) -> String {
     options.extension.strikethrough = true;
     options.extension.tasklist = true;
     options.extension.footnotes = true;
+    options.extension.description_lists = true;
     options.extension.autolink = true;
     options.extension.header_ids = Some("h-".to_string());
     // unsafe_ stays false; we don't want raw HTML from authors yet.
