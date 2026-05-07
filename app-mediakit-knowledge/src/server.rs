@@ -1585,27 +1585,8 @@ async fn wiki_page(
         .clone()
         .unwrap_or_else(|| slug.clone());
         
-    // E1: Resolve `cites:` frontmatter against citations.yaml for the ribbon.
-    let citation_status: Option<&'static str> = if let Some(ref ids) = parsed.frontmatter.cites {
-        if ids.is_empty() {
-            None
-        } else {
-            let entries = crate::citations::load_registry(&state.citations_yaml).await.unwrap_or_default();
-            let id_set: std::collections::HashSet<&str> = entries.iter().map(|e| e.id.as_str()).collect();
-            let verified_count = ids.iter().filter(|id| {
-                id_set.contains(id.as_str()) &&
-                entries.iter().any(|e| &e.id == *id && e.last_verified.is_some())
-            }).count();
-            Some(if verified_count == ids.len() { "green" }
-                 else if verified_count == 0 { "red" }
-                 else { "amber" })
-        }
-    } else {
-        None
-    };
-
     let pending_count = pending_count_for(&state, maybe_user.as_ref()).await;
-    Ok(wiki_chrome(&title, &slug, parsed.frontmatter, &body_html, headings, &state.site_title, maybe_user.as_ref(), pending_count, citation_status).into_response())
+    Ok(wiki_chrome(&title, &slug, parsed.frontmatter, &body_html, headings, &state.site_title, maybe_user.as_ref(), pending_count).into_response())
 }
 
 async fn static_asset(Path(path): Path<String>) -> Response {
@@ -1651,21 +1632,8 @@ fn wiki_chrome(
     site_title: &str,
     user: Option<&User>,
     pending_count: i64,
-    citation_status: Option<&'static str>,
 ) -> Markup {
     let _talk_slug = format!("{slug}.talk");
-
-    // E4: Freshness ribbon — compute age bucket from `last_edited:`.
-    let freshness: Option<(&'static str, &'static str)> = fm.last_edited.as_ref().and_then(|d| {
-        use chrono::{NaiveDate, Utc};
-        let edited = NaiveDate::parse_from_str(d, "%Y-%m-%d").ok()?;
-        let today = Utc::now().date_naive();
-        let days = (today - edited).num_days();
-        Some(if days <= 90 { ("current", "Updated within 90 days") }
-             else if days <= 365 { ("recent", "Updated within the past year") }
-             else if days <= 730 { ("aging", "Updated 1–2 years ago") }
-             else { ("stale", "Not updated in over 2 years") })
-    });
 
     // B5: Precompute ToC entries with hierarchical section numbers (1, 2, 2.1, etc.)
     let numbered_headings: Vec<(String, String, u8, String)> = {
@@ -1875,25 +1843,6 @@ fn wiki_chrome(
                             }
                         }
 
-                        // E1: Citation Authority Ribbon — green/amber/red based on citation verification.
-                        @if let Some(status) = citation_status {
-                            div class={ "citation-ribbon citation-ribbon-" (status) }
-                                role="status"
-                                aria-label="Citation verification status"
-                            {
-                                span.citation-ribbon-icon {
-                                    @if status == "green" { "✓" }
-                                    @else if status == "amber" { "⚠" }
-                                    @else { "✗" }
-                                }
-                                span.citation-ribbon-text {
-                                    @if status == "green" { "All citations verified" }
-                                    @else if status == "amber" { "Some citations unverified" }
-                                    @else { "Citations unverified" }
-                                }
-                            }
-                        }
-
                         // Forward-looking-information notice (unchanged from Phase 1)
                         @if fm.forward_looking {
                             aside.fli-notice {
@@ -1965,14 +1914,6 @@ fn wiki_chrome(
 
                         // End-of-article footer block (item 5 + item 15)
                         footer.wiki-article-footer {
-                            // E4: Freshness ribbon — coloured badge based on last_edited age.
-                            @if let Some((bucket, label)) = freshness {
-                                div class={ "freshness-ribbon freshness-" (bucket) }
-                                    title=(label)
-                                {
-                                    span.freshness-label { (label) }
-                                }
-                            }
                             // Categories list (from `categories:` array — item 15)
                             @if let Some(cats) = &fm.categories {
                                 @if !cats.is_empty() {
