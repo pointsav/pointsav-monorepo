@@ -9,7 +9,7 @@
 set -euo pipefail
 
 PROJECT=${SLM_YOYO_GCP_PROJECT:-woodfine-node-gcp-free}
-ZONE=${SLM_YOYO_GCP_ZONE:-us-west1-b}
+ZONE=${SLM_YOYO_GCP_ZONE:-us-central1-a}
 INSTANCE=${SLM_YOYO_GCP_INSTANCE:-yoyo-tier-b-1}
 
 echo "Starting ${INSTANCE} in ${PROJECT}/${ZONE} ..."
