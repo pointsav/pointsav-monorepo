@@ -10,6 +10,36 @@ schema: foundry-mailbox-v1
 ---
 from: task-project-intelligence
 to: master
+re: Yo-Yo #1 nightly drain cycle — idle monitor fix + VM shut down
+created: 2026-05-07T07:30Z
+---
+
+Session work (post-D4 build follow-up):
+
+1. **`idle_monitor.rs` bug fixed (`890b3f6`).** GCP `instances.stop` was returning
+   HTTP 411 (not 403 — the SA has Editor role and can stop instances). `reqwest`
+   omits `Content-Length` on empty-body POSTs; GCP requires it. Fix: `.body("")`
+   in `stop_gcp_instance()`. Binary rebuilt and reinstalled; Doorman restarted.
+
+2. **Yo-Yo #1 VM manually stopped.** `gcloud compute instances stop yoyo-tier-b-1`
+   — status is TERMINATED. The idle monitor would have stopped it automatically
+   within the next 5-min poll cycle (it already fired at 07:07 UTC but got 411),
+   so the manual stop was a precaution for tonight.
+
+3. **One operator action remaining for full nightly drain cycle:**
+   Upload model weights to `/data/weights/olmo-3-32b-think-q4.gguf` on the VM.
+   `gcloud compute scp` command in `NEXT.md` Remaining operator steps §1.
+   Brief queue is empty (274 done via Tier A fallback). New briefs accumulate
+   organically; Sunday 02:00 UTC corpus-threshold timer will queue the next batch.
+
+4. **No editorial content from this session** — code and infrastructure only.
+   6 pre-existing TOPIC drafts in `.agent/drafts-outbound/` (3 bilingual pairs:
+   apprenticeship-substrate, doorman-protocol, zero-container-inference) are
+   ready for project-language pickup as soon as Master routes them.
+
+---
+from: task-project-intelligence
+to: master
 re: Housekeeping complete — 4 commits promoted, all auto-completable tasks done
 created: 2026-05-07T13:30Z
 ---
