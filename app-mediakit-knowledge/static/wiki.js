@@ -169,9 +169,84 @@
 
     function renderCard(data) {
       var snip = data.snippet || "No summary available.";
-      card.innerHTML = '<strong>' + data.title + '</strong><p>' + snip + '</p>';
+      var imgHtml = data.image_url ? '<img src="' + data.image_url + '" alt="">' : '';
+      card.innerHTML = imgHtml + '<strong>' + data.title + '</strong><p>' + snip + '</p>';
       card.style.display = 'block';
     }
+  }
+
+  /* ------------------------------------------------------------------ *
+   * 4. Glossary Tooltips                                                 *
+   * ------------------------------------------------------------------ */
+  function initGlossaryTooltips() {
+    var tooltip = document.createElement('div');
+    tooltip.className = 'wiki-glossary-tooltip';
+    tooltip.style.display = 'none';
+    document.body.appendChild(tooltip);
+
+    var terms = document.querySelectorAll('.wiki-glossary-term');
+    terms.forEach(function(term) {
+      term.addEventListener('mouseenter', function() {
+        var defn = term.getAttribute('title');
+        if (!defn) return;
+        
+        // Temporarily remove title to prevent native tooltip
+        term.dataset.title = defn;
+        term.removeAttribute('title');
+        
+        tooltip.textContent = defn;
+        tooltip.style.display = 'block';
+        
+        var rect = term.getBoundingClientRect();
+        // Position above the term
+        tooltip.style.left = rect.left + window.scrollX + 'px';
+        tooltip.style.top = (rect.top + window.scrollY - tooltip.offsetHeight - 5) + 'px';
+      });
+
+      term.addEventListener('mouseleave', function() {
+        tooltip.style.display = 'none';
+        if (term.dataset.title) {
+          term.setAttribute('title', term.dataset.title);
+        }
+      });
+    });
+  }
+
+  /* ------------------------------------------------------------------ *
+   * 4. Mobile nav drawer toggle                                          *
+   * ------------------------------------------------------------------ */
+
+  function initMobileNav() {
+    var btn     = document.getElementById('nav-toggle');
+    var drawer  = document.getElementById('mobile-nav-drawer');
+    var overlay = document.getElementById('mobile-nav-overlay');
+    var closeBtn = document.getElementById('mobile-nav-close');
+
+    if (!btn || !drawer || !overlay) return;
+
+    function openNav() {
+      document.body.setAttribute('data-nav-open', 'true');
+      drawer.removeAttribute('aria-hidden');
+      overlay.removeAttribute('aria-hidden');
+      btn.setAttribute('aria-expanded', 'true');
+    }
+
+    function closeNav() {
+      document.body.removeAttribute('data-nav-open');
+      drawer.setAttribute('aria-hidden', 'true');
+      overlay.setAttribute('aria-hidden', 'true');
+      btn.setAttribute('aria-expanded', 'false');
+    }
+
+    btn.addEventListener('click', openNav);
+    overlay.addEventListener('click', closeNav);
+    if (closeBtn) closeBtn.addEventListener('click', closeNav);
+
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && document.body.hasAttribute('data-nav-open')) {
+        closeNav();
+      }
+    });
   }
 
   /* ------------------------------------------------------------------ *
@@ -182,6 +257,8 @@
     initToc();
     initDensityToggle();
     initHoverCards();
+    initGlossaryTooltips();
+    initMobileNav();
   });
 
 }());
