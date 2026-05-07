@@ -18,6 +18,7 @@ Last updated: 2026-04-25.
 |---|---|---|---|
 | app-console-bim | Reserved-folder | app-console | 2 files (CLAUDE.md + RESEARCH.md shared with app-orchestration-bim); research phase; directory created 2026-04-23 (closes registry drift) |
 | app-console-bookkeeper | Active | app-console | Activated 2026-04-22 via framework §8 (pilot); HTML-plugin pattern (view + cartridge); registry row was originally mis-classified; `README.*` and data-binding pending |
+| app-console-exchange | Reserved-folder | app-console | Secure TUI ad exchange surface; same risk-profile rationale as app-console-market; Doctrine claim #52 |
 | app-console-content | Scaffold-coded | app-console | 8 files; in workspace members |
 | app-console-email | Scaffold-coded | app-console | 4 files |
 | app-console-help | Reserved-folder | app-console | READMEs only |
@@ -193,10 +194,10 @@ Last updated: 2026-04-25.
 
 - **Active:** 5 (`app-console-bookkeeper`, `app-workplace-presentation`, `app-workplace-proforma`, `service-extraction`, `service-slm`)
 - **Scaffold-coded:** 50
-- **Reserved-folder:** 41
+- **Reserved-folder:** 42
 - **Defect:** 5 (`pointsav-pty-bridge`, `service-parser`, `service-email-egress-ews`, `service-email-egress-imap`, `vendors-maxmind`)
 - **Not-a-project:** 2 (`discovery-queue`, `target`)
 - **Dormant:** 0
 - **Archived:** 0
 
-**Total rows:** 105.
+**Total rows:** 106.
