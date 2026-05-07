@@ -45,6 +45,7 @@ use serde_json::json;
 use std::collections::BTreeMap;
 use std::path::{Path as FsPath, PathBuf};
 use std::sync::{Arc, Mutex};
+use std::time::{SystemTime, UNIX_EPOCH};
 use tokio::fs;
 
 use crate::assets::StaticAsset;
@@ -133,6 +134,7 @@ pub fn router(state: AppState) -> Router {
         // Phase 3 Step 3.2 — full-text search HTML page over the tantivy index
         .route("/search", get(search_page))
         .route("/wanted", get(wanted_page))
+        .route("/random", get(random_page))
         .route("/mcp", post(mcp_handler))
         // Phase 3 Step 3.3 — Atom + JSON Feed syndication
         .route("/feed.atom", get(crate::feeds::get_atom))
@@ -368,6 +370,35 @@ async fn mcp_dispatch(
 /// Walks every .md file in content_dir, renders each, and collects all
 /// anchors tagged with `class="wiki-redlink"`. Returns a table sorted by
 /// inbound-link count (most-wanted first), matching Wikipedia's Special:WantedPages.
+/// `GET /random` — redirect to a randomly chosen article.
+///
+/// Collects all topic slugs, picks one using a time-seeded index (no external
+/// crate needed), and issues a 302 redirect to `/wiki/<slug>`. Returns 404
+/// when the content directory is empty.
+async fn random_page(
+    State(state): State<Arc<AppState>>,
+) -> Result<Response, WikiError> {
+    let topic_files = collect_all_topic_files(
+        &state.content_dir,
+        &[state.guide_dir.as_deref(), state.guide_dir_2.as_deref()],
+    )
+    .await?;
+    let slugs: Vec<String> = topic_files.into_iter().map(|tf| tf.slug).collect();
+    if slugs.is_empty() {
+        return Err(WikiError::NotFound("random".into()));
+    }
+    let nanos = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .subsec_nanos() as usize;
+    let slug = &slugs[nanos % slugs.len()];
+    Ok(Response::builder()
+        .status(StatusCode::FOUND)
+        .header(header::LOCATION, format!("/wiki/{slug}"))
+        .body(axum::body::Body::empty())
+        .unwrap())
+}
+
 async fn wanted_page(
     State(state): State<Arc<AppState>>,
     CurrentUser(maybe_user): CurrentUser,
@@ -1365,7 +1396,7 @@ async fn wiki_page(
     State(state): State<Arc<AppState>>,
     Path(slug): Path<String>,
     CurrentUser(maybe_user): CurrentUser,
-) -> Result<Markup, WikiError> {
+) -> Result<Response, WikiError> {
     // Slug safety: reject path traversal. Allow at most one `/` separator
     // for category-scoped slugs (`architecture/compounding-substrate`).
     if slug.contains("..") || slug.is_empty() {
@@ -1407,6 +1438,16 @@ async fn wiki_page(
         Err(e) => return Err(e.into()),
     };
     let mut parsed = parse_page(&text)?;
+
+    // A5: redirect_to frontmatter — 301 before any rendering.
+    if let Some(ref target) = parsed.frontmatter.redirect_to.clone() {
+        let location = format!("/wiki/{target}");
+        return Ok(Response::builder()
+            .status(StatusCode::MOVED_PERMANENTLY)
+            .header(header::LOCATION, location)
+            .body(axum::body::Body::empty())
+            .unwrap());
+    }
 
     // ── Item 11: Language toggle auto-detection ───────────────────────────
     //
@@ -1476,7 +1517,7 @@ async fn wiki_page(
     }
         
     let pending_count = pending_count_for(&state, maybe_user.as_ref()).await;
-    Ok(wiki_chrome(&title, &slug, parsed.frontmatter, &body_html, headings, &backlinks, &state.site_title, maybe_user.as_ref(), pending_count))
+    Ok(wiki_chrome(&title, &slug, parsed.frontmatter, &body_html, headings, &backlinks, &state.site_title, maybe_user.as_ref(), pending_count).into_response())
 }
 
 async fn static_asset(Path(path): Path<String>) -> Response {
@@ -1572,6 +1613,7 @@ fn wiki_chrome(
                     ul.mobile-nav-list {
                         li { a href="/" { "Home" } }
                         li { a href="/search" { "Search" } }
+                        li { a href="/random" { "Random article" } }
                         li { a href="/wanted" { "Wanted articles" } }
                     }
                 }
@@ -1598,6 +1640,11 @@ fn wiki_chrome(
                                     }
                                 }
                             }
+                        }
+                        div.wiki-toc-tools {
+                            a href="/random" { "Random article" }
+                            a href="/wanted" { "Wanted articles" }
+                            a href="/search" { "Search" }
                         }
                     }
 
@@ -1725,6 +1772,16 @@ fn wiki_chrome(
                         @if let Some(hatnote) = &fm.hatnote {
                             div.wiki-hatnote {
                                 (hatnote)
+                            }
+                        }
+
+                        // A6: Disambiguation page notice
+                        @if fm.disambig == Some(true) {
+                            div.wiki-disambig-notice {
+                                em {
+                                    "This disambiguation page lists articles associated with the same title. "
+                                    "If an internal link led you here, you may wish to change the link to point directly to the intended article."
+                                }
                             }
                         }
 
