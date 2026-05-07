@@ -1,0 +1,30 @@
+[Unit]
+Description=PointSav service-extraction — cluster-totebox-jennifer instance
+Documentation=https://github.com/woodfine/woodfine-fleet-deployment
+After=network.target local-fs.service
+Wants=local-fs.service
+
+[Service]
+Type=simple
+Restart=on-failure
+RestartSec=10
+
+# ── Deployment paths ──────────────────────────────────────────────────────────
+# Adjust EXTRACTION_BASE_DIR to the actual jennifer deployment root on this host.
+Environment=EXTRACTION_BASE_DIR=/home/mathew/deployments/woodfine-fleet-deployment
+Environment=EXTRACTION_WATCH_DIR=/home/mathew/deployments/woodfine-fleet-deployment/cluster-totebox-jennifer/service-fs/data/service-people/source
+
+# ── CORPUS bridge to service-content DataGraph ────────────────────────────────
+# Drop CORPUS_*.json into service-content's ledger dir for LadybugDB ingestion.
+# module_id="jennifer" scopes these entities in the graph namespace.
+Environment=EXTRACTION_EMIT_CORPUS_DIR=/home/mathew/deployments/woodfine-fleet-deployment/cluster-totebox-jennifer/service-fs/data/service-content/ledgers
+Environment=EXTRACTION_CORPUS_MODULE_ID=jennifer
+
+ExecStart=/usr/local/bin/service-extraction
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=service-extraction-jennifer
+
+[Install]
+WantedBy=multi-user.target
