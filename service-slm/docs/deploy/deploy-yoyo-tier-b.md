@@ -32,7 +32,7 @@ packer build yoyo-image.pkr.hcl
 ```
 
 Packer will:
-1. Launch a temporary `g2-standard-4` VM in `us-west1-b`
+1. Launch a temporary `g2-standard-4` VM in `us-central1-a`
 2. Install CUDA 12, vLLM ≥ 0.12, Nginx
 3. Publish the resulting image to the `slm-yoyo` family in `woodfine-node-gcp-free`
 
@@ -77,7 +77,7 @@ weights_disk_name = "yoyo-tier-b-1-weights"
 SSH into the VM and prepare the weights directory:
 
 ```bash
-gcloud compute ssh yoyo-tier-b-1 --zone us-west1-b --project woodfine-node-gcp-free \
+gcloud compute ssh yoyo-tier-b-1 --zone us-central1-a --project woodfine-node-gcp-free \
     -- "sudo mkdir -p /data/weights && sudo chmod 777 /data/weights"
 ```
 
@@ -87,7 +87,7 @@ Upload the GGUF file (adjust the local path):
 gcloud compute scp \
     /path/to/olmo-3-32b-think-q4.gguf \
     yoyo-tier-b-1:/data/weights/olmo-3-32b-think-q4.gguf \
-    --zone us-west1-b \
+    --zone us-central1-a \
     --project woodfine-node-gcp-free
 ```
 
@@ -101,8 +101,8 @@ The startup script (`/etc/rc.local`) mounts the weights disk and writes the Ngin
 auth map on first boot. Trigger it now so the image is fully configured:
 
 ```bash
-gcloud compute instances stop  yoyo-tier-b-1 --zone us-west1-b --project woodfine-node-gcp-free
-gcloud compute instances start yoyo-tier-b-1 --zone us-west1-b --project woodfine-node-gcp-free
+gcloud compute instances stop  yoyo-tier-b-1 --zone us-central1-a --project woodfine-node-gcp-free
+gcloud compute instances start yoyo-tier-b-1 --zone us-central1-a --project woodfine-node-gcp-free
 ```
 
 Allow ~3 min for the VM to boot and vLLM to load the model.
@@ -135,7 +135,7 @@ SLM_YOYO_METRICS_KEY=vllm:num_requests_running
 
 # Idle monitor — all four required; absent any one, auto-stop is disabled
 SLM_YOYO_GCP_PROJECT=woodfine-node-gcp-free
-SLM_YOYO_GCP_ZONE=us-west1-b
+SLM_YOYO_GCP_ZONE=us-central1-a
 SLM_YOYO_GCP_INSTANCE=yoyo-tier-b-1
 SLM_YOYO_IDLE_MINUTES=30
 ```
@@ -202,7 +202,7 @@ monitor fires and calls `instances.stop`. Confirm in GCP Console or:
 
 ```bash
 gcloud compute instances describe yoyo-tier-b-1 \
-    --zone us-west1-b --project woodfine-node-gcp-free \
+    --zone us-central1-a --project woodfine-node-gcp-free \
     --format="value(status)"
 # Expected: TERMINATED
 ```
@@ -228,7 +228,7 @@ each night when the VM starts.
 |---|---|
 | Start VM on-demand | `./scripts/start-yoyo.sh` |
 | Stop VM immediately | `./scripts/stop-yoyo.sh` |
-| Check VM state | `gcloud compute instances describe yoyo-tier-b-1 --zone us-west1-b --project woodfine-node-gcp-free --format="value(status)"` |
+| Check VM state | `gcloud compute instances describe yoyo-tier-b-1 --zone us-central1-a --project woodfine-node-gcp-free --format="value(status)"` |
 | Check queue depth | `curl -s http://127.0.0.1:9080/readyz \| jq .queue_pending` |
 | Watch drain live | `journalctl -u local-doorman -f \| grep -E "drain\|yoyo\|idle"` |
 | Nightly start time | 02:00 UTC — GCP Instance Schedule fires automatically |
