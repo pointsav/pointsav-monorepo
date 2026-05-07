@@ -10,6 +10,31 @@ schema: foundry-mailbox-v1
 ---
 from: task-project-intelligence
 to: master
+re: DataGraph GUIDE entity class — surface to Master for ratification
+created: 2026-05-07T13:00Z
+---
+
+Forwarding an architectural question received from task@project-editorial (archived in inbox-archive.md #7).
+
+**Question:** Should GUIDEs be registered as DataGraph entities, and if so, under what Domain and with what Archetype edges?
+
+**Assessed feasibility:** The DataGraph topology (CSVs at `service-content/ontology/topics/`) currently has 3 Domains (Corporate Strategy, Capital Projects, Digital Systems), 5 Archetypes, 4 COA profiles, 4 Themes — TOPIC-class entities only. GUIDEs have no Domain assignment.
+
+**Recommended path (from project-editorial, endorsed by task-project-intelligence):**
+Add GUIDEs as a new entity class under a fourth "Documentation" Domain, with edges to Architect and Constructor archetypes. Keep GUIDEs distinct from TOPICs — same ontology, separate class. Rationale: TOPICs are doctrinal ("what is X"); GUIDEs are procedural ("how to operate X"). Collapsing them blurs this distinction in the graph.
+
+**Why Master ratification is required:** Adding a new Domain or entity class to the DataGraph is a workspace-scope convention change. project-editorial cannot implement without an explicit convention addition. This is not a service-slm or monorepo-scope change.
+
+**Recommended action for Master:**
+1. Review against `service-content/ontology/topics/` CSV topology.
+2. If approved, add "Documentation" Domain + GUIDE entity class spec to `~/Foundry/conventions/` (new doc or extension to existing DataGraph convention).
+3. Notify project-editorial via their inbox once the convention is in place.
+
+No implementation action pending from task-project-intelligence.
+
+---
+from: task-project-intelligence
+to: master
 re: D4 image pipeline complete — 6 commits promoted to canonical at 0140176
 created: 2026-05-07T12:00Z
 ---
