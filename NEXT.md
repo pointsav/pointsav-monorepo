@@ -6,7 +6,7 @@
 > Read at session start when a Root Claude opens in this repo. Update
 > at session end when repo-scope open items change.
 
-Last updated: 2026-04-23.
+Last updated: 2026-05-07.
 
 ---
 
@@ -91,42 +91,9 @@ migrations)*
   - ISO / IMG artefacts in `os-infrastructure/`,
     `os-network-admin/`, `os-totebox/` (tracking status TBD).
 
-### New projects to register — Reverse-Flow Substrate (Doctrine claim #52)
-
-Six new Reserved-folder projects are named in DOCTRINE.md claim #52
-(ratified 2026-04-30) and `conventions/reverse-flow-substrate.md`.
-Create directory + bilingual READMEs + registry row in one commit per
-project (workspace §9: directory creation and registry row must land
-together). Activation to Active follows the standard framework §8
-procedure (CLAUDE.md + NEXT.md + registry row update).
-
-| Project | Prefix type | App OS | Notes |
-|---|---|---|---|
-| `service-market` | `service-*` | `os-totebox` | Ring 2 data marketplace — outbound connectors (Snowflake, AWS Data Exchange, LiveRamp) + inbound Delta Sharing API |
-| `service-exchange` | `service-*` | `os-totebox` | Ring 2 ad exchange — IAB OpenRTB 2.6; SSP + DSP bidirectional; Prebid Server sidecar; `iab-specs-openrtb` crate |
-| `app-orchestration-market` | `app-orchestration-*` | `os-orchestration` | Browser marketplace storefront; deployed as `gateway-orchestration-market-N` |
-| `app-orchestration-exchange` | `app-orchestration-*` | `os-orchestration` | Browser ad campaign UI; deployed as `gateway-orchestration-exchange-N` |
-| `app-console-market` | `app-console-*` | `os-console` | Secure TUI for industries where web delivery is too risky (financial, health, legal data) |
-| `app-console-exchange` | `app-console-*` | `os-console` | Secure TUI ad exchange surface; same risk-profile rationale |
-
-Also note: `app-orchestration-gis` (from `project-gis` cluster,
-deployed as `gateway-orchestration-gis-1`) is absent from the project
-registry — close this registry drift in the same pass.
-
 ### Conformance and activations
 
-- **`app-workplace-memo` activation.** Scaffold-coded with 47 files,
-  described by its sibling as "running on Linux Mint." Needs
-  `CLAUDE.md` + `NEXT.md` to become Active per framework §8.
-- **`app-workplace-proforma` CLAUDE.md commit-convention decision.**
-  Its `CLAUDE.md` exists but is marked "not committed to git." Per
-  the 2026-04-22 framework decision (committed convention is
-  canonical), this file either needs committing or explicit
-  conformance to a local-only exception.
-- **`service-extraction/CLAUDE.md` staleness.** The in-module
-  `CLAUDE.md` describes v0.2/v0.4 development but the code is a
-  149-line filesystem-watching router — different implementation.
-  Align before any new refactor of this service.
+*(queue empty — see Recently closed 2026-05-07 below)*
 
 ### Stashes parked in this repo
 
@@ -136,6 +103,24 @@ registry — close this registry drift in the same pass.
   `git stash pop` when ready to resume.
 - `stash@{1}` — pre-existing — "On service-extraction-v04: main:
   registry + BIM untracked — parked before task [21] resume".
+
+## Recently closed (2026-05-07)
+
+- **Reverse-Flow Substrate project registrations (Doctrine claim #52)** — six new
+  Reserved-folder projects created with bilingual READMEs and registry rows in one
+  commit each: `service-market`, `service-exchange`, `app-orchestration-market`,
+  `app-orchestration-exchange`, `app-console-market`, `app-console-exchange`.
+- **`app-orchestration-gis` registry drift** — directory created; Reserved-folder row
+  added to registry. Deployed instance `gateway-orchestration-gis-1` was missing from
+  the project registry.
+- **`.gitignore` deduplication** — "Asymmetric Storage Protocol: Enforce Tier-1
+  Quarantine" block was duplicated 4× (lines 4–18). Normalised to a single copy.
+- **`service-extraction/CLAUDE.md`** — CLAUDE.md created; describes the 149-line
+  filesystem-watching router accurately (replaces the stale v0.2/v0.4 framing in README).
+- **`app-workplace-memo` activation** — CLAUDE.md + NEXT.md added; registry row
+  promoted from Scaffold-coded → Active per framework §8.
+- **`app-workplace-proforma/CLAUDE.md`** — local-only file committed to git; header
+  updated to standard CLAUDE.md format.
 
 ## Recently closed (2026-04-23)
 
