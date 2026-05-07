@@ -1,0 +1,19 @@
+[Unit]
+Description=PointSav jennifer DataGraph CORPUS batch rebuild
+Documentation=https://github.com/woodfine/woodfine-fleet-deployment
+After=local-doorman.service
+
+[Service]
+Type=oneshot
+User=mathew
+
+# Deployment paths — adjust per host
+Environment=JENNIFER_BASE=/home/mathew/deployments/woodfine-fleet-deployment/cluster-totebox-jennifer
+Environment=SERVICE_CONTENT_LEDGER=/home/mathew/deployments/woodfine-fleet-deployment/cluster-totebox-jennifer/service-fs/data/service-content/ledgers
+Environment=JENNIFER_CRM_DIR=/home/mathew/deployments/woodfine-fleet-deployment/cluster-totebox-jennifer/service-fs/data/service-people/ledgers
+
+ExecStart=/srv/foundry/clones/project-intelligence/service-slm/scripts/corpus-batch-jennifer.sh --batch-size 50
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=corpus-rebuild
