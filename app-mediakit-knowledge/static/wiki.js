@@ -250,6 +250,150 @@
   }
 
   /* ------------------------------------------------------------------ *
+   * A2: Footnote hover tooltips                                         *
+   * Show the footnote body text on hover over [1] superscript links.   *
+   * ------------------------------------------------------------------ */
+
+  function initFootnoteTooltips() {
+    var refs = document.querySelectorAll('sup.footnote-ref a');
+    if (!refs.length) return;
+
+    var tip = document.createElement('div');
+    tip.className = 'fn-tooltip';
+    tip.setAttribute('aria-hidden', 'true');
+    tip.style.display = 'none';
+    document.body.appendChild(tip);
+
+    function getFootnoteText(href) {
+      // href is "#fn-1"; the li id is "fn-1"
+      var id = href.replace(/^#/, '');
+      var li = document.getElementById(id);
+      if (!li) return null;
+      // Clone so we can strip the backref arrow without mutating the DOM.
+      var clone = li.cloneNode(true);
+      var backref = clone.querySelector('.footnote-backref');
+      if (backref) backref.remove();
+      return clone.textContent.trim();
+    }
+
+    function showTip(anchor, text) {
+      tip.textContent = text;
+      tip.style.display = 'block';
+      var rect = anchor.getBoundingClientRect();
+      var top = window.scrollY + rect.bottom + 6;
+      var left = Math.min(window.scrollX + rect.left, window.innerWidth - 400);
+      tip.style.top = top + 'px';
+      tip.style.left = Math.max(8, left) + 'px';
+    }
+
+    refs.forEach(function (anchor) {
+      anchor.addEventListener('mouseenter', function () {
+        var text = getFootnoteText(anchor.getAttribute('href') || '');
+        if (text) showTip(anchor, text);
+      });
+      anchor.addEventListener('mouseleave', function () {
+        tip.style.display = 'none';
+      });
+      anchor.addEventListener('focus', function () {
+        var text = getFootnoteText(anchor.getAttribute('href') || '');
+        if (text) showTip(anchor, text);
+      });
+      anchor.addEventListener('blur', function () {
+        tip.style.display = 'none';
+      });
+    });
+  }
+
+  /* ------------------------------------------------------------------ *
+   * D2: Search autocomplete                                              *
+   * Debounced dropdown fed by GET /api/complete?q={prefix}.             *
+   * ------------------------------------------------------------------ */
+  function initSearchAutocomplete() {
+    var input = document.getElementById('header-search-q');
+    var dropdown = document.getElementById('search-autocomplete-dropdown');
+    if (!input || !dropdown) return;
+
+    var debounceTimer = null;
+    var activeIdx = -1;
+    var items = [];
+
+    function hideDropdown() {
+      dropdown.style.display = 'none';
+      dropdown.innerHTML = '';
+      items = [];
+      activeIdx = -1;
+    }
+
+    function renderDropdown(hits) {
+      dropdown.innerHTML = '';
+      items = hits;
+      activeIdx = -1;
+      if (!hits.length) { hideDropdown(); return; }
+      hits.forEach(function(hit, i) {
+        var li = document.createElement('div');
+        li.className = 'ac-item';
+        li.textContent = hit.title;
+        li.addEventListener('mousedown', function(e) {
+          e.preventDefault();
+          window.location.href = '/wiki/' + hit.slug;
+        });
+        dropdown.appendChild(li);
+      });
+      dropdown.style.display = 'block';
+    }
+
+    input.addEventListener('input', function() {
+      clearTimeout(debounceTimer);
+      var q = input.value.trim();
+      if (q.length < 2) { hideDropdown(); return; }
+      debounceTimer = setTimeout(function() {
+        fetch('/api/complete?q=' + encodeURIComponent(q))
+          .then(function(r) { return r.json(); })
+          .then(renderDropdown)
+          .catch(function() { hideDropdown(); });
+      }, 200);
+    });
+
+    input.addEventListener('keydown', function(e) {
+      if (!items.length) return;
+      var rows = dropdown.querySelectorAll('.ac-item');
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        activeIdx = Math.min(activeIdx + 1, rows.length - 1);
+        rows.forEach(function(r, i) { r.classList.toggle('ac-active', i === activeIdx); });
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        activeIdx = Math.max(activeIdx - 1, 0);
+        rows.forEach(function(r, i) { r.classList.toggle('ac-active', i === activeIdx); });
+      } else if (e.key === 'Enter' && activeIdx >= 0) {
+        e.preventDefault();
+        window.location.href = '/wiki/' + items[activeIdx].slug;
+      } else if (e.key === 'Escape') {
+        hideDropdown();
+      }
+    });
+
+    document.addEventListener('click', function(e) {
+      if (!dropdown.contains(e.target) && e.target !== input) hideDropdown();
+    });
+  }
+
+  /* ------------------------------------------------------------------ *
+   * B3: Navbox autocollapse                                              *
+   * Clicking the navbox title bar toggles visibility of navbox-content. *
+   * ------------------------------------------------------------------ */
+  function initNavboxes() {
+    var navboxes = document.querySelectorAll('.navbox');
+    navboxes.forEach(function(nb) {
+      var title = nb.querySelector('.navbox-title');
+      if (!title) return;
+      title.addEventListener('click', function() {
+        nb.classList.toggle('navbox-collapsed');
+      });
+    });
+  }
+
+  /* ------------------------------------------------------------------ *
    * Boot                                                                 *
    * ------------------------------------------------------------------ */
 
@@ -259,6 +403,9 @@
     initHoverCards();
     initGlossaryTooltips();
     initMobileNav();
+    initFootnoteTooltips();
+    initNavboxes();
+    initSearchAutocomplete();
   });
 
 }());
