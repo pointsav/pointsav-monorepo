@@ -14,7 +14,7 @@ variable "project_id" {
 
 variable "zone" {
   type    = string
-  default = "us-west1-b"
+  default = "us-west1-a"
 }
 
 variable "vllm_port" {
@@ -36,10 +36,8 @@ source "googlecompute" "yoyo" {
   }
   ssh_username        = "packer"
   on_host_maintenance = "TERMINATE"
-  accelerators {
-    type  = "nvidia-l4"
-    count = 1
-  }
+  accelerator_type    = "zones/${var.zone}/acceleratorTypes/nvidia-l4"
+  accelerator_count   = 1
 }
 
 build {
