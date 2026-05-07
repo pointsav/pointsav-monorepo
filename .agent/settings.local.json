@@ -58,9 +58,7 @@
       "Bash(curl -s \"http://127.0.0.1:9081/v1/graph/context?q=compliance&module_id=woodfine&limit=3\")",
       "Bash(curl -s \"http://127.0.0.1:9081/v1/graph/context?q=nda&module_id=woodfine&limit=3\")",
       "Bash(sed -n '53,65p' .agent/rules/cleanup-log.md)",
-      "Bash(sed -n '68,85p' .agent/rules/cleanup-log.md)",
-      "Bash(~/Foundry/bin/promote.sh)",
-      "Bash(GIT_AUTHOR_NAME=\"Jennifer Woodfine\" GIT_AUTHOR_EMAIL=\"jwoodfine@users.noreply.github.com\" GIT_COMMITTER_NAME=\"Jennifer Woodfine\" GIT_COMMITTER_EMAIL=\"jwoodfine@users.noreply.github.com\" ~/Foundry/bin/commit-as-next.sh \"housekeeping: stage settings.local.json at session-end\")"
+      "Bash(sed -n '68,85p' .agent/rules/cleanup-log.md)"
     ]
   },
   "context": {
