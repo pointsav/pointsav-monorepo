@@ -13,9 +13,9 @@ Last updated: 2026-05-07.
 ## Currently open
 
 ### Leapfrog 2030 Architecture & Multi-Yo-Yo Roadmap
-- **Execute 4-Phase Roadmap** — See `service-slm/NEXT.md` for the active Task agent queue.
-  - Active: Software Configuration (Multi-Yo-Yo endpoints, Tier C Auth, Seed Alignment).
-  - Deferred: Infrastructure Provisioning (GCP Project, D4 Image, VM Deployment).
+- **Software layer complete** (177/177 tests, canonical `ecfc691`). See `service-slm/NEXT.md`.
+- **Infrastructure Provisioning** — operator-gated. GCP project + L4 quota + packer build +
+  tofu apply + weights upload + Doorman env vars. Runbook: `service-slm/docs/deploy/deploy-yoyo-tier-b.md`.
 
 ### Layout hygiene — defect closures queued
 
@@ -55,9 +55,7 @@ the source-remove.
   `app-console-*` and `app-network-*` projects contain both
   patterns; the registry's `Type` column does not distinguish.
   Surfaced during bookkeeper activation.
-- **`BIM.zip` triage** — user-added working-tree artefact; determine
-  whether source data, extraction seed, or stray; gitignore or
-  delete.
+- **`BIM.zip` triage** — verified 2026-05-07: no zip artefact present on disk; item closed.
 
 ### Rename series
 
@@ -72,9 +70,6 @@ migrations)*
   are treated as standalone workspaces (hence 23 stray
   `Cargo.lock` files). Unifying would consolidate targets and
   resolve profile inheritance.
-- **Monorepo `.gitignore` deduplication** — the "Asymmetric Storage
-  Protocol: Enforce Tier-1 Quarantine" block is duplicated four
-  times. Normalise to a single copy.
 - **Large binaries** — tracked artefacts that should move to
   build-time fetch:
   - `app-mediakit-telemetry/assets/GeoLite2-City.mmdb` (63.5 MB)
