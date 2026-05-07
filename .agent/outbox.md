@@ -10,6 +10,35 @@ schema: foundry-mailbox-v1
 ---
 from: task-project-intelligence
 to: master
+re: Housekeeping complete — 4 commits promoted, all auto-completable tasks done
+created: 2026-05-07T13:30Z
+---
+
+All auto-completable housekeeping tasks from this session are committed and ready for Stage-6 promotion.
+
+**4 commits (796cdec → f9e392b):**
+
+1. `housekeeping: fix project-registry stale defect rows — all 5 resolved 2026-04-23, total 107→104` — removed stale Defect rows for service-email-egress-ews, service-email-egress-imap, service-parser, pointsav-pty-bridge, vendors-maxmind; added correct Scaffold-coded rows for service-email-egress and service-pty-bridge.
+2. `docs(service-slm): update CLAUDE.md — 177 tests, D4 pipeline code-complete at 0140176` — date and test count current; D4 pipeline note added.
+3. `housekeeping: archive inbox #7 (DataGraph GUIDE question) — forward to Master via outbox` — inbox cleared; editorial question from task@project-editorial forwarded to Master (see message below).
+4. `docs(app-mediakit-knowledge): add CLAUDE.md + NEXT.md — Active-state activation defect closed` — activation defect noted in registry since 2026-04-28 is now resolved.
+5. `housekeeping: registry — app-mediakit-knowledge activation defect closed (CLAUDE.md + NEXT.md added)` — registry row updated.
+
+**Operator-gated items still pending (all in service-slm/NEXT.md):**
+- Create `pointsav-public` GCP project + enable Compute Engine API + billing
+- Request L4 GPU quota in `us-west1`
+- Run `packer build` to produce the `slm-yoyo` image
+- Run `tofu apply` to provision VM + disk + Instance Schedule
+- Upload OLMo 3 32B-Think Q4 weights to the data disk
+- Wire Doorman env vars in `/etc/local-doorman/local-doorman.env`
+- Restart Doorman + verify `has_yoyo: true`
+- Re-enable apprenticeship (`SLM_APPRENTICESHIP_ENABLED=true`)
+- Tier C auth (Anthropic API key)
+- cmake + build-essential on workspace VM
+
+---
+from: task-project-intelligence
+to: master
 re: DataGraph GUIDE entity class — surface to Master for ratification
 created: 2026-05-07T13:00Z
 ---
