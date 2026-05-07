@@ -17,12 +17,17 @@ Last updated: 2026-05-07.
 - **Yo-Yo #1 VM live** — `yoyo-tier-b-1` provisioned 2026-05-07 in `us-central1-a`
   (Spot g2-standard-4 + L4, image `slm-yoyo-20260507-061137`). Doorman wired
   (`has_yoyo: true`). Nginx TLS + bearer auth verified working.
+- **Idle monitor fixed** (`890b3f6`) — was returning HTTP 411 (missing `Content-Length: 0`
+  on GCP POST); fixed with `.body("")`. The SA (Editor role) can stop instances without
+  additional IAM grant — step 2 below is no longer required.
+- **VM currently TERMINATED** — manually stopped 2026-05-07; Instance Schedule will
+  restart at 02:00 UTC nightly once weights are loaded.
 - **Remaining operator steps:**
   1. Upload OLMo 3 32B-Think Q4 weights (~20 GB) to `/data/weights/olmo-3-32b-think-q4.gguf`
-     on the Yo-Yo VM via `gcloud compute scp`.
-  2. Grant `roles/compute.instanceAdmin.v1` to the Compute Engine SA
-     (`369270631281-compute@developer.gserviceaccount.com`) in GCP console — needed for
-     Doorman idle monitor to auto-stop the VM.
+     on the Yo-Yo VM via `gcloud compute scp`. This is the only blocker for full
+     nightly drain cycle. Once loaded, VM starts at 02:00 UTC, vLLM serves, drain
+     worker routes briefs to Tier B, idle monitor stops VM after 30 min idle.
+  2. ~~Grant `roles/compute.instanceAdmin.v1`~~ — not needed; Editor role sufficient.
   3. Run smoke test per `service-slm/docs/deploy/deploy-yoyo-tier-b.md` §8.
   4. Re-enable apprenticeship: set `SLM_APPRENTICESHIP_ENABLED=true` in `local-doorman.env`.
 - Runbook: `service-slm/docs/deploy/deploy-yoyo-tier-b.md`.
