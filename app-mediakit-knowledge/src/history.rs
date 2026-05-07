@@ -7,7 +7,11 @@ pub struct HistoryEntry {
     pub author: String,
     pub email: String,
     pub timestamp_iso: String,
+    /// First line of the commit message (the subject).
     pub message: String,
+    /// User-supplied edit summary — the body paragraph after the blank line,
+    /// stripped of any "Version: M.m.P" trailers. Empty when absent.
+    pub edit_summary: String,
 }
 
 pub struct BlameLine {
@@ -58,12 +62,16 @@ pub fn topic_history(
             let message = commit.message().map_err(|e| WikiError::WriteFailed(format!("gix message failed: {e}")))?;
             let time = commit.time().map_err(|e| WikiError::WriteFailed(format!("gix time failed: {e}")))?;
             
+            let edit_summary = message.body()
+                .map(|b| String::from_utf8_lossy(b.without_trailer().as_ref()).trim().to_string())
+                .unwrap_or_default();
             entries.push(HistoryEntry {
                 sha: commit_item.id().to_string(),
                 author: author.name.to_string(),
                 email: author.email.to_string(),
                 timestamp_iso: format_time(time),
                 message: message.summary().to_string(),
+                edit_summary,
             });
             
             current_blob_id = blob_id;
@@ -218,6 +226,44 @@ pub fn topic_diff(
     }
 
     Ok(lines)
+}
+
+/// Return the raw Markdown content of `slug` at the given git revision.
+/// `rev` may be a SHA prefix, a ref name, or a `SHA~` parent shorthand.
+/// Returns an empty string when the file didn't exist at that revision.
+pub fn get_file_at_rev(content_dir: &Path, slug: &str, rev: &str) -> Result<String, WikiError> {
+    let repo = gix::open(content_dir)
+        .map_err(|e| WikiError::WriteFailed(format!("gix open: {e}")))?;
+    let path = Path::new(slug).with_extension("md");
+
+    if rev.is_empty() || rev == "0000000000000000000000000000000000000000" {
+        return Ok(String::new());
+    }
+    let (actual_rev, is_parent) = if rev.ends_with('~') {
+        (&rev[..rev.len()-1], true)
+    } else {
+        (rev, false)
+    };
+    let id = repo.rev_parse_single(actual_rev)
+        .map_err(|e| WikiError::WriteFailed(format!("gix rev-parse: {e}")))?;
+    let commit = id.object().map_err(|e| WikiError::WriteFailed(format!("gix object: {e}")))?
+        .try_into_commit().map_err(|e| WikiError::WriteFailed(format!("not a commit: {e}")))?;
+    let target = if is_parent {
+        let pid = commit.parent_ids().next()
+            .ok_or_else(|| WikiError::WriteFailed("no parent".into()))?;
+        pid.object().map_err(|e| WikiError::WriteFailed(format!("parent object: {e}")))?
+            .try_into_commit().map_err(|e| WikiError::WriteFailed(format!("parent not commit: {e}")))?
+    } else {
+        commit
+    };
+    let tree = target.tree().map_err(|e| WikiError::WriteFailed(format!("tree: {e}")))?;
+    match tree.lookup_entry_by_path(&path).map_err(|e| WikiError::WriteFailed(format!("path lookup: {e}")))? {
+        Some(entry) => {
+            let blob = entry.object().map_err(|e| WikiError::WriteFailed(format!("blob: {e}")))?.into_blob();
+            Ok(String::from_utf8_lossy(&blob.data).into_owned())
+        }
+        None => Ok(String::new()),
+    }
 }
 
 fn format_time(time: gix::date::Time) -> String {
