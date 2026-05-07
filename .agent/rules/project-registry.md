@@ -128,7 +128,7 @@ Last updated: 2026-04-25.
 | service-email-egress-ews | Defect → `service-email-egress` | service | Doubly-nested; 6 sub-crates; consolidation pending |
 | service-email-egress-imap | Defect → `service-email-egress` | service | Same consolidation |
 | service-email-template | Scaffold-coded | service | 5 files |
-| service-extraction | Active | service | 21 files; CLAUDE.md present but stale (see NEXT.md Item 9) |
+| service-extraction | Active | service | Filesystem-watching JSON payload router; 149-line main.rs; CLAUDE.md added 2026-05-07 |
 | service-fs | Scaffold-coded | service | 3 files; in workspace members |
 | service-http | Scaffold-coded | service | 9 files |
 | service-market | Reserved-folder | service | Ring 2 data marketplace — outbound connectors (Snowflake, AWS Data Exchange, LiveRamp) + inbound Delta Sharing API; Doctrine claim #52 |
