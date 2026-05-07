@@ -32,9 +32,10 @@ sudo apt-get update -qq
 sudo apt-get install -y --no-install-recommends cuda-drivers
 
 # -- vLLM ----------------------------------------------------------------------
-echo "==> Installing vLLM >= 0.12"
-sudo pip3 install --upgrade pip
-sudo pip3 install "vllm>=0.12"
+echo "==> Installing vLLM >= 0.12 into /opt/vllm venv"
+sudo python3 -m venv /opt/vllm
+sudo /opt/vllm/bin/pip install --upgrade pip
+sudo /opt/vllm/bin/pip install "vllm>=0.12"
 
 # -- systemd units -------------------------------------------------------------
 echo "==> Installing vllm.service"

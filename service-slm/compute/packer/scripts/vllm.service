@@ -8,7 +8,7 @@ Type=simple
 # Model path is on the persistent weights disk mounted by rc.local at boot.
 # The service restarts on failure with a 10 s delay so a slow disk mount does
 # not permanently prevent startup.
-ExecStart=/usr/local/bin/python3 -m vllm.entrypoints.openai.api_server \
+ExecStart=/opt/vllm/bin/python3 -m vllm.entrypoints.openai.api_server \
     --model /data/weights/olmo-3-32b-think-q4.gguf \
     --tensor-parallel-size 1 \
     --port 8000 \
