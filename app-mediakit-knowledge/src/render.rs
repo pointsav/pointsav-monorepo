@@ -157,9 +157,9 @@ pub fn render_html_raw(body_md: &str, content_dir: &std::path::Path) -> String {
     options.extension.footnotes = true;
     options.extension.description_lists = true;
     options.extension.autolink = true;
-    options.extension.header_ids = Some("h-".to_string());
-    // unsafe_ stays false; we don't want raw HTML from authors yet.
-    options.render.unsafe_ = false;
+    options.extension.header_id_prefix = Some("h-".to_string());
+    // r#unsafe stays false; we don't want raw HTML from authors yet.
+    options.render.r#unsafe = false;
     let raw = markdown_to_html(body_md, &options);
     inject_wiki_prefixes(&raw, content_dir)
 }
