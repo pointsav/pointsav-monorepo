@@ -55,6 +55,7 @@ Last updated: 2026-04-25.
 | Project | State | Type | Notes |
 |---|---|---|---|
 | app-orchestration-bim | Reserved-folder | app-orchestration | 2 files (CLAUDE.md + RESEARCH.md byte-identical to app-console-bim copy, Task Claude — BIM to rationalise); triggered taxonomy expansion to seventh in-force domain on 2026-04-22; directory created 2026-04-23 (closes registry drift) |
+| app-orchestration-market | Reserved-folder | app-orchestration | Browser marketplace storefront; deployed as gateway-orchestration-market-N; Doctrine claim #52 |
 
 ## App — PrivateGit surface (`app-privategit-*`)
 
@@ -190,10 +191,10 @@ Last updated: 2026-04-25.
 
 - **Active:** 5 (`app-console-bookkeeper`, `app-workplace-presentation`, `app-workplace-proforma`, `service-extraction`, `service-slm`)
 - **Scaffold-coded:** 50
-- **Reserved-folder:** 38
+- **Reserved-folder:** 39
 - **Defect:** 5 (`pointsav-pty-bridge`, `service-parser`, `service-email-egress-ews`, `service-email-egress-imap`, `vendors-maxmind`)
 - **Not-a-project:** 2 (`discovery-queue`, `target`)
 - **Dormant:** 0
 - **Archived:** 0
 
-**Total rows:** 102.
+**Total rows:** 103.
