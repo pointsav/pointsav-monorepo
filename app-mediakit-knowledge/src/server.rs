@@ -171,7 +171,11 @@ pub fn router(state: AppState) -> Router {
         // segment, so the route captures `{slug}` as a single segment and
         // the handler strips an optional trailing `.md` for the
         // git-clone-style UX (`/git/topic-foo.md` or `/git/topic-foo`).
-        .route("/git/{slug}", get(git_markdown));
+        .route("/git/{slug}", get(git_markdown))
+        // Wikipedia-parity special pages
+        .route("/special/whatlinkshere/{slug}", get(what_links_here))
+        .route("/special/pageinfo/{slug}", get(page_info))
+        .route("/special/cite/{slug}", get(cite_page));
     // Phase 2 Step 7 — collab WebSocket relay; only mounted when the CLI
     // flag is set (default off — production deploys without --enable-collab
     // never expose the route).
@@ -1581,24 +1585,6 @@ async fn wiki_page(
         .clone()
         .unwrap_or_else(|| slug.clone());
         
-    // Retrieve Backlinks (What Links Here)
-    let backlinks_query = format!("\"{}\"", slug.split('/').last().unwrap_or(&slug));
-    let mut backlinks = Vec::new();
-    if let Ok(hits) = run_search(&state.search, &backlinks_query, 50) {
-        for hit in hits {
-            if hit.slug != slug {
-                backlinks.push(TopicSummary {
-                    slug: hit.slug,
-                    title: hit.title,
-                    last_edited: None,
-                    short_description: None,
-                    lede_first_line: "".to_string(),
-                    file_path: PathBuf::new(),
-                });
-            }
-        }
-    }
-        
     // E1: Resolve `cites:` frontmatter against citations.yaml for the ribbon.
     let citation_status: Option<&'static str> = if let Some(ref ids) = parsed.frontmatter.cites {
         if ids.is_empty() {
@@ -1619,7 +1605,7 @@ async fn wiki_page(
     };
 
     let pending_count = pending_count_for(&state, maybe_user.as_ref()).await;
-    Ok(wiki_chrome(&title, &slug, parsed.frontmatter, &body_html, headings, &backlinks, &state.site_title, maybe_user.as_ref(), pending_count, citation_status).into_response())
+    Ok(wiki_chrome(&title, &slug, parsed.frontmatter, &body_html, headings, &state.site_title, maybe_user.as_ref(), pending_count, citation_status).into_response())
 }
 
 async fn static_asset(Path(path): Path<String>) -> Response {
@@ -1662,7 +1648,6 @@ fn wiki_chrome(
     fm: Frontmatter,
     body_html: &str,
     headings: Vec<(String, String, u8)>,
-    backlinks: &[TopicSummary],
     site_title: &str,
     user: Option<&User>,
     pending_count: i64,
@@ -1682,11 +1667,24 @@ fn wiki_chrome(
              else { ("stale", "Not updated in over 2 years") })
     });
 
-    // Breadcrumb: derive category from frontmatter `category:` field,
-    // or from the slug prefix when the TOPIC is in a subdirectory.
-    let breadcrumb_category: Option<String> = fm.category.clone().or_else(|| {
-        slug.find('/').map(|pos| capitalise(&slug[..pos]))
-    });
+    // B5: Precompute ToC entries with hierarchical section numbers (1, 2, 2.1, etc.)
+    let numbered_headings: Vec<(String, String, u8, String)> = {
+        let mut counters = vec![0usize; 7];
+        headings.iter().map(|(id, text, level)| {
+            let lvl = *level as usize;
+            counters[lvl] += 1;
+            for c in &mut counters[lvl + 1..] {
+                *c = 0;
+            }
+            let num = counters[1..=lvl]
+                .iter()
+                .map(|n| n.to_string())
+                .collect::<Vec<_>>()
+                .join(".");
+            (id.clone(), text.clone(), *level, num)
+        })
+        .collect()
+    };
 
     html! {
         (DOCTYPE)
@@ -1740,51 +1738,52 @@ fn wiki_chrome(
                 }
                 div.mobile-nav-overlay #mobile-nav-overlay aria-hidden="true" {}
 
-                // Article-page two-column layout: left TOC rail + article body
+                // Article-page three-column layout: left rail + article body + right rail
                 div.wiki-layout {
 
-                    // --- Left rail: collapsible TOC (Vector 2022 sticky pattern) ---
-                    nav.wiki-toc #wiki-toc {
-                        div.toc-header {
-                            span.toc-title { "Contents" }
-                            button.toc-toggle #toc-toggle
-                                aria-controls="toc-list"
-                                aria-expanded="true"
-                                title="Toggle table of contents"
-                            { "[hide]" }
+                    // --- Left rail: navigation portlet + collapsible TOC ---
+                    div.wiki-left-rail {
+                        // Navigation portlet (Wikipedia: vector-main-menu)
+                        nav.wiki-nav-portlet aria-label="Navigation" {
+                            h3.wiki-portlet-heading { "Navigation" }
+                            ul.wiki-portlet-links {
+                                li { a href="/" { "Main page" } }
+                                li { a href="/random" { "Random article" } }
+                                li { a href="/wanted" { "Wanted articles" } }
+                                li { a href="/special/all-pages" { "All pages" } }
+                                li { a href="/special/recent-changes" { "Recent changes" } }
+                                li { a href="/special/statistics" { "Statistics" } }
+                                li { a href="/search" { "Search" } }
+                            }
                         }
-                        @if !headings.is_empty() {
-                            ol.toc-list #toc-list {
-                                @for (id, text, level) in &headings {
-                                    li class={ "toc-level-" (level) } {
-                                        a href={ "#" (id) } { (text) }
+                        // Contents / ToC portlet with hierarchical section numbers
+                        @if !numbered_headings.is_empty() {
+                            nav.wiki-toc #wiki-toc aria-label="Contents" {
+                                div.toc-header {
+                                    span.toc-title { "Contents" }
+                                    button.toc-toggle #toc-toggle
+                                        aria-controls="toc-list"
+                                        aria-expanded="true"
+                                        title="Toggle table of contents"
+                                    { "[hide]" }
+                                }
+                                ol.toc-list #toc-list {
+                                    @for (id, text, level, num) in &numbered_headings {
+                                        li class={ "toc-level-" (level) } {
+                                            a href={ "#" (id) } {
+                                                span.toc-numb { (num) }
+                                                " "
+                                                span.toc-text { (text) }
+                                            }
+                                        }
                                     }
                                 }
                             }
-                        }
-                        div.wiki-toc-tools {
-                            a href="/random" { "Random article" }
-                            a href="/wanted" { "Wanted articles" }
-                            a href="/special/all-pages" { "All pages" }
-                            a href="/special/recent-changes" { "Recent changes" }
-                            a href="/special/statistics" { "Statistics" }
-                            a href="/search" { "Search" }
                         }
                     }
 
                     // --- Main article column ---
                     main.wiki-main {
-
-                        // Breadcrumb navigation — "Documentation > Category > Title"
-                        @if let Some(ref cat) = breadcrumb_category {
-                            nav.wiki-breadcrumb aria-label="Breadcrumb" {
-                                a href="/" { (site_title) }
-                                span.wiki-breadcrumb-sep { " › " }
-                                a href={ "/category/" (cat.to_lowercase()) } { (cat) }
-                                span.wiki-breadcrumb-sep { " › " }
-                                span.wiki-breadcrumb-current { (title) }
-                            }
-                        }
 
                         // Title row: tabs (top-left) + title + language switcher + action tabs (top-right)
                         div.wiki-title-row {
@@ -1934,20 +1933,6 @@ fn wiki_chrome(
                                 (PreEscaped(body_html))
                             }
                         }
-                        
-                        // Backlinks footer
-                        @if !backlinks.is_empty() {
-                            section.wiki-backlinks {
-                                h2 { "What links here" }
-                                ul {
-                                    @for link in backlinks {
-                                        li {
-                                            a href={ "/wiki/" (link.slug) } { (link.title) }
-                                        }
-                                    }
-                                }
-                            }
-                        }
 
                         // E2: Research Trail Footer — collapsible <details> from frontmatter.
                         @if let Some(ref trail) = fm.research_trail {
@@ -2021,7 +2006,7 @@ fn wiki_chrome(
                                 }
                             }
 
-                            // License + about/contact links
+                            // License + trademark + about/contact links (Wikipedia footer pattern)
                             div.wiki-footer-meta {
                                 p.wiki-license {
                                     "Content is available under "
@@ -2030,12 +2015,46 @@ fn wiki_chrome(
                                     }
                                     " unless otherwise stated."
                                 }
+                                p.wiki-trademark {
+                                    "PointSav Digital Systems™, Foundry™, ToteboxOS™, and related marks are trademarks of "
+                                    "Woodfine Capital Projects Inc. All other trademarks are property of their respective owners."
+                                }
                                 nav.wiki-footer-links {
                                     a href="/wiki/about" { "About" }
                                     " · "
                                     a href="/wiki/contact" { "Contact" }
                                     " · "
                                     a href="/wiki/disclaimers" { "Disclaimers" }
+                                }
+                            }
+                        }
+                    }
+
+                    // --- Right rail: page tools portlet (B4 — Wikipedia toolbox) ---
+                    div.wiki-right-rail {
+                        nav.wiki-page-tools aria-label="Page tools" {
+                            h3.wiki-portlet-heading { "Tools" }
+                            ul.wiki-portlet-links {
+                                li {
+                                    a href={ "/special/whatlinkshere/" (slug) } {
+                                        "What links here"
+                                    }
+                                }
+                                li {
+                                    a href={ "/wiki/" (slug) } rel="bookmark"
+                                        title="Permanent link to this revision" {
+                                        "Permanent link"
+                                    }
+                                }
+                                li {
+                                    a href={ "/special/pageinfo/" (slug) } {
+                                        "Page information"
+                                    }
+                                }
+                                li {
+                                    a href={ "/special/cite/" (slug) } {
+                                        "Cite this page"
+                                    }
                                 }
                             }
                         }
@@ -2060,6 +2079,155 @@ fn wiki_chrome(
             }
         }
     }
+}
+
+// ─── Wikipedia-parity special page handlers ────────────────────────────────
+
+/// `GET /special/whatlinkshere/{slug}` — lists all articles that link to the
+/// given slug, equivalent to Wikipedia's Special:WhatLinksHere.
+async fn what_links_here(
+    Path(slug): Path<String>,
+    State(state): State<Arc<AppState>>,
+    CurrentUser(maybe_user): CurrentUser,
+) -> Result<Markup, WikiError> {
+    let pending_count = pending_count_for(&state, maybe_user.as_ref()).await;
+
+    // Use the same search approach as the old inline backlinks: search for the
+    // slug (last path component) as a quoted phrase.
+    let query = format!("\"{}\"", slug.split('/').last().unwrap_or(&slug));
+    let backlinks: Vec<TopicSummary> = run_search(&state.search, &query, 100)
+        .unwrap_or_default()
+        .into_iter()
+        .filter(|hit| hit.slug != slug)
+        .map(|hit| TopicSummary {
+            slug: hit.slug,
+            title: hit.title,
+            last_edited: None,
+            short_description: None,
+            lede_first_line: String::new(),
+            file_path: PathBuf::new(),
+        })
+        .collect();
+
+    let page_title = format!("Articles that link to: {slug}");
+    Ok(chrome(
+        &format!("{} — {}", page_title, state.site_title),
+        html! {
+            h1 { "What links here: " em { (slug) } }
+            @if backlinks.is_empty() {
+                p { "No other articles currently link to this page." }
+            } @else {
+                p { (backlinks.len()) " article(s) link here:" }
+                ul.wiki-backlinks-list {
+                    @for link in &backlinks {
+                        li {
+                            a href={ "/wiki/" (link.slug) } { (link.title) }
+                        }
+                    }
+                }
+            }
+        },
+        &state.site_title, maybe_user.as_ref(), pending_count,
+    ))
+}
+
+/// `GET /special/pageinfo/{slug}` — shows metadata for an article (title,
+/// category, status, last edited, word count), equivalent to Wikipedia's
+/// Special:PageInfo.
+async fn page_info(
+    Path(slug): Path<String>,
+    State(state): State<Arc<AppState>>,
+    CurrentUser(maybe_user): CurrentUser,
+) -> Result<Markup, WikiError> {
+    let pending_count = pending_count_for(&state, maybe_user.as_ref()).await;
+
+    // Load the article file to extract frontmatter.
+    let md_path = state.content_dir.join(format!("{slug}.md"));
+    let (title, category, status, last_edited, word_count) = if md_path.exists() {
+        let raw = tokio::fs::read_to_string(&md_path).await.unwrap_or_default();
+        let parsed = crate::render::parse_page(&raw)
+            .unwrap_or_else(|_| crate::render::ParsedPage {
+                frontmatter: crate::render::Frontmatter::default(),
+                body_md: raw.clone(),
+            });
+        let fm = parsed.frontmatter;
+        let title = fm.title.unwrap_or_else(|| slug.clone());
+        let category = fm.category.unwrap_or_else(|| "—".to_string());
+        let status = fm.status.unwrap_or_else(|| "stable".to_string());
+        let last_edited = fm.last_edited.unwrap_or_else(|| "—".to_string());
+        let word_count = parsed.body_md.split_whitespace().count();
+        (title, category, status, last_edited, word_count)
+    } else {
+        (slug.clone(), "—".to_string(), "—".to_string(), "—".to_string(), 0)
+    };
+
+    Ok(chrome(
+        &format!("Page information: {title} — {}", state.site_title),
+        html! {
+            h1 { "Page information: " em { (title) } }
+            table.wiki-info-table {
+                tr { th { "Field" } th { "Value" } }
+                tr { td { "Slug" }        td { code { (slug) } } }
+                tr { td { "Category" }    td { (category) } }
+                tr { td { "Status" }      td { (status) } }
+                tr { td { "Last edited" } td { (last_edited) } }
+                tr { td { "Word count" }  td { (word_count) } }
+            }
+            p { a href={ "/wiki/" (slug) } { "← Back to article" } }
+        },
+        &state.site_title, maybe_user.as_ref(), pending_count,
+    ))
+}
+
+/// `GET /special/cite/{slug}` — renders citation formats for the article
+/// (Wikipedia/APA/MLA), equivalent to Wikipedia's "Cite this page" tool.
+async fn cite_page(
+    Path(slug): Path<String>,
+    State(state): State<Arc<AppState>>,
+    CurrentUser(maybe_user): CurrentUser,
+) -> Result<Markup, WikiError> {
+    let pending_count = pending_count_for(&state, maybe_user.as_ref()).await;
+
+    let md_path = state.content_dir.join(format!("{slug}.md"));
+    let (title, last_edited) = if md_path.exists() {
+        let raw = tokio::fs::read_to_string(&md_path).await.unwrap_or_default();
+        let parsed = crate::render::parse_page(&raw)
+            .unwrap_or_else(|_| crate::render::ParsedPage {
+                frontmatter: crate::render::Frontmatter::default(),
+                body_md: raw.clone(),
+            });
+        let fm = parsed.frontmatter;
+        (
+            fm.title.unwrap_or_else(|| slug.clone()),
+            fm.last_edited.unwrap_or_else(|| "n.d.".to_string()),
+        )
+    } else {
+        (slug.clone(), "n.d.".to_string())
+    };
+
+    let url = format!("https://documentation.pointsav.com/wiki/{slug}");
+    let site = &state.site_title;
+    let apa = format!("PointSav Digital Systems. ({last_edited}). {title}. {site}. {url}");
+    let mla = format!(
+        "PointSav Digital Systems. \"{title}.\" {site}, {last_edited}, {url}."
+    );
+    let wiki = format!("{{{{cite web|url={url}|title={title}|website={site}|date={last_edited}}}}}");
+
+    Ok(chrome(
+        &format!("Cite: {title} — {site}"),
+        html! {
+            h1 { "Cite this page: " em { (title) } }
+            p { "Use one of the formats below to cite this article." }
+            h2 { "APA" }
+            pre.wiki-cite-block { (apa) }
+            h2 { "MLA" }
+            pre.wiki-cite-block { (mla) }
+            h2 { "Wikitext" }
+            pre.wiki-cite-block { (wiki) }
+            p { a href={ "/wiki/" (slug) } { "← Back to article" } }
+        },
+        &state.site_title, maybe_user.as_ref(), pending_count,
+    ))
 }
 
 // ─── Phase 3 Step 3.4 handlers ─────────────────────────────────────────────
@@ -3292,14 +3460,17 @@ mod tests {
         );
     }
 
-    /// Verify that the breadcrumb renders when `category:` frontmatter is present.
+    /// Verify that the navigation portlet and page tools render on article pages.
+    /// (Replaces the former breadcrumb test — breadcrumbs removed in the
+    /// Wikipedia-parity sprint; navigation portlet and right-rail tools portlet
+    /// are the Wikipedia-style replacement.)
     #[tokio::test]
-    async fn wiki_page_renders_breadcrumb_from_category() {
+    async fn wiki_page_renders_navigation_portlet() {
         let dir = tempfile::tempdir().unwrap();
         let state_dir = tempfile::tempdir().unwrap();
         tokio::fs::write(
-            dir.path().join("breadcrumb-test.md"),
-            "---\ntitle: Breadcrumb Test\ncategory: architecture\n---\nBody.\n",
+            dir.path().join("nav-portlet-test.md"),
+            "---\ntitle: Nav Portlet Test\ncategory: architecture\n---\nBody.\n",
         )
         .await
         .unwrap();
@@ -3325,7 +3496,7 @@ mod tests {
         let resp = app
             .oneshot(
                 Request::builder()
-                    .uri("/wiki/breadcrumb-test")
+                    .uri("/wiki/nav-portlet-test")
                     .body(Body::empty())
                     .unwrap(),
             )
@@ -3335,12 +3506,16 @@ mod tests {
         let body = resp.into_body().collect().await.unwrap().to_bytes();
         let html = std::str::from_utf8(&body).unwrap();
         assert!(
-            html.contains("wiki-breadcrumb"),
-            "breadcrumb nav should appear: {html}"
+            html.contains("wiki-nav-portlet"),
+            "navigation portlet should appear: {html}"
         );
         assert!(
-            html.contains("Documentation"),
-            "Documentation root link should appear in breadcrumb: {html}"
+            html.contains("wiki-page-tools"),
+            "page tools portlet should appear: {html}"
+        );
+        assert!(
+            !html.contains("wiki-breadcrumb"),
+            "breadcrumb nav must not appear (removed in Wikipedia-parity sprint): {html}"
         );
     }
 
