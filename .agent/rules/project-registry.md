@@ -24,6 +24,7 @@ Last updated: 2026-04-25.
 | app-console-input | Scaffold-coded | app-console | 6 files |
 | app-console-keys | Reserved-folder | app-console | READMEs only |
 | app-console-mesh | Reserved-folder | app-console | Placeholder |
+| app-console-market | Reserved-folder | app-console | Secure TUI marketplace surface for financial/health/legal data industries; Doctrine claim #52 |
 | app-console-minutebook | Reserved-folder | app-console | READMEs only |
 | app-console-people | Scaffold-coded | app-console | 5 files |
 | app-console-vault | Reserved-folder | app-console | Placeholder |
@@ -192,10 +193,10 @@ Last updated: 2026-04-25.
 
 - **Active:** 5 (`app-console-bookkeeper`, `app-workplace-presentation`, `app-workplace-proforma`, `service-extraction`, `service-slm`)
 - **Scaffold-coded:** 50
-- **Reserved-folder:** 40
+- **Reserved-folder:** 41
 - **Defect:** 5 (`pointsav-pty-bridge`, `service-parser`, `service-email-egress-ews`, `service-email-egress-imap`, `vendors-maxmind`)
 - **Not-a-project:** 2 (`discovery-queue`, `target`)
 - **Dormant:** 0
 - **Archived:** 0
 
-**Total rows:** 104.
+**Total rows:** 105.
