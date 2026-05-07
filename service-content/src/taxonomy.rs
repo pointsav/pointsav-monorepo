@@ -58,6 +58,16 @@ pub struct TopicRow {
     pub active_state: String,
 }
 
+#[derive(Debug, Clone)]
+pub struct GuideRow {
+    pub guide_id: String,
+    pub title: String,
+    pub domain: String,
+    pub wiki_repo: String,
+    pub wiki_path: String,
+    pub active_state: String,
+}
+
 #[derive(Debug, Default)]
 pub struct TaxonomyBundle {
     pub archetypes: Vec<ArchetypeRow>,
@@ -66,6 +76,7 @@ pub struct TaxonomyBundle {
     pub glossary: Vec<GlossaryRow>,
     pub themes: Vec<ThemeRow>,
     pub topics: Vec<TopicRow>,
+    pub guides: Vec<GuideRow>,
 }
 
 // ── Parsers ───────────────────────────────────────────────────────────────────
@@ -184,6 +195,26 @@ pub fn parse_topics(csv: &str) -> Result<Vec<TopicRow>, String> {
     Ok(rows)
 }
 
+pub fn parse_guides(csv: &str) -> Result<Vec<GuideRow>, String> {
+    let mut rdr = ReaderBuilder::new().flexible(true).from_reader(csv.as_bytes());
+    let mut rows = Vec::new();
+    for result in rdr.records() {
+        let r = result.map_err(|e| format!("guides CSV parse error: {e}"))?;
+        if r.len() < 6 {
+            return Err(format!("guides row has {} columns, need 6", r.len()));
+        }
+        rows.push(GuideRow {
+            guide_id: r[0].trim().to_string(),
+            title: r[1].trim().to_string(),
+            domain: r[2].trim().to_string(),
+            wiki_repo: r[3].trim().to_string(),
+            wiki_path: r[4].trim().to_string(),
+            active_state: r[5].trim().to_string(),
+        });
+    }
+    Ok(rows)
+}
+
 // ── Serializers (for GET /v1/config/* export) ────────────────────────────────
 
 #[allow(dead_code)]
@@ -235,6 +266,15 @@ pub fn serialize_topics(rows: &[TopicRow]) -> String {
     let mut out = String::from("topic_id,title,domain,wiki_repo,wiki_path,active_state\n");
     for r in rows {
         out.push_str(&csv_row(&[&r.topic_id, &r.title, &r.domain, &r.wiki_repo, &r.wiki_path, &r.active_state]));
+    }
+    out
+}
+
+#[allow(dead_code)]
+pub fn serialize_guides(rows: &[GuideRow]) -> String {
+    let mut out = String::from("guide_id,title,domain,wiki_repo,wiki_path,active_state\n");
+    for r in rows {
+        out.push_str(&csv_row(&[&r.guide_id, &r.title, &r.domain, &r.wiki_repo, &r.wiki_path, &r.active_state]));
     }
     out
 }
@@ -316,6 +356,18 @@ pub fn topics_to_entities(rows: &[TopicRow]) -> Vec<GraphEntity> {
     }).collect()
 }
 
+pub fn guides_to_entities(rows: &[GuideRow]) -> Vec<GraphEntity> {
+    rows.iter().map(|r| GraphEntity {
+        entity_name: r.title.clone(),
+        classification: "guide".to_string(),
+        role_vector: Some(r.domain.clone()),
+        location_vector: Some(r.wiki_path.clone()),
+        contact_vector: Some(r.wiki_repo.clone()),
+        module_id: "__taxonomy__".to_string(),
+        confidence: 1.0,
+    }).collect()
+}
+
 // ── Directory loader ──────────────────────────────────────────────────────────
 
 pub fn load_taxonomy_from_dir(ontology_dir: &str) -> Result<TaxonomyBundle, String> {
@@ -376,6 +428,14 @@ pub fn load_taxonomy_from_dir(ontology_dir: &str) -> Result<TaxonomyBundle, Stri
         }
     }
 
+    // Guides (Documentation domain only — GUIDE entity class per datagraph-guide-entity-class convention)
+    let guide_path = format!("{}/guides/guides_documentation.csv", ontology_dir);
+    if std::path::Path::new(&guide_path).exists() {
+        let csv = read(&guide_path)?;
+        let mut rows = parse_guides(skip_header(&csv))?;
+        bundle.guides.append(&mut rows);
+    }
+
     Ok(bundle)
 }
 
@@ -387,6 +447,7 @@ pub fn bundle_to_entities(bundle: &TaxonomyBundle) -> Vec<GraphEntity> {
     all.extend(glossary_to_entities(&bundle.glossary));
     all.extend(themes_to_entities(&bundle.themes));
     all.extend(topics_to_entities(&bundle.topics));
+    all.extend(guides_to_entities(&bundle.guides));
     all
 }
 
