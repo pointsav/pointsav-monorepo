@@ -209,9 +209,17 @@ async fn stop_gcp_instance(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::sync::{Mutex, OnceLock};
+
+    // Serialize tests that mutate process-global env vars.
+    static ENV_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
+    fn env_lock() -> &'static Mutex<()> {
+        ENV_LOCK.get_or_init(|| Mutex::new(()))
+    }
 
     #[test]
     fn from_env_returns_none_without_gcp_vars() {
+        let _g = env_lock().lock().unwrap();
         // All GCP env vars unset in test environment — should return None.
         // (SLM_YOYO_ENDPOINT may or may not be set; we rely on GCP vars being absent.)
         std::env::remove_var("SLM_YOYO_GCP_PROJECT");
@@ -226,6 +234,7 @@ mod tests {
 
     #[test]
     fn from_env_builds_config_with_all_vars() {
+        let _g = env_lock().lock().unwrap();
         std::env::set_var("SLM_YOYO_ENDPOINT", "http://1.2.3.4:8080");
         std::env::set_var("SLM_YOYO_IDLE_MINUTES", "45");
         std::env::set_var("SLM_YOYO_GCP_PROJECT", "my-project");
@@ -245,6 +254,7 @@ mod tests {
 
     #[test]
     fn from_env_builds_config_with_custom_metrics_key() {
+        let _g = env_lock().lock().unwrap();
         std::env::set_var("SLM_YOYO_ENDPOINT", "http://1.2.3.4:9443");
         std::env::set_var("SLM_YOYO_GCP_PROJECT", "pointsav-public");
         std::env::set_var("SLM_YOYO_GCP_ZONE", "us-west1-b");
