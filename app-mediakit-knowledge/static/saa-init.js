@@ -358,18 +358,21 @@ function buildSaaEditor(slot, slug, initialDoc, collabEnabled) {
     saveBtn.addEventListener('click', function () {
       var body = view.state.doc.toString();
       var userRole = (typeof window.WIKI_USER_ROLE === 'string') ? window.WIKI_USER_ROLE : 'admin';
-      var editSummary = '';
+      var summaryInput = document.getElementById('saa-summary');
+      var editSummary = summaryInput ? summaryInput.value.trim() : '';
 
       if (userRole !== 'admin') {
         // Editors must supply an edit summary before submitting.
-        var prompted = window.prompt(
-          'Describe your change (required for editors):\nExample: "Corrected terminology per glossary v3"'
-        );
-        if (!prompted || !prompted.trim()) {
-          setStatus('Edit summary required.', false);
-          return;
+        if (!editSummary) {
+          var prompted = window.prompt(
+            'Describe your change (required for editors):\nExample: "Corrected terminology per glossary v3"'
+          );
+          if (!prompted || !prompted.trim()) {
+            setStatus('Edit summary required.', false);
+            return;
+          }
+          editSummary = prompted.trim();
         }
-        editSummary = prompted.trim();
       }
 
       saveBtn.disabled = true;

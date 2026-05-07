@@ -1879,3 +1879,48 @@ body.login-body {
 .wiki-wanted-table th { background: #f6f8fa; font-weight: 600; }
 .wanted-count { text-align: center; font-variant-numeric: tabular-nums; }
 .wanted-sources { font-size: 0.85rem; color: #57606a; }
+
+/* ── A1: Footnote superscripts — Wikipedia-style blue [1] ──────────────── */
+sup.footnote-ref { line-height: 1; vertical-align: super; font-size: 0.75em; }
+sup.footnote-ref a { color: #3366cc; font-weight: 600; text-decoration: none; }
+sup.footnote-ref a:hover { text-decoration: underline; }
+section.footnotes { border-top: 1px solid #a2a9b1; margin-top: 2rem; padding-top: 0.75rem; font-size: 0.875rem; }
+section.footnotes ol { padding-left: 1.5rem; margin: 0; }
+section.footnotes li { margin: 0.25rem 0; color: #202122; }
+a.footnote-backref { color: #3366cc; text-decoration: none; margin-left: 0.25rem; }
+a.footnote-backref:hover { text-decoration: underline; }
+
+/* ── A2: Footnote hover tooltip ─────────────────────────────────────────── */
+.fn-tooltip {
+  position: absolute; z-index: 900; max-width: 380px; padding: 0.5rem 0.75rem;
+  background: #fff; border: 1px solid #a2a9b1; border-radius: 3px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15); font-size: 0.825rem; line-height: 1.5;
+  color: #202122; pointer-events: none;
+}
+.fn-tooltip p { margin: 0; }
+
+/* ── A6: Disambiguation page notice ─────────────────────────────────────── */
+.wiki-disambig-notice {
+  background: #f8f9fa; border: 1px solid #a2a9b1; border-radius: 3px;
+  padding: 0.5rem 0.75rem; margin-bottom: 1rem; font-size: 0.875rem; color: #54595d;
+}
+
+/* ── A4: TOC toolbox nav links ───────────────────────────────────────────── */
+.wiki-toc-tools {
+  margin-top: 1rem; padding-top: 0.5rem; border-top: 1px solid #eaecf0;
+  display: flex; flex-direction: column; gap: 0.25rem;
+}
+.wiki-toc-tools a { font-size: 0.8125rem; color: #3366cc; text-decoration: none; }
+.wiki-toc-tools a:hover { text-decoration: underline; }
+
+/* ── A7: Edit summary row ────────────────────────────────────────────────── */
+.editor-summary-row {
+  display: flex; align-items: center; gap: 0.5rem;
+  padding: 0.5rem 0.75rem; border-top: 1px solid #d0d7de; background: #f6f8fa;
+}
+.editor-summary-row label { font-size: 0.875rem; font-weight: 500; white-space: nowrap; color: #57606a; }
+.editor-summary-row input {
+  flex: 1; padding: 0.3rem 0.5rem; font-size: 0.875rem;
+  border: 1px solid #d0d7de; border-radius: 3px; outline: none;
+}
+.editor-summary-row input:focus { border-color: #0969da; box-shadow: 0 0 0 2px rgba(9,105,218,0.2); }

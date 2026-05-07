@@ -250,6 +250,61 @@
   }
 
   /* ------------------------------------------------------------------ *
+   * A2: Footnote hover tooltips                                         *
+   * Show the footnote body text on hover over [1] superscript links.   *
+   * ------------------------------------------------------------------ */
+
+  function initFootnoteTooltips() {
+    var refs = document.querySelectorAll('sup.footnote-ref a');
+    if (!refs.length) return;
+
+    var tip = document.createElement('div');
+    tip.className = 'fn-tooltip';
+    tip.setAttribute('aria-hidden', 'true');
+    tip.style.display = 'none';
+    document.body.appendChild(tip);
+
+    function getFootnoteText(href) {
+      // href is "#fn-1"; the li id is "fn-1"
+      var id = href.replace(/^#/, '');
+      var li = document.getElementById(id);
+      if (!li) return null;
+      // Clone so we can strip the backref arrow without mutating the DOM.
+      var clone = li.cloneNode(true);
+      var backref = clone.querySelector('.footnote-backref');
+      if (backref) backref.remove();
+      return clone.textContent.trim();
+    }
+
+    function showTip(anchor, text) {
+      tip.textContent = text;
+      tip.style.display = 'block';
+      var rect = anchor.getBoundingClientRect();
+      var top = window.scrollY + rect.bottom + 6;
+      var left = Math.min(window.scrollX + rect.left, window.innerWidth - 400);
+      tip.style.top = top + 'px';
+      tip.style.left = Math.max(8, left) + 'px';
+    }
+
+    refs.forEach(function (anchor) {
+      anchor.addEventListener('mouseenter', function () {
+        var text = getFootnoteText(anchor.getAttribute('href') || '');
+        if (text) showTip(anchor, text);
+      });
+      anchor.addEventListener('mouseleave', function () {
+        tip.style.display = 'none';
+      });
+      anchor.addEventListener('focus', function () {
+        var text = getFootnoteText(anchor.getAttribute('href') || '');
+        if (text) showTip(anchor, text);
+      });
+      anchor.addEventListener('blur', function () {
+        tip.style.display = 'none';
+      });
+    });
+  }
+
+  /* ------------------------------------------------------------------ *
    * Boot                                                                 *
    * ------------------------------------------------------------------ */
 
@@ -259,6 +314,7 @@
     initHoverCards();
     initGlossaryTooltips();
     initMobileNav();
+    initFootnoteTooltips();
   });
 
 }());
