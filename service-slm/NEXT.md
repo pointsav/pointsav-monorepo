@@ -1,6 +1,6 @@
 # NEXT.md — service-slm
 
-> Last updated: 2026-05-06 (DataGraph proxy endpoints + Stage-6 promote)
+> Last updated: 2026-05-07 (D4 image pipeline + nightly drain infrastructure)
 > Read at session start. Update before session end so the next
 > session knows where to pick up.
 
@@ -26,25 +26,31 @@ Reference: `service-slm/docs/topic-leapfrog-architecture.md`
   + `POST /v1/graph/mutate` in slm-doorman-server; proxy to service-content; audit-log
   as `graph-query` / `graph-mutation`; require `X-Foundry-Module-ID`; 167/167 tests.
 
-**Infrastructure Provisioning (Master Authorization Required — none can proceed without D4):**
-- [ ] **Tier C Auth:** Add billing-capped Anthropic API key to `/etc/local-doorman/local-doorman.env`
-  (`SLM_TIER_C_ANTHROPIC_ENDPOINT` + `SLM_TIER_C_ANTHROPIC_KEY`) — enables `audit_proxy`
-  and `service-content POST /v1/draft/generate`. Requires operator API key management.
-- [ ] **Re-enable apprenticeship:** Set `SLM_APPRENTICESHIP_ENABLED=true` in Doorman env
-  (was disabled post Phase 2).
-- [ ] **Yo-Yo idle-shutdown timer:** Runbook step 8 — ~$390/mo savings; 5 min operator time.
-- [ ] **Stage-6 promote:** 30+ commits ahead of origin/main; operator authorization needed.
+**Infrastructure Provisioning (Operator-gated — D4 code complete as of 2026-05-07):**
+
+D4 pipeline landed in canonical at `0140176`. Runbook: `docs/deploy/deploy-yoyo-tier-b.md`.
+
+- [ ] **Create GCP Project:** Physically create the `pointsav-public` GCP project.
+- [ ] **L4 quota:** Request `NVIDIA_L4_GPUS` quota in `us-west1` via GCP console.
+- [ ] **Build image:** `cd service-slm/compute/packer && packer build yoyo-image.pkr.hcl`
+  → publishes to `slm-yoyo` family in `pointsav-public`.
+- [ ] **Provision infra:** `cd service-slm/compute/opentofu && tofu apply` → VM + 100 GB SSD +
+  Instance Schedule (02:00 UTC nightly start) + firewall + IAM.
+- [ ] **Upload weights:** `gcloud compute scp olmo-3-32b-think-q4.gguf yoyo-tier-b-1:/data/weights/`
+- [ ] **Wire Doorman env vars:** Add 7 Tier B vars to `/etc/local-doorman/local-doorman.env`
+  (see `docs/deploy/local-doorman.env.example` and runbook Step 5).
+- [ ] **Restart Doorman + verify:** `sudo systemctl restart local-doorman` → `/readyz` must show
+  `has_yoyo: true`; circuit closes within 30 s of vLLM reporting healthy.
+- [ ] **Smoke test nightly drain:** Run `scripts/start-yoyo.sh`, push one shadow brief, confirm
+  drain + idle-shutdown fires after 30 min (runbook Step 7).
+- [ ] **Re-enable apprenticeship:** Set `SLM_APPRENTICESHIP_ENABLED=true` in Doorman env.
+- [ ] **Tier C Auth:** Add Anthropic API key to `local-doorman.env` — enables `audit_proxy`
+  and `service-content POST /v1/draft/generate`. Requires operator API key.
 - [ ] **cmake + C++ compiler:** `apt install cmake build-essential` on workspace VM
-  (required for `lbug = "0.16"` to compile at `cargo build` time in service-content).
-- [ ] **Create GCP Project:** Physically create the `pointsav-public` GCP project (D4 gate).
-- [ ] **D4 Image Pipeline:** Packer/OpenTofu pipeline → Ubuntu 24.04 + CUDA + vLLM ≥ 0.12
-  + Nginx TLS + idle-shutdown systemd timer. Bake → publish to `slm-yoyo` family.
-- [ ] **Deploy Yo-Yo #1 (Trainer):** `g2-standard-4` Spot; night-shift schedule; verify
-  idle-shutdown operational.
+  (required for `lbug = "0.16"` at `cargo build` time in service-content).
 - [ ] **Deploy Yo-Yo #2 (Extractor):** `a3-highgpu-1g` Dedicated; deploy when ready to
   process `cluster-totebox-jennifer`.
-- [ ] **Batch Ingestion:** Feed 1,600+ deployment files into Yo-Yo #2; monitor LadybugDB
-  graph growth.
+- [ ] **Batch Ingestion:** Feed 1,600+ deployment files into Yo-Yo #2; monitor LadybugDB growth.
 
 ---
 
