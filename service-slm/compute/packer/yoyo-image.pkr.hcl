@@ -14,7 +14,7 @@ variable "project_id" {
 
 variable "zone" {
   type    = string
-  default = "us-west1-a"
+  default = "us-central1-a"
 }
 
 variable "vllm_port" {
