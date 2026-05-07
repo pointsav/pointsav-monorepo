@@ -1,7 +1,7 @@
 variable "project_id" {
   description = "GCP project ID where Yo-Yo resources are created."
   type        = string
-  default     = "pointsav-public"
+  default     = "woodfine-node-gcp-free"
 }
 
 variable "region" {
