@@ -30,10 +30,10 @@ Reference: `service-slm/docs/topic-leapfrog-architecture.md`
 
 D4 pipeline landed in canonical at `0140176`. Runbook: `docs/deploy/deploy-yoyo-tier-b.md`.
 
-- [ ] **Create GCP Project:** Physically create the `pointsav-public` GCP project.
+- [ ] **Create GCP Project:** Physically create the `woodfine-node-gcp-free` GCP project.
 - [ ] **L4 quota:** Request `NVIDIA_L4_GPUS` quota in `us-west1` via GCP console.
 - [ ] **Build image:** `cd service-slm/compute/packer && packer build yoyo-image.pkr.hcl`
-  → publishes to `slm-yoyo` family in `pointsav-public`.
+  → publishes to `slm-yoyo` family in `woodfine-node-gcp-free`.
 - [ ] **Provision infra:** `cd service-slm/compute/opentofu && tofu apply` → VM + 100 GB SSD +
   Instance Schedule (02:00 UTC nightly start) + firewall + IAM.
 - [ ] **Upload weights:** `gcloud compute scp olmo-3-32b-think-q4.gguf yoyo-tier-b-1:/data/weights/`
@@ -311,7 +311,7 @@ All four sit at workspace-repo / infrastructure path; outbox
 
 ## Critical sequence (revised post-PS.1-1)
 
-1. **D4** (Master) → create `pointsav-public` GCP project + build
+1. **D4** (Master) → create `woodfine-node-gcp-free` GCP project + build
    first slm-yoyo image (vLLM ≥0.12 + nginx TLS + CUDA + Ubuntu 24.04)
 2. **Yo-Yo MIN deploy** (operator-gate; Master orchestrates) —
    only after D4
