@@ -14,8 +14,18 @@ Last updated: 2026-05-07.
 
 ### Leapfrog 2030 Architecture & Multi-Yo-Yo Roadmap
 - **Software layer complete** (177/177 tests, canonical `ecfc691`). See `service-slm/NEXT.md`.
-- **Infrastructure Provisioning** — operator-gated. GCP project + L4 quota + packer build +
-  tofu apply + weights upload + Doorman env vars. Runbook: `service-slm/docs/deploy/deploy-yoyo-tier-b.md`.
+- **Yo-Yo #1 VM live** — `yoyo-tier-b-1` provisioned 2026-05-07 in `us-central1-a`
+  (Spot g2-standard-4 + L4, image `slm-yoyo-20260507-061137`). Doorman wired
+  (`has_yoyo: true`). Nginx TLS + bearer auth verified working.
+- **Remaining operator steps:**
+  1. Upload OLMo 3 32B-Think Q4 weights (~20 GB) to `/data/weights/olmo-3-32b-think-q4.gguf`
+     on the Yo-Yo VM via `gcloud compute scp`.
+  2. Grant `roles/compute.instanceAdmin.v1` to the Compute Engine SA
+     (`369270631281-compute@developer.gserviceaccount.com`) in GCP console — needed for
+     Doorman idle monitor to auto-stop the VM.
+  3. Run smoke test per `service-slm/docs/deploy/deploy-yoyo-tier-b.md` §8.
+  4. Re-enable apprenticeship: set `SLM_APPRENTICESHIP_ENABLED=true` in `local-doorman.env`.
+- Runbook: `service-slm/docs/deploy/deploy-yoyo-tier-b.md`.
 
 ### Layout hygiene — defect closures queued
 
