@@ -80,7 +80,7 @@ Last updated: 2026-04-25.
 | Project | State | Type | Notes |
 |---|---|---|---|
 | app-workplace-bim | Reserved-folder | app-workplace | 2 files (CLAUDE.md + RESEARCH.md); research phase; directory created 2026-04-23 (closes registry drift) |
-| app-workplace-memo | Scaffold-coded | app-workplace | 47 files; running on Linux Mint per sibling's doc; CLAUDE.md + NEXT.md pending for Active |
+| app-workplace-memo | Active | app-workplace | 47 files; Tauri v1 (macOS dev) / v2 (Linux prod); walking skeleton unverified; CLAUDE.md + NEXT.md added 2026-05-07 |
 | app-workplace-presentation | Active | app-workplace | 52 files; CLAUDE.md present; Phase 5 |
 | app-workplace-proforma | Active | app-workplace | 45 files; CLAUDE.md present but marked "local-only"; conformance pending |
 
@@ -193,8 +193,8 @@ Last updated: 2026-04-25.
 
 ## Summary (2026-04-22 baseline)
 
-- **Active:** 5 (`app-console-bookkeeper`, `app-workplace-presentation`, `app-workplace-proforma`, `service-extraction`, `service-slm`)
-- **Scaffold-coded:** 50
+- **Active:** 6 (`app-console-bookkeeper`, `app-workplace-memo`, `app-workplace-presentation`, `app-workplace-proforma`, `service-extraction`, `service-slm`)
+- **Scaffold-coded:** 49
 - **Reserved-folder:** 43
 - **Defect:** 5 (`pointsav-pty-bridge`, `service-parser`, `service-email-egress-ews`, `service-email-egress-imap`, `vendors-maxmind`)
 - **Not-a-project:** 2 (`discovery-queue`, `target`)
