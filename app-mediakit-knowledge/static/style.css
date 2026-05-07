@@ -685,6 +685,22 @@ article table th { background: var(--bg-chrome); font-weight: 600; }
 
 .header-search button:hover { background: var(--border); }
 
+/* D2: search autocomplete wrapper + dropdown */
+.header-search-wrap { position: relative; flex: 1; display: flex; }
+.header-search-wrap input[type="search"] { flex: 1; }
+#search-autocomplete-dropdown {
+  position: absolute; top: 100%; left: 0; right: 0;
+  background: var(--bg); border: 1px solid var(--border);
+  border-top: none; border-radius: 0 0 3px 3px;
+  box-shadow: 0 4px 8px rgba(0,0,0,.12);
+  z-index: 200; max-height: 240px; overflow-y: auto;
+}
+.ac-item {
+  padding: 0.4rem 0.6rem; font-size: 0.875rem; cursor: pointer;
+  color: var(--fg); border-bottom: 1px solid var(--bg-chrome);
+}
+.ac-item:hover, .ac-item.ac-active { background: var(--bg-chrome); }
+
 @media (max-width: 600px) {
   .header-search { display: none; }
 }
@@ -1693,6 +1709,33 @@ body.login-body {
   padding: 0.1rem 0.5rem;
 }
 
+/* D1: Two-column word-level diff */
+.diff-header { font-size: 0.875rem; color: var(--muted-fg, #6b7280); margin-bottom: 0.5rem; }
+.diff-two-col-wrap { overflow-x: auto; }
+.diff-two-col {
+  width: 100%; border-collapse: collapse;
+  font-family: var(--mono, 'Fira Code', monospace); font-size: 0.82rem; line-height: 1.5;
+}
+.diff-two-col th {
+  background: #eaecf0; padding: 0.25rem 0.5rem;
+  text-align: left; border: 1px solid #a2a9b1; font-size: 0.8rem;
+}
+.diff-col-old, .diff-cell-old { width: 50%; }
+.diff-col-new, .diff-cell-new { width: 50%; }
+.diff-two-col td {
+  padding: 0.1rem 0.5rem; vertical-align: top;
+  border: 1px solid #e0e0e0; white-space: pre-wrap; word-break: break-word;
+}
+.diff-row-eq td { color: var(--muted-fg, #6b7280); }
+.diff-row-del .diff-cell-old { background: #ffeef0; }
+.diff-row-del .diff-cell-new { background: #f8f9fa; }
+.diff-row-ins .diff-cell-old { background: #f8f9fa; }
+.diff-row-ins .diff-cell-new { background: #e6ffec; }
+.diff-row-chg .diff-cell-old { background: #ffeef0; }
+.diff-row-chg .diff-cell-new { background: #e6ffec; }
+.diff-two-col del { background: #fdb8c0; text-decoration: none; border-radius: 2px; }
+.diff-two-col ins { background: #acf2bd; text-decoration: none; border-radius: 2px; }
+
 /* Review action forms */
 .pending-review-forms {
   display: flex;
@@ -1924,3 +1967,171 @@ a.footnote-backref:hover { text-decoration: underline; }
   border: 1px solid #d0d7de; border-radius: 3px; outline: none;
 }
 .editor-summary-row input:focus { border-color: #0969da; box-shadow: 0 0 0 2px rgba(9,105,218,0.2); }
+
+/* ── E1: Citation Authority Ribbon ──────────────────────────────────────── */
+.citation-ribbon {
+  display: flex; align-items: center; gap: 0.4rem;
+  padding: 0.3rem 0.75rem; margin-bottom: 0.5rem;
+  font-size: 0.8rem; border-radius: 3px; border-left: 3px solid currentColor;
+}
+.citation-ribbon-green  { background: #d1fae5; color: #065f46; }
+.citation-ribbon-amber  { background: #fef3c7; color: #92400e; }
+.citation-ribbon-red    { background: #fee2e2; color: #991b1b; }
+.citation-ribbon-icon   { font-weight: 700; font-size: 0.9rem; }
+
+/* ── E2: Research Trail Footer ───────────────────────────────────────────── */
+.wiki-research-trail {
+  margin: 1.5rem 0; padding: 0.5rem 0.75rem;
+  background: #f8f9fa; border: 1px solid #eaecf0; border-radius: 3px;
+  font-size: 0.875rem;
+}
+.wiki-research-trail summary {
+  cursor: pointer; font-weight: 600; color: #3366cc;
+  list-style: none; display: flex; align-items: center; gap: 0.4rem;
+}
+.wiki-research-trail summary::before { content: '▸'; font-size: 0.75rem; }
+.wiki-research-trail[open] summary::before { content: '▾'; }
+.wiki-research-trail-dl { margin: 0.75rem 0 0; display: grid; grid-template-columns: max-content 1fr; gap: 0.25rem 1rem; }
+.wiki-research-trail-dl dt { font-weight: 500; color: #54595d; }
+.wiki-research-trail-dl dd { margin: 0; }
+.wiki-research-trail-dl ul { margin: 0; padding-left: 1.2rem; }
+
+/* ── E4: Freshness Ribbon ────────────────────────────────────────────────── */
+.freshness-ribbon {
+  display: inline-flex; align-items: center;
+  padding: 0.2rem 0.6rem; border-radius: 3px;
+  font-size: 0.75rem; font-weight: 500; margin-bottom: 0.5rem;
+}
+.freshness-current  { background: #d1fae5; color: #065f46; }
+.freshness-recent   { background: #dbeafe; color: #1e40af; }
+.freshness-aging    { background: #fef3c7; color: #92400e; }
+.freshness-stale    { background: #fee2e2; color: #991b1b; }
+
+/* ── C: Special pages ────────────────────────────────────────────────────── */
+.wiki-special-intro { color: #54595d; font-size: 0.9rem; margin-bottom: 1rem; }
+.wiki-special-table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+.wiki-special-table th, .wiki-special-table td {
+  border: 1px solid #a2a9b1; padding: 0.35rem 0.6rem; text-align: left;
+}
+.wiki-special-table th { background: #eaecf0; font-weight: 600; }
+.wiki-special-table tr:nth-child(even) td { background: #f8f9fa; }
+.rc-date { white-space: nowrap; font-size: 0.85rem; color: #54595d; }
+.rc-author { white-space: nowrap; }
+.rc-sha { font-family: monospace; font-size: 0.8rem; color: #54595d; }
+.wiki-allpages-jump { margin-bottom: 1rem; font-size: 0.9rem; }
+.wiki-allpages-jump a { margin-right: 0.3rem; font-weight: 600; }
+.wiki-allpages-list { column-count: 3; column-gap: 1.5rem; list-style: disc; padding-left: 1.5rem; }
+.wiki-allpages-list li { break-inside: avoid; }
+@media (max-width: 720px) { .wiki-allpages-list { column-count: 1; } }
+
+/* ── C4: Talk pages ──────────────────────────────────────────────────────── */
+.wiki-talk-empty { color: #54595d; font-style: italic; margin: 1.5rem 0; }
+.wiki-talk-post { margin-top: 2rem; border-top: 1px solid #eaecf0; padding-top: 1rem; }
+.wiki-talk-post h2 { font-size: 1.1rem; margin-bottom: 0.75rem; }
+.talk-form-row { display: flex; flex-direction: column; gap: 0.25rem; margin-bottom: 0.75rem; }
+.talk-form-row label { font-size: 0.875rem; font-weight: 500; color: #57606a; }
+.talk-form-row input, .talk-form-row textarea {
+  padding: 0.4rem 0.5rem; font-size: 0.9rem;
+  border: 1px solid #d0d7de; border-radius: 3px; outline: none; font-family: inherit;
+}
+.talk-form-row input:focus, .talk-form-row textarea:focus {
+  border-color: #0969da; box-shadow: 0 0 0 2px rgba(9,105,218,0.2);
+}
+.wiki-btn {
+  display: inline-block; padding: 0.4rem 1rem; font-size: 0.9rem; font-weight: 500;
+  background: #0969da; color: #fff; border: none; border-radius: 4px; cursor: pointer;
+}
+.wiki-btn:hover { background: #0550ae; }
+
+/* ── B2: Infobox — Wikipedia-style float-right summary table ─────────────── */
+.infobox {
+  float: right; clear: right;
+  margin: 0 0 1rem 1.5rem;
+  padding: 0.5rem;
+  background: #f8f9fa;
+  border: 1px solid #a2a9b1;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  max-width: 22em;
+  width: auto;
+}
+.infobox tbody tr { vertical-align: top; }
+.infobox th {
+  background: #eaecf0;
+  font-weight: 500;
+  padding: 0.25rem 0.5rem;
+  text-align: right;
+  white-space: nowrap;
+  width: 40%;
+  border: 1px solid #a2a9b1;
+}
+.infobox td {
+  padding: 0.25rem 0.5rem;
+  border: 1px solid #a2a9b1;
+}
+@media (max-width: 720px) {
+  .infobox { float: none; margin: 0 0 1rem 0; width: 100%; max-width: 100%; }
+}
+
+/* ── B3: Navbox — collapsible horizontal navigation table ────────────────── */
+.navbox {
+  clear: both;
+  margin: 1.5rem 0 0.5rem;
+  padding: 0;
+  background: #f8f9fa;
+  border: 1px solid #a2a9b1;
+  font-size: 0.875rem;
+  width: 100%;
+}
+.navbox-title {
+  background: #cee0f2;
+  font-weight: 600;
+  padding: 0.25rem 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  user-select: none;
+}
+.navbox-title::after {
+  content: '\25BE'; /* ▾ */
+  font-size: 0.75rem;
+  margin-left: auto;
+  transition: transform 0.15s;
+}
+.navbox.navbox-collapsed .navbox-title::after {
+  transform: rotate(-90deg);
+}
+.navbox-content {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  padding: 0.5rem;
+  border-top: 1px solid #a2a9b1;
+}
+.navbox.navbox-collapsed .navbox-content { display: none; }
+.navbox-group {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  min-width: 12em;
+}
+.navbox-group-label {
+  font-weight: 500;
+  color: #54595d;
+  white-space: nowrap;
+}
+.navbox-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem 0.6rem;
+}
+.navbox-list li::before { content: '\00B7'; color: #a2a9b1; margin-right: 0.2rem; }
+.navbox-list li:first-child::before { content: ''; margin-right: 0; }
+.navbox-list a { color: #3366cc; text-decoration: none; }
+.navbox-list a:hover { text-decoration: underline; }
