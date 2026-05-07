@@ -7,13 +7,19 @@ variable "project_id" {
 variable "region" {
   description = "GCP region."
   type        = string
-  default     = "us-central1"
+  default     = "southamerica-east1"
 }
 
 variable "zone" {
   description = "GCP zone within the region."
   type        = string
-  default     = "us-central1-a"
+  default     = "southamerica-east1-b"
+}
+
+variable "fallback_zones" {
+  description = "Ordered fallback zone list for Spot preemption cycling. start-yoyo.sh tries these in order if the primary zone is unavailable."
+  type        = list(string)
+  default     = ["southamerica-east1-b", "southamerica-east1-c", "southamerica-east1-a", "northamerica-northeast1-a", "us-central1-a"]
 }
 
 variable "instance_name" {
@@ -26,6 +32,12 @@ variable "start_time_utc" {
   description = "Nightly start time in UTC (HH:MM). GCP Instance Schedule fires instances.start at this time every day."
   type        = string
   default     = "02:00"
+}
+
+variable "stop_time_utc" {
+  description = "Hard-stop time in UTC (HH:MM). GCP Instance Schedule fires instances.stop regardless of idle monitor state. Prevents indefinite runtime if idle monitor crashes."
+  type        = string
+  default     = "06:00"
 }
 
 variable "bearer_token" {
