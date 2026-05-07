@@ -9,7 +9,7 @@ packer {
 
 variable "project_id" {
   type    = string
-  default = "pointsav-public"
+  default = "woodfine-node-gcp-free"
 }
 
 variable "zone" {
