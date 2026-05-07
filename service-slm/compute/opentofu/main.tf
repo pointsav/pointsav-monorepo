@@ -56,7 +56,7 @@ resource "google_compute_instance" "yoyo_tier_b" {
   tags = ["yoyo-tier-b"]
 
   scheduling {
-    # Spot (preemptible) for cost; L4 Spot availability is generally good in us-west1.
+    # Spot (preemptible) for cost.
     preemptible        = true
     automatic_restart  = false
     on_host_maintenance = "TERMINATE"
@@ -94,7 +94,7 @@ resource "google_compute_instance" "yoyo_tier_b" {
   }
 
   guest_accelerator {
-    type  = "nvidia-tesla-l4"
+    type  = "nvidia-l4"
     count = 1
   }
 
