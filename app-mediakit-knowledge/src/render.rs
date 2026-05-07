@@ -14,7 +14,7 @@
 //! - `short_description`: one-sentence article summary; rendered as italic
 //!   subtitle below the H1 (Wikipedia Vector 2022 article-subtitle pattern)
 
-use comrak::{markdown_to_html, Options};
+use comrak::{Arena, format_html, nodes::{NodeHtmlBlock, NodeValue}, parse_document, Options};
 use serde::Deserialize;
 use std::collections::BTreeMap;
 
@@ -96,6 +96,18 @@ pub struct Frontmatter {
     #[serde(default)]
     pub disambig: Option<bool>,
 
+    /// Sprint E1: list of citation IDs declared in this article. Each ID is
+    /// resolved against `citations.yaml`; the aggregate verification status drives
+    /// the Citation Authority Ribbon colour (green / amber / red).
+    #[serde(default)]
+    pub cites: Option<Vec<String>>,
+
+    /// Sprint E2: research-trail metadata block. Fields:
+    ///   query, sources, date, confidence, notes
+    /// Rendered as a collapsible `<details>` block at the end of the article body.
+    #[serde(default)]
+    pub research_trail: Option<BTreeMap<String, serde_yaml::Value>>,
+
     #[serde(flatten)]
     pub extra: BTreeMap<String, serde_yaml::Value>,
 }
@@ -148,6 +160,10 @@ pub fn render_html(body_md: &str, content_dir: &std::path::Path) -> String {
 
 /// Like `render_html` but returns the raw comrak output without edit-pencil
 /// injection. Use this as the input to `extract_headings` for TOC generation.
+///
+/// Sprint B: uses comrak's AST API so that fenced code blocks with info strings
+/// "infobox" and "navbox" can be walked and replaced with structured HTML before
+/// final rendering.
 pub fn render_html_raw(body_md: &str, content_dir: &std::path::Path) -> String {
     let mut options = Options::default();
     options.extension.wikilinks_title_after_pipe = true;
@@ -160,8 +176,100 @@ pub fn render_html_raw(body_md: &str, content_dir: &std::path::Path) -> String {
     options.extension.header_id_prefix = Some("h-".to_string());
     // r#unsafe stays false; we don't want raw HTML from authors yet.
     options.render.r#unsafe = false;
-    let raw = markdown_to_html(body_md, &options);
+
+    let arena = Arena::new();
+    let root = parse_document(&arena, body_md, &options);
+
+    // B2/B3: Walk AST and replace infobox/navbox fenced blocks with HTML.
+    for node in root.descendants() {
+        let new_val = {
+            let data = node.data.borrow();
+            if let NodeValue::CodeBlock(ref cb) = data.value {
+                if cb.info == "infobox" {
+                    render_infobox(&cb.literal).map(|html| NodeValue::HtmlBlock(NodeHtmlBlock { block_type: 6, literal: html }))
+                } else if cb.info == "navbox" {
+                    render_navbox(&cb.literal).map(|html| NodeValue::HtmlBlock(NodeHtmlBlock { block_type: 6, literal: html }))
+                } else {
+                    None
+                }
+            } else {
+                None
+            }
+        };
+        if let Some(v) = new_val {
+            node.data.borrow_mut().value = v;
+        }
+    }
+
+    let mut raw = String::new();
+    format_html(root, &options, &mut raw).expect("comrak format_html");
     inject_wiki_prefixes(&raw, content_dir)
+}
+
+/// B2: Render an infobox YAML body as a Wikipedia-style float-right summary table.
+///
+/// Accepts any flat YAML mapping (key: value pairs). Unknown keys render verbatim.
+/// Returns None if the YAML fails to parse — the code block is left unchanged.
+fn render_infobox(yaml: &str) -> Option<String> {
+    let map: serde_yaml::Mapping = serde_yaml::from_str(yaml).ok()?;
+    let mut html = String::from("<table class=\"infobox\">\n<tbody>\n");
+    for (k, v) in &map {
+        let key = yaml_val_to_string(k);
+        let val = yaml_val_to_string(v);
+        html.push_str(&format!("<tr><th>{}</th><td>{}</td></tr>\n", escape_html(&key), escape_html(&val)));
+    }
+    html.push_str("</tbody>\n</table>\n");
+    Some(html)
+}
+
+/// B3: Render a navbox YAML body as a collapsible horizontal navigation table.
+///
+/// Expected YAML structure:
+/// ```yaml
+/// title: "Navigation title"
+/// groups:
+///   - label: "Group label"
+///     links:
+///       - text: "Link text"
+///         slug: "article-slug"
+/// ```
+/// Returns None if the YAML fails to parse.
+fn render_navbox(yaml: &str) -> Option<String> {
+    let val: serde_yaml::Value = serde_yaml::from_str(yaml).ok()?;
+    let title = val.get("title").and_then(|v| v.as_str()).unwrap_or("Navigation");
+    let mut html = format!(
+        "<div class=\"navbox\">\n<div class=\"navbox-title\">{}</div>\n<div class=\"navbox-content\">\n",
+        escape_html(title)
+    );
+    if let Some(groups) = val.get("groups").and_then(|g| g.as_sequence()) {
+        for group in groups {
+            let label = group.get("label").and_then(|l| l.as_str()).unwrap_or("");
+            html.push_str(&format!("<div class=\"navbox-group\">\n<span class=\"navbox-group-label\">{}</span>\n<ul class=\"navbox-list\">\n", escape_html(label)));
+            if let Some(links) = group.get("links").and_then(|l| l.as_sequence()) {
+                for link in links {
+                    let text = link.get("text").and_then(|t| t.as_str()).unwrap_or("");
+                    let slug = link.get("slug").and_then(|s| s.as_str()).unwrap_or("");
+                    html.push_str(&format!("<li><a href=\"/wiki/{}\">{}</a></li>\n", escape_html(slug), escape_html(text)));
+                }
+            }
+            html.push_str("</ul>\n</div>\n");
+        }
+    }
+    html.push_str("</div>\n</div>\n");
+    Some(html)
+}
+
+fn yaml_val_to_string(v: &serde_yaml::Value) -> String {
+    match v {
+        serde_yaml::Value::String(s) => s.clone(),
+        serde_yaml::Value::Number(n) => n.to_string(),
+        serde_yaml::Value::Bool(b) => b.to_string(),
+        _ => String::new(),
+    }
+}
+
+fn escape_html(s: &str) -> String {
+    s.replace('&', "&amp;").replace('<', "&lt;").replace('>', "&gt;").replace('"', "&quot;")
 }
 
 /// Walk rendered HTML and prefix any `href="slug" data-wikilink="true"` generated
