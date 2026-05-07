@@ -12,3 +12,12 @@ target/
 service-slm/router-trainer/engine/llamafile
 service-slm/router-trainer/**/*.log
 node_modules/
+
+# Customer deployment instances — local-only, not tracked per CLAUDE.md §10
+woodfine-fleet-deployment/
+
+# Runtime data directories
+service-content/data/
+
+# Agent runtime lock files
+.agent/scheduled_tasks.lock
