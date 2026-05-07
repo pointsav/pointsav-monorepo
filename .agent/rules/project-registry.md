@@ -125,6 +125,7 @@ Last updated: 2026-04-25.
 | service-extraction | Active | service | 21 files; CLAUDE.md present but stale (see NEXT.md Item 9) |
 | service-fs | Scaffold-coded | service | 3 files; in workspace members |
 | service-http | Scaffold-coded | service | 9 files |
+| service-market | Reserved-folder | service | Ring 2 data marketplace — outbound connectors (Snowflake, AWS Data Exchange, LiveRamp) + inbound Delta Sharing API; Doctrine claim #52 |
 | service-message-courier | Reserved-folder | service | 1 file |
 | service-parser | Defect → remove | service | Legacy name; canonical is `service-extraction`; removal pending |
 | service-people | Scaffold-coded | service | 17 files; in workspace members |
@@ -188,10 +189,10 @@ Last updated: 2026-04-25.
 
 - **Active:** 5 (`app-console-bookkeeper`, `app-workplace-presentation`, `app-workplace-proforma`, `service-extraction`, `service-slm`)
 - **Scaffold-coded:** 50
-- **Reserved-folder:** 36
+- **Reserved-folder:** 37
 - **Defect:** 5 (`pointsav-pty-bridge`, `service-parser`, `service-email-egress-ews`, `service-email-egress-imap`, `vendors-maxmind`)
 - **Not-a-project:** 2 (`discovery-queue`, `target`)
 - **Dormant:** 0
 - **Archived:** 0
 
-**Total rows:** 100.
+**Total rows:** 101.
