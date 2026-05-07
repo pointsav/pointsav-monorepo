@@ -193,9 +193,12 @@ async fn stop_gcp_instance(
         "https://compute.googleapis.com/compute/v1/projects/{}/zones/{}/instances/{}/stop",
         config.gcp_project, config.gcp_zone, config.gcp_instance
     );
+    // GCP Compute Engine API requires Content-Length: 0 on empty-body POSTs.
+    // reqwest omits the header by default, causing HTTP 411.
     let resp = client
         .post(&url)
         .bearer_auth(&token)
+        .body("")
         .send()
         .await
         .map_err(|e| format!("GCP API request failed: {e}"))?;
