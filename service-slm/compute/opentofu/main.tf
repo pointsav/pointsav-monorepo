@@ -12,11 +12,12 @@ provider "google" {
   region  = var.region
 }
 
-# ── Instance Schedule (nightly start) ────────────────────────────────────────
+# ── Instance Schedule (nightly start + hard stop) ────────────────────────────
 # Fires instances.start every night at var.start_time_utc (default 02:00 UTC).
-# There is intentionally no vm_stop_schedule: the Doorman idle monitor on the
-# workspace VM calls instances.stop via the Compute Engine API after 30 minutes
-# of idle (configurable via SLM_YOYO_IDLE_MINUTES).
+# Fires instances.stop at var.stop_time_utc (default 06:00 UTC) as a hard cap.
+# The Doorman idle monitor will typically stop the VM sooner (after 30 min idle
+# via SLM_YOYO_IDLE_MINUTES), but the stop schedule is a safety net if the idle
+# monitor crashes or loses connectivity.
 
 resource "google_compute_resource_policy" "nightly_start" {
   name   = "${var.instance_name}-nightly-start"
@@ -26,6 +27,9 @@ resource "google_compute_resource_policy" "nightly_start" {
     time_zone = "UTC"
     vm_start_schedule {
       schedule = "0 ${split(":", var.start_time_utc)[0]} * * *"
+    }
+    vm_stop_schedule {
+      schedule = "0 ${split(":", var.stop_time_utc)[0]} * * *"
     }
   }
 }
