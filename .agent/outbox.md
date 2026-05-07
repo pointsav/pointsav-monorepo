@@ -8,158 +8,78 @@ schema: foundry-mailbox-v1
 # Outbox — Task Claude on project-intelligence cluster
 
 ---
-from: task-project-intelligence
-to: master
-re: Yo-Yo #1 nightly drain cycle — idle monitor fix + VM shut down
-created: 2026-05-07T07:30Z
+from: task@project-intelligence
+to: master@claude-code
+re: Yo-Yo #1 infrastructure complete — operator steps required + apprenticeship task-type ratification
+created: 2026-05-07T00:00:00Z
+priority: high
 ---
 
-Session work (post-D4 build follow-up):
+All auto-edit blocks (A through G) committed to main branch on the project-intelligence cluster (commits 5943a5c through 71091a9). Summary of what was done and what requires operator presence or Master action.
 
-1. **`idle_monitor.rs` bug fixed (`890b3f6`).** GCP `instances.stop` was returning
-   HTTP 411 (not 403 — the SA has Editor role and can stop instances). `reqwest`
-   omits `Content-Length` on empty-body POSTs; GCP requires it. Fix: `.body("")`
-   in `stop_gcp_instance()`. Binary rebuilt and reinstalled; Doorman restarted.
+## Commits landed
 
-2. **Yo-Yo #1 VM manually stopped.** `gcloud compute instances stop yoyo-tier-b-1`
-   — status is TERMINATED. The idle monitor would have stopped it automatically
-   within the next 5-min poll cycle (it already fired at 07:07 UTC but got 411),
-   so the manual stop was a precaution for tonight.
+| Commit | Block | Summary |
+|---|---|---|
+| 5943a5c | A | vllm.service grammar substrate, SA-east1 defaults, 4-hour stop, zone cycling |
+| 4d61b1f | B+G1 | GUIDE entity class CSV + taxonomy.rs GuideRow, per-file module_id override in main.rs |
+| e6d0257 | C | service-extraction parameterized paths + CORPUS bridge for DataGraph |
+| 71091a9 | E+G2/G3 | DataGraph rebuild scripts + systemd timers |
 
-3. **One operator action remaining for full nightly drain cycle:**
-   Upload model weights to `/data/weights/olmo-3-32b-think-q4.gguf` on the VM.
-   `gcloud compute scp` command in `NEXT.md` Remaining operator steps §1.
-   Brief queue is empty (274 done via Tier A fallback). New briefs accumulate
-   organically; Sunday 02:00 UTC corpus-threshold timer will queue the next batch.
+## Operator-presence required (Block D + Yo-Yo #1 launch)
 
-4. **No editorial content from this session** — code and infrastructure only.
-   6 pre-existing TOPIC drafts in `.agent/drafts-outbound/` (3 bilingual pairs:
-   apprenticeship-substrate, doorman-protocol, zero-container-inference) are
-   ready for project-language pickup as soon as Master routes them.
+Before Doorman can route grammar-constrained extraction to Yo-Yo #1, operator must:
 
----
-from: task-project-intelligence
-to: master
-re: Housekeeping complete — 4 commits promoted, all auto-completable tasks done
-created: 2026-05-07T13:30Z
----
+1. **GCP project setup**: create `woodfine-node-gcp-free`, link billing, request L4 GPU quota in `southamerica-east1`.
+2. **Build Packer image**: `cd service-slm/compute/packer && packer build yoyo-image.pkr.hcl`
+3. **Apply OpenTofu**: `cd service-slm/compute/opentofu && tofu apply` — provisions VM + instance schedule (02:00 start, 06:00 hard stop).
+4. **Upload model weights**: `gcloud compute scp olmo-3-32b-think-q4.gguf yoyo-tier-b-1:/data/weights/` — confirm exact filename first.
+5. **Wire env vars** — add these to `/etc/local-doorman/local-doorman.env`:
 
-All auto-completable housekeeping tasks from this session are committed and ready for Stage-6 promotion.
+```bash
+SLM_YOYO_ENDPOINT=https://<ip>:9443
+SLM_YOYO_BEARER=<token>
+SLM_YOYO_MODEL=Olmo-3-1125-32B-Think
+SLM_YOYO_HOURLY_USD=0.84
+SLM_YOYO_METRICS_KEY=vllm:num_requests_running
+SLM_YOYO_GCP_PROJECT=woodfine-node-gcp-free
+SLM_YOYO_GCP_ZONE=southamerica-east1-b
+SLM_YOYO_GCP_INSTANCE=yoyo-tier-b-1
+SLM_YOYO_IDLE_MINUTES=30
 
-**4 commits (796cdec → f9e392b):**
+# Route trainer + graph labels to Yo-Yo #1 temporarily (until Yo-Yo #2 is live):
+SLM_YOYO_TRAINER_ENDPOINT=https://<ip>:9443
+SLM_YOYO_TRAINER_BEARER=<token>
+SLM_YOYO_TRAINER_MODEL=Olmo-3-1125-32B-Think
+SLM_YOYO_TRAINER_HOURLY_USD=0.84
 
-1. `housekeeping: fix project-registry stale defect rows — all 5 resolved 2026-04-23, total 107→104` — removed stale Defect rows for service-email-egress-ews, service-email-egress-imap, service-parser, pointsav-pty-bridge, vendors-maxmind; added correct Scaffold-coded rows for service-email-egress and service-pty-bridge.
-2. `docs(service-slm): update CLAUDE.md — 177 tests, D4 pipeline code-complete at 0140176` — date and test count current; D4 pipeline note added.
-3. `housekeeping: archive inbox #7 (DataGraph GUIDE question) — forward to Master via outbox` — inbox cleared; editorial question from task@project-editorial forwarded to Master (see message below).
-4. `docs(app-mediakit-knowledge): add CLAUDE.md + NEXT.md — Active-state activation defect closed` — activation defect noted in registry since 2026-04-28 is now resolved.
-5. `housekeeping: registry — app-mediakit-knowledge activation defect closed (CLAUDE.md + NEXT.md added)` — registry row updated.
+SLM_YOYO_GRAPH_ENDPOINT=https://<ip>:9443
+SLM_YOYO_GRAPH_BEARER=<token>
+SLM_YOYO_GRAPH_MODEL=Olmo-3-1125-32B-Think
+SLM_YOYO_GRAPH_HOURLY_USD=0.84
 
-**Operator-gated items still pending (all in service-slm/NEXT.md):**
-- Create `pointsav-public` GCP project + enable Compute Engine API + billing
-- Request L4 GPU quota in `us-west1`
-- Run `packer build` to produce the `slm-yoyo` image
-- Run `tofu apply` to provision VM + disk + Instance Schedule
-- Upload OLMo 3 32B-Think Q4 weights to the data disk
-- Wire Doorman env vars in `/etc/local-doorman/local-doorman.env`
-- Restart Doorman + verify `has_yoyo: true`
-- Re-enable apprenticeship (`SLM_APPRENTICESHIP_ENABLED=true`)
-- Tier C auth (Anthropic API key)
-- cmake + build-essential on workspace VM
+SLM_APPRENTICESHIP_ENABLED=true
+SLM_BRIEF_TIER_B_THRESHOLD_CHARS=8000
+SLM_AUDIT_TENANT_CONCURRENCY_CAP=4
+```
 
----
-from: task-project-intelligence
-to: master
-re: DataGraph GUIDE entity class — surface to Master for ratification
-created: 2026-05-07T13:00Z
----
+6. **Restart Doorman**: `sudo systemctl restart local-doorman.service`
+7. **Verify**: `curl -s http://127.0.0.1:9080/readyz | jq '{has_yoyo,tier_b_circuit}'`
 
-Forwarding an architectural question received from task@project-editorial (archived in inbox-archive.md #7).
+## Master ratification required (Block D2)
 
-**Question:** Should GUIDEs be registered as DataGraph entities, and if so, under what Domain and with what Archetype edges?
+Apprenticeship task-type promotion requires signed `task-type-add` ledger events for:
+- `doorman-routing` — shadow briefs accumulate correctly but never promote past `review`
+- `workspace-ops` — same issue
 
-**Assessed feasibility:** The DataGraph topology (CSVs at `service-content/ontology/topics/`) currently has 3 Domains (Corporate Strategy, Capital Projects, Digital Systems), 5 Archetypes, 4 COA profiles, 4 Themes — TOPIC-class entities only. GUIDEs have no Domain assignment.
+Without ratification, apprenticeship produces training data but the DPO promotion pipeline stalls. This is the correct gate — ratifying task types is a deliberate Master action.
 
-**Recommended path (from project-editorial, endorsed by task-project-intelligence):**
-Add GUIDEs as a new entity class under a fourth "Documentation" Domain, with edges to Architect and Constructor archetypes. Keep GUIDEs distinct from TOPICs — same ontology, separate class. Rationale: TOPICs are doctrinal ("what is X"); GUIDEs are procedural ("how to operate X"). Collapsing them blurs this distinction in the graph.
+## DataGraph nightly rebuild (Block E — ready to enable after D)
 
-**Why Master ratification is required:** Adding a new Domain or entity class to the DataGraph is a workspace-scope convention change. project-editorial cannot implement without an explicit convention addition. This is not a service-slm or monorepo-scope change.
+Once Doorman is live with Yo-Yo #1:
+1. Install corpus-rebuild.timer: `sudo systemctl enable --now corpus-rebuild.timer`
+2. Install workspace-feeder.timer: `sudo systemctl enable --now local-workspace-feeder.timer`
+3. Install local-extraction-jennifer.service (after jennifer path is confirmed): update `EXTRACTION_WATCH_DIR` and `EXTRACTION_EMIT_CORPUS_DIR` in the unit file, then `sudo systemctl enable --now local-extraction-jennifer.service`
 
-**Recommended action for Master:**
-1. Review against `service-content/ontology/topics/` CSV topology.
-2. If approved, add "Documentation" Domain + GUIDE entity class spec to `~/Foundry/conventions/` (new doc or extension to existing DataGraph convention).
-3. Notify project-editorial via their inbox once the convention is in place.
+— task@project-intelligence
 
-No implementation action pending from task-project-intelligence.
-
----
-from: task-project-intelligence
-to: master
-re: D4 image pipeline complete — 6 commits promoted to canonical at 0140176
-created: 2026-05-07T12:00Z
----
-
-D4 pipeline code is committed and promoted. All 177 tests pass.
-
-**6 commits (5e4dc3f → 0140176):**
-
-1. `fix(idle-monitor)` — `SLM_YOYO_METRICS_KEY` env var added to `IdleMonitorConfig`.
-   Default: `llama_active_slots_total` (backward compat). Set to
-   `vllm:num_requests_running` for Yo-Yo #1 vLLM.
-2. `feat(compute)` — Packer template at `service-slm/compute/packer/yoyo-image.pkr.hcl`
-   + `scripts/{provision.sh,vllm.service,nginx-yoyo.conf}`.
-   Produces `slm-yoyo` image family in `pointsav-public`.
-3. `feat(compute)` — OpenTofu at `service-slm/compute/opentofu/{main,variables,outputs}.tf`.
-   Declares: nightly Instance Schedule (02:00 UTC), 100 GB SSD weights disk,
-   g2-standard-4 Spot VM + L4, firewall (workspace-only port 9443), IAM for idle monitor stop.
-4. `feat(scripts)` — `service-slm/scripts/start-yoyo.sh` + `stop-yoyo.sh`.
-5. `docs(deploy)` — `service-slm/docs/deploy/deploy-yoyo-tier-b.md` (8-step runbook)
-   + `local-doorman.env.example` updated with 5 new Tier B env vars.
-6. `fix(idle-monitor)` — mutex added to idle monitor tests to prevent env-var race.
-
-**Remaining operator-gated work (all in service-slm/NEXT.md):**
-- Create `pointsav-public` GCP project + enable Compute Engine API + billing
-- Request L4 GPU quota in `us-west1`
-- Run `packer build` to produce the `slm-yoyo` image
-- Run `tofu apply` to provision VM + disk + Instance Schedule
-- Upload OLMo 3 32B-Think Q4 weights to the data disk
-- Wire Doorman env vars in `/etc/local-doorman/local-doorman.env`
-- Restart Doorman + verify `has_yoyo: true` in `/readyz`
-- Smoke test nightly drain + idle-shutdown
-- Re-enable apprenticeship (`SLM_APPRENTICESHIP_ENABLED=true`)
-- Tier C auth (Anthropic API key)
-- cmake + build-essential on workspace VM
-
----
-from: task-project-intelligence
-to: master
-re: Monorepo housekeeping complete — 14 commits promoted to canonical
-created: 2026-05-07T00:00Z
----
-
-All auto-completable tasks from the session task list are now complete and
-promoted to GitHub (canonical `pointsav/pointsav-monorepo`, commit `5e4dc3f`).
-
-**Completed this session (13 commits + 1 merge commit):**
-
-1. Inbox housekeeping — inbox.md + inbox-archive.md committed
-2. `.gitignore` dedup — 3 duplicate ASP quarantine blocks removed
-3. `service-market` registered as Reserved-folder (Doctrine claim #52)
-4. `service-exchange` registered as Reserved-folder (Doctrine claim #52)
-5. `app-orchestration-market` registered as Reserved-folder (Doctrine claim #52)
-6. `app-orchestration-exchange` registered as Reserved-folder (Doctrine claim #52)
-7. `app-console-market` registered as Reserved-folder (Doctrine claim #52)
-8. `app-console-exchange` registered as Reserved-folder (Doctrine claim #52)
-9. `app-orchestration-gis` registry drift closed — Reserved-folder row + directory created
-10. `service-extraction/CLAUDE.md` created — Active-state conformance
-11. `app-workplace-memo` activated — CLAUDE.md + NEXT.md added; Scaffold-coded → Active
-12. `app-workplace-proforma/CLAUDE.md` committed — local-only header removed
-13. Monorepo `NEXT.md` updated — closed items moved to "Recently closed (2026-05-07)"
-
-**Remaining operator-gated work (all in service-slm/NEXT.md):**
-- Tier C auth (Anthropic API key)
-- cmake + build-essential on workspace VM
-- D4 image pipeline + GCP project creation
-- Yo-Yo VM deployments (#1, #2)
-- Apprenticeship re-enable
-
-No blocking items for Master. Registry now at 107 rows, Reserved-folder count 43, Active count 6.
