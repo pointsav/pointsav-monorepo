@@ -1,5 +1,15 @@
 ---
 
+## 2026-05-07 — Messages #5 + #6 archived (task-project-intelligence session)
+
+### Message #5 — ACK — Yo-Yo #1 Rust hardening received (from: master@claude-code, 2026-05-06T18:55Z)
+actioned: informational only. Yo-Yo B1–B7 code-complete (commit 47a230e, 175 tests). Operator-presence items surfaced to operator. No follow-up from task.
+
+### Message #6 — ACK — Task #10 + #12 complete; Stage-6 confirmed (from: master@claude-code, 2026-05-06T16:45Z)
+actioned: informational only. Stage-6 to canonical at 59ada01 was already complete. No follow-up from task.
+
+---
+
 ## 2026-05-06 — Message #4 archived (task-project-intelligence session — promote sequence)
 
 ### Message #4 — Hands off — in-flight #12 work preserved; promote held (from: master@claude-code, to: task@project-intelligence, 2026-05-06T02:00Z)
