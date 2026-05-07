@@ -27,7 +27,7 @@ axum = { version = "0.8", features = ["ws"] }
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "signal", "fs", "process"] }
 tower = "0.5"
 tower-http = { version = "0.6", features = ["trace", "set-header", "compression-br", "compression-gzip"] }
-comrak = "0.29"
+comrak = "0.52"
 maud = { version = "0.27", features = ["axum"] }
 rust-embed = { version = "8", features = ["compression"] }
 mime_guess = "2"
