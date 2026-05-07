@@ -125,8 +125,10 @@ pub fn router(state: AppState) -> Router {
         .route("/api/citations", get(crate::citations::get_citations))
         // Phase 2 Step 6 — three-keystroke ladder stubs (501 until Phase 4
         // wires the Doorman MCP server)
-        .route("/api/doorman/complete", post(doorman_stub))
-        .route("/api/doorman/instruct", post(doorman_stub))
+        .route("/api/doorman/complete", post(doorman_complete))
+        .route("/api/doorman/instruct", post(doorman_instruct))
+        // D2: search autocomplete
+        .route("/api/complete", get(search_complete))
         // Leapfrog: Page Preview hover endpoint
         .route("/api/preview/{*slug}", get(preview_api))
         // Wave 5B — category listing pages
@@ -147,6 +149,12 @@ pub fn router(state: AppState) -> Router {
         .route("/history/{*slug}", get(history_page))
         .route("/blame/{*slug}", get(blame_page))
         .route("/diff/{*slug}", get(diff_page))
+        // Sprint C — special pages
+        .route("/special/recent-changes", get(recent_changes_page))
+        .route("/special/all-pages", get(all_pages_page))
+        .route("/special/statistics", get(statistics_page))
+        // Sprint C4 — Talk namespace
+        .route("/talk/{*slug}", get(talk_page).post(talk_post))
         // Phase 5 — auth + edit review
         .route("/special/login", get(crate::auth::get_login).post(crate::auth::post_login))
         .route("/special/logout", post(crate::auth::post_logout))
@@ -171,6 +179,38 @@ pub fn router(state: AppState) -> Router {
         r = r.route("/ws/collab/{slug}", get(crate::collab::ws_collab));
     }
     r.with_state(Arc::new(state))
+}
+
+/// D2: `GET /api/complete?q={prefix}` — title autocomplete for search box.
+///
+/// Returns a JSON array of `{title, slug}` objects whose titles or slugs
+/// contain the query string (case-insensitive). Capped at 10 results.
+async fn search_complete(
+    State(state): State<Arc<AppState>>,
+    Query(params): Query<SearchQueryParams>,
+) -> Json<serde_json::Value> {
+    let q = params.q.to_lowercase();
+    if q.is_empty() {
+        return Json(json!([]));
+    }
+    let topic_files = collect_all_topic_files(
+        &state.content_dir,
+        &[state.guide_dir.as_deref(), state.guide_dir_2.as_deref()],
+    ).await.unwrap_or_default();
+
+    let mut hits = Vec::new();
+    for tf in &topic_files {
+        if hits.len() >= 10 { break; }
+        let title = if let Ok(text) = fs::read_to_string(&tf.path).await {
+            if let Ok(p) = crate::render::parse_page(&text) {
+                p.frontmatter.title.unwrap_or_else(|| tf.slug.clone())
+            } else { tf.slug.clone() }
+        } else { tf.slug.clone() };
+        if title.to_lowercase().contains(&q) || tf.slug.to_lowercase().contains(&q) {
+            hits.push(json!({"title": title, "slug": tf.slug}));
+        }
+    }
+    Json(json!(hits))
 }
 
 async fn preview_api(
@@ -551,14 +591,54 @@ async fn search_page(
 /// Doorman MCP integration lands in Phase 4. The client-side handlers in
 /// `saa-init.js` check for this status and display a one-time toast rather
 /// than treating it as an error.
-async fn doorman_stub() -> impl IntoResponse {
-    (
-        StatusCode::NOT_IMPLEMENTED,
-        Json(json!({
-            "phase": 4,
-            "reason": "Doorman MCP integration deferred to Phase 4"
-        })),
-    )
+/// E3: Doorman `/complete` — forwards request body to WIKI_DOORMAN_URL when set.
+/// Returns 501 with a JSON explanation when WIKI_DOORMAN_URL is unset.
+async fn doorman_complete(
+    State(state): State<Arc<AppState>>,
+    Json(body): Json<serde_json::Value>,
+) -> impl IntoResponse {
+    doorman_proxy(&state, "/v1/complete", body).await
+}
+
+/// E3: Doorman `/instruct` — same forwarding logic as `/complete`.
+async fn doorman_instruct(
+    State(state): State<Arc<AppState>>,
+    Json(body): Json<serde_json::Value>,
+) -> impl IntoResponse {
+    doorman_proxy(&state, "/v1/instruct", body).await
+}
+
+async fn doorman_proxy(
+    state: &Arc<AppState>,
+    path: &str,
+    body: serde_json::Value,
+) -> Response {
+    let _ = state; // AppState doesn't need DOORMAN_URL; read from env directly.
+    let doorman_url = match std::env::var("WIKI_DOORMAN_URL") {
+        Ok(u) if !u.is_empty() => u,
+        _ => {
+            return (StatusCode::NOT_IMPLEMENTED, Json(json!({
+                "error": "Doorman not configured — set WIKI_DOORMAN_URL to enable",
+                "hint": "WIKI_DOORMAN_URL=http://localhost:9091"
+            }))).into_response();
+        }
+    };
+    let url = format!("{}{}", doorman_url.trim_end_matches('/'), path);
+    // Re-use reqwest::Client if available; we create a one-shot client here since
+    // doorman calls are infrequent editor interactions, not high-throughput paths.
+    let client = reqwest::Client::new();
+    match client.post(&url).json(&body).send().await {
+        Ok(resp) => {
+            let status = resp.status();
+            let bytes = resp.bytes().await.unwrap_or_default();
+            (axum::http::StatusCode::from_u16(status.as_u16()).unwrap_or(StatusCode::BAD_GATEWAY),
+             [(header::CONTENT_TYPE, "application/json")],
+             bytes).into_response()
+        }
+        Err(e) => {
+            (StatusCode::BAD_GATEWAY, Json(json!({"error": format!("Doorman unreachable: {e}")}))).into_response()
+        }
+    }
 }
 
 // ─── Home-page data types ───────────────────────────────────────────────────
@@ -1024,8 +1104,11 @@ fn home_chrome(
             body {
                 header.site-header {
                     a.site-title href="/" { (site_title) }
-                    form.header-search action="/search" method="get" {
-                        input type="search" name="q" placeholder="Search articles…" autocomplete="off";
+                    form.header-search #header-search-form action="/search" method="get" {
+                        div.header-search-wrap {
+                            input #header-search-q type="search" name="q" placeholder="Search articles…" autocomplete="off";
+                            div #search-autocomplete-dropdown style="display:none;" {}
+                        }
                         button type="submit" { "Search" }
                     }
                     nav.site-nav {
@@ -1516,8 +1599,27 @@ async fn wiki_page(
         }
     }
         
+    // E1: Resolve `cites:` frontmatter against citations.yaml for the ribbon.
+    let citation_status: Option<&'static str> = if let Some(ref ids) = parsed.frontmatter.cites {
+        if ids.is_empty() {
+            None
+        } else {
+            let entries = crate::citations::load_registry(&state.citations_yaml).await.unwrap_or_default();
+            let id_set: std::collections::HashSet<&str> = entries.iter().map(|e| e.id.as_str()).collect();
+            let verified_count = ids.iter().filter(|id| {
+                id_set.contains(id.as_str()) &&
+                entries.iter().any(|e| &e.id == *id && e.last_verified.is_some())
+            }).count();
+            Some(if verified_count == ids.len() { "green" }
+                 else if verified_count == 0 { "red" }
+                 else { "amber" })
+        }
+    } else {
+        None
+    };
+
     let pending_count = pending_count_for(&state, maybe_user.as_ref()).await;
-    Ok(wiki_chrome(&title, &slug, parsed.frontmatter, &body_html, headings, &backlinks, &state.site_title, maybe_user.as_ref(), pending_count).into_response())
+    Ok(wiki_chrome(&title, &slug, parsed.frontmatter, &body_html, headings, &backlinks, &state.site_title, maybe_user.as_ref(), pending_count, citation_status).into_response())
 }
 
 async fn static_asset(Path(path): Path<String>) -> Response {
@@ -1564,8 +1666,21 @@ fn wiki_chrome(
     site_title: &str,
     user: Option<&User>,
     pending_count: i64,
+    citation_status: Option<&'static str>,
 ) -> Markup {
     let _talk_slug = format!("{slug}.talk");
+
+    // E4: Freshness ribbon — compute age bucket from `last_edited:`.
+    let freshness: Option<(&'static str, &'static str)> = fm.last_edited.as_ref().and_then(|d| {
+        use chrono::{NaiveDate, Utc};
+        let edited = NaiveDate::parse_from_str(d, "%Y-%m-%d").ok()?;
+        let today = Utc::now().date_naive();
+        let days = (today - edited).num_days();
+        Some(if days <= 90 { ("current", "Updated within 90 days") }
+             else if days <= 365 { ("recent", "Updated within the past year") }
+             else if days <= 730 { ("aging", "Updated 1–2 years ago") }
+             else { ("stale", "Not updated in over 2 years") })
+    });
 
     // Breadcrumb: derive category from frontmatter `category:` field,
     // or from the slug prefix when the TOPIC is in a subdirectory.
@@ -1589,8 +1704,11 @@ fn wiki_chrome(
             body {
                 header.site-header {
                     a.site-title href="/" { (site_title) }
-                    form.header-search action="/search" method="get" {
-                        input type="search" name="q" placeholder="Search articles…" autocomplete="off";
+                    form.header-search #header-search-form action="/search" method="get" {
+                        div.header-search-wrap {
+                            input #header-search-q type="search" name="q" placeholder="Search articles…" autocomplete="off";
+                            div #search-autocomplete-dropdown style="display:none;" {}
+                        }
                         button type="submit" { "Search" }
                     }
                     nav.site-nav {
@@ -1615,6 +1733,9 @@ fn wiki_chrome(
                         li { a href="/search" { "Search" } }
                         li { a href="/random" { "Random article" } }
                         li { a href="/wanted" { "Wanted articles" } }
+                        li { a href="/special/all-pages" { "All pages" } }
+                        li { a href="/special/recent-changes" { "Recent changes" } }
+                        li { a href="/special/statistics" { "Statistics" } }
                     }
                 }
                 div.mobile-nav-overlay #mobile-nav-overlay aria-hidden="true" {}
@@ -1644,6 +1765,9 @@ fn wiki_chrome(
                         div.wiki-toc-tools {
                             a href="/random" { "Random article" }
                             a href="/wanted" { "Wanted articles" }
+                            a href="/special/all-pages" { "All pages" }
+                            a href="/special/recent-changes" { "Recent changes" }
+                            a href="/special/statistics" { "Statistics" }
                             a href="/search" { "Search" }
                         }
                     }
@@ -1670,9 +1794,9 @@ fn wiki_chrome(
                                     href={ "/wiki/" (slug) }
                                     aria-current="page"
                                 { "Article" }
-                                span.wiki-tab.wiki-tab-disabled
-                                    aria-disabled="true"
-                                    title="Talk pages coming soon"
+                                a.wiki-tab
+                                    href={ "/talk/" (slug) }
+                                    title="Discussion page"
                                 { "Talk" }
                             }
 
@@ -1752,6 +1876,25 @@ fn wiki_chrome(
                             }
                         }
 
+                        // E1: Citation Authority Ribbon — green/amber/red based on citation verification.
+                        @if let Some(status) = citation_status {
+                            div class={ "citation-ribbon citation-ribbon-" (status) }
+                                role="status"
+                                aria-label="Citation verification status"
+                            {
+                                span.citation-ribbon-icon {
+                                    @if status == "green" { "✓" }
+                                    @else if status == "amber" { "⚠" }
+                                    @else { "✗" }
+                                }
+                                span.citation-ribbon-text {
+                                    @if status == "green" { "All citations verified" }
+                                    @else if status == "amber" { "Some citations unverified" }
+                                    @else { "Citations unverified" }
+                                }
+                            }
+                        }
+
                         // Forward-looking-information notice (unchanged from Phase 1)
                         @if fm.forward_looking {
                             aside.fli-notice {
@@ -1806,8 +1949,45 @@ fn wiki_chrome(
                             }
                         }
 
+                        // E2: Research Trail Footer — collapsible <details> from frontmatter.
+                        @if let Some(ref trail) = fm.research_trail {
+                            @if !trail.is_empty() {
+                                details.wiki-research-trail {
+                                    summary { "Research trail" }
+                                    dl.wiki-research-trail-dl {
+                                        @for (key, val) in trail {
+                                            dt { (key) }
+                                            dd {
+                                                @match val {
+                                                    serde_yaml::Value::String(s) => (s),
+                                                    serde_yaml::Value::Sequence(seq) => {
+                                                        ul {
+                                                            @for item in seq {
+                                                                @if let serde_yaml::Value::String(ref s) = item {
+                                                                    li { (s) }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                    other => (format!("{other:?}"))
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
                         // End-of-article footer block (item 5 + item 15)
                         footer.wiki-article-footer {
+                            // E4: Freshness ribbon — coloured badge based on last_edited age.
+                            @if let Some((bucket, label)) = freshness {
+                                div class={ "freshness-ribbon freshness-" (bucket) }
+                                    title=(label)
+                                {
+                                    span.freshness-label { (label) }
+                                }
+                            }
                             // Categories list (from `categories:` array — item 15)
                             @if let Some(cats) = &fm.categories {
                                 @if !cats.is_empty() {
@@ -2058,6 +2238,337 @@ async fn git_markdown(
     Ok(resp)
 }
 
+// ── Sprint C: Special pages ────────────────────────────────────────────────
+
+/// C1: `GET /special/recent-changes` — cross-repo git log, newest 50 changes.
+async fn recent_changes_page(
+    State(state): State<Arc<AppState>>,
+    CurrentUser(maybe_user): CurrentUser,
+) -> Result<Markup, WikiError> {
+    let pending_count = pending_count_for(&state, maybe_user.as_ref()).await;
+
+    let entries = {
+        let repo = gix::open(&state.content_dir)
+            .map_err(|e| WikiError::WriteFailed(format!("gix open: {e}")))?;
+        let head = match repo.head() {
+            Ok(h) => h,
+            Err(_) => {
+                return Ok(chrome(
+                    &format!("Recent changes — {}", state.site_title),
+                    html! { h1 { "Recent changes" } p { "No git history yet." } },
+                    &state.site_title, maybe_user.as_ref(), pending_count,
+                ));
+            }
+        };
+        let id = match head.id() {
+            Some(id) => id,
+            None => {
+                return Ok(chrome(
+                    &format!("Recent changes — {}", state.site_title),
+                    html! { h1 { "Recent changes" } p { "Empty repository." } },
+                    &state.site_title, maybe_user.as_ref(), pending_count,
+                ));
+            }
+        };
+        let mut out = Vec::new();
+        let ancestors = id.ancestors().all()
+            .map_err(|e| WikiError::WriteFailed(format!("gix ancestors: {e}")))?;
+        for item in ancestors.take(50) {
+            let item = match item { Ok(i) => i, Err(_) => continue };
+            let commit = match item.object() { Ok(c) => c, Err(_) => continue };
+            let author = match commit.author() { Ok(a) => a, Err(_) => continue };
+            let message = match commit.message() { Ok(m) => m, Err(_) => continue };
+            let time = match commit.time() { Ok(t) => t, Err(_) => continue };
+            let ts = {
+                use chrono::{TimeZone, Utc};
+                let secs = time.seconds;
+                Utc.timestamp_opt(secs, 0).single()
+                    .map(|dt| dt.format("%Y-%m-%d %H:%M").to_string())
+                    .unwrap_or_else(|| secs.to_string())
+            };
+            // Extract article slug from commit message if it references one content file.
+            let msg = message.summary().to_string();
+            out.push((item.id().to_string(), author.name.to_string(), ts, msg));
+        }
+        out
+    };
+
+    Ok(chrome(
+        &format!("Recent changes — {}", state.site_title),
+        html! {
+            h1 { "Recent changes" }
+            p.wiki-special-intro { "Last 50 edits across all articles." }
+            @if entries.is_empty() {
+                p { em { "No changes recorded yet." } }
+            } @else {
+                table.wiki-special-table {
+                    thead {
+                        tr {
+                            th { "Date" }
+                            th { "Author" }
+                            th { "Summary" }
+                        }
+                    }
+                    tbody {
+                        @for (sha, author, date, msg) in &entries {
+                            tr {
+                                td.rc-date { (date) }
+                                td.rc-author { (author) }
+                                td.rc-summary {
+                                    code.rc-sha { (&sha[..7.min(sha.len())]) }
+                                    " "
+                                    (msg)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        &state.site_title, maybe_user.as_ref(), pending_count,
+    ))
+}
+
+/// C2: `GET /special/all-pages` — alphabetical directory grouped by first letter.
+async fn all_pages_page(
+    State(state): State<Arc<AppState>>,
+    CurrentUser(maybe_user): CurrentUser,
+) -> Result<Markup, WikiError> {
+    let pending_count = pending_count_for(&state, maybe_user.as_ref()).await;
+
+    let topic_files = collect_all_topic_files(
+        &state.content_dir,
+        &[state.guide_dir.as_deref(), state.guide_dir_2.as_deref()],
+    ).await?;
+
+    // Collect (title, slug) pairs, sorted by title.
+    let mut pages: Vec<(String, String)> = Vec::new();
+    for tf in &topic_files {
+        let title = if let Ok(text) = fs::read_to_string(&tf.path).await {
+            if let Ok(parsed) = crate::render::parse_page(&text) {
+                parsed.frontmatter.title.unwrap_or_else(|| tf.slug.clone())
+            } else { tf.slug.clone() }
+        } else { tf.slug.clone() };
+        pages.push((title, tf.slug.clone()));
+    }
+    pages.sort_by(|a, b| a.0.to_lowercase().cmp(&b.0.to_lowercase()));
+
+    // Group by first letter.
+    let mut groups: BTreeMap<char, Vec<(String, String)>> = BTreeMap::new();
+    for (title, slug) in pages {
+        let ch = title.chars().next()
+            .unwrap_or('#')
+            .to_uppercase()
+            .next()
+            .unwrap_or('#');
+        let key = if ch.is_ascii_alphabetic() { ch } else { '#' };
+        groups.entry(key).or_default().push((title, slug));
+    }
+
+    Ok(chrome(
+        &format!("All pages — {}", state.site_title),
+        html! {
+            h1 { "All pages" }
+            p.wiki-special-intro { (topic_files.len()) " articles total." }
+            // Jump links
+            nav.wiki-allpages-jump {
+                @for ch in groups.keys() {
+                    a href={ "#ap-" (ch) } { (ch) }
+                    " "
+                }
+            }
+            @for (ch, entries) in &groups {
+                h2 id={ "ap-" (ch) } { (ch) }
+                ul.wiki-allpages-list {
+                    @for (title, slug) in entries {
+                        li { a href={ "/wiki/" (slug) } { (title) } }
+                    }
+                }
+            }
+        },
+        &state.site_title, maybe_user.as_ref(), pending_count,
+    ))
+}
+
+/// C3: `GET /special/statistics` — article count, categories, redlink count, most recent edit.
+async fn statistics_page(
+    State(state): State<Arc<AppState>>,
+    CurrentUser(maybe_user): CurrentUser,
+) -> Result<Markup, WikiError> {
+    let pending_count = pending_count_for(&state, maybe_user.as_ref()).await;
+    let re_redlink = Regex::new(r#"class="wiki-redlink""#).expect("static regex");
+
+    let topic_files = collect_all_topic_files(
+        &state.content_dir,
+        &[state.guide_dir.as_deref(), state.guide_dir_2.as_deref()],
+    ).await?;
+
+    let article_count = topic_files.len();
+    let mut category_set: std::collections::HashSet<String> = std::collections::HashSet::new();
+    let mut redlink_count: usize = 0;
+    let mut most_recent: Option<String> = None;
+
+    for tf in &topic_files {
+        if let Ok(text) = fs::read_to_string(&tf.path).await {
+            if let Ok(parsed) = crate::render::parse_page(&text) {
+                if let Some(cat) = parsed.frontmatter.category {
+                    category_set.insert(cat);
+                }
+                if let Some(ref le) = parsed.frontmatter.last_edited {
+                    let is_newer = most_recent.as_ref().map_or(true, |mr| le > mr);
+                    if is_newer { most_recent = Some(le.clone()); }
+                }
+                let html = crate::render::render_html_raw(&text, &state.content_dir);
+                redlink_count += re_redlink.find_iter(&html).count();
+            }
+        }
+    }
+
+    Ok(chrome(
+        &format!("Statistics — {}", state.site_title),
+        html! {
+            h1 { "Statistics" }
+            table.wiki-special-table {
+                tbody {
+                    tr { th { "Articles" } td { (article_count) } }
+                    tr { th { "Categories" } td { (category_set.len()) } }
+                    tr { th { "Redlinks (missing articles)" } td { (redlink_count) } }
+                    tr { th { "Most recent edit" } td {
+                        @if let Some(ref d) = most_recent { (d) }
+                        @else { em { "unknown" } }
+                    } }
+                }
+            }
+        },
+        &state.site_title, maybe_user.as_ref(), pending_count,
+    ))
+}
+
+// ── Sprint C4: Talk namespace ──────────────────────────────────────────────
+
+fn talk_file_path(content_dir: &FsPath, slug: &str) -> PathBuf {
+    content_dir.join("talk").join(format!("{slug}.md"))
+}
+
+/// C4: `GET /talk/{*slug}` — serve talk page or empty stub.
+async fn talk_page(
+    State(state): State<Arc<AppState>>,
+    Path(slug): Path<String>,
+    CurrentUser(maybe_user): CurrentUser,
+) -> Result<Markup, WikiError> {
+    if slug.contains("..") || slug.is_empty() {
+        return Err(WikiError::NotFound(slug));
+    }
+    let pending_count = pending_count_for(&state, maybe_user.as_ref()).await;
+    let talk_path = talk_file_path(&state.content_dir, &slug);
+    let talk_md = if talk_path.is_file() {
+        fs::read_to_string(&talk_path).await.unwrap_or_default()
+    } else {
+        String::new()
+    };
+    let body_html = if talk_md.is_empty() {
+        String::new()
+    } else {
+        crate::render::render_html(&talk_md, &state.content_dir)
+    };
+
+    let article_url = format!("/wiki/{slug}");
+    Ok(chrome(
+        &format!("Talk: {slug} — {}", state.site_title),
+        html! {
+            div.wiki-title-row {
+                nav.wiki-page-tabs aria-label="Page tabs" {
+                    a.wiki-tab href=(article_url) { "Article" }
+                    a.wiki-tab.wiki-tab-active aria-current="page" href={ "/talk/" (slug) } { "Talk" }
+                }
+                div.wiki-title-block {
+                    h1.page-title { "Talk: " (slug) }
+                    p.wiki-tagline { "From PointSav Documentation" }
+                }
+                nav.wiki-action-tabs aria-label="Page actions" {
+                    a.wiki-tab.wiki-tab-active aria-current="page" href={ "/talk/" (slug) } { "Discussion" }
+                }
+            }
+            @if body_html.is_empty() {
+                p.wiki-talk-empty {
+                    em { "No discussion yet. Add a section below to start the conversation." }
+                }
+            } @else {
+                div.wiki-article { div.page-body { (PreEscaped(body_html)) } }
+            }
+            @if maybe_user.is_some() {
+                section.wiki-talk-post {
+                    h2 { "Add a new section" }
+                    form method="post" action={ "/talk/" (slug) } {
+                        div.talk-form-row {
+                            label for="talk-section-title" { "Section title" }
+                            input #talk-section-title name="section_title" type="text"
+                                placeholder="Section heading" required;
+                        }
+                        div.talk-form-row {
+                            label for="talk-body" { "Comment" }
+                            textarea #talk-body name="body" rows="6"
+                                placeholder="Write your comment here…" required {}
+                        }
+                        button.wiki-btn type="submit" { "Add section" }
+                    }
+                }
+            }
+        },
+        &state.site_title, maybe_user.as_ref(), pending_count,
+    ))
+}
+
+#[derive(Deserialize)]
+struct TalkPostForm {
+    section_title: String,
+    body: String,
+}
+
+/// C4: `POST /talk/{*slug}` — append a new section to the talk page.
+async fn talk_post(
+    State(state): State<Arc<AppState>>,
+    Path(slug): Path<String>,
+    CurrentUser(maybe_user): CurrentUser,
+    axum::Form(form): axum::Form<TalkPostForm>,
+) -> Result<Response, WikiError> {
+    if slug.contains("..") || slug.is_empty() {
+        return Err(WikiError::NotFound(slug));
+    }
+    let user = maybe_user.ok_or_else(|| WikiError::NotFound("unauthenticated".into()))?;
+
+    let section_title = form.section_title.trim().to_string();
+    let body_text = form.body.trim().to_string();
+    if section_title.is_empty() || body_text.is_empty() {
+        return Err(WikiError::SlugInvalid("section_title and body are required".into()));
+    }
+
+    let talk_dir = state.content_dir.join("talk");
+    tokio::fs::create_dir_all(&talk_dir).await?;
+    let talk_path = talk_file_path(&state.content_dir, &slug);
+
+    let existing = if talk_path.is_file() {
+        tokio::fs::read_to_string(&talk_path).await.unwrap_or_default()
+    } else {
+        String::new()
+    };
+
+    use chrono::Utc;
+    let now = Utc::now().format("%Y-%m-%d %H:%M UTC").to_string();
+    let new_section = format!(
+        "\n\n## {}\n\n*{} — {}*\n\n{}\n",
+        section_title, user.username, now, body_text
+    );
+    let updated = format!("{}{}", existing.trim_end(), new_section);
+    tokio::fs::write(&talk_path, updated.as_bytes()).await?;
+
+    Ok(Response::builder()
+        .status(StatusCode::FOUND)
+        .header(header::LOCATION, format!("/talk/{slug}"))
+        .body(axum::body::Body::empty())
+        .unwrap())
+}
+
 async fn history_page(
     State(state): State<Arc<AppState>>,
     Path(slug): Path<String>,
@@ -2081,7 +2592,8 @@ async fn history_page(
                         th style="padding: 8px;" { "SHA" }
                         th style="padding: 8px;" { "Author" }
                         th style="padding: 8px;" { "Date" }
-                        th style="padding: 8px;" { "Message" }
+                        th style="padding: 8px;" { "Commit" }
+                        th style="padding: 8px;" { "Edit summary" }
                     }
                 }
                 tbody {
@@ -2099,6 +2611,11 @@ async fn history_page(
                             td style="padding: 8px;" { (entry.author) }
                             td style="padding: 8px; color: #666; font-size: 0.9em;" { (entry.timestamp_iso) }
                             td style="padding: 8px;" { (entry.message) }
+                            td style="padding: 8px; color: #54595d; font-style: italic; font-size: 0.9em;" {
+                                @if !entry.edit_summary.is_empty() {
+                                    (entry.edit_summary)
+                                }
+                            }
                         }
                     }
                 }
@@ -2153,6 +2670,7 @@ struct DiffQueryParams {
     b: Option<String>,
 }
 
+/// D1: Two-column word-level diff — Wikipedia-style red/green inline table.
 async fn diff_page(
     State(state): State<Arc<AppState>>,
     Path(slug): Path<String>,
@@ -2162,28 +2680,79 @@ async fn diff_page(
     crate::edit::validate_slug(&slug)?;
     let a_sha = query.a.unwrap_or_default();
     let b_sha = query.b.unwrap_or_else(|| "HEAD".to_string());
-    
-    let diff = crate::history::topic_diff(&state.content_dir, &slug, &a_sha, &b_sha)?;
+
+    // Retrieve file content at both revisions (blocking — run on threadpool).
+    let content_dir = state.content_dir.clone();
+    let slug2 = slug.clone();
+    let a2 = a_sha.clone();
+    let b2 = b_sha.clone();
+    let (old_text, new_text) = tokio::task::spawn_blocking(move || {
+        let old = crate::history::get_file_at_rev(&content_dir, &slug2, &a2).unwrap_or_default();
+        let new = crate::history::get_file_at_rev(&content_dir, &slug2, &b2).unwrap_or_default();
+        (old, new)
+    }).await.map_err(|e| WikiError::WriteFailed(format!("diff spawn: {e}")))?;
+
+    // Build two-column rows: (left_html, right_html, row_class)
+    let line_diff = similar::TextDiff::from_lines(&old_text, &new_text);
+    let mut rows: Vec<(String, String, &'static str)> = Vec::new();
+
+    // Collect paired del/ins groups for inline word-level diff.
+    let mut pending_del: Vec<String> = Vec::new();
+    let mut pending_ins: Vec<String> = Vec::new();
+
+    fn flush_pending(del: &mut Vec<String>, ins: &mut Vec<String>, rows: &mut Vec<(String, String, &'static str)>) {
+        let max = del.len().max(ins.len());
+        for i in 0..max {
+            let old_line = del.get(i).map(|s| s.as_str()).unwrap_or("");
+            let new_line = ins.get(i).map(|s| s.as_str()).unwrap_or("");
+            let (left_html, right_html) = if !old_line.is_empty() && !new_line.is_empty() {
+                word_diff_pair(old_line, new_line)
+            } else {
+                (html_escape(old_line), html_escape(new_line))
+            };
+            let cls = if old_line.is_empty() { "diff-row-ins" }
+                      else if new_line.is_empty() { "diff-row-del" }
+                      else { "diff-row-chg" };
+            rows.push((left_html, right_html, cls));
+        }
+        del.clear();
+        ins.clear();
+    }
+
+    for change in line_diff.iter_all_changes() {
+        match change.tag() {
+            similar::ChangeTag::Equal => {
+                flush_pending(&mut pending_del, &mut pending_ins, &mut rows);
+                let s = html_escape(change.value());
+                rows.push((s.clone(), s, "diff-row-eq"));
+            }
+            similar::ChangeTag::Delete => {
+                pending_del.push(change.value().to_string());
+            }
+            similar::ChangeTag::Insert => {
+                pending_ins.push(change.value().to_string());
+            }
+        }
+    }
+    flush_pending(&mut pending_del, &mut pending_ins, &mut rows);
 
     let body = html! {
         h1 { "Diff: " (slug) }
-        p { "Comparing " code { (a_sha) } " to " code { (b_sha) } }
-        div.diff-container style="background: #f9f9f9; padding: 1em; border-radius: 4px; overflow-x: auto;" {
-            pre style="margin: 0; font-family: monospace; font-size: 0.9em; line-height: 1.5;" {
-                @for line in diff {
-                    @let line_class = match line.change {
-                        '+' => "diff-add",
-                        '-' => "diff-sub",
-                        _ => "diff-equal",
-                    };
-                    @let line_style = match line.change {
-                        '+' => "background: #e6ffec; color: #22863a;",
-                        '-' => "background: #ffeef0; color: #cb2431;",
-                        _ => "",
-                    };
-                    div class=(line_class) style=(line_style) {
-                        span style="user-select: none; margin-right: 1em; color: #999;" { (line.change) }
-                        (line.text)
+        p.diff-header { "From " code { (&a_sha[..7.min(a_sha.len())]) } " to " code { (&b_sha[..7.min(b_sha.len())]) } }
+        div.diff-two-col-wrap {
+            table.diff-two-col {
+                thead {
+                    tr {
+                        th.diff-col-old { "Before" }
+                        th.diff-col-new { "After" }
+                    }
+                }
+                tbody {
+                    @for (left, right, cls) in &rows {
+                        tr class=(cls) {
+                            td.diff-cell-old { (PreEscaped(left)) }
+                            td.diff-cell-new { (PreEscaped(right)) }
+                        }
                     }
                 }
             }
@@ -2192,6 +2761,58 @@ async fn diff_page(
 
     let pending_count = pending_count_for(&state, maybe_user.as_ref()).await;
     Ok(chrome(&format!("Diff: {}", slug), body, &state.site_title, maybe_user.as_ref(), pending_count))
+}
+
+fn html_escape(s: &str) -> String {
+    s.replace('&', "&amp;").replace('<', "&lt;").replace('>', "&gt;")
+}
+
+/// Build (left_html, right_html) from a word-level diff of two lines.
+/// Changed words are wrapped in `<del>` / `<ins>`; equal words are plain.
+fn word_diff_pair(old_line: &str, new_line: &str) -> (String, String) {
+    let wd = similar::TextDiff::from_words(old_line, new_line);
+    let old_sl = wd.old_slices();
+    let new_sl = wd.new_slices();
+    let mut left = String::new();
+    let mut right = String::new();
+    for op in wd.ops() {
+        match *op {
+            similar::DiffOp::Equal { old_index, len, .. } => {
+                for s in &old_sl[old_index..old_index + len] {
+                    let e = html_escape(s);
+                    left.push_str(&e);
+                    right.push_str(&e);
+                }
+            }
+            similar::DiffOp::Delete { old_index, old_len, .. } => {
+                left.push_str("<del>");
+                for s in &old_sl[old_index..old_index + old_len] {
+                    left.push_str(&html_escape(s));
+                }
+                left.push_str("</del>");
+            }
+            similar::DiffOp::Insert { new_index, new_len, .. } => {
+                right.push_str("<ins>");
+                for s in &new_sl[new_index..new_index + new_len] {
+                    right.push_str(&html_escape(s));
+                }
+                right.push_str("</ins>");
+            }
+            similar::DiffOp::Replace { old_index, old_len, new_index, new_len } => {
+                left.push_str("<del>");
+                for s in &old_sl[old_index..old_index + old_len] {
+                    left.push_str(&html_escape(s));
+                }
+                left.push_str("</del>");
+                right.push_str("<ins>");
+                for s in &new_sl[new_index..new_index + new_len] {
+                    right.push_str(&html_escape(s));
+                }
+                right.push_str("</ins>");
+            }
+        }
+    }
+    (left, right)
 }
 
 /// Shared shell for non-article pages (search, category, errors).
@@ -2208,8 +2829,11 @@ fn chrome(_title: &str, body: Markup, site_title: &str, user: Option<&User>, pen
             body {
                 header.site-header {
                     a.site-title href="/" { (site_title) }
-                    form.header-search action="/search" method="get" {
-                        input type="search" name="q" placeholder="Search articles…" autocomplete="off";
+                    form.header-search #header-search-form action="/search" method="get" {
+                        div.header-search-wrap {
+                            input #header-search-q type="search" name="q" placeholder="Search articles…" autocomplete="off";
+                            div #search-autocomplete-dropdown style="display:none;" {}
+                        }
                         button type="submit" { "Search" }
                     }
                     nav.site-nav {
