@@ -9,7 +9,7 @@
 #   SLM_YOYO_GCP_INSTANCE=yoyo-tier-b-2 ./scripts/stop-yoyo.sh
 set -euo pipefail
 
-PROJECT=${SLM_YOYO_GCP_PROJECT:-pointsav-public}
+PROJECT=${SLM_YOYO_GCP_PROJECT:-woodfine-node-gcp-free}
 ZONE=${SLM_YOYO_GCP_ZONE:-us-west1-b}
 INSTANCE=${SLM_YOYO_GCP_INSTANCE:-yoyo-tier-b-1}
 
