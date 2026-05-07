@@ -35,6 +35,9 @@ async fn fixture_state() -> (AppState, tempfile::TempDir, tempfile::TempDir) {
         collab: Arc::new(app_mediakit_knowledge::collab::CollabRooms::new()),
         enable_collab: false,
         site_title: "PointSav Documentation Wiki".to_string(),
+        git_tenant: "pointsav".to_string(),
+        glossary: Arc::new(app_mediakit_knowledge::glossary::Glossary::default()),
+                db: None,
     };
     (state, dir, state_dir)
 }
@@ -119,6 +122,9 @@ async fn get_edit_initial_json_round_trips_special_chars() {
         collab: Arc::new(app_mediakit_knowledge::collab::CollabRooms::new()),
         enable_collab: false,
         site_title: "PointSav Documentation Wiki".to_string(),
+        git_tenant: "pointsav".to_string(),
+        glossary: Arc::new(app_mediakit_knowledge::glossary::Glossary::default()),
+                db: None,
     };
     let app = router(state);
     let resp = app
@@ -149,12 +155,14 @@ async fn post_edit_writes_to_existing_file_atomically() {
     let (state, dir, _state_dir) = fixture_state().await;
     let new_content = "---\ntitle: Updated\nslug: topic-existing\n---\n# New body\n";
     let app = router(state);
+    let json_body = serde_json::json!({"body": new_content, "edit_summary": ""});
     let resp = app
         .oneshot(
             Request::builder()
                 .method("POST")
                 .uri("/edit/topic-existing")
-                .body(Body::from(new_content))
+                .header("content-type", "application/json")
+                .body(Body::from(json_body.to_string()))
                 .unwrap(),
         )
         .await
@@ -170,12 +178,14 @@ async fn post_edit_writes_to_existing_file_atomically() {
 async fn post_edit_404_for_nonexistent_file() {
     let (state, _dir, _state_dir) = fixture_state().await;
     let app = router(state);
+    let json_body = serde_json::json!({"body": "anything", "edit_summary": ""});
     let resp = app
         .oneshot(
             Request::builder()
                 .method("POST")
                 .uri("/edit/topic-not-here")
-                .body(Body::from("anything"))
+                .header("content-type", "application/json")
+                .body(Body::from(json_body.to_string()))
                 .unwrap(),
         )
         .await
@@ -187,12 +197,14 @@ async fn post_edit_404_for_nonexistent_file() {
 async fn post_edit_rejects_invalid_slug_shape() {
     let (state, _dir, _state_dir) = fixture_state().await;
     let app = router(state);
+    let json_body = serde_json::json!({"body": "x", "edit_summary": ""});
     let resp = app
         .oneshot(
             Request::builder()
                 .method("POST")
                 .uri("/edit/Foo%20Bar")
-                .body(Body::from("x"))
+                .header("content-type", "application/json")
+                .body(Body::from(json_body.to_string()))
                 .unwrap(),
         )
         .await

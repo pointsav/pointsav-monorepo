@@ -1,51 +1,10 @@
-# Sub-Agent Queue Archive — project-intelligence
+# Sub-Agent Queue Archive — pointsav-monorepo
 
 Completed briefs archived from `sub-agent-queue.md`.
 
 ---
 
 ## Completed
-
-### 2026-04-30 — Iter-24 deep research — Yo-Yo training + TUI + service-content + service-slm-IS-Yo-Yo convention [COMPLETED commit `8ce4fce`]
-
-Operator-directed deep-research dispatch following Master v0.1.85 §7C LIVE
-+ Yo-Yo Phase 2 in-flight. Comprehensive scoping covering six operator
-concerns. 10,837 words; 11 sections; 22 external sources cited; 14 operator
-open questions; phased roadmap (Phase 0-6).
-
-- **Outcome**: 1 new doc at `service-slm/docs/yoyo-training-substrate-and-
-  service-content-integration.md`. No code changes. Tests still 154/154.
-  Commit `8ce4fce` (Peter Woodfine).
-- **Three urgent findings**:
-  1. service-content bypasses the Doorman — every LLM call goes to legacy
-     hardcoded `127.0.0.1:8082`, NOT port 9080 → no audit-ledger capture,
-     no apprenticeship corpus contribution. **Most urgent Phase 1 fix.**
-  2. KuzuDB acquired by Apple Oct 2025; project archived. ARCHITECTURE.md
-     §5.4 references the abandoned kuzu crate. LadybugDB is the named
-     successor but early-stage. Master decision needed before Phase 2.
-  3. OLMo 3 32B Think has NO commercial API anywhere (cite: Artificial
-     Analysis). Yo-Yo is literally the only way to use the Think variant.
-     Validates the Yo-Yo investment directly.
-- **3 Doctrine claim candidates** proposed in §7:
-  - **Claim #43 Single-Boundary Compute Discipline**: Doorman is the only
-    path to inference compute; bearer tokens live exclusively at the
-    Doorman; bypass = audit violation
-  - **Claim #44 Knowledge-Graph-Grounded Apprenticeship**: service-slm
-    queries service-content graph before every substantive inference;
-    (query, graph-context, response, verdict) tuple is atomic training
-    unit; graph + adapter co-evolve
-  - **Claim #45 TUI-as-Corpus-Producer**: every TUI sysadmin interaction
-    is a curated training tuple; ~200-500 explicit-verdict interactions
-    may be sufficient for a production IT-support adapter
-- **6 §9 Master-instruction proposals** ready for next outbox followup
-  (drafted in same housekeeping commit).
-- **Cost analysis**: effective cost-per-million-tokens for Yo-Yo inference
-  ~$0.25-0.40 blended at $0.18/hr L4 spot; **15-60x cheaper than Claude**
-  depending on tier. ROI math for G1 (decrease Claude tokens) strongly
-  positive within month 1 of training.
-- **Phased roadmap**: Phase 0 (now) → Phase 6 (Year 2 PointSav-LLM CPT
-  release). Total cluster-Task effort estimate ~6-8 weeks across phases
-  1-5; Master + operator effort interspersed.
 
 ### 2026-04-29 — Iter-23 §7C step 3 — shadow_handler async-202 + worker-side corpus write [COMPLETED commit `66790b8`]
 
@@ -373,7 +332,7 @@ hardening on the audit endpoints we shipped in PS.4.
     seen). Closed-tenant-set deployments unaffected; future hardening could
     add eviction if dynamic tenant sets become common.
   - `SLM_AUDIT_TENANT_CONCURRENCY_CAP` default 4 — high-volume tenants may
-    need to tune at deploy time. Note in guide-doorman when PS.8 lands.
+    need to tune at deploy time. Note in GUIDE-doorman when PS.8 lands.
   - Per-tenant request rate limit (requests-per-second) is a separate
     concern from in-flight count and not addressed in this iter.
 
@@ -420,7 +379,7 @@ explicit field instead of field-presence inference.
   directory.
 - **Tests**: 124/124 still passing — `temp_ledger` test helpers call
   `AuditLedger::new()` directly; main.rs change doesn't reach them.
-- Pairs with PS.8 guide-doorman handoff (still parked on Master catalog
+- Pairs with PS.8 GUIDE-doorman handoff (still parked on Master catalog
   provisioning).
 - Commit `5812501` (Peter Woodfine).
 

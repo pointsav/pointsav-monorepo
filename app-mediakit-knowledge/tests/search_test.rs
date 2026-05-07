@@ -55,6 +55,9 @@ async fn fixture_state() -> (AppState, tempfile::TempDir, tempfile::TempDir) {
         collab: Arc::new(app_mediakit_knowledge::collab::CollabRooms::new()),
         enable_collab: false,
         site_title: "PointSav Documentation Wiki".to_string(),
+        git_tenant: "pointsav".to_string(),
+        glossary: Arc::new(app_mediakit_knowledge::glossary::Glossary::default()),
+                db: None,
     };
     (state, dir, state_dir)
 }
@@ -151,13 +154,15 @@ async fn post_edit_triggers_reindex() {
 
     // Edit topic-alpha to remove "substrate" and add a unique new keyword.
     let new_body = "---\ntitle: \"Alpha v2\"\nslug: topic-alpha\n---\nAlpha now discusses tangerines and quokkas.\n";
+    let json_body = serde_json::json!({"body": new_body, "edit_summary": ""});
     let resp = app
         .clone()
         .oneshot(
             Request::builder()
                 .method("POST")
                 .uri("/edit/topic-alpha")
-                .body(Body::from(new_body))
+                .header("content-type", "application/json")
+                .body(Body::from(json_body.to_string()))
                 .unwrap(),
         )
         .await
