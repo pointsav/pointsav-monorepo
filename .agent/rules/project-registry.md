@@ -119,6 +119,7 @@ Last updated: 2026-04-25.
 | service-content | Scaffold-coded | service | 37 files; in workspace members |
 | service-egress | Scaffold-coded | service | 4 files |
 | service-email | Scaffold-coded | service | 18 files |
+| service-exchange | Reserved-folder | service | Ring 2 ad exchange — IAB OpenRTB 2.6; SSP + DSP bidirectional; Prebid Server sidecar; `iab-specs-openrtb` crate; Doctrine claim #52 |
 | service-email-egress-ews | Defect → `service-email-egress` | service | Doubly-nested; 6 sub-crates; consolidation pending |
 | service-email-egress-imap | Defect → `service-email-egress` | service | Same consolidation |
 | service-email-template | Scaffold-coded | service | 5 files |
@@ -189,10 +190,10 @@ Last updated: 2026-04-25.
 
 - **Active:** 5 (`app-console-bookkeeper`, `app-workplace-presentation`, `app-workplace-proforma`, `service-extraction`, `service-slm`)
 - **Scaffold-coded:** 50
-- **Reserved-folder:** 37
+- **Reserved-folder:** 38
 - **Defect:** 5 (`pointsav-pty-bridge`, `service-parser`, `service-email-egress-ews`, `service-email-egress-imap`, `vendors-maxmind`)
 - **Not-a-project:** 2 (`discovery-queue`, `target`)
 - **Dormant:** 0
 - **Archived:** 0
 
-**Total rows:** 101.
+**Total rows:** 102.
