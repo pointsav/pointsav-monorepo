@@ -38,6 +38,7 @@ use axum::{
     routing::{get, post},
     Json, Router,
 };
+use regex::Regex;
 use maud::{html, Markup, PreEscaped, DOCTYPE};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -47,11 +48,13 @@ use std::sync::{Arc, Mutex};
 use tokio::fs;
 
 use crate::assets::StaticAsset;
+use crate::auth::CurrentUser;
 use crate::collab::CollabRooms;
 use crate::error::WikiError;
 use crate::jsonld::jsonld_for_topic;
 use crate::render::{extract_headings, inject_edit_pencils, parse_page, render_html_raw, Frontmatter, TranslationMap};
 use crate::search::{search as run_search, SearchIndex};
+use crate::users::User;
 
 #[derive(Clone)]
 pub struct AppState {
@@ -88,8 +91,13 @@ pub struct AppState {
     /// and template `window.WIKI_COLLAB_ENABLED = true` into the editor
     /// page so `saa-init.js` lazy-loads the collab JS bundle.
     pub enable_collab: bool,
+    /// Phase 4 Step 4.7: tenant name for the read-only git remote.
+    pub git_tenant: String,
     /// Phase 10: Leapfrog 2030 glossary auto-linker.
     pub glossary: Arc<crate::glossary::Glossary>,
+    /// Phase 5: SQLite connection for users/sessions/pending-edits.
+    /// None when auth is not configured (no WIKI_ADMIN_USERNAME set).
+    pub db: Option<Arc<Mutex<rusqlite::Connection>>>,
 }
 
 pub fn router(state: AppState) -> Router {
@@ -124,6 +132,8 @@ pub fn router(state: AppState) -> Router {
         .route("/category/{name}", get(category_page))
         // Phase 3 Step 3.2 — full-text search HTML page over the tantivy index
         .route("/search", get(search_page))
+        .route("/wanted", get(wanted_page))
+        .route("/mcp", post(mcp_handler))
         // Phase 3 Step 3.3 — Atom + JSON Feed syndication
         .route("/feed.atom", get(crate::feeds::get_atom))
         .route("/feed.json", get(crate::feeds::get_json_feed))
@@ -135,6 +145,18 @@ pub fn router(state: AppState) -> Router {
         .route("/history/{*slug}", get(history_page))
         .route("/blame/{*slug}", get(blame_page))
         .route("/diff/{*slug}", get(diff_page))
+        // Phase 5 — auth + edit review
+        .route("/special/login", get(crate::auth::get_login).post(crate::auth::post_login))
+        .route("/special/logout", post(crate::auth::post_logout))
+        .route("/special/create-account", get(crate::auth::get_create_account).post(crate::auth::post_create_account))
+        .route("/special/pending-changes", get(crate::pending::review_queue))
+        .route("/special/pending/{id}", get(crate::pending::review_detail))
+        .route("/special/pending/{id}/accept", post(crate::pending::accept_edit))
+        .route("/special/pending/{id}/reject", post(crate::pending::reject_edit))
+        .route("/special/contributions/{username}", get(crate::pending::contributions))
+        // Phase 4 Step 4.7 — read-only git remote (smart-HTTP)
+        .route("/git-server/{tenant}/info/refs", get(crate::git_protocol::info_refs))
+        .route("/git-server/{tenant}/git-upload-pack", post(crate::git_protocol::upload_pack))
         // axum 0.8 doesn't allow a literal `.md` suffix after a dynamic
         // segment, so the route captures `{slug}` as a single segment and
         // the handler strips an optional trailing `.md` for the
@@ -166,10 +188,12 @@ async fn preview_api(
     let parsed = parse_page(&text)?;
     let title = parsed.frontmatter.title.unwrap_or_else(|| slug.clone());
     let snippet = crate::feeds::first_paragraph_snippet(&parsed.body_md, 300);
+    let image_url = crate::feeds::first_image_url(&parsed.body_md);
     
     Ok(Json(json!({
         "title": title,
         "snippet": snippet,
+        "image_url": image_url,
         "slug": slug
     })))
 }
@@ -184,6 +208,237 @@ struct SearchQueryParams {
     q: String,
 }
 
+/// `POST /mcp` — Minimal MCP (Model Context Protocol) JSON-RPC 2.0 endpoint.
+///
+/// Resources:
+///   - `article`  — full article HTML + frontmatter JSON by slug
+///   - `category` — article list for a category
+///   - `search`   — Tantivy full-text query, returns hits with title+snippet+slug
+///   - `wanted`   — redlink table (missing slug → source slugs)
+///
+/// Auth: open read-only, consistent with auth-less wiki mode.
+async fn mcp_handler(
+    State(state): State<Arc<AppState>>,
+    Json(req): Json<serde_json::Value>,
+) -> impl IntoResponse {
+    let id = req.get("id").cloned().unwrap_or(serde_json::Value::Null);
+    let method = req
+        .get("method")
+        .and_then(|v| v.as_str())
+        .unwrap_or("")
+        .to_string();
+    let params = req
+        .get("params")
+        .cloned()
+        .unwrap_or(serde_json::Value::Object(serde_json::Map::new()));
+
+    let result = mcp_dispatch(&state, &method, &params).await;
+
+    let body = match result {
+        Ok(v) => json!({ "jsonrpc": "2.0", "id": id, "result": v }),
+        Err(msg) => json!({
+            "jsonrpc": "2.0",
+            "id": id,
+            "error": { "code": -32000, "message": msg }
+        }),
+    };
+
+    (
+        [(header::CONTENT_TYPE, HeaderValue::from_static("application/json"))],
+        axum::Json(body),
+    )
+}
+
+async fn mcp_dispatch(
+    state: &AppState,
+    method: &str,
+    params: &serde_json::Value,
+) -> Result<serde_json::Value, String> {
+    match method {
+        "article" => {
+            let slug = params
+                .get("slug")
+                .and_then(|v| v.as_str())
+                .ok_or("missing param: slug")?;
+            if slug.contains("..") {
+                return Err("invalid slug".into());
+            }
+            let path = state.content_dir.join(format!("{slug}.md"));
+            let text = tokio::fs::read_to_string(&path)
+                .await
+                .map_err(|_| format!("article not found: {slug}"))?;
+            let parsed = crate::render::parse_page(&text)
+                .map_err(|e| format!("parse error: {e}"))?;
+            let html = crate::render::render_html_raw(&parsed.body_md, &state.content_dir);
+            Ok(json!({
+                "slug": slug,
+                "title": parsed.frontmatter.title,
+                "category": parsed.frontmatter.category,
+                "last_edited": parsed.frontmatter.last_edited,
+                "quality": parsed.frontmatter.quality,
+                "status": parsed.frontmatter.status,
+                "short_description": parsed.frontmatter.short_description,
+                "html": html,
+            }))
+        }
+        "category" => {
+            let name = params
+                .get("name")
+                .and_then(|v| v.as_str())
+                .ok_or("missing param: name")?;
+            let buckets = crate::server::bucket_topics_by_category(
+                &state.content_dir,
+                state.guide_dir.as_deref(),
+                state.guide_dir_2.as_deref(),
+            )
+            .await
+            .map_err(|e| format!("error: {e}"))?;
+            let empty = Vec::new();
+            let topics = buckets.get(name).unwrap_or(&empty);
+            let items: Vec<serde_json::Value> = topics
+                .iter()
+                .map(|t| json!({
+                    "slug": t.slug,
+                    "title": t.title,
+                    "last_edited": t.last_edited,
+                    "short_description": t.short_description,
+                }))
+                .collect();
+            Ok(json!({ "category": name, "count": items.len(), "articles": items }))
+        }
+        "search" => {
+            let q = params
+                .get("q")
+                .and_then(|v| v.as_str())
+                .ok_or("missing param: q")?;
+            let limit = params
+                .get("limit")
+                .and_then(|v| v.as_u64())
+                .unwrap_or(10) as usize;
+            let hits = crate::search::search(&state.search, q, limit)
+                .map_err(|e| format!("search error: {e}"))?;
+            let items: Vec<serde_json::Value> = hits
+                .iter()
+                .map(|h| json!({
+                    "slug": h.slug,
+                    "title": h.title,
+                    "snippet": h.snippet,
+                }))
+                .collect();
+            Ok(json!({ "query": q, "count": items.len(), "hits": items }))
+        }
+        "wanted" => {
+            let re = Regex::new(r#"href="/wiki/([^"]+)"[^>]*class="wiki-redlink""#)
+                .expect("static regex");
+            let topic_files = collect_all_topic_files(
+                &state.content_dir,
+                &[state.guide_dir.as_deref(), state.guide_dir_2.as_deref()],
+            )
+            .await
+            .map_err(|e| format!("error: {e}"))?;
+            let mut wanted: BTreeMap<String, Vec<String>> = BTreeMap::new();
+            for tf in &topic_files {
+                if let Ok(text) = tokio::fs::read_to_string(&tf.path).await {
+                    let html = crate::render::render_html_raw(&text, &state.content_dir);
+                    for cap in re.captures_iter(&html) {
+                        wanted
+                            .entry(cap[1].to_string())
+                            .or_default()
+                            .push(tf.slug.clone());
+                    }
+                }
+            }
+            let mut rows: Vec<serde_json::Value> = wanted
+                .into_iter()
+                .map(|(slug, sources)| json!({ "missing_slug": slug, "linked_from": sources }))
+                .collect();
+            rows.sort_by(|a, b| {
+                let la = a["linked_from"].as_array().map(|v| v.len()).unwrap_or(0);
+                let lb = b["linked_from"].as_array().map(|v| v.len()).unwrap_or(0);
+                lb.cmp(&la)
+            });
+            Ok(json!({ "count": rows.len(), "wanted": rows }))
+        }
+        _ => Err(format!("unknown method: {method}")),
+    }
+}
+
+/// `GET /wanted` — "Wanted articles" page.
+///
+/// Walks every .md file in content_dir, renders each, and collects all
+/// anchors tagged with `class="wiki-redlink"`. Returns a table sorted by
+/// inbound-link count (most-wanted first), matching Wikipedia's Special:WantedPages.
+async fn wanted_page(
+    State(state): State<Arc<AppState>>,
+    CurrentUser(maybe_user): CurrentUser,
+) -> Result<Markup, WikiError> {
+    let pending_count = pending_count_for(&state, maybe_user.as_ref()).await;
+    let re = Regex::new(r#"href="/wiki/([^"]+)"[^>]*class="wiki-redlink""#).expect("static regex");
+
+    // Walk all topic files and collect redlinks.
+    let topic_files = collect_all_topic_files(
+        &state.content_dir,
+        &[state.guide_dir.as_deref(), state.guide_dir_2.as_deref()],
+    )
+    .await?;
+
+    let mut wanted: BTreeMap<String, Vec<String>> = BTreeMap::new();
+    for tf in &topic_files {
+        if let Ok(text) = fs::read_to_string(&tf.path).await {
+            let html = crate::render::render_html_raw(&text, &state.content_dir);
+            for cap in re.captures_iter(&html) {
+                let missing = cap[1].to_string();
+                wanted.entry(missing).or_default().push(tf.slug.clone());
+            }
+        }
+    }
+
+    // Sort by inbound count descending.
+    let mut rows: Vec<(String, Vec<String>)> = wanted.into_iter().collect();
+    rows.sort_by(|a, b| b.1.len().cmp(&a.1.len()).then(a.0.cmp(&b.0)));
+
+    Ok(chrome(
+        &format!("Wanted articles — {}", state.site_title),
+        html! {
+            h1 { "Wanted articles" }
+            p.wiki-wanted-intro {
+                "Articles linked from other pages that do not yet exist. "
+                "Most-linked first."
+            }
+            @if rows.is_empty() {
+                p { em { "No wanted articles — all wikilinks resolve." } }
+            } @else {
+                table.wiki-wanted-table {
+                    thead {
+                        tr {
+                            th { "Missing article" }
+                            th { "Links in" }
+                            th { "Linked from" }
+                        }
+                    }
+                    tbody {
+                        @for (slug, sources) in &rows {
+                            tr {
+                                td { (slug) }
+                                td.wanted-count { (sources.len()) }
+                                td.wanted-sources {
+                                    @for (i, src) in sources.iter().enumerate() {
+                                        @if i > 0 { ", " }
+                                        a href={ "/wiki/" (src) } { (src) }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        &state.site_title,
+        maybe_user.as_ref(),
+        pending_count,
+    ))
+}
+
 /// Phase 3 Step 3.2 — `GET /search?q=...` HTML results page.
 ///
 /// Empty query → empty results + the search form. Renders within the
@@ -193,6 +448,7 @@ struct SearchQueryParams {
 async fn search_page(
     State(state): State<Arc<AppState>>,
     Query(params): Query<SearchQueryParams>,
+    CurrentUser(maybe_user): CurrentUser,
 ) -> Result<Markup, WikiError> {
     let query = params.q.trim().to_string();
     let hits = if query.is_empty() {
@@ -201,6 +457,7 @@ async fn search_page(
         run_search(&state.search, &query, 25)?
     };
 
+    let pending_count = pending_count_for(&state, maybe_user.as_ref()).await;
     Ok(chrome(
         if query.is_empty() {
             "Search".to_string()
@@ -252,6 +509,8 @@ async fn search_page(
             }
         },
         &state.site_title,
+        maybe_user.as_ref(),
+        pending_count,
     ))
 }
 
@@ -341,6 +600,7 @@ const RATIFIED_CATEGORIES: &[&str] = &[
     "company",
     "reference",
     "help",
+    "design-system",
 ];
 
 // ─── Home-page helpers ──────────────────────────────────────────────────────
@@ -650,7 +910,7 @@ fn bucket_guides_by_domain(guides: &[TopicSummary]) -> BTreeMap<String, Vec<Topi
 /// categories (excludes `index.md`, `_index.md`, and `*.es.md` siblings,
 /// matching `bucket_topics_by_category()` discipline).
 ///
-/// `category_count` is `RATIFIED_CATEGORIES.len()` — always 9, signalling
+/// `category_count` is `RATIFIED_CATEGORIES.len()` — always 10, signalling
 /// the platform's intended scope rather than only categories with
 /// articles.
 ///
@@ -684,47 +944,13 @@ fn compute_home_stats(buckets: &CategoryBuckets) -> HomeStats {
 /// - Two-column main panel:
 ///   - Left: Optional featured TOPIC panel
 ///   - Right: Optional Leapfrog 2030 inventions bullet panel
-/// - By-category 3×3 grid (all 9 ratified categories; empty ones show
+/// - By-category grid (all 10 ratified categories; empty ones show
 ///   "0 articles — in preparation")
 /// - Recent additions feed (top 5, sorted by `last_edited` descending)
 /// - Site footer with bilingual notice
 /// How many articles to preview per category before showing "All N →".
 /// Categories with ≤ PREVIEW_LIMIT articles always show the full list.
 const PREVIEW_LIMIT: usize = 8;
-
-// KEY_GUIDES removed — guides now served in-wiki via guide_dir and appear in
-// the Help category grid alongside TOPICs. No external GitHub links on home page.
-// Retained as dead code until woodfine-fleet-deployment is added to the cluster.
-#[allow(dead_code)]
-const KEY_GUIDES: &[(&str, &str, &str)] = &[
-    // AI & SLM
-    ("Operating the service-slm Doorman", "vault-privategit-source", "https://github.com/woodfine/woodfine-fleet-deployment/blob/main/vault-privategit-source/guide-doorman.md"),
-    ("Operating the Yo-Yo Tier B Deployment", "vault-privategit-source", "https://github.com/woodfine/woodfine-fleet-deployment/blob/main/vault-privategit-source/guide-operating-yoyo.md"),
-    ("Operating the Tier A Sysadmin TUI", "vault-privategit-source", "https://github.com/woodfine/woodfine-fleet-deployment/blob/main/vault-privategit-source/guide-tier-a-sysadmin-tui.md"),
-    // Personnel cluster
-    ("SLM Execution — Personnel Cluster", "cluster-totebox-personnel", "https://github.com/woodfine/woodfine-fleet-deployment/blob/main/cluster-totebox-personnel/guide-slm-execution.md"),
-    ("Sovereign Search Operations", "cluster-totebox-personnel", "https://github.com/woodfine/woodfine-fleet-deployment/blob/main/cluster-totebox-personnel/guide-sovereign-search.md"),
-    ("Microsoft Entra ID Sovereignty", "cluster-totebox-personnel", "https://github.com/woodfine/woodfine-fleet-deployment/blob/main/cluster-totebox-personnel/guide-msft-entra-id.md"),
-    ("Ingress Operations & Self-Healing Loop", "cluster-totebox-personnel", "https://github.com/woodfine/woodfine-fleet-deployment/blob/main/cluster-totebox-personnel/guide-ingress-operations.md"),
-    ("Totebox Orchestration & Autonomous Synthesis", "cluster-totebox-personnel", "https://github.com/woodfine/woodfine-fleet-deployment/blob/main/cluster-totebox-personnel/guide-totebox-orchestration.md"),
-    ("LinkedIn Adapter (service-message-courier)", "cluster-totebox-personnel", "https://github.com/woodfine/woodfine-fleet-deployment/blob/main/cluster-totebox-personnel/guide-linkedin-adapter.md"),
-    ("Physical Egress — Cold Storage Backup", "cluster-totebox-personnel", "https://github.com/woodfine/woodfine-fleet-deployment/blob/main/cluster-totebox-personnel/guide-cold-storage-sync.md"),
-    ("Personnel Ledger Operations", "cluster-totebox-personnel", "https://github.com/woodfine/woodfine-fleet-deployment/blob/main/cluster-totebox-personnel/guide-personnel-ledger.md"),
-    // Network & command
-    ("PointSav Private Network Orchestration", "route-network-admin", "https://github.com/woodfine/woodfine-fleet-deployment/blob/main/route-network-admin/guide-mesh-orchestration.md"),
-    ("Unified Command Ledger Operations", "node-console-operator", "https://github.com/woodfine/woodfine-fleet-deployment/blob/main/node-console-operator/guide-command-ledger.md"),
-    // Infrastructure
-    ("Bare-Metal Provisioning & Mesh Fusion", "fleet-infrastructure-onprem", "https://github.com/woodfine/woodfine-fleet-deployment/blob/main/fleet-infrastructure-onprem/guide-provision-onprem.md"),
-    ("LXC Network Ledger Provisioning", "fleet-infrastructure-onprem", "https://github.com/woodfine/woodfine-fleet-deployment/blob/main/fleet-infrastructure-onprem/guide-lxc-network-admin.md"),
-    ("PPN Cloud Anchor Ignition", "fleet-infrastructure-cloud", "https://github.com/woodfine/woodfine-fleet-deployment/blob/main/fleet-infrastructure-cloud/guide-provision-relay.md"),
-    ("Sovereign VPN Deployment", "fleet-infrastructure-leased", "https://github.com/woodfine/woodfine-fleet-deployment/blob/main/fleet-infrastructure-leased/guide-deploy-vpn.md"),
-    ("Standalone Bare-Metal Provisioning", "fleet-infrastructure-leased", "https://github.com/woodfine/woodfine-fleet-deployment/blob/main/fleet-infrastructure-leased/guide-provision-standalone.md"),
-    // Fleet-wide operations
-    ("Physical Egress — Regulatory Printing", "woodfine-fleet-deployment", "https://github.com/woodfine/woodfine-fleet-deployment/blob/main/guide-physical-egress.md"),
-    ("Woodfine Telemetry Operations", "woodfine-fleet-deployment", "https://github.com/woodfine/woodfine-fleet-deployment/blob/main/guide-telemetry-operations.md"),
-    ("Operating the Knowledge Wiki", "media-knowledge-documentation", "https://github.com/woodfine/woodfine-fleet-deployment/blob/main/media-knowledge-documentation/guide-operate-knowledge-wiki.md"),
-    ("Telemetry Engine Integration", "media-marketing-landing", "https://github.com/pointsav/pointsav-fleet-deployment/blob/main/media-marketing-landing/guide-telemetry-integration.md"),
-];
 
 fn home_chrome(
     home_fm: &crate::render::Frontmatter,
@@ -736,6 +962,8 @@ fn home_chrome(
     featured: Option<FeaturedArticle>,
     dyk: Option<LeapfrogFacts>,
     site_title: &str,
+    user: Option<&User>,
+    pending_count: i64,
 ) -> Markup {
     let _title = home_fm.title.as_deref().unwrap_or(site_title);
 
@@ -771,6 +999,7 @@ fn home_chrome(
                     }
                     nav.site-nav {
                         a href="/" { "Home" }
+                        (auth_nav_widget(user, pending_count))
                     }
                 }
                 main.site-main {
@@ -790,7 +1019,6 @@ fn home_chrome(
                                 @if let Some(ref d) = stats.last_updated {
                                     " — last updated " time datetime=(d) { (d) }
                                 }
-                                "."
                             }
                         }
                     }
@@ -969,7 +1197,7 @@ fn capitalise(s: &str) -> String {
 
 /// Current flat-listing index behaviour, preserved for the absent-`index.md`
 /// case. Extracted verbatim from the pre-iteration-1 `index()` handler.
-async fn placeholder_index(state: &AppState) -> Result<Markup, WikiError> {
+async fn placeholder_index(state: &AppState, user: Option<&User>, pending_count: i64) -> Result<Markup, WikiError> {
     let mut entries = fs::read_dir(&state.content_dir).await?;
     let mut pages: Vec<String> = Vec::new();
     while let Some(entry) = entries.next_entry().await? {
@@ -1006,6 +1234,8 @@ async fn placeholder_index(state: &AppState) -> Result<Markup, WikiError> {
             }
         },
         &state.site_title,
+        user,
+        pending_count,
     ))
 }
 
@@ -1014,17 +1244,43 @@ async fn placeholder_index(state: &AppState) -> Result<Markup, WikiError> {
 async fn category_page(
     State(state): State<Arc<AppState>>,
     Path(name): Path<String>,
+    CurrentUser(maybe_user): CurrentUser,
 ) -> Result<Markup, WikiError> {
+    let pending_count = pending_count_for(&state, maybe_user.as_ref()).await;
     let buckets = bucket_topics_by_category(&state.content_dir, state.guide_dir.as_deref(), state.guide_dir_2.as_deref()).await?;
     let empty: Vec<TopicSummary> = Vec::new();
     let topics = buckets.get(&name).unwrap_or(&empty);
     let display = capitalise(&name);
     let count = topics.len();
 
+    // Render _index.md MOC prose above the auto-list when present.
+    let moc_html: Option<String> = {
+        let index_path = state.content_dir.join(&name).join("_index.md");
+        if index_path.exists() {
+            match fs::read_to_string(&index_path).await {
+                Ok(text) => {
+                    if let Ok(parsed) = crate::render::parse_page(&text) {
+                        Some(crate::render::render_html_raw(&parsed.body_md, &state.content_dir))
+                    } else {
+                        None
+                    }
+                }
+                Err(_) => None,
+            }
+        } else {
+            None
+        }
+    };
+
     Ok(chrome(
         &format!("{display} — {}", state.site_title),
         html! {
             h1.wiki-cat-page-title { (display) }
+            @if let Some(ref moc) = moc_html {
+                div.wiki-cat-moc {
+                    (PreEscaped(moc))
+                }
+            }
             @if count == 0 {
                 p.wiki-cat-page-empty { "No articles in this category yet." }
             } @else {
@@ -1047,15 +1303,21 @@ async fn category_page(
             }
         },
         &state.site_title,
+        maybe_user.as_ref(),
+        pending_count,
     ))
 }
 
 // ─── index handler ──────────────────────────────────────────────────────────
 
-async fn index(State(state): State<Arc<AppState>>) -> Result<Markup, WikiError> {
+async fn index(
+    State(state): State<Arc<AppState>>,
+    CurrentUser(maybe_user): CurrentUser,
+) -> Result<Markup, WikiError> {
+    let pending_count = pending_count_for(&state, maybe_user.as_ref()).await;
     let home_path = state.content_dir.join("index.md");
     if !home_path.exists() {
-        return placeholder_index(&state).await;
+        return placeholder_index(&state, maybe_user.as_ref(), pending_count).await;
     }
 
     let home_text = fs::read_to_string(&home_path).await?;
@@ -1094,12 +1356,15 @@ async fn index(State(state): State<Arc<AppState>>) -> Result<Markup, WikiError> 
         featured,
         dyk,
         &state.site_title,
+        maybe_user.as_ref(),
+        pending_count,
     ))
 }
 
 async fn wiki_page(
     State(state): State<Arc<AppState>>,
     Path(slug): Path<String>,
+    CurrentUser(maybe_user): CurrentUser,
 ) -> Result<Markup, WikiError> {
     // Slug safety: reject path traversal. Allow at most one `/` separator
     // for category-scoped slugs (`architecture/compounding-substrate`).
@@ -1183,7 +1448,7 @@ async fn wiki_page(
     // Two-step render: extract headings from clean comrak output (no edit pencils),
     // then inject pencils for the final body HTML. This keeps TOC text clean.
     let raw_html = render_html_raw(&parsed.body_md, &state.content_dir);
-    let mut raw_html = crate::glossary::inject_glossary_tooltips(&raw_html, &state.glossary);
+    let raw_html = crate::glossary::inject_glossary_tooltips(&raw_html, &state.glossary);
     let headings = extract_headings(&raw_html);
     let body_html = inject_edit_pencils(&raw_html);
     let title = parsed
@@ -1210,7 +1475,8 @@ async fn wiki_page(
         }
     }
         
-    Ok(wiki_chrome(&title, &slug, parsed.frontmatter, &body_html, headings, &backlinks, &state.site_title))
+    let pending_count = pending_count_for(&state, maybe_user.as_ref()).await;
+    Ok(wiki_chrome(&title, &slug, parsed.frontmatter, &body_html, headings, &backlinks, &state.site_title, maybe_user.as_ref(), pending_count))
 }
 
 async fn static_asset(Path(path): Path<String>) -> Response {
@@ -1255,8 +1521,10 @@ fn wiki_chrome(
     headings: Vec<(String, String, u8)>,
     backlinks: &[TopicSummary],
     site_title: &str,
+    user: Option<&User>,
+    pending_count: i64,
 ) -> Markup {
-    let talk_slug = format!("{slug}.talk");
+    let _talk_slug = format!("{slug}.talk");
 
     // Breadcrumb: derive category from frontmatter `category:` field,
     // or from the slug prefix when the TOPIC is in a subdirectory.
@@ -1286,8 +1554,28 @@ fn wiki_chrome(
                     }
                     nav.site-nav {
                         a href="/" { "Home" }
+                        (auth_nav_widget(user, pending_count))
+                    }
+                    button.nav-toggle-btn #nav-toggle
+                        aria-label="Toggle navigation"
+                        aria-expanded="false"
+                        aria-controls="mobile-nav-drawer"
+                    { "☰" }
+                }
+
+                // Mobile nav drawer — hidden on desktop, toggled by hamburger button
+                nav.mobile-nav-drawer #mobile-nav-drawer aria-hidden="true" {
+                    div.mobile-nav-header {
+                        a.site-title href="/" { (site_title) }
+                        button.mobile-nav-close #mobile-nav-close aria-label="Close navigation" { "✕" }
+                    }
+                    ul.mobile-nav-list {
+                        li { a href="/" { "Home" } }
+                        li { a href="/search" { "Search" } }
+                        li { a href="/wanted" { "Wanted articles" } }
                     }
                 }
+                div.mobile-nav-overlay #mobile-nav-overlay aria-hidden="true" {}
 
                 // Article-page two-column layout: left TOC rail + article body
                 div.wiki-layout {
@@ -1319,7 +1607,7 @@ fn wiki_chrome(
                         // Breadcrumb navigation — "Documentation > Category > Title"
                         @if let Some(ref cat) = breadcrumb_category {
                             nav.wiki-breadcrumb aria-label="Breadcrumb" {
-                                a href="/" { "Documentation" }
+                                a href="/" { (site_title) }
                                 span.wiki-breadcrumb-sep { " › " }
                                 a href={ "/category/" (cat.to_lowercase()) } { (cat) }
                                 span.wiki-breadcrumb-sep { " › " }
@@ -1345,7 +1633,12 @@ fn wiki_chrome(
                             // Language button sits BELOW the H1, left-aligned —
                             // matching MediaWiki Vector 2022 (.mw-portlet-lang placement).
                             div.wiki-title-block {
-                                h1.page-title { (title) }
+                                h1.page-title {
+                                    (title)
+                                    @if let Some(ref q) = fm.quality {
+                                        span class={ "quality-badge quality-" (q) } { (q) }
+                                    }
+                                }
                                 @if let Some(translations) = &fm.translations {
                                     @if !translations.is_empty() {
                                         div.wiki-lang-switcher {
@@ -1384,9 +1677,11 @@ fn wiki_chrome(
                                     href={ "/wiki/" (slug) }
                                     aria-current="page"
                                 { "Read" }
-                                a.wiki-tab
-                                    href={ "/edit/" (slug) }
-                                { "Edit" }
+                                @if user.is_some() {
+                                    a.wiki-tab href={ "/edit/" (slug) } { "Edit" }
+                                } @else {
+                                    a.wiki-tab href={ "/git/" (slug) } title="Log in to edit" { "View source" }
+                                }
                                 a.wiki-tab
                                     href={ "/history/" (slug) }
                                 { "View history" }
@@ -1416,6 +1711,13 @@ fn wiki_chrome(
                                 strong { "Forward-looking information." }
                                 " Statements herein are subject to material assumptions and risks. "
                                 "Per NI 51-102 / OSC SN 51-721 disclosure posture."
+                            }
+                        }
+
+                        // Stub notice: hatnote-style banner when status == "stub"
+                        @if fm.status.as_deref() == Some("stub") {
+                            div.stub-notice {
+                                em { "This article is a stub. You can expand it." }
                             }
                         }
 
@@ -1702,6 +2004,7 @@ async fn git_markdown(
 async fn history_page(
     State(state): State<Arc<AppState>>,
     Path(slug): Path<String>,
+    CurrentUser(maybe_user): CurrentUser,
 ) -> Result<Markup, WikiError> {
     crate::edit::validate_slug(&slug)?;
     let path = state.content_dir.join(format!("{slug}.md"));
@@ -1746,12 +2049,14 @@ async fn history_page(
         }
     };
 
-    Ok(chrome(&format!("History: {}", slug), body, &state.site_title))
+    let pending_count = pending_count_for(&state, maybe_user.as_ref()).await;
+    Ok(chrome(&format!("History: {}", slug), body, &state.site_title, maybe_user.as_ref(), pending_count))
 }
 
 async fn blame_page(
     State(state): State<Arc<AppState>>,
     Path(slug): Path<String>,
+    CurrentUser(maybe_user): CurrentUser,
 ) -> Result<Markup, WikiError> {
     crate::edit::validate_slug(&slug)?;
     let path = state.content_dir.join(format!("{slug}.md"));
@@ -1781,7 +2086,8 @@ async fn blame_page(
         }
     };
 
-    Ok(chrome(&format!("Blame: {}", slug), body, &state.site_title))
+    let pending_count = pending_count_for(&state, maybe_user.as_ref()).await;
+    Ok(chrome(&format!("Blame: {}", slug), body, &state.site_title, maybe_user.as_ref(), pending_count))
 }
 
 #[derive(Deserialize)]
@@ -1794,6 +2100,7 @@ async fn diff_page(
     State(state): State<Arc<AppState>>,
     Path(slug): Path<String>,
     Query(query): Query<DiffQueryParams>,
+    CurrentUser(maybe_user): CurrentUser,
 ) -> Result<Markup, WikiError> {
     crate::edit::validate_slug(&slug)?;
     let a_sha = query.a.unwrap_or_default();
@@ -1826,11 +2133,12 @@ async fn diff_page(
         }
     };
 
-    Ok(chrome(&format!("Diff: {}", slug), body, &state.site_title))
+    let pending_count = pending_count_for(&state, maybe_user.as_ref()).await;
+    Ok(chrome(&format!("Diff: {}", slug), body, &state.site_title, maybe_user.as_ref(), pending_count))
 }
 
 /// Shared shell for non-article pages (search, category, errors).
-fn chrome(title: &str, body: Markup, site_title: &str) -> Markup {
+fn chrome(_title: &str, body: Markup, site_title: &str, user: Option<&User>, pending_count: i64) -> Markup {
     html! {
         (DOCTYPE)
         html lang="en" {
@@ -1849,6 +2157,7 @@ fn chrome(title: &str, body: Markup, site_title: &str) -> Markup {
                     }
                     nav.site-nav {
                         a href="/" { "Home" }
+                        (auth_nav_widget(user, pending_count))
                     }
                 }
                 main.site-main {
@@ -1860,6 +2169,43 @@ fn chrome(title: &str, body: Markup, site_title: &str) -> Markup {
             }
         }
     }
+}
+
+fn auth_nav_widget(user: Option<&User>, pending_count: i64) -> Markup {
+    html! {
+        @if let Some(u) = user {
+            " · "
+            span.nav-username { (u.username) }
+            @if u.is_admin() && pending_count > 0 {
+                " "
+                a.pending-badge href="/special/pending-changes" {
+                    (pending_count) " pending"
+                }
+            }
+            " · "
+            form method="post" action="/special/logout" style="display:inline;" {
+                button.nav-logout-btn type="submit" { "Log out" }
+            }
+        } @else {
+            " · "
+            a href="/special/login" { "Log in" }
+        }
+    }
+}
+
+async fn pending_count_for(state: &AppState, user: Option<&User>) -> i64 {
+    let Some(u) = user else { return 0; };
+    if !u.is_admin() {
+        return 0;
+    }
+    let Some(db) = &state.db else { return 0; };
+    let db = db.clone();
+    tokio::task::spawn_blocking(move || {
+        let conn = db.lock().unwrap();
+        crate::pending::count_pending(&conn).unwrap_or(0)
+    })
+    .await
+    .unwrap_or(0)
 }
 
 #[cfg(test)]
@@ -1898,6 +2244,9 @@ mod tests {
                 collab: Arc::new(crate::collab::CollabRooms::new()),
                 enable_collab: false,
                 site_title: "PointSav Documentation Wiki".to_string(),
+                git_tenant: "pointsav".to_string(),
+                glossary: Arc::new(crate::glossary::Glossary::default()),
+                db: None,
             },
             dir,
             state_dir,
@@ -1990,7 +2339,7 @@ mod tests {
         assert!(html.contains("Article"), "Article tab should appear: {html}");
         assert!(html.contains("Talk"), "Talk tab should appear: {html}");
         assert!(html.contains("Read"), "Read tab should appear: {html}");
-        assert!(html.contains("Edit"), "Edit tab should appear: {html}");
+        assert!(html.contains("View source"), "View source tab should appear (unauthenticated): {html}");
         assert!(html.contains("View history"), "View history tab should appear: {html}");
     }
 
@@ -2063,6 +2412,9 @@ mod tests {
             collab: Arc::new(crate::collab::CollabRooms::new()),
             enable_collab: false,
             site_title: "PointSav Documentation Wiki".to_string(),
+            git_tenant: "pointsav".to_string(),
+            glossary: Arc::new(crate::glossary::Glossary::default()),
+                db: None,
         };
         let app = router(state);
         let resp = app
@@ -2133,6 +2485,9 @@ mod tests {
             collab: Arc::new(crate::collab::CollabRooms::new()),
             enable_collab: false,
             site_title: "PointSav Documentation Wiki".to_string(),
+            git_tenant: "pointsav".to_string(),
+            glossary: Arc::new(crate::glossary::Glossary::default()),
+                db: None,
         };
         let app = router(state);
         let resp = app
@@ -2181,6 +2536,9 @@ mod tests {
             collab: Arc::new(crate::collab::CollabRooms::new()),
             enable_collab: false,
             site_title: "PointSav Documentation Wiki".to_string(),
+            git_tenant: "pointsav".to_string(),
+            glossary: Arc::new(crate::glossary::Glossary::default()),
+                db: None,
         };
         let app = router(state);
         let resp = app
@@ -2226,6 +2584,9 @@ mod tests {
             collab: Arc::new(crate::collab::CollabRooms::new()),
             enable_collab: false,
             site_title: "PointSav Documentation Wiki".to_string(),
+            git_tenant: "pointsav".to_string(),
+            glossary: Arc::new(crate::glossary::Glossary::default()),
+                db: None,
         };
         let app = router(state);
         let resp = app
@@ -2275,6 +2636,9 @@ mod tests {
             collab: Arc::new(crate::collab::CollabRooms::new()),
             enable_collab: false,
             site_title: "PointSav Documentation Wiki".to_string(),
+            git_tenant: "pointsav".to_string(),
+            glossary: Arc::new(crate::glossary::Glossary::default()),
+                db: None,
         };
         let app = router(state);
         let resp = app
@@ -2326,6 +2690,9 @@ mod tests {
             collab: Arc::new(crate::collab::CollabRooms::new()),
             enable_collab: false,
             site_title: "PointSav Documentation Wiki".to_string(),
+            git_tenant: "pointsav".to_string(),
+            glossary: Arc::new(crate::glossary::Glossary::default()),
+                db: None,
         };
         let app = router(state);
         let resp = app
@@ -2380,6 +2747,9 @@ mod tests {
             collab: Arc::new(crate::collab::CollabRooms::new()),
             enable_collab: false,
             site_title: "PointSav Documentation Wiki".to_string(),
+            git_tenant: "pointsav".to_string(),
+            glossary: Arc::new(crate::glossary::Glossary::default()),
+                db: None,
         };
         let app = router(state);
         let resp = app
@@ -2436,6 +2806,9 @@ mod tests {
             collab: Arc::new(crate::collab::CollabRooms::new()),
             enable_collab: false,
             site_title: "PointSav Documentation Wiki".to_string(),
+            git_tenant: "pointsav".to_string(),
+            glossary: Arc::new(crate::glossary::Glossary::default()),
+                db: None,
         };
         let app = router(state);
         let resp = app
@@ -2494,6 +2867,9 @@ mod tests {
             collab: Arc::new(crate::collab::CollabRooms::new()),
             enable_collab: false,
             site_title: "PointSav Documentation Wiki".to_string(),
+            git_tenant: "pointsav".to_string(),
+            glossary: Arc::new(crate::glossary::Glossary::default()),
+                db: None,
         };
         let app = router(state);
         let resp = app
@@ -2545,6 +2921,9 @@ mod tests {
             collab: Arc::new(crate::collab::CollabRooms::new()),
             enable_collab: false,
             site_title: "PointSav Documentation Wiki".to_string(),
+            git_tenant: "pointsav".to_string(),
+            glossary: Arc::new(crate::glossary::Glossary::default()),
+                db: None,
         };
         let app = router(state);
         let resp = app
