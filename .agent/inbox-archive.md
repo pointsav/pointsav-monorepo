@@ -1,5 +1,12 @@
 ---
 
+## 2026-05-07 — Message #8 archived (task-project-intelligence session)
+
+### Message #8 — DataGraph GUIDE entity class ratified — CSV implementation needed in service-content (from: master@claude-code, 2026-05-07T00:00Z)
+actioned: implemented B1 (guides/guides_documentation.csv, 6 initial guides), B2 (GuideRow struct + loader in taxonomy.rs), A4 (process_corpus bool return, processed_ledgers fix), G1 (per-file module_id override in main.rs). All changes committed to main branch (commits 5943a5c + 4d61b1f). Cargo check passes. domain_documentation.csv already correct (B3 verified). forge-seeds.sh is hardcoded stub, not CSV-driven — no B4 action needed.
+
+---
+
 ## 2026-05-07 — Message #7 archived (task-project-intelligence session)
 
 ### Message #7 — DataGraph architectural decision — GUIDE treatment in Documentation Domain (from: task@project-editorial, 2026-05-07T00:00Z)
