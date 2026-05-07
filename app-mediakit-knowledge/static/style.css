@@ -1391,3 +1391,491 @@ a.wiki-redlink:visited {
   font-style: italic;
   color: var(--fg-muted);
 }
+.wiki-hover-card img {
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+  margin-bottom: 0.75rem;
+  border-radius: 1px;
+  background: var(--bg-soft);
+}
+
+/* Glossary Tooltips */
+.wiki-glossary-tooltip {
+  position: absolute;
+  z-index: 1001;
+  max-width: 250px;
+  background: var(--fg);
+  color: var(--bg);
+  padding: 0.5rem 0.75rem;
+  border-radius: 2px;
+  font-size: 0.8125rem;
+  line-height: 1.3;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  pointer-events: none;
+}
+
+/* ── Phase 5: Auth nav widget ─────────────────────────────────────── */
+
+.nav-username {
+  font-weight: 500;
+}
+
+.nav-logout-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: inherit;
+  padding: 0;
+  font: inherit;
+  font-size: inherit;
+  text-decoration: underline;
+}
+
+.nav-logout-btn:hover {
+  color: var(--link);
+}
+
+.pending-badge {
+  display: inline-block;
+  background: #d73c3c;
+  color: #fff;
+  border-radius: 10px;
+  padding: 0.1rem 0.45rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-decoration: none;
+  vertical-align: middle;
+  margin-left: 0.2rem;
+}
+
+.pending-badge:hover {
+  background: #b52e2e;
+}
+
+/* ── Phase 5: Login page ──────────────────────────────────────────── */
+
+body.login-body {
+  background: var(--bg);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  max-width: 840px;
+  width: 100%;
+  min-height: 420px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.07);
+}
+
+.login-brand {
+  background: var(--fg);
+  color: var(--bg);
+  padding: 2.5rem 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.login-brand-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  color: var(--bg);
+}
+
+.login-brand-icon {
+  font-size: 1.5rem;
+}
+
+.login-brand-name {
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.login-brand-tagline {
+  font-size: 0.9rem;
+  opacity: 0.85;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.login-brand-note {
+  font-size: 0.8125rem;
+  opacity: 0.65;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.login-form-panel {
+  background: var(--bg);
+  padding: 2.5rem 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.login-heading {
+  font-size: 1.375rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.login-error {
+  background: #ffeef0;
+  color: #b52e2e;
+  border: 1px solid #f5c2c7;
+  border-radius: 3px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.login-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.login-field label {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.login-field input {
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 0.5rem 0.625rem;
+  font: inherit;
+  font-size: 0.9375rem;
+  background: var(--bg);
+  color: var(--fg);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.login-field input:focus {
+  outline: 2px solid var(--link);
+  outline-offset: -1px;
+}
+
+.login-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.login-submit {
+  background: var(--link);
+  color: #fff;
+  border: none;
+  border-radius: 3px;
+  padding: 0.6rem 1.25rem;
+  font: inherit;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  cursor: pointer;
+  align-self: flex-start;
+}
+
+.login-submit:hover {
+  opacity: 0.88;
+}
+
+@media (max-width: 580px) {
+  .login-layout {
+    grid-template-columns: 1fr;
+  }
+  .login-brand {
+    padding: 1.5rem 1.25rem;
+  }
+}
+
+/* ── Phase 5: Pending-edit review pages ───────────────────────────── */
+
+.pending-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  margin-top: 1rem;
+}
+
+.pending-table th,
+.pending-table td {
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+
+.pending-table th {
+  font-weight: 600;
+  border-bottom: 2px solid var(--border);
+}
+
+.pending-summary {
+  color: var(--muted-fg, #6b7280);
+  font-style: italic;
+  max-width: 280px;
+}
+
+.pending-review-link {
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+.pending-meta {
+  font-size: 0.875rem;
+  color: var(--muted-fg, #6b7280);
+  margin-top: 0;
+}
+
+.pending-edit-summary {
+  font-size: 0.9rem;
+  background: var(--code-bg, #f6f8fa);
+  border-left: 3px solid var(--border);
+  padding: 0.5rem 0.75rem;
+  margin: 0.5rem 0 1.5rem;
+}
+
+/* Diff display */
+.pending-diff {
+  font-family: var(--mono, 'Fira Code', monospace);
+  font-size: 0.82rem;
+  line-height: 1.5;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  overflow-x: auto;
+  max-height: 480px;
+  overflow-y: auto;
+}
+
+.diff-group {
+  border-bottom: 2px dashed var(--border);
+  padding: 0.25rem 0;
+}
+
+.diff-group:last-child {
+  border-bottom: none;
+}
+
+.diff-del {
+  background: #ffeef0;
+  color: #b52e2e;
+  white-space: pre;
+  padding: 0.1rem 0.5rem;
+}
+
+.diff-ins {
+  background: #e6ffec;
+  color: #1a7f37;
+  white-space: pre;
+  padding: 0.1rem 0.5rem;
+}
+
+.diff-eq {
+  color: var(--muted-fg, #6b7280);
+  white-space: pre;
+  padding: 0.1rem 0.5rem;
+}
+
+/* Review action forms */
+.pending-review-forms {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+}
+
+.pending-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-width: 600px;
+}
+
+.pending-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.pending-field label {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.pending-field input {
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 0.45rem 0.625rem;
+  font: inherit;
+  font-size: 0.9rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.pending-btn-reject {
+  background: #ffeef0;
+  color: #b52e2e;
+  border: 1px solid #f5c2c7;
+  border-radius: 3px;
+  padding: 0.5rem 1.25rem;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  align-self: flex-start;
+}
+
+.pending-btn-reject:hover {
+  background: #f5c2c7;
+}
+
+.pending-btn-accept {
+  display: inline-block;
+  background: #1a7f37;
+  color: #fff;
+  border: none;
+  border-radius: 3px;
+  padding: 0.55rem 1.4rem;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.pending-btn-accept:hover {
+  background: #116329;
+}
+
+/* Contribution status badges */
+.pending-status-pending  { color: #9a6700; background: #fff8c5; padding: 0.15rem 0.4rem; border-radius: 2px; font-size: 0.8rem; font-weight: 600; }
+.pending-status-accepted { color: #1a7f37; background: #dafbe1; padding: 0.15rem 0.4rem; border-radius: 2px; font-size: 0.8rem; font-weight: 600; }
+.pending-status-rejected { color: #b52e2e; background: #ffeef0; padding: 0.15rem 0.4rem; border-radius: 2px; font-size: 0.8rem; font-weight: 600; }
+
+/* ── Quality badges ────────────────────────────────────────────────────── */
+.quality-badge {
+  display: inline-block;
+  margin-left: 0.5rem;
+  padding: 0.1rem 0.45rem;
+  border-radius: 3px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  vertical-align: middle;
+  line-height: 1.6;
+}
+.quality-complete { background: #dafbe1; color: #1a7f37; border: 1px solid #aaefc1; }
+.quality-core     { background: #ddf4ff; color: #0969da; border: 1px solid #9cd8fd; }
+.quality-stub     { background: #fff8c5; color: #9a6700; border: 1px solid #f5d773; }
+
+/* ── Stub notice (article-scope hatnote) ───────────────────────────────── */
+.stub-notice {
+  margin: 0.6rem 0 0.8rem;
+  padding: 0.35rem 0.75rem;
+  border-left: 3px solid #d9e8f5;
+  background: #f6f8fa;
+  color: #57606a;
+  font-size: 0.9rem;
+}
+
+/* ── Category page MOC prose (from _index.md) ─────────────────────────── */
+.wiki-cat-moc {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--color-border, #d0d7de);
+}
+
+/* ── Mobile hamburger nav ──────────────────────────────────────────────── */
+.nav-toggle-btn {
+  display: none;
+  background: none;
+  border: none;
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0.3rem 0.5rem;
+  color: inherit;
+}
+
+.mobile-nav-drawer {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: min(280px, 85vw);
+  height: 100%;
+  background: #fff;
+  box-shadow: 2px 0 12px rgba(0,0,0,0.18);
+  z-index: 1001;
+  flex-direction: column;
+  padding: 1rem;
+  overflow-y: auto;
+}
+.mobile-nav-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+.mobile-nav-close {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0.25rem 0.4rem;
+}
+.mobile-nav-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.mobile-nav-list li { border-bottom: 1px solid #eee; }
+.mobile-nav-list a {
+  display: block;
+  padding: 0.75rem 0.5rem;
+  text-decoration: none;
+  color: inherit;
+  font-size: 1rem;
+}
+.mobile-nav-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+  z-index: 1000;
+}
+
+@media (max-width: 799px) {
+  .nav-toggle-btn { display: inline-flex; }
+  body[data-nav-open] .mobile-nav-drawer { display: flex; }
+  body[data-nav-open] .mobile-nav-overlay { display: block; }
+}
+
+/* ── Wanted articles page ──────────────────────────────────────────────── */
+.wiki-wanted-intro { color: #57606a; margin-bottom: 1rem; }
+.wiki-wanted-table { border-collapse: collapse; width: 100%; }
+.wiki-wanted-table th,
+.wiki-wanted-table td { padding: 0.4rem 0.75rem; border: 1px solid #d0d7de; text-align: left; }
+.wiki-wanted-table th { background: #f6f8fa; font-weight: 600; }
+.wanted-count { text-align: center; font-variant-numeric: tabular-nums; }
+.wanted-sources { font-size: 0.85rem; color: #57606a; }
