@@ -2,7 +2,7 @@
 schema: foundry-cluster-queue-v1
 owner: task-project-slm
 created: 2026-04-28
-location: ~/Foundry/clones/project-slm/.agent/sub-agent-queue.md
+location: ~/Foundry/clones/project-slm/.claude/sub-agent-queue.md
 ---
 
 # Sub-agent Queue — Task Claude on project-slm cluster

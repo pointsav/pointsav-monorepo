@@ -31,6 +31,9 @@ async fn fixture_state() -> (AppState, tempfile::TempDir, tempfile::TempDir) {
         collab: Arc::new(app_mediakit_knowledge::collab::CollabRooms::new()),
         enable_collab: false,
         site_title: "PointSav Documentation Wiki".to_string(),
+        git_tenant: "pointsav".to_string(),
+        glossary: Arc::new(app_mediakit_knowledge::glossary::Glossary::default()),
+                db: None,
     };
     (state, dir, state_dir)
 }
@@ -76,12 +79,14 @@ async fn git_commit_on_edit() {
     
     let app = router(state);
     let new_content = "# Updated content";
+    let json_body = serde_json::json!({"body": new_content, "edit_summary": ""});
     let resp = app
         .oneshot(
             Request::builder()
                 .method("POST")
                 .uri("/edit/git-edit")
-                .body(Body::from(new_content))
+                .header("content-type", "application/json")
+                .body(Body::from(json_body.to_string()))
                 .unwrap(),
         )
         .await
