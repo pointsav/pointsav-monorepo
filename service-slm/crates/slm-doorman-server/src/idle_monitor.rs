@@ -2,10 +2,11 @@
 
 //! Yo-Yo idle monitor (B5) — replaces yoyo-manual/yoyo-idle-check.sh.
 //!
-//! Polls llama-server `/metrics` every 5 minutes for `llama_active_slots_total`.
-//! When the VM has been idle (zero active slots) longer than `SLM_YOYO_IDLE_MINUTES`
-//! (default 30), sends a GCP `instances.stop` request via the Compute Engine API
-//! using the workspace Service Account ADC token from the GCE metadata server.
+//! Polls the Yo-Yo VM `/metrics` endpoint every 5 minutes for an active-request
+//! counter. When the VM has been idle (zero active requests) longer than
+//! `SLM_YOYO_IDLE_MINUTES` (default 30), sends a GCP `instances.stop` request
+//! via the Compute Engine API using the workspace Service Account ADC token from
+//! the GCE metadata server.
 //!
 //! The monitor is spawned as a background tokio task in `main.rs` only when all
 //! four GCP env vars are set (`SLM_YOYO_GCP_PROJECT`, `SLM_YOYO_GCP_ZONE`,
@@ -15,8 +16,11 @@
 //! Env vars:
 //!   SLM_YOYO_ENDPOINT        Yo-Yo base URL (also consumed by Tier B client)
 //!   SLM_YOYO_IDLE_MINUTES    idle threshold in minutes; default 30
-//!   SLM_YOYO_GCP_PROJECT     GCP project id (e.g. woodfine-node-gcp-free)
-//!   SLM_YOYO_GCP_ZONE        GCP zone (e.g. us-west1-a)
+//!   SLM_YOYO_METRICS_KEY     Prometheus metric name for active-request count;
+//!                             default: llama_active_slots_total (llama-server);
+//!                             set to vllm:num_requests_running for vLLM
+//!   SLM_YOYO_GCP_PROJECT     GCP project id (e.g. pointsav-public)
+//!   SLM_YOYO_GCP_ZONE        GCP zone (e.g. us-west1-b)
 //!   SLM_YOYO_GCP_INSTANCE    GCP instance name (e.g. yoyo-tier-b-1)
 
 use std::time::{Duration, Instant};
@@ -32,6 +36,7 @@ const GCP_METADATA_TOKEN_URL: &str =
 pub struct IdleMonitorConfig {
     pub yoyo_endpoint: String,
     pub idle_threshold: Duration,
+    pub metrics_key: String,
     pub gcp_project: String,
     pub gcp_zone: String,
     pub gcp_instance: String,
@@ -48,6 +53,8 @@ impl IdleMonitorConfig {
             .ok()
             .and_then(|s| s.parse().ok())
             .unwrap_or(30);
+        let metrics_key = std::env::var("SLM_YOYO_METRICS_KEY")
+            .unwrap_or_else(|_| "llama_active_slots_total".to_string());
         let gcp_project = std::env::var("SLM_YOYO_GCP_PROJECT").ok()?;
         let gcp_zone = std::env::var("SLM_YOYO_GCP_ZONE").ok()?;
         let gcp_instance = std::env::var("SLM_YOYO_GCP_INSTANCE").ok()?;
@@ -55,6 +62,7 @@ impl IdleMonitorConfig {
         Some(Self {
             yoyo_endpoint,
             idle_threshold: Duration::from_secs(idle_minutes * 60),
+            metrics_key,
             gcp_project,
             gcp_zone,
             gcp_instance,
@@ -86,7 +94,7 @@ pub async fn run_idle_monitor(config: IdleMonitorConfig) {
     loop {
         tokio::time::sleep(POLL_INTERVAL).await;
 
-        match poll_active_slots(&client, &config.yoyo_endpoint).await {
+        match poll_active_slots(&client, &config.yoyo_endpoint, &config.metrics_key).await {
             Some(n) if n > 0 => {
                 last_active = Instant::now();
                 stop_sent = false;
@@ -134,13 +142,17 @@ pub async fn run_idle_monitor(config: IdleMonitorConfig) {
     }
 }
 
-/// Poll llama-server `/metrics` and extract `llama_active_slots_total`.
-/// Returns `None` on network error or missing metric.
-async fn poll_active_slots(client: &reqwest::Client, endpoint: &str) -> Option<u64> {
+/// Poll the Yo-Yo `/metrics` endpoint and extract the active-request counter
+/// named by `metrics_key`. Returns `None` on network error or missing metric.
+async fn poll_active_slots(
+    client: &reqwest::Client,
+    endpoint: &str,
+    metrics_key: &str,
+) -> Option<u64> {
     let url = format!("{}/metrics", endpoint.trim_end_matches('/'));
     let text = client.get(&url).send().await.ok()?.text().await.ok()?;
     for line in text.lines() {
-        if line.starts_with("llama_active_slots_total") && !line.starts_with('#') {
+        if line.starts_with(metrics_key) && !line.starts_with('#') {
             if let Some(val) = line.splitn(2, ' ').nth(1) {
                 return val.trim().parse::<f64>().ok().map(|f| f as u64);
             }
@@ -197,9 +209,17 @@ async fn stop_gcp_instance(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::sync::{Mutex, OnceLock};
+
+    // Serialize tests that mutate process-global env vars.
+    static ENV_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
+    fn env_lock() -> &'static Mutex<()> {
+        ENV_LOCK.get_or_init(|| Mutex::new(()))
+    }
 
     #[test]
     fn from_env_returns_none_without_gcp_vars() {
+        let _g = env_lock().lock().unwrap();
         // All GCP env vars unset in test environment — should return None.
         // (SLM_YOYO_ENDPOINT may or may not be set; we rely on GCP vars being absent.)
         std::env::remove_var("SLM_YOYO_GCP_PROJECT");
@@ -214,19 +234,39 @@ mod tests {
 
     #[test]
     fn from_env_builds_config_with_all_vars() {
+        let _g = env_lock().lock().unwrap();
         std::env::set_var("SLM_YOYO_ENDPOINT", "http://1.2.3.4:8080");
         std::env::set_var("SLM_YOYO_IDLE_MINUTES", "45");
         std::env::set_var("SLM_YOYO_GCP_PROJECT", "my-project");
         std::env::set_var("SLM_YOYO_GCP_ZONE", "us-west1-a");
         std::env::set_var("SLM_YOYO_GCP_INSTANCE", "yoyo-tier-b-1");
+        std::env::remove_var("SLM_YOYO_METRICS_KEY");
         let cfg = IdleMonitorConfig::from_env().expect("should build config");
         assert_eq!(cfg.idle_threshold, Duration::from_secs(45 * 60));
         assert_eq!(cfg.gcp_project, "my-project");
+        assert_eq!(cfg.metrics_key, "llama_active_slots_total");
         std::env::remove_var("SLM_YOYO_ENDPOINT");
         std::env::remove_var("SLM_YOYO_IDLE_MINUTES");
         std::env::remove_var("SLM_YOYO_GCP_PROJECT");
         std::env::remove_var("SLM_YOYO_GCP_ZONE");
         std::env::remove_var("SLM_YOYO_GCP_INSTANCE");
+    }
+
+    #[test]
+    fn from_env_builds_config_with_custom_metrics_key() {
+        let _g = env_lock().lock().unwrap();
+        std::env::set_var("SLM_YOYO_ENDPOINT", "http://1.2.3.4:9443");
+        std::env::set_var("SLM_YOYO_GCP_PROJECT", "pointsav-public");
+        std::env::set_var("SLM_YOYO_GCP_ZONE", "us-west1-b");
+        std::env::set_var("SLM_YOYO_GCP_INSTANCE", "yoyo-tier-b-1");
+        std::env::set_var("SLM_YOYO_METRICS_KEY", "vllm:num_requests_running");
+        let cfg = IdleMonitorConfig::from_env().expect("should build config");
+        assert_eq!(cfg.metrics_key, "vllm:num_requests_running");
+        std::env::remove_var("SLM_YOYO_ENDPOINT");
+        std::env::remove_var("SLM_YOYO_GCP_PROJECT");
+        std::env::remove_var("SLM_YOYO_GCP_ZONE");
+        std::env::remove_var("SLM_YOYO_GCP_INSTANCE");
+        std::env::remove_var("SLM_YOYO_METRICS_KEY");
     }
 
     #[test]
