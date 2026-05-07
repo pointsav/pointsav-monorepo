@@ -1,0 +1,23 @@
+[Unit]
+Description=vLLM OpenAI-compatible inference server (Yo-Yo Tier B)
+Documentation=https://docs.vllm.ai
+After=network.target
+
+[Service]
+Type=simple
+# Model path is on the persistent weights disk mounted by rc.local at boot.
+# The service restarts on failure with a 10 s delay so a slow disk mount does
+# not permanently prevent startup.
+ExecStart=/usr/local/bin/python3 -m vllm.entrypoints.openai.api_server \
+    --model /data/weights/olmo-3-32b-think-q4.gguf \
+    --tensor-parallel-size 1 \
+    --port 8000 \
+    --host 127.0.0.1 \
+    --served-model-name Olmo-3-1125-32B-Think \
+    --max-model-len 8192
+Restart=on-failure
+RestartSec=10
+TimeoutStartSec=300
+
+[Install]
+WantedBy=multi-user.target
