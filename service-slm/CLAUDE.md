@@ -177,3 +177,4 @@ progresses (B2 fills `slm-doorman/src/tier/yoyo.rs`; B4 fills
 
 If a rule at this level conflicts with an inherited rule, **stop and
 surface the conflict** — do not silently override.
+
