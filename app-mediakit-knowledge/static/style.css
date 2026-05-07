@@ -217,10 +217,11 @@ article table th { background: var(--bg-chrome); font-weight: 600; }
   --cat-bg: #f8f9fa;
 }
 
-/* --- Two-column wiki layout: left TOC rail + article main --- */
+/* --- Three-column wiki layout: left rail + article main + right rail --- */
 
 .wiki-layout {
-  display: flex;
+  display: grid;
+  grid-template-columns: 220px 1fr 200px;
   align-items: flex-start;
   max-width: var(--max-content-width);
   margin: 0 auto;
@@ -228,19 +229,70 @@ article table th { background: var(--bg-chrome); font-weight: 600; }
   gap: 0;
 }
 
-/* --- Left-rail collapsible TOC (Vector 2022 sticky pattern) --- */
+/* --- Left rail (navigation portlet + TOC portlet) --- */
 
-.wiki-toc {
-  flex: 0 0 var(--toc-width);
-  width: var(--toc-width);
-  min-width: var(--toc-width);
+.wiki-left-rail {
   position: sticky;
   top: 1rem;
   align-self: flex-start;
+  padding: 1.25rem 0 1.25rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* --- Navigation portlet (Wikipedia: vector-main-menu) --- */
+
+.wiki-nav-portlet {
   background: var(--toc-bg);
   border: 1px solid var(--border);
   border-radius: 2px;
-  margin: 1.25rem 0 1.25rem 1.25rem;
+  padding: 0.5rem 0;
+  font-family: var(--sans);
+  font-size: 0.875rem;
+}
+
+/* --- Shared portlet heading (Navigation + Contents + Tools) --- */
+
+.wiki-portlet-heading {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  padding: 0.25rem 0.75rem;
+  margin: 0;
+  color: var(--fg);
+}
+
+/* --- Shared portlet link list --- */
+
+.wiki-portlet-links {
+  list-style: none;
+  padding: 0.25rem 0;
+  margin: 0;
+}
+
+.wiki-portlet-links li {
+  padding: 0;
+  margin: 0;
+}
+
+.wiki-portlet-links a {
+  display: block;
+  color: var(--link);
+  text-decoration: none;
+  padding: 0.15rem 0.75rem;
+  line-height: 1.4;
+  font-size: 0.875rem;
+}
+
+.wiki-portlet-links a:hover { text-decoration: underline; }
+.wiki-portlet-links a:visited { color: var(--link-visited); }
+
+/* --- Left-rail collapsible TOC (Vector 2022 sticky pattern) --- */
+
+.wiki-toc {
+  background: var(--toc-bg);
+  border: 1px solid var(--border);
+  border-radius: 2px;
   padding: 0.5rem 0;
   font-family: var(--sans);
   font-size: 0.875rem;
@@ -302,15 +354,39 @@ article table th { background: var(--bg-chrome); font-weight: 600; }
 .toc-level-5 a { padding-left: 3rem; }
 .toc-level-6 a { padding-left: 3.75rem; }
 
+/* Section number span (Wikipedia: vector-toc-numb) */
+.toc-numb {
+  color: var(--fg-muted);
+  font-size: 0.8125rem;
+  margin-right: 0.25em;
+}
+
 /* When the TOC is collapsed (JS sets aria-expanded=false), hide the list */
 .wiki-toc.toc-collapsed .toc-list { display: none; }
 
 /* --- Main article column --- */
 
 .wiki-main {
-  flex: 1 1 0%;
   min-width: 0;
   padding: 1.25rem 1.5rem 3rem 1.5rem;
+}
+
+/* --- Right rail (page tools portlet) --- */
+
+.wiki-right-rail {
+  position: sticky;
+  top: 1rem;
+  align-self: flex-start;
+  padding: 1.25rem 1.25rem 1.25rem 0;
+}
+
+.wiki-page-tools {
+  background: var(--toc-bg);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  padding: 0.5rem 0;
+  font-family: var(--sans);
+  font-size: 0.875rem;
 }
 
 /* --- Title row: tabs + title + action tabs --- */
@@ -593,6 +669,8 @@ article table th { background: var(--bg-chrome); font-weight: 600; }
 .wiki-license { margin: 0 0 0.25rem; }
 .wiki-license a { color: var(--link); }
 
+.wiki-trademark { margin: 0.25rem 0 0; font-size: 0.75rem; color: var(--fg-muted); }
+
 .wiki-footer-links a {
   color: var(--link);
   text-decoration: none;
@@ -604,16 +682,21 @@ article table th { background: var(--bg-chrome); font-weight: 600; }
 
 @media (max-width: 768px) {
   .wiki-layout {
-    flex-direction: column;
+    grid-template-columns: 1fr;
+  }
+
+  .wiki-left-rail {
+    position: static;
+    padding: 0.75rem 0.75rem 0;
+    order: 2; /* left rail appears below the article on mobile */
+  }
+
+  .wiki-right-rail {
+    display: none; /* right rail hidden on mobile */
   }
 
   .wiki-toc {
     position: static;
-    width: auto;
-    min-width: 0;
-    flex: none;
-    margin: 0.75rem 0.75rem 0;
-    order: 2; /* TOC appears below the title row on mobile */
   }
 
   .wiki-main {
@@ -1948,13 +2031,7 @@ a.footnote-backref:hover { text-decoration: underline; }
   padding: 0.5rem 0.75rem; margin-bottom: 1rem; font-size: 0.875rem; color: #54595d;
 }
 
-/* ── A4: TOC toolbox nav links ───────────────────────────────────────────── */
-.wiki-toc-tools {
-  margin-top: 1rem; padding-top: 0.5rem; border-top: 1px solid #eaecf0;
-  display: flex; flex-direction: column; gap: 0.25rem;
-}
-.wiki-toc-tools a { font-size: 0.8125rem; color: #3366cc; text-decoration: none; }
-.wiki-toc-tools a:hover { text-decoration: underline; }
+/* ── A4: TOC toolbox nav links — removed (navigation moved to .wiki-nav-portlet) ── */
 
 /* ── A7: Edit summary row ────────────────────────────────────────────────── */
 .editor-summary-row {
