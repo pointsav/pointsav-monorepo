@@ -1,6 +1,6 @@
 # CLAUDE.md — service-slm
 
-> **State:** Active  —  **Last updated:** 2026-05-05
+> **State:** Active  —  **Last updated:** 2026-05-07
 > **Registry row:** `pointsav-monorepo/.agent/rules/project-registry.md`
 >
 > When state changes, update this header AND the registry row in the
@@ -22,9 +22,13 @@ service-content — see `ARCHITECTURE.md` Ring 3a.
 ## Current state
 
 **Active.** Doorman in production on workspace VM (`local-doorman.service`).
-Tier A (llama-server, OLMo 3 7B Q4) live and verified. **175/175 tests.**
+Tier A (llama-server, OLMo 3 7B Q4) live and verified. **177/177 tests.**
 
-As of 2026-05-05 (commit `378ccb0`):
+D4 image pipeline code complete as of 2026-05-07 (commit `0140176`): Packer template,
+OpenTofu infrastructure, on-demand scripts, operator runbook. Operator provisioning steps
+documented in `docs/deploy/deploy-yoyo-tier-b.md`.
+
+As of 2026-05-07 (commit `0140176`):
 
 - **Tier A** — live; GBNF/JsonSchema grammar; Lark rejected pre-flight.
 - **Tier B** — code-complete; multi-Yo-Yo `HashMap<String, YoYoTierClient>`;

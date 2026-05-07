@@ -24,6 +24,7 @@ use axum::{
     response::{IntoResponse, Response},
     Json,
 };
+use crate::auth::LoggedInUser;
 use maud::{html, Markup, PreEscaped, DOCTYPE};
 use serde::Deserialize;
 use std::path::PathBuf;
@@ -68,6 +69,7 @@ pub fn validate_slug(slug: &str) -> Result<(), WikiError> {
 pub async fn get_edit(
     State(state): State<Arc<AppState>>,
     Path(slug): Path<String>,
+    LoggedInUser(user): LoggedInUser,
 ) -> Result<Markup, WikiError> {
     validate_slug(&slug)?;
     let path = state.content_dir.join(format!("{slug}.md"));
@@ -85,6 +87,8 @@ pub async fn get_edit(
     let slug_json = serde_json::to_string(&slug)
         .unwrap_or_else(|_| "\"\"".to_string())
         .replace("</", "<\\/");
+    let role_json = serde_json::to_string(&user.role)
+        .unwrap_or_else(|_| "\"editor\"".to_string());
 
     Ok(html! {
         (DOCTYPE)
@@ -117,9 +121,10 @@ pub async fn get_edit(
                 // collab bundle and switches the editor into Y.Doc-backed mode.
                 script {
                     (PreEscaped(format!(
-                        "window.SAA_SLUG={};window.SAA_INITIAL={};{}",
+                        "window.SAA_SLUG={};window.SAA_INITIAL={};window.WIKI_USER_ROLE={};{}",
                         slug_json,
                         initial_json,
+                        role_json,
                         if state.enable_collab {
                             "window.WIKI_COLLAB_ENABLED=true;"
                         } else {
@@ -134,37 +139,67 @@ pub async fn get_edit(
     })
 }
 
+/// Edit request body — JSON with content and optional edit summary.
+#[derive(Deserialize)]
+pub struct EditBody {
+    pub body: String,
+    #[serde(default)]
+    pub edit_summary: String,
+}
+
 /// Atomic write of edited TOPIC body to an existing file. Returns 404 if the
-/// target does not exist (use `/create` for new TOPICs — separate route to
-/// avoid accidental creation via PUT-shaped POST).
+/// target does not exist (use `/create` for new TOPICs).
 ///
-/// On successful write, asynchronously triggers a tantivy reindex of the
-/// slug. Reindex failures are logged but do NOT roll back the disk write —
-/// the search index is derived state per ARCHITECTURE.md §1; the on-disk
-/// file is canonical.
+/// Admin users write directly; editor users' changes go to the pending queue.
+/// On successful admin write, triggers a tantivy reindex. Reindex failures
+/// are logged but do NOT roll back the disk write — the index is derived state.
 pub async fn post_edit(
     State(state): State<Arc<AppState>>,
     Path(slug): Path<String>,
-    body: String,
+    LoggedInUser(user): LoggedInUser,
+    Json(req): Json<EditBody>,
 ) -> Result<Response, WikiError> {
     validate_slug(&slug)?;
     let target = state.content_dir.join(format!("{slug}.md"));
     if !target.is_file() {
         return Err(WikiError::NotFound(slug));
     }
-    atomic_write(&state.content_dir, &target, &body).await?;
+
+    if !user.is_admin() {
+        // Editor path: queue for review
+        if let Some(db) = &state.db {
+            let db = db.clone();
+            let author_id = user.id.clone();
+            let slug_c = slug.clone();
+            let body_c = req.body.clone();
+            let summary_c = req.edit_summary.clone();
+            let id = tokio::task::spawn_blocking(move || {
+                let conn = db.lock().unwrap();
+                crate::pending::insert_pending(&conn, &slug_c, &author_id, &body_c, &summary_c)
+            })
+            .await
+            .map_err(|e| WikiError::WriteFailed(format!("spawn error: {e}")))?
+            .map_err(|e| WikiError::WriteFailed(format!("db error: {e}")))?;
+            tracing::info!(slug = %slug, id = %id, author = %user.username, "edit queued for review");
+            return Ok((StatusCode::ACCEPTED, "queued").into_response());
+        }
+        return Err(WikiError::WriteFailed("auth not configured".into()));
+    }
+
+    // Admin path: direct write
+    atomic_write(&state.content_dir, &target, &req.body).await?;
 
     // Phase 4 Step 4.1: commit to git. Failures are logged but not fatal.
     {
         let git_repo = state.git.lock().map_err(|e| WikiError::WriteFailed(format!("git lock failed: {e}")))?;
         let _ = crate::git::ensure_commit_identity_from_env(&git_repo);
-        match crate::git::commit_topic(&git_repo, &slug, &body, "", "", &format!("edit: {slug}")) {
+        match crate::git::commit_topic(&git_repo, &slug, &req.body, "", "", &format!("edit: {slug}")) {
             Ok(_) => tracing::info!(slug = %slug, "committed edit to git"),
             Err(e) => tracing::warn!(slug = %slug, error = %e, "git commit failed after edit"),
         }
     }
 
-    if let Err(e) = crate::search::reindex_topic(&state.search, &slug, &body) {
+    if let Err(e) = crate::search::reindex_topic(&state.search, &slug, &req.body) {
         tracing::warn!(slug = %slug, error = %e, "search reindex failed after edit");
     }
     Ok((StatusCode::OK, "saved").into_response())
@@ -233,7 +268,7 @@ pub fn derive_slug(title: &str) -> String {
 /// Atomic write via temp-file + POSIX rename. The temp file is created in
 /// the same directory as the target so the rename stays on the same
 /// filesystem (cross-fs renames are non-atomic on Linux).
-async fn atomic_write(
+pub(crate) async fn atomic_write(
     content_dir: &PathBuf,
     target: &PathBuf,
     body: &str,
