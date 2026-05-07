@@ -13,6 +13,13 @@ sudo apt-get install -y --no-install-recommends \
     nginx openssl \
     python3 python3-pip python3-venv
 
+# -- Kernel headers + build tools (required for DKMS / NVIDIA module compile) --
+echo "==> Installing kernel headers and build tools"
+sudo apt-get install -y --no-install-recommends \
+    linux-headers-$(uname -r) \
+    build-essential \
+    dkms
+
 # -- CUDA ----------------------------------------------------------------------
 echo "==> Installing CUDA keyring"
 CUDA_KEYRING_URL="https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/x86_64/cuda-keyring_1.1-1_all.deb"
