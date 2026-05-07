@@ -2045,17 +2045,6 @@ a.footnote-backref:hover { text-decoration: underline; }
 }
 .editor-summary-row input:focus { border-color: #0969da; box-shadow: 0 0 0 2px rgba(9,105,218,0.2); }
 
-/* ── E1: Citation Authority Ribbon ──────────────────────────────────────── */
-.citation-ribbon {
-  display: flex; align-items: center; gap: 0.4rem;
-  padding: 0.3rem 0.75rem; margin-bottom: 0.5rem;
-  font-size: 0.8rem; border-radius: 3px; border-left: 3px solid currentColor;
-}
-.citation-ribbon-green  { background: #d1fae5; color: #065f46; }
-.citation-ribbon-amber  { background: #fef3c7; color: #92400e; }
-.citation-ribbon-red    { background: #fee2e2; color: #991b1b; }
-.citation-ribbon-icon   { font-weight: 700; font-size: 0.9rem; }
-
 /* ── E2: Research Trail Footer ───────────────────────────────────────────── */
 .wiki-research-trail {
   margin: 1.5rem 0; padding: 0.5rem 0.75rem;
@@ -2072,17 +2061,6 @@ a.footnote-backref:hover { text-decoration: underline; }
 .wiki-research-trail-dl dt { font-weight: 500; color: #54595d; }
 .wiki-research-trail-dl dd { margin: 0; }
 .wiki-research-trail-dl ul { margin: 0; padding-left: 1.2rem; }
-
-/* ── E4: Freshness Ribbon ────────────────────────────────────────────────── */
-.freshness-ribbon {
-  display: inline-flex; align-items: center;
-  padding: 0.2rem 0.6rem; border-radius: 3px;
-  font-size: 0.75rem; font-weight: 500; margin-bottom: 0.5rem;
-}
-.freshness-current  { background: #d1fae5; color: #065f46; }
-.freshness-recent   { background: #dbeafe; color: #1e40af; }
-.freshness-aging    { background: #fef3c7; color: #92400e; }
-.freshness-stale    { background: #fee2e2; color: #991b1b; }
 
 /* ── C: Special pages ────────────────────────────────────────────────────── */
 .wiki-special-intro { color: #54595d; font-size: 0.9rem; margin-bottom: 1rem; }
