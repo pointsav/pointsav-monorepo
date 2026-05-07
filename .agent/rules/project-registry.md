@@ -82,7 +82,7 @@ Last updated: 2026-04-25.
 | app-workplace-bim | Reserved-folder | app-workplace | 2 files (CLAUDE.md + RESEARCH.md); research phase; directory created 2026-04-23 (closes registry drift) |
 | app-workplace-memo | Active | app-workplace | 47 files; Tauri v1 (macOS dev) / v2 (Linux prod); walking skeleton unverified; CLAUDE.md + NEXT.md added 2026-05-07 |
 | app-workplace-presentation | Active | app-workplace | 52 files; CLAUDE.md present; Phase 5 |
-| app-workplace-proforma | Active | app-workplace | 45 files; CLAUDE.md present but marked "local-only"; conformance pending |
+| app-workplace-proforma | Active | app-workplace | 45 files; EUPL v1.2; Tauri + Rust + vanilla JS; CLAUDE.md committed 2026-05-07 |
 
 ## OS (`os-*`)
 
