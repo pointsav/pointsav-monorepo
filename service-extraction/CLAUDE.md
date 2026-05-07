@@ -20,10 +20,23 @@ incoming JSON file in → ledger JSON files out.
 
 ## Current state
 
-- 149-line `src/main.rs`. Single binary, standalone Rust workspace.
-- Hardcoded deployment paths (see `BASE_DEPLOYMENT_DIR`, `TOTEBOX_SOURCE_DIR`).
+- ~195-line `src/main.rs`. Single binary, standalone Rust workspace.
+- All paths parameterized via env vars (see Configuration below).
+- CORPUS bridge: when `EXTRACTION_EMIT_CORPUS_DIR` is set, emits `CORPUS_*.json`
+  alongside `CRM_*.json` for service-content DataGraph ingestion.
 - Not a workspace member — `cargo check` must run inside this directory.
 - No tests.
+
+## Configuration (env vars)
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `EXTRACTION_BASE_DIR` | `/home/mathew/deployments/woodfine-fleet-deployment` | Deployment root; used to construct CRM ledger output paths |
+| `EXTRACTION_WATCH_DIR` | `${EXTRACTION_BASE_DIR}/cluster-totebox-personnel-1/service-fs/data/service-people/source` | Directory watched for incoming JSON payloads |
+| `EXTRACTION_EMIT_CORPUS_DIR` | *(unset — disabled)* | When set, also write `CORPUS_*.json` for service-content DataGraph ingestion |
+| `EXTRACTION_CORPUS_MODULE_ID` | *(unset)* | When set with `EXTRACTION_EMIT_CORPUS_DIR`, embeds `module_id` in CORPUS JSON (otherwise service-content uses its own `SERVICE_CONTENT_MODULE_ID`) |
+
+Systemd unit for the jennifer instance: `service-slm/compute/systemd/local-extraction-jennifer.service`.
 
 ## Build and run
 
@@ -34,11 +47,11 @@ cargo build --release  # production build
 
 Run (deployment directory must exist):
 ```
-cargo run
+EXTRACTION_WATCH_DIR=/path/to/source cargo run
 ```
 
 The binary blocks on a `notify` filesystem watch. Drop `.json` files into
-`TOTEBOX_SOURCE_DIR` to trigger processing. Idempotent: already-processed
+`EXTRACTION_WATCH_DIR` to trigger processing. Idempotent: already-processed
 filenames are tracked in-memory for the process lifetime.
 
 ## File layout
@@ -58,6 +71,5 @@ service-extraction/
 - **Do not add network calls.** Extraction is a local, offline operation.
 - **Do not add a database.** Ledger output is flat-file JSON; `service-fs`
   is the persistence layer above.
-- **Paths are deployment-scoped.** `BASE_DEPLOYMENT_DIR` and
-  `TOTEBOX_SOURCE_DIR` are hardcoded — update before deploying to a new
-  instance.
+- **All paths via env vars.** `EXTRACTION_BASE_DIR`, `EXTRACTION_WATCH_DIR`,
+  `EXTRACTION_EMIT_CORPUS_DIR` — never hardcode deployment paths in source.
