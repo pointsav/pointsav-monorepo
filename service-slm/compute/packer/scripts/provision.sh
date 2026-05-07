@@ -53,6 +53,17 @@ sudo openssl req -x509 -nodes -newkey rsa:4096 -days 3650 \
 echo "==> Installing nginx-yoyo.conf"
 sudo install -m 644 /tmp/nginx-yoyo.conf /etc/nginx/conf.d/yoyo.conf
 sudo rm -f /etc/nginx/sites-enabled/default
+
+# Default deny-all auth map — rc.local overwrites this at boot with the real token.
+# Keeping the map in a separate file (not in yoyo.conf) avoids a duplicate-map
+# error when rc.local writes yoyo-auth-map.conf and reloads nginx.
+sudo tee /etc/nginx/conf.d/yoyo-auth-map.conf > /dev/null << 'MAPEOF'
+map_hash_bucket_size 128;
+map $http_authorization $auth_ok {
+    default 0;
+}
+MAPEOF
+
 sudo systemctl enable nginx
 
 # -- Data disk mount point -----------------------------------------------------
