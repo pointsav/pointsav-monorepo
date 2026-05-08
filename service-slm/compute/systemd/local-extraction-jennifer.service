@@ -6,6 +6,7 @@ Wants=local-fs.service
 
 [Service]
 Type=simple
+User=mathew
 Restart=on-failure
 RestartSec=10
 

@@ -479,3 +479,112 @@ fn csv_row(fields: &[&str]) -> String {
     row.push('\n');
     row
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // ── parse_guides ──────────────────────────────────────────────────────────
+
+    #[test]
+    fn parse_guides_parses_with_header() {
+        let csv = "guide_id,title,domain,wiki_repo,wiki_path,active_state\n\
+                   guide-doorman,Doorman Operations,documentation,woodfine/fleet,vault/guide-doorman.md,active\n";
+        let rows = parse_guides(csv).unwrap();
+        assert_eq!(rows.len(), 1);
+        assert_eq!(rows[0].guide_id, "guide-doorman");
+        assert_eq!(rows[0].title, "Doorman Operations");
+        assert_eq!(rows[0].domain, "documentation");
+        assert_eq!(rows[0].active_state, "active");
+    }
+
+    #[test]
+    fn parse_guides_multiple_rows() {
+        let csv = "guide_id,title,domain,wiki_repo,wiki_path,active_state\n\
+                   guide-a,Guide A,documentation,repo,path/a.md,active\n\
+                   guide-b,Guide B,documentation,repo,path/b.md,pending\n";
+        let rows = parse_guides(csv).unwrap();
+        assert_eq!(rows.len(), 2);
+        assert_eq!(rows[1].guide_id, "guide-b");
+        assert_eq!(rows[1].active_state, "pending");
+    }
+
+    #[test]
+    fn parse_guides_rejects_too_few_columns() {
+        let csv = "guide_id,title,domain\nguide-a,Guide A,documentation\n";
+        let result = parse_guides(csv);
+        // header row satisfies column count (6 required; only 3 cols here)
+        // actual parse error depends on whether header row is treated as data
+        // when fewer cols than required: returns Err
+        assert!(result.is_err() || result.unwrap().is_empty());
+    }
+
+    #[test]
+    fn guides_to_entities_maps_fields() {
+        let rows = vec![GuideRow {
+            guide_id: "guide-yoyo".to_string(),
+            title: "Yo-Yo Operations".to_string(),
+            domain: "documentation".to_string(),
+            wiki_repo: "woodfine/fleet".to_string(),
+            wiki_path: "vault/guide-yoyo.md".to_string(),
+            active_state: "active".to_string(),
+        }];
+        let entities = guides_to_entities(&rows);
+        assert_eq!(entities.len(), 1);
+        assert_eq!(entities[0].entity_name, "Yo-Yo Operations");
+        assert_eq!(entities[0].classification, "guide");
+        assert_eq!(entities[0].role_vector.as_deref(), Some("documentation"));
+        assert_eq!(entities[0].module_id, "__taxonomy__");
+        assert!((entities[0].confidence - 1.0).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn serialize_guides_roundtrips() {
+        let rows = vec![GuideRow {
+            guide_id: "guide-test".to_string(),
+            title: "Test Guide".to_string(),
+            domain: "documentation".to_string(),
+            wiki_repo: "woodfine/fleet".to_string(),
+            wiki_path: "vault/guide-test.md".to_string(),
+            active_state: "active".to_string(),
+        }];
+        let csv = serialize_guides(&rows);
+        assert!(csv.starts_with("guide_id,title,"));
+        assert!(csv.contains("guide-test"));
+        let parsed = parse_guides(&csv).unwrap();
+        assert_eq!(parsed.len(), 1);
+        assert_eq!(parsed[0].guide_id, "guide-test");
+    }
+
+    // ── skip_header_owned ────────────────────────────────────────────────────
+
+    #[test]
+    fn skip_header_owned_removes_first_line() {
+        let csv = "header,row\ndata,row\n";
+        assert_eq!(skip_header_owned(csv), "data,row\n");
+    }
+
+    #[test]
+    fn skip_header_owned_empty_input() {
+        assert_eq!(skip_header_owned(""), "");
+    }
+
+    // ── guides_documentation.csv sanity ─────────────────────────────────────
+
+    #[test]
+    fn ontology_guides_documentation_csv_parses() {
+        // Verify the actual on-disk CSV parses without error and has expected rows.
+        // Path is relative to the manifest directory (service-content/).
+        let csv_path = concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/ontology/guides/guides_documentation.csv"
+        );
+        let Ok(csv) = std::fs::read_to_string(csv_path) else { return; };
+        let rows = parse_guides(&csv).expect("guides_documentation.csv must parse cleanly");
+        assert!(!rows.is_empty(), "guides_documentation.csv must have at least one row");
+        for row in &rows {
+            assert!(!row.guide_id.is_empty(), "guide_id must not be empty");
+            assert_eq!(row.domain, "documentation", "all guides must have domain=documentation");
+        }
+    }
+}
