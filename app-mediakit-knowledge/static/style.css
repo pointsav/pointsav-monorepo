@@ -678,21 +678,20 @@ article table th { background: var(--bg-chrome); font-weight: 600; }
 
 .wiki-footer-links a:hover { text-decoration: underline; }
 
-/* --- Mobile responsive overrides for Phase 1.1 chrome --- */
+/* --- Mobile responsive overrides — Sprint G: <960px left rail hidden --- */
 
-@media (max-width: 768px) {
+@media (max-width: 960px) {
   .wiki-layout {
     grid-template-columns: 1fr;
   }
 
+  /* Left rail hidden at mobile — accessible via § ToC button and ☰ Nav button */
   .wiki-left-rail {
-    position: static;
-    padding: 0.75rem 0.75rem 0;
-    order: 2; /* left rail appears below the article on mobile */
+    display: none;
   }
 
   .wiki-right-rail {
-    display: none; /* right rail hidden on mobile */
+    display: none;
   }
 
   .wiki-toc {
@@ -700,7 +699,6 @@ article table th { background: var(--bg-chrome); font-weight: 600; }
   }
 
   .wiki-main {
-    order: 1;
     padding: 0.75rem;
   }
 
@@ -1931,7 +1929,7 @@ body.login-body {
   border-bottom: 1px solid var(--color-border, #d0d7de);
 }
 
-/* ── Mobile hamburger nav ──────────────────────────────────────────────── */
+/* ── Mobile nav + ToC drawers ──────────────────────────────────────────── */
 .nav-toggle-btn {
   display: none;
   background: none;
@@ -1943,7 +1941,20 @@ body.login-body {
   color: inherit;
 }
 
-.mobile-nav-drawer {
+.toc-toggle-btn {
+  display: none;
+  background: none;
+  border: none;
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0.3rem 0.5rem;
+  color: inherit;
+  margin-left: 0.25rem;
+}
+
+.mobile-nav-drawer,
+.mobile-toc-drawer {
   display: none;
   position: fixed;
   top: 0;
@@ -1963,7 +1974,12 @@ body.login-body {
   justify-content: space-between;
   margin-bottom: 1rem;
 }
-.mobile-nav-close {
+.mobile-drawer-title {
+  font-weight: 600;
+  font-size: 1rem;
+}
+.mobile-nav-close,
+.mobile-toc-close {
   background: none;
   border: none;
   font-size: 1.2rem;
@@ -1983,6 +1999,22 @@ body.login-body {
   color: inherit;
   font-size: 1rem;
 }
+.mobile-toc-list {
+  list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0;
+}
+.mobile-toc-list li { border-bottom: 1px solid #eee; }
+.mobile-toc-list a {
+  display: block;
+  padding: 0.6rem 0.5rem;
+  text-decoration: none;
+  color: var(--link, #3366cc);
+  font-size: 0.9rem;
+}
+.mobile-toc-list .toc-level-2 { padding-left: 1.25rem; font-size: 0.85rem; }
+.mobile-toc-list .toc-level-3 { padding-left: 2.25rem; font-size: 0.82rem; }
+.mobile-toc-list .toc-numb { color: #57606a; margin-right: 0.3rem; }
 .mobile-nav-overlay {
   display: none;
   position: fixed;
@@ -1991,10 +2023,13 @@ body.login-body {
   z-index: 1000;
 }
 
-@media (max-width: 799px) {
+@media (max-width: 960px) {
   .nav-toggle-btn { display: inline-flex; }
+  .toc-toggle-btn { display: inline-flex; }
   body[data-nav-open] .mobile-nav-drawer { display: flex; }
-  body[data-nav-open] .mobile-nav-overlay { display: block; }
+  body[data-toc-open] .mobile-toc-drawer { display: flex; }
+  body[data-nav-open] .mobile-nav-overlay,
+  body[data-toc-open] .mobile-nav-overlay { display: block; }
 }
 
 /* ── Wanted articles page ──────────────────────────────────────────────── */

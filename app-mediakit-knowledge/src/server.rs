@@ -1686,6 +1686,13 @@ fn wiki_chrome(
                         aria-expanded="false"
                         aria-controls="mobile-nav-drawer"
                     { "☰" }
+                    @if !numbered_headings.is_empty() {
+                        button.toc-toggle-btn #toc-toggle-btn
+                            aria-label="Table of contents"
+                            aria-expanded="false"
+                            aria-controls="mobile-toc-drawer"
+                        { "§" }
+                    }
                 }
 
                 // Mobile nav drawer — hidden on desktop, toggled by hamburger button
@@ -1702,6 +1709,26 @@ fn wiki_chrome(
                         li { a href="/special/all-pages" { "All pages" } }
                         li { a href="/special/recent-changes" { "Recent changes" } }
                         li { a href="/special/statistics" { "Statistics" } }
+                    }
+                }
+                // Mobile ToC drawer — hidden on desktop, toggled by § button
+                @if !numbered_headings.is_empty() {
+                    div.mobile-toc-drawer #mobile-toc-drawer aria-hidden="true" {
+                        div.mobile-nav-header {
+                            span.mobile-drawer-title { "Contents" }
+                            button.mobile-toc-close #mobile-toc-close aria-label="Close contents" { "✕" }
+                        }
+                        ol.mobile-toc-list {
+                            @for (id, text, level, num) in &numbered_headings {
+                                li class={ "toc-level-" (level) } {
+                                    a href={ "#" (id) } {
+                                        span.toc-numb { (num) }
+                                        " "
+                                        (text)
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
                 div.mobile-nav-overlay #mobile-nav-overlay aria-hidden="true" {}
