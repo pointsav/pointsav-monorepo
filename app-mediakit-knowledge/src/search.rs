@@ -178,7 +178,10 @@ async fn collect_topics(content_dir: &Path) -> Result<Vec<(String, String, Strin
                     Ok(t) => t,
                     Err(_) => continue,
                 };
-                let parsed = parse_page(&text)?;
+                let parsed = match parse_page(&text) {
+                    Ok(p) => p,
+                    Err(_) => continue,
+                };
                 let title = parsed.frontmatter.title.clone().unwrap_or_else(|| stem.to_string());
                 out.push((slug, title, parsed.body_md));
             }
@@ -197,7 +200,10 @@ async fn collect_topics(content_dir: &Path) -> Result<Vec<(String, String, Strin
                 Ok(t) => t,
                 Err(_) => continue,
             };
-            let parsed = parse_page(&text)?;
+            let parsed = match parse_page(&text) {
+                Ok(p) => p,
+                Err(_) => continue,
+            };
             let title = parsed.frontmatter.title.clone().unwrap_or_else(|| stem.to_string());
             out.push((stem.to_string(), title, parsed.body_md));
         }
