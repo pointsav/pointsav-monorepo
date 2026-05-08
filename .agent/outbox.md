@@ -10,6 +10,77 @@ schema: foundry-mailbox-v1
 ---
 from: task@project-intelligence
 to: master@claude-code
+re: session-end — all services live; 3 TOPIC drafts ready for project-editorial; 3 operator tracks remain
+created: 2026-05-08T06:20:00Z
+priority: high
+---
+
+## Services deployed (all live)
+
+| Service | Status | Notes |
+|---|---|---|
+| `local-doorman.service` | running | Tier A (7B llama-server) live |
+| `local-content.service` | running | Graph on :9081; taxonomy loaded; 17 MB binary |
+| `local-extraction-jennifer.service` | running | Watching `service-people/source` |
+| `nightly-run.sh` | running (nohup PID 1093165) | Log: `/tmp/nightly-run.log`; 4h hard stop, 30-min idle |
+
+## What nightly-run does each night
+
+1. foundry-workspace-feeder (20 Foundry conventions/guides → `foundry-workspace` module)
+2. corpus-batch-jennifer (50 jennifer source files → `jennifer` module; empty until weights + vLLM)
+3. corpus-threshold.py (checks DPO/SFT training triplets; writes marker when ≥50 tuples)
+
+## Commits this session
+
+- `e05f025` feat: nightly-run.sh — 4h DataGraph session + training triplet threshold check
+- `8fe3e53` fix: taxonomy loader drop-first-row (skip_header bug; was silently dropping first archetype/domain/guide at every startup)
+- `4551982` housekeeping: outbox
+- `de34b53` housekeeping: NEXT.md — all pipeline blocks code-complete
+- `b761d67` test: taxonomy guide unit tests; extraction unit User=mathew fix
+- `7b00aa3` feat: guide HTTP endpoints + graph-cleanup.sh reload
+- infrastructure/bootstrap.sh (2 commits): workspace target path + source dir creation + operator ACL
+
+## Three operator tracks remaining (unchanged from prior outbox)
+
+**Track 1 — weights upload (unblocks vLLM/jennifer corpus):**
+```bash
+gcloud compute scp <olmo-3-32b-think-q4.gguf> yoyo-tier-b-1:/data/weights/ \
+  --zone=us-central1-b --project=woodfine-node-gcp-free
+gcloud compute ssh yoyo-tier-b-1 --zone=us-central1-b --project=woodfine-node-gcp-free \
+  --command="sudo systemctl start vllm.service"
+```
+
+**Track 2 — nightly timers (after Track 1 live):**
+```bash
+sudo systemctl enable --now corpus-rebuild.timer local-workspace-feeder.timer
+```
+
+**Track 3 — apprenticeship + ratification (Master scope):**
+- `SLM_APPRENTICESHIP_ENABLED=true` in local-doorman.env → restart Doorman
+- Tier C: Anthropic API key in local-doorman.env
+- Signed `task-type-add` ledger events for `doorman-routing` + `workspace-ops` (Block D2)
+
+## TOPIC drafts ready for project-editorial
+
+Three TOPIC drafts are staged at:
+`~/Foundry/clones/project-intelligence/.agent/drafts-outbound/`
+
+| Draft | Language protocol | BCSC class | Status |
+|---|---|---|---|
+| `topic-apprenticeship-substrate.md` + `.es.md` | PROSE-TOPIC | current-fact | draft-pending-language-pass |
+| `topic-doorman-protocol.md` + `.es.md` | PROSE-TOPIC | current-fact | draft-pending-language-pass |
+| `topic-zero-container-inference.md` + `.es.md` | PROSE-TOPIC | forward-looking | draft-pending-language-pass |
+
+All three target `content-wiki-documentation`. project-editorial pickup path:
+```
+~/Foundry/clones/project-intelligence/.agent/drafts-outbound/topic-*.md
+```
+
+— task@project-intelligence
+
+---
+from: task@project-intelligence
+to: master@claude-code
 re: Yo-Yo #1 + service-content pipeline — all code complete; operator steps remain
 created: 2026-05-08T10:00:00Z
 priority: high
