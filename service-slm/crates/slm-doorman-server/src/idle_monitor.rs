@@ -35,6 +35,7 @@ const GCP_METADATA_TOKEN_URL: &str =
 #[derive(Clone, Debug)]
 pub struct IdleMonitorConfig {
     pub yoyo_endpoint: String,
+    pub yoyo_bearer: Option<String>,
     pub idle_threshold: Duration,
     pub metrics_key: String,
     pub gcp_project: String,
@@ -49,6 +50,7 @@ impl IdleMonitorConfig {
         if yoyo_endpoint.is_empty() {
             return None;
         }
+        let yoyo_bearer = std::env::var("SLM_YOYO_BEARER").ok().filter(|s| !s.is_empty());
         let idle_minutes: u64 = std::env::var("SLM_YOYO_IDLE_MINUTES")
             .ok()
             .and_then(|s| s.parse().ok())
@@ -61,6 +63,7 @@ impl IdleMonitorConfig {
 
         Some(Self {
             yoyo_endpoint,
+            yoyo_bearer,
             idle_threshold: Duration::from_secs(idle_minutes * 60),
             metrics_key,
             gcp_project,
@@ -94,22 +97,11 @@ pub async fn run_idle_monitor(config: IdleMonitorConfig) {
     loop {
         tokio::time::sleep(POLL_INTERVAL).await;
 
-        match poll_active_slots(&client, &config.yoyo_endpoint, &config.metrics_key).await {
-            Some(n) if n > 0 => {
-                last_active = Instant::now();
-                stop_sent = false;
-                info!(
-                    target: "slm_doorman::idle_monitor",
-                    active_slots = n,
-                    "Yo-Yo busy; idle clock reset"
-                );
-            }
-            result => {
+        match poll_active_slots(&client, &config.yoyo_endpoint, config.yoyo_bearer.as_deref(), &config.metrics_key).await {
+            Some(0) => {
+                // Metrics reachable, zero active slots — VM is up but idle.
+                // Let the idle clock run; fire stop if threshold exceeded.
                 let idle_secs = last_active.elapsed().as_secs();
-                if result.is_none() {
-                    // Metrics endpoint unreachable — VM may be booting or stopped.
-                    // Don't advance last_active; let the clock run.
-                }
                 if !stop_sent && last_active.elapsed() >= config.idle_threshold {
                     warn!(
                         target: "slm_doorman::idle_monitor",
@@ -138,19 +130,47 @@ pub async fn run_idle_monitor(config: IdleMonitorConfig) {
                     }
                 }
             }
+            Some(n) => {
+                // VM is serving (n > 0) — reset idle clock.
+                last_active = Instant::now();
+                stop_sent = false;
+                info!(
+                    target: "slm_doorman::idle_monitor",
+                    active_slots = n,
+                    "Yo-Yo busy; idle clock reset"
+                );
+            }
+            None => {
+                // Metrics unreachable — VM is booting, stopped, or vLLM not yet
+                // loaded. Reset the idle clock so we don't stop a VM that was never
+                // serving. The nightly GCP instance schedule is the hard-stop
+                // fallback when the VM is unreachable.
+                last_active = Instant::now();
+                stop_sent = false;
+            }
         }
     }
 }
 
 /// Poll the Yo-Yo `/metrics` endpoint and extract the active-request counter
-/// named by `metrics_key`. Returns `None` on network error or missing metric.
+/// named by `metrics_key`. Returns `None` on network error, non-200 response,
+/// or missing metric.
 async fn poll_active_slots(
     client: &reqwest::Client,
     endpoint: &str,
+    bearer: Option<&str>,
     metrics_key: &str,
 ) -> Option<u64> {
     let url = format!("{}/metrics", endpoint.trim_end_matches('/'));
-    let text = client.get(&url).send().await.ok()?.text().await.ok()?;
+    let mut req = client.get(&url);
+    if let Some(token) = bearer {
+        req = req.bearer_auth(token);
+    }
+    let resp = req.send().await.ok()?;
+    if !resp.status().is_success() {
+        return None;
+    }
+    let text = resp.text().await.ok()?;
     for line in text.lines() {
         if line.starts_with(metrics_key) && !line.starts_with('#') {
             if let Some(val) = line.splitn(2, ' ').nth(1) {
