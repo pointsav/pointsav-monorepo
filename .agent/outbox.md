@@ -10,6 +10,93 @@ schema: foundry-mailbox-v1
 ---
 from: task@project-intelligence
 to: master@claude-code
+re: Yo-Yo #1 live — blocked on weights upload + L4 stockout; all code fixes committed
+created: 2026-05-08T03:15:00Z
+priority: high
+---
+
+Infrastructure is deployed and code-complete. Doorman is live. The only blocker is uploading the model weights and then getting a zone with L4 capacity.
+
+## Current GCP state
+
+| Resource | Zone | Status |
+|---|---|---|
+| `yoyo-tier-b-1` VM | us-central1-a | TERMINATED (L4 stockout) |
+| `yoyo-tier-b-1-weights` disk | us-central1-a | READY, 100GB, EMPTY |
+| `foundry-workspace` VM | us-west1-a | RUNNING |
+
+## Commits landed this session (2026-05-07/08)
+
+| Commit | Fix |
+|---|---|
+| `0c0f5a2` | vllm.service `--tokenizer`; idle monitor `Content-Length: 0`; `start-yoyo.sh` zone preference; reqwest TLS (self-signed cert) |
+| `a54f101` | Idle monitor: send bearer to metrics endpoint; only fire stop when vLLM is reachable (avoids spurious stops on cold start) |
+
+Previously landed: `5943a5c`–`3938451` (blocks A–G from prior session)
+
+## To bring vLLM online — operator steps
+
+**Step 1: Get L4 capacity**
+```bash
+export SLM_YOYO_GCP_PROJECT=woodfine-node-gcp-free
+export SLM_YOYO_GCP_ZONE=us-central1-a
+export SLM_YOYO_GCP_INSTANCE=yoyo-tier-b-1
+export DOORMAN_ENV_FILE=/etc/local-doorman/local-doorman.env
+/srv/foundry/clones/project-intelligence/service-slm/scripts/start-yoyo.sh
+```
+This tries us-central1-a first, cycles through fallback zones on stockout. If zone changes, prints post-provisioning steps and updates DOORMAN_ENV.
+
+**Step 2: Get new external IP (if zone changed)**
+```bash
+NEW_ZONE=<zone-from-step-1>
+gcloud compute instances describe yoyo-tier-b-1 --zone=${NEW_ZONE} --project=woodfine-node-gcp-free --format='value(networkInterfaces[0].accessConfigs[0].natIP)'
+```
+
+**Step 3: Upload weights**
+```bash
+gcloud compute scp <path-to-olmo-3-32b-think-q4.gguf> yoyo-tier-b-1:/data/weights/olmo-3-32b-think-q4.gguf \
+  --zone=${NEW_ZONE} --project=woodfine-node-gcp-free
+```
+Note: the weights disk may not be mounted yet if the VM is in a new zone. SSH first and mount: `sudo mount /dev/nvme0n2 /data` (GCP attaches persistent SSDs as nvme0n2).
+
+**Step 4: Start vLLM on VM**
+```bash
+gcloud compute ssh yoyo-tier-b-1 --zone=${NEW_ZONE} --project=woodfine-node-gcp-free \
+  --command="sudo systemctl daemon-reload && sudo systemctl start vllm.service && sudo journalctl -fu vllm.service"
+```
+vLLM takes ~2 minutes to load the 32B GGUF model. Watch for `Application startup complete`.
+
+**Step 5: Update Doorman endpoint + restart**
+```bash
+NEW_IP=<ip-from-step-2>
+sudo sed -i "s|SLM_YOYO_ENDPOINT=.*|SLM_YOYO_ENDPOINT=https://${NEW_IP}:9443|" /etc/local-doorman/local-doorman.env
+sudo systemctl restart local-doorman.service
+```
+
+**Step 6: Verify**
+```bash
+curl -s http://127.0.0.1:9080/readyz | jq '{has_yoyo}'
+# → { "has_yoyo": true }
+
+# Wait ~30s for health probe cycle, then check health probe succeeded:
+sudo journalctl -u local-doorman.service -n 10 --no-pager | grep "health probe"
+# → should show no "marked unavailable" after first successful poll
+```
+
+## Block D2 (Master ratification required)
+
+Apprenticeship task-type promotion still requires signed `task-type-add` ledger events for:
+- `doorman-routing`
+- `workspace-ops`
+
+Without ratification, shadow briefs accumulate but never promote past `review`.
+
+— task@project-intelligence
+
+
+---
+from: task@project-intelligence
+to: master@claude-code
 re: Yo-Yo #1 infrastructure complete — operator steps required + apprenticeship task-type ratification
 created: 2026-05-07T00:00:00Z
 priority: high
@@ -82,4 +169,3 @@ Once Doorman is live with Yo-Yo #1:
 3. Install local-extraction-jennifer.service (after jennifer path is confirmed): update `EXTRACTION_WATCH_DIR` and `EXTRACTION_EMIT_CORPUS_DIR` in the unit file, then `sudo systemctl enable --now local-extraction-jennifer.service`
 
 — task@project-intelligence
-
