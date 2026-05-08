@@ -113,6 +113,15 @@ pub async fn get_edit(
                 }
                 main.editor-shell {
                     div #saa-editor data-slug=(slug) {}
+                    div.editor-summary-row {
+                        label for="saa-summary" { "Edit summary:" }
+                        input #saa-summary
+                            type="text"
+                            name="summary"
+                            maxlength="200"
+                            placeholder="Briefly describe your change…"
+                            autocomplete="off";
+                    }
                     div #saa-status.saa-status {}
                 }
                 // Inject editor state before the bundle + glue scripts load.
@@ -193,7 +202,12 @@ pub async fn post_edit(
     {
         let git_repo = state.git.lock().map_err(|e| WikiError::WriteFailed(format!("git lock failed: {e}")))?;
         let _ = crate::git::ensure_commit_identity_from_env(&git_repo);
-        match crate::git::commit_topic(&git_repo, &slug, &req.body, "", "", &format!("edit: {slug}")) {
+        let commit_msg = if req.edit_summary.trim().is_empty() {
+            format!("edit: {slug}")
+        } else {
+            format!("edit: {slug}\n\n{}", req.edit_summary.trim())
+        };
+        match crate::git::commit_topic(&git_repo, &slug, &req.body, "", "", &commit_msg) {
             Ok(_) => tracing::info!(slug = %slug, "committed edit to git"),
             Err(e) => tracing::warn!(slug = %slug, error = %e, "git commit failed after edit"),
         }

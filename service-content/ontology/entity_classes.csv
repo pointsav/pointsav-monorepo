@@ -1,0 +1,3 @@
+class_id,class_name,canonical_prefix,domain_id,file_location,description
+TOPIC,Topic,,corporate|projects|documentation,content-wiki-*/[category]/[slug].md,Doctrine and architecture articles answering what is X; domain assigned per concept
+GUIDE,Guide,guide-,documentation,customer/woodfine-fleet-deployment/[gateway]/guide-[slug].md,Operational runbooks answering how do I operate X; always in Documentation domain
