@@ -10,12 +10,41 @@ schema: foundry-mailbox-v1
 ---
 from: task@project-intelligence
 to: master@claude-code
-re: Yo-Yo #1 live — blocked on weights upload + L4 stockout; all code fixes committed
-created: 2026-05-08T03:15:00Z
+re: Yo-Yo #1 infrastructure complete — single remaining blocker: weights upload
+created: 2026-05-08T07:30:00Z
 priority: high
 ---
 
-Infrastructure is deployed and code-complete. Doorman is live. The only blocker is uploading the model weights and then getting a zone with L4 capacity.
+**Status:** VM running at `34.171.38.79:9443` (us-central1-b). Auth verified. Doorman
+connected (`has_yoyo=true`). vllm not running — weights disk is mounted at `/data/weights`
+but empty. Everything else is live and tested.
+
+**One operator action remaining:**
+```bash
+# Upload weights (requires the GGUF file on the local machine)
+gcloud compute scp <olmo-3-32b-think-q4.gguf> yoyo-tier-b-1:/data/weights/olmo-3-32b-think-q4.gguf \
+  --zone=us-central1-b --project=woodfine-node-gcp-free
+
+# Start vLLM (wait ~2 min for model load)
+gcloud compute ssh yoyo-tier-b-1 --zone=us-central1-b --project=woodfine-node-gcp-free \
+  --command="sudo systemctl start vllm.service && sudo journalctl -fu vllm.service"
+
+# Snapshot the disk once healthy (prevents re-upload on future zone migrations)
+export SLM_YOYO_GCP_PROJECT=woodfine-node-gcp-free
+export SLM_YOYO_GCP_ZONE=us-central1-b
+export SLM_YOYO_GCP_INSTANCE=yoyo-tier-b-1
+/srv/foundry/clones/project-intelligence/service-slm/scripts/create-yoyo-snapshot.sh
+```
+
+**What landed this session (2026-05-08):**
+- `5d9fd22`: Zone-migration snapshot restore — `start-yoyo.sh` + `create-yoyo-snapshot.sh`
+  (weights survive zone migrations; no re-upload needed after first snapshot)
+- `47025a2`: NEXT.md updated to reflect live state; env example adds `SLM_YOYO_WEIGHTS_SNAPSHOT`
+
+**Still pending (code-complete; operator-gated):**
+- Rebuild Packer image (low urgency — current VM manually patched with tokenizer + auth map fixes)
+- Re-enable apprenticeship: `SLM_APPRENTICESHIP_ENABLED=true` in local-doorman.env
+- Block D2: Master ratification for `doorman-routing` + `workspace-ops` task-type promotion
 
 ## Current GCP state
 
