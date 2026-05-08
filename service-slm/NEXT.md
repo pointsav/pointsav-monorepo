@@ -1,6 +1,6 @@
 # NEXT.md — service-slm
 
-> Last updated: 2026-05-08 (Yo-Yo #1 live; snapshot restore added; one blocker remains)
+> Last updated: 2026-05-08 (Yo-Yo #1 live; service-content pipeline code-complete; weights upload remaining)
 > Read at session start. Update before session end so the next
 > session knows where to pick up.
 
@@ -12,7 +12,7 @@ Yo-Yo #1 is fully live. `yoyo-tier-b-1` in `woodfine-node-gcp-free/us-central1-b
 RUNNING at `34.171.38.79:9443`. nginx auth verified. Doorman connected (`has_yoyo=true`).
 The only thing preventing inference is the model weights file on the weights disk.
 
-**Completed since 2026-05-07 (commits `0c0f5a2`–`5d9fd22`):**
+**Completed since 2026-05-07 (commits `0c0f5a2`–`b761d67`):**
 - [x] **GCP Project + VM live:** `woodfine-node-gcp-free`, `yoyo-tier-b-1` in `us-central1-b`.
 - [x] **nginx TLS + auth:** Port 9443, self-signed cert, bearer token from instance metadata.
 - [x] **Doorman env wired:** `SLM_YOYO_ENDPOINT`, `SLM_YOYO_BEARER`, `SLM_YOYO_GCP_*` in
@@ -26,8 +26,23 @@ The only thing preventing inference is the model weights file on the weights dis
   rc.local only overwrites `yoyo-auth-map.conf` — reload no longer loses the directive.
 - [x] **Zone-migration snapshot restore:** `start-yoyo.sh` uses `SLM_YOYO_WEIGHTS_SNAPSHOT`
   to restore weights disk from snapshot; `create-yoyo-snapshot.sh` captures it post-upload.
+- [x] **service-content DataGraph pipeline — code complete (commits `7b00aa3`, `b761d67`):**
+  - Guide taxonomy entity class: `GuideRow`, `parse_guides`, `guides_to_entities` in taxonomy.rs
+  - HTTP routes: `GET/POST /v1/config/guides`, `POST /v1/config/guides/reload`
+  - Per-file module_id override in main.rs (workspace feeder uses `foundry-workspace`)
+  - 7 taxonomy unit tests + ontology CSV (`guides/guides_documentation.csv`)
+  - `graph-cleanup.sh` uses real HTTP endpoints (fixed from non-existent `/v1/config/taxonomy/reload`)
+  - `local-content.service` + `bootstrap.sh` at `infrastructure/local-content/`
+  - `local-extraction-jennifer.service` running as `User=mathew`
+- [x] **DataGraph rebuild pipeline — code complete:**
+  - `corpus-batch-jennifer.sh` (nightly jennifer batch, 50 files, `module_id: jennifer`)
+  - `foundry-workspace-feeder.sh` (nightly workspace batch, 20 files, `module_id: foundry-workspace`)
+  - `corpus-rebuild.timer/service` + `local-workspace-feeder.timer/service` installed (disabled)
+  - `service-extraction` parameterized + CORPUS bridge enabled (EXTRACTION_EMIT_CORPUS_DIR)
 
 **Remaining — operator presence required:**
+
+**Track 1 — Yo-Yo #1 weights (single blocker for inference):**
 
 - [ ] **Upload weights** (single remaining blocker — everything else is live):
   ```bash
@@ -51,11 +66,30 @@ The only thing preventing inference is the model weights file on the weights dis
   /srv/foundry/clones/project-intelligence/service-slm/scripts/create-yoyo-snapshot.sh
   ```
 
-- [ ] **Rebuild Packer image** (low urgency — current VM manually patched; future VMs will need
-  this to get the tokenizer + auth map fixes baked in):
+**Track 2 — service-content DataGraph deployment (can happen before Track 1):**
+
+- [ ] **Install service-content binary + enable unit** (build running — check with `ls -lh
+  service-content/target/release/service-content`; when ready run bootstrap):
   ```bash
-  cd service-slm/compute/packer && packer build yoyo-image.pkr.hcl
+  sudo bash /srv/foundry/infrastructure/local-content/bootstrap.sh
+  sudo systemctl start local-content.service
+  curl -s http://127.0.0.1:9081/healthz
   ```
+
+- [ ] **Enable service-extraction for jennifer:**
+  ```bash
+  sudo cp service-slm/compute/systemd/local-extraction-jennifer.service /etc/systemd/system/
+  sudo systemctl daemon-reload
+  sudo systemctl enable --now local-extraction-jennifer.service
+  ```
+
+- [ ] **Enable nightly batch timers** (after Yo-Yo #1 + vLLM are live — timers call Doorman
+  which routes to Yo-Yo):
+  ```bash
+  sudo systemctl enable --now corpus-rebuild.timer local-workspace-feeder.timer
+  ```
+
+**Track 3 — apprenticeship and auth:**
 
 - [ ] **Re-enable apprenticeship:** Set `SLM_APPRENTICESHIP_ENABLED=true` in
   `/etc/local-doorman/local-doorman.env` and `sudo systemctl restart local-doorman.service`.
@@ -63,12 +97,17 @@ The only thing preventing inference is the model weights file on the weights dis
 - [ ] **Tier C Auth:** Add Anthropic API key to `local-doorman.env` — enables `audit_proxy`
   and `service-content POST /v1/draft/generate`. Requires operator API key.
 
-- [x] **cmake + C++ compiler:** already installed (`cmake 3.28.3`, `gcc 13.3.0`). service-content
-  builds clean.
-
 - [ ] **Block D2 (Master ratification):** Signed `task-type-add` ledger events for
   `doorman-routing` + `workspace-ops` — apprenticeship shadow briefs accumulate but never
   promote past `review` without Master ratification.
+
+**Track 4 — future hardware:**
+
+- [ ] **Rebuild Packer image** (low urgency — current VM manually patched; future VMs will need
+  this to get the tokenizer + auth map fixes baked in):
+  ```bash
+  cd service-slm/compute/packer && packer build yoyo-image.pkr.hcl
+  ```
 
 - [ ] **Deploy Yo-Yo #2 (Extractor):** `a3-highgpu-1g` Dedicated; deploy when ready to
   process `cluster-totebox-jennifer` with grammar-constrained 70B extraction.
