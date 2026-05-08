@@ -63,8 +63,8 @@ The only thing preventing inference is the model weights file on the weights dis
 - [ ] **Tier C Auth:** Add Anthropic API key to `local-doorman.env` — enables `audit_proxy`
   and `service-content POST /v1/draft/generate`. Requires operator API key.
 
-- [ ] **cmake + C++ compiler:** `apt install cmake build-essential` on workspace VM
-  (required for `lbug = "0.16"` at `cargo build` time in service-content).
+- [x] **cmake + C++ compiler:** already installed (`cmake 3.28.3`, `gcc 13.3.0`). service-content
+  builds clean.
 
 - [ ] **Block D2 (Master ratification):** Signed `task-type-add` ledger events for
   `doorman-routing` + `workspace-ops` — apprenticeship shadow briefs accumulate but never
