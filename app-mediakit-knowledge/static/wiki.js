@@ -225,6 +225,13 @@
     if (!btn || !drawer || !overlay) return;
 
     function openNav() {
+      // Close ToC drawer if open
+      document.body.removeAttribute('data-toc-open');
+      var tocDrawer = document.getElementById('mobile-toc-drawer');
+      var tocBtn    = document.getElementById('toc-toggle-btn');
+      if (tocDrawer) tocDrawer.setAttribute('aria-hidden', 'true');
+      if (tocBtn)    tocBtn.setAttribute('aria-expanded', 'false');
+
       document.body.setAttribute('data-nav-open', 'true');
       drawer.removeAttribute('aria-hidden');
       overlay.removeAttribute('aria-hidden');
@@ -246,6 +253,55 @@
       if (e.key === 'Escape' && document.body.hasAttribute('data-nav-open')) {
         closeNav();
       }
+    });
+  }
+
+  /* ------------------------------------------------------------------ *
+   * 4b. Mobile ToC drawer toggle                                         *
+   * ------------------------------------------------------------------ */
+
+  function initTocDrawer() {
+    var btn      = document.getElementById('toc-toggle-btn');
+    var drawer   = document.getElementById('mobile-toc-drawer');
+    var overlay  = document.getElementById('mobile-nav-overlay'); // shared overlay
+    var closeBtn = document.getElementById('mobile-toc-close');
+
+    if (!btn || !drawer || !overlay) return;
+
+    function openToc() {
+      // Close nav drawer if open
+      document.body.removeAttribute('data-nav-open');
+      var navDrawer = document.getElementById('mobile-nav-drawer');
+      var navBtn    = document.getElementById('nav-toggle');
+      if (navDrawer) navDrawer.setAttribute('aria-hidden', 'true');
+      if (navBtn)    navBtn.setAttribute('aria-expanded', 'false');
+
+      document.body.setAttribute('data-toc-open', 'true');
+      drawer.removeAttribute('aria-hidden');
+      overlay.removeAttribute('aria-hidden');
+      btn.setAttribute('aria-expanded', 'true');
+    }
+
+    function closeToc() {
+      document.body.removeAttribute('data-toc-open');
+      drawer.setAttribute('aria-hidden', 'true');
+      overlay.setAttribute('aria-hidden', 'true');
+      btn.setAttribute('aria-expanded', 'false');
+    }
+
+    btn.addEventListener('click', openToc);
+    overlay.addEventListener('click', closeToc);
+    if (closeBtn) closeBtn.addEventListener('click', closeToc);
+
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && document.body.hasAttribute('data-toc-open')) {
+        closeToc();
+      }
+    });
+
+    // Close drawer when navigating to a section
+    drawer.querySelectorAll('a').forEach(function (link) {
+      link.addEventListener('click', closeToc);
     });
   }
 
@@ -403,6 +459,7 @@
     initHoverCards();
     initGlossaryTooltips();
     initMobileNav();
+    initTocDrawer();
     initFootnoteTooltips();
     initNavboxes();
     initSearchAutocomplete();
