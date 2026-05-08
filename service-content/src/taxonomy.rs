@@ -381,21 +381,21 @@ pub fn load_taxonomy_from_dir(ontology_dir: &str) -> Result<TaxonomyBundle, Stri
     let arc_path = format!("{}/archetypes.csv", ontology_dir);
     if std::path::Path::new(&arc_path).exists() {
         let csv = read(&arc_path)?;
-        bundle.archetypes = parse_archetypes(skip_header(&csv))?;
+        bundle.archetypes = parse_archetypes(&csv)?;
     }
 
     // Chart of Accounts
     let coa_path = format!("{}/chart_of_accounts.csv", ontology_dir);
     if std::path::Path::new(&coa_path).exists() {
         let csv = read(&coa_path)?;
-        bundle.coa = parse_coa(skip_header(&csv))?;
+        bundle.coa = parse_coa(&csv)?;
     }
 
     // Themes
     let theme_path = format!("{}/themes.csv", ontology_dir);
     if std::path::Path::new(&theme_path).exists() {
         let csv = read(&theme_path)?;
-        bundle.themes = parse_themes(skip_header(&csv))?;
+        bundle.themes = parse_themes(&csv)?;
     }
 
     // Domains (3 files)
@@ -403,7 +403,7 @@ pub fn load_taxonomy_from_dir(ontology_dir: &str) -> Result<TaxonomyBundle, Stri
         let path = format!("{}/domains/domain_{}.csv", ontology_dir, domain);
         if std::path::Path::new(&path).exists() {
             let csv = read(&path)?;
-            let mut rows = parse_domain(skip_header(&csv))?;
+            let mut rows = parse_domain(&csv)?;
             bundle.domains.append(&mut rows);
         }
     }
@@ -413,7 +413,7 @@ pub fn load_taxonomy_from_dir(ontology_dir: &str) -> Result<TaxonomyBundle, Stri
         let path = format!("{}/glossary/glossary_{}.csv", ontology_dir, domain);
         if std::path::Path::new(&path).exists() {
             let csv = read(&path)?;
-            let mut rows = parse_glossary(skip_header(&csv))?;
+            let mut rows = parse_glossary(&csv)?;
             bundle.glossary.append(&mut rows);
         }
     }
@@ -423,7 +423,7 @@ pub fn load_taxonomy_from_dir(ontology_dir: &str) -> Result<TaxonomyBundle, Stri
         let path = format!("{}/topics/topics_{}.csv", ontology_dir, domain);
         if std::path::Path::new(&path).exists() {
             let csv = read(&path)?;
-            let mut rows = parse_topics(skip_header(&csv))?;
+            let mut rows = parse_topics(&csv)?;
             bundle.topics.append(&mut rows);
         }
     }
@@ -432,7 +432,7 @@ pub fn load_taxonomy_from_dir(ontology_dir: &str) -> Result<TaxonomyBundle, Stri
     let guide_path = format!("{}/guides/guides_documentation.csv", ontology_dir);
     if std::path::Path::new(&guide_path).exists() {
         let csv = read(&guide_path)?;
-        let mut rows = parse_guides(skip_header(&csv))?;
+        let mut rows = parse_guides(&csv)?;
         bundle.guides.append(&mut rows);
     }
 
@@ -461,7 +461,7 @@ fn skip_header(csv: &str) -> &str {
     }
 }
 
-/// Public version used by config_http to strip header before parsing POST body.
+/// Strip the first (header) line. Exposed for external tooling; not used internally.
 pub fn skip_header_owned(csv: &str) -> String {
     skip_header(csv).to_string()
 }
@@ -586,5 +586,31 @@ mod tests {
             assert!(!row.guide_id.is_empty(), "guide_id must not be empty");
             assert_eq!(row.domain, "documentation", "all guides must have domain=documentation");
         }
+    }
+
+    // ── regression: load_taxonomy_from_dir must not drop first data row ──────
+
+    #[test]
+    fn parse_archetypes_first_row_not_dropped() {
+        // Regression test for the skip_header + has_headers double-strip bug.
+        // All parse_* functions use ReaderBuilder with has_headers=true (default),
+        // so the CSV must be passed WITH its header row — the crate handles it.
+        let csv = "id,name,signature,healing_trigger,gravity_keywords\n\
+                   1,The Executive,Strategic Direction,Stagnation,strategy|leadership\n\
+                   2,The Guardian,Risk & Compliance,Breach,compliance|audit\n";
+        let rows = parse_archetypes(csv).unwrap();
+        assert_eq!(rows.len(), 2, "both rows must be returned — not 1 (first dropped)");
+        assert_eq!(rows[0].name, "The Executive", "first row must be The Executive");
+        assert_eq!(rows[1].name, "The Guardian");
+    }
+
+    #[test]
+    fn parse_domain_first_row_not_dropped() {
+        let csv = "domain_id,domain_name,category,thesis,gravity_keywords\n\
+                   corporate,Corporate,governance,Thesis A,real estate|equity\n\
+                   documentation,Documentation,knowledge,Thesis B,guide|wiki\n";
+        let rows = parse_domain(csv).unwrap();
+        assert_eq!(rows.len(), 2, "both domain rows must be returned");
+        assert_eq!(rows[0].domain_id, "corporate");
     }
 }

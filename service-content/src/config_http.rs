@@ -11,7 +11,7 @@ use crate::http::HttpState;
 use crate::taxonomy::{
     archetypes_to_entities, coa_to_entities, domains_to_entities, glossary_to_entities,
     guides_to_entities, parse_archetypes, parse_coa, parse_domain, parse_glossary, parse_guides,
-    parse_themes, parse_topics, serialize_domains, skip_header_owned, themes_to_entities, topics_to_entities,
+    parse_themes, parse_topics, serialize_domains, themes_to_entities, topics_to_entities,
 };
 
 // ── CSV response helper ───────────────────────────────────────────────────────
@@ -62,7 +62,7 @@ async fn get_domains(
     for domain in &["corporate", "documentation", "projects"] {
         let path = format!("{}/domains/domain_{}.csv", state.ontology_dir, domain);
         if let Ok(csv) = std::fs::read_to_string(&path) {
-            let rows = parse_domain(&skip_header_owned(&csv)).map_err(|e| err422(e))?;
+            let rows = parse_domain(&csv).map_err(|e| err422(e))?;
             all.extend(rows);
         }
     }
