@@ -21,17 +21,35 @@ set -uo pipefail
 JENNIFER_BASE="${JENNIFER_BASE:-/home/mathew/deployments/woodfine-fleet-deployment/cluster-totebox-jennifer}"
 FOUNDRY_ROOT="${FOUNDRY_ROOT:-${HOME}/Foundry}"
 CRM_DIR="${JENNIFER_BASE}/service-fs/data/service-people/ledgers"
+JENNIFER_SOURCE_DIR="${JENNIFER_BASE}/service-fs/data/service-people/source"
 BATCH_SIZE=50
-IDLE_SECONDS=1800    # 30 minutes
-HARD_STOP_SECONDS=14400  # 4 hours
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
+# Defaults for the loop's two timers — env vars override at process scope;
+# --test-mode swaps the defaults to short values so the timers can be exercised
+# in seconds rather than hours.
+IDLE_SECONDS_DEFAULT=1800        # 30 minutes
+HARD_STOP_SECONDS_DEFAULT=14400  # 4 hours
+
+NO_YOYO=false
+TEST_MODE=false
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --batch-size) BATCH_SIZE="$2"; shift 2 ;;
+        --no-yoyo)    NO_YOYO=true; shift ;;
+        --test-mode)  TEST_MODE=true; shift ;;
+        --help|-h)    sed -n '2,18p' "$0"; exit 0 ;;
         *) echo "Unknown flag: $1" >&2; exit 1 ;;
     esac
 done
+
+if [[ "${TEST_MODE}" == "true" ]]; then
+    IDLE_SECONDS_DEFAULT=30
+    HARD_STOP_SECONDS_DEFAULT=60
+fi
+
+IDLE_SECONDS="${IDLE_SECONDS:-${IDLE_SECONDS_DEFAULT}}"
+HARD_STOP_SECONDS="${HARD_STOP_SECONDS:-${HARD_STOP_SECONDS_DEFAULT}}"
 
 DEADLINE=$(( $(date +%s) + HARD_STOP_SECONDS ))
 LAST_SEMANTIC_COUNT=0
@@ -44,9 +62,37 @@ semantic_count() {
     find "${CRM_DIR}" -maxdepth 1 -name "SEMANTIC_*.json" 2>/dev/null | wc -l
 }
 
-log "Session start. Hard stop: 4h. Idle timeout: 30 min. Batch size: ${BATCH_SIZE}."
+log "Session start. Hard stop: $((HARD_STOP_SECONDS / 60))m. Idle timeout: $((IDLE_SECONDS / 60))m (=${IDLE_SECONDS}s). Batch size: ${BATCH_SIZE}. test_mode=${TEST_MODE} no_yoyo=${NO_YOYO}."
 log "CRM dir: ${CRM_DIR}"
 mkdir -p "${CRM_DIR}"
+
+# ── Yo-Yo lifecycle: start (with wait-ready) ─────────────────────────────────
+# Exit codes from start-yoyo.sh:
+#   0 = VM up + vLLM ready
+#   1 = GCE start failure (auth/permission/unknown)
+#   2 = vLLM ready-poll timeout (VM up; falls back to Tier A only)
+#   3 = zone stockout cascade exhausted
+# We continue the loop in all cases — Doorman handles tier fallback transparently.
+TIER_B_AVAILABLE=false
+if [[ "${NO_YOYO}" != "true" ]]; then
+    log "Starting Yo-Yo #1 (wait-ready=300s, auto-snapshot)..."
+    if "${SCRIPT_DIR}/start-yoyo.sh" --wait-ready=300 --auto-snapshot 2>&1 | sed 's/^/  /'; then
+        TIER_B_AVAILABLE=true
+        log "Yo-Yo #1 ready — Tier B available."
+    else
+        rc=${PIPESTATUS[0]}
+        log "WARN: start-yoyo.sh exited rc=${rc} (1=hard fail, 2=ready timeout, 3=stockout). Proceeding with Tier A fallback only."
+    fi
+else
+    log "Skipping Yo-Yo lifecycle (--no-yoyo)."
+fi
+
+# ── Pre-flight: feed availability ────────────────────────────────────────────
+JENNIFER_SOURCE_COUNT=0
+if [[ -d "${JENNIFER_SOURCE_DIR}" ]]; then
+    JENNIFER_SOURCE_COUNT=$(find "${JENNIFER_SOURCE_DIR}" -maxdepth 2 -type f 2>/dev/null | wc -l)
+fi
+log "Jennifer source files available: ${JENNIFER_SOURCE_COUNT} (in ${JENNIFER_SOURCE_DIR})"
 
 LAST_SEMANTIC_COUNT=$(semantic_count)
 log "Current SEMANTIC count: ${LAST_SEMANTIC_COUNT}"
@@ -107,6 +153,15 @@ done
 
 FINAL=$(semantic_count)
 log "Session complete. Final SEMANTIC count: ${FINAL}."
+
+# ── Yo-Yo lifecycle: stop (graceful drain) ───────────────────────────────────
+# Stops the GCE VM before the threshold-check Python step so cost stops
+# accruing as early as possible. stop-yoyo.sh treats already-terminated as
+# success, so this is safe even if start-yoyo failed earlier.
+if [[ "${NO_YOYO}" != "true" ]]; then
+    log "Stopping Yo-Yo #1 (drain-timeout 60s)..."
+    "${SCRIPT_DIR}/stop-yoyo.sh" --drain-timeout=60 2>&1 | sed 's/^/  /' || true
+fi
 
 # ── Training triplet threshold check ─────────────────────────────────────────
 # Run corpus-threshold.py every night so training fires as soon as enough
