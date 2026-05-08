@@ -1668,7 +1668,17 @@ fn wiki_chrome(
                 (PreEscaped(jsonld_for_topic(&fm, slug)))
             }
             body {
-                header.site-header {
+                // Sticky header — hidden until main header scrolls off-screen (Sprint H)
+                div.wiki-sticky-header #wiki-sticky-header aria-hidden="true" {
+                    div.sticky-inner {
+                        a.sticky-logo href="/" { (site_title) }
+                        span.sticky-title #sticky-title { (title) }
+                        @if user.is_some() {
+                            a.sticky-edit href={ "/edit/" (slug) } { "Edit" }
+                        }
+                    }
+                }
+                header.site-header #site-header {
                     a.site-title href="/" { (site_title) }
                     form.header-search #header-search-form action="/search" method="get" {
                         div.header-search-wrap {
