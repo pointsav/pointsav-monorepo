@@ -33,6 +33,9 @@ BEARER_TOKEN="${SLM_YOYO_BEARER:-}"
 IMAGE_FAMILY="${SLM_YOYO_IMAGE_FAMILY:-slm-yoyo}"
 IMAGE_PROJECT="${SLM_YOYO_IMAGE_PROJECT:-${PROJECT}}"
 WEIGHTS_DISK="${INSTANCE}-weights"
+# When set, new weights disks are restored from this snapshot instead of created empty.
+# Set this after uploading weights: create-yoyo-snapshot.sh → SLM_YOYO_WEIGHTS_SNAPSHOT
+WEIGHTS_SNAPSHOT="${SLM_YOYO_WEIGHTS_SNAPSHOT:-}"
 
 # Ordered fallback zone list — used ONLY when the current zone is exhausted.
 FALLBACK_ZONES=(
@@ -78,14 +81,23 @@ provision_vm_in_zone() {
     local zone="$1"
     echo "  [PROVISION] Creating ${INSTANCE} in ${PROJECT}/${zone}..."
 
-    # Create weights disk first
+    # Create weights disk — restore from snapshot if one exists, otherwise blank.
     echo "  [PROVISION] Creating weights disk ${WEIGHTS_DISK} in ${zone}..."
-    if ! gcloud compute disks create "${WEIGHTS_DISK}" \
-            --project="${PROJECT}" \
-            --zone="${zone}" \
-            --type=pd-ssd \
-            --size=100GB \
-            --labels=role=yoyo-weights 2>&1; then
+    local disk_create_args=(
+        "${WEIGHTS_DISK}"
+        --project="${PROJECT}"
+        --zone="${zone}"
+        --type=pd-ssd
+        --labels=role=yoyo-weights
+    )
+    if [[ -n "${WEIGHTS_SNAPSHOT}" ]]; then
+        echo "  [PROVISION] Restoring from snapshot ${WEIGHTS_SNAPSHOT} (weights preserved)."
+        disk_create_args+=(--source-snapshot="${WEIGHTS_SNAPSHOT}")
+    else
+        echo "  [PROVISION] No snapshot set — empty disk (weights upload required after provisioning)."
+        disk_create_args+=(--size=100GB)
+    fi
+    if ! gcloud compute disks create "${disk_create_args[@]}" 2>&1; then
         echo "  [PROVISION] Disk creation failed in ${zone} — trying next zone."
         return 1
     fi
@@ -132,12 +144,20 @@ provision_vm_in_zone() {
     return 0
 }
 
-# ── Helper: update Doorman env with new zone ─────────────────────────────────
+# ── Helper: update Doorman env with new zone (and snapshot if known) ─────────
 update_doorman_env() {
     local new_zone="$1"
     if [[ -w "${DOORMAN_ENV}" ]]; then
         sed -i "s|^SLM_YOYO_GCP_ZONE=.*|SLM_YOYO_GCP_ZONE=${new_zone}|" "${DOORMAN_ENV}"
         echo "Updated SLM_YOYO_GCP_ZONE=${new_zone} in ${DOORMAN_ENV}."
+        if [[ -n "${WEIGHTS_SNAPSHOT}" ]]; then
+            if grep -q "^SLM_YOYO_WEIGHTS_SNAPSHOT=" "${DOORMAN_ENV}"; then
+                sed -i "s|^SLM_YOYO_WEIGHTS_SNAPSHOT=.*|SLM_YOYO_WEIGHTS_SNAPSHOT=${WEIGHTS_SNAPSHOT}|" "${DOORMAN_ENV}"
+            else
+                echo "SLM_YOYO_WEIGHTS_SNAPSHOT=${WEIGHTS_SNAPSHOT}" >> "${DOORMAN_ENV}"
+            fi
+            echo "Updated SLM_YOYO_WEIGHTS_SNAPSHOT=${WEIGHTS_SNAPSHOT} in ${DOORMAN_ENV}."
+        fi
     fi
 }
 
