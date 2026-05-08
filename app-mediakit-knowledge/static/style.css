@@ -124,8 +124,8 @@ article h1, article h2, article h3, article h4, article h5, article h6 {
 }
 
 article h1 { font-size: 1.75rem; border-bottom: 1px solid var(--border); padding-bottom: 0.25rem; }
-article h2 { font-size: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 0.25rem; }
-article h3 { font-size: 1.25rem; }
+article h2 { font-size: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 0.25rem; scroll-margin-top: 60px; }
+article h3 { font-size: 1.25rem; scroll-margin-top: 60px; }
 article h4 { font-size: 1.0625rem; font-weight: 600; }
 
 article a { color: var(--link); }
@@ -2225,3 +2225,68 @@ a.footnote-backref:hover { text-decoration: underline; }
 .navbox-list li:first-child::before { content: ''; margin-right: 0; }
 .navbox-list a { color: #3366cc; text-decoration: none; }
 .navbox-list a:hover { text-decoration: underline; }
+
+/* ── Sprint H: Sticky header ───────────────────────────────────────────── */
+.wiki-sticky-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 50px;
+  background: var(--bg-chrome, #f6f8fa);
+  border-bottom: 1px solid var(--border, #d0d7de);
+  z-index: 200;
+  display: none;
+  align-items: center;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+.wiki-sticky-header.sticky-visible {
+  display: flex;
+}
+.sticky-inner {
+  max-width: var(--max-content-width, 1280px);
+  margin: 0 auto;
+  padding: 0 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+  min-width: 0;
+}
+.sticky-logo {
+  font-weight: 700;
+  font-size: 0.95rem;
+  text-decoration: none;
+  color: var(--fg);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.sticky-title {
+  font-size: 0.95rem;
+  color: var(--fg);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.sticky-edit {
+  font-size: 0.875rem;
+  color: var(--link, #3366cc);
+  text-decoration: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+  padding: 0.2rem 0.6rem;
+  border: 1px solid var(--border, #d0d7de);
+  border-radius: 3px;
+}
+.sticky-edit:hover { background: var(--bg, #fff); text-decoration: none; }
+
+/* ── Sprint I: Active ToC section tracking ─────────────────────────────── */
+.toc-list .toc-section-active > a {
+  font-weight: 600;
+  color: var(--fg, #1f2328);
+  border-left: 3px solid var(--link, #3366cc);
+  padding-left: 0.4rem;
+  margin-left: -0.4rem;
+}
