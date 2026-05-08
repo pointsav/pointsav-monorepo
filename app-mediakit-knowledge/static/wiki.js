@@ -450,6 +450,85 @@
   }
 
   /* ------------------------------------------------------------------ *
+   * Sprint H: Sticky header                                              *
+   *                                                                     *
+   * IntersectionObserver on #site-header. When the main header scrolls  *
+   * off-screen the sticky bar becomes visible. When it scrolls back into *
+   * view the sticky bar hides.                                           *
+   * ------------------------------------------------------------------ */
+
+  function initStickyHeader() {
+    var stickyEl  = document.getElementById('wiki-sticky-header');
+    var mainHeader = document.getElementById('site-header');
+    if (!stickyEl || !mainHeader) return;
+
+    var observer = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          stickyEl.classList.remove('sticky-visible');
+          stickyEl.setAttribute('aria-hidden', 'true');
+        } else {
+          stickyEl.classList.add('sticky-visible');
+          stickyEl.removeAttribute('aria-hidden');
+        }
+      });
+    }, { threshold: 0 });
+
+    observer.observe(mainHeader);
+  }
+
+  /* ------------------------------------------------------------------ *
+   * Sprint I: Active ToC section tracking                                *
+   *                                                                     *
+   * IntersectionObserver on every h2/h3 inside the article body.        *
+   * When a heading enters the viewport the matching ToC entry receives   *
+   * the `toc-section-active` class; all others lose it.                 *
+   * ------------------------------------------------------------------ */
+
+  function initActiveToc() {
+    var tocList = document.getElementById('toc-list');
+    if (!tocList) return;
+
+    var headings = document.querySelectorAll('.wiki-main h2[id], .wiki-main h3[id]');
+    if (!headings.length) return;
+
+    var activeId = null;
+
+    function setActive(id) {
+      if (id === activeId) return;
+      activeId = id;
+      tocList.querySelectorAll('li').forEach(function (li) {
+        li.classList.remove('toc-section-active');
+      });
+      if (!id) return;
+      var link = tocList.querySelector('a[href="#' + id + '"]');
+      if (link && link.parentElement) {
+        link.parentElement.classList.add('toc-section-active');
+      }
+    }
+
+    var observer = new IntersectionObserver(function (entries) {
+      // Pick the topmost heading currently intersecting.
+      var topEntry = null;
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          if (!topEntry || entry.boundingClientRect.top < topEntry.boundingClientRect.top) {
+            topEntry = entry;
+          }
+        }
+      });
+      if (topEntry) {
+        setActive(topEntry.target.id);
+      }
+    }, {
+      rootMargin: '-10% 0px -70% 0px', // trigger when heading is in top 30% of viewport
+      threshold: 0
+    });
+
+    headings.forEach(function (h) { observer.observe(h); });
+  }
+
+  /* ------------------------------------------------------------------ *
    * Boot                                                                 *
    * ------------------------------------------------------------------ */
 
@@ -460,6 +539,8 @@
     initGlossaryTooltips();
     initMobileNav();
     initTocDrawer();
+    initStickyHeader();
+    initActiveToc();
     initFootnoteTooltips();
     initNavboxes();
     initSearchAutocomplete();
