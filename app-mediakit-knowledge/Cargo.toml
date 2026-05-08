@@ -27,7 +27,7 @@ axum = { version = "0.8", features = ["ws"] }
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "signal", "fs", "process"] }
 tower = "0.5"
 tower-http = { version = "0.6", features = ["trace", "set-header", "compression-br", "compression-gzip"] }
-comrak = "0.29"
+comrak = "0.52"
 maud = { version = "0.27", features = ["axum"] }
 rust-embed = { version = "8", features = ["compression"] }
 mime_guess = "2"
@@ -66,6 +66,9 @@ chrono = "0.4"
 # StreamExt::split needed for axum WebSocket sender/receiver split.
 futures-util = "0.3"
 csv = "1.3"
+# E3: Doorman proxy — forwards /api/doorman/* to WIKI_DOORMAN_URL when set.
+# default-features = false + rustls avoids the openssl-sys system-lib dep.
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
 regex = "1.10"
 # File-system watcher for incremental Tantivy search reindex.
 # The recommended backend on Linux is inotify (default); macos uses kqueue.
