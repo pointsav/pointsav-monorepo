@@ -450,6 +450,75 @@
   }
 
   /* ------------------------------------------------------------------ *
+   * Sprint J: Mobile collapsible h2 sections                             *
+   *                                                                     *
+   * At <960px each h2 in the article body acts as a toggle for the      *
+   * content that follows it (up to the next h2). State is persisted in  *
+   * localStorage per slug so the user's open sections survive refresh.  *
+   * The lead section (before the first h2) is always visible.           *
+   * ------------------------------------------------------------------ */
+
+  function initCollapsibleSections() {
+    // Only activate on narrow screens.
+    if (window.innerWidth >= 960) return;
+
+    var article = document.querySelector('.wiki-main article, .wiki-body, .wiki-main');
+    if (!article) return;
+
+    var slug = (document.querySelector('link[rel="canonical"]') || {}).href || window.location.pathname;
+
+    var storageKey = 'wiki-sections:' + slug;
+    var openSections = {};
+    try {
+      var stored = localStorage.getItem(storageKey);
+      if (stored) openSections = JSON.parse(stored);
+    } catch (e) { openSections = {}; }
+
+    // Collect all h2 elements inside the article
+    var h2s = article.querySelectorAll('h2');
+    if (!h2s.length) return;
+
+    h2s.forEach(function (h2) {
+      var id = h2.id || h2.textContent.trim().replace(/\s+/g, '-').toLowerCase();
+
+      // Default: open (true) if no saved state
+      var isOpen = openSections[id] !== false;
+
+      // Collect siblings between this h2 and the next h2
+      var siblings = [];
+      var next = h2.nextElementSibling;
+      while (next && next.tagName !== 'H2') {
+        siblings.push(next);
+        next = next.nextElementSibling;
+      }
+      if (!siblings.length) return; // no content to collapse
+
+      // Wrap siblings in a collapsible div
+      var wrapper = document.createElement('div');
+      wrapper.className = 'section-body';
+      h2.parentNode.insertBefore(wrapper, siblings[0]);
+      siblings.forEach(function (s) { wrapper.appendChild(s); });
+
+      // Style h2 as a toggle
+      h2.classList.add('section-toggle');
+      h2.setAttribute('aria-expanded', String(isOpen));
+      if (!isOpen) {
+        wrapper.style.display = 'none';
+        h2.classList.add('section-collapsed');
+      }
+
+      h2.addEventListener('click', function () {
+        isOpen = !isOpen;
+        h2.setAttribute('aria-expanded', String(isOpen));
+        h2.classList.toggle('section-collapsed', !isOpen);
+        wrapper.style.display = isOpen ? '' : 'none';
+        openSections[id] = isOpen;
+        try { localStorage.setItem(storageKey, JSON.stringify(openSections)); } catch (e) {}
+      });
+    });
+  }
+
+  /* ------------------------------------------------------------------ *
    * Sprint H: Sticky header                                              *
    *                                                                     *
    * IntersectionObserver on #site-header. When the main header scrolls  *
@@ -541,6 +610,7 @@
     initTocDrawer();
     initStickyHeader();
     initActiveToc();
+    initCollapsibleSections();
     initFootnoteTooltips();
     initNavboxes();
     initSearchAutocomplete();

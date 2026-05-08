@@ -1711,6 +1711,23 @@ fn wiki_chrome(
                         a.site-title href="/" { (site_title) }
                         button.mobile-nav-close #mobile-nav-close aria-label="Close navigation" { "✕" }
                     }
+                    // Sprint K: article ToC inside the nav drawer (visible above nav links)
+                    @if !numbered_headings.is_empty() {
+                        p.mobile-drawer-section-heading { "Contents" }
+                        ol.mobile-toc-list.mobile-nav-toc {
+                            @for (id, text, level, num) in &numbered_headings {
+                                li class={ "toc-level-" (level) } {
+                                    a href={ "#" (id) } {
+                                        span.toc-numb { (num) }
+                                        " "
+                                        (text)
+                                    }
+                                }
+                            }
+                        }
+                        hr.mobile-drawer-divider;
+                        p.mobile-drawer-section-heading { "Navigation" }
+                    }
                     ul.mobile-nav-list {
                         li { a href="/" { "Home" } }
                         li { a href="/search" { "Search" } }
