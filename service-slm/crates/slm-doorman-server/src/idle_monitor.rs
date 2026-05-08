@@ -194,11 +194,13 @@ async fn stop_gcp_instance(
         config.gcp_project, config.gcp_zone, config.gcp_instance
     );
     // GCP Compute Engine API requires Content-Length: 0 on empty-body POSTs.
-    // reqwest omits the header by default, causing HTTP 411.
+    // reqwest may use chunked transfer encoding for .body(""), which the API
+    // rejects with HTTP 411. Setting the header explicitly is the safe path.
     let resp = client
         .post(&url)
         .bearer_auth(&token)
-        .body("")
+        .header(reqwest::header::CONTENT_LENGTH, "0")
+        .body(reqwest::Body::from(""))
         .send()
         .await
         .map_err(|e| format!("GCP API request failed: {e}"))?;

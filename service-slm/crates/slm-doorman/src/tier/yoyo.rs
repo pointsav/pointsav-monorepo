@@ -180,6 +180,7 @@ impl YoYoTierClient {
             config,
             http: reqwest::Client::builder()
                 .timeout(SOCKET_TIMEOUT)
+                .danger_accept_invalid_certs(true)
                 .build()
                 .unwrap_or_default(),
             bearer,
@@ -429,6 +430,7 @@ impl YoYoTierClient {
 async fn run_health_probe(endpoint: String, health_up: Arc<AtomicBool>) {
     let http = reqwest::Client::builder()
         .timeout(HEALTH_PROBE_TIMEOUT)
+        .danger_accept_invalid_certs(true)
         .build()
         .unwrap_or_default();
 
