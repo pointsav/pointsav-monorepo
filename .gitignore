@@ -1,0 +1,9 @@
+# Multi-agent session locks (ephemeral — not committed)
+.agent/engines/*/session.lock
+
+# Generated wiki state and logs — ephemeral, not committed
+logs/
+state-corporate/
+state-documentation/
+state-projects/
+state-test/
