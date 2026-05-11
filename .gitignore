@@ -1,0 +1,5 @@
+# Multi-agent session locks (ephemeral — not committed)
+.agent/engines/*/session.lock
+
+# Working copy directories — tracked in separate git repos
+pointsav-monorepo/
