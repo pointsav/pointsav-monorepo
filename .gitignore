@@ -1,0 +1,8 @@
+# Multi-agent session locks (ephemeral — not committed)
+.agent/engines/*/session.lock
+
+# Build artifacts — not committed
+build/
+
+# Legacy .claude directory (should be .agent symlink — to be fixed)
+.claude/
