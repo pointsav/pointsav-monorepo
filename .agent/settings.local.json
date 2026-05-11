@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 *)",
+      "Bash(grep -B 1 -A 5 \"^JUN 13$\" /tmp/stmt7.txt)",
+      "Bash(grep -B 2 -A 8 \"^JUN 13$\" /tmp/stmt7.txt)"
+    ]
+  }
+}
