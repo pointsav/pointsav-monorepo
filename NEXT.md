@@ -1,350 +1,139 @@
-# NEXT.md — pointsav-monorepo
+# NEXT — project-orchestration
 
-> **Scope: this repo only.** Cross-repo and workspace-level open
-> items live at `~/Foundry/NEXT.md`.
->
-> Read at session start when a Root Claude opens in this repo. Update
-> at session end when repo-scope open items change.
-
-Last updated: 2026-05-24.
+> Implementation scope: Totebox Orchestration transition Phases 1–3.
+> Full plan: `/home/mathew/.claude/plans/before-we-do-that-humming-emerson.md`
+> Opened: 2026-05-08
 
 ---
 
-## Knowledge platform — canonical plan
+## Phase 1 — Declare vocabulary (COMMAND SESSION SCOPE)
 
-The three-wiki knowledge platform is governed by two documents in
-`.agent/plans/`: **`KNOWLEDGE-PLATFORM-VISION.md`** (vision & architecture —
-upstream) and **`KNOWLEDGE-PLATFORM-PLAN.md`** (project-knowledge execution
-plan — 8 phases). All prior knowledge-platform, Wikipedia-parity, and blueprint
-plans were superseded and removed 2026-05-21; the parity plans are archived
-under `.agent/plans/archive/`.
+These edits happen in `~/Foundry/`, not this cluster.
 
-**Execution progress:**
-
-- [x] Phases 1–5 + hygiene COMPLETE. 17 commits on `app-mediakit-knowledge` — all pass `cargo test` + `cargo clippy -D warnings`. [2026-05-22–24 totebox@claude-code]
-- [x] Phase 2 — claim-authoring convention ratified as doctrine claim #54. [2026-05-21 totebox@claude-code]
-- [x] 3 live fixes (`23deea11`) — IVC band "Phase 7" text removed; WCAG `#878d99→#666c78`; dtcg-to-css.py cubicBezier fixed. [2026-05-24 totebox@claude-code]
-- [ ] **Stage 6 — 17 commits unpromoted.** Command Session: `echo "y" | ~/Foundry/bin/promote.sh` → `cargo build --release` → `sudo systemctl restart` 3 wiki services. Outbox: `project-knowledge-20260524-session-close`. [2026-05-24 totebox@claude-code]
-- [ ] **Phase 6 — GATED** on: (1) `content-wiki-*` → `media-knowledge-*` GitHub rename; (2) MASTER Doctrine amendment. No Totebox work until Command confirms both. [2026-05-23 totebox@claude-code]
-- [ ] **Design commission → project-design** — 5 DESIGN-* drafts outboxed; MASTER COSIGN on DTCG required; `shell_chrome()` implementation to follow after ratification. [2026-05-24 totebox@claude-code]
-- [ ] **DS-ADR-07 amendment** — needed before font-loading token work. Flagged to Command. [2026-05-24 totebox@claude-code]
-- [ ] Phase 3.4 — continuous citation verification (reqwest + scheduler). Deferred; own sub-project.
-- [ ] Phase 3.6 — claim-record MCP API. Deferred; waiting on project-intelligence re: slm-mcp-server.
+- [x] **P1.1** `CLAUDE.md` §11: Master → Command Session, Task → Totebox Session, Root → eliminated
+- [x] **P1.2** `AGENT.md` session roles table: same vocabulary change
+- [x] **P1.3** `bin/claude-role.sh`: Command / Totebox / error-on-vendor output
+- [ ] **P1.4** `MANIFEST.md`: add "As a Totebox Orchestration" section
+  - Names vault-privategit-source-1 as Command instance
+  - Lists os-orchestration node + os-mediakit node (planned)
+  - 13 active Totebox Archives + 2 planned (project-source, project-woodfine)
+  - `service-slm` Doorman as the shared Orchestration SLM layer
+- [ ] **P1.5** Correct `systems/os-orchestration.md` user-guide article:
+  - Remove: "NetworkAdminOS maintains the MBA registry" claim
+  - Correct: no central registry; COMMAND's pairings.yaml + MANIFEST.md = topology record
+  - Correct: `system-mba-shim` is the MVP transitional layer only
+  - Location: `vendor/content-wiki-documentation/` — use project-editorial Totebox Session
 
 ---
 
-## app-mediakit-knowledge — Phase 6A shipped (2026-05-13)
+## Phase 2 — Formalize manifests + SLM wiring + pairings.yaml
 
-- [x] `inject_wiki_prefixes` trailing-quote bug fixed (`src/render.rs`)
-- [x] Slug normalisation fallback: mixed-case URL → 301 → canonical lowercase (`src/server.rs`)
-- [x] Redirect hatnote via `?redirectedfrom=` (`src/server.rs`, `static/style.css`)
-- [x] 4 new integration tests in `tests/slug_test.rs` — all pass
+These edits happen in `~/Foundry/` (COMMAND scope) and this cluster (Totebox scope).
 
-**Stage 6 — promote complete** (confirmed 2026-05-13):
-- [x] `promote.sh` on `pointsav-monorepo` — Phase 6A in `origin/main` [2026-05-13 task@claude-code]
-
-**Binary rebuild + service restart pending** (Master scope):
-- [ ] `cargo build --release` from `app-mediakit-knowledge/` subdirectory [2026-05-13 task@claude-code]
-- [ ] `sudo cp target/release/app-mediakit-knowledge /usr/local/bin/` [2026-05-13 task@claude-code]
-- [ ] `sudo systemctl restart` all 3 wiki services + smoke verify [2026-05-13 task@claude-code]
-
-**Phase 6B — DID portable identity**: gated on BP6 operator decision. Plan at `.agent/plans/PHASE-6B-DID-IDENTITY.md`.
-
-**JS bundle cleanup** (backlog — low priority): vendored JS bundles in `app-mediakit-knowledge/static/vendor/` were kept per operator P7b decision 2026-05-16. Schedule explicitly when operator is ready; no session work until then.
+- [ ] **P2.1** Update `foundry-cluster-manifest-v1` schema docs with `slm_endpoint:` field
+- [ ] **P2.2** Add `slm_endpoint: http://localhost:8011` to all 13 cluster `.agent/manifest.md` files
+      Clusters to update: project-bim, project-bookkeeping, project-command, project-data,
+      project-design, project-editorial, project-gis, project-intelligence, project-knowledge,
+      project-marketing, project-orgcharts, project-proofreader, project-system
+- [ ] **P2.3** Create `slm/` dir in each of 13 clusters:
+      - `slm/MODULE_ID` — the tenant identifier (e.g. `editorial`, `bim`, `gis`, etc.)
+      - `slm/endpoint.txt` — `http://localhost:8011`
+      - `slm/README.md` — one sentence: "SLM routing for this archive via the shared Doorman."
+- [ ] **P2.3b** Create `pairings.yaml` at workspace root (`~/Foundry/pairings.yaml`)
+      One entry per active archive: endpoint, module_id, paired_on, type
+- [ ] **P2.4** Provision `clones/project-source/` (PointSav canonical-tier development archive)
+      - Clone: pointsav-monorepo, pointsav-design-system
+      - Replaces Root sessions in vendor/ for PointSav canonical work
+- [ ] **P2.5** Provision `clones/project-woodfine/` (Woodfine customer-tier development archive)
+      - Clone: woodfine-fleet-deployment
+      - Replaces Root sessions in customer/ for Woodfine work
+- [ ] **P2.6** Update `PROJECT-CLONES.md`: use "Totebox Archive" language, add SLM column (15 archives)
 
 ---
 
-## Currently open
+## Phase 3 — Instrument tooling (TOTEBOX SESSION SCOPE — use this cluster)
 
-### service-slm Phases 4–5 complete — Stage 6 pending
+Write code in `pointsav-monorepo/` on branch `cluster/project-orchestration`.
 
-- [x] Phase 4: `build_doorman()` node-class gate + `SLM_FORCE_BROKER_MODE`; `select_tier()` Micro invariant; `/readyz` reports `node_class`/`tier_a`/`tier_a_reason`/`ai_available`; `local-doorman.service` `Requires=` → `Wants=`. [2026-05-22 totebox@claude-code]
-- [x] Phase 5: `tests/micro_node.rs` (5 integration tests); 8 `SqliteGraphStore` round-trip tests; `scripts/run-micro-sandbox.sh` cgroup sandbox. 260/260 tests pass. Commit `32213020`. [2026-05-22 totebox@claude-code]
-- [ ] **Stage 6 promote** — 2 commits ahead of origin/main (post-session); Command must `bin/promote.sh`. [2026-05-23 totebox@claude-sonnet-4-6]
-- [ ] **Tonight's build session** — full todo in outbox (`project-intelligence-20260523-build-session-todo`) + BRIEF-vm-hardening-and-consolidation.md. Key: stop local-slm, fix service-content Ring 2/3, deploy Phase 4/5 binaries. [2026-05-23 totebox@claude-sonnet-4-6]
-- [ ] Phase 6 (deferred): `latency_class` in `slm-core`; `BackendLifecycle` trait; Tier A model drift; GF-1/GF-2 async audit + timeouts. [2026-05-22 totebox@claude-code]
+### P3.1 — bin/open-archive.sh
 
-### Doctrine conflict — claim #49 vs. tier-zero working-set convention
+Shell script at `~/Foundry/bin/open-archive.sh <archive-name>`:
 
-- [ ] **Resolve in DOCTRINE.md or convention:** DOCTRINE.md claim #49 states
-  "the full substrate runs at \[$7/mo e2-micro\] size" but
-  `conventions/tier-zero-customer-side-sovereign-specialist.md` §1 specifies a
-  "2–4 GB working set" for the Tier A (1B specialist) node. These are not
-  contradictory — claim #49 means the *deterministic substrate only* (claim #54:
-  AI is value-add, not load-bearing); Tier A is a NUC-class property, not the
-  fleet default. The doctrine language is ambiguous without that gloss.
-  **Recommendation (surface to Command):** add one clarifying sentence to claim
-  #49: "the deterministic substrate (claim #54) runs at this size; on-node AI
-  is a property of the NUC / hardware-Totebox rung." [2026-05-22 totebox@claude-code]
-  Reference: `BRIEF-flow-restructure.md` §6.
+```
+1. Validate archive exists in clones/
+2. Read clones/<archive>/.agent/manifest.md:
+   - Print archive name, tetrad status (all 4 legs + status)
+   - Print slm_endpoint + module_id
+   - Count pending inbox messages (non-blank lines after header)
+3. Check contributor tier from pairings.yaml (basic: warn if not P1 opening Command CWD)
+4. Set env vars: FOUNDRY_ARCHIVE=<archive>, FOUNDRY_MODULE_ID=<module_id>
+5. Exec: claude --cwd ~/Foundry/clones/<archive>/
+```
 
-### BLOCKED — `.agent/manifest.md` contamination (cross-cluster rebase artefact)
+### P3.2 — bin/list-archives.sh
 
-- [ ] **Command Session must resolve:** a Stage-6 rebase 2026-05-22 pulled
-  `project-knowledge`'s `.agent/manifest.md`, `.agent/outbox.md`, and
-  `.agent/memory/` into the project-intelligence working tree. The manifest
-  currently describes `cluster_name: project-knowledge`, not project-intelligence.
-  project-intelligence cannot safely update its manifest until Command reverts
-  or replaces this file. **Do not edit `.agent/manifest.md`** until Command
-  confirms the correct content is in place. [2026-05-22 totebox@claude-code]
-  Reference: session-context.md contamination note.
+Shell script at `~/Foundry/bin/list-archives.sh`:
 
-### lbug static-link linker error — pre-existing, cargo build blocked
+```
+1. Walk clones/*/. agent/manifest.md
+2. For each manifest: print cluster_name, tetrad leg statuses, inbox count
+3. Columnar output, easy to scan
+4. Source: PROJECT-CLONES.md or manifest files directly
+```
 
-- [ ] **lbug 0.16 static archive (`liblbug.a`) is missing antlr4/utf8proc symbols.**
-  `cargo build -p service-content` fails at link time. The deployed binary uses
-  `liblbug.so.0` at `/usr/local/lib/` (a complete shared library, all C++ deps
-  bundled). Cargo is forcing static link via `--whole-archive liblbug.a`
-  (lbug's build.rs), not the shared library. Fix: either patch lbug's build.rs
-  to emit `cargo:rustc-link-lib=dylib=lbug`, or set an env var in the service's
-  `.cargo/config.toml`. `cargo check -p service-content` passes — code is
-  type-correct. This is a pre-existing issue, not introduced by Phase 3.
-  [2026-05-22 totebox@claude-code]
+### P3.3 — app-orchestration-command v0.0.1 (Rust)
 
-### BLOCKER — stale `cluster/project-knowledge` branch (Stage-6 landmine)
+Scaffold in `pointsav-monorepo/app-orchestration-command/`:
 
-- [ ] **Escalated to Command Session** 2026-05-21 (outbox msg-id
-  `project-knowledge-20260521-cluster-branch-topology-drift`). Branch
-  `cluster/project-knowledge` diverged from `main` at merge-base `7cf4d6eb`
-  (2026-05-03): `main` is 374 commits ahead, the cluster branch only 33
-  (mailbox/ops). A Stage-6 promote of the cluster branch as-is would revert
-  374 canonical commits. Command must decide: delete the stale branch, or
-  reconcile it to `main`. **`KNOWLEDGE-PLATFORM-PLAN.md` Phase 1 is paused**
-  until the canonical working branch is confirmed. [2026-05-21 totebox@claude-code]
+Endpoints (HTTP, loopback only, port 8020):
+- `GET /archives` — return JSON list of all archives with tetrad status + inbox count
+  Source: walk clones/*/. agent/manifest.md
+- `POST /message` — route a cross-archive message
+  MUST validate per-caller scope first (confused deputy defense):
+  check requesting archive's module_id against pairings.yaml permissions
+  Log all routing decisions to audit ledger
+- `GET /personnel/<unix-user>` — return permission tier + pairing set
+  Source: pairings.yaml + PersonnelArchive DataGraph (MVP: just pairings.yaml)
 
-### Layout hygiene — defect closures queued
+Implementation pattern: follow `app-orchestration-gis` structure (same codebase).
+Commit on `cluster/project-orchestration` branch in this cluster's pointsav-monorepo.
 
-Rule source: `.claude/rules/repo-layout.md` (introduced 2026-04-23).
-Each item below is a separate commit via `tool-commit-as-next.sh`.
+### P3.4 — Deploy to deployments/orchestration-command-1/
 
-*(queue empty — Tier-2 project-root scripts closed 2026-04-23;
-see Recently closed below and `cleanup-log.md`)*
+After v0.0.1 compiles:
+- Create `~/Foundry/deployments/orchestration-command-1/` with MANIFEST.md
+- Copy binary, write systemd unit to `infrastructure/`
+- Start service: `sudo systemctl start app-orchestration-command`
+- Test: `curl http://localhost:8020/archives`
 
-### Awaiting cross-repo handoff
+### P3.5 — Update NEXT.md
 
-Entries lodged in `.claude/rules/handoffs-outbound.md`. Pattern is
-passive — nothing moves until Master Claude or a Root Claude in
-the destination repo picks up the entry and commits the add-side.
-Source files remain in place here until the destination has
-committed; only then does a follow-up Root Claude session commit
-the source-remove.
+Mark Phase 1 + 2 complete; update workspace NEXT.md with Phase 3 task link.
 
-- **`GUIDE-OPERATIONS.md` → `content-wiki-documentation`** — see
-  outbox for destination path and rationale.
-- **`USER_GUIDE_2026-03-30_V2.md` → `content-wiki-documentation`**
-  (with `_V2` dropped in transit) — see outbox.
+---
 
-### Framework follow-ups
+## Two-VM transition (parallel track — COMMAND scope)
 
-- **BIM project activations** — three of four BIM projects are still
-  Reserved-folder. Follow the `app-console-bookkeeper` pilot pattern
-  (framework §8): `app-console-bim`, `app-orchestration-bim`,
-  `app-workplace-bim`, `service-bim` (the fourth, which triggered
-  the taxonomy expansion).
-- **`service-bookkeeper` forward reference** — the
-  `app-console-bookkeeper` view reads "Awaiting service-bookkeeper
-  sync" but that service is not in the registry. Decide: register
-  as Reserved-folder, redirect to `service-fs/data/`, or correct
-  the reference.
-- **HTML-plugin vs Rust-crate `Type`-column refinement.**
-  `app-console-*` and `app-network-*` projects contain both
-  patterns; the registry's `Type` column does not distinguish.
-  Surfaced during bookkeeper activation.
-- **`BIM.zip` triage** — user-added working-tree artefact; determine
-  whether source data, extraction seed, or stray; gitignore or
-  delete.
+See plan file §"Two-VM transition" for full detail.
 
-### Rename series
+- [ ] **T1** WireGuard Part A: VPN peer for staging at :9200
+- [ ] **T2** Provision os-mediakit node (new GCP VM)
+- [ ] **T3** Transfer: rsync chain via Jennifer's Mac
+- [ ] **T4** DNS cutover for 9 domains
+- [ ] **T5** Remove public vhosts from os-orchestration node; update MANIFEST.md
 
-*(queue empty — all five rename-series items closed 2026-04-23;
-see Recently closed below and `cleanup-log.md` Completed
-migrations)*
+---
 
-### Structural defects
+## Content backlog (project-editorial scope)
 
-- **Workspace `Cargo.toml` unification** — per 2026-04-18 audit,
-  workspace declares only 8 of ~70+ crates as members. Other crates
-  are treated as standalone workspaces (hence 23 stray
-  `Cargo.lock` files). Unifying would consolidate targets and
-  resolve profile inheritance.
-- **Monorepo `.gitignore` deduplication** — the "Asymmetric Storage
-  Protocol: Enforce Tier-1 Quarantine" block is duplicated four
-  times. Normalise to a single copy.
-- **Large binaries** — tracked artefacts that should move to
-  build-time fetch:
-  - `app-mediakit-telemetry/assets/GeoLite2-City.mmdb` (63.5 MB)
-    — **still tracked**. Next candidate for fetch-at-build
-    treatment. Paths reclassified 2026-04-23.
-  - `service-slm/router-trainer/engine/llamafile` (35 MB) —
-    **untracked since 2026-04-23** via `git rm --cached` + new
-    `.gitignore` pattern. Physical file remains at path for the
-    Python workflow. History still contains the blob; shrinking
-    the repo requires `git-filter-repo`, separate task.
-  - `service-slm/router-trainer/engine/weights/qwen2.5-coder-1.5b.gguf`
-    (15 MB) — already covered by existing `**/weights/*` +
-    `*.gguf` ignore patterns. Same history-blob caveat applies.
-  - ISO / IMG artefacts in `os-infrastructure/`,
-    `os-network-admin/`, `os-totebox/` (tracking status TBD).
+- [ ] Route TOPIC/GUIDE batch: 7 drafts in `~/Foundry/.agent/drafts-outbound/` → DONE 2026-05-08
+- [ ] Write `conventions/trustworthy-system.md` (COMMAND scope)
+- [ ] Update user-guide article (P1.5 above)
 
-### New projects to register — Reverse-Flow Substrate (Doctrine claim #52)
+---
 
-Six new Reserved-folder projects are named in DOCTRINE.md claim #52
-(ratified 2026-04-30) and `conventions/reverse-flow-substrate.md`.
-Create directory + bilingual READMEs + registry row in one commit per
-project (workspace §9: directory creation and registry row must land
-together). Activation to Active follows the standard framework §8
-procedure (CLAUDE.md + NEXT.md + registry row update).
+## Key references
 
-| Project | Prefix type | App OS | Notes |
-|---|---|---|---|
-| `service-market` | `service-*` | `os-totebox` | Ring 2 data marketplace — outbound connectors (Snowflake, AWS Data Exchange, LiveRamp) + inbound Delta Sharing API |
-| `service-exchange` | `service-*` | `os-totebox` | Ring 2 ad exchange — IAB OpenRTB 2.6; SSP + DSP bidirectional; Prebid Server sidecar; `iab-specs-openrtb` crate |
-| `app-orchestration-market` | `app-orchestration-*` | `os-orchestration` | Browser marketplace storefront; deployed as `gateway-orchestration-market-N` |
-| `app-orchestration-exchange` | `app-orchestration-*` | `os-orchestration` | Browser ad campaign UI; deployed as `gateway-orchestration-exchange-N` |
-| `app-console-market` | `app-console-*` | `os-console` | Secure TUI for industries where web delivery is too risky (financial, health, legal data) |
-| `app-console-exchange` | `app-console-*` | `os-console` | Secure TUI ad exchange surface; same risk-profile rationale |
-
-Also note: `app-orchestration-gis` (from `project-gis` cluster,
-deployed as `gateway-orchestration-gis-1`) is absent from the project
-registry — close this registry drift in the same pass.
-
-### Conformance and activations
-
-- **`app-workplace-memo` activation.** Scaffold-coded with 47 files,
-  described by its sibling as "running on Linux Mint." Needs
-  `CLAUDE.md` + `NEXT.md` to become Active per framework §8.
-- **`app-workplace-proforma` CLAUDE.md commit-convention decision.**
-  Its `CLAUDE.md` exists but is marked "not committed to git." Per
-  the 2026-04-22 framework decision (committed convention is
-  canonical), this file either needs committing or explicit
-  conformance to a local-only exception.
-- **`service-extraction/CLAUDE.md` staleness.** The in-module
-  `CLAUDE.md` describes v0.2/v0.4 development but the code is a
-  149-line filesystem-watching router — different implementation.
-  Align before any new refactor of this service.
-
-### Stashes parked in this repo
-
-- `stash@{0}` — 2026-04-22 — "task21 WIP before worktree removal"
-  (on `audit-layer-1-findings`; engineering work on `slm-memory-kv`
-  crate, renames, untracked research doc). Restore with
-  `git stash pop` when ready to resume.
-- `stash@{1}` — pre-existing — "On service-extraction-v04: main:
-  registry + BIM untracked — parked before task [21] resume".
-
-## Recently closed (2026-04-23)
-
-- Repo-layout rule introduced — `.claude/rules/repo-layout.md`
-  codifies allowed files at the monorepo root and at each project
-  directory root; names the sibling repos
-  (`content-wiki-documentation`, `pointsav-design-system`, etc.)
-  where cross-cutting content belongs. Anchor for the "Layout
-  hygiene" queue above.
-- `force_build.sh` relocated — root → `vendor-sel4-kernel/scripts/`.
-  Zero runtime callers; script uses absolute paths so no content
-  edits were needed. Repo root is now one file lighter against the
-  new rule.
-- `os-infrastructure/build_iso/forge_iso.sh` renamed to
-  `compile_binary.sh` — resolves filename collision with the
-  sibling ISO-assembly script at the project root. In-file header
-  updated. Zero external callers. New open question logged in
-  `cleanup-log.md`: the compile and assembly scripts are not wired
-  together.
-- `app-console-content/src/{pointsav-surveyor.sh,surveyor.py}`
-  relocated to `app-console-content/scripts/`. Both files moved as
-  100% renames. Shell wrapper is relative (`$(dirname "$0")`),
-  Python script uses absolute paths — neither needed content
-  edits. Throttle open-question row in `cleanup-log.md` updated
-  with a code-reference pointer to the new path; the operator
-  decision on `MAX_DAILY_VERIFICATIONS = 10` remains open.
-- Handoff-outbound pattern introduced —
-  `.claude/rules/handoffs-outbound.md` logs cross-repo file moves
-  kept in place here until a Root Claude in the destination repo
-  commits them. Two entries lodged (`GUIDE-OPERATIONS.md`,
-  `USER_GUIDE_2026-03-30_V2.md`, both to
-  `content-wiki-documentation`). Formalisation of the pattern in
-  `~/Foundry/CLAUDE.md` §9 and §10 surfaced for Master Claude in
-  `cleanup-log.md`.
-- Tier-2 project-root scripts relocated — 18 files across 9
-  projects moved to their respective `scripts/` subfolders in 9
-  separate commits (`8f5cc48` through `faae141`). Every file
-  registered as a 100% rename; no callers needed updating.
-  Projects touched: `os-totebox`, `service-content`,
-  `service-email`, `service-slm`, `tool-cognitive-forge`,
-  `os-network-admin`, `vendor-phi3-mini`, `service-vpn`,
-  `app-mediakit-telemetry`. Stray `tool-cognitive-forge/llama.log`
-  surfaced as a separate housekeeping item.
-- `service-parser/` removed — first rename-series closure.
-  Directory contained only a README describing a superseded
-  AI-routing framing; zero runtime references, never a workspace
-  member, one commit in history. Nothing recyclable into
-  `service-extraction` (which describes a different, deterministic
-  Parser-Combinators approach). Rename-table row moved to
-  Completed migrations; registry row removed (Defect count
-  5 → 4, Total rows 100 → 99).
-- `pointsav-pty-bridge` → `service-pty-bridge` — second
-  rename-series closure. Directory renamed via `git mv` (4 files,
-  all 100% renames); `Cargo.toml` `name` field updated in the
-  same commit. Registry row moved from "Other / special" into
-  the Service table; reclassified Defect → Scaffold-coded
-  (Defect 4 → 3, Scaffold-coded 51 → 52). Zero external import
-  references; not a workspace member; stray `Cargo.lock` left
-  in place (resolves with workspace unification).
-- Fifth (final) rename-series closure — Cognitive Forge term
-  retired in one commit. `service-slm/cognitive-forge/` renamed
-  to `service-slm/router/`; former top-level `tool-cognitive-forge/`
-  moved to `service-slm/router-trainer/`. Rust runtime
-  (`router/`) and Python distillation workflow
-  (`router-trainer/`) now live together as producer/consumer.
-  Cargo.toml `name` + `main.rs` usage string updated.
-  `distill_knowledge.py` moved from non-canonical `src/` to
-  `scripts/`. Three binary/log files untracked via `git rm
-  --cached` + new `.gitignore` patterns (llamafile 35 MB,
-  engine.log, llama.log) — physical files remain at new paths.
-  Registry Scaffold-coded 54 → 53, Total 98 → 97. Closes the
-  rename-series queue entirely (5 of 5) and the separate
-  `llama.log` housekeeping item.
-- `service-email-egress-{ews,imap}` wrappers flattened — fourth
-  rename-series closure. Consolidation-to-`service-email-egress`
-  plan reversed after sub-crate review: EWS and IMAP are two
-  protocol adapters, not duplicates, and merging them would erase
-  the architectural distinction. Instead, the redundant
-  doubly-nested wrapper directories were flattened — 73 files
-  promoted up one level. Registry reclassified both from
-  Defect → Scaffold-coded; Defect count 2 → 0 (registry is now
-  Defect-free). The 13 dir-name / Cargo-name mismatches from the
-  2026-04-18 audit remain separate.
-- `vendors-maxmind` reclassified to
-  `app-mediakit-telemetry/assets/` — third rename-series closure.
-  Data-only directory moved to the authoritative path already
-  documented in the vendor's README; `.mmdb` (63.5 MB) + both
-  READMEs travelled together; empty `vendors-maxmind/` removed.
-  Open question "does it belong as a `vendor-*` crate at all?"
-  closed (answer: no; non-workspace data directory).
-  `repo-layout.md` extended to name `assets/` and `data/` as
-  conventional subfolders. Registry Defect 3 → 2, Total rows
-  99 → 98. In-transit edit to `USER_GUIDE_2026-03-30_V2.md`
-  line 902 updates the path reference — travels with the pending
-  cross-repo handoff. Separate `.mmdb` → build-time-fetch task
-  remains open under Structural defects.
-
-## Recently closed (2026-04-22)
-
-- Audit cleanup — removed 2 `__MACOSX/` directories and 16 tracked
-  `.DS_Store` / AppleDouble files from egress extraction-artefact
-  scaffolding. `.DS_Store` added to `.gitignore`. Commit `0eeaeba`.
-- Project registry bootstrap — 96-row inventory covering every
-  top-level directory. Commit `fd7811f`.
-- BIM-research project rows + cleanup-log bootstrap on `main` (drift
-  closed) + taxonomy-expansion session entry. Commit `3cc8f4a`.
-- `app-console-bookkeeper` activation pilot — Reserved-folder
-  (mis-classified) → Active. Commit `27ad6d2`.
-
-## Pointers
-
-- Workspace-level open items: `~/Foundry/NEXT.md`
-- Workspace changelog: `~/Foundry/CHANGELOG.md`
-- Project registry: `.claude/rules/project-registry.md`
-- Cleanup log: `.claude/rules/cleanup-log.md`
-- Repo layout rule: `.claude/rules/repo-layout.md`
-- Handoffs outbound: `.claude/rules/handoffs-outbound.md`
+- Plan file: `/home/mathew/.claude/plans/before-we-do-that-humming-emerson.md`
+- Cluster manifest: `.agent/manifest.md`
+- app-orchestration-gis reference impl: `clones/project-gis/pointsav-monorepo/app-orchestration-gis/`
