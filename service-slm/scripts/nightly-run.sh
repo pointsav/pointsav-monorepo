@@ -75,8 +75,11 @@ mkdir -p "${CRM_DIR}"
 # We continue the loop in all cases — Doorman handles tier fallback transparently.
 TIER_B_AVAILABLE=false
 if [[ "${NO_YOYO}" != "true" ]]; then
-    log "Starting Yo-Yo #1 (wait-ready=300s, auto-snapshot)..."
-    if "${SCRIPT_DIR}/start-yoyo.sh" --wait-ready=300 --auto-snapshot 2>&1 | sed 's/^/  /'; then
+    # --wait-ready=5400 (90 min) accommodates the first-boot sovereign bootstrap
+    # (HF download + llama.cpp convert + quantize + GCS upload). Subsequent
+    # warm-disk boots resolve in ~5 min, well inside the budget.
+    log "Starting Yo-Yo #1 (wait-ready=5400s, auto-snapshot)..."
+    if "${SCRIPT_DIR}/start-yoyo.sh" --wait-ready=5400 --auto-snapshot 2>&1 | sed 's/^/  /'; then
         TIER_B_AVAILABLE=true
         log "Yo-Yo #1 ready — Tier B available."
     else
