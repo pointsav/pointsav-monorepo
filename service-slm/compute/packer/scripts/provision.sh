@@ -1,17 +1,24 @@
 #!/usr/bin/env bash
 # Packer provisioner for the slm-yoyo GCE image.
-# Installs: CUDA 12, Python 3.12, vLLM >= 0.12, Nginx TLS reverse proxy.
+# Installs: CUDA 12, Python 3.12, vLLM >= 0.12, Nginx TLS reverse proxy,
+# llama.cpp (built from source for our own quantization), training libs
+# (torch/peft/bitsandbytes/transformers/huggingface_hub/accelerate),
+# google-cloud-sdk + gcsfuse, and the Yo-Yo lifecycle systemd units
+# (vllm-weights-prep, lora-training [disabled], adapter-publish).
 # Idempotent -- safe to re-run.
 set -euo pipefail
 
 VLLM_PORT=${VLLM_PORT:-8000}
+LLAMA_CPP_REF=${LLAMA_CPP_REF:-master}   # pinned commit can be set via env
 
 echo "==> Installing system packages"
 sudo apt-get update -qq
 sudo apt-get install -y --no-install-recommends \
-    curl gnupg ca-certificates \
+    curl gnupg ca-certificates jq \
     nginx openssl \
-    python3 python3-pip python3-venv
+    python3 python3-pip python3-venv \
+    cmake git \
+    apt-transport-https
 
 # -- Kernel headers + build tools (required for DKMS / NVIDIA module compile) --
 echo "==> Installing kernel headers and build tools"
@@ -19,6 +26,17 @@ sudo apt-get install -y --no-install-recommends \
     linux-headers-$(uname -r) \
     build-essential \
     dkms
+
+# -- google-cloud-sdk (for gcloud + gsutil + gcsfuse) --------------------------
+echo "==> Installing google-cloud-sdk + gcsfuse"
+echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" \
+    | sudo tee /etc/apt/sources.list.d/google-cloud-sdk.list
+echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt gcsfuse-noble main" \
+    | sudo tee /etc/apt/sources.list.d/gcsfuse.list
+curl -fsSL https://packages.cloud.google.com/apt/doc/apt-key.gpg \
+    | sudo gpg --dearmor -o /usr/share/keyrings/cloud.google.gpg
+sudo apt-get update -qq
+sudo apt-get install -y --no-install-recommends google-cloud-sdk gcsfuse
 
 # -- CUDA ----------------------------------------------------------------------
 echo "==> Installing CUDA keyring"
@@ -31,16 +49,60 @@ echo "==> Installing CUDA drivers (L4 / Ada Lovelace)"
 sudo apt-get update -qq
 sudo apt-get install -y --no-install-recommends cuda-drivers
 
-# -- vLLM ----------------------------------------------------------------------
-echo "==> Installing vLLM >= 0.12 into /opt/vllm venv"
+# -- vLLM + training libs ------------------------------------------------------
+# Single venv at /opt/vllm carries both vLLM (inference) and the training
+# stack (torch + peft + bitsandbytes + transformers + huggingface_hub + accelerate).
+# vLLM pins its own torch; pip resolves a compatible set.
+echo "==> Installing vLLM + training libraries into /opt/vllm venv"
 sudo python3 -m venv /opt/vllm
-sudo /opt/vllm/bin/pip install --upgrade pip
-sudo /opt/vllm/bin/pip install "vllm>=0.12"
+sudo /opt/vllm/bin/pip install --upgrade pip wheel
+sudo /opt/vllm/bin/pip install \
+    "vllm>=0.12" \
+    "peft>=0.13" \
+    "bitsandbytes>=0.44" \
+    "transformers>=4.46" \
+    "huggingface_hub>=0.25" \
+    "accelerate>=1.0" \
+    "sentencepiece" \
+    "protobuf"
+
+# -- llama.cpp (built from source) ---------------------------------------------
+# We build llama-quantize ourselves so the quantization step is reproducible
+# and verifiable against our own pinned commit. CPU-only build is sufficient
+# for quantize (CUDA is needed only for inference, which vLLM handles).
+echo "==> Cloning + building llama.cpp at ref=${LLAMA_CPP_REF}"
+sudo git clone https://github.com/ggerganov/llama.cpp /opt/llama.cpp
+sudo git -C /opt/llama.cpp checkout "${LLAMA_CPP_REF}"
+sudo cmake -B /opt/llama.cpp/build -S /opt/llama.cpp \
+    -DGGML_CUDA=OFF -DLLAMA_CURL=OFF
+sudo cmake --build /opt/llama.cpp/build --target llama-quantize -j"$(nproc)"
+
+# Make convert script + llama-quantize available on PATH
+sudo install -m 755 /opt/llama.cpp/build/bin/llama-quantize /usr/local/bin/llama-quantize
+
+# `hf` (huggingface_hub >= 0.26 CLI; supersedes the deprecated `huggingface-cli`)
+# is provided by huggingface_hub in the venv; symlink for global access.
+sudo ln -sf /opt/vllm/bin/hf /usr/local/bin/hf
 
 # -- systemd units -------------------------------------------------------------
-echo "==> Installing vllm.service"
+echo "==> Installing systemd units"
 sudo install -m 644 /tmp/vllm.service /etc/systemd/system/vllm.service
-sudo systemctl enable vllm
+sudo install -m 644 /tmp/vllm-weights-prep.service /etc/systemd/system/vllm-weights-prep.service
+sudo install -m 644 /tmp/lora-training.service /etc/systemd/system/lora-training.service
+sudo install -m 644 /tmp/adapter-publish.service /etc/systemd/system/adapter-publish.service
+
+echo "==> Installing lifecycle scripts"
+sudo install -m 755 /tmp/vllm-weights-prep.sh /usr/local/bin/vllm-weights-prep.sh
+sudo install -m 755 /tmp/lora-training.sh /usr/local/bin/lora-training.sh
+sudo install -m 755 /tmp/adapter-publish.sh /usr/local/bin/adapter-publish.sh
+
+# Enable units that should run at boot.
+# vllm-weights-prep MUST run before vllm.service (declared via Requires/After).
+# lora-training is intentionally NOT enabled — it activates after Master
+# ratifies the Yo-Yo-runs-LoRA-training Doctrine claim.
+# adapter-publish is on-demand (no [Install] section).
+sudo systemctl enable vllm-weights-prep.service
+sudo systemctl enable vllm.service
 
 # -- Nginx TLS -----------------------------------------------------------------
 echo "==> Generating self-signed TLS certificate for Nginx"
@@ -69,27 +131,36 @@ MAPEOF
 
 sudo systemctl enable nginx
 
-# -- Data disk mount point -----------------------------------------------------
-echo "==> Creating /data/weights mount point"
-sudo mkdir -p /data/weights
+# -- Data disk mount points ----------------------------------------------------
+echo "==> Creating /data/weights and /training mount points"
+sudo mkdir -p /data/weights /training /srv/foundry-substrate
 
-# Startup script: mount the persistent weights disk (device yoyo-weights) on boot.
-# The disk is attached by OpenTofu with device_name = "yoyo-weights".
+# Startup script: mount the persistent weights disk on boot.
+# /training disk (if attached) and /srv/foundry-substrate (gcsfuse) are
+# best-effort; absent disks/buckets do not block boot.
 sudo tee /etc/rc.local > /dev/null << 'EOF'
 #!/usr/bin/env bash
-# Mount persistent weights disk on boot (attached by OpenTofu).
+# Mount persistent weights disk on boot (attached by start-yoyo.sh / OpenTofu).
 DEVICE=/dev/disk/by-id/google-yoyo-weights
 MOUNTPOINT=/data/weights
 if [ -b "${DEVICE}" ] && ! mountpoint -q "${MOUNTPOINT}"; then
-    # Format on first boot if no filesystem present.
     if ! blkid "${DEVICE}" > /dev/null 2>&1; then
         mkfs.ext4 -F "${DEVICE}"
     fi
     mount "${DEVICE}" "${MOUNTPOINT}"
 fi
 
-# Retrieve bearer token from GCP instance metadata and write it to the Nginx
-# map file so the proxy auth is set without baking the secret into the image.
+# Optional: mount /training scratch disk if present (best-effort).
+TRAIN_DEVICE=/dev/disk/by-id/google-yoyo-training
+TRAIN_MOUNTPOINT=/training
+if [ -b "${TRAIN_DEVICE}" ] && ! mountpoint -q "${TRAIN_MOUNTPOINT}"; then
+    if ! blkid "${TRAIN_DEVICE}" > /dev/null 2>&1; then
+        mkfs.ext4 -F "${TRAIN_DEVICE}"
+    fi
+    mount "${TRAIN_DEVICE}" "${TRAIN_MOUNTPOINT}" || true
+fi
+
+# Bearer token: retrieve from instance metadata, write to nginx auth map.
 TOKEN=$(curl -sf -H "Metadata-Flavor: Google" \
     "http://metadata.google.internal/computeMetadata/v1/instance/attributes/bearer-token" || true)
 if [ -n "${TOKEN}" ]; then

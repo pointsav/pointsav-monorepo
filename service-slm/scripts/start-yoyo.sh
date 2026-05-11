@@ -50,10 +50,11 @@ WAIT_READY=0       # 0 = no wait, >0 = poll seconds before exiting
 AUTO_SNAPSHOT=false
 RETRY_CYCLES=1
 RETRY_WAIT=300
+WEIGHTS_GCS_BUCKET="${SLM_YOYO_WEIGHTS_GCS_BUCKET:-woodfine-node-gcp-free-foundry-substrate}"
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --wait-ready=*)         WAIT_READY="${1#*=}"; shift ;;
-        --wait-ready)           WAIT_READY=300; shift ;;
+        --wait-ready)           WAIT_READY=5400; shift ;;
         --auto-snapshot)        AUTO_SNAPSHOT=true; shift ;;
         --retry-cycles=*)       RETRY_CYCLES="${1#*=}"; shift ;;
         --retry-wait-seconds=*) RETRY_WAIT="${1#*=}"; shift ;;
@@ -76,15 +77,22 @@ log() {
     fi
 }
 
-# Ordered fallback zone list — used ONLY when the current zone is exhausted.
+# Ordered fallback zone list — used when the primary zone is exhausted or when
+# provisioning fresh. Order is tuned to L4 GPU capacity observed during recent
+# Packer image builds (most-likely-available zones first). us-east4 omitted —
+# does not stock g2-standard-4. Update when GCP capacity patterns shift.
 FALLBACK_ZONES=(
+    "us-west1-a"
     "us-central1-a"
     "us-central1-b"
     "us-central1-c"
-    "northamerica-northeast1-b"
-    "northamerica-northeast1-c"
     "us-east1-b"
     "us-east1-c"
+    "us-east1-d"
+    "us-west1-b"
+    "us-west4-a"
+    "northamerica-northeast1-b"
+    "northamerica-northeast1-c"
 )
 
 # ── Helper: check if gcloud error output indicates zone stockout ──────────────
@@ -121,33 +129,48 @@ provision_vm_in_zone() {
     echo "  [PROVISION] Creating ${INSTANCE} in ${PROJECT}/${zone}..."
 
     # Create weights disk — restore from snapshot if one exists, otherwise blank.
-    echo "  [PROVISION] Creating weights disk ${WEIGHTS_DISK} in ${zone}..."
+    # 256GB pd-balanced fits the first-boot bootstrap peak (safetensors 64GB + intermediate
+    # fp16 GGUF 64GB during convert step, before cleanup) PLUS steady-state (base 20GB +
+    # LoRA adapters 3GB + tokenizer + checkpoints + headroom). pd-balanced is much cheaper
+    # than pd-ssd; LoRA I/O is fine on balanced. ~$26/mo always-attached.
+    echo "  [PROVISION] Creating weights disk ${WEIGHTS_DISK} (256GB pd-balanced) in ${zone}..."
     local disk_create_args=(
         "${WEIGHTS_DISK}"
         --project="${PROJECT}"
         --zone="${zone}"
-        --type=pd-ssd
+        --type=pd-balanced
         --labels=role=yoyo-weights
     )
     if [[ -n "${WEIGHTS_SNAPSHOT}" ]]; then
         echo "  [PROVISION] Restoring from snapshot ${WEIGHTS_SNAPSHOT} (weights preserved)."
         disk_create_args+=(--source-snapshot="${WEIGHTS_SNAPSHOT}")
     else
-        echo "  [PROVISION] No snapshot set — empty disk (weights upload required after provisioning)."
-        disk_create_args+=(--size=100GB)
+        echo "  [PROVISION] No snapshot set — empty disk; vllm-weights-prep.service will bootstrap from GCS or AllenAI."
+        disk_create_args+=(--size=256GB)
     fi
     if ! gcloud compute disks create "${disk_create_args[@]}" 2>&1; then
         echo "  [PROVISION] Disk creation failed in ${zone} — trying next zone."
         return 1
     fi
 
-    # Build metadata arg
+    # Build metadata arg — bearer-token (nginx auth) + weights-gcs-bucket
+    # (consumed by vllm-weights-prep.service to know where to fetch/upload).
+    local meta_kv=()
+    [[ -n "${BEARER_TOKEN}" ]] && meta_kv+=("bearer-token=${BEARER_TOKEN}")
+    [[ -n "${WEIGHTS_GCS_BUCKET}" ]] && meta_kv+=("weights-gcs-bucket=${WEIGHTS_GCS_BUCKET}")
     local meta_arg=""
-    if [[ -n "${BEARER_TOKEN}" ]]; then
-        meta_arg="--metadata=bearer-token=${BEARER_TOKEN}"
+    if [[ "${#meta_kv[@]}" -gt 0 ]]; then
+        local IFS=','
+        meta_arg="--metadata=${meta_kv[*]}"
     fi
 
-    # Create the instance
+    # Create the instance.
+    # Ephemeral external IP is allocated by default (no --no-address flag) so:
+    #   (a) wait_for_vllm_ready can probe https://<ip>:9443/health from outside
+    #   (b) Doorman's existing SLM_YOYO_ENDPOINT pattern (https://<ip>:9443) works
+    #   (c) the VM has internet egress for HF download during first-boot bootstrap
+    # Scope is restricted by VPC firewall rule (only the workspace VM IP allowed
+    # through to port 9443; SSH is via IAP). This is the existing operational pattern.
     local err_output
     err_output=$(gcloud compute instances create "${INSTANCE}" \
         --project="${PROJECT}" \
@@ -164,8 +187,7 @@ provision_vm_in_zone() {
         --disk=name="${WEIGHTS_DISK}",device-name=yoyo-weights,auto-delete=no \
         --tags=yoyo-tier-b \
         --scopes=cloud-platform \
-        ${meta_arg} \
-        --no-address 2>&1)
+        ${meta_arg} 2>&1)
 
     if [[ $? -ne 0 ]]; then
         if is_stockout "${err_output}"; then
@@ -183,20 +205,48 @@ provision_vm_in_zone() {
     return 0
 }
 
-# ── Helper: update Doorman env with new zone (and snapshot if known) ─────────
+# ── Helper: update Doorman env with new zone, IP, snapshot ──────────────────
+# After every successful provision/start, the VM may have a new external IP.
+# Doorman's SLM_YOYO_ENDPOINT must reflect this for the health probe to land.
+# Best-effort: writes if the env file is writable; otherwise emits the new
+# values to stdout so an operator can apply them via sudo.
 update_doorman_env() {
     local new_zone="$1"
-    if [[ -w "${DOORMAN_ENV}" ]]; then
-        sed -i "s|^SLM_YOYO_GCP_ZONE=.*|SLM_YOYO_GCP_ZONE=${new_zone}|" "${DOORMAN_ENV}"
-        echo "Updated SLM_YOYO_GCP_ZONE=${new_zone} in ${DOORMAN_ENV}."
-        if [[ -n "${WEIGHTS_SNAPSHOT}" ]]; then
-            if grep -q "^SLM_YOYO_WEIGHTS_SNAPSHOT=" "${DOORMAN_ENV}"; then
-                sed -i "s|^SLM_YOYO_WEIGHTS_SNAPSHOT=.*|SLM_YOYO_WEIGHTS_SNAPSHOT=${WEIGHTS_SNAPSHOT}|" "${DOORMAN_ENV}"
-            else
-                echo "SLM_YOYO_WEIGHTS_SNAPSHOT=${WEIGHTS_SNAPSHOT}" >> "${DOORMAN_ENV}"
-            fi
-            echo "Updated SLM_YOYO_WEIGHTS_SNAPSHOT=${WEIGHTS_SNAPSHOT} in ${DOORMAN_ENV}."
+    local new_ip
+    new_ip=$(gcloud compute instances describe "${INSTANCE}" \
+            --project="${PROJECT}" --zone="${new_zone}" \
+            --format='value(networkInterfaces[0].accessConfigs[0].natIP)' 2>/dev/null || echo "")
+    local new_endpoint=""
+    [[ -n "${new_ip}" ]] && new_endpoint="https://${new_ip}:9443"
+
+    if [[ ! -w "${DOORMAN_ENV}" ]]; then
+        echo "Note: ${DOORMAN_ENV} not writable by this process. Apply these as root:"
+        echo "  SLM_YOYO_GCP_ZONE=${new_zone}"
+        [[ -n "${new_endpoint}" ]] && echo "  SLM_YOYO_ENDPOINT=${new_endpoint}"
+        [[ -n "${WEIGHTS_SNAPSHOT}" ]] && echo "  SLM_YOYO_WEIGHTS_SNAPSHOT=${WEIGHTS_SNAPSHOT}"
+        echo "Then: sudo systemctl restart local-doorman.service"
+        return 0
+    fi
+
+    sed -i "s|^SLM_YOYO_GCP_ZONE=.*|SLM_YOYO_GCP_ZONE=${new_zone}|" "${DOORMAN_ENV}"
+    echo "Updated SLM_YOYO_GCP_ZONE=${new_zone} in ${DOORMAN_ENV}."
+
+    if [[ -n "${new_endpoint}" ]]; then
+        if grep -q "^SLM_YOYO_ENDPOINT=" "${DOORMAN_ENV}"; then
+            sed -i "s|^SLM_YOYO_ENDPOINT=.*|SLM_YOYO_ENDPOINT=${new_endpoint}|" "${DOORMAN_ENV}"
+        else
+            echo "SLM_YOYO_ENDPOINT=${new_endpoint}" >> "${DOORMAN_ENV}"
         fi
+        echo "Updated SLM_YOYO_ENDPOINT=${new_endpoint} in ${DOORMAN_ENV}."
+    fi
+
+    if [[ -n "${WEIGHTS_SNAPSHOT}" ]]; then
+        if grep -q "^SLM_YOYO_WEIGHTS_SNAPSHOT=" "${DOORMAN_ENV}"; then
+            sed -i "s|^SLM_YOYO_WEIGHTS_SNAPSHOT=.*|SLM_YOYO_WEIGHTS_SNAPSHOT=${WEIGHTS_SNAPSHOT}|" "${DOORMAN_ENV}"
+        else
+            echo "SLM_YOYO_WEIGHTS_SNAPSHOT=${WEIGHTS_SNAPSHOT}" >> "${DOORMAN_ENV}"
+        fi
+        echo "Updated SLM_YOYO_WEIGHTS_SNAPSHOT=${WEIGHTS_SNAPSHOT} in ${DOORMAN_ENV}."
     fi
 }
 
