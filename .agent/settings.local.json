@@ -1,0 +1,70 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(systemctl is-active *)",
+      "Bash(curl -s http://127.0.0.1:9080/readyz)",
+      "Bash(curl -s http://127.0.0.1:9080/v1/models)",
+      "Bash(grep -v \"^archive-2026-04$\")",
+      "Bash(grep -v \"^refined$\")",
+      "Bash(cat)",
+      "Bash(/srv/foundry/bin/edit-via-doorman.sh --request --tenant pointsav --edit-type RESEARCH-wikipedia-structure --target-path clones/project-language/.claude/drafts-outbound/topic-wikipedia-structure.draft.md --request-file /tmp/wikipedia-research-brief.md)",
+      "WebFetch(domain:en.wikipedia.org)",
+      "Bash(/srv/foundry/bin/edit-via-doorman.sh *)",
+      "Bash(grep -v \"\\\\.es\\\\.md$\")",
+      "Bash(git add *)",
+      "Bash(~/Foundry/bin/commit-as-next.sh *)",
+      "Bash(mv /srv/foundry/.claude/drafts-outbound/topic-brief-queue-substrate.draft.md /srv/foundry/.claude/drafts-outbound/archive-2026-04/)",
+      "Bash(mv /srv/foundry/.claude/drafts-outbound/topic-service-slm-and-yoyo-operational.draft.md /srv/foundry/.claude/drafts-outbound/archive-2026-04/)",
+      "Bash(mv /srv/foundry/.claude/drafts-outbound/topic-four-tier-slm-substrate.draft.md /srv/foundry/.claude/drafts-outbound/archive-2026-04/)",
+      "Bash(awk '{print $2}')",
+      "Bash(python3 -m json.tool)",
+      "Bash(mkdir *)",
+      "Bash(mkdir -p *)",
+      "Bash(cp *)",
+      "Write",
+      "Edit",
+      "Read(/srv/foundry/clones/**)",
+      "Read(/srv/foundry/**)",
+      "Bash(mkdir -p /srv/foundry/clones/project-language/.claude/drafts-outbound/refined/from-project-knowledge-guides)",
+      "Bash(mkdir -p /srv/foundry/clones/project-language/.claude/drafts-outbound/refined/leapfrog-2030/doctrine)",
+      "Bash(mkdir -p /srv/foundry/clones/project-language/.claude/drafts-outbound/refined/leapfrog-2030/conventions)",
+      "Bash(mkdir -p /srv/foundry/clones/project-language/.claude/drafts-outbound/refined/leapfrog-2030/inventions)",
+      "Bash(mkdir -p /srv/foundry/clones/project-language/.claude/drafts-outbound/refined/leapfrog-2030/architecture)",
+      "Bash(awk '/^---$/{p=0} /to: task @ clones\\\\/project-language/{p=1} p' /srv/foundry/.claude/outbox.md)",
+      "Bash(git -C /srv/foundry/clones/project-language/ rev-parse --show-toplevel)",
+      "Bash(git pull *)",
+      "Bash(git rebase *)",
+      "Bash(git fetch *)",
+      "Bash(GIT_AUTHOR_NAME=\"Jennifer Woodfine\" GIT_AUTHOR_EMAIL=\"jwoodfine@users.noreply.github.com\" GIT_COMMITTER_NAME=\"Jennifer Woodfine\" GIT_COMMITTER_EMAIL=\"jwoodfine@users.noreply.github.com\" git *)",
+      "Bash(git push *)",
+      "Bash(git -C /srv/foundry/clones/project-language/pointsav-monorepo log --oneline -3)",
+      "Bash(git -C /srv/foundry/clones/project-language/pointsav-monorepo status --short)",
+      "Bash(git -C /srv/foundry/clones/project-language/content-wiki-documentation status --short)",
+      "WebSearch",
+      "Bash(grep \"\\\\.md$\")",
+      "Bash(python3 *)",
+      "Bash(git -C /srv/foundry/clones/project-language status --short)",
+      "Bash(git -C /srv/foundry/clones/project-language/content-wiki-documentation log --oneline -4)",
+      "Bash(grep -v \"^---$\")",
+      "Bash(grep -v \"^$\")",
+      "Read(//srv/foundry/clones/project-knowledge/**)",
+      "Read(//srv/foundry/clones/project-design/**)",
+      "Read(//srv/foundry/clones/project-gis/**)",
+      "Bash(git -C /srv/foundry/clones/project-language/content-wiki-projects status)",
+      "Bash(git -C /srv/foundry/clones/project-language/content-wiki-projects log --format=\"%H %an <%ae> %s\" -5)",
+      "Bash(mv /srv/foundry/clones/project-language /srv/foundry/clones/project-editorial)",
+      "Bash(mv /srv/foundry/clones/project-slm /srv/foundry/clones/project-intelligence)",
+      "Bash(xargs -I{} sh -c 'echo \"=== {} ===\" && head -8 {}')"
+    ]
+  },
+  "context": {
+    "includeDirectories": [
+      "/srv/foundry/deployments/cluster-totebox-jennifer"
+    ]
+  },
+  "tools": {
+    "sandboxAllowedPaths": [
+      "/srv/foundry/deployments/cluster-totebox-jennifer"
+    ]
+  }
+}
