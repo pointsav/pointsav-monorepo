@@ -1,178 +1,98 @@
 #!/usr/bin/env bash
-# One-shot nightly DataGraph rebuild session.
+# Yo-Yo #1 nightly pipeline — two mandatory phases.
 #
-# Mimics what the nightly timers do when Yo-Yo #1 is live:
-#   - Feeds CORPUS batches (jennifer + foundry-workspace) to service-content
-#   - Stops after 4-hour wall clock OR 30-minute idle (no new SEMANTIC files)
-#   - Runs corpus-threshold.py at session end to check DPO/SFT training triplets
+# Phase 1 (DataGraph, 2h): vLLM UP → jennifer-datagraph-rebuild.sh → REST API extraction
+# Phase 2 (Training, 2h):  vLLM DOWN → corpus-threshold.py → QLoRA on 7B model
+#
+# Both phases run every night regardless of data volume.
+# Split configurable via DATAGRAPH_SECONDS (default 7200) / TRAINING_SECONDS (default 7200).
 #
 # Run AFTER local-content.service is live.
 #
 # Usage:
-#   ./scripts/nightly-run.sh [--batch-size N]
+#   ./scripts/nightly-run.sh
+#   ./scripts/nightly-run.sh --no-yoyo   (skip VM lifecycle; use local Tier A only)
+#   ./scripts/nightly-run.sh --test-mode  (short timers: 60s DataGraph + 60s Training)
 #
 # Env vars:
-#   JENNIFER_BASE          — jennifer deployment root (default: ~/deployments/...)
-#   BATCH_SIZE             — corpus batch size per round (default: 50)
-#   FOUNDRY_ROOT           — Foundry workspace root (default: ~/Foundry)
+#   DATAGRAPH_SECONDS   — DataGraph phase budget (default: 7200)
+#   TRAINING_SECONDS    — Training phase budget (default: 7200)
+#   JENNIFER_DEPLOYMENT — jennifer deployment root
+#   FOUNDRY_ROOT        — Foundry workspace root (default: /srv/foundry)
 
 set -uo pipefail
 
-JENNIFER_BASE="${JENNIFER_BASE:-/home/mathew/deployments/woodfine-fleet-deployment/cluster-totebox-jennifer}"
-FOUNDRY_ROOT="${FOUNDRY_ROOT:-${HOME}/Foundry}"
-CRM_DIR="${JENNIFER_BASE}/service-fs/data/service-people/ledgers"
-JENNIFER_SOURCE_DIR="${JENNIFER_BASE}/service-fs/data/service-people/source"
-BATCH_SIZE=50
+FOUNDRY_ROOT="${FOUNDRY_ROOT:-/srv/foundry}"
+JENNIFER_DEPLOYMENT="${JENNIFER_DEPLOYMENT:-/srv/foundry/deployments/cluster-totebox-jennifer}"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
-# Defaults for the loop's two timers — env vars override at process scope;
-# --test-mode swaps the defaults to short values so the timers can be exercised
-# in seconds rather than hours.
-IDLE_SECONDS_DEFAULT=1800        # 30 minutes
-HARD_STOP_SECONDS_DEFAULT=14400  # 4 hours
+DATAGRAPH_SECONDS_DEFAULT=7200
+TRAINING_SECONDS_DEFAULT=7200
 
 NO_YOYO=false
 TEST_MODE=false
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        --batch-size) BATCH_SIZE="$2"; shift 2 ;;
         --no-yoyo)    NO_YOYO=true; shift ;;
         --test-mode)  TEST_MODE=true; shift ;;
-        --help|-h)    sed -n '2,18p' "$0"; exit 0 ;;
+        --help|-h)    sed -n '2,24p' "$0"; exit 0 ;;
         *) echo "Unknown flag: $1" >&2; exit 1 ;;
     esac
 done
 
 if [[ "${TEST_MODE}" == "true" ]]; then
-    IDLE_SECONDS_DEFAULT=30
-    HARD_STOP_SECONDS_DEFAULT=60
+    DATAGRAPH_SECONDS_DEFAULT=60
+    TRAINING_SECONDS_DEFAULT=60
 fi
 
-IDLE_SECONDS="${IDLE_SECONDS:-${IDLE_SECONDS_DEFAULT}}"
-HARD_STOP_SECONDS="${HARD_STOP_SECONDS:-${HARD_STOP_SECONDS_DEFAULT}}"
+DATAGRAPH_SECONDS="${DATAGRAPH_SECONDS:-${DATAGRAPH_SECONDS_DEFAULT}}"
+TRAINING_SECONDS="${TRAINING_SECONDS:-${TRAINING_SECONDS_DEFAULT}}"
 
-DEADLINE=$(( $(date +%s) + HARD_STOP_SECONDS ))
-LAST_SEMANTIC_COUNT=0
-IDLE_SINCE=0
-LOOP=0
+log() { echo "[nightly-run $(date -u +'%Y-%m-%dT%H:%M:%SZ')] $*"; }
 
-log() { echo "[nightly-run $(date '+%H:%M:%S')] $*"; }
+log "Session start. DataGraph=${DATAGRAPH_SECONDS}s Training=${TRAINING_SECONDS}s no_yoyo=${NO_YOYO} test_mode=${TEST_MODE}"
 
-semantic_count() {
-    find "${CRM_DIR}" -maxdepth 1 -name "SEMANTIC_*.json" 2>/dev/null | wc -l
-}
+# ── Phase 1: DataGraph rebuild ────────────────────────────────────────────────
+log "=== Phase 1: DataGraph rebuild (${DATAGRAPH_SECONDS}s budget) ==="
 
-log "Session start. Hard stop: $((HARD_STOP_SECONDS / 60))m. Idle timeout: $((IDLE_SECONDS / 60))m (=${IDLE_SECONDS}s). Batch size: ${BATCH_SIZE}. test_mode=${TEST_MODE} no_yoyo=${NO_YOYO}."
-log "CRM dir: ${CRM_DIR}"
-mkdir -p "${CRM_DIR}"
-
-# ── Yo-Yo lifecycle: start (with wait-ready) ─────────────────────────────────
-# Exit codes from start-yoyo.sh:
-#   0 = VM up + vLLM ready
-#   1 = GCE start failure (auth/permission/unknown)
-#   2 = vLLM ready-poll timeout (VM up; falls back to Tier A only)
-#   3 = zone stockout cascade exhausted
-# We continue the loop in all cases — Doorman handles tier fallback transparently.
-TIER_B_AVAILABLE=false
 if [[ "${NO_YOYO}" != "true" ]]; then
-    # --wait-ready=5400 (90 min) accommodates the first-boot sovereign bootstrap
-    # (HF download + llama.cpp convert + quantize + GCS upload). Subsequent
-    # warm-disk boots resolve in ~5 min, well inside the budget.
-    log "Starting Yo-Yo #1 (wait-ready=5400s, auto-snapshot)..."
+    log "Starting Yo-Yo #1 (vLLM Tier B for extraction)..."
     if "${SCRIPT_DIR}/start-yoyo.sh" --wait-ready=5400 --auto-snapshot 2>&1 | sed 's/^/  /'; then
-        TIER_B_AVAILABLE=true
         log "Yo-Yo #1 ready — Tier B available."
     else
         rc=${PIPESTATUS[0]}
-        log "WARN: start-yoyo.sh exited rc=${rc} (1=hard fail, 2=ready timeout, 3=stockout). Proceeding with Tier A fallback only."
+        log "WARN: start-yoyo.sh exited rc=${rc}. Proceeding with Tier A fallback."
     fi
 else
     log "Skipping Yo-Yo lifecycle (--no-yoyo)."
 fi
 
-# ── Pre-flight: feed availability ────────────────────────────────────────────
-JENNIFER_SOURCE_COUNT=0
-if [[ -d "${JENNIFER_SOURCE_DIR}" ]]; then
-    JENNIFER_SOURCE_COUNT=$(find "${JENNIFER_SOURCE_DIR}" -maxdepth 2 -type f 2>/dev/null | wc -l)
-fi
-log "Jennifer source files available: ${JENNIFER_SOURCE_COUNT} (in ${JENNIFER_SOURCE_DIR})"
-
-LAST_SEMANTIC_COUNT=$(semantic_count)
-log "Current SEMANTIC count: ${LAST_SEMANTIC_COUNT}"
-
-# Run workspace feeder once at start
-log "Running foundry-workspace-feeder (batch-size 20)..."
+# Workspace feeder warmup (20 workspace artifacts → DataGraph via REST)
+log "Workspace feeder warmup (batch-size 20)..."
 "${SCRIPT_DIR}/foundry-workspace-feeder.sh" --batch-size 20 2>&1 | sed 's/^/  /' || true
 
-while true; do
-    NOW=$(date +%s)
+log "Running jennifer-datagraph-rebuild.sh (budget=${DATAGRAPH_SECONDS}s)..."
+DATAGRAPH_SECONDS="${DATAGRAPH_SECONDS}" \
+JENNIFER_DEPLOYMENT="${JENNIFER_DEPLOYMENT}" \
+FOUNDRY_ROOT="${FOUNDRY_ROOT}" \
+    "${SCRIPT_DIR}/jennifer-datagraph-rebuild.sh" \
+    || log "WARN: jennifer-datagraph-rebuild returned non-zero — check service-content + Doorman"
 
-    # Hard stop
-    if [[ "${NOW}" -ge "${DEADLINE}" ]]; then
-        log "4-hour hard stop reached. Exiting."
-        break
-    fi
-
-    REMAINING=$(( DEADLINE - NOW ))
-    log "$(( REMAINING / 60 ))m remaining. Loop ${LOOP}."
-
-    # Idle check
-    CURRENT=$(semantic_count)
-    DELTA=$(( CURRENT - LAST_SEMANTIC_COUNT ))
-
-    if [[ "${DELTA}" -gt 0 ]]; then
-        log "Progress: +${DELTA} SEMANTIC files (total: ${CURRENT}). Idle clock reset."
-        LAST_SEMANTIC_COUNT="${CURRENT}"
-        IDLE_SINCE=0
-    else
-        if [[ "${IDLE_SINCE}" -eq 0 ]]; then
-            IDLE_SINCE="${NOW}"
-            log "No new SEMANTIC files. Idle clock started (total: ${CURRENT})."
-        else
-            IDLE_ELAPSED=$(( NOW - IDLE_SINCE ))
-            log "Idle ${IDLE_ELAPSED}s / ${IDLE_SECONDS}s (total SEMANTIC: ${CURRENT})."
-            if [[ "${IDLE_ELAPSED}" -ge "${IDLE_SECONDS}" ]]; then
-                log "30-minute idle timeout. Final SEMANTIC count: ${CURRENT}. Exiting."
-                break
-            fi
-        fi
-    fi
-
-    # Drop next corpus batch
-    log "Corpus batch (batch-size ${BATCH_SIZE})..."
-    "${SCRIPT_DIR}/corpus-batch-jennifer.sh" --batch-size "${BATCH_SIZE}" 2>&1 | \
-        grep -E "^\[corpus-batch\]|dropped|skipped|SKIP|OK|ERROR" | sed 's/^/  /' || true
-
-    # Top up workspace feeder every 10 loops
-    LOOP=$(( LOOP + 1 ))
-    if (( LOOP % 10 == 0 )); then
-        log "Workspace feeder top-up..."
-        "${SCRIPT_DIR}/foundry-workspace-feeder.sh" --batch-size 20 2>&1 | sed 's/^/  /' || true
-    fi
-
-    log "Sleeping 60s..."
-    sleep 60
-done
-
-FINAL=$(semantic_count)
-log "Session complete. Final SEMANTIC count: ${FINAL}."
-
-# ── Yo-Yo lifecycle: stop (graceful drain) ───────────────────────────────────
-# Stops the GCE VM before the threshold-check Python step so cost stops
-# accruing as early as possible. stop-yoyo.sh treats already-terminated as
-# success, so this is safe even if start-yoyo failed earlier.
+log "Phase 1 complete. Stopping vLLM to free L4 GPU for training..."
 if [[ "${NO_YOYO}" != "true" ]]; then
-    log "Stopping Yo-Yo #1 (drain-timeout 60s)..."
     "${SCRIPT_DIR}/stop-yoyo.sh" --drain-timeout=60 2>&1 | sed 's/^/  /' || true
 fi
 
-# ── Training triplet threshold check ─────────────────────────────────────────
-# Run corpus-threshold.py every night so training fires as soon as enough
-# DPO/SFT tuples have accumulated — not just on the Sunday cron.
-THRESHOLD_SCRIPT="${SCRIPT_DIR}/corpus-threshold.py"
-if [[ -f "${THRESHOLD_SCRIPT}" ]]; then
-    log "Running corpus-threshold check (training triplets)..."
-    FOUNDRY_ROOT="${FOUNDRY_ROOT}" python3 "${THRESHOLD_SCRIPT}" 2>&1 | sed 's/^/  /' || true
-else
-    log "WARN: corpus-threshold.py not found at ${THRESHOLD_SCRIPT} — skipping."
-fi
+# ── Phase 2: Training ─────────────────────────────────────────────────────────
+log "=== Phase 2: Training (${TRAINING_SECONDS}s budget) ==="
+log "Running corpus-threshold.py (dispatches GCS marker if threshold met)..."
+TRAINING_SECONDS="${TRAINING_SECONDS}" \
+FOUNDRY_ROOT="${FOUNDRY_ROOT}" \
+    python3 "${SCRIPT_DIR}/corpus-threshold.py" 2>&1 | sed 's/^/  /' || true
+
+# ── Nightly summary ───────────────────────────────────────────────────────────
+log "=== Nightly run complete ==="
+HEALTH=$(cat "${FOUNDRY_ROOT}/data/datagraph-health.json" 2>/dev/null || echo '{}')
+log "DataGraph: $(echo "${HEALTH}" | jq -r '"entity_count=\(.entity_count // 0) delta=\(.delta // 0) new_entities=\(.new_entities_this_run // 0)"')"
+MARKER_COUNT=$(find "${FOUNDRY_ROOT}/data/training-pending" -name "*.json" -not -name "*.claimed" -not -name "*.completed" 2>/dev/null | wc -l)
+log "Training: ${MARKER_COUNT} pending marker(s) dispatched this run."

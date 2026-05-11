@@ -117,7 +117,7 @@ if [[ "${AVAIL_GB}" -lt 140 ]]; then
 fi
 
 # Step 1: download AllenAI safetensors
-log "Step 1/4: downloading safetensors from ${HF_REPO} (~80 min, ~64 GB)..."
+log "Step 1/5: downloading safetensors from ${HF_REPO} (~80 min, ~64 GB)..."
 mkdir -p "${STAGING_DIR}"
 # huggingface_hub >= 0.26 deprecated `huggingface-cli` and renamed it to `hf`.
 # We use `hf download`. HF_TOKEN env is read transparently if set; pass an
@@ -135,14 +135,14 @@ hf "${HF_DOWNLOAD_ARGS[@]}"
 # Use the venv python so transformers + safetensors imports succeed.
 INTERMEDIATE_GGUF="${STAGING_DIR}/olmo-3-32b-think-fp16.gguf"
 VENV_PYTHON="${VENV_PYTHON:-/opt/vllm/bin/python3}"
-log "Step 2/4: converting HF safetensors → GGUF fp16 (~10 min)..."
+log "Step 2/5: converting HF safetensors → GGUF fp16 (~10 min)..."
 "${VENV_PYTHON}" "${LLAMA_CPP_DIR}/convert_hf_to_gguf.py" \
     "${STAGING_DIR}" \
     --outfile "${INTERMEDIATE_GGUF}" \
     --outtype f16
 
 # Step 3: quantize fp16 → Q4_K_M
-log "Step 3/4: quantizing fp16 GGUF → Q4_K_M (~5 min)..."
+log "Step 3/5: quantizing fp16 GGUF → Q4_K_M (~5 min)..."
 "${LLAMA_CPP_DIR}/build/bin/llama-quantize" \
     "${INTERMEDIATE_GGUF}" \
     "${WEIGHTS_FILE}" \
@@ -150,7 +150,7 @@ log "Step 3/4: quantizing fp16 GGUF → Q4_K_M (~5 min)..."
 
 # Step 4: compute sha256, upload Q4_K_M + sha256 to GCS
 ACTUAL_SHA=$(sha256sum "${WEIGHTS_FILE}" | awk '{print $1}')
-log "Step 4/4: uploading Q4_K_M (sha256=${ACTUAL_SHA}) to ${GCS_WEIGHTS_URL}..."
+log "Step 4/5: uploading Q4_K_M (sha256=${ACTUAL_SHA}) to ${GCS_WEIGHTS_URL}..."
 gcloud storage cp "${WEIGHTS_FILE}" "${GCS_WEIGHTS_URL}"
 echo "${ACTUAL_SHA}  olmo-3-32b-think-q4.gguf" | gcloud storage cp - "${GCS_SHA256_URL}"
 
@@ -165,6 +165,34 @@ done
 # Cleanup intermediates
 log "Cleanup: removing staging dir + intermediate fp16 GGUF (frees disk for adapters + checkpoints)..."
 rm -rf "${STAGING_DIR}"
+
+# Step 5/5: OLMo 3 7B Think safetensors for QLoRA training (Tier A adapter production)
+# 7B safetensors (~14 GB) fit cleanly in QLoRA 4-bit on L4 (24 GB VRAM).
+TRAIN_HF_DIR="${WEIGHTS_DIR}/olmo-3-7b-think-hf"
+GCS_TRAIN_PREFIX="gs://${GCS_BUCKET}/base-models/olmo-3-7b-think-hf"
+
+if [[ -f "${TRAIN_HF_DIR}/.complete" ]]; then
+    log "Step 5/5: 7B training weights already present at ${TRAIN_HF_DIR}."
+else
+    mkdir -p "${TRAIN_HF_DIR}"
+    if gcloud storage ls "${GCS_TRAIN_PREFIX}/config.json" &>/dev/null; then
+        log "Step 5/5: pulling 7B training weights from GCS (~5 min, ~14 GB)..."
+        gcloud storage cp -r "${GCS_TRAIN_PREFIX}/*" "${TRAIN_HF_DIR}/"
+    else
+        log "Step 5/5: first-boot — downloading OLMo 3 7B Think from AllenAI (~20 min, ~14 GB)..."
+        HF_DOWNLOAD_ARGS=(download "allenai/OLMo-3-1125-7B-Think"
+            --local-dir "${TRAIN_HF_DIR}"
+            --include="*.safetensors"
+            --include="config.json"
+            --include="tokenizer*")
+        [[ -n "${HF_TOKEN}" ]] && HF_DOWNLOAD_ARGS+=(--token "${HF_TOKEN}")
+        hf "${HF_DOWNLOAD_ARGS[@]}"
+        gcloud storage cp -r "${TRAIN_HF_DIR}/" "${GCS_TRAIN_PREFIX}/"
+        log "Step 5/5: 7B weights uploaded to GCS for future Yo-Yos."
+    fi
+    touch "${TRAIN_HF_DIR}/.complete"
+    log "Step 5/5: 7B training weights ready at ${TRAIN_HF_DIR}."
+fi
 
 # Final verification
 verify_sha256 "${WEIGHTS_FILE}" "${ACTUAL_SHA}"

@@ -5,8 +5,8 @@ Phase 3 corpus threshold watcher and training trigger.
 
 Counts JSONL tuples per adapter bucket against per-adapter thresholds.
 When a threshold is reached (or --force is supplied), writes a
-training-pending marker and, if SLM_YOYO_TRAINER_ENDPOINT is set,
-dispatches to the Yo-Yo Trainer (Leapfrog 2030 Yo-Yo #1).
+training-pending marker and syncs corpus to GCS for Yo-Yo #1 pickup
+(if SLM_YOYO_WEIGHTS_GCS_BUCKET is set; otherwise marker is local only).
 
 Run modes:
   On-demand:     corpus-threshold.py [--dry-run] [--adapter NAME]
@@ -15,14 +15,12 @@ Run modes:
 Adapter buckets and thresholds:
   engineering-pointsav    engineering/**/*.jsonl   threshold=50  SFT
   apprenticeship-pointsav apprenticeship/**/*.jsonl threshold=50  DPO
-
-Quality gate (post-D4): ≥60% validation acceptance rate blocks adapter
-promotion. Pre-D4 the gate always returns False (safe default).
 """
 
 import argparse
 import json
 import os
+import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -30,8 +28,6 @@ from pathlib import Path
 FOUNDRY_ROOT = Path(os.environ.get("FOUNDRY_ROOT", Path.home() / "Foundry"))
 CORPUS_ROOT = FOUNDRY_ROOT / "data" / "training-corpus"
 PENDING_DIR = FOUNDRY_ROOT / "data" / "training-pending"
-
-QUALITY_GATE_THRESHOLD = 0.60  # ≥60% acceptance rate required before promotion
 
 ADAPTER_SPECS: dict = {
     "engineering-pointsav": {
@@ -56,13 +52,21 @@ def count_files(glob_pattern: str) -> list:
 def write_pending_marker(adapter_name: str, files: list, dry_run: bool = False) -> Path:
     timestamp = datetime.now(timezone.utc).isoformat()
     spec = ADAPTER_SPECS[adapter_name]
+    # Parse role and tenant from adapter name (pattern: <role>-<tenant>)
+    parts = adapter_name.split("-", 1)
+    role = parts[0] if len(parts) >= 1 else adapter_name
+    tenant = parts[1] if len(parts) >= 2 else "pointsav"
+    corpus_prefix = spec["glob"].split("/**")[0]
     marker = {
         "adapter": adapter_name,
-        "tuple_count": len(files),
+        "tenant": tenant,
+        "role": role,
+        "corpus_path": str(CORPUS_ROOT / corpus_prefix),
+        "method": spec["method"],
         "training_method": spec["method"],
+        "version": 1,
+        "tuple_count": len(files),
         "triggered_at": timestamp,
-        "d4_ready": bool(os.environ.get("SLM_YOYO_TRAINER_ENDPOINT")),
-        "quality_gate_threshold": QUALITY_GATE_THRESHOLD,
         "sample_files": [f.name for f in files[:5]],
     }
     PENDING_DIR.mkdir(parents=True, exist_ok=True)
@@ -76,51 +80,43 @@ def write_pending_marker(adapter_name: str, files: list, dry_run: bool = False) 
     return marker_path
 
 
-def check_quality_gate(adapter_name: str, dry_run: bool = False) -> bool:
-    """
-    Run held-out validation and check acceptance rate >= QUALITY_GATE_THRESHOLD.
-
-    Pre-D4: always returns False (blocks promotion safely).
-    Post-D4: POST to SLM_YOYO_TRAINER_ENDPOINT to run held-out inference,
-    compute acceptance rate, and return True only if rate >= threshold.
-    """
-    yoyo_endpoint = os.environ.get("SLM_YOYO_TRAINER_ENDPOINT", "")
-    if not yoyo_endpoint:
-        print(f"    [QUALITY] SLM_YOYO_TRAINER_ENDPOINT not set (D4 pending) — gate blocks promotion.")
-        return False
-    if dry_run:
-        print(f"    [QUALITY] [DRY-RUN] Would validate against {yoyo_endpoint}.")
-        return False
-    # TODO(post-D4): implement validation API call to Yo-Yo #1.
-    # POST {yoyo_endpoint}/v1/validate with adapter_name + held-out corpus files.
-    # Response: { acceptance_rate: float, total_evaluated: int }.
-    # Promote if acceptance_rate >= QUALITY_GATE_THRESHOLD.
-    print(f"    [QUALITY] Yo-Yo validation not yet wired (post-D4 task). Gate blocks promotion.")
-    return False
-
-
 def trigger_training_cycle(adapter_name: str, files: list, dry_run: bool = False) -> bool:
-    """Invoke a training cycle. Returns True if training was successfully dispatched."""
-    yoyo_endpoint = os.environ.get("SLM_YOYO_TRAINER_ENDPOINT", "")
+    """Write GCS training marker. Returns True if marker was dispatched."""
+    import subprocess
 
+    spec = ADAPTER_SPECS[adapter_name]
     marker_path = write_pending_marker(adapter_name, files, dry_run=dry_run)
     if not dry_run:
         print(f"    [MARKER] Written: {marker_path}")
 
-    if not yoyo_endpoint:
-        print(f"    [TRAIN] D4 not configured — marker written for operator pickup.")
-        return False
+    gcs_bucket = os.environ.get("SLM_YOYO_WEIGHTS_GCS_BUCKET", "")
+    if not gcs_bucket:
+        print(f"    [TRAIN] SLM_YOYO_WEIGHTS_GCS_BUCKET not set — marker local only ({marker_path.name})")
+        return True
 
     if dry_run:
-        print(f"    [DRY-RUN] Would dispatch training to {yoyo_endpoint}.")
-        return False
+        print(f"    [DRY-RUN] Would sync corpus to gs://{gcs_bucket}/training-corpus/ + upload marker")
+        return True
 
-    # TODO(post-D4): POST to Yo-Yo #1 training endpoint.
-    # The Leapfrog 2030 Yo-Yo #1 (g2-standard-4 / L4 / OLMo 3 32B-Think)
-    # accepts a training job with the corpus files and returns a job_id.
-    print(f"    [TRAIN] D4 endpoint configured but training API not yet wired (post-D4 task).")
-    print(f"    [TRAIN] Endpoint: {yoyo_endpoint}")
-    return False
+    corpus_prefix = spec["glob"].split("/**")[0]
+    try:
+        subprocess.run(
+            ["gcloud", "storage", "cp", "-r",
+             str(CORPUS_ROOT / corpus_prefix) + "/",
+             f"gs://{gcs_bucket}/training-corpus/{corpus_prefix}/"],
+            check=True, capture_output=True
+        )
+        subprocess.run(
+            ["gcloud", "storage", "cp", str(marker_path),
+             f"gs://{gcs_bucket}/training-pending/{marker_path.name}"],
+            check=True, capture_output=True
+        )
+        print(f"    [TRAIN] Corpus synced + marker → gs://{gcs_bucket}/training-pending/{marker_path.name}")
+        return True
+    except subprocess.CalledProcessError as e:
+        print(f"    [TRAIN] GCS dispatch failed: {e}")
+        print(f"    [TRAIN] Marker remains local: {marker_path}")
+        return True  # local marker still allows manual pickup
 
 
 def main() -> None:
@@ -140,10 +136,6 @@ def main() -> None:
         choices=list(ADAPTER_SPECS.keys()),
         help="Check only this adapter (default: all adapters)"
     )
-    parser.add_argument(
-        "--skip-quality-gate", action="store_true",
-        help="Promote adapter without running quality gate (testing only)"
-    )
     args = parser.parse_args()
 
     now = datetime.now(timezone.utc).isoformat()
@@ -156,8 +148,8 @@ def main() -> None:
     print(f"[{now}] Phase 3 corpus threshold check{flag_str}")
     print(f"  FOUNDRY_ROOT    = {FOUNDRY_ROOT}")
     print(f"  CORPUS_ROOT     = {CORPUS_ROOT}")
-    yoyo = os.environ.get("SLM_YOYO_TRAINER_ENDPOINT", "(not set — D4 pending)")
-    print(f"  TRAINER_ENDPOINT= {yoyo}")
+    gcs_bucket = os.environ.get("SLM_YOYO_WEIGHTS_GCS_BUCKET", "(not set — local marker only)")
+    print(f"  GCS_BUCKET      = {gcs_bucket}")
     print()
 
     any_triggered = False
@@ -186,16 +178,7 @@ def main() -> None:
         reason = "threshold reached" if at_threshold else "forced (Sunday cron)"
         print(f"    status:      READY — {reason}")
 
-        dispatched = trigger_training_cycle(adapter_name, files, dry_run=args.dry_run)
-
-        if dispatched or args.skip_quality_gate:
-            gate_pass = args.skip_quality_gate or check_quality_gate(
-                adapter_name, dry_run=args.dry_run
-            )
-            if gate_pass:
-                print(f"    [PROMOTE]    Quality gate passed (>={QUALITY_GATE_THRESHOLD:.0%}). Adapter ready.")
-            else:
-                print(f"    [PROMOTE]    Quality gate not met — adapter not promoted.")
+        trigger_training_cycle(adapter_name, files, dry_run=args.dry_run)
         print()
 
     if not any_triggered:
