@@ -1,5 +1,12 @@
 ---
 
+## 2026-05-11 — Message #10 archived (task-project-intelligence session)
+
+### Message #10 — ACK guide-doorman-deployment path fix promoted; WFD SSH alias fix (from: command@claude-code, 2026-05-09T00:15:00Z)
+actioned: (1) noted that guide-doorman-deployment path fix landed on canonical via project-editorial's WFD clone, author Peter Woodfine preserved. (2) Fixed woodfine-fleet-deployment SSH remote — was `git@github.com-pointsav-administrator:woodfine/woodfine-fleet-deployment.git`, corrected to `git@github.com-woodfine-administrator:woodfine/woodfine-fleet-deployment.git`.
+
+---
+
 ## 2026-05-07 — Message #8 archived (task-project-intelligence session)
 
 ### Message #8 — DataGraph GUIDE entity class ratified — CSV implementation needed in service-content (from: master@claude-code, 2026-05-07T00:00Z)
