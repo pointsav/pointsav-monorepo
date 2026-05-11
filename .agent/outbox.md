@@ -1,9 +1,9 @@
 ---
 mailbox: outbox
-owner: task@project-orchestration
-location: ~/Foundry/clones/project-orchestration/.agent/
+owner: task-project-bim
+location: ~/Foundry/clones/project-bim/.agent/
 schema: foundry-mailbox-v1
 ---
 
-# Outbox — project-orchestration Task
+# Outbox — Task Claude on project-bim cluster
 
