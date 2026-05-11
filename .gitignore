@@ -1,0 +1,10 @@
+# Multi-agent session locks (ephemeral — not committed)
+.agent/engines/*/session.lock
+
+# Personal data directories — not committed to remote
+inputs/
+outputs/
+working/
+
+# Auth and secrets (local-only)
+.secrets/
