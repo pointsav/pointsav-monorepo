@@ -1,0 +1,285 @@
+/*
+ * Woodfine marketing site — shared shell CSS
+ *
+ * Extracted from deployments/media-marketing-landing-1/content/disclaimer.html
+ * on 2026-05-09 (Phase 1a of website-congruence-plan.md).
+ *
+ * Scope: tokens, page container, topnav, page-hero, subpage-main, footer,
+ * copyright, responsive layer for the shell. Does NOT include page-
+ * specific styling (props, classes, hero band, contact-grid, disclaimer-
+ * body, jurisdiction-table) — those stay inline on the page that uses them
+ * or move to per-page CSS modules.
+ *
+ * Phase-3 plan: replace the inline :root token block here with
+ * <link rel="stylesheet" href="/tokens.css"> in the consuming page
+ * <head>, emitted by Style Dictionary. Until that pipeline lands, the
+ * tokens are inlined here.
+ *
+ * Light-mode only. No dark-mode toggles anywhere on Woodfine properties
+ * (operator preference, recorded 2026-05-09).
+ */
+
+/* ── Tokens (will move to tokens.css in Phase 3) ─────────────────── */
+:root {
+  --paper:    #FFFFFF;
+  --paper-2:  #F7F9FA;
+  --paper-3:  #E6E7E8;
+
+  --ink:         #111827;
+  --ink-2:       #374151;
+  --ink-3:       #6B7280;
+  --ink-4:       #9CA3AF;
+  --rule:        #E6E7E8;
+  --rule-strong: #9CA3AF;
+
+  --wf-blue:      #164679;
+  --wf-blue-tint: #E8EFF7;
+
+  --accent:      var(--wf-blue);
+  --accent-tint: var(--wf-blue-tint);
+
+  /* Brand-aligned 3-font system (Google substitutes for Trade Gothic / Caecilia / Avenir) */
+  --display: "Oswald", "Trade Gothic LT Std", "Barlow Condensed", "Helvetica Neue", Arial, sans-serif;
+  --serif:   "Roboto Slab", "Caecilia LT Std", "Zilla Slab", Georgia, serif;
+  --sans:    "Nunito Sans", "Avenir LT Std", "Avenir Next", "Mulish", -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+}
+
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--paper-2);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 14px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: inherit; text-decoration: none; }
+
+/* ── Outer page (paper-on-canvas) ────────────────────────────────── */
+.page {
+  max-width: 1440px;
+  width: 100%;
+  margin: 0 auto;
+  background: var(--paper-2);
+  padding: 32px 0 0;
+}
+
+/* ── Header ───────────────────────────────────────────────────────── */
+.topnav {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  padding: 0 56px;
+  margin-bottom: 28px;
+}
+.topnav .left,
+.topnav .right {
+  display: flex;
+  gap: 36px;
+  font-family: var(--display);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  color: var(--ink-3);
+  text-transform: uppercase;
+  align-items: center;
+}
+.topnav .left { justify-content: flex-start; }
+.topnav .right {
+  justify-content: flex-end;
+  color: var(--accent);
+}
+.topnav .left a,
+.topnav .right a {
+  display: inline-flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 4px;
+  box-sizing: border-box;
+  line-height: 1;
+  transition: opacity 160ms ease, color 160ms ease;
+}
+.topnav .left a:hover,
+.topnav .right a:hover { opacity: 0.7; }
+
+.topnav .left a.active-page {
+  background: var(--accent);
+  color: #fff;
+  padding: 0 14px;
+  letter-spacing: 0.16em;
+}
+
+/* "↗" glyph after right-side nav links to signal opens-in-new-tab.
+   Phase 2 of the congruence plan — operator confirmed 2026-05-09. */
+.topnav .right a::after {
+  content: " \2197";
+  font-size: 0.85em;
+  margin-left: 2px;
+  opacity: 0.75;
+  letter-spacing: 0;
+}
+
+.wordmark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+.wordmark img,
+.wordmark .logo-svg {
+  display: block;
+  height: 80px;
+  width: 320px;
+}
+
+/* ── Page hero band (subpage) ────────────────────────────────────── */
+.page-hero {
+  margin: 0 56px;
+  background: var(--paper-3);
+  border-bottom: 1px solid var(--rule);
+  padding: 22px 140px;
+  text-align: center;
+}
+.page-hero h1 {
+  margin: 0;
+  font-family: var(--display);
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+
+/* ── Subpage main ─────────────────────────────────────────────────── */
+.subpage-main {
+  margin: 0 56px;
+  background: var(--paper);
+  padding: 48px 140px 80px;
+  min-height: 1200px;
+}
+
+/* ── Footer ───────────────────────────────────────────────────────── */
+.footer {
+  margin: 0 56px;
+  background: var(--paper-3);
+  padding: 22px 120px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  column-gap: 24px;
+  color: var(--ink-2);
+}
+.footer .cities {
+  font-family: var(--serif);
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--ink);
+  letter-spacing: 0.04em;
+}
+.footer .cities .sep {
+  display: inline-block;
+  margin: 0 12px;
+  color: var(--ink-3);
+}
+.footer .footnav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-family: var(--display);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  text-align: right;
+}
+.footer .footnav a { transition: opacity 160ms ease; }
+.footer .footnav a:hover { opacity: 0.7; }
+
+.copyright {
+  margin: 14px 96px 48px;
+  font-size: 10px;
+  color: var(--ink-4);
+  letter-spacing: 0.04em;
+}
+
+/* ── Font-pairing presets — body class drives --serif / --sans ───── */
+body.fp-brand            { --display: "Oswald", sans-serif; --serif: "Roboto Slab", Georgia, serif; --sans: "Nunito Sans", system-ui, sans-serif; }
+body.fp-brand-zilla      { --display: "Oswald", sans-serif; --serif: "Zilla Slab", Georgia, serif; --sans: "Mulish", system-ui, sans-serif; }
+body.fp-barlow-roboto    { --display: "Barlow Condensed", sans-serif; --serif: "Roboto Slab", Georgia, serif; --sans: "Nunito Sans", system-ui, sans-serif; }
+body.fp-league-zilla     { --display: "League Gothic", sans-serif; --serif: "Zilla Slab", Georgia, serif; --sans: "Nunito Sans", system-ui, sans-serif; }
+body.fp-system           { --display: -apple-system, system-ui, sans-serif; --serif: ui-serif, Georgia, serif; --sans: -apple-system, system-ui, sans-serif; }
+
+/* ── Leapfrog 2030 — Responsive Layer for the shell ──────────────── */
+
+/* 1200px: trim wide-screen padding */
+@media (max-width: 1200px) {
+  .topnav { padding: 0 36px; }
+  .footer { margin: 0 36px; padding: 20px 80px; }
+  .copyright { margin: 12px 56px 40px; }
+  .page-hero { margin: 0 36px; padding: 20px 80px; }
+  .subpage-main { margin: 0 36px; padding: 40px 80px 60px; }
+}
+
+/* 1024px: tablet-landscape */
+@media (max-width: 1024px) {
+  .page { padding: 24px 0 0; }
+  .topnav { padding: 0 24px; margin-bottom: 20px; }
+  .footer { margin: 0 24px; padding: 18px 48px; }
+  .copyright { margin: 10px 32px 32px; }
+  .page-hero { margin: 0 24px; padding: 18px 48px; }
+  .page-hero h1 { font-size: clamp(18px, 3vw, 22px); }
+  .subpage-main { margin: 0 24px; padding: 36px 48px 56px; }
+  .wordmark .logo-svg { width: 240px; height: 60px; }
+}
+
+/* 768px: tablet-portrait — collapse topnav to stacked */
+@media (max-width: 768px) {
+  .page { padding: 16px 0 0; }
+  .topnav {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto;
+    padding: 0 16px;
+    margin-bottom: 16px;
+    gap: 12px;
+    justify-items: center;
+  }
+  .topnav .wordmark { order: -1; }
+  .topnav .left, .topnav .right {
+    justify-content: center;
+    gap: 20px;
+    font-size: 10px;
+  }
+  .wordmark .logo-svg { width: 200px; height: 50px; }
+  .footer {
+    margin: 0 12px;
+    padding: 16px 20px;
+    grid-template-columns: 1fr;
+    row-gap: 12px;
+  }
+  .footer .cities .sep { margin: 0 8px; }
+  .footer .footnav { text-align: left; flex-direction: row; gap: 16px; flex-wrap: wrap; }
+  .copyright { margin: 8px 20px 28px; }
+  .page-hero { margin: 0 12px; padding: 16px 20px; }
+  .page-hero h1 { font-size: clamp(16px, 4vw, 22px); letter-spacing: 0.12em; }
+  .subpage-main { margin: 0 12px; padding: 28px 20px 40px; min-height: auto; }
+}
+
+/* 480px: mobile */
+@media (max-width: 480px) {
+  .page { padding: 12px 0 0; }
+  .topnav { padding: 0 12px; gap: 8px; }
+  .topnav .left, .topnav .right { gap: 12px; font-size: 9px; }
+  .wordmark .logo-svg { width: 160px; height: 40px; }
+  .footer { margin: 0 8px; padding: 14px 16px; }
+  .copyright { margin: 8px 16px 24px; }
+  .page-hero { margin: 0 8px; padding: 14px 16px; }
+  .page-hero h1 { font-size: clamp(14px, 5vw, 18px); letter-spacing: 0.1em; }
+  .subpage-main { margin: 0 8px; padding: 20px 16px 32px; }
+}
