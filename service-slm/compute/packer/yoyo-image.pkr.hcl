@@ -17,6 +17,15 @@ variable "zone" {
   default = "us-central1-b"
 }
 
+# build_machine_type: CPU-only instance used only during Packer image creation.
+# GPU (nvidia-l4) is NOT needed here — CUDA drivers, vLLM, and llama.cpp all
+# install fine on CPU-only hardware; the GPU is only required at inference runtime.
+# g2-standard-4 (L4) is frequently stocked out; n2-standard-8 is always available.
+variable "build_machine_type" {
+  type    = string
+  default = "n2-standard-8"
+}
+
 variable "vllm_port" {
   type    = number
   default = 8000
@@ -32,7 +41,7 @@ source "googlecompute" "yoyo" {
   project_id          = var.project_id
   zone                = var.zone
   source_image_family = "ubuntu-2404-lts-amd64"
-  machine_type        = "g2-standard-4"
+  machine_type        = var.build_machine_type
   disk_size           = 50
   image_name          = "slm-yoyo-${formatdate("YYYYMMDD-HHmmss", timestamp())}"
   image_family        = "slm-yoyo"
@@ -41,9 +50,7 @@ source "googlecompute" "yoyo" {
     role  = "yoyo-tier-b"
   }
   ssh_username        = "packer"
-  on_host_maintenance = "TERMINATE"
-  accelerator_type    = "zones/${var.zone}/acceleratorTypes/nvidia-l4"
-  accelerator_count   = 1
+  on_host_maintenance = "MIGRATE"
 }
 
 build {
