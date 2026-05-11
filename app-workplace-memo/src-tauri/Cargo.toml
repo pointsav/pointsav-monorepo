@@ -1,0 +1,53 @@
+[package]
+name = "workplace-memo"
+version = "0.1.0"
+description = "Sovereign local-first document editor — PointSav Digital Systems"
+authors = ["PointSav Digital Systems"]
+license = "EUPL-1.2"
+repository = ""
+edition = "2021"
+rust-version = "1.70"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[build-dependencies]
+tauri-build = { version = "1.5", features = [] }
+
+[dependencies]
+# Tauri v1 — required for macOS 10.13 High Sierra compatibility.
+# Tauri v2 requires macOS 10.15+.
+# When upgrading the development machine, bump to tauri = "2" and
+# update tauri-build, tauri-plugin-fs, tauri-plugin-dialog accordingly.
+tauri = { version = "1.7", features = [
+  "dialog-open",
+  "dialog-save",
+  "fs-read-file",
+  "fs-write-file",
+  "fs-exists",
+  "path-all",
+  "shell-open"
+] }
+
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+base64 = "0.21"
+
+[features]
+# This feature is used for production builds or when `devPath` points to the filesystem
+# DO NOT REMOVE!!
+custom-protocol = ["tauri/custom-protocol"]
+
+# ─── Notes ──────────────────────────────────────────────────────────────────
+# For Linux (Tauri v2) production build, replace the tauri dependency with:
+#
+# tauri = { version = "2", features = [] }
+# tauri-plugin-fs = "2"
+# tauri-plugin-dialog = "2"
+#
+# And update [build-dependencies]:
+# tauri-build = { version = "2", features = [] }
+#
+# The IPC command signatures in src/main.rs require minor updates for v2's
+# plugin-based file system API. See DEVELOPMENT.md for the migration guide.
+
+[workspace]

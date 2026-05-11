@@ -1,0 +1,11 @@
+[package]
+name = "system-security"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+# This is critical: tells Cargo to produce a .a file for the C linker
+crate-type = ["staticlib"]
+
+[dependencies]
+# PointSav no_std logic requires zero dependencies for Tier 6

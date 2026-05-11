@@ -1,0 +1,10 @@
+{
+  "extracted_signals": {
+    "sender": "MyFonts <newsletters-no-reply@mail.myfonts.com>",
+    "subject": "Meet Pants On Fire 🔥"
+  },
+  "source_artifact": "VAULT_INGRESS_totebox-ingress_EB7EA201.eml",
+  "status": "AWAITING_HITL_CHECKOUT",
+  "timestamp": "2026-03-28T03:34:08.514073072+00:00",
+  "transaction_id": "0F733433"
+}

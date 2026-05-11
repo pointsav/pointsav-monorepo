@@ -1,0 +1,53 @@
+---
+asset_id: "TX-7DD86888"
+source: "VAULT_INGRESS_OpenStack_D115F82B.eml"
+system_directive: "Synthesize taxonomy."
+status: "PENDING_COGNITIVE_STATE"
+---
+
+Hi Abhishek!
+
+Thanks for the prompt reply!
+While I think you're on spot with the diagnosis, I am not sure if the path is actually working.
+
+I tried to apply the patch, while having `swift_store_retry_get_count = 5` in the glance-api.conf, and I had exactly the
+same stack trace, as without the patch.
+However, setting swift_store_retry_get_count to 0 has solved the problem indeed.
+
+According to what I see in my test environment, your patch solves the issue only when swift_store_retry_get_count is not
+defined at all, but not when it's defined to non-zero value.
+
+пт, 27 мар. 2026 г. в 16:24, Abhishek Kekane <[akekane@redhat.com][1]>:
+
+> hi Dmitriy,
+> 
+> The mentioned bug is reported in LP [1] and I have pushed a fix [2] for it.
+> As a workaround you can set swift_store_retry_get_count to 0 in the config file.
+> 
+> Let me know if mentioned fix [2] works for you.
+> 
+> [1] [https://bugs.launchpad.net/glance/+bug/2146432][2]
+> [2] [https://review.opendev.org/c/openstack/glance_store/+/982221][3]
+> 
+> Thanks & Best Regards,
+> 
+> Abhishek Kekane
+> 
+> 
+> On Fri, Mar 27, 2026 at 8:50 PM Dmitriy Rabotyagov <[noonedeadpunk@gmail.com][4]> wrote:
+> 
+> > Hi folks,
+> > 
+> > I am trying to test out Glance configured with Swift backend on 2026.1 prior to the release, and facing some issues.
+> > As we are super close to the release, I have decided to pop up with the ML, to ensure it's a "me" problem, and not a
+> > generic bug somewhere.
+> > 
+> > So I am using:
+> > - Glance installed from SHA 07dd0a203b6883efa66486035c436b92c83da0f3
+> > - glance-store 5.4.0 (according to U-C)
+> > - Swift installed from SHA 51b068309a626d2228ab69b5158ee857e96d101d
+> > 
+> > Image upload works quite well [1], image is appearing in Glance and in Swift quite correctly.
+> > But whenever I attempt to create an instance from the image, or, basically, just download image with `openstack
+> > image save a024ca39-42bc-4a0c-bd34-26209bda4008`,I get Glance WSGI crashing, resulting in 502:
+> > root@aio1-utility-contain

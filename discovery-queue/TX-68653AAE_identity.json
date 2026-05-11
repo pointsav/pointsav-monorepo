@@ -1,0 +1,10 @@
+{
+  "extracted_signals": {
+    "sender": "Bruce Momjian <bruce@momjian.us>",
+    "subject": "Re: [PATCH] pgindent truncates last line of files missing a trailing newline"
+  },
+  "source_artifact": "VAULT_INGRESS_PostgresSQL_0A628481.eml",
+  "status": "AWAITING_HITL_CHECKOUT",
+  "timestamp": "2026-03-29T04:52:04.014887839+00:00",
+  "transaction_id": "68653AAE"
+}

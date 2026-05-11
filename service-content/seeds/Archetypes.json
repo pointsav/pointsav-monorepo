@@ -1,0 +1,9 @@
+{
+  "archetypes": [
+    { "id": "1", "name": "The Executive", "signature": "Strategic Direction", "gravity_keywords": ["Strategic Direction", "Stagnation", "Executive"] },
+    { "id": "2", "name": "The Guardian", "signature": "Risk & Compliance", "gravity_keywords": ["Risk & Compliance", "Breach", "Guardian"] },
+    { "id": "3", "name": "The Fiduciary", "signature": "Resource Integrity", "gravity_keywords": ["Resource Integrity", "Leakage", "Fiduciary"] },
+    { "id": "4", "name": "The Architect", "signature": "System Design", "gravity_keywords": ["System Design", "Complexity", "Architect"] },
+    { "id": "7", "name": "The Constructor", "signature": "Physical Realization", "gravity_keywords": ["Physical Realization", "Structural Gap", "Constructor"] }
+  ]
+}

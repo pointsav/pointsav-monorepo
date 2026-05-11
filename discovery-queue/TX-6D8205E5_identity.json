@@ -1,0 +1,10 @@
+{
+  "extracted_signals": {
+    "sender": "Vladimir Kozhukalov <kozhukalov@gmail.com>",
+    "subject": "[openstack-helm] Remove metacontroller and daemonjob-controller"
+  },
+  "source_artifact": "VAULT_INGRESS_OpenStack_14725D1C.eml",
+  "status": "AWAITING_HITL_CHECKOUT",
+  "timestamp": "2026-03-28T03:34:07.271392716+00:00",
+  "transaction_id": "6D8205E5"
+}

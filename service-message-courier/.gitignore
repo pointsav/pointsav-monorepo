@@ -1,0 +1,21 @@
+# PointSav Digital Systems: Vendor/Customer Isolation
+# ---------------------------------------------------
+# This file ensures that Customer-specific operational logic
+# (such as third-party egress adapters and credentials) 
+# remains on local hardware and is never committed to upstream Git.
+
+# Ignore all specific execution adapters
+private-adapters/*
+
+# Ignore local environment variables and credentials
+.env
+.env.local
+credentials.json
+auth_state.json
+
+# Ignore local ledger databases (execution tracking)
+local_ledger.db
+*.sqlite3
+
+# Keep the directory structure intact for parity
+!.gitkeep

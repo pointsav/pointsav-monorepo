@@ -1,0 +1,8 @@
+{
+  "chart_of_accounts": [
+    { "id": "1", "profile": "Compliance", "sub_domain": "Legal Representation", "gravity_keywords": ["Compliance", "Counsel", "Legal Representation"] },
+    { "id": "5", "profile": "Real Estate", "sub_domain": "Leasing", "gravity_keywords": ["Real Estate", "Leasing", "Office", "Industrial", "Retail"] },
+    { "id": "9", "profile": "Construction", "sub_domain": "Control Architect", "gravity_keywords": ["Construction", "Collaborators", "Control Architect"] },
+    { "id": "11", "profile": "Investor Relations", "sub_domain": "Portfolio Managers", "gravity_keywords": ["Investor Relations", "Finance", "Portfolio Managers"] }
+  ]
+}
