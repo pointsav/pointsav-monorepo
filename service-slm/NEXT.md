@@ -1,26 +1,94 @@
 # NEXT.md — service-slm
 
-> Last updated: 2026-05-11 (Yo-Yo #1 — vLLM GGUF arch fix committed; Packer rebuild in progress)
+> Last updated: 2026-05-11 (Yo-Yo #1 — CUDA OOM blocker; VM STOPPED; re-quantization required)
 > Read at session start. Update before session end so the next
 > session knows where to pick up.
 
 ---
 
-## Right now — PACKER REBUILD + VM REPROVISION IN PROGRESS
+## Right now — CUDA OOM BLOCKER; VM STOPPED CLEANLY; RESUME POINT DOCUMENTED
 
-**Critical fix landed (2026-05-11, commit `70c40ab`):**
+**Current VM state (2026-05-11 session end):**
+- `yoyo-tier-b-1` STOPPED in `us-west1-b` (not terminated — weights disk intact)
+- IP was `8.231.141.23` (will change on next start; use `start-yoyo.sh` to get new IP)
+- Weights disk has `/data/weights/olmo-3-32b-think-q4.gguf` (18.14 GiB, Path A complete)
+- `/data/weights/model/` directory exists with `config.json` + GGUF symlink (GGUF arch fix live)
+- `/data/weights/tokenizer/` populated from HF cold bootstrap
+- Packer image `slm-yoyo-20260511-071612` built successfully in `us-west1-a`
+
+**CUDA OOM — root cause and fix path:**
+L4 GPU sees 22.04 GiB to CUDA. OLMo 3 32B Q4_K_M loads to 21.63 GiB PyTorch +
+~240 MiB framework overhead = 21.87 GiB total. With `--gpu-memory-utilization 0.97`
+(21.38 GiB cap) and `--enforce-eager` and `--cpu-offload-gb 2` (KV cache only — does NOT
+offload weights in the GGUF path), the model is still 270 MiB short. vLLM v0.20.1 GGUF
+loading appears to ignore `--cpu-offload-gb`; the flag is for standard safetensors paths.
+
+**Fix: re-quantize to Q3_K_M on the VM** (~40 min on L4, saves ~3 GiB):
+```bash
+# 1. Start the VM (Mode 1 — existing disk, no weights re-download)
+/srv/foundry/clones/project-intelligence/service-slm/scripts/start-yoyo.sh \
+  --instance=yoyo-tier-b-1 --wait-ready=0
+
+# 2. SSH in and re-quantize (llama.cpp is at /opt/llama.cpp on the VM)
+NEW_IP=$(gcloud compute instances describe yoyo-tier-b-1 \
+  --zone=us-west1-b --project=woodfine-node-gcp-free \
+  --format='get(networkInterfaces[0].accessConfigs[0].natIP)')
+gcloud compute ssh yoyo-tier-b-1 --zone=us-west1-b --project=woodfine-node-gcp-free \
+  --command="sudo /opt/llama.cpp/build/bin/llama-quantize \
+    /data/weights/olmo-3-32b-think-q4.gguf \
+    /data/weights/olmo-3-32b-think-q3.gguf \
+    Q3_K_M && echo DONE"
+
+# 3. Update model directory symlink
+gcloud compute ssh yoyo-tier-b-1 --zone=us-west1-b --project=woodfine-node-gcp-free \
+  --command="sudo ln -sf /data/weights/olmo-3-32b-think-q3.gguf \
+    /data/weights/model/olmo-3-32b-think-q3.gguf && \
+    sudo rm -f /data/weights/model/olmo-3-32b-think-q4.gguf && \
+    ls -lh /data/weights/model/"
+
+# 4. Upload Q3_K_M to GCS (replaces Q4_K_M as the canonical artifact)
+gcloud compute ssh yoyo-tier-b-1 --zone=us-west1-b --project=woodfine-node-gcp-free \
+  --command="gsutil -o GSUtil:parallel_composite_upload_threshold=150M cp \
+    /data/weights/olmo-3-32b-think-q3.gguf \
+    gs://woodfine-node-gcp-free-foundry-substrate/base-models/olmo-3-32b-think-q3.gguf && \
+    echo GCS_DONE"
+
+# 5. Update vllm.service WEIGHTS_FILE reference (edit vllm-weights-prep.sh in repo too)
+#    The vllm-weights-prep.sh reads WEIGHTS_GCS_OBJECT from instance metadata.
+#    Update the metadata key after GCS upload is confirmed.
+
+# 6. Start vLLM
+gcloud compute ssh yoyo-tier-b-1 --zone=us-west1-b --project=woodfine-node-gcp-free \
+  --command="sudo systemctl start vllm.service && \
+    sudo journalctl -fu vllm.service"
+```
+
+**Checklist for re-quantization session:**
+- [ ] VM started (Mode 1: `us-west1-b`, existing weights disk)
+- [ ] `llama-quantize Q3_K_M` complete (expect ~40 min on L4 — it uses CUDA for quantization)
+- [ ] `/data/weights/model/` symlink updated to Q3_K_M file
+- [ ] Q3_K_M uploaded to GCS `base-models/olmo-3-32b-think-q3.gguf`
+- [ ] `vllm-weights-prep.sh` and `vllm.service` comments updated in repo (optional — can do post-validation)
+- [ ] `vllm.service` starts without OOM (expect ~2 min after weights loaded)
+- [ ] `curl -sk https://${NEW_IP}:9443/health` → `{"status":"ok"}`
+- [ ] Update `/etc/local-doorman/local-doorman.env`: `SLM_YOYO_GCP_ZONE=us-west1-b`, `SLM_YOYO_ENDPOINT=https://${NEW_IP}:9443`
+- [ ] `sudo systemctl restart local-doorman.service`
+- [ ] Run `service-slm/scripts/test-yoyo-flows.sh` → 6 PASS
+- [ ] Run `service-slm/scripts/create-yoyo-snapshot.sh`
+- [ ] Enable apprenticeship: `SLM_APPRENTICESHIP_ENABLED=true` in doorman env
+- [ ] Enable nightly timers: `sudo systemctl enable --now corpus-rebuild.timer local-workspace-feeder.timer`
+
+**What's already working (do NOT redo):**
+- GGUF architecture fix: `config.json` in `/data/weights/model/` → `Olmo3ForCausalLM` resolves ✓
+- Weights on disk (Q4_K_M, 18.14 GiB) — start VM Mode 1 to preserve them ✓
+- Packer image `slm-yoyo-20260511-071612` built with all 5 services ✓
+
+**Previously completed (commits `0c0f5a2`–`e791e4c`):**
 `transformers 5.8.0` GGUF architecture check fails for olmo2 (the llama.cpp arch name for
 OLMo3 32B Think). Fix: `vllm-weights-prep.sh` creates `/data/weights/model/` directory with
 `config.json` (model_type: olmo3) + GGUF symlink; `vllm.service` `--model` now points at the
 directory. Transformers reads config.json (bypasses GGUF arch check); vLLM discovers GGUF by
 scanning for `*.gguf` in the directory.
-
-**Packer image rebuild in progress** (CPU build machine; commit `e5073dc`):
-- Bakes the vLLM GGUF fix into new image family `slm-yoyo`
-- Build machine: `n2-standard-8` in `us-central1-b` (avoids L4 GPU stockout during build;
-  GPU not required for image creation — only needed at runtime)
-- Estimated ~25 min; background task `bs3jrv2a1`
-- After build: run `start-yoyo.sh --wait-ready=5400 --auto-snapshot` to provision new VM
 
 **Completed since 2026-05-07 (commits `0c0f5a2`–`b761d67`):**
 - [x] **GCP Project + VM live:** `woodfine-node-gcp-free`, `yoyo-tier-b-1` in `us-central1-b`.

@@ -6,6 +6,7 @@ Requires=vllm-weights-prep.service
 
 [Service]
 Type=simple
+Environment=PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 # Model path is on the persistent weights disk. The Q4_K_M GGUF is produced by
 # vllm-weights-prep.service (either pulled from our GCS canonical artifact, or
 # derived from AllenAI source on first-boot). Tokenizer files come from the
