@@ -71,27 +71,97 @@ while true; do
 
     log "Training: tenant=${tenant} role=${role} method=${method} corpus=${corpus_path} → ${out_dir}"
 
-    # Activate the venv that has torch + peft + accelerate
-    source /opt/vllm/bin/activate
+    TRAIN_WEIGHTS_DIR="${TRAIN_WEIGHTS_DIR:-/data/weights/olmo-3-7b-think-hf}"
+    GCS_BUCKET=$(curl -fsS --max-time 5 -H 'Metadata-Flavor: Google' \
+        "http://metadata.google.internal/computeMetadata/v1/instance/attributes/weights-gcs-bucket" \
+        2>/dev/null || echo "")
 
-    # Run the training (PLACEHOLDER — actual accelerate invocation lands when
-    # apprenticeship/corpus paths are finalized; for now this is a stub that
-    # writes a placeholder adapter and exits with informative log).
+    # Pull corpus from GCS (workspace VM synced it before writing the marker)
+    LOCAL_CORPUS="/tmp/training-corpus-${role}"
+    mkdir -p "${LOCAL_CORPUS}"
+    if [[ -n "${GCS_BUCKET}" ]]; then
+        gcloud storage cp -r "gs://${GCS_BUCKET}/training-corpus/${role}/" "${LOCAL_CORPUS}/" \
+            2>/dev/null || log "WARN: GCS corpus pull failed; using local if present"
+    fi
+
+    # Activate training venv (baked into image; pip fallback for first-run)
+    source /opt/vllm/bin/activate
+    python3 -c "import peft, bitsandbytes, accelerate, trl" 2>/dev/null || {
+        log "Installing training deps (should be pre-baked; falling back to pip)..."
+        pip install --quiet peft bitsandbytes accelerate trl datasets
+    }
+
     case "${method}" in
         sft|dpo)
-            log "STUB: would run accelerate train ${method} on ${corpus_path}"
-            log "STUB: writing placeholder adapter at ${out_dir}/adapter_config.json"
-            cat > "${out_dir}/adapter_config.json" <<EOF
-{
-    "stub": true,
-    "tenant": "${tenant}",
-    "role": "${role}",
-    "method": "${method}",
-    "corpus_path": "${corpus_path}",
-    "trained_at": "$(date -u +'%Y-%m-%dT%H:%M:%SZ')",
-    "note": "Real training pipeline lands when Master ratifies Yo-Yo-runs-LoRA + corpus consumer is finalized."
-}
-EOF
+            log "QLoRA ${method}: model=${TRAIN_WEIGHTS_DIR} corpus=${LOCAL_CORPUS} → ${out_dir}"
+            python3 - <<PYEOF
+import json, sys, torch
+from pathlib import Path
+from datasets import Dataset
+from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
+from peft import LoraConfig, get_peft_model, TaskType
+from trl import SFTTrainer, SFTConfig
+
+model_dir = "${TRAIN_WEIGHTS_DIR}"
+corpus_dir = "${LOCAL_CORPUS}"
+out_dir = "${out_dir}"
+
+records = []
+for fpath in sorted(Path(corpus_dir).rglob("*.jsonl")):
+    try:
+        with open(fpath) as f:
+            for line in f:
+                r = json.loads(line.strip())
+                text = "\n".join(filter(None, [r.get("commit_msg"), r.get("actual_diff"),
+                                               r.get("brief"), r.get("body")]))
+                if text.strip():
+                    records.append({"text": text[:2048]})
+    except Exception as e:
+        print(f"WARN: {fpath}: {e}")
+
+if not records:
+    print("No corpus records found — skipping training run.")
+    sys.exit(0)
+
+print(f"Corpus: {len(records)} tuples from {corpus_dir}")
+bnb = BitsAndBytesConfig(load_in_4bit=True, bnb_4bit_quant_type="nf4",
+    bnb_4bit_compute_dtype=torch.bfloat16, bnb_4bit_use_double_quant=True)
+model = AutoModelForCausalLM.from_pretrained(model_dir, quantization_config=bnb,
+    device_map="auto", trust_remote_code=True)
+tokenizer = AutoTokenizer.from_pretrained(model_dir, trust_remote_code=True)
+tokenizer.pad_token = tokenizer.eos_token
+model.config.use_cache = False
+
+lora = LoraConfig(r=16, lora_alpha=32, lora_dropout=0.05, bias="none",
+    task_type=TaskType.CAUSAL_LM,
+    target_modules=["q_proj","v_proj","k_proj","o_proj","gate_proj","up_proj","down_proj"])
+model = get_peft_model(model, lora)
+model.print_trainable_parameters()
+
+trainer = SFTTrainer(
+    model=model, tokenizer=tokenizer,
+    train_dataset=Dataset.from_list(records),
+    args=SFTConfig(
+        output_dir=out_dir,
+        num_train_epochs=2,
+        per_device_train_batch_size=1,
+        gradient_accumulation_steps=4,
+        gradient_checkpointing=True,
+        bf16=True, fp16=False,
+        learning_rate=2e-4,
+        warmup_ratio=0.03,
+        max_seq_length=512,
+        logging_steps=10,
+        save_steps=100,
+        report_to="none",
+        dataloader_num_workers=0,
+    )
+)
+trainer.train()
+trainer.save_model(out_dir)
+tokenizer.save_pretrained(out_dir)
+print(f"Adapter saved → {out_dir}")
+PYEOF
             ;;
         *)
             log "ERROR: unknown method '${method}' (expected sft|dpo)"
