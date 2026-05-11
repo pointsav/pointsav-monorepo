@@ -1,287 +1,191 @@
 ---
 schema: foundry-cluster-manifest-v1
-cluster_name: project-knowledge
-cluster_branch: cluster/project-knowledge
-created: 2026-04-26
-backfilled_triad: 2026-04-26 (per Doctrine v0.0.4)
-state: active
-slm_endpoint: http://localhost:8011
-module_id: knowledge
+cluster_name: project-gis
+cluster_branch: cluster/project-gis
+created: 2026-04-30
+state: provisioning
+doctrine_version: 0.0.14
+doctrine_claims_codified: []
+doctrine_claims_proposed: []   # placeholder; will fold in claims surfaced by Sonnet research
 
-tetrad:                          # upgraded from triad: 2026-04-28 per claim #37 / doctrine v0.0.10
+operator: woodfine + pointsav (jointly — Location Intelligence platform)
+working_pattern: research-then-scaffold
+input_shape: open-gis-standards + retail-co-location-analysis
+
+design:
+  rules:
+    - .agent/rules/design-tokens.md
+
+# Cluster mission (workspace v0.1.88, 2026-04-30):
+# Ship a "Location Intelligence" platform — a leapfrog-2030 flat-file
+# open-GIS substrate parallel to project-bim's Building Design System.
+# Same architectural commitments: flat-file storage, open standards,
+# Rust + Tauri, offline-first, EUPL-licensed, seL4-hardened.
+#
+# Three Totebox Archive services to be added (per operator 2026-04-30):
+#   - service-business: retail business locations (Walmart, Home Depot,
+#     Costco, Ikea, regional equivalents)
+#   - service-places: public-purpose locations (hospitals, higher
+#     education, airports)
+#   - service-parking: geo-fence parking lot coordinates
+#
+# Three new app surfaces:
+#   - app-console-gis: query + dataset provider
+#   - app-workplace-gis: PointSav's QGIS — manual layer editor on map
+#   - app-orchestration-gis: meteoblue.com-quality map renderer
+#     (browser-delivered via os-orchestration)
+#
+# Customer-facing deployment: gis.woodfinegroup.com
+# Showcases co-location of Walmart/Ikea + Home Depot/X + Costco
+# within 1km / 2km / 3km of each other.
+#
+# Bridge to BIM: location intelligence supplies the urban-scale
+# context that BIM compositions live in (claim #41 City Code as
+# Composable Geometry depends on a real geographic dataset).
+
+tetrad:
   vendor:
-    - repo: content-wiki-documentation
-      path: content-wiki-documentation/
-      upstream: vendor/content-wiki-documentation
-      focus: TOPIC content; ADRs; service summaries; glossary
     - repo: pointsav-monorepo
-      path: pointsav-monorepo/
+      path: ./pointsav-monorepo
       upstream: vendor/pointsav-monorepo
-      focus: app-mediakit-knowledge/ (the wiki engine crate)
+      focus: |
+        service-business/, service-places/, service-parking/ (Ring 1
+        boundary ingest), app-console-gis/, app-workplace-gis/,
+        app-orchestration-gis/, os-orchestration/ (mapping browser
+        delivery)
+      status: leg-pending — sub-clone provisioning + scaffold
+    - repo: pointsav-design-system
+      path: ./pointsav-design-system
+      upstream: vendor/pointsav-design-system
+      focus: |
+        DESIGN-* + COMPONENT-* + RESEARCH-* + token-* drafts for the
+        gis.woodfinegroup.com surface (parallel to design-system
+        substrate per Doctrine claim #38)
+      status: leg-pending
   customer:
-    - fleet_deployment_repo: vendor/pointsav-fleet-deployment
-      catalog_subfolder: media-knowledge-documentation/
-      tenant: pointsav
-      purpose: documentation-wiki-deployment-shape; README + MANIFEST + guide-deployment + guide-provision-node ratified 2026-04-26 (v0.1.5); GUIDE-operate-knowledge-wiki bulk draft staged 2026-04-27 in this cluster's drafts-outbound/ for project-language refinement
-      status: active
+    - fleet_deployment_repo: customer/woodfine-fleet-deployment
+      catalog_subfolder: gateway-orchestration-gis/
+      tenant: woodfine
+      purpose: customer-facing-location-intelligence-public-demo
+      status: leg-pending — catalog folder authoring
   deployment:
-    - path: ~/Foundry/deployments/media-knowledge-documentation-1/
-      tenant: pointsav
-      shape: wiki-runtime
+    - path: deployments/gateway-orchestration-gis-1
+      tenant: woodfine
+      shape: long-running-service
       runtime_artifacts:
-        - /usr/local/bin/app-mediakit-knowledge          # live since 2026-04-27 v0.1.29
-        - /etc/systemd/system/local-knowledge.service    # live since 2026-04-26 v0.1.21
-        - /var/lib/local-knowledge/state                 # provisioned v0.1.29
-        - nginx vhost documentation.pointsav.com         # TLS live since 2026-04-27 v0.1.29 (cert through 2026-07-26)
-      status: active                                     # public TLS launch 2026-04-27 16:25Z
-  wiki:                          # NEW Tetrad leg per convention §4
-    - repo: vendor/content-wiki-documentation
-      drafts_via: clones/project-knowledge/.claude/drafts-outbound/
-      gateway: project-language Task (PL.6 in SLM Operationalization Plan §4)
+        - (planned) /usr/local/bin/app-orchestration-gis
+        - (planned) /etc/systemd/system/local-gateway-orchestration-gis.service
+        - (planned) /var/lib/gateway-orchestration-gis/tiles/
+        - (planned) nginx vhost gis.woodfinegroup.com (HTTPS)
+      status: leg-pending — pre-provisioning
+    - path: clusters/cluster-totebox-personnel-1
+      tenant: woodfine
+      shape: data-archive
+      runtime_artifacts:
+        - service-business JSONL/Parquet (retail locations)
+        - service-places JSONL/Parquet (public-purpose locations)
+        - service-parking JSONL/Parquet (geo-fence polygons)
+      status: leg-pending — data acquisition (Walmart/Home Depot/Costco
+        US/CA/MX/ES + Ikea ES + Home Depot equivalent ES)
+  wiki:
+    # project-gis does NOT hold sub-clones of content-wiki repos (removed 2026-05-05).
+    # All wiki drafts route via drafts-outbound model only.
+    - drafts_via: clones/project-gis/.agent/drafts-outbound/
+      gateway: project-editorial Task
       planned_topics:
-        # Already staged as substantive bulk drafts 2026-04-27 (awaiting project-language sweep):
-        - topic-app-mediakit-knowledge.md                          # the wiki engine — headline architecture TOPIC
-        - topic-documentation-pointsav-com-launch-2026-04-27.md    # current-fact launch milestone
-        - topic-substrate-native-compatibility.md                  # Doctrine claim #29 narrative (Action API drop rationale)
-        # Skeleton staged 2026-04-28 to demonstrate Tetrad intent:
-        - topic-collab-via-passthrough-relay.md                    # Phase 2 Step 7 substrate pattern
-        # Substantive bulk drafts staged 2026-04-30 (iteration-2 leapfrog batch):
-        - topic-knowledge-wiki-home-page-design.md                 # public-facing home-page narrative (Wikipedia muscle memory + leapfrog)
-        - topic-article-shell-leapfrog.md                          # public-facing article-shell leapfrog narrative
-        - topic-wiki-provider-landscape.md                         # 25-provider competitive landscape audit (PROSE-TOPIC reference/)
-        - guide-keep-the-home-page-the-gold-standard.md            # operational PROSE-GUIDE for keeping home page the gold standard
-        # Future planned TOPICs (substance follows in milestone N+1+):
-        - topic-source-of-truth-inversion.md                       # git canonical, binary view, CRDT ephemeral
-        - topic-wikipedia-leapfrog-design.md                       # the muscle-memory chrome design narrative (existing draft)
-      status: active                                     # 3 substantive + 1 skeleton + 4 leapfrog-iteration-2 in flight as of 2026-04-30
+        - topic-location-intelligence-platform.md  # what + why; Bloomberg-grade
+        - topic-gis-substrate-architecture.md      # flat-file open-GIS pattern
+        - topic-geo-fence-parking-pattern.md       # service-parking shape
+        - guide-gis-deployment.md                  # how to operate gis.woodfinegroup.com
+        - topic-walmart-homedepot-costco-co-location.md
+        - topic-spanish-retail-equivalents.md
+      status: leg-pending — scaffold after research lands; 6 rescued drafts in drafts-outbound/from-project-gis/
 
-design:                          # opt-in per v0.1.57 cluster-design-draft-pipeline; mandatory when triggered (cluster shipped UI)
-  rules: [.agent/rules/design-tokens.md]                           # added 2026-05-03 per Design Token Workflow plan
-  drafts_via: clones/project-knowledge/.claude/drafts-outbound/
-  gateway: project-design Task (DS.* in SLM Operationalization Plan §4)
-  planned_drafts:
-    # Already staged 2026-04-29 (iteration-1 home-page chrome substrate refinement):
-    - component-home-grid                                          # the iteration-1 home page 3×3 category grid
-    # Substantive batch staged 2026-04-30 (iteration-2 leapfrog primitives):
-    - research-wikipedia-leapfrog-2030                             # DESIGN-RESEARCH — primary research synthesis from 4× Sonnet sub-agents
-    - component-citation-authority-ribbon                          # DESIGN-COMPONENT — first-class leapfrog primitive (§6.1 of research)
-    - component-research-trail-footer                              # DESIGN-COMPONENT — first-class leapfrog primitive (§6.2; Doctrine claim #39 at article scale)
-    - component-freshness-ribbon                                   # DESIGN-COMPONENT — first-class leapfrog primitive (§6.3; per-section dateModified JSON-LD)
-    - token-knowledge-wiki-baseline                                # DESIGN-TOKEN-CHANGE — three-tier DTCG bundle additions (PENDING MASTER COSIGN)
-  triggers:                                                        # events that warrant staging a DESIGN-* draft
-    - new_ui_element_shipped                                       # iteration-1 home-page chrome (component-home-grid precedent)
-    - existing_substrate_component_modified                        # font-stack changes, density toggle additions
-    - brand_voice_or_accessibility_refinement                      # accessibility-targets changes
-    - ai_consumption_hint_introduced                               # JSON-LD schema additions (citation-badges, research-trail, freshness-ribbon)
-    - public_launch_component                                      # also stages a topic-component-* PROSE-TOPIC for project-language pickup
-  status: active                                                   # 1 staged 2026-04-29 + 5 staged 2026-04-30 in flight
+# Operator decisions surfaced (in workspace NEXT.md operator-presence carries):
+#   1. Workplace OS deployment naming — operator suggested
+#      "desktop-workplace-gis"; need Nomenclature Matrix amendment
+#   2. service-business storage shape — flat (JSONL/Parquet) vs
+#      database (PostgreSQL+PostGIS); pending Sonnet research outcome
+#   3. Mapping tile/layer delivery stack — pending Sonnet research
+#      (vector tiles via MapLibre? raster via Leaflet? meteoblue uses
+#      proprietary; what's the open-source equivalent?)
 
-clones:
-  - repo: content-wiki-documentation
-    role: primary
-    path: content-wiki-documentation/
-    upstream: vendor/content-wiki-documentation
-  - repo: pointsav-monorepo
-    role: sibling
-    path: pointsav-monorepo/
-    upstream: vendor/pointsav-monorepo
-    focus: app-mediakit-knowledge/
-  - repo: pointsav-fleet-deployment
-    role: sibling
-    path: pointsav-fleet-deployment/
-    upstream: vendor/pointsav-fleet-deployment
-    focus: media-knowledge-documentation/
-
-deployment_instance: ~/Foundry/deployments/media-knowledge-documentation-1/
-trajectory_capture: enabled
-
-adapter_routing:
-  trains:
-    - cluster-project-knowledge  # own cluster adapter (documentation/wiki writing skill)
-    - engineering-pointsav       # Vendor engineering corpus (wiki engine + TOPIC content patterns)
-    # NOTE: per-tenant TOPICs (tenant-pointsav, tenant-woodfine) join trains
-    # when Customer wikis spin up under their own deployment instances
-  consumes:
-    - constitutional-doctrine    # always
-    - engineering-pointsav       # always — Vendor knowledge
-    - cluster-project-knowledge  # own cluster context (documentation/wiki writing)
-    - role-task                  # current role
-    # tenant-pointsav consumed when authoring PointSav-voice TOPICs (default
-    # for media-knowledge-documentation-1 instance); tenant-woodfine when
-    # authoring Customer-voice TOPICs in future Customer deployments
-
-wiki_draft_triggers:                  # added v0.1.31 per cluster-wiki-draft-pipeline.md §1
-  # Events that warrant staging a bulk draft to .claude/drafts-outbound/.
-  # Discretion is the Task's; project-language can request more via outbox
-  # if a milestone passes uncovered.
-  - wiki_engine_phase_complete        # any of Phases 1, 1.1, 2 (and per-step), 3, 4-8
-  - deployment_goes_public_tls        # documentation.pointsav.com pattern (v0.1.29 precedent)
-  - architecture_or_inventions_amend  # ARCHITECTURE.md, UX-DESIGN.md, INVENTIONS.md substantive change
-  - operational_gap_surfaced_closed   # e.g., ufw firewall fix v0.1.29 → operational GUIDE
-  - novel_pattern_shipped             # e.g., collab passthrough relay; substrate-native API set
-  - per_project_readme_stale          # README hasn't matched substantive code shift in N commits
-  - bcsc_disclosure_event             # material-change disclosure record per ni-51-102 §4
+# Bootstrap commits will be authored by jwoodfine/pwoodfine alternating
+# via bin/commit-as-next.sh once sub-clones are provisioned.
 ---
 
-# Cluster manifest — project-knowledge
+# Cluster manifest — project-gis
 
-Multi-clone cluster (N=3). First multi-clone cluster authored under
-Doctrine v0.0.2 §IV.c. Created 2026-04-26.
+This file is the cluster-manifest declaration per Doctrine §IV.c +
+v0.0.10 Tetrad amendment. Read at session start.
 
-## Mission
+## Cluster status
 
-Build the PointSav knowledge platform. Three workstreams:
+**State**: active (2026-05-04 — Master ratification of Gemini-era work)
 
-1. **TOPIC authorship** in `content-wiki-documentation/` — write
-   the wiki content. Every TOPIC committed enters the engineering
-   corpus (per `conventions/trajectory-substrate.md`) and shapes
-   the `cluster-project-knowledge` adapter (per Doctrine claim
-   #21 Role-Conditioned Cluster Adapters).
-2. **Wiki engine** in `pointsav-monorepo/app-mediakit-knowledge/`
-   — make it buildable, runnable, and theme-aligned with the 95%
-   Wikipedia muscle-memory target. The crate already has substantial
-   scaffolding (axum server + markdown renderer with wikilinks +
-   git-sync editor + search index + four HTML templates).
-3. **Deployment** in `pointsav-fleet-deployment/media-knowledge-documentation/`
-   — catalog GUIDEs + a runtime instance at
-   `~/Foundry/deployments/media-knowledge-documentation-1/`
-   serving the wiki at a loopback URL initially, with a
-   `documentation.pointsav.com` target for v0.5.0+.
+Sub-clones provisioned: pointsav-monorepo, pointsav-design-system,
+woodfine-fleet-deployment, content-wiki-documentation, content-wiki-projects,
+woodfine-media-assets. Monorepo contains service-business, service-places,
+service-fs, app-orchestration-gis crate directories.
 
-The strategic positioning (Doctrine §XVI, Knowledge Commons): the
-wiki becomes a much easier way to access PointSav information than
-GitHub. Public-facing entry point. CC BY 4.0 content ships in the
-public bundle per Doctrine §VIII at every MINOR doctrine bump.
+Two-deployment architecture in place:
+- `cluster-totebox-personnel-1` — data layer (service-business, service-places, service-fs)
+- `gateway-orchestration-gis-1` — GIS platform (app-orchestration-gis + www)
 
-## Scope (per sub-clone)
+gis.woodfinegroup.com is live. TOTEBOX_DATA_PATH path fixed 2026-05-04 (removed
+spurious `/data/` suffix in config.py and MANIFEST.md).
 
-### content-wiki-documentation/ — PRIMARY
+## Standing in for v0.1.88+
 
-- TOPIC files (`TOPIC-*.md` and `topic-*.md`): write new ones,
-  expand existing ones
-- ADRs (`sys-adr-*.yaml`): keep current; add new as architecture
-  decisions accrue
-- Service summaries (`service-*-NN.yaml`): keep aligned with
-  monorepo service state
-- Glossary (`glossary-documentation.csv`)
-- Per-tenant subfolders (future): `pointsav/`, `woodfine/` for
-  per-tenant TOPICs that share a writing protocol but diverge in
-  voice. Not present at v0.1.4; introduce when a Woodfine TOPIC
-  is needed.
-- Repo-level `CLAUDE.md` predates v0.0.2 multi-clone pattern;
-  may need amendment by next Root Claude in this repo to reflect
-  the new cluster scope. Surface via outbox if material.
+This cluster bootstraps in three phases:
 
-### pointsav-monorepo/app-mediakit-knowledge/ — SIBLING (focused)
+### Phase 1 — Strategy + cluster shell (THIS COMMIT v0.1.88)
 
-- Existing crate scaffolding (committed to monorepo `main`):
-  - `src/server/` — axum HTTP server
-  - `src/renderer/` — markdown + wikilinks + footnotes + TOC
-  - `src/editor/` — in-browser editor with git commit
-  - `src/search/` — search index
-  - `src/sync/git.rs` — git-sync to backing repo
-  - `templates/` — article.html, category.html, search.html,
-    editor.html
-  - `static/` — style.css, wiki.js
-  - `tests/fixtures/` — test data
-- Task scope: get this crate to a runnable binary state. Do not
-  touch other crates in the monorepo this session — only
-  `app-mediakit-knowledge/` is in scope.
-- Workspace `[members]` may need to add this crate (Layer 1
-  audit finding); if blocked, surface via outbox (matches the
-  pattern that project-data found with service-fs).
+- Cluster directory + manifest provisioned
+- Workspace `PROJECT-CLONES.md` updated with project-gis row
+- Sonnet research dispatched (Location Intelligence platform survey;
+  Spain Home Depot equivalent; architecture flat-vs-database; map
+  tile/layer delivery stack)
+- Operator decisions surfaced (Workplace OS deployment naming;
+  storage shape)
 
-### pointsav-fleet-deployment/media-knowledge-documentation/ — SIBLING (focused)
+### Phase 2 — Sub-clone provisioning + scaffold (next session)
 
-- Existing catalog GUIDEs:
-  - `README.md` (placeholder; references "Sovereign Disclosure
-    Standard" which is outdated; update to reflect the
-    BCSC-grounded posture per `conventions/bcsc-disclosure-posture.md`)
-  - `guide-deployment.md` (catalog runbook; expand with the
-    actual deployment procedure once Phase 0 lands)
-  - `guide-provision-node.md` (catalog runbook; align with
-    `infrastructure/local-slm/` precedent for Linux + systemd
-    + binary deployment)
-- Add new `MANIFEST.md` for the catalog subfolder per
-  Doctrine §VII.
-- Task scope: catalog updates + write a starter deployment
-  procedure that mirrors `infrastructure/local-slm/` — same
-  systemd-unit shape, dedicated `local-knowledge` system user,
-  loopback bind by default.
+When operator green-lights the strategy doc, Master:
+- Provisions sub-clones for pointsav-monorepo, pointsav-design-system,
+  woodfine-fleet-deployment in this cluster
+- Scaffolds service-business, service-places, service-parking
+  directories + Cargo.toml stubs
+- Scaffolds app-console-gis, app-workplace-gis, app-orchestration-gis
+  directories
+- Cluster-Task picks up after this point
 
-## Branch
+### Phase 3 — Data acquisition + visualization (Task work)
 
-`cluster/project-knowledge` in each sub-clone. Created 2026-04-26
-from local upstream `main`.
+- Walmart Superstore locations: US, Canada, Mexico, Spain (Spain = Ikea)
+- Home Depot locations: US, Canada, Mexico (Spain = X, per Sonnet research)
+- Costco locations: US, Canada, Mexico, Spain
+- Ingest into service-business
+- Co-location analysis: pairs/triples within 1km / 2km / 3km
+- Visualization at gis.woodfinegroup.com
 
-## Remotes (all three sub-clones, same shape)
+## What this cluster does NOT do
 
-- `origin` — canonical via admin SSH alias
-  (`github.com-pointsav-administrator`)
-- `origin-staging-j` — Jennifer's staging-tier mirror
-  (`github.com-jwoodfine`)
-- `origin-staging-p` — Peter's staging-tier mirror
-  (`github.com-pwoodfine`)
+- BIM (project-bim's scope; cross-references for City Code claim #41)
+- Editorial gateway (project-language's scope; project-gis stages
+  drafts at `.claude/drafts-outbound/`)
+- Doorman/SLM (project-slm's scope; project-gis consumes service-SLM
+  for routine map-annotation work via SERVICE-SLM-PROPOSAL convention
+  per v0.1.86 broadcast)
 
-Push policy: staging-tier only. Per Doctrine §V Action Matrix
-and v0.0.10 auto-mode safety brief.
+## Cross-references
 
-## Trajectory capture
-
-Enabled. The L1 post-commit hook (`bin/capture-edit.py` v0.1.1)
-is installed in each sub-clone's `.git/hooks/post-commit`. Every
-commit on `cluster/project-knowledge` writes a corpus record to
-`~/Foundry/data/training-corpus/engineering/project-knowledge/<sha>.jsonl`.
-
-## Adapter target
-
-`cluster-project-knowledge` — the planned cluster adapter for
-documentation/wiki writing skill (per Doctrine claim #21). When
-L3 (constitutional adapter training) ships at v0.5.0+, this
-adapter trains from the cluster's accumulated commits + TOPIC
-revisions + per-tenant voice signal.
-
-The cluster adapter pairs with per-tenant adapters at request
-time (Doctrine claim #22 Adapter Composition Algebra):
-
-```
-   base + constitutional + cluster[project-knowledge]
-        + tenant[pointsav | woodfine] + role[task]
-   = TOPIC-writing personality for this tenant
-```
-
-## Mailbox
-
-- Inbox: `~/Foundry/clones/project-knowledge/.claude/inbox.md`
-- Outbox: `~/Foundry/clones/project-knowledge/.claude/outbox.md`
-- Trajectory log: `~/Foundry/clones/project-knowledge/.claude/trajectory-log.md`
-  (created on first L2 capture)
-
-## Cross-cluster coordination
-
-- `project-slm` — service-slm Doorman is the inference path that
-  TOPIC-writing Tasks will eventually consume (when service-slm
-  matures and the cluster adapter is trained). Coordinate via
-  Master outbox; not a synchronous dependency for v0.1.x.
-- `project-data` — Ring 1 services (service-fs, service-people,
-  service-email, service-input). The wiki may later ingest TOPICs
-  via service-input (treating wiki content as another document
-  ingest channel) but this is a v0.5.0+ exploration. No
-  synchronous dependency now.
-
-## State as of provisioning (2026-04-26)
-
-| Item | State |
-|---|---|
-| Cluster directory + manifest | Done — this commit |
-| Sub-clones (3) cloned + branched | Done — this commit |
-| Remotes configured | Done — this commit |
-| Capture hooks installed | Done — this commit |
-| First Task session | Pending — opens via Claude Code in this directory |
-| app-mediakit-knowledge build | First Task priority #1 |
-| Wiki running locally | First Task priority #2-3 |
-| First TOPICs (or extension of existing) | First Task priority #4 |
-
----
-
-*Provisioned 2026-04-26 in workspace v0.1.4 / Doctrine v0.0.2.*
+- `~/Foundry/CLAUDE.md` §10 + §11 (cluster pattern + tetrad)
+- `~/Foundry/DOCTRINE.md` claims #14, #16, #18, #28, #38
+- `~/Foundry/conventions/four-tier-slm-substrate.md`
+- `~/Foundry/conventions/project-tetrad-discipline.md`
+- `~/Foundry/IT_SUPPORT_Nomenclature_Matrix_V8.md`
+- `~/Foundry/MEMO-2026-03-30-Development-Overview-V8.md` §4
+  (deployment catalog)
+- `~/Foundry/clones/project-bim/.claude/manifest.md` (parallel cluster
+  pattern; same Tetrad shape)
