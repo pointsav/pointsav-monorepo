@@ -1,16 +1,26 @@
 # NEXT.md — service-slm
 
-> Last updated: 2026-05-08 (Yo-Yo #1 live; service-content pipeline code-complete; weights upload remaining)
+> Last updated: 2026-05-11 (Yo-Yo #1 — vLLM GGUF arch fix committed; Packer rebuild in progress)
 > Read at session start. Update before session end so the next
 > session knows where to pick up.
 
 ---
 
-## Right now — SINGLE REMAINING BLOCKER: weights upload
+## Right now — PACKER REBUILD + VM REPROVISION IN PROGRESS
 
-Yo-Yo #1 is fully live. `yoyo-tier-b-1` in `woodfine-node-gcp-free/us-central1-b` is
-RUNNING at `34.171.38.79:9443`. nginx auth verified. Doorman connected (`has_yoyo=true`).
-The only thing preventing inference is the model weights file on the weights disk.
+**Critical fix landed (2026-05-11, commit `70c40ab`):**
+`transformers 5.8.0` GGUF architecture check fails for olmo2 (the llama.cpp arch name for
+OLMo3 32B Think). Fix: `vllm-weights-prep.sh` creates `/data/weights/model/` directory with
+`config.json` (model_type: olmo3) + GGUF symlink; `vllm.service` `--model` now points at the
+directory. Transformers reads config.json (bypasses GGUF arch check); vLLM discovers GGUF by
+scanning for `*.gguf` in the directory.
+
+**Packer image rebuild in progress** (CPU build machine; commit `e5073dc`):
+- Bakes the vLLM GGUF fix into new image family `slm-yoyo`
+- Build machine: `n2-standard-8` in `us-central1-b` (avoids L4 GPU stockout during build;
+  GPU not required for image creation — only needed at runtime)
+- Estimated ~25 min; background task `bs3jrv2a1`
+- After build: run `start-yoyo.sh --wait-ready=5400 --auto-snapshot` to provision new VM
 
 **Completed since 2026-05-07 (commits `0c0f5a2`–`b761d67`):**
 - [x] **GCP Project + VM live:** `woodfine-node-gcp-free`, `yoyo-tier-b-1` in `us-central1-b`.
