@@ -1,8 +1,7 @@
 [Unit]
 Description=Yo-Yo LoRA training watcher (apprenticeship corpus → adapter)
 Documentation=file:///var/log/yoyo-lora-training.log
-After=vllm.service
-Requires=vllm.service
+After=network-online.target
 
 [Service]
 Type=simple
