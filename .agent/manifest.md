@@ -63,6 +63,16 @@ clones:
     upstream: vendor/pointsav-monorepo
 trajectory_capture: pending
 
+software_footprint:
+  target_os: os-totebox
+  monorepo: pointsav-monorepo
+  branch: cluster/project-data
+  owns:
+    - service-fs/      # Immutable WORM ledger (Ring 1 ingest backbone)
+    - service-input/   # Generic document / file ingestion
+    - service-people/  # Identity Ledger
+    - service-email/   # Communications Ledger
+
 adapter_routing:
   trains:
     - cluster-project-data       # own cluster adapter (Ring 1 services + WORM ledger)
