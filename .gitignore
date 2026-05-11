@@ -1,0 +1,2 @@
+# Multi-agent session locks (ephemeral — not committed)
+.agent/engines/*/session.lock
