@@ -1,56 +1,67 @@
-@~/Foundry/AGENT.md
+@~/Foundry/CLAUDE.md
 
-# project-intelligence — Archive Guide
+# project-orchestration — Cluster Guide
 
-> **State:** active | **Last updated:** 2026-05-18
-> **Cluster manifest:** `.agent/manifest.md`
-> **Workspace AGENT.md takes precedence on conflict.**
+> **Scope:** Phases 1–3 of the Totebox Orchestration transition.
+> This cluster builds the vocabulary, tooling, and CommandCentre
+> that make the Foundry workspace a first-class Totebox Orchestration instance.
+
+Last updated: 2026-05-08.
 
 ---
 
-## Cluster mission
+## 1. Cluster mission
 
-See `.agent/manifest.md` for full mission statement.
+Implement the three-phase transition from the legacy Master/Root/Task
+session model to the Command/Totebox model. See the plan file at
+`/home/mathew/.claude/plans/before-we-do-that-humming-emerson.md`.
 
-## Tetrad
+**Phase 1 — Declare vocabulary (~2 hours):**
+- `CLAUDE.md` §11: Master → Command Session, Task → Totebox Session, Root → eliminated
+- `AGENT.md`: same vocabulary change
+- `bin/claude-role.sh`: Command / Totebox / error-on-vendor output
+- `MANIFEST.md`: "As a Totebox Orchestration" section
+- `vendor/content-wiki-documentation` user-guide: correct MBA registry claim
 
-See `.agent/manifest.md` `tetrad:` block for the canonical declaration
-across vendor / customer / deployment / wiki legs.
+**Phase 2 — Formalize (~1 day):**
+- Create `pairings.yaml` at workspace root
+- Add `slm_endpoint:` to all 13 cluster manifests
+- Create `slm/` dirs in all 13 clusters
+- Provision `project-source` + `project-woodfine` development archives
+- Update `PROJECT-CLONES.md`
 
-## At session start
+**Phase 3 — Instrument (~1 day):**
+- Write `bin/open-archive.sh` (reads manifest, sets env, invokes Claude)
+- Write `bin/list-archives.sh` (lists archives with tetrad + inbox status)
+- Scaffold `app-orchestration-command` v0.0.1 (this cluster's vendor leg)
 
-Per `~/Foundry/AGENT.md` § Session roles:
+---
 
-1. Confirm role: `~/Foundry/bin/foundry-role.sh` (Totebox Session expected)
-2. Write session lock: `.agent/engines/<engine-id>/session.lock`
-3. Read `.agent/manifest.md` — cluster mission + tetrad
-4. Read `.agent/inbox.md` — pending messages
-5. Read `~/Foundry/NOTAM.md` — workspace warnings
-6. Read `.agent/rules/*.md` if present (may be absent for newer archives)
+## 2. Repos in scope
 
-## Hard rules (workspace-level, do not duplicate; reference only)
+| Repo | Path in cluster | Upstream |
+|---|---|---|
+| `pointsav-monorepo` | `./pointsav-monorepo/` | `vendor/pointsav-monorepo` |
 
-- `~/Foundry/AGENT.md` § Hard rules — identity store immutable, never
-  chmod; preview before writing; edit in place (no _V2 files);
-  one session per repo; Bloomberg standard; BCSC posture; SYS-ADR-07/10/19.
-- `~/Foundry/CLAUDE.md` § Size discipline — per-archive CLAUDE.md ≤ 150 lines.
+Phase 2 may add `woodfine-fleet-deployment` for GUIDE leg work.
 
-## Commit + promote
+---
 
-- Commits via `~/Foundry/bin/commit-as-next.sh "<message>"`. Direct
-  `git commit` is blocked by the pre-commit gate (Phase 1.13).
-- Stage 6 promotion via `~/Foundry/bin/promote.sh` from the
-  Command Session, not from this Totebox.
+## 3. Branch
 
-## Artifacts produced here
+Feature branch: `cluster/project-orchestration` in `pointsav-monorepo`.
 
-For each piece of work, classify per `~/Foundry/conventions/artifact-classification.yaml`:
-TOPIC-* / GUIDE-* / COMMS-* → `.agent/drafts-outbound/` → project-editorial.
-DESIGN-* / ASSET-* → `.agent/drafts-outbound/` → project-design.
-BIM-* → `.agent/drafts-outbound/` → project-bim.
-CODE-* / SCRIPT-* / CONFIG-* / DATA-* → commit directly (self-contained).
+Phases 1 and 2 workspace changes (CLAUDE.md, AGENT.md, bin/, pairings.yaml)
+are **Command Session scope** — commit at `~/Foundry/` using
+`bin/commit-as-next.sh`. Do not commit workspace files from this cluster.
 
-## Conflicts
+Phase 3 Rust code (`app-orchestration-command/`) is Task Session scope —
+commit from this cluster using `bin/commit-as-next.sh`.
 
-If a workspace rule conflicts with anything stated here, **stop and surface
-the conflict via outbox to command session** — do not silently override.
+---
+
+## 4. Key references
+
+- Plan: `/home/mathew/.claude/plans/before-we-do-that-humming-emerson.md`
+- Cluster wiki draft pipeline: `~/Foundry/conventions/cluster-wiki-draft-pipeline.md`
+- TOPIC/GUIDE drafts already staged: `~/Foundry/.agent/drafts-outbound/topic-*.draft.md` + `guide-*.draft.md`
