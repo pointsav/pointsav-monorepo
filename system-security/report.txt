@@ -1,0 +1,245 @@
+# Initial Task (CapDL Initialiser) Details
+
+# IRQ Details
+
+# TCB Details
+	- TCB: 'tcb_monitor'
+		* IP: 0x200000
+		* SP: 0x7ffffffff000
+		* IPC Buffer: 0x205000
+		* Priority: 255
+		* CPU Affinity: 0
+		* Bound Objects:
+			-> VSpace: 'pml4_monitor'
+			-> IPC Buffer: 'frame_ipcbuf_monitor'
+			-> CSpace: 'cnode_monitor'
+			-> Scheduling Context: 'sched_context_monitor'
+
+	- TCB: 'tcb_system_security'
+		* IP: 0x200000
+		* SP: 0x7ffffffff000
+		* IPC Buffer: 0x257000
+		* Priority: 254
+		* CPU Affinity: 0
+		* Bound Objects:
+			-> CSpace: 'cnode_system_security'
+			-> VSpace: 'pml4_system_security'
+			-> IPC Buffer: 'frame_ipcbuf_system_security'
+			-> Fault Endpoint: 'ep_fault_monitor'
+			-> Scheduling Context: 'sched_context_system_security'
+			-> Notification: 'ntfn_system_security'
+
+	- TCB: 'tcb_system_watchdog'
+		* IP: 0x200000
+		* SP: 0x7ffffffff000
+		* IPC Buffer: 0x202000
+		* Priority: 200
+		* CPU Affinity: 0
+		* Bound Objects:
+			-> CSpace: 'cnode_system_watchdog'
+			-> VSpace: 'pml4_system_watchdog'
+			-> IPC Buffer: 'frame_ipcbuf_system_watchdog'
+			-> Fault Endpoint: 'ep_fault_monitor'
+			-> Scheduling Context: 'sched_context_system_watchdog'
+			-> Notification: 'ntfn_system_watchdog'
+
+
+# CNode Details
+	- CNode: 'cnode_monitor'
+		* Slot: 1
+			-> Object: 'ep_fault_monitor'
+			-> Rights: Read, Write, Grant
+			-> Badge: 0x0
+		* Slot: 2
+			-> Object: 'reply_monitor'
+		* Slot: 10
+			-> Object: 'tcb_system_security'
+		* Slot: 11
+			-> Object: 'tcb_system_watchdog'
+
+	- CNode: 'cnode_system_security'
+		* Slot: 1
+			-> Object: 'ntfn_system_security'
+			-> Rights: Read, Write
+			-> Badge: 0x0
+		* Slot: 2
+			-> Object: 'ep_fault_monitor'
+			-> Rights: Read, Write, Grant
+			-> Badge: 0x1
+		* Slot: 3
+			-> Object: 'pml4_system_security'
+		* Slot: 4
+			-> Object: 'reply_system_security'
+		* Slot: 20
+			-> Object: 'ntfn_system_watchdog'
+			-> Rights: Read, Write
+			-> Badge: 0x400
+		* Slot: 394
+			-> Object: 'ioports_0x3f8_system_security'
+
+	- CNode: 'cnode_system_watchdog'
+		* Slot: 1
+			-> Object: 'ntfn_system_watchdog'
+			-> Rights: Read, Write
+			-> Badge: 0x0
+		* Slot: 2
+			-> Object: 'ep_fault_monitor'
+			-> Rights: Read, Write, Grant
+			-> Badge: 0x2
+		* Slot: 3
+			-> Object: 'pml4_system_watchdog'
+		* Slot: 4
+			-> Object: 'reply_system_watchdog'
+		* Slot: 20
+			-> Object: 'ntfn_system_security'
+			-> Rights: Read, Write
+			-> Badge: 0x400
+
+
+# Architecture Specific Details
+	- x86 I/O Ports: 'ioports_0x3f8_system_security'
+		* Start Port: 0x3f8
+		* End Port: 0x3ff
+
+# Kernel Objects Details: ID, Type, Name
+	0 - CNode: 'cnode_monitor'
+	1 - CNode: 'cnode_system_security'
+	2 - CNode: 'cnode_system_watchdog'
+	3 - Page(4 KiB): 'frame_elf_monitor_000000000'
+	4 - Page(4 KiB): 'frame_elf_monitor_000000001'
+	5 - Page(4 KiB): 'frame_elf_monitor_000000002'
+	6 - Page(4 KiB): 'frame_elf_monitor_000000003'
+	7 - Page(4 KiB): 'frame_elf_monitor_000000004'
+	8 - Page(4 KiB): 'frame_elf_system_security_000000000'
+	9 - Page(4 KiB): 'frame_elf_system_security_000000001'
+	10 - Page(4 KiB): 'frame_elf_system_security_000000002'
+	11 - Page(4 KiB): 'frame_elf_system_security_000000003'
+	12 - Page(4 KiB): 'frame_elf_system_security_000000004'
+	13 - Page(4 KiB): 'frame_elf_system_security_000000005'
+	14 - Page(4 KiB): 'frame_elf_system_security_000000006'
+	15 - Page(4 KiB): 'frame_elf_system_security_000000007'
+	16 - Page(4 KiB): 'frame_elf_system_security_000000008'
+	17 - Page(4 KiB): 'frame_elf_system_security_000000009'
+	18 - Page(4 KiB): 'frame_elf_system_security_000000010'
+	19 - Page(4 KiB): 'frame_elf_system_security_000000011'
+	20 - Page(4 KiB): 'frame_elf_system_security_000000012'
+	21 - Page(4 KiB): 'frame_elf_system_security_000000013'
+	22 - Page(4 KiB): 'frame_elf_system_security_000000014'
+	23 - Page(4 KiB): 'frame_elf_system_security_000000015'
+	24 - Page(4 KiB): 'frame_elf_system_security_000000016'
+	25 - Page(4 KiB): 'frame_elf_system_security_000000017'
+	26 - Page(4 KiB): 'frame_elf_system_security_000000018'
+	27 - Page(4 KiB): 'frame_elf_system_security_000000019'
+	28 - Page(4 KiB): 'frame_elf_system_security_000000020'
+	29 - Page(4 KiB): 'frame_elf_system_security_000000021'
+	30 - Page(4 KiB): 'frame_elf_system_security_000000022'
+	31 - Page(4 KiB): 'frame_elf_system_security_000000023'
+	32 - Page(4 KiB): 'frame_elf_system_security_000000024'
+	33 - Page(4 KiB): 'frame_elf_system_security_000000025'
+	34 - Page(4 KiB): 'frame_elf_system_security_000000026'
+	35 - Page(4 KiB): 'frame_elf_system_security_000000027'
+	36 - Page(4 KiB): 'frame_elf_system_security_000000028'
+	37 - Page(4 KiB): 'frame_elf_system_security_000000029'
+	38 - Page(4 KiB): 'frame_elf_system_security_000000030'
+	39 - Page(4 KiB): 'frame_elf_system_security_000000031'
+	40 - Page(4 KiB): 'frame_elf_system_security_000000032'
+	41 - Page(4 KiB): 'frame_elf_system_security_000000033'
+	42 - Page(4 KiB): 'frame_elf_system_security_000000034'
+	43 - Page(4 KiB): 'frame_elf_system_security_000000035'
+	44 - Page(4 KiB): 'frame_elf_system_security_000000036'
+	45 - Page(4 KiB): 'frame_elf_system_security_000000037'
+	46 - Page(4 KiB): 'frame_elf_system_security_000000038'
+	47 - Page(4 KiB): 'frame_elf_system_security_000000039'
+	48 - Page(4 KiB): 'frame_elf_system_security_000000040'
+	49 - Page(4 KiB): 'frame_elf_system_security_000000041'
+	50 - Page(4 KiB): 'frame_elf_system_security_000000042'
+	51 - Page(4 KiB): 'frame_elf_system_security_000000043'
+	52 - Page(4 KiB): 'frame_elf_system_security_000000044'
+	53 - Page(4 KiB): 'frame_elf_system_security_000000045'
+	54 - Page(4 KiB): 'frame_elf_system_security_000000046'
+	55 - Page(4 KiB): 'frame_elf_system_security_000000047'
+	56 - Page(4 KiB): 'frame_elf_system_security_000000048'
+	57 - Page(4 KiB): 'frame_elf_system_security_000000049'
+	58 - Page(4 KiB): 'frame_elf_system_security_000000050'
+	59 - Page(4 KiB): 'frame_elf_system_security_000000051'
+	60 - Page(4 KiB): 'frame_elf_system_security_000000052'
+	61 - Page(4 KiB): 'frame_elf_system_security_000000053'
+	62 - Page(4 KiB): 'frame_elf_system_security_000000054'
+	63 - Page(4 KiB): 'frame_elf_system_security_000000055'
+	64 - Page(4 KiB): 'frame_elf_system_security_000000056'
+	65 - Page(4 KiB): 'frame_elf_system_security_000000057'
+	66 - Page(4 KiB): 'frame_elf_system_security_000000058'
+	67 - Page(4 KiB): 'frame_elf_system_security_000000059'
+	68 - Page(4 KiB): 'frame_elf_system_security_000000060'
+	69 - Page(4 KiB): 'frame_elf_system_security_000000061'
+	70 - Page(4 KiB): 'frame_elf_system_security_000000062'
+	71 - Page(4 KiB): 'frame_elf_system_security_000000063'
+	72 - Page(4 KiB): 'frame_elf_system_security_000000064'
+	73 - Page(4 KiB): 'frame_elf_system_security_000000065'
+	74 - Page(4 KiB): 'frame_elf_system_security_000000066'
+	75 - Page(4 KiB): 'frame_elf_system_security_000000067'
+	76 - Page(4 KiB): 'frame_elf_system_security_000000068'
+	77 - Page(4 KiB): 'frame_elf_system_security_000000069'
+	78 - Page(4 KiB): 'frame_elf_system_security_000000070'
+	79 - Page(4 KiB): 'frame_elf_system_security_000000071'
+	80 - Page(4 KiB): 'frame_elf_system_security_000000072'
+	81 - Page(4 KiB): 'frame_elf_system_security_000000073'
+	82 - Page(4 KiB): 'frame_elf_system_security_000000074'
+	83 - Page(4 KiB): 'frame_elf_system_security_000000075'
+	84 - Page(4 KiB): 'frame_elf_system_security_000000076'
+	85 - Page(4 KiB): 'frame_elf_system_security_000000077'
+	86 - Page(4 KiB): 'frame_elf_system_security_000000078'
+	87 - Page(4 KiB): 'frame_elf_system_security_000000079'
+	88 - Page(4 KiB): 'frame_elf_system_security_000000080'
+	89 - Page(4 KiB): 'frame_elf_system_security_000000081'
+	90 - Page(4 KiB): 'frame_elf_system_security_000000082'
+	91 - Page(4 KiB): 'frame_elf_system_security_000000083'
+	92 - Page(4 KiB): 'frame_elf_system_security_000000084'
+	93 - Page(4 KiB): 'frame_elf_system_security_000000085'
+	94 - Page(4 KiB): 'frame_elf_system_security_000000086'
+	95 - Page(4 KiB): 'frame_elf_system_watchdog_000000000'
+	96 - Page(4 KiB): 'frame_elf_system_watchdog_000000001'
+	97 - Page(4 KiB): 'frame_ipcbuf_monitor'
+	98 - Page(4 KiB): 'frame_ipcbuf_system_security'
+	99 - Page(4 KiB): 'frame_ipcbuf_system_watchdog'
+	100 - Page(4 KiB): 'frame_monitor_stack'
+	101 - Page(4 KiB): 'frame_mr_telemetry_shared_000000000'
+	102 - Page(4 KiB): 'frame_system_security_stack_000000000'
+	103 - Page(4 KiB): 'frame_system_security_stack_000000001'
+	104 - Page(4 KiB): 'frame_system_watchdog_stack_000000000'
+	105 - Page(4 KiB): 'frame_system_watchdog_stack_000000001'
+	106 - PageTable: 'pd_monitor_vaddr_0x0'
+	107 - PageTable: 'pd_monitor_vaddr_0x7fffc0000000'
+	108 - PageTable: 'pd_system_security_vaddr_0x0'
+	109 - PageTable: 'pd_system_security_vaddr_0x7fffc0000000'
+	110 - PageTable: 'pd_system_watchdog_vaddr_0x0'
+	111 - PageTable: 'pd_system_watchdog_vaddr_0x7fffc0000000'
+	112 - PageTable: 'pdpt_monitor_vaddr_0x0'
+	113 - PageTable: 'pdpt_monitor_vaddr_0x7f8000000000'
+	114 - PageTable: 'pdpt_system_security_vaddr_0x0'
+	115 - PageTable: 'pdpt_system_security_vaddr_0x7f8000000000'
+	116 - PageTable: 'pdpt_system_watchdog_vaddr_0x0'
+	117 - PageTable: 'pdpt_system_watchdog_vaddr_0x7f8000000000'
+	118 - PageTable: 'pml4_monitor'
+	119 - PageTable: 'pml4_system_security'
+	120 - PageTable: 'pml4_system_watchdog'
+	121 - PageTable: 'pt_monitor_vaddr_0x200000'
+	122 - PageTable: 'pt_monitor_vaddr_0x7fffffe00000'
+	123 - PageTable: 'pt_system_security_vaddr_0x200000'
+	124 - PageTable: 'pt_system_security_vaddr_0x4000000'
+	125 - PageTable: 'pt_system_security_vaddr_0x7fffffe00000'
+	126 - PageTable: 'pt_system_watchdog_vaddr_0x200000'
+	127 - PageTable: 'pt_system_watchdog_vaddr_0x4000000'
+	128 - PageTable: 'pt_system_watchdog_vaddr_0x7fffffe00000'
+	129 - TCB: 'tcb_monitor'
+	130 - TCB: 'tcb_system_security'
+	131 - TCB: 'tcb_system_watchdog'
+	132 - SchedContext: 'sched_context_monitor'
+	133 - SchedContext: 'sched_context_system_security'
+	134 - SchedContext: 'sched_context_system_watchdog'
+	135 - Notification: 'ntfn_system_security'
+	136 - Notification: 'ntfn_system_watchdog'
+	137 - Reply: 'reply_monitor'
+	138 - Reply: 'reply_system_security'
+	139 - Reply: 'reply_system_watchdog'
+	140 - Endpoint: 'ep_fault_monitor'
