@@ -22,10 +22,12 @@ ExecStart=/opt/vllm/bin/python3 -m vllm.entrypoints.openai.api_server \
     --port 8000 \
     --host 127.0.0.1 \
     --served-model-name Olmo-3-32B-Think Olmo-3-1125-32B-Think olmo-3-32b \
-    --max-model-len 8192 \
+    --max-model-len 4096 \
     --enable-lora \
     --max-loras 8 \
-    --max-lora-rank 64
+    --max-lora-rank 64 \
+    --enforce-eager \
+    --gpu-memory-utilization 0.97
 Restart=on-failure
 RestartSec=10
 TimeoutStartSec=600
