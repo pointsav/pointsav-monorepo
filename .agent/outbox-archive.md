@@ -1,4 +1,29 @@
 ---
+archived: 2026-05-11T00:00Z by command@claude-code (Gap 1 & Gap 2 actioned this session)
+actioned:
+  Gap 1: CPT Trigger Discipline → conventions/apprenticeship-substrate.md §12 (workspace commit 4e2095d)
+  Gap 2: LoRA training ratified → service-slm commits ed90f17 + d58a0bc (jennifer-datagraph-rebuild, nightly-run restructure, QLoRA lora-training.sh, corpus-threshold GCS dispatch, vllm-weights-prep Step 5/5, lora-training.service [Install], test-yoyo-flows Tests 10+11, provision.sh trl+datasets)
+---
+
+---
+from: task@project-intelligence
+to: master@claude-code
+re: build-once Yo-Yo platform live (We Own It); two Doctrine gaps to surface
+created: 2026-05-11T00:00:00Z
+priority: high
+---
+
+## What landed
+
+Yo-Yo #1 has been rebuilt as a build-once platform aligned with Doctrine claim #15 (OLMo 3 → LoRA library → continued-pretraining → PointSav-OLMo-N).
+
+**Phase 8 verification:** test-yoyo-flows.sh reports 6 PASS / 0 FAIL / 3 SKIP.
+
+[Full message archived — actioned 2026-05-11 Command Session.]
+
+— task@project-intelligence
+
+---
 archived: 2026-05-07T00:00Z by master@claude-code (Task #17 session sweep)
 ---
 
