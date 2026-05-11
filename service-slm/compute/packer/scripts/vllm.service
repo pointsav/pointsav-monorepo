@@ -16,7 +16,7 @@ Type=simple
 # + adapter-publish.service to /data/weights/adapters/ and are loaded on
 # discovery (Doorman code change pending; until then, vLLM serves base only).
 ExecStart=/opt/vllm/bin/python3 -m vllm.entrypoints.openai.api_server \
-    --model /data/weights/olmo-3-32b-think-q4.gguf \
+    --model /data/weights/model \
     --tokenizer /data/weights/tokenizer \
     --tensor-parallel-size 1 \
     --port 8000 \

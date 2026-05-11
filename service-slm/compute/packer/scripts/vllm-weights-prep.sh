@@ -54,6 +54,20 @@ GCS_SHA256_URL="gs://${GCS_BUCKET}/base-models/olmo-3-32b-think-q4.gguf.sha256"
 GCS_TOKENIZER_PREFIX="gs://${GCS_BUCKET}/base-models/tokenizer/"
 
 # ── Helpers ─────────────────────────────────────────────────────────────────
+
+# Create /data/weights/model/ — a directory containing config.json + a symlink
+# to the GGUF.  vLLM reads config.json from the directory path (avoiding the
+# transformers GGUF architecture check for olmo2/olmo3) and discovers the GGUF
+# by scanning for *.gguf files in the same directory.
+MODEL_DIR="${WEIGHTS_DIR}/model"
+setup_model_dir() {
+    mkdir -p "${MODEL_DIR}"
+    cp "${TOKENIZER_DIR}/config.json" "${MODEL_DIR}/" 2>/dev/null || true
+    cp "${TOKENIZER_DIR}/generation_config.json" "${MODEL_DIR}/" 2>/dev/null || true
+    ln -sf "${WEIGHTS_FILE}" "${MODEL_DIR}/$(basename "${WEIGHTS_FILE}")" 2>/dev/null || true
+    log "vLLM model directory ready at ${MODEL_DIR} (config.json + GGUF symlink)"
+}
+
 verify_sha256() {
     local file="$1" expected="$2"
     local actual
@@ -86,6 +100,7 @@ if [[ -n "${EXPECTED_SHA}" ]]; then
         log "WARN: tokenizer files not in GCS (older bootstrap?); proceeding without"
 
     log "Path A: complete. ${WEIGHTS_FILE} ready (sha256=${EXPECTED_SHA})."
+    setup_model_dir
     exit 0
 fi
 
@@ -197,6 +212,7 @@ fi
 # Final verification
 verify_sha256 "${WEIGHTS_FILE}" "${ACTUAL_SHA}"
 
+setup_model_dir
 log "Path B complete. Canonical Q4_K_M now in GCS; future boots take Path A."
 log "Final state: ${WEIGHTS_FILE} ready (sha256=${ACTUAL_SHA}), tokenizer at ${TOKENIZER_DIR}/."
 exit 0
