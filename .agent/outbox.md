@@ -1,9 +1,9 @@
 ---
 mailbox: outbox
-owner: task-project-system
-location: ~/Foundry/clones/project-system/.claude/
+owner: task@project-orchestration
+location: ~/Foundry/clones/project-orchestration/.agent/
 schema: foundry-mailbox-v1
 ---
 
-# Outbox — Task Claude on project-system cluster
+# Outbox — project-orchestration Task
 
