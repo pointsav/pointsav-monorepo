@@ -1,0 +1,23 @@
+{
+  "name": "workplace-proforma",
+  "version": "0.1.0",
+  "description": "Sovereign local-first spreadsheet for institutional analysis — PointSav Digital Systems",
+  "author": "PointSav Digital Systems",
+  "licence": "EUPL-1.2",
+  "private": true,
+  "scripts": {
+    "dev": "tauri dev",
+    "build": "tauri build",
+    "tauri": "tauri"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@tauri-apps/cli": "1.6.3",
+    "@tauri-apps/api": "1.6.0"
+  },
+  "_notes": {
+    "platform": "Tauri v1.6.x is used for macOS 10.13 High Sierra compatibility. Tauri v2 requires macOS 10.15+. When the development machine is upgraded, bump @tauri-apps/cli and @tauri-apps/api to 2.x and update src-tauri/Cargo.toml accordingly. The frontend code is identical between v1 and v2.",
+    "linux-build": "On Linux (production sovereign target), Tauri v2 is preferred. To build with v2 on Linux: npm install @tauri-apps/cli@2 @tauri-apps/api@2 and update src-tauri/Cargo.toml tauri dependency to 2.x",
+    "engine": "Phase 1 MVP ships with a minimal JS formula engine sufficient for arithmetic, cell references, ranges, and common functions (SUM, AVERAGE, MIN, MAX, COUNT, IF, ROUND, PMT, IRR, NPV). Phase 2 replaces this with IronCalc or Formualizer via Rust IPC for full Excel-compatible function coverage."
+  }
+}

@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Network Ledger | Woodfine Management Corp.</title>
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.css" />
+    <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xterm-addon-webgl@0.16.0/lib/xterm-addon-webgl.js"></script>
+
+    <style>
+        /* DS-ADR-08: INSTITUTIONAL BRUTALISM (ANODIZED PALETTE) */
+        :root {
+            --bg-color: #F4F4F5;       
+            --text-color: #18181B;     
+            --border-color: #27272A;   
+            --accent-color: #991B1B;   
+            --terminal-bg: #1C1C1E;    
+            --terminal-text: #4ADE80;  
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Courier New', Courier, monospace; }
+
+        body { background-color: var(--bg-color); color: var(--text-color); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+
+        header { display: flex; justify-content: space-between; align-items: flex-start; padding: 1.5rem 2.5rem; border-bottom: 2px solid var(--border-color); background-color: var(--bg-color); text-transform: uppercase; font-weight: bold; letter-spacing: -0.5px; }
+        .header-left h1 { font-size: 2.2rem; margin-bottom: 0.25rem; color: var(--text-color); letter-spacing: -1px; }
+        .header-left .subtitle { font-size: 0.85rem; font-weight: normal; color: #52525B; }
+        .header-left .sys-clock { font-size: 0.8rem; color: #16A34A; margin-top: 1rem; font-weight: bold; }
+        .vendor-customer { font-size: 0.85rem; text-align: right; color: #3F3F46; }
+
+        nav { display: flex; width: 100%; border-bottom: 2px solid var(--border-color); background-color: #E4E4E7; overflow-x: auto; }
+        .nav-btn { flex: 1; white-space: nowrap; background: none; border: none; border-right: 1px solid var(--border-color); padding: 0.85rem 1.5rem; font-size: 0.85rem; font-weight: bold; cursor: pointer; text-align: center; color: var(--text-color); transition: background-color 0.1s, color 0.1s; }
+        .nav-btn:last-child { border-right: none; }
+        .nav-btn:hover { background-color: #D4D4D8; }
+        .nav-btn.active { background-color: var(--border-color); color: #FAFAFA; }
+
+        main { flex-grow: 1; position: relative; background-color: var(--bg-color); }
+        .cartridge { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; padding: 2.5rem; overflow-y: auto; }
+        .cartridge.active { display: block; }
+        h2 { margin-bottom: 1.5rem; border-bottom: 1px solid #D4D4D8; padding-bottom: 0.5rem; color: var(--border-color); }
+
+        table { width: 100%; border-collapse: collapse; background-color: #FFFFFF; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        th, td { border: 1px solid #D4D4D8; padding: 0.85rem; text-align: left; font-size: 0.85rem; }
+        th { background-color: var(--border-color); color: #FAFAFA; text-transform: uppercase; font-weight: 600; }
+        .status-live { font-weight: bold; color: #16A34A; } 
+        .status-offline { font-weight: bold; color: var(--accent-color); }
+        .crypto-hash { font-family: monospace; color: #71717A; font-size: 0.75rem; letter-spacing: 0.5px; }
+
+        #f8-terminal { background-color: var(--terminal-bg); padding: 1.5rem; flex-direction: column; }
+        #f8-terminal.active { display: flex; }
+        .terminal-header { color: #A1A1AA; margin-bottom: 1rem; border-bottom: 1px solid #3F3F46; padding-bottom: 1rem; line-height: 1.5; flex-shrink: 0; }
+        #terminal-container { flex-grow: 1; width: 100%; overflow: hidden; }
+        
+        .xterm-viewport::-webkit-scrollbar { width: 8px; }
+        .xterm-viewport::-webkit-scrollbar-track { background: var(--terminal-bg); }
+        .xterm-viewport::-webkit-scrollbar-thumb { background: #3F3F46; border-radius: 4px; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-left">
+            <h1>NETWORK LEDGER</h1>
+            <div class="subtitle">POINTSAV PRIVATE NETWORK (PPN) MESH | INFRASTRUCTURE GATEWAY</div>
+            <div class="sys-clock" id="sys-clock">SYS.TIME: --:--:-- UTC</div>
+        </div>
+        <div class="vendor-customer">
+            <div style="color: #18181B; font-weight: bold;">CUSTOMER: WOODFINE MANAGEMENT CORP.</div>
+            <div>VENDOR: POINTSAV DIGITAL SYSTEMS</div>
+            <div style="margin-top: 4px; font-size: 0.75rem; color: #16A34A;">AUTH: FIDUCIARY ROOT</div>
+        </div>
+    </header>
+
+    <nav id="cartridge-nav">
+        <button class="nav-btn" data-target="f1-help">[F1] HELP</button>
+        <button class="nav-btn" data-target="f2-infrastructure">[F2] INFRASTRUCTURE</button>
+        <button class="nav-btn" data-target="f3-totebox">[F3] TOTEBOX ARCHIVES</button>
+        <button class="nav-btn" data-target="f4-integration">[F4] INTEGRATION</button>
+        <button class="nav-btn" data-target="f5-mediakit">[F5] MEDIAKIT</button>
+        <button class="nav-btn" data-target="f6-privategit">[F6] PRIVATEGIT</button>
+        <button class="nav-btn" data-target="f7-radar">[F7] LIVE RADAR</button>
+        <button class="nav-btn active" data-target="f8-terminal" style="background-color: var(--terminal-bg); color: var(--terminal-text); border-color: var(--border-color);">[F8] TERMINAL</button>
+    </nav>
+
+    <main>
+        <div id="f1-help" class="cartridge"><h2>OPERATIONAL PROTOCOLS</h2><p style="color: #52525B;">Awaiting Linguistic Protocol Injection...</p></div>
+        <div id="f2-infrastructure" class="cartridge">
+            <h2>MACRO-FLEET LEDGER</h2>
+            <table>
+                <tr><th>Substrate ID</th><th>Classification</th><th>Mesh IP</th><th>State</th></tr>
+                <tr><td>fleet-infrastructure-cloud</td><td>GCP Relay Hub</td><td>35.199.187.57</td><td class="status-live">LIVE / ANCHORED</td></tr>
+                <tr><td>fleet-infrastructure-leased</td><td>Laptop B (Secure VPN Hub)</td><td>10.50.0.1</td><td class="status-live">LIVE / ARMED</td></tr>
+                <tr><td>fleet-infrastructure-onprem</td><td>Laptop A (Edge Processor)</td><td>10.50.0.2</td><td class="status-live">LIVE / ROUTING</td></tr>
+            </table>
+        </div>
+        <div id="f3-totebox" class="cartridge">
+            <h2>TOTEBOX EDGE MATRIX (CRYPTOGRAPHIC ATTESTATION)</h2>
+            <table>
+                <tr><th>LXC Container ID</th><th>Host Substrate</th><th>Internal IP</th><th>SHA-256 Attestation Fingerprint</th><th>Fiduciary State</th></tr>
+                <tr><td>totebox-archive-01</td><td>10.50.0.2</td><td>10.218.10.10</td><td class="crypto-hash">e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855</td><td class="status-live">SEALED / VERIFIED</td></tr>
+                <tr><td>totebox-archive-02</td><td>10.50.0.2</td><td>10.218.10.11</td><td class="crypto-hash">8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92</td><td class="status-live">SEALED / VERIFIED</td></tr>
+                <tr><td>totebox-archive-03</td><td>10.50.0.2</td><td>10.218.10.12</td><td class="crypto-hash">b1674191a88ec5cdd733e4240a81803105dc412d6c6708d53ab94fc248f4f553</td><td class="status-live">SEALED / VERIFIED</td></tr>
+            </table>
+        </div>
+        <div id="f4-integration" class="cartridge"><h2>SYSTEM INTEGRATION</h2><p style="color: #52525B;">Awaiting API Gateway Telemetry...</p></div>
+        <div id="f5-mediakit" class="cartridge"><h2>MEDIAKIT ASSETS</h2><p style="color: #52525B;">Awaiting Node Sync...</p></div>
+        <div id="f6-privategit" class="cartridge"><h2>PRIVATEGIT VAULT</h2><p style="color: #52525B;">Awaiting Git Protocol Daemon...</p></div>
+        <div id="f7-radar" class="cartridge"><h2>MESH RADAR</h2><p style="color: #52525B;">WireGuard Tunnel Latency: 43ms (Average)</p></div>
+
+        <div id="f8-terminal" class="cartridge active">
+            <div class="terminal-header">
+                [SYSTEM] POINT-SAV PRIVATE NETWORK (PPN) SECURE SHELL<br>
+                [WARNING] All infrastructure configuration MUST execute through this interface. Wizards are disabled.
+            </div>
+            <div id="terminal-container"></div>
+        </div>
+    </main>
+
+    <script>
+        // LIVE SYSTEM CLOCK (UTC)
+        function updateClock() {
+            const now = new Date();
+            const utcString = now.toISOString().substring(11, 19);
+            document.getElementById('sys-clock').textContent = `SYS.TIME: ${utcString} UTC`;
+        }
+        setInterval(updateClock, 1000); updateClock();
+
+        // ----------------------------------------------------
+        // THE LEAPFROG 2030 ENGINE: ZERO-COPY MEMORY + WEBPGU/WEBGL
+        // ----------------------------------------------------
+        const term = new Terminal({
+            theme: { background: '#1C1C1E', foreground: '#4ADE80', cursor: '#FAFAFA' },
+            fontFamily: "'Courier New', Courier, monospace",
+            fontSize: 14,
+            cursorBlink: true,
+            allowProposedApi: true 
+        });
+
+        // Inject the WebGL Hardware Accelerator
+        const webglAddon = new WebglAddon.WebglAddon();
+        term.loadAddon(webglAddon);
+        
+        const fitAddon = new FitAddon.FitAddon();
+        term.loadAddon(fitAddon);
+        term.open(document.getElementById('terminal-container'));
+        fitAddon.fit();
+
+        term.writeln('\x1b[38;5;247m[SYSTEM] Initializing PointSav Hardware-Accelerated Interface...\x1b[0m');
+        term.writeln('\x1b[38;5;247m[SYSTEM] Bypassing string parsers. Engaging Zero-Copy Binary Frame Router...\x1b[0m');
+
+        const protocol = (location.protocol === 'https:') ? 'wss://' : 'ws://';
+        const wsUrl = protocol + location.host + '/terminal/ws';
+        const ws = new WebSocket(wsUrl);
+        
+        // MATHEMATICAL LOCK: Forcing the socket to bypass strings and use raw CPU bytes
+        ws.binaryType = 'arraybuffer';
+
+        ws.onopen = () => {
+            term.writeln('\x1b[1;32m[SUCCESS] Kernel connection established. GPU Pipeline engaged.\x1b[0m\r\n');
+        };
+
+        // INCOMING BINDING: Read raw bytes from Rust directly into Terminal memory
+        ws.onmessage = (event) => {
+            if (event.data instanceof ArrayBuffer) {
+                term.write(new Uint8Array(event.data));
+            } else {
+                term.write(event.data); // Fallback for pure text frames
+            }
+        };
+
+        // OUTGOING BINDING: Read raw keystrokes and fire them to Rust as binary payloads
+        term.onData(data => {
+            if (ws.readyState === WebSocket.OPEN) {
+                ws.send(new TextEncoder().encode(data));
+            }
+        });
+
+        ws.onerror = () => { term.writeln('\r\n\x1b[1;31m[FAULT] Connection refused by host. Verify Edge Daemon.\x1b[0m'); };
+        ws.onclose = () => { term.writeln('\r\n\x1b[1;31m[SYSTEM] Terminal connection severed.\x1b[0m'); };
+
+        // ----------------------------------------------------
+        // BULLETPROOF NAVIGATION LOGIC (UNCHANGED)
+        // ----------------------------------------------------
+        function switchCartridge(targetId) {
+            try {
+                document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+                document.querySelectorAll('.cartridge').forEach(cart => cart.classList.remove('active'));
+
+                const targetBtn = document.querySelector(`[data-target="${targetId}"]`);
+                const targetCartridge = document.getElementById(targetId);
+                
+                if (targetBtn && targetCartridge) {
+                    targetBtn.classList.add('active');
+                    targetCartridge.classList.add('active');
+                    
+                    if (targetId === 'f8-terminal') {
+                        setTimeout(() => { fitAddon.fit(); term.focus(); }, 10);
+                    }
+                }
+            } catch (err) { console.error("Navigation Override Error:", err); }
+        }
+
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => { 
+                e.preventDefault();
+                switchCartridge(btn.getAttribute('data-target')); 
+            });
+        });
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key && e.key.match(/^F[1-8]$/)) {
+                e.preventDefault(); 
+                e.stopPropagation();
+                const targetMap = { 'F1': 'f1-help', 'F2': 'f2-infrastructure', 'F3': 'f3-totebox', 'F4': 'f4-integration', 'F5': 'f5-mediakit', 'F6': 'f6-privategit', 'F7': 'f7-radar', 'F8': 'f8-terminal' };
+                switchCartridge(targetMap[e.key]);
+            }
+        }, true);
+
+        term.attachCustomKeyEventHandler((e) => {
+            if (e.key && e.key.match(/^F[1-8]$/)) {
+                if (e.type === 'keydown') {
+                    const targetMap = { 'F1': 'f1-help', 'F2': 'f2-infrastructure', 'F3': 'f3-totebox', 'F4': 'f4-integration', 'F5': 'f5-mediakit', 'F6': 'f6-privategit', 'F7': 'f7-radar', 'F8': 'f8-terminal' };
+                    switchCartridge(targetMap[e.key]);
+                }
+                return false; 
+            }
+            return true;
+        });
+
+        window.addEventListener('resize', () => { fitAddon.fit(); });
+    </script>
+</body>
+</html>

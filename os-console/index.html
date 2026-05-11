@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Command Ledger | Woodfine Management Corp.</title>
+    <style>
+        /* DS-ADR-08: Institutional Brutalism (Woodfine Light Theme) */
+        :root {
+            --bg-deep: #F7F9FA;
+            --bg-panel: #FFFFFF;
+            --text-primary: #111827;
+            --text-muted: #6B7280;
+            --border-dim: rgba(17, 24, 39, 0.15);
+            --border-heavy: #111827;
+            --accent-woodfine: #164679;
+            --accent-secure: #54924E;
+            --accent-hover: #E9ECEF;
+            --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            --font-mono: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+        }
+
+        body {
+            margin: 0;
+            font-family: var(--font-sans);
+            background-color: var(--bg-deep);
+            color: var(--text-primary);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* THE SOVEREIGNTY AXIS (SIDEBAR) */
+        .sidebar {
+            width: 320px;
+            background-color: var(--bg-panel);
+            border-right: 1px solid var(--border-heavy);
+            display: flex;
+            flex-direction: column;
+            z-index: 100;
+            box-shadow: 2px 0 15px rgba(0,0,0,0.03);
+        }
+
+        .brand-header {
+            padding: 30px 25px;
+            border-bottom: 1px solid var(--border-dim);
+            background-color: var(--bg-deep);
+        }
+
+        .brand-name {
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            color: var(--accent-woodfine);
+        }
+
+        .brand-sub {
+            font-size: 11px;
+            font-family: var(--font-mono);
+            color: var(--text-muted);
+            margin-top: 8px;
+        }
+
+        .mba-status {
+            padding: 15px 25px;
+            border-bottom: 1px solid var(--border-dim);
+            background-color: var(--bg-panel);
+        }
+
+        .mba-label {
+            font-size: 10px;
+            font-family: var(--font-mono);
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+
+        .mba-key {
+            font-family: var(--font-mono);
+            font-size: 12px;
+            color: var(--accent-secure);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .vault-section {
+            padding: 25px;
+            flex-grow: 1;
+            overflow-y: auto;
+        }
+
+        .section-title {
+            font-size: 11px;
+            font-family: var(--font-mono);
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border-dim);
+            padding-bottom: 5px;
+        }
+
+        .totebox-item {
+            padding: 12px 15px;
+            border: 1px solid var(--border-dim);
+            margin-bottom: 10px;
+            background: var(--bg-deep);
+            cursor: default;
+        }
+
+        .totebox-tag {
+            font-size: 10px;
+            font-family: var(--font-mono);
+            color: var(--accent-woodfine);
+            margin-bottom: 4px;
+            font-weight: 600;
+        }
+
+        .totebox-name {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        /* THE AGGREGATION PLANE (MAIN CONTENT) */
+        .main-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--bg-deep);
+        }
+
+        .f-keys {
+            display: flex;
+            background-color: var(--bg-panel);
+            border-bottom: 1px solid var(--border-heavy);
+        }
+
+        .f-key {
+            padding: 18px 25px;
+            font-family: var(--font-mono);
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            border-right: 1px solid var(--border-dim);
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: all 0.2s ease;
+        }
+
+        .f-key:hover {
+            color: var(--accent-woodfine);
+            background-color: var(--accent-hover);
+        }
+
+        .f-key.active {
+            color: var(--accent-woodfine);
+            border-bottom-color: var(--accent-woodfine);
+            background-color: var(--bg-deep);
+        }
+
+        /* DYNAMIC VIEWPORT */
+        #console-viewport {
+            padding: 50px;
+            overflow-y: auto;
+            flex-grow: 1;
+        }
+
+        /* CARTRIDGE STYLES (Loaded dynamically) */
+        .plugin-container { width: 100%; max-width: 1000px; }
+        .page-title { font-size: 28px; font-weight: 300; color: var(--text-primary); margin: 0 0 10px 0; letter-spacing: -0.5px; }
+        .page-subtitle { color: var(--text-muted); font-size: 14px; margin-bottom: 40px; font-family: var(--font-mono); }
+        .data-card { border: 1px solid var(--border-dim); padding: 25px; background: var(--bg-panel); border-top: 3px solid var(--text-primary); box-shadow: 0 4px 6px rgba(0,0,0,0.02); margin-bottom: 20px;}
+        .data-label { font-family: var(--font-mono); font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; margin-bottom: 15px; }
+        
+        .fade-in { animation: fadeIn 0.3s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        .system-footer {
+            padding: 20px 25px;
+            border-top: 1px solid var(--border-heavy);
+            font-family: var(--font-mono);
+            font-size: 10px;
+            color: var(--text-muted);
+            display: flex;
+            justify-content: space-between;
+            background-color: var(--bg-panel);
+        }
+        
+        .mesh-status { color: var(--accent-secure); font-weight: 600; display: flex; align-items: center; gap: 6px;}
+    </style>
+</head>
+<body>
+
+    <nav class="sidebar">
+        <div class="brand-header">
+            <div class="brand-name">Woodfine Management</div>
+            <div class="brand-sub">Sovereign Command Ledger</div>
+        </div>
+
+        <div class="mba-status">
+            <div class="mba-label">HARDWARE AUTHORIZATION</div>
+            <div class="mba-key">
+                <div class="status-dot"></div> MBA LINK ACTIVE [0x8F92...a1b]
+            </div>
+            <div class="mba-label" style="margin-top: 8px;">PAIRED VAULTS: 6</div>
+        </div>
+
+        <div class="vault-section">
+            <div class="section-title">Physical Archives (LXC)</div>
+            
+            <div class="totebox-item">
+                <div class="totebox-tag">[os-totebox]</div>
+                <div class="totebox-name">cluster-totebox-personnel-1</div>
+            </div>
+            <div class="totebox-item">
+                <div class="totebox-tag">[os-totebox]</div>
+                <div class="totebox-name">cluster-totebox-personnel-2</div>
+            </div>
+            <div class="totebox-item">
+                <div class="totebox-tag">[os-totebox]</div>
+                <div class="totebox-name">cluster-totebox-personnel-3</div>
+            </div>
+        </div>
+
+        <div class="system-footer" style="border-top: 1px solid var(--border-dim);">
+            <span>Powered by PointSav Digital Systems™</span>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <header class="f-keys" id="f-key-nav">
+            <div class="f-key" data-key="F1" data-route="../app-console-help/view-help.html">[F1] Help</div>
+            <div class="f-key" data-key="F2" data-route="../app-console-people/view-people.html">[F2] People</div>
+            <div class="f-key" data-key="F3" data-route="../app-console-email/view-email.html">[F3] Email</div>
+            <div class="f-key" data-key="F4" data-route="../app-console-content/view-content.html">[F4] Content</div>
+            <div class="f-key" data-key="F5" data-route="../app-console-minutebook/view-minutebook.html">[F5] Minutebook</div>
+            <div class="f-key" data-key="F6" data-route="../app-console-bookkeeper/view-bookkeeper.html">[F6] Bookkeeper</div>
+            <div class="f-key" data-key="F12" data-route="../app-console-input/view-input.html" style="margin-left: auto;">[F12] Input Machine</div>
+        </header>
+
+        <div id="console-viewport">
+            </div>
+        
+        <div class="system-footer">
+            <span>&copy; 2026 Woodfine Management Corp.</span>
+            <span class="mesh-status"><div class="status-dot"></div> CYBERPHYSICAL MESH: SECURE</span>
+        </div>
+    </main>
+
+    <script>
+        const viewport = document.getElementById('console-viewport');
+        const fKeys = document.querySelectorAll('.f-key');
+
+        // The Engine: Fetch HTML Cartridge and Inject
+        async function loadCartridge(route, element) {
+            // Update UI State
+            fKeys.forEach(el => el.classList.remove('active'));
+            if (element) element.classList.add('active');
+            
+            viewport.innerHTML = '<div style="font-family: var(--font-mono); font-size: 12px; color: var(--text-muted);">Mounting Cartridge...</div>';
+
+            try {
+                // Fetch the native HTML fragment
+                const response = await fetch(route);
+                if (!response.ok) throw new Error('Cartridge missing or offline.');
+                const html = await response.text();
+                
+                // Inject the fragment
+                viewport.innerHTML = html;
+            } catch (error) {
+                viewport.innerHTML = `<div style="color: #ED1B2F; font-family: var(--font-mono); font-size: 12px;">[ERROR] Vault isolated or offline. Cannot mount ${route}.</div>`;
+            }
+        }
+
+        // Mouse click execution
+        fKeys.forEach(key => {
+            key.addEventListener('click', () => {
+                loadCartridge(key.dataset.route, key);
+            });
+        });
+
+        // Hardware Keyboard Intercept (The Fiduciary Interface)
+        window.addEventListener('keydown', (e) => {
+            // Prevent default browser behavior for these F-keys (like saving, opening dev tools)
+            if (['F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F12'].includes(e.key)) {
+                e.preventDefault(); 
+                const targetKey = Array.from(fKeys).find(el => el.dataset.key === e.key);
+                if (targetKey) {
+                    loadCartridge(targetKey.dataset.route, targetKey);
+                }
+            }
+        });
+
+        // Mount default landing view
+        viewport.innerHTML = '<div class="plugin-container fade-in"><h1 class="page-title">Sovereign Command Ledger</h1><div class="page-subtitle">Awaiting Input. Press an F-Key or select a module above to mount a physical vault.</div></div>';
+    </script>
+</body>
+</html>

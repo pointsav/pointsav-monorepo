@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sovereign Command Ledger | PointSav Digital Systems</title>
+    <style>
+        :root {
+            --ps-canvas: #09090B;
+            --ps-text: #FFFFFF;
+            --ps-muted: #A3A3A3;
+            --ps-accent: #869FB9;
+            --ps-alert: #F03F50;
+            --font-mono: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background-color: var(--ps-canvas); color: var(--ps-text); font-family: var(--font-mono); font-size: 0.875rem; line-height: 1.5; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        #header { border-bottom: 1px solid var(--ps-muted); padding: 16px; display: flex; justify-content: space-between; text-transform: uppercase; letter-spacing: 0.05em; }
+        #terminal-output { flex-grow: 1; padding: 16px; overflow-y: auto; white-space: pre-wrap; word-wrap: break-word; }
+        .line { margin-bottom: 8px; }
+        .line-system { color: var(--ps-muted); }
+        .line-user { color: var(--ps-text); }
+        .line-success { color: var(--ps-accent); }
+        .line-alert { color: var(--ps-alert); }
+        .json-block { color: var(--ps-accent); padding-left: 16px; }
+        #input-container { display: flex; padding: 16px; border-top: 1px solid var(--ps-muted); background: var(--ps-canvas); }
+        #prompt-prefix { color: var(--ps-accent); margin-right: 8px; white-space: pre; }
+        #cmd-input { flex-grow: 1; background: transparent; border: none; color: var(--ps-text); font-family: var(--font-mono); font-size: 0.875rem; outline: none; }
+    </style>
+</head>
+<body>
+    <div id="header">
+        <div>[F8] MESH COMMAND LEDGER</div>
+        <div>CONNECTION: SECURE (10.50.0.x)</div>
+    </div>
+    <div id="terminal-output">
+        <div class="line line-system">PointSav Digital Systems - Private Network Gateway</div>
+        <div class="line line-system">Initializing Fiduciary Translation Matrix... OK.</div>
+        <div class="line line-system">Ready for semantic input.</div>
+    </div>
+    <div id="input-container">
+        <span id="prompt-prefix">operator@woodfine-mesh:~#</span>
+        <input type="text" id="cmd-input" autocomplete="off" spellcheck="false" autofocus />
+    </div>
+    <script>
+        const output = document.getElementById('terminal-output');
+        const input = document.getElementById('cmd-input');
+        const prefix = document.getElementById('prompt-prefix');
+        let currentState = 'INTENT';
+        let pendingPayload = null;
+
+        function printLine(text, className = 'line-user') {
+            const div = document.createElement('div');
+            div.className = `line ${className}`;
+            div.textContent = text;
+            output.appendChild(div);
+            output.scrollTop = output.scrollHeight;
+        }
+
+        input.addEventListener('keydown', async (e) => {
+            if (e.key === 'Enter') {
+                const val = input.value.trim();
+                if (!val) return;
+                input.value = '';
+                printLine(`> ${val}`);
+
+                if (currentState === 'INTENT') {
+                    printLine('[SYSTEM] Transmitting intent to Semantic Router...', 'line-system');
+                    input.disabled = true;
+                    try {
+                        const res = await fetch('/api/translate', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ raw_input: val })
+                        });
+                        const data = await res.json();
+                        if (data.status === 'PENDING_AUTHORIZATION') {
+                            pendingPayload = data.data;
+                            printLine('[PROPOSED MACHINE PAYLOAD]:', 'line-system');
+                            printLine(JSON.stringify(pendingPayload, null, 2), 'json-block');
+                            printLine('[FIDUCIARY GATEWAY] Verify translation. Type EXECUTE to broadcast, or ABORT to cancel.', 'line-alert');
+                            currentState = 'AUTHORIZE';
+                            prefix.textContent = '[AUTHORIZE]~#';
+                        } else {
+                            printLine(`[ERROR] ${data.message}`, 'line-alert');
+                        }
+                    } catch (err) {
+                        printLine(`[FATAL] Network rejection. Gateway unreachable.`, 'line-alert');
+                    }
+                    input.disabled = false; input.focus();
+                } else if (currentState === 'AUTHORIZE') {
+                    if (val === 'EXECUTE' && pendingPayload) {
+                        printLine('[SYSTEM] Authorization verified. Injecting to UDP Mesh...', 'line-system');
+                        input.disabled = true;
+                        try {
+                            const res = await fetch('/api/authorize', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(pendingPayload)
+                            });
+                            const data = await res.json();
+                            if (data.status === 'SUCCESS') {
+                                printLine(`[SUCCESS] ${data.message} [TS: ${data.data.timestamp}]`, 'line-success');
+                            } else {
+                                printLine(`[FATAL] ${data.message}`, 'line-alert');
+                            }
+                        } catch (err) {
+                            printLine(`[FATAL] Mesh injection failed.`, 'line-alert');
+                        }
+                    } else {
+                        printLine('[SYSTEM] Execution aborted by operator.', 'line-system');
+                    }
+                    currentState = 'INTENT'; pendingPayload = null;
+                    prefix.textContent = 'operator@woodfine-mesh:~#';
+                    input.disabled = false; input.focus();
+                }
+            }
+        });
+    </script>
+</body>
+</html>

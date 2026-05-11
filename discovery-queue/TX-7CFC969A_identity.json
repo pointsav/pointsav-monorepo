@@ -1,0 +1,10 @@
+{
+  "extracted_signals": {
+    "sender": "Thomas Munro <thomas.munro@gmail.com>",
+    "subject": "Re: pg_waldump: support decoding of WAL inside tarfile"
+  },
+  "source_artifact": "VAULT_INGRESS_PostgresSQL_E6AF0F84.eml",
+  "status": "AWAITING_HITL_CHECKOUT",
+  "timestamp": "2026-03-29T04:52:04.045829564+00:00",
+  "transaction_id": "7CFC969A"
+}
