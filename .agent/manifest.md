@@ -15,6 +15,13 @@ input_shape: totebox-orchestration-transition-phases-1-3
 slm_endpoint: http://localhost:8011
 module_id: orchestration
 
+software_footprint:
+  target_os: os-orchestration   # planned; ~/Foundry itself will run on this OS (P1.4/P1.5)
+  monorepo: pointsav-monorepo
+  branch: cluster/project-orchestration
+  owns:
+    - app-orchestration-command/  # user-facing aggregator (scaffolding pending Task session)
+
 # Cluster mission:
 # Implement the Totebox Orchestration transition — Phases 1, 2, and 3.
 #
