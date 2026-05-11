@@ -1,36 +1,35 @@
 ---
-log: trajectory
-owner: task-project-proofreader
-location: ~/Foundry/clones/project-proofreader/.claude/
 schema: foundry-trajectory-log-v1
-created: 2026-04-27
+owner: task-project-orgcharts
+created: 2026-04-26
 ---
 
-# Trajectory log — project-proofreader cluster
+# Trajectory log — project-orgcharts cluster
 
-Per Doctrine §XV and `conventions/trajectory-substrate.md` §2.
-Session trajectory capture seed.
-
----
-
-*(no trajectory entries yet — cluster provisioned 2026-04-27)*
+Session-level trajectory capture per Doctrine §XV + `conventions/
+trajectory-substrate.md` §2. L1 hook (post-commit) installed in all
+sub-clones.
 
 ---
 
-## 2026-05-03 — Tetrad Ratification & HTTPS Live-Up (Master)
+## 2026-04-26 — Cluster provisioning (Master)
+
+Master Claude provisioned the cluster (multi-clone N=3).
+Sub-clones: pointsav-design-system, pointsav-media-assets, woodfine-media-assets.
+Operator: Jennifer Woodfine.
+
+---
+
+## 2026-05-03 — Tetrad Ratification & N=3 Decision (Master)
 
 Master Claude ratified the Project Tetrad upgrade (Doctrine claim #37).
 Status audit:
-1. Vendor leg: Active (HEAD eb0ffd3; service-proofreader binary live).
-2. Customer leg: Active (gateway-orchestration-proofreader/ catalog present in pointsav-fleet-deployment).
-3. Deployment leg: Active (HTTPS live at https://proofreader.pointsav.com).
-   - Decommissioned internal woodfinegroup.com instance 2026-05-06.
-   - Migrated from customer-tier woodfine-fleet-deployment to vendor-tier pointsav-fleet-deployment.
-4. Wiki leg: Active (3/5 TOPIC skeletons staged).
+1. Vendor leg: Active (design-system components).
+2. Customer leg: Leg-pending (Task assigned GUIDE/MANIFEST drafting).
+3. Deployment leg: Active (cluster-totebox-corporate-1 operational).
+4. Wiki leg: Leg-pending (TOPIC skeletons staged).
 
-Master Actions:
-- provisioned SSL certificate via certbot (2026-05-03).
-- updated cluster manifest to state: active (Ratified Tetrad 2026-05-03).
+Master Decision:
+- Maintain N=3 cluster shape. Master denies the addition of `woodfine-fleet-deployment` as a 4th sub-clone to keep the cluster lean. Customer-tier catalog updates will coordinate via Master/Root handoff per CLAUDE.md §11.
 
 — Master Claude, 2026-05-03
-
