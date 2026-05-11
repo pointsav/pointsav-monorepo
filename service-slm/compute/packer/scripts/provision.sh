@@ -58,11 +58,13 @@ sudo python3 -m venv /opt/vllm
 sudo /opt/vllm/bin/pip install --upgrade pip wheel
 sudo /opt/vllm/bin/pip install \
     "vllm>=0.12" \
-    "peft>=0.13" \
-    "bitsandbytes>=0.44" \
+    "peft>=0.14" \
+    "bitsandbytes>=0.45" \
     "transformers>=4.46" \
     "huggingface_hub>=0.25" \
     "accelerate>=1.0" \
+    "trl>=0.12.0" \
+    "datasets>=3.0.0" \
     "sentencepiece" \
     "protobuf"
 
