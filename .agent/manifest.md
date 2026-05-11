@@ -1,123 +1,190 @@
 ---
 schema: foundry-cluster-manifest-v1
-cluster_name: project-marketing
-cluster_branch: cluster/project-marketing
-created: 2026-05-06
-state: active (v0.0.1 MVP shipped 2026-05-06; cargo check clean; bootstrap + deploy pending Master)
-doctrine_version: 0.0.14
-doctrine_claims_codified: [37, 43, 44]
-doctrine_claims_proposed: []
-
-operator: pointsav (Mathew, Jennifer)
-working_pattern: production-first-mvp
-input_shape: app-mediakit-marketing-as-wordpress-leapfrog
-
-# Cluster mission per operator direction 2026-05-06: build
-# app-mediakit-marketing as a Rust server that delivers WordPress.org
-# muscle-memory at the user-facing layer (Dashboard, Pages, Posts,
-# Media, Themes, Plugins, Settings vocabulary that millions of users
-# already know) but with a leapfrog-2030 internal architecture:
-#
-#   - Rust binary (no PHP, no MySQL — flat-file content + LadybugDB
-#     graph for entities)
-#   - Sovereign per Compounding Substrate doctrine (no vendor cloud
-#     dependency; runs on customer-owned hardware; Tier 0 compatible
-#     on $7/mo node)
-#   - Integrates with service-content DataGraph for entity grounding
-#     (people, companies, products mentioned on landing pages link to
-#     real graph entities)
-#   - Audit ledger built-in (every page edit captured for training
-#     corpus per Doctrine claim #44)
-#   - WORM-ledger-design pattern for content version history
-#   - No plugin sprawl — capabilities composed via app-orchestration-*
-#     pattern (e.g., command for user aggregation, slm for inference,
-#     content for graph)
-#
-# Two parallel deployments — media-marketing-landing-1 (Woodfine
-# customer-tier; home.woodfinegroup.com) and media-marketing-landing-2
-# (PointSav vendor-tier; home.pointsav.com) — demonstrate the
-# multi-tenant pattern. Each tenant runs the same software with
-# tenant-specific theming + content; SMB customers get the same
-# system on their own service-SLM.
+cluster_name: project-system
+cluster_branch: cluster/project-system
+created: 2026-04-26
+state: active
 
 tetrad:
   vendor:
-    - source_repo: pointsav-monorepo
-      project_path: app-mediakit-marketing/
-      status: active 2026-05-06; v0.0.1 MVP committed (3bc17061, Peter); axum binary with WordPress muscle-memory admin + multi-tenant + DataGraph optional; cargo check clean (245 pkgs, 0 errors); bootstrap + deploy pending Master
+    - repo: pointsav-monorepo
+      path: pointsav-monorepo/
+      upstream: vendor/pointsav-monorepo
+      focus: 28 projects in scope — 14 system-* (system-substrate, system-core, system-security, system-interface, system-substrate-broadcom, system-substrate-freebsd, system-substrate-wifi, system-network-interface, system-udp, system-resolution, system-audit, system-verification, system-slm, system-gateway-mba); 9 moonshot-* (moonshot-kernel, moonshot-hypervisor, moonshot-sel4-vmm, moonshot-toolkit, moonshot-database, moonshot-index, moonshot-network, moonshot-protocol, moonshot-gpu); 5 vendor-quarantine (vendor-sel4-kernel, vendor-virtio, vendor-gpu-drivers, vendor-linux-systemd, vendor-wireguard). Codifies Doctrine claims #33 (The Capability Ledger Substrate) + #34 (The Two-Bottoms Sovereign Substrate).
   customer:
     - fleet_deployment_repo: vendor/pointsav-fleet-deployment
-      catalog_subfolder: media-marketing-landing/
-      status: existing catalog (currently holds telemetry GUIDEs); marketing-site GUIDEs to be added (guide-deployment-marketing-site, guide-provision-marketing-site)
-    - fleet_deployment_repo: customer/woodfine-fleet-deployment
-      catalog_subfolder: media-marketing-landing/
-      status: existing catalog (currently holds telemetry GUIDEs); marketing-site GUIDEs to be added
-  deployment:
-    - path: deployments/media-marketing-landing-1/
-      tenant: woodfine
-      domain: home.woodfinegroup.com
-      status: MANIFEST authored 2026-05-06; first MVP build pending
-    - path: deployments/media-marketing-landing-2/
+      catalog_subfolders:
+        - fleet-infrastructure-onprem/
+        - fleet-infrastructure-cloud/
+        - fleet-infrastructure-leased/
       tenant: pointsav
-      domain: home.pointsav.com
-      status: MANIFEST authored 2026-05-06; first MVP build pending
+      purpose: vendor-side-showcase-public-facing-Customer-and-Community-Members; receives GUIDE-substrate-rollout-{onprem,cloud,leased}.md drafted Task-side; public bundle per Doctrine §VIII
+      status: leg-pending — Task drafts GUIDEs in workspace-root staging; Master rehomes to catalog
+    - fleet_deployment_repo: customer/woodfine-fleet-deployment
+      catalog_subfolders:
+        - fleet-infrastructure-onprem/
+        - fleet-infrastructure-cloud/
+        - fleet-infrastructure-leased/
+      tenant: woodfine
+      purpose: customer-tier-operational-mirror; substrate updates flow here as Customer-side variant content
+      status: leg-pending — Task drafts as cluster work; Master coordinates §11 cross-repo rehoming
+  deployment:
+    - shape: informational-all-instances
+      tenant: all
+      purpose: substrate-shaped-cluster — substrate touches every numbered runtime under ~/Foundry/deployments/. Real-time feedback loop for every cluster's Task when substrate breaks.
+      currently_running:
+        - ~/Foundry/deployments/cluster-totebox-corporate-1/
+        - ~/Foundry/deployments/media-knowledge-documentation-1/
+      future: every new instance provisioned by any cluster
+      status: doctrine-§IV.d-sub-rule-applied (see RESEARCH-system-substrate.md §1.2 + DOCTRINE.md claim #34)
   wiki:
-    - target: vendor/content-wiki-documentation
-      drafts_via: clones/project-editorial/.agent/drafts-outbound/
-      status: leg-pending — TOPIC drafts staged when MVP demonstrates the WordPress-leapfrog framing
+    - repo: vendor/content-wiki-documentation
+      drafts_via: clones/project-system/.claude/drafts-outbound/
+      gateway: project-language Task
+      planned_topics:
+        - topic-merkle-proofs-as-substrate-primitive.md  # Phase 1A.4 + 1A.5 milestone (inclusion + consistency); RFC 9162 §2 grounding
+        - topic-capability-ledger-substrate.md           # Doctrine claim #33 architecture decision; Phase 1A structurally complete
+        - topic-two-bottoms-sovereign-substrate.md       # Doctrine claim #34 (seL4-native + NetBSD-compat composition); future-leaning as Phase 2 lands
+      status: leg-pending — first skeleton (topic-merkle-proofs-as-substrate-primitive) staged in drafts-outbound/ this commit; substantive bulk follows in milestone N+1; project-language Task is the editorial gateway per cluster-wiki-draft-pipeline.md
 
-datagraph_module_id: both
-# Marketing landing pages reference both pointsav (PointSav-tier
-# product mentions, design tokens) and woodfine (Woodfine-tier
-# customer surfaces). Per-call module_id explicit per
-# conventions/datagraph-access-discipline.md.
+clones:
+  - repo: pointsav-monorepo
+    role: primary
+    path: pointsav-monorepo/
+    upstream: vendor/pointsav-monorepo
+    focus: system-* + moonshot-* + vendor-quarantine projects
+  - repo: pointsav-fleet-deployment
+    role: sibling
+    path: pointsav-fleet-deployment/
+    upstream: vendor/pointsav-fleet-deployment
+    focus: Vendor-side fleet-infrastructure-* showcase catalog
+  - repo: woodfine-fleet-deployment
+    role: sibling
+    path: woodfine-fleet-deployment/
+    upstream: customer/woodfine-fleet-deployment
+    focus: Customer-tier fleet-infrastructure-* mirror
 
-mvp_scope:
-  v0.0.1:
-    - Rust binary serving static-rendered Markdown + flat-file content
-    - WordPress muscle-memory navigation: Dashboard / Pages / Media / Themes / Settings
-    - Multi-tenant via SERVICE_MARKETING_MODULE_ID env (woodfine | pointsav)
-    - Reads landing-page entity references from service-content (Doorman 9080 once #12 lands; interim direct 9081)
-    - Tier 0 compatible: serves on $7/mo node with no AI tier
-  v0.0.2:
-    - Theme system (CSS tokens from pointsav-design-system)
-    - Per-tenant nav + branding (woodfine vs pointsav)
-    - Audit-logged page edits via Doorman /v1/audit/capture
-  v0.0.3:
-    - WORM-ledger version history for page edits
-    - SEO basics (meta tags, sitemap, RSS)
-  v0.1.0:
-    - "Plugins" = app-orchestration-* surfaces composed in via iframe / API mount
-    - Forms (contact, newsletter, lead capture) feed service-content as graph mutations
+trajectory_capture: enabled (L1 capture-edit hook installed in all three sub-clones at provisioning)
 
-cross_cluster_dependencies:
-  - project-intelligence: service-content DataGraph (entity references)
-  - project-design: pointsav-design-system tokens (theme CSS)
-  - project-editorial: TOPIC authoring for marketing-site framing wiki content (later)
-  - project-knowledge: app-mediakit-knowledge sibling pattern (Rust binary + flat-file content; muscle-memory shape parallel)
-  - project-command: future user-aggregation surface may compose marketing analytics
-
-provisioning_notes:
-  - pointsav-monorepo sub-clone: ✅ provisioned 2026-05-06 (~468 MB; cluster/project-marketing branch; 3 remotes)
-  - pointsav-design-system: deferred (CSS tokens not needed for v0.0.1 MVP; first release uses minimal inline styles)
-  - vendor/pointsav-fleet-deployment + customer/woodfine-fleet-deployment: catalogs exist; marketing-site GUIDEs to be added in same session
-
-session_role: task
-default_starting_dir: ~/Foundry/clones/project-marketing/
+adapter_routing:
+  trains:
+    - cluster-project-system     # own cluster adapter (substrate-authoring skill — kernel + system layer + reproducible-build harness + capability-ledger primitives)
+    - engineering-pointsav       # Vendor engineering corpus
+    # NOTE: no tenant-* adapter — system-* is platform substrate, not per-tenant content
+  consumes:
+    - constitutional-doctrine    # always
+    - engineering-pointsav       # always — Vendor knowledge
+    - cluster-project-system     # own cluster context
+    - role-task                  # current role
 ---
 
-# project-marketing — WordPress-leapfrog marketing landing surface
+# Cluster manifest — project-system
 
-This cluster owns `app-mediakit-marketing` source — the Rust server delivering WordPress muscle-memory at the UI layer with a sovereign, Tier 0-compatible architecture beneath. Two simultaneous deployments demonstrate multi-tenant operation: woodfine (home.woodfinegroup.com) and pointsav (home.pointsav.com).
+Multi-clone N=3 cluster (third multi-clone cluster authored under
+Doctrine v0.0.2 §IV.c). Three sub-clones in one cluster directory;
+one Task session writes to one `.git/index` at a time.
 
-## Status
+## Scope
 
-Manifest authored 2026-05-06. pointsav-monorepo sub-clone provisioned on cluster/project-marketing branch. Existing app-mediakit-marketing scaffold (Cargo.toml + bilingual README + src/) is ready for Task to develop the v0.0.1 MVP.
+The substrate beneath every `os-*` operating system family, every
+`service-*` and `app-*` deployment, and every Customer Totebox
+runtime in Foundry. Codifies Doctrine claims #33 (The Capability
+Ledger Substrate) + #34 (The Two-Bottoms Sovereign Substrate).
 
-## Cross-references
+### Native bottom: seL4 (today) → moonshot-kernel (future)
+- AArch64-first hardware
+- seL4 v15.0.0 (31 March 2026); Microkit 2.2.0; rust-sel4 4.0.0
+- moonshot-kernel: long-horizon no_std Rust port; AArch64-first
 
-- `conventions/orchestration-architecture.md` — Model B peer apps (app-mediakit-marketing is sibling to app-mediakit-knowledge)
-- `conventions/datagraph-access-discipline.md` — entity lookups via Doorman
-- `conventions/compounding-substrate.md` — sovereign + Tier 0 + optional intelligence
-- `conventions/worm-ledger-design.md` — page-edit version history pattern
-- `~/Foundry/.agent/plans/2026-05-05-publishing-tier-naming-cross-check.md` — broader architecture context
+### Compat bottom: NetBSD
+- Veriexec verified-image boot; `build.sh` offline reproducibility;
+  rump kernels for IT/OT bridge
+- BSD 2-clause; independent foundation; zero hyperscaler entanglement
+- 57-port hardware breadth
+
+### Linux NOT in doctrine
+- Unsupported community-tier explore-it-anywhere fallback only
+- Not a Foundry substrate; not in trust chain; not in any showcase
+  GUIDE
+
+## Branch
+
+`cluster/project-system` in each sub-clone (created 2026-04-26
+from local upstream `main`).
+
+## Remotes (within each sub-clone)
+
+### pointsav-monorepo + pointsav-fleet-deployment (engineering-tier)
+
+- `origin` — canonical via admin SSH alias
+  (`github.com-pointsav-administrator`)
+- `origin-staging-j` — Jennifer's staging-tier mirror
+  (`github.com-jwoodfine`)
+- `origin-staging-p` — Peter's staging-tier mirror
+  (`github.com-pwoodfine`)
+
+### woodfine-fleet-deployment (customer-tier)
+
+- `origin` — canonical via admin SSH alias
+  (`github.com-woodfine-administrator`)
+- No staging mirrors (customer-tier flow is Vendor → Customer; no
+  pre-canonical staging tier on Customer side).
+
+Push policy: staging-tier only for engineering sub-clones; no
+push to `origin` (canonical) — Stage 6 promotion is the canonical-
+tier path. customer-tier sub-clone receives propagation from
+factory-release-engineering, not direct pushes from Task.
+
+## Required Phase 1 reading
+
+`~/Foundry/RESEARCH-system-substrate.md` (workspace-root staging).
+Read end-to-end before Phase 1A / Phase 1B work. The synthesis
+(§§1-7) carries the strategic narrative; the appendices (§8) carry
+verbatim research with sources to cite when writing technical
+documentation.
+
+## Trajectory capture
+
+Enabled. L1 capture hook installed in all three sub-clones; every
+commit on `cluster/project-system` enters
+`~/Foundry/data/training-corpus/engineering/project-system/` for
+future cluster-adapter training.
+
+## Cross-cluster coordination
+
+- **project-slm Task**: may eventually need substrate APIs in
+  `slm-doorman` for capability-ledger integration (apprenticeship
+  verdict ledger → capability ledger primitive). Surface to Master
+  via outbox when capability-ledger primitive APIs stabilize.
+- **project-data Task**: WORM-ledger substrate APIs are this
+  cluster's responsibility; existing `worm-ledger-design.md`
+  convention is the contract; service-fs may consume the
+  Foundry-canonical primitive once Phase 1A lands.
+- **project-knowledge + project-orgcharts Task sessions**: consume
+  `os-*` runtime; substrate updates from this cluster flow to
+  their deployment instances per the all-instances deployment leg.
+  Coordination automatic (substrate updates land for everyone);
+  surface only if a substrate change breaks consumer assumptions.
+
+## Mailbox
+
+- Inbox: `~/Foundry/clones/project-system/.claude/inbox.md`
+- Outbox: `~/Foundry/clones/project-system/.claude/outbox.md`
+- Trajectory log: `~/Foundry/clones/project-system/.claude/trajectory-log.md`
+  (created on first capture)
+
+## State at provisioning (2026-04-26)
+
+| Item | State |
+|---|---|
+| Cluster directory | Created |
+| Three sub-clones | Cloned from local upstream (~553 MB total) |
+| `cluster/project-system` branch | Created in each sub-clone |
+| Remotes (admin alias + staging where applicable) | Configured |
+| L1 capture hook | Installed in each sub-clone |
+| First-session Task brief | Written (this commit's `inbox.md`) |
+| Phase 1 status | Pending — Task picks up next session |
+
+---
+
+*Provisioned 2026-04-26 in workspace v0.1.19 / Doctrine v0.0.8.*
