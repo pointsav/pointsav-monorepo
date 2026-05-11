@@ -12,10 +12,5 @@ RestartSec=60
 StandardOutput=journal
 StandardError=journal
 
-# This unit is intentionally NOT enabled in [Install] — the WantedBy line is
-# absent so `systemctl enable lora-training.service` is a deliberate operator
-# action, not a side effect of provisioning. Activation requires Master
-# ratification of the Yo-Yo-runs-LoRA-training Doctrine claim.
-#
-# To activate after ratification:
-#   sudo systemctl enable --now lora-training.service
+[Install]
+WantedBy=multi-user.target

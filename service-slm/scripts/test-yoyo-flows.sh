@@ -371,6 +371,60 @@ else
     record "9-health-probe-recovery" "SKIP" "restart-vLLM-via-SSH path not yet implemented in this script"
 fi
 
+# ── Test 10: Jennifer DataGraph REST API flow ─────────────────────────────────
+echo "=== Test 10: Jennifer DataGraph REST API flow ==="
+if [[ "${SERVICE_CONTENT_UP}" != "true" ]]; then
+    record "10-jennifer-datagraph-rest-api" "SKIP" "service-content unreachable"
+else
+    # Write one entity via REST (same API surface customers use)
+    mutate_out=$(curl -sf --max-time 10 -X POST "${SERVICE_CONTENT}/v1/graph/mutate" \
+        -H "Content-Type: application/json" \
+        -d '{"module_id":"test","entities":[{"entity_name":"Test Entity Flow10",
+             "classification":"Company","role_vector":null,"location_vector":null,
+             "contact_vector":null,"module_id":"test","confidence":0.99}]}' 2>/dev/null || echo "FAIL")
+    if [[ "${mutate_out}" == "FAIL" ]]; then
+        record "10-jennifer-datagraph-rest-api" "FAIL" "POST /v1/graph/mutate returned error"
+    else
+        # Query it back via the same customer API
+        query_out=$(curl -sf --max-time 5 \
+            "${SERVICE_CONTENT}/v1/graph/context?q=Test+Entity+Flow10&module_id=test&limit=1" 2>/dev/null || echo "")
+        if echo "${query_out}" | python3 -c 'import json,sys; d=json.loads(sys.stdin.read()); assert len(d)>0' >/dev/null 2>&1; then
+            record "10-jennifer-datagraph-rest-api" "PASS" "entity written + queried back via customer REST API"
+        else
+            record "10-jennifer-datagraph-rest-api" "FAIL" "entity written but query returned empty: ${query_out:0:120}"
+        fi
+    fi
+fi
+
+# ── Test 11: LoRA training marker claim ──────────────────────────────────────
+echo "=== Test 11: LoRA training marker claim ==="
+PENDING_DIR_T11="${FOUNDRY_ROOT:-/srv/foundry}/data/training-pending"
+mkdir -p "${PENDING_DIR_T11}"
+MARKER_T11="${PENDING_DIR_T11}/test-flow11-$(date +%Y%m%dT%H%M%S).json"
+echo '{"adapter":"engineering-pointsav","tenant":"pointsav","role":"engineering",
+      "corpus_path":"/srv/foundry/data/training-corpus/engineering",
+      "method":"sft","training_method":"sft","version":99,
+      "tuple_count":1,"triggered_at":"'"$(date -u +'%Y-%m-%dT%H:%M:%SZ')"'"}' > "${MARKER_T11}"
+
+CLAIM_FOUND=false
+for i in $(seq 1 6); do
+    sleep 5
+    if ls "${MARKER_T11}.claimed" "${MARKER_T11}.completed" 2>/dev/null | grep -q .; then
+        CLAIM_FOUND=true
+        break
+    fi
+done
+
+if [[ "${CLAIM_FOUND}" == "true" ]]; then
+    record "11-lora-training-marker-claim" "PASS" "marker claimed within $((i * 5))s"
+elif systemctl is-active --quiet lora-training.service 2>/dev/null; then
+    record "11-lora-training-marker-claim" "FAIL" "lora-training.service active but marker not claimed after 30s"
+else
+    record "11-lora-training-marker-claim" "SKIP" "lora-training.service not active (enable with: sudo systemctl enable --now lora-training.service)"
+fi
+# Clean up test marker
+rm -f "${MARKER_T11}" "${MARKER_T11}.claimed" "${MARKER_T11}.completed" 2>/dev/null || true
+
 # ── Summary ──────────────────────────────────────────────────────────────────
 echo ""
 echo "=== Summary ==="
