@@ -180,6 +180,7 @@ impl YoYoTierClient {
             config,
             http: reqwest::Client::builder()
                 .timeout(SOCKET_TIMEOUT)
+                .danger_accept_invalid_certs(true)
                 .build()
                 .unwrap_or_default(),
             bearer,
@@ -260,15 +261,22 @@ impl YoYoTierClient {
             .clone()
             .unwrap_or_else(|| self.config.default_model.clone());
 
-        // Translate GrammarConstraint → vLLM ≥0.12 wire envelope.
-        let extra_body: Option<serde_json::Value> = req.grammar.as_ref().map(|g| match g {
-            GrammarConstraint::Lark(s) | GrammarConstraint::Gbnf(s) => {
-                serde_json::json!({ "structured_outputs": { "grammar": s } })
+        // Translate GrammarConstraint → llama-server wire format.
+        // Lark/GBNF → top-level `grammar` string field.
+        // JsonSchema → `response_format: {type: json_schema, json_schema: {name, schema}}`.
+        let (grammar_str, response_format) = match req.grammar.as_ref() {
+            None => (None, None),
+            Some(GrammarConstraint::Lark(s)) | Some(GrammarConstraint::Gbnf(s)) => {
+                (Some(s.clone()), None)
             }
-            GrammarConstraint::JsonSchema(v) => {
-                serde_json::json!({ "structured_outputs": { "json_schema": v } })
+            Some(GrammarConstraint::JsonSchema(v)) => {
+                let rf = serde_json::json!({
+                    "type": "json_schema",
+                    "json_schema": { "name": "response", "schema": v }
+                });
+                (None, Some(rf))
             }
-        });
+        };
 
         let body = OpenAiChatRequest {
             model: model.clone(),
@@ -276,7 +284,8 @@ impl YoYoTierClient {
             stream: req.stream,
             max_tokens: req.max_tokens,
             temperature: req.temperature,
-            extra_body,
+            grammar: grammar_str,
+            response_format,
         };
         let url = format!(
             "{}/v1/chat/completions",
@@ -429,6 +438,7 @@ impl YoYoTierClient {
 async fn run_health_probe(endpoint: String, health_up: Arc<AtomicBool>) {
     let http = reqwest::Client::builder()
         .timeout(HEALTH_PROBE_TIMEOUT)
+        .danger_accept_invalid_certs(true)
         .build()
         .unwrap_or_default();
 
@@ -492,12 +502,13 @@ struct OpenAiChatRequest {
     max_tokens: Option<u32>,
     #[serde(skip_serializing_if = "Option::is_none")]
     temperature: Option<f32>,
-    /// vLLM ≥0.12 structured-outputs envelope. Absent when no grammar is
-    /// requested (skip_serializing_if); never emits an empty object.
-    /// Shape: `{"structured_outputs": {"grammar": "<s>"}}` for Lark/GBNF,
-    ///        `{"structured_outputs": {"json_schema": {...}}}` for JSON Schema.
+    /// llama-server GBNF/Lark grammar string (top-level field). Absent when no grammar.
     #[serde(skip_serializing_if = "Option::is_none")]
-    extra_body: Option<serde_json::Value>,
+    grammar: Option<String>,
+    /// llama-server JSON Schema structured output. Shape:
+    /// `{"type":"json_schema","json_schema":{"name":"response","schema":{...}}}`
+    #[serde(skip_serializing_if = "Option::is_none")]
+    response_format: Option<serde_json::Value>,
 }
 
 #[derive(Deserialize)]
@@ -754,7 +765,7 @@ mod tests {
     // ---- Grammar serialisation tests ----
 
     #[tokio::test]
-    async fn grammar_lark_serialises_into_extra_body_structured_outputs() {
+    async fn grammar_lark_serialises_into_grammar_field() {
         use std::sync::Mutex;
 
         let captured: Arc<Mutex<Option<serde_json::Value>>> = Arc::new(Mutex::new(None));
@@ -782,15 +793,12 @@ mod tests {
         client.complete(&r).await.expect("lark grammar happy path");
 
         let body = captured.lock().unwrap().clone().expect("body captured");
-        assert_eq!(
-            body["extra_body"]["structured_outputs"]["grammar"],
-            serde_json::json!("start: /[a-z]+/")
-        );
-        assert!(body["extra_body"]["structured_outputs"]["json_schema"].is_null());
+        assert_eq!(body["grammar"], serde_json::json!("start: /[a-z]+/"));
+        assert!(body.get("response_format").is_none(), "response_format absent for Lark");
     }
 
     #[tokio::test]
-    async fn grammar_gbnf_serialises_into_extra_body_structured_outputs() {
+    async fn grammar_gbnf_serialises_into_grammar_field() {
         use std::sync::Mutex;
 
         let captured: Arc<Mutex<Option<serde_json::Value>>> = Arc::new(Mutex::new(None));
@@ -819,13 +827,14 @@ mod tests {
 
         let body = captured.lock().unwrap().clone().expect("body captured");
         assert_eq!(
-            body["extra_body"]["structured_outputs"]["grammar"],
+            body["grammar"],
             serde_json::json!(r#"root ::= "yes" | "no""#)
         );
+        assert!(body.get("response_format").is_none(), "response_format absent for GBNF");
     }
 
     #[tokio::test]
-    async fn grammar_json_schema_serialises_into_extra_body_structured_outputs() {
+    async fn grammar_json_schema_serialises_into_response_format() {
         use std::sync::Mutex;
 
         let captured: Arc<Mutex<Option<serde_json::Value>>> = Arc::new(Mutex::new(None));
@@ -859,12 +868,14 @@ mod tests {
             .expect("json_schema grammar happy path");
 
         let body = captured.lock().unwrap().clone().expect("body captured");
-        assert_eq!(body["extra_body"]["structured_outputs"]["json_schema"], schema);
-        assert!(body["extra_body"]["structured_outputs"]["grammar"].is_null());
+        assert_eq!(body["response_format"]["type"], "json_schema");
+        assert_eq!(body["response_format"]["json_schema"]["name"], "response");
+        assert_eq!(body["response_format"]["json_schema"]["schema"], schema);
+        assert!(body.get("grammar").is_none(), "grammar absent for JsonSchema");
     }
 
     #[tokio::test]
-    async fn grammar_none_omits_extra_body_structured_outputs() {
+    async fn grammar_none_omits_grammar_and_response_format() {
         use std::sync::Mutex;
 
         let captured: Arc<Mutex<Option<serde_json::Value>>> = Arc::new(Mutex::new(None));
@@ -892,8 +903,12 @@ mod tests {
 
         let body = captured.lock().unwrap().clone().expect("body captured");
         assert!(
-            body.get("extra_body").is_none(),
-            "extra_body must be absent when grammar is None"
+            body.get("grammar").is_none(),
+            "grammar must be absent when GrammarConstraint is None"
+        );
+        assert!(
+            body.get("response_format").is_none(),
+            "response_format must be absent when GrammarConstraint is None"
         );
     }
 

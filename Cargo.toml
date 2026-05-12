@@ -5,7 +5,10 @@ members = [
     "service-content",
     "app-console-content",
     "tool-acs-miner",
+    "system-core",
+    "system-ledger",
     "system-gateway-mba",
+    "moonshot-toolkit",
     "service-fs",
     "system-security",
     "xtask"

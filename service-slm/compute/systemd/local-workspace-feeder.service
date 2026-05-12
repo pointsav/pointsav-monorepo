@@ -1,0 +1,19 @@
+[Unit]
+Description=PointSav Foundry workspace DataGraph feeder (foundry-workspace module)
+Documentation=https://github.com/woodfine/woodfine-fleet-deployment
+After=local-doorman.service
+
+[Service]
+Type=oneshot
+User=mathew
+
+# Paths — adjust per host
+Environment=FOUNDRY_WORKSPACE_ROOT=/home/mathew/Foundry
+Environment=FOUNDRY_CONTENT_LEDGER=/home/mathew/deployments/woodfine-fleet-deployment/cluster-totebox-jennifer/service-fs/data/service-content/ledgers
+Environment=FOUNDRY_SEMANTIC_DIR=/home/mathew/deployments/woodfine-fleet-deployment/cluster-totebox-jennifer/service-fs/data/service-people/ledgers
+
+ExecStart=/srv/foundry/clones/project-intelligence/service-slm/scripts/foundry-workspace-feeder.sh --batch-size 20
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=workspace-feeder
