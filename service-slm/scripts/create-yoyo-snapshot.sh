@@ -14,7 +14,7 @@
 set -uo pipefail
 
 PROJECT="${SLM_YOYO_GCP_PROJECT:-woodfine-node-gcp-free}"
-ZONE="${SLM_YOYO_GCP_ZONE:-us-central1-b}"
+ZONE="${SLM_YOYO_GCP_ZONE:-us-west1-b}"
 INSTANCE="${SLM_YOYO_GCP_INSTANCE:-yoyo-tier-b-1}"
 DOORMAN_ENV="${DOORMAN_ENV_FILE:-/etc/local-doorman/local-doorman.env}"
 WEIGHTS_DISK="${INSTANCE}-weights"
