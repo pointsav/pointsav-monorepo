@@ -1,0 +1,750 @@
+openapi: "3.1.0"
+info:
+  title: app-mediakit-knowledge
+  version: "0.1.0"
+  description: |
+    Wikipedia-pattern HTTP knowledge wiki engine for PointSav Documentation.
+    Serves Markdown content at documentation.pointsav.com. Single Rust binary;
+    no database; no runtime dependencies beyond the compiled binary.
+
+    MCP endpoint (Phase 4 Step 4.6) requires --enable-mcp flag.
+    Collab endpoint (Phase 2 Step 7) requires --enable-collab flag.
+    Git remote (Phase 4 Step 4.7) requires --git-tenant flag.
+
+  contact:
+    name: PointSav Digital Systems
+    url: https://documentation.pointsav.com
+  license:
+    name: Apache-2.0
+    url: https://opensource.org/licenses/Apache-2.0
+
+servers:
+  - url: https://documentation.pointsav.com
+    description: Production
+
+tags:
+  - name: phase-1
+    description: "Phase 1 — render: article pages, static assets, health check"
+  - name: phase-1.1
+    description: "Phase 1.1 — Wikipedia chrome: TOC, hatnote, language switcher, tabs"
+  - name: phase-2
+    description: "Phase 2 — edit + collab: JSON-LD, atomic edit, CodeMirror, collab"
+  - name: phase-3
+    description: "Phase 3 — search + feeds: Tantivy BM25, Atom, JSON Feed, sitemap"
+  - name: phase-4
+    description: "Phase 4 — git sync + MCP: history, blame, diff, link graph, MCP, git remote"
+  - name: special
+    description: "Special pages: recent changes, all pages, statistics, login, pending edits"
+
+paths:
+  /:
+    get:
+      tags: [phase-1.1]
+      summary: Wiki home page
+      description: Renders index.md from the content directory. Returns the home page with featured article, leapfrog facts panel, and category grid.
+      responses:
+        "200":
+          description: Home page HTML
+          content:
+            text/html:
+              schema:
+                type: string
+
+  /healthz:
+    get:
+      tags: [phase-1]
+      summary: Health check
+      responses:
+        "200":
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: ok
+
+  /wiki/{slug}:
+    get:
+      tags: [phase-1]
+      summary: Render a wiki article
+      description: |
+        Renders a Markdown article by slug. Supports category-scoped slugs
+        (e.g. `architecture/compounding-substrate`). Returns 404 when the slug
+        does not resolve to a file in the content directory.
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+          example: compounding-substrate
+      responses:
+        "200":
+          description: Article HTML
+          content:
+            text/html:
+              schema:
+                type: string
+        "404":
+          description: Article not found
+
+  /edit/{slug}:
+    get:
+      tags: [phase-2]
+      summary: Article editor page
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Editor page HTML with CodeMirror 6
+          content:
+            text/html:
+              schema:
+                type: string
+    post:
+      tags: [phase-2]
+      summary: Save article edit
+      description: |
+        Atomically saves the updated article body. Reindexes the article in
+        Tantivy and updates the redb wikilink graph. Per SYS-ADR-10, requires
+        a verified human author (MBA auth when auth is configured).
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                body:
+                  type: string
+                  description: Full replacement article body in Markdown
+                summary:
+                  type: string
+                  description: Edit summary
+              required: [body]
+      responses:
+        "303":
+          description: Redirect to article view after successful save
+        "400":
+          description: Invalid request body
+
+  /create:
+    post:
+      tags: [phase-2]
+      summary: Create a new article
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                slug:
+                  type: string
+                title:
+                  type: string
+                category:
+                  type: string
+                body:
+                  type: string
+              required: [slug, title, category, body]
+      responses:
+        "303":
+          description: Redirect to new article view
+        "400":
+          description: Validation error
+
+  /search:
+    get:
+      tags: [phase-3]
+      summary: Full-text search (BM25 via Tantivy)
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Search query string
+      responses:
+        "200":
+          description: Search results HTML page
+          content:
+            text/html:
+              schema:
+                type: string
+
+  /api/citations:
+    get:
+      tags: [phase-2]
+      summary: Citation registry (for editor autocomplete)
+      description: Returns all entries from citations.yaml as JSON for CodeMirror `[` autocomplete.
+      responses:
+        "200":
+          description: Citation list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CitationEntry"
+
+  /api/squiggle-rules:
+    get:
+      tags: [phase-2]
+      summary: SAA squiggle rule set
+      description: Returns the 7 deterministic editorial rules used for in-editor squiggle linting.
+      responses:
+        "200":
+          description: Rule list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  /api/doorman/complete:
+    post:
+      tags: [phase-2]
+      summary: Doorman completion (stub until Phase 4 wires WIKI_DOORMAN_URL)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "501":
+          description: Not implemented — set WIKI_DOORMAN_URL to enable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DoormanStubResponse"
+
+  /api/doorman/instruct:
+    post:
+      tags: [phase-2]
+      summary: Doorman instruction (stub until Phase 4 wires WIKI_DOORMAN_URL)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "501":
+          description: Not implemented — set WIKI_DOORMAN_URL to enable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DoormanStubResponse"
+
+  /feed.atom:
+    get:
+      tags: [phase-3]
+      summary: Atom syndication feed (RFC 4287)
+      responses:
+        "200":
+          description: Atom feed XML
+          content:
+            application/atom+xml:
+              schema:
+                type: string
+
+  /feed.json:
+    get:
+      tags: [phase-3]
+      summary: JSON Feed 1.1
+      responses:
+        "200":
+          description: JSON Feed
+          content:
+            application/feed+json:
+              schema:
+                type: object
+
+  /sitemap.xml:
+    get:
+      tags: [phase-3]
+      summary: XML sitemap (sitemaps.org)
+      responses:
+        "200":
+          description: Sitemap XML
+          content:
+            application/xml:
+              schema:
+                type: string
+
+  /robots.txt:
+    get:
+      tags: [phase-3]
+      summary: Robots exclusion
+      responses:
+        "200":
+          description: Robots.txt
+          content:
+            text/plain:
+              schema:
+                type: string
+
+  /llms.txt:
+    get:
+      tags: [phase-3]
+      summary: LLM discovery manifest (llmstxt.org)
+      responses:
+        "200":
+          description: llms.txt Markdown
+          content:
+            text/plain:
+              schema:
+                type: string
+
+  /git/{slug}:
+    get:
+      tags: [phase-3]
+      summary: Raw Markdown source (git-clone-style ingestion)
+      description: Returns the raw Markdown source for a slug. An optional `.md` suffix is stripped.
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Raw Markdown
+          content:
+            text/plain:
+              schema:
+                type: string
+        "404":
+          description: Slug not found
+
+  /history/{slug}:
+    get:
+      tags: [phase-4]
+      summary: Article revision history
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: History page HTML
+          content:
+            text/html:
+              schema:
+                type: string
+
+  /blame/{slug}:
+    get:
+      tags: [phase-4]
+      summary: Article blame (per-line author attribution via gix)
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Blame page HTML
+          content:
+            text/html:
+              schema:
+                type: string
+
+  /diff/{slug}:
+    get:
+      tags: [phase-4]
+      summary: Diff between two revisions
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: from
+          in: query
+          schema:
+            type: string
+          description: From commit SHA (optional — defaults to HEAD~1)
+        - name: to
+          in: query
+          schema:
+            type: string
+          description: To commit SHA (optional — defaults to HEAD)
+      responses:
+        "200":
+          description: Diff page HTML
+          content:
+            text/html:
+              schema:
+                type: string
+
+  /special/whatlinkshere/{slug}:
+    get:
+      tags: [phase-4]
+      summary: Backlinks page (articles that link to this slug)
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Backlinks page HTML
+          content:
+            text/html:
+              schema:
+                type: string
+
+  /mcp:
+    post:
+      tags: [phase-4]
+      summary: MCP JSON-RPC 2.0 endpoint
+      description: |
+        Model Context Protocol server over HTTP. Requires --enable-mcp flag.
+        Implements: initialize, tools/list, tools/call, resources/list,
+        resources/read, prompts/list, prompts/get.
+
+        Tools: search_topics, get_revision, create_topic, propose_edit,
+        link_citation, list_backlinks.
+
+        Resources: wiki://topic/{slug}
+        Prompts: cite-this-page, summarize-topic, draft-related-topic
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JsonRpcRequest"
+            examples:
+              initialize:
+                value:
+                  jsonrpc: "2.0"
+                  id: 1
+                  method: initialize
+                  params:
+                    protocolVersion: "2024-11-05"
+                    capabilities: {}
+                    clientInfo:
+                      name: my-client
+                      version: "1.0"
+              tools_list:
+                value:
+                  jsonrpc: "2.0"
+                  id: 2
+                  method: tools/list
+                  params: {}
+              tools_call_search:
+                value:
+                  jsonrpc: "2.0"
+                  id: 3
+                  method: tools/call
+                  params:
+                    name: search_topics
+                    arguments:
+                      query: compounding substrate
+                      limit: 5
+      responses:
+        "200":
+          description: JSON-RPC 2.0 response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JsonRpcResponse"
+        "404":
+          description: Endpoint not mounted (--enable-mcp not set)
+
+  /git-server/{tenant}/info/refs:
+    get:
+      tags: [phase-4]
+      summary: Git smart-HTTP ref advertisement
+      description: Read-only git remote ref advertisement for `git clone` / `git fetch`.
+      parameters:
+        - name: tenant
+          in: path
+          required: true
+          schema:
+            type: string
+          example: pointsav
+        - name: service
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [git-upload-pack]
+      responses:
+        "200":
+          description: Ref advertisement
+          content:
+            application/x-git-upload-pack-advertisement:
+              schema:
+                type: string
+                format: binary
+        "400":
+          description: Invalid service parameter
+        "404":
+          description: Tenant not found
+
+  /git-server/{tenant}/git-upload-pack:
+    post:
+      tags: [phase-4]
+      summary: Git smart-HTTP upload-pack (pack data)
+      parameters:
+        - name: tenant
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/x-git-upload-pack-request:
+            schema:
+              type: string
+              format: binary
+      responses:
+        "200":
+          description: Pack data
+          content:
+            application/x-git-upload-pack-result:
+              schema:
+                type: string
+                format: binary
+
+  /openapi.yaml:
+    get:
+      tags: [phase-4]
+      summary: This OpenAPI 3.1 specification
+      responses:
+        "200":
+          description: OpenAPI YAML
+          content:
+            application/yaml:
+              schema:
+                type: string
+
+  /special/recent-changes:
+    get:
+      tags: [special]
+      summary: Recent changes feed (Wikipedia-pattern)
+      responses:
+        "200":
+          description: Recent changes HTML
+          content:
+            text/html:
+              schema:
+                type: string
+
+  /special/all-pages:
+    get:
+      tags: [special]
+      summary: All pages listing
+      responses:
+        "200":
+          description: All pages HTML
+          content:
+            text/html:
+              schema:
+                type: string
+
+  /special/statistics:
+    get:
+      tags: [special]
+      summary: Wiki statistics
+      responses:
+        "200":
+          description: Statistics page HTML
+          content:
+            text/html:
+              schema:
+                type: string
+
+  /wanted:
+    get:
+      tags: [special]
+      summary: Wanted articles (unresolved wikilinks)
+      responses:
+        "200":
+          description: Wanted articles HTML
+          content:
+            text/html:
+              schema:
+                type: string
+
+  /random:
+    get:
+      tags: [special]
+      summary: Redirect to a random article
+      responses:
+        "302":
+          description: Redirect to a random wiki article
+
+  /special/login:
+    get:
+      tags: [special]
+      summary: Login page
+      responses:
+        "200":
+          description: Login form HTML
+    post:
+      tags: [special]
+      summary: Process login
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+      responses:
+        "303":
+          description: Redirect after login
+        "401":
+          description: Invalid credentials
+
+components:
+  schemas:
+    ArticleFrontmatter:
+      type: object
+      description: YAML frontmatter schema for wiki articles (foundry-doc-v1)
+      properties:
+        title:
+          type: string
+        slug:
+          type: string
+          description: Must equal the filename stem; immortal after first publish
+        category:
+          type: string
+          enum: [architecture, substrate, patterns, systems, services, applications, governance, infrastructure, reference, design-system, root]
+        subcategory:
+          type: string
+        last_edited:
+          type: string
+          format: date
+        editor:
+          type: string
+        status:
+          type: string
+          enum: [stable, pre-build, draft, stub]
+        short_description:
+          type: string
+        references:
+          type: array
+          items:
+            $ref: "#/components/schemas/Reference"
+      required: [title, slug, category]
+
+    Reference:
+      type: object
+      properties:
+        id:
+          type: integer
+        text:
+          type: string
+        url:
+          type: string
+          format: uri
+        internal:
+          type: boolean
+        path:
+          type: string
+      required: [id, text]
+
+    CitationEntry:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        url:
+          type: string
+          format: uri
+        publisher:
+          type: string
+        jurisdiction:
+          type: string
+        type:
+          type: string
+        evidence_class:
+          type: string
+        last_verified:
+          type: string
+          format: date
+      required: [id, title]
+
+    JsonRpcRequest:
+      type: object
+      properties:
+        jsonrpc:
+          type: string
+          enum: ["2.0"]
+        id:
+          oneOf:
+            - type: integer
+            - type: string
+            - type: "null"
+        method:
+          type: string
+        params:
+          type: object
+      required: [jsonrpc, method]
+
+    JsonRpcResponse:
+      type: object
+      properties:
+        jsonrpc:
+          type: string
+          enum: ["2.0"]
+        id:
+          oneOf:
+            - type: integer
+            - type: string
+            - type: "null"
+        result:
+          description: Present on success
+        error:
+          $ref: "#/components/schemas/JsonRpcError"
+      required: [jsonrpc, id]
+
+    JsonRpcError:
+      type: object
+      properties:
+        code:
+          type: integer
+        message:
+          type: string
+        data: {}
+      required: [code, message]
+
+    DoormanStubResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        hint:
+          type: string
+        phase:
+          type: integer
+        reason:
+          type: string
+      required: [error, phase, reason]
