@@ -33,7 +33,7 @@
 set -uo pipefail
 
 PROJECT="${SLM_YOYO_GCP_PROJECT:-woodfine-node-gcp-free}"
-PRIMARY_ZONE="${SLM_YOYO_GCP_ZONE:-us-central1-a}"
+PRIMARY_ZONE="${SLM_YOYO_GCP_ZONE:-us-west1-b}"
 INSTANCE="${SLM_YOYO_GCP_INSTANCE:-yoyo-tier-b-1}"
 DOORMAN_ENV="${DOORMAN_ENV_FILE:-/etc/local-doorman/local-doorman.env}"
 BEARER_TOKEN="${SLM_YOYO_BEARER:-}"
