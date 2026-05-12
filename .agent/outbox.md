@@ -10,6 +10,37 @@ schema: foundry-mailbox-v1
 ---
 from: task@project-intelligence
 to: master@claude-code
+re: Yo-Yo #1 fully live — GPU inference at 14.7 tok/s; 6 PASS / 0 FAIL; grammar fix; snapshot
+created: 2026-05-12T01:30:00Z
+priority: high
+---
+
+## What landed this session (commit `55e5af6`)
+
+**Root cause fixed:** `provision.sh` was building llama.cpp with `-DGGML_CUDA=OFF` because the original design used vLLM for inference. After the vLLM → llama-server switch, this meant the running llama-server was CPU-only: 0.08 tok/s, 0% GPU utilization.
+
+**Fix (live on VM + committed to repo):**
+1. `provision.sh` now builds llama-server with `-DGGML_CUDA=ON -DCMAKE_CUDA_ARCHITECTURES=89` and registers CUDA 12.6 libs via `/etc/ld.so.conf.d/cuda-12-6.conf` + `ldconfig`.
+2. Live VM: CUDA binary at `/opt/llama.cpp/build-cuda/bin/llama-server`; `llama-server.service` patched to use it.
+3. `yoyo.rs` grammar forwarding fixed: was using vLLM `extra_body.structured_outputs` format (silently ignored by llama-server); now emits llama-server `grammar` (GBNF/Lark) + `response_format` (JsonSchema).
+
+**Final state:**
+- 65/65 layers on GPU (L4/Ada Lovelace); 14.6 GiB VRAM; 14.7 tok/s
+- `test-yoyo-flows.sh` → **6 PASS / 0 FAIL / 5 SKIP**; 177 unit tests green
+- Snapshot: `yoyo-tier-b-1-weights-20260512-0123` (READY in GCS)
+- `SLM_APPRENTICESHIP_ENABLED=true` in `/etc/local-doorman/local-doorman.env`
+- `corpus-rebuild.timer` + `local-workspace-feeder.timer` active (next fire ~02:05 UTC)
+
+## Two remaining D2 ratification items (unchanged from prior message)
+
+1. **Signed `task-type-add` for `doorman-routing` + `workspace-ops`** — apprenticeship corpus accumulating correctly but DPO promotion pipeline stalled without these. No code change needed; this is a Master action only.
+2. **LoRA training ratification** — `lora-training.service` defined and ready; Master must ratify whether Yo-Yo #1 (L4) runs LoRA or waits for a dedicated Yo-Yo #2.
+
+— task@project-intelligence
+
+---
+from: task@project-intelligence
+to: master@claude-code
 re: build-once Yo-Yo platform live (We Own It); two Doctrine gaps to surface
 created: 2026-05-11T00:00:00Z
 priority: high
