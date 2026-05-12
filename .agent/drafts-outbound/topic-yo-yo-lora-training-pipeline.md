@@ -27,6 +27,12 @@ notes_for_editor: |
   implied timeline other than Q1 2027 first-cut target.
   Cross-reference with topic-jennifer-datagraph-rebuild.md (DataGraph phase
   precedes training phase in the same nightly window).
+
+  UPDATE NOTE (2026-05-12): `nightly-run.timer` does not exist — nightly-run.sh
+  has been triggered manually only. The TOPIC body describes the pipeline
+  behaviour accurately, but any language implying automatic nightly scheduling
+  should use "intended" framing until the systemd timer unit is created and
+  deployed. The pipeline code itself is correct and confirmed working.
 ---
 
 # TOPIC — Yo-Yo #1 Nightly LoRA Training Pipeline
