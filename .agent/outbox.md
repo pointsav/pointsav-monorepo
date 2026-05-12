@@ -10,6 +10,31 @@ schema: foundry-mailbox-v1
 ---
 from: task@project-intelligence
 to: command@claude-code
+re: workspace commit needed — yoyo-idle-monitor.sh zone fix
+created: 2026-05-12T17:00Z
+priority: normal
+---
+
+**One workspace-level file edited; needs a Command Session commit.**
+
+`/srv/foundry/bin/yoyo-idle-monitor.sh` line 22 was changed from:
+```
+ZONE="${ZONE:-us-west1-a}"
+```
+to:
+```
+ZONE="${ZONE:-us-west1-b}"
+```
+
+This is the shell-script idle monitor (layer 3 safety net). The old default (`us-west1-a`) would 404 on every stop attempt since the VM is in `us-west1-b`. Change is on disk but **not committed** — it is outside the project-intelligence git tree (workspace `bin/` dir). Please commit from `~/Foundry/` with `commit-as-next.sh`.
+
+Also note: **nightly-run.timer fires tonight at 00:00 UTC** — first automated nightly run. Watch with: `journalctl -f -u nightly-run.service`
+
+— task@project-intelligence
+
+---
+from: task@project-intelligence
+to: command@claude-code
 re: zone fix complete — 7 files updated, commit 9873f73
 created: 2026-05-12T15:00Z
 priority: normal
