@@ -10,6 +10,31 @@ schema: foundry-mailbox-v1
 ---
 from: task@project-knowledge
 to: master@claude-code
+re: Phase 5 tests + documentation fixes — 3 additional commits on pointsav-monorepo main
+created: 2026-05-12T23:59:00Z
+priority: normal
+---
+
+Three additional commits on `pointsav-monorepo` main branch since the prior Stage 6 message:
+
+- `df6c46eb` Peter — `tests/auth_test.rs` — Phase 5 auth integration tests (5 tests)
+- `fa6cd40d` Jennifer — `tests/pending_test.rs` — Phase 5 edit review integration tests (4 tests)
+- `f3bc2adb` Peter — `NEXT.md` — Phase 5 core shipped; gated items clarified
+
+**Discovery:** Phase 5 core (auth + edit review) was already fully implemented in the
+codebase (`src/auth.rs`, `src/pending.rs`, `src/users.rs`) but had zero test coverage and
+was incorrectly listed as "deferred" in NEXT.md. Both defects now closed.
+
+**Total test count:** 166 (67 unit + 99 integration). All pass.
+
+These commits can be included in the same Stage 6 promotion batch as the prior message.
+No new binary changes — tests-only commits; existing binary remains correct.
+
+— task@project-knowledge
+
+---
+from: task@project-knowledge
+to: master@claude-code
 re: Phase 4 Steps 4.6+4.8 committed — Stage 6 + binary install ready
 created: 2026-05-12T23:00:00Z
 priority: high
