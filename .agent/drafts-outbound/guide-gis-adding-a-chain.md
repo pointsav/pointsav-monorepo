@@ -218,3 +218,44 @@ Three changes to the chain-onboarding pattern landed in the May 2026 sprint quar
 **The country-polygon containment filter (Sprint 11) catches bbox contamination.** When a chain's bounding box overlaps a neighbour country (most commonly the United States and Canada border), Overpass returns cross-border records that would otherwise be mis-attributed. The filter, added to `ingest-osm.py` in May 2026, drops records that fall outside the chain's declared country polygon. Telemetry: `polygon-filter: dropped N cross-border records`. No action is required when adding a new chain — the filter operates on every chain automatically. The country polygon is loaded from `fallback_ne_admin1.geojson` (Natural Earth admin-1, unioned by ISO).
 
 **See also:** `guide-gis-adding-a-country.md` for the procedure to extend the operational footprint to a new country (Sprint 10 added Uruguay).
+
+---
+
+## Appendix: Sprint 13 — name filter and Canadian spelling (May 2026)
+
+**`SKIP_NAME_SUBSTRINGS` audit.** `ingest-osm.py` maintains a list of lowercase name substrings that identify sub-facility OSM elements — pharmacy windows, gas stations, vision centres, and similar amenities that share a brand:wikidata tag with the parent store. Any record whose OSM `name` contains one of these substrings is silently dropped at ingest time (before the JSONL is written). The current list is:
+
+```python
+SKIP_NAME_SUBSTRINGS = [
+    "gasoline", " gas", "fuel", "petrol",
+    "pharmacy", "vision center", "garden center", "photo center",
+    "tire & lube", "tire and lube",
+    "food court", "optical", "hearing aid", "moneycenter"
+]
+```
+
+If a chain's ingest returns unexpectedly few records, check whether any of its OSM element names contain a substring from this list. A common failure mode: chains using Canadian or British English spellings (e.g. "Centre", "Supercentre") that partially match filter substrings.
+
+**The "supercentre" gotcha.** Prior to May 2026 the list included `"supercentre"`. This silently dropped all Canadian Walmart stores tagged as "Walmart Supercentre" in OSM (Canadian English spelling). The US-English spelling "Supercenter" was not matched (different string). The filter was removed in Sprint 13. If you are adding a chain in a Canadian or UK market and record counts seem low, verify that no filter substring matches the chain's name format by running:
+
+```bash
+python3 -c "
+import json
+SKIP = ['gasoline', ' gas', 'fuel', 'petrol', 'pharmacy', 'vision center',
+        'garden center', 'photo center', 'tire & lube', 'tire and lube',
+        'food court', 'optical', 'hearing aid', 'moneycenter']
+path = '/srv/foundry/deployments/cluster-totebox-personnel-1/service-fs/service-business/<chain-id>.jsonl'
+hits = []
+with open(path) as f:
+    for line in f:
+        r = json.loads(line)
+        name = (r.get('location_name') or '').lower()
+        matches = [s for s in SKIP if s in name]
+        if matches:
+            hits.append((name, matches))
+print(f'{len(hits)} records matched filter substrings (these were NOT dropped — they are in the JSONL).')
+print('If counts seem low, the dropped records are the ones NOT in the JSONL.')
+"
+```
+
+Records that matched the filter were already dropped during ingest and are invisible in the JSONL. To check for dropped records, compare `wc -l <chain>.jsonl` against the `OSM elements returned: N` line in the ingest console output. A large gap between elements returned and final record count indicates filter activity.
