@@ -337,7 +337,7 @@ attempt_start_once() {
         if [[ $? -eq 0 ]]; then
             log "VM started in ${known_zone} (Mode 1: preemption recovery)."
             STARTED_ZONE="${known_zone}"
-            [[ "${known_zone}" != "${PRIMARY_ZONE}" ]] && update_doorman_env "${known_zone}"
+            update_doorman_env "${known_zone}"
             return 0
         fi
         if is_stockout "${err}"; then
