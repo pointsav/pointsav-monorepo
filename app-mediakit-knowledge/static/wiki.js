@@ -22,10 +22,10 @@
    * 1. TOC collapse toggle                                               *
    * ------------------------------------------------------------------ */
 
-  var STORAGE_KEY_TOC = 'wiki-toc-expanded';
+  var STORAGE_KEY_TOC = 'vector-toc-expanded';
 
   function initToc() {
-    var toc     = document.getElementById('wiki-toc');
+    var toc     = document.getElementById('vector-toc');
     var toggle  = document.getElementById('toc-toggle');
     var list    = document.getElementById('toc-list');
 
@@ -462,7 +462,7 @@
     // Only activate on narrow screens.
     if (window.innerWidth >= 960) return;
 
-    var article = document.querySelector('.wiki-main article, .wiki-body, .wiki-main');
+    var article = document.querySelector('#mw-content-text, .mw-body');
     if (!article) return;
 
     var slug = (document.querySelector('link[rel="canonical"]') || {}).href || window.location.pathname;
@@ -528,7 +528,7 @@
 
   function initStickyHeader() {
     var stickyEl  = document.getElementById('wiki-sticky-header');
-    var mainHeader = document.getElementById('site-header');
+    var mainHeader = document.getElementById('mw-header');
     if (!stickyEl || !mainHeader) return;
 
     var observer = new IntersectionObserver(function (entries) {
@@ -558,7 +558,7 @@
     var tocList = document.getElementById('toc-list');
     if (!tocList) return;
 
-    var headings = document.querySelectorAll('.wiki-main h2[id], .wiki-main h3[id]');
+    var headings = document.querySelectorAll('.mw-body h2[id], .mw-body h3[id]');
     if (!headings.length) return;
 
     var activeId = null;

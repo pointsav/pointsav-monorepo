@@ -1106,7 +1106,7 @@ fn home_chrome(
                 link rel="stylesheet" href="/static/style.css";
             }
             body {
-                header.site-header {
+                header.mw-header {
                     a.site-title href="/" { (site_title) }
                     form.header-search #header-search-form action="/search" method="get" {
                         div.header-search-wrap {
@@ -1678,7 +1678,7 @@ fn wiki_chrome(
                         }
                     }
                 }
-                header.site-header #site-header {
+                header.mw-header #mw-header {
                     a.site-title href="/" { (site_title) }
                     form.header-search #header-search-form action="/search" method="get" {
                         div.header-search-wrap {
@@ -1764,9 +1764,9 @@ fn wiki_chrome(
                 div.wiki-layout {
 
                     // --- Left rail: navigation portlet + collapsible TOC ---
-                    div.wiki-left-rail {
+                    div #mw-panel {
                         // Navigation portlet (Wikipedia: vector-main-menu)
-                        nav.wiki-nav-portlet aria-label="Navigation" {
+                        nav.vector-main-menu aria-label="Navigation" {
                             h3.wiki-portlet-heading { "Navigation" }
                             ul.wiki-portlet-links {
                                 li { a href="/" { "Main page" } }
@@ -1780,7 +1780,7 @@ fn wiki_chrome(
                         }
                         // Contents / ToC portlet with hierarchical section numbers
                         @if !numbered_headings.is_empty() {
-                            nav.wiki-toc #wiki-toc aria-label="Contents" {
+                            nav.vector-toc #vector-toc aria-label="Contents" {
                                 div.toc-header {
                                     span.toc-title { "Contents" }
                                     button.toc-toggle #toc-toggle
@@ -1805,7 +1805,7 @@ fn wiki_chrome(
                     }
 
                     // --- Main article column ---
-                    main.wiki-main {
+                    main.mw-body {
 
                         // Title row: tabs (top-left) + title + language switcher + action tabs (top-right)
                         div.wiki-title-row {
@@ -1864,7 +1864,7 @@ fn wiki_chrome(
                             }
 
                             // Read / Edit / View history tabs — top-right (item 2)
-                            nav.wiki-action-tabs aria-label="Page actions" {
+                            nav #p-views aria-label="Page actions" {
                                 a.wiki-tab.wiki-tab-active
                                     href={ "/wiki/" (slug) }
                                     aria-current="page"
@@ -1931,7 +1931,7 @@ fn wiki_chrome(
                         }
 
                         // Article body
-                        article.wiki-article {
+                        div #mw-content-text {
                             div.page-body {
                                 (PreEscaped(body_html))
                             }
@@ -2990,7 +2990,7 @@ fn chrome(_title: &str, body: Markup, site_title: &str, user: Option<&User>, pen
                 link rel="stylesheet" href="/static/style.css";
             }
             body {
-                header.site-header {
+                header.mw-header {
                     a.site-title href="/" { (site_title) }
                     form.header-search #header-search-form action="/search" method="get" {
                         div.header-search-wrap {
@@ -3501,7 +3501,7 @@ mod tests {
         let body = resp.into_body().collect().await.unwrap().to_bytes();
         let html = std::str::from_utf8(&body).unwrap();
         assert!(
-            html.contains("wiki-nav-portlet"),
+            html.contains("vector-main-menu"),
             "navigation portlet should appear: {html}"
         );
         assert!(

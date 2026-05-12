@@ -19,6 +19,19 @@
   --link: #3366cc;
   --link-visited: #6b4ba1;
   --max-content-width: 76em;
+
+  /* MediaWiki Codex aliases — Phase 2 token port entrypoints.
+   * Values mirror the PointSav variables above; Phase 2 will
+   * substitute these across style.css selectors. */
+  --mw-color-link:         var(--link);
+  --mw-color-link-visited: var(--link-visited);
+  --mw-color-link-redlink: #ba0000;
+  --mw-color-base-10:      var(--bg-chrome);
+  --mw-color-base-20:      #eaecf0;
+  --mw-color-base-50:      var(--border);
+  --mw-font-family-article: var(--serif);
+  --mw-font-family-chrome:  var(--sans);
+  --mw-font-size-base:      0.875rem;
 }
 
 * { box-sizing: border-box; }
@@ -36,7 +49,7 @@ body {
 
 /* --- chrome --- */
 
-.site-header {
+.mw-header {
   border-bottom: 1px solid var(--border);
   background: var(--bg-chrome);
   padding: 0.75rem 1.25rem;
@@ -231,7 +244,7 @@ article table th { background: var(--bg-chrome); font-weight: 600; }
 
 /* --- Left rail (navigation portlet + TOC portlet) --- */
 
-.wiki-left-rail {
+#mw-panel {
   position: sticky;
   top: 1rem;
   align-self: flex-start;
@@ -243,7 +256,7 @@ article table th { background: var(--bg-chrome); font-weight: 600; }
 
 /* --- Navigation portlet (Wikipedia: vector-main-menu) --- */
 
-.wiki-nav-portlet {
+.vector-main-menu {
   background: var(--toc-bg);
   border: 1px solid var(--border);
   border-radius: 2px;
@@ -289,7 +302,7 @@ article table th { background: var(--bg-chrome); font-weight: 600; }
 
 /* --- Left-rail collapsible TOC (Vector 2022 sticky pattern) --- */
 
-.wiki-toc {
+.vector-toc {
   background: var(--toc-bg);
   border: 1px solid var(--border);
   border-radius: 2px;
@@ -362,11 +375,11 @@ article table th { background: var(--bg-chrome); font-weight: 600; }
 }
 
 /* When the TOC is collapsed (JS sets aria-expanded=false), hide the list */
-.wiki-toc.toc-collapsed .toc-list { display: none; }
+.vector-toc.toc-collapsed .toc-list { display: none; }
 
 /* --- Main article column --- */
 
-.wiki-main {
+.mw-body {
   min-width: 0;
   padding: 1.25rem 1.5rem 3rem 1.5rem;
 }
@@ -410,7 +423,7 @@ article table th { background: var(--bg-chrome); font-weight: 600; }
 }
 
 /* Read / Edit / View history tabs — top-right (item 2) */
-.wiki-action-tabs {
+#p-views {
   display: flex;
   align-items: flex-end;
   gap: 0;
@@ -583,7 +596,7 @@ article table th { background: var(--bg-chrome); font-weight: 600; }
 
 /* --- Article wrapper inside wiki-main --- */
 
-.wiki-article {
+#mw-content-text {
   /* Inherits article styles from Phase 1 */
 }
 
@@ -686,7 +699,7 @@ article table th { background: var(--bg-chrome); font-weight: 600; }
   }
 
   /* Left rail hidden at mobile — accessible via § ToC button and ☰ Nav button */
-  .wiki-left-rail {
+  #mw-panel {
     display: none;
   }
 
@@ -694,11 +707,11 @@ article table th { background: var(--bg-chrome); font-weight: 600; }
     display: none;
   }
 
-  .wiki-toc {
+  .vector-toc {
     position: static;
   }
 
-  .wiki-main {
+  .mw-body {
     padding: 0.75rem;
   }
 
@@ -709,7 +722,7 @@ article table th { background: var(--bg-chrome); font-weight: 600; }
   }
 
   .wiki-page-tabs,
-  .wiki-action-tabs {
+  #p-views {
     margin: 0;
     flex-wrap: wrap;
   }
