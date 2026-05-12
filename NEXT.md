@@ -30,9 +30,24 @@ presence:
   per framework §8 before moving to next phase milestone.
 
 ### Leapfrog 2030 Architecture & Multi-Yo-Yo Roadmap
-- **Execute 4-Phase Roadmap** — See `service-slm/NEXT.md` for the active Task agent queue.
-  - Active: Software Configuration (Multi-Yo-Yo endpoints, Tier C Auth, Seed Alignment).
-  - Deferred: Infrastructure Provisioning (GCP Project, D4 Image, VM Deployment).
+- **Software layer complete** (177/177 tests, canonical `ecfc691`). See `service-slm/NEXT.md`.
+- **Yo-Yo #1 VM live** — `yoyo-tier-b-1` provisioned 2026-05-07 in `us-central1-a`
+  (Spot g2-standard-4 + L4, image `slm-yoyo-20260507-061137`). Doorman wired
+  (`has_yoyo: true`). Nginx TLS + bearer auth verified working.
+- **Idle monitor fixed** (`890b3f6`) — was returning HTTP 411 (missing `Content-Length: 0`
+  on GCP POST); fixed with `.body("")`. The SA (Editor role) can stop instances without
+  additional IAM grant — step 2 below is no longer required.
+- **VM currently TERMINATED** — manually stopped 2026-05-07; Instance Schedule will
+  restart at 02:00 UTC nightly once weights are loaded.
+- **Remaining operator steps:**
+  1. Upload OLMo 3 32B-Think Q4 weights (~20 GB) to `/data/weights/olmo-3-32b-think-q4.gguf`
+     on the Yo-Yo VM via `gcloud compute scp`. This is the only blocker for full
+     nightly drain cycle. Once loaded, VM starts at 02:00 UTC, vLLM serves, drain
+     worker routes briefs to Tier B, idle monitor stops VM after 30 min idle.
+  2. ~~Grant `roles/compute.instanceAdmin.v1`~~ — not needed; Editor role sufficient.
+  3. Run smoke test per `service-slm/docs/deploy/deploy-yoyo-tier-b.md` §8.
+  4. Re-enable apprenticeship: set `SLM_APPRENTICESHIP_ENABLED=true` in `local-doorman.env`.
+- Runbook: `service-slm/docs/deploy/deploy-yoyo-tier-b.md`.
 
 ### Layout hygiene — defect closures queued
 
@@ -72,9 +87,7 @@ the source-remove.
   `app-console-*` and `app-network-*` projects contain both
   patterns; the registry's `Type` column does not distinguish.
   Surfaced during bookkeeper activation.
-- **`BIM.zip` triage** — user-added working-tree artefact; determine
-  whether source data, extraction seed, or stray; gitignore or
-  delete.
+- **`BIM.zip` triage** — verified 2026-05-07: no zip artefact present on disk; item closed.
 
 ### Rename series
 
@@ -89,9 +102,6 @@ migrations)*
   are treated as standalone workspaces (hence 23 stray
   `Cargo.lock` files). Unifying would consolidate targets and
   resolve profile inheritance.
-- **Monorepo `.gitignore` deduplication** — the "Asymmetric Storage
-  Protocol: Enforce Tier-1 Quarantine" block is duplicated four
-  times. Normalise to a single copy.
 - **Large binaries** — tracked artefacts that should move to
   build-time fetch:
   - `app-mediakit-telemetry/assets/GeoLite2-City.mmdb` (63.5 MB)
@@ -108,42 +118,9 @@ migrations)*
   - ISO / IMG artefacts in `os-infrastructure/`,
     `os-network-admin/`, `os-totebox/` (tracking status TBD).
 
-### New projects to register — Reverse-Flow Substrate (Doctrine claim #52)
-
-Six new Reserved-folder projects are named in DOCTRINE.md claim #52
-(ratified 2026-04-30) and `conventions/reverse-flow-substrate.md`.
-Create directory + bilingual READMEs + registry row in one commit per
-project (workspace §9: directory creation and registry row must land
-together). Activation to Active follows the standard framework §8
-procedure (CLAUDE.md + NEXT.md + registry row update).
-
-| Project | Prefix type | App OS | Notes |
-|---|---|---|---|
-| `service-market` | `service-*` | `os-totebox` | Ring 2 data marketplace — outbound connectors (Snowflake, AWS Data Exchange, LiveRamp) + inbound Delta Sharing API |
-| `service-exchange` | `service-*` | `os-totebox` | Ring 2 ad exchange — IAB OpenRTB 2.6; SSP + DSP bidirectional; Prebid Server sidecar; `iab-specs-openrtb` crate |
-| `app-orchestration-market` | `app-orchestration-*` | `os-orchestration` | Browser marketplace storefront; deployed as `gateway-orchestration-market-N` |
-| `app-orchestration-exchange` | `app-orchestration-*` | `os-orchestration` | Browser ad campaign UI; deployed as `gateway-orchestration-exchange-N` |
-| `app-console-market` | `app-console-*` | `os-console` | Secure TUI for industries where web delivery is too risky (financial, health, legal data) |
-| `app-console-exchange` | `app-console-*` | `os-console` | Secure TUI ad exchange surface; same risk-profile rationale |
-
-Also note: `app-orchestration-gis` (from `project-gis` cluster,
-deployed as `gateway-orchestration-gis-1`) is absent from the project
-registry — close this registry drift in the same pass.
-
 ### Conformance and activations
 
-- **`app-workplace-memo` activation.** Scaffold-coded with 47 files,
-  described by its sibling as "running on Linux Mint." Needs
-  `CLAUDE.md` + `NEXT.md` to become Active per framework §8.
-- **`app-workplace-proforma` CLAUDE.md commit-convention decision.**
-  Its `CLAUDE.md` exists but is marked "not committed to git." Per
-  the 2026-04-22 framework decision (committed convention is
-  canonical), this file either needs committing or explicit
-  conformance to a local-only exception.
-- **`service-extraction/CLAUDE.md` staleness.** The in-module
-  `CLAUDE.md` describes v0.2/v0.4 development but the code is a
-  149-line filesystem-watching router — different implementation.
-  Align before any new refactor of this service.
+*(queue empty — see Recently closed 2026-05-07 below)*
 
 ### Stashes parked in this repo
 
@@ -153,6 +130,24 @@ registry — close this registry drift in the same pass.
   `git stash pop` when ready to resume.
 - `stash@{1}` — pre-existing — "On service-extraction-v04: main:
   registry + BIM untracked — parked before task [21] resume".
+
+## Recently closed (2026-05-07)
+
+- **Reverse-Flow Substrate project registrations (Doctrine claim #52)** — six new
+  Reserved-folder projects created with bilingual READMEs and registry rows in one
+  commit each: `service-market`, `service-exchange`, `app-orchestration-market`,
+  `app-orchestration-exchange`, `app-console-market`, `app-console-exchange`.
+- **`app-orchestration-gis` registry drift** — directory created; Reserved-folder row
+  added to registry. Deployed instance `gateway-orchestration-gis-1` was missing from
+  the project registry.
+- **`.gitignore` deduplication** — "Asymmetric Storage Protocol: Enforce Tier-1
+  Quarantine" block was duplicated 4× (lines 4–18). Normalised to a single copy.
+- **`service-extraction/CLAUDE.md`** — CLAUDE.md created; describes the 149-line
+  filesystem-watching router accurately (replaces the stale v0.2/v0.4 framing in README).
+- **`app-workplace-memo` activation** — CLAUDE.md + NEXT.md added; registry row
+  promoted from Scaffold-coded → Active per framework §8.
+- **`app-workplace-proforma/CLAUDE.md`** — local-only file committed to git; header
+  updated to standard CLAUDE.md format.
 
 ## Recently closed (2026-04-23)
 
