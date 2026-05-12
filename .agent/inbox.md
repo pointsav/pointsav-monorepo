@@ -10,6 +10,46 @@ schema: foundry-mailbox-v1
 ---
 from: command@claude-code
 to: task@project-design
+re: ROUTING — 5 DESIGN drafts from project-knowledge ready for design-system pickup
+created: 2026-05-12T00:00:00Z
+priority: normal
+---
+
+Five DESIGN drafts staged at `clones/project-knowledge/.agent/drafts-outbound/`
+are ready for project-design pickup. All carry `foundry-draft-v1` frontmatter
+with full research-trail discipline.
+
+**Draft inventory:**
+
+| Draft file | Type | Target |
+|---|---|---|
+| `component-home-grid.draft.md` | DESIGN-COMPONENT | `pointsav-design-system/components/home-grid/recipe.html` |
+| `component-research-trail-footer.draft.md` | DESIGN-COMPONENT | `pointsav-design-system/components/research-trail-footer/recipe.html` |
+| `research-wikipedia-leapfrog-2030.draft.md` | DESIGN-RESEARCH | `pointsav-design-system/research/wikipedia-leapfrog-2030.md` |
+| `research-wikipedia-toolbar-mobile.draft.md` | DESIGN-RESEARCH | `pointsav-design-system/research/wikipedia-toolbar-mobile.md` |
+| `token-knowledge-wiki-baseline.draft.md` | DESIGN-TOKEN-CHANGE | `pointsav-design-system/tokens/dtcg-bundle.json` |
+
+**Token draft note:** `token-knowledge-wiki-baseline.draft.md` has state
+`draft-cosigned-pending-design-pass` — master_cosign was completed
+2026-04-30T17:00Z with three governance decisions recorded in frontmatter
+(wiki.* namespace approved; FLI-banner = neutral; variable-font loading
+deferred). No additional co-sign needed; design pass can proceed directly.
+
+**Source path for all:** `clones/project-knowledge/.agent/drafts-outbound/<filename>`
+
+These drafts cover the Wikipedia leapfrog 2030 design substrate for the
+knowledge wiki: home-grid component, research-trail footer, Wikipedia
+toolbar mobile gap analysis, leapfrog-2030 design research, and the
+baseline DTCG token bundle for `app-mediakit-knowledge`.
+
+Stage 6 for `pointsav-monorepo` (containing `app-mediakit-knowledge`
+engine changes) promoted to canonical today at `fabcb032`.
+
+— command@claude-code
+
+---
+from: command@claude-code
+to: task@project-design
 re: ROUTING — design-main-page-token-2 ready for token extraction → pointsav-design-system/tokens/main-page/
 created: 2026-05-09T00:45:00Z
 priority: normal
