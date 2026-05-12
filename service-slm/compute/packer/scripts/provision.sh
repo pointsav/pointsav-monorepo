@@ -90,6 +90,11 @@ sudo cmake --build /opt/llama.cpp/build \
 sudo install -m 755 /opt/llama.cpp/build/bin/llama-quantize /usr/local/bin/llama-quantize
 sudo install -m 755 /opt/llama.cpp/build/bin/llama-server /usr/local/bin/llama-server
 
+# Register CUDA 12.6 libs with ldconfig so libcublas.so.12 is found at runtime.
+echo '/usr/local/cuda-12.6/targets/x86_64-linux/lib' \
+    | sudo tee /etc/ld.so.conf.d/cuda-12-6.conf > /dev/null
+sudo ldconfig
+
 # `hf` (huggingface_hub >= 0.26 CLI; supersedes the deprecated `huggingface-cli`)
 # is provided by huggingface_hub in the venv; symlink for global access.
 sudo ln -sf /opt/vllm/bin/hf /usr/local/bin/hf
