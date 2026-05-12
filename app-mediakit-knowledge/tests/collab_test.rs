@@ -34,6 +34,7 @@ async fn build_state(enable_collab: bool) -> (AppState, tempfile::TempDir, tempf
         site_title: "PointSav Documentation Wiki".to_string(),
         git_tenant: "pointsav".to_string(),
         glossary: Arc::new(app_mediakit_knowledge::glossary::Glossary::default()),
+                links: app_mediakit_knowledge::links::LinkGraph::for_testing(),
                 db: None,
     };
     (state, dir, state_dir)
