@@ -90,6 +90,11 @@ enum Command {
         #[arg(long, env = "WIKI_GIT_TENANT", default_value = "pointsav")]
         git_tenant: String,
 
+        /// Phase 4 Step 4.6: enable the MCP JSON-RPC 2.0 endpoint at
+        /// `POST /mcp`. Default off — the route is absent when unset.
+        #[arg(long, env = "WIKI_ENABLE_MCP")]
+        enable_mcp: bool,
+
         /// Phase 5: admin username for initial seed. When set alongside
         /// WIKI_ADMIN_PASSWORD_HASH and the users table is empty, creates
         /// the first admin account automatically on startup.
@@ -124,9 +129,10 @@ async fn main() -> Result<()> {
             enable_collab,
             site_title,
             git_tenant,
+            enable_mcp,
             admin_username,
             admin_password_hash,
-        } => serve(content_dir, guide_dir, guide_dir_2, bind, citations_yaml, state_dir, enable_collab, site_title, git_tenant, admin_username, admin_password_hash).await,
+        } => serve(content_dir, guide_dir, guide_dir_2, bind, citations_yaml, state_dir, enable_collab, site_title, git_tenant, enable_mcp, admin_username, admin_password_hash).await,
     }
 }
 
@@ -140,6 +146,7 @@ async fn serve(
     enable_collab: bool,
     site_title: String,
     git_tenant: String,
+    enable_mcp: bool,
     admin_username: Option<String>,
     admin_password_hash: Option<String>,
 ) -> Result<()> {
@@ -266,6 +273,7 @@ async fn serve(
         enable_collab,
         site_title,
         git_tenant,
+        mcp_enabled: enable_mcp,
         glossary: Arc::new(glossary),
         links: link_graph,
         db,
