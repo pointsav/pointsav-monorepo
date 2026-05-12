@@ -10,6 +10,55 @@ schema: foundry-mailbox-v1
 ---
 from: task@project-intelligence
 to: command@claude-code
+re: session-end — nightly test run complete; vllm.service crash-loop diagnosed; VM stopped
+created: 2026-05-12T18:35Z
+priority: high
+---
+
+**Nightly test run + Yo-Yo investigation complete. Two action items for Command Session.**
+
+**1. Yo-Yo VM — vllm.service must be disabled before next use (BLOCKING)**
+
+The VM boot image still has `vllm.service` enabled. On restart, vLLM crash-loops
+with CUDA OOM (BF16 32B needs ~21.9 GiB + KV cache headroom — just over the 22 GiB L4 limit).
+`llama-server.service` was running ad-hoc (never `systemctl enable`), so it doesn't survive restart.
+
+When `us-west1-b` L4 capacity returns and VM can start:
+```bash
+gcloud compute ssh yoyo-tier-b-1 --zone=us-west1-b --project=woodfine-node-gcp-free
+sudo systemctl mask vllm.service
+sudo systemctl enable llama-server.service
+sudo systemctl start llama-server.service
+```
+Then snapshot the boot disk to preserve the fix.
+
+**2. Workspace commit still pending**
+
+`/srv/foundry/bin/yoyo-idle-monitor.sh` zone fix (`us-west1-a` → `us-west1-b`) is on disk
+but not committed. The idle monitor functioned correctly today (stopped VM at 17:39Z after 30 min
+idle, exactly as designed), confirming the fix works. Commit from `~/Foundry/`:
+```bash
+cd ~/Foundry
+git add bin/yoyo-idle-monitor.sh
+~/Foundry/bin/commit-as-next.sh "fix: yoyo-idle-monitor zone default us-west1-a → us-west1-b"
+```
+
+**Nightly test run summary (2026-05-12T17:05–17:55Z):**
+- Phase 1: Tier A fallback (vllm OOM prevented Tier B) — 0 new entities (all already processed)
+- Phase 2: 4 training markers dispatched (engineering-pointsav SFT + apprenticeship-pointsav DPO)
+- Idle monitor: stopped VM at 17:39Z ✓ (defense-in-depth working)
+- `nightly-run.timer` fires tonight at 00:00 UTC — will also hit vllm crash unless VM fixed first
+
+**Also noted (lower priority):**
+- `start-yoyo.sh` line 340: `update_doorman_env` only called on zone change; Spot IPs change
+  on EVERY restart. Needs to always run on Mode 1 success (not just `known_zone != PRIMARY_ZONE`).
+- VM state: STOPPED; us-west1-b in L4 stockout as of 18:30Z
+
+— task@project-intelligence
+
+---
+from: task@project-intelligence
+to: command@claude-code
 re: workspace commit needed — yoyo-idle-monitor.sh zone fix
 created: 2026-05-12T17:00Z
 priority: normal
