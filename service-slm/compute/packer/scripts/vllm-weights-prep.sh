@@ -25,7 +25,7 @@ set -euo pipefail
 
 # ── Configuration ───────────────────────────────────────────────────────────
 WEIGHTS_DIR="/data/weights"
-WEIGHTS_FILE="${WEIGHTS_DIR}/olmo-3-32b-think-q4.gguf"
+WEIGHTS_FILE="${WEIGHTS_DIR}/olmo-3-32b-think-q3.gguf"
 TOKENIZER_DIR="${WEIGHTS_DIR}/tokenizer"
 STAGING_DIR="${WEIGHTS_DIR}/staging"
 LOG_FILE="/var/log/yoyo-weights-prep.log"
@@ -49,8 +49,8 @@ if [[ -z "${GCS_BUCKET}" ]]; then
 fi
 log "GCS bucket: gs://${GCS_BUCKET}/"
 
-GCS_WEIGHTS_URL="gs://${GCS_BUCKET}/base-models/olmo-3-32b-think-q4.gguf"
-GCS_SHA256_URL="gs://${GCS_BUCKET}/base-models/olmo-3-32b-think-q4.gguf.sha256"
+GCS_WEIGHTS_URL="gs://${GCS_BUCKET}/base-models/olmo-3-32b-think-q3.gguf"
+GCS_SHA256_URL="gs://${GCS_BUCKET}/base-models/olmo-3-32b-think-q3.gguf.sha256"
 GCS_TOKENIZER_PREFIX="gs://${GCS_BUCKET}/base-models/tokenizer/"
 
 # ── Helpers ─────────────────────────────────────────────────────────────────
@@ -156,18 +156,18 @@ log "Step 2/5: converting HF safetensors → GGUF fp16 (~10 min)..."
     --outfile "${INTERMEDIATE_GGUF}" \
     --outtype f16
 
-# Step 3: quantize fp16 → Q4_K_M
-log "Step 3/5: quantizing fp16 GGUF → Q4_K_M (~5 min)..."
+# Step 3: quantize fp16 → Q3_K_M (fits within L4 22 GiB VRAM with llama-server)
+log "Step 3/5: quantizing fp16 GGUF → Q3_K_M (~5 min)..."
 "${LLAMA_CPP_DIR}/build/bin/llama-quantize" \
     "${INTERMEDIATE_GGUF}" \
     "${WEIGHTS_FILE}" \
-    Q4_K_M
+    Q3_K_M
 
 # Step 4: compute sha256, upload Q4_K_M + sha256 to GCS
 ACTUAL_SHA=$(sha256sum "${WEIGHTS_FILE}" | awk '{print $1}')
-log "Step 4/5: uploading Q4_K_M (sha256=${ACTUAL_SHA}) to ${GCS_WEIGHTS_URL}..."
+log "Step 4/5: uploading Q3_K_M (sha256=${ACTUAL_SHA}) to ${GCS_WEIGHTS_URL}..."
 gcloud storage cp "${WEIGHTS_FILE}" "${GCS_WEIGHTS_URL}"
-echo "${ACTUAL_SHA}  olmo-3-32b-think-q4.gguf" | gcloud storage cp - "${GCS_SHA256_URL}"
+echo "${ACTUAL_SHA}  olmo-3-32b-think-q3.gguf" | gcloud storage cp - "${GCS_SHA256_URL}"
 
 # Save tokenizer files locally + upload to GCS so future Path A runs can grab them
 log "Saving tokenizer files locally + uploading to GCS..."
@@ -213,6 +213,6 @@ fi
 verify_sha256 "${WEIGHTS_FILE}" "${ACTUAL_SHA}"
 
 setup_model_dir
-log "Path B complete. Canonical Q4_K_M now in GCS; future boots take Path A."
+log "Path B complete. Canonical Q3_K_M now in GCS; future boots take Path A."
 log "Final state: ${WEIGHTS_FILE} ready (sha256=${ACTUAL_SHA}), tokenizer at ${TOKENIZER_DIR}/."
 exit 0
