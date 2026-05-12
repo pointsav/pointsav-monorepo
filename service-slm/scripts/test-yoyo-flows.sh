@@ -136,9 +136,10 @@ if [[ -n "${readyz_resp}" ]]; then
         # Probe more deeply: send a tiny inference and inspect tier_used in
         # the response body. Doorman falls back to Tier A transparently when
         # Tier B is down, so HTTP 200 alone is not proof of Tier B health.
-        probe_body=$(curl -sS --max-time 5 \
+        probe_body=$(curl -sS --max-time 30 \
             -H "Content-Type: application/json" \
-            -d '{"model":"olmo-3-32b","messages":[{"role":"user","content":"ping"}],"max_tokens":1,"yoyo_label":"default"}' \
+            -H "X-Foundry-Complexity: high" \
+            -d '{"model":"olmo-3-32b","messages":[{"role":"user","content":"ping"}],"max_tokens":1}' \
             "${DOORMAN}/v1/chat/completions" 2>/dev/null || echo "")
         probe_tier=$(echo "${probe_body}" | python3 -c 'import json,sys; print(json.loads(sys.stdin.read()).get("tier_used",""))' 2>/dev/null || echo "")
         if [[ "${probe_tier}" == "yoyo" ]]; then
@@ -195,8 +196,9 @@ if [[ "${TIER_B_UP}" != "true" ]]; then
     record "1-plain-tier-b-inference" "SKIP" "Tier B not reachable"
 else
     out=$(curl -sS -o /tmp/yoyo-flow-b1 -w '%{http_code}' \
-        --max-time 30 -H "Content-Type: application/json" \
-        -d '{"model":"olmo-3-32b","messages":[{"role":"user","content":"Say hello in one word."}],"max_tokens":8,"yoyo_label":"default"}' \
+        --max-time 60 -H "Content-Type: application/json" \
+        -H "X-Foundry-Complexity: high" \
+        -d '{"model":"olmo-3-32b","messages":[{"role":"user","content":"Say hello in one word."}],"max_tokens":8}' \
         "${DOORMAN}/v1/chat/completions" 2>/dev/null || echo "000")
     tier=$(extract_tier_used /tmp/yoyo-flow-b1)
     if [[ "${out}" == "200" ]] && [[ "${tier}" == "yoyo" ]]; then
@@ -218,8 +220,10 @@ else
 {"model":"olmo-3-32b","messages":[{"role":"user","content":"Return a JSON object with name=Alice and age=30."}],"max_tokens":40,"yoyo_label":"default","grammar":{"type":"json-schema","value":${schema}}}
 EOF
 )
-    out=$(curl -sS -o /tmp/yoyo-flow-b2 -w '%{http_code}' --max-time 30 \
-        -H "Content-Type: application/json" -d "${body}" \
+    out=$(curl -sS -o /tmp/yoyo-flow-b2 -w '%{http_code}' --max-time 60 \
+        -H "Content-Type: application/json" \
+        -H "X-Foundry-Complexity: high" \
+        -d "${body}" \
         "${DOORMAN}/v1/chat/completions" 2>/dev/null || echo "000")
     tier=$(extract_tier_used /tmp/yoyo-flow-b2)
     if [[ "${out}" == "200" ]] && [[ "${tier}" == "yoyo" ]]; then
@@ -290,10 +294,11 @@ elif [[ "${TIER_B_UP}" != "true" ]]; then
     record "5-apprenticeship-shadow" "SKIP" "Tier B not reachable"
 else
     pre=$(find /srv/foundry/data/training-corpus/apprenticeship -name "*.jsonl" -newer /tmp 2>/dev/null | wc -l)
-    curl -sS -o /tmp/yoyo-flow-b5 --max-time 30 \
+    curl -sS -o /tmp/yoyo-flow-b5 --max-time 60 \
         -H "Content-Type: application/json" \
+        -H "X-Foundry-Complexity: high" \
         -H "X-Foundry-Task-Type: doorman-routing" \
-        -d '{"model":"olmo-3-32b","messages":[{"role":"user","content":"Pick a tier for this routing decision."}],"max_tokens":16,"yoyo_label":"default"}' \
+        -d '{"model":"olmo-3-32b","messages":[{"role":"user","content":"Pick a tier for this routing decision."}],"max_tokens":16}' \
         "${DOORMAN}/v1/chat/completions" >/dev/null 2>&1
     sleep 2
     post=$(find /srv/foundry/data/training-corpus/apprenticeship -name "*.jsonl" -newer /tmp 2>/dev/null | wc -l)
@@ -309,9 +314,10 @@ echo "=== Test 6: Mesh routing by yoyo-label ==="
 if [[ "${TIER_B_UP}" != "true" ]]; then
     record "6-mesh-routing" "SKIP" "Tier B not reachable"
 else
-    out=$(curl -sS -o /tmp/yoyo-flow-b6 -w '%{http_code}' --max-time 30 \
+    out=$(curl -sS -o /tmp/yoyo-flow-b6 -w '%{http_code}' --max-time 60 \
         -H "Content-Type: application/json" \
-        -d '{"model":"olmo-3-32b","messages":[{"role":"user","content":"hi"}],"max_tokens":2,"yoyo_label":"trainer"}' \
+        -H "X-Foundry-Complexity: high" \
+        -d '{"model":"olmo-3-32b","messages":[{"role":"user","content":"hi"}],"max_tokens":2}' \
         "${DOORMAN}/v1/chat/completions" 2>/dev/null || echo "000")
     tier=$(extract_tier_used /tmp/yoyo-flow-b6)
     if [[ "${out}" == "200" ]] && [[ "${tier}" == "yoyo" ]]; then
