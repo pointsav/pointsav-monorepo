@@ -67,7 +67,7 @@ process_document() {
         }')
 
     local response
-    response=$(curl -sf --max-time 30 \
+    response=$(curl -sf --max-time 120 \
         -X POST "${DOORMAN_ENDPOINT}/v1/chat/completions" \
         -H "Content-Type: application/json" \
         -H "X-Foundry-Module-ID: ${MODULE_ID}" \
