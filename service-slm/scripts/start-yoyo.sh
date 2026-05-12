@@ -77,23 +77,48 @@ log() {
     fi
 }
 
-# Ordered fallback zone list — used when the primary zone is exhausted or when
-# provisioning fresh. Order is tuned to L4 GPU capacity observed during recent
-# Packer image builds (most-likely-available zones first). us-east4 omitted —
-# does not stock g2-standard-4. Update when GCP capacity patterns shift.
-FALLBACK_ZONES=(
-    "us-west1-a"
-    "us-central1-a"
-    "us-central1-b"
-    "us-central1-c"
-    "us-east1-b"
-    "us-east1-c"
-    "us-east1-d"
-    "us-west1-b"
-    "us-west4-a"
-    "northamerica-northeast1-b"
-    "northamerica-northeast1-c"
+# UTC offsets for L4-capable GCP zones (integer hours; DST ignored — 1h precision
+# is sufficient for demand-pattern scoring). Spot capacity correlates with commercial
+# compute demand, which follows business hours in each zone's local market.
+# Scoring: local hour 01-07 = deep night (5), 20-01 = late evening (4),
+#          07-09 = early morning (3), daytime = 1.
+# Zones where it is currently night float to the top of the fallback list,
+# maximising the chance of finding available L4 Spot capacity.
+# us-east4 omitted — does not stock g2-standard-4.
+declare -A ZONE_UTC_OFFSET=(
+    ["us-west1-a"]=-8    ["us-west1-b"]=-8
+    ["us-west4-a"]=-8
+    ["us-central1-a"]=-6 ["us-central1-b"]=-6 ["us-central1-c"]=-6
+    ["us-east1-b"]=-5    ["us-east1-c"]=-5    ["us-east1-d"]=-5
+    ["northamerica-northeast1-b"]=-5 ["northamerica-northeast1-c"]=-5
+    ["europe-west1-b"]=1 ["europe-west1-c"]=1 ["europe-west4-a"]=1
+    ["europe-west2-a"]=0 ["europe-west2-b"]=0
+    ["asia-east1-a"]=8   ["asia-east1-b"]=8
+    ["asia-southeast1-a"]=8 ["asia-southeast1-b"]=8
 )
+
+# Returns zone names one-per-line, sorted by night-score descending.
+# Excludes the zone passed as $1 (already tried in Mode 1).
+# Ties broken by $RANDOM so repeated runs don't hammer the same zone.
+sorted_fallback_zones() {
+    local skip_zone="${1:-}"
+    local utc_hour
+    utc_hour=$(date -u +%-H)   # %-H strips leading zero for bash arithmetic
+    local -a scored=()
+    local zone offset local_hour score
+    for zone in "${!ZONE_UTC_OFFSET[@]}"; do
+        [[ "${zone}" == "${skip_zone}" ]] && continue
+        offset="${ZONE_UTC_OFFSET[$zone]}"
+        local_hour=$(( (utc_hour + offset + 24) % 24 ))
+        if   (( local_hour >= 1  && local_hour <  7 )); then score=5
+        elif (( local_hour >= 20 || local_hour <  1 )); then score=4
+        elif (( local_hour >= 7  && local_hour <  9 )); then score=3
+        else score=1
+        fi
+        scored+=("${score}.${RANDOM}:${zone}")
+    done
+    printf '%s\n' "${scored[@]}" | sort -t: -k1 -rn | sed 's/^[^:]*://'
+}
 
 # ── Helper: check if gcloud error output indicates zone stockout ──────────────
 is_stockout() {
@@ -349,12 +374,12 @@ attempt_start_once() {
         log "No existing ${INSTANCE} in project ${PROJECT} — entering Mode 2 (provision)."
     fi
 
-    # Mode 2: provision a new VM in a fallback zone
-    local zones_to_try=()
-    for z in "${FALLBACK_ZONES[@]}"; do
-        [[ "${z}" != "${known_zone:-}" ]] && zones_to_try+=("${z}")
-    done
-    for zone in "${zones_to_try[@]}"; do
+    # Mode 2: provision a new VM in a time-scored fallback zone.
+    # sorted_fallback_zones() ranks zones where it is currently night first —
+    # lower commercial GPU demand means more L4 Spot capacity available.
+    log "Zone order (top 3 by night-score): $(sorted_fallback_zones "${known_zone:-}" | head -3 | tr '\n' ' ')"
+    local zone
+    while IFS= read -r zone; do
         log "Trying to provision ${INSTANCE} in ${PROJECT}/${zone} ..."
         if provision_vm_in_zone "${zone}" >&2; then
             log "VM provisioned in ${zone} (Mode 2: zone relocation)."
@@ -363,7 +388,7 @@ attempt_start_once() {
             print_post_provision_steps "${zone}"
             return 0
         fi
-    done
+    done < <(sorted_fallback_zones "${known_zone:-}")
 
     log "All fallback zones exhausted in this cycle."
     return 3
