@@ -29,6 +29,13 @@ notes_for_editor: |
   covers Phase 2.
   The jennifer-graph is live at service-content (11 MB LadybugDB file) —
   state this as current fact.
+
+  UPDATE NOTE (2026-05-12): First successful extraction confirmed — 4–11
+  entities per document, pipeline end-to-end verified 2026-05-12. State
+  pipeline as current-fact (not forward-looking). Three-consecutive-HEALTHY
+  gate still forward criterion. Doorman response envelope is `.content`
+  (not OpenAI `.choices[]`) — relevant if body text references the wire
+  format.
 ---
 
 # TOPIC — Jennifer DataGraph Rebuild
