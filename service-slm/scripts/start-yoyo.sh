@@ -160,8 +160,7 @@ provision_vm_in_zone() {
     [[ -n "${WEIGHTS_GCS_BUCKET}" ]] && meta_kv+=("weights-gcs-bucket=${WEIGHTS_GCS_BUCKET}")
     local meta_arg=""
     if [[ "${#meta_kv[@]}" -gt 0 ]]; then
-        local IFS=','
-        meta_arg="--metadata=${meta_kv[*]}"
+        meta_arg="--metadata=$(IFS=','; printf '%s' "${meta_kv[*]}")"
     fi
 
     # Create the instance.
