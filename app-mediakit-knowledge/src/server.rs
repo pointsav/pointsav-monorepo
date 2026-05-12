@@ -1788,6 +1788,11 @@ fn wiki_chrome(
                                         aria-expanded="true"
                                         title="Toggle table of contents"
                                     { "[hide]" }
+                                    button.toc-pin-btn #toc-pin-btn
+                                        aria-label="Pin table of contents"
+                                        aria-pressed="false"
+                                        title="Keep table of contents visible"
+                                    { "[pin]" }
                                 }
                                 ol.toc-list #toc-list {
                                     @for (id, text, level, num) in &numbered_headings {
@@ -1817,6 +1822,7 @@ fn wiki_chrome(
                                 { "Article" }
                                 a.wiki-tab
                                     href={ "/talk/" (slug) }
+                                    accesskey="t"
                                     title="Discussion page"
                                 { "Talk" }
                             }
@@ -1867,15 +1873,17 @@ fn wiki_chrome(
                             nav #p-views aria-label="Page actions" {
                                 a.wiki-tab.wiki-tab-active
                                     href={ "/wiki/" (slug) }
+                                    accesskey="r"
                                     aria-current="page"
                                 { "Read" }
                                 @if user.is_some() {
-                                    a.wiki-tab href={ "/edit/" (slug) } { "Edit" }
+                                    a.wiki-tab href={ "/edit/" (slug) } accesskey="e" { "Edit" }
                                 } @else {
-                                    a.wiki-tab href={ "/git/" (slug) } title="Log in to edit" { "View source" }
+                                    a.wiki-tab href={ "/git/" (slug) } accesskey="s" title="Log in to edit" { "View source" }
                                 }
                                 a.wiki-tab
                                     href={ "/history/" (slug) }
+                                    accesskey="h"
                                 { "View history" }
                             }
                         }
