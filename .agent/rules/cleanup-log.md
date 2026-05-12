@@ -96,6 +96,48 @@ Newest on top. Append a dated block when a session includes meaningful cleanup w
 ---
 
 
+## 2026-05-12 — Wikipedia Parity Phase 3 — keyboard shortcuts + TOC pin + AJAX page navigation
+
+- **wiki.js rewritten** (~619 lines → ~530 lines). Module-level state vars added for idempotent
+  re-init on AJAX navigation: `_sectionObserver`, `_hoverCard`, `_hoverTimer`, `_hoverTarget`,
+  `_hoverCache`, `_glossaryTip`, `_fnTip`.
+
+- **5 content-dependent init functions extracted/renamed** to support AJAX page swap:
+  `initHoverCards()`, `initGlossaryTooltips()`, `initFootnoteTooltips()`,
+  `initNavboxes()`, `initCollapsibleSections()`, `initActiveTocTracking()` (stores observer
+  ref in `_sectionObserver`; disconnects before content swap). Called at boot and in
+  `reinitContentInteractions()` after every AJAX navigation.
+
+- **Keyboard shortcuts (Part 1)**: `?` key toggles shortcut help overlay; `Esc` closes it.
+  AccessKey attributes added to server.rs — `accesskey="r"` (Read), `accesskey="e"` (Edit),
+  `accesskey="s"` (View source), `accesskey="h"` (View history), `accesskey="t"` (Talk).
+  Browsers trigger via Alt+Shift+key (Firefox/Linux), Alt+key (Chrome), Ctrl+Option (macOS).
+
+- **TOC pin button (Part 2)**: `button.toc-pin-btn #toc-pin-btn` added to `div.toc-header` in
+  server.rs (after the existing `[hide]` toggle). `initTocPin()` in wiki.js — pin state
+  persisted to `localStorage['wiki-toc-pinned']`; pinned TOC cannot be collapsed by the hide
+  button; `applyPinState()` toggles `toc-pinned` class + `aria-pressed` + button text.
+
+- **AJAX page navigation (Part 3)**: `initAjaxNavigation()` intercepts `/wiki/*` link clicks
+  and `popstate` events. `navigateTo()` uses `fetch()` + `DOMParser` + DOM swap of
+  `#mw-content-text`, `#vector-toc`, `h1.page-title`, `nav #p-views`, `.wiki-breadcrumb`,
+  `document.title`. Loading bar (`#wiki-loading-bar`) with CSS-driven progress at page top.
+  Modifier clicks (Ctrl/Meta/Alt/Shift) and non-`/wiki/` links fall through to full navigation.
+  On fetch error → `window.location.href` fallback. `history.pushState` for forward nav;
+  `history.replaceState` seeds initial state. Uses `.then/.catch` (not async/await) for
+  broad browser compat.
+
+- **CSS additions** (~80 lines appended): `#wiki-loading-bar` (fixed top-of-page progress bar);
+  `#toc-pin-btn` + `.toc-pin-active` (pin button next to hide toggle); `#wiki-shortcut-overlay`
+  + `#wiki-shortcut-panel` + `#wiki-shortcut-close` + `.wiki-shortcut-note` (keyboard overlay).
+
+- **Commit**: `3cee49d` (Jennifer). 60/60 lib tests pass. `doorman_stubs_return_correct_json_shape`
+  pre-existing failure, unrelated.
+
+- **Deployment**: Release build needed; install + `systemctl restart` pending for both services.
+
+---
+
 ## 2026-05-12 — Wikipedia Parity Phase 2A — article typography regression fix + color token port
 
 - **Regression fix**: Phase 1 changed `article.wiki-article` → `div #mw-content-text`, silently
