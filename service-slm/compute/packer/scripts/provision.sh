@@ -45,9 +45,12 @@ curl -fsSL "${CUDA_KEYRING_URL}" -o /tmp/cuda-keyring.deb
 sudo dpkg -i /tmp/cuda-keyring.deb
 rm /tmp/cuda-keyring.deb
 
-echo "==> Installing CUDA drivers (L4 / Ada Lovelace)"
+echo "==> Installing CUDA drivers + build toolkit (L4 / Ada Lovelace)"
 sudo apt-get update -qq
-sudo apt-get install -y --no-install-recommends cuda-drivers
+sudo apt-get install -y --no-install-recommends \
+    cuda-drivers \
+    cuda-nvcc-12-6 \
+    libcublas-dev-12-6
 
 # -- vLLM + training libs ------------------------------------------------------
 # Single venv at /opt/vllm carries both vLLM (inference) and the training
@@ -68,19 +71,24 @@ sudo /opt/vllm/bin/pip install \
     "sentencepiece" \
     "protobuf"
 
-# -- llama.cpp (built from source) ---------------------------------------------
-# We build llama-quantize ourselves so the quantization step is reproducible
-# and verifiable against our own pinned commit. CPU-only build is sufficient
-# for quantize (CUDA is needed only for inference, which vLLM handles).
+# -- llama.cpp (built from source, CUDA-enabled) ------------------------------
+# We build both llama-quantize (weights bootstrap) and llama-server (inference).
+# CUDA (SM 89 / L4 Ada Lovelace) is required for llama-server GPU inference.
+# nvcc compiles without a GPU present; the GPU is only needed at runtime.
 echo "==> Cloning + building llama.cpp at ref=${LLAMA_CPP_REF}"
 sudo git clone https://github.com/ggerganov/llama.cpp /opt/llama.cpp
 sudo git -C /opt/llama.cpp checkout "${LLAMA_CPP_REF}"
 sudo cmake -B /opt/llama.cpp/build -S /opt/llama.cpp \
-    -DGGML_CUDA=OFF -DLLAMA_CURL=OFF
-sudo cmake --build /opt/llama.cpp/build --target llama-quantize -j"$(nproc)"
+    -DGGML_CUDA=ON -DLLAMA_CURL=OFF \
+    -DCMAKE_CUDA_ARCHITECTURES=89 \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_CUDA_COMPILER=/usr/local/cuda-12.6/bin/nvcc
+sudo cmake --build /opt/llama.cpp/build \
+    --target llama-quantize llama-server -j"$(nproc)"
 
-# Make convert script + llama-quantize available on PATH
+# Make binaries available on PATH
 sudo install -m 755 /opt/llama.cpp/build/bin/llama-quantize /usr/local/bin/llama-quantize
+sudo install -m 755 /opt/llama.cpp/build/bin/llama-server /usr/local/bin/llama-server
 
 # `hf` (huggingface_hub >= 0.26 CLI; supersedes the deprecated `huggingface-cli`)
 # is provided by huggingface_hub in the venv; symlink for global access.
@@ -90,6 +98,7 @@ sudo ln -sf /opt/vllm/bin/hf /usr/local/bin/hf
 echo "==> Installing systemd units"
 sudo install -m 644 /tmp/vllm.service /etc/systemd/system/vllm.service
 sudo install -m 644 /tmp/vllm-weights-prep.service /etc/systemd/system/vllm-weights-prep.service
+sudo install -m 644 /tmp/llama-server.service /etc/systemd/system/llama-server.service
 sudo install -m 644 /tmp/lora-training.service /etc/systemd/system/lora-training.service
 sudo install -m 644 /tmp/adapter-publish.service /etc/systemd/system/adapter-publish.service
 
@@ -99,12 +108,13 @@ sudo install -m 755 /tmp/lora-training.sh /usr/local/bin/lora-training.sh
 sudo install -m 755 /tmp/adapter-publish.sh /usr/local/bin/adapter-publish.sh
 
 # Enable units that should run at boot.
-# vllm-weights-prep MUST run before vllm.service (declared via Requires/After).
+# vllm-weights-prep downloads weights before llama-server starts (Requires/After).
+# vllm.service is installed but NOT enabled — llama-server.service handles inference.
 # lora-training is intentionally NOT enabled — it activates after Master
 # ratifies the Yo-Yo-runs-LoRA-training Doctrine claim.
 # adapter-publish is on-demand (no [Install] section).
 sudo systemctl enable vllm-weights-prep.service
-sudo systemctl enable vllm.service
+sudo systemctl enable llama-server.service
 
 # -- Nginx TLS -----------------------------------------------------------------
 echo "==> Generating self-signed TLS certificate for Nginx"

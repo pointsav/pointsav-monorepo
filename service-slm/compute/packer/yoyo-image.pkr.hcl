@@ -19,7 +19,8 @@ variable "zone" {
 
 # build_machine_type: CPU-only instance used only during Packer image creation.
 # GPU (nvidia-l4) is NOT needed here — CUDA drivers, vLLM, and llama.cpp all
-# install fine on CPU-only hardware; the GPU is only required at inference runtime.
+# install fine on CPU-only hardware (nvcc compiles CUDA without a GPU present);
+# the GPU is only required at inference runtime.
 # g2-standard-4 (L4) is frequently stocked out; n2-standard-8 is always available.
 variable "build_machine_type" {
   type    = string
@@ -64,6 +65,10 @@ build {
   provisioner "file" {
     source      = "scripts/vllm-weights-prep.service"
     destination = "/tmp/vllm-weights-prep.service"
+  }
+  provisioner "file" {
+    source      = "scripts/llama-server.service"
+    destination = "/tmp/llama-server.service"
   }
   provisioner "file" {
     source      = "scripts/lora-training.service"
