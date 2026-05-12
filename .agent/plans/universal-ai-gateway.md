@@ -1,7 +1,8 @@
 # Universal AI Gateway — Multi-Week Implementation Plan
 
 > Authored: 2026-05-12 task@project-intelligence  
-> Status: Active planning — Sprint 1 ready to begin  
+> Status: Active planning — Sprint 0a ready to begin  
+> Updated: 2026-05-12 (on-demand boot, real streaming, training capture, operational model)  
 > Companion: ~/.claude/plans/wire-format-leapfrog-2030.md (strategic context)  
 >            ~/.claude/plans/sovereign-coding-agent-leapfrog-2030.md
 
@@ -13,7 +14,72 @@ Transform service-slm from an OpenAI-only gateway into a universal AI gateway th
 1. Accepts ANY client (Claude Code, OpenAI SDK, Anthropic SDK, MCP clients)
 2. Routes through sovereign infrastructure (Tier A local → Tier B Yo-Yo → Tier C passthrough)
 3. Reduces Claude Code API token spend by 60–70% via local routing
-4. Positions as a sovereign node in the emerging A2A agent mesh
+4. Trains the local model on every Claude Code session automatically
+5. Positions as a sovereign node in the emerging A2A agent mesh
+
+---
+
+## Operational Model (The Correct Mental Picture)
+
+This is NOT about replacing Claude — it is about routing the RIGHT task to the RIGHT tier.
+
+```
+TASK TYPE                          CORRECT TIER         WHY
+─────────────────────────────────────────────────────────────────────────
+Read file / summarise              Tier A (local 7B)    Zero cost, instant
+Simple grep / search result        Tier A (local 7B)    Doesn't need reasoning
+Moderate code edit / refactor      Tier B (Yo-Yo 32B)   Good enough, cheap
+Entity extraction / DataGraph      Tier B (Yo-Yo 32B)   Already proven working
+Complex debugging                  Tier C (Claude)      Needs real reasoning
+Architecture decisions             Tier C (Claude)      Needs real reasoning
+Multi-step agent chains (5+)       Tier C (Claude)      Tool-use quality gap
+```
+
+**Claude Code still does ALL complex tasks** — via Tier C passthrough to the real
+Anthropic API. The shim adds intelligence, not degradation. Tier C is always available.
+
+### The Daily Schedule
+
+```
+00:00 ──── nightly-run Phase 1 ──────────────────────── DataGraph rebuild
+           Yo-Yo #1 starts for extraction (2h budget)
+02:00 ──── Phase 2 ──────────────────────────────────── LoRA training (GPU freed)
+           Yo-Yo stops after Phase 1; training runs on freed L4
+04:00 ──── nightly-run complete ─────────────────────── Yo-Yo idle-stopped
+           (idle monitor stops VM after 30 min idle — already live)
+...
+09:00 ──── Developer starts working ─────────────────── First Claude Code request
+           Shim detects Yo-Yo down → falls back to Tier A immediately
+           Background: start-yoyo.sh spawned async (~2-3 min boot)
+09:03 ──── Yo-Yo #1 healthy ─────────────────────────── Circuit breaker closes
+           All sonnet-tier requests now route to Tier B
+           Tier A handles haiku-tier requests (always-on, zero cost)
+           Tier C passthrough for opus-tier (complex tasks → real Claude)
+...
+22:00 ──── Developer stops working ──────────────────── Last request processed
+           Idle monitor fires after 30 min → Yo-Yo stops automatically
+           Cost: ~13h × $0.40/hr = $5.20/day max; actual = hours actively used
+```
+
+**Do NOT leave Yo-Yo running 24/7.** On-demand boot + idle-stop is the right model:
+- Nightly window: Yo-Yo managed by nightly-run.sh (existing)
+- Daytime: Yo-Yo managed by on-demand lazy-start in the Doorman (Sprint 0b)
+- Cost ceiling: ~$5.20/day if used all day; often $1-3/day in practice
+
+### Are We Training Our Model By Using It?
+
+**Not yet — but Sprint 0b wires this automatically.**
+
+Every Claude Code request that goes through the shim has:
+- A `brief`: the user's message / task description
+- An `actual_diff`: the code change that results from the session
+
+The apprenticeship substrate (`POST /v1/shadow`) already accepts `{brief, actual_diff}` and
+generates a DPO training tuple. The commit that approves the change is the implicit verdict.
+
+After Sprint 0b: **every Claude Code edit that routes through the shim feeds the training corpus.**
+The model learns from YOUR development patterns. After 6–12 months of daily use, the Yo-Yo LoRA
+adapter will be fine-tuned specifically on how you build Foundry code. This is the compound moat.
 
 ---
 
@@ -60,7 +126,7 @@ INBOUND (any client)           CANONICAL IR          OUTBOUND (per-backend)
 
 ---
 
-### Sprint 0 — Anthropic Shim MVP  ✦ DO THIS NOW ✦
+### Sprint 0a — Anthropic Shim (fake streaming)  ✦ DO THIS FIRST ✦
 **Duration:** 2–3 days  
 **Goal:** Claude Code routes through Doorman via `ANTHROPIC_BASE_URL`  
 **Token cost reduction begins immediately after merge**
@@ -224,6 +290,101 @@ curl -s http://127.0.0.1:9080/v1/messages \
 
 ---
 
+### Sprint 0b — Real Streaming + On-Demand Boot + Training Capture
+**Duration:** 3–4 days (directly after 0a)  
+**Goal:** Production-quality shim — real token streaming, Yo-Yo lazy-start, session training
+
+#### Part 1: Real Token Streaming (~200 LOC in yoyo.rs + http.rs)
+
+**Why fake streaming is not enough:** Claude Code's UX degrades — no live typing,
+long responses feel hung, tool-use chains timeout on large responses.
+
+**How:** llama-server already supports SSE streaming (`"stream": true`).
+The Doorman needs to pass the stream through rather than buffering.
+
+In `yoyo.rs`:
+```rust
+// Detect stream: true in ComputeRequest
+// Use reqwest Response::bytes_stream() instead of .json()
+// Re-emit each llama-server SSE chunk directly to the axum response channel
+// Translate llama-server's OpenAI-format SSE → Anthropic SSE format on the fly
+```
+
+In `http.rs` (Anthropic shim handler):
+```rust
+// Return axum::response::Sse<impl Stream> instead of Json
+// Each llama-server "data: {choices[0].delta.content}" chunk →
+//   → Anthropic "data: {type:content_block_delta, delta:{type:text_delta, text:...}}"
+// Bookend with message_start / message_stop events
+```
+
+**Result:** Claude Code sees real token-by-token streaming from Yo-Yo #1.
+The 14.7 tok/s GPU speed means a typical 200-token response streams in ~14s,
+which is noticeable and natural — not a 14s wait then instant dump.
+
+#### Part 2: On-Demand Yo-Yo Lazy-Start (~80 LOC in router or http.rs)
+
+**Problem:** Yo-Yo is stopped at 9am. First Claude Code request of the day routes
+to Tier A (fallback), which is correct. But subsequent requests should hit Tier B.
+
+**Solution:** When Doorman routes a request and Tier B circuit is OPEN (Yo-Yo down):
+1. Serve THIS request from Tier A immediately (no user wait)
+2. Spawn `tokio::task::spawn` — background async task calls `start-yoyo.sh`
+3. The existing background health probe (every 30s) will detect Yo-Yo healthy
+4. Circuit breaker closes automatically — next request hits Tier B
+
+```rust
+// In router.rs, after Tier B circuit-open fallback:
+if self.yoyo.circuit_is_open() && !self.yoyo_start_pending.load(Ordering::Relaxed) {
+    self.yoyo_start_pending.store(true, Ordering::Relaxed);
+    let pending = Arc::clone(&self.yoyo_start_pending);
+    tokio::task::spawn(async move {
+        let _ = tokio::process::Command::new("bash")
+            .arg("/srv/foundry/clones/project-intelligence/service-slm/scripts/start-yoyo.sh")
+            .arg("--wait-ready=300")
+            .status().await;
+        pending.store(false, Ordering::Relaxed);
+    });
+}
+```
+
+**New env var:** `SLM_YOYO_AUTO_START=true` — gates this behaviour (default off until tested).
+
+**Coordination with nightly-run:** nightly-run.sh manages Yo-Yo independently via
+`start-yoyo.sh` / `stop-yoyo.sh`. No conflict — the idle monitor stops it after 30 min idle
+regardless of who started it. The nightly window has precedence.
+
+#### Part 3: Training Capture (~80 LOC in http.rs shim)
+
+**Every Claude Code edit that routes through the shim becomes a training tuple.**
+
+The `POST /v1/shadow` endpoint already exists (`brief` + `actual_diff`).
+
+In the Anthropic shim handler, after routing:
+```rust
+// If SLM_APPRENTICESHIP_ENABLED=true AND request was a code-edit task:
+// 1. brief = user's message (the task description)
+// 2. actual_diff = placeholder "" for now (Sprint 0b ships the wiring;
+//    the actual diff comes from git — a later enhancement captures it)
+// 3. POST /v1/shadow async (fire-and-forget, non-blocking)
+```
+
+**Sprint 0b ships the wiring.** The actual diff capture (from git) is a later enhancement.
+Even with empty diffs, the corpus accumulates task descriptions — useful for SFT.
+Full DPO pairs (with diffs) land in a follow-on sprint when git hook integration is added.
+
+#### Sprint 0b files changed
+
+| File | Change |
+|---|---|
+| `slm-doorman/src/tier/yoyo.rs` | +~150 LOC: streaming path |
+| `slm-doorman-server/src/http.rs` | +~150 LOC: SSE response + lazy-start trigger + shadow capture |
+| `slm-doorman/src/router.rs` | +~80 LOC: on-demand start logic + atomic flag |
+| Tests | +~60 LOC |
+| **Total** | **~440 LOC** |
+
+---
+
 ### Sprint 1 — Neutral Canonical IR
 **Duration:** 1 week  
 **Goal:** Replace `ChatMessage` (OpenAI type) with `CanonicalMessage` (neutral) in slm-core
@@ -358,14 +519,28 @@ identified, sovereign A2A node — callable by any A2A-compatible orchestrator.
 
 | Sprint | Work | Duration | Outcome |
 |---|---|---|---|
-| **0** | Anthropic shim (http.rs only) | **2–3 days** | **Claude Code routes through Doorman TODAY** |
+| **0a** | Anthropic shim, fake streaming (http.rs only) | **2–3 days** | **Claude Code routes through Doorman** |
+| **0b** | Real streaming + on-demand Yo-Yo boot + training capture | **3–4 days** | **Production quality; Yo-Yo auto-starts; every session trains the model** |
 | 1 | Neutral canonical IR (slm-core) | 1 week | Full content block support; tool-use preserved |
-| 2 | Tier C native + Responses API | 1 week | No OpenAI shim for Claude; future-proof inbound |
+| 2 | Tier C native Anthropic + Responses API inbound | 1 week | No shim for Claude Tier C; future-proof |
 | 3 | MCP server | 2 weeks | DataGraph + corpus callable from any MCP client |
 | 4 | app-console-slm MVP | 3 weeks | No more SSH for ops; coding assistant binary |
-| 5 | A2A agent card | 4 weeks | Foundry in the agent mesh |
+| 5 | A2A agent card | 4 weeks | Foundry sovereign node in agent mesh |
 
-**Total: ~13 weeks to full stack.** Sprint 0 is this week.
+**Total: ~15 weeks to full stack. Sprints 0a+0b ship this week + next week.**
+
+### Cost model after Sprint 0a+0b live
+
+| Scenario | Before | After |
+|---|---|---|
+| Haiku-tier tasks (file reads, search) | $3/M Anthropic | ~$0 (Tier A local) |
+| Sonnet-tier tasks (code edits) | $3–15/M Anthropic | ~$0.40/hr Yo-Yo while active |
+| Opus-tier tasks (complex reasoning) | $15/M Anthropic | $15/M Anthropic (unchanged) |
+| Training benefit | None | Every session feeds corpus → LoRA adapter improves |
+| Yo-Yo running cost | N/A | ~$1–5/day (on-demand, idle-stopped) |
+
+**Claude still handles all complex tasks.** The saving is on the ~60% of tokens
+that are file reads, tool results, and moderate edits — those route locally.
 
 ---
 
@@ -390,13 +565,20 @@ This is critical context before routing Claude Code through local models:
 
 ---
 
-## Open Questions Before Sprint 0
+## Open Questions Before Sprint 0a
 
-- [ ] Should `claude-opus-*` pass through to real Anthropic API (requires Tier C configured)?
-      Or map to Tier B and accept quality drop?
-- [ ] Token usage tracking: Doorman doesn't count tokens today.
-      Add approximate count via `content.split_whitespace().count() * 1.3` placeholder?
-- [ ] `ANTHROPIC_BASE_URL` scope: per-project `.claude/settings.json` or workspace-wide?
+- [ ] **Opus → Tier C passthrough:** Requires Tier C configured with Anthropic API key.
+      Currently `SLM_TIER_C_ANTHROPIC_ENDPOINT` / bearer in env. Verify configured before
+      routing `claude-opus-*` there. Fallback: map opus → Tier B and accept quality drop.
+- [ ] **Token tracking:** Doorman doesn't count tokens. Sprint 0a ships `0` in `usage`.
+      Add `content.split_whitespace().count() * 1.3` approximate in Sprint 0b.
+- [ ] **`ANTHROPIC_BASE_URL` scope:** Per-project `.claude/settings.json` recommended
+      (not workspace-wide) so the current session is not affected during testing.
+- [ ] **Nightly-run coordination:** On-demand start (Sprint 0b) must check if nightly-run
+      is active before spawning start-yoyo.sh. Add `SLM_NIGHTLY_ACTIVE` lock file check.
+- [ ] **Training capture consent:** Auto-submitting to `/v1/shadow` means all shim requests
+      become training candidates. Confirm this is desired before Sprint 0b ships.
+      Add `SLM_SHIM_TRAINING_CAPTURE=true` gate (default false until explicitly opted in).
 
 ---
 
