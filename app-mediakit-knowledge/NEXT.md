@@ -39,9 +39,11 @@ CLAUDE.md + NEXT.md were missing (noted in registry since 2026-04-28). Added 202
 
 Manual two-client collab smoke (two editors on the same TOPIC, cursor sync visible) is needed before marking Phase 2 Step 7 fully ratified. See `docs/STEP-7-COLLAB-SMOKE.md`.
 
-## Open: feeds.rs flat walk
+## Closed: feeds.rs recursive walk
 
-`feeds.rs` `collect_recent_items()` still uses a flat `read_dir()` — feeds only surface root-level TOPICs. Deferred from Wave 1 iteration-2. Fix: apply the same recursive-walk pattern as `collect_topic_files()`.
+`collect_recent_items()` already implements a two-level walk (root + one category level)
+matching the pattern in `collect_topic_files()`. Subdirectory TOPIC coverage verified by
+`feeds_include_subdirectory_topics` test added 2026-05-12. NEXT.md note was stale.
 
 ## Deferred / operator-gated
 
