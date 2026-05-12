@@ -2347,3 +2347,95 @@ a.footnote-backref:hover { text-decoration: underline; }
     /* no extra styling needed; display toggled via JS */
   }
 }
+
+/* === Phase 3 — Interaction Parity === */
+
+/* AJAX loading bar */
+#wiki-loading-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 2px;
+  background: var(--link);
+  z-index: 9999;
+  width: 0;
+  transition: width 0.2s ease;
+  pointer-events: none;
+}
+#wiki-loading-bar.loading { width: 70%; }
+#wiki-loading-bar.done { width: 100%; transition: width 0.1s ease, opacity 0.4s ease; opacity: 0; }
+
+/* TOC pin button */
+#toc-pin-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.75rem;
+  color: var(--fg-muted);
+  padding: 0 0.25rem;
+  line-height: 1;
+  vertical-align: middle;
+}
+#toc-pin-btn:hover { color: var(--fg); }
+#toc-pin-btn.toc-pin-active { color: var(--link); font-weight: bold; }
+
+/* Keyboard shortcut overlay */
+#wiki-shortcut-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+#wiki-shortcut-panel {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1.5rem;
+  min-width: 320px;
+  position: relative;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+}
+#wiki-shortcut-panel h2 {
+  margin: 0 0 1rem;
+  font-size: 1rem;
+  font-family: var(--sans);
+}
+#wiki-shortcut-panel table {
+  border-collapse: collapse;
+  width: 100%;
+}
+#wiki-shortcut-panel td {
+  padding: 0.3rem 0.5rem;
+  vertical-align: middle;
+}
+#wiki-shortcut-panel td:first-child {
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  white-space: nowrap;
+  color: var(--fg-muted);
+  background: var(--bg-chrome);
+  border-radius: 3px;
+  padding: 0.2rem 0.4rem;
+}
+#wiki-shortcut-close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.2rem;
+  color: var(--fg-muted);
+  line-height: 1;
+  padding: 0.1rem 0.3rem;
+}
+#wiki-shortcut-close:hover { color: var(--fg); }
+.wiki-shortcut-note {
+  font-size: 0.8rem;
+  color: var(--fg-muted);
+  margin-top: 1rem;
+  margin-bottom: 0;
+}
