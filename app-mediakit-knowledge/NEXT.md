@@ -1,18 +1,27 @@
 # NEXT.md — app-mediakit-knowledge
 
-> Last updated: 2026-05-07
+> Last updated: 2026-05-12
 
-## Phase 4 — Git sync + MCP server (operator-gated: BP1 clearance)
+## Phase 4 — COMPLETE (Steps 4.1–4.8 all shipped)
 
-BP1 decision packet at `docs/BP1-DECISION-PACKET.md` (~15 min read). Seven open questions require operator answers before Phase 4 implementation begins:
+All Phase 4 steps committed on `pointsav-monorepo` main branch. Stage 6
+promotion pending (outbox message sent to Master). Release binary built.
 
-1. MCP transport — stdio (Cursor/Claude Desktop) vs SSE (HTTP streaming)?
-2. Git remote protocol — smart-HTTP read-only (`/git-http-backend/`) vs dumb-HTTP?
-3. `--enable-mcp` default — on or off in production unit?
-4. project-slm coordination order — Phase 4 Step 4.6 MCP wiring needs service-slm Tier C available?
-5. `gix` vs `git2` split — Phase 4 Step 1 (commit-on-edit) uses git2; Step 2 (history/blame) could use gix. Keep one or split?
-6. `libgit2-dev` system-lib install on workspace VM?
-7. OpenAPI 3.1 spec — hand-author vs codegen from axum routes?
+| Step | State | Commit |
+|---|---|---|
+| 4.1 — git2 commit-on-edit | ✓ Shipped | `177813e` |
+| 4.2 — /history + /blame | ✓ Shipped | `177813e` |
+| 4.3 — /diff | ✓ Shipped | `177813e` |
+| 4.4 — redb wikilink graph | ✓ Shipped | `177813e` |
+| 4.5 — blake3 hashes | ✓ Shipped | `177813e` |
+| 4.6 — MCP server (native, no vendor SDK) | ✓ Shipped | `055b2f8e` |
+| 4.7 — git smart-HTTP remote | ✓ Shipped | pre-existing |
+| 4.8 — OpenAPI 3.1 spec | ✓ Shipped | `c9db78da` |
+
+**Notes on MCP implementation:** `rmcp` vendor SDK rejected per Doctrine claim #54
+("We Own It"). Implemented natively in `src/mcp.rs` (~330 lines) using
+`axum` + `serde_json`. Transport: HTTP JSON-RPC 2.0 (standard; no stdio/SSE split
+needed). Default off behind `--enable-mcp` / `WIKI_ENABLE_MCP`.
 
 ## Open: activation defect (now closed)
 
@@ -36,6 +45,5 @@ Manual two-client collab smoke (two editors on the same TOPIC, cursor sync visib
 
 ## Deferred / operator-gated
 
-- `libssl-dev` on workspace VM (needed for `cargo build --release`)
-- `libgit2-dev` (needed for Phase 4)
-- Phase 5-9 implementation — each gated on the preceding phase shipping
+- Phase 5-9 implementation — each gated on the preceding phase shipping + operator clearance
+- Note: `libssl-dev` and `libgit2-dev` confirmed present on VM (Phase 4 release build succeeded)
