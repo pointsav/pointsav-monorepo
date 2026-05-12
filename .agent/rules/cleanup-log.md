@@ -95,6 +95,51 @@ Newest on top. Append a dated block when a session includes meaningful cleanup w
 
 ---
 
+## 2026-05-12 — Phase 4 Steps 4.4+4.5 — redb wikilink graph + blake3 content hashes
+
+- **`src/links.rs`** (new, 230 lines): `LinkGraph` struct backed by redb. Two tables in
+  `<state_dir>/links.redb`: `outlinks` (composite key `"from_slug\x00to_slug"` → u8 sentinel;
+  supports prefix scan for outlinks and full-scan filter for backlinks) and `hashes`
+  (`"slug\x00revision_sha"` → 32-byte blake3 digest; federation-seam baseline for Phase 7).
+  Public API: `open_or_create`, `rebuild_for_slug`, `backlinks`, `record_hash`,
+  `lookup_by_hash`, `for_testing`. Wikilink parser: regex `r"\[\[([^\]|#\[]+)"`, output
+  slugified (lowercased, spaces → hyphens, anchors/aliases stripped). `for_testing()` uses
+  tempfile + atomic counter for isolated parallel test databases.
+
+- **`tests/links_test.rs`** (new, 133 lines): 7 integration tests — 6 unit-level graph
+  tests (backlink add/clear, multiple sources, self-links, blake3 round-trip, unknown hash)
+  + 1 route-level test (`whatlinkshere_returns_backlinks_from_graph` via tempfile fixture +
+  oneshot router pattern matching `tests/feeds_test.rs`).
+
+- **Wiring across 20 files:**
+  - `src/error.rs`: new `WikiError::LinkGraph(String)` variant; mapped to HTTP 500.
+  - `src/lib.rs`: `pub mod links;` added.
+  - `src/main.rs`: `LinkGraph::open_or_create(&state_dir.join("links.redb"))` at startup
+    (after git repo and glossary); stored in `Arc<LinkGraph>`; passed as `AppState.links`.
+  - `src/server.rs`: `AppState.links: Arc<LinkGraph>` field; `GET /special/whatlinkshere/{slug}`
+    route + `what_links_here` handler (reads `backlinks()`, renders HTML list); "What links here"
+    link in article footer chrome. All `AppState` test constructors updated.
+  - `src/edit.rs`: `post_edit` and `post_create` both call `record_hash(slug, oid_sha, body)`
+    after git commit succeeds, and `rebuild_for_slug(slug, body)` unconditionally. Failures
+    logged non-fatally (link graph is derived state, rebuildable).
+  - All 11 pre-existing integration test files: `links: LinkGraph::for_testing()` added to
+    `AppState` construction (1–2 lines each).
+
+- **Cargo**: `redb = "4.1"` + `blake3 = "1.8"` added to `[dependencies]`.
+
+- **Test results**: 7/7 `links_test` pass (`cargo test --test links_test`). `cargo check`
+  clean. Pre-existing `doorman_stubs_return_correct_json_shape` failure unchanged (unrelated).
+
+- **Stage 6 needed**: Wikipedia Parity Phases 1+2A+3 commits (`3b557cf`, `68c643c`, `b8a1ad8`,
+  `3cee49d`) + this Phase 4 commit (`177813e`) + cleanup-log entry (this commit) need
+  `bin/promote.sh` from Command Session to reach canonical `pointsav/pointsav-monorepo` main.
+
+- **Pending**: Step 4.6 (MCP server via rmcp) and Step 4.7 (git smart-HTTP remote) per
+  `docs/PHASE-4-PLAN.md`. Deploy: `systemctl restart local-knowledge-documentation.service`
+  after Stage 6 binary rebuild.
+
+---
+
 
 ## 2026-05-12 — Wikipedia Parity Phase 3 — keyboard shortcuts + TOC pin + AJAX page navigation
 
