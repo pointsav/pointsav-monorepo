@@ -119,8 +119,8 @@ python3 build-tiles.py --layer all
 
 About four minutes for full rebuild. Three layers:
 
-- **Layer 1** (locations): individual store dots, tippecanoe-built. ~400 MB output.
-- **Layer 2** (clusters): cluster bubbles + clusters-meta.json. ~40 MB tile + ~3 MB JSON.
+- **Layer 1** (locations): individual store dots, tippecanoe-built. ~500 MB output. Layer 1 merges three sources: service-business JSONL (retail chains), Overture service-places (hospital, university, airport from `service-fs/service-places/`), and OSM civic data (hospital + university from `service-places/cleansed-civic-osm.jsonl`). All three must be present; a missing civic OSM file produces no error but silently omits ~60,000 hospital and university records from the map.
+- **Layer 2** (clusters): cluster bubbles + clusters-meta.json. ~43 MB tile + ~3 MB JSON.
 - **Layer 3** (radius): proximity ring shapes. ~100 MB output.
 
 For incremental work, restrict to one or two layers:
