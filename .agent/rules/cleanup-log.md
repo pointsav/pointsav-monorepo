@@ -96,4 +96,36 @@ Newest on top. Append a dated block when a session includes meaningful cleanup w
 ---
 
 
+## 2026-05-12 — Wikipedia Parity Phase 1 DOM standardisation
+
+- **7 structural class/ID names renamed** to MediaWiki/Vector 2022 equivalents across
+  `src/server.rs`, `static/style.css`, `static/wiki.js` (commit `3b557cf`, Peter).
+  PointSav-specific classes (`wiki-home-*`, `wiki-cat-*`, `wiki-special-*`, etc.) left unchanged.
+
+  | Old | New | Scope |
+  |---|---|---|
+  | `.site-header` / `#site-header` | `.mw-header` / `#mw-header` | `<header>` chrome |
+  | `div.wiki-left-rail` | `div #mw-panel` | left sidebar |
+  | `nav.wiki-nav-portlet` | `nav.vector-main-menu` | nav portlet |
+  | `nav.wiki-toc` / `#wiki-toc` | `nav.vector-toc` / `#vector-toc` | TOC |
+  | `main.wiki-main` | `main.mw-body` | page body wrapper |
+  | `nav.wiki-action-tabs` | `nav #p-views` | Read/Edit/History tabs |
+  | `article.wiki-article` | `div #mw-content-text` | article body |
+
+- **CSS custom properties seeded** in `:root` — 9 `--mw-*` aliases referencing the
+  existing PointSav variables (Phase 2 token port entrypoints). No existing rules broken.
+
+- **Maud syntax fix applied**: in Rust 2021, `element#id` (no preceding `.class`) is a
+  reserved prefixed identifier. Correct form is `element #id` (space before `#`). Affected
+  three elements: `div #mw-panel`, `nav #p-views`, `div #mw-content-text`.
+
+- **One test updated**: `server::tests::wiki_page_renders_navigation_portlet` assertion
+  changed from `"wiki-nav-portlet"` to `"vector-main-menu"`. 60/60 lib tests pass.
+  `doorman_stubs_return_correct_json_shape` failure confirmed pre-existing (unrelated to
+  this change).
+
+- **No new open questions** from this session.
+
+---
+
 > **Archived entries:** session logs before this point are in `cleanup-log-archive.md`.
