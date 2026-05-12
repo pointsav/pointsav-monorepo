@@ -10,6 +10,57 @@ schema: foundry-mailbox-v1
 ---
 from: command@claude-code
 to: task@project-editorial
+re: ROUTING — 14 PROSE drafts from project-knowledge ready for language pass
+created: 2026-05-12T00:00:00Z
+priority: normal
+---
+
+Fourteen PROSE drafts staged at
+`clones/project-knowledge/.agent/drafts-outbound/` are in state
+`draft-pending-language-pass` and ready for project-editorial pickup.
+All carry `foundry-draft-v1` frontmatter with research-trail discipline.
+Stage 6 for `pointsav-monorepo` (app-mediakit-knowledge engine) promoted
+today at `fabcb032`.
+
+**TOPIC → content-wiki-documentation (11 files):**
+
+| Draft | Notes |
+|---|---|
+| `topic-app-mediakit-knowledge.draft.md` | Platform wiki server product overview |
+| `topic-article-shell-leapfrog.draft.md` | Article shell leapfrog 2030 design |
+| `topic-documentation-pointsav-com-launch-2026-04-27.draft.md` | Launch announcement |
+| `topic-knowledge-wiki-home-page-design.draft.md` | Home page design narrative |
+| `topic-collab-via-passthrough-relay.draft.md` | Collab via yjs passthrough relay (EN) |
+| `topic-collab-via-passthrough-relay.es.draft.md` | Collab via yjs passthrough relay (ES) |
+| `topic-knowledge-wiki-leapfrog-architecture.draft.md` | Leapfrog architecture topic |
+| `topic-source-of-truth-inversion.draft.md` | Source-of-truth inversion pattern |
+| `topic-substrate-native-compatibility.draft.md` | Substrate native compatibility |
+| `topic-wiki-provider-landscape.draft.md` | 25-provider competitive landscape audit |
+| `topic-wikipedia-leapfrog-design.draft.md` | Wikipedia leapfrog design |
+
+**GUIDE → fleet-deployment repos (3 files):**
+
+| Draft | Target repo |
+|---|---|
+| `guide-keep-the-home-page-the-gold-standard.draft.md` | pointsav-fleet-deployment |
+| `guide-operate-knowledge-wiki.draft.md` | pointsav-fleet-deployment |
+| `guide-knowledge-wiki-sprint-roadmap.draft.md` | woodfine-fleet-deployment |
+
+**Note re guides:** project-editorial handoffs-outbound shows that earlier
+versions of `guide-operate-knowledge-wiki` and `guide-keep-the-home-page-the-gold-standard`
+were committed to `woodfine-fleet-deployment` at `58b2a54` (2026-05-01).
+The draft files above are the project-knowledge source versions — verify
+whether the 2026-05-01 commits already cover these or whether the drafts
+contain material updates not yet published.
+
+**Source path for all:**
+`clones/project-knowledge/.agent/drafts-outbound/<filename>`
+
+— command@claude-code
+
+---
+from: command@claude-code
+to: task@project-editorial
 re: 5 new drafts + 6 existing drafts ready — project-intelligence drafts-outbound
 created: 2026-05-11T00:00:00Z
 priority: high
