@@ -158,6 +158,69 @@ async fn atom_feed_lists_expected_topics() {
     );
 }
 
+// ─── Subdirectory TOPICs ─────────────────────────────────────────────────────
+
+/// A TOPIC nested inside a category subdirectory must appear in both feeds.
+#[tokio::test]
+async fn feeds_include_subdirectory_topics() {
+    let (state, dir, _state_dir) = fixture_state().await;
+
+    // Create a category subdirectory and a TOPIC inside it.
+    tokio::fs::create_dir(dir.path().join("architecture"))
+        .await
+        .unwrap();
+    tokio::fs::write(
+        dir.path().join("architecture").join("deep-topic.md"),
+        "---\ntitle: \"Deep Topic\"\nslug: architecture/deep-topic\ncategory: architecture\n---\nA topic in a subdirectory.\n",
+    )
+    .await
+    .unwrap();
+
+    let app = router(state);
+
+    // Atom feed must include the subdirectory slug.
+    let resp = app
+        .clone()
+        .oneshot(
+            Request::builder()
+                .uri("/feed.atom")
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+    let bytes = resp.into_body().collect().await.unwrap().to_bytes();
+    let xml = std::str::from_utf8(&bytes).unwrap();
+    assert!(
+        xml.contains("deep-topic"),
+        "Atom feed should contain subdirectory TOPIC 'deep-topic': {xml}"
+    );
+
+    // JSON feed must also include it.
+    let resp = app
+        .oneshot(
+            Request::builder()
+                .uri("/feed.json")
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+    let bytes = resp.into_body().collect().await.unwrap().to_bytes();
+    let json: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
+    let empty = vec![];
+    let ids: Vec<&str> = json["items"]
+        .as_array()
+        .unwrap_or(&empty)
+        .iter()
+        .filter_map(|i| i["id"].as_str())
+        .collect();
+    assert!(
+        ids.iter().any(|id| id.contains("deep-topic")),
+        "JSON feed should contain subdirectory TOPIC 'deep-topic': {json}"
+    );
+}
+
 // ─── JSON Feed ───────────────────────────────────────────────────────────────
 
 #[tokio::test]
