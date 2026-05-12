@@ -19,6 +19,7 @@ pub mod glossary;
 pub mod history;
 pub mod git_protocol;
 pub mod jsonld;
+pub mod links;
 pub mod pending;
 pub mod render;
 pub mod search;
