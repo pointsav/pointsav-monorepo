@@ -115,9 +115,9 @@ body {
 
 .empty { color: var(--fg-muted); font-style: italic; }
 
-/* --- article body --- */
+/* --- article body (.page-body = div wrapping comrak output inside #mw-content-text) --- */
 
-article { font-family: var(--serif); font-size: 1rem; line-height: 1.65; }
+.page-body { font-family: var(--mw-font-family-article); font-size: 1rem; line-height: 1.65; }
 
 .page-title {
   font-family: var(--sans);
@@ -129,37 +129,37 @@ article { font-family: var(--serif); font-size: 1rem; line-height: 1.65; }
   margin-bottom: 1.25rem;
 }
 
-article h1, article h2, article h3, article h4, article h5, article h6 {
+.page-body h1, .page-body h2, .page-body h3, .page-body h4, .page-body h5, .page-body h6 {
   font-family: var(--sans);
   font-weight: 400;
   margin-top: 1.75rem;
   margin-bottom: 0.5rem;
 }
 
-article h1 { font-size: 1.75rem; border-bottom: 1px solid var(--border); padding-bottom: 0.25rem; }
-article h2 { font-size: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 0.25rem; scroll-margin-top: 60px; }
-article h3 { font-size: 1.25rem; scroll-margin-top: 60px; }
-article h4 { font-size: 1.0625rem; font-weight: 600; }
+.page-body h1 { font-size: 1.75rem; border-bottom: 1px solid var(--border); padding-bottom: 0.25rem; }
+.page-body h2 { font-size: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 0.25rem; scroll-margin-top: 60px; }
+.page-body h3 { font-size: 1.25rem; scroll-margin-top: 60px; }
+.page-body h4 { font-size: 1.0625rem; font-weight: 600; }
 
-article a { color: var(--link); }
-article a:visited { color: var(--link-visited); }
-article a.wikilink { color: var(--link); }
+.page-body a { color: var(--mw-color-link); }
+.page-body a:visited { color: var(--mw-color-link-visited); }
+.page-body a.wikilink { color: var(--mw-color-link); }
 
-article p, article ul, article ol { margin: 0.75em 0; }
-article ul, article ol { padding-left: 2em; }
-article li { margin: 0.2em 0; }
+.page-body p, .page-body ul, .page-body ol { margin: 0.75em 0; }
+.page-body ul, .page-body ol { padding-left: 2em; }
+.page-body li { margin: 0.2em 0; }
 
-article code {
+.page-body code {
   font-family: var(--mono);
   font-size: 0.875em;
-  background: var(--bg-chrome);
+  background: var(--mw-color-base-10);
   padding: 0.1em 0.3em;
   border-radius: 2px;
 }
 
-article pre {
-  background: var(--bg-chrome);
-  border: 1px solid var(--border);
+.page-body pre {
+  background: var(--mw-color-base-10);
+  border: 1px solid var(--mw-color-base-50);
   padding: 0.75rem 1rem;
   overflow-x: auto;
   font-family: var(--mono);
@@ -168,33 +168,33 @@ article pre {
   border-radius: 2px;
 }
 
-article pre code {
+.page-body pre code {
   background: transparent;
   padding: 0;
   border-radius: 0;
 }
 
-article blockquote {
-  border-left: 3px solid var(--border);
+.page-body blockquote {
+  border-left: 3px solid var(--mw-color-base-50);
   margin: 1rem 0;
   padding: 0.25rem 1rem;
   color: var(--fg-muted);
 }
 
-article table {
+.page-body table {
   border-collapse: collapse;
   margin: 1rem 0;
   font-size: 0.9375rem;
 }
 
-article table th, article table td {
-  border: 1px solid var(--border);
+.page-body table th, .page-body table td {
+  border: 1px solid var(--mw-color-base-50);
   padding: 0.4rem 0.6rem;
   text-align: left;
   vertical-align: top;
 }
 
-article table th { background: var(--bg-chrome); font-weight: 600; }
+.page-body table th { background: var(--mw-color-base-10); font-weight: 600; }
 
 /* --- forward-looking-information notice --- */
 
@@ -218,16 +218,16 @@ article table th { background: var(--bg-chrome); font-weight: 600; }
 /* --- Additional CSS variables for Phase 1.1 chrome --- */
 :root {
   --toc-width: 14em;
-  --toc-bg: #f8f9fa;
+  --toc-bg: var(--mw-color-base-10);
   --ivc-band-bg: #f0f4f8;
   --ivc-band-border: #c8d6e5;
-  --tab-active-border: #3366cc;
-  --tab-hover-bg: #eaecf0;
-  --density-btn-bg: #eaecf0;
-  --density-btn-active-bg: #3366cc;
-  --density-btn-active-fg: #ffffff;
-  --hatnote-color: #54595d;
-  --cat-bg: #f8f9fa;
+  --tab-active-border: var(--mw-color-link);
+  --tab-hover-bg: var(--mw-color-base-20);
+  --density-btn-bg: var(--mw-color-base-20);
+  --density-btn-active-bg: var(--mw-color-link);
+  --density-btn-active-fg: var(--bg);
+  --hatnote-color: var(--fg-muted);
+  --cat-bg: var(--mw-color-base-10);
 }
 
 /* --- Three-column wiki layout: left rail + article main + right rail --- */
@@ -522,7 +522,7 @@ article table th { background: var(--bg-chrome); font-weight: 600; }
 
 .wiki-lang-btn:hover {
   background: var(--link);
-  color: #fff;
+  color: var(--bg);
   text-decoration: none;
 }
 
@@ -862,14 +862,14 @@ article table th { background: var(--bg-chrome); font-weight: 600; }
   flex: 3; /* 60% approx */
   border: 1px solid var(--border);
   border-radius: 2px;
-  background: #f8f9fa; /* Wikipedia Featured Article background */
+  background: var(--mw-color-base-10); /* Wikipedia Featured Article background */
 }
 
 .wiki-home-dyk {
   flex: 2; /* 40% approx */
   border: 1px solid var(--border);
   border-radius: 2px;
-  background: #fff;
+  background: var(--bg);
 }
 
 .wiki-home-featured h2, .wiki-home-dyk h2 {
@@ -1436,7 +1436,7 @@ article table th { background: var(--bg-chrome); font-weight: 600; }
 
 /* Red Links */
 a.wiki-redlink {
-  color: #ba0000;
+  color: var(--mw-color-link-redlink);
 }
 a.wiki-redlink:visited {
   color: #a55858;
