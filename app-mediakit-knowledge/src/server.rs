@@ -96,6 +96,9 @@ pub struct AppState {
     pub git_tenant: String,
     /// Phase 10: Leapfrog 2030 glossary auto-linker.
     pub glossary: Arc<crate::glossary::Glossary>,
+    /// Phase 4 Steps 4.4+4.5: redb-backed wikilink graph and blake3 hashes.
+    /// Always present; database file at `<state_dir>/links.redb`.
+    pub links: Arc<crate::links::LinkGraph>,
     /// Phase 5: SQLite connection for users/sessions/pending-edits.
     /// None when auth is not configured (no WIKI_ADMIN_USERNAME set).
     pub db: Option<Arc<Mutex<rusqlite::Connection>>>,
@@ -2095,16 +2098,13 @@ async fn what_links_here(
 ) -> Result<Markup, WikiError> {
     let pending_count = pending_count_for(&state, maybe_user.as_ref()).await;
 
-    // Use the same search approach as the old inline backlinks: search for the
-    // slug (last path component) as a quoted phrase.
-    let query = format!("\"{}\"", slug.split('/').last().unwrap_or(&slug));
-    let backlinks: Vec<TopicSummary> = run_search(&state.search, &query, 100)
-        .unwrap_or_default()
+    // Use the redb link graph for exact wikilink backlinks (Step 4.4).
+    let backlink_slugs = state.links.backlinks(&slug).unwrap_or_default();
+    let backlinks: Vec<TopicSummary> = backlink_slugs
         .into_iter()
-        .filter(|hit| hit.slug != slug)
-        .map(|hit| TopicSummary {
-            slug: hit.slug,
-            title: hit.title,
+        .map(|s| TopicSummary {
+            title: s.clone(),
+            slug: s,
             last_edited: None,
             short_description: None,
             lede_first_line: String::new(),
@@ -3098,6 +3098,7 @@ mod tests {
                 site_title: "PointSav Documentation Wiki".to_string(),
                 git_tenant: "pointsav".to_string(),
                 glossary: Arc::new(crate::glossary::Glossary::default()),
+                links: crate::links::LinkGraph::for_testing(),
                 db: None,
             },
             dir,
@@ -3266,6 +3267,7 @@ mod tests {
             site_title: "PointSav Documentation Wiki".to_string(),
             git_tenant: "pointsav".to_string(),
             glossary: Arc::new(crate::glossary::Glossary::default()),
+                links: crate::links::LinkGraph::for_testing(),
                 db: None,
         };
         let app = router(state);
@@ -3339,6 +3341,7 @@ mod tests {
             site_title: "PointSav Documentation Wiki".to_string(),
             git_tenant: "pointsav".to_string(),
             glossary: Arc::new(crate::glossary::Glossary::default()),
+                links: crate::links::LinkGraph::for_testing(),
                 db: None,
         };
         let app = router(state);
@@ -3390,6 +3393,7 @@ mod tests {
             site_title: "PointSav Documentation Wiki".to_string(),
             git_tenant: "pointsav".to_string(),
             glossary: Arc::new(crate::glossary::Glossary::default()),
+                links: crate::links::LinkGraph::for_testing(),
                 db: None,
         };
         let app = router(state);
@@ -3438,6 +3442,7 @@ mod tests {
             site_title: "PointSav Documentation Wiki".to_string(),
             git_tenant: "pointsav".to_string(),
             glossary: Arc::new(crate::glossary::Glossary::default()),
+                links: crate::links::LinkGraph::for_testing(),
                 db: None,
         };
         let app = router(state);
@@ -3493,6 +3498,7 @@ mod tests {
             site_title: "PointSav Documentation Wiki".to_string(),
             git_tenant: "pointsav".to_string(),
             glossary: Arc::new(crate::glossary::Glossary::default()),
+                links: crate::links::LinkGraph::for_testing(),
                 db: None,
         };
         let app = router(state);
@@ -3551,6 +3557,7 @@ mod tests {
             site_title: "PointSav Documentation Wiki".to_string(),
             git_tenant: "pointsav".to_string(),
             glossary: Arc::new(crate::glossary::Glossary::default()),
+                links: crate::links::LinkGraph::for_testing(),
                 db: None,
         };
         let app = router(state);
@@ -3608,6 +3615,7 @@ mod tests {
             site_title: "PointSav Documentation Wiki".to_string(),
             git_tenant: "pointsav".to_string(),
             glossary: Arc::new(crate::glossary::Glossary::default()),
+                links: crate::links::LinkGraph::for_testing(),
                 db: None,
         };
         let app = router(state);
@@ -3667,6 +3675,7 @@ mod tests {
             site_title: "PointSav Documentation Wiki".to_string(),
             git_tenant: "pointsav".to_string(),
             glossary: Arc::new(crate::glossary::Glossary::default()),
+                links: crate::links::LinkGraph::for_testing(),
                 db: None,
         };
         let app = router(state);
@@ -3728,6 +3737,7 @@ mod tests {
             site_title: "PointSav Documentation Wiki".to_string(),
             git_tenant: "pointsav".to_string(),
             glossary: Arc::new(crate::glossary::Glossary::default()),
+                links: crate::links::LinkGraph::for_testing(),
                 db: None,
         };
         let app = router(state);
@@ -3782,6 +3792,7 @@ mod tests {
             site_title: "PointSav Documentation Wiki".to_string(),
             git_tenant: "pointsav".to_string(),
             glossary: Arc::new(crate::glossary::Glossary::default()),
+                links: crate::links::LinkGraph::for_testing(),
                 db: None,
         };
         let app = router(state);
