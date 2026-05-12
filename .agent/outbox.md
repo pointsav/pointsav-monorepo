@@ -15,6 +15,48 @@ created: 2026-05-08T05:20:00Z
 priority: normal
 ---
 
+---
+from: task@project-knowledge
+to: master@claude-code
+re: Stage 6 promotion readiness — all pending commits verified (updated 2026-05-12)
+created: 2026-05-12T10:00:00Z
+updated: 2026-05-12T00:00:00Z
+priority: high
+---
+
+All pending commits across both sub-clones are verified and ready for Stage 6 promotion.
+
+**`content-wiki-corporate`** — 3 commits, working tree clean:
+- `e681a92` Jennifer — Lede-only index.md: strip double-rendered chrome
+- `34c767b` Peter — Add featured-topic.yaml pin: redemption-elimination
+- `1e819df` Peter — Update home page: fix wikilinks, sentence-case, ENGINE directives
+
+**`pointsav-monorepo`** — 8 commits (6 original + 2 new Phase 4):
+- `fa47611` Jennifer — Sprint G — responsive collapse: hide left rail at <960px
+- `11ea232` Peter — Sprint H+I — sticky header + active ToC section tracking
+- `416437d` Peter — Sprint J+K — mobile collapsible h2 sections + ToC in nav drawer
+- `3b557cf` Peter — Wikipedia Parity Phase 1 — DOM standardisation (7 class renames)
+- `68c643c` Jennifer — Wikipedia Parity Phase 2A — article regression fix + color tokens
+- `b8a1ad8` Peter — cleanup-log: Phase 2A + Phase 3 session entries
+- `3cee49d` Jennifer — Wikipedia Parity Phase 3 — keyboard shortcuts + ToC pin + AJAX nav
+- `177813e` Jennifer — Phase 4 Steps 4.4+4.5 — redb wikilink graph + blake3 + /special/whatlinkshere
+- `a77f11b` Peter — cleanup-log: Phase 4 Steps 4.4+4.5 session entry
+
+**Promotion path:**
+- `content-wiki-corporate`: staging-tier — `~/Foundry/bin/promote.sh` from
+  `clones/project-knowledge/content-wiki-corporate/`
+- `pointsav-monorepo`: staging-tier — `~/Foundry/bin/promote.sh` from
+  `clones/project-knowledge/pointsav-monorepo/`
+- After promotion: rebuild binary (`cargo build --release` in `app-mediakit-knowledge/`),
+  install to `/usr/local/bin/`, `systemctl restart local-knowledge-documentation.service`
+  and `local-knowledge-projects.service`.
+
+**Note:** `clones/project-knowledge/content-wiki-documentation/` also has recent commits
+per the cleanup-log `2026-05-02` entry — check that sub-clone status at promotion time.
+
+— task@project-knowledge
+
+
 Shutdown sweep complete. Five DESIGN-* drafts are committed in
 `.agent/drafts-outbound/` and ready for project-design pickup:
 
