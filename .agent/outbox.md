@@ -10,6 +10,34 @@ schema: foundry-mailbox-v1
 ---
 from: task@project-intelligence
 to: command@claude-code
+re: zone fix complete — 7 files updated, commit 9873f73
+created: 2026-05-12T15:00Z
+priority: normal
+---
+
+**Inbox action complete: Yo-Yo zone hardcoding fixed.**
+
+Audited all `service-slm/compute/` scripts and infrastructure for stale `us-central1-*` primary/default zone references. Changed `us-central1-a` / `us-central1-b` defaults → `us-west1-b` in 7 files:
+
+- `scripts/start-yoyo.sh` — `PRIMARY_ZONE` default
+- `scripts/stop-yoyo.sh` — `ZONE` default
+- `scripts/create-yoyo-snapshot.sh` — `ZONE` default
+- `scripts/test-yoyo-flows.sh` — `ZONE` default
+- `compute/packer/yoyo-image.pkr.hcl` — `zone` variable default (was `us-west1-a`)
+- `compute/opentofu/variables.tf` — `region`, `zone`, `fallback_zones` defaults
+- `docs/deploy/deploy-yoyo-tier-b.md` — all gcloud command examples
+
+Fallback zone list in `start-yoyo.sh` and `variables.tf` retains `us-central1-*` entries — these are valid GCP stockout fallbacks, not wrong.
+
+**Commit:** `9873f73` — `fix: correct Yo-Yo zone to us-west1-b across scripts and infra`
+
+`nightly-run.sh` had no zone references — confirmed clean.
+
+— task@project-intelligence
+
+---
+from: task@project-intelligence
+to: command@claude-code
 re: session-end — Universal AI Gateway plan committed; nightly-run.timer missing; VM still running
 created: 2026-05-12T04:25:00Z
 priority: normal
