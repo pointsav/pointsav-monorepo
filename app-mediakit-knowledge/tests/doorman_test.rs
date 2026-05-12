@@ -31,6 +31,7 @@ async fn doorman_state() -> (AppState, tempfile::TempDir, tempfile::TempDir) {
             collab: Arc::new(app_mediakit_knowledge::collab::CollabRooms::new()),
             enable_collab: false,
             git_tenant: "pointsav".to_string(),
+        mcp_enabled: false,
             glossary: Arc::new(app_mediakit_knowledge::glossary::Glossary::default()),
                 links: app_mediakit_knowledge::links::LinkGraph::for_testing(),
                 db: None,
@@ -102,7 +103,7 @@ async fn doorman_stubs_return_correct_json_shape() {
                     .method("POST")
                     .uri(path)
                     .header("content-type", "application/json")
-                    .body(Body::empty())
+                    .body(Body::from("{}"))
                     .unwrap(),
             )
             .await

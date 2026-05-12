@@ -40,6 +40,7 @@ async fn citation_state() -> (AppState, tempfile::TempDir, tempfile::TempDir) {
             collab: Arc::new(app_mediakit_knowledge::collab::CollabRooms::new()),
             enable_collab: false,
             git_tenant: "pointsav".to_string(),
+        mcp_enabled: false,
             glossary: Arc::new(app_mediakit_knowledge::glossary::Glossary::default()),
                 links: app_mediakit_knowledge::links::LinkGraph::for_testing(),
                 db: None,
