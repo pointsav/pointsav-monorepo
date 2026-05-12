@@ -96,6 +96,36 @@ Newest on top. Append a dated block when a session includes meaningful cleanup w
 ---
 
 
+## 2026-05-12 — Wikipedia Parity Phase 2A — article typography regression fix + color token port
+
+- **Regression fix**: Phase 1 changed `article.wiki-article` → `div #mw-content-text`, silently
+  breaking all `article { }` CSS rules (article typography: Georgia serif, heading borders, link
+  colors, code blocks, blockquotes, tables). Fixed by replacing the entire article-body block
+  (lines 118–197) with `.page-body { }` equivalents. `.page-body` is the `div.page-body` wrapper
+  that the server renders inside `div#mw-content-text`.
+
+- **`--mw-*` tokens wired into article rules**: `.page-body a` → `var(--mw-color-link)`,
+  `.page-body a:visited` → `var(--mw-color-link-visited)`, code/pre backgrounds →
+  `var(--mw-color-base-10)`, borders → `var(--mw-color-base-50)`.
+
+- **9 hardcoded hex colors in secondary `:root` block ported** to existing CSS variables:
+  `--toc-bg`, `--tab-active-border`, `--tab-hover-bg`, `--density-btn-bg`,
+  `--density-btn-active-bg`, `--density-btn-active-fg`, `--hatnote-color`, `--cat-bg`.
+
+- **4 body-level hardcoded colors ported**: `.wiki-lang-btn:hover color` → `var(--bg)`;
+  `.wiki-home-featured background` → `var(--mw-color-base-10)`; `.wiki-home-dyk background` →
+  `var(--bg)`; `a.wiki-redlink color` → `var(--mw-color-link-redlink)`.
+
+- **Left unchanged** (UI-specific palettes with no matching token): `#b58900` FLI notice border;
+  `#a55858`/`#d73c3c`/`#b52e2e`/`#ffeef0`/`#f5c2c7` editor/auth error-state palette.
+
+- **Commit**: `68c643c` (Jennifer). 60/60 lib tests pass. `doorman_stubs_return_correct_json_shape`
+  pre-existing failure, unrelated to this change.
+
+- **Deployment**: Release build in progress; install + `systemctl restart` pending.
+
+---
+
 ## 2026-05-12 — Wikipedia Parity Phase 1 DOM standardisation
 
 - **7 structural class/ID names renamed** to MediaWiki/Vector 2022 equivalents across
