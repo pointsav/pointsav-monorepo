@@ -35,7 +35,7 @@ if ! curl -sf --max-time 5 "${CONTENT_ENDPOINT}/healthz" >/dev/null; then
     log "ERROR: service-content not responding at ${CONTENT_ENDPOINT}. Abort."
     exit 1
 fi
-if ! curl -sf --max-time 5 "${DOORMAN_ENDPOINT}/v1/health" >/dev/null 2>&1; then
+if ! curl -sf --max-time 5 "${DOORMAN_ENDPOINT}/readyz" >/dev/null 2>&1; then
     log "WARN: Doorman not responding at ${DOORMAN_ENDPOINT}. Entity extraction will degrade to Tier A."
 fi
 
@@ -67,7 +67,7 @@ process_document() {
         }')
 
     local response
-    response=$(curl -sf --max-time 120 \
+    response=$(curl -sf --max-time 180 \
         -X POST "${DOORMAN_ENDPOINT}/v1/chat/completions" \
         -H "Content-Type: application/json" \
         -H "X-Foundry-Module-ID: ${MODULE_ID}" \
@@ -76,7 +76,7 @@ process_document() {
         -d "${payload}" 2>/dev/null) || { log "WARN: Doorman call failed for ${worm_id}. Skipping."; return 0; }
 
     local entities
-    entities=$(echo "${response}" | jq -r '.choices[0].message.content // "[]"')
+    entities=$(echo "${response}" | jq -r '.content // .choices[0].message.content // "[]"')
     local entity_count
     entity_count=$(echo "${entities}" | jq 'length' 2>/dev/null || echo 0)
 
