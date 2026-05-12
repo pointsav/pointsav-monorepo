@@ -10,8 +10,8 @@ use std::sync::Arc;
 use crate::http::HttpState;
 use crate::taxonomy::{
     archetypes_to_entities, coa_to_entities, domains_to_entities, glossary_to_entities,
-    parse_archetypes, parse_coa, parse_domain, parse_glossary, parse_themes, parse_topics,
-    serialize_domains, skip_header_owned, themes_to_entities, topics_to_entities,
+    guides_to_entities, parse_archetypes, parse_coa, parse_domain, parse_glossary, parse_guides,
+    parse_themes, parse_topics, serialize_domains, themes_to_entities, topics_to_entities,
 };
 
 // ── CSV response helper ───────────────────────────────────────────────────────
@@ -62,7 +62,7 @@ async fn get_domains(
     for domain in &["corporate", "documentation", "projects"] {
         let path = format!("{}/domains/domain_{}.csv", state.ontology_dir, domain);
         if let Ok(csv) = std::fs::read_to_string(&path) {
-            let rows = parse_domain(&skip_header_owned(&csv)).map_err(|e| err422(e))?;
+            let rows = parse_domain(&csv).map_err(|e| err422(e))?;
             all.extend(rows);
         }
     }
@@ -186,6 +186,43 @@ async fn post_topics(
     Ok(Json(serde_json::json!({"loaded": count, "classification": "topic", "domain": domain})))
 }
 
+// ── Guides ────────────────────────────────────────────────────────────────────
+
+async fn get_guides(
+    State(state): State<Arc<HttpState>>,
+) -> Result<Response, (StatusCode, String)> {
+    let path = format!("{}/guides/guides_documentation.csv", state.ontology_dir);
+    let csv = std::fs::read_to_string(&path).map_err(|_| err404("guides"))?;
+    Ok(csv_response(csv))
+}
+
+async fn post_guides(
+    State(state): State<Arc<HttpState>>,
+    body: String,
+) -> Result<Json<serde_json::Value>, (StatusCode, String)> {
+    let rows = parse_guides(&body).map_err(|e| err422(e))?;
+    let entities = guides_to_entities(&rows);
+    state.graph.delete_by_classification("__taxonomy__", "guide").map_err(|e| err500(e))?;
+    let count = state.graph.upsert_entities("__taxonomy__", &entities).map_err(|e| err500(e))?;
+    Ok(Json(serde_json::json!({"loaded": count, "classification": "guide"})))
+}
+
+// Reload all guides from the on-disk CSV and re-seed into the graph.
+// Used by graph-cleanup.sh as the canonical no-restart reload path.
+async fn reload_guides(
+    State(state): State<Arc<HttpState>>,
+) -> Result<Json<serde_json::Value>, (StatusCode, String)> {
+    let path = format!("{}/guides/guides_documentation.csv", state.ontology_dir);
+    let csv = std::fs::read_to_string(&path).map_err(|_| err404("guides"))?;
+    // Pass full CSV including header row — csv ReaderBuilder has has_headers=true by default,
+    // which consumes the header row and iterates only data rows via .records().
+    let rows = parse_guides(&csv).map_err(|e| err422(e))?;
+    let entities = guides_to_entities(&rows);
+    state.graph.delete_by_classification("__taxonomy__", "guide").map_err(|e| err500(e))?;
+    let count = state.graph.upsert_entities("__taxonomy__", &entities).map_err(|e| err500(e))?;
+    Ok(Json(serde_json::json!({"reloaded": count, "classification": "guide", "source": path})))
+}
+
 // ── Router ────────────────────────────────────────────────────────────────────
 
 pub fn config_routes() -> Router<Arc<HttpState>> {
@@ -196,4 +233,6 @@ pub fn config_routes() -> Router<Arc<HttpState>> {
         .route("/v1/config/themes", get(get_themes).post(post_themes))
         .route("/v1/config/glossary/:domain", get(get_glossary).post(post_glossary))
         .route("/v1/config/topics/:domain", get(get_topics).post(post_topics))
+        .route("/v1/config/guides", get(get_guides).post(post_guides))
+        .route("/v1/config/guides/reload", axum::routing::post(reload_guides))
 }
