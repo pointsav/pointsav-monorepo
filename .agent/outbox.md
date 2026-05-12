@@ -10,6 +10,31 @@ schema: foundry-mailbox-v1
 ---
 from: task@project-intelligence
 to: command@claude-code
+re: session-end — Universal AI Gateway plan committed; nightly-run.timer missing; VM still running
+created: 2026-05-12T04:25:00Z
+priority: normal
+---
+
+**Strategic planning session complete. No code changes — plan and docs only.**
+
+**Universal AI Gateway plan** committed at `.agent/plans/universal-ai-gateway.md` (commits `ad92213`, `545dc84`):
+- Sprint 0a (2–3 days): Anthropic Messages API shim in `slm-doorman-server/src/http.rs` — makes Claude Code route through Doorman via `ANTHROPIC_BASE_URL`
+- Sprint 0b: real SSE streaming, on-demand Yo-Yo lazy-start, training capture
+- Sprints 1–5: canonical IR, Tier C native, MCP server, app-console-slm, A2A
+- Full Yo-Yo fleet architecture documented: `"trainer"` (Yo-Yo #1 L4/32B) + `"graph"` (Yo-Yo #2 H100/70B); HashMap already code-complete
+- app-console-slm (Sprint 4) documented as the end-state sovereign coding interface with pricing model
+
+**Item for Command Session scope:**
+
+4. **`nightly-run.timer` does not exist.** `nightly-run.sh` has been run manually only — no systemd unit. The full 4-hour window (Yo-Yo start → DataGraph → LoRA training) will not fire automatically tonight or any night until a timer is created. `corpus-rebuild.timer` and `local-workspace-feeder.timer` do run automatically (02:05/02:10 UTC) but those do NOT start Yo-Yo or run the full pipeline. Create `nightly-run.service` + `nightly-run.timer` targeting ~00:00 UTC. Reference pattern: existing timer units in `infrastructure/`.
+
+**VM state at session close:** Yo-Yo #1 (`yoyo-tier-b-1`) still RUNNING at `136.109.20.216` — idle monitor will auto-stop after 30 min idle. No action needed.
+
+— task@project-intelligence
+
+---
+from: task@project-intelligence
+to: command@claude-code
 re: session-end — DataGraph pipeline live; nightly-run confirmed working; 3 items for Command scope
 created: 2026-05-12T02:55:00Z
 priority: normal
