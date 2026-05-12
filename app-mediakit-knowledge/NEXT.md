@@ -45,7 +45,17 @@ Manual two-client collab smoke (two editors on the same TOPIC, cursor sync visib
 matching the pattern in `collect_topic_files()`. Subdirectory TOPIC coverage verified by
 `feeds_include_subdirectory_topics` test added 2026-05-12. NEXT.md note was stale.
 
+## Phase 5 core — shipped
+
+`src/auth.rs` (428 lines), `src/pending.rs` (505 lines), `src/users.rs` (186 lines) —
+cookie sessions, argon2id passwords, edit review queue, accept/reject workflow.
+Integration tests added 2026-05-12: `tests/auth_test.rs` (5 tests), `tests/pending_test.rs` (4 tests).
+
+Phase 5.1+ not yet implemented: per-page ACLs (`read:`/`edit:` frontmatter), OIDC SSO,
+webhook subscriptions, `asyncapi.yaml` 3.1 spec — gated on BP5.
+
 ## Deferred / operator-gated
 
-- Phase 5-9 implementation — each gated on the preceding phase shipping + operator clearance
+- Phase 5.1+ — per-page ACLs, OIDC SSO, webhooks, AsyncAPI 3.1 — gated on BP5 + Stage 6
+- Phase 6-9 implementation — each gated on the preceding phase shipping + operator clearance
 - Note: `libssl-dev` and `libgit2-dev` confirmed present on VM (Phase 4 release build succeeded)
