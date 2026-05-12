@@ -1,62 +1,31 @@
 # NEXT.md — service-slm
 
-> Last updated: 2026-05-12 (Yo-Yo #1 — CUDA llama-server build in progress; resume after build)
+> Last updated: 2026-05-12 (Yo-Yo #1 — FULLY LIVE; 14.7 tok/s GPU; 6 PASS / 0 FAIL)
 > Read at session start. Update before session end so the next
 > session knows where to pick up.
 
 ---
 
-## Right now — CUDA llama-server build running; almost at inference
+## YO-YO #1 — FULLY LIVE (2026-05-12)
 
-**Current VM state (2026-05-12):**
+**Current VM state:**
 - `yoyo-tier-b-1` RUNNING in `us-west1-b`, IP `136.109.20.216`
-- `llama-server.service` running with Q3_K_M but **CPU-only build** → 0.08 tok/s
-- CUDA build running at `/opt/llama.cpp/build-cuda/` (cmake+nvcc, SM 89, cublas-dev-12-6)
-- Q3_K_M GGUF: `/data/weights/olmo-3-32b-think-q3.gguf` (14.53 GiB, sha256 in GCS) ✓
-- Q3_K_M uploaded to GCS `base-models/olmo-3-32b-think-q3.gguf` ✓
-- GCS sha256 uploaded to `base-models/olmo-3-32b-think-q3.gguf.sha256` ✓
-- nginx auth map populated with bearer token ✓
-- Doorman env updated: `SLM_YOYO_GCP_ZONE=us-west1-b`, `SLM_YOYO_ENDPOINT=https://136.109.20.216:9443`
-- Doorman `SLM_YOYO_METRICS_KEY=llamacpp:requests_processing` (llama-server metrics)
+- `llama-server.service` running with Q3_K_M, CUDA build at `build-cuda/bin/llama-server`
+- **14.7 tok/s** (GPU, 65/65 layers on L4); was 0.08 tok/s CPU-only
+- 16.1 GiB / 22.5 GiB VRAM in use (model + KV cache)
+- `corpus-rebuild.timer` + `local-workspace-feeder.timer` enabled, next fire ~02:05 UTC
+- `SLM_APPRENTICESHIP_ENABLED=true` (already set; DPO promotion gated on Master ratification)
+- `SLM_YOYO_WEIGHTS_SNAPSHOT=yoyo-tier-b-1-weights-20260512-0123` ✓
 
-**Architecture change (commit `a4a26b5`):**
-vLLM replaced by llama-server as Tier B inference backend. vLLM OOM'd loading 32B Q4_K_M
-(21.87 GiB VRAM vs 22.04 GiB L4). vLLM + Q3_K_M is worse (dequantizes to bf16).
-llama-server keeps Q3_K_M in native quantized GPU format at ~14.7 GiB VRAM.
-provision.sh now builds llama-server with CUDA; llama-server.service is the boot-time
-inference unit; vllm.service installed but not enabled.
+**Architecture (committed):**
+- vLLM → llama-server for Tier B (vLLM OOM on L4; llama-server runs Q3_K_M natively)
+- provision.sh builds llama-server with CUDA (SM 89/L4); ldconfig registers CUDA 12.6 libs
+- yoyo.rs grammar forwarding: vLLM `extra_body.structured_outputs` → llama-server `grammar` + `response_format`
 
-**Next steps (in order):**
-1. Wait for CUDA build to finish on VM (check: `ls -lh /opt/llama.cpp/build-cuda/bin/llama-server`)
-2. Update llama-server.service on VM to use CUDA binary:
-   ```bash
-   sudo sed -i 's|build/bin/llama-server|build-cuda/bin/llama-server|' \
-     /etc/systemd/system/llama-server.service
-   sudo systemctl daemon-reload
-   sudo systemctl restart llama-server.service
-   ```
-3. Verify CUDA is active: `nvidia-smi dmon -s u -d 1 -c 3` during inference (expect >80% SM)
-4. Quick inference timing:
-   ```bash
-   time curl -s -H 'Content-Type: application/json' \
-     -d '{"model":"Olmo-3-1125-32B-Think","messages":[{"role":"user","content":"1+1="}],"max_tokens":3}' \
-     http://127.0.0.1:8000/v1/chat/completions
-   # Expect: <10s total (vs 50s+ on CPU)
-   ```
-5. Run smoke test: `service-slm/scripts/test-yoyo-flows.sh` → 6 PASS / 0 FAIL / 3 SKIP
-6. Snapshot: `service-slm/scripts/create-yoyo-snapshot.sh`
-7. Enable apprenticeship: add `SLM_APPRENTICESHIP_ENABLED=true` to `/etc/local-doorman/local-doorman.env`
-8. Enable nightly timers: `sudo systemctl enable --now corpus-rebuild.timer local-workspace-feeder.timer`
-
-**Already complete (do NOT redo):**
-- Q3_K_M quantized from Q4_K_M via `llama-quantize --allow-requantize` ✓
-- Q3_K_M + sha256 in GCS (`base-models/`) ✓
-- llama-server running (CPU) on port 8000 ✓
-- nginx auth map: bearer token `a5896b...` ✓
-- Doorman env: zone=us-west1-b, endpoint=https://136.109.20.216:9443 ✓
-- provision.sh + yoyo-image.pkr.hcl updated (commit `a4a26b5`) ✓
-- vllm-weights-prep.sh: Q4→Q3 GCS artifact reference (commit `a4a26b5`) ✓
-- llama-server.service file in repo (commit `a4a26b5`) ✓
+**Remaining:**
+- [ ] D2 Master ratification: `doorman-routing` + `workspace-ops` task-types → unlock DPO promotion
+- [ ] Next Packer image build (will bake CUDA llama-server; current VM patched manually)
+- [ ] LoRA training marker (Test 11): `sudo systemctl enable --now lora-training.service` after ratification
 
 **Completed since 2026-05-07 (commits `0c0f5a2`–`b761d67`):**
 - [x] **GCP Project + VM live:** `woodfine-node-gcp-free`, `yoyo-tier-b-1` in `us-central1-b`.
