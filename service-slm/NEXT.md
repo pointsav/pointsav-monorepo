@@ -1,6 +1,6 @@
 # NEXT.md — service-slm
 
-> Last updated: 2026-05-12 (Yo-Yo #1 — FULLY LIVE; DataGraph pipeline confirmed working)
+> Last updated: 2026-05-12 (zone fix complete; VM stopped manually after 24h missed-shutdown)
 > Read at session start. Update before session end so the next
 > session knows where to pick up.
 
@@ -9,7 +9,7 @@
 ## YO-YO #1 — FULLY LIVE + DATAGRAPH PIPELINE WORKING (2026-05-12)
 
 **Current VM state:**
-- `yoyo-tier-b-1` RUNNING in `us-west1-b`, IP `136.109.20.216`
+- `yoyo-tier-b-1` **STOPPED** in `us-west1-b` (stopped 2026-05-12T16:17Z — was running 24h due to zone bug below)
 - `llama-server.service` running with Q3_K_M, CUDA build at `build-cuda/bin/llama-server`
 - **14.7 tok/s** (GPU, 65/65 layers on L4); was 0.08 tok/s CPU-only
 - 16.1 GiB / 22.5 GiB VRAM in use (model + KV cache)
@@ -29,6 +29,11 @@
 - Confirmed: 6 entities extracted from first doc in run #3 (pipeline end-to-end working)
 - Training markers dispatched (4 pending): engineering-pointsav, apprenticeship-pointsav
 - `SLM_YOYO_WEIGHTS_GCS_BUCKET` not set — training markers are local-only until configured
+
+**Zone fix — committed 9873f73 (2026-05-12):**
+- Root cause of 24h missed shutdown: `nightly-run.sh` calls `stop-yoyo.sh` as a subprocess without sourcing the env file. `stop-yoyo.sh` fell back to its hardcoded default `us-central1-a` → 404. The Rust idle monitor IS a systemd service (reads env file) so it would have worked, but Doorman was also restarted mid-session with stale zone state. Both paths now correct: script defaults fixed + Doorman restarted with `us-west1-b` env.
+- `SLM_YOYO_GCP_ZONE=us-west1-b` confirmed in `/etc/local-doorman/local-doorman.env` ✓
+- Doorman restarted 2026-05-12T16:17Z, healthy ✓
 
 **Remaining:**
 - [ ] **`nightly-run.timer`**: No systemd unit exists — nightly-run.sh has been triggered manually only. Create `nightly-run.service` + `nightly-run.timer` (target: ~00:00 UTC) so Yo-Yo #1 boots, DataGraph runs, and LoRA training fires automatically each night. See `infrastructure/` for existing timer patterns.
