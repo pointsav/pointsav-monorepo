@@ -1,11 +1,11 @@
 # project-gis Outstanding To-Do (Backlog)
 
-**Snapshot:** 2026-05-09 (post-Sprint 12)
+**Snapshot:** 2026-05-12 (post-Sprint 13 follow-on)
 **Purpose:** Cluster-level backlog of every open / deferred / held item not addressed in the current commit. Maintained alongside `tasks.md` (which carries sprint-close history) and `outbox.md` (which carries inter-session messages). Refreshed when items ship or new ones surface.
 
-**Pipeline state:** 48,810 cleansed records · 7,292 raw / 6,422 deduplicated clusters · score 0–730 · live at gis.woodfinegroup.com.
+**Pipeline state:** 48,468 cleansed records · 6,815 deduplicated clusters · T3=28 · T2=1,309 · T1=3,374 · T0=2,104 · score 0–730 · live at gis.woodfinegroup.com.
 
-**Recent commits:** Sprint 9 `7e92013` · Sprint 10 `cb80d96` · Sprint 11 `a8e3dec` · Sprint 12 `8f09505` · search dot-level + backlog `074c34b` · search v2 dual-mode `cfda0f4`. Workspace `/srv/foundry` in sync with `origin/main`.
+**Recent commits:** Sprint 12 `8f09505` · search v2 `cfda0f4` · Sprint 13 follow-on `5f96ca0` (supercentre filter fix + civic OSM tile path). Code commits now in project-gis git (cluster/project-gis) via `git add -f`.
 
 ---
 
