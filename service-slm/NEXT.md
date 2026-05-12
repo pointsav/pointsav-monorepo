@@ -1,12 +1,12 @@
 # NEXT.md — service-slm
 
-> Last updated: 2026-05-12 (Yo-Yo #1 — FULLY LIVE; 14.7 tok/s GPU; 6 PASS / 0 FAIL)
+> Last updated: 2026-05-12 (Yo-Yo #1 — FULLY LIVE; DataGraph pipeline confirmed working)
 > Read at session start. Update before session end so the next
 > session knows where to pick up.
 
 ---
 
-## YO-YO #1 — FULLY LIVE (2026-05-12)
+## YO-YO #1 — FULLY LIVE + DATAGRAPH PIPELINE WORKING (2026-05-12)
 
 **Current VM state:**
 - `yoyo-tier-b-1` RUNNING in `us-west1-b`, IP `136.109.20.216`
@@ -14,18 +14,27 @@
 - **14.7 tok/s** (GPU, 65/65 layers on L4); was 0.08 tok/s CPU-only
 - 16.1 GiB / 22.5 GiB VRAM in use (model + KV cache)
 - `corpus-rebuild.timer` + `local-workspace-feeder.timer` enabled, next fire ~02:05 UTC
-- `SLM_APPRENTICESHIP_ENABLED=true` (already set; DPO promotion gated on Master ratification)
-- `SLM_YOYO_WEIGHTS_SNAPSHOT=yoyo-tier-b-1-weights-20260512-0123` ✓
+- `SLM_APPRENTICESHIP_ENABLED=true` (DPO promotion gated on Master ratification — D2 done)
+- `SLM_YOYO_WEIGHTS_SNAPSHOT=yoyo-tier-b-1-weights-20260512-0248` ✓
 
 **Architecture (committed):**
 - vLLM → llama-server for Tier B (vLLM OOM on L4; llama-server runs Q3_K_M natively)
 - provision.sh builds llama-server with CUDA (SM 89/L4); ldconfig registers CUDA 12.6 libs
-- yoyo.rs grammar forwarding: vLLM `extra_body.structured_outputs` → llama-server `grammar` + `response_format`
+- yoyo.rs grammar forwarding: `grammar` + `response_format` (JsonSchema) to llama-server
+- Doorman response format: `.content` field (not `.choices[]`)
+- jennifer-datagraph-rebuild.sh: 180s curl timeout, `/readyz` health check, `.content` parse path
+
+**Nightly run state (as of 2026-05-12T02:52 UTC):**
+- Run #4 in progress — 30 docs queued, processed ledger cleared (previous runs had parsing bug)
+- Confirmed: 6 entities extracted from first doc in run #3 (pipeline end-to-end working)
+- Training markers dispatched (4 pending): engineering-pointsav, apprenticeship-pointsav
+- `SLM_YOYO_WEIGHTS_GCS_BUCKET` not set — training markers are local-only until configured
 
 **Remaining:**
-- [ ] D2 Master ratification: `doorman-routing` + `workspace-ops` task-types → unlock DPO promotion
+- [ ] Set `SLM_YOYO_WEIGHTS_GCS_BUCKET` in `/etc/local-doorman/local-doorman.env` for training dispatch
 - [ ] Next Packer image build (will bake CUDA llama-server; current VM patched manually)
-- [ ] LoRA training marker (Test 11): `sudo systemctl enable --now lora-training.service` after ratification
+- [ ] LoRA training marker (Test 11): workspace dispatch service needs to be written
+- [ ] ProtectHome fix: `/srv/foundry/infrastructure/local-content/local-content.service` line 51 (outboxed)
 
 **Completed since 2026-05-07 (commits `0c0f5a2`–`b761d67`):**
 - [x] **GCP Project + VM live:** `woodfine-node-gcp-free`, `yoyo-tier-b-1` in `us-central1-b`.
