@@ -23,51 +23,11 @@ tetrad:
       path: pointsav-monorepo/
       upstream: vendor/pointsav-monorepo
       focus: |
-        6 NEW projects in scope (Tetrad-vendor leg) —
-          * service-materials (NEW; Ring 2 material substrate; flat
-            files unless real DB needed; IfcMaterial + bSDD URI
-            references for material classes; Pset_Material* property
-            sets; Uniclass Pm classification)
-          * service-buildings (NEW; Ring 2 building element substrate;
-            IFC GUID-keyed element store; per-element YAML sidecars
-            keyed on IFC GUIDs; serves IfcBuiltElement family across
-            walls/slabs/columns/beams/doors/windows/roofs/stairs;
-            spatial hierarchy via IfcSpatialElement; Speckle-inspired
-            hash-addressed object store at objects/<hash>.json; UI
-            mode-prop pattern)
-          * service-codes (NEW; Ring 2 regulatory substrate; the
-            City-Code-as-Composable-Geometry invention; manages bSDD
-            URI references to per-jurisdiction zoning dictionaries;
-            authors/consumes IDS 1.0 constraint files via ifctester;
-            federates IFC geometric exclusion-zone fragments
-            (woodfine-rs1-constraints.ifc); composes per-jurisdiction
-            overlays (municipal + provincial + federal + accessibility))
-          * app-orchestration-bim (NEW; Yew/Leptos + Axum frontend;
-            "browser interface for all parties involved" — architects,
-            engineers, construction managers, property managers; the
-            Building Design System showcase parallel to
-            design.pointsav.com pattern; aggregates Totebox property
-            archives; renders IFC + bSDD + IDS + Building Design
-            System tokens for AEC consumption)
-          * app-workplace-bim (NEW; Tauri 2.10 + Rust full-feature
-            BIM editor; Pattern 1 architecture per BIM_Buildable
-            Architecture.md — thin Rust shell + xeokit/@thatopen
-            webview + IfcOpenShell sidecar via subprocess; "muscle
-            memory" universal AEC interface — SpatialTree,
-            PropertiesPanel, Viewport3D, etc.; IFC-SPF authoritative;
-            Speckle-inspired flat-file object store from day one)
-          * app-console-bim (NEW; READ surface — property managers,
-            FM operators, AEC collaborators querying without editing;
-            BimGuidSearch + BimAuditLog + BimDashboard + BimExportPanel
-            unique components; mode-prop variants of shared components)
-        Pre-existing speculative registry rows for app-{console,
-        orchestration,workplace}-bim + service-bim are replaced by
-        this scope. service-bim is RETIRED — split into service-
-        materials + service-buildings + service-codes per architectural
-        decomposition above.
-        Codifies Doctrine claim #37 (Tetrad) + proposes claim #40
-        (Flat-File BIM Substrate) + claim #41 (City Code as Composable
-        Geometry).
+        6 NEW projects: service-materials + service-buildings +
+        service-codes (Ring 2 substrate triad) + app-orchestration-bim
+        + app-workplace-bim + app-console-bim (apps tier). service-bim
+        retired; split into the three service-* crates above. Full
+        per-project detail in manifest-notes.md §Vendor focus blocks.
   customer:
     - fleet_deployment_repo: customer/woodfine-fleet-deployment
       catalog_subfolder: cluster-totebox-property/
@@ -220,36 +180,20 @@ clones:
     upstream: vendor/pointsav-monorepo (cloned via local filesystem
       2026-04-28; remotes set to admin SSH alias + jwoodfine + pwoodfine
       staging mirrors)
-    focus: |
-      6 NEW projects scaffold + Building Design System integration.
-      Service-* triad (materials + buildings + codes) at Ring 2.
-      App-* triad (orchestration + workplace + console) at apps tier.
+    focus: 6 NEW projects scaffold + Building Design System integration (service-* triad + app-* triad).
   - repo: pointsav-design-system
     role: tokens-source
     path: pointsav-design-system/
     upstream: vendor/pointsav-design-system (cloned via local filesystem
       2026-04-28; same staging setup)
-    focus: |
-      The Building Design System EXTENSION OF the existing DTCG vault.
-      8 BIM token primitive categories (SPATIAL / ELEMENTS / SYSTEMS /
-      MATERIALS / ASSEMBLIES / PERFORMANCE / IDENTITY+CODES /
-      RELATIONSHIPS) anchored to IFC 4.3 entity hierarchy. 10
-      universal interface components + 4 console-unique + 4
-      workplace-unique. Coordinates with project-design (the META-
-      substrate owner) — see cross-cluster handoff entry below.
-      Uniclass 2015 imported as classification floor (analogous to
-      project-design's Carbon-baseline-floor pattern).
+    focus: Building Design System extension — 8 BIM token primitive categories + 10 universal + 4+4 surface-unique components; Uniclass 2015 classification floor. Detail in manifest-notes.md §Clone focus blocks.
   - repo: woodfine-fleet-deployment
     role: customer-fleet
     path: woodfine-fleet-deployment/
     upstream: customer/woodfine-fleet-deployment (cloned via local
       filesystem 2026-04-28; remotes set to mcorp-administrator SSH
       alias + jwoodfine + pwoodfine staging mirrors)
-    focus: |
-      Two catalog subfolders: cluster-totebox-property/ (existing,
-      Task extends GUIDEs) + gateway-orchestration-bim/ (NEW, Task
-      creates catalog folder + drafts GUIDEs). Customer-tier
-      operational mirror for both deployment instances.
+    focus: Two catalog subfolders — cluster-totebox-property/ (extends GUIDEs) + gateway-orchestration-bim/ (NEW, Task creates folder + drafts GUIDEs).
 
 deployment_instances:
   - ~/Foundry/deployments/gateway-orchestration-bim-1/  (woodfine; bim.woodfinegroup.com target)
