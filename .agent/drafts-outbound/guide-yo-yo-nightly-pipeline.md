@@ -24,6 +24,16 @@ notes_for_editor: |
   intended operator actions — use "intended" language there. All other
   described behaviour is current-fact (code complete, 177/177 tests pass).
   No ES pair needed for guides.
+
+  UPDATE NOTE (2026-05-12): The following corrections apply to this draft
+  before language pass — verify these are reflected in the body text:
+  1. jennifer-datagraph-rebuild.sh curl timeout is 180s (not 30s as originally
+     scripted — 32B Think model needs 30–120s per inference).
+  2. Doorman response envelope: `.content` field, not `.choices[0].message.content`.
+     Scripts parsing the raw OpenAI wire format will silently return zero entities.
+  3. Doorman health check endpoint is `/readyz` (GET /v1/health returns 404).
+  4. Processed ledger (data/datagraph-processed.txt): entries written on "no entities"
+     as well as on success — clear the ledger if a parsing bug corrupted a run.
 ---
 
 # GUIDE — Yo-Yo #1 Nightly Pipeline
