@@ -94,6 +94,10 @@ pub struct AppState {
     pub enable_collab: bool,
     /// Phase 4 Step 4.7: tenant name for the read-only git remote.
     pub git_tenant: String,
+    /// Phase 4 Step 4.6: when true, mount `POST /mcp` and expose the
+    /// MCP JSON-RPC 2.0 endpoint. Default off — the route is absent
+    /// when this flag is not set.
+    pub mcp_enabled: bool,
     /// Phase 10: Leapfrog 2030 glossary auto-linker.
     pub glossary: Arc<crate::glossary::Glossary>,
     /// Phase 4 Steps 4.4+4.5: redb-backed wikilink graph and blake3 hashes.
@@ -106,6 +110,7 @@ pub struct AppState {
 
 pub fn router(state: AppState) -> Router {
     let collab_enabled = state.enable_collab;
+    let mcp_enabled = state.mcp_enabled;
     let mut r = Router::new()
         .route("/", get(index))
         // Wildcard capture allows category-scoped slugs: `/wiki/architecture/compounding-substrate`
@@ -140,7 +145,7 @@ pub fn router(state: AppState) -> Router {
         .route("/search", get(search_page))
         .route("/wanted", get(wanted_page))
         .route("/random", get(random_page))
-        .route("/mcp", post(mcp_handler))
+        // Phase 4 Step 4.6 — MCP route mounted conditionally; see mcp_enabled guard below
         // Phase 3 Step 3.3 — Atom + JSON Feed syndication
         .route("/feed.atom", get(crate::feeds::get_atom))
         .route("/feed.json", get(crate::feeds::get_json_feed))
@@ -178,12 +183,19 @@ pub fn router(state: AppState) -> Router {
         // Wikipedia-parity special pages
         .route("/special/whatlinkshere/{slug}", get(what_links_here))
         .route("/special/pageinfo/{slug}", get(page_info))
-        .route("/special/cite/{slug}", get(cite_page));
+        .route("/special/cite/{slug}", get(cite_page))
+        // Phase 4 Step 4.8 — OpenAPI 3.1 specification
+        .route("/openapi.yaml", get(openapi_yaml));
     // Phase 2 Step 7 — collab WebSocket relay; only mounted when the CLI
     // flag is set (default off — production deploys without --enable-collab
     // never expose the route).
     if collab_enabled {
         r = r.route("/ws/collab/{slug}", get(crate::collab::ws_collab));
+    }
+    // Phase 4 Step 4.6 — MCP JSON-RPC 2.0 endpoint; only mounted when
+    // --enable-mcp is set (default off).
+    if mcp_enabled {
+        r = r.route("/mcp", post(crate::mcp::handler));
     }
     r.with_state(Arc::new(state))
 }
@@ -251,165 +263,21 @@ async fn healthz() -> &'static str {
     "ok"
 }
 
+/// `GET /openapi.yaml` — Phase 4 Step 4.8.
+///
+/// Serves the hand-authored OpenAPI 3.1 specification embedded at compile
+/// time via `include_str!`. Always current — no runtime I/O.
+async fn openapi_yaml() -> impl IntoResponse {
+    (
+        [(header::CONTENT_TYPE, "application/yaml")],
+        include_str!("../openapi.yaml"),
+    )
+}
+
 #[derive(Deserialize)]
 struct SearchQueryParams {
     #[serde(default)]
     q: String,
-}
-
-/// `POST /mcp` — Minimal MCP (Model Context Protocol) JSON-RPC 2.0 endpoint.
-///
-/// Resources:
-///   - `article`  — full article HTML + frontmatter JSON by slug
-///   - `category` — article list for a category
-///   - `search`   — Tantivy full-text query, returns hits with title+snippet+slug
-///   - `wanted`   — redlink table (missing slug → source slugs)
-///
-/// Auth: open read-only, consistent with auth-less wiki mode.
-async fn mcp_handler(
-    State(state): State<Arc<AppState>>,
-    Json(req): Json<serde_json::Value>,
-) -> impl IntoResponse {
-    let id = req.get("id").cloned().unwrap_or(serde_json::Value::Null);
-    let method = req
-        .get("method")
-        .and_then(|v| v.as_str())
-        .unwrap_or("")
-        .to_string();
-    let params = req
-        .get("params")
-        .cloned()
-        .unwrap_or(serde_json::Value::Object(serde_json::Map::new()));
-
-    let result = mcp_dispatch(&state, &method, &params).await;
-
-    let body = match result {
-        Ok(v) => json!({ "jsonrpc": "2.0", "id": id, "result": v }),
-        Err(msg) => json!({
-            "jsonrpc": "2.0",
-            "id": id,
-            "error": { "code": -32000, "message": msg }
-        }),
-    };
-
-    (
-        [(header::CONTENT_TYPE, HeaderValue::from_static("application/json"))],
-        axum::Json(body),
-    )
-}
-
-async fn mcp_dispatch(
-    state: &AppState,
-    method: &str,
-    params: &serde_json::Value,
-) -> Result<serde_json::Value, String> {
-    match method {
-        "article" => {
-            let slug = params
-                .get("slug")
-                .and_then(|v| v.as_str())
-                .ok_or("missing param: slug")?;
-            if slug.contains("..") {
-                return Err("invalid slug".into());
-            }
-            let path = state.content_dir.join(format!("{slug}.md"));
-            let text = tokio::fs::read_to_string(&path)
-                .await
-                .map_err(|_| format!("article not found: {slug}"))?;
-            let parsed = crate::render::parse_page(&text)
-                .map_err(|e| format!("parse error: {e}"))?;
-            let html = crate::render::render_html_raw(&parsed.body_md, &state.content_dir);
-            Ok(json!({
-                "slug": slug,
-                "title": parsed.frontmatter.title,
-                "category": parsed.frontmatter.category,
-                "last_edited": parsed.frontmatter.last_edited,
-                "quality": parsed.frontmatter.quality,
-                "status": parsed.frontmatter.status,
-                "short_description": parsed.frontmatter.short_description,
-                "html": html,
-            }))
-        }
-        "category" => {
-            let name = params
-                .get("name")
-                .and_then(|v| v.as_str())
-                .ok_or("missing param: name")?;
-            let buckets = crate::server::bucket_topics_by_category(
-                &state.content_dir,
-                state.guide_dir.as_deref(),
-                state.guide_dir_2.as_deref(),
-            )
-            .await
-            .map_err(|e| format!("error: {e}"))?;
-            let empty = Vec::new();
-            let topics = buckets.get(name).unwrap_or(&empty);
-            let items: Vec<serde_json::Value> = topics
-                .iter()
-                .map(|t| json!({
-                    "slug": t.slug,
-                    "title": t.title,
-                    "last_edited": t.last_edited,
-                    "short_description": t.short_description,
-                }))
-                .collect();
-            Ok(json!({ "category": name, "count": items.len(), "articles": items }))
-        }
-        "search" => {
-            let q = params
-                .get("q")
-                .and_then(|v| v.as_str())
-                .ok_or("missing param: q")?;
-            let limit = params
-                .get("limit")
-                .and_then(|v| v.as_u64())
-                .unwrap_or(10) as usize;
-            let hits = crate::search::search(&state.search, q, limit)
-                .map_err(|e| format!("search error: {e}"))?;
-            let items: Vec<serde_json::Value> = hits
-                .iter()
-                .map(|h| json!({
-                    "slug": h.slug,
-                    "title": h.title,
-                    "snippet": h.snippet,
-                }))
-                .collect();
-            Ok(json!({ "query": q, "count": items.len(), "hits": items }))
-        }
-        "wanted" => {
-            let re = Regex::new(r#"href="/wiki/([^"]+)"[^>]*class="wiki-redlink""#)
-                .expect("static regex");
-            let topic_files = collect_all_topic_files(
-                &state.content_dir,
-                &[state.guide_dir.as_deref(), state.guide_dir_2.as_deref()],
-            )
-            .await
-            .map_err(|e| format!("error: {e}"))?;
-            let mut wanted: BTreeMap<String, Vec<String>> = BTreeMap::new();
-            for tf in &topic_files {
-                if let Ok(text) = tokio::fs::read_to_string(&tf.path).await {
-                    let html = crate::render::render_html_raw(&text, &state.content_dir);
-                    for cap in re.captures_iter(&html) {
-                        wanted
-                            .entry(cap[1].to_string())
-                            .or_default()
-                            .push(tf.slug.clone());
-                    }
-                }
-            }
-            let mut rows: Vec<serde_json::Value> = wanted
-                .into_iter()
-                .map(|(slug, sources)| json!({ "missing_slug": slug, "linked_from": sources }))
-                .collect();
-            rows.sort_by(|a, b| {
-                let la = a["linked_from"].as_array().map(|v| v.len()).unwrap_or(0);
-                let lb = b["linked_from"].as_array().map(|v| v.len()).unwrap_or(0);
-                lb.cmp(&la)
-            });
-            Ok(json!({ "count": rows.len(), "wanted": rows }))
-        }
-        _ => Err(format!("unknown method: {method}")),
-    }
 }
 
 /// `GET /wanted` — "Wanted articles" page.
@@ -626,7 +494,9 @@ async fn doorman_proxy(
         _ => {
             return (StatusCode::NOT_IMPLEMENTED, Json(json!({
                 "error": "Doorman not configured — set WIKI_DOORMAN_URL to enable",
-                "hint": "WIKI_DOORMAN_URL=http://localhost:9091"
+                "hint": "WIKI_DOORMAN_URL=http://localhost:9091",
+                "phase": 4,
+                "reason": "Phase 4 Step 4.6 wires Doorman MCP integration; set WIKI_DOORMAN_URL to enable"
             }))).into_response();
         }
     };
@@ -729,9 +599,9 @@ const RATIFIED_CATEGORIES: &[&str] = &[
 /// directly in `content_dir` the slug equals the filename stem (e.g.,
 /// `topic-hello`). For files in a subdirectory the slug is
 /// `<subdir>/<stem>` (e.g., `architecture/compounding-substrate`).
-struct TopicFile {
-    slug: String,
-    path: PathBuf,
+pub struct TopicFile {
+    pub slug: String,
+    pub path: PathBuf,
 }
 
 /// Repo-management files that are not wiki content. Filtered out at the
@@ -764,7 +634,7 @@ const SYSTEM_FILE_STEMS: &[&str] = &[
 ///
 /// Descends one level into subdirectories (category folders). Does not
 /// recurse further — the content tree is `<content_dir>/<category>/<slug>.md`.
-async fn collect_topic_files(content_dir: &FsPath) -> std::io::Result<Vec<TopicFile>> {
+pub async fn collect_topic_files(content_dir: &FsPath) -> std::io::Result<Vec<TopicFile>> {
     let mut out = Vec::new();
     let mut entries = fs::read_dir(content_dir).await?;
 
@@ -827,7 +697,7 @@ async fn collect_topic_files(content_dir: &FsPath) -> std::io::Result<Vec<TopicF
 /// Collect topic files from `content_dir` and zero or more `guide_dirs`.
 /// Slugs are unique within each dir; guide slugs are prefixed by their subdir
 /// name so they don't collide with content slugs.
-async fn collect_all_topic_files(
+pub async fn collect_all_topic_files(
     content_dir: &FsPath,
     guide_dirs: &[Option<&FsPath>],
 ) -> std::io::Result<Vec<TopicFile>> {
@@ -3097,6 +2967,7 @@ mod tests {
                 enable_collab: false,
                 site_title: "PointSav Documentation Wiki".to_string(),
                 git_tenant: "pointsav".to_string(),
+            mcp_enabled: false,
                 glossary: Arc::new(crate::glossary::Glossary::default()),
                 links: crate::links::LinkGraph::for_testing(),
                 db: None,
@@ -3266,6 +3137,7 @@ mod tests {
             enable_collab: false,
             site_title: "PointSav Documentation Wiki".to_string(),
             git_tenant: "pointsav".to_string(),
+            mcp_enabled: false,
             glossary: Arc::new(crate::glossary::Glossary::default()),
                 links: crate::links::LinkGraph::for_testing(),
                 db: None,
@@ -3340,6 +3212,7 @@ mod tests {
             enable_collab: false,
             site_title: "PointSav Documentation Wiki".to_string(),
             git_tenant: "pointsav".to_string(),
+            mcp_enabled: false,
             glossary: Arc::new(crate::glossary::Glossary::default()),
                 links: crate::links::LinkGraph::for_testing(),
                 db: None,
@@ -3392,6 +3265,7 @@ mod tests {
             enable_collab: false,
             site_title: "PointSav Documentation Wiki".to_string(),
             git_tenant: "pointsav".to_string(),
+            mcp_enabled: false,
             glossary: Arc::new(crate::glossary::Glossary::default()),
                 links: crate::links::LinkGraph::for_testing(),
                 db: None,
@@ -3441,6 +3315,7 @@ mod tests {
             enable_collab: false,
             site_title: "PointSav Documentation Wiki".to_string(),
             git_tenant: "pointsav".to_string(),
+            mcp_enabled: false,
             glossary: Arc::new(crate::glossary::Glossary::default()),
                 links: crate::links::LinkGraph::for_testing(),
                 db: None,
@@ -3497,6 +3372,7 @@ mod tests {
             enable_collab: false,
             site_title: "PointSav Documentation Wiki".to_string(),
             git_tenant: "pointsav".to_string(),
+            mcp_enabled: false,
             glossary: Arc::new(crate::glossary::Glossary::default()),
                 links: crate::links::LinkGraph::for_testing(),
                 db: None,
@@ -3556,6 +3432,7 @@ mod tests {
             enable_collab: false,
             site_title: "PointSav Documentation Wiki".to_string(),
             git_tenant: "pointsav".to_string(),
+            mcp_enabled: false,
             glossary: Arc::new(crate::glossary::Glossary::default()),
                 links: crate::links::LinkGraph::for_testing(),
                 db: None,
@@ -3614,6 +3491,7 @@ mod tests {
             enable_collab: false,
             site_title: "PointSav Documentation Wiki".to_string(),
             git_tenant: "pointsav".to_string(),
+            mcp_enabled: false,
             glossary: Arc::new(crate::glossary::Glossary::default()),
                 links: crate::links::LinkGraph::for_testing(),
                 db: None,
@@ -3674,6 +3552,7 @@ mod tests {
             enable_collab: false,
             site_title: "PointSav Documentation Wiki".to_string(),
             git_tenant: "pointsav".to_string(),
+            mcp_enabled: false,
             glossary: Arc::new(crate::glossary::Glossary::default()),
                 links: crate::links::LinkGraph::for_testing(),
                 db: None,
@@ -3736,6 +3615,7 @@ mod tests {
             enable_collab: false,
             site_title: "PointSav Documentation Wiki".to_string(),
             git_tenant: "pointsav".to_string(),
+            mcp_enabled: false,
             glossary: Arc::new(crate::glossary::Glossary::default()),
                 links: crate::links::LinkGraph::for_testing(),
                 db: None,
@@ -3791,6 +3671,7 @@ mod tests {
             enable_collab: false,
             site_title: "PointSav Documentation Wiki".to_string(),
             git_tenant: "pointsav".to_string(),
+            mcp_enabled: false,
             glossary: Arc::new(crate::glossary::Glossary::default()),
                 links: crate::links::LinkGraph::for_testing(),
                 db: None,
