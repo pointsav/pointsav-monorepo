@@ -10,6 +10,41 @@ schema: foundry-mailbox-v1
 ---
 from: task@project-gis
 to: command
+re: Sprint 13 follow-on — two global pipeline bugs fixed (supercentre filter + civic OSM tile path)
+created: 2026-05-12T00:00:00Z
+priority: normal
+---
+
+Sprint 13 follow-on commit `5f96ca0` (Peter Woodfine). Two global pipeline bugs found and fixed.
+
+**Bug 1 — `"supercentre"` in SKIP_NAME_SUBSTRINGS (ingest-osm.py:129)**
+- Root cause: "supercentre" (Canadian -re spelling) was in the name-filter list intended for sub-facilities. This silently dropped any OSM element named "Walmart Supercentre" at ingest time.
+- Impact: Global, Canada-only. "supercenter" (US -er spelling) is a different string and was NOT matched. No chain other than walmart-ca uses "supercentre" in OSM.
+- Fix: Removed "supercentre" from SKIP_NAME_SUBSTRINGS.
+- Result: walmart-ca re-ingest → 453 records (was 253). Sherwood Park Walmart Supercentre (53.5689, -113.2792) recovered. It creates a new cluster: "Strathcona County, Edmonton — Co-location 4" (anchored by walmart-ca; Canadian Tire at 0.73 km is the ALPHA_HW secondary → T2 Hub).
+
+**Bug 2 — cleansed-civic-osm.jsonl not read by build_layer1() (build-tiles.py)**
+- Root cause: build_layer1() read hospital/university data from service-fs/service-places/ (Overture-sourced; 1 CA hospital record with lat=0,lon=0). The OSM-sourced service-places/cleansed-civic-osm.jsonl (60,756 records across all countries including 4,447 CA) was never included in the tile build.
+- Impact: Global — all hospitals and universities from the OSM civic ingest were absent from the map in ALL countries (US, FR, MX, DE, IT, CA, ES, GB, PL, Nordics, etc.).
+- Fix: Added a third read block in build_layer1() for cleansed-civic-osm.jsonl. Schema-compatible (latitude/longitude fields match); no UI changes needed (hospital #DC2626 red, university #15803D green already wired).
+- Result: Strathcona Community Hospital (53.5682411, -113.2758681) and all 60,756 civic OSM records now flow into layer1-locations.pmtiles.
+
+**Pipeline state after Sprint 13 follow-on:**
+- 48,468 cleansed business records (walmart-ca 453, up from 253)
+- 6,815 clusters (was 6,422 at Sprint 12) — 393 new clusters from recovered Walmart Supercentre records across Canada
+- T3 Apex: 28 · T2 Hub: 1,309 · T1 Valid: 3,374 · T0 Border: 2,104 · Score 0–730
+- layer1-locations.pmtiles: 500.6 MB (was ~400 MB; +60,756 civic OSM records)
+- layer2-clusters.pmtiles: 43.7 MB · clusters-meta.json: 2,876 KB
+- Strathcona County clusters: 4 (Co-location 1–4; new Co-location 4 is the Walmart Supercentre at 53.5689)
+- Live at gis.woodfinegroup.com
+
+**Note on commit flow:** Code files (ingest-osm.py + build-tiles.py) staged to project-gis git via `git add -f` (forced past clones/project-gis/.gitignore rule `pointsav-monorepo/`). The 4f7b0b0 workspace commit that added this gitignore rule left project-gis code tracking in limbo — files are now in project-gis git (`cluster/project-gis` branch) but were previously in workspace git. Command Session should clarify the intended commit path for project-gis code going forward and update the gitignore/NEXT.md accordingly.
+
+**Outstanding backlog (unchanged from Sprint 13):** 13 items in outstanding-todo.md.
+
+---
+from: task@project-gis
+to: command
 re: session 13 close — search highlight v2 (dual-mode); outstanding-todo backlog persisted; inbox swept
 created: 2026-05-09T01:30:00Z
 priority: normal
