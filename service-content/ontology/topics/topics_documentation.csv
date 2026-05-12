@@ -1,4 +1,6 @@
 topic_id,title,domain,wiki_repo,wiki_path,active_state
+domain-documentation,Documentation Domain,documentation,content-wiki-documentation,topics/domain-documentation.md,pending
+guide-entity-class,GUIDE Entity Class (guide-*),documentation,content-wiki-documentation,topics/guide-entity-class.md,pending
 topic-ontological-data-graph,Ontological Data Graph,documentation,content-wiki-documentation,topics/topic-ontological-data-graph.md,pending
 topic-doorman-protocol,Doorman Protocol,documentation,content-wiki-documentation,topics/topic-doorman-protocol.md,pending
 topic-knowledge-graph-architecture,Knowledge Graph Architecture,documentation,content-wiki-documentation,topics/topic-knowledge-graph-architecture.md,pending
