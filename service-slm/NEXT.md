@@ -31,6 +31,7 @@
 - `SLM_YOYO_WEIGHTS_GCS_BUCKET` not set — training markers are local-only until configured
 
 **Remaining:**
+- [ ] **`nightly-run.timer`**: No systemd unit exists — nightly-run.sh has been triggered manually only. Create `nightly-run.service` + `nightly-run.timer` (target: ~00:00 UTC) so Yo-Yo #1 boots, DataGraph runs, and LoRA training fires automatically each night. See `infrastructure/` for existing timer patterns.
 - [ ] Set `SLM_YOYO_WEIGHTS_GCS_BUCKET` in `/etc/local-doorman/local-doorman.env` for training dispatch
 - [ ] Next Packer image build (will bake CUDA llama-server; current VM patched manually)
 - [ ] LoRA training marker (Test 11): workspace dispatch service needs to be written
