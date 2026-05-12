@@ -1,4 +1,26 @@
 ---
+archived: 2026-05-12T01:45Z by task@project-intelligence
+actioned: D2 closed (doorman-routing + workspace-ops registered); LoRA ratified (lora-training.service active on VM); GPU inference live at 14.7 tok/s; 6 PASS / 0 FAIL smoke test
+messages_archived: 5 (2026-05-07 through 2026-05-12)
+---
+
+## Archived message: Yo-Yo #1 fully live — GPU inference at 14.7 tok/s (2026-05-12T01:30:00Z)
+
+Root cause: provision.sh built llama.cpp CPU-only (-DGGML_CUDA=OFF). Fixed to CUDA build.
+yoyo.rs grammar fix: vLLM extra_body → llama-server grammar + response_format.
+Smoke test: 6 PASS / 0 FAIL. Snapshot: yoyo-tier-b-1-weights-20260512-0123.
+
+## Archived message: build-once Yo-Yo platform live (2026-05-11T00:00:00Z)
+
+Build-once platform aligned with Doctrine claim #15. Sovereignty boundary: GCS canonical
+artifacts. GGUF arch fix via /data/weights/model/ directory. Two Doctrine gaps surfaced
+(CPT trigger, LoRA ratification) — both resolved by Command Session.
+
+## Archived messages: service-content pipeline complete + infrastructure (2026-05-07 through 2026-05-08)
+
+All A-G blocks committed. Track 1-4 operator items now complete.
+
+---
 archived: 2026-05-11T00:00Z by command@claude-code (Gap 1 & Gap 2 actioned this session)
 actioned:
   Gap 1: CPT Trigger Discipline → conventions/apprenticeship-substrate.md §12 (workspace commit 4e2095d)
