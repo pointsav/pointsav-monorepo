@@ -68,13 +68,14 @@ fn main() -> NotifyResult<()> {
             match graph_store.upsert_entities("__taxonomy__", &entities) {
                 Ok(n) => println!(
                     "[TAXONOMY] Loaded: {} archetypes, {} coa-profiles, {} domains, \
-                     {} glossary-terms, {} themes, {} topics → {} entities upserted",
+                     {} glossary-terms, {} themes, {} topics, {} guides → {} entities upserted",
                     bundle.archetypes.len(),
                     bundle.coa.len(),
                     bundle.domains.len(),
                     bundle.glossary.len(),
                     bundle.themes.len(),
                     bundle.topics.len(),
+                    bundle.guides.len(),
                     n
                 ),
                 Err(e) => println!("[TAXONOMY] Graph write failed: {}", e),
@@ -106,8 +107,9 @@ fn main() -> NotifyResult<()> {
             if path.extension().and_then(|s| s.to_str()) == Some("json") {
                 let filename = path.file_name().unwrap().to_str().unwrap().to_string();
                 if filename.starts_with("CORPUS_") {
-                    process_corpus(&path, &crm_dir, &doorman_endpoint, &module_id, &graph_store);
-                    processed_ledgers.push(filename);
+                    if process_corpus(&path, &crm_dir, &doorman_endpoint, &module_id, &graph_store) {
+                        processed_ledgers.push(filename);
+                    }
                 }
             }
         }
@@ -133,8 +135,9 @@ fn main() -> NotifyResult<()> {
                             if filename.starts_with("CORPUS_") && !processed_ledgers.contains(&filename) {
                                 println!("\n[WATCHER] New Corpus Detected: {}", filename);
                                 thread::sleep(Duration::from_millis(250));
-                                process_corpus(&path, &crm_dir, &doorman_endpoint, &module_id, &graph_store);
-                                processed_ledgers.push(filename);
+                                if process_corpus(&path, &crm_dir, &doorman_endpoint, &module_id, &graph_store) {
+                                    processed_ledgers.push(filename);
+                                }
                             }
                         }
                     }
@@ -152,14 +155,21 @@ fn process_corpus(
     doorman_endpoint: &str,
     module_id: &str,
     graph_store: &Arc<dyn GraphStore>,
-) {
-    let content = match fs::read_to_string(filepath) { Ok(c) => c, Err(_) => return };
-    let payload: Value = match serde_json::from_str(&content) { Ok(v) => v, Err(_) => return };
+) -> bool {
+    let content = match fs::read_to_string(filepath) { Ok(c) => c, Err(_) => return false };
+    let payload: Value = match serde_json::from_str(&content) { Ok(v) => v, Err(_) => return false };
 
     let worm_id = payload["worm_id"].as_str().unwrap_or("UNKNOWN");
     let corpus_text = payload["corpus"].as_str().unwrap_or("");
+    // Per-file module_id override: CORPUS JSON may carry a "module_id" field to
+    // route workspace artifacts into a separate graph namespace (e.g. "foundry-workspace")
+    // without requiring a separate service-content instance.
+    let effective_module_id: &str = payload["module_id"]
+        .as_str()
+        .filter(|s| !s.is_empty())
+        .unwrap_or(module_id);
 
-    if corpus_text.is_empty() { return; }
+    if corpus_text.is_empty() { return false; }
 
     println!("  -> [WATCHER] Routing payload to Doorman ({})/v1/chat/completions...", doorman_endpoint);
 
@@ -214,7 +224,7 @@ fn process_corpus(
     let url = format!("{}/v1/chat/completions", doorman_endpoint);
     let client = reqwest::blocking::Client::new();
     let res = client.post(&url)
-        .header("X-Foundry-Module-ID", module_id)
+        .header("X-Foundry-Module-ID", effective_module_id)
         .header("X-Foundry-Request-ID", &request_id)
         .header("X-Foundry-Complexity", "high")
         .header("X-Foundry-Yoyo-Label", "graph")
@@ -263,7 +273,7 @@ fn process_corpus(
                                 role_vector: role_vector.clone(),
                                 location_vector: location_vector.clone(),
                                 contact_vector: contact_vector.clone(),
-                                module_id: module_id.to_string(),
+                                module_id: effective_module_id.to_string(),
                                 confidence: 0.95,
                             });
 
@@ -305,23 +315,29 @@ fn process_corpus(
                         println!("  -> [WATCHER] Semantic Integration Complete: {} Nodes Secured.", enriched_crm.len());
 
                         // ── Graph write path ──────────────────────────────────
-                        if let Err(e) = graph_store.upsert_entities(module_id, &graph_entities) {
+                        if let Err(e) = graph_store.upsert_entities(effective_module_id, &graph_entities) {
                             println!("  -> [GRAPH] Write failed: {}", e);
+                            return false;
                         } else {
-                            println!("  -> [GRAPH] {} entities written to graph.", graph_entities.len());
+                            println!("  -> [GRAPH] {} entities written to graph (module: {}).", graph_entities.len(), effective_module_id);
+                            return true;
                         }
                     } else {
                         println!("  -> [SYS_HALT] Doorman response was not a valid entity JSON array.");
+                        return false;
                     }
                 } else {
                     println!("  -> [SYS_HALT] Doorman returned invalid JSON format.");
+                    return false;
                 }
             } else {
                 println!("  -> [SYS_HALT] Doorman rejected payload: {}", response.status());
+                return false;
             }
         }
         Err(e) => {
             println!("  -> [SYS_HALT] Doorman routing failed: {}", e);
+            return false;
         }
     }
 }
