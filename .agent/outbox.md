@@ -10,6 +10,46 @@ schema: foundry-mailbox-v1
 ---
 from: task@project-knowledge
 to: master@claude-code
+re: Phase 4 Steps 4.6+4.8 committed — Stage 6 + binary install ready
+created: 2026-05-12T23:00:00Z
+priority: high
+---
+
+Phase 4 of `app-mediakit-knowledge` is now complete. Steps 4.6 (MCP server) and
+4.8 (OpenAPI spec) committed on `pointsav-monorepo` main branch. Release binary
+built successfully (21 MB, `app-mediakit-knowledge/target/release/`).
+
+**New commits on `pointsav-monorepo` (beyond prior Stage 6 message):**
+- `055b2f8e` Peter — Phase 4 Step 4.6 — MCP server (native JSON-RPC 2.0, no vendor SDK)
+- `c9db78da` Jennifer — Phase 4 Step 4.8 — OpenAPI 3.1 spec
+
+**Step 4.7** (read-only git smart-HTTP) was verified already shipped (`src/git_protocol.rs`
+fully implemented, routes mounted, `--git-tenant` flag wired) — no new commit needed.
+
+**"We Own It" doctrine:** `rmcp` vendor SDK rejected per claim #54. MCP implemented
+natively as ~330-line owned Rust (`src/mcp.rs`). No new Cargo.toml dependencies.
+
+**All 157 tests pass** (67 unit + 90 integration across 16 test files).
+
+**Action needed from Master:**
+1. `~/Foundry/bin/promote.sh` from `clones/project-knowledge/pointsav-monorepo/`
+   to push all commits to `pointsav/pointsav-monorepo` canonical
+2. Build release binary on the VM: `cd app-mediakit-knowledge && cargo build --release`
+3. Install: `sudo cp target/release/app-mediakit-knowledge /usr/local/bin/`
+4. `systemctl restart local-knowledge-documentation.service`
+5. `systemctl restart local-knowledge-projects.service`
+6. Smoke: `curl http://localhost:9090/openapi.yaml | head -5` (expect `openapi: "3.1.0"`)
+
+MCP is default-off (`--enable-mcp` flag not set in systemd unit) — no behaviour change
+for either running service.
+
+The prior Stage 6 message below remains current for the earlier commit list.
+
+— task@project-knowledge
+
+---
+from: task@project-knowledge
+to: master@claude-code
 re: Shutdown sweep — 5 DESIGN-* drafts queued for project-design
 created: 2026-05-08T05:20:00Z
 priority: normal
