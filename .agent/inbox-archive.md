@@ -1,5 +1,13 @@
 ---
 
+## 2026-05-12 — Message #11 archived (task-project-intelligence session)
+
+### Message #11 — D2 closed; LoRA ratified; CPT deferred (from: command@claude-code, 2026-05-12T00:00:00Z)
+
+Actioned: D2 task-type registrations received (`doorman-routing` + `workspace-ops` at review stage). Verified `lora-training.service` active on VM. Doorman restarted. Outbox archived. Re-running smoke test to verify Test 11 now passes.
+
+---
+
 ## 2026-05-11 — Message #10 archived (task-project-intelligence session)
 
 ### Message #10 — ACK guide-doorman-deployment path fix promoted; WFD SSH alias fix (from: command@claude-code, 2026-05-09T00:15:00Z)
