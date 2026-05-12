@@ -359,3 +359,28 @@ Six scoped items shipped. Operator answered all four decision-blocking items fro
 3. C2 Fred Meyer ALPHA removal review
 4. D1–D4 held items (DataGraph E2, Sherwood Park 3km, Rust ingest, OD Study)
 5. E1–E4 long-tail (IPEDS, draft open questions, PRODUCT_VISION, blank-zone diag)
+
+## Sprint 13 follow-on — 2026-05-12
+
+Two global pipeline bugs identified and fixed. Triggered by operator-supplied Google Maps URLs for missing Sherwood Park Walmart Supercentre and Strathcona Community Hospital.
+
+### Shipped — commit `5f96ca0` (Peter Woodfine)
+
+- **Bug 1 — `"supercentre"` in SKIP_NAME_SUBSTRINGS** (`ingest-osm.py:129`): Canadian-spelling filter was silently dropping "Walmart Supercentre" records at ingest. US spelling "supercenter" was not matched. Fix: removed `"supercentre"`. walmart-ca re-ingested: 253 → 453 records. New cluster: "Strathcona County, Edmonton — Co-location 4" at (53.5689, -113.2790), anchored by walmart-ca with Canadian Tire as ALPHA_HW secondary (0.73 km). Affects all of Canada — every "Walmart Supercentre" OSM element now ingests correctly.
+
+- **Bug 2 — civic OSM data absent from tiles** (`build-tiles.py`, `build_layer1()`): `service-places/cleansed-civic-osm.jsonl` (60,756 records: hospitals + universities across US, CA, FR, MX, DE, IT, ES, GB, PL, Nordics) was never read by the tile builder. Only Overture service-fs data was used, which had essentially zero valid Canadian records. Fix: added third read block for civic OSM path. All 60,756 records now flow into layer1-locations.pmtiles. Strathcona Community Hospital (53.5682, -113.2767, Sherwood Park AB) now renders.
+
+### Pipeline state after Sprint 13 follow-on
+- 48,468 cleansed business records (cluster-entities dedup applied)
+- 6,815 clusters (was 6,422); T3 Apex: 28 · T2 Hub: 1,309 · T1 Valid: 3,374 · T0 Border: 2,104
+- Score range 0–730
+- layer1-locations.pmtiles: 500.6 MB (was ~400 MB; +60,756 civic OSM records)
+- layer2-clusters.pmtiles: 43.7 MB · clusters-meta.json: 2,876 KB
+- Strathcona County: 4 clusters (Co-location 1–4); Co-location 4 is the new Walmart Supercentre anchor
+- Live at gis.woodfinegroup.com
+
+### Commit-flow note for Command Session
+Code files (ingest-osm.py + build-tiles.py) staged via `git add -f` in project-gis git (cluster/project-gis branch). The 4f7b0b0 workspace commit added `pointsav-monorepo/` to clones/project-gis/.gitignore, leaving code tracking in limbo between workspace git and project-gis git. Command Session should clarify the intended mechanism and update NEXT.md.
+
+### Open follow-ups (unchanged backlog)
+Same 13 items in outstanding-todo.md (A1, B1, B2, C1, C2, D1–D4, E1–E4).
