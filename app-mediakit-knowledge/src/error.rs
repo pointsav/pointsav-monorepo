@@ -33,6 +33,10 @@ pub enum WikiError {
     /// Phase 3 Step 3.1: tantivy index build, query, or reindex failed.
     #[error("search failed: {0}")]
     SearchFailed(String),
+
+    /// Phase 4 Steps 4.4+4.5: redb link-graph or blake3 hash operation failed.
+    #[error("link graph error: {0}")]
+    LinkGraph(String),
 }
 
 impl IntoResponse for WikiError {

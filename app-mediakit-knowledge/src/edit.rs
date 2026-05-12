@@ -208,11 +208,19 @@ pub async fn post_edit(
             format!("edit: {slug}\n\n{}", req.edit_summary.trim())
         };
         match crate::git::commit_topic(&git_repo, &slug, &req.body, "", "", &commit_msg) {
-            Ok(_) => tracing::info!(slug = %slug, "committed edit to git"),
+            Ok(oid) => {
+                tracing::info!(slug = %slug, "committed edit to git");
+                if let Err(e) = state.links.record_hash(&slug, &oid.to_string(), req.body.as_bytes()) {
+                    tracing::warn!(slug = %slug, error = %e, "blake3 hash record failed after edit");
+                }
+            }
             Err(e) => tracing::warn!(slug = %slug, error = %e, "git commit failed after edit"),
         }
     }
 
+    if let Err(e) = state.links.rebuild_for_slug(&slug, &req.body) {
+        tracing::warn!(slug = %slug, error = %e, "link graph rebuild failed after edit");
+    }
     if let Err(e) = crate::search::reindex_topic(&state.search, &slug, &req.body) {
         tracing::warn!(slug = %slug, error = %e, "search reindex failed after edit");
     }
@@ -253,11 +261,19 @@ pub async fn post_create(
         let git_repo = state.git.lock().map_err(|e| WikiError::WriteFailed(format!("git lock failed: {e}")))?;
         let _ = crate::git::ensure_commit_identity_from_env(&git_repo);
         match crate::git::commit_topic(&git_repo, &slug, &body, "", "", &format!("create: {slug}")) {
-            Ok(_) => tracing::info!(slug = %slug, "committed create to git"),
+            Ok(oid) => {
+                tracing::info!(slug = %slug, "committed create to git");
+                if let Err(e) = state.links.record_hash(&slug, &oid.to_string(), body.as_bytes()) {
+                    tracing::warn!(slug = %slug, error = %e, "blake3 hash record failed after create");
+                }
+            }
             Err(e) => tracing::warn!(slug = %slug, error = %e, "git commit failed after create"),
         }
     }
 
+    if let Err(e) = state.links.rebuild_for_slug(&slug, &body) {
+        tracing::warn!(slug = %slug, error = %e, "link graph rebuild failed after create");
+    }
     if let Err(e) = crate::search::reindex_topic(&state.search, &slug, &body) {
         tracing::warn!(slug = %slug, error = %e, "search reindex failed after create");
     }

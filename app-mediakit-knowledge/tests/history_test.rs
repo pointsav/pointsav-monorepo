@@ -31,6 +31,7 @@ async fn fixture_state() -> (AppState, TempDir, TempDir) {
             enable_collab: false,
             git_tenant: "pointsav".to_string(),
             glossary: Arc::new(app_mediakit_knowledge::glossary::Glossary::default()),
+                links: app_mediakit_knowledge::links::LinkGraph::for_testing(),
                 db: None,
             site_title: "Test Wiki".to_string(),
         },
