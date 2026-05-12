@@ -1,0 +1,13 @@
+[Unit]
+Description=Nightly Foundry workspace DataGraph feeder (10 min after Yo-Yo #1 starts)
+Documentation=https://github.com/woodfine/woodfine-fleet-deployment
+
+[Timer]
+# 02:10 UTC — 10 minutes after Yo-Yo #1 nightly start (02:00 UTC)
+# Fires after corpus-rebuild.timer (02:05 UTC) so jennifer and workspace
+# batches don't compete for the same Doorman connections simultaneously.
+OnCalendar=*-*-* 02:10:00 UTC
+Persistent=true
+
+[Install]
+WantedBy=timers.target

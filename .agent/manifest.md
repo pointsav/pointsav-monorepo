@@ -59,6 +59,15 @@ clones:
     added: 2026-05-05
 trajectory_capture: pending
 
+software_footprint:
+  target_os: os-totebox
+  monorepo: pointsav-monorepo
+  branch: cluster/project-intelligence
+  owns:
+    - service-slm/        # AI Doorman + Yo-Yo orchestrator
+    - service-content/    # Taxonomy Ledger / LadybugDB knowledge graph
+    - service-disclosure/ # Disclosure substrate
+
 adapter_routing:
   trains:
     - cluster-project-slm        # own cluster adapter (Doorman + Yo-Yo client + Tier C)
