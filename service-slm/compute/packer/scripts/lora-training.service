@@ -1,0 +1,15 @@
+[Unit]
+Description=Yo-Yo LoRA training watcher (apprenticeship corpus → adapter)
+Documentation=file:///var/log/yoyo-lora-training.log
+After=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/lora-training.sh
+Restart=on-failure
+RestartSec=60
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
