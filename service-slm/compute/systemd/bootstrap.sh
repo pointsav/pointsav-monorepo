@@ -58,10 +58,22 @@ echo "[DOORMAN] Enabling slm-doorman.service to start on boot..."
 systemctl enable slm-doorman.service
 
 echo "[DOORMAN] Bootstrap complete."
+
+# 7. Install nightly-run systemd units (timer + service)
+NIGHTLY_TIMER_SOURCE="${SERVICE_SLM_DIR}/compute/systemd/nightly-run.timer"
+NIGHTLY_SERVICE_SOURCE="${SERVICE_SLM_DIR}/compute/systemd/nightly-run.service"
+echo "[NIGHTLY] Installing nightly-run.timer + nightly-run.service..."
+install -m 644 "${NIGHTLY_TIMER_SOURCE}"   /etc/systemd/system/nightly-run.timer
+install -m 644 "${NIGHTLY_SERVICE_SOURCE}" /etc/systemd/system/nightly-run.service
+systemctl daemon-reload
+echo "[NIGHTLY] Units installed. Enable with: systemctl enable --now nightly-run.timer"
+
 echo ""
 echo "Next steps:"
 echo "  1. Verify the unit installed: systemctl cat slm-doorman.service"
 echo "  2. Start the service: systemctl start slm-doorman.service"
 echo "  3. Check logs: journalctl -u slm-doorman -f"
 echo "  4. Test endpoint: curl http://127.0.0.1:9080/healthz"
+echo "  5. Enable nightly timer: systemctl enable --now nightly-run.timer"
+echo "  6. Verify: systemctl list-timers nightly-run.timer"
 echo ""
