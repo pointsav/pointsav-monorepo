@@ -1,6 +1,7 @@
-# CLAUDE.md — Workplace✦Proforma
+# CLAUDE.md — app-workplace-proforma
 
-Local context for Claude Code. Not committed to git (see `.gitignore`).
+> **State:** Active  —  **Last updated:** 2026-05-07
+> **Registry row:** `.agent/rules/project-registry.md`
 
 ---
 

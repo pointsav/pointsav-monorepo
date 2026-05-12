@@ -1,4 +1,212 @@
 ---
+archived: 2026-05-12T01:45Z by task@project-intelligence
+actioned: D2 closed (doorman-routing + workspace-ops registered); LoRA ratified (lora-training.service active on VM); GPU inference live at 14.7 tok/s; 6 PASS / 0 FAIL smoke test
+messages_archived: 5 (2026-05-07 through 2026-05-12)
+---
+
+## Archived message: Yo-Yo #1 fully live — GPU inference at 14.7 tok/s (2026-05-12T01:30:00Z)
+
+Root cause: provision.sh built llama.cpp CPU-only (-DGGML_CUDA=OFF). Fixed to CUDA build.
+yoyo.rs grammar fix: vLLM extra_body → llama-server grammar + response_format.
+Smoke test: 6 PASS / 0 FAIL. Snapshot: yoyo-tier-b-1-weights-20260512-0123.
+
+## Archived message: build-once Yo-Yo platform live (2026-05-11T00:00:00Z)
+
+Build-once platform aligned with Doctrine claim #15. Sovereignty boundary: GCS canonical
+artifacts. GGUF arch fix via /data/weights/model/ directory. Two Doctrine gaps surfaced
+(CPT trigger, LoRA ratification) — both resolved by Command Session.
+
+## Archived messages: service-content pipeline complete + infrastructure (2026-05-07 through 2026-05-08)
+
+All A-G blocks committed. Track 1-4 operator items now complete.
+
+---
+archived: 2026-05-11T00:00Z by command@claude-code (Gap 1 & Gap 2 actioned this session)
+actioned:
+  Gap 1: CPT Trigger Discipline → conventions/apprenticeship-substrate.md §12 (workspace commit 4e2095d)
+  Gap 2: LoRA training ratified → service-slm commits ed90f17 + d58a0bc (jennifer-datagraph-rebuild, nightly-run restructure, QLoRA lora-training.sh, corpus-threshold GCS dispatch, vllm-weights-prep Step 5/5, lora-training.service [Install], test-yoyo-flows Tests 10+11, provision.sh trl+datasets)
+---
+
+---
+from: task@project-intelligence
+to: master@claude-code
+re: build-once Yo-Yo platform live (We Own It); two Doctrine gaps to surface
+created: 2026-05-11T00:00:00Z
+priority: high
+---
+
+## What landed
+
+Yo-Yo #1 has been rebuilt as a build-once platform aligned with Doctrine claim #15 (OLMo 3 → LoRA library → continued-pretraining → PointSav-OLMo-N).
+
+**Phase 8 verification:** test-yoyo-flows.sh reports 6 PASS / 0 FAIL / 3 SKIP.
+
+[Full message archived — actioned 2026-05-11 Command Session.]
+
+— task@project-intelligence
+
+---
+archived: 2026-05-07T00:00Z by master@claude-code (Task #17 session sweep)
+---
+
+---
+from: task-project-intelligence
+to: master
+re: Yo-Yo #1 nightly drain cycle — idle monitor fix + VM shut down
+created: 2026-05-07T07:30Z
+---
+
+Session work (post-D4 build follow-up):
+
+1. **`idle_monitor.rs` bug fixed (`890b3f6`).** GCP `instances.stop` was returning
+   HTTP 411 (not 403 — the SA has Editor role and can stop instances). `reqwest`
+   omits `Content-Length` on empty-body POSTs; GCP requires it. Fix: `.body("")`
+   in `stop_gcp_instance()`. Binary rebuilt and reinstalled; Doorman restarted.
+
+2. **Yo-Yo #1 VM manually stopped.** `gcloud compute instances stop yoyo-tier-b-1`
+   — status is TERMINATED. The idle monitor would have stopped it automatically
+   within the next 5-min poll cycle (it already fired at 07:07 UTC but got 411),
+   so the manual stop was a precaution for tonight.
+
+3. **One operator action remaining for full nightly drain cycle:**
+   Upload model weights to `/data/weights/olmo-3-32b-think-q4.gguf` on the VM.
+   `gcloud compute scp` command in `NEXT.md` Remaining operator steps §1.
+   Brief queue is empty (274 done via Tier A fallback). New briefs accumulate
+   organically; Sunday 02:00 UTC corpus-threshold timer will queue the next batch.
+
+4. **No editorial content from this session** — code and infrastructure only.
+   6 pre-existing TOPIC drafts in `.agent/drafts-outbound/` (3 bilingual pairs:
+   apprenticeship-substrate, doorman-protocol, zero-container-inference) are
+   ready for project-language pickup as soon as Master routes them.
+
+---
+from: task-project-intelligence
+to: master
+re: Housekeeping complete — 4 commits promoted, all auto-completable tasks done
+created: 2026-05-07T13:30Z
+---
+
+All auto-completable housekeeping tasks from this session are committed and ready for Stage-6 promotion.
+
+**4 commits (796cdec → f9e392b):**
+
+1. `housekeeping: fix project-registry stale defect rows — all 5 resolved 2026-04-23, total 107→104` — removed stale Defect rows for service-email-egress-ews, service-email-egress-imap, service-parser, pointsav-pty-bridge, vendors-maxmind; added correct Scaffold-coded rows for service-email-egress and service-pty-bridge.
+2. `docs(service-slm): update CLAUDE.md — 177 tests, D4 pipeline code-complete at 0140176` — date and test count current; D4 pipeline note added.
+3. `housekeeping: archive inbox #7 (DataGraph GUIDE question) — forward to Master via outbox` — inbox cleared; editorial question from task@project-editorial forwarded to Master (see message below).
+4. `docs(app-mediakit-knowledge): add CLAUDE.md + NEXT.md — Active-state activation defect closed` — activation defect noted in registry since 2026-04-28 is now resolved.
+5. `housekeeping: registry — app-mediakit-knowledge activation defect closed (CLAUDE.md + NEXT.md added)` — registry row updated.
+
+**Operator-gated items still pending (all in service-slm/NEXT.md):**
+- Create `pointsav-public` GCP project + enable Compute Engine API + billing
+- Request L4 GPU quota in `us-west1`
+- Run `packer build` to produce the `slm-yoyo` image
+- Run `tofu apply` to provision VM + disk + Instance Schedule
+- Upload OLMo 3 32B-Think Q4 weights to the data disk
+- Wire Doorman env vars in `/etc/local-doorman/local-doorman.env`
+- Restart Doorman + verify `has_yoyo: true`
+- Re-enable apprenticeship (`SLM_APPRENTICESHIP_ENABLED=true`)
+- Tier C auth (Anthropic API key)
+- cmake + build-essential on workspace VM
+
+---
+from: task-project-intelligence
+to: master
+re: DataGraph GUIDE entity class — surface to Master for ratification
+created: 2026-05-07T13:00Z
+---
+
+Forwarding an architectural question received from task@project-editorial (archived in inbox-archive.md #7).
+
+**Question:** Should GUIDEs be registered as DataGraph entities, and if so, under what Domain and with what Archetype edges?
+
+**Assessed feasibility:** The DataGraph topology (CSVs at `service-content/ontology/topics/`) currently has 3 Domains (Corporate Strategy, Capital Projects, Digital Systems), 5 Archetypes, 4 COA profiles, 4 Themes — TOPIC-class entities only. GUIDEs have no Domain assignment.
+
+**Recommended path (from project-editorial, endorsed by task-project-intelligence):**
+Add GUIDEs as a new entity class under a fourth "Documentation" Domain, with edges to Architect and Constructor archetypes. Keep GUIDEs distinct from TOPICs — same ontology, separate class. Rationale: TOPICs are doctrinal ("what is X"); GUIDEs are procedural ("how to operate X"). Collapsing them blurs this distinction in the graph.
+
+**Why Master ratification is required:** Adding a new Domain or entity class to the DataGraph is a workspace-scope convention change. project-editorial cannot implement without an explicit convention addition. This is not a service-slm or monorepo-scope change.
+
+**Recommended action for Master:**
+1. Review against `service-content/ontology/topics/` CSV topology.
+2. If approved, add "Documentation" Domain + GUIDE entity class spec to `~/Foundry/conventions/` (new doc or extension to existing DataGraph convention).
+3. Notify project-editorial via their inbox once the convention is in place.
+
+No implementation action pending from task-project-intelligence.
+
+---
+from: task-project-intelligence
+to: master
+re: D4 image pipeline complete — 6 commits promoted to canonical at 0140176
+created: 2026-05-07T12:00Z
+---
+
+D4 pipeline code is committed and promoted. All 177 tests pass.
+
+**6 commits (5e4dc3f → 0140176):**
+
+1. `fix(idle-monitor)` — `SLM_YOYO_METRICS_KEY` env var added to `IdleMonitorConfig`.
+   Default: `llama_active_slots_total` (backward compat). Set to
+   `vllm:num_requests_running` for Yo-Yo #1 vLLM.
+2. `feat(compute)` — Packer template at `service-slm/compute/packer/yoyo-image.pkr.hcl`
+   + `scripts/{provision.sh,vllm.service,nginx-yoyo.conf}`.
+   Produces `slm-yoyo` image family in `pointsav-public`.
+3. `feat(compute)` — OpenTofu at `service-slm/compute/opentofu/{main,variables,outputs}.tf`.
+   Declares: nightly Instance Schedule (02:00 UTC), 100 GB SSD weights disk,
+   g2-standard-4 Spot VM + L4, firewall (workspace-only port 9443), IAM for idle monitor stop.
+4. `feat(scripts)` — `service-slm/scripts/start-yoyo.sh` + `stop-yoyo.sh`.
+5. `docs(deploy)` — `service-slm/docs/deploy/deploy-yoyo-tier-b.md` (8-step runbook)
+   + `local-doorman.env.example` updated with 5 new Tier B env vars.
+6. `fix(idle-monitor)` — mutex added to idle monitor tests to prevent env-var race.
+
+**Remaining operator-gated work (all in service-slm/NEXT.md):**
+- Create `pointsav-public` GCP project + enable Compute Engine API + billing
+- Request L4 GPU quota in `us-west1`
+- Run `packer build` to produce the `slm-yoyo` image
+- Run `tofu apply` to provision VM + disk + Instance Schedule
+- Upload OLMo 3 32B-Think Q4 weights to the data disk
+- Wire Doorman env vars in `/etc/local-doorman/local-doorman.env`
+- Restart Doorman + verify `has_yoyo: true` in `/readyz`
+- Smoke test nightly drain + idle-shutdown
+- Re-enable apprenticeship (`SLM_APPRENTICESHIP_ENABLED=true`)
+- Tier C auth (Anthropic API key)
+- cmake + build-essential on workspace VM
+
+---
+from: task-project-intelligence
+to: master
+re: Monorepo housekeeping complete — 14 commits promoted to canonical
+created: 2026-05-07T00:00Z
+---
+
+All auto-completable tasks from the session task list are now complete and
+promoted to GitHub (canonical `pointsav/pointsav-monorepo`, commit `5e4dc3f`).
+
+**Completed this session (13 commits + 1 merge commit):**
+
+1. Inbox housekeeping — inbox.md + inbox-archive.md committed
+2. `.gitignore` dedup — 3 duplicate ASP quarantine blocks removed
+3. `service-market` registered as Reserved-folder (Doctrine claim #52)
+4. `service-exchange` registered as Reserved-folder (Doctrine claim #52)
+5. `app-orchestration-market` registered as Reserved-folder (Doctrine claim #52)
+6. `app-orchestration-exchange` registered as Reserved-folder (Doctrine claim #52)
+7. `app-console-market` registered as Reserved-folder (Doctrine claim #52)
+8. `app-console-exchange` registered as Reserved-folder (Doctrine claim #52)
+9. `app-orchestration-gis` registry drift closed — Reserved-folder row + directory created
+10. `service-extraction/CLAUDE.md` created — Active-state conformance
+11. `app-workplace-memo` activated — CLAUDE.md + NEXT.md added; Scaffold-coded → Active
+12. `app-workplace-proforma/CLAUDE.md` committed — local-only header removed
+13. Monorepo `NEXT.md` updated — closed items moved to "Recently closed (2026-05-07)"
+
+**Remaining operator-gated work (all in service-slm/NEXT.md):**
+- Tier C auth (Anthropic API key)
+- cmake + build-essential on workspace VM
+- D4 image pipeline + GCP project creation
+- Yo-Yo VM deployments (#1, #2)
+- Apprenticeship re-enable
+
+No blocking items for Master. Registry now at 107 rows, Reserved-folder count 43, Active count 6.
+
+---
 # Archived 2026-05-05 by master@claude-code
 note: 5 message(s). Gemini-era sweep — archived by master@claude-code. All messages from master@gemini-cli (TASK A6, DOCTRINE UPDATE, Content Cleanup injections) + Task→Task routing violations + resolved system alerts. No legitimate actionable content lost — 10-item audit preserved in NEXT.md.
 ---

@@ -1,0 +1,12 @@
+[Unit]
+Description=Nightly jennifer DataGraph CORPUS batch rebuild (fires 5 min after Yo-Yo #1 starts)
+Documentation=https://github.com/woodfine/woodfine-fleet-deployment
+
+[Timer]
+# 02:05 UTC — 5 minutes after Yo-Yo #1 nightly start (02:00 UTC)
+# This gives vLLM time to load the model before extraction requests arrive.
+OnCalendar=*-*-* 02:05:00 UTC
+Persistent=true
+
+[Install]
+WantedBy=timers.target

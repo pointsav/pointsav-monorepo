@@ -58,6 +58,16 @@ pub struct TopicRow {
     pub active_state: String,
 }
 
+#[derive(Debug, Clone)]
+pub struct GuideRow {
+    pub guide_id: String,
+    pub title: String,
+    pub domain: String,
+    pub wiki_repo: String,
+    pub wiki_path: String,
+    pub active_state: String,
+}
+
 #[derive(Debug, Default)]
 pub struct TaxonomyBundle {
     pub archetypes: Vec<ArchetypeRow>,
@@ -66,6 +76,7 @@ pub struct TaxonomyBundle {
     pub glossary: Vec<GlossaryRow>,
     pub themes: Vec<ThemeRow>,
     pub topics: Vec<TopicRow>,
+    pub guides: Vec<GuideRow>,
 }
 
 // ── Parsers ───────────────────────────────────────────────────────────────────
@@ -184,6 +195,26 @@ pub fn parse_topics(csv: &str) -> Result<Vec<TopicRow>, String> {
     Ok(rows)
 }
 
+pub fn parse_guides(csv: &str) -> Result<Vec<GuideRow>, String> {
+    let mut rdr = ReaderBuilder::new().flexible(true).from_reader(csv.as_bytes());
+    let mut rows = Vec::new();
+    for result in rdr.records() {
+        let r = result.map_err(|e| format!("guides CSV parse error: {e}"))?;
+        if r.len() < 6 {
+            return Err(format!("guides row has {} columns, need 6", r.len()));
+        }
+        rows.push(GuideRow {
+            guide_id: r[0].trim().to_string(),
+            title: r[1].trim().to_string(),
+            domain: r[2].trim().to_string(),
+            wiki_repo: r[3].trim().to_string(),
+            wiki_path: r[4].trim().to_string(),
+            active_state: r[5].trim().to_string(),
+        });
+    }
+    Ok(rows)
+}
+
 // ── Serializers (for GET /v1/config/* export) ────────────────────────────────
 
 #[allow(dead_code)]
@@ -235,6 +266,15 @@ pub fn serialize_topics(rows: &[TopicRow]) -> String {
     let mut out = String::from("topic_id,title,domain,wiki_repo,wiki_path,active_state\n");
     for r in rows {
         out.push_str(&csv_row(&[&r.topic_id, &r.title, &r.domain, &r.wiki_repo, &r.wiki_path, &r.active_state]));
+    }
+    out
+}
+
+#[allow(dead_code)]
+pub fn serialize_guides(rows: &[GuideRow]) -> String {
+    let mut out = String::from("guide_id,title,domain,wiki_repo,wiki_path,active_state\n");
+    for r in rows {
+        out.push_str(&csv_row(&[&r.guide_id, &r.title, &r.domain, &r.wiki_repo, &r.wiki_path, &r.active_state]));
     }
     out
 }
@@ -316,6 +356,18 @@ pub fn topics_to_entities(rows: &[TopicRow]) -> Vec<GraphEntity> {
     }).collect()
 }
 
+pub fn guides_to_entities(rows: &[GuideRow]) -> Vec<GraphEntity> {
+    rows.iter().map(|r| GraphEntity {
+        entity_name: r.title.clone(),
+        classification: "guide".to_string(),
+        role_vector: Some(r.domain.clone()),
+        location_vector: Some(r.wiki_path.clone()),
+        contact_vector: Some(r.wiki_repo.clone()),
+        module_id: "__taxonomy__".to_string(),
+        confidence: 1.0,
+    }).collect()
+}
+
 // ── Directory loader ──────────────────────────────────────────────────────────
 
 pub fn load_taxonomy_from_dir(ontology_dir: &str) -> Result<TaxonomyBundle, String> {
@@ -329,21 +381,21 @@ pub fn load_taxonomy_from_dir(ontology_dir: &str) -> Result<TaxonomyBundle, Stri
     let arc_path = format!("{}/archetypes.csv", ontology_dir);
     if std::path::Path::new(&arc_path).exists() {
         let csv = read(&arc_path)?;
-        bundle.archetypes = parse_archetypes(skip_header(&csv))?;
+        bundle.archetypes = parse_archetypes(&csv)?;
     }
 
     // Chart of Accounts
     let coa_path = format!("{}/chart_of_accounts.csv", ontology_dir);
     if std::path::Path::new(&coa_path).exists() {
         let csv = read(&coa_path)?;
-        bundle.coa = parse_coa(skip_header(&csv))?;
+        bundle.coa = parse_coa(&csv)?;
     }
 
     // Themes
     let theme_path = format!("{}/themes.csv", ontology_dir);
     if std::path::Path::new(&theme_path).exists() {
         let csv = read(&theme_path)?;
-        bundle.themes = parse_themes(skip_header(&csv))?;
+        bundle.themes = parse_themes(&csv)?;
     }
 
     // Domains (3 files)
@@ -351,7 +403,7 @@ pub fn load_taxonomy_from_dir(ontology_dir: &str) -> Result<TaxonomyBundle, Stri
         let path = format!("{}/domains/domain_{}.csv", ontology_dir, domain);
         if std::path::Path::new(&path).exists() {
             let csv = read(&path)?;
-            let mut rows = parse_domain(skip_header(&csv))?;
+            let mut rows = parse_domain(&csv)?;
             bundle.domains.append(&mut rows);
         }
     }
@@ -361,7 +413,7 @@ pub fn load_taxonomy_from_dir(ontology_dir: &str) -> Result<TaxonomyBundle, Stri
         let path = format!("{}/glossary/glossary_{}.csv", ontology_dir, domain);
         if std::path::Path::new(&path).exists() {
             let csv = read(&path)?;
-            let mut rows = parse_glossary(skip_header(&csv))?;
+            let mut rows = parse_glossary(&csv)?;
             bundle.glossary.append(&mut rows);
         }
     }
@@ -371,9 +423,17 @@ pub fn load_taxonomy_from_dir(ontology_dir: &str) -> Result<TaxonomyBundle, Stri
         let path = format!("{}/topics/topics_{}.csv", ontology_dir, domain);
         if std::path::Path::new(&path).exists() {
             let csv = read(&path)?;
-            let mut rows = parse_topics(skip_header(&csv))?;
+            let mut rows = parse_topics(&csv)?;
             bundle.topics.append(&mut rows);
         }
+    }
+
+    // Guides (Documentation domain only — GUIDE entity class per datagraph-guide-entity-class convention)
+    let guide_path = format!("{}/guides/guides_documentation.csv", ontology_dir);
+    if std::path::Path::new(&guide_path).exists() {
+        let csv = read(&guide_path)?;
+        let mut rows = parse_guides(&csv)?;
+        bundle.guides.append(&mut rows);
     }
 
     Ok(bundle)
@@ -387,6 +447,7 @@ pub fn bundle_to_entities(bundle: &TaxonomyBundle) -> Vec<GraphEntity> {
     all.extend(glossary_to_entities(&bundle.glossary));
     all.extend(themes_to_entities(&bundle.themes));
     all.extend(topics_to_entities(&bundle.topics));
+    all.extend(guides_to_entities(&bundle.guides));
     all
 }
 
@@ -400,7 +461,7 @@ fn skip_header(csv: &str) -> &str {
     }
 }
 
-/// Public version used by config_http to strip header before parsing POST body.
+/// Strip the first (header) line. Exposed for external tooling; not used internally.
 pub fn skip_header_owned(csv: &str) -> String {
     skip_header(csv).to_string()
 }
@@ -417,4 +478,139 @@ fn csv_row(fields: &[&str]) -> String {
     let mut row = fields.iter().map(|f| csv_field(f)).collect::<Vec<_>>().join(",");
     row.push('\n');
     row
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // ── parse_guides ──────────────────────────────────────────────────────────
+
+    #[test]
+    fn parse_guides_parses_with_header() {
+        let csv = "guide_id,title,domain,wiki_repo,wiki_path,active_state\n\
+                   guide-doorman,Doorman Operations,documentation,woodfine/fleet,vault/guide-doorman.md,active\n";
+        let rows = parse_guides(csv).unwrap();
+        assert_eq!(rows.len(), 1);
+        assert_eq!(rows[0].guide_id, "guide-doorman");
+        assert_eq!(rows[0].title, "Doorman Operations");
+        assert_eq!(rows[0].domain, "documentation");
+        assert_eq!(rows[0].active_state, "active");
+    }
+
+    #[test]
+    fn parse_guides_multiple_rows() {
+        let csv = "guide_id,title,domain,wiki_repo,wiki_path,active_state\n\
+                   guide-a,Guide A,documentation,repo,path/a.md,active\n\
+                   guide-b,Guide B,documentation,repo,path/b.md,pending\n";
+        let rows = parse_guides(csv).unwrap();
+        assert_eq!(rows.len(), 2);
+        assert_eq!(rows[1].guide_id, "guide-b");
+        assert_eq!(rows[1].active_state, "pending");
+    }
+
+    #[test]
+    fn parse_guides_rejects_too_few_columns() {
+        let csv = "guide_id,title,domain\nguide-a,Guide A,documentation\n";
+        let result = parse_guides(csv);
+        // header row satisfies column count (6 required; only 3 cols here)
+        // actual parse error depends on whether header row is treated as data
+        // when fewer cols than required: returns Err
+        assert!(result.is_err() || result.unwrap().is_empty());
+    }
+
+    #[test]
+    fn guides_to_entities_maps_fields() {
+        let rows = vec![GuideRow {
+            guide_id: "guide-yoyo".to_string(),
+            title: "Yo-Yo Operations".to_string(),
+            domain: "documentation".to_string(),
+            wiki_repo: "woodfine/fleet".to_string(),
+            wiki_path: "vault/guide-yoyo.md".to_string(),
+            active_state: "active".to_string(),
+        }];
+        let entities = guides_to_entities(&rows);
+        assert_eq!(entities.len(), 1);
+        assert_eq!(entities[0].entity_name, "Yo-Yo Operations");
+        assert_eq!(entities[0].classification, "guide");
+        assert_eq!(entities[0].role_vector.as_deref(), Some("documentation"));
+        assert_eq!(entities[0].module_id, "__taxonomy__");
+        assert!((entities[0].confidence - 1.0).abs() < f64::EPSILON);
+    }
+
+    #[test]
+    fn serialize_guides_roundtrips() {
+        let rows = vec![GuideRow {
+            guide_id: "guide-test".to_string(),
+            title: "Test Guide".to_string(),
+            domain: "documentation".to_string(),
+            wiki_repo: "woodfine/fleet".to_string(),
+            wiki_path: "vault/guide-test.md".to_string(),
+            active_state: "active".to_string(),
+        }];
+        let csv = serialize_guides(&rows);
+        assert!(csv.starts_with("guide_id,title,"));
+        assert!(csv.contains("guide-test"));
+        let parsed = parse_guides(&csv).unwrap();
+        assert_eq!(parsed.len(), 1);
+        assert_eq!(parsed[0].guide_id, "guide-test");
+    }
+
+    // ── skip_header_owned ────────────────────────────────────────────────────
+
+    #[test]
+    fn skip_header_owned_removes_first_line() {
+        let csv = "header,row\ndata,row\n";
+        assert_eq!(skip_header_owned(csv), "data,row\n");
+    }
+
+    #[test]
+    fn skip_header_owned_empty_input() {
+        assert_eq!(skip_header_owned(""), "");
+    }
+
+    // ── guides_documentation.csv sanity ─────────────────────────────────────
+
+    #[test]
+    fn ontology_guides_documentation_csv_parses() {
+        // Verify the actual on-disk CSV parses without error and has expected rows.
+        // Path is relative to the manifest directory (service-content/).
+        let csv_path = concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/ontology/guides/guides_documentation.csv"
+        );
+        let Ok(csv) = std::fs::read_to_string(csv_path) else { return; };
+        let rows = parse_guides(&csv).expect("guides_documentation.csv must parse cleanly");
+        assert!(!rows.is_empty(), "guides_documentation.csv must have at least one row");
+        for row in &rows {
+            assert!(!row.guide_id.is_empty(), "guide_id must not be empty");
+            assert_eq!(row.domain, "documentation", "all guides must have domain=documentation");
+        }
+    }
+
+    // ── regression: load_taxonomy_from_dir must not drop first data row ──────
+
+    #[test]
+    fn parse_archetypes_first_row_not_dropped() {
+        // Regression test for the skip_header + has_headers double-strip bug.
+        // All parse_* functions use ReaderBuilder with has_headers=true (default),
+        // so the CSV must be passed WITH its header row — the crate handles it.
+        let csv = "id,name,signature,healing_trigger,gravity_keywords\n\
+                   1,The Executive,Strategic Direction,Stagnation,strategy|leadership\n\
+                   2,The Guardian,Risk & Compliance,Breach,compliance|audit\n";
+        let rows = parse_archetypes(csv).unwrap();
+        assert_eq!(rows.len(), 2, "both rows must be returned — not 1 (first dropped)");
+        assert_eq!(rows[0].name, "The Executive", "first row must be The Executive");
+        assert_eq!(rows[1].name, "The Guardian");
+    }
+
+    #[test]
+    fn parse_domain_first_row_not_dropped() {
+        let csv = "domain_id,domain_name,category,thesis,gravity_keywords\n\
+                   corporate,Corporate,governance,Thesis A,real estate|equity\n\
+                   documentation,Documentation,knowledge,Thesis B,guide|wiki\n";
+        let rows = parse_domain(csv).unwrap();
+        assert_eq!(rows.len(), 2, "both domain rows must be returned");
+        assert_eq!(rows[0].domain_id, "corporate");
+    }
 }

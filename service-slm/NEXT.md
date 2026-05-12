@@ -1,50 +1,143 @@
 # NEXT.md — service-slm
 
-> Last updated: 2026-05-06 (DataGraph proxy endpoints + Stage-6 promote)
+> Last updated: 2026-05-12 (Yo-Yo #1 — FULLY LIVE; DataGraph pipeline confirmed working)
 > Read at session start. Update before session end so the next
 > session knows where to pick up.
 
 ---
 
-## Right now — OPERATOR-PRESENCE REQUIRED (all code tasks complete)
+## YO-YO #1 — FULLY LIVE + DATAGRAPH PIPELINE WORKING (2026-05-12)
 
-All software-layer tasks from the Leapfrog 2030 architecture are now complete.
-Reference: `service-slm/docs/topic-leapfrog-architecture.md`
+**Current VM state:**
+- `yoyo-tier-b-1` RUNNING in `us-west1-b`, IP `136.109.20.216`
+- `llama-server.service` running with Q3_K_M, CUDA build at `build-cuda/bin/llama-server`
+- **14.7 tok/s** (GPU, 65/65 layers on L4); was 0.08 tok/s CPU-only
+- 16.1 GiB / 22.5 GiB VRAM in use (model + KV cache)
+- `corpus-rebuild.timer` + `local-workspace-feeder.timer` enabled, next fire ~02:05 UTC
+- `SLM_APPRENTICESHIP_ENABLED=true` (DPO promotion gated on Master ratification — D2 done)
+- `SLM_YOYO_WEIGHTS_SNAPSHOT=yoyo-tier-b-1-weights-20260512-0248` ✓
 
-**Software Configuration (ALL DONE — commits `6bbbe49` → `5a6d3f0`):**
-- [x] **Multi-Yo-Yo Support:** `main.rs` supports `SLM_YOYO_TRAINER_ENDPOINT` +
-  `SLM_YOYO_GRAPH_ENDPOINT`; `HashMap<String, YoYoTierClient>` routes by label.
-- [x] **Grammar Constraints:** `service-content` passes entity JSON Schema as `grammar`
-  field + `X-Foundry-Yoyo-Label: graph` header; Doorman deserializes and routes to Yo-Yo #2.
-- [x] **Seed Alignment:** `Archetypes.json`, `Domains.json`, `Themes.json` present in
-  `service-content/seeds/` (3 domains, 4 themes, 5 archetypes — verified 2026-05-05).
-- [x] **Tier C Drafting Pipeline:** `service-content POST /v1/draft/generate` wired;
-  queries LadybugDB graph → ≤2K-token prompt → Doorman `/v1/audit/proxy` → Claude Sonnet.
-- [x] **Phase 3 threshold watcher:** `service-slm/scripts/corpus-threshold.py` + systemd
-  timer `training-trigger.timer` (Sunday 02:00 UTC); marker-only mode pre-D4.
-- [x] **DataGraph proxy endpoints (2026-05-06, commit `5a6d3f0`):** `POST /v1/graph/query`
-  + `POST /v1/graph/mutate` in slm-doorman-server; proxy to service-content; audit-log
-  as `graph-query` / `graph-mutation`; require `X-Foundry-Module-ID`; 167/167 tests.
+**Architecture (committed):**
+- vLLM → llama-server for Tier B (vLLM OOM on L4; llama-server runs Q3_K_M natively)
+- provision.sh builds llama-server with CUDA (SM 89/L4); ldconfig registers CUDA 12.6 libs
+- yoyo.rs grammar forwarding: `grammar` + `response_format` (JsonSchema) to llama-server
+- Doorman response format: `.content` field (not `.choices[]`)
+- jennifer-datagraph-rebuild.sh: 180s curl timeout, `/readyz` health check, `.content` parse path
 
-**Infrastructure Provisioning (Master Authorization Required — none can proceed without D4):**
-- [ ] **Tier C Auth:** Add billing-capped Anthropic API key to `/etc/local-doorman/local-doorman.env`
-  (`SLM_TIER_C_ANTHROPIC_ENDPOINT` + `SLM_TIER_C_ANTHROPIC_KEY`) — enables `audit_proxy`
-  and `service-content POST /v1/draft/generate`. Requires operator API key management.
-- [ ] **Re-enable apprenticeship:** Set `SLM_APPRENTICESHIP_ENABLED=true` in Doorman env
-  (was disabled post Phase 2).
-- [ ] **Yo-Yo idle-shutdown timer:** Runbook step 8 — ~$390/mo savings; 5 min operator time.
-- [ ] **Stage-6 promote:** 30+ commits ahead of origin/main; operator authorization needed.
-- [ ] **cmake + C++ compiler:** `apt install cmake build-essential` on workspace VM
-  (required for `lbug = "0.16"` to compile at `cargo build` time in service-content).
-- [ ] **Create GCP Project:** Physically create the `pointsav-public` GCP project (D4 gate).
-- [ ] **D4 Image Pipeline:** Packer/OpenTofu pipeline → Ubuntu 24.04 + CUDA + vLLM ≥ 0.12
-  + Nginx TLS + idle-shutdown systemd timer. Bake → publish to `slm-yoyo` family.
-- [ ] **Deploy Yo-Yo #1 (Trainer):** `g2-standard-4` Spot; night-shift schedule; verify
-  idle-shutdown operational.
+**Nightly run state (as of 2026-05-12T02:52 UTC):**
+- Run #4 in progress — 30 docs queued, processed ledger cleared (previous runs had parsing bug)
+- Confirmed: 6 entities extracted from first doc in run #3 (pipeline end-to-end working)
+- Training markers dispatched (4 pending): engineering-pointsav, apprenticeship-pointsav
+- `SLM_YOYO_WEIGHTS_GCS_BUCKET` not set — training markers are local-only until configured
+
+**Remaining:**
+- [ ] **`nightly-run.timer`**: No systemd unit exists — nightly-run.sh has been triggered manually only. Create `nightly-run.service` + `nightly-run.timer` (target: ~00:00 UTC) so Yo-Yo #1 boots, DataGraph runs, and LoRA training fires automatically each night. See `infrastructure/` for existing timer patterns.
+- [ ] Set `SLM_YOYO_WEIGHTS_GCS_BUCKET` in `/etc/local-doorman/local-doorman.env` for training dispatch
+- [ ] Next Packer image build (will bake CUDA llama-server; current VM patched manually)
+- [ ] LoRA training marker (Test 11): workspace dispatch service needs to be written
+- [ ] ProtectHome fix: `/srv/foundry/infrastructure/local-content/local-content.service` line 51 (outboxed)
+
+**Completed since 2026-05-07 (commits `0c0f5a2`–`b761d67`):**
+- [x] **GCP Project + VM live:** `woodfine-node-gcp-free`, `yoyo-tier-b-1` in `us-central1-b`.
+- [x] **nginx TLS + auth:** Port 9443, self-signed cert, bearer token from instance metadata.
+- [x] **Doorman env wired:** `SLM_YOYO_ENDPOINT`, `SLM_YOYO_BEARER`, `SLM_YOYO_GCP_*` in
+  `/etc/local-doorman/local-doorman.env`. Doorman `has_yoyo=true`, health probe cycling (502
+  from nginx — expected while vllm is not running).
+- [x] **Idle monitor fixed:** Only fires GCP stop on `Some(0)` (vLLM reachable + zero active
+  slots). `None` (unreachable / 401 / 502) resets idle clock — VM won't be spuriously stopped.
+- [x] **vllm.service tokenizer fix:** `--tokenizer allenai/OLMo-3-1125-32B-Think` in ExecStart
+  (live on VM; baked into Packer template for next image build).
+- [x] **nginx auth map split:** `map_hash_bucket_size 128` in `map-hash-bucket.conf`;
+  rc.local only overwrites `yoyo-auth-map.conf` — reload no longer loses the directive.
+- [x] **Zone-migration snapshot restore:** `start-yoyo.sh` uses `SLM_YOYO_WEIGHTS_SNAPSHOT`
+  to restore weights disk from snapshot; `create-yoyo-snapshot.sh` captures it post-upload.
+- [x] **service-content DataGraph pipeline — code complete (commits `7b00aa3`, `b761d67`):**
+  - Guide taxonomy entity class: `GuideRow`, `parse_guides`, `guides_to_entities` in taxonomy.rs
+  - HTTP routes: `GET/POST /v1/config/guides`, `POST /v1/config/guides/reload`
+  - Per-file module_id override in main.rs (workspace feeder uses `foundry-workspace`)
+  - 7 taxonomy unit tests + ontology CSV (`guides/guides_documentation.csv`)
+  - `graph-cleanup.sh` uses real HTTP endpoints (fixed from non-existent `/v1/config/taxonomy/reload`)
+  - `local-content.service` + `bootstrap.sh` at `infrastructure/local-content/`
+  - `local-extraction-jennifer.service` running as `User=mathew`
+- [x] **DataGraph rebuild pipeline — code complete:**
+  - `corpus-batch-jennifer.sh` (nightly jennifer batch, 50 files, `module_id: jennifer`)
+  - `foundry-workspace-feeder.sh` (nightly workspace batch, 20 files, `module_id: foundry-workspace`)
+  - `corpus-rebuild.timer/service` + `local-workspace-feeder.timer/service` installed (disabled)
+  - `service-extraction` parameterized + CORPUS bridge enabled (EXTRACTION_EMIT_CORPUS_DIR)
+
+**Remaining — operator presence required:**
+
+**Track 1 — Yo-Yo #1 weights (single blocker for inference):**
+
+- [ ] **Upload weights** (single remaining blocker — everything else is live):
+  ```bash
+  gcloud compute scp <olmo-3-32b-think-q4.gguf> yoyo-tier-b-1:/data/weights/olmo-3-32b-think-q4.gguf \
+    --zone=us-central1-b --project=woodfine-node-gcp-free
+  ```
+
+- [ ] **Start vLLM** (after weights land):
+  ```bash
+  gcloud compute ssh yoyo-tier-b-1 --zone=us-central1-b --project=woodfine-node-gcp-free \
+    --command="sudo systemctl start vllm.service && sudo journalctl -fu vllm.service"
+  ```
+  Wait ~2 min for `Application startup complete`. Health probe will close within 30 s.
+
+- [ ] **Snapshot the weights disk** (run once after vLLM is healthy — preserves weights across
+  future zone migrations; no re-upload needed after this):
+  ```bash
+  export SLM_YOYO_GCP_PROJECT=woodfine-node-gcp-free
+  export SLM_YOYO_GCP_ZONE=us-central1-b
+  export SLM_YOYO_GCP_INSTANCE=yoyo-tier-b-1
+  /srv/foundry/clones/project-intelligence/service-slm/scripts/create-yoyo-snapshot.sh
+  ```
+
+**Track 2 — service-content DataGraph deployment (can happen before Track 1):**
+
+- [ ] **Install service-content binary + enable unit** (build running — check with `ls -lh
+  service-content/target/release/service-content`; when ready run bootstrap):
+  ```bash
+  sudo bash /srv/foundry/infrastructure/local-content/bootstrap.sh
+  sudo systemctl start local-content.service
+  curl -s http://127.0.0.1:9081/healthz
+  ```
+
+- [ ] **Enable service-extraction for jennifer:**
+  ```bash
+  sudo cp service-slm/compute/systemd/local-extraction-jennifer.service /etc/systemd/system/
+  sudo systemctl daemon-reload
+  sudo systemctl enable --now local-extraction-jennifer.service
+  ```
+
+- [ ] **Enable nightly batch timers** (after Yo-Yo #1 + vLLM are live — timers call Doorman
+  which routes to Yo-Yo):
+  ```bash
+  sudo systemctl enable --now corpus-rebuild.timer local-workspace-feeder.timer
+  ```
+
+**Track 3 — apprenticeship and auth:**
+
+- [ ] **Re-enable apprenticeship:** Set `SLM_APPRENTICESHIP_ENABLED=true` in
+  `/etc/local-doorman/local-doorman.env` and `sudo systemctl restart local-doorman.service`.
+
+- [ ] **Tier C Auth:** Add Anthropic API key to `local-doorman.env` — enables `audit_proxy`
+  and `service-content POST /v1/draft/generate`. Requires operator API key.
+
+- [ ] **Block D2 (Master ratification):** Signed `task-type-add` ledger events for
+  `doorman-routing` + `workspace-ops` — apprenticeship shadow briefs accumulate but never
+  promote past `review` without Master ratification.
+
+**Track 4 — future hardware:**
+
+- [ ] **Rebuild Packer image** (low urgency — current VM manually patched; future VMs will need
+  this to get the tokenizer + auth map fixes baked in):
+  ```bash
+  cd service-slm/compute/packer && packer build yoyo-image.pkr.hcl
+  ```
+
 - [ ] **Deploy Yo-Yo #2 (Extractor):** `a3-highgpu-1g` Dedicated; deploy when ready to
-  process `cluster-totebox-jennifer`.
-- [ ] **Batch Ingestion:** Feed 1,600+ deployment files into Yo-Yo #2; monitor LadybugDB
-  graph growth.
+  process `cluster-totebox-jennifer` with grammar-constrained 70B extraction.
+
+- [ ] **Batch Ingestion:** Feed 1,600+ deployment files into Yo-Yo #2; monitor LadybugDB growth.
 
 ---
 
@@ -305,7 +398,7 @@ All four sit at workspace-repo / infrastructure path; outbox
 
 ## Critical sequence (revised post-PS.1-1)
 
-1. **D4** (Master) → create `pointsav-public` GCP project + build
+1. **D4** (Master) → create `woodfine-node-gcp-free` GCP project + build
    first slm-yoyo image (vLLM ≥0.12 + nginx TLS + CUDA + Ubuntu 24.04)
 2. **Yo-Yo MIN deploy** (operator-gate; Master orchestrates) —
    only after D4
