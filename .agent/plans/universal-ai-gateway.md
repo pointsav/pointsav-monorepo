@@ -2,7 +2,7 @@
 
 > Authored: 2026-05-12 task@project-intelligence  
 > Status: Active planning — Sprint 0a ready to begin  
-> Updated: 2026-05-12 (on-demand boot, real streaming, training capture, operational model)  
+> Updated: 2026-05-12 (on-demand boot, real streaming, training capture, operational model, app-console-slm as end-state interface, pricing model)  
 > Companion: ~/.claude/plans/wire-format-leapfrog-2030.md (strategic context)  
 >            ~/.claude/plans/sovereign-coding-agent-leapfrog-2030.md
 
@@ -24,16 +24,20 @@ Transform service-slm from an OpenAI-only gateway into a universal AI gateway th
 This is NOT about replacing Claude — it is about routing the RIGHT task to the RIGHT tier.
 
 ```
-TASK TYPE                          CORRECT TIER         WHY
-─────────────────────────────────────────────────────────────────────────
-Read file / summarise              Tier A (local 7B)    Zero cost, instant
-Simple grep / search result        Tier A (local 7B)    Doesn't need reasoning
-Moderate code edit / refactor      Tier B (Yo-Yo 32B)   Good enough, cheap
-Entity extraction / DataGraph      Tier B (Yo-Yo 32B)   Already proven working
-Complex debugging                  Tier C (Claude)      Needs real reasoning
-Architecture decisions             Tier C (Claude)      Needs real reasoning
-Multi-step agent chains (5+)       Tier C (Claude)      Tool-use quality gap
+TASK TYPE                          CORRECT TIER                  WHY
+──────────────────────────────────────────────────────────────────────────────────
+Read file / summarise              Tier A (local 7B)             Zero cost, instant
+Simple grep / search result        Tier A (local 7B)             Doesn't need reasoning
+Moderate code edit / refactor      Tier B "trainer" (Yo-Yo #1)  Good enough, cheap
+Entity extraction / DataGraph      Tier B "trainer" (Yo-Yo #1)  Proven working (74 entities)
+Complex debugging                  Tier C (Claude)               Needs real reasoning
+Architecture decisions             Tier C (Claude)               Needs real reasoning
+Multi-step agent chains (5+)       Tier C (Claude)               Tool-use quality gap
+Batch graph extraction (strict)    Tier B "graph" (Yo-Yo #2)    H100 + Llama 70B + grammar
 ```
+
+**Yo-Yo #1 ("trainer")** — daily worker: on-demand inference during business hours + nightly LoRA training window.  
+**Yo-Yo #2 ("graph")** — periodic specialist: H100/Llama 3.3 70B for grammar-constrained extraction batch runs (monthly/quarterly). NOT always-on. NOT used for Claude Code routing.
 
 **Claude Code still does ALL complex tasks** — via Tier C passthrough to the real
 Anthropic API. The shim adds intelligence, not degradation. Tier C is always available.
@@ -95,10 +99,37 @@ slm-doorman-server (axum, port 9080)
   POST /v1/graph/mutate       ← DataGraph proxy
   GET  /readyz, /healthz, /v1/contract
 
-Tier A: llama-server (OLMo 3 7B, local, port 8080)
-Tier B: Yo-Yo #1 llama-server (OLMo 3 32B Think, GCP L4, port 9443)
-Tier C: Anthropic API (configured but minimal use)
+Tier A:  llama-server (OLMo 3 7B Q4, local, port 8080)       ← always-on
+Tier B:  HashMap<String, YoYoTierClient> — named backends:
+           "default"  SLM_YOYO_*                  fallback / general-purpose
+           "trainer"  SLM_YOYO_TRAINER_*           Yo-Yo #1: L4/OLMo 3 32B-Think
+           "graph"    SLM_YOYO_GRAPH_*             Yo-Yo #2: H100/Llama 3.3 70B
+Tier C:  Anthropic / Gemini / OpenAI (ExternalAllowlist, mock-only until D4)
 ```
+
+### The Yo-Yo Fleet — Two VMs, Two Roles
+
+The Tier B multi-backend system is **code-complete** (`HashMap<String, YoYoTierClient>`).
+`ComputeRequest.yoyo_label: Option<String>` selects the target node by key.
+No label → first map entry (insertion order); unrecognised label → `TierUnavailable`.
+
+| Node | Env prefix | Hardware | Role | Schedule |
+|---|---|---|---|---|
+| **Yo-Yo #1** (`"trainer"`) | `SLM_YOYO_TRAINER_*` | GCP L4 24GB (`g2-standard-4`) | On-demand inference (OLMo 3 32B Think) + nightly LoRA training | Starts on first request each day; idle-stops after 30 min; nightly-run manages 00:00–04:00 window |
+| **Yo-Yo #2** (`"graph"`) | `SLM_YOYO_GRAPH_*` | GCP H100 80GB (`a3-highgpu-1g`) | Batch graph extraction (Llama 3.3 70B, grammar-constrained) | Manual/periodic — monthly or quarterly when large extraction batches are queued; not on-demand |
+
+**Yo-Yo #2 is NOT a training VM.** It is a high-powered inference node for ontologically-strict
+entity extraction using grammar constraints (`X-Foundry-Yoyo-Label: graph` header). It runs
+Llama 3.3 70B which requires H100 VRAM. It is significantly more expensive per hour than Yo-Yo #1
+and runs infrequently — triggered manually when the DataGraph needs a large batch reprocessed
+with stricter extraction quality than OLMo 3 32B can provide.
+
+**Adding more backends:** The HashMap design supports N Yo-Yo nodes. To add a third:
+1. Define new env vars `SLM_YOYO_<LABEL>_ENDPOINT` + `SLM_YOYO_<LABEL>_BEARER` etc.
+2. Insert a new entry in `slm-doorman-server/src/main.rs` at startup
+3. Route to it via `ComputeRequest { yoyo_label: Some("your-label".into()), ... }`
+
+No code changes to the router logic — only config and startup registration.
 
 **The gap:** Claude Code speaks Anthropic Messages API. Doorman speaks OpenAI.
 Every Claude Code token goes to `api.anthropic.com` at $3–15/M. Nothing routes locally.
@@ -247,12 +278,16 @@ Uses axum `StreamBody` + `tokio::sync::mpsc` — 1 sender, buffered.
 
 #### Model routing table (Sprint 0)
 
-| Claude Code model | Complexity | Routes to |
-|---|---|---|
-| `claude-haiku-*` | Low | Tier A (local OLMo 7B) |
-| `claude-sonnet-*` | High | Tier B (Yo-Yo OLMo 32B Think) |
-| `claude-opus-*` | High + tier_hint=C | Tier C (Anthropic API passthrough) |
-| anything else | Medium | Tier A or B per circuit state |
+| Claude Code model | Complexity | `yoyo_label` | Routes to |
+|---|---|---|---|
+| `claude-haiku-*` | Low | — | Tier A (local OLMo 7B, no Yo-Yo needed) |
+| `claude-sonnet-*` | High | `"trainer"` | Tier B Yo-Yo #1 (OLMo 3 32B Think, L4) |
+| `claude-opus-*` | High | — (Tier C) | Tier C (Anthropic API passthrough) |
+| anything else | Medium | `"trainer"` | Tier B Yo-Yo #1 or Tier A per circuit state |
+
+The `"graph"` label (Yo-Yo #2 / Llama 3.3 70B / H100) is NOT used for Claude Code routing.
+That backend is reserved for grammar-constrained DataGraph extraction batch jobs, triggered
+manually or by service-content when strict ontological extraction is needed.
 
 **Note:** OLMo 3 32B Think ≠ Claude Sonnet for complex coding tasks. Set
 `ANTHROPIC_BASE_URL` per-project, not globally. Start with non-critical
@@ -460,29 +495,192 @@ foundry:doorman-health         Tier A/B/C status + circuit breaker state
 
 ---
 
-### Sprint 4 — app-console-slm MVP
-**Duration:** 3 weeks
+### Sprint 4 — app-console-slm  ✦ THE END-STATE INTERFACE ✦
+**Duration:** 6–8 weeks (largest sprint; most user-visible)  
+**Goal:** A sovereign coding agent that replaces Claude Code CLI for Foundry work —  
+         your own interface, your own routing, your own training loop.
 
-Single binary, two modes: coding agent + operator dashboard.
+#### What app-console-slm IS
 
-**New crate:** `crates/app-console-slm/` (or separate repo)
+```
+Claude Code today:
+  Developer → Claude Code CLI → Anthropic API → Claude → response
+                                  ↑ subscription or pay-per-token
+                                  ↑ all tokens leave the infrastructure
 
-**`console-slm status` (week 1):**
+app-console-slm goal:
+  Developer → console-slm code → Doorman → Tier A (local, $0)
+                                         → Tier B (Yo-Yo, ~$0.40/hr)
+                                         → Tier C (Claude API, pay-per-token, ~30% of tokens)
+                                  ↑ one shared API key for the whole team
+                                  ↑ only the hard tasks reach Claude
+                                  ↑ every session trains the local model
+```
+
+This is NOT about removing Claude from the loop. Claude (via Tier C) still handles
+all complex tasks — debugging, architecture, long agent chains. The difference is:
+- You control the routing
+- You own the audit trail
+- Simple operations (file reads, search, moderate edits) never leave your infrastructure
+- One Claude API key serves the whole team, not N × Claude subscription
+
+#### Is this allowed / compatible with Anthropic's terms?
+
+Yes. Anthropic explicitly supports:
+- Building applications on the Claude API (`ANTHROPIC_BASE_URL` is documented)
+- Routing API calls through custom gateways (LiteLLM, Portkey, OpenRouter all do this)
+- Building agent loops that call the Claude API programmatically
+
+`app-console-slm` is an application built ON the Anthropic API — same category as
+any AI coding tool. This is the intended commercial model. Anthropic's terms allow it.
+
+#### Claude Code Pro vs Claude API direct — the pricing reality
+
+| Model | Cost | Value for |
+|---|---|---|
+| **Claude Pro** ($20/mo) | Flat rate, usage-limited | Solo developer, moderate use |
+| **Claude Max** ($100/mo) | Flat rate, higher limits | Solo developer, heavy use |
+| **Claude API direct** | $0.80–15/M tokens | Teams, or when you control routing |
+
+**The critical insight:** Claude Code Pro ($100/month) is a flat subscription that covers
+essentially all Claude Code usage for one developer. For a single heavy developer, $100/month
+is cheaper than direct API at Sonnet rates ($3–15/M = $180–2250/month at full speed).
+
+**Where service-slm wins on pricing:**
+
+*Solo developer:* Claude Max ($100/mo) + service-slm = best of both worlds.
+Use Claude Code with `ANTHROPIC_BASE_URL` pointing at Doorman. The ~60-70% of tokens
+that are file reads and tool results route locally for free. The ~30% that need Claude
+quality pass through Tier C (to Anthropic API) and ARE covered by the Pro subscription.
+The subscription covers Tier C; local infrastructure covers everything else.
+
+*Team of 3+ developers:* Fixed infrastructure cost vs 3 × $100/month subscriptions.
+```
+3 developers × $100/mo Claude Max = $300/month
+service-slm infrastructure: ~$50–80/month (VM + storage)
++ 1 Claude API key for Tier C only (~$30–100/month for ~30% of team tokens)
+= $80–180/month total vs $300/month subscriptions
+```
+Break-even at ~2 developers. Advantage grows with team size.
+
+*5+ developers:* The team never pays per-seat. One shared API key at Tier C.
+app-console-slm becomes the standard tool; no Claude Code subscription needed.
+
+**Transition path:**
+```
+Today       → Claude Code + ANTHROPIC_BASE_URL (Sprint 0a)
+             Subscribe stays; routing improves; training starts
+             
+6 months    → app-console-slm chat + status (Sprint 4 partial)
+             Simple work shifts to console-slm; Claude Code for complex tasks
+             
+12 months   → app-console-slm code mode (Sprint 4 complete)
+             Local model fine-tuned on your codebase
+             Most development through console-slm
+             Claude Code subscription optional for individual heavy users
+             
+18 months+  → Team scales; console-slm standard tool
+             API key shared; per-seat cost eliminated
+             Model compound advantage in full effect
+```
+
+#### The compounding advantage (why this is a moat)
+
+Unlike Claude Code which is stateless per-session:
+- Every `console-slm code` session generates DPO training tuples (via `/v1/shadow`)
+- After 6–12 months of daily use, the Yo-Yo LoRA adapter is fine-tuned on YOUR code
+- The model learns your naming conventions, architecture patterns, test style
+- Routing gradually shifts MORE to Tier B as quality improves
+- The local model gets better at Foundry-specific patterns; general Claude handles the rest
+
+**This is the moat that no cloud subscription can replicate — the data stays in-house.**
+
+#### Binary design
+
+```
+console-slm [command]
+
+  code      Coding agent loop — identical surface to Claude Code:
+            tools: Bash, Read, Write, Edit, Search, WebFetch
+            routes through Doorman (Tier A/B/C)
+            apprenticeship capture on every session
+            
+  admin     Operator TUI — single pane of glass for Foundry infrastructure
+            panels: Doorman health, Yo-Yo controls, nightly log, corpus stats,
+                    DataGraph state, apprenticeship ledger
+                    
+  status    One-line health check (replaces all manual curl checks)
+  
+  chat      REPL — replaces slm-chat.sh and ad-hoc inference
+```
+
+**`console-slm status` output:**
 ```
 Doorman    ● running  (http://127.0.0.1:9080)
 Tier A     ● running  OLMo 3 7B   http://127.0.0.1:8080
 Tier B     ● running  OLMo 3 32B  https://136.109.20.216:9443  14.7 tok/s
-Tier C     ○ standby  Anthropic API
+Tier C     ○ standby  Anthropic API  key: configured
 DataGraph  ● healthy  entity_count=74  last_run=02:52 UTC
 Training   ⊙ pending  4 markers  GCS bucket: not configured
 ```
 
-**`console-slm admin` TUI (week 2):**  
-Ratatui panels: Doorman health, Yo-Yo controls (start/stop/snapshot),
-nightly run log stream, corpus stats, apprenticeship ledger.
+**`console-slm admin` TUI (ratatui panels):**
+| Panel | Replaces |
+|---|---|
+| Doorman health + tier circuit state | manual curl /readyz |
+| Yo-Yo start/stop/snapshot controls | start-yoyo.sh / stop-yoyo.sh |
+| Nightly run live log stream | tail /tmp/nightly-run-*.log |
+| Corpus stats + threshold | corpus-stats.sh |
+| DataGraph entity count + delta | manual jq datagraph-health.json |
+| Apprenticeship ledger + DPO queue | manual ledger.md reads |
+| GPU panel (VRAM, tok/s, layer offload) | SSH to Yo-Yo VM + nvidia-smi |
 
-**`console-slm chat` (week 3):**  
-REPL that routes through Doorman (replaces slm-chat.sh).
+No SSH required for routine operations. This is the single pane of glass.
+
+#### Architecture
+
+```
+app-console-slm (new repo or crates/app-console-slm/)
+├── src/
+│   ├── main.rs             # CLI entry + subcommand dispatch
+│   ├── cmd/
+│   │   ├── code.rs         # Agentic loop (tool-use: Bash/Read/Write/Edit/Search)
+│   │   ├── admin.rs        # Ratatui TUI + panel management
+│   │   ├── status.rs       # Health check (calls Doorman /readyz, /healthz, tier endpoints)
+│   │   └── chat.rs         # REPL (wraps existing Doorman /v1/messages)
+│   ├── tools/
+│   │   ├── bash.rs         # Bash tool implementation
+│   │   ├── file_ops.rs     # Read/Write/Edit
+│   │   └── search.rs       # Grep + file find
+│   └── doorman_client.rs   # HTTP client for service-slm endpoints
+```
+
+**Depends on:** `slm-doorman-server` running at `$SLM_DOORMAN_ENDPOINT` (default: 127.0.0.1:9080)  
+**Uses:** `POST /v1/messages` (Sprint 0a shim) — wires directly to Doorman, not Anthropic  
+**Scope:** Separate repo recommended (`pointsav-monorepo` cluster, new crate in service-slm)
+
+#### Sprint 4 milestones
+
+**Week 1–2 — `console-slm status` + `console-slm chat`:**
+- doorman_client.rs: thin HTTP client for Doorman endpoints
+- `status` command: parse /readyz, /healthz, tier probes → formatted table
+- `chat` command: REPL loop calling /v1/messages, streaming response display
+- Estimated LOC: ~400
+
+**Week 3–4 — `console-slm admin` TUI:**
+- ratatui app skeleton: multi-panel layout, keyboard navigation
+- Doorman panel, Yo-Yo panel (start/stop via shell exec), nightly log stream
+- DataGraph panel (parse datagraph-health.json), corpus panel
+- Estimated LOC: ~600
+
+**Week 5–6 — `console-slm code` agent loop:**
+- Agentic loop: send message, parse tool_use blocks, dispatch tools, send tool_result
+- Tool implementations: Bash, Read, Write, Edit, Search (same surface as Claude Code)
+- Apprenticeship capture: auto-submit to /v1/shadow after each session
+- Session persistence: context window management (summarise older turns)
+- Estimated LOC: ~800
+
+**Total Sprint 4: ~1800 LOC**
 
 ---
 
@@ -524,10 +722,22 @@ identified, sovereign A2A node — callable by any A2A-compatible orchestrator.
 | 1 | Neutral canonical IR (slm-core) | 1 week | Full content block support; tool-use preserved |
 | 2 | Tier C native Anthropic + Responses API inbound | 1 week | No shim for Claude Tier C; future-proof |
 | 3 | MCP server | 2 weeks | DataGraph + corpus callable from any MCP client |
-| 4 | app-console-slm MVP | 3 weeks | No more SSH for ops; coding assistant binary |
+| **4** | **app-console-slm** — status/admin/chat/code agent loop | **6–8 weeks** | **Sovereign coding agent; replaces Claude Code subscription at scale** |
 | 5 | A2A agent card | 4 weeks | Foundry sovereign node in agent mesh |
 
-**Total: ~15 weeks to full stack. Sprints 0a+0b ship this week + next week.**
+**Total: ~18 weeks to full stack. Sprints 0a+0b ship this week + next week.**
+
+### Pricing transition milestones
+
+| Stage | Tool | Pricing |
+|---|---|---|
+| Now | Claude Code + ANTHROPIC_BASE_URL (Sprint 0a) | Claude Max sub covers Tier C; local covers the rest |
+| Sprint 4 partial (6mo) | Claude Code for complex + console-slm for ops | Same |
+| Sprint 4 complete (12mo) | console-slm code mode for most dev work | API key (shared) + infra cost; subscriptions optional |
+| Team scale (18mo+) | console-slm standard; no per-seat subscriptions | Fixed infrastructure beats variable per-token |
+
+**Key number:** At 3+ developers, service-slm infrastructure cost + shared API key beats
+3 × Claude Max subscriptions. That is the transition trigger.
 
 ### Cost model after Sprint 0a+0b live
 
@@ -593,7 +803,11 @@ This is critical context before routing Claude Code through local models:
 | `slm-doorman/src/tier/external.rs` | 2 | Native Anthropic outbound |
 | `slm-doorman-server/src/http.rs` | 2 | Add `/v1/responses` inbound |
 | `crates/slm-mcp-server/` (new) | 3 | MCP server crate |
-| `crates/app-console-slm/` (new) | 4 | Console binary |
+| `app-console-slm/src/main.rs` (new repo or crate) | 4 | Entry point + subcommands |
+| `app-console-slm/src/cmd/code.rs` | 4 | Agentic loop (tool-use surface) |
+| `app-console-slm/src/cmd/admin.rs` | 4 | Ratatui TUI dashboard |
+| `app-console-slm/src/cmd/status.rs` | 4 | Health check output |
+| `app-console-slm/src/doorman_client.rs` | 4 | HTTP client for Doorman /v1/messages etc. |
 | `slm-doorman-server/src/http.rs` | 5 | A2A endpoints |
 
 ---
