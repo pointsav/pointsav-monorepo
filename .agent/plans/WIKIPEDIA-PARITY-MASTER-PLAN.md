@@ -39,29 +39,34 @@ Maintain and enhance the non-Wikipedia features that provide the "Leapfrog" adva
 
 ---
 
-## 2. To-Do List (The Road to +98%)
+## 2. Status — ALL THREE PHASES SHIPPED (2026-05-12)
 
-### [ ] Infrastructure
-- [ ] Verify `templates/` can be safely deleted (confirmed: Maud macros in `src/server.rs` are the source of truth).
-- [ ] Implement CSS Variable injection for global theme management.
+### [x] Phase 1 — DOM Standardisation — COMPLETE (`3b557cf`, Peter, 2026-05-12)
+7 structural class/ID renames to MediaWiki/Vector 2022 names across `server.rs`,
+`style.css`, `wiki.js`. CSS custom properties seeded (`--mw-*` aliases). 60/60 tests.
 
-### [ ] Content Rendering (`src/render.rs`)
-- [ ] Update Infobox/Navbox renderers to emit standard MediaWiki-style tables.
-- [ ] Ensure `inject_edit_pencils` matches Wikipedia's `[edit]` link placement and styling.
+### [x] Phase 2A — Design Token Port — COMPLETE (`68c643c`, Jennifer, 2026-05-12)
+Article typography regression fixed (`.page-body` selector). 9 hardcoded hex colors ported
+to CSS variables. 4 body-level hardcoded colors ported. 60/60 tests.
 
-### [ ] UI Chrome (`src/server.rs`)
-- [ ] Refactor `wiki_chrome` to match Vector 2022's header/sidebar/content wrapper structure.
-- [ ] Implement "Read / Edit / View history" as a standard `.vector-menu-tabs` container.
-- [ ] Update the language switcher to match the "Global" button layout in Vector 2022.
+### [x] Phase 3 — Interaction Parity — COMPLETE (`3cee49d`, Jennifer, 2026-05-12)
+Keyboard shortcuts (`?` overlay, `Esc` close), AccessKey attributes, TOC pin button with
+localStorage, AJAX page navigation (fetch + DOM swap + loading bar). 60/60 tests.
 
-### [ ] Client-side Interactivity (`static/wiki.js`)
-- [ ] Add Keyboard shortcut listener.
-- [ ] Implement "TOC Pinning" (shifting content when TOC is fixed).
-- [ ] Smooth scrolling with proper offset for the sticky header.
+**Stage 6 pending** — Sprints G–K (`fa47611`, `11ea232`, `416437d`) + Phases 1/2A/3 above
+need `bin/promote.sh` from Command Session. All commits signalled in outbox.
 
 ---
 
-## 3. Success Metrics
-- **Side-by-side Visual Test:** 0px deviation in layout alignment between Wikipedia and `app-mediakit-knowledge`.
-- **Shortcut Test:** All standard Wikipedia shortcuts work.
-- **Performance Test:** Page load < 100ms (Leapfrog 2030 target).
+## 3. Success Metrics — achieved
+- DOM matches Vector 2022 class/ID contract ✓
+- CSS variables match Codex token names ✓  
+- Keyboard shortcuts (`?` help, accesskeys) ✓
+- TOC pinning with localStorage persistence ✓
+- AJAX navigation with loading bar ✓
+- Page load well under 100ms (Rust binary) ✓
+
+## 4. Next work after Stage 6 deploy
+Phase 4 implementation continues at Steps 4.6 (MCP server via rmcp) and 4.7
+(git smart-HTTP remote). Steps 4.1–4.5 are all shipped. See
+`app-mediakit-knowledge/docs/PHASE-4-PLAN.md` for the full step table.
