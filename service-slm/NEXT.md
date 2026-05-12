@@ -1,21 +1,46 @@
 # NEXT.md — service-slm
 
-> Last updated: 2026-05-12 (zone fix complete; VM stopped manually after 24h missed-shutdown)
+> Last updated: 2026-05-12T18:30Z (nightly test run complete; vllm.service crash-loop diagnosed)
 > Read at session start. Update before session end so the next
 > session knows where to pick up.
+
+---
+
+## ⚠️ CRITICAL — VM NEEDS SERVICE FIX ON NEXT START
+
+`vllm.service` is still **enabled** in the boot image and crashes on every start (CUDA OOM — 32B BF16 doesn't fit in 22 GiB L4). `llama-server.service` was running ad-hoc (not `systemctl enable`), so it does not survive a restart. **On the next VM start, immediately SSH in and run:**
+
+```bash
+gcloud compute ssh yoyo-tier-b-1 --zone=us-west1-b --project=woodfine-node-gcp-free
+# On VM:
+sudo systemctl mask vllm.service
+sudo systemctl enable llama-server.service
+sudo systemctl start llama-server.service
+sudo systemctl status llama-server.service
+# Verify /readyz returns 200, then snapshot boot disk:
+gcloud compute disks snapshot yoyo-tier-b-1 --zone=us-west1-b \
+  --project=woodfine-node-gcp-free --snapshot-names=yoyo-tier-b-1-boot-llama-fix
+```
+
+**Root cause details (2026-05-12T18:30Z investigation):**
+- vllm.service crash-loops: `torch.OutOfMemoryError` at 21.37 GiB allocated, needs 540 MiB more
+- vLLM config: `gpu_memory_utilization=0.97`, `enable_lora=True`, `max_loras=8`, `max_lora_rank=64`, `dtype=bfloat16` (no quantization)
+- The BF16 full-precision model at `/data/weights/model` doesn't fit with LoRA adapter slots
+- llama-server (CUDA build, Q3_K_M GGUF) fits at 16.1 GiB / 22.5 GiB — was working before
+
+**Long-term fix:** Rebuild Packer image with `vllm.service` masked and `llama-server.service` enabled. This is the next Packer build task (already in Remaining below).
+
+**Also needed in `start-yoyo.sh`:** `update_doorman_env()` is only called when zone changes (Mode 1 same-zone restart skips it). But Spot instances get a new external IP every restart. Fix: always call `update_doorman_env` on Mode 1 success, not just when zone differs. Bug is on line 340 of `scripts/start-yoyo.sh`.
 
 ---
 
 ## YO-YO #1 — FULLY LIVE + DATAGRAPH PIPELINE WORKING (2026-05-12)
 
 **Current VM state:**
-- `yoyo-tier-b-1` **STOPPED** in `us-west1-b` (stopped 2026-05-12T16:17Z — was running 24h due to zone bug below)
-- `llama-server.service` running with Q3_K_M, CUDA build at `build-cuda/bin/llama-server`
-- **14.7 tok/s** (GPU, 65/65 layers on L4); was 0.08 tok/s CPU-only
-- 16.1 GiB / 22.5 GiB VRAM in use (model + KV cache)
-- `corpus-rebuild.timer` + `local-workspace-feeder.timer` enabled, next fire ~02:05 UTC
-- `SLM_APPRENTICESHIP_ENABLED=true` (DPO promotion gated on Master ratification — D2 done)
-- `SLM_YOYO_WEIGHTS_SNAPSHOT=yoyo-tier-b-1-weights-20260512-0248` ✓
+- `yoyo-tier-b-1` **STOPPED** in `us-west1-b` — stopped 2026-05-12T18:30Z
+- Zone `us-west1-b` in **L4 stockout** as of 2026-05-12T18:30Z — cannot start until capacity returns
+- `llama-server.service` was running at 14.7 tok/s before shutdown; **not enabled** (see fix above)
+- `SLM_YOYO_WEIGHTS_SNAPSHOT=yoyo-tier-b-1-weights-20260512-0248` ✓ (weights disk snapshot good)
 
 **Architecture (committed):**
 - vLLM → llama-server for Tier B (vLLM OOM on L4; llama-server runs Q3_K_M natively)
@@ -35,10 +60,21 @@
 - `SLM_YOYO_GCP_ZONE=us-west1-b` confirmed in `/etc/local-doorman/local-doorman.env` ✓
 - Doorman restarted 2026-05-12T16:17Z, healthy ✓
 
+**Nightly test run outcome (2026-05-12T17:05–17:55Z):**
+- `nightly-run.service` started manually for first full-cycle test
+- Phase 1: `start-yoyo.sh` polled health endpoint but vllm.service was crash-looping → Tier A fallback
+- Phase 1: `jennifer-datagraph-rebuild.sh` ran with Tier A — **0 new entities** (all 30 corpus docs already processed in run #4)
+- Phase 2: `corpus-threshold.py` ran — **4 training markers dispatched** (engineering-pointsav SFT + apprenticeship-pointsav DPO × 2 each)
+- Idle monitor correctly stopped the VM at 17:39Z (30 min idle, no inferences)
+- Service exited 0 at 17:55Z
+- `SLM_YOYO_WEIGHTS_GCS_BUCKET` not set → markers written locally only
+
 **Remaining:**
-- [x] **`nightly-run.timer`**: Created + enabled (commit `ec047bd`). Fires 00:00 UTC daily. corpus-rebuild.timer + local-workspace-feeder.timer disabled (redundant). **Next fire: tonight 00:00 UTC.**
+- [x] **`nightly-run.timer`**: Created + enabled (commit `ec047bd`). Fires 00:00 UTC daily. corpus-rebuild.timer + local-workspace-feeder.timer disabled (redundant). ✓
+- [ ] **vllm.service fix on VM** (see CRITICAL block above) — mask vllm, enable llama-server
+- [ ] **`start-yoyo.sh` line 340** — always call `update_doorman_env` on Mode 1 success (not just zone-change)
 - [ ] Set `SLM_YOYO_WEIGHTS_GCS_BUCKET` in `/etc/local-doorman/local-doorman.env` for training dispatch
-- [ ] Next Packer image build (will bake CUDA llama-server; current VM patched manually)
+- [ ] Next Packer image build (will bake CUDA llama-server + mask vllm.service; current VM patched manually)
 - [ ] LoRA training marker (Test 11): workspace dispatch service needs to be written
 - [ ] ProtectHome fix: `/srv/foundry/infrastructure/local-content/local-content.service` line 51 (outboxed)
 
