@@ -261,20 +261,22 @@ impl YoYoTierClient {
             .clone()
             .unwrap_or_else(|| self.config.default_model.clone());
 
-        // Translate GrammarConstraint → llama-server wire format.
-        // Lark/GBNF → top-level `grammar` string field.
-        // JsonSchema → `response_format: {type: json_schema, json_schema: {name, schema}}`.
-        let (grammar_str, response_format) = match req.grammar.as_ref() {
-            None => (None, None),
+        // Translate GrammarConstraint → vLLM 0.12+ wire format.
+        // All variants route via extra_body.structured_outputs (not top-level
+        // guided_* fields, which were removed in vLLM 0.12).
+        // Lark/GBNF → {"structured_outputs": {"grammar": "<string>"}}
+        // JsonSchema → {"structured_outputs": {"json": <schema object>}}
+        let extra_body = match req.grammar.as_ref() {
+            None => None,
             Some(GrammarConstraint::Lark(s)) | Some(GrammarConstraint::Gbnf(s)) => {
-                (Some(s.clone()), None)
+                Some(serde_json::json!({
+                    "structured_outputs": { "grammar": s }
+                }))
             }
             Some(GrammarConstraint::JsonSchema(v)) => {
-                let rf = serde_json::json!({
-                    "type": "json_schema",
-                    "json_schema": { "name": "response", "schema": v }
-                });
-                (None, Some(rf))
+                Some(serde_json::json!({
+                    "structured_outputs": { "json": v }
+                }))
             }
         };
 
@@ -284,8 +286,7 @@ impl YoYoTierClient {
             stream: req.stream,
             max_tokens: req.max_tokens,
             temperature: req.temperature,
-            grammar: grammar_str,
-            response_format,
+            extra_body,
         };
         let url = format!(
             "{}/v1/chat/completions",
@@ -502,13 +503,13 @@ struct OpenAiChatRequest {
     max_tokens: Option<u32>,
     #[serde(skip_serializing_if = "Option::is_none")]
     temperature: Option<f32>,
-    /// llama-server GBNF/Lark grammar string (top-level field). Absent when no grammar.
+    /// vLLM 0.12+ structured output envelope. Shape:
+    /// `{"structured_outputs": {"json": <schema>}}` for JsonSchema,
+    /// `{"structured_outputs": {"grammar": "<string>"}}` for Lark/GBNF.
+    /// Absent when no grammar constraint. The old `guided_json` /
+    /// `guided_grammar` top-level extra_body fields were removed in vLLM 0.12.
     #[serde(skip_serializing_if = "Option::is_none")]
-    grammar: Option<String>,
-    /// llama-server JSON Schema structured output. Shape:
-    /// `{"type":"json_schema","json_schema":{"name":"response","schema":{...}}}`
-    #[serde(skip_serializing_if = "Option::is_none")]
-    response_format: Option<serde_json::Value>,
+    extra_body: Option<serde_json::Value>,
 }
 
 #[derive(Deserialize)]
@@ -793,8 +794,14 @@ mod tests {
         client.complete(&r).await.expect("lark grammar happy path");
 
         let body = captured.lock().unwrap().clone().expect("body captured");
-        assert_eq!(body["grammar"], serde_json::json!("start: /[a-z]+/"));
-        assert!(body.get("response_format").is_none(), "response_format absent for Lark");
+        assert_eq!(
+            body["extra_body"]["structured_outputs"]["grammar"],
+            serde_json::json!("start: /[a-z]+/")
+        );
+        assert!(
+            body["extra_body"]["structured_outputs"].get("json").is_none(),
+            "json field absent for Lark"
+        );
     }
 
     #[tokio::test]
@@ -827,10 +834,13 @@ mod tests {
 
         let body = captured.lock().unwrap().clone().expect("body captured");
         assert_eq!(
-            body["grammar"],
+            body["extra_body"]["structured_outputs"]["grammar"],
             serde_json::json!(r#"root ::= "yes" | "no""#)
         );
-        assert!(body.get("response_format").is_none(), "response_format absent for GBNF");
+        assert!(
+            body["extra_body"]["structured_outputs"].get("json").is_none(),
+            "json field absent for GBNF"
+        );
     }
 
     #[tokio::test]
@@ -868,10 +878,11 @@ mod tests {
             .expect("json_schema grammar happy path");
 
         let body = captured.lock().unwrap().clone().expect("body captured");
-        assert_eq!(body["response_format"]["type"], "json_schema");
-        assert_eq!(body["response_format"]["json_schema"]["name"], "response");
-        assert_eq!(body["response_format"]["json_schema"]["schema"], schema);
-        assert!(body.get("grammar").is_none(), "grammar absent for JsonSchema");
+        assert_eq!(body["extra_body"]["structured_outputs"]["json"], schema);
+        assert!(
+            body["extra_body"]["structured_outputs"].get("grammar").is_none(),
+            "grammar field absent for JsonSchema"
+        );
     }
 
     #[tokio::test]
@@ -903,12 +914,8 @@ mod tests {
 
         let body = captured.lock().unwrap().clone().expect("body captured");
         assert!(
-            body.get("grammar").is_none(),
-            "grammar must be absent when GrammarConstraint is None"
-        );
-        assert!(
-            body.get("response_format").is_none(),
-            "response_format must be absent when GrammarConstraint is None"
+            body.get("extra_body").is_none(),
+            "extra_body must be absent when GrammarConstraint is None"
         );
     }
 
