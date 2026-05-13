@@ -35,7 +35,7 @@ Last updated: 2026-05-07.
 | Project | State | Type | Notes |
 |---|---|---|---|
 | app-mediakit-distributions | Scaffold-coded | app-mediakit | 4 files |
-| app-mediakit-knowledge | Active | app-mediakit | Phases 1, 1.1, 2 (Steps 1-7), 3 (Steps 3.1-3.4) shipped; Phase 4 plan + BP1 decision packet + Step 7 smoke runbook landed; CLAUDE.md + NEXT.md added 2026-05-07 (activation defect closed) |
+| app-mediakit-knowledge | Active | app-mediakit | Phases 1–3 + Wikipedia Parity Phases 1/2A/3 shipped; Phase 4 Steps 4.1–4.5 shipped (`177813e` 2026-05-12); Steps 4.6 (MCP/rmcp) + 4.7 (git smart-HTTP) pending; project-root CLAUDE.md + NEXT.md activation defect still open |
 | app-mediakit-marketing | Scaffold-coded | app-mediakit | 4 files |
 | app-mediakit-telemetry | Scaffold-coded | app-mediakit | 14 files; MaxMind `.mmdb` pending move to build-time fetch |
 

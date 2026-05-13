@@ -95,5 +95,154 @@ Newest on top. Append a dated block when a session includes meaningful cleanup w
 
 ---
 
+## 2026-05-12 — Phase 4 Steps 4.4+4.5 — redb wikilink graph + blake3 content hashes
+
+- **`src/links.rs`** (new, 230 lines): `LinkGraph` struct backed by redb. Two tables in
+  `<state_dir>/links.redb`: `outlinks` (composite key `"from_slug\x00to_slug"` → u8 sentinel;
+  supports prefix scan for outlinks and full-scan filter for backlinks) and `hashes`
+  (`"slug\x00revision_sha"` → 32-byte blake3 digest; federation-seam baseline for Phase 7).
+  Public API: `open_or_create`, `rebuild_for_slug`, `backlinks`, `record_hash`,
+  `lookup_by_hash`, `for_testing`. Wikilink parser: regex `r"\[\[([^\]|#\[]+)"`, output
+  slugified (lowercased, spaces → hyphens, anchors/aliases stripped). `for_testing()` uses
+  tempfile + atomic counter for isolated parallel test databases.
+
+- **`tests/links_test.rs`** (new, 133 lines): 7 integration tests — 6 unit-level graph
+  tests (backlink add/clear, multiple sources, self-links, blake3 round-trip, unknown hash)
+  + 1 route-level test (`whatlinkshere_returns_backlinks_from_graph` via tempfile fixture +
+  oneshot router pattern matching `tests/feeds_test.rs`).
+
+- **Wiring across 20 files:**
+  - `src/error.rs`: new `WikiError::LinkGraph(String)` variant; mapped to HTTP 500.
+  - `src/lib.rs`: `pub mod links;` added.
+  - `src/main.rs`: `LinkGraph::open_or_create(&state_dir.join("links.redb"))` at startup
+    (after git repo and glossary); stored in `Arc<LinkGraph>`; passed as `AppState.links`.
+  - `src/server.rs`: `AppState.links: Arc<LinkGraph>` field; `GET /special/whatlinkshere/{slug}`
+    route + `what_links_here` handler (reads `backlinks()`, renders HTML list); "What links here"
+    link in article footer chrome. All `AppState` test constructors updated.
+  - `src/edit.rs`: `post_edit` and `post_create` both call `record_hash(slug, oid_sha, body)`
+    after git commit succeeds, and `rebuild_for_slug(slug, body)` unconditionally. Failures
+    logged non-fatally (link graph is derived state, rebuildable).
+  - All 11 pre-existing integration test files: `links: LinkGraph::for_testing()` added to
+    `AppState` construction (1–2 lines each).
+
+- **Cargo**: `redb = "4.1"` + `blake3 = "1.8"` added to `[dependencies]`.
+
+- **Test results**: 7/7 `links_test` pass (`cargo test --test links_test`). `cargo check`
+  clean. Pre-existing `doorman_stubs_return_correct_json_shape` failure unchanged (unrelated).
+
+- **Stage 6 needed**: Wikipedia Parity Phases 1+2A+3 commits (`3b557cf`, `68c643c`, `b8a1ad8`,
+  `3cee49d`) + this Phase 4 commit (`177813e`) + cleanup-log entry (this commit) need
+  `bin/promote.sh` from Command Session to reach canonical `pointsav/pointsav-monorepo` main.
+
+- **Pending**: Step 4.6 (MCP server via rmcp) and Step 4.7 (git smart-HTTP remote) per
+  `docs/PHASE-4-PLAN.md`. Deploy: `systemctl restart local-knowledge-documentation.service`
+  after Stage 6 binary rebuild.
+
+---
+
+
+## 2026-05-12 — Wikipedia Parity Phase 3 — keyboard shortcuts + TOC pin + AJAX page navigation
+
+- **wiki.js rewritten** (~619 lines → ~530 lines). Module-level state vars added for idempotent
+  re-init on AJAX navigation: `_sectionObserver`, `_hoverCard`, `_hoverTimer`, `_hoverTarget`,
+  `_hoverCache`, `_glossaryTip`, `_fnTip`.
+
+- **5 content-dependent init functions extracted/renamed** to support AJAX page swap:
+  `initHoverCards()`, `initGlossaryTooltips()`, `initFootnoteTooltips()`,
+  `initNavboxes()`, `initCollapsibleSections()`, `initActiveTocTracking()` (stores observer
+  ref in `_sectionObserver`; disconnects before content swap). Called at boot and in
+  `reinitContentInteractions()` after every AJAX navigation.
+
+- **Keyboard shortcuts (Part 1)**: `?` key toggles shortcut help overlay; `Esc` closes it.
+  AccessKey attributes added to server.rs — `accesskey="r"` (Read), `accesskey="e"` (Edit),
+  `accesskey="s"` (View source), `accesskey="h"` (View history), `accesskey="t"` (Talk).
+  Browsers trigger via Alt+Shift+key (Firefox/Linux), Alt+key (Chrome), Ctrl+Option (macOS).
+
+- **TOC pin button (Part 2)**: `button.toc-pin-btn #toc-pin-btn` added to `div.toc-header` in
+  server.rs (after the existing `[hide]` toggle). `initTocPin()` in wiki.js — pin state
+  persisted to `localStorage['wiki-toc-pinned']`; pinned TOC cannot be collapsed by the hide
+  button; `applyPinState()` toggles `toc-pinned` class + `aria-pressed` + button text.
+
+- **AJAX page navigation (Part 3)**: `initAjaxNavigation()` intercepts `/wiki/*` link clicks
+  and `popstate` events. `navigateTo()` uses `fetch()` + `DOMParser` + DOM swap of
+  `#mw-content-text`, `#vector-toc`, `h1.page-title`, `nav #p-views`, `.wiki-breadcrumb`,
+  `document.title`. Loading bar (`#wiki-loading-bar`) with CSS-driven progress at page top.
+  Modifier clicks (Ctrl/Meta/Alt/Shift) and non-`/wiki/` links fall through to full navigation.
+  On fetch error → `window.location.href` fallback. `history.pushState` for forward nav;
+  `history.replaceState` seeds initial state. Uses `.then/.catch` (not async/await) for
+  broad browser compat.
+
+- **CSS additions** (~80 lines appended): `#wiki-loading-bar` (fixed top-of-page progress bar);
+  `#toc-pin-btn` + `.toc-pin-active` (pin button next to hide toggle); `#wiki-shortcut-overlay`
+  + `#wiki-shortcut-panel` + `#wiki-shortcut-close` + `.wiki-shortcut-note` (keyboard overlay).
+
+- **Commit**: `3cee49d` (Jennifer). 60/60 lib tests pass. `doorman_stubs_return_correct_json_shape`
+  pre-existing failure, unrelated.
+
+- **Deployment**: Release build needed; install + `systemctl restart` pending for both services.
+
+---
+
+## 2026-05-12 — Wikipedia Parity Phase 2A — article typography regression fix + color token port
+
+- **Regression fix**: Phase 1 changed `article.wiki-article` → `div #mw-content-text`, silently
+  breaking all `article { }` CSS rules (article typography: Georgia serif, heading borders, link
+  colors, code blocks, blockquotes, tables). Fixed by replacing the entire article-body block
+  (lines 118–197) with `.page-body { }` equivalents. `.page-body` is the `div.page-body` wrapper
+  that the server renders inside `div#mw-content-text`.
+
+- **`--mw-*` tokens wired into article rules**: `.page-body a` → `var(--mw-color-link)`,
+  `.page-body a:visited` → `var(--mw-color-link-visited)`, code/pre backgrounds →
+  `var(--mw-color-base-10)`, borders → `var(--mw-color-base-50)`.
+
+- **9 hardcoded hex colors in secondary `:root` block ported** to existing CSS variables:
+  `--toc-bg`, `--tab-active-border`, `--tab-hover-bg`, `--density-btn-bg`,
+  `--density-btn-active-bg`, `--density-btn-active-fg`, `--hatnote-color`, `--cat-bg`.
+
+- **4 body-level hardcoded colors ported**: `.wiki-lang-btn:hover color` → `var(--bg)`;
+  `.wiki-home-featured background` → `var(--mw-color-base-10)`; `.wiki-home-dyk background` →
+  `var(--bg)`; `a.wiki-redlink color` → `var(--mw-color-link-redlink)`.
+
+- **Left unchanged** (UI-specific palettes with no matching token): `#b58900` FLI notice border;
+  `#a55858`/`#d73c3c`/`#b52e2e`/`#ffeef0`/`#f5c2c7` editor/auth error-state palette.
+
+- **Commit**: `68c643c` (Jennifer). 60/60 lib tests pass. `doorman_stubs_return_correct_json_shape`
+  pre-existing failure, unrelated to this change.
+
+- **Deployment**: Release build in progress; install + `systemctl restart` pending.
+
+---
+
+## 2026-05-12 — Wikipedia Parity Phase 1 DOM standardisation
+
+- **7 structural class/ID names renamed** to MediaWiki/Vector 2022 equivalents across
+  `src/server.rs`, `static/style.css`, `static/wiki.js` (commit `3b557cf`, Peter).
+  PointSav-specific classes (`wiki-home-*`, `wiki-cat-*`, `wiki-special-*`, etc.) left unchanged.
+
+  | Old | New | Scope |
+  |---|---|---|
+  | `.site-header` / `#site-header` | `.mw-header` / `#mw-header` | `<header>` chrome |
+  | `div.wiki-left-rail` | `div #mw-panel` | left sidebar |
+  | `nav.wiki-nav-portlet` | `nav.vector-main-menu` | nav portlet |
+  | `nav.wiki-toc` / `#wiki-toc` | `nav.vector-toc` / `#vector-toc` | TOC |
+  | `main.wiki-main` | `main.mw-body` | page body wrapper |
+  | `nav.wiki-action-tabs` | `nav #p-views` | Read/Edit/History tabs |
+  | `article.wiki-article` | `div #mw-content-text` | article body |
+
+- **CSS custom properties seeded** in `:root` — 9 `--mw-*` aliases referencing the
+  existing PointSav variables (Phase 2 token port entrypoints). No existing rules broken.
+
+- **Maud syntax fix applied**: in Rust 2021, `element#id` (no preceding `.class`) is a
+  reserved prefixed identifier. Correct form is `element #id` (space before `#`). Affected
+  three elements: `div #mw-panel`, `nav #p-views`, `div #mw-content-text`.
+
+- **One test updated**: `server::tests::wiki_page_renders_navigation_portlet` assertion
+  changed from `"wiki-nav-portlet"` to `"vector-main-menu"`. 60/60 lib tests pass.
+  `doorman_stubs_return_correct_json_shape` failure confirmed pre-existing (unrelated to
+  this change).
+
+- **No new open questions** from this session.
+
+---
 
 > **Archived entries:** session logs before this point are in `cleanup-log-archive.md`.
