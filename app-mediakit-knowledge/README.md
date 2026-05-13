@@ -15,12 +15,9 @@ as a Wikipedia-shaped read-and-edit surface.
 
 ## Status
 
-Phase 1 — render. The engine reads a content directory, parses
-Markdown with the comrak wikilinks extension, and serves rendered
-pages over HTTP on a loopback address.
-
-See [`ARCHITECTURE.md`](./ARCHITECTURE.md) for the build-phase plan
-through Phase 8.
+Phases 1 through 5 core shipped and running in production at
+`documentation.pointsav.com`. See [`ARCHITECTURE.md`](./ARCHITECTURE.md)
+for the full phase plan.
 
 ## Design principle
 
@@ -32,33 +29,37 @@ slots are sibling files. There is no schema migration ladder
 because there is no canonical schema in the database — the
 database is a regenerable index of the file tree.
 
-## Run (Phase 1)
+## Run
 
 ```
-cargo run -- serve --content-dir tests/fixtures/content
+cargo run -- serve --content-dir <path-to-content-wiki-documentation>
 ```
 
 The server binds `127.0.0.1:9090` by default. Override with
-`--bind` or `WIKI_BIND`.
+`--bind` or `WIKI_BIND`. Build the release binary with
+`cargo build --release` inside this directory (not from the monorepo
+root — workspace coupling with `service-content` requires crate-local
+build).
 
-## Build phases (planned)
+## Build phases
 
 | Phase | Adds | Status |
 |---|---|---|
-| 1 | render one TOPIC | in flight |
-| 2 | edit endpoint | planned |
-| 3 | search (tantivy in-process) | planned |
-| 4 | git sync, history, blame, diff | planned |
-| 5 | auth (local + OIDC) | planned |
-| 6 | wikilink resolution + backlinks | planned |
-| 7 | federation seam (blake3 content addressing) | planned |
-| 8 | disclosure mode (iXBRL, OpenTimestamps, MediaWiki XML import) | planned |
+| 1 | render — GET /wiki/{slug}, /static/, /healthz | shipped |
+| 1.1 | Wikipedia chrome — tabs, TOC, hatnote, language switcher | shipped |
+| 2 | edit + collab — CodeMirror 6, JSON-LD, atomic save, yjs collab relay | shipped |
+| 3 | search + feeds — Tantivy BM25, Atom, JSON Feed, sitemap, llms.txt | shipped |
+| 4 | Git sync + MCP — git2, history/blame/diff, redb wikilink graph, blake3, native MCP JSON-RPC 2.0, OpenAPI 3.1 | shipped |
+| 5 core | auth + edit review — cookie sessions, argon2id, edit review queue | shipped |
+| 5.1+ | per-page ACLs, OIDC SSO, webhook subscriptions, AsyncAPI 3.1 | planned — gated on BP5 |
+| 6 | wikilink resolution + portable identity | planned |
+| 7 | federation seam (blake3 content addressing + ActivityPub) | planned |
+| 8 | disclosure mode + cryptographic timestamping | planned |
 
-Phase 8 is the planned moat — the combination of Markdown-native
-authorship, structured-data extraction for regulator-required
-financial-statement blocks, cryptographic timestamping, and
-per-jurisdiction export adapters. Forward-looking; subject to
-material assumptions and operator decisions.
+Phase 8 is the intended moat — Markdown-native authorship, structured-data
+extraction for regulator-required financial-statement blocks, cryptographic
+timestamping, and per-jurisdiction export adapters. Forward-looking; subject
+to material assumptions and operator decisions.
 
 ## Cluster context
 

@@ -13,12 +13,9 @@ de estilo Wikipedia.
 
 ## Estado
 
-Fase 1 — renderizado. El motor lee un directorio de contenido,
-analiza Markdown con la extensión de wikilinks de comrak, y sirve
-páginas renderizadas por HTTP en una dirección de loopback.
-
-Consulte [`ARCHITECTURE.md`](./ARCHITECTURE.md) para el plan
-completo de las fases de construcción (hasta la Fase 8).
+Las fases 1 a 5 (núcleo) se han desplegado y están operativas en
+producción en `documentation.pointsav.com`. Consulte
+[`ARCHITECTURE.md`](./ARCHITECTURE.md) para el plan completo de fases.
 
 ## Principio de diseño
 
@@ -31,13 +28,32 @@ son archivos hermanos. No hay escalera de migración de esquema
 porque no hay esquema canónico en la base de datos — la base de
 datos es un índice regenerable del árbol de archivos.
 
-## Ejecutar (Fase 1)
+## Ejecutar
 
 ```
-cargo run -- serve --content-dir tests/fixtures/content
+cargo run -- serve --content-dir <ruta-al-contenido>
 ```
 
-El servidor enlaza `127.0.0.1:9090` por defecto.
+El servidor enlaza `127.0.0.1:9090` por defecto. Para compilar el
+binario de producción, ejecute `cargo build --release` dentro de
+este directorio (no desde la raíz del monorepo — el acoplamiento
+del workspace con `service-content` requiere compilación local al
+crate).
+
+## Fases de construcción
+
+| Fase | Agrega | Estado |
+|---|---|---|
+| 1 | renderizado — GET /wiki/{slug}, /static/, /healthz | desplegado |
+| 1.1 | interfaz Wikipedia — pestañas, TOC, hatnote, selector de idioma | desplegado |
+| 2 | edición + colaboración — CodeMirror 6, JSON-LD, guardado atómico, relay yjs | desplegado |
+| 3 | búsqueda + feeds — Tantivy BM25, Atom, JSON Feed, sitemap, llms.txt | desplegado |
+| 4 | sync Git + MCP — git2, historial/blame/diff, grafo redb, blake3, MCP JSON-RPC 2.0, OpenAPI 3.1 | desplegado |
+| 5 núcleo | autenticación + revisión de ediciones — sesiones por cookie, argon2id, cola de revisión | desplegado |
+| 5.1+ | ACLs por página, SSO OIDC, suscripciones webhook, AsyncAPI 3.1 | planificado — condicionado a BP5 |
+| 6 | resolución de wikilinks + identidad portátil | planificado |
+| 7 | interfaz de federación (direccionamiento de contenido blake3 + ActivityPub) | planificado |
+| 8 | modo de divulgación + sellado criptográfico de tiempo | planificado |
 
 ## Posicionamiento previsto
 
