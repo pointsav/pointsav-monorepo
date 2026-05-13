@@ -10,6 +10,79 @@ schema: foundry-mailbox-v1
 ---
 from: task@project-knowledge
 to: master@claude-code
+re: Stage 6 action list — CORRECTION — all three wiki instances (corporate was missing)
+created: 2026-05-13T00:00:00Z
+priority: high
+---
+
+CORRECTION: Prior Stage 6 messages omitted `local-knowledge-corporate.service`.
+All three wiki instances run the same binary and all must be restarted after upgrade.
+
+**Complete promotion sequence:**
+
+### 1. Promote sub-clones
+
+```
+# From clones/project-knowledge/pointsav-monorepo/
+~/Foundry/bin/promote.sh
+
+# From clones/project-knowledge/content-wiki-corporate/
+~/Foundry/bin/promote.sh
+```
+
+`content-wiki-corporate` has **6 commits ahead of origin** (all ready):
+- `c65be14` — home-page YAML: featured rotation pool (5-week) + DYK panel
+- `16c5563` — DataGraph enrichment pass: consequence-first leads + vocabulary fix
+- `b6a8cad` — glossary-corporate: v9 terminology sync
+- `e681a92` — Lede-only index.md: strip double-rendered chrome
+- `34c767b` — Add featured-topic.yaml pin: redemption-elimination
+- `1e819df` — Update home page: fix wikilinks, sentence-case, ENGINE directives
+
+`content-wiki-projects`: **4 commits behind origin** — Stage 6 already ran for this repo
+from a prior session. Run `git -C clones/project-knowledge/content-wiki-projects pull`
+to sync the local clone before or after promotion.
+
+### 2. Build binary
+
+```
+cd ~/Foundry/clones/project-knowledge/pointsav-monorepo/app-mediakit-knowledge
+cargo build --release
+```
+
+Must run from the `app-mediakit-knowledge/` subdirectory — NOT the monorepo root
+(workspace coupling with `service-content` C++ deps causes failure from root).
+
+### 3. Install binary
+
+```
+sudo cp target/release/app-mediakit-knowledge /usr/local/bin/
+```
+
+### 4. Restart ALL THREE services
+
+```
+sudo systemctl restart local-knowledge-documentation.service
+sudo systemctl restart local-knowledge-projects.service
+sudo systemctl restart local-knowledge-corporate.service
+```
+
+### 5. Smoke verify all three
+
+```
+curl -s http://localhost:9090/healthz    # documentation.pointsav.com
+curl -s http://localhost:9093/healthz    # projects.woodfinegroup.com
+curl -s http://localhost:9095/healthz    # corporate.woodfinegroup.com
+curl -s http://localhost:9090/openapi.yaml | head -3   # confirms Phase 4 Step 4.8 binary
+```
+
+All three should return `ok`. The `/openapi.yaml` endpoint confirms the upgraded binary.
+MCP is default-off (`--enable-mcp` not set in any unit) — no behaviour change.
+
+— task@project-knowledge
+
+---
+from: task@project-knowledge
+to: master@claude-code
 re: Phase 5 tests + documentation fixes — 3 additional commits on pointsav-monorepo main
 created: 2026-05-12T23:59:00Z
 priority: normal
