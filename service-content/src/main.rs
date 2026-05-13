@@ -107,9 +107,8 @@ fn main() -> NotifyResult<()> {
             if path.extension().and_then(|s| s.to_str()) == Some("json") {
                 let filename = path.file_name().unwrap().to_str().unwrap().to_string();
                 if filename.starts_with("CORPUS_") {
-                    if process_corpus(&path, &crm_dir, &doorman_endpoint, &module_id, &graph_store) {
-                        processed_ledgers.push(filename);
-                    }
+                    let _ = process_corpus(&path, &crm_dir, &doorman_endpoint, &module_id, &graph_store);
+                    processed_ledgers.push(filename);
                 }
             }
         }
@@ -135,8 +134,9 @@ fn main() -> NotifyResult<()> {
                             if filename.starts_with("CORPUS_") && !processed_ledgers.contains(&filename) {
                                 println!("\n[WATCHER] New Corpus Detected: {}", filename);
                                 thread::sleep(Duration::from_millis(250));
-                                if process_corpus(&path, &crm_dir, &doorman_endpoint, &module_id, &graph_store) {
-                                    processed_ledgers.push(filename);
+                                processed_ledgers.push(filename.clone());
+                                if !process_corpus(&path, &crm_dir, &doorman_endpoint, &module_id, &graph_store) {
+                                    println!("  -> [WATCHER] Extraction failed for {} — skipping until restart.", filename);
                                 }
                             }
                         }
@@ -172,13 +172,6 @@ fn process_corpus(
     if corpus_text.is_empty() { return false; }
 
     println!("  -> [WATCHER] Routing payload to Doorman ({})/v1/chat/completions...", doorman_endpoint);
-
-    let request_id = format!("sc-{}-{}",
-        worm_id,
-        std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap_or_default()
-            .subsec_nanos());
 
     let system_prompt = "You are a semantic entity extractor for a real estate property management archive. \
         Given a corpus of text, extract all named entities as a JSON array. \
@@ -225,7 +218,6 @@ fn process_corpus(
     let client = reqwest::blocking::Client::new();
     let res = client.post(&url)
         .header("X-Foundry-Module-ID", effective_module_id)
-        .header("X-Foundry-Request-ID", &request_id)
         .header("X-Foundry-Complexity", "high")
         .header("X-Foundry-Yoyo-Label", "graph")
         .json(&body)
