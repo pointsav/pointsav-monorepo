@@ -1,5 +1,15 @@
 ---
 
+## 2026-05-13 — Message #13 archived (task-project-intelligence session)
+
+### Message #13 — URGENT: service-content OOM + two code bugs (from: command@claude-code, 2026-05-13T02:55Z)
+
+**Actioned:** Both bugs fixed in `service-content/src/main.rs`. Build running; deploy pending.
+- Fix 1: Removed invalid `X-Foundry-Request-ID` header (non-UUID caused 400 storm)
+- Fix 2: `processed_ledgers.push(filename)` now unconditional (prevents retry on failure)
+
+---
+
 ## 2026-05-12 — Message #12 archived (task-project-intelligence session)
 
 ### Message #12 — Yo-Yo #1 zone error fix — compute/ scripts (from: command@claude-code, 2026-05-12T04:50Z)

@@ -6,7 +6,7 @@
 > Read at session start when a Root Claude opens in this repo. Update
 > at session end when repo-scope open items change.
 
-Last updated: 2026-05-07.
+Last updated: 2026-05-13.
 
 ---
 
@@ -79,6 +79,22 @@ see Recently closed below and `cleanup-log.md` Completed
 migrations)*
 
 ### Structural defects
+
+- **lbug 0.16.1 prebuilt packaging regression** [2026-05-13] — The prebuilt `liblbug.a`
+  (both `compat` and `perf` Linux x86_64 variants) shipped without the companion
+  `libfastpfor.a`, causing undefined `__fastpack*` symbols at link time. Workaround:
+  build from source via `LBUG_SHARED=1`. Resolution options:
+  (a) pin `lbug` to the last version with a self-contained static prebuilt (was working
+  with lbug as of 2026-05-08 binary), or
+  (b) add a `build.rs` env override to force shared-lib path by default.
+  Upstream: report packaging regression to lbug crate maintainers.
+
+- **`start-yoyo.sh` Mode 2 Doorman env bug** [2026-05-13] — Mode 2 (zone stockout
+  cascade) provisions a new VM in a fallback zone but does not call `update_doorman_env`,
+  leaving Doorman pointing at the old (terminated) instance. Found when Mode 2 ran in
+  `us-west1-b` stockout and provisioned `yoyo-tier-b-1` in `europe-west4-a`; Doorman env
+  was stale until manually updated. Fix: `start-yoyo.sh` should call `update_doorman_env`
+  unconditionally at the end of Mode 2, same as Mode 1.
 
 - **Workspace `Cargo.toml` unification** — per 2026-04-18 audit,
   workspace declares only 8 of ~70+ crates as members. Other crates
