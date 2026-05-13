@@ -228,6 +228,14 @@ async fn serve(
 
     let glossary = app_mediakit_knowledge::glossary::load_glossary(&content_dir);
 
+    // Phase 4 Steps 4.4+4.5: open or create the redb link graph.
+    tracing::info!("opening link graph");
+    let link_graph = app_mediakit_knowledge::links::LinkGraph::open_or_create(
+        &state_dir.join("links.redb"),
+    )?;
+    let link_graph = Arc::new(link_graph);
+    tracing::info!("link graph ready");
+
     // Phase 5: open SQLite DB when admin credentials are configured.
     let db = if admin_username.is_some() || admin_password_hash.is_some() {
         let db_path = state_dir.join("wiki.db");
@@ -259,6 +267,7 @@ async fn serve(
         site_title,
         git_tenant,
         glossary: Arc::new(glossary),
+        links: link_graph,
         db,
     };
     let app = router(state);
