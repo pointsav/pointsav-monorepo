@@ -594,6 +594,14 @@ body {
   font-size: 0.9375rem;
 }
 
+.wiki-redirected-from {
+  font-size: 0.8125rem;
+  color: var(--fg-muted);
+  font-family: var(--sans);
+  margin: 0 0 0.75rem 0;
+  font-style: italic;
+}
+
 /* --- Article wrapper inside wiki-main --- */
 
 #mw-content-text {
