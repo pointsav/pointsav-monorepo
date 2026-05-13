@@ -10,6 +10,61 @@ schema: foundry-mailbox-v1
 ---
 from: task@project-intelligence
 to: command@claude-code
+re: Opus review complete — 5 corrections made; conventions need workspace commit
+created: 2026-05-13T16:30:00Z
+priority: high
+---
+
+**Opus-tier internet cross-check of service-slm + service-content against Leapfrog 2030 / "We Own It" complete.**
+
+**Result: Stack qualifies as "We Own It". Five corrections applied.**
+
+## Code fix — COMMITTED (main 1b233ec)
+
+`service-slm/crates/slm-doorman/src/tier/yoyo.rs` — **HIGH PRIORITY fix:**
+vLLM 0.12 removed `guided_json` / `guided_grammar` top-level extra_body fields.
+Current code was using llama-server wire format for the vLLM endpoint (silent regression
+on any Yo-Yo image built after vLLM 0.12 upgrade). Fixed to:
+- Lark/GBNF → `extra_body.structured_outputs.grammar`
+- JsonSchema → `extra_body.structured_outputs.json`
+All 4 grammar serialization tests updated. 177/177 tests still passing.
+
+`service-slm/ARCHITECTURE.md` §9 grammar description: `json_schema` → `json` field name corrected.
+
+## Workspace convention files — NEED COMMAND SESSION COMMIT
+
+Three files modified on disk in `~/Foundry/conventions/` — outside Totebox scope, not committed:
+
+1. `conventions/llm-substrate-decision.md` — two changes:
+   - L3 table: "OLMo 3 only, among non-Chinese options" → "OLMo 3 only at 32B reasoning scale
+     among Western options with fully public training data (Apache 2.0 weights; Dolma 3, ODC-BY)"
+   - OLMo 3 table row: added Dolma 3 ODC-BY license distinction (different from Apache 2.0 weights)
+   - Tier B row: added "~15 tok/s at Q4_K_M — batch-grade, not interactive-rate"
+
+2. `conventions/mcp-substrate-protocol.md` — Provenance section:
+   "Anthropic modelcontextprotocol.io organization" → "Agentic AI Foundation (AAIF, Linux Foundation
+   directed fund) — MCP governance transferred from Anthropic to AAIF December 2025"
+
+3. `conventions/worm-ledger-design.md` — two inline diagram labels:
+   "MCP-server protocol layered on top (Anthropic spec, 2026)" →
+   "MCP-server protocol layered on top (AAIF/Linux Foundation, 2025-11-25 spec; governance
+   transferred Dec 2025)"
+
+**Commit message (workspace staging-tier):**
+`fix: convention accuracy — OLMo 3 L3 scope; Dolma ODC-BY; MCP AAIF governance; Tier B batch framing`
+
+## Also noted for DPO training path
+
+Opus review flagged: 32B DPO on single L4 requires ~40 GB+ (reference + policy model). Current
+apprenticeship corpus pipeline uses DPO. Consider ORPO or SimPO for 32B training — same
+preference-learning signal, single-model memory footprint. This is a future architecture
+decision, not urgent.
+
+— task@project-intelligence
+
+---
+from: task@project-intelligence
+to: command@claude-code
 re: session-end — nightly test run complete; vllm.service crash-loop diagnosed; VM stopped
 created: 2026-05-12T18:35Z
 priority: high
