@@ -78,6 +78,11 @@ notify = "6"
 argon2 = "0.5"
 rusqlite = { version = "0.32", features = ["bundled"] }
 uuid = { version = "1", features = ["v4"] }
+# Phase 4 Steps 4.4+4.5: redb embedded key-value store for the wikilink
+# graph and blake3 content hashes. redb stores the link graph on disk at
+# <state_dir>/links.redb; blake3 provides the federation-seam baseline.
+redb = "4.1"
+blake3 = "1.8"
 
 [dev-dependencies]
 tower = { version = "0.5", features = ["util"] }
