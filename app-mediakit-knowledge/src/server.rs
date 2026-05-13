@@ -96,6 +96,9 @@ pub struct AppState {
     pub git_tenant: String,
     /// Phase 10: Leapfrog 2030 glossary auto-linker.
     pub glossary: Arc<crate::glossary::Glossary>,
+    /// Phase 4 Steps 4.4+4.5: redb-backed wikilink graph and blake3 hashes.
+    /// Always present; database file at `<state_dir>/links.redb`.
+    pub links: Arc<crate::links::LinkGraph>,
     /// Phase 5: SQLite connection for users/sessions/pending-edits.
     /// None when auth is not configured (no WIKI_ADMIN_USERNAME set).
     pub db: Option<Arc<Mutex<rusqlite::Connection>>>,
@@ -1106,7 +1109,7 @@ fn home_chrome(
                 link rel="stylesheet" href="/static/style.css";
             }
             body {
-                header.site-header {
+                header.mw-header {
                     a.site-title href="/" { (site_title) }
                     form.header-search #header-search-form action="/search" method="get" {
                         div.header-search-wrap {
@@ -1668,7 +1671,17 @@ fn wiki_chrome(
                 (PreEscaped(jsonld_for_topic(&fm, slug)))
             }
             body {
-                header.site-header {
+                // Sticky header — hidden until main header scrolls off-screen (Sprint H)
+                div.wiki-sticky-header #wiki-sticky-header aria-hidden="true" {
+                    div.sticky-inner {
+                        a.sticky-logo href="/" { (site_title) }
+                        span.sticky-title #sticky-title { (title) }
+                        @if user.is_some() {
+                            a.sticky-edit href={ "/edit/" (slug) } { "Edit" }
+                        }
+                    }
+                }
+                header.mw-header #mw-header {
                     a.site-title href="/" { (site_title) }
                     form.header-search #header-search-form action="/search" method="get" {
                         div.header-search-wrap {
@@ -1686,6 +1699,13 @@ fn wiki_chrome(
                         aria-expanded="false"
                         aria-controls="mobile-nav-drawer"
                     { "☰" }
+                    @if !numbered_headings.is_empty() {
+                        button.toc-toggle-btn #toc-toggle-btn
+                            aria-label="Table of contents"
+                            aria-expanded="false"
+                            aria-controls="mobile-toc-drawer"
+                        { "§" }
+                    }
                 }
 
                 // Mobile nav drawer — hidden on desktop, toggled by hamburger button
@@ -1693,6 +1713,23 @@ fn wiki_chrome(
                     div.mobile-nav-header {
                         a.site-title href="/" { (site_title) }
                         button.mobile-nav-close #mobile-nav-close aria-label="Close navigation" { "✕" }
+                    }
+                    // Sprint K: article ToC inside the nav drawer (visible above nav links)
+                    @if !numbered_headings.is_empty() {
+                        p.mobile-drawer-section-heading { "Contents" }
+                        ol.mobile-toc-list.mobile-nav-toc {
+                            @for (id, text, level, num) in &numbered_headings {
+                                li class={ "toc-level-" (level) } {
+                                    a href={ "#" (id) } {
+                                        span.toc-numb { (num) }
+                                        " "
+                                        (text)
+                                    }
+                                }
+                            }
+                        }
+                        hr.mobile-drawer-divider;
+                        p.mobile-drawer-section-heading { "Navigation" }
                     }
                     ul.mobile-nav-list {
                         li { a href="/" { "Home" } }
@@ -1704,15 +1741,35 @@ fn wiki_chrome(
                         li { a href="/special/statistics" { "Statistics" } }
                     }
                 }
+                // Mobile ToC drawer — hidden on desktop, toggled by § button
+                @if !numbered_headings.is_empty() {
+                    div.mobile-toc-drawer #mobile-toc-drawer aria-hidden="true" {
+                        div.mobile-nav-header {
+                            span.mobile-drawer-title { "Contents" }
+                            button.mobile-toc-close #mobile-toc-close aria-label="Close contents" { "✕" }
+                        }
+                        ol.mobile-toc-list {
+                            @for (id, text, level, num) in &numbered_headings {
+                                li class={ "toc-level-" (level) } {
+                                    a href={ "#" (id) } {
+                                        span.toc-numb { (num) }
+                                        " "
+                                        (text)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
                 div.mobile-nav-overlay #mobile-nav-overlay aria-hidden="true" {}
 
                 // Article-page three-column layout: left rail + article body + right rail
                 div.wiki-layout {
 
                     // --- Left rail: navigation portlet + collapsible TOC ---
-                    div.wiki-left-rail {
+                    div #mw-panel {
                         // Navigation portlet (Wikipedia: vector-main-menu)
-                        nav.wiki-nav-portlet aria-label="Navigation" {
+                        nav.vector-main-menu aria-label="Navigation" {
                             h3.wiki-portlet-heading { "Navigation" }
                             ul.wiki-portlet-links {
                                 li { a href="/" { "Main page" } }
@@ -1726,7 +1783,7 @@ fn wiki_chrome(
                         }
                         // Contents / ToC portlet with hierarchical section numbers
                         @if !numbered_headings.is_empty() {
-                            nav.wiki-toc #wiki-toc aria-label="Contents" {
+                            nav.vector-toc #vector-toc aria-label="Contents" {
                                 div.toc-header {
                                     span.toc-title { "Contents" }
                                     button.toc-toggle #toc-toggle
@@ -1734,6 +1791,11 @@ fn wiki_chrome(
                                         aria-expanded="true"
                                         title="Toggle table of contents"
                                     { "[hide]" }
+                                    button.toc-pin-btn #toc-pin-btn
+                                        aria-label="Pin table of contents"
+                                        aria-pressed="false"
+                                        title="Keep table of contents visible"
+                                    { "[pin]" }
                                 }
                                 ol.toc-list #toc-list {
                                     @for (id, text, level, num) in &numbered_headings {
@@ -1751,7 +1813,7 @@ fn wiki_chrome(
                     }
 
                     // --- Main article column ---
-                    main.wiki-main {
+                    main.mw-body {
 
                         // Title row: tabs (top-left) + title + language switcher + action tabs (top-right)
                         div.wiki-title-row {
@@ -1763,6 +1825,7 @@ fn wiki_chrome(
                                 { "Article" }
                                 a.wiki-tab
                                     href={ "/talk/" (slug) }
+                                    accesskey="t"
                                     title="Discussion page"
                                 { "Talk" }
                             }
@@ -1810,18 +1873,20 @@ fn wiki_chrome(
                             }
 
                             // Read / Edit / View history tabs — top-right (item 2)
-                            nav.wiki-action-tabs aria-label="Page actions" {
+                            nav #p-views aria-label="Page actions" {
                                 a.wiki-tab.wiki-tab-active
                                     href={ "/wiki/" (slug) }
+                                    accesskey="r"
                                     aria-current="page"
                                 { "Read" }
                                 @if user.is_some() {
-                                    a.wiki-tab href={ "/edit/" (slug) } { "Edit" }
+                                    a.wiki-tab href={ "/edit/" (slug) } accesskey="e" { "Edit" }
                                 } @else {
-                                    a.wiki-tab href={ "/git/" (slug) } title="Log in to edit" { "View source" }
+                                    a.wiki-tab href={ "/git/" (slug) } accesskey="s" title="Log in to edit" { "View source" }
                                 }
                                 a.wiki-tab
                                     href={ "/history/" (slug) }
+                                    accesskey="h"
                                 { "View history" }
                             }
                         }
@@ -1877,7 +1942,7 @@ fn wiki_chrome(
                         }
 
                         // Article body
-                        article.wiki-article {
+                        div #mw-content-text {
                             div.page-body {
                                 (PreEscaped(body_html))
                             }
@@ -2033,16 +2098,13 @@ async fn what_links_here(
 ) -> Result<Markup, WikiError> {
     let pending_count = pending_count_for(&state, maybe_user.as_ref()).await;
 
-    // Use the same search approach as the old inline backlinks: search for the
-    // slug (last path component) as a quoted phrase.
-    let query = format!("\"{}\"", slug.split('/').last().unwrap_or(&slug));
-    let backlinks: Vec<TopicSummary> = run_search(&state.search, &query, 100)
-        .unwrap_or_default()
+    // Use the redb link graph for exact wikilink backlinks (Step 4.4).
+    let backlink_slugs = state.links.backlinks(&slug).unwrap_or_default();
+    let backlinks: Vec<TopicSummary> = backlink_slugs
         .into_iter()
-        .filter(|hit| hit.slug != slug)
-        .map(|hit| TopicSummary {
-            slug: hit.slug,
-            title: hit.title,
+        .map(|s| TopicSummary {
+            title: s.clone(),
+            slug: s,
             last_edited: None,
             short_description: None,
             lede_first_line: String::new(),
@@ -2936,7 +2998,7 @@ fn chrome(_title: &str, body: Markup, site_title: &str, user: Option<&User>, pen
                 link rel="stylesheet" href="/static/style.css";
             }
             body {
-                header.site-header {
+                header.mw-header {
                     a.site-title href="/" { (site_title) }
                     form.header-search #header-search-form action="/search" method="get" {
                         div.header-search-wrap {
@@ -3036,6 +3098,7 @@ mod tests {
                 site_title: "PointSav Documentation Wiki".to_string(),
                 git_tenant: "pointsav".to_string(),
                 glossary: Arc::new(crate::glossary::Glossary::default()),
+                links: crate::links::LinkGraph::for_testing(),
                 db: None,
             },
             dir,
@@ -3204,6 +3267,7 @@ mod tests {
             site_title: "PointSav Documentation Wiki".to_string(),
             git_tenant: "pointsav".to_string(),
             glossary: Arc::new(crate::glossary::Glossary::default()),
+                links: crate::links::LinkGraph::for_testing(),
                 db: None,
         };
         let app = router(state);
@@ -3277,6 +3341,7 @@ mod tests {
             site_title: "PointSav Documentation Wiki".to_string(),
             git_tenant: "pointsav".to_string(),
             glossary: Arc::new(crate::glossary::Glossary::default()),
+                links: crate::links::LinkGraph::for_testing(),
                 db: None,
         };
         let app = router(state);
@@ -3328,6 +3393,7 @@ mod tests {
             site_title: "PointSav Documentation Wiki".to_string(),
             git_tenant: "pointsav".to_string(),
             glossary: Arc::new(crate::glossary::Glossary::default()),
+                links: crate::links::LinkGraph::for_testing(),
                 db: None,
         };
         let app = router(state);
@@ -3376,6 +3442,7 @@ mod tests {
             site_title: "PointSav Documentation Wiki".to_string(),
             git_tenant: "pointsav".to_string(),
             glossary: Arc::new(crate::glossary::Glossary::default()),
+                links: crate::links::LinkGraph::for_testing(),
                 db: None,
         };
         let app = router(state);
@@ -3431,6 +3498,7 @@ mod tests {
             site_title: "PointSav Documentation Wiki".to_string(),
             git_tenant: "pointsav".to_string(),
             glossary: Arc::new(crate::glossary::Glossary::default()),
+                links: crate::links::LinkGraph::for_testing(),
                 db: None,
         };
         let app = router(state);
@@ -3447,7 +3515,7 @@ mod tests {
         let body = resp.into_body().collect().await.unwrap().to_bytes();
         let html = std::str::from_utf8(&body).unwrap();
         assert!(
-            html.contains("wiki-nav-portlet"),
+            html.contains("vector-main-menu"),
             "navigation portlet should appear: {html}"
         );
         assert!(
@@ -3489,6 +3557,7 @@ mod tests {
             site_title: "PointSav Documentation Wiki".to_string(),
             git_tenant: "pointsav".to_string(),
             glossary: Arc::new(crate::glossary::Glossary::default()),
+                links: crate::links::LinkGraph::for_testing(),
                 db: None,
         };
         let app = router(state);
@@ -3546,6 +3615,7 @@ mod tests {
             site_title: "PointSav Documentation Wiki".to_string(),
             git_tenant: "pointsav".to_string(),
             glossary: Arc::new(crate::glossary::Glossary::default()),
+                links: crate::links::LinkGraph::for_testing(),
                 db: None,
         };
         let app = router(state);
@@ -3605,6 +3675,7 @@ mod tests {
             site_title: "PointSav Documentation Wiki".to_string(),
             git_tenant: "pointsav".to_string(),
             glossary: Arc::new(crate::glossary::Glossary::default()),
+                links: crate::links::LinkGraph::for_testing(),
                 db: None,
         };
         let app = router(state);
@@ -3666,6 +3737,7 @@ mod tests {
             site_title: "PointSav Documentation Wiki".to_string(),
             git_tenant: "pointsav".to_string(),
             glossary: Arc::new(crate::glossary::Glossary::default()),
+                links: crate::links::LinkGraph::for_testing(),
                 db: None,
         };
         let app = router(state);
@@ -3720,6 +3792,7 @@ mod tests {
             site_title: "PointSav Documentation Wiki".to_string(),
             git_tenant: "pointsav".to_string(),
             glossary: Arc::new(crate::glossary::Glossary::default()),
+                links: crate::links::LinkGraph::for_testing(),
                 db: None,
         };
         let app = router(state);
