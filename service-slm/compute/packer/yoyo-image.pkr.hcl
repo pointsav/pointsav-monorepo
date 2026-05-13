@@ -14,7 +14,7 @@ variable "project_id" {
 
 variable "zone" {
   type    = string
-  default = "us-west1-a"
+  default = "us-west1-b"
 }
 
 # build_machine_type: CPU-only instance used only during Packer image creation.
