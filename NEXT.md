@@ -6,7 +6,23 @@
 > Read at session start when a Root Claude opens in this repo. Update
 > at session end when repo-scope open items change.
 
-Last updated: 2026-04-23.
+Last updated: 2026-05-13.
+
+---
+
+## app-mediakit-knowledge — Phase 6A shipped (2026-05-13)
+
+- [x] `inject_wiki_prefixes` trailing-quote bug fixed (`src/render.rs`)
+- [x] Slug normalisation fallback: mixed-case URL → 301 → canonical lowercase (`src/server.rs`)
+- [x] Redirect hatnote via `?redirectedfrom=` (`src/server.rs`, `static/style.css`)
+- [x] 4 new integration tests in `tests/slug_test.rs` — all pass
+
+**Stage 6 pending** (Master scope):
+- [ ] `promote.sh` on `pointsav-monorepo` (12 commits ahead of origin) [2026-05-13 task@claude-code]
+- [ ] `cargo build --release` from `app-mediakit-knowledge/` subdirectory [2026-05-13 task@claude-code]
+- [ ] `sudo systemctl restart` all 3 wiki services + smoke verify [2026-05-13 task@claude-code]
+
+**Phase 6B — DID portable identity**: gated on BP6 operator decision. Plan at `.agent/plans/PHASE-6B-DID-IDENTITY.md`.
 
 ---
 
