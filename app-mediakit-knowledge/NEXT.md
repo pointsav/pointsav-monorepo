@@ -54,8 +54,31 @@ Integration tests added 2026-05-12: `tests/auth_test.rs` (5 tests), `tests/pendi
 Phase 5.1+ not yet implemented: per-page ACLs (`read:`/`edit:` frontmatter), OIDC SSO,
 webhook subscriptions, `asyncapi.yaml` 3.1 spec — gated on BP5.
 
+## Phase 6 Part A — shipped (2026-05-13)
+
+Three items implemented and tested:
+
+1. **`inject_wiki_prefixes` trailing-quote fix** (`src/render.rs`) — `raw_slug` previously
+   included the closing `"` of the `href` attribute, causing `is_redlink` to always return
+   true and wikilink URLs to contain a trailing `"`. Fixed: `trim_end_matches('"')` + slug
+   normalisation (decode `%20`, lowercase, spaces→hyphens).
+
+2. **Slug normalisation fallback** (`src/server.rs`) — when a direct file lookup fails,
+   tries the lowercase+hyphenated form and returns HTTP 301 to the canonical URL.
+   e.g. `/wiki/Compounding-Substrate` → 301 → `/wiki/compounding-substrate`.
+
+3. **Redirect hatnote** (`src/server.rs`, `static/style.css`) — `redirect_to:` 301 now
+   includes `?redirectedfrom=<slug>`; `wiki_page` extracts it and passes to `wiki_chrome`;
+   `wiki_chrome` renders `.wiki-redirected-from` hatnote at top of article body.
+
+Tests: 4 new tests in `tests/slug_test.rs` — all pass. Full suite: 67 unit + 70+ integration,
+all passing.
+
 ## Deferred / operator-gated
 
 - Phase 5.1+ — per-page ACLs, OIDC SSO, webhooks, AsyncAPI 3.1 — gated on BP5 + Stage 6
-- Phase 6-9 implementation — each gated on the preceding phase shipping + operator clearance
+- Phase 6 Part B — portable DID identity (`did:web:` + WebFinger) — needs BP6 design decision
+- Phase 7-9 implementation — each gated on the preceding phase shipping + operator clearance
 - Note: `libssl-dev` and `libgit2-dev` confirmed present on VM (Phase 4 release build succeeded)
+- **Stage 6 + binary rebuild** — now 10 commits ahead of origin on `main`; requires Master session
+  (`~/Foundry/bin/promote.sh` + `cargo build --release` + `sudo systemctl restart` all 3 services)
