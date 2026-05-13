@@ -280,6 +280,11 @@ struct SearchQueryParams {
     q: String,
 }
 
+#[derive(Deserialize)]
+struct WikiPageQuery {
+    redirectedfrom: Option<String>,
+}
+
 /// `GET /wanted` — "Wanted articles" page.
 ///
 /// Walks every .md file in content_dir, renders each, and collects all
@@ -1355,6 +1360,7 @@ async fn index(
 async fn wiki_page(
     State(state): State<Arc<AppState>>,
     Path(slug): Path<String>,
+    Query(q): Query<WikiPageQuery>,
     CurrentUser(maybe_user): CurrentUser,
 ) -> Result<Response, WikiError> {
     // Slug safety: reject path traversal. Allow at most one `/` separator
@@ -1392,7 +1398,23 @@ async fn wiki_page(
             }
             match found {
                 Some(t) => t,
-                None => return Err(WikiError::NotFound(slug)),
+                None => {
+                    // Slug normalization fallback: if the slug has uppercase or
+                    // spaces, try the lowercase+hyphenated form and redirect.
+                    let norm = slug.to_lowercase().replace(' ', "-");
+                    if norm != slug {
+                        let norm_path = state.content_dir.join(format!("{norm}.md"));
+                        if norm_path.exists() {
+                            let location = format!("/wiki/{norm}");
+                            return Ok(Response::builder()
+                                .status(StatusCode::MOVED_PERMANENTLY)
+                                .header(header::LOCATION, location)
+                                .body(axum::body::Body::empty())
+                                .unwrap());
+                        }
+                    }
+                    return Err(WikiError::NotFound(slug));
+                }
             }
         }
         Err(e) => return Err(e.into()),
@@ -1400,8 +1422,9 @@ async fn wiki_page(
     let mut parsed = parse_page(&text)?;
 
     // A5: redirect_to frontmatter — 301 before any rendering.
+    // Pass ?redirectedfrom=<slug> so the target page can render a hatnote.
     if let Some(ref target) = parsed.frontmatter.redirect_to.clone() {
-        let location = format!("/wiki/{target}");
+        let location = format!("/wiki/{target}?redirectedfrom={slug}");
         return Ok(Response::builder()
             .status(StatusCode::MOVED_PERMANENTLY)
             .header(header::LOCATION, location)
@@ -1459,7 +1482,8 @@ async fn wiki_page(
         .unwrap_or_else(|| slug.clone());
         
     let pending_count = pending_count_for(&state, maybe_user.as_ref()).await;
-    Ok(wiki_chrome(&title, &slug, parsed.frontmatter, &body_html, headings, &state.site_title, maybe_user.as_ref(), pending_count).into_response())
+    let redirected_from = q.redirectedfrom.as_deref();
+    Ok(wiki_chrome(&title, &slug, parsed.frontmatter, &body_html, headings, &state.site_title, maybe_user.as_ref(), pending_count, redirected_from).into_response())
 }
 
 async fn static_asset(Path(path): Path<String>) -> Response {
@@ -1505,6 +1529,7 @@ fn wiki_chrome(
     site_title: &str,
     user: Option<&User>,
     pending_count: i64,
+    redirected_from: Option<&str>,
 ) -> Markup {
     let _talk_slug = format!("{slug}.talk");
 
@@ -1775,6 +1800,15 @@ fn wiki_chrome(
                                 button.density-btn #density-exceptions.density-btn-active
                                     { "Exceptions only" }
                                 button.density-btn #density-all { "All" }
+                            }
+                        }
+
+                        // Redirected-from hatnote: shown when arriving via a redirect page
+                        @if let Some(from_slug) = redirected_from {
+                            div.wiki-redirected-from {
+                                "(Redirected from "
+                                a href={ "/wiki/" (from_slug) } { (from_slug) }
+                                ")"
                             }
                         }
 
