@@ -17,9 +17,12 @@ Last updated: 2026-05-13.
 - [x] Redirect hatnote via `?redirectedfrom=` (`src/server.rs`, `static/style.css`)
 - [x] 4 new integration tests in `tests/slug_test.rs` — all pass
 
-**Stage 6 pending** (Master scope):
-- [ ] `promote.sh` on `pointsav-monorepo` (12 commits ahead of origin) [2026-05-13 task@claude-code]
+**Stage 6 — promote complete** (confirmed 2026-05-13):
+- [x] `promote.sh` on `pointsav-monorepo` — Phase 6A in `origin/main` [2026-05-13 task@claude-code]
+
+**Binary rebuild + service restart pending** (Master scope):
 - [ ] `cargo build --release` from `app-mediakit-knowledge/` subdirectory [2026-05-13 task@claude-code]
+- [ ] `sudo cp target/release/app-mediakit-knowledge /usr/local/bin/` [2026-05-13 task@claude-code]
 - [ ] `sudo systemctl restart` all 3 wiki services + smoke verify [2026-05-13 task@claude-code]
 
 **Phase 6B — DID portable identity**: gated on BP6 operator decision. Plan at `.agent/plans/PHASE-6B-DID-IDENTITY.md`.

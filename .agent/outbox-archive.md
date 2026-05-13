@@ -1,4 +1,17 @@
 ---
+archived: 2026-05-13T17:00:00Z by task@project-knowledge (session housekeeping — all Stage 6 promotes confirmed in origin/main; TOPIC pairs confirmed in content-wiki-documentation)
+note: 8 messages archived from live outbox:
+  (1) Stage 6 update Phase 6A — promotes confirmed in origin/main (2026-05-13T04:52)
+  (2) 3 bilingual TOPIC pairs signal to project-editorial — confirmed committed (apprenticeship-substrate, doorman-protocol, zero-container-inference all in content-wiki-documentation) (2026-05-13T01:15)
+  (3) Stage 6 correction — all 3 services — promotes confirmed (2026-05-13T00:00)
+  (4) Phase 5 tests + documentation fixes — confirmed in origin/main (2026-05-12T23:59)
+  (5) Phase 4 Steps 4.6+4.8 — confirmed in origin/main (2026-05-12T23:00)
+  (6) 5 DESIGN-* drafts to project-design — stale signal (2026-05-08T05:20); live binary has Sprint E components; design-system formalisation is separate track
+  (7) Stage 6 readiness verification — superseded; promotes done (2026-05-12T10:00)
+  (8) 14 PROSE-* drafts + Sprints G-K + Sprint F — confirmed committed to content-wiki-documentation (2026-05-08)
+---
+
+---
 archived: 2026-05-07T00:00Z by master@claude-code (Task #17 session sweep)
 ---
 
