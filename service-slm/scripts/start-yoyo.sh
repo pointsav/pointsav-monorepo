@@ -33,9 +33,13 @@
 set -uo pipefail
 
 PROJECT="${SLM_YOYO_GCP_PROJECT:-woodfine-node-gcp-free}"
-PRIMARY_ZONE="${SLM_YOYO_GCP_ZONE:-us-west1-b}"
+PRIMARY_ZONE="${SLM_YOYO_GCP_ZONE:-europe-west4-a}"
 INSTANCE="${SLM_YOYO_GCP_INSTANCE:-yoyo-tier-b-1}"
 DOORMAN_ENV="${DOORMAN_ENV_FILE:-/etc/local-doorman/local-doorman.env}"
+# Zone fallback disabled by default — creating 256 GB disk clones across regions
+# to probe capacity costs $2-20/scan. Enable only for explicit operator-initiated
+# zone migration: SLM_YOYO_ALLOW_ZONE_FALLBACK=true ./scripts/start-yoyo.sh
+ALLOW_ZONE_FALLBACK="${SLM_YOYO_ALLOW_ZONE_FALLBACK:-false}"
 BEARER_TOKEN="${SLM_YOYO_BEARER:-}"
 IMAGE_FAMILY="${SLM_YOYO_IMAGE_FAMILY:-slm-yoyo}"
 IMAGE_PROJECT="${SLM_YOYO_IMAGE_PROJECT:-${PROJECT}}"
@@ -365,13 +369,23 @@ attempt_start_once() {
             return 0
         fi
         if is_stockout "${err}"; then
-            log "Zone ${known_zone} has no L4 capacity. Falling through to Mode 2."
+            log "Zone ${known_zone} has no L4 capacity."
+            if [[ "${ALLOW_ZONE_FALLBACK}" != "true" ]]; then
+                log "Zone fallback disabled — skipping (set SLM_YOYO_ALLOW_ZONE_FALLBACK=true to scan other zones)."
+                return 3
+            fi
+            log "Falling through to Mode 2 (ALLOW_ZONE_FALLBACK=true)."
         else
             log "ERROR: failed to start ${INSTANCE} in ${known_zone}: ${err}"
             return 1
         fi
     else
-        log "No existing ${INSTANCE} in project ${PROJECT} — entering Mode 2 (provision)."
+        log "No existing ${INSTANCE} in project ${PROJECT}."
+        if [[ "${ALLOW_ZONE_FALLBACK}" != "true" ]]; then
+            log "Zone fallback disabled — cannot provision without an existing VM (set SLM_YOYO_ALLOW_ZONE_FALLBACK=true to enable)."
+            return 3
+        fi
+        log "Entering Mode 2 (provision) — ALLOW_ZONE_FALLBACK=true."
     fi
 
     # Mode 2: provision a new VM in a time-scored fallback zone.
