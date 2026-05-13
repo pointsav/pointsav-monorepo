@@ -12,6 +12,23 @@ Last updated: 2026-05-13.
 
 ## Currently open
 
+### app-mediakit-knowledge — Phase 4 continuation
+
+Steps 4.1–4.5 complete as of 2026-05-12. Next two steps pending Stage 6 + operator
+presence:
+
+- [ ] **Step 4.6 — MCP server via rmcp** [2026-05-12 task@claude-code]
+  Expose wiki engine as an MCP tool server. Transport decision (stdio vs SSE) was
+  a BP1 open question — check `docs/BP1-DECISION-PACKET.md` Q3 for operator answer
+  before implementing. CLI flag `--enable-mcp`.
+- [ ] **Step 4.7 — Read-only git remote via smart-HTTP** [2026-05-12 task@claude-code]
+  `GET /info/refs?service=git-upload-pack` + `POST /git-upload-pack`. Allows
+  `git clone` of the content directory. CLI flag `--enable-git-remote`.
+- [ ] **Deploy after Stage 6** — rebuild release binary, install, restart
+  `local-knowledge-documentation.service` and `local-knowledge-projects.service`.
+- [ ] **project-root CLAUDE.md + NEXT.md** — activation defect still open; required
+  per framework §8 before moving to next phase milestone.
+
 ### Leapfrog 2030 Architecture & Multi-Yo-Yo Roadmap
 - **Software layer complete** (177/177 tests, canonical `ecfc691`). See `service-slm/NEXT.md`.
 - **Yo-Yo #1 VM live** — `yoyo-tier-b-1` provisioned 2026-05-07 in `us-central1-a`
