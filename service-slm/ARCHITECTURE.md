@@ -490,10 +490,10 @@ by key. No label → first entry in map insertion order (deterministic at curren
 scale; callers should always set a label in production). Unrecognised label →
 `DoormanError::TierUnavailable`.
 
-- Grammar handling (all three variants accepted):
+- Grammar handling (all three variants accepted; vLLM 0.12+ API — `guided_*` fields removed in 0.12):
   - `Lark(s)` → **pre-validated** via `LarkValidator` (llguidance); `MalformedLarkGrammar` (HTTP 400) if compilation fails with parse-error location in the response body. On valid parse → `extra_body.structured_outputs.grammar = s`
   - `Gbnf(s)` → `extra_body.structured_outputs.grammar = s`
-  - `JsonSchema(v)` → `extra_body.structured_outputs.json_schema = v`
+  - `JsonSchema(v)` → `extra_body.structured_outputs.json = v`
 - Additional `X-Foundry-*` headers forwarded per CONTRACT.md: `Request-ID`, `Module-ID`, `Contract-Version`, `Complexity`
 - Retry policy: 503 + `Retry-After` → retry once; 401/403 → refresh bearer token, retry once; 410 → `DoormanError::ContractMajorMismatch` (loud fail, no retry)
 - Deployment gated on D4 image-build pipeline (Master-tier action)
