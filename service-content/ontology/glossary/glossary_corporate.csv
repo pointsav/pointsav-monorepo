@@ -197,7 +197,7 @@ legacy joint venture,empresa conjunta preexistente,A traditional partnership str
 Legacy Cash Flow,Flujo de Caja Legado,The primary yield generated from stabilized assets and organic deleveraging,corporate
 leverage cycle,ciclo de apalancamiento,The period during which the debt-to-asset value is increased to fund development,corporate
 limited partnership,sociedad en comandita,A legal business structure used as an investment vehicle where partners have limited liability.,corporate
-Limited Partnership Agreement,Acuerdo de Sociedad en Comandita,A core legal document outlining the rights and obligations of general and limited partners,corporate
+Universal Governing Bylaws,Estatutos de Gobierno Universales,A core legal document outlining the rights and obligations of general and limited partners,corporate
 Listed,Cotizada,Admission to trading on a public stock exchange.,corporate
 Listed Equity,Capital Cotizado,Shares of companies traded on a public stock exchange.,corporate
 Loans and Mortgages,Préstamos e Hipotecas,Borrowed capital secured by assets,corporate
@@ -277,6 +277,7 @@ private credit,crédito privado,Non-bank lending to companies or projects,corpor
 private equity,capital privado,Capital invested directly into private companies or real estate,corporate
 Private Market,Mercado Privado,A market where securities are not traded on public exchanges,corporate
 Private Placement Exemptions,Exenciones de Colocación Privada,Legal provisions that allow the sale of investment units without formal registration with regulatory authorities,corporate
+Private Placement Memorandum,Memorándum de Colocación Privada,A legal document used in private securities offerings,corporate
 Private SPV Templates,Plantillas de SPV Privados,Standardized structures for external special purpose vehicles used by non-resident asset managers and investors for direct cross-border investing.,corporate
 private SPV,SPV Privado,A special purpose vehicle established by non-resident asset managers for direct cross-border investing and tax optimization.,corporate
 Production Curve,Curva de Producción,A graph illustrating the maximum output that can be produced with given inputs.,corporate
@@ -309,6 +310,7 @@ Real Estate Agents,Agentes Inmobiliarios,Professionals who facilitate the buying
 Real Estate Community,Comunidad Inmobiliaria,The collective of individuals and organizations involved in the real estate sector.,corporate
 Real Estate Investment Trust (REIT),Fideicomiso de Inversión en Bienes Raíces (REIT),A legal structure that allows for real estate development while maintaining tax transparency,corporate
 Real Property,Propiedad Inmobiliaria,Land and anything permanently attached to it,corporate
+real property developer,desarrollador de propiedad inmobiliaria,A person or company that develops real property assets,corporate
 Record Keeping,Mantenimiento de Registros,The systematic organization and storage of information,corporate
 redemption queues,colas de rescate,The waiting periods faced by investors seeking to liquidate holdings in illiquid investment funds,corporate
 Referral Fees,Comisiones por Referencia,Payments made for directing clients or business opportunities.,corporate
@@ -407,9 +409,9 @@ Woodfine Buildings,Edificios Woodfine,Institutional-grade buildings developed by
 Woodfine Capital Projects Inc.,Woodfine Capital Projects Inc.,The Promoter and parent company that strategically develops and launches direct-hold solutions and PointSav Digital Systems.,corporate
 WOODFINE CAPITAL PROJECTS,WOODFINE CAPITAL PROJECTS INC.,A header reference for sections on the Promoter and parent company.,corporate
 Woodfine Group,El Grupo Woodfine,The collective entities associated with Woodfine Capital Projects Inc.,corporate
-Woodfine Limited Partnerships,Sociedades en Comandita Woodfine,Legal structures used as direct-hold solutions to own and operate physical real estate assets.,corporate
-Woodfine LP Investor Presentation,Presentación a Inversores de Woodfine LP,A formal document presenting investment opportunities in Woodfine Limited Partnerships.,corporate
-Woodfine LPs,LPs de Woodfine,Abbreviation for Woodfine Limited Partnerships.,corporate
+Woodfine direct-hold solutions,Soluciones de Tenencia Directa Woodfine,Legal structures used as direct-hold solutions to own and operate physical real estate assets.,corporate
+Woodfine LP Investor Presentation,Presentación a Inversores de Woodfine LP,A formal document presenting investment opportunities in Woodfine direct-hold solutions.,corporate
+Woodfine LPs,LPs de Woodfine,Abbreviation for Woodfine direct-hold solutions.,corporate
 Woodfine Management Corp. (Administrator),Woodfine Management Corp. (Administrador),The entity that administers the direct-hold solutions through dedicated subsidiaries,corporate
 Woodfine Management Corp.,Woodfine Management Corp.,The Principal Manager,corporate
 Woodfine or the Firm,Woodfine o la Firma,Refers to Woodfine Management Corp. as the principal manager and operating company.,corporate

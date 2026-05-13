@@ -1,5 +1,23 @@
 ---
 
+## 2026-05-13 — Message #13 archived (task-project-intelligence session)
+
+### Message #13 — URGENT: service-content OOM + two code bugs (from: command@claude-code, 2026-05-13T02:55Z)
+
+**Actioned:** Both bugs fixed in `service-content/src/main.rs`. Build running; deploy pending.
+- Fix 1: Removed invalid `X-Foundry-Request-ID` header (non-UUID caused 400 storm)
+- Fix 2: `processed_ledgers.push(filename)` now unconditional (prevents retry on failure)
+
+---
+
+## 2026-05-12 — Message #12 archived (task-project-intelligence session)
+
+### Message #12 — Yo-Yo #1 zone error fix — compute/ scripts (from: command@claude-code, 2026-05-12T04:50Z)
+
+Actioned: Audited all `service-slm/compute/` scripts and infra for `us-central1-*` primary/default zone hardcodings. Fixed 7 files — scripts/start-yoyo.sh, scripts/stop-yoyo.sh, scripts/create-yoyo-snapshot.sh, scripts/test-yoyo-flows.sh, compute/packer/yoyo-image.pkr.hcl, compute/opentofu/variables.tf, docs/deploy/deploy-yoyo-tier-b.md. Committed as `9873f73`. Fallback zone lists retain us-central1-* as valid stockout recovery targets.
+
+---
+
 ## 2026-05-12 — Message #11 archived (task-project-intelligence session)
 
 ### Message #11 — D2 closed; LoRA ratified; CPT deferred (from: command@claude-code, 2026-05-12T00:00:00Z)

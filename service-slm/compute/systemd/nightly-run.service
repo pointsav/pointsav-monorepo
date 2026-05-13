@@ -1,0 +1,14 @@
+[Unit]
+Description=Yo-Yo #1 nightly automation (DataGraph rebuild + LoRA training)
+Documentation=file:///srv/foundry/clones/project-intelligence/service-slm/scripts/nightly-run.sh
+After=local-doorman.service network-online.target
+
+[Service]
+Type=oneshot
+User=mathew
+EnvironmentFile=/etc/local-doorman/local-doorman.env
+ExecStart=/srv/foundry/clones/project-intelligence/service-slm/scripts/nightly-run.sh
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=nightly-run
+TimeoutStartSec=14400
