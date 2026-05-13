@@ -7,19 +7,19 @@ variable "project_id" {
 variable "region" {
   description = "GCP region."
   type        = string
-  default     = "southamerica-east1"
+  default     = "us-west1"
 }
 
 variable "zone" {
   description = "GCP zone within the region."
   type        = string
-  default     = "southamerica-east1-b"
+  default     = "us-west1-b"
 }
 
 variable "fallback_zones" {
   description = "Ordered fallback zone list for Spot preemption cycling. start-yoyo.sh tries these in order if the primary zone is unavailable."
   type        = list(string)
-  default     = ["southamerica-east1-b", "southamerica-east1-c", "southamerica-east1-a", "northamerica-northeast1-a", "us-central1-a"]
+  default     = ["us-west1-a", "us-central1-a", "us-central1-b", "us-central1-c"]
 }
 
 variable "instance_name" {
