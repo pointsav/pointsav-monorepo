@@ -32,7 +32,7 @@ use std::sync::{Arc, Mutex};
 use axum::body::Bytes;
 use axum::extract::State;
 use axum::http::{HeaderMap, StatusCode};
-use axum::response::{IntoResponse, Json};
+use axum::response::{IntoResponse, Json, Response};
 use axum::routing::{get, post};
 use axum::Router;
 use reqwest::Client as ReqwestClient;
@@ -111,6 +111,7 @@ pub fn router(state: Arc<AppState>) -> Router {
         .route("/healthz", get(healthz))
         .route("/readyz", get(readyz))
         .route("/v1/contract", get(contract))
+        .route("/v1/messages", post(anthropic_messages))
         .route("/v1/chat/completions", post(chat_completions))
         .route("/v1/brief", post(brief))
         .route("/v1/verdict", post(verdict))
@@ -229,6 +230,7 @@ async fn chat_completions(
         yoyo_label,
         grammar: body.grammar,
         speculation: None,
+        graph_context_enabled: None,
     };
 
     let resp = state.doorman.route(&req).await.map_err(ApiError::from)?;
@@ -511,6 +513,7 @@ async fn extract(State(state): State<Arc<AppState>>, raw: Bytes) -> impl IntoRes
         yoyo_label: Some("trainer".to_string()),
         grammar: Some(GrammarConstraint::JsonSchema(req.schema)),
         speculation: None,
+        graph_context_enabled: None,
     };
 
     // 5. Route — no Tier A fallback.
@@ -1163,6 +1166,233 @@ fn urlencoding_encode(s: &str) -> String {
         }
     }
     out
+}
+
+// =============================================================================
+// POST /v1/messages — Anthropic Messages API shim (Sprint 0a)
+//
+// Enables Claude Code (and any Anthropic SDK client) to route through Doorman
+// by pointing ANTHROPIC_BASE_URL=http://127.0.0.1:9080. Sprint 0 uses fake SSE
+// streaming (buffer full response, emit all events at once) — real token
+// streaming lands in Sprint 0b.
+//
+// Model → tier routing:
+//   claude-haiku-*  → Complexity::Low   → Tier A (local, always-on)
+//   claude-sonnet-* → Complexity::High  → Tier B "trainer" (Yo-Yo #1)
+//   claude-opus-*   → Complexity::High  → Tier C passthrough
+//   anything else   → Complexity::Medium → Tier B "trainer" fallback
+//
+// graph_context_enabled: Some(false) on all requests — DataGraph entity rows
+// must not bloat Claude Code prompts (the shim is the routing boundary).
+// =============================================================================
+
+/// Inbound: Anthropic Messages API request body.
+#[derive(Deserialize)]
+struct AnthropicMessagesBody {
+    model: String,
+    #[serde(default)]
+    system: Option<String>,
+    messages: Vec<AnthropicMessage>,
+    max_tokens: u32,
+    #[serde(default)]
+    stream: bool,
+    #[serde(default)]
+    temperature: Option<f32>,
+    #[serde(default)]
+    metadata: Option<serde_json::Value>,
+    #[serde(default)]
+    stop_sequences: Option<Vec<String>>,
+}
+
+#[derive(Deserialize)]
+struct AnthropicMessage {
+    role: String,
+    content: AnthropicContent,
+}
+
+/// Anthropic content may be a plain string or an array of typed blocks.
+#[derive(Deserialize)]
+#[serde(untagged)]
+enum AnthropicContent {
+    Text(String),
+    Blocks(Vec<AnthropicContentBlock>),
+}
+
+#[derive(Deserialize)]
+struct AnthropicContentBlock {
+    #[serde(rename = "type")]
+    block_type: String,
+    #[serde(default)]
+    text: Option<String>,
+    #[serde(default)]
+    thinking: Option<String>,
+    // id / name / input / tool_use_id present in tool_use / tool_result blocks;
+    // ignored in Sprint 0 (content is flattened to text).
+    #[serde(default)]
+    id: Option<serde_json::Value>,
+    #[serde(default)]
+    name: Option<serde_json::Value>,
+    #[serde(default)]
+    input: Option<serde_json::Value>,
+    #[serde(default)]
+    tool_use_id: Option<serde_json::Value>,
+    #[serde(default)]
+    content: Option<serde_json::Value>,
+}
+
+/// Flatten Anthropic content (text or blocks) to a plain string.
+/// Tool-use and tool-result blocks are omitted; thinking blocks are wrapped
+/// in `<thinking>` tags. This is the Sprint 0 simplification — Sprint 1
+/// replaces ChatMessage with CanonicalMessage and preserves all block types.
+fn flatten_anthropic_content(content: AnthropicContent) -> String {
+    match content {
+        AnthropicContent::Text(s) => s,
+        AnthropicContent::Blocks(blocks) => blocks
+            .into_iter()
+            .filter_map(|b| match b.block_type.as_str() {
+                "text" => b.text,
+                "thinking" => b.thinking.map(|t| format!("<thinking>{}</thinking>", t)),
+                _ => None,
+            })
+            .collect::<Vec<_>>()
+            .join("\n"),
+    }
+}
+
+/// Translate an Anthropic Messages request into a canonical `ComputeRequest`.
+fn anthropic_to_compute_request(
+    body: AnthropicMessagesBody,
+    module_id: ModuleId,
+    request_id: RequestId,
+) -> ComputeRequest {
+    let mut messages: Vec<ChatMessage> = Vec::new();
+
+    if let Some(system) = body.system {
+        if !system.is_empty() {
+            messages.push(ChatMessage { role: "system".to_string(), content: system });
+        }
+    }
+
+    for msg in body.messages {
+        messages.push(ChatMessage {
+            role: msg.role,
+            content: flatten_anthropic_content(msg.content),
+        });
+    }
+
+    let (complexity, yoyo_label) = if body.model.starts_with("claude-haiku") {
+        (Complexity::Low, None)
+    } else if body.model.starts_with("claude-sonnet") {
+        (Complexity::High, Some("trainer".to_string()))
+    } else if body.model.starts_with("claude-opus") {
+        (Complexity::High, None)
+    } else {
+        (Complexity::Medium, Some("trainer".to_string()))
+    };
+
+    ComputeRequest {
+        request_id,
+        module_id,
+        model: Some(body.model),
+        messages,
+        complexity,
+        tier_hint: None,
+        stream: false, // Doorman always returns buffered; SSE is assembled by the handler
+        max_tokens: Some(body.max_tokens),
+        temperature: body.temperature,
+        sanitised_outbound: false,
+        tier_c_label: None,
+        yoyo_label,
+        grammar: None,
+        speculation: None,
+        graph_context_enabled: Some(false),
+    }
+}
+
+/// Build a non-streaming Anthropic Messages API response body.
+fn compute_to_anthropic_response(resp: &slm_core::ComputeResponse, model: &str) -> serde_json::Value {
+    let output_tokens = resp.content.split_whitespace().count() as u32;
+    serde_json::json!({
+        "id": format!("msg_{}", resp.request_id),
+        "type": "message",
+        "role": "assistant",
+        "content": [{"type": "text", "text": resp.content}],
+        "model": model,
+        "stop_reason": "end_turn",
+        "stop_sequence": null,
+        "usage": {
+            "input_tokens": 0,
+            "output_tokens": output_tokens
+        }
+    })
+}
+
+/// Build a fake-SSE response: buffer the full content, emit all 6 events at once.
+/// Claude Code's streaming UX receives the full response in a single burst rather
+/// than token-by-token. Real per-token streaming lands in Sprint 0b.
+fn anthropic_sse_body(resp: &slm_core::ComputeResponse, model: &str) -> String {
+    let msg_id = format!("msg_{}", resp.request_id);
+    let output_tokens = resp.content.split_whitespace().count() as u32;
+
+    let e_start = serde_json::json!({
+        "type": "message_start",
+        "message": {
+            "id": &msg_id, "type": "message", "role": "assistant",
+            "content": [], "model": model,
+            "stop_reason": null, "stop_sequence": null,
+            "usage": {"input_tokens": 0, "output_tokens": 0}
+        }
+    });
+    let e_cb_start = serde_json::json!({"type": "content_block_start", "index": 0, "content_block": {"type": "text", "text": ""}});
+    let e_cb_delta = serde_json::json!({"type": "content_block_delta", "index": 0, "delta": {"type": "text_delta", "text": resp.content}});
+    let e_cb_stop  = serde_json::json!({"type": "content_block_stop",  "index": 0});
+    let e_msg_delta = serde_json::json!({"type": "message_delta", "delta": {"stop_reason": "end_turn", "stop_sequence": null}, "usage": {"output_tokens": output_tokens}});
+    let e_msg_stop  = serde_json::json!({"type": "message_stop"});
+
+    format!(
+        "event: message_start\ndata: {}\n\n\
+         event: content_block_start\ndata: {}\n\n\
+         event: content_block_delta\ndata: {}\n\n\
+         event: content_block_stop\ndata: {}\n\n\
+         event: message_delta\ndata: {}\n\n\
+         event: message_stop\ndata: {}\n\n",
+        e_start, e_cb_start, e_cb_delta, e_cb_stop, e_msg_delta, e_msg_stop
+    )
+}
+
+async fn anthropic_messages(
+    State(state): State<Arc<AppState>>,
+    headers: HeaderMap,
+    Json(body): Json<AnthropicMessagesBody>,
+) -> Result<Response, ApiError> {
+    let module_id = match headers
+        .get("x-foundry-module-id")
+        .and_then(|v| v.to_str().ok())
+    {
+        Some(s) => ModuleId::from_str(s)
+            .map_err(|e| ApiError::bad_request(format!("invalid X-Foundry-Module-ID: {e}")))?,
+        None => ModuleId::from_str("foundry").expect("compile-time-valid default moduleId"),
+    };
+    let request_id = RequestId::new();
+    let model = body.model.clone();
+    let stream = body.stream;
+
+    let req = anthropic_to_compute_request(body, module_id, request_id);
+    let resp = state.doorman.route(&req).await.map_err(ApiError::from)?;
+
+    if stream {
+        let sse_body = anthropic_sse_body(&resp, &model);
+        Ok(Response::builder()
+            .status(StatusCode::OK)
+            .header("content-type", "text/event-stream; charset=utf-8")
+            .header("cache-control", "no-cache")
+            .header("x-accel-buffering", "no")
+            .body(axum::body::Body::from(sse_body))
+            .expect("build SSE response"))
+    } else {
+        let body = compute_to_anthropic_response(&resp, &model);
+        Ok((StatusCode::OK, Json(body)).into_response())
+    }
 }
 
 struct ApiError {
