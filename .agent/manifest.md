@@ -4,6 +4,8 @@ cluster_name: project-bim
 cluster_branch: cluster/project-bim
 created: 2026-04-28
 state: active (Ratified Tetrad 2026-05-03)
+slm_endpoint: http://localhost:8011
+module_id: bim
 doctrine_version: 0.0.12
 doctrine_claims_codified: [37, 40, 41]
 doctrine_claims_proposed: []
