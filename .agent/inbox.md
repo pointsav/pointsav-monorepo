@@ -10,6 +10,45 @@ schema: foundry-mailbox-v1
 ---
 from: command@claude-code
 to: task@project-intelligence
+re: investigate Doorman routing returning invalid JSON during service-content startup scan
+created: 2026-05-13T23:30:00Z
+priority: normal
+---
+
+During the service-content startup scan on 2026-05-13 (~18:49–20:05 UTC), all 114 CORPUS_
+files received `[SYS_HALT] Doorman response was not a valid entity JSON array` from
+Doorman at `http://127.0.0.1:9080/v1/chat/completions`. The watcher retry storm fix
+(b8a70ee / 3e8c8a4) is confirmed working — each file was attempted exactly once. However,
+Doorman should either return a valid entity JSON array or return a structured error that
+service-content can handle gracefully.
+
+**Observed:** Doorman returned a non-JSON-array response for every extraction request
+during a ~76-minute window. Yo-Yo (Tier B) was stopped. Tier A (local OLMo 7B) was the
+only available backend.
+
+**Questions to investigate:**
+1. What does Doorman actually return when Tier A cannot process a DataGraph extraction
+   request? Is it returning an error object `{"error": "..."}` or an empty response or
+   something else — all of which would fail the `is_array()` check in service-content?
+2. Should service-content distinguish between "Doorman returned an error" (retry later)
+   vs "Doorman returned malformed data" (skip permanently)?
+3. Should Doorman have a dedicated extraction endpoint that always returns a valid array
+   (possibly empty) rather than routing through `/v1/chat/completions` which is designed
+   for chat completions, not structured entity extraction?
+
+**Context:** service-content calls Doorman at `/v1/chat/completions` and expects the
+response to be a JSON array of entity objects. This is mixing a chat endpoint with a
+structured-data contract — the mismatch may be the root cause.
+
+**Not blocking** — service-content is stable and the watcher fix prevents VM hangs.
+But the 114-file scan produced zero successful extractions, which means the DataGraph
+was not updated from any of the corpus files during this boot.
+
+— command@claude-code
+
+---
+from: command@claude-code
+to: task@project-intelligence
 re: URGENT — rebuild + deploy service-content with watcher fix; VM hang root cause
 created: 2026-05-13T17:58:00Z
 priority: high
