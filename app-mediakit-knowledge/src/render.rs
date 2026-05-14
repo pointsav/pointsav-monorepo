@@ -284,25 +284,33 @@ fn inject_wiki_prefixes(html: &str, content_dir: &std::path::Path) -> String {
         // Look backwards for the href="
         let before_marker = &rest[..pos];
         if let Some(href_pos) = before_marker.rfind("href=\"") {
-            let prefix = &before_marker[..href_pos + 6]; // up to href="
-            let mut slug = &before_marker[href_pos + 6..];
-            
-            // Check if it's already got the wiki prefix from previous scripts
-            if slug.starts_with("/wiki/") {
-                slug = &slug[6..];
-            } else if slug.starts_with("/category/") {
-                // If it's a category link, just leave it as is, but it shouldn't have data-wikilink true
+            let prefix = &before_marker[..href_pos + 6]; // up to and including href="
+            let raw = &before_marker[href_pos + 6..];
+            // Comrak puts the closing " of the href attribute in before_marker;
+            // strip it so we get only the slug value.
+            let raw_slug = raw.trim_end_matches('"');
+
+            if raw_slug.starts_with("/category/") {
+                // Category links pass through with their original href intact
+                out.push_str(prefix);
+                out.push_str(raw_slug);
+                out.push_str("\" data-wikilink=\"true\">");
+            } else {
+                let base = raw_slug.strip_prefix("/wiki/").unwrap_or(raw_slug);
+                // Decode %20, then normalise: lowercase + spaces→hyphens
+                let decoded = base.replace("%20", " ");
+                let norm_slug = decoded.trim().to_lowercase().replace(' ', "-");
+
+                let is_redlink = !content_dir.join(format!("{}.md", norm_slug)).exists();
+                let redlink_class = if is_redlink { " class=\"wiki-redlink\"" } else { "" };
+
+                out.push_str(prefix);
+                out.push_str("/wiki/");
+                out.push_str(&norm_slug);
+                out.push_str("\" data-wikilink=\"true\"");
+                out.push_str(redlink_class);
+                out.push_str(">");
             }
-            
-            let is_redlink = !content_dir.join(format!("{}.md", slug)).exists();
-            let redlink_class = if is_redlink { " class=\"wiki-redlink\"" } else { "" };
-            
-            out.push_str(prefix);
-            out.push_str("/wiki/");
-            out.push_str(slug);
-            out.push_str("\" data-wikilink=\"true\"");
-            out.push_str(redlink_class);
-            out.push_str(">");
         } else {
             // Malformed, just copy
             out.push_str(before_marker);

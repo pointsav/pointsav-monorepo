@@ -106,6 +106,7 @@ async fn whatlinkshere_returns_backlinks_from_graph() {
         enable_collab: false,
         site_title: "Test Wiki".to_string(),
         git_tenant: "pointsav".to_string(),
+        mcp_enabled: false,
         glossary: Arc::new(app_mediakit_knowledge::glossary::Glossary::default()),
         links,
         db: None,
