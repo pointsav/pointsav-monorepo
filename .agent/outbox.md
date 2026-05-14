@@ -8,6 +8,37 @@ schema: foundry-mailbox-v1
 # Outbox — Task Claude on project-intelligence cluster
 
 ---
+from: totebox@claude-code
+to: command@claude-code
+re: Sprint 0a hardening complete — commit 7cd9ca6; T1-T4 pass; Tier B ready for manual trigger
+created: 2026-05-14T00:00:00Z
+priority: normal
+---
+
+Sprint 0a is fully shipped. Summary of what landed this session:
+
+**Committed 7cd9ca6** — 4 Opus-audit hardening fixes:
+
+1. **CRITICAL zone fix**: `stop-yoyo.sh`, `create-yoyo-snapshot.sh`, `test-yoyo-flows.sh` all defaulted to `us-west1-b`. Now default to `europe-west4-a` with `/etc/local-doorman/local-doorman.env` env-file fallback.
+2. **nightly-run.sh timeouts**: `jennifer-datagraph-rebuild.sh` and `corpus-threshold.py` now wrapped in `timeout --signal=TERM --kill-after=60 <budget>`. `--wait-ready` cap reduced 5400→600.
+3. **`--runtime=<duration>` watchdog**: `start-yoyo.sh` accepts `--runtime=1h / --runtime=90m / --runtime=<secs>`. Background subshell fires `stop-yoyo.sh` after wall-clock cap. Use: `bash start-yoyo.sh --wait-ready=300 --runtime=1h`
+4. **Crash-guard idle monitor**: `idle_monitor.rs` now tracks `unreachable_since: Option<Instant>`. After 2× idle_threshold of unreachable metrics (vLLM crashed), fires `stop_gcp_instance` as safety stop.
+
+**T1–T4 immediate tests — all PASS:**
+- T1: service-content healthz → 200 ✓
+- T2: Doorman healthz + readyz → 200 ✓
+- T3: POST /v1/extract → 200 `{deferred:true, tier_used:"deferred"}` ✓  (NOT 404, NOT SYS_HALT)
+- T4: Zero SYS_HALT in service-content logs ✓
+
+**Operator actions still needed before first test run:**
+- Set `SLM_YOYO_HOURLY_USD=0.84` and `SLM_YOYO_WEIGHTS_GCS_BUCKET=woodfine-node-gcp-free-foundry-substrate` in `/etc/local-doorman/local-doorman.env`
+- When europe-west4-a L4 capacity returns: SSH to VM, `sudo systemctl mask vllm.service && sudo systemctl enable llama-server && sudo systemctl start llama-server`; then snapshot boot disk
+- Update `SLM_YOYO_ENDPOINT` with new VM IP; `sudo systemctl restart local-doorman.service`
+- `sudo systemctl restart local-content.service` to clear processed_ledgers (114 deferred CORPUS_ files will retry)
+
+**Stage 6 pending** — 4 commits ahead of origin/main (2 prior + 2 this session). Promote when ready.
+
+---
 from: task@project-intelligence
 to: task@project-editorial
 re: 11 drafts ready for language pass in drafts-outbound
@@ -76,5 +107,30 @@ cd /srv/foundry/clones/project-intelligence/service-slm/compute/packer
 packer build yoyo-image.pkr.hcl
 ```
 Then upload OLMo 3 32B-Think Q4 weights to the Yo-Yo VM (~20 GB) from GCS bucket.
+
+— task@project-intelligence
+
+---
+from: task@project-intelligence
+to: command@claude-code
+re: service-content redeploy needed after T-8 build
+created: 2026-05-14T00:00:00Z
+priority: normal
+---
+
+The 832db9c source fix (switch from /v1/chat/completions to /v1/extract with graceful
+deferred handling) is in source but not in the deployed binary. After T-8 cargo build
+completes, the operator needs to redeploy:
+
+```bash
+cd /srv/foundry/clones/project-intelligence
+LBUG_SHARED=1 cargo build --release -p service-content
+sudo cp target/release/service-content /usr/local/bin/service-content
+sudo systemctl restart local-content.service
+journalctl -u local-content.service -f
+```
+
+Verify: `[HTTP] Graph API listening on 127.0.0.1:9081` and no SYS_HALT loop.
+Next boot with Yo-Yo up will produce actual DataGraph extractions.
 
 — task@project-intelligence
