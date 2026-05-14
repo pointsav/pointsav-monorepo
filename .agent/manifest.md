@@ -5,6 +5,8 @@ cluster_branch: cluster/project-knowledge
 created: 2026-04-26
 backfilled_triad: 2026-04-26 (per Doctrine v0.0.4)
 state: active
+slm_endpoint: http://localhost:8011
+module_id: knowledge
 
 tetrad:                          # upgraded from triad: 2026-04-28 per claim #37 / doctrine v0.0.10
   vendor:
