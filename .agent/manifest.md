@@ -4,6 +4,8 @@ cluster_name: project-marketing
 cluster_branch: cluster/project-marketing
 created: 2026-05-06
 state: active (v0.0.1 MVP shipped 2026-05-06; cargo check clean; bootstrap + deploy pending Master)
+slm_endpoint: http://localhost:8011
+module_id: marketing
 doctrine_version: 0.0.14
 doctrine_claims_codified: [37, 43, 44]
 doctrine_claims_proposed: []
