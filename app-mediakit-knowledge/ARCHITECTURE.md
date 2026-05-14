@@ -2,9 +2,9 @@
 schema: foundry-doc-v1
 document_version: 0.3.0
 component: app-mediakit-knowledge
-status: design — Phase 1 shipped 2026-04-26 (commit 722ae18); Phase 2 + catalog work green-lit per Master v0.1.14 ratification
-last_updated: 2026-04-26
-session: 2
+status: active — Phases 1 through 4 shipped; Phase 5 (auth + webhooks) is next milestone, gated on Stage 6 promotion + BP5 clearance
+last_updated: 2026-05-12
+session: 4
 companion_docs:
   - docs/INVENTIONS.md
   - docs/UX-DESIGN.md
@@ -40,15 +40,20 @@ are documented separately in [`docs/INVENTIONS.md`](docs/INVENTIONS.md).
 
 | Phase | State | Cluster |
 |---|---|---|
-| 1 — render | shipped (722ae18) | project-knowledge |
-| 2 — edit | designed; paused pending Master review of session-2 outbox | project-knowledge |
-| 3 — search + syndication feeds | designed | project-knowledge |
-| 4 — Git sync + MCP server | designed | project-knowledge |
-| 5 — auth + webhooks | designed | project-knowledge |
+| 1 — render | **shipped** (722ae18, 2026-04-26) | project-knowledge |
+| 1.1 — Wikipedia chrome | **shipped** (additive; TOC, hatnote, tabs, density toggle, language switcher) | project-knowledge |
+| 2 — edit + collab | **shipped** (Steps 1-7; JSON-LD, atomic edit, CodeMirror 6, SAA squiggles, citation autocomplete, yjs collab relay) | project-knowledge |
+| 3 — search + feeds | **shipped** (Steps 3.1-3.4; Tantivy BM25, Atom, JSON Feed, sitemap, robots.txt, llms.txt, raw Markdown) | project-knowledge |
+| 4 — Git sync + MCP | **shipped** (Steps 4.1-4.8; git2 commit-on-edit, history/blame/diff, redb link-graph, blake3 hashes, MCP native JSON-RPC 2.0, git smart-HTTP, OpenAPI 3.1) | project-knowledge |
+| 5 — auth + webhooks | designed — **next milestone**; gated on Stage 6 promotion + BP5 operator clearance | project-knowledge |
 | 6 — wikilink resolution + portable identity | designed | project-knowledge |
 | 7 — federation seam (blake3 + ActivityPub) | designed | project-knowledge |
 | 8 — disclosure mode | per Master v0.1.10 ratification, **migrates to a future `project-disclosure` cluster**; convention extended in v0.1.14 with §6 cadence sub-bullets for two-clock + Disclosure-Diff + Subscriber Proof-of-Receipt | project-disclosure (TBD) |
 | 9 — Constrained-Constitutional Authoring (CCA) | **ratified as DOCTRINE claim #31 in v0.0.6**; `disclosure-substrate.md` §6 cadence Phase 9 declared; depends on constitutional-layer adapter from project-slm cluster (coordination dispatched per Master v0.1.14) | project-disclosure (TBD) |
+
+**Phase 4 MCP note:** `rmcp` vendor SDK was rejected per Doctrine claim #54 ("We Own It"). MCP is
+implemented natively in `src/mcp.rs` (~330 lines) using `axum` + `serde_json` over HTTP JSON-RPC 2.0.
+No vendor SDK dependency.
 
 The session-2 conflict on the `mediawiki-action-api-shim` was
 **resolved in Master's v0.1.14 commit**: the convention's §5
@@ -113,7 +118,7 @@ time and document chosen version in `Cargo.toml` comments.
 | Search | `tantivy` 0.24+ | 3 |
 | Feed generation | `atom_syndication` + `serde_json` | 3 |
 | JSON-LD serialisation | `serde_json` (typed schema.org structs) | 3 (baseline from 1) |
-| MCP server | `rmcp` (official Anthropic Rust SDK) | 4 |
+| MCP server | native `axum` + `serde_json` (HTTP JSON-RPC 2.0; `rmcp` rejected per Doctrine claim #54) | 4 |
 | Git write | `git2` (libgit2-sys) | 4 |
 | Git read | `gix` | 4 |
 | Embedded KV | `redb` 4.1+ | 4 |
