@@ -1,6 +1,6 @@
 # NEXT.md — service-slm
 
-> Last updated: 2026-05-12T18:30Z (nightly test run complete; vllm.service crash-loop diagnosed)
+> Last updated: 2026-05-14T18:00Z (Sprint 0a shim + graph_context_enabled committed; zone corrected to europe-west4-a)
 > Read at session start. Update before session end so the next
 > session knows where to pick up.
 
@@ -11,15 +11,16 @@
 `vllm.service` is still **enabled** in the boot image and crashes on every start (CUDA OOM — 32B BF16 doesn't fit in 22 GiB L4). `llama-server.service` was running ad-hoc (not `systemctl enable`), so it does not survive a restart. **On the next VM start, immediately SSH in and run:**
 
 ```bash
-gcloud compute ssh yoyo-tier-b-1 --zone=us-west1-b --project=woodfine-node-gcp-free
+gcloud compute ssh yoyo-tier-b-1 --zone=europe-west4-a --project=woodfine-node-gcp-free
 # On VM:
 sudo systemctl mask vllm.service
 sudo systemctl enable llama-server.service
 sudo systemctl start llama-server.service
 sudo systemctl status llama-server.service
-# Verify /readyz returns 200, then snapshot boot disk:
-gcloud compute disks snapshot yoyo-tier-b-1 --zone=us-west1-b \
-  --project=woodfine-node-gcp-free --snapshot-names=yoyo-tier-b-1-boot-llama-fix
+# Verify llama-server health, then snapshot boot disk (one-time fix):
+gcloud compute disks snapshot yoyo-tier-b-1 --zone=europe-west4-a \
+  --project=woodfine-node-gcp-free \
+  --snapshot-names=yoyo-tier-b-1-boot-llama-fix-$(date +%Y%m%d)
 ```
 
 **Root cause details (2026-05-12T18:30Z investigation):**
@@ -30,17 +31,17 @@ gcloud compute disks snapshot yoyo-tier-b-1 --zone=us-west1-b \
 
 **Long-term fix:** Rebuild Packer image with `vllm.service` masked and `llama-server.service` enabled. This is the next Packer build task (already in Remaining below).
 
-**Also needed in `start-yoyo.sh`:** `update_doorman_env()` is only called when zone changes (Mode 1 same-zone restart skips it). But Spot instances get a new external IP every restart. Fix: always call `update_doorman_env` on Mode 1 success, not just when zone differs. Bug is on line 340 of `scripts/start-yoyo.sh`.
+**`start-yoyo.sh` IP update — CONFIRMED CORRECT (2026-05-14 T-4 investigation):** `update_doorman_env()` is already called unconditionally on Mode 1 success. No code change needed for IP updates. New item: add `--runtime=<duration>` hard wall-clock cap (see Remaining below).
 
 ---
 
 ## YO-YO #1 — FULLY LIVE + DATAGRAPH PIPELINE WORKING (2026-05-12)
 
 **Current VM state:**
-- `yoyo-tier-b-1` **STOPPED** in `us-west1-b` — stopped 2026-05-12T18:30Z
-- Zone `us-west1-b` in **L4 stockout** as of 2026-05-12T18:30Z — cannot start until capacity returns
+- `yoyo-tier-b-1` **STOPPED** in `europe-west4-a` — stopped 2026-05-12T18:30Z (zone migrated from us-west1-b due to stockout there)
+- Zone `europe-west4-a` in **L4 stockout** as of 2026-05-14 — cannot start until capacity returns; **do NOT provision in other zones**
 - `llama-server.service` was running at 14.7 tok/s before shutdown; **not enabled** (see fix above)
-- `SLM_YOYO_WEIGHTS_SNAPSHOT=yoyo-tier-b-1-weights-20260512-0248` ✓ (weights disk snapshot good)
+- `SLM_YOYO_WEIGHTS_SNAPSHOT=yoyo-tier-b-1-weights-20260513-1923` ✓ (weights disk snapshot good; 148 GB)
 
 **Architecture (committed):**
 - vLLM → llama-server for Tier B (vLLM OOM on L4; llama-server runs Q3_K_M natively)
@@ -56,8 +57,8 @@ gcloud compute disks snapshot yoyo-tier-b-1 --zone=us-west1-b \
 - `SLM_YOYO_WEIGHTS_GCS_BUCKET` not set — training markers are local-only until configured
 
 **Zone fix — committed 9873f73 (2026-05-12):**
-- Root cause of 24h missed shutdown: `nightly-run.sh` calls `stop-yoyo.sh` as a subprocess without sourcing the env file. `stop-yoyo.sh` fell back to its hardcoded default `us-central1-a` → 404. The Rust idle monitor IS a systemd service (reads env file) so it would have worked, but Doorman was also restarted mid-session with stale zone state. Both paths now correct: script defaults fixed + Doorman restarted with `us-west1-b` env.
-- `SLM_YOYO_GCP_ZONE=us-west1-b` confirmed in `/etc/local-doorman/local-doorman.env` ✓
+- Root cause of 24h missed shutdown: `nightly-run.sh` calls `stop-yoyo.sh` as a subprocess without sourcing the env file. `stop-yoyo.sh` fell back to its hardcoded default `us-central1-a` → 404. Both paths now correct: script defaults fixed + Doorman restarted.
+- `SLM_YOYO_GCP_ZONE=europe-west4-a` in `/etc/local-doorman/local-doorman.env` ✓ (VM migrated to EU zone)
 - Doorman restarted 2026-05-12T16:17Z, healthy ✓
 
 **Nightly test run outcome (2026-05-12T17:05–17:55Z):**
@@ -70,11 +71,15 @@ gcloud compute disks snapshot yoyo-tier-b-1 --zone=us-west1-b \
 - `SLM_YOYO_WEIGHTS_GCS_BUCKET` not set → markers written locally only
 
 **Remaining:**
-- [x] **`nightly-run.timer`**: Created + enabled (commit `ec047bd`). Fires 00:00 UTC daily. corpus-rebuild.timer + local-workspace-feeder.timer disabled (redundant). ✓
-- [ ] **vllm.service fix on VM** (see CRITICAL block above) — mask vllm, enable llama-server
-- [ ] **`start-yoyo.sh` line 340** — always call `update_doorman_env` on Mode 1 success (not just zone-change)
-- [ ] Set `SLM_YOYO_WEIGHTS_GCS_BUCKET` in `/etc/local-doorman/local-doorman.env` for training dispatch
-- [ ] Next Packer image build (will bake CUDA llama-server + mask vllm.service; current VM patched manually)
+- [x] **`nightly-run.timer`**: Created + enabled (commit `ec047bd`). Fires 00:00 UTC daily. ✓ (PAUSED — manual trigger only until pricing verified over several days)
+- [x] **`start-yoyo.sh` Mode 1 IP update** — confirmed unconditional in T-4 (2026-05-14). ✓
+- [x] **Sprint 0a: POST /v1/messages Anthropic shim** — committed fdd1a22 (2026-05-14). ✓
+- [x] **`graph_context_enabled` on ComputeRequest** — committed 6e6b992 + 34d8d8d (2026-05-14). ✓
+- [ ] **vllm.service fix on VM** (see CRITICAL block above) — mask vllm, enable llama-server (europe-west4-a, on next VM start)
+- [ ] **`start-yoyo.sh --runtime=<duration>`** — add hard wall-clock watchdog (stop-yoyo.sh fires after N hours; idle monitor is still the earlier-exit path)
+- [ ] Set `SLM_YOYO_HOURLY_USD=0.84` + `SLM_YOYO_WEIGHTS_GCS_BUCKET=woodfine-node-gcp-free-foundry-substrate` in `/etc/local-doorman/local-doorman.env` (operator sudo)
+- [ ] Next Packer image rebuild — bake vllm.service mask + llama-server.service enable; prevents SSH-on-every-restart
+- [ ] **Sprint 0b: real per-token streaming** — replace fake-SSE burst in `http.rs::anthropic_sse_body()` with true token stream (~60 LOC)
 - [ ] LoRA training marker (Test 11): workspace dispatch service needs to be written
 - [ ] ProtectHome fix: `/srv/foundry/infrastructure/local-content/local-content.service` line 51 (outboxed)
 
