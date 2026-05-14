@@ -4,6 +4,8 @@ cluster_name: project-proofreader
 cluster_branch: cluster/project-proofreader
 created: 2026-04-27
 state: active
+slm_endpoint: http://localhost:8011
+module_id: proofreader
 
 # Tetrad upgrade 2026-04-28 per Master inbox broadcast (Doctrine
 # claim #37 / v0.0.10): triad → tetrad with wiki leg added as the
