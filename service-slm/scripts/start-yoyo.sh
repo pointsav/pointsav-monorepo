@@ -28,8 +28,14 @@
 # Usage:
 #   ./scripts/start-yoyo.sh
 #   ./scripts/start-yoyo.sh --wait-ready=300 --auto-snapshot
+#   ./scripts/start-yoyo.sh --wait-ready=300 --runtime=1h
 #   ./scripts/start-yoyo.sh --retry-cycles=3 --retry-wait-seconds=300
 #   SLM_YOYO_GCP_INSTANCE=yoyo-tier-b-2 ./scripts/start-yoyo.sh
+#
+# --runtime=<duration>  Hard wall-clock stop cap. After this duration a background
+#                       watchdog calls stop-yoyo.sh regardless of activity. The
+#                       Doorman idle monitor (30 min idle) is the earlier-exit path;
+#                       whichever fires first wins. Format: 1h, 90m, or bare seconds.
 set -uo pipefail
 
 PROJECT="${SLM_YOYO_GCP_PROJECT:-woodfine-node-gcp-free}"
@@ -51,6 +57,7 @@ LIFECYCLE_LOG="${SLM_YOYO_LIFECYCLE_LOG:-/var/log/yoyo-lifecycle.log}"
 
 # ── Flag parsing ─────────────────────────────────────────────────────────────
 WAIT_READY=0       # 0 = no wait, >0 = poll seconds before exiting
+RUNTIME_SECONDS=0  # 0 = no hard cap; >0 = watchdog stops VM after this many seconds
 AUTO_SNAPSHOT=false
 RETRY_CYCLES=1
 RETRY_WAIT=300
@@ -62,8 +69,21 @@ while [[ $# -gt 0 ]]; do
         --auto-snapshot)        AUTO_SNAPSHOT=true; shift ;;
         --retry-cycles=*)       RETRY_CYCLES="${1#*=}"; shift ;;
         --retry-wait-seconds=*) RETRY_WAIT="${1#*=}"; shift ;;
+        --runtime=*)
+            raw="${1#*=}"
+            if [[ "${raw}" =~ ^([0-9]+)h$ ]]; then
+                RUNTIME_SECONDS=$(( ${BASH_REMATCH[1]} * 3600 ))
+            elif [[ "${raw}" =~ ^([0-9]+)m$ ]]; then
+                RUNTIME_SECONDS=$(( ${BASH_REMATCH[1]} * 60 ))
+            elif [[ "${raw}" =~ ^([0-9]+)$ ]]; then
+                RUNTIME_SECONDS="${raw}"
+            else
+                echo "Unknown --runtime format: ${raw} (use 1h, 90m, or bare seconds)" >&2
+                exit 1
+            fi
+            shift ;;
         --help|-h)
-            sed -n '2,30p' "$0"
+            sed -n '2,38p' "$0"
             exit 0
             ;;
         *) echo "Unknown flag: $1" >&2; exit 1 ;;
@@ -412,7 +432,7 @@ attempt_start_once() {
 # Main — retry-cycle loop wraps Mode 1 + Mode 2; then optional wait-ready + snapshot
 # ─────────────────────────────────────────────────────────────────────────────
 
-log "Session start. instance=${INSTANCE} primary_zone=${PRIMARY_ZONE} retry_cycles=${RETRY_CYCLES} retry_wait=${RETRY_WAIT}s wait_ready=${WAIT_READY}s auto_snapshot=${AUTO_SNAPSHOT}"
+log "Session start. instance=${INSTANCE} primary_zone=${PRIMARY_ZONE} retry_cycles=${RETRY_CYCLES} retry_wait=${RETRY_WAIT}s wait_ready=${WAIT_READY}s runtime=${RUNTIME_SECONDS}s auto_snapshot=${AUTO_SNAPSHOT}"
 
 STARTED_ZONE=""
 cycle=0
@@ -437,6 +457,19 @@ done
 if [[ -z "${STARTED_ZONE}" ]]; then
     log "ERROR: could not start or provision ${INSTANCE} in any zone after ${RETRY_CYCLES} cycle(s). Exit 3."
     exit 3
+fi
+
+# ── Runtime cap watchdog ──────────────────────────────────────────────────────
+# Independent of the Doorman idle monitor: whichever fires first stops the VM.
+if [[ "${RUNTIME_SECONDS}" -gt 0 ]]; then
+    log "Runtime cap: VM will auto-stop in ${RUNTIME_SECONDS}s ($(( RUNTIME_SECONDS / 60 )) min)."
+    (
+        sleep "${RUNTIME_SECONDS}"
+        log "Runtime cap reached — stopping Yo-Yo VM now."
+        "${SCRIPT_DIR}/stop-yoyo.sh" 2>&1 | sed 's/^/  [watchdog] /'
+    ) &
+    WATCHDOG_PID=$!
+    log "Watchdog PID ${WATCHDOG_PID} armed."
 fi
 
 # ── Optional wait-ready + auto-snapshot ──────────────────────────────────────
