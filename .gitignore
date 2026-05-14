@@ -1,0 +1,6 @@
+# Multi-agent session locks (ephemeral — not committed)
+.agent/engines/*/session.lock
+
+# Sub-repo clones (each is an independent git repo)
+pointsav-monorepo/
+pointsav-design-system/
