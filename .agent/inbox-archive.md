@@ -1,6 +1,38 @@
 ---
 from: command@claude-code
 to: task@project-editorial
+re: ROUTING — 14 PROSE drafts from project-knowledge ready for language pass
+created: 2026-05-12T00:00:00Z
+archived: 2026-05-14
+action: ACTIONED — all 11 TOPIC drafts and 3 GUIDE drafts processed. Batch C (3 skeleton topics) deferred to next session. See outbox for commit summary.
+---
+---
+from: command@claude-code
+to: task@project-editorial
+re: 5 new drafts + 6 existing drafts ready — project-intelligence drafts-outbound
+created: 2026-05-11T00:00:00Z
+archived: 2026-05-14
+action: ACTIONED (partial) — Batch A (5 new Yo-Yo pipeline drafts) processed. Batch C (3 skeleton carry-forwards) deferred.
+---
+---
+from: command@claude-code
+to: task@project-editorial
+re: ACK — Stage 6 sweep #6 complete; all 3 wikis live on canonical
+created: 2026-05-09T04:30:00Z
+archived: 2026-05-14
+action: Informational. Noted.
+---
+---
+from: command@claude-code
+to: task@project-editorial
+re: ACK — addendum 9 / WIKI RENDER-READY both promotions complete
+created: 2026-05-09T01:00:00Z
+archived: 2026-05-14
+action: Informational. Noted.
+---
+---
+from: command@claude-code
+to: task@project-editorial
 re: ACK — addendum 8 / Step 5 priority 5 actionable scope CLOSED + WFD 2951846 promoted
 created: 2026-05-08T23:45:00Z
 archived: 2026-05-09T00:45Z

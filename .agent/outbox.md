@@ -9,6 +9,46 @@ schema: foundry-mailbox-v1
 
 ---
 from: task@project-editorial
+to: command@claude-code
+re: SESSION COMPLETE — full backlog sweep (Batches A–D)
+created: 2026-05-14T00:00:00Z
+priority: normal
+---
+
+All actionable batches from the approved plan executed. Summary:
+
+**Batch A — project-intelligence (3 commits):**
+- A1: `substrate/yo-yo-lora-training-pipeline.md` + `.es.md` — Yo-Yo LoRA training pipeline, CPT distinction preserved
+- A2: `substrate/jennifer-datagraph-rebuild.md` + `.es.md` — nightly DataGraph rebuild, routing parity principle
+- A3: `woodfine-fleet-deployment/cluster-intelligence/guide-yo-yo-nightly-pipeline.md` — new dir + guide with 3 corrections applied
+
+**Batch B — project-knowledge (10 commits):**
+- B1: `reference/wiki-provider-landscape.md` — 25-provider audit, governance vocabulary removed
+- B2: `patterns/wikipedia-leapfrog-design.md` — richer draft merged, C2PA/typography references added
+- B3: `applications/app-mediakit-knowledge.md` — phase-numbered features, complete route surface, governance vocabulary removed
+- B4: `substrate/substrate-native-compatibility.md` — governance vocabulary cleaned from committed version
+- B5: `architecture/collab-via-passthrough-relay.md` + `.es.md` — NEW bilingual pair, passthrough relay pattern
+- B6: `applications/knowledge-wiki-home-page-design.md` + `.es.md` — NEW bilingual pair, two-audience home page design
+- B7: `applications/documentation-pointsav-com-launch-2026-04-27.md` + `.es.md` — NEW bilingual pair, launch record
+- B8: `applications/article-shell-leapfrog.md` + `.es.md` — NEW bilingual pair, 5 leapfrog primitives
+- B9: `patterns/knowledge-wiki-leapfrog-architecture.md` + `.es.md` — Tim Starling attribution, 95% coverage specificity, frontmatter cleanup
+- B10: `patterns/source-of-truth-inversion.md` + `.es.md` — governance vocabulary cleaned, kernel-agnostic section added
+
+**Batch C — SKIPPED:** apprenticeship-substrate, doorman-protocol, zero-container-inference — substance gated on future milestones per plan.
+
+**Batch D — fleet-deployment guides (3 commits across 2 repos):**
+- D1: `pointsav-fleet-deployment/media-knowledge-documentation/guide-operate-knowledge-wiki.md` — personal path reference removed
+- D2: `pointsav-fleet-deployment/media-knowledge-documentation/guide-keep-the-home-page-the-gold-standard.md` — NEW, 10-category taxonomy, no personal names
+- D3: `woodfine-fleet-deployment/gateway-knowledge-documentation-1/guide-knowledge-wiki-sprint-roadmap.md` — frontmatter fix (bcsc_class, last_edited)
+
+**All 3 repos clean.** Stage 6 promotion pending for content-wiki-documentation and both fleet-deployment repos.
+
+**Remaining skeleton items** (Batch C) are noted as pending in inbox message from 2026-05-13 (superseded project-knowledge versions of apprenticeship-substrate, doorman-protocol, zero-container-inference). These remain as deferred until substance is available.
+
+— task@project-editorial
+
+---
+from: task@project-editorial
 to: master@claude-code
 re: Category-balance audit complete — 3 taxonomy questions for operator decision
 created: 2026-05-09T02:30Z
