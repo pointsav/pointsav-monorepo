@@ -40,16 +40,17 @@ use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use slm_core::{
     ApprenticeshipAttempt, ApprenticeshipBrief, AuditCaptureRequest, AuditCaptureResponse,
-    AuditProxyRequest, ChatMessage, Complexity, ComputeRequest, GrammarConstraint,
-    ModuleId, RequestId,
+    AuditProxyRequest, ChatMessage, Complexity, ComputeRequest, DeferReason, ExtractionRequest,
+    ExtractionResponse, GrammarConstraint, ModuleId, RequestId, Tier,
 };
 use slm_doorman::ledger::{
     ENTRY_TYPE_AUDIT_CAPTURE, ENTRY_TYPE_AUDIT_PROXY, ENTRY_TYPE_AUDIT_PROXY_STUB,
+    ENTRY_TYPE_EXTRACT,
 };
 use slm_doorman::{
     ApprenticeshipConfig, ApprenticeshipDispatcher, AuditCaptureEntry, AuditProxyClient,
     AuditProxyEntry, AuditProxyPurposeAllowlist, AuditProxyStubEntry, BriefCache, Doorman,
-    DoormanError, VerdictDispatchOutcome, VerdictDispatcher, VerdictWireBody,
+    DoormanError, ExtractionAuditEntry, VerdictDispatchOutcome, VerdictDispatcher, VerdictWireBody,
 };
 use tokio::sync::Semaphore;
 
@@ -114,6 +115,7 @@ pub fn router(state: Arc<AppState>) -> Router {
         .route("/v1/brief", post(brief))
         .route("/v1/verdict", post(verdict))
         .route("/v1/shadow", post(shadow))
+        .route("/v1/extract", post(extract))
         .route("/v1/audit/proxy", post(audit_proxy))
         .route("/v1/audit/capture", post(audit_capture))
         .route("/v1/graph/query", post(graph_query))
@@ -425,6 +427,187 @@ fn acquire_tenant_permit(
             module_id: module_id.to_string(),
             cap: state.audit_tenant_concurrency_cap,
         })
+}
+
+/// Maximum permitted raw body size for `POST /v1/extract`.
+/// 256 KiB: large enough for a 3000-token corpus; small enough to resist DoS.
+pub const EXTRACTION_MAX_REQUEST_BYTES: usize = 256 * 1024; // 256 KiB
+
+/// `POST /v1/extract` — dedicated entity extraction endpoint.
+///
+/// Routes exclusively to Yo-Yo "trainer" (OLMo 3 32B-Think) via
+/// `route_yoyo_only()`. Does NOT fall back to Tier A — OLMo 7B cannot
+/// produce structured JSON arrays reliably and must never serve as a
+/// fallback for extraction (SYS-ADR-07).
+///
+/// Response is always HTTP 200:
+/// - `extraction_ok: true`  → `entities` contains the extracted array
+/// - `deferred: true`       → Yo-Yo unavailable; caller retries with backoff
+///
+/// ADR-07 boundary: `ExtractionRequest.text` is prose only. The `schema`
+/// field constrains the OUTPUT; structured graph data must never cross the
+/// AI boundary as prompt input.
+async fn extract(State(state): State<Arc<AppState>>, raw: Bytes) -> impl IntoResponse {
+    // 0. Body-size cap — before deserialisation.
+    if raw.len() > EXTRACTION_MAX_REQUEST_BYTES {
+        return ApiError::bad_request(format!(
+            "extract request is {} bytes, exceeding the {}-byte limit; reduce payload",
+            raw.len(),
+            EXTRACTION_MAX_REQUEST_BYTES,
+        ))
+        .into_response();
+    }
+
+    // 1. Deserialise — deny_unknown_fields enforced by ExtractionRequest (ADR-07).
+    let req: ExtractionRequest = match serde_json::from_slice(&raw) {
+        Ok(r) => r,
+        Err(e) => return ApiError::bad_request(format!("invalid JSON body: {e}")).into_response(),
+    };
+
+    // 2. Validate module_id.
+    let module_id = match ModuleId::from_str(&req.module_id) {
+        Ok(mid) => mid,
+        Err(e) => {
+            return ApiError::bad_request(format!("invalid module_id: {e}")).into_response()
+        }
+    };
+
+    // 3. Per-tenant concurrency permit (shared semaphore with audit endpoints).
+    let _permit = match acquire_tenant_permit(&state, &module_id) {
+        Ok(p) => p,
+        Err(e) => {
+            let mut resp = ApiError::from(e).into_response();
+            resp.headers_mut().insert(
+                axum::http::header::RETRY_AFTER,
+                axum::http::HeaderValue::from_static("5"),
+            );
+            return resp;
+        }
+    };
+
+    // 4. Build ComputeRequest targeting Yo-Yo "trainer" with JsonSchema grammar.
+    let request_id = RequestId::new();
+    let compute_req = ComputeRequest {
+        request_id,
+        module_id: module_id.clone(),
+        model: None,
+        messages: vec![
+            ChatMessage {
+                role: "system".to_string(),
+                content: "Extract named entities. Return a JSON array matching the schema exactly.".to_string(),
+            },
+            ChatMessage {
+                role: "user".to_string(),
+                content: req.text,
+            },
+        ],
+        complexity: Complexity::High,
+        tier_hint: Some(Tier::Yoyo),
+        stream: false,
+        max_tokens: Some(2048),
+        temperature: Some(0.1),
+        sanitised_outbound: true,
+        tier_c_label: None,
+        yoyo_label: Some("trainer".to_string()),
+        grammar: Some(GrammarConstraint::JsonSchema(req.schema)),
+        speculation: None,
+    };
+
+    // 5. Route — no Tier A fallback.
+    let start = std::time::Instant::now();
+    let result = state.doorman.route_yoyo_only(&compute_req, "trainer").await;
+    let latency_ms = start.elapsed().as_millis() as u64;
+
+    // Capture error message before moving result.
+    let error_message_for_audit = result.as_ref().err().map(|e| e.to_string());
+
+    // 6. Parse result into response fields.
+    let (entities, tier_used, model, extraction_ok, deferred, defer_reason_str) = match result {
+        Ok(compute_resp) => {
+            // Strip markdown fences if the model wrapped its output.
+            let raw_content = compute_resp.content.trim().to_string();
+            let stripped = raw_content
+                .strip_prefix("```json")
+                .unwrap_or(&raw_content)
+                .strip_prefix("```")
+                .unwrap_or(&raw_content);
+            let stripped = stripped.strip_suffix("```").unwrap_or(stripped).trim();
+            match serde_json::from_str::<Vec<serde_json::Value>>(stripped) {
+                Ok(ents) => (
+                    ents,
+                    "yoyo_trainer".to_string(),
+                    compute_resp.model,
+                    true,
+                    false,
+                    None::<String>,
+                ),
+                Err(_) => (
+                    vec![],
+                    "deferred".to_string(),
+                    "none".to_string(),
+                    false,
+                    true,
+                    Some("yoyo-transient".to_string()),
+                ),
+            }
+        }
+        Err(DoormanError::TierUnavailable(_)) => (
+            vec![],
+            "deferred".to_string(),
+            "none".to_string(),
+            false,
+            true,
+            Some("yoyo-circuit-open".to_string()),
+        ),
+        Err(_) => (
+            vec![],
+            "deferred".to_string(),
+            "none".to_string(),
+            false,
+            true,
+            Some("yoyo-transient".to_string()),
+        ),
+    };
+
+    // 7. Audit entry (non-fatal if write fails — never block the response).
+    let audit_entry = ExtractionAuditEntry {
+        entry_type: ENTRY_TYPE_EXTRACT.to_string(),
+        timestamp_utc: Utc::now(),
+        request_id,
+        module_id,
+        extraction_ok,
+        deferred,
+        entities_count: entities.len(),
+        tier_used: tier_used.clone(),
+        latency_ms,
+        defer_reason: defer_reason_str.clone(),
+        error_message: error_message_for_audit,
+    };
+    if let Err(write_err) = state.doorman.ledger().append_extract_entry(&audit_entry) {
+        tracing::warn!(
+            target: "slm_doorman::extract",
+            error = %write_err,
+            request_id = %request_id,
+            "failed to write extraction audit entry"
+        );
+    }
+
+    // 8. Build typed response with DeferReason enum.
+    let defer_reason_enum = defer_reason_str.as_deref().map(|s| match s {
+        "yoyo-circuit-open" => DeferReason::YoyoCircuitOpen,
+        "yoyo-label-unconfigured" => DeferReason::YoyoLabelUnconfigured,
+        _ => DeferReason::YoyoTransient,
+    });
+
+    Json(ExtractionResponse {
+        entities,
+        tier_used,
+        model,
+        extraction_ok,
+        deferred,
+        defer_reason: defer_reason_enum,
+    })
+    .into_response()
 }
 
 /// `POST /v1/audit/proxy` — audited external provider call (PS.4 step 2).

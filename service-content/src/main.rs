@@ -171,20 +171,12 @@ fn process_corpus(
 
     if corpus_text.is_empty() { return false; }
 
-    println!("  -> [WATCHER] Routing payload to Doorman ({})/v1/chat/completions...", doorman_endpoint);
+    println!("  -> [WATCHER] Routing payload to Doorman ({})/v1/extract...", doorman_endpoint);
 
-    let system_prompt = "You are a semantic entity extractor for a real estate property management archive. \
-        Given a corpus of text, extract all named entities as a JSON array. \
-        Each object must have these fields: \
-        entity_name (string), \
-        classification (string: Person|Company|Project|Account|Location), \
-        role_vector (string or null), \
-        location_vector (string or null), \
-        contact_vector (string: email address or phone number or null). \
-        Return ONLY a valid JSON array with no explanation or markdown.";
-
-    // JSON Schema enforced by Yo-Yo #2 (Graph Extractor, H100/Llama 3.3 70B)
-    // via Doorman grammar substrate (PS.3 Tier B path).
+    // POST /v1/extract — Tier B only (route_yoyo_only). Doorman returns
+    // {deferred: true} when Tier B is unavailable instead of falling back
+    // to Tier A. This prevents the KV-cache bloat and retry storm that
+    // caused VM crashes when Tier B was down for extended periods.
     let entity_schema = serde_json::json!({
         "type": "array",
         "items": {
@@ -204,22 +196,14 @@ fn process_corpus(
     });
 
     let body = serde_json::json!({
-        "model": "local",
-        "messages": [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": corpus_text}
-        ],
-        "temperature": 0.1,
-        "max_tokens": 2048,
-        "grammar": {"type": "json-schema", "value": entity_schema}
+        "text": corpus_text,
+        "schema": entity_schema,
+        "module_id": effective_module_id
     });
 
-    let url = format!("{}/v1/chat/completions", doorman_endpoint);
+    let url = format!("{}/v1/extract", doorman_endpoint);
     let client = reqwest::blocking::Client::new();
     let res = client.post(&url)
-        .header("X-Foundry-Module-ID", effective_module_id)
-        .header("X-Foundry-Complexity", "high")
-        .header("X-Foundry-Yoyo-Label", "graph")
         .json(&body)
         .timeout(Duration::from_secs(300))
         .send();
@@ -227,18 +211,21 @@ fn process_corpus(
     match res {
         Ok(response) => {
             if response.status().is_success() {
-                if let Ok(completion) = response.json::<serde_json::Value>() {
-                    let content = completion["choices"][0]["message"]["content"]
-                        .as_str()
-                        .unwrap_or("");
-                    // Strip markdown code fences if present
-                    let content = content.trim();
-                    let content = content.strip_prefix("```json").unwrap_or(content);
-                    let content = content.strip_prefix("```").unwrap_or(content);
-                    let content = content.strip_suffix("```").unwrap_or(content);
-                    let content = content.trim();
+                if let Ok(extract_resp) = response.json::<serde_json::Value>() {
+                    // Tier B unavailable — graceful defer, no retry this session.
+                    // File remains in processed_ledgers; next boot will retry.
+                    if extract_resp["deferred"].as_bool().unwrap_or(false) {
+                        let reason = extract_resp["defer_reason"].as_str().unwrap_or("unknown");
+                        println!("  -> [WATCHER] Extraction deferred ({}): Tier B unavailable — will retry next boot.", reason);
+                        return true;
+                    }
 
-                    if let Ok(semantic_entities) = serde_json::from_str::<Vec<Value>>(content) {
+                    if extract_resp["extraction_ok"].as_bool().unwrap_or(false) {
+                        let semantic_entities = extract_resp["entities"]
+                            .as_array()
+                            .cloned()
+                            .unwrap_or_default();
+
                         let mut enriched_crm = Vec::new();
                         let mut graph_entities: Vec<GraphEntity> = Vec::new();
 
@@ -315,7 +302,7 @@ fn process_corpus(
                             return true;
                         }
                     } else {
-                        println!("  -> [SYS_HALT] Doorman response was not a valid entity JSON array.");
+                        println!("  -> [SYS_HALT] Extraction failed: extraction_ok false, no defer reason.");
                         return false;
                     }
                 } else {

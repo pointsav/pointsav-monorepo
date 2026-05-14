@@ -53,6 +53,8 @@ pub const ENTRY_TYPE_AUDIT_PROXY_STUB: &str = "audit-proxy-stub";
 pub const ENTRY_TYPE_AUDIT_PROXY: &str = "audit-proxy";
 /// Canonical `entry_type` string for `AuditCaptureEntry`.
 pub const ENTRY_TYPE_AUDIT_CAPTURE: &str = "audit-capture";
+/// Canonical `entry_type` string for `ExtractionAuditEntry` (`POST /v1/extract`).
+pub const ENTRY_TYPE_EXTRACT: &str = "extract";
 
 // Serde default fns — used in `#[serde(default = "...")]` on each struct's
 // `entry_type` field so that old JSONL entries that pre-date contract v0.2.0
@@ -68,6 +70,9 @@ fn default_entry_type_audit_proxy() -> String {
 }
 fn default_entry_type_audit_capture() -> String {
     ENTRY_TYPE_AUDIT_CAPTURE.to_string()
+}
+fn default_entry_type_extract() -> String {
+    ENTRY_TYPE_EXTRACT.to_string()
 }
 
 // ---------------------------------------------------------------------------
@@ -267,6 +272,42 @@ pub struct AuditCaptureEntry {
     pub caller_request_id: Option<String>,
 }
 
+/// Audit ledger entry for a `POST /v1/extract` call.
+///
+/// Written once per extraction attempt — after the Yo-Yo call completes (or
+/// is deferred). A single-entry design: unlike audit_proxy there is no
+/// provider-relay; the Doorman itself makes the inference call, so one entry
+/// captures the full outcome.
+///
+/// `entry_type` is always `"extract"` (PS.4 discriminator for extraction
+/// pipeline, distinct from `"chat-completion"` to preserve audit-filter
+/// correctness — SYS-ADR-10).
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct ExtractionAuditEntry {
+    /// Explicit discriminator field. Always `"extract"`.
+    #[serde(default = "default_entry_type_extract")]
+    pub entry_type: String,
+    pub timestamp_utc: DateTime<Utc>,
+    pub request_id: RequestId,
+    pub module_id: ModuleId,
+    /// `true` when entities were successfully extracted and parsed.
+    pub extraction_ok: bool,
+    /// `true` when the request was deferred (Yo-Yo unavailable).
+    pub deferred: bool,
+    /// Number of entities returned (0 when deferred).
+    pub entities_count: usize,
+    /// `"yoyo_trainer"` on success, `"deferred"` otherwise.
+    pub tier_used: String,
+    /// Elapsed time for the Yo-Yo call, or circuit-check time when deferred.
+    pub latency_ms: u64,
+    /// Kebab-case defer reason; present when `deferred: true`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub defer_reason: Option<String>,
+    /// Upstream error message; present on Yo-Yo call failure.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub error_message: Option<String>,
+}
+
 impl AuditLedger {
     /// Write a stub entry for a `POST /v1/audit/proxy` call. This is the
     /// PS.4 step 1 paper trail: we capture the inbound request shape before
@@ -322,6 +363,25 @@ impl AuditLedger {
         let mut entry = entry.clone();
         entry.entry_type = ENTRY_TYPE_AUDIT_CAPTURE.to_string();
         let path = self.path_for(&entry.captured_at);
+        let line = serde_json::to_vec(&entry)?;
+        let _guard = self.inner.lock().expect("audit ledger mutex poisoned");
+        let file = OpenOptions::new().create(true).append(true).open(&path)?;
+        let mut writer = BufWriter::new(file);
+        writer.write_all(&line)?;
+        writer.write_all(b"\n")?;
+        writer.flush()?;
+        Ok(())
+    }
+
+    /// Write one extraction audit entry for a `POST /v1/extract` call.
+    ///
+    /// Single-entry design: written after the Yo-Yo call completes or the
+    /// request is deferred. `entry_type` is forced to `"extract"` at write
+    /// time regardless of the caller's field value.
+    pub fn append_extract_entry(&self, entry: &ExtractionAuditEntry) -> Result<()> {
+        let mut entry = entry.clone();
+        entry.entry_type = ENTRY_TYPE_EXTRACT.to_string();
+        let path = self.path_for(&entry.timestamp_utc);
         let line = serde_json::to_vec(&entry)?;
         let _guard = self.inner.lock().expect("audit ledger mutex poisoned");
         let file = OpenOptions::new().create(true).append(true).open(&path)?;
