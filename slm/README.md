@@ -1,1 +1,1 @@
-SLM routing for this archive via the shared Doorman instance (module: marketing).
+SLM routing for this archive via the shared Doorman instance (module: command).
