@@ -31,9 +31,9 @@ CLAUDE.md + NEXT.md were missing (noted in registry since 2026-04-28). Added 202
 
 `README.es.md` is a 4-file scaffold stub; the English README is 8 KB. Refresh pass needed before next public-facing milestone.
 
-## Open: site_title + guide_dir_2 config (production)
+## Closed: site_title + guide_dir_2 config (production)
 
-`local-knowledge-documentation.service` now supports `--site-title` and `--guide-dir-2` (shipped 2026-05-02). Verify both are set correctly in the active systemd unit on the workspace VM.
+`local-knowledge-documentation.service` now supports `--site-title` and `--guide-dir-2` (shipped 2026-05-02). Verified 2026-05-14: `WIKI_SITE_TITLE=PointSav Documentation Wiki` and `WIKI_GUIDE_DIR_2=/srv/foundry/customer/woodfine-fleet-deployment` both set in the active unit. `local-knowledge-projects.service` and `local-knowledge-corporate.service` confirmed with correct per-instance titles; neither needs `WIKI_GUIDE_DIR_2`.
 
 ## Open: Step 7 collab smoke verification
 
