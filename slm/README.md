@@ -1,1 +1,1 @@
-SLM routing for this archive via the shared Doorman instance (module: orgcharts).
+SLM routing for this archive via the shared Doorman instance (module: marketing).
