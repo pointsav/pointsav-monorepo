@@ -43,6 +43,7 @@ pub use grammar_validation::LarkValidator;
 pub use graph::GraphContextClient;
 pub use ledger::{
     AuditCaptureEntry, AuditEntry, AuditLedger, AuditProxyEntry, AuditProxyStubEntry,
+    ExtractionAuditEntry,
 };
 pub use promotion_ledger::{PromotionLedger, PromotionOutcome, Stage, StatRow};
 pub use redact::sanitize;
