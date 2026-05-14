@@ -22,7 +22,8 @@ service-content — see `ARCHITECTURE.md` Ring 3a.
 ## Current state
 
 **Active.** Doorman in production on workspace VM (`local-doorman.service`).
-Tier A (llama-server, OLMo 3 7B Q4) live and verified. **177/177 tests.**
+Tier A (llama-server, OLMo 2 1B Q4) live and verified. **177/177 tests.**
+Tier A upgrade to OLMo 2 1124 7B Instruct pending (see NEXT.md).
 
 D4 image pipeline code complete as of 2026-05-07 (commit `0140176`): Packer template,
 OpenTofu infrastructure, on-demand scripts, operator runbook. Operator provisioning steps
@@ -47,8 +48,9 @@ As of 2026-05-07 (commit `0140176`):
   `POST /v1/audit/capture`; contract v0.2.0; four `entry_type`
   discriminators.
 - **Apprenticeship (AS-2..AS-7 + §7C brief queue)** — code-complete;
-  **disabled on workspace VM** (`SLM_APPRENTICESHIP_ENABLED` unset;
-  operator-presence re-enable pending).
+  **enabled on workspace VM** (`SLM_APPRENTICESHIP_ENABLED=true` since v0.1.39);
+  diff-capture hook (`/v1/shadow` `actual_diff` field) not yet wired — git
+  post-commit hook pending (see NEXT.md).
 - **Graph context (Ring 2→3)** — `GraphContextClient` queries
   `service-content` before every inference; injects `[ENTITY CONTEXT]`
   system message; non-fatal if service-content is down.
