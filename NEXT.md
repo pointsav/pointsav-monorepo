@@ -6,11 +6,77 @@
 > Read at session start when a Root Claude opens in this repo. Update
 > at session end when repo-scope open items change.
 
-Last updated: 2026-05-13.
+Last updated: 2026-05-14.
 
 ---
 
 ## Currently open
+
+### service-slm / service-content — Sprint 0a prerequisites [2026-05-14 task@claude-code]
+
+Architectural deep-thinks (Opus agents) produced three policy docs in `.agent/plans/`.
+Decisions and actions required before Sprint 0a (`POST /v1/messages` Anthropic shim) ships:
+
+- [ ] **Add `graph_context_enabled: Option<bool>` to `ComputeRequest`** [BLOCKS Sprint 0a]
+  `slm-core/src/lib.rs` + `slm-doorman/src/router.rs:125-158`. Without this, the Anthropic
+  shim injects DataGraph entity rows into every Claude Code request. Shim handler sets `false`.
+- [ ] **Decide opus → Tier C path** [BLOCKS Sprint 0a for opus]
+  Path A: add `"claude-code-passthrough"` to `FOUNDRY_DEFAULT_ALLOWLIST` (`external.rs:78`),
+  wire `SLM_TIER_C_ANTHROPIC_*` env. Path B: route `claude-opus-*` to Tier B "trainer" in
+  Sprint 0a, defer Tier C wiring to Sprint 0b.
+- [ ] **Reconcile apprenticeship flag drift**
+  On-VM `local-doorman.service` has `SLM_APPRENTICESHIP_ENABLED=true` (v0.1.39 deliberate).
+  Clone `compute/systemd/slm-doorman.service:37` still says `false`. CLAUDE.md updated this
+  session. Propagate `true` to the clone unit file.
+
+### service-content — Ring 2/Ring 3 decoupling [2026-05-14 task@claude-code]
+
+Current `main.rs` is the **legacy watcher** that `service-content/ARCHITECTURE.md` designates
+deprecated. Ring 2 ingest halts completely when Ring 3 (Doorman) is unavailable — the Community
+Tier principle is aspirational, not real. See `.agent/plans/service-content-architecture-2026.md`.
+
+- [ ] **Sprint 1 — deterministic Source node write** (~30 LOC)
+  Before calling `POST /v1/extract`, write a `Source` node to the graph with `worm_id` +
+  `module_id`. Graph grows regardless of Ring 3 reachability. Closes the most critical
+  production defect (114 CORPUS files currently deferred).
+- [ ] **Persistent extraction queue** (replace per-boot retry)
+  `processed_ledgers: Vec<String>` resets on restart. 114 deferred files retry every boot.
+  Fix: disk-backed set (sidecar JSONL or SQLite) + Yo-Yo-up notification trigger.
+- [ ] **Validate `module_id`; reject `__` prefix**
+  `main.rs:167-170` allows per-file `module_id` override with no validation. A CORPUS file
+  carrying `"module_id": "__taxonomy__"` corrupts the taxonomy namespace.
+- [ ] **Wire `RelatedTo` edges in graph store**
+  `graph.rs:66-72` declares `RelatedTo` table; it is never populated anywhere. Graph is
+  node-only. Everything in ARCHITECTURE.md §8 about linked nodes is unmet.
+- [ ] **Fix `main.rs:293` unwrap** — `fs::write(...).unwrap()` panics on disk-full.
+- [ ] **Move `/v1/draft/generate` to Doorman** (Ring violation — Ring 2 generating text via Ring 3).
+
+### service-slm — audit ledger completeness [2026-05-14 task@claude-code]
+
+- [ ] **`ExtractionAuditEntry` missing fields** (`ledger.rs:286-309`, `http.rs:573-585`)
+  Add: `model: String`, `cost_usd: f64`, `sanitised_outbound: bool`. Handler discards these
+  from `ComputeResponse` before writing the ledger entry.
+- [ ] **Add `"graph-query"` to `AUDIT_CAPTURE_VALID_EVENT_TYPES`** (`http.rs:859-865`)
+  Graph proxy handlers write this `event_type` but it's not in the accepted set.
+
+### Leapfrog compound loop — close the flywheel [2026-05-14 task@claude-code]
+
+The compound moat (apprenticeship → LoRA → sovereign model) requires these steps in order.
+See `.agent/plans/leapfrog-2026.md` for full strategic analysis.
+
+- [ ] **1. Git post-commit hook** — wire `actual_diff` in `/v1/shadow` (`http.rs:349-358`)
+  Currently always empty. ~50 LOC hook + Doorman endpoint extension. Closes the training loop.
+- [ ] **2. Eval harness** — held-out eval set + regression test for Tier A and Tier B tasks.
+  Must exist BEFORE first LoRA training run (no way to measure improvement otherwise).
+- [ ] **3. Corpus quality gate** — min brief length, min diff size, dedup policy, PII scrub.
+  ~150 LOC; prevents noise/PII from poisoning the training set.
+- [ ] **4. Ratify `conventions/permissible-model-substrate.md`** — BCSC posture, OLMo-only
+  rule, upgrade procedure as policy. Excludes Qwen/DeepSeek/Yi/GLM (PRC-headquartered).
+- [ ] **5. Tier A upgrade** — `OLMo-2-1124-7B-Instruct-Q4_K_M.gguf`, `MemoryMax=6G`.
+  Current 1B cannot produce reliable flat-schema tool-call args (blocks haiku-tier shim).
+  Requires weights download to `/var/lib/local-slm/weights/` + unit file update + redeploy.
+- [ ] **6. First LoRA training run** — on Yo-Yo #1 after steps 1–3 complete.
+- [ ] **7. mistralrs-server migration** — at LoRA milestone; enables hot-swap adapters at runtime.
 
 ### app-mediakit-knowledge — Phase 4 continuation
 
