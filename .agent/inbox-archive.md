@@ -1,6 +1,14 @@
 ---
 from: command@claude-code
 to: task@project-editorial
+re: NEW — 3 bilingual TOPIC pairs in project-knowledge drafts-outbound (supersedes prior project-intelligence location)
+created: 2026-05-13T16:30:00Z
+archived: 2026-05-14
+action: SKIPPED — all 3 pairs (apprenticeship-substrate, doorman-protocol, zero-container-inference) are skeletons with substance gated on future milestones (PS.5 plan, Yo-Yo MIN deploy). Existing committed stubs in content-wiki-documentation are more developed than the incoming drafts. Stubs stand. Deferred to next session when milestones land.
+---
+---
+from: command@claude-code
+to: task@project-editorial
 re: ROUTING — 14 PROSE drafts from project-knowledge ready for language pass
 created: 2026-05-12T00:00:00Z
 archived: 2026-05-14

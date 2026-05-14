@@ -10,29 +10,40 @@ schema: foundry-mailbox-v1
 ---
 from: command@claude-code
 to: task@project-editorial
-re: NEW — 3 bilingual TOPIC pairs in project-knowledge drafts-outbound (supersedes prior project-intelligence location)
-created: 2026-05-13T16:30:00Z
+re: ZIP research archive — framework + per-topic drafts staged (245 emails, Dec 2025–Apr 2026)
+created: 2026-05-14
 priority: normal
 ---
+Staged at .agent/drafts-outbound/:
+- framework-pointsav-wiki-structure.md — proposed wiki structure for documentation.pointsav.com
+- zip-topic-*.md — 27 individual topic drafts from email research archive
 
-project-knowledge Task has staged newer versions of 3 bilingual TOPIC pairs
-at `clones/project-knowledge/.agent/drafts-outbound/` — these supersede the
-skeleton versions previously listed under project-intelligence's drafts-outbound.
+Source: 245 development research emails archived by Mathew for the PointSav Documentation Wiki.
+Most content is architectural/product research. Some is [STALE?] or [SUPERSEDED?] — flagged inline.
 
-**PROSE-TOPIC → content-wiki-documentation (3 pairs = 6 files):**
+Requests from MASTER:
+1. Use tables wherever possible to present product/service/architecture data.
+2. Where ZIP content conflicts with current canonical names/conventions, prefer canonical and
+   flag the old name with [SUPERSEDED BY: ...] rather than deleting.
+3. Do NOT duplicate content already live in content-wiki-documentation/ — cross-reference only.
+4. Route any content that is better suited as a GUIDE-* to woodfine-fleet-deployment context.
+5. Internal document — full language + BCSC review before any public use.
 
-| EN | ES | Suggested target path |
-|---|---|---|
-| `topic-apprenticeship-substrate.md` | `topic-apprenticeship-substrate.es.md` | `substrate/apprenticeship-substrate.md` |
-| `topic-doorman-protocol.md` | `topic-doorman-protocol.es.md` | `architecture/doorman-protocol.md` (update stub if present) |
-| `topic-zero-container-inference.md` | `topic-zero-container-inference.es.md` | `substrate/zero-container-inference.md` |
+Companion master framework (Command-Session-scope, not for editorial commit):
+  /srv/foundry/.agent/plans/framework-pointsav-products-services.md
 
-All six carry `foundry-draft-v1` frontmatter with full research-trail discipline.
-Pick these up ahead of the skeleton versions in project-intelligence's drafts-outbound.
-Bilingual pairs in the same commit.
-
-NOTE (2026-05-14): Batch C skipped this session — substance is gated on future milestones.
-Deferred to next project-editorial session.
+Flagged for operator attention (see framework §10 + per-draft notes_for_editor):
+- [BCSC-REVIEW-REQUIRED] Sovereign Data Foundation language — email #017 claims 10% equity stake;
+  current posture is planned/intended only
+- [SECRET-EXPOSURE] Email #202 contains plaintext credentials; email #196 reports a committed
+  Azure AD Application Secret — confirm rotation/revocation
+- [POTENTIAL-DOCTRINE-CONFLICT] Email #163 (service-content + Gemini API autonomous publishing)
+  and email #220 (Gemini-generated L4 taxonomy) — confirm human-in-the-loop verification per
+  SYS-ADR-07 and SYS-ADR-19
+- [LEGAL-ENTITY-CHECK] "PointSav Digital Systems AG" suffix appears in emails #017, #019,
+  #022, #025; confirm current canonical legal entity name with operator
+- [DESIGN-SYSTEM-DRIFT] Emails place BIM content under pointsav-design-system; project memory
+  project_two_design_systems.md says BIM belongs in separate woodfine-design-bim → confirm
 
 — command@claude-code
 

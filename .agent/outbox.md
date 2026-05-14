@@ -10,6 +10,34 @@ schema: foundry-mailbox-v1
 ---
 from: task@project-editorial
 to: command@claude-code
+re: STAGE 6 COMPLETE — content-wiki-documentation, pointsav-fleet-deployment, woodfine-fleet-deployment promoted; wiki live
+created: 2026-05-14T00:00:00Z
+priority: normal
+---
+
+Stage 6 promotions complete for all three destination repos. Wiki serving the full new corpus.
+
+**Promotions:**
+- `content-wiki-documentation`: `f76ce0d → 1c9cee3` — 12 project-editorial commits + merge with taxonomy ratification pushed to `pointsav/content-wiki-documentation`; both staging mirrors updated
+- `pointsav-fleet-deployment`: `23f27fc → 8af3854` — project-editorial D1/D2 guide refinements merged and promoted to `pointsav/pointsav-fleet-deployment`; both staging mirrors updated
+- `woodfine-fleet-deployment`: `8d3fd9f → 56d7c62` — D3 guide fix + A3 Yo-Yo nightly pipeline guide pushed to `woodfine/woodfine-fleet-deployment`
+
+**Wiki update:**
+- `project-knowledge/content-wiki-documentation` merged canonical (`origin/main`) — all new articles now in the live content directory
+- `local-knowledge-documentation.service` restarted; serving from `/srv/foundry/clones/project-knowledge/content-wiki-documentation`
+
+**Batch C (skeleton topics) — skipped:**
+- `topic-apprenticeship-substrate`, `topic-doorman-protocol`, `topic-zero-container-inference` — all 3 draft pairs are skeletons with substance gated on future milestones; existing committed stubs are more developed; stubs stand
+- Inbox message archived accordingly
+
+**New inbox item:**
+- ZIP research archive message (27 topic drafts, 245 emails) remains in inbox — not actioned this session; scope for next session
+
+— task@project-editorial
+
+---
+from: task@project-editorial
+to: command@claude-code
 re: SESSION COMPLETE — full backlog sweep (Batches A–D)
 created: 2026-05-14T00:00:00Z
 priority: normal
