@@ -344,6 +344,57 @@ impl Doorman {
 }
 
 impl Doorman {
+    /// Route a request to a specific named Yo-Yo backend without Tier A fallback.
+    ///
+    /// Unlike `route()`, this method does NOT fall back to Tier A on
+    /// circuit-open or transient failure. Returns
+    /// `Err(DoormanError::TierUnavailable(Tier::Yoyo))` immediately so the
+    /// caller can defer the request rather than routing to an inappropriate
+    /// backend.
+    ///
+    /// Used by `POST /v1/extract`: entity extraction requires the "trainer"
+    /// Yo-Yo node (OLMo 3 32B-Think). OLMo 7B (Tier A) cannot produce
+    /// structured JSON arrays reliably and must never serve as a fallback for
+    /// extraction.
+    pub async fn route_yoyo_only(
+        &self,
+        req: &ComputeRequest,
+        label: &str,
+    ) -> Result<ComputeResponse> {
+        let client = self.yoyo.get(label).ok_or_else(|| {
+            warn!(
+                target: "slm_doorman::router",
+                label,
+                "route_yoyo_only: Yo-Yo label not configured"
+            );
+            DoormanError::TierUnavailable(Tier::Yoyo)
+        })?;
+
+        if !client.allow_request() {
+            warn!(
+                target: "slm_doorman::router",
+                request_id = %req.request_id,
+                label,
+                "route_yoyo_only: circuit not allowing request (open or health-probe down)"
+            );
+            return Err(DoormanError::TierUnavailable(Tier::Yoyo));
+        }
+
+        // PS.3: validate Lark grammar at boundary if validator configured.
+        // Extraction uses JsonSchema; this branch is defensive only.
+        if let (Some(validator), Some(GrammarConstraint::Lark(lark_src))) =
+            (&self.lark_validator, &req.grammar)
+        {
+            if let Err(reason) = validator.validate(lark_src) {
+                return Err(DoormanError::MalformedLarkGrammar { reason });
+            }
+        }
+
+        client.complete(req).await
+    }
+}
+
+impl Doorman {
     async fn try_local_fallback(&self, req: &ComputeRequest) -> Result<ComputeResponse> {
         match &self.local {
             Some(local) => {
