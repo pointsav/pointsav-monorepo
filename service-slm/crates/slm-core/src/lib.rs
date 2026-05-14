@@ -141,6 +141,7 @@ mod tests {
             yoyo_label: None,
             grammar: None,
             speculation: None,
+            graph_context_enabled: None,
         }
     }
 
