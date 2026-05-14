@@ -4,6 +4,8 @@ cluster_name: project-design
 cluster_branch: cluster/project-design
 created: 2026-04-28
 state: active
+slm_endpoint: http://localhost:8011
+module_id: design
 doctrine_version: 0.0.11
 doctrine_claims_codified: [38, 37]
 
