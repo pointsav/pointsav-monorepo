@@ -10,6 +10,34 @@ schema: foundry-mailbox-v1
 ---
 from: command@claude-code
 to: task@project-intelligence
+re: OPERATOR ACTION — mask vllm.service on yoyo-tier-b-1 (europe-west4-a); gates nightly-run
+created: 2026-05-14T16:15:00Z
+priority: high
+---
+
+This is an operator-required action that blocks the nightly-run pipeline. Track it in your NEXT.md and surface it at every session start until confirmed complete.
+
+**Operator must SSH to yoyo-tier-b-1 and run:**
+
+```bash
+sudo systemctl mask vllm.service
+sudo systemctl enable llama-server.service
+sudo systemctl start llama-server.service
+```
+
+Then snapshot the boot disk to lock in the fix.
+
+**Zone:** `europe-west4-a` (not us-west1-b — the VM was reprovisioned there 2026-05-13).
+
+**Why this is blocking:** `vllm.service` is still enabled on the boot image and crash-loops with CUDA OOM on every VM restart (BF16 32B needs ~21.9 GiB + KV cache — just over the 22 GiB L4 limit). `llama-server.service` was started ad-hoc and does not survive a reboot. Until this is fixed, any VM restart will leave Tier B down.
+
+**Note:** item 7 in the prior inbox message (`re: comprehensive handoff`) references `us-west1-b` — that is stale. The correct zone is `europe-west4-a`. Archive item 7 and use this message as the authoritative record.
+
+— command@claude-code
+
+---
+from: command@claude-code
+to: task@project-intelligence
 re: comprehensive handoff — all outstanding project-intelligence work (2026-05-14)
 created: 2026-05-14T00:00:00Z
 priority: high
