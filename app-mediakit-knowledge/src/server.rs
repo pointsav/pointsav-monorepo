@@ -585,6 +585,8 @@ pub type CategoryBuckets = BTreeMap<String, Vec<TopicSummary>>;
 /// Per naming-convention.md §10 Q5-A operator ratification 2026-04-28.
 const RATIFIED_CATEGORIES: &[&str] = &[
     "architecture",
+    "substrate",
+    "patterns",
     "services",
     "systems",
     "applications",
@@ -1058,7 +1060,7 @@ fn home_chrome(
                             div.wiki-home-cat-section {
                                 div.wiki-home-cat-section-head {
                                     h2 {
-                                        a href={ "/category/" (cat) } { (capitalise(cat)) }
+                                        a href={ "/category/" (cat) } { (humanize_category(cat)) }
                                     }
                                     @if count > 0 {
                                         span.wiki-home-cat-section-count {
@@ -1180,13 +1182,19 @@ fn home_chrome(
     }
 }
 
-/// Capitalise the first character of a category name for display.
-fn capitalise(s: &str) -> String {
-    let mut c = s.chars();
-    match c.next() {
-        None => String::new(),
-        Some(f) => f.to_uppercase().to_string() + c.as_str(),
-    }
+/// Convert a category slug to a display label: hyphens become spaces, each word title-cased.
+/// E.g. "design-system" → "Design System", "substrate" → "Substrate".
+fn humanize_category(s: &str) -> String {
+    s.split('-')
+        .map(|word| {
+            let mut c = word.chars();
+            match c.next() {
+                None => String::new(),
+                Some(f) => f.to_uppercase().to_string() + c.as_str(),
+            }
+        })
+        .collect::<Vec<_>>()
+        .join(" ")
 }
 
 // ─── Placeholder index (index.md absent) ───────────────────────────────────
@@ -1246,7 +1254,7 @@ async fn category_page(
     let buckets = bucket_topics_by_category(&state.content_dir, state.guide_dir.as_deref(), state.guide_dir_2.as_deref()).await?;
     let empty: Vec<TopicSummary> = Vec::new();
     let topics = buckets.get(&name).unwrap_or(&empty);
-    let display = capitalise(&name);
+    let display = humanize_category(&name);
     let count = topics.len();
 
     // Render _index.md MOC prose above the auto-list when present.
@@ -1902,7 +1910,7 @@ fn wiki_chrome(
                                     div.wiki-categories {
                                         span.cats-label { "Category:" }
                                         span.wiki-category-single-tag {
-                                            a href={ "/category/" (cat) } { (capitalise(cat)) }
+                                            a href={ "/category/" (cat) } { (humanize_category(cat)) }
                                         }
                                     }
                                 }
