@@ -4,7 +4,7 @@ cluster: project-infrastructure
 opened: 2026-05-14
 state: active
 slm_endpoint: http://localhost:8011
-module_id: infrastructure
+module_id: system
 
 tetrad:                                # added 2026-05-18 — Phase 4.4 hardening; canonical declaration parallel to the prose `## Tetrad` section below
   vendor:
