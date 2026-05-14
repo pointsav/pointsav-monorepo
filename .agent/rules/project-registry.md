@@ -8,7 +8,7 @@ must be closed.
 
 State vocabulary — see `~/Foundry/CLAUDE.md` §8 for definitions.
 
-Last updated: 2026-05-07.
+Last updated: 2026-05-14.
 
 ---
 
@@ -30,6 +30,14 @@ Last updated: 2026-05-07.
 | app-console-people | Scaffold-coded | app-console | 5 files |
 | app-console-vault | Reserved-folder | app-console | Placeholder |
 
+## App — Infrastructure surface (`app-infrastructure-*`)
+
+| Project | State | Type | Notes |
+|---|---|---|---|
+| app-infrastructure-cloud | Reserved-folder | app-infrastructure | README pair only; runs on os-infrastructure; GCP node (fleet-infrastructure-cloud-1); scaffolded 2026-05-14 |
+| app-infrastructure-leased | Reserved-folder | app-infrastructure | README pair only; runs on os-infrastructure; Laptop B node (fleet-infrastructure-leased-1); scaffolded 2026-05-14 |
+| app-infrastructure-onprem | Reserved-folder | app-infrastructure | README pair only; runs on os-infrastructure; Laptop A node (fleet-infrastructure-onprem-1); scaffolded 2026-05-14 |
+
 ## App — MediaKit surface (`app-mediakit-*`)
 
 | Project | State | Type | Notes |
@@ -43,6 +51,7 @@ Last updated: 2026-05-07.
 
 | Project | State | Type | Notes |
 |---|---|---|---|
+| app-network-admin | Reserved-folder | app-network | README pair only; control-plane for os-network-admin; PPN mesh routing authority; scaffolded 2026-05-14 |
 | app-network-cluster | Reserved-folder | app-network | Placeholder |
 | app-network-gateway | Reserved-folder | app-network | Placeholder |
 | app-network-help | Reserved-folder | app-network | Placeholder |
