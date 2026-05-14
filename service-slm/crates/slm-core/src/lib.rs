@@ -108,6 +108,12 @@ pub struct ComputeRequest {
     /// Optional speculative decoding configuration.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub speculation: Option<SpeculationRequest>,
+    /// When `Some(false)`, graph-context injection is skipped for this request.
+    /// Defaults to `None` (injection enabled when service-content is configured).
+    /// The Anthropic Messages shim sets this to `Some(false)` to prevent
+    /// DataGraph entity rows from bloating Claude Code prompts.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub graph_context_enabled: Option<bool>,
 }
 
 #[cfg(test)]

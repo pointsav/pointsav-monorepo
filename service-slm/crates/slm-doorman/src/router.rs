@@ -123,7 +123,9 @@ impl Doorman {
         // message. The owned `effective_req` must be declared before the
         // conditional block so its lifetime covers the dispatch call below.
         let effective_req: ComputeRequest;
-        let req_ref: &ComputeRequest = if let Some(ref gc) = self.graph_context_client {
+        let req_ref: &ComputeRequest = if req.graph_context_enabled == Some(false) {
+            req
+        } else if let Some(ref gc) = self.graph_context_client {
             let query = req
                 .messages
                 .iter()
