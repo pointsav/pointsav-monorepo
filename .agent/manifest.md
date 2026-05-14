@@ -6,6 +6,8 @@ renamed_from: project-language
 renamed: 2026-05-05
 created: 2026-04-27
 state: active
+slm_endpoint: http://localhost:8011
+module_id: editorial
 editorial_gateway_role: true       # this cluster IS service-language per workspace v0.1.31 (Doctrine claim #35); refines bulk drafts from Master/Root/Task drafts-outbound input ports per cluster-wiki-draft-pipeline.md
 
 tetrad:                            # upgraded from `triad:` per Doctrine v0.0.10 / claim #37 (Project Tetrad Discipline, ratified 2026-04-28); supersedes project-triad-discipline.md
