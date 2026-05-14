@@ -170,6 +170,7 @@ impl<'a> ApprenticeshipDispatcher<'a> {
             yoyo_label: None,
             grammar: None,
             speculation: None,
+            graph_context_enabled: None,
             };
 
         info!(
@@ -263,6 +264,7 @@ impl<'a> ApprenticeshipDispatcher<'a> {
             yoyo_label: None,
             grammar: None,
             speculation: None,
+            graph_context_enabled: None,
             };
 
         info!(

@@ -155,6 +155,7 @@ mod tests {
                 yoyo_label: None,
                 grammar: None,
                 speculation: None,
+                graph_context_enabled: None,
             }
         };
         let selected = registry.select_optimal(&dummy_req).await;
@@ -185,6 +186,7 @@ mod tests {
                 yoyo_label: None,
                 grammar: None,
                 speculation: None,
+                graph_context_enabled: None,
             }
         };
         let selected = registry.select_optimal(&dummy_req).await;
