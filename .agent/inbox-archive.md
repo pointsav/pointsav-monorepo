@@ -1,6 +1,14 @@
 ---
 from: command@claude-code
 to: task@project-editorial
+re: ZIP research archive — framework + per-topic drafts staged (245 emails, Dec 2025–Apr 2026)
+created: 2026-05-14
+archived: 2026-05-14
+action: ACTIONED — all 5 flags resolved with operator. Overhaul plan written at .agent/plans/overhaul-documentation-pointsav-com.md (15 sections). All 27 ZIP drafts incorporated into Phase 2 sub-phase 2a worklist. Progress tracker initialised at .agent/plans/overhaul-progress.md. Gemini CLI picks up Phase 0 next.
+---
+---
+from: command@claude-code
+to: task@project-editorial
 re: NEW — 3 bilingual TOPIC pairs in project-knowledge drafts-outbound (supersedes prior project-intelligence location)
 created: 2026-05-13T16:30:00Z
 archived: 2026-05-14
