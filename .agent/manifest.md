@@ -7,6 +7,8 @@ renamed: 2026-05-05
 created: 2026-04-23
 backfilled: 2026-04-26 (manifest schema), 2026-04-26 (triad per Doctrine v0.0.4), 2026-04-28 (tetrad per Doctrine v0.0.10 claim #37)
 state: active
+slm_endpoint: http://localhost:8011
+module_id: intelligence
 
 tetrad:
   vendor:
