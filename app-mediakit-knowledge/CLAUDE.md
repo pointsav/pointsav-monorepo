@@ -1,6 +1,6 @@
 # CLAUDE.md — app-mediakit-knowledge
 
-> **State:** Active  —  **Last updated:** 2026-05-07
+> **State:** Active  —  **Last updated:** 2026-05-12
 > **Registry row:** `pointsav-monorepo/.agent/rules/project-registry.md`
 >
 > When state changes, update this header AND the registry row in the
@@ -13,15 +13,14 @@
 `app-mediakit-knowledge` is the Wikipedia-pattern HTTP knowledge wiki
 for `os-mediakit`. Serves `content-wiki-documentation` as a fully
 navigable wiki at `documentation.pointsav.com`. Single Rust binary;
-no database; no runtime dependencies beyond the compiled binary.
-
+optional SQLite auth DB (bundled; no runtime system dependencies).
 Substrate substitution for MediaWiki per Doctrine claim #29.
 
 ## Current state
 
-**Active.** Phases 1, 1.1, 2 (Steps 1-7), 3 (Steps 3.1-3.4) shipped
-and promoted to canonical. Phase 4 plan complete (BP1 decision packet
-ready); implementation gated on operator BP1 clearance.
+**Active.** Phases 1, 1.1, 2 (Steps 1-7), 3 (Steps 3.1-3.4), 4
+(Steps 4.1-4.8), and Phase 5 core shipped. Phase 5.1+ (per-page ACLs,
+OIDC SSO, webhooks) deferred pending BP5 clearance.
 
 Running in production at `documentation.pointsav.com` via
 `local-knowledge-documentation.service` (port 9090) and
@@ -49,8 +48,9 @@ cargo run -- serve --content-dir <path-to-content-wiki-documentation>
 | 1.1 — Wikipedia chrome | Shipped | Article/Talk/History tabs, TOC, hatnote, language switcher, footer |
 | 2 — edit + collab | Shipped (Steps 1-7) | JSON-LD, atomic edit, CodeMirror 6, SAA squiggles, citation autocomplete, collab via yjs |
 | 3 — search + feeds | Shipped (Steps 3.1-3.4) | Tantivy BM25, `/feed.atom`, `/feed.json`, `/sitemap.xml`, `/robots.txt`, `/llms.txt`, `/git/{slug}` |
-| 4 — Git sync + MCP | Designed; BP1 gated | `docs/PHASE-4-PLAN.md` + `docs/BP1-DECISION-PACKET.md` |
-| 5-9 | Designed | See `ARCHITECTURE.md` §0 status snapshot |
+| 4 — Git sync + MCP | Shipped (Steps 4.1-4.8) | git2, history/blame/diff, redb wikilink graph, blake3, MCP native JSON-RPC 2.0, git smart-HTTP, OpenAPI 3.1 |
+| 5 — auth + edit review | Phase 5 core shipped; 5.1+ deferred | Cookie sessions, argon2id, edit review queue; ACLs/SSO/webhooks gated on BP5 |
+| 6-9 | Designed | See `ARCHITECTURE.md` §0 status snapshot |
 
 ## Hard constraints
 
@@ -71,12 +71,16 @@ app-mediakit-knowledge/
 ├── CLAUDE.md              this file
 ├── NEXT.md                open items
 ├── ARCHITECTURE.md        phase plan, status, conventions
-├── docs/
-│   ├── BP1-DECISION-PACKET.md   Phase 4 operator review (~15 min)
-│   ├── PHASE-4-PLAN.md          8-step Phase 4 design
-│   └── STEP-7-COLLAB-SMOKE.md  Phase 2 Step 7 smoke runbook
-└── src/
-    └── server.rs          main HTTP handler
+├── openapi.yaml           OpenAPI 3.1 spec (751 lines)
+├── src/
+│   ├── server.rs          main HTTP handler, routing, AppState
+│   ├── auth.rs            Phase 5: cookie sessions, auth extractors
+│   ├── pending.rs         Phase 5: edit review queue
+│   ├── users.rs           Phase 5: SQLite schema, argon2id
+│   ├── mcp.rs             Phase 4.6: MCP JSON-RPC 2.0 server
+│   └── git_protocol.rs    Phase 4.7: read-only git smart-HTTP
+└── docs/
+    └── STEP-7-COLLAB-SMOKE.md  Phase 2 Step 7 smoke runbook
 ```
 
 ## Inherited rules — do not duplicate, do not silently override
