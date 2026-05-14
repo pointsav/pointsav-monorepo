@@ -4,6 +4,8 @@ cluster_name: project-gis
 cluster_branch: cluster/project-gis
 created: 2026-04-30
 state: provisioning
+slm_endpoint: http://localhost:8011
+module_id: gis
 doctrine_version: 0.0.14
 doctrine_claims_codified: []
 doctrine_claims_proposed: []   # placeholder; will fold in claims surfaced by Sonnet research
