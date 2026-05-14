@@ -85,6 +85,9 @@ pub async fn run_idle_monitor(config: IdleMonitorConfig) {
     let mut last_active = Instant::now();
     // Guard against sending repeated stop requests for the same idle period.
     let mut stop_sent = false;
+    // Track consecutive unreachable polls; after 2× idle_threshold of unreachable
+    // metrics (vLLM crashed, VM hung), fire a safety stop to prevent runaway spend.
+    let mut unreachable_since: Option<Instant> = None;
 
     info!(
         target: "slm_doorman::idle_monitor",
@@ -100,7 +103,7 @@ pub async fn run_idle_monitor(config: IdleMonitorConfig) {
         match poll_active_slots(&client, &config.yoyo_endpoint, config.yoyo_bearer.as_deref(), &config.metrics_key).await {
             Some(0) => {
                 // Metrics reachable, zero active slots — VM is up but idle.
-                // Let the idle clock run; fire stop if threshold exceeded.
+                unreachable_since = None;
                 let idle_secs = last_active.elapsed().as_secs();
                 if !stop_sent && last_active.elapsed() >= config.idle_threshold {
                     warn!(
@@ -134,6 +137,7 @@ pub async fn run_idle_monitor(config: IdleMonitorConfig) {
                 // VM is serving (n > 0) — reset idle clock.
                 last_active = Instant::now();
                 stop_sent = false;
+                unreachable_since = None;
                 info!(
                     target: "slm_doorman::idle_monitor",
                     active_slots = n,
@@ -141,12 +145,47 @@ pub async fn run_idle_monitor(config: IdleMonitorConfig) {
                 );
             }
             None => {
-                // Metrics unreachable — VM is booting, stopped, or vLLM not yet
-                // loaded. Reset the idle clock so we don't stop a VM that was never
-                // serving. The nightly GCP instance schedule is the hard-stop
-                // fallback when the VM is unreachable.
-                last_active = Instant::now();
-                stop_sent = false;
+                // Metrics unreachable — VM is booting, stopped, or vLLM crashed.
+                // Track continuous unreachable duration. After 2× idle_threshold,
+                // fire a safety stop: a crashed vLLM never becomes reachable again,
+                // so the normal idle path would never trigger.
+                if unreachable_since.is_none() {
+                    unreachable_since = Some(Instant::now());
+                }
+                let safety_threshold = config.idle_threshold * 2;
+                if !stop_sent
+                    && unreachable_since
+                        .map(|t| t.elapsed() >= safety_threshold)
+                        .unwrap_or(false)
+                {
+                    let unreachable_secs =
+                        unreachable_since.map(|t| t.elapsed().as_secs()).unwrap_or(0);
+                    warn!(
+                        target: "slm_doorman::idle_monitor",
+                        unreachable_secs,
+                        project = %config.gcp_project,
+                        zone = %config.gcp_zone,
+                        instance = %config.gcp_instance,
+                        "Yo-Yo metrics unreachable past safety threshold (crash-guard); sending stop"
+                    );
+                    match stop_gcp_instance(&client, &config).await {
+                        Ok(()) => {
+                            info!(
+                                target: "slm_doorman::idle_monitor",
+                                instance = %config.gcp_instance,
+                                "GCP stop request accepted (crash-guard)"
+                            );
+                            stop_sent = true;
+                        }
+                        Err(reason) => {
+                            warn!(
+                                target: "slm_doorman::idle_monitor",
+                                %reason,
+                                "GCP stop request (crash-guard) failed; will retry next cycle"
+                            );
+                        }
+                    }
+                }
             }
         }
     }
