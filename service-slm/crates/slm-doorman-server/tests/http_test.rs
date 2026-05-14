@@ -868,6 +868,7 @@ async fn lark_validation_runs_before_tier_b_dispatch() {
             "start: item+\nitem: [ unclosed\n".to_string(),
         )),
         speculation: None,
+        graph_context_enabled: None,
     };
 
     // Call route() directly on the Doorman. The pre-validation step (PS.3
@@ -1201,6 +1202,7 @@ async fn valid_lark_grammar_passes_through_to_tier_b() {
             "start: /yes/ | /no/".to_string(),
         )),
         speculation: None,
+        graph_context_enabled: None,
     };
 
     let resp = doorman.route(&req).await;
@@ -2697,4 +2699,143 @@ async fn graph_proxy_service_content_unconfigured_returns_503() {
         "graph_query with unconfigured service-content must return 503; got {}",
         resp.status()
     );
+}
+
+// ===========================================================================
+// Section N — POST /v1/messages Anthropic Messages API shim (3 tests)
+// ===========================================================================
+
+/// POST /v1/messages non-streaming → 200 with Anthropic Messages API response shape.
+/// Verifies id prefix, type, role, stop_reason, content block structure.
+#[tokio::test]
+async fn anthropic_messages_non_streaming_returns_200_with_anthropic_shape() {
+    let server = MockServer::start().await;
+    Mock::given(method("POST"))
+        .and(path("/v1/chat/completions"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+            "choices": [
+                { "message": { "role": "assistant", "content": "pong" } }
+            ]
+        })))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    let state = app_state_with_local(server.uri());
+    let app = router(state);
+
+    let req_body = json!({
+        "model": "claude-haiku-3-5-20241022",
+        "messages": [{"role": "user", "content": "ping"}],
+        "max_tokens": 100
+    });
+    let resp = app
+        .oneshot(post_json("/v1/messages", &req_body))
+        .await
+        .expect("oneshot");
+
+    assert_eq!(resp.status(), StatusCode::OK);
+    let body = body_json(resp).await;
+    assert_eq!(body["type"], "message");
+    assert_eq!(body["role"], "assistant");
+    assert_eq!(body["stop_reason"], "end_turn");
+    assert!(
+        body["id"].as_str().unwrap_or("").starts_with("msg_"),
+        "id must start with msg_; got {:?}",
+        body["id"]
+    );
+    assert_eq!(body["content"][0]["type"], "text");
+    assert_eq!(body["content"][0]["text"], "pong");
+}
+
+/// POST /v1/messages with system prompt → 200 with Anthropic response shape.
+/// The system field is prepended as a system ChatMessage by the adapter.
+#[tokio::test]
+async fn anthropic_messages_system_prompt_returns_200() {
+    let server = MockServer::start().await;
+    Mock::given(method("POST"))
+        .and(path("/v1/chat/completions"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+            "choices": [
+                { "message": { "role": "assistant", "content": "Hello there!" } }
+            ]
+        })))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    let state = app_state_with_local(server.uri());
+    let app = router(state);
+
+    let req_body = json!({
+        "model": "claude-sonnet-4-5",
+        "system": "You are a helpful assistant.",
+        "messages": [{"role": "user", "content": "Hello"}],
+        "max_tokens": 200
+    });
+    let resp = app
+        .oneshot(post_json("/v1/messages", &req_body))
+        .await
+        .expect("oneshot");
+
+    assert_eq!(resp.status(), StatusCode::OK);
+    let body = body_json(resp).await;
+    assert_eq!(body["type"], "message");
+    assert_eq!(body["content"][0]["text"], "Hello there!");
+}
+
+/// POST /v1/messages with stream:true → 200 with text/event-stream content-type
+/// and all 6 SSE event types present in the response body.
+#[tokio::test]
+async fn anthropic_messages_streaming_returns_sse_with_all_six_events() {
+    let server = MockServer::start().await;
+    Mock::given(method("POST"))
+        .and(path("/v1/chat/completions"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+            "choices": [
+                { "message": { "role": "assistant", "content": "streamed response" } }
+            ]
+        })))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    let state = app_state_with_local(server.uri());
+    let app = router(state);
+
+    let req_body = json!({
+        "model": "claude-sonnet-4-5",
+        "messages": [{"role": "user", "content": "stream this"}],
+        "max_tokens": 50,
+        "stream": true
+    });
+    let resp = app
+        .oneshot(post_json("/v1/messages", &req_body))
+        .await
+        .expect("oneshot");
+
+    assert_eq!(resp.status(), StatusCode::OK);
+
+    let ct = resp
+        .headers()
+        .get("content-type")
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("");
+    assert!(
+        ct.contains("text/event-stream"),
+        "content-type must include text/event-stream; got {ct}"
+    );
+
+    let bytes = axum::body::to_bytes(resp.into_body(), 1024 * 1024)
+        .await
+        .expect("read SSE body");
+    let body_str = String::from_utf8(bytes.to_vec()).expect("SSE body is UTF-8");
+
+    assert!(body_str.contains("event: message_start"),       "missing message_start");
+    assert!(body_str.contains("event: content_block_start"), "missing content_block_start");
+    assert!(body_str.contains("event: content_block_delta"), "missing content_block_delta");
+    assert!(body_str.contains("event: content_block_stop"),  "missing content_block_stop");
+    assert!(body_str.contains("event: message_delta"),       "missing message_delta");
+    assert!(body_str.contains("event: message_stop"),        "missing message_stop");
+    assert!(body_str.contains("streamed response"),          "SSE body must contain the response text");
 }
