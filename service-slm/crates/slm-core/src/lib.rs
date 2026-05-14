@@ -385,3 +385,66 @@ pub struct ComputeResponse {
     #[serde(default)]
     pub upstream_version: Option<String>,
 }
+
+// ---------------------------------------------------------------------------
+// Extraction wire shapes (POST /v1/extract)
+// ---------------------------------------------------------------------------
+
+/// Input body for `POST /v1/extract`.
+///
+/// SYS-ADR-07 boundary: `text` must be unstructured prose only. The `schema`
+/// field constrains the OUTPUT shape from the inference model; structured graph
+/// facts must never be injected into the AI prompt verbatim.
+///
+/// `#[serde(deny_unknown_fields)]` locks the contract at the boundary — unknown
+/// fields return 400 before any inference call, enforcing the ADR-07 scope.
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ExtractionRequest {
+    /// Unstructured prose to extract entities from.
+    pub text: String,
+    /// JSON Schema constraining the OUTPUT array from the inference model.
+    pub schema: serde_json::Value,
+    /// Tenant identifier — validated as [`ModuleId`].
+    pub module_id: String,
+    /// Per-request inference timeout in seconds (default 180).
+    #[serde(default = "default_extraction_timeout")]
+    pub timeout_secs: u64,
+}
+
+fn default_extraction_timeout() -> u64 {
+    180
+}
+
+/// Output body for `POST /v1/extract`.
+///
+/// Always HTTP 200. When `deferred: true`, `entities` is empty and
+/// `defer_reason` describes why inference was skipped.
+#[derive(Debug, Serialize)]
+pub struct ExtractionResponse {
+    /// Extracted entity array. Empty (`[]`) when `deferred: true`.
+    pub entities: Vec<serde_json::Value>,
+    /// `"yoyo_trainer"` on success, `"deferred"` when unavailable.
+    pub tier_used: String,
+    /// Model identifier reported by the backend, or `"none"` when deferred.
+    pub model: String,
+    /// `true` when entities were successfully extracted and parsed.
+    pub extraction_ok: bool,
+    /// `true` when the request was deferred (Yo-Yo unavailable).
+    pub deferred: bool,
+    /// Present when `deferred: true`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub defer_reason: Option<DeferReason>,
+}
+
+/// Why an extraction request was deferred rather than executed.
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum DeferReason {
+    /// The `"trainer"` Yo-Yo label is not configured on this Doorman.
+    YoyoLabelUnconfigured,
+    /// The Yo-Yo circuit breaker is open after consecutive failures.
+    YoyoCircuitOpen,
+    /// A transient upstream error prevented extraction (timeout or 5xx).
+    YoyoTransient,
+}
