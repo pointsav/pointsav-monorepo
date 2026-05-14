@@ -4,6 +4,8 @@ cluster_name: project-command
 cluster_branch: cluster/project-command
 created: 2026-05-05
 state: active (provisioned 2026-05-06; pointsav-monorepo sub-clone ready for Task)
+slm_endpoint: http://localhost:8011
+module_id: command
 doctrine_version: 0.0.14
 doctrine_claims_codified: [37, 43, 44]
 doctrine_claims_proposed: []
