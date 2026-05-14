@@ -7,7 +7,7 @@
 //! - Featured-topic YAML present and valid → featured panel renders.
 //! - Featured-topic YAML with unresolvable slug → featured panel suppressed.
 //! - Recent feed sorts by `last_edited:` descending.
-//! - Category grid always shows all 10 ratified categories; empty ones render
+//! - Category grid always shows all 12 ratified categories; empty ones render
 //!   placeholder copy.
 
 use app_mediakit_knowledge::search;
@@ -122,12 +122,12 @@ async fn home_renders_with_index_md_present() {
     // Site title.
     assert!(html.contains("PointSav Knowledge"), "title should appear: snippet={}", &html[..html.len().min(500)]);
 
-    // All 10 ratified category names must appear in the grid.
-    for cat in &["Architecture", "Services", "Systems", "Applications", "Governance", "Infrastructure", "Company", "Reference", "Help", "Design-system"] {
+    // All 12 ratified category names must appear in the grid (humanized: hyphens → spaces).
+    for cat in &["Architecture", "Substrate", "Patterns", "Services", "Systems", "Applications", "Governance", "Infrastructure", "Company", "Reference", "Help", "Design System"] {
         assert!(html.contains(cat), "category '{cat}' should appear in grid");
     }
 
-    // The 3 populated categories show articles, the 6 empty ones show placeholder.
+    // The 3 populated categories show articles, the 9 empty ones show placeholder.
     assert!(html.contains("Arch One"), "architecture topic should appear");
     assert!(html.contains("Service One"), "services topic should appear");
     assert!(html.contains("Gov One"), "governance topic should appear");
@@ -325,7 +325,7 @@ async fn category_with_zero_articles_renders_placeholder() {
     .await
     .unwrap();
 
-    // Only 3 categories populated; other 6 should show placeholder.
+    // Only 3 categories populated; other 9 should show placeholder.
     write_topic(dir.path(), "topic-arch-one.md",  "Arch One",  "architecture", None, "Body.").await;
     write_topic(dir.path(), "topic-svc-one.md",   "Svc One",   "services",     None, "Body.").await;
     write_topic(dir.path(), "topic-gov-one.md",   "Gov One",   "governance",   None, "Body.").await;
@@ -342,10 +342,48 @@ async fn category_with_zero_articles_renders_placeholder() {
         &html[..html.len().min(1500)]
     );
 
-    // Count occurrences — there should be exactly 7 (the 7 empty categories; 10 total, 3 populated).
+    // Count occurrences — there should be exactly 9 (the 9 empty categories; 12 total, 3 populated).
     let placeholder_count = html.matches("In preparation.").count();
     assert_eq!(
-        placeholder_count, 7,
-        "expected 7 empty-category placeholders, got {placeholder_count}"
+        placeholder_count, 9,
+        "expected 9 empty-category placeholders, got {placeholder_count}"
+    );
+}
+
+// ─── Test 8: substrate category buckets correctly + humanized heading ─────────
+
+#[tokio::test]
+async fn substrate_category_buckets_and_renders_humanized() {
+    let dir = tempfile::tempdir().unwrap();
+
+    tokio::fs::write(
+        dir.path().join("index.md"),
+        "---\ntitle: \"Home\"\ncategory: \"root\"\n---\nLede.\n",
+    )
+    .await
+    .unwrap();
+
+    write_topic(dir.path(), "topic-substrate-one.md", "Substrate Topic", "substrate", None, "Body.").await;
+
+    let (state, _state_dir) = build_state(dir.path()).await;
+    let (status, html) = get_home(state).await;
+
+    assert_eq!(status, StatusCode::OK);
+
+    // Topic must appear in the substrate bucket, not the uncategorised catch-all.
+    assert!(
+        html.contains("Substrate Topic"),
+        "substrate topic must appear in home page: snippet={}",
+        &html[..html.len().min(1000)]
+    );
+    assert!(
+        !html.contains("All articles"),
+        "substrate topic must not fall into uncategorised catch-all"
+    );
+
+    // Category heading must render as "Substrate" (humanized), not "substrate".
+    assert!(
+        html.contains("Substrate"),
+        "substrate heading must be humanized to 'Substrate'"
     );
 }
