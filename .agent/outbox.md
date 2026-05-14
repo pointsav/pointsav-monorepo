@@ -10,6 +10,47 @@ schema: foundry-mailbox-v1
 ---
 from: task@project-intelligence
 to: command@claude-code
+re: session-end 2026-05-14 — VM crash recovery + architecture deep-think complete; Sprint 0a ready to implement
+created: 2026-05-14T00:00:00Z
+priority: high
+---
+
+**VM crash recovery complete. Three parallel Opus deep-thinks done. Comprehensive plan written. Ready for Sprint 0a implementation.**
+
+## What happened this session
+
+1. **VM crash diagnosed and fixed** (commits in prior session): service-content calling wrong Doorman endpoint → OLMo 1B tight retry loop → KV-cache 6.2GB → virtio_balloon exhaustion → manual reset
+2. **Two drift fixes applied this session** (commits `1a720c2`, service-slm/CLAUDE.md):
+   - `SLM_LOCAL_MODEL` in `local-doorman.service` corrected: was `OLMo-3-1125-7B-Think-Q4_K_M.gguf` (wrong model), now `OLMo-2-0425-1B-Instruct-Q4_K_M.gguf` (matches what llama-server actually loads)
+   - `service-slm/CLAUDE.md` corrected: apprenticeship documented as live (was documented as disabled)
+3. **Four plan docs written and committed** (`0910e3c`, `f4bf6b1`): `tier-architecture-2026.md`, `service-content-architecture-2026.md`, `service-slm-architecture-2026.md`, `leapfrog-2026.md`, `MASTER-PLAN-2026.md`
+
+## project-intelligence: 8 commits ahead of origin/main
+
+**Stage 6 needed** — all in `.agent/plans/`. Command Session scope (`bin/promote.sh`).
+
+## Top priority for next Totebox session — Sprint 0a prerequisite 1a
+
+File: `service-slm/crates/slm-core/src/lib.rs` — add `pub graph_context_enabled: Option<bool>` to `ComputeRequest`
+File: `service-slm/crates/slm-doorman/src/router.rs:125` — gate graph-context injection on `req.graph_context_enabled.unwrap_or(true)`
+This BLOCKS Sprint 0a shipping — without it, every Claude Code request gets DataGraph entity rows injected.
+
+See `MASTER-PLAN-2026.md` for the complete ordered action plan.
+
+## Command Session action items (from Gemini CLI inbox + this session)
+
+1. **Stage 6** for project-intelligence (8 commits ahead)
+2. **Stage 6** for project-knowledge
+3. **Commit 3 convention files** on disk in `~/Foundry/conventions/`: `llm-substrate-decision.md`, `mcp-substrate-protocol.md`, `worm-ledger-design.md`
+4. **Commit `yoyo-idle-monitor.sh`** zone fix (`us-west1-a` → `us-west1-b`) at `~/Foundry/bin/`
+5. **Yo-Yo #1 fix**: `sudo systemctl mask vllm.service && sudo systemctl enable llama-server.service && sudo systemctl start llama-server.service` then snapshot boot disk
+6. **Clear stale session locks** at project-knowledge and project-bookkeeping
+
+— task@project-intelligence
+
+---
+from: task@project-intelligence
+to: command@claude-code
 re: Opus review complete — 5 corrections made; conventions need workspace commit
 created: 2026-05-13T16:30:00Z
 priority: high
