@@ -57,7 +57,7 @@ log "=== Phase 1: DataGraph rebuild (${DATAGRAPH_SECONDS}s budget) ==="
 
 if [[ "${NO_YOYO}" != "true" ]]; then
     log "Starting Yo-Yo #1 (vLLM Tier B for extraction)..."
-    if "${SCRIPT_DIR}/start-yoyo.sh" --wait-ready=5400 --auto-snapshot 2>&1 | sed 's/^/  /'; then
+    if "${SCRIPT_DIR}/start-yoyo.sh" --wait-ready=600 --auto-snapshot 2>&1 | sed 's/^/  /'; then
         log "Yo-Yo #1 ready — Tier B available."
     else
         rc=${PIPESTATUS[0]}
@@ -71,12 +71,13 @@ fi
 log "Workspace feeder warmup (batch-size 20)..."
 "${SCRIPT_DIR}/foundry-workspace-feeder.sh" --batch-size 20 2>&1 | sed 's/^/  /' || true
 
-log "Running jennifer-datagraph-rebuild.sh (budget=${DATAGRAPH_SECONDS}s)..."
-DATAGRAPH_SECONDS="${DATAGRAPH_SECONDS}" \
-JENNIFER_DEPLOYMENT="${JENNIFER_DEPLOYMENT}" \
-FOUNDRY_ROOT="${FOUNDRY_ROOT}" \
-    "${SCRIPT_DIR}/jennifer-datagraph-rebuild.sh" \
-    || log "WARN: jennifer-datagraph-rebuild returned non-zero — check service-content + Doorman"
+log "Running jennifer-datagraph-rebuild.sh (budget=${DATAGRAPH_SECONDS}s, hard timeout enforced)..."
+timeout --signal=TERM --kill-after=60 "${DATAGRAPH_SECONDS}" \
+    env DATAGRAPH_SECONDS="${DATAGRAPH_SECONDS}" \
+        JENNIFER_DEPLOYMENT="${JENNIFER_DEPLOYMENT}" \
+        FOUNDRY_ROOT="${FOUNDRY_ROOT}" \
+        "${SCRIPT_DIR}/jennifer-datagraph-rebuild.sh" 2>&1 | sed 's/^/  /' || \
+    log "WARN: jennifer-datagraph-rebuild.sh timed out or returned non-zero — check service-content + Doorman"
 
 log "Phase 1 complete. Stopping vLLM to free L4 GPU for training..."
 if [[ "${NO_YOYO}" != "true" ]]; then
@@ -85,10 +86,12 @@ fi
 
 # ── Phase 2: Training ─────────────────────────────────────────────────────────
 log "=== Phase 2: Training (${TRAINING_SECONDS}s budget) ==="
-log "Running corpus-threshold.py (dispatches GCS marker if threshold met)..."
-TRAINING_SECONDS="${TRAINING_SECONDS}" \
-FOUNDRY_ROOT="${FOUNDRY_ROOT}" \
-    python3 "${SCRIPT_DIR}/corpus-threshold.py" 2>&1 | sed 's/^/  /' || true
+log "Running corpus-threshold.py (dispatches GCS marker if threshold met, hard timeout enforced)..."
+timeout --signal=TERM --kill-after=60 "${TRAINING_SECONDS}" \
+    env TRAINING_SECONDS="${TRAINING_SECONDS}" \
+        FOUNDRY_ROOT="${FOUNDRY_ROOT}" \
+    python3 "${SCRIPT_DIR}/corpus-threshold.py" 2>&1 | sed 's/^/  /' || \
+    log "WARN: corpus-threshold.py timed out or returned non-zero"
 
 # ── Nightly summary ───────────────────────────────────────────────────────────
 log "=== Nightly run complete ==="
