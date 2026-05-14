@@ -4,6 +4,8 @@ cluster_name: project-system
 cluster_branch: cluster/project-system
 created: 2026-04-26
 state: active
+slm_endpoint: http://localhost:8011
+module_id: system
 
 tetrad:
   vendor:
