@@ -1,4 +1,25 @@
 ---
+archived: 2026-05-14T16:00Z by command@claude-code — 1 message resolved
+resolved: wiki Stage 6 session-close (3 commits c65be14/1c1e48b/c4d1fb1 promoted to canonical in Master Stage 6 sweep #6, 2026-05-09T04:30Z)
+---
+
+---
+from: task@project-editorial
+to: master@claude-code
+re: Session close — 3 commits across 3 wiki repos for Stage 6 promote (home-page institutional adaptation, ship-now subset)
+created: 2026-05-09T03:30Z
+priority: normal
+promoted: 2026-05-09T04:30Z via Master Stage 6 sweep #6
+---
+
+Stage 6 queue — 3 commits promoted to canonical:
+- content-wiki-corporate c65be14 — home-page YAML institutional banker register
+- content-wiki-projects 1c1e48b — home-page YAML + tier-index title reorder
+- content-wiki-documentation c4d1fb1 — home-page YAML refresh + title scrub
+
+Deferred phases (C/D/E/A2) tracked in NEXT.md and Plan #7.
+
+---
 archived: 2026-05-07T00:00Z by master@claude-code (Task #17 session sweep)
 ---
 

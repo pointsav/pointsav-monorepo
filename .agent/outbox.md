@@ -10,49 +10,6 @@ schema: foundry-mailbox-v1
 ---
 from: task@project-editorial
 to: master@claude-code
-re: Session close — 3 commits across 3 wiki repos for Stage 6 promote (home-page institutional adaptation, ship-now subset)
-created: 2026-05-09T03:30Z
-priority: normal
----
-
-**Stage 6 queue — 3 commits, all pushed to staging-j + staging-p:**
-
-| Repo | Commit | Subject |
-|---|---|---|
-| `content-wiki-corporate` | `c65be14` | home-page YAML: featured rotation pool (5-week) + new DYK panel — institutional banker register |
-| `content-wiki-projects` | `1c1e48b` | home-page YAML + tier-index title reorder — institutional banker register |
-| `content-wiki-documentation` | `c4d1fb1` | home-page YAML refresh + title scrub — institutional banker register |
-
-All 3 are clean fast-forwards from canonical. No conflicts expected.
-
-**What ships to live sites after canonical promote:**
-
-- **All 3 wikis:** refreshed Featured Article rotation + Did You Know panel content matching institutional banker register.
-- **corporate.woodfinegroup.com:** gains DYK panel for the first time (5 facts on Direct-Hold structural features).
-- **projects.woodfinegroup.com:** gains DYK panel for the first time (7 facts with quantitative scarcity hooks); 2 tier-index titles renamed for consistency (`European Co-location Tier Index` → `Co-location Tier Index: Europe`).
-- **documentation.pointsav.com:** Did You Know panel content refreshed from generic "leapfrog inventions" to 7 banker-grade Structural Facts; 3 article titles scrubbed of workspace-internal governance vocabulary (`Foundry Doctrine — Architectural Overview` → `Foundry — Architectural Overview`; `The Sovereign Airlock Doctrine` → `The Sovereign Airlock`; `AEC Muscle Memory and Interface Conventions` → `AEC Muscle Memory and Interface Patterns`); 3 systems/ articles renamed from PascalCase to Title Case + space (`OrchestrationOS` → `Orchestration OS`, etc.).
-
-**Context — Plan #7 ship-now subset (Phases A + A2 + B + F):**
-
-This is a partial execution of Plan #7 (Wikipedia Main Page institutional
-adaptation at 97% structural fidelity, with bespoke per-wiki slot labels +
-content sourced from existing TOPICs). Operator credit budget did not
-allow the full plan in one session. Deferred to follow-up sessions:
-
-- **Phase C** — author 15 new YAML drafts across 3 wikis for engine-pending slots (`in-the-news.yaml`, `featured-spotlight.yaml`, `sister-wikis.yaml`, `other-areas.yaml`; `on-this-day.yaml` only for projects per operator constraint #3 — corporate + documentation defer).
-- **Phase D** — rewrite `patterns/knowledge-wiki-home-page-design.md` + `.es.md` with the full institutional 10-slot spec, the 3 per-wiki slot tables, the YAML schemas for the 5 new slots, the "10 categories" correction, and the institutional-banker reader contract.
-- **Phase E** — outbox to project-knowledge (cluster owns engine source) with engine spec for the 5 new chrome slots + multi-tenant Other Areas (replace hardcoded GitHub links at `app-mediakit-knowledge/src/server.rs:1262-1266` with per-wiki YAML).
-- **Phase A2 follow-up** — body-level Doctrine/Convention scrub across ~120 documentation-wiki files (surfaced this session as new Open entry in `cleanup-log.md`); phased multi-session work; first sweep is the 12 banker-relevant Featured-rotation articles.
-
-Full plan + slot mapping at `/home/mathew/.claude/plans/you-are-task-agetn-robust-puddle.md` Plan #7.
-
-**New operator constraint surfaced this session (saved as feedback memory `feedback_no_doctrine_convention_in_public.md`):** workspace-internal governance vocabulary ("Doctrine", "Convention") must not appear in public-facing wiki content. This drove the 3 title scrubs in this commit, the slot-design revisions in Plan #7, and the new cleanup-log Open entry surfacing the body-level scrub as tracked work.
-
-**No further project-editorial action required this session.** Standing reference + cleanup-log already updated. Inbox empty.
-
----
-from: task@project-editorial
-to: master@claude-code
 re: Category-balance audit complete — 3 taxonomy questions for operator decision
 created: 2026-05-09T02:30Z
 priority: high
