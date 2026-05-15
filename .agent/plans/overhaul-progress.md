@@ -2,27 +2,34 @@
 schema: overhaul-progress-v1
 plan: overhaul-documentation-pointsav-com.md
 phase: 2
-sub_phase: 2i-complete
+sub_phase: 2j-complete
 status: in-progress
 safe_to_resume: true
 unsafe_reason: ""
 owner_engine: claude-code
-last_updated: 2026-05-15T21:00:00Z
+last_updated: 2026-05-15T23:30:00Z
 last_session_id: f0c72c72-f1b7-4254-bfa2-553a5e266bac
 ---
 
 ## Last completed sub-task
-- task: Sub-phase 2i — architecture/ category Bloomberg lede + internal vocab scrub (complete)
-- commit_sha: d5a542b (content-wiki-documentation, final architecture/ batch)
+- task: Sub-phase 2j — Bloomberg vocabulary sweep across all remaining categories (complete)
+- commit_sha: 96a6379 (content-wiki-documentation, final substrate residual batch 7b)
 - committed_at: 2026-05-15
-- detail: Full architecture/ sweep across 4 batches (7c3ca97, ea347f8, 8fb0eb7, d5a542b).
-  All "Foundry", "Doctrine claim #N", "~/Foundry/", "Task Claude" vocabulary removed from
-  all architecture/ EN+ES article pairs. Substitutions: "PointSav" (commercial/product
-  context), "the platform" (technical substrate), "the development workspace" (internal workspace refs).
-  systems/totebox-archive.md cluster-totebox-jennifer scrub (a9b4059).
-  WFD reconciliation: hard reset to canonical + cherry-pick 2 genuine commits (606563c, d10c971).
-  LEGAL draft verified + routed to command@claude-code outbox.
-  All inbox messages actioned and archived.
+- detail: Full Foundry/Doctrine/X-Foundry-Module/~/Foundry/ vocabulary sweep across 7 batches:
+  - Batch 1 (Peter): services/ EN+ES
+  - Batch 2 (Jennifer): systems/ EN+ES
+  - Batch 3 (Peter): infrastructure/ + patterns/ EN+ES
+  - Batch 4 (Jennifer): design-system/ EN+ES
+  - Batch 5 (Peter): reference/ EN+ES
+  - Batch 6 (Peter, 9e891c8): substrate/ EN (13 files) + patterns/pairing-as-permission + applications/app-mediakit-knowledge.es.md
+  - Batch 7 (Jennifer, e899768): substrate/ ES (18 files)
+  - Batch 7b (Peter, 96a6379): 4 residual files (single-boundary-compute-discipline.md,
+    reverse-flow-substrate.md, reverse-flow-substrate.es.md, design-system-substrate.es.md)
+  Substitution rules: "Foundry" → "the platform" / "PointSav"; "Doctrine claim #N" → removed;
+  "X-Foundry-Module-ID" → "X-Module-ID"; "Foundry artifact" → "Platform artifact";
+  "~/Foundry/" paths → removed; reclamación/afirmación doctrinal #N (ES) → removed.
+  Final grep across all non-architecture categories returned zero hits.
+  Sub-phase 2i (architecture/ + substrate/ Bloomberg lede scrub, d5a542b) also completed this session.
 
 ## Sub-phase 2e summary (cross-reference gap fill — COMPLETE)
 Audit (enhanced to skip inline code spans and .agent/ rules files) found 44 flagged links;
@@ -91,11 +98,16 @@ Style guides updated with OPUS editorial rules.
     identity-ledger-schema-design, pointsav-llm, zero-container-inference (EN+ES)
   - Batch 4 (d5a542b): totebox-session.es.md (~/Foundry/ paths + charter vocabulary)
 
-### Next — sub-phase 2j or operator-designated next phase
-- services/, systems/, patterns/, reference/, governance/, infrastructure/, design-system/,
-  applications/ categories still have Doctrine/Convention vocabulary (per cleanup-log.md audit:
-  ~50 files in documentation wiki)
-- Suggest: operator to designate next sub-phase scope and priority order
+### Sub-phase 2j — COMPLETE (commits 9e891c8, e899768, 96a6379 + batches 1–5 earlier this session)
+Bloomberg vocabulary sweep across ALL non-architecture categories. All Foundry/Doctrine/internal
+path vocabulary removed from services/, systems/, patterns/, reference/, governance/,
+infrastructure/, design-system/, applications/, and substrate/ (EN+ES). Final grep clean.
+
+### Next — operator-designated next phase
+- Stage 6 promotion of content-wiki-documentation (all 2j commits) → Command Session
+- Stage 6 promotion of woodfine-fleet-deployment → Command Session
+- LEGAL corrections (factory-release-engineering MIT.txt + PointSav-ARR.txt) → Command Session (ps-administrator)
+- Further overhaul phases at operator discretion
 
 ## Blockers
 - (none)
