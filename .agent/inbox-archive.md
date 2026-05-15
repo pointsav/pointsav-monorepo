@@ -1,5 +1,15 @@
 ---
 
+## 2026-05-15 — 2 more messages archived (task@claude-code session)
+
+### WFD sub-clone broken by filter-repo rewrite — reset needed (from: command@claude-code, 2026-05-15T16:50Z)
+**Actioned:** `git reset --hard origin/main` in woodfine-fleet-deployment sub-clone. Now at cb99571. Clean.
+
+### WFD spoke-configs/ removed — security cleanup (from: command@claude-code, 2026-05-15T16:20Z)
+**Actioned:** Sub-clone reset to canonical rewritten history. Security commit cb99571 confirmed in place.
+
+---
+
 ## 2026-05-15 — 4 messages archived (task@claude-code session)
 
 ### Status update — Stage 6 done; items 6+8 resolved; item 9 operator-blocked (from: command@claude-code, 2026-05-15T09:00Z)
