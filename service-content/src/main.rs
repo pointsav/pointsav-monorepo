@@ -164,12 +164,31 @@ fn process_corpus(
     // Per-file module_id override: CORPUS JSON may carry a "module_id" field to
     // route workspace artifacts into a separate graph namespace (e.g. "foundry-workspace")
     // without requiring a separate service-content instance.
+    // Reject "__" prefix — reserved for taxonomy namespace; a rogue CORPUS file must
+    // not be able to overwrite taxonomy nodes.
     let effective_module_id: &str = payload["module_id"]
         .as_str()
-        .filter(|s| !s.is_empty())
+        .filter(|s| !s.is_empty() && !s.starts_with("__"))
         .unwrap_or(module_id);
 
     if corpus_text.is_empty() { return false; }
+
+    // Sprint 1: write Source node before calling Doorman.
+    // Graph grows regardless of Ring 3 (Doorman/Tier B) reachability.
+    let source_node = GraphEntity {
+        entity_name: worm_id.to_string(),
+        classification: "Source".to_string(),
+        role_vector: None,
+        location_vector: None,
+        contact_vector: None,
+        module_id: effective_module_id.to_string(),
+        confidence: 1.0,
+    };
+    if let Err(e) = graph_store.upsert_entities(effective_module_id, &[source_node]) {
+        println!("  -> [GRAPH] Source node write failed (non-fatal): {}", e);
+    } else {
+        println!("  -> [GRAPH] Source node written: {} ({})", worm_id, effective_module_id);
+    }
 
     println!("  -> [WATCHER] Routing payload to Doorman ({})/v1/extract...", doorman_endpoint);
 
@@ -290,7 +309,10 @@ fn process_corpus(
                         });
 
                         let out_file = format!("{}/SEMANTIC_{}.json", crm_dir, worm_id);
-                        fs::write(&out_file, semantic_ledger.to_string()).unwrap();
+                        if let Err(e) = fs::write(&out_file, semantic_ledger.to_string()) {
+                            println!("  -> [WATCHER] Failed to write semantic ledger {}: {}", out_file, e);
+                            return false;
+                        }
                         println!("  -> [WATCHER] Semantic Integration Complete: {} Nodes Secured.", enriched_crm.len());
 
                         // ── Graph write path ──────────────────────────────────
