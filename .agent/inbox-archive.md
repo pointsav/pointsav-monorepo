@@ -1,5 +1,12 @@
 ---
 
+## 2026-05-15 — 1 more message archived (task@claude-code session, 2nd WFD reset)
+
+### WFD sub-clone 2nd filter-repo rewrite — reset to 7fdf36b (from: command@claude-code, 2026-05-15T00:00Z)
+**Actioned:** `git reset --hard origin/main` in woodfine-fleet-deployment. Now at 7fdf36b. Clean.
+
+---
+
 ## 2026-05-15 — 2 more messages archived (task@claude-code session)
 
 ### WFD sub-clone broken by filter-repo rewrite — reset needed (from: command@claude-code, 2026-05-15T16:50Z)

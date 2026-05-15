@@ -31,37 +31,28 @@ Current `main.rs` is the **legacy watcher** that `service-content/ARCHITECTURE.m
 deprecated. Ring 2 ingest halts completely when Ring 3 (Doorman) is unavailable — the Community
 Tier principle is aspirational, not real. See `.agent/plans/service-content-architecture-2026.md`.
 
-- [ ] **Sprint 1 — deterministic Source node write** (~30 LOC)
-  Before calling `POST /v1/extract`, write a `Source` node to the graph with `worm_id` +
-  `module_id`. Graph grows regardless of Ring 3 reachability. Closes the most critical
-  production defect (114 CORPUS files currently deferred).
+- [x] **Sprint 1 — deterministic Source node write** — done (2026-05-15, `889bc993`). Source node written before Doorman call; graph grows regardless of Tier B reachability.
 - [ ] **Persistent extraction queue** (replace per-boot retry)
   `processed_ledgers: Vec<String>` resets on restart. 114 deferred files retry every boot.
   Fix: disk-backed set (sidecar JSONL or SQLite) + Yo-Yo-up notification trigger.
-- [ ] **Validate `module_id`; reject `__` prefix**
-  `main.rs:167-170` allows per-file `module_id` override with no validation. A CORPUS file
-  carrying `"module_id": "__taxonomy__"` corrupts the taxonomy namespace.
+- [x] **Validate `module_id`; reject `__` prefix** — done (2026-05-15, `889bc993`). Rejects `__`-prefixed overrides.
 - [ ] **Wire `RelatedTo` edges in graph store**
   `graph.rs:66-72` declares `RelatedTo` table; it is never populated anywhere. Graph is
   node-only. Everything in ARCHITECTURE.md §8 about linked nodes is unmet.
-- [ ] **Fix `main.rs:293` unwrap** — `fs::write(...).unwrap()` panics on disk-full.
+- [x] **Fix `main.rs:293` unwrap** — done (2026-05-15, `889bc993`).
 - [ ] **Move `/v1/draft/generate` to Doorman** (Ring violation — Ring 2 generating text via Ring 3).
 
 ### service-slm — audit ledger completeness [2026-05-14 task@claude-code]
 
-- [ ] **`ExtractionAuditEntry` missing fields** (`ledger.rs:286-309`, `http.rs:573-585`)
-  Add: `model: String`, `cost_usd: f64`, `sanitised_outbound: bool`. Handler discards these
-  from `ComputeResponse` before writing the ledger entry.
-- [ ] **Add `"graph-query"` to `AUDIT_CAPTURE_VALID_EVENT_TYPES`** (`http.rs:859-865`)
-  Graph proxy handlers write this `event_type` but it's not in the accepted set.
+- [x] **`ExtractionAuditEntry` missing fields** — done (2026-05-15, `889bc993`). `model`, `cost_usd`, `sanitised_outbound` added.
+- [x] **Add `"graph-query"` to `AUDIT_CAPTURE_VALID_EVENT_TYPES`** — done (2026-05-15, `889bc993`).
 
 ### Leapfrog compound loop — close the flywheel [2026-05-14 task@claude-code]
 
 The compound moat (apprenticeship → LoRA → sovereign model) requires these steps in order.
 See `.agent/plans/leapfrog-2026.md` for full strategic analysis.
 
-- [ ] **1. Git post-commit hook** — wire `actual_diff` in `/v1/shadow` (`http.rs:349-358`)
-  Currently always empty. ~50 LOC hook + Doorman endpoint extension. Closes the training loop.
+- [x] **1. Git post-commit hook** — done (2026-05-15). `service-slm/scripts/capture-edit.sh` (54 LOC). Reads `.git/foundry-brief-id`; POSTs diff to `/v1/shadow`. Install: `ln -sf ... .git/hooks/post-commit`. Agent session writes brief_id to file before committing; clears at session end.
 - [ ] **2. Eval harness** — held-out eval set + regression test for Tier A and Tier B tasks.
   Must exist BEFORE first LoRA training run (no way to measure improvement otherwise).
 - [ ] **3. Corpus quality gate** — min brief length, min diff size, dedup policy, PII scrub.
@@ -76,26 +67,18 @@ See `.agent/plans/leapfrog-2026.md` for full strategic analysis.
 
 ### app-mediakit-knowledge — Phase 4 continuation
 
-Steps 4.1–4.5 complete as of 2026-05-12. Next two steps pending Stage 6 + operator
-presence:
+**CLOSED (2026-05-15).** Steps 4.1–4.8 all confirmed shipped in source:
+`src/mcp.rs` (Step 4.6, `POST /mcp` default-off), `src/git_protocol.rs` (Step 4.7
+smart-HTTP). Project-root `NEXT.md` already says "Phase 4 COMPLETE". CLAUDE.md and
+project NEXT.md are authoritative.
 
-- [ ] **Step 4.6 — MCP server via rmcp** [2026-05-12 task@claude-code]
-  Expose wiki engine as an MCP tool server. Transport decision (stdio vs SSE) was
-  a BP1 open question — check `docs/BP1-DECISION-PACKET.md` Q3 for operator answer
-  before implementing. CLI flag `--enable-mcp`.
-- [ ] **Step 4.7 — Read-only git remote via smart-HTTP** [2026-05-12 task@claude-code]
-  `GET /info/refs?service=git-upload-pack` + `POST /git-upload-pack`. Allows
-  `git clone` of the content directory. CLI flag `--enable-git-remote`.
-- [ ] **Deploy after Stage 6** — rebuild release binary, install, restart
-  `local-knowledge-documentation.service` and `local-knowledge-projects.service`.
-- [ ] **project-root CLAUDE.md + NEXT.md** — activation defect still open; required
-  per framework §8 before moving to next phase milestone.
+Remaining open item: **Deploy** — rebuild release binary, restart
+`local-knowledge-documentation.service` and `local-knowledge-projects.service`.
+This requires operator presence on the workspace VM; no code work needed.
 
 ### Leapfrog 2030 Architecture & Multi-Yo-Yo Roadmap
-- **Software layer complete** (177/177 tests, canonical `ecfc691`). See `service-slm/NEXT.md`.
-- **Yo-Yo #1 VM live** — `yoyo-tier-b-1` provisioned 2026-05-07 in `us-central1-a`
-  (Spot g2-standard-4 + L4, image `slm-yoyo-20260507-061137`). Doorman wired
-  (`has_yoyo: true`). Nginx TLS + bearer auth verified working.
+- **Software layer complete** (180/180 tests as of 2026-05-15). See `service-slm/NEXT.md`.
+- **Yo-Yo #1 VM live** — `yoyo-tier-b-1` in `europe-west4-a` (relocated from `us-central1-a` via Mode 2 stockout cascade; confirmed 2026-05-15). L4, image `slm-yoyo-20260507-061137`. Doorman wired; nginx TLS + bearer auth verified working.
 - **Idle monitor fixed** (`890b3f6`) — was returning HTTP 411 (missing `Content-Length: 0`
   on GCP POST); fixed with `.body("")`. The SA (Editor role) can stop instances without
   additional IAM grant — step 2 below is no longer required.
