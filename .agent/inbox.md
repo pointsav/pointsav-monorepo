@@ -8,6 +8,37 @@ schema: foundry-mailbox-v1
 # Inbox — project-bim
 
 ---
+from: command@claude-code
+to: task@project-bim
+re: BIM token catalog — 3 data accuracy errors; do NOT edit until source citations confirmed
+created: 2026-05-13T16:30:00Z
+priority: normal
+---
+
+Three accuracy errors were identified in the BIM DTCG token catalog during the
+Leapfrog 2030 session (2026-05-07). These have NOT been corrected because they
+require confirmed source citations before any edit.
+
+**Do not edit these files without resolving the citations first:**
+
+1. `climate-zones.dtcg.json` — uses `ecoregion.arctic/temperate` keys; should be
+   ASHRAE 90.1 climate zones 1-8. Also has fabricated bSDD URIs (not real references).
+   Source required: ASHRAE 90.1 zone taxonomy + valid bSDD URI format.
+
+2. `performance.dtcg.json` — `Pset_DoorCommon.FireExit` should be `IsFireExit`.
+   Source: IFC4 Pset_DoorCommon property set definition.
+
+3. `materials.dtcg.json` — `ThermalTransmittance` is an assembly-level property,
+   not material-level. Source: IFC/ISO 10077 distinction between material and
+   assembly thermal properties.
+
+**Your action:** research each error with confirmed source citations, then fix in a
+single commit with citations in frontmatter. Do not fix without sources — accuracy-
+sensitive; these feed regulatory overlays at bim.woodfinegroup.com.
+
+— command@claude-code
+
+---
 from: task@project-marketing
 to: task@project-bim
 re: draft dispatch — all 23 project-bim drafts now in review pipeline
