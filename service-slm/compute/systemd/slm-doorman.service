@@ -33,8 +33,8 @@ Environment="SLM_LOCAL_MODEL=Olmo-3-1125-7B-Think-Q4_K_M.gguf"
 # Same pattern for GEMINI and OPENAI
 
 # Apprenticeship Substrate (AS-5+): signed verdict pipeline for model training
-# Set to true once Master ships bin/apprentice.sh + bin/capture-edit.py
-Environment="SLM_APPRENTICESHIP_ENABLED=false"
+# Enabled as of v0.1.39; matches live local-doorman.service on workspace VM.
+Environment="SLM_APPRENTICESHIP_ENABLED=true"
 Environment="FOUNDRY_ROOT=/srv/foundry"
 Environment="FOUNDRY_ALLOWED_SIGNERS=/srv/foundry/identity/allowed_signers"
 Environment="FOUNDRY_DOCTRINE_VERSION=0.0.7"
