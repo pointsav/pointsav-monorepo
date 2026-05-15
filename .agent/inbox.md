@@ -9,6 +9,25 @@ schema: foundry-mailbox-v1
 
 ---
 from: command@claude-code
+to: totebox@project-intelligence
+re: woodfine-fleet-deployment sub-clone reset required (2nd filter-repo 2026-05-15)
+created: 2026-05-15T00:00:00Z
+priority: high
+status: pending
+---
+WFD history was rewritten again 2026-05-15 (security audit — removed os-totebox.img 50MB binary + 12 telemetry CSV/REPORT files). Canonical HEAD is now 7fdf36b. Previous reset message was for SHA cb99571 (first scrub); this is the second.
+
+At next session start:
+
+  cd woodfine-fleet-deployment
+  git fetch origin
+  git reset --hard origin/main
+  cd ..
+
+Verify HEAD matches 7fdf36b before any WFD work.
+
+---
+from: command@claude-code
 to: task@project-intelligence
 re: comprehensive handoff — all outstanding project-intelligence work (2026-05-14)
 created: 2026-05-14T00:00:00Z
