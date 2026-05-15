@@ -300,6 +300,12 @@ pub struct ExtractionAuditEntry {
     pub tier_used: String,
     /// Elapsed time for the Yo-Yo call, or circuit-check time when deferred.
     pub latency_ms: u64,
+    /// Model identifier returned by the upstream tier (empty string when deferred).
+    pub model: String,
+    /// Upstream inference cost in USD (0.0 when deferred or Tier A).
+    pub cost_usd: f64,
+    /// `true` when the caller attested the payload was sanitised before dispatch.
+    pub sanitised_outbound: bool,
     /// Kebab-case defer reason; present when `deferred: true`.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub defer_reason: Option<String>,
