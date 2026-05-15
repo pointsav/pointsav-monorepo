@@ -582,7 +582,11 @@
     let selectedClusterId = null;
     let overviewActive = true;
 
-    const DEMO_CLUSTER_ID = 'c_walmart_ca_51x262__114x007';
+    const DEMO_CLUSTER_IDS = new Set([
+        'c_walmart_ca_51x262__114x007',   // Airdrie Co-location 1 — Walmart
+        'c_home_depot_ca_51x261__114x007', // Airdrie Co-location 2 — Home Depot
+        'c_costco_ca_51x211__113x983',     // CrossIron Mills / Balzac — Costco
+    ]);
     let demoOverlay = null;
     fetch('data/demo-overlay.json').then(r => r.ok ? r.json() : null).then(d => { demoOverlay = d; }).catch(() => {});
     let selectedClusterProps  = null;
@@ -1140,7 +1144,7 @@
         const sitesSub  = count1km !== null ? `${count1km} · 1 km` : '';
 
         // Demo overlay — merge when this is the showcase cluster
-        const demo = (selectedClusterId === DEMO_CLUSTER_ID && demoOverlay) ? demoOverlay : null;
+        const demo = (DEMO_CLUSTER_IDS.has(selectedClusterId) && demoOverlay) ? demoOverlay : null;
         const isMeasured = demo?.is_measured || p.iso === 'ES';
 
         // Catchment population (pre-computed in synthesize-od-study.py)
