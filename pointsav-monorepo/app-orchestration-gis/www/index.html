@@ -437,18 +437,6 @@
         if (btn) btn.click();
     }
 
-    function toggleCatchment(btn) {
-        const current = map.getLayoutProperty('radius-fill', 'visibility');
-        const newVis  = current === 'visible' ? 'none' : 'visible';
-        if (newVis === 'visible') {
-            map.setFilter('radius-fill', null);
-            map.setFilter('radius-line', null);
-        }
-        map.setLayoutProperty('radius-fill', 'visibility', newVis);
-        map.setLayoutProperty('radius-line', 'visibility', newVis);
-        btn.classList.toggle('lc-active', newVis === 'visible');
-    }
-
     // ── Catchment visualization ──────────────────────────────────────────────
 
     function showCatchmentForCluster(clusterId, isMeasured) {
@@ -837,8 +825,6 @@
         selectedClusterCoords = null;
         catchmentActive = false;
         hideCatchment();
-        if (map.getLayer('radius-fill'))    map.setLayoutProperty('radius-fill',    'visibility', 'none');
-        if (map.getLayer('radius-line'))    map.setLayoutProperty('radius-line',    'visibility', 'none');
         if (map.getLayer('proximity-fill')) map.setLayoutProperty('proximity-fill', 'visibility', 'none');
         if (map.getLayer('proximity-line')) map.setLayoutProperty('proximity-line', 'visibility', 'none');
         if (map.getSource('proximity-circle-src')) map.getSource('proximity-circle-src').setData({ type: 'FeatureCollection', features: [] });
@@ -879,9 +865,7 @@
                 <button class="lc-btn lc-active" id="lc-clusters" onclick="toggleLayer('nodes', this)">
                     <span class="lc-dot" style="background:#0A3070"></span>Co-location Clusters
                 </button>
-                <button class="lc-btn" id="lc-radius" onclick="toggleCatchment(this)">
-                    <span class="lc-dot" style="background:#1E40AF;opacity:0.5"></span>Data Radius
-                </button>
+
                 <button class="lc-btn" id="lc-locations" onclick="toggleLayer('all-locations', this)">
                     <span class="lc-dot" style="background:var(--text-muted)"></span>All Locations
                 </button>
