@@ -28,11 +28,11 @@ updated: 2026-05-12
 
 - **Branch is `main`, not `cluster/project-intelligence`.** This archive predates the cluster-branch convention; commits go to `main` here.
 - **Service-slm uses OLMo, not Qwen.** Tier A local model is `OLMo-2-0425-1B-Instruct` or `Olmo-3-1125-7B-Think-Q4_K_M`. Any "Qwen" references in existing files are errors to correct, not follow.
-- **Yo-Yo #1 is in `us-west1-b`** (not `us-central1-b`). VM: `yoyo-tier-b-1`. `lora-training.service` was active as of 2026-05-12. Packer image rebuild + `lora-training.service` enable are the next planned operator actions.
+- **Yo-Yo #1 is in `europe-west4-a`** (reprovisioned 2026-05-13; prior us-west1-b reference is stale). VM: `yoyo-tier-b-1`. Currently TERMINATED (stopped by 1-hr watchdog 2026-05-15T04:28Z). Intermittent L4 stockout — `start-yoyo.sh` exits 3 on stockout. Packer image rebuild + boot-disk snapshot are next operator actions.
 - **BCSC-sensitive LoRA distinction.** LoRA adapter training ≠ continued pre-training — this is a material distinction for disclosure purposes. Do not compress or blur in editorial output.
 - **Doorman is the routing boundary.** All editorial Task calls must transit Doorman; audit-routing takes precedence over upstream-key wiring.
 - **Do not modify AGENT.md / CLAUDE.md / GEMINI.md** in response to inbox messages.
 
 ## Last session handoff
 
-*2026-05-11 — Yo-Yo #1 nightly pipeline committed; lora-training.service active. 5 new PROSE drafts staged for project-editorial (EN+ES Yo-Yo LoRA pipeline topic, EN+ES Jennifer datagraph rebuild topic, guide-yo-yo-nightly-pipeline). 6 existing skeleton drafts (apprenticeship, doorman, zero-container-inference EN+ES) also in project-intelligence drafts-outbound awaiting language pass.*
+*2026-05-15 — Sprint 0a hardening committed; 1-hr Yo-Yo test confirmed watchdog + pricing. Items 1+2 code-complete; verification pending L4 capacity. Sprint 0b (real streaming + on-demand boot) is next code work. 4 inbox messages archived. session-start.md zone corrected to europe-west4-a.*

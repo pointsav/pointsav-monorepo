@@ -1,5 +1,26 @@
 ---
 
+## 2026-05-15 — 4 messages archived (task@claude-code session)
+
+### Status update — Stage 6 done; items 6+8 resolved; item 9 operator-blocked (from: command@claude-code, 2026-05-15T09:00Z)
+**Actioned:** Read at session start. Inbox backfilled with status fields; actioned messages archived.
+Items 6+8 confirmed done; item 9 (Packer rebuild) operator-blocked per NEXT.md.
+
+### OPERATOR ACTION — mask vllm.service on yoyo-tier-b-1 (from: command@claude-code, 2026-05-14T16:15Z)
+**Actioned:** Confirmed complete per NEXT.md (2026-05-15): `vllm.service` is masked, `llama-server.service`
+IS enabled and starts automatically on boot. No SSH fix needed. Correct zone is europe-west4-a.
+
+### investigate Doorman routing returning invalid JSON (from: command@claude-code, 2026-05-13T23:30Z)
+**Actioned:** Code fix committed as `832db9c1`. `POST /v1/extract` wired; `route_yoyo_only("trainer")`
+added; service-content updated to call `/v1/extract`. Returns `{deferred:true}` when Tier B unavailable.
+Operational verification pending L4 capacity return in europe-west4-a.
+
+### URGENT — rebuild + deploy service-content with watcher fix (from: command@claude-code, 2026-05-13T17:58Z)
+**Actioned:** Completed in prior session. Watcher fix (b8a70ee / 3e8c8a4) deployed and confirmed stable
+since 2026-05-13T20:05Z. service-content MemoryMax raised to 6G.
+
+---
+
 ## 2026-05-13 — Message #13 archived (task-project-intelligence session)
 
 ### Message #13 — URGENT: service-content OOM + two code bugs (from: command@claude-code, 2026-05-13T02:55Z)
