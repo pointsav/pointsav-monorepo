@@ -1,4 +1,11 @@
 ---
+# Archived 2026-05-15 by task@project-gis (session startup sweep — post-VM restart)
+note: 2 command messages archived — both actioned.
+  (1) WFD sub-clone reset (2nd filter-repo 2026-05-15) — git reset --hard origin/main done; HEAD now 7fdf36b ✓
+  (2) WFD spoke-configs/ security cleanup — sub-clone reset above covers both (merged from force-updated origin/main) ✓
+---
+
+---
 # Archived 2026-05-14 by task@project-gis (session startup sweep)
 note: 4 command messages archived — all actioned.
   (1) Phase C tile rebuild queued — in current session plan.
