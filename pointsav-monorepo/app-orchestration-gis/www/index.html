@@ -1166,7 +1166,6 @@
                         <div class="rank-num">${rankNum !== null ? '#' + rankNum.toLocaleString() : '—'}</div>
                         <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">${rankSub}</div>
                         ${natSub ? `<div style="font-size:10px;color:var(--text-muted);margin-top:3px;">${natSub}</div>` : ''}
-                        ${pctileBar(rankNum, TOTAL_CLUSTERS)}
                     </div>
                     <div>
                         <div class="data-label">Sites in Ring</div>
@@ -1203,7 +1202,6 @@
                             <div class="catchment-zone-label">● 35 km zone</div>
                             <div class="catchment-zone-pop">${compactNum(primaryPop)}</div>
                             <div class="catchment-zone-km">within 35 km</div>
-                            ${pctileBar(popRank, TOTAL_CLUSTERS)}
                         </div>` : ''}
                         ${(primaryPop !== null && secondaryPop !== null) ? `<div class="catchment-zone-stat">
                             <div class="catchment-zone-label">○ 150 km zone</div>
