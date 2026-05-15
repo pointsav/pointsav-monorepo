@@ -91,8 +91,33 @@ suggestions inline.]
 
 ## §6 — reference/ sub-routing proposal
 
-[DEFERRED — populated during Phase 2 sub-phase 2b (reference/ sub-routing). The 55
-reference/ articles are reviewed and sub-bucket assignments made at that sub-phase.]
+Executed 2026-05-15 (sub-phase 2b, commit 4596b1c). Content contract prohibits nested
+directories (depth cap = 2), so sub-routing is done by moving articles to existing
+top-level categories rather than creating reference/style/ etc.
+
+**Final reference/ count: 34 EN articles** (down from 46; 12 moved out).
+
+| Slug | Action | Destination | Rationale |
+|---|---|---|---|
+| bcsc-disclosure-posture | moved | governance/ | Securities-law compliance posture — governance topic |
+| api-key-boundary-discipline | moved | governance/ | Security rule with ADR-level weight |
+| zero-container-runtime | moved | patterns/ | Structural commitment — same shape as named patterns |
+| customer-first-ordering | moved | patterns/ | Named build-ordering discipline |
+| model-tier-discipline | moved | patterns/ | AI model routing discipline |
+| project-tetrad-discipline | moved | patterns/ | Project-structure pattern |
+| project-triad-discipline | moved | patterns/ | Project-structure pattern |
+| cluster-design-draft-pipeline | moved | patterns/ | Editorial pipeline pattern |
+| cluster-wiki-draft-pipeline | moved | patterns/ | Editorial pipeline pattern |
+| draft-research-trail-discipline | moved | patterns/ | Research-trail pattern |
+| tier-c-key-wiring | moved | infrastructure/ | Key-wiring in fleet deployment context |
+| data-vault-bookkeeping-substrate | moved | infrastructure/ | Ledger infrastructure |
+
+**Remaining in reference/ (34 articles):** 15 style-guide-* articles; glossary-documentation;
+hardware-reference; structural-positioning; wiki-provider-landscape; wikipedia-leapfrog-pattern;
+wikipedia-structure; editorial-language-registers; editorial-philosophy; news-release-standards;
+service-slm-operationalization-plan; root-files-discipline; 7 bim-* articles; open-bim-regulatory-acceptance.
+
+Wikilinks unaffected: resolver is slug-based; slugs unchanged by category moves.
 
 ---
 
