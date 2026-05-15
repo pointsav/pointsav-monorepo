@@ -7,7 +7,7 @@ H3 res-7 catchment signals for Spanish co-location clusters.
 Source:
   Ministry of Transport (MITMA) Big Data Mobility Study
   Main page:  https://www.mitma.gob.es/ministerio/proyectos-singulares/estudio-de-movilidad-con-big-data
-  Open data:  https://opendata-movilidad.mitma.es/
+  Open data:  https://movilidad-opendata.mitma.es/
 
 ZONE_SHAPEFILE_FORMATS note:
   MITMA has released zone geometries in multiple formats across study versions:
@@ -79,20 +79,20 @@ DOWNLOAD_INSTRUCTIONS = """
   MITMA raw data not found. Manual download required.
 
   1. Visit the open-data portal:
-       https://opendata-movilidad.mitma.es/
+       https://movilidad-opendata.mitma.es/
 
   2. Download the OD trip files (viajes) and zone geometry (zonas).
      Example wget for a monthly zip (adjust the URL from the portal):
 
        mkdir -p {viajes_dir}
        wget -P {viajes_dir} \\
-         "https://opendata-movilidad.mitma.es/maestra1-mitma-distritos/ficheros-diarios/2022-01/2022-01-03_Maestra1_MMM_MITMA_Distritos.zip"
+         "https://movilidad-opendata.mitma.es/maestra1-mitma-distritos/ficheros-diarios/2022-01/2022-01-03_Maestra1_MMM_MITMA_Distritos.zip"
 
      Download zone geometries (GeoJSON or shapefile):
 
        mkdir -p {zones_dir}
        wget -P {zones_dir} \\
-         "https://opendata-movilidad.mitma.es/zonificacion_distritos/distritos_mitma.geojson"
+         "https://movilidad-opendata.mitma.es/zonificacion_distritos/distritos_mitma.geojson"
 
   3. Re-run this script once data is in place.
   -----------------------------------------------------------------------
