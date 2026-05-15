@@ -330,4 +330,329 @@ Authorship is the Opus parent's synthesis of the four agent reports plus direct 
 
 The four sub-agent reports are preserved in this Task session's chat trace; if a follow-up session needs them in fuller detail than the synthesis preserves, they are available via session-trace recovery. The draft-created JSONL event for this draft is emitted to `~/Foundry/data/training-corpus/apprenticeship/prose-edit/pointsav/draft-2026-04-30-research-wikipedia-leapfrog-2030.jsonl` per cluster-wiki-draft-pipeline.md §7 and apprenticeship-substrate.md §7A.
 
+---
+
+## Research Update — 2026-05-15 — Hover Previews + Appearance System + Full-Width Toggle
+
+This update extends the research substrate with three Wikipedia muscle-memory primitives that were declared in scope at iteration-2 planning but are not yet shipped in the running `app-mediakit-knowledge` binary as of 2026-05-15 (cluster `cluster/project-knowledge`, post-`ea4ad77`). The three features here are *additive Vector 2022 reader conveniences* — none requires substrate token re-anchoring, none disturbs the existing three-column layout, and all three respect the engine's no-bundler discipline (vanilla `wiki.js`, vanilla `style.css`).
+
+Methodology: WebFetch against four canonical sources (en.wikipedia.org/wiki/Main_Page, en.wikipedia.org/wiki/Rust_(programming_language), mediawiki.org/wiki/Extension:Popups, mediawiki.org/wiki/Skin:Vector/2022, mediawiki.org/wiki/Page_Previews) plus direct inspection of the live wiki at `http://localhost:9090` (HTML markup of an article page, `static/wiki.js`, `static/style.css`, and the `/api/preview/{slug}` JSON endpoint). The WebFetch summaries returned thin technical detail for several of these pages — the Extension:Popups and Skin:Vector/2022 articles are mostly product-marketing copy with implementation specifics living in Phabricator and gerrit. Where MediaWiki documentation was non-load-bearing, the recommendations below cite the running MediaWiki implementation observed in production (Wikipedia rendering Vector 2022 today, May 2026) as the muscle-memory contract; engine implementers may verify by inspecting page source on en.wikipedia.org directly.
+
+### 1. Hover Previews (Page Previews / ext.popups)
+
+**Wikipedia behaviour (Vector 2022, Extension:Popups, observed May 2026).** When a reader hovers a wikilink in article body content (NOT chrome links, NOT footnote markers, NOT external links — only the main namespace article links inside `.mw-parser-output`), a card appears after an administrator-configurable dwell threshold (default ~500 ms in Extension:Popups; Wikipedia desktop runs closer to 300–500 ms; the abandon-delay before close is ~300 ms after the reader's pointer leaves both the link and the card). The card is built from the REST API endpoint `https://en.wikipedia.org/api/rest_v1/page/summary/{title}`, which returns JSON with `title`, `description` (Wikidata short description), `extract` (plain-text first ~200 chars of lead), `extract_html`, `thumbnail.source` (~320 px width), `originalimage`, `lang`, `dir`, `timestamp`, `content_urls.desktop.page`. Popup container DOM is appended to `<body>`; outer wrapper is `.mwe-popups` (root) with modifiers `.mwe-popups-fade-in-up` / `.mwe-popups-fade-in-down` for the directional reveal, and modifier `.mwe-popups-type-page` (vs `.mwe-popups-type-reference` for footnote previews). Inner structure: `.mwe-popups-container` → `.mwe-popups-discreet` → optional `<a class="mwe-popups-extract"><span class="mwe-popups-thumbnail"><img></span><h3>title</h3><p>extract</p></a>` → `.mwe-popups-settings` (cog icon, opens preference dialog). The card carries `role="tooltip"` with `aria-hidden` flipping on visibility. Keyboard users get focus-triggered previews (the `mouseenter`/`focusin` and `mouseleave`/`focusout` pair, with Escape dismissing). Screen readers are intentionally not exposed to the preview content — `aria-hidden="true"` is set, because the underlying link already carries the same `title` attribute.
+
+Critically: Wikipedia avoids preview-storms by debouncing. Hovering five wikilinks in quick succession does NOT issue five API requests — the implementation cancels in-flight fetches when the hover target changes before completion, and once a preview is rendered for a slug it is cached in memory for the session.
+
+Disable controls: Wikipedia exposes Page Previews on/off via the settings cog on the card itself, AND via Special:Preferences → Appearance → Reading preferences → "Show previews of page contents when hovering over links" (the underlying user preference is `popups`).
+
+**Leapfrog 2030 state (as of 2026-05-15).** `static/wiki.js` already contains a working `initHoverCards()` implementation: a singleton `_hoverCard` div with class `.wiki-hover-card` is appended to body; `_hoverCache` memoises per-slug responses; mouseenter on any `a[data-wikilink="true"]:not(.wiki-redlink)` fires `fetch('/api/preview/' + slug)`; the response is shaped `{title, snippet, image_url, slug}` and rendered into the card. CSS is present at `style.css:1483–1521` — fixed 320 px width, serif title, sans body, box-shadow, optional 150 px object-fit cover image. The `/api/preview/{slug}` server endpoint is live and returns the documented shape.
+
+**Gap analysis vs Wikipedia muscle-memory.** The current implementation is functional but pre-muscle-memory in three respects:
+
+1. **No dwell delay.** The current `mouseenter` handler fires immediately. Wikipedia uses a ~300–500 ms dwell to suppress drive-through previews. Required: add a `setTimeout(showCard, 300)` on mouseenter; clear it on mouseleave before the timeout fires.
+2. **No fetch cancellation on hover-target change.** A reader sweeping the cursor across five wikilinks issues five fetches; only the last writes to `_hoverCache`, but the in-flight requests still hit the server. Required: capture the fetch as an `AbortController` ref scoped to the most recent hover, abort on target change.
+3. **No "Read more" affordance, no settings cog, no directional reveal.** The current card renders `<strong>title</strong><p>snippet</p>` with no closing link to the article and no off-toggle. Required: append `<a class="wiki-hover-readmore" href="/wiki/{slug}">Read more →</a>` and a small `.wiki-hover-settings` gear button that opens a localStorage-backed preference dialog. The directional reveal (`fade-in-up` vs `fade-in-down`) requires viewport-edge detection and is second-class polish; suggest deferring.
+4. **No keyboard / focus parity.** Wikipedia activates previews on `focusin` as well as `mouseenter`. Required: bind the same handler to focus events; bind Escape to dismiss.
+5. **No abandon-delay graceful re-entry.** Current implementation hides the card 200 ms after mouseleave. A reader who slides the cursor from link → card should see the card stay open (this works today because the card has its own mouseenter clearTimeout). Verify the same gesture works when transitioning from card → link (it currently does not, because the link's mouseleave fires the hide-timer; the card-mouseenter clears it, but mouseenter on the link does not clear it). Required: add `_hoverTimer` clear on link mouseenter (already present, but verify).
+
+**Implementation notes (specific files).**
+
+- `static/wiki.js` §4 (existing `initHoverCards()`): wrap the `mouseenter` body in a `setTimeout(..., HOVER_DELAY)` with `HOVER_DELAY = 300`; store the timeout handle alongside `_hoverTimer` as `_showTimer` so mouseleave can cancel both. Add `link.addEventListener('focusin', ...)` and `link.addEventListener('focusout', ...)` mirroring the mouse handlers. Add `document.addEventListener('keydown', e => { if (e.key === 'Escape' && _hoverCard) _hoverCard.style.display = 'none'; })`. Replace inline `_hoverCard.innerHTML` construction with a `renderHoverCard(data)` that includes the "Read more" affordance.
+- `static/style.css` `.wiki-hover-card`: add `.wiki-hover-readmore { display: block; margin-top: 0.5rem; font-family: var(--sans); font-size: 0.8125rem; color: var(--link); text-decoration: none; }`; add CSS transition `transition: opacity 120ms ease-out, transform 120ms ease-out` and toggle between `opacity: 0; transform: translateY(4px)` (hidden) and `opacity: 1; transform: translateY(0)` (visible).
+- `src/server.rs` `/api/preview/{slug}` handler: confirmed working today. No server changes required. Optional Phase 2 polish — extend the response with `last_edited` (so the card can carry a freshness micro-indicator consistent with §6.3 freshness-ribbon design), and `description` (Wikidata-equivalent: pulled from `Frontmatter.short_description` already in render.rs).
+- ARIA: set `role="tooltip"` and `aria-hidden="true"` on the hover card root; flip `aria-hidden="false"` on display. Set `aria-describedby` on the underlying link to the card's id when shown.
+- localStorage key for the disable preference: `wiki-hover-previews-enabled` (default `'1'`). When `'0'`, `initHoverCards()` early-returns. Settings cog opens a small dialog with two radio buttons.
+
+**Citation density interaction.** The IVC verification band ships Off / Exceptions / All citation density (already in place). Hover previews should respect citation density: when `wiki-citation-density === 'off'`, the preview card should NOT show citation marks inline in the snippet. Verify rendering pipeline strips IVC-mark spans from the preview snippet at API time (server-side strip is cleaner than client-side regex).
+
+### 2. Appearance / Theme System (Day / Night / OS mode)
+
+**Wikipedia behaviour (Vector 2022 Appearance panel, observed May 2026).** Vector 2022 exposes an **Appearance** panel in the right-rail page-tools column (default position; user can pin or unpin from the rail via the `vector-appearance-pinned` user-preference / cookie). The pinnable header is `<div class="vector-appearance" id="vector-appearance">` containing a `<h3>Appearance</h3>`, a pin/unpin toggle button with `data-event-name="ui.sidebar-appearance"`, and three feature groups:
+
+1. **Text** (font size): Small / Standard / Large — implemented as radio inputs `name="skin-client-pref-vector-font-size-group"` with `value="0"` / `"1"` / `"2"`. The selected value writes to localStorage key `mwclientpreferences` (a JSON blob containing all client-prefs) AND to a cookie `mwclientpreferences` for cross-tab consistency, AND sets a class on `<html>` matching the pattern `vector-feature-custom-font-size-clientpref-{0|1|2}`. CSS reads the class and adjusts `--font-size-base` / line-height scale.
+2. **Width** (column width): Standard / Wide — radio `name="skin-client-pref-vector-feature-limited-width-group"` with `value="1"` / `"0"` (1 = Standard / limited; 0 = Wide / full-width). The selected value sets `<html class="vector-feature-limited-width-clientpref-{0|1}">`. See §3 below for the full discussion of width.
+3. **Color** (theme): Automatic / Light / Dark — radio `name="skin-client-pref-skin-theme-group"` with values `"os"` / `"day"` / `"night"`. The selected value sets `<html class="skin-theme-clientpref-{os|day|night}">`. When `os`, a CSS `@media (prefers-color-scheme: dark)` rule activates the dark palette; when `day`, light is forced; when `night`, dark is forced.
+
+Persistence: anonymous users get the cookie `mwclientpreferences` (max-age 365 days); logged-in users get the value persisted to their account `Special:Preferences` and the cookie acts as a session cache. The localStorage key `mwclientpreferences` is read on page load by `mediawiki.skinning.clientPreferences` to apply the class BEFORE first paint (inline `<script>` in `<head>` runs the read-and-apply so there is no flash of unstyled theme).
+
+CSS implementation: Vector 2022 uses ~600 CSS custom properties from Codex (e.g., `--color-base`, `--color-base--emphasized`, `--background-color-base`, `--background-color-neutral`, `--border-color-base`, `--color-link`, `--color-progressive`, etc). The light-theme defaults sit on `:root` or `html`; the dark overrides sit on `html.skin-theme-clientpref-night`, AND under `@media (prefers-color-scheme: dark)` scoped to `html.skin-theme-clientpref-os`. Codex specifically inverts the *base* palette, the *link* palette, and the *border* palette; image rendering is dimmed with a `filter: brightness(0.85) contrast(1.1)` rule on `img:not([class*="invert"]):not([class*="skin-invert"])` in night mode, with an opt-in/opt-out per-image class system (`class="skin-invert"` to flip a black-on-white SVG, `class="skin-invert-image"` for raster images, `class="notpageimage"` to skip).
+
+**Leapfrog 2030 state (as of 2026-05-15).** Zero theme code today. `static/wiki.js` has no theme handler. `static/style.css` defines a single light palette on `:root` (`--bg: #ffffff`, `--fg: #202122`, `--link: #3366cc`, `--link-visited: #6b4ba1`, `--border: #a2a9b1`, plus the Codex aliases `--mw-color-link`, `--mw-color-base-10`, `--mw-color-base-20`, `--mw-color-link-redlink`) — there is no dark override, no Appearance panel in the right rail, no localStorage key for theme.
+
+**Recommended implementation.**
+
+*CSS substrate.* The existing `:root` block at `style.css:9–35` IS the substrate; the recommended pattern is to keep the light palette on `:root` and add a `html.skin-theme-clientpref-night` selector (and a `@media (prefers-color-scheme: dark) { html.skin-theme-clientpref-os { ... } }` block) that overrides every variable. Concrete dark palette (Codex-derived, validated for WCAG AA contrast against the existing typography stack):
+
+```css
+html.skin-theme-clientpref-night {
+  --bg: #101418;
+  --bg-chrome: #1c2128;
+  --bg-aside: #2c241a;
+  --fg: #eaecf0;
+  --fg-muted: #a2a9b1;
+  --border: #54595d;
+  --link: #88a9ff;
+  --link-visited: #c8b3ff;
+  --mw-color-link-redlink: #ff6e6e;
+  --mw-color-base-10: var(--bg-chrome);
+  --mw-color-base-20: #2a2f37;
+  --mw-color-base-50: var(--border);
+  --ivc-band-bg: #15212e;
+  --ivc-band-border: #243446;
+  --toc-bg: var(--mw-color-base-10);
+}
+@media (prefers-color-scheme: dark) {
+  html.skin-theme-clientpref-os {
+    /* duplicate of the night block above */
+  }
+}
+```
+
+Images: add a single rule `html.skin-theme-clientpref-night img:not(.skin-invert-image):not([class*="notpageimage"]) { filter: brightness(0.92) contrast(1.05); }` to match the Wikipedia dimming behaviour without inverting raster content.
+
+*Toggle UI.* Vector 2022 places the Appearance panel in the right rail. Leapfrog already has a right-rail page-tools column (see §1 of this research draft's existing §3 article-shell analysis). The toggle should render as a new portlet between "Page tools" and the IVC band. Concrete DOM (rendered server-side in `src/server.rs`'s right-rail builder):
+
+```html
+<nav class="vector-appearance" id="vector-appearance" aria-label="Appearance">
+  <h3 class="wiki-portlet-heading">Appearance</h3>
+  <fieldset class="wiki-clientpref-group">
+    <legend>Color</legend>
+    <label><input type="radio" name="wiki-theme" value="os"> Automatic</label>
+    <label><input type="radio" name="wiki-theme" value="day"> Light</label>
+    <label><input type="radio" name="wiki-theme" value="night"> Dark</label>
+  </fieldset>
+  <fieldset class="wiki-clientpref-group">
+    <legend>Width</legend>
+    <label><input type="radio" name="wiki-width" value="standard"> Standard</label>
+    <label><input type="radio" name="wiki-width" value="wide"> Wide</label>
+  </fieldset>
+</nav>
+```
+
+A compact alternative for tight viewports (and Wikipedia's actual mobile pattern): a single sun/moon icon button in the header that cycles `day → night → os → day` on click, with the radio panel reserved for desktop right-rail. Recommend both — header icon for fast-toggle muscle memory (most Wikipedia readers in 2026 use the header icon, not the panel), panel for explicit preferences. The header icon lives next to the language switcher (🌐) at `:root .wiki-lang-switcher`; add a sibling `.wiki-appearance-quick-toggle` button.
+
+*JavaScript handler.* New section in `static/wiki.js`:
+
+```javascript
+/* ------------------------------------------------------------------ *
+ * 16. Appearance / Theme System                                       *
+ * ------------------------------------------------------------------ */
+
+var STORAGE_KEY_THEME = 'wiki-theme';
+var STORAGE_KEY_WIDTH = 'wiki-width';
+var THEME_DEFAULT = 'os';
+var WIDTH_DEFAULT = 'standard';
+
+function applyTheme(value) {
+  var html = document.documentElement;
+  html.classList.remove(
+    'skin-theme-clientpref-os',
+    'skin-theme-clientpref-day',
+    'skin-theme-clientpref-night'
+  );
+  html.classList.add('skin-theme-clientpref-' + value);
+}
+
+function applyWidth(value) {
+  var html = document.documentElement;
+  html.classList.remove(
+    'wiki-width-clientpref-standard',
+    'wiki-width-clientpref-wide'
+  );
+  html.classList.add('wiki-width-clientpref-' + value);
+}
+
+function initAppearance() {
+  var savedTheme = localStorage.getItem(STORAGE_KEY_THEME) || THEME_DEFAULT;
+  var savedWidth = localStorage.getItem(STORAGE_KEY_WIDTH) || WIDTH_DEFAULT;
+  applyTheme(savedTheme);
+  applyWidth(savedWidth);
+
+  /* wire the radios */
+  document.querySelectorAll('input[name="wiki-theme"]').forEach(function (r) {
+    r.checked = (r.value === savedTheme);
+    r.addEventListener('change', function () {
+      localStorage.setItem(STORAGE_KEY_THEME, r.value);
+      applyTheme(r.value);
+    });
+  });
+  document.querySelectorAll('input[name="wiki-width"]').forEach(function (r) {
+    r.checked = (r.value === savedWidth);
+    r.addEventListener('change', function () {
+      localStorage.setItem(STORAGE_KEY_WIDTH, r.value);
+      applyWidth(r.value);
+    });
+  });
+
+  /* header quick-toggle (cycles day → night → os) */
+  var quick = document.getElementById('wiki-appearance-quick-toggle');
+  if (quick) {
+    quick.addEventListener('click', function () {
+      var current = localStorage.getItem(STORAGE_KEY_THEME) || THEME_DEFAULT;
+      var next = current === 'day' ? 'night'
+               : current === 'night' ? 'os'
+               : 'day';
+      localStorage.setItem(STORAGE_KEY_THEME, next);
+      applyTheme(next);
+      var radio = document.querySelector('input[name="wiki-theme"][value="' + next + '"]');
+      if (radio) radio.checked = true;
+    });
+  }
+}
+```
+
+**Flash-of-unstyled-theme (FOUT) suppression.** Wikipedia inlines a tiny `<script>` in `<head>` that reads `localStorage.mwclientpreferences` and sets the html class BEFORE the body renders. Leapfrog must do the same — `wiki.js` runs `defer`, which fires AFTER the body parses, so a deferred theme apply causes a visible flash. Recommend: render an inline `<script>` block in the document head (`src/render.rs` or wherever `<head>` is composed) with the minimal read-and-apply logic:
+
+```html
+<script>
+(function() {
+  try {
+    var t = localStorage.getItem('wiki-theme') || 'os';
+    var w = localStorage.getItem('wiki-width') || 'standard';
+    document.documentElement.classList.add('skin-theme-clientpref-' + t);
+    document.documentElement.classList.add('wiki-width-clientpref-' + w);
+  } catch (e) {}
+})();
+</script>
+```
+
+This is the single inline script allowed by the engine's progressive-enhancement discipline — it is two operations, no external dependencies, and is the standard pattern across every Vector 2022 implementation.
+
+### 3. Full-Width / Limited-Width Toggle
+
+**Wikipedia behaviour.** Vector 2022 introduced a width-toggle in 2023. The default is "Standard" — content column capped at ~960 px (Codex `--width-breakpoint-desktop-wide` / `1600px` viewport, content `~960px`). Reader can opt in to "Wide" mode, which lifts the cap and spans the full viewport (with a 1.25 rem gutter on each side). Two surfaces expose the toggle:
+
+1. **Appearance panel** in the right rail — the Width radio group described in §2 above.
+2. **Inline expand button** at the right edge of the article body, rendered as a small button with an arrow icon (`<span class="vector-toolbox-expand">⇄</span>` or similar; the exact glyph is a horizontal double-arrow, sometimes rendered as `↔`). Positioned floating at the bottom-right corner of the content column when in Standard width; clicking toggles to Wide. In Wide mode, the same button shows a "collapse" affordance (the icon reverses direction).
+
+CSS: `html.vector-feature-limited-width-clientpref-1` (limited / Standard) sets `--mw-page-container-max-width: 960px` or the equivalent grid-template-columns constraint; `html.vector-feature-limited-width-clientpref-0` (wide) sets it to `none` / `100%`. The Codex breakpoint is implemented via a CSS custom property that the page-container grid reads — not via a media query — because the override is a user preference, not a viewport size.
+
+Persistence: same cookie + localStorage pattern as theme (`mwclientpreferences` JSON blob). Logged-in users persist to account.
+
+Importantly: width and theme are independent. Reader can run Wide + Day, or Standard + Night, in any combination.
+
+**Leapfrog 2030 state.** Zero width-toggle code today. Current layout (`.wiki-layout`) is `grid-template-columns: 220px 1fr 200px; max-width: var(--max-content-width)` where `--max-content-width: 76em` (~1216 px) — already wider than Wikipedia's default Standard. The content column has no explicit max-width separate from the page container.
+
+**Recommended implementation.**
+
+*CSS substrate.* Introduce two new custom properties scoped per-mode:
+
+```css
+:root {
+  --wiki-page-max-width-standard: 76em;   /* current default */
+  --wiki-page-max-width-wide: none;
+}
+
+html.wiki-width-clientpref-standard .wiki-layout {
+  max-width: var(--wiki-page-max-width-standard);
+}
+html.wiki-width-clientpref-wide .wiki-layout {
+  max-width: var(--wiki-page-max-width-wide);
+  /* gutters: */
+  padding-left: 1.25rem;
+  padding-right: 1.25rem;
+}
+```
+
+Default `--wiki-page-max-width-standard` is the existing `76em`. Setting `wide` lifts the cap; the existing inner grid (`220px 1fr 200px`) naturally absorbs the extra space into the `1fr` column. Verify the rail columns don't bloat — if they do, add `grid-template-columns: 220px minmax(0, 1fr) 200px` to constrain.
+
+*Inline expand button.* Render in the right-rail OR floating at the article body's bottom-right corner. Wikipedia uses the latter (a floating button at the content-column edge); recommend the floating pattern for muscle-memory parity:
+
+```html
+<button class="wiki-width-expand-btn"
+        id="wiki-width-expand-btn"
+        aria-label="Expand to full width"
+        title="Toggle reading width">
+  <span aria-hidden="true">⇄</span>
+</button>
+```
+
+```css
+.wiki-width-expand-btn {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--bg-chrome);
+  color: var(--fg);
+  font-size: 1.25rem;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  z-index: 100;
+}
+.wiki-width-expand-btn:hover { background: var(--mw-color-base-20); }
+html.wiki-width-clientpref-wide .wiki-width-expand-btn span {
+  transform: rotate(180deg);
+  display: inline-block;
+}
+@media (max-width: 960px) {
+  .wiki-width-expand-btn { display: none; } /* width toggle is meaningless on narrow viewports */
+}
+```
+
+The button's click handler is wired by the same `initAppearance()` from §2:
+
+```javascript
+var expandBtn = document.getElementById('wiki-width-expand-btn');
+if (expandBtn) {
+  expandBtn.addEventListener('click', function () {
+    var current = localStorage.getItem(STORAGE_KEY_WIDTH) || WIDTH_DEFAULT;
+    var next = current === 'standard' ? 'wide' : 'standard';
+    localStorage.setItem(STORAGE_KEY_WIDTH, next);
+    applyWidth(next);
+    var radio = document.querySelector('input[name="wiki-width"][value="' + next + '"]');
+    if (radio) radio.checked = true;
+    expandBtn.setAttribute('aria-label',
+      next === 'wide' ? 'Collapse to standard width' : 'Expand to full width');
+  });
+}
+```
+
+*FOUT suppression.* Same inline `<script>` in `<head>` from §2 already sets `wiki-width-clientpref-{standard|wide}` before first paint. No additional inline script needed.
+
+**Open implementation question — does this interact with the 200 px right-rail?** Wikipedia's Wide mode keeps the right rail; it just lifts the content max-width. Leapfrog's `.wiki-layout` has the same shape — `220px 1fr 200px` — so the recommendation is to lift the *grid container's* max-width and let the `1fr` column absorb the gain. An alternative is to *collapse* the right rail in Wide mode (giving the content 100% of the lifted width, no rails). This is more aggressive and not what Wikipedia does — recommend matching Wikipedia (keep rails, widen middle).
+
+### 4. Open Questions for Project-Design
+
+Resolving these is gateway-time scope. The three features above can ship without these answered, but the answers determine substrate-level token additions for `pointsav-design-system`:
+
+**(g) Hover preview: snippet length and image policy.** Wikipedia's REST `summary` endpoint truncates `extract` to ~200 chars; the existing `/api/preview/{slug}` endpoint uses an ellipsis-truncated snippet of similar size. Does the substrate ratify 200 chars as the canonical preview-snippet length, or should it be operator-tunable per article? And: when a TOPIC has no image, does the card collapse to text-only (current behaviour), or always reserve a 60×60 placeholder block (a Wikipedia variant pattern)? Recommend text-only collapse for typography integrity, but flag for substrate review.
+
+**(h) Dark-mode link colours — sRGB or P3 wide-gamut?** The recommended `--link: #88a9ff` (Codex-derived) is an sRGB value. Codex 2025 supports P3 wide-gamut variants (e.g., `color(display-p3 0.53 0.66 1)`) for displays that support them. Project-design ruling needed: do we ship sRGB-only (universal compatibility), sRGB + P3 with `@supports (color: color(display-p3 0 0 0))` (modern displays get richer link colour), or hold for substrate-wide P3 audit? Affects ~12 colour tokens across the dark palette.
+
+**(i) Width-toggle: does Wide preserve the IVC band as a centered chrome strip, or stretch it to full width?** The IVC verification band currently spans the full content column. In Wide mode, the band stretches to ~1800 px on a typical 1920 px viewport, which is much larger than the band's typography is designed for. Recommend: cap the IVC band at a `max-width: 76em; margin: 0 auto;` independent of the page container max-width, so the band typography stays consistent. Or: allow the band to stretch and re-design the band typography for wider compositions. Project-design ruling needed.
+
+**(j) Should the right rail collapse on narrow viewports independently of the width toggle?** The current layout's `220px 1fr 200px` grid wraps poorly under 960 px. Wikipedia's mobile Vector 2022 collapses the right rail entirely into a hamburger menu under 720 px. Leapfrog's mobile drawer pattern already supports this; verify the right-rail Appearance panel migrates into the mobile drawer alongside the existing TOC / nav drawers. Implementation detail, not a token question, but worth surfacing.
+
+**(k) Quick-toggle icon: sun/moon, or contrast (◐) glyph?** Wikipedia uses a sun/moon icon (Codex-icon `theme-light` / `theme-dark`). Codex ships these as SVG sprites. Leapfrog's text-icon discipline (the existing 🌐, ☰, § icons in the header) suggests a Unicode glyph rather than an SVG sprite — recommend `◐` (half-circle, theme-agnostic) cycling through, or `☀` (day) / `☾` (night) / `◐` (os). Substrate ruling on whether Leapfrog uses Codex SVG icons or stays on Unicode glyphs for chrome.
+
+**(l) Persistence: localStorage vs server-side cookie.** Wikipedia uses both — localStorage for fast read on next page load, cookie for cross-tab consistency and (for logged-in users) sync to Special:Preferences. Leapfrog currently has no user-account substrate. Recommend localStorage-only for v1; cookie sync deferred to whenever a user account substrate ships. Document this so a future session does not unilaterally add cookies.
+
+### 5. Substrate-side scope summary (additive to §9 of original research)
+
+The three features above add work to two of the four downstream drafts already staged, and a new draft is recommended:
+
+- **`token-knowledge-wiki-baseline.draft.md`** (DESIGN-TOKEN-CHANGE, Master co-sign) — extend with: dark-palette token bundle (15 token overrides under `wiki.theme.night.*` semantic tier), width tokens (`wiki.layout.width.standard` / `.wide`), hover-card tokens (`wiki.hover.bg` / `.border` / `.shadow` / `.delay-ms`). These are not new design surfaces — they are dark-mode and width variants of existing tokens.
+- **NEW: `component-appearance-panel.draft.md`** (DESIGN-COMPONENT) — recipe for the right-rail Appearance portlet (radio-group fieldset; icon header; pin/unpin affordance). Stage to drafts-outbound for project-design pickup.
+- **NEW: `component-hover-preview-card.draft.md`** (DESIGN-COMPONENT) — recipe for the hover-card primitive. Specifies the 320 px width, image aspect ratio, typography (serif title + sans body), shadow + border, settings cog, Read more link, the 300 ms dwell, the focus-parity behaviour, the AbortController fetch cancellation.
+- **`component-research-trail-footer.draft.md`** (existing) — extend with dark-palette `--research-trail-bg-night` value. No structural change.
+
+No new TOPIC drafts are needed for this iteration — the Wikipedia muscle-memory contract is already documented in this research file and in `topic-wikipedia-leapfrog-design.draft.md`. Engine implementation can proceed in parallel with substrate refinement; the engine sets the localStorage keys and CSS class names recommended above, and substrate refinement may rename them at gateway time without breaking the engine (the engine's class names are not load-bearing across the gateway — only the *behaviour contract* is).
+
+### 6. Sequencing recommendation for the engine implementer
+
+1. **Inline FOUT-suppression script in `<head>`** — small, must land first; everything else assumes it is present.
+2. **Theme CSS substrate** — dark-palette block in `style.css`; no JS yet, theme can be tested by manually setting `html.skin-theme-clientpref-night` via DevTools.
+3. **Theme quick-toggle in header** — single icon button next to the language switcher; cycles day → night → os.
+4. **Width CSS substrate** — `wiki-width-clientpref-{standard|wide}` classes with the max-width override; no JS yet, testable via DevTools.
+5. **Floating expand button** — bottom-right of viewport; wires width toggle.
+6. **Appearance right-rail panel** — full radio panel with both theme and width groups; pin/unpin behaviour.
+7. **Hover preview polish** — dwell delay, AbortController, Read more link, focus parity, Escape dismiss, settings cog.
+
+Each step is independently shippable and independently testable. Steps 1–5 are pure CSS + minimal JS; step 6 is the substantial new chrome; step 7 polishes an existing feature. Total engine LoC estimate: ~250 lines wiki.js, ~180 lines style.css, ~30 lines render.rs / server.rs for the right-rail panel and head-script emission.
+
 The Foundry Doctrine 2030 has 39 ratified claims as of v0.0.10. This research operationalises three of them at the wiki-engine surface: claim #21 (Role-Conditioned Cluster Adapters — the cluster-project-knowledge adapter trains from this corpus), claim #35 (The Reverse-Funnel Editorial Pattern — this draft enters the project-language gateway via the standard pickup), and claim #39 (Draft Research Trail Discipline — this draft itself complies with the research-trail mandate, demonstrating the structure it proposes the substrate adopt at article scale).
