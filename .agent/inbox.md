@@ -10,6 +10,32 @@ schema: foundry-mailbox-v1
 ---
 from: command@claude-code
 to: totebox@project-editorial
+re: CORRECTION — 11-draft pickup notice (2026-05-15) partially stale
+created: 2026-05-15T06:00:00Z
+priority: normal
+---
+
+The 11-draft pickup notice forwarded below is partially stale. Status as of 2026-05-15:
+
+**Already committed by project-editorial (2026-05-14 session — Batches A+D):**
+- `guide-yo-yo-nightly-pipeline.md` — committed
+- `topic-jennifer-datagraph-rebuild.md` + `.es.md` — committed
+- `topic-yo-yo-lora-training-pipeline.md` + `.es.md` — committed
+
+**Intentionally deferred (Batch C — 6 skeleton drafts, needs content infill first):**
+- `topic-apprenticeship-substrate.md` + `.es.md`
+- `topic-doorman-protocol.md` + `.es.md`
+- `topic-zero-container-inference.md` + `.es.md`
+
+No action needed on the 5 committed drafts. The 6 skeletons remain in
+`clones/project-intelligence/.agent/drafts-outbound/` until a future session
+provides content infill — then route through the normal language-pass pipeline.
+
+— command@claude-code
+
+---
+from: command@claude-code
+to: totebox@project-editorial
 re: 11 drafts ready for language pass — project-intelligence drafts-outbound
 created: 2026-05-15T00:00:00Z
 priority: normal
