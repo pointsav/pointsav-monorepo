@@ -525,7 +525,7 @@ async fn extract(State(state): State<Arc<AppState>>, raw: Bytes) -> impl IntoRes
     let error_message_for_audit = result.as_ref().err().map(|e| e.to_string());
 
     // 6. Parse result into response fields.
-    let (entities, tier_used, model, extraction_ok, deferred, defer_reason_str) = match result {
+    let (entities, tier_used, model, cost_usd, extraction_ok, deferred, defer_reason_str) = match result {
         Ok(compute_resp) => {
             // Strip markdown fences if the model wrapped its output.
             let raw_content = compute_resp.content.trim().to_string();
@@ -540,6 +540,7 @@ async fn extract(State(state): State<Arc<AppState>>, raw: Bytes) -> impl IntoRes
                     ents,
                     "yoyo_trainer".to_string(),
                     compute_resp.model,
+                    compute_resp.cost_usd,
                     true,
                     false,
                     None::<String>,
@@ -548,6 +549,7 @@ async fn extract(State(state): State<Arc<AppState>>, raw: Bytes) -> impl IntoRes
                     vec![],
                     "deferred".to_string(),
                     "none".to_string(),
+                    0.0_f64,
                     false,
                     true,
                     Some("yoyo-transient".to_string()),
@@ -558,6 +560,7 @@ async fn extract(State(state): State<Arc<AppState>>, raw: Bytes) -> impl IntoRes
             vec![],
             "deferred".to_string(),
             "none".to_string(),
+            0.0_f64,
             false,
             true,
             Some("yoyo-circuit-open".to_string()),
@@ -566,6 +569,7 @@ async fn extract(State(state): State<Arc<AppState>>, raw: Bytes) -> impl IntoRes
             vec![],
             "deferred".to_string(),
             "none".to_string(),
+            0.0_f64,
             false,
             true,
             Some("yoyo-transient".to_string()),
@@ -583,6 +587,9 @@ async fn extract(State(state): State<Arc<AppState>>, raw: Bytes) -> impl IntoRes
         entities_count: entities.len(),
         tier_used: tier_used.clone(),
         latency_ms,
+        model: model.clone(),
+        cost_usd,
+        sanitised_outbound: compute_req.sanitised_outbound,
         defer_reason: defer_reason_str.clone(),
         error_message: error_message_for_audit,
     };
@@ -862,6 +869,7 @@ pub const AUDIT_CAPTURE_MAX_PAYLOAD_BYTES: usize = 16 * 1024; // 16 KiB
 const AUDIT_CAPTURE_VALID_EVENT_TYPES: &[&str] = &[
     "prose-edit",
     "design-edit",
+    "graph-query",
     "graph-mutation",
     "anchor-event",
     "verdict-issued",
@@ -1188,6 +1196,7 @@ fn urlencoding_encode(s: &str) -> String {
 
 /// Inbound: Anthropic Messages API request body.
 #[derive(Deserialize)]
+#[allow(dead_code)]
 struct AnthropicMessagesBody {
     model: String,
     #[serde(default)]
@@ -1219,6 +1228,7 @@ enum AnthropicContent {
 }
 
 #[derive(Deserialize)]
+#[allow(dead_code)]
 struct AnthropicContentBlock {
     #[serde(rename = "type")]
     block_type: String,
