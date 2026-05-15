@@ -478,19 +478,28 @@
         if (catchmentActive && selectedClusterId) {
             const meta = clusterIndex?.get(selectedClusterId);
             showCatchmentForCluster(selectedClusterId);
-            // fitBounds on the 150 km secondary ring frames both catchment zones on any screen.
+            // flyTo to a fixed zoom of 8.5 frames both catchment rings predictably on all screen sizes
+            // without dropping below z7 (keeps the 35 km inner ring visible).
             // The zoomend handler suppresses showOverview() while catchment is active,
             // so dropping below RETAIL_ZOOM_THRESHOLD (9) does not lose cluster selection.
             if (meta && map.getZoom() > 9) {
-                map.fitBounds(catchmentBounds(meta.lon, meta.lat, 150), {
-                    padding: { top: 40, bottom: 40, left: 420, right: 40 },
-                    maxZoom: 9.4,
-                    duration: 900,
-                    essential: true,
-                });
+                map.flyTo({ center: [meta.lon, meta.lat], zoom: 8.5, duration: 800 });
             }
         } else {
             hideCatchment();
+            if (selectedClusterId) {
+                const meta = clusterIndex?.get(selectedClusterId);
+                if (map.getZoom() < RETAIL_ZOOM_THRESHOLD) {
+                    // Zoom back to retail level; zoomend will restore layers via setRetailLevel path
+                    if (meta) map.flyTo({ center: [meta.lon, meta.lat], zoom: RETAIL_ZOOM_THRESHOLD + 0.5, duration: 700 });
+                } else {
+                    // Already at retail zoom — restore layers explicitly
+                    if (map.getLayer('proximity-fill')) map.setLayoutProperty('proximity-fill', 'visibility', 'visible');
+                    if (map.getLayer('proximity-line')) map.setLayoutProperty('proximity-line', 'visibility', 'visible');
+                    if (map.getLayer('all-locations')) map.setLayoutProperty('all-locations', 'visibility', 'visible');
+                    updateProximityRings();
+                }
+            }
         }
     }
 
@@ -1789,7 +1798,10 @@
             if (!overviewActive && z >= RETAIL_ZOOM_THRESHOLD && catchmentActive && selectedClusterId) {
                 if (map.getLayer('proximity-fill')) map.setLayoutProperty('proximity-fill', 'visibility', 'visible');
                 if (map.getLayer('proximity-line')) map.setLayoutProperty('proximity-line', 'visibility', 'visible');
-                if (map.getLayer('all-locations')) map.setLayoutProperty('all-locations', 'visibility', 'visible');
+                if (map.getLayer('all-locations')) {
+                    map.setLayoutProperty('all-locations', 'visibility', 'visible');
+                    map.setPaintProperty('all-locations', 'circle-opacity', 0.70);
+                }
                 updateProximityRings();
             }
             if (overviewActive && z >= RETAIL_ZOOM_THRESHOLD) {
