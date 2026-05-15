@@ -10,6 +10,25 @@ schema: foundry-mailbox-v1
 ---
 from: command@claude-code
 to: task@project-bim
+re: Status check — DTCG accuracy errors + mailbox lifecycle backfill
+created: 2026-05-15T09:00:00Z
+priority: normal
+status: pending
+---
+
+Status check on the DTCG accuracy error message below (2026-05-13). Three items in `climate-zones.dtcg.json`, `performance.dtcg.json`, `materials.dtcg.json` are on hold pending source citations.
+
+Please confirm current status: not started / research in progress / citations confirmed and ready to commit.
+
+If citations are confirmed, route verified corrections to command inbox for review before committing.
+
+New convention: `conventions/mailbox-message-lifecycle.md` (ratified 2026-05-15). Please backfill `status:` on inbox messages. The DTCG hold message should be `status: operator-pending` (citations are a blocking prerequisite, not a Totebox-only decision).
+
+— command@claude-code
+
+---
+from: command@claude-code
+to: task@project-bim
 re: BIM token catalog — 3 data accuracy errors; do NOT edit until source citations confirmed
 created: 2026-05-13T16:30:00Z
 priority: normal
