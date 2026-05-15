@@ -497,6 +497,12 @@
             const meta = clusterIndex?.get(selectedClusterId);
             const isMeasured = meta?.iso === 'ES'; // ES clusters will use MITMA when ingested
             showCatchmentForCluster(selectedClusterId, isMeasured);
+            // Zoom to primary catchment ring — at zoom 14 the ring is 35 km off-screen.
+            // flyTo zoom 9.5 puts the ring boundary clearly in frame on all screen sizes
+            // and stays above RETAIL_ZOOM_THRESHOLD (9) so showOverview() never fires.
+            if (meta && map.getZoom() > 10) {
+                map.flyTo({ center: [meta.lon, meta.lat], zoom: 9.5, duration: 900 });
+            }
         } else {
             hideCatchment();
         }
