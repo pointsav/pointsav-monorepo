@@ -972,8 +972,17 @@ mod tests {
         let result_a = handle_a.join().expect("thread A joined");
         let result_b = handle_b.join().expect("thread B joined");
 
-        let got_a = result_a.expect("worker A ok");
-        let got_b = result_b.expect("worker B ok");
+        // QueueLockFailed is expected when both workers race — treat as "missed".
+        let got_a = match result_a {
+            Ok(brief) => brief,
+            Err(DoormanError::QueueLockFailed { .. }) => None,
+            Err(e) => panic!("worker A unexpected error: {}", e),
+        };
+        let got_b = match result_b {
+            Ok(brief) => brief,
+            Err(DoormanError::QueueLockFailed { .. }) => None,
+            Err(e) => panic!("worker B unexpected error: {}", e),
+        };
 
         // Exactly one should have received the brief.
         let success_count = [got_a.is_some(), got_b.is_some()]
