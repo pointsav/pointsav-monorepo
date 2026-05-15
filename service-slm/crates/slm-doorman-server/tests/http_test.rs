@@ -749,6 +749,8 @@ fn doorman_error_to_status(e: &DoormanError) -> StatusCode {
         DoormanError::QueueLockFailed { .. } => StatusCode::SERVICE_UNAVAILABLE,
         // Malformed brief detected and moved to poison bucket — 400 BAD_REQUEST.
         DoormanError::QueueMalformedBrief { .. } => StatusCode::BAD_REQUEST,
+        // Corpus quality gate rejected — 422 UNPROCESSABLE_ENTITY.
+        DoormanError::QueueQualityGateRejected { .. } => StatusCode::UNPROCESSABLE_ENTITY,
         // Graph proxy — caller omitted module-id header (400) or service-content
         // is unreachable/unconfigured (503).
         DoormanError::GraphProxyMissingModuleId => StatusCode::BAD_REQUEST,
