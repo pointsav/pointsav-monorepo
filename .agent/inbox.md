@@ -9,6 +9,22 @@ schema: foundry-mailbox-v1
 
 ---
 from: command@claude-code
+to: totebox@project-design
+re: AGENTS.md retro-add — pointsav-design-system
+created: 2026-05-14T22:34:22Z
+priority: low
+---
+
+Add `AGENTS.md` (vendor-neutral pointer file, `root-files-discipline.md` Tier 2) to
+`vendor/pointsav-design-system/` (the repo root). Follow the pattern at
+`vendor/pointsav-monorepo/moonshot-toolkit/AGENTS.md`. Quick-reference block should
+point to `CLAUDE.md` at the design-system root + constitutional charter + workspace nav.
+
+Commit staging-tier in project-design's pointsav-design-system sub-clone;
+push to staging mirrors. Stage 6 can batch with other design commits.
+
+---
+from: command@claude-code
 to: task@project-design
 re: ROUTING — 5 DESIGN drafts from project-knowledge ready for design-system pickup
 created: 2026-05-12T00:00:00Z
