@@ -160,9 +160,80 @@ Should return roughly the byte count of the most recent `clusters-meta.json` bui
 
 **`check-chain-counts.py` shows new OVER for a chain that was OK yesterday.** OpenStreetMap may have added cross-border records the polygon filter does not catch. Inspect the JSONL for outlier latitudes/longitudes; tighten the country bbox in `ingest-osm.py` if the bounding box itself is too loose.
 
+## Stage 6 — O-D Study and Catchment Layers (Sprint 14+)
+
+This stage is required when census or spend data has been updated, or when the
+catchment radius parameters change. It is independent of Stages 1–5 and can be
+run separately.
+
+### Step A — Synthesize O-D Catchment Data
+
+Computes primary (≤35 km) and secondary (35–150 km) catchment populations and
+spend for all 6,815 clusters. Also ranks clusters and updates `clusters-meta.json`.
+
+```bash
+python3 synthesize-od-study.py
+```
+
+About 15–25 minutes. Reads `census-h3-res7.jsonl` (172 MB) and
+`cleansed-spend-h3-res7.jsonl` (265 MB) from `service-fs/`. Iterates all
+clusters, computing H3 grid disks at resolution 7 (ring k=17 for primary,
+k=72 for secondary). Outputs:
+
+- `service-fs/service-mobility/od-summary.jsonl` — B3 artifact; one record per cluster
+- `work/catchment-data.json` — aggregated catchment stats + ranks
+- Updates `clusters-meta.json` in place with catchment fields
+
+Console lines to watch:
+- `[N/6815]` progress markers every 500 clusters
+- `Top 5 clusters by combined catchment population` — sanity check at end
+
+Failure modes:
+- **h3 not installed**: `pip install h3` in the project Python environment.
+- **clusters-meta.json missing catchment fields after run**: Check that the merge
+  loop matched cluster IDs correctly; run with a debug print on the first unmatched entry.
+
+### Step B — Build Catchment Polygon Layer
+
+Generates two circular polygons per cluster (primary 35 km, secondary 150 km)
+and passes through tippecanoe to produce the map catchment layer.
+
+```bash
+python3 build-catchment-polygons.py
+tippecanoe -o /srv/foundry/deployments/gateway-orchestration-gis-1/www/tiles/layer3-catchment.pmtiles \
+  --force --layer catchment --minimum-zoom 3 --maximum-zoom 10 \
+  --drop-densest-as-needed \
+  pointsav-monorepo/app-orchestration-gis/work/catchment-polygons.geojson
+```
+
+About 1 minute. Outputs `work/catchment-polygons.geojson` (two features per cluster:
+`zone=primary` and `zone=secondary`). The MapLibre style uses `match ["get","zone"]`
+to colour them distinctly.
+
+### Step C — Build Census and Spend Data Tile Layers
+
+Generates H3 hexagon polygon layers for census and spend, masked to catchment areas
+(within 150 km of any cluster), and passes through tippecanoe.
+
+```bash
+python3 build-data-tiles.py
+```
+
+About 20–30 minutes. Outputs:
+- `layer4-census.pmtiles` — population H3 hexes within catchment areas
+- `layer5-spend.pmtiles` — spend H3 hexes within catchment areas
+
+Both are written directly to the deployment tiles directory.
+
+Note: Only H3 cells within 150 km of at least one cluster are included. The full
+150 km data radius is the ingest boundary, not the display boundary.
+
 ## See Also
 
 - [Adding a New Chain to the GIS Pipeline](guide-gis-adding-a-chain.md)
 - [Adding a Country to the GIS Pipeline](guide-gis-adding-a-country.md)
+- [O-D Catchment Methodology](topic-od-catchment-methodology.md)
+- [Trade Area Data Sources](topic-trade-area-data-sources.md)
+- [Catchment Ranking Methodology](topic-catchment-ranking-methodology.md)
 - [Retail Co-location Methodology](topic-co-location-methodology.md)
 - [Cluster Deduplication Threshold](topic-cluster-deduplication-threshold.md)

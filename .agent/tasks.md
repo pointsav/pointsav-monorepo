@@ -183,7 +183,33 @@ Dispatched to project-editorial earlier session.
 ## Group G — Deferred
 
 - **G1:** Rust `service-ingest` crate — hold
-- **G2:** OD Study layer — hold
+- **G2:** OD Study layer — [x] DONE Sprint 14 (synthesize-od-study.py)
+
+---
+
+## Group H — Sprint 14: O-D Catchment + Phase C EU Hardware
+
+### H1: B1 Census Ingest [x] DONE
+WorldPop 2026 100m → H3 res-7 JSONL; 13 countries; 1,928,815 populated cells in service-fs/service-census/census-h3-res7.jsonl (172 MB).
+
+### H2: B2 Spend Ingest [x] DONE
+Per-capita spend multipliers (BLS/StatCan/Eurostat proxies) applied to census grid. 3 categories: grocery / hardware / wholesale. 1,988,375 spend cells in service-fs/service-spend/cleansed-spend-h3-res7.jsonl (265 MB).
+
+### H3: B3 O-D Study [x] DONE 2026-05-15
+synthesize-od-study.py: crow-flies ring approach, PRIMARY_RINGS=17 (≤35km), SECONDARY_RINGS=72 (≤150km) at H3 res-7. 6,815 clusters × ~15,000 cells each. Merged pp/sp/pg/sg/ph/sh/pw/sw/rp/rg/rh/rw/rn into clusters-meta.json. B3 artifact at service-fs/service-mobility/od-summary.jsonl.
+
+### H4: Catchment polygon tiles [x] DONE 2026-05-15
+build-catchment-polygons.py: 13,630 circle features (2 per cluster). layer3-catchment.pmtiles (87 MB).
+
+### H5: Census + spend PMTile layers [x] DONE 2026-05-15
+build-data-tiles.py: catchment-masked H3 hexes. layer4-census.pmtiles (373 MB), layer5-spend.pmtiles (635 MB).
+
+### H6: Map UI — catchment layers + Data modal + BentoBox trade area [x] DONE 2026-05-15
+index.html: sources (catchment-src, census-src, spend-src), 6 new layers, toggleCatchmentLayer/setHomeAway/openDataModal/closeDataModal JS, HOME/AWAY sub-toggle, full Data methodology modal, BentoBox Trade Area section (primary/secondary pop + catchment rank).
+
+### H7: Phase C EU hardware chain tile rebuild [x] DONE 2026-05-15
+6 new chains: toom-baumarkt-de, hagebaumarkt-de, bricocenter-it, silvan-dk, praktiker-gr, byko-is.
+52,362 raw → 48,468 cleansed → 6,815 deduplicated clusters. All Phase C chains within ±30% expected count. Full pipeline rebuild: cluster-entities → build-clusters → generate-rankings → build-tiles → synthesize-od-study (re-merge catchment).
 
 ---
 
@@ -384,3 +410,24 @@ Code files (ingest-osm.py + build-tiles.py) staged via `git add -f` in project-g
 
 ### Open follow-ups (unchanged backlog)
 Same 13 items in outstanding-todo.md (A1, B1, B2, C1, C2, D1–D4, E1–E4).
+
+---
+
+## Sprint 13 — Data Enrichment & Compliance (2026-05-12, In Progress)
+
+**H1: Legal Manifest & Compliance [x] DONE**
+- Add "Data Credits" and "Disclaimer" buttons to index.html.
+- Author DATA-MANIFEST.md in project root.
+- Stage LICENSE-DATA-MANIFEST.draft.md and LICENSE-DISCLAIMER.draft.md in .agent/drafts-outbound/ for editorial approval.
+
+**H2: Service Scaffolding [x] DONE**
+- Create pointsav-monorepo/service-{census,spend,mobility} with READMEs.
+- Create /srv/foundry/deployments/cluster-totebox-personnel-1/service-fs/service-{census,spend,mobility} data archives.
+
+**H3: Spatial Filtering Infrastructure [x] DONE**
+- Implement utils/spatial_filter.py with bucket-based O(1) candidate lookup and Haversine distance.
+- Create ingest skeletons for service-census, service-spend, and service-mobility using the 75km radius filter.
+
+**Next Up:**
+- Phase B1–B3: Full implementation of WorldPop, Eurostat, and US Census ingest.
+- Phase B4: European data parity audit.
