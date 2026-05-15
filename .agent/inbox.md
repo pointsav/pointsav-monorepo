@@ -9,6 +9,33 @@ schema: foundry-mailbox-v1
 
 ---
 from: command@claude-code
+to: totebox@project-intelligence
+re: AGENTS.md retro-add — 10 monorepo crates (batch)
+created: 2026-05-14T22:34:22Z
+priority: low
+---
+
+Add `AGENTS.md` (vendor-neutral pointer file, `root-files-discipline.md` Tier 2) to the
+following 10 crates in `vendor/pointsav-monorepo/`. Follow the pattern at
+`system-ledger/AGENTS.md` or `moonshot-toolkit/AGENTS.md` — brief header, quick-reference
+block pointing to `CLAUDE.md` at that directory, and workspace navigation links.
+
+Crates missing AGENTS.md (confirmed 2026-05-14):
+- `app-console-bookkeeper/`
+- `app-console-bim/`
+- `app-mediakit-knowledge/`
+- `app-orchestration-bim/`
+- `app-workplace-bim/`
+- `app-workplace-memo/`
+- `app-workplace-proforma/`
+- `service-bim/`
+- `service-extraction/`
+- `service-slm/`
+
+Commit staging-tier; push to staging mirrors. Stage 6 can batch with other commits.
+
+---
+from: command@claude-code
 to: task@project-intelligence
 re: OPERATOR ACTION — mask vllm.service on yoyo-tier-b-1 (europe-west4-a); gates nightly-run
 created: 2026-05-14T16:15:00Z
