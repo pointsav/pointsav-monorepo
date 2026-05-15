@@ -24,3 +24,7 @@ service-content/data/
 
 # Multi-agent session locks (ephemeral — not committed)
 .agent/engines/*/session.lock
+
+# Operator-specific runtime env files — never commit, copy from *.env.example
+service-totebox-egress/totebox-index.env
+service-content/.env
