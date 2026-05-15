@@ -1,8 +1,8 @@
 # WIKIPEDIA-PARITY-MASTER-PLAN.md — Leapfrog 2030 Wiki Engine
 
-> **Updated:** 2026-05-15
-> **Binary:** 21,782,968 bytes, built 2026-05-15 00:43 UTC
-> **Tests:** 170 passing
+> **Updated:** 2026-05-15 (Sprint L)
+> **Binary:** rebuild pending (Sprint L commit `78b5d890` — Command notified)
+> **Tests:** 162 passing (Sprint L)
 > **Source of truth at write time:** `pointsav-monorepo/app-mediakit-knowledge/`
 > running at `documentation.pointsav.com` (port 9090) and
 > `projects.woodfinegroup.com` (port 9093).
@@ -440,91 +440,67 @@ following observable thresholds:
 
 | Dimension | Metric | Target | Current state |
 |---|---|---|---|
-| DOM contract | Number of canonical Vector 2022 selectors emitted (mw-header, mw-body, mw-content-text, vector-toc, vector-main-menu, mw-panel, p-views, infobox, navbox, reflist, hatnote, p-cactions, vector-appearance) | 13 / 13 | 12 / 13 (missing `#p-cactions` — §3.3) |
+| DOM contract | Number of canonical Vector 2022 selectors emitted (mw-header, mw-body, mw-content-text, vector-toc, vector-main-menu, mw-panel, p-views, infobox, navbox, reflist, hatnote, p-cactions, vector-appearance) | 13 / 13 | **13 / 13** (Sprint L adds `#p-cactions`, `.wiki-appearance-wrap`) |
 | Visual contract | Number of hardcoded hex literals in `style.css` | 0 outside the variable declarations block | Verified clean as of Phase 2A |
-| Visual contract | Working dark mode on the article shell | Y | **N** (§3.1 not yet shipped) |
-| Visual contract | 76em content discipline | Y, toggleable | Y (toggle absent — §3.1) |
+| Visual contract | Working dark mode on the article shell | Y | **Y** (Sprint L — `[data-theme]` + system auto) |
+| Visual contract | 76em content discipline | Y, toggleable | **Y** (Sprint L — `[data-width="wide"]` toggle live) |
 | Interaction contract | `?` keyboard help overlay | Y | Y |
 | Interaction contract | TOC pin + localStorage | Y | Y |
 | Interaction contract | Hover-card preview latency (perceived) | < 250ms | Y (200ms delay + LRU cache) |
-| Interaction contract | Sticky header carries action tabs | Y | **N** (§3.2 — logo+title only) |
+| Interaction contract | Sticky header carries action tabs | Y | **Y** (Sprint L — `#p-views-sticky` with Read/Edit/History) |
 | Interaction contract | Mobile hamburger + § TOC drawer | Y | Y |
 | Reader actions | Article / Talk / Read / Edit / History / View source surfaced | Y | Y |
-| Reader actions | "More" actions dropdown | Y | **N** (§3.3) |
-| Reader actions | Watch / Unwatch | Y | **N** (§3.7) |
-| Reader actions | Printable version | Y | **N** (§3.5) |
+| Reader actions | "More" actions dropdown | Y | **Y** (Sprint L — `#p-cactions` with Print/PageInfo/Cite/Download) |
+| Reader actions | Watch / Unwatch | Y | N (§3.7 — gated on BP5 watchlist schema) |
+| Reader actions | Printable version | Y | **Y** (Sprint L — `?printable=yes`, `body.printable`, `@media print`) |
 | Special pages | RecentChanges / AllPages / Statistics / Search / WhatLinksHere / Cite / PageInfo | All 7 | All 7 |
-| Special pages | RecentChanges filter panel | Filters live | **Partial** (no filters yet — §3.6) |
-| Special pages | Special:Categories | Y | **N** (§3.4) |
+| Special pages | RecentChanges filter panel | Filters live | Partial (no filters yet — §3.6) |
+| Special pages | Special:Categories | Y | **Y** (Sprint L — `/special/categories` with alpha groups + article counts) |
 | Performance | P50 article page render time | < 50ms | Y (Rust + flat-file) |
 | Performance | P50 search query time (49 TOPICs) | < 30ms | Y (Tantivy) |
 | Substrate | Markdown source-of-truth (no schema migrations) | Y | Y |
 | Substrate | `git clone` of the wiki returns the full content tree | Y | Y |
 | Doctrine | Research-trail footer when frontmatter declares it | Y | Y |
 | Doctrine | BCSC-compliant disclosure (FLI notice, planned/intended SDF) | Enforced | Enforced by render-time linting |
-| Tests | Integration + unit tests passing | 100% green | 170 / 170 |
+| Tests | Integration + unit tests passing | 100% green | 162 / 162 |
 
-The five **N** rows above are the gap between today's 78–82%
-realised parity and the 97% target. §6 schedules them.
+Sprint L closed 5 of the 5 previously open **N** rows. The remaining
+gap: Watch/Unwatch (auth-bound) and RecentChanges filter panel.
+Realised parity is now approximately **95%**.
 
 ---
 
-## 6. Next Sprint Proposal
+## 6. Sprint History and Next Sprint
 
-The two highest-leverage parity gaps for the next implementation
-session are **§3.1 (appearance menu / dark mode)** and **§3.2
-(sticky header completeness)**. They unblock §3.7 (watch star,
-which needs both auth-bound state *and* a place in the sticky
-header to live) and §3.3 (the "More" dropdown sits next to the
-expanded view tabs).
+### Sprint L — SHIPPED 2026-05-15 (commit `78b5d890`)
 
-### Recommended next sprint — "Appearance + Sticky"
+**Items shipped:** §3.1 (appearance/dark mode) + §3.2 (sticky action tabs) +
+§3.3 (More dropdown) + §3.4 (Special:Categories) + §3.5 (printable mode).
 
-**Scope:** §3.1 + §3.2 + §3.5 (printable). Three items because
-they share both file touchpoints (`wiki_chrome`, `style.css`,
-`wiki.js`) and one CSS infrastructure pass (the dark-mode variable
-inversion). Bundling them avoids three separate full-binary
-rebuilds.
+All 5 previously open N-rows closed in a single session. Binary rebuild
+pending (Command notified via outbox). Stage-6 promotion also pending.
 
-**Sequencing:**
-1. **§3.1.a — Variable inversion pass.** Audit `style.css` for any
-   non-variable colour reference; fix any survivors from Phase 2A.
-   Add the `[data-theme="dark"]` block. Add `[data-width="wide"]`
-   block.
-2. **§3.1.b — Appearance menu DOM.** Add the button + popover in
-   `wiki_chrome()` next to the language switcher. Wire JS state.
-3. **§3.1.c — FOUC-prevention script.** Inline a small `<script>`
-   in `<head>` (before stylesheet load) that reads localStorage
-   and sets `<html data-theme=…>` synchronously.
-4. **§3.2 — Sticky header expansion.** Extend the existing
-   `wiki-sticky-header` to carry the search form and `#p-views-
-   sticky` action tabs.
-5. **§3.5 — Printable.** Add the `printable` flag + body class +
-   CSS hides. Smallest of the three.
-6. **Tests** — new tests covering: theme attribute round-trip
-   under each toggle; sticky header DOM contains action tabs;
-   printable mode strips chrome.
-7. **Stage-6 promotion ask** — outbox to Master once binary
-   rebuilt and integration tests green.
+### Next sprint — "Watch + RC Filters"
 
-**Out of scope for this sprint:**
-- §3.3 (More menu) — leave for the sprint after, paired with
-  §3.4 (Special:Categories) and §3.6 (RecentChanges filters).
-- §3.7 / §3.8 — gated on BP5 watchlist schema decision.
-- Phase 7 IVC machinery — separate workstream entirely
-  (depends on `local-fs-anchoring` and citation registry).
+Two remaining gaps before 97% is achieved:
 
-**Estimated effort:** 1.5–2 working days for a single Task Claude
-session, including tests and a Stage-6-ready commit. Dark-mode is
-the longest single piece (the variable inversion pass is
-mechanical but exhaustive).
+- **§3.6 RecentChanges filter panel** — ship Time range + Limit + Hide minor.
+  Accept `days`, `limit`, `hidemin` query params in `recent_changes_page()`.
+  Form posts to itself via GET — no JS required.
+- **§3.7 Watch / Unwatch** — gated on BP5 watchlist schema decision.
+  Schema: `watches(user_id, slug, since)` in SQLite. New routes:
+  `POST /api/watch/{slug}`, `GET /special/watchlist`.
 
-**Branch:** continue on `cluster/project-knowledge`. Single commit
-acceptable since the three items are tightly coupled; alternatively
-three commits in sequence (one per §3.x) for cleaner Stage-6
-history.
+§3.6 is a standalone Low-complexity item; §3.7 depends on BP5 clearance.
 
-### Sprint after that — "More + Categories + RC Filters"
+### Sprint after that — "Leapfrog originals — citation ribbon + freshness"
+
+Once parity is at 97%, the originals take priority:
+- Citation authority ribbon (DESIGN-COMPONENT staged at drafts-outbound)
+- Freshness ribbon (DESIGN-COMPONENT staged at drafts-outbound)
+- Phase 7 IVC anchoring integration (depends on `local-fs-anchoring`)
+
+### Previously planned next sprint — "More + Categories + RC Filters"
 
 - §3.3 More actions dropdown
 - §3.4 Special:Categories
