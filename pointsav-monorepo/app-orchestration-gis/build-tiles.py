@@ -331,6 +331,7 @@ def build_clusters_meta():
             "anc": p.get("anchor_label") or p.get("primary_anchor") or "",
             "dn":  p.get("display_name") or "",
             "cty": p.get("city") or "",
+            "mkt_conf": p.get("mkt_conf") or "low",
             "st":  p.get("state") or "",
             "iso": p.get("iso") or "",
             "rgn": p.get("region_name") or "",

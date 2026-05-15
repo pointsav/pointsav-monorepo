@@ -6,17 +6,24 @@ metropolitan/regional names to lat/lon coordinates. All lookups are offline
 — no runtime API calls.
 
 Boundary files (in BOUNDARIES_DIR):
-    us_cbsa.geojson       — US Census TIGER GENZ2023 CBSA/MSA boundaries
-    ca_cma.geojson        — Statistics Canada 2021 Census Metropolitan Areas
-    mx_metro.geojson      — INEGI 2018 Zonas Metropolitanas
-    eu_nuts3.geojson      — Eurostat GISCO NUTS-3 2021 level-3 (1:3M)
+    us_cbsa.geojson           — US Census TIGER GENZ2023 CBSA/MSA boundaries
+    ca_cma.geojson            — Statistics Canada 2021 Census Metropolitan Areas
+    mx_metro.geojson          — INEGI 2018 Zonas Metropolitanas
+    eu_nuts3.geojson          — Eurostat GISCO NUTS-3 2021 level-3 (1:3M)
     fallback_ne_admin1.geojson — Natural Earth Admin-1 10m (global fallback)
+
+Settlement-level files (built by build-settlements.py):
+    us_places.geojson         — US Census TIGER Places 2023 (cities, towns, villages)
+    eu_municipalities.geojson — GISCO LAU 2021 municipalities + GADM GBR admin-3 districts
+    ca_places_nominatim.json  — Nominatim results for CA county-CSD clusters
 
 Usage:
     from utils.region_engine import RegionEngine
     engine = RegionEngine(BOUNDARIES_DIR)
     name = engine.resolve(lat=43.6532, lon=-79.3832, iso="CA")
     # → "Toronto CMA"
+    market, conf = engine.resolve_market(lat=53.511, lon=-113.317, iso="CA")
+    # → ("Sherwood Park", "high")
 """
 
 import json
@@ -330,6 +337,12 @@ def _format_ne_admin1(props: dict) -> str:
     return _clean_region_name(name) if name else "Region"
 
 
+# Keywords that indicate a CSD is a county/regional district, not a settlement
+_CA_COUNTY_KEYWORDS = (
+    "County", "Region", "District", "Municipality",
+    "Township", "Parish", "Rural",
+)
+
 # GADM CamelCase splitter: "StrathconaCounty" → "Strathcona County"
 _CAMELCASE_RE = re.compile(r"(?<=[a-z])(?=[A-Z])")
 # Spanish prepositions glued to preceding word in GADM ES data (Acapulcode Juárez,
@@ -386,6 +399,12 @@ class RegionEngine:
         # Sprint 10 — admin-3 CSD (CA) + admin-2 Municipio (MX) via GADM 4.1
         self._ca_csd_feats = _load_geojson(d / "ca_csd.geojson")
         self._mx_mun_feats = _load_geojson(d / "mx_municipio.geojson")
+        # Settlement-level files (built by build-settlements.py)
+        self._us_places_feats = _load_geojson(d / "us_places.geojson")
+        self._eu_mun_feats    = _load_geojson(d / "eu_municipalities.geojson")
+        # CA nominatim overrides for county CSDs (cluster_id → settlement_name)
+        nom_path = d / "ca_places_nominatim.json"
+        self._ca_nominatim: dict = json.loads(nom_path.read_text()) if nom_path.exists() else {}
 
         # Build STRtrees upfront for repeated O(log N) queries
         if self._us_feats:
@@ -402,18 +421,25 @@ class RegionEngine:
             self._ca_csd_tree = STRtree([f[0] for f in self._ca_csd_feats])
         if self._mx_mun_feats:
             self._mx_mun_tree = STRtree([f[0] for f in self._mx_mun_feats])
+        if self._us_places_feats:
+            self._us_places_tree = STRtree([f[0] for f in self._us_places_feats])
+        if self._eu_mun_feats:
+            self._eu_mun_tree = STRtree([f[0] for f in self._eu_mun_feats])
 
         counts = {
             "US": len(self._us_feats), "CA": len(self._ca_feats),
             "MX": len(self._mx_feats), "EU": len(self._eu_feats),
             "FB": len(self._fb_feats),
             "CA_CSD": len(self._ca_csd_feats), "MX_MUN": len(self._mx_mun_feats),
+            "US_PLACES": len(self._us_places_feats), "EU_MUN": len(self._eu_mun_feats),
         }
         loaded = sum(counts.values())
         print(f"RegionEngine: {loaded} boundary polygons loaded "
               f"(US={counts['US']} CA={counts['CA']} MX={counts['MX']} "
               f"EU={counts['EU']} FB={counts['FB']} "
-              f"CA_CSD={counts['CA_CSD']} MX_MUN={counts['MX_MUN']})")
+              f"CA_CSD={counts['CA_CSD']} MX_MUN={counts['MX_MUN']} "
+              f"US_PLACES={counts['US_PLACES']} EU_MUN={counts['EU_MUN']} "
+              f"CA_NOM={len(self._ca_nominatim)})")
 
     def _tree_query(self, tree: "STRtree", features: list[tuple], point: "Point") -> Optional[dict]:
         hits = tree.query(point, predicate="within")
@@ -427,6 +453,119 @@ class RegionEngine:
 
     # Composite country codes (multi-country bboxes) → route to EU NUTS-3
     _COMPOSITE_EU = {"Nordics"}
+
+    # EU/EEA ISOs covered by the GISCO LAU file
+    _EU_MUN_ISO = {
+        "AT", "BE", "BG", "CY", "CZ", "DE", "DK", "EE", "ES", "FI",
+        "FR", "GR", "HR", "HU", "IE", "IT", "LT", "LU", "LV", "MT",
+        "NL", "PL", "PT", "RO", "SE", "SI", "SK", "NO", "IS", "LI",
+        "CH",
+    }
+
+    def resolve_market(self, lat: float, lon: float, iso: str,
+                       cluster_id: str = "") -> tuple[str, str]:
+        """
+        Return (market_name, confidence) for the given coordinate.
+
+        market_name — settlement-level place name: city, town, or village.
+          For county-level CSDs in Canada the name is the settlement within
+          the county (e.g. "Sherwood Park", not "Strathcona County").
+          For rural clusters with no settlement match, the county/municipality
+          name is returned with confidence="medium".
+
+        confidence — "high" | "medium" | "low"
+          high:   settlement boundary matched directly
+          medium: county/municipality matched, no finer settlement found
+          low:    metro-region or fallback only
+        """
+        if not self._available:
+            return ("", "low")
+
+        point = Point(lon, lat)
+
+        try:
+            # ------------------------------------------------------------------
+            # Canada — CSD + Nominatim override for county CSDs
+            # ------------------------------------------------------------------
+            if iso == "CA":
+                # 1. Try CSD boundary (GADM admin-3)
+                csd_name = ""
+                if self._ca_csd_feats:
+                    props = self._tree_query(self._ca_csd_tree, self._ca_csd_feats, point)
+                    if props:
+                        csd_name = _format_ca_csd(props)
+
+                if csd_name and not any(kw in csd_name for kw in _CA_COUNTY_KEYWORDS):
+                    # City/town-level CSD — use directly
+                    return (csd_name, "high")
+
+                # 2. County CSD or no match — check Nominatim override first
+                if cluster_id and cluster_id in self._ca_nominatim:
+                    nom = self._ca_nominatim[cluster_id].strip()
+                    if nom:
+                        # Nominatim may still return county-level for truly rural clusters
+                        conf = "medium" if any(kw in nom for kw in _CA_COUNTY_KEYWORDS) else "high"
+                        return (nom, conf)
+
+                # 3. Fall back to county CSD name with medium confidence
+                if csd_name:
+                    return (csd_name, "medium")
+
+                return ("", "low")
+
+            # ------------------------------------------------------------------
+            # United States — TIGER incorporated places
+            # ------------------------------------------------------------------
+            if iso == "US":
+                if self._us_places_feats:
+                    props = self._tree_query(self._us_places_tree, self._us_places_feats, point)
+                    if props:
+                        name = props.get("name") or props.get("NAME") or ""
+                        if name:
+                            return (name.strip(), "high")
+                # Fallback: CBSA primary city (strip " Metro Area" suffix)
+                if self._us_feats:
+                    props = self._tree_query(self._us_tree, self._us_feats, point)
+                    if props:
+                        name = _format_us_cbsa(props)
+                        name = name.replace(" Metro Area", "").strip()
+                        return (name, "medium") if name else ("", "low")
+                return ("", "low")
+
+            # ------------------------------------------------------------------
+            # Mexico — GADM municipio (already settlement-level)
+            # ------------------------------------------------------------------
+            if iso == "MX":
+                if self._mx_mun_feats:
+                    props = self._tree_query(self._mx_mun_tree, self._mx_mun_feats, point)
+                    if props:
+                        name = _format_mx_municipio(props)
+                        return (name, "high") if name else ("", "low")
+                return ("", "low")
+
+            # ------------------------------------------------------------------
+            # EU + EEA — GISCO LAU municipalities
+            # UK (GB) — GADM districts (included in eu_municipalities.geojson)
+            # ------------------------------------------------------------------
+            if iso in self._EU_MUN_ISO or iso == "GB" or iso in self._COMPOSITE_EU:
+                if self._eu_mun_feats:
+                    props = self._tree_query(self._eu_mun_tree, self._eu_mun_feats, point)
+                    if props:
+                        name = props.get("name") or props.get("NAME") or ""
+                        name = _clean_region_name(name.strip())
+                        return (name, "high") if name else ("", "low")
+                # Fallback: NUTS-3 region name
+                if self._eu_feats:
+                    props = self._tree_query(self._eu_tree, self._eu_feats, point)
+                    if props:
+                        name = _format_eu_nuts3(props)
+                        return (name, "medium") if name else ("", "low")
+                return ("", "low")
+
+        except Exception:
+            pass
+
+        return ("", "low")
 
     def resolve(self, lat: float, lon: float, iso: str) -> Optional[str]:
         """

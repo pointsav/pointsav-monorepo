@@ -368,16 +368,24 @@ def compute_clusters():
                 )
 
                 # Geographic display name + offline reverse-geocoded region
-                city_str  = (pri.get("city", "") or "").strip()
-                state_str = (pri.get("region", "") or "").strip()
-                iso_str   = (pri.get("iso_country_code", "") or "").strip()
+                iso_str      = (pri.get("iso_country_code", "") or "").strip()
                 anchor_label = ANCHOR_DISPLAY_NAMES.get(anchor_cid, anchor_cid)
+                region_name  = region_engine.resolve(plat, plon, iso_str)
+
+                # Settlement-level market name — derived from centroid, not POI addr:city
+                cluster_id_tmp = (
+                    f"c_{anchor_cid}_{round(plat, 3)}_{round(plon, 3)}"
+                    .replace(".", "x").replace("-", "_")
+                )
+                city_str, mkt_conf = region_engine.resolve_market(
+                    plat, plon, iso_str, cluster_id=cluster_id_tmp
+                )
+                state_str = (pri.get("region", "") or "").strip()
+
                 if city_str:
                     display_name = f"{city_str}, {state_str}" if state_str else f"{city_str}, {iso_str}"
                 else:
                     display_name = f"{anchor_label} ({iso_str})"
-
-                region_name = region_engine.resolve(plat, plon, iso_str)
 
                 clusters.append({
                     "cluster_id": (
@@ -403,6 +411,7 @@ def compute_clusters():
                     "display_name": display_name,
                     "region_name": region_name,
                     "city":       city_str,
+                    "mkt_conf":   mkt_conf,
                     "state":      state_str,
                     "iso":        iso_str,
                     "catchment_radius_km": DENSE_CATCHMENT_KM if is_dense else DEFAULT_CATCHMENT_KM,
