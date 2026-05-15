@@ -39,10 +39,13 @@ Dependencies (all available in this pipeline):
 import os
 import sys
 import csv
+import gzip
 import json
 import math
 import zipfile
 import collections
+import urllib.request
+import urllib.error
 from pathlib import Path
 
 # ---------------------------------------------------------------------------
@@ -68,35 +71,33 @@ OUTPUT_WORK = OUTPUT_DIR / "mitma-work-od-es.jsonl"
 # H3 resolution used throughout the pipeline
 H3_RES = 7
 
-# Activity-type string constants (MITMA vocabulary)
-ACTIVIDAD_TRABAJO = "trabajo"          # work destination
-ACTIVIDAD_HOGAR   = "hogar"            # home activity type
-RESIDENCIA_FLAG   = "1"               # residencia column value meaning home zone
+# Activity-type string constants (MITMA v2 vocabulary)
+# v1 used "trabajo"/"hogar"; v2 uses "frecuente"/"casa"
+ACTIVIDAD_TRABAJO = "frecuente"        # work/frequent-destination activity
+ACTIVIDAD_HOGAR   = "casa"             # home activity type
 
-# Download instructions (printed when raw data is absent)
-DOWNLOAD_INSTRUCTIONS = """
-  -----------------------------------------------------------------------
-  MITMA raw data not found. Manual download required.
+# MITMA portal (movilidad-opendata.mitma.es) returns HTTP 500.
+# Data is accessible directly from the S3 buckets behind the portal.
+S3_V2 = "https://mitma-movilidad-v2.s3.amazonaws.com"
 
-  1. Visit the open-data portal:
-       https://movilidad-opendata.mitma.es/
+# Shapefile components for the v2 district zonification (ETRS89 UTM30N → WGS84)
+S3_ZONE_FILES = [
+    ("zonificacion/zonificacion_distritos/zonificacion_distritos.shp", "zonificacion_distritos.shp"),
+    ("zonificacion/zonificacion_distritos/zonificacion_distritos.dbf", "zonificacion_distritos.dbf"),
+    ("zonificacion/zonificacion_distritos/zonificacion_distritos.shx", "zonificacion_distritos.shx"),
+    ("zonificacion/zonificacion_distritos/zonificacion_distritos.prj", "zonificacion_distritos.prj"),
+]
 
-  2. Download the OD trip files (viajes) and zone geometry (zonas).
-     Example wget for a monthly zip (adjust the URL from the portal):
-
-       mkdir -p {viajes_dir}
-       wget -P {viajes_dir} \\
-         "https://movilidad-opendata.mitma.es/maestra1-mitma-distritos/ficheros-diarios/2022-01/2022-01-03_Maestra1_MMM_MITMA_Distritos.zip"
-
-     Download zone geometries (GeoJSON or shapefile):
-
-       mkdir -p {zones_dir}
-       wget -P {zones_dir} \\
-         "https://movilidad-opendata.mitma.es/zonificacion_distritos/distritos_mitma.geojson"
-
-  3. Re-run this script once data is in place.
-  -----------------------------------------------------------------------
-""".format(viajes_dir=VIAJES_DIR, zones_dir=ZONES_DIR)
+# One representative week of v2 daily viajes (Jan 3–9 2022: Mon–Sun)
+S3_VIAJES_SAMPLE = [
+    ("estudios_basicos/por-distritos/viajes/ficheros-diarios/2022-01/20220103_Viajes_distritos.csv.gz", "20220103_Viajes_distritos.csv.gz"),
+    ("estudios_basicos/por-distritos/viajes/ficheros-diarios/2022-01/20220104_Viajes_distritos.csv.gz", "20220104_Viajes_distritos.csv.gz"),
+    ("estudios_basicos/por-distritos/viajes/ficheros-diarios/2022-01/20220105_Viajes_distritos.csv.gz", "20220105_Viajes_distritos.csv.gz"),
+    ("estudios_basicos/por-distritos/viajes/ficheros-diarios/2022-01/20220106_Viajes_distritos.csv.gz", "20220106_Viajes_distritos.csv.gz"),
+    ("estudios_basicos/por-distritos/viajes/ficheros-diarios/2022-01/20220107_Viajes_distritos.csv.gz", "20220107_Viajes_distritos.csv.gz"),
+    ("estudios_basicos/por-distritos/viajes/ficheros-diarios/2022-01/20220108_Viajes_distritos.csv.gz", "20220108_Viajes_distritos.csv.gz"),
+    ("estudios_basicos/por-distritos/viajes/ficheros-diarios/2022-01/20220109_Viajes_distritos.csv.gz", "20220109_Viajes_distritos.csv.gz"),
+]
 
 # ---------------------------------------------------------------------------
 # H3 import guard
@@ -123,30 +124,62 @@ def haversine_km(lon1: float, lat1: float, lon2: float, lat2: float) -> float:
     return 2 * R * math.atan2(math.sqrt(a), math.sqrt(1 - a))
 
 # ---------------------------------------------------------------------------
-# Step 1: Check for raw data
+# Step 1: Auto-download raw data from MITMA S3
 # ---------------------------------------------------------------------------
 
-def check_raw_data() -> bool:
-    """Return True if raw MITMA directories exist and contain files."""
-    if not RAW_MITMA_DIR.exists():
-        print(f"Raw MITMA directory not found: {RAW_MITMA_DIR}")
-        print(DOWNLOAD_INSTRUCTIONS)
+def _dl(s3_path: str, dest: Path, label: str) -> bool:
+    """Download one file from S3_V2 to dest; skip if already cached."""
+    if dest.exists() and dest.stat().st_size > 0:
+        size_mb = dest.stat().st_size / 1_048_576
+        print(f"  [cache] {dest.name} ({size_mb:.1f} MB)")
+        return True
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    url = f"{S3_V2}/{s3_path}"
+    print(f"  Downloading {label}: {url}")
+    tmp = dest.with_suffix(dest.suffix + ".part")
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "foundry-mitma-ingest/1"})
+        with urllib.request.urlopen(req, timeout=300) as resp:
+            total = int(resp.headers.get("Content-Length", "0") or "0")
+            chunk, read, last_pct = 256 * 1024, 0, -1
+            with open(tmp, "wb") as out:
+                while True:
+                    buf = resp.read(chunk)
+                    if not buf:
+                        break
+                    out.write(buf)
+                    read += len(buf)
+                    if total > 0:
+                        pct = int(read * 100 / total)
+                        if pct >= last_pct + 5:
+                            print(f"    {pct:>3}%  {read/1_048_576:.1f} / {total/1_048_576:.1f} MB")
+                            last_pct = pct
+        tmp.rename(dest)
+        print(f"  -> {dest.name} ({dest.stat().st_size / 1_048_576:.1f} MB)")
+        return True
+    except (urllib.error.URLError, OSError) as e:
+        print(f"  [FAIL] {label}: {e}")
+        if tmp.exists():
+            tmp.unlink()
         return False
 
-    zones_files = list(ZONES_DIR.rglob("*")) if ZONES_DIR.exists() else []
-    viajes_files = list(VIAJES_DIR.rglob("*")) if VIAJES_DIR.exists() else []
 
-    if not zones_files:
-        print(f"Zone geometry directory is empty or missing: {ZONES_DIR}")
-        print(DOWNLOAD_INSTRUCTIONS)
-        return False
+def ensure_raw_data() -> bool:
+    """Download MITMA zone shapefile and sample viajes files if not cached."""
+    print("Checking MITMA raw data...")
+    ok = True
 
-    if not viajes_files:
-        print(f"Trip CSV directory is empty or missing: {VIAJES_DIR}")
-        print(DOWNLOAD_INSTRUCTIONS)
-        return False
+    # Zone shapefile
+    for s3_path, fname in S3_ZONE_FILES:
+        if not _dl(s3_path, ZONES_DIR / fname, fname):
+            ok = False
 
-    return True
+    # Sample viajes (one week Jan 2022)
+    for s3_path, fname in S3_VIAJES_SAMPLE:
+        if not _dl(s3_path, VIAJES_DIR / fname, fname):
+            ok = False
+
+    return ok
 
 # ---------------------------------------------------------------------------
 # Step 2: Load Spanish clusters (iso == "ES")
@@ -411,7 +444,7 @@ def build_zone_index(zone_map: dict, buckets, threshold_km: float) -> dict:
         nearby = nearby_clusters(lon, lat, buckets, threshold_km)
         if not nearby:
             continue
-        h3_cell = h3.geo_to_h3(lat, lon, H3_RES)
+        h3_cell = h3.latlng_to_cell(lat, lon, H3_RES)
         index[zone_id] = {
             "h3": h3_cell,
             "lat": round(lat, 6),
@@ -453,6 +486,14 @@ def iter_od_csvs(viajes_dir: Path):
                                 yield f"{path.name}/{member}", lines
             except (zipfile.BadZipFile, OSError) as e:
                 print(f"  Warning: cannot open zip {path.name}: {e}")
+
+        elif path.name.lower().endswith(".csv.gz"):
+            try:
+                with gzip.open(path, "rb") as gz:
+                    lines = gz.read().decode("utf-8", errors="replace").splitlines(keepends=True)
+                yield path.name, lines
+            except (OSError, EOFError) as e:
+                print(f"  Warning: cannot read gz {path.name}: {e}")
 
 # ---------------------------------------------------------------------------
 # Step 6: Aggregate OD flows
@@ -575,10 +616,8 @@ def aggregate_od_flows(viajes_dir: Path, zone_index: dict, dry_run: bool = False
             rows_processed += 1
 
             # HOME signal: trip from a home zone (residential origin)
-            is_home_trip = (
-                act_orig.lower() == ACTIVIDAD_HOGAR
-                or residencia == RESIDENCIA_FLAG
-            )
+            # v2: actividad_origen == "casa"; residencia is a province code, not used
+            is_home_trip = act_orig.lower() == ACTIVIDAD_HOGAR
             if is_home_trip:
                 rec = home_acc[orig_h3]
                 rec["visits"] += viajes
@@ -702,8 +741,9 @@ def main() -> None:
     else:
         print("=== ingest-mitma.py: Spain MITMA MNO mobility ingest ===")
 
-    # Step 1: verify raw data exists
-    if not check_raw_data():
+    # Step 1: download raw data if not cached
+    if not ensure_raw_data():
+        print("ERROR: One or more MITMA downloads failed; check network and retry.")
         sys.exit(1)
 
     # Step 2: load Spanish clusters and build proximity index
