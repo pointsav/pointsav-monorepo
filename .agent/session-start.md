@@ -1,73 +1,27 @@
 ---
 schema: foundry-session-start-v1
-archive: project-proofreader
-updated: 2026-05-20
+archive: project-system
+updated: 2026-05-14
 ---
 
-# Session start — project-proofreader
+# Session start — project-system
 
 > Step 8 of the session start ritual (AGENT.md §Session start).
 > Engine-agnostic — Claude Code and Gemini CLI both read this.
 
 ## This archive at a glance
 
-- **Mission:** os-console platform — chassis-first Leapfrog 2030. Single binary (`os-console`) with
-  `app-console-keys` base chassis + compiled-in cartridges (F1–F12). `app-console-content` is the
-  F4 cartridge (proofreader + drafter). All owned in `pointsav-monorepo/`.
-- **Active branch:** `cluster/project-proofreader` (pending rename → `cluster/project-console`)
-- **Architecture plan:** `.agent/plans/os-console-platform.md` — read this before any architecture discussion
-- **Coding roadmap:** `.agent/plans/leapfrog-2030-coding.md` — phased plan; Phase 1 is next
+- **Mission:** Substrate-shaped cluster — the substrate touches every numbered runtime under `~/Foundry/deployments/`. Owns vendor-side showcase content (public-facing Customer and Community Members) and customer-tier operational mirror content. Receives `GUIDE-substrate-rollout-{onprem,cloud,leased}.md` drafted Task-side; public bundle per Doctrine §VIII. Real-time feedback loop for every cluster's Task when substrate breaks.
+- **Active branch:** `cluster/project-system`
 - **Inbox:** read `.agent/inbox.md` (step 4 — already done before this file)
-
-## Critical state
-
-- **Phase 0 COMPLETE** — `app-console-content` crate committed; `cargo build` green; SSH TUI gate
-  passed (ratatui frame confirmed over port 2222 via `ssh -p 2222 -i ~/.ssh/google_compute_engine
-  mathew@localhost`).
-- **Phase 1 = chassis first** — next task is creating `app-console-keys` lib crate and converting
-  `app-console-content` from a standalone binary to a lib crate (F4 Cartridge). See
-  `leapfrog-2030-coding.md` Phase 1 checklist.
-- **No `app-console-keys/` Cargo.toml yet** — Reserved-folder in catalog; Phase 1 creates it.
-- **SSH key note**: `mathew` user has no standard `id_ed25519`; use `-i ~/.ssh/google_compute_engine`
-  for localhost testing until Phase 2 adds `proofctl user add`.
-- **russh 0.60 API**: native async fn in impl (no async_trait); `russh::keys::PrivateKey::random(&mut rand::rng(), Algorithm::Ed25519)`; `session.channel_success(channel)?` in pty_request + shell_request; TerminalHandle uses sink Vec<u8> + flush sends. See memory for full reference.
-- **Web UI is to be taken down** — blocked on Command Session (sudo). Teardown checklist in
-  `tui-pivot-2030.md` §Part 6. `local-proofreader-console.service` (9091) + `local-proofreader-public.service` (9097) + nginx vhost + cert.
-- **Pending rename:** project-proofreader → project-console. Outbox msg sent to Command.
-
-## Architecture at a glance (2026-05-20)
-
-- `os-console` = single binary; `app-console-keys` = base chassis (always-installed, like
-  `service-fs` for os-totebox); other cartridges are optional compiled-in lib crates.
-- **F-key map (WIP):** F1=help, F2=people, F3=email, F4=content, F5=minutebook, F6=bookkeeper,
-  F7=bim, F8=gis, F9=slm, F10=**app-console-mesh**, F11=system, **F12=input (The Anchor, immovable)**
-- **MBA** = peer-to-peer (os-console ↔ os-totebox/os-orchestration/etc.); NOT network-layer.
-  `system-gateway-mba` is server side; `app-console-keys` is client side (shows `MBA LINK ACTIVE`).
-- **PPN** = WireGuard infrastructure only; deliberately isolated from os-* application layer.
-- **Doorman:** `http://localhost:8011` (NOT 9080). Response field: `.content`.
-- **Input Machine (F12):** global intercept → POST to `service-input` → classify + route + audit.
-  SYS-ADR-10: cannot be bypassed from other panes.
+- **In-flight plans:** none (check `.agent/plans/` for any new files)
 
 ## Known gotchas
 
-- **Do not swap or upgrade the SLM model** until the operator explicitly lifts the constraint.
-- `service-proofreader` backend (9092) stays live and unchanged.
-- Verdict POST to `/v1/verdict` closes the apprenticeship loop — preserve this path.
-- Long-poll timeout: 300s on `/v1/proofread`, 30s everywhere else.
-- Doorman wire: response carries `.content`, not `.choices[0].message.content`.
+- Substrate changes have system-wide impact — changes here propagate to every deployment runtime. Coordinate with Command Session before any substrate modification.
+- Vendor-side and customer-tier content is mirrored — ensure changes are consistent across both branches of content.
 - Commit via `~/Foundry/bin/commit-as-next.sh` only (staging-tier).
-- Port 2222 needs a GCE firewall rule — coordinate with Command Session / operator.
-- `tui-pivot-2030.md` is superseded by the new plans; ignore its Phase 7 chassis deferral and 9080 port references.
-
-## Technology stack
-
-ratatui 0.30 + crossterm 0.28 + russh 0.60 (feature-gated ssh-server) + tui-textarea 0.7 +
-similar 2.5 + syntect 5.2 + nucleo 0.5 + rusqlite 0.32 + pdfium-render 0.8 (Phase 7) + tokio
 
 ## Last session handoff
 
-*2026-05-23 (session 7): Stage 6 rebase complete — 11 os-console commits cleanly rebased
-onto local `main` (tip `9afc9e25`). Push BLOCKED: histories completely unrelated (local
-main and all remotes share zero ancestors). Escalated to Command via outbox. binary-targets.yaml
-written and build-request sent. Inbox msgs updated. Next coding: Phase 3 QR (Kitty/Sixel) or
-Phase 4 F11 system panel — after Command resolves Stage 6 history question.*
+*No prior handoff recorded.*

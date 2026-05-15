@@ -1,6 +1,6 @@
-# project-infrastructure — Gemini CLI entry point
+# project-system — Gemini CLI entry point
 
-You are a **Totebox Session** for the `project-infrastructure` archive.
+You are a **Totebox Session** for the `project-system` archive.
 
 Before any action, execute the 8-step startup ritual defined in:
 
