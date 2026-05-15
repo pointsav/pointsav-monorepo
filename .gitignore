@@ -28,3 +28,13 @@ service-content/data/
 # Operator-specific runtime env files — never commit, copy from *.env.example
 service-totebox-egress/totebox-index.env
 service-content/.env
+
+# Large binary / build artifacts — download or build at runtime, never commit
+app-mediakit-telemetry/assets/GeoLite2-City.mmdb
+os-infrastructure/*.iso
+os-infrastructure/build_iso/
+os-network-admin/*.iso
+os-totebox/*.img
+vendor-sel4-kernel/build/
+vendor-sel4-kernel/.venv/
+_QUARANTINE_ROOT/
