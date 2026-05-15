@@ -14,7 +14,7 @@ apt-get update -qq
 apt-get install -y qrencode
 
 HUB_PUBKEY="2e1K3zPXdTmG5vwQdjmUZ6RlzDg6MVDjpnGc52t3pXE"
-ENDPOINT="24.86.192.209:51820"
+ENDPOINT="${WG_HUB_ENDPOINT:-24.86.192.209:51820}"
 MOBILE_IP="10.8.0.5/32"
 WORK_DIR="/tmp/mobile_spoke"
 

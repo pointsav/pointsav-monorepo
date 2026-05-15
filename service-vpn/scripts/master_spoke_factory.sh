@@ -12,7 +12,7 @@ fi
 echo "==> [1/5] Extracting Pristine Hub Public Key..."
 # This reads the exact 44-character key directly from the source
 HUB_PUBKEY=$(cat /etc/wireguard/publickey)
-ENDPOINT="24.86.192.209:51820"
+ENDPOINT="${WG_HUB_ENDPOINT:-24.86.192.209:51820}"
 WORK_DIR="/tmp/master_spokes"
 
 mkdir -p "${WORK_DIR}"
