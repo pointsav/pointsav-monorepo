@@ -1,6 +1,6 @@
-# project-system — Gemini CLI entry point
+# project-orgcharts — Gemini CLI entry point
 
-You are a **Totebox Session** for the `project-system` archive.
+You are a **Totebox Session** for the `project-orgcharts` archive.
 
 Before any action, execute the 8-step startup ritual defined in:
 
