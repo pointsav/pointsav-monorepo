@@ -6,9 +6,9 @@ sub_phase: 0-vocabulary-baseline
 status: in-progress
 safe_to_resume: true
 unsafe_reason: ""
-owner_engine: gemini-cli
-last_updated: 2026-05-14T20:00:00Z
-last_session_id: ""
+owner_engine: claude-code
+last_updated: 2026-05-15T00:00:00Z
+last_session_id: d64fccd3-6513-4802-a3dc-966cad0e754b-163418
 ---
 
 ## Last completed sub-task
