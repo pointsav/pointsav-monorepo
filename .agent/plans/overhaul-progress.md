@@ -12,13 +12,13 @@ last_session_id: d64fccd3-6513-4802-a3dc-966cad0e754b-327278
 ---
 
 ## Last completed sub-task
-- task: Category _index.md landing rebuilds (6 categories × 2 = 12 files)
-- commit_sha: ed06bec (content-wiki-documentation)
+- task: Style guide OPUS editorial rules update (sub-phase 2h)
+- commit_sha: 6050420 (content-wiki-documentation)
 - committed_at: 2026-05-15
-- detail: architecture, systems, services, applications, infrastructure, reference — complete MOC
-  rewrites; stale article lists replaced with accurate curated groupings; frontmatter normalized;
-  internal ENGINE/EDITORIAL comments removed; broken style-guide-readme link fixed; retired help/
-  link removed from reference See also
+- detail: style-guide-topic.md + .es.md + style-guide-guide.md + .es.md — Bloomberg four-paragraph
+  lede structure, stand-alone PDF test, 75/25 register, CFO sentence test, named actors rule,
+  "so what" discipline, internal governance vocabulary ban; broken style-guide-readme links removed;
+  workspace path references replaced with plain prose
 
 ## Sub-phase 2e summary (cross-reference gap fill — COMPLETE)
 Audit (enhanced to skip inline code spans and .agent/ rules files) found 44 flagged links;
@@ -68,11 +68,15 @@ Classifier detected and tagged 87 unlabelled fenced blocks across 17 guide files
 Note: compounding-substrate, doorman-protocol, disclosure-substrate, leapfrog-2030-architecture
   rewritten in step 5 (commits 96e221d/91b8910); not revisited in 2g.
 
-### Next
-- Sub-phase 2h: update reference/style-guide-topic.md and reference/style-guide-guide.md with
-  §6 readability rules (the two remaining kept style guides)
-- New articles identified: governance/procurement-overview.md and governance/security-overview.md
-  (high-value institutional reader landing pages — not yet written)
+### Sub-phase 2h — COMPLETE (commit 6050420)
+Style guides updated with OPUS editorial rules.
+
+### Next — sub-phase 2i
+- New articles for institutional readers: governance/procurement-overview.md and
+  governance/security-overview.md (high-value landing pages identified by OPUS main page agent —
+  not yet written; banker-relevant content gap)
+- Broader article-by-article readability pass: substrate/ and architecture/ categories
+  applying the Bloomberg + 75/25 + CFO sentence rules per article
 
 ## Blockers
 - (none)
