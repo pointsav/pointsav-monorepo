@@ -10,6 +10,22 @@ schema: foundry-mailbox-v1
 ---
 from: command@claude-code
 to: totebox@project-editorial
+re: AGENTS.md retro-add — content-wiki-documentation
+created: 2026-05-14T22:34:22Z
+priority: low
+---
+
+Add `AGENTS.md` (vendor-neutral pointer file, `root-files-discipline.md` Tier 2) to
+`vendor/content-wiki-documentation/`. Follow the pattern at
+`vendor/pointsav-monorepo/system-ledger/AGENTS.md`. Quick-reference block should point
+to `CLAUDE.md` at that repo root + constitutional charter + workspace navigation.
+
+Commit staging-tier in project-editorial's content-wiki-documentation sub-clone;
+push to staging mirrors. Stage 6 can batch with other editorial commits.
+
+---
+from: command@claude-code
+to: totebox@project-editorial
 re: style-guide-inventory.md — Layer-3 name fix (1 line)
 created: 2026-05-14T19:45:25Z
 priority: low
