@@ -2,29 +2,27 @@
 schema: overhaul-progress-v1
 plan: overhaul-documentation-pointsav-com.md
 phase: 2
-sub_phase: 2i-substrate-complete
+sub_phase: 2i-complete
 status: in-progress
 safe_to_resume: true
 unsafe_reason: ""
 owner_engine: claude-code
-last_updated: 2026-05-15T22:00:00Z
-last_session_id: 167cdef2-9deb-4dd0-9b5d-c86ab8c009d7
+last_updated: 2026-05-15T21:00:00Z
+last_session_id: f0c72c72-f1b7-4254-bfa2-553a5e266bac
 ---
 
 ## Last completed sub-task
-- task: Sub-phase 2i — substrate/ category Bloomberg lede + internal vocab scrub (complete)
-- commit_sha: eac2449 (content-wiki-documentation)
+- task: Sub-phase 2i — architecture/ category Bloomberg lede + internal vocab scrub (complete)
+- commit_sha: d5a542b (content-wiki-documentation, final architecture/ batch)
 - committed_at: 2026-05-15
-- detail: All 9 substrate articles in EN+ES pairs swept. Two commit batches (2ab8fee + eac2449).
-  citation-substrate, apprenticeship-substrate, language-protocol-substrate — full rewrites with
-  Bloomberg 4-paragraph lede, ES frontmatter fixed (lang: es added), blockquotes removed.
-  trajectory-substrate — full rewrite: Doctrine claim #14, ~/Foundry/ paths, Task Claude removed.
-  disclosure-substrate — Doctrine claim #29 removed; conventions/ paths removed; blockquote removed.
-  system-substrate-doctrine, design-system-substrate, knowledge-commons,
-  substrate-native-compatibility — targeted edits: Foundry branding, named competitors,
-  marketing phrases, workspace path refs all cleaned.
-  New governance articles: governance/procurement-overview.md + security-overview.md (EN+ES),
-  governance/_index.md + .es.md updated (f1383b4).
+- detail: Full architecture/ sweep across 4 batches (7c3ca97, ea347f8, 8fb0eb7, d5a542b).
+  All "Foundry", "Doctrine claim #N", "~/Foundry/", "Task Claude" vocabulary removed from
+  all architecture/ EN+ES article pairs. Substitutions: "PointSav" (commercial/product
+  context), "the platform" (technical substrate), "the development workspace" (internal workspace refs).
+  systems/totebox-archive.md cluster-totebox-jennifer scrub (a9b4059).
+  WFD reconciliation: hard reset to canonical + cherry-pick 2 genuine commits (606563c, d10c971).
+  LEGAL draft verified + routed to command@claude-code outbox.
+  All inbox messages actioned and archived.
 
 ## Sub-phase 2e summary (cross-reference gap fill — COMPLETE)
 Audit (enhanced to skip inline code spans and .agent/ rules files) found 44 flagged links;
@@ -77,22 +75,27 @@ Note: compounding-substrate, doorman-protocol, disclosure-substrate, leapfrog-20
 ### Sub-phase 2h — COMPLETE (commit 6050420)
 Style guides updated with OPUS editorial rules.
 
-### Sub-phase 2i — substrate/ COMPLETE; architecture/ in progress
+### Sub-phase 2i — COMPLETE (architecture/ + substrate/)
 - governance/procurement-overview.md + security-overview.md (EN+ES) — new articles, committed f1383b4
 - governance/_index.md + .es.md — updated with institutional due-diligence group
-- substrate/ category — Bloomberg lede + vocab scrub — 9 articles EN+ES (2ab8fee + eac2449):
-  - citation-substrate, apprenticeship-substrate, language-protocol-substrate — full rewrites
-  - trajectory-substrate — full rewrite (Doctrine claim #14, ~/Foundry/ paths, Task Claude)
-  - disclosure-substrate — Doctrine claim #29 removed; blockquote removed
-  - system-substrate-doctrine, design-system-substrate, knowledge-commons,
-    substrate-native-compatibility — targeted edits
+- substrate/ category — Bloomberg lede + vocab scrub — 9 articles EN+ES (2ab8fee + eac2449)
+- architecture/ category — Foundry/Doctrine/~/Foundry/Task Claude vocab scrub across all EN+ES pairs:
+  - Batch 1 (7c3ca97): 5 articles from crashed session (city-code-as-composable-geometry,
+    foundry-doctrine-architecture, pointsav-llm, totebox-orchestration-development, totebox-session)
+  - Batch 2 (ea347f8): 12 EN + 12 ES (24 files) — _index, collab-via-passthrough-relay,
+    cryptographic-ledgers, data-sovereignty-telemetry, decode-time-constraints,
+    direct-payment-settlement, flat-file-bim-leapfrog, foundry-doctrine-architecture,
+    foundry-doctrine-overview, identity-ledger-schema-design, location-intelligence-strategy,
+    totebox-orchestration-development, vertical-seed-packs-marketplace, zero-container-inference
+  - Batch 3 (8fb0eb7): 8 files — customer-hostability, foundry-doctrine-overview,
+    identity-ledger-schema-design, pointsav-llm, zero-container-inference (EN+ES)
+  - Batch 4 (d5a542b): totebox-session.es.md (~/Foundry/ paths + charter vocabulary)
 
-### Next — architecture/ category readability pass
-- Audit architecture/ articles for: bold H1 opener, blockquote opener, "Doctrine" mentions,
-  internal path refs, named competitors
-- Priority articles: foundry-doctrine-architecture, doorman-protocol (already done in step 5),
-  three-ring-architecture (done in 2g), compounding-substrate (done in step 5)
-- Remaining architecture/ articles to sweep: check which have not yet been rewritten
+### Next — sub-phase 2j or operator-designated next phase
+- services/, systems/, patterns/, reference/, governance/, infrastructure/, design-system/,
+  applications/ categories still have Doctrine/Convention vocabulary (per cleanup-log.md audit:
+  ~50 files in documentation wiki)
+- Suggest: operator to designate next sub-phase scope and priority order
 
 ## Blockers
 - (none)
