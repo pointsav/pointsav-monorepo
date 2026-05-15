@@ -192,7 +192,6 @@
         .reach-btn:disabled { opacity: 0.45; cursor: default; }
         .vintage-row { display: flex; align-items: center; justify-content: space-between; margin-top: 7px; font-size: 9px; color: var(--text-muted); }
         .vintage-badge { background: rgba(0,0,0,0.05); border-radius: 4px; padding: 2px 6px; font-weight: 700; }
-        .vintage-measured { background: #DCFCE7; color: #166534; }
         .catchment-pop-stats { display: flex; gap: 0; margin-top: 8px; border-top: 1px solid var(--border-soft); padding-top: 8px; }
         .catchment-zone-stat { flex: 1; }
         .catchment-zone-stat + .catchment-zone-stat { border-left: 1px solid var(--border-soft); padding-left: 10px; margin-left: 6px; }
@@ -201,21 +200,6 @@
         .catchment-zone-km { font-size: 9px; color: var(--text-muted); margin-top: 1px; }
         .data-value { font-variant-numeric: tabular-nums; }
         .rank-num { font-variant-numeric: tabular-nums; font-size: 24px; font-weight: 900; color: var(--brand-primary); line-height: 1.1; }
-
-        /* ── Demo overlay block ─────────────────────────────────────────── */
-        .demo-block { background: linear-gradient(135deg,#fffbeb 0%,#fef3c7 100%); border: 1px solid #fbbf24; border-radius: 8px; padding: 10px 12px; margin-top: 2px; }
-        .demo-badge { display: inline-flex; align-items: center; gap: 4px; background: #f59e0b; color: #fff; border-radius: 4px; padding: 2px 7px; font-size: 9px; font-weight: 800; letter-spacing: 0.4px; text-transform: uppercase; margin-bottom: 6px; }
-        .demo-stat-row { display: flex; gap: 6px; margin-top: 6px; }
-        .demo-stat { flex: 1; background: rgba(255,255,255,0.7); border-radius: 5px; padding: 5px 7px; }
-        .demo-stat-val { font-size: 14px; font-weight: 900; color: #92400e; font-variant-numeric: tabular-nums; line-height: 1.1; }
-        .demo-stat-lbl { font-size: 8px; font-weight: 700; color: #b45309; text-transform: uppercase; letter-spacing: 0.3px; margin-top: 1px; }
-        .od-wedge-row { display: flex; flex-direction: column; gap: 3px; margin-top: 8px; border-top: 1px solid #fbbf24; padding-top: 8px; }
-        .od-wedge { display: flex; align-items: center; gap: 6px; font-size: 10px; }
-        .od-wedge-dir { width: 22px; font-weight: 800; color: #92400e; flex-shrink: 0; }
-        .od-wedge-bar-wrap { flex: 1; height: 6px; background: #fef3c7; border-radius: 3px; overflow: hidden; }
-        .od-wedge-bar { height: 100%; border-radius: 3px; background: #f59e0b; }
-        .od-wedge-pct { width: 26px; text-align: right; font-weight: 700; color: #78350f; font-variant-numeric: tabular-nums; }
-        .od-wedge-lbl { color: var(--text-muted); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
         /* ── Context strip (replaces region tabs when drilled in) ──────── */
         .context-strip { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
@@ -302,7 +286,6 @@
                     <li><strong>WorldPop</strong>: High-resolution population grids (100m). Licensed under CC BY 4.0.</li>
                     <li><strong>OpenStreetMap</strong>: Map data © OpenStreetMap contributors. Licensed under ODbL.</li>
                     <li><strong>Overture Maps</strong>: POI and transportation data © Overture Maps Foundation. Licensed under CDLA-Permissive-2.0 / ODbL.</li>
-                    <li><strong>WorldMove</strong>: Synthetic global mobility dataset (Tsinghua FIB-LAB). Licensed under CC BY 4.0.</li>
                 </ul>
                 <h3>Regional & Administrative</h3>
                 <ul>
@@ -326,7 +309,7 @@
                 <h3>No Guarantee</h3>
                 <p>Woodfine Group does not guarantee the accuracy, completeness, or timeliness of the data. Retailer locations and catchment analysis should not be used for high-stakes site selection, navigation, or critical infrastructure planning without independent verification.</p>
                 <h3>Privacy Notice</h3>
-                <p>We do not utilize real-time individual tracking data. All mobility metrics are derived from synthetic trajectories (WorldMove) or anonymized, aggregated visitor patterns. No personally identifiable information (PII) is processed or displayed.</p>
+                <p>We do not utilize real-time individual tracking data. Catchment population and consumer-spend metrics are derived from WorldPop high-resolution population grids assigned to clusters via a distance-decay radius model. No personally identifiable information (PII) is processed or displayed.</p>
             </div>
         </div>
     </div>
@@ -454,7 +437,7 @@
 
     // ── Catchment visualization ──────────────────────────────────────────────
 
-    function showCatchmentForCluster(clusterId, isMeasured) {
+    function showCatchmentForCluster(clusterId) {
         if (!map.getSource('catchment-src')) return;
         const f = ['==', ['get', 'cluster_id'], clusterId];
         const fPrimary   = ['all', f, ['==', ['get', 'zone'], 'primary']];
@@ -463,10 +446,8 @@
         map.setFilter('catchment-inner-fill', fPrimary);
         map.setFilter('catchment-outer-line', fSecondary);
         map.setFilter('catchment-inner-line', fPrimary);
-        // Dashed = estimated; solid = measured MITMA data
-        const dash = isMeasured ? [1, 0] : [4, 3];
         if (map.getLayer('catchment-inner-line')) {
-            map.setPaintProperty('catchment-inner-line', 'line-dasharray', dash);
+            map.setPaintProperty('catchment-inner-line', 'line-dasharray', [4, 3]);
         }
         ['catchment-outer-fill','catchment-inner-fill',
          'catchment-outer-line','catchment-inner-line'].forEach(id => {
@@ -479,7 +460,8 @@
     function hideCatchment() {
         ['catchment-outer-fill','catchment-inner-fill',
          'catchment-outer-line','catchment-inner-line',
-         'catchment-heatmap-pop','catchment-heatmap-spend'].forEach(id => {
+         'catchment-heatmap-pop','catchment-heatmap-spend',
+         'catchment-heatmap-work','catchment-heatmap-home-measured'].forEach(id => {
             if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', 'none');
         });
         if (map.getSource('catchment-centroids-src')) {
@@ -490,18 +472,22 @@
     function toggleCatchmentMaster(btn) {
         catchmentActive = !catchmentActive;
         btn.classList.toggle('active', catchmentActive);
-        btn.textContent = catchmentActive ? 'Catchment ON' : 'Catchment';
+        btn.textContent = catchmentActive ? 'Hide' : 'Show on Map';
         const sub = document.getElementById('catchment-sublayers');
         if (sub) sub.classList.toggle('visible', catchmentActive);
         if (catchmentActive && selectedClusterId) {
             const meta = clusterIndex?.get(selectedClusterId);
-            const isMeasured = meta?.iso === 'ES'; // ES clusters will use MITMA when ingested
-            showCatchmentForCluster(selectedClusterId, isMeasured);
-            // Zoom to primary catchment ring — at zoom 14 the ring is 35 km off-screen.
-            // flyTo zoom 9.5 puts the ring boundary clearly in frame on all screen sizes
-            // and stays above RETAIL_ZOOM_THRESHOLD (9) so showOverview() never fires.
-            if (meta && map.getZoom() > 10) {
-                map.flyTo({ center: [meta.lon, meta.lat], zoom: 9.5, duration: 900 });
+            showCatchmentForCluster(selectedClusterId);
+            // fitBounds on the 150 km secondary ring frames both catchment zones on any screen.
+            // The zoomend handler suppresses showOverview() while catchment is active,
+            // so dropping below RETAIL_ZOOM_THRESHOLD (9) does not lose cluster selection.
+            if (meta && map.getZoom() > 9) {
+                map.fitBounds(catchmentBounds(meta.lon, meta.lat, 150), {
+                    padding: { top: 40, bottom: 40, left: 420, right: 40 },
+                    maxZoom: 9.4,
+                    duration: 900,
+                    essential: true,
+                });
             }
         } else {
             hideCatchment();
@@ -513,15 +499,64 @@
         document.querySelectorAll('.sublayer-opt').forEach(el => el.classList.remove('active'));
         if (btn) btn.classList.add('active');
         updateCatchmentSubLayer();
+        // Update source badge to reflect the active sublayer's provenance
+        const badge = document.getElementById('catchment-source-badge');
+        if (badge && selectedClusterProps) {
+            badge.textContent = catchmentSourceLabel(selectedClusterProps, sublayer);
+        }
     }
 
     function updateCatchmentSubLayer() {
         if (!catchmentActive) return;
-        ['catchment-heatmap-pop','catchment-heatmap-spend'].forEach(id => {
+        const layers = ['catchment-heatmap-pop','catchment-heatmap-spend',
+                        'catchment-heatmap-work','catchment-heatmap-home-measured'];
+        layers.forEach(id => {
             if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', 'none');
         });
-        const target = catchmentSubLayer === 'spend' ? 'catchment-heatmap-spend' : 'catchment-heatmap-pop';
+        let target;
+        if (catchmentSubLayer === 'spend') {
+            target = 'catchment-heatmap-spend';
+        } else if (catchmentSubLayer === 'work') {
+            target = 'catchment-heatmap-work';
+        } else if (catchmentSubLayer === 'home-measured') {
+            target = 'catchment-heatmap-home-measured';
+        } else {
+            target = 'catchment-heatmap-pop';
+        }
         if (map.getLayer(target)) map.setLayoutProperty(target, 'visibility', 'visible');
+    }
+
+    // ── Mobility provenance helpers ──────────────────────────────────────────
+    // Normalise iso (string or array) → array of ISO2 codes
+    function isoList(iso) {
+        if (Array.isArray(iso)) return iso.filter(Boolean);
+        if (typeof iso === 'string' && iso) return [iso];
+        return [];
+    }
+
+    function hasWorkReachData(p) {
+        // ES: MITMA layer6 built; US/CA: LODES/StatCan pending Sprint 17
+        const codes = isoList(p && p.iso);
+        return codes.includes('ES');
+    }
+
+    // Source-label resolution. HOME (pop / spend) → mobility_source field on
+    // the cluster (observed MITMA where available, radius/WorldPop otherwise).
+    // WORK → derived from cluster ISO (LODES US / StatCan CA / MITMA ES).
+    function catchmentSourceLabel(p, sublayer) {
+        if (!p) return 'WorldPop · radius catchment';
+        if (sublayer === 'work') {
+            const codes = isoList(p.iso);
+            if (codes.includes('US')) return 'LODES · US Census 2021';
+            if (codes.includes('CA')) return 'StatCan · Census 2021';
+            if (codes.includes('ES')) return 'MITMA · MNO observed';
+            return 'Not yet available';
+        }
+        // HOME-side sublayers (pop, spend, home-measured)
+        if (p.mobility_source === 'mitma') return 'MITMA · MNO observed';
+        if (p.mobility_source === 'lodes')   return 'LODES · US Census 2021';
+        if (p.mobility_source === 'statcan') return 'StatCan · Census 2021';
+        return 'WorldPop · radius catchment';
     }
 
     function loadCatchmentCentroids(clusterId) {
@@ -588,13 +623,6 @@
     let selectedClusterId = null;
     let overviewActive = true;
 
-    const DEMO_CLUSTER_IDS = new Set([
-        'c_walmart_ca_51x262__114x007',   // Airdrie Co-location 1 — Walmart
-        'c_home_depot_ca_51x261__114x007', // Airdrie Co-location 2 — Home Depot
-        'c_costco_ca_51x211__113x983',     // CrossIron Mills / Balzac — Costco
-    ]);
-    let demoOverlay = null;
-    fetch('data/demo-overlay.json').then(r => r.ok ? r.json() : null).then(d => { demoOverlay = d; }).catch(() => {});
     let selectedClusterProps  = null;
     let selectedClusterCoords = null;
     // Zoom threshold between Co-location Level (bubbles) and Retail Level (All Locations + rings)
@@ -967,6 +995,9 @@
             ph: c.ph, sh: c.sh,
             pw: c.pw, sw: c.sw,
             rp: c.rp, rg: c.rg, rh: c.rh, rw: c.rw,
+            // Mobility provenance (synthesize-od-study.py + build-mobility-tiles.py)
+            mobility_source:  c.mobility_source  || 'radius',
+            mobility_vintage: c.mobility_vintage || 'worldpop-2026',
         };
     }
 
@@ -1149,10 +1180,6 @@
         const sitesHero = count3km !== null ? count3km.toLocaleString() : '—';
         const sitesSub  = count1km !== null ? `${count1km} · 1 km` : '';
 
-        // Demo overlay — merge when this is the showcase cluster
-        const demo = (DEMO_CLUSTER_IDS.has(selectedClusterId) && demoOverlay) ? demoOverlay : null;
-        const isMeasured = demo?.is_measured || p.iso === 'ES';
-
         // Catchment population (pre-computed in synthesize-od-study.py)
         const primaryPop   = p.pp != null ? parseInt(p.pp) : null;
         const secondaryPop = p.sp != null ? parseInt(p.sp) : null;
@@ -1162,6 +1189,10 @@
         const popRank      = p.rp != null ? parseInt(p.rp) : null;
         const grocRank     = p.rg != null ? parseInt(p.rg) : null;
         const TOTAL_CLUSTERS = 6815;
+
+        // Mobility provenance — drives WORK reach availability + source badge text
+        const hasWorkReach   = hasWorkReachData(p);
+        const sourceBadgeTxt = catchmentSourceLabel(p, catchmentSubLayer);
 
         document.getElementById('inspector').innerHTML = `
             <div class="data-block">
@@ -1189,6 +1220,48 @@
                     ${[density !== null ? `${density.toFixed(1)}/km²` : null, uniqueBrands ? `${uniqueBrands} brand${uniqueBrands === 1 ? '' : 's'}` : null, count1km != null ? `${count1km} at 1 km` : null].filter(Boolean).join(' · ')}
                 </div>` : ''}
             </div>
+            <div class="data-block" style="padding-top:6px;">
+                <div class="catchment-block">
+                    <div class="catchment-header">
+                        <div class="data-label" style="margin:0;">Catchment Area</div>
+                        <button class="catchment-master-toggle${catchmentActive ? ' active' : ''}"
+                                onclick="toggleCatchmentMaster(this)">
+                            ${catchmentActive ? 'Hide' : 'Show on Map'}
+                        </button>
+                    </div>
+                    ${(primaryPop > 0 || secondaryPop > 0) ? `
+                    <div class="catchment-pop-stats">
+                        ${primaryPop > 0 ? `<div class="catchment-zone-stat">
+                            <div class="catchment-zone-label">● 35 km zone</div>
+                            <div class="catchment-zone-pop">${compactNum(primaryPop)}</div>
+                        </div>` : ''}
+                        ${(primaryPop > 0 && secondaryPop > 0) ? `<div class="catchment-zone-stat">
+                            <div class="catchment-zone-label">○ 150 km zone</div>
+                            <div class="catchment-zone-pop">${compactNum(primaryPop + secondaryPop)}</div>
+                        </div>` : ''}
+                    </div>` : ''}
+                    <div id="catchment-sublayers" class="catchment-sublayers${catchmentActive ? ' visible' : ''}">
+                        <div class="sublayer-radio">
+                            <div class="sublayer-opt${catchmentSubLayer === 'pop' ? ' active' : ''}"
+                                 onclick="setCatchmentSubLayer('pop', this)">
+                                <div class="sublayer-dot" style="background:#f97316;"></div>Population density
+                            </div>
+                            <div class="sublayer-opt${catchmentSubLayer === 'spend' ? ' active' : ''}"
+                                 onclick="setCatchmentSubLayer('spend', this)">
+                                <div class="sublayer-dot" style="background:#10b981;"></div>Consumer spend
+                            </div>
+                            ${hasWorkReach ? `<div class="sublayer-opt${catchmentSubLayer === 'work' ? ' active' : ''}"
+                                 onclick="setCatchmentSubLayer('work', this)">
+                                <div class="sublayer-dot" style="background:#3b82f6;"></div>Work origins
+                            </div>` : ''}
+                        </div>
+                        <div class="vintage-row">
+                            <span>Source</span>
+                            <span class="vintage-badge" id="catchment-source-badge">${sourceBadgeTxt}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <div class="data-block">
                 <div class="data-label">Anchor Location</div>
                 <div class="anchor-pills">
@@ -1204,92 +1277,12 @@
                     ${wh.map(w => `<div class="pill">${chainName(w)}</div>`).join('')}
                 </div>
             </div>
-            <div id="sel-el" class="sel-el-block data-block">
+            <div id="sel-el" class="sel-el-block data-block" style="border-bottom:none;">
                 <div class="data-label">Selected Location</div>
                 <div style="font-size:11px;color:var(--text-muted);font-style:italic;padding:4px 0;">
                     Click a retailer dot in this ring to inspect.
                 </div>
             </div>
-            <div class="data-block" style="padding-top:6px;border-bottom:none;">
-                <div class="catchment-block">
-                    <div class="catchment-header">
-                        <div class="data-label" style="margin:0;">Catchment Area</div>
-                        <button class="catchment-master-toggle${catchmentActive ? ' active' : ''}"
-                                onclick="toggleCatchmentMaster(this)">
-                            ${catchmentActive ? 'ON' : 'Show on Map'}
-                        </button>
-                    </div>
-                    ${(primaryPop !== null || secondaryPop !== null) ? `
-                    <div class="catchment-pop-stats">
-                        ${primaryPop !== null ? `<div class="catchment-zone-stat">
-                            <div class="catchment-zone-label">● 35 km zone</div>
-                            <div class="catchment-zone-pop">${compactNum(primaryPop)}</div>
-                            <div class="catchment-zone-km">within 35 km</div>
-                        </div>` : ''}
-                        ${(primaryPop !== null && secondaryPop !== null) ? `<div class="catchment-zone-stat">
-                            <div class="catchment-zone-label">○ 150 km zone</div>
-                            <div class="catchment-zone-pop">${compactNum(primaryPop + secondaryPop)}</div>
-                            <div class="catchment-zone-km">within 150 km</div>
-                        </div>` : ''}
-                    </div>` : ''}
-                    <div id="catchment-sublayers" class="catchment-sublayers${catchmentActive ? ' visible' : ''}">
-                        <div class="sublayer-radio">
-                            <div class="sublayer-opt${catchmentSubLayer === 'pop' ? ' active' : ''}"
-                                 onclick="setCatchmentSubLayer('pop', this)">
-                                <div class="sublayer-dot" style="background:#f97316;"></div>Population density
-                            </div>
-                            <div class="sublayer-opt${catchmentSubLayer === 'spend' ? ' active' : ''}"
-                                 onclick="setCatchmentSubLayer('spend', this)">
-                                <div class="sublayer-dot" style="background:#10b981;"></div>Consumer spend
-                            </div>
-                        </div>
-                        <div class="reach-control">
-                            <button class="reach-btn${catchmentReach === 'home' ? ' active' : ''}"
-                                    onclick="catchmentReach='home';this.parentElement.querySelectorAll('.reach-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active')">
-                                HOME reach
-                            </button>
-                            <button class="reach-btn" disabled title="WORK catchment — planned when mobility data integrated">
-                                WORK reach
-                            </button>
-                        </div>
-                        <div class="vintage-row">
-                            <span>Source</span>
-                            <span class="vintage-badge${isMeasured ? ' vintage-measured' : ''}">
-                                ${isMeasured ? (demo ? 'Illustrative · demo data' : 'MITMA MNO · measured') : 'Gravity model · estimated'}
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            ${demo ? `
-            <div class="data-block demo-block" style="border-bottom:none;">
-                <div class="demo-badge">★ Demo Site — Illustrative Data</div>
-                <div class="data-label" style="margin-bottom:4px;">Visitor Origin Study</div>
-                <div class="demo-stat-row">
-                    <div class="demo-stat">
-                        <div class="demo-stat-val">${compactNum(demo.daily_unique_visitors)}</div>
-                        <div class="demo-stat-lbl">Daily visitors</div>
-                    </div>
-                    <div class="demo-stat">
-                        <div class="demo-stat-val">${compactNum(demo.home_pop_measured)}</div>
-                        <div class="demo-stat-lbl">HOME catchment</div>
-                    </div>
-                    <div class="demo-stat">
-                        <div class="demo-stat-val">${Math.round(demo.work_pop_measured / 1000)}K</div>
-                        <div class="demo-stat-lbl">WORK origins</div>
-                    </div>
-                </div>
-                <div class="od-wedge-row">
-                    ${demo.od_flow_segments.map(seg => `
-                    <div class="od-wedge">
-                        <span class="od-wedge-dir">${seg.dir}</span>
-                        <div class="od-wedge-bar-wrap"><div class="od-wedge-bar" style="width:${seg.pct * 3}%;"></div></div>
-                        <span class="od-wedge-pct">${seg.pct}%</span>
-                        <span class="od-wedge-lbl">${seg.label}</span>
-                    </div>`).join('')}
-                </div>
-                <div style="margin-top:6px;font-size:9px;color:#b45309;font-style:italic;">${demo.data_source}</div>
-            </div>` : ''}
         `;
     }
 
@@ -1648,6 +1641,61 @@
             },
         }, 'proximity-fill');
 
+        // ── Mobility (WORK + observed HOME) sources & heatmap layers ─────
+        // layer6 — WORK reach (LODES US + StatCan CA + MITMA ES merged)
+        map.addSource('mobility-work-src', {
+            type: 'vector',
+            url: 'pmtiles://tiles/layer6-mobility-work.pmtiles',
+        });
+
+        map.addLayer({
+            id: 'catchment-heatmap-work', type: 'heatmap',
+            source: 'mobility-work-src',
+            'source-layer': 'mobility_work',
+            layout: { visibility: 'none' },
+            paint: {
+                'heatmap-weight': ['get', 'visits_norm'],
+                'heatmap-intensity': ['interpolate', ['linear'], ['zoom'], 6, 0.6, 10, 1.2, 14, 2.0],
+                'heatmap-color': [
+                    'interpolate', ['linear'], ['heatmap-density'],
+                    0,   'rgba(200,220,255,0.0)',
+                    0.2, 'rgba(100,160,255,0.35)',
+                    0.5, 'rgba(59,130,246,0.55)',
+                    1.0, 'rgba(29,78,216,0.75)',
+                ],
+                'heatmap-radius': ['interpolate', ['linear'], ['zoom'], 6, 14, 10, 32, 14, 60],
+                'heatmap-opacity': ['interpolate', ['linear'], ['zoom'], 6, 0.7, 14, 0.8],
+            },
+        }, 'proximity-fill');
+
+        // layer7 — HOME reach (MITMA ES, measured). Same warm gradient as
+        // catchment-heatmap-pop so observed-HOME reads as the high-fidelity
+        // counterpart of the modelled HOME layer.
+        map.addSource('mobility-home-es-src', {
+            type: 'vector',
+            url: 'pmtiles://tiles/layer7-mobility-home-measured.pmtiles',
+        });
+
+        map.addLayer({
+            id: 'catchment-heatmap-home-measured', type: 'heatmap',
+            source: 'mobility-home-es-src',
+            'source-layer': 'mobility_home',
+            layout: { visibility: 'none' },
+            paint: {
+                'heatmap-weight': ['get', 'visits_norm'],
+                'heatmap-intensity': ['interpolate', ['linear'], ['zoom'], 6, 0.6, 10, 1.2, 14, 2.0],
+                'heatmap-color': [
+                    'interpolate', ['linear'], ['heatmap-density'],
+                    0,   'rgba(253,186,116,0.0)',
+                    0.2, 'rgba(253,186,116,0.35)',
+                    0.5, 'rgba(249,115,22,0.55)',
+                    1.0, 'rgba(194,65,12,0.75)',
+                ],
+                'heatmap-radius': ['interpolate', ['linear'], ['zoom'], 6, 14, 10, 32, 14, 60],
+                'heatmap-opacity': ['interpolate', ['linear'], ['zoom'], 6, 0.7, 14, 0.8],
+            },
+        }, 'proximity-fill');
+
         // ── Cluster zoom helper — shared by nodes click + proximity-fill click ──
         function drillIntoCluster(p, coords) {
             overviewActive = false;
@@ -1656,8 +1704,7 @@
             showClusterDetail(p, coords);
             // If catchment was active for a previous cluster, update it to the new one
             if (catchmentActive && selectedClusterId) {
-                const isMeasured = p.iso === 'ES';
-                showCatchmentForCluster(selectedClusterId, isMeasured);
+                showCatchmentForCluster(selectedClusterId);
             }
 
             // Ring centre is not individually marked — anchor store is visible via all-locations
@@ -1724,11 +1771,26 @@
         // Retail Level → Co-location Level only via explicit Back button (never auto-revert)
         map.on('zoomend', () => {
             const z = map.getZoom();
-            // Zoom out below Retail threshold → always revert to Co-location Level
-            // (symmetric with the zoom-in transition at RETAIL_ZOOM_THRESHOLD)
+            // Zoom out below Retail threshold → revert to Co-location Level,
+            // EXCEPT when catchment is active: the 150 km secondary ring requires
+            // z~7.5–8.0 to frame, below the threshold by design. Keep cluster
+            // selection and catchment layers; hide proximity rings at that zoom.
             if (!overviewActive && z < RETAIL_ZOOM_THRESHOLD) {
+                if (catchmentActive && selectedClusterId) {
+                    if (map.getLayer('proximity-fill')) map.setLayoutProperty('proximity-fill', 'visibility', 'none');
+                    if (map.getLayer('proximity-line')) map.setLayoutProperty('proximity-line', 'visibility', 'none');
+                    if (map.getLayer('all-locations')) map.setLayoutProperty('all-locations', 'visibility', 'none');
+                    return;
+                }
                 showOverview();
                 return;
+            }
+            // Restore retail layers when zooming back above threshold in cluster+catchment context
+            if (!overviewActive && z >= RETAIL_ZOOM_THRESHOLD && catchmentActive && selectedClusterId) {
+                if (map.getLayer('proximity-fill')) map.setLayoutProperty('proximity-fill', 'visibility', 'visible');
+                if (map.getLayer('proximity-line')) map.setLayoutProperty('proximity-line', 'visibility', 'visible');
+                if (map.getLayer('all-locations')) map.setLayoutProperty('all-locations', 'visibility', 'visible');
+                updateProximityRings();
             }
             if (overviewActive && z >= RETAIL_ZOOM_THRESHOLD) {
                 setRetailLevel();
