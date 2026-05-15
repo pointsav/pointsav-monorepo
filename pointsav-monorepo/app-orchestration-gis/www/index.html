@@ -202,6 +202,21 @@
         .data-value { font-variant-numeric: tabular-nums; }
         .rank-num { font-variant-numeric: tabular-nums; font-size: 24px; font-weight: 900; color: var(--brand-primary); line-height: 1.1; }
 
+        /* ── Demo overlay block ─────────────────────────────────────────── */
+        .demo-block { background: linear-gradient(135deg,#fffbeb 0%,#fef3c7 100%); border: 1px solid #fbbf24; border-radius: 8px; padding: 10px 12px; margin-top: 2px; }
+        .demo-badge { display: inline-flex; align-items: center; gap: 4px; background: #f59e0b; color: #fff; border-radius: 4px; padding: 2px 7px; font-size: 9px; font-weight: 800; letter-spacing: 0.4px; text-transform: uppercase; margin-bottom: 6px; }
+        .demo-stat-row { display: flex; gap: 6px; margin-top: 6px; }
+        .demo-stat { flex: 1; background: rgba(255,255,255,0.7); border-radius: 5px; padding: 5px 7px; }
+        .demo-stat-val { font-size: 14px; font-weight: 900; color: #92400e; font-variant-numeric: tabular-nums; line-height: 1.1; }
+        .demo-stat-lbl { font-size: 8px; font-weight: 700; color: #b45309; text-transform: uppercase; letter-spacing: 0.3px; margin-top: 1px; }
+        .od-wedge-row { display: flex; flex-direction: column; gap: 3px; margin-top: 8px; border-top: 1px solid #fbbf24; padding-top: 8px; }
+        .od-wedge { display: flex; align-items: center; gap: 6px; font-size: 10px; }
+        .od-wedge-dir { width: 22px; font-weight: 800; color: #92400e; flex-shrink: 0; }
+        .od-wedge-bar-wrap { flex: 1; height: 6px; background: #fef3c7; border-radius: 3px; overflow: hidden; }
+        .od-wedge-bar { height: 100%; border-radius: 3px; background: #f59e0b; }
+        .od-wedge-pct { width: 26px; text-align: right; font-weight: 700; color: #78350f; font-variant-numeric: tabular-nums; }
+        .od-wedge-lbl { color: var(--text-muted); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
         /* ── Context strip (replaces region tabs when drilled in) ──────── */
         .context-strip { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
         .ctx-back {
@@ -566,6 +581,10 @@
     let currentRegion = 'NA';
     let selectedClusterId = null;
     let overviewActive = true;
+
+    const DEMO_CLUSTER_ID = 'c_walmart_ca_51x262__114x007';
+    let demoOverlay = null;
+    fetch('data/demo-overlay.json').then(r => r.ok ? r.json() : null).then(d => { demoOverlay = d; }).catch(() => {});
     let selectedClusterProps  = null;
     let selectedClusterCoords = null;
     // Zoom threshold between Co-location Level (bubbles) and Retail Level (All Locations + rings)
@@ -932,6 +951,12 @@
             unique_brands: c.ub || 0,
             wh_list: JSON.stringify(c.wh || []),
             sub_entities_display: JSON.stringify(c.sub || []),
+            // Catchment population + spend (synthesize-od-study.py)
+            pp: c.pp, sp: c.sp,
+            pg: c.pg, sg: c.sg,
+            ph: c.ph, sh: c.sh,
+            pw: c.pw, sw: c.sw,
+            rp: c.rp, rg: c.rg, rh: c.rh, rw: c.rw,
         };
     }
 
@@ -1114,6 +1139,10 @@
         const sitesHero = count3km !== null ? count3km.toLocaleString() : '—';
         const sitesSub  = count1km !== null ? `${count1km} · 1 km` : '';
 
+        // Demo overlay — merge when this is the showcase cluster
+        const demo = (selectedClusterId === DEMO_CLUSTER_ID && demoOverlay) ? demoOverlay : null;
+        const isMeasured = demo?.is_measured || p.iso === 'ES';
+
         // Catchment population (pre-computed in synthesize-od-study.py)
         const primaryPop   = p.pp != null ? parseInt(p.pp) : null;
         const secondaryPop = p.sp != null ? parseInt(p.sp) : null;
@@ -1162,7 +1191,7 @@
             <div class="data-block" style="padding-top:6px;">
                 <div class="catchment-block">
                     <div class="catchment-header">
-                        <div class="data-label" style="margin:0;">Population Catchment</div>
+                        <div class="data-label" style="margin:0;">Catchment Area</div>
                         <button class="catchment-master-toggle${catchmentActive ? ' active' : ''}"
                                 onclick="toggleCatchmentMaster(this)">
                             ${catchmentActive ? 'ON' : 'Show on Map'}
@@ -1204,8 +1233,8 @@
                         </div>
                         <div class="vintage-row">
                             <span>Source</span>
-                            <span class="vintage-badge${p.iso === 'ES' ? ' vintage-measured' : ''}">
-                                ${p.iso === 'ES' ? 'MITMA MNO · measured' : 'Gravity model · estimated'}
+                            <span class="vintage-badge${isMeasured ? ' vintage-measured' : ''}">
+                                ${isMeasured ? (demo ? 'Illustrative · demo data' : 'MITMA MNO · measured') : 'Gravity model · estimated'}
                             </span>
                         </div>
                     </div>
@@ -1218,6 +1247,35 @@
                     ${wh.map(w => `<div class="pill">${chainName(w)}</div>`).join('')}
                 </div>
             </div>
+            ${demo ? `
+            <div class="data-block demo-block">
+                <div class="demo-badge">★ Demo Site — Illustrative Data</div>
+                <div class="data-label" style="margin-bottom:4px;">Visitor Origin Study</div>
+                <div class="demo-stat-row">
+                    <div class="demo-stat">
+                        <div class="demo-stat-val">${compactNum(demo.daily_unique_visitors)}</div>
+                        <div class="demo-stat-lbl">Daily visitors</div>
+                    </div>
+                    <div class="demo-stat">
+                        <div class="demo-stat-val">${compactNum(demo.home_pop_measured)}</div>
+                        <div class="demo-stat-lbl">HOME catchment</div>
+                    </div>
+                    <div class="demo-stat">
+                        <div class="demo-stat-val">${Math.round(demo.work_pop_measured / 1000)}K</div>
+                        <div class="demo-stat-lbl">WORK origins</div>
+                    </div>
+                </div>
+                <div class="od-wedge-row">
+                    ${demo.od_flow_segments.map(seg => `
+                    <div class="od-wedge">
+                        <span class="od-wedge-dir">${seg.dir}</span>
+                        <div class="od-wedge-bar-wrap"><div class="od-wedge-bar" style="width:${seg.pct * 3}%;"></div></div>
+                        <span class="od-wedge-pct">${seg.pct}%</span>
+                        <span class="od-wedge-lbl">${seg.label}</span>
+                    </div>`).join('')}
+                </div>
+                <div style="margin-top:6px;font-size:9px;color:#b45309;font-style:italic;">${demo.data_source}</div>
+            </div>` : ''}
             <div id="sel-el" class="sel-el-block data-block" style="border-bottom:none;">
                 <div class="data-label">Selected Location</div>
                 <div style="font-size:11px;color:var(--text-muted);font-style:italic;padding:4px 0;">
