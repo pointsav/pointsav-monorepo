@@ -1,47 +1,64 @@
 # NEXT.md — service-slm
 
-> Last updated: 2026-05-14T18:00Z (Sprint 0a shim + graph_context_enabled committed; zone corrected to europe-west4-a)
+> Last updated: 2026-05-15T05:00Z (Sprint 0a hardening committed; 1-hour test run completed; service-content 6G; restart sequence documented)
 > Read at session start. Update before session end so the next
 > session knows where to pick up.
 
 ---
 
-## ⚠️ CRITICAL — VM NEEDS SERVICE FIX ON NEXT START
+## ⚠️ CRITICAL — MANUAL START SEQUENCE (confirmed 2026-05-15)
 
-`vllm.service` is still **enabled** in the boot image and crashes on every start (CUDA OOM — 32B BF16 doesn't fit in 22 GiB L4). `llama-server.service` was running ad-hoc (not `systemctl enable`), so it does not survive a restart. **On the next VM start, immediately SSH in and run:**
+### On every VM start:
+1. Run `start-yoyo.sh --runtime=2h` (exit 3 = stockout, wait; exit 0 = proceed)
+2. Update **all three** endpoints with new VM IP (the sed in start-yoyo.sh fails silently — always do manually):
+   ```bash
+   NEW_IP=$(gcloud compute instances describe yoyo-tier-b-1 --zone=europe-west4-a \
+       --project=woodfine-node-gcp-free --format='value(networkInterfaces[0].accessConfigs[0].natIP)')
+   sudo sed -i "s|^SLM_YOYO_ENDPOINT=.*|SLM_YOYO_ENDPOINT=https://${NEW_IP}:9443|" /etc/local-doorman/local-doorman.env
+   sudo sed -i "s|^SLM_YOYO_TRAINER_ENDPOINT=.*|SLM_YOYO_TRAINER_ENDPOINT=https://${NEW_IP}:9443|" /etc/local-doorman/local-doorman.env
+   sudo sed -i "s|^SLM_YOYO_GRAPH_ENDPOINT=.*|SLM_YOYO_GRAPH_ENDPOINT=https://${NEW_IP}:9443|" /etc/local-doorman/local-doorman.env
+   sudo systemctl restart local-doorman.service
+   ```
+3. **Wait 90s** for Doorman health probe to confirm Tier B — BEFORE restarting service-content:
+   ```bash
+   journalctl -u local-doorman.service -f --since "now" | grep -E "recovered|unavailable"
+   # EXPECT: "Tier B recovered" within 90s
+   ```
+4. Restart service-content (clears processed_ledgers):
+   ```bash
+   sudo systemctl restart local-content.service
+   # Takes ~16 min to load — do NOT restart again while loading
+   ```
+5. Drop verification file, watch for successful extractions.
 
-```bash
-gcloud compute ssh yoyo-tier-b-1 --zone=europe-west4-a --project=woodfine-node-gcp-free
-# On VM:
-sudo systemctl mask vllm.service
-sudo systemctl enable llama-server.service
-sudo systemctl start llama-server.service
-sudo systemctl status llama-server.service
-# Verify llama-server health, then snapshot boot disk (one-time fix):
-gcloud compute disks snapshot yoyo-tier-b-1 --zone=europe-west4-a \
-  --project=woodfine-node-gcp-free \
-  --snapshot-names=yoyo-tier-b-1-boot-llama-fix-$(date +%Y%m%d)
-```
+### VM boot state (confirmed 2026-05-15):
+- **`llama-server.service` IS enabled and starts automatically** — no SSH fix needed ✓
+- `vllm.service` is masked — no crash-loop ✓
+- nginx proxies 9443 → llama-server:8000; no bearer auth needed for `/health` endpoint
+- model: `Olmo-3-1125-32B-Think` (Q3_K_M GGUF, 16.1 GiB on 22.5 GiB L4) ✓
 
-**Root cause details (2026-05-12T18:30Z investigation):**
-- vllm.service crash-loops: `torch.OutOfMemoryError` at 21.37 GiB allocated, needs 540 MiB more
-- vLLM config: `gpu_memory_utilization=0.97`, `enable_lora=True`, `max_loras=8`, `max_lora_rank=64`, `dtype=bfloat16` (no quantization)
-- The BF16 full-precision model at `/data/weights/model` doesn't fit with LoRA adapter slots
-- llama-server (CUDA build, Q3_K_M GGUF) fits at 16.1 GiB / 22.5 GiB — was working before
+### Infrastructure state:
+- `service-content` MemoryMax raised to **6G** (`/etc/systemd/system/local-content.service.d/memory.conf`) — takes ~16 min to load 10K-entity LadybugDB graph
+- `SLM_YOYO_HOURLY_USD=0.84`, `SLM_YOYO_WEIGHTS_GCS_BUCKET=woodfine-node-gcp-free-foundry-substrate` — already set in `/etc/local-doorman/local-doorman.env` ✓
 
-**Long-term fix:** Rebuild Packer image with `vllm.service` masked and `llama-server.service` enabled. This is the next Packer build task (already in Remaining below).
-
-**`start-yoyo.sh` IP update — CONFIRMED CORRECT (2026-05-14 T-4 investigation):** `update_doorman_env()` is already called unconditionally on Mode 1 success. No code change needed for IP updates. New item: add `--runtime=<duration>` hard wall-clock cap (see Remaining below).
+### Still TODO after next successful start:
+- Snapshot boot disk (one-time — avoids SSH on every restart):
+  ```bash
+  gcloud compute disks snapshot yoyo-tier-b-1 --zone=europe-west4-a \
+    --project=woodfine-node-gcp-free \
+    --snapshot-names=yoyo-tier-b-1-boot-llama-fix-$(date +%Y%m%d)
+  ```
+- Verify Doorman health probe recovers (was timing out during 2026-05-15 test — needs re-test with correct sequence)
 
 ---
 
 ## YO-YO #1 — FULLY LIVE + DATAGRAPH PIPELINE WORKING (2026-05-12)
 
 **Current VM state:**
-- `yoyo-tier-b-1` **STOPPED** in `europe-west4-a` — stopped 2026-05-12T18:30Z (zone migrated from us-west1-b due to stockout there)
-- Zone `europe-west4-a` in **L4 stockout** as of 2026-05-14 — cannot start until capacity returns; **do NOT provision in other zones**
-- `llama-server.service` was running at 14.7 tok/s before shutdown; **not enabled** (see fix above)
-- `SLM_YOYO_WEIGHTS_SNAPSHOT=yoyo-tier-b-1-weights-20260513-1923` ✓ (weights disk snapshot good; 148 GB)
+- `yoyo-tier-b-1` **TERMINATED** in `europe-west4-a` — stopped by 1-hr watchdog at 04:28:48 UTC 2026-05-15 ✓
+- Zone `europe-west4-a` intermittent L4 stockout — `start-yoyo.sh` exits 3 cleanly on stockout; wait for capacity; **do NOT provision in other zones**
+- `llama-server.service` **IS enabled** (confirmed 2026-05-15) — starts automatically on boot, no SSH fix needed ✓
+- `SLM_YOYO_WEIGHTS_SNAPSHOT=yoyo-tier-b-1-weights-20260512-0248` ✓ (weights disk snapshot good; 148 GB)
 
 **Architecture (committed):**
 - vLLM → llama-server for Tier B (vLLM OOM on L4; llama-server runs Q3_K_M natively)
@@ -75,9 +92,9 @@ gcloud compute disks snapshot yoyo-tier-b-1 --zone=europe-west4-a \
 - [x] **`start-yoyo.sh` Mode 1 IP update** — confirmed unconditional in T-4 (2026-05-14). ✓
 - [x] **Sprint 0a: POST /v1/messages Anthropic shim** — committed fdd1a22 (2026-05-14). ✓
 - [x] **`graph_context_enabled` on ComputeRequest** — committed 6e6b992 + 34d8d8d (2026-05-14). ✓
-- [ ] **vllm.service fix on VM** (see CRITICAL block above) — mask vllm, enable llama-server (europe-west4-a, on next VM start)
-- [ ] **`start-yoyo.sh --runtime=<duration>`** — add hard wall-clock watchdog (stop-yoyo.sh fires after N hours; idle monitor is still the earlier-exit path)
-- [ ] Set `SLM_YOYO_HOURLY_USD=0.84` + `SLM_YOYO_WEIGHTS_GCS_BUCKET=woodfine-node-gcp-free-foundry-substrate` in `/etc/local-doorman/local-doorman.env` (operator sudo)
+- [x] **vllm.service fix on VM** — confirmed 2026-05-15: llama-server.service IS enabled at boot, vllm.service IS masked. No SSH fix needed. ✓
+- [x] **`start-yoyo.sh --runtime=<duration>`** — committed; watchdog tested and verified (stopped VM exactly at T+60min, 2026-05-15). ✓
+- [x] Set `SLM_YOYO_HOURLY_USD=0.84` + `SLM_YOYO_WEIGHTS_GCS_BUCKET=woodfine-node-gcp-free-foundry-substrate` in `/etc/local-doorman/local-doorman.env` ✓
 - [ ] Next Packer image rebuild — bake vllm.service mask + llama-server.service enable; prevents SSH-on-every-restart
 - [ ] **Sprint 0b: real per-token streaming** — replace fake-SSE burst in `http.rs::anthropic_sse_body()` with true token stream (~60 LOC)
 - [ ] LoRA training marker (Test 11): workspace dispatch service needs to be written
