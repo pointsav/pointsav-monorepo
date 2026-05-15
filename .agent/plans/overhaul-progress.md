@@ -2,7 +2,7 @@
 schema: overhaul-progress-v1
 plan: overhaul-documentation-pointsav-com.md
 phase: 2
-sub_phase: 2f-complete
+sub_phase: 2g-started
 status: in-progress
 safe_to_resume: true
 unsafe_reason: ""
@@ -12,9 +12,12 @@ last_session_id: d64fccd3-6513-4802-a3dc-966cad0e754b-327278
 ---
 
 ## Last completed sub-task
-- task: Sub-phase 2f — fenced code-block normalisation complete (87 blocks across 17 guide files)
-- commit_sha: 1b2d50a (pointsav), 1ffb3bc (woodfine)
+- task: Cleanup sweep — ADR consolidation + internal-process article deletion
+- commit_sha: 62d71fb (content-wiki-documentation)
 - committed_at: 2026-05-15
+- detail: governance/architecture-decisions.md + .es.md created (12 ADRs → 1 Bloomberg-cadence article);
+  76 files deleted (12 sys-adr-* stubs, 10 internal-process patterns/, 13 internal style-guide-*,
+  2 wikipedia-* reference/, launch announcement)
 
 ## Sub-phase 2e summary (cross-reference gap fill — COMPLETE)
 Audit (enhanced to skip inline code spans and .agent/ rules files) found 44 flagged links;
@@ -40,10 +43,33 @@ Classifier detected and tagged 87 unlabelled fenced blocks across 17 guide files
 - Classifier bug fixed: initial version failed to track labeled blocks, causing their closing fences to be treated as new unlabelled openers (all 165 false tags reverted before fix)
 - 2 commits: 1ffb3bc (woodfine, 14 files, 51 changes), 1b2d50a (pointsav, 3 files, 36 changes)
 
-## Next pending sub-task
-- task: Sub-phase 2g — readability pass (lede rewrite, descriptive headers, passive voice, inline citations)
-- inputs: overhaul-documentation-pointsav-com.md §9.3 sub-phase 2g spec
-- notes: Corpus-wide; ordered by inbound-link count; applies full quality-metric suite per-article; EN+ES pairs in lockstep
+## Sub-phase 2g status — readability pass (in progress)
+
+### Completed corpus-wide mechanical sweeps (commits e8a740f, fd0d647, 7bb084e)
+- quality field: `published`→`complete` (54 files) + `core`→`complete` (49 files) = 103 files
+- `## See Also` → `## See also` heading normalization: 151 files
+- Internal-only `## References` sections removed: 54 files
+  (kept 7 articles with external URL citations; frontmatter references retained)
+- `Doctrine §` body-text references replaced with plain prose: 5 files
+
+### Featured pool articles — individual lede/quality pass (commits e8a740f, fd0d647)
+- COMPLETE: three-ring-architecture (Bloomberg lede rewrite; sys-adr-07 wikilinks fixed)
+- COMPLETE: economic-model (quality + duplicate ES See also merged)
+- COMPLETE: worm-ledger-design (quality + duplicate ES See also merged)
+- COMPLETE: sovereign-ai-commons (quality + duplicate ES See also merged)
+- COMPLETE: llm-substrate-decision (quality + duplicate ES See also merged)
+- COMPLETE: customer-hostability (quality core→complete; Doctrine refs removed)
+- COMPLETE: knowledge-commons (internal vocab 'conventions' replaced)
+- COMPLETE: substrate-native-compatibility (already clean — no changes needed)
+Note: compounding-substrate, doorman-protocol, disclosure-substrate, leapfrog-2030-architecture
+  rewritten in step 5 (commits 96e221d/91b8910); not revisited in 2g.
+
+### Next
+- Sub-phase 2g broader pass: category `_index.md` landings (10 files) — governance/_index.md
+  needs update to reference architecture-decisions.md; other landings need Bloomberg lede treatment
+- Remaining body-level 'Convention' vocabulary audit (uses of banned term in article body text)
+- `reference/` category: style-guide-topic.md and style-guide-guide.md editorial rules update
+  (sub-phase 2h)
 
 ## Blockers
 - (none)
