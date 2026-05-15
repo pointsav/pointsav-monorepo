@@ -12,12 +12,13 @@ last_session_id: d64fccd3-6513-4802-a3dc-966cad0e754b-327278
 ---
 
 ## Last completed sub-task
-- task: Cleanup sweep — ADR consolidation + internal-process article deletion
-- commit_sha: 62d71fb (content-wiki-documentation)
+- task: Category _index.md landing rebuilds (6 categories × 2 = 12 files)
+- commit_sha: ed06bec (content-wiki-documentation)
 - committed_at: 2026-05-15
-- detail: governance/architecture-decisions.md + .es.md created (12 ADRs → 1 Bloomberg-cadence article);
-  76 files deleted (12 sys-adr-* stubs, 10 internal-process patterns/, 13 internal style-guide-*,
-  2 wikipedia-* reference/, launch announcement)
+- detail: architecture, systems, services, applications, infrastructure, reference — complete MOC
+  rewrites; stale article lists replaced with accurate curated groupings; frontmatter normalized;
+  internal ENGINE/EDITORIAL comments removed; broken style-guide-readme link fixed; retired help/
+  link removed from reference See also
 
 ## Sub-phase 2e summary (cross-reference gap fill — COMPLETE)
 Audit (enhanced to skip inline code spans and .agent/ rules files) found 44 flagged links;
@@ -51,6 +52,9 @@ Classifier detected and tagged 87 unlabelled fenced blocks across 17 guide files
 - Internal-only `## References` sections removed: 54 files
   (kept 7 articles with external URL citations; frontmatter references retained)
 - `Doctrine §` body-text references replaced with plain prose: 5 files
+- Doctrine claim vocabulary removed corpus-wide: 227 files (c0f7adb)
+- 6 category _index.md landings rebuilt as full MOC pages (EN+ES, 12 files, ed06bec)
+- Body-level 'Convention' vocabulary audit complete — 4 remaining uses are legitimate English
 
 ### Featured pool articles — individual lede/quality pass (commits e8a740f, fd0d647)
 - COMPLETE: three-ring-architecture (Bloomberg lede rewrite; sys-adr-07 wikilinks fixed)
@@ -65,11 +69,10 @@ Note: compounding-substrate, doorman-protocol, disclosure-substrate, leapfrog-20
   rewritten in step 5 (commits 96e221d/91b8910); not revisited in 2g.
 
 ### Next
-- Sub-phase 2g broader pass: category `_index.md` landings (10 files) — governance/_index.md
-  needs update to reference architecture-decisions.md; other landings need Bloomberg lede treatment
-- Remaining body-level 'Convention' vocabulary audit (uses of banned term in article body text)
-- `reference/` category: style-guide-topic.md and style-guide-guide.md editorial rules update
-  (sub-phase 2h)
+- Sub-phase 2h: update reference/style-guide-topic.md and reference/style-guide-guide.md with
+  §6 readability rules (the two remaining kept style guides)
+- New articles identified: governance/procurement-overview.md and governance/security-overview.md
+  (high-value institutional reader landing pages — not yet written)
 
 ## Blockers
 - (none)
