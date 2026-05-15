@@ -301,4 +301,12 @@ pub enum DoormanError {
         /// Parse-error description.
         reason: String,
     },
+
+    /// A brief or shadow entry was rejected by the corpus quality gate before
+    /// being written to the queue. 422 UNPROCESSABLE_ENTITY.
+    #[error("corpus quality gate rejected brief: {reason}")]
+    QueueQualityGateRejected {
+        /// Human-readable rejection reason (safe to return to caller).
+        reason: String,
+    },
 }
