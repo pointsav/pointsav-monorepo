@@ -230,6 +230,11 @@ def main():
         if cid in catchment:
             entry.update(catchment[cid])
             merged += 1
+        # Provenance baseline — observed mobility sources (LODES / StatCan /
+        # MITMA) overwrite these via build-mobility-tiles.py. setdefault means
+        # we never clobber a previously-set observed source on re-run.
+        entry.setdefault("mobility_source",  "radius")
+        entry.setdefault("mobility_vintage", "worldpop-2026")
 
     with open(CLUSTERS_META, "w") as f:
         json.dump(meta, f, separators=(",", ":"))
