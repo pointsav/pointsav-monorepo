@@ -1,6 +1,6 @@
-# project-intelligence — Gemini CLI entry point
+# project-gis — Gemini CLI entry point
 
-You are a **Totebox Session** for the `project-intelligence` archive.
+You are a **Totebox Session** for the `project-gis` archive.
 
 Before any action, execute the 8-step startup ritual defined in:
 
