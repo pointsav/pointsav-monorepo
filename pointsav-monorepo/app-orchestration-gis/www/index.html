@@ -1187,7 +1187,20 @@
                     ${mz.length > 0 ? `<div style="font-size:10px;color:var(--text-muted);width:100%;margin-top:6px;font-style:italic;">Co-located within 150 m: ${mz.map(z => z.anchor || z.merged_anchor || '').filter(Boolean).join(' · ')}</div>` : ''}
                 </div>
             </div>
-            <div class="data-block" style="padding-top:6px;">
+            <div class="data-block">
+                <div class="data-label">Commercial Support</div>
+                <div class="anchor-pills">
+                    ${hw.map(h => `<div class="pill">${chainName(h)}</div>`).join('')}
+                    ${wh.map(w => `<div class="pill">${chainName(w)}</div>`).join('')}
+                </div>
+            </div>
+            <div id="sel-el" class="sel-el-block data-block">
+                <div class="data-label">Selected Location</div>
+                <div style="font-size:11px;color:var(--text-muted);font-style:italic;padding:4px 0;">
+                    Click a retailer dot in this ring to inspect.
+                </div>
+            </div>
+            <div class="data-block" style="padding-top:6px;border-bottom:none;">
                 <div class="catchment-block">
                     <div class="catchment-header">
                         <div class="data-label" style="margin:0;">Catchment Area</div>
@@ -1238,15 +1251,8 @@
                     </div>
                 </div>
             </div>
-            <div class="data-block">
-                <div class="data-label">Commercial Support</div>
-                <div class="anchor-pills">
-                    ${hw.map(h => `<div class="pill">${chainName(h)}</div>`).join('')}
-                    ${wh.map(w => `<div class="pill">${chainName(w)}</div>`).join('')}
-                </div>
-            </div>
             ${demo ? `
-            <div class="data-block demo-block">
+            <div class="data-block demo-block" style="border-bottom:none;">
                 <div class="demo-badge">★ Demo Site — Illustrative Data</div>
                 <div class="data-label" style="margin-bottom:4px;">Visitor Origin Study</div>
                 <div class="demo-stat-row">
@@ -1274,12 +1280,6 @@
                 </div>
                 <div style="margin-top:6px;font-size:9px;color:#b45309;font-style:italic;">${demo.data_source}</div>
             </div>` : ''}
-            <div id="sel-el" class="sel-el-block data-block" style="border-bottom:none;">
-                <div class="data-label">Selected Location</div>
-                <div style="font-size:11px;color:var(--text-muted);font-style:italic;padding:4px 0;">
-                    Click a retailer dot in this ring to inspect.
-                </div>
-            </div>
         `;
     }
 
