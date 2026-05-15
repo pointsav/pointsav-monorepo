@@ -14,20 +14,16 @@ Last updated: 2026-05-14.
 
 ### service-slm / service-content — Sprint 0a prerequisites [2026-05-14 task@claude-code]
 
-Architectural deep-thinks (Opus agents) produced three policy docs in `.agent/plans/`.
-Decisions and actions required before Sprint 0a (`POST /v1/messages` Anthropic shim) ships:
+**Sprint 0a SHIPPED** — `POST /v1/messages` live on workspace VM (`fdd1a223` + `7cd9ca61`).
 
-- [ ] **Add `graph_context_enabled: Option<bool>` to `ComputeRequest`** [BLOCKS Sprint 0a]
-  `slm-core/src/lib.rs` + `slm-doorman/src/router.rs:125-158`. Without this, the Anthropic
-  shim injects DataGraph entity rows into every Claude Code request. Shim handler sets `false`.
-- [ ] **Decide opus → Tier C path** [BLOCKS Sprint 0a for opus]
-  Path A: add `"claude-code-passthrough"` to `FOUNDRY_DEFAULT_ALLOWLIST` (`external.rs:78`),
-  wire `SLM_TIER_C_ANTHROPIC_*` env. Path B: route `claude-opus-*` to Tier B "trainer" in
-  Sprint 0a, defer Tier C wiring to Sprint 0b.
-- [ ] **Reconcile apprenticeship flag drift**
-  On-VM `local-doorman.service` has `SLM_APPRENTICESHIP_ENABLED=true` (v0.1.39 deliberate).
-  Clone `compute/systemd/slm-doorman.service:37` still says `false`. CLAUDE.md updated this
-  session. Propagate `true` to the clone unit file.
+- [x] **Add `graph_context_enabled: Option<bool>` to `ComputeRequest`** — done; shim sets `Some(false)` (`slm-core/src/lib.rs:116`, `http.rs:1308`)
+- [x] **Decide opus → Tier C path** — Path B chosen: `claude-opus-*` routes to `Complexity::High, yoyo_label: None` (generic Tier B). Tier C wiring deferred to Sprint 0b.
+- [x] **Reconcile apprenticeship flag drift** — `compute/systemd/slm-doorman.service:37` updated to `true` (2026-05-15)
+
+**Sprint 0b (next):**
+- [ ] **Real per-token SSE streaming** in `http.rs::anthropic_sse_body()` (~60 LOC). Currently buffers full response then emits 6 events at once.
+- [ ] **On-demand Yo-Yo lazy-start** in `router.rs` — start Yo-Yo VM when Tier B request arrives and VM is stopped.
+- [ ] **Wire `SLM_TIER_C_ANTHROPIC_*` env** for opus → Tier C passthrough (Path A, deferred from Sprint 0a).
 
 ### service-content — Ring 2/Ring 3 decoupling [2026-05-14 task@claude-code]
 
@@ -172,12 +168,7 @@ migrations)*
   (b) add a `build.rs` env override to force shared-lib path by default.
   Upstream: report packaging regression to lbug crate maintainers.
 
-- **`start-yoyo.sh` Mode 2 Doorman env bug** [2026-05-13] — Mode 2 (zone stockout
-  cascade) provisions a new VM in a fallback zone but does not call `update_doorman_env`,
-  leaving Doorman pointing at the old (terminated) instance. Found when Mode 2 ran in
-  `us-west1-b` stockout and provisioned `yoyo-tier-b-1` in `europe-west4-a`; Doorman env
-  was stale until manually updated. Fix: `start-yoyo.sh` should call `update_doorman_env`
-  unconditionally at the end of Mode 2, same as Mode 1.
+- ~~**`start-yoyo.sh` Mode 2 Doorman env bug**~~ — **CLOSED (2026-05-15).** `update_doorman_env` already called at line 421 in Mode 2 path (confirmed in code). Both Mode 1 (line 388) and Mode 2 (line 421) call it unconditionally.
 
 - **Workspace `Cargo.toml` unification** — per 2026-04-18 audit,
   workspace declares only 8 of ~70+ crates as members. Other crates
