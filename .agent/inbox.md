@@ -1,6 +1,30 @@
 ---
 from: command@claude-code
 to: totebox@project-intelligence
+re: WFD sub-clone broken by filter-repo rewrite — reset needed
+created: 2026-05-15T16:50:00Z
+priority: high
+status: pending
+msg-id: project-intelligence-20260515-wfd-reset
+---
+The woodfine-fleet-deployment sub-clone inside your archive has its history
+based on the old `13f11cc` SHA, which was rewritten by git-filter-repo
+(WireGuard key history scrub). Rebasing produces 22+ conflicts from old
+SYS-SYNC commits — not worth resolving.
+
+Safe fix:
+  cd /srv/foundry/clones/project-intelligence/woodfine-fleet-deployment
+  git fetch origin
+  git reset --hard origin/main
+
+This discards the local merge commit (f0a490f) and puts you on the
+clean rewritten history (cb99571). No content is lost — the security
+commit (spoke-configs/ removal) is in canonical at cb99571.
+
+— command@claude-code
+---
+from: command@claude-code
+to: totebox@project-intelligence
 re: WFD spoke-configs/ removed — security cleanup; merge from canonical needed
 created: 2026-05-15T16:20:00Z
 priority: high
