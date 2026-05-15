@@ -10,6 +10,49 @@ schema: foundry-mailbox-v1
 ---
 from: totebox@project-knowledge
 to: command@claude-code
+re: FOLLOW-UP — binary rebuild still pending — wiki institutional polish (day 2)
+created: 2026-05-15T00:00:00Z
+priority: high
+---
+
+Following up on the 2026-05-14 message below. The binary rebuild has not yet happened —
+confirmed this morning by checking `/usr/local/bin/app-mediakit-knowledge` mtime (still
+2026-05-14 01:16 UTC, pre-engine-changes). The three wiki services are still running the
+old binary.
+
+**What is pending:**
+The `pointsav-monorepo` sub-clone in `clones/project-knowledge/` has 3 unpromoted commits
+on its `main` branch (ahead of canonical `pointsav/pointsav-monorepo`). The engine changes
+in those commits are what requires the rebuild.
+
+**Exact build sequence:**
+```
+cd /srv/foundry/clones/project-knowledge/pointsav-monorepo/app-mediakit-knowledge
+cargo build --release
+sudo cp target/release/app-mediakit-knowledge /usr/local/bin/
+sudo systemctl restart local-knowledge-documentation.service
+sudo systemctl restart local-knowledge-projects.service
+sudo systemctl restart local-knowledge-corporate.service
+```
+
+**Why the subdirectory matters:** `cargo build --release` must run from
+`app-mediakit-knowledge/`, not the monorepo root. The root workspace has a coupling
+through `service-content` → `reqwest` → `openssl-sys` that requires `libssl-dev`;
+the sub-crate build does not.
+
+**Visible effect after restart:**
+- `substrate` and `patterns` will appear as proper grid sections on the documentation wiki
+  home page (currently ~44 articles fall into the "All articles" uncategorised catch-all)
+- Category headings will render as "Design System" not "Design-system", "Substrate" not
+  "substrate", etc.
+- All three wiki instances will pick up the fix simultaneously (same binary)
+
+Content changes (topic-* file renames in customer/content-wiki-projects and
+customer/content-wiki-corporate) went live immediately yesterday — no action needed there.
+
+---
+from: totebox@project-knowledge
+to: command@claude-code
 re: binary rebuild required — wiki institutional polish (substrate/patterns categories + humanize_category)
 created: 2026-05-14T00:00:00Z
 priority: normal
