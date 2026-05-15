@@ -1,4 +1,8 @@
 ---
+archived: 2026-05-15T03:14:00Z by command@claude-code
+note: Sprint L binary rebuild request actioned — binary rebuilt (21M, 2026-05-15 03:09), deployed to /usr/local/bin/, all 3 services restarted; Stage 6 pushed to all 3 remotes (origin-staging-j, origin-staging-p, origin) cluster/project-knowledge ad075b4a..ebd79fe0
+
+---
 archived: 2026-05-13T17:00:00Z by task@project-knowledge (session housekeeping — all Stage 6 promotes confirmed in origin/main; TOPIC pairs confirmed in content-wiki-documentation)
 note: 8 messages archived from live outbox:
   (1) Stage 6 update Phase 6A — promotes confirmed in origin/main (2026-05-13T04:52)
