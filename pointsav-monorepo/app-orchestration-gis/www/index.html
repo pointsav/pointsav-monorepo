@@ -193,6 +193,14 @@
         .vintage-row { display: flex; align-items: center; justify-content: space-between; margin-top: 7px; font-size: 9px; color: var(--text-muted); }
         .vintage-badge { background: rgba(0,0,0,0.05); border-radius: 4px; padding: 2px 6px; font-weight: 700; }
         .vintage-measured { background: #DCFCE7; color: #166534; }
+        .catchment-pop-stats { display: flex; gap: 0; margin-top: 8px; border-top: 1px solid var(--border-soft); padding-top: 8px; }
+        .catchment-zone-stat { flex: 1; }
+        .catchment-zone-stat + .catchment-zone-stat { border-left: 1px solid var(--border-soft); padding-left: 10px; margin-left: 6px; }
+        .catchment-zone-label { font-size: 9px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.4px; }
+        .catchment-zone-pop { font-size: 15px; font-weight: 900; color: var(--text-main); font-variant-numeric: tabular-nums; line-height: 1.2; margin-top: 1px; }
+        .catchment-zone-km { font-size: 9px; color: var(--text-muted); margin-top: 1px; }
+        .data-value { font-variant-numeric: tabular-nums; }
+        .rank-num { font-variant-numeric: tabular-nums; font-size: 24px; font-weight: 900; color: var(--brand-primary); line-height: 1.1; }
 
         /* ── Context strip (replaces region tabs when drilled in) ──────── */
         .context-strip { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
@@ -532,6 +540,21 @@
     function colorMatchExpr(rankField) {
         return ['match', ['get', rankField],
             1, '#64748B', 2, '#1E40AF', 3, '#0A3070', '#e5e7eb'];
+    }
+
+    const _compactFmt = new Intl.NumberFormat('en', { notation: 'compact', maximumFractionDigits: 1 });
+    function compactNum(n) { return n == null ? '—' : _compactFmt.format(n); }
+
+    function pctileBar(rank, total) {
+        if (rank == null) return '';
+        const pct = Math.max(0, Math.round((1 - rank / total) * 100));
+        const col = pct >= 90 ? '#16a34a' : pct >= 75 ? '#d97706' : '#64748B';
+        return `<div style="display:flex;align-items:center;gap:5px;margin-top:5px;">
+            <div style="flex:1;height:4px;border-radius:2px;background:#e5e7eb;overflow:hidden;">
+                <div style="width:${pct}%;height:100%;background:${col};border-radius:2px;"></div>
+            </div>
+            <span style="font-size:9px;font-weight:800;color:${col};font-variant-numeric:tabular-nums;width:28px;text-align:right;">${pct}%ile</span>
+        </div>`;
     }
 
     // ── Map ─────────────────────────────────────────────────────────
@@ -1107,6 +1130,16 @@
         const sitesHero = count3km !== null ? count3km.toLocaleString() : '—';
         const sitesSub  = count1km !== null ? `${count1km} · 1 km` : '';
 
+        // Catchment population (pre-computed in synthesize-od-study.py)
+        const primaryPop   = p.pp != null ? parseInt(p.pp) : null;
+        const secondaryPop = p.sp != null ? parseInt(p.sp) : null;
+        const primaryGroc  = p.pg != null ? parseInt(p.pg) : null;
+        const primaryHw    = p.ph != null ? parseInt(p.ph) : null;
+        const primaryWh    = p.pw != null ? parseInt(p.pw) : null;
+        const popRank      = p.rp != null ? parseInt(p.rp) : null;
+        const grocRank     = p.rg != null ? parseInt(p.rg) : null;
+        const TOTAL_CLUSTERS = 6815;
+
         document.getElementById('inspector').innerHTML = `
             <div class="data-block">
                 <div class="data-label">Regional Market</div>
@@ -1117,21 +1150,21 @@
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;">
                     <div>
                         <div class="data-label">${rankLabel}</div>
-                        <div style="font-size:24px;font-weight:900;color:var(--brand-primary);line-height:1.1;">${rankNum !== null ? '#' + rankNum.toLocaleString() : '—'}</div>
+                        <div class="rank-num">${rankNum !== null ? '#' + rankNum.toLocaleString() : '—'}</div>
                         <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">${rankSub}</div>
                         ${natSub ? `<div style="font-size:10px;color:var(--text-muted);margin-top:3px;">${natSub}</div>` : ''}
+                        ${pctileBar(rankNum, TOTAL_CLUSTERS)}
                     </div>
                     <div>
                         <div class="data-label">Sites in Ring</div>
-                        <div style="font-size:24px;font-weight:900;color:var(--brand-primary);line-height:1.1;">${sitesHero}</div>
+                        <div class="rank-num">${sitesHero}</div>
                         <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">at 3 km</div>
                         ${sitesSub ? `<div style="font-size:10px;color:var(--text-muted);margin-top:3px;">${sitesSub}</div>` : ''}
                     </div>
                 </div>
                 ${(density !== null || uniqueBrands) ? `
-                <div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--border-soft);font-size:11px;color:var(--text-muted);display:flex;justify-content:space-between;gap:10px;">
-                    ${density !== null ? `<span>${density.toFixed(1)} stores per km²</span>` : ''}
-                    ${uniqueBrands ? `<span>${uniqueBrands} retail brand${uniqueBrands === 1 ? '' : 's'}</span>` : ''}
+                <div style="margin-top:8px;padding-top:6px;border-top:1px solid var(--border-soft);font-size:10px;color:var(--text-muted);">
+                    ${[density !== null ? `${density.toFixed(1)}/km²` : null, uniqueBrands ? `${uniqueBrands} brand${uniqueBrands === 1 ? '' : 's'}` : null, count1km != null ? `${count1km} at 1 km` : null].filter(Boolean).join(' · ')}
                 </div>` : ''}
             </div>
             <div class="data-block">
@@ -1142,49 +1175,63 @@
                     ${mz.length > 0 ? `<div style="font-size:10px;color:var(--text-muted);width:100%;margin-top:6px;font-style:italic;">Co-located within 150 m: ${mz.map(z => z.anchor || z.merged_anchor || '').filter(Boolean).join(' · ')}</div>` : ''}
                 </div>
             </div>
-            <div class="data-block">
-                <div class="data-label">Commercial Support</div>
-                <div class="anchor-pills">
-                    ${hw.map(h => `<div class="pill">${chainName(h)}</div>`).join('')}
-                    ${wh.map(w => `<div class="pill">${chainName(w)}</div>`).join('')}
-                </div>
-            </div>
             <div class="data-block" style="padding-top:6px;">
                 <div class="catchment-block">
                     <div class="catchment-header">
                         <div class="data-label" style="margin:0;">Population Catchment</div>
                         <button class="catchment-master-toggle${catchmentActive ? ' active' : ''}"
                                 onclick="toggleCatchmentMaster(this)">
-                            ${catchmentActive ? 'Catchment ON' : 'Catchment'}
+                            ${catchmentActive ? 'ON' : 'Show on Map'}
                         </button>
                     </div>
+                    ${(primaryPop !== null || secondaryPop !== null) ? `
+                    <div class="catchment-pop-stats">
+                        ${primaryPop !== null ? `<div class="catchment-zone-stat">
+                            <div class="catchment-zone-label">● Primary</div>
+                            <div class="catchment-zone-pop">${compactNum(primaryPop)}</div>
+                            <div class="catchment-zone-km">within 35 km</div>
+                            ${pctileBar(popRank, TOTAL_CLUSTERS)}
+                        </div>` : ''}
+                        ${secondaryPop !== null ? `<div class="catchment-zone-stat">
+                            <div class="catchment-zone-label">○ Secondary</div>
+                            <div class="catchment-zone-pop">${compactNum(secondaryPop)}</div>
+                            <div class="catchment-zone-km">35 – 150 km</div>
+                        </div>` : ''}
+                    </div>` : ''}
                     <div id="catchment-sublayers" class="catchment-sublayers${catchmentActive ? ' visible' : ''}">
                         <div class="sublayer-radio">
                             <div class="sublayer-opt${catchmentSubLayer === 'pop' ? ' active' : ''}"
                                  onclick="setCatchmentSubLayer('pop', this)">
-                                <div class="sublayer-dot" style="background:#f97316;"></div>Population
+                                <div class="sublayer-dot" style="background:#f97316;"></div>Population density
                             </div>
                             <div class="sublayer-opt${catchmentSubLayer === 'spend' ? ' active' : ''}"
                                  onclick="setCatchmentSubLayer('spend', this)">
-                                <div class="sublayer-dot" style="background:#10b981;"></div>Spend
+                                <div class="sublayer-dot" style="background:#10b981;"></div>Consumer spend
                             </div>
                         </div>
                         <div class="reach-control">
                             <button class="reach-btn${catchmentReach === 'home' ? ' active' : ''}"
                                     onclick="catchmentReach='home';this.parentElement.querySelectorAll('.reach-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active')">
-                                HOME
+                                HOME reach
                             </button>
                             <button class="reach-btn" disabled title="WORK catchment — planned when mobility data integrated">
-                                WORK (planned)
+                                WORK reach
                             </button>
                         </div>
                         <div class="vintage-row">
                             <span>Source</span>
                             <span class="vintage-badge${p.iso === 'ES' ? ' vintage-measured' : ''}">
-                                ${p.iso === 'ES' ? 'MITMA MNO (measured)' : 'Estimated · Gravity v1'}
+                                ${p.iso === 'ES' ? 'MITMA MNO · measured' : 'Gravity model · estimated'}
                             </span>
                         </div>
                     </div>
+                </div>
+            </div>
+            <div class="data-block">
+                <div class="data-label">Commercial Support</div>
+                <div class="anchor-pills">
+                    ${hw.map(h => `<div class="pill">${chainName(h)}</div>`).join('')}
+                    ${wh.map(w => `<div class="pill">${chainName(w)}</div>`).join('')}
                 </div>
             </div>
             <div id="sel-el" class="sel-el-block data-block" style="border-bottom:none;">
