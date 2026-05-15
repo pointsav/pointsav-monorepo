@@ -496,17 +496,17 @@
         } else {
             hideCatchment();
             if (selectedClusterId) {
-                const meta = clusterIndex?.get(selectedClusterId);
-                if (map.getZoom() < RETAIL_ZOOM_THRESHOLD) {
-                    // Zoom back to retail level; zoomend will restore layers via setRetailLevel path
-                    if (meta) map.flyTo({ center: [meta.lon, meta.lat], zoom: RETAIL_ZOOM_THRESHOLD + 0.5, duration: 700 });
-                } else {
-                    // Already at retail zoom — restore layers explicitly
-                    if (map.getLayer('proximity-fill')) map.setLayoutProperty('proximity-fill', 'visibility', 'visible');
-                    if (map.getLayer('proximity-line')) map.setLayoutProperty('proximity-line', 'visibility', 'visible');
-                    if (map.getLayer('all-locations')) map.setLayoutProperty('all-locations', 'visibility', 'visible');
-                    updateProximityRings();
+                // Restore retail layers in place at the current zoom/center — no flyTo.
+                // The zoomend handler has no branch for (!catchmentActive && !overviewActive),
+                // so we must explicitly re-show proximity rings, retailer dots, and refresh
+                // ring geometry. Cluster bubbles stay hidden (we are still drilled into a cluster).
+                if (map.getLayer('proximity-fill')) map.setLayoutProperty('proximity-fill', 'visibility', 'visible');
+                if (map.getLayer('proximity-line')) map.setLayoutProperty('proximity-line', 'visibility', 'visible');
+                if (map.getLayer('all-locations')) {
+                    map.setLayoutProperty('all-locations', 'visibility', 'visible');
+                    map.setPaintProperty('all-locations', 'circle-opacity', 0.70);
                 }
+                updateProximityRings();
             }
         }
     }
