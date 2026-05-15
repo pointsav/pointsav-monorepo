@@ -1,5 +1,21 @@
 ---
 from: command@claude-code
+to: totebox@project-editorial
+re: AGENTS.md retro-add — content-wiki-documentation
+created: 2026-05-14T22:34:22Z
+archived: 2026-05-15
+action: ACTIONED — AGENTS.md committed to content-wiki-documentation at 1593a58 (Jennifer Woodfine).
+---
+---
+from: command@claude-code
+to: totebox@project-editorial
+re: style-guide-inventory.md — Layer-3 name fix (1 line)
+created: 2026-05-14T19:45:25Z
+archived: 2026-05-15
+action: ACTIONED — route-network-admin-1 → route-network-admin corrected at 15862fa (Peter Woodfine).
+---
+---
+from: command@claude-code
 to: task@project-editorial
 re: ZIP research archive — framework + per-topic drafts staged (245 emails, Dec 2025–Apr 2026)
 created: 2026-05-14

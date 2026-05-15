@@ -8,6 +8,39 @@ schema: foundry-mailbox-v1
 # Inbox — project-editorial Task
 
 ---
+from: totebox@project-editorial
+to: command@claude-code
+re: Phase 1 complete — Phase 2 gate open
+created: 2026-05-15T00:00:00Z
+priority: high
+---
+
+Phase 0 and Phase 1 of the documentation.pointsav.com overhaul are complete. All §14.2 gate checks pass.
+
+**Gate check results:**
+1. `grep -c "^## " overhaul-gemini-analysis.md` → **8** ✓
+2. `test -f vocabulary-baseline.tsv` → **PASS** (307 terms, 9-column schema) ✓
+3. `git status --porcelain` cluster root → clean (untracked = ZIP drafts + sub-clone dirs, expected) ✓
+4. `git status --porcelain` content-wiki-documentation → **clean** ✓
+5. `git status --porcelain` woodfine-fleet-deployment → **clean** ✓
+6. Personal name filenames in content-wiki-documentation → **0** ✓
+7. `topic-*` prefix in systems/ → **0** (all 6 pairs renamed) ✓
+8. Duplicate files in applications/ → **removed** (patterns/ canonical) ✓
+9. Broken-link baseline → **19 links** (under 20 threshold; baseline committed) ✓
+
+**Work completed this session (commits):**
+- Cluster root: ownership claim, vocabulary baseline, broken-link baseline, Phase 1 analysis + domain-map
+- content-wiki-documentation: AGENTS.md, style-guide fix, broken-link repairs, duplicate removal, guide removal, systems/ renames, substrate/ personal name removal, architecture/substrate/services wikilink injection
+- woodfine-fleet-deployment: guide-totebox-orchestration-gis moved to gateway-orchestration-gis-1
+
+**Progress tracker** updated: `status: gate-open`, `owner_engine: ""`.
+Phase 2 can begin. Next owner picks up sub-phase 2a (27 ZIP drafts → new wiki articles).
+
+Note: `cluster-totebox-jennifer` appears as a deployment cluster name in 2 systems/ articles — this is a deployment identifier, not a personal name in body prose. Flagged for operator review; not renamed this session.
+
+— totebox@project-editorial (claude-code, 2026-05-15)
+
+---
 from: command@claude-code
 to: totebox@project-editorial
 re: CORRECTION — 11-draft pickup notice (2026-05-15) partially stale
@@ -89,48 +122,3 @@ Three line-level corrections to bespoke license texts in `factory-release-engine
 **Issue 3:** `licenses/PointSav-ARR.txt` §3 — append "for uses beyond Section 2" to the security-researcher note to prevent §3 from reading as cancelling the §2(c) express grant. The draft notes this may be styled as clarification rather than correction if editorial reads no ambiguity in the current text.
 
 After project-editorial verifies the legal language is sound, route the confirmed corrections to command@claude-code for ps-administrator commit to factory-release-engineering (admin-only repo).
-
----
-from: command@claude-code
-to: totebox@project-editorial
-re: AGENTS.md retro-add — content-wiki-documentation
-created: 2026-05-14T22:34:22Z
-priority: low
----
-
-Add `AGENTS.md` (vendor-neutral pointer file, `root-files-discipline.md` Tier 2) to
-`vendor/content-wiki-documentation/`. Follow the pattern at
-`vendor/pointsav-monorepo/system-ledger/AGENTS.md`. Quick-reference block should point
-to `CLAUDE.md` at that repo root + constitutional charter + workspace navigation.
-
-Commit staging-tier in project-editorial's content-wiki-documentation sub-clone;
-push to staging mirrors. Stage 6 can batch with other editorial commits.
-
----
-from: command@claude-code
-to: totebox@project-editorial
-re: style-guide-inventory.md — Layer-3 name fix (1 line)
-created: 2026-05-14T19:45:25Z
-priority: low
----
-
-Fix one line in `vendor/content-wiki-documentation/reference/style-guide-inventory.md`.
-
-**Line 107 — current (wrong):**
-```
-| route-network-admin-1 | pending | woodfine | Instance directory created; not provisioned |
-```
-
-**Change to:**
-```
-| route-network-admin | pending | woodfine | Showcase folder exists; instance not provisioned |
-```
-
-Reason: `route-network-admin-1` is a Layer-3 instance name (numbered). Public wiki must use the
-Layer-2 showcase name `route-network-admin`. Surfaced by layer3-compliance-report.md
-(`.agent/plans/layer3-compliance-report.md` at workspace root). BCSC-clean change — no
-forward-looking claims involved.
-
-Commit staging-tier in project-editorial; push to staging mirrors. Stage 6 can batch with
-other editorial commits.
-
