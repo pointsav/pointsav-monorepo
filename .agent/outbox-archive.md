@@ -1,4 +1,8 @@
 ---
+archived: 2026-05-15T04:09:00Z by command@claude-code
+note: Sprint M binary rebuild request actioned — binary rebuilt (21M, 2026-05-15 04:08), deployed, all 3 services restarted; monorepo main rebased on origin/main + pushed to all 3 remotes bfbdd94c..49d9627c (5 commits: Sprint L + Sprint M + 3 prior)
+
+---
 archived: 2026-05-15T03:14:00Z by command@claude-code
 note: Sprint L binary rebuild request actioned — binary rebuilt (21M, 2026-05-15 03:09), deployed to /usr/local/bin/, all 3 services restarted; Stage 6 pushed to all 3 remotes (origin-staging-j, origin-staging-p, origin) cluster/project-knowledge ad075b4a..ebd79fe0
 
