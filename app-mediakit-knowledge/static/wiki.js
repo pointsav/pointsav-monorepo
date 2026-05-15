@@ -552,6 +552,100 @@
   }
 
   /* ------------------------------------------------------------------ *
+   * 12a. Appearance menu (theme + width toggle)                         *
+   * ------------------------------------------------------------------ */
+
+  function initAppearanceMenu() {
+    var btn  = document.getElementById('wiki-appearance-btn');
+    var menu = document.getElementById('wiki-appearance-menu');
+    if (!btn || !menu) return;
+
+    function applyTheme(t) {
+      document.documentElement.setAttribute('data-theme', t);
+      try { localStorage.setItem('wiki-theme', t); } catch(e) {}
+      document.querySelectorAll('#wiki-theme-options .wiki-appearance-opt').forEach(function(el) {
+        el.classList.toggle('appearance-active', el.getAttribute('data-theme-val') === t);
+      });
+    }
+
+    function applyWidth(w) {
+      document.documentElement.setAttribute('data-width', w);
+      try { localStorage.setItem('wiki-width', w); } catch(e) {}
+      document.querySelectorAll('#wiki-width-options .wiki-appearance-opt').forEach(function(el) {
+        el.classList.toggle('appearance-active', el.getAttribute('data-width-val') === w);
+      });
+    }
+
+    // Reflect stored state on open.
+    function reflectState() {
+      var t = document.documentElement.getAttribute('data-theme') || 'auto';
+      var w = document.documentElement.getAttribute('data-width') || 'standard';
+      applyTheme(t);
+      applyWidth(w);
+    }
+
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      var open = btn.getAttribute('aria-expanded') === 'true';
+      btn.setAttribute('aria-expanded', String(!open));
+      if (!open) {
+        menu.removeAttribute('hidden');
+        reflectState();
+      } else {
+        menu.setAttribute('hidden', '');
+      }
+    });
+
+    menu.addEventListener('click', function(e) {
+      var el = e.target;
+      var tv = el.getAttribute('data-theme-val');
+      var wv = el.getAttribute('data-width-val');
+      if (tv) applyTheme(tv);
+      if (wv) applyWidth(wv);
+    });
+
+    document.addEventListener('click', function(e) {
+      if (!menu.hasAttribute('hidden') && !menu.contains(e.target) && e.target !== btn) {
+        menu.setAttribute('hidden', '');
+        btn.setAttribute('aria-expanded', 'false');
+      }
+    });
+
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' && !menu.hasAttribute('hidden')) {
+        menu.setAttribute('hidden', '');
+        btn.setAttribute('aria-expanded', 'false');
+        btn.focus();
+      }
+    });
+
+    // Apply stored preferences immediately (anti-FOUT inline script did this
+    // before paint; here we also mark the active buttons).
+    reflectState();
+  }
+
+  /* ------------------------------------------------------------------ *
+   * 12b. More actions dropdown (#p-cactions)                            *
+   * ------------------------------------------------------------------ */
+
+  function initMoreMenu() {
+    var details = document.getElementById('p-cactions-details');
+    if (!details) return;
+
+    document.addEventListener('click', function(e) {
+      if (details.open && !details.contains(e.target)) {
+        details.open = false;
+      }
+    });
+
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' && details.open) {
+        details.open = false;
+      }
+    });
+  }
+
+  /* ------------------------------------------------------------------ *
    * 12. Sticky header                                                    *
    *                                                                     *
    * IntersectionObserver on #mw-header. Fires once at page load;       *
@@ -810,6 +904,8 @@
    * ------------------------------------------------------------------ */
 
   document.addEventListener('DOMContentLoaded', function () {
+    initAppearanceMenu();
+    initMoreMenu();
     initToc();
     initTocPin();
     initDensityToggle();

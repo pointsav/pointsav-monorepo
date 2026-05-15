@@ -184,6 +184,7 @@ pub fn router(state: AppState) -> Router {
         .route("/special/whatlinkshere/{slug}", get(what_links_here))
         .route("/special/pageinfo/{slug}", get(page_info))
         .route("/special/cite/{slug}", get(cite_page))
+        .route("/special/categories", get(categories_index_page))
         // Phase 4 Step 4.8 — OpenAPI 3.1 specification
         .route("/openapi.yaml", get(openapi_yaml));
     // Phase 2 Step 7 — collab WebSocket relay; only mounted when the CLI
@@ -283,6 +284,8 @@ struct SearchQueryParams {
 #[derive(Deserialize)]
 struct WikiPageQuery {
     redirectedfrom: Option<String>,
+    #[serde(default)]
+    printable: bool,
 }
 
 /// `GET /wanted` — "Wanted articles" page.
@@ -1491,7 +1494,7 @@ async fn wiki_page(
         
     let pending_count = pending_count_for(&state, maybe_user.as_ref()).await;
     let redirected_from = q.redirectedfrom.as_deref();
-    Ok(wiki_chrome(&title, &slug, parsed.frontmatter, &body_html, headings, &state.site_title, maybe_user.as_ref(), pending_count, redirected_from).into_response())
+    Ok(wiki_chrome(&title, &slug, parsed.frontmatter, &body_html, headings, &state.site_title, maybe_user.as_ref(), pending_count, redirected_from, q.printable).into_response())
 }
 
 async fn static_asset(Path(path): Path<String>) -> Response {
@@ -1538,6 +1541,7 @@ fn wiki_chrome(
     user: Option<&User>,
     pending_count: i64,
     redirected_from: Option<&str>,
+    printable: bool,
 ) -> Markup {
     let _talk_slug = format!("{slug}.talk");
 
@@ -1568,19 +1572,28 @@ fn wiki_chrome(
                 meta name="viewport" content="width=device-width, initial-scale=1";
                 title { (site_title) }
                 link rel="stylesheet" href="/static/style.css";
+                // Anti-FOUT: apply stored theme/width before first paint to
+                // avoid a flash of the default light theme for dark-mode users.
+                script { (PreEscaped(r#"(function(){var t=localStorage.getItem('wiki-theme')||'auto';document.documentElement.setAttribute('data-theme',t);var w=localStorage.getItem('wiki-width')||'standard';document.documentElement.setAttribute('data-width',w);}());"#)) }
                 // JSON-LD baseline (Phase 2 Step 1) — schema.org TechArticle /
                 // DefinedTerm. Cumulative across phases; AEO crawlers + downstream
                 // consumers ingest the structured data.
                 (PreEscaped(jsonld_for_topic(&fm, slug)))
             }
-            body {
+            body class=(if printable { "printable" } else { "" }) {
                 // Sticky header — hidden until main header scrolls off-screen (Sprint H)
                 div.wiki-sticky-header #wiki-sticky-header aria-hidden="true" {
                     div.sticky-inner {
                         a.sticky-logo href="/" { (site_title) }
                         span.sticky-title #sticky-title { (title) }
-                        @if user.is_some() {
-                            a.sticky-edit href={ "/edit/" (slug) } { "Edit" }
+                        nav.sticky-actions #p-views-sticky aria-label="Page actions" {
+                            a.sticky-tab href={ "/wiki/" (slug) } accesskey="r" { "Read" }
+                            @if user.is_some() {
+                                a.sticky-tab href={ "/edit/" (slug) } accesskey="e" { "Edit" }
+                            } @else {
+                                a.sticky-tab href={ "/git/" (slug) } { "View source" }
+                            }
+                            a.sticky-tab href={ "/history/" (slug) } { "View history" }
                         }
                     }
                 }
@@ -1592,6 +1605,31 @@ fn wiki_chrome(
                             div #search-autocomplete-dropdown style="display:none;" {}
                         }
                         button type="submit" { "Search" }
+                    }
+                    // Appearance menu button + popover
+                    div.wiki-appearance-wrap #wiki-appearance-wrap {
+                        button.wiki-appearance-btn #wiki-appearance-btn
+                            aria-expanded="false"
+                            aria-controls="wiki-appearance-menu"
+                            title="Appearance"
+                        { "Aa" }
+                        div.wiki-appearance-menu #wiki-appearance-menu role="dialog" aria-label="Appearance" hidden="" {
+                            div.wiki-appearance-section {
+                                p.wiki-appearance-label { "Color" }
+                                div.wiki-appearance-options #wiki-theme-options {
+                                    button.wiki-appearance-opt #theme-auto data-theme-val="auto" { "Automatic" }
+                                    button.wiki-appearance-opt #theme-light data-theme-val="light" { "Light" }
+                                    button.wiki-appearance-opt #theme-dark data-theme-val="dark" { "Dark" }
+                                }
+                            }
+                            div.wiki-appearance-section {
+                                p.wiki-appearance-label { "Width" }
+                                div.wiki-appearance-options #wiki-width-options {
+                                    button.wiki-appearance-opt #width-standard data-width-val="standard" { "Standard" }
+                                    button.wiki-appearance-opt #width-wide data-width-val="wide" { "Wide" }
+                                }
+                            }
+                        }
                     }
                     nav.site-nav {
                         a href="/" { "Home" }
@@ -1640,6 +1678,7 @@ fn wiki_chrome(
                         li { a href="/random" { "Random article" } }
                         li { a href="/wanted" { "Wanted articles" } }
                         li { a href="/special/all-pages" { "All pages" } }
+                        li { a href="/special/categories" { "Categories" } }
                         li { a href="/special/recent-changes" { "Recent changes" } }
                         li { a href="/special/statistics" { "Statistics" } }
                     }
@@ -1679,6 +1718,7 @@ fn wiki_chrome(
                                 li { a href="/random" { "Random article" } }
                                 li { a href="/wanted" { "Wanted articles" } }
                                 li { a href="/special/all-pages" { "All pages" } }
+                                li { a href="/special/categories" { "Categories" } }
                                 li { a href="/special/recent-changes" { "Recent changes" } }
                                 li { a href="/special/statistics" { "Statistics" } }
                                 li { a href="/search" { "Search" } }
@@ -1791,6 +1831,18 @@ fn wiki_chrome(
                                     href={ "/history/" (slug) }
                                     accesskey="h"
                                 { "View history" }
+                            }
+                            // "More" actions dropdown (caret after View history)
+                            nav.wiki-cactions #p-cactions aria-label="More actions" {
+                                details #p-cactions-details {
+                                    summary.wiki-cactions-toggle title="More actions" { "▾" }
+                                    ul.wiki-cactions-menu {
+                                        li { a href={ "/wiki/" (slug) "?printable=yes" } { "Print / Export" } }
+                                        li { a href={ "/special/pageinfo/" (slug) } { "Page information" } }
+                                        li { a href={ "/special/cite/" (slug) } { "Cite this page" } }
+                                        li { a href={ "/git/" (slug) } { "Download as Markdown" } }
+                                    }
+                                }
                             }
                         }
 
@@ -2465,6 +2517,82 @@ async fn all_pages_page(
                 ul.wiki-allpages-list {
                     @for (title, slug) in entries {
                         li { a href={ "/wiki/" (slug) } { (title) } }
+                    }
+                }
+            }
+        },
+        &state.site_title, maybe_user.as_ref(), pending_count,
+    ))
+}
+
+/// `GET /special/categories` — index of all categories with article counts,
+/// mirroring Wikipedia's Special:Categories.
+async fn categories_index_page(
+    State(state): State<Arc<AppState>>,
+    CurrentUser(maybe_user): CurrentUser,
+) -> Result<Markup, WikiError> {
+    let pending_count = pending_count_for(&state, maybe_user.as_ref()).await;
+
+    let topic_files = collect_all_topic_files(
+        &state.content_dir,
+        &[state.guide_dir.as_deref(), state.guide_dir_2.as_deref()],
+    ).await?;
+
+    // Collect category → count pairs.
+    let mut cat_counts: BTreeMap<String, usize> = BTreeMap::new();
+    for tf in &topic_files {
+        if let Ok(text) = fs::read_to_string(&tf.path).await {
+            if let Ok(parsed) = crate::render::parse_page(&text) {
+                // categories[] list takes precedence over singular category:
+                if let Some(cats) = parsed.frontmatter.categories {
+                    for cat in cats {
+                        *cat_counts.entry(cat).or_insert(0) += 1;
+                    }
+                } else if let Some(cat) = parsed.frontmatter.category {
+                    if cat != "root" {
+                        *cat_counts.entry(cat).or_insert(0) += 1;
+                    }
+                }
+            }
+        }
+    }
+
+    // Group by first letter of the humanized name.
+    let mut groups: BTreeMap<char, Vec<(String, String, usize)>> = BTreeMap::new();
+    for (cat_slug, count) in &cat_counts {
+        let display = humanize_category(cat_slug);
+        let ch = display.chars().next()
+            .unwrap_or('#')
+            .to_uppercase()
+            .next()
+            .unwrap_or('#');
+        let key = if ch.is_ascii_alphabetic() { ch } else { '#' };
+        groups.entry(key).or_default().push((display, cat_slug.clone(), *count));
+    }
+    for entries in groups.values_mut() {
+        entries.sort_by(|a, b| a.0.to_lowercase().cmp(&b.0.to_lowercase()));
+    }
+
+    Ok(chrome(
+        &format!("Categories — {}", state.site_title),
+        html! {
+            h1 { "Categories" }
+            p.wiki-special-intro { (cat_counts.len()) " categories across " (topic_files.len()) " articles." }
+            nav.wiki-allpages-jump {
+                @for ch in groups.keys() {
+                    a href={ "#cat-" (ch) } { (ch) }
+                    " "
+                }
+            }
+            @for (ch, entries) in &groups {
+                h2 id={ "cat-" (ch) } { (ch) }
+                ul.wiki-allpages-list {
+                    @for (display, slug, count) in entries {
+                        li {
+                            a href={ "/category/" (slug) } { (display) }
+                            " "
+                            span.wiki-cat-count { "(" (count) (if *count == 1 { " article" } else { " articles" }) ")" }
+                        }
                     }
                 }
             }
