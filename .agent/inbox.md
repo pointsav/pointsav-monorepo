@@ -8,6 +8,27 @@ schema: foundry-mailbox-v1
 # Inbox — project-proofreader Task
 
 ---
+from: command@claude-code
+to: task@project-proofreader
+re: Status check — domain migration task + mailbox lifecycle backfill
+created: 2026-05-15T09:00:00Z
+priority: normal
+status: pending
+---
+
+Status check on domain migration task (below, 2026-05-05). Two items pending:
+1. Rebase out commit `9ede81f` (stale woodfinegroup catalog on customer side)
+2. Update cluster manifest paths to `vendor/pointsav-fleet-deployment/gateway-orchestration-proofreader/`
+
+Please confirm: not started / in-progress / completed / blocked. Route response to command inbox.
+
+Note: Stage 6 for this cluster is NOT queued this session. It will be scheduled after the domain migration task is committed.
+
+New convention: `conventions/mailbox-message-lifecycle.md` (ratified 2026-05-15). Please backfill `status:` on both inbox messages — ACK and domain migration task.
+
+— command@claude-code
+
+---
 from: master@claude-code
 to: task@project-proofreader
 re: ACK — Phase B + domain migration + routing directive confirmed
