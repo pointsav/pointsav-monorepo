@@ -1,25 +1,24 @@
 ---
 schema: overhaul-progress-v1
 plan: overhaul-documentation-pointsav-com.md
-phase: 1
-sub_phase: gate-open
-status: gate-open
+phase: 2
+sub_phase: 2a-complete
+status: in-progress
 safe_to_resume: true
 unsafe_reason: ""
-owner_engine: ""
-last_updated: 2026-05-15T00:00:00Z
-last_session_id: d64fccd3-6513-4802-a3dc-966cad0e754b-163418
+owner_engine: claude-code
+last_updated: 2026-05-15T02:30:00Z
+last_session_id: 661f08e9-2920-4124-a172-29aabb236616
 ---
 
 ## Last completed sub-task
-- task: Phase 1 complete — all 16 light-work commits landed; §14.2 gate checks all pass
-- commit_sha: 7f1cbe4
+- task: Sub-phase 2a item 27 — zip-topic-three-layer-architecture → new architecture/three-layer-architecture.md + .es.md
+- commit_sha: cb7ef71
 - committed_at: 2026-05-15
 
 ## Next pending sub-task
-- task: Phase 2 — full editorial overhaul begins; owner engine sets sub-phase 2a (ZIP draft intake, 27 drafts) first
-- inputs: .agent/drafts-outbound/zip-topic-*.md (27 files), overhaul-gemini-analysis.md §2 mapping table
-- expected_commit_msg_prefix: "feat(architecture): " or "feat(systems): " etc. depending on category
+- task: Sub-phase 2b — begin Phase 2 next steps per overhaul plan (§2 deferred items, §3–§8)
+- inputs: .agent/plans/overhaul-documentation-pointsav-com.md §§3–8
 
 ## Blockers
 - (none)
@@ -38,30 +37,30 @@ last_session_id: d64fccd3-6513-4802-a3dc-966cad0e754b-163418
 ## Per-item tracker — sub-phase 2a (27 ZIP drafts)
 | id | slug                                  | state   | sha | notes |
 |----|---------------------------------------|---------|-----|-------|
-| 01 | zip-topic-app-console-input-f12       | pending | —   | |
-| 02 | zip-topic-archetypes-and-coa          | pending | —   | |
-| 03 | zip-topic-bim-product-family          | pending | —   | |
-| 04 | zip-topic-competitive-positioning     | pending | —   | |
-| 05 | zip-topic-compliance-disclosure       | pending | —   | |
-| 06 | zip-topic-deployment-patterns         | pending | —   | |
-| 07 | zip-topic-design-system               | pending | —   | |
-| 08 | zip-topic-hardware-research           | pending | —   | |
-| 09 | zip-topic-leapfrog-2030               | pending | —   | |
-| 10 | zip-topic-legal-ip-structure          | pending | —   | |
-| 11 | zip-topic-machine-based-authorization | pending | —   | |
-| 12 | zip-topic-microkernel-substrate       | pending | —   | |
-| 13 | zip-topic-os-console                  | pending | —   | |
-| 14 | zip-topic-os-family-overview          | pending | —   | |
-| 15 | zip-topic-os-infrastructure-network   | pending | —   | |
-| 16 | zip-topic-os-mediakit                 | pending | —   | |
-| 17 | zip-topic-os-orchestration            | pending | —   | |
-| 18 | zip-topic-os-totebox                  | pending | —   | |
-| 19 | zip-topic-os-workplace                | pending | —   | |
-| 20 | zip-topic-pointsav-overview           | pending | —   | |
-| 21 | zip-topic-service-content             | pending | —   | |
-| 22 | zip-topic-service-email-people        | pending | —   | |
-| 23 | zip-topic-service-slm                 | pending | —   | |
-| 24 | zip-topic-six-tier-sovereignty-matrix | pending | —   | |
-| 25 | zip-topic-supply-chain-governance     | pending | —   | |
-| 26 | zip-topic-the-diode-standard          | pending | —   | |
-| 27 | zip-topic-three-layer-architecture    | pending | —   | |
+| 01 | zip-topic-app-console-input-f12       | committed | 3e384b4 | new: applications/app-console-input.md |
+| 02 | zip-topic-archetypes-and-coa          | committed | 8839e16 | new: services/archetypes-and-chart-of-accounts.md |
+| 03 | zip-topic-bim-product-family          | committed | df6b313 | new: applications/bim-and-real-property-surfaces.md |
+| 04 | zip-topic-competitive-positioning     | committed | d64f3de | new: reference/structural-positioning.md |
+| 05 | zip-topic-compliance-disclosure       | committed | 9cb0d0b | new: governance/compliance-and-continuous-disclosure.md |
+| 06 | zip-topic-deployment-patterns         | committed | 0772534 | new: patterns/deployment-patterns.md |
+| 07 | zip-topic-design-system               | committed | bce93ed | merge: design-system/design-typography.md |
+| 08 | zip-topic-hardware-research           | committed | 84c2571 | new: reference/hardware-reference.md |
+| 09 | zip-topic-leapfrog-2030               | committed | a4fa0f5 | merge: architecture/leapfrog-2030-architecture.md |
+| 10 | zip-topic-legal-ip-structure          | committed | 4b41242 | new: governance/legal-and-ip-structure.md |
+| 11 | zip-topic-machine-based-authorization | committed | 20057ac | merge: architecture/machine-based-auth.md |
+| 12 | zip-topic-microkernel-substrate       | committed | 9712244 | new: substrate/sel4-microkernel-substrate.md |
+| 13 | zip-topic-os-console                  | committed | 808a97e | merge: systems/console-os.md |
+| 14 | zip-topic-os-family-overview          | committed | e2380b3 | new: systems/os-family-overview.md |
+| 15 | zip-topic-os-infrastructure-network   | committed | 0156aa9 | merge: systems/infrastructure-os.md + os-network-admin.md |
+| 16 | zip-topic-os-mediakit                 | committed | 8afeabb | merge: systems/mediakit-os.md |
+| 17 | zip-topic-os-orchestration            | committed | 626563d | merge: systems/os-orchestration.md |
+| 18 | zip-topic-os-totebox                  | committed | c003764 | merge: systems/totebox-os.md |
+| 19 | zip-topic-os-workplace                | committed | ee335c1 | merge: systems/os-workplace.md |
+| 20 | zip-topic-pointsav-overview           | committed | 7220c49 | new: architecture/pointsav-overview.md |
+| 21 | zip-topic-service-content             | committed | 813efe3 | merge: services/service-content.md |
+| 22 | zip-topic-service-email-people        | committed | d330b3c | merge: services/service-email.md + service-people.md |
+| 23 | zip-topic-service-slm                 | committed | eb376d5 | merge: services/service-slm.md |
+| 24 | zip-topic-six-tier-sovereignty-matrix | committed | 0316dcc | new: architecture/six-tier-sovereignty-matrix.md |
+| 25 | zip-topic-supply-chain-governance     | committed | cf727ad | new: architecture/five-stage-supply-chain.md |
+| 26 | zip-topic-the-diode-standard          | committed | 9e084ce | new: architecture/diode-standard.md |
+| 27 | zip-topic-three-layer-architecture    | committed | cb7ef71 | new: architecture/three-layer-architecture.md |
