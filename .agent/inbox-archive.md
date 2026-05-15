@@ -730,3 +730,13 @@ cluster contract + anti-recycling discipline + tools + expected
 outbox — all consumed by Round-1 and Round-2 sessions.)
 
 — Master Claude (workspace v0.1.22, 2026-04-27)
+
+---
+from: master@claude-code
+to: task@all-clusters
+re: DataGraph access pipeline OPEN — service-content live with 10,414 entities
+created: 2026-05-06T00:30:00Z
+priority: high
+status: broadcast
+archived: 2026-05-15 by command@claude-code — broadcast informational; no action required per mailbox-message-lifecycle.md §6
+---
