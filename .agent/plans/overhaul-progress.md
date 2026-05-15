@@ -2,23 +2,29 @@
 schema: overhaul-progress-v1
 plan: overhaul-documentation-pointsav-com.md
 phase: 2
-sub_phase: 2g-started
+sub_phase: 2i-substrate-complete
 status: in-progress
 safe_to_resume: true
 unsafe_reason: ""
 owner_engine: claude-code
-last_updated: 2026-05-15T18:30:00Z
-last_session_id: d64fccd3-6513-4802-a3dc-966cad0e754b-327278
+last_updated: 2026-05-15T22:00:00Z
+last_session_id: 167cdef2-9deb-4dd0-9b5d-c86ab8c009d7
 ---
 
 ## Last completed sub-task
-- task: Style guide OPUS editorial rules update (sub-phase 2h)
-- commit_sha: 6050420 (content-wiki-documentation)
+- task: Sub-phase 2i — substrate/ category Bloomberg lede + internal vocab scrub (complete)
+- commit_sha: eac2449 (content-wiki-documentation)
 - committed_at: 2026-05-15
-- detail: style-guide-topic.md + .es.md + style-guide-guide.md + .es.md — Bloomberg four-paragraph
-  lede structure, stand-alone PDF test, 75/25 register, CFO sentence test, named actors rule,
-  "so what" discipline, internal governance vocabulary ban; broken style-guide-readme links removed;
-  workspace path references replaced with plain prose
+- detail: All 9 substrate articles in EN+ES pairs swept. Two commit batches (2ab8fee + eac2449).
+  citation-substrate, apprenticeship-substrate, language-protocol-substrate — full rewrites with
+  Bloomberg 4-paragraph lede, ES frontmatter fixed (lang: es added), blockquotes removed.
+  trajectory-substrate — full rewrite: Doctrine claim #14, ~/Foundry/ paths, Task Claude removed.
+  disclosure-substrate — Doctrine claim #29 removed; conventions/ paths removed; blockquote removed.
+  system-substrate-doctrine, design-system-substrate, knowledge-commons,
+  substrate-native-compatibility — targeted edits: Foundry branding, named competitors,
+  marketing phrases, workspace path refs all cleaned.
+  New governance articles: governance/procurement-overview.md + security-overview.md (EN+ES),
+  governance/_index.md + .es.md updated (f1383b4).
 
 ## Sub-phase 2e summary (cross-reference gap fill — COMPLETE)
 Audit (enhanced to skip inline code spans and .agent/ rules files) found 44 flagged links;
@@ -71,12 +77,22 @@ Note: compounding-substrate, doorman-protocol, disclosure-substrate, leapfrog-20
 ### Sub-phase 2h — COMPLETE (commit 6050420)
 Style guides updated with OPUS editorial rules.
 
-### Next — sub-phase 2i
-- New articles for institutional readers: governance/procurement-overview.md and
-  governance/security-overview.md (high-value landing pages identified by OPUS main page agent —
-  not yet written; banker-relevant content gap)
-- Broader article-by-article readability pass: substrate/ and architecture/ categories
-  applying the Bloomberg + 75/25 + CFO sentence rules per article
+### Sub-phase 2i — substrate/ COMPLETE; architecture/ in progress
+- governance/procurement-overview.md + security-overview.md (EN+ES) — new articles, committed f1383b4
+- governance/_index.md + .es.md — updated with institutional due-diligence group
+- substrate/ category — Bloomberg lede + vocab scrub — 9 articles EN+ES (2ab8fee + eac2449):
+  - citation-substrate, apprenticeship-substrate, language-protocol-substrate — full rewrites
+  - trajectory-substrate — full rewrite (Doctrine claim #14, ~/Foundry/ paths, Task Claude)
+  - disclosure-substrate — Doctrine claim #29 removed; blockquote removed
+  - system-substrate-doctrine, design-system-substrate, knowledge-commons,
+    substrate-native-compatibility — targeted edits
+
+### Next — architecture/ category readability pass
+- Audit architecture/ articles for: bold H1 opener, blockquote opener, "Doctrine" mentions,
+  internal path refs, named competitors
+- Priority articles: foundry-doctrine-architecture, doorman-protocol (already done in step 5),
+  three-ring-architecture (done in 2g), compounding-substrate (done in step 5)
+- Remaining architecture/ articles to sweep: check which have not yet been rewritten
 
 ## Blockers
 - (none)
