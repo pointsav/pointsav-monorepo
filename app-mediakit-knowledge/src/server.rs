@@ -979,6 +979,18 @@ fn home_chrome(
         .collect();
     uncategorised.sort_by(|a, b| a.title.cmp(&b.title));
 
+    // Format an integer with comma separators (e.g. 1234 → "1,234").
+    fn fmt_commas(n: usize) -> String {
+        let s = n.to_string();
+        let mut out = String::new();
+        let offset = s.len() % 3;
+        for (i, ch) in s.chars().enumerate() {
+            if i > 0 && (i + 3 - offset) % 3 == 0 { out.push(','); }
+            out.push(ch);
+        }
+        out
+    }
+
     html! {
         (DOCTYPE)
         html lang="en" {
@@ -987,9 +999,11 @@ fn home_chrome(
                 meta name="viewport" content="width=device-width, initial-scale=1";
                 title { (site_title) }
                 link rel="stylesheet" href="/static/style.css";
+                // Anti-FOUT: apply stored theme before first paint
+                script { (PreEscaped(r#"(function(){var t=localStorage.getItem('wiki-theme')||'auto';document.documentElement.setAttribute('data-theme',t);var w=localStorage.getItem('wiki-width')||'standard';document.documentElement.setAttribute('data-width',w);}());"#)) }
             }
             body {
-                header.mw-header {
+                header.mw-header #mw-header {
                     a.site-title href="/" { (site_title) }
                     form.header-search #header-search-form action="/search" method="get" {
                         div.header-search-wrap {
@@ -998,64 +1012,178 @@ fn home_chrome(
                         }
                         button type="submit" { "Search" }
                     }
+                    div.wiki-appearance-wrap #wiki-appearance-wrap {
+                        button.wiki-appearance-btn #wiki-appearance-btn
+                            aria-expanded="false"
+                            aria-controls="wiki-appearance-menu"
+                            title="Appearance"
+                        { "Aa" }
+                        div.wiki-appearance-menu #wiki-appearance-menu role="dialog" aria-label="Appearance" hidden="" {
+                            div.wiki-appearance-section {
+                                p.wiki-appearance-label { "Color" }
+                                div.wiki-appearance-options #wiki-theme-options {
+                                    button.wiki-appearance-opt #theme-auto data-theme-val="auto" { "Automatic" }
+                                    button.wiki-appearance-opt #theme-light data-theme-val="light" { "Light" }
+                                    button.wiki-appearance-opt #theme-dark data-theme-val="dark" { "Dark" }
+                                }
+                            }
+                            div.wiki-appearance-section {
+                                p.wiki-appearance-label { "Width" }
+                                div.wiki-appearance-options #wiki-width-options {
+                                    button.wiki-appearance-opt #width-standard data-width-val="standard" { "Standard" }
+                                    button.wiki-appearance-opt #width-wide data-width-val="wide" { "Wide" }
+                                }
+                            }
+                        }
+                    }
                     nav.site-nav {
                         a href="/" { "Home" }
+                        a href="/special/all-pages" { "All pages" }
+                        a href="/special/categories" { "Categories" }
+                        a href="/special/recent-changes" { "Recent changes" }
                         (auth_nav_widget(user, pending_count))
                     }
                 }
-                main.site-main {
-                    // Wikipedia-style welcome banner
-                    div.wiki-home-welcome {
-                        h1 { "Welcome to PointSav Knowledge" }
-                        @if !home_html.is_empty() {
-                            div.wiki-home-lede { (PreEscaped(home_html)) }
-                        }
+                main.site-main #mp-main {
 
-                        // Stats banner
+                    // ── Welcome banner (#mp-topbanner) ──────────────────────
+                    div #mp-topbanner .wiki-home-welcome {
+                        h1 {
+                            "Welcome to "
+                            (site_title)
+                            ","
+                        }
+                        p.wiki-home-tagline {
+                            "the corporate knowledge wiki for the PointSav Digital Systems platform."
+                        }
                         @if stats.article_count > 0 {
-                            p.wiki-home-stats aria-label="Knowledge wiki scale" {
-                                (stats.article_count) " article"
+                            p.wiki-home-stats aria-label="Wiki scale" {
+                                strong { (fmt_commas(stats.article_count)) }
+                                " article"
                                 @if stats.article_count != 1 { "s" }
-                                " across " (stats.category_count) " categories"
+                                " in "
+                                strong { (stats.category_count) }
+                                " categories"
                                 @if let Some(ref d) = stats.last_updated {
                                     " — last updated " time datetime=(d) { (d) }
                                 }
                             }
                         }
+                        @if !home_html.is_empty() {
+                            div.wiki-home-lede { (PreEscaped(home_html)) }
+                        }
                     }
 
-                    // Wikipedia-style top section: Featured (Left) + Did You Know (Right)
-                    div.wiki-home-top-panels {
-                        @if let Some(featured) = featured {
-                            div.wiki-home-featured {
+                    // ── Four-box editorial grid (#mp-upper) ─────────────────
+                    div #mp-upper .wiki-home-top-panels {
+
+                        // TFA — From today's featured article
+                        @if let Some(ref featured) = featured {
+                            section #mp-tfa .wiki-home-box .wiki-home-featured {
                                 h2 { "From today's featured article" }
-                                div.featured-content {
+                                div.wiki-home-box-body.featured-content {
                                     h3 { a href={ "/wiki/" (featured.slug) } { (featured.title) } }
-                                    p { (featured.snippet) " " a href={ "/wiki/" (featured.slug) } { "Read more..." } }
+                                    @if !featured.snippet.is_empty() {
+                                        p { (featured.snippet) " " a href={ "/wiki/" (featured.slug) } { em { "Full article..." } } }
+                                    } @else {
+                                        p { a href={ "/wiki/" (featured.slug) } { em { "Read the full article..." } } }
+                                    }
+                                }
+                                div.wiki-home-box-footer {
+                                    a href="/special/all-pages" { "Archive" }
+                                    " · "
+                                    a href="/feed.atom" { "Subscribe" }
+                                    " · "
+                                    a href="/wiki/about" { "About" }
                                 }
                             }
                         }
 
-                        @if let Some(dyk) = dyk {
-                            div.wiki-home-dyk {
-                                h2 { "Did you know..." }
-                                ul {
+                        // DYK — Did you know...
+                        @if let Some(ref dyk) = dyk {
+                            section #mp-dyk .wiki-home-box .wiki-home-dyk {
+                                h2 { "Did you know\u{00a0}..." }
+                                ul.wiki-home-box-body {
                                     @for fact in &dyk.facts {
                                         li {
+                                            "… that "
                                             (fact.text)
+                                            @if !fact.text.ends_with('?') { "?" }
                                             @if let Some(ref slug) = fact.link_slug {
                                                 " " a href={ "/wiki/" (slug) } { "[more]" }
                                             }
                                         }
                                     }
                                 }
+                                div.wiki-home-box-footer {
+                                    a href="/special/all-pages" { "Archive" }
+                                    " · "
+                                    a href="/wiki/contribute" { "Nominate" }
+                                }
                             }
                         }
+
+                        // ITN — Recently updated (our "In the news" analogue)
+                        @if !recent.is_empty() {
+                            section #mp-itn .wiki-home-box .wiki-home-itn {
+                                h2 { "Recently updated" }
+                                ul.wiki-home-box-body.wiki-home-recent {
+                                    @for t in recent.iter().take(5) {
+                                        li.wiki-home-recent-item {
+                                            @if let Some(ref d) = t.last_edited {
+                                                span.wiki-home-recent-date { (d) }
+                                            }
+                                            a href={ "/wiki/" (t.slug) } { (t.title) }
+                                        }
+                                    }
+                                }
+                                div.wiki-home-box-footer {
+                                    a href="/special/recent-changes" { "All changes" }
+                                    " · "
+                                    a href="/feed.atom" { "Feed" }
+                                }
+                            }
+                        }
+
+                        // OTD — From the doctrine (our "On this day" analogue)
+                        section #mp-otd .wiki-home-box .wiki-home-otd {
+                            h2 { "From the doctrine" }
+                            div.wiki-home-box-body {
+                                ul.wiki-home-doctrine-list {
+                                    li {
+                                        strong { "ADR SYS-ADR-10" }
+                                        " — F12 mandatory. "
+                                        "No structured data enters the ledger without an explicit operator action."
+                                    }
+                                    li {
+                                        strong { "ADR SYS-ADR-07" }
+                                        " — No structured data through AI. "
+                                        "IFC geometry and BIM properties route through deterministic parsers only."
+                                    }
+                                    li {
+                                        strong { "Claim\u{00a0}#39" }
+                                        " — Research trail at article scale. "
+                                        "Every published article carries its source chain."
+                                    }
+                                    li.wiki-home-notam {
+                                        strong { "Active\u{00a0}NOTAM:" }
+                                        " none."
+                                    }
+                                }
+                            }
+                            div.wiki-home-box-footer {
+                                a href="/wiki/doctrine" { "Full doctrine" }
+                                " · "
+                                a href="/wiki/notam" { "NOTAM" }
+                                " · "
+                                a href="/wiki/conventions" { "Conventions" }
+                            }
+                        }
+
                     }
 
-                    // Category sections (Wikipedia "Portals" style) — show all articles
-                    // for small categories, PREVIEW_LIMIT + "All N →" for larger ones.
-                    h2.wiki-home-section-title { "Platform areas" }
+                    // ── Browse by area (demoted category grid) ───────────────
+                    h2.wiki-home-section-title { "Browse by area" }
                     div.wiki-home-grid {
                         @for cat in RATIFIED_CATEGORIES {
                             @let topics = buckets.get(*cat).map(|v| v.as_slice()).unwrap_or(&[]);
@@ -1094,12 +1222,27 @@ fn home_chrome(
                         }
                     }
 
-                    // Operational guides — grouped by domain
+                    // ── Catch-all: TOPICs not in any ratified category ───────
+                    @if !uncategorised.is_empty() {
+                        div.wiki-home-uncategorised {
+                            h2 { "All articles" }
+                            p.wiki-home-uncategorised-note {
+                                "Articles not yet sorted into a category."
+                            }
+                            ul.wiki-home-uncategorised-list {
+                                @for t in &uncategorised {
+                                    li { a href={ "/wiki/" (t.slug) } { (t.title) } }
+                                }
+                            }
+                        }
+                    }
+
+                    // ── Operational guides ───────────────────────────────────
                     @if !guides.is_empty() {
                         @let domains = bucket_guides_by_domain(guides);
-                        div.wiki-home-guides {
+                        div.wiki-home-guides.wiki-home-box {
                             h2 { "Operational guides" }
-                            div.wiki-home-guides-grid {
+                            div.wiki-home-guides-grid.wiki-home-box-body {
                                 @for (domain, items) in domains {
                                     div.wiki-home-guide-domain {
                                         h3 { (domain) }
@@ -1113,73 +1256,103 @@ fn home_chrome(
                                     }
                                 }
                             }
+                            div.wiki-home-box-footer {
+                                a href="/special/all-pages" { "All guides" }
+                                " · "
+                                a href="/wiki/about" { "About this wiki" }
+                            }
                         }
                     }
 
-                    // Platform Telemetry (Placeholder for Phase 10 integration)
-                    h2.wiki-home-section-title { "Platform Telemetry" }
-                    div.wiki-home-telemetry style="background: #f8f9fa; border: 1px solid #a2a9b1; padding: 1rem; border-radius: 2px;" {
-                        p style="margin: 0; font-family: monospace; color: #54595d;" { "Awaiting telemetry endpoint connection... " code { "schema: region-v1" } " payload expected." }
-                    }
-
-                    // Catch-all: every TOPIC/GUIDE not in a ratified category
-                    @if !uncategorised.is_empty() {
-                        div.wiki-home-uncategorised {
-                            h2 { "All articles" }
-                            p.wiki-home-uncategorised-note {
-                                "Articles not yet sorted into a category."
+                    // ── Sister surfaces (#mp-other) ──────────────────────────
+                    section #mp-other .wiki-home-sister {
+                        h2.wiki-home-section-title { "Sister surfaces" }
+                        ul.wiki-home-sister-grid {
+                            li {
+                                a.wiki-home-sister-link href="https://projects.woodfinegroup.com" {
+                                    span.wiki-home-sister-name { "Projects Wiki" }
+                                    span.wiki-home-sister-desc { "Woodfine projects deployment" }
+                                }
                             }
-                            ul.wiki-home-uncategorised-list {
-                                @for t in &uncategorised {
-                                    li {
-                                        a href={ "/wiki/" (t.slug) } { (t.title) }
-                                    }
+                            li {
+                                a.wiki-home-sister-link href="/wiki/about" {
+                                    span.wiki-home-sister-name { "Corporate Wiki" }
+                                    span.wiki-home-sister-desc { "Business-side documentation" }
+                                }
+                            }
+                            li {
+                                a.wiki-home-sister-link href="https://github.com/pointsav/pointsav-design-system" {
+                                    span.wiki-home-sister-name { "Design System" }
+                                    span.wiki-home-sister-desc { "Tokens, components, recipes" }
+                                }
+                            }
+                            li {
+                                a.wiki-home-sister-link href="https://github.com/pointsav/factory-release-engineering" {
+                                    span.wiki-home-sister-name { "Factory Release Engineering" }
+                                    span.wiki-home-sister-desc { "Governance, licensing, CLAs" }
+                                }
+                            }
+                            li {
+                                a.wiki-home-sister-link href="https://github.com/pointsav" {
+                                    span.wiki-home-sister-name { "PointSav on GitHub" }
+                                    span.wiki-home-sister-desc { "Canonical vendor-tier source" }
+                                }
+                            }
+                            li {
+                                a.wiki-home-sister-link href="https://github.com/woodfine" {
+                                    span.wiki-home-sister-name { "Woodfine on GitHub" }
+                                    span.wiki-home-sister-desc { "Customer-tier mirror" }
+                                }
+                            }
+                            li {
+                                a.wiki-home-sister-link href="/wiki/doctrine" {
+                                    span.wiki-home-sister-name { "Doctrine" }
+                                    span.wiki-home-sister-desc { "Constitutional charter" }
+                                }
+                            }
+                            li {
+                                a.wiki-home-sister-link href="/wiki/notam" {
+                                    span.wiki-home-sister-name { "NOTAM" }
+                                    span.wiki-home-sister-desc { "Active operational notices" }
+                                }
+                            }
+                            li {
+                                a.wiki-home-sister-link href="/openapi.yaml" {
+                                    span.wiki-home-sister-name { "OpenAPI 3.1" }
+                                    span.wiki-home-sister-desc { "Machine-consumable API spec" }
+                                }
+                            }
+                            li {
+                                a.wiki-home-sister-link href="/llms.txt" {
+                                    span.wiki-home-sister-name { "llms.txt" }
+                                    span.wiki-home-sister-desc { "AI ingestion convention" }
                                 }
                             }
                         }
                     }
 
-                    // Other areas — GitHub and related resources
-                    div.wiki-home-other {
-                        h2 { "Other areas" }
-                        ul {
-                            li { a href="https://github.com/pointsav" { "PointSav on GitHub" } " — canonical vendor-tier source" }
-                            li { a href="https://github.com/woodfine" { "Woodfine Management Corp. on GitHub" } " — customer-tier mirror" }
-                            li { a href="https://github.com/pointsav/pointsav-design-system" { "Design system" } " — visual tokens, component recipes, brand conventions" }
-                            li { a href="https://github.com/pointsav/factory-release-engineering" { "factory-release-engineering" } " — licensing matrix, contributor agreements, governance" }
-                        }
-                    }
-
-                    // Recent additions — top 10 by last_edited
-                    @if !recent.is_empty() {
-                        h2.wiki-home-section-title { "Recent additions" }
-                        ul.wiki-home-recent {
-                            @for t in recent {
-                                li.wiki-home-recent-item {
-                                    @if let Some(ref d) = t.last_edited {
-                                        span.wiki-home-recent-date { (d) }
-                                    }
-                                    a href={ "/wiki/" (t.slug) } { (t.title) }
-                                }
-                            }
-                        }
-                    }
                 }
                 footer.site-footer {
-                    p.wiki-home-bilingual-notice {
-                        em {
-                            "Available in English and Español. "
-                            "Spanish articles are strategic-adaptation overviews, not translations."
+                    // Language tier — Wikipedia "available in" pattern
+                    div.wiki-home-langs {
+                        p.wiki-home-lang-tier {
+                            strong { "English" }
+                            " · "
+                            a href="/wiki/index.es" hreflang="es" { strong { "Español" } }
                         }
-                        " "
-                        a href="/wiki/index.es" { "Leer en Español →" }
+                        p.wiki-home-lang-note {
+                            "Spanish articles are strategic-adaptation overviews, not literal translations."
+                        }
                     }
-                    p { (site_title) " — "
+                    p.wiki-footer-engine {
+                        (site_title)
+                        " — "
                         a href="/" { "Home" }
-                        " · Engine: app-mediakit-knowledge — see "
+                        " · Engine: app-mediakit-knowledge · "
                         a href="https://github.com/pointsav/pointsav-monorepo" { "ARCHITECTURE.md" }
                     }
                 }
+                script src="/static/wiki.js" defer="true" {}
             }
         }
     }
