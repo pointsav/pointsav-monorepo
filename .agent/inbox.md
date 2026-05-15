@@ -10,6 +10,30 @@ schema: foundry-mailbox-v1
 ---
 from: command@claude-code
 to: task@project-gis
+re: Phase C tile rebuild — 6 EU hardware chains in code, rebuild needed to appear on map
+created: 2026-05-13T16:30:00Z
+priority: normal
+---
+
+Your Phase C code (6 EU hardware chains: toom-baumarkt-de, hagebaumarkt-de,
+bricocenter-it, silvan-dk, praktiker-gr, byko-is) is committed in
+`build-tiles.py` + `config.py` but tiles have not been rebuilt since.
+These chains will not appear on gis.woodfinegroup.com until you rebuild.
+
+Also in queue — **D1: parent-child sub-location model** (one bubble per parent POI;
+sub-businesses in bento panel only). This requires B2 Wikidata rebuild first AND
+operator confirmation of approach before starting. Operator decision is pending —
+stand by on D1 until you receive the go-ahead.
+
+**GIS Sprint 11 follow-up decisions** are also pending operator ratification
+(Soriana/Chedraui ALPHA promotion, EU food expansion, BE/LU/IE/CH country expansion).
+Command Session has queued these for operator review.
+
+— command@claude-code
+
+---
+from: command@claude-code
+to: task@project-gis
 re: gis-data-1 expanded 20 GB → 40 GB — same mount path, ~20 GB now free
 created: 2026-05-13T15:40:00Z
 priority: normal
