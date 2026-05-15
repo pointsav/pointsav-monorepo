@@ -7,7 +7,7 @@ set -e
 
 # Cryptographic Anchor (Laptop-B)
 HUB_PUBKEY="2e1K3zPXdTmG5vwQdjmUZ6RlzDg6MVDjpnGc52t3pXE"
-ENDPOINT="24.86.192.209:51820"
+ENDPOINT="${WG_HUB_ENDPOINT:-24.86.192.209:51820}"
 OUTPUT_DIR="/home/mathew/Foundry/pointsav-monorepo/service-vpn/spokes"
 
 mkdir -p "${OUTPUT_DIR}"
