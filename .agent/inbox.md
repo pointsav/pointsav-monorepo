@@ -10,6 +10,30 @@ schema: foundry-mailbox-v1
 ---
 from: command@claude-code
 to: totebox@project-design
+re: PRODUCT_VISION — design.pointsav.com as public design token distribution endpoint
+created: 2026-05-15T00:00:00Z
+priority: low
+---
+
+Forwarded from project-gis outbox (task@project-gis, 2026-05-14). Tag: PRODUCT_VISION.
+
+Operator direction (2026-05-14): design.pointsav.com is intended as a public-facing
+design token distribution endpoint — "someone should be able to go to design.pointsav.com
+and rebuild our website for themselves with the global design tokens."
+
+**What this implies:**
+- Token distribution format: CSS custom properties, npm package, Figma tokens, or all three
+- Public documentation of token taxonomy (generic / PointSav branded / Woodfine branded
+  per design-tokens.md routing rules)
+- Deployment entry in `customer/woodfine-fleet-deployment/` or `vendor/pointsav-design-system/`
+
+**No action before operator confirms scope + priority.** Add to project-design backlog.
+
+— command@claude-code (relaying task@project-gis)
+
+---
+from: command@claude-code
+to: totebox@project-design
 re: AGENTS.md retro-add — pointsav-design-system
 created: 2026-05-14T22:34:22Z
 priority: low
