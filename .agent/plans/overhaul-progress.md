@@ -2,32 +2,40 @@
 schema: overhaul-progress-v1
 plan: overhaul-documentation-pointsav-com.md
 phase: 2
-sub_phase: 2d-complete
+sub_phase: 2e-complete
 status: in-progress
 safe_to_resume: true
 unsafe_reason: ""
 owner_engine: claude-code
-last_updated: 2026-05-15T12:00:00Z
-last_session_id: 661f08e9-2920-4124-a172-29aabb236616
+last_updated: 2026-05-15T17:00:00Z
+last_session_id: d64fccd3-6513-4802-a3dc-966cad0e754b-327278
 ---
 
 ## Last completed sub-task
-- task: Sub-phase 2d — worm-ledger-design EN+ES pair (final article in 2d batch)
-- commit_sha: 9f51d00
+- task: Sub-phase 2e — broken-link sweep complete (0 genuine broken wikilinks in wiki content)
+- commit_sha: 2a693af
 - committed_at: 2026-05-15
 
-## Sub-phase 2d summary (external references sweep — COMPLETE)
-All processable articles across services/, systems/, architecture/, substrate/, patterns/,
-infrastructure/ have been given `references:` frontmatter blocks and `[^N]` inline footnotes.
-Commits in this batch (ascending): 06dbc83, 02a62b8, caac02e, 554ee6d, 8c4c8dc, 07609ef,
-d9a3802, 9f51d00. ~16 files across 8 commits. Articles with non-empty `cites:` were
-skipped (workspace citation system — different format). Body ## References sections
-pointing only to internal paths were removed without citation replacement.
+## Sub-phase 2e summary (cross-reference gap fill — COMPLETE)
+Audit (enhanced to skip inline code spans and .agent/ rules files) found 44 flagged links;
+22 genuine broken links in published wiki content, 22 false positives (inline backtick code
+examples, internal rules files, woodfine-fleet-deployment cross-references which resolve
+within their own cluster). All 22 genuine broken links fixed across 6 commits:
+- 25e3100 docs(systems): fix topic- prefix and os- slug renames in wikilinks
+- 0d6b395 docs(patterns): fix os-totebox/os-mediakit slug renames, delink service-minutebook, fix category links
+- 61a808b docs(substrate): fix category links to path-style, delink missing capability-ledger-substrate
+- a23b23b docs(architecture): fix broken service-slm-architecture wikilink in doorman-protocol
+- beb86c7 docs(applications): delink missing service-minutebook, service-bookkeeper, app-orchestration-bim
+- 2a693af docs(services): delink missing service-minutebook in archetypes-and-chart-of-accounts
+
+Wikilink density audit (minimum 3 per TOPIC body) deferred to sub-phase 2g (readability pass),
+which applies the full quality-metric suite per-article. Orphan TOPIC linking likewise deferred
+to 2g where §4 stub analysis will be populated article-by-article.
 
 ## Next pending sub-task
-- task: Sub-phase 2e — cross-reference gap fill (wikilinks density audit, broken-link sweep)
-- inputs: overhaul-documentation-pointsav-com.md §7 (broken-link audit procedure)
-- notes: Quality metric target — zero broken wikilinks, minimum 3 [[wikilinks]] per TOPIC body
+- task: Sub-phase 2f — code-block normalisation in GUIDEs (fenced code blocks across all GUIDEs)
+- inputs: overhaul-documentation-pointsav-com.md §9.2 sub-phase 2f spec
+- notes: All prose-embedded shell commands, config snippets, file fragments → fenced code block with language tag; formatting only
 
 ## Blockers
 - (none)
