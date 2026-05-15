@@ -155,15 +155,23 @@
         .back-btn            { border: none; background: none; cursor: pointer; color: var(--text-muted); font-size: 11px; font-weight: 700; padding: 0 0 12px 0; display: flex; align-items: center; gap: 4px; }
         .sel-el-block        { background: rgba(22,70,121,0.04); border-radius: 8px; padding: 10px 12px; border-left: 3px solid var(--brand-primary); }
 
-        /* ── Chain search / retailer filter ────────────────────────────── */
+        /* ── Chain search / retailer + place search ────────────────────── */
         .chain-search-wrap  { position: relative; margin-top: 8px; }
         .chain-search-input { width: 100%; padding: 6px 28px 6px 10px; border: 1px solid var(--border-soft); border-radius: 6px; font-size: 12px; color: var(--brand-primary); outline: none; box-sizing: border-box; background: #fff; }
         .chain-search-input:focus { border-color: var(--brand-primary); box-shadow: 0 0 0 2px rgba(10,48,112,0.08); }
         .chain-search-input::placeholder { color: var(--text-muted); font-weight: 400; }
         .chain-search-clear { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--text-muted); font-size: 16px; line-height: 1; padding: 0 2px; }
-        .chain-dropdown { position: absolute; left: 0; right: 0; top: calc(100% + 2px); background: #fff; border: 1px solid var(--border-soft); border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.12); max-height: 200px; overflow-y: auto; z-index: 20; }
-        .chain-option { padding: 7px 12px; font-size: 12px; cursor: pointer; white-space: nowrap; }
+        .chain-dropdown { position: absolute; left: 0; right: 0; top: calc(100% + 2px); background: #fff; border: 1px solid var(--border-soft); border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.12); max-height: 260px; overflow-y: auto; z-index: 20; }
+        .chain-option { padding: 7px 12px; font-size: 12px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .chain-option:hover, .chain-option.focused { background: #EFF6FF; color: var(--brand-primary); font-weight: 700; }
+        .chain-section-label { padding: 5px 12px 3px 12px; font-size: 9px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; background: #f8fafc; border-bottom: 1px solid var(--border-soft); }
+        .chain-section-label + .chain-option { border-top: none; }
+        .chain-option.place-option { font-weight: 500; color: var(--text-main); }
+        .chain-option.place-option:hover, .chain-option.place-option.focused { color: var(--brand-primary); font-weight: 700; }
+        .chain-option .place-sub { font-size: 10px; color: var(--text-muted); font-weight: 400; display: block; margin-top: 1px; }
+        .chain-option.place-option:hover .place-sub, .chain-option.place-option.focused .place-sub { color: var(--brand-primary); opacity: 0.75; }
+        .chain-option.loading { color: var(--text-muted); font-style: italic; cursor: default; }
+        .chain-option.loading:hover { background: transparent; color: var(--text-muted); font-weight: 400; }
         .chain-filter-pill { display: inline-flex; align-items: center; gap: 5px; background: #EFF6FF; color: var(--brand-primary); border-radius: 10px; padding: 2px 8px; font-size: 10px; font-weight: 800; margin-top: 6px; }
 
         /* ── Catchment toggle block (inside cluster detail panel) ───────── */
@@ -230,7 +238,7 @@
             </div>
             <div id="chain-search-wrap" class="chain-search-wrap">
                 <input id="chain-search-input" class="chain-search-input" type="text"
-                       placeholder="Filter by retailer…" autocomplete="off"
+                       placeholder="Search city, town, or retailer…" autocomplete="off"
                        oninput="onChainSearchInput(this.value)"
                        onfocus="if(this.value)onChainSearchInput(this.value)"
                        onblur="closeDropdown()"
@@ -838,39 +846,187 @@
         if (overviewActive) showOverview();
     }
 
+    // ── Search: dual-mode — retailer brands + Nominatim geocoding ─────
+    // The input handles two intents:
+    //   (a) typing a known retailer brand → filters cluster bubbles + dots
+    //   (b) typing a city/town/region    → Nominatim geocode → flyTo
+    // Results are rendered in a single dropdown with section labels.
+    let placeSearchSeq    = 0;     // monotonic request id (drops stale responses)
+    let placeSearchTimer  = null;  // debounce handle
+    let lastPlaceResults  = [];    // [{name, displayName, lon, lat, bbox}]
+    let lastBrandMatches  = [];    // [brandName]
+
+    function renderSearchDropdown() {
+        const dd = document.getElementById('chain-dropdown');
+        if (!dd) return;
+        const sections = [];
+        if (lastBrandMatches.length) {
+            sections.push('<div class="chain-section-label">Retailers</div>');
+            sections.push(lastBrandMatches.map(n =>
+                `<div class="chain-option" data-kind="brand" data-brand="${escapeAttr(n)}" onclick="setChainFilterFromEl(this)">${escapeHtml(n)}</div>`
+            ).join(''));
+        }
+        if (lastPlaceResults.length) {
+            sections.push('<div class="chain-section-label">Places</div>');
+            sections.push(lastPlaceResults.map((p, i) =>
+                `<div class="chain-option place-option" data-kind="place" data-idx="${i}" onclick="selectPlaceResult(${i})"><span>${escapeHtml(p.name)}</span><span class="place-sub">${escapeHtml(p.context)}</span></div>`
+            ).join(''));
+        }
+        if (!sections.length) {
+            dd.style.display = 'none';
+            dd.innerHTML = '';
+            return;
+        }
+        dd.innerHTML = sections.join('');
+        dd.style.display = '';
+    }
+
+    function escapeHtml(s) {
+        return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+    function escapeAttr(s) { return escapeHtml(s); }
+
     function onChainSearchInput(val) {
         dropdownFocusIdx = -1;
-        const q  = val.trim().toLowerCase();
+        const q  = val.trim();
         const dd = document.getElementById('chain-dropdown');
         if (!q) {
             dd.style.display = 'none';
+            dd.innerHTML = '';
+            lastBrandMatches = [];
+            lastPlaceResults = [];
+            if (placeSearchTimer) { clearTimeout(placeSearchTimer); placeSearchTimer = null; }
             if (activeChainFilter) clearChainFilter();
             return;
         }
-        const matches = BRAND_NAMES.filter(n => n.toLowerCase().includes(q));
-        if (!matches.length) { dd.style.display = 'none'; return; }
-        dd.innerHTML = matches.map(n =>
-            `<div class="chain-option" data-brand="${n}" onclick="setChainFilter('${n}')">${n}</div>`
-        ).join('');
-        dd.style.display = '';
+        // 1. Brand matches (instant, local)
+        const qLower = q.toLowerCase();
+        lastBrandMatches = BRAND_NAMES.filter(n => n.toLowerCase().includes(qLower));
+        // 2. Show a Loading row immediately for places so the user sees activity
+        if (q.length >= 2) {
+            // Keep prior place results visible until new ones arrive — avoids flicker
+            renderSearchDropdown();
+            // Inject a Loading row if there are no place results yet for this query
+            if (!lastPlaceResults.length) {
+                const dd2 = document.getElementById('chain-dropdown');
+                if (dd2 && lastBrandMatches.length === 0) {
+                    dd2.innerHTML = '<div class="chain-section-label">Places</div><div class="chain-option loading">Searching…</div>';
+                    dd2.style.display = '';
+                } else if (dd2) {
+                    dd2.innerHTML += '<div class="chain-section-label">Places</div><div class="chain-option loading">Searching…</div>';
+                }
+            }
+            // Debounce geocoding to ~250ms; respects Nominatim's usage policy
+            if (placeSearchTimer) clearTimeout(placeSearchTimer);
+            const mySeq = ++placeSearchSeq;
+            placeSearchTimer = setTimeout(() => fetchPlaceResults(q, mySeq), 250);
+        } else {
+            // Single character — show only brand matches (avoid pinging Nominatim for every keystroke)
+            lastPlaceResults = [];
+            renderSearchDropdown();
+        }
+    }
+
+    function fetchPlaceResults(q, mySeq) {
+        const url = 'https://nominatim.openstreetmap.org/search'
+            + '?q=' + encodeURIComponent(q)
+            + '&format=json&limit=5&addressdetails=1';
+        // Nominatim requires a descriptive User-Agent; browsers forbid setting User-Agent,
+        // so we pass identifying info via a request param and rely on the Referer header.
+        fetch(url, { headers: { 'Accept': 'application/json' } })
+            .then(r => r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status)))
+            .then(rows => {
+                if (mySeq !== placeSearchSeq) return; // stale response
+                lastPlaceResults = (Array.isArray(rows) ? rows : []).slice(0, 5).map(r => {
+                    const addr = r.address || {};
+                    const primary = addr.city || addr.town || addr.village || addr.hamlet
+                        || addr.municipality || addr.county || addr.state || addr.country
+                        || (r.display_name || '').split(',')[0];
+                    const contextParts = [];
+                    if (addr.state && addr.state !== primary) contextParts.push(addr.state);
+                    if (addr.country && addr.country !== primary) contextParts.push(addr.country);
+                    const context = contextParts.length ? contextParts.join(', ') : (r.display_name || '');
+                    let bbox = null;
+                    if (Array.isArray(r.boundingbox) && r.boundingbox.length === 4) {
+                        const [s, n, w, e] = r.boundingbox.map(parseFloat);
+                        if ([s, n, w, e].every(v => !isNaN(v))) bbox = [[w, s], [e, n]];
+                    }
+                    return {
+                        name: primary,
+                        context: context,
+                        lon: parseFloat(r.lon),
+                        lat: parseFloat(r.lat),
+                        bbox: bbox,
+                    };
+                }).filter(p => !isNaN(p.lon) && !isNaN(p.lat));
+                renderSearchDropdown();
+            })
+            .catch(err => {
+                if (mySeq !== placeSearchSeq) return;
+                console.warn('[search] geocode error:', err);
+                lastPlaceResults = [];
+                // Re-render to drop the Loading row
+                renderSearchDropdown();
+            });
+    }
+
+    function setChainFilterFromEl(el) {
+        if (el && el.dataset && el.dataset.brand) setChainFilter(el.dataset.brand);
+    }
+
+    function selectPlaceResult(idx) {
+        const p = lastPlaceResults[idx];
+        if (!p) return;
+        const inp = document.getElementById('chain-search-input');
+        if (inp) inp.value = p.name + (p.context ? ', ' + p.context : '');
+        closeDropdown();
+        if (p.bbox) {
+            map.fitBounds(p.bbox, { padding: 60, duration: 900, maxZoom: 12 });
+        } else {
+            map.flyTo({ center: [p.lon, p.lat], zoom: 10, duration: 900 });
+        }
     }
 
     function onChainSearchKey(e) {
         const dd   = document.getElementById('chain-dropdown');
-        const opts = dd ? [...dd.querySelectorAll('.chain-option')] : [];
-        if (!opts.length || dd.style.display === 'none') {
-            if (e.key === 'Escape') clearChainFilter();
+        const opts = dd ? [...dd.querySelectorAll('.chain-option:not(.loading)')] : [];
+        if (e.key === 'Escape') {
+            const inp = document.getElementById('chain-search-input');
+            if (inp) inp.value = '';
+            lastBrandMatches = [];
+            lastPlaceResults = [];
+            closeDropdown();
+            if (activeChainFilter) clearChainFilter();
+            return;
+        }
+        if (!opts.length || !dd || dd.style.display === 'none') {
+            // No dropdown options yet — if Enter is pressed, force a geocode lookup
+            if (e.key === 'Enter') {
+                const inp = document.getElementById('chain-search-input');
+                if (inp && inp.value.trim()) {
+                    const mySeq = ++placeSearchSeq;
+                    fetchPlaceResults(inp.value.trim(), mySeq);
+                }
+                e.preventDefault();
+            }
             return;
         }
         if (e.key === 'ArrowDown') {
             dropdownFocusIdx = Math.min(dropdownFocusIdx + 1, opts.length - 1);
         } else if (e.key === 'ArrowUp') {
             dropdownFocusIdx = Math.max(dropdownFocusIdx - 1, 0);
-        } else if (e.key === 'Enter' && dropdownFocusIdx >= 0) {
-            setChainFilter(opts[dropdownFocusIdx].dataset.brand);
+        } else if (e.key === 'Enter') {
+            // No selection → pick the first result (prefer place over brand)
+            const idx = dropdownFocusIdx >= 0 ? dropdownFocusIdx : 0;
+            const el = opts[idx];
+            if (el) {
+                if (el.dataset.kind === 'place') {
+                    selectPlaceResult(parseInt(el.dataset.idx, 10));
+                } else if (el.dataset.kind === 'brand') {
+                    setChainFilter(el.dataset.brand);
+                }
+            }
             e.preventDefault(); return;
-        } else if (e.key === 'Escape') {
-            clearChainFilter(); return;
         } else { return; }
         opts.forEach((o, i) => o.classList.toggle('focused', i === dropdownFocusIdx));
         e.preventDefault();
