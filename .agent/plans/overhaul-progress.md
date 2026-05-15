@@ -2,23 +2,32 @@
 schema: overhaul-progress-v1
 plan: overhaul-documentation-pointsav-com.md
 phase: 2
-sub_phase: 2a-complete
+sub_phase: 2d-complete
 status: in-progress
 safe_to_resume: true
 unsafe_reason: ""
 owner_engine: claude-code
-last_updated: 2026-05-15T02:30:00Z
+last_updated: 2026-05-15T12:00:00Z
 last_session_id: 661f08e9-2920-4124-a172-29aabb236616
 ---
 
 ## Last completed sub-task
-- task: Sub-phase 2a item 27 — zip-topic-three-layer-architecture → new architecture/three-layer-architecture.md + .es.md
-- commit_sha: cb7ef71
+- task: Sub-phase 2d — worm-ledger-design EN+ES pair (final article in 2d batch)
+- commit_sha: 9f51d00
 - committed_at: 2026-05-15
 
+## Sub-phase 2d summary (external references sweep — COMPLETE)
+All processable articles across services/, systems/, architecture/, substrate/, patterns/,
+infrastructure/ have been given `references:` frontmatter blocks and `[^N]` inline footnotes.
+Commits in this batch (ascending): 06dbc83, 02a62b8, caac02e, 554ee6d, 8c4c8dc, 07609ef,
+d9a3802, 9f51d00. ~16 files across 8 commits. Articles with non-empty `cites:` were
+skipped (workspace citation system — different format). Body ## References sections
+pointing only to internal paths were removed without citation replacement.
+
 ## Next pending sub-task
-- task: Sub-phase 2b — begin Phase 2 next steps per overhaul plan (§2 deferred items, §3–§8)
-- inputs: .agent/plans/overhaul-documentation-pointsav-com.md §§3–8
+- task: Sub-phase 2e — cross-reference gap fill (wikilinks density audit, broken-link sweep)
+- inputs: overhaul-documentation-pointsav-com.md §7 (broken-link audit procedure)
+- notes: Quality metric target — zero broken wikilinks, minimum 3 [[wikilinks]] per TOPIC body
 
 ## Blockers
 - (none)
