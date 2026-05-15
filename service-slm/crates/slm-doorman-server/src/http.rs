@@ -1494,6 +1494,8 @@ impl From<DoormanError> for ApiError {
             DoormanError::QueueLockFailed { .. } => StatusCode::SERVICE_UNAVAILABLE,
             // Malformed brief detected and moved to poison bucket.
             DoormanError::QueueMalformedBrief { .. } => StatusCode::BAD_REQUEST,
+            // Corpus quality gate rejected the brief (too short, no diff, PII).
+            DoormanError::QueueQualityGateRejected { .. } => StatusCode::UNPROCESSABLE_ENTITY,
             // Graph proxy — caller omitted the mandatory X-Foundry-Module-ID
             // header. Error is on the caller's side.
             DoormanError::GraphProxyMissingModuleId => StatusCode::BAD_REQUEST,
