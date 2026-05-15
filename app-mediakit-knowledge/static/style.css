@@ -32,6 +32,8 @@
   --mw-font-family-article: var(--serif);
   --mw-font-family-chrome:  var(--sans);
   --mw-font-size-base:      0.875rem;
+  --mw-color-box-tfa:       #cef2e0; /* Wikipedia TFA / OTD green */
+  --mw-color-box-dyk:       #cedff2; /* Wikipedia DYK / ITN blue  */
 }
 
 * { box-sizing: border-box; }
@@ -814,7 +816,7 @@ body {
   border: 1px solid var(--border);
   padding: 1rem 1.5rem;
   margin-bottom: 1.25rem;
-  border-radius: 2px;
+  border-radius: 0;
 }
 
 .wiki-home-welcome h1 {
@@ -859,35 +861,50 @@ body {
   color: var(--fg);
 }
 
-/* Top panels (Featured + DYK) — 60/40 split on desktop */
+/* Top panels — 2×2 grid matching Wikipedia Main Page layout */
 .wiki-home-top-panels {
-  display: flex;
-  gap: 1.25rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
   margin-bottom: 1.25rem;
 }
 
 .wiki-home-featured {
-  flex: 3; /* 60% approx */
   border: 1px solid var(--border);
-  border-radius: 2px;
-  background: var(--mw-color-base-10); /* Wikipedia Featured Article background */
+  border-radius: 0;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
 }
 
 .wiki-home-dyk {
-  flex: 2; /* 40% approx */
   border: 1px solid var(--border);
-  border-radius: 2px;
+  border-radius: 0;
   background: var(--bg);
+  display: flex;
+  flex-direction: column;
 }
 
-.wiki-home-featured h2, .wiki-home-dyk h2 {
+/* Box headers — base style shared across all four panels */
+.wiki-home-featured h2, .wiki-home-dyk h2,
+.wiki-home-itn h2, .wiki-home-otd h2,
+.wiki-home-guides h2 {
   font-family: var(--sans);
   font-size: 1rem;
   font-weight: 600;
   margin: 0;
   padding: 0.5rem 0.75rem;
-  background: #eaecf0; /* Wikipedia panel header color */
+  background: var(--mw-color-base-20);
   border-bottom: 1px solid var(--border);
+}
+
+/* Wikipedia colour discipline: green for TFA / OTD, blue for DYK / ITN */
+.wiki-home-featured h2, .wiki-home-otd h2 {
+  background: var(--mw-color-box-tfa);
+}
+
+.wiki-home-dyk h2, .wiki-home-itn h2 {
+  background: var(--mw-color-box-dyk);
 }
 
 .featured-content, .wiki-home-dyk ul {
@@ -918,7 +935,7 @@ body {
 }
 
 @media (max-width: 960px) {
-  .wiki-home-top-panels { flex-direction: column; }
+  .wiki-home-top-panels { grid-template-columns: 1fr; }
 }
 
 /* Category grid — 3 columns desktop, 2 at <960px, 1 at <600px */
@@ -1052,7 +1069,6 @@ body {
 
 .wiki-home-recent-item a:hover {
   text-decoration: underline;
-}
 }
 
 /* ============================================================
@@ -2669,4 +2685,191 @@ body.printable .mw-body {
 .wiki-cat-count {
   color: var(--fg-muted);
   font-size: 0.8rem;
+}
+
+/* ── Sprint M: Wikipedia Main Page parity — four-box home chrome ────────────── */
+
+/* Welcome banner tagline */
+.wiki-home-tagline {
+  font-family: var(--sans);
+  font-size: 0.9375rem;
+  color: var(--fg-muted);
+  margin: 0.25rem 0 0.5rem;
+}
+
+/* Base box — all four editorial panels + guides inherit this */
+.wiki-home-box {
+  border: 1px solid var(--border);
+  border-radius: 0;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Box body — grows to fill available height; adds padding */
+.wiki-home-box-body {
+  flex: 1;
+  padding: 0.75rem 1rem;
+}
+
+/* Box footer — Wikipedia greybar pattern with · separators */
+.wiki-home-box-footer {
+  background: #f9f9f9;
+  border-top: 1px solid var(--border);
+  padding: 0.375rem 0.75rem;
+  font-size: 0.8125rem;
+  font-family: var(--sans);
+  color: var(--fg-muted);
+  line-height: 1.4;
+}
+
+.wiki-home-box-footer a {
+  color: var(--link);
+  text-decoration: none;
+}
+
+.wiki-home-box-footer a:hover { text-decoration: underline; }
+
+[data-theme="dark"] .wiki-home-box-footer,
+[data-theme="auto"] .wiki-home-box-footer {
+  background: var(--bg-chrome);
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-theme="auto"] .wiki-home-box-footer {
+    background: var(--bg-chrome);
+  }
+}
+
+/* ITN box — Recently updated */
+.wiki-home-itn {
+  border-radius: 0;
+}
+
+/* Override the ul's padding: 0 reset so items have horizontal padding */
+.wiki-home-itn .wiki-home-box-body {
+  padding: 0.375rem 0.75rem;
+}
+
+/* OTD box — From the doctrine */
+.wiki-home-otd {
+  border-radius: 0;
+}
+
+/* Doctrine list inside OTD box */
+.wiki-home-doctrine-list {
+  list-style: disc;
+  margin: 0;
+  padding: 0 0 0 1.25rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.wiki-home-doctrine-list li {
+  padding: 0.25rem 0;
+}
+
+/* NOTAM item — red left-border accent */
+.wiki-home-notam {
+  list-style: none;
+  border-left: 3px solid #d33;
+  padding-left: 0.5rem;
+  margin-left: -1.25rem;
+}
+
+/* Sister surfaces section */
+.wiki-home-sister {
+  margin-top: 2rem;
+}
+
+.wiki-home-sister-grid {
+  list-style: none;
+  padding: 0;
+  margin: 0.75rem 0 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.625rem;
+}
+
+@media (max-width: 960px) {
+  .wiki-home-sister-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 600px) {
+  .wiki-home-sister-grid { grid-template-columns: 1fr; }
+}
+
+.wiki-home-sister-link {
+  display: block;
+  border: 1px solid var(--border);
+  border-radius: 0;
+  padding: 0.5rem 0.75rem;
+  text-decoration: none;
+  color: var(--fg);
+  background: var(--bg-chrome);
+  transition: border-color 0.15s;
+}
+
+.wiki-home-sister-link:hover {
+  border-color: var(--link);
+}
+
+.wiki-home-sister-name {
+  display: block;
+  font-family: var(--sans);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--link);
+}
+
+.wiki-home-sister-desc {
+  display: block;
+  font-size: 0.8125rem;
+  color: var(--fg-muted);
+  margin-top: 0.125rem;
+}
+
+/* Language tier footer (Wikipedia "available in N languages" pattern) */
+.wiki-home-langs {
+  border-top: 1px solid var(--border);
+  padding: 0.75rem 0 0;
+  margin-top: 1.5rem;
+  text-align: center;
+}
+
+.wiki-home-lang-tier {
+  font-family: var(--sans);
+  font-size: 0.9375rem;
+  margin: 0 0 0.25rem;
+}
+
+.wiki-home-lang-tier a {
+  color: var(--link);
+  text-decoration: none;
+}
+
+.wiki-home-lang-tier a:hover { text-decoration: underline; }
+
+.wiki-home-lang-note {
+  font-size: 0.8125rem;
+  color: var(--fg-muted);
+  margin: 0;
+  font-style: italic;
+}
+
+/* Operational guides box — uses .wiki-home-box base; h2 already covered above */
+.wiki-home-guides-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+  gap: 1rem;
+}
+
+.wiki-home-guide-domain h3 {
+  font-family: var(--sans);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  margin: 0 0 0.375rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--fg-muted);
 }
