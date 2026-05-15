@@ -2,18 +2,18 @@
 schema: overhaul-progress-v1
 plan: overhaul-documentation-pointsav-com.md
 phase: 2
-sub_phase: 2e-complete
+sub_phase: 2f-complete
 status: in-progress
 safe_to_resume: true
 unsafe_reason: ""
 owner_engine: claude-code
-last_updated: 2026-05-15T17:00:00Z
+last_updated: 2026-05-15T18:30:00Z
 last_session_id: d64fccd3-6513-4802-a3dc-966cad0e754b-327278
 ---
 
 ## Last completed sub-task
-- task: Sub-phase 2e — broken-link sweep complete (0 genuine broken wikilinks in wiki content)
-- commit_sha: 2a693af
+- task: Sub-phase 2f — fenced code-block normalisation complete (87 blocks across 17 guide files)
+- commit_sha: 1b2d50a (pointsav), 1ffb3bc (woodfine)
 - committed_at: 2026-05-15
 
 ## Sub-phase 2e summary (cross-reference gap fill — COMPLETE)
@@ -32,10 +32,18 @@ Wikilink density audit (minimum 3 per TOPIC body) deferred to sub-phase 2g (read
 which applies the full quality-metric suite per-article. Orphan TOPIC linking likewise deferred
 to 2g where §4 stub analysis will be populated article-by-article.
 
+## Sub-phase 2f summary (fenced code-block normalisation — COMPLETE)
+Classifier detected and tagged 87 unlabelled fenced blocks across 17 guide files in two clusters.
+- Language tag distribution: bash (~65), text (~15), ini (~7)
+- Classification logic: shell prefixes > bare paths (→text) > shell commands > env vars > systemd keywords > json > text
+- Key edge cases handled: sudo tee heredoc classified as bash (not ini), bare /path references as text, $VAR/path as text, Environment="..." drop-ins as ini
+- Classifier bug fixed: initial version failed to track labeled blocks, causing their closing fences to be treated as new unlabelled openers (all 165 false tags reverted before fix)
+- 2 commits: 1ffb3bc (woodfine, 14 files, 51 changes), 1b2d50a (pointsav, 3 files, 36 changes)
+
 ## Next pending sub-task
-- task: Sub-phase 2f — code-block normalisation in GUIDEs (fenced code blocks across all GUIDEs)
-- inputs: overhaul-documentation-pointsav-com.md §9.2 sub-phase 2f spec
-- notes: All prose-embedded shell commands, config snippets, file fragments → fenced code block with language tag; formatting only
+- task: Sub-phase 2g — readability pass (lede rewrite, descriptive headers, passive voice, inline citations)
+- inputs: overhaul-documentation-pointsav-com.md §9.3 sub-phase 2g spec
+- notes: Corpus-wide; ordered by inbound-link count; applies full quality-metric suite per-article; EN+ES pairs in lockstep
 
 ## Blockers
 - (none)
