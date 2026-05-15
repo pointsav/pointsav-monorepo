@@ -67,6 +67,78 @@ use slm_doorman::DoormanError;
 /// Result alias for queue operations.
 pub type QueueResult<T> = std::result::Result<T, DoormanError>;
 
+// ── Corpus quality gate ───────────────────────────────────────────────────────
+
+/// Minimum `body` character count for a brief to enter the training corpus.
+/// Briefs shorter than this carry insufficient context for useful LoRA tuples.
+const MIN_BRIEF_BODY_CHARS: usize = 50;
+
+/// Minimum `actual_diff` character count for a shadow entry.
+/// Diffs smaller than this are trivial (whitespace-only or single-char fixes)
+/// and do not contribute meaningful signal.
+const MIN_DIFF_CHARS: usize = 20;
+
+/// Substrings whose presence in a brief body or diff signals a credential leak.
+/// The gate rejects the brief; no corpus tuple is written.
+const PII_PATTERNS: &[(&str, &str)] = &[
+    ("sk-ant-", "Anthropic API key"),
+    ("AKIA", "AWS access key"),
+    ("ghp_", "GitHub PAT"),
+    ("-----BEGIN RSA PRIVATE KEY-----", "RSA private key"),
+    ("-----BEGIN OPENSSH PRIVATE KEY-----", "SSH private key"),
+    ("-----BEGIN EC PRIVATE KEY-----", "EC private key"),
+];
+
+/// Check `text` for known credential/PII patterns.
+/// Returns the pattern name if found, or `None` if clean.
+fn check_pii(text: &str) -> Option<&'static str> {
+    for (pattern, name) in PII_PATTERNS {
+        if text.contains(pattern) {
+            return Some(name);
+        }
+    }
+    None
+}
+
+/// Gate check for a bare `ApprenticeshipBrief` (used by `enqueue`).
+pub fn quality_gate_brief(brief: &ApprenticeshipBrief) -> QueueResult<()> {
+    if brief.body.len() < MIN_BRIEF_BODY_CHARS {
+        return Err(DoormanError::QueueQualityGateRejected {
+            reason: format!(
+                "brief body too short ({} chars < {} min); add more context",
+                brief.body.len(),
+                MIN_BRIEF_BODY_CHARS
+            ),
+        });
+    }
+    if let Some(pattern) = check_pii(&brief.body) {
+        return Err(DoormanError::QueueQualityGateRejected {
+            reason: format!("PII/credential detected in brief body: {}", pattern),
+        });
+    }
+    Ok(())
+}
+
+/// Gate check for a `ShadowQueueEntry` (brief + actual_diff).
+pub fn quality_gate_shadow(entry: &ShadowQueueEntry) -> QueueResult<()> {
+    quality_gate_brief(&entry.brief)?;
+    if entry.actual_diff.len() < MIN_DIFF_CHARS {
+        return Err(DoormanError::QueueQualityGateRejected {
+            reason: format!(
+                "actual_diff too small ({} chars < {} min); commit lacks substantive changes",
+                entry.actual_diff.len(),
+                MIN_DIFF_CHARS
+            ),
+        });
+    }
+    if let Some(pattern) = check_pii(&entry.actual_diff) {
+        return Err(DoormanError::QueueQualityGateRejected {
+            reason: format!("PII/credential detected in diff: {}", pattern),
+        });
+    }
+    Ok(())
+}
+
 // ── Configuration ────────────────────────────────────────────────────────────
 
 /// Configuration for the brief queue.
@@ -259,6 +331,7 @@ pub fn pending_count(cfg: &QueueConfig) -> usize {
 ///
 /// Returns a [`QueueEntry`] with the path on success.
 pub fn enqueue(cfg: &QueueConfig, brief: &ApprenticeshipBrief) -> QueueResult<QueueEntry> {
+    quality_gate_brief(brief)?;
     ensure_dirs(cfg)?;
 
     let filename = brief_filename(&brief.brief_id);
@@ -323,6 +396,7 @@ pub fn enqueue(cfg: &QueueConfig, brief: &ApprenticeshipBrief) -> QueueResult<Qu
 ///
 /// Returns a [`QueueEntry`] with the path on success.
 pub fn enqueue_shadow(cfg: &QueueConfig, entry: &ShadowQueueEntry) -> QueueResult<QueueEntry> {
+    quality_gate_shadow(entry)?;
     ensure_dirs(cfg)?;
 
     let brief_id = &entry.brief.brief_id;
@@ -846,7 +920,7 @@ mod tests {
             acceptance_test: "Tests pass.".to_string(),
             doctrine_citations: vec![],
             shadow: true,
-            body: "Bump MANIFEST.md version.".to_string(),
+            body: "Bump MANIFEST.md version number to match the new release tag.".to_string(),
         }
     }
 
