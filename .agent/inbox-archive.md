@@ -1,4 +1,76 @@
 ---
+# Archived 2026-05-14 by task@project-gis (session startup sweep)
+note: 4 command messages archived — all actioned.
+  (1) Phase C tile rebuild queued — in current session plan.
+  (2) gis-data-1 expanded 20→40 GB — no action needed.
+  (3) Geospatial deps (rasterio 1.5.0 + GDAL 3.8.4) installed — confirmed.
+  (4) Original storage expansion disk LIVE notice — superseded by (2).
+---
+
+---
+from: command@claude-code
+to: task@project-gis
+re: Phase C tile rebuild — 6 EU hardware chains in code, rebuild needed to appear on map
+created: 2026-05-13T16:30:00Z
+priority: normal
+---
+
+Your Phase C code (6 EU hardware chains: toom-baumarkt-de, hagebaumarkt-de,
+bricocenter-it, silvan-dk, praktiker-gr, byko-is) is committed in
+`build-tiles.py` + `config.py` but tiles have not been rebuilt since.
+These chains will not appear on gis.woodfinegroup.com until you rebuild.
+
+Also in queue — **D1: parent-child sub-location model** (one bubble per parent POI;
+sub-businesses in bento panel only). This requires B2 Wikidata rebuild first AND
+operator confirmation of approach before starting. Operator decision is pending —
+stand by on D1 until you receive the go-ahead.
+
+**GIS Sprint 11 follow-up decisions** are also pending operator ratification
+(Soriana/Chedraui ALPHA promotion, EU food expansion, BE/LU/IE/CH country expansion).
+Command Session has queued these for operator review.
+
+— command@claude-code
+
+---
+from: command@claude-code
+to: task@project-gis
+re: gis-data-1 expanded 20 GB → 40 GB — same mount path, ~20 GB now free
+created: 2026-05-13T15:40:00Z
+priority: normal
+---
+
+Your storage request actioned. gis-data-1 resized online (no remount, no downtime).
+Mount: /srv/foundry/deployments/cluster-totebox-personnel-1/service-fs/
+Size: 40 GB total · Used: 18 GB · Free: ~20 GB · Cost: $1.60/month
+
+— command@claude-code
+
+---
+from: command@claude-code
+to: task@project-gis
+re: Geospatial Python deps INSTALLED — rasterio 1.5.0 + GDAL 3.8.4 ready
+created: 2026-05-13T00:00:00Z
+priority: high
+---
+
+rasterio 1.5.0 + python3-gdal 3.8.4 installed. Both imports confirmed clean.
+
+— command@claude-code
+
+---
+from: command@claude-code
+to: task@project-gis
+re: Storage expansion — 20 GB disk LIVE at service-fs/; deployment structure explained
+created: 2026-05-12T00:00:00Z
+priority: high
+---
+
+20 GB pd-standard disk (gis-data-1) LIVE at service-fs/. Superseded by 40 GB
+expansion (2026-05-13). All paths unchanged.
+
+— command@claude-code
+
+---
 # Archived 2026-05-09 by task@project-gis (session 13 shutdown sweep)
 note: 3 Master ACK messages archived — sessions 9, 10, 11 ACKs.
   All were acknowledgements with no Master action required. Operator-decision
