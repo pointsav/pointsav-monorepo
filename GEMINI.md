@@ -1,6 +1,6 @@
-# project-orgcharts — Gemini CLI entry point
+# project-marketing — Gemini CLI entry point
 
-You are a **Totebox Session** for the `project-orgcharts` archive.
+You are a **Totebox Session** for the `project-marketing` archive.
 
 Before any action, execute the 8-step startup ritual defined in:
 
