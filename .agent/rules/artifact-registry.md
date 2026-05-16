@@ -1,7 +1,7 @@
 ---
 schema: foundry-artifact-registry-v1
 project: project-gis
-last_updated: 2026-05-14
+last_updated: 2026-05-16
 ---
 
 # project-gis Artifact Registry
@@ -21,33 +21,32 @@ Routing:
 
 ### A1 — TOPIC: O-D Catchment Methodology
 - **File:** `topic-od-catchment-methodology.draft.md`
-- **Status:** TO STAGE (2026-05-14 session)
+- **Status:** DISPATCHED fe5148fd (2026-05-16) — at project-editorial
 - **Destination:** project-editorial
 - **Content:** Crow-flies O-D model; 35/150km ring rationale; H3 res-7; provisional language; HOME vs AWAY distinction
 
 ### A2 — TOPIC: Trade Area Data Sources
 - **File:** `topic-trade-area-data-sources.draft.md`
-- **Status:** TO STAGE (2026-05-14 session)
+- **Status:** DISPATCHED fe5148fd (2026-05-16) — at project-editorial
 - **Destination:** project-editorial
 - **Content:** WorldPop 2026 100m raster → H3 res-7 aggregation; 13 countries; per-capita spend multipliers; data vintage; BLS/StatCan/Eurostat proxies
 
 ### A3 — TOPIC: Catchment Ranking Methodology
 - **File:** `topic-catchment-ranking-methodology.draft.md`
-- **Status:** TO STAGE (2026-05-14 session)
+- **Status:** DISPATCHED fe5148fd (2026-05-16) — at project-editorial
 - **Destination:** project-editorial
 - **Content:** Combined primary+secondary rank dimensions; no-weights rationale; future weighting roadmap
 
 ### A4 — TEXT: Data Methodology Dialog
 - **File:** `text-gis-data-methodology-dialog.draft.md`
-- **Status:** TO STAGE (2026-05-14 session)
-- **Destination:** project-editorial
+- **Status:** DISPATCHED fe5148fd (2026-05-16) — at project-editorial
 - **Content:** Copy for the "Data" button modal on gis.woodfinegroup.com; all data source attributions; methodology notes; link to DATA-MANIFEST.md
 
-### A5 — GUIDE: Pipeline Rebuild (O-D + Catchment update)
+### A5 — GUIDE: Pipeline Rebuild (Phase 1/2 appended)
 - **File:** `guide-gis-pipeline-rebuild.draft.md`
-- **Status:** UPDATE / TO STAGE (2026-05-14 session)
+- **Status:** DISPATCHED fe5148fd (2026-05-16) — at project-editorial; Phase 1/2 sections appended
 - **Destination:** project-editorial
-- **Content:** Append synthesize-od-study.py → build-catchment-polygons.py → build-data-tiles.py steps to existing rebuild guide
+- **Content:** Full rebuild procedure including Phase 1 taxonomy rebuild steps and Phase 2 build-geometric-ranking.py future pipeline
 
 ---
 

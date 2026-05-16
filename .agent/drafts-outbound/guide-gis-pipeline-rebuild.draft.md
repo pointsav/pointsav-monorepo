@@ -228,6 +228,49 @@ Both are written directly to the deployment tiles directory.
 Note: Only H3 cells within 150 km of at least one cluster are included. The full
 150 km data radius is the ingest boundary, not the display boundary.
 
+## Phase 1 Rebuild — Taxonomy Restructure (Sprint 17, May 2026)
+
+Phase 1 restructured the anchor taxonomy from a two-class system (ALPHA_ANCHORS +
+ALPHA_HARDWARE) to a four-class system: ALPHA_HYPERMARKET, ALPHA_LIFESTYLE,
+ALPHA_HARDWARE, ALPHA_WAREHOUSE. This change is config-only — no re-ingest is
+required. Mercadona (Spain), Tesco (UK), and Sainsbury's (UK) were promoted to
+ALPHA_HYPERMARKET in this phase. IKEA moved from ALPHA_ANCHORS to ALPHA_LIFESTYLE.
+
+After a Phase 1 config change, run the standard pipeline from Step 1:
+
+```bash
+python3 build-clusters.py
+python3 generate-rankings.py
+python3 build-tiles.py
+```
+
+Phase 1 also adds per-tier civic counts to each cluster record:
+`hc_count_regional`, `hc_count_district`, `he_count_regional`, `he_count_small`.
+These fields drive the Civic Context cell in the bento inspector.
+
+## Phase 2 Rebuild — Pure-Geometric Ranking Engine (planned Sprint 18)
+
+Phase 2 replaces the V2 score-based ranking with a pure-predicate tier engine.
+The new entry point is `build-geometric-ranking.py`, which supersedes
+`generate-rankings.py` for tier assignment. The V2 script is retained at
+`legacy/generate-rankings-v2.py` as a rollback path.
+
+Phase 2 also extends `synthesize-od-study.py` to rank all eight catchment axes
+(primary/secondary × general/grocery/hardware/wholesale) within each ISO market.
+
+After Phase 2 is deployed, the standard rebuild sequence becomes:
+
+```bash
+python3 synthesize-od-study.py
+python3 build-clusters.py
+python3 build-geometric-ranking.py
+python3 build-tiles.py
+```
+
+`generate-rankings.py` is no longer called in the standard pipeline after Phase 2.
+The `score_final` field will not be present in cluster GeoJSON output after Phase 2;
+the circle-radius map layer expression must be updated accordingly before deployment.
+
 ## See Also
 
 - [Adding a New Chain to the GIS Pipeline](guide-gis-adding-a-chain.md)
