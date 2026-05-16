@@ -1337,9 +1337,10 @@ fn home_chrome(
                         div.footer-col.footer-col-ip {
                             h4.footer-col-heading { "Intellectual Property" }
                             p.footer-trademark {
-                                "PointSav Digital Systems™, Foundry™, ToteboxOS™, and related marks are "
-                                "trademarks of Woodfine Capital Projects Inc. All other trademarks are "
-                                "property of their respective owners."
+                                "PointSav™, Foundry™, ToteboxOS™, ConsoleOS™, OrchestrationOS™, and "
+                                "WorkplaceOS™ are unregistered trademarks of Woodfine Capital Projects Inc. "
+                                "WoodfineGroup™ is an unregistered trademark of Woodfine Management Corp., "
+                                "a wholly owned subsidiary of Woodfine Capital Projects Inc."
                             }
                             p.footer-license {
                                 "Content is available under "
@@ -1392,7 +1393,7 @@ fn home_chrome(
                         }
                     }
                     p.footer-copyright.footer-baseplate {
-                        "© 2011–2026 Woodfine Capital Projects Inc. · "
+                        "© 2026 Woodfine Capital Projects Inc. All rights reserved. · "
                         a href="/" { (site_title) }
                     }
                 }
@@ -2234,9 +2235,10 @@ fn wiki_chrome(
                         div.footer-col.footer-col-ip {
                             h4.footer-col-heading { "Intellectual Property" }
                             p.footer-trademark {
-                                "PointSav Digital Systems™, Foundry™, ToteboxOS™, and related marks are "
-                                "trademarks of Woodfine Capital Projects Inc. All other trademarks are "
-                                "property of their respective owners."
+                                "PointSav™, Foundry™, ToteboxOS™, ConsoleOS™, OrchestrationOS™, and "
+                                "WorkplaceOS™ are unregistered trademarks of Woodfine Capital Projects Inc. "
+                                "WoodfineGroup™ is an unregistered trademark of Woodfine Management Corp., "
+                                "a wholly owned subsidiary of Woodfine Capital Projects Inc."
                             }
                             p.footer-license {
                                 "Content is available under "
@@ -2279,7 +2281,7 @@ fn wiki_chrome(
                         }
                     }
                     p.footer-copyright.footer-baseplate {
-                        "© 2011–2026 Woodfine Capital Projects Inc. · "
+                        "© 2026 Woodfine Capital Projects Inc. All rights reserved. · "
                         a href="/" { (site_title) }
                     }
                 }
@@ -3301,9 +3303,10 @@ fn chrome(_title: &str, body: Markup, site_title: &str, user: Option<&User>, pen
                         div.footer-col.footer-col-ip {
                             h4.footer-col-heading { "Intellectual Property" }
                             p.footer-trademark {
-                                "PointSav Digital Systems™, Foundry™, ToteboxOS™, and related marks are "
-                                "trademarks of Woodfine Capital Projects Inc. All other trademarks are "
-                                "property of their respective owners."
+                                "PointSav™, Foundry™, ToteboxOS™, ConsoleOS™, OrchestrationOS™, and "
+                                "WorkplaceOS™ are unregistered trademarks of Woodfine Capital Projects Inc. "
+                                "WoodfineGroup™ is an unregistered trademark of Woodfine Management Corp., "
+                                "a wholly owned subsidiary of Woodfine Capital Projects Inc."
                             }
                             p.footer-license {
                                 "Content is available under "
@@ -3330,7 +3333,7 @@ fn chrome(_title: &str, body: Markup, site_title: &str, user: Option<&User>, pen
                         }
                     }
                     p.footer-copyright.footer-baseplate {
-                        "© 2011–2026 Woodfine Capital Projects Inc. · "
+                        "© 2026 Woodfine Capital Projects Inc. All rights reserved. · "
                         a href="/" { (site_title) }
                     }
                 }
