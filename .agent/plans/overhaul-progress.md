@@ -103,11 +103,41 @@ Bloomberg vocabulary sweep across ALL non-architecture categories. All Foundry/D
 path vocabulary removed from services/, systems/, patterns/, reference/, governance/,
 infrastructure/, design-system/, applications/, and substrate/ (EN+ES). Final grep clean.
 
+### Phase 2 final cleanup — COMPLETE (commit 769980b, Peter)
+- 11 `conventions/` internal path refs removed from published articles (agent + session)
+- 2 `X-Foundry-Module-ID` → `X-Module-ID` residuals fixed (totebox-orchestration-development.md/.es.md)
+- `comisión de Foundry` → `comisión de la plataforma` (architecture/_index.es.md)
+- `carta constitucional de Foundry` → `carta constitucional de la plataforma` (personnel-permissions.es.md)
+- Phase 2 §9.4 verification: bcsc_class CLEAN · personal names CLEAN · Foundry/Doctrine CLEAN
+- Wikilink density sample: 9/10 articles ≥3 wikilinks; sys-adr-07.md has 0 (ADR format — acceptable)
+
+### OPUS audit of content-wiki-corporate + content-wiki-projects (2026-05-15)
+Both wikis are 100% clean on Bloomberg vocabulary. Structural issues found:
+
+**content-wiki-corporate:**
+- 3 of 5 TOPICs below 3-wikilink minimum (fiduciary-data-mandate, interest-coverage-ratio, redemption-elimination)
+- index.es.md missing (bilingual obligation)
+- bcsc_class missing on index.md
+
+**content-wiki-projects:**
+- 4 broken [[wikilinks]] in tier-index-north-america.md/.es.md (co-location-index-us, co-location-index-mexico)
+- 5 broken markdown links to `(co-location-methodology.md)` (missing `topic-` prefix)
+- 5 of 17 TOPIC slugs use bare form (no `topic-` prefix) — inconsistent with 12 others
+- 12 of 19 published articles have 0 wikilinks
+- index.es.md missing; bcsc_class missing on index.md
+- Provenance blocks in country-index articles expose internal project names
+
+**service-content seeds:** Not available in this cluster's monorepo sub-clone.
+Must be audited in a project-data/project-slm session. Known issues: wiki_repo/wiki_path
+fields in topics_corporate.csv + topics_projects.csv are stale; v9 glossary terms not
+applied to service-content CSVs.
+
 ### Next — operator-designated next phase
-- Stage 6 promotion of content-wiki-documentation (all 2j commits) → Command Session
+- Stage 6 promotion of content-wiki-documentation (86 commits) → Command Session
 - Stage 6 promotion of woodfine-fleet-deployment → Command Session
-- LEGAL corrections (factory-release-engineering MIT.txt + PointSav-ARR.txt) → Command Session (ps-administrator)
-- Further overhaul phases at operator discretion
+- content-wiki-projects structural fixes (broken links, slug unification, wikilinks, index.es.md) → new session
+- content-wiki-corporate structural fixes (wikilink density, index.es.md, bcsc_class) → new session
+- service-content vocabulary/CSV audit → project-data or project-slm session
 
 ## Blockers
 - (none)
