@@ -8,21 +8,34 @@
 //! via the Compute Engine API using the workspace Service Account ADC token from
 //! the GCE metadata server.
 //!
+//! **Preemption auto-restart (B5-ext):** when `/metrics` is unreachable and we
+//! did NOT issue the stop ourselves (`stop_sent=false`), the VM was likely
+//! preempted by GCP. The monitor calls `instances.start` automatically, subject
+//! to a rolling restart budget (`SLM_YOYO_MAX_RESTARTS_PER_HOUR`, default 3)
+//! and a boot-grace window (`SLM_YOYO_RESTART_BOOT_GRACE_SEC`, default 90 s)
+//! that suppresses the next poll so we don't count a booting VM as unreachable.
+//!
 //! The monitor is spawned as a background tokio task in `main.rs` only when all
 //! four GCP env vars are set (`SLM_YOYO_GCP_PROJECT`, `SLM_YOYO_GCP_ZONE`,
 //! `SLM_YOYO_GCP_INSTANCE`, and `SLM_YOYO_ENDPOINT`). Absent any of these,
 //! `IdleMonitorConfig::from_env()` returns `None` and no task is spawned.
 //!
 //! Env vars:
-//!   SLM_YOYO_ENDPOINT        Yo-Yo base URL (also consumed by Tier B client)
-//!   SLM_YOYO_IDLE_MINUTES    idle threshold in minutes; default 30
-//!   SLM_YOYO_METRICS_KEY     Prometheus metric name for active-request count;
-//!                             default: llama_active_slots_total (llama-server);
-//!                             set to vllm:num_requests_running for vLLM
-//!   SLM_YOYO_GCP_PROJECT     GCP project id (e.g. pointsav-public)
-//!   SLM_YOYO_GCP_ZONE        GCP zone (e.g. us-west1-b)
-//!   SLM_YOYO_GCP_INSTANCE    GCP instance name (e.g. yoyo-tier-b-1)
+//!   SLM_YOYO_ENDPOINT              Yo-Yo base URL (also consumed by Tier B client)
+//!   SLM_YOYO_IDLE_MINUTES          idle threshold in minutes; default 30
+//!   SLM_YOYO_METRICS_KEY           Prometheus metric name for active-request count;
+//!                                  default: llama_active_slots_total (llama-server);
+//!                                  set to vllm:num_requests_running for vLLM
+//!   SLM_YOYO_GCP_PROJECT           GCP project id (e.g. pointsav-public)
+//!   SLM_YOYO_GCP_ZONE              GCP zone (e.g. us-west1-b)
+//!   SLM_YOYO_GCP_INSTANCE          GCP instance name (e.g. yoyo-tier-b-1)
+//!   SLM_YOYO_AUTO_RESTART          auto-restart on preemption; default true;
+//!                                  set false or 0 to disable (e.g. incident response)
+//!   SLM_YOYO_MAX_RESTARTS_PER_HOUR rolling auto-restart cap; default 3
+//!   SLM_YOYO_RESTART_BOOT_GRACE_SEC seconds to wait after a start call before
+//!                                  resuming /metrics polling; default 90
 
+use std::collections::VecDeque;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
@@ -33,6 +46,52 @@ const POLL_INTERVAL: Duration = Duration::from_secs(300); // 5 minutes
 const HTTP_TIMEOUT: Duration = Duration::from_secs(10);
 const GCP_METADATA_TOKEN_URL: &str =
     "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token";
+
+// Minimum unreachable duration before triggering a preemption-restart attempt.
+// One poll interval ensures we don't restart on a transient /health blip.
+const PREEMPTION_PROBE_THRESHOLD: Duration = Duration::from_secs(60);
+
+// ── Restart budget ────────────────────────────────────────────────────────────
+
+/// Rolling-window restart tracker. Enforces a maximum number of auto-restart
+/// attempts within a configurable time window to prevent thrashing when GCP is
+/// under sustained preemption pressure.
+#[derive(Debug, Default)]
+pub struct RestartBudget {
+    window: Duration,
+    attempts: VecDeque<Instant>,
+}
+
+impl RestartBudget {
+    pub fn new(window: Duration) -> Self {
+        Self { window, attempts: VecDeque::new() }
+    }
+
+    /// Evict stale entries, then return true and record an attempt if the cap
+    /// has not been reached. Returns false (and records nothing) when the cap
+    /// is already full within the rolling window.
+    pub fn try_consume(&mut self, cap: u32, now: Instant) -> bool {
+        // Evict attempts that have aged out of the window.
+        while let Some(&front) = self.attempts.front() {
+            if now.duration_since(front) > self.window {
+                self.attempts.pop_front();
+            } else {
+                break;
+            }
+        }
+        if cap == 0 || self.attempts.len() as u32 >= cap {
+            return false;
+        }
+        self.attempts.push_back(now);
+        true
+    }
+
+    pub fn count(&self) -> usize {
+        self.attempts.len()
+    }
+}
+
+// ── Config ────────────────────────────────────────────────────────────────────
 
 #[derive(Clone, Debug)]
 pub struct IdleMonitorConfig {
@@ -49,6 +108,16 @@ pub struct IdleMonitorConfig {
     /// poll granularity from misfiring when the model is actively serving
     /// but the poll catches an inter-request gap (slots=0).
     pub last_yoyo_dispatch: Arc<AtomicU64>,
+    /// Auto-restart on preemption detection. Default true.
+    /// Set SLM_YOYO_AUTO_RESTART=false to disable.
+    pub auto_restart_enabled: bool,
+    /// Maximum auto-restart attempts within a rolling 60-minute window.
+    /// Default 3. Prevents thrash on sustained GCP preemption pressure.
+    pub max_restarts_per_hour: u32,
+    /// Seconds to suppress polling after a successful instances.start call,
+    /// allowing the VM to boot before being counted as unreachable again.
+    /// Default 90.
+    pub restart_boot_grace: Duration,
 }
 
 impl IdleMonitorConfig {
@@ -68,6 +137,17 @@ impl IdleMonitorConfig {
         let gcp_project = std::env::var("SLM_YOYO_GCP_PROJECT").ok()?;
         let gcp_zone = std::env::var("SLM_YOYO_GCP_ZONE").ok()?;
         let gcp_instance = std::env::var("SLM_YOYO_GCP_INSTANCE").ok()?;
+        let auto_restart_enabled = std::env::var("SLM_YOYO_AUTO_RESTART")
+            .map(|v| !matches!(v.trim(), "false" | "0"))
+            .unwrap_or(true);
+        let max_restarts_per_hour: u32 = std::env::var("SLM_YOYO_MAX_RESTARTS_PER_HOUR")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(3);
+        let restart_boot_grace_secs: u64 = std::env::var("SLM_YOYO_RESTART_BOOT_GRACE_SEC")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(90);
 
         Some(Self {
             yoyo_endpoint,
@@ -78,9 +158,28 @@ impl IdleMonitorConfig {
             gcp_zone,
             gcp_instance,
             last_yoyo_dispatch: Arc::new(AtomicU64::new(0)),
+            auto_restart_enabled,
+            max_restarts_per_hour,
+            restart_boot_grace: Duration::from_secs(restart_boot_grace_secs),
         })
     }
 }
+
+// ── GCP URL helpers (extracted so unit tests can verify without network) ──────
+
+pub fn gcp_stop_url(project: &str, zone: &str, instance: &str) -> String {
+    format!(
+        "https://compute.googleapis.com/compute/v1/projects/{project}/zones/{zone}/instances/{instance}/stop"
+    )
+}
+
+pub fn gcp_start_url(project: &str, zone: &str, instance: &str) -> String {
+    format!(
+        "https://compute.googleapis.com/compute/v1/projects/{project}/zones/{zone}/instances/{instance}/start"
+    )
+}
+
+// ── Main loop ─────────────────────────────────────────────────────────────────
 
 /// Run the idle monitor loop. Call via `tokio::spawn(run_idle_monitor(config))`.
 pub async fn run_idle_monitor(config: IdleMonitorConfig) {
@@ -92,22 +191,43 @@ pub async fn run_idle_monitor(config: IdleMonitorConfig) {
     // Start the idle clock at task-spawn time so a cold VM doesn't get stopped
     // before its first request within the threshold window.
     let mut last_active = Instant::now();
-    // Guard against sending repeated stop requests for the same idle period.
+    // stop_sent doubles as the "we_stopped_it" flag: when true, an unreachable
+    // /metrics endpoint is the expected post-idle-shutdown state — do not restart.
     let mut stop_sent = false;
-    // Track consecutive unreachable polls; after 2× idle_threshold of unreachable
-    // metrics (vLLM crashed, VM hung), fire a safety stop to prevent runaway spend.
+    // Track continuous unreachable duration for the crash-guard path.
     let mut unreachable_since: Option<Instant> = None;
+    // Rolling restart budget — enforces max_restarts_per_hour.
+    let mut restart_budget = RestartBudget::new(Duration::from_secs(3600));
+    // When Some, suppress poll cycles until the deadline passes (boot grace).
+    let mut in_boot_grace_until: Option<Instant> = None;
 
     info!(
         target: "slm_doorman::idle_monitor",
         endpoint = %config.yoyo_endpoint,
         idle_threshold_secs = config.idle_threshold.as_secs(),
         gcp_instance = %config.gcp_instance,
+        auto_restart = config.auto_restart_enabled,
+        max_restarts_per_hour = config.max_restarts_per_hour,
         "Yo-Yo idle monitor started"
     );
 
     loop {
         tokio::time::sleep(POLL_INTERVAL).await;
+
+        // Boot-grace suppression: skip this poll if a recent start call means
+        // the VM is still booting. Avoids counting a booting VM as unreachable
+        // and burning restart budget immediately after a successful start.
+        if let Some(deadline) = in_boot_grace_until {
+            if Instant::now() < deadline {
+                info!(
+                    target: "slm_doorman::idle_monitor",
+                    grace_remaining_secs = deadline.saturating_duration_since(Instant::now()).as_secs(),
+                    "boot-grace window active; skipping poll"
+                );
+                continue;
+            }
+            in_boot_grace_until = None;
+        }
 
         // Incorporate dispatch-based last_active: if the HTTP router signalled
         // a Tier B dispatch more recently than the poll-based last_active,
@@ -174,44 +294,105 @@ pub async fn run_idle_monitor(config: IdleMonitorConfig) {
                 );
             }
             None => {
-                // Metrics unreachable — VM is booting, stopped, or vLLM crashed.
-                // Track continuous unreachable duration. After 2× idle_threshold,
-                // fire a safety stop: a crashed vLLM never becomes reachable again,
-                // so the normal idle path would never trigger.
+                // Metrics unreachable — VM is booting, stopped, or crashed.
+                //
+                // Two cases:
+                //   (a) stop_sent=true  — we issued the stop ourselves (idle shutdown).
+                //                         This is expected. Do nothing except the
+                //                         crash-guard when auto_restart is off.
+                //   (b) stop_sent=false — we did NOT stop it. Most likely GCP preempted
+                //                         the VM. Trigger auto-restart if enabled.
+
                 if unreachable_since.is_none() {
                     unreachable_since = Some(Instant::now());
                 }
-                let safety_threshold = config.idle_threshold * 2;
-                if !stop_sent
-                    && unreachable_since
-                        .map(|t| t.elapsed() >= safety_threshold)
-                        .unwrap_or(false)
-                {
-                    let unreachable_secs =
-                        unreachable_since.map(|t| t.elapsed().as_secs()).unwrap_or(0);
-                    warn!(
-                        target: "slm_doorman::idle_monitor",
-                        unreachable_secs,
-                        project = %config.gcp_project,
-                        zone = %config.gcp_zone,
-                        instance = %config.gcp_instance,
-                        "Yo-Yo metrics unreachable past safety threshold (crash-guard); sending stop"
-                    );
-                    match stop_gcp_instance(&client, &config).await {
-                        Ok(()) => {
-                            info!(
-                                target: "slm_doorman::idle_monitor",
-                                instance = %config.gcp_instance,
-                                "GCP stop request accepted (crash-guard)"
-                            );
-                            stop_sent = true;
-                        }
-                        Err(reason) => {
+                let unreachable_for = unreachable_since
+                    .map(|t| t.elapsed())
+                    .unwrap_or_default();
+
+                if stop_sent {
+                    // Idle-shutdown case: VM is intentionally down. Only apply
+                    // the crash-guard when auto_restart is off (otherwise the
+                    // start call IS the response to extended unreachability and
+                    // the crash-guard would race against it).
+                    if !config.auto_restart_enabled {
+                        let safety_threshold = config.idle_threshold * 2;
+                        if unreachable_for >= safety_threshold {
+                            let unreachable_secs = unreachable_for.as_secs();
                             warn!(
                                 target: "slm_doorman::idle_monitor",
-                                %reason,
-                                "GCP stop request (crash-guard) failed; will retry next cycle"
+                                unreachable_secs,
+                                project = %config.gcp_project,
+                                zone = %config.gcp_zone,
+                                instance = %config.gcp_instance,
+                                "Yo-Yo metrics unreachable past safety threshold (crash-guard); sending stop"
                             );
+                            match stop_gcp_instance(&client, &config).await {
+                                Ok(()) => {
+                                    info!(
+                                        target: "slm_doorman::idle_monitor",
+                                        instance = %config.gcp_instance,
+                                        "GCP stop request accepted (crash-guard)"
+                                    );
+                                    stop_sent = true;
+                                }
+                                Err(reason) => {
+                                    warn!(
+                                        target: "slm_doorman::idle_monitor",
+                                        %reason,
+                                        "GCP stop request (crash-guard) failed; will retry next cycle"
+                                    );
+                                }
+                            }
+                        }
+                    }
+                } else if config.auto_restart_enabled
+                    && unreachable_for >= PREEMPTION_PROBE_THRESHOLD
+                {
+                    // Preemption detected: VM is unreachable and we didn't stop it.
+                    // Attempt instances.start subject to the rolling budget.
+                    let now = Instant::now();
+                    if !restart_budget.try_consume(config.max_restarts_per_hour, now) {
+                        warn!(
+                            target: "slm_doorman::idle_monitor",
+                            attempts_in_window = restart_budget.count(),
+                            cap = config.max_restarts_per_hour,
+                            "Yo-Yo restart budget exhausted; sustained preemption pressure — operator intervention required"
+                        );
+                    } else {
+                        let attempt = restart_budget.count();
+                        warn!(
+                            target: "slm_doorman::idle_monitor",
+                            attempt,
+                            cap = config.max_restarts_per_hour,
+                            unreachable_secs = unreachable_for.as_secs(),
+                            project = %config.gcp_project,
+                            zone = %config.gcp_zone,
+                            instance = %config.gcp_instance,
+                            "Yo-Yo VM preempted; auto-restarting (attempt {}/{})",
+                            attempt, config.max_restarts_per_hour
+                        );
+                        match start_gcp_instance(&client, &config).await {
+                            Ok(()) => {
+                                info!(
+                                    target: "slm_doorman::idle_monitor",
+                                    instance = %config.gcp_instance,
+                                    boot_grace_secs = config.restart_boot_grace.as_secs(),
+                                    "GCP start request accepted; entering boot-grace window"
+                                );
+                                // Reset idle clock and unreachable window for the
+                                // freshly started VM.
+                                last_active = Instant::now();
+                                unreachable_since = None;
+                                in_boot_grace_until = Some(now + config.restart_boot_grace);
+                            }
+                            Err(reason) => {
+                                warn!(
+                                    target: "slm_doorman::idle_monitor",
+                                    %reason,
+                                    "GCP instances.start failed; will retry next cycle (budget slot consumed)"
+                                );
+                            }
                         }
                     }
                 }
@@ -220,9 +401,15 @@ pub async fn run_idle_monitor(config: IdleMonitorConfig) {
     }
 }
 
+// ── Metrics parsing ───────────────────────────────────────────────────────────
+
 /// Poll the Yo-Yo `/metrics` endpoint and extract the active-request counter
 /// named by `metrics_key`. Returns `None` on network error, non-200 response,
 /// or missing metric.
+///
+/// Uses exact token matching (`"<key> "` prefix) to avoid false positives from
+/// metrics whose names share the key as a prefix
+/// (e.g. `llama_active_slots_total_avg` must not match key `llama_active_slots_total`).
 async fn poll_active_slots(
     client: &reqwest::Client,
     endpoint: &str,
@@ -239,15 +426,28 @@ async fn poll_active_slots(
         return None;
     }
     let text = resp.text().await.ok()?;
+    parse_metric(&text, metrics_key)
+}
+
+/// Extract a Prometheus gauge value from a metrics text body.
+/// Skips `#`-prefixed comment/help lines. Matches only lines where the metric
+/// name is followed immediately by a space (exact token boundary), preventing
+/// prefix collisions (e.g. `llama_active_slots_total_avg` vs `llama_active_slots_total`).
+pub fn parse_metric(text: &str, metrics_key: &str) -> Option<u64> {
+    let prefix = format!("{} ", metrics_key);
     for line in text.lines() {
-        if line.starts_with(metrics_key) && !line.starts_with('#') {
-            if let Some(val) = line.splitn(2, ' ').nth(1) {
-                return val.trim().parse::<f64>().ok().map(|f| f as u64);
-            }
+        if line.starts_with('#') {
+            continue;
+        }
+        if line.starts_with(&prefix) {
+            let val = line[prefix.len()..].trim();
+            return val.parse::<f64>().ok().map(|f| f as u64);
         }
     }
     None
 }
+
+// ── GCP API helpers ───────────────────────────────────────────────────────────
 
 /// Fetch an ADC bearer token from the GCE metadata server.
 async fn fetch_gcp_adc_token(client: &reqwest::Client) -> Result<String, String> {
@@ -277,13 +477,8 @@ async fn stop_gcp_instance(
     config: &IdleMonitorConfig,
 ) -> Result<(), String> {
     let token = fetch_gcp_adc_token(client).await?;
-    let url = format!(
-        "https://compute.googleapis.com/compute/v1/projects/{}/zones/{}/instances/{}/stop",
-        config.gcp_project, config.gcp_zone, config.gcp_instance
-    );
+    let url = gcp_stop_url(&config.gcp_project, &config.gcp_zone, &config.gcp_instance);
     // GCP Compute Engine API requires Content-Length: 0 on empty-body POSTs.
-    // reqwest may use chunked transfer encoding for .body(""), which the API
-    // rejects with HTTP 411. Setting the header explicitly is the safe path.
     let resp = client
         .post(&url)
         .bearer_auth(&token)
@@ -299,6 +494,31 @@ async fn stop_gcp_instance(
     }
 }
 
+/// POST `instances.start` to the GCP Compute Engine API.
+/// Idempotent: GCP returns success when called on an already-running VM.
+async fn start_gcp_instance(
+    client: &reqwest::Client,
+    config: &IdleMonitorConfig,
+) -> Result<(), String> {
+    let token = fetch_gcp_adc_token(client).await?;
+    let url = gcp_start_url(&config.gcp_project, &config.gcp_zone, &config.gcp_instance);
+    let resp = client
+        .post(&url)
+        .bearer_auth(&token)
+        .header(reqwest::header::CONTENT_LENGTH, "0")
+        .body(reqwest::Body::from(""))
+        .send()
+        .await
+        .map_err(|e| format!("GCP API request failed: {e}"))?;
+    if resp.status().is_success() {
+        Ok(())
+    } else {
+        Err(format!("GCP instances.start returned HTTP {}", resp.status()))
+    }
+}
+
+// ── Tests ─────────────────────────────────────────────────────────────────────
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -310,15 +530,14 @@ mod tests {
         ENV_LOCK.get_or_init(|| Mutex::new(()))
     }
 
+    // ── IdleMonitorConfig::from_env ───────────────────────────────────────────
+
     #[test]
     fn from_env_returns_none_without_gcp_vars() {
         let _g = env_lock().lock().unwrap();
-        // All GCP env vars unset in test environment — should return None.
-        // (SLM_YOYO_ENDPOINT may or may not be set; we rely on GCP vars being absent.)
         std::env::remove_var("SLM_YOYO_GCP_PROJECT");
         std::env::remove_var("SLM_YOYO_GCP_ZONE");
         std::env::remove_var("SLM_YOYO_GCP_INSTANCE");
-        // Even if endpoint is set, missing GCP vars → None
         std::env::set_var("SLM_YOYO_ENDPOINT", "http://127.0.0.1:8080");
         let result = IdleMonitorConfig::from_env();
         assert!(result.is_none());
@@ -363,19 +582,216 @@ mod tests {
     }
 
     #[test]
-    fn poll_active_slots_parses_prometheus_line() {
-        // Simulate the parse logic directly — no network call needed.
-        let metrics_text = "# HELP llama_active_slots_total Active slots\n\
-                            # TYPE llama_active_slots_total gauge\n\
-                            llama_active_slots_total 3\n";
-        let mut result: Option<u64> = None;
-        for line in metrics_text.lines() {
-            if line.starts_with("llama_active_slots_total") && !line.starts_with('#') {
-                if let Some(val) = line.splitn(2, ' ').nth(1) {
-                    result = val.trim().parse::<f64>().ok().map(|f| f as u64);
-                }
-            }
-        }
-        assert_eq!(result, Some(3));
+    fn from_env_auto_restart_defaults_to_true() {
+        let _g = env_lock().lock().unwrap();
+        std::env::set_var("SLM_YOYO_ENDPOINT", "http://1.2.3.4:9443");
+        std::env::set_var("SLM_YOYO_GCP_PROJECT", "proj");
+        std::env::set_var("SLM_YOYO_GCP_ZONE", "us-west1-a");
+        std::env::set_var("SLM_YOYO_GCP_INSTANCE", "inst");
+        std::env::remove_var("SLM_YOYO_AUTO_RESTART");
+        let cfg = IdleMonitorConfig::from_env().unwrap();
+        assert!(cfg.auto_restart_enabled);
+        std::env::remove_var("SLM_YOYO_ENDPOINT");
+        std::env::remove_var("SLM_YOYO_GCP_PROJECT");
+        std::env::remove_var("SLM_YOYO_GCP_ZONE");
+        std::env::remove_var("SLM_YOYO_GCP_INSTANCE");
+    }
+
+    #[test]
+    fn from_env_auto_restart_disabled_by_zero() {
+        let _g = env_lock().lock().unwrap();
+        std::env::set_var("SLM_YOYO_ENDPOINT", "http://1.2.3.4:9443");
+        std::env::set_var("SLM_YOYO_GCP_PROJECT", "proj");
+        std::env::set_var("SLM_YOYO_GCP_ZONE", "us-west1-a");
+        std::env::set_var("SLM_YOYO_GCP_INSTANCE", "inst");
+        std::env::set_var("SLM_YOYO_AUTO_RESTART", "0");
+        let cfg = IdleMonitorConfig::from_env().unwrap();
+        assert!(!cfg.auto_restart_enabled);
+        std::env::remove_var("SLM_YOYO_ENDPOINT");
+        std::env::remove_var("SLM_YOYO_GCP_PROJECT");
+        std::env::remove_var("SLM_YOYO_GCP_ZONE");
+        std::env::remove_var("SLM_YOYO_GCP_INSTANCE");
+        std::env::remove_var("SLM_YOYO_AUTO_RESTART");
+    }
+
+    #[test]
+    fn from_env_auto_restart_disabled_by_false() {
+        let _g = env_lock().lock().unwrap();
+        std::env::set_var("SLM_YOYO_ENDPOINT", "http://1.2.3.4:9443");
+        std::env::set_var("SLM_YOYO_GCP_PROJECT", "proj");
+        std::env::set_var("SLM_YOYO_GCP_ZONE", "us-west1-a");
+        std::env::set_var("SLM_YOYO_GCP_INSTANCE", "inst");
+        std::env::set_var("SLM_YOYO_AUTO_RESTART", "false");
+        let cfg = IdleMonitorConfig::from_env().unwrap();
+        assert!(!cfg.auto_restart_enabled);
+        std::env::remove_var("SLM_YOYO_ENDPOINT");
+        std::env::remove_var("SLM_YOYO_GCP_PROJECT");
+        std::env::remove_var("SLM_YOYO_GCP_ZONE");
+        std::env::remove_var("SLM_YOYO_GCP_INSTANCE");
+        std::env::remove_var("SLM_YOYO_AUTO_RESTART");
+    }
+
+    #[test]
+    fn from_env_max_restarts_per_hour_defaults_to_three() {
+        let _g = env_lock().lock().unwrap();
+        std::env::set_var("SLM_YOYO_ENDPOINT", "http://1.2.3.4:9443");
+        std::env::set_var("SLM_YOYO_GCP_PROJECT", "proj");
+        std::env::set_var("SLM_YOYO_GCP_ZONE", "us-west1-a");
+        std::env::set_var("SLM_YOYO_GCP_INSTANCE", "inst");
+        std::env::remove_var("SLM_YOYO_MAX_RESTARTS_PER_HOUR");
+        let cfg = IdleMonitorConfig::from_env().unwrap();
+        assert_eq!(cfg.max_restarts_per_hour, 3);
+        std::env::remove_var("SLM_YOYO_ENDPOINT");
+        std::env::remove_var("SLM_YOYO_GCP_PROJECT");
+        std::env::remove_var("SLM_YOYO_GCP_ZONE");
+        std::env::remove_var("SLM_YOYO_GCP_INSTANCE");
+    }
+
+    #[test]
+    fn from_env_max_restarts_per_hour_parses_override() {
+        let _g = env_lock().lock().unwrap();
+        std::env::set_var("SLM_YOYO_ENDPOINT", "http://1.2.3.4:9443");
+        std::env::set_var("SLM_YOYO_GCP_PROJECT", "proj");
+        std::env::set_var("SLM_YOYO_GCP_ZONE", "us-west1-a");
+        std::env::set_var("SLM_YOYO_GCP_INSTANCE", "inst");
+        std::env::set_var("SLM_YOYO_MAX_RESTARTS_PER_HOUR", "5");
+        let cfg = IdleMonitorConfig::from_env().unwrap();
+        assert_eq!(cfg.max_restarts_per_hour, 5);
+        std::env::remove_var("SLM_YOYO_ENDPOINT");
+        std::env::remove_var("SLM_YOYO_GCP_PROJECT");
+        std::env::remove_var("SLM_YOYO_GCP_ZONE");
+        std::env::remove_var("SLM_YOYO_GCP_INSTANCE");
+        std::env::remove_var("SLM_YOYO_MAX_RESTARTS_PER_HOUR");
+    }
+
+    #[test]
+    fn from_env_restart_boot_grace_defaults_to_90() {
+        let _g = env_lock().lock().unwrap();
+        std::env::set_var("SLM_YOYO_ENDPOINT", "http://1.2.3.4:9443");
+        std::env::set_var("SLM_YOYO_GCP_PROJECT", "proj");
+        std::env::set_var("SLM_YOYO_GCP_ZONE", "us-west1-a");
+        std::env::set_var("SLM_YOYO_GCP_INSTANCE", "inst");
+        std::env::remove_var("SLM_YOYO_RESTART_BOOT_GRACE_SEC");
+        let cfg = IdleMonitorConfig::from_env().unwrap();
+        assert_eq!(cfg.restart_boot_grace, Duration::from_secs(90));
+        std::env::remove_var("SLM_YOYO_ENDPOINT");
+        std::env::remove_var("SLM_YOYO_GCP_PROJECT");
+        std::env::remove_var("SLM_YOYO_GCP_ZONE");
+        std::env::remove_var("SLM_YOYO_GCP_INSTANCE");
+    }
+
+    // ── GCP URL construction ──────────────────────────────────────────────────
+
+    #[test]
+    fn gcp_stop_url_is_well_formed() {
+        let url = gcp_stop_url("my-project", "europe-west4-a", "yoyo-tier-b-1");
+        assert_eq!(
+            url,
+            "https://compute.googleapis.com/compute/v1/projects/my-project/zones/europe-west4-a/instances/yoyo-tier-b-1/stop"
+        );
+    }
+
+    #[test]
+    fn gcp_start_url_is_well_formed() {
+        let url = gcp_start_url("my-project", "europe-west4-a", "yoyo-tier-b-1");
+        assert_eq!(
+            url,
+            "https://compute.googleapis.com/compute/v1/projects/my-project/zones/europe-west4-a/instances/yoyo-tier-b-1/start"
+        );
+    }
+
+    // ── parse_metric ─────────────────────────────────────────────────────────
+
+    #[test]
+    fn parse_metric_extracts_integer_value() {
+        let text = "# HELP llama_active_slots_total Active slots\n\
+                    # TYPE llama_active_slots_total gauge\n\
+                    llama_active_slots_total 3\n";
+        assert_eq!(parse_metric(text, "llama_active_slots_total"), Some(3));
+    }
+
+    #[test]
+    fn parse_metric_extracts_float_value() {
+        let text = "llama_active_slots_total 2.0\n";
+        assert_eq!(parse_metric(text, "llama_active_slots_total"), Some(2));
+    }
+
+    #[test]
+    fn parse_metric_extracts_zero() {
+        let text = "llama_active_slots_total 0.0\n";
+        assert_eq!(parse_metric(text, "llama_active_slots_total"), Some(0));
+    }
+
+    #[test]
+    fn parse_metric_skips_help_and_type_comments() {
+        let text = "# HELP llama_active_slots_total Active slots\n\
+                    # TYPE llama_active_slots_total gauge\n\
+                    llama_active_slots_total 5\n";
+        assert_eq!(parse_metric(text, "llama_active_slots_total"), Some(5));
+    }
+
+    #[test]
+    fn parse_metric_returns_none_for_missing_key() {
+        let text = "other_metric 7\n";
+        assert_eq!(parse_metric(text, "llama_active_slots_total"), None);
+    }
+
+    #[test]
+    fn parse_metric_avoids_prefix_collision() {
+        // "llama_active_slots_total_avg" must NOT match key "llama_active_slots_total"
+        // because exact-token matching requires the key to be followed by a space.
+        let text = "llama_active_slots_total_avg 99\n\
+                    llama_active_slots_total 4\n";
+        assert_eq!(parse_metric(text, "llama_active_slots_total"), Some(4));
+    }
+
+    #[test]
+    fn parse_metric_returns_none_for_empty_text() {
+        assert_eq!(parse_metric("", "llama_active_slots_total"), None);
+    }
+
+    // ── RestartBudget ─────────────────────────────────────────────────────────
+
+    #[test]
+    fn restart_budget_admits_up_to_cap() {
+        let mut budget = RestartBudget::new(Duration::from_secs(3600));
+        let now = Instant::now();
+        assert!(budget.try_consume(3, now));
+        assert!(budget.try_consume(3, now));
+        assert!(budget.try_consume(3, now));
+        assert_eq!(budget.count(), 3);
+    }
+
+    #[test]
+    fn restart_budget_rejects_over_cap() {
+        let mut budget = RestartBudget::new(Duration::from_secs(3600));
+        let now = Instant::now();
+        budget.try_consume(3, now);
+        budget.try_consume(3, now);
+        budget.try_consume(3, now);
+        // 4th attempt within the window must be rejected
+        assert!(!budget.try_consume(3, now));
+        assert_eq!(budget.count(), 3); // count unchanged
+    }
+
+    #[test]
+    fn restart_budget_evicts_stale_entries() {
+        let mut budget = RestartBudget::new(Duration::from_secs(10));
+        // Record two attempts with a timestamp 20s in the past (outside window).
+        let old = Instant::now() - Duration::from_secs(20);
+        budget.try_consume(3, old);
+        budget.try_consume(3, old);
+        assert_eq!(budget.count(), 2);
+        // Now attempt at "now" — the two old entries should be evicted, so the cap is not hit.
+        let now = Instant::now();
+        assert!(budget.try_consume(3, now));
+        assert_eq!(budget.count(), 1); // only the fresh attempt remains
+    }
+
+    #[test]
+    fn restart_budget_zero_cap_always_rejects() {
+        let mut budget = RestartBudget::new(Duration::from_secs(3600));
+        assert!(!budget.try_consume(0, Instant::now()));
+        assert_eq!(budget.count(), 0);
     }
 }
