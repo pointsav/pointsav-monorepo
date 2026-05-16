@@ -1,6 +1,6 @@
 ---
 schema: foundry-draft-v1
-state: asset-staged-pending-master-access
+state: asset-committed-6d58f07
 language_protocol: ASSET
 originating_cluster: project-design
 target_repo: pointsav/pointsav-media-assets

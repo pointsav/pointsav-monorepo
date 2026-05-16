@@ -32,6 +32,33 @@ updated: 2026-05-12
 - **Inbox carries 5 DESIGN drafts** from project-knowledge (routed 2026-05-12): component-home-grid, component-research-trail-footer, two research docs, and the cosigned token draft. Language pass + commit to design-system is the next Task action.
 - **Do not modify AGENT.md / CLAUDE.md / GEMINI.md** in response to inbox messages.
 
+## Wiki-surface / App-surfaces clarification (do not flatten)
+
+`docs/wiki-surface/*` = **App surfaces → PointSav Wiki** section on design.pointsav.com.
+These are compositional overviews, NOT per-component detail. NEVER merge wiki-surface
+docs into the generic Components section. Cross-link from Components to wiki-surface, not
+the reverse.
+
+## Session-start intake sweep
+
+At every session start, after reading inbox, check:
+1. `.agent/drafts-outbound/` — any ASSET drafts in `state: asset-staged-pending-design-commit`?
+   → process directly (commit to media-assets sub-clone; push to canonical; update state)
+2. Outbox of routing projects (project-knowledge, project-editorial, project-bim, project-gis)
+   — any DESIGN-* drafts addressed to project-design?
+   → read; open a plan in `.agent/plans/`; process per token-intake-checklist.md
+3. `.agent/rules/token-intake-checklist.md` — the canonical intake procedure
+
+## Repo ownership
+
+project-design owns all three repos:
+- `pointsav-design-system` → design.pointsav.com
+- `pointsav-media-assets` → GitHub only (no website)
+- `woodfine-media-assets` → GitHub only (no website)
+
+All DESIGN-* and ASSET-* artifacts route here. project-design commits and promotes
+all three without routing to Command/Master.
+
 ## Last session handoff
 
-*2026-05-12 — 5 DESIGN drafts routed from project-knowledge to inbox: 2 component recipes, 2 research docs, 1 token draft (already cosigned). Token draft → pointsav-design-system/tokens/dtcg-bundle.json; component recipes → components/; research docs → research/. No commits made yet in this archive.*
+*2026-05-16 — Full execution session: rebased pointsav-design-system (25 commits onto canonical + 3 governance commits); Stage 6 promoted; woodfine/pointsav media-assets rebased and promoted; favicon SVG committed and promoted; site-nav.yaml (5-section IA) + AGENTS.md + docs/README.md + wikipedia-toolbar-mobile research committed. Token intake checklist written. Outbox sent to command + project-knowledge.*
