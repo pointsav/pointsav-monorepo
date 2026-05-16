@@ -37,6 +37,7 @@
 #                       Doorman idle monitor (30 min idle) is the earlier-exit path;
 #                       whichever fires first wins. Format: 1h, 90m, or bare seconds.
 set -uo pipefail
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 PROJECT="${SLM_YOYO_GCP_PROJECT:-woodfine-node-gcp-free}"
 PRIMARY_ZONE="${SLM_YOYO_GCP_ZONE:-europe-west4-a}"
