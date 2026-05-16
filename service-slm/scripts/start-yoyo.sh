@@ -277,7 +277,15 @@ update_doorman_env() {
         return 0
     fi
 
-    sed -i "s|^SLM_YOYO_GCP_ZONE=.*|SLM_YOYO_GCP_ZONE=${new_zone}|" "${DOORMAN_ENV}"
+    # SLM_YOYO_GCP_ZONE — use grep+sed||append; bare sed is silent if key absent.
+    if grep -q "^SLM_YOYO_GCP_ZONE=" "${DOORMAN_ENV}"; then
+        sed -i "s|^SLM_YOYO_GCP_ZONE=.*|SLM_YOYO_GCP_ZONE=${new_zone}|" "${DOORMAN_ENV}"
+    else
+        echo "SLM_YOYO_GCP_ZONE=${new_zone}" >> "${DOORMAN_ENV}"
+    fi
+    if ! grep -q "^SLM_YOYO_GCP_ZONE=${new_zone}$" "${DOORMAN_ENV}"; then
+        log "ERROR: failed to write SLM_YOYO_GCP_ZONE to ${DOORMAN_ENV}"; return 1
+    fi
     echo "Updated SLM_YOYO_GCP_ZONE=${new_zone} in ${DOORMAN_ENV}."
 
     if [[ -n "${new_endpoint}" ]]; then
@@ -285,6 +293,9 @@ update_doorman_env() {
             sed -i "s|^SLM_YOYO_ENDPOINT=.*|SLM_YOYO_ENDPOINT=${new_endpoint}|" "${DOORMAN_ENV}"
         else
             echo "SLM_YOYO_ENDPOINT=${new_endpoint}" >> "${DOORMAN_ENV}"
+        fi
+        if ! grep -q "^SLM_YOYO_ENDPOINT=${new_endpoint}$" "${DOORMAN_ENV}"; then
+            log "ERROR: failed to write SLM_YOYO_ENDPOINT to ${DOORMAN_ENV}"; return 1
         fi
         echo "Updated SLM_YOYO_ENDPOINT=${new_endpoint} in ${DOORMAN_ENV}."
     fi
@@ -294,6 +305,9 @@ update_doorman_env() {
             sed -i "s|^SLM_YOYO_WEIGHTS_SNAPSHOT=.*|SLM_YOYO_WEIGHTS_SNAPSHOT=${WEIGHTS_SNAPSHOT}|" "${DOORMAN_ENV}"
         else
             echo "SLM_YOYO_WEIGHTS_SNAPSHOT=${WEIGHTS_SNAPSHOT}" >> "${DOORMAN_ENV}"
+        fi
+        if ! grep -q "^SLM_YOYO_WEIGHTS_SNAPSHOT=${WEIGHTS_SNAPSHOT}$" "${DOORMAN_ENV}"; then
+            log "ERROR: failed to write SLM_YOYO_WEIGHTS_SNAPSHOT to ${DOORMAN_ENV}"; return 1
         fi
         echo "Updated SLM_YOYO_WEIGHTS_SNAPSHOT=${WEIGHTS_SNAPSHOT} in ${DOORMAN_ENV}."
     fi
