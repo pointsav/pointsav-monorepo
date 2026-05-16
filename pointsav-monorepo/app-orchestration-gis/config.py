@@ -21,7 +21,8 @@ WORK_DIR          = Path(__file__).parent / "work"
 # Home Depot/Leroy Merlin/B&Q etc. = Hardware (unchanged set).
 
 # General-merchandise + grocery hypermarkets (daily-shopping format).
-# Phase 5: carrefour-hypermarket-fr DONE (493 stores, Q217599, 2026-05-16). Phase 6: auchan-fr, leclerc-fr, edeka-de.
+# Phase 5: carrefour-hypermarket-fr DONE (493 stores, Q217599, 2026-05-16).
+# Phase 6: auchan-fr, leclerc-fr, ecenter-de, marktkauf-de DONE 2026-05-16.
 ALPHA_HYPERMARKET = {
     "NA": {
         # Walmart: Fortune #1 — dominant NA hypermarket
@@ -42,6 +43,12 @@ ALPHA_HYPERMARKET = {
         "bilka-dk", "obs-coop-no", "hagkaup-is", "k-citymarket-fi", "prisma-fi",
         # Carrefour FR: hypermarket-only variant (493 stores, Q217599) — Phase 5 2026-05-16
         "carrefour-hypermarket-fr",
+        # Auchan FR: hypermarket-only (~130 stores, Q758603) — Phase 6 2026-05-16
+        "auchan-fr",
+        # E.Leclerc FR: dominant French hypermarket cooperative (~720 stores, Q1273376) — Phase 6 2026-05-16
+        "leclerc-fr",
+        # Edeka hypermarket formats DE: E center (~290, Q1101048) + Marktkauf (~310, Q1524300) — Phase 6 2026-05-16
+        "ecenter-de", "marktkauf-de",
     }
 }
 
@@ -315,7 +322,9 @@ ANCHOR_DISPLAY_NAMES: dict = {
     "carrefour-hypermarket-es": "Carrefour", "carrefour-hypermarket-it": "Carrefour",
     "carrefour-hypermarket-pl": "Carrefour", "carrefour-hypermarket-fr": "Carrefour",
     "alcampo-es": "Alcampo", "leclerc-es": "E.Leclerc", "leclerc-pl": "E.Leclerc",
-    "auchan-pl": "Auchan",
+    "auchan-pl": "Auchan", "auchan-fr": "Auchan",
+    "leclerc-fr": "E.Leclerc",
+    "ecenter-de": "E center", "marktkauf-de": "Marktkauf",
     "ipercoop-it": "Ipercoop", "iper-it": "Iper", "bennet-it": "Bennet",
     "bilka-dk": "Bilka", "obs-coop-no": "OBS Coop",
     "k-citymarket-fi": "K-Citymarket", "hagkaup-is": "Hagkaup",
