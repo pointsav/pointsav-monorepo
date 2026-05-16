@@ -1,2 +1,169 @@
 topic_id,title,domain,wiki_repo,wiki_path,active_state
 topic-doorman-protocol,Doorman Protocol,documentation,content-wiki-documentation,architecture/doorman-protocol.md,active
+app-console-input,App Console Input,documentation,content-wiki-documentation,applications/app-console-input.md,active
+app-mediakit-knowledge,App Mediakit Knowledge,documentation,content-wiki-documentation,applications/app-mediakit-knowledge.md,active
+app-mediakit-marketing,App Mediakit Marketing,documentation,content-wiki-documentation,applications/app-mediakit-marketing.md,active
+app-orchestration-gis,App Orchestration Gis,documentation,content-wiki-documentation,applications/app-orchestration-gis.md,active
+bim-and-real-property-surfaces,Bim And Real Property Surfaces,documentation,content-wiki-documentation,applications/bim-and-real-property-surfaces.md,active
+location-intelligence-platform,Location Intelligence Platform,documentation,content-wiki-documentation,applications/location-intelligence-platform.md,active
+3-layer-stack,3 Layer Stack,documentation,content-wiki-documentation,architecture/3-layer-stack.md,active
+3d-asset-tokens,3d Asset Tokens,documentation,content-wiki-documentation,architecture/3d-asset-tokens.md,active
+architecture,Architecture,documentation,content-wiki-documentation,architecture/architecture.md,active
+building-design-system-bim,Building Design System Bim,documentation,content-wiki-documentation,architecture/building-design-system-bim.md,active
+capability-based-security,Capability Based Security,documentation,content-wiki-documentation,architecture/capability-based-security.md,active
+city-code-as-composable-geometry,City Code As Composable Geometry,documentation,content-wiki-documentation,architecture/city-code-as-composable-geometry.md,active
+co-location-methodology,Co Location Methodology,documentation,content-wiki-documentation,architecture/co-location-methodology.md,active
+collab-via-passthrough-relay,Collab Via Passthrough Relay,documentation,content-wiki-documentation,architecture/collab-via-passthrough-relay.md,active
+crypto-attestation,Crypto Attestation,documentation,content-wiki-documentation,architecture/crypto-attestation.md,active
+cryptographic-ledgers,Cryptographic Ledgers,documentation,content-wiki-documentation,architecture/cryptographic-ledgers.md,active
+customer-hostability,Customer Hostability,documentation,content-wiki-documentation,architecture/customer-hostability.md,active
+data-sovereignty-telemetry,Data Sovereignty Telemetry,documentation,content-wiki-documentation,architecture/data-sovereignty-telemetry.md,active
+decode-time-constraints,Decode Time Constraints,documentation,content-wiki-documentation,architecture/decode-time-constraints.md,active
+development-regions,Development Regions,documentation,content-wiki-documentation,architecture/development-regions.md,active
+diode-standard,Diode Standard,documentation,content-wiki-documentation,architecture/diode-standard.md,active
+direct-payment-settlement,Direct Payment Settlement,documentation,content-wiki-documentation,architecture/direct-payment-settlement.md,active
+economic-model,Economic Model,documentation,content-wiki-documentation,architecture/economic-model.md,active
+five-stage-supply-chain,Five Stage Supply Chain,documentation,content-wiki-documentation,architecture/five-stage-supply-chain.md,active
+flat-file-bim-leapfrog,Flat File Bim Leapfrog,documentation,content-wiki-documentation,architecture/flat-file-bim-leapfrog.md,active
+foundry-doctrine-architecture,Foundry Doctrine Architecture,documentation,content-wiki-documentation,architecture/foundry-doctrine-architecture.md,active
+foundry-doctrine-overview,Foundry Doctrine Overview,documentation,content-wiki-documentation,architecture/foundry-doctrine-overview.md,active
+identity-ledger-schema-design,Identity Ledger Schema Design,documentation,content-wiki-documentation,architecture/identity-ledger-schema-design.md,active
+leapfrog-2030-architecture,Leapfrog 2030 Architecture,documentation,content-wiki-documentation,architecture/leapfrog-2030-architecture.md,active
+location-intelligence-strategy,Location Intelligence Strategy,documentation,content-wiki-documentation,architecture/location-intelligence-strategy.md,active
+machine-based-auth,Machine Based Auth,documentation,content-wiki-documentation,architecture/machine-based-auth.md,active
+personnel-permissions,Personnel Permissions,documentation,content-wiki-documentation,architecture/personnel-permissions.md,active
+poi-data-schema,Poi Data Schema,documentation,content-wiki-documentation,architecture/poi-data-schema.md,active
+pointsav-llm,Pointsav Llm,documentation,content-wiki-documentation,architecture/pointsav-llm.md,active
+pointsav-overview,Pointsav Overview,documentation,content-wiki-documentation,architecture/pointsav-overview.md,active
+six-tier-sovereignty-matrix,Six Tier Sovereignty Matrix,documentation,content-wiki-documentation,architecture/six-tier-sovereignty-matrix.md,active
+slm-stack-architecture,Slm Stack Architecture,documentation,content-wiki-documentation,architecture/slm-stack-architecture.md,active
+sovereign-ai-routing,Sovereign Ai Routing,documentation,content-wiki-documentation,architecture/sovereign-ai-routing.md,active
+three-layer-architecture,Three Layer Architecture,documentation,content-wiki-documentation,architecture/three-layer-architecture.md,active
+three-ring-architecture,Three Ring Architecture,documentation,content-wiki-documentation,architecture/three-ring-architecture.md,active
+topic-app-mediakit-knowledge,Clone the monorepo,documentation,content-wiki-documentation,architecture/topic-app-mediakit-knowledge.md,active
+totebox-orchestration-development,Totebox Orchestration Development,documentation,content-wiki-documentation,architecture/totebox-orchestration-development.md,active
+totebox-session,Totebox Session,documentation,content-wiki-documentation,architecture/totebox-session.md,active
+verification-surveyor,Verification Surveyor,documentation,content-wiki-documentation,architecture/verification-surveyor.md,active
+vertical-seed-packs-marketplace,Vertical Seed Packs Marketplace,documentation,content-wiki-documentation,architecture/vertical-seed-packs-marketplace.md,active
+zero-container-inference,Zero Container Inference,documentation,content-wiki-documentation,architecture/zero-container-inference.md,active
+brand-family-swatch,Brand Family Swatch,documentation,content-wiki-documentation,design-system/brand-family-swatch.md,active
+brand-typography,Brand Typography,documentation,content-wiki-documentation,design-system/brand-typography.md,active
+design-philosophy,Design Philosophy,documentation,content-wiki-documentation,design-system/design-philosophy.md,active
+design-primitive-vocabulary,Design Primitive Vocabulary,documentation,content-wiki-documentation,design-system/design-primitive-vocabulary.md,active
+anti-homogenization-discipline,Anti Homogenization Discipline,documentation,content-wiki-documentation,governance/anti-homogenization-discipline.md,active
+api-key-boundary-discipline,Api Key Boundary Discipline,documentation,content-wiki-documentation,governance/api-key-boundary-discipline.md,active
+architecture-decisions,Architecture Decisions,documentation,content-wiki-documentation,governance/architecture-decisions.md,active
+bcsc-disclosure-posture,Bcsc Disclosure Posture,documentation,content-wiki-documentation,governance/bcsc-disclosure-posture.md,active
+canadian-simple-copyright,Canadian Simple Copyright,documentation,content-wiki-documentation,governance/canadian-simple-copyright.md,active
+compliance-and-continuous-disclosure,Compliance And Continuous Disclosure,documentation,content-wiki-documentation,governance/compliance-and-continuous-disclosure.md,active
+contributor-model,Contributor Model,documentation,content-wiki-documentation,governance/contributor-model.md,active
+favicon-matrix,Favicon Matrix,documentation,content-wiki-documentation,governance/favicon-matrix.md,active
+legal-and-ip-structure,Legal And Ip Structure,documentation,content-wiki-documentation,governance/legal-and-ip-structure.md,active
+moonshot-initiatives,Moonshot Initiatives,documentation,content-wiki-documentation,governance/moonshot-initiatives.md,active
+ontological-governance,Ontological Governance,documentation,content-wiki-documentation,governance/ontological-governance.md,active
+procurement-overview,Procurement Overview,documentation,content-wiki-documentation,governance/procurement-overview.md,active
+security-overview,Security Overview,documentation,content-wiki-documentation,governance/security-overview.md,active
+sovereign-airlock-doctrine,Sovereign Airlock Doctrine,documentation,content-wiki-documentation,governance/sovereign-airlock-doctrine.md,active
+sovereign-replacement-initiative,Sovereign Replacement Initiative,documentation,content-wiki-documentation,governance/sovereign-replacement-initiative.md,active
+data-vault-bookkeeping-substrate,Data Vault Bookkeeping Substrate,documentation,content-wiki-documentation,infrastructure/data-vault-bookkeeping-substrate.md,active
+edge-deployment,Edge Deployment,documentation,content-wiki-documentation,infrastructure/edge-deployment.md,active
+sovereign-mesh,Sovereign Mesh,documentation,content-wiki-documentation,infrastructure/sovereign-mesh.md,active
+sovereign-telemetry,Sovereign Telemetry,documentation,content-wiki-documentation,infrastructure/sovereign-telemetry.md,active
+storage,Storage,documentation,content-wiki-documentation,infrastructure/storage.md,active
+telemetry-architecture,Telemetry Architecture,documentation,content-wiki-documentation,infrastructure/telemetry-architecture.md,active
+tier-c-key-wiring,Tier C Key Wiring,documentation,content-wiki-documentation,infrastructure/tier-c-key-wiring.md,active
+worm-ledger-architecture,Worm Ledger Architecture,documentation,content-wiki-documentation,infrastructure/worm-ledger-architecture.md,active
+worm-ledger-design,Worm Ledger Design,documentation,content-wiki-documentation,infrastructure/worm-ledger-design.md,active
+worm-ledger-storage-architecture,Worm Ledger Storage Architecture,documentation,content-wiki-documentation,infrastructure/worm-ledger-storage-architecture.md,active
+collab-via-passthrough-relay,Collab Via Passthrough Relay,documentation,content-wiki-documentation,patterns/collab-via-passthrough-relay.md,active
+customer-first-ordering,Customer First Ordering,documentation,content-wiki-documentation,patterns/customer-first-ordering.md,active
+deployment-patterns,Deployment Patterns,documentation,content-wiki-documentation,patterns/deployment-patterns.md,active
+knowledge-wiki-leapfrog-architecture,Knowledge Wiki Leapfrog Architecture,documentation,content-wiki-documentation,patterns/knowledge-wiki-leapfrog-architecture.md,active
+location-intelligence-ux,Location Intelligence Ux,documentation,content-wiki-documentation,patterns/location-intelligence-ux.md,active
+model-tier-discipline,Model Tier Discipline,documentation,content-wiki-documentation,patterns/model-tier-discipline.md,active
+pairing-as-permission,Pairing As Permission,documentation,content-wiki-documentation,patterns/pairing-as-permission.md,active
+source-of-truth-inversion,Source Of Truth Inversion,documentation,content-wiki-documentation,patterns/source-of-truth-inversion.md,active
+zero-container-runtime,Zero Container Runtime,documentation,content-wiki-documentation,patterns/zero-container-runtime.md,active
+zero-execution-routing,Zero Execution Routing,documentation,content-wiki-documentation,patterns/zero-execution-routing.md,active
+bim-aec-muscle-memory,Bim Aec Muscle Memory,documentation,content-wiki-documentation,reference/bim-aec-muscle-memory.md,active
+bim-design-philosophy,Bim Design Philosophy,documentation,content-wiki-documentation,reference/bim-design-philosophy.md,active
+bim-market-context,Bim Market Context,documentation,content-wiki-documentation,reference/bim-market-context.md,active
+bim-token-taxonomy,Bim Token Taxonomy,documentation,content-wiki-documentation,reference/bim-token-taxonomy.md,active
+bim-token-three-layers,Bim Token Three Layers,documentation,content-wiki-documentation,reference/bim-token-three-layers.md,active
+bim-token-what-it-is,Bim Token What It Is,documentation,content-wiki-documentation,reference/bim-token-what-it-is.md,active
+editorial-language-registers,Editorial Language Registers,documentation,content-wiki-documentation,reference/editorial-language-registers.md,active
+editorial-philosophy,Editorial Philosophy,documentation,content-wiki-documentation,reference/editorial-philosophy.md,active
+glossary-documentation,Glossary Documentation,documentation,content-wiki-documentation,reference/glossary-documentation.md,active
+hardware-reference,Hardware Reference,documentation,content-wiki-documentation,reference/hardware-reference.md,active
+news-release-standards,News Release Standards,documentation,content-wiki-documentation,reference/news-release-standards.md,active
+open-bim-regulatory-acceptance,Open Bim Regulatory Acceptance,documentation,content-wiki-documentation,reference/open-bim-regulatory-acceptance.md,active
+root-files-discipline,Root Files Discipline,documentation,content-wiki-documentation,reference/root-files-discipline.md,active
+service-slm-operationalization-plan,Service Slm Operationalization Plan,documentation,content-wiki-documentation,reference/service-slm-operationalization-plan.md,active
+structural-positioning,Structural Positioning,documentation,content-wiki-documentation,reference/structural-positioning.md,active
+style-guide-architecture,Style Guide Architecture,documentation,content-wiki-documentation,reference/style-guide-architecture.md,active
+style-guide-guide,Style Guide Guide,documentation,content-wiki-documentation,reference/style-guide-guide.md,active
+style-guide-topic,Style Guide Topic,documentation,content-wiki-documentation,reference/style-guide-topic.md,active
+wiki-provider-landscape,Wiki Provider Landscape,documentation,content-wiki-documentation,reference/wiki-provider-landscape.md,active
+archetypes-and-chart-of-accounts,Archetypes And Chart Of Accounts,documentation,content-wiki-documentation,services/archetypes-and-chart-of-accounts.md,active
+fs-anchor-emitter,Fs Anchor Emitter,documentation,content-wiki-documentation,services/fs-anchor-emitter.md,active
+message-courier,Message Courier,documentation,content-wiki-documentation,services/message-courier.md,active
+pointsav-gis-engine,Pointsav Gis Engine,documentation,content-wiki-documentation,services/pointsav-gis-engine.md,active
+service-business-clustering,Service Business Clustering,documentation,content-wiki-documentation,services/service-business-clustering.md,active
+service-content,Service Content,documentation,content-wiki-documentation,services/service-content.md,active
+service-egress,Service Egress,documentation,content-wiki-documentation,services/service-egress.md,active
+service-email,Service Email,documentation,content-wiki-documentation,services/service-email.md,active
+service-extraction,Service Extraction,documentation,content-wiki-documentation,services/service-extraction.md,active
+service-fs-architecture,Service Fs Architecture,documentation,content-wiki-documentation,services/service-fs-architecture.md,active
+service-fs-data-lake,Service Fs Data Lake,documentation,content-wiki-documentation,services/service-fs-data-lake.md,active
+service-fs-security-compliance,Service Fs Security Compliance,documentation,content-wiki-documentation,services/service-fs-security-compliance.md,active
+service-people,Service People,documentation,content-wiki-documentation,services/service-people.md,active
+service-places-filtering,Service Places Filtering,documentation,content-wiki-documentation,services/service-places-filtering.md,active
+service-search,Service Search,documentation,content-wiki-documentation,services/service-search.md,active
+service-slm-totebox-sysadmin,Service Slm Totebox Sysadmin,documentation,content-wiki-documentation,services/service-slm-totebox-sysadmin.md,active
+service-slm-yoyo-operational,Service Slm Yoyo Operational,documentation,content-wiki-documentation,services/service-slm-yoyo-operational.md,active
+service-slm,Service Slm,documentation,content-wiki-documentation,services/service-slm.md,active
+service-wallet-settlement,Service Wallet Settlement,documentation,content-wiki-documentation,services/service-wallet-settlement.md,active
+template-ledger,Template Ledger,documentation,content-wiki-documentation,services/template-ledger.md,active
+adapter-composition,Adapter Composition,documentation,content-wiki-documentation,substrate/adapter-composition.md,active
+apprenticeship-substrate,Apprenticeship Substrate,documentation,content-wiki-documentation,substrate/apprenticeship-substrate.md,active
+brief-queue-substrate,Brief Queue Substrate,documentation,content-wiki-documentation,substrate/brief-queue-substrate.md,active
+citation-substrate,Citation Substrate,documentation,content-wiki-documentation,substrate/citation-substrate.md,active
+code-for-machines-first,Code For Machines First,documentation,content-wiki-documentation,substrate/code-for-machines-first.md,active
+compounding-doorman,Compounding Doorman,documentation,content-wiki-documentation,substrate/compounding-doorman.md,active
+compounding-substrate,Compounding Substrate,documentation,content-wiki-documentation,substrate/compounding-substrate.md,active
+customer-owned-graph-ip,Customer Owned Graph Ip,documentation,content-wiki-documentation,substrate/customer-owned-graph-ip.md,active
+design-system-substrate,Design System Substrate,documentation,content-wiki-documentation,substrate/design-system-substrate.md,active
+disclosure-substrate,Disclosure Substrate,documentation,content-wiki-documentation,substrate/disclosure-substrate.md,active
+four-tier-slm-substrate,Four Tier Slm Substrate,documentation,content-wiki-documentation,substrate/four-tier-slm-substrate.md,active
+knowledge-commons,Knowledge Commons,documentation,content-wiki-documentation,substrate/knowledge-commons.md,active
+knowledge-graph-grounded-apprenticeship,Knowledge Graph Grounded Apprenticeship,documentation,content-wiki-documentation,substrate/knowledge-graph-grounded-apprenticeship.md,active
+language-protocol-substrate,Language Protocol Substrate,documentation,content-wiki-documentation,substrate/language-protocol-substrate.md,active
+llm-substrate-decision,Llm Substrate Decision,documentation,content-wiki-documentation,substrate/llm-substrate-decision.md,active
+location-intelligence-substrate,Location Intelligence Substrate,documentation,content-wiki-documentation,substrate/location-intelligence-substrate.md,active
+mcp-substrate-protocol,Mcp Substrate Protocol,documentation,content-wiki-documentation,substrate/mcp-substrate-protocol.md,active
+merkle-proofs-as-substrate-primitive,Merkle Proofs As Substrate Primitive,documentation,content-wiki-documentation,substrate/merkle-proofs-as-substrate-primitive.md,active
+nightly-datagraph-rebuild,Nightly Datagraph Rebuild,documentation,content-wiki-documentation,substrate/nightly-datagraph-rebuild.md,active
+reverse-flow-substrate,Reverse Flow Substrate,documentation,content-wiki-documentation,substrate/reverse-flow-substrate.md,active
+seed-taxonomy-as-smb-bootstrap,Seed Taxonomy As Smb Bootstrap,documentation,content-wiki-documentation,substrate/seed-taxonomy-as-smb-bootstrap.md,active
+sel4-microkernel-substrate,Sel4 Microkernel Substrate,documentation,content-wiki-documentation,substrate/sel4-microkernel-substrate.md,active
+single-boundary-compute-discipline,Single Boundary Compute Discipline,documentation,content-wiki-documentation,substrate/single-boundary-compute-discipline.md,active
+sovereign-ai-commons,Sovereign Ai Commons,documentation,content-wiki-documentation,substrate/sovereign-ai-commons.md,active
+substrate-native-compatibility,Substrate Native Compatibility,documentation,content-wiki-documentation,substrate/substrate-native-compatibility.md,active
+substrate-without-inference-base-case,Substrate Without Inference Base Case,documentation,content-wiki-documentation,substrate/substrate-without-inference-base-case.md,active
+system-substrate-doctrine,System Substrate Doctrine,documentation,content-wiki-documentation,substrate/system-substrate-doctrine.md,active
+tier-zero-customer-side-sovereign-specialist,Tier Zero Customer Side Sovereign Specialist,documentation,content-wiki-documentation,substrate/tier-zero-customer-side-sovereign-specialist.md,active
+trajectory-substrate,Trajectory Substrate,documentation,content-wiki-documentation,substrate/trajectory-substrate.md,active
+tui-corpus-producer,Tui Corpus Producer,documentation,content-wiki-documentation,substrate/tui-corpus-producer.md,active
+yo-yo-lora-training-pipeline,Yo Yo Lora Training Pipeline,documentation,content-wiki-documentation,substrate/yo-yo-lora-training-pipeline.md,active
+yoyo-compute-substrate,Yoyo Compute Substrate,documentation,content-wiki-documentation,substrate/yoyo-compute-substrate.md,active
+console-os,Console Os,documentation,content-wiki-documentation,systems/console-os.md,active
+infrastructure-os,Infrastructure Os,documentation,content-wiki-documentation,systems/infrastructure-os.md,active
+mediakit-os,Mediakit Os,documentation,content-wiki-documentation,systems/mediakit-os.md,active
+os-family-overview,Os Family Overview,documentation,content-wiki-documentation,systems/os-family-overview.md,active
+os-network-admin,Os Network Admin,documentation,content-wiki-documentation,systems/os-network-admin.md,active
+os-orchestration,Os Orchestration,documentation,content-wiki-documentation,systems/os-orchestration.md,active
+os-privategit,Os Privategit,documentation,content-wiki-documentation,systems/os-privategit.md,active
+os-workplace,Os Workplace,documentation,content-wiki-documentation,systems/os-workplace.md,active
+totebox-archive,Totebox Archive,documentation,content-wiki-documentation,systems/totebox-archive.md,active
+totebox-orchestration,Totebox Orchestration,documentation,content-wiki-documentation,systems/totebox-orchestration.md,active
+totebox-os,Totebox Os,documentation,content-wiki-documentation,systems/totebox-os.md,active
