@@ -224,8 +224,8 @@ All source data is documented in `DATA-MANIFEST.md` in the project root.
 
 ## 12. Region Summary
 
-Tier counts as of 2026-05-16 (Block 6 complete: Auchan-FR, E.Leclerc-FR,
-E center-DE, Marktkauf-DE ingested; 9,234 clusters after deduplication).
+Tier counts as of 2026-05-16 (Block 6 + IPEDS enrichment + FR/DE anchor
+promotion complete; 9,678 clusters after deduplication).
 
 | ISO | T1 Regional | T2 District | T3 Local | T4 Fringe |
 |-----|-------------|-------------|----------|-----------|
@@ -234,13 +234,17 @@ E center-DE, Marktkauf-DE ingested; 9,234 clusters after deduplication).
 | MX  | 15          | —           | —        | —         |
 | CA  | 7           | —           | —        | —         |
 | GB  | 5           | —           | —        | —         |
-| FR  | 0           | —           | —        | —         |
+| FR  | 3           | —           | —        | —         |
 | DE  | 0           | —           | —        | —         |
-| **Total** | **149** | **1,329** | **2,011** | **5,745** |
+| **Total** | **152** | **1,403** | **2,094** | **6,029** |
 
-FR and DE show T1=0 because Auchan-FR, E.Leclerc-FR, E center-DE, and
-Marktkauf-DE are not yet REGION_CONFIG anchors. IKEA-FR and Costco-FR clusters
-pass the civic and population gates but have empty `hyper_list` (no
-ALPHA_HYPERMARKET anchor co-located within 3 km in the current data), so the
-composition predicate does not fire. Adding these chains to the FR/DE anchor
-list is deferred to a future sprint pending operator decision.
+FR has 3 T1 clusters — enabled by adding Carrefour-FR, Auchan-FR, and
+E.Leclerc-FR to `REGION_CONFIG["FR"]["anchor"]` (Phase 6, 2026-05-16). These
+chains now appear in `hyper_list` of nearby IKEA/Costco clusters, satisfying
+the Lifestyle∧Hyper composition predicate.
+
+DE remains T1=0. E center-DE (38 records) and Marktkauf-DE (126 records)
+are added as DE anchors; however, OSM coverage for these chains is sparse, and
+no IKEA-de cluster currently has an E center or Marktkauf within 3 km in the
+cleansed data. DE T1 qualification requires denser E center/Marktkauf OSM
+coverage or additional hypermarket ingest (e.g., Real-DE, Kaufland-DE).
