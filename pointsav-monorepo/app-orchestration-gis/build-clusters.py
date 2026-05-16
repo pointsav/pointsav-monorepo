@@ -222,11 +222,16 @@ def compute_clusters():
         hw_g_recs = [r for cid in r_roles.get("hardware",  []) if cid in GENERIC_HARDWARE[cont]  for r in locs_by_cid.get(cid, [])]
         wh_a_recs = [r for cid in r_roles.get("warehouse", []) if cid in ALPHA_WAREHOUSE[cont]   for r in locs_by_cid.get(cid, [])]
         wh_g_recs = [r for cid in r_roles.get("warehouse", []) if cid in GENERIC_WAREHOUSE[cont] for r in locs_by_cid.get(cid, [])]
+        # Cross-class co-tenants for V3 composition predicates (T1: Lifestyle∧Hyper, Warehouse∧Hyper)
+        hyper_a_recs = [r for cid in r_roles.get("anchor", []) if cid in ALPHA_HYPERMARKET[cont] for r in locs_by_cid.get(cid, [])]
+        ls_a_recs    = [r for cid in r_roles.get("anchor", []) if cid in ALPHA_LIFESTYLE[cont]   for r in locs_by_cid.get(cid, [])]
 
-        hw_a_grid = build_grid(hw_a_recs)
-        hw_g_grid = build_grid(hw_g_recs)
-        wh_a_grid = build_grid(wh_a_recs)
-        wh_g_grid = build_grid(wh_g_recs)
+        hw_a_grid    = build_grid(hw_a_recs)
+        hw_g_grid    = build_grid(hw_g_recs)
+        wh_a_grid    = build_grid(wh_a_recs)
+        wh_g_grid    = build_grid(wh_g_recs)
+        hyper_a_grid = build_grid(hyper_a_recs)
+        ls_a_grid    = build_grid(ls_a_recs)
 
         for anchor_cid in r_roles.get("anchor", []):
             if anchor_cid not in _all_alpha[cont]:
@@ -236,10 +241,12 @@ def compute_clusters():
                 plon = float(pri["longitude"])
 
                 # Single query at max radius (3km); sub-radii filter from results
-                hw_a_wd = query_grid_with_dist(plat, plon, hw_a_grid, max_r)
-                hw_g_wd = query_grid_with_dist(plat, plon, hw_g_grid, max_r)
-                wh_a_wd = query_grid_with_dist(plat, plon, wh_a_grid, max_r)
-                wh_g_wd = query_grid_with_dist(plat, plon, wh_g_grid, max_r)
+                hw_a_wd    = query_grid_with_dist(plat, plon, hw_a_grid,    max_r)
+                hw_g_wd    = query_grid_with_dist(plat, plon, hw_g_grid,    max_r)
+                wh_a_wd    = query_grid_with_dist(plat, plon, wh_a_grid,    max_r)
+                wh_g_wd    = query_grid_with_dist(plat, plon, wh_g_grid,    max_r)
+                hyper_a_wd = query_grid_with_dist(plat, plon, hyper_a_grid, max_r)
+                ls_a_wd    = query_grid_with_dist(plat, plon, ls_a_grid,    max_r)
                 nhc_wd  = query_grid_with_dist(plat, plon, hc_g, TERTIARY_RADIUS_KM)
                 nhe_wd  = query_grid_with_dist(plat, plon, he_g, TERTIARY_RADIUS_KM)
 
@@ -282,8 +289,10 @@ def compute_clusters():
                 d_wh_g = nearest_dist(wh_g_wd, max_r)
                 generic_score = linear_score(d_hw_g, max_r) + linear_score(d_wh_g, max_r)
 
-                hw_ids = list({r.get("chain_id", "") for r, _ in hw_a_wd + hw_g_wd})
-                wh_ids = list({r.get("chain_id", "") for r, _ in wh_a_wd + wh_g_wd})
+                hw_ids    = list({r.get("chain_id", "") for r, _ in hw_a_wd + hw_g_wd})
+                wh_ids    = list({r.get("chain_id", "") for r, _ in wh_a_wd + wh_g_wd})
+                hyper_ids = list({r.get("chain_id", "") for r, _ in hyper_a_wd if r.get("chain_id") != anchor_cid})
+                ls_ids    = list({r.get("chain_id", "") for r, _ in ls_a_wd    if r.get("chain_id") != anchor_cid})
 
                 # Anchor details for click-to-inspect (per category, with cat field for dot coloring)
                 anchor_details = []
@@ -457,6 +466,8 @@ def compute_clusters():
                     "anchor_label": anchor_label,
                     "hw_list":    json.dumps(hw_ids),
                     "wh_list":    json.dumps(wh_ids),
+                    "hyper_list": json.dumps(hyper_ids),
+                    "ls_list":    json.dumps(ls_ids),
                     "hc_count":          hc_distinct,
                     "he_count":          he_distinct,
                     "hc_count_regional": hc_regional,
