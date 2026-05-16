@@ -1,0 +1,40 @@
+/* ==========================================================================
+ * POINTSAV DESIGN SYSTEM: WOODFINE THEME (THE CUSTOMER OVERRIDE)
+ * ==========================================================================
+ * Maps Woodfine institutional branding onto the style.css runtime variables.
+ * Linked after style.css when WIKI_BRAND_THEME=woodfine is set.
+ *
+ * Token source: home pages at woodfinegroup.com and pointsav.com.
+ * Canvas #F7F9FA, text #111827, muted #6B7280, hairline rgba(17,24,39,0.15),
+ * accent #164679 (Woodfine Blue Base). Same tokens as the press-release
+ * template so the wiki reads as the same legal entity.
+ *
+ * Source: pointsav-design-system/tokens/theme-woodfine.css
+ */
+
+:root {
+    /* Page and surface backgrounds */
+    --bg:        #F7F9FA;   /* warm off-white canvas — matches --wf-canvas */
+    --bg-chrome: #FFFFFF;   /* raised surfaces: header, sidebar — matches --wf-card */
+    --bg-aside:  #EEF3F9;   /* aside panels: slightly Woodfine-Blue-tinted */
+
+    /* Foreground */
+    --fg:        #111827;   /* Deep Slate — matches --wf-text */
+    --fg-muted:  #6B7280;   /* secondary text — matches --wf-muted */
+
+    /* Borders: use hairline rather than the heavy --wf-border value */
+    --border:    rgba(17, 24, 39, 0.20);  /* --wf-hairline, slightly stronger */
+
+    /* Links: Woodfine Blue instead of Wikipedia sky-blue */
+    --link:         #164679;   /* --wf-accent */
+    --link-visited: #0F3258;   /* darker Woodfine Blue for visited state */
+
+    /* SYSTEM COLOR TOKENS (Tier-2 Semantic) — kept for downstream consumers */
+    --sys-canvas:  #F7F9FA;
+    --sys-card:    #FFFFFF;
+    --sys-text:    #111827;
+    --sys-muted:   #6B7280;
+    --sys-border:  #111827;
+    --sys-hairline: rgba(17, 24, 39, 0.15);
+    --sys-accent:  #164679;
+}
