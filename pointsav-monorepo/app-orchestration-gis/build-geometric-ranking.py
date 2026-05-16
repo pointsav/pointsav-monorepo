@@ -9,7 +9,7 @@ binary-predicate gate system. Each cluster is assigned:
 
 Predicate definitions:
     T1 Regional:  (Warehouse ∧ Hypermarket) OR (Lifestyle ∧ Hypermarket)
-                  ∧ rank_pp_iso ≤ p10  ∧ rank_sp_iso ≤ p20
+                  ∧ rank_pp_iso ≤ p10
                   ∧ hc_count_regional ≥ 1
                   ∧ IoU_max(cluster, any stronger-in-ISO) ≤ 0.10
 
@@ -161,13 +161,9 @@ def _eval_t1(p: dict, iso_peers: list[dict]) -> tuple[bool, list[str]]:
     fired.append("T1:composition")
 
     rpp = float(p.get("rank_pp_iso") or 1.0)
-    rsp = float(p.get("rank_sp_iso") or 1.0)
     if rpp > P10:
         return False, []
     fired.append("T1:rank_pp")
-    if rsp > P20:
-        return False, []
-    fired.append("T1:rank_sp")
 
     hc_reg = int(p.get("hc_count_regional") or 0)
     if hc_reg < 1:
