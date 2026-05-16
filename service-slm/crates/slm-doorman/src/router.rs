@@ -18,7 +18,10 @@ use tracing::{info, warn};
 use crate::error::{DoormanError, Result};
 use crate::grammar_validation::LarkValidator;
 use crate::graph::GraphContextClient;
-use crate::ledger::{AuditEntry, AuditLedger, CompletionStatus, ENTRY_TYPE_CHAT_COMPLETION};
+use crate::ledger::{
+    AuditEntry, AuditLedger, CompletionStatus, ExtractionAuditEntry, ENTRY_TYPE_CHAT_COMPLETION,
+    ENTRY_TYPE_EXTRACT,
+};
 use crate::mesh::MeshRegistry;
 use crate::tier::{ExternalTierClient, LocalTierClient, YoYoTierClient};
 
@@ -358,11 +361,16 @@ impl Doorman {
     /// Yo-Yo node (OLMo 3 32B-Think). OLMo 7B (Tier A) cannot produce
     /// structured JSON arrays reliably and must never serve as a fallback for
     /// extraction.
+    ///
+    /// Writes one `ExtractionAuditEntry` (entry_type = "extract") per call so
+    /// extraction traffic is fully traceable in the audit ledger.
     pub async fn route_yoyo_only(
         &self,
         req: &ComputeRequest,
         label: &str,
     ) -> Result<ComputeResponse> {
+        let started = std::time::Instant::now();
+
         let client = self.yoyo.get(label).ok_or_else(|| {
             warn!(
                 target: "slm_doorman::router",
@@ -379,6 +387,11 @@ impl Doorman {
                 label,
                 "route_yoyo_only: circuit not allowing request (open or health-probe down)"
             );
+            let latency_ms = started.elapsed().as_millis() as u64;
+            self.append_extract_audit(
+                req, label, latency_ms, None, true,
+                Some("yoyo-circuit-open".to_string()), None,
+            );
             return Err(DoormanError::TierUnavailable(Tier::Yoyo));
         }
 
@@ -392,7 +405,57 @@ impl Doorman {
             }
         }
 
-        client.complete(req).await
+        let result = client.complete(req).await;
+        let latency_ms = started.elapsed().as_millis() as u64;
+        match &result {
+            Ok(resp) => self.append_extract_audit(
+                req, label, latency_ms, Some(resp), false, None, None,
+            ),
+            Err(e) => self.append_extract_audit(
+                req, label, latency_ms, None, false, None, Some(e.to_string()),
+            ),
+        }
+        result
+    }
+
+    fn append_extract_audit(
+        &self,
+        req: &ComputeRequest,
+        label: &str,
+        latency_ms: u64,
+        resp: Option<&ComputeResponse>,
+        deferred: bool,
+        defer_reason: Option<String>,
+        error_message: Option<String>,
+    ) {
+        let entry = ExtractionAuditEntry {
+            entry_type: ENTRY_TYPE_EXTRACT.to_string(),
+            timestamp_utc: Utc::now(),
+            request_id: req.request_id,
+            module_id: req.module_id.clone(),
+            extraction_ok: resp.is_some() && !deferred,
+            deferred,
+            entities_count: 0,  // entity count available only in the HTTP handler
+            tier_used: if deferred {
+                "deferred".to_string()
+            } else {
+                format!("yoyo_{}", label)
+            },
+            latency_ms,
+            model: resp.map(|r| r.model.clone()).unwrap_or_default(),
+            cost_usd: resp.map(|r| r.cost_usd).unwrap_or(0.0),
+            sanitised_outbound: req.sanitised_outbound,
+            defer_reason,
+            error_message,
+        };
+        if let Err(e) = self.ledger.append_extract_entry(&entry) {
+            warn!(
+                target: "slm_doorman::ledger",
+                error = %e,
+                request_id = %req.request_id,
+                "route_yoyo_only: failed to append extraction audit entry"
+            );
+        }
     }
 }
 
