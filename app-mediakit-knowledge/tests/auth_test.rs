@@ -40,6 +40,7 @@ async fn authless_state() -> (AppState, tempfile::TempDir, tempfile::TempDir) {
         mcp_enabled: false,
         glossary: Arc::new(app_mediakit_knowledge::glossary::Glossary::default()),
         links: app_mediakit_knowledge::links::LinkGraph::for_testing(),
+        brand_theme: None,
         db: None,
     };
     (state, dir, state_dir)
@@ -77,6 +78,7 @@ async fn auth_state_with_token() -> (AppState, String, tempfile::TempDir, tempfi
         mcp_enabled: false,
         glossary: Arc::new(app_mediakit_knowledge::glossary::Glossary::default()),
         links: app_mediakit_knowledge::links::LinkGraph::for_testing(),
+        brand_theme: None,
         db: Some(db),
     };
     (state, token, dir, state_dir)
