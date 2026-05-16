@@ -1,4 +1,12 @@
 ---
+archived: 2026-05-16 by task@project-gis (post-Block-6 cleanup)
+note: 3 messages archived — all status: actioned.
+  (1) Phase 2.7 diff harness PAUSE — Decision A=Option 1 (rank_sp removed), Decision C=Phase 1+2; commit 44e953c3
+  (2) Pre-flight results Tier Scoring Overhaul — informational; Phase 1 cleared to begin; no Command action
+  (3) Regional Market sprint complete — commit e1a140a5; mkt_conf live; 3 open decisions carried to NEXT
+---
+
+---
 archived: 2026-05-15T16:50:00Z
 actioned-by: command@claude-code
 notes: Sprint 14 Stage 6 done (e1a140a5 → cluster/project-gis); Regional Market commit promoted; Sprint 14+15+Regional all on canonical. Operator decisions (pipeline rebuild, search index, wiki integration) surfaced in NEXT.md.
