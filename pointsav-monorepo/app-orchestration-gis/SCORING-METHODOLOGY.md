@@ -183,8 +183,8 @@ Clinics do not pass these gates. All hospital types contribute to the Tier 3 gat
 | `hc_count_district` | `build-clusters.py` | District hospitals in tertiary ring |
 | `he_count_regional` | `build-clusters.py` | Regional universities in tertiary ring |
 | `he_count_small` | `build-clusters.py` | Small universities in tertiary ring |
-| `national_rank` | `generate-rankings.py` | Rank within ISO by V2 score_final (legacy, retained) |
-| `iso_market_rank` | `generate-rankings.py` | Sub-national market rank (US/CA/MX state; EU country) |
+| `national_rank` | `legacy/generate-rankings-v2.py` | Rank within ISO by V2 score_final (legacy, retained) |
+| `iso_market_rank` | `legacy/generate-rankings-v2.py` | Sub-national market rank (US/CA/MX state; EU country) |
 | `tier_descriptor` | `build-clusters.py` | Composition label (e.g., "Hypermarket + Hardware + Warehouse") |
 
 **Removed fields (G15 override):** `score_final`, `score_base`, `score_count_bonus`,
@@ -199,9 +199,9 @@ The full pipeline is reproducible from the raw ingested source data:
 
 ```bash
 python3 synthesize-od-study.py    # per-ISO percentile ranks
-python3 build-clusters.py         # cluster geometry + civic counts
-python3 generate-rankings.py      # national_rank + iso_market_rank
-python3 build-geometric-ranking.py  # tier assignment
+python3 build-clusters.py                       # cluster geometry + civic counts
+python3 legacy/generate-rankings-v2.py          # national_rank + iso_market_rank
+python3 build-geometric-ranking.py              # tier assignment
 python3 build-tiles.py            # PMTiles output
 ```
 
