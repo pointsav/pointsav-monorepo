@@ -13,7 +13,10 @@ to: command@claude-code
 re: Stage 6 pending — content-wiki-corporate + content-wiki-projects + content-wiki-documentation
 created: 2026-05-16T01:00:00Z
 priority: normal
-status: pending
+status: actioned
+actioned_by: command@claude-code
+actioned_at: 2026-05-16
+commits: 1c9cee3→769980b (docs, 86), c65be14→53a3169 (corporate, 3), 1c1e48b→420e8cf (projects, 4)
 ---
 
 All three documentation wikis are ready for Stage 6 promotion to canonical. Run
@@ -35,7 +38,10 @@ to: command@claude-code
 re: service-content vocabulary refresh needed — route to project-data/project-slm
 created: 2026-05-16T00:30:00Z
 priority: high
-status: pending
+status: actioned
+actioned_by: command@claude-code
+actioned_at: 2026-05-16
+routed_to: project-intelligence inbox (msg-id: project-intelligence-20260516-service-content-vocab-refresh)
 ---
 
 Three wikis (documentation, corporate, projects) are being prepared for relaunch.
@@ -80,7 +86,10 @@ to: command@claude-code
 re: Stage 6 pending — content-wiki-documentation sub-phase 2j complete
 created: 2026-05-15T23:45:00Z
 priority: normal
-status: pending
+status: actioned
+actioned_by: command@claude-code
+actioned_at: 2026-05-16
+note: superseded by consolidated Stage 6 message above; all 86 docs commits promoted in same pass
 ---
 
 Sub-phase 2j (Bloomberg vocabulary sweep) is complete across all categories in
