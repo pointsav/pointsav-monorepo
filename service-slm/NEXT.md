@@ -1,6 +1,6 @@
 # NEXT.md — service-slm
 
-> Last updated: 2026-05-15T05:00Z (Sprint 0a hardening committed; 1-hour test run completed; service-content 6G; restart sequence documented)
+> Last updated: 2026-05-16T06:10Z (idle monitor preemption auto-restart deployed; two 30-min test loops passed; VM TERMINATED)
 > Read at session start. Update before session end so the next
 > session knows where to pick up.
 
@@ -52,10 +52,26 @@
 
 ---
 
+## SESSION 2026-05-16 — IDLE MONITOR HARDENED + TEST LOOPS PASSED
+
+**Commits this session:**
+- `3e873ea4` fix: idle monitor dispatch-clock — `last_yoyo_dispatch` AtomicU64 prevents premature 24-min stop (poll granularity fix)
+- `b93f745b` feat: idle monitor preemption auto-restart + `parse_metric` prefix fix + 22 tests — 198/198 tests
+
+**Two 30-min test loops completed (both via `/v1/messages` Anthropic shim → `claude-sonnet-4-6` → Tier B):**
+- Trainer label: completed (timer-based, no GCP preemption)
+- Graph label: 318 requests / 1803s — survived GCP preemption mid-test (VM auto-restarted manually; preemption auto-restart now handles this automatically in production)
+
+**Auto-restart now live:** `SLM_YOYO_AUTO_RESTART=true`, `SLM_YOYO_MAX_RESTARTS_PER_HOUR=3`, boot-grace 90s. When Doorman detects `/metrics` unreachable + `stop_sent=false` for ≥60s, it calls `instances.start` automatically.
+
+**Stage 6 still pending** — `b93f745b` and `3e873ea4` are local; need promotion to canonical when ready.
+
+---
+
 ## YO-YO #1 — FULLY LIVE + DATAGRAPH PIPELINE WORKING (2026-05-12)
 
 **Current VM state:**
-- `yoyo-tier-b-1` **TERMINATED** in `europe-west4-a` — stopped by 1-hr watchdog at 04:28:48 UTC 2026-05-15 ✓
+- `yoyo-tier-b-1` **TERMINATED** in `europe-west4-a` — manually stopped at 06:10Z 2026-05-16 after two test loops ✓ No billing.
 - Zone `europe-west4-a` intermittent L4 stockout — `start-yoyo.sh` exits 3 cleanly on stockout; wait for capacity; **do NOT provision in other zones**
 - `llama-server.service` **IS enabled** (confirmed 2026-05-15) — starts automatically on boot, no SSH fix needed ✓
 - `SLM_YOYO_WEIGHTS_SNAPSHOT=yoyo-tier-b-1-weights-20260512-0248` ✓ (weights disk snapshot good; 148 GB)
