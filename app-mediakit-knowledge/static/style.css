@@ -39,6 +39,18 @@
    * PointSav default: steel-blue #869FB9 (matches pointsav.com home page chrome).
    * Woodfine theme overrides to #164679 in theme-woodfine.css. */
   --accent: #869FB9;
+
+  /* Semantic status / diff / action colors — dark mode overrides below */
+  --color-danger:      #b52e2e;
+  --color-danger-bg:   #ffeef0;
+  --color-danger-hi:   #fdb8c0;
+  --color-success:     #1a7f37;
+  --color-success-bg:  #e6ffec;
+  --color-success-hi:  #acf2bd;
+  --color-warning:     #9a6700;
+  --color-warning-bg:  #fff8c5;
+  --color-info-bg:     #cee0f2;
+  --link-hover:        #0550ae;
 }
 
 * { box-sizing: border-box; }
@@ -297,7 +309,7 @@ body {
 
 .fli-notice {
   background: var(--bg-aside);
-  border-left: 3px solid #b58900;
+  border-left: 3px solid var(--color-warning);
   padding: 0.75rem 1rem;
   margin: 1rem 0 1.5rem;
   font-family: var(--sans);
@@ -1564,7 +1576,7 @@ a.wiki-redlink {
   color: var(--mw-color-link-redlink);
 }
 a.wiki-redlink:visited {
-  color: #a55858;
+  color: color-mix(in srgb, var(--mw-color-link-redlink) 70%, var(--bg));
 }
 
 /* Glossary Tooltips */
@@ -1673,7 +1685,7 @@ a.wiki-redlink:visited {
 
 .pending-badge {
   display: inline-block;
-  background: #d73c3c;
+  background: var(--color-danger);
   color: #fff;
   border-radius: 10px;
   padding: 0.1rem 0.45rem;
@@ -1685,7 +1697,7 @@ a.wiki-redlink:visited {
 }
 
 .pending-badge:hover {
-  background: #b52e2e;
+  background: var(--color-danger);
 }
 
 /* ── Phase 5: Login page ──────────────────────────────────────────── */
@@ -1765,9 +1777,9 @@ body.login-body {
 }
 
 .login-error {
-  background: #ffeef0;
-  color: #b52e2e;
-  border: 1px solid #f5c2c7;
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
+  border: 1px solid color-mix(in srgb, var(--color-danger) 30%, var(--bg));
   border-radius: 2px;
   padding: 0.5rem 0.75rem;
   font-size: 0.875rem;
@@ -1863,7 +1875,7 @@ body.login-body {
 }
 
 .pending-summary {
-  color: var(--muted-fg, #6b7280);
+  color: var(--fg-muted);
   font-style: italic;
   max-width: 280px;
 }
@@ -1875,13 +1887,13 @@ body.login-body {
 
 .pending-meta {
   font-size: 0.875rem;
-  color: var(--muted-fg, #6b7280);
+  color: var(--fg-muted);
   margin-top: 0;
 }
 
 .pending-edit-summary {
   font-size: 0.9rem;
-  background: var(--code-bg, #f6f8fa);
+  background: var(--bg-chrome);
   border-left: 3px solid var(--border);
   padding: 0.5rem 0.75rem;
   margin: 0.5rem 0 1.5rem;
@@ -1889,7 +1901,7 @@ body.login-body {
 
 /* Diff display */
 .pending-diff {
-  font-family: var(--mono, 'Fira Code', monospace);
+  font-family: var(--mono);
   font-size: 0.82rem;
   line-height: 1.5;
   border: 1px solid var(--border);
@@ -1909,51 +1921,51 @@ body.login-body {
 }
 
 .diff-del {
-  background: #ffeef0;
-  color: #b52e2e;
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
   white-space: pre;
   padding: 0.1rem 0.5rem;
 }
 
 .diff-ins {
-  background: #e6ffec;
-  color: #1a7f37;
+  background: var(--color-success-bg);
+  color: var(--color-success);
   white-space: pre;
   padding: 0.1rem 0.5rem;
 }
 
 .diff-eq {
-  color: var(--muted-fg, #6b7280);
+  color: var(--fg-muted);
   white-space: pre;
   padding: 0.1rem 0.5rem;
 }
 
 /* D1: Two-column word-level diff */
-.diff-header { font-size: 0.875rem; color: var(--muted-fg, #6b7280); margin-bottom: 0.5rem; }
+.diff-header { font-size: 0.875rem; color: var(--fg-muted); margin-bottom: 0.5rem; }
 .diff-two-col-wrap { overflow-x: auto; }
 .diff-two-col {
   width: 100%; border-collapse: collapse;
-  font-family: var(--mono, 'Fira Code', monospace); font-size: 0.82rem; line-height: 1.5;
+  font-family: var(--mono); font-size: 0.82rem; line-height: 1.5;
 }
 .diff-two-col th {
-  background: #eaecf0; padding: 0.25rem 0.5rem;
-  text-align: left; border: 1px solid #a2a9b1; font-size: 0.8rem;
+  background: var(--mw-color-base-20); padding: 0.25rem 0.5rem;
+  text-align: left; border: 1px solid var(--border); font-size: 0.8rem;
 }
 .diff-col-old, .diff-cell-old { width: 50%; }
 .diff-col-new, .diff-cell-new { width: 50%; }
 .diff-two-col td {
   padding: 0.1rem 0.5rem; vertical-align: top;
-  border: 1px solid #e0e0e0; white-space: pre-wrap; word-break: break-word;
+  border: 1px solid var(--border); white-space: pre-wrap; word-break: break-word;
 }
-.diff-row-eq td { color: var(--muted-fg, #6b7280); }
-.diff-row-del .diff-cell-old { background: #ffeef0; }
-.diff-row-del .diff-cell-new { background: #f8f9fa; }
-.diff-row-ins .diff-cell-old { background: #f8f9fa; }
-.diff-row-ins .diff-cell-new { background: #e6ffec; }
-.diff-row-chg .diff-cell-old { background: #ffeef0; }
-.diff-row-chg .diff-cell-new { background: #e6ffec; }
-.diff-two-col del { background: #fdb8c0; text-decoration: none; border-radius: 2px; }
-.diff-two-col ins { background: #acf2bd; text-decoration: none; border-radius: 2px; }
+.diff-row-eq td { color: var(--fg-muted); }
+.diff-row-del .diff-cell-old { background: var(--color-danger-bg); }
+.diff-row-del .diff-cell-new { background: var(--bg-chrome); }
+.diff-row-ins .diff-cell-old { background: var(--bg-chrome); }
+.diff-row-ins .diff-cell-new { background: var(--color-success-bg); }
+.diff-row-chg .diff-cell-old { background: var(--color-danger-bg); }
+.diff-row-chg .diff-cell-new { background: var(--color-success-bg); }
+.diff-two-col del { background: var(--color-danger-hi); text-decoration: none; border-radius: 2px; }
+.diff-two-col ins { background: var(--color-success-hi); text-decoration: none; border-radius: 2px; }
 
 /* Review action forms */
 .pending-review-forms {
@@ -1994,9 +2006,9 @@ body.login-body {
 }
 
 .pending-btn-reject {
-  background: #ffeef0;
-  color: #b52e2e;
-  border: 1px solid #f5c2c7;
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
+  border: 1px solid color-mix(in srgb, var(--color-danger) 30%, var(--bg));
   border-radius: 2px;
   padding: 0.5rem 1.25rem;
   font: inherit;
@@ -2007,12 +2019,12 @@ body.login-body {
 }
 
 .pending-btn-reject:hover {
-  background: #f5c2c7;
+  background: var(--color-danger-hi);
 }
 
 .pending-btn-accept {
   display: inline-block;
-  background: #1a7f37;
+  background: var(--color-success);
   color: #fff;
   border: none;
   border-radius: 2px;
@@ -2025,13 +2037,13 @@ body.login-body {
 }
 
 .pending-btn-accept:hover {
-  background: #116329;
+  background: color-mix(in srgb, var(--color-success) 80%, #000);
 }
 
 /* Contribution status badges */
-.pending-status-pending  { color: #9a6700; background: #fff8c5; padding: 0.15rem 0.4rem; border-radius: 2px; font-size: 0.8rem; font-weight: 600; }
-.pending-status-accepted { color: #1a7f37; background: #dafbe1; padding: 0.15rem 0.4rem; border-radius: 2px; font-size: 0.8rem; font-weight: 600; }
-.pending-status-rejected { color: #b52e2e; background: #ffeef0; padding: 0.15rem 0.4rem; border-radius: 2px; font-size: 0.8rem; font-weight: 600; }
+.pending-status-pending  { color: var(--color-warning); background: var(--color-warning-bg); padding: 0.15rem 0.4rem; border-radius: 2px; font-size: 0.8rem; font-weight: 600; }
+.pending-status-accepted { color: var(--color-success); background: var(--color-success-bg); padding: 0.15rem 0.4rem; border-radius: 2px; font-size: 0.8rem; font-weight: 600; }
+.pending-status-rejected { color: var(--color-danger);  background: var(--color-danger-bg);  padding: 0.15rem 0.4rem; border-radius: 2px; font-size: 0.8rem; font-weight: 600; }
 
 /* ── Quality badges ────────────────────────────────────────────────────── */
 .quality-badge {
@@ -2046,17 +2058,17 @@ body.login-body {
   vertical-align: middle;
   line-height: 1.6;
 }
-.quality-complete { background: #dafbe1; color: #1a7f37; border: 1px solid #aaefc1; }
-.quality-core     { background: #ddf4ff; color: #0969da; border: 1px solid #9cd8fd; }
-.quality-stub     { background: #fff8c5; color: #9a6700; border: 1px solid #f5d773; }
+.quality-complete { background: var(--color-success-bg); color: var(--color-success); border: 1px solid color-mix(in srgb, var(--color-success) 40%, var(--bg)); }
+.quality-core     { background: var(--color-info-bg);    color: var(--link);           border: 1px solid color-mix(in srgb, var(--link) 40%, var(--bg)); }
+.quality-stub     { background: var(--color-warning-bg); color: var(--color-warning);  border: 1px solid color-mix(in srgb, var(--color-warning) 40%, var(--bg)); }
 
 /* ── Stub notice (article-scope hatnote) ───────────────────────────────── */
 .stub-notice {
   margin: 0.6rem 0 0.8rem;
   padding: 0.35rem 0.75rem;
-  border-left: 3px solid #d9e8f5;
-  background: #f6f8fa;
-  color: #57606a;
+  border-left: 3px solid color-mix(in srgb, var(--accent) 30%, var(--bg));
+  background: var(--bg-chrome);
+  color: var(--fg-muted);
   font-size: 0.9rem;
 }
 
@@ -2064,7 +2076,7 @@ body.login-body {
 .wiki-cat-moc {
   margin-bottom: 1.5rem;
   padding-bottom: 1rem;
-  border-bottom: 1px solid var(--color-border, #d0d7de);
+  border-bottom: 1px solid var(--border);
 }
 
 /* ── Mobile nav + ToC drawers ──────────────────────────────────────────── */
@@ -2099,7 +2111,7 @@ body.login-body {
   left: 0;
   width: min(280px, 85vw);
   height: 100%;
-  background: #fff;
+  background: var(--bg);
   box-shadow: 2px 0 12px rgba(0,0,0,0.18);
   z-index: 1001;
   flex-direction: column;
@@ -2129,7 +2141,7 @@ body.login-body {
   margin: 0;
   padding: 0;
 }
-.mobile-nav-list li { border-bottom: 1px solid #eee; }
+.mobile-nav-list li { border-bottom: 1px solid var(--mw-color-base-20); }
 .mobile-nav-list a {
   display: block;
   padding: 0.75rem 0.5rem;
@@ -2142,17 +2154,17 @@ body.login-body {
   margin: 0.5rem 0 0;
   padding: 0;
 }
-.mobile-toc-list li { border-bottom: 1px solid #eee; }
+.mobile-toc-list li { border-bottom: 1px solid var(--mw-color-base-20); }
 .mobile-toc-list a {
   display: block;
   padding: 0.6rem 0.5rem;
   text-decoration: none;
-  color: var(--link, #3366cc);
+  color: var(--link);
   font-size: 0.9rem;
 }
 .mobile-toc-list .toc-level-2 { padding-left: 1.25rem; font-size: 0.85rem; }
 .mobile-toc-list .toc-level-3 { padding-left: 2.25rem; font-size: 0.82rem; }
-.mobile-toc-list .toc-numb { color: #57606a; margin-right: 0.3rem; }
+.mobile-toc-list .toc-numb { color: var(--fg-muted); margin-right: 0.3rem; }
 .mobile-nav-overlay {
   display: none;
   position: fixed;
@@ -2171,37 +2183,37 @@ body.login-body {
 }
 
 /* ── Wanted articles page ──────────────────────────────────────────────── */
-.wiki-wanted-intro { color: #57606a; margin-bottom: 1rem; }
+.wiki-wanted-intro { color: var(--fg-muted); margin-bottom: 1rem; }
 .wiki-wanted-table { border-collapse: collapse; width: 100%; }
 .wiki-wanted-table th,
-.wiki-wanted-table td { padding: 0.4rem 0.75rem; border: 1px solid #d0d7de; text-align: left; }
-.wiki-wanted-table th { background: #f6f8fa; font-weight: 600; }
+.wiki-wanted-table td { padding: 0.4rem 0.75rem; border: 1px solid var(--border); text-align: left; }
+.wiki-wanted-table th { background: var(--bg-chrome); font-weight: 600; }
 .wanted-count { text-align: center; font-variant-numeric: tabular-nums; }
-.wanted-sources { font-size: 0.85rem; color: #57606a; }
+.wanted-sources { font-size: 0.85rem; color: var(--fg-muted); }
 
 /* ── A1: Footnote superscripts — Wikipedia-style blue [1] ──────────────── */
 sup.footnote-ref { line-height: 1; vertical-align: super; font-size: 0.75em; }
-sup.footnote-ref a { color: #3366cc; font-weight: 600; text-decoration: none; }
+sup.footnote-ref a { color: var(--link); font-weight: 600; text-decoration: none; }
 sup.footnote-ref a:hover { text-decoration: underline; }
-section.footnotes { border-top: 1px solid #a2a9b1; margin-top: 2rem; padding-top: 0.75rem; font-size: 0.875rem; }
+section.footnotes { border-top: 1px solid var(--border); margin-top: 2rem; padding-top: 0.75rem; font-size: 0.875rem; }
 section.footnotes ol { padding-left: 1.5rem; margin: 0; }
-section.footnotes li { margin: 0.25rem 0; color: #202122; }
-a.footnote-backref { color: #3366cc; text-decoration: none; margin-left: 0.25rem; }
+section.footnotes li { margin: 0.25rem 0; color: var(--fg); }
+a.footnote-backref { color: var(--link); text-decoration: none; margin-left: 0.25rem; }
 a.footnote-backref:hover { text-decoration: underline; }
 
 /* ── A2: Footnote hover tooltip ─────────────────────────────────────────── */
 .fn-tooltip {
   position: absolute; z-index: 900; max-width: 380px; padding: 0.5rem 0.75rem;
-  background: #fff; border: 1px solid #a2a9b1; border-radius: 2px;
+  background: var(--bg); border: 1px solid var(--border); border-radius: 2px;
   box-shadow: 0 2px 6px rgba(0,0,0,0.15); font-size: 0.825rem; line-height: 1.5;
-  color: #202122; pointer-events: none;
+  color: var(--fg); pointer-events: none;
 }
 .fn-tooltip p { margin: 0; }
 
 /* ── A6: Disambiguation page notice ─────────────────────────────────────── */
 .wiki-disambig-notice {
-  background: #f8f9fa; border: 1px solid #a2a9b1; border-radius: 2px;
-  padding: 0.5rem 0.75rem; margin-bottom: 1rem; font-size: 0.875rem; color: #54595d;
+  background: var(--bg-chrome); border: 1px solid var(--border); border-radius: 2px;
+  padding: 0.5rem 0.75rem; margin-bottom: 1rem; font-size: 0.875rem; color: var(--fg-muted);
 }
 
 /* ── A4: TOC toolbox nav links — removed (navigation moved to .wiki-nav-portlet) ── */
@@ -2209,43 +2221,44 @@ a.footnote-backref:hover { text-decoration: underline; }
 /* ── A7: Edit summary row ────────────────────────────────────────────────── */
 .editor-summary-row {
   display: flex; align-items: center; gap: 0.5rem;
-  padding: 0.5rem 0.75rem; border-top: 1px solid #d0d7de; background: #f6f8fa;
+  padding: 0.5rem 0.75rem; border-top: 1px solid var(--border); background: var(--bg-chrome);
 }
-.editor-summary-row label { font-size: 0.875rem; font-weight: 500; white-space: nowrap; color: #57606a; }
+.editor-summary-row label { font-size: 0.875rem; font-weight: 500; white-space: nowrap; color: var(--fg-muted); }
 .editor-summary-row input {
   flex: 1; padding: 0.3rem 0.5rem; font-size: 0.875rem;
-  border: 1px solid #d0d7de; border-radius: 2px; outline: none;
+  border: 1px solid var(--border); border-radius: 2px; outline: none;
+  background: var(--bg); color: var(--fg);
 }
-.editor-summary-row input:focus { border-color: #0969da; box-shadow: 0 0 0 2px rgba(9,105,218,0.2); }
+.editor-summary-row input:focus { border-color: var(--link); box-shadow: 0 0 0 2px color-mix(in srgb, var(--link) 20%, transparent); }
 
 /* ── E2: Research Trail Footer ───────────────────────────────────────────── */
 .wiki-research-trail {
   margin: 1.5rem 0; padding: 0.5rem 0.75rem;
-  background: #f8f9fa; border: 1px solid #eaecf0; border-radius: 2px;
+  background: var(--bg-chrome); border: 1px solid var(--mw-color-base-20); border-radius: 2px;
   font-size: 0.875rem;
 }
 .wiki-research-trail summary {
-  cursor: pointer; font-weight: 600; color: #3366cc;
+  cursor: pointer; font-weight: 600; color: var(--link);
   list-style: none; display: flex; align-items: center; gap: 0.4rem;
 }
 .wiki-research-trail summary::before { content: '▸'; font-size: 0.75rem; }
 .wiki-research-trail[open] summary::before { content: '▾'; }
 .wiki-research-trail-dl { margin: 0.75rem 0 0; display: grid; grid-template-columns: max-content 1fr; gap: 0.25rem 1rem; }
-.wiki-research-trail-dl dt { font-weight: 500; color: #54595d; }
+.wiki-research-trail-dl dt { font-weight: 500; color: var(--fg-muted); }
 .wiki-research-trail-dl dd { margin: 0; }
 .wiki-research-trail-dl ul { margin: 0; padding-left: 1.2rem; }
 
 /* ── C: Special pages ────────────────────────────────────────────────────── */
-.wiki-special-intro { color: #54595d; font-size: 0.9rem; margin-bottom: 1rem; }
+.wiki-special-intro { color: var(--fg-muted); font-size: 0.9rem; margin-bottom: 1rem; }
 .wiki-special-table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
 .wiki-special-table th, .wiki-special-table td {
-  border: 1px solid #a2a9b1; padding: 0.35rem 0.6rem; text-align: left;
+  border: 1px solid var(--border); padding: 0.35rem 0.6rem; text-align: left;
 }
-.wiki-special-table th { background: #eaecf0; font-weight: 600; }
-.wiki-special-table tr:nth-child(even) td { background: #f8f9fa; }
-.rc-date { white-space: nowrap; font-size: 0.85rem; color: #54595d; }
+.wiki-special-table th { background: var(--bg-chrome); font-weight: 600; }
+.wiki-special-table tr:nth-child(even) td { background: color-mix(in srgb, var(--bg-chrome) 60%, transparent); }
+.rc-date { white-space: nowrap; font-size: 0.85rem; color: var(--fg-muted); }
 .rc-author { white-space: nowrap; }
-.rc-sha { font-family: monospace; font-size: 0.8rem; color: #54595d; }
+.rc-sha { font-family: monospace; font-size: 0.8rem; color: var(--fg-muted); }
 .wiki-allpages-jump { margin-bottom: 1rem; font-size: 0.9rem; }
 .wiki-allpages-jump a { margin-right: 0.3rem; font-weight: 600; }
 .wiki-allpages-list { column-count: 3; column-gap: 1.5rem; list-style: disc; padding-left: 1.5rem; }
@@ -2253,31 +2266,32 @@ a.footnote-backref:hover { text-decoration: underline; }
 @media (max-width: 720px) { .wiki-allpages-list { column-count: 1; } }
 
 /* ── C4: Talk pages ──────────────────────────────────────────────────────── */
-.wiki-talk-empty { color: #54595d; font-style: italic; margin: 1.5rem 0; }
-.wiki-talk-post { margin-top: 2rem; border-top: 1px solid #eaecf0; padding-top: 1rem; }
+.wiki-talk-empty { color: var(--fg-muted); font-style: italic; margin: 1.5rem 0; }
+.wiki-talk-post { margin-top: 2rem; border-top: 1px solid var(--mw-color-base-20); padding-top: 1rem; }
 .wiki-talk-post h2 { font-size: 1.1rem; margin-bottom: 0.75rem; }
 .talk-form-row { display: flex; flex-direction: column; gap: 0.25rem; margin-bottom: 0.75rem; }
-.talk-form-row label { font-size: 0.875rem; font-weight: 500; color: #57606a; }
+.talk-form-row label { font-size: 0.875rem; font-weight: 500; color: var(--fg-muted); }
 .talk-form-row input, .talk-form-row textarea {
   padding: 0.4rem 0.5rem; font-size: 0.9rem;
-  border: 1px solid #d0d7de; border-radius: 2px; outline: none; font-family: inherit;
+  border: 1px solid var(--border); border-radius: 2px; outline: none; font-family: inherit;
+  background: var(--bg); color: var(--fg);
 }
 .talk-form-row input:focus, .talk-form-row textarea:focus {
-  border-color: #0969da; box-shadow: 0 0 0 2px rgba(9,105,218,0.2);
+  border-color: var(--link); box-shadow: 0 0 0 2px color-mix(in srgb, var(--link) 20%, transparent);
 }
 .wiki-btn {
   display: inline-block; padding: 0.4rem 1rem; font-size: 0.9rem; font-weight: 500;
-  background: #0969da; color: #fff; border: none; border-radius: 2px; cursor: pointer;
+  background: var(--link); color: #fff; border: none; border-radius: 2px; cursor: pointer;
 }
-.wiki-btn:hover { background: #0550ae; }
+.wiki-btn:hover { background: var(--link-hover); }
 
 /* ── B2: Infobox — Wikipedia-style float-right summary table ─────────────── */
 .infobox {
   float: right; clear: right;
   margin: 0 0 1rem 1.5rem;
   padding: 0.5rem;
-  background: #f8f9fa;
-  border: 1px solid #a2a9b1;
+  background: var(--bg-chrome);
+  border: 1px solid var(--border);
   border-collapse: collapse;
   font-size: 0.875rem;
   line-height: 1.4;
@@ -2286,17 +2300,17 @@ a.footnote-backref:hover { text-decoration: underline; }
 }
 .infobox tbody tr { vertical-align: top; }
 .infobox th {
-  background: #eaecf0;
+  background: var(--mw-color-base-20);
   font-weight: 500;
   padding: 0.25rem 0.5rem;
   text-align: right;
   white-space: nowrap;
   width: 40%;
-  border: 1px solid #a2a9b1;
+  border: 1px solid var(--border);
 }
 .infobox td {
   padding: 0.25rem 0.5rem;
-  border: 1px solid #a2a9b1;
+  border: 1px solid var(--border);
 }
 @media (max-width: 720px) {
   .infobox { float: none; margin: 0 0 1rem 0; width: 100%; max-width: 100%; }
@@ -2307,13 +2321,13 @@ a.footnote-backref:hover { text-decoration: underline; }
   clear: both;
   margin: 1.5rem 0 0.5rem;
   padding: 0;
-  background: #f8f9fa;
-  border: 1px solid #a2a9b1;
+  background: var(--bg-chrome);
+  border: 1px solid var(--border);
   font-size: 0.875rem;
   width: 100%;
 }
 .navbox-title {
-  background: #cee0f2;
+  background: var(--color-info-bg);
   font-weight: 600;
   padding: 0.25rem 0.5rem;
   display: flex;
@@ -2336,7 +2350,7 @@ a.footnote-backref:hover { text-decoration: underline; }
   flex-wrap: wrap;
   gap: 0.5rem 1rem;
   padding: 0.5rem;
-  border-top: 1px solid #a2a9b1;
+  border-top: 1px solid var(--border);
 }
 .navbox.navbox-collapsed .navbox-content { display: none; }
 .navbox-group {
@@ -2348,7 +2362,7 @@ a.footnote-backref:hover { text-decoration: underline; }
 }
 .navbox-group-label {
   font-weight: 500;
-  color: #54595d;
+  color: var(--fg-muted);
   white-space: nowrap;
 }
 .navbox-list {
@@ -2359,9 +2373,9 @@ a.footnote-backref:hover { text-decoration: underline; }
   flex-wrap: wrap;
   gap: 0.2rem 0.6rem;
 }
-.navbox-list li::before { content: '\00B7'; color: #a2a9b1; margin-right: 0.2rem; }
+.navbox-list li::before { content: '\00B7'; color: var(--border); margin-right: 0.2rem; }
 .navbox-list li:first-child::before { content: ''; margin-right: 0; }
-.navbox-list a { color: #3366cc; text-decoration: none; }
+.navbox-list a { color: var(--link); text-decoration: none; }
 .navbox-list a:hover { text-decoration: underline; }
 
 /* ── Sprint H: Sticky header ───────────────────────────────────────────── */
@@ -2371,8 +2385,8 @@ a.footnote-backref:hover { text-decoration: underline; }
   left: 0;
   right: 0;
   height: 50px;
-  background: var(--bg-chrome, #f6f8fa);
-  border-bottom: 1px solid var(--border, #d0d7de);
+  background: var(--bg-chrome);
+  border-bottom: 1px solid var(--border);
   z-index: 200;
   display: none;
   align-items: center;
@@ -2382,7 +2396,7 @@ a.footnote-backref:hover { text-decoration: underline; }
   display: flex;
 }
 .sticky-inner {
-  max-width: var(--max-content-width, 1280px);
+  max-width: var(--max-content-width);
   margin: 0 auto;
   padding: 0 1.25rem;
   display: flex;
@@ -2413,12 +2427,12 @@ a.footnote-backref:hover { text-decoration: underline; }
 }
 .sticky-edit {
   font-size: 0.875rem;
-  color: var(--link, #3366cc);
+  color: var(--link);
   text-decoration: none;
   white-space: nowrap;
   flex-shrink: 0;
   padding: 0.2rem 0.6rem;
-  border: 1px solid var(--border, #d0d7de);
+  border: 1px solid var(--border);
   border-radius: 2px;
 }
 .sticky-edit:hover { background: var(--bg, #fff); text-decoration: none; }
@@ -2438,17 +2452,17 @@ a.footnote-backref:hover { text-decoration: underline; }
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: #57606a;
+  color: var(--fg-muted);
   margin: 0.75rem 0 0.25rem;
   padding: 0 0.5rem;
 }
 .mobile-drawer-divider {
   border: none;
-  border-top: 1px solid #eee;
+  border-top: 1px solid var(--mw-color-base-20);
   margin: 0.75rem 0;
 }
 .mobile-nav-toc { margin-bottom: 0; }
-.mobile-nav-toc a { color: var(--link, #3366cc); }
+.mobile-nav-toc a { color: var(--link); }
 
 /* ── Sprint J: Mobile collapsible h2 sections ──────────────────────────── */
 @media (max-width: 960px) {
@@ -2465,7 +2479,7 @@ a.footnote-backref:hover { text-decoration: underline; }
     top: 50%;
     transform: translateY(-50%);
     font-size: 0.85rem;
-    color: #57606a;
+    color: var(--fg-muted);
     transition: transform 0.15s ease;
   }
   .section-toggle.section-collapsed::after {
@@ -2650,6 +2664,16 @@ a.footnote-backref:hover { text-decoration: underline; }
   --mw-color-base-10: var(--bg-chrome);
   --mw-color-base-20: #3a3a3e;
   --mw-color-base-50: var(--border);
+  --color-danger:      #f47067;
+  --color-danger-bg:   color-mix(in srgb, #c94040 18%, var(--bg));
+  --color-danger-hi:   color-mix(in srgb, #c94040 35%, var(--bg));
+  --color-success:     #3fb950;
+  --color-success-bg:  color-mix(in srgb, #22863a 18%, var(--bg));
+  --color-success-hi:  color-mix(in srgb, #22863a 35%, var(--bg));
+  --color-warning:     #e3b341;
+  --color-warning-bg:  color-mix(in srgb, #b08800 18%, var(--bg));
+  --color-info-bg:     color-mix(in srgb, #3466aa 25%, var(--bg));
+  --link-hover:        #7facdf;
 }
 
 /* Auto: follow system preference when no explicit theme is set */
@@ -2667,6 +2691,16 @@ a.footnote-backref:hover { text-decoration: underline; }
     --mw-color-base-10: var(--bg-chrome);
     --mw-color-base-20: #3a3a3e;
     --mw-color-base-50: var(--border);
+    --color-danger:      #f47067;
+    --color-danger-bg:   color-mix(in srgb, #c94040 18%, var(--bg));
+    --color-danger-hi:   color-mix(in srgb, #c94040 35%, var(--bg));
+    --color-success:     #3fb950;
+    --color-success-bg:  color-mix(in srgb, #22863a 18%, var(--bg));
+    --color-success-hi:  color-mix(in srgb, #22863a 35%, var(--bg));
+    --color-warning:     #e3b341;
+    --color-warning-bg:  color-mix(in srgb, #b08800 18%, var(--bg));
+    --color-info-bg:     color-mix(in srgb, #3466aa 25%, var(--bg));
+    --link-hover:        #7facdf;
   }
 }
 
@@ -2824,7 +2858,7 @@ body.printable .mw-body {
 
 /* Box footer — Wikipedia greybar pattern with · separators */
 .wiki-home-box-footer {
-  background: #f9f9f9;
+  background: var(--bg-chrome);
   border-top: 1px solid var(--border);
   padding: 0.375rem 0.75rem;
   font-size: 0.8125rem;
@@ -2882,7 +2916,7 @@ body.printable .mw-body {
 /* NOTAM item — red left-border accent */
 .wiki-home-notam {
   list-style: none;
-  border-left: 3px solid #d33;
+  border-left: 3px solid var(--color-danger);
   padding-left: 0.5rem;
   margin-left: -1.25rem;
 }
@@ -2986,8 +3020,8 @@ body.printable .mw-body {
 
 /* RecentChanges filter panel */
 .recentchanges-filters {
-  background: #f8f9fa;
-  border: 1px solid #a2a9b1;
+  background: var(--bg-chrome);
+  border: 1px solid var(--border);
   padding: 0.5rem 0.75rem;
   margin-bottom: 1rem;
   font-size: 0.875rem;
@@ -3002,17 +3036,19 @@ body.printable .mw-body {
 .rc-filter-row select {
   font-size: 0.875rem;
   padding: 0.125rem 0.25rem;
-  border: 1px solid #a2a9b1;
-  background: #fff;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--fg);
 }
 .rc-filter-row .rc-apply {
   font-size: 0.875rem;
   padding: 0.125rem 0.625rem;
-  border: 1px solid #a2a9b1;
-  background: #fff;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--fg);
   cursor: pointer;
 }
-.rc-filter-row .rc-apply:hover { background: #eaecf0; }
+.rc-filter-row .rc-apply:hover { background: var(--mw-color-base-20); }
 .rc-hidemin-label { display: flex; align-items: center; gap: 0.25rem; }
 
 /* Watch star button */
@@ -3030,24 +3066,25 @@ body.printable .mw-body {
   vertical-align: middle;
   line-height: 1;
 }
-.wiki-watch-btn:hover { color: var(--link-color, #3366cc); }
-.wiki-watch-btn[aria-pressed="true"] { color: #f90; }
+.wiki-watch-btn:hover { color: var(--link); }
+.wiki-watch-btn[aria-pressed="true"] { color: var(--color-warning); }
 
 /* Watchlist special page */
 .wiki-watchlist-intro { margin-bottom: 1rem; color: var(--fg-muted); }
 .wiki-watchlist-table { width: 100%; border-collapse: collapse; }
 .wiki-watchlist-table th,
-.wiki-watchlist-table td { padding: 0.35rem 0.5rem; text-align: left; border-bottom: 1px solid #eaecf0; }
-.wiki-watchlist-table th { background: #f8f9fa; font-weight: 600; font-size: 0.875rem; }
+.wiki-watchlist-table td { padding: 0.35rem 0.5rem; text-align: left; border-bottom: 1px solid var(--mw-color-base-20); }
+.wiki-watchlist-table th { background: var(--bg-chrome); font-weight: 600; font-size: 0.875rem; }
 .watchlist-since { color: var(--fg-muted); font-size: 0.875rem; white-space: nowrap; }
 .watchlist-unwatch {
   font-size: 0.8125rem;
   padding: 0.1rem 0.5rem;
-  border: 1px solid #a2a9b1;
-  background: #fff;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--fg);
   cursor: pointer;
 }
-.watchlist-unwatch:hover { background: #fee; border-color: #c00; color: #c00; }
+.watchlist-unwatch:hover { background: var(--color-danger-bg); border-color: var(--color-danger); color: var(--color-danger); }
 
 /* ── Citation authority ribbon ─────────────────────────────────────────── */
 .wiki-citation-ribbon {
@@ -3055,19 +3092,19 @@ body.printable .mw-body {
   padding: 0.25rem 0.75rem;
   border-left: 3px solid transparent;
   margin: 0.5rem 0 0.75rem 0;
-  background: #f8f9fa;
+  background: var(--bg-chrome);
 }
 .citation-all-resolved {
-  border-left-color: #14a44d;
-  color: #14a44d;
+  border-left-color: var(--color-success);
+  color: var(--color-success);
 }
 .citation-partial {
-  border-left-color: #e6a817;
-  color: #7a5800;
+  border-left-color: var(--color-warning);
+  color: var(--color-warning);
 }
 .citation-none-resolved {
-  border-left-color: #c00;
-  color: #c00;
+  border-left-color: var(--color-danger);
+  color: var(--color-danger);
 }
 
 /* ── Freshness badge ────────────────────────────────────────────────────── */
@@ -3078,10 +3115,10 @@ body.printable .mw-body {
   padding: 0.1em 0.4em;
   border-radius: 2px;
 }
-.freshness-current { color: #14a44d; }
-.freshness-recent  { color: #3366cc; }
-.freshness-aging   { color: #e6a817; }
-.freshness-stale   { color: #c00; }
+.freshness-current { color: var(--color-success); }
+.freshness-recent  { color: var(--link); }
+.freshness-aging   { color: var(--color-warning); }
+.freshness-stale   { color: var(--color-danger); }
 
 /* ── Sprint X: Error page + pageinfo + whatlinkshere ────────────────── */
 
