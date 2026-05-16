@@ -6,7 +6,7 @@
 > Read at session start when a Root Claude opens in this repo. Update
 > at session end when repo-scope open items change.
 
-Last updated: 2026-05-16.
+Last updated: 2026-05-16 (session 2 — Issues 4+5 + Yo-Yo 1-hr test).
 
 ---
 
@@ -23,6 +23,16 @@ Root causes identified and addressed after 2× daily crash pattern (GCP host mai
 - [x] **GCP host maintenance — MIGRATE confirmed** — `onHostMaintenance=MIGRATE`, `automaticRestart=True`, `preemptible=False`. VM already correctly configured. Crashes were OOM-only, not host maintenance.
 - [ ] **journald cap** — create `/etc/systemd/journald.conf.d/foundry-cap.conf` with `SystemMaxUse=2G` and run `sudo systemctl restart systemd-journald`. (Minor risk factor; junk fill on `/var`.)
 - [ ] **Delete unused 7B-Think weights** — `/var/lib/local-slm/weights/` has wrong 7B variant (4.5 GB). Recover disk space once 7B → OLMo 2 1B is confirmed stable.
+
+### service-content — ontology CSVs + Domains.json [2026-05-16 task@claude-code]
+
+**DONE** — commit `7e55e530` (Jennifer Woodfine):
+- `topics_documentation.csv`: 167 documentation wiki articles registered (168 total rows).
+- `guides_documentation.csv`: 38 additional GUIDEs registered (44 unique fleet guides total).
+- `Domains.json`: `"Sovereign Telemetry"` → `"Verified System Telemetry"` (Do-Not-Use §5).
+- **Known gap:** ~30 topic titles are slug-derived (fallback) rather than H1-extracted. Low-priority editorial cleanup only.
+- **Stage 6** already complete on session start — `main == origin/main`. No promotion action needed this session.
+- **Yo-Yo 1-hr test:** VM RUNNING at `34.6.204.25` on session start; `start-yoyo.sh --runtime=1h` watchdog armed. Auto-restart active.
 
 ### service-slm / service-content — Sprint 0a prerequisites [2026-05-14 task@claude-code]
 
