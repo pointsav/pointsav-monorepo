@@ -62,7 +62,7 @@
 
 | # | Item | Source | Effort | Notes |
 |---|---|---|---|---|
-| F1 | **IPEDS EF2023A.zip integration** | inbox-archive 2026-05-05 | M | US higher-education enrolment fixture. Master ranked below D3. Low priority. |
+| F1 | **IPEDS EF2023A.zip integration** | inbox-archive 2026-05-05 | M | US higher-education enrolment fixture. URLs verified live 2026-05-16: nces.ed.gov/ipeds/datacenter/data/EF2023A.zip (2.8 MB) + HD2023.zip (1.1 MB). enrich_university_enrollment.py already written. Run when Phase 3 (civic enrichment) is prioritised. Low priority. |
 | F2 | **5 draft open questions still open** | draft frontmatter inspection | S each | Five staged drafts carry one open_questions field each (location-intelligence-ux, ring-retailer-click-ux, zoom-prefetch-pattern, gis-as-bim-substrate, uk-eu-food-retail-coverage). Editorial gate (project-editorial Task scope, not project-gis). |
 | F3 | **PRODUCT_VISION — Beacon + Opportunity Engine** | drafts-outbound/PRODUCT_VISION.md | L | Aspirational features (Cluster DNA radar chart, dynamic re-scoring lenses, Opportunity Zones). No scoping; vision-stage. Not in scope until operator commits. |
 | F4 | **Blank-zone diagnostic z6–10** | tasks.md Sprint 5 close | S | Possible bubble flicker mid-zoom. Sprint 9 prefetch + threshold-9 likely resolved; lower priority follow-up. |
