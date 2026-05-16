@@ -46,14 +46,14 @@
 | # | Item | Source | Effort | Notes |
 |---|---|---|---|---|
 | D1 | **Overture Addresses spatial join** | tasks.md Group B3 | L | For POIs with null `addr:*`, spatial-join against Overture Addresses theme (≤15 m). Back-fill `full_address`. New ingest-pipeline step; would require its own sprint. |
-| D2 | **Fred Meyer ALPHA removal review** | tasks.md Sprint 4 close | M | `fred-meyer-us` (92–132 PNW-regional stores) currently in ALPHA_ANCHORS. Operator flagged for review. Re-ingest + rebuild + tier audit to measure impact. |
+| D2 | **Fred Meyer ALPHA placement — ingest pending** | tasks.md Sprint 4 close | M | `fred-meyer-us` now in ALPHA_HYPERMARKET (Phase 1 taxonomy). Verified 2026-05-16: 0 locations in service-business-cleansed → 0 clusters → zero tier impact. Semantically correct placement; no removal needed. Dormant until fred-meyer-us ingest is completed. |
 
 ## E · Held / architecturally blocked (5)
 
 | # | Item | Source | Effort | Notes |
 |---|---|---|---|---|
 | E1 | **DataGraph entity writes (E2)** | tasks.md · inbox-archive 2026-05-06 | M | service-content graph live (127.0.0.1:9081, 10,414 entities, module_id=woodfine). Held by Master pending schema-sync. Awaiting Master ratification. |
-| E2 | **Sherwood Park Costco / 3 km radius gap (D5)** | tasks.md Group D5 | S (doc note) or M (recalibration) | Costco 3.96 km from Walmart anchor — outside max_r=3.0 km. Visible in All Locations layer; absent from cluster bento. Options: (a) raise to 5 km (cross-cluster pollution risk); (b) document as methodology limit. Sprint 11 lean: leave at 3 km. |
+| E2 | **Sherwood Park Costco / 3 km radius gap (D5)** | tasks.md Group D5 | CLOSED | Verified 2026-05-16 (Phase 2 diff harness): Costco and HomeDepot both generate T3 Local clusters (rank_pp≈0.44, hc=1). The Costco is 3.96 km from nearest Walmart anchor and correctly forms its own cluster. Under Phase 2 predicate engine, Sherwood Park clusters correctly score T3 (no Hypermarket co-tenant within 3 km radius). Not a T1 gap — the 3 km radius limit is methodology-correct. E2 is closed: not a defect. |
 | E3 | **G1 — Rust service-ingest crate** | tasks.md Group G | L | Hold per workspace strategy. |
 | E4 | **G2 — OD Study layer** | tasks.md Group G | — | [x] DONE Sprint 14. synthesize-od-study.py ships primary/secondary catchment. AWAY sub-toggle stubs to HOME pending daytime population data. |
 | E5 | **StatCan commuter flow URL (98-400-X2021007)** | Sprint 16 | S | StatCan CompDataDownload.cfm and 98-10-0494-01 fallback both returning dead links (2026-05-15). ingest-statcan.py exits with instructions. Needs: new working URL for Journey-to-Work bulk CSV, or operator manual download. Blocks CA WORK reach in layer6. |
