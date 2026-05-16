@@ -29,6 +29,9 @@
     --link:         #164679;   /* --wf-accent */
     --link-visited: #0F3258;   /* darker Woodfine Blue for visited state */
 
+    /* Institutional accent — overrides PointSav steel-blue to Woodfine Blue */
+    --accent:       #164679;   /* same as --link; chrome highlights match link colour */
+
     /* SYSTEM COLOR TOKENS (Tier-2 Semantic) — kept for downstream consumers */
     --sys-canvas:  #F7F9FA;
     --sys-card:    #FFFFFF;

@@ -34,6 +34,11 @@
   --mw-font-size-base:      0.875rem;
   --mw-color-box-tfa:       #cef2e0; /* Wikipedia TFA / OTD green */
   --mw-color-box-dyk:       #cedff2; /* Wikipedia DYK / ITN blue  */
+
+  /* Institutional accent — chrome highlights separate from link colour.
+   * PointSav default: steel-blue #869FB9 (matches pointsav.com home page chrome).
+   * Woodfine theme overrides to #164679 in theme-woodfine.css. */
+  --accent: #869FB9;
 }
 
 * { box-sizing: border-box; }
@@ -203,7 +208,7 @@ body {
 /* Article lede — first direct-child <p> gets a left-border accent (institutional editorial voice).
  * Uses :first-of-type so it fires even when a <blockquote> or <div> precedes the paragraph. */
 #mw-content-text > .page-body > p:first-of-type {
-  border-left: 3px solid var(--link);
+  border-left: 3px solid var(--accent);
   padding-left: 1rem;
   line-height: 1.75;
   color: var(--fg);
@@ -311,10 +316,10 @@ body {
   --toc-bg: var(--mw-color-base-10);
   --ivc-band-bg: #f0f4f8;
   --ivc-band-border: #c8d6e5;
-  --tab-active-border: var(--mw-color-link);
+  --tab-active-border: var(--accent);
   --tab-hover-bg: var(--mw-color-base-20);
   --density-btn-bg: var(--mw-color-base-20);
-  --density-btn-active-bg: var(--mw-color-link);
+  --density-btn-active-bg: var(--accent);
   --density-btn-active-fg: var(--bg);
   --hatnote-color: var(--fg-muted);
   --cat-bg: var(--mw-color-base-10);
@@ -862,8 +867,8 @@ body {
 }
 
 .header-search input[type="search"]:focus {
-  border-color: var(--link);
-  box-shadow: 0 0 0 2px rgba(51,102,204,0.15);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 20%, transparent);
 }
 
 .header-search button {
@@ -2420,7 +2425,7 @@ a.footnote-backref:hover { text-decoration: underline; }
 .toc-list .toc-section-active > a {
   font-weight: 600;
   color: var(--fg, #1f2328);
-  border-left: 3px solid var(--link, #3366cc);
+  border-left: 3px solid var(--accent, #869FB9);
   padding-left: 0.4rem;
   margin-left: -0.4rem;
 }
@@ -2973,4 +2978,205 @@ body.printable .mw-body {
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--fg-muted);
+}
+
+/* RecentChanges filter panel */
+.recentchanges-filters {
+  background: #f8f9fa;
+  border: 1px solid #a2a9b1;
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+}
+.rc-filter-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+.rc-filter-row label { color: var(--fg-muted); }
+.rc-filter-row select {
+  font-size: 0.875rem;
+  padding: 0.125rem 0.25rem;
+  border: 1px solid #a2a9b1;
+  background: #fff;
+}
+.rc-filter-row .rc-apply {
+  font-size: 0.875rem;
+  padding: 0.125rem 0.625rem;
+  border: 1px solid #a2a9b1;
+  background: #fff;
+  cursor: pointer;
+}
+.rc-filter-row .rc-apply:hover { background: #eaecf0; }
+.rc-hidemin-label { display: flex; align-items: center; gap: 0.25rem; }
+
+/* Watch star button */
+.wiki-watch-form {
+  display: inline;
+  margin: 0;
+}
+.wiki-watch-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 0 0.25rem;
+  color: var(--fg-muted);
+  vertical-align: middle;
+  line-height: 1;
+}
+.wiki-watch-btn:hover { color: var(--link-color, #3366cc); }
+.wiki-watch-btn[aria-pressed="true"] { color: #f90; }
+
+/* Watchlist special page */
+.wiki-watchlist-intro { margin-bottom: 1rem; color: var(--fg-muted); }
+.wiki-watchlist-table { width: 100%; border-collapse: collapse; }
+.wiki-watchlist-table th,
+.wiki-watchlist-table td { padding: 0.35rem 0.5rem; text-align: left; border-bottom: 1px solid #eaecf0; }
+.wiki-watchlist-table th { background: #f8f9fa; font-weight: 600; font-size: 0.875rem; }
+.watchlist-since { color: var(--fg-muted); font-size: 0.875rem; white-space: nowrap; }
+.watchlist-unwatch {
+  font-size: 0.8125rem;
+  padding: 0.1rem 0.5rem;
+  border: 1px solid #a2a9b1;
+  background: #fff;
+  cursor: pointer;
+}
+.watchlist-unwatch:hover { background: #fee; border-color: #c00; color: #c00; }
+
+/* ── Citation authority ribbon ─────────────────────────────────────────── */
+.wiki-citation-ribbon {
+  font-size: 0.8125rem;
+  padding: 0.25rem 0.75rem;
+  border-left: 3px solid transparent;
+  margin: 0.5rem 0 0.75rem 0;
+  background: #f8f9fa;
+}
+.citation-all-resolved {
+  border-left-color: #14a44d;
+  color: #14a44d;
+}
+.citation-partial {
+  border-left-color: #e6a817;
+  color: #7a5800;
+}
+.citation-none-resolved {
+  border-left-color: #c00;
+  color: #c00;
+}
+
+/* ── Freshness badge ────────────────────────────────────────────────────── */
+.wiki-freshness {
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  margin-left: 0.375rem;
+  padding: 0.1em 0.4em;
+  border-radius: 2px;
+}
+.freshness-current { color: #14a44d; }
+.freshness-recent  { color: #3366cc; }
+.freshness-aging   { color: #e6a817; }
+.freshness-stale   { color: #c00; }
+
+/* ── Sprint T: Print stylesheet ─────────────────────────────────────── */
+/* Institutional print: Charter serif headings, rails stripped, URL expansion. */
+/* Wikipedia uses system-sans for print; we use Charter — the home-page serif. */
+@media print {
+  body {
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 11pt;
+    line-height: 1.5;
+    color: #000;
+    background: #fff;
+  }
+
+  h1 { font-family: "Charter", "Bitstream Charter", Georgia, serif; font-size: 22pt; font-weight: bold; }
+  h2 { font-family: "Charter", "Bitstream Charter", Georgia, serif; font-size: 16pt; font-weight: bold; page-break-after: avoid; }
+  h3 { font-family: "Charter", "Bitstream Charter", Georgia, serif; font-size: 13pt; font-weight: bold; page-break-after: avoid; }
+  h4, h5, h6 { font-family: "Charter", "Bitstream Charter", Georgia, serif; font-size: 11pt; font-weight: bold; page-break-after: avoid; }
+
+  /* Expand external URLs so the document is self-contained on paper */
+  a[href^="http"]::after { content: " <" attr(href) ">"; font-size: 9pt; color: #555; font-style: italic; }
+  a[href^="/"]::after, a[href^="#"]::after { content: ""; }
+  a { color: #000; }
+
+  /* Strip all chrome — only the article body survives */
+  .mw-header,
+  #mw-panel,
+  .wiki-right-rail,
+  .wiki-sticky-header,
+  .wiki-page-tabs,
+  nav#p-views,
+  .edit-pencil,
+  .wiki-ivc-band,
+  .wiki-citation-ribbon,
+  .wiki-freshness,
+  .wiki-page-tools,
+  #toc-pin-btn,
+  .toc-toggle,
+  .toc-toggle-btn,
+  .mobile-nav-overlay,
+  .mobile-nav-drawer,
+  .mobile-toc-drawer,
+  .wiki-lang-switcher,
+  .wiki-density-toggle,
+  .wiki-watch-form,
+  .wiki-watch-btn,
+  .wiki-cactions-toggle,
+  .wiki-cactions-menu,
+  .wiki-appearance-btn,
+  .wiki-appearance-wrap,
+  .header-search-wrap,
+  .wiki-home-bilingual-notice,
+  .wiki-home-lang-tier,
+  .wiki-home-stats,
+  .wiki-home-two-col,
+  .wiki-home-cat-grid,
+  .wiki-home-uncategorised,
+  .footer-col-privacy,
+  .footer-col-nav,
+  .site-nav { display: none !important; }
+
+  /* Full-width article; no grid layout */
+  .wiki-layout { display: block; }
+  .mw-body { max-width: 100%; padding: 0; margin: 0; }
+  #mw-content-text, .page-body { max-width: 100%; padding: 0; }
+
+  /* Remove lede accent border — clean on paper */
+  #mw-content-text > .page-body > p:first-of-type {
+    border-left: none;
+    padding-left: 0;
+    line-height: 1.5;
+  }
+
+  /* TOC — flat and readable, not pinned rail */
+  .vector-toc {
+    position: static !important;
+    float: none;
+    width: 100%;
+    max-height: none;
+    overflow: visible;
+    border: 1px solid #ccc;
+    padding: 0.5em 1em;
+    margin-bottom: 1em;
+    page-break-inside: avoid;
+    background: #fff;
+  }
+  .toc-list a { color: #000; }
+
+  /* Notices — no colour fills on paper */
+  .wiki-hatnote,
+  .stub-notice,
+  .fli-notice,
+  .wiki-disambig-notice { background: none !important; border: 1px solid #aaa; }
+
+  /* Footer — IP column only; privacy and nav stripped above */
+  .site-footer { border-top: 1px solid #ccc; padding: 0.5em 0; background: #fff; }
+  .footer-inner { grid-template-columns: 1fr !important; }
+  .footer-baseplate, .footer-copyright { font-size: 9pt; }
+
+  /* Avoid splitting code and tables across pages */
+  pre, blockquote, table, figure, .infobox { page-break-inside: avoid; }
+  .infobox { float: none; width: 100%; margin: 1em 0; }
 }
