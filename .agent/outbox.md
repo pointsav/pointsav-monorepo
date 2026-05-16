@@ -13,10 +13,10 @@ to: command@claude-code
 re: Phase 2.7 diff harness — PAUSE required before Stage 6
 created: 2026-05-16T04:10:00Z
 updated: 2026-05-16T04:25:00Z
-status: operator-pending
+status: actioned
 actioned_by: command@claude-code
 actioned_at: 2026-05-16
-note: read by Command; decisions A/C remain; Decision B resolved (synthesize-od DONE); updated findings below
+note: Decision A = Option 1 (rank_sp removed from T1 gate entirely); Decision B = resolved (synthesize-od complete); Decision C = Phase 1+2 together; build-geometric-ranking.py rerun — T1=86 (CA:2 GB:1 US:60 MX:12 ES:11); build-tiles.py running; commit 44e953c3
 msg-id: project-gis-20260516-phase2-diff-pause
 ---
 
