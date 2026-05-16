@@ -85,7 +85,7 @@ to: command@claude-code
 re: service-slm session 2026-05-16 — idle monitor hardened, test loops passed, VM TERMINATED
 created: 2026-05-16T06:10Z
 priority: normal
-status: pending
+status: stale
 ---
 
 Two commits landed this session:
