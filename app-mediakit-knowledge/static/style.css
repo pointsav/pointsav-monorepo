@@ -9,8 +9,8 @@
 :root {
   --serif: Georgia, "Times New Roman", serif;
   --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, sans-serif;
-  --mono: "SF Mono", Menlo, Consolas, monospace;
-  --bg: #ffffff;
+  --mono: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+  --bg: #F9FAFB;     /* near-white canvas — matches PointSav home page --ps-canvas */
   --bg-chrome: #f8f9fa;
   --bg-aside: #fdf6e3;
   --fg: #202122;
@@ -62,8 +62,11 @@ body {
 }
 
 .site-title {
-  font-weight: 700;
-  font-size: 1.25rem;
+  font-family: var(--mono);
+  font-weight: 800;
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
   text-decoration: none;
   color: var(--fg);
 }
@@ -91,10 +94,10 @@ body {
   margin-top: 3rem;
 }
 
-/* Multi-column institutional footer layout */
+/* Multi-column institutional footer layout — IP | Privacy | Nav */
 .footer-inner {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr;
+  grid-template-columns: 2fr 1.5fr 1fr;
   gap: 1.5rem 2rem;
   max-width: var(--max-content-width);
   margin: 0 auto 1rem;
@@ -130,6 +133,19 @@ body {
 .footer-engine a { color: var(--fg-muted); text-decoration: none; }
 .footer-engine a:hover { text-decoration: underline; }
 
+/* Footer section headings — institutional two-column pattern from home pages */
+.footer-col-heading {
+  font-family: var(--mono);
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--fg);
+  margin: 0 0 0.5rem;
+}
+
+.footer-privacy { margin: 0; color: var(--fg-muted); font-size: 0.72rem; line-height: 1.5; }
+
 .footer-copyright {
   margin: 0.75rem auto 0;
   max-width: var(--max-content-width);
@@ -141,6 +157,14 @@ body {
 
 .footer-copyright a { color: var(--fg-muted); text-decoration: none; }
 .footer-copyright a:hover { text-decoration: underline; }
+
+/* Footer baseplate — uppercase mono, full-width bottom stripe */
+.footer-baseplate {
+  font-family: var(--mono);
+  text-transform: uppercase;
+  font-size: 0.6rem;
+  letter-spacing: 0.06em;
+}
 
 @media (max-width: 768px) {
   .footer-inner { grid-template-columns: 1fr; gap: 1rem; }
@@ -175,6 +199,14 @@ body {
 /* --- article body (.page-body = div wrapping comrak output inside #mw-content-text) --- */
 
 .page-body { font-family: var(--mw-font-family-article); font-size: 1rem; line-height: 1.65; }
+
+/* Article lede — first paragraph gets a left-border accent (institutional editorial voice) */
+#mw-content-text > .page-body > p:first-child {
+  border-left: 3px solid var(--link);
+  padding-left: 1rem;
+  line-height: 1.75;
+  color: var(--fg);
+}
 
 .page-title {
   font-family: var(--sans);
@@ -491,8 +523,11 @@ body {
 .wiki-tab {
   display: inline-block;
   padding: 0.35rem 0.75rem;
-  font-family: var(--sans);
-  font-size: 0.875rem;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
   color: var(--link);
   text-decoration: none;
   border: 1px solid var(--border);
@@ -816,7 +851,7 @@ body {
   padding: 0.3rem 0.6rem;
   border: 1px solid var(--border);
   border-right: none;
-  border-radius: 3px 0 0 3px;
+  border-radius: 2px 0 0 2px;
   background: var(--bg);
   color: var(--fg);
   outline: none;
@@ -831,11 +866,14 @@ body {
 }
 
 .header-search button {
-  font-family: var(--sans);
-  font-size: 0.875rem;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
   padding: 0.3rem 0.65rem;
   border: 1px solid var(--border);
-  border-radius: 0 3px 3px 0;
+  border-radius: 0 2px 2px 0;
   background: var(--bg-chrome);
   color: var(--fg);
   cursor: pointer;
@@ -850,7 +888,7 @@ body {
 #search-autocomplete-dropdown {
   position: absolute; top: 100%; left: 0; right: 0;
   background: var(--bg); border: 1px solid var(--border);
-  border-top: none; border-radius: 0 0 3px 3px;
+  border-top: none; border-radius: 0 0 2px 2px;
   box-shadow: 0 4px 8px rgba(0,0,0,.12);
   z-index: 200; max-height: 240px; overflow-y: auto;
 }
