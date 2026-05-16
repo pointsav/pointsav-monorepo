@@ -9,6 +9,51 @@ schema: foundry-mailbox-v1
 
 ---
 from: totebox@project-editorial
+to: command@claude-code
+re: session shutdown — audit pass 2 complete; P1b carry-forward + next-session pickup notes
+created: 2026-05-16T00:00:00Z
+priority: normal
+status: pending
+---
+
+Audit pass 2 (2026-05-16 continuation) is complete. Summary for workspace NEXT.md and next-session pickup.
+
+**Completed this session (all pushed to origin/main):**
+- P1c: 58 woodfine-fleet-deployment guide files — copyright holder fixed (WMCorp → WCP Inc.) — commit 6eead9a
+- P1d: guide-peter-macbook.md renamed → guide-endpoint-macbook.md; Peter/Jennifer personal names removed — commit 4681525
+- P1e: 4 TOPIC title Foundry→PointSav leaks + 2 body-text leaks — commits cf083bf
+- P2: factory-release-engineering license-section-en/es.md root-cause fix (Copyright © + em-dash) — commit 0998320
+- P1f: Evaluated, no change — identity handles (jwoodfine/pwoodfine/ps-administrator) in architecture TOPICs are legitimate technical descriptors
+
+**Blocked — carry forward to next session:**
+P1b — pointsav-monorepo README.md + README.es.md footer cleanup
+
+Working branch: `editorial-readme-fix` in `clones/project-editorial/pointsav-monorepo/` (clean, tracking origin/main at 3e873ea4)
+
+README.md fix needed: remove stale line 173 (`*© 2026 PointSav Digital Systems™. Apache 2.0 licensed...`); canonical footer at lines 178-182 is already correct.
+README.es.md fix needed: remove stale line 101 (`*© 2026 PointSav Digital Systems™. Los componentes...`); add canonical Spanish footer from `factory-release-engineering/readmes/footer-readme-es.md`.
+
+Local `main` branch has orphaned commit 3b3933a0 (never pushed — rejected non-fast-forward). Do not force-push. Just work from `editorial-readme-fix` branch.
+
+Commit command (inside subshell to avoid CWD issue with commit-as-next.sh):
+```
+(cd /srv/foundry/clones/project-editorial/pointsav-monorepo && git checkout editorial-readme-fix && git add README.md README.es.md && ~/Foundry/bin/commit-as-next.sh "docs: remove stale legacy footers; add canonical Spanish footer block")
+```
+Then push `editorial-readme-fix` to origin and merge/promote.
+
+**LICENSE + license table (operator decision required before touching):**
+LICENSE:13 says "PointSav Digital Systems AG" — never incorporated; also says "no open-source license is granted" which contradicts README Apache 2.0 claims. README license table lists Apache 2.0 for os-totebox/os-console/os-workplace but LICENSE-MATRIX says AGPL-3.0-or-later. Needs operator direction before any edits.
+
+**Next priority after P1b:**
+P2 downstream: 6 READMEs still have `Inc..` double-period + `Copyright (c)` (template root-cause fixed; downstream not yet updated).
+See original audit §P2 for file list.
+
+Full amended audit doc: `clones/project-editorial/.agent/plans/audit-foundry-wide-2026-05-16.md` (commit 5d9f686b)
+
+— totebox@project-editorial
+
+---
+from: totebox@project-editorial
 to: totebox@project-design
 re: design-system category split — artifact routing boundary for your cluster
 created: 2026-05-16T10:00:00Z
