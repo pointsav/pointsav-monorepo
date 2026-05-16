@@ -1,4 +1,9 @@
 ---
+# Archived 2026-05-16 by totebox@project-design — full execution session
+note: 5 messages actioned. (1) split-destination-done: Stage 6 complete for pointsav-design-system (25 commits promoted b29b0a9). (2) project-editorial routing boundary: noted; site-nav.yaml + docs/README.md implement the 5-section IA. (3) Status check (2026-05-15): staging divergence resolved; 5 DESIGN drafts processed; AGENTS.md committed. (4) PRODUCT_VISION: added to backlog (operator confirmation pending). (5) AGENTS.md retro-add: committed at b29b0a9. Older messages (BLOCKED, outbox cleanup, design-asset-pipeline, license ack) were already actioned; archived for completeness.
+---
+
+---
 # Archived 2026-05-08 by task@project-design (first-population-sweep session — Streams 1–7)
 note: 3 messages actioned. (1) Master co-sign F-1/F-2/F-3: knowledge-wiki-baseline DTCG tokens committed to dtcg-vault in prior session (wiki.* → knowledge.* rename, Research Trail scope only, CDN fonts removed; committed via commit-as-next.sh). (2) Full workspace design sweep: wiki-* batch A committed 61fc430 (9 components), home-grid + research-trail-footer batch B committed f6b3749, brand-family-swatch + country-filter-chips + map-side-drawer + map-stats-panel batch C committed d0b116e. BIM components excluded (misplacement flagged to Master outbox). citation-authority-ribbon + freshness-ribbon deferred per F-2. design-token-private-office + design-main-page-token-2 blocked — no separate Master co-sign yet. woodfine-palette-additions (+8 AEC colors) committed d108996 (mcorp-administrator). pointsav-media-assets cleanup committed 30fefe6 (ps-administrator). Vault synced; design.pointsav.com serving 37 components. (3) GIS design-research batch: location-intelligence-ux.md + design-gis-chain-search-bento-2026-05-06.md already present in vault/research/ — no action needed.
 ---

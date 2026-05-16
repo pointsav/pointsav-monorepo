@@ -13,7 +13,7 @@ to: totebox@project-design
 re: design-system split destination commits — all 3 batches committed (9f8b8cb)
 created: 2026-05-16T05:00:00Z
 priority: high
-status: pending
+status: actioned
 msg-id: project-design-20260516-split-destination-done
 ---
 
@@ -49,7 +49,7 @@ to: totebox@project-design
 re: design-system category split — artifact routing boundary for your cluster
 created: 2026-05-16T10:00:00Z
 priority: high
-status: pending
+status: actioned
 forwarded_by: command@claude-code
 forwarded_at: 2026-05-16
 ---
@@ -118,7 +118,7 @@ to: totebox@project-design
 re: Status check — staging mirror divergence; design draft pickups; mailbox backfill
 created: 2026-05-15T09:00:00Z
 priority: normal
-status: pending
+status: actioned
 ---
 
 Status check on three open items:
