@@ -200,8 +200,9 @@ body {
 
 .page-body { font-family: var(--mw-font-family-article); font-size: 1rem; line-height: 1.65; }
 
-/* Article lede — first paragraph gets a left-border accent (institutional editorial voice) */
-#mw-content-text > .page-body > p:first-child {
+/* Article lede — first direct-child <p> gets a left-border accent (institutional editorial voice).
+ * Uses :first-of-type so it fires even when a <blockquote> or <div> precedes the paragraph. */
+#mw-content-text > .page-body > p:first-of-type {
   border-left: 3px solid var(--link);
   padding-left: 1rem;
   line-height: 1.75;
@@ -1054,7 +1055,7 @@ body {
 /* Category card */
 .wiki-home-cat-card {
   border: 1px solid var(--border);
-  border-radius: 3px;
+  border-radius: 2px;
   padding: 1rem;
   background: var(--bg);
   transition: border-color 0.15s ease;
@@ -1231,7 +1232,7 @@ body {
 .wiki-home-leapfrog {
   background: var(--bg-chrome);
   border: 1px solid var(--border);
-  border-radius: 4px;
+  border-radius: 2px;
   padding: 1rem 1.25rem;
   height: 100%;
 }
@@ -1697,7 +1698,7 @@ body.login-body {
   width: 100%;
   min-height: 420px;
   border: 1px solid var(--border);
-  border-radius: 4px;
+  border-radius: 2px;
   overflow: hidden;
   box-shadow: 0 4px 24px rgba(0,0,0,0.07);
 }
@@ -1760,7 +1761,7 @@ body.login-body {
   background: #ffeef0;
   color: #b52e2e;
   border: 1px solid #f5c2c7;
-  border-radius: 3px;
+  border-radius: 2px;
   padding: 0.5rem 0.75rem;
   font-size: 0.875rem;
   margin: 0;
@@ -1785,7 +1786,7 @@ body.login-body {
 
 .login-field input {
   border: 1px solid var(--border);
-  border-radius: 3px;
+  border-radius: 2px;
   padding: 0.5rem 0.625rem;
   font: inherit;
   font-size: 0.9375rem;
@@ -1811,7 +1812,7 @@ body.login-body {
   background: var(--link);
   color: #fff;
   border: none;
-  border-radius: 3px;
+  border-radius: 2px;
   padding: 0.6rem 1.25rem;
   font: inherit;
   font-size: 0.9375rem;
@@ -1885,7 +1886,7 @@ body.login-body {
   font-size: 0.82rem;
   line-height: 1.5;
   border: 1px solid var(--border);
-  border-radius: 3px;
+  border-radius: 2px;
   overflow-x: auto;
   max-height: 480px;
   overflow-y: auto;
@@ -1977,7 +1978,7 @@ body.login-body {
 
 .pending-field input {
   border: 1px solid var(--border);
-  border-radius: 3px;
+  border-radius: 2px;
   padding: 0.45rem 0.625rem;
   font: inherit;
   font-size: 0.9rem;
@@ -1989,7 +1990,7 @@ body.login-body {
   background: #ffeef0;
   color: #b52e2e;
   border: 1px solid #f5c2c7;
-  border-radius: 3px;
+  border-radius: 2px;
   padding: 0.5rem 1.25rem;
   font: inherit;
   font-size: 0.9rem;
@@ -2007,7 +2008,7 @@ body.login-body {
   background: #1a7f37;
   color: #fff;
   border: none;
-  border-radius: 3px;
+  border-radius: 2px;
   padding: 0.55rem 1.4rem;
   font: inherit;
   font-size: 0.9rem;
@@ -2030,7 +2031,7 @@ body.login-body {
   display: inline-block;
   margin-left: 0.5rem;
   padding: 0.1rem 0.45rem;
-  border-radius: 3px;
+  border-radius: 2px;
   font-size: 0.7rem;
   font-weight: 700;
   letter-spacing: 0.03em;
@@ -2184,7 +2185,7 @@ a.footnote-backref:hover { text-decoration: underline; }
 /* ── A2: Footnote hover tooltip ─────────────────────────────────────────── */
 .fn-tooltip {
   position: absolute; z-index: 900; max-width: 380px; padding: 0.5rem 0.75rem;
-  background: #fff; border: 1px solid #a2a9b1; border-radius: 3px;
+  background: #fff; border: 1px solid #a2a9b1; border-radius: 2px;
   box-shadow: 0 2px 6px rgba(0,0,0,0.15); font-size: 0.825rem; line-height: 1.5;
   color: #202122; pointer-events: none;
 }
@@ -2192,7 +2193,7 @@ a.footnote-backref:hover { text-decoration: underline; }
 
 /* ── A6: Disambiguation page notice ─────────────────────────────────────── */
 .wiki-disambig-notice {
-  background: #f8f9fa; border: 1px solid #a2a9b1; border-radius: 3px;
+  background: #f8f9fa; border: 1px solid #a2a9b1; border-radius: 2px;
   padding: 0.5rem 0.75rem; margin-bottom: 1rem; font-size: 0.875rem; color: #54595d;
 }
 
@@ -2206,14 +2207,14 @@ a.footnote-backref:hover { text-decoration: underline; }
 .editor-summary-row label { font-size: 0.875rem; font-weight: 500; white-space: nowrap; color: #57606a; }
 .editor-summary-row input {
   flex: 1; padding: 0.3rem 0.5rem; font-size: 0.875rem;
-  border: 1px solid #d0d7de; border-radius: 3px; outline: none;
+  border: 1px solid #d0d7de; border-radius: 2px; outline: none;
 }
 .editor-summary-row input:focus { border-color: #0969da; box-shadow: 0 0 0 2px rgba(9,105,218,0.2); }
 
 /* ── E2: Research Trail Footer ───────────────────────────────────────────── */
 .wiki-research-trail {
   margin: 1.5rem 0; padding: 0.5rem 0.75rem;
-  background: #f8f9fa; border: 1px solid #eaecf0; border-radius: 3px;
+  background: #f8f9fa; border: 1px solid #eaecf0; border-radius: 2px;
   font-size: 0.875rem;
 }
 .wiki-research-trail summary {
@@ -2252,14 +2253,14 @@ a.footnote-backref:hover { text-decoration: underline; }
 .talk-form-row label { font-size: 0.875rem; font-weight: 500; color: #57606a; }
 .talk-form-row input, .talk-form-row textarea {
   padding: 0.4rem 0.5rem; font-size: 0.9rem;
-  border: 1px solid #d0d7de; border-radius: 3px; outline: none; font-family: inherit;
+  border: 1px solid #d0d7de; border-radius: 2px; outline: none; font-family: inherit;
 }
 .talk-form-row input:focus, .talk-form-row textarea:focus {
   border-color: #0969da; box-shadow: 0 0 0 2px rgba(9,105,218,0.2);
 }
 .wiki-btn {
   display: inline-block; padding: 0.4rem 1rem; font-size: 0.9rem; font-weight: 500;
-  background: #0969da; color: #fff; border: none; border-radius: 4px; cursor: pointer;
+  background: #0969da; color: #fff; border: none; border-radius: 2px; cursor: pointer;
 }
 .wiki-btn:hover { background: #0550ae; }
 
@@ -2384,8 +2385,11 @@ a.footnote-backref:hover { text-decoration: underline; }
   min-width: 0;
 }
 .sticky-logo {
-  font-weight: 700;
-  font-size: 0.95rem;
+  font-family: var(--mono);
+  font-weight: 800;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
   text-decoration: none;
   color: var(--fg);
   white-space: nowrap;
@@ -2408,7 +2412,7 @@ a.footnote-backref:hover { text-decoration: underline; }
   flex-shrink: 0;
   padding: 0.2rem 0.6rem;
   border: 1px solid var(--border, #d0d7de);
-  border-radius: 3px;
+  border-radius: 2px;
 }
 .sticky-edit:hover { background: var(--bg, #fff); text-decoration: none; }
 
@@ -2509,7 +2513,7 @@ a.footnote-backref:hover { text-decoration: underline; }
 #wiki-shortcut-panel {
   background: var(--bg);
   border: 1px solid var(--border);
-  border-radius: 4px;
+  border-radius: 2px;
   padding: 1.5rem;
   min-width: 320px;
   position: relative;
@@ -2534,7 +2538,7 @@ a.footnote-backref:hover { text-decoration: underline; }
   white-space: nowrap;
   color: var(--fg-muted);
   background: var(--bg-chrome);
-  border-radius: 3px;
+  border-radius: 2px;
   padding: 0.2rem 0.4rem;
 }
 #wiki-shortcut-close {
@@ -2566,7 +2570,7 @@ a.footnote-backref:hover { text-decoration: underline; }
 .wiki-appearance-btn {
   background: none;
   border: 1px solid var(--border);
-  border-radius: 3px;
+  border-radius: 2px;
   cursor: pointer;
   font-size: 0.875rem;
   font-weight: 600;
@@ -2583,7 +2587,7 @@ a.footnote-backref:hover { text-decoration: underline; }
   right: 0;
   background: var(--bg);
   border: 1px solid var(--border);
-  border-radius: 4px;
+  border-radius: 2px;
   box-shadow: 0 4px 16px rgba(0,0,0,0.15);
   min-width: 200px;
   z-index: 500;
@@ -2608,7 +2612,7 @@ a.footnote-backref:hover { text-decoration: underline; }
   flex: 1;
   background: var(--bg-chrome);
   border: 1px solid var(--border);
-  border-radius: 3px;
+  border-radius: 2px;
   cursor: pointer;
   font-size: 0.78rem;
   color: var(--fg);
@@ -2676,7 +2680,7 @@ a.footnote-backref:hover { text-decoration: underline; }
   font-size: 0.8rem;
   color: var(--fg-muted);
   padding: 0.15rem 0.35rem;
-  border-radius: 3px;
+  border-radius: 2px;
   list-style: none;
   user-select: none;
 }
@@ -2688,7 +2692,7 @@ a.footnote-backref:hover { text-decoration: underline; }
   position: absolute;
   background: var(--bg);
   border: 1px solid var(--border);
-  border-radius: 4px;
+  border-radius: 2px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.12);
   list-style: none;
   margin: 0;
@@ -2719,12 +2723,16 @@ nav.wiki-cactions { position: relative; }
   margin-left: auto;
 }
 .sticky-tab {
-  font-size: 0.8rem;
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
   color: var(--link);
   text-decoration: none;
   padding: 0.15rem 0.5rem;
   border: 1px solid var(--border);
-  border-radius: 3px;
+  border-radius: 2px;
   white-space: nowrap;
 }
 .sticky-tab:hover { background: var(--bg); text-decoration: none; }
