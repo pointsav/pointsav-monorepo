@@ -1333,23 +1333,60 @@ fn home_chrome(
 
                 }
                 footer.site-footer {
-                    // Language tier — Wikipedia "available in" pattern
-                    div.wiki-home-langs {
-                        p.wiki-home-lang-tier {
-                            strong { "English" }
-                            " · "
-                            a href="/wiki/index.es" hreflang="es" { strong { "Español" } }
+                    div.footer-inner {
+                        div.footer-col.footer-col-info {
+                            p.footer-license {
+                                "Content is available under "
+                                a href="https://creativecommons.org/licenses/by/4.0/" { "CC BY 4.0" }
+                                " unless otherwise stated."
+                            }
+                            p.footer-trademark {
+                                "PointSav Digital Systems™, Foundry™, ToteboxOS™, and related marks are "
+                                "trademarks of Woodfine Capital Projects Inc. All other trademarks are "
+                                "property of their respective owners."
+                            }
+                            @if woodfine_theme {
+                                p.footer-bcsc {
+                                    "This knowledge base may contain forward-looking statements identified "
+                                    "with language such as "
+                                    em { "planned, intended, may," }
+                                    " or "
+                                    em { "target." }
+                                }
+                            }
                         }
-                        p.wiki-home-lang-note {
-                            "Spanish articles are strategic-adaptation overviews, not literal translations."
+                        div.footer-col.footer-col-langs {
+                            div.footer-langs {
+                                p.footer-langs-tier {
+                                    strong { "English" }
+                                    " · "
+                                    a href="/wiki/index.es" hreflang="es" { strong { "Español" } }
+                                }
+                                p.footer-langs-note {
+                                    "Spanish articles are strategic-adaptation overviews, not literal translations."
+                                }
+                            }
+                        }
+                        div.footer-col.footer-col-nav {
+                            nav.footer-nav aria-label="Footer navigation" {
+                                a href="/wiki/about" { "About" }
+                                " · "
+                                a href="/wiki/contact" { "Contact" }
+                                " · "
+                                a href="/wiki/disclaimers" { "Disclaimers" }
+                                " · "
+                                a href="/sitemap.xml" { "Sitemap" }
+                            }
+                            p.footer-engine {
+                                a href="https://github.com/pointsav/pointsav-monorepo" {
+                                    "app-mediakit-knowledge"
+                                }
+                            }
                         }
                     }
-                    p.wiki-footer-engine {
-                        (site_title)
-                        " — "
-                        a href="/" { "Home" }
-                        " · Engine: app-mediakit-knowledge · "
-                        a href="https://github.com/pointsav/pointsav-monorepo" { "ARCHITECTURE.md" }
+                    p.footer-copyright {
+                        "© 2026 Woodfine Capital Projects Inc. · "
+                        a href="/" { (site_title) }
                     }
                 }
                 script src="/static/wiki.js" defer="true" {}
@@ -1729,6 +1766,7 @@ fn wiki_chrome(
             }
             let num = counters[1..=lvl]
                 .iter()
+                .skip_while(|n| **n == 0)
                 .map(|n| n.to_string())
                 .collect::<Vec<_>>()
                 .join(".");
@@ -2149,27 +2187,6 @@ fn wiki_chrome(
                                 }
                             }
 
-                            // License + trademark + about/contact links (Wikipedia footer pattern)
-                            div.wiki-footer-meta {
-                                p.wiki-license {
-                                    "Content is available under "
-                                    a href="https://creativecommons.org/licenses/by/4.0/" {
-                                        "CC BY 4.0"
-                                    }
-                                    " unless otherwise stated."
-                                }
-                                p.wiki-trademark {
-                                    "PointSav Digital Systems™, Foundry™, ToteboxOS™, and related marks are trademarks of "
-                                    "Woodfine Capital Projects Inc. All other trademarks are property of their respective owners."
-                                }
-                                nav.wiki-footer-links {
-                                    a href="/wiki/about" { "About" }
-                                    " · "
-                                    a href="/wiki/contact" { "Contact" }
-                                    " · "
-                                    a href="/wiki/disclaimers" { "Disclaimers" }
-                                }
-                            }
                         }
                     }
 
@@ -2204,15 +2221,50 @@ fn wiki_chrome(
                     }
                 }
 
-                // Bottom page footer — unchanged structure, updated copy
+                // Site footer — trademark, license, BCSC notice, nav links
                 footer.site-footer {
-                    p {
-                        (site_title) " — "
-                        a href="/" { "Index" }
-                        " · Engine: app-mediakit-knowledge — see "
-                        a href="https://github.com/pointsav/pointsav-monorepo" {
-                            "ARCHITECTURE.md"
+                    div.footer-inner {
+                        div.footer-col.footer-col-info {
+                            p.footer-license {
+                                "Content is available under "
+                                a href="https://creativecommons.org/licenses/by/4.0/" { "CC BY 4.0" }
+                                " unless otherwise stated."
+                            }
+                            p.footer-trademark {
+                                "PointSav Digital Systems™, Foundry™, ToteboxOS™, and related marks are "
+                                "trademarks of Woodfine Capital Projects Inc. All other trademarks are "
+                                "property of their respective owners."
+                            }
+                            @if woodfine_theme {
+                                p.footer-bcsc {
+                                    "This knowledge base may contain forward-looking statements identified "
+                                    "with language such as "
+                                    em { "planned, intended, may," }
+                                    " or "
+                                    em { "target." }
+                                }
+                            }
                         }
+                        div.footer-col.footer-col-nav {
+                            nav.footer-nav aria-label="Footer navigation" {
+                                a href="/wiki/about" { "About" }
+                                " · "
+                                a href="/wiki/contact" { "Contact" }
+                                " · "
+                                a href="/wiki/disclaimers" { "Disclaimers" }
+                                " · "
+                                a href="/sitemap.xml" { "Sitemap" }
+                            }
+                            p.footer-engine {
+                                a href="https://github.com/pointsav/pointsav-monorepo" {
+                                    "app-mediakit-knowledge"
+                                }
+                            }
+                        }
+                    }
+                    p.footer-copyright {
+                        "© 2026 Woodfine Capital Projects Inc. · "
+                        a href="/" { (site_title) }
                     }
                 }
 
@@ -3229,7 +3281,33 @@ fn chrome(_title: &str, body: Markup, site_title: &str, user: Option<&User>, pen
                     (body)
                 }
                 footer.site-footer {
-                    p { (site_title) " — " a href="/" { "Home" } " · Engine: app-mediakit-knowledge" }
+                    div.footer-inner {
+                        div.footer-col.footer-col-info {
+                            p.footer-license {
+                                "Content is available under "
+                                a href="https://creativecommons.org/licenses/by/4.0/" { "CC BY 4.0" }
+                                " unless otherwise stated."
+                            }
+                            p.footer-trademark {
+                                "PointSav Digital Systems™, Foundry™, ToteboxOS™, and related marks are "
+                                "trademarks of Woodfine Capital Projects Inc. All other trademarks are "
+                                "property of their respective owners."
+                            }
+                        }
+                        div.footer-col.footer-col-nav {
+                            nav.footer-nav aria-label="Footer navigation" {
+                                a href="/wiki/about" { "About" }
+                                " · "
+                                a href="/wiki/contact" { "Contact" }
+                                " · "
+                                a href="/wiki/disclaimers" { "Disclaimers" }
+                            }
+                        }
+                    }
+                    p.footer-copyright {
+                        "© 2026 Woodfine Capital Projects Inc. · "
+                        a href="/" { (site_title) }
+                    }
                 }
             }
         }
