@@ -351,32 +351,31 @@
     const protocol = new pmtiles.Protocol();
     maplibregl.addProtocol('pmtiles', protocol.tile.bind(protocol));
 
-    // ── Tier colour ramp — 4-tier: Local → District → Regional (+ Fringe) ──
-    // Keys are V2 rank values (rank_3km): 3=Regional, 2=District, 1=Local, 0=Fringe.
-    // Phase 2 will add a `tier` field (1=Regional…4=Fringe); effectiveTier() bridges both.
+    // ── Tier colour ramp — 4-tier: Regional → District → Local → Fringe ──
+    // Keys are V2 rank values (3=Regional, 2=District, 1=Local, 0=Fringe) used by
+    // TIER_COLORS and effectiveTierKey(). Map layer filters use V3 `tier` (1=Regional…4=Fringe).
     const TIER_COLORS = {
         3: { fill: '#0A3070', text: '#ffffff', name: 'Regional' },  // dark navy
         2: { fill: '#1E40AF', text: '#ffffff', name: 'District' },  // indigo
         1: { fill: '#64748B', text: '#ffffff', name: 'Local'    },  // slate
         0: { fill: '#e2e8f0', text: '#475569', name: 'Fringe'   },  // light gray
     };
-    // Map Phase 2 tier field (1=best) back to V2 key for color lookup.
+    // Map V3 tier (1=Regional…4=Fringe) to V2 key for TIER_COLORS lookup.
     const TIER2_TO_V2 = { 1: 3, 2: 2, 3: 1, 4: 0 };
     function effectiveTierKey(p) {
-        if (p.tier != null) return TIER2_TO_V2[p.tier] ?? 0;
-        return p[`rank_${currentRadius}km`] ?? 0;
+        return TIER2_TO_V2[p.tier] ?? (TIER2_TO_V2[p.rank_3km] ?? (p.rank_3km ?? p.rank_1km ?? 0));
     }
     const NEUTRAL = { fill: '#e2e8f0', text: '#6B7280', name: '—' };
     const REGION_SUMMARY = {
         NA: {
             label: 'North America',
-            '1km': { total: 7704, t3: 1064, t2: 4033, t1: 897 },
-            '3km': { total: 7704, t3: 2869, t2: 3870, t1: 965 },
+            '1km': { total: 7704, t3: 34, t2: 773, t1: 2081 },
+            '3km': { total: 7704, t3: 34, t2: 773, t1: 2081 },
         },
         EU: {
             label: 'Europe',
-            '1km': { total: 1530, t3: 35,  t2: 538,  t1: 112 },
-            '3km': { total: 1530, t3: 162, t2: 1227, t1: 141 },
+            '1km': { total: 1530, t3: 2, t2: 243, t1: 354 },
+            '3km': { total: 1530, t3: 2, t2: 243, t1: 354 },
         },
     };
 
@@ -625,9 +624,9 @@
             .catch(() => {}); // centroids not yet built — degrade gracefully
     }
 
-    function colorMatchExpr(rankField) {
-        return ['match', ['get', rankField],
-            1, '#64748B', 2, '#1E40AF', 3, '#0A3070', '#e5e7eb'];
+    function colorMatchExpr() {
+        return ['match', ['get', 'tier'],
+            1, '#0A3070', 2, '#1E40AF', 3, '#64748B', '#e5e7eb'];
     }
 
     const _compactFmt = new Intl.NumberFormat('en', { notation: 'compact', maximumFractionDigits: 1 });
@@ -767,17 +766,16 @@
         document.querySelectorAll('.radius-btn').forEach(b => {
             b.classList.toggle('active', btn ? b === btn : b.textContent.trim().startsWith(String(km)));
         });
-        const rf = `rank_${km}km`;
-        // Apply filter (respecting any active cluster exclusion)
+        // V3: tier is radius-independent; radius toggle only affects proximity rings
         if (selectedClusterId) {
-            map.setFilter('nodes', ['all', ['>', ['get', rf], 0], ['!=', ['get', 'cluster_id'], selectedClusterId]]);
+            map.setFilter('nodes', ['all', ['<', ['get', 'tier'], 4], ['!=', ['get', 'cluster_id'], selectedClusterId]]);
         } else {
-            map.setFilter('nodes', ['>', ['get', rf], 0]);
+            map.setFilter('nodes', ['<', ['get', 'tier'], 4]);
         }
         // circle-radius is stable (score_final-based) — do not touch it here
-        map.setPaintProperty('nodes', 'circle-color', colorMatchExpr(rf));
-        if (map.getLayer('nodes-halo'))  map.setFilter('nodes-halo',  ['==', ['get', rf], 3]);
-        if (map.getLayer('nodes-label')) map.setFilter('nodes-label', ['>=', ['get', rf], 2]);
+        map.setPaintProperty('nodes', 'circle-color', colorMatchExpr());
+        if (map.getLayer('nodes-halo'))  map.setFilter('nodes-halo',  ['==', ['get', 'tier'], 1]);
+        if (map.getLayer('nodes-label')) map.setFilter('nodes-label', ['<=', ['get', 'tier'], 2]);
         if (activeChainFilter) reapplyChainHighlight();
         // Refresh overview counts or redraw proximity ring depending on mode
         if (overviewActive) {
@@ -1077,17 +1075,16 @@
         if (map.getLayer('proximity-fill')) map.setLayoutProperty('proximity-fill', 'visibility', 'none');
         if (map.getLayer('proximity-line')) map.setLayoutProperty('proximity-line', 'visibility', 'none');
         if (map.getSource('proximity-circle-src')) map.getSource('proximity-circle-src').setData({ type: 'FeatureCollection', features: [] });
-        // Restore Co-location Level layers
-        const rf = `rank_${currentRadius}km`;
+        // Restore Co-location Level layers (V3: tier is radius-independent)
         if (map.getLayer('nodes')) {
             map.setLayoutProperty('nodes', 'visibility', 'visible');
-            map.setFilter('nodes', ['>', ['get', rf], 0]);
+            map.setFilter('nodes', ['<', ['get', 'tier'], 4]);
         }
         if (map.getLayer('nodes-halo')) {
             map.setLayoutProperty('nodes-halo', 'visibility', 'visible');
-            map.setFilter('nodes-halo', ['==', ['get', rf], 3]);
+            map.setFilter('nodes-halo', ['==', ['get', 'tier'], 1]);
         }
-        if (map.getLayer('nodes-label')) map.setFilter('nodes-label', ['>=', ['get', rf], 2]);
+        if (map.getLayer('nodes-label')) map.setFilter('nodes-label', ['<=', ['get', 'tier'], 2]);
         if (map.getLayer('all-locations')) map.setLayoutProperty('all-locations', 'visibility', 'none');
         if (map.getSource('anchors')) {
             map.getSource('anchors').setData({ type: 'FeatureCollection', features: [] });
@@ -1196,6 +1193,9 @@
             hc_count_district: c.hcd || 0,
             he_count_regional: c.her || 0,
             he_count_small:    c.hes || 0,
+            // V3 tier engine fields (build-geometric-ranking.py)
+            tier:                  c.tier,
+            tier_predicates_fired: c.tier_predicates_fired,
         };
     }
 
@@ -1559,6 +1559,7 @@
                         geometry: { type: 'Point', coordinates: [c.lon, c.lat] },
                         properties: {
                             cluster_id:   c.id,
+                            tier:         c.tier ?? 4,
                             rank_1km:     c.r1,
                             rank_3km:     c.r3,
                             score_final:  c.sc,
@@ -1648,7 +1649,7 @@
         map.addLayer({
             id: 'nodes-halo', type: 'circle',
             source: 'data',
-            filter: ['==', ['get', 'rank_1km'], 3],
+            filter: ['==', ['get', 'tier'], 1],
             paint: {
                 'circle-radius': ['interpolate', ['linear'], ['zoom'], 3, 12, 14, 34],
                 'circle-color': '#0a3070',
@@ -1662,13 +1663,13 @@
             id: 'nodes', type: 'circle',
             source: 'data',
             layout: { visibility: 'visible' },
-            filter: ['>', ['get', 'rank_1km'], 0],
+            filter: ['<', ['get', 'tier'], 4],
             paint: {
                 'circle-radius': ['interpolate', ['linear'], ['zoom'],
                     2,  ['interpolate', ['linear'], ['get', 'score_final'], 0, 3, 700, 7],
                     10, ['interpolate', ['linear'], ['get', 'score_final'], 0, 5, 700, 14],
                     14, ['interpolate', ['linear'], ['get', 'score_final'], 0, 7, 700, 20]],
-                'circle-color': colorMatchExpr('rank_1km'),
+                'circle-color': colorMatchExpr(),
                 'circle-stroke-width': 1.5,
                 'circle-stroke-color': 'rgba(10, 48, 112, 0.25)',
                 'circle-opacity': 0.88,
@@ -1730,7 +1731,7 @@
                 'text-halo-color': '#ffffff',
                 'text-halo-width': 1.5,
             },
-            filter: ['>=', ['get', 'rank_1km'], 2],
+            filter: ['<=', ['get', 'tier'], 2],
         });
 
         // ── Catchment sources and layers (layer3-catchment + centroid heatmap) ──
