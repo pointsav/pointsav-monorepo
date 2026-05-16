@@ -173,7 +173,8 @@ impl YoYoTierClient {
         if let Ok(handle) = tokio::runtime::Handle::try_current() {
             let health_up_clone = Arc::clone(&health_up);
             let endpoint = config.endpoint.clone();
-            handle.spawn(run_health_probe(endpoint, health_up_clone));
+            let probe_bearer = bearer.clone();
+            handle.spawn(run_health_probe(endpoint, health_up_clone, probe_bearer));
         }
 
         Self {
@@ -436,7 +437,7 @@ impl YoYoTierClient {
 /// Background health probe task. Spawned once per `YoYoTierClient::new()`.
 /// Polls `<endpoint>/health` every 30 s with a 2 s timeout.
 /// Three consecutive failures set `health_up` to false; one recovery resets.
-async fn run_health_probe(endpoint: String, health_up: Arc<AtomicBool>) {
+async fn run_health_probe(endpoint: String, health_up: Arc<AtomicBool>, bearer: Arc<dyn BearerTokenProvider>) {
     let http = reqwest::Client::builder()
         .timeout(HEALTH_PROBE_TIMEOUT)
         .danger_accept_invalid_certs(true)
@@ -456,8 +457,10 @@ async fn run_health_probe(endpoint: String, health_up: Arc<AtomicBool>) {
     loop {
         tokio::time::sleep(HEALTH_PROBE_INTERVAL).await;
 
+        let token = bearer.token().await.unwrap_or_default();
         let ok = http
             .get(&url)
+            .bearer_auth(token)
             .send()
             .await
             .map(|r| r.status().is_success())
