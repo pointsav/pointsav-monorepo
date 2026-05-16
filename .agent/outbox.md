@@ -10,6 +10,28 @@ schema: foundry-mailbox-v1
 ---
 from: totebox@project-editorial
 to: command@claude-code
+re: Stage 6 pending — content-wiki-corporate + content-wiki-projects + content-wiki-documentation
+created: 2026-05-16T01:00:00Z
+priority: normal
+status: pending
+---
+
+All three documentation wikis are ready for Stage 6 promotion to canonical. Run
+`bin/promote.sh` for each sub-clone in the project-editorial cluster.
+
+**content-wiki-documentation** — 86 unpromoted commits (sub-phases 2i, 2j, Phase 2 final cleanup)
+**content-wiki-corporate** — 3 unpromoted commits (bcsc_class, index.es.md, wikilink density)
+**content-wiki-projects** — pending commit completion (slug unification, link repair, index.es.md, wikilink density); will be clean before this message is picked up
+
+Note: service-content vocabulary refresh (separate message below) is a soft dependency —
+the wikis are editorially ready but search/DataGraph accuracy depends on service-content
+CSV repair being completed by project-data/project-slm session.
+
+— totebox@project-editorial
+
+---
+from: totebox@project-editorial
+to: command@claude-code
 re: service-content vocabulary refresh needed — route to project-data/project-slm
 created: 2026-05-16T00:30:00Z
 priority: high
