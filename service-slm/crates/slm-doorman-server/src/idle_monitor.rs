@@ -23,7 +23,9 @@
 //!   SLM_YOYO_GCP_ZONE        GCP zone (e.g. us-west1-b)
 //!   SLM_YOYO_GCP_INSTANCE    GCP instance name (e.g. yoyo-tier-b-1)
 
-use std::time::{Duration, Instant};
+use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::Arc;
+use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 use tracing::{info, warn};
 
@@ -41,6 +43,12 @@ pub struct IdleMonitorConfig {
     pub gcp_project: String,
     pub gcp_zone: String,
     pub gcp_instance: String,
+    /// Shared atomic updated by the HTTP router on each successful Tier B
+    /// dispatch. Stores Unix epoch seconds; zero means no dispatch yet.
+    /// The idle monitor reads this on every poll cycle to prevent the 5-min
+    /// poll granularity from misfiring when the model is actively serving
+    /// but the poll catches an inter-request gap (slots=0).
+    pub last_yoyo_dispatch: Arc<AtomicU64>,
 }
 
 impl IdleMonitorConfig {
@@ -69,6 +77,7 @@ impl IdleMonitorConfig {
             gcp_project,
             gcp_zone,
             gcp_instance,
+            last_yoyo_dispatch: Arc::new(AtomicU64::new(0)),
         })
     }
 }
@@ -99,6 +108,26 @@ pub async fn run_idle_monitor(config: IdleMonitorConfig) {
 
     loop {
         tokio::time::sleep(POLL_INTERVAL).await;
+
+        // Incorporate dispatch-based last_active: if the HTTP router signalled
+        // a Tier B dispatch more recently than the poll-based last_active,
+        // rewind last_active so the 5-min poll granularity cannot fire a
+        // premature stop when the model is between requests (slots=0).
+        {
+            let dispatch_secs = config.last_yoyo_dispatch.load(Ordering::Relaxed);
+            if dispatch_secs > 0 {
+                let now_secs = SystemTime::now()
+                    .duration_since(UNIX_EPOCH)
+                    .unwrap_or_default()
+                    .as_secs();
+                let dispatch_elapsed =
+                    Duration::from_secs(now_secs.saturating_sub(dispatch_secs));
+                if dispatch_elapsed < last_active.elapsed() {
+                    last_active = Instant::now() - dispatch_elapsed;
+                    stop_sent = false; // VM dispatched recently; allow future stop after new idle window
+                }
+            }
+        }
 
         match poll_active_slots(&client, &config.yoyo_endpoint, config.yoyo_bearer.as_deref(), &config.metrics_key).await {
             Some(0) => {
