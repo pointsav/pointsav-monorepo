@@ -255,6 +255,7 @@ body {
 .page-body pre {
   background: var(--mw-color-base-10);
   border: 1px solid var(--mw-color-base-50);
+  border-left: 3px solid var(--accent);
   padding: 0.75rem 1rem;
   overflow-x: auto;
   font-family: var(--mono);
@@ -270,7 +271,7 @@ body {
 }
 
 .page-body blockquote {
-  border-left: 3px solid var(--mw-color-base-50);
+  border-left: 3px solid var(--accent);
   margin: 1rem 0;
   padding: 0.25rem 1rem;
   color: var(--fg-muted);
@@ -290,6 +291,7 @@ body {
 }
 
 .page-body table th { background: var(--mw-color-base-10); font-weight: 600; }
+.page-body table tbody tr:nth-child(even) td { background: color-mix(in srgb, var(--bg-chrome) 60%, transparent); }
 
 /* --- forward-looking-information notice --- */
 
@@ -2644,6 +2646,7 @@ a.footnote-backref:hover { text-decoration: underline; }
   --border:    #404040;
   --link:      #6794d0;
   --link-visited: #b786ff;
+  --accent:    #a0bcd0;  /* lighter steel-blue for dark background readability */
   --mw-color-base-10: var(--bg-chrome);
   --mw-color-base-20: #3a3a3e;
   --mw-color-base-50: var(--border);
@@ -2660,6 +2663,7 @@ a.footnote-backref:hover { text-decoration: underline; }
     --border:    #404040;
     --link:      #6794d0;
     --link-visited: #b786ff;
+    --accent:    #a0bcd0;  /* lighter steel-blue for dark background readability */
     --mw-color-base-10: var(--bg-chrome);
     --mw-color-base-20: #3a3a3e;
     --mw-color-base-50: var(--border);
@@ -3078,6 +3082,86 @@ body.printable .mw-body {
 .freshness-recent  { color: #3366cc; }
 .freshness-aging   { color: #e6a817; }
 .freshness-stale   { color: #c00; }
+
+/* ── Sprint V: Search results page ──────────────────────────────────── */
+.search-form {
+  display: flex;
+  gap: 0.5rem;
+  margin: 1rem 0 1.5rem;
+  max-width: 36rem;
+}
+.search-form input[type="search"] {
+  flex: 1;
+  padding: 0.45rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 2px 0 0 2px;
+  font-size: 1rem;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--sans);
+}
+.search-form input[type="search"]:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 20%, transparent);
+}
+.search-form button {
+  padding: 0.45rem 1rem;
+  border: 1px solid var(--border);
+  border-left: none;
+  border-radius: 0 2px 2px 0;
+  background: var(--bg-chrome);
+  color: var(--fg);
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.search-form button:hover { background: var(--border); }
+
+.search-summary, .search-empty {
+  color: var(--fg-muted);
+  font-size: 0.9375rem;
+  margin: 0 0 1rem;
+}
+
+.search-results {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.search-hit {
+  padding: 0.875rem 0;
+  border-bottom: 1px solid var(--border);
+}
+.search-hit:first-child { border-top: 1px solid var(--border); }
+.search-hit-title {
+  display: block;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--link);
+  text-decoration: none;
+  margin-bottom: 0.2rem;
+  font-family: var(--sans);
+}
+.search-hit-title:hover { text-decoration: underline; }
+.search-hit-title:visited { color: var(--link-visited); }
+.search-hit-slug {
+  display: block;
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  color: var(--fg-muted);
+  margin-bottom: 0.35rem;
+}
+.search-hit-snippet {
+  margin: 0;
+  font-size: 0.9375rem;
+  color: var(--fg);
+  line-height: 1.5;
+}
 
 /* ── Sprint T: Print stylesheet ─────────────────────────────────────── */
 /* Institutional print: Charter serif headings, rails stripped, URL expansion. */
