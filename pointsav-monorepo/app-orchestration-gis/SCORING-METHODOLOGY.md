@@ -43,7 +43,7 @@ The initiating store's class determines the cluster's primary anchor category.
 
 | Class | Chains (representative) |
 |---|---|
-| **ALPHA_HYPERMARKET** | Walmart (US/CA/MX), Target (US), Soriana (MX), Mercadona (ES), Tesco (UK), Sainsbury's (UK), Bilka (DK), K-Citymarket (FI), Prisma (FI), Obs Coop (NO), Hagkaup (IS) |
+| **ALPHA_HYPERMARKET** | Walmart (US/CA/MX), Target (US), Soriana (MX), Mercadona (ES), Tesco (UK), Sainsbury's (UK), Bilka (DK), K-Citymarket (FI), Prisma (FI), Obs Coop (NO), Hagkaup (IS), Carrefour (FR), Auchan (FR), E.Leclerc (FR), E center (DE), Marktkauf (DE) |
 | **ALPHA_LIFESTYLE** | IKEA (all regions) |
 | **ALPHA_HARDWARE** | Home Depot (US/CA/MX), Lowe's (US/CA), Leroy Merlin (EU), Brico Dépôt (FR/ES), Bauhaus (EU) |
 | **ALPHA_WAREHOUSE** | Costco (all regions), Sam's Club (US/MX), BJ's (US), Makro (ES/NL/PL) |
@@ -52,7 +52,16 @@ The initiating store's class determines the cluster's primary anchor category.
 neighbourhood grocery formats; their density (thousands of small stores per
 country) would produce thousands of false-positive clusters below any useful
 district threshold. Their absence is a deliberate semantic decision, not a
-data gap. Carrefour (FR) is planned for ingest in Phase 5.
+data gap.
+
+**ALPHA_HYPERMARKET vs. cluster anchor:** Membership in ALPHA_HYPERMARKET
+contributes a chain's stores to the `hyper_list` field of nearby clusters
+and satisfies the composition predicate. It does not by itself initiate cluster
+locations — only chains listed in `REGION_CONFIG[country]["anchor"]` seed new
+cluster centroids. Carrefour (FR), Auchan (FR), E.Leclerc (FR), E center (DE),
+and Marktkauf (DE) are ALPHA_HYPERMARKET members but are not currently
+REGION_CONFIG anchors; their stores appear in `hyper_list` only when co-located
+within 3 km of an existing IKEA or Costco anchor cluster.
 
 ---
 
@@ -210,3 +219,28 @@ python3 build-tiles.py            # PMTiles output
 ```
 
 All source data is documented in `DATA-MANIFEST.md` in the project root.
+
+---
+
+## 12. Region Summary
+
+Tier counts as of 2026-05-16 (Block 6 complete: Auchan-FR, E.Leclerc-FR,
+E center-DE, Marktkauf-DE ingested; 9,234 clusters after deduplication).
+
+| ISO | T1 Regional | T2 District | T3 Local | T4 Fringe |
+|-----|-------------|-------------|----------|-----------|
+| US  | 102         | —           | —        | —         |
+| ES  | 20          | —           | —        | —         |
+| MX  | 15          | —           | —        | —         |
+| CA  | 7           | —           | —        | —         |
+| GB  | 5           | —           | —        | —         |
+| FR  | 0           | —           | —        | —         |
+| DE  | 0           | —           | —        | —         |
+| **Total** | **149** | **1,329** | **2,011** | **5,745** |
+
+FR and DE show T1=0 because Auchan-FR, E.Leclerc-FR, E center-DE, and
+Marktkauf-DE are not yet REGION_CONFIG anchors. IKEA-FR and Costco-FR clusters
+pass the civic and population gates but have empty `hyper_list` (no
+ALPHA_HYPERMARKET anchor co-located within 3 km in the current data), so the
+composition predicate does not fire. Adding these chains to the FR/DE anchor
+list is deferred to a future sprint pending operator decision.
