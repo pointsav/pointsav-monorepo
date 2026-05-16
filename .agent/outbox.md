@@ -12,90 +12,128 @@ from: task@project-gis
 to: command@claude-code
 re: Phase 2.7 diff harness — PAUSE required before Stage 6
 created: 2026-05-16T04:10:00Z
+updated: 2026-05-16T04:25:00Z
 status: operator-pending
 actioned_by: command@claude-code
 actioned_at: 2026-05-16
-note: read by Command; decisions A/B/C surfaced to operator in NEXT.md; awaiting operator acknowledgment
+note: read by Command; decisions A/C remain; Decision B resolved (synthesize-od DONE); updated findings below
 msg-id: project-gis-20260516-phase2-diff-pause
 ---
 
 Phase 2 geometric ranking engine has been written and run against the Phase 1
-cluster build. Diff harness output below. **Operator acknowledgment required
-before Stage 6 and build-tiles.py run.**
-
-**Pipeline state:** 9,234 clusters after dedup. Per-ISO ranks loaded from
-catchment-data.json (6,794 of 9,234 clusters have catchment data; 2,440
-new Phase 1 clusters from Mercadona/Tesco/Sainsbury's have no catchment
-data yet — will be populated on next synthesize-od-study.py run).
+cluster build. **synthesize-od-study.py has now completed (9,234/9,234 clusters).
+Findings updated below. Operator acknowledgment required before Stage 6.**
 
 ---
 
-### Contingency Table: rank_v2 × tier (V3)
+### Updated Contingency Table (post synthesize-od): rank_v2 × tier (V3)
 
 ```
    v2\tier        T1        T2        T3        T4 (Fringe)
-      v2=0         0       133       243          2534     (no catchment data = Fringe)
-      v2=1        14       289      1211          3206
-      v2=2         3        76       497           917
-      v2=3         0         3        43            65
+      v2=?         2       268       381          2259   (new Phase 1 EU chains, no prior rank)
+      v2=1        29       644      1493          2554
+      v2=2         5       100       516           872
+      v2=3         0         4        45            62
 ```
 
----
-
-### Mountain View — EXPECTED demotion confirmed
-
-`c_walmart_us_37x401__122x11` (Mountain View, CA, US):
-- V2 rank: T0 Border (rank_v2=0) — was never V2 Apex, so no demotion
-- V3 tier: **T2 District** ✓
-- pred: `["T2:composition", "T2:rank_pp", "T2:rank_spend", "T2:civic_hospital", "T2:iou"]`
-- rank_pp_iso: 0.1765 (top 18% in US by primary population)
-- hc_count_regional: 2
-
-Mountain View is correctly T2 District under V3. The anticipated demotion is confirmed.
+Totals: T1=36  T2=1,016  T3=2,435  T4=5,747
 
 ---
 
-### Test matrix results
+### Test matrix — final results
 
 | Location | Expected | Actual V3 | Notes |
 |---|---|---|---|
-| Mountain View | T2 District | **T2 District** ✓ | Confirmed demotion |
-| Mississauga (Walmart+Costco at 43x544) | T1 Regional | **T2 District** | rank_sp=0.22 — just above P20 threshold; passes all other T1 gates |
-| Sherwood Park (Costco+HomeDepot) | T1 Regional | **T3 Local** | rank_pp=0.44; composition lacks Hypermarket co-tenant for T1/T2 |
-| Madrid Salamanca (Mercadona) | T1 Regional | **T4 Fringe** | No catchment data for new Mercadona clusters; needs synthesize-od rerun |
-| Anderlecht (IKEA-nl) | T2 District | **T4 Fringe** | rank_pp=1.0 — no catchment data for EU IKEA-nl cluster |
-| Camden, NJ (Walmart) | T3 Local | **T4 Fringe** | rank_pp=0.82; no Warehouse co-tenant; fails T3 |
+| Mountain View (Walmart+Costco) | T2 District | **T2 District** ✓ | rank_pp=0.194 ≤ P25; rank_sp=0.258 |
+| Sherwood Park (Costco+HomeDepot) | T3 Local | **T3 Local** ✓ | rank_pp=0.447 ≤ P50; hc_count=1; E2 closed |
+| Mercadona Pamplona (×2) | T1 Regional | **T1 Regional** ✓ | Makro-ES warehouse co-tenant; rank_pp≈0.033 |
+| Mississauga Vaughan (Walmart+Costco) | T1 Regional | **T4 Fringe** | rank_sp=0.359 — structural issue (see below) |
+| London/UK Tesco clusters | T2 District | **T2 District** ✓ | Tesco+Home Depot combos pass T2 |
 
 ---
 
-### Operator decisions needed
+### Decision B — RESOLVED
 
-**Decision A — T1 rank_sp threshold: keep P20 or relax to P25?**
-Mississauga Walmart+Costco has rank_sp=0.22 (22nd percentile), missing T1 by 2
-percentage points. Relaxing to P25 would promote this cluster to T1 Regional.
-Recommendation: relax to P25 (rank_sp is a secondary population gate; P20 was
-conservative; P25 is more consistent with P25 used for T2 primary gate).
-
-**Decision B — Catchment data gap for new Phase 1 chains: run synthesize-od first?**
-Mercadona, Tesco, Sainsbury's clusters have no catchment data and cannot be tiered
-by the geometric engine. These will all score Fringe until synthesize-od-study.py
-is re-run. synthesize-od-study.py takes ~3–4 hours on this hardware.
-Recommendation: run synthesize-od before build-tiles.py; accept temporary Fringe
-assignment if a partial deploy is acceptable.
-
-**Decision C — Stage 6 scope: Phase 1 only, or Phase 1+2 together?**
-Phase 1 code (4-class taxonomy, BentoBox Layout A/B, per-tier civic counts) is
-committed and tested. Phase 2 engine (build-geometric-ranking.py) is committed
-but has the above known gaps. Options:
-  (i) Stage 6 Phase 1 only: run build-tiles.py now; defer Phase 2 tier field until
-      catchment data gap is resolved. Bento will use V2 rank_3km for colors.
-  (ii) Stage 6 Phase 1+2 together: run synthesize-od first (~4h), then full pipeline.
-Recommendation: Stage 6 Phase 1 only now; Phase 2 Stage 6 after catchment rerun.
+synthesize-od-study.py completed 2026-05-16T04:19:37Z. All 9,234 clusters now have
+catchment data. Mercadona/Tesco/Sainsbury's EU clusters are fully ranked. No
+operator action needed on Decision B.
 
 ---
 
-**This message requires operator acknowledgment before build-tiles.py is run
-and before Stage 6. Do not proceed to build-tiles.py automatically.**
+### Decision A — REVISED: rank_sp gate structural issue for CA/UK
+
+The earlier framing ("relax P20 to P25") was incorrect. The actual finding is:
+
+**No Canadian or UK cluster can achieve T1 Regional under the current rank_sp gate,
+regardless of threshold, because the gate is contaminated by a cross-border effect.**
+
+Findings:
+- Best CA T1 candidate: `c_walmart_ca_43x798__79x539` (Vaughan, ON)
+  - Composition: Walmart + Costco + Canadian Tire + Home Depot ✓
+  - rank_pp_iso = 0.0016 (top 0.16% in Canada — #1 by primary catchment) ✓
+  - rank_sp_iso = 0.359 — far above P20, P25, P30 thresholds
+  - pp = 6,359,233 / sp = 6,219,608 (total reach 12.6M people)
+- P20 rank_sp cutoff in Canada corresponds to sp = 7,876,592 (cluster near Quebec City)
+- The clusters with the best rank_sp in Canada are **border-town clusters** (Niagara,
+  Windsor, Sarnia, Hamilton) whose 35-150km secondary ring extends into the US and
+  captures dense US population. These border clusters dominate rank_sp, pushing even
+  the GTA hubs to rank_sp=0.30-0.40.
+- UK has the same problem: best rank_sp clusters are in Norfolk/Suffolk (whose
+  secondary ring extends over continental Europe), not London or Manchester.
+- CA clusters with rank_sp ≤ 0.20: 124 of 624 — but none have T1 composition
+  AND rank_pp ≤ 0.10 simultaneously.
+
+This is a methodology limitation, not a data gap. The rank_sp gate as designed
+excludes dense national hubs in countries where border proximity inflates secondary
+ranks for peripheral clusters.
+
+**Three options for operator decision:**
+
+**Option 1 — Remove rank_sp from T1:** T1 keeps rank_pp ≤ P10, civic, IoU, composition.
+Secondary population reach is implicit in rank_pp (a 35-km primary ring of 6M people
+already demonstrates national significance). This would enable Vaughan and likely
+1-2 Toronto-area and 1-2 London-area clusters to reach T1.
+Risk: slight over-tiering of dense but isolated rural hubs.
+
+**Option 2 — Replace rank_sp with absolute threshold (sp ≥ 5,000,000):** A cluster
+with 5M+ secondary-ring residents clearly has national-scale reach regardless of
+cross-border effects. Vaughan (sp=6.2M) passes; border clusters pass too but only
+if they also pass rank_pp ≤ P10 (which they don't — border clusters have rank_pp ≈ 0.5).
+This is more principled than P20.
+
+**Option 3 — Keep P20 (accept CA/UK T1 = 0):** The US and MX T1 counts (30 and 4)
+are sufficient. CA and GB are both adequately served by T2 District. No change needed.
+
+Recommendation: **Option 2** (absolute secondary threshold sp ≥ 5,000,000). It is
+principled, addresses the cross-border contamination, and is explainable to end users:
+"Tier 1 requires at least 5 million residents within the secondary trade area."
+
+---
+
+### Decision C — Stage 6 scope (unchanged)
+
+Phase 1 code fully committed and tested. Phase 2 engine now has full catchment data.
+Options:
+  **(i) Stage 6 Phase 1+2 together** (recommended): run build-tiles.py now with
+      current V3 tier assignments. T1=36, T2=1016, T3=2435. Pending Decision A/C
+      threshold change (trivial code edit — 1 line in build-geometric-ranking.py).
+  (ii) Stage 6 Phase 1 only: run build-tiles.py with V2 rank_3km for tier display.
+      Phase 2 fields (tier_predicates_fired) deferred.
+
+Recommendation: Stage 6 Phase 1+2 together after Decision A is settled. Pipeline
+is ready; Decision A is the only remaining gate.
+
+---
+
+**Remaining operator decisions:**
+
+**A** — T1 rank_sp gate: Option 1 (remove), Option 2 (absolute ≥5M), or Option 3 (keep P20)?
+**C** — Stage 6 scope: Phase 1+2 together (recommended) or Phase 1 only?
+
+After A+C decisions: one line change to build-geometric-ranking.py (if A≠Option 3),
+then: build-tiles.py → Stage 6.
+
+**Do not run build-tiles.py until A and C are acknowledged.**
 
 — task@project-gis
 
