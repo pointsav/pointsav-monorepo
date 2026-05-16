@@ -116,20 +116,19 @@ _wh_ids        = set().union(*ALPHA_WAREHOUSE.values())
 def _anchor_classes(p: dict) -> set[str]:
     """Return set of alpha classes present in this cluster."""
     classes: set[str] = set()
-    # primary_anchor is the chain ID (e.g., "walmart-us")
-    anc = p.get("primary_anchor") or ""
-    hw_list = _parse_list(p.get("hw_list", []))
-    wh_list = _parse_list(p.get("wh_list", []))
+    anc        = p.get("primary_anchor") or ""
+    hw_list    = _parse_list(p.get("hw_list",    []))
+    wh_list    = _parse_list(p.get("wh_list",    []))
+    hyper_list = _parse_list(p.get("hyper_list", []))
+    ls_list    = _parse_list(p.get("ls_list",    []))
 
-    if anc in _hyper_ids:
+    if anc in _hyper_ids     or any(c in _hyper_ids     for c in hyper_list):
         classes.add("Hypermarket")
-    if anc in _lifestyle_ids:
+    if anc in _lifestyle_ids or any(c in _lifestyle_ids for c in ls_list):
         classes.add("Lifestyle")
-    # Hardware: anchor is hardware OR hw_list non-empty
-    if anc in _hw_ids or any(c in _hw_ids for c in hw_list):
+    if anc in _hw_ids        or any(c in _hw_ids        for c in hw_list):
         classes.add("Hardware")
-    # Warehouse: anchor is warehouse OR wh_list non-empty
-    if anc in _wh_ids or any(c in _wh_ids for c in wh_list):
+    if anc in _wh_ids        or any(c in _wh_ids        for c in wh_list):
         classes.add("Warehouse")
     return classes
 
