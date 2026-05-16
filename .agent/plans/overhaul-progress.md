@@ -2,26 +2,25 @@
 schema: overhaul-progress-v1
 plan: overhaul-documentation-pointsav-com.md
 phase: 2
-sub_phase: design-system-split-queued
-status: in-progress
+sub_phase: complete
+status: clean-checkpoint
 safe_to_resume: true
 unsafe_reason: ""
-owner_engine: claude-code
-last_updated: 2026-05-16T16:14:39Z
+owner_engine: ""
+last_updated: 2026-05-16T16:50:00Z
 last_session_id: c5d87d6f-be9a-48df-bfe9-a48f1ea3e1d0-441063
 ---
 
 ## Last completed sub-task
-- task: Design-system category split — OPUS analysis, handoffs-outbound entries, routing messages
-- commit_sha: d4d9a83 (content-wiki-documentation handoffs), ce1f631e (outbox messages)
+- task: Design-system source cleanup + P1b/P2 README fixes
+- commit_sha: 9bbee55 (content-wiki-documentation source cleanup), 7ece788f (pointsav-monorepo P1b), b79ff02 (content-wiki-documentation P2), d3bfd6c (woodfine-fleet-deployment P2), 7d97b51 (pointsav-fleet-deployment P2), 1c8d9bf (pointsav-design-system P2)
 - committed_at: 2026-05-16
-- detail: OPUS agent determined 4 EN+ES pairs stay at documentation.pointsav.com (design-philosophy,
-  design-primitive-vocabulary, brand-family-swatch, brand-typography); 48 files across 3 batches
-  move to pointsav-design-system/. Three pending-destination-commit entries opened in
-  content-wiki-documentation/.agent/rules/handoffs-outbound.md. Messages queued to project-design
-  and command@claude-code establishing the permanent artifact routing boundary.
-  Source-side git rm + _index.md rewrite + redirects.yaml + naming-convention.md §13 amendment
-  are gated on project-design's destination commits landing.
+- detail: 48 files git rm'd from design-system/; _index.md rewritten (EN+ES); redirects.yaml created
+  (48 entries); naming-convention.md §7 added; three handoff entries closed. P1b (pointsav-monorepo
+  README) fixed on editorial-readme-fix branch — stale Apache 2.0 copyright line removed, canonical
+  Spanish footer added. P2 READMEs fixed in 4 staging-tier sub-clones (Copyright (c) → Copyright ©,
+  Inc.. → Inc.). Two admin-only READMEs (pointsav-media-assets, woodfine-media-assets) deferred to
+  Command Session.
 
 ## Three-wiki relaunch — COMPLETE (2026-05-16)
 - task: Stage 6 promotion of all three wikis + structural fixes
