@@ -77,12 +77,38 @@ pub struct DraftResponse {
 #[derive(Debug, Serialize)]
 pub struct HealthResponse {
     pub status: &'static str,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub failures: Vec<String>,
 }
 
 // ── handlers ──────────────────────────────────────────────────────────────────
 
-async fn healthz() -> Json<HealthResponse> {
-    Json(HealthResponse { status: "ok" })
+async fn healthz(State(state): State<Arc<HttpState>>) -> (StatusCode, Json<HealthResponse>) {
+    let mut failures = Vec::new();
+
+    // Probe graph store with a lightweight read — if the graph is broken this will error.
+    if let Err(e) = state.graph.query_context("__taxonomy__", "", 1) {
+        failures.push(format!("graph: {}", e));
+    }
+
+    // Probe Doorman /readyz with 2s timeout.
+    let doorman_url = format!("{}/readyz", state.doorman_endpoint);
+    match reqwest::Client::new()
+        .get(&doorman_url)
+        .timeout(Duration::from_secs(2))
+        .send()
+        .await
+    {
+        Ok(res) if res.status().is_success() => {}
+        Ok(res) => failures.push(format!("doorman: HTTP {}", res.status())),
+        Err(e) => failures.push(format!("doorman: {}", e)),
+    }
+
+    if failures.is_empty() {
+        (StatusCode::OK, Json(HealthResponse { status: "ok", failures: Vec::new() }))
+    } else {
+        (StatusCode::SERVICE_UNAVAILABLE, Json(HealthResponse { status: "degraded", failures }))
+    }
 }
 
 async fn graph_context(
