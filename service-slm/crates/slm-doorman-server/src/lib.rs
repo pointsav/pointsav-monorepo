@@ -26,6 +26,7 @@ pub mod queue;
 /// of the feature set.
 pub mod test_helpers {
     use std::collections::HashMap;
+    use std::sync::atomic::AtomicU64;
     use std::sync::{Arc, Mutex};
 
     use slm_doorman::tier::{
@@ -110,6 +111,7 @@ pub mod test_helpers {
             audit_tenant_concurrency_cap: TEST_AUDIT_CONCURRENCY_CAP,
             queue_config: temp_queue_config(),
             service_content_endpoint: String::new(),
+            last_yoyo_dispatch: Arc::new(AtomicU64::new(0)),
         })
     }
 
@@ -141,6 +143,7 @@ pub mod test_helpers {
             audit_tenant_concurrency_cap: TEST_AUDIT_CONCURRENCY_CAP,
             queue_config: temp_queue_config(),
             service_content_endpoint: String::new(),
+            last_yoyo_dispatch: Arc::new(AtomicU64::new(0)),
         })
     }
 
@@ -170,6 +173,7 @@ pub mod test_helpers {
             audit_tenant_concurrency_cap: TEST_AUDIT_CONCURRENCY_CAP,
             queue_config: temp_queue_config(),
             service_content_endpoint: String::new(),
+            last_yoyo_dispatch: Arc::new(AtomicU64::new(0)),
         })
     }
 
@@ -223,6 +227,7 @@ pub mod test_helpers {
             audit_tenant_concurrency_cap: TEST_AUDIT_CONCURRENCY_CAP,
             queue_config: temp_queue_config(),
             service_content_endpoint: String::new(),
+            last_yoyo_dispatch: Arc::new(AtomicU64::new(0)),
         })
     }
 
@@ -292,6 +297,7 @@ pub mod test_helpers {
             audit_tenant_concurrency_cap: concurrency_cap,
             queue_config: temp_queue_config(),
             service_content_endpoint: String::new(),
+            last_yoyo_dispatch: Arc::new(AtomicU64::new(0)),
         });
         (state, ledger_dir)
     }
@@ -340,6 +346,7 @@ pub mod test_helpers {
             audit_tenant_concurrency_cap: TEST_AUDIT_CONCURRENCY_CAP,
             queue_config: temp_queue_config(),
             service_content_endpoint: String::new(),
+            last_yoyo_dispatch: Arc::new(AtomicU64::new(0)),
         });
         (state, ledger_dir)
     }
@@ -362,6 +369,7 @@ pub mod test_helpers {
             audit_tenant_concurrency_cap: TEST_AUDIT_CONCURRENCY_CAP,
             queue_config: temp_queue_config(),
             service_content_endpoint: service_content_endpoint.into(),
+            last_yoyo_dispatch: Arc::new(AtomicU64::new(0)),
         })
     }
 }
