@@ -345,6 +345,7 @@ async fn error_brief_cache_miss_returns_410() {
         audit_tenant_concurrency_cap: 100,
         queue_config: temp_queue_config(),
         service_content_endpoint: String::new(),
+        last_yoyo_dispatch: Arc::new(std::sync::atomic::AtomicU64::new(0)),
     });
     let app = router(state);
 
@@ -637,6 +638,7 @@ async fn shadow_enqueued_brief_file_exists_at_queue_path() {
         audit_tenant_concurrency_cap: 100,
         queue_config: queue_cfg,
         service_content_endpoint: String::new(),
+        last_yoyo_dispatch: Arc::new(std::sync::atomic::AtomicU64::new(0)),
     });
 
     let app = router(state_with_queue);
@@ -1056,6 +1058,7 @@ async fn audit_proxy_valid_request_writes_audit_stub_and_returns_503() {
         audit_tenant_concurrency_cap: 100,
         queue_config: temp_queue_config(),
         service_content_endpoint: String::new(),
+        last_yoyo_dispatch: Arc::new(std::sync::atomic::AtomicU64::new(0)),
     });
     let app = router(state);
 
@@ -1736,6 +1739,7 @@ async fn audit_proxy_unallowlisted_purpose_does_not_write_ledger_entry() {
         audit_tenant_concurrency_cap: 100,
         queue_config: temp_queue_config(),
         service_content_endpoint: String::new(),
+        last_yoyo_dispatch: Arc::new(std::sync::atomic::AtomicU64::new(0)),
     });
     let app = router(state);
 
@@ -1879,6 +1883,7 @@ async fn audit_capture_valid_prose_edit_event_returns_200_and_writes_ledger() {
         audit_tenant_concurrency_cap: 100,
         queue_config: temp_queue_config(),
         service_content_endpoint: String::new(),
+        last_yoyo_dispatch: Arc::new(std::sync::atomic::AtomicU64::new(0)),
     });
     let app = router(state);
 
@@ -2052,6 +2057,7 @@ async fn audit_capture_oversized_payload_returns_413() {
         audit_tenant_concurrency_cap: 100,
         queue_config: temp_queue_config(),
         service_content_endpoint: String::new(),
+        last_yoyo_dispatch: Arc::new(std::sync::atomic::AtomicU64::new(0)),
     });
     let app = router(state);
 
@@ -2123,6 +2129,7 @@ async fn audit_capture_default_event_types_all_accepted() {
             audit_tenant_concurrency_cap: 100,
             queue_config: temp_queue_config(),
             service_content_endpoint: String::new(),
+        last_yoyo_dispatch: Arc::new(std::sync::atomic::AtomicU64::new(0)),
         });
         let app = router(state);
 
@@ -2198,6 +2205,7 @@ async fn audit_proxy_oversized_request_returns_413() {
         audit_tenant_concurrency_cap: 100,
         queue_config: temp_queue_config(),
         service_content_endpoint: String::new(),
+        last_yoyo_dispatch: Arc::new(std::sync::atomic::AtomicU64::new(0)),
     });
     let app = router(state);
 
@@ -2354,6 +2362,7 @@ async fn audit_tenant_concurrency_cap_rejects_excess_requests() {
         audit_tenant_concurrency_cap: 2,
         queue_config: temp_queue_config(),
         service_content_endpoint: String::new(),
+        last_yoyo_dispatch: Arc::new(std::sync::atomic::AtomicU64::new(0)),
     });
 
     // Both requests below should fail immediately: no permits available.
@@ -2441,6 +2450,7 @@ async fn audit_tenant_concurrency_cap_per_tenant_independent() {
         audit_tenant_concurrency_cap: 1,
         queue_config: temp_queue_config(),
         service_content_endpoint: String::new(),
+        last_yoyo_dispatch: Arc::new(std::sync::atomic::AtomicU64::new(0)),
     });
 
     // Two requests from different tenants; both should complete (200 OK

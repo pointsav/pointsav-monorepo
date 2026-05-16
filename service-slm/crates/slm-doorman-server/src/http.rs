@@ -27,7 +27,9 @@
 
 use std::collections::HashMap;
 use std::str::FromStr;
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use axum::body::Bytes;
 use axum::extract::State;
@@ -104,6 +106,13 @@ pub struct AppState {
     /// is not set. Set to an empty string to mark the proxy as unconfigured
     /// (handlers return 503 with `GraphProxyServiceUnavailable`).
     pub service_content_endpoint: String,
+    /// Shared dispatch clock for the Yo-Yo idle monitor (B5).
+    /// The router stores Unix epoch seconds here on every successful Tier B
+    /// dispatch. The idle monitor reads this each poll cycle to prevent the
+    /// 5-min polling interval from triggering a premature VM stop when the
+    /// model is between requests (slots=0 between 26-second inferences).
+    /// Zero = no Tier B dispatch since Doorman boot.
+    pub last_yoyo_dispatch: Arc<AtomicU64>,
 }
 
 pub fn router(state: Arc<AppState>) -> Router {
@@ -235,6 +244,12 @@ async fn chat_completions(
 
     let resp = state.doorman.route(&req).await.map_err(ApiError::from)?;
     let tier_str = resp.tier_used.as_str().to_string();
+    if tier_str.starts_with("yoyo") {
+        state.last_yoyo_dispatch.store(
+            SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default().as_secs(),
+            Ordering::Relaxed,
+        );
+    }
     let mut resp_headers = HeaderMap::new();
     if let Ok(v) = tier_str.parse() {
         resp_headers.insert("x-foundry-tier-used", v);
@@ -523,6 +538,14 @@ async fn extract(State(state): State<Arc<AppState>>, raw: Bytes) -> impl IntoRes
 
     // Capture error message before moving result.
     let error_message_for_audit = result.as_ref().err().map(|e| e.to_string());
+
+    // Update idle monitor dispatch clock: route_yoyo_only targets Tier B exclusively.
+    if result.is_ok() {
+        state.last_yoyo_dispatch.store(
+            SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default().as_secs(),
+            Ordering::Relaxed,
+        );
+    }
 
     // 6. Parse result into response fields.
     let (entities, tier_used, model, cost_usd, extraction_ok, deferred, defer_reason_str) = match result {
@@ -1402,6 +1425,12 @@ async fn anthropic_messages(
 
     let req = anthropic_to_compute_request(body, module_id, request_id);
     let resp = state.doorman.route(&req).await.map_err(ApiError::from)?;
+    if resp.tier_used.as_str().starts_with("yoyo") {
+        state.last_yoyo_dispatch.store(
+            SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default().as_secs(),
+            Ordering::Relaxed,
+        );
+    }
 
     if stream {
         let sse_body = anthropic_sse_body(&resp, &model);

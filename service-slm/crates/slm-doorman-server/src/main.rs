@@ -60,6 +60,7 @@
 
 use slm_doorman_server::http;
 use slm_doorman_server::idle_monitor::IdleMonitorConfig;
+use std::sync::atomic::AtomicU64;
 use slm_doorman_server::queue::{
     dequeue_shadow, ensure_dirs, reap_expired_leases, release_shadow, QueueConfig, ReleaseOutcome,
 };
@@ -111,6 +112,11 @@ async fn main() -> anyhow::Result<()> {
     // AppState so both the handler and the drain worker share the same config.
     let queue_cfg = QueueConfig::from_env();
 
+    // Shared dispatch clock — updated by the HTTP router on every successful
+    // Tier B dispatch; read by the idle monitor to prevent premature VM stops
+    // when the 5-min poll catches an inter-request gap (slots=0).
+    let last_yoyo_dispatch = Arc::new(AtomicU64::new(0));
+
     // Graph proxy — reuse the SERVICE_CONTENT_ENDPOINT already consumed by
     // GraphContextClient above. Default to 127.0.0.1:9081 if unset so the
     // proxy is available in community-tier deployments without extra config.
@@ -136,6 +142,8 @@ async fn main() -> anyhow::Result<()> {
         queue_config: Arc::new(queue_cfg.clone()),
         // Graph proxy — base URL for service-content (datagraph-access-discipline).
         service_content_endpoint,
+        // Dispatch clock shared with the idle monitor.
+        last_yoyo_dispatch: Arc::clone(&last_yoyo_dispatch),
     });
 
     info!(
@@ -315,7 +323,10 @@ async fn main() -> anyhow::Result<()> {
     // (default 30) of zero active slots, sends a GCP instances.stop request
     // via the workspace SA ADC token from the GCE metadata server.
     // Requires all four GCP env vars — absent any, the monitor does not start.
-    if let Some(idle_cfg) = IdleMonitorConfig::from_env() {
+    if let Some(mut idle_cfg) = IdleMonitorConfig::from_env() {
+        // Wire in the shared dispatch clock so the idle monitor can account for
+        // Tier B dispatches that occurred between 5-min poll intervals.
+        idle_cfg.last_yoyo_dispatch = Arc::clone(&last_yoyo_dispatch);
         info!(
             idle_threshold_secs = idle_cfg.idle_threshold.as_secs(),
             gcp_instance = %idle_cfg.gcp_instance,

@@ -21,6 +21,7 @@
 //! No live API calls per the standing operator guardrail.
 
 use std::collections::HashMap;
+use std::sync::atomic::AtomicU64;
 use std::sync::{Arc, Mutex};
 
 use axum::body::Body;
@@ -114,6 +115,7 @@ fn app_state_with_proxy_and_ledger_dir(
         audit_tenant_concurrency_cap: 100,
         queue_config: temp_queue_config(),
         service_content_endpoint: String::new(),
+        last_yoyo_dispatch: Arc::new(AtomicU64::new(0)),
     })
 }
 
