@@ -3040,20 +3040,20 @@ async fn history_page(
         @if history.is_empty() {
             p { "No revision history yet." }
         } @else {
-            table.history-table style="width: 100%; border-collapse: collapse; margin-top: 1em;" {
+            table.history-table {
                 thead {
-                    tr style="border-bottom: 2px solid #eee; text-align: left;" {
-                        th style="padding: 8px;" { "SHA" }
-                        th style="padding: 8px;" { "Author" }
-                        th style="padding: 8px;" { "Date" }
-                        th style="padding: 8px;" { "Commit" }
-                        th style="padding: 8px;" { "Edit summary" }
+                    tr.history-thead-row {
+                        th.history-th { "SHA" }
+                        th.history-th { "Author" }
+                        th.history-th { "Date" }
+                        th.history-th { "Commit" }
+                        th.history-th { "Edit summary" }
                     }
                 }
                 tbody {
                     @for entry in history {
-                        tr style="border-bottom: 1px solid #eee;" {
-                            td style="padding: 8px; font-family: monospace;" {
+                        tr.history-body-row {
+                            td.history-td-sha {
                                 a href=(format!("/diff/{}?b={}&a={}~", slug, entry.sha, entry.sha)) {
                                     @if entry.sha.len() >= 7 {
                                         (entry.sha[..7].to_string())
@@ -3062,10 +3062,10 @@ async fn history_page(
                                     }
                                 }
                             }
-                            td style="padding: 8px;" { (entry.author) }
-                            td style="padding: 8px; color: #666; font-size: 0.9em;" { (entry.timestamp_iso) }
-                            td style="padding: 8px;" { (entry.message) }
-                            td style="padding: 8px; color: #54595d; font-style: italic; font-size: 0.9em;" {
+                            td.history-td { (entry.author) }
+                            td.history-td-date { (entry.timestamp_iso) }
+                            td.history-td { (entry.message) }
+                            td.history-td-summary {
                                 @if !entry.edit_summary.is_empty() {
                                     (entry.edit_summary)
                                 }
@@ -3095,11 +3095,11 @@ async fn blame_page(
 
     let body = html! {
         h1 { "Blame: " (slug) }
-        div.blame-container style="background: #f9f9f9; padding: 1em; border-radius: 4px; overflow-x: auto;" {
-            pre style="margin: 0; font-family: monospace; font-size: 0.9em; line-height: 1.5;" {
+        div.blame-container {
+            pre.blame-pre {
                 @for line in blame {
-                    div.blame-line style="display: flex;" {
-                        span.blame-meta style="color: #999; width: 200px; flex-shrink: 0; user-select: none; border-right: 1px solid #ddd; margin-right: 1em;" {
+                    div.blame-line {
+                        span.blame-meta {
                             @if line.sha.len() >= 7 {
                                 (line.sha[..7].to_string())
                             } @else {
