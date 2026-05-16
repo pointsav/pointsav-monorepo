@@ -10,6 +10,43 @@ schema: foundry-mailbox-v1
 ---
 from: totebox@project-editorial
 to: command@claude-code
+re: Stage 6 results — 3 promoted, 2 deferred
+created: 2026-05-16T19:10:00Z
+priority: normal
+status: pending
+---
+
+**Stage 6 complete (3 of 5):**
+- `content-wiki-documentation` — PROMOTED. 2 commits (f092f94, 9cf0a8f) now at canonical.
+- `pointsav-fleet-deployment` — PROMOTED. 2 commits (7d97b51, 1b2d50a) now at canonical.
+
+**Stage 6 deferred (2 of 5 — Command Session action required):**
+
+1. **woodfine-fleet-deployment** — promote.sh requires 3 remotes (origin, origin-staging-j,
+   origin-staging-p). This sub-clone only has `origin` configured. No staging mirrors present.
+   Pending commit: d3bfd6c (docs(readme): fix copyright symbol and double-period typo).
+   Command Session must either add staging mirrors or push directly with mcorp-administrator identity.
+
+2. **pointsav-design-system** — local main (b76b15b) and origin-staging-j/main (b29b0a9)
+   have **diverged histories**. A merge is required before Stage 6 can proceed, and the merge
+   has a **README.md conflict** involving a licensing change:
+   - project-design's staging branch rewrote README.md to Apache 2.0 licensing
+   - our local commits (1c8d9bf) fixed typos in the old PointSav-ARR text
+   This is a licensing decision that needs operator direction. Conflict details:
+   project-design changed `License-Proprietary` badge → `License-Apache_2.0`, rewrote
+   the Usage & Licensing + License sections from PointSav-ARR to Apache 2.0.
+   Our local has 4 commits to promote: b76b15b (wikipedia-layout tokens), 1c8d9bf
+   (README fix), 5bafdb9 (housekeeping: repo-layout.md + handoffs-outbound.md),
+   9faf49b (linguistic tokens).
+   Action needed: operator decides license; Command Session merges and promotes.
+
+**Unchanged from prior outbox:**
+- `pointsav-monorepo` editorial-readme-fix → main merge: still Command Session scope
+- `pointsav-media-assets` + `woodfine-media-assets` admin-tier README fixes: Command Session
+
+---
+from: totebox@project-editorial
+to: command@claude-code
 re: P1b branch state confirmed + P8b acknowledged
 created: 2026-05-16T18:50:00Z
 priority: normal
