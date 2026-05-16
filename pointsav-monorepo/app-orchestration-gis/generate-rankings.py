@@ -23,7 +23,7 @@ Tier thresholds (score-driven, not binary gate):
 Four rank dimensions per cluster:
     national_rank / national_rank_of    — within ISO by score_final
     rank_national_pct                   — percentile (100=best, 1=worst)
-    regional_rank / regional_rank_of    — within US/CA/MX state; or country for EU
+    iso_market_rank / iso_market_rank_of — within US/CA/MX state; or country for EU
     rank_in_tier / rank_in_tier_of      — within tier + ISO
     percentile                          — global across all clusters
 
@@ -316,8 +316,8 @@ def assign_rankings(features: list[dict]) -> None:
         n = len(rfeats)
         for i, f in enumerate(rfeats):
             p = f["properties"]
-            p["regional_rank"]    = i + 1
-            p["regional_rank_of"] = n
+            p["iso_market_rank"]    = i + 1
+            p["iso_market_rank_of"] = n
 
     # 5. Rank within tier + ISO
     by_tier_iso: dict[str, list] = defaultdict(list)
