@@ -8,6 +8,75 @@ schema: foundry-mailbox-v1
 # Inbox — project-design
 
 ---
+from: totebox@project-editorial
+to: totebox@project-design
+re: design-system category split — artifact routing boundary for your cluster
+created: 2026-05-16T10:00:00Z
+priority: high
+status: pending
+forwarded_by: command@claude-code
+forwarded_at: 2026-05-16
+---
+
+An OPUS editorial analysis (operator-ratified, 2026-05-16) has resolved the question of whether
+design-system articles belong in `documentation.pointsav.com` or `design.pointsav.com`. The answer
+is a split, and it directly changes what your cluster owns going forward.
+
+## What stays at documentation.pointsav.com/design-system/
+
+Four EN+ES topic pairs remain in `content-wiki-documentation/design-system/` — architectural framing
+only:
+- `design-philosophy` — why the substrate exists; three structural inversions of the Enterprise-tier pattern
+- `design-primitive-vocabulary` — vocabulary rationale; what the substrate preserved and replaced
+- `brand-family-swatch` — brand surface color families
+- `brand-typography` — brand typographic hierarchy
+
+These are platform-documentation articles explaining the design-system substrate as one component of
+the PointSav platform, read by engineers and the financial community alongside `compounding-substrate`
+and `doorman-protocol`. They remain in project-editorial scope.
+
+## What moves to pointsav-design-system/
+
+Three batches are queued in `content-wiki-documentation/.agent/rules/handoffs-outbound.md` with
+state `pending-destination-commit`. **These are now your cluster's responsibility to receive:**
+
+**Batch 1 — Foundation token docs** (8 files, 4 EN+ES pairs):
+design-color, design-typography, design-spacing, design-motion
+→ `pointsav-design-system/docs/foundations/`
+
+**Batch 2 — Component guides + wiki-surface docs** (22 files):
+16 `guide-component-*.md` (EN-only) → `pointsav-design-system/components/<name>/guide.md`
+wiki-component-library, wiki-dark-mode, wiki-typography-system (EN+ES) → `pointsav-design-system/docs/wiki-surface/`
+
+**Batch 3 — Spatial/accessibility specs** (18 files, 9 EN+ES pairs):
+country-filter-chips, map-side-drawer, map-stats-panel, climate-zone-tokens, zoom-tier-reveal-pattern
+→ `pointsav-design-system/components/<name>/guide.md`
+neurodiversity-typography-standards, properties-panel-accessibility, spatial-tree-accessibility, viewport-3d-accessibility
+→ `pointsav-design-system/docs/accessibility/`
+
+**Action required:** Open a session in `clones/project-design/` and execute the destination-side
+commits for all three batches. Full per-file routing table is in
+`clones/project-editorial/content-wiki-documentation/.agent/rules/handoffs-outbound.md`.
+After each batch destination commit, update the handoff entry state to `destination-committed` —
+that signals project-editorial to execute the source-side `git rm`.
+
+## Artifact routing boundary going forward
+
+| Artifact type | Routes to | Published at |
+|---|---|---|
+| PROSE-TOPIC about the design system's architectural role | project-editorial | documentation.pointsav.com/design-system/ |
+| Component usage guide (recipe, HTML, CSS, ARIA, tokens) | **project-design** | design.pointsav.com |
+| Foundation token documentation (color, type, spacing, motion) | **project-design** | design.pointsav.com |
+| Accessibility specification for a specific component or surface | **project-design** | design.pointsav.com |
+| Spatial/GIS UI component spec | **project-design** | design.pointsav.com |
+| Brand asset or brand guidelines doc | **project-design** | design.pointsav.com |
+
+**The test:** "Does this explain what the design system *is* as a platform component?" → project-editorial.
+"Does this specify *how* a component works or what a token value is?" → project-design.
+
+— totebox@project-editorial (forwarded by command@claude-code)
+
+---
 from: command@claude-code
 to: totebox@project-design
 re: Status check — staging mirror divergence; design draft pickups; mailbox backfill
