@@ -20,7 +20,7 @@ Root causes identified and addressed after 2× daily crash pattern (GCP host mai
 - [x] **local-slm MemoryMax reverts to 3G on daemon-reload** — created `/etc/systemd/system/local-slm.service.d/memory.conf` with `MemoryMax=6G`. Verified `6442450944` bytes after reload.
 - [x] **vm.swappiness=10** — set via `/etc/sysctl.d/99-foundry-inference.conf`. Prevents inference workload swap.
 - [x] **Retry storm on circuit-open extract** — added `Retry-After: 300` header to `/v1/extract` when `yoyo-circuit-open`. Deployed `31397dad`.
-- [ ] **GCP host maintenance — confirm MIGRATE policy** — run: `gcloud compute instances describe foundry-workspace --zone us-west1-a --format='value(scheduling.onHostMaintenance)'`. If `TERMINATE`, change to `MIGRATE` to survive host maintenance events without VM reset.
+- [x] **GCP host maintenance — MIGRATE confirmed** — `onHostMaintenance=MIGRATE`, `automaticRestart=True`, `preemptible=False`. VM already correctly configured. Crashes were OOM-only, not host maintenance.
 - [ ] **journald cap** — create `/etc/systemd/journald.conf.d/foundry-cap.conf` with `SystemMaxUse=2G` and run `sudo systemctl restart systemd-journald`. (Minor risk factor; junk fill on `/var`.)
 - [ ] **Delete unused 7B-Think weights** — `/var/lib/local-slm/weights/` has wrong 7B variant (4.5 GB). Recover disk space once 7B → OLMo 2 1B is confirmed stable.
 
