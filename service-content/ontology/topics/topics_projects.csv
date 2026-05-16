@@ -1,6 +1,18 @@
 topic_id,title,domain,wiki_repo,wiki_path,active_state
-topic-co-location-mandate,Co-Location Mandate,projects,content-wiki-documentation,topics/topic-co-location-mandate.md,pending
-topic-woodfine-buildings,Woodfine Buildings Standard,projects,content-wiki-documentation,topics/topic-woodfine-buildings.md,pending
-topic-self-similar-governance,Self-Similar Governance,projects,content-wiki-documentation,topics/topic-self-similar-governance.md,pending
-topic-mix-of-use,Mix-of-Use Design Model,projects,content-wiki-documentation,topics/topic-mix-of-use.md,pending
-topic-capital-framework,Capital Framework,projects,content-wiki-documentation,topics/topic-capital-framework.md,pending
+topic-asset-architecture-standard,Asset Architecture Standard,projects,content-wiki-projects,topic-asset-architecture-standard.md,active
+topic-co-location-anchors,Co-location Anchors,projects,content-wiki-projects,topic-co-location-anchors.md,active
+topic-co-location-index-canada,Co-location Index: Canada,projects,content-wiki-projects,topic-co-location-index-canada.md,active
+topic-co-location-index-italy,Co-location Index: Italy,projects,content-wiki-projects,topic-co-location-index-italy.md,active
+topic-co-location-index-mexico,Co-location Index: Mexico,projects,content-wiki-projects,topic-co-location-index-mexico.md,active
+topic-co-location-index-nordics,Co-location Index: Nordics,projects,content-wiki-projects,topic-co-location-index-nordics.md,active
+topic-co-location-index-poland,Co-location Index: Poland,projects,content-wiki-projects,topic-co-location-index-poland.md,active
+topic-co-location-index-spain,Co-location Index: Spain,projects,content-wiki-projects,topic-co-location-index-spain.md,active
+topic-co-location-index-us,Co-location Index: United States,projects,content-wiki-projects,topic-co-location-index-us.md,active
+topic-co-location-intelligence-overview,Retail Co-location Intelligence Overview,projects,content-wiki-projects,topic-co-location-intelligence-overview.md,active
+topic-co-location-methodology,Retail Co-location Methodology,projects,content-wiki-projects,topic-co-location-methodology.md,active
+topic-co-location-ranking-system,Retail Co-location Ranking System,projects,content-wiki-projects,topic-co-location-ranking-system.md,active
+topic-regional-market-matrix,Regional Market Matrix,projects,content-wiki-projects,topic-regional-market-matrix.md,active
+topic-site-ledger-integration,Site Ledger Integration,projects,content-wiki-projects,topic-site-ledger-integration.md,active
+topic-tier-index-europe,Co-location Tier Index: Europe,projects,content-wiki-projects,topic-tier-index-europe.md,active
+topic-tier-index-north-america,Co-location Tier Index: North America,projects,content-wiki-projects,topic-tier-index-north-america.md,active
+topic-zoning-acquisition-rules,Zoning Acquisition Rules,projects,content-wiki-projects,topic-zoning-acquisition-rules.md,active
