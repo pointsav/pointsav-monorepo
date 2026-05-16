@@ -5,3 +5,41 @@ guide-doorman-deployment,Doorman Deployment Guide,documentation,woodfine/woodfin
 guide-slm-execution,SLM Execution and Inference Operations,documentation,woodfine/woodfine-fleet-deployment,cluster-totebox-personnel/guide-slm-execution.md,active
 guide-console-operations,Console Operator Guide,documentation,woodfine/woodfine-fleet-deployment,node-console-operator/guide-console-operations.md,active
 guide-provision-node,Node Provisioning Guide,documentation,woodfine/woodfine-fleet-deployment,vault-privategit-source/guide-provision-node.md,active
+guide-01-deployment,SLM Deployment Guide — cluster-totebox-personnel,documentation,woodfine/woodfine-fleet-deployment,service-slm/guide-01-deployment.md,active
+guide-bim-archive-operations,Edit MANIFEST.md to update last_ingestion and model_guids,documentation,woodfine/woodfine-fleet-deployment,cluster-totebox-property/guide-bim-archive-operations.md,active
+guide-bim-token-authoring,On the deployment host,documentation,woodfine/woodfine-fleet-deployment,gateway-orchestration-bim/guide-bim-token-authoring.md,active
+guide-cold-storage-sync,🧭 GUIDE: PHYSICAL EGRESS (COLD STORAGE BACKUP),documentation,woodfine/woodfine-fleet-deployment,cluster-totebox-personnel/guide-cold-storage-sync.md,active
+guide-command-ledger,🧭 GUIDE: UNIFIED COMMAND LEDGER OPERATIONS,documentation,woodfine/woodfine-fleet-deployment,node-console-operator/guide-command-ledger.md,active
+guide-command-session,Guide — Running a Command Session,documentation,woodfine/woodfine-fleet-deployment,vault-privategit-source/guide-command-session.md,active
+guide-deploy-bim-substrate,Expected: {"status":"ok"},documentation,woodfine/woodfine-fleet-deployment,gateway-orchestration-bim/guide-deploy-bim-substrate.md,active
+guide-deploy-vpn,OPERATIONAL MANIFEST: SOVEREIGN OVERLAY NETWORK,documentation,woodfine/woodfine-fleet-deployment,fleet-infrastructure-leased/guide-deploy-vpn.md,active
+guide-deployment,Deployment Guide — cluster-totebox-corporate,documentation,woodfine/woodfine-fleet-deployment,cluster-totebox-corporate/guide-deployment.md,active
+guide-deployment-marketing-site,Deployment Guide — Marketing Landing Site (Woodfine tenant),documentation,woodfine/woodfine-fleet-deployment,media-marketing-landing/guide-deployment-marketing-site.md,active
+guide-editorial-content-sweep,Guide — Monthly Editorial Content Sweep,documentation,woodfine/woodfine-fleet-deployment,media-knowledge-documentation/guide-editorial-content-sweep.md,active
+guide-gis-adding-a-chain,Gis Adding A Chain,documentation,woodfine/woodfine-fleet-deployment,gateway-orchestration-gis/guide-gis-adding-a-chain.md,active
+guide-ingress-operations,🧭 GUIDE: INGRESS OPERATIONS & SELF-HEALING LOOP,documentation,woodfine/woodfine-fleet-deployment,cluster-totebox-personnel/guide-ingress-operations.md,active
+guide-knowledge-wiki-sprint-roadmap,Confirm HTTP 200 on all three:,documentation,woodfine/woodfine-fleet-deployment,media-knowledge-documentation/guide-knowledge-wiki-sprint-roadmap.md,active
+guide-linkedin-adapter,GUIDE: Physical Egress (service-message-courier),documentation,woodfine/woodfine-fleet-deployment,cluster-totebox-personnel/guide-linkedin-adapter.md,active
+guide-lxc-network-admin,🧭 GUIDE: PROVISIONING THE NETWORK LEDGER (LXC),documentation,woodfine/woodfine-fleet-deployment,fleet-infrastructure-onprem/guide-lxc-network-admin.md,active
+guide-macos-endpoints,OPERATIONAL MANIFEST: macOS SOVEREIGN ENDPOINT CONFIGURATION,documentation,woodfine/woodfine-fleet-deployment,fleet-infrastructure-leased/guide-macos-endpoints.md,active
+guide-mesh-execution,🧭 GUIDE: PPN MESH EXECUTION (THE F8 TERMINAL),documentation,woodfine/woodfine-fleet-deployment,guide-mesh-execution.md,active
+guide-mesh-orchestration,Mesh Network Orchestration Guide,documentation,woodfine/woodfine-fleet-deployment,route-network-admin/guide-mesh-orchestration.md,active
+guide-msft-entra-id,GUIDE: MICROSOFT ENTRA ID SOVEREIGNTY,documentation,woodfine/woodfine-fleet-deployment,cluster-totebox-personnel/guide-msft-entra-id.md,active
+guide-open-archive,Guide — Opening a Totebox Archive,documentation,woodfine/woodfine-fleet-deployment,vault-privategit-source/guide-open-archive.md,active
+guide-operate-marketing-landing,Start both tenants,documentation,woodfine/woodfine-fleet-deployment,media-marketing-landing/guide-operate-marketing-landing.md,active
+guide-personnel-ledger,GUIDE: Personnel Ledger Operations,documentation,woodfine/woodfine-fleet-deployment,cluster-totebox-personnel/guide-personnel-ledger.md,active
+guide-peter-macbook,OPERATIONAL MANIFEST: MACBOOK AIR ENDPOINT (MEXICO),documentation,woodfine/woodfine-fleet-deployment,fleet-infrastructure-leased/guide-peter-macbook.md,active
+guide-physical-egress,GUIDE: Physical Egress (Regulatory Printing),documentation,woodfine/woodfine-fleet-deployment,guide-physical-egress.md,active
+guide-provision-marketing-site,Provision Node Guide — Marketing Landing Site (Woodfine tenant),documentation,woodfine/woodfine-fleet-deployment,media-marketing-landing/guide-provision-marketing-site.md,active
+guide-provision-onprem,GUIDE: Bare-Metal Provisioning & Mesh Fusion,documentation,woodfine/woodfine-fleet-deployment,fleet-infrastructure-onprem/guide-provision-onprem.md,active
+guide-provision-relay,Cloud Relay Provisioning Guide,documentation,woodfine/woodfine-fleet-deployment,fleet-infrastructure-cloud/guide-provision-relay.md,active
+guide-provision-standalone,Standalone Node Provisioning Guide,documentation,woodfine/woodfine-fleet-deployment,fleet-infrastructure-leased/guide-provision-standalone.md,active
+guide-regulation-overlay-publishing,IDS syntax validation passes,documentation,woodfine/woodfine-fleet-deployment,gateway-orchestration-bim/guide-regulation-overlay-publishing.md,active
+guide-sovereign-search,GUIDE: Sovereign Search Operations,documentation,woodfine/woodfine-fleet-deployment,cluster-totebox-personnel/guide-sovereign-search.md,active
+guide-telemetry-governance,Telemetry Governance Guide — media-marketing-landing,documentation,woodfine/woodfine-fleet-deployment,media-marketing-landing/guide-telemetry-governance.md,active
+guide-telemetry-operations,Woodfine Management Corp. | Operational Telemetry Guide,documentation,woodfine/woodfine-fleet-deployment,guide-telemetry-operations.md,active
+guide-tier-a-sysadmin-tui,Operating the Tier A Sysadmin TUI,documentation,woodfine/woodfine-fleet-deployment,vault-privategit-source/guide-tier-a-sysadmin-tui.md,active
+guide-totebox-orchestration,🧭 GUIDE: TOTEBOX ORCHESTRATION & AUTONOMOUS SYNTHESIS,documentation,woodfine/woodfine-fleet-deployment,cluster-totebox-personnel/guide-totebox-orchestration.md,active
+guide-wiki-dark-mode-toggle,Wiki Dark Mode Toggle,documentation,woodfine/woodfine-fleet-deployment,media-knowledge-documentation/guide-wiki-dark-mode-toggle.md,active
+guide-wiki-design-tokens,Wiki Design Tokens Configuration,documentation,woodfine/woodfine-fleet-deployment,media-knowledge-documentation/guide-wiki-design-tokens.md,active
+guide-yo-yo-nightly-pipeline,Yo Yo Nightly Pipeline,documentation,woodfine/woodfine-fleet-deployment,cluster-intelligence/guide-yo-yo-nightly-pipeline.md,active
