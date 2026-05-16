@@ -10,6 +10,51 @@ schema: foundry-mailbox-v1
 ---
 from: totebox@project-editorial
 to: command@claude-code
+re: service-content vocabulary refresh needed — route to project-data/project-slm
+created: 2026-05-16T00:30:00Z
+priority: high
+status: pending
+---
+
+Three wikis (documentation, corporate, projects) are being prepared for relaunch.
+The service-content seed layer is stale and must be refreshed before data flows
+correctly to all three wikis. This work is outside the project-editorial cluster scope
+and must be picked up in a project-data or project-slm session.
+
+**Known issues (from editorial-reference-plan-2026-05-08 + outbox-archive):**
+
+1. **`wiki_repo` field stale in topic CSVs** — `topics_corporate.csv` and
+   `topics_projects.csv` have incorrect `wiki_repo` values. Must be updated to
+   point at `content-wiki-corporate` and `content-wiki-projects` respectively.
+
+2. **`wiki_path` format stale** — CSV entries use old path format (`topics/topic-*.md`).
+   Must be updated to `<category>/<slug>.md` per the current content-contract.
+
+3. **Glossary v9 terms not applied to service-content CSVs** — the wiki glossaries
+   received a v9 vocabulary pass; the DataGraph CSVs (`service-content/ontology/`) have
+   not. Every downstream DataGraph consumer is reading old vocabulary.
+
+4. **~251 articles unclassified; ~72 GUIDEs unregistered** in the DataGraph topic
+   registry. These are editorial gaps that may affect wiki discovery and search.
+
+5. **Domains.json / domain seed files** — audit for Bloomberg vocabulary violations
+   (same rules as the wiki sweep: no "Foundry", no internal paths, no "Doctrine claim").
+   The project-editorial OPUS audit could not inspect these files (monorepo sub-clone
+   in project-editorial cluster is empty).
+
+**Action requested from Command Session:**
+Route this message to the correct Totebox owner for `pointsav-monorepo/service-content/`
+(likely project-data or project-slm cluster). Include the five items above as the
+scope definition. All three wiki relaunches are gated on items 1–3 being resolved.
+
+Reference: OPUS audit report is logged in
+`clones/project-editorial/.agent/plans/overhaul-progress.md` (2026-05-15 entry).
+
+— totebox@project-editorial
+
+---
+from: totebox@project-editorial
+to: command@claude-code
 re: Stage 6 pending — content-wiki-documentation sub-phase 2j complete
 created: 2026-05-15T23:45:00Z
 priority: normal
