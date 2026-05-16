@@ -6,7 +6,7 @@
 > Read at session start when a Root Claude opens in this repo. Update
 > at session end when repo-scope open items change.
 
-Last updated: 2026-05-16 (session 2 — Issues 4+5 + Yo-Yo 1-hr test).
+Last updated: 2026-05-16 (session 4 — Stage 6 topology repair + Yo-Yo watchdog SCRIPT_DIR bug fixed).
 
 ---
 
@@ -21,7 +21,7 @@ Root causes identified and addressed after 2× daily crash pattern (GCP host mai
 - [x] **vm.swappiness=10** — set via `/etc/sysctl.d/99-foundry-inference.conf`. Prevents inference workload swap.
 - [x] **Retry storm on circuit-open extract** — added `Retry-After: 300` header to `/v1/extract` when `yoyo-circuit-open`. Deployed `31397dad`.
 - [x] **GCP host maintenance — MIGRATE confirmed** — `onHostMaintenance=MIGRATE`, `automaticRestart=True`, `preemptible=False`. VM already correctly configured. Crashes were OOM-only, not host maintenance.
-- [ ] **journald cap** — create `/etc/systemd/journald.conf.d/foundry-cap.conf` with `SystemMaxUse=2G` and run `sudo systemctl restart systemd-journald`. (Minor risk factor; junk fill on `/var`.)
+- [x] **journald cap** — `/etc/systemd/journald.conf.d/foundry-cap.conf` created with `SystemMaxUse=2G`; journald restarted. Done session 3 (2026-05-16).
 - [ ] **Delete unused 7B-Think weights** — `/var/lib/local-slm/weights/` has wrong 7B variant (4.5 GB). Recover disk space once 7B → OLMo 2 1B is confirmed stable.
 
 ### service-content — ontology CSVs + Domains.json [2026-05-16 task@claude-code]
@@ -32,7 +32,7 @@ Root causes identified and addressed after 2× daily crash pattern (GCP host mai
 - `Domains.json`: `"Sovereign Telemetry"` → `"Verified System Telemetry"` (Do-Not-Use §5).
 - **Known gap:** ~30 topic titles are slug-derived (fallback) rather than H1-extracted. Low-priority editorial cleanup only.
 - **Stage 6** already complete on session start — `main == origin/main`. No promotion action needed this session.
-- **Yo-Yo 1-hr test:** VM RUNNING at `34.6.204.25` on session start; `start-yoyo.sh --runtime=1h` watchdog armed. Auto-restart active.
+- **Yo-Yo 1-hr test:** DONE. Watchdog fired at T+1hr (2026-05-16T17:33:40Z) but `stop-yoyo.sh` failed — `SCRIPT_DIR: unbound variable` in watchdog subshell. VM stopped manually; bug fixed in `2a4c8ade` (SCRIPT_DIR defined at line 40 of `start-yoyo.sh`).
 
 ### service-slm / service-content — Sprint 0a prerequisites [2026-05-14 task@claude-code]
 
@@ -103,8 +103,7 @@ This requires operator presence on the workspace VM; no code work needed.
 - **Idle monitor fixed** (`890b3f6`) — was returning HTTP 411 (missing `Content-Length: 0`
   on GCP POST); fixed with `.body("")`. The SA (Editor role) can stop instances without
   additional IAM grant — step 2 below is no longer required.
-- **VM currently TERMINATED** — manually stopped 2026-05-07; Instance Schedule will
-  restart at 02:00 UTC nightly once weights are loaded.
+- **VM currently TERMINATED** — stopped 2026-05-16 (manually, after 1-hr watchdog failed due to SCRIPT_DIR bug; bug fixed in `2a4c8ade`). No Instance Schedule active; operator must start manually when weights are ready.
 - **Remaining operator steps:**
   1. Upload OLMo 3 32B-Think Q4 weights (~20 GB) to `/data/weights/olmo-3-32b-think-q4.gguf`
      on the Yo-Yo VM via `gcloud compute scp`. This is the only blocker for full
@@ -173,6 +172,8 @@ migrations)*
   Upstream: report packaging regression to lbug crate maintainers.
 
 - ~~**`start-yoyo.sh` Mode 2 Doorman env bug**~~ — **CLOSED (2026-05-15).** `update_doorman_env` already called at line 421 in Mode 2 path (confirmed in code). Both Mode 1 (line 388) and Mode 2 (line 421) call it unconditionally.
+
+- ~~**`start-yoyo.sh` watchdog `SCRIPT_DIR` unbound variable**~~ — **CLOSED (2026-05-16).** `SCRIPT_DIR` was used at line 469 in the `--runtime` watchdog subshell but never defined. 1-hr watchdog fired but `stop-yoyo.sh` call failed; VM left running. Fix: `SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"` added after `set -uo pipefail`. Commit `2a4c8ade` (Peter Woodfine).
 
 - **Workspace `Cargo.toml` unification** — per 2026-04-18 audit,
   workspace declares only 8 of ~70+ crates as members. Other crates
