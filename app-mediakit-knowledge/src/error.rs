@@ -1,4 +1,4 @@
-use axum::http::StatusCode;
+use axum::http::{header, StatusCode};
 use axum::response::{IntoResponse, Response};
 
 #[derive(Debug, thiserror::Error)]
@@ -50,6 +50,78 @@ impl IntoResponse for WikiError {
             _ => StatusCode::INTERNAL_SERVER_ERROR,
         };
         tracing::warn!(error = %self, "request error");
-        (status, self.to_string()).into_response()
+
+        let (heading, body_html) = match &self {
+            WikiError::NotFound(slug) => (
+                "Page not found".to_owned(),
+                format!(
+                    "<p class=\"wiki-error-message\">The article \
+                     <strong>{}</strong> does not exist in this wiki.</p>\
+                     <p class=\"wiki-error-detail\">\
+                     You can <a href=\"/\">return to the home page</a> or \
+                     <a href=\"/search\">search</a> for what you are looking for.</p>",
+                    html_escape(slug)
+                ),
+            ),
+            WikiError::SlugInvalid(slug) => (
+                "Invalid page name".to_owned(),
+                format!(
+                    "<p class=\"wiki-error-message\">\
+                     <code>{}</code> is not a valid article name.</p>",
+                    html_escape(slug)
+                ),
+            ),
+            WikiError::AlreadyExists(slug) => (
+                "Article already exists".to_owned(),
+                format!(
+                    "<p class=\"wiki-error-message\">\
+                     <a href=\"/wiki/{}\">{}</a> already exists.</p>",
+                    html_escape(slug),
+                    html_escape(slug)
+                ),
+            ),
+            _ => (
+                format!("Error {}", status.as_u16()),
+                format!(
+                    "<p class=\"wiki-error-message\">{}</p>",
+                    html_escape(&self.to_string())
+                ),
+            ),
+        };
+
+        let html = format!(
+            r#"<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>{heading}</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="wiki-error-body">
+  <header class="wiki-error-header">
+    <a class="wiki-error-home" href="/">← Home</a>
+  </header>
+  <main class="wiki-error-page">
+    <h1 class="wiki-error-title">{heading}</h1>
+    {body_html}
+  </main>
+</body>
+</html>"#,
+        );
+
+        (
+            status,
+            [(header::CONTENT_TYPE, "text/html; charset=utf-8")],
+            html,
+        )
+            .into_response()
     }
+}
+
+fn html_escape(s: &str) -> String {
+    s.replace('&', "&amp;")
+        .replace('<', "&lt;")
+        .replace('>', "&gt;")
+        .replace('"', "&quot;")
 }
