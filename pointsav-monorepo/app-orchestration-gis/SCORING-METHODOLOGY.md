@@ -186,6 +186,10 @@ Clinics do not pass these gates. All hospital types contribute to the Tier 3 gat
 | `national_rank` | `legacy/generate-rankings-v2.py` | Rank within ISO by V2 score_final (legacy, retained) |
 | `iso_market_rank` | `legacy/generate-rankings-v2.py` | Sub-national market rank (US/CA/MX state; EU country) |
 | `tier_descriptor` | `build-clusters.py` | Composition label (e.g., "Hypermarket + Hardware + Warehouse") |
+| `hyper_list` | `build-clusters.py` | JSON list of ALPHA_HYPERMARKET chain IDs co-located within 3 km (excluding self) |
+| `ls_list` | `build-clusters.py` | JSON list of ALPHA_LIFESTYLE chain IDs co-located within 3 km (excluding self) |
+| `hw_list` | `build-clusters.py` | JSON list of ALPHA_HARDWARE chain IDs co-located within 3 km (excluding self) |
+| `wh_list` | `build-clusters.py` | JSON list of ALPHA_WAREHOUSE chain IDs co-located within 3 km (excluding self) |
 
 **Removed fields (G15 override):** `score_final`, `score_base`, `score_count_bonus`,
 `score_diversity_bonus`, `score_multi_anchor`, `score_civic_depth`, `score_overlap_penalty`,
