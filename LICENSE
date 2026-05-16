@@ -10,6 +10,10 @@ This repository and all associated source code, documentation, and architectural
 At this time, no open-source license (e.g., MIT, Apache, GPL) is granted. You may not use, copy, modify, merge, publish, distribute, sublicense, or sell copies of this software, or permit persons to whom the software is furnished to do so, without explicit, written, cryptographic authorization from Woodfine Capital Projects Inc.
 
 3. LICENSING ROADMAP
-PointSav Digital Systems™ operates on a Vendor/Customer engineering model under the stewardship of Woodfine Capital Projects Inc. Upon the conclusion of the Incubation Phase and the incorporation of PointSav Digital Systems AG, portions of this architecture may transition to a source-available or delayed-open-source model (such as the Functional Source License or Business Source License) to foster knowledge transfer while preventing commercial free-riding. 
+PointSav Digital Systems™ operates on a Vendor/Customer engineering model under the stewardship of Woodfine Capital Projects Inc. Upon the conclusion of the Incubation Phase, portions of this architecture may transition to a source-available or delayed-open-source model (such as the Functional Source License or Business Source License) to foster knowledge transfer while preventing commercial free-riding. 
 
 Until such a corporate transition is finalized and cryptographically signed within this repository, ALL RIGHTS REMAIN STRICTLY RESERVED.
+
+4. APACHE 2.0 CRATES
+Crates identified as Apache-2.0 in factory-release-engineering/mapping/repo-license-map.yaml
+are governed by the Apache License, Version 2.0, notwithstanding the terms above.
