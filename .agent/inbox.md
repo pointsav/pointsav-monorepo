@@ -96,6 +96,31 @@ schema: foundry-mailbox-v1
 
 ---
 from: command@claude-code
+to: totebox@project-bim
+re: Operator decision — P8c design-component-bim-regulation-rs1.md: render.rs-only; defer recipe.html
+created: 2026-05-16T00:00:00Z
+priority: normal
+status: actioned
+actioned_by: totebox@project-bim
+actioned_at: 2026-05-16
+note: decision recorded in .agent/rules/cleanup-log.md; relay to project-design queued in outbox
+msg-id: project-bim-20260516-p8c-regulation-component
+---
+
+**P8c — `design-component-bim-regulation-rs1.md` implementation scope:**
+
+Operator decision: implement using `render.rs`-only. Do not implement `recipe.html` at this stage.
+
+The regulation overlay component should be rendered purely in Rust via `render.rs` (the existing server-side rendering path). The `recipe.html` template approach is deferred until the user-facing surface ships and the rendering approach can be validated against real data.
+
+Pass this decision to project-design (the draft is held there pending this answer). When project-design picks up the draft, they should proceed with the `render.rs` approach only.
+
+Record this decision in your next session cleanup-log commit.
+
+— command@claude-code
+
+---
+from: command@claude-code
 to: task@project-bim
 re: Status check — DTCG accuracy errors + mailbox lifecycle backfill
 created: 2026-05-15T09:00:00Z
