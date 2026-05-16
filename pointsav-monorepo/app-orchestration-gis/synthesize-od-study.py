@@ -214,6 +214,35 @@ def main():
     for cid in catchment:
         catchment[cid]["rn"] = n
 
+    # Per-ISO percentile ranks for all 8 axes (required by Phase 2 geometric engine).
+    # Each value is a fraction in [0,1] where lower = better (top decile ≤ 0.10).
+    print("Computing per-ISO percentile ranks for 8 catchment axes ...")
+
+    cid_to_iso: dict[str, str] = {c["id"]: c.get("iso", "") for c in clusters}
+
+    iso_groups: dict[str, list[str]] = defaultdict(list)
+    for cid in catchment:
+        iso = cid_to_iso.get(cid, "")
+        iso_groups[iso].append(cid)
+
+    _axes = [
+        ("rank_pp_iso", lambda d: d["pp"]),
+        ("rank_sp_iso", lambda d: d["sp"]),
+        ("rank_pg_iso", lambda d: d["pg"]),
+        ("rank_sg_iso", lambda d: d["sg"]),
+        ("rank_ph_iso", lambda d: d["ph"]),
+        ("rank_sh_iso", lambda d: d["sh"]),
+        ("rank_pw_iso", lambda d: d["pw"]),
+        ("rank_sw_iso", lambda d: d["sw"]),
+    ]
+    for iso, iso_cids in iso_groups.items():
+        m = len(iso_cids)
+        for field, key_fn in _axes:
+            sorted_cids = sorted(iso_cids, key=lambda c: key_fn(catchment[c]), reverse=True)
+            for rank, cid in enumerate(sorted_cids, 1):
+                # rank 1 = best; percentile = rank/m gives (0, 1] where lower = better
+                catchment[cid][field] = round(rank / m, 4)
+
     # Write catchment-data.json
     print(f"Writing {CATCHMENT_OUT} ...")
     with open(CATCHMENT_OUT, "w") as f:
