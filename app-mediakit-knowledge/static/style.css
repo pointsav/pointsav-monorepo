@@ -3083,6 +3083,89 @@ body.printable .mw-body {
 .freshness-aging   { color: #e6a817; }
 .freshness-stale   { color: #c00; }
 
+/* ── Sprint X: Error page + pageinfo + whatlinkshere ────────────────── */
+
+/* Error page (404 / 400 / 500) — minimal chrome, styled via CSS */
+.wiki-error-body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--sans);
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+.wiki-error-header {
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-chrome);
+  padding: 0.75rem 1.5rem;
+}
+.wiki-error-home {
+  color: var(--link);
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+}
+.wiki-error-home:hover { text-decoration: underline; }
+.wiki-error-page {
+  max-width: 40rem;
+  margin: 5rem auto;
+  padding: 0 1.5rem;
+}
+.wiki-error-title {
+  font-size: 2rem;
+  font-weight: 400;
+  font-family: var(--sans);
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.5rem;
+  margin-bottom: 1rem;
+}
+.wiki-error-message { font-size: 1rem; margin: 0 0 0.75rem; line-height: 1.65; }
+.wiki-error-detail { font-size: 0.9375rem; color: var(--fg-muted); margin: 0; line-height: 1.65; }
+.wiki-error-detail a { color: var(--link); }
+.wiki-error-detail a:hover { text-decoration: underline; }
+
+/* PageInfo table (/special/pageinfo/{slug}) */
+.wiki-info-table {
+  border-collapse: collapse;
+  font-size: 0.9375rem;
+  margin: 1rem 0;
+  width: 100%;
+  max-width: 36rem;
+}
+.wiki-info-table th, .wiki-info-table td {
+  border: 1px solid var(--border);
+  padding: 0.4rem 0.75rem;
+  text-align: left;
+  vertical-align: top;
+}
+.wiki-info-table th {
+  background: var(--bg-chrome);
+  font-weight: 600;
+  width: 10rem;
+  white-space: nowrap;
+}
+.wiki-info-table tbody tr:nth-child(even) td { background: color-mix(in srgb, var(--bg-chrome) 60%, transparent); }
+
+/* WhatLinksHere list (/special/whatlinkshere/{slug}) */
+.wiki-backlinks-list {
+  list-style: none;
+  padding: 0;
+  margin: 0.5rem 0;
+}
+.wiki-backlinks-list li {
+  padding: 0.4rem 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.9375rem;
+}
+.wiki-backlinks-list li:last-child { border-bottom: none; }
+.wiki-backlinks-list a { color: var(--link); text-decoration: none; }
+.wiki-backlinks-list a:hover { text-decoration: underline; }
+.wiki-backlinks-list a:visited { color: var(--link-visited); }
+
 /* ── Sprint W: History + Blame + Cite — inline-style purge + CSS ─────── */
 
 /* History page (/history/{slug}) */
