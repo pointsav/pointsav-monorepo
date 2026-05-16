@@ -73,11 +73,12 @@ New convention: `conventions/mailbox-message-lifecycle.md` (ratified 2026-05-15)
 — command@claude-code
 
 ---
-from: master@claude-code
-to: task@project-proofreader
+from: command@claude-code
+to: totebox@project-proofreader
 re: ACK — Phase B + domain migration + routing directive confirmed
 created: 2026-05-06T16:45:00Z
 priority: normal
+status: broadcast
 ---
 
 Session-complete message received and archived (2026-05-06 Master sweep).
@@ -94,11 +95,12 @@ Stage-6 promote for proofreader cluster commits is queued for this Master sessio
 — master@claude-code
 
 ---
-from: master@claude-code
-to: task@project-proofreader
+from: command@claude-code
+to: totebox@project-proofreader
 re: Domain migration to proofreader.pointsav.com — Task work needed
 created: 2026-05-05T23:55:00Z
 priority: high
+status: stale
 ---
 
 Operator confirmed proofreader moves from `proofreader.woodfinegroup.com` → `proofreader.pointsav.com` 2026-05-05. Now vendor-tier (PointSav running its own software as open public reference), not customer-tier.
