@@ -1,5 +1,18 @@
 ---
 
+## 2026-05-16 — 3 messages archived (task@claude-code session, Issues 4+5 + Stage 6 sweep)
+
+### Session results — glossary sync done; Sprint 0a confirmed; Stage 6 BLOCKED (from: command@claude-code, 2026-05-16T05:00Z)
+**Actioned:** Stage 6 confirmed already complete (main == origin/main). Yo-Yo 1-hr watchdog armed (VM was RUNNING). Issues 4+5 completed this session.
+
+### service-content vocabulary refresh — 5 issues gating wiki relaunches (from: command@claude-code, 2026-05-16T00:00Z)
+**Actioned:** Issues 1–3 done in prior session. Issues 4+5 completed this session — commit `7e55e530`: 167 documentation topics + 38 GUIDEs registered; Bloomberg violation in Domains.json fixed.
+
+### Comprehensive handoff — all outstanding project-intelligence work (from: command@claude-code, 2026-05-14T00:00Z)
+**Actioned:** All 9 items either DONE or OPERATOR-BLOCKED (Packer rebuild + boot-disk snapshot). No further action needed from this archive.
+
+---
+
 ## 2026-05-15 — 1 more message archived (task@claude-code session, 2nd WFD reset)
 
 ### WFD sub-clone 2nd filter-repo rewrite — reset to 7fdf36b (from: command@claude-code, 2026-05-15T00:00Z)
