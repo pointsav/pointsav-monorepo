@@ -55,6 +55,37 @@
 
 * { box-sizing: border-box; }
 
+/* Global keyboard focus ring — :focus-visible fires only for keyboard navigation,
+ * not mouse clicks, so it never shows a ring where it would be unexpected.
+ * Elements with custom focus styles (inputs with box-shadow) override this. */
+:focus-visible {
+  outline: 2px solid var(--link);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Skip-to-content link — visually hidden until focused by keyboard.
+ * Targets #mw-content-text; lets screen-reader and keyboard users jump past chrome. */
+.skip-to-content {
+  position: fixed;
+  top: -100%;
+  left: 1rem;
+  z-index: 9999;
+  background: var(--bg);
+  color: var(--link);
+  padding: 0.5rem 1rem;
+  border: 2px solid var(--link);
+  border-radius: 2px;
+  font-family: var(--sans);
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: top 0.15s ease;
+}
+.skip-to-content:focus {
+  top: 0.75rem;
+}
+
 html { font-size: 16px; }
 
 body {
@@ -1826,7 +1857,7 @@ body.login-body {
   box-sizing: border-box;
 }
 
-.login-field input:focus {
+.login-field input:focus-visible {
   outline: 2px solid var(--link);
   outline-offset: -1px;
 }
@@ -2405,6 +2436,11 @@ a.footnote-backref:hover { text-decoration: underline; }
 }
 .wiki-sticky-header.sticky-visible {
   display: flex;
+  animation: sticky-slidein 0.15s ease;
+}
+@keyframes sticky-slidein {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 .sticky-inner {
   max-width: var(--max-content-width);
@@ -2446,7 +2482,7 @@ a.footnote-backref:hover { text-decoration: underline; }
   border: 1px solid var(--border);
   border-radius: 2px;
 }
-.sticky-edit:hover { background: var(--bg, #fff); text-decoration: none; }
+.sticky-edit:hover { background: var(--bg); text-decoration: none; }
 
 /* ── Sprint I: Active ToC section tracking ─────────────────────────────── */
 .toc-list .toc-section-active > a {

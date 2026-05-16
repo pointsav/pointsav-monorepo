@@ -1003,6 +1003,7 @@ fn home_chrome(
                 script { (PreEscaped(r#"(function(){var t=localStorage.getItem('wiki-theme')||'auto';document.documentElement.setAttribute('data-theme',t);var w=localStorage.getItem('wiki-width')||'standard';document.documentElement.setAttribute('data-width',w);}());"#)) }
             }
             body {
+                a.skip-to-content href="#mp-main" { "Skip to content" }
                 header.mw-header #mw-header {
                     a.site-title href="/" { (site_title) }
                     form.header-search #header-search-form action="/search" method="get" {
@@ -1800,6 +1801,7 @@ fn wiki_chrome(
                 (PreEscaped(jsonld_for_topic(&fm, slug)))
             }
             body class=(if printable { "printable" } else { "" }) {
+                a.skip-to-content href="#mw-content-text" { "Skip to content" }
                 // Sticky header — hidden until main header scrolls off-screen (Sprint H)
                 div.wiki-sticky-header #wiki-sticky-header aria-hidden="true" {
                     div.sticky-inner {
@@ -3281,6 +3283,7 @@ fn chrome(_title: &str, body: Markup, site_title: &str, user: Option<&User>, pen
                 link rel="stylesheet" href="/static/style.css";
             }
             body {
+                a.skip-to-content href="#main-content" { "Skip to content" }
                 header.mw-header {
                     a.site-title href="/" { (site_title) }
                     form.header-search #header-search-form action="/search" method="get" {
@@ -3295,7 +3298,7 @@ fn chrome(_title: &str, body: Markup, site_title: &str, user: Option<&User>, pen
                         (auth_nav_widget(user, pending_count))
                     }
                 }
-                main.site-main {
+                main.site-main #main-content {
                     (body)
                 }
                 footer.site-footer {
