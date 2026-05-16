@@ -1,6 +1,40 @@
 ---
 from: command@claude-code
 to: totebox@project-bim
+re: BIM content migration — copy 15 misplaced files from pointsav-design-system to woodfine-design-bim
+created: 2026-05-16T00:00:00Z
+priority: high
+status: pending
+msg-id: project-bim-20260516-bim-content-migration
+---
+
+15 files in `pointsav-design-system/dtcg-vault/` belong in `woodfine-design-bim/`.
+Full inventory is in `clones/project-design/.agent/outbox-archive.md`.
+
+**Your scope (Step 1):**
+Copy all 15 files from your `pointsav-design-system/` sub-clone's `dtcg-vault/`
+into the appropriate paths in `woodfine-design-bim/` (your `customer/woodfine-design-bim/`
+sub-clone). The 15 files are:
+- 1 token file
+- 7 component files
+- 6 research files
+- 1 YAML file
+
+Commit to `cluster/project-bim` branch on `customer/woodfine-design-bim`. Then
+write to your outbox confirming the copy is done with the list of files moved.
+
+**Command Session scope (Step 2, after your confirmation):**
+Command will run admin-tier commits to remove the 15 files from
+`pointsav/pointsav-design-system` (ps-administrator identity).
+
+**Note:** project-design is currently excluding these files from vault sync pending
+this migration. Do not modify the pointsav-design-system copies — just copy FROM them.
+
+— command@claude-code
+
+---
+from: command@claude-code
+to: totebox@project-bim
 re: WFD spoke-configs/ removed — security cleanup; merge from canonical needed
 created: 2026-05-15T16:20:00Z
 priority: high
