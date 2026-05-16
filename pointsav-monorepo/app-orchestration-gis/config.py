@@ -21,7 +21,7 @@ WORK_DIR          = Path(__file__).parent / "work"
 # Home Depot/Leroy Merlin/B&Q etc. = Hardware (unchanged set).
 
 # General-merchandise + grocery hypermarkets (daily-shopping format).
-# Phase 5: carrefour-fr (re-ingest required — ~5,200 stores). Phase 6: auchan-fr, leclerc-fr, edeka-de.
+# Phase 5: carrefour-hypermarket-fr DONE (493 stores, Q217599, 2026-05-16). Phase 6: auchan-fr, leclerc-fr, edeka-de.
 ALPHA_HYPERMARKET = {
     "NA": {
         # Walmart: Fortune #1 — dominant NA hypermarket
@@ -40,8 +40,8 @@ ALPHA_HYPERMARKET = {
         "tesco-uk", "sainsburys-uk",
         # Nordic large-format hypermarkets (migrated from ALPHA_ANCHORS EU 2026-05-16)
         "bilka-dk", "obs-coop-no", "hagkaup-is", "k-citymarket-fi", "prisma-fi",
-        # Carrefour FR: PENDING re-ingest (Phase 5 — ~5,200 stores via name_query partial)
-        # "carrefour-fr",
+        # Carrefour FR: hypermarket-only variant (493 stores, Q217599) — Phase 5 2026-05-16
+        "carrefour-hypermarket-fr",
     }
 }
 
@@ -121,7 +121,7 @@ GENERIC_FOOD = {"lidl-es", "safeway-ca", "whole-foods-us", "biedronka-pl",
                 "aldi-de", "aldi-uk", "aldi-nl", "aldi-pl"}
 # Sprint 12 — soriana-mx promoted from Food to ALPHA_HYPERMARKET (operator decision A1).
 # mercadona-es, tesco-uk, sainsburys-uk promoted to ALPHA_HYPERMARKET 2026-05-16 (operator D1/Phase 1).
-# carrefour-fr: Phase 5 re-ingest pending — add to ALPHA_HYPERMARKET when ingested.
+# carrefour-hypermarket-fr: Phase 5 DONE 2026-05-16 (493 stores, Q217599 tag, hypermarket-only variant).
 # Chedraui-mx, safeway-ca, whole-foods-us remain Food (operator decision, format mismatch).
 
 # ── REGION CONFIGURATION ─────────────────────────────────────────────────────
