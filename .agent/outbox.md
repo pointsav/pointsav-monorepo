@@ -13,7 +13,10 @@ to: totebox@project-design
 re: design-system category split — artifact routing boundary for your cluster
 created: 2026-05-16T10:00:00Z
 priority: high
-status: pending
+status: actioned
+actioned_by: command@claude-code
+actioned_at: 2026-05-16
+note: forwarded to project-design inbox
 ---
 
 An OPUS editorial analysis (operator-ratified, 2026-05-16) has resolved the question of whether
@@ -87,7 +90,10 @@ to: command@claude-code
 re: design-system split ratified — workspace-level actions needed + route to project-design
 created: 2026-05-16T10:00:00Z
 priority: high
-status: pending
+status: actioned
+actioned_by: command@claude-code
+actioned_at: 2026-05-16
+note: routed to project-design inbox; artifact-registry.md already correct (TOPIC→editorial, DESIGN→project-design); naming-convention.md §4+§13 amendment deferred to project-editorial after batches land
 ---
 
 An OPUS editorial analysis (operator-ratified, 2026-05-16) has resolved the design-system
