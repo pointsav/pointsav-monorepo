@@ -35,4 +35,4 @@ updated: 2026-05-12
 
 ## Last session handoff
 
-*2026-05-15 — Sprint 0a hardening committed; 1-hr Yo-Yo test confirmed watchdog + pricing. Items 1+2 code-complete; verification pending L4 capacity. Sprint 0b (real streaming + on-demand boot) is next code work. 4 inbox messages archived. session-start.md zone corrected to europe-west4-a.*
+*2026-05-16 — Issues 4+5 complete: 167 documentation topics + 38 GUIDEs registered in service-content ontology CSVs; Bloomberg violation in Domains.json fixed (commit 7e55e530, Jennifer Woodfine). Stage 6 already complete on session start (main == origin/main). Yo-Yo 1-hr watchdog armed (VM was RUNNING at 34.6.204.25). All 3 inbox messages archived. Sprint 0b (real SSE streaming + on-demand boot) is next code work.*
