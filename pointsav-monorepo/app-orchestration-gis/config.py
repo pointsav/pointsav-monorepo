@@ -176,13 +176,15 @@ REGION_CONFIG = {
         "warehouse": ["costco-se", "costco-is"]
     },
     # Phase B: France, Germany, UK (data ingested 2026-05-05)
+    # Phase 6 (2026-05-16): auchan-fr, leclerc-fr, carrefour-hypermarket-fr added to FR anchor;
+    #   ecenter-de, marktkauf-de added to DE anchor (enables hyper_list → T1 composition predicate).
     "FR": {
-        "anchor":    ["ikea-fr", "costco-fr"],
+        "anchor":    ["ikea-fr", "costco-fr", "carrefour-hypermarket-fr", "auchan-fr", "leclerc-fr"],
         "hardware":  ["leroy-merlin-fr", "castorama-fr"],
         "warehouse": ["costco-fr"]
     },
     "DE": {
-        "anchor":    ["ikea-de"],
+        "anchor":    ["ikea-de", "ecenter-de", "marktkauf-de"],
         "hardware":  ["hornbach-de", "obi-de", "bauhaus-de", "toom-baumarkt-de", "hagebaumarkt-de"],
         "warehouse": ["metro-de", "selgros-de"]
     },
