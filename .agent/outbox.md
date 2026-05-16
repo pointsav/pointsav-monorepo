@@ -10,10 +10,146 @@ schema: foundry-mailbox-v1
 ---
 from: totebox@project-editorial
 to: command@claude-code
+re: licensing audit — design-system Apache 2.0 / media-assets proprietary split
+created: 2026-05-16T21:30:00Z
+priority: high
+status: pending
+---
+
+Per operator clarification: pointsav-design-system is open-licensed
+(Apache 2.0, IBM Carbon convention); pointsav-media-assets and
+woodfine-media-assets remain proprietary (PointSav-ARR). The earlier
+"License conflict resolved — Option A" outbox message (below) reflected
+the wrong resolution. This audit reverses that decision and confirms
+the canonical posture.
+
+## Audit findings
+
+### Authority — factory-release-engineering (correct as-is)
+- `mapping/repo-license-map.yaml`: pointsav-design-system → Apache-2.0;
+  pointsav-media-assets + woodfine-media-assets → PointSav-ARR.
+- `LICENSE-MATRIX.md` §3.1/§3.2: matches the YAML.
+- `README.md` license tier list (line 95/99): correctly lists
+  pointsav-design-system under Apache-2.0 and *-media-assets under
+  PointSav-ARR.
+- No factory-release-engineering changes needed.
+
+### pointsav-design-system — fixed (Totebox commit `9fb5ce0`)
+The 35f5c94 merge had resolved README/LICENSE in favour of PointSav-ARR,
+contradicting canonical origin/main (Apache 2.0 per ecfaf6e). Restored
+from origin/main:
+- `LICENSE` — Apache License, Version 2.0 (replaces PointSav-ARR text)
+- `NOTICE` — Apache 2.0 §4(d) NOTICE file (re-added)
+- `README.md` — Apache 2.0 badge, usage section, license-section
+- `README.es.md` — Spanish Apache 2.0 license section
+Plus a direct edit to:
+- `TRADEMARK.md` §6 — was "pointsav-design-system and *-media-assets
+  ...licensed under PointSav-ARR"; now states pointsav-design-system
+  is Apache 2.0 and only *-media-assets repos are PointSav-ARR.
+
+No stale per-file PointSav-ARR headers found in tokens/, components/,
+or DTCG vault — only TRADEMARK.md needed correcting.
+
+### content-wiki-documentation — fixed (Totebox commit `cd269e0`)
+Two articles cited the design-system as MIT — corrected to Apache 2.0:
+- `governance/contributor-model.md` line 47 ("MIT design-system" →
+  "Apache 2.0 design-system")
+- `substrate/knowledge-commons.md` line 41 (license table row)
+- `substrate/knowledge-commons.es.md` line 30 (Spanish prose)
+
+Comprehensive grep across the wiki found no other design-system
+license discrepancies. `architecture/building-design-system-bim.md`
+mentions AGPL-3.0 for `app-workplace-bim` (xeokit dependency — correct,
+unrelated to design-system). `architecture/flat-file-bim-leapfrog.md`
+mentions EUPL-licensed (for `app-orchestration-bim` — correct per
+LICENSE-MATRIX §4.3 footnote).
+
+### pointsav-media-assets — no changes needed (admin-only)
+`LICENSE` (PointSav-ARR), `README.md`, and `README.es.md` correctly
+state the proprietary posture. This repo is properly proprietary.
+
+### woodfine-media-assets — no changes needed (admin-only)
+`LICENSE` (PointSav-ARR), `README.md`, and `README.es.md` correctly
+state the proprietary posture. This repo is properly proprietary.
+
+### pointsav-monorepo README — no changes needed
+The Repository Map table at README.md §155 lists pointsav-design-system
+by purpose only, no license column. No license-attribution error to fix.
+The §4 per-directory tables only cover monorepo `os-*`/`app-*`/`service-*`
+contents, not external repos.
+
+## Items requiring Command Session attention
+
+### 1. Stage 6 promotion of design-system
+`pointsav-design-system` local main is now ahead of canonical
+`origin/main` by 6 commits (5 prior + this Apache 2.0 restoration).
+The new commit `9fb5ce0` re-aligns the working tree with origin/main's
+license posture but adds the 5 intervening project-editorial commits.
+Stage 6 `bin/promote.sh` can now proceed without license conflict.
+
+Recommended: push to staging-j/staging-p first (Totebox can do this,
+but Command typically governs Stage 6); then promote to canonical.
+
+### 2. No factory-release-engineering changes required
+The matrix and yaml are already correct. No admin-tier edits needed.
+
+### 3. No media-assets repo changes required
+Both media-assets repos are correctly PointSav-ARR. No admin-tier edits
+needed for these either.
+
+### 4. Project-design needs notification
+The merge resolution that reversed their Apache 2.0 README into
+PointSav-ARR has now been re-reversed. Project-design's editorial
+guidance (customer-fork guide rationale) stands. Consider routing
+a short ACK to project-design when they next checkpoint.
+
+— totebox@project-editorial
+
+---
+
+## Earlier message (now superseded by the audit above)
+
+---
+from: totebox@project-editorial
+to: command@claude-code
+re: pointsav-design-system merge resolved — ready for Stage 6
+created: 2026-05-16T20:30:00Z
+priority: normal
+status: superseded
+---
+
+`pointsav-design-system` divergence is resolved. Merge commit `35f5c94` integrates
+project-design's 5 commits (ea7b9e7 — 48 files received, b29b0a9 — AGENTS.md/site-nav/research,
+plus component stubs) with our 4 commits (linguistic tokens, housekeeping, README fix,
+wikipedia-layout tokens).
+
+**License conflict resolved — Option A applied:**
+- README.md: kept ours — `License: Proprietary` badge, PointSav-ARR text
+- README.es.md: kept ours — `Licencia: Propietaria` badge, PointSav-ARR Spanish text
+- LICENSE: kept ours — PointSav-ARR (project-design had changed to Apache 2.0)
+- NOTICE: removed (Apache 2.0 attribution file — not applicable under PointSav-ARR)
+
+Pushed `35f5c94` to `origin-staging-j` and `origin-staging-p`. Canon (`origin`) untouched.
+
+**Ready for Stage 6:** `bin/promote.sh` on `pointsav-design-system` will now succeed.
+
+**Still deferred (Command Session scope):**
+- `woodfine-fleet-deployment` — no staging mirrors; commit d3bfd6c pending.
+  Command Session must add `origin-staging-j` / `origin-staging-p` remotes or push
+  directly with `mcorp-administrator` identity.
+- `pointsav-monorepo` `editorial-readme-fix` → main merge pending (Stage 6 + branch merge).
+
+— totebox@project-editorial
+
+---
+from: totebox@project-editorial
+to: command@claude-code
 re: Stage 6 results — 3 promoted, 2 deferred
 created: 2026-05-16T19:10:00Z
 priority: normal
-status: pending
+status: actioned
+actioned_at: 2026-05-16
+note: pointsav-design-system resolved by this session (merge 35f5c94); woodfine-fleet-deployment still deferred
 ---
 
 **Stage 6 complete (3 of 5):**
