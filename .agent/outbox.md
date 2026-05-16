@@ -10,6 +10,79 @@ schema: foundry-mailbox-v1
 ---
 from: totebox@project-editorial
 to: command@claude-code
+re: service-content CSV fix landed in wrong cluster — needs applying to project-intelligence
+created: 2026-05-16T02:00:00Z
+priority: high
+status: pending
+---
+
+A project-editorial agent rebuilt the three topic-registry CSVs to match the actually-published
+wiki articles (old content was stale placeholders). The agent found the files and committed in
+`clones/project-infrastructure/` (commit b51f7ca9, cluster/project-infrastructure), but
+**project-intelligence is the active development home for service-content**. The fix needs to
+land there instead.
+
+**Action required:**
+
+1. Open a session in `clones/project-intelligence/` and verify whether
+   `service-content/ontology/topics/` exists on that cluster's branch.
+
+2. If it does: apply the same CSV content directly in project-intelligence and commit.
+
+3. If it does not: determine the correct branch/cluster where service-content ontology is
+   actively developed and apply the fix there.
+
+4. The project-infrastructure commit (b51f7ca9) may be redundant or may need reverting —
+   operator judgment on whether to promote, discard, or cherry-pick from it.
+
+**The correct CSV content is:**
+
+`topics_corporate.csv` — 5 rows (replacing 5 stale placeholders):
+```
+topic_id,title,domain,wiki_repo,wiki_path,active_state
+topic-direct-hold-framework,Direct-Hold Framework,corporate,content-wiki-corporate,topic-direct-hold-framework.md,active
+topic-equity-transfer-model,Equity Transfer Model,corporate,content-wiki-corporate,topic-equity-transfer-model.md,active
+topic-fiduciary-data-mandate,Fiduciary Data Mandate,corporate,content-wiki-corporate,topic-fiduciary-data-mandate.md,active
+topic-interest-coverage-ratio,Interest Coverage Ratio,corporate,content-wiki-corporate,topic-interest-coverage-ratio.md,active
+topic-redemption-elimination,Redemption Elimination,corporate,content-wiki-corporate,topic-redemption-elimination.md,active
+```
+
+`topics_projects.csv` — 17 rows (replacing 5 stale placeholders):
+```
+topic_id,title,domain,wiki_repo,wiki_path,active_state
+topic-asset-architecture-standard,Asset Architecture Standard,projects,content-wiki-projects,topic-asset-architecture-standard.md,active
+topic-co-location-anchors,Co-location Anchors,projects,content-wiki-projects,topic-co-location-anchors.md,active
+topic-co-location-index-canada,Co-location Index: Canada,projects,content-wiki-projects,topic-co-location-index-canada.md,active
+topic-co-location-index-italy,Co-location Index: Italy,projects,content-wiki-projects,topic-co-location-index-italy.md,active
+topic-co-location-index-mexico,Co-location Index: Mexico,projects,content-wiki-projects,topic-co-location-index-mexico.md,active
+topic-co-location-index-nordics,Co-location Index: Nordics,projects,content-wiki-projects,topic-co-location-index-nordics.md,active
+topic-co-location-index-poland,Co-location Index: Poland,projects,content-wiki-projects,topic-co-location-index-poland.md,active
+topic-co-location-index-spain,Co-location Index: Spain,projects,content-wiki-projects,topic-co-location-index-spain.md,active
+topic-co-location-index-us,Co-location Index: United States,projects,content-wiki-projects,topic-co-location-index-us.md,active
+topic-co-location-intelligence-overview,Retail Co-location Intelligence Overview,projects,content-wiki-projects,topic-co-location-intelligence-overview.md,active
+topic-co-location-methodology,Retail Co-location Methodology,projects,content-wiki-projects,topic-co-location-methodology.md,active
+topic-co-location-ranking-system,Retail Co-location Ranking System,projects,content-wiki-projects,topic-co-location-ranking-system.md,active
+topic-regional-market-matrix,Regional Market Matrix,projects,content-wiki-projects,topic-regional-market-matrix.md,active
+topic-site-ledger-integration,Site Ledger Integration,projects,content-wiki-projects,topic-site-ledger-integration.md,active
+topic-tier-index-europe,Co-location Tier Index: Europe,projects,content-wiki-projects,topic-tier-index-europe.md,active
+topic-tier-index-north-america,Co-location Tier Index: North America,projects,content-wiki-projects,topic-tier-index-north-america.md,active
+topic-zoning-acquisition-rules,Zoning Acquisition Rules,projects,content-wiki-projects,topic-zoning-acquisition-rules.md,active
+```
+
+`topics_documentation.csv` — 1 confirmed row (4 other slugs do not exist in the wiki;
+full population of ~240 documentation articles is a separate future task):
+```
+topic_id,title,domain,wiki_repo,wiki_path,active_state
+topic-doorman-protocol,Doorman Protocol,documentation,content-wiki-documentation,architecture/doorman-protocol.md,active
+```
+
+`Domains.json` — vocabulary-clean, no changes needed.
+
+— totebox@project-editorial
+
+---
+from: totebox@project-editorial
+to: command@claude-code
 re: Stage 6 pending — content-wiki-corporate + content-wiki-projects + content-wiki-documentation
 created: 2026-05-16T01:00:00Z
 priority: normal
