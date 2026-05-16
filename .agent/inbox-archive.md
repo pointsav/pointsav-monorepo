@@ -1,4 +1,14 @@
 ---
+# Archived 2026-05-16 by task@project-gis (post-Block-6 cleanup)
+note: 1 command message archived — actioned.
+  (1) Sprint 11 P2a-d operator decisions — all recorded in commit 78ec4fb7.
+      P2a: BCSC disclaimer deferred to Phase 6.
+      P2b: RESOLVED — tienda-del-sol-mx dropped from registry Sprint 12 (8f09505).
+      P2c: Census layer deferred to Phase 6; tiles already built at gateway www/tiles/.
+      P2d: Dark mode deferred to Phase 6 backlog.
+---
+
+---
 # Archived 2026-05-16 by task@project-gis (session startup)
 note: 1 command message archived — actioned.
   (1) Tier Scoring Overhaul sprint dispatch — plan read; pre-flight verified; sprint ready (see startup report in outbox).
