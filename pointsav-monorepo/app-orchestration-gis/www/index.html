@@ -43,6 +43,12 @@
         .data-label  { font-size: 9px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
         .data-value  { font-size: 18px; font-weight: 800; color: var(--text-main); }
         .tier-badge  { display: inline-block; padding: 6px 14px; border-radius: 8px; font-size: 14px; font-weight: 800; letter-spacing: 0.3px; }
+
+        /* ── BentoBox cluster inspector — Layout A ────────────────── */
+        .bento-tier-cell      { text-align: center; padding: 16px 0 8px; }
+        .bento-tier-badge     { display: block; width: 100%; padding: 14px 20px; border-radius: 12px; font-size: 42px; font-weight: 900; letter-spacing: -0.5px; text-align: center; line-height: 1; }
+        .bento-composition-chip { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.8px; margin-top: 8px; text-align: center; }
+
         .anchor-pills { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
         .pill         { background: #fff; border: 1px solid var(--border-soft); padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: 700; color: var(--text-main); text-transform: uppercase; }
         .pill.alpha   { background: var(--brand-primary); color: white; border-color: var(--brand-primary); }
@@ -98,6 +104,18 @@
             .radius-selector { bottom: auto; top: 15px; left: 50%; }
             .nav-cluster     { bottom: 52vh; right: 12px; }
             .nav-btn         { width: 80px; }
+        }
+
+        /* ── BentoBox Layout B — mobile cluster inspector ─────────── */
+        @media (max-width: 480px) {
+            /* Tier badge shrinks to inline header chip */
+            .bento-tier-cell      { text-align: left; padding: 0 0 8px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px; }
+            .bento-tier-badge     { display: inline-block; width: auto; padding: 4px 12px; font-size: 12px; font-weight: 800; letter-spacing: 0.3px; border-radius: 8px; }
+            .bento-composition-chip { font-size: 10px; text-align: left; margin-top: 0; flex-basis: 100%; }
+            /* Anchors row is shown first (CSS order), secondary/civic hidden */
+            .bento-anchors-first  { order: -1; }
+            /* Hide lower-priority cells on narrow viewports */
+            .bento-hide-mobile    { display: none !important; }
         }
 
         /* ── Footer & Modals ──────────────────────────────────────── */
@@ -333,27 +351,36 @@
     const protocol = new pmtiles.Protocol();
     maplibregl.addProtocol('pmtiles', protocol.tile.bind(protocol));
 
-    // ── Tier colour ramp (3-tier: Valid → Hub → Apex) ───────────────
+    // ── Tier colour ramp — 4-tier: Local → District → Regional (+ Fringe) ──
+    // Keys are V2 rank values (rank_3km): 3=Regional, 2=District, 1=Local, 0=Fringe.
+    // Phase 2 will add a `tier` field (1=Regional…4=Fringe); effectiveTier() bridges both.
     const TIER_COLORS = {
-        1: { fill: '#64748B', text: '#ffffff', name: 'Valid'  },   // slate — frees chromatic gamut for category dots
-        2: { fill: '#1E40AF', text: '#ffffff', name: 'Hub'    },   // indigo
-        3: { fill: '#0A3070', text: '#ffffff', name: 'Apex'   },   // dark navy
+        3: { fill: '#0A3070', text: '#ffffff', name: 'Regional' },  // dark navy
+        2: { fill: '#1E40AF', text: '#ffffff', name: 'District' },  // indigo
+        1: { fill: '#64748B', text: '#ffffff', name: 'Local'    },  // slate
+        0: { fill: '#e2e8f0', text: '#475569', name: 'Fringe'   },  // light gray
     };
-    const NEUTRAL = { fill: '#e5e7eb', text: '#6B7280', name: 'Unknown' };
+    // Map Phase 2 tier field (1=best) back to V2 key for color lookup.
+    const TIER2_TO_V2 = { 1: 3, 2: 2, 3: 1, 4: 0 };
+    function effectiveTierKey(p) {
+        if (p.tier != null) return TIER2_TO_V2[p.tier] ?? 0;
+        return p[`rank_${currentRadius}km`] ?? 0;
+    }
+    const NEUTRAL = { fill: '#e2e8f0', text: '#6B7280', name: '—' };
     const REGION_SUMMARY = {
         NA: {
             label: 'North America',
-            '1km': { total: 2361, t3: 122, t2: 1179, t1: 1060 },
-            '3km': { total: 3758, t3: 548, t2: 2106, t1: 1104 },
+            '1km': { total: 7704, t3: 1064, t2: 4033, t1: 897 },
+            '3km': { total: 7704, t3: 2869, t2: 3870, t1: 965 },
         },
         EU: {
             label: 'Europe',
-            '1km': { total: 314,  t3: 5,   t2: 229,  t1: 80   },
-            '3km': { total: 479,  t3: 27,  t2: 382,  t1: 70   },
+            '1km': { total: 1530, t3: 35,  t2: 538,  t1: 112 },
+            '3km': { total: 1530, t3: 162, t2: 1227, t1: 141 },
         },
     };
 
-    function tierColor(rankVal) { return TIER_COLORS[rankVal] || NEUTRAL; }
+    function tierColor(rankVal) { return TIER_COLORS[rankVal] ?? NEUTRAL; }
 
     function catchmentBounds(lon, lat, km) {
         const dLat = km / 111.0;
@@ -1077,9 +1104,10 @@
             <div class="data-block">
                 <div class="data-label">Quality Tiers</div>
                 <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;">
-                    <span class="tier-badge" style="background:#0A3070;color:#fff;font-size:12px;">T3 Apex &nbsp;${s.t3}</span>
-                    <span class="tier-badge" style="background:#1E40AF;color:#fff;font-size:12px;">T2 Hub &nbsp;${s.t2}</span>
-                    ${s.t1 > 0 ? `<span class="tier-badge" style="background:#64748B;color:#fff;font-size:12px;">T1 Valid &nbsp;${s.t1}</span>` : ''}
+                    <span class="tier-badge" style="background:#0A3070;color:#fff;font-size:12px;">Regional &nbsp;${s.t3}</span>
+                    <span class="tier-badge" style="background:#1E40AF;color:#fff;font-size:12px;">District &nbsp;${s.t2}</span>
+                    ${s.t1 > 0 ? `<span class="tier-badge" style="background:#64748B;color:#fff;font-size:12px;">Local &nbsp;${s.t1}</span>` : ''}
+                    <span class="tier-badge" style="background:#e2e8f0;color:#475569;font-size:12px;">Fringe &nbsp;${s.total - s.t3 - s.t2 - s.t1}</span>
                 </div>
             </div>
             <div class="data-block">
@@ -1286,104 +1314,107 @@
         `;
     }
 
-    // ── Cluster detail panel renderer (Items 3, 4, 7) ───────────────
+    // ── Cluster detail panel renderer — Layout A (desktop) / Layout B (mobile) ─
     function showClusterDetail(props, coords) {
         if (props !== undefined) { selectedClusterProps = props; selectedClusterCoords = coords; }
         const p = selectedClusterProps;
         if (!p) return;
         const clusterName = p.display_name || (p.anchor_label + (p.city ? ', ' + p.city : ''));
         setNavContext(REGIONS[currentRegion].label, flyToOverview, clusterName);
-        const rf  = `rank_${currentRadius}km`;
-        const rv  = p[rf];
-        const tc  = tierColor(rv);
+        const tvKey  = effectiveTierKey(p);
+        const tc     = tierColor(tvKey);
 
-        let hw = [], wh = [], subs = [], mz = [];
-        try { hw   = JSON.parse(p.hw_list); } catch (_) {}
-        try { wh   = JSON.parse(p.wh_list); } catch (_) {}
-        try { subs = JSON.parse(p.sub_entities_display); } catch (_) {}
-        // merged_zones: array from clusters-meta.json, or JSON string from PMTile feature
+        let hw = [], wh = [], subs = [], mz = [], preds = [];
+        try { hw    = JSON.parse(p.hw_list); } catch (_) {}
+        try { wh    = JSON.parse(p.wh_list); } catch (_) {}
+        try { subs  = JSON.parse(p.sub_entities_display); } catch (_) {}
+        try { preds = JSON.parse(p.tier_predicates_fired); } catch (_) {}
         if (Array.isArray(p.merged_zones)) mz = p.merged_zones;
         else if (typeof p.merged_zones === 'string') { try { mz = JSON.parse(p.merged_zones); } catch (_) {} }
 
-        const score      = parseFloat(p.score);
-        const scoreFinal = parseFloat(p.score_final);
         const anchorLabel = p.anchor_label || p.primary_anchor || '';
 
-        // Item 3 — region hero
-        const cityState   = p.city ? (p.state ? `${p.city}, ${p.state}` : `${p.city}, ${countryName(p.iso)}`) : null;
-        const regionRaw   = (p.region_name && p.region_name !== 'Unknown Region') ? p.region_name : null;
+        // Cell 1 — place name + region
+        const cityState    = p.city ? (p.state ? `${p.city}, ${p.state}` : `${p.city}, ${countryName(p.iso)}`) : null;
+        const regionRaw    = (p.region_name && p.region_name !== 'Unknown Region') ? p.region_name : null;
         const secondaryGeo = cityState || (p.iso ? countryName(p.iso) : null);
         const regionLabel  = regionRaw || secondaryGeo || 'Regional Node';
-
-        const regionBlock = regionRaw
-            ? `<div class="region-hero-block">
-                <div class="region-name-hero">${regionRaw}</div>
-                ${secondaryGeo ? `<div class="region-secondary-geo">${secondaryGeo}</div>` : ''}
-               </div>`
+        const regionBlock  = regionRaw
+            ? `<div class="region-hero-block"><div class="region-name-hero">${regionRaw}</div>${secondaryGeo ? `<div class="region-secondary-geo">${secondaryGeo}</div>` : ''}</div>`
             : `<div class="data-value" style="font-size:16px;">${regionLabel}</div>`;
 
-        const natRank   = p.national_rank    != null ? parseInt(p.national_rank)    : null;
-        const natOf     = p.national_rank_of != null ? parseInt(p.national_rank_of) : null;
-        const naRank    = p.na_rank          != null ? parseInt(p.na_rank)          : null;
-        const naOf      = p.na_rank_of       != null ? parseInt(p.na_rank_of)       : null;
-        const count1km  = p.count_1km        != null ? parseInt(p.count_1km)        : null;
-        const count3km  = p.count_3km        != null ? parseInt(p.count_3km)        : null;
-        const uniqueBrands = p.unique_brands != null ? parseInt(p.unique_brands)    : null;
-        const tierDesc  = p.tier_descriptor  || tc.name;
-        // Density per km² (3 km radius = π·9 km² catchment area)
-        const density   = count3km !== null ? (count3km / (Math.PI * 9)) : null;
+        // Cell 2 — tier badge (dominant) + composition chip
+        const tierDesc  = p.tier_descriptor || tc.name;
+        const predHover = preds.length > 0 ? ` title="${preds.join(', ')}"` : '';
 
-        // Rank cell: prefer NA rank for NA clusters, national rank as fallback
-        const rankNum    = naRank  !== null ? naRank  : natRank;
-        const rankOf     = naOf    !== null ? naOf    : natOf;
-        const rankLabel  = naRank  !== null ? 'North America Rank' : 'National Rank';
-        const rankSub    = rankOf  !== null ? `of ${rankOf.toLocaleString()} · ${countryName(p.iso)}` : '';
-        const natSub     = (naRank !== null && natRank !== null)
-                         ? `#${natRank.toLocaleString()} of ${natOf.toLocaleString()} nationally` : '';
+        // Cell 3 — rank (national, single)
+        const natRank  = p.national_rank    != null ? parseInt(p.national_rank)    : null;
+        const natOf    = p.national_rank_of != null ? parseInt(p.national_rank_of) : null;
+        const mktRank  = p.iso_market_rank    != null ? parseInt(p.iso_market_rank)    : null;
+        const mktOf    = p.iso_market_rank_of != null ? parseInt(p.iso_market_rank_of) : null;
+        const rankNum  = natRank;
+        const rankOf   = natOf;
+        const rankSub  = rankOf != null ? `of ${rankOf.toLocaleString()} · ${countryName(p.iso)}` : '';
+        const rankSubB = mktRank != null ? `#${mktRank} in ${p.state || p.iso}` : '';
 
-        // Sites cell
-        const sitesHero = count3km !== null ? count3km.toLocaleString() : '—';
-        const sitesSub  = count1km !== null ? `${count1km} · 1 km` : '';
+        // Cell 4 — sites in ring
+        const count1km  = p.count_1km != null ? parseInt(p.count_1km) : null;
+        const count3km  = p.count_3km != null ? parseInt(p.count_3km) : null;
 
-        // Catchment population (pre-computed in synthesize-od-study.py)
+        // Cell 6 — catchment
         const primaryPop   = p.pp != null ? parseInt(p.pp) : null;
         const secondaryPop = p.sp != null ? parseInt(p.sp) : null;
-        const primaryGroc  = p.pg != null ? parseInt(p.pg) : null;
-        const primaryHw    = p.ph != null ? parseInt(p.ph) : null;
-        const primaryWh    = p.pw != null ? parseInt(p.pw) : null;
-        const popRank      = p.rp != null ? parseInt(p.rp) : null;
-        const grocRank     = p.rg != null ? parseInt(p.rg) : null;
-        const TOTAL_CLUSTERS = 6815;
-
-        // Mobility provenance — drives WORK reach availability + source badge text
         const hasWorkReach   = hasWorkReachData(p);
         const sourceBadgeTxt = catchmentSourceLabel(p, catchmentSubLayer);
+
+        // Cell 7 — civic context with per-tier breakdown (G14 override)
+        const hcReg = p.hc_count_regional != null ? parseInt(p.hc_count_regional) : 0;
+        const hcDst = p.hc_count_district != null ? parseInt(p.hc_count_district) : 0;
+        const heReg = p.he_count_regional != null ? parseInt(p.he_count_regional) : 0;
+        const heSml = p.he_count_small    != null ? parseInt(p.he_count_small)    : 0;
+        const civicParts = [
+            hcReg > 0 ? `${hcReg} regional hospital${hcReg > 1 ? 's' : ''}` : null,
+            hcDst > 0 ? `${hcDst} district hospital${hcDst > 1 ? 's' : ''}` : null,
+            heReg > 0 ? `${heReg} regional university${heReg > 1 ? 's' : ''}` : null,
+            heSml > 0 ? `${heSml} small university${heSml > 1 ? 's' : ''}` : null,
+        ].filter(Boolean);
+        const civicLine = civicParts.length > 0 ? civicParts.join(' · ') + ` within ${p.catchment_radius_km != null ? 5 : 5} km` : null;
 
         document.getElementById('inspector').innerHTML = `
             <div class="data-block">
                 <div class="data-label">Regional Market</div>
                 ${regionBlock}
             </div>
-            <div class="data-block">
-                <span class="tier-badge" role="status" aria-label="Tier ${rv} cluster: ${tierDesc}${count3km !== null ? '; ' + count3km + ' stores within 3 kilometres' : ''}" style="background:${tc.fill};color:${tc.text};font-size:12px;padding:4px 10px;">${tierDesc}</span>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;">
-                    <div>
-                        <div class="data-label">${rankLabel}</div>
-                        <div class="rank-num">${rankNum !== null ? '#' + rankNum.toLocaleString() : '—'}</div>
-                        <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">${rankSub}</div>
-                        ${natSub ? `<div style="font-size:10px;color:var(--text-muted);margin-top:3px;">${natSub}</div>` : ''}
-                    </div>
-                    <div>
-                        <div class="data-label">Sites in Ring</div>
-                        <div class="rank-num">${sitesHero}</div>
-                        <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">at 3 km</div>
-                        ${sitesSub ? `<div style="font-size:10px;color:var(--text-muted);margin-top:3px;">${sitesSub}</div>` : ''}
-                    </div>
+            <div class="data-block bento-tier-cell">
+                <span class="tier-badge bento-tier-badge"
+                      role="status"
+                      aria-label="${tc.name} tier cluster${count3km !== null ? '; ' + count3km + ' stores within 3 km' : ''}"
+                      style="background:${tc.fill};color:${tc.text};"${predHover}>${tc.name}</span>
+                <div class="bento-composition-chip">${tierDesc}</div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                <div class="data-block">
+                    <div class="data-label">National Rank</div>
+                    <div class="rank-num">${rankNum !== null ? '#' + rankNum.toLocaleString() : '—'}</div>
+                    <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">${rankSub}</div>
+                    ${rankSubB ? `<div style="font-size:10px;color:var(--text-muted);margin-top:3px;">${rankSubB}</div>` : ''}
                 </div>
-                ${(density !== null || uniqueBrands) ? `
-                <div style="margin-top:8px;padding-top:6px;border-top:1px solid var(--border-soft);font-size:10px;color:var(--text-muted);">
-                    ${[density !== null ? `${density.toFixed(1)}/km²` : null, uniqueBrands ? `${uniqueBrands} brand${uniqueBrands === 1 ? '' : 's'}` : null, count1km != null ? `${count1km} at 1 km` : null].filter(Boolean).join(' · ')}
-                </div>` : ''}
+                <div class="data-block">
+                    <div class="data-label">Sites in Ring</div>
+                    <div class="rank-num">${count3km !== null ? count3km.toLocaleString() : '—'}</div>
+                    <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">at 3 km</div>
+                    ${count1km !== null ? `<div style="font-size:10px;color:var(--text-muted);margin-top:3px;">${count1km} · 1 km</div>` : ''}
+                </div>
+            </div>
+            <div class="data-block">
+                <div class="data-label">Anchors</div>
+                <div class="anchor-pills">
+                    ${anchorLabel ? `<div class="pill alpha">${anchorLabel}</div>` : ''}
+                    ${hw.map(h => `<div class="pill">${chainName(h)}</div>`).join('')}
+                    ${wh.map(w => `<div class="pill">${chainName(w)}</div>`).join('')}
+                    ${subs.length > 0 ? `<div style="font-size:10px;color:var(--text-muted);width:100%;margin-top:3px;">+ ${subs.join(' · ')}</div>` : ''}
+                    ${mz.length > 0 ? `<div style="font-size:10px;color:var(--text-muted);width:100%;margin-top:6px;font-style:italic;">Co-located within 150 m: ${mz.map(z => z.anchor || z.merged_anchor || '').filter(Boolean).join(' · ')}</div>` : ''}
+                </div>
             </div>
             <div class="data-block" style="padding-top:6px;">
                 <div class="catchment-block">
@@ -1427,21 +1458,11 @@
                     </div>
                 </div>
             </div>
+            ${civicLine ? `
             <div class="data-block">
-                <div class="data-label">Anchor Location</div>
-                <div class="anchor-pills">
-                    ${anchorLabel ? `<div class="pill alpha">${anchorLabel}</div>` : ''}
-                    ${subs.length > 0 ? `<div style="font-size:10px;color:var(--text-muted);width:100%;margin-top:3px;">+ ${subs.join(' · ')}</div>` : ''}
-                    ${mz.length > 0 ? `<div style="font-size:10px;color:var(--text-muted);width:100%;margin-top:6px;font-style:italic;">Co-located within 150 m: ${mz.map(z => z.anchor || z.merged_anchor || '').filter(Boolean).join(' · ')}</div>` : ''}
-                </div>
-            </div>
-            <div class="data-block">
-                <div class="data-label">Commercial Support</div>
-                <div class="anchor-pills">
-                    ${hw.map(h => `<div class="pill">${chainName(h)}</div>`).join('')}
-                    ${wh.map(w => `<div class="pill">${chainName(w)}</div>`).join('')}
-                </div>
-            </div>
+                <div class="data-label">Civic Context</div>
+                <div style="font-size:12px;color:var(--text-main);margin-top:4px;line-height:1.5;">${civicLine}</div>
+            </div>` : ''}
             <div id="sel-el" class="sel-el-block data-block" style="border-bottom:none;">
                 <div class="data-label">Selected Location</div>
                 <div style="font-size:11px;color:var(--text-muted);font-style:italic;padding:4px 0;">
@@ -1618,7 +1639,7 @@
             },
         });
 
-        // Layer: T3 Apex emphasis halo (rendered beneath cluster nodes)
+        // Layer: Regional-tier emphasis halo (rendered beneath cluster nodes)
         map.addLayer({
             id: 'nodes-halo', type: 'circle',
             source: 'data',

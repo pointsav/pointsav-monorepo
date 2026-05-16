@@ -17,7 +17,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 from config import (
     SERVICE_BUSINESS_CLEANSED, SERVICE_PLACES_CLEANSED, WORK_DIR,
     REGION_CONFIG, ISO_TO_REGION, BOUNDARIES_DIR,
-    ALPHA_ANCHORS, ALPHA_HARDWARE, ALPHA_WAREHOUSE,
+    ALPHA_HYPERMARKET, ALPHA_LIFESTYLE, ALPHA_HARDWARE, ALPHA_WAREHOUSE,
     GENERIC_HARDWARE, GENERIC_WAREHOUSE,
     CHAIN_FAMILIES, CHAIN_SUB_LABELS, ANCHOR_DISPLAY_NAMES,
     SECONDARY_RADIUS_KM, TERTIARY_RADIUS_KM,
@@ -112,6 +112,26 @@ def count_distinct_institutions(recs_with_dist, r_km, cluster_km=0.3) -> int:
     return len(centroids)
 
 
+def count_distinct_by_tier(recs_with_dist, r_km, cluster_km, tier_field, tier_label) -> int:
+    """Count distinct institutions within r_km whose tier_field matches tier_label."""
+    candidates = [(r, d) for r, d in recs_with_dist
+                  if d <= r_km and r.get(tier_field) == tier_label]
+    if not candidates:
+        return 0
+    centroids: list[tuple[float, float]] = []
+    for r, _ in candidates:
+        lat = float(r["latitude"])
+        lon = float(r["longitude"])
+        assigned = False
+        for clat, clon in centroids:
+            if haversine_km(lat, lon, clat, clon) <= cluster_km:
+                assigned = True
+                break
+        if not assigned:
+            centroids.append((lat, lon))
+    return len(centroids)
+
+
 def nearest_dist(recs_with_dist, fallback):
     dists = [d for _, d in recs_with_dist]
     return min(dists) if dists else fallback
@@ -188,6 +208,13 @@ def compute_clusters():
     max_r = max(RADII_KM)
     clusters = []
 
+    # Union of all 4 alpha classes per continent — any member can initiate a cluster.
+    _all_alpha = {
+        cont: (ALPHA_HYPERMARKET.get(cont, set()) | ALPHA_LIFESTYLE.get(cont, set()) |
+               ALPHA_HARDWARE.get(cont, set())    | ALPHA_WAREHOUSE.get(cont, set()))
+        for cont in ("NA", "EU")
+    }
+
     for r_key, r_roles in REGION_CONFIG.items():
         cont = "NA" if r_key in ("US", "CA", "MX") else "EU"
 
@@ -202,7 +229,7 @@ def compute_clusters():
         wh_g_grid = build_grid(wh_g_recs)
 
         for anchor_cid in r_roles.get("anchor", []):
-            if anchor_cid not in ALPHA_ANCHORS[cont]:
+            if anchor_cid not in _all_alpha[cont]:
                 continue
             for pri in locs_by_cid.get(anchor_cid, []):
                 plat = float(pri["latitude"])
@@ -221,6 +248,11 @@ def compute_clusters():
                 # Count distinct institutions (300m cluster radius collapses campus sub-nodes)
                 hc_distinct = count_distinct_institutions(nhc_wd, TERTIARY_RADIUS_KM, 0.3)
                 he_distinct = count_distinct_institutions(nhe_wd, TERTIARY_RADIUS_KM, 0.3)
+                # Per-tier civic counts for bento breakdown (G14 override 2026-05-16)
+                hc_regional = count_distinct_by_tier(nhc_wd, TERTIARY_RADIUS_KM, 0.3, "hospital_tier", "regional")
+                hc_district = count_distinct_by_tier(nhc_wd, TERTIARY_RADIUS_KM, 0.3, "hospital_tier", "district")
+                he_regional = count_distinct_by_tier(nhe_wd, TERTIARY_RADIUS_KM, 0.3, "university_tier", "regional")
+                he_small    = count_distinct_by_tier(nhe_wd, TERTIARY_RADIUS_KM, 0.3, "university_tier", "small")
 
                 # Evaluate tier at each secondary radius (civics not in gate)
                 ranks = {}
@@ -317,12 +349,17 @@ def compute_clusters():
                 count_3km = sum(1 for s in anchor_details
                                 if s.get('cat') in ('hardware', 'warehouse') and s['d'] <= 3.0) + 1
 
-                # Tier descriptor: categorical composition (which families are present)
-                _all_hw_ids = set().union(*ALPHA_HARDWARE.values()) | set().union(*GENERIC_HARDWARE.values())
-                _all_wh_ids = set().union(*ALPHA_WAREHOUSE.values()) | set().union(*GENERIC_WAREHOUSE.values())
-                if anchor_cid in _all_wh_ids:
+                # Tier descriptor: categorical composition (which anchor classes are present).
+                # Anchor class from 4-class taxonomy (D5 2026-05-16).
+                _hyper_ids     = set().union(*ALPHA_HYPERMARKET.values())
+                _lifestyle_ids = set().union(*ALPHA_LIFESTYLE.values())
+                _wh_ids        = set().union(*ALPHA_WAREHOUSE.values())
+                _hw_ids        = set().union(*ALPHA_HARDWARE.values()) | set().union(*GENERIC_HARDWARE.values())
+                if anchor_cid in _wh_ids:
                     _anchor_cat = 'Warehouse'
-                elif anchor_cid in _all_hw_ids:
+                elif anchor_cid in _lifestyle_ids:
+                    _anchor_cat = 'Lifestyle'
+                elif anchor_cid in _hw_ids:
                     _anchor_cat = 'Hardware'
                 else:
                     _anchor_cat = 'Hypermarket'
@@ -332,25 +369,41 @@ def compute_clusters():
                     _cats.add('Hardware')
                 if any(s.get('cat') == 'warehouse' for s in anchor_details):
                     _cats.add('Warehouse')
-                # Plain-English tier nomenclature (Sprint 9): accessibility-friendly,
-                # neurodivergent-clear; old labels (Full Complement / Home + Bulk Hub) used
-                # compound nouns and "+" symbols that increased cognitive load.
-                if 'Hypermarket' in _cats and 'Hardware' in _cats and 'Warehouse' in _cats:
-                    tier_descriptor = 'Prime'
-                elif 'Hypermarket' in _cats and 'Hardware' in _cats:
-                    tier_descriptor = 'Strong (Retail)'
-                elif 'Hypermarket' in _cats and 'Warehouse' in _cats:
-                    tier_descriptor = 'Strong (Bulk)'
-                elif 'Hardware' in _cats and 'Warehouse' in _cats:
-                    tier_descriptor = 'Strong (Hub)'
-                elif 'Hypermarket' in _cats:
-                    tier_descriptor = 'Core (Hyper)'
-                elif 'Hardware' in _cats:
-                    tier_descriptor = 'Core (Hardware)'
-                elif 'Warehouse' in _cats:
-                    tier_descriptor = 'Core (Wholesale)'
+                # Composition descriptor (secondary chip in bento, per D2 2026-05-16).
+                _has_h = 'Hypermarket' in _cats
+                _has_l = 'Lifestyle' in _cats
+                _has_w = 'Warehouse' in _cats
+                _has_hw = 'Hardware' in _cats
+                if _has_h and _has_l and _has_hw and _has_w:
+                    tier_descriptor = 'Hypermarket + Lifestyle + Hardware + Warehouse'
+                elif _has_h and _has_hw and _has_w:
+                    tier_descriptor = 'Hypermarket + Hardware + Warehouse'
+                elif _has_l and _has_h and _has_hw:
+                    tier_descriptor = 'Lifestyle + Hypermarket + Hardware'
+                elif _has_l and _has_h and _has_w:
+                    tier_descriptor = 'Lifestyle + Hypermarket + Warehouse'
+                elif _has_h and _has_hw:
+                    tier_descriptor = 'Hypermarket + Hardware'
+                elif _has_h and _has_w:
+                    tier_descriptor = 'Hypermarket + Warehouse'
+                elif _has_l and _has_h:
+                    tier_descriptor = 'Lifestyle + Hypermarket'
+                elif _has_hw and _has_w:
+                    tier_descriptor = 'Hardware + Warehouse'
+                elif _has_l and _has_hw:
+                    tier_descriptor = 'Lifestyle + Hardware'
+                elif _has_l and _has_w:
+                    tier_descriptor = 'Lifestyle + Warehouse'
+                elif _has_h:
+                    tier_descriptor = 'Hypermarket'
+                elif _has_l:
+                    tier_descriptor = 'Lifestyle'
+                elif _has_hw:
+                    tier_descriptor = 'Hardware'
+                elif _has_w:
+                    tier_descriptor = 'Warehouse'
                 else:
-                    tier_descriptor = 'Emerging'
+                    tier_descriptor = 'Fringe'
 
                 # Sub-entity display labels (within 200m of anchor)
                 sub_labels = []
@@ -404,8 +457,12 @@ def compute_clusters():
                     "anchor_label": anchor_label,
                     "hw_list":    json.dumps(hw_ids),
                     "wh_list":    json.dumps(wh_ids),
-                    "hc_count":   hc_distinct,
-                    "he_count":   he_distinct,
+                    "hc_count":          hc_distinct,
+                    "he_count":          he_distinct,
+                    "hc_count_regional": hc_regional,
+                    "hc_count_district": hc_district,
+                    "he_count_regional": he_regional,
+                    "he_count_small":    he_small,
                     "anchor_details": json.dumps(anchor_details),
                     "sub_entities_display": json.dumps(sub_labels),
                     "display_name": display_name,

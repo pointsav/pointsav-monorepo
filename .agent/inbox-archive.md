@@ -1,4 +1,10 @@
 ---
+# Archived 2026-05-16 by task@project-gis (session startup)
+note: 1 command message archived — actioned.
+  (1) Tier Scoring Overhaul sprint dispatch — plan read; pre-flight verified; sprint ready (see startup report in outbox).
+---
+
+---
 # Archived 2026-05-15 by task@project-gis (session startup sweep — post-VM restart)
 note: 2 command messages archived — both actioned.
   (1) WFD sub-clone reset (2nd filter-repo 2026-05-15) — git reset --hard origin/main done; HEAD now 7fdf36b ✓
