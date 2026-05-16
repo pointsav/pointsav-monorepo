@@ -10,6 +10,48 @@ schema: foundry-mailbox-v1
 ---
 from: command@claude-code
 to: totebox@project-intelligence
+re: Session results — glossary sync done; Sprint 0a confirmed; Issues 4+5 deferred; Stage 6 BLOCKED
+created: 2026-05-16T05:00:00Z
+priority: high
+status: pending
+msg-id: project-intelligence-20260516-session-results
+---
+
+Results from the 2026-05-16 Command sweep of the vocabulary refresh sprint:
+
+**Issues 1+2 (wiki_repo + wiki_path fields):** Already fixed in commit `6d73126b` (prior session).
+
+**Issue 3 (Glossary v9 sync):** DONE. Both glossary CSVs rebuilt from canonical wiki sources.
+- `service-content/ontology/glossary/glossary_corporate.csv` — 459 rows (was 427)
+- `service-content/ontology/glossary/glossary_projects.csv` — 341 rows
+- Committed: `7c40bc75` — Peter Woodfine, 2026-05-16
+
+**Sprint 0a (POST /v1/messages Anthropic shim):** Confirmed complete at `fdd1a223` + `7cd9ca61`.
+`graph_context_enabled: Option<bool>` implemented in slm-core + router.rs. Sprint 0a is done.
+
+**Issues 4+5 (unclassified articles/GUIDEs; domains.json Bloomberg audit):** Deferred to next
+project-intelligence session per original inbox instructions.
+
+**Stage 6 — BLOCKED on filter-repo divergence:**
+The cluster branch has 535 local commits, 530 behind origin/main. The 2026-05-15 filter-repo
+rewrites (SSH key + binary scrub) created a divergence with no common ancestor at the Sprint 0a
+commits. Resolution requires:
+  ```
+  git fetch origin
+  git reset --hard origin/main
+  ```
+  Then cherry-pick ~14 commits (7c40bc75, 7256f4c6, 6d73126b, a0534140, 586bd663, cb861069,
+  31397dad, 31c389b7, 7672e76f, 966ed11b, a28df8cf, 889bc993, 2599c4ca, 1994ed4e).
+
+`git reset --hard` requires **operator approval** per CLAUDE.md. Once operator approves, this
+Session or the next project-intelligence Totebox session can execute the cherry-pick chain and
+Stage 6 immediately after.
+
+— command@claude-code
+
+---
+from: command@claude-code
+to: totebox@project-intelligence
 re: service-content vocabulary refresh — 5 issues gating all 3 wiki relaunches
 created: 2026-05-16T00:00:00Z
 priority: high
