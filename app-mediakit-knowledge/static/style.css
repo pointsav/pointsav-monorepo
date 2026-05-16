@@ -3083,6 +3083,79 @@ body.printable .mw-body {
 .freshness-aging   { color: #e6a817; }
 .freshness-stale   { color: #c00; }
 
+/* ── Sprint W: History + Blame + Cite — inline-style purge + CSS ─────── */
+
+/* History page (/history/{slug}) */
+.history-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+  font-size: 0.875rem;
+}
+.history-thead-row {
+  border-bottom: 2px solid var(--border);
+  text-align: left;
+}
+.history-th {
+  padding: 0.5rem 0.75rem;
+  font-weight: 600;
+  background: var(--bg-chrome);
+  color: var(--fg);
+  white-space: nowrap;
+}
+.history-body-row { border-bottom: 1px solid var(--border); }
+.history-body-row:hover { background: color-mix(in srgb, var(--accent) 6%, var(--bg)); }
+.history-td,
+.history-td-sha,
+.history-td-date,
+.history-td-summary { padding: 0.4rem 0.75rem; vertical-align: top; }
+.history-td-sha { font-family: var(--mono); font-size: 0.8125rem; white-space: nowrap; }
+.history-td-sha a { color: var(--link); text-decoration: none; }
+.history-td-sha a:hover { text-decoration: underline; }
+.history-td-date { color: var(--fg-muted); font-size: 0.875rem; white-space: nowrap; }
+.history-td-summary { color: var(--fg-muted); font-style: italic; font-size: 0.875rem; }
+
+/* Blame page (/blame/{slug}) */
+.blame-container {
+  background: var(--bg-chrome);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: 2px;
+  overflow-x: auto;
+}
+.blame-pre { margin: 0; font-family: var(--mono); font-size: 0.875rem; line-height: 1.5; padding: 0; }
+.blame-line { display: flex; }
+.blame-line:hover { background: color-mix(in srgb, var(--accent) 8%, transparent); }
+.blame-meta {
+  color: var(--fg-muted);
+  width: 14rem;
+  flex-shrink: 0;
+  user-select: none;
+  border-right: 1px solid var(--border);
+  padding: 0 0.75rem 0 0.5rem;
+  margin-right: 0.75rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.blame-text { white-space: pre; color: var(--fg); }
+
+/* Cite page (/special/cite/{slug}) */
+.wiki-cite-block {
+  background: var(--bg-chrome);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: 2px;
+  padding: 0.75rem 1rem;
+  font-family: var(--mono);
+  font-size: 0.875rem;
+  white-space: pre-wrap;
+  word-break: break-all;
+  margin: 0.5rem 0 1.5rem;
+  color: var(--fg);
+  line-height: 1.5;
+}
+
 /* ── Sprint V: Search results page ──────────────────────────────────── */
 .search-form {
   display: flex;
