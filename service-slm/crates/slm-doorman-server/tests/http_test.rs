@@ -559,7 +559,7 @@ async fn shadow_with_apprenticeship_enabled_returns_202_with_body_shape() {
             "task_type": "version-bump-manifest",
             "scope": {},
             "acceptance_test": "cargo test --workspace",
-            "body": "bump Cargo.toml version to 0.1.0"
+            "body": "bump Cargo.toml version to 0.1.0 — update workspace manifest patch version"
         },
         "actual_diff": "- version = \"0.0.9\"\n+ version = \"0.1.0\"\n"
     });
@@ -651,9 +651,9 @@ async fn shadow_enqueued_brief_file_exists_at_queue_path() {
             "task_type": "version-bump-manifest",
             "scope": {},
             "acceptance_test": "cargo test --workspace",
-            "body": "implement shadow enqueue"
+            "body": "implement shadow enqueue to persist apprenticeship corpus entries to queue dir"
         },
-        "actual_diff": "+ enqueue_shadow()\n"
+        "actual_diff": "+ enqueue_shadow(brief, diff)\n+ // persist to queue dir\n"
     });
 
     let resp = app
@@ -691,7 +691,7 @@ async fn shadow_enqueued_brief_file_exists_at_queue_path() {
     );
     assert_eq!(
         entry["actual_diff"].as_str().unwrap_or(""),
-        "+ enqueue_shadow()\n",
+        "+ enqueue_shadow(brief, diff)\n+ // persist to queue dir\n",
         "queue file must preserve the actual_diff"
     );
 }

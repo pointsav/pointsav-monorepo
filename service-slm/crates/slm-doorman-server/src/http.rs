@@ -609,7 +609,7 @@ async fn extract(State(state): State<Arc<AppState>>, raw: Bytes) -> impl IntoRes
         _ => DeferReason::YoyoTransient,
     });
 
-    Json(ExtractionResponse {
+    let mut resp = Json(ExtractionResponse {
         entities,
         tier_used,
         model,
@@ -617,7 +617,18 @@ async fn extract(State(state): State<Arc<AppState>>, raw: Bytes) -> impl IntoRes
         deferred,
         defer_reason: defer_reason_enum,
     })
-    .into_response()
+    .into_response();
+
+    // Circuit-open: tell callers to back off for 5 minutes so they don't
+    // re-submit every boot and produce a Doorman flood when Tier B returns.
+    if defer_reason_str.as_deref() == Some("yoyo-circuit-open") {
+        resp.headers_mut().insert(
+            axum::http::header::RETRY_AFTER,
+            axum::http::HeaderValue::from_static("300"),
+        );
+    }
+
+    resp
 }
 
 /// `POST /v1/audit/proxy` — audited external provider call (PS.4 step 2).
@@ -1290,15 +1301,17 @@ fn anthropic_to_compute_request(
         });
     }
 
-    let (complexity, yoyo_label) = if body.model.starts_with("claude-haiku") {
-        (Complexity::Low, None)
-    } else if body.model.starts_with("claude-sonnet") {
-        (Complexity::High, Some("trainer".to_string()))
-    } else if body.model.starts_with("claude-opus") {
-        (Complexity::High, None)
-    } else {
-        (Complexity::Medium, Some("trainer".to_string()))
-    };
+    let (complexity, yoyo_label, tier_hint, tier_c_label) =
+        if body.model.starts_with("claude-haiku") {
+            (Complexity::Low, None, None, None)
+        } else if body.model.starts_with("claude-sonnet") {
+            (Complexity::High, Some("trainer".to_string()), None, None)
+        } else if body.model.starts_with("claude-opus") {
+            // Tier C passthrough: hint External + supply allowlisted label.
+            (Complexity::High, None, Some(Tier::External), Some("editorial-refinement".to_string()))
+        } else {
+            (Complexity::Medium, Some("trainer".to_string()), None, None)
+        };
 
     ComputeRequest {
         request_id,
@@ -1306,12 +1319,12 @@ fn anthropic_to_compute_request(
         model: Some(body.model),
         messages,
         complexity,
-        tier_hint: None,
+        tier_hint,
         stream: false, // Doorman always returns buffered; SSE is assembled by the handler
         max_tokens: Some(body.max_tokens),
         temperature: body.temperature,
         sanitised_outbound: false,
-        tier_c_label: None,
+        tier_c_label,
         yoyo_label,
         grammar: None,
         speculation: None,

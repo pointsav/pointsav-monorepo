@@ -501,6 +501,7 @@ fn classify_error(e: &DoormanError) -> CompletionStatus {
         // server-side for unreachable service-content (UpstreamError).
         DoormanError::GraphProxyMissingModuleId => CompletionStatus::PolicyDenied,
         DoormanError::GraphProxyServiceUnavailable => CompletionStatus::UpstreamError,
+        DoormanError::QueueQualityGateRejected { .. } => CompletionStatus::PolicyDenied,
     }
 }
 
