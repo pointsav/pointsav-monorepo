@@ -307,6 +307,99 @@ content-forward rule where deletion is involved.
 
 ---
 
+## woodfine-design-bim — naming analysis (OPUS agent, 2026-05-16)
+
+### What the repo actually is
+
+A DTCG design-token bundle for Building Information Modeling, consumed at runtime
+by `app-orchestration-bim` (serving `bim.woodfinegroup.com`) via the
+`BIM_DESIGN_SYSTEM_DIR` environment variable. Contents:
+
+- 9 DTCG token files (`tokens/bim/*.dtcg.json`) anchored to IFC 4.3 primitive
+  categories (spatial, elements, systems, materials, assemblies, performance,
+  identity-codes, relationships) + climate-zone file
+- `regulation/` — IDS 1.0 + IFC fragments (BC RS-1 v0.0.3)
+- `climate/` — climate-zone specifications
+- `components/` — BIM component recipes
+- `research/` — AI-readable research files
+- License: **EUPL-1.2** (EU copyleft — stronger than Apache 2.0, weaker than AGPL)
+
+Standards floor: IFC 4.3 (ISO 16739-1:2024), Uniclass 2015, IDS 1.0, bSDD.
+
+Structurally it is a **design-system substrate for the BIM/AEC semantic layer**
+(same architecture as `pointsav-design-system` but different audience: architects,
+structural/MEP engineers, construction managers rather than UI/UX developers).
+
+### Why the current name does not work
+
+1. **Only three-part name in either org.** Every other repo is `<org>-<compound-noun>`
+   (`woodfine-fleet-deployment`, `woodfine-media-assets`). `woodfine-design-bim` is
+   `<org>-<noun>-<qualifier>` — a unique and inconsistent shape.
+
+2. **Reads with "BIM" as the head noun.** By English grammar, `woodfine-design-bim`
+   parses as "Woodfine's BIM, in the design area." The repo is *design tokens for
+   BIM*, not a BIM artifact. The head noun should be the token/design layer, not BIM.
+
+3. **`design-bim` is not a recognized term** in AEC or UI/UX vocabulary. A Goldman
+   Sachs analyst and an AEC developer would both need to decode it.
+
+4. **`IT_SUPPORT_Nomenclature_Matrix_V8.md` no longer exists** — CLAUDE.md §5 has
+   a dangling reference to it. Canonical replacement is
+   `conventions/nomenclature-taxonomy.md`. Flag as a CLAUDE.md cleanup item.
+
+### Deeper structural issue discovered (separate from naming)
+
+**Two sources contradict each other on where BIM tokens belong:**
+
+- **project-bim manifest** says: platform-level Building Design System tokens
+  belong in `pointsav-design-system` (vendor tier, sub-clone in project-bim cluster)
+- **`.agent/plans/README.md` routing table** says: `BIM-* → project-bim →
+  woodfine-design-bim. Never routes to pointsav-design-system`
+
+These cannot both be canonical. Additionally, the project-bim cluster's three
+sub-clones are `pointsav-monorepo`, `pointsav-design-system`, and
+`woodfine-fleet-deployment` — `woodfine-design-bim` is **not a sub-clone** of
+project-bim, meaning BIM-* artifacts are being routed to a repo the project-bim
+Task cannot write to. This is a routing defect independent of the name.
+
+**Operator decision needed:** Is `woodfine-design-bim` a *tenant-branded* BIM
+token bundle (customer tier, Woodfine-specific → stays in woodfine org) or is it
+the *platform-level* BIM design substrate (vendor tier → should live in
+`pointsav-design-system` or a new `pointsav-bim-*` repo)?
+
+### Recommendation: rename to `woodfine-bim`
+
+**Primary choice: `woodfine-bim`**
+- Matches `woodfine-<purpose-noun>` pattern exactly
+- Passes 5-second test for both audiences ("Woodfine's BIM stuff")
+- Honest about wider scope (tokens + regulation + climate + components + research)
+- Follows the same logic as `woodfine-fleet-deployment` and `woodfine-media-assets`
+
+**Secondary choice: `woodfine-bim-assets`**
+- Symmetric with `woodfine-media-assets`
+- Signals tenant-branded BIM material vs. platform substrate
+- Resolves the customer-tier org placement question explicitly
+
+This is a **rename requiring git remote changes** — not a local convention only.
+
+### Content-forward transition: files to update on rename
+
+| File | Change |
+|---|---|
+| `customer/woodfine-design-bim/README.md` + `.es.md` | Update title heading |
+| `.agent/plans/README.md` line 28 | `woodfine-design-bim` → `woodfine-bim` (+ revisit "Never routes to pointsav-design-system" caveat) |
+| `PROJECT-CLONES.md` project-bim block | Add explicit "tokens repo: woodfine-bim" line |
+| `pairings.yaml` | Update repo name entry |
+| `deployments/gateway-orchestration-bim-1/MANIFEST.md` | Update any path references (env var `BIM_DESIGN_SYSTEM_DIR` itself does not need changing) |
+| GitHub remote | Rename in `github.com/woodfine` settings; GitHub redirects ~6 months; update `git remote set-url origin` in any clones |
+| Any open inbox/outbox/plans referencing old name | Search and update |
+| `CLAUDE.md` §5 | Fix dangling `IT_SUPPORT_Nomenclature_Matrix_V8.md` reference → `conventions/nomenclature-taxonomy.md` |
+
+Also add `woodfine-bim` as a sub-clone to the project-bim cluster manifest to fix
+the routing defect (BIM-* artifacts need a path into the repo).
+
+---
+
 ## Sequencing note
 
 Items 1–2 (org profiles) are admin-tier and need Command Session.
