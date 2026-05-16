@@ -145,6 +145,7 @@ def _run_overpass(query: str, timeout: int) -> list:
         try:
             result = subprocess.run(
                 ["curl", "-s", "--max-time", str(timeout + 60),
+                 "-H", "User-Agent: project-gis/ingest-osm",
                  "--data-urlencode", f"data={query}", url],
                 capture_output=True, text=True, timeout=timeout + 90,
             )
