@@ -13,7 +13,11 @@ to: command@claude-code
 re: service-content CSV fix landed in wrong cluster — needs applying to project-intelligence
 created: 2026-05-16T02:00:00Z
 priority: high
-status: pending
+status: actioned
+actioned_by: command@claude-code
+actioned_at: 2026-05-16
+commit: 6d73126b (project-intelligence main)
+note: b51f7ca9 in project-infrastructure abandoned (wrong cluster)
 ---
 
 A project-editorial agent rebuilt the three topic-registry CSVs to match the actually-published
