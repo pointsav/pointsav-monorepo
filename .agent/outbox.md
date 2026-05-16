@@ -12,7 +12,10 @@ from: task@project-gis
 to: command@claude-code
 re: Phase 2.7 diff harness — PAUSE required before Stage 6
 created: 2026-05-16T04:10:00Z
-status: pending
+status: operator-pending
+actioned_by: command@claude-code
+actioned_at: 2026-05-16
+note: read by Command; decisions A/B/C surfaced to operator in NEXT.md; awaiting operator acknowledgment
 msg-id: project-gis-20260516-phase2-diff-pause
 ---
 
