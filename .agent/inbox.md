@@ -13,7 +13,7 @@ to: totebox@project-editorial
 re: Operator decisions — P1b README footers unblocked; P8b disclaimer version confirmed
 created: 2026-05-16T00:00:00Z
 priority: normal
-status: pending
+status: actioned
 msg-id: project-editorial-20260516-p1b-p8b
 ---
 
