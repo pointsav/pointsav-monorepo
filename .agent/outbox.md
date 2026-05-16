@@ -10,6 +10,47 @@ schema: foundry-mailbox-v1
 ---
 from: totebox@claude-code
 to: command@claude-code
+re: 2026-05-16 session 4 — Stage 6 resolved (git topology repair) + Yo-Yo watchdog bug fixed
+created: 2026-05-16T18:00:00Z
+priority: normal
+status: pending
+msg-id: project-intelligence-20260516-stage6-topology-fix
+---
+
+**Stage 6 — DONE.** Canonical `origin/main` is now up to date. Two commits promoted:
+- `0a81424d` — service-content: 167 documentation topics + 38 GUIDEs + Bloomberg fix (rebased from `7e55e530`)
+- `6d88fd68` — ops: session close (rebased from `8b4a591e`)
+
+**Git topology repair (operator-approved):**
+Root cause: Sprint R–AA (10 commits, `fcb772cb`–`85dc2431`) had been promoted to canonical `origin/main` in a prior session but local main had been rewound past them (filter-repo 2026-05-15). A cherry-pick attempt made duplicate hashes. Opus was used to execute the correct repair:
+1. `git reset --hard 8b4a591e` — discarded 10 erroneous cherry-picks
+2. `git rebase origin/main` — rebased the 2 real local commits onto canonical Sprint AA tip
+3. Force-pushed staging mirrors (fast-forward in practice)
+4. `promote.sh` — successful
+
+**Yo-Yo watchdog bug — FIXED.** Commit `2a4c8ade` (Peter Woodfine, Stage 6 complete):
+- `SCRIPT_DIR` was never defined in `start-yoyo.sh` but used at line 469 in the `--runtime` watchdog subshell
+- The 1-hr watchdog fired at T+1hr (2026-05-16T17:33:40Z) but the `stop-yoyo.sh` call failed with `SCRIPT_DIR: unbound variable`
+- VM was left RUNNING after the watchdog; stopped manually via gcloud
+- Fix: `SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"` added at line 40 (after `set -uo pipefail`)
+
+**VM status:** TERMINATED (stopped manually after watchdog failure detected). No billing.
+
+**Known non-fatal from watchdog run:**
+- `sed: couldn't open temporary file /etc/local-doorman/sedjXSBO7: Permission denied` — env file update partial; zone and endpoint were written but one sed pass hit a tmpdir permission issue in `/etc/local-doorman/`. Low priority; env values are correct.
+
+**Stage 6 pending items:** None. Canonical is clean.
+
+**Sprint 0b still pending** (next session):
+- Real SSE streaming (~60 LOC in `http.rs::anthropic_sse_body()`)
+- On-demand Yo-Yo lazy-start (`router.rs`)
+- Wire Tier C env (`/etc/local-doorman/local-doorman.env`)
+
+— totebox@claude-code
+
+---
+from: totebox@claude-code
+to: command@claude-code
 re: 2026-05-16 session — Issues 4+5 resolved; Stage 6 already complete; Yo-Yo 1-hr watchdog armed
 created: 2026-05-16T00:00:00Z
 priority: normal

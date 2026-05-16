@@ -35,4 +35,4 @@ updated: 2026-05-12
 
 ## Last session handoff
 
-*2026-05-16 — Issues 4+5 complete: 167 documentation topics + 38 GUIDEs registered in service-content ontology CSVs; Bloomberg violation in Domains.json fixed (commit 7e55e530, Jennifer Woodfine). Stage 6 already complete on session start (main == origin/main). Yo-Yo 1-hr watchdog armed (VM was RUNNING at 34.6.204.25). All 3 inbox messages archived. Sprint 0b (real SSE streaming + on-demand boot) is next code work.*
+*2026-05-16 session 4 — Stage 6 complete (canonical up to date at `2a4c8ade`). Git topology repaired: local main had diverged from canonical due to filter-repo rewrite; Opus-assisted hard-reset + rebase resolved it cleanly. Yo-Yo 1-hr watchdog `SCRIPT_DIR` bug fixed and promoted (`2a4c8ade`, Peter Woodfine). VM TERMINATED — no billing. Toggle: Jennifer is next. Sprint 0b (real SSE streaming + on-demand lazy-start) is next code work.*
