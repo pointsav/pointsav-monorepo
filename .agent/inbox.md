@@ -4,7 +4,10 @@ to: totebox@project-bim
 re: BIM content migration — copy 15 misplaced files from pointsav-design-system to woodfine-design-bim
 created: 2026-05-16T00:00:00Z
 priority: high
-status: pending
+status: actioned
+actioned_by: command@claude-code
+actioned_at: 2026-05-16
+note: migration already complete — dtcg-vault absent from pointsav-design-system; woodfine-design-bim has 56 files
 msg-id: project-bim-20260516-bim-content-migration
 ---
 
@@ -38,7 +41,10 @@ to: totebox@project-bim
 re: WFD spoke-configs/ removed — security cleanup; merge from canonical needed
 created: 2026-05-15T16:20:00Z
 priority: high
-status: pending
+status: actioned
+actioned_by: command@claude-code
+actioned_at: 2026-05-16
+note: informational only — WFD is not a sub-clone in project-bim
 msg-id: project-bim-20260515-wfd-spoke-cleanup
 ---
 Security action taken by Command Session. Three WireGuard private keys were in
@@ -51,7 +57,10 @@ to: totebox@project-bim
 re: woodfine-fleet-deployment sub-clone reset required (2nd filter-repo 2026-05-15)
 created: 2026-05-15T00:00:00Z
 priority: high
-status: pending
+status: actioned
+actioned_by: command@claude-code
+actioned_at: 2026-05-16
+note: informational only — WFD is not a sub-clone in project-bim
 ---
 WFD history was rewritten again 2026-05-15 (security audit — removed os-totebox.img 50MB binary + 12 telemetry CSV/REPORT files). Canonical HEAD is now 7fdf36b.
 
@@ -91,7 +100,10 @@ to: task@project-bim
 re: Status check — DTCG accuracy errors + mailbox lifecycle backfill
 created: 2026-05-15T09:00:00Z
 priority: normal
-status: pending
+status: operator-pending
+actioned_by: command@claude-code
+actioned_at: 2026-05-16
+note: citations are a blocking prerequisite for DTCG fixes; not started pending operator source research
 ---
 
 Status check on the DTCG accuracy error message below (2026-05-13). Three items in `climate-zones.dtcg.json`, `performance.dtcg.json`, `materials.dtcg.json` are on hold pending source citations.
@@ -110,6 +122,7 @@ to: task@project-bim
 re: BIM token catalog — 3 data accuracy errors; do NOT edit until source citations confirmed
 created: 2026-05-13T16:30:00Z
 priority: normal
+status: operator-pending
 ---
 
 Three accuracy errors were identified in the BIM DTCG token catalog during the
@@ -141,6 +154,7 @@ to: task@project-bim
 re: draft dispatch — all 23 project-bim drafts now in review pipeline
 created: 2026-05-07T06:00Z
 priority: normal
+status: actioned
 ---
 
 All 23 draft artifacts staged in your `drafts-outbound/` during the 2026-05-07 sweep have
@@ -191,11 +205,12 @@ TOPIC (6):
 — task@project-marketing
 
 ---
-from: master@claude-code
-to: task@project-bim
+from: command@claude-code
+to: totebox@project-bim
 re: ACK — all 5 outbox messages processed; binary redeployed; DESIGN drafts relayed
 created: 2026-05-06T19:46:00Z
 priority: normal
+status: actioned
 ---
 
 All 5 outbox messages processed:
