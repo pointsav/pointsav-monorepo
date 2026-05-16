@@ -215,14 +215,22 @@ body {
 
 /* --- article body (.page-body = div wrapping comrak output inside #mw-content-text) --- */
 
-.page-body { font-family: var(--mw-font-family-article); font-size: 1rem; line-height: 1.65; }
+.page-body {
+  font-family: var(--mw-font-family-article);
+  font-size: 1rem;
+  line-height: 1.7;
+  text-rendering: optimizeLegibility;
+  overflow-wrap: break-word;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
 
 /* Article lede — first direct-child <p> gets a left-border accent (institutional editorial voice).
  * Uses :first-of-type so it fires even when a <blockquote> or <div> precedes the paragraph. */
 #mw-content-text > .page-body > p:first-of-type {
   border-left: 3px solid var(--accent);
   padding-left: 1rem;
-  line-height: 1.75;
+  line-height: 1.8;
   color: var(--fg);
 }
 
@@ -230,6 +238,7 @@ body {
   font-family: var(--sans);
   font-weight: 400;
   font-size: 2rem;
+  letter-spacing: -0.01em;
   border-bottom: 1px solid var(--border);
   padding-bottom: 0.5rem;
   margin-top: 0;
@@ -243,18 +252,20 @@ body {
   margin-bottom: 0.5rem;
 }
 
-.page-body h1 { font-size: 1.75rem; border-bottom: 1px solid var(--border); padding-bottom: 0.25rem; }
-.page-body h2 { font-size: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 0.25rem; scroll-margin-top: 60px; }
+.page-body h1 { font-size: 1.75rem; letter-spacing: -0.01em; border-bottom: 1px solid var(--border); padding-bottom: 0.25rem; }
+.page-body h2 { font-size: 1.5rem; letter-spacing: -0.005em; margin-top: 2.25rem; border-bottom: 1px solid var(--border); padding-bottom: 0.25rem; scroll-margin-top: 60px; }
 .page-body h3 { font-size: 1.25rem; scroll-margin-top: 60px; }
-.page-body h4 { font-size: 1.0625rem; font-weight: 600; }
+.page-body h4 { font-size: 1.0625rem; font-weight: 600; margin-top: 1.5rem; }
+.page-body h5 { font-size: 1rem; font-weight: 600; margin-top: 1.25rem; }
+.page-body h6 { font-size: 0.9375rem; font-weight: 600; font-style: italic; margin-top: 1.25rem; }
 
 .page-body a { color: var(--mw-color-link); }
 .page-body a:visited { color: var(--mw-color-link-visited); }
 .page-body a.wikilink { color: var(--mw-color-link); }
 
-.page-body p, .page-body ul, .page-body ol { margin: 0.75em 0; }
+.page-body p, .page-body ul, .page-body ol { margin: 0.9em 0; }
 .page-body ul, .page-body ol { padding-left: 2em; }
-.page-body li { margin: 0.2em 0; }
+.page-body li { margin: 0.3em 0; }
 
 .page-body code {
   font-family: var(--mono);
