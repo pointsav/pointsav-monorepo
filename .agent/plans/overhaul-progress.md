@@ -2,16 +2,41 @@
 schema: overhaul-progress-v1
 plan: overhaul-documentation-pointsav-com.md
 phase: 2
-sub_phase: 2j-complete
+sub_phase: design-system-split-queued
 status: in-progress
 safe_to_resume: true
 unsafe_reason: ""
 owner_engine: claude-code
-last_updated: 2026-05-15T23:30:00Z
+last_updated: 2026-05-16T10:30:00Z
 last_session_id: f0c72c72-f1b7-4254-bfa2-553a5e266bac
 ---
 
 ## Last completed sub-task
+- task: Design-system category split — OPUS analysis, handoffs-outbound entries, routing messages
+- commit_sha: d4d9a83 (content-wiki-documentation handoffs), ce1f631e (outbox messages)
+- committed_at: 2026-05-16
+- detail: OPUS agent determined 4 EN+ES pairs stay at documentation.pointsav.com (design-philosophy,
+  design-primitive-vocabulary, brand-family-swatch, brand-typography); 48 files across 3 batches
+  move to pointsav-design-system/. Three pending-destination-commit entries opened in
+  content-wiki-documentation/.agent/rules/handoffs-outbound.md. Messages queued to project-design
+  and command@claude-code establishing the permanent artifact routing boundary.
+  Source-side git rm + _index.md rewrite + redirects.yaml + naming-convention.md §13 amendment
+  are gated on project-design's destination commits landing.
+
+## Three-wiki relaunch — COMPLETE (2026-05-16)
+- task: Stage 6 promotion of all three wikis + structural fixes
+- committed_at: 2026-05-16
+- detail:
+  - content-wiki-documentation: 86 commits promoted via bin/promote.sh (commits 1c9cee3→769980b)
+  - content-wiki-corporate: 3 commits promoted (commits c65be14→53a3169); structural fixes:
+    index.es.md added, bcsc_class added, 3 topics brought to ≥3 wikilinks
+  - content-wiki-projects: 4 commits promoted (commits 1c1e48b→420e8cf); structural fixes:
+    5 slug inconsistencies fixed, broken wikilinks repaired across 24 files, index.es.md added,
+    bcsc_class added, 12 articles given ≥3 wikilinks
+  - service-content CSVs: rebuilt in project-intelligence (commit 6d73126b) — topics_corporate
+    (5 rows), topics_projects (17 rows), topics_documentation (1 confirmed row)
+
+## Last completed sub-task (prior session)
 - task: Sub-phase 2j — Bloomberg vocabulary sweep across all remaining categories (complete)
 - commit_sha: 96a6379 (content-wiki-documentation, final substrate residual batch 7b)
 - committed_at: 2026-05-15
