@@ -10,6 +10,95 @@ schema: foundry-mailbox-v1
 ---
 from: task@project-gis
 to: command@claude-code
+re: Phase 2.7 diff harness — PAUSE required before Stage 6
+created: 2026-05-16T04:10:00Z
+status: pending
+msg-id: project-gis-20260516-phase2-diff-pause
+---
+
+Phase 2 geometric ranking engine has been written and run against the Phase 1
+cluster build. Diff harness output below. **Operator acknowledgment required
+before Stage 6 and build-tiles.py run.**
+
+**Pipeline state:** 9,234 clusters after dedup. Per-ISO ranks loaded from
+catchment-data.json (6,794 of 9,234 clusters have catchment data; 2,440
+new Phase 1 clusters from Mercadona/Tesco/Sainsbury's have no catchment
+data yet — will be populated on next synthesize-od-study.py run).
+
+---
+
+### Contingency Table: rank_v2 × tier (V3)
+
+```
+   v2\tier        T1        T2        T3        T4 (Fringe)
+      v2=0         0       133       243          2534     (no catchment data = Fringe)
+      v2=1        14       289      1211          3206
+      v2=2         3        76       497           917
+      v2=3         0         3        43            65
+```
+
+---
+
+### Mountain View — EXPECTED demotion confirmed
+
+`c_walmart_us_37x401__122x11` (Mountain View, CA, US):
+- V2 rank: T0 Border (rank_v2=0) — was never V2 Apex, so no demotion
+- V3 tier: **T2 District** ✓
+- pred: `["T2:composition", "T2:rank_pp", "T2:rank_spend", "T2:civic_hospital", "T2:iou"]`
+- rank_pp_iso: 0.1765 (top 18% in US by primary population)
+- hc_count_regional: 2
+
+Mountain View is correctly T2 District under V3. The anticipated demotion is confirmed.
+
+---
+
+### Test matrix results
+
+| Location | Expected | Actual V3 | Notes |
+|---|---|---|---|
+| Mountain View | T2 District | **T2 District** ✓ | Confirmed demotion |
+| Mississauga (Walmart+Costco at 43x544) | T1 Regional | **T2 District** | rank_sp=0.22 — just above P20 threshold; passes all other T1 gates |
+| Sherwood Park (Costco+HomeDepot) | T1 Regional | **T3 Local** | rank_pp=0.44; composition lacks Hypermarket co-tenant for T1/T2 |
+| Madrid Salamanca (Mercadona) | T1 Regional | **T4 Fringe** | No catchment data for new Mercadona clusters; needs synthesize-od rerun |
+| Anderlecht (IKEA-nl) | T2 District | **T4 Fringe** | rank_pp=1.0 — no catchment data for EU IKEA-nl cluster |
+| Camden, NJ (Walmart) | T3 Local | **T4 Fringe** | rank_pp=0.82; no Warehouse co-tenant; fails T3 |
+
+---
+
+### Operator decisions needed
+
+**Decision A — T1 rank_sp threshold: keep P20 or relax to P25?**
+Mississauga Walmart+Costco has rank_sp=0.22 (22nd percentile), missing T1 by 2
+percentage points. Relaxing to P25 would promote this cluster to T1 Regional.
+Recommendation: relax to P25 (rank_sp is a secondary population gate; P20 was
+conservative; P25 is more consistent with P25 used for T2 primary gate).
+
+**Decision B — Catchment data gap for new Phase 1 chains: run synthesize-od first?**
+Mercadona, Tesco, Sainsbury's clusters have no catchment data and cannot be tiered
+by the geometric engine. These will all score Fringe until synthesize-od-study.py
+is re-run. synthesize-od-study.py takes ~3–4 hours on this hardware.
+Recommendation: run synthesize-od before build-tiles.py; accept temporary Fringe
+assignment if a partial deploy is acceptable.
+
+**Decision C — Stage 6 scope: Phase 1 only, or Phase 1+2 together?**
+Phase 1 code (4-class taxonomy, BentoBox Layout A/B, per-tier civic counts) is
+committed and tested. Phase 2 engine (build-geometric-ranking.py) is committed
+but has the above known gaps. Options:
+  (i) Stage 6 Phase 1 only: run build-tiles.py now; defer Phase 2 tier field until
+      catchment data gap is resolved. Bento will use V2 rank_3km for colors.
+  (ii) Stage 6 Phase 1+2 together: run synthesize-od first (~4h), then full pipeline.
+Recommendation: Stage 6 Phase 1 only now; Phase 2 Stage 6 after catchment rerun.
+
+---
+
+**This message requires operator acknowledgment before build-tiles.py is run
+and before Stage 6. Do not proceed to build-tiles.py automatically.**
+
+— task@project-gis
+
+---
+from: task@project-gis
+to: command@claude-code
 re: Pre-flight results — Tier Scoring Overhaul (3 of 3 resolved)
 created: 2026-05-16T16:00:00Z
 status: actioned
