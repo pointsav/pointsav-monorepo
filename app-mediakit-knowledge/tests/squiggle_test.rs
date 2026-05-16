@@ -29,6 +29,7 @@ async fn fixture_state() -> (AppState, tempfile::TempDir, tempfile::TempDir) {
         mcp_enabled: false,
         glossary: Arc::new(app_mediakit_knowledge::glossary::Glossary::default()),
                 links: app_mediakit_knowledge::links::LinkGraph::for_testing(),
+                brand_theme: None,
                 db: None,
     };
     (state, dir, state_dir)

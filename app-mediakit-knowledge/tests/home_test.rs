@@ -67,6 +67,7 @@ async fn build_state(
         mcp_enabled: false,
         glossary: Arc::new(app_mediakit_knowledge::glossary::Glossary::default()),
                 links: app_mediakit_knowledge::links::LinkGraph::for_testing(),
+                brand_theme: None,
                 db: None,
     };
     (state, state_dir)

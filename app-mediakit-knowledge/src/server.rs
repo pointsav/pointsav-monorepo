@@ -106,6 +106,10 @@ pub struct AppState {
     /// Phase 5: SQLite connection for users/sessions/pending-edits.
     /// None when auth is not configured (no WIKI_ADMIN_USERNAME set).
     pub db: Option<Arc<Mutex<rusqlite::Connection>>>,
+    /// Optional brand theme selector. When set to `"woodfine"`, BCSC
+    /// forward-looking-statement disclaimer appears in all page footers.
+    /// Set via `--brand-theme` / `WIKI_BRAND_THEME`.
+    pub brand_theme: Option<String>,
 }
 
 pub fn router(state: AppState) -> Router {
@@ -960,9 +964,11 @@ fn home_chrome(
     featured: Option<FeaturedArticle>,
     dyk: Option<LeapfrogFacts>,
     site_title: &str,
+    brand_theme: Option<&str>,
     user: Option<&User>,
     pending_count: i64,
 ) -> Markup {
+    let woodfine_theme = brand_theme == Some("woodfine");
     let _title = home_fm.title.as_deref().unwrap_or(site_title);
 
     // Articles in non-ratified buckets (not already shown as guides) so that
@@ -1582,6 +1588,7 @@ async fn index(
         featured,
         dyk,
         &state.site_title,
+        state.brand_theme.as_deref(),
         maybe_user.as_ref(),
         pending_count,
     ))
@@ -1713,7 +1720,7 @@ async fn wiki_page(
         
     let pending_count = pending_count_for(&state, maybe_user.as_ref()).await;
     let redirected_from = q.redirectedfrom.as_deref();
-    Ok(wiki_chrome(&title, &slug, parsed.frontmatter, &body_html, headings, &state.site_title, maybe_user.as_ref(), pending_count, redirected_from, q.printable).into_response())
+    Ok(wiki_chrome(&title, &slug, parsed.frontmatter, &body_html, headings, &state.site_title, state.brand_theme.as_deref(), maybe_user.as_ref(), pending_count, redirected_from, q.printable).into_response())
 }
 
 async fn static_asset(Path(path): Path<String>) -> Response {
@@ -1757,11 +1764,13 @@ fn wiki_chrome(
     body_html: &str,
     headings: Vec<(String, String, u8)>,
     site_title: &str,
+    brand_theme: Option<&str>,
     user: Option<&User>,
     pending_count: i64,
     redirected_from: Option<&str>,
     printable: bool,
 ) -> Markup {
+    let woodfine_theme = brand_theme == Some("woodfine");
     let _talk_slug = format!("{slug}.talk");
 
     // B5: Precompute ToC entries with hierarchical section numbers (1, 2, 2.1, etc.)
@@ -3422,8 +3431,8 @@ mod tests {
             mcp_enabled: false,
                 glossary: Arc::new(crate::glossary::Glossary::default()),
                 links: crate::links::LinkGraph::for_testing(),
-                db: None,
-            },
+                brand_theme: None,
+                db: None,            },
             dir,
             state_dir,
         )
@@ -3592,8 +3601,8 @@ mod tests {
             mcp_enabled: false,
             glossary: Arc::new(crate::glossary::Glossary::default()),
                 links: crate::links::LinkGraph::for_testing(),
-                db: None,
-        };
+                brand_theme: None,
+                db: None,        };
         let app = router(state);
         let resp = app
             .oneshot(
@@ -3667,8 +3676,8 @@ mod tests {
             mcp_enabled: false,
             glossary: Arc::new(crate::glossary::Glossary::default()),
                 links: crate::links::LinkGraph::for_testing(),
-                db: None,
-        };
+                brand_theme: None,
+                db: None,        };
         let app = router(state);
         let resp = app
             .oneshot(
@@ -3720,8 +3729,8 @@ mod tests {
             mcp_enabled: false,
             glossary: Arc::new(crate::glossary::Glossary::default()),
                 links: crate::links::LinkGraph::for_testing(),
-                db: None,
-        };
+                brand_theme: None,
+                db: None,        };
         let app = router(state);
         let resp = app
             .oneshot(
@@ -3770,8 +3779,8 @@ mod tests {
             mcp_enabled: false,
             glossary: Arc::new(crate::glossary::Glossary::default()),
                 links: crate::links::LinkGraph::for_testing(),
-                db: None,
-        };
+                brand_theme: None,
+                db: None,        };
         let app = router(state);
         let resp = app
             .oneshot(
@@ -3827,8 +3836,8 @@ mod tests {
             mcp_enabled: false,
             glossary: Arc::new(crate::glossary::Glossary::default()),
                 links: crate::links::LinkGraph::for_testing(),
-                db: None,
-        };
+                brand_theme: None,
+                db: None,        };
         let app = router(state);
         let resp = app
             .oneshot(
@@ -3887,8 +3896,8 @@ mod tests {
             mcp_enabled: false,
             glossary: Arc::new(crate::glossary::Glossary::default()),
                 links: crate::links::LinkGraph::for_testing(),
-                db: None,
-        };
+                brand_theme: None,
+                db: None,        };
         let app = router(state);
         let resp = app
             .oneshot(
@@ -3946,8 +3955,8 @@ mod tests {
             mcp_enabled: false,
             glossary: Arc::new(crate::glossary::Glossary::default()),
                 links: crate::links::LinkGraph::for_testing(),
-                db: None,
-        };
+                brand_theme: None,
+                db: None,        };
         let app = router(state);
         let resp = app
             .oneshot(Request::builder().uri("/").body(Body::empty()).unwrap())
@@ -4007,8 +4016,8 @@ mod tests {
             mcp_enabled: false,
             glossary: Arc::new(crate::glossary::Glossary::default()),
                 links: crate::links::LinkGraph::for_testing(),
-                db: None,
-        };
+                brand_theme: None,
+                db: None,        };
         let app = router(state);
         let resp = app
             .oneshot(
@@ -4070,8 +4079,8 @@ mod tests {
             mcp_enabled: false,
             glossary: Arc::new(crate::glossary::Glossary::default()),
                 links: crate::links::LinkGraph::for_testing(),
-                db: None,
-        };
+                brand_theme: None,
+                db: None,        };
         let app = router(state);
         let resp = app
             .oneshot(
@@ -4126,8 +4135,8 @@ mod tests {
             mcp_enabled: false,
             glossary: Arc::new(crate::glossary::Glossary::default()),
                 links: crate::links::LinkGraph::for_testing(),
-                db: None,
-        };
+                brand_theme: None,
+                db: None,        };
         let app = router(state);
         let resp = app
             .oneshot(
