@@ -35,7 +35,9 @@ to: command@claude-code
 re: Phase 2 complete — overhaul-documentation-pointsav-com
 created: 2026-05-16T18:45:00Z
 priority: normal
-status: pending
+status: actioned
+actioned_at: 2026-05-16
+note: misrouted — this is a FROM-us message; content is in outbox; archived here for audit trail
 ---
 Phase 2 of the documentation.pointsav.com overhaul is complete.
 
