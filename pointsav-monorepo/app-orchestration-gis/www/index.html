@@ -1191,6 +1191,11 @@
             // Mobility provenance (synthesize-od-study.py + build-mobility-tiles.py)
             mobility_source:  c.mobility_source  || 'radius',
             mobility_vintage: c.mobility_vintage || 'worldpop-2026',
+            // Civic context — per-tier counts (G14 override 2026-05-16)
+            hc_count_regional: c.hcr || 0,
+            hc_count_district: c.hcd || 0,
+            he_count_regional: c.her || 0,
+            he_count_small:    c.hes || 0,
         };
     }
 

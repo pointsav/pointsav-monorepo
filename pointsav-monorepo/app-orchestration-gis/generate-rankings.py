@@ -248,7 +248,7 @@ def assign_tiers(features: list[dict], t3: int, t2: int, t1: int) -> tuple[int, 
         else:
             p["rank_v2"] = 0
 
-    return effective_t3, t2, t1
+    return t3, t2, t1
 
 
 def _rank_key(p: dict) -> tuple:

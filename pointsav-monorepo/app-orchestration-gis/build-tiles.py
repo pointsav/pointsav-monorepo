@@ -19,23 +19,21 @@ sys.path.insert(0, str(Path(__file__).parent))
 from config import TOTEBOX_DATA_PATH, SERVICE_BUSINESS, SERVICE_PLACES, TILES_DIR, WORK_DIR, WWW_DIR
 
 # chain_id → brand family (drives circle-color in the locations layer)
-# Six families: Hypermarket | Hardware | Warehouse | Food | Furniture | Pharmacy
+# Seven families: Hypermarket | Lifestyle | Hardware | Warehouse | Food | Furniture | Pharmacy
+# D5 2026-05-16: IKEA exits Hypermarket → Lifestyle class (separate anchor category)
+# D1/Phase 1 2026-05-16: mercadona-es + tesco-uk + sainsburys-uk → Hypermarket
 CHAIN_FAMILY = {
-    # Hypermarket (anchor — large-format 80k+ sq ft)
+    # Hypermarket (anchor — general-merchandise + groceries, large-format)
     "walmart-us":               "Hypermarket",
     "walmart-ca":               "Hypermarket",
     "walmart-mx":               "Hypermarket",
     "bodega-aurrera-mx":        "Hypermarket",
-    "ikea-us":                  "Hypermarket",
-    "ikea-ca":                  "Hypermarket",
-    "ikea-mx":                  "Hypermarket",
-    "ikea-es":                  "Hypermarket",
-    "ikea-gr":                  "Hypermarket",
-    "ikea-it":                  "Hypermarket",
-    "ikea-nordics":             "Hypermarket",
-    "ikea-pl":                  "Hypermarket",
     "real-canadian-superstore-ca": "Hypermarket",
     "target-us":                "Hypermarket",
+    "soriana-mx":               "Hypermarket",
+    "mercadona-es":             "Hypermarket",
+    "tesco-uk":                 "Hypermarket",
+    "sainsburys-uk":            "Hypermarket",
     "carrefour-hypermarket-es": "Hypermarket",
     "alcampo-es":               "Hypermarket",
     "leclerc-es":               "Hypermarket",
@@ -53,6 +51,21 @@ CHAIN_FAMILY = {
     "hagkaup-is":               "Hypermarket",
     "coop-forum-se":            "Hypermarket",
     "maxi-ica-se":              "Hypermarket",
+    # Lifestyle (anchor — destination furniture/home goods; IKEA family)
+    "ikea-us":                  "Lifestyle",
+    "ikea-ca":                  "Lifestyle",
+    "ikea-mx":                  "Lifestyle",
+    "ikea-es":                  "Lifestyle",
+    "ikea-gr":                  "Lifestyle",
+    "ikea-it":                  "Lifestyle",
+    "ikea-nordics":             "Lifestyle",
+    "ikea-pl":                  "Lifestyle",
+    "ikea-fr":                  "Lifestyle",
+    "ikea-de":                  "Lifestyle",
+    "ikea-uk":                  "Lifestyle",
+    "ikea-at":                  "Lifestyle",
+    "ikea-nl":                  "Lifestyle",
+    "ikea-pt":                  "Lifestyle",
     # Hardware / Home improvement
     "home-depot-us":            "Hardware",
     "home-depot-ca":            "Hardware",
@@ -63,6 +76,8 @@ CHAIN_FAMILY = {
     "leroy-merlin-it":          "Hardware",
     "leroy-merlin-gr":          "Hardware",
     "leroy-merlin-pl":          "Hardware",
+    "leroy-merlin-fr":          "Hardware",
+    "leroy-merlin-pt":          "Hardware",
     "clas-ohlson-se":           "Hardware",
     "canadian-tire-ca":         "Hardware",
     "peavey-mart-ca":           "Hardware",
@@ -71,7 +86,9 @@ CHAIN_FAMILY = {
     "obs-bygg-no":              "Hardware",
     "gamma-nl":                 "Hardware",
     "karwei-nl":                "Hardware",
+    "praxis-nl":                "Hardware",
     "castorama-fr":             "Hardware",
+    "castorama-pl":             "Hardware",
     "husasmidjan-is":           "Hardware",
     "brico-depot-es":           "Hardware",
     "toom-baumarkt-de":         "Hardware",
@@ -80,6 +97,10 @@ CHAIN_FAMILY = {
     "praktiker-gr":             "Hardware",
     "byko-is":                  "Hardware",
     "hagebaumarkt-de":          "Hardware",
+    "hornbach-de":              "Hardware",
+    "hornbach-at":              "Hardware",
+    "bauhaus-se":               "Hardware",
+    "bq-uk":                    "Hardware",
     # Warehouse Club (membership and cash & carry)
     "costco-us":                "Warehouse",
     "costco-ca":                "Warehouse",
@@ -107,13 +128,11 @@ CHAIN_FAMILY = {
     "lidl-it":                  "Food",
     "lidl-nordics":             "Food",
     "lidl-pl":                  "Food",
-    "mercadona-es":             "Food",
     "safeway-ca":               "Food",
     "safeway-us":               "Food",
     "save-on-foods-ca":         "Food",
     "whole-foods-us":           "Food",
     "chedraui-mx":              "Food",
-    "soriana-mx":               "Hypermarket",
     "hipercor-es":              "Food",
     "famila-it":                "Food",
     "biedronka-pl":             "Food",
@@ -121,8 +140,6 @@ CHAIN_FAMILY = {
     "netto-pl":                 "Food",
     "tiendas-3b-mx":            "Food",
     "sklavenitis-gr":           "Food",
-    "tesco-uk":                 "Food",
-    "sainsburys-uk":            "Food",
     "lidl-uk":                  "Food",
     "lidl-de":                  "Food",
     "lidl-fr":                  "Food",
@@ -345,6 +362,11 @@ def build_clusters_meta():
             "sub": _try_json(p.get("sub_entities_display")),
             "mz":  p.get("merged_zones") or [],
             "ub":  int(p.get("unique_brands") or 0),
+            # Civic context — per-tier counts for bento breakdown (G14 override 2026-05-16)
+            "hcr": int(p.get("hc_count_regional") or 0),
+            "hcd": int(p.get("hc_count_district") or 0),
+            "her": int(p.get("he_count_regional") or 0),
+            "hes": int(p.get("he_count_small") or 0),
         })
     out = WWW_DIR / "data" / "clusters-meta.json"
     out.parent.mkdir(parents=True, exist_ok=True)
