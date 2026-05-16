@@ -6,24 +6,36 @@
 > Read at session start when a Root Claude opens in this repo. Update
 > at session end when repo-scope open items change.
 
-Last updated: 2026-05-14.
+Last updated: 2026-05-16.
 
 ---
 
 ## Currently open
+
+### VM stability — crash prevention [2026-05-16 task@claude-code]
+
+Root causes identified and addressed after 2× daily crash pattern (GCP host maintenance + cgroup OOM).
+
+- [x] **LadybugDB buffer pool blowup** — `SystemConfig::default()` allocated 12.8 GB (80% RAM). Fixed: explicit `buffer_pool_size` from env var `SERVICE_CONTENT_LBUG_BUFFER_POOL_MB` (default 64 MB). Deployed `7672e76f`. Dropin: `MemoryMax=3G`, pool=2048 MB.
+- [x] **local-slm MemoryMax reverts to 3G on daemon-reload** — created `/etc/systemd/system/local-slm.service.d/memory.conf` with `MemoryMax=6G`. Verified `6442450944` bytes after reload.
+- [x] **vm.swappiness=10** — set via `/etc/sysctl.d/99-foundry-inference.conf`. Prevents inference workload swap.
+- [x] **Retry storm on circuit-open extract** — added `Retry-After: 300` header to `/v1/extract` when `yoyo-circuit-open`. Deployed `31397dad`.
+- [ ] **GCP host maintenance — confirm MIGRATE policy** — run: `gcloud compute instances describe foundry-workspace --zone us-west1-a --format='value(scheduling.onHostMaintenance)'`. If `TERMINATE`, change to `MIGRATE` to survive host maintenance events without VM reset.
+- [ ] **journald cap** — create `/etc/systemd/journald.conf.d/foundry-cap.conf` with `SystemMaxUse=2G` and run `sudo systemctl restart systemd-journald`. (Minor risk factor; junk fill on `/var`.)
+- [ ] **Delete unused 7B-Think weights** — `/var/lib/local-slm/weights/` has wrong 7B variant (4.5 GB). Recover disk space once 7B → OLMo 2 1B is confirmed stable.
 
 ### service-slm / service-content — Sprint 0a prerequisites [2026-05-14 task@claude-code]
 
 **Sprint 0a SHIPPED** — `POST /v1/messages` live on workspace VM (`fdd1a223` + `7cd9ca61`).
 
 - [x] **Add `graph_context_enabled: Option<bool>` to `ComputeRequest`** — done; shim sets `Some(false)` (`slm-core/src/lib.rs:116`, `http.rs:1308`)
-- [x] **Decide opus → Tier C path** — Path B chosen: `claude-opus-*` routes to `Complexity::High, yoyo_label: None` (generic Tier B). Tier C wiring deferred to Sprint 0b.
+- [x] **Decide opus → Tier C path** — Path A shipped (2026-05-16): `claude-opus-*` routes `tier_hint: External`, `tier_c_label: "editorial-refinement"` (`31397dad`). Requires `has_external=true` at runtime (Tier C env config). Currently returns 503 (unconfigured) which is correct failsafe.
 - [x] **Reconcile apprenticeship flag drift** — `compute/systemd/slm-doorman.service:37` updated to `true` (2026-05-15)
 
 **Sprint 0b (next):**
 - [ ] **Real per-token SSE streaming** in `http.rs::anthropic_sse_body()` (~60 LOC). Currently buffers full response then emits 6 events at once.
 - [ ] **On-demand Yo-Yo lazy-start** in `router.rs` — start Yo-Yo VM when Tier B request arrives and VM is stopped.
-- [ ] **Wire `SLM_TIER_C_ANTHROPIC_*` env** for opus → Tier C passthrough (Path A, deferred from Sprint 0a).
+- [ ] **Wire `SLM_TIER_C_ANTHROPIC_*` env** for opus → Tier C passthrough (routing is wired in `31397dad`; ExternalTierClient needs API key + endpoint env vars set in `local-doorman.env`).
 
 ### service-content — Ring 2/Ring 3 decoupling [2026-05-14 task@claude-code]
 
@@ -55,8 +67,7 @@ See `.agent/plans/leapfrog-2026.md` for full strategic analysis.
 - [x] **1. Git post-commit hook** — done (2026-05-15). `service-slm/scripts/capture-edit.sh` (54 LOC). Reads `.git/foundry-brief-id`; POSTs diff to `/v1/shadow`. Install: `ln -sf ... .git/hooks/post-commit`. Agent session writes brief_id to file before committing; clears at session end.
 - [ ] **2. Eval harness** — held-out eval set + regression test for Tier A and Tier B tasks.
   Must exist BEFORE first LoRA training run (no way to measure improvement otherwise).
-- [ ] **3. Corpus quality gate** — min brief length, min diff size, dedup policy, PII scrub.
-  ~150 LOC; prevents noise/PII from poisoning the training set.
+- [x] **3. Corpus quality gate** — shipped (2026-05-16, `31c389b7`): MIN_BRIEF_BODY_CHARS=50, MIN_DIFF_CHARS=20, PII patterns (API keys, SSH private keys). 422 on rejection.
 - [ ] **4. Ratify `conventions/permissible-model-substrate.md`** — BCSC posture, OLMo-only
   rule, upgrade procedure as policy. Excludes Qwen/DeepSeek/Yi/GLM (PRC-headquartered).
 - [ ] **5. Tier A upgrade** — `OLMo-2-1124-7B-Instruct-Q4_K_M.gguf`, `MemoryMax=6G`.
