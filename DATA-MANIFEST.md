@@ -41,7 +41,32 @@ This document serves as the master record of all data sources, methodologies, an
 *   **License**: [Creative Commons Attribution 4.0 International (CC BY 4.0)](https://ec.europa.eu/eurostat/about-us/policies/copyright).
 *   **Attribution**: © European Union, 1995-2026.
 
-## 3. Disclaimers & Terms of Use
+## 3. Co-Location Tier Methodology
+
+### Anchor Taxonomy (V3, May 2026)
+
+The co-location engine classifies stores into four alpha anchor classes. Stores in these classes can initiate clusters; stores in other categories can join clusters but cannot initiate them.
+
+| Class | Representative chains |
+|---|---|
+| **ALPHA_HYPERMARKET** | Walmart (US/CA/MX), Target (US), Soriana (MX), Mercadona (ES), Tesco (UK), Sainsbury's (UK), Bilka (DK), K-Citymarket (FI), Prisma (FI), Obs Coop (NO), Hagkaup (IS) |
+| **ALPHA_LIFESTYLE** | IKEA (all regions) |
+| **ALPHA_HARDWARE** | Home Depot (US/CA/MX), Lowe's (US/CA), Canadian Tire (CA), Leroy Merlin (EU), Brico Dépôt (FR/ES), Bauhaus (EU), Woodies (IE) |
+| **ALPHA_WAREHOUSE** | Costco (all regions), Sam's Club (US/MX), BJ's (US), Makro (ES/NL/PL) |
+
+Rewe (DE), Lidl, and Aldi are not ingested by design. These chains operate in neighbourhood grocery formats; their density would produce thousands of clusters below any useful district threshold. Their exclusion is a deliberate semantic decision, not a data gap.
+
+### Tier Assignment (V3, May 2026)
+
+Tiers are assigned by binary predicate gates (pure-geometric engine, `build-geometric-ranking.py`). A cluster is Tier 1 Regional if it passes all five gates: composition (Warehouse+Hypermarket or Lifestyle+Hypermarket), top-10% national primary catchment population, top-20% national secondary catchment population, regional hospital present, and IoU ≤ 0.10 with any stronger co-located cluster. The full predicate specification is in `SCORING-METHODOLOGY.md`.
+
+Prior to Sprint 17 (May 2026), tiers were assigned by a composite score (V2: sum of base score, count bonus, diversity bonus, civic depth, overlap penalty). V2 sub-scores (`score_final`, `rank_v2`, and related fields) have been removed from emitted geometry; the V2 scripts are retained at `legacy/generate-rankings-v2.py`.
+
+### Civic Data
+
+Hospital and university classification is sourced from OpenStreetMap. Hospitals are classified as `regional`, `district`, or `clinic` based on the OSM `healthcare` tag and mapped name patterns. Universities are classified as `regional`, `small`, or `excluded`. Per-tier civic counts (`hc_count_regional`, `hc_count_district`, `he_count_regional`, `he_count_small`) are computed within a 5 km tertiary ring around each cluster anchor.
+
+## 4. Disclaimers & Terms of Use
 
 The Woodfine Location Intelligence platform (`gis.woodfinegroup.com`) provides synthesized location intelligence metrics "as is." 
 
