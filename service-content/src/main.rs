@@ -4,15 +4,16 @@ mod http;
 mod taxonomy;
 
 use graph::{GraphEntity, GraphStore, LbugGraphStore};
-use notify::{Event, RecursiveMode, Result as NotifyResult, Watcher};
+use notify::{Event, RecursiveMode, Watcher};
 use std::fs;
+use std::io::{BufRead, Write};
 use std::path::Path;
 use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
 use serde_json::Value;
 
-fn main() -> NotifyResult<()> {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("================================================================");
     println!("[SYSTEM] PointSav Semantic Watcher (Rust Edition) Activated");
     println!("[SYSTEM] Protocol: Schema Expansion Routing");
@@ -44,13 +45,17 @@ fn main() -> NotifyResult<()> {
     let corpus_dir = format!("{}/service-content/ledgers", base_dir);
     let crm_dir = format!("{}/service-people/ledgers", base_dir);
 
-    if !Path::new(&corpus_dir).exists() { fs::create_dir_all(&corpus_dir).unwrap(); }
-    if !Path::new(&crm_dir).exists() { fs::create_dir_all(&crm_dir).unwrap(); }
+    if !Path::new(&corpus_dir).exists() {
+        fs::create_dir_all(&corpus_dir)?;
+    }
+    if !Path::new(&crm_dir).exists() {
+        fs::create_dir_all(&crm_dir)?;
+    }
 
     // ── Graph store initialisation ────────────────────────────────────────────
     let graph_dir = std::env::var("SERVICE_CONTENT_GRAPH_DIR")
         .unwrap_or_else(|_| format!("{}/service-content/graph", base_dir));
-    fs::create_dir_all(&graph_dir).unwrap();
+    fs::create_dir_all(&graph_dir)?;
     let graph_db_path = format!("{}/entities.lbug", graph_dir);
 
     let graph_store: Arc<dyn GraphStore> = Arc::new(
@@ -59,6 +64,22 @@ fn main() -> NotifyResult<()> {
     );
     graph_store.init_schema().expect("[SYSTEM] Failed to initialise graph schema");
     println!("[SYSTEM] Graph store ready: {}", graph_db_path);
+
+    // ── Processed-ledger persistence ─────────────────────────────────────────
+    // STATE_DIR defaults to graph_dir so the JSONL lives alongside the graph DB.
+    // Override with SERVICE_CONTENT_STATE_DIR.
+    // Each line is the filename of a successfully-processed CORPUS_*.json file.
+    // Files not present in this list are retried on the next restart.
+    let state_dir = std::env::var("SERVICE_CONTENT_STATE_DIR")
+        .unwrap_or_else(|_| graph_dir.clone());
+    fs::create_dir_all(&state_dir)?;
+    let processed_ledgers_path = Path::new(&state_dir).join("processed_ledgers.jsonl");
+    let mut processed_ledgers = load_processed_ledgers(&processed_ledgers_path);
+    println!(
+        "[SYSTEM] Loaded {} previously processed ledger entries from {}",
+        processed_ledgers.len(),
+        processed_ledgers_path.display()
+    );
 
     // ── Startup taxonomy load ─────────────────────────────────────────────────
     match taxonomy::load_taxonomy_from_dir(&ontology_dir) {
@@ -99,15 +120,17 @@ fn main() -> NotifyResult<()> {
     });
 
     // ── Process any pre-existing CORPUS_* files ───────────────────────────────
-    let mut processed_ledgers: Vec<String> = Vec::new();
-
     if let Ok(entries) = fs::read_dir(Path::new(&corpus_dir)) {
         for entry in entries.flatten() {
             let path = entry.path();
             if path.extension().and_then(|s| s.to_str()) == Some("json") {
                 let filename = path.file_name().unwrap().to_str().unwrap().to_string();
-                if filename.starts_with("CORPUS_") {
-                    let _ = process_corpus(&path, &crm_dir, &doorman_endpoint, &module_id, &graph_store);
+                if filename.starts_with("CORPUS_") && !processed_ledgers.contains(&filename) {
+                    if process_corpus(&path, &crm_dir, &doorman_endpoint, &module_id, &graph_store) {
+                        append_processed_ledger(&processed_ledgers_path, &filename);
+                    }
+                    // Always push to in-memory list to prevent same-session re-triggers.
+                    // Failed files are not in the JSONL, so they will retry on next restart.
                     processed_ledgers.push(filename);
                 }
             }
@@ -134,9 +157,12 @@ fn main() -> NotifyResult<()> {
                             if filename.starts_with("CORPUS_") && !processed_ledgers.contains(&filename) {
                                 println!("\n[WATCHER] New Corpus Detected: {}", filename);
                                 thread::sleep(Duration::from_millis(250));
+                                // Push before processing to prevent duplicate triggers in the same session.
                                 processed_ledgers.push(filename.clone());
-                                if !process_corpus(&path, &crm_dir, &doorman_endpoint, &module_id, &graph_store) {
-                                    println!("  -> [WATCHER] Extraction failed for {} — skipping until restart.", filename);
+                                if process_corpus(&path, &crm_dir, &doorman_endpoint, &module_id, &graph_store) {
+                                    append_processed_ledger(&processed_ledgers_path, &filename);
+                                } else {
+                                    println!("  -> [WATCHER] Extraction failed for {} — will retry on next restart.", filename);
                                 }
                             }
                         }
@@ -146,6 +172,41 @@ fn main() -> NotifyResult<()> {
             Ok(_) => {}
             Err(_) => {}
         }
+    }
+}
+
+/// Returns true if `s` is a valid per-file module_id override:
+/// non-empty, ≤64 chars, only lowercase ASCII letters / digits / hyphens.
+/// The reserved __ prefix is checked separately before calling this.
+fn validate_module_id(s: &str) -> bool {
+    !s.is_empty() && s.len() <= 64 && s.chars().all(|c| matches!(c, 'a'..='z' | '0'..='9' | '-'))
+}
+
+/// Load the set of already-processed CORPUS filenames from the sidecar JSONL.
+/// Returns an empty Vec if the file does not exist or cannot be read — a missing
+/// file is not an error; it just means all CORPUS files will be processed.
+fn load_processed_ledgers(path: &Path) -> Vec<String> {
+    let file = match fs::File::open(path) {
+        Ok(f) => f,
+        Err(_) => return Vec::new(),
+    };
+    std::io::BufReader::new(file)
+        .lines()
+        .filter_map(|l| l.ok())
+        .map(|l| l.trim().to_string())
+        .filter(|l| !l.is_empty())
+        .collect()
+}
+
+/// Append one filename to the sidecar JSONL. Non-fatal on failure.
+fn append_processed_ledger(path: &Path, filename: &str) {
+    match fs::OpenOptions::new().create(true).append(true).open(path) {
+        Ok(mut f) => {
+            if let Err(e) = writeln!(f, "{}", filename) {
+                eprintln!("[SYSTEM] Warning: could not append to {}: {}", path.display(), e);
+            }
+        }
+        Err(e) => eprintln!("[SYSTEM] Warning: could not open {} for append: {}", path.display(), e),
     }
 }
 
@@ -161,15 +222,28 @@ fn process_corpus(
 
     let worm_id = payload["worm_id"].as_str().unwrap_or("UNKNOWN");
     let corpus_text = payload["corpus"].as_str().unwrap_or("");
-    // Per-file module_id override: CORPUS JSON may carry a "module_id" field to
-    // route workspace artifacts into a separate graph namespace (e.g. "foundry-workspace")
-    // without requiring a separate service-content instance.
-    // Reject "__" prefix — reserved for taxonomy namespace; a rogue CORPUS file must
-    // not be able to overwrite taxonomy nodes.
-    let effective_module_id: &str = payload["module_id"]
-        .as_str()
-        .filter(|s| !s.is_empty() && !s.starts_with("__"))
-        .unwrap_or(module_id);
+
+    // Per-file module_id validation.
+    // Absent or empty → use process-level module_id (trusted from env var).
+    // Present and invalid → reject the file to prevent taxonomy-namespace injection.
+    let effective_module_id: String = match payload["module_id"].as_str().filter(|s| !s.is_empty()) {
+        None => module_id.to_string(),
+        Some(s) if s.starts_with("__") => {
+            println!(
+                "  -> [WARN] Rejecting {}: module_id '{}' uses reserved __ prefix",
+                filepath.display(), s
+            );
+            return false;
+        }
+        Some(s) if !validate_module_id(s) => {
+            println!(
+                "  -> [WARN] Rejecting {}: module_id '{}' fails [a-z0-9-]{{1,64}} validation",
+                filepath.display(), s
+            );
+            return false;
+        }
+        Some(s) => s.to_string(),
+    };
 
     if corpus_text.is_empty() { return false; }
 
@@ -181,10 +255,10 @@ fn process_corpus(
         role_vector: None,
         location_vector: None,
         contact_vector: None,
-        module_id: effective_module_id.to_string(),
+        module_id: effective_module_id.clone(),
         confidence: 1.0,
     };
-    if let Err(e) = graph_store.upsert_entities(effective_module_id, &[source_node]) {
+    if let Err(e) = graph_store.upsert_entities(&effective_module_id, &[source_node]) {
         println!("  -> [GRAPH] Source node write failed (non-fatal): {}", e);
     } else {
         println!("  -> [GRAPH] Source node written: {} ({})", worm_id, effective_module_id);
@@ -232,7 +306,7 @@ fn process_corpus(
             if response.status().is_success() {
                 if let Ok(extract_resp) = response.json::<serde_json::Value>() {
                     // Tier B unavailable — graceful defer, no retry this session.
-                    // File remains in processed_ledgers; next boot will retry.
+                    // File is not written to processed_ledgers JSONL; next boot retries.
                     if extract_resp["deferred"].as_bool().unwrap_or(false) {
                         let reason = extract_resp["defer_reason"].as_str().unwrap_or("unknown");
                         println!("  -> [WATCHER] Extraction deferred ({}): Tier B unavailable — will retry next boot.", reason);
@@ -271,7 +345,7 @@ fn process_corpus(
                                 role_vector: role_vector.clone(),
                                 location_vector: location_vector.clone(),
                                 contact_vector: contact_vector.clone(),
-                                module_id: effective_module_id.to_string(),
+                                module_id: effective_module_id.clone(),
                                 confidence: 0.95,
                             });
 
@@ -316,7 +390,7 @@ fn process_corpus(
                         println!("  -> [WATCHER] Semantic Integration Complete: {} Nodes Secured.", enriched_crm.len());
 
                         // ── Graph write path ──────────────────────────────────
-                        if let Err(e) = graph_store.upsert_entities(effective_module_id, &graph_entities) {
+                        if let Err(e) = graph_store.upsert_entities(&effective_module_id, &graph_entities) {
                             println!("  -> [GRAPH] Write failed: {}", e);
                             return false;
                         } else {
