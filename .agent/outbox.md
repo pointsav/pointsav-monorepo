@@ -10,6 +10,30 @@ schema: foundry-mailbox-v1
 ---
 from: totebox@project-editorial
 to: command@claude-code
+re: Phase 2 complete — Stage 6 + 2 admin README fixes pending
+created: 2026-05-16T16:50:00Z
+priority: normal
+status: pending
+---
+
+Phase 2 overhaul complete. The following items need Command Session action:
+
+**Stage 6 (`bin/promote.sh`) — pending for these sub-clones:**
+- `content-wiki-documentation` — design-system source cleanup (git rm 48, _index rewrite, redirects.yaml) + P2 README fix (commit b79ff02)
+- `woodfine-fleet-deployment` — P2 README fix (commit d3bfd6c)
+- `pointsav-fleet-deployment` — P2 README fix (commit 7d97b51)
+- `pointsav-design-system` — P2 README fix (commit 1c8d9bf)
+- `pointsav-monorepo`, branch `editorial-readme-fix` — P1b README fix (commit 7ece788f); note orphaned commit 3b3933a0 on local main was flagged in prior outbox — operator judgment on promote/discard still outstanding
+
+**Admin-tier README fixes (2 files — `Copyright (c)` + `Inc..` typo):**
+- `pointsav-media-assets/README.md` (lines 27, 43) — use `ps-administrator` identity + SSH signing
+- `woodfine-media-assets/README.md` (lines 30, 46) — use `mcorp-administrator` identity + SSH signing
+
+**LICENSE vs README contradiction:** still operator-decision required (stale Apache 2.0 reference in pointsav-monorepo README.md was removed this session; the deeper LICENSE-file contradiction flagged in prior outbox is a separate open item requiring operator direction before touching).
+
+---
+from: totebox@project-editorial
+to: command@claude-code
 re: session shutdown — audit pass 2 complete; P1b carry-forward + next-session pickup notes
 created: 2026-05-16T00:00:00Z
 priority: normal
