@@ -1334,16 +1334,17 @@ fn home_chrome(
                 }
                 footer.site-footer {
                     div.footer-inner {
-                        div.footer-col.footer-col-info {
-                            p.footer-license {
-                                "Content is available under "
-                                a href="https://creativecommons.org/licenses/by/4.0/" { "CC BY 4.0" }
-                                " unless otherwise stated."
-                            }
+                        div.footer-col.footer-col-ip {
+                            h4.footer-col-heading { "Intellectual Property" }
                             p.footer-trademark {
                                 "PointSav Digital Systems™, Foundry™, ToteboxOS™, and related marks are "
                                 "trademarks of Woodfine Capital Projects Inc. All other trademarks are "
                                 "property of their respective owners."
+                            }
+                            p.footer-license {
+                                "Content is available under "
+                                a href="https://creativecommons.org/licenses/by/4.0/" { "CC BY 4.0" }
+                                " unless otherwise stated."
                             }
                             @if woodfine_theme {
                                 p.footer-bcsc {
@@ -1355,7 +1356,15 @@ fn home_chrome(
                                 }
                             }
                         }
-                        div.footer-col.footer-col-langs {
+                        div.footer-col.footer-col-privacy {
+                            h4.footer-col-heading { "Privacy Posture" }
+                            p.footer-privacy {
+                                "This platform operates a Zero-Cookie, Zero-State Telemetry architecture "
+                                "for read-only visitors. No analytics, tracking cookies, or third-party "
+                                "data collection is employed."
+                            }
+                        }
+                        div.footer-col.footer-col-nav {
                             div.footer-langs {
                                 p.footer-langs-tier {
                                     strong { "English" }
@@ -1366,8 +1375,6 @@ fn home_chrome(
                                     "Spanish articles are strategic-adaptation overviews, not literal translations."
                                 }
                             }
-                        }
-                        div.footer-col.footer-col-nav {
                             nav.footer-nav aria-label="Footer navigation" {
                                 a href="/wiki/about" { "About" }
                                 " · "
@@ -1384,8 +1391,8 @@ fn home_chrome(
                             }
                         }
                     }
-                    p.footer-copyright {
-                        "© 2026 Woodfine Capital Projects Inc. · "
+                    p.footer-copyright.footer-baseplate {
+                        "© 2011–2026 Woodfine Capital Projects Inc. · "
                         a href="/" { (site_title) }
                     }
                 }
@@ -2221,19 +2228,20 @@ fn wiki_chrome(
                     }
                 }
 
-                // Site footer — trademark, license, BCSC notice, nav links
+                // Site footer — two-column institutional pattern matching home pages
                 footer.site-footer {
                     div.footer-inner {
-                        div.footer-col.footer-col-info {
-                            p.footer-license {
-                                "Content is available under "
-                                a href="https://creativecommons.org/licenses/by/4.0/" { "CC BY 4.0" }
-                                " unless otherwise stated."
-                            }
+                        div.footer-col.footer-col-ip {
+                            h4.footer-col-heading { "Intellectual Property" }
                             p.footer-trademark {
                                 "PointSav Digital Systems™, Foundry™, ToteboxOS™, and related marks are "
                                 "trademarks of Woodfine Capital Projects Inc. All other trademarks are "
                                 "property of their respective owners."
+                            }
+                            p.footer-license {
+                                "Content is available under "
+                                a href="https://creativecommons.org/licenses/by/4.0/" { "CC BY 4.0" }
+                                " unless otherwise stated."
                             }
                             @if woodfine_theme {
                                 p.footer-bcsc {
@@ -2243,6 +2251,14 @@ fn wiki_chrome(
                                     " or "
                                     em { "target." }
                                 }
+                            }
+                        }
+                        div.footer-col.footer-col-privacy {
+                            h4.footer-col-heading { "Privacy Posture" }
+                            p.footer-privacy {
+                                "This platform operates a Zero-Cookie, Zero-State Telemetry architecture "
+                                "for read-only visitors. No analytics, tracking cookies, or third-party "
+                                "data collection is employed."
                             }
                         }
                         div.footer-col.footer-col-nav {
@@ -2262,8 +2278,8 @@ fn wiki_chrome(
                             }
                         }
                     }
-                    p.footer-copyright {
-                        "© 2026 Woodfine Capital Projects Inc. · "
+                    p.footer-copyright.footer-baseplate {
+                        "© 2011–2026 Woodfine Capital Projects Inc. · "
                         a href="/" { (site_title) }
                     }
                 }
@@ -3282,16 +3298,25 @@ fn chrome(_title: &str, body: Markup, site_title: &str, user: Option<&User>, pen
                 }
                 footer.site-footer {
                     div.footer-inner {
-                        div.footer-col.footer-col-info {
+                        div.footer-col.footer-col-ip {
+                            h4.footer-col-heading { "Intellectual Property" }
+                            p.footer-trademark {
+                                "PointSav Digital Systems™, Foundry™, ToteboxOS™, and related marks are "
+                                "trademarks of Woodfine Capital Projects Inc. All other trademarks are "
+                                "property of their respective owners."
+                            }
                             p.footer-license {
                                 "Content is available under "
                                 a href="https://creativecommons.org/licenses/by/4.0/" { "CC BY 4.0" }
                                 " unless otherwise stated."
                             }
-                            p.footer-trademark {
-                                "PointSav Digital Systems™, Foundry™, ToteboxOS™, and related marks are "
-                                "trademarks of Woodfine Capital Projects Inc. All other trademarks are "
-                                "property of their respective owners."
+                        }
+                        div.footer-col.footer-col-privacy {
+                            h4.footer-col-heading { "Privacy Posture" }
+                            p.footer-privacy {
+                                "This platform operates a Zero-Cookie, Zero-State Telemetry architecture "
+                                "for read-only visitors. No analytics, tracking cookies, or third-party "
+                                "data collection is employed."
                             }
                         }
                         div.footer-col.footer-col-nav {
@@ -3304,8 +3329,8 @@ fn chrome(_title: &str, body: Markup, site_title: &str, user: Option<&User>, pen
                             }
                         }
                     }
-                    p.footer-copyright {
-                        "© 2026 Woodfine Capital Projects Inc. · "
+                    p.footer-copyright.footer-baseplate {
+                        "© 2011–2026 Woodfine Capital Projects Inc. · "
                         a href="/" { (site_title) }
                     }
                 }
