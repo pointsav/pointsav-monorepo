@@ -233,27 +233,13 @@ def apply_overlap_penalty(features: list[dict], radius_km: float = 75.0) -> None
 
 
 def assign_tiers(features: list[dict], t3: int, t2: int, t1: int) -> tuple[int, int, int]:
-    """Apply score-driven tiers with country saturation guard. Returns (t3, t2, t1) used."""
-    by_iso: dict[str, list] = defaultdict(list)
-    for f in features:
-        by_iso[f["properties"].get("iso", "XX")].append(f["properties"].get("score_final", 0))
-
-    # Saturation guard: raise T3 threshold until no ISO exceeds 5%
-    effective_t3 = t3
-    for iso, scores in by_iso.items():
-        total = len(scores)
-        if total < 10:
-            continue
-        while True:
-            t3_count = sum(1 for s in scores if s >= effective_t3)
-            if t3_count / total <= MAX_T3_PCT:
-                break
-            effective_t3 += 25
-
+    """Apply score-driven tiers. Saturation guard removed — Phase 2 uses pure-predicate
+    geometric engine (build-geometric-ranking.py); top-decile-within-ISO is self-bounding.
+    Returns (t3, t2, t1) used (unchanged thresholds)."""
     for f in features:
         p = f["properties"]
         s = p.get("score_final", 0)
-        if s >= effective_t3:
+        if s >= t3:
             p["rank_v2"] = 3
         elif s >= t2:
             p["rank_v2"] = 2
