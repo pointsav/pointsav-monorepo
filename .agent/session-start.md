@@ -26,11 +26,11 @@ updated: 2026-05-14
 
 **2026-05-17 — totebox@claude-code**
 
-Active work: `preview/building-width-calculator.html` print layout tuning.
+Print/PDF pipeline resolved. DTCG token files and Rust scaffold are the active work.
 
-- Section 1 print spacing tightened (line-height 1.4, p margin 5px 0, lede 4px/8px, h2/h3 tighter, callout 8px padding, strip-wrap h3:first-child margin-top 0, max-width none on p and lede) — all in `@media print`
-- Text of first two paragraphs revised (shorter, Opus-edited)
-- `margin-top: 14px` on "The cross-section..." paragraph
-- Page 1 fit NOT yet confirmed in browser print-preview — check this first
+- Print CSS fixed across all 3 preview HTMLs: `@page { size: 11in 8.5in; margin: 0; }` + slide matches page box exactly
+- PDF generator at `preview/build-pdf.mjs` (Playwright/Chromium) — verified 6-page, 11×8.5in PDF
+- Generate: `NODE_PATH=/home/jennifer/sandbox/working/ps-talking-points/node_modules node build-pdf.mjs <file.html>`
+- PDFs committed alongside HTMLs; do NOT use browser print dialog
 - Next: create 6 missing DTCG token files (see NEXT.md + `.agent/plans/tool-buildingwidth-architecture.md`)
 - DTCG accuracy errors (3 files) remain operator-pending; do not touch

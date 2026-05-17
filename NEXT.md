@@ -7,12 +7,12 @@ Attribution format: `[YYYY-MM-DD role@engine]`
 
 ## Hot — pick up here next session
 
-- [ ] **HTML print layout — page 1 still needs tuning** `[2026-05-17 totebox@claude-code]`
-  - File: `preview/building-width-calculator.html`
-  - Section 1 (The Backwards Method) must fit on one landscape letter page: masthead + h2 + lede + 2 paragraphs + strip-wrap diagram + Zone 1/2/3 descriptions + callout
-  - Print CSS spacing already tightened this session (line-height 1.4, p margin 5px, lede 4px/8px, h2/h3 tighter, callout 8px/14px, strip-wrap h3:first-child margin-top 0, max-width none on p and lede)
-  - Not yet verified in browser print-preview — confirm Section 1 fits cleanly on page 1 before next work
-  - Lever remaining if still overflowing: `.strip-row { padding: 4px 12px; }` saves ~30px
+- [x] **HTML print layout — resolved 2026-05-17** `[2026-05-17 totebox@claude-code]`
+  - Root cause: `@page { size: landscape; margin: 0.3in }` + `slide { width: 10.4in }` triple-stacked margins; Chrome silently ignored
+  - Fix: `@page { size: 11in 8.5in; margin: 0; }` + `slide { width: 11in; height: 8.5in; transform: none }` in all 3 preview HTMLs
+  - PDF generator: `preview/build-pdf.mjs` (Playwright + Chromium); confirmed 792×612pt = 11×8.5in per page
+  - Generate: `NODE_PATH=/home/jennifer/sandbox/working/ps-talking-points/node_modules node build-pdf.mjs <file.html>` or `all`
+  - Do NOT use the browser print dialog — output varies by operator; use the script
 
 - [ ] **DTCG token files — 6 missing files to create** `[2026-05-17 totebox@claude-code]`
   - Full spec in `.agent/plans/tool-buildingwidth-architecture.md`
