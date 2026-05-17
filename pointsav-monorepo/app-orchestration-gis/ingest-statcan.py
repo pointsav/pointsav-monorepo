@@ -13,17 +13,19 @@ Source:
     https://www12.statcan.gc.ca/census-recensement/2021/dp-pd/dt-td/
       CompDataDownload.cfm?LANG=E&PID=141928&OFT=CSV
 
-  DA population-weighted centroids:
-    https://www12.statcan.gc.ca/census-recensement/2021/geo/sip-pis/
-      censusdacentres-centresairesdiffusion/files-fichiers/
-      CenPop2021_Mean_DA.csv
-    Columns: DAUID, PRUID, PRNAME, CDUID, CSDUID, CSDNAME, ERUID,
-             CMAUID, CMANAME, ALandDA, POPULATION, LATITUDE, LONGITUDE
+  DA population-weighted centroids (Figshare mirror — WORKING 2026-05-17):
+    https://ndownloader.figshare.com/files/47126050
+    Columns: DAUID, PRUID, y (lat), x (lon), Population
+
+  NOTE: The StatCan official centroid URL is dead. The original CompDataDownload.cfm
+  URL for 98-400-X2021007 is also permanently dead (redirects to 404 page).
+  See COMMUTER_URL block below for the manual download procedure.
 
 Fallback source (when bulk commuter-flow CSV is unavailable):
-  Table 98-10-0494-01 — Employment by DA (work-reach proxy, not true OD)
-    https://www150.statcan.gc.ca/t1/tbl1/en/dtbl/dtblDnld.action?pid=9810049401
-  Records carry data_source="statcan_employment_proxy" + is_measured=False.
+  Table 98-10-0494-01 — Place of work status by CT (work-reach proxy, not true OD)
+    https://www150.statcan.gc.ca/n1/tbl/csv/98100494-eng.zip  [WORKING 2026-05-17]
+  NOTE: This is CMA/CT-level, not DA-level. Granularity is coarser than the
+  primary table. Records carry data_source="statcan_employment_proxy" + is_measured=False.
 
 Pipeline:
   1. Load Canadian clusters (iso == "CA" or list containing "CA") from
@@ -84,14 +86,37 @@ H3_RES = 7
 # Source URLs
 # ---------------------------------------------------------------------------
 
-# StatCan official URL is offline; Figshare mirror (Popwgt_DA_Cent.csv):
+# DA centroid mirror (Figshare) — VERIFIED WORKING 2026-05-17 (HTTP 302 → S3, real file).
 #   DAUID, PRUID, y (lat), x (lon), Population — 57k DAs, pop-weighted centroids
 CENTROIDS_URL = "https://ndownloader.figshare.com/files/47126050"
 CENTROIDS_FILE = RAW_STATCAN_DIR / "Popwgt_DA_Cent.csv"
 
-# COMMUTER_URL verified dead 2026-05-17 (redirects to StatCan 404 page; returns 4099-byte HTML).
-# StatCan rotated the CompDataDownload.cfm endpoint. Operator must manually download
-# Table 98-400-X2021007 from the StatCan Census 2021 catalogue and place it at COMMUTER_ZIP.
+# ---------------------------------------------------------------------------
+# PRIMARY COMMUTER TABLE — MANUAL DOWNLOAD REQUIRED
+# ---------------------------------------------------------------------------
+# Table 98-400-X2021007 (DA-to-DA commuter flow, ~500 MB) was a StatCan
+# Census Data Product served via CompDataDownload.cfm (PID=141928).
+# That endpoint is PERMANENTLY DEAD as of 2026-05-17: all www12 paths for
+# PID=141928 redirect to https://www12.statcan.gc.ca/census-recensement/
+#   srvmsg/srvmsg404.html (4,099-byte HTML error page).
+# No automated public replacement for DA-level OD flow data exists.
+# The CMA/CA-level commuting table (98-10-0460-01) IS publicly available but
+# is NOT a valid substitute — it contains no DA-level geography.
+#
+# MANUAL DOWNLOAD PROCEDURE (DA-level commuter flow):
+#   1. Go to: https://www12.statcan.gc.ca/census-recensement/2021/dp-pd/dt-td/
+#   2. Under "Commuting", look for product 98-400-X2021007
+#      ("Commuting flows for employed workers aged 15 and over by
+#       place of residence and place of work").
+#      If not found there, contact StatCan order desk:
+#        https://www150.statcan.gc.ca/n1/en/about/contact-contactez-nous
+#        Reference: Table 98-400-X2021007, PID=141928
+#   3. Download the bulk CSV file (~500 MB); it may come as a .zip.
+#   4. Save the file as one of:
+#        {commuter_file}
+#        {commuter_zip}
+#   5. Re-run this script. It will detect the local file and skip the download.
+# ---------------------------------------------------------------------------
 COMMUTER_URL = (
     "https://www12.statcan.gc.ca/census-recensement/2021/dp-pd/dt-td/"
     "CompDataDownload.cfm?LANG=E&PID=141928&OFT=CSV"
@@ -99,10 +124,26 @@ COMMUTER_URL = (
 COMMUTER_FILE = RAW_STATCAN_DIR / "98-400-X2021007.csv"
 COMMUTER_ZIP  = RAW_STATCAN_DIR / "98-400-X2021007.zip"
 
-# Fallback employment-by-DA table
-# EMPLOYMENT_URL verified dead 2026-05-17 (returns HTTP 404).
+# ---------------------------------------------------------------------------
+# FALLBACK EMPLOYMENT TABLE
+# ---------------------------------------------------------------------------
+# Table 98-10-0494-01 — "Place of work status by occupation broad category,
+# work activity, age and gender": Census metropolitan areas, tracted census
+# agglomerations and census tracts of work.
+#
+# IMPORTANT LIMITATION: This table is CMA/CT-level, not DA-level.
+# It cannot produce DA-granularity WORK-reach estimates. Records produced
+# from this fallback carry data_source="statcan_employment_proxy" and
+# is_measured=False to flag this limitation downstream.
+#
+# URL STATUS 2026-05-17:
+#   Old dtblDnld.action URL: DEAD (HTTP 404).
+#   New n1/tbl/csv/ URL:     WORKING (HTTP 200, ~107 MB ZIP).
+#     https://www150.statcan.gc.ca/n1/tbl/csv/98100494-eng.zip
+#   CKAN record: https://open.canada.ca/data/api/3/action/package_show?id=...
+#     (CKAN search: "Place of work status occupation 2021 census")
 EMPLOYMENT_URL = (
-    "https://www150.statcan.gc.ca/t1/tbl1/en/dtbl/dtblDnld.action?pid=9810049401"
+    "https://www150.statcan.gc.ca/n1/tbl/csv/98100494-eng.zip"
 )
 EMPLOYMENT_FILE = RAW_STATCAN_DIR / "98-10-0494-01.csv"
 EMPLOYMENT_ZIP  = RAW_STATCAN_DIR / "98-10-0494-01.zip"
@@ -110,29 +151,61 @@ EMPLOYMENT_ZIP  = RAW_STATCAN_DIR / "98-10-0494-01.zip"
 # Download-failure instructions block
 DOWNLOAD_INSTRUCTIONS = """
   -----------------------------------------------------------------------
-  Statistics Canada bulk download failed (StatCan periodically rotates
-  these URLs). Manual download required.
+  Statistics Canada bulk download failed or files not found.
 
-  1. Population-weighted DA centroids (Figshare mirror, ~3.4 MB):
+  SITUATION (verified 2026-05-17):
+    - DA-level commuter OD table (98-400-X2021007, ~500 MB): the StatCan
+      CompDataDownload.cfm endpoint is permanently dead. No automated
+      public download exists. MANUAL DOWNLOAD REQUIRED (see below).
+    - DA centroid file (Figshare mirror, ~3.4 MB): automated download
+      should work. If it fails, proceed to step 1.
+    - Fallback employment table (98-10-0494-01, ~107 MB): automated
+      download from the new StatCan URL should work. If it fails, see
+      step 3.
+
+  STEP 1 — Population-weighted DA centroids (Figshare mirror, ~3.4 MB):
        mkdir -p {raw_dir}
        curl -L -o {centroids_file} \\
          "{centroids_url}"
-     Columns: DAUID, PRUID, y (lat), x (lon), Population
+     Expected columns: DAUID, PRUID, y (lat), x (lon), Population
 
-  2. Journey-to-Work commuter flows, Table 98-400-X2021007 (~500 MB):
-       Visit the StatCan Census 2021 catalogue:
-         https://www12.statcan.gc.ca/census-recensement/2021/dp-pd/dt-td/
-       Search PID=141928 ("Commuting flows ... place of residence and
-       place of work"), download as CSV and save as:
-         {commuter_file}
-       (Or as a .zip with the CSV inside: {commuter_zip})
+  STEP 2 — Journey-to-Work DA-level commuter flows (MANUAL REQUIRED):
+     This is the primary data source. Table 98-400-X2021007 must be
+     obtained directly from Statistics Canada.
 
-  3. Fallback — Employment by DA, Table 98-10-0494-01:
-         {employment_url}
-       Save as:
-         {employment_file}
+     Option A — Public catalogue (may still work):
+       1. Open: https://www12.statcan.gc.ca/census-recensement/2021/dp-pd/dt-td/
+       2. Click "Commuting" in the left-hand topic list.
+       3. Look for "Commuting flows for employed workers aged 15 and over
+          by place of residence and place of work" (PID 141928).
+       4. Click "Download data" and select CSV format.
+       5. Save the downloaded file as:
+            {commuter_zip}
+          (or {commuter_file} if it comes as a plain CSV)
 
-  4. Re-run this script once any of these files is in place.
+     Option B — StatCan order desk (if public download is unavailable):
+       1. Go to: https://www150.statcan.gc.ca/n1/en/about/contact-contactez-nous
+       2. Reference: "Table 98-400-X2021007, PID=141928, Census 2021,
+          commuting flows by place of residence and place of work,
+          DA-level, bulk CSV".
+       3. Save received file as: {commuter_zip}
+
+     Re-run this script once {commuter_zip} is in place.
+     The script will skip the download and process the local file.
+
+  STEP 3 — Fallback: Place of work status by CT (automated, ~107 MB):
+     NOTE: This fallback produces CMA/CT-level estimates, not DA-level.
+     Results carry data_source="statcan_employment_proxy", is_measured=False.
+
+     Automated URL (working as of 2026-05-17):
+       {employment_url}
+
+     If automated download fails, download manually:
+       1. Open: https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=9810049401
+       2. Click "Download options" → "Download entire table (CSV)".
+       3. Save as: {employment_zip}
+
+  STEP 4 — Re-run this script once any of the above files is in place.
   -----------------------------------------------------------------------
 """.format(
     raw_dir=RAW_STATCAN_DIR,
@@ -633,11 +706,13 @@ def aggregate_employment_proxy(da_index: dict, dry_run: bool = False):
     """
     Fallback when the commuter-flow table is unavailable.
 
-    Loads Table 98-10-0494-01 (employment by DA) and treats the
-    employment count at each in-envelope DA as a *work-reach proxy*.
-    This is not true origin-destination — workers are represented at
-    their workplace DA, not their residence DA — so records carry
-    data_source="statcan_employment_proxy" and is_measured=False.
+    Loads Table 98-10-0494-01 / 98100494 (place of work status by CMA/CT)
+    and treats the employment count at each in-envelope geography as a
+    *work-reach proxy*. This is not true origin-destination and is
+    CMA/CT-level, not DA-level — granularity is coarser than the primary
+    table. Workers are represented at their workplace geography, not their
+    residence DA. Records carry data_source="statcan_employment_proxy"
+    and is_measured=False.
     """
     src_path = EMPLOYMENT_FILE if EMPLOYMENT_FILE.exists() else EMPLOYMENT_ZIP
     if not src_path.exists():
@@ -839,7 +914,7 @@ def main() -> None:
     have_employment = _valid_zip(EMPLOYMENT_FILE) or _valid_zip(EMPLOYMENT_ZIP)
     if not have_employment and not have_commuter:
         have_employment = download_with_progress(
-            EMPLOYMENT_URL, EMPLOYMENT_ZIP, "Employment by DA (98-10-0494-01)"
+            EMPLOYMENT_URL, EMPLOYMENT_ZIP, "Place of work status by CT (98100494 / 98-10-0494-01)"
         ) and _valid_zip(EMPLOYMENT_ZIP)
 
     if not (have_commuter or have_employment):
