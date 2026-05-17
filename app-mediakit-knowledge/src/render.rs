@@ -161,8 +161,8 @@ pub fn render_html(body_md: &str, content_dir: &std::path::Path) -> String {
 /// Like `render_html` but returns the raw comrak output without edit-pencil
 /// injection. Use this as the input to `extract_headings` for TOC generation.
 ///
-/// Sprint B: uses comrak's AST API so that fenced code blocks with info strings
-/// "infobox" and "navbox" can be walked and replaced with structured HTML before
+/// Sprint B/AC: uses comrak's AST API so that fenced code blocks with info strings
+/// "infobox", "navbox", and "main" can be walked and replaced with structured HTML before
 /// final rendering.
 pub fn render_html_raw(body_md: &str, content_dir: &std::path::Path) -> String {
     let mut options = Options::default();
@@ -174,13 +174,16 @@ pub fn render_html_raw(body_md: &str, content_dir: &std::path::Path) -> String {
     options.extension.description_lists = true;
     options.extension.autolink = true;
     options.extension.header_id_prefix = Some("h-".to_string());
-    // r#unsafe stays false; we don't want raw HTML from authors yet.
-    options.render.r#unsafe = false;
+    // Enable raw HTML so our programmatically-injected HtmlBlock nodes (infobox,
+    // navbox, main) are not suppressed by the renderer.  All injected HTML goes
+    // through escape_html(), so there is no XSS risk from our own code.  Raw HTML
+    // authored directly in markdown is a separate concern addressed by Phase 5 auth.
+    options.render.r#unsafe = true;
 
     let arena = Arena::new();
     let root = parse_document(&arena, body_md, &options);
 
-    // B2/B3: Walk AST and replace infobox/navbox fenced blocks with HTML.
+    // B2/B3/AC: Walk AST and replace infobox/navbox/main fenced blocks with HTML.
     for node in root.descendants() {
         let new_val = {
             let data = node.data.borrow();
@@ -189,6 +192,8 @@ pub fn render_html_raw(body_md: &str, content_dir: &std::path::Path) -> String {
                     render_infobox(&cb.literal).map(|html| NodeValue::HtmlBlock(NodeHtmlBlock { block_type: 6, literal: html }))
                 } else if cb.info == "navbox" {
                     render_navbox(&cb.literal).map(|html| NodeValue::HtmlBlock(NodeHtmlBlock { block_type: 6, literal: html }))
+                } else if cb.info == "main" {
+                    render_main(&cb.literal).map(|html| NodeValue::HtmlBlock(NodeHtmlBlock { block_type: 6, literal: html }))
                 } else {
                     None
                 }
@@ -206,15 +211,45 @@ pub fn render_html_raw(body_md: &str, content_dir: &std::path::Path) -> String {
     inject_wiki_prefixes(&raw, content_dir)
 }
 
-/// B2: Render an infobox YAML body as a Wikipedia-style float-right summary table.
+/// B2/AC: Render an infobox YAML body as a Wikipedia-style float-right summary table.
 ///
-/// Accepts any flat YAML mapping (key: value pairs). Unknown keys render verbatim.
+/// Special keys (not rendered as data rows):
+///   `title`         → `<caption>` element at top of table
+///   `image`         → full-width image row; value is the `src` URL
+///   `image_caption` → caption text below the image (only if `image` is also present)
+///
+/// All other keys render as `<th>label</th><td>value</td>` rows.
 /// Returns None if the YAML fails to parse — the code block is left unchanged.
 fn render_infobox(yaml: &str) -> Option<String> {
     let map: serde_yaml::Mapping = serde_yaml::from_str(yaml).ok()?;
-    let mut html = String::from("<table class=\"infobox\">\n<tbody>\n");
+
+    let get_str = |key: &str| -> Option<String> {
+        map.get(&serde_yaml::Value::String(key.to_string()))
+            .and_then(|v| if let serde_yaml::Value::String(s) = v { Some(s.clone()) } else { None })
+    };
+    let title         = get_str("title");
+    let image         = get_str("image");
+    let image_caption = get_str("image_caption");
+
+    let mut html = String::from("<table class=\"infobox\">\n");
+    if let Some(ref t) = title {
+        html.push_str(&format!("<caption class=\"infobox-title\">{}</caption>\n", escape_html(t)));
+    }
+    html.push_str("<tbody>\n");
+    if let Some(ref img) = image {
+        let alt = image_caption.as_deref().or(title.as_deref()).unwrap_or("");
+        html.push_str("<tr><td colspan=\"2\" class=\"infobox-image\">");
+        html.push_str(&format!("<img src=\"{}\" alt=\"{}\">", escape_html(img), escape_html(alt)));
+        if let Some(ref cap) = image_caption {
+            html.push_str(&format!("<div class=\"infobox-caption\">{}</div>", escape_html(cap)));
+        }
+        html.push_str("</td></tr>\n");
+    }
+
+    const RESERVED: &[&str] = &["title", "image", "image_caption"];
     for (k, v) in &map {
         let key = yaml_val_to_string(k);
+        if RESERVED.contains(&key.as_str()) { continue; }
         let val = yaml_val_to_string(v);
         html.push_str(&format!("<tr><th>{}</th><td>{}</td></tr>\n", escape_html(&key), escape_html(&val)));
     }
@@ -257,6 +292,40 @@ fn render_navbox(yaml: &str) -> Option<String> {
     }
     html.push_str("</div>\n</div>\n");
     Some(html)
+}
+
+/// AC: Render a `main` fenced block as a Wikipedia-style "Main article:" hatnote.
+///
+/// Block body formats:
+///   `slug`              — display text derived from the last slug segment (hyphens → spaces, title-cased)
+///   `slug|Display Text` — explicit display text after the pipe
+///
+/// Renders with `class="wiki-hatnote"` so it shares the existing hatnote styling.
+fn render_main(body: &str) -> Option<String> {
+    let body = body.trim();
+    if body.is_empty() { return None; }
+    let (slug, display) = if let Some(pipe) = body.find('|') {
+        (body[..pipe].trim(), body[pipe + 1..].trim().to_string())
+    } else {
+        let last = body.rsplit('/').next().unwrap_or(body);
+        let display = last
+            .split('-')
+            .map(|w| {
+                let mut chars = w.chars();
+                match chars.next() {
+                    None => String::new(),
+                    Some(c) => c.to_uppercase().collect::<String>() + chars.as_str(),
+                }
+            })
+            .collect::<Vec<_>>()
+            .join(" ");
+        (body, display)
+    };
+    Some(format!(
+        "<div class=\"wiki-hatnote\">Main article: <a href=\"/wiki/{}\">{}</a></div>\n",
+        escape_html(slug),
+        escape_html(&display)
+    ))
 }
 
 fn yaml_val_to_string(v: &serde_yaml::Value) -> String {
