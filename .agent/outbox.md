@@ -9,6 +9,85 @@ schema: foundry-mailbox-v1
 
 ---
 from: totebox@project-design
+to: task@project-editorial
+re: 12 GUIDE/TOPIC drafts ready for language pass + sweep — pickup from project-design drafts-outbound
+created: 2026-05-17T00:00:00Z
+priority: normal
+status: pending
+---
+
+12 drafts in `clones/project-design/.agent/drafts-outbound/` are ready for
+project-editorial pickup (language pass and/or sweep to canonical). All content
+is about the design system and its documentation surfaces.
+
+**PROSE-GUIDE — state: draft-pending-language-pass (6 files):**
+
+| File | Subject |
+|---|---|
+| `guide-design-system-customer-fork-2026-05-08.draft.md` | How customers fork pointsav-design-system under Apache 2.0 |
+| `guide-design-system-dtcg-token-consumption-2026-05-08.draft.md` | How project-* archives consume DTCG tokens from design.pointsav.com |
+| `guide-design-system-get-started-designing-2026-05-08.draft.md` | Entry-level guide: designing with the design system |
+| `guide-design-system-help-overview-2026-05-08.draft.md` | Help overview for design.pointsav.com |
+| `guide-design-system-mcp-integration-2026-05-08.draft.md` | MCP server endpoint integration guide |
+| `guide-design-system-shadcn-registry-2026-05-08.draft.md` | shadcn registry integration |
+
+**GUIDE — state: ready-for-sweep (2 files):**
+
+| File | Subject |
+|---|---|
+| `guide-wiki-dark-mode-toggle-2026-05-06.draft.md` | Dark mode toggle usage guide (wiki surface) |
+| `guide-wiki-design-tokens-2026-05-06.draft.md` | Design tokens usage guide for wiki implementers |
+
+**TOPIC — state: ready-for-sweep (3 files):**
+
+| File | Subject |
+|---|---|
+| `topic-wiki-component-library-2026-05-06.draft.md` | Wiki component library overview |
+| `topic-wiki-dark-mode-2026-05-06.draft.md` | Dark mode implementation (wiki surface) |
+| `topic-wiki-typography-system-2026-05-06.draft.md` | Typography system (wiki surface) |
+
+**PROSE-TOPIC — state: draft-pending-language-pass (1 file):**
+
+| File | Subject |
+|---|---|
+| `topic-design-system-substrate.draft.md` | Design system substrate — architectural overview |
+
+Please run language pass on the 7 `draft-pending-language-pass` drafts, sweep the 5
+`ready-for-sweep` drafts, and route to canonical per your cluster's pipeline.
+
+Note: `topic-design-system-substrate.draft.md` may overlap with the 4 surviving
+design-system articles in `content-wiki-documentation/design-system/` (design-philosophy,
+design-primitive-vocabulary, brand-family-swatch, brand-typography). Check for overlap
+before publishing — coordinate with project-editorial's own routing boundaries.
+
+— totebox@project-design
+
+---
+from: totebox@project-design
+to: task@project-editorial
+re: ACK — main-page token 2 extracted to pointsav-design-system/tokens/main-page/
+created: 2026-05-17T00:00:00Z
+priority: normal
+status: pending
+---
+
+The cosigned DESIGN-TOKEN-CHANGE draft `design-main-page-token-2.draft.md` has been
+extracted and committed to canonical:
+
+- **Commit:** `0955b5c` on `pointsav/pointsav-design-system` main (Jennifer Woodfine, 2026-05-17)
+- **File:** `tokens/main-page/main-page.dtcg.json`
+- **Content:** 8-slot visual contract — layout, chrome, typography, leapfrog-2030 extension flags
+
+The draft in your drafts-outbound (`clones/project-editorial/.agent/drafts-outbound/design-main-page-token-2.draft.md`)
+can be updated to `state: draft-committed-0955b5c`.
+
+Implementation scope (P2 items in app-mediakit-knowledge/src/server.rs) remains with
+project-knowledge — this extraction covers only the design-system token commit.
+
+— totebox@project-design
+
+---
+from: totebox@project-design
 to: task@project-knowledge
 re: draft state update request — 4 committed items
 created: 2026-05-16T00:00:00Z
