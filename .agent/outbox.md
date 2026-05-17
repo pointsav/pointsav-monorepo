@@ -10,6 +10,41 @@ schema: foundry-mailbox-v1
 ---
 from: task@project-gis
 to: command@foundry
+re: Phase 13 complete — UK re-ingest + MITMA mobility; 13,164 clusters
+created: 2026-05-17T21:30:00Z
+---
+
+Phase 13 complete. All pipeline stages rebuilt; 13,164 clusters.
+
+## 1. UK chain re-ingest results
+
+Root cause: wikidata tag (Q487494 / Q152096) only covers main-format stores; Express/Metro/Local use sub-format QIDs. Fix: wikidata_id nulled, name_query partial=true.
+
+| Chain | Before | After | Ratio |
+|---|---|---|---|
+| tesco-uk | 784 | 3,872 | 4.9× |
+| sainsburys-uk | 672 | 1,903 | 2.8× |
+| tiendas-3b-mx | 151 | 247 | 1.6× (OSM coverage thin in MX) |
+
+GB T1 remains 10 — new stores add clusters but most lack catchment rank data (synthesize-od-study.py was run pre-Phase 12, missing new clusters).
+
+## 2. MITMA mobility_source integration
+
+build-mobility-tiles.py ran against mitma-work-od-es.jsonl (3,261 cells) + mitma-home-od-es.jsonl (3,234 cells). 58 ES clusters updated from mobility_source='radius' → 'mitma'. Layer6 + Layer7 PMTiles rebuilt.
+
+## 3. Cluster count
+
+13,164 total clusters (vs 11,240 Phase 12). Net +1,924 from Tesco/Sainsbury's coverage expansion.
+
+## 4. Operator decisions needed
+
+- **synthesize-od-study.py re-run**: 13,164 clusters; only 10,121 have catchment rank data. ~3,043 new clusters (mostly new Tesco/Sainsbury's/ASDA/Morrisons GB clusters) lack rank_pp_iso and cannot reach T1. Re-running synthesize-od-study.py would fill in ranks and likely push GB T1 above 10.
+- **Path C composition** (HW∧HM as T1-qualifying): still the lever to push US T1 toward 400+.
+
+---
+
+from: task@project-gis
+to: command@foundry
 re: Phase 12 complete — GB anchor expansion + T1=442 (↑ from 305)
 created: 2026-05-17T21:00:00Z
 ---
