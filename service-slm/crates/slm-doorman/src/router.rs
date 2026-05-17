@@ -26,6 +26,7 @@ use crate::mesh::MeshRegistry;
 use crate::tier::{ExternalTierClient, LocalTierClient, YoYoTierClient};
 
 use std::collections::HashMap;
+use std::time::{Duration, Instant};
 
 #[derive(Default)]
 pub struct DoormanConfig {
@@ -273,13 +274,38 @@ impl Doorman {
                 };
 
                 // B4: fast-path health + circuit check before making any HTTP call.
+                // B2: when SLM_YOYO_AUTO_START=true and the backend is down,
+                // invoke start-yoyo.sh (path from SLM_YOYO_START_SCRIPT) and
+                // wait up to 90 s for the health probe to recover before falling
+                // back to Tier A.
                 if !client.allow_request() {
-                    warn!(
+                    let auto_start = std::env::var("SLM_YOYO_AUTO_START")
+                        .map(|v| v == "true")
+                        .unwrap_or(false);
+                    let came_up = if auto_start {
+                        info!(
+                            target: "slm_doorman::router",
+                            request_id = %req.request_id,
+                            "Tier B down; SLM_YOYO_AUTO_START=true — triggering start-yoyo.sh"
+                        );
+                        try_auto_start_yoyo(client).await
+                    } else {
+                        false
+                    };
+                    if !came_up {
+                        warn!(
+                            target: "slm_doorman::router",
+                            request_id = %req.request_id,
+                            auto_start,
+                            "Tier B unavailable; falling back to Tier A"
+                        );
+                        return self.try_local_fallback(req).await;
+                    }
+                    info!(
                         target: "slm_doorman::router",
                         request_id = %req.request_id,
-                        "Tier B unavailable (health probe down or circuit open); falling back to Tier A"
+                        "Yo-Yo health probe up after auto-start; proceeding with Tier B"
                     );
-                    return self.try_local_fallback(req).await;
                 }
 
                 match client.complete(req).await {
@@ -566,6 +592,46 @@ fn classify_error(e: &DoormanError) -> CompletionStatus {
         DoormanError::GraphProxyServiceUnavailable => CompletionStatus::UpstreamError,
         DoormanError::QueueQualityGateRejected { .. } => CompletionStatus::PolicyDenied,
     }
+}
+
+/// On-demand Yo-Yo auto-start. Invokes the script at `SLM_YOYO_START_SCRIPT`
+/// and polls `client.is_healthy()` every 5 s for up to 90 s.
+/// Returns `true` if the backend becomes healthy within the budget.
+/// Non-fatal: script spawn failures are logged and `false` is returned.
+async fn try_auto_start_yoyo(client: &YoYoTierClient) -> bool {
+    let script = match std::env::var("SLM_YOYO_START_SCRIPT") {
+        Ok(s) => s,
+        Err(_) => {
+            warn!(
+                target: "slm_doorman::router",
+                "SLM_YOYO_AUTO_START=true but SLM_YOYO_START_SCRIPT not set — cannot auto-start"
+            );
+            return false;
+        }
+    };
+
+    match tokio::process::Command::new(&script).spawn() {
+        Ok(_child) => {
+            info!(target: "slm_doorman::router", script = %script, "auto-start: start-yoyo.sh spawned");
+        }
+        Err(e) => {
+            warn!(
+                target: "slm_doorman::router",
+                script = %script, error = %e,
+                "auto-start: failed to spawn start-yoyo.sh"
+            );
+            return false;
+        }
+    }
+
+    let deadline = Instant::now() + Duration::from_secs(90);
+    while Instant::now() < deadline {
+        tokio::time::sleep(Duration::from_secs(5)).await;
+        if client.is_healthy() {
+            return true;
+        }
+    }
+    false
 }
 
 #[cfg(test)]
