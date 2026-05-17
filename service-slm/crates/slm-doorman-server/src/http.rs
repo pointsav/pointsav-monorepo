@@ -38,6 +38,7 @@ use axum::response::{IntoResponse, Json, Response};
 use axum::routing::{get, post};
 use axum::Router;
 use reqwest::Client as ReqwestClient;
+use tokio_stream::wrappers::ReceiverStream;
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use slm_core::{
@@ -1373,6 +1374,149 @@ fn compute_to_anthropic_response(resp: &slm_core::ComputeResponse, model: &str) 
     })
 }
 
+// ── vLLM OpenAI SSE chunk types (used by build_stream_body) ─────────────────
+
+#[derive(serde::Deserialize)]
+struct OaiStreamChunk {
+    choices: Vec<OaiStreamChoice>,
+}
+#[derive(serde::Deserialize)]
+struct OaiStreamChoice {
+    delta: OaiStreamDelta,
+}
+#[derive(serde::Deserialize)]
+struct OaiStreamDelta {
+    content: Option<String>,
+}
+
+/// Translate a vLLM SSE response to Anthropic SSE format, yielding tokens
+/// incrementally as they arrive. Emits a `: ping` keepalive comment every 15s
+/// when no token arrives, preventing Claude Code from timing out on long
+/// generations.
+fn build_stream_body(
+    mut upstream: reqwest::Response,
+    model: String,
+    request_id: slm_core::RequestId,
+) -> axum::body::Body {
+    use axum::body::Bytes;
+    use std::time::Duration;
+
+    let (tx, rx) = tokio::sync::mpsc::channel::<Result<Bytes, std::convert::Infallible>>(32);
+
+    tokio::spawn(async move {
+        let msg_id = format!("msg_{}", request_id);
+
+        macro_rules! send_sse {
+            ($name:expr, $data:expr) => {{
+                let s = format!(
+                    "event: {}\ndata: {}\n\n",
+                    $name,
+                    serde_json::to_string(&$data).unwrap_or_default()
+                );
+                if tx.send(Ok(Bytes::from(s))).await.is_err() {
+                    return;
+                }
+            }};
+        }
+
+        // Preamble
+        send_sse!(
+            "message_start",
+            serde_json::json!({
+                "type": "message_start",
+                "message": {
+                    "id": &msg_id, "type": "message", "role": "assistant",
+                    "content": [], "model": &model,
+                    "stop_reason": null, "stop_sequence": null,
+                    "usage": {"input_tokens": 0, "output_tokens": 0}
+                }
+            })
+        );
+        send_sse!(
+            "content_block_start",
+            serde_json::json!({
+                "type": "content_block_start", "index": 0,
+                "content_block": {"type": "text", "text": ""}
+            })
+        );
+
+        // Stream vLLM SSE → Anthropic SSE
+        let mut buf = String::new();
+        let mut output_tokens: u32 = 0;
+        let ping_interval = Duration::from_secs(15);
+        let mut last_ping = tokio::time::Instant::now();
+
+        'outer: loop {
+            let elapsed = last_ping.elapsed();
+            let remaining = ping_interval.checked_sub(elapsed).unwrap_or(Duration::ZERO);
+
+            match tokio::time::timeout(remaining, upstream.chunk()).await {
+                Err(_) => {
+                    // 15s elapsed with no data — emit keepalive
+                    if tx.send(Ok(Bytes::from_static(b": ping\n\n"))).await.is_err() {
+                        return;
+                    }
+                    last_ping = tokio::time::Instant::now();
+                }
+                Ok(Err(_)) => break,   // network error
+                Ok(Ok(None)) => break, // end of stream
+                Ok(Ok(Some(bytes))) => {
+                    buf.push_str(&String::from_utf8_lossy(&bytes));
+
+                    while let Some(pos) = buf.find('\n') {
+                        let line = buf[..pos].trim_end_matches('\r').to_string();
+                        buf.drain(..=pos);
+
+                        if let Some(data) = line.strip_prefix("data: ") {
+                            if data == "[DONE]" {
+                                break 'outer;
+                            }
+                            if let Ok(chunk) = serde_json::from_str::<OaiStreamChunk>(data) {
+                                if let Some(text) = chunk
+                                    .choices
+                                    .into_iter()
+                                    .next()
+                                    .and_then(|c| c.delta.content)
+                                {
+                                    if !text.is_empty() {
+                                        output_tokens +=
+                                            text.split_whitespace().count() as u32;
+                                        send_sse!(
+                                            "content_block_delta",
+                                            serde_json::json!({
+                                                "type": "content_block_delta",
+                                                "index": 0,
+                                                "delta": {"type": "text_delta", "text": text}
+                                            })
+                                        );
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Closing sequence
+        send_sse!(
+            "content_block_stop",
+            serde_json::json!({"type": "content_block_stop", "index": 0})
+        );
+        send_sse!(
+            "message_delta",
+            serde_json::json!({
+                "type": "message_delta",
+                "delta": {"stop_reason": "end_turn", "stop_sequence": null},
+                "usage": {"output_tokens": output_tokens}
+            })
+        );
+        send_sse!("message_stop", serde_json::json!({"type": "message_stop"}));
+    });
+
+    axum::body::Body::from_stream(ReceiverStream::new(rx))
+}
+
 /// Build a fake-SSE response: buffer the full content, emit all 6 events at once.
 /// Claude Code's streaming UX receives the full response in a single burst rather
 /// than token-by-token. Real per-token streaming lands in Sprint 0b.
@@ -1424,6 +1568,39 @@ async fn anthropic_messages(
     let stream = body.stream;
 
     let req = anthropic_to_compute_request(body, module_id, request_id);
+
+    // Real SSE: try Tier B streaming first; fall back to buffered + fake-SSE
+    // when Tier B is unavailable (circuit open, not configured, etc.).
+    if stream {
+        match state.doorman.yoyo_stream(&req).await {
+            Ok(upstream) => {
+                state.last_yoyo_dispatch.store(
+                    SystemTime::now()
+                        .duration_since(UNIX_EPOCH)
+                        .unwrap_or_default()
+                        .as_secs(),
+                    Ordering::Relaxed,
+                );
+                let stream_body = build_stream_body(upstream, model, req.request_id);
+                return Ok(Response::builder()
+                    .status(StatusCode::OK)
+                    .header("content-type", "text/event-stream; charset=utf-8")
+                    .header("cache-control", "no-cache")
+                    .header("x-accel-buffering", "no")
+                    .header("x-foundry-tier-used", "yoyo")
+                    .body(stream_body)
+                    .expect("build SSE response"));
+            }
+            Err(e) => {
+                tracing::debug!(
+                    target: "slm_doorman_server",
+                    error = %e,
+                    "yoyo_stream unavailable; falling back to buffered SSE"
+                );
+            }
+        }
+    }
+
     let resp = state.doorman.route(&req).await.map_err(ApiError::from)?;
     if resp.tier_used.as_str().starts_with("yoyo") {
         state.last_yoyo_dispatch.store(

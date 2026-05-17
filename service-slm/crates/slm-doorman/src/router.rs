@@ -483,6 +483,32 @@ impl Doorman {
             );
         }
     }
+
+    /// Begin a streaming Tier-B request. Returns the raw vLLM HTTP response on
+    /// success; the caller translates the SSE body to the target wire format.
+    ///
+    /// Returns `Err(TierUnavailable(Tier::Yoyo))` if no Yo-Yo clients are
+    /// configured. Returns `Err(TierBCircuitOpen)` if the circuit is open.
+    /// Does NOT fall back to Tier A — streaming callers handle fallback
+    /// themselves.
+    pub async fn yoyo_stream(&self, req: &ComputeRequest) -> Result<reqwest::Response> {
+        let client = if let Some(ref label) = req.yoyo_label {
+            self.yoyo.get(label.as_str()).ok_or_else(|| {
+                warn!(
+                    target: "slm_doorman::router",
+                    label = label.as_str(),
+                    "yoyo_stream: requested label not configured"
+                );
+                DoormanError::TierUnavailable(Tier::Yoyo)
+            })?
+        } else {
+            self.yoyo
+                .values()
+                .next()
+                .ok_or_else(|| DoormanError::TierUnavailable(Tier::Yoyo))?
+        };
+        client.start_stream(req).await
+    }
 }
 
 impl Doorman {
