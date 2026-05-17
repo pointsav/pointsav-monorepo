@@ -102,6 +102,20 @@ impl Doorman {
         self.external.is_some()
     }
 
+    pub fn has_lark_validator(&self) -> bool {
+        self.lark_validator.is_some()
+    }
+
+    /// Returns the circuit breaker state string of the default (first)
+    /// Yo-Yo client, or `"unconfigured"` when no Yo-Yo clients exist.
+    pub fn default_yoyo_circuit_state(&self) -> &'static str {
+        self.yoyo
+            .values()
+            .next()
+            .map(|c| c.circuit_state())
+            .unwrap_or("unconfigured")
+    }
+
     pub fn ledger(&self) -> &AuditLedger {
         &self.ledger
     }
