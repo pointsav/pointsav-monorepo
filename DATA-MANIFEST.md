@@ -9,10 +9,19 @@ This document serves as the master record of all data sources, methodologies, an
 *   **License**: [Open Database License (ODbL) 1.0](https://opendatacommons.org/licenses/odbl/).
 *   **Attribution**: © OpenStreetMap contributors.
 
-### Overture Maps Foundation
+### Overture Maps Foundation — Places
 *   **Purpose**: Global POI theme (Places), Transportation network, and Building footprints.
 *   **License**: [CDLA-Permissive-2.0](https://cdla.dev/permissive-2-0/) (Places) and [ODbL](https://opendatacommons.org/licenses/odbl/) (Transportation/Buildings).
 *   **Attribution**: © Overture Maps Foundation.
+
+### Overture Maps Foundation — Addresses
+*   **Release version**: 2026-04-15.0
+*   **S3 path**: `s3://overturemaps-us-west-2/release/2026-04-15.0/theme=addresses/type=address/*.parquet`
+*   **Purpose**: Street-level address backfill for OSM-sourced service-business JSONL records that carry null `street_address` fields. Matched by H3 res-11 spatial proximity (≤ ~53m). Backfilled fields: `street_address`, `city`, `region`, `postal_code`. Provenance tag `address_source: overture_addresses`, confidence 0.90.
+*   **Markets**: US, CA, MX, ES, FR, DE, GB, IT, NL, AT, PL, GR, PT + SE, NO, DK, FI, IS (18 countries).
+*   **License**: [Open Database License (ODbL) 1.0](https://opendatacommons.org/licenses/odbl/) — share-alike; derived datasets must retain ODbL.
+*   **Attribution**: © Overture Maps Foundation contributors.
+*   **Script**: `app-orchestration-gis/extract-overture-addresses.py`
 
 ### WorldPop
 *   **Purpose**: High-resolution (100m) gridded population data for global demographic analysis.
