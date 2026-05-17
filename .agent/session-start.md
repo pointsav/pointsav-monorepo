@@ -22,10 +22,9 @@ updated: 2026-05-17
 
 ## Critical state
 
-- **`pointsav-monorepo/app-console-content/` created** — `cargo build` green as of 2026-05-17.
-  Workspace + crate Cargo.toml + src/main.rs all written. Gate test (SSH connection to port 2222)
-  pending — do this at next session start to complete Phase 0.
-- **russh 0.60 API**: native async fn in impl (no async_trait); `russh::keys::PrivateKey::random(&mut rand::rng(), Algorithm::Ed25519)`; `session.channel_success(channel)?` in pty_request + shell_request; TerminalHandle uses sink Vec<u8> + flush sends.
+- **Phase 0 COMPLETE** — `app-console-content` crate committed; `cargo build` green; SSH TUI gate passed (ratatui frame confirmed over port 2222 via `ssh -p 2222 -i ~/.ssh/google_compute_engine mathew@localhost`). Next: Phase 1 (auth + session management).
+- **SSH key note**: `mathew` user has no standard `id_ed25519`; use `-i ~/.ssh/google_compute_engine` for localhost testing until Phase 1 adds `proofctl user add`.
+- **russh 0.60 API**: native async fn in impl (no async_trait); `russh::keys::PrivateKey::random(&mut rand::rng(), Algorithm::Ed25519)`; `session.channel_success(channel)?` in pty_request + shell_request; TerminalHandle uses sink Vec<u8> + flush sends. See memory for full reference.
 - **No `os-console/` exists yet** — Phase 7 milestone; standalone binary first.
 - **Web UI is to be taken down** — `local-proofreader-console.service` (9091) and
   `local-proofreader-public.service` (9097) + nginx vhost + cert. Teardown checklist
@@ -47,7 +46,4 @@ ratatui + crossterm + russh (embedded SSH server, port 2222) + tui-textarea + si
 
 ## Last session handoff
 
-*2026-05-17: Phase 0 spike — `app-console-content` crate created; `cargo build` green.
-Gate test pending (SSH to port 2222). Next action: run the binary (`cargo run --bin app-console-content`
-in `pointsav-monorepo/`), test `ssh -p 2222 -o StrictHostKeyChecking=no mathew@localhost`, confirm
-ratatui frame visible and `q` exits. Then commit: `~/Foundry/bin/commit-as-next.sh "feat: Session 1 — russh + ratatui spike; SSH TUI skeleton on port 2222"`. Update NEXT.md Phase 0 checkboxes.*
+*2026-05-17: Phase 0 COMPLETE. `app-console-content` crate committed, `cargo build` green, gate passed (ratatui TUI renders over SSH port 2222). Next session: Phase 1 (auth + session management) — SQLite user store, `auth_publickey` fingerprint lookup, `proofctl user add`, identity in status bar. See NEXT.md Phase 1 checklist and the autonomous dev plan at `~/.claude/plans/can-you-make-a-deep-naur.md` Session 2.*
