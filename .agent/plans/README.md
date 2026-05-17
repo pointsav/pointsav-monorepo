@@ -25,7 +25,7 @@ All engines (Claude Code, Gemini CLI) read and write here.
 | DESIGN-TOKEN-* (PointSav branded) | project-design | pointsav-media-assets | |
 | DESIGN-TOKEN-* (Woodfine branded) | project-design | woodfine-media-assets | |
 | ASSET-* | project-design | pointsav-media-assets or woodfine-media-assets | |
-| BIM-* | project-bim | woodfine-design-bim | Never routes to pointsav-design-system |
+| BIM-* | project-bim | pointsav-bim-system (pending repo transfer) | Distinct from pointsav-design-system (UI/UX tokens vs BIM tokens — separate substrates) |
 | LICENSE-* | Command Session (admin-tier) | factory-release-engineering | |
 | Self-contained | this project-* | own drafts-outbound/ or direct commit | Valid — artifact stays in originating project |
 
