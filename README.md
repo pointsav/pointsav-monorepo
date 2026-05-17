@@ -170,8 +170,6 @@ Every third-party dependency is tracked as formal technical debt. For each quara
 
 ---
 
-*© 2026 PointSav Digital Systems™. Apache 2.0 licensed components are governed by the terms of that licence. Proprietary components are all rights reserved.*
-
 *→ Versión en español: [README.es.md](./README.es.md)*
 
 
