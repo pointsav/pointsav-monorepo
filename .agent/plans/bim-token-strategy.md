@@ -2,7 +2,7 @@
 
 **Created:** 2026-05-17
 **Owner:** project-editorial (research); operator (decision)
-**Status:** Research complete (6 of 7 agents); commercial model section pending Agent 7
+**Status:** Research complete (8 agents total)
 
 ---
 
@@ -534,6 +534,133 @@ posture makes the Carbon-for-everyone-to-use framing credible.
 
 ---
 
-*Research basis: 7 OPUS agent reports, completed 2026-05-16/17.*
+## Part X — Brand positioning and CMS architecture
+
+**Operator question:** Should Woodfine host the free BIM tokens at woodfinegroup.com
+(and act as the publisher), with PointSav running the paid CMS underneath? Or should
+PointSav be the publisher?
+
+**Answer: PointSav publishes. Woodfine is the named reference customer.** Option B.
+
+### Why not Woodfine as publisher (Option A)
+
+**No precedent in AEC ontology space for a single property owner publishing a
+widely-adopted open standard.** Eight standards were researched across the full
+AEC built-environment space. The pattern is consistent:
+
+| Publisher model | Examples | Industry adoption |
+|---|---|---|
+| Standards body (ISO-track) | buildingSMART/IFC | Universal |
+| Neutral consortium, multiple owners | RealEstateCore | Strong, growing |
+| Vendor-consortium, neutral brand | Project Haystack | Strong in niche |
+| Academic-neutral | Brick Schema | Cited; deployed unevenly |
+| Engineering firms → neutral steward | BIP (Sweden) | Strong nationally |
+| Single tech vendor as face | Google Digital Buildings | Weak — underperformed REC |
+| **Single property owner as face** | **No precedent** | **N/A** |
+
+**The Vasakronan precedent is decisive.** Vasakronan is Sweden's largest commercial
+landlord, the dominant funder and anchor user of RealEstateCore, and had the substrate
+and brand stature to publish "Vasakronan Building Standard." They deliberately did not.
+They formed a consortium (Vasakronan + Akademiska Hus + Willhem + Idun + RISE +
+Jönköping University) and published under the neutral "RealEstateCore" brand. Their
+own competitors signed on because it was not called "Vasakronan's standard." If
+Vasakronan — with far more Nordic CRE credibility than Woodfine has in its market —
+would not put their name on the standard, Woodfine should not either.
+
+**Competing landlords will not adopt a Woodfine-branded standard.** Institutional CRE
+firms (Brookfield, Hines, JLL-managed properties) treat BIM/data infrastructure as
+either proprietary competitive advantage or neutral commons consumed from a consortium.
+A publicly named Woodfine adoption implicitly endorses Woodfine's intellectual
+leadership — a marketing concession no institutional landlord will make. This creates
+a hard adoption ceiling that defeats the strategic purpose.
+
+### Why `woodfinegroup.com` is the wrong destination
+
+`woodfinegroup.com` is a commercial real estate corporate site — portfolio listings,
+leasing inquiries, investor relations. An AEC professional evaluating a BIM token
+standard landing there will experience cognitive dissonance: "Why is a landlord
+publishing a technical standard? What's the angle?"
+
+IBM Carbon lives at `carbondesignsystem.com` — a standalone domain — not at
+`ibm.com/carbon`. This is deliberate. A design system reads as a product from a
+standalone domain; it reads as marketing from a corporate site. The same applies here.
+
+**Dedicated domain is the right call:** `bim.pointsav.com` is acceptable;
+`bimtokens.org` or `bim-tokens.dev` is better. Carbon's standalone domain model
+(`carbondesignsystem.com`) is the template.
+
+### The funnel question: where do token finders want to go next?
+
+AEC professionals who find free BIM tokens want, in order: docs → GitHub →
+the CMS vendor → the reference customer deployment.
+
+- **If destination is `woodfinegroup.com`:** visitor wants a BIM CMS. Woodfine
+  does not sell one. Funnel dies at step 3. Woodfine's actual offerings (leasing,
+  investment management) are irrelevant to the visitor.
+- **If destination is `pointsav.com`:** visitor wants exactly what PointSav sells.
+  Conversion is direct. Free tokens → CMS trial → enterprise tier. *Match.*
+
+**The Confluent/Kafka model is exact:** LinkedIn created Kafka; Confluent
+commercialized it with LinkedIn as the named reference customer. LinkedIn appears
+in Confluent's case study, not on Confluent's homepage. Confluent was acquired by
+IBM for $11B in March 2026. Woodfine is LinkedIn; PointSav is Confluent.
+
+### The `os-privategit` + `app-privategit-bim` product architecture
+
+**Architecture is sound.** The design token CMS market (Supernova, Tokens Studio
+Pro, Backlight, Specify) has converged on the same pattern: neutral open standard
++ branded CMS with different names. The successful ones (Supernova, Tokens Studio)
+are CMS companies that *defer to* neutral token formats (DTCG, Figma Variables,
+Style Dictionary) rather than publishing their own. The failed one (Specify) branded
+its own "SDTF" format — format never achieved standard status, company shut down.
+
+`os-privategit` is correctly positioned as a **horizontal PointSav infrastructure
+product** — managed private git with WORM provenance, F12 console, and sovereignty
+posture. It should not carry BIM branding; that preserves future `app-privategit-*`
+verticals (legal, healthcare, scientific).
+
+`app-privategit-bim` is the BIM-vertical application layer. Market it as "PointSav
+BIM CMS" or "PointSav BIM Tokens Enterprise." Workflow primitives that justify SaaS
+pricing (Supernova comparable: $49–$99/editor/month for team tier; enterprise
+$20K–$100K+ ACV):
+- Multi-stakeholder review workflows for token changes
+- IDS export (the same token set that defines tokens validates IFC files)
+- IFC 4.3 anchoring validation service
+- Automated DTCG → IFC property set mapping
+- WORM provenance audit trail (BCSC-defensible)
+- Private token overlays on top of the open base set (tenant fit-out variants)
+
+### The future consortium path
+
+Option B does not foreclose Option C. The recommended sequence:
+
+1. **Now (Year 1):** PointSav publishes under PointSav brand; Woodfine is named
+   reference customer. W3C Community Group chartered as governance scaffold.
+2. **Years 2–3:** Once ≥5 non-PointSav contributors are active, approach buildingSMART
+   for liaison status + 2-4 institutional co-founders for a formal consortium.
+3. **Years 3–5:** Transfer spec stewardship to Linux Foundation directed fund
+   (ASWF model) if the standard achieves meaningful adoption. PointSav retains
+   CMS commercial rights; the standard becomes genuinely neutral.
+
+The RealEstateCore trajectory is the template: published 2017 by a small Swedish
+software company with landlord sponsors → Microsoft adoption 2020 → formal
+consortium maturation 2020–2024. Small publisher, excellent technical artifact,
+named institutional deployments — that is the path.
+
+### Summary decision
+
+| Question | Answer |
+|---|---|
+| Who publishes the free tokens? | **PointSav** |
+| Where is the free token site? | **Dedicated domain** (bim.pointsav.com or standalone) |
+| Who is the named reference customer? | **Woodfine** — case study, public deployment, anchor |
+| What is the paid tier? | **PointSav BIM CMS** (`app-privategit-bim`) |
+| What is `os-privategit`? | Horizontal private git OS — not BIM-branded |
+| When does Woodfine become more than a reference customer? | Founding governance board seat in the future consortium (Year 2–3) |
+| BCSC posture? | Option B is BCSC-clean — PointSav publishes a factual artifact; Woodfine is a factual reference customer. No speculative claims required. |
+
+---
+
+*Research basis: 8 OPUS agent reports, completed 2026-05-16/17.*
 *All agents ran as sub-agents of the project-editorial Totebox session.*
 *Synthesis written by project-editorial Root Claude session 2026-05-17.*
