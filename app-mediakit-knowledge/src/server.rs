@@ -544,6 +544,8 @@ pub struct TopicSummary {
     pub last_edited: Option<String>,
     /// `short_description` from frontmatter; may be None if not set.
     pub short_description: Option<String>,
+    /// `status` from frontmatter: `stable | pre-build | draft | stub`.
+    pub status: Option<String>,
     /// First non-blank, non-heading line of the body Markdown.
     pub lede_first_line: String,
     /// Absolute path to the source file on disk (used for git fallback).
@@ -788,6 +790,7 @@ async fn bucket_topics_by_category(
             title,
             last_edited,
             short_description,
+            status: parsed.frontmatter.status.clone(),
             lede_first_line,
             file_path: tf.path,
         };
@@ -957,6 +960,9 @@ fn compute_home_stats(buckets: &CategoryBuckets) -> HomeStats {
 /// Categories with ≤ PREVIEW_LIMIT articles always show the full list.
 const PREVIEW_LIMIT: usize = 8;
 
+const WORDMARK_POINTSAV: &str = r##"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 40"><text x="0" y="30" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="24" font-weight="800" fill="#09090B" letter-spacing="-0.03em">POINT-SAV DIGITAL SYSTEMS</text></svg>"##;
+const WORDMARK_WOODFINE: &str = r##"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 350 40"><text x="0" y="30" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="24" font-weight="800" fill="#111827" letter-spacing="-0.03em">WOODFINE CAPITAL PROJECTS</text></svg>"##;
+
 fn home_chrome(
     home_fm: &crate::render::Frontmatter,
     home_html: &str,
@@ -971,7 +977,8 @@ fn home_chrome(
     user: Option<&User>,
     pending_count: i64,
 ) -> Markup {
-    let woodfine_theme = brand_theme == Some("woodfine");
+    let woodfine_theme = matches!(brand_theme, Some("woodfine") | Some("woodfine-projects"));
+    let woodfine_projects = brand_theme == Some("woodfine-projects");
     let _title = home_fm.title.as_deref().unwrap_or(site_title);
 
     // Articles in non-ratified buckets (not already shown as guides) so that
@@ -1002,7 +1009,7 @@ fn home_chrome(
 
     html! {
         (DOCTYPE)
-        html lang="en" {
+        html lang="en" data-theme=[brand_theme] {
             head {
                 meta charset="utf-8";
                 meta name="viewport" content="width=device-width, initial-scale=1";
@@ -1016,8 +1023,12 @@ fn home_chrome(
                         (auth_nav_widget(user, pending_count))
                     }
                     div.brand-row {
-                        a.wordmark href="/" {
-                            span.wordmark-text { (site_title) }
+                        a.wordmark href="/" aria-label=(site_title) {
+                            @if woodfine_theme {
+                                (PreEscaped(WORDMARK_WOODFINE))
+                            } @else {
+                                (PreEscaped(WORDMARK_POINTSAV))
+                            }
                         }
                     }
                     nav.nav-row aria-label="Site navigation" {
@@ -1027,7 +1038,10 @@ fn home_chrome(
                         }
                         span.nav-divider aria-hidden="true" {}
                         ul.nav-list.right {
-                            @if woodfine_theme {
+                            @if woodfine_projects {
+                                li { a href="https://corporate.woodfinegroup.com" { "Corporate" } }
+                                li { a href="/wiki/newsroom" { "Newsroom" } }
+                            } @else if woodfine_theme {
                                 li { a href="https://projects.woodfinegroup.com" { "Projects" } }
                                 li { a href="/wiki/newsroom" { "Newsroom" } }
                             } @else {
@@ -1179,7 +1193,8 @@ fn home_chrome(
                     h2.wiki-home-section-title { "Browse by area" }
                     div.wiki-home-grid {
                         @for cat in RATIFIED_CATEGORIES {
-                            @let topics = buckets.get(*cat).map(|v| v.as_slice()).unwrap_or(&[]);
+                            @let all_in_cat = buckets.get(*cat).map(|v| v.as_slice()).unwrap_or(&[]);
+                            @let topics: Vec<&TopicSummary> = all_in_cat.iter().filter(|t| t.status.as_deref() != Some("stub")).collect();
                             @let count = topics.len();
                             div.wiki-home-cat-section {
                                 div.wiki-home-cat-section-head {
@@ -1781,7 +1796,8 @@ fn wiki_chrome(
     redirected_from: Option<&str>,
     printable: bool,
 ) -> Markup {
-    let woodfine_theme = brand_theme == Some("woodfine");
+    let woodfine_theme = matches!(brand_theme, Some("woodfine") | Some("woodfine-projects"));
+    let woodfine_projects = brand_theme == Some("woodfine-projects");
     let _talk_slug = format!("{slug}.talk");
     let page_title = format!("{title} — {site_title}");
 
@@ -1807,7 +1823,7 @@ fn wiki_chrome(
 
     html! {
         (DOCTYPE)
-        html lang="en" {
+        html lang="en" data-theme=[brand_theme] {
             head {
                 meta charset="utf-8";
                 meta name="viewport" content="width=device-width, initial-scale=1";
@@ -1842,8 +1858,12 @@ fn wiki_chrome(
                                 aria-controls="mobile-toc-drawer"
                             { "Contents" }
                         }
-                        a.wordmark href="/" {
-                            span.wordmark-text { (site_title) }
+                        a.wordmark href="/" aria-label=(site_title) {
+                            @if woodfine_theme {
+                                (PreEscaped(WORDMARK_WOODFINE))
+                            } @else {
+                                (PreEscaped(WORDMARK_POINTSAV))
+                            }
                         }
                         button.nav-toggle-btn #nav-toggle
                             aria-label="Menu"
@@ -1858,7 +1878,10 @@ fn wiki_chrome(
                         }
                         span.nav-divider aria-hidden="true" {}
                         ul.nav-list.right {
-                            @if woodfine_theme {
+                            @if woodfine_projects {
+                                li { a href="https://corporate.woodfinegroup.com" { "Corporate" } }
+                                li { a href="/wiki/newsroom" { "Newsroom" } }
+                            } @else if woodfine_theme {
                                 li { a href="https://projects.woodfinegroup.com" { "Projects" } }
                                 li { a href="/wiki/newsroom" { "Newsroom" } }
                             } @else {
@@ -2296,6 +2319,7 @@ async fn what_links_here(
             slug: s,
             last_edited: None,
             short_description: None,
+            status: None,
             lede_first_line: String::new(),
             file_path: PathBuf::new(),
         })
