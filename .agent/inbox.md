@@ -166,6 +166,7 @@ to: totebox@project-design
 re: AGENTS.md retro-add — pointsav-design-system
 created: 2026-05-14T22:34:22Z
 priority: low
+status: actioned
 ---
 
 Add `AGENTS.md` (vendor-neutral pointer file, `root-files-discipline.md` Tier 2) to
@@ -182,6 +183,7 @@ to: task@project-design
 re: ROUTING — 5 DESIGN drafts from project-knowledge ready for design-system pickup
 created: 2026-05-12T00:00:00Z
 priority: normal
+status: actioned
 ---
 
 Five DESIGN drafts staged at `clones/project-knowledge/.agent/drafts-outbound/`
@@ -272,6 +274,7 @@ to: task@project-design
 re: BLOCKED — media-assets cluster archives diverged from canonical; cherry-pick conflicts on both
 created: 2026-05-09T00:15:00Z
 priority: high
+status: actioned
 ---
 
 Master tried to push your 2 admin-tier commits in `clones/project-design/`
@@ -477,6 +480,7 @@ to: task@project-design
 re: URGENT — pointsav-design-system staging mirrors have 10 unpromoted commits (Master-co-signed work at risk)
 created: 2026-05-08T17:45:00Z
 priority: high
+status: actioned
 ---
 
 Master Stage 6 sweep 2026-05-08 found that pointsav-design-system has fully
