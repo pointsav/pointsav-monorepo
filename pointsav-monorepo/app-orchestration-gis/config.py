@@ -24,6 +24,7 @@ WORK_DIR          = Path(__file__).parent / "work"
 # Phase 5: carrefour-hypermarket-fr DONE (493 stores, Q217599, 2026-05-16).
 # Phase 6: auchan-fr, leclerc-fr, ecenter-de, marktkauf-de DONE 2026-05-16.
 # Phase 7: kaufland-de DONE 2026-05-16.
+# Phase 8: fred-meyer-us DONE 2026-05-17 (126 records, Q5495932; PNW-regional; 63 new clusters, 0 T1).
 ALPHA_HYPERMARKET = {
     "NA": {
         # Walmart: Fortune #1 — dominant NA hypermarket
