@@ -39,6 +39,14 @@ Attribution format: `[YYYY-MM-DD role@engine]`
   - `materials.dtcg.json` — IFC/ISO 10077 material vs. assembly thermal property distinction
   - **Do not edit without operator-confirmed citations**
 
+- [ ] **Opus army synthesis — 5 operator decisions surfaced** `[2026-05-17 totebox@claude-code]`
+  - Source: `.agent/plans/agent-{1,2,3}-*-report.md`
+  1. **Academic Small area** — 105 m² (V3 Master Summary, authoritative) vs 87.7 m² in `woodfine-bim-library/tokens/bim/professional-office-subtypes.dtcg.json`. Token file needs update commit.
+  2. **Civic zone depths** — still synthesised; no DISCOVERY sketch exists. Field-research pass needed.
+  3. **Professional Office Z2/Z3** — V12 carries TBD placeholders (3.0/3.0). Confirm or specify.
+  4. **Business Building Width option** — A/A (32.29 m, widest) is currently in HTML; operator may prefer C/C (27.27 m, balanced). Confirm.
+  5. **End-cap tile sizing** — tokens say E-1/E-2 = 2,700 SF; V12 Methodology end-cap diagrams show 3,500–5,500 SF. Token file fix needed.
+
 ---
 
 ## Artifact dispatch status
@@ -59,6 +67,13 @@ Attribution format: `[YYYY-MM-DD role@engine]`
 
 **→ Command (admin-tier; outbox pending 2026-05-17):**
 - [x] woodfine-palette-additions.md (mcorp-administrator; woodfine-media-assets)
+
+**→ project-editorial (supplemental dispatch 2026-05-17 — Opus army synthesis):**
+- [x] 11 NEW TOPIC drafts for `content-wiki-projects/topics/bim/`
+  - topic-bim-building-width-method + zone-depths-per-use-type (Agent 1)
+  - topic-bim-floor-plate-methodology + tile-system + tile-combinations + leasing-efficiencies (Agent 2)
+  - topic-bim-key-plans-index + private-office + medical + business + professional-office (Agent 3)
+- All structured as living documents (Future research sections for iteration)
 
 ---
 

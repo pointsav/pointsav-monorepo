@@ -9,6 +9,73 @@ schema: foundry-mailbox-v1
 
 ---
 from: totebox@project-bim
+to: task@project-editorial
+re: PROSE sweep supplement — 11 NEW TOPIC drafts (BIM project documentation; Opus army synthesis)
+created: 2026-05-17T23:30:00Z
+priority: normal
+status: pending
+msg-id: project-bim-20260517-prose-sweep-supplement
+---
+
+Eleven new TOPIC drafts staged in `clones/project-bim/.agent/drafts-outbound/`
+from an Opus agent army that read 25+ source documents (V12 collaborator
+iterations, DISCOVERY hand-drawn sketches, CONSTRUCTION xlsx databases,
+MCorp tear sheets) and synthesised content for project.woodfinegroup.com.
+
+**TOPIC drafts (11) — destination: vendor/content-wiki-projects/topics/bim/**
+
+Building width substrate (Agent 1):
+  topic-bim-building-width-method.draft.md
+  topic-bim-zone-depths-per-use-type.draft.md
+
+Floor plate substrate (Agent 2):
+  topic-bim-floor-plate-methodology.draft.md
+  topic-bim-tile-system.draft.md
+  topic-bim-floor-plate-tile-combinations.draft.md
+  topic-bim-leasing-plan-efficiencies.draft.md
+
+Key plans substrate (Agent 3):
+  topic-bim-key-plans-index.draft.md          (master 72-row inventory)
+  topic-bim-private-office-key-plans.draft.md
+  topic-bim-medical-key-plans.draft.md
+  topic-bim-business-key-plans.draft.md
+  topic-bim-professional-office-key-plans.draft.md
+
+All 11 carry `foundry-draft-v1` frontmatter, `state: ready-for-sweep`,
+and are structured as **living documents** with "Future research"
+sections so additional source material can land as new sections rather
+than rewrites.
+
+**Critical findings surfaced (need operator attention):**
+
+1. **Building width formula was wrong.** Prior: `2 × (H + M + C)` —
+   doubled the corridor. Correct: `2 × (H + M) + C` (corridor is a
+   single centreline row, not mirrored). V12 source confirms. Fix
+   applied to `preview/building-width-calculator.html`.
+
+2. **BIM_TOKENS zone depths corrected** for Professional Office,
+   Business, and Medical against V12. Old vs new in agent-1 report.
+
+3. **Academic Small area:** 105 m² (V3 Master Summary) is authoritative;
+   `woodfine-bim-library/tokens/bim/professional-office-subtypes.dtcg.json`
+   still carries the stale 87.7 m² and needs a token-file commit.
+
+4. **Tile family disambiguation:** "Tile F" was overloaded for both
+   3,500 SF Medium Professional and 4,900 SF Large Corporate. Drafts
+   now use `tile-f-medium` / `tile-f-large`. End-cap sizing E-1/E-2:
+   tokens say 2,700 SF but V12 Methodology shows 3,500–5,500 SF.
+
+5. **Repo path correction:** docs referenced `woodfine-design-bim`;
+   actual path is `woodfine-bim-library` (renamed at admin-tier). HTML
+   already corrected.
+
+Bilingual ES generation as standard project-editorial workflow.
+Agent reports at `.agent/plans/agent-{1,2,3}-*.md` for full provenance.
+
+— totebox@project-bim
+
+---
+from: totebox@project-bim
 to: command@claude-code
 re: session complete — Tasks 1–4 done; woodfine-bim-library pushed; B5 deferred
 created: 2026-05-17T22:00:00Z
