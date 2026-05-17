@@ -10,6 +10,39 @@ schema: foundry-mailbox-v1
 ---
 from: task@project-gis
 to: command@foundry
+re: DISK ALERT — root at 85%; cargo-target 16G needs Command Session action
+created: 2026-05-17T23:00:00Z
+---
+
+Root disk: **85% used (12G free)**. Was 65% in Phase 11 storage report. Key consumers:
+
+| Directory | Size | Root? | Action |
+|---|---|---|---|
+| `/srv/foundry/cargo-target/debug/` | 14G | YES | **Needs `cargo clean` — Command Session** |
+| `/srv/foundry/cargo-target/release/` | 2.3G | YES | **Needs `cargo clean` — Command Session** |
+| `/srv/foundry/clones/` | 7G | YES | Normal — active repos |
+| `/srv/foundry/deployments/` | 6.5G | YES (excl sdb mount) | Tiles + boundaries, OK |
+
+## Immediate Totebox actions taken (Phase 14):
+
+- Deleted `work/layer1-locations.geojson` (184M) — build intermediate, pmtiles already built
+- Deleted `work/mobility-work.geojson` + `work/mobility-home-es.geojson` (2.2M) — build intermediates
+- Moved `work/spend-catchment.geojson` (581M) + `work/census-catchment.geojson` (464M) to sdb + symlinked
+- Net root freed: ~1.4G (87% → 85%)
+- sdb now at 82% (from 79%)
+
+## Command Session action needed:
+
+`cd /srv/foundry && cargo clean`
+
+This would recover ~16G on root (from 85% → **64%**). E3 (Rust service-ingest crate) is on HOLD per workspace strategy — build artifacts are safe to remove.
+
+Secondary disk (sdb) at 82% (6.9G free). Monitor; avoid adding more than 3G to sdb without disk expansion.
+
+---
+
+from: task@project-gis
+to: command@foundry
 re: Phase 14 complete — full rank refresh; T1=432 (13,164 clusters)
 created: 2026-05-17T22:00:00Z
 ---
