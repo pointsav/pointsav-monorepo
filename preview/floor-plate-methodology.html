@@ -27,8 +27,8 @@
     --mixed: #7a6a55;
 
     /* slide geometry: landscape letter, exact */
-    --slide-w: 10.5in;
-    --slide-h: 8.0in;
+    --slide-w: 11in;
+    --slide-h: 8.5in;
     --pad-x: 0.28in;
     --pad-y: 0.2in;
   }
@@ -631,7 +631,7 @@
      PRINT — each .slide becomes exactly one landscape letter page
      ============================================================ */
   @media print {
-    @page { size: 11in 8.5in landscape; margin: 0.25in; }
+    @page { size: 11in 8.5in landscape; margin: 0; }
 
     *, *::before, *::after {
       -webkit-print-color-adjust: exact !important;
