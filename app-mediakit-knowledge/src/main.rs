@@ -106,6 +106,11 @@ enum Command {
         /// or via the argon2 crate's own CLI.
         #[arg(long, env = "WIKI_ADMIN_PASSWORD_HASH")]
         admin_password_hash: Option<String>,
+
+        /// Optional brand theme selector. Set to "woodfine" to activate the
+        /// BCSC forward-looking-statement disclaimer in all page footers.
+        #[arg(long, env = "WIKI_BRAND_THEME")]
+        brand_theme: Option<String>,
     },
 }
 
@@ -132,7 +137,8 @@ async fn main() -> Result<()> {
             enable_mcp,
             admin_username,
             admin_password_hash,
-        } => serve(content_dir, guide_dir, guide_dir_2, bind, citations_yaml, state_dir, enable_collab, site_title, git_tenant, enable_mcp, admin_username, admin_password_hash).await,
+            brand_theme,
+        } => serve(content_dir, guide_dir, guide_dir_2, bind, citations_yaml, state_dir, enable_collab, site_title, git_tenant, enable_mcp, admin_username, admin_password_hash, brand_theme).await,
     }
 }
 
@@ -149,6 +155,7 @@ async fn serve(
     enable_mcp: bool,
     admin_username: Option<String>,
     admin_password_hash: Option<String>,
+    brand_theme: Option<String>,
 ) -> Result<()> {
     if !content_dir.is_dir() {
         bail!(
@@ -276,6 +283,7 @@ async fn serve(
         mcp_enabled: enable_mcp,
         glossary: Arc::new(glossary),
         links: link_graph,
+        brand_theme,
         db,
     };
     let app = router(state);

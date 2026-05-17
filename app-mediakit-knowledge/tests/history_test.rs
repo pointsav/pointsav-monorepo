@@ -33,6 +33,7 @@ async fn fixture_state() -> (AppState, TempDir, TempDir) {
             mcp_enabled: false,
             glossary: Arc::new(app_mediakit_knowledge::glossary::Glossary::default()),
                 links: app_mediakit_knowledge::links::LinkGraph::for_testing(),
+                brand_theme: None,
                 db: None,
             site_title: "Test Wiki".to_string(),
         },
