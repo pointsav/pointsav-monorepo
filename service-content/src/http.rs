@@ -299,6 +299,37 @@ pub async fn run_server(store: Arc<dyn GraphStore>, bind_addr: String, doorman_e
         }
     };
     println!("[HTTP] Graph API listening on {}", bind_addr);
+
+    // Race between normal serve and SIGTERM. On SIGTERM, exit(0) so systemd
+    // marks the unit as successful and the in-flight CORPUS file can be
+    // retried cleanly on the next restart (it was never appended to the
+    // processed_ledgers JSONL unless extraction succeeded).
+    #[cfg(unix)]
+    {
+        use tokio::signal::unix::{signal, SignalKind};
+        let mut sigterm = match signal(SignalKind::terminate()) {
+            Ok(s) => s,
+            Err(e) => {
+                eprintln!("[HTTP] SIGTERM handler install failed: {}; serving without it", e);
+                if let Err(e) = axum::serve(listener, app).await {
+                    eprintln!("[HTTP] Server error: {}", e);
+                }
+                return;
+            }
+        };
+        tokio::select! {
+            result = axum::serve(listener, app) => {
+                if let Err(e) = result {
+                    eprintln!("[HTTP] Server error: {}", e);
+                }
+            }
+            _ = sigterm.recv() => {
+                eprintln!("[HTTP] SIGTERM received — shutting down cleanly");
+                std::process::exit(0);
+            }
+        }
+    }
+    #[cfg(not(unix))]
     if let Err(e) = axum::serve(listener, app).await {
         eprintln!("[HTTP] Server error: {}", e);
     }
