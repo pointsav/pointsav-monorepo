@@ -8,7 +8,7 @@ INDEX_CARD="../totebox-index.env"
 source "$INDEX_CARD"
 
 CRM_PATH="../data-ledgers/crm_contacts.csv"
-ROSTER_PATH="../data-ledgers/personnel_roster.jsonl"
+ROSTER_PATH="../data-ledgers/email-corpus-index.jsonl"
 VAULT_NEW="$PHYSICAL_USB_PATH/new"
 
 if [ ! -d "$VAULT_NEW" ]; then
