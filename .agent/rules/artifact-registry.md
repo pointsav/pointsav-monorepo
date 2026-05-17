@@ -113,7 +113,7 @@ Routing:
 | Census Catchment | `work/census-catchment.geojson` → `layer4-census.pmtiles` (373 MB) | DONE (2026-05-15) |
 | Spend Catchment | `work/spend-catchment.geojson` → `layer5-spend.pmtiles` (635 MB) | DONE (2026-05-15) |
 | DATA-MANIFEST.md | project root | DONE (2026-05-12) |
-| clusters-meta.json | gateway www/data/ | DONE (catchment merged; 6,815 entries with pp/sp/rp fields) |
+| clusters-meta.json | gateway www/data/ | DONE (2026-05-17; 10,248 clusters; pp/sp/rp + catchment fields; Kaufland-DE Phase 7) |
 | regional-markets.json | gateway www/data/ | DONE (2026-05-15; 2,986 Regional Markets, 2,942 high-conf) |
 | us_places.geojson | deployments/boundaries/ | DONE (2026-05-15; TIGER 2023, 32K US places) |
 | eu_municipalities.geojson | deployments/boundaries/ | DONE (2026-05-15; GISCO LAU 2021 + GADM GBR, 98.6K entries) |

@@ -23,6 +23,7 @@ WORK_DIR          = Path(__file__).parent / "work"
 # General-merchandise + grocery hypermarkets (daily-shopping format).
 # Phase 5: carrefour-hypermarket-fr DONE (493 stores, Q217599, 2026-05-16).
 # Phase 6: auchan-fr, leclerc-fr, ecenter-de, marktkauf-de DONE 2026-05-16.
+# Phase 7: kaufland-de DONE 2026-05-16.
 ALPHA_HYPERMARKET = {
     "NA": {
         # Walmart: Fortune #1 — dominant NA hypermarket
@@ -49,6 +50,8 @@ ALPHA_HYPERMARKET = {
         "leclerc-fr",
         # Edeka hypermarket formats DE: E center (~290, Q1101048) + Marktkauf (~310, Q1524300) — Phase 6 2026-05-16
         "ecenter-de", "marktkauf-de",
+        # Kaufland DE: Schwarz Group hypermarket (~760 stores, Q685967) — Phase 7 2026-05-16
+        "kaufland-de",
     }
 }
 
@@ -184,7 +187,7 @@ REGION_CONFIG = {
         "warehouse": ["costco-fr"]
     },
     "DE": {
-        "anchor":    ["ikea-de", "ecenter-de", "marktkauf-de"],
+        "anchor":    ["ikea-de", "ecenter-de", "marktkauf-de", "kaufland-de"],
         "hardware":  ["hornbach-de", "obi-de", "bauhaus-de", "toom-baumarkt-de", "hagebaumarkt-de"],
         "warehouse": ["metro-de", "selgros-de"]
     },
@@ -326,7 +329,7 @@ ANCHOR_DISPLAY_NAMES: dict = {
     "alcampo-es": "Alcampo", "leclerc-es": "E.Leclerc", "leclerc-pl": "E.Leclerc",
     "auchan-pl": "Auchan", "auchan-fr": "Auchan",
     "leclerc-fr": "E.Leclerc",
-    "ecenter-de": "E center", "marktkauf-de": "Marktkauf",
+    "ecenter-de": "E center", "marktkauf-de": "Marktkauf", "kaufland-de": "Kaufland",
     "ipercoop-it": "Ipercoop", "iper-it": "Iper", "bennet-it": "Bennet",
     "bilka-dk": "Bilka", "obs-coop-no": "OBS Coop",
     "k-citymarket-fi": "K-Citymarket", "hagkaup-is": "Hagkaup",

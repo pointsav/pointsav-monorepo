@@ -224,27 +224,25 @@ All source data is documented in `DATA-MANIFEST.md` in the project root.
 
 ## 12. Region Summary
 
-Tier counts as of 2026-05-16 (Block 6 + IPEDS enrichment + FR/DE anchor
-promotion complete; 9,678 clusters after deduplication).
+Tier counts as of 2026-05-17 (Phase 7 complete: Kaufland-DE ingested and added
+to REGION_CONFIG["DE"]["anchor"]; 10,248 clusters after deduplication).
 
 | ISO | T1 Regional | T2 District | T3 Local | T4 Fringe |
 |-----|-------------|-------------|----------|-----------|
 | US  | 102         | —           | —        | —         |
 | ES  | 20          | —           | —        | —         |
 | MX  | 15          | —           | —        | —         |
+| DE  | 9           | —           | —        | —         |
 | CA  | 7           | —           | —        | —         |
 | GB  | 5           | —           | —        | —         |
 | FR  | 3           | —           | —        | —         |
-| DE  | 0           | —           | —        | —         |
-| **Total** | **152** | **1,403** | **2,094** | **6,029** |
+| **Total** | **161** | **1,433** | **2,117** | **6,537** |
 
-FR has 3 T1 clusters — enabled by adding Carrefour-FR, Auchan-FR, and
-E.Leclerc-FR to `REGION_CONFIG["FR"]["anchor"]` (Phase 6, 2026-05-16). These
-chains now appear in `hyper_list` of nearby IKEA/Costco clusters, satisfying
-the Lifestyle∧Hyper composition predicate.
+FR has 3 T1 clusters — enabled by Carrefour-FR, Auchan-FR, and E.Leclerc-FR
+in `REGION_CONFIG["FR"]["anchor"]` (Phase 6, 2026-05-16).
 
-DE remains T1=0. E center-DE (38 records) and Marktkauf-DE (126 records)
-are added as DE anchors; however, OSM coverage for these chains is sparse, and
-no IKEA-de cluster currently has an E center or Marktkauf within 3 km in the
-cleansed data. DE T1 qualification requires denser E center/Marktkauf OSM
-coverage or additional hypermarket ingest (e.g., Real-DE, Kaufland-DE).
+DE has 9 T1 clusters — enabled by Kaufland-DE (797 stores, Q685967) added to
+`ALPHA_HYPERMARKET["EU"]` and `REGION_CONFIG["DE"]["anchor"]` (Phase 7,
+2026-05-17). Kaufland co-locates with IKEA-DE at 9 sites satisfying the
+Lifestyle∧Hyper composition predicate. E center (38 records) and Marktkauf
+(126 records) have insufficient OSM coverage for IKEA co-location.
