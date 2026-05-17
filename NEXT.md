@@ -41,6 +41,27 @@ Attribution format: `[YYYY-MM-DD role@engine]`
 
 ---
 
+## Artifact dispatch status
+
+**→ project-editorial (outbox pending since 2026-05-17):**
+- [x] 10 TOPIC drafts (all planned_topics from manifest)
+- [x] 5 GUIDE drafts (cluster-totebox-property + gateway-orchestration-bim)
+
+**→ project-design (outbox pending since 2026-05-17):**
+- [x] 7 DESIGN-COMPONENT (bim-spatial-tree, properties-panel, viewport-3d, view-navigator, guid-search, audit-log, regulation-rs1)
+- [x] 4 DESIGN-RESEARCH (bim-token-taxonomy, asset-woodfine-logo, climate-zone-constraints, mobile-bim-ux)
+- [x] 1 DESIGN-TOKEN-CHANGE (design-token-private-office; master-cosigned)
+
+**→ project-design (supplemental dispatch 2026-05-17):**
+- [x] design-research-html-print-pdf-pipeline.draft.md (NEW — print/PDF architecture)
+- [x] design-index.md (BIM extension review index; accept/refine request)
+- [x] design-generic-components-index.md (9 generic patterns flowback)
+
+**→ Command (admin-tier; outbox pending 2026-05-17):**
+- [x] woodfine-palette-additions.md (mcorp-administrator; woodfine-media-assets)
+
+---
+
 ## Deferred
 
-- [ ] Stage 6 push — 8 commits ahead of origin on `cluster/project-bim` `[2026-05-17 totebox@claude-code]`
+- [ ] Stage 6 push — 18 commits ahead of origin on `cluster/project-bim` `[2026-05-17 totebox@claude-code]`
