@@ -850,17 +850,14 @@ async fn lark_validation_runs_before_tier_b_dispatch() {
         temp_ledger(),
     );
 
-    use slm_core::{ChatMessage, Complexity, GrammarConstraint, ModuleId, RequestId, Tier};
+    use slm_core::{CanonicalMessage, Complexity, GrammarConstraint, ModuleId, RequestId, Tier};
     use std::str::FromStr;
 
     let req = slm_core::ComputeRequest {
         request_id: RequestId::new(),
         module_id: ModuleId::from_str("test").unwrap(),
         model: None,
-        messages: vec![ChatMessage {
-            role: "user".to_string(),
-            content: "ping".to_string(),
-        }],
+        messages: vec![CanonicalMessage::text("user", "ping")],
         complexity: Complexity::High,
         tier_hint: Some(Tier::Yoyo),
         stream: false,
@@ -1186,17 +1183,14 @@ async fn valid_lark_grammar_passes_through_to_tier_b() {
         temp_ledger(),
     );
 
-    use slm_core::{ChatMessage, Complexity, GrammarConstraint, ModuleId, RequestId, Tier};
+    use slm_core::{CanonicalMessage, Complexity, GrammarConstraint, ModuleId, RequestId, Tier};
     use std::str::FromStr;
 
     let req = slm_core::ComputeRequest {
         request_id: RequestId::new(),
         module_id: ModuleId::from_str("test").unwrap(),
         model: None,
-        messages: vec![ChatMessage {
-            role: "user".to_string(),
-            content: "ping".to_string(),
-        }],
+        messages: vec![CanonicalMessage::text("user", "ping")],
         complexity: Complexity::High,
         tier_hint: Some(Tier::Yoyo),
         stream: false,

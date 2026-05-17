@@ -12,7 +12,7 @@
 //! deterministic processing" decision.
 
 use chrono::Utc;
-use slm_core::{Complexity, ComputeRequest, ComputeResponse, GrammarConstraint, Tier};
+use slm_core::{CanonicalMessage, Complexity, ComputeRequest, ComputeResponse, GrammarConstraint, Role, Tier};
 use tracing::{info, warn};
 
 use crate::error::{DoormanError, Result};
@@ -148,8 +148,8 @@ impl Doorman {
                 .messages
                 .iter()
                 .rev()
-                .find(|m| m.role == "user")
-                .map(|m| m.content.chars().take(200).collect::<String>())
+                .find(|m| m.role == Role::User)
+                .map(|m| m.text_content().chars().take(200).collect::<String>())
                 .unwrap_or_default();
 
             if !query.is_empty() {
@@ -160,10 +160,7 @@ impl Doorman {
                     let mut cloned = req.clone();
                     cloned.messages.insert(
                         0,
-                        slm_core::ChatMessage {
-                            role: "system".to_string(),
-                            content: format!("[ENTITY CONTEXT]\n{}", ctx),
-                        },
+                        CanonicalMessage::text("system", format!("[ENTITY CONTEXT]\n{}", ctx)),
                     );
                     effective_req = cloned;
                     &effective_req
@@ -458,6 +455,7 @@ impl Doorman {
         result
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn append_extract_audit(
         &self,
         req: &ComputeRequest,
@@ -677,7 +675,7 @@ async fn try_auto_start_yoyo(client: &YoYoTierClient) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use slm_core::{ChatMessage, ModuleId, RequestId};
+    use slm_core::{CanonicalMessage, ModuleId, RequestId};
     use std::str::FromStr;
 
     fn req(complexity: Complexity, hint: Option<Tier>, yoyo_label: Option<String>) -> ComputeRequest {
@@ -685,10 +683,7 @@ mod tests {
             request_id: RequestId::new(),
             module_id: ModuleId::from_str("foundry").unwrap(),
             model: None,
-            messages: vec![ChatMessage {
-                role: "user".into(),
-                content: "ping".into(),
-            }],
+            messages: vec![CanonicalMessage::text("user", "ping")],
             complexity,
             tier_hint: hint,
             stream: false,

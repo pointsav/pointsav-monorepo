@@ -27,10 +27,88 @@ pub use tier::{Complexity, SpeculationRequest, Tier};
 use serde::{Deserialize, Serialize};
 
 /// One inbound message in OpenAI chat-completions shape.
+/// Retained for `AuditProxyRequest.messages` — do not migrate to `CanonicalMessage`.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ChatMessage {
     pub role: String,
     pub content: String,
+}
+
+/// Role of a participant in a conversation.
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "lowercase")]
+pub enum Role {
+    User,
+    Assistant,
+    System,
+    Tool,
+}
+
+impl Role {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Role::User => "user",
+            Role::Assistant => "assistant",
+            Role::System => "system",
+            Role::Tool => "tool",
+        }
+    }
+}
+
+/// A typed content block in Anthropic Messages API format.
+/// Canonical internal representation used by all tier clients.
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+#[serde(tag = "type", rename_all = "snake_case")]
+pub enum ContentBlock {
+    Text { text: String },
+    ToolUse { id: String, name: String, input: serde_json::Value },
+    ToolResult { tool_use_id: String, content: String },
+    Thinking { thinking: String },
+}
+
+/// A message in the canonical neutral format.
+/// All tier clients translate FROM this format TO their native wire format.
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct CanonicalMessage {
+    pub role: Role,
+    pub content: Vec<ContentBlock>,
+}
+
+impl CanonicalMessage {
+    /// Convenience constructor for simple single-text messages.
+    pub fn text(role: impl Into<String>, text: impl Into<String>) -> Self {
+        let role_str: String = role.into();
+        let role = match role_str.as_str() {
+            "assistant" => Role::Assistant,
+            "system" => Role::System,
+            "tool" => Role::Tool,
+            _ => Role::User,
+        };
+        Self {
+            role,
+            content: vec![ContentBlock::Text { text: text.into() }],
+        }
+    }
+
+    /// Concatenates all text and thinking blocks.
+    /// Used where only plain text matters (graph-context injection, apprenticeship).
+    pub fn text_content(&self) -> String {
+        self.content
+            .iter()
+            .filter_map(|b| match b {
+                ContentBlock::Text { text } => Some(text.as_str()),
+                ContentBlock::Thinking { thinking } => Some(thinking.as_str()),
+                _ => None,
+            })
+            .collect::<Vec<_>>()
+            .join("\n")
+    }
+}
+
+impl From<ChatMessage> for CanonicalMessage {
+    fn from(m: ChatMessage) -> Self {
+        CanonicalMessage::text(m.role, m.content)
+    }
 }
 
 /// Decode-time grammar constraint that the caller wants the Doorman to
@@ -74,7 +152,7 @@ pub struct ComputeRequest {
     pub request_id: RequestId,
     pub module_id: ModuleId,
     pub model: Option<String>,
-    pub messages: Vec<ChatMessage>,
+    pub messages: Vec<CanonicalMessage>,
     #[serde(default)]
     pub complexity: Complexity,
     #[serde(default)]
@@ -127,10 +205,7 @@ mod tests {
             request_id: RequestId::new(),
             module_id: ModuleId::from_str("test-module").unwrap(),
             model: None,
-            messages: vec![ChatMessage {
-                role: "user".to_string(),
-                content: "hello".to_string(),
-            }],
+            messages: vec![CanonicalMessage::text("user", "hello")],
             complexity: Complexity::default(),
             tier_hint: None,
             stream: false,
@@ -232,6 +307,54 @@ mod tests {
     }
 
     #[test]
+    fn content_block_text_round_trip() {
+        let block = ContentBlock::Text { text: "hello world".to_string() };
+        let json = serde_json::to_string(&block).unwrap();
+        assert!(json.contains(r#""type":"text""#), "text type tag missing; got: {json}");
+        let back: ContentBlock = serde_json::from_str(&json).unwrap();
+        assert_eq!(back, block);
+    }
+
+    #[test]
+    fn content_block_tool_use_round_trip() {
+        let block = ContentBlock::ToolUse {
+            id: "tu_1".to_string(),
+            name: "bash".to_string(),
+            input: serde_json::json!({"cmd": "ls -la"}),
+        };
+        let json = serde_json::to_string(&block).unwrap();
+        assert!(json.contains(r#""type":"tool_use""#), "tool_use tag missing; got: {json}");
+        let back: ContentBlock = serde_json::from_str(&json).unwrap();
+        assert_eq!(back, block);
+    }
+
+    #[test]
+    fn canonical_message_text_helper() {
+        let msg = CanonicalMessage::text("user", "ping");
+        assert_eq!(msg.role, Role::User);
+        assert_eq!(msg.text_content(), "ping");
+    }
+
+    #[test]
+    fn canonical_message_round_trip() {
+        let msg = CanonicalMessage {
+            role: Role::Assistant,
+            content: vec![
+                ContentBlock::Text { text: "here is a tool call".to_string() },
+                ContentBlock::ToolUse {
+                    id: "tu_abc".to_string(),
+                    name: "read_file".to_string(),
+                    input: serde_json::json!({"path": "/tmp/x"}),
+                },
+            ],
+        };
+        let json = serde_json::to_string(&msg).unwrap();
+        let back: CanonicalMessage = serde_json::from_str(&json).unwrap();
+        assert_eq!(back.role, Role::Assistant);
+        assert_eq!(back.content.len(), 2);
+    }
+
+    #[test]
     fn compute_request_default_grammar_is_none() {
         // Construct a request without setting grammar; verify the field is None.
         let req = minimal_request();
@@ -245,7 +368,7 @@ mod tests {
         let json_without_grammar = serde_json::json!({
             "request_id": req.request_id,
             "module_id": req.module_id,
-            "messages": [{"role": "user", "content": "test"}],
+            "messages": [{"role": "user", "content": [{"type": "text", "text": "test"}]}],
         })
         .to_string();
         let req2: ComputeRequest = serde_json::from_str(&json_without_grammar).unwrap();

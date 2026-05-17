@@ -11,7 +11,7 @@
 use std::time::Instant;
 
 use serde::{Deserialize, Serialize};
-use slm_core::{ChatMessage, ComputeRequest, ComputeResponse, GrammarConstraint, Tier};
+use slm_core::{CanonicalMessage, ContentBlock, ComputeRequest, ComputeResponse, GrammarConstraint, Tier};
 use tracing::debug;
 
 use crate::error::{DoormanError, Result};
@@ -72,7 +72,7 @@ impl LocalTierClient {
 
         let body = OpenAiChatRequest {
             model: model.clone(),
-            messages: req.messages.clone(),
+            messages: canonical_to_oai(&req.messages),
             stream: req.stream,
             max_tokens: req.max_tokens,
             temperature: req.temperature,
@@ -119,9 +119,77 @@ impl LocalTierClient {
 }
 
 #[derive(Serialize)]
+#[serde(untagged)]
+enum OaiWireMessage {
+    Text { role: String, content: String },
+    ToolCall { role: String, content: serde_json::Value, tool_calls: Vec<OaiToolCall> },
+    ToolResult { role: String, content: String, tool_call_id: String },
+}
+
+#[derive(Serialize)]
+struct OaiToolCall {
+    id: String,
+    #[serde(rename = "type")]
+    kind: &'static str,
+    function: OaiFunction,
+}
+
+#[derive(Serialize)]
+struct OaiFunction {
+    name: String,
+    arguments: String,
+}
+
+fn canonical_to_oai(msgs: &[CanonicalMessage]) -> Vec<OaiWireMessage> {
+    let mut out = Vec::new();
+    for msg in msgs {
+        let role = msg.role.as_str().to_string();
+        let texts: Vec<&str> = msg.content.iter().filter_map(|b| match b {
+            ContentBlock::Text { text } => Some(text.as_str()),
+            ContentBlock::Thinking { thinking } => Some(thinking.as_str()),
+            _ => None,
+        }).collect();
+        let tool_uses: Vec<_> = msg.content.iter().filter_map(|b| match b {
+            ContentBlock::ToolUse { id, name, input } => Some((id, name, input)),
+            _ => None,
+        }).collect();
+        let tool_results: Vec<_> = msg.content.iter().filter_map(|b| match b {
+            ContentBlock::ToolResult { tool_use_id, content } => Some((tool_use_id, content)),
+            _ => None,
+        }).collect();
+
+        if !tool_uses.is_empty() {
+            out.push(OaiWireMessage::ToolCall {
+                role,
+                content: serde_json::Value::Null,
+                tool_calls: tool_uses.into_iter().map(|(id, name, input)| OaiToolCall {
+                    id: id.clone(),
+                    kind: "function",
+                    function: OaiFunction {
+                        name: name.clone(),
+                        arguments: serde_json::to_string(input).unwrap_or_default(),
+                    },
+                }).collect(),
+            });
+        } else if !tool_results.is_empty() {
+            for (tool_use_id, content) in tool_results {
+                out.push(OaiWireMessage::ToolResult {
+                    role: "tool".to_string(),
+                    content: content.clone(),
+                    tool_call_id: tool_use_id.clone(),
+                });
+            }
+        } else {
+            out.push(OaiWireMessage::Text { role, content: texts.join("\n") });
+        }
+    }
+    out
+}
+
+#[derive(Serialize)]
 struct OpenAiChatRequest {
     model: String,
-    messages: Vec<ChatMessage>,
+    messages: Vec<OaiWireMessage>,
     #[serde(skip_serializing_if = "is_false")]
     stream: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -145,7 +213,12 @@ struct OpenAiChatResponse {
 
 #[derive(Deserialize)]
 struct OpenAiChatChoice {
-    message: ChatMessage,
+    message: OaiResponseMessage,
+}
+
+#[derive(Deserialize)]
+struct OaiResponseMessage {
+    content: String,
 }
 
 fn is_false(b: &bool) -> bool {
@@ -156,7 +229,7 @@ fn is_false(b: &bool) -> bool {
 mod tests {
     use super::*;
     use slm_core::{
-        ChatMessage, Complexity, ComputeRequest, GrammarConstraint, ModuleId, RequestId, Tier,
+        CanonicalMessage, Complexity, ComputeRequest, GrammarConstraint, ModuleId, RequestId, Tier,
     };
     use std::str::FromStr;
     use wiremock::matchers::{method, path};
@@ -167,10 +240,7 @@ mod tests {
             request_id: RequestId::new(),
             module_id: ModuleId::from_str("foundry").unwrap(),
             model: Some("OLMo-3-7B-Q4_K_M.gguf".into()),
-            messages: vec![ChatMessage {
-                role: "user".into(),
-                content: "ping".into(),
-            }],
+            messages: vec![CanonicalMessage::text("user", "ping")],
             complexity: Complexity::Low,
             tier_hint: Some(Tier::Local),
             stream: false,
