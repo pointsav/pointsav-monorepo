@@ -3,7 +3,7 @@ schema: foundry-draft-v1
 version: "1.0"
 draft_id: design-component-bim-properties-panel-2026-05-06
 language_protocol: DESIGN-COMPONENT
-state: ready-for-sweep
+state: committed-dtcg-vault-ebabd0b
 created: 2026-05-06T22:00:00Z
 research_done_count: 3
 research_suggested_count: 0

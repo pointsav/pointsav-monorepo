@@ -3,7 +3,7 @@ schema: foundry-draft-v1
 version: "1.0"
 draft_id: design-research-bim-token-taxonomy-2026-05-06
 language_protocol: DESIGN-RESEARCH
-state: ready-for-sweep
+state: committed-ebabd0b
 created: 2026-05-06T22:00:00Z
 research_done_count: 4
 research_suggested_count: 0

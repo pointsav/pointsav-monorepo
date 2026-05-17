@@ -10,6 +10,83 @@ schema: foundry-mailbox-v1
 ---
 from: command@claude-code
 to: task@project-bim
+re: Operator decisions locked — BIM Objects + two-tier + license fix + task brief
+created: 2026-05-17T18:45:00Z
+priority: high
+status: pending
+msg-id: command-20260517-bim-decisions-locked
+---
+
+Four operator decisions locked 2026-05-17. Execute all in next session.
+
+## Decision 1 — Terminology: "BIM Objects" everywhere user-facing
+
+Replace "BIM tokens" / "BIM token" with "BIM Objects" or "BIM components" in all user-facing copy.
+The DTCG wire format stays internal. AEC professionals use "objects" and "components", not "tokens."
+
+Affects:
+- `woodfine-design-bim/` README.md + README.es.md
+- All GUIDE drafts in `drafts-outbound/` referencing "BIM token authoring" etc.
+- `topic-bim-token-what-it-is.draft.md` → retitle "BIM Objects — What They Are"
+- `topic-bim-token-three-layers.draft.md` → retitle "BIM Objects — Three Composition Layers"
+- `topic-bim-tokens-substrate.draft.md` → retitle "BIM Objects — Substrate"
+
+Do NOT change internal code, variable names, or DTCG JSON file structures — user-visible copy only.
+
+## Decision 2 — Two-tier access model (not three)
+
+bim.woodfinegroup.com has exactly two tiers:
+
+| Tier | Access | Content |
+|---|---|---|
+| Public | No login | Generic BIM objects: parking stalls, corridors, staircases, standard finishes |
+| Operational | os-console only | Full archives, BCF coordination, IDS validation |
+
+Gated tier (lease/AOR attestation login) is removed. Write the app-orchestration-bim Phase 1
+architecture spec with this two-tier model. File: `.agent/plans/app-orchestration-bim-phase1.md`.
+
+## Decision 3 — No org transfer; woodfine-design-bim stays in woodfine org
+
+`woodfine/woodfine-design-bim` stays in the woodfine org. No rename, no transfer to pointsav.
+The project-editorial P-HIGH transfer request has been marked stale by Command Session.
+
+GIS parallel (canonical model going forward):
+- software.pointsav.com = GIS engine → PointSav = BIM software (app-orchestration-bim)
+- gis.woodfinegroup.com = map data → Woodfine = BIM objects (woodfine-design-bim, bim.woodfinegroup.com)
+
+"PointSav Buildings Schema" lives only in content-wiki-documentation TOPICs. No separate site.
+
+## Decision 4 — License fix (execute this session)
+
+woodfine-design-bim JSON/data files (`*.dtcg.json`, schemas) → Apache 2.0.
+EUPL-1.2 share-alike will scare off architects embedding objects in Revit deliverables.
+
+Steps:
+1. In woodfine-design-bim sub-clone: update `LICENSE` EUPL-1.2 → Apache 2.0
+2. Add `NOTICE` file (Apache 2.0 §4(d) attribution — Woodfine Capital Projects Inc.)
+3. Update `README.md` + `README.es.md` license section
+4. Commit via `bin/commit-as-next.sh`
+5. Push to origin (mcorp-administrator alias); include pending commit 443a231 in the same push batch
+
+app-orchestration-bim Rust codebase: EUPL-1.2 remains correct — software, not data.
+
+## Task scope
+
+1. License fix commit + Stage 6 push to woodfine-design-bim origin (mcorp-administrator)
+2. Terminology sweep: README + all drafts-outbound GUIDE drafts
+3. Write `.agent/plans/app-orchestration-bim-phase1.md` (two-tier architecture spec)
+4. Retitle the three affected TOPIC drafts; route corrected versions to project-editorial inbox
+
+## Still operator-pending (unchanged)
+
+DTCG accuracy errors (climate-zones, performance, materials) remain `status: operator-pending`.
+Do not edit without confirmed source citations.
+
+— command@claude-code
+
+---
+from: command@claude-code
+to: task@project-bim
 re: Status check — DTCG accuracy errors + mailbox lifecycle backfill
 created: 2026-05-15T09:00:00Z
 priority: normal

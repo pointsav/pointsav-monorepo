@@ -2,7 +2,7 @@
 schema: foundry-draft-v1
 draft_id: design-research-asset-woodfine-logo
 language_protocol: DESIGN-RESEARCH
-state: ready-for-sweep
+state: committed-ce641e8
 target_path: vendor/pointsav-design-system/research/bim-woodfine-logo-asset.md
 created: 2026-05-05T00:00:00Z
 revised: 2026-05-06T17:45:00Z

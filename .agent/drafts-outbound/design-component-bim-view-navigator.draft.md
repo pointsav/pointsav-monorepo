@@ -3,7 +3,7 @@ schema: foundry-draft-v1
 version: "1.0"
 draft_id: design-component-bim-view-navigator-2026-05-06
 language_protocol: DESIGN-COMPONENT
-state: ready-for-sweep
+state: committed-dtcg-vault-ebabd0b
 created: 2026-05-06T22:00:00Z
 research_done_count: 2
 research_suggested_count: 1

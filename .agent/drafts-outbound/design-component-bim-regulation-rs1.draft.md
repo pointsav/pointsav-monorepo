@@ -3,7 +3,7 @@ schema: foundry-draft-v1
 version: "1.0"
 draft_id: design-component-bim-regulation-rs1-2026-05-06
 language_protocol: DESIGN-COMPONENT
-state: ready-for-sweep
+state: committed-dtcg-vault-d6f9200
 created: 2026-05-06T22:00:00Z
 research_done_count: 3
 research_suggested_count: 0

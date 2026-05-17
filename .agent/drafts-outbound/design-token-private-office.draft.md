@@ -3,7 +3,7 @@ schema: foundry-draft-v1
 draft_id: design-token-private-office
 language_protocol: DESIGN-TOKEN-CHANGE
 master_cosign: master@claude-code 2026-05-06T23:35Z
-state: master-cosigned
+state: committed-dtcg-vault-ce641e8
 target_path: vendor/pointsav-design-system/tokens/bim/spatial-programmes.dtcg.json
 created: 2026-05-05T00:00:00Z
 revised: 2026-05-06T17:45:00Z
