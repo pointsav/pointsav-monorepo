@@ -12,12 +12,19 @@ use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
 use serde_json::Value;
+use tracing::{error, info, warn};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    println!("================================================================");
-    println!("[SYSTEM] PointSav Semantic Watcher (Rust Edition) Activated");
-    println!("[SYSTEM] Protocol: Schema Expansion Routing");
-    println!("================================================================");
+    // Structured JSON logging — RUST_LOG controls filter (default: info).
+    tracing_subscriber::fmt()
+        .json()
+        .with_env_filter(
+            tracing_subscriber::EnvFilter::try_from_default_env()
+                .unwrap_or_else(|_| tracing_subscriber::EnvFilter::new("info")),
+        )
+        .init();
+
+    info!(service = "service-content", "PointSav Semantic Watcher activated");
 
     let doorman_endpoint = std::env::var("SLM_DOORMAN_ENDPOINT")
         .unwrap_or_else(|_| "http://127.0.0.1:9080".to_string());
@@ -37,10 +44,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .unwrap_or_else(|| "ontology".to_string())
     });
 
-    println!("[SYSTEM] Doorman endpoint: {}", doorman_endpoint);
-    println!("[SYSTEM] Base dir: {}", base_dir);
-    println!("[SYSTEM] Module ID: {}", module_id);
-    println!("[SYSTEM] Ontology dir: {}", ontology_dir);
+    info!(doorman_endpoint, base_dir, module_id, ontology_dir, "startup configuration");
 
     let corpus_dir = format!("{}/service-content/ledgers", base_dir);
     let crm_dir = format!("{}/service-people/ledgers", base_dir);
@@ -63,7 +67,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .expect("[SYSTEM] Failed to open LadybugDB graph store"),
     );
     graph_store.init_schema().expect("[SYSTEM] Failed to initialise graph schema");
-    println!("[SYSTEM] Graph store ready: {}", graph_db_path);
+    info!(graph_db_path, "graph store ready");
 
     // ── Processed-ledger persistence ─────────────────────────────────────────
     // STATE_DIR defaults to graph_dir so the JSONL lives alongside the graph DB.
@@ -75,10 +79,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     fs::create_dir_all(&state_dir)?;
     let processed_ledgers_path = Path::new(&state_dir).join("processed_ledgers.jsonl");
     let mut processed_ledgers = load_processed_ledgers(&processed_ledgers_path);
-    println!(
-        "[SYSTEM] Loaded {} previously processed ledger entries from {}",
-        processed_ledgers.len(),
-        processed_ledgers_path.display()
+    info!(
+        count = processed_ledgers.len(),
+        path = %processed_ledgers_path.display(),
+        "loaded processed ledger entries"
     );
 
     // ── Startup taxonomy load ─────────────────────────────────────────────────
@@ -87,23 +91,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let entities = taxonomy::bundle_to_entities(&bundle);
             let total = entities.len();
             match graph_store.upsert_entities("__taxonomy__", &entities) {
-                Ok(n) => println!(
-                    "[TAXONOMY] Loaded: {} archetypes, {} coa-profiles, {} domains, \
-                     {} glossary-terms, {} themes, {} topics, {} guides → {} entities upserted",
-                    bundle.archetypes.len(),
-                    bundle.coa.len(),
-                    bundle.domains.len(),
-                    bundle.glossary.len(),
-                    bundle.themes.len(),
-                    bundle.topics.len(),
-                    bundle.guides.len(),
-                    n
+                Ok(n) => info!(
+                    archetypes = bundle.archetypes.len(),
+                    domains = bundle.domains.len(),
+                    entities_upserted = n,
+                    "taxonomy loaded"
                 ),
-                Err(e) => println!("[TAXONOMY] Graph write failed: {}", e),
+                Err(e) => error!(error = %e, "taxonomy graph write failed"),
             }
             let _ = total;
         }
-        Err(e) => println!("[TAXONOMY] Load failed (non-fatal): {}", e),
+        Err(e) => warn!(error = %e, "taxonomy load failed (non-fatal)"),
     }
 
     // ── HTTP server (dedicated thread + own tokio runtime) ───────────────────
@@ -144,8 +142,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut watcher = notify::recommended_watcher(tx)?;
     watcher.watch(Path::new(&corpus_dir), RecursiveMode::NonRecursive)?;
 
-    println!("================================================================");
-    println!("[SYSTEM] Active Kernel Surveillance Engaged on Corpus Plane...");
+    info!(corpus_dir, "corpus watcher active");
 
     loop {
         match rx.recv() {
@@ -155,14 +152,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         if extension == "json" {
                             let filename = path.file_name().unwrap().to_str().unwrap().to_string();
                             if filename.starts_with("CORPUS_") && !processed_ledgers.contains(&filename) {
-                                println!("\n[WATCHER] New Corpus Detected: {}", filename);
+                                info!(corpus_file = %filename, "new corpus detected");
                                 thread::sleep(Duration::from_millis(250));
-                                // Push before processing to prevent duplicate triggers in the same session.
                                 processed_ledgers.push(filename.clone());
                                 if process_corpus(&path, &crm_dir, &doorman_endpoint, &module_id, &graph_store) {
                                     append_processed_ledger(&processed_ledgers_path, &filename);
                                 } else {
-                                    println!("  -> [WATCHER] Extraction failed for {} — will retry on next restart.", filename);
+                                    warn!(corpus_file = %filename, "extraction failed — will retry on next restart");
                                 }
                             }
                         }
@@ -229,17 +225,11 @@ fn process_corpus(
     let effective_module_id: String = match payload["module_id"].as_str().filter(|s| !s.is_empty()) {
         None => module_id.to_string(),
         Some(s) if s.starts_with("__") => {
-            println!(
-                "  -> [WARN] Rejecting {}: module_id '{}' uses reserved __ prefix",
-                filepath.display(), s
-            );
+            warn!(corpus_file = %filepath.display(), module_id = s, "rejecting: reserved __ prefix");
             return false;
         }
         Some(s) if !validate_module_id(s) => {
-            println!(
-                "  -> [WARN] Rejecting {}: module_id '{}' fails [a-z0-9-]{{1,64}} validation",
-                filepath.display(), s
-            );
+            warn!(corpus_file = %filepath.display(), module_id = s, "rejecting: invalid module_id format");
             return false;
         }
         Some(s) => s.to_string(),
@@ -259,12 +249,12 @@ fn process_corpus(
         confidence: 1.0,
     };
     if let Err(e) = graph_store.upsert_entities(&effective_module_id, &[source_node]) {
-        println!("  -> [GRAPH] Source node write failed (non-fatal): {}", e);
+        warn!(module_id = %effective_module_id, worm_id, error = %e, "source node write failed (non-fatal)");
     } else {
-        println!("  -> [GRAPH] Source node written: {} ({})", worm_id, effective_module_id);
+        info!(module_id = %effective_module_id, worm_id, "source node written");
     }
 
-    println!("  -> [WATCHER] Routing payload to Doorman ({})/v1/extract...", doorman_endpoint);
+    info!(module_id = %effective_module_id, doorman_endpoint, "routing to Doorman /v1/extract");
 
     // POST /v1/extract — Tier B only (route_yoyo_only). Doorman returns
     // {deferred: true} when Tier B is unavailable instead of falling back
@@ -309,7 +299,7 @@ fn process_corpus(
                     // File is not written to processed_ledgers JSONL; next boot retries.
                     if extract_resp["deferred"].as_bool().unwrap_or(false) {
                         let reason = extract_resp["defer_reason"].as_str().unwrap_or("unknown");
-                        println!("  -> [WATCHER] Extraction deferred ({}): Tier B unavailable — will retry next boot.", reason);
+                        warn!(defer_reason = reason, "extraction deferred — tier B unavailable; will retry next boot");
                         return true;
                     }
 
@@ -384,34 +374,33 @@ fn process_corpus(
 
                         let out_file = format!("{}/SEMANTIC_{}.json", crm_dir, worm_id);
                         if let Err(e) = fs::write(&out_file, semantic_ledger.to_string()) {
-                            println!("  -> [WATCHER] Failed to write semantic ledger {}: {}", out_file, e);
+                            error!(out_file, error = %e, "failed to write semantic ledger");
                             return false;
                         }
-                        println!("  -> [WATCHER] Semantic Integration Complete: {} Nodes Secured.", enriched_crm.len());
+                        info!(entities = enriched_crm.len(), module_id = %effective_module_id, "semantic integration complete");
 
-                        // ── Graph write path ──────────────────────────────────
                         if let Err(e) = graph_store.upsert_entities(&effective_module_id, &graph_entities) {
-                            println!("  -> [GRAPH] Write failed: {}", e);
+                            error!(module_id = %effective_module_id, error = %e, "graph write failed");
                             return false;
                         } else {
-                            println!("  -> [GRAPH] {} entities written to graph (module: {}).", graph_entities.len(), effective_module_id);
+                            info!(module_id = %effective_module_id, entities = graph_entities.len(), "entities written to graph");
                             return true;
                         }
                     } else {
-                        println!("  -> [SYS_HALT] Extraction failed: extraction_ok false, no defer reason.");
+                        error!(module_id = %effective_module_id, "extraction_ok false with no defer reason");
                         return false;
                     }
                 } else {
-                    println!("  -> [SYS_HALT] Doorman returned invalid JSON format.");
+                    error!("doorman returned invalid JSON");
                     return false;
                 }
             } else {
-                println!("  -> [SYS_HALT] Doorman rejected payload: {}", response.status());
+                error!(status = %response.status(), "doorman rejected payload");
                 return false;
             }
         }
         Err(e) => {
-            println!("  -> [SYS_HALT] Doorman routing failed: {}", e);
+            error!(error = %e, "doorman routing failed");
             return false;
         }
     }
