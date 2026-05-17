@@ -1,6 +1,6 @@
 ---
 schema: foundry-draft-v1
-draft_id: guide-bim-token-authoring
+draft_id: guide-bim-object-authoring
 language_protocol: PROSE-GUIDE
 state: ready-for-sweep
 target_path: customer/woodfine-fleet-deployment/gateway-orchestration-bim/guide-bim-token-authoring.md
@@ -16,9 +16,9 @@ research_provenance: |
 research_inline: false
 ---
 
-# Guide: Authoring BIM Tokens
+# Guide: Authoring BIM Objects
 
-This guide explains how to add a new BIM Token to a sovereign token vault. At v0.0.1, tokens are authored as DTCG JSON files committed directly to git. The four-zone CMS authoring interface (`app-console-bim`) is planned for v0.1.x and will wrap the same file operations.
+This guide explains how to add a new BIM Object to a sovereign object vault. At v0.0.1, BIM Objects are authored as DTCG JSON files committed directly to git. The four-zone CMS authoring interface (`app-console-bim`) is planned for v0.1.x and will wrap the same file operations.
 
 ## Prerequisites
 
@@ -57,7 +57,7 @@ The Specification zone defines the token's permanent identity: what kind of buil
 
 4. Add the `applicable_psets` array using the IFC 4.3 entity specification page, which lists applicable property sets for each entity type.
 
-**File location:** Add the token to the correct category file in `tokens/bim/`:
+**File location:** Add the BIM Object to the correct category file in `tokens/bim/`:
 
 | Element type | File |
 |---|---|
@@ -151,7 +151,7 @@ Use SI units unless the source standard is expressed in imperial. When both exis
 
 ## Zone 4 — Publishing
 
-After authoring Zones 1–3, commit and publish the token.
+After authoring Zones 1–3, commit and publish the BIM Object.
 
 **Validation checklist before commit:**
 
@@ -170,20 +170,20 @@ git commit -m "feat(tokens): add <token-name> — <one-line description>"
 
 **Promote to app-orchestration-bim:**
 
-The BIM Token Catalog (`app-orchestration-bim`) reads the token vault at startup. Restart the service to load new tokens:
+The BIM Object Library (`app-orchestration-bim`) reads the object vault at startup. Restart the service to load new BIM Objects:
 
 ```bash
 # On the deployment host
 systemctl restart app-orchestration-bim
 ```
 
-Verify the new token appears at `/tokens` and the detail page loads at `/tokens/<category-key>`.
+Verify the new BIM Object appears at `/tokens` and the detail page loads at `/tokens/<category-key>`.
 
 ---
 
 ## Naming Conventions
 
-- Token IDs: `<category>.<element-type>` — lowercase, hyphens, no underscores.
+- BIM Object IDs: `<category>.<element-type>` — lowercase, hyphens, no underscores.
   Example: `elements.exterior-wall-concrete`, `materials.thermal-insulation-mineral-wool`
 - Regulation overlay IDs: `regulation/<jurisdiction>/<element-slug>.ids`
 - Climate zone IDs: `ASHRAE-<zone>`, `NBC-Zone-<n>`, `EN-<zone-code>`
@@ -192,6 +192,6 @@ Verify the new token appears at `/tokens` and the detail page loads at `/tokens/
 
 ## Notes
 
-- DESIGN-TOKEN changes (additions to the token primitives in `pointsav-design-system`) require master co-sign in frontmatter per DOCTRINE.md before the Root session commits to the design system.
-- Customer vault additions (to `woodfine-design-bim`) do not require master co-sign — they are customer-tier extensions.
+- DESIGN-TOKEN changes (additions to the BIM Object primitives in `pointsav-design-system`) require master co-sign in frontmatter per DOCTRINE.md before the Root session commits to the design system.
+- Customer vault additions (to `woodfine-bim-library`) do not require master co-sign — they are customer-tier extensions.
 - The `app-privategit-bim` CMS engine is the planned production interface for this workflow (intended for v0.1.x). This guide documents the git-direct approach for v0.0.x.
