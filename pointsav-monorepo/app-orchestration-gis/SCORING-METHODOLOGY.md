@@ -224,19 +224,19 @@ All source data is documented in `DATA-MANIFEST.md` in the project root.
 
 ## 12. Region Summary
 
-Tier counts as of 2026-05-17 (Phase 8 complete: Fred Meyer-US ingested (126 records,
-Q5495932); 10,311 clusters after deduplication).
+Tier counts as of 2026-05-17 (Phase 9 complete: IKEA 14-chain ingest audit; sub-format
+filter + multi_country fix; 10,213 clusters after deduplication).
 
 | ISO | T1 Regional | T2 District | T3 Local | T4 Fringe |
 |-----|-------------|-------------|----------|-----------|
-| US  | 102         | —           | —        | —         |
-| ES  | 20          | —           | —        | —         |
+| US  | 105         | —           | —        | —         |
 | MX  | 15          | —           | —        | —         |
+| ES  | 15          | —           | —        | —         |
 | DE  | 9           | —           | —        | —         |
 | CA  | 7           | —           | —        | —         |
-| GB  | 5           | —           | —        | —         |
 | FR  | 3           | —           | —        | —         |
-| **Total** | **161** | **1,447** | **2,122** | **6,581** |
+| GB  | 3           | —           | —        | —         |
+| **Total** | **157** | **1,462** | **2,081** | **6,513** |
 
 FR has 3 T1 clusters — enabled by Carrefour-FR, Auchan-FR, and E.Leclerc-FR
 in `REGION_CONFIG["FR"]["anchor"]` (Phase 6, 2026-05-16).
@@ -251,3 +251,10 @@ Fred Meyer (126 stores, Q5495932) added to `ALPHA_HYPERMARKET["NA"]` and
 `REGION_CONFIG["US"]["anchor"]` (Phase 8, 2026-05-17). PNW-regional Kroger
 subsidiary; seeds 63 new US clusters but none qualify T1 (no IKEA or Costco
 co-location within 3 km in Pacific Northwest).
+
+IKEA 14-chain ingest audit (Phase 9, 2026-05-17): sub-format inflation corrected
+across all 14 IKEA YAMLs via `format_reject_nodes: true` and `format_exclude_names`
+list. ikea-mx and ikea-nl use `format_reject_nodes: false` (stores are OSM nodes).
+ikea-nordics uses `multi_country: true` (spans SE/NO/DK/FI; non-ISO country_code
+caused silent record drop). GB T1 dropped from 5 → 3; ES from 20 → 15; US
+increased from 102 → 105 (cleaner IKEA location data improved composition matching).
