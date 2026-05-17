@@ -357,7 +357,7 @@ async fn main() -> Result<()> {
         .init();
 
     let bind_addr =
-        std::env::var("MARKETPLACE_BIND").unwrap_or_else(|_| "127.0.0.1:9200".into());
+        std::env::var("MARKETPLACE_BIND").unwrap_or_else(|_| "127.0.0.1:9202".into());
     let wallet_address = std::env::var("POLYGON_WALLET_ADDRESS").unwrap_or_default();
     let fs_endpoint =
         std::env::var("FS_ENDPOINT").unwrap_or_else(|_| "http://127.0.0.1:8020".into());
