@@ -43,8 +43,9 @@ use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use slm_core::{
     ApprenticeshipAttempt, ApprenticeshipBrief, AuditCaptureRequest, AuditCaptureResponse,
-    AuditProxyRequest, ChatMessage, Complexity, ComputeRequest, DeferReason, ExtractionRequest,
-    ExtractionResponse, GrammarConstraint, ModuleId, RequestId, Tier,
+    AuditProxyRequest, CanonicalMessage, ChatMessage, Complexity, ContentBlock, ComputeRequest,
+    DeferReason, ExtractionRequest, ExtractionResponse, GrammarConstraint, ModuleId, RequestId,
+    Role, Tier,
 };
 use slm_doorman::ledger::{
     ENTRY_TYPE_AUDIT_CAPTURE, ENTRY_TYPE_AUDIT_PROXY, ENTRY_TYPE_AUDIT_PROXY_STUB,
@@ -247,7 +248,7 @@ async fn chat_completions(
         request_id,
         module_id,
         model: body.model,
-        messages: body.messages,
+        messages: body.messages.into_iter().map(CanonicalMessage::from).collect(),
         complexity,
         tier_hint: None,
         stream: body.stream,
@@ -528,14 +529,8 @@ async fn extract(State(state): State<Arc<AppState>>, raw: Bytes) -> impl IntoRes
         module_id: module_id.clone(),
         model: None,
         messages: vec![
-            ChatMessage {
-                role: "system".to_string(),
-                content: "Extract named entities. Return a JSON array matching the schema exactly.".to_string(),
-            },
-            ChatMessage {
-                role: "user".to_string(),
-                content: req.text,
-            },
+            CanonicalMessage::text("system", "Extract named entities. Return a JSON array matching the schema exactly."),
+            CanonicalMessage::text("user", req.text),
         ],
         complexity: Complexity::High,
         tier_hint: Some(Tier::Yoyo),
@@ -1303,22 +1298,32 @@ struct AnthropicContentBlock {
     content: Option<serde_json::Value>,
 }
 
-/// Flatten Anthropic content (text or blocks) to a plain string.
-/// Tool-use and tool-result blocks are omitted; thinking blocks are wrapped
-/// in `<thinking>` tags. This is the Sprint 0 simplification — Sprint 1
-/// replaces ChatMessage with CanonicalMessage and preserves all block types.
-fn flatten_anthropic_content(content: AnthropicContent) -> String {
+/// Translate Anthropic content (text or blocks) to canonical ContentBlock form.
+fn canonical_content(content: AnthropicContent) -> Vec<ContentBlock> {
     match content {
-        AnthropicContent::Text(s) => s,
+        AnthropicContent::Text(s) => vec![ContentBlock::Text { text: s }],
         AnthropicContent::Blocks(blocks) => blocks
             .into_iter()
             .filter_map(|b| match b.block_type.as_str() {
-                "text" => b.text,
-                "thinking" => b.thinking.map(|t| format!("<thinking>{}</thinking>", t)),
+                "text" => b.text.map(|t| ContentBlock::Text { text: t }),
+                "thinking" => b.thinking.map(|t| ContentBlock::Thinking { thinking: t }),
+                "tool_use" => {
+                    let id = b.id.as_ref()?.as_str()?.to_string();
+                    let name = b.name.as_ref()?.as_str()?.to_string();
+                    let input = b.input.unwrap_or(serde_json::Value::Null);
+                    Some(ContentBlock::ToolUse { id, name, input })
+                }
+                "tool_result" => {
+                    let tool_use_id = b.tool_use_id.as_ref()?.as_str()?.to_string();
+                    let content = match b.content? {
+                        serde_json::Value::String(s) => s,
+                        v => v.to_string(),
+                    };
+                    Some(ContentBlock::ToolResult { tool_use_id, content })
+                }
                 _ => None,
             })
-            .collect::<Vec<_>>()
-            .join("\n"),
+            .collect(),
     }
 }
 
@@ -1328,18 +1333,24 @@ fn anthropic_to_compute_request(
     module_id: ModuleId,
     request_id: RequestId,
 ) -> ComputeRequest {
-    let mut messages: Vec<ChatMessage> = Vec::new();
+    let mut messages: Vec<CanonicalMessage> = Vec::new();
 
     if let Some(system) = body.system {
         if !system.is_empty() {
-            messages.push(ChatMessage { role: "system".to_string(), content: system });
+            messages.push(CanonicalMessage::text("system", system));
         }
     }
 
     for msg in body.messages {
-        messages.push(ChatMessage {
-            role: msg.role,
-            content: flatten_anthropic_content(msg.content),
+        let role = match msg.role.as_str() {
+            "assistant" => Role::Assistant,
+            "system" => Role::System,
+            "tool" => Role::Tool,
+            _ => Role::User,
+        };
+        messages.push(CanonicalMessage {
+            role,
+            content: canonical_content(msg.content),
         });
     }
 
