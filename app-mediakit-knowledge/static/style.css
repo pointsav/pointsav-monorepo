@@ -226,6 +226,24 @@
   --color-info-bg:     #cee0f2;
 }
 
+/* Woodfine brand theme — corporate site */
+[data-theme="woodfine"] {
+  --wf-claret: #8B1A2F;
+  --wf-blue:   #164679;
+  --accent:    var(--wf-claret);
+  --ds-paper-2: #FAF8F5;
+  --bg:         var(--ds-paper-2);
+}
+
+/* Woodfine brand theme — projects site */
+[data-theme="woodfine-projects"] {
+  --wf-slate: #3D5A73;
+  --wf-blue:  #164679;
+  --accent:   var(--wf-slate);
+  --ds-paper-2: #FAF8F5;
+  --bg:         var(--ds-paper-2);
+}
+
 * { box-sizing: border-box; }
 
 /* Global keyboard focus ring — :focus-visible fires only for keyboard navigation,
