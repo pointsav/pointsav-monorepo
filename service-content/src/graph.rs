@@ -19,6 +19,8 @@ pub trait GraphStore: Send + Sync {
     fn upsert_entities(&self, module_id: &str, entities: &[GraphEntity]) -> Result<usize>;
     fn query_context(&self, module_id: &str, query: &str, limit: usize) -> Result<Vec<GraphEntity>>;
     fn list_entities(&self, module_id: &str) -> Result<Vec<GraphEntity>>;
+    /// Count all entities across all module_ids. Used by healthz for monitoring.
+    fn count_all(&self) -> Result<usize>;
     /// Delete all entities matching module_id + classification. Returns count deleted.
     fn delete_by_classification(&self, module_id: &str, classification: &str) -> Result<usize>;
     /// Delete entities matching module_id + classification + location_vector (used for
@@ -86,9 +88,10 @@ impl GraphStore for LbugGraphStore {
     fn upsert_entities(&self, module_id: &str, entities: &[GraphEntity]) -> Result<usize> {
         let conn = self.conn()?;
 
-        // Prepare the MERGE statement once, then execute per entity.
-        // LadybugDB MERGE semantics: create-or-match on primary key; SET updates fields on match.
-        let mut stmt = conn
+        // Two prepared statements per batch:
+        // 1. MERGE updates all mutable fields; created_at excluded so it is never overwritten.
+        // 2. A follow-up SET fills created_at only when the field is still empty (newly created node).
+        let mut stmt_merge = conn
             .prepare(
                 "MERGE (e:Entity {id: $id}) \
                  SET e.entity_name = $entity_name, \
@@ -97,10 +100,17 @@ impl GraphStore for LbugGraphStore {
                      e.location_vector = $location_vector, \
                      e.contact_vector = $contact_vector, \
                      e.module_id = $module_id, \
-                     e.confidence = $confidence, \
-                     e.created_at = $created_at",
+                     e.confidence = $confidence",
             )
             .map_err(|e| anyhow!("Failed to prepare upsert statement: {}", e))?;
+
+        // Set created_at only when the field is empty (i.e., newly created node).
+        let mut stmt_init_ts = conn
+            .prepare(
+                "MATCH (e:Entity) WHERE e.id = $id AND e.created_at = '' \
+                 SET e.created_at = $created_at",
+            )
+            .map_err(|e| anyhow!("Failed to prepare created_at init statement: {}", e))?;
 
         let now = chrono::Utc::now().to_rfc3339();
         let mut count = 0usize;
@@ -113,9 +123,9 @@ impl GraphStore for LbugGraphStore {
             );
 
             conn.execute(
-                &mut stmt,
+                &mut stmt_merge,
                 vec![
-                    ("id", Value::String(id)),
+                    ("id", Value::String(id.clone())),
                     ("entity_name", Value::String(entity.entity_name.clone())),
                     ("classification", Value::String(entity.classification.clone())),
                     ("role_vector", Value::String(entity.role_vector.clone().unwrap_or_default())),
@@ -123,10 +133,18 @@ impl GraphStore for LbugGraphStore {
                     ("contact_vector", Value::String(entity.contact_vector.clone().unwrap_or_default())),
                     ("module_id", Value::String(entity.module_id.clone())),
                     ("confidence", Value::Double(entity.confidence)),
-                    ("created_at", Value::String(now.clone())),
                 ],
             )
             .map_err(|e| anyhow!("Failed to upsert entity '{}': {}", entity.entity_name, e))?;
+
+            // Non-fatal if the init-timestamp step fails — the entity was still upserted.
+            let _ = conn.execute(
+                &mut stmt_init_ts,
+                vec![
+                    ("id", Value::String(id)),
+                    ("created_at", Value::String(now.clone())),
+                ],
+            );
 
             count += 1;
         }
@@ -183,6 +201,21 @@ impl GraphStore for LbugGraphStore {
             .map_err(|e| anyhow!("Failed to execute list_entities: {}", e))?;
 
         rows_to_entities(result)
+    }
+
+    fn count_all(&self) -> Result<usize> {
+        let conn = self.conn()?;
+        let mut stmt = conn
+            .prepare("MATCH (e:Entity) RETURN e.entity_name")
+            .map_err(|e| anyhow!("count_all prepare failed: {}", e))?;
+        let result = conn
+            .execute(&mut stmt, vec![])
+            .map_err(|e| anyhow!("count_all execute failed: {}", e))?;
+        let mut count = 0usize;
+        for _ in result {
+            count += 1;
+        }
+        Ok(count)
     }
 
     fn delete_by_classification(&self, module_id: &str, classification: &str) -> Result<usize> {
