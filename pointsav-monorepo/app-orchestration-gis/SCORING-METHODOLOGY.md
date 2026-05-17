@@ -43,7 +43,7 @@ The initiating store's class determines the cluster's primary anchor category.
 
 | Class | Chains (representative) |
 |---|---|
-| **ALPHA_HYPERMARKET** | Walmart (US/CA/MX), Target (US), Soriana (MX), Mercadona (ES), Tesco (UK), Sainsbury's (UK), Bilka (DK), K-Citymarket (FI), Prisma (FI), Obs Coop (NO), Hagkaup (IS), Carrefour (FR), Auchan (FR), E.Leclerc (FR), E center (DE), Marktkauf (DE) |
+| **ALPHA_HYPERMARKET** | Walmart (US/CA/MX), Target (US), Fred Meyer (US), Soriana (MX), Mercadona (ES), Tesco (UK), Sainsbury's (UK), Bilka (DK), K-Citymarket (FI), Prisma (FI), Obs Coop (NO), Hagkaup (IS), Carrefour (FR), Auchan (FR), E.Leclerc (FR), E center (DE), Marktkauf (DE), Kaufland (DE) |
 | **ALPHA_LIFESTYLE** | IKEA (all regions) |
 | **ALPHA_HARDWARE** | Home Depot (US/CA/MX), Lowe's (US/CA), Leroy Merlin (EU), Brico Dépôt (FR/ES), Bauhaus (EU) |
 | **ALPHA_WAREHOUSE** | Costco (all regions), Sam's Club (US/MX), BJ's (US), Makro (ES/NL/PL) |
@@ -224,8 +224,8 @@ All source data is documented in `DATA-MANIFEST.md` in the project root.
 
 ## 12. Region Summary
 
-Tier counts as of 2026-05-17 (Phase 7 complete: Kaufland-DE ingested and added
-to REGION_CONFIG["DE"]["anchor"]; 10,248 clusters after deduplication).
+Tier counts as of 2026-05-17 (Phase 8 complete: Fred Meyer-US ingested (126 records,
+Q5495932); 10,311 clusters after deduplication).
 
 | ISO | T1 Regional | T2 District | T3 Local | T4 Fringe |
 |-----|-------------|-------------|----------|-----------|
@@ -236,7 +236,7 @@ to REGION_CONFIG["DE"]["anchor"]; 10,248 clusters after deduplication).
 | CA  | 7           | —           | —        | —         |
 | GB  | 5           | —           | —        | —         |
 | FR  | 3           | —           | —        | —         |
-| **Total** | **161** | **1,433** | **2,117** | **6,537** |
+| **Total** | **161** | **1,447** | **2,122** | **6,581** |
 
 FR has 3 T1 clusters — enabled by Carrefour-FR, Auchan-FR, and E.Leclerc-FR
 in `REGION_CONFIG["FR"]["anchor"]` (Phase 6, 2026-05-16).
@@ -246,3 +246,8 @@ DE has 9 T1 clusters — enabled by Kaufland-DE (797 stores, Q685967) added to
 2026-05-17). Kaufland co-locates with IKEA-DE at 9 sites satisfying the
 Lifestyle∧Hyper composition predicate. E center (38 records) and Marktkauf
 (126 records) have insufficient OSM coverage for IKEA co-location.
+
+Fred Meyer (126 stores, Q5495932) added to `ALPHA_HYPERMARKET["NA"]` and
+`REGION_CONFIG["US"]["anchor"]` (Phase 8, 2026-05-17). PNW-regional Kroger
+subsidiary; seeds 63 new US clusters but none qualify T1 (no IKEA or Costco
+co-location within 3 km in Pacific Northwest).
