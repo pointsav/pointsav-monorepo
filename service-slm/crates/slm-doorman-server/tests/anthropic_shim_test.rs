@@ -211,14 +211,12 @@ async fn stream_true_returns_sse_events_in_correct_order() {
     assert!(body.contains("hello"), "stream body must contain upstream token text");
 }
 
-// ── tool_use content: Sprint 0a limitation documented ───────────────────────
+// ── tool_use content: Sprint 1 CanonicalMessage preserves all block types ────
 
 #[tokio::test]
-#[ignore = "Sprint 0a limitation: tool_use blocks are flattened to empty string; Sprint 1 CanonicalMessage unblocks full tool-use round-trip"]
-async fn tool_use_blocks_are_flattened_in_sprint_0a() {
-    // tool_use blocks are currently silently dropped (no text field).
-    // This test documents the known Sprint 0a limitation.
-    // Expected: message arrives at the backend with an empty user message.
+async fn tool_use_blocks_pass_through_gateway() {
+    // Sprint 1: tool_use blocks are preserved as CanonicalMessage::ToolUse
+    // and translated to OAI tool_calls format before reaching the backend.
     let mock = MockServer::start().await;
     Mock::given(method("POST"))
         .and(path("/v1/chat/completions"))
@@ -240,11 +238,8 @@ async fn tool_use_blocks_are_flattened_in_sprint_0a() {
         }]
     }));
     let resp = app.oneshot(req).await.unwrap();
-    // Under Sprint 0a the request proceeds (not rejected) but the tool_use
-    // content is flattened away. Sprint 1 replaces this with CanonicalMessage
-    // which preserves all ContentBlock variants.
     assert_eq!(resp.status(), StatusCode::OK,
-        "Sprint 0a: tool_use request should not be rejected, only flattened");
+        "tool_use request must pass through the gateway successfully");
 }
 
 // ── Auth: missing x-api-key → 401 ───────────────────────────────────────────
