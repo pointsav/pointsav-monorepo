@@ -3,186 +3,369 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Building Width Calculator — Key Plans and Tiles</title>
+<title>Building Width Calculator — Slide Deck</title>
 <style>
   :root {
     --ink: #1a1a1a;
     --ink-soft: #4a4a4a;
-    --rule: #cccccc;
+    --ink-faint: #8a8a8a;
+    --rule: #d6d6d2;
+    --rule-strong: #1a1a1a;
     --paper: #ffffff;
     --shade: #f6f5f1;
     --shade-deep: #ece9df;
-    --zone1: #4a78b8;   /* Habitat — blue */
+    --zone1: #4a78b8;
     --zone1-soft: #d9e4f3;
-    --zone2: #d99a3b;   /* Magazine — amber */
+    --zone2: #d99a3b;
     --zone2-soft: #f6e5c4;
-    --zone3: #b54545;   /* Corridor — red */
+    --zone3: #b54545;
     --zone3-soft: #f0d2d2;
     --facade: #cccccc;
     --accent: #1f4f8b;
+
+    /* slide geometry: landscape letter, exact */
+    --slide-w: 10.5in;
+    --slide-h: 8.0in;
+    --pad-x: 0.28in;
+    --pad-y: 0.2in;
   }
   * { box-sizing: border-box; }
   html, body {
     margin: 0; padding: 0;
-    background: var(--paper);
+    background: #2a2a2a;
     color: var(--ink);
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
-    font-size: 15px;
-    line-height: 1.55;
+    font-size: 13px;
+    line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
   }
   .mono {
     font-family: "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
     font-variant-numeric: tabular-nums;
   }
-  .wrap {
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 48px 32px 80px;
-  }
-  header.masthead {
-    border-bottom: 2px solid var(--ink);
-    padding-bottom: 24px;
-    margin-bottom: 40px;
-  }
-  header.masthead .eyebrow {
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
-    font-size: 11px;
-    color: var(--ink-soft);
-    margin-bottom: 8px;
-  }
-  header.masthead h1 {
-    font-size: 30px;
-    line-height: 1.2;
-    margin: 0 0 6px;
-    font-weight: 600;
-  }
-  header.masthead .sub {
-    color: var(--ink-soft);
-    font-size: 14px;
-  }
-  nav.toc {
-    background: var(--shade);
-    padding: 14px 20px;
-    border-left: 3px solid var(--accent);
-    margin-bottom: 48px;
-    font-size: 14px;
-  }
-  nav.toc strong { display: block; margin-bottom: 6px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-soft); }
-  nav.toc a { color: var(--accent); text-decoration: none; margin-right: 18px; }
-  nav.toc a:hover { text-decoration: underline; }
 
-  section { margin-bottom: 64px; }
-  section h2 {
+  /* ============================================================
+     SLIDE FRAME — fixed-size card; identical on screen and print
+     ============================================================ */
+  .deck {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 28px;
+    padding: 36px 0 60px;
+  }
+  .slide {
+    width: var(--slide-w);
+    height: var(--slide-h);
+    background: var(--paper);
+    color: var(--ink);
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 8px 28px rgba(0,0,0,0.35);
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+  }
+
+  /* slide header strip */
+  .slide-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    padding: 0.18in var(--pad-x) 0.12in;
+    border-bottom: 1px solid var(--rule-strong);
+  }
+  .slide-head .title {
     font-size: 22px;
     font-weight: 600;
-    margin: 0 0 6px;
-    padding-bottom: 6px;
-    border-bottom: 1px solid var(--ink);
+    letter-spacing: -0.005em;
   }
-  section h2 .num {
-    color: var(--accent);
-    font-size: 14px;
-    letter-spacing: 0.1em;
-    margin-right: 10px;
+  .slide-head .eyebrow {
+    font-size: 10px;
     text-transform: uppercase;
-  }
-  section .lede {
+    letter-spacing: 0.14em;
     color: var(--ink-soft);
-    font-size: 14px;
-    margin: 8px 0 24px;
-    max-width: 720px;
-  }
-  section h3 {
-    font-size: 15px;
     font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
+  }
+  .slide-head .num-chip {
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+    font-size: 11px;
     color: var(--accent);
-    margin: 32px 0 12px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
   }
-  p { max-width: 760px; }
 
-  /* Section 1 — strip diagram */
-  .strip-wrap {
-    display: grid;
-    grid-template-columns: 280px 1fr;
-    gap: 32px;
-    align-items: start;
-    margin: 24px 0 8px;
+  /* slide body */
+  .slide-body {
+    padding: 0.14in var(--pad-x) 0.12in;
+    overflow: hidden;
+    min-height: 0;
   }
-  .strip {
-    border: 1px solid var(--ink);
-    background: var(--paper);
-  }
-  .strip-row {
-    display: grid;
-    grid-template-columns: 80px 1fr 90px;
+
+  /* slide footer */
+  .slide-foot {
+    display: flex;
     align-items: center;
-    border-bottom: 1px dashed var(--rule);
-    padding: 8px 12px;
-    font-size: 12px;
+    justify-content: space-between;
+    padding: 0.10in var(--pad-x) 0.14in;
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+    font-size: 9.5px;
+    color: var(--ink-faint);
+    letter-spacing: 0.04em;
+    border-top: 1px solid var(--rule);
   }
-  .strip-row:last-child { border-bottom: none; }
-  .strip-row .label { font-weight: 600; }
-  .strip-row .dim { text-align: right; font-family: "SF Mono", Menlo, Consolas, monospace; color: var(--ink-soft); }
-  .strip-row.facade { background: var(--facade); }
-  .strip-row.habitat { background: var(--zone1-soft); }
-  .strip-row.magazine { background: var(--zone2-soft); }
-  .strip-row.corridor { background: var(--zone3-soft); }
-  .strip-row.habitat .label { color: var(--zone1); }
-  .strip-row.magazine .label { color: var(--zone2); }
-  .strip-row.corridor .label { color: var(--zone3); }
+  .slide-foot .foot-left { text-transform: uppercase; }
+  .slide-foot .foot-right { font-variant-numeric: tabular-nums; }
+
+  /* ============================================================
+     TITLE SLIDE
+     ============================================================ */
+  .slide.title-slide { grid-template-rows: 1fr; }
+  .slide.title-slide .slide-body {
+    padding: 0.55in var(--pad-x);
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 0.6in;
+    align-items: center;
+  }
+  .title-slide .eyebrow {
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    font-size: 11px;
+    color: var(--accent);
+    font-weight: 600;
+    margin-bottom: 18px;
+  }
+  .title-slide h1 {
+    font-size: 56px;
+    line-height: 1.02;
+    font-weight: 600;
+    margin: 0 0 22px;
+    letter-spacing: -0.015em;
+  }
+  .title-slide .deck-sub {
+    font-size: 16px;
+    color: var(--ink-soft);
+    line-height: 1.4;
+    max-width: 5.5in;
+  }
+  .title-slide .deck-sub .mono { font-size: 14px; }
+  .title-slide .agenda {
+    border-left: 3px solid var(--accent);
+    padding: 6px 0 6px 22px;
+  }
+  .title-slide .agenda strong {
+    display: block;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-size: 10px;
+    color: var(--ink-soft);
+    margin-bottom: 12px;
+    font-weight: 600;
+  }
+  .title-slide .agenda ol {
+    margin: 0; padding: 0;
+    list-style: none;
+    counter-reset: agenda;
+  }
+  .title-slide .agenda li {
+    counter-increment: agenda;
+    font-size: 15px;
+    padding: 6px 0;
+    border-bottom: 1px dotted var(--rule);
+    display: flex;
+    gap: 14px;
+  }
+  .title-slide .agenda li:last-child { border-bottom: none; }
+  .title-slide .agenda li::before {
+    content: counter(agenda, decimal-leading-zero);
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 600;
+    min-width: 24px;
+  }
+  .title-slide .corner-mark {
+    position: absolute;
+    top: 0.4in;
+    right: var(--pad-x);
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+    font-size: 10px;
+    color: var(--ink-faint);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  /* ============================================================
+     SHARED CONTENT PRIMITIVES
+     ============================================================ */
+  .lede {
+    font-size: 14px;
+    color: var(--ink-soft);
+    margin: 0 0 14px;
+    line-height: 1.45;
+    max-width: 9.2in;
+  }
+  p { margin: 0 0 10px; }
+  h3.subhead {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    margin: 0 0 5px;
+  }
 
   .callout {
     background: var(--shade);
     border-left: 3px solid var(--zone2);
-    padding: 14px 18px;
-    margin: 16px 0;
-    font-size: 14px;
+    padding: 10px 14px;
+    font-size: 11.5px;
+    line-height: 1.45;
+    color: var(--ink);
   }
   .callout strong { color: var(--zone2); }
+  .callout.tight { padding: 8px 12px; font-size: 11px; }
 
-  /* Section 2 — bar chart */
+  /* ============================================================
+     SLIDE 1 — Backwards Method
+     ============================================================ */
+  .slide-1 .slide-body {
+    display: grid;
+    grid-template-columns: 3.2in 1fr;
+    grid-template-rows: auto 1fr auto;
+    gap: 0 0.35in;
+  }
+  .slide-1 .lede {
+    grid-column: 1 / -1;
+    margin-bottom: 12px;
+  }
+  .slide-1 .strip {
+    border: 1px solid var(--rule-strong);
+    background: var(--paper);
+    align-self: start;
+  }
+  .slide-1 .strip-row {
+    display: grid;
+    grid-template-columns: 60px 1fr 80px;
+    align-items: center;
+    border-bottom: 1px dashed var(--rule);
+    padding: 5px 10px;
+    font-size: 10.5px;
+    line-height: 1.3;
+  }
+  .slide-1 .strip-row:last-child { border-bottom: none; }
+  .slide-1 .strip-row .label { font-weight: 600; }
+  .slide-1 .strip-row .dim {
+    text-align: right;
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+    color: var(--ink-soft);
+    font-size: 10px;
+  }
+  .slide-1 .strip-row.facade { background: var(--facade); }
+  .slide-1 .strip-row.habitat { background: var(--zone1-soft); }
+  .slide-1 .strip-row.magazine { background: var(--zone2-soft); }
+  .slide-1 .strip-row.corridor { background: var(--zone3-soft); }
+  .slide-1 .strip-row.habitat .label { color: var(--zone1); }
+  .slide-1 .strip-row.magazine .label { color: var(--zone2); }
+  .slide-1 .strip-row.corridor .label { color: var(--zone3); }
+
+  .zone-defs { display: flex; flex-direction: column; gap: 10px; }
+  .zone-def { border-left: 3px solid var(--rule); padding-left: 12px; }
+  .zone-def.z1 { border-left-color: var(--zone1); }
+  .zone-def.z2 { border-left-color: var(--zone2); }
+  .zone-def.z3 { border-left-color: var(--zone3); }
+  .zone-def h4 {
+    font-size: 12px;
+    margin: 0 0 2px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+  .zone-def.z1 h4 { color: var(--zone1); }
+  .zone-def.z2 h4 { color: var(--zone2); }
+  .zone-def.z3 h4 { color: var(--zone3); }
+  .zone-def p {
+    font-size: 11.5px;
+    line-height: 1.4;
+    margin: 0;
+    color: var(--ink);
+  }
+  .slide-1 .callout {
+    grid-column: 1 / -1;
+    margin-top: 6px;
+  }
+
+  /* ============================================================
+     SLIDE 2 — Bar Chart
+     ============================================================ */
+  .slide-2 .slide-body {
+    display: grid;
+    grid-template-rows: auto auto 1fr;
+    gap: 6px;
+  }
+  .slide-2 .legend {
+    display: flex;
+    gap: 22px;
+    font-size: 11px;
+    color: var(--ink-soft);
+    margin-bottom: 4px;
+  }
+  .slide-2 .legend span::before {
+    content: "";
+    display: inline-block;
+    width: 11px; height: 11px;
+    margin-right: 6px;
+    vertical-align: -1px;
+  }
+  .slide-2 .legend .z1::before { background: var(--zone1); }
+  .slide-2 .legend .z2::before { background: var(--zone2); }
+  .slide-2 .legend .z3::before { background: var(--zone3); }
+
   .bar-table {
-    margin-top: 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
   }
   .bar-row {
     display: grid;
-    grid-template-columns: 200px 1fr 140px;
+    grid-template-columns: 1.95in 1fr 1.25in;
     gap: 16px;
     align-items: center;
-    padding: 10px 0;
+    padding: 4px 0;
     border-bottom: 1px solid var(--rule);
   }
   .bar-row:last-child { border-bottom: none; }
-  .bar-name { font-weight: 600; font-size: 14px; }
+  .bar-name { font-weight: 600; font-size: 12.5px; line-height: 1.2; }
   .bar-name .sub {
     display: block;
     font-weight: 400;
-    font-size: 11px;
+    font-size: 10px;
     color: var(--ink-soft);
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
+    text-transform: none;
+    letter-spacing: 0;
+    margin-top: 2px;
+    line-height: 1.3;
   }
   .bar-track {
     display: flex;
-    height: 36px;
-    border: 1px solid var(--ink);
+    height: 32px;
+    border: 1px solid var(--rule-strong);
     background: var(--paper);
     overflow: hidden;
     position: relative;
   }
   .seg {
     color: white;
-    font-size: 11px;
+    font-size: 10.5px;
+    font-weight: 500;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: filter 0.15s;
-    border-right: 1px solid rgba(255,255,255,0.4);
+    border-right: 1px solid rgba(255,255,255,0.45);
     position: relative;
     cursor: default;
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+    letter-spacing: 0.01em;
   }
   .seg:last-child { border-right: none; }
   .seg.z1 { background: var(--zone1); }
@@ -202,139 +385,164 @@
     white-space: nowrap;
     border-radius: 2px;
     z-index: 10;
-    font-family: "SF Mono", Menlo, Consolas, monospace;
   }
   .seg:hover .tooltip { visibility: visible; }
   .bar-total {
     text-align: right;
     font-family: "SF Mono", Menlo, Consolas, monospace;
-    font-size: 13px;
+    font-size: 12.5px;
+    line-height: 1.25;
   }
-  .bar-total .ft { color: var(--ink-soft); font-size: 11px; }
+  .bar-total strong { font-weight: 600; }
+  .bar-total .ft { color: var(--ink-soft); font-size: 10px; display: block; margin-top: 1px; }
 
-  .legend {
-    display: flex;
-    gap: 18px;
-    font-size: 12px;
-    margin: 8px 0 20px;
-    color: var(--ink-soft);
+  /* ============================================================
+     SLIDE 3 — Calculator
+     ============================================================ */
+  .slide-3 .slide-body {
+    display: grid;
+    grid-template-rows: auto auto 1fr auto auto;
+    gap: 8px;
   }
-  .legend span::before {
-    content: "";
-    display: inline-block;
-    width: 12px; height: 12px;
-    margin-right: 6px;
-    vertical-align: -1px;
-  }
-  .legend .z1::before { background: var(--zone1); }
-  .legend .z2::before { background: var(--zone2); }
-  .legend .z3::before { background: var(--zone3); }
-
-  /* Section 3 — formula */
-  .formula {
+  .slide-3 .formula {
     background: var(--shade);
-    padding: 24px 28px;
+    padding: 12px 18px;
     border: 1px solid var(--rule);
     text-align: center;
     font-family: "SF Mono", Menlo, Consolas, monospace;
-    font-size: 18px;
-    margin: 16px 0 28px;
+    font-size: 15px;
+    line-height: 1.3;
   }
-  .formula .zline {
+  .slide-3 .formula .zline {
     display: block;
-    font-size: 13px;
+    font-size: 11px;
     color: var(--ink-soft);
-    margin-top: 8px;
+    margin-top: 6px;
   }
-  .formula .z1 { color: var(--zone1); font-weight: 600; }
-  .formula .z2 { color: var(--zone2); font-weight: 600; }
-  .formula .z3 { color: var(--zone3); font-weight: 600; }
+  .slide-3 .formula .z1 { color: var(--zone1); font-weight: 700; }
+  .slide-3 .formula .z2 { color: var(--zone2); font-weight: 700; }
+  .slide-3 .formula .z3 { color: var(--zone3); font-weight: 700; }
 
   table.calc {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 12px;
-    font-size: 13px;
+    font-size: 11.5px;
+    table-layout: fixed;
   }
   table.calc th, table.calc td {
     text-align: left;
-    padding: 8px 10px;
+    padding: 5px 8px;
     border-bottom: 1px solid var(--rule);
+    line-height: 1.3;
   }
   table.calc th {
     background: var(--shade-deep);
-    font-size: 11px;
+    font-size: 9.5px;
     text-transform: uppercase;
     letter-spacing: 0.06em;
-    font-weight: 600;
+    font-weight: 700;
+    color: var(--ink);
   }
-  table.calc td.num { font-family: "SF Mono", Menlo, Consolas, monospace; text-align: right; }
+  table.calc td.num {
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+    text-align: right;
+    font-size: 11px;
+  }
+  table.calc td.num .alt { color: var(--ink-faint); font-size: 10px; }
   table.calc tr.widest { background: #faf4e6; }
   table.calc tr.narrowest { background: #f0f5fa; }
+  table.calc col.c-name { width: 18%; }
+  table.calc col.c-z { width: 15%; }
+  table.calc col.c-half { width: 11%; }
+  table.calc col.c-total { width: 15%; }
 
   .delta-card {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
-    gap: 14px;
-    margin-top: 20px;
+    gap: 10px;
   }
   .delta-card .card {
     border: 1px solid var(--rule);
-    padding: 16px;
+    padding: 10px 14px;
     background: var(--shade);
   }
   .delta-card .card .label {
-    font-size: 11px;
+    font-size: 9.5px;
     text-transform: uppercase;
     letter-spacing: 0.08em;
     color: var(--ink-soft);
-    margin-bottom: 6px;
+    margin-bottom: 4px;
+    font-weight: 600;
   }
   .delta-card .card .val {
     font-family: "SF Mono", Menlo, Consolas, monospace;
-    font-size: 22px;
+    font-size: 19px;
     font-weight: 600;
+    line-height: 1.1;
   }
-  .delta-card .card .val .ft { font-size: 13px; font-weight: 400; color: var(--ink-soft); display: block; }
+  .delta-card .card .val .ft {
+    font-size: 10.5px;
+    font-weight: 400;
+    color: var(--ink-soft);
+    display: block;
+    margin-top: 3px;
+    line-height: 1.3;
+  }
 
-  /* Section 4 — floor plate */
+  /* ============================================================
+     SLIDE 4 — Floor Plate
+     ============================================================ */
+  .slide-4 .slide-body {
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    gap: 8px;
+  }
+  .compositions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    height: 100%;
+  }
   .composition {
-    margin-bottom: 28px;
+    display: grid;
+    grid-template-rows: auto auto auto;
+    gap: 2px;
   }
   .composition h4 {
-    font-size: 14px;
-    margin: 18px 0 4px;
-    font-weight: 600;
+    font-size: 12px;
+    margin: 0;
+    font-weight: 700;
   }
   .composition .descr {
-    font-size: 12px;
+    font-size: 10.5px;
     color: var(--ink-soft);
-    margin-bottom: 8px;
+    line-height: 1.35;
+    margin-bottom: 2px;
   }
   .plate {
     display: flex;
-    border: 2px solid var(--ink);
-    height: 180px;
+    border: 1.5px solid var(--rule-strong);
+    height: 0.9in;
     background: var(--paper);
     overflow: hidden;
   }
   .plate .tile {
-    border-right: 1px solid var(--ink);
+    border-right: 1px solid var(--rule-strong);
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     text-align: center;
-    font-size: 11px;
-    padding: 6px;
+    font-size: 10px;
+    padding: 4px;
     cursor: default;
-    transition: background 0.12s;
+    line-height: 1.2;
   }
   .plate .tile:last-child { border-right: none; }
   .plate .tile:hover { filter: brightness(0.95); }
-  .plate .tile .name { font-weight: 600; font-size: 12px; margin-bottom: 2px; }
-  .plate .tile .sf { font-family: "SF Mono", Menlo, Consolas, monospace; font-size: 11px; }
-  .plate .tile .zones { font-size: 10px; color: var(--ink-soft); margin-top: 4px; }
+  .plate .tile .name { font-weight: 700; font-size: 11px; margin-bottom: 2px; }
+  .plate .tile .sf { font-family: "SF Mono", Menlo, Consolas, monospace; font-size: 10px; }
+  .plate .tile .zones { font-size: 9px; color: var(--ink-soft); margin-top: 2px; }
   .tile-corp { background: #e3eaf3; }
   .tile-prof { background: #f6e5c4; }
   .tile-priv { background: #f0d2d2; }
@@ -342,253 +550,308 @@
   .plate-meta {
     display: flex;
     justify-content: space-between;
-    font-size: 11px;
+    font-size: 9.5px;
     color: var(--ink-soft);
-    margin-top: 4px;
     font-family: "SF Mono", Menlo, Consolas, monospace;
+    margin-top: 2px;
   }
 
-  /* Section 5 */
-  .next-grid {
+  /* ============================================================
+     SLIDE 5 — What Comes Next
+     ============================================================ */
+  .slide-5 .slide-body {
     display: grid;
-    grid-template-columns: 1fr 320px;
-    gap: 32px;
+    grid-template-columns: 1fr 3.4in;
+    gap: 0.5in;
     align-items: start;
+  }
+  .slide-5 .prose {
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--ink);
+    max-width: 6in;
+  }
+  .slide-5 .prose p { margin: 0 0 14px; }
+  .slide-5 .prose .lede {
+    font-size: 15px;
+    color: var(--ink);
+    margin-bottom: 16px;
+  }
+  .slide-5 .closing {
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid var(--rule);
+    font-size: 12px;
+    color: var(--ink-soft);
+    font-family: "SF Mono", Menlo, Consolas, monospace;
   }
   .file-list {
     background: var(--shade);
     padding: 16px 20px;
     border-left: 3px solid var(--accent);
     font-family: "SF Mono", Menlo, Consolas, monospace;
-    font-size: 12px;
+    font-size: 11.5px;
+    line-height: 1.5;
   }
   .file-list strong {
     display: block;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    font-size: 11px;
+    font-size: 10px;
     margin-bottom: 8px;
     color: var(--ink-soft);
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-weight: 700;
   }
-  .file-list li { margin-bottom: 4px; list-style: none; }
+  .file-list li { margin-bottom: 3px; list-style: none; }
   .file-list ul { padding: 0; margin: 0; }
 
-  footer.colophon {
-    margin-top: 80px;
-    padding-top: 18px;
-    border-top: 1px solid var(--rule);
-    font-size: 11px;
-    color: var(--ink-soft);
-    font-family: "SF Mono", Menlo, Consolas, monospace;
-  }
-
+  /* ============================================================
+     PRINT — each .slide becomes exactly one landscape letter page
+     ============================================================ */
   @media print {
-    @page { size: letter landscape; margin: 1.25cm 1.5cm; }
+    @page { size: 11in 8.5in landscape; margin: 0.25in; }
 
     *, *::before, *::after {
       -webkit-print-color-adjust: exact !important;
       print-color-adjust: exact !important;
     }
-
-    html, body { font-size: 11pt; line-height: 1.4; }
-
-    .wrap { max-width: 100%; padding: 0; }
-
-    nav.toc { display: none; }
-
+    html, body { background: white; }
+    .deck { display: block; padding: 0; gap: 0; }
+    .slide {
+      box-shadow: none;
+      page-break-after: always;
+      break-after: page;
+      margin: 0;
+    }
+    .slide:last-child { page-break-after: auto; break-after: auto; }
     .seg .tooltip { display: none !important; }
-    .seg:hover { filter: none; }
-    .plate .tile:hover { filter: none; }
-
-    /* Tighten paragraph and lede margins globally; extend to full page width */
-    p { margin: 5px 0; max-width: none; }
-    section .lede { margin: 4px 0 8px; max-width: none; }
-
-    /* Every section starts on its own slide */
-    section + section { break-before: page; page-break-before: always; }
-
-    /* Headings stay glued to what follows */
-    section h2 { margin-bottom: 4px; padding-bottom: 4px; break-after: avoid; page-break-after: avoid; }
-    section h3 { margin-top: 8px; margin-bottom: 4px; break-after: avoid; page-break-after: avoid; }
-    .strip-wrap h3:first-child { margin-top: 0; }
-
-    /* Tighten masthead so Section 1 fits on one slide */
-    header.masthead { padding-bottom: 12px; margin-bottom: 16px; }
-
-    /* Tighten strip-wrap top gap */
-    .strip-wrap { margin-top: 8px; margin-bottom: 4px; }
-
-    /* Tighten callout chrome */
-    .callout { padding: 8px 14px; margin: 8px 0; }
-
-    /* Tighten bar chart rows so Section 2 fits on one slide */
-    .bar-row   { padding: 5px 0; break-inside: avoid; page-break-inside: avoid; }
-    .bar-track { height: 26px; }
-
-    /* Atomic units never split across pages */
-    .composition { break-inside: avoid; page-break-inside: avoid; }
-    .delta-card  { break-inside: avoid; page-break-inside: avoid; }
-    .callout     { break-inside: avoid; page-break-inside: avoid; }
-    .strip-row   { break-inside: avoid; page-break-inside: avoid; }
-
-    /* Floor plate compositions — restore comfortable tile height; explicit spacing */
-    .plate              { height: 160px; }
-    .composition h4     { margin-top: 14px; margin-bottom: 6px; }
-    .composition .descr { margin-bottom: 10px; }
-    .composition        { margin-bottom: 20px; }
-
-    .next-grid { grid-template-columns: 1fr; }
-
-    footer.colophon { margin-top: 24px; }
-
     a { color: inherit; text-decoration: none; }
+  }
+
+  /* Smaller screens — let the deck scale visually but preserve layout */
+  @media (max-width: 1200px) {
+    .deck { padding: 16px 0 40px; }
+    .slide { transform: scale(0.92); transform-origin: top center; margin: -28px 0; }
+  }
+  @media (max-width: 1000px) {
+    .slide { transform: scale(0.78); margin: -75px 0; }
   }
 </style>
 </head>
 <body>
-<div class="wrap">
+<div class="deck">
 
-<header class="masthead">
-  <div class="eyebrow">Spatial Taxonomy &middot; Building Information Model</div>
-  <h1>Building Width Calculator</h1>
-  <div class="sub">Furniture &rarr; Zone &rarr; Width &middot; A proof-of-concept for <span class="mono">tool-buildingwidth</span></div>
-</header>
-
-<nav class="toc">
-  <strong>On this page</strong>
-  <a href="#sec-1">1 · The Backwards Method</a>
-  <a href="#sec-2">2 · Zone Depth by Use Type</a>
-  <a href="#sec-3">3 · Width Calculator</a>
-  <a href="#sec-4">4 · The Floor Plate</a>
-  <a href="#sec-5">5 · What Comes Next</a>
-</nav>
-
-<!-- ============================================================ -->
-<section id="sec-1">
-  <h2><span class="num">Section 1</span>The Backwards Method</h2>
-  <p class="lede">Most office buildings begin with a width — sixty feet reads well for daylight — then cram furniture in until it fits. Woodfine inverts the sequence. We start with the tenant's actual chair, desk, exam table, lab bench, or lectern, and the building width is whatever that arrangement requires.</p>
-
-  <p>The Building Width Calculator is not a width calculator in the conventional sense. It is the <em>output</em> of a backwards-running process that reads furniture inventories, applies the German Circulation Law and the European Lighting Standard, and reports the width that falls out at the end. Use type drives the result: a medical floor plate is wider than an academic one because exam tables are deeper than seminar rows.</p>
-
-  <p style="margin-top: 14px;">The cross-section has three zones, mirrored on each side of a central corridor:</p>
-
-  <div class="strip-wrap">
-    <div class="strip" id="strip-diagram">
-      <!-- populated by JS -->
+  <!-- ============================================================
+       SLIDE 0 — Title
+       ============================================================ -->
+  <section class="slide title-slide">
+    <div class="corner-mark">Woodfine &middot; Building Information Model</div>
+    <div class="slide-body">
+      <div>
+        <div class="eyebrow">Spatial Taxonomy &middot; Proof of Concept</div>
+        <h1>Building Width<br>Calculator</h1>
+        <div class="deck-sub">Furniture &rarr; Zone &rarr; Width. A backwards-running method for sizing office buildings from tenant fit-out, driving the <span class="mono">tool-buildingwidth</span> engine.</div>
+      </div>
+      <div class="agenda">
+        <strong>Agenda &mdash; five slides</strong>
+        <ol>
+          <li>The Backwards Method</li>
+          <li>Zone Depth by Use Type</li>
+          <li>The Width Calculator</li>
+          <li>The Floor Plate</li>
+          <li>What Comes Next</li>
+        </ol>
+      </div>
     </div>
-    <div>
-      <h3>Zone 1 — Habitat</h3>
-      <p style="margin-top: 0;">All desks, workstations, exam tables, or benches live here. Six metres minimum from the facade — the European Lighting Standard threshold for natural light at a workstation.</p>
-      <h3>Zone 2 — Magazine</h3>
-      <p style="margin-top: 0;">Storage, bookshelves, filing, server rooms, supply closets. Its depth is the slack variable: widen it to keep the building from becoming a long, narrow rectangle.</p>
-      <h3>Zone 3 — Corridor</h3>
-      <p style="margin-top: 0;">Bilateral, mirrored at the centre of the floor plate. Width is set by occupancy egress requirements and accessibility — overdesigned by 20% to support small-tenant in-and-out traffic.</p>
+  </section>
+
+  <!-- ============================================================
+       SLIDE 1 — Backwards Method
+       ============================================================ -->
+  <section class="slide slide-1">
+    <header class="slide-head">
+      <div>
+        <div class="num-chip">SECTION 01</div>
+        <div class="title">The Backwards Method</div>
+      </div>
+      <div class="eyebrow">Furniture drives width</div>
+    </header>
+    <div class="slide-body">
+      <p class="lede">Most office buildings start with a width — sixty feet for daylight — then cram furniture in until it fits. Woodfine inverts the sequence: start with the tenant's chair, desk, exam table or bench, and the building width is whatever the arrangement requires. The cross-section has three zones, mirrored on each side of a central corridor.</p>
+
+      <div class="strip" id="strip-diagram"><!-- populated by JS --></div>
+
+      <div class="zone-defs">
+        <div class="zone-def z1">
+          <h4>Zone 1 &mdash; Habitat</h4>
+          <p>Desks, workstations, exam tables, benches. Six metres minimum from the facade &mdash; the European Lighting Standard threshold for natural light at a workstation.</p>
+        </div>
+        <div class="zone-def z2">
+          <h4>Zone 2 &mdash; Magazine</h4>
+          <p>Storage, bookshelves, filing, server rooms. The slack variable: widen it to keep the plate from becoming a long, narrow rectangle.</p>
+        </div>
+        <div class="zone-def z3">
+          <h4>Zone 3 &mdash; Corridor</h4>
+          <p>Bilateral, mirrored at the centre. Width set by egress and accessibility &mdash; overdesigned by 20% for small-tenant traffic.</p>
+        </div>
+      </div>
+
+      <div class="callout">
+        <strong>The 0.7 m German Circulation Law addition.</strong> Perpendicular desks at 6.0 m Habitat fit only two in series; 0.7 m unlocks the third with clearance. Token: <span class="mono">bim.circulation-addition.perpendicular-desk = 0.7 m</span>.
+      </div>
     </div>
-  </div>
+    <footer class="slide-foot">
+      <span class="foot-left">Building Width Calculator &middot; Woodfine Management Corp.</span>
+      <span class="foot-right">01 / 05</span>
+    </footer>
+  </section>
 
-  <div class="callout">
-    <strong>The 0.7 m German Circulation Law addition.</strong> If desks are perpendicular to the facade, a 6.0 m Habitat depth fits only two desks in series. Adding 0.7 m unlocks the third desk with proper clearance — this is the German Circulation Law in practice. Token: <span class="mono">bim.circulation-addition.perpendicular-desk = 0.7 m</span>.
-  </div>
-</section>
+  <!-- ============================================================
+       SLIDE 2 — Bar Chart
+       ============================================================ -->
+  <section class="slide slide-2">
+    <header class="slide-head">
+      <div>
+        <div class="num-chip">SECTION 02</div>
+        <div class="title">Zone Depth by Use Type</div>
+      </div>
+      <div class="eyebrow">Seven use types &middot; seven widths</div>
+    </header>
+    <div class="slide-body">
+      <p class="lede">Each segment's width is the actual zone depth in metres, scaled against the widest total. The widest tenant (Civic) is roughly 1.4 m wider than the narrowest (Private Office) &mdash; the demising tolerance the floor plate must absorb.</p>
 
-<!-- ============================================================ -->
-<section id="sec-2">
-  <h2><span class="num">Section 2</span>Zone Depth by Use Type</h2>
-  <p class="lede">Six use types, six different building widths. The chart below is proportional — each segment's width on screen is the actual zone depth in metres, scaled against the widest total. Hover any segment for exact values.</p>
+      <div class="legend">
+        <span class="z1">Zone 1 &mdash; Habitat (desks)</span>
+        <span class="z2">Zone 2 &mdash; Magazine (storage)</span>
+        <span class="z3">Zone 3 &mdash; Corridor (circulation)</span>
+      </div>
 
-  <div class="legend">
-    <span class="z1">Zone 1 — Habitat (desks)</span>
-    <span class="z2">Zone 2 — Magazine (storage)</span>
-    <span class="z3">Zone 3 — Corridor (circulation)</span>
-  </div>
-
-  <div class="bar-table" id="bar-table">
-    <!-- populated by JS -->
-  </div>
-</section>
-
-<!-- ============================================================ -->
-<section id="sec-3">
-  <h2><span class="num">Section 3</span>The Building Width Calculator</h2>
-  <p class="lede">The formula is a mirror equation. One half of the floor plate is Zone 1 plus Zone 2 plus Zone 3. The other half is identical. Total building width is the sum.</p>
-
-  <div class="formula">
-    <span class="z1">Zone 1</span> + <span class="z2">Zone 2</span> + <span class="z3">Zone 3</span> | <span class="z3">Zone 3</span> + <span class="z2">Zone 2</span> + <span class="z1">Zone 1</span>
-    <span class="zline">Building Width = 2 × (Habitat + Magazine) + 2 × Corridor &nbsp; — &nbsp; or simply 2 × (Z1 + Z2 + Z3)</span>
-  </div>
-
-  <p>Where the Corridor is zero (Private Office, Academic — both open to a shared building corridor instead of a bilateral one), the central pair collapses to a single shared corridor and the formula reduces to 2 × (Z1 + Z2).</p>
-
-  <table class="calc" id="calc-table">
-    <thead>
-      <tr>
-        <th>Use Type</th>
-        <th>Zone 1 Habitat</th>
-        <th>Zone 2 Magazine</th>
-        <th>Zone 3 Corridor</th>
-        <th>Half Width</th>
-        <th>Total Width</th>
-      </tr>
-    </thead>
-    <tbody><!-- populated by JS --></tbody>
-  </table>
-
-  <div class="delta-card" id="delta-card">
-    <!-- populated by JS -->
-  </div>
-
-  <div class="callout" style="margin-top: 24px;">
-    <strong>The &plusmn;5 ft precision question.</strong> Why does a 1.4 m gap between Medical and Academic widths matter for demising? Because tiles must compose to a single floor plate width across all use types on a floor. If the building is sized for Medical (its widest tenant), Academic tenants get extra Zone 2 they did not ask for. If sized for Academic, Medical does not fit. The <span class="mono">tool-buildingwidth</span> engine resolves this by computing the floor's <em>tenant-mix maximum width</em> at design time, then either redistributing Zone 2 depth or constraining tenant mix per floor.
-  </div>
-</section>
-
-<!-- ============================================================ -->
-<section id="sec-4">
-  <h2><span class="num">Section 4</span>The Floor Plate</h2>
-  <p class="lede">Twenty-thousand square feet of net leasable area per upper floor. Tiles are the assembly units — Small Tile = 2,700 SF, Large Tile = 4,900 SF — and they compose to fill the plate exactly. Three example compositions follow. Hover any tile for its key plan, climate-zone count, and source token.</p>
-
-  <p>The rule from the methodology memo: <em>"in all cases, the entirety of the Floor Plates is dividable by a certain combination of Key Plans, with no remainder of free space that is not represented by a Key Plan."</em> Rolling efficiency target: 100%.</p>
-
-  <div class="composition" id="comp-corporate"></div>
-  <div class="composition" id="comp-private"></div>
-  <div class="composition" id="comp-mixed"></div>
-
-  <div class="callout">
-    <strong>Tile = Climate Zone.</strong> Each Tile is an independent HVAC zone. A tenant who wants thermostat control leases a Tile. A tenant in a Private Office in Tile B-1 shares climate control with four other private offices — the trade-off the leasing agreement makes explicit. Source token: <span class="mono">bim.tile.design-principles.climate-zone-autonomy</span>.
-  </div>
-</section>
-
-<!-- ============================================================ -->
-<section id="sec-5">
-  <h2><span class="num">Section 5</span>What Comes Next</h2>
-
-  <div class="next-grid">
-    <div>
-      <p>This HTML is the specification document for <span class="mono">tool-buildingwidth</span>, a Rust engine that will read the DTCG tokens at the right and compute floor plate dimensions, tile compositions, and demising-wall coordinates from a tenant-mix input. The engine outputs IFC-compatible geometry and a leasing-plan summary; this page is what the engine renders as a human preview.</p>
-
-      <p>The values shown here are not approximations. Every metre, every square foot, every percentage is read live from the DTCG token files at page load. When the tokens change — when a new key plan sample lands or a corridor width updates — this page changes with them. The engine, when shipped, will share the same source.</p>
+      <div class="bar-table" id="bar-table"><!-- populated by JS --></div>
     </div>
+    <footer class="slide-foot">
+      <span class="foot-left">Building Width Calculator &middot; Woodfine Management Corp.</span>
+      <span class="foot-right">02 / 05</span>
+    </footer>
+  </section>
 
-    <div class="file-list">
-      <strong>Source token files</strong>
-      <ul>
-        <li>building-width-calculator.dtcg.json</li>
-        <li>floor-plate-standards.dtcg.json</li>
-        <li>professional-office-subtypes.dtcg.json</li>
-        <li>tile-system.dtcg.json</li>
-      </ul>
-      <strong style="margin-top: 14px;">Future consumer</strong>
-      <ul>
-        <li>pointsav-monorepo/<br>&nbsp;&nbsp;crates/tool-buildingwidth/</li>
-      </ul>
+  <!-- ============================================================
+       SLIDE 3 — Calculator
+       ============================================================ -->
+  <section class="slide slide-3">
+    <header class="slide-head">
+      <div>
+        <div class="num-chip">SECTION 03</div>
+        <div class="title">The Building Width Calculator</div>
+      </div>
+      <div class="eyebrow">Mirror equation &middot; both halves equal</div>
+    </header>
+    <div class="slide-body">
+      <div class="formula">
+        <span class="z1">Zone 1</span> + <span class="z2">Zone 2</span> + <span class="z3">Zone 3</span> &nbsp;|&nbsp; <span class="z3">Zone 3</span> + <span class="z2">Zone 2</span> + <span class="z1">Zone 1</span>
+        <span class="zline">Building Width = 2 &times; (Habitat + Magazine + Corridor)</span>
+      </div>
+
+      <table class="calc" id="calc-table">
+        <colgroup>
+          <col class="c-name"><col class="c-z"><col class="c-z"><col class="c-z"><col class="c-half"><col class="c-total">
+        </colgroup>
+        <thead>
+          <tr>
+            <th>Use Type</th>
+            <th>Z1 Habitat</th>
+            <th>Z2 Magazine</th>
+            <th>Z3 Corridor</th>
+            <th>Half</th>
+            <th>Total Width</th>
+          </tr>
+        </thead>
+        <tbody><!-- populated by JS --></tbody>
+      </table>
+
+      <div class="delta-card" id="delta-card"><!-- populated by JS --></div>
+
+      <div class="callout tight">
+        <strong>The &plusmn;5 ft precision question.</strong> Tiles must compose to a single floor-plate width across all use types on a floor. <span class="mono">tool-buildingwidth</span> resolves this by computing each floor's tenant-mix maximum width at design time, then redistributing Zone 2 or constraining the mix.
+      </div>
     </div>
-  </div>
-</section>
+    <footer class="slide-foot">
+      <span class="foot-left">Building Width Calculator &middot; Woodfine Management Corp.</span>
+      <span class="foot-right">03 / 05</span>
+    </footer>
+  </section>
 
-<footer class="colophon">
-  Source data: woodfine-design-bim DTCG token library v0.0.2 &nbsp;|&nbsp; Woodfine Management Corp
-</footer>
+  <!-- ============================================================
+       SLIDE 4 — Floor Plate
+       ============================================================ -->
+  <section class="slide slide-4">
+    <header class="slide-head">
+      <div>
+        <div class="num-chip">SECTION 04</div>
+        <div class="title">The Floor Plate</div>
+      </div>
+      <div class="eyebrow">20,000 SF &middot; tiles compose without remainder</div>
+    </header>
+    <div class="slide-body">
+      <p class="lede">Tiles are the assembly units &mdash; Small Tile = 2,700 SF, Large Tile = 4,900 SF &mdash; and they compose to fill the plate exactly. Each Tile is an independent climate zone: a tenant who wants thermostat control leases a Tile. Three example compositions below.</p>
+
+      <div class="compositions">
+        <div class="composition" id="comp-corporate"></div>
+        <div class="composition" id="comp-private"></div>
+        <div class="composition" id="comp-mixed"></div>
+      </div>
+
+      <div class="callout tight">
+        <strong>Tile = Climate Zone.</strong> Composition B (Private Office heavy) yields forty independent thermostats on one floor. Source token: <span class="mono">bim.tile.design-principles.climate-zone-autonomy</span>.
+      </div>
+    </div>
+    <footer class="slide-foot">
+      <span class="foot-left">Building Width Calculator &middot; Woodfine Management Corp.</span>
+      <span class="foot-right">04 / 05</span>
+    </footer>
+  </section>
+
+  <!-- ============================================================
+       SLIDE 5 — What Comes Next
+       ============================================================ -->
+  <section class="slide slide-5">
+    <header class="slide-head">
+      <div>
+        <div class="num-chip">SECTION 05</div>
+        <div class="title">What Comes Next</div>
+      </div>
+      <div class="eyebrow">Specification &rarr; Rust engine</div>
+    </header>
+    <div class="slide-body">
+      <div class="prose">
+        <p class="lede">This HTML is the specification document for <span class="mono">tool-buildingwidth</span>, a Rust engine that reads the DTCG tokens listed at right and computes floor plate dimensions, tile compositions, and demising-wall coordinates from a tenant-mix input.</p>
+        <p>The engine outputs IFC-compatible geometry and a leasing-plan summary; this deck is what the engine will render as a human preview.</p>
+        <p>Every metre, every square foot, every percentage on these slides is read live from the DTCG token files at page load. When the tokens change &mdash; a new key plan sample, a corridor width update &mdash; the deck changes with them. The engine, when shipped, shares the same source.</p>
+        <div class="closing">
+          Source: woodfine-design-bim DTCG token library v0.0.2
+        </div>
+      </div>
+
+      <div class="file-list">
+        <strong>Source token files</strong>
+        <ul>
+          <li>building-width-calculator.dtcg.json</li>
+          <li>floor-plate-standards.dtcg.json</li>
+          <li>professional-office-subtypes.dtcg.json</li>
+          <li>tile-system.dtcg.json</li>
+        </ul>
+        <strong style="margin-top: 16px;">Future consumer</strong>
+        <ul>
+          <li>pointsav-monorepo/</li>
+          <li>&nbsp;&nbsp;crates/tool-buildingwidth/</li>
+        </ul>
+      </div>
+    </div>
+    <footer class="slide-foot">
+      <span class="foot-left">Building Width Calculator &middot; Woodfine Management Corp.</span>
+      <span class="foot-right">05 / 05</span>
+    </footer>
+  </section>
 
 </div>
 
@@ -658,7 +921,7 @@ function totalWidth(z) {
      </div>`
   ).join('') + `<div class="strip-row" style="background: var(--shade-deep); border-top: 2px solid var(--ink);">
        <div class="label">TOTAL</div>
-       <div style="font-size: 11px; color: var(--ink-soft);">Professional Office cross-section</div>
+       <div style="font-size: 10px; color: var(--ink-soft);">Professional Office</div>
        <div class="dim"><strong>${totalWidth(z).toFixed(1)} m</strong><br>${mToFtIn(totalWidth(z))}</div>
      </div>`;
 })();
@@ -720,11 +983,11 @@ function totalWidth(z) {
     else if (key === narrowest.key) cls = 'narrowest';
     return `<tr class="${cls}">
        <td><strong>${z.label}</strong></td>
-       <td class="num">${mFmt(z.habitat)} <span style="color: var(--ink-soft);">/ ${mToFtIn(z.habitat)}</span></td>
-       <td class="num">${mFmt(z.magazine)} <span style="color: var(--ink-soft);">/ ${mToFtIn(z.magazine)}</span></td>
-       <td class="num">${mFmt(z.corridor)} <span style="color: var(--ink-soft);">/ ${mToFtIn(z.corridor)}</span></td>
+       <td class="num">${mFmt(z.habitat)} <span class="alt">/ ${mToFtIn(z.habitat)}</span></td>
+       <td class="num">${mFmt(z.magazine)} <span class="alt">/ ${mToFtIn(z.magazine)}</span></td>
+       <td class="num">${mFmt(z.corridor)} <span class="alt">/ ${mToFtIn(z.corridor)}</span></td>
        <td class="num">${half.toFixed(2)} m</td>
-       <td class="num"><strong>${t.toFixed(2)} m</strong> <span style="color: var(--ink-soft);">/ ${mToFtIn(t)}</span></td>
+       <td class="num"><strong>${t.toFixed(2)} m</strong> <span class="alt">/ ${mToFtIn(t)}</span></td>
      </tr>`;
   }).join('');
 
