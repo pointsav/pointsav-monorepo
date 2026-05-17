@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Floor Plate Methodology — Key Plans and Tiles</title>
+<style>
+  :root {
+    --ink: #1a1a1a;
+    --ink-soft: #4a4a4a;
+    --rule: #cccccc;
+    --paper: #ffffff;
+    --shade: #f6f5f1;
+    --shade-deep: #ece9df;
+    --accent: #1f4f8b;
+    --corp: #4a78b8;
+    --prof: #d99a3b;
+    --priv: #b54545;
+    --mixed: #7a6a55;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+  .mono { font-family: "SF Mono", Menlo, Consolas, monospace; font-variant-numeric: tabular-nums; }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 48px 32px 80px; }
+
+  header.masthead {
+    border-bottom: 2px solid var(--ink);
+    padding-bottom: 24px;
+    margin-bottom: 40px;
+  }
+  header.masthead .eyebrow {
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-size: 11px;
+    color: var(--ink-soft);
+    margin-bottom: 8px;
+  }
+  header.masthead h1 {
+    font-size: 30px;
+    line-height: 1.2;
+    margin: 0 0 6px;
+    font-weight: 600;
+  }
+  header.masthead .sub { color: var(--ink-soft); font-size: 14px; }
+
+  section { margin-bottom: 56px; }
+  section h2 {
+    font-size: 22px;
+    font-weight: 600;
+    margin: 0 0 6px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--ink);
+  }
+  section h2 .num {
+    color: var(--accent);
+    font-size: 14px;
+    letter-spacing: 0.1em;
+    margin-right: 10px;
+    text-transform: uppercase;
+  }
+  section .lede { color: var(--ink-soft); font-size: 14px; margin: 8px 0 24px; max-width: 760px; }
+  p { max-width: 800px; }
+
+  .definition {
+    background: var(--shade);
+    border-left: 4px solid var(--accent);
+    padding: 20px 24px;
+    margin: 16px 0 24px;
+    font-size: 16px;
+  }
+  .definition .label {
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-size: 11px;
+    color: var(--ink-soft);
+    margin-bottom: 8px;
+  }
+  .definition em { font-weight: 600; font-style: normal; color: var(--accent); }
+
+  /* Tile cards */
+  .tile-family {
+    margin-bottom: 36px;
+  }
+  .tile-family h3 {
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+    margin: 24px 0 12px;
+  }
+  .tile-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 12px;
+  }
+  .tile-card {
+    border: 1px solid var(--ink);
+    background: var(--paper);
+    padding: 14px 16px;
+    font-size: 13px;
+    position: relative;
+  }
+  .tile-card .code {
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+    font-size: 11px;
+    color: var(--ink-soft);
+    text-transform: uppercase;
+  }
+  .tile-card .name {
+    font-weight: 600;
+    font-size: 15px;
+    margin: 4px 0 6px;
+  }
+  .tile-card .area {
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+    font-size: 13px;
+    margin-bottom: 8px;
+  }
+  .tile-card .area .m2 { color: var(--ink-soft); font-size: 11px; }
+  .tile-card .composition {
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin-bottom: 8px;
+    line-height: 1.45;
+  }
+  .tile-card .zones {
+    display: inline-block;
+    background: var(--shade-deep);
+    padding: 2px 8px;
+    font-size: 11px;
+    border-radius: 2px;
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+  }
+  .tile-card .endcap {
+    position: absolute;
+    top: 14px; right: 16px;
+    font-size: 10px;
+    background: var(--priv);
+    color: white;
+    padding: 2px 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .tile-card.small { border-left: 4px solid var(--corp); }
+  .tile-card.large { border-left: 4px solid var(--prof); }
+
+  /* Size hierarchy — Section 3 */
+  .hierarchy { margin: 16px 0; border-top: 1px solid var(--rule); }
+  .h-row {
+    display: grid;
+    grid-template-columns: 90px 1fr 130px;
+    gap: 0 16px;
+    align-items: start;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--rule);
+    font-size: 13px;
+  }
+  .h-label { font-weight: 600; padding-top: 2px; }
+  .h-track {
+    height: 16px;
+    background: var(--shade-deep);
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 6px;
+  }
+  .h-fill { height: 100%; background: var(--accent); }
+  .h-desc { font-size: 12px; color: var(--ink); line-height: 1.4; }
+  .h-sf { font-family: "SF Mono", Menlo, Consolas, monospace; text-align: right; }
+  .h-sf .sf-main { font-size: 13px; font-weight: 600; display: block; }
+  .h-sf .sf-m2   { font-size: 10px; color: var(--ink-soft); display: block; }
+
+  /* Floor plate composition strip — Section 4 */
+  .floor-strip {
+    display: flex;
+    height: 120px;
+    border: 2px solid var(--ink);
+    margin: 12px 0 0;
+    overflow: hidden;
+  }
+  .fs-seg {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 4px 2px;
+    border-right: 1px solid rgba(255,255,255,0.3);
+    overflow: hidden;
+    color: white;
+  }
+  .fs-seg:last-child { border-right: none; }
+  .fs-seg.light { color: var(--ink); }
+  .fs-seg .fs-code  { font-family: "SF Mono", Menlo, Consolas, monospace; font-size: 10px; font-weight: 700; }
+  .fs-seg .fs-sf    { font-size: 9px; margin-top: 3px; opacity: 0.9; }
+  .fs-seg .fs-zones { font-size: 9px; opacity: 0.75; }
+  .fs-ruler {
+    display: flex;
+    justify-content: space-between;
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+    font-size: 10px;
+    color: var(--ink-soft);
+    margin: 3px 0 14px;
+    border-top: 1px solid var(--rule);
+    padding-top: 3px;
+  }
+  .floor-legend {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 6px 20px;
+    margin-top: 10px;
+    font-size: 12px;
+  }
+  .fl-item { display: flex; align-items: center; gap: 8px; }
+  .fl-swatch { width: 14px; height: 14px; flex-shrink: 0; border: 1px solid rgba(0,0,0,0.2); }
+  .fl-name   { font-weight: 600; }
+  .fl-detail { color: var(--ink-soft); font-size: 11px; }
+  .grid-label {
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+    font-size: 11px;
+    color: var(--ink-soft);
+    margin-bottom: 6px;
+  }
+
+  .principle-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    margin-top: 16px;
+  }
+  .principle {
+    background: var(--shade);
+    padding: 18px 20px;
+    border-left: 3px solid var(--accent);
+  }
+  .principle h4 {
+    margin: 0 0 8px;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--accent);
+  }
+  .principle p { font-size: 13px; margin: 0; }
+
+  footer.colophon {
+    margin-top: 80px;
+    padding-top: 18px;
+    border-top: 1px solid var(--rule);
+    font-size: 11px;
+    color: var(--ink-soft);
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+  }
+
+  @media print {
+    @page { size: letter landscape; margin: 1.25cm 1.5cm; }
+
+    *, *::before, *::after {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+
+    html, body { font-size: 11pt; }
+
+    .wrap { max-width: 100%; padding: 0; }
+
+    /* Every section starts on its own slide */
+    section + section { break-before: page; page-break-before: always; }
+
+    /* Headings stay glued to what follows */
+    section h2      { break-after: avoid; page-break-after: avoid; }
+    .tile-family h3 { break-after: avoid; page-break-after: avoid; }
+
+    /* Atomic units never split across pages */
+    .tile-card  { break-inside: avoid; page-break-inside: avoid; }
+    .principle  { break-inside: avoid; page-break-inside: avoid; }
+    .definition { break-inside: avoid; page-break-inside: avoid; }
+
+    footer.colophon { margin-top: 24px; }
+
+    a { color: inherit; text-decoration: none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="masthead">
+  <div class="eyebrow">Spatial Taxonomy &middot; Floor Plate Methodology</div>
+  <h1>Key Plans and Tiles</h1>
+  <div class="sub">A geometric self-similar aperiodic space-planning system &middot; Methodology V12</div>
+</header>
+
+<section>
+  <h2><span class="num">Section 1</span>What "Key Plans and Tiles" Means</h2>
+
+  <div class="definition">
+    <div class="label">Working definition, from the methodology memo</div>
+    <p style="margin: 0;">"<em>Key Plans and Tiles</em>" means a geometric self-similar aperiodic space-planning system based on furniture/equipment arrangements and circulation versus modular area-per-person progressions. Various Key Plans are summed up together in order to make Tiles. Not all the Key Plans are supposed to fit in all the Tiles &mdash; in the case of the building corners or areas surrounding the Elevator Lobbies, there may be "unique" Special Tiles where either only certain Key Plans fit or the Key Plans found within these Special Tiles are exclusive to these areas. However, in all cases, the entirety of the Floor Plates is dividable by a certain combination of Key Plans, with no remainder of "free space" that is not represented by a Key Plan.</p>
+  </div>
+
+  <p>Translate: a Key Plan is the smallest unit &mdash; a labelled rectangle around one tenant's actual furniture, sized to enclose desks, storage, circulation, and accessibility. A Tile is a composable group of Key Plans. The Floor Plate is the assembly of Tiles. Nothing on the floor is unrepresented.</p>
+
+  <p>The system is <em>aperiodic</em> because Tiles do not repeat on a fixed grid. It is <em>self-similar</em> because each Tile is exactly one HVAC climate zone, regardless of size. It is <em>geometric</em> because all dimensions resolve to real metric measurements driven by real furniture SKUs.</p>
+</section>
+
+<section>
+  <h2><span class="num">Section 2</span>The Tile Catalogue</h2>
+  <p class="lede">Two tile sizes. Eleven tile types. Each Tile is one climate zone; combinations of tiles aggregate climate-control authority. Source: <span class="mono">tile-system.dtcg.json</span>.</p>
+
+  <div class="tile-family">
+    <h3>Small Tile Family &mdash; 2,700 SF (250.84 m²) each</h3>
+    <div class="tile-grid" id="small-tiles"></div>
+  </div>
+
+  <div class="tile-family">
+    <h3>Large Tile Family &mdash; 4,900 SF (455.22 m²) each</h3>
+    <div class="tile-grid" id="large-tiles"></div>
+  </div>
+</section>
+
+<section>
+  <h2><span class="num">Section 3</span>The Size Hierarchy</h2>
+  <p class="lede">Five fractions of the 20,000 SF net leasable floor plate. Source: <span class="mono">floor-plate-standards.dtcg.json</span>.</p>
+
+  <div class="hierarchy" id="hierarchy"></div>
+
+  <p style="margin-top: 16px;">A Corporate Office tenant may occupy any fraction up to the full floor. The 1/8 floor (2,500 SF) is the minimum Corporate Office tile <em>and</em> the aggregate tile for Private Office leaseholds. The 1/2 floor is dedicated on the second floor to the Tenant Lounge per the design memo.</p>
+</section>
+
+<section>
+  <h2><span class="num">Section 4</span>One Floor &mdash; Filled Exactly</h2>
+  <p class="lede">A worked composition — one example of how tiles fill the floor exactly. Each segment below is one Tile, drawn to scale. The composition sums to 20,000 SF with every square foot represented by a Key Plan.</p>
+
+  <div class="grid-label">Floor plate composition &mdash; 20,000 SF net leasable &middot; drawn to scale</div>
+  <div class="floor-strip" id="floor-demo"></div>
+  <div class="fs-ruler"><span>0 SF</span><span>10,000 SF</span><span>20,000 SF</span></div>
+  <div class="floor-legend" id="floor-demo-legend"></div>
+
+  <p>Other combinations are valid as long as they sum to 20,000 SF (or 18,850 SF after corridors + restrooms allocation: 450 SF corridors + 700 SF tenant restrooms &amp; meter room). The methodology requires that whatever combination is chosen, <em>every square foot is represented by a Key Plan</em>.</p>
+</section>
+
+<section>
+  <h2><span class="num">Section 5</span>Design Principles</h2>
+  <p class="lede">Encoded as token metadata at <span class="mono">bim.tile.design-principles</span>. Four principles govern every composition.</p>
+
+  <div class="principle-grid">
+    <div class="principle">
+      <h4>Climate-zone autonomy</h4>
+      <p>One tile, one HVAC zone. A tenant who wants direct thermostat control must lease a whole Tile. Tenants combining tiles must combine climate control with the same negotiated authority. Smaller tiles = more zones = more autonomy per tenant; larger tiles = fewer zones = more contiguous tenant space.</p>
+    </div>
+    <div class="principle">
+      <h4>Rolling efficiency</h4>
+      <p>The Tile composition must reach 100% floor-plate utilisation at any tenant mix &mdash; no free space without a corresponding Key Plan. As tenants come and go, the floor recomposes; the engineering rule is that the recomposition is always achievable from the published catalogue.</p>
+    </div>
+    <div class="principle">
+      <h4>Corner handling</h4>
+      <p>Building short sides and corners use End Cap tiles (B-1, E-1, E-2). Small tiles at corners may create structural-grid boxing issues. Column grid is reviewed before specifying corner tile types; core position is adjusted if short-side tiles conflict.</p>
+    </div>
+    <div class="principle">
+      <h4>Professional &rarr; Corporate gap</h4>
+      <p>The jump from Professional Office (~5,000 SF / 1/4 tile) to Corporate Office (min 2,500 SF / 1/8 tile) leaves a gap for tenants needing 5,000&ndash;7,500 SF. Tile H (4,900 SF) and Small+Small Professional combinations (~4,200 SF) bridge it.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2><span class="num">Section 6</span>Why Smaller Tiles Matter</h2>
+
+  <p><strong>Climate-zone autonomy as a leasing feature.</strong> A small tenant who wants to set their own thermostat must lease a full Tile. The Tile catalogue is therefore not just a geometric system &mdash; it is a leasing instrument. A Private Office in Tile B-1 shares climate with four other private offices; a Private Office in Tile G shares with nine; a Corporate Office in Tile F sets its own. The leasing agreement makes this explicit and prices accordingly.</p>
+
+  <p><strong>Smaller tiles increase tenant autonomy and operational complexity in parallel.</strong> A Private-Office-heavy floor (Composition B in the Building Width Calculator companion page) can host 40+ independent climate zones on a single 20,000 SF plate. The HVAC engineering is more expensive; the leasing yield is higher because each thermostat is its own line item.</p>
+</section>
+
+<section>
+  <h2><span class="num">Section 7</span>Rolling Efficiency</h2>
+
+  <p>The engineering definition of "efficiency" is net-leasable divided by gross-buildable. The Woodfine methodology calls this metric outdated. The replacement metric is <strong>economic efficiency</strong>: the share of a floor that is actively leased and represented by a Key Plan that matches a real tenant's furniture inventory.</p>
+
+  <p>A floor at 100% engineering efficiency with one tenant in a 60-foot-wide rectangle, putting bookshelves on top of desks because the Habitat zone is too shallow, is failing the economic test. A floor at 88% engineering efficiency with seven tenants in mixed Tile compositions, each at 100% tenant-utilisation inside their leasehold, is succeeding.</p>
+
+  <p>Rolling efficiency is the dynamic version of this. As tenants change &mdash; a Medical practice expands, a Private Office tenant leaves, a Corporate tenant downsizes &mdash; the Tile recomposition must always be valid. The catalogue is sized to make that always possible.</p>
+</section>
+
+<footer class="colophon">
+  Source data: woodfine-design-bim DTCG token library v0.0.2 &nbsp;|&nbsp; Woodfine Management Corp.
+</footer>
+
+</div>
+
+<script>
+const BIM_TOKENS = {
+  smallTiles: [
+    { code: "tile-a",  name: "Tile A — Corporate Office",            sf: 2700, m2: 250.84, comp: "Single corporate tenant unit (2,700 SF). Maximum climate-zone autonomy.", zones: 1 },
+    { code: "tile-b1", name: "Tile B-1 — Private Office End Cap",    sf: 2700, m2: 250.84, comp: "Five private offices (300 + 450 + 300 + 450 + 300 SF) plus 900 SF corridor.", zones: 5, endcap: true },
+    { code: "tile-c1", name: "Tile C-1 — Professional (Med + Small)", sf: 2700, m2: 250.84, comp: "Professional Office Medium (2,000 SF) + Small (700 SF).", zones: 2 },
+    { code: "tile-c2", name: "Tile C-2 — Professional (Med Pair)",    sf: 2700, m2: 250.84, comp: "Two Medium Professional Office units (1,100 SF each) + 500 SF corridor.", zones: 2 },
+    { code: "tile-c3", name: "Tile C-3 — Professional (Large+Small)", sf: 2700, m2: 250.84, comp: "Large Professional (2,400 SF) + Small Professional (300 SF). Lab/Medical anchor.", zones: 2 },
+    { code: "tile-c4", name: "Tile C-4 — Professional Single Large",  sf: 2700, m2: 250.84, comp: "Single 2,200 SF Professional unit + 500 SF corridor/support. Civic/Academic.", zones: 1 },
+    { code: "tile-e1", name: "Tile E-1 — Mixed End Cap (Left)",       sf: 2700, m2: 250.84, comp: "2 × Private (300 SF) + Professional Small (800 SF) + 1,300 SF corridor.", zones: 3, endcap: true },
+    { code: "tile-e2", name: "Tile E-2 — Mixed End Cap (Right)",      sf: 2700, m2: 250.84, comp: "Mirror of E-1 for right building end. Handles corner column grid.", zones: 3, endcap: true }
+  ],
+  largeTiles: [
+    { code: "tile-f", name: "Tile F — Large Corporate Office",   sf: 4900, m2: 455.22, comp: "Single 4,900 SF corporate tenant. Approaches 1/4 floor tile.", zones: 1 },
+    { code: "tile-g", name: "Tile G — Large Private Office Mix", sf: 4900, m2: 455.22, comp: "Ten private offices (300–500 SF each) + 900 SF corridor. Maximum climate-zone count.", zones: 10 },
+    { code: "tile-h", name: "Tile H — Large Professional Office", sf: 4900, m2: 455.22, comp: "Three Professional Office units (any sub-type mix) + 700 SF corridor.", zones: 3 }
+  ],
+  hierarchy: [
+    { label: "1/8",  m2: 232.26,  sf: 2500,  desc: "Minimum Corporate Office tile; Private Office aggregate" },
+    { label: "1/4",  m2: 464.52,  sf: 5000,  desc: "Standard Professional Office leasehold; mid-tier Corporate" },
+    { label: "1/2",  m2: 929.03,  sf: 10000, desc: "Tenant Lounge (2nd floor); large Corporate Office option" },
+    { label: "3/4",  m2: 1393.55, sf: 15000, desc: "Large Corporate Office option (non-standard tile composition)" },
+    { label: "Full", m2: 1858.06, sf: 20000, desc: "Full floor; one Corporate tenant occupies entire upper floor" }
+  ]
+};
+
+/* Render tile cards */
+function tileCardHtml(t, sizeClass) {
+  return `<div class="tile-card ${sizeClass}">
+    ${t.endcap ? '<div class="endcap">End Cap</div>' : ''}
+    <div class="code">${t.code}</div>
+    <div class="name">${t.name}</div>
+    <div class="area">${t.sf.toLocaleString()} SF <span class="m2">/ ${t.m2.toFixed(2)} m²</span></div>
+    <div class="composition">${t.comp}</div>
+    <div class="zones">${t.zones} climate zone${t.zones > 1 ? 's' : ''}</div>
+  </div>`;
+}
+document.getElementById('small-tiles').innerHTML = BIM_TOKENS.smallTiles.map(t => tileCardHtml(t, 'small')).join('');
+document.getElementById('large-tiles').innerHTML = BIM_TOKENS.largeTiles.map(t => tileCardHtml(t, 'large')).join('');
+
+/* Hierarchy bars */
+const maxHier = Math.max(...BIM_TOKENS.hierarchy.map(h => h.sf));
+document.getElementById('hierarchy').innerHTML = BIM_TOKENS.hierarchy.map(h => `
+  <div class="h-row">
+    <div class="h-label">${h.label} Floor</div>
+    <div>
+      <div class="h-track"><div class="h-fill" style="width: ${(h.sf / maxHier) * 100}%;"></div></div>
+      <div class="h-desc">${h.desc}</div>
+    </div>
+    <div class="h-sf"><span class="sf-main">${h.sf.toLocaleString()} SF</span><span class="sf-m2">${h.m2.toFixed(2)} m²</span></div>
+  </div>
+`).join('');
+
+/* Floor plate composition strip */
+const floorLayout = [
+  { code: "Tile F",   sf: 4900, color: "#4a78b8", name: "Tile F — Large Corporate Office",       zones: 1,  light: false },
+  { code: "Tile A",   sf: 2700, color: "#6a8fc8", name: "Tile A — Corporate Office",              zones: 1,  light: false },
+  { code: "Tile H",   sf: 4900, color: "#d99a3b", name: "Tile H — Large Professional Office",     zones: 3,  light: false },
+  { code: "Tile C-1", sf: 2700, color: "#e5b46e", name: "Tile C-1 — Professional Med + Small",    zones: 2,  light: true  },
+  { code: "Tile B-1", sf: 2700, color: "#b54545", name: "Tile B-1 — Private Office End Cap",      zones: 5,  light: false },
+  { code: "Common",   sf: 2100, color: "#7a7a7a", name: "Common — corridors + restrooms + meter", zones: 0,  light: false }
+];
+document.getElementById('floor-demo').innerHTML = floorLayout.map(t => `
+  <div class="fs-seg${t.light ? ' light' : ''}" style="flex: ${t.sf} ${t.sf} 0; background: ${t.color};">
+    <div class="fs-code">${t.code}</div>
+    <div class="fs-sf">${t.sf.toLocaleString()} SF</div>
+    ${t.zones > 0 ? `<div class="fs-zones">${t.zones} zone${t.zones > 1 ? 's' : ''}</div>` : ''}
+  </div>
+`).join('');
+document.getElementById('floor-demo-legend').innerHTML = floorLayout.map(t => `
+  <div class="fl-item">
+    <div class="fl-swatch" style="background: ${t.color};"></div>
+    <div>
+      <span class="fl-name">${t.code}</span>
+      <span class="fl-detail"> — ${t.sf.toLocaleString()} SF${t.zones > 0 ? ` · ${t.zones} climate zone${t.zones > 1 ? 's' : ''}` : ''}</span>
+    </div>
+  </div>
+`).join('');
+</script>
+
+</body>
+</html>

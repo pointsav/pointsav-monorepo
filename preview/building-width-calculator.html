@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Building Width Calculator — Key Plans and Tiles</title>
+<style>
+  :root {
+    --ink: #1a1a1a;
+    --ink-soft: #4a4a4a;
+    --rule: #cccccc;
+    --paper: #ffffff;
+    --shade: #f6f5f1;
+    --shade-deep: #ece9df;
+    --zone1: #4a78b8;   /* Habitat — blue */
+    --zone1-soft: #d9e4f3;
+    --zone2: #d99a3b;   /* Magazine — amber */
+    --zone2-soft: #f6e5c4;
+    --zone3: #b54545;   /* Corridor — red */
+    --zone3-soft: #f0d2d2;
+    --facade: #cccccc;
+    --accent: #1f4f8b;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 15px;
+    line-height: 1.55;
+  }
+  .mono {
+    font-family: "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+    font-variant-numeric: tabular-nums;
+  }
+  .wrap {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 48px 32px 80px;
+  }
+  header.masthead {
+    border-bottom: 2px solid var(--ink);
+    padding-bottom: 24px;
+    margin-bottom: 40px;
+  }
+  header.masthead .eyebrow {
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-size: 11px;
+    color: var(--ink-soft);
+    margin-bottom: 8px;
+  }
+  header.masthead h1 {
+    font-size: 30px;
+    line-height: 1.2;
+    margin: 0 0 6px;
+    font-weight: 600;
+  }
+  header.masthead .sub {
+    color: var(--ink-soft);
+    font-size: 14px;
+  }
+  nav.toc {
+    background: var(--shade);
+    padding: 14px 20px;
+    border-left: 3px solid var(--accent);
+    margin-bottom: 48px;
+    font-size: 14px;
+  }
+  nav.toc strong { display: block; margin-bottom: 6px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-soft); }
+  nav.toc a { color: var(--accent); text-decoration: none; margin-right: 18px; }
+  nav.toc a:hover { text-decoration: underline; }
+
+  section { margin-bottom: 64px; }
+  section h2 {
+    font-size: 22px;
+    font-weight: 600;
+    margin: 0 0 6px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--ink);
+  }
+  section h2 .num {
+    color: var(--accent);
+    font-size: 14px;
+    letter-spacing: 0.1em;
+    margin-right: 10px;
+    text-transform: uppercase;
+  }
+  section .lede {
+    color: var(--ink-soft);
+    font-size: 14px;
+    margin: 8px 0 24px;
+    max-width: 720px;
+  }
+  section h3 {
+    font-size: 15px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+    margin: 32px 0 12px;
+  }
+  p { max-width: 760px; }
+
+  /* Section 1 — strip diagram */
+  .strip-wrap {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 32px;
+    align-items: start;
+    margin: 24px 0 8px;
+  }
+  .strip {
+    border: 1px solid var(--ink);
+    background: var(--paper);
+  }
+  .strip-row {
+    display: grid;
+    grid-template-columns: 80px 1fr 90px;
+    align-items: center;
+    border-bottom: 1px dashed var(--rule);
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+  .strip-row:last-child { border-bottom: none; }
+  .strip-row .label { font-weight: 600; }
+  .strip-row .dim { text-align: right; font-family: "SF Mono", Menlo, Consolas, monospace; color: var(--ink-soft); }
+  .strip-row.facade { background: var(--facade); }
+  .strip-row.habitat { background: var(--zone1-soft); }
+  .strip-row.magazine { background: var(--zone2-soft); }
+  .strip-row.corridor { background: var(--zone3-soft); }
+  .strip-row.habitat .label { color: var(--zone1); }
+  .strip-row.magazine .label { color: var(--zone2); }
+  .strip-row.corridor .label { color: var(--zone3); }
+
+  .callout {
+    background: var(--shade);
+    border-left: 3px solid var(--zone2);
+    padding: 14px 18px;
+    margin: 16px 0;
+    font-size: 14px;
+  }
+  .callout strong { color: var(--zone2); }
+
+  /* Section 2 — bar chart */
+  .bar-table {
+    margin-top: 16px;
+  }
+  .bar-row {
+    display: grid;
+    grid-template-columns: 200px 1fr 140px;
+    gap: 16px;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .bar-row:last-child { border-bottom: none; }
+  .bar-name { font-weight: 600; font-size: 14px; }
+  .bar-name .sub {
+    display: block;
+    font-weight: 400;
+    font-size: 11px;
+    color: var(--ink-soft);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .bar-track {
+    display: flex;
+    height: 36px;
+    border: 1px solid var(--ink);
+    background: var(--paper);
+    overflow: hidden;
+    position: relative;
+  }
+  .seg {
+    color: white;
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: filter 0.15s;
+    border-right: 1px solid rgba(255,255,255,0.4);
+    position: relative;
+    cursor: default;
+  }
+  .seg:last-child { border-right: none; }
+  .seg.z1 { background: var(--zone1); }
+  .seg.z2 { background: var(--zone2); }
+  .seg.z3 { background: var(--zone3); }
+  .seg:hover { filter: brightness(1.15); }
+  .seg .tooltip {
+    visibility: hidden;
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--ink);
+    color: white;
+    padding: 4px 8px;
+    font-size: 11px;
+    white-space: nowrap;
+    border-radius: 2px;
+    z-index: 10;
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+  }
+  .seg:hover .tooltip { visibility: visible; }
+  .bar-total {
+    text-align: right;
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+    font-size: 13px;
+  }
+  .bar-total .ft { color: var(--ink-soft); font-size: 11px; }
+
+  .legend {
+    display: flex;
+    gap: 18px;
+    font-size: 12px;
+    margin: 8px 0 20px;
+    color: var(--ink-soft);
+  }
+  .legend span::before {
+    content: "";
+    display: inline-block;
+    width: 12px; height: 12px;
+    margin-right: 6px;
+    vertical-align: -1px;
+  }
+  .legend .z1::before { background: var(--zone1); }
+  .legend .z2::before { background: var(--zone2); }
+  .legend .z3::before { background: var(--zone3); }
+
+  /* Section 3 — formula */
+  .formula {
+    background: var(--shade);
+    padding: 24px 28px;
+    border: 1px solid var(--rule);
+    text-align: center;
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+    font-size: 18px;
+    margin: 16px 0 28px;
+  }
+  .formula .zline {
+    display: block;
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin-top: 8px;
+  }
+  .formula .z1 { color: var(--zone1); font-weight: 600; }
+  .formula .z2 { color: var(--zone2); font-weight: 600; }
+  .formula .z3 { color: var(--zone3); font-weight: 600; }
+
+  table.calc {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 12px;
+    font-size: 13px;
+  }
+  table.calc th, table.calc td {
+    text-align: left;
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--rule);
+  }
+  table.calc th {
+    background: var(--shade-deep);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 600;
+  }
+  table.calc td.num { font-family: "SF Mono", Menlo, Consolas, monospace; text-align: right; }
+  table.calc tr.widest { background: #faf4e6; }
+  table.calc tr.narrowest { background: #f0f5fa; }
+
+  .delta-card {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 14px;
+    margin-top: 20px;
+  }
+  .delta-card .card {
+    border: 1px solid var(--rule);
+    padding: 16px;
+    background: var(--shade);
+  }
+  .delta-card .card .label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink-soft);
+    margin-bottom: 6px;
+  }
+  .delta-card .card .val {
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+    font-size: 22px;
+    font-weight: 600;
+  }
+  .delta-card .card .val .ft { font-size: 13px; font-weight: 400; color: var(--ink-soft); display: block; }
+
+  /* Section 4 — floor plate */
+  .composition {
+    margin-bottom: 28px;
+  }
+  .composition h4 {
+    font-size: 14px;
+    margin: 18px 0 4px;
+    font-weight: 600;
+  }
+  .composition .descr {
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin-bottom: 8px;
+  }
+  .plate {
+    display: flex;
+    border: 2px solid var(--ink);
+    height: 180px;
+    background: var(--paper);
+    overflow: hidden;
+  }
+  .plate .tile {
+    border-right: 1px solid var(--ink);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    font-size: 11px;
+    padding: 6px;
+    cursor: default;
+    transition: background 0.12s;
+  }
+  .plate .tile:last-child { border-right: none; }
+  .plate .tile:hover { filter: brightness(0.95); }
+  .plate .tile .name { font-weight: 600; font-size: 12px; margin-bottom: 2px; }
+  .plate .tile .sf { font-family: "SF Mono", Menlo, Consolas, monospace; font-size: 11px; }
+  .plate .tile .zones { font-size: 10px; color: var(--ink-soft); margin-top: 4px; }
+  .tile-corp { background: #e3eaf3; }
+  .tile-prof { background: #f6e5c4; }
+  .tile-priv { background: #f0d2d2; }
+  .tile-mixed { background: #e6e0d4; }
+  .plate-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--ink-soft);
+    margin-top: 4px;
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+  }
+
+  /* Section 5 */
+  .next-grid {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 32px;
+    align-items: start;
+  }
+  .file-list {
+    background: var(--shade);
+    padding: 16px 20px;
+    border-left: 3px solid var(--accent);
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+    font-size: 12px;
+  }
+  .file-list strong {
+    display: block;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 11px;
+    margin-bottom: 8px;
+    color: var(--ink-soft);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+  .file-list li { margin-bottom: 4px; list-style: none; }
+  .file-list ul { padding: 0; margin: 0; }
+
+  footer.colophon {
+    margin-top: 80px;
+    padding-top: 18px;
+    border-top: 1px solid var(--rule);
+    font-size: 11px;
+    color: var(--ink-soft);
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+  }
+
+  @media print {
+    @page { size: letter landscape; margin: 1.25cm 1.5cm; }
+
+    *, *::before, *::after {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+
+    html, body { font-size: 11pt; line-height: 1.4; }
+
+    .wrap { max-width: 100%; padding: 0; }
+
+    nav.toc { display: none; }
+
+    .seg .tooltip { display: none !important; }
+    .seg:hover { filter: none; }
+    .plate .tile:hover { filter: none; }
+
+    /* Tighten paragraph and lede margins globally; extend to full page width */
+    p { margin: 5px 0; max-width: none; }
+    section .lede { margin: 4px 0 8px; max-width: none; }
+
+    /* Every section starts on its own slide */
+    section + section { break-before: page; page-break-before: always; }
+
+    /* Headings stay glued to what follows */
+    section h2 { margin-bottom: 4px; padding-bottom: 4px; break-after: avoid; page-break-after: avoid; }
+    section h3 { margin-top: 8px; margin-bottom: 4px; break-after: avoid; page-break-after: avoid; }
+    .strip-wrap h3:first-child { margin-top: 0; }
+
+    /* Tighten masthead so Section 1 fits on one slide */
+    header.masthead { padding-bottom: 12px; margin-bottom: 16px; }
+
+    /* Tighten strip-wrap top gap */
+    .strip-wrap { margin-top: 8px; margin-bottom: 4px; }
+
+    /* Tighten callout chrome */
+    .callout { padding: 8px 14px; margin: 8px 0; }
+
+    /* Tighten bar chart rows so Section 2 fits on one slide */
+    .bar-row   { padding: 5px 0; break-inside: avoid; page-break-inside: avoid; }
+    .bar-track { height: 26px; }
+
+    /* Atomic units never split across pages */
+    .composition { break-inside: avoid; page-break-inside: avoid; }
+    .delta-card  { break-inside: avoid; page-break-inside: avoid; }
+    .callout     { break-inside: avoid; page-break-inside: avoid; }
+    .strip-row   { break-inside: avoid; page-break-inside: avoid; }
+
+    /* Floor plate compositions — restore comfortable tile height; explicit spacing */
+    .plate              { height: 160px; }
+    .composition h4     { margin-top: 14px; margin-bottom: 6px; }
+    .composition .descr { margin-bottom: 10px; }
+    .composition        { margin-bottom: 20px; }
+
+    .next-grid { grid-template-columns: 1fr; }
+
+    footer.colophon { margin-top: 24px; }
+
+    a { color: inherit; text-decoration: none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="masthead">
+  <div class="eyebrow">Spatial Taxonomy &middot; Building Information Model</div>
+  <h1>Building Width Calculator</h1>
+  <div class="sub">Furniture &rarr; Zone &rarr; Width &middot; A proof-of-concept for <span class="mono">tool-buildingwidth</span></div>
+</header>
+
+<nav class="toc">
+  <strong>On this page</strong>
+  <a href="#sec-1">1 · The Backwards Method</a>
+  <a href="#sec-2">2 · Zone Depth by Use Type</a>
+  <a href="#sec-3">3 · Width Calculator</a>
+  <a href="#sec-4">4 · The Floor Plate</a>
+  <a href="#sec-5">5 · What Comes Next</a>
+</nav>
+
+<!-- ============================================================ -->
+<section id="sec-1">
+  <h2><span class="num">Section 1</span>The Backwards Method</h2>
+  <p class="lede">Most office buildings begin with a width — sixty feet reads well for daylight — then cram furniture in until it fits. Woodfine inverts the sequence. We start with the tenant's actual chair, desk, exam table, lab bench, or lectern, and the building width is whatever that arrangement requires.</p>
+
+  <p>The Building Width Calculator is not a width calculator in the conventional sense. It is the <em>output</em> of a backwards-running process that reads furniture inventories, applies the German Circulation Law and the European Lighting Standard, and reports the width that falls out at the end. Use type drives the result: a medical floor plate is wider than an academic one because exam tables are deeper than seminar rows.</p>
+
+  <p style="margin-top: 14px;">The cross-section has three zones, mirrored on each side of a central corridor:</p>
+
+  <div class="strip-wrap">
+    <div class="strip" id="strip-diagram">
+      <!-- populated by JS -->
+    </div>
+    <div>
+      <h3>Zone 1 — Habitat</h3>
+      <p style="margin-top: 0;">All desks, workstations, exam tables, or benches live here. Six metres minimum from the facade — the European Lighting Standard threshold for natural light at a workstation.</p>
+      <h3>Zone 2 — Magazine</h3>
+      <p style="margin-top: 0;">Storage, bookshelves, filing, server rooms, supply closets. Its depth is the slack variable: widen it to keep the building from becoming a long, narrow rectangle.</p>
+      <h3>Zone 3 — Corridor</h3>
+      <p style="margin-top: 0;">Bilateral, mirrored at the centre of the floor plate. Width is set by occupancy egress requirements and accessibility — overdesigned by 20% to support small-tenant in-and-out traffic.</p>
+    </div>
+  </div>
+
+  <div class="callout">
+    <strong>The 0.7 m German Circulation Law addition.</strong> If desks are perpendicular to the facade, a 6.0 m Habitat depth fits only two desks in series. Adding 0.7 m unlocks the third desk with proper clearance — this is the German Circulation Law in practice. Token: <span class="mono">bim.circulation-addition.perpendicular-desk = 0.7 m</span>.
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section id="sec-2">
+  <h2><span class="num">Section 2</span>Zone Depth by Use Type</h2>
+  <p class="lede">Six use types, six different building widths. The chart below is proportional — each segment's width on screen is the actual zone depth in metres, scaled against the widest total. Hover any segment for exact values.</p>
+
+  <div class="legend">
+    <span class="z1">Zone 1 — Habitat (desks)</span>
+    <span class="z2">Zone 2 — Magazine (storage)</span>
+    <span class="z3">Zone 3 — Corridor (circulation)</span>
+  </div>
+
+  <div class="bar-table" id="bar-table">
+    <!-- populated by JS -->
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section id="sec-3">
+  <h2><span class="num">Section 3</span>The Building Width Calculator</h2>
+  <p class="lede">The formula is a mirror equation. One half of the floor plate is Zone 1 plus Zone 2 plus Zone 3. The other half is identical. Total building width is the sum.</p>
+
+  <div class="formula">
+    <span class="z1">Zone 1</span> + <span class="z2">Zone 2</span> + <span class="z3">Zone 3</span> | <span class="z3">Zone 3</span> + <span class="z2">Zone 2</span> + <span class="z1">Zone 1</span>
+    <span class="zline">Building Width = 2 × (Habitat + Magazine) + 2 × Corridor &nbsp; — &nbsp; or simply 2 × (Z1 + Z2 + Z3)</span>
+  </div>
+
+  <p>Where the Corridor is zero (Private Office, Academic — both open to a shared building corridor instead of a bilateral one), the central pair collapses to a single shared corridor and the formula reduces to 2 × (Z1 + Z2).</p>
+
+  <table class="calc" id="calc-table">
+    <thead>
+      <tr>
+        <th>Use Type</th>
+        <th>Zone 1 Habitat</th>
+        <th>Zone 2 Magazine</th>
+        <th>Zone 3 Corridor</th>
+        <th>Half Width</th>
+        <th>Total Width</th>
+      </tr>
+    </thead>
+    <tbody><!-- populated by JS --></tbody>
+  </table>
+
+  <div class="delta-card" id="delta-card">
+    <!-- populated by JS -->
+  </div>
+
+  <div class="callout" style="margin-top: 24px;">
+    <strong>The &plusmn;5 ft precision question.</strong> Why does a 1.4 m gap between Medical and Academic widths matter for demising? Because tiles must compose to a single floor plate width across all use types on a floor. If the building is sized for Medical (its widest tenant), Academic tenants get extra Zone 2 they did not ask for. If sized for Academic, Medical does not fit. The <span class="mono">tool-buildingwidth</span> engine resolves this by computing the floor's <em>tenant-mix maximum width</em> at design time, then either redistributing Zone 2 depth or constraining tenant mix per floor.
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section id="sec-4">
+  <h2><span class="num">Section 4</span>The Floor Plate</h2>
+  <p class="lede">Twenty-thousand square feet of net leasable area per upper floor. Tiles are the assembly units — Small Tile = 2,700 SF, Large Tile = 4,900 SF — and they compose to fill the plate exactly. Three example compositions follow. Hover any tile for its key plan, climate-zone count, and source token.</p>
+
+  <p>The rule from the methodology memo: <em>"in all cases, the entirety of the Floor Plates is dividable by a certain combination of Key Plans, with no remainder of free space that is not represented by a Key Plan."</em> Rolling efficiency target: 100%.</p>
+
+  <div class="composition" id="comp-corporate"></div>
+  <div class="composition" id="comp-private"></div>
+  <div class="composition" id="comp-mixed"></div>
+
+  <div class="callout">
+    <strong>Tile = Climate Zone.</strong> Each Tile is an independent HVAC zone. A tenant who wants thermostat control leases a Tile. A tenant in a Private Office in Tile B-1 shares climate control with four other private offices — the trade-off the leasing agreement makes explicit. Source token: <span class="mono">bim.tile.design-principles.climate-zone-autonomy</span>.
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section id="sec-5">
+  <h2><span class="num">Section 5</span>What Comes Next</h2>
+
+  <div class="next-grid">
+    <div>
+      <p>This HTML is the specification document for <span class="mono">tool-buildingwidth</span>, a Rust engine that will read the DTCG tokens at the right and compute floor plate dimensions, tile compositions, and demising-wall coordinates from a tenant-mix input. The engine outputs IFC-compatible geometry and a leasing-plan summary; this page is what the engine renders as a human preview.</p>
+
+      <p>The values shown here are not approximations. Every metre, every square foot, every percentage is read live from the DTCG token files at page load. When the tokens change — when a new key plan sample lands or a corridor width updates — this page changes with them. The engine, when shipped, will share the same source.</p>
+    </div>
+
+    <div class="file-list">
+      <strong>Source token files</strong>
+      <ul>
+        <li>building-width-calculator.dtcg.json</li>
+        <li>floor-plate-standards.dtcg.json</li>
+        <li>professional-office-subtypes.dtcg.json</li>
+        <li>tile-system.dtcg.json</li>
+      </ul>
+      <strong style="margin-top: 14px;">Future consumer</strong>
+      <ul>
+        <li>pointsav-monorepo/<br>&nbsp;&nbsp;crates/tool-buildingwidth/</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<footer class="colophon">
+  Source data: woodfine-design-bim DTCG token library v0.0.2 &nbsp;|&nbsp; Woodfine Management Corp
+</footer>
+
+</div>
+
+<script>
+/* ============================================================
+   BIM_TOKENS — inline mirror of the DTCG token files.
+   All values are read from this object at render time.
+   ============================================================ */
+const BIM_TOKENS = {
+  zones: {
+    "private-office":      { label: "Private Office",      habitat: 5.9944, magazine: 1.3716, corridor: 0.0,   note: "PO-1/PO-2/PO-3 — opens to shared building corridor" },
+    "professional-office": { label: "Professional Office", habitat: 6.0,    magazine: 3.8,    corridor: 2.0,   note: "Baseline professional office; tenant business suites" },
+    "academic":            { label: "Academic",            habitat: 4.7,    magazine: 3.0,    corridor: 0.0,   note: "Seating faces forward — Habitat under 6 m permitted" },
+    "business":            { label: "Business",            habitat: 6.0,    magazine: 7.3,    corridor: 2.7,   note: "Widest Magazine — open storage walls, server rooms" },
+    "medical":             { label: "Medical",             habitat: 7.2,    magazine: 4.87,   corridor: 2.89,  note: "Widest Habitat — exam table depth + patient circulation" },
+    "laboratory":          { label: "Laboratory",          habitat: 6.7818, magazine: 4.8006, corridor: 3.048, note: "Bench depth + fume hood clearance + IBC high-hazard egress" },
+    "civic":               { label: "Civic",               habitat: 6.0,    magazine: 7.23,   corridor: 3.6,   note: "Widest Corridor — public assembly egress" }
+  },
+  circulationAddition: {
+    perpendicularDesk: 0.7
+  },
+  floorPlate: {
+    netLeasableM2: 1858.06,
+    netLeasableSF: 20000
+  },
+  tiles: {
+    small: 2700, // SF
+    large: 4900  // SF
+  }
+};
+
+/* ---------- helpers ---------- */
+function mToFtIn(m) {
+  if (m === 0) return "—";
+  const totalIn = m * 39.3701;
+  const ft = Math.floor(totalIn / 12);
+  const inches = Math.round(totalIn - ft * 12);
+  if (inches === 12) return (ft + 1) + "'0\"";
+  return ft + "'" + inches + "\"";
+}
+function mFmt(m) {
+  if (m === 0) return "0.00 m";
+  return m.toFixed(2).replace(/\.?0+$/, function(s){ return s.indexOf('.') >= 0 ? s.replace(/0+$/,'').replace(/\.$/,'') : s; }) + " m";
+}
+function totalWidth(z) {
+  return 2 * (z.habitat + z.magazine + z.corridor);
+}
+
+/* ---------- Section 1 strip diagram ---------- */
+(function renderStrip() {
+  const el = document.getElementById('strip-diagram');
+  const z = BIM_TOKENS.zones["professional-office"];
+  const rows = [
+    { cls: 'facade',   label: 'Facade',   dim: '—',           desc: 'Frontage' },
+    { cls: 'habitat',  label: 'Zone 1',   dim: mFmt(z.habitat),  desc: 'Habitat — desks' },
+    { cls: 'magazine', label: 'Zone 2',   dim: mFmt(z.magazine), desc: 'Magazine — storage' },
+    { cls: 'corridor', label: 'Zone 3',   dim: mFmt(z.corridor), desc: 'Corridor' },
+    { cls: 'magazine', label: 'Zone 2',   dim: mFmt(z.magazine), desc: 'Magazine — storage' },
+    { cls: 'habitat',  label: 'Zone 1',   dim: mFmt(z.habitat),  desc: 'Habitat — desks' },
+    { cls: 'facade',   label: 'Facade',   dim: '—',           desc: 'Frontage' }
+  ];
+  el.innerHTML = rows.map(r =>
+    `<div class="strip-row ${r.cls}">
+       <div class="label">${r.label}</div>
+       <div>${r.desc}</div>
+       <div class="dim">${r.dim}</div>
+     </div>`
+  ).join('') + `<div class="strip-row" style="background: var(--shade-deep); border-top: 2px solid var(--ink);">
+       <div class="label">TOTAL</div>
+       <div style="font-size: 11px; color: var(--ink-soft);">Professional Office cross-section</div>
+       <div class="dim"><strong>${totalWidth(z).toFixed(1)} m</strong><br>${mToFtIn(totalWidth(z))}</div>
+     </div>`;
+})();
+
+/* ---------- Section 2 bar chart ---------- */
+(function renderBars() {
+  const el = document.getElementById('bar-table');
+  const order = ["private-office", "academic", "professional-office", "laboratory", "medical", "business", "civic"];
+  const totals = order.map(k => totalWidth(BIM_TOKENS.zones[k]));
+  const maxTotal = Math.max(...totals);
+
+  el.innerHTML = order.map(key => {
+    const z = BIM_TOKENS.zones[key];
+    const t = totalWidth(z);
+    const pctTotal = (t / maxTotal) * 100;
+    const half = z.habitat + z.magazine + z.corridor;
+    const maxHalf = maxTotal / 2;
+    const w1 = (z.habitat / maxHalf) * 100;
+    const w2 = (z.magazine / maxHalf) * 100;
+    const w3 = (z.corridor / maxHalf) * 100;
+    return `<div class="bar-row">
+       <div class="bar-name">${z.label}<span class="sub">${z.note}</span></div>
+       <div class="bar-track" style="width: ${pctTotal/2 * 2}%;">
+         <div class="seg z1" style="width: ${w1 / (w1+w2+w3) * 100}%;">
+           ${z.habitat >= 1.5 ? mFmt(z.habitat) : ''}
+           <span class="tooltip">Z1 Habitat: ${mFmt(z.habitat)} / ${mToFtIn(z.habitat)}</span>
+         </div>
+         ${w2 > 0 ? `<div class="seg z2" style="width: ${w2 / (w1+w2+w3) * 100}%;">
+           ${z.magazine >= 1.5 ? mFmt(z.magazine) : ''}
+           <span class="tooltip">Z2 Magazine: ${mFmt(z.magazine)} / ${mToFtIn(z.magazine)}</span>
+         </div>` : ''}
+         ${w3 > 0 ? `<div class="seg z3" style="width: ${w3 / (w1+w2+w3) * 100}%;">
+           ${z.corridor >= 1.5 ? mFmt(z.corridor) : ''}
+           <span class="tooltip">Z3 Corridor: ${mFmt(z.corridor)} / ${mToFtIn(z.corridor)}</span>
+         </div>` : ''}
+       </div>
+       <div class="bar-total">
+         <strong>${t.toFixed(2)} m</strong>
+         <span class="ft">${mToFtIn(t)} total</span>
+       </div>
+     </div>`;
+  }).join('');
+})();
+
+/* ---------- Section 3 calc table + delta card ---------- */
+(function renderCalc() {
+  const tbody = document.querySelector('#calc-table tbody');
+  const order = ["private-office", "academic", "professional-office", "laboratory", "medical", "business", "civic"];
+  const totals = order.map(k => ({ key: k, t: totalWidth(BIM_TOKENS.zones[k]) }));
+  const widest = totals.reduce((a,b) => a.t > b.t ? a : b);
+  const narrowest = totals.reduce((a,b) => a.t < b.t ? a : b);
+
+  tbody.innerHTML = order.map(key => {
+    const z = BIM_TOKENS.zones[key];
+    const half = z.habitat + z.magazine + z.corridor;
+    const t = totalWidth(z);
+    let cls = '';
+    if (key === widest.key) cls = 'widest';
+    else if (key === narrowest.key) cls = 'narrowest';
+    return `<tr class="${cls}">
+       <td><strong>${z.label}</strong></td>
+       <td class="num">${mFmt(z.habitat)} <span style="color: var(--ink-soft);">/ ${mToFtIn(z.habitat)}</span></td>
+       <td class="num">${mFmt(z.magazine)} <span style="color: var(--ink-soft);">/ ${mToFtIn(z.magazine)}</span></td>
+       <td class="num">${mFmt(z.corridor)} <span style="color: var(--ink-soft);">/ ${mToFtIn(z.corridor)}</span></td>
+       <td class="num">${half.toFixed(2)} m</td>
+       <td class="num"><strong>${t.toFixed(2)} m</strong> <span style="color: var(--ink-soft);">/ ${mToFtIn(t)}</span></td>
+     </tr>`;
+  }).join('');
+
+  const card = document.getElementById('delta-card');
+  const delta = widest.t - narrowest.t;
+  const deltaFt = delta * 3.28084;
+  card.innerHTML = `
+    <div class="card">
+      <div class="label">Widest building width</div>
+      <div class="val">${widest.t.toFixed(2)} m <span class="ft">${mToFtIn(widest.t)} &middot; ${BIM_TOKENS.zones[widest.key].label}</span></div>
+    </div>
+    <div class="card">
+      <div class="label">Narrowest building width</div>
+      <div class="val">${narrowest.t.toFixed(2)} m <span class="ft">${mToFtIn(narrowest.t)} &middot; ${BIM_TOKENS.zones[narrowest.key].label}</span></div>
+    </div>
+    <div class="card">
+      <div class="label">Spread &mdash; widest minus narrowest</div>
+      <div class="val">${delta.toFixed(2)} m <span class="ft">${deltaFt.toFixed(1)} ft</span></div>
+    </div>
+  `;
+})();
+
+/* ---------- Section 4 floor plate compositions ---------- */
+function renderComposition(containerId, heading, descr, tiles) {
+  const el = document.getElementById(containerId);
+  const total = tiles.reduce((s,t) => s + t.sf, 0);
+  const html = tiles.map(t => {
+    const pct = (t.sf / total) * 100;
+    return `<div class="tile ${t.cls}" style="width: ${pct}%;" title="${t.label} — ${t.sf} SF — ${t.zones} climate zone${t.zones > 1 ? 's' : ''}">
+       <div class="name">${t.label}</div>
+       <div class="sf">${t.sf.toLocaleString()} SF</div>
+       <div class="zones">${t.zones} climate zone${t.zones > 1 ? 's' : ''}</div>
+     </div>`;
+  }).join('');
+  el.innerHTML = `
+    <h4>${heading}</h4>
+    <div class="descr">${descr}</div>
+    <div class="plate">${html}</div>
+    <div class="plate-meta">
+      <span>Tiles: ${tiles.length}</span>
+      <span>Climate zones: ${tiles.reduce((s,t) => s + t.zones, 0)}</span>
+      <span>Total: ${total.toLocaleString()} SF (target ${BIM_TOKENS.floorPlate.netLeasableSF.toLocaleString()})</span>
+    </div>
+  `;
+}
+
+renderComposition(
+  'comp-corporate',
+  'Composition A — Corporate-heavy',
+  'Three large corporate tiles (Tile F, 4,900 SF each) plus two standard corporate tiles (Tile A, 2,700 SF each). Five independent climate zones — each tenant controls their own thermostat. Total: 20,100 SF.',
+  [
+    { label: 'Tile F', cls: 'tile-corp', sf: 4900, zones: 1 },
+    { label: 'Tile F', cls: 'tile-corp', sf: 4900, zones: 1 },
+    { label: 'Tile F', cls: 'tile-corp', sf: 4900, zones: 1 },
+    { label: 'Tile A', cls: 'tile-corp', sf: 2700, zones: 1 },
+    { label: 'Tile A', cls: 'tile-corp', sf: 2700, zones: 1 }
+  ]
+);
+
+renderComposition(
+  'comp-private',
+  'Composition B — Private Office heavy',
+  'Maximum climate-zone count. Two Tile G (4,900 SF, 10 climate zones each) plus four Tile B-1 (2,700 SF, 5 climate zones each) end caps. Twenty private licensed offices and twenty more in end caps. Forty independent thermostats on one floor.',
+  [
+    { label: 'Tile B-1', cls: 'tile-priv', sf: 2700, zones: 5 },
+    { label: 'Tile G',   cls: 'tile-priv', sf: 4900, zones: 10 },
+    { label: 'Tile B-1', cls: 'tile-priv', sf: 2700, zones: 5 },
+    { label: 'Tile B-1', cls: 'tile-priv', sf: 2700, zones: 5 },
+    { label: 'Tile G',   cls: 'tile-priv', sf: 4900, zones: 10 },
+    { label: 'Tile B-1', cls: 'tile-priv', sf: 2700, zones: 5 }
+  ]
+);
+
+renderComposition(
+  'comp-mixed',
+  'Composition C — Mixed Professional Centre',
+  'Two Tile H (large professional, 3 climate zones each), one Tile C-2 (Medium professional pair), one Tile C-1 (Medium + Small), and two end-cap mixed tiles (E-1 / E-2). Tenants: Medical anchor + Business cluster + Private Office end caps.',
+  [
+    { label: 'Tile E-1', cls: 'tile-mixed', sf: 2700, zones: 3 },
+    { label: 'Tile H',   cls: 'tile-prof',  sf: 4900, zones: 3 },
+    { label: 'Tile C-2', cls: 'tile-prof',  sf: 2700, zones: 2 },
+    { label: 'Tile H',   cls: 'tile-prof',  sf: 4900, zones: 3 },
+    { label: 'Tile C-1', cls: 'tile-prof',  sf: 2700, zones: 2 },
+    { label: 'Tile E-2', cls: 'tile-mixed', sf: 2100, zones: 3 }
+  ]
+);
+</script>
+
+</body>
+</html>

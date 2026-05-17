@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Key Plans Index — Professional Office Sub-types</title>
+<style>
+  :root {
+    --ink: #1a1a1a;
+    --ink-soft: #4a4a4a;
+    --rule: #cccccc;
+    --paper: #ffffff;
+    --shade: #f6f5f1;
+    --shade-deep: #ece9df;
+    --accent: #1f4f8b;
+    --zone1: #4a78b8;
+    --zone2: #d99a3b;
+    --zone3: #b54545;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 15px;
+    line-height: 1.55;
+  }
+  .mono { font-family: "SF Mono", Menlo, Consolas, monospace; font-variant-numeric: tabular-nums; }
+  .wrap { max-width: 1200px; margin: 0 auto; padding: 48px 32px 80px; }
+
+  header.masthead {
+    border-bottom: 2px solid var(--ink);
+    padding-bottom: 24px;
+    margin-bottom: 36px;
+  }
+  header.masthead .eyebrow {
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-size: 11px;
+    color: var(--ink-soft);
+    margin-bottom: 8px;
+  }
+  header.masthead h1 {
+    font-size: 30px;
+    line-height: 1.2;
+    margin: 0 0 6px;
+    font-weight: 600;
+  }
+  header.masthead .sub { color: var(--ink-soft); font-size: 14px; }
+
+  .layout {
+    display: grid;
+    grid-template-columns: 1fr 280px;
+    gap: 40px;
+    align-items: start;
+  }
+
+  section { margin-bottom: 48px; }
+  section h2 {
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0 0 8px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--ink);
+  }
+  section .lede { color: var(--ink-soft); font-size: 14px; margin: 8px 0 20px; max-width: 720px; }
+  p { max-width: 760px; }
+
+  /* Sub-type cards */
+  .subtype {
+    border: 1px solid var(--rule);
+    border-left: 4px solid var(--accent);
+    background: var(--paper);
+    padding: 18px 22px;
+    margin-bottom: 18px;
+  }
+  .subtype header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 8px;
+  }
+  .subtype h3 {
+    font-size: 18px;
+    margin: 0;
+    font-weight: 600;
+  }
+  .subtype .codes {
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+    font-size: 11px;
+    color: var(--ink-soft);
+    background: var(--shade);
+    padding: 2px 8px;
+  }
+  .subtype .descr { font-size: 13px; color: var(--ink-soft); margin-bottom: 12px; }
+  .subtype .specs {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin: 12px 0;
+    font-size: 12px;
+  }
+  .subtype .spec {
+    background: var(--shade);
+    padding: 8px 10px;
+    border-radius: 2px;
+  }
+  .subtype .spec .label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink-soft);
+  }
+  .subtype .spec .val {
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+    font-weight: 600;
+    font-size: 14px;
+  }
+  .subtype .spec.z1 { border-left: 3px solid var(--zone1); }
+  .subtype .spec.z2 { border-left: 3px solid var(--zone2); }
+  .subtype .spec.z3 { border-left: 3px solid var(--zone3); }
+
+  .subtype .specialisations {
+    font-size: 12px;
+    margin-bottom: 8px;
+  }
+  .subtype .specialisations .label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink-soft);
+    margin-right: 6px;
+  }
+  .subtype .specialisations .pill {
+    display: inline-block;
+    background: var(--shade-deep);
+    padding: 2px 8px;
+    margin: 2px 4px 2px 0;
+    font-size: 11px;
+    border-radius: 2px;
+  }
+  .subtype .key-plans {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-top: 12px;
+  }
+  .subtype .key-plan-card {
+    background: var(--shade);
+    padding: 10px 12px;
+    text-align: center;
+    border-top: 2px solid var(--accent);
+  }
+  .subtype .key-plan-card .size {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink-soft);
+  }
+  .subtype .key-plan-card .area {
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+    font-size: 14px;
+    font-weight: 600;
+    margin: 2px 0;
+  }
+  .subtype .key-plan-card .m2 {
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+    font-size: 10px;
+    color: var(--ink-soft);
+  }
+  .subtype .key-plan-card.pending { background: #faf4e6; border-top-color: var(--zone2); }
+  .subtype .key-plan-card.pending .area { color: var(--zone2); }
+
+  .design-notes {
+    font-size: 12px;
+    color: var(--ink-soft);
+    padding-top: 10px;
+    margin-top: 12px;
+    border-top: 1px dashed var(--rule);
+    line-height: 1.5;
+  }
+  .design-notes .label {
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink-soft);
+    font-size: 10px;
+    margin-right: 6px;
+  }
+
+  /* Comparison table */
+  table.compare {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    margin-top: 12px;
+  }
+  table.compare th, table.compare td {
+    text-align: left;
+    padding: 8px 8px;
+    border-bottom: 1px solid var(--rule);
+  }
+  table.compare th {
+    background: var(--shade-deep);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+  }
+  table.compare td.num { font-family: "SF Mono", Menlo, Consolas, monospace; text-align: right; }
+  table.compare td.label { font-weight: 600; }
+  table.compare td.pending { color: var(--zone2); font-style: italic; }
+
+  /* Sidebar — Private Offices */
+  aside.sidebar {
+    background: var(--shade);
+    padding: 24px 22px;
+    border-top: 3px solid var(--accent);
+    position: sticky;
+    top: 24px;
+  }
+  aside.sidebar h2 {
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+    margin: 0 0 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--rule);
+  }
+  aside.sidebar .po-card {
+    margin-bottom: 16px;
+    padding-bottom: 14px;
+    border-bottom: 1px dashed var(--rule);
+  }
+  aside.sidebar .po-card:last-child { border-bottom: none; }
+  aside.sidebar .po-card .code {
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+    font-size: 11px;
+    color: var(--ink-soft);
+  }
+  aside.sidebar .po-card .name {
+    font-weight: 600;
+    font-size: 14px;
+    margin: 2px 0;
+  }
+  aside.sidebar .po-card .area {
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+    font-size: 13px;
+    margin-bottom: 4px;
+  }
+  aside.sidebar .po-card .descr {
+    font-size: 11px;
+    color: var(--ink-soft);
+    line-height: 1.5;
+  }
+
+  aside.sidebar .po-zones {
+    margin-top: 20px;
+    padding-top: 14px;
+    border-top: 1px solid var(--rule);
+  }
+  aside.sidebar .po-zones h3 {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin: 0 0 8px;
+  }
+  aside.sidebar .po-zones .row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    padding: 4px 0;
+    border-bottom: 1px dashed var(--rule);
+  }
+  aside.sidebar .po-zones .row:last-child { border-bottom: none; }
+  aside.sidebar .po-zones .row .lbl { color: var(--ink-soft); }
+  aside.sidebar .po-zones .row .val { font-family: "SF Mono", Menlo, Consolas, monospace; }
+
+  footer.colophon {
+    margin-top: 80px;
+    padding-top: 18px;
+    border-top: 1px solid var(--rule);
+    font-size: 11px;
+    color: var(--ink-soft);
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+  }
+
+  @media print {
+    @page { size: letter landscape; margin: 1.25cm 1.5cm; }
+
+    *, *::before, *::after {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+
+    html, body { font-size: 11pt; }
+
+    .wrap { max-width: 100%; padding: 0; }
+
+    /* Collapse sidebar below main */
+    .layout { grid-template-columns: 1fr; gap: 0; }
+
+    /* Every section starts on its own slide; sidebar gets its own slide too */
+    section + section  { break-before: page; page-break-before: always; }
+    aside.sidebar      { position: static; }
+
+    /* Headings stay glued to what follows */
+    section h2 { break-after: avoid; page-break-after: avoid; }
+
+    /* Atomic units never split across pages */
+    .subtype { break-inside: avoid; page-break-inside: avoid; }
+    .po-card { break-inside: avoid; page-break-inside: avoid; }
+    tr       { break-inside: avoid; page-break-inside: avoid; }
+
+    table.compare { font-size: 9pt; }
+    table.compare th, table.compare td { padding: 5px 6px; }
+
+    footer.colophon { margin-top: 24px; }
+
+    a { color: inherit; text-decoration: none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="masthead">
+  <div class="eyebrow">Spatial Taxonomy &middot; Reference Index</div>
+  <h1>Key Plans Index</h1>
+  <div class="sub">Professional Office sub-types &middot; Zone depths &middot; Key plan areas</div>
+</header>
+
+<div class="layout">
+
+  <main>
+    <section>
+      <h2>Comparison Table</h2>
+      <p class="lede">All values from <span class="mono">building-width-calculator.dtcg.json</span> and <span class="mono">professional-office-subtypes.dtcg.json</span>. Building Width = 2 × (Z1 + Z2 + Z3).</p>
+      <table class="compare" id="compare-table">
+        <thead>
+          <tr>
+            <th>Sub-type</th>
+            <th>Specialisations</th>
+            <th>Zone 1</th>
+            <th>Zone 2</th>
+            <th>Zone 3</th>
+            <th>Total Width</th>
+            <th>KP Small</th>
+            <th>KP Medium</th>
+            <th>KP Large</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>The Five Professional Office Sub-types</h2>
+      <p class="lede">Each sub-type carries FFE codes for three size tiers (1,100 / 1,400 / 800 SF respectively). Key plan index ranges are from the source workbook. Source: <span class="mono">CONSTRUCTION_2026_01_06_Key Plan_Professional Office_FFE_FIN.xlsx</span> V3.</p>
+      <div id="subtype-list"></div>
+    </section>
+  </main>
+
+  <aside class="sidebar">
+    <h2>Private Office</h2>
+    <p style="font-size: 12px; color: var(--ink-soft); margin: 0 0 16px;">A separate use type from Professional Office. Three sizes; no shared bilateral corridor &mdash; each office opens directly to the building corridor.</p>
+
+    <div id="po-cards"></div>
+
+    <div class="po-zones">
+      <h3>Private Office zones</h3>
+      <div id="po-zones-list"></div>
+    </div>
+  </aside>
+
+</div>
+
+<footer class="colophon">
+  Source data: woodfine-design-bim DTCG token library v0.0.2 &nbsp;|&nbsp; Woodfine Management Corp
+</footer>
+
+</div>
+
+<script>
+const BIM_TOKENS = {
+  subtypes: [
+    {
+      key: "medical",
+      label: "Medical Office",
+      ffe_codes: ["M1", "M2", "M3"],
+      ffe_sizes_sf: { M1: 1100, M2: 1400, M3: 800 },
+      specialisations: ["Dentist", "General Practitioner"],
+      kp_index_range: "10–14",
+      zone: { habitat: 7.2, magazine: 4.87, corridor: 2.89 },
+      keyplan: { small: { sf: 2402, m2: 223.0 }, medium: { sf: 3568, m2: 331.0 }, large: { sf: 5231, m2: 486.0 } },
+      design_notes: "Widest Zone 1 (7.2 m) of all sub-types — exam table depth plus patient and clinician circulation per German Circulation Law and WELL health standards. ADA/CSA-B651 corridor width. Acoustic and vibration isolation requirements. Demising wall required between suites."
+    },
+    {
+      key: "business",
+      label: "Business Office",
+      ffe_codes: ["B1", "B2", "B3"],
+      ffe_sizes_sf: { B1: 1100, B2: 1400, B3: 800 },
+      specialisations: ["Professional Services", "Law Firm", "Accounting Firm", "Engineering Firm"],
+      kp_index_range: "15–21",
+      zone: { habitat: 6.0, magazine: 7.3, corridor: 2.7 },
+      keyplan: { small: { sf: 3350, m2: 311.22 }, medium: { sf: 4302, m2: 399.66 }, large: { sf: 7524, m2: 669.0 } },
+      design_notes: "Widest Zone 2 Magazine (7.3 m) across all sub-types. The deep Magazine zone accommodates open filing walls, print areas, server rooms, and shared team collaboration space — characteristic of professional services practices."
+    },
+    {
+      key: "laboratory",
+      label: "Laboratory",
+      ffe_codes: ["L1", "L2", "L3"],
+      ffe_sizes_sf: { L1: 1100, L2: 1400, L3: 800 },
+      specialisations: ["Medical Laboratory", "Research Laboratory"],
+      kp_index_range: "22–28",
+      zone: { habitat: 6.7818, magazine: 4.8006, corridor: 3.048 },
+      keyplan: { small: { sf: 2099, m2: 195.0035 }, medium: { sf: 3401, m2: 315.96 }, large: { sf: 4313, m2: 400.69 } },
+      design_notes: "Wider Zone 1 (6.78 m) than standard Professional Office to accommodate bench depth and fume hood clearances per German Circulation Law. IBC high-hazard occupancy egress width (3.048 m / 10' 0\") in Zone 3 corridor."
+    },
+    {
+      key: "academic",
+      label: "Academic Office",
+      ffe_codes: ["A1", "A2", "A3"],
+      ffe_sizes_sf: { A1: 1100, A2: 1400, A3: 800 },
+      specialisations: ["Classroom", "Seminar Room", "Lecture Hall"],
+      kp_index_range: "29–32",
+      zone: { habitat: 4.7, magazine: 3.0, corridor: 0.0 },
+      keyplan: { small: { sf: 1131, m2: 105.0 }, medium: { sf: 2583, m2: 240.0 }, large: { sf: 4070, m2: 378.0 } },
+      design_notes: "Shorter Zone 1 (4.7 m) than other sub-types — seating faces forward rather than the façade. No bilateral corridor; suites open to the building corridor."
+    },
+    {
+      key: "civic",
+      label: "Civic Office",
+      ffe_codes: ["C1", "C2", "C3"],
+      ffe_sizes_sf: { C1: 1100, C2: 1400, C3: 800 },
+      specialisations: ["Courtroom", "Municipal Office", "Cultural Space", "Civic Assembly"],
+      kp_index_range: "33–37",
+      zone: { habitat: 6.0, magazine: 7.23, corridor: 3.6 },
+      keyplan: { small: { sf: 2912, m2: 270.0 }, medium: { sf: 6215, m2: 577.0 }, large: { sf: 8850, m2: 822.0 } },
+      design_notes: "Widest overall floor plate — large Zone 2 Magazine (7.23 m) for public records and secure areas; widest Zone 3 Corridor (3.6 m / 12' 0\") across all sub-types for public assembly egress. ADA/accessible-route compliance mandatory throughout leasehold."
+    }
+  ],
+  privateOffices: [
+    { code: "PO-1", label: "Private Office Small",  sf: 325, m2: 30.1935,  descr: "Minimum size accommodating 1 desk, 1 chair, 1 three-person round table, 1 filing cabinet, 1 credenza, 1 bookshelf, 1 coat rack with German Circulation Law compliance and Façade Frontage. May be 300–400 SF on final Key Plan." },
+    { code: "PO-2", label: "Private Office Medium", sf: 465, m2: 43.199,   descr: "Adds second desk, chair, and credenza to PO-1. Approximately 100 SF larger than PO-1; not double the area." },
+    { code: "PO-3", label: "Private Office Large",  sf: 685, m2: 63.6386,  descr: "Three-person private office configuration." }
+  ],
+  privateOfficeZones: {
+    habitat: 5.9944,
+    magazine: 1.3716,
+    corridor: 0.0
+  }
+};
+
+function mToFtIn(m) {
+  if (m === 0) return "—";
+  const totalIn = m * 39.3701;
+  const ft = Math.floor(totalIn / 12);
+  const inches = Math.round(totalIn - ft * 12);
+  if (inches === 12) return (ft + 1) + "'0\"";
+  return ft + "'" + inches + "\"";
+}
+function totalWidth(z) { return 2 * (z.habitat + z.magazine + z.corridor); }
+
+/* Comparison table */
+(function() {
+  const tbody = document.querySelector('#compare-table tbody');
+  tbody.innerHTML = BIM_TOKENS.subtypes.map(s => {
+    const tot = totalWidth(s.zone);
+    return `<tr>
+      <td class="label">${s.label}</td>
+      <td>${s.specialisations.length ? s.specialisations.join(', ') : '—'}</td>
+      <td class="num">${s.zone.habitat.toFixed(2)} m</td>
+      <td class="num">${s.zone.magazine.toFixed(2)} m</td>
+      <td class="num">${s.zone.corridor.toFixed(2)} m</td>
+      <td class="num"><strong>${tot.toFixed(2)} m</strong><br><span style="color: var(--ink-soft); font-size: 10px;">${mToFtIn(tot)}</span></td>
+      <td class="num">${s.keyplan.small.sf.toLocaleString()} SF</td>
+      <td class="num">${s.keyplan.medium.sf.toLocaleString()} SF</td>
+      <td class="num">${s.keyplan.large.sf.toLocaleString()} SF</td>
+    </tr>`;
+  }).join('');
+})();
+
+/* Sub-type cards */
+(function() {
+  const wrap = document.getElementById('subtype-list');
+  wrap.innerHTML = BIM_TOKENS.subtypes.map(s => {
+    const tot = totalWidth(s.zone);
+    return `<article class="subtype">
+      <header>
+        <h3>${s.label}</h3>
+        <span class="codes">FFE: ${s.ffe_codes.join(' · ')} &nbsp;|&nbsp; KP Index ${s.kp_index_range}</span>
+      </header>
+      <div class="specs">
+        <div class="spec z1"><div class="label">Zone 1 Habitat</div><div class="val">${s.zone.habitat.toFixed(2)} m / ${mToFtIn(s.zone.habitat)}</div></div>
+        <div class="spec z2"><div class="label">Zone 2 Magazine</div><div class="val">${s.zone.magazine.toFixed(2)} m / ${mToFtIn(s.zone.magazine)}</div></div>
+        <div class="spec z3"><div class="label">Zone 3 Corridor</div><div class="val">${s.zone.corridor === 0 ? 'None (shared)' : s.zone.corridor.toFixed(2) + ' m / ' + mToFtIn(s.zone.corridor)}</div></div>
+      </div>
+      <div class="specialisations">
+        <span class="label">Specialisations:</span>
+        ${s.specialisations.length ? s.specialisations.map(x => `<span class="pill">${x}</span>`).join('') : '<span style="color: var(--ink-soft); font-size: 11px;">— none recorded —</span>'}
+      </div>
+      <div style="font-size: 12px; margin: 8px 0;">
+        <span style="color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.06em; font-size: 10px;">FFE sizes:</span>
+        ${s.ffe_codes.map(c => `<span class="pill" style="font-family: 'SF Mono', monospace;">${c} = ${s.ffe_sizes_sf[c].toLocaleString()} SF</span>`).join('')}
+        &nbsp;&middot;&nbsp;
+        <span style="color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.06em; font-size: 10px;">Total building width:</span>
+        <strong class="mono">${tot.toFixed(2)} m / ${mToFtIn(tot)}</strong>
+      </div>
+      <div class="key-plans">
+        <div class="key-plan-card">
+          <div class="size">Key Plan Small</div>
+          <div class="area">${s.keyplan.small.sf.toLocaleString()} SF</div>
+          <div class="m2">${s.keyplan.small.m2.toFixed(2)} m²</div>
+        </div>
+        <div class="key-plan-card">
+          <div class="size">Key Plan Medium</div>
+          <div class="area">${s.keyplan.medium.sf.toLocaleString()} SF</div>
+          <div class="m2">${s.keyplan.medium.m2.toFixed(2)} m²</div>
+        </div>
+        <div class="key-plan-card">
+          <div class="size">Key Plan Large</div>
+          <div class="area">${s.keyplan.large.sf.toLocaleString()} SF</div>
+          <div class="m2">${s.keyplan.large.m2.toFixed(2)} m²</div>
+        </div>
+      </div>
+      <div class="design-notes">
+        <span class="label">Design notes</span> ${s.design_notes}
+      </div>
+    </article>`;
+  }).join('');
+})();
+
+/* Private Office sidebar */
+(function() {
+  const wrap = document.getElementById('po-cards');
+  wrap.innerHTML = BIM_TOKENS.privateOffices.map(p => `
+    <div class="po-card">
+      <div class="code">${p.code}</div>
+      <div class="name">${p.label}</div>
+      <div class="area">${p.sf.toLocaleString()} SF &middot; ${p.m2.toFixed(2)} m²</div>
+      <div class="descr">${p.descr}</div>
+    </div>
+  `).join('');
+
+  const z = BIM_TOKENS.privateOfficeZones;
+  const tot = 2 * (z.habitat + z.magazine + z.corridor);
+  document.getElementById('po-zones-list').innerHTML = `
+    <div class="row"><span class="lbl">Zone 1 Habitat</span><span class="val">${z.habitat.toFixed(4)} m</span></div>
+    <div class="row"><span class="lbl">Zone 2 Magazine</span><span class="val">${z.magazine.toFixed(4)} m</span></div>
+    <div class="row"><span class="lbl">Zone 3 Corridor</span><span class="val">${z.corridor === 0 ? 'none' : z.corridor.toFixed(2) + ' m'}</span></div>
+    <div class="row" style="margin-top: 6px; padding-top: 8px; border-top: 1px solid var(--ink); font-weight: 600;"><span class="lbl">Total width</span><span class="val">${tot.toFixed(2)} m / ${mToFtIn(tot)}</span></div>
+    <div style="font-size: 11px; color: var(--ink-soft); margin-top: 8px; line-height: 1.5;">
+      Habitat marginally under the 6.0 m European Lighting Standard — flagged for review on final Key Plan sign-off. Corridor is zero because each office opens directly to a shared building corridor.
+    </div>
+  `;
+})();
+</script>
+
+</body>
+</html>
