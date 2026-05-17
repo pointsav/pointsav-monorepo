@@ -13,7 +13,7 @@ set -euo pipefail
 
 INDEX_CARD="../totebox-index.env"
 source "$INDEX_CARD"
-ROSTER_PATH="../data-ledgers/personnel_roster.jsonl"
+ROSTER_PATH="../data-ledgers/email-corpus-index.jsonl"
 VAULT_NEW="$PHYSICAL_USB_PATH/new"
 VAULT_CUR="$PHYSICAL_USB_PATH/cur"
 

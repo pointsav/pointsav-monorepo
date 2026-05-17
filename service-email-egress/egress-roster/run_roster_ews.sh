@@ -7,7 +7,7 @@ set -euo pipefail
 INDEX_CARD="../totebox-index.env"
 source "$INDEX_CARD"
 
-ROSTER_PATH="../data-ledgers/personnel_roster.jsonl"
+ROSTER_PATH="../data-ledgers/email-corpus-index.jsonl"
 MASTER_LEDGER="../data-ledgers/master_metadata_ledger.jsonl"
 
 # Dynamic Process Isolation Variables
