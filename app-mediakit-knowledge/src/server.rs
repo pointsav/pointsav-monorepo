@@ -599,9 +599,7 @@ const RATIFIED_CATEGORIES: &[&str] = &[
     "applications",
     "governance",
     "infrastructure",
-    "company",
     "reference",
-    "help",
     "design-system",
 ];
 
@@ -1010,50 +1008,33 @@ fn home_chrome(
                 meta name="viewport" content="width=device-width, initial-scale=1";
                 title { (site_title) }
                 link rel="stylesheet" href="/static/style.css";
-                // Anti-FOUT: apply stored theme before first paint
-                script { (PreEscaped(r#"(function(){var t=localStorage.getItem('wiki-theme')||'auto';document.documentElement.setAttribute('data-theme',t);var w=localStorage.getItem('wiki-width')||'standard';document.documentElement.setAttribute('data-width',w);}());"#)) }
             }
             body {
                 a.skip-to-content href="#mp-main" { "Skip to content" }
-                header.mw-header #mw-header {
-                    a.site-title href="/" { (site_title) }
-                    form.header-search #header-search-form action="/search" method="get" {
-                        div.header-search-wrap {
-                            input #header-search-q type="search" name="q" placeholder="Search articles…" autocomplete="off";
-                            div #search-autocomplete-dropdown style="display:none;" {}
-                        }
-                        button type="submit" { "Search" }
-                    }
-                    div.wiki-appearance-wrap #wiki-appearance-wrap {
-                        button.wiki-appearance-btn #wiki-appearance-btn
-                            aria-expanded="false"
-                            aria-controls="wiki-appearance-menu"
-                            title="Appearance"
-                        { "Aa" }
-                        div.wiki-appearance-menu #wiki-appearance-menu role="dialog" aria-label="Appearance" hidden="" {
-                            div.wiki-appearance-section {
-                                p.wiki-appearance-label { "Color" }
-                                div.wiki-appearance-options #wiki-theme-options {
-                                    button.wiki-appearance-opt #theme-auto data-theme-val="auto" { "Automatic" }
-                                    button.wiki-appearance-opt #theme-light data-theme-val="light" { "Light" }
-                                    button.wiki-appearance-opt #theme-dark data-theme-val="dark" { "Dark" }
-                                }
-                            }
-                            div.wiki-appearance-section {
-                                p.wiki-appearance-label { "Width" }
-                                div.wiki-appearance-options #wiki-width-options {
-                                    button.wiki-appearance-opt #width-standard data-width-val="standard" { "Standard" }
-                                    button.wiki-appearance-opt #width-wide data-width-val="wide" { "Wide" }
-                                }
-                            }
-                        }
-                    }
-                    nav.site-nav {
-                        a href="/" { "Home" }
-                        a href="/special/all-pages" { "All pages" }
-                        a href="/special/categories" { "Categories" }
-                        a href="/special/recent-changes" { "Recent changes" }
+                header.shell-header #mw-header {
+                    div.utility-row {
                         (auth_nav_widget(user, pending_count))
+                    }
+                    div.brand-row {
+                        a.wordmark href="/" {
+                            span.wordmark-text { (site_title) }
+                        }
+                    }
+                    nav.nav-row aria-label="Site navigation" {
+                        ul.nav-list.left {
+                            li { a href="/wiki/disclaimers" { "Disclaimer" } }
+                            li { a href="/wiki/contact" { "Contact" } }
+                        }
+                        span.nav-divider aria-hidden="true" {}
+                        ul.nav-list.right {
+                            @if woodfine_theme {
+                                li { a href="https://projects.woodfinegroup.com" { "Projects" } }
+                                li { a href="/wiki/newsroom" { "Newsroom" } }
+                            } @else {
+                                li { a href="https://pointsav.com" { "pointsav.com" } }
+                                li { a href="https://github.com/pointsav" { "GitHub" } }
+                            }
+                        }
                     }
                 }
                 main.site-main #mp-main {
@@ -1344,69 +1325,36 @@ fn home_chrome(
                     }
 
                 }
-                footer.site-footer {
-                    div.footer-inner {
-                        div.footer-col.footer-col-ip {
-                            h4.footer-col-heading { "Intellectual Property" }
-                            p.footer-trademark {
-                                "PointSav™, Foundry™, ToteboxOS™, ConsoleOS™, OrchestrationOS™, and "
-                                "WorkplaceOS™ are unregistered trademarks of Woodfine Capital Projects Inc. "
-                                "WoodfineGroup™ is an unregistered trademark of Woodfine Management Corp., "
-                                "a wholly owned subsidiary of Woodfine Capital Projects Inc."
-                            }
-                            p.footer-license {
-                                "Content is available under "
-                                a href="https://creativecommons.org/licenses/by/4.0/" { "CC BY 4.0" }
-                                " unless otherwise stated."
-                            }
-                            @if woodfine_theme {
-                                p.footer-bcsc {
-                                    "This knowledge base may contain forward-looking statements identified "
-                                    "with language such as "
-                                    em { "planned, intended, may," }
-                                    " or "
-                                    em { "target." }
-                                }
+                footer.shell-footer #site-footer {
+                    div.footer-row {
+                        @if woodfine_theme {
+                            div.cities {
+                                "Vancouver"
+                                span.sep { " | " }
+                                "New York"
                             }
                         }
-                        div.footer-col.footer-col-privacy {
-                            h4.footer-col-heading { "Privacy Posture" }
-                            p.footer-privacy {
-                                "This platform operates a Zero-Cookie, Zero-State Telemetry architecture "
-                                "for read-only visitors. No analytics, tracking cookies, or third-party "
-                                "data collection is employed."
-                            }
-                        }
-                        div.footer-col.footer-col-nav {
-                            div.footer-langs {
-                                p.footer-langs-tier {
-                                    strong { "English" }
-                                    " · "
-                                    a href="/wiki/index.es" hreflang="es" { strong { "Español" } }
-                                }
-                                p.footer-langs-note {
-                                    "Spanish articles are strategic-adaptation overviews, not literal translations."
-                                }
-                            }
-                            nav.footer-nav aria-label="Footer navigation" {
-                                a href="/wiki/about" { "About" }
-                                " · "
-                                a href="/wiki/contact" { "Contact" }
-                                " · "
-                                a href="/wiki/disclaimers" { "Disclaimers" }
-                                " · "
-                                a href="/sitemap.xml" { "Sitemap" }
-                            }
-                            p.footer-engine {
-                                a href="https://github.com/pointsav/pointsav-monorepo" {
-                                    "app-mediakit-knowledge"
-                                }
-                            }
+                        nav.footnav aria-label="Footer navigation" {
+                            a href="/wiki/disclaimers" { "Disclaimer" }
+                            a href="/wiki/contact" { "Contact" }
+                            a href="/sitemap.xml" { "Sitemap" }
                         }
                     }
-                    p.footer-copyright.footer-baseplate {
-                        "© 2026 Woodfine Capital Projects Inc. All rights reserved. · "
-                        a href="/" { (site_title) }
+                    p.footer-copyright-line {
+                        @if woodfine_theme {
+                            "© 2026 Woodfine Capital Projects Inc. All rights reserved."
+                        } @else {
+                            "© 2026 PointSav Digital Systems. Content: "
+                            a href="https://creativecommons.org/licenses/by/4.0/" { "CC BY 4.0" }
+                            "."
+                        }
+                    }
+                    p.footer-trademark-line {
+                        "PointSav™, Foundry™, ToteboxOS™, ConsoleOS™, OrchestrationOS™, and WorkplaceOS™ are unregistered trademarks of Woodfine Capital Projects Inc. "
+                        "WoodfineGroup™ is an unregistered trademark of Woodfine Management Corp., a wholly owned subsidiary of Woodfine Capital Projects Inc. "
+                        @if woodfine_theme {
+                            "This knowledge base may contain forward-looking statements."
+                        }
                     }
                 }
                 script src="/static/wiki.js" defer="true" {}
@@ -1865,9 +1813,6 @@ fn wiki_chrome(
                 meta name="viewport" content="width=device-width, initial-scale=1";
                 title { (page_title) }
                 link rel="stylesheet" href="/static/style.css";
-                // Anti-FOUT: apply stored theme/width before first paint to
-                // avoid a flash of the default light theme for dark-mode users.
-                script { (PreEscaped(r#"(function(){var t=localStorage.getItem('wiki-theme')||'auto';document.documentElement.setAttribute('data-theme',t);var w=localStorage.getItem('wiki-width')||'standard';document.documentElement.setAttribute('data-width',w);}());"#)) }
                 // JSON-LD baseline (Phase 2 Step 1) — schema.org TechArticle /
                 // DefinedTerm. Cumulative across phases; AEO crawlers + downstream
                 // consumers ingest the structured data.
@@ -1875,71 +1820,61 @@ fn wiki_chrome(
             }
             body class=(if printable { "printable" } else { "" }) {
                 a.skip-to-content href="#mw-content-text" { "Skip to content" }
-                // Sticky header — hidden until main header scrolls off-screen (Sprint H)
+                // Sticky header — appears on scroll; minimal chrome only
                 div.wiki-sticky-header #wiki-sticky-header aria-hidden="true" {
                     div.sticky-inner {
                         a.sticky-logo href="/" { (site_title) }
                         span.sticky-title #sticky-title { (title) }
-                        nav.sticky-actions #p-views-sticky aria-label="Page actions" {
-                            a.sticky-tab href={ "/wiki/" (slug) } accesskey="r" { "Read" }
-                            @if user.is_some() {
-                                a.sticky-tab href={ "/edit/" (slug) } accesskey="e" { "Edit" }
-                            } @else {
-                                a.sticky-tab href={ "/git/" (slug) } { "View source" }
-                            }
-                            a.sticky-tab href={ "/history/" (slug) } { "View history" }
+                        form.sticky-search action="/search" method="get" {
+                            input type="search" name="q" placeholder="Search…" autocomplete="off";
                         }
                     }
                 }
-                header.mw-header #mw-header {
-                    a.site-title href="/" { (site_title) }
-                    form.header-search #header-search-form action="/search" method="get" {
-                        div.header-search-wrap {
-                            input #header-search-q type="search" name="q" placeholder="Search articles…" autocomplete="off";
-                            div #search-autocomplete-dropdown style="display:none;" {}
-                        }
-                        button type="submit" { "Search" }
-                    }
-                    // Appearance menu button + popover
-                    div.wiki-appearance-wrap #wiki-appearance-wrap {
-                        button.wiki-appearance-btn #wiki-appearance-btn
-                            aria-expanded="false"
-                            aria-controls="wiki-appearance-menu"
-                            title="Appearance"
-                        { "Aa" }
-                        div.wiki-appearance-menu #wiki-appearance-menu role="dialog" aria-label="Appearance" hidden="" {
-                            div.wiki-appearance-section {
-                                p.wiki-appearance-label { "Color" }
-                                div.wiki-appearance-options #wiki-theme-options {
-                                    button.wiki-appearance-opt #theme-auto data-theme-val="auto" { "Automatic" }
-                                    button.wiki-appearance-opt #theme-light data-theme-val="light" { "Light" }
-                                    button.wiki-appearance-opt #theme-dark data-theme-val="dark" { "Dark" }
-                                }
-                            }
-                            div.wiki-appearance-section {
-                                p.wiki-appearance-label { "Width" }
-                                div.wiki-appearance-options #wiki-width-options {
-                                    button.wiki-appearance-opt #width-standard data-width-val="standard" { "Standard" }
-                                    button.wiki-appearance-opt #width-wide data-width-val="wide" { "Wide" }
-                                }
-                            }
-                        }
-                    }
-                    nav.site-nav {
-                        a href="/" { "Home" }
+                header.shell-header #mw-header {
+                    div.utility-row {
                         (auth_nav_widget(user, pending_count))
                     }
-                    button.nav-toggle-btn #nav-toggle
-                        aria-label="Toggle navigation"
-                        aria-expanded="false"
-                        aria-controls="mobile-nav-drawer"
-                    { "☰" }
-                    @if !numbered_headings.is_empty() {
-                        button.toc-toggle-btn #toc-toggle-btn
-                            aria-label="Table of contents"
+                    div.brand-row {
+                        @if !numbered_headings.is_empty() {
+                            button.toc-toggle-btn #toc-toggle-btn
+                                aria-label="Contents"
+                                aria-expanded="false"
+                                aria-controls="mobile-toc-drawer"
+                            { "Contents" }
+                        }
+                        a.wordmark href="/" {
+                            span.wordmark-text { (site_title) }
+                        }
+                        button.nav-toggle-btn #nav-toggle
+                            aria-label="Menu"
                             aria-expanded="false"
-                            aria-controls="mobile-toc-drawer"
-                        { "§" }
+                            aria-controls="mobile-nav-drawer"
+                        { "Menu" }
+                    }
+                    nav.nav-row aria-label="Site navigation" {
+                        ul.nav-list.left {
+                            li { a href="/wiki/disclaimers" { "Disclaimer" } }
+                            li { a href="/wiki/contact" { "Contact" } }
+                        }
+                        span.nav-divider aria-hidden="true" {}
+                        ul.nav-list.right {
+                            @if woodfine_theme {
+                                li { a href="https://projects.woodfinegroup.com" { "Projects" } }
+                                li { a href="/wiki/newsroom" { "Newsroom" } }
+                            } @else {
+                                li { a href="https://pointsav.com" { "pointsav.com" } }
+                                li { a href="https://github.com/pointsav" { "GitHub" } }
+                            }
+                        }
+                    }
+                    div.search-row {
+                        form.header-search #header-search-form action="/search" method="get" {
+                            div.header-search-wrap {
+                                input #header-search-q type="search" name="q" placeholder="Search articles…" autocomplete="off";
+                                div #search-autocomplete-dropdown style="display:none;" {}
+                            }
+                            button type="submit" { "Search" }
+                        }
                     }
                 }
 
@@ -1947,7 +1882,7 @@ fn wiki_chrome(
                 nav.mobile-nav-drawer #mobile-nav-drawer aria-hidden="true" {
                     div.mobile-nav-header {
                         a.site-title href="/" { (site_title) }
-                        button.mobile-nav-close #mobile-nav-close aria-label="Close navigation" { "✕" }
+                        button.mobile-nav-close #mobile-nav-close aria-label="Close navigation" { "Close" }
                     }
                     // Sprint K: article ToC inside the nav drawer (visible above nav links)
                     @if !numbered_headings.is_empty() {
@@ -1982,7 +1917,7 @@ fn wiki_chrome(
                     div.mobile-toc-drawer #mobile-toc-drawer aria-hidden="true" {
                         div.mobile-nav-header {
                             span.mobile-drawer-title { "Contents" }
-                            button.mobile-toc-close #mobile-toc-close aria-label="Close contents" { "✕" }
+                            button.mobile-toc-close #mobile-toc-close aria-label="Close contents" { "Close" }
                         }
                         ol.mobile-toc-list {
                             @for (id, text, level, num) in &numbered_headings {
@@ -2080,7 +2015,7 @@ fn wiki_chrome(
                                 @if let Some(translations) = &fm.translations {
                                     @if !translations.is_empty() {
                                         div.wiki-lang-switcher {
-                                            span.wiki-lang-globe aria-hidden="true" { "🌐" }
+                                            span.wiki-lang-globe aria-hidden="true" {}
                                             @for (lang, lang_slug) in translations {
                                                 @let lang_label = match lang.as_str() {
                                                     "es" => "Español",
@@ -2109,18 +2044,13 @@ fn wiki_chrome(
                                 }
                             }
 
-                            // Read / Edit / View history tabs — top-right (item 2)
+                            // Read / History tabs — top-right (Edit/View source in article footer)
                             nav #p-views aria-label="Page actions" {
                                 a.wiki-tab.wiki-tab-active
                                     href={ "/wiki/" (slug) }
                                     accesskey="r"
                                     aria-current="page"
                                 { "Read" }
-                                @if user.is_some() {
-                                    a.wiki-tab href={ "/edit/" (slug) } accesskey="e" { "Edit" }
-                                } @else {
-                                    a.wiki-tab href={ "/git/" (slug) } accesskey="s" title="Log in to edit" { "View source" }
-                                }
                                 a.wiki-tab
                                     href={ "/history/" (slug) }
                                     accesskey="h"
@@ -2304,60 +2234,37 @@ fn wiki_chrome(
                     }
                 }
 
-                // Site footer — two-column institutional pattern matching home pages
-                footer.site-footer {
-                    div.footer-inner {
-                        div.footer-col.footer-col-ip {
-                            h4.footer-col-heading { "Intellectual Property" }
-                            p.footer-trademark {
-                                "PointSav™, Foundry™, ToteboxOS™, ConsoleOS™, OrchestrationOS™, and "
-                                "WorkplaceOS™ are unregistered trademarks of Woodfine Capital Projects Inc. "
-                                "WoodfineGroup™ is an unregistered trademark of Woodfine Management Corp., "
-                                "a wholly owned subsidiary of Woodfine Capital Projects Inc."
-                            }
-                            p.footer-license {
-                                "Content is available under "
-                                a href="https://creativecommons.org/licenses/by/4.0/" { "CC BY 4.0" }
-                                " unless otherwise stated."
-                            }
-                            @if woodfine_theme {
-                                p.footer-bcsc {
-                                    "This knowledge base may contain forward-looking statements identified "
-                                    "with language such as "
-                                    em { "planned, intended, may," }
-                                    " or "
-                                    em { "target." }
-                                }
+                footer.shell-footer #site-footer {
+                    div.footer-row {
+                        @if woodfine_theme {
+                            div.cities {
+                                "Vancouver"
+                                span.sep { " | " }
+                                "New York"
                             }
                         }
-                        div.footer-col.footer-col-privacy {
-                            h4.footer-col-heading { "Privacy Posture" }
-                            p.footer-privacy {
-                                "This platform operates a Zero-Cookie, Zero-State Telemetry architecture "
-                                "for read-only visitors. No analytics, tracking cookies, or third-party "
-                                "data collection is employed."
-                            }
-                        }
-                        div.footer-col.footer-col-nav {
-                            nav.footer-nav aria-label="Footer navigation" {
-                                a href="/wiki/about" { "About" }
-                                " · "
-                                a href="/wiki/contact" { "Contact" }
-                                " · "
-                                a href="/wiki/disclaimers" { "Disclaimers" }
-                                " · "
-                                a href="/sitemap.xml" { "Sitemap" }
-                            }
-                            p.footer-engine {
-                                a href="https://github.com/pointsav/pointsav-monorepo" {
-                                    "app-mediakit-knowledge"
-                                }
-                            }
+                        nav.footnav aria-label="Footer navigation" {
+                            a href="/wiki/disclaimers" { "Disclaimer" }
+                            a href="/wiki/contact" { "Contact" }
+                            a href={ "/git/" (slug) } { "View source" }
+                            a href="/sitemap.xml" { "Sitemap" }
                         }
                     }
-                    p.footer-copyright.footer-baseplate {
-                        "© 2026 Woodfine Capital Projects Inc. All rights reserved. · "
-                        a href="/" { (site_title) }
+                    p.footer-copyright-line {
+                        @if woodfine_theme {
+                            "© 2026 Woodfine Capital Projects Inc. All rights reserved."
+                        } @else {
+                            "© 2026 PointSav Digital Systems. Content: "
+                            a href="https://creativecommons.org/licenses/by/4.0/" { "CC BY 4.0" }
+                            "."
+                        }
+                    }
+                    p.footer-trademark-line {
+                        "PointSav™, Foundry™, ToteboxOS™, ConsoleOS™, OrchestrationOS™, and WorkplaceOS™ are unregistered trademarks of Woodfine Capital Projects Inc. "
+                        "WoodfineGroup™ is an unregistered trademark of Woodfine Management Corp., a wholly owned subsidiary of Woodfine Capital Projects Inc. "
+                        @if woodfine_theme {
+                            "This knowledge base may contain forward-looking statements."
+                        }
                     }
                 }
 
@@ -3357,60 +3264,44 @@ fn chrome(_title: &str, body: Markup, site_title: &str, user: Option<&User>, pen
             }
             body {
                 a.skip-to-content href="#main-content" { "Skip to content" }
-                header.mw-header {
-                    a.site-title href="/" { (site_title) }
-                    form.header-search #header-search-form action="/search" method="get" {
-                        div.header-search-wrap {
-                            input #header-search-q type="search" name="q" placeholder="Search articles…" autocomplete="off";
-                            div #search-autocomplete-dropdown style="display:none;" {}
-                        }
-                        button type="submit" { "Search" }
-                    }
-                    nav.site-nav {
-                        a href="/" { "Home" }
+                header.shell-header {
+                    div.utility-row {
                         (auth_nav_widget(user, pending_count))
+                    }
+                    div.brand-row {
+                        a.wordmark href="/" {
+                            span.wordmark-text { (site_title) }
+                        }
+                    }
+                    nav.nav-row aria-label="Site navigation" {
+                        ul.nav-list.left {
+                            li { a href="/wiki/disclaimers" { "Disclaimer" } }
+                            li { a href="/wiki/contact" { "Contact" } }
+                        }
+                        span.nav-divider aria-hidden="true" {}
+                        ul.nav-list.right {
+                            li { a href="https://pointsav.com" { "pointsav.com" } }
+                            li { a href="https://github.com/pointsav" { "GitHub" } }
+                        }
                     }
                 }
                 main.site-main #main-content {
                     (body)
                 }
-                footer.site-footer {
-                    div.footer-inner {
-                        div.footer-col.footer-col-ip {
-                            h4.footer-col-heading { "Intellectual Property" }
-                            p.footer-trademark {
-                                "PointSav™, Foundry™, ToteboxOS™, ConsoleOS™, OrchestrationOS™, and "
-                                "WorkplaceOS™ are unregistered trademarks of Woodfine Capital Projects Inc. "
-                                "WoodfineGroup™ is an unregistered trademark of Woodfine Management Corp., "
-                                "a wholly owned subsidiary of Woodfine Capital Projects Inc."
-                            }
-                            p.footer-license {
-                                "Content is available under "
-                                a href="https://creativecommons.org/licenses/by/4.0/" { "CC BY 4.0" }
-                                " unless otherwise stated."
-                            }
-                        }
-                        div.footer-col.footer-col-privacy {
-                            h4.footer-col-heading { "Privacy Posture" }
-                            p.footer-privacy {
-                                "This platform operates a Zero-Cookie, Zero-State Telemetry architecture "
-                                "for read-only visitors. No analytics, tracking cookies, or third-party "
-                                "data collection is employed."
-                            }
-                        }
-                        div.footer-col.footer-col-nav {
-                            nav.footer-nav aria-label="Footer navigation" {
-                                a href="/wiki/about" { "About" }
-                                " · "
-                                a href="/wiki/contact" { "Contact" }
-                                " · "
-                                a href="/wiki/disclaimers" { "Disclaimers" }
-                            }
+                footer.shell-footer {
+                    div.footer-row {
+                        nav.footnav aria-label="Footer navigation" {
+                            a href="/wiki/disclaimers" { "Disclaimer" }
+                            a href="/wiki/contact" { "Contact" }
                         }
                     }
-                    p.footer-copyright.footer-baseplate {
-                        "© 2026 Woodfine Capital Projects Inc. All rights reserved. · "
-                        a href="/" { (site_title) }
+                    p.footer-copyright-line {
+                        "© 2026 PointSav Digital Systems. Content: "
+                        a href="https://creativecommons.org/licenses/by/4.0/" { "CC BY 4.0" }
+                        "."
+                    }
+                    p.footer-trademark-line {
+                        "PointSav™, Foundry™, ToteboxOS™, ConsoleOS™, OrchestrationOS™, and WorkplaceOS™ are unregistered trademarks of Woodfine Capital Projects Inc."
                     }
                 }
             }
