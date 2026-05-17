@@ -1,7 +1,7 @@
 ---
 schema: foundry-artifact-registry-v1
 project: project-gis
-last_updated: 2026-05-16
+last_updated: 2026-05-17
 ---
 
 # project-gis Artifact Registry
@@ -69,7 +69,7 @@ Routing:
 - **Status:** STAGED in drafts-outbound/ (text-gis-canada-walmart-hospital-coverage.draft.md)
 
 ### B6 — DESIGN-RESEARCH: Bento Merged Zones Disclosure
-- **Status:** STAGED in drafts-outbound/ — at project-design
+- **Status:** IMPLEMENTED 21cf18df (2026-05-17) — merged-ring UX shipped in index.html (Union-Find groupOverlappingClusters, showMergedGroupPanel). Editorial draft still at project-design for write-up.
 
 ### B7 — DESIGN-RESEARCH: Location Intelligence UX
 - **Status:** STAGED in drafts-outbound/ — at project-design
@@ -113,11 +113,27 @@ Routing:
 | Census Catchment | `work/census-catchment.geojson` → `layer4-census.pmtiles` (373 MB) | DONE (2026-05-15) |
 | Spend Catchment | `work/spend-catchment.geojson` → `layer5-spend.pmtiles` (635 MB) | DONE (2026-05-15) |
 | DATA-MANIFEST.md | project root | DONE (2026-05-12) |
-| clusters-meta.json | gateway www/data/ | DONE (2026-05-17; 10,248 clusters; pp/sp/rp + catchment fields; Kaufland-DE Phase 7) |
+| clusters-meta.json | gateway www/data/ | DONE (2026-05-17; 10,213 clusters; T1=305/T2=1,213/T3=2,186/T4=6,509; P10=0.20 Phase 11 adbb5d42) |
 | regional-markets.json | gateway www/data/ | DONE (2026-05-15; 2,986 Regional Markets, 2,942 high-conf) |
 | us_places.geojson | deployments/boundaries/ | DONE (2026-05-15; TIGER 2023, 32K US places) |
 | eu_municipalities.geojson | deployments/boundaries/ | DONE (2026-05-15; GISCO LAU 2021 + GADM GBR, 98.6K entries) |
 | ca_places_nominatim.json | deployments/boundaries/ | DONE (2026-05-15; 12 county-CSD overrides, e.g. Sherwood Park) |
+
+---
+
+### Phase 11 Analysis Artifacts (2026-05-17)
+
+| Artifact | File | Status |
+|---|---|---|
+| T1 threshold sweep (pre-IoU) | `work/sim-1a-results.txt` | DONE (2026-05-17; 5 thresholds; NA@P=0.20: 476 pre-IoU, 245 post-IoU) |
+| T1 civic/composition sensitivity | `work/sim-1b-results.txt` | DONE (2026-05-17; civic B: NA=278@P=0.20; Path C adds 302 clusters) |
+| T1 IoU + spatial coverage | `work/sim-1c-results.txt` | DONE (2026-05-17; IoU=0.10@P=0.20: NA=226 EU=57; 37 US states at 0) |
+| Chain count audit | `work/chain-count-audit.txt` | DONE (2026-05-17; 91 OK, 35 OVER, 14 UNDER, 1 EMPTY) |
+| Chain coverage audit | `work/chain-coverage-audit.md` | DONE (2026-05-17; gap candidates per country; see Section 2) |
+| OD data research (UK/FR/DE) | `work/od-data-research-uk-fr-de.md` | DONE (2026-05-17; ONS ODWP01EW + INSEE FD_MOBPRO + BA Pendler all viable) |
+| Kontur integration plan | `work/kontur-integration-plan.md` | DONE (2026-05-17; H3 res-8 available; CC BY 4.0; HDX download) |
+| Storage report | `work/storage-report.md` | DONE (2026-05-17; root 65%; stale backups 35M removable) |
+| SafeGraph export | `export-safegraph.py` | DONE adbb5d42 (2026-05-17; --sample 100 verified) |
 
 ---
 
