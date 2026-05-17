@@ -8,6 +8,7 @@ audience: vendor-public
 bcsc_class: vendor-public
 language_protocol: PROSE-TOPIC
 authored: 2026-05-17T00:00:00Z
+title: "BIM Objects — Substrate"
 authored_by: totebox@project-bim
 authored_with: claude-sonnet-4-6
 research_done_count: 3
@@ -30,13 +31,13 @@ notes_for_editor: |
   woodfine-design-bim at publication time.
 ---
 
-# The BIM tokens substrate
+# BIM Objects — Substrate
 
-The Building Design System token library anchors every value to a node
+The Building Design System BIM Object library anchors every object to a node
 in the IFC 4.3 entity hierarchy, classified by Uniclass 2015, and
 published as a dereferenceable bSDD URI. This document describes how
-the three-layer reference system works, what the eight BIM primitive
-token categories encode, and how a BIM operator reads and applies them
+the three-layer reference system works, what the eight BIM Object primitive
+categories encode, and how a BIM operator reads and applies them
 when authoring an IFC file.
 
 ## Three layers of reference
@@ -49,11 +50,11 @@ defines a hierarchy of named entity classes — `IfcSite`, `IfcBuilding`,
 hundreds more — each with typed Property Sets (Psets) specifying what
 attributes a compliant implementation must support.
 
-Every Building Design System token maps to a specific IFC entity class
-or Pset. The spatial token `bim.spatial.storey` anchors to
-`IfcBuildingStorey`; the performance token `bim.performance.door-fire-exit`
-anchors to `Pset_DoorCommon.IsFireExit`. When the token value changes,
-a validator can trace the change back to the IFC Pset that the token
+Every Building Design System BIM Object maps to a specific IFC entity class
+or Pset. The spatial BIM Object `bim.spatial.storey` anchors to
+`IfcBuildingStorey`; the performance BIM Object `bim.performance.door-fire-exit`
+anchors to `Pset_DoorCommon.IsFireExit`. When a BIM Object value changes,
+a validator can trace the change back to the IFC Pset that the BIM Object
 represents.
 
 ### Layer 2 — Uniclass 2015 classification floor
@@ -81,9 +82,9 @@ Building Design System tokens carry these URIs in their `$description`
 or `$extensions.bsdd_uri` fields, linking the token to an authoritative
 definition that a validator or authoring tool can resolve at runtime.
 
-## Eight token primitive categories
+## Eight BIM Object primitive categories
 
-The Building Design System groups BIM tokens into eight categories,
+The Building Design System groups BIM Objects into eight categories,
 each mapped to a distinct layer of the IFC entity model.
 
 ### 1. Spatial (`bim.spatial.*`)
@@ -127,10 +128,10 @@ Source file: `assemblies.dtcg.json`
 ### 5. Systems (`bim.systems.*`)
 
 HVAC zones, electrical circuits, and plumbing networks —
-`IfcSystem` and `IfcDistributionSystem`. The central token in this
+`IfcSystem` and `IfcDistributionSystem`. The central BIM Object in this
 category is the climate-zone-autonomy principle: one Tile equals one
 HVAC zone. A tenant who leases a Tile controls a thermostat. The
-token `bim.systems.tile-climate-autonomy` encodes this invariant so
+BIM Object `bim.systems.tile-climate-autonomy` encodes this invariant so
 any downstream validator can confirm a proposed floor-plate
 composition satisfies it.
 
@@ -144,7 +145,7 @@ regulatory minima drawn from EN 12464-1 (workplace daylight), EN
 90.1. Performance tokens are the regulatory floor that the spatial
 and element tokens must satisfy.
 
-The most architecturally consequential performance token is
+The most architecturally consequential performance BIM Object is
 `bim.performance.max-workstation-to-window`, set at 6.0 metres from
 EN 12464-1:2021. This single value drives the Zone 1 Habitat depth
 in every professional office floor plate.
@@ -155,7 +156,7 @@ Source file: `performance.dtcg.json`
 
 ASHRAE 90.1 climate zones 1 through 8, encoding the heating-degree-
 day and cooling-degree-day thresholds that govern mechanical-system
-sizing across North American jurisdictions. These tokens are consumed
+sizing across North American jurisdictions. These BIM Objects are consumed
 by service-codes when a building site is assigned to an ASHRAE zone
 and the energy model is validated.
 
@@ -166,23 +167,23 @@ Source file: `climate-zones.dtcg.json`
 Use-type codes (FFE series: M1, M2, B1, L1, A1, C1), tile codes
 (Tile A through Tile H), and key-plan index ranges. These are the
 opaque identifiers that planning documents use when describing floor-
-plate compositions. The token catalogue is the lexicon that maps
+plate compositions. The BIM Object library is the lexicon that maps
 each code to its geometric and programme meaning.
 
 Source file: `identity-codes.dtcg.json`
 
-## How tokens are delivered
+## How BIM Objects are delivered
 
-The token library is distributed as a set of DTCG-format JSON files
-in the `woodfine-design-bim` repository. DTCG (W3C Design Token
-Community Group format) is a JSON structure where each token carries
+The BIM Object library is distributed as a set of DTCG-format JSON files
+in the `woodfine-bim-library` repository. DTCG (W3C Design Token
+Community Group format) is a JSON structure where each BIM Object carries
 a `$value`, `$type`, and `$description`, with optional `$extensions`
 for standards references and provenance.
 
 A BIM authoring tool or validator reads the DTCG files at startup and
-constructs an in-memory token index. Any dimension, threshold, or
-classification referenced in a design session resolves to a token
-value rather than a hard-coded number. When the token changes —
+constructs an in-memory BIM Object index. Any dimension, threshold, or
+classification referenced in a design session resolves to a BIM Object
+value rather than a hard-coded number. When a BIM Object changes —
 because a code amendment raises the minimum corridor width, or a
 new Uniclass edition replaces a classification code — the consuming
 tool receives the update via a library version bump, not a manual
@@ -190,24 +191,24 @@ re-entry of values across hundreds of model elements.
 
 ## Relationship to the IFC file
 
-The DTCG token library does not modify IFC files directly. It is an
+The DTCG BIM Object library does not modify IFC files directly. It is an
 authoring-time reference — the source of truth for what values to
 write into an IFC Pset when a model element is created or modified.
 A BIM operator who follows the Building Design System writes the IFC
-file with the token values; IDS 1.0 contracts then validate that
+file with the BIM Object values; IDS 1.0 contracts then validate that
 the IFC file conforms to the published thresholds.
 
-The token-to-IFC pipeline is therefore:
+The BIM Object-to-IFC pipeline is therefore:
 
 ```
-Token value (bim.performance.max-workstation-to-window = 6.0 m)
+BIM Object value (bim.performance.max-workstation-to-window = 6.0 m)
         ↓ applied at authoring time
 IFC Pset_SpaceOccupancy attribute in IfcSpace
         ↓ validated at delivery time
 IDS 1.0 rule: IfcSpace.MaxWorkstationToWindow ≤ 6000 mm
 ```
 
-This separation — author with tokens, validate with IDS — is the
+This separation — author with BIM Objects, validate with IDS — is the
 substrate that makes City Code as Composable Geometry possible at the
 next layer.
 

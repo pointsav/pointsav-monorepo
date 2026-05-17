@@ -1,6 +1,7 @@
 ---
 schema: foundry-draft-v1
-draft_id: topic-bim-token-three-layers
+draft_id: topic-bim-objects-three-layers
+title: "BIM Objects — Three Composition Layers"
 language_protocol: PROSE-TOPIC
 state: ready-for-sweep
 target_path: vendor/content-wiki-documentation/topic-bim-token-three-layers.md
@@ -20,17 +21,17 @@ research_provenance: |
 research_inline: false
 ---
 
-# The Three Layers of a BIM Token
+# BIM Objects — Three Composition Layers
 
 ## Lede
 
-A BIM Token has three layers: Specification, Regulation, and Climate Zone. All three are embedded data in the token. None of the three layers is a runtime user-selectable option — a designer does not "switch" between climate zones any more than they switch building codes. The three layers are displayed simultaneously as static reference tables, each showing all registered overlays for the token's element type. This structure reflects a physical reality: a built element has a fixed type (Specification), exists in a fixed jurisdiction (Regulation), and performs in a fixed climate (Climate Zone). All three are facts about the element's physical context, not user preferences.
+A BIM Object has three layers: Specification, Regulation, and Climate Zone. All three are embedded data in the object. None of the three layers is a runtime user-selectable option — a designer does not "switch" between climate zones any more than they switch building codes. The three layers are displayed simultaneously as static reference tables, each showing all registered overlays for the BIM Object's element type. This structure reflects a physical reality: a built element has a fixed type (Specification), exists in a fixed jurisdiction (Regulation), and performs in a fixed climate (Climate Zone). All three are facts about the element's physical context, not user preferences.
 
 ---
 
 ## Why Three Layers
 
-Software design system tokens typically have two concerns: what a value IS (its semantic role — primary colour, heading size) and what value it resolves to (its computed output — `#164679`, `24px`). BIM tokens address a fundamentally different problem space that requires three concerns.
+Software design system tokens typically have two concerns: what a value IS (its semantic role — primary colour, heading size) and what value it resolves to (its computed output — `#164679`, `24px`). BIM Objects address a fundamentally different problem space that requires three concerns.
 
 A built-environment element specification must simultaneously answer:
 - **What is this element?** — its type in a neutral, tool-independent schema (IFC), its classification in a neutral reference system (Uniclass), and its semantic identity in a jurisdiction-spanning dictionary (bSDD). This is stable across all deployments.
@@ -58,7 +59,7 @@ The Specification layer is the token's permanent identity. It does not vary by j
 | `applicable_psets` | Applicable IFC Property Sets | Array of Pset names |
 | `dtcg_type` | DTCG token type extension | `bim-element`, `bim-material`, etc. |
 
-The Specification layer is authored once per token and promoted through the standard design-system pipeline (vendor → customer → deployment). Changes to the Specification layer require a version bump and changelog entry.
+The Specification layer is authored once per BIM Object and promoted through the standard design-system pipeline (vendor → customer → deployment). Changes to the Specification layer require a version bump and changelog entry.
 
 **IFC entity hierarchy breadcrumb.** Every Specification record includes the full IFC inheritance path from `IfcRoot` to the specific class. For `IfcWall`:
 
@@ -100,7 +101,7 @@ The Regulation layer holds jurisdiction-specific requirements. It is a table of 
 | SG | SGBC BCA Green Mark | Thermal transmittance (OTTV) | ≤ 45 | W/m² |
 | US-VA (federal) | ASHRAE 90.1-2022 | Assembly U-factor (climate zone 4A) | ≤ 0.124 | Btu/h·ft²·°F |
 
-**Empty state.** At v0.0.1, most tokens have no registered overlays — the overlay structure is defined but unpopulated. The v0.0.3 milestone is planned to deliver the first overlay set: BC RS-1 residential zoning requirements for exterior walls, slabs, and windows. The empty state is displayed explicitly: "No regulatory overlays registered. BC RS-1 in development (v0.0.3)."
+**Empty state.** At v0.0.1, most BIM Objects have no registered overlays — the overlay structure is defined but unpopulated. The v0.0.3 milestone is planned to deliver the first overlay set: BC RS-1 residential zoning requirements for exterior walls, slabs, and windows. The empty state is displayed explicitly: "No regulatory overlays registered. BC RS-1 in development (v0.0.3)."
 
 **Geometric exclusion fragments.** Where a regulatory requirement has geometric expression — fire compartment boundaries, accessibility clearances, setback envelopes — the overlay row includes an IFC fragment: a solid geometry encoded in IFC that defines the spatial constraint. Geometric exclusion takes unconditional precedence over numeric constraints in the composition rule. See "Composition Rule" below.
 
@@ -186,9 +187,9 @@ When a new BIM Token is authored — by a standards body, a jurisdiction, or a d
 
 **Zone 3 — Climate Zone.** Add-zone-row form: zone system selector (ASHRAE / NBC / EN ISO 52000), zone identifier, parameter name, required value, unit, source standard reference. Multiple zone rows per token.
 
-**Zone 4 — Publishing.** Validation summary (IDS file syntax check, IFC fragment geometry check if applicable), preview of token JSON output, approval workflow (for tokens requiring master co-sign per DOCTRINE.md), commit message field, publish action (git commit to token vault).
+**Zone 4 — Publishing.** Validation summary (IDS file syntax check, IFC fragment geometry check if applicable), preview of BIM Object JSON output, approval workflow (for BIM Objects requiring master co-sign per DOCTRINE.md), commit message field, publish action (git commit to object vault).
 
-The CMS authoring model is the intended interface for `app-console-bim` (planned, v0.1.x). At v0.0.1, tokens are authored directly as DTCG JSON files and committed via git.
+The CMS authoring model is the intended interface for `app-console-bim` (planned, v0.1.x). At v0.0.1, BIM Objects are authored directly as DTCG JSON files and committed via git.
 
 ---
 
@@ -212,4 +213,4 @@ This is the same relationship as between a CSS property specification (declaring
 
 ---
 
-*Draft prepared for project-editorial sweep. Research provenance: plan Part 1 canonical definition; sub-agent A + B research; climate-zones.dtcg.json token file; glossary_projects.csv. Doctrine claims: #40, #41. BCSC posture: all forward-looking items use planned/intended language.*
+*Draft prepared for project-editorial sweep. Research provenance: plan Part 1 canonical definition; sub-agent A + B research; climate-zones.dtcg.json token file; glossary_projects.csv. Doctrine claims: #40, #41. BCSC posture: all forward-looking items use planned/intended language. Terminology updated 2026-05-17: BIM tokens → BIM Objects.*
