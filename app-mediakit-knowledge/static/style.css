@@ -1,46 +1,220 @@
 /* PointSav Knowledge — wiki chrome.
  *
- * Wikipedia muscle-memory target: serif body for article content, sans
- * for chrome and headings; same content max-width discipline; same
- * blue-link / purple-visited convention. Mobile-first via single
- * column with viewport scaling. No JS required for read.
+ * Institutional target: Goldman Sachs / Wikipedia muscle-memory.
+ * Self-hosted WOFF2 fonts: Oswald (nav/display), Source Serif 4 (article
+ * headings), Inter (body). Light mode only — no dark mode. No cookies.
  */
 
-:root {
-  --serif: Georgia, "Times New Roman", serif;
-  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, sans-serif;
-  --mono: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
-  --bg: #F9FAFB;     /* near-white canvas — matches PointSav home page --ps-canvas */
-  --bg-chrome: #f8f9fa;
-  --bg-aside: #fdf6e3;
-  --fg: #202122;
-  --fg-muted: #54595d;
-  --border: #a2a9b1;
-  --link: #3366cc;
-  --link-visited: #6b4ba1;
-  --max-content-width: 76em;
+/* ── Self-hosted WOFF2 font faces ──────────────────────────────────────────── */
+/* Served at /static/fonts/*.woff2 via rust-embed. OFL licensed. */
 
-  /* MediaWiki Codex aliases — Phase 2 token port entrypoints.
-   * Values mirror the PointSav variables above; Phase 2 will
-   * substitute these across style.css selectors. */
+/* Oswald — display/nav labels only (10-11px uppercase) */
+@font-face {
+  font-family: 'Oswald';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/static/fonts/Oswald-400-normal-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329;
+}
+@font-face {
+  font-family: 'Oswald';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/static/fonts/Oswald-400-normal-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Oswald';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/static/fonts/Oswald-600-normal-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329;
+}
+@font-face {
+  font-family: 'Oswald';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/static/fonts/Oswald-600-normal-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Oswald';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/static/fonts/Oswald-700-normal-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329;
+}
+@font-face {
+  font-family: 'Oswald';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/static/fonts/Oswald-700-normal-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* Source Serif 4 — article headings H1/H2/H3 */
+@font-face {
+  font-family: 'Source Serif 4';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/static/fonts/Source-Serif-4-400-italic-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329;
+}
+@font-face {
+  font-family: 'Source Serif 4';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/static/fonts/Source-Serif-4-400-italic-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Source Serif 4';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/static/fonts/Source-Serif-4-400-normal-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329;
+}
+@font-face {
+  font-family: 'Source Serif 4';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/static/fonts/Source-Serif-4-400-normal-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Source Serif 4';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/static/fonts/Source-Serif-4-700-normal-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329;
+}
+@font-face {
+  font-family: 'Source Serif 4';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/static/fonts/Source-Serif-4-700-normal-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* Inter — body text */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/static/fonts/Inter-400-normal-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329;
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/static/fonts/Inter-400-normal-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('/static/fonts/Inter-500-normal-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329;
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('/static/fonts/Inter-500-normal-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/static/fonts/Inter-600-normal-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329;
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/static/fonts/Inter-600-normal-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* ── Design system tokens ──────────────────────────────────────────────────── */
+
+:root {
+  /* Font families */
+  --serif:   "Source Serif 4", "Roboto Slab", Georgia, serif;
+  --sans:    "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, sans-serif;
+  --display: "Oswald", "Helvetica Neue", Arial, sans-serif;
+  --mono:    "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+
+  /* Paper — light mode only; hard-coded, no dark-mode overrides */
+  --ds-paper-1: #FFFFFF;
+  --ds-paper-2: #F7F9FA;
+  --ds-paper-3: #E6E7E8;
+
+  /* Ink */
+  --ds-ink-1: #111827;
+  --ds-ink-2: #374151;
+  --ds-ink-3: #6B7280;
+  --ds-ink-4: #9CA3AF;
+
+  /* Rule */
+  --ds-rule-hairline: #D1D5DB;
+
+  /* Layout */
+  --max-content-width: 76em;
+  --measure: 68ch;
+  --radius: 2px;
+
+  /* Links — single colour, no visited state */
+  --link:       #1B5DC8;
+  --link-hover: #0550ae;
+
+  /* PointSav brand accent */
+  --ps-blue: #869FB9;
+  --accent:  var(--ps-blue);
+
+  /* Backward-compatible aliases for existing selectors */
+  --bg:        var(--ds-paper-2);
+  --bg-chrome: var(--ds-paper-3);
+  --bg-aside:  #fdf6e3;
+  --fg:        var(--ds-ink-1);
+  --fg-muted:  var(--ds-ink-3);
+  --border:    var(--ds-rule-hairline);
+
+  /* MediaWiki Codex aliases */
   --mw-color-link:         var(--link);
-  --mw-color-link-visited: var(--link-visited);
-  --mw-color-link-redlink: #ba0000;
+  --mw-color-link-redlink: var(--ds-ink-3);
   --mw-color-base-10:      var(--bg-chrome);
-  --mw-color-base-20:      #eaecf0;
+  --mw-color-base-20:      #D1D5DB;
   --mw-color-base-50:      var(--border);
   --mw-font-family-article: var(--serif);
   --mw-font-family-chrome:  var(--sans);
   --mw-font-size-base:      0.875rem;
-  --mw-color-box-tfa:       #cef2e0; /* Wikipedia TFA / OTD green */
-  --mw-color-box-dyk:       #cedff2; /* Wikipedia DYK / ITN blue  */
+  --mw-color-box-tfa:       #cef2e0;
+  --mw-color-box-dyk:       #cedff2;
 
-  /* Institutional accent — chrome highlights separate from link colour.
-   * PointSav default: steel-blue #869FB9 (matches pointsav.com home page chrome).
-   * Woodfine theme overrides to #164679 in theme-woodfine.css. */
-  --accent: #869FB9;
-
-  /* Semantic status / diff / action colors — dark mode overrides below */
+  /* Semantic status / diff / action colors */
   --color-danger:      #b52e2e;
   --color-danger-bg:   #ffeef0;
   --color-danger-hi:   #fdb8c0;
@@ -50,7 +224,6 @@
   --color-warning:     #9a6700;
   --color-warning-bg:  #fff8c5;
   --color-info-bg:     #cee0f2;
-  --link-hover:        #0550ae;
 }
 
 * { box-sizing: border-box; }
@@ -99,9 +272,11 @@ body {
 
 /* --- chrome --- */
 
+/* Existing single-row header — updated to use design tokens.
+ * Phase C will replace .mw-header with .shell-header three-row structure. */
 .mw-header {
   border-bottom: 1px solid var(--border);
-  background: var(--bg-chrome);
+  background: var(--ds-paper-3);
   padding: 0.75rem 1.25rem;
   display: flex;
   justify-content: space-between;
@@ -110,22 +285,119 @@ body {
 }
 
 .site-title {
-  font-family: var(--mono);
-  font-weight: 800;
-  font-size: 1rem;
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: 0.9375rem;
   text-transform: uppercase;
-  letter-spacing: -0.02em;
+  letter-spacing: 0.05em;
   text-decoration: none;
-  color: var(--fg);
+  color: var(--ds-ink-1);
 }
 
 .site-nav a {
-  color: var(--link);
+  font-family: var(--display);
+  font-size: 0.6875rem;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ds-ink-2);
   text-decoration: none;
-  margin-left: 1rem;
+  margin-left: 1.25rem;
 }
 
-.site-nav a:hover { text-decoration: underline; }
+.site-nav a:hover { color: var(--ds-ink-1); }
+
+/* ── Three-row shell header — activated by Phase C Rust rebuild ────────────── */
+
+.shell-header {
+  border-bottom: 1px solid var(--border);
+  background: var(--ds-paper-2);
+}
+
+.utility-row {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 0.3rem 1.25rem;
+  background: var(--ds-paper-3);
+  border-bottom: 1px solid var(--border);
+  font-family: var(--display);
+  font-size: 0.625rem;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  gap: 1.25rem;
+}
+
+.utility-row a { color: var(--ds-ink-3); text-decoration: none; }
+.utility-row a:hover { color: var(--ds-ink-1); }
+
+.brand-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  background: var(--ds-paper-2);
+}
+
+.brand-row .wordmark { display: block; text-decoration: none; }
+.brand-row .wordmark svg { height: 32px; width: auto; }
+
+.wordmark-text {
+  font-family: var(--display);
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ds-ink-1);
+  text-decoration: none;
+}
+
+.nav-row {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  padding: 0 1.25rem;
+  border-top: 1px solid var(--border);
+  background: var(--ds-paper-2);
+  min-height: 2.5rem;
+}
+
+.nav-list {
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  gap: 1.25rem;
+}
+
+.nav-list.right { justify-content: flex-end; }
+
+.nav-list a {
+  font-family: var(--display);
+  font-size: 0.6875rem;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ds-ink-2);
+  text-decoration: none;
+}
+.nav-list a:hover { color: var(--ds-ink-1); }
+
+.nav-divider {
+  width: 1px;
+  background: var(--border);
+  align-self: stretch;
+  margin: 0.5rem 0;
+}
+
+.search-row {
+  background: var(--ds-paper-3);
+  border-top: 1px solid var(--border);
+  padding: 0.5rem 1.25rem;
+  display: flex;
+  justify-content: center;
+}
 
 .site-main {
   max-width: var(--max-content-width);
@@ -135,20 +407,79 @@ body {
 
 .site-footer {
   border-top: 1px solid var(--border);
-  background: var(--bg-chrome);
+  background: var(--ds-paper-3);
   padding: 1.5rem 1.25rem 1rem;
-  color: var(--fg-muted);
+  color: var(--ds-ink-3);
   font-size: 0.8125rem;
   margin-top: 3rem;
 }
 
-/* Multi-column institutional footer layout — IP | Privacy | Nav */
+/* Two-column institutional footer layout — IP | Nav */
 .footer-inner {
   display: grid;
-  grid-template-columns: 2fr 1.5fr 1fr;
+  grid-template-columns: 2fr 1fr;
   gap: 1.5rem 2rem;
   max-width: var(--max-content-width);
   margin: 0 auto 1rem;
+}
+
+/* ── Shell footer — activated by Phase C Rust rebuild ─────────────────────── */
+
+.shell-footer {
+  border-top: 1px solid var(--border);
+  background: var(--ds-paper-3);
+  padding: 1.5rem 1.25rem 0.75rem;
+  margin-top: 3rem;
+  font-size: 0.8125rem;
+  color: var(--ds-ink-3);
+}
+
+.footer-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  max-width: var(--max-content-width);
+  margin: 0 auto 0.75rem;
+  gap: 1rem;
+}
+
+.cities {
+  font-family: var(--serif);
+  font-size: 0.875rem;
+  color: var(--ds-ink-1);
+}
+
+.cities .sep {
+  margin: 0 0.4rem;
+  color: var(--ds-ink-4);
+}
+
+.footnav {
+  display: flex;
+  gap: 1.25rem;
+  font-family: var(--display);
+  font-size: 0.625rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.footnav a { color: var(--ds-ink-3); text-decoration: none; }
+.footnav a:hover { color: var(--ds-ink-1); }
+
+.footer-copyright-line {
+  max-width: var(--max-content-width);
+  margin: 0 auto;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.6875rem;
+  color: var(--ds-ink-4);
+}
+
+.footer-trademark-line {
+  max-width: var(--max-content-width);
+  margin: 0.35rem auto 0;
+  font-size: 0.625rem;
+  color: var(--ds-ink-4);
 }
 
 .footer-col { display: flex; flex-direction: column; gap: 0.35rem; }
@@ -181,14 +512,14 @@ body {
 .footer-engine a { color: var(--fg-muted); text-decoration: none; }
 .footer-engine a:hover { text-decoration: underline; }
 
-/* Footer section headings — institutional two-column pattern from home pages */
+/* Footer section headings */
 .footer-col-heading {
-  font-family: var(--mono);
+  font-family: var(--display);
   font-size: 0.6rem;
-  font-weight: 700;
+  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--fg);
+  color: var(--ds-ink-2);
   margin: 0 0 0.5rem;
 }
 
@@ -250,6 +581,7 @@ body {
   font-family: var(--mw-font-family-article);
   font-size: 1rem;
   line-height: 1.7;
+  max-width: var(--measure);
   text-rendering: optimizeLegibility;
   overflow-wrap: break-word;
   -webkit-font-smoothing: antialiased;
@@ -277,8 +609,8 @@ body {
 }
 
 .page-body h1, .page-body h2, .page-body h3, .page-body h4, .page-body h5, .page-body h6 {
-  font-family: var(--sans);
-  font-weight: 400;
+  font-family: var(--serif);
+  font-weight: 700;
   margin-top: 1.75rem;
   margin-bottom: 0.5rem;
 }
@@ -291,7 +623,6 @@ body {
 .page-body h6 { font-size: 0.9375rem; font-weight: 600; font-style: italic; margin-top: 1.25rem; }
 
 .page-body a { color: var(--mw-color-link); }
-.page-body a:visited { color: var(--mw-color-link-visited); }
 .page-body a.wikilink { color: var(--mw-color-link); }
 
 .page-body p, .page-body ul, .page-body ol { margin: 0.9em 0; }
@@ -449,7 +780,6 @@ body {
 }
 
 .wiki-portlet-links a:hover { text-decoration: underline; }
-.wiki-portlet-links a:visited { color: var(--link-visited); }
 
 /* --- Left-rail collapsible TOC (Vector 2022 sticky pattern) --- */
 
@@ -486,7 +816,7 @@ body {
   font-family: inherit;
 }
 
-.toc-toggle:hover { color: var(--link-visited); }
+.toc-toggle:hover { color: var(--link); }
 
 .toc-list {
   list-style: none;
@@ -509,7 +839,6 @@ body {
 }
 
 .toc-list a:hover { text-decoration: underline; }
-.toc-list a:visited { color: var(--link-visited); }
 
 /* Indent sub-headings visually */
 .toc-level-2 a { padding-left: 0.75rem; }
@@ -832,7 +1161,6 @@ body {
   font-size: 0.875rem;
 }
 
-.cats-list a:visited { color: var(--link-visited); }
 .cats-list a:hover { text-decoration: underline; }
 
 .wiki-footer-meta {
@@ -1442,7 +1770,6 @@ body {
 }
 
 .wiki-home-cat-article a:hover { text-decoration: underline; }
-.wiki-home-cat-article a:visited { color: var(--link-visited); }
 
 .wiki-home-cat-article-desc {
   color: var(--fg-muted);
@@ -1591,7 +1918,6 @@ body {
 }
 
 .wiki-cat-page-item-title:hover { text-decoration: underline; }
-.wiki-cat-page-item-title:visited { color: var(--link-visited); }
 
 .wiki-cat-page-item-date {
   font-size: 0.8rem;
@@ -1613,12 +1939,10 @@ body {
 
 /* ─── Leapfrog 2030 Enhancements ───────────────────────────────────────────── */
 
-/* Red Links */
+/* Unresolved wikilinks — muted, not alarming; visible to contributors */
 a.wiki-redlink {
-  color: var(--mw-color-link-redlink);
-}
-a.wiki-redlink:visited {
-  color: color-mix(in srgb, var(--mw-color-link-redlink) 70%, var(--bg));
+  color: var(--ds-ink-3);
+  text-decoration: underline dotted;
 }
 
 /* Glossary Tooltips */
@@ -2693,129 +3017,7 @@ a.footnote-backref:hover { text-decoration: underline; }
   margin-bottom: 0;
 }
 
-/* ── Appearance menu ───────────────────────────────────────────────────────── */
-
-.wiki-appearance-wrap {
-  position: relative;
-  flex-shrink: 0;
-}
-.wiki-appearance-btn {
-  background: none;
-  border: 1px solid var(--border);
-  border-radius: 2px;
-  cursor: pointer;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--fg);
-  padding: 0.2rem 0.55rem;
-  line-height: 1.4;
-  vertical-align: middle;
-  font-family: var(--sans);
-}
-.wiki-appearance-btn:hover { background: var(--bg-chrome); }
-.wiki-appearance-menu {
-  position: absolute;
-  top: calc(100% + 6px);
-  right: 0;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 2px;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
-  min-width: 200px;
-  z-index: 500;
-  padding: 0.75rem;
-}
-.wiki-appearance-menu[hidden] { display: none; }
-.wiki-appearance-section { margin-bottom: 0.75rem; }
-.wiki-appearance-section:last-child { margin-bottom: 0; }
-.wiki-appearance-label {
-  font-size: 0.7rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--fg-muted);
-  margin: 0 0 0.4rem;
-}
-.wiki-appearance-options {
-  display: flex;
-  gap: 0.35rem;
-}
-.wiki-appearance-opt {
-  flex: 1;
-  background: var(--bg-chrome);
-  border: 1px solid var(--border);
-  border-radius: 2px;
-  cursor: pointer;
-  font-size: 0.78rem;
-  color: var(--fg);
-  padding: 0.25rem 0.4rem;
-  text-align: center;
-  font-family: var(--sans);
-  transition: background 0.1s;
-}
-.wiki-appearance-opt:hover { background: var(--mw-color-base-20); }
-.wiki-appearance-opt.appearance-active {
-  background: var(--link);
-  color: #fff;
-  border-color: var(--link);
-}
-
-/* ── Dark theme variables ──────────────────────────────────────────────────── */
-
-[data-theme="dark"] {
-  --bg:        #1a1a1a;
-  --bg-chrome: #27272a;
-  --bg-aside:  #222218;
-  --fg:        #d5d5d5;
-  --fg-muted:  #9ea3a7;
-  --border:    #404040;
-  --link:      #6794d0;
-  --link-visited: #b786ff;
-  --accent:    #a0bcd0;  /* lighter steel-blue for dark background readability */
-  --mw-color-base-10: var(--bg-chrome);
-  --mw-color-base-20: #3a3a3e;
-  --mw-color-base-50: var(--border);
-  --color-danger:      #f47067;
-  --color-danger-bg:   color-mix(in srgb, #c94040 18%, var(--bg));
-  --color-danger-hi:   color-mix(in srgb, #c94040 35%, var(--bg));
-  --color-success:     #3fb950;
-  --color-success-bg:  color-mix(in srgb, #22863a 18%, var(--bg));
-  --color-success-hi:  color-mix(in srgb, #22863a 35%, var(--bg));
-  --color-warning:     #e3b341;
-  --color-warning-bg:  color-mix(in srgb, #b08800 18%, var(--bg));
-  --color-info-bg:     color-mix(in srgb, #3466aa 25%, var(--bg));
-  --link-hover:        #7facdf;
-}
-
-/* Auto: follow system preference when no explicit theme is set */
-@media (prefers-color-scheme: dark) {
-  [data-theme="auto"] {
-    --bg:        #1a1a1a;
-    --bg-chrome: #27272a;
-    --bg-aside:  #222218;
-    --fg:        #d5d5d5;
-    --fg-muted:  #9ea3a7;
-    --border:    #404040;
-    --link:      #6794d0;
-    --link-visited: #b786ff;
-    --accent:    #a0bcd0;  /* lighter steel-blue for dark background readability */
-    --mw-color-base-10: var(--bg-chrome);
-    --mw-color-base-20: #3a3a3e;
-    --mw-color-base-50: var(--border);
-    --color-danger:      #f47067;
-    --color-danger-bg:   color-mix(in srgb, #c94040 18%, var(--bg));
-    --color-danger-hi:   color-mix(in srgb, #c94040 35%, var(--bg));
-    --color-success:     #3fb950;
-    --color-success-bg:  color-mix(in srgb, #22863a 18%, var(--bg));
-    --color-success-hi:  color-mix(in srgb, #22863a 35%, var(--bg));
-    --color-warning:     #e3b341;
-    --color-warning-bg:  color-mix(in srgb, #b08800 18%, var(--bg));
-    --color-info-bg:     color-mix(in srgb, #3466aa 25%, var(--bg));
-    --link-hover:        #7facdf;
-  }
-}
-
-/* Wide width toggle */
+/* Wide width toggle — preserved for article density control */
 [data-width="wide"] {
   --max-content-width: none;
 }
@@ -2985,16 +3187,6 @@ body.printable .mw-body {
 
 .wiki-home-box-footer a:hover { text-decoration: underline; }
 
-[data-theme="dark"] .wiki-home-box-footer,
-[data-theme="auto"] .wiki-home-box-footer {
-  background: var(--bg-chrome);
-}
-
-@media (prefers-color-scheme: dark) {
-  [data-theme="auto"] .wiki-home-box-footer {
-    background: var(--bg-chrome);
-  }
-}
 
 /* ITN box — Recently updated */
 .wiki-home-itn {
@@ -3312,7 +3504,6 @@ body.printable .mw-body {
 .wiki-backlinks-list li:last-child { border-bottom: none; }
 .wiki-backlinks-list a { color: var(--link); text-decoration: none; }
 .wiki-backlinks-list a:hover { text-decoration: underline; }
-.wiki-backlinks-list a:visited { color: var(--link-visited); }
 
 /* ── Sprint W: History + Blame + Cite — inline-style purge + CSS ─────── */
 
@@ -3452,7 +3643,6 @@ body.printable .mw-body {
   font-family: var(--sans);
 }
 .search-hit-title:hover { text-decoration: underline; }
-.search-hit-title:visited { color: var(--link-visited); }
 .search-hit-slug {
   display: block;
   font-family: var(--mono);
