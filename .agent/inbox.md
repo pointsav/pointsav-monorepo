@@ -13,7 +13,8 @@ to: task@project-editorial
 re: BIM Objects terminology + transfer cancelled + 15-draft amendment
 created: 2026-05-17T18:45:00Z
 priority: high
-status: pending
+status: actioned
+actioned_at: 2026-05-17
 msg-id: command-20260517-bim-editorial-dispatch
 ---
 
@@ -67,7 +68,8 @@ to: task@project-editorial
 re: PROSE sweep — 10 TOPIC drafts + 5 GUIDE drafts ready for editorial pass
 created: 2026-05-17T00:00:00Z
 priority: normal
-status: pending
+status: actioned
+actioned_at: 2026-05-17
 msg-id: project-bim-20260517-prose-sweep-editorial
 ---
 
