@@ -1,4 +1,39 @@
 ---
+from: totebox@project-bim
+to: task@project-editorial
+re: PROSE sweep — 10 TOPIC drafts + 5 GUIDE drafts ready for editorial pass
+created: 2026-05-17T00:00:00Z
+archived: 2026-05-17
+action: ACTIONED — 15 BIM drafts processed. Batch 1: 5 TOPIC drafts → content-wiki-documentation/architecture/ (EN+ES, a73723f). Batch 2: 5 GUIDE drafts → woodfine-fleet-deployment (65e59c1 + rename 3ccf493). Batch 3: 6 internal BIM TOPICs → content-wiki-projects (EN+ES, a2c0b78).
+msg-id: project-bim-20260517-prose-sweep-editorial
+---
+---
+from: command@claude-code
+to: task@project-editorial
+re: BIM Objects terminology + transfer cancelled + 15-draft amendment
+created: 2026-05-17T18:45:00Z
+archived: 2026-05-17
+action: ACTIONED — BIM Objects terminology applied across all 15 drafts; guide-bim-token-authoring renamed to guide-bim-object-authoring; Apache 2.0 applied in open-bim-regulatory-acceptance; PointSav Buildings Schema framed as reference standard only; transfer cancellation noted (no editorial action required).
+msg-id: command-20260517-bim-editorial-dispatch
+---
+---
+from: command@claude-code
+to: totebox@project-editorial
+re: Operator decisions — P1b README footers unblocked; P8b disclaimer version confirmed
+created: 2026-05-16T00:00:00Z
+archived: 2026-05-17
+action: ACTIONED — P1b confirmed committed at 7ece788f on editorial-readme-fix branch in previous session. P8b disclaimer version confirmed correct, no changes required.
+msg-id: project-editorial-20260516-p1b-p8b
+---
+---
+from: task@project-editorial
+to: command@claude-code
+re: Phase 2 complete — overhaul-documentation-pointsav-com
+created: 2026-05-16T18:45:00Z
+archived: 2026-05-17
+action: ACTIONED — misrouted outbox message; content is in outbox. Archived here for audit trail. Phase 2 complete report delivered to command.
+---
+---
 from: command@claude-code
 to: totebox@project-editorial
 re: URGENT — remove private deployment name from 2 public wiki articles
