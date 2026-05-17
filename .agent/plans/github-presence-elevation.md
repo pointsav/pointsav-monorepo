@@ -367,20 +367,12 @@ token bundle (customer tier, Woodfine-specific → stays in woodfine org) or is 
 the *platform-level* BIM design substrate (vendor tier → should live in
 `pointsav-design-system` or a new `pointsav-bim-*` repo)?
 
-### Recommendation: rename to `woodfine-bim`
+### SUPERSEDED — see updated analysis below
 
-**Primary choice: `woodfine-bim`**
-- Matches `woodfine-<purpose-noun>` pattern exactly
-- Passes 5-second test for both audiences ("Woodfine's BIM stuff")
-- Honest about wider scope (tokens + regulation + climate + components + research)
-- Follows the same logic as `woodfine-fleet-deployment` and `woodfine-media-assets`
-
-**Secondary choice: `woodfine-bim-assets`**
-- Symmetric with `woodfine-media-assets`
-- Signals tenant-branded BIM material vs. platform substrate
-- Resolves the customer-tier org placement question explicitly
-
-This is a **rename requiring git remote changes** — not a local convention only.
+Prior recommendation was `woodfine-bim` (keep in woodfine org). Operator clarified
+2026-05-17 that BIM tokens are open and generic for the AEC community — like Carbon
+for UI/UX. That intent resolves the operator-decision flagged above: the repo belongs
+in the `pointsav` vendor org. See updated recommendation.
 
 ### Content-forward transition: files to update on rename
 
@@ -395,8 +387,66 @@ This is a **rename requiring git remote changes** — not a local convention onl
 | Any open inbox/outbox/plans referencing old name | Search and update |
 | `CLAUDE.md` §5 | Fix dangling `IT_SUPPORT_Nomenclature_Matrix_V8.md` reference → `conventions/nomenclature-taxonomy.md` |
 
-Also add `woodfine-bim` as a sub-clone to the project-bim cluster manifest to fix
-the routing defect (BIM-* artifacts need a path into the repo).
+---
+
+### Updated naming recommendation (OPUS agent, 2026-05-17)
+
+**Operator intent clarified:** BIM tokens are open and generic for the AEC community
+— "for everyone to use like design tokens." This resolves the org-placement question:
+open platform substrate belongs in the `pointsav` vendor org, not the `woodfine`
+customer org. Woodfine's role as first-mover is acknowledged in README and NOTICE,
+not encoded in the slug — same as IBM/Carbon (`carbon-design-system`, not
+`ibm-bim-system`).
+
+#### Three candidates
+
+| Name | Org | Parallel | 5-sec read |
+|---|---|---|---|
+| **`pointsav-bim-system`** ✓ | pointsav (vendor) | `design-system` ↔ `bim-system` — two substrates, same steward | "PointSav's BIM design substrate" |
+| `pointsav-bim-tokens` | pointsav (vendor) | `@carbon/tokens` vocabulary; most technically precise | "DTCG bundle for BIM" — narrow but honest |
+| `pointsav-building-design-system` | pointsav (vendor) | Longest; "building design system" is the pitch-deck phrase | "Carbon for buildings" — highest narrative payload, longer slug |
+
+#### Recommendation: `pointsav-bim-system`
+
+`<org>-<compound-noun>` shape matches every other Foundry vendor repo. The
+`design-system` ↔ `bim-system` parallel makes the relationship to
+`pointsav-design-system` legible at a glance — two repos, one for the UI/UX
+semantic layer, one for the BIM/AEC semantic layer, same steward, same license.
+No incumbent owns the `bim-system` slug on GitHub or npm — the namespace is clear.
+
+The "BIM authoring software" overload risk (AEC industry uses "BIM system" for
+software like Revit) is real but resolved in the README's first sentence.
+
+#### License: change EUPL-1.2 → Apache 2.0
+
+EUPL-1.2 is network-copyleft — a commercial AEC vendor (Autodesk, Bentley,
+Nemetschek) cannot embed EUPL tokens in proprietary software without exposing
+their product to copyleft demands. That kills adoption. IBM Carbon, Google Material,
+Adobe Spectrum all use Apache 2.0 specifically to remove the copyleft barrier.
+For a token standard whose value depends on becoming the industry default, the
+license must be Apache 2.0.
+
+All contributors to date are PointSav/Woodfine employees under CLA — re-licensing
+authority is clean. Document the chain in a `NOTICE` file.
+
+#### What changes (full move, not just rename)
+
+This is a **repo transfer + rename + relicense**, not a local rename:
+
+| Change | Detail |
+|---|---|
+| GitHub transfer | `woodfine/woodfine-design-bim` → `pointsav` org first; then rename to `pointsav-bim-system`. Do transfer before rename — easier to debug. |
+| Local path | `customer/woodfine-design-bim/` → `vendor/pointsav-bim-system/` (crosses vendor/customer boundary) |
+| Stage 6 path | No longer flows through Woodfine staging mirrors; flows through `origin-staging-j` / `origin-staging-p` like other `pointsav/*` vendor repos |
+| Admin identity | `mcorp-administrator` → `ps-administrator` for any admin-tier commits |
+| `pairings.yaml` | Move entry from customer section to vendor section |
+| `PROJECT-CLONES.md` | Update project-bim block; add explicit "tokens repo: pointsav-bim-system" |
+| `.agent/plans/README.md` routing | Rewrite line 28: `BIM-* → project-bim → pointsav-bim-system`; clarify boundary with `pointsav-design-system` (UI/UX tokens vs BIM tokens — neither subsumes the other); drop "Never routes to pointsav-design-system" caveat |
+| project-bim cluster manifest | Add `pointsav-bim-system` as fourth sub-clone (fixes routing defect) |
+| README / NOTICE | Add: "Initial token set authored by Woodfine Management Corp. for portfolio operations; published under PointSav vendor stewardship for AEC community adoption." |
+| LICENSE file | Replace EUPL-1.2 → Apache 2.0; add NOTICE file documenting relicensing |
+| CHANGELOG.md | One-line entry recording org transfer + relicense (BCSC discipline) |
+| `git remote set-url origin` | Update in any existing clones after GitHub transfer settles |
 
 ---
 
