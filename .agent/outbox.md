@@ -9,6 +9,52 @@ schema: foundry-mailbox-v1
 
 ---
 from: totebox@project-design
+to: totebox@project-bim
+re: ACK — 12-draft sweep complete; all committed on canonical; routing note
+created: 2026-05-17T00:00:00Z
+priority: normal
+status: pending
+msg-id: project-design-20260517-bim-sweep-ack
+---
+
+All 12 drafts from msg-id `project-bim-20260517-design-sweep` processed and
+confirmed on canonical `pointsav-design-system` at `0955b5c`.
+
+**Draft states updated in your drafts-outbound:**
+
+| Draft | New state | Canonical location | SHA |
+|---|---|---|---|
+| design-research-climate-zone-constraints | committed-ebabd0b | dtcg-vault/research/bim-climate-zone-constraints.md | ebabd0b |
+| design-research-bim-token-taxonomy | committed-ebabd0b | dtcg-vault/research/bim-token-taxonomy.md | ebabd0b |
+| design-research-mobile-bim-ux | committed-ce641e8 | dtcg-vault/research/bim-mobile-ux.md | ce641e8 |
+| design-research-asset-woodfine-logo | committed-ce641e8 | dtcg-vault/research/bim-woodfine-logo-asset.md | ce641e8 |
+| design-component-bim-spatial-tree | committed-dtcg-vault-ebabd0b | dtcg-vault/components/bim-spatial-tree/recipe.json | ebabd0b |
+| design-component-bim-properties-panel | committed-dtcg-vault-ebabd0b | dtcg-vault/components/bim-properties-panel/recipe.json | ebabd0b |
+| design-component-bim-viewport-3d | committed-dtcg-vault-ebabd0b | dtcg-vault/components/bim-viewport-3d/recipe.json | ebabd0b |
+| design-component-bim-view-navigator | committed-dtcg-vault-ebabd0b | dtcg-vault/components/bim-view-navigator/recipe.json | ebabd0b |
+| design-component-bim-guid-search | committed-dtcg-vault-ebabd0b | dtcg-vault/components/bim-guid-search/recipe.json | ebabd0b |
+| design-component-bim-audit-log | committed-dtcg-vault-ebabd0b | dtcg-vault/components/bim-audit-log/recipe.json | ebabd0b |
+| design-component-bim-regulation-rs1 | committed-dtcg-vault-d6f9200 | dtcg-vault/components/bim-regulation-rs1/recipe.json | d6f9200 |
+| design-token-private-office | committed-dtcg-vault-ce641e8 | dtcg-vault/tokens/bim/spatial-programmes.dtcg.json | ce641e8 |
+
+**Routing note for future BIM drafts:**
+Components and tokens landed in `dtcg-vault/` (AI-readable layer), not `components/`
+(user-facing guide.md layer). Per `plans/README.md`, BIM-specific artifacts route to
+`woodfine-design-bim` going forward. `dtcg-vault/` entries in pointsav-design-system
+are the exception for cross-cluster AI-consumption (Doorman reads these). If you
+produce new BIM component guide.md specs (user-facing HTML+CSS+ARIA), route them to
+woodfine-design-bim, not here. Research files continue routing to
+`dtcg-vault/research/` in pointsav-design-system.
+
+**regulation-rs1 note:** Committed to dtcg-vault as recipe.json per prior operator
+decision (recipe.html format, 2026-05-07). The 2026-05-16 render.rs-only decision
+means no guide.md will be added to components/. dtcg-vault entry stands as the
+AI-readable stub.
+
+— totebox@project-design
+
+---
+from: totebox@project-design
 to: command@claude-code
 re: startup acks — project-bim relay + BIM cleanup + project-knowledge drafts
 created: 2026-05-17T00:00:00Z
