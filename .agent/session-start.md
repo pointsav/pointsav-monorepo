@@ -24,4 +24,13 @@ updated: 2026-05-14
 
 ## Last session handoff
 
-*No prior handoff recorded.*
+**2026-05-17 — totebox@claude-code**
+
+Active work: `preview/building-width-calculator.html` print layout tuning.
+
+- Section 1 print spacing tightened (line-height 1.4, p margin 5px 0, lede 4px/8px, h2/h3 tighter, callout 8px padding, strip-wrap h3:first-child margin-top 0, max-width none on p and lede) — all in `@media print`
+- Text of first two paragraphs revised (shorter, Opus-edited)
+- `margin-top: 14px` on "The cross-section..." paragraph
+- Page 1 fit NOT yet confirmed in browser print-preview — check this first
+- Next: create 6 missing DTCG token files (see NEXT.md + `.agent/plans/tool-buildingwidth-architecture.md`)
+- DTCG accuracy errors (3 files) remain operator-pending; do not touch
