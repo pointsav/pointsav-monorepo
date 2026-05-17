@@ -1,0 +1,6 @@
+[workspace]
+resolver = "2"
+members = ["app-console-content"]
+
+[workspace.package]
+edition = "2021"

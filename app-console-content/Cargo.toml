@@ -1,0 +1,21 @@
+[package]
+name = "app-console-content"
+version = "0.1.0"
+edition = "2021"
+description = "Proofreader + content-draft TUI over SSH — os-console F4 Content Cartridge"
+
+[[bin]]
+name = "app-console-content"
+path = "src/main.rs"
+
+[[bin]]
+name = "proofctl"
+path = "src/bin/proofctl.rs"
+
+[dependencies]
+ratatui = "0.30"
+crossterm = { version = "0.28", features = ["event-stream"] }
+russh = "0.60"
+tokio = { version = "1", features = ["full"] }
+rand = "0.10"
+anyhow = "1"
