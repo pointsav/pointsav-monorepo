@@ -648,12 +648,14 @@
     a { color: inherit; text-decoration: none; }
   }
 
-  /* Smaller screens — let the deck scale visually but preserve layout */
-  @media (max-width: 1200px) {
+  /* Smaller screens — let the deck scale visually but preserve layout.
+     `screen and` guards these from firing during Chromium PDF pagination,
+     where the @page width is 1056px and would otherwise trigger them. */
+  @media screen and (max-width: 1200px) {
     .deck { padding: 16px 0 40px; }
     .slide { transform: scale(0.92); transform-origin: top center; margin: -28px 0; }
   }
-  @media (max-width: 1000px) {
+  @media screen and (max-width: 1000px) {
     .slide { transform: scale(0.78); margin: -75px 0; }
   }
 </style>
