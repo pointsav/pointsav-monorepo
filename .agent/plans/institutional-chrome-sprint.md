@@ -6,9 +6,10 @@
 |---|---|---|
 | B1–B6 — CSS redesign (fonts, tokens, header, dark-mode removal, footer, link colours) | **COMPLETE** | `57c7dfe2` on `readme-fixes-2026-05-16` |
 | C1–C7 — Rust rebuild (categories, header chrome, dark-mode JS, emojis, tabs, footer, sticky) | **COMPLETE** | `37fe2a49` on `readme-fixes-2026-05-16` |
-| D — Per-site theme verification (SVG wordmarks, `--wf-claret`, `--wf-slate`) | **PENDING** | — |
-| E1–E4 — Quality gates (wanted, stub suppression, category counts, title QA) | **PENDING** | — |
-| Stage 6 promotion | **PENDING** | Command Session scope; 2 commits ahead of `origin/main` |
+| D — Per-site theme verification (SVG wordmarks, `--wf-claret`, `--wf-slate`) | **COMPLETE** | `ada53ef8` on `readme-fixes-2026-05-16` |
+| E2 — Stub suppression in home grid | **COMPLETE** | `ada53ef8` on `readme-fixes-2026-05-16` |
+| E1, E3, E4 — Quality gates (wanted, category counts, title QA) | **BLOCKED — awaiting build** | post-Stage 6 + project-knowledge build |
+| Stage 6 promotion | **PENDING** | Command Session scope; 3 commits ahead of `origin/main`; outbox message sent |
 
 **Branch:** `pointsav-monorepo` sub-clone at `/srv/foundry/clones/project-editorial/pointsav-monorepo/`, branch `readme-fixes-2026-05-16`.
 
