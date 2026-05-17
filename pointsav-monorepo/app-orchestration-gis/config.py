@@ -26,6 +26,7 @@ WORK_DIR          = Path(__file__).parent / "work"
 # Phase 7: kaufland-de DONE 2026-05-16.
 # Phase 8: fred-meyer-us DONE 2026-05-17 (126 records, Q5495932; PNW-regional; 63 new clusters, 0 T1).
 # Phase 12: whole-foods-us promoted from GENERIC_FOOD; chedraui-mx promoted; heb-us, asda-uk, morrisons-uk ingested 2026-05-17.
+# Phase 15: wegmans-us, winco-foods-us, sprouts-us ingested 2026-05-17.
 ALPHA_HYPERMARKET = {
     "NA": {
         # Walmart: Fortune #1 — dominant NA hypermarket
@@ -42,6 +43,12 @@ ALPHA_HYPERMARKET = {
         "heb-us",
         # Chedraui: Mexican hypermarket chain (~280 stores, Q2336803) — Phase 12 promotion 2026-05-17
         "chedraui-mx",
+        # Wegmans: large-format NE US grocery (~110 stores, Q1182328) — Phase 15 ingest 2026-05-17
+        "wegmans-us",
+        # WinCo Foods: bulk/warehouse-style grocery OR/WA/ID/NV/UT/AZ/CA/TX (~140 stores, Q2584339) — Phase 15 2026-05-17
+        "winco-foods-us",
+        # Sprouts Farmers Market: natural grocery Sun Belt (~410 stores, Q7580917) — Phase 15 2026-05-17
+        "sprouts-us",
     },
     "EU": {
         # Mercadona-ES: Spain's flagship hypermarket, 1,603 stores — operator D1 2026-05-16
@@ -151,7 +158,7 @@ REGION_CONFIG = {
     # Dual membership: Fortune-scale chains appear in BOTH anchor (can initiate clusters)
     # AND hardware/warehouse (are found as secondaries by other anchors, contributing scores).
     "US": {
-        "anchor":    ["walmart-us", "target-us", "fred-meyer-us", "whole-foods-us", "heb-us", "ikea-us", "home-depot-us", "costco-us"],
+        "anchor":    ["walmart-us", "target-us", "fred-meyer-us", "whole-foods-us", "heb-us", "wegmans-us", "winco-foods-us", "sprouts-us", "ikea-us", "home-depot-us", "costco-us"],
         "hardware":  ["home-depot-us", "alaska-industrial-hardware-us", "lowes-us", "menards-us"],
         "warehouse": ["costco-us", "sams-club-us", "bjs-wholesale-us"]
     },
@@ -337,6 +344,9 @@ ANCHOR_DISPLAY_NAMES: dict = {
     "fred-meyer-us": "Fred Meyer",
     "whole-foods-us": "Whole Foods Market",
     "heb-us": "H-E-B",
+    "wegmans-us": "Wegmans",
+    "winco-foods-us": "WinCo Foods",
+    "sprouts-us": "Sprouts Farmers Market",
     "chedraui-mx": "Chedraui",
     "target-us": "Target",
     "real-canadian-superstore-ca": "Real Canadian Superstore",
