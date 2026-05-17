@@ -628,24 +628,32 @@
   }
 
   /* ============================================================
-     PRINT — each .slide becomes exactly one landscape letter page
+     PRINT — each .slide IS one landscape letter page.
+     @page owns the geometry; slide owns the whitespace.
+     Use build-pdf.mjs (Playwright) — not the browser dialog.
      ============================================================ */
   @media print {
-    @page { size: landscape; margin: 0.3in; }
+    @page {
+      size: 11in 8.5in;
+      margin: 0;
+    }
 
     *, *::before, *::after {
       -webkit-print-color-adjust: exact !important;
       print-color-adjust: exact !important;
     }
-    html, body { background: white !important; margin: 0; padding: 0; }
-    .deck { display: block; padding: 0; gap: 0; background: white; }
+    html, body { background: #ffffff !important; margin: 0; padding: 0; }
+    .deck { display: block; padding: 0; gap: 0; background: #ffffff; }
     .slide {
-      width: 10.4in !important;
-      height: 7.9in !important;
+      width: 11in;
+      height: 8.5in;
       box-shadow: none !important;
-      margin: 0 !important;
+      margin: 0;
+      transform: none !important;
       page-break-after: always;
       break-after: page;
+      page-break-inside: avoid;
+      break-inside: avoid;
     }
     .slide:last-child { page-break-after: auto; break-after: auto; }
     a { color: inherit; text-decoration: none; }
