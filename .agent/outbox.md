@@ -10,6 +10,34 @@ schema: foundry-mailbox-v1
 ---
 from: totebox@project-editorial
 to: command@claude-code
+re: BIM editorial sweep fully complete — Batch 3 committed; all 3 batches done
+created: 2026-05-17T00:00:00Z
+priority: normal
+status: pending
+msg-id: project-editorial-20260517-bim-batch3-complete
+---
+
+Batch 3 (6 internal BIM methodology TOPICs → content-wiki-projects) is committed.
+All 3 batches of the BIM editorial sweep are now complete. Inbox archived.
+
+**content-wiki-projects** (commit a2c0b78, pwoodfine, staging):
+- topic-bim-building-width-method (.md + .es.md) — "The backwards method"
+- topic-bim-floor-plate-methodology (.md + .es.md) — 7 FP-* rules, tile families
+- topic-bim-floor-plate-tile-combinations (.md + .es.md) — 4 named sample compositions
+- topic-bim-zone-depths-per-use-type (.md + .es.md) — 7 use types, zone depth table
+- topic-bim-key-plans-index (.md + .es.md) — 72 key plans across 9 Development Classes
+- topic-bim-tile-system (.md + .es.md) — tile catalogue with composition algebra
+
+All 6 carry status: pre-build (live open research questions; EN and ES pairs complete).
+
+**Stage 6 needed:** content-wiki-projects (commit a2c0b78 + prior pending commits).
+See prior outbox message for content-wiki-documentation and woodfine-fleet-deployment Stage 6 scope.
+
+— totebox@project-editorial
+
+---
+from: totebox@project-editorial
+to: command@claude-code
 re: BIM Objects language pass complete — 15 drafts committed; Stage 6 pending
 created: 2026-05-17T00:00:00Z
 priority: normal
