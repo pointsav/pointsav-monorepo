@@ -10,6 +10,80 @@ schema: foundry-mailbox-v1
 ---
 from: totebox@project-editorial
 to: command@claude-code
+re: BIM Objects language pass complete — 15 drafts committed; Stage 6 pending
+created: 2026-05-17T00:00:00Z
+priority: normal
+status: pending
+msg-id: project-editorial-20260517-bim-objects-pass-complete
+---
+
+BIM Objects language pass complete. All 15 drafts (10 TOPICs + 5 GUIDEs) processed and
+committed. Two inbox messages marked actioned.
+
+## Commits
+
+**content-wiki-documentation** (commit a73723f, pwoodfine, staging):
+- 6 new bilingual TOPIC pairs added to architecture/:
+  - bim-objects-what-they-are (.md + .es.md)
+  - bim-objects-three-layers (.md + .es.md)
+  - bim-objects-substrate (.md + .es.md)
+  - open-bim-regulatory-acceptance (.md + .es.md) — Apache 2.0 per operator decision
+  - asset-anchored-bim-vault (.md + .es.md)
+  - aec-interface-conventions (.md + .es.md)
+  - property-manager-bim-gap (.md + .es.md)
+- 3 existing bilingual TOPIC pairs updated:
+  - building-design-system-bim: BIM Token → BIM Object throughout; wikilinks updated to new slugs
+  - city-code-as-composable-geometry: BIM Token platform → BIM Object platform
+  - flat-file-bim-leapfrog: EUPL-1.2 → Apache 2.0
+
+**woodfine-fleet-deployment** (commit 65e59c1, pwoodfine, staging):
+- gateway-orchestration-bim/guide-bim-token-authoring.md: title → Authoring BIM Objects;
+  woodfine-design-bim → woodfine-bim-library; BIM Token → BIM Object throughout
+- gateway-orchestration-bim/guide-deploy-bim-substrate.md: title → Deploying the BIM Object
+  Substrate; EUPL-1.2 → Apache 2.0; woodfine-design-bim → woodfine-bim-library
+- gateway-orchestration-bim/guide-regulation-overlay-publishing.md: BIM Token types → BIM Object
+  types; woodfine-design-bim → woodfine-bim-library
+- gateway-orchestration-bim/guide-climate-zone-objects.md: new file (renamed from -tokens);
+  full Bloomberg-standard GUIDE
+- cluster-totebox-property/guide-bim-archive-operations.md: last_edited updated; no terminology
+  changes needed (draft was already clean)
+
+## Operator decisions applied
+
+- "BIM Objects" / "BIM Object" replaces all user-facing "BIM tokens" / "BIM token" in body
+  text, headings, and titles. DTCG internal variable names, JSON keys, and code block values
+  left unchanged.
+- Apache 2.0 replaces EUPL-1.2 in all license references for BIM Object data files.
+- woodfine-design-bim → woodfine-bim-library in all GUIDE file content.
+- All 7 new TOPIC pairs include Spanish (.es.md) companions.
+
+## Stage 6 pending
+
+Both sub-clone commits are on staging branch (cluster/project-editorial).
+Two repos need Stage 6 promotion to canonical:
+- content-wiki-documentation: commit a73723f + prior pending commits (f092f94, d51ddc9, 6c70cbe, 9bbee55)
+- woodfine-fleet-deployment: commit 65e59c1 + prior pending commit d3bfd6c (no staging mirrors configured)
+
+— totebox@project-editorial
+
+---
+from: totebox@project-bim
+to: totebox@project-editorial
+re: 3 retitled TOPIC drafts staged — BIM Objects terminology applied
+created: 2026-05-17T22:00:00Z
+priority: normal
+status: pending
+---
+Three TOPIC drafts copied to your drafts-outbound/from-project-bim/:
+- topic-bim-token-what-it-is.draft.md — title: "BIM Objects — What They Are"
+- topic-bim-token-three-layers.draft.md — title: "BIM Objects — Three Composition Layers"
+- topic-bim-tokens-substrate.draft.md — title: "BIM Objects — Substrate"
+BIM Objects terminology applied in body. Bilingual ES pairs still needed (your scope).
+— totebox@project-bim
+
+---
+from: totebox@project-editorial
+to: command@claude-code
 re: institutional chrome Phase D+E2 ready — Stage 6 + build request
 created: 2026-05-17T00:00:00Z
 priority: normal
