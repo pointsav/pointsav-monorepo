@@ -52,19 +52,22 @@ A two-phase corpus overhaul of `documentation.pointsav.com` is in progress.
 
 ## Last session handoff
 
-*2026-05-17 — BIM token strategy research complete (8 OPUS agents). Key decisions:*
-- *PointSav publishes the open BIM tokens (not Woodfine); Woodfine is the named reference customer (Confluent/Kafka model)*
-- *`os-privategit` + `app-privategit-bim` product architecture confirmed*
-- *BIM token strategy memo moved to `project-bim/.agent/plans/bim-token-strategy.md` for further development*
-- *`github-presence-elevation.md` plan committed with full audit findings, README drafts, and BIM naming analysis*
-- *Stage 6 for content-wiki-documentation and pointsav-fleet-deployment promoted; woodfine-fleet-deployment and pointsav-design-system still deferred to Command Session*
+*2026-05-17 — Institutional chrome sprint: Phases B + C complete.*
+- *Phase B (CSS): fonts, design tokens, shell-header, dark mode removed, footer, link colours — committed `57c7dfe2`*
+- *Phase C (Rust rebuild): three-row header, footer, emoji removal, category cleanup — committed `37fe2a49` (build passed)*
+- *Branch: `pointsav-monorepo` sub-clone on `readme-fixes-2026-05-16`, 2 commits ahead of `origin/main`*
+- *Full plan with execution status: `.agent/plans/institutional-chrome-sprint.md`*
 
-*Pending Command Session items (in outbox):*
-1. *Repo transfer: `woodfine/woodfine-design-bim` → `pointsav/pointsav-bim-system` + relicense EUPL-1.2 → Apache 2.0 (operator approval needed)*
+*Next session: Phase D (per-site theme verification + SVG wordmarks) → Phase E (quality gates).*
+```
+curl -s http://localhost:9090/ | grep "shell-header"   # verify new chrome is live
+```
+*Stage 6 for the two monorepo commits is Command Session scope.*
+
+*Prior pending Command Session items (still in outbox):*
+1. *Repo transfer: `woodfine/woodfine-design-bim` → `pointsav/pointsav-bim-system` + relicense Apache 2.0*
 2. *Both org profile READMEs (`pointsav/.github/profile/`, `woodfine/.github/profile/`)*
 3. *woodfine-fleet-deployment Stage 6 (add staging mirrors)*
 4. *pointsav-design-system Stage 6 (diverged history + licensing conflict merge)*
-5. *pointsav-monorepo editorial-readme-fix → main*
+5. *pointsav-monorepo `readme-fixes-2026-05-16` → Stage 6 (includes institutional chrome)*
 6. *pointsav-media-assets + woodfine-media-assets admin-tier README fixes*
-
-*Next project-editorial work: institutional-chrome-sprint.md (three-wiki header redesign) when wiki rendering session opens.*

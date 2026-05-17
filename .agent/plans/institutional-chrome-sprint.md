@@ -1,5 +1,28 @@
 # Plan: Three-site wiki redesign — institutional chrome sprint
 
+## Execution status (as of 2026-05-17)
+
+| Phase | Status | Commit |
+|---|---|---|
+| B1–B6 — CSS redesign (fonts, tokens, header, dark-mode removal, footer, link colours) | **COMPLETE** | `57c7dfe2` on `readme-fixes-2026-05-16` |
+| C1–C7 — Rust rebuild (categories, header chrome, dark-mode JS, emojis, tabs, footer, sticky) | **COMPLETE** | `37fe2a49` on `readme-fixes-2026-05-16` |
+| D — Per-site theme verification (SVG wordmarks, `--wf-claret`, `--wf-slate`) | **PENDING** | — |
+| E1–E4 — Quality gates (wanted, stub suppression, category counts, title QA) | **PENDING** | — |
+| Stage 6 promotion | **PENDING** | Command Session scope; 2 commits ahead of `origin/main` |
+
+**Branch:** `pointsav-monorepo` sub-clone at `/srv/foundry/clones/project-editorial/pointsav-monorepo/`, branch `readme-fixes-2026-05-16`.
+
+**Next session entry point:** Phase D. Check running service first:
+```bash
+curl -s http://localhost:9090/ | grep "shell-header"
+curl -s http://localhost:9090/ | grep "company\|help"
+```
+Then inline SVG wordmarks and add `--wf-claret`/`--wf-slate` per-theme CSS overrides in `style.css`. Phase E quality gates follow.
+
+**Font files:** 18 WOFF2 files committed to `static/fonts/` (~728 kB). URL path is `/static/fonts/filename.woff2` (rust-embed serves `static/` at `/static/` prefix).
+
+---
+
 ## Context
 
 The operator has flagged that `documentation.pointsav.com`, `corporate.woodfinegroup.com`, and
