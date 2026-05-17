@@ -19,9 +19,9 @@ research_inline: false
 
 # Guide: Publishing a Regulatory Overlay
 
-A Regulatory Overlay adds jurisdiction-specific requirements to one or more BIM Token types. Each overlay is an independently versioned bundle of three files. This guide covers authoring, validating, and promoting an overlay to a live token vault.
+A Regulatory Overlay adds jurisdiction-specific requirements to one or more BIM Object types. Each overlay is an independently versioned bundle of three files. This guide covers authoring, validating, and promoting an overlay to a live object vault.
 
-All paths below are relative to the `woodfine-design-bim` repository root.
+All paths below are relative to the `woodfine-bim-library` repository root.
 
 ---
 
@@ -207,7 +207,7 @@ git add regulation/CA-BC/ tokens/bim/elements.dtcg.json
 git commit -m "feat(regulation): add CA-BC BCBC 2024 exterior wall thermal overlay"
 ```
 
-After commit to `woodfine-design-bim`, restart `app-orchestration-bim` on the deployment host to load the new overlay. Verify the overlay appears in the Regulation tab for the `elements.IfcWall` token page at `bim.woodfinegroup.com/tokens/elements.dtcg`.
+After commit to `woodfine-bim-library`, restart `app-orchestration-bim` on the deployment host to load the new overlay. Verify the overlay appears in the Regulation tab for the `elements.IfcWall` BIM Object page at `bim.woodfinegroup.com/tokens/elements.dtcg`.
 
 ---
 
