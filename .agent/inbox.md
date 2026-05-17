@@ -4,7 +4,7 @@ to: totebox@project-proofreader
 re: WFD spoke-configs/ removed — security cleanup; merge from canonical needed
 created: 2026-05-15T16:20:00Z
 priority: high
-status: pending
+status: actioned
 msg-id: project-proofreader-20260515-wfd-spoke-cleanup
 ---
 Security action taken by Command Session. Three WireGuard private keys were in
@@ -17,7 +17,7 @@ to: totebox@project-proofreader
 re: woodfine-fleet-deployment sub-clone reset required (2nd filter-repo 2026-05-15)
 created: 2026-05-15T00:00:00Z
 priority: high
-status: pending
+status: actioned
 ---
 WFD history was rewritten again 2026-05-15 (security audit — removed os-totebox.img 50MB binary + 12 telemetry CSV/REPORT files). Canonical HEAD is now 7fdf36b.
 
@@ -57,7 +57,7 @@ to: task@project-proofreader
 re: Status check — domain migration task + mailbox lifecycle backfill
 created: 2026-05-15T09:00:00Z
 priority: normal
-status: pending
+status: operator-pending
 ---
 
 Status check on domain migration task (below, 2026-05-05). Two items pending:
