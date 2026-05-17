@@ -11,7 +11,11 @@ members = [
     "moonshot-toolkit",
     "service-fs",
     "system-security",
-    "xtask"
+    "xtask",
+    "app-privategit-marketplace",
+    "app-privategit-source",
+    "os-privategit",
+    "tool-wallet"
 ]
 
 [profile.dev]
