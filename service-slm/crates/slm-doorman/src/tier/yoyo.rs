@@ -209,6 +209,55 @@ impl YoYoTierClient {
         self.health_up.load(Ordering::Relaxed)
     }
 
+    /// Begin a streaming request to vLLM. Returns the raw HTTP response; the
+    /// caller is responsible for consuming the SSE body and translating it to
+    /// the target wire format (Anthropic SSE, OpenAI SSE, etc.).
+    ///
+    /// Unlike `complete()`, there is no outer 90-second deadline — the caller's
+    /// SSE consumer drives the timeout. The circuit breaker is checked on entry;
+    /// `record_success()` is called when a 200 response is received and
+    /// `record_failure()` on any network error.
+    pub async fn start_stream(&self, req: &ComputeRequest) -> Result<reqwest::Response> {
+        if !self.circuit.allow_request() {
+            return Err(DoormanError::TierBCircuitOpen);
+        }
+
+        let model = req.model.clone().unwrap_or_else(|| self.config.default_model.clone());
+        let extra_body = match req.grammar.as_ref() {
+            None => None,
+            Some(GrammarConstraint::Lark(s)) | Some(GrammarConstraint::Gbnf(s)) => {
+                Some(serde_json::json!({"structured_outputs": {"grammar": s}}))
+            }
+            Some(GrammarConstraint::JsonSchema(v)) => {
+                Some(serde_json::json!({"structured_outputs": {"json": v}}))
+            }
+        };
+        let body = OpenAiChatRequest {
+            model: model.clone(),
+            messages: req.messages.clone(),
+            stream: true,
+            max_tokens: req.max_tokens,
+            temperature: req.temperature,
+            extra_body,
+        };
+        let url = format!(
+            "{}/v1/chat/completions",
+            self.config.endpoint.trim_end_matches('/')
+        );
+        debug!(target: "slm_doorman::tier::yoyo", %url, %model, "tier-B stream request");
+
+        match self.send_with_retries(&url, &body, req).await {
+            Ok(resp) => {
+                self.circuit.record_success();
+                Ok(resp)
+            }
+            Err(e) => {
+                self.circuit.record_failure();
+                Err(e)
+            }
+        }
+    }
+
     /// Route one request to Tier B with full resilience stack:
     /// circuit breaker check → 90 s outer deadline → 60 s socket timeout
     /// → 503 cold-start retry → 401/403 auth refresh.
