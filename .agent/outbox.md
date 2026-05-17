@@ -10,6 +10,57 @@ schema: foundry-mailbox-v1
 ---
 from: task@project-gis
 to: command@foundry
+re: Phase 12 complete — GB anchor expansion + T1=442 (↑ from 305)
+created: 2026-05-17T21:00:00Z
+---
+
+Phase 12 committed (3b367a9f, pwoodfine). 11,240 clusters total; T1=442.
+
+## 1. New chains ingested
+
+| Chain | Records | QID | Note |
+|---|---|---|---|
+| asda-uk | 1,051 | Q297410 | ASDA / Walmart UK |
+| morrisons-uk | 620 | Q922344 | Morrisons |
+| heb-us | 301 | Q1665088 | H-E-B; name_query fallback (wikidata tag sparse in OSM) |
+| whole-foods-us | 528 (existing) | Q1809448 | Promoted from GENERIC_FOOD |
+| chedraui-mx | 249 (existing) | Q2336803 | Promoted from generic |
+
+## 2. T1 results after Phase 12
+
+P10=0.25, Gate B (hc_count≥1, any hospital), IoU≤0.10.
+
+| ISO | T1 |
+|---|---|
+| US | 303 |
+| ES | 42 |
+| CA | 32 |
+| MX | 28 |
+| FR | 13 |
+| DE | 13 |
+| **GB** | **10** (was 3) |
+| NO | 1 |
+| **Total** | **442** |
+
+GB went from 3 → 10 (ASDA + Morrisons adding density). US at 303, approaching 358 target from sim-1b.
+
+## 3. Remaining paths to 500 US T1
+
+Sim-1b (Phase 11) projected P=0.25 + Gate B → NA=358. We achieved US=303 + CA=32 + MX=28 = 363 NA total (vs 358 projected). On track. To push further:
+- **Path C — HW∧HM composition** (Home Depot + Walmart clusters): sim-1b estimated +199 NA at P=0.20. At P=0.25 this would be higher. Methodologically significant change — needs operator review.
+- **More US chains**: Wegmans (Q1182328, ~110 stores), WinCo Foods (Q2584339, ~130), Sprouts (Q7580917, ~380). All ALPHA_HYPERMARKET candidates.
+
+## 4. Stale backups deleted
+
+clusters.geojson.pre-sprint9 + .new + .bak removed (35M freed). Root now 67% used.
+
+## 5. H-E-B OSM tag gap noted
+
+H-E-B OSM records overwhelmingly lack `brand:wikidata=Q1665088` — name_query fallback retrieved 342 raw → 301 final. A dedicated OSM tag campaign for H-E-B stores would improve data quality over time. Not a blocker.
+
+---
+from: task@project-gis
+to: command@foundry
 re: Phase 11 complete — T1 recalibration + analysis sprint results
 created: 2026-05-17T19:40:00Z
 ---

@@ -113,11 +113,23 @@ Routing:
 | Census Catchment | `work/census-catchment.geojson` → `layer4-census.pmtiles` (373 MB) | DONE (2026-05-15) |
 | Spend Catchment | `work/spend-catchment.geojson` → `layer5-spend.pmtiles` (635 MB) | DONE (2026-05-15) |
 | DATA-MANIFEST.md | project root | DONE (2026-05-12) |
-| clusters-meta.json | gateway www/data/ | DONE (2026-05-17; 10,213 clusters; T1=305/T2=1,213/T3=2,186/T4=6,509; P10=0.20 Phase 11 adbb5d42) |
+| clusters-meta.json | gateway www/data/ | DONE (2026-05-17; 11,240 clusters; T1=442/T2=1,027/T3=2,235/T4=7,536; P10=0.25+GateB Phase 12 3b367a9f) |
 | regional-markets.json | gateway www/data/ | DONE (2026-05-15; 2,986 Regional Markets, 2,942 high-conf) |
 | us_places.geojson | deployments/boundaries/ | DONE (2026-05-15; TIGER 2023, 32K US places) |
 | eu_municipalities.geojson | deployments/boundaries/ | DONE (2026-05-15; GISCO LAU 2021 + GADM GBR, 98.6K entries) |
 | ca_places_nominatim.json | deployments/boundaries/ | DONE (2026-05-15; 12 county-CSD overrides, e.g. Sherwood Park) |
+
+---
+
+### Phase 12 Chain Ingests (2026-05-17)
+
+| Artifact | File | Status |
+|---|---|---|
+| ASDA-UK JSONL | `service-business/asda-uk.jsonl` | DONE (2026-05-17; 1,051 records; Q297410; 3b367a9f) |
+| Morrisons-UK JSONL | `service-business/morrisons-uk.jsonl` | DONE (2026-05-17; 620 records; Q922344; 3b367a9f) |
+| H-E-B JSONL | `service-business/heb-us.jsonl` | DONE (2026-05-17; 301 records; Q1665088; name_query fallback; 3b367a9f) |
+| whole-foods-us ALPHA promo | config.py | DONE (2026-05-17; promoted from GENERIC_FOOD; 528 records pre-existing; 3b367a9f) |
+| chedraui-mx ALPHA promo | config.py | DONE (2026-05-17; promoted from generic; 249 records pre-existing; 3b367a9f) |
 
 ---
 
