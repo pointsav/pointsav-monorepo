@@ -31,6 +31,7 @@ pub mod test_helpers {
 
     use slm_doorman::tier::{
         ExternalTierClient, LocalTierClient, LocalTierConfig, TierCPricing, TierCProvider,
+        YoYoTierClient,
     };
     use slm_doorman::{
         AuditLedger, AuditProxyClient, AuditProxyConfig, AuditProxyPurposeAllowlist, BriefCache,
@@ -112,6 +113,7 @@ pub mod test_helpers {
             queue_config: temp_queue_config(),
             service_content_endpoint: String::new(),
             last_yoyo_dispatch: Arc::new(AtomicU64::new(0)),
+            gateway_token: None,
         })
     }
 
@@ -144,6 +146,7 @@ pub mod test_helpers {
             queue_config: temp_queue_config(),
             service_content_endpoint: String::new(),
             last_yoyo_dispatch: Arc::new(AtomicU64::new(0)),
+            gateway_token: None,
         })
     }
 
@@ -174,6 +177,7 @@ pub mod test_helpers {
             queue_config: temp_queue_config(),
             service_content_endpoint: String::new(),
             last_yoyo_dispatch: Arc::new(AtomicU64::new(0)),
+            gateway_token: None,
         })
     }
 
@@ -228,6 +232,7 @@ pub mod test_helpers {
             queue_config: temp_queue_config(),
             service_content_endpoint: String::new(),
             last_yoyo_dispatch: Arc::new(AtomicU64::new(0)),
+            gateway_token: None,
         })
     }
 
@@ -298,6 +303,7 @@ pub mod test_helpers {
             queue_config: temp_queue_config(),
             service_content_endpoint: String::new(),
             last_yoyo_dispatch: Arc::new(AtomicU64::new(0)),
+            gateway_token: None,
         });
         (state, ledger_dir)
     }
@@ -347,8 +353,55 @@ pub mod test_helpers {
             queue_config: temp_queue_config(),
             service_content_endpoint: String::new(),
             last_yoyo_dispatch: Arc::new(AtomicU64::new(0)),
+            gateway_token: None,
         });
         (state, ledger_dir)
+    }
+
+    /// Build an `AppState` with Tier B (Yo-Yo) configured to hit the given
+    /// endpoint. Used by Anthropic shim integration tests.
+    pub fn app_state_with_yoyo(
+        yoyo_endpoint: impl Into<String>,
+        gateway_token: Option<String>,
+    ) -> Arc<AppState> {
+        use slm_doorman::tier::StaticBearer;
+        use std::sync::Arc as StdArc;
+
+        let config = slm_doorman::tier::YoYoTierConfig {
+            endpoint: yoyo_endpoint.into(),
+            default_model: "test-yoyo-model".to_string(),
+            contract_version: "0".to_string(),
+            pricing: slm_doorman::tier::PricingConfig::default(),
+        };
+        let bearer = StdArc::new(StaticBearer::new("test-bearer"));
+        let client = YoYoTierClient::new(config, bearer);
+        let mut yoyo_map = std::collections::HashMap::new();
+        yoyo_map.insert("trainer".to_string(), client);
+
+        let doorman = Doorman::new(
+            DoormanConfig {
+                local: None,
+                yoyo: yoyo_map,
+                external: None,
+                lark_validator: None,
+                graph_context_client: None,
+            },
+            temp_ledger(),
+        );
+        Arc::new(AppState {
+            doorman,
+            apprenticeship: None,
+            brief_cache: Arc::new(BriefCache::default()),
+            verdict_dispatcher: None,
+            audit_proxy_client: None,
+            audit_proxy_purpose_allowlist: FOUNDRY_DEFAULT_PURPOSE_ALLOWLIST,
+            audit_tenant_concurrency: empty_concurrency_map(),
+            audit_tenant_concurrency_cap: TEST_AUDIT_CONCURRENCY_CAP,
+            queue_config: temp_queue_config(),
+            service_content_endpoint: String::new(),
+            last_yoyo_dispatch: Arc::new(AtomicU64::new(0)),
+            gateway_token,
+        })
     }
 
     /// Build an `AppState` with a service-content endpoint configured.
@@ -370,6 +423,7 @@ pub mod test_helpers {
             queue_config: temp_queue_config(),
             service_content_endpoint: service_content_endpoint.into(),
             last_yoyo_dispatch: Arc::new(AtomicU64::new(0)),
+            gateway_token: None,
         })
     }
 }

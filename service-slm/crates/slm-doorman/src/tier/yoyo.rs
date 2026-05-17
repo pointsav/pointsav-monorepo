@@ -209,6 +209,12 @@ impl YoYoTierClient {
         self.health_up.load(Ordering::Relaxed)
     }
 
+    /// Returns the current circuit breaker state as a string:
+    /// "closed", "open", or "half-open".
+    pub fn circuit_state(&self) -> &'static str {
+        self.circuit.state_str()
+    }
+
     /// Begin a streaming request to vLLM. Returns the raw HTTP response; the
     /// caller is responsible for consuming the SSE body and translating it to
     /// the target wire format (Anthropic SSE, OpenAI SSE, etc.).
