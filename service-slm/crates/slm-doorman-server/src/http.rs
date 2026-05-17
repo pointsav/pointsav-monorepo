@@ -114,6 +114,11 @@ pub struct AppState {
     /// model is between requests (slots=0 between 26-second inferences).
     /// Zero = no Tier B dispatch since Doorman boot.
     pub last_yoyo_dispatch: Arc<AtomicU64>,
+    /// When `Some`, the `POST /v1/messages` handler validates the incoming
+    /// `x-api-key` header against this value and returns 401 on mismatch.
+    /// When `None`, auth is disabled (community-tier / development mode).
+    /// Set via `SLM_GATEWAY_TOKEN` env var at boot.
+    pub gateway_token: Option<String>,
 }
 
 pub fn router(state: Arc<AppState>) -> Router {
@@ -139,13 +144,26 @@ async fn healthz() -> &'static str {
 }
 
 async fn readyz(State(state): State<Arc<AppState>>) -> impl IntoResponse {
-    // The Doorman is always ready in B1; B5+ may add upstream-tier
-    // readiness checks (e.g., probe Tier A /healthz) before flipping.
+    let last_dispatch = state.last_yoyo_dispatch.load(Ordering::Relaxed);
+    let last_yoyo_dispatch_age_s: Option<u64> = if last_dispatch == 0 {
+        None
+    } else {
+        let now = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_secs();
+        Some(now.saturating_sub(last_dispatch))
+    };
+
     let body = serde_json::json!({
         "ready": true,
         "has_local": state.doorman.has_local(),
         "has_yoyo": state.doorman.has_yoyo(),
         "has_external": state.doorman.has_external(),
+        "lark_validation_active": state.doorman.has_lark_validator(),
+        "apprenticeship_enabled": state.apprenticeship.is_some(),
+        "tier_b_circuit_state": state.doorman.default_yoyo_circuit_state(),
+        "last_yoyo_dispatch_age_s": last_yoyo_dispatch_age_s,
     });
     (StatusCode::OK, Json(body))
 }
@@ -1555,6 +1573,20 @@ async fn anthropic_messages(
     headers: HeaderMap,
     Json(body): Json<AnthropicMessagesBody>,
 ) -> Result<Response, ApiError> {
+    // Validate x-api-key when a gateway token is configured.
+    if let Some(ref expected) = state.gateway_token {
+        let provided = headers
+            .get("x-api-key")
+            .and_then(|v| v.to_str().ok())
+            .unwrap_or("");
+        if provided != expected {
+            return Err(ApiError {
+                status: StatusCode::UNAUTHORIZED,
+                body: serde_json::json!({"error": {"type": "authentication_error", "message": "invalid api key"}}),
+            });
+        }
+    }
+
     let module_id = match headers
         .get("x-foundry-module-id")
         .and_then(|v| v.to_str().ok())
@@ -1609,6 +1641,8 @@ async fn anthropic_messages(
         );
     }
 
+    let tier_header = resp.tier_used.as_str().to_string();
+
     if stream {
         let sse_body = anthropic_sse_body(&resp, &model);
         Ok(Response::builder()
@@ -1616,11 +1650,19 @@ async fn anthropic_messages(
             .header("content-type", "text/event-stream; charset=utf-8")
             .header("cache-control", "no-cache")
             .header("x-accel-buffering", "no")
+            .header("x-foundry-tier-used", &tier_header)
             .body(axum::body::Body::from(sse_body))
             .expect("build SSE response"))
     } else {
         let body = compute_to_anthropic_response(&resp, &model);
-        Ok((StatusCode::OK, Json(body)).into_response())
+        Ok(Response::builder()
+            .status(StatusCode::OK)
+            .header("content-type", "application/json")
+            .header("x-foundry-tier-used", &tier_header)
+            .body(axum::body::Body::from(
+                serde_json::to_vec(&body).unwrap_or_default(),
+            ))
+            .expect("build JSON response"))
     }
 }
 
