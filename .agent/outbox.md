@@ -10,6 +10,41 @@ schema: foundry-mailbox-v1
 ---
 from: task@project-gis
 to: command@foundry
+re: Phase 14 complete — full rank refresh; T1=432 (13,164 clusters)
+created: 2026-05-17T22:00:00Z
+---
+
+Phase 14 complete. synthesize-od-study.py re-run covers all 13,164 clusters.
+
+## Final T1 breakdown (P10=0.25 + Gate B + full catchment ranks)
+
+| ISO | T1 |
+|---|---|
+| US | 279 |
+| ES | 51 |
+| MX | 34 |
+| CA | 32 |
+| DE | 14 |
+| FR | 13 |
+| GB | 9 |
+| **Total** | **432** |
+
+Note: US T1 dropped from 303 → 279 vs Phase 12 because the percentile ranks are now computed across 13,164 clusters (vs 11,240 before). More UK/Tesco/Sainsbury's clusters competing in the GB ISO pool tighten the P25 gate. ES improved 42→51 (Chedraui clusters now have rank data).
+
+## T2/T3 improvement
+
+T2: 1,021 → 1,594; T3: 2,211 → 3,091. Many new Tesco/Sainsbury's co-location clusters correctly fall into T2/T3 (strong co-location but below T1 rank gate).
+
+## Operator decisions pending
+
+1. **Path C composition** — add HW∧HM (HomeDepot+Walmart) as T1-qualifying. Sim-1b estimated +199 NA T1. Methodologically significant.
+2. **US LODES ingest** — 5 of 51 states downloaded. Full ingest (all 50+DC) would give US clusters observed work-reach data instead of radius estimates. ingest-lodes.py is auto-download; estimate 2-4h for full run.
+3. **P10 recalibration** — with 13,164 clusters, P25 applied ISO-wide. May want to verify US T1=279 is acceptable or adjust threshold.
+
+---
+
+from: task@project-gis
+to: command@foundry
 re: Phase 13 complete — UK re-ingest + MITMA mobility; 13,164 clusters
 created: 2026-05-17T21:30:00Z
 ---

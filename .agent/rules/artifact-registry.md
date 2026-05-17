@@ -113,7 +113,7 @@ Routing:
 | Census Catchment | `work/census-catchment.geojson` → `layer4-census.pmtiles` (373 MB) | DONE (2026-05-15) |
 | Spend Catchment | `work/spend-catchment.geojson` → `layer5-spend.pmtiles` (635 MB) | DONE (2026-05-15) |
 | DATA-MANIFEST.md | project root | DONE (2026-05-12) |
-| clusters-meta.json | gateway www/data/ | DONE (2026-05-17; 13,164 clusters; T1=442/T2=1,021/T3=2,211/T4=9,490; P10=0.25+GateB Phase 13; tesco 3872/sainsburys 1903/tiendas247 re-ingested) |
+| clusters-meta.json | gateway www/data/ | DONE (2026-05-17; 13,164 clusters; T1=432/T2=1,594/T3=3,091/T4=8,047; P10=0.25+GateB Phase 14; full catchment ranks; US:279 ES:51 MX:34 CA:32 DE:14 FR:13 GB:9) |
 | regional-markets.json | gateway www/data/ | DONE (2026-05-15; 2,986 Regional Markets, 2,942 high-conf) |
 | us_places.geojson | deployments/boundaries/ | DONE (2026-05-15; TIGER 2023, 32K US places) |
 | eu_municipalities.geojson | deployments/boundaries/ | DONE (2026-05-15; GISCO LAU 2021 + GADM GBR, 98.6K entries) |
