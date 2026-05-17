@@ -2392,6 +2392,35 @@ a.footnote-backref:hover { text-decoration: underline; }
 @media (max-width: 720px) {
   .infobox { float: none; margin: 0 0 1rem 0; width: 100%; max-width: 100%; }
 }
+/* AC: infobox caption (title) */
+.infobox caption {
+  caption-side: top;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  padding: 0.35rem 0.5rem 0.25rem;
+  text-align: center;
+  background: var(--mw-color-base-20);
+  border-bottom: 1px solid var(--border);
+}
+/* AC: infobox image row */
+.infobox-image {
+  text-align: center;
+  padding: 0.5rem;
+  border: 1px solid var(--border);
+}
+.infobox-image img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+}
+.infobox-caption {
+  font-size: 0.8125rem;
+  color: var(--fg-muted);
+  font-style: italic;
+  margin-top: 0.3rem;
+  text-align: center;
+}
 
 /* ── B3: Navbox — collapsible horizontal navigation table ────────────────── */
 .navbox {
