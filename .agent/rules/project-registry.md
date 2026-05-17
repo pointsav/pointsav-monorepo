@@ -75,7 +75,8 @@ Last updated: 2026-05-14.
 | Project | State | Type | Notes |
 |---|---|---|---|
 | app-privategit-design-system | Scaffold-coded | app-privategit | 4 files |
-| app-privategit-source-control | Scaffold-coded | app-privategit | 4 files |
+| app-privategit-marketplace | Active | app-privategit | software.pointsav.com storefront — static pages, /v1/products, /v1/license, /v1/claim; workspace member; activated project-software 2026-05-17 |
+| app-privategit-source | Active | app-privategit | release server — /releases/* binary streaming + MANIFEST; /git/* 503 stub (smart-HTTP v0.0.2); workspace member; renamed from app-privategit-source-control 2026-05-17 |
 
 ## App — Totebox surface (`app-totebox-*`)
 
@@ -102,7 +103,7 @@ Last updated: 2026-05-14.
 | os-interface | Scaffold-coded | os | 4 files; legacy name — canonical is `os-orchestration` (rename in flight) |
 | os-mediakit | Scaffold-coded | os | 4 files |
 | os-network-admin | Scaffold-coded | os | 12 files; ISO artefact — tracking status TBD |
-| os-privategit | Scaffold-coded | os | 4 files |
+| os-privategit | Active | os | 4 files; deployment: vault-privategit-source-1 (software.pointsav.com:9202/9201); hosts marketplace + source + wallet; workspace member; activated project-software 2026-05-17 |
 | os-totebox | Scaffold-coded | os | 6 files; IMG artefact — tracking status TBD |
 | os-workplace | Scaffold-coded | os | 4 files |
 
@@ -166,6 +167,7 @@ Last updated: 2026-05-14.
 | Project | State | Type | Notes |
 |---|---|---|---|
 | tool-acs-miner | Scaffold-coded | tool | 3 files; in workspace members |
+| tool-wallet | Active | tool | Polygon USDC watcher — eth_getLogs watch loop + eth_getTransactionReceipt check; writes receipts to local dir + service-fs fallback; workspace member; activated project-software 2026-05-17 |
 | tool-archive-rescue | Reserved-folder | tool | 3 files |
 | tool-cognitive-forge | Scaffold-coded | tool | 8 files; "Cognitive Forge" is a retired term per Do-Not-Use list — rename pending |
 | tool-edgar-extractor | Reserved-folder | tool | 2 files |
