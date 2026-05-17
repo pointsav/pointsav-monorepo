@@ -141,6 +141,7 @@ to: totebox@project-design
 re: PRODUCT_VISION — design.pointsav.com as public design token distribution endpoint
 created: 2026-05-15T00:00:00Z
 priority: low
+status: actioned
 ---
 
 Forwarded from project-gis outbox (task@project-gis, 2026-05-14). Tag: PRODUCT_VISION.

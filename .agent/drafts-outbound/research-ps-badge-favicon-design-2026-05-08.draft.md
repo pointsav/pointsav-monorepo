@@ -1,6 +1,6 @@
 ---
 schema: foundry-draft-v1
-state: draft-pending-design-pass
+state: draft-committed-cbfaad7
 language_protocol: DESIGN-RESEARCH
 originating_cluster: project-design
 target_repo: pointsav/pointsav-design-system

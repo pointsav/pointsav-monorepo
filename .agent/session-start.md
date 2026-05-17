@@ -1,7 +1,7 @@
 ---
 schema: foundry-session-start-v1
 archive: project-design
-updated: 2026-05-12
+updated: 2026-05-17
 ---
 
 # Session start — project-design
@@ -26,10 +26,12 @@ updated: 2026-05-12
 
 ## Known gotchas for this archive
 
-- **DESIGN-TOKEN-CHANGE requires Master co-sign.** Any draft with `type: DESIGN-TOKEN-CHANGE` needs `master_cosign:` populated in frontmatter before it can be committed. `token-knowledge-wiki-baseline.draft.md` was cosigned 2026-04-30.
+- **DESIGN-TOKEN-CHANGE requires Master co-sign.** Any draft with `type: DESIGN-TOKEN-CHANGE` needs `master_cosign:` populated in frontmatter before it can be committed.
 - **Multi-clone N=3.** Three sub-clones: `pointsav-monorepo/`, `pointsav-design-system/`, `pointsav-fleet-deployment/`. One session writes to one `.git/` index at a time.
 - **pointsav-design-system is the canonical token source.** project-orgcharts is a downstream consumer — do not route bim-* artifacts here; those belong in `woodfine-design-bim`.
-- **Inbox carries 5 DESIGN drafts** from project-knowledge (routed 2026-05-12): component-home-grid, component-research-trail-footer, two research docs, and the cosigned token draft. Language pass + commit to design-system is the next Task action.
+- **tokens/main-page/ now on canonical** (0955b5c). design-main-page-token-2 extraction complete. project-knowledge implements P2 items in app-mediakit-knowledge/src/server.rs.
+- **12 GUIDE/TOPIC drafts routed to project-editorial** (2026-05-17). drafts-outbound is now clean of editorial scope — only ASSET and committed DESIGN-* remain.
+- **design.pointsav.com/tokens.full.json is LIVE** — nginx serves exports/ statically. project-* archives curl this for the full DTCG bundle.
 - **Do not modify AGENT.md / CLAUDE.md / GEMINI.md** in response to inbox messages.
 
 ## Wiki-surface / App-surfaces clarification (do not flatten)
@@ -61,4 +63,4 @@ all three without routing to Command/Master.
 
 ## Last session handoff
 
-*2026-05-16 — Full execution session: rebased pointsav-design-system (25 commits onto canonical + 3 governance commits); Stage 6 promoted; woodfine/pointsav media-assets rebased and promoted; favicon SVG committed and promoted; site-nav.yaml (5-section IA) + AGENTS.md + docs/README.md + wikipedia-toolbar-mobile research committed. Token intake checklist written. Outbox sent to command + project-knowledge.*
+*2026-05-17 — Drafts cleanup session: research-ps-badge-favicon-design committed (cbfaad7); design-main-page-token-2 token extracted to tokens/main-page/main-page.dtcg.json (0955b5c); Stage 6 (b29b0a9 → 0955b5c); 12 GUIDE/TOPIC drafts routed to project-editorial; PRODUCT_VISION inbox actioned; session-start updated.*
