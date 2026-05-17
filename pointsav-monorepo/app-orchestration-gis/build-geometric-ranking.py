@@ -10,7 +10,7 @@ binary-predicate gate system. Each cluster is assigned:
 Predicate definitions:
     T1 Regional:  (Warehouse ∧ Hypermarket) OR (Lifestyle ∧ Hypermarket)
                   ∧ rank_pp_iso ≤ p10
-                  ∧ hc_count_regional ≥ 1
+                  ∧ hc_count ≥ 1 (any hospital; Gate B Phase 12 2026-05-17)
                   ∧ IoU_max(cluster, any stronger-in-ISO) ≤ 0.10
 
     T2 District:  Hypermarket ∧ (Hardware OR Warehouse)
@@ -55,8 +55,8 @@ OUTPUT_FILE   = WORK_DIR / "clusters.geojson"
 CATCHMENT_IN  = WORK_DIR / "catchment-data.json"
 CLUSTERS_META = Path("/srv/foundry/deployments/gateway-orchestration-gis-1/www/data/clusters-meta.json")
 
-# Percentile thresholds (G6 — coarse set; P10 relaxed to 0.20 Phase 11 2026-05-17)
-P10 = 0.20
+# Percentile thresholds (G6 — coarse set; P10 raised to 0.25 + Gate B Phase 12 2026-05-17)
+P10 = 0.25
 P20 = 0.20
 P25 = 0.25
 P50 = 0.50
@@ -164,10 +164,10 @@ def _eval_t1(p: dict, iso_peers: list[dict]) -> tuple[bool, list[str]]:
         return False, []
     fired.append("T1:rank_pp")
 
-    hc_reg = int(p.get("hc_count_regional") or 0)
+    hc_reg = int(p.get("hc_count") or 0)
     if hc_reg < 1:
         return False, []
-    fired.append("T1:civic_regional")
+    fired.append("T1:civic")
 
     cid = _cid(p)
     pp  = float(p.get("pp") or 0)
