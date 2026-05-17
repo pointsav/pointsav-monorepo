@@ -52,22 +52,25 @@ A two-phase corpus overhaul of `documentation.pointsav.com` is in progress.
 
 ## Last session handoff
 
-*2026-05-17 — Institutional chrome sprint: Phases B + C complete.*
-- *Phase B (CSS): fonts, design tokens, shell-header, dark mode removed, footer, link colours — committed `57c7dfe2`*
-- *Phase C (Rust rebuild): three-row header, footer, emoji removal, category cleanup — committed `37fe2a49` (build passed)*
-- *Branch: `pointsav-monorepo` sub-clone on `readme-fixes-2026-05-16`, 2 commits ahead of `origin/main`*
-- *Full plan with execution status: `.agent/plans/institutional-chrome-sprint.md`*
+*2026-05-17 — Institutional chrome sprint: Phases B + C + D + E2 complete. Awaiting build.*
+- *Phase B (CSS): fonts, design tokens, shell-header, dark mode removed, footer, link colours — `57c7dfe2`*
+- *Phase C (Rust): three-row header, footer, emoji removal, category cleanup — `37fe2a49`*
+- *Phase D + E2 (theming + stub suppression): per-site SVG wordmarks, CSS theme blocks, right-nav links, stub filter — `ada53ef8`*
+- *Branch: `pointsav-monorepo` on `readme-fixes-2026-05-16`, 3 commits ahead of `origin/main`*
+- *Outbox message sent to Command: Stage 6 + project-knowledge build request*
+- *Full plan: `.agent/plans/institutional-chrome-sprint.md`*
 
-*Next session: Phase D (per-site theme verification + SVG wordmarks) → Phase E (quality gates).*
+*Next session: E1 + E3 + E4 quality gates (after Command does Stage 6 + project-knowledge builds).*
 ```
-curl -s http://localhost:9090/ | grep "shell-header"   # verify new chrome is live
+curl -s http://localhost:9090/wanted   # E1: broken link audit
+curl -s http://localhost:9090/         # E3: category counts
 ```
-*Stage 6 for the two monorepo commits is Command Session scope.*
 
-*Prior pending Command Session items (still in outbox):*
-1. *Repo transfer: `woodfine/woodfine-design-bim` → `pointsav/pointsav-bim-system` + relicense Apache 2.0*
-2. *Both org profile READMEs (`pointsav/.github/profile/`, `woodfine/.github/profile/`)*
-3. *woodfine-fleet-deployment Stage 6 (add staging mirrors)*
-4. *pointsav-design-system Stage 6 (diverged history + licensing conflict merge)*
-5. *pointsav-monorepo `readme-fixes-2026-05-16` → Stage 6 (includes institutional chrome)*
-6. *pointsav-media-assets + woodfine-media-assets admin-tier README fixes*
+*Pending Command Session items (still in outbox):*
+1. *Stage 6: `readme-fixes-2026-05-16` → `origin/main` in `pointsav-monorepo` (3 commits)*
+2. *Instruct project-knowledge: `cargo build --release` + restart 3 services*
+3. *Repo transfer: `woodfine/woodfine-design-bim` → `pointsav/pointsav-bim-system`*
+4. *Both org profile READMEs (`pointsav/.github/profile/`, `woodfine/.github/profile/`)*
+5. *woodfine-fleet-deployment Stage 6 (add staging mirrors)*
+6. *pointsav-design-system Stage 6 (diverged history + licensing conflict merge)*
+7. *pointsav-media-assets + woodfine-media-assets admin-tier README fixes*
