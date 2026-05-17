@@ -77,6 +77,7 @@ pub struct DraftResponse {
 #[derive(Debug, Serialize)]
 pub struct HealthResponse {
     pub status: &'static str,
+    pub entity_count: usize,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub failures: Vec<String>,
 }
@@ -90,6 +91,9 @@ async fn healthz(State(state): State<Arc<HttpState>>) -> (StatusCode, Json<Healt
     if let Err(e) = state.graph.query_context("__taxonomy__", "", 1) {
         failures.push(format!("graph: {}", e));
     }
+
+    // Get live entity count for monitoring. Non-fatal if it fails.
+    let entity_count = state.graph.count_all().unwrap_or(0);
 
     // Probe Doorman /readyz with 2s timeout.
     let doorman_url = format!("{}/readyz", state.doorman_endpoint);
@@ -105,9 +109,9 @@ async fn healthz(State(state): State<Arc<HttpState>>) -> (StatusCode, Json<Healt
     }
 
     if failures.is_empty() {
-        (StatusCode::OK, Json(HealthResponse { status: "ok", failures: Vec::new() }))
+        (StatusCode::OK, Json(HealthResponse { status: "ok", entity_count, failures: Vec::new() }))
     } else {
-        (StatusCode::SERVICE_UNAVAILABLE, Json(HealthResponse { status: "degraded", failures }))
+        (StatusCode::SERVICE_UNAVAILABLE, Json(HealthResponse { status: "degraded", entity_count, failures }))
     }
 }
 

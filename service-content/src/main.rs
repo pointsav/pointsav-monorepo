@@ -296,11 +296,12 @@ fn process_corpus(
             if response.status().is_success() {
                 if let Ok(extract_resp) = response.json::<serde_json::Value>() {
                     // Tier B unavailable — graceful defer, no retry this session.
-                    // File is not written to processed_ledgers JSONL; next boot retries.
+                    // Return false so caller does NOT write to processed_ledgers JSONL;
+                    // next boot with Tier B available will retry this file.
                     if extract_resp["deferred"].as_bool().unwrap_or(false) {
                         let reason = extract_resp["defer_reason"].as_str().unwrap_or("unknown");
                         warn!(defer_reason = reason, "extraction deferred — tier B unavailable; will retry next boot");
-                        return true;
+                        return false;
                     }
 
                     if extract_resp["extraction_ok"].as_bool().unwrap_or(false) {
