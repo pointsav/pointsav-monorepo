@@ -1,6 +1,6 @@
 ---
 schema: foundry-draft-v1
-state: draft
+state: committed-eb51d0f
 language_protocol: DESIGN-RESEARCH
 originating_cluster: project-gis
 target_repo: vendor/pointsav-design-system
