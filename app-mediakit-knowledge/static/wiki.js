@@ -268,6 +268,24 @@
    * 6. Mobile nav drawer toggle                                          *
    * ------------------------------------------------------------------ */
 
+  // Trap keyboard focus inside an open drawer (WCAG 2.1 §2.1.2).
+  function trapFocus(drawer) {
+    drawer.addEventListener('keydown', function (e) {
+      if (e.key !== 'Tab') return;
+      var focusable = Array.from(drawer.querySelectorAll(
+        'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      ));
+      if (!focusable.length) return;
+      var first = focusable[0];
+      var last  = focusable[focusable.length - 1];
+      if (e.shiftKey) {
+        if (document.activeElement === first) { e.preventDefault(); last.focus(); }
+      } else {
+        if (document.activeElement === last)  { e.preventDefault(); first.focus(); }
+      }
+    });
+  }
+
   function initMobileNav() {
     var btn      = document.getElementById('nav-toggle');
     var drawer   = document.getElementById('mobile-nav-drawer');
@@ -285,6 +303,7 @@
       drawer.removeAttribute('aria-hidden');
       overlay.removeAttribute('aria-hidden');
       btn.setAttribute('aria-expanded', 'true');
+      if (closeBtn) closeBtn.focus();
     }
 
     function closeNav() {
@@ -292,6 +311,7 @@
       drawer.setAttribute('aria-hidden', 'true');
       overlay.setAttribute('aria-hidden', 'true');
       btn.setAttribute('aria-expanded', 'false');
+      btn.focus();
     }
 
     btn.addEventListener('click', openNav);
@@ -301,6 +321,13 @@
     document.addEventListener('keydown', function (e) {
       if (e.key === 'Escape' && document.body.hasAttribute('data-nav-open')) closeNav();
     });
+
+    // Close when a nav link is followed (matches TOC drawer behavior).
+    drawer.querySelectorAll('a').forEach(function (link) {
+      link.addEventListener('click', closeNav);
+    });
+
+    trapFocus(drawer);
   }
 
   /* ------------------------------------------------------------------ *
@@ -324,6 +351,7 @@
       drawer.removeAttribute('aria-hidden');
       overlay.removeAttribute('aria-hidden');
       btn.setAttribute('aria-expanded', 'true');
+      if (closeBtn) closeBtn.focus();
     }
 
     function closeToc() {
@@ -331,6 +359,7 @@
       drawer.setAttribute('aria-hidden', 'true');
       overlay.setAttribute('aria-hidden', 'true');
       btn.setAttribute('aria-expanded', 'false');
+      btn.focus();
     }
 
     btn.addEventListener('click', openToc);
@@ -344,6 +373,8 @@
     drawer.querySelectorAll('a').forEach(function (link) {
       link.addEventListener('click', closeToc);
     });
+
+    trapFocus(drawer);
   }
 
   /* ------------------------------------------------------------------ *

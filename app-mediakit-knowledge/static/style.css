@@ -2129,7 +2129,11 @@ body.login-body {
   font-size: 1.4rem;
   line-height: 1;
   cursor: pointer;
-  padding: 0.3rem 0.5rem;
+  padding: 0.5rem;
+  min-height: 44px;
+  min-width: 44px;
+  align-items: center;
+  justify-content: center;
   color: inherit;
 }
 
@@ -2140,7 +2144,11 @@ body.login-body {
   font-size: 1.1rem;
   line-height: 1;
   cursor: pointer;
-  padding: 0.3rem 0.5rem;
+  padding: 0.5rem;
+  min-height: 44px;
+  min-width: 44px;
+  align-items: center;
+  justify-content: center;
   color: inherit;
   margin-left: 0.25rem;
 }
@@ -2176,7 +2184,12 @@ body.login-body {
   border: none;
   font-size: 1.2rem;
   cursor: pointer;
-  padding: 0.25rem 0.4rem;
+  padding: 0.5rem;
+  min-height: 44px;
+  min-width: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .mobile-nav-list {
   list-style: none;
@@ -2185,8 +2198,10 @@ body.login-body {
 }
 .mobile-nav-list li { border-bottom: 1px solid var(--mw-color-base-20); }
 .mobile-nav-list a {
-  display: block;
-  padding: 0.75rem 0.5rem;
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0.5rem 0.5rem;
   text-decoration: none;
   color: inherit;
   font-size: 1rem;
@@ -2198,8 +2213,10 @@ body.login-body {
 }
 .mobile-toc-list li { border-bottom: 1px solid var(--mw-color-base-20); }
 .mobile-toc-list a {
-  display: block;
-  padding: 0.6rem 0.5rem;
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0.4rem 0.5rem;
   text-decoration: none;
   color: var(--link);
   font-size: 0.9rem;
@@ -2215,13 +2232,31 @@ body.login-body {
   z-index: 1000;
 }
 
+@keyframes drawer-slidein {
+  from { transform: translateX(-100%); opacity: 0; }
+  to   { transform: translateX(0);     opacity: 1; }
+}
+@keyframes overlay-fadein {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
 @media (max-width: 960px) {
   .nav-toggle-btn { display: inline-flex; }
   .toc-toggle-btn { display: inline-flex; }
-  body[data-nav-open] .mobile-nav-drawer { display: flex; }
-  body[data-toc-open] .mobile-toc-drawer { display: flex; }
+  body[data-nav-open] .mobile-nav-drawer {
+    display: flex;
+    animation: drawer-slidein 0.2s ease;
+  }
+  body[data-toc-open] .mobile-toc-drawer {
+    display: flex;
+    animation: drawer-slidein 0.2s ease;
+  }
   body[data-nav-open] .mobile-nav-overlay,
-  body[data-toc-open] .mobile-nav-overlay { display: block; }
+  body[data-toc-open] .mobile-nav-overlay {
+    display: block;
+    animation: overlay-fadein 0.2s ease;
+  }
 }
 
 /* ── Wanted articles page ──────────────────────────────────────────────── */
