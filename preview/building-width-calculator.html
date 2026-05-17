@@ -699,22 +699,22 @@
       <div class="eyebrow">Furniture drives width</div>
     </header>
     <div class="slide-body">
-      <p class="lede">Most office buildings start with a width — sixty feet for daylight — then cram furniture in until it fits. Woodfine inverts the sequence: start with the tenant's chair, desk, exam table or bench, and the building width is whatever the arrangement requires. The cross-section has three zones, mirrored on each side of a central corridor.</p>
+      <p class="lede">Most office buildings start with a width &mdash; sixty feet for daylight &mdash; then fit furniture into what remains. Woodfine inverts the sequence: start with the tenant's desk, workstation, exam table or bench; the zones follow from the furniture, and the building width is whatever the arrangement requires. The cross-section has three zones, with Zone 1 (Habitat) and Zone 2 (Magazine) mirrored on each side of a single centreline Zone 3 (Corridor).</p>
 
       <div class="strip" id="strip-diagram"><!-- populated by JS --></div>
 
       <div class="zone-defs">
         <div class="zone-def z1">
           <h4>Zone 1 &mdash; Habitat</h4>
-          <p>Desks, workstations, exam tables, benches. Six metres minimum from the facade &mdash; the European Lighting Standard threshold for natural light at a workstation.</p>
+          <p>Desks, workstations, exam tables, benches. Six metres from the fa&ccedil;ade is the working baseline &mdash; the European Lighting Standard threshold for daylight at a workstation; some use types widen it (Medical 7.28 m for exam-table depth) and Academic compresses it because seating faces forward, not toward the fa&ccedil;ade.</p>
         </div>
         <div class="zone-def z2">
           <h4>Zone 2 &mdash; Magazine</h4>
-          <p>Storage, bookshelves, filing, server rooms. The slack variable: widen it to keep the plate from becoming a long, narrow rectangle.</p>
+          <p>Storage, bookshelves, filing, staff rooms, server rooms. The slack variable: widen it to balance the floor plate so it doesn't end up as a long, narrow rectangle.</p>
         </div>
         <div class="zone-def z3">
           <h4>Zone 3 &mdash; Corridor</h4>
-          <p>Bilateral, mirrored at the centre. Width set by egress and accessibility &mdash; overdesigned by 20% for small-tenant traffic.</p>
+          <p>A single centreline corridor, not mirrored. Width set by egress and accessibility &mdash; overdesigned by 20% to promote well-being and absorb the "in and out" traffic of smaller tenants.</p>
         </div>
       </div>
 
@@ -740,7 +740,7 @@
       <div class="eyebrow">Seven use types &middot; seven widths</div>
     </header>
     <div class="slide-body">
-      <p class="lede">Each segment's width is the actual zone depth in metres, scaled against the widest total. The widest tenant (Civic) is roughly 1.4 m wider than the narrowest (Private Office) &mdash; the demising tolerance the floor plate must absorb.</p>
+      <p class="lede">Each segment's width is the actual zone depth in metres, scaled against the widest total. Building width = 2&times;(Habitat + Magazine) + Corridor &mdash; the corridor is centreline, single, not mirrored. The widest tenant (Business at its open-storage maximum) is roughly 17.6 m wider than the narrowest (Private Office); a mixed-tenant floor must reconcile this within a single plate width.</p>
 
       <div class="legend">
         <span class="z1">Zone 1 &mdash; Habitat (desks)</span>
@@ -765,12 +765,12 @@
         <div class="num-chip">SECTION 03</div>
         <div class="title">The Building Width Calculator</div>
       </div>
-      <div class="eyebrow">Mirror equation &middot; both halves equal</div>
+      <div class="eyebrow">Habitat + Magazine mirrored &middot; corridor single</div>
     </header>
     <div class="slide-body">
       <div class="formula">
-        <span class="z1">Zone 1</span> + <span class="z2">Zone 2</span> + <span class="z3">Zone 3</span> &nbsp;|&nbsp; <span class="z3">Zone 3</span> + <span class="z2">Zone 2</span> + <span class="z1">Zone 1</span>
-        <span class="zline">Building Width = 2 &times; (Habitat + Magazine + Corridor)</span>
+        <span class="z1">Zone 1</span> + <span class="z2">Zone 2</span> &nbsp;|&nbsp; <span class="z3">Zone 3</span> &nbsp;|&nbsp; <span class="z2">Zone 2</span> + <span class="z1">Zone 1</span>
+        <span class="zline">Building Width = 2 &times; (Habitat + Magazine) + Corridor</span>
       </div>
 
       <table class="calc" id="calc-table">
@@ -783,7 +783,7 @@
             <th>Z1 Habitat</th>
             <th>Z2 Magazine</th>
             <th>Z3 Corridor</th>
-            <th>Half</th>
+            <th>Half (Z1+Z2)</th>
             <th>Total Width</th>
           </tr>
         </thead>
@@ -883,13 +883,13 @@
    ============================================================ */
 const BIM_TOKENS = {
   zones: {
-    "private-office":      { label: "Private Office",      habitat: 5.9944, magazine: 1.3716, corridor: 0.0,   note: "PO-1/PO-2/PO-3 — opens to shared building corridor" },
-    "professional-office": { label: "Professional Office", habitat: 6.0,    magazine: 3.8,    corridor: 2.0,   note: "Baseline professional office; tenant business suites" },
-    "academic":            { label: "Academic",            habitat: 4.7,    magazine: 3.0,    corridor: 0.0,   note: "Seating faces forward — Habitat under 6 m permitted" },
-    "business":            { label: "Business",            habitat: 6.0,    magazine: 7.3,    corridor: 2.7,   note: "Widest Magazine — open storage walls, server rooms" },
-    "medical":             { label: "Medical",             habitat: 7.2,    magazine: 4.87,   corridor: 2.89,  note: "Widest Habitat — exam table depth + patient circulation" },
-    "laboratory":          { label: "Laboratory",          habitat: 6.7818, magazine: 4.8006, corridor: 3.048, note: "Bench depth + fume hood clearance + IBC high-hazard egress" },
-    "civic":               { label: "Civic",               habitat: 6.0,    magazine: 7.23,   corridor: 3.6,   note: "Widest Corridor — public assembly egress" }
+    "private-office":      { label: "Private Office",      habitat: 5.9944, magazine: 1.3716, corridor: 0.0,   note: "PO-1/PO-2/PO-3 — opens to shared building corridor (no bilateral corridor)" },
+    "professional-office": { label: "Professional Office", habitat: 6.0,    magazine: 3.0,    corridor: 3.0,   note: "V12 baseline (Jan 2025) — TBD pending furniture lock; Z2 and Z3 are placeholders" },
+    "academic":            { label: "Academic",            habitat: 4.7,    magazine: 3.0,    corridor: 0.0,   note: "Seating faces forward — Habitat under 6 m permitted; opens to building corridor" },
+    "business":            { label: "Business",            habitat: 5.51,   magazine: 9.26,   corridor: 2.75,  note: "Notes V3 Option A/A — widest of 21 enumerated options; reflects open storage walls" },
+    "medical":             { label: "Medical",             habitat: 7.2819, magazine: 4.877,  corridor: 2.892, note: "M3/M1/M2 sketches — 286 5/8\" + 192\" + 113 7/8\"; exam-table depth + patient circulation" },
+    "laboratory":          { label: "Laboratory",          habitat: 6.7818, magazine: 4.8006, corridor: 3.048, note: "Bench depth + fume hood clearance + IBC high-hazard egress 10'0\"" },
+    "civic":               { label: "Civic",               habitat: 6.0,    magazine: 7.23,   corridor: 3.6,   note: "Widest Corridor 12'0\" — public assembly egress; awaiting DISCOVERY sketch confirmation" }
   },
   circulationAddition: {
     perpendicularDesk: 0.7
@@ -918,7 +918,9 @@ function mFmt(m) {
   return m.toFixed(2).replace(/\.?0+$/, function(s){ return s.indexOf('.') >= 0 ? s.replace(/0+$/,'').replace(/\.$/,'') : s; }) + " m";
 }
 function totalWidth(z) {
-  return 2 * (z.habitat + z.magazine + z.corridor);
+  // Habitat and Magazine are mirrored on each side of a single centreline Corridor.
+  // V12 (Jan 2025) and Notes V3 enumeration confirm: Z3 is NOT doubled.
+  return 2 * (z.habitat + z.magazine) + z.corridor;
 }
 
 /* ---------- Section 1 strip diagram ---------- */
@@ -947,7 +949,10 @@ function totalWidth(z) {
      </div>`;
 })();
 
-/* ---------- Section 2 bar chart ---------- */
+/* ---------- Section 2 bar chart ----------
+   Each bar visualises the full mirror cross-section:
+   [ Z1 | Z2 | Z3 | Z2 | Z1 ]   (Z3 single, centerline)
+   Total bar width is scaled to the widest tenant. */
 (function renderBars() {
   const el = document.getElementById('bar-table');
   const order = ["private-office", "academic", "professional-office", "laboratory", "medical", "business", "civic"];
@@ -958,26 +963,24 @@ function totalWidth(z) {
     const z = BIM_TOKENS.zones[key];
     const t = totalWidth(z);
     const pctTotal = (t / maxTotal) * 100;
-    const half = z.habitat + z.magazine + z.corridor;
-    const maxHalf = maxTotal / 2;
-    const w1 = (z.habitat / maxHalf) * 100;
-    const w2 = (z.magazine / maxHalf) * 100;
-    const w3 = (z.corridor / maxHalf) * 100;
+    // Per-segment share of the bar, summing to 100%.
+    const sZ1 = (z.habitat / t) * 100;
+    const sZ2 = (z.magazine / t) * 100;
+    const sZ3 = (z.corridor / t) * 100;
+    const seg = (cls, pct, dim, tipLabel) => pct > 0
+      ? `<div class="seg ${cls}" style="width: ${pct}%;">
+           ${dim >= 1.5 ? mFmt(dim) : ''}
+           <span class="tooltip">${tipLabel}: ${mFmt(dim)} / ${mToFtIn(dim)}</span>
+         </div>`
+      : '';
     return `<div class="bar-row">
        <div class="bar-name">${z.label}<span class="sub">${z.note}</span></div>
-       <div class="bar-track" style="width: ${pctTotal/2 * 2}%;">
-         <div class="seg z1" style="width: ${w1 / (w1+w2+w3) * 100}%;">
-           ${z.habitat >= 1.5 ? mFmt(z.habitat) : ''}
-           <span class="tooltip">Z1 Habitat: ${mFmt(z.habitat)} / ${mToFtIn(z.habitat)}</span>
-         </div>
-         ${w2 > 0 ? `<div class="seg z2" style="width: ${w2 / (w1+w2+w3) * 100}%;">
-           ${z.magazine >= 1.5 ? mFmt(z.magazine) : ''}
-           <span class="tooltip">Z2 Magazine: ${mFmt(z.magazine)} / ${mToFtIn(z.magazine)}</span>
-         </div>` : ''}
-         ${w3 > 0 ? `<div class="seg z3" style="width: ${w3 / (w1+w2+w3) * 100}%;">
-           ${z.corridor >= 1.5 ? mFmt(z.corridor) : ''}
-           <span class="tooltip">Z3 Corridor: ${mFmt(z.corridor)} / ${mToFtIn(z.corridor)}</span>
-         </div>` : ''}
+       <div class="bar-track" style="width: ${pctTotal}%;">
+         ${seg('z1', sZ1, z.habitat,  'Z1 Habitat')}
+         ${seg('z2', sZ2, z.magazine, 'Z2 Magazine')}
+         ${seg('z3', sZ3, z.corridor, 'Z3 Corridor')}
+         ${seg('z2', sZ2, z.magazine, 'Z2 Magazine')}
+         ${seg('z1', sZ1, z.habitat,  'Z1 Habitat')}
        </div>
        <div class="bar-total">
          <strong>${t.toFixed(2)} m</strong>
@@ -997,7 +1000,7 @@ function totalWidth(z) {
 
   tbody.innerHTML = order.map(key => {
     const z = BIM_TOKENS.zones[key];
-    const half = z.habitat + z.magazine + z.corridor;
+    const half = z.habitat + z.magazine; // mirrored Habitat+Magazine; Corridor is centerline
     const t = totalWidth(z);
     let cls = '';
     if (key === widest.key) cls = 'widest';

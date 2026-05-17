@@ -357,33 +357,48 @@
   .large-tile-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 18px;
+    grid-template-rows: 1fr 1fr;
+    gap: 10px;
     height: 100%;
     align-items: stretch;
   }
   .large-tile-grid .tile-card {
-    padding: 18px 20px;
+    padding: 10px 14px;
   }
-  .large-tile-grid .tile-card .code { font-size: 11px; }
+  .large-tile-grid .tile-card.medium { border-left: 4px solid var(--mixed); }
+  .large-tile-grid .tile-card.large  { border-left: 4px solid var(--prof); }
+  .large-tile-grid .tile-card .code { font-size: 9.5px; }
   .large-tile-grid .tile-card .name {
-    font-size: 16px;
-    margin: 5px 0 10px;
-    line-height: 1.2;
+    font-size: 12.5px;
+    margin: 4px 0 6px;
+    line-height: 1.22;
   }
   .large-tile-grid .tile-card .area {
-    font-size: 15px;
-    margin-bottom: 12px;
+    font-size: 12px;
+    margin-bottom: 7px;
   }
-  .large-tile-grid .tile-card .area .m2 { font-size: 12px; }
+  .large-tile-grid .tile-card .area .m2 { font-size: 10px; }
   .large-tile-grid .tile-card .composition {
-    font-size: 12.5px;
-    line-height: 1.5;
-    margin-bottom: 14px;
+    font-size: 10.5px;
+    line-height: 1.4;
+    margin-bottom: 8px;
   }
   .large-tile-grid .tile-card .zones {
-    font-size: 11px;
-    padding: 3px 10px;
+    font-size: 10px;
+    padding: 2px 7px;
   }
+  .large-tile-grid .tile-card .family-badge {
+    position: absolute;
+    top: 8px; right: 10px;
+    font-size: 8.5px;
+    background: var(--mixed);
+    color: white;
+    padding: 2px 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 600;
+  }
+  .large-tile-grid .tile-card.large .family-badge { background: var(--prof); }
 
   /* ============================================================
      SLIDE 4 — Size Hierarchy
@@ -690,8 +705,8 @@
         <ol>
           <li>What Key Plans and Tiles Means</li>
           <li>The Tile Catalogue &mdash; Small Tiles</li>
-          <li>The Tile Catalogue &mdash; Large Tiles</li>
-          <li>The Size Hierarchy</li>
+          <li>The Tile Catalogue &mdash; Medium &amp; Large Tiles</li>
+          <li>The Size Hierarchy &amp; Floor Plate Range</li>
           <li>One Floor &mdash; Filled Exactly</li>
           <li>Design Principles</li>
           <li>Leasing Economics &amp; Rolling Efficiency</li>
@@ -737,10 +752,10 @@
         <div class="num-chip">SECTION 02</div>
         <div class="title">The Tile Catalogue &mdash; Small Tiles</div>
       </div>
-      <div class="eyebrow">Eight tile types &middot; 2,700 SF each</div>
+      <div class="eyebrow">Eight tile types &middot; 2,700 SF each &middot; smallest of three families</div>
     </header>
     <div class="slide-body">
-      <p class="lede">Small Tile Family &mdash; 2,700 SF (250.84 m&sup2;) each. Each Tile is one climate zone; combinations aggregate climate-control authority. Source: <span class="mono">tile-system.dtcg.json</span>.</p>
+      <p class="lede">Small Tile Family &mdash; 2,700 SF (250.84 m&sup2;) each. Each Tile is one HVAC climate zone; combinations aggregate climate-control authority. Tile B-1 and Mixed E-1/E-2 carry the End Cap role at the short sides of the floor plate. Source: <span class="mono">AEC_Floor Plates_Tiles_Alternatives.pdf</span> (V12, Collaborators #27).</p>
       <div class="small-tile-grid" id="small-tiles"></div>
     </div>
     <footer class="slide-foot">
@@ -756,12 +771,12 @@
     <header class="slide-head">
       <div>
         <div class="num-chip">SECTION 03</div>
-        <div class="title">The Tile Catalogue &mdash; Large Tiles</div>
+        <div class="title">The Tile Catalogue &mdash; Medium &amp; Large Tiles</div>
       </div>
-      <div class="eyebrow">Three tile types &middot; 4,900 SF each</div>
+      <div class="eyebrow">Medium family 3,500 SF &middot; Large family 4,900 SF</div>
     </header>
     <div class="slide-body">
-      <p class="lede">Large Tile Family &mdash; 4,900 SF (455.22 m&sup2;) each. Approaches the 1/4 floor tile in scale; useful for corporate anchors, large professional offices, and dense private-office mixes. Source: <span class="mono">tile-system.dtcg.json</span>.</p>
+      <p class="lede">Three tile sizes form the catalogue: Small (2,700 SF), Medium (3,500 SF), Large (4,900 SF). Medium tiles bridge the gap between Small and Large; their End Cap variants (E-1, E-2) absorb the short-side geometry of the building. Source: <span class="mono">AEC_Floor Plates_Methodology_V12.pdf</span> p. 2.</p>
       <div class="large-tile-grid" id="large-tiles"></div>
     </div>
     <footer class="slide-foot">
@@ -777,12 +792,12 @@
     <header class="slide-head">
       <div>
         <div class="num-chip">SECTION 04</div>
-        <div class="title">The Size Hierarchy</div>
+        <div class="title">The Size Hierarchy &amp; Floor Plate Range</div>
       </div>
-      <div class="eyebrow">Five fractions of 20,000 SF</div>
+      <div class="eyebrow">Five fractions &middot; PC 19&ndash;23k SF &middot; SU 17&ndash;21k SF</div>
     </header>
     <div class="slide-body">
-      <p class="lede">Five fractions of the 20,000 SF net leasable floor plate. Source: <span class="mono">floor-plate-standards.dtcg.json</span>.</p>
+      <p class="lede">Five fractions of the reference 20,000 SF net leasable floor plate. The reference is a midpoint &mdash; Professional Centres run 19,000&ndash;23,000 SF and Suburban Office runs 17,000&ndash;21,000 SF, with 3&ndash;5 floors and 6&ndash;9 floors respectively. Source: <span class="mono">PROJECTS_MCorp_Tear Sheet_Floor Plates_Tiles_Combinations.pdf</span> p. 2.</p>
       <div class="hierarchy" id="hierarchy"></div>
       <p class="closing">A Corporate Office tenant may occupy any fraction up to the full floor. The 1/8 floor (2,500 SF) is the minimum Corporate Office tile <em>and</em> the aggregate tile for Private Office leaseholds. The 1/2 floor is dedicated on the second floor to the Tenant Lounge per the design memo.</p>
     </div>
@@ -804,12 +819,12 @@
       <div class="eyebrow">20,000 SF &middot; every SF a Key Plan</div>
     </header>
     <div class="slide-body">
-      <p class="lede">A worked composition &mdash; one example of how tiles fill the floor exactly. Each segment is one Tile, drawn to scale; the composition sums to 20,000 SF with every square foot represented by a Key Plan.</p>
-      <div class="grid-label">Floor plate composition &mdash; 20,000 SF net leasable &middot; drawn to scale</div>
+      <p class="lede">A worked composition &mdash; one Sample Small Tile arrangement from the methodology. The body of the floor is filled by Basic and Compound Tiles; the residual area around the Core and Elevator Lobby is filled by Special Tiles (SP-A, SP-B, SP-C). Together these sum to the full net leasable area with no remainder.</p>
+      <div class="grid-label">Sample Small Tile &mdash; Tile A ×6 + Special A ×2 + Special B + Core = 20,000 SF net leasable footprint (V12 Methodology p. 4)</div>
       <div class="floor-strip" id="floor-demo"></div>
       <div class="fs-ruler"><span>0 SF</span><span>10,000 SF</span><span>20,000 SF</span></div>
       <div class="floor-legend" id="floor-demo-legend"></div>
-      <p class="closing">Other combinations are valid as long as they sum to 20,000 SF (or 18,850 SF after corridors + restrooms). The methodology requires that whatever combination is chosen, <em>every square foot is represented by a Key Plan</em>.</p>
+      <p class="closing">Other combinations are valid as long as they sum to net leasable with every SF represented by a Key Plan. <em>Special Tiles absorb the residual geometry around the building Core</em> &mdash; they are sized so their width matches the nearest Professional Office key-plan width, preserving demising-wall continuity. Source: V12 Methodology p. 4 (Sample Small Tile).</p>
     </div>
     <footer class="slide-foot">
       <span class="foot-left">Floor Plate Methodology &middot; Woodfine Management Corp.</span>
@@ -840,12 +855,12 @@
           <p>The Tile composition must reach 100% floor-plate utilisation at any tenant mix &mdash; no free space without a corresponding Key Plan. As tenants come and go, the floor recomposes; the engineering rule is that the recomposition is always achievable from the published catalogue.</p>
         </div>
         <div class="principle">
-          <h4>Corner handling</h4>
-          <p>Building short sides and corners use End Cap tiles (B-1, E-1, E-2). Small tiles at corners may create structural-grid boxing issues. Column grid is reviewed before specifying corner tile types; core position is adjusted if short-side tiles conflict.</p>
+          <h4>End caps &amp; natural light</h4>
+          <p>Building short sides use End Cap tiles (B-1, E-1, E-2 at Small/Medium scale; A-1, B-2, C-3, C-4 at 6,000 SF for paired short sides). End caps must receive natural light on both perpendicular axes; if they do not, the leasehold is &ldquo;not 100% efficient&rdquo; per the methodology and a window-bay revision is triggered.</p>
         </div>
         <div class="principle">
-          <h4>Professional &rarr; Corporate gap</h4>
-          <p>The jump from Professional Office (~5,000 SF / 1/4 tile) to Corporate Office (min 2,500 SF / 1/8 tile) leaves a gap for tenants needing 5,000&ndash;7,500 SF. Tile H (4,900 SF) and Small+Small Professional combinations (~4,200 SF) bridge it.</p>
+          <h4>Special Tiles snap to Key-Plan width</h4>
+          <p>Special Tiles SP-A, SP-B, SP-C fill the area around the Core and Elevator Lobby. Their width snaps to the nearest Professional Office Key Plan width &mdash; e.g. if a PO is 450 SF and SP-A is 400 SF, SP-A is increased by 50 SF to match. SP-C (in front of the Core) must avoid direct door-to-elevator alignment.</p>
         </div>
       </div>
     </div>
@@ -869,16 +884,15 @@
     <div class="slide-body">
       <div class="column">
         <h3>Why Smaller Tiles Matter</h3>
-        <h4>Climate-zone autonomy as a leasing feature</h4>
-        <p>A small tenant who wants to set their own thermostat must lease a full Tile. The Tile catalogue is therefore not just a geometric system &mdash; it is a leasing instrument. A Private Office in Tile B-1 shares climate with four other private offices; a Private Office in Tile G shares with nine; a Corporate Office in Tile F sets its own. The leasing agreement makes this explicit and prices accordingly.</p>
-        <p><strong>Smaller tiles increase tenant autonomy and operational complexity in parallel.</strong> A Private-Office-heavy floor (Composition B in the Building Width Calculator companion deck) can host 40+ independent climate zones on a single 20,000 SF plate. The HVAC engineering is more expensive; the leasing yield is higher because each thermostat is its own line item.</p>
+        <h4>16 leasehold variations vs. 9</h4>
+        <p>The methodology's quantitative test is leasehold variation count at a fixed plate area. A modular 325 SF grid yields nine leasehold sizes at 2,925 SF total. The Key Plans and Tiles system &mdash; using 325 SF, 465 SF, and 685 SF private-office widths in irregular combination &mdash; yields <strong>sixteen leasehold sizes at 2,775 SF total</strong>. More leasable configurations per square foot of plate. Source: Tiles Combinations p. 4.</p>
+        <p>Climate-zone autonomy is the second leasing lever. A small tenant who wants thermostat control must lease a full Tile. A Private Office in Tile B-1 shares climate with four other private offices; a Private Office in Tile G shares with nine; a Corporate Office in Tile A or F sets its own. <strong>The leasing agreement prices climate autonomy explicitly.</strong></p>
       </div>
       <div class="column divider">
         <h3>Rolling Efficiency</h3>
         <h4>Engineering efficiency vs. economic efficiency</h4>
-        <p>The engineering definition of &ldquo;efficiency&rdquo; is net-leasable divided by gross-buildable. The Woodfine methodology calls this metric outdated. The replacement metric is <strong>economic efficiency</strong>: the share of a floor that is actively leased and represented by a Key Plan that matches a real tenant's furniture inventory.</p>
-        <p>A floor at 100% engineering efficiency with one tenant in a 60-foot rectangle, putting bookshelves on top of desks because the Habitat zone is too shallow, is failing the economic test. A floor at 88% engineering efficiency with seven tenants in mixed Tile compositions, each at 100% tenant-utilisation inside their leasehold, is succeeding.</p>
-        <p>Rolling efficiency is the dynamic version: as tenants change, the Tile recomposition must always be valid. The catalogue is sized to make that always possible.</p>
+        <p>Engineering efficiency is net-leasable divided by gross-buildable &mdash; a static ratio. The Woodfine methodology replaces it with <strong>economic efficiency</strong>: the share of a floor that is actively leased and represented by a Key Plan matching a real tenant's furniture inventory.</p>
+        <p>Rolling efficiency is the dynamic test. As tenants come and go, the Tile recomposition must always be valid; <em>the catalogue is sized so 100% utilisation is always recoverable</em> from a published combination. Tenants taking space across Tile boundaries lose climate-zone control &mdash; the leasing instrument prices this trade-off explicitly.</p>
       </div>
     </div>
     <footer class="slide-foot">
@@ -902,9 +916,12 @@ const BIM_TOKENS = {
     { code: "tile-e2", name: "Tile E-2 — Mixed End Cap (Right)",      sf: 2700, m2: 250.84, comp: "Mirror of E-1 for right building end. Handles corner column grid.", zones: 3, endcap: true }
   ],
   largeTiles: [
-    { code: "tile-f", name: "Tile F — Large Corporate Office",   sf: 4900, m2: 455.22, comp: "Single 4,900 SF corporate tenant. Approaches 1/4 floor tile.", zones: 1 },
-    { code: "tile-g", name: "Tile G — Large Private Office Mix", sf: 4900, m2: 455.22, comp: "Ten private offices (300–500 SF each) + 900 SF corridor. Maximum climate-zone count.", zones: 10 },
-    { code: "tile-h", name: "Tile H — Large Professional Office", sf: 4900, m2: 455.22, comp: "Three Professional Office units (any sub-type mix) + 700 SF corridor.", zones: 3 }
+    { code: "tile-d",  name: "Tile D — Medium Corporate Office",   sf: 3500, m2: 325.16, comp: "Single 3,500 SF corporate tenant. Medium-family corporate anchor.", zones: 1, family: "Medium" },
+    { code: "tile-e",  name: "Tile E — Medium Private Office",     sf: 3500, m2: 325.16, comp: "Eight Private Offices (300–500 SF mix) totalling 2,900 SF + 600 SF corridor.", zones: 8, family: "Medium" },
+    { code: "tile-fm", name: "Tile F (Medium) — Professional",     sf: 3500, m2: 325.16, comp: "Four Professional Office units (3 Small 800 + 1 Medium 1,100). Medium-family professional anchor.", zones: 4, family: "Medium" },
+    { code: "tile-f",  name: "Tile F — Large Corporate Office",    sf: 4900, m2: 455.22, comp: "Single 4,900 SF corporate tenant. Approaches 1/4 floor tile.", zones: 1, family: "Large" },
+    { code: "tile-g",  name: "Tile G — Large Private Office Mix",  sf: 4900, m2: 455.22, comp: "Ten Private Offices (300–500 SF mix) + 900 SF corridor. Maximum climate-zone count.", zones: 10, family: "Large" },
+    { code: "tile-h",  name: "Tile H — Large Professional Office", sf: 4900, m2: 455.22, comp: "Five Professional Office units (mixed Small/Medium/Large). Spans Medical, Business, Lab, Academic, Civic.", zones: 5, family: "Large" }
   ],
   hierarchy: [
     { label: "1/8",  m2: 232.26,  sf: 2500,  desc: "Minimum Corporate Office tile; Private Office aggregate" },
@@ -919,6 +936,7 @@ const BIM_TOKENS = {
 function tileCardHtml(t, sizeClass) {
   return `<div class="tile-card ${sizeClass}">
     ${t.endcap ? '<div class="endcap">End Cap</div>' : ''}
+    ${t.family ? `<div class="family-badge">${t.family}</div>` : ''}
     <div class="code">${t.code}</div>
     <div class="name">${t.name}</div>
     <div class="area">${t.sf.toLocaleString()} SF <span class="m2">/ ${t.m2.toFixed(2)} m²</span></div>
@@ -927,7 +945,7 @@ function tileCardHtml(t, sizeClass) {
   </div>`;
 }
 document.getElementById('small-tiles').innerHTML = BIM_TOKENS.smallTiles.map(t => tileCardHtml(t, 'small')).join('');
-document.getElementById('large-tiles').innerHTML = BIM_TOKENS.largeTiles.map(t => tileCardHtml(t, 'large')).join('');
+document.getElementById('large-tiles').innerHTML = BIM_TOKENS.largeTiles.map(t => tileCardHtml(t, (t.family || '').toLowerCase())).join('');
 
 /* Hierarchy bars */
 const maxHier = Math.max(...BIM_TOKENS.hierarchy.map(h => h.sf));
@@ -942,14 +960,21 @@ document.getElementById('hierarchy').innerHTML = BIM_TOKENS.hierarchy.map(h => `
   </div>
 `).join('');
 
-/* Floor plate composition strip */
+/* Floor plate composition strip — V12 Methodology p. 4 Sample Small Tile.
+   Two Corporate Office 2,700 SF + Two Corporate Office 2,700 SF (paired) + Corporate Office 2,700 SF
+   + Corporate Office x2 (5,400) + Special Tile A 400 + Special Tile B 300 + Special Tile A 400.
+   Basic tiles 18,900 SF + Special Tiles 1,100 SF = 20,000 SF.                                       */
 const floorLayout = [
-  { code: "Tile F",   sf: 4900, color: "#4a78b8", name: "Tile F — Large Corporate Office",       zones: 1,  light: false },
-  { code: "Tile A",   sf: 2700, color: "#6a8fc8", name: "Tile A — Corporate Office",              zones: 1,  light: false },
-  { code: "Tile H",   sf: 4900, color: "#d99a3b", name: "Tile H — Large Professional Office",     zones: 3,  light: false },
-  { code: "Tile C-1", sf: 2700, color: "#e5b46e", name: "Tile C-1 — Professional Med + Small",    zones: 2,  light: true  },
-  { code: "Tile B-1", sf: 2700, color: "#b54545", name: "Tile B-1 — Private Office End Cap",      zones: 5,  light: false },
-  { code: "Common",   sf: 2100, color: "#7a7a7a", name: "Common — corridors + restrooms + meter", zones: 0,  light: false }
+  { code: "Tile A",  sf: 2700, color: "#4a78b8", name: "Tile A — Corporate Office",         zones: 1, light: false },
+  { code: "Tile A",  sf: 2700, color: "#6a8fc8", name: "Tile A — Corporate Office",         zones: 1, light: false },
+  { code: "SP-A",    sf:  400, color: "#9c7eb5", name: "Special Tile A — core-adjacent",    zones: 1, light: false },
+  { code: "Core",    sf: 1300, color: "#5a5a5a", name: "Core + Service Stairs",             zones: 0, light: false },
+  { code: "SP-B",    sf:  300, color: "#b9a3d0", name: "Special Tile B — secondary core",   zones: 1, light: true  },
+  { code: "Tile A",  sf: 2700, color: "#4a78b8", name: "Tile A — Corporate Office (right)", zones: 1, light: false },
+  { code: "Tile A×2", sf: 5400, color: "#3e6aaa", name: "Two Tile A combined — 5,400 SF",   zones: 2, light: false },
+  { code: "SP-A",    sf:  400, color: "#9c7eb5", name: "Special Tile A — second instance",  zones: 1, light: false },
+  { code: "Tile A",  sf: 2700, color: "#5a82c2", name: "Tile A — Corporate Office",         zones: 1, light: false },
+  { code: "Tile A",  sf: 1400, color: "#6a8fc8", name: "Corporate fill (residual)",         zones: 1, light: false }
 ];
 document.getElementById('floor-demo').innerHTML = floorLayout.map(t => `
   <div class="fs-seg${t.light ? ' light' : ''}" style="flex: ${t.sf} ${t.sf} 0; background: ${t.color};">

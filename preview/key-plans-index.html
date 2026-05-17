@@ -681,7 +681,7 @@
       <div>
         <div class="eyebrow">Spatial Taxonomy &middot; Reference Index</div>
         <h1>Key Plans<br>Index</h1>
-        <div class="deck-sub">Professional Office sub-types, zone depths, and key plan areas — read live from the <span class="mono">professional-office-subtypes.dtcg.json</span> and <span class="mono">building-width-calculator.dtcg.json</span> token files.</div>
+        <div class="deck-sub">Private Office and the five Professional Office sub&#8209;types (Index entries 1&ndash;3 and 9&ndash;37) &mdash; zone depths and key plan areas reconciled against the V3 master Summary table (January&nbsp;6,&nbsp;2026). Token sources: <span class="mono">professional-office-subtypes.dtcg.json</span> and <span class="mono">building-width-calculator.dtcg.json</span> in <span class="mono">woodfine-bim-library/tokens/bim/</span>.</div>
       </div>
       <div class="agenda">
         <strong>Agenda &mdash; four content slides</strong>
@@ -707,7 +707,7 @@
       <div class="eyebrow">Five sub-types &middot; zones &middot; key plan areas</div>
     </header>
     <div class="slide-body">
-      <p class="lede">All values from <span class="mono">building-width-calculator.dtcg.json</span> and <span class="mono">professional-office-subtypes.dtcg.json</span>. Building Width = 2 &times; (Z1 + Z2 + Z3). Key Plan sizes are the FFE-tier footprints (Small / Medium / Large).</p>
+      <p class="lede">Values reconciled against the V3 Summary table (<span class="mono">DISCOVERY_MCorp_Sketches_Key Plans_Summary_Notes</span>, 2026&#8209;01&#8209;06) and mirrored in <span class="mono">building-width-calculator.dtcg.json</span> + <span class="mono">professional-office-subtypes.dtcg.json</span>. Building Width = 2&nbsp;&times;&nbsp;(Z1&nbsp;+&nbsp;Z2)&nbsp;+&nbsp;Z3. Key Plan sizes are Small / Medium / Large completed-sample footprints.</p>
 
       <div class="legend-row">
         <span class="z1">Zone 1 &mdash; Habitat (desks)</span>
@@ -761,7 +761,7 @@
       <div class="eyebrow">Medical &middot; Business &middot; Laboratory</div>
     </header>
     <div class="slide-body">
-      <p class="lede">Each sub-type carries FFE codes for three size tiers (1,100 / 1,400 / 800 SF). Specs read from <span class="mono">professional-office-subtypes.dtcg.json</span>; Key Plan footprints from the source workbook.</p>
+      <p class="lede">Each sub&#8209;type declares three FFE tile&#8209;codes (M/B/L/A/C&#8209;1 = 1,100&nbsp;SF, &#8209;2 = 1,400&nbsp;SF, &#8209;3 = 800&nbsp;SF) representing 1/4&#8209;floor sub&#8209;allocations. Key Plan footprints (Small / Medium / Large) come from the V3 Master Summary table and are larger than the tile&#8209;codes &mdash; they are the completed&#8209;sample full&#8209;suite areas.</p>
       <div class="subtype-grid cols-3" id="subtype-grid-1"><!-- populated by JS --></div>
     </div>
     <footer class="slide-foot">
@@ -782,11 +782,11 @@
       <div class="eyebrow">Academic &middot; Civic</div>
     </header>
     <div class="slide-body">
-      <p class="lede">Academic and Civic complete the five-sub-type taxonomy. Academic uses forward-facing seating (Habitat under 6 m permitted); Civic carries the widest Corridor for public assembly egress.</p>
+      <p class="lede">Academic and Civic complete the five Professional Office sub&#8209;types. Academic uses forward&#8209;facing seating, so the European Lighting Standard&apos;s 6 m Habitat minimum does not apply (workstations remain compliant); Civic carries the widest Corridor (3.6 m / 12') across all sub&#8209;types for public assembly egress.</p>
       <div class="subtype-grid cols-2" id="subtype-grid-2"><!-- populated by JS --></div>
       <div class="source-note">
-        <strong>Source workbook</strong>
-        <span class="mono">CONSTRUCTION_2026_01_06_Key Plan_Professional Office_FFE_FIN.xlsx</span> V3 &mdash; Key Plan index ranges 10&ndash;37, FFE size tiers M/B/L/A/C-1/2/3, deduplicated against the DTCG token library.
+        <strong>Source &middot; V3 Master Summary</strong>
+        Numbers reconciled against <span class="mono">DISCOVERY_MCorp_Sketches_Key Plans_Summary_Notes</span> page&nbsp;1, V3 (Jennifer&nbsp;M.&nbsp;Woodfine, 2026&#8209;01&#8209;06) and the Key Plan Directory V2 (Index entries 1&ndash;37). Academic Small carries forward at <strong>105&nbsp;m&sup2; / 1,131&nbsp;SF</strong> per V3, superseding two earlier iterations (87.7&nbsp;m&sup2; in Samples_V2 and 110.5&nbsp;m&sup2; in the February V2 Summary). FFE size tiers M / B / L / A / C&#8209;1/2/3 = 1,100 / 1,400 / 800&nbsp;SF reflect the 1/4&#8209;floor tile sub&#8209;allocation, not the key plan footprint.
       </div>
     </div>
     <footer class="slide-foot">
@@ -894,9 +894,9 @@ const BIM_TOKENS = {
     { code: "PO-3", label: "Private Office Large",  sf: 685, m2: 63.6386,  descr: "Three-person private office configuration." }
   ],
   privateOfficeZones: {
-    habitat: 5.9944,
-    magazine: 1.3716,
-    corridor: 0.0
+    habitat: 5.9944,    // V3 table displays 6.0 m / 19'8"; underlying spec 5.9944 m
+    magazine: 1.3716,   // V3 table displays 1.4 m / 4'6"; underlying spec 1.3716 m
+    corridor: 0.0       // V3 dash; each PO opens directly to building corridor
   }
 };
 
@@ -1031,7 +1031,7 @@ function renderSubtypeCard(s) {
     <div class="row z2"><span class="lbl">Zone 2 Magazine</span><span class="val">${z.magazine.toFixed(4)} m</span></div>
     <div class="row z3"><span class="lbl">Zone 3 Corridor</span><span class="val">${z.corridor === 0 ? 'none' : z.corridor.toFixed(2) + ' m'}</span></div>
     <div class="row total"><span class="lbl">Total width</span><span class="val">${tot.toFixed(2)} m &middot; ${mToFtIn(tot)}</span></div>
-    <div class="po-flag"><strong>Flagged for review.</strong> Habitat marginally under the 6.0 m European Lighting Standard — to be confirmed on final Key Plan sign-off. Corridor is zero because each office opens directly to the shared building corridor.</div>
+    <div class="po-flag"><strong>Flagged for review.</strong> Habitat 5.9944 m is marginally under the 6.0 m European Lighting Standard (V3 table rounds to 6.0 m / 19'8"); confirm on final Key Plan sign-off. Corridor is zero because each office opens directly onto the shared building corridor — no internal bilateral corridor.</div>
   `;
 })();
 </script>
