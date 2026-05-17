@@ -8,7 +8,7 @@ INDEX_CARD="../totebox-index.env"
 source "$INDEX_CARD"
 
 CRM_PATH="../data-ledgers/crm_contacts.csv"
-ROSTER_PATH="../data-ledgers/personnel_roster.jsonl"
+ROSTER_PATH="../data-ledgers/email-corpus-index.jsonl"
 VAULT_ROOT="$PHYSICAL_USB_PATH"
 
 echo "SYSTEM EVENT: Initiating 14-Column Provenance Primer..."
