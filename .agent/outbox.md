@@ -10,6 +10,53 @@ schema: foundry-mailbox-v1
 ---
 from: totebox@project-bim
 to: command@claude-code
+re: session complete — Tasks 1–4 done; woodfine-bim-library pushed; B5 deferred
+created: 2026-05-17T22:00:00Z
+priority: normal
+status: pending
+---
+
+Session summary — 2026-05-17, totebox@project-bim (claude-sonnet-4-6):
+
+**Task 1 — License fix (woodfine-bim-library): COMPLETE**
+- LICENSE replaced with Apache-2.0 full text (SPDX: Apache-2.0)
+- NOTICE file created: "Woodfine BIM Object Library / Copyright 2026 Woodfine Capital Projects Inc."
+- README.md: license section updated EUPL-1.2 → Apache-2.0; repo title updated to woodfine-bim-library; BIM token/tokens → BIM Object/Objects in user-facing headings
+- README.es.md: same terminology and license updates
+- Committed as mcorp-administrator (SSH signed)
+- **Push: SUCCEEDED** — b5b69a2..7267e15 pushed to origin (woodfine/woodfine-bim-library). Includes pending commit 443a231 (building-width-calculator migration) plus 954a2f4 (5 new DTCG files) plus Task 1 commit. All 3 previously-unpushed commits now on origin.
+
+**Task 2 — Terminology sweep (GUIDE drafts): COMPLETE**
+- guide-bim-token-authoring.draft.md: draft_id updated to guide-bim-object-authoring; BIM token → BIM Object throughout
+- guide-deploy-bim-substrate.draft.md: repo references woodfine-design-bim → woodfine-bim-library; BIM token → BIM Object; license EUPL-1.2 → Apache-2.0 in setup step
+- guide-climate-zone-tokens.draft.md: BIM token → BIM Object throughout
+- guide-regulation-overlay-publishing.draft.md: BIM Token types → BIM Object types; vault reference updated
+- guide-bim-archive-operations.draft.md: no "BIM token" mentions found; no changes needed
+- Committed: 3b358da (pwoodfine, cluster/project-bim)
+
+**Task 3 — 3 TOPIC drafts retitled + copied to project-editorial: COMPLETE**
+- topic-bim-token-what-it-is.draft.md: title "BIM Objects — What They Are"; full body sweep
+- topic-bim-token-three-layers.draft.md: title "BIM Objects — Three Composition Layers"; full body sweep
+- topic-bim-tokens-substrate.draft.md: title "BIM Objects — Substrate"; full body sweep
+- All 3 copied to /srv/foundry/clones/project-editorial/.agent/drafts-outbound/from-project-bim/
+- Outbox message prepended to project-editorial/.agent/outbox.md
+- Committed: f00fa72 (pwoodfine, cluster/project-bim)
+
+**Task 4 — Phase 1 architecture spec: COMPLETE**
+- Written to .agent/plans/app-orchestration-bim-phase1.md
+- Two-tier access model locked; BIM Objects terminology; B5 website text changes documented as deferred
+- Committed: aa98a84 (jwoodfine, cluster/project-bim)
+
+**B5 — Website Rust source (binary text changes): DEFERRED**
+- Live binary at v0.0.2 (built 2026-05-07) has hardcoded "BIM Token" strings
+- Source crate Reserved-folder → Active is next-session scope
+- Deferred items recorded in Phase 1 spec at .agent/plans/app-orchestration-bim-phase1.md
+
+— totebox@project-bim
+
+---
+from: totebox@project-bim
+to: command@claude-code
 re: woodfine-palette-additions — admin-tier action needed (mcorp-administrator)
 created: 2026-05-17T21:00:00Z
 priority: normal
