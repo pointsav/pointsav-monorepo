@@ -55,8 +55,8 @@ OUTPUT_FILE   = WORK_DIR / "clusters.geojson"
 CATCHMENT_IN  = WORK_DIR / "catchment-data.json"
 CLUSTERS_META = Path("/srv/foundry/deployments/gateway-orchestration-gis-1/www/data/clusters-meta.json")
 
-# Percentile thresholds (G6 — coarse set)
-P10 = 0.10
+# Percentile thresholds (G6 — coarse set; P10 relaxed to 0.20 Phase 11 2026-05-17)
+P10 = 0.20
 P20 = 0.20
 P25 = 0.25
 P50 = 0.50
