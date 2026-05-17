@@ -3,7 +3,7 @@ use axum::{
     body::Bytes,
     extract::{Query, State},
     http::{HeaderMap, StatusCode},
-    response::{IntoResponse, Json, Response},
+    response::{Html, IntoResponse, Json, Response},
     routing::get,
     Router,
 };
@@ -18,6 +18,8 @@ use std::{
     time::UNIX_EPOCH,
 };
 use tokio::net::TcpListener;
+
+const SPA_HTML: &str = include_str!("assets/index.html");
 
 // ---------------------------------------------------------------------------
 // Config
@@ -36,12 +38,18 @@ struct Config {
     bind: String,
     #[serde(default = "default_max_bytes")]
     max_bytes: usize,
+    #[serde(default = "default_module_id")]
+    module_id: String,
     #[serde(rename = "root")]
     roots: Vec<RootEntry>,
 }
 
 fn default_max_bytes() -> usize {
     2 * 1024 * 1024
+}
+
+fn default_module_id() -> String {
+    "workbench".to_string()
 }
 
 impl Config {
@@ -59,6 +67,7 @@ impl Config {
 struct AppState {
     roots: Arc<Vec<RootEntry>>,
     max_bytes: usize,
+    spa_html: Arc<String>,
 }
 
 // ---------------------------------------------------------------------------
@@ -128,6 +137,10 @@ fn allowed_write_ext(path: &Path) -> bool {
 // Handlers
 // ---------------------------------------------------------------------------
 
+async fn get_spa(State(state): State<AppState>) -> Html<String> {
+    Html((*state.spa_html).clone())
+}
+
 #[derive(Deserialize)]
 struct FileQuery {
     path: String,
@@ -149,7 +162,7 @@ fn err(status: StatusCode, msg: impl Into<String>) -> Response {
     (status, Json(ErrorBody { error: msg.into() })).into_response()
 }
 
-/// GET /_api/edit/file?path=<url_path>
+/// GET /file?path=<url_path>
 async fn get_file(
     State(state): State<AppState>,
     Query(q): Query<FileQuery>,
@@ -186,7 +199,7 @@ async fn get_file(
     Json(FileResponse { content, mtime, writable }).into_response()
 }
 
-/// PUT /_api/edit/file?path=<url_path>
+/// PUT /file?path=<url_path>
 /// Body: raw UTF-8 text. Header X-Foundry-Editor: 1 required.
 /// Optional header X-Foundry-Mtime: <u64> — if provided and mtime differs, returns 409.
 async fn put_file(
@@ -285,17 +298,27 @@ async fn main() -> Result<()> {
         .unwrap_or_else(|| "config.toml".to_string());
 
     let config = Config::load(&config_path)?;
+
+    // Inject module_id into SPA HTML as a bootstrap <meta> tag
+    let spa_html = SPA_HTML.replacen(
+        "<head>",
+        &format!("<head>\n<meta name=\"workbench-module-id\" content=\"{}\">", config.module_id),
+        1,
+    );
+
     let state = AppState {
         roots: Arc::new(config.roots),
         max_bytes: config.max_bytes,
+        spa_html: Arc::new(spa_html),
     };
 
     let app = Router::new()
+        .route("/", get(get_spa))
         .route("/file", get(get_file).put(put_file))
         .with_state(state);
 
     let addr: SocketAddr = config.bind.parse().context("parsing bind address")?;
-    println!("local-intranet-editor listening on {}", addr);
+    println!("app-privategit-workbench listening on {}", addr);
 
     let listener = TcpListener::bind(addr).await?;
     axum::serve(listener, app).await?;
