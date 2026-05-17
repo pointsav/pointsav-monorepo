@@ -227,6 +227,14 @@
         .data-value { font-variant-numeric: tabular-nums; }
         .rank-num { font-variant-numeric: tabular-nums; font-size: 24px; font-weight: 900; color: var(--brand-primary); line-height: 1.1; }
 
+        /* ── Merged-ring group panel ──────────────────────────────────── */
+        .merged-group-header { font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; }
+        .merged-group-item { display: flex; align-items: center; gap: 8px; padding: 7px 10px; border-radius: 8px; cursor: pointer; border: 1px solid var(--border-soft); background: #fff; margin-bottom: 4px; transition: all 0.12s; }
+        .merged-group-item:hover { background: #EFF6FF; border-color: #BFDBFE; }
+        .merged-group-item-name { font-size: 12px; font-weight: 700; color: var(--text-main); flex: 1; }
+        .merged-group-item-sub { font-size: 10px; color: var(--text-muted); margin-top: 1px; }
+        .merged-group-item-tier { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
         /* ── Context strip (replaces region tabs when drilled in) ──────── */
         .context-strip { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
         .ctx-back {
@@ -528,6 +536,7 @@
                 // ring geometry. Cluster bubbles stay hidden (we are still drilled into a cluster).
                 if (map.getLayer('proximity-fill')) map.setLayoutProperty('proximity-fill', 'visibility', 'visible');
                 if (map.getLayer('proximity-line')) map.setLayoutProperty('proximity-line', 'visibility', 'visible');
+                if (map.getLayer('proximity-merged-label')) map.setLayoutProperty('proximity-merged-label', 'visibility', 'visible');
                 if (map.getLayer('all-locations')) {
                     map.setLayoutProperty('all-locations', 'visibility', 'visible');
                     map.setPaintProperty('all-locations', 'circle-opacity', 0.70);
@@ -1074,7 +1083,9 @@
         hideCatchment();
         if (map.getLayer('proximity-fill')) map.setLayoutProperty('proximity-fill', 'visibility', 'none');
         if (map.getLayer('proximity-line')) map.setLayoutProperty('proximity-line', 'visibility', 'none');
+        if (map.getLayer('proximity-merged-label')) map.setLayoutProperty('proximity-merged-label', 'visibility', 'none');
         if (map.getSource('proximity-circle-src')) map.getSource('proximity-circle-src').setData({ type: 'FeatureCollection', features: [] });
+        if (map.getSource('proximity-merged-label-src')) map.getSource('proximity-merged-label-src').setData({ type: 'FeatureCollection', features: [] });
         // Restore Co-location Level layers (V3: tier is radius-independent)
         if (map.getLayer('nodes')) {
             map.setLayoutProperty('nodes', 'visibility', 'visible');
@@ -1139,6 +1150,7 @@
         // GeoJSON layers first (instant paint from in-memory clusters-meta) — no tile I/O
         if (map.getLayer('proximity-fill')) map.setLayoutProperty('proximity-fill', 'visibility', 'visible');
         if (map.getLayer('proximity-line')) map.setLayoutProperty('proximity-line', 'visibility', 'visible');
+        if (map.getLayer('proximity-merged-label')) map.setLayoutProperty('proximity-merged-label', 'visibility', 'visible');
         updateProximityRings();
         // Reveal all-locations dots — already pre-warmed at z>=RETAIL_PREFETCH_ZOOM with opacity 0
         if (map.getLayer('all-locations')) {
@@ -1222,6 +1234,35 @@
         return best;
     }
 
+    // ── Union-Find: group clusters whose 3km disks overlap (centroid dist < 2*radius) ──
+    // Returns an array of groups, each group being an array of candidate objects.
+    // Singleton groups are clusters that do not overlap with any other cluster at this radius.
+    function groupOverlappingClusters(candidates, radiusKm) {
+        const n = candidates.length;
+        const parent = Array.from({ length: n }, (_, i) => i);
+        function find(i) {
+            while (parent[i] !== i) { parent[i] = parent[parent[i]]; i = parent[i]; }
+            return i;
+        }
+        function union(a, b) { parent[find(a)] = find(b); }
+        // Two circles overlap when their centroid distance < 2 * radiusKm
+        const threshold = 2 * radiusKm;
+        for (let i = 0; i < n; i++) {
+            for (let j = i + 1; j < n; j++) {
+                const d = haversineKm(candidates[i].coords[0], candidates[i].coords[1],
+                                      candidates[j].coords[0], candidates[j].coords[1]);
+                if (d < threshold) union(i, j);
+            }
+        }
+        const map_ = new Map();
+        for (let i = 0; i < n; i++) {
+            const root = find(i);
+            if (!map_.has(root)) map_.set(root, []);
+            map_.get(root).push(candidates[i]);
+        }
+        return Array.from(map_.values());
+    }
+
     function updateProximityRings() {
         if (overviewActive || !map.getSource('proximity-circle-src')) return;
         let candidates;
@@ -1246,12 +1287,56 @@
                 candidates.push({ cluster_id: cid, rank: f.properties?.[rankField] || 1, coords: f.geometry.coordinates });
             }
         }
-        const circles = candidates.map(({ cluster_id, rank, coords }) => {
-            const circle = makeCircleGeoJSON(coords, currentRadius);
-            circle.features[0].properties = { cluster_id, rank };
-            return circle.features[0];
-        });
+
+        // At 3km, merge overlapping cluster rings into a single representative ring.
+        // At 1km, clusters are tight co-tenancy parks — render individually as before.
+        const circles = [];
+        const labelPoints = [];
+        if (currentRadius >= 3) {
+            const groups = groupOverlappingClusters(candidates, currentRadius);
+            for (const group of groups) {
+                if (group.length === 1) {
+                    // Singleton: render as before
+                    const { cluster_id, rank, coords } = group[0];
+                    const circle = makeCircleGeoJSON(coords, currentRadius);
+                    circle.features[0].properties = { cluster_id, rank, merged_count: 1, member_ids: cluster_id };
+                    circles.push(circle.features[0]);
+                } else {
+                    // Merged group: centroid of member centroids, best rank of the group
+                    const meanLon = group.reduce((s, c) => s + c.coords[0], 0) / group.length;
+                    const meanLat = group.reduce((s, c) => s + c.coords[1], 0) / group.length;
+                    const bestRank = Math.max(...group.map(c => c.rank));
+                    const representativeId = group.reduce((best, c) => c.rank > best.rank ? c : best, group[0]).cluster_id;
+                    const memberIds = group.map(c => c.cluster_id).join(',');
+                    const circle = makeCircleGeoJSON([meanLon, meanLat], currentRadius);
+                    circle.features[0].properties = {
+                        cluster_id: representativeId,
+                        rank: bestRank,
+                        merged_count: group.length,
+                        member_ids: memberIds,
+                    };
+                    circles.push(circle.features[0]);
+                    // Label point at the centroid for the count badge
+                    labelPoints.push({
+                        type: 'Feature',
+                        geometry: { type: 'Point', coordinates: [meanLon, meanLat] },
+                        properties: { label: `${group.length} clusters`, merged_count: group.length, member_ids: memberIds },
+                    });
+                }
+            }
+        } else {
+            // 1km: no merging — render each ring individually
+            for (const { cluster_id, rank, coords } of candidates) {
+                const circle = makeCircleGeoJSON(coords, currentRadius);
+                circle.features[0].properties = { cluster_id, rank, merged_count: 1, member_ids: cluster_id };
+                circles.push(circle.features[0]);
+            }
+        }
+
         map.getSource('proximity-circle-src').setData({ type: 'FeatureCollection', features: circles });
+        if (map.getSource('proximity-merged-label-src')) {
+            map.getSource('proximity-merged-label-src').setData({ type: 'FeatureCollection', features: labelPoints });
+        }
     }
 
     function makeCircleGeoJSON(center, radiusKm) {
@@ -1600,6 +1685,31 @@
             },
         });
 
+        // GeoJSON source for merged-ring count labels (populated by updateProximityRings)
+        map.addSource('proximity-merged-label-src', {
+            type: 'geojson',
+            data: { type: 'FeatureCollection', features: [] },
+        });
+        // Label layer: count badge drawn at centroid of merged groups
+        map.addLayer({
+            id: 'proximity-merged-label', type: 'symbol',
+            source: 'proximity-merged-label-src',
+            layout: {
+                visibility: 'none',
+                'text-field': ['get', 'label'],
+                'text-size': 11,
+                'text-font': ['Noto Sans Bold', 'Open Sans Bold', 'Arial Unicode MS Bold'],
+                'text-anchor': 'center',
+                'text-allow-overlap': true,
+                'text-ignore-placement': true,
+            },
+            paint: {
+                'text-color': '#ffffff',
+                'text-halo-color': '#1E40AF',
+                'text-halo-width': 2,
+            },
+        });
+
         // Layer: catchment radius polygons — tier-colored, filter-driven per selected cluster
         map.addLayer({
             id: 'radius-fill', type: 'fill',
@@ -1888,6 +1998,47 @@
             },
         }, 'proximity-fill');
 
+        // ── Merged-ring panel: list constituent clusters for user to select one ──
+        function showMergedGroupPanel(memberIds, lngLat) {
+            const members = memberIds
+                .map(id => clusterIndex?.get(id))
+                .filter(Boolean)
+                .sort((a, b) => (b.r3 || 0) - (a.r3 || 0)); // highest rank first
+            if (!members.length) return;
+
+            const tierColor = (tier) => {
+                if (tier === 1) return '#0A3070';
+                if (tier === 2) return '#1E40AF';
+                if (tier === 3) return '#64748B';
+                return '#CBD5E1';
+            };
+
+            const itemsHTML = members.map(c => {
+                const name  = c.dn || c.anc || c.id;
+                const sub   = [c.cty, c.st].filter(Boolean).join(', ');
+                const color = tierColor(c.tier ?? 4);
+                return `<div class="merged-group-item" onclick="drillIntoCluster(metaToClusterProps(clusterIndex.get('${c.id}')), [${c.lon}, ${c.lat}])" onmousedown="event.preventDefault()">
+                    <div class="merged-group-item-tier" style="background:${color};"></div>
+                    <div>
+                        <div class="merged-group-item-name">${escapeHtml(name)}</div>
+                        ${sub ? `<div class="merged-group-item-sub">${escapeHtml(sub)}</div>` : ''}
+                    </div>
+                </div>`;
+            }).join('');
+
+            document.getElementById('inspector').innerHTML = `
+                <div class="merged-group-header">${members.length} overlapping clusters — select one</div>
+                ${itemsHTML}
+                <div style="margin-top:8px;">
+                    <button class="back-btn" onclick="showOverview()">← Back to Overview</button>
+                </div>
+            `;
+            // Fly to the clicked point to keep the rings in frame
+            if (lngLat) {
+                map.flyTo({ center: [lngLat.lng, lngLat.lat], zoom: Math.max(map.getZoom(), 12), duration: 600, essential: true });
+            }
+        }
+
         // ── Cluster zoom helper — shared by nodes click + proximity-fill click ──
         function drillIntoCluster(p, coords) {
             overviewActive = false;
@@ -1908,12 +2059,16 @@
             map.setLayoutProperty('all-locations', 'visibility', 'visible');
             map.setLayoutProperty('proximity-fill', 'visibility', 'visible');
             map.setLayoutProperty('proximity-line', 'visibility', 'visible');
+            if (map.getLayer('proximity-merged-label')) map.setLayoutProperty('proximity-merged-label', 'visibility', 'visible');
             updateProximityRings();
 
             // Fly to cluster at zoom 14 so the ring is clearly visible and neighbours are in frame
             const targetZoom = Math.max(map.getZoom(), 14);
             map.flyTo({ center: coords, zoom: targetZoom, duration: 1200, essential: true });
         }
+        // Expose both functions on window so injected panel onclick handlers can call them
+        window.drillIntoCluster = drillIntoCluster;
+        window.showMergedGroupPanel = showMergedGroupPanel;
 
         // ── Click handler: proximity-fill (Retail Level ring navigation) ──
         map.on('click', 'proximity-fill', (e) => {
@@ -1921,7 +2076,19 @@
             const retailerHits = map.queryRenderedFeatures(e.point, { layers: ['all-locations', 'individual-points'] });
             if (retailerHits.length) return;
 
-            const cid = e.features[0]?.properties?.cluster_id;
+            const props = e.features[0]?.properties;
+            if (!props) return;
+
+            // Merged ring: show constituent cluster list instead of drilling directly
+            const mergedCount = props.merged_count || 1;
+            if (mergedCount > 1 && props.member_ids) {
+                const memberIds = String(props.member_ids).split(',');
+                showMergedGroupPanel(memberIds, e.lngLat);
+                e.stopPropagation();
+                return;
+            }
+
+            const cid = props.cluster_id;
             if (!cid || !clusterIndex?.has(cid)) return;
             const c = clusterIndex.get(cid);
             drillIntoCluster(metaToClusterProps(c), [c.lon, c.lat]);
@@ -1971,6 +2138,7 @@
                 if (catchmentActive && selectedClusterId) {
                     if (map.getLayer('proximity-fill')) map.setLayoutProperty('proximity-fill', 'visibility', 'none');
                     if (map.getLayer('proximity-line')) map.setLayoutProperty('proximity-line', 'visibility', 'none');
+                    if (map.getLayer('proximity-merged-label')) map.setLayoutProperty('proximity-merged-label', 'visibility', 'none');
                     if (map.getLayer('all-locations')) map.setLayoutProperty('all-locations', 'visibility', 'none');
                     return;
                 }
@@ -1981,6 +2149,7 @@
             if (!overviewActive && z >= RETAIL_ZOOM_THRESHOLD && catchmentActive && selectedClusterId) {
                 if (map.getLayer('proximity-fill')) map.setLayoutProperty('proximity-fill', 'visibility', 'visible');
                 if (map.getLayer('proximity-line')) map.setLayoutProperty('proximity-line', 'visibility', 'visible');
+                if (map.getLayer('proximity-merged-label')) map.setLayoutProperty('proximity-merged-label', 'visibility', 'visible');
                 if (map.getLayer('all-locations')) {
                     map.setLayoutProperty('all-locations', 'visibility', 'visible');
                     map.setPaintProperty('all-locations', 'circle-opacity', 0.70);
