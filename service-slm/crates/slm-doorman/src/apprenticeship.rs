@@ -20,8 +20,8 @@ use std::path::{Path, PathBuf};
 use chrono::Utc;
 use regex::Regex;
 use slm_core::{
-    ApprenticeshipAttempt, ApprenticeshipBrief, ChatMessage, Complexity, ComputeRequest, ModuleId,
-    RequestId, Tier, APPRENTICE_ESCALATE_THRESHOLD, DEFAULT_BRIEF_TIER_B_THRESHOLD_CHARS,
+    ApprenticeshipAttempt, ApprenticeshipBrief, CanonicalMessage, Complexity, ComputeRequest,
+    ModuleId, RequestId, Tier, APPRENTICE_ESCALATE_THRESHOLD, DEFAULT_BRIEF_TIER_B_THRESHOLD_CHARS,
 };
 use std::str::FromStr;
 use std::sync::OnceLock;
@@ -148,14 +148,8 @@ impl<'a> ApprenticeshipDispatcher<'a> {
             module_id,
             model: None,
             messages: vec![
-                ChatMessage {
-                    role: "system".into(),
-                    content: APPRENTICE_SYSTEM_PROMPT.to_string(),
-                },
-                ChatMessage {
-                    role: "user".into(),
-                    content: prompt,
-                },
+                CanonicalMessage::text("system", APPRENTICE_SYSTEM_PROMPT),
+                CanonicalMessage::text("user", prompt),
             ],
             complexity: match tier_hint {
                 Tier::Yoyo => Complexity::High,
@@ -242,14 +236,8 @@ impl<'a> ApprenticeshipDispatcher<'a> {
             module_id,
             model: None,
             messages: vec![
-                ChatMessage {
-                    role: "system".into(),
-                    content: APPRENTICE_SYSTEM_PROMPT.to_string(),
-                },
-                ChatMessage {
-                    role: "user".into(),
-                    content: prompt,
-                },
+                CanonicalMessage::text("system", APPRENTICE_SYSTEM_PROMPT),
+                CanonicalMessage::text("user", prompt),
             ],
             complexity: match tier_hint {
                 Tier::Yoyo => Complexity::High,
