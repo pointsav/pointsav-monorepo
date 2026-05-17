@@ -144,6 +144,8 @@ async fn main() -> anyhow::Result<()> {
         service_content_endpoint,
         // Dispatch clock shared with the idle monitor.
         last_yoyo_dispatch: Arc::clone(&last_yoyo_dispatch),
+        // Gateway auth — None disables auth (community-tier mode).
+        gateway_token: std::env::var("SLM_GATEWAY_TOKEN").ok(),
     });
 
     info!(
