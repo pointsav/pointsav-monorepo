@@ -203,6 +203,12 @@ impl YoYoTierClient {
         self.health_up.load(Ordering::Relaxed) && self.circuit.allow_request()
     }
 
+    /// Returns true if the background health probe reports the backend as up.
+    /// Does not check the circuit breaker — use `allow_request()` for dispatch decisions.
+    pub fn is_healthy(&self) -> bool {
+        self.health_up.load(Ordering::Relaxed)
+    }
+
     /// Route one request to Tier B with full resilience stack:
     /// circuit breaker check → 90 s outer deadline → 60 s socket timeout
     /// → 503 cold-start retry → 401/403 auth refresh.
