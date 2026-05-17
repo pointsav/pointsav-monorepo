@@ -13,7 +13,8 @@ to: command@claude-code
 re: BIM token strategy complete — repo transfer decision needed
 created: 2026-05-17T00:00:00Z
 priority: high
-status: pending
+status: stale
+note: operator-decision-2026-05-17 — no org transfer; woodfine-design-bim stays in woodfine org; bim.woodfinegroup.com is Woodfine's content property; two-tier model only (public + os-console); command@claude-code has dispatched corrected task briefs to project-bim and project-editorial
 ---
 
 Eight-agent OPUS research on BIM token strategy complete 2026-05-17.
