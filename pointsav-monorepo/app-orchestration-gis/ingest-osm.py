@@ -226,9 +226,10 @@ def element_to_record(elem: dict, chain: dict) -> dict | None:
     postal_code = tags.get("addr:postcode")
     iso_country = tags.get("addr:country") or tags.get("is_in:country_code")
 
-    # Reject records explicitly tagged as belonging to a different country
+    # Reject records explicitly tagged as belonging to a different country.
+    # Skipped for multi_country chains (e.g. ikea-nordics) where country_code is not ISO.
     expected_cc = chain.get("country_code", "")
-    if iso_country and iso_country != expected_cc:
+    if iso_country and expected_cc and not chain.get("multi_country", False) and iso_country != expected_cc:
         return None
 
     return {
@@ -253,23 +254,41 @@ def element_to_record(elem: dict, chain: dict) -> dict | None:
         "source": "osm",
         "confidence": 0.85,
         "last_updated": "2026-05-01",
+        "osm_element_type": elem["type"],  # node / way / relation
     }
 
 
 def apply_format_filter(records: list, chain: dict) -> list:
-    """Drop records whose location_name matches any format_exclude_names substring."""
+    """Drop records that fail format filters.
+
+    Two filters, applied in order:
+      1. format_reject_nodes: true  — drop all OSM node elements.
+         Full-format stores (large buildings) are ways or relations; sub-format
+         locations (restaurants, play areas, planning studios) are typically nodes.
+      2. format_exclude_names       — drop any record whose location_name contains
+         a listed substring (case-insensitive). Catches named sub-formats not
+         eliminated by the node filter.
+    """
+    reject_nodes = chain.get("format_reject_nodes", False)
     exclude = chain.get("format_exclude_names") or []
-    if not exclude:
+    if not reject_nodes and not exclude:
         return records
     out = []
+    node_dropped = 0
+    name_dropped = 0
     for rec in records:
+        if reject_nodes and rec.get("osm_element_type") == "node":
+            node_dropped += 1
+            continue
         name = rec.get("location_name") or ""
         if any(ex.lower() in name.lower() for ex in exclude):
+            name_dropped += 1
             continue
         out.append(rec)
-    dropped = len(records) - len(out)
-    if dropped:
-        print(f"    format_filter: dropped {dropped} sub-format records")
+    if node_dropped:
+        print(f"    format_filter: dropped {node_dropped} OSM node records (format_reject_nodes)")
+    if name_dropped:
+        print(f"    format_filter: dropped {name_dropped} name-match sub-format records")
     return out
 
 
@@ -334,8 +353,11 @@ def ingest_chain(chain_id: str) -> int:
     # Rejects any record explicitly tagged with a country other than expected_cc.
     # Records with no iso_country_code (untagged in OSM) are kept — they may be valid
     # local stores that simply lack the addr:country OSM tag.
+    # multi_country: true skips both tag and polygon filters (multi-country chains where
+    # country_code is not a valid ISO alpha-2 code, e.g. ikea-nordics).
     expected_cc = chain.get("country_code", "")
-    if expected_cc:
+    multi_country = chain.get("multi_country", False)
+    if expected_cc and not multi_country:
         before_cc = len(records)
         records = [r for r in records
                    if not r.get("iso_country_code") or r["iso_country_code"] == expected_cc]
@@ -345,7 +367,7 @@ def ingest_chain(chain_id: str) -> int:
 
     # Sprint 11 D3 — polygon containment filter (catches bbox leak when records
     # have no addr:country tag and inherit the chain's country_code as fallback).
-    if expected_cc:
+    if expected_cc and not multi_country:
         records, polygon_dropped = _filter_records_by_country_polygon(records, expected_cc)
         if polygon_dropped:
             print(f"    polygon-filter: dropped {polygon_dropped} cross-border records")
