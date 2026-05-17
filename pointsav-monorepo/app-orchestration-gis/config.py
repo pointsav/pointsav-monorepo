@@ -25,6 +25,7 @@ WORK_DIR          = Path(__file__).parent / "work"
 # Phase 6: auchan-fr, leclerc-fr, ecenter-de, marktkauf-de DONE 2026-05-16.
 # Phase 7: kaufland-de DONE 2026-05-16.
 # Phase 8: fred-meyer-us DONE 2026-05-17 (126 records, Q5495932; PNW-regional; 63 new clusters, 0 T1).
+# Phase 12: whole-foods-us promoted from GENERIC_FOOD; chedraui-mx promoted; heb-us, asda-uk, morrisons-uk ingested 2026-05-17.
 ALPHA_HYPERMARKET = {
     "NA": {
         # Walmart: Fortune #1 — dominant NA hypermarket
@@ -35,12 +36,22 @@ ALPHA_HYPERMARKET = {
         "soriana-mx",
         # Fred Meyer: Kroger subsidiary; PNW-regional (92–132 stores); Phase 8 review pending
         "fred-meyer-us",
+        # Whole Foods Market: premium US grocery (~528 stores, Q1758180) — Phase 12 promotion 2026-05-17
+        "whole-foods-us",
+        # H-E-B: Texas/MX regional hypermarket (~340 stores, Q1665088) — Phase 12 ingest 2026-05-17
+        "heb-us",
+        # Chedraui: Mexican hypermarket chain (~280 stores, Q2336803) — Phase 12 promotion 2026-05-17
+        "chedraui-mx",
     },
     "EU": {
         # Mercadona-ES: Spain's flagship hypermarket, 1,603 stores — operator D1 2026-05-16
         "mercadona-es",
         # Tesco-UK + Sainsbury's-UK: UK large-format hypermarkets — Phase 1 promotion 2026-05-16
         "tesco-uk", "sainsburys-uk",
+        # ASDA-UK: Walmart UK subsidiary, large-format hypermarket (~600 stores, Q297410) — Phase 12 2026-05-17
+        "asda-uk",
+        # Morrisons-UK: UK large-format hypermarket (~500 stores, Q922344) — Phase 12 2026-05-17
+        "morrisons-uk",
         # Nordic large-format hypermarkets (migrated from ALPHA_ANCHORS EU 2026-05-16)
         "bilka-dk", "obs-coop-no", "hagkaup-is", "k-citymarket-fi", "prisma-fi",
         # Carrefour FR: hypermarket-only variant (493 stores, Q217599) — Phase 5 2026-05-16
@@ -126,21 +137,21 @@ ALPHA_WAREHOUSE = {
 }
 
 # Generic categorization for substitution logic
-GENERIC_FOOD = {"lidl-es", "safeway-ca", "whole-foods-us", "biedronka-pl",
+GENERIC_FOOD = {"lidl-es", "safeway-ca", "biedronka-pl",
                 "lidl-uk",
                 "lidl-de", "lidl-fr", "lidl-nl", "lidl-at", "lidl-pt",
                 "aldi-de", "aldi-uk", "aldi-nl", "aldi-pl"}
 # Sprint 12 — soriana-mx promoted from Food to ALPHA_HYPERMARKET (operator decision A1).
 # mercadona-es, tesco-uk, sainsburys-uk promoted to ALPHA_HYPERMARKET 2026-05-16 (operator D1/Phase 1).
 # carrefour-hypermarket-fr: Phase 5 DONE 2026-05-16 (493 stores, Q217599 tag, hypermarket-only variant).
-# Chedraui-mx, safeway-ca, whole-foods-us remain Food (operator decision, format mismatch).
+# Phase 12 — whole-foods-us, chedraui-mx promoted from Food/generic to ALPHA_HYPERMARKET 2026-05-17.
 
 # ── REGION CONFIGURATION ─────────────────────────────────────────────────────
 REGION_CONFIG = {
     # Dual membership: Fortune-scale chains appear in BOTH anchor (can initiate clusters)
     # AND hardware/warehouse (are found as secondaries by other anchors, contributing scores).
     "US": {
-        "anchor":    ["walmart-us", "target-us", "fred-meyer-us", "ikea-us", "home-depot-us", "costco-us"],
+        "anchor":    ["walmart-us", "target-us", "fred-meyer-us", "whole-foods-us", "heb-us", "ikea-us", "home-depot-us", "costco-us"],
         "hardware":  ["home-depot-us", "alaska-industrial-hardware-us", "lowes-us", "menards-us"],
         "warehouse": ["costco-us", "sams-club-us", "bjs-wholesale-us"]
     },
@@ -150,7 +161,7 @@ REGION_CONFIG = {
         "warehouse": ["costco-ca"]
     },
     "MX": {
-        "anchor":    ["walmart-mx", "soriana-mx", "ikea-mx", "home-depot-mx", "costco-mx"],
+        "anchor":    ["walmart-mx", "soriana-mx", "chedraui-mx", "ikea-mx", "home-depot-mx", "costco-mx"],
         "hardware":  ["home-depot-mx"],
         "warehouse": ["costco-mx", "sams-club-mx"]
     },
@@ -193,7 +204,7 @@ REGION_CONFIG = {
         "warehouse": ["metro-de", "selgros-de"]
     },
     "GB": {
-        "anchor":    ["tesco-uk", "sainsburys-uk", "ikea-uk", "costco-uk"],
+        "anchor":    ["tesco-uk", "sainsburys-uk", "asda-uk", "morrisons-uk", "ikea-uk", "costco-uk"],
         "hardware":  ["bq-uk"],
         "warehouse": ["costco-uk"]
     },
@@ -322,7 +333,11 @@ ANCHOR_DISPLAY_NAMES: dict = {
     "soriana-mx": "Soriana",
     "mercadona-es": "Mercadona",
     "tesco-uk": "Tesco", "sainsburys-uk": "Sainsbury's",
+    "asda-uk": "ASDA", "morrisons-uk": "Morrisons",
     "fred-meyer-us": "Fred Meyer",
+    "whole-foods-us": "Whole Foods Market",
+    "heb-us": "H-E-B",
+    "chedraui-mx": "Chedraui",
     "target-us": "Target",
     "real-canadian-superstore-ca": "Real Canadian Superstore",
     "carrefour-hypermarket-es": "Carrefour", "carrefour-hypermarket-it": "Carrefour",
