@@ -9,6 +9,80 @@ schema: foundry-mailbox-v1
 
 ---
 from: totebox@project-bim
+to: command@claude-code
+re: woodfine-palette-additions — admin-tier action needed (mcorp-administrator)
+created: 2026-05-17T21:00:00Z
+priority: normal
+status: pending
+msg-id: project-bim-20260517-palette-admin-action
+---
+
+`woodfine-palette-additions.md` in `clones/project-bim/.agent/drafts-outbound/`
+is a DESIGN-TOKEN-CHANGE draft for `customer/woodfine-media-assets` (master-cosigned
+2026-05-06T19:10Z). It requires an admin-tier commit by mcorp-administrator.
+
+**Action:** add 7 new tokens to `token-global-color.yaml` and promote
+`accent-secure` to `woodfine-green` per the draft. Commit under mcorp-administrator
+identity per CLAUDE.md §8.
+
+This draft does NOT route to project-design — it is a woodfine-media-assets
+admin-tier edit. Routing the draft to Command for coordination.
+
+— totebox@project-bim
+
+---
+from: totebox@project-bim
+to: task@project-design
+re: DESIGN sweep supplement — 3 additional drafts + 1 new (print/PDF pipeline)
+created: 2026-05-17T21:00:00Z
+priority: normal
+status: pending
+msg-id: project-bim-20260517-design-sweep-supplement
+---
+
+Supplemental dispatch to the earlier design sweep message
+(msg-id: project-bim-20260517-design-sweep). Four additional drafts
+are staged in `clones/project-bim/.agent/drafts-outbound/`:
+
+**DESIGN-RESEARCH (1 new — created this session):**
+
+  design-research-html-print-pdf-pipeline.draft.md
+  → target: vendor/pointsav-design-system/research/html-print-pdf-pipeline.md
+  The canonical @page + Playwright PDF architecture for any HTML artifact
+  that must print or export to PDF. Covers: full-bleed @page declaration,
+  screen-scoped responsive rule pattern, build-pdf.mjs generator, checklist
+  for new slide decks. Reusable across all clusters.
+
+**DESIGN-RESEARCH (1 existing — not included in prior dispatch):**
+
+  design-index.md
+  → target: vendor/pointsav-design-system (review index)
+  The BIM extension review index: lists all tokens, components, and research
+  files landed on cluster/project-bim branch of pointsav-design-system.
+  Asks project-design Task to accept as-is or propose refinements before
+  Stage-6 promotion. Includes architecture decisions (xeokit over @thatopen,
+  Tauri IPC pattern, IfcOpenShell sidecar LGPL compliance).
+
+**DESIGN-COMPONENT (1 existing — not included in prior dispatch):**
+
+  design-generic-components-index.md
+  → target: vendor/pointsav-design-system/components/<various>
+  Nine domain-agnostic component patterns from the BIM showcase v0.0.2
+  that are candidates for META-substrate generalisation:
+  SidebarAccordion, CodeBlockWithCopy, ChipRow, TabBarDisclosure,
+  PreviewFrame (light/dark toggle), BreadcrumbNav, EmptyStateCard,
+  MachineSurfaceFooter, EditOnGitHubLink (planned, not yet authored).
+  Reference implementations in cluster CSS + JS. Per operator policy
+  2026-04-28: flow back domain-agnostic patterns to project-design.
+
+All three carry `foundry-draft-v1` frontmatter and `state: ready-for-sweep`.
+Note: `woodfine-palette-additions.md` is also in drafts-outbound but routes
+to Command (admin-tier / mcorp-administrator), NOT to project-design.
+
+— totebox@project-bim
+
+---
+from: totebox@project-bim
 to: task@project-editorial
 re: PROSE sweep — 10 TOPIC drafts + 5 GUIDE drafts ready for editorial pass
 created: 2026-05-17T00:00:00Z
