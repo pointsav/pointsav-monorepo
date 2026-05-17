@@ -7,6 +7,16 @@ Attribution format: `[YYYY-MM-DD role@engine]`
 
 ## Hot — pick up here next session
 
+- [ ] **Key Plans foundation — 4 operator decisions needed** `[2026-05-17 totebox@claude-code]`
+  - Briefing: `.agent/plans/key-plans-foundation-briefing.md` (225 lines, executive digest)
+  - Deep study: `.agent/plans/key-plans-foundation-study.md` (711 lines, full inventory + gap analysis)
+  - **Decision 1** — canonical naming convention (codes PO-1/M-1/B-1 vs sizes Small/Medium/Large vs specialisations Chiropractor/Dentist/GP)
+  - **Decision 2** — HTML `BIM_TOKENS` block: delete + fetch DTCG, or treat drift as lint-catchable bug
+  - **Decision 3** — scope of v0.0.x (Professional Centre only, or include Retail Select + Tech Industrial + 12 common-area key plans)
+  - **Decision 4** — resolve Tiles PDF internal inconsistencies (Tile A reuse, Corridor Expander T 100 vs 300 SF, sample-tile arithmetic gaps, J/K/L/M footnote vocab)
+  - **Pause until resolved:** further HTML `BIM_TOKENS` edits, new DTCG token additions, Rust crate scaffold
+  - **Safe to continue:** TOPIC/DESIGN-RESEARCH drafts (living documents), HTML cosmetic polish, source-document research, project.woodfinegroup.com content
+
 - [x] **HTML print layout — resolved 2026-05-17** `[2026-05-17 totebox@claude-code]`
   - Root cause: `@page { size: landscape; margin: 0.3in }` + `slide { width: 10.4in }` triple-stacked margins; Chrome silently ignored
   - Fix: `@page { size: 11in 8.5in; margin: 0; }` + `slide { width: 11in; height: 8.5in; transform: none }` in all 3 preview HTMLs

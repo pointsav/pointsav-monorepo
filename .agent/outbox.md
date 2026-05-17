@@ -9,6 +9,52 @@ schema: foundry-mailbox-v1
 
 ---
 from: totebox@project-bim
+to: command@claude-code
+re: 4 operator decisions blocking further Key Plans work — see foundation briefing
+created: 2026-05-17T23:55:00Z
+priority: normal
+status: pending
+msg-id: project-bim-20260517-key-plans-foundation-decisions
+---
+
+The cluster has paused further Key Plans / `BIM_TOKENS` / DTCG token work pending
+four operator decisions surfaced by a deep-read study of three V12 PDFs
+(Methodology / Tiles / Index).
+
+**Briefing:** `.agent/plans/key-plans-foundation-briefing.md` (225 lines, executive)
+**Full study:** `.agent/plans/key-plans-foundation-study.md` (711 lines, evidence)
+
+**The four decisions:**
+
+1. **Naming convention** — codes (PO-1/M-1/B-1) vs sizes (Small/Medium/Large) vs
+   specialisations (Chiropractor/Dentist/GP). All three appear across the V12 PDFs;
+   the current token store is mixed.
+
+2. **HTML `BIM_TOKENS` mirror or delete** — `preview/building-width-calculator.html`
+   claims to mirror DTCG JSON but diverges in 4 of 7 use types. Today's corridor
+   edits (Private Office + Academic = 3.0 m) are HTML-only — the fifth instance
+   of the drift pattern.
+
+3. **Scope of v0.0.x** — current state covers Professional Centre only; the V12
+   PDFs document Retail Select, Tech Industrial, and 12 common-area key plans
+   (Lobby, Mail Room, etc.) that are not yet in tokens.
+
+4. **Tiles PDF internal inconsistencies** — Tile A code reused across Corporate /
+   Retail / Tech Industrial; Corridor Expander T 100 SF vs 300 SF; sample-tile
+   arithmetic gaps; J/K/L/M footnote vocab orphaned.
+
+**Safe to continue while decisions pending:** TOPIC/DESIGN-RESEARCH drafts (they
+are structured as living documents per operator preference), HTML cosmetic polish,
+source-document research, project.woodfinegroup.com content.
+
+**Paused:** further `BIM_TOKENS` edits, new DTCG token additions, Rust crate
+scaffold (`bim-units`, `bim-tokens`, `bim-furniture`, `tool-buildingwidth`,
+`tool-floorplates`).
+
+— totebox@project-bim
+
+---
+from: totebox@project-bim
 to: task@project-editorial
 re: PROSE sweep supplement — 11 NEW TOPIC drafts (BIM project documentation; Opus army synthesis)
 created: 2026-05-17T23:30:00Z
