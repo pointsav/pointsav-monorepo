@@ -6,7 +6,7 @@
 > Read at session start when a Root Claude opens in this repo. Update
 > at session end when repo-scope open items change.
 
-Last updated: 2026-05-16 (session 4 — Stage 6 topology repair + Yo-Yo watchdog SCRIPT_DIR bug fixed).
+Last updated: 2026-05-17 (session 5 — audit plan blocks A–D shipped; D5 plan written; Sprint 0b done).
 
 ---
 
@@ -42,9 +42,16 @@ Root causes identified and addressed after 2× daily crash pattern (GCP host mai
 - [x] **Decide opus → Tier C path** — Path A shipped (2026-05-16): `claude-opus-*` routes `tier_hint: External`, `tier_c_label: "editorial-refinement"` (`31397dad`). Requires `has_external=true` at runtime (Tier C env config). Currently returns 503 (unconfigured) which is correct failsafe.
 - [x] **Reconcile apprenticeship flag drift** — `compute/systemd/slm-doorman.service:37` updated to `true` (2026-05-15)
 
-**Sprint 0b (next):**
-- [ ] **Real per-token SSE streaming** in `http.rs::anthropic_sse_body()` (~60 LOC). Currently buffers full response then emits 6 events at once.
-- [ ] **On-demand Yo-Yo lazy-start** in `router.rs` — start Yo-Yo VM when Tier B request arrives and VM is stopped.
+**Sprint 0b — SHIPPED (2026-05-16/17):**
+- [x] **Real per-token SSE streaming** — `build_stream_body()` using `reqwest::chunk()` + `ReceiverStream`; 15s keepalive pings. Commit `21fff1f5`.
+- [x] **On-demand Yo-Yo lazy-start** — `SLM_YOYO_AUTO_START=true` gate in `dispatch()`; 90s health poll. Commit `c20dacc5`.
+- [x] **Integration tests** — 9-test `anthropic_shim_test.rs` suite; gateway auth (`x-api-key`); `x-foundry-tier-used` header on all paths. Commit `33dd6f3b`.
+- [x] **readyz extended fields** — `lark_validation_active`, `apprenticeship_enabled`, `tier_b_circuit_state`, `last_yoyo_dispatch_age_s`. Commit `33dd6f3b`.
+- [x] **service-content SIGTERM handler** — `#[cfg(unix)]` tokio::select! in `http::run_server()`. Commit `a21fdaae`.
+- [x] **service-content structured logging** — JSON tracing subscriber + `info!`/`warn!`/`error!` throughout. Commit `a21fdaae`.
+
+**Sprint 1 — next:**
+- [ ] **D5 — CanonicalMessage + ContentBlock** (~230 LOC). Full research + implementation plan at `.agent/plans/d5-canonical-message-sprint1.md`. Replaces `ChatMessage { role, content: String }` with typed content blocks; unlocks tool_use round-trip through gateway. Files: slm-core + all 3 tier clients + apprenticeship.rs + mesh.rs + router.rs + http.rs + tests. Key constraint: keep `ChatMessage` for `AuditProxyRequest` (audit_proxy.rs stays unchanged).
 - [ ] **Wire `SLM_TIER_C_ANTHROPIC_*` env** for opus → Tier C passthrough (routing is wired in `31397dad`; ExternalTierClient needs API key + endpoint env vars set in `local-doorman.env`).
 
 ### service-content — Ring 2/Ring 3 decoupling [2026-05-14 task@claude-code]

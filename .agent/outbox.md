@@ -10,6 +10,44 @@ schema: foundry-mailbox-v1
 ---
 from: totebox@claude-code
 to: command@claude-code
+re: 2026-05-17 session 5 — audit plan A–D complete; Sprint 0b shipped; D5 plan written
+created: 2026-05-17T00:00:00Z
+priority: normal
+status: pending
+msg-id: project-intelligence-20260517-audit-plan-complete
+---
+
+**Audit plan blocks A–D shipped (10 commits total):**
+- A1: persist processed_ledgers to disk (JSONL sidecar)
+- A2: start-yoyo.sh sed fix
+- A3: replace unwrap() in service-content
+- A4: real /healthz (graph + Doorman /readyz probe)
+- A5: module_id validation
+- A6: audit-write on route_yoyo_only + ExtractionAuditEntry fields
+- A7: "graph-query" added to AUDIT_CAPTURE_VALID_EVENT_TYPES
+- B1: real SSE token streaming (build_stream_body, 15s keepalive)
+- B2: on-demand Yo-Yo lazy-start (SLM_YOYO_AUTO_START gate, 90s health poll)
+- C1: integration test suite (9 tests, gateway auth, x-foundry-tier-used header)
+- D1: service-content SIGTERM handler
+- D3: service-content structured tracing (JSON)
+- D4: readyz extended fields (circuit state, lark validator, dispatch age)
+
+**10 commits ahead of origin/main.** Stage 6 pending.
+
+**D5 — Sprint 1 — NOT started.** Full implementation plan at:
+`.agent/plans/d5-canonical-message-sprint1.md`
+~230 LOC across 9 files. Unlocks tool_use round-trip through gateway.
+Next session: implement D5, then Stage 6 promote.
+
+**lbug test binary linker error** — pre-existing; unrelated to this session.
+`cargo test --workspace` fails for service-content test binary only (parquet writer
+undefined symbols). Main binary builds and runs fine.
+
+— totebox@claude-code
+
+---
+from: totebox@claude-code
+to: command@claude-code
 re: 2026-05-16 session 4 — Stage 6 resolved (git topology repair) + Yo-Yo watchdog bug fixed
 created: 2026-05-16T18:00:00Z
 priority: normal
