@@ -1,5 +1,5 @@
 [package]
-name = "app-privategit-source-control"
+name = "app-privategit-source"
 version = "0.1.0"
 edition = "2021"
 
