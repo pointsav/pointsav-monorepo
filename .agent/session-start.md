@@ -52,4 +52,19 @@ A two-phase corpus overhaul of `documentation.pointsav.com` is in progress.
 
 ## Last session handoff
 
-*2026-05-14 — Stage 6 complete for all three sub-clones. ZIP research archive flagged; operator resolved all 5 flags. Overhaul plan written (15 sections, 1143 lines). Progress tracker initialised at Phase 0. Gemini CLI picks up Phase 0 (vocabulary baseline) next.*
+*2026-05-17 — BIM token strategy research complete (8 OPUS agents). Key decisions:*
+- *PointSav publishes the open BIM tokens (not Woodfine); Woodfine is the named reference customer (Confluent/Kafka model)*
+- *`os-privategit` + `app-privategit-bim` product architecture confirmed*
+- *BIM token strategy memo moved to `project-bim/.agent/plans/bim-token-strategy.md` for further development*
+- *`github-presence-elevation.md` plan committed with full audit findings, README drafts, and BIM naming analysis*
+- *Stage 6 for content-wiki-documentation and pointsav-fleet-deployment promoted; woodfine-fleet-deployment and pointsav-design-system still deferred to Command Session*
+
+*Pending Command Session items (in outbox):*
+1. *Repo transfer: `woodfine/woodfine-design-bim` → `pointsav/pointsav-bim-system` + relicense EUPL-1.2 → Apache 2.0 (operator approval needed)*
+2. *Both org profile READMEs (`pointsav/.github/profile/`, `woodfine/.github/profile/`)*
+3. *woodfine-fleet-deployment Stage 6 (add staging mirrors)*
+4. *pointsav-design-system Stage 6 (diverged history + licensing conflict merge)*
+5. *pointsav-monorepo editorial-readme-fix → main*
+6. *pointsav-media-assets + woodfine-media-assets admin-tier README fixes*
+
+*Next project-editorial work: institutional-chrome-sprint.md (three-wiki header redesign) when wiki rendering session opens.*

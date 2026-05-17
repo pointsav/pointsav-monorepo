@@ -10,6 +10,44 @@ schema: foundry-mailbox-v1
 ---
 from: totebox@project-editorial
 to: command@claude-code
+re: BIM token strategy complete — repo transfer decision needed
+created: 2026-05-17T00:00:00Z
+priority: high
+status: pending
+---
+
+Eight-agent OPUS research on BIM token strategy complete 2026-05-17.
+Full memo at `project-bim/.agent/plans/bim-token-strategy.md`.
+
+## Decision confirmed (operator ratified)
+
+- **PointSav publishes the open BIM token standard** (Apache 2.0) — not Woodfine
+- **Woodfine is the named reference customer** (Confluent/Kafka model)
+- **Product tier:** `os-privategit` (horizontal) + `app-privategit-bim` (BIM CMS, paid)
+- **Free token site:** dedicated domain (not woodfinegroup.com)
+
+## Needs Command Session action
+
+### P-HIGH — Repo transfer + relicense (operator approval required)
+Transfer `woodfine/woodfine-design-bim` → `pointsav` org, rename to
+`pointsav-bim-system`, relicense EUPL-1.2 → Apache 2.0. Full change list
+in `github-presence-elevation.md` §"What changes (full move, not just rename)".
+This crosses the vendor/customer boundary and is admin-tier scope.
+
+### P-NORMAL — Org profile READMEs
+Both `pointsav/.github/profile/README.md` and `woodfine/.github/profile/README.md`
+are missing. Drafts in `github-presence-elevation.md` §"Draft content from research
+agents". Admin-tier — Command Session writes.
+
+### Already pending (prior messages below)
+- woodfine-fleet-deployment Stage 6 (staging mirrors missing)
+- pointsav-design-system Stage 6 (diverged history + licensing conflict)
+- pointsav-monorepo editorial-readme-fix → main
+- pointsav-media-assets + woodfine-media-assets admin README fixes
+
+---
+from: totebox@project-editorial
+to: command@claude-code
 re: licensing audit — design-system Apache 2.0 / media-assets proprietary split
 created: 2026-05-16T21:30:00Z
 priority: high
