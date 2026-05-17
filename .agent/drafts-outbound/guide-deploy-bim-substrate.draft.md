@@ -16,17 +16,17 @@ research_provenance: |
 research_inline: false
 ---
 
-# Guide: Deploying the BIM Token Substrate
+# Guide: Deploying the BIM Object Substrate
 
-This guide covers setting up a sovereign BIM token vault (`woodfine-design-bim`) and deploying `app-orchestration-bim` to serve it at a public URL. All commands run from the deployment host as a user with `sudo` access and `systemd` unit permissions.
+This guide covers setting up a sovereign BIM Object vault (`woodfine-bim-library`) and deploying `app-orchestration-bim` to serve it at a public URL. All commands run from the deployment host as a user with `sudo` access and `systemd` unit permissions.
 
 All paths below are relative to the GitHub repository root where appropriate, or absolute on the deployment host.
 
 ---
 
-## Part 1 — Provision the woodfine-design-bim Token Vault
+## Part 1 — Provision the woodfine-bim-library Object Vault
 
-The BIM token vault is a GitHub repository in the `woodfine` org. It holds all DTCG token files, regulatory overlays, and climate zone data for the deployment.
+The BIM Object vault is a GitHub repository in the `woodfine` org. It holds all DTCG object files, regulatory overlays, and climate zone data for the deployment.
 
 ### Prerequisites
 
@@ -37,20 +37,20 @@ The BIM token vault is a GitHub repository in the `woodfine` org. It holds all D
 
 1. Create the repository on GitHub (one-time, Master action via mcorp-administrator):
    ```
-   Repository: woodfine/woodfine-design-bim
+   Repository: woodfine/woodfine-bim-library
    Visibility: Private (default)
-   License: EUPL-1.2
+   License: Apache-2.0
    ```
 
 2. Clone to the deployment host:
    ```bash
-   git clone git@github.com-mcorp:woodfine/woodfine-design-bim.git \
-       /opt/foundry/vaults/woodfine-design-bim
+   git clone git@github.com-mcorp:woodfine/woodfine-bim-library.git \
+       /opt/foundry/vaults/woodfine-bim-library
    ```
 
-3. Verify the token directory is populated:
+3. Verify the object directory is populated:
    ```bash
-   ls /opt/foundry/vaults/woodfine-design-bim/tokens/bim/
+   ls /opt/foundry/vaults/woodfine-bim-library/tokens/bim/
    # Expected: spatial.dtcg.json  elements.dtcg.json  systems.dtcg.json
    #           materials.dtcg.json  assemblies.dtcg.json  performance.dtcg.json
    #           identity-codes.dtcg.json  relationships.dtcg.json  climate-zones.dtcg.json
@@ -60,12 +60,12 @@ The BIM token vault is a GitHub repository in the `woodfine` org. It holds all D
 
 ## Part 2 — Configure app-orchestration-bim
 
-`app-orchestration-bim` reads its token vault path from an environment variable at startup.
+`app-orchestration-bim` reads its object vault path from an environment variable at startup.
 
 ### Environment variable
 
 ```
-BIM_DESIGN_SYSTEM_DIR=/opt/foundry/vaults/woodfine-design-bim
+BIM_DESIGN_SYSTEM_DIR=/opt/foundry/vaults/woodfine-bim-library
 ```
 
 This variable tells the vault loader in `vault.rs` where to find the `tokens/bim/`, `components/bim-*/`, and `research/bim-*.md` directories.
@@ -81,7 +81,7 @@ Set the environment variable in the unit's `[Service]` section:
 
 ```ini
 [Service]
-Environment=BIM_DESIGN_SYSTEM_DIR=/opt/foundry/vaults/woodfine-design-bim
+Environment=BIM_DESIGN_SYSTEM_DIR=/opt/foundry/vaults/woodfine-bim-library
 Environment=PORT=9096
 ExecStart=/opt/foundry/bin/app-orchestration-bim
 User=foundry
@@ -182,9 +182,9 @@ After DNS resolves and TLS is active, run the full smoke test:
 curl -s https://bim.woodfinegroup.com/readyz
 # Expected: {"status":"ok"}
 
-# 2. Token catalog loads
-curl -s https://bim.woodfinegroup.com/tokens | grep -c "bim-token-card"
-# Expected: 8 (one per token category)
+# 2. BIM Object catalog loads
+curl -s https://bim.woodfinegroup.com/tokens | grep -c "bim-object-card"
+# Expected: 8 (one per BIM Object category)
 
 # 3. Machine surface
 curl -s https://bim.woodfinegroup.com/tokens.json | jq '.["elements.IfcWall"] | .ifc_class'

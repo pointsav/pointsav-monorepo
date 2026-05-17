@@ -20,15 +20,15 @@ research_provenance: |
 research_inline: false
 ---
 
-# Guide: Working with Climate Zone Tokens
+# Guide: Working with Climate Zone BIM Objects
 
-This guide covers how Climate Zone performance data is structured in the BIM token vault and how it is consumed by `app-orchestration-bim`.
+This guide covers how Climate Zone performance data is structured in the BIM Object vault and how it is consumed by `app-orchestration-bim`.
 
 ## 1. What Climate Zone Data Is
 
-Climate Zone data is performance specification data embedded in BIM Tokens. It is **not a user-selectable dropdown** — it is reference data showing the performance requirements that apply in each registered climate zone for a given element type.
+Climate Zone data is performance specification data embedded in BIM Objects. It is **not a user-selectable dropdown** — it is reference data showing the performance requirements that apply in each registered climate zone for a given element type.
 
-The data lives in `tokens/bim/climate-zones.dtcg.json` in the BIM token vault (either `pointsav-design-system` or a customer vault such as `woodfine-design-bim`).
+The data lives in `tokens/bim/climate-zones.dtcg.json` in the BIM Object vault (either `pointsav-design-system` or a customer vault such as `woodfine-bim-library`).
 
 ## 2. File Location
 
@@ -54,11 +54,11 @@ Each entry in the file is a performance parameter for one element type in one cl
 }
 ```
 
-## 3. Token Resolution Workflow
+## 3. BIM Object Resolution Workflow
 
 1. **Site assignment.** The project site is linked to an `IfcSpatialZone` (PredefinedType: `USERDEFINED`, ObjectType: `CLIMATE_ZONE`) with the applicable zone identifier (e.g., `ASHRAE-5C`).
 
-2. **Token lookup.** When an element token is placed, the token resolver reads `climate-zones.dtcg.json` and finds all rows where `ifc_class` matches the placed element type and `zone_id` matches the project's assigned zone.
+2. **BIM Object lookup.** When a BIM Object is placed, the object resolver reads `climate-zones.dtcg.json` and finds all rows where `ifc_class` matches the placed element type and `zone_id` matches the project's assigned zone.
 
 3. **Performance binding.** The matched rows are bound to the element as required property values. These appear in the element's Regulation tab as Climate Zone rows.
 
@@ -82,7 +82,7 @@ To add performance data for a new climate zone:
 1. Open `tokens/bim/climate-zones.dtcg.json` in the token vault.
 2. Add rows for each element type and performance parameter in the new zone. Use the existing row structure.
 3. Commit to the token vault repository with message: `feat(climate-zones): add <zone-id> performance parameters`.
-4. Update the BIM Token Catalog by restarting `app-orchestration-bim` (the vault is read at startup).
+4. Update the BIM Object Library by restarting `app-orchestration-bim` (the vault is read at startup).
 5. If the zone requires an IDS constraint file, author the IDS file and add it to `climate/<zone-id>/` in the vault.
 
 ## 6. Registered Climate Zones at v0.0.1
