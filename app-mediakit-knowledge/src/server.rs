@@ -626,6 +626,7 @@ const SYSTEM_FILE_STEMS: &[&str] = &[
     "CHANGELOG",
     "MANIFEST",
     "CLAUDE",
+    "AGENT",
     "NEXT",
     "NOTAM",
     "TRADEMARK",
@@ -658,6 +659,10 @@ pub async fn collect_topic_files(content_dir: &FsPath) -> std::io::Result<Vec<To
         let name_str = name.to_string_lossy().to_string();
 
         if file_type.is_dir() {
+            // Skip hidden directories (.git, .github, etc.).
+            if name_str.starts_with('.') {
+                continue;
+            }
             // Descend into category subdirectory.
             let subdir_name = name_str.clone();
             let mut sub_entries = match fs::read_dir(entry.path()).await {
@@ -1772,6 +1777,7 @@ fn wiki_chrome(
 ) -> Markup {
     let woodfine_theme = brand_theme == Some("woodfine");
     let _talk_slug = format!("{slug}.talk");
+    let page_title = format!("{title} — {site_title}");
 
     // B5: Precompute ToC entries with hierarchical section numbers (1, 2, 2.1, etc.)
     let numbered_headings: Vec<(String, String, u8, String)> = {
@@ -1799,7 +1805,7 @@ fn wiki_chrome(
             head {
                 meta charset="utf-8";
                 meta name="viewport" content="width=device-width, initial-scale=1";
-                title { (site_title) }
+                title { (page_title) }
                 link rel="stylesheet" href="/static/style.css";
                 // Anti-FOUT: apply stored theme/width before first paint to
                 // avoid a flash of the default light theme for dark-mode users.
