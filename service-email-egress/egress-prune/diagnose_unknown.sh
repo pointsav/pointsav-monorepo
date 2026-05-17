@@ -3,7 +3,7 @@ set -euo pipefail
 
 INDEX_CARD="../totebox-index.env"
 source "$INDEX_CARD"
-ROSTER_PATH="../data-ledgers/personnel_roster.jsonl"
+ROSTER_PATH="../data-ledgers/email-corpus-index.jsonl"
 
 echo "SYSTEM EVENT: Igniting Auto-Hunter Diagnostic Probe..."
 TOKEN=$(curl -s -X POST https://login.microsoftonline.com/$AZURE_TENANT_ID/oauth2/v2.0/token \
