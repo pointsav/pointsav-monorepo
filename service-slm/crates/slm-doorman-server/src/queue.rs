@@ -251,6 +251,15 @@ pub struct ShadowQueueEntry {
     /// for briefs promoted to the queue from capture-edit.py direct writes
     /// before this field was introduced).
     pub actual_diff: String,
+    /// Tier-of-origin for `actual_diff`. When a Claude-Code session through
+    /// the `/v1/messages` gateway shim produces a diff, the post-commit
+    /// capture path carries forward the `X-Foundry-Tier-Used` header value
+    /// here so the drain worker can refuse Tier-C-provenance tuples per the
+    /// Anthropic ToS competing-models constraint. `None` means provenance
+    /// is unknown (legacy queue entries pre-2026-05-18) and is treated as
+    /// permitted by the upstream `/v1/shadow` handler.
+    #[serde(default)]
+    pub source_tier: Option<String>,
 }
 
 /// A leased shadow entry returned by [`dequeue_shadow`].
@@ -539,6 +548,7 @@ pub fn dequeue_shadow(
                 Ok(brief) => ShadowQueueEntry {
                     brief,
                     actual_diff: String::new(),
+                    source_tier: None,
                 },
                 Err(e) => {
                     let poison_path = cfg.poison_dir().join(&base_filename);
