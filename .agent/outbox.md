@@ -10,6 +10,29 @@ schema: foundry-mailbox-v1
 ---
 from: totebox@claude-code
 to: command@claude-code
+re: 2026-05-18 session — 7B upgrade + D5 Sprint 1 + drain fix; Stage 6 pending
+created: 2026-05-18T04:00:00Z
+priority: normal
+status: pending
+
+Session paused at compute pressure. Commits shipped but NOT yet promoted:
+- `561b74ce` fix(content): created_at + entity_count + deferred-extraction retry
+- `ae653cdb` feat(slm): D5 Sprint 1 — CanonicalMessage + ContentBlock (211 tests pass)
+- `c67bb284` fix(slm,content): drain worker flag-check + remove dead taxonomy helpers
+- `9915eddf` ops: session close / NEXT updated
+
+ACTION REQUIRED — Command Session:
+1. Stage 6 promote (stash session.lock first)
+2. sync-local.sh --all
+3. Rebuild + redeploy Doorman (drain fix not yet live in binary)
+4. Re-enable SLM_APPRENTICESHIP_ENABLED=true + restore queue-paused/ briefs
+
+Doorman is currently running old binary with SLM_APPRENTICESHIP_ENABLED=false.
+3 Claude sessions killed (pts/1, pts/3, pts/4 — all idle, no active work).
+
+---
+from: totebox@claude-code
+to: command@claude-code
 re: 2026-05-17 session 5 — audit plan A–D complete; Sprint 0b shipped; D5 plan written
 created: 2026-05-17T00:00:00Z
 priority: normal
