@@ -6,7 +6,7 @@
 > Read at session start when a Root Claude opens in this repo. Update
 > at session end when repo-scope open items change.
 
-Last updated: 2026-05-18 (totebox@claude-code — 10-agent learning-loop audit + master plan).
+Last updated: 2026-05-18 (totebox@claude-code — overnight build: 7 commits, ~3500 LOC, 14 of 24 approved items shipped).
 
 ---
 
@@ -27,26 +27,45 @@ Last updated: 2026-05-18 (totebox@claude-code — 10-agent learning-loop audit +
 - [ ] **P0-0.3** GCP Billing Budget API: **$300/mo** with 50/80/100% alerts + auto-stop Cloud Function (operator from laptop with billing.admin, 2 hr)
 - [x] **P0-0.4** Tier-C provenance guard + `tier_used` top-level JSONL field (shipped 2026-05-18 by task@claude-code: ShadowWireBody + ShadowQueueEntry `source_tier` field; 403 at /v1/shadow; Tier::External rejection in write_shadow_tuple; 3 new tests)
 - [x] **P0-0.5** `--runtime=14h` default in nightly-run.sh (shipped 2026-05-18 by task@claude-code)
-- [ ] **P0-0.6** journalctl vacuum (Command, sudo) + service-extraction/target prune (task, this session)
-- [ ] **Outbox to project-editorial:** ratify machine-readable Do-Not-Use regex set (staged 2026-05-18)
+- [x] **P0-0.6** journalctl vacuum (Command, sudo — pending) + service-extraction/target prune (task — shipped 2026-05-18; freed 625 MB)
+- [x] **Outbox to project-editorial:** Do-Not-Use regex set ratification request staged (`outbox.md`)
 
-### Phase 1 — next 2-3 weeks (close the loop)
-- [ ] P1-1.1 Corpus quality gate (~150 LOC, 2 days)
-- [ ] P1-1.2 Hold-out eval set curation + ssh-signing (2 days, 100 tuples frozen)
-- [ ] P1-1.3 `bin/eval-adapter.sh` — F12 gate-keeper for adapter promotion (1 day)
-- [ ] P1-1.4 F12 corpus promotion gate + `bin/promote-corpus.sh` (1 day)
-- [ ] P1-1.5 Operator signs first verdict batch — unblocks `feedback/` DPO pairs (1 day operator time)
-- [ ] P1-1.6 Adapter-version tagging on ComputeRequest + AuditEntry (1 day)
-- [ ] P1-1.7 Tool-use round-trip completion — `tools: Vec<ToolDef>` + `ContentBlock` response (~300 LOC, 4-5 days; the real D5 closure)
-- [ ] P1-1.8 Wire `/v1/messages` → `enqueue_shadow()` (1 day; AFTER Anthropic legal clear on competing-models clause)
-- [ ] P1-1.9 LoRA training toolchain (`bin/export-dpo.sh`, `corpus-threshold.py`, `lora-update.sh`, snapshot tooling, systemd timer disabled-by-default) — ~3-4 days
-- [ ] P1-1.10 First dry-run training pass on Yo-Yo trainer — $5-10, throwaway adapter
+### Phase 1 — overnight build (mostly shipped 2026-05-18)
+- [x] P1-1.1 Corpus quality gate (shipped 100b2bae; `corpus_gate.rs`, 9 tests; max-diff cap + dedup + BCSC flag + Do-Not-Use reject)
+- [ ] P1-1.2 Hold-out eval set curation + ssh-signing (operator action — `eval-prepare.sh` shipped 232e2e2c for candidate selection)
+- [ ] P1-1.3 `bin/eval-adapter.sh` — F12 gate-keeper for adapter promotion (deferred; depends on P1-1.2 sign)
+- [ ] P1-1.4 F12 corpus promotion gate + `bin/promote-corpus.sh` (deferred; would land alongside `_review/` subdir refactor — risky for an autonomous session)
+- [ ] P1-1.5 Operator signs first verdict batch — unblocks `feedback/` DPO pairs (operator action)
+- [x] P1-1.6 Adapter-version tagging on ComputeRequest/Response + AuditEntry/ExtractionAuditEntry + Prometheus labels (shipped 100b2bae)
+- [ ] P1-1.7 Tool-use round-trip completion — `tools: Vec<ToolDef>` + `ContentBlock` response (deferred; ~300 LOC across 3 tier clients; want operator review of API shape before touching)
+- [x] P1-1.8 Wire `/v1/messages` → `enqueue_shadow()` (shipped 100b2bae; `SLM_SHIM_TRAINING_CAPTURE` gated; Tier-C exclusion defended)
+- [x] P1-1.9 LoRA training toolchain (shipped 232e2e2c; `corpus-snapshot.sh`, `export-dpo.sh`, `lora-update.sh`, systemd unit set — disabled by default, SLM_LORA_AUTO_ENABLE gate + approval tag)
+- [ ] P1-1.10 First dry-run training pass on Yo-Yo trainer — explicitly excluded per operator directive (no Yo-Yo spend tonight)
 
-### Phase 2 — content creation flow (parallel, 4-6 weeks)
-See plan §Phase 2 — 8 items targeting `worm_id`/cites, RelatedTo edges, /v1/editorial/seed, citations resolver, graph_context on tuples, /v1/editorial/grammar, deprecate /v1/draft/generate, embeddings + sqlite-vec HNSW.
+### Phase 2 — content creation flow (partially shipped 2026-05-18)
+- [x] P2-2.1 `worm_id` + `cites:` on GraphEntity (shipped 773113d5; schema + LadybugDB columns + backward-compat row parsing)
+- [ ] P2-2.2 RelatedTo edges substrate (deferred; needs project-editorial taxonomy ratification + service-content extraction prompt changes)
+- [ ] P2-2.3 `POST /v1/editorial/seed` aggregated endpoint (stretch; not shipped)
+- [x] P2-2.4 `citations.yaml` resolver + `/v1/citations/resolve` endpoint (shipped 773113d5; hot-reload + empty-file degraded mode)
+- [x] P2-2.5 `graph_context` field on apprenticeship JSONL (shipped 100b2bae; closes Doctrine #44 grounding loop)
+- [ ] P2-2.6 `POST /v1/editorial/grammar` endpoint (deferred; blocked on editorial vocab ratification)
+- [ ] P2-2.7 Deprecate `/v1/draft/generate` (stretch; not shipped)
+- [ ] P2-2.8 Local vector index + retrieval (deferred; sqlite-vec dep + Yo-Yo embedder)
 
-### Phase 3 — observability & scale (parallel, 6-8 weeks)
-See plan §Phase 3 — Prometheus metrics, canary tasks, /v1/shadow-tier A/B, Sigstore adapter signing, per-day spend ledger + tool-loop counter, burn-and-restart runbook.
+### Phase 3 — observability & scale (partially shipped 2026-05-18)
+- [x] P3-3.1 Prometheus metrics exporter + `/metrics` endpoint (shipped 100b2bae; 4 counters + 1 histogram emitted from `router::write_audit`)
+- [ ] P3-3.2 Canary task set + `bin/canary-run.sh` (deferred; needs 10 task specs)
+- [ ] P3-3.3 `/v1/shadow-adapter` A/B harness (deferred; lower priority since Tier C off — could repurpose for adapter v2 vs v3 later)
+- [x] P3-3.4 Adapter version registry skeleton (shipped 100b2bae; `adapter_registry.rs` + YAML schema + lifecycle methods; Sigstore signature field reserved, no signing yet)
+- [x] P3-3.5 Daily Tier-B cost ledger (shipped 100b2bae; `cost_ledger.rs` + per-day rollup endpoint TBD)
+- [x] P3-3.6 Burn-and-restart runbook (shipped 232e2e2c; 4-phase contamination response procedure)
+
+### Phase 4 — artifact creation + cross-project routing (partially shipped 2026-05-18)
+- [x] Outbox to Command for forward to project-editorial: 4 TOPIC + 5 GUIDE data + endpoint specs (shipped 478c9465)
+- [x] Outbox to Command: 4 CONVENTION proposals (tier-c-prohibition / learning-loop / corpus-quality-gate / adapter-version substrates) (shipped 478c9465)
+- [ ] service-slm/ARCHITECTURE.md update with adapter substrate + corpus gate sections (deferred)
+- [ ] service-slm/DEVELOPMENT.md update with new endpoints + corpus tools workflow (deferred)
+- [ ] service-content/ARCHITECTURE.md update with worm_id + cites + citations endpoint (deferred)
 
 ### Resource & cost decisions (ratified in plan)
 - Stay CPU-only on workspace VM; reject local-GPU reshape; keep Yo-Yo burst pattern
