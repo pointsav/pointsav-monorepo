@@ -19,6 +19,7 @@ pub trait GraphStore: Send + Sync {
     fn upsert_entities(&self, module_id: &str, entities: &[GraphEntity]) -> Result<usize>;
     fn query_context(&self, module_id: &str, query: &str, limit: usize)
         -> Result<Vec<GraphEntity>>;
+    #[allow(dead_code)]
     fn list_entities(&self, module_id: &str) -> Result<Vec<GraphEntity>>;
     /// Count all entities across all module_ids. Used by healthz for monitoring.
     fn count_all(&self) -> Result<usize>;
