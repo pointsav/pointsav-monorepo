@@ -24,4 +24,4 @@ updated: 2026-05-14
 
 ## Last session handoff
 
-*2026-05-06 — v0.0.1 MVP shipped. cargo check clean. Bootstrap deploy + certbot TLS pending operator action.*
+*2026-05-18 — PointSav site content editing session. Changes to software.pointsav.com (software + licensing pages) and home.pointsav.com (home, disclaimer, contact). All committed to cluster/project-software; Stage 6 pending. Disk-based HTML serving implemented — no rebuild needed for future HTML edits. See memory/project_pointsav_site_files.md for all file locations.*
