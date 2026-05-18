@@ -587,6 +587,19 @@ struct LeapfrogFact {
     link_slug: Option<String>,
 }
 
+#[derive(Deserialize)]
+struct ReferenceInvariants {
+    heading: String,
+    items: Vec<ReferenceInvariant>,
+}
+
+#[derive(Deserialize)]
+struct ReferenceInvariant {
+    label: Option<String>,
+    text: String,
+    link_slug: Option<String>,
+}
+
 /// Category buckets: `BTreeMap<category_name, Vec<TopicSummary>>`.
 pub type CategoryBuckets = BTreeMap<String, Vec<TopicSummary>>;
 
@@ -893,6 +906,33 @@ async fn load_dyk(content_dir: &FsPath) -> Option<LeapfrogFacts> {
     serde_yaml::from_str(&text).ok()
 }
 
+async fn load_reference_invariants(content_dir: &FsPath) -> Option<ReferenceInvariants> {
+    let path = content_dir.join("reference-invariants.yaml");
+    let text = fs::read_to_string(path).await.ok()?;
+    serde_yaml::from_str(&text).ok()
+}
+
+fn extract_short_description(text: &str) -> Option<String> {
+    let after_first = text.strip_prefix("---\n")?;
+    let end = after_first.find("\n---")?;
+    let fm_text = &after_first[..end];
+    let val: serde_yaml::Value = serde_yaml::from_str(fm_text).ok()?;
+    val.get("short_description")?.as_str().map(|s| s.to_string())
+}
+
+async fn load_category_descriptions(content_dir: &FsPath, categories: &[&str]) -> BTreeMap<String, String> {
+    let mut map = BTreeMap::new();
+    for cat in categories {
+        let path = content_dir.join(cat).join("_index.md");
+        if let Ok(text) = fs::read_to_string(&path).await {
+            if let Some(desc) = extract_short_description(&text) {
+                map.insert(cat.to_string(), desc);
+            }
+        }
+    }
+    map
+}
+
 fn bucket_guides_by_domain(guides: &[TopicSummary]) -> BTreeMap<String, Vec<TopicSummary>> {
     let mut map = BTreeMap::new();
     for g in guides {
@@ -972,6 +1012,8 @@ fn home_chrome(
     guides: &[TopicSummary],
     featured: Option<FeaturedArticle>,
     dyk: Option<LeapfrogFacts>,
+    ref_inv: Option<ReferenceInvariants>,
+    cat_descriptions: &BTreeMap<String, String>,
     site_title: &str,
     brand_theme: Option<&str>,
     user: Option<&User>,
@@ -1079,6 +1121,14 @@ fn home_chrome(
                         @if !home_html.is_empty() {
                             div.wiki-home-lede { (PreEscaped(home_html)) }
                         }
+                        div.wiki-home-search {
+                            form action="/search" method="get" {
+                                input type="search" name="q"
+                                      placeholder={ "Search " (fmt_commas(stats.article_count)) " articles" }
+                                      aria-label="Search the wiki" {}
+                                button type="submit" { "Search" }
+                            }
+                        }
                     }
 
                     // ── Four-box editorial grid (#mp-upper) ─────────────────
@@ -1152,38 +1202,23 @@ fn home_chrome(
                             }
                         }
 
-                        // OTD — From the doctrine (our "On this day" analogue)
-                        section #mp-otd .wiki-home-box .wiki-home-otd {
-                            h2 { "From the doctrine" }
-                            div.wiki-home-box-body {
-                                ul.wiki-home-doctrine-list {
-                                    li {
-                                        strong { "ADR SYS-ADR-10" }
-                                        " — F12 mandatory. "
-                                        "No structured data enters the ledger without an explicit operator action."
-                                    }
-                                    li {
-                                        strong { "ADR SYS-ADR-07" }
-                                        " — No structured data through AI. "
-                                        "IFC geometry and BIM properties route through deterministic parsers only."
-                                    }
-                                    li {
-                                        strong { "Claim\u{00a0}#39" }
-                                        " — Research trail at article scale. "
-                                        "Every published article carries its source chain."
-                                    }
-                                    li.wiki-home-notam {
-                                        strong { "Active\u{00a0}NOTAM:" }
-                                        " none."
+                        // Reference invariants — data-driven panel loaded from reference-invariants.yaml
+                        @if let Some(ref ri) = ref_inv {
+                            section #mp-otd .wiki-home-box .wiki-home-otd {
+                                h2 { (ri.heading) }
+                                ul.wiki-home-box-body.wiki-home-doctrine-list {
+                                    @for item in &ri.items {
+                                        li {
+                                            @if let Some(ref label) = item.label {
+                                                strong { (label) " — " }
+                                            }
+                                            (item.text)
+                                            @if let Some(ref slug) = item.link_slug {
+                                                " " a href={ "/wiki/" (slug) } { "[more]" }
+                                            }
+                                        }
                                     }
                                 }
-                            }
-                            div.wiki-home-box-footer {
-                                a href="/wiki/doctrine" { "Full doctrine" }
-                                " · "
-                                a href="/wiki/notam" { "NOTAM" }
-                                " · "
-                                a href="/wiki/conventions" { "Conventions" }
                             }
                         }
 
@@ -1215,15 +1250,8 @@ fn home_chrome(
                                 @if count == 0 {
                                     p.wiki-home-cat-in-prep { "In preparation." }
                                 } @else {
-                                    ul.wiki-home-cat-articles {
-                                        @for t in topics.iter().take(PREVIEW_LIMIT) {
-                                            li.wiki-home-cat-article {
-                                                a href={ "/wiki/" (t.slug) } { (t.title) }
-                                                @if let Some(ref desc) = t.short_description {
-                                                    p.wiki-home-cat-article-desc { (desc) }
-                                                }
-                                            }
-                                        }
+                                    @if let Some(desc) = cat_descriptions.get(*cat) {
+                                        p.wiki-home-cat-desc { (desc) }
                                     }
                                 }
                             }
@@ -1276,64 +1304,74 @@ fn home_chrome(
                     section #mp-other .wiki-home-sister {
                         h2.wiki-home-section-title { "Sister surfaces" }
                         ul.wiki-home-sister-grid {
-                            li {
-                                a.wiki-home-sister-link href="https://projects.woodfinegroup.com" {
-                                    span.wiki-home-sister-name { "Projects Wiki" }
-                                    span.wiki-home-sister-desc { "Woodfine projects deployment" }
+                            @if woodfine_projects {
+                                li {
+                                    a.wiki-home-sister-link href="https://corporate.woodfinegroup.com" {
+                                        span.wiki-home-sister-name { "Corporate Reference" }
+                                        span.wiki-home-sister-desc { "Woodfine Management Corp." }
+                                    }
                                 }
-                            }
-                            li {
-                                a.wiki-home-sister-link href="/wiki/about" {
-                                    span.wiki-home-sister-name { "Corporate Wiki" }
-                                    span.wiki-home-sister-desc { "Business-side documentation" }
+                                li {
+                                    a.wiki-home-sister-link href="https://gis.woodfinegroup.com" {
+                                        span.wiki-home-sister-name { "Live Platform" }
+                                        span.wiki-home-sister-desc { "GIS co-location intelligence" }
+                                    }
                                 }
-                            }
-                            li {
-                                a.wiki-home-sister-link href="https://github.com/pointsav/pointsav-design-system" {
-                                    span.wiki-home-sister-name { "Design System" }
-                                    span.wiki-home-sister-desc { "Tokens, components, recipes" }
+                                li {
+                                    a.wiki-home-sister-link href="https://documentation.pointsav.com" {
+                                        span.wiki-home-sister-name { "Engineering Documentation" }
+                                        span.wiki-home-sister-desc { "PointSav platform reference" }
+                                    }
                                 }
-                            }
-                            li {
-                                a.wiki-home-sister-link href="https://github.com/pointsav/factory-release-engineering" {
-                                    span.wiki-home-sister-name { "Factory Release Engineering" }
-                                    span.wiki-home-sister-desc { "Governance, licensing, CLAs" }
+                                li {
+                                    a.wiki-home-sister-link href="/wiki/newsroom" {
+                                        span.wiki-home-sister-name { "Newsroom" }
+                                        span.wiki-home-sister-desc { "Announcements and updates" }
+                                    }
                                 }
-                            }
-                            li {
-                                a.wiki-home-sister-link href="https://github.com/pointsav" {
-                                    span.wiki-home-sister-name { "PointSav on GitHub" }
-                                    span.wiki-home-sister-desc { "Canonical vendor-tier source" }
+                            } @else if woodfine_theme {
+                                li {
+                                    a.wiki-home-sister-link href="https://projects.woodfinegroup.com" {
+                                        span.wiki-home-sister-name { "Projects Platform" }
+                                        span.wiki-home-sister-desc { "Woodfine co-location intelligence" }
+                                    }
                                 }
-                            }
-                            li {
-                                a.wiki-home-sister-link href="https://github.com/woodfine" {
-                                    span.wiki-home-sister-name { "Woodfine on GitHub" }
-                                    span.wiki-home-sister-desc { "Customer-tier mirror" }
+                                li {
+                                    a.wiki-home-sister-link href="https://documentation.pointsav.com" {
+                                        span.wiki-home-sister-name { "Engineering Documentation" }
+                                        span.wiki-home-sister-desc { "PointSav platform reference" }
+                                    }
                                 }
-                            }
-                            li {
-                                a.wiki-home-sister-link href="/wiki/doctrine" {
-                                    span.wiki-home-sister-name { "Doctrine" }
-                                    span.wiki-home-sister-desc { "Constitutional charter" }
+                                li {
+                                    a.wiki-home-sister-link href="/wiki/newsroom" {
+                                        span.wiki-home-sister-name { "Newsroom" }
+                                        span.wiki-home-sister-desc { "Announcements and updates" }
+                                    }
                                 }
-                            }
-                            li {
-                                a.wiki-home-sister-link href="/wiki/notam" {
-                                    span.wiki-home-sister-name { "NOTAM" }
-                                    span.wiki-home-sister-desc { "Active operational notices" }
+                            } @else {
+                                li {
+                                    a.wiki-home-sister-link href="https://projects.woodfinegroup.com" {
+                                        span.wiki-home-sister-name { "Projects Platform" }
+                                        span.wiki-home-sister-desc { "Woodfine co-location intelligence" }
+                                    }
                                 }
-                            }
-                            li {
-                                a.wiki-home-sister-link href="/openapi.yaml" {
-                                    span.wiki-home-sister-name { "OpenAPI 3.1" }
-                                    span.wiki-home-sister-desc { "Machine-consumable API spec" }
+                                li {
+                                    a.wiki-home-sister-link href="https://corporate.woodfinegroup.com" {
+                                        span.wiki-home-sister-name { "Corporate Reference" }
+                                        span.wiki-home-sister-desc { "Woodfine Management Corp." }
+                                    }
                                 }
-                            }
-                            li {
-                                a.wiki-home-sister-link href="/llms.txt" {
-                                    span.wiki-home-sister-name { "llms.txt" }
-                                    span.wiki-home-sister-desc { "AI ingestion convention" }
+                                li {
+                                    a.wiki-home-sister-link href="https://github.com/pointsav/pointsav-design-system" {
+                                        span.wiki-home-sister-name { "Design System" }
+                                        span.wiki-home-sister-desc { "Tokens, components, recipes" }
+                                    }
+                                }
+                                li {
+                                    a.wiki-home-sister-link href="https://github.com/pointsav" {
+                                        span.wiki-home-sister-name { "PointSav on GitHub" }
+                                        span.wiki-home-sister-desc { "Canonical vendor-tier source" }
+                                    }
                                 }
                             }
                         }
@@ -1529,6 +1567,8 @@ async fn index(
     let home_html = crate::glossary::inject_glossary_tooltips(&home_html, &state.glossary);
     let featured = load_featured(&state.content_dir, &buckets).await;
     let dyk = load_dyk(&state.content_dir).await;
+    let ref_inv = load_reference_invariants(&state.content_dir).await;
+    let cat_descriptions = load_category_descriptions(&state.content_dir, RATIFIED_CATEGORIES).await;
 
     // Collect guide summaries for the dedicated guides section.
     // A guide is any entry whose filename stem starts with "guide-".
@@ -1555,6 +1595,8 @@ async fn index(
         &guide_summaries,
         featured,
         dyk,
+        ref_inv,
+        &cat_descriptions,
         &state.site_title,
         state.brand_theme.as_deref(),
         maybe_user.as_ref(),
