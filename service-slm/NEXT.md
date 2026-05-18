@@ -1,8 +1,132 @@
 # NEXT.md — service-slm
 
-> Last updated: 2026-05-18 (7B upgrade shipped; D5+drain fix committed; paused for compute)
+> Last updated: 2026-05-18 (overnight build — 12 signed commits, 15 of 24 approved learning-loop items shipped)
 > Read at session start. Update before session end so the next
 > session knows where to pick up.
+
+---
+
+## SESSION 2026-05-18 — OVERNIGHT LEARNING-LOOP BUILD
+
+12 signed commits totalling ~3700 LOC. See
+`.agent/plans/learning-loop-master-plan-2026-05-18.md` for the master
+plan; `ARCHITECTURE.md` §15 for substrate documentation.
+
+### Shipped — new modules in slm-doorman
+
+- `corpus_gate.rs` (P1-1.1, ~490 LOC + 9 tests). Second-layer
+  write-time gate: max-diff cap, sha256 dedup, BCSC flag-only,
+  Do-Not-Use reject. JSONL row carries `corpus_gate` audit-replay
+  field.
+- `adapter_registry.rs` (P3-3.4, ~270 LOC + 3 tests).
+  `data/adapters/registry.yaml` schema + stage lifecycle
+  (eval_pending → eval_ok → promoted → retired/rejected). Sigstore
+  signature field reserved.
+- `cost_ledger.rs` (P3-3.5-partial, ~260 LOC + 3 tests). Per-response
+  rows at `data/cost-ledger/<date>.jsonl`. **Writer wiring into
+  write_audit deferred** — endpoint half is the surface today.
+- `metrics.rs` in slm-doorman-server (P3-3.1, ~120 LOC). Prometheus
+  recorder + `/metrics` endpoint.
+
+### Shipped — edits to existing modules
+
+- P0-0.4 Tier-C contamination guard: `ShadowWireBody.source_tier`
+  field; 403 in shadow handler; `write_shadow_tuple` early-return
+  on `Tier::External`; top-level `tier_used` JSONL field.
+- P1-1.6 adapter-version threading: `ComputeRequest/Response`,
+  `AuditEntry`/`ExtractionAuditEntry`, all 16 ComputeRequest sites,
+  all 3 ComputeResponse sites; Yo-Yo parses
+  `X-Foundry-Adapter-Version` header.
+- P1-1.8 `/v1/messages` → enqueue_shadow capture; gated by
+  `SLM_SHIM_TRAINING_CAPTURE=true` + tier != External.
+- P2-2.5 `graph_context` parameter on `write_shadow_tuple`;
+  populated from `GraphContextClient.fetch_context`; new
+  `Doorman::graph_context_client()` accessor.
+- P3-3.1 4 Prometheus metric emits in `router::write_audit`:
+  `slm_requests_total{tier,model,adapter_version,completion_status}`,
+  `slm_cost_usd_total{tier,model}`, `slm_latency_ms{tier,model}`,
+  `slm_audit_writes_total{entry_type}`.
+- P3-3.3 SKELETON: `/v1/shadow-adapter` endpoint with frozen wire
+  shape; returns 501 NOT_IMPLEMENTED until P3-3.3-followup.
+- P0-0.5 `--runtime=14h` default in `nightly-run.sh`.
+
+### Shipped — scripts + systemd + docs
+
+- `scripts/corpus-snapshot.sh` (P1-1.9): zstd tarball + sha256
+  manifest + per-tuple shasum list.
+- `scripts/export-dpo.sh` (P1-1.9): DPO export with LIMA threshold
+  gate. Defense-in-depth Tier C exclusion.
+- `scripts/lora-update.sh` (P1-1.9): orchestrator. **HARD DISABLED**
+  by default (`SLM_LORA_AUTO_ENABLE=true` env + operator approval
+  tag required).
+- `scripts/eval-prepare.sh` (P1-1.2-prep): stratified candidate
+  selection for operator ssh-signing.
+- `compute/systemd/lora-update.{timer,service}`: Sunday 02:00 UTC;
+  empty `WantedBy=` so `daemon-reload` leaves disabled.
+- `docs/runbook-corpus-contamination.md` (P3-3.6): 4-phase
+  burn-and-restart procedure.
+- `ARCHITECTURE.md` §15: closed-loop substrate documentation.
+
+### Compile + test state
+
+- `cargo check -p slm-doorman` ✓ green (1m57s).
+- `cargo check -p slm-doorman-server` ✓ green (3m08s with metrics
+  deps; 6s incremental).
+- `cargo test --workspace` — attempted but stalled on VM memory
+  pressure (4.5G swap of 16G; 2 stuck cargo processes killed after
+  1hr in disk-I/O wait). Run from a freshly-rebooted state when
+  Stage 6 wants verification.
+
+### IMMEDIATE — Command Session next actions
+
+- [ ] **Stage 6 promote 9 commits** (`6bca8f94`..`f17d703d`).
+  Pattern: stash `.agent/engines/claude-code/settings.local.json`,
+  `echo "y" | ~/Foundry/bin/promote.sh`, restore.
+- [ ] **Rebuild + redeploy Doorman**:
+  ```bash
+  cd /srv/foundry/clones/project-intelligence/service-slm
+  cargo build --release -p slm-doorman-server
+  sudo cp target/release/slm-doorman-server /usr/local/bin/local-doorman
+  sudo systemctl restart local-doorman
+  curl -sS http://127.0.0.1:9090/metrics | head -20    # verify P3-3.1
+  ```
+- [ ] **Flip apprenticeship on**:
+  ```bash
+  sudo sed -i 's/SLM_APPRENTICESHIP_ENABLED=false/SLM_APPRENTICESHIP_ENABLED=true/' \
+    /etc/systemd/system/local-doorman.service
+  sudo systemctl daemon-reload
+  sudo systemctl restart local-doorman
+  ```
+  Drain 27+ paused/pending briefs.
+- [ ] `bin/sync-local.sh --all` after Stage 6.
+- [ ] Forward Phase 4 outboxes to project-editorial.
+
+### IMMEDIATE — operator-only (from laptop)
+
+- [ ] **GCP Billing Budget**: $300/mo on project 369270631281 with
+  50/80/100% alerts + auto-stop Cloud Function (`roles/billing.admin`
+  on billing account 0169E0-25F3AE-A5F545).
+- [ ] **Sign eval holdout**: run `scripts/eval-prepare.sh`, review,
+  ssh-sign with `ssh-keygen -Y sign -n eval-holdout-v1`.
+- [ ] **Sign first verdict batch**: ssh-sign 10 shadow tuples to
+  unblock DPO feedback pairs.
+
+### DEFERRED — next coding session
+
+- [ ] P1-1.4 F12 review-subdir refactor — operator design-review the
+  in-place-vs-_review/ decision before landing.
+- [ ] P1-1.7 Tool-use round-trip — ~300 LOC; operator API-shape
+  review (`tools: Vec<ToolDef>` + `ContentBlock` response).
+- [ ] P2-2.2 RelatedTo edges substrate — needs editorial taxonomy
+  ratification (outbox staged).
+- [ ] P2-2.3 `/v1/editorial/seed` — depends on P2-2.2 + P2-2.1 wiring.
+- [ ] P2-2.6 `/v1/editorial/grammar` — blocked on editorial vocab.
+- [ ] P2-2.7 deprecate `/v1/draft/generate` — architectural cleanup.
+- [ ] P2-2.8 Local vector index + retrieval (sqlite-vec).
+- [ ] P3-3.2 Canary task set + `bin/canary-run.sh`.
+- [ ] P3-3.3-followup adapter A/B dual-dispatch (skeleton shipped).
+- [ ] P3-3.4-followup Sigstore adapter signing (operator key).
+- [ ] P3-3.5-followup wire `write_audit` → `cost_ledger.append`.
 
 ---
 
