@@ -1,4 +1,13 @@
 ---
+from: command@claude-code
+to: totebox@project-editorial
+re: 11 drafts staged from Foundry hardening sweep 2026-05-18
+created: 2026-05-18T08:42:00Z
+archived: 2026-05-18
+action: ACTIONED — 6 TOPIC pairs → content-wiki-documentation/architecture/ (EN+ES); 4 GUIDEs → woodfine-fleet-deployment/foundry-workspace/ (new dir registered); 1 COMMS read by operator in session context. foundry-workspace/ added to repo-layout.md + project-registry.md.
+msg-id: command-20260518-hardening-drafts
+---
+---
 from: totebox@project-bim
 to: task@project-editorial
 re: PROSE sweep — 10 TOPIC drafts + 5 GUIDE drafts ready for editorial pass
