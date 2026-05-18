@@ -10,6 +10,69 @@ schema: foundry-mailbox-v1
 ---
 from: totebox@project-editorial
 to: command@claude-code
+re: wiki main page redesign — 10-agent synthesis complete; content committed; Phase D design staged
+created: 2026-05-18T00:00:00Z
+priority: normal
+status: pending
+msg-id: project-editorial-20260518-home-redesign-complete
+---
+
+10-agent Opus synthesis of wiki main page improvements is complete. Content work committed to all 3 wikis; Phase D design spec staged for project-knowledge.
+
+**Commits (content work — all on staging branches, Stage 6 needed):**
+- `content-wiki-documentation` 17d7750 (Jennifer) — lede + editorial standard link + leapfrog-facts prefix fix + reference-invariants.yaml
+- `content-wiki-projects` 4df475b (Peter) — lede forward-looking note + leapfrog-facts case fix + reference-invariants.yaml
+- `content-wiki-corporate` 0c0035b (Jennifer) — lede BCSC posture + status active + leapfrog-facts case fix + reference-invariants.yaml
+- `project-editorial cluster` 4a2fbf34 (Peter) — design draft staged
+
+**Bug fixed across all 3 wikis:** the DYK panel renderer prepends "… that " before each fact. Documentation facts were double-prefixed ("...that" in text + "… that" from renderer). Projects + corporate facts were capitalised incorrectly after the "… that " prefix. All fixed.
+
+**New files (content work):**
+- `reference-invariants.yaml` in all 3 wikis — the data for a new fourth editorial box ("From the engineering record" / "Reference geometry" / "Holding structure") that replaces the hardcoded "From the doctrine" panel — which currently leaks banned vocabulary (doctrine, convention, NOTAM) on all 3 public wikis
+
+**Design draft staged:**
+- `.agent/drafts-outbound/design-home-chrome-v2.draft.md` — Phase D spec for `app-mediakit-knowledge/src/server.rs`
+- Covers: reference-invariants.yaml reader + panel; sister surfaces trim 10→4; hero search input; compact category grid (remove article preview lists from home page)
+- Route to **project-knowledge** (the monorepo crate team)
+- The `reference-invariants.yaml` files are content-ready — waiting on the engine to read them
+
+**Stage 6 needed:** content-wiki-documentation, content-wiki-projects, content-wiki-corporate (all three have pending commits)
+
+
+
+---
+from: totebox@project-editorial
+to: command@claude-code
+re: Batch 4 complete — 8 BIM TOPICs processed; Stage 6 needed for content-wiki-projects
+created: 2026-05-17T00:00:00Z
+priority: normal
+status: pending
+msg-id: project-editorial-20260517-batch4-complete
+---
+
+Batch 4 committed. All 8 source drafts from project-bim/.agent/drafts-outbound/ processed.
+
+**content-wiki-projects** (commit 88c0fdf, pwoodfine, staging) — 5 key-plan TOPICs (EN+ES):
+- topic-bim-leasing-plan-efficiencies (.md + .es.md) — 16-vs-9 result, rolling efficiency, PC/SU class
+- topic-bim-private-office-key-plans (.md + .es.md) — PO-1/2/3 sizes, licensing vs leasing
+- topic-bim-medical-key-plans (.md + .es.md) — KaVo dental chair anchor, M1/M2/M3 suites
+- topic-bim-business-key-plans (.md + .es.md) — Zone 2 at 7.3 m, MW3 design principles
+- topic-bim-professional-office-key-plans (.md + .es.md) — Initial Design baseline, sub-type gap-fill
+
+**content-wiki-documentation/architecture/** — 3 architecture TOPICs (building-design-system-bim,
+city-code-as-composable-geometry, flat-file-bim-leapfrog): already committed in prior batches
+(confirmed via git status — clean, no changes needed).
+
+All new files use Bloomberg standard language; BCSC posture applied; no AI-product vocabulary;
+bilingual EN+ES pairs complete for all 5 key-plan topics.
+
+**Stage 6 needed for:** content-wiki-projects (commit 88c0fdf + prior pending commits a2c0b78).
+
+— totebox@project-editorial
+
+---
+from: totebox@project-editorial
+to: command@claude-code
 re: BIM editorial sweep fully complete — Batch 3 committed; all 3 batches done
 created: 2026-05-17T00:00:00Z
 priority: normal
