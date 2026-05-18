@@ -92,6 +92,28 @@ async fn main() -> anyhow::Result<()> {
     // recorder never blocks Doorman startup.
     let _ = slm_doorman_server::metrics::init();
 
+    // Install global cost ledger (P3-3.5-followup). Failure is non-fatal:
+    // router::write_audit calls `cost_ledger::append_global()` which
+    // no-ops when the ledger isn't installed. The ledger writes to
+    // `$FOUNDRY_ROOT/data/cost-ledger/<date>.jsonl`.
+    match slm_doorman::cost_ledger::CostLedger::from_env() {
+        Ok(ledger) => {
+            tracing::info!(
+                target: "slm_doorman_server::main",
+                path = %ledger.base_dir().display(),
+                "cost ledger initialised"
+            );
+            let _ = slm_doorman::cost_ledger::init(ledger);
+        }
+        Err(e) => {
+            tracing::warn!(
+                target: "slm_doorman_server::main",
+                error = %e,
+                "cost ledger init failed; per-response cost rows will be skipped"
+            );
+        }
+    }
+
     let bind_addr: SocketAddr = std::env::var("SLM_BIND_ADDR")
         .unwrap_or_else(|_| "127.0.0.1:9080".to_string())
         .parse()

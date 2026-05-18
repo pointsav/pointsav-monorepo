@@ -31,7 +31,7 @@ use serde::{Deserialize, Serialize};
 use std::fs::OpenOptions;
 use std::io::{BufRead, BufReader, Write};
 use std::path::PathBuf;
-use std::sync::Mutex;
+use std::sync::{Mutex, OnceLock};
 
 /// One row in the cost ledger — one HTTP response = one row.
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -154,6 +154,53 @@ impl CostLedger {
         let date = ts.get(0..10).unwrap_or("1970-01-01");
         self.base_dir.join(format!("{date}.jsonl"))
     }
+
+    /// Path to the underlying directory (diagnostic surface).
+    pub fn base_dir(&self) -> &std::path::Path {
+        &self.base_dir
+    }
+}
+
+/// Global cost ledger handle — installed by `init()` at process startup
+/// (analogous to `slm_doorman_server::metrics::HANDLE`). `append_global()`
+/// is a no-op when the handle isn't set, so calling it from hot paths
+/// like `router::write_audit` is safe even during tests that don't
+/// install the ledger.
+static GLOBAL: OnceLock<CostLedger> = OnceLock::new();
+
+/// Install the global cost ledger. Idempotent — the first install wins;
+/// subsequent calls log + ignore. Failure to install (e.g. permission
+/// error on the data directory) is returned to the caller but should
+/// NOT block Doorman startup; callers are expected to log + continue.
+///
+/// P3-3.5-followup: enables `router::write_audit` to record per-response
+/// cost rows without threading the ledger through every layer of the
+/// dispatch path.
+pub fn init(ledger: CostLedger) -> Result<(), &'static str> {
+    GLOBAL
+        .set(ledger)
+        .map_err(|_| "cost ledger already installed")
+}
+
+/// Append to the global cost ledger if installed; no-op otherwise.
+/// Errors are swallowed with a tracing::warn — cost-ledger failure
+/// must never propagate into the response path.
+pub fn append_global(row: &CostRow) {
+    if let Some(ledger) = GLOBAL.get() {
+        if let Err(e) = ledger.append(row) {
+            tracing::warn!(
+                target: "slm_doorman::cost_ledger",
+                error = %e,
+                request_id = %row.request_id,
+                "cost ledger append failed (non-fatal)"
+            );
+        }
+    }
+}
+
+/// Diagnostic: returns true when the global cost ledger has been installed.
+pub fn is_initialized() -> bool {
+    GLOBAL.get().is_some()
 }
 
 /// Aggregated cost summary for one UTC day.
