@@ -6,7 +6,7 @@
 > Read at session start when a Root Claude opens in this repo. Update
 > at session end when repo-scope open items change.
 
-Last updated: 2026-05-18 (totebox@claude-code — overnight build: 7 commits, ~3500 LOC, 14 of 24 approved items shipped).
+Last updated: 2026-05-18 (totebox@claude-code — overnight build complete: 17 signed commits, ~4500 LOC, 18 of 24 approved items + 3 followups shipped).
 
 ---
 
@@ -54,10 +54,10 @@ Last updated: 2026-05-18 (totebox@claude-code — overnight build: 7 commits, ~3
 
 ### Phase 3 — observability & scale (partially shipped 2026-05-18)
 - [x] P3-3.1 Prometheus metrics exporter + `/metrics` endpoint (shipped 100b2bae; 4 counters + 1 histogram emitted from `router::write_audit`)
-- [ ] P3-3.2 Canary task set + `bin/canary-run.sh` (deferred; needs 10 task specs)
-- [ ] P3-3.3 `/v1/shadow-adapter` A/B harness (deferred; lower priority since Tier C off — could repurpose for adapter v2 vs v3 later)
+- [x] P3-3.2 Canary task set + `scripts/canary-run.sh` (shipped 51212dbb; 10 tasks × 7 categories + Bash/jq/yq runner with promote/flag/reject thresholds)
+- [x] P3-3.3 `/v1/shadow-adapter` A/B harness — SKELETON (shipped f17d703d; wire shape frozen, 501 NOT_IMPLEMENTED; dual-dispatch deferred to followup)
 - [x] P3-3.4 Adapter version registry skeleton (shipped 100b2bae; `adapter_registry.rs` + YAML schema + lifecycle methods; Sigstore signature field reserved, no signing yet)
-- [x] P3-3.5 Daily Tier-B cost ledger (shipped 100b2bae; `cost_ledger.rs` + per-day rollup endpoint TBD)
+- [x] P3-3.5 Daily Tier-B cost ledger (shipped 100b2bae + 36de591e + d45629fc; `cost_ledger.rs` + write_audit wiring + `GET /v1/cost/daily?date=` endpoint)
 - [x] P3-3.6 Burn-and-restart runbook (shipped 232e2e2c; 4-phase contamination response procedure)
 
 ### Phase 4 — artifact creation + cross-project routing (partially shipped 2026-05-18)
