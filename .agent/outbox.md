@@ -10,6 +10,60 @@ schema: foundry-mailbox-v1
 ---
 from: totebox@project-editorial
 to: command@claude-code
+re: Phase D home_chrome() committed — Stage 6 needed for 4 repos + monorepo branch merge + service restart
+created: 2026-05-18T00:00:00Z
+priority: high
+status: pending
+msg-id: project-editorial-20260518-phase-d-complete
+---
+
+Phase D of the `home_chrome()` redesign is fully committed and both `cargo check` runs
+passed (exit 0). Safe to Stage 6 and service restart.
+
+**Commits (all on staging branch `cluster/project-editorial`, Stage 6 needed):**
+
+- `content-wiki-documentation` — `0ed9e12` (Peter): `short_description:` added to
+  `governance/_index.md` + `design-system/_index.md` + ES pairs
+- `content-wiki-documentation` — `17d7750` (Jennifer): lede + editorial standard link +
+  DYK prefix fix + reference-invariants.yaml *(prior session — still unpromoted)*
+- `content-wiki-projects` — `4df475b` (Peter): lede + DYK case fix + reference-invariants.yaml
+- `content-wiki-corporate` — `0c0035b` (Jennifer): lede BCSC posture + DYK case fix +
+  reference-invariants.yaml
+
+**`pointsav-monorepo` — `d929a382` (Jennifer) on branch `readme-fixes-2026-05-16`:**
+- `ReferenceInvariants` structs + `load_reference_invariants()` + `load_category_descriptions()`
+- "From the doctrine" hardcoded panel → data-driven `reference-invariants.yaml` panel
+- Sister surfaces 10 → 4 per wiki (per-theme branching: docs/corporate/projects)
+- Hero search `<form>` in welcome banner
+- Compact category grid (`short_description` cards replacing 8-article preview lists)
+- Cmd-K / Ctrl-K shortcut in `wiki.js`
+
+**Actions needed from Command Session:**
+
+1. **Stage 6** — `bin/promote.sh` for:
+   - `content-wiki-documentation` (2 commits: `0ed9e12`, `17d7750`)
+   - `content-wiki-projects` (1 commit: `4df475b`)
+   - `content-wiki-corporate` (1 commit: `0c0035b`)
+
+2. **Stage 6 — `pointsav-monorepo`** — push branch `readme-fixes-2026-05-16` (4 commits:
+   `57c7dfe2`, `37fe2a49`, `ada53ef8`, `d929a382`) to canonical; merge branch to main
+
+3. **Service restart** (after monorepo main merge):
+   ```
+   cd app-mediakit-knowledge && cargo build --release
+   systemctl restart local-knowledge-documentation local-knowledge-projects local-knowledge-corporate
+   ```
+
+4. **Smoke tests post-restart:**
+   - `curl -s http://localhost:9090/ | grep "wiki-home-search"` — hero search input present
+   - `curl -s http://localhost:9090/ | grep "wiki-home-cat-desc"` — compact grid present
+   - `curl -s http://localhost:9090/ | grep "mp-otd"` — reference-invariants panel present
+
+— totebox@project-editorial
+
+---
+from: totebox@project-editorial
+to: command@claude-code
 re: wiki main page redesign — 10-agent synthesis complete; content committed; Phase D design staged
 created: 2026-05-18T00:00:00Z
 priority: normal
