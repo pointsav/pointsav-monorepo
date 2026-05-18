@@ -10,7 +10,7 @@ use core::panic::PanicInfo;
 pub extern "C" fn _start() -> ! {
     // 1. Initialize bare-metal state
     // 2. Map capability pointers passed by the CBM (Root-Task)
-    
+
     // 3. The Sovereign Polling Loop (Gatekeeper State Machine)
     loop {
         // Block and wait for Inter-Process Communication (IPC) from system-network-interface
@@ -18,7 +18,7 @@ pub extern "C" fn _start() -> ! {
     }
 }
 
-/// Bare-metal panic handler. 
+/// Bare-metal panic handler.
 /// In a production environment, this triggers a fault IPC to the system-security Watchdog.
 #[panic_handler]
 fn panic(_info: &PanicInfo) -> ! {
