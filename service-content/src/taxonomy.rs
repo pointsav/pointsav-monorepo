@@ -528,19 +528,6 @@ pub fn bundle_to_entities(bundle: &TaxonomyBundle) -> Vec<GraphEntity> {
 
 // ── Internal helpers ──────────────────────────────────────────────────────────
 
-fn skip_header(csv: &str) -> &str {
-    if let Some(pos) = csv.find('\n') {
-        csv[pos + 1..].trim_start()
-    } else {
-        ""
-    }
-}
-
-/// Strip the first (header) line. Exposed for external tooling; not used internally.
-pub fn skip_header_owned(csv: &str) -> String {
-    skip_header(csv).to_string()
-}
-
 fn csv_field(s: &str) -> String {
     if s.contains(',') || s.contains('"') || s.contains('\n') {
         format!("\"{}\"", s.replace('"', "\"\""))
@@ -633,19 +620,6 @@ mod tests {
         let parsed = parse_guides(&csv).unwrap();
         assert_eq!(parsed.len(), 1);
         assert_eq!(parsed[0].guide_id, "guide-test");
-    }
-
-    // ── skip_header_owned ────────────────────────────────────────────────────
-
-    #[test]
-    fn skip_header_owned_removes_first_line() {
-        let csv = "header,row\ndata,row\n";
-        assert_eq!(skip_header_owned(csv), "data,row\n");
-    }
-
-    #[test]
-    fn skip_header_owned_empty_input() {
-        assert_eq!(skip_header_owned(""), "");
     }
 
     // ── guides_documentation.csv sanity ─────────────────────────────────────
