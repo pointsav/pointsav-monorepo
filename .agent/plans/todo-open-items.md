@@ -51,16 +51,23 @@
 - [ ] **project-knowledge services restart** — cargo build --release + restart 3 systemd services after monorepo merge
 - [ ] **Admin README fixes** — pointsav-media-assets + woodfine-media-assets (admin-tier commits)
 
+## DONE — home_chrome() Phase D (2026-05-18)
+
+- [x] **short_description added** — `governance/_index.md` + `design-system/_index.md` + ES pairs (`0ed9e12`, Peter)
+- [x] **Phase D Rust + JS committed** — `pointsav-monorepo` commit `d929a382` (Jennifer):
+  - `ReferenceInvariants` structs + `load_reference_invariants()` + `load_category_descriptions()`
+  - "From the doctrine" hardcoded panel → data-driven YAML panel
+  - Sister surfaces 10 → 4 per wiki (per-theme branching)
+  - Hero search `<form>` in welcome banner
+  - Compact category grid (`short_description` cards replacing 8-article preview lists)
+  - Cmd-K / Ctrl-K shortcut in `wiki.js`
+  - `cargo check` passed ×2 (exit 0)
+
 ## PENDING — project-knowledge (Rust / monorepo work)
 
-Route to project-knowledge session. Design spec: `.agent/drafts-outbound/design-home-chrome-v2.draft.md`
+All Phase D steps ✅ complete. Remaining Rust work deferred to Phase E.
 
-- [ ] **Phase D step 1** — implement `load_reference_invariants()` + `ReferenceInvariants` struct in server.rs
-- [ ] **Phase D step 2** — render per-wiki reference-invariants panel; retire hardcoded "From the doctrine" block (`server.rs:1150–1184`)
-- [ ] **Phase D step 3** — trim sister surfaces from 10 → 4 per wiki (`server.rs:1271–1335`)
-- [ ] **Phase D step 4** — add hero search form to welcome banner + Cmd-K in `static/wiki.js`
-- [ ] **Phase D step 5** — compact category grid (remove 8-article preview lists; add `description:` field support)
-- [ ] **Phase D step 5a** — write `description:` frontmatter to all 10 `_index.md` files in content-wiki-documentation
+> Phase D design spec: `.agent/drafts-outbound/design-home-chrome-v2.draft.md`
 
 ## PENDING — project-editorial (next session)
 
