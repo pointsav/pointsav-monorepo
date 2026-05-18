@@ -439,6 +439,20 @@ impl Doorman {
             "entry_type" => "chat-completion",
         )
         .increment(1);
+
+        // Cost ledger append (P3-3.5-followup). The global ledger is
+        // installed by main.rs at startup; absent ledger is a no-op.
+        // Failures are swallowed (tracing::warn) — cost-ledger
+        // failure must never propagate into the response path.
+        crate::cost_ledger::append_global(&crate::cost_ledger::CostRow {
+            ts: entry.timestamp_utc.to_rfc3339_opts(chrono::SecondsFormat::Secs, true),
+            request_id: entry.request_id.to_string(),
+            tier: entry.tier.as_str().to_string(),
+            model: entry.model.clone(),
+            cost_usd: entry.cost_usd,
+            inference_ms: entry.inference_ms,
+            adapter_version: entry.adapter_version.clone(),
+        });
     }
 }
 
