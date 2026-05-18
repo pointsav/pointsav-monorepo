@@ -31,8 +31,7 @@ pub mod witness;
 
 use std::collections::HashSet;
 use system_core::{
-    Capability, CheckpointInclusionError, Hash256, InclusionProof, SignedCheckpoint,
-    WitnessRecord,
+    Capability, CheckpointInclusionError, Hash256, InclusionProof, SignedCheckpoint, WitnessRecord,
 };
 
 /// Kernel verifier verdict on a capability invocation.
@@ -289,9 +288,7 @@ impl LedgerConsumer for InMemoryLedger {
             }
             apex::ApexVerdict::Single { apex } => current_root
                 .verify_signer(&apex.name, &apex.pubkey)
-                .map_err(|e| {
-                    ConsultError::InconsistentState(format!("verify_signer: {e:?}"))
-                })?,
+                .map_err(|e| ConsultError::InconsistentState(format!("verify_signer: {e:?}")))?,
             apex::ApexVerdict::Handover { old_apex, new_apex } => current_root
                 .verify_apex_handover(
                     &old_apex.name,
@@ -299,9 +296,7 @@ impl LedgerConsumer for InMemoryLedger {
                     &new_apex.name,
                     &new_apex.pubkey,
                 )
-                .map_err(|e| {
-                    ConsultError::InconsistentState(format!("verify_handover: {e:?}"))
-                })?,
+                .map_err(|e| ConsultError::InconsistentState(format!("verify_handover: {e:?}")))?,
         };
         if !apex_ok {
             return Ok(Verdict::Refuse(RefuseReason::StaleApex));
@@ -677,13 +672,7 @@ mod tests {
             0xCD,
             &[("apex-old", &sk_old_clone), ("apex-new", &sk_new_again)],
         );
-        let r = ledger.apply_apex_handover(
-            "apex-old",
-            &pk_old,
-            "apex-new",
-            &pk_new,
-            &handover,
-        );
+        let r = ledger.apply_apex_handover("apex-old", &pk_old, "apex-new", &pk_new, &handover);
         assert!(r.is_ok());
         // Current apex is now apex-new.
         let cur = ledger.apex.current().unwrap();
@@ -698,13 +687,7 @@ mod tests {
         // Handover checkpoint signed ONLY by apex-old (missing apex-new).
         let (sk_old_clone, _) = keypair(0x11);
         let handover = signed_checkpoint(100, 0xCD, &[("apex-old", &sk_old_clone)]);
-        let r = ledger.apply_apex_handover(
-            "apex-old",
-            &pk_old,
-            "apex-new",
-            &pk_new,
-            &handover,
-        );
+        let r = ledger.apply_apex_handover("apex-old", &pk_old, "apex-new", &pk_new, &handover);
         assert!(matches!(r, Err(LedgerError::InvalidHandover(_))));
     }
 
@@ -981,4 +964,3 @@ mod tests {
         );
     }
 }
-
