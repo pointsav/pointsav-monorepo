@@ -114,6 +114,10 @@ impl LocalTierClient {
             // decision the marginal cost is sunk in the VM cost.
             cost_usd: 0.0,
             upstream_version: None,
+            // Tier A llama-server hot-swap not yet wired (Phase 1 of
+            // learning-loop-master-plan-2026-05-18.md P1-1.9). Base
+            // model only — report None until `--lora` path lands.
+            adapter_version: None,
         })
     }
 }
@@ -252,6 +256,7 @@ mod tests {
             grammar: None,
             speculation: None,
             graph_context_enabled: None,
+            adapter_version: None,
         }
     }
 

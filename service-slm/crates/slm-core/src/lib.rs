@@ -192,6 +192,15 @@ pub struct ComputeRequest {
     /// DataGraph entity rows from bloating Claude Code prompts.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub graph_context_enabled: Option<bool>,
+    /// Optional adapter version hint. When set, the tier backend SHOULD load
+    /// this LoRA adapter version for the request (e.g. `coding-lora-2026-05-18`).
+    /// Backends MAY ignore the hint when the adapter isn't loaded; the actual
+    /// adapter version that served the request is reported back via
+    /// `ComputeResponse.adapter_version`. `None` means "use whatever is loaded".
+    /// Phase 1 of learning-loop-master-plan-2026-05-18.md (P1-1.6): required
+    /// for retrospective adapter-version-aware audit queries.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub adapter_version: Option<String>,
 }
 
 #[cfg(test)]
@@ -217,6 +226,7 @@ mod tests {
             grammar: None,
             speculation: None,
             graph_context_enabled: None,
+            adapter_version: None,
         }
     }
 
@@ -514,6 +524,14 @@ pub struct ComputeResponse {
     /// Yo-Yo or external-API implementation version, opaque string.
     #[serde(default)]
     pub upstream_version: Option<String>,
+    /// Adapter version that actually served the request. `None` when no LoRA
+    /// adapter is loaded (base model only) or when the backend does not
+    /// report adapter info (e.g. Tier C / Anthropic). Always reflects the
+    /// truth of WHAT served the request, regardless of what the request
+    /// hinted in `ComputeRequest.adapter_version`. Phase 1 of
+    /// learning-loop-master-plan-2026-05-18.md (P1-1.6).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub adapter_version: Option<String>,
 }
 
 // ---------------------------------------------------------------------------
