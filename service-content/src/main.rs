@@ -5,13 +5,13 @@ mod taxonomy;
 
 use graph::{GraphEntity, GraphStore, LbugGraphStore};
 use notify::{Event, RecursiveMode, Watcher};
+use serde_json::Value;
 use std::fs;
 use std::io::{BufRead, Write};
 use std::path::Path;
 use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
-use serde_json::Value;
 use tracing::{error, info, warn};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -24,14 +24,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         )
         .init();
 
-    info!(service = "service-content", "PointSav Semantic Watcher activated");
+    info!(
+        service = "service-content",
+        "PointSav Semantic Watcher activated"
+    );
 
     let doorman_endpoint = std::env::var("SLM_DOORMAN_ENDPOINT")
         .unwrap_or_else(|_| "http://127.0.0.1:9080".to_string());
     let base_dir = std::env::var("SERVICE_CONTENT_BASE_DIR")
         .unwrap_or_else(|_| "/home/mathew/deployments/woodfine-fleet-deployment/cluster-totebox-personnel-1/service-fs/data".to_string());
-    let module_id = std::env::var("SERVICE_CONTENT_MODULE_ID")
-        .unwrap_or_else(|_| "woodfine".to_string());
+    let module_id =
+        std::env::var("SERVICE_CONTENT_MODULE_ID").unwrap_or_else(|_| "woodfine".to_string());
 
     // Ontology directory: service-content/ontology/ relative to the binary's parent,
     // or overridden via SERVICE_CONTENT_ONTOLOGY_DIR.
@@ -44,7 +47,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .unwrap_or_else(|| "ontology".to_string())
     });
 
-    info!(doorman_endpoint, base_dir, module_id, ontology_dir, "startup configuration");
+    info!(
+        doorman_endpoint,
+        base_dir, module_id, ontology_dir, "startup configuration"
+    );
 
     let corpus_dir = format!("{}/service-content/ledgers", base_dir);
     let crm_dir = format!("{}/service-people/ledgers", base_dir);
@@ -63,10 +69,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let graph_db_path = format!("{}/entities.lbug", graph_dir);
 
     let graph_store: Arc<dyn GraphStore> = Arc::new(
-        LbugGraphStore::new(&graph_db_path)
-            .expect("[SYSTEM] Failed to open LadybugDB graph store"),
+        LbugGraphStore::new(&graph_db_path).expect("[SYSTEM] Failed to open LadybugDB graph store"),
     );
-    graph_store.init_schema().expect("[SYSTEM] Failed to initialise graph schema");
+    graph_store
+        .init_schema()
+        .expect("[SYSTEM] Failed to initialise graph schema");
     info!(graph_db_path, "graph store ready");
 
     // ── Processed-ledger persistence ─────────────────────────────────────────
@@ -74,8 +81,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Override with SERVICE_CONTENT_STATE_DIR.
     // Each line is the filename of a successfully-processed CORPUS_*.json file.
     // Files not present in this list are retried on the next restart.
-    let state_dir = std::env::var("SERVICE_CONTENT_STATE_DIR")
-        .unwrap_or_else(|_| graph_dir.clone());
+    let state_dir =
+        std::env::var("SERVICE_CONTENT_STATE_DIR").unwrap_or_else(|_| graph_dir.clone());
     fs::create_dir_all(&state_dir)?;
     let processed_ledgers_path = Path::new(&state_dir).join("processed_ledgers.jsonl");
     let mut processed_ledgers = load_processed_ledgers(&processed_ledgers_path);
@@ -107,14 +114,19 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // ── HTTP server (dedicated thread + own tokio runtime) ───────────────────
     // Cannot use reqwest::blocking inside a #[tokio::main] context (nested
     // runtime panic). Keep main synchronous; HTTP server owns its own runtime.
-    let http_bind = std::env::var("SERVICE_CONTENT_HTTP_BIND")
-        .unwrap_or_else(|_| "127.0.0.1:9081".to_string());
+    let http_bind =
+        std::env::var("SERVICE_CONTENT_HTTP_BIND").unwrap_or_else(|_| "127.0.0.1:9081".to_string());
     let graph_for_http = Arc::clone(&graph_store);
     let doorman_for_http = doorman_endpoint.clone();
     let ontology_for_http = ontology_dir.clone();
     std::thread::spawn(move || {
         let rt = tokio::runtime::Runtime::new().expect("Failed to build HTTP tokio runtime");
-        rt.block_on(http::run_server(graph_for_http, http_bind, doorman_for_http, ontology_for_http));
+        rt.block_on(http::run_server(
+            graph_for_http,
+            http_bind,
+            doorman_for_http,
+            ontology_for_http,
+        ));
     });
 
     // ── Process any pre-existing CORPUS_* files ───────────────────────────────
@@ -124,7 +136,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             if path.extension().and_then(|s| s.to_str()) == Some("json") {
                 let filename = path.file_name().unwrap().to_str().unwrap().to_string();
                 if filename.starts_with("CORPUS_") && !processed_ledgers.contains(&filename) {
-                    if process_corpus(&path, &crm_dir, &doorman_endpoint, &module_id, &graph_store) {
+                    if process_corpus(&path, &crm_dir, &doorman_endpoint, &module_id, &graph_store)
+                    {
                         append_processed_ledger(&processed_ledgers_path, &filename);
                     }
                     // Always push to in-memory list to prevent same-session re-triggers.
@@ -151,11 +164,19 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     if let Some(extension) = path.extension() {
                         if extension == "json" {
                             let filename = path.file_name().unwrap().to_str().unwrap().to_string();
-                            if filename.starts_with("CORPUS_") && !processed_ledgers.contains(&filename) {
+                            if filename.starts_with("CORPUS_")
+                                && !processed_ledgers.contains(&filename)
+                            {
                                 info!(corpus_file = %filename, "new corpus detected");
                                 thread::sleep(Duration::from_millis(250));
                                 processed_ledgers.push(filename.clone());
-                                if process_corpus(&path, &crm_dir, &doorman_endpoint, &module_id, &graph_store) {
+                                if process_corpus(
+                                    &path,
+                                    &crm_dir,
+                                    &doorman_endpoint,
+                                    &module_id,
+                                    &graph_store,
+                                ) {
                                     append_processed_ledger(&processed_ledgers_path, &filename);
                                 } else {
                                     warn!(corpus_file = %filename, "extraction failed — will retry on next restart");
@@ -199,10 +220,18 @@ fn append_processed_ledger(path: &Path, filename: &str) {
     match fs::OpenOptions::new().create(true).append(true).open(path) {
         Ok(mut f) => {
             if let Err(e) = writeln!(f, "{}", filename) {
-                eprintln!("[SYSTEM] Warning: could not append to {}: {}", path.display(), e);
+                eprintln!(
+                    "[SYSTEM] Warning: could not append to {}: {}",
+                    path.display(),
+                    e
+                );
             }
         }
-        Err(e) => eprintln!("[SYSTEM] Warning: could not open {} for append: {}", path.display(), e),
+        Err(e) => eprintln!(
+            "[SYSTEM] Warning: could not open {} for append: {}",
+            path.display(),
+            e
+        ),
     }
 }
 
@@ -213,8 +242,14 @@ fn process_corpus(
     module_id: &str,
     graph_store: &Arc<dyn GraphStore>,
 ) -> bool {
-    let content = match fs::read_to_string(filepath) { Ok(c) => c, Err(_) => return false };
-    let payload: Value = match serde_json::from_str(&content) { Ok(v) => v, Err(_) => return false };
+    let content = match fs::read_to_string(filepath) {
+        Ok(c) => c,
+        Err(_) => return false,
+    };
+    let payload: Value = match serde_json::from_str(&content) {
+        Ok(v) => v,
+        Err(_) => return false,
+    };
 
     let worm_id = payload["worm_id"].as_str().unwrap_or("UNKNOWN");
     let corpus_text = payload["corpus"].as_str().unwrap_or("");
@@ -222,7 +257,8 @@ fn process_corpus(
     // Per-file module_id validation.
     // Absent or empty → use process-level module_id (trusted from env var).
     // Present and invalid → reject the file to prevent taxonomy-namespace injection.
-    let effective_module_id: String = match payload["module_id"].as_str().filter(|s| !s.is_empty()) {
+    let effective_module_id: String = match payload["module_id"].as_str().filter(|s| !s.is_empty())
+    {
         None => module_id.to_string(),
         Some(s) if s.starts_with("__") => {
             warn!(corpus_file = %filepath.display(), module_id = s, "rejecting: reserved __ prefix");
@@ -235,7 +271,9 @@ fn process_corpus(
         Some(s) => s.to_string(),
     };
 
-    if corpus_text.is_empty() { return false; }
+    if corpus_text.is_empty() {
+        return false;
+    }
 
     // Sprint 1: write Source node before calling Doorman.
     // Graph grows regardless of Ring 3 (Doorman/Tier B) reachability.
@@ -286,7 +324,8 @@ fn process_corpus(
 
     let url = format!("{}/v1/extract", doorman_endpoint);
     let client = reqwest::blocking::Client::new();
-    let res = client.post(&url)
+    let res = client
+        .post(&url)
         .json(&body)
         .timeout(Duration::from_secs(300))
         .send();
@@ -300,7 +339,10 @@ fn process_corpus(
                     // next boot with Tier B available will retry this file.
                     if extract_resp["deferred"].as_bool().unwrap_or(false) {
                         let reason = extract_resp["defer_reason"].as_str().unwrap_or("unknown");
-                        warn!(defer_reason = reason, "extraction deferred — tier B unavailable; will retry next boot");
+                        warn!(
+                            defer_reason = reason,
+                            "extraction deferred — tier B unavailable; will retry next boot"
+                        );
                         return false;
                     }
 
@@ -315,16 +357,20 @@ fn process_corpus(
 
                         for ent in &semantic_entities {
                             let entity_name = ent["entity_name"].as_str().unwrap_or("").to_string();
-                            let classification = ent["classification"].as_str().unwrap_or("").to_string();
-                            let role_vector = ent.get("role_vector")
+                            let classification =
+                                ent["classification"].as_str().unwrap_or("").to_string();
+                            let role_vector = ent
+                                .get("role_vector")
                                 .and_then(|v| v.as_str())
                                 .filter(|s| !s.is_empty() && *s != "null")
                                 .map(str::to_string);
-                            let location_vector = ent.get("location_vector")
+                            let location_vector = ent
+                                .get("location_vector")
                                 .and_then(|v| v.as_str())
                                 .filter(|s| !s.is_empty() && *s != "null")
                                 .map(str::to_string);
-                            let contact_vector = ent.get("contact_vector")
+                            let contact_vector = ent
+                                .get("contact_vector")
                                 .and_then(|v| v.as_str())
                                 .filter(|s| !s.is_empty() && *s != "null")
                                 .map(str::to_string);
@@ -342,15 +388,28 @@ fn process_corpus(
 
                             // Build the legacy JSON CRM record
                             let mut new_ent = serde_json::Map::new();
-                            new_ent.insert("entity_name".to_string(), serde_json::json!(entity_name));
-                            new_ent.insert("classification".to_string(), serde_json::json!(classification));
-                            new_ent.insert("role_vector".to_string(),
-                                role_vector.as_deref().map(|s| serde_json::json!(s))
-                                    .unwrap_or(serde_json::json!("UNVERIFIED")));
+                            new_ent
+                                .insert("entity_name".to_string(), serde_json::json!(entity_name));
+                            new_ent.insert(
+                                "classification".to_string(),
+                                serde_json::json!(classification),
+                            );
+                            new_ent.insert(
+                                "role_vector".to_string(),
+                                role_vector
+                                    .as_deref()
+                                    .map(|s| serde_json::json!(s))
+                                    .unwrap_or(serde_json::json!("UNVERIFIED")),
+                            );
                             new_ent.insert("confidence".to_string(), serde_json::json!(0.95));
-                            new_ent.insert("context_anchor".to_string(), serde_json::json!("SLM NEURAL INFERENCE"));
+                            new_ent.insert(
+                                "context_anchor".to_string(),
+                                serde_json::json!("SLM NEURAL INFERENCE"),
+                            );
 
-                            let loc = location_vector.as_deref().map(|s| serde_json::json!(s))
+                            let loc = location_vector
+                                .as_deref()
+                                .map(|s| serde_json::json!(s))
                                 .unwrap_or(serde_json::json!("UNVERIFIED"));
                             new_ent.insert("location_vector".to_string(), loc);
 
@@ -380,7 +439,9 @@ fn process_corpus(
                         }
                         info!(entities = enriched_crm.len(), module_id = %effective_module_id, "semantic integration complete");
 
-                        if let Err(e) = graph_store.upsert_entities(&effective_module_id, &graph_entities) {
+                        if let Err(e) =
+                            graph_store.upsert_entities(&effective_module_id, &graph_entities)
+                        {
                             error!(module_id = %effective_module_id, error = %e, "graph write failed");
                             return false;
                         } else {
