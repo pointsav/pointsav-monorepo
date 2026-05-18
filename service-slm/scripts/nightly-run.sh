@@ -57,7 +57,7 @@ log "=== Phase 1: DataGraph rebuild (${DATAGRAPH_SECONDS}s budget) ==="
 
 if [[ "${NO_YOYO}" != "true" ]]; then
     log "Starting Yo-Yo #1 (vLLM Tier B for extraction)..."
-    if "${SCRIPT_DIR}/start-yoyo.sh" --wait-ready=600 --auto-snapshot 2>&1 | sed 's/^/  /'; then
+    if "${SCRIPT_DIR}/start-yoyo.sh" --wait-ready=600 --runtime=14h --auto-snapshot 2>&1 | sed 's/^/  /'; then
         log "Yo-Yo #1 ready — Tier B available."
     else
         rc=${PIPESTATUS[0]}
