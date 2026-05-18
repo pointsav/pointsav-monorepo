@@ -304,13 +304,22 @@ async fn verdict(
     Ok(Json(outcome))
 }
 
-/// `POST /v1/shadow` wire shape — brief + actual_diff.
+/// `POST /v1/shadow` wire shape — brief + actual_diff + source_tier.
 #[derive(Deserialize)]
 struct ShadowWireBody {
     brief: ApprenticeshipBrief,
     /// The diff that the senior actually committed (the post-hoc
     /// reference). Convention §7 path P2.
     actual_diff: String,
+    /// Tier-of-origin for `actual_diff`. When the `/v1/messages` shim
+    /// captures a Claude-Code session via the post-commit hook, this
+    /// carries the `X-Foundry-Tier-Used` value from the upstream
+    /// response. Value `"external"` triggers a 403 rejection per the
+    /// Anthropic ToS competing-models constraint (Tier-C outputs must
+    /// not enter the training corpus). Other values (`"local"`,
+    /// `"yoyo"`) or `None` (legacy / unknown provenance) are permitted.
+    #[serde(default)]
+    source_tier: Option<String>,
 }
 
 /// Response body for a successful `POST /v1/shadow` enqueue (202 ACCEPTED).
@@ -358,6 +367,25 @@ async fn shadow(
         ApiError::not_found("apprenticeship endpoints disabled (SLM_APPRENTICESHIP_ENABLED unset)")
     })?;
 
+    // Tier-C contamination gate (Anthropic ToS, competing-models constraint).
+    // If the caller declares the diff was authored through a Tier-C-routed
+    // session, refuse to enqueue — Tier-C outputs are prohibited from the
+    // training corpus. Defense-in-depth: the structural invariant in
+    // `pick_tier_for_brief` keeps apprentice attempts off Tier C, but
+    // `actual_diff` carries its own provenance independent of the apprentice
+    // routing decision.
+    if wire.source_tier.as_deref() == Some("external") {
+        tracing::warn!(
+            target: "contamination_guard",
+            brief_id = %wire.brief.brief_id,
+            source_tier = "external",
+            "rejected /v1/shadow: Tier-C source_tier prohibited by Anthropic ToS"
+        );
+        return Err(ApiError::forbidden(
+            "source_tier=\"external\" prohibited: Tier-C outputs must not enter the training corpus (Anthropic ToS, competing-models constraint)",
+        ));
+    }
+
     // Preserve the caller's brief_id as the audit_id. The brief_id is the
     // deterministic idempotency key for the queue file
     // (`<brief_id>.brief.jsonl`); using it as audit_id lets callers correlate
@@ -399,6 +427,7 @@ async fn shadow(
     let shadow_entry = crate::queue::ShadowQueueEntry {
         brief: wire.brief.clone(),
         actual_diff: wire.actual_diff.clone(),
+        source_tier: wire.source_tier.clone(),
     };
     let entry =
         crate::queue::enqueue_shadow(&state.queue_config, &shadow_entry).map_err(ApiError::from)?;
@@ -1693,6 +1722,13 @@ impl ApiError {
     fn not_found(msg: impl Into<String>) -> Self {
         Self {
             status: StatusCode::NOT_FOUND,
+            body: serde_json::json!({ "error": { "message": msg.into() } }),
+        }
+    }
+
+    fn forbidden(msg: impl Into<String>) -> Self {
+        Self {
+            status: StatusCode::FORBIDDEN,
             body: serde_json::json!({ "error": { "message": msg.into() } }),
         }
     }
