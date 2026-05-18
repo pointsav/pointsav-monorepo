@@ -144,6 +144,18 @@ pub async fn build_index(
 /// for every non-bilingual TOPIC. Descends one level into category subdirs.
 /// Frontmatter is parsed; body is the markdown source after the delimiters.
 /// Slugs for subdirectory files use `<category>/<stem>` form.
+/// Repo-management file stems excluded from the search index — mirrors
+/// SYSTEM_FILE_STEMS in server.rs. Both lists must stay in sync.
+const SEARCH_EXCLUDED_STEMS: &[&str] = &[
+    "README", "CHANGELOG", "MANIFEST", "CLAUDE", "NEXT", "NOTAM",
+    "TRADEMARK", "CODE_OF_CONDUCT", "BUDGET", "DOCTRINE", "LICENSE",
+    "CONTRIBUTING", "SECURITY", "AGENT",
+];
+
+fn is_excluded_stem(stem: &str) -> bool {
+    SEARCH_EXCLUDED_STEMS.contains(&stem)
+}
+
 async fn collect_topics(content_dir: &Path) -> Result<Vec<(String, String, String)>, WikiError> {
     let mut out = Vec::new();
     let mut entries = tokio::fs::read_dir(content_dir).await?;
@@ -153,11 +165,13 @@ async fn collect_topics(content_dir: &Path) -> Result<Vec<(String, String, Strin
         let path = entry.path();
 
         if file_type.is_dir() {
+            let dir_name = path.file_name().and_then(|s| s.to_str()).unwrap_or("");
+            // Skip hidden directories (.git, .github, etc.).
+            if dir_name.starts_with('.') {
+                continue;
+            }
             // Descend into one-level subdirectory (category folder).
-            let subdir_name = path.file_name()
-                .and_then(|s| s.to_str())
-                .unwrap_or("")
-                .to_string();
+            let subdir_name = dir_name.to_string();
             let mut sub_entries = match tokio::fs::read_dir(&path).await {
                 Ok(e) => e,
                 Err(_) => continue,
@@ -193,6 +207,10 @@ async fn collect_topics(content_dir: &Path) -> Result<Vec<(String, String, Strin
             let Some(stem) = path.file_stem().and_then(|s| s.to_str()) else {
                 continue;
             };
+            // Skip repo-management files and Spanish/index variants.
+            if is_excluded_stem(stem) {
+                continue;
+            }
             if stem.ends_with(".es") || stem == "index" || stem == "_index" || stem.starts_with('_') {
                 continue;
             }
@@ -396,6 +414,41 @@ mod tests {
         let hits_es = search(&index, "español", 10).unwrap();
         // The Spanish sibling was not indexed, so its body terms don't match.
         assert!(hits_es.is_empty());
+    }
+
+    /// System files (README, CLAUDE, AGENT, etc.) must not enter the index.
+    #[tokio::test]
+    async fn system_files_excluded_from_index() {
+        let content_dir = tempfile::tempdir().unwrap();
+        let state_dir = tempfile::tempdir().unwrap();
+        // A regular topic — should be indexed.
+        tokio::fs::write(
+            content_dir.path().join("topic-real.md"),
+            "---\ntitle: Real\nslug: topic-real\n---\nThis is a real article.\n",
+        )
+        .await
+        .unwrap();
+        // System files — must NOT be indexed.
+        for stem in &["README", "CLAUDE", "AGENT", "NEXT", "CHANGELOG"] {
+            tokio::fs::write(
+                content_dir.path().join(format!("{stem}.md")),
+                format!("---\ntitle: {stem}\n---\nUnique system-file keyword: xyzzy-{stem}-sentinel.\n"),
+            )
+            .await
+            .unwrap();
+        }
+        let index = build_index(content_dir.path(), state_dir.path()).await.unwrap();
+        // System-file sentinels must not appear in search results.
+        for stem in &["README", "CLAUDE", "AGENT", "NEXT", "CHANGELOG"] {
+            let hits = search(&index, &format!("xyzzy-{stem}-sentinel"), 10).unwrap();
+            assert!(
+                hits.is_empty(),
+                "{stem}.md should not be indexed, but searching for its sentinel returned hits"
+            );
+        }
+        // Regular topic is still indexed.
+        let hits = search(&index, "real article", 10).unwrap();
+        assert!(!hits.is_empty(), "regular topic should be indexed");
     }
 
     #[tokio::test]
