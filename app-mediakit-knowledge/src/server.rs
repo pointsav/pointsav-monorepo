@@ -1599,6 +1599,50 @@ async fn index(
     ))
 }
 
+/// Search category subdirectories of `state.content_dir` (and guide dirs)
+/// for a file whose stem matches `bare_slug`. Returns the path-qualified
+/// slug (`"category/bare_slug"`) when exactly one match is found, or
+/// `None` if zero or more than one match exist (ambiguous).
+async fn resolve_bare_slug(state: &AppState, bare_slug: &str) -> Option<String> {
+    let dirs: Vec<&PathBuf> = [
+        Some(&state.content_dir),
+        state.guide_dir.as_ref(),
+        state.guide_dir_2.as_ref(),
+    ]
+    .into_iter()
+    .flatten()
+    .collect();
+
+    let mut found: Option<String> = None;
+    for dir in dirs {
+        let mut entries = match fs::read_dir(dir).await {
+            Ok(e) => e,
+            Err(_) => continue,
+        };
+        while let Some(entry) = entries.next_entry().await.ok().flatten() {
+            let ft = match entry.file_type().await {
+                Ok(ft) => ft,
+                Err(_) => continue,
+            };
+            if !ft.is_dir() {
+                continue;
+            }
+            let dir_name = entry.file_name().to_string_lossy().to_string();
+            if dir_name.starts_with('.') {
+                continue;
+            }
+            let candidate = entry.path().join(format!("{bare_slug}.md"));
+            if candidate.exists() {
+                if found.is_some() {
+                    return None; // Ambiguous: two subdirectories share the same stem.
+                }
+                found = Some(format!("{dir_name}/{bare_slug}"));
+            }
+        }
+    }
+    found
+}
+
 async fn wiki_page(
     State(state): State<Arc<AppState>>,
     Path(slug): Path<String>,
@@ -1648,6 +1692,20 @@ async fn wiki_page(
                         let norm_path = state.content_dir.join(format!("{norm}.md"));
                         if norm_path.exists() {
                             let location = format!("/wiki/{norm}");
+                            return Ok(Response::builder()
+                                .status(StatusCode::MOVED_PERMANENTLY)
+                                .header(header::LOCATION, location)
+                                .body(axum::body::Body::empty())
+                                .unwrap());
+                        }
+                    }
+                    // Bare-slug resolver: if the slug has no directory component,
+                    // search category subdirectories for a unique stem match and
+                    // 301-redirect to the qualified slug. Fixes wikilinks that were
+                    // written before the Wave-1 category-subdirectory migration.
+                    if !slug.contains('/') {
+                        if let Some(full) = resolve_bare_slug(&state, &slug).await {
+                            let location = format!("/wiki/{full}");
                             return Ok(Response::builder()
                                 .status(StatusCode::MOVED_PERMANENTLY)
                                 .header(header::LOCATION, location)
@@ -3920,6 +3978,64 @@ mod tests {
         assert!(
             html.contains("The Compounding Substrate"),
             "title from frontmatter should appear: {html}"
+        );
+    }
+
+    /// Verify that a bare slug (`/wiki/compounding-substrate`) 301-redirects to
+    /// the path-qualified slug (`/wiki/architecture/compounding-substrate`) when
+    /// the file lives in a category subdirectory.
+    #[tokio::test]
+    async fn wiki_page_bare_slug_redirects_to_qualified() {
+        let dir = tempfile::tempdir().unwrap();
+        let state_dir = tempfile::tempdir().unwrap();
+        tokio::fs::create_dir_all(dir.path().join("architecture")).await.unwrap();
+        tokio::fs::write(
+            dir.path().join("architecture/bare-slug-test.md"),
+            "---\ntitle: Bare Slug Test\ncategory: architecture\n---\nBody.\n",
+        )
+        .await
+        .unwrap();
+        let index = crate::search::build_index(dir.path(), state_dir.path())
+            .await
+            .unwrap();
+        let repo = crate::git::open_or_init(dir.path()).unwrap();
+        let state = AppState {
+            content_dir: dir.path().to_path_buf(),
+            guide_dir: None,
+            guide_dir_2: None,
+            citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
+            search: Arc::new(index),
+            git: Arc::new(Mutex::new(repo)),
+            collab: Arc::new(crate::collab::CollabRooms::new()),
+            enable_collab: false,
+            site_title: "Test Wiki".to_string(),
+            git_tenant: "pointsav".to_string(),
+            mcp_enabled: false,
+            glossary: Arc::new(crate::glossary::Glossary::default()),
+            links: crate::links::LinkGraph::for_testing(),
+            brand_theme: None,
+            db: None,
+        };
+        let app = router(state);
+        let resp = app
+            .oneshot(
+                Request::builder()
+                    .uri("/wiki/bare-slug-test")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(
+            resp.status(),
+            StatusCode::MOVED_PERMANENTLY,
+            "bare slug should 301 redirect to path-qualified form"
+        );
+        let location = resp.headers().get("location").unwrap().to_str().unwrap();
+        assert_eq!(
+            location,
+            "/wiki/architecture/bare-slug-test",
+            "redirect location should be the path-qualified slug"
         );
     }
 
