@@ -301,3 +301,54 @@ periodic timer; on operator command. Pending operational decision.
 - Companion: `conventions/customer-owned-graph-ip.md`
 - Reference: existing `vendor/pointsav-monorepo/service-content/seeds/`
 - Cluster scope: project-data Task
+
+---
+
+## Addendum — provenance + citations (2026-05-18)
+
+Shipped in commit `773113d5` per
+`.agent/plans/learning-loop-master-plan-2026-05-18.md`.
+
+### Entity provenance (P2-2.1)
+
+`GraphEntity` gains two optional fields:
+
+```rust
+pub struct GraphEntity {
+    // ... existing fields ...
+    pub worm_id: Option<String>,    // CORPUS ledger ID that supports this entity
+    pub cites: Vec<String>,         // citation IDs from /srv/foundry/citations.yaml
+}
+```
+
+LadybugDB `Entity` table gains `worm_id STRING` + `cites_json STRING`
+columns. Backward-compatible: `rows_to_entities` handles both legacy
+7-column and post-2026-05-18 9-column shapes; missing fields default
+to `None` / empty `Vec`. All 9 GraphEntity construction sites in
+`src/main.rs` and `src/taxonomy.rs` updated. Extraction Doorman path
+will populate these when wired to the CORPUS ledger (P2-2.1-followup).
+
+### Citations resolver (P2-2.4)
+
+New module `src/citations.rs` loads `/srv/foundry/citations.yaml`
+(857 lines) at startup. Indexed by canonical ID + title + URL +
+aliases for O(1) lookup. Hot-reload via mtime poll.
+
+`GET /v1/citations/resolve?q=<alias-or-url>` returns the matched
+entry or `{"matched": false}`. Empty-file degraded mode: missing
+citations.yaml returns no-match for every query rather than failing
+service startup.
+
+Editorial Task sessions use this to harden `[external: <url>]`
+markers into `[citation-id]` during refinement, eliminating
+hallucinated citation IDs.
+
+### Outstanding
+
+- P2-2.2 RelatedTo edges + neighbors endpoint (deferred — needs
+  editorial taxonomy ratification)
+- P2-2.3 `POST /v1/editorial/seed` aggregated endpoint
+- P2-2.6 `POST /v1/editorial/grammar` (banned-vocab + glossary pack)
+- P2-2.7 deprecate `/v1/draft/generate`
+
+See the master plan for sequencing.
