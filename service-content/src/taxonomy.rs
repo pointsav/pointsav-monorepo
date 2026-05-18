@@ -352,6 +352,8 @@ pub fn archetypes_to_entities(rows: &[ArchetypeRow]) -> Vec<GraphEntity> {
             contact_vector: Some(r.gravity_keywords.clone()),
             module_id: "__taxonomy__".to_string(),
             confidence: 1.0,
+            worm_id: None,
+            cites: Vec::new(),
         })
         .collect()
 }
@@ -366,6 +368,8 @@ pub fn coa_to_entities(rows: &[CoaRow]) -> Vec<GraphEntity> {
             contact_vector: Some(r.gravity_keywords.clone()),
             module_id: "__taxonomy__".to_string(),
             confidence: 1.0,
+            worm_id: None,
+            cites: Vec::new(),
         })
         .collect()
 }
@@ -380,6 +384,8 @@ pub fn domains_to_entities(rows: &[DomainRow]) -> Vec<GraphEntity> {
             contact_vector: Some(r.gravity_keywords.clone()),
             module_id: "__taxonomy__".to_string(),
             confidence: 1.0,
+            worm_id: None,
+            cites: Vec::new(),
         })
         .collect()
 }
@@ -396,6 +402,8 @@ pub fn glossary_to_entities(rows: &[GlossaryRow]) -> Vec<GraphEntity> {
                 contact_vector: Some(r.definition.chars().take(200).collect()),
                 module_id: "__taxonomy__".to_string(),
                 confidence: 1.0,
+                worm_id: None,
+                cites: Vec::new(),
             }
         })
         .collect()
@@ -411,6 +419,8 @@ pub fn themes_to_entities(rows: &[ThemeRow]) -> Vec<GraphEntity> {
             contact_vector: Some(r.gravity_keywords.clone()),
             module_id: "__taxonomy__".to_string(),
             confidence: 1.0,
+            worm_id: None,
+            cites: Vec::new(),
         })
         .collect()
 }
@@ -425,6 +435,8 @@ pub fn topics_to_entities(rows: &[TopicRow]) -> Vec<GraphEntity> {
             contact_vector: Some(r.wiki_repo.clone()),
             module_id: "__taxonomy__".to_string(),
             confidence: 1.0,
+            worm_id: None,
+            cites: Vec::new(),
         })
         .collect()
 }
@@ -439,6 +451,8 @@ pub fn guides_to_entities(rows: &[GuideRow]) -> Vec<GraphEntity> {
             contact_vector: Some(r.wiki_repo.clone()),
             module_id: "__taxonomy__".to_string(),
             confidence: 1.0,
+            worm_id: None,
+            cites: Vec::new(),
         })
         .collect()
 }
