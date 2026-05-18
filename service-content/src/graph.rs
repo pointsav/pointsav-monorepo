@@ -12,6 +12,20 @@ pub struct GraphEntity {
     pub contact_vector: Option<String>,
     pub module_id: String,
     pub confidence: f64,
+    /// WORM ledger ID of the CORPUS file this entity was extracted from
+    /// (e.g. `CORPUS_01J9Q...`). Phase 2 of
+    /// learning-loop-master-plan-2026-05-18.md (P2-2.1) — provenance for
+    /// every entity so editorial citations can be traced back to source.
+    /// Optional for backward compatibility with entities ingested before
+    /// 2026-05-18; new extractions MUST populate this field.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub worm_id: Option<String>,
+    /// Citation IDs from `/srv/foundry/citations.yaml` that ground this
+    /// entity. Resolved against the canonical citation registry. Phase 2
+    /// of learning-loop-master-plan-2026-05-18.md (P2-2.1) — required for
+    /// citation-faithful editorial output via /v1/editorial/seed.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub cites: Vec<String>,
 }
 
 pub trait GraphStore: Send + Sync {
@@ -67,6 +81,12 @@ impl LbugGraphStore {
 impl GraphStore for LbugGraphStore {
     fn init_schema(&self) -> Result<()> {
         let conn = self.conn()?;
+        // Note: P2-2.1 (2026-05-18) adds `worm_id` and `cites_json` columns
+        // for entity provenance and citation grounding. `IF NOT EXISTS` keeps
+        // pre-existing tables compatible; new columns gain a default of empty
+        // string for existing rows (handled at query time by val_to_string).
+        // A future migration step (P2-2.1-followup) populates worm_id for
+        // legacy rows from the CORPUS ledger replay.
         conn.query(
             "CREATE NODE TABLE IF NOT EXISTS Entity(\
                 id STRING PRIMARY KEY, \
@@ -77,7 +97,9 @@ impl GraphStore for LbugGraphStore {
                 contact_vector STRING, \
                 module_id STRING, \
                 confidence DOUBLE, \
-                created_at STRING\
+                created_at STRING, \
+                worm_id STRING, \
+                cites_json STRING\
             )",
         )
         .map_err(|e| anyhow!("init_schema Entity table failed: {}", e))?;
@@ -108,7 +130,9 @@ impl GraphStore for LbugGraphStore {
                      e.location_vector = $location_vector, \
                      e.contact_vector = $contact_vector, \
                      e.module_id = $module_id, \
-                     e.confidence = $confidence",
+                     e.confidence = $confidence, \
+                     e.worm_id = $worm_id, \
+                     e.cites_json = $cites_json",
             )
             .map_err(|e| anyhow!("Failed to prepare upsert statement: {}", e))?;
 
@@ -129,6 +153,11 @@ impl GraphStore for LbugGraphStore {
                 module_id,
                 entity.entity_name.to_lowercase().replace(' ', "_")
             );
+
+            // Serialise `cites` to JSON string for LadybugDB scalar column.
+            // Empty vec → "[]" so query-side parsing is uniform.
+            let cites_json = serde_json::to_string(&entity.cites)
+                .unwrap_or_else(|_| "[]".to_string());
 
             conn.execute(
                 &mut stmt_merge,
@@ -153,6 +182,8 @@ impl GraphStore for LbugGraphStore {
                     ),
                     ("module_id", Value::String(entity.module_id.clone())),
                     ("confidence", Value::Double(entity.confidence)),
+                    ("worm_id", Value::String(entity.worm_id.clone().unwrap_or_default())),
+                    ("cites_json", Value::String(cites_json)),
                 ],
             )
             .map_err(|e| anyhow!("Failed to upsert entity '{}': {}", entity.entity_name, e))?;
@@ -187,7 +218,8 @@ impl GraphStore for LbugGraphStore {
                  WHERE e.module_id = $module_id \
                    AND lower(e.entity_name) CONTAINS $query \
                  RETURN e.entity_name, e.classification, e.role_vector, \
-                        e.location_vector, e.contact_vector, e.module_id, e.confidence \
+                        e.location_vector, e.contact_vector, e.module_id, e.confidence, \
+                        e.worm_id, e.cites_json \
                  LIMIT $limit",
             )
             .map_err(|e| anyhow!("Failed to prepare query_context statement: {}", e))?;
@@ -214,7 +246,8 @@ impl GraphStore for LbugGraphStore {
                 "MATCH (e:Entity) \
                  WHERE e.module_id = $module_id \
                  RETURN e.entity_name, e.classification, e.role_vector, \
-                        e.location_vector, e.contact_vector, e.module_id, e.confidence",
+                        e.location_vector, e.contact_vector, e.module_id, e.confidence, \
+                        e.worm_id, e.cites_json",
             )
             .map_err(|e| anyhow!("Failed to prepare list_entities statement: {}", e))?;
 
@@ -320,9 +353,13 @@ fn val_to_f64(v: &Value) -> f64 {
 }
 
 /// Convert a `QueryResult` iterator into `Vec<GraphEntity>`.
-/// Each row yields 7 columns in RETURN order:
+/// Each row yields 9 columns in RETURN order:
 /// 0 entity_name, 1 classification, 2 role_vector, 3 location_vector,
-/// 4 contact_vector, 5 module_id, 6 confidence
+/// 4 contact_vector, 5 module_id, 6 confidence, 7 worm_id, 8 cites_json
+///
+/// P2-2.1 (2026-05-18) — worm_id + cites_json columns added for provenance
+/// and citation grounding. Rows with fewer than 9 columns are pre-2026-05-18
+/// schema versions; columns 7-8 default to None/empty for those rows.
 fn rows_to_entities(result: lbug::QueryResult<'_>) -> Result<Vec<GraphEntity>> {
     let mut out = Vec::new();
     for row in result {
@@ -357,6 +394,24 @@ fn rows_to_entities(result: lbug::QueryResult<'_>) -> Result<Vec<GraphEntity>> {
         };
         let module_id = val_to_string(&row[5]);
         let confidence = val_to_f64(&row[6]);
+        // worm_id + cites are optional — present in 9-column rows, absent
+        // in legacy 7-column rows. Default to None / empty Vec.
+        let worm_id = if row.len() >= 8 {
+            let s = val_to_string(&row[7]);
+            if s.is_empty() { None } else { Some(s) }
+        } else {
+            None
+        };
+        let cites: Vec<String> = if row.len() >= 9 {
+            let json = val_to_string(&row[8]);
+            if json.is_empty() {
+                Vec::new()
+            } else {
+                serde_json::from_str(&json).unwrap_or_default()
+            }
+        } else {
+            Vec::new()
+        };
 
         out.push(GraphEntity {
             entity_name,
@@ -366,6 +421,8 @@ fn rows_to_entities(result: lbug::QueryResult<'_>) -> Result<Vec<GraphEntity>> {
             contact_vector,
             module_id,
             confidence,
+            worm_id,
+            cites,
         });
     }
     Ok(out)
