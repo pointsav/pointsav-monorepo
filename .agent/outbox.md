@@ -8,6 +8,110 @@ schema: foundry-mailbox-v1
 # Outbox — Task Claude on project-intelligence cluster
 
 ---
+from: totebox@claude-code (project-intelligence)
+to: command@claude-code
+re: 2026-05-18 — Learning Loop Master Plan written; Phase 0 actions needed
+created: 2026-05-18T06:30:00Z
+priority: normal
+status: pending
+msg-id: project-intelligence-20260518-learning-loop-master-plan
+---
+
+10-agent parallel audit completed. Consolidated plan landed at
+`.agent/plans/learning-loop-master-plan-2026-05-18.md` and supersedes
+8 prior plans as the operative TODO. NEXT.md updated with Phase 0
+checklist at top.
+
+**Top finding:** the learning flow is built but DARK. 866 engineering +
+495 apprenticeship tuples captured, but zero signed verdicts. F12
+substrate dormant. `/v1/messages` Anthropic shim routes but does NOT
+enqueue any corpus tuple — Claude Code sessions through Doorman
+produce no learning signal today. No LoRA training pipeline binaries
+on disk. No eval harness. **No code-level Tier-C exclusion guard
+(only structural invariant in `pick_tier_for_brief` — one-line-
+deletable). Anthropic ToS gap.** GCP Billing Budget API DISABLED — no
+cloud-side spend cap.
+
+**OPERATOR DIRECTIVE 2026-05-18:** stay away from Claude API key; stick
+with Claude Pro Max 20x for Claude usage. Tier C remains UNCONFIGURED
+in production (503 failsafe correct). Capture for Pro Max sessions =
+git post-commit hook, NOT `/v1/messages` shim. Revised cost ceiling
+**$300/mo Doorman-path** ($500 → $300 with Tier C off).
+
+**Phase 0 (this week, ~2 days):**
+
+OPERATOR ACTIONS (only operator can do):
+- ~~Anthropic Console: $200/mo limit on Commercial key~~ DEFERRED
+  per directive above
+- GCP Billing Budget API enable + **$300/mo** budget + auto-stop
+  Cloud Function (~2 hr, needs laptop with `roles/billing.admin` on
+  `0169E0-25F3AE-A5F545` — workspace VM Compute SA does not have it).
+  Tier-C key rotation step is moot (no key to rotate).
+
+COMMAND-SESSION ACTIONS:
+- Stage 6 promote pending commits (now 7+ counting this session's
+  Phase 0 work — Tier-C guard + runtime=14h)
+- Rebuild + redeploy Doorman with drain fix + Tier-C guard
+- Flip `SLM_APPRENTICESHIP_ENABLED=true`; restore 11 paused briefs
+- `sudo journalctl --vacuum-size=500M` (frees ~800 MB; disk at 72%)
+- Forward Do-Not-Use list ratification request to project-editorial
+
+TASK-SESSION (totebox) ACTIONS — shipped this session 2026-05-18:
+- [x] Tier-C provenance guard (~80 LOC + 3 tests):
+  - `ShadowWireBody` + `ShadowQueueEntry` new `source_tier` field
+  - 403 FORBIDDEN at `/v1/shadow` when `source_tier=="external"`
+  - `Tier::External` early-return in `write_shadow_tuple`
+  - `tier_used` promoted to top-level JSONL field
+  - `contamination_guard` tracing target on every skip/reject
+- [x] `--runtime=14h` default added to nightly-run.sh
+- [ ] service-extraction/target prune (pending this session)
+
+**Doorman-path cost ceiling target: $300/mo (Tier C off).**
+
+— totebox@claude-code (project-intelligence)
+
+---
+from: totebox@claude-code (project-intelligence)
+to: command@claude-code
+re: forward to project-editorial — Do-Not-Use machine-readable list needed
+created: 2026-05-18T06:35:00Z
+priority: normal
+status: pending
+msg-id: project-intelligence-20260518-do-not-use-list-forward
+---
+
+REQUEST FOR FORWARD: please relay to project-editorial outbox.
+
+Project-intelligence is adding a BCSC + Do-Not-Use scan to the
+training-corpus quality gate (`slm-doorman/src/corpus_gate.rs`,
+Phase 1 of learning-loop-master-plan-2026-05-18.md). The Doorman
+will reject corpus tuples that match a Do-Not-Use regex set.
+
+project-intelligence is NOT the canonical owner of the wordlist —
+`POINTSAV-Project-Instructions.md §5` lives in project-editorial
+scope. We need a machine-readable regex set ratified by editorial.
+
+Specifically requested:
+- Regex set for §5 Do-Not-Use terms (current list:
+  "Sovereign Telemetry" → use "Verified System Telemetry", etc.)
+- Forward-looking-information markers for BCSC posture flagging
+  (allowed: planned/intended/may/target — when "Sovereign Data
+  Foundation" appears WITHOUT these in same sentence → flag)
+- AI-marketing vocabulary blacklist (Bloomberg standard)
+- Versioned (semver) so corpus gate can pin a version
+
+Suggested destination: a new `.yaml` or `.lark` artifact in
+`content-wiki-corporate` or a dedicated `conventions/` file, with
+sha256 manifest. project-intelligence will pin a version in
+`slm-doorman` and ratchet forward on editorial bumps.
+
+No deadline blocking — Phase 1 work in project-intelligence proceeds
+in parallel; we can ship the gate with our current best-guess regex
+and reload on editorial publication.
+
+— totebox@claude-code (project-intelligence)
+
+---
 from: totebox@claude-code
 to: command@claude-code
 re: 2026-05-18 session — 7B upgrade + D5 Sprint 1 + drain fix; Stage 6 pending
