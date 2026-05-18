@@ -17,7 +17,8 @@ pub struct GraphEntity {
 pub trait GraphStore: Send + Sync {
     fn init_schema(&self) -> Result<()>;
     fn upsert_entities(&self, module_id: &str, entities: &[GraphEntity]) -> Result<usize>;
-    fn query_context(&self, module_id: &str, query: &str, limit: usize) -> Result<Vec<GraphEntity>>;
+    fn query_context(&self, module_id: &str, query: &str, limit: usize)
+        -> Result<Vec<GraphEntity>>;
     fn list_entities(&self, module_id: &str) -> Result<Vec<GraphEntity>>;
     /// Count all entities across all module_ids. Used by healthz for monitoring.
     fn count_all(&self) -> Result<usize>;
@@ -25,7 +26,12 @@ pub trait GraphStore: Send + Sync {
     fn delete_by_classification(&self, module_id: &str, classification: &str) -> Result<usize>;
     /// Delete entities matching module_id + classification + location_vector (used for
     /// per-domain glossary/topic reloads where classification is shared across domains).
-    fn delete_by_classification_and_location(&self, module_id: &str, classification: &str, location: &str) -> Result<usize>;
+    fn delete_by_classification_and_location(
+        &self,
+        module_id: &str,
+        classification: &str,
+        location: &str,
+    ) -> Result<usize>;
 }
 
 pub struct LbugGraphStore {
@@ -38,7 +44,8 @@ impl LbugGraphStore {
             .ok()
             .and_then(|s| s.parse::<u64>().ok())
             .unwrap_or(64)
-            * 1024 * 1024;
+            * 1024
+            * 1024;
         let config = SystemConfig::default()
             .buffer_pool_size(buffer_pool_bytes)
             .max_num_threads(2)
@@ -127,10 +134,22 @@ impl GraphStore for LbugGraphStore {
                 vec![
                     ("id", Value::String(id.clone())),
                     ("entity_name", Value::String(entity.entity_name.clone())),
-                    ("classification", Value::String(entity.classification.clone())),
-                    ("role_vector", Value::String(entity.role_vector.clone().unwrap_or_default())),
-                    ("location_vector", Value::String(entity.location_vector.clone().unwrap_or_default())),
-                    ("contact_vector", Value::String(entity.contact_vector.clone().unwrap_or_default())),
+                    (
+                        "classification",
+                        Value::String(entity.classification.clone()),
+                    ),
+                    (
+                        "role_vector",
+                        Value::String(entity.role_vector.clone().unwrap_or_default()),
+                    ),
+                    (
+                        "location_vector",
+                        Value::String(entity.location_vector.clone().unwrap_or_default()),
+                    ),
+                    (
+                        "contact_vector",
+                        Value::String(entity.contact_vector.clone().unwrap_or_default()),
+                    ),
                     ("module_id", Value::String(entity.module_id.clone())),
                     ("confidence", Value::Double(entity.confidence)),
                 ],
@@ -152,7 +171,12 @@ impl GraphStore for LbugGraphStore {
         Ok(count)
     }
 
-    fn query_context(&self, module_id: &str, query: &str, limit: usize) -> Result<Vec<GraphEntity>> {
+    fn query_context(
+        &self,
+        module_id: &str,
+        query: &str,
+        limit: usize,
+    ) -> Result<Vec<GraphEntity>> {
         let conn = self.conn()?;
         let q_lower = query.to_lowercase();
 
@@ -238,7 +262,12 @@ impl GraphStore for LbugGraphStore {
         Ok(0)
     }
 
-    fn delete_by_classification_and_location(&self, module_id: &str, classification: &str, location: &str) -> Result<usize> {
+    fn delete_by_classification_and_location(
+        &self,
+        module_id: &str,
+        classification: &str,
+        location: &str,
+    ) -> Result<usize> {
         let conn = self.conn()?;
         let mut stmt = conn
             .prepare(
@@ -248,7 +277,12 @@ impl GraphStore for LbugGraphStore {
                    AND e.location_vector = $loc \
                  DELETE e",
             )
-            .map_err(|e| anyhow!("Failed to prepare delete_by_classification_and_location: {}", e))?;
+            .map_err(|e| {
+                anyhow!(
+                    "Failed to prepare delete_by_classification_and_location: {}",
+                    e
+                )
+            })?;
         conn.execute(
             &mut stmt,
             vec![
@@ -257,7 +291,12 @@ impl GraphStore for LbugGraphStore {
                 ("loc", Value::String(location.to_string())),
             ],
         )
-        .map_err(|e| anyhow!("Failed to execute delete_by_classification_and_location: {}", e))?;
+        .map_err(|e| {
+            anyhow!(
+                "Failed to execute delete_by_classification_and_location: {}",
+                e
+            )
+        })?;
         Ok(0)
     }
 }
@@ -293,15 +332,27 @@ fn rows_to_entities(result: lbug::QueryResult<'_>) -> Result<Vec<GraphEntity>> {
         let classification = val_to_string(&row[1]);
         let role_vector = {
             let s = val_to_string(&row[2]);
-            if s.is_empty() { None } else { Some(s) }
+            if s.is_empty() {
+                None
+            } else {
+                Some(s)
+            }
         };
         let location_vector = {
             let s = val_to_string(&row[3]);
-            if s.is_empty() { None } else { Some(s) }
+            if s.is_empty() {
+                None
+            } else {
+                Some(s)
+            }
         };
         let contact_vector = {
             let s = val_to_string(&row[4]);
-            if s.is_empty() { None } else { Some(s) }
+            if s.is_empty() {
+                None
+            } else {
+                Some(s)
+            }
         };
         let module_id = val_to_string(&row[5]);
         let confidence = val_to_f64(&row[6]);
