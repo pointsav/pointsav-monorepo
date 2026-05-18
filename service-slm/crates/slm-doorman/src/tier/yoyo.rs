@@ -371,6 +371,15 @@ impl YoYoTierClient {
             .get("x-foundry-yoyo-version")
             .and_then(|v| v.to_str().ok())
             .map(|s| s.to_string());
+        // Tier B reports the loaded adapter via the X-Foundry-Adapter-Version
+        // response header (Phase 1 of learning-loop-master-plan-2026-05-18.md
+        // P1-1.6). Server-side mistralrs / vLLM populates this when a LoRA
+        // is mounted; absent header means base model only.
+        let adapter_version = resp
+            .headers()
+            .get("x-foundry-adapter-version")
+            .and_then(|v| v.to_str().ok())
+            .map(|s| s.to_string());
 
         let body: OpenAiChatResponse = resp.json().await?;
         let content = body
@@ -388,6 +397,7 @@ impl YoYoTierClient {
             inference_ms,
             cost_usd: self.config.pricing.yoyo_cost_usd(inference_ms),
             upstream_version,
+            adapter_version,
         })
     }
 
@@ -689,6 +699,7 @@ mod tests {
             grammar: None,
             speculation: None,
             graph_context_enabled: None,
+            adapter_version: None,
         }
     }
 

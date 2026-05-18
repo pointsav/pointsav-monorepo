@@ -58,6 +58,10 @@ base64 = "0.22"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
 
+# Hashing — sha2 for stable cross-process (brief_hash, diff_hash) dedup
+# in corpus_gate.rs and the sidecar JSONL index.
+sha2 = "0.10"
+
 [profile.release]
 opt-level = 3
 lto = "thin"
