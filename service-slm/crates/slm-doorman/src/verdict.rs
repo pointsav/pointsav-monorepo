@@ -536,6 +536,13 @@ fn write_dpo_pair(
     brief_id: &str,
     attempt_id: &str,
 ) -> Result<PathBuf> {
+    // Second-layer corpus quality gate for DPO-pair writes
+    // (P1-1.1 of learning-loop-master-plan-2026-05-18.md). Scans both the
+    // rejected and corrected diffs for max-size + Do-Not-Use + BCSC; no
+    // dedup (each DPO row is uniquely keyed by ulid).
+    let rejected_gate = crate::corpus_gate::scan_diff_only(rejected_diff)?;
+    let corrected_gate = crate::corpus_gate::scan_diff_only(corrected_diff)?;
+
     let dir = corpus_root
         .join("data")
         .join("training-corpus")
@@ -559,6 +566,8 @@ fn write_dpo_pair(
         "corrected_diff": sanitize(corrected_diff),
         "doctrine_violation_tag": doctrine_violation_tag,
         "created": Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Secs, true),
+        "corpus_gate_rejected": rejected_gate,
+        "corpus_gate_corrected": corrected_gate,
     });
     let line = serde_json::to_string(&record).map_err(|e| DoormanError::CorpusWrite {
         path: path.display().to_string(),
