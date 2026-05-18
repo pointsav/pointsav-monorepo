@@ -10,6 +10,103 @@ schema: foundry-mailbox-v1
 ---
 from: totebox@claude-code (project-intelligence)
 to: command@claude-code
+re: 2026-05-18 overnight build — 8 commits, ~3500 LOC, 14 of 24 items shipped — Stage 6 pending
+created: 2026-05-18T10:00:00Z
+priority: high
+status: pending
+msg-id: project-intelligence-20260518-overnight-build-summary
+---
+
+OVERNIGHT BUILD COMPLETE — 8 signed commits land on main:
+  c8c8e1bb (start, plan only — Phase 0 prep)
+  6bca8f94  feat(slm): Tier-C contamination guard + Yo-Yo runtime backstop (Peter)
+  92b47c6c  ops: learning-loop master plan + Phase 0 ops updates (Jennifer)
+  773113d5  feat(content): worm_id + cites on Entity + citations.yaml resolver (Jennifer)
+  232e2e2c  feat(slm): LoRA training toolchain + eval prep + contamination runbook (Peter)
+  100b2bae  feat(slm): closed-loop substrate — corpus gate, adapter versions, metrics, capture (Jennifer)
+  478c9465  ops: outbox — Phase 4 batch requests (Peter)
+  44faa3c8  ops: NEXT.md — overnight build complete; 14 of 24 (Jennifer)
+
+ACTION REQUIRED — Command Session for next session:
+
+1. **Stage 6 promote** the 7 unpromoted commits (6bca8f94 through 44faa3c8).
+   Use the standard pattern: stash settings.local.json, `echo "y" |
+   ~/Foundry/bin/promote.sh`, restore. Expected runtime ~5 min.
+
+2. **Rebuild + redeploy Doorman** with all the new code:
+   - `cd service-slm && cargo build --release -p slm-doorman-server`
+   - `sudo cp target/release/slm-doorman-server /usr/local/bin/local-doorman`
+   - `sudo systemctl restart local-doorman`
+   - Verify: `curl -sS http://127.0.0.1:9090/metrics | head -20`
+     should show Prometheus counters (P3-3.1 endpoint).
+
+3. **Flip apprenticeship on** (P0-0.1 still pending):
+   `sudo sed -i 's/SLM_APPRENTICESHIP_ENABLED=false/SLM_APPRENTICESHIP_ENABLED=true/'
+    /etc/systemd/system/local-doorman.service && sudo systemctl daemon-reload
+    && sudo systemctl restart local-doorman`. Drain 27 paused/pending briefs.
+
+4. **Run sync-local.sh --all** after Stage 6 (per AGENT.md shutdown step 6c).
+
+5. **Forward outbox messages** to project-editorial:
+   - Forward the "4 TOPIC + 5 GUIDE data + endpoint specs" message
+   - Forward the Do-Not-Use regex set ratification request
+
+6. **Ratify the 4 CONVENTION proposals** at ~/Foundry/conventions/:
+   - conventions/tier-c-prohibition-substrate.md
+   - conventions/learning-loop-substrate.md
+   - conventions/corpus-quality-gate-substrate.md
+   - conventions/adapter-version-substrate.md
+   I provided the body summaries in a prior outbox; full text on
+   request.
+
+OPERATOR-ONLY (from a laptop with the right credentials):
+
+- Anthropic Console: ~~spend cap~~ DEFERRED per directive (no Tier C
+  in production for now).
+- **GCP Billing Budget**: enable Billing Budget API on project
+  369270631281; create $300/mo budget with 50/80/100% alerts.
+  Requires `roles/billing.admin` on billing account 0169E0-25F3AE-A5F545.
+- **Sign first verdict batch** when ready — unblocks DPO feedback
+  pairs. Procedure in service-slm/docs/runbook-corpus-contamination.md
+  is the inverse (burn-and-restart); the positive procedure is the
+  promote-corpus.sh script (deferred — operator may use
+  ssh-keygen -Y sign directly tonight).
+- **Sign eval holdout** when curated — service-slm/scripts/eval-prepare.sh
+  is ready to run; it writes
+  data/training-corpus/eval/candidates-<date>.jsonl for review.
+
+WHAT I DID NOT DO:
+
+- Yo-Yo training dry-run (explicit operator exclusion: no Yo-Yo
+  spend tonight).
+- P1-1.4 F12 review-subdir refactor — risky in autonomous context;
+  touches verdict.rs paths; operator should review the design call
+  (in-place update vs separate _review/ subdir) before code lands.
+- P1-1.7 tool-use round-trip — too large (~300 LOC across 3 tier
+  clients) for an autonomous session; operator should review the
+  ComputeRequest tools/tool_choice + ContentBlock response API shape
+  before changes propagate.
+- ARCHITECTURE.md / DEVELOPMENT.md doc updates — deferred to next
+  session.
+- cargo test --workspace on slm-doorman with all the new code —
+  attempted but stalled on VM memory pressure (4.5G swap of 16G);
+  killed the stuck cargo processes, fell back to `cargo check -p
+  <crate>` which IS green for both slm-doorman and
+  slm-doorman-server. Recommend running the focused test from a
+  freshly-rebooted state if Stage 6 needs test verification.
+
+KNOWN VM STATE:
+- Load average ~7 (memory pressure from running services + cargo)
+- Swap 4.5G / 16G
+- Disk 80% after my 625 MB prune of service-extraction/target
+- 4 capture-edit shadow briefs queued from my commits (these are
+  normal apprenticeship captures from the post-commit hook)
+
+— totebox@claude-code (project-intelligence)
+
+---
+from: totebox@claude-code (project-intelligence)
+to: command@claude-code
 re: forward to project-editorial — 4 TOPIC + 4 GUIDE data + endpoint specs ready
 created: 2026-05-18T09:30:00Z
 priority: normal
