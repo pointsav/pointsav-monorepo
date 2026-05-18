@@ -2,7 +2,7 @@ use std::fs;
 use std::io::Read;
 use std::path::PathBuf;
 use std::time::{SystemTime, UNIX_EPOCH};
-use tiny_http::{Server, Response, Method};
+use tiny_http::{Method, Response, Server};
 
 const BASE_DEPLOYMENT_DIR: &str = "/home/mathew/deployments/woodfine-fleet-deployment";
 
@@ -26,17 +26,32 @@ fn main() {
             let _ = request.respond(Response::empty(400));
             continue;
         }
-        println!("[DIAGNOSTIC] Payload stream read successfully. Size: {} bytes", content.len());
+        println!(
+            "[DIAGNOSTIC] Payload stream read successfully. Size: {} bytes",
+            content.len()
+        );
 
         match serde_json::from_str::<serde_json::Value>(&content) {
             Ok(json) => {
                 println!("[DIAGNOSTIC] JSON structurally valid.");
-                
-                let dest_archive = json.get("destination_archive").and_then(|v| v.as_str()).unwrap_or("default");
-                let target_service = json.get("target_service").and_then(|v| v.as_str()).unwrap_or("service-input");
-                let coa = json.get("chart_of_accounts").and_then(|v| v.as_str()).unwrap_or("00-Uncategorized");
-                
-                println!("[DIAGNOSTIC] Extracted Routing: {} -> {}", dest_archive, target_service);
+
+                let dest_archive = json
+                    .get("destination_archive")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("default");
+                let target_service = json
+                    .get("target_service")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("service-input");
+                let coa = json
+                    .get("chart_of_accounts")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("00-Uncategorized");
+
+                println!(
+                    "[DIAGNOSTIC] Extracted Routing: {} -> {}",
+                    dest_archive, target_service
+                );
 
                 let mut out_dir = PathBuf::from(BASE_DEPLOYMENT_DIR);
                 out_dir.push(dest_archive);
@@ -47,12 +62,18 @@ fn main() {
                 println!("[DIAGNOSTIC] Physical Directory Target: {:?}", out_dir);
 
                 if let Err(e) = fs::create_dir_all(&out_dir) {
-                    println!("[ERROR] File System Permission Denied (Cannot create directory): {:?}", e);
+                    println!(
+                        "[ERROR] File System Permission Denied (Cannot create directory): {:?}",
+                        e
+                    );
                     let _ = request.respond(Response::empty(500));
                     continue;
                 }
 
-                let timestamp = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
+                let timestamp = SystemTime::now()
+                    .duration_since(UNIX_EPOCH)
+                    .unwrap()
+                    .as_secs();
                 let worm_id = format!("{}_{}", coa, timestamp);
                 let out_path = out_dir.join(format!("{}.json", worm_id));
 
@@ -62,15 +83,18 @@ fn main() {
                     Ok(_) => {
                         println!("[SUCCESS] WORM Write Successful!");
                         let _ = request.respond(Response::empty(200));
-                    },
+                    }
                     Err(e) => {
                         println!("[ERROR] File System Write Failed: {:?}", e);
                         let _ = request.respond(Response::empty(400));
                     }
                 }
-            },
+            }
             Err(e) => {
-                println!("[ERROR] JSON Parsing Failed. The Relay is mangling the payload: {:?}", e);
+                println!(
+                    "[ERROR] JSON Parsing Failed. The Relay is mangling the payload: {:?}",
+                    e
+                );
                 let preview: String = content.chars().take(250).collect();
                 println!("[DIAGNOSTIC] Payload Header Preview: {}", preview);
                 let _ = request.respond(Response::empty(400));
