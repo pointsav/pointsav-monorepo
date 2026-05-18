@@ -534,6 +534,7 @@ fn mixed_entry_types_in_jsonl_stream_distinguishable_by_field_presence() {
         sanitised_outbound: true,
         completion_status: CompletionStatus::Ok,
         error_message: None,
+        adapter_version: None,
     };
     ledger.append(&chat_entry).expect("append AuditEntry");
 
@@ -694,6 +695,7 @@ fn entry_type_tag_discriminates_all_entry_kinds() {
             sanitised_outbound: false,
             completion_status: CompletionStatus::Ok,
             error_message: None,
+            adapter_version: None,
         })
         .expect("append AuditEntry");
 

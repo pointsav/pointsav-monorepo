@@ -87,6 +87,11 @@ use tracing::info;
 async fn main() -> anyhow::Result<()> {
     init_tracing();
 
+    // Install Prometheus metrics recorder (P3-3.1). Failure is non-fatal:
+    // `metrics::init()` returns Ok in degraded mode so a missing/duplicate
+    // recorder never blocks Doorman startup.
+    let _ = slm_doorman_server::metrics::init();
+
     let bind_addr: SocketAddr = std::env::var("SLM_BIND_ADDR")
         .unwrap_or_else(|_| "127.0.0.1:9080".to_string())
         .parse()
