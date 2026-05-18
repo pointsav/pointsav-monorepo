@@ -700,6 +700,92 @@ async fn shadow_enqueued_brief_file_exists_at_queue_path() {
     );
 }
 
+/// POST /v1/shadow with `source_tier: "external"` → 403 FORBIDDEN.
+///
+/// Tier-C contamination gate (Anthropic ToS, competing-models constraint).
+/// The shim must refuse to enqueue any brief whose `actual_diff` originated
+/// in a Tier-C-routed session. The queue file MUST NOT be written.
+#[tokio::test]
+async fn shadow_with_external_source_tier_returns_403_and_does_not_enqueue() {
+    let verifier: Arc<dyn VerdictVerifier> = Arc::new(RejectVerifier);
+    let state = app_state_with_apprenticeship(verifier);
+    let queue_dir = state.queue_config.base_dir.join("queue");
+    let app = router(state);
+
+    let brief_id = "shadow-contamination-guard-001";
+    let req_body = json!({
+        "brief": {
+            "brief_id": brief_id,
+            "created": "2026-05-18T00:00:00Z",
+            "senior_role": "task",
+            "senior_identity": "pwoodfine",
+            "task_type": "version-bump-manifest",
+            "scope": {},
+            "acceptance_test": "cargo test",
+            "body": "this brief originated through a Tier-C-routed session — reject"
+        },
+        "actual_diff": "+ poisoned line\n",
+        "source_tier": "external"
+    });
+
+    let resp = app
+        .oneshot(post_json("/v1/shadow", &req_body))
+        .await
+        .expect("oneshot");
+
+    assert_eq!(
+        resp.status(),
+        StatusCode::FORBIDDEN,
+        "/v1/shadow must return 403 when source_tier==external"
+    );
+
+    // The queue file MUST NOT exist. The contamination guard runs BEFORE
+    // the enqueue call, so no JSONL should land on disk.
+    let queue_file = queue_dir.join(format!("{brief_id}.brief.jsonl"));
+    assert!(
+        !queue_file.exists(),
+        "queue file must NOT be written for a 403 source_tier=external rejection; found {}",
+        queue_file.display()
+    );
+}
+
+/// POST /v1/shadow with `source_tier: "local"` → 202 ACCEPTED.
+///
+/// Confirms the contamination guard is targeted to `"external"` and does
+/// not reject permitted tier-of-origin values.
+#[tokio::test]
+async fn shadow_with_local_source_tier_returns_202() {
+    let verifier: Arc<dyn VerdictVerifier> = Arc::new(RejectVerifier);
+    let state = app_state_with_apprenticeship(verifier);
+    let app = router(state);
+
+    let req_body = json!({
+        "brief": {
+            "brief_id": "shadow-source-tier-local-001",
+            "created": "2026-05-18T00:00:00Z",
+            "senior_role": "task",
+            "senior_identity": "jwoodfine",
+            "task_type": "version-bump-manifest",
+            "scope": {},
+            "acceptance_test": "cargo test",
+            "body": "this brief originated through a Tier-A-routed session"
+        },
+        "actual_diff": "+ permitted line\n",
+        "source_tier": "local"
+    });
+
+    let resp = app
+        .oneshot(post_json("/v1/shadow", &req_body))
+        .await
+        .expect("oneshot");
+
+    assert_eq!(
+        resp.status(),
+        StatusCode::ACCEPTED,
+        "/v1/shadow must return 202 for source_tier=local"
+    );
+}
+
 // ===========================================================================
 // Helper — replicate the From<DoormanError> status-code mapping
 // from http.rs so we can assert on it directly without making the
