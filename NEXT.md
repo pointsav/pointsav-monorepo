@@ -6,7 +6,61 @@
 > Read at session start when a Root Claude opens in this repo. Update
 > at session end when repo-scope open items change.
 
-Last updated: 2026-05-17 (session 5 — audit plan blocks A–D shipped; D5 plan written; Sprint 0b done).
+Last updated: 2026-05-18 (totebox@claude-code — 10-agent learning-loop audit + master plan).
+
+---
+
+## 🚨 OPERATIVE PLAN — Learning Loop Master Plan 2026-05-18
+
+> **See `.agent/plans/learning-loop-master-plan-2026-05-18.md` for full sequencing.** It consolidates the 10 prior plans (MASTER-PLAN, leapfrog, service-slm-arch, service-content-arch, tier-arch, sovereign-routing, universal-ai-gateway, service-audit, service-slm-hardening, d5-canonical) into a single phased TODO. Sections below remain valid carry-forward.
+
+### Phase 0 — this week (containment, ~2 days)
+
+> **Operator directive 2026-05-18:** stay away from Claude API key; stick
+> with Claude Pro Max 20x. Tier C remains UNCONFIGURED in production
+> (`SLM_TIER_C_ANTHROPIC_API_KEY` UNSET; 503 failsafe correct). Doorman-path
+> cost ceiling revised to $300/mo. Capture path for Claude Pro Max sessions
+> = git post-commit hook (`bin/capture-edit.py`), NOT `/v1/messages` shim.
+
+- [ ] **P0-0.1** Stage 6 promote 6 commits; redeploy Doorman; `SLM_APPRENTICESHIP_ENABLED=true` (Command Session, 15 min)
+- [x] ~~**P0-0.2** Anthropic Console limit~~ **DEFERRED per operator directive** (no Tier C in production)
+- [ ] **P0-0.3** GCP Billing Budget API: **$300/mo** with 50/80/100% alerts + auto-stop Cloud Function (operator from laptop with billing.admin, 2 hr)
+- [x] **P0-0.4** Tier-C provenance guard + `tier_used` top-level JSONL field (shipped 2026-05-18 by task@claude-code: ShadowWireBody + ShadowQueueEntry `source_tier` field; 403 at /v1/shadow; Tier::External rejection in write_shadow_tuple; 3 new tests)
+- [x] **P0-0.5** `--runtime=14h` default in nightly-run.sh (shipped 2026-05-18 by task@claude-code)
+- [ ] **P0-0.6** journalctl vacuum (Command, sudo) + service-extraction/target prune (task, this session)
+- [ ] **Outbox to project-editorial:** ratify machine-readable Do-Not-Use regex set (staged 2026-05-18)
+
+### Phase 1 — next 2-3 weeks (close the loop)
+- [ ] P1-1.1 Corpus quality gate (~150 LOC, 2 days)
+- [ ] P1-1.2 Hold-out eval set curation + ssh-signing (2 days, 100 tuples frozen)
+- [ ] P1-1.3 `bin/eval-adapter.sh` — F12 gate-keeper for adapter promotion (1 day)
+- [ ] P1-1.4 F12 corpus promotion gate + `bin/promote-corpus.sh` (1 day)
+- [ ] P1-1.5 Operator signs first verdict batch — unblocks `feedback/` DPO pairs (1 day operator time)
+- [ ] P1-1.6 Adapter-version tagging on ComputeRequest + AuditEntry (1 day)
+- [ ] P1-1.7 Tool-use round-trip completion — `tools: Vec<ToolDef>` + `ContentBlock` response (~300 LOC, 4-5 days; the real D5 closure)
+- [ ] P1-1.8 Wire `/v1/messages` → `enqueue_shadow()` (1 day; AFTER Anthropic legal clear on competing-models clause)
+- [ ] P1-1.9 LoRA training toolchain (`bin/export-dpo.sh`, `corpus-threshold.py`, `lora-update.sh`, snapshot tooling, systemd timer disabled-by-default) — ~3-4 days
+- [ ] P1-1.10 First dry-run training pass on Yo-Yo trainer — $5-10, throwaway adapter
+
+### Phase 2 — content creation flow (parallel, 4-6 weeks)
+See plan §Phase 2 — 8 items targeting `worm_id`/cites, RelatedTo edges, /v1/editorial/seed, citations resolver, graph_context on tuples, /v1/editorial/grammar, deprecate /v1/draft/generate, embeddings + sqlite-vec HNSW.
+
+### Phase 3 — observability & scale (parallel, 6-8 weeks)
+See plan §Phase 3 — Prometheus metrics, canary tasks, /v1/shadow-tier A/B, Sigstore adapter signing, per-day spend ledger + tool-loop counter, burn-and-restart runbook.
+
+### Resource & cost decisions (ratified in plan)
+- Stay CPU-only on workspace VM; reject local-GPU reshape; keep Yo-Yo burst pattern
+- 7B Tier A — don't upgrade to 13B until VM resized to n2-standard-8
+- Embeddings = `nomic-embed-text-v1.5` on Yo-Yo trainer (NOT workspace VM; reject `bge-small` per BCSC)
+- Vector index = sqlite-vec OR redb + `instant-distance` HNSW
+- Nightly training Yo-Yo = preemptible L4, $15-40/mo, separate from inference Yo-Yo
+- **Cost ceiling: $300/mo Doorman-path** ($200 Yo-Yo Spot + $100 workspace baseline; Tier C $0 — disabled per operator directive 2026-05-18). Claude Pro Max 20x is a separate operator-managed line item.
+
+### Operator decisions outstanding
+1. ~~Anthropic legal review of "competing-models" clause~~ — moot for now; Pro Max 20x outputs are operator-side, not gateway-routed
+2. Eval scorer choice for diffs (edit-distance vs Pro Max judge vs human spot-check)
+3. F12 adapter-promotion authority (single signer vs multi-sig)
+4. Confirm GCS bucket `gs://woodfine-node-gcp-free-foundry-substrate/adapters/`
 
 ---
 
