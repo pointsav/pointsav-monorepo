@@ -17,7 +17,7 @@ status: pending
 msg-id: project-intelligence-20260518-overnight-build-summary
 ---
 
-OVERNIGHT BUILD COMPLETE — 8 signed commits land on main:
+OVERNIGHT BUILD COMPLETE — 17 signed commits land on main:
   c8c8e1bb (start, plan only — Phase 0 prep)
   6bca8f94  feat(slm): Tier-C contamination guard + Yo-Yo runtime backstop (Peter)
   92b47c6c  ops: learning-loop master plan + Phase 0 ops updates (Jennifer)
@@ -25,11 +25,22 @@ OVERNIGHT BUILD COMPLETE — 8 signed commits land on main:
   232e2e2c  feat(slm): LoRA training toolchain + eval prep + contamination runbook (Peter)
   100b2bae  feat(slm): closed-loop substrate — corpus gate, adapter versions, metrics, capture (Jennifer)
   478c9465  ops: outbox — Phase 4 batch requests (Peter)
-  44faa3c8  ops: NEXT.md — overnight build complete; 14 of 24 (Jennifer)
+  44faa3c8  ops: NEXT.md — overnight build complete (Jennifer)
+  6c400e29  ops: outbox — overnight build summary (Peter)
+  2d114d27  docs(slm): ARCHITECTURE.md §15 — closed-loop substrate (Jennifer)
+  b67847dc  docs(content): ARCHITECTURE.md addendum — provenance + citations (Peter)
+  f17d703d  feat(slm): P3-3.3 skeleton — /v1/shadow-adapter (Jennifer)
+  c261c57f  ops(slm): NEXT.md — overnight session log (Peter)
+  3f958c96  docs(slm): DEVELOPMENT.md §9 — build + ops workflow (Jennifer)
+  36de591e  feat(slm): P3-3.5-followup — wire cost_ledger into write_audit (Peter)
+  d45629fc  feat(slm): P3-3.5-endpoint — GET /v1/cost/daily?date= (Jennifer)
+  51212dbb  feat(slm): P3-3.2 — canary task set v1 + runner (Peter)
+
+UPDATED COUNT: 18 of 24 approved items + 3 followups shipped, ~4500 LOC.
 
 ACTION REQUIRED — Command Session for next session:
 
-1. **Stage 6 promote** the 7 unpromoted commits (6bca8f94 through 44faa3c8).
+1. **Stage 6 promote** the 17 unpromoted commits (6bca8f94 through 51212dbb).
    Use the standard pattern: stash settings.local.json, `echo "y" |
    ~/Foundry/bin/promote.sh`, restore. Expected runtime ~5 min.
 
