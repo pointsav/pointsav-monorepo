@@ -1,3 +1,4 @@
+mod citations;
 mod config_http;
 mod graph;
 mod http;
@@ -285,6 +286,8 @@ fn process_corpus(
         contact_vector: None,
         module_id: effective_module_id.clone(),
         confidence: 1.0,
+        worm_id: None,
+        cites: Vec::new(),
     };
     if let Err(e) = graph_store.upsert_entities(&effective_module_id, &[source_node]) {
         warn!(module_id = %effective_module_id, worm_id, error = %e, "source node write failed (non-fatal)");
@@ -384,6 +387,8 @@ fn process_corpus(
                                 contact_vector: contact_vector.clone(),
                                 module_id: effective_module_id.clone(),
                                 confidence: 0.95,
+                                worm_id: None,
+                                cites: Vec::new(),
                             });
 
                             // Build the legacy JSON CRM record
