@@ -127,6 +127,7 @@ pub fn router(state: Arc<AppState>) -> Router {
         .route("/healthz", get(healthz))
         .route("/readyz", get(readyz))
         .route("/metrics", get(metrics_endpoint))
+        .route("/v1/cost/daily", get(cost_daily_endpoint))
         .route("/v1/contract", get(contract))
         .route("/v1/messages", post(anthropic_messages))
         .route("/v1/chat/completions", post(chat_completions))
@@ -238,6 +239,90 @@ async fn metrics_endpoint() -> (StatusCode, [(axum::http::header::HeaderName, &'
         )],
         body,
     )
+}
+
+/// `GET /v1/cost/daily?date=YYYY-MM-DD` — daily cost rollup.
+///
+/// Phase 3 (P3-3.5-endpoint-followup) of
+/// learning-loop-master-plan-2026-05-18.md. Reads
+/// `data/cost-ledger/<date>.jsonl` and returns per-tier + per-model
+/// totals.
+///
+/// Returns 200 with an empty rollup when no rows for the date OR when
+/// the global cost ledger isn't installed (degraded mode). Defaults to
+/// today's UTC date when `date` query is absent.
+///
+/// Wire shape:
+/// ```json
+/// {
+///   "date": "2026-05-18",
+///   "request_count": 42,
+///   "total_cost_usd": 1.23,
+///   "total_inference_ms": 12345,
+///   "by_tier": {"yoyo": 1.20, "local": 0.0},
+///   "by_model": {"olmo-2-7b": 1.20, "olmo-2-1b": 0.0}
+/// }
+/// ```
+#[derive(Deserialize)]
+struct CostDailyQuery {
+    #[serde(default)]
+    date: Option<String>,
+}
+
+async fn cost_daily_endpoint(
+    axum::extract::Query(q): axum::extract::Query<CostDailyQuery>,
+) -> Result<Json<serde_json::Value>, ApiError> {
+    use slm_doorman::cost_ledger;
+    let date = q.date.unwrap_or_else(|| {
+        chrono::Utc::now().format("%Y-%m-%d").to_string()
+    });
+    if date.len() != 10 || date.chars().filter(|c| *c == '-').count() != 2 {
+        return Err(ApiError::bad_request(
+            "date must be YYYY-MM-DD (UTC); omit to default to today",
+        ));
+    }
+    // When the global ledger isn't installed (test mode / missing
+    // base dir), return an empty rollup rather than 503 — the surface
+    // is read-only, callers integrate against the wire shape.
+    let body = if cost_ledger::is_initialized() {
+        // No public accessor for GLOBAL — construct a CostLedger
+        // pointing at the same base_dir via from_env. Idempotent
+        // re-read; production cost matches.
+        match cost_ledger::CostLedger::from_env() {
+            Ok(ledger) => match ledger.daily_rollup(&date) {
+                Ok(rollup) => serde_json::to_value(&rollup)
+                    .unwrap_or_else(|_| serde_json::json!({})),
+                Err(e) => {
+                    return Err(ApiError {
+                        status: StatusCode::INTERNAL_SERVER_ERROR,
+                        body: serde_json::json!({
+                            "error": {"message": format!("cost ledger read failed: {e}")}
+                        }),
+                    });
+                }
+            },
+            Err(_) => serde_json::json!({
+                "date": date,
+                "request_count": 0,
+                "total_cost_usd": 0.0,
+                "total_inference_ms": 0,
+                "by_tier": {},
+                "by_model": {},
+                "_status": "cost_ledger_uninstalled",
+            }),
+        }
+    } else {
+        serde_json::json!({
+            "date": date,
+            "request_count": 0,
+            "total_cost_usd": 0.0,
+            "total_inference_ms": 0,
+            "by_tier": {},
+            "by_model": {},
+            "_status": "cost_ledger_uninstalled",
+        })
+    };
+    Ok(Json(body))
 }
 
 async fn healthz() -> &'static str {
