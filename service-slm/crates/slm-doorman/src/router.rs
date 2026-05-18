@@ -120,6 +120,20 @@ impl Doorman {
         &self.ledger
     }
 
+    /// Direct access to the graph context client — needed by callers that
+    /// want to capture graph_context separately from the prompt injection
+    /// path. Phase 2 (P2-2.5) of learning-loop-master-plan-2026-05-18.md:
+    /// apprenticeship.rs::dispatch_shadow embeds the queried context in
+    /// the JSONL tuple so LoRA training learns citation-grounded prose
+    /// (Doctrine claim #44 — co-evolution loop).
+    ///
+    /// Returns `None` when no client is configured (service-content not
+    /// wired). Callers MUST handle the None case as "no graph context
+    /// available" rather than failing.
+    pub fn graph_context_client(&self) -> Option<&GraphContextClient> {
+        self.graph_context_client.as_ref()
+    }
+
     /// Pick a tier from the request and dispatch. The caller's `tier_hint`
     /// is honoured when the named tier is configured; otherwise the
     /// router maps `complexity` to a default tier and probes for the
@@ -357,6 +371,7 @@ impl Doorman {
                 sanitised_outbound: req.sanitised_outbound,
                 completion_status: CompletionStatus::Ok,
                 error_message: None,
+                adapter_version: resp.adapter_version.clone(),
             },
             Err(e) => AuditEntry {
                 entry_type: ENTRY_TYPE_CHAT_COMPLETION.to_string(),
@@ -370,6 +385,7 @@ impl Doorman {
                 sanitised_outbound: req.sanitised_outbound,
                 completion_status: classify_error(e),
                 error_message: Some(e.to_string()),
+                adapter_version: None,
             },
         };
         if let Err(write_err) = self.ledger.append(&entry) {
@@ -382,6 +398,47 @@ impl Doorman {
                 "failed to append audit entry"
             );
         }
+
+        // Prometheus metric emit (P3-3.1). The recorder is installed by
+        // slm-doorman-server::metrics::init() at startup; if absent, the
+        // `metrics` facade no-ops. Labels: tier + model + adapter_version
+        // + completion_status. adapter_version is "none" when no LoRA is
+        // loaded so the label dimension stays bounded.
+        let adapter_label = entry
+            .adapter_version
+            .clone()
+            .unwrap_or_else(|| "none".to_string());
+        let status_label = match entry.completion_status {
+            CompletionStatus::Ok => "ok",
+            CompletionStatus::UpstreamError => "upstream_error",
+            CompletionStatus::PolicyDenied => "policy_denied",
+            CompletionStatus::TierUnavailable => "tier_unavailable",
+        };
+        metrics::counter!(
+            "slm_requests_total",
+            "tier" => entry.tier.as_str().to_string(),
+            "model" => entry.model.clone(),
+            "adapter_version" => adapter_label.clone(),
+            "completion_status" => status_label,
+        )
+        .increment(1);
+        metrics::counter!(
+            "slm_cost_usd_total",
+            "tier" => entry.tier.as_str().to_string(),
+            "model" => entry.model.clone(),
+        )
+        .increment(entry.cost_usd as u64);
+        metrics::histogram!(
+            "slm_latency_ms",
+            "tier" => entry.tier.as_str().to_string(),
+            "model" => entry.model.clone(),
+        )
+        .record(entry.inference_ms as f64);
+        metrics::counter!(
+            "slm_audit_writes_total",
+            "entry_type" => "chat-completion",
+        )
+        .increment(1);
     }
 }
 
@@ -485,6 +542,7 @@ impl Doorman {
             sanitised_outbound: req.sanitised_outbound,
             defer_reason,
             error_message,
+            adapter_version: resp.and_then(|r| r.adapter_version.clone()),
         };
         if let Err(e) = self.ledger.append_extract_entry(&entry) {
             warn!(
@@ -629,6 +687,7 @@ fn classify_error(e: &DoormanError) -> CompletionStatus {
         DoormanError::GraphProxyMissingModuleId => CompletionStatus::PolicyDenied,
         DoormanError::GraphProxyServiceUnavailable => CompletionStatus::UpstreamError,
         DoormanError::QueueQualityGateRejected { .. } => CompletionStatus::PolicyDenied,
+        DoormanError::CorpusGateRejected { .. } => CompletionStatus::PolicyDenied,
     }
 }
 
@@ -695,6 +754,7 @@ mod tests {
             grammar: None,
             speculation: None,
             graph_context_enabled: None,
+            adapter_version: None,
         }
     }
 

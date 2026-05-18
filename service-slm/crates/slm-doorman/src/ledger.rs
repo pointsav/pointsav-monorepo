@@ -97,6 +97,11 @@ pub struct AuditEntry {
     pub completion_status: CompletionStatus,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub error_message: Option<String>,
+    /// Adapter version that served the request, if reported by the tier.
+    /// Required for retrospective adapter-version-aware audit queries.
+    /// Phase 1 of learning-loop-master-plan-2026-05-18.md (P1-1.6).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub adapter_version: Option<String>,
 }
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, Eq, PartialEq)]
@@ -312,6 +317,10 @@ pub struct ExtractionAuditEntry {
     /// Upstream error message; present on Yo-Yo call failure.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub error_message: Option<String>,
+    /// Adapter version that served the extraction request, if reported.
+    /// Phase 1 of learning-loop-master-plan-2026-05-18.md (P1-1.6).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub adapter_version: Option<String>,
 }
 
 impl AuditLedger {
@@ -420,6 +429,7 @@ mod tests {
             sanitised_outbound: true,
             completion_status: CompletionStatus::Ok,
             error_message: None,
+            adapter_version: None,
         };
         ledger.append(&entry).unwrap();
         ledger.append(&entry).unwrap();
@@ -593,6 +603,7 @@ mod tests {
             sanitised_outbound: true,
             completion_status: CompletionStatus::Ok,
             error_message: None,
+            adapter_version: None,
         };
 
         // Now make the directory read-only so subsequent file opens fail.

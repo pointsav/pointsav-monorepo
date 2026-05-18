@@ -13,10 +13,13 @@
 //! `~/Foundry/conventions/three-ring-architecture.md` (Ring 3 — Optional
 //! Intelligence). Audit ledger discipline is doctrinal — see Doctrine §V.
 
+pub mod adapter_registry;
 pub mod apprenticeship;
 pub mod audit_proxy;
 pub mod brief_cache;
 pub mod citations;
+pub mod corpus_gate;
+pub mod cost_ledger;
 pub mod error;
 pub mod grammar_validation;
 pub mod graph;
@@ -28,6 +31,8 @@ pub mod router;
 pub mod tier;
 pub mod verdict;
 
+pub use adapter_registry::{AdapterEntry, AdapterRegistry};
+pub use cost_ledger::{CostLedger, CostRow, DailyRollup};
 pub use apprenticeship::{
     apprentice_prompt, build_attempt, parse_attempt_content, pick_tier_for_brief,
     shadow_corpus_path, ApprenticeshipConfig, ApprenticeshipDispatcher, ParsedAttempt,

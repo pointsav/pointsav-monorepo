@@ -11,6 +11,7 @@
 
 pub mod http;
 pub mod idle_monitor;
+pub mod metrics;
 /// Brief Queue Substrate (apprenticeship-substrate.md §7C).
 ///
 /// File-backed durable queue that decouples brief acceptance from

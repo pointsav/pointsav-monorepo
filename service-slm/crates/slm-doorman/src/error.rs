@@ -309,4 +309,14 @@ pub enum DoormanError {
         /// Human-readable rejection reason (safe to return to caller).
         reason: String,
     },
+
+    /// A tuple was rejected by the second-layer corpus_gate (write-time)
+    /// just before `write_shadow_tuple` or `write_dpo_pair`. Distinct
+    /// from `QueueQualityGateRejected` (first-layer, enqueue-time). 422.
+    /// Phase 1 of learning-loop-master-plan-2026-05-18.md (P1-1.1).
+    #[error("corpus gate rejected tuple: {reason}")]
+    CorpusGateRejected {
+        /// Human-readable rejection reason (safe to return to caller).
+        reason: String,
+    },
 }

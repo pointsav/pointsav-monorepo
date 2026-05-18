@@ -326,6 +326,9 @@ impl ExternalTierClient {
             inference_ms,
             cost_usd,
             upstream_version: Some(provider.as_str().to_string()),
+            // Tier C (Anthropic) does not expose adapter info — Claude is a
+            // hosted model with no LoRA composition surface.
+            adapter_version: None,
         })
     }
 }
@@ -475,6 +478,7 @@ mod tests {
             grammar: None,
             speculation: None,
             graph_context_enabled: None,
+            adapter_version: None,
         }
     }
 
