@@ -138,7 +138,90 @@ pub fn router(state: Arc<AppState>) -> Router {
         .route("/v1/audit/capture", post(audit_capture))
         .route("/v1/graph/query", post(graph_query))
         .route("/v1/graph/mutate", post(graph_mutate))
+        .route("/v1/shadow-adapter", post(shadow_adapter))
         .with_state(state)
+}
+
+/// `POST /v1/shadow-adapter` — Adapter A/B comparison harness.
+///
+/// Phase 3 (P3-3.3) of learning-loop-master-plan-2026-05-18.md, retargeted
+/// from "Tier A vs Tier C" (moot per operator directive 2026-05-18 — no
+/// Tier C in production) to "adapter v_a vs adapter v_b" comparison.
+///
+/// **STATUS: SKELETON.** The endpoint is mounted and the wire shape is
+/// frozen so callers can integrate, but the dual-dispatch implementation
+/// is deferred to P3-3.3-followup. Returns 501 NOT_IMPLEMENTED with a
+/// descriptive body until the follow-up lands.
+///
+/// Wire shape:
+/// ```json
+/// {
+///   "prompt": "<text>",
+///   "adapter_a": "coding-lora-2026-05-15",
+///   "adapter_b": "coding-lora-2026-05-22",
+///   "module_id": "pointsav",
+///   "max_tokens": 1024
+/// }
+/// ```
+///
+/// Response (when implemented):
+/// ```json
+/// {
+///   "adapter_a": {"version": "...", "content": "...", "latency_ms": 420, "tier": "yoyo"},
+///   "adapter_b": {"version": "...", "content": "...", "latency_ms": 510, "tier": "yoyo"},
+///   "prompt_hash": "sha256-hex"
+/// }
+/// ```
+///
+/// Sampling: caller decides. The harness records both responses to the
+/// audit ledger (entry_type: shadow-adapter-comparison) for offline
+/// eval. Used by:
+/// - Canary task harness (P3-3.2) to verify a newly-trained adapter
+///   matches or beats the production adapter before promotion.
+/// - Operator-driven A/B sampling on /v1/messages traffic (the
+///   `SLM_SHADOW_ADAPTER_SAMPLE_PCT` env would gate auto-sampling once
+///   wired).
+#[derive(Deserialize)]
+struct ShadowAdapterBody {
+    #[serde(default)]
+    prompt: String,
+    #[serde(default)]
+    adapter_a: String,
+    #[serde(default)]
+    adapter_b: String,
+    #[serde(default)]
+    module_id: Option<String>,
+    #[serde(default)]
+    max_tokens: Option<u32>,
+}
+
+async fn shadow_adapter(
+    State(_state): State<Arc<AppState>>,
+    Json(body): Json<ShadowAdapterBody>,
+) -> Result<Json<serde_json::Value>, ApiError> {
+    if body.prompt.trim().is_empty() {
+        return Err(ApiError::bad_request("prompt must not be empty"));
+    }
+    if body.adapter_a.trim().is_empty() || body.adapter_b.trim().is_empty() {
+        return Err(ApiError::bad_request(
+            "adapter_a and adapter_b must both be non-empty adapter IDs",
+        ));
+    }
+    let _ = body.module_id;
+    let _ = body.max_tokens;
+    // 501 NOT_IMPLEMENTED — see module doc above.
+    Err(ApiError {
+        status: StatusCode::NOT_IMPLEMENTED,
+        body: serde_json::json!({
+            "error": {
+                "type": "not_implemented",
+                "message": "shadow-adapter dual-dispatch deferred to P3-3.3-followup; endpoint scaffolded so callers can integrate the wire shape now",
+                "wire_shape_version": "skeleton-v0",
+                "adapter_a": body.adapter_a,
+                "adapter_b": body.adapter_b,
+            }
+        }),
+    })
 }
 
 /// `GET /metrics` — Prometheus textual format scrape endpoint.
