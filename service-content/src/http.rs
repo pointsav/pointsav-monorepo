@@ -9,6 +9,7 @@ use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use std::time::Duration;
 
+use crate::citations::CitationRegistry;
 use crate::config_http::config_routes;
 use crate::graph::{GraphEntity, GraphStore};
 
@@ -18,6 +19,10 @@ pub struct HttpState {
     pub graph: Arc<dyn GraphStore>,
     pub doorman_endpoint: String,
     pub ontology_dir: String,
+    /// Citation registry resolver — P2-2.4. Loaded at startup from
+    /// `/srv/foundry/citations.yaml` (overridable via
+    /// `FOUNDRY_CITATIONS_PATH`). Hot-reload polling is on by default.
+    pub citations: Arc<CitationRegistry>,
 }
 
 // ── request / response types ──────────────────────────────────────────────────
@@ -304,6 +309,44 @@ fn format_entity_block(entities: &[GraphEntity]) -> String {
     out
 }
 
+// ── citation resolver endpoint ───────────────────────────────────────────────
+
+#[derive(Debug, Deserialize)]
+pub struct CitationQuery {
+    /// Query string — canonical ID, title, URL, or alias.
+    pub q: String,
+}
+
+/// `GET /v1/citations/resolve?q=<alias-or-url>` — resolves a query string
+/// against the citation registry loaded at startup. Returns the matched
+/// entry or `{matched: false, entry: null, registry_size: <n>}`.
+///
+/// Phase 2 (P2-2.4) of learning-loop-master-plan-2026-05-18.md — hardens
+/// against hallucinated citation IDs in editorial output by giving
+/// project-editorial a canonical resolver to call before emitting
+/// `[citation-id]` markers in TOPIC drafts.
+async fn citations_resolve(
+    State(state): State<Arc<HttpState>>,
+    Query(query): Query<CitationQuery>,
+) -> Result<Json<crate::citations::ResolveResponse>, (StatusCode, String)> {
+    if query.q.trim().is_empty() {
+        return Err((
+            StatusCode::BAD_REQUEST,
+            "query string 'q' must not be empty".to_string(),
+        ));
+    }
+    // Best-effort hot reload — log + ignore errors so a stale-but-loaded
+    // registry stays in service.
+    if let Err(e) = state.citations.reload_if_changed() {
+        tracing::warn!(
+            target: "service_content::http",
+            error = %e,
+            "citation registry hot-reload failed (using prior in-memory state)"
+        );
+    }
+    Ok(Json(state.citations.resolve_response(&query.q)))
+}
+
 // ── server entrypoint ─────────────────────────────────────────────────────────
 
 pub async fn run_server(
@@ -312,10 +355,37 @@ pub async fn run_server(
     doorman_endpoint: String,
     ontology_dir: String,
 ) {
+    // Load citation registry at startup (P2-2.4). Failure is non-fatal —
+    // an empty registry returns "no match" for every query, which is the
+    // correct degraded behaviour when citations.yaml is missing.
+    let citations = match CitationRegistry::from_env() {
+        Ok(r) => {
+            tracing::info!(
+                target: "service_content::http",
+                citations_loaded = r.len(),
+                path = %r.path().display(),
+                "citation registry loaded"
+            );
+            Arc::new(r)
+        }
+        Err(e) => {
+            tracing::warn!(
+                target: "service_content::http",
+                error = %e,
+                "citation registry load failed; resolver will return empty for all queries"
+            );
+            Arc::new(CitationRegistry::open("/dev/null").unwrap_or_else(|_| {
+                CitationRegistry::open(std::path::PathBuf::from("/tmp/__nonexistent__"))
+                    .expect("registry::open with missing file always succeeds")
+            }))
+        }
+    };
+
     let state = Arc::new(HttpState {
         graph: store,
         doorman_endpoint,
         ontology_dir,
+        citations,
     });
 
     let app = Router::new()
@@ -323,6 +393,7 @@ pub async fn run_server(
         .route("/v1/graph/context", get(graph_context))
         .route("/v1/graph/mutate", post(graph_mutate))
         .route("/v1/draft/generate", post(draft_generate))
+        .route("/v1/citations/resolve", get(citations_resolve))
         .merge(config_routes())
         .with_state(state);
 
