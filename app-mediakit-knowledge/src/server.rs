@@ -2103,7 +2103,7 @@ fn wiki_chrome(
                                         }
                                     }
                                 }
-                                p.wiki-tagline { "From PointSav Documentation" }
+                                p.wiki-tagline { "From " (site_title.trim_end_matches(" Wiki")) }
                                 @if let Some(ref desc) = fm.short_description {
                                     p.topic-short-description { em { (desc) } }
                                 }
@@ -3012,7 +3012,7 @@ async fn talk_page(
                 }
                 div.wiki-title-block {
                     h1.page-title { "Talk: " (slug) }
-                    p.wiki-tagline { "From PointSav Documentation" }
+                    p.wiki-tagline { "From " (state.site_title.trim_end_matches(" Wiki")) }
                 }
                 nav.wiki-action-tabs aria-label="Page actions" {
                     a.wiki-tab.wiki-tab-active aria-current="page" href={ "/talk/" (slug) } { "Discussion" }
