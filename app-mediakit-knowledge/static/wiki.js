@@ -793,6 +793,13 @@
         if (overlay) overlay.remove();
       }
     });
+    // Cmd-K / Ctrl-K: focus the home page search input when present.
+    document.addEventListener('keydown', function (e) {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        var input = document.querySelector('.wiki-home-search input[type="search"]');
+        if (input) { e.preventDefault(); input.focus(); }
+      }
+    });
   }
 
   function toggleShortcutOverlay() {
