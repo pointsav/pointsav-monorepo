@@ -126,6 +126,7 @@ pub fn router(state: Arc<AppState>) -> Router {
     Router::new()
         .route("/healthz", get(healthz))
         .route("/readyz", get(readyz))
+        .route("/metrics", get(metrics_endpoint))
         .route("/v1/contract", get(contract))
         .route("/v1/messages", post(anthropic_messages))
         .route("/v1/chat/completions", post(chat_completions))
@@ -138,6 +139,22 @@ pub fn router(state: Arc<AppState>) -> Router {
         .route("/v1/graph/query", post(graph_query))
         .route("/v1/graph/mutate", post(graph_mutate))
         .with_state(state)
+}
+
+/// `GET /metrics` — Prometheus textual format scrape endpoint.
+/// Phase 3 (P3-3.1) of learning-loop-master-plan-2026-05-18.md.
+/// Returns 200 with empty body when the recorder isn't installed
+/// (degraded mode — better than 503 for a Prometheus scraper).
+async fn metrics_endpoint() -> (StatusCode, [(axum::http::header::HeaderName, &'static str); 1], String) {
+    let body = crate::metrics::render();
+    (
+        StatusCode::OK,
+        [(
+            axum::http::header::CONTENT_TYPE,
+            "text/plain; version=0.0.4",
+        )],
+        body,
+    )
 }
 
 async fn healthz() -> &'static str {
@@ -260,6 +277,7 @@ async fn chat_completions(
         grammar: body.grammar,
         speculation: None,
         graph_context_enabled: None,
+        adapter_version: None,
     };
 
     let resp = state.doorman.route(&req).await.map_err(ApiError::from)?;
@@ -572,6 +590,7 @@ async fn extract(State(state): State<Arc<AppState>>, raw: Bytes) -> impl IntoRes
         grammar: Some(GrammarConstraint::JsonSchema(req.schema)),
         speculation: None,
         graph_context_enabled: None,
+        adapter_version: None,
     };
 
     // 5. Route — no Tier A fallback.
@@ -658,6 +677,7 @@ async fn extract(State(state): State<Arc<AppState>>, raw: Bytes) -> impl IntoRes
         sanitised_outbound: compute_req.sanitised_outbound,
         defer_reason: defer_reason_str.clone(),
         error_message: error_message_for_audit,
+        adapter_version: None,
     };
     if let Err(write_err) = state.doorman.ledger().append_extract_entry(&audit_entry) {
         tracing::warn!(
@@ -1411,6 +1431,7 @@ fn anthropic_to_compute_request(
         grammar: None,
         speculation: None,
         graph_context_enabled: Some(false),
+        adapter_version: None,
     }
 }
 
@@ -1683,6 +1704,24 @@ async fn anthropic_messages(
 
     let tier_header = resp.tier_used.as_str().to_string();
 
+    // P1-1.8 of learning-loop-master-plan-2026-05-18.md — fire-and-forget
+    // shadow-brief capture for non-streaming /v1/messages turns.
+    //
+    // Gated by `SLM_SHIM_TRAINING_CAPTURE=true` (default off — per operator
+    // directive 2026-05-18 no Tier C in production, so most useful for
+    // future SDK clients pointed at Doorman). Tier C responses are
+    // explicitly skipped (Anthropic ToS competing-models constraint).
+    //
+    // Apprenticeship config must be enabled — if SLM_APPRENTICESHIP_ENABLED
+    // is unset the queue infrastructure may not exist. Best-effort: any
+    // error is logged but NEVER propagates to the caller.
+    if state.apprenticeship.is_some()
+        && std::env::var("SLM_SHIM_TRAINING_CAPTURE").as_deref() == Ok("true")
+        && resp.tier_used != slm_core::Tier::External
+    {
+        capture_anthropic_shadow(&state, &req, &resp);
+    }
+
     if stream {
         let sse_body = anthropic_sse_body(&resp, &model);
         Ok(Response::builder()
@@ -1703,6 +1742,88 @@ async fn anthropic_messages(
                 serde_json::to_vec(&body).unwrap_or_default(),
             ))
             .expect("build JSON response"))
+    }
+}
+
+/// Build an ApprenticeshipBrief from the inbound ComputeRequest + response
+/// and enqueue it as a shadow brief. Best-effort: every step that could
+/// fail is logged + swallowed so the caller's response is unaffected.
+///
+/// P1-1.8 of learning-loop-master-plan-2026-05-18.md.
+fn capture_anthropic_shadow(
+    state: &Arc<AppState>,
+    req: &slm_core::ComputeRequest,
+    resp: &slm_core::ComputeResponse,
+) {
+    use slm_core::{ApprenticeshipBrief, BriefScope, SeniorRole};
+
+    // Extract the last user message as the brief body. /v1/messages turns
+    // are conversational; the last user turn captures the "what was
+    // asked". Multi-turn context is lost — acceptable for first pass.
+    let last_user_body = req
+        .messages
+        .iter()
+        .rev()
+        .find(|m| m.role == slm_core::Role::User)
+        .map(|m| m.text_content())
+        .unwrap_or_default();
+
+    if last_user_body.trim().is_empty() {
+        tracing::debug!(
+            target: "contamination_guard",
+            request_id = %req.request_id,
+            "skipping anthropic shadow capture: no user message"
+        );
+        return;
+    }
+
+    // Brief ID is a deterministic hash of request_id so a duplicate POST
+    // of the same conversation doesn't enqueue twice.
+    let brief_id = format!("anth-{}", req.request_id);
+    let brief = ApprenticeshipBrief {
+        brief_id: brief_id.clone(),
+        created: chrono::Utc::now(),
+        senior_role: SeniorRole::Task("task-anthropic-shim".to_string()),
+        senior_identity: "anthropic-shim".to_string(),
+        task_type: "anthropic-conversation".to_string(),
+        scope: BriefScope {
+            cluster: Some(req.module_id.as_str().to_string()),
+            files: vec![],
+        },
+        acceptance_test: format!("model: {}", resp.model),
+        doctrine_citations: vec![],
+        shadow: true,
+        body: last_user_body,
+    };
+
+    // Use the assistant's response content as `actual_diff` (the "what
+    // happened" reference). For tool-use round-trips this is incomplete
+    // (P1-1.7 follow-up), but for plain text it captures the model output.
+    let actual_diff = resp.content.clone();
+
+    let entry = crate::queue::ShadowQueueEntry {
+        brief,
+        actual_diff,
+        source_tier: Some(resp.tier_used.as_str().to_string()),
+    };
+
+    match crate::queue::enqueue_shadow(&state.queue_config, &entry) {
+        Ok(_) => {
+            tracing::info!(
+                target: "slm_doorman_server::http",
+                brief_id = %brief_id,
+                tier_used = %resp.tier_used.as_str(),
+                "anthropic shadow brief enqueued (SLM_SHIM_TRAINING_CAPTURE)"
+            );
+        }
+        Err(e) => {
+            tracing::warn!(
+                target: "slm_doorman_server::http",
+                brief_id = %brief_id,
+                error = %e,
+                "anthropic shadow enqueue failed (non-fatal)"
+            );
+        }
     }
 }
 
@@ -1804,6 +1925,11 @@ impl From<DoormanError> for ApiError {
             DoormanError::QueueMalformedBrief { .. } => StatusCode::BAD_REQUEST,
             // Corpus quality gate rejected the brief (too short, no diff, PII).
             DoormanError::QueueQualityGateRejected { .. } => StatusCode::UNPROCESSABLE_ENTITY,
+            // Second-layer write-time corpus gate rejected the tuple
+            // (Do-Not-Use term, BCSC violation past flag threshold, duplicate,
+            // oversized diff). 422 UNPROCESSABLE_ENTITY mirrors the queue-gate
+            // mapping above.
+            DoormanError::CorpusGateRejected { .. } => StatusCode::UNPROCESSABLE_ENTITY,
             // Graph proxy — caller omitted the mandatory X-Foundry-Module-ID
             // header. Error is on the caller's side.
             DoormanError::GraphProxyMissingModuleId => StatusCode::BAD_REQUEST,
