@@ -1,8 +1,48 @@
 # NEXT.md — service-slm
 
-> Last updated: 2026-05-16T06:10Z (idle monitor preemption auto-restart deployed; two 30-min test loops passed; VM TERMINATED)
+> Last updated: 2026-05-18 (7B upgrade shipped; D5+drain fix committed; paused for compute)
 > Read at session start. Update before session end so the next
 > session knows where to pick up.
+
+---
+
+## SESSION 2026-05-18 — 7B UPGRADE + D5 SPRINT 1 + DRAIN FIX (session paused)
+
+**Tier A upgrade: OLMo 2 1124 7B Instruct Q4_K_M running.**
+- `local-slm.service` updated: `--parallel 1 --no-repack`, MemoryMax=7G, MemoryHigh=6500M
+- Drop-in: `/etc/systemd/system/local-slm.service.d/memory.conf`
+- Performance: ~5.5s short, 80-120s long prompts (CPU-only)
+- Git-tracked in `~/Foundry/infrastructure/local-slm/`
+
+**D5 Sprint 1 shipped (`ae653cdb`):** `CanonicalMessage` + `ContentBlock` replace flat `ChatMessage` in `ComputeRequest`. 211 tests pass.
+
+**Drain worker spin-loop fixed (`c67bb284`):** Drain worker now checks `apprenticeship.is_none()` at top of loop and sleeps instead of dequeue→retry spinning. `skip_header`/`skip_header_owned` dead code removed from service-content.
+
+### IMMEDIATE — do first next session
+
+- [ ] **Rebuild + restart Doorman** (c67bb284 not yet deployed):
+  ```bash
+  cd /srv/foundry/clones/project-intelligence/service-slm
+  cargo build --release -p slm-doorman-server
+  sudo cp target/release/slm-doorman-server /usr/local/bin/local-doorman
+  sudo sed -i 's/SLM_APPRENTICESHIP_ENABLED=false/SLM_APPRENTICESHIP_ENABLED=true/' \
+    /etc/systemd/system/local-doorman.service
+  sudo systemctl daemon-reload && sudo systemctl restart local-doorman
+  sudo mv /srv/foundry/data/apprenticeship/queue-paused/*.brief.jsonl \
+          /srv/foundry/data/apprenticeship/queue/
+  ```
+- [ ] **Stage 6 promote** — `561b74ce`, `ae653cdb`, `c67bb284` unpromoted:
+  ```bash
+  cp .agent/engines/claude-code/session.lock /tmp/
+  echo "y" | ~/Foundry/bin/promote.sh
+  mv /tmp/session.lock .agent/engines/claude-code/session.lock
+  ~/Foundry/bin/sync-local.sh --all
+  ```
+
+### NEXT — hardening tasks
+
+- [ ] **Task 3:** Add 503 busy-rejection — query llama-server `/health` before dispatch; if `slots_idle==0` + no Tier B → 503 + `Retry-After: 30`. In `service-slm/crates/slm-doorman/src/tier/local.rs`.
+- [ ] **Task 4:** End-to-end integration test for Anthropic shim — full path `/v1/messages` → `CanonicalMessage` → mock Tier A → SSE. Include tool_use case.
 
 ---
 
