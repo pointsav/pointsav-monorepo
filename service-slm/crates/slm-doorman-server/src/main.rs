@@ -167,11 +167,11 @@ async fn main() -> anyhow::Result<()> {
     //   2. `queue_reaper`       — reclaims expired leases from queue-in-flight/
     //      so crashed workers' briefs are retried.
     //
-    // Both tasks run regardless of SLM_APPRENTICESHIP_ENABLED.  If
-    // apprenticeship is disabled the drain worker finds no briefs in the queue
-    // (capture-edit.py also checks the flag before writing) and exits each
-    // poll cycle immediately.  This keeps the queue infrastructure live and
-    // ready for the flag to be enabled without a restart.
+    // Both tasks run regardless of SLM_APPRENTICESHIP_ENABLED.  The drain
+    // worker checks the flag at the top of each poll cycle: when disabled it
+    // skips dequeue entirely and sleeps, so no brief is ever picked up while
+    // the flag is off.  This keeps the queue infrastructure live and ready
+    // for the flag to be enabled without a restart.
     //
     // Env vars:
     //   SLM_QUEUE_DRAIN_INTERVAL_SEC   drain poll interval; default 30s
@@ -206,6 +206,14 @@ async fn main() -> anyhow::Result<()> {
             );
 
             loop {
+                // Skip dequeue entirely when apprenticeship is disabled.
+                // Without this guard the worker would dequeue, re-queue with
+                // Retry, then immediately dequeue again — a tight spin loop.
+                if drain_doorman_arc.apprenticeship.is_none() {
+                    tokio::time::sleep(drain_interval).await;
+                    continue;
+                }
+
                 match dequeue_shadow(&drain_cfg, &worker_id) {
                     Ok(None) => {
                         // Queue empty; sleep and poll again.
@@ -219,7 +227,7 @@ async fn main() -> anyhow::Result<()> {
                             "drain worker: dispatching queued shadow brief"
                         );
 
-                        // Only dispatch if apprenticeship is enabled.
+                        // Apprenticeship is guaranteed enabled here (checked above).
                         let outcome = if let Some(cfg) = drain_doorman_arc.apprenticeship.as_ref() {
                             use slm_doorman::ApprenticeshipDispatcher;
                             let dispatcher = ApprenticeshipDispatcher::with_cache(
@@ -257,12 +265,7 @@ async fn main() -> anyhow::Result<()> {
                                 }
                             }
                         } else {
-                            // Apprenticeship disabled — re-queue the brief for when
-                            // the operator enables the flag without restarting.
-                            tracing::debug!(
-                                brief_id = %brief_id,
-                                "drain worker: apprenticeship disabled; re-queuing brief"
-                            );
+                            // Unreachable: apprenticeship.is_none() is checked at loop top.
                             ReleaseOutcome::Retry
                         };
 
