@@ -165,8 +165,11 @@ plan; `ARCHITECTURE.md` §15 for substrate documentation.
 
 ### NEXT — hardening tasks
 
-- [ ] **Task 3:** Add 503 busy-rejection — query llama-server `/health` before dispatch; if `slots_idle==0` + no Tier B → 503 + `Retry-After: 30`. In `service-slm/crates/slm-doorman/src/tier/local.rs`.
-- [ ] **Task 4:** End-to-end integration test for Anthropic shim — full path `/v1/messages` → `CanonicalMessage` → mock Tier A → SSE. Include tool_use case.
+- [x] **Task 3:** 503 busy-rejection — `is_busy()` health probe + `TierABusy` error + `Retry-After: 30` header + Tier B escalation — landed `c38e66de`/`e2a93a99`/`160668cd`; awaiting Stage 6.
+- [x] **Task 4:** Anthropic shim integration tests — 14 tests in `anthropic_shim_test.rs`; fixed `doorman_error_to_status` E0004 + shadow diff-length bug — landed `93620c1b`; awaiting Stage 6.
+- [ ] **Sprint 0b:** Replace fake-SSE `anthropic_sse_body()` with real per-token streaming (~60 LOC). File: `crates/slm-doorman-server/src/http.rs`. No blockers.
+- [ ] **P3-3.2 followup:** Flesh out canary task set + `bin/canary-run.sh` (skeleton in `9454bac4`).
+- [ ] **P1-1.7:** Tool-use round-trip (~300 LOC) — awaiting operator API-shape approval (`tools: Vec<ToolDef>` + `ContentBlock` response).
 
 ---
 
