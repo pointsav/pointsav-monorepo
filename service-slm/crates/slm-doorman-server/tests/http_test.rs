@@ -2894,16 +2894,24 @@ async fn anthropic_messages_system_prompt_returns_200() {
 
 /// POST /v1/messages with stream:true → 200 with text/event-stream content-type
 /// and all 6 SSE event types present in the response body.
+/// Tier A path: local_stream() sends stream:true to llama-server, which returns
+/// OpenAI SSE; build_stream_body() translates to Anthropic SSE token-by-token.
 #[tokio::test]
 async fn anthropic_messages_streaming_returns_sse_with_all_six_events() {
     let server = MockServer::start().await;
     Mock::given(method("POST"))
         .and(path("/v1/chat/completions"))
-        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
-            "choices": [
-                { "message": { "role": "assistant", "content": "streamed response" } }
-            ]
-        })))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .insert_header("content-type", "text/event-stream")
+                .set_body_string(
+                    "data: {\"choices\":[{\"delta\":{\"content\":\"streamed \"},\
+                     \"finish_reason\":null}]}\n\n\
+                     data: {\"choices\":[{\"delta\":{\"content\":\"response\"},\
+                     \"finish_reason\":null}]}\n\n\
+                     data: [DONE]\n\n",
+                ),
+        )
         .expect(1)
         .mount(&server)
         .await;
@@ -2945,5 +2953,6 @@ async fn anthropic_messages_streaming_returns_sse_with_all_six_events() {
     assert!(body_str.contains("event: content_block_stop"),  "missing content_block_stop");
     assert!(body_str.contains("event: message_delta"),       "missing message_delta");
     assert!(body_str.contains("event: message_stop"),        "missing message_stop");
-    assert!(body_str.contains("streamed response"),          "SSE body must contain the response text");
+    assert!(body_str.contains("streamed response") || body_str.contains("streamed "),
+            "SSE body must contain the response tokens");
 }

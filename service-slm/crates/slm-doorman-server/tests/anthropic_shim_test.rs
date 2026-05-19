@@ -416,12 +416,12 @@ async fn tier_a_busy_returns_503_with_retry_after_header() {
     assert_eq!(retry_after, "30", "busy 503 must include Retry-After: 30");
 }
 
-// ── stream: true, Tier A only → fake-SSE fallback ────────────────────────────
+// ── stream: true, Tier A only → real per-token SSE ───────────────────────────
 
 #[tokio::test]
-async fn stream_true_with_tier_a_only_emits_fake_sse() {
-    // No Tier B configured. stream=true falls back to buffered fake-SSE from
-    // Tier A inference.
+async fn stream_true_with_tier_a_only_streams_real_sse() {
+    // No Tier B configured. stream=true uses local_stream() → llama-server
+    // with stream:true → build_stream_body() produces per-token Anthropic SSE.
     let mock = MockServer::start().await;
     Mock::given(method("GET"))
         .and(path("/health"))
@@ -433,11 +433,15 @@ async fn stream_true_with_tier_a_only_emits_fake_sse() {
         .await;
     Mock::given(method("POST"))
         .and(path("/v1/chat/completions"))
-        .respond_with(ResponseTemplate::new(200).set_body_json(
-            json!({
-                "choices": [{"message": {"role": "assistant", "content": "fake stream token"}}]
-            }),
-        ))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .insert_header("content-type", "text/event-stream")
+                .set_body_string(
+                    "data: {\"choices\":[{\"delta\":{\"content\":\"real stream token\"},\
+                     \"finish_reason\":null}]}\n\n\
+                     data: [DONE]\n\n",
+                ),
+        )
         .mount(&mock)
         .await;
 
@@ -457,12 +461,19 @@ async fn stream_true_with_tier_a_only_emits_fake_sse() {
         .get("content-type")
         .and_then(|v| v.to_str().ok())
         .unwrap_or("");
-    assert!(ct.contains("text/event-stream"), "fake-SSE response must have SSE content-type, got: {ct}");
+    assert!(ct.contains("text/event-stream"), "Tier A stream response must have SSE content-type, got: {ct}");
+
+    let tier = resp.headers()
+        .get("x-foundry-tier-used")
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("");
+    assert_eq!(tier, "local", "Tier A stream must report x-foundry-tier-used: local");
 
     let body = response_text(resp).await;
-    assert!(body.contains("fake stream token"), "fake-SSE body must include upstream content");
-    assert!(body.contains("message_start"), "fake-SSE must include message_start event");
-    assert!(body.contains("message_stop"), "fake-SSE must include message_stop event");
+    assert!(body.contains("real stream token"), "Tier A SSE body must include upstream token");
+    assert!(body.contains("message_start"), "Tier A SSE must include message_start event");
+    assert!(body.contains("message_stop"), "Tier A SSE must include message_stop event");
+    assert!(body.contains("content_block_delta"), "Tier A SSE must include per-token delta events");
 }
 
 // ── Non-streaming response shape matches Anthropic spec ──────────────────────
