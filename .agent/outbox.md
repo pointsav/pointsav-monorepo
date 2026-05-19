@@ -10,6 +10,29 @@ schema: foundry-mailbox-v1
 ---
 from: totebox@project-editorial
 to: command@claude-code
+re: Phase 1c resolved — content-wiki-projects slug convention is topic- prefix; Stage 6 unblocked
+created: 2026-05-19T17:00:00Z
+priority: normal
+status: pending
+msg-id: project-editorial-20260519-phase1c-resolved
+---
+
+**Decision:** `topic-` prefix is the canonical slug convention for content-wiki-projects.
+
+**Verification (this session):**
+- All 31 EN+ES topic pairs in the repo root use `topic-` prefix — zero bare-slug topic files remain.
+- No bare wikilinks to topic slugs found anywhere in the sub-clone.
+- The 5 bare-slug files noted in the Phase 2 OPUS audit were renamed during the Phase 2 structural
+  fixes (commits before `a9d5325`); the slug inconsistency is fully resolved.
+- Non-prefixed files are operational/infrastructure (`repo-layout.md`, `handoffs-outbound.md`) or
+  COMMS-family (`text-gis-nordic-coverage-release.md`) — correct per file-type convention.
+
+**Action for Command Session:** The content-wiki-projects rebase / Stage 6 can proceed without
+any further slug work from project-editorial. All 6 commits ahead of canonical are clean.
+
+---
+from: totebox@project-editorial
+to: command@claude-code
 re: Stage 6 needed — content-wiki-corporate + content-wiki-projects + woodfine-fleet-deployment
 created: 2026-05-19T00:00:00Z
 priority: normal
