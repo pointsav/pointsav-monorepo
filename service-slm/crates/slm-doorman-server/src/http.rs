@@ -1998,6 +1998,8 @@ fn capture_anthropic_shadow(
 struct ApiError {
     status: StatusCode,
     body: serde_json::Value,
+    /// When `Some(n)`, emits `Retry-After: n` on the response.
+    retry_after_secs: Option<u32>,
 }
 
 impl ApiError {
@@ -2005,6 +2007,7 @@ impl ApiError {
         Self {
             status: StatusCode::BAD_REQUEST,
             body: serde_json::json!({ "error": { "message": msg.into() } }),
+            retry_after_secs: None,
         }
     }
 
@@ -2012,6 +2015,7 @@ impl ApiError {
         Self {
             status: StatusCode::NOT_FOUND,
             body: serde_json::json!({ "error": { "message": msg.into() } }),
+            retry_after_secs: None,
         }
     }
 
@@ -2019,6 +2023,7 @@ impl ApiError {
         Self {
             status: StatusCode::FORBIDDEN,
             body: serde_json::json!({ "error": { "message": msg.into() } }),
+            retry_after_secs: None,
         }
     }
 }
@@ -2029,6 +2034,9 @@ impl From<DoormanError> for ApiError {
             DoormanError::TierUnavailable(_) | DoormanError::NotImplemented { .. } => {
                 StatusCode::SERVICE_UNAVAILABLE
             }
+            // Tier A busy: same 503 status but also needs Retry-After: 30.
+            // Handled after the match via `retry_after_secs`.
+            DoormanError::TierABusy => StatusCode::SERVICE_UNAVAILABLE,
             DoormanError::ExternalNotAllowlisted { .. } | DoormanError::VerifySignature(_) => {
                 StatusCode::FORBIDDEN
             }
@@ -2112,15 +2120,28 @@ impl From<DoormanError> for ApiError {
                 StatusCode::SERVICE_UNAVAILABLE
             }
         };
+        let retry_after_secs = if matches!(e, DoormanError::TierABusy) {
+            Some(30)
+        } else {
+            None
+        };
         Self {
             status,
             body: serde_json::json!({ "error": { "message": e.to_string() } }),
+            retry_after_secs,
         }
     }
 }
 
 impl IntoResponse for ApiError {
     fn into_response(self) -> axum::response::Response {
-        (self.status, Json(self.body)).into_response()
+        let mut resp = (self.status, Json(self.body)).into_response();
+        if let Some(secs) = self.retry_after_secs {
+            if let Ok(v) = axum::http::HeaderValue::from_str(&secs.to_string()) {
+                resp.headers_mut()
+                    .insert(axum::http::header::RETRY_AFTER, v);
+            }
+        }
+        resp
     }
 }

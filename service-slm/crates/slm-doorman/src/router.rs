@@ -276,11 +276,26 @@ impl Doorman {
 
         match tier {
             Tier::Local => {
-                self.local
+                let local = self
+                    .local
                     .as_ref()
-                    .ok_or(DoormanError::TierUnavailable(Tier::Local))?
-                    .complete(req)
-                    .await
+                    .ok_or(DoormanError::TierUnavailable(Tier::Local))?;
+                match local.complete(req).await {
+                    // Tier A busy and Tier B is configured → escalate so the
+                    // request gets served rather than immediately 503-ing.
+                    // Box::pin is required because dispatch is async and the
+                    // recursive call would otherwise create an infinitely sized
+                    // future (E0733).
+                    Err(DoormanError::TierABusy) if !self.yoyo.is_empty() => {
+                        info!(
+                            target: "slm_doorman::router",
+                            request_id = %req.request_id,
+                            "Tier A busy (slots_idle=0); escalating to Tier B"
+                        );
+                        Box::pin(self.dispatch(Tier::Yoyo, req)).await
+                    }
+                    other => other,
+                }
             }
             Tier::Yoyo => {
                 let client = if let Some(ref label) = req.yoyo_label {
@@ -702,6 +717,10 @@ fn classify_error(e: &DoormanError) -> CompletionStatus {
         DoormanError::GraphProxyServiceUnavailable => CompletionStatus::UpstreamError,
         DoormanError::QueueQualityGateRejected { .. } => CompletionStatus::PolicyDenied,
         DoormanError::CorpusGateRejected { .. } => CompletionStatus::PolicyDenied,
+        // Tier A busy — all inference slots occupied, no Tier B to fall back to.
+        // Classified as TierUnavailable: the server cannot serve the request right
+        // now but the caller did nothing wrong.
+        DoormanError::TierABusy => CompletionStatus::TierUnavailable,
     }
 }
 
