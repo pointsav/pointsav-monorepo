@@ -113,7 +113,7 @@ Routing:
 | Census Catchment | `work/census-catchment.geojson` → `layer4-census.pmtiles` (373 MB) | DONE (2026-05-15) |
 | Spend Catchment | `work/spend-catchment.geojson` → `layer5-spend.pmtiles` (635 MB) | DONE (2026-05-15) |
 | DATA-MANIFEST.md | project root | DONE (2026-05-12) |
-| clusters-meta.json | gateway www/data/ | DONE (2026-05-17; 13,164 clusters; T1=432/T2=1,594/T3=3,091/T4=8,047; P10=0.25+GateB Phase 14; full catchment ranks; US:279 ES:51 MX:34 CA:32 DE:14 FR:13 GB:9) |
+| clusters-meta.json | gateway www/data/ | DONE (2026-05-19; 13,657 clusters; T1=435/T2=1,602/T3=3,080/T4=8,540; Phase 15; US:282 ES:51 MX:34 CA:32 DE:14 FR:13 GB:9) |
 | regional-markets.json | gateway www/data/ | DONE (2026-05-15; 2,986 Regional Markets, 2,942 high-conf) |
 | us_places.geojson | deployments/boundaries/ | DONE (2026-05-15; TIGER 2023, 32K US places) |
 | eu_municipalities.geojson | deployments/boundaries/ | DONE (2026-05-15; GISCO LAU 2021 + GADM GBR, 98.6K entries) |
@@ -129,6 +129,18 @@ Routing:
 | sainsburys-uk re-ingest | `service-business/sainsburys-uk.jsonl` | DONE (2026-05-17; 672→1,903 records; name_query partial; Phase 13) |
 | tiendas-3b-mx re-ingest | `service-business/tiendas-3b-mx.jsonl` | DONE (2026-05-17; 151→247 records; name_query Tiendas 3B; Phase 13) |
 | MITMA ES mobility_source | clusters-meta.json (58 ES clusters) | DONE (2026-05-17; build-mobility-tiles.py; Phase 13) |
+
+---
+
+### Phase 15 Chain Ingests (2026-05-18)
+
+| Artifact | File | Status |
+|---|---|---|
+| wegmans-us JSONL | `service-business/wegmans-us.jsonl` | DONE (2026-05-18; 114 records; Q1182328; name_query; 4952dfaf) |
+| winco-foods-us JSONL | `service-business/winco-foods-us.jsonl` | DONE (2026-05-18; 145 records; Q2584339; name_query; 4952dfaf) |
+| sprouts-us JSONL | `service-business/sprouts-us.jsonl` | DONE (2026-05-18; 450 records; Q7580917; name_query; 4952dfaf) |
+| build-tiles CHAIN_FAMILY fix | `build-tiles.py` | DONE (2026-05-19; wegmans/winco/sprouts/whole-foods/chedraui/asda/morrisons/heb brand_family fixed) |
+| layer2-clusters.pmtiles rebuild | gateway tiles/ | DONE (2026-05-19; 13,657 clusters; 76.7 MB) |
 
 ---
 
