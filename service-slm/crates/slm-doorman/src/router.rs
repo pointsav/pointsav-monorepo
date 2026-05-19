@@ -608,6 +608,19 @@ impl Doorman {
         };
         client.start_stream(req).await
     }
+
+    /// Begin a streaming Tier-A request. Returns the raw llama-server HTTP
+    /// response on success; the caller translates the SSE body to the target
+    /// wire format.
+    ///
+    /// Returns `Err(TierUnavailable(Tier::Local))` if no local client is
+    /// configured. Does NOT fall back — streaming callers handle fallback.
+    pub async fn local_stream(&self, req: &ComputeRequest) -> Result<reqwest::Response> {
+        match &self.local {
+            Some(local) => local.start_stream(req).await,
+            None => Err(DoormanError::TierUnavailable(Tier::Local)),
+        }
+    }
 }
 
 impl Doorman {

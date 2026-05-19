@@ -1766,9 +1766,9 @@ fn build_stream_body(
     axum::body::Body::from_stream(ReceiverStream::new(rx))
 }
 
-/// Build a fake-SSE response: buffer the full content, emit all 6 events at once.
-/// Claude Code's streaming UX receives the full response in a single burst rather
-/// than token-by-token. Real per-token streaming lands in Sprint 0b.
+/// Last-resort buffered SSE: emit all 6 events in a single burst from a
+/// fully-buffered ComputeResponse. Used only when both Tier B (yoyo_stream)
+/// and Tier A (local_stream) streaming paths are unavailable.
 fn anthropic_sse_body(resp: &slm_core::ComputeResponse, model: &str) -> String {
     let msg_id = format!("msg_{}", resp.request_id);
     let output_tokens = resp.content.split_whitespace().count() as u32;
@@ -1833,8 +1833,8 @@ async fn anthropic_messages(
 
     let req = anthropic_to_compute_request(body, module_id, request_id);
 
-    // Real SSE: try Tier B streaming first; fall back to buffered + fake-SSE
-    // when Tier B is unavailable (circuit open, not configured, etc.).
+    // Real SSE: try Tier B then Tier A streaming; fall back to buffered +
+    // fake-SSE burst only when both are unavailable (last resort).
     if stream {
         match state.doorman.yoyo_stream(&req).await {
             Ok(upstream) => {
@@ -1859,7 +1859,26 @@ async fn anthropic_messages(
                 tracing::debug!(
                     target: "slm_doorman_server",
                     error = %e,
-                    "yoyo_stream unavailable; falling back to buffered SSE"
+                    "yoyo_stream unavailable; trying Tier A stream"
+                );
+            }
+        }
+        match state.doorman.local_stream(&req).await {
+            Ok(upstream) => {
+                return Ok(Response::builder()
+                    .status(StatusCode::OK)
+                    .header("content-type", "text/event-stream; charset=utf-8")
+                    .header("cache-control", "no-cache")
+                    .header("x-accel-buffering", "no")
+                    .header("x-foundry-tier-used", "local")
+                    .body(build_stream_body(upstream, model, req.request_id))
+                    .expect("build SSE response"));
+            }
+            Err(e) => {
+                tracing::debug!(
+                    target: "slm_doorman_server",
+                    error = %e,
+                    "local_stream unavailable; falling back to buffered SSE"
                 );
             }
         }
