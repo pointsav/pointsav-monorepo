@@ -4,6 +4,29 @@ Rolling 3-session summary. Newest entry first. Push oldest to session-context-ar
 
 ---
 
+## 2026-05-19 (continuation) | totebox@claude-code | Sonnet 4.6
+
+**Done this session:**
+- Phase 1c resolved: `topic-` prefix confirmed canonical for content-wiki-projects; all 31 EN+ES pairs already use it; outbox message sent to unblock Command Stage 6 (commit `ea074049`).
+- Vendor co-location drafts: location-intelligence-ux TOPIC pair (EN+ES) committed to content-wiki-documentation/applications/ (`a2baf95`); all 6 vendor refined/ drafts removed from drafts-outbound (`01379316`).
+- E1 wikilink fixes (13 files): delink reverse-funnel-editorial-pattern + service-minutebook/bookkeeper; fix sel4-foundation→sel4-microkernel-substrate in 7 ES files; remove broken cross-category _index links (`19cd854`).
+- E3 status field: brand-family-swatch + brand-typography pairs — added `status: active` (`80de908`).
+- E4 title case: foundry-services-slice-model sentence case; slug drift logged in cleanup-log.md (`d8d82cf`).
+- Outbox pruned: 12 actioned/stale messages archived to outbox-archive.md; routing message added for 5 DESIGN-RESEARCH + component drafts → project-design (`487d1da3`).
+- todo-open-items.md: archived 3 old DONE blocks; marked all new completed items (`6ca2e592`).
+
+**Pending / carry-forward:**
+- Stage 6 for content-wiki-documentation, content-wiki-projects, content-wiki-corporate, woodfine-fleet-deployment — Command Session task.
+- pointsav-monorepo `readme-fixes-2026-05-16` → main merge + service restart — Command Session task.
+- Route design drafts to project-design — Command Session to forward outbox message.
+- Phase E bilingual home routing — deferred, low priority, needs Rust change → project-knowledge.
+- Italy co-location stub — needs data from project-gis.
+
+**Operator preferences surfaced:**
+- No new preferences this session.
+
+---
+
 ## 2026-05-19 | totebox@claude-code | Sonnet 4.6
 
 **Done this session:**
@@ -15,10 +38,9 @@ Rolling 3-session summary. Newest entry first. Push oldest to session-context-ar
 - from-project-gis/ drafts-outbound cleared (9 files removed, `f82b4ee6`); Italy stub (`topic-co-location-index-italy`) bounced to handoffs-outbound — needs real cluster data from project-gis before publishing.
 
 **Pending / carry-forward:**
-- Phase 1c — content-wiki-projects slug naming convention decision (`topic-` prefix vs. bare slug). Command Session is blocked on rebase until this is picked. Next session should decide and write the answer to outbox for Command Session.
-- Stage 6 promotions needed for content-wiki-corporate, content-wiki-projects, woodfine-fleet-deployment sub-clones — Command Session task, not project-editorial.
+- Phase 1c — resolved this continuation session.
+- Stage 6 promotions needed for content-wiki-corporate, content-wiki-projects, woodfine-fleet-deployment sub-clones — Command Session task.
 - Phase E bilingual home routing — deferred, low priority.
-- Design/component drafts in drafts-outbound (component-*.draft.md, design-*.draft.md) — project-design scope, not actioned this session.
 
 **Operator preferences surfaced:**
 - DataGraph at cluster-totebox-jennifer is the authoritative source for corporate wiki vocabulary. Always check it before drafting lede or terminology for content-wiki-corporate. Outbox message language is a starting point, not final word.
