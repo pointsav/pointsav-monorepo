@@ -610,3 +610,94 @@ async fn tool_result_content_block_passes_through_gateway() {
     assert_eq!(resp.status(), StatusCode::OK,
         "tool_result content block must pass through gateway successfully");
 }
+
+// ── POST /v1/shadow-adapter — adapter A/B dual-dispatch ──────────────────────
+
+#[tokio::test]
+async fn shadow_adapter_dual_dispatch_returns_both_arms() {
+    // Both adapter arms route to Tier A (local). The mock handles two POST
+    // requests and returns distinct content for each (model field differs).
+    let mock = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path("/health"))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .set_body_json(json!({"status": "ok", "slots_idle": 2})),
+        )
+        .mount(&mock)
+        .await;
+    Mock::given(method("POST"))
+        .and(path("/v1/chat/completions"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+            "choices": [{"message": {"role": "assistant", "content": "adapter response"}}]
+        })))
+        .expect(2)  // one call per adapter arm
+        .mount(&mock)
+        .await;
+
+    let state = app_state_with_local(mock.uri());
+    let app = router(state);
+
+    let req = Request::builder()
+        .method("POST")
+        .uri("/v1/shadow-adapter")
+        .header("content-type", "application/json")
+        .body(Body::from(serde_json::to_vec(&json!({
+            "prompt": "What is 2 + 2?",
+            "adapter_a": "lora-v1",
+            "adapter_b": "lora-v2",
+            "max_tokens": 32
+        })).unwrap()))
+        .unwrap();
+    let resp = app.oneshot(req).await.unwrap();
+    assert_eq!(resp.status(), StatusCode::OK, "shadow-adapter must return 200");
+
+    let body = response_body(resp).await;
+    assert!(body["adapter_a"].is_object(), "response must contain adapter_a arm");
+    assert!(body["adapter_b"].is_object(), "response must contain adapter_b arm");
+    assert_eq!(body["adapter_a"]["version"], "lora-v1");
+    assert_eq!(body["adapter_b"]["version"], "lora-v2");
+    assert!(body["prompt_hash"].is_string(), "response must contain prompt_hash");
+    let hash = body["prompt_hash"].as_str().unwrap();
+    assert_eq!(hash.len(), 64, "prompt_hash must be a 64-char hex SHA-256");
+}
+
+#[tokio::test]
+async fn shadow_adapter_rejects_empty_prompt() {
+    let mock = MockServer::start().await;
+    let state = app_state_with_local(mock.uri());
+    let app = router(state);
+
+    let req = Request::builder()
+        .method("POST")
+        .uri("/v1/shadow-adapter")
+        .header("content-type", "application/json")
+        .body(Body::from(serde_json::to_vec(&json!({
+            "prompt": "",
+            "adapter_a": "lora-v1",
+            "adapter_b": "lora-v2"
+        })).unwrap()))
+        .unwrap();
+    let resp = app.oneshot(req).await.unwrap();
+    assert_eq!(resp.status(), StatusCode::BAD_REQUEST, "empty prompt must return 400");
+}
+
+#[tokio::test]
+async fn shadow_adapter_rejects_missing_adapter_ids() {
+    let mock = MockServer::start().await;
+    let state = app_state_with_local(mock.uri());
+    let app = router(state);
+
+    let req = Request::builder()
+        .method("POST")
+        .uri("/v1/shadow-adapter")
+        .header("content-type", "application/json")
+        .body(Body::from(serde_json::to_vec(&json!({
+            "prompt": "test prompt",
+            "adapter_a": "lora-v1",
+            "adapter_b": ""
+        })).unwrap()))
+        .unwrap();
+    let resp = app.oneshot(req).await.unwrap();
+    assert_eq!(resp.status(), StatusCode::BAD_REQUEST, "empty adapter_b must return 400");
+}
