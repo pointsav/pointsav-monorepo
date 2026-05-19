@@ -126,7 +126,7 @@ plan; `ARCHITECTURE.md` §15 for substrate documentation.
 - [ ] P3-3.2 Canary task set + `bin/canary-run.sh`.
 - [ ] P3-3.3-followup adapter A/B dual-dispatch (skeleton shipped).
 - [ ] P3-3.4-followup Sigstore adapter signing (operator key).
-- [ ] P3-3.5-followup wire `write_audit` → `cost_ledger.append`.
+- [x] P3-3.5-followup wire `write_audit` → `cost_ledger.append` — landed `80083e6e`; awaiting Stage 6.
 
 ---
 
