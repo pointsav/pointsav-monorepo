@@ -27,6 +27,7 @@ WORK_DIR          = Path(__file__).parent / "work"
 # Phase 8: fred-meyer-us DONE 2026-05-17 (126 records, Q5495932; PNW-regional; 63 new clusters, 0 T1).
 # Phase 12: whole-foods-us promoted from GENERIC_FOOD; chedraui-mx promoted; heb-us, asda-uk, morrisons-uk ingested 2026-05-17.
 # Phase 15: wegmans-us, winco-foods-us, sprouts-us ingested 2026-05-17.
+# Phase 16: esselunga-it, sklavenitis-gr, billa-plus-at, continente-pt, albert-heijn-xl-nl added 2026-05-19.
 ALPHA_HYPERMARKET = {
     "NA": {
         # Walmart: Fortune #1 — dominant NA hypermarket
@@ -71,6 +72,17 @@ ALPHA_HYPERMARKET = {
         "ecenter-de", "marktkauf-de",
         # Kaufland DE: Schwarz Group hypermarket (~760 stores, Q685967) — Phase 7 2026-05-16
         "kaufland-de",
+        # Phase 16 EU gap fills (2026-05-19):
+        # Esselunga IT: N. Italian flagship hypermarket (~190 stores, Q1377048)
+        "esselunga-it",
+        # Sklavenitis GR: Greece #1 grocer + Marinopoulos acquisition (~600 stores, Q7536996)
+        "sklavenitis-gr",
+        # Billa Plus AT: REWE Group AT flagship hypermarket (~135 stores, Q806085)
+        "billa-plus-at",
+        # Continente PT: Sonae MC PT #1 hypermarket (~40 stores, Q5164541)
+        "continente-pt",
+        # Albert Heijn XL NL: Ahold Delhaize large-format hypermarket (~85 stores)
+        "albert-heijn-xl-nl",
     }
 }
 
@@ -178,12 +190,12 @@ REGION_CONFIG = {
         "warehouse": ["costco-es", "makro-es"]
     },
     "IT": {
-        "anchor":    ["ikea-it"],
+        "anchor":    ["esselunga-it", "ikea-it"],
         "hardware":  ["leroy-merlin-it", "obi-it", "bricocenter-it"],
         "warehouse": ["metro-it"]
     },
     "GR": {
-        "anchor":    ["ikea-gr"],
+        "anchor":    ["sklavenitis-gr", "ikea-gr"],
         "hardware":  ["leroy-merlin-gr", "praktiker-gr"],
         "warehouse": ["the-mart-gr"]
     },
@@ -216,18 +228,19 @@ REGION_CONFIG = {
         "warehouse": ["costco-uk"]
     },
     # Phase C: Austria, Netherlands, Portugal
+    # Phase 16 (2026-05-19): billa-plus-at, albert-heijn-xl-nl, continente-pt added as anchors.
     "AT": {
-        "anchor":    ["ikea-at"],
+        "anchor":    ["billa-plus-at", "ikea-at"],
         "hardware":  ["hornbach-at"],
         "warehouse": []
     },
     "NL": {
-        "anchor":    ["ikea-nl", "makro-nl"],
+        "anchor":    ["albert-heijn-xl-nl", "ikea-nl", "makro-nl"],
         "hardware":  ["praxis-nl", "gamma-nl", "karwei-nl"],
         "warehouse": ["makro-nl"]
     },
     "PT": {
-        "anchor":    ["ikea-pt"],
+        "anchor":    ["continente-pt", "ikea-pt"],
         "hardware":  ["leroy-merlin-pt"],
         "warehouse": []
     },
@@ -356,6 +369,11 @@ ANCHOR_DISPLAY_NAMES: dict = {
     "auchan-pl": "Auchan", "auchan-fr": "Auchan",
     "leclerc-fr": "E.Leclerc",
     "ecenter-de": "E center", "marktkauf-de": "Marktkauf", "kaufland-de": "Kaufland",
+    "esselunga-it": "Esselunga",
+    "sklavenitis-gr": "Sklavenitis",
+    "billa-plus-at": "Billa Plus",
+    "continente-pt": "Continente",
+    "albert-heijn-xl-nl": "Albert Heijn XL",
     "ipercoop-it": "Ipercoop", "iper-it": "Iper", "bennet-it": "Bennet",
     "bilka-dk": "Bilka", "obs-coop-no": "OBS Coop",
     "k-citymarket-fi": "K-Citymarket", "hagkaup-is": "Hagkaup",
