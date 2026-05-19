@@ -7,6 +7,26 @@ State values: `pending-destination-commit` | `destination-committed` | `closed`
 
 ---
 
+## from-project-gis batch (processed 2026-05-19)
+
+All 9 drafts in `.agent/drafts-outbound/from-project-gis/` reviewed and cleared.
+
+| Draft | Destination | State |
+|---|---|---|
+| guide-gis-adding-a-chain.md | woodfine-fleet-deployment/gateway-orchestration-gis/ | destination-committed (d10c971) |
+| text-gis-nordic-coverage-release.md + .es | content-wiki-projects/comms/ | destination-committed (34f9500) |
+| topic-gis-nordic-uk-coverage-2026-05-06.md | content-wiki-projects/ (as topic-gis-nordic-uk-coverage.md) | destination-committed (a9d5325) |
+| topic-app-orchestration-gis.md | content-wiki-documentation/applications/ | destination-committed (prior session) |
+| topic-service-fs-data-lake.md | content-wiki-documentation/services/ | destination-committed (prior session) |
+| topic-service-business-clustering.md | content-wiki-documentation/services/ | destination-committed (prior session) |
+| topic-service-places-filtering.md | content-wiki-documentation/services/ | destination-committed (prior session) |
+| topic-co-location-index-canada.md | content-wiki-projects/ | destination-committed (prior session) |
+| topic-co-location-index-italy.md | content-wiki-projects/ (stub) | pending-destination-commit |
+
+**Italy note:** `topic-co-location-index-italy.md` exists in content-wiki-projects as an empty stub (data table unpopulated). project-gis must supply actual cluster data before the stub can be published. Bounce to project-gis outbox.
+
+---
+
 ## Leapfrog-2030 batch (workspace v0.1.96 / refined 2026-04-30)
 
 Refined output staging area: `clones/project-language/.claude/drafts-outbound/refined/leapfrog-2030/`
