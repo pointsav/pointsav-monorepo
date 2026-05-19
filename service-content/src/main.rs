@@ -458,12 +458,12 @@ fn process_corpus(
                 }
             } else {
                 error!(status = %response.status(), "doorman rejected payload");
-                return false;
+                false
             }
         }
         Err(e) => {
             error!(error = %e, "doorman routing failed");
-            return false;
+            false
         }
     }
 }
