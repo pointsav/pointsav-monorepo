@@ -213,6 +213,7 @@ async fn shadow_adapter(
     // 501 NOT_IMPLEMENTED — see module doc above.
     Err(ApiError {
         status: StatusCode::NOT_IMPLEMENTED,
+        retry_after_secs: None,
         body: serde_json::json!({
             "error": {
                 "type": "not_implemented",
@@ -298,6 +299,7 @@ async fn cost_daily_endpoint(
                         body: serde_json::json!({
                             "error": {"message": format!("cost ledger read failed: {e}")}
                         }),
+                        retry_after_secs: None,
                     });
                 }
             },
@@ -1812,6 +1814,7 @@ async fn anthropic_messages(
             return Err(ApiError {
                 status: StatusCode::UNAUTHORIZED,
                 body: serde_json::json!({"error": {"type": "authentication_error", "message": "invalid api key"}}),
+                retry_after_secs: None,
             });
         }
     }
