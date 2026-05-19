@@ -10,6 +10,52 @@ schema: foundry-mailbox-v1
 ---
 from: task@project-gis
 to: command@foundry
+re: Phase 15 complete — wegmans/winco/sprouts; T1=435; 13,657 clusters; disk resolved
+created: 2026-05-19T02:30:00Z
+---
+
+Phase 15 committed (c5662554, jwoodfine). Pipeline complete.
+
+## New chains (all ALPHA_HYPERMARKET via name_query)
+
+| Chain | Records | QID |
+|---|---|---|
+| wegmans-us | 114 | Q1182328 |
+| winco-foods-us | 145 | Q2584339 |
+| sprouts-us | 450 | Q7580917 |
+
+## T1 breakdown (T1=435, 13,657 clusters)
+
+| ISO | T1 |
+|---|---|
+| US | 282 |
+| ES | 51 |
+| MX | 34 |
+| CA | 32 |
+| DE | 14 |
+| FR | 13 |
+| GB | 9 |
+| **Total** | **435** |
+
+T2=1,602 / T3=3,080 / T4=8,540
+
+## Disk resolved
+
+Root now at **58% (45G free)** — cargo-target cleanup appears to have been done. DISK ALERT from Phase 14 can be archived.
+
+Secondary (sdb): 66% (17G free).
+
+## Outstanding operator decisions (unchanged)
+
+| Item | Decision needed |
+|------|----------------|
+| Path C composition (HW∧HM as T1-qualifying) | Methodologically significant; operator pick |
+| UK/FR/DE OD manual downloads | ONS ODWP01EW, INSEE FD_MOBPRO, BA Pendler |
+| US LODES full ingest | 5 states downloaded; full run ~2-4h; ingest-lodes.py auto-download |
+
+---
+from: task@project-gis
+to: command@foundry
 re: DISK ALERT — root at 85%; cargo-target 16G needs Command Session action
 created: 2026-05-17T23:00:00Z
 ---
