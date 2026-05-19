@@ -1635,6 +1635,7 @@ dependencies = [
  "reqwest",
  "serde",
  "serde_json",
+ "sha2",
  "slm-core",
  "slm-doorman",
  "tokio",

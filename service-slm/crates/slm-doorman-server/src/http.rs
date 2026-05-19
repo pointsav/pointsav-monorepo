@@ -48,6 +48,7 @@ use slm_core::{
     Role, Tier,
 };
 use slm_doorman::ledger::{
+    AuditEntry, CompletionStatus,
     ENTRY_TYPE_AUDIT_CAPTURE, ENTRY_TYPE_AUDIT_PROXY, ENTRY_TYPE_AUDIT_PROXY_STUB,
     ENTRY_TYPE_EXTRACT,
 };
@@ -146,13 +147,7 @@ pub fn router(state: Arc<AppState>) -> Router {
 /// `POST /v1/shadow-adapter` — Adapter A/B comparison harness.
 ///
 /// Phase 3 (P3-3.3) of learning-loop-master-plan-2026-05-18.md, retargeted
-/// from "Tier A vs Tier C" (moot per operator directive 2026-05-18 — no
-/// Tier C in production) to "adapter v_a vs adapter v_b" comparison.
-///
-/// **STATUS: SKELETON.** The endpoint is mounted and the wire shape is
-/// frozen so callers can integrate, but the dual-dispatch implementation
-/// is deferred to P3-3.3-followup. Returns 501 NOT_IMPLEMENTED with a
-/// descriptive body until the follow-up lands.
+/// from "Tier A vs Tier C" to "adapter v_a vs adapter v_b" comparison.
 ///
 /// Wire shape:
 /// ```json
@@ -165,7 +160,7 @@ pub fn router(state: Arc<AppState>) -> Router {
 /// }
 /// ```
 ///
-/// Response (when implemented):
+/// Response:
 /// ```json
 /// {
 ///   "adapter_a": {"version": "...", "content": "...", "latency_ms": 420, "tier": "yoyo"},
@@ -174,14 +169,10 @@ pub fn router(state: Arc<AppState>) -> Router {
 /// }
 /// ```
 ///
-/// Sampling: caller decides. The harness records both responses to the
-/// audit ledger (entry_type: shadow-adapter-comparison) for offline
-/// eval. Used by:
-/// - Canary task harness (P3-3.2) to verify a newly-trained adapter
-///   matches or beats the production adapter before promotion.
-/// - Operator-driven A/B sampling on /v1/messages traffic (the
-///   `SLM_SHADOW_ADAPTER_SAMPLE_PCT` env would gate auto-sampling once
-///   wired).
+/// Both arms are dispatched concurrently; each writes an
+/// `entry_type: shadow-adapter-comparison` row to the audit ledger for
+/// offline eval. Used by the canary harness (P3-3.2) and operator-driven
+/// A/B sampling.
 #[derive(Deserialize)]
 struct ShadowAdapterBody {
     #[serde(default)]
@@ -197,7 +188,7 @@ struct ShadowAdapterBody {
 }
 
 async fn shadow_adapter(
-    State(_state): State<Arc<AppState>>,
+    State(state): State<Arc<AppState>>,
     Json(body): Json<ShadowAdapterBody>,
 ) -> Result<Json<serde_json::Value>, ApiError> {
     if body.prompt.trim().is_empty() {
@@ -208,22 +199,119 @@ async fn shadow_adapter(
             "adapter_a and adapter_b must both be non-empty adapter IDs",
         ));
     }
-    let _ = body.module_id;
-    let _ = body.max_tokens;
-    // 501 NOT_IMPLEMENTED — see module doc above.
-    Err(ApiError {
-        status: StatusCode::NOT_IMPLEMENTED,
-        retry_after_secs: None,
-        body: serde_json::json!({
-            "error": {
-                "type": "not_implemented",
-                "message": "shadow-adapter dual-dispatch deferred to P3-3.3-followup; endpoint scaffolded so callers can integrate the wire shape now",
-                "wire_shape_version": "skeleton-v0",
-                "adapter_a": body.adapter_a,
-                "adapter_b": body.adapter_b,
-            }
-        }),
-    })
+
+    let module_id = match &body.module_id {
+        Some(s) => ModuleId::from_str(s)
+            .map_err(|e| ApiError::bad_request(format!("invalid module_id: {e}")))?,
+        None => ModuleId::from_str("foundry").expect("compile-time-valid default moduleId"),
+    };
+
+    let messages = vec![CanonicalMessage::text("user", body.prompt.clone())];
+    let max_tokens = body.max_tokens.unwrap_or(512);
+
+    let req_a = ComputeRequest {
+        request_id: RequestId::new(),
+        module_id: module_id.clone(),
+        model: Some(body.adapter_a.clone()),
+        messages: messages.clone(),
+        complexity: Complexity::Medium,
+        tier_hint: None,
+        stream: false,
+        max_tokens: Some(max_tokens),
+        temperature: None,
+        sanitised_outbound: false,
+        tier_c_label: None,
+        yoyo_label: None,
+        grammar: None,
+        speculation: None,
+        graph_context_enabled: Some(false),
+        adapter_version: None,
+    };
+    let req_b = ComputeRequest {
+        request_id: RequestId::new(),
+        module_id: module_id.clone(),
+        model: Some(body.adapter_b.clone()),
+        messages,
+        complexity: Complexity::Medium,
+        tier_hint: None,
+        stream: false,
+        max_tokens: Some(max_tokens),
+        temperature: None,
+        sanitised_outbound: false,
+        tier_c_label: None,
+        yoyo_label: None,
+        grammar: None,
+        speculation: None,
+        graph_context_enabled: Some(false),
+        adapter_version: None,
+    };
+
+    // Concurrent dispatch — both arms run simultaneously.
+    let (res_a, res_b) = tokio::join!(
+        state.doorman.route(&req_a),
+        state.doorman.route(&req_b),
+    );
+
+    // Prompt hash for dedup and offline correlation.
+    use sha2::{Digest, Sha256};
+    let prompt_hash = format!("{:x}", Sha256::digest(body.prompt.as_bytes()));
+
+    // Write one audit entry per arm (entry_type distinguishes from normal completions).
+    let ts = Utc::now();
+    let write_comparison_entry = |res: &slm_doorman::error::Result<slm_core::ComputeResponse>,
+                                   req: &ComputeRequest,
+                                   version: &str| {
+        let entry = AuditEntry {
+            entry_type: "shadow-adapter-comparison".to_string(),
+            timestamp_utc: ts,
+            request_id: req.request_id,
+            module_id: req.module_id.clone(),
+            tier: res.as_ref().map(|r| r.tier_used).unwrap_or(Tier::Local),
+            model: version.to_string(),
+            inference_ms: res.as_ref().map(|r| r.inference_ms).unwrap_or(0),
+            cost_usd: res.as_ref().map(|r| r.cost_usd).unwrap_or(0.0),
+            sanitised_outbound: false,
+            completion_status: if res.is_ok() {
+                CompletionStatus::Ok
+            } else {
+                CompletionStatus::UpstreamError
+            },
+            error_message: res.as_ref().err().map(|e| e.to_string()),
+            adapter_version: Some(version.to_string()),
+        };
+        if let Err(e) = state.doorman.ledger().append(&entry) {
+            tracing::warn!(
+                target: "slm_doorman_server",
+                error = %e,
+                version,
+                "shadow_adapter: failed to write audit entry"
+            );
+        }
+    };
+    write_comparison_entry(&res_a, &req_a, &body.adapter_a);
+    write_comparison_entry(&res_b, &req_b, &body.adapter_b);
+
+    // Build the response arm — success carries content + latency, error carries message.
+    let arm_json = |res: slm_doorman::error::Result<slm_core::ComputeResponse>, version: &str| {
+        match res {
+            Ok(r) => serde_json::json!({
+                "version": version,
+                "content": r.content,
+                "latency_ms": r.inference_ms,
+                "tier": r.tier_used.as_str(),
+            }),
+            Err(e) => serde_json::json!({
+                "version": version,
+                "error": e.to_string(),
+            }),
+        }
+    };
+
+    Ok(Json(serde_json::json!({
+        "adapter_a": arm_json(res_a, &body.adapter_a),
+        "adapter_b": arm_json(res_b, &body.adapter_b),
+        "prompt_hash": prompt_hash,
+    })))
 }
 
 /// `GET /metrics` — Prometheus textual format scrape endpoint.
