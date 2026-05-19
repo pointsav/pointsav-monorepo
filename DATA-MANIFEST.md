@@ -58,7 +58,7 @@ The co-location engine classifies stores into four alpha anchor classes. Stores 
 
 | Class | Representative chains |
 |---|---|
-| **ALPHA_HYPERMARKET** | Walmart (US/CA/MX), Target (US), Soriana (MX), Mercadona (ES), Tesco (UK), Sainsbury's (UK), Bilka (DK), K-Citymarket (FI), Prisma (FI), Obs Coop (NO), Hagkaup (IS) |
+| **ALPHA_HYPERMARKET** | Walmart (US/CA/MX), Target (US), Fred Meyer (US), Whole Foods Market (US), H-E-B (US), Wegmans (US), WinCo Foods (US), Sprouts Farmers Market (US), Real Canadian Superstore (CA), Soriana (MX), Chedraui (MX), Mercadona (ES), Tesco (UK), Sainsbury's (UK), ASDA (UK), Morrisons (UK), Carrefour hypermarket (FR/ES/IT/PL), Auchan (FR), Bilka (DK), K-Citymarket (FI), Prisma (FI), Obs Coop (NO), Hagkaup (IS) |
 | **ALPHA_LIFESTYLE** | IKEA (all regions) |
 | **ALPHA_HARDWARE** | Home Depot (US/CA/MX), Lowe's (US/CA), Canadian Tire (CA), Leroy Merlin (EU), Brico Dépôt (FR/ES), Bauhaus (EU), Woodies (IE) |
 | **ALPHA_WAREHOUSE** | Costco (all regions), Sam's Club (US/MX), BJ's (US), Makro (ES/NL/PL) |
