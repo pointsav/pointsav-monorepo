@@ -8,7 +8,7 @@ must be closed.
 
 State vocabulary — see `~/Foundry/CLAUDE.md` §8 for definitions.
 
-Last updated: 2026-05-14.
+Last updated: 2026-04-25.
 
 ---
 
@@ -18,32 +18,22 @@ Last updated: 2026-05-14.
 |---|---|---|---|
 | app-console-bim | Reserved-folder | app-console | 2 files (CLAUDE.md + RESEARCH.md shared with app-orchestration-bim); research phase; directory created 2026-04-23 (closes registry drift) |
 | app-console-bookkeeper | Active | app-console | Activated 2026-04-22 via framework §8 (pilot); HTML-plugin pattern (view + cartridge); registry row was originally mis-classified; `README.*` and data-binding pending |
-| app-console-exchange | Reserved-folder | app-console | Secure TUI ad exchange surface; same risk-profile rationale as app-console-market; Doctrine claim #52 |
 | app-console-content | Scaffold-coded | app-console | 8 files; in workspace members |
 | app-console-email | Scaffold-coded | app-console | 4 files |
 | app-console-help | Reserved-folder | app-console | READMEs only |
 | app-console-input | Scaffold-coded | app-console | 6 files |
 | app-console-keys | Reserved-folder | app-console | READMEs only |
 | app-console-mesh | Reserved-folder | app-console | Placeholder |
-| app-console-market | Reserved-folder | app-console | Secure TUI marketplace surface for financial/health/legal data industries; Doctrine claim #52 |
 | app-console-minutebook | Reserved-folder | app-console | READMEs only |
 | app-console-people | Scaffold-coded | app-console | 5 files |
 | app-console-vault | Reserved-folder | app-console | Placeholder |
-
-## App — Infrastructure surface (`app-infrastructure-*`)
-
-| Project | State | Type | Notes |
-|---|---|---|---|
-| app-infrastructure-cloud | Reserved-folder | app-infrastructure | README pair only; runs on os-infrastructure; GCP node (fleet-infrastructure-cloud-1); scaffolded 2026-05-14 |
-| app-infrastructure-leased | Reserved-folder | app-infrastructure | README pair only; runs on os-infrastructure; Laptop B node (fleet-infrastructure-leased-1); scaffolded 2026-05-14 |
-| app-infrastructure-onprem | Reserved-folder | app-infrastructure | README pair only; runs on os-infrastructure; Laptop A node (fleet-infrastructure-onprem-1); scaffolded 2026-05-14 |
 
 ## App — MediaKit surface (`app-mediakit-*`)
 
 | Project | State | Type | Notes |
 |---|---|---|---|
 | app-mediakit-distributions | Scaffold-coded | app-mediakit | 4 files |
-| app-mediakit-knowledge | Active | app-mediakit | Phases 1–3 + Wikipedia Parity Phases 1/2A/3 shipped; Phase 4 Steps 4.1–4.5 shipped (`177813e` 2026-05-12); Steps 4.6 (MCP/rmcp) + 4.7 (git smart-HTTP) pending; project-root CLAUDE.md + NEXT.md activation defect still open |
+| app-mediakit-knowledge | Active | app-mediakit | Phases 1, 1.1, 2 (Steps 1-7), 3 (Steps 3.1-3.4) shipped; Phase 4 plan + BP1 decision packet + Step 7 smoke runbook landed; project-root CLAUDE.md + NEXT.md activation defect — add before Phase 4 implementation begins |
 | app-mediakit-marketing | Scaffold-coded | app-mediakit | 4 files |
 | app-mediakit-telemetry | Scaffold-coded | app-mediakit | 14 files; MaxMind `.mmdb` pending move to build-time fetch |
 
@@ -51,7 +41,6 @@ Last updated: 2026-05-14.
 
 | Project | State | Type | Notes |
 |---|---|---|---|
-| app-network-admin | Reserved-folder | app-network | README pair only; control-plane for os-network-admin; PPN mesh routing authority; scaffolded 2026-05-14 |
 | app-network-cluster | Reserved-folder | app-network | Placeholder |
 | app-network-gateway | Reserved-folder | app-network | Placeholder |
 | app-network-help | Reserved-folder | app-network | Placeholder |
@@ -66,17 +55,13 @@ Last updated: 2026-05-14.
 | Project | State | Type | Notes |
 |---|---|---|---|
 | app-orchestration-bim | Reserved-folder | app-orchestration | 2 files (CLAUDE.md + RESEARCH.md byte-identical to app-console-bim copy, Task Claude — BIM to rationalise); triggered taxonomy expansion to seventh in-force domain on 2026-04-22; directory created 2026-04-23 (closes registry drift) |
-| app-orchestration-exchange | Reserved-folder | app-orchestration | Browser ad campaign UI; deployed as gateway-orchestration-exchange-N; Doctrine claim #52 |
-| app-orchestration-gis | Reserved-folder | app-orchestration | GIS/mapping orchestration surface; deployed as gateway-orchestration-gis-1; registry drift closed 2026-05-07 |
-| app-orchestration-market | Reserved-folder | app-orchestration | Browser marketplace storefront; deployed as gateway-orchestration-market-N; Doctrine claim #52 |
 
 ## App — PrivateGit surface (`app-privategit-*`)
 
 | Project | State | Type | Notes |
 |---|---|---|---|
 | app-privategit-design-system | Scaffold-coded | app-privategit | 4 files |
-| app-privategit-marketplace | Active | app-privategit | software.pointsav.com storefront — static pages, /v1/products, /v1/license, /v1/claim; workspace member; activated project-software 2026-05-17 |
-| app-privategit-source | Active | app-privategit | release server — /releases/* binary streaming + MANIFEST; /git/* 503 stub (smart-HTTP v0.0.2); workspace member; renamed from app-privategit-source-control 2026-05-17 |
+| app-privategit-source-control | Scaffold-coded | app-privategit | 4 files |
 
 ## App — Totebox surface (`app-totebox-*`)
 
@@ -90,9 +75,9 @@ Last updated: 2026-05-14.
 | Project | State | Type | Notes |
 |---|---|---|---|
 | app-workplace-bim | Reserved-folder | app-workplace | 2 files (CLAUDE.md + RESEARCH.md); research phase; directory created 2026-04-23 (closes registry drift) |
-| app-workplace-memo | Active | app-workplace | 47 files; Tauri v1 (macOS dev) / v2 (Linux prod); walking skeleton unverified; CLAUDE.md + NEXT.md added 2026-05-07 |
+| app-workplace-memo | Scaffold-coded | app-workplace | 47 files; running on Linux Mint per sibling's doc; CLAUDE.md + NEXT.md pending for Active |
 | app-workplace-presentation | Active | app-workplace | 52 files; CLAUDE.md present; Phase 5 |
-| app-workplace-proforma | Active | app-workplace | 45 files; EUPL v1.2; Tauri + Rust + vanilla JS; CLAUDE.md committed 2026-05-07 |
+| app-workplace-proforma | Active | app-workplace | 45 files; CLAUDE.md present but marked "local-only"; conformance pending |
 
 ## OS (`os-*`)
 
@@ -103,7 +88,7 @@ Last updated: 2026-05-14.
 | os-interface | Scaffold-coded | os | 4 files; legacy name — canonical is `os-orchestration` (rename in flight) |
 | os-mediakit | Scaffold-coded | os | 4 files |
 | os-network-admin | Scaffold-coded | os | 12 files; ISO artefact — tracking status TBD |
-| os-privategit | Active | os | 4 files; deployment: vault-privategit-source-1 (software.pointsav.com:9202/9201); hosts marketplace + source + wallet; workspace member; activated project-software 2026-05-17 |
+| os-privategit | Scaffold-coded | os | 4 files |
 | os-totebox | Scaffold-coded | os | 6 files; IMG artefact — tracking status TBD |
 | os-workplace | Scaffold-coded | os | 4 files |
 
@@ -134,14 +119,14 @@ Last updated: 2026-05-14.
 | service-content | Scaffold-coded | service | 37 files; in workspace members |
 | service-egress | Scaffold-coded | service | 4 files |
 | service-email | Scaffold-coded | service | 18 files |
-| service-exchange | Reserved-folder | service | Ring 2 ad exchange — IAB OpenRTB 2.6; SSP + DSP bidirectional; Prebid Server sidecar; `iab-specs-openrtb` crate; Doctrine claim #52 |
-| service-email-egress | Scaffold-coded | service | EWS + IMAP protocol adapters; doubly-nested wrappers flattened 2026-04-23; 6 sub-crates (egress-ingress, egress-ledger, egress-roster, egress-balancer, egress-prune, data-ledgers) |
+| service-email-egress-ews | Defect → `service-email-egress` | service | Doubly-nested; 6 sub-crates; consolidation pending |
+| service-email-egress-imap | Defect → `service-email-egress` | service | Same consolidation |
 | service-email-template | Scaffold-coded | service | 5 files |
-| service-extraction | Active | service | Filesystem-watching JSON payload router; 149-line main.rs; CLAUDE.md added 2026-05-07 |
+| service-extraction | Active | service | 21 files; CLAUDE.md present but stale (see NEXT.md Item 9) |
 | service-fs | Scaffold-coded | service | 3 files; in workspace members |
 | service-http | Scaffold-coded | service | 9 files |
-| service-market | Reserved-folder | service | Ring 2 data marketplace — outbound connectors (Snowflake, AWS Data Exchange, LiveRamp) + inbound Delta Sharing API; Doctrine claim #52 |
 | service-message-courier | Reserved-folder | service | 1 file |
+| service-parser | Defect → remove | service | Legacy name; canonical is `service-extraction`; removal pending |
 | service-people | Scaffold-coded | service | 17 files; in workspace members |
 | service-search | Reserved-folder | service | 1 file |
 | service-slm | Active | service | B1 Doorman scaffold landed 2026-04-25 (standalone cargo workspace; `crates/slm-core`, `slm-doorman`, `slm-doorman-server`); 6/6 tests; `cognitive-forge/` excluded pending rename |
@@ -167,7 +152,6 @@ Last updated: 2026-05-14.
 | Project | State | Type | Notes |
 |---|---|---|---|
 | tool-acs-miner | Scaffold-coded | tool | 3 files; in workspace members |
-| tool-wallet | Active | tool | Polygon USDC watcher — eth_getLogs watch loop + eth_getTransactionReceipt check; writes receipts to local dir + service-fs fallback; workspace member; activated project-software 2026-05-17 |
 | tool-archive-rescue | Reserved-folder | tool | 3 files |
 | tool-cognitive-forge | Scaffold-coded | tool | 8 files; "Cognitive Forge" is a retired term per Do-Not-Use list — rename pending |
 | tool-edgar-extractor | Reserved-folder | tool | 2 files |
@@ -187,26 +171,27 @@ Last updated: 2026-05-14.
 | vendor-slm-engine | Reserved-folder | vendor | 3 files |
 | vendor-virtio | Reserved-folder | vendor | 1 file |
 | vendor-wireguard | Reserved-folder | vendor | 1 file |
+| vendors-maxmind | Defect → `vendor-maxmind` + data-reclass | vendor | Typo (plural); plus .mmdb belongs at build-time-fetch, not in Git |
 
 ## Other / special
 
 | Project | State | Type | Notes |
 |---|---|---|---|
 | discovery-queue | Not-a-project | runtime data | 22 `TX-*_identity.json` files; gitignore + move to `service-fs/data/` |
-| service-pty-bridge | Scaffold-coded | service | Renamed from `pointsav-pty-bridge` 2026-04-23 (brand-prefix violation); Rust daemon; 3 files; not a workspace member |
+| pointsav-pty-bridge | Defect → `service-pty-bridge` | service | Brand-prefix violation; rename pending (user-approved) |
 | target | Not-a-project | build output | Rust cargo output; in .gitignore |
 | xtask | Scaffold-coded | xtask | 2 files; in workspace members; Rust xtask convention |
 
 ---
 
-## Summary (updated 2026-05-07)
+## Summary (2026-04-22 baseline)
 
-- **Active:** 6 (`app-console-bookkeeper`, `app-workplace-memo`, `app-workplace-presentation`, `app-workplace-proforma`, `service-extraction`, `service-slm`)
-- **Scaffold-coded:** 51 (includes `service-pty-bridge` + `service-email-egress` closed from Defect 2026-04-23)
-- **Reserved-folder:** 43
-- **Defect:** 0 (all 5 prior defects resolved 2026-04-23 — see `cleanup-log.md` Completed migrations)
+- **Active:** 5 (`app-console-bookkeeper`, `app-workplace-presentation`, `app-workplace-proforma`, `service-extraction`, `service-slm`)
+- **Scaffold-coded:** 50
+- **Reserved-folder:** 36
+- **Defect:** 5 (`pointsav-pty-bridge`, `service-parser`, `service-email-egress-ews`, `service-email-egress-imap`, `vendors-maxmind`)
 - **Not-a-project:** 2 (`discovery-queue`, `target`)
 - **Dormant:** 0
 - **Archived:** 0
 
-**Total rows:** 104.
+**Total rows:** 100.
