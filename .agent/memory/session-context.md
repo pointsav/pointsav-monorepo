@@ -1,35 +1,40 @@
-# Session Context — Rolling 3-Session Summary
+# Session Context — project-knowledge cluster
+
+Rolling 3-session summary. Newest on top. Keep only 3 entries; push oldest to `session-context-archive.md`.
 
 ---
 
 ## 2026-05-19 | Totebox | claude-code
 
 **Done this session:**
-- Task 3 (503 busy-rejection): `TierABusy` error variant + `is_busy()` health probe + `Box::pin` escalation + `Retry-After: 30` header. 3 commits (`c38e66de`, `e2a93a99`, `160668cd`). 123 slm-doorman tests pass.
-- Task 4 (Anthropic shim integration): 5 new tests in `anthropic_shim_test.rs` (14 total). Fixed latent `doorman_error_to_status` E0004 compile error and `shadow_with_local_source_tier_returns_202` diff-length bug in `http_test.rs`. 1 commit (`93620c1b`). 241 workspace tests pass.
-- Struck P3-3.5-followup in NEXT.md (was already done as of `80083e6e`).
+- D3 complete (`cf72e67`): `substrate/_index.md`+`.es.md` expanded from 7→32 articles across 6 thematic sections; `patterns/_index.md`+`.es.md` expanded from 3→10 articles across 4 thematic sections. Bilingual.
+- D6 complete (`a07bdf5`): governance category completion. `sovereign-airlock-doctrine` EN+ES fully rewritten (stale vocabulary, wrong company names, broken frontmatter, dead wikilinks). `moonshot-initiatives`, `ontological-governance`, `sovereign-replacement-initiative` EN+ES elevated stub→complete. `governance/_index.md`+`.es.md` expanded with 3 new sections, 8 previously-unlisted articles.
+- Projects wiki: PJ1 (methodology tier table fix), PJ4 (heading audit), PJ5 (slug normalise), PJ7 (leapfrog-facts prefix fix) — all committed before context compaction, recorded in THREE-WIKI-REBUILD-MASTER.md.
+- Outbox updated with consolidated 4-commit documentation wiki promote request.
 
 **Pending / carry-forward:**
-- NEXT.md needs Task 3 + Task 4 struck (first commit next session)
-- Sprint 0b: replace fake-SSE `anthropic_sse_body()` with real per-token streaming (~60 LOC in `http.rs`)
-- P3-3.2: canary task set + `bin/canary-run.sh` — skeleton shipped, needs flesh
-- P1-1.7: tool-use round-trip — awaiting operator API-shape approval
-- Stage 6: 36 commits unpromoted (Command Session task)
+- D10: wikilink validation pass — blocked on Stage 6 binary rebuild (must happen from Command Session via `bin/promote.sh` + `cargo build --release` + service restart).
+- PJ2: 6 country index stubs (Canada, Italy, Mexico, Nordics, Poland, Spain) — needs real GIS data, multi-session research effort.
+- content-wiki-documentation: 4 commits ahead of origin/main.
+- content-wiki-projects: 4 commits ahead of origin/main.
+- monorepo sub-clone: 16 commits ahead (Sprints R–AE) — Stage 6 pending Command Session.
 
 **Operator preferences surfaced:**
-- No new preferences this session. Existing: terse responses, no trailing summaries.
+- Sequential work directives ("X next") — execute immediately without re-asking for confirmation.
+- No trailing summaries needed mid-session; keep updates concise.
 
 ---
 
-## 2026-05-18 | Totebox | claude-code (overnight build)
+## 2026-05-18 | Totebox | claude-code
 
-**Done:**
-- 12 signed commits, ~3500 LOC across Phases 0–4 of learning-loop-master-plan
-- Key modules: `corpus_gate.rs`, `adapter_registry.rs`, `cost_ledger.rs`, `metrics.rs`
-- D5 Sprint 1: `CanonicalMessage` + `ContentBlock` replace flat `ChatMessage`
-- c67bb284 drain fix; multiple NEXT.md/outbox ops commits
+**Done:** D5 (short_description on 162 EN+ES docs wiki articles), D8 (governance/_index + design-system/_index frontmatter), D1/D2/D4/D7/D9 verified moot or done. PJ3 (short_description on 26 EN+ES projects wiki articles). nightly-datagraph-rebuild stub expanded. All P0 engine bugs (A–H) shipped in Sprints AD+AE.
 
-**Pending carry-forward:**
-- Phase 4 outboxes to forward to project-editorial
-- Tier C auth (Anthropic API key) not yet set in production env
-- Yo-Yo #1 packer image rebuild (operator task, from laptop)
+**Pending:** D3 (substrate/patterns _index MOC), D6 (governance stubs), D10 (post-Stage-6 validation). PJ1/PJ5/PJ7 carried to next session.
+
+---
+
+## 2026-05-17 | Totebox | claude-code
+
+**Done:** Full UI/UX + content + link audit across all 3 wikis (304 + 18 + 5 sitemap URLs). THREE-WIKI-REBUILD-MASTER.md plan authored from 4 content audit sub-agents + 3 UI/UX audit sub-agents. C1–C7 corporate wiki fixes committed. PJ6/PJ8 verified.
+
+**Pending:** Stage 6 + binary rebuild (P1). Engine bugs P0-A through P0-H identified; Sprint AD candidates listed.
