@@ -448,18 +448,18 @@ fn process_corpus(
                             graph_store.upsert_entities(&effective_module_id, &graph_entities)
                         {
                             error!(module_id = %effective_module_id, error = %e, "graph write failed");
-                            return false;
+                            false
                         } else {
                             info!(module_id = %effective_module_id, entities = graph_entities.len(), "entities written to graph");
-                            return true;
+                            true
                         }
                     } else {
                         error!(module_id = %effective_module_id, "extraction_ok false with no defer reason");
-                        return false;
+                        false
                     }
                 } else {
                     error!("doorman returned invalid JSON");
-                    return false;
+                    false
                 }
             } else {
                 error!(status = %response.status(), "doorman rejected payload");
