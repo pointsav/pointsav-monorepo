@@ -69,10 +69,17 @@ All Phase D steps ✅ complete. Remaining Rust work deferred to Phase E.
 
 > Phase D design spec: `.agent/drafts-outbound/design-home-chrome-v2.draft.md`
 
+## DONE — 2026-05-19 session
+
+- [x] **Corporate wiki lede** — DataGraph-aligned lede applied (commit `188dabd`); index.es.md updated + BCSC disclosure added; featured-topic rotated to topic-redemption-elimination
+- [x] **GIS Batch 1** — topic-gis-nordic-uk-coverage.md + .es.md committed to content-wiki-projects (commit `a9d5325`); guide + comms text confirmed already committed in prior session
+- [x] **GIS Batch 2** — all 4 tech TOPICs confirmed already committed in prior session; no new work needed
+- [x] **from-project-gis/ drafts cleared** — all 9 drafts removed; Italy stub bounced to handoffs-outbound (commit `f82b4ee6`)
+- [x] **Command Session outbox message actioned** — corporate wiki lede message marked actioned
+
 ## PENDING — project-editorial (next session)
 
-- [ ] **Check project-bim drafts-outbound** — any new drafts since 2026-05-17 sweep?
-- [ ] **Update overhaul-progress.md** — mark BIM batches done; add home redesign milestone
+- [ ] **Phase 1c — content-wiki-projects slug naming** — pick canonical convention (`topic-` prefix vs bare slug) before Command Session can rebase
 - [ ] **Bilingual home routing** (Phase E) — `index.es.md` exists but `index()` never reads it; deferred to Phase E per design draft
 
 ---
