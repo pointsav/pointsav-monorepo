@@ -770,7 +770,7 @@ async fn shadow_with_local_source_tier_returns_202() {
             "acceptance_test": "cargo test",
             "body": "this brief originated through a Tier-A-routed session"
         },
-        "actual_diff": "+ permitted line\n",
+        "actual_diff": "+ permitted line added by test\n",
         "source_tier": "local"
     });
 
@@ -848,6 +848,10 @@ fn doorman_error_to_status(e: &DoormanError) -> StatusCode {
         DoormanError::TierBTimeout | DoormanError::TierBCircuitOpen => {
             StatusCode::SERVICE_UNAVAILABLE
         }
+        // Tier A busy (slots_idle=0); no Tier B to escalate → 503.
+        DoormanError::TierABusy => StatusCode::SERVICE_UNAVAILABLE,
+        // Corpus quality gate (write-time corpus gate) rejected the entry → 422.
+        DoormanError::CorpusGateRejected { .. } => StatusCode::UNPROCESSABLE_ENTITY,
     }
 }
 

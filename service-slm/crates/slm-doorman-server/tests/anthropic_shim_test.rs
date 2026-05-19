@@ -6,8 +6,13 @@
 //!   - `claude-haiku-*` model → routes to Tier A (local), `x-foundry-tier-used: local`
 //!   - `claude-sonnet-*` model → routes to Tier B (yoyo), `x-foundry-tier-used: yoyo`
 //!   - `claude-opus-*` model → Tier C unconfigured → 503 with JSON error
-//!   - `stream: true` → SSE events arrive in correct order
-//!   - `tool_use` content block → documented Sprint 0a limitation (flattened to "")
+//!   - `stream: true` → SSE events arrive in correct order (Tier B real-SSE)
+//!   - `stream: true` → fake-SSE fallback when only Tier A configured
+//!   - `tool_use` content block → passes through gateway (HTTP 200)
+//!   - `tool_result` content block → passes through gateway (HTTP 200)
+//!   - `system` field → prepended as system message in downstream POST body
+//!   - Non-streaming response shape → matches Anthropic Messages API spec
+//!   - Tier A busy (slots_idle=0, no Tier B) → 503 + `Retry-After: 30` header
 //!   - Missing `x-api-key` header → 401
 //!   - Invalid `x-api-key` header → 401
 //!
@@ -368,4 +373,229 @@ async fn no_auth_when_gateway_token_not_configured() {
     }));
     let resp = app.oneshot(req).await.unwrap();
     assert_eq!(resp.status(), StatusCode::OK, "auth disabled when no gateway token configured");
+}
+
+// ── Tier A busy → 503 + Retry-After: 30 ─────────────────────────────────────
+
+#[tokio::test]
+async fn tier_a_busy_returns_503_with_retry_after_header() {
+    // llama-server reports slots_idle=0; no Tier B configured → TierABusy → 503
+    let mock = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path("/health"))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .set_body_json(json!({"status": "ok", "slots_idle": 0, "slots_processing": 1})),
+        )
+        .mount(&mock)
+        .await;
+    // POST /v1/chat/completions must NOT be called when busy
+    Mock::given(method("POST"))
+        .and(path("/v1/chat/completions"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(local_ok_body()))
+        .expect(0)
+        .mount(&mock)
+        .await;
+
+    let state = app_state_with_local(mock.uri());
+    let app = router(state);
+
+    let req = messages_request(json!({
+        "model": "claude-haiku-4-5-20251001",
+        "max_tokens": 64,
+        "messages": [{"role": "user", "content": "ping"}]
+    }));
+    let resp = app.oneshot(req).await.unwrap();
+    assert_eq!(resp.status(), StatusCode::SERVICE_UNAVAILABLE,
+        "busy Tier A with no Tier B must return 503");
+
+    let retry_after = resp.headers()
+        .get("retry-after")
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("");
+    assert_eq!(retry_after, "30", "busy 503 must include Retry-After: 30");
+}
+
+// ── stream: true, Tier A only → fake-SSE fallback ────────────────────────────
+
+#[tokio::test]
+async fn stream_true_with_tier_a_only_emits_fake_sse() {
+    // No Tier B configured. stream=true falls back to buffered fake-SSE from
+    // Tier A inference.
+    let mock = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path("/health"))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .set_body_json(json!({"status": "ok", "slots_idle": 1})),
+        )
+        .mount(&mock)
+        .await;
+    Mock::given(method("POST"))
+        .and(path("/v1/chat/completions"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(
+            json!({
+                "choices": [{"message": {"role": "assistant", "content": "fake stream token"}}]
+            }),
+        ))
+        .mount(&mock)
+        .await;
+
+    let state = app_state_with_local(mock.uri());
+    let app = router(state);
+
+    let req = messages_request(json!({
+        "model": "claude-haiku-4-5-20251001",
+        "max_tokens": 64,
+        "stream": true,
+        "messages": [{"role": "user", "content": "ping"}]
+    }));
+    let resp = app.oneshot(req).await.unwrap();
+    assert_eq!(resp.status(), StatusCode::OK);
+
+    let ct = resp.headers()
+        .get("content-type")
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("");
+    assert!(ct.contains("text/event-stream"), "fake-SSE response must have SSE content-type, got: {ct}");
+
+    let body = response_text(resp).await;
+    assert!(body.contains("fake stream token"), "fake-SSE body must include upstream content");
+    assert!(body.contains("message_start"), "fake-SSE must include message_start event");
+    assert!(body.contains("message_stop"), "fake-SSE must include message_stop event");
+}
+
+// ── Non-streaming response shape matches Anthropic spec ──────────────────────
+
+#[tokio::test]
+async fn non_streaming_response_shape_matches_anthropic_spec() {
+    let mock = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path("/health"))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .set_body_json(json!({"status": "ok", "slots_idle": 1})),
+        )
+        .mount(&mock)
+        .await;
+    Mock::given(method("POST"))
+        .and(path("/v1/chat/completions"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(
+            json!({
+                "choices": [{"message": {"role": "assistant", "content": "hello"}}]
+            }),
+        ))
+        .mount(&mock)
+        .await;
+
+    let state = app_state_with_local(mock.uri());
+    let app = router(state);
+
+    let req = messages_request(json!({
+        "model": "claude-haiku-4-5-20251001",
+        "max_tokens": 64,
+        "messages": [{"role": "user", "content": "hi"}]
+    }));
+    let resp = app.oneshot(req).await.unwrap();
+    assert_eq!(resp.status(), StatusCode::OK);
+
+    let body = response_body(resp).await;
+    assert_eq!(body["type"], "message", "response must have type: message");
+    assert_eq!(body["role"], "assistant", "response must have role: assistant");
+    assert_eq!(body["stop_reason"], "end_turn", "response must have stop_reason: end_turn");
+    assert!(body["id"].as_str().map(|s| s.starts_with("msg_")).unwrap_or(false),
+        "response id must start with msg_");
+    assert_eq!(body["content"][0]["type"], "text", "content block must have type: text");
+    assert_eq!(body["content"][0]["text"], "hello", "content block must carry upstream text");
+    assert!(body["usage"].is_object(), "response must include usage object");
+    assert!(body["usage"]["output_tokens"].is_number(), "usage must include output_tokens");
+}
+
+// ── system field threads into downstream POST body ────────────────────────────
+
+#[tokio::test]
+async fn system_message_is_sent_to_tier_a_backend() {
+    let mock = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path("/health"))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .set_body_json(json!({"status": "ok", "slots_idle": 1})),
+        )
+        .mount(&mock)
+        .await;
+    Mock::given(method("POST"))
+        .and(path("/v1/chat/completions"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(local_ok_body()))
+        .mount(&mock)
+        .await;
+
+    let state = app_state_with_local(mock.uri());
+    let app = router(state);
+
+    let req = messages_request(json!({
+        "model": "claude-haiku-4-5-20251001",
+        "max_tokens": 64,
+        "system": "You are a test assistant.",
+        "messages": [{"role": "user", "content": "hello"}]
+    }));
+    let resp = app.oneshot(req).await.unwrap();
+    assert_eq!(resp.status(), StatusCode::OK);
+
+    // Inspect the request received by the backend: system content must appear
+    // as the first message in the messages array sent downstream.
+    let reqs = mock.received_requests().await.unwrap();
+    let post_reqs: Vec<_> = reqs.iter().filter(|r| r.method.as_str() == "POST").collect();
+    assert_eq!(post_reqs.len(), 1, "exactly one POST must reach Tier A");
+
+    let downstream: serde_json::Value = serde_json::from_slice(&post_reqs[0].body).unwrap();
+    let msgs = downstream["messages"].as_array().expect("messages must be an array");
+    let first = &msgs[0];
+    assert_eq!(first["role"], "system", "first message must carry system role");
+    assert!(
+        first["content"].as_str().map(|s| s.contains("test assistant")).unwrap_or(false),
+        "system message content must match the system field value"
+    );
+}
+
+// ── tool_result content block passes through ─────────────────────────────────
+
+#[tokio::test]
+async fn tool_result_content_block_passes_through_gateway() {
+    let mock = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path("/health"))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .set_body_json(json!({"status": "ok", "slots_idle": 1})),
+        )
+        .mount(&mock)
+        .await;
+    Mock::given(method("POST"))
+        .and(path("/v1/chat/completions"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(local_ok_body()))
+        .mount(&mock)
+        .await;
+
+    let state = app_state_with_local(mock.uri());
+    let app = router(state);
+
+    // Simulate a tool_result turn: assistant replied with tool_use, user
+    // now returns the tool_result.
+    let req = messages_request(json!({
+        "model": "claude-haiku-4-5-20251001",
+        "max_tokens": 64,
+        "messages": [
+            {"role": "user",      "content": "run bash"},
+            {"role": "assistant", "content": [
+                {"type": "tool_use", "id": "tu_1", "name": "bash", "input": {"cmd": "ls"}}
+            ]},
+            {"role": "user", "content": [
+                {"type": "tool_result", "tool_use_id": "tu_1", "content": "file1.txt\nfile2.txt"}
+            ]}
+        ]
+    }));
+    let resp = app.oneshot(req).await.unwrap();
+    assert_eq!(resp.status(), StatusCode::OK,
+        "tool_result content block must pass through gateway successfully");
 }
