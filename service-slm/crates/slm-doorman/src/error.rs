@@ -86,6 +86,13 @@ pub enum DoormanError {
         corpus_path: String,
     },
 
+    /// Tier A (llama-server) reported `slots_idle == 0` — all inference slots
+    /// are occupied. When no Tier B is configured the router propagates this
+    /// error; the HTTP layer returns 503 with `Retry-After: 30`.
+    /// When Tier B is available the router escalates the request instead.
+    #[error("Tier A (llama-server) is busy (slots_idle=0); no Tier B available — retry after 30 s")]
+    TierABusy,
+
     #[error(
         "Tier A (llama-server) does not accept {dialect} grammars; \
          {advice}"
