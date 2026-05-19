@@ -156,8 +156,8 @@ impl GraphStore for LbugGraphStore {
 
             // Serialise `cites` to JSON string for LadybugDB scalar column.
             // Empty vec → "[]" so query-side parsing is uniform.
-            let cites_json = serde_json::to_string(&entity.cites)
-                .unwrap_or_else(|_| "[]".to_string());
+            let cites_json =
+                serde_json::to_string(&entity.cites).unwrap_or_else(|_| "[]".to_string());
 
             conn.execute(
                 &mut stmt_merge,
@@ -182,7 +182,10 @@ impl GraphStore for LbugGraphStore {
                     ),
                     ("module_id", Value::String(entity.module_id.clone())),
                     ("confidence", Value::Double(entity.confidence)),
-                    ("worm_id", Value::String(entity.worm_id.clone().unwrap_or_default())),
+                    (
+                        "worm_id",
+                        Value::String(entity.worm_id.clone().unwrap_or_default()),
+                    ),
                     ("cites_json", Value::String(cites_json)),
                 ],
             )
@@ -398,7 +401,11 @@ fn rows_to_entities(result: lbug::QueryResult<'_>) -> Result<Vec<GraphEntity>> {
         // in legacy 7-column rows. Default to None / empty Vec.
         let worm_id = if row.len() >= 8 {
             let s = val_to_string(&row[7]);
-            if s.is_empty() { None } else { Some(s) }
+            if s.is_empty() {
+                None
+            } else {
+                Some(s)
+            }
         } else {
             None
         };
