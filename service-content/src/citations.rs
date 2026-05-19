@@ -115,7 +115,11 @@ impl CitationRegistry {
 
     /// Count registered citations.
     pub fn len(&self) -> usize {
-        self.inner.read().expect("citations registry poisoned").entries.len()
+        self.inner
+            .read()
+            .expect("citations registry poisoned")
+            .entries
+            .len()
     }
 
     /// Convenience: returns true when the registry is empty (no file, or
@@ -162,9 +166,8 @@ impl CitationRegistry {
                 return Ok(false);
             }
         }
-        let fresh = load_from_path(&self.path).with_context(|| {
-            format!("hot reload failed for {}", self.path.display())
-        })?;
+        let fresh = load_from_path(&self.path)
+            .with_context(|| format!("hot reload failed for {}", self.path.display()))?;
         let mut guard = self.inner.write().expect("citations registry poisoned");
         *guard = fresh;
         Ok(true)
@@ -177,8 +180,7 @@ impl CitationRegistry {
 }
 
 fn load_from_path(path: &Path) -> Result<RegistryInner> {
-    let body = std::fs::read_to_string(path)
-        .with_context(|| format!("read {}", path.display()))?;
+    let body = std::fs::read_to_string(path).with_context(|| format!("read {}", path.display()))?;
 
     // Strip top-level YAML frontmatter if present. The citations.yaml
     // file uses `---` frontmatter delimiters around an initial header,
