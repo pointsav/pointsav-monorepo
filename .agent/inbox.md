@@ -1,10 +1,10 @@
 ---
 mailbox: inbox
-owner: task-project-intelligence
-location: ~/Foundry/clones/project-intelligence/.agent/
+owner: task@project-knowledge
+location: ~/Foundry/clones/project-knowledge/.agent/
 schema: foundry-mailbox-v1
 ---
 
-# Inbox — task-project-intelligence
+# Inbox — project-knowledge
 
-*(empty — all messages archived 2026-05-16 by task@claude-code session)*
+*(empty — last message archived 2026-05-17; cleaned 2026-05-18 startup)*
