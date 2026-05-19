@@ -69,25 +69,9 @@ impl LocalTierClient {
     }
 
     pub async fn complete(&self, req: &ComputeRequest) -> Result<ComputeResponse> {
-        // Pre-flight busy check. Returns TierABusy when all inference slots
-        // are occupied so the router can escalate to Tier B rather than
-        // queuing behind a saturated local server.
-        if self.is_busy().await {
-            return Err(crate::error::DoormanError::TierABusy);
-        }
-        let model = req
-            .model
-            .clone()
-            .unwrap_or_else(|| self.config.default_model.clone());
-
-        // Translate GrammarConstraint → llama-server wire fields.
-        // llama-server (llama.cpp HTTP API) accepts:
-        //   `grammar`     — GBNF string at the top level of the request body
-        //   `json_schema` — JSON Schema object at the top level
-        // It does NOT accept Lark grammars (llama-server does not ship
-        // llguidance). Lark is rejected here before any network call so the
-        // caller can escalate to Tier B (vLLM ≥0.12, which supports Lark via
-        // llguidance) or supply a GBNF equivalent. Per v0.1.33 Q1 ratification.
+        // Grammar validation — pure check, no network calls. Runs first so
+        // invalid input is rejected before the busy check round-trip.
+        // Lark is rejected before any network call (invariant relied on by tests).
         let (grammar_field, json_schema_field) = match req.grammar.as_ref() {
             None => (None, None),
             Some(GrammarConstraint::Gbnf(s)) => (Some(s.clone()), None),
@@ -100,6 +84,19 @@ impl LocalTierClient {
                 });
             }
         };
+
+        let model = req
+            .model
+            .clone()
+            .unwrap_or_else(|| self.config.default_model.clone());
+
+        // Pre-flight busy check. Returns TierABusy when all inference slots
+        // are occupied so the router can escalate to Tier B rather than
+        // queuing behind a saturated local server. Runs after grammar
+        // validation so invalid input is rejected cheaply before any I/O.
+        if self.is_busy().await {
+            return Err(crate::error::DoormanError::TierABusy);
+        }
 
         let body = OpenAiChatRequest {
             model: model.clone(),
@@ -457,6 +454,13 @@ mod tests {
     #[tokio::test]
     async fn grammar_none_omits_all_grammar_fields() {
         let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .and(path("/health"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(
+                serde_json::json!({"status": "ok", "slots_idle": 1}),
+            ))
+            .mount(&server)
+            .await;
         Mock::given(method("POST"))
             .and(path("/v1/chat/completions"))
             .respond_with(ResponseTemplate::new(200).set_body_json(ok_body()))
@@ -469,10 +473,14 @@ mod tests {
         r.grammar = None;
         client.complete(&r).await.expect("none grammar happy path");
 
-        let requests = server.received_requests().await.unwrap();
-        assert_eq!(requests.len(), 1, "expected exactly one upstream request");
+        let all_requests = server.received_requests().await.unwrap();
+        let post_requests: Vec<_> = all_requests
+            .iter()
+            .filter(|r| r.method.as_str() == "POST")
+            .collect();
+        assert_eq!(post_requests.len(), 1, "expected exactly one POST upstream request");
         let body: serde_json::Value =
-            serde_json::from_slice(&requests[0].body).expect("request body must be valid JSON");
+            serde_json::from_slice(&post_requests[0].body).expect("request body must be valid JSON");
         assert!(
             body.get("grammar").is_none(),
             "body must not contain 'grammar' key when grammar is None"
@@ -489,6 +497,13 @@ mod tests {
     #[tokio::test]
     async fn grammar_gbnf_serialises_into_top_level_grammar_field() {
         let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .and(path("/health"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(
+                serde_json::json!({"status": "ok", "slots_idle": 1}),
+            ))
+            .mount(&server)
+            .await;
         Mock::given(method("POST"))
             .and(path("/v1/chat/completions"))
             .respond_with(ResponseTemplate::new(200).set_body_json(ok_body()))
@@ -502,10 +517,14 @@ mod tests {
         r.grammar = Some(GrammarConstraint::Gbnf(gbnf.to_string()));
         client.complete(&r).await.expect("gbnf grammar happy path");
 
-        let requests = server.received_requests().await.unwrap();
-        assert_eq!(requests.len(), 1);
+        let all_requests = server.received_requests().await.unwrap();
+        let post_requests: Vec<_> = all_requests
+            .iter()
+            .filter(|r| r.method.as_str() == "POST")
+            .collect();
+        assert_eq!(post_requests.len(), 1);
         let body: serde_json::Value =
-            serde_json::from_slice(&requests[0].body).expect("request body must be valid JSON");
+            serde_json::from_slice(&post_requests[0].body).expect("request body must be valid JSON");
         assert_eq!(
             body.get("grammar").and_then(|v| v.as_str()),
             Some(gbnf),
@@ -528,6 +547,13 @@ mod tests {
     #[tokio::test]
     async fn grammar_json_schema_serialises_into_top_level_json_schema_field() {
         let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .and(path("/health"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(
+                serde_json::json!({"status": "ok", "slots_idle": 1}),
+            ))
+            .mount(&server)
+            .await;
         Mock::given(method("POST"))
             .and(path("/v1/chat/completions"))
             .respond_with(ResponseTemplate::new(200).set_body_json(ok_body()))
@@ -550,10 +576,14 @@ mod tests {
             .await
             .expect("json_schema grammar happy path");
 
-        let requests = server.received_requests().await.unwrap();
-        assert_eq!(requests.len(), 1);
+        let all_requests = server.received_requests().await.unwrap();
+        let post_requests: Vec<_> = all_requests
+            .iter()
+            .filter(|r| r.method.as_str() == "POST")
+            .collect();
+        assert_eq!(post_requests.len(), 1);
         let body: serde_json::Value =
-            serde_json::from_slice(&requests[0].body).expect("request body must be valid JSON");
+            serde_json::from_slice(&post_requests[0].body).expect("request body must be valid JSON");
         assert_eq!(
             body.get("json_schema"),
             Some(&schema),
