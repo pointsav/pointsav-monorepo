@@ -148,6 +148,53 @@ impl LocalTierClient {
             adapter_version: None,
         })
     }
+
+    /// Begin a streaming Tier-A request. Returns the raw llama-server HTTP
+    /// response on success; the caller translates the SSE body to the target
+    /// wire format using `build_stream_body`.
+    ///
+    /// Applies the same grammar validation and busy-check as `complete()`.
+    /// Returns `Err(TierABusy)` when all inference slots are saturated.
+    /// Does NOT fall back — streaming callers handle fallback themselves.
+    pub async fn start_stream(&self, req: &ComputeRequest) -> Result<reqwest::Response> {
+        let (grammar_field, json_schema_field) = match req.grammar.as_ref() {
+            None => (None, None),
+            Some(GrammarConstraint::Gbnf(s)) => (Some(s.clone()), None),
+            Some(GrammarConstraint::JsonSchema(v)) => (None, Some(v.clone())),
+            Some(GrammarConstraint::Lark(_)) => {
+                return Err(DoormanError::TierAGrammarUnsupported {
+                    dialect: "Lark",
+                    advice: "escalate to Tier B (Yo-Yo) which supports Lark via llguidance, \
+                             or provide a GBNF equivalent for Tier A",
+                });
+            }
+        };
+
+        if self.is_busy().await {
+            return Err(DoormanError::TierABusy);
+        }
+
+        let model = req
+            .model
+            .clone()
+            .unwrap_or_else(|| self.config.default_model.clone());
+        let body = OpenAiChatRequest {
+            model: model.clone(),
+            messages: canonical_to_oai(&req.messages),
+            stream: true,
+            max_tokens: req.max_tokens,
+            temperature: req.temperature,
+            grammar: grammar_field,
+            json_schema: json_schema_field,
+        };
+        let url = format!(
+            "{}/v1/chat/completions",
+            self.config.endpoint.trim_end_matches('/')
+        );
+        debug!(target: "slm_doorman::tier::local", %url, %model, "tier-A stream request");
+
+        Ok(self.http.post(&url).json(&body).send().await?.error_for_status()?)
+    }
 }
 
 /// Minimal subset of the llama-server `/health` response we care about.
