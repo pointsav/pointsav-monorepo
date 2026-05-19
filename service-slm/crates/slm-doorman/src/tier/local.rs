@@ -8,7 +8,7 @@
 //! OpenAI-compatible wire format, so the client does not branch on which
 //! is running.
 
-use std::time::Instant;
+use std::time::{Duration, Instant};
 
 use serde::{Deserialize, Serialize};
 use slm_core::{CanonicalMessage, ContentBlock, ComputeRequest, ComputeResponse, GrammarConstraint, Tier};
@@ -43,7 +43,38 @@ impl LocalTierClient {
         &self.config.endpoint
     }
 
+    /// Query `GET /health` on the llama-server and return `true` when all
+    /// inference slots are busy (`slots_idle == 0`).
+    ///
+    /// Non-fatal by design: any network or parse error returns `false`
+    /// (not busy) so a health-endpoint misconfiguration can never block
+    /// inference. The 500 ms timeout prevents a slow health check from
+    /// adding significant latency to the hot path.
+    pub async fn is_busy(&self) -> bool {
+        let url = format!("{}/health", self.config.endpoint.trim_end_matches('/'));
+        let resp = match self
+            .http
+            .get(&url)
+            .timeout(Duration::from_millis(500))
+            .send()
+            .await
+        {
+            Ok(r) => r,
+            Err(_) => return false,
+        };
+        match resp.json::<LlamaHealthResponse>().await {
+            Ok(h) => h.slots_idle == 0,
+            Err(_) => false,
+        }
+    }
+
     pub async fn complete(&self, req: &ComputeRequest) -> Result<ComputeResponse> {
+        // Pre-flight busy check. Returns TierABusy when all inference slots
+        // are occupied so the router can escalate to Tier B rather than
+        // queuing behind a saturated local server.
+        if self.is_busy().await {
+            return Err(crate::error::DoormanError::TierABusy);
+        }
         let model = req
             .model
             .clone()
@@ -120,6 +151,16 @@ impl LocalTierClient {
             adapter_version: None,
         })
     }
+}
+
+/// Minimal subset of the llama-server `/health` response we care about.
+/// Unknown fields are ignored via `#[serde(default)]` on the one field
+/// we need — adding fields to llama-server never breaks this struct.
+#[derive(Deserialize)]
+struct LlamaHealthResponse {
+    /// Number of inference slots currently idle. 0 means fully saturated.
+    #[serde(default)]
+    slots_idle: u32,
 }
 
 #[derive(Serialize)]
@@ -526,6 +567,89 @@ mod tests {
             body.get("extra_body").is_none(),
             "Tier A must NOT use extra_body; json_schema goes at top level"
         );
+    }
+
+    // ── Busy-check tests ──────────────────────────────────────────────────
+
+    /// When `/health` reports `slots_idle=0`, `complete()` returns
+    /// `TierABusy` before making any inference call.
+    #[tokio::test]
+    async fn busy_health_check_short_circuits_inference() {
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .and(path("/health"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+                "status": "no slot available",
+                "slots_idle": 0,
+                "slots_processing": 1
+            })))
+            .expect(1)
+            .mount(&server)
+            .await;
+        // No mock for /v1/chat/completions — any inference call would be unexpected.
+
+        let client = client(server.uri());
+        let err = client.complete(&req()).await.expect_err("busy must error");
+        assert!(
+            matches!(err, DoormanError::TierABusy),
+            "expected TierABusy when slots_idle=0, got {err:?}"
+        );
+    }
+
+    /// When `/health` reports `slots_idle >= 1`, `complete()` proceeds
+    /// to the inference call normally.
+    #[tokio::test]
+    async fn idle_health_check_proceeds_to_inference() {
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .and(path("/health"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+                "status": "ok",
+                "slots_idle": 1,
+                "slots_processing": 0
+            })))
+            .expect(1)
+            .mount(&server)
+            .await;
+        Mock::given(method("POST"))
+            .and(path("/v1/chat/completions"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(ok_body()))
+            .expect(1)
+            .mount(&server)
+            .await;
+
+        let client = client(server.uri());
+        let resp = client
+            .complete(&req())
+            .await
+            .expect("idle slots must succeed");
+        assert_eq!(resp.content, "PONG");
+    }
+
+    /// When `/health` returns 500, `is_busy()` returns `false` (non-fatal)
+    /// and `complete()` falls through to the inference call.
+    #[tokio::test]
+    async fn health_check_error_falls_through_to_inference() {
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .and(path("/health"))
+            .respond_with(ResponseTemplate::new(500))
+            .expect(1)
+            .mount(&server)
+            .await;
+        Mock::given(method("POST"))
+            .and(path("/v1/chat/completions"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(ok_body()))
+            .expect(1)
+            .mount(&server)
+            .await;
+
+        let client = client(server.uri());
+        let resp = client
+            .complete(&req())
+            .await
+            .expect("health error must not block inference");
+        assert_eq!(resp.content, "PONG");
     }
 
     /// When `grammar` is `Some(Lark(...))` the call must return a typed
