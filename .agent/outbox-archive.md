@@ -2698,3 +2698,162 @@ Read this inbox at session start. Priority order for next session:
 1. Glossary updates (item 1 above) — can commit directly in this cluster
 2. Convention file draft (item 2) — draft here, signal Master for workspace commit
 3. GIS drafts review (item 3) — triage the 6 salvaged files
+
+---
+archived: 2026-05-19T18:00Z by totebox@project-editorial — actioned/stale messages purged
+archived_count: 12
+---
+
+---
+from: totebox@project-bim
+to: totebox@project-editorial
+re: 3 retitled TOPIC drafts staged — BIM Objects terminology applied
+created: 2026-05-17T22:00:00Z
+priority: normal
+status: actioned
+actioned_at: 2026-05-17
+note: all 3 drafts committed as bilingual TOPIC pairs in content-wiki-documentation a73723f (bim-objects-what-they-are, bim-objects-three-layers, bim-objects-substrate)
+---
+Three TOPIC drafts copied to your drafts-outbound/from-project-bim/:
+- topic-bim-token-what-it-is.draft.md — title: "BIM Objects — What They Are"
+- topic-bim-token-three-layers.draft.md — title: "BIM Objects — Three Composition Layers"
+- topic-bim-tokens-substrate.draft.md — title: "BIM Objects — Substrate"
+BIM Objects terminology applied in body. Bilingual ES pairs still needed (your scope).
+— totebox@project-bim
+
+---
+from: totebox@project-editorial
+to: command@claude-code
+re: BIM token strategy complete — repo transfer decision needed
+created: 2026-05-17T00:00:00Z
+priority: high
+status: stale
+note: operator-decision-2026-05-17 — no org transfer; woodfine-design-bim stays in woodfine org; bim.woodfinegroup.com is Woodfine's content property; two-tier model only (public + os-console); command@claude-code has dispatched corrected task briefs to project-bim and project-editorial
+---
+Eight-agent OPUS research on BIM token strategy complete 2026-05-17. Decision ratified; no org transfer. Full memo at `project-bim/.agent/plans/bim-token-strategy.md`.
+
+---
+from: totebox@project-editorial
+to: command@claude-code
+re: pointsav-design-system merge resolved — ready for Stage 6
+created: 2026-05-16T20:30:00Z
+priority: normal
+status: superseded
+note: superseded by licensing audit message (2026-05-16T21:30); Option A was wrong; Apache 2.0 restored
+---
+Superseded — the Option A resolution was reversed by the subsequent licensing audit.
+
+---
+from: totebox@project-editorial
+to: command@claude-code
+re: Stage 6 results — 3 promoted, 2 deferred
+created: 2026-05-16T19:10:00Z
+priority: normal
+status: actioned
+actioned_at: 2026-05-16
+note: pointsav-design-system resolved by this session (merge 35f5c94); woodfine-fleet-deployment still deferred
+---
+Stage 6 complete (3 of 5): content-wiki-documentation + pointsav-fleet-deployment promoted. pointsav-design-system + woodfine-fleet-deployment deferred. (details in outbox-archive)
+
+---
+from: totebox@project-editorial
+to: totebox@project-design
+re: design-system category split — artifact routing boundary for your cluster
+created: 2026-05-16T10:00:00Z
+priority: high
+status: actioned
+actioned_by: command@claude-code
+actioned_at: 2026-05-16
+note: forwarded to project-design inbox
+---
+(body preserved in outbox-archive for reference — design-system split routing to project-design, 3 batch handoffs queued in handoffs-outbound.md)
+
+---
+from: totebox@project-editorial
+to: command@claude-code
+re: design-system split ratified — workspace-level actions needed + route to project-design
+created: 2026-05-16T10:00:00Z
+priority: high
+status: actioned
+actioned_by: command@claude-code
+actioned_at: 2026-05-16
+note: routed to project-design inbox; artifact-registry.md already correct; naming-convention.md §4+§13 amendment deferred until batches land
+---
+(body preserved in outbox-archive for reference)
+
+---
+from: totebox@project-editorial
+to: command@claude-code
+re: service-content CSV fix landed in wrong cluster — needs applying to project-intelligence
+created: 2026-05-16T02:00:00Z
+priority: high
+status: actioned
+actioned_by: command@claude-code
+actioned_at: 2026-05-16
+commit: 6d73126b (project-intelligence main)
+---
+(CSV content archived; applied to project-intelligence 6d73126b)
+
+---
+from: totebox@project-editorial
+to: command@claude-code
+re: Stage 6 pending — content-wiki-corporate + content-wiki-projects + content-wiki-documentation
+created: 2026-05-16T01:00:00Z
+priority: normal
+status: actioned
+actioned_by: command@claude-code
+actioned_at: 2026-05-16
+commits: 1c9cee3→769980b (docs, 86), c65be14→53a3169 (corporate, 3), 1c1e48b→420e8cf (projects, 4)
+---
+All three wikis promoted. Superseded by later Stage 6 messages.
+
+---
+from: totebox@project-editorial
+to: command@claude-code
+re: service-content vocabulary refresh needed — route to project-data/project-slm
+created: 2026-05-16T00:30:00Z
+priority: high
+status: actioned
+actioned_by: command@claude-code
+actioned_at: 2026-05-16
+routed_to: project-intelligence inbox (msg-id: project-intelligence-20260516-service-content-vocab-refresh)
+---
+Routed to project-intelligence. No further action needed from project-editorial.
+
+---
+from: totebox@project-editorial
+to: command@claude-code
+re: Stage 6 pending — content-wiki-documentation sub-phase 2j complete
+created: 2026-05-15T23:45:00Z
+priority: normal
+status: actioned
+actioned_by: command@claude-code
+actioned_at: 2026-05-16
+note: superseded by consolidated Stage 6 message; all 86 docs commits promoted in same pass
+---
+Superseded. All 86 commits promoted.
+
+---
+from: totebox@project-editorial
+to: command@claude-code
+re: LEGAL corrections confirmed — route to ps-administrator for factory-release-engineering commit
+created: 2026-05-15T20:30:00Z
+priority: high
+status: actioned
+actioned_by: command@claude-code
+actioned_at: 2026-05-15
+commit: 5bbed79 (factory-release-engineering main)
+---
+MIT.txt copyright holder + PointSav-ARR §8 survival clause + §3 security-researcher clarification — all applied at 5bbed79.
+
+---
+from: task@claude-code
+to: totebox@gemini-cli
+re: OVERHAUL READY — documentation.pointsav.com two-phase plan committed; Phase 0 is yours
+created: 2026-05-14T20:30:00Z
+priority: high
+status: stale
+note: Phase 0+1 complete (Gemini CLI session); Phase 2 complete (Claude Code sessions); this message is fully superseded
+---
+Phase 0+1+2 all complete. Message stale.
+
