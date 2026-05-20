@@ -42,10 +42,7 @@ status: active
 
 - [x] **Confirm WFD spoke-configs awareness** _(done 2026-05-20 — noted; 3 inbox messages archived to inbox-archive.md)_
 
-- [ ] **Preserve BENCH numbers to tracked file before next VM restart**
-  `/tmp/bench-system-ledger.log` is on tmpfs and will not survive reboot. The `.agent/BENCH-v0.2.0.md` file here IS tracked locally but is not in the monorepo. The numbers need to be committed into a tracked crate file before Stage-6 promotion.
-  Target: `system-ledger/BENCHMARKS.md` (new file) or appended to `system-ledger/ARCHITECTURE.md` §5.
-  _Source: BENCH-v0.2.0.md §7 warning_
+- [x] **Preserve BENCH numbers to tracked file before next VM restart** _(done 2026-05-20 Group 2C — `system-ledger/BENCHMARKS.md` created; commit `0881091`)_
 
 ---
 
@@ -134,142 +131,46 @@ All three will route through project-editorial after drafting.
 These are the doc-quality items identified in `CHECKLIST-stage6-promotion-readiness.md`.
 Prerequisite for Stage-6 promotion of `system-core` and `system-ledger` to v1.0.0.
 
-### 2A — `system-core` hygiene (all MECHANICAL)
+### 2A — `system-core` hygiene ✓ _(done 2026-05-20, commit `dcb2700`)_
 
-- [ ] **Delete `system-core/master-relay.rs`**
-  `git rm system-core/master-relay.rs` — residual sketch, not a Cargo target, defect per repo-layout rule.
-
-- [ ] **Update `system-core/CLAUDE.md` version header**
-  Header still reads `Version: 0.1.4`; current is `0.2.0`.
-
-- [ ] **Clean `system-core/NEXT.md` queue**
-  Remove resolved items (inclusion_proof, consistency_proof, LedgerEntry enum).
-  Remaining open items: `Capability::canonical_bytes()` (CBOR), `IRQHandler` cap_type variant, `no_std` carve-out.
-  Unblock the "Blocked" section (it is no longer blocked).
-
-- [ ] **Update `system-core/ARCHITECTURE.md` §5 test count**
-  §5 "Verification" still lists 16 unit tests; actual is 51. Update.
-
-- [ ] **Update `system-core/ARCHITECTURE.md` §3 system-ledger status**
-  §3 still says "Status: `system-ledger` not yet created". Update to "RESOLVED + IMPLEMENTED".
-
-- [ ] **Add `///` rustdoc to all `pub` items in `system-core/src/lib.rs`**
-  Missing on: `Capability::cap_type`, `Capability::rights`, `Capability::ledger_anchor`,
-  all `WitnessRecord` fields, all `LedgerAnchor` fields, all `CapabilityType` variants, all `Right` variants.
-  Add `/// # Examples` block to `Capability::hash()`.
-
-- [ ] **Add `///` rustdoc to `ParseError` and `VerifyError` variants in `checkpoint.rs`**
-  No variant-level docs currently. Each variant needs a one-line description of the condition that produces it.
-
+- [x] Delete `system-core/master-relay.rs`
+- [x] Update `system-core/CLAUDE.md` version header
+- [x] Clean `system-core/NEXT.md` queue
+- [x] Update `system-core/ARCHITECTURE.md` §5 test count + §3 system-ledger status
+- [x] Add `///` rustdoc to all `pub` items in `system-core/src/lib.rs` + `checkpoint.rs`
 - [ ] **Add missing Cargo.toml metadata to `system-core/Cargo.toml`**
-  Missing: `description`, `license`, `repository`, `keywords`, `categories`, `rust-version`.
   _[OPERATOR DECISION: what SPDX license value? Check `factory-release-engineering/LICENSE-MATRIX.md`]_
 
-### 2B — `system-core` test gap closure
+### 2B — `system-core` test gap closure ✓ _(done 2026-05-20, commit `334462b`)_
 
-- [ ] **Add negative-path tests in `lib.rs`**
-  No test for `Capability` hash sensitivity to `expiry_t: None` vs `Some`.
-  No test that changing `witness_pubkey` changes hash.
-  No `Right` / `CapabilityType` round-trip exhaustion.
-  Target: 4 additional tests.
-
-- [ ] **Add `ParseError` variant tests in `checkpoint.rs`**
-  Missing coverage for: `NotUtf8`, `Truncated`, `MissingNewline`, `BadRootHashLength`, `MissingSignatureSeparator`.
-  At least one test per `ParseError` variant.
-
-- [ ] **Add `VerifyError::BadPublicKey` explicit test in `checkpoint.rs`**
-  Currently no test passes a malformed 32-byte pubkey to `verify_signer` to trigger `BadPublicKey`.
-
-- [ ] **Add `verify_consistency_proof` `NewSignatureInvalid` coverage**
-  Existing test only reaches `OldSignatureInvalid`. Need one test where old sig is valid but new sig is invalid.
-
+- [x] Negative-path tests in `lib.rs` (4 new tests — hash sensitivity, round-trips)
+- [x] `ParseError` variant tests in `checkpoint.rs` (5 variants covered)
+- [x] `VerifyError::BadPublicKey` test (y=2 non-curve point)
+- [x] `verify_consistency_proof` `NewSignatureInvalid` coverage
 - [ ] **[OPTIONAL, OPERATOR DECISION] Property-based tests for `ConsistencyProof::verify`**
-  proptest/quickcheck fuzz over `(old_size, new_size)` pairs to confirm no panics on edge inputs.
-  Decision: is the full-grid 1..=8 test sufficient, or is proptest worth adding?
 
-### 2C — `system-ledger` hygiene (all MECHANICAL)
+### 2C — `system-ledger` hygiene ✓ _(done 2026-05-20, commit `0881091`)_
 
-- [ ] **Update `system-ledger/CLAUDE.md` "Current state" body**
-  Confirm it no longer says "Skeleton commit landed." Should describe v0.2.1 delivered state.
-
-- [ ] **Clean `system-ledger/NEXT.md` queue**
-  Remove completed items (#18 cache, #19 revocation, #11 apex, #12 witness, #20 LedgerConsumer, #21 benchmarks).
-  Remaining open: `MoonshotDatabaseLedger` (Deferred), multi-threaded LedgerConsumer (Deferred).
-
-- [ ] **Update `system-ledger/ARCHITECTURE.md` §3 decision-flow stale text**
-  §3 currently reads "currently relies on the consumer pre-validating...". This is no longer accurate —
-  `apply_witness_record` now validates via `InclusionProof`. Update to reflect v0.2.0 production path.
-
-- [ ] **Update `system-ledger/ARCHITECTURE.md` §5 "Verification"**
-  Still says "Skeleton: zero tests". Update to: 44 tests + 10 criterion benches, all passing.
-
+- [x] Update `system-ledger/CLAUDE.md`, `NEXT.md`, `ARCHITECTURE.md`
+- [x] Commit `BENCH-v0.2.0.md` numbers to `system-ledger/BENCHMARKS.md`
 - [ ] **Add `description`, `license`, `repository`, `keywords`, `categories`, `rust-version` to `system-ledger/Cargo.toml`**
   _[OPERATOR DECISION: same license question as system-core]_
 
-- [ ] **Document `tempfile` in `system-ledger` `CLAUDE.md` hard constraints**
-  `tempfile = "3"` is in `[dependencies]` (not dev-deps) because it is used in production `witness.rs`.
-  This blocks any future `no_std` path. Document explicitly.
+### 2D — `system-ledger` test gap closure ✓ _(done 2026-05-20, commit `cb935f9`)_
 
-- [ ] **Commit `BENCH-v0.2.0.md` numbers to `system-ledger/BENCHMARKS.md`**
-  Copy the §3 table and §6 recommendation from `BENCH-v0.2.0.md` to a tracked file.
-  Add hardware qualifier: Intel Xeon 2.20 GHz, GCP n2-class, ARM will be 10–50× slower for Ed25519.
+- [x] `ConsultError::InconsistentState` test (bad apex pubkey y=2)
+- [x] `LedgerError::NoApexForCheckpoint` explicit test
+- [x] `apply_witness_record` at handover height (`ApexVerdict::Handover` branch)
+- [x] **`WitnessVerifyError::TempFileFailed` and `NonUtf8Path` coverage decision**
+  _Decided: untestable in unit CI (requires injecting OS tempfile failure or non-UTF-8 path; both are OS-level fault injection not suitable for cargo test). Documented as infrastructure-failure paths; no test added._
 
-### 2D — `system-ledger` test gap closure
+### 2E — `moonshot-toolkit` ARCHITECTURE.md drift ✓ _(confirmed already applied — no commit needed)_
 
-- [ ] **Add test for `ConsultError::InconsistentState`**
-  Path: `consult_capability` → apex returns `Err(VerifyError::BadPublicKey)` due to malformed stored pubkey.
-  No test currently triggers this path.
+### 2F — CI verification pass ✓ _(done 2026-05-20, commit `54fb7e7`)_
 
-- [ ] **Add explicit test for `LedgerError::NoApexForCheckpoint`**
-  Currently only exercised implicitly.
-
-- [ ] **Add test for `apply_witness_record` at handover height (`ApexVerdict::Handover` branch)**
-  The branch where either apex's signature suffices for inclusion-proof verification.
-  Not covered by any existing test.
-
-- [ ] **Document `WitnessVerifyError::TempFileFailed` and `NonUtf8Path` coverage decision**
-  These are infrastructure-failure paths. Either add integration-level coverage or document as untestable in CI.
-
-### 2E — `moonshot-toolkit` ARCHITECTURE.md drift fixes
-
-From `AUDIT-moonshot-toolkit-arch-vs-cli.md`:
-
-- [ ] **[MECHANICAL] Fix `ProtectionDomain` fields in ARCHITECTURE.md §3**
-  Doc has `entry_points`, `assigned_memory_regions`, `assigned_channels` — none exist in code.
-  Code has `binary` (path) and `stack_bytes` — neither is documented.
-  Replace with actual shipped fields: `name`, `binary`, `priority`, `stack_bytes`.
-
-- [ ] **[MECHANICAL] Fix `BuildPlan` struct block in ARCHITECTURE.md §3**
-  Doc has `input_hashes: Vec<Hash256>` field — does not exist in code.
-  Replace with the three actual fields: `spec_hash`, `steps`, `plan_hash`.
-
-- [ ] **[MECHANICAL] Update §6 Verification test count**
-  Still says "0 tests at activation". Update to: "Phase 1B ships 30 tests..."
-
-- [ ] **[MECHANICAL] Add validation rule: "No duplicate PD names" to §3 spec.rs**
-
-- [ ] **[MECHANICAL] Add `--format` flag documentation to `plan` subcommand description**
-
-- [ ] **[MECHANICAL] Add `validate` stdout summary documentation**
-
-- [ ] **[MECHANICAL] Add exit-code, stdout/stderr, and `build` plan_hash prefix to §3 CLI block**
-
-- [ ] **[MECHANICAL] Document `EmptySpec` guard in `plan.rs` section**
-
-- [ ] **[MECHANICAL] Remove "TOML /" from `plan` description — code only outputs JSON**
-
-### 2F — CI verification pass (before Stage-6 promotion)
-
-Run these on a clean HEAD and log results in `cleanup-log.md`:
-
-- [ ] `cargo clippy -p system-core -- -D warnings`
-- [ ] `cargo fmt --check -p system-core`
-- [ ] `cargo doc -p system-core --no-deps` (zero warnings)
-- [ ] `cargo clippy -p system-ledger -- -D warnings`
-- [ ] `cargo fmt --check -p system-ledger`
-- [ ] `cargo doc -p system-ledger --no-deps` (zero warnings)
-- [ ] `cargo clippy -p moonshot-toolkit -- -D warnings`
-- [ ] `cargo fmt --check -p moonshot-toolkit`
+- [x] `cargo clippy -D warnings` — clean (1 lint fixed: `push_str("…")` → `push('…')`)
+- [x] `cargo fmt --check` — clean (19 diffs fixed)
+- [x] `cargo doc --no-deps` — clean (7 broken intra-doc links + 1 bare URL fixed)
 
 ---
 
