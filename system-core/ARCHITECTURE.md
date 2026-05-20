@@ -106,9 +106,10 @@ MINOR (mirrors the `LedgerBackend` trait pattern in
 
 ### Status
 
-`system-ledger` not yet created — Phase 1A increment 3 builds it.
-This section will be updated to "RESOLVED + IMPLEMENTED" when the
-crate lands.
+**RESOLVED + IMPLEMENTED.** `system-ledger` v0.2.1 is an active workspace
+member. All five modules (cache, revocation, apex, witness, lib) are fully
+implemented with 44 tests and 10 criterion benchmarks. See `system-ledger/`
+for the full implementation.
 
 ## 4. Cross-references
 
@@ -131,9 +132,9 @@ crate lands.
 
 ## 5. Verification
 
-16 unit tests on `cargo test -p system-core` (Rust stable):
+**51 tests passing** on `cargo test -p system-core` (Rust stable), zero warnings.
 
-**Capability data-shape (`tests`):**
+**Capability data-shape (`lib::tests`)** (6 tests):
 - `capability_serialises_round_trip`
 - `capability_hash_is_deterministic`
 - `capability_hash_changes_with_expiry`
@@ -141,7 +142,7 @@ crate lands.
 - `witness_record_serialises_round_trip`
 - `ledger_anchor_serialises_round_trip`
 
-**C2SP signed-note + apex-cosigning (`checkpoint::tests`):**
+**C2SP signed-note + apex-cosigning (`checkpoint::tests`)** (10 tests):
 - `checkpoint_body_round_trip`
 - `checkpoint_with_extensions_round_trip`
 - `key_hash_derivation_is_deterministic`
@@ -149,14 +150,50 @@ crate lands.
 - `signed_checkpoint_wire_round_trip_single_sig`
 - `single_signature_verifies`
 - `signature_fails_under_wrong_pubkey`
-- `multi_sig_apex_handover_round_trip` — both P-old + P-new signatures
-  parse, render, and verify on the same checkpoint body
-- `handover_fails_if_only_one_signs` — handover predicate refuses
-  when only one apex signs
-- `body_tampering_breaks_signature` — modifying the checkpoint after
-  signing makes verification fail
+- `multi_sig_apex_handover_round_trip`
+- `handover_fails_if_only_one_signs`
+- `body_tampering_breaks_signature`
 
-Merkle inclusion / consistency proofs and the higher-level "subsequent
-checkpoints require only P-new" state machine live downstream where
-the consultation logic does — covered when that crate / extension is
-chosen and built.
+**RFC 9162 §2.1.3 inclusion proofs (`inclusion_proof::tests`)** (14 tests):
+- `rfc9162_leaf_hash_includes_zero_prefix`
+- `rfc9162_internal_hash_includes_one_prefix`
+- `single_leaf_tree_proof_is_empty`
+- `two_leaf_tree_proofs_verify`
+- `four_leaf_tree_proofs_verify`
+- `eight_leaf_tree_proofs_verify`
+- `odd_leaf_tree_proofs_verify`
+- `tampered_sibling_fails`
+- `wrong_leaf_hash_fails`
+- `wrong_root_fails`
+- `leaf_index_out_of_bounds_fails`
+- `path_too_long_fails`
+- `path_too_short_fails`
+- `proof_does_not_verify_for_other_leaf`
+
+**RFC 9162 §2.1.4 consistency proofs (`consistency_proof::tests`)** (11 tests):
+- `identity_case_empty_proof_same_root_verifies`
+- `old_size_zero_rejected`
+- `old_size_exceeds_new_size_rejected`
+- `equal_sizes_non_empty_proof_rejected`
+- `single_leaf_extension_verifies`
+- `power_of_two_extensions_verify`
+- `non_power_of_two_sizes_verify`
+- `mismatched_old_root_rejected`
+- `mismatched_new_root_rejected`
+- `corrupt_proof_hash_rejected`
+- `full_grid_1_to_8_verifies` — all 36 `(old, new)` pairs with `0 < old ≤ new ≤ 8`
+
+**Composed checkpoint primitives — `verify_inclusion_proof` (Phase 1A.4) and `verify_consistency_proof` (Phase 1A.5)** (10 tests, in `checkpoint::tests`):
+- `verify_inclusion_proof_valid`
+- `verify_inclusion_proof_tree_size_mismatch`
+- `verify_inclusion_proof_bad_signature`
+- `verify_inclusion_proof_proof_corrupted`
+- `verify_inclusion_proof_wrong_leaf_hash`
+- `verify_consistency_proof_valid`
+- `verify_consistency_proof_old_size_mismatch`
+- `verify_consistency_proof_new_size_mismatch`
+- `verify_consistency_proof_old_signature_invalid`
+- `verify_consistency_proof_proof_corrupted`
+
+The higher-level state machine ("subsequent checkpoints require only P-new") lives in
+`system-ledger` — covered there with 44 tests including the end-to-end handover ceremony.
