@@ -19,7 +19,14 @@ use std::{
     io::Write,
     net::SocketAddr,
     sync::{mpsc, Arc},
-    time::Duration,
+    time::{Duration, Instant},
+};
+
+use app_console_content::{
+    auth::compute_fingerprint,
+    db::{find_user, open_db},
+    session::User,
+    ui::status_bar::{fetch_health, HealthState},
 };
 
 // ---------------------------------------------------------------------------
@@ -70,6 +77,7 @@ struct AppSession {
     term_cols: u32,
     term_rows: u32,
     input_tx: Option<mpsc::SyncSender<u8>>,
+    user: Option<User>,
 }
 
 impl AppSession {
@@ -80,6 +88,7 @@ impl AppSession {
             term_cols: 220,
             term_rows: 50,
             input_tx: None,
+            user: None,
         }
     }
 }
@@ -89,10 +98,25 @@ impl Handler for AppSession {
 
     async fn auth_publickey(
         &mut self,
-        _user: &str,
-        _key: &russh::keys::PublicKey,
+        _ssh_user: &str,
+        key: &russh::keys::PublicKey,
     ) -> Result<Auth, Self::Error> {
-        Ok(Auth::Accept)
+        let fingerprint = compute_fingerprint(key);
+        match open_db().and_then(|conn| find_user(&conn, &fingerprint)) {
+            Ok(Some(user)) => {
+                eprintln!("proof: auth accepted for {}@{}", user.username, user.tenant.as_str());
+                self.user = Some(user);
+                Ok(Auth::Accept)
+            }
+            Ok(None) => {
+                eprintln!("proof: auth rejected — fingerprint not registered: {fingerprint}");
+                Ok(Auth::Reject { proceed_with_methods: None, partial_success: false })
+            }
+            Err(e) => {
+                eprintln!("proof: auth db error: {e}");
+                Ok(Auth::Reject { proceed_with_methods: None, partial_success: false })
+            }
+        }
     }
 
     async fn channel_open_session(
@@ -130,6 +154,17 @@ impl Handler for AppSession {
         let cols = self.term_cols as u16;
         let rows = self.term_rows as u16;
 
+        let user = match self.user.take() {
+            Some(u) => u,
+            None => {
+                eprintln!("proof: shell_request without authenticated user — rejecting");
+                return Ok(());
+            }
+        };
+
+        // Fetch health state before entering the blocking render loop.
+        let health = fetch_health().await;
+
         let handle = self.handle.take().expect("handle set in channel_open_session");
         let ch_id = self.channel_id.unwrap_or(channel);
 
@@ -148,7 +183,8 @@ impl Handler for AppSession {
 
         session.channel_success(channel)?;
 
-        tokio::task::spawn_blocking(move || run_tui(terminal, input_rx));
+        let started = Instant::now();
+        tokio::task::spawn_blocking(move || run_tui(terminal, input_rx, user, health, started));
 
         Ok(())
     }
@@ -189,6 +225,9 @@ impl Handler for AppSession {
 fn run_tui(
     mut terminal: Terminal<CrosstermBackend<TerminalHandle>>,
     input_rx: mpsc::Receiver<u8>,
+    user: User,
+    health: HealthState,
+    started: Instant,
 ) {
     {
         let backend = terminal.backend_mut();
@@ -196,48 +235,51 @@ fn run_tui(
     }
 
     loop {
+        let elapsed = started.elapsed().as_secs();
+
         let draw_result = terminal.draw(|f| {
             let area = f.area();
 
+            // Split: content fills remaining rows; status bar is 1 row at bottom.
+            let chunks = Layout::default()
+                .direction(Direction::Vertical)
+                .constraints([Constraint::Fill(1), Constraint::Length(1)])
+                .split(area);
+
+            // --- Content area ---
+            let title = format!(" PROOFREADER — {}@{} ", user.username, user.tenant.as_str());
             let outer = Block::default()
                 .borders(Borders::ALL)
                 .border_style(Style::default().fg(Color::Cyan))
-                .title(" PROOFREADER — Leapfrog 2030 ")
+                .title(title)
                 .title_alignment(Alignment::Center);
-            f.render_widget(outer, area);
+            f.render_widget(outer, chunks[0]);
 
             let inner = Layout::default()
                 .direction(Direction::Vertical)
-                .constraints([
-                    Constraint::Fill(1),
-                    Constraint::Length(3),
-                    Constraint::Length(1),
-                ])
+                .constraints([Constraint::Fill(1), Constraint::Length(1)])
                 .margin(1)
-                .split(area);
+                .split(chunks[0]);
 
-            let greeting = Paragraph::new(
-                "Session 1 — SSH + ratatui spike\n\nPress  q  to quit",
-            )
-            .alignment(Alignment::Center)
-            .style(Style::default().fg(Color::White));
-            f.render_widget(greeting, inner[0]);
-
-            let status = Paragraph::new("[ Tier A (OLMo 3 7B) │ Ready │ 127.0.0.1:9092 ]")
+            let body = format!(
+                "Session 2 — Auth complete\n\nLogged in as: {}@{}\n\nPress  q  to quit",
+                user.username,
+                user.tenant.as_str(),
+            );
+            let content = Paragraph::new(body)
                 .alignment(Alignment::Center)
-                .style(
-                    Style::default()
-                        .fg(Color::Green)
-                        .add_modifier(Modifier::BOLD),
-                );
-            f.render_widget(status, inner[1]);
+                .style(Style::default().fg(Color::White).add_modifier(Modifier::BOLD));
+            f.render_widget(content, inner[0]);
+
+            // --- Status bar ---
+            app_console_content::ui::status_bar::render(f, chunks[1], &user, &health, elapsed);
         });
 
         if draw_result.is_err() {
             break;
         }
 
-        match input_rx.recv_timeout(Duration::from_millis(50)) {
+        match input_rx.recv_timeout(Duration::from_millis(500)) {
             Ok(b'q') | Ok(3) => break,
             Ok(_) => {}
             Err(mpsc::RecvTimeoutError::Timeout) => {}
