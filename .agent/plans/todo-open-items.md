@@ -9,10 +9,7 @@
 
 - [x] **Drafts-outbound cleanup** — `refined/co-location/woodfine/` (11 files, closed batch) git-removed; empty dirs cleared
 - [x] **Phase E design draft** — `design-phase-e-bilingual-routing.draft.md` written; outbox message to project-knowledge added
-
-## PENDING — project-editorial (next session)
-
-- [ ] **leapfrog-facts.es.yaml** — produce ES DYK content for all 3 wikis (documentation, projects, corporate) before Phase E ships; required by §11 of Phase E draft
+- [x] **leapfrog-facts.es.yaml** — Spanish DYK content produced and committed to all 3 wikis (documentation d9d2bc1, projects 825fab2, corporate a5a062b)
 
 ---
 
@@ -42,9 +39,9 @@
 - [ ] **Admin README fixes** — pointsav-media-assets + woodfine-media-assets (admin-tier commits)
 - [ ] **Route design drafts** — forward project-editorial outbox routing message to project-design inbox (5 DESIGN-RESEARCH + component drafts)
 
-## PENDING — project-editorial (carry-forward, low priority)
+## PENDING — project-editorial
 
-- [ ] **leapfrog-facts.es.yaml content** — produce ES DYK for all 3 wikis (see DONE block above + §11 of Phase E draft)
+*(none — all editorial work complete for Phase E prerequisites)*
 
 ---
 
