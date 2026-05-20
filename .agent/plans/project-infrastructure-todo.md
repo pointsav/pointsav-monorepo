@@ -1,7 +1,7 @@
 ---
 title: project-infrastructure — Comprehensive TODO
 created: 2026-05-20
-updated: 2026-05-20
+updated: 2026-05-20 (session 2)
 status: active
 author: task@claude-code
 ---
@@ -20,24 +20,13 @@ and woodfine-fleet-deployment fleet-infrastructure-* + route-network-admin clust
 
 These items should be done first. None require operator decision.
 
-- [ ] **Commit `CLAUDE.md` + `.agent/manifest.md` together** (both unstaged/untracked since 2026-05-18)
-- [ ] **Fix `session-start.md`** — frontmatter says `archive: project-intelligence`; correct to `project-infrastructure`
-- [ ] **Delete project-intelligence plans from `.agent/plans/`**
-  Files to remove: `MASTER-PLAN-2026.md`, `leapfrog-2026.md`, `service-content-architecture-2026.md`,
-  `service-slm-architecture-2026.md`, `tier-architecture-2026.md`, `universal-ai-gateway.md`
-  Keep: `lbug-build-blocker.md` (still relevant to service-content deploy), `README.md`, this file
-- [ ] **Delete project-intelligence drafts from `.agent/drafts-outbound/`**
-  Files to remove: `guide-yo-yo-nightly-pipeline.md`, `topic-apprenticeship-substrate.md`,
-  `topic-apprenticeship-substrate.es.md`, `topic-doorman-protocol.md`, `topic-doorman-protocol.es.md`,
-  `topic-jennifer-datagraph-rebuild.md`, `topic-jennifer-datagraph-rebuild.es.md`,
-  `topic-yo-yo-lora-training-pipeline.md`, `topic-yo-yo-lora-training-pipeline.es.md`,
-  `topic-zero-container-inference.md`, `topic-zero-container-inference.es.md`
-- [ ] **Replace `NEXT.md`** — current content is all project-intelligence items; replace with
-  infrastructure-scoped items drawn from this plan
-- [ ] **Create `.agent/memory/` directory and seed `session-context.md`** — directory is absent;
-  no session context has ever been written for this archive
-- [ ] **Fix manifest `planned_topics` slugs** — manifest declares `topic-os-infrastructure.md`
-  but wiki published it as `infrastructure-os.md` (slug mismatch); update manifest to match reality
+- [x] **Commit `CLAUDE.md` + `.agent/manifest.md` together** — done 2026-05-20 session 1
+- [x] **Fix `session-start.md`** — done 2026-05-20 session 1
+- [x] **Delete project-intelligence plans from `.agent/plans/`** — done 2026-05-20 session 1
+- [x] **Delete project-intelligence drafts from `.agent/drafts-outbound/`** — done 2026-05-20 session 1
+- [x] **Replace `NEXT.md`** — done 2026-05-20 session 1; updated again session 2
+- [x] **Create `.agent/memory/` directory and seed `session-context.md`** — done 2026-05-20 session 1
+- [x] **Fix manifest `planned_topics` slugs** — done 2026-05-20 session 1
 
 ---
 
@@ -48,7 +37,11 @@ promoted via project-editorial, committed by Command Session admin-tier.
 
 ### 2a — Fix: misaligned / outdated
 
-- [ ] **`infrastructure/sovereign-mesh.md` + `.es.md` — expand from stub to full topic**
+- [x] **`infrastructure/sovereign-mesh.md` + `.es.md` — expand from stub to full topic**
+  Done 2026-05-20 session 2. Drafts staged at `.agent/drafts-outbound/topic-sovereign-mesh.draft.md`
+  + `topic-sovereign-mesh.es.draft.md`. Outbox message sent to project-editorial. Pending editorial
+  pickup → commit to content-wiki-documentation.
+  ~~Original description:~~
   Current state: one sentence. This is the gap that corresponds to `topic-ppn-architecture.md`
   in the manifest. Required content:
   - WireGuard overlay — all fleet nodes are mesh peers; no central broker
@@ -186,17 +179,13 @@ Work done in this archive; committed via `commit-as-next.sh`; promoted via Stage
   - **Option C**: Stub the functions to return safe no-op values so the binary compiles,
     then implement properly in a subsequent milestone
 
-- [ ] **`os-infrastructure/forge_iso.sh` — fix hardcoded monorepo path**
-  Line 9: `MONOREPO_ROOT="$HOME/Foundry/factory-pointsav/pointsav-monorepo"` — old path.
-  Correct to `/srv/foundry/vendor/pointsav-monorepo` or parameterise via env variable.
+- [x] **`os-infrastructure/forge_iso.sh` — fix hardcoded monorepo path** — done 2026-05-20 session 2
 
-- [ ] **`os-infrastructure/Makefile` — fix wrong script name**
-  Line 27: calls `./forge_infrastructure_iso.sh` — file does not exist.
-  Actual script is `forge_iso.sh`. Fix the Makefile target.
+- [x] **`os-infrastructure/Makefile` — fix wrong script name** — done 2026-05-20 session 2
 
-- [ ] **Gitignore build artifacts in `os-infrastructure/`**
-  The following are tracked but should not be:
-  `build_iso/boot/final_image.elf`, `build_iso/boot/kernel.elf`, `build_iso/boot/grub/`,
+- [x] **Gitignore build artifacts in `os-infrastructure/` and `os-network-admin/`** — done 2026-05-20 session 2; 14 tracked binaries removed from index
+  ~~The following are tracked but should not be:
+  `build_iso/boot/final_image.elf`, `build_iso/boot/kernel.elf`, `build_iso/boot/grub/`,~~
   `build_iso/os-infrastructure.elf`, `build_iso/system-substrate`, `build_iso/staging/`,
   `pointsav-os-infrastructure.iso`, `linker.ld` (if auto-generated), `.gitkeep` (once real
   files exist). Add to `os-infrastructure/.gitignore`.
@@ -204,16 +193,9 @@ Work done in this archive; committed via `commit-as-next.sh`; promoted via Stage
 
 ### 4b — Fix: structural anomaly
 
-- [ ] **`system-network-interface` — split lib.rs from main.rs**
-  This crate has a 4-line `lib.rs` (bare-metal stub; imported by `os-infrastructure` as a
-  `#![no_std]`-compatible dependency) and a full tokio+warp HTTP gateway `main.rs`.
-  These are incompatible in one crate — the lib.rs is `no_std` context; the main.rs requires std.
-  The `Cargo.toml` declares `[workspace]` and heavy std dependencies (tokio, warp, reqwest),
-  which means `os-infrastructure` cannot actually link it as a `no_std` lib.
-  Resolution: extract the F8 Terminal Gateway binary (`main.rs`) into its own crate.
-  Candidate name: `app-network-admin` (matches the `app-network-*` Reserved-folder pattern).
-  The `lib.rs` stub stays in `system-network-interface` or is replaced with the real
-  bare-metal NIC interface (see §4a Option A / §4d).
+- [x] **`system-network-interface` — split lib.rs from main.rs** — done 2026-05-20 session 2
+  F8 Gateway binary moved to `app-network-admin/`. `system-network-interface` is now a pure
+  lib crate (no std deps, `[workspace]` kept for standalone isolation). Both compile clean.
 
 - [ ] **`os-network-admin/src/main.rs` — clarify role**
   Currently a simple UDP telemetry poller connecting to `10.0.0.101:5000` (Laptop B vitals).
@@ -283,17 +265,9 @@ Order reflects dependency chain — each item unblocks the next.
 
 These appear in the manifest tetrad `focus` list but no directories exist in the monorepo:
 
-- [ ] **Create `app-infrastructure-onprem/`** — Reserved-folder scaffold
-  `README.md` + `README.es.md` describing: on-premises `os-infrastructure` node app surface;
-  highest-trust posture; operator owns and can physically verify the hardware.
-
-- [ ] **Create `app-infrastructure-leased/`** — Reserved-folder scaffold
-  `README.md` + `README.es.md` describing: colocated bare-metal node app surface;
-  hybrid-trust posture.
-
-- [ ] **Create `app-infrastructure-cloud/`** — Reserved-folder scaffold
-  `README.md` + `README.es.md` describing: hyperscaler VM node app surface;
-  lowest-trust posture; stateless relay only; no persistent storage.
+- [x] **Create `app-infrastructure-onprem/`** — done 2026-05-20 session 2
+- [x] **Create `app-infrastructure-leased/`** — done 2026-05-20 session 2
+- [x] **Create `app-infrastructure-cloud/`** — done 2026-05-20 session 2
 
 ---
 
