@@ -5,7 +5,7 @@
 //! replication-safety primitive for ledger-mirror catch-up and
 //! multi-witness checkpoint advancement.
 //!
-//! Reuses [`inclusion_proof::rfc9162_internal_hash`]; no new hash helper.
+//! Reuses `rfc9162_internal_hash` from `inclusion_proof`; no new hash helper.
 //! Per RFC 9162 §2.1.4. Composed kernel-facing API:
 //! [`crate::checkpoint::SignedCheckpoint::verify_consistency_proof`].
 
@@ -239,7 +239,10 @@ mod tests {
     /// tree structure rather than from the RFC's recursive PROOF function), so
     /// it serves as an external ground-truth for the test fixtures.
     fn make_consistency_proof(old_n: usize, new_n: usize) -> ConsistencyProof {
-        assert!(old_n <= new_n && old_n > 0, "oracle requires 0 < old_n <= new_n");
+        assert!(
+            old_n <= new_n && old_n > 0,
+            "oracle requires 0 < old_n <= new_n"
+        );
         if old_n == new_n {
             return ConsistencyProof { hashes: vec![] };
         }
@@ -298,9 +301,9 @@ mod tests {
                 // Sibling is at (lv, n_loop ^ 1) in the new tree (the right-side
                 // node that exists only because new_n > old_n).
                 let sibling_idx = (n_loop ^ 1) as usize;
-                let p = get_new(lv, sibling_idx).unwrap_or_else(|| panic!(
-                    "ELSE branch: sibling ({lv},{sibling_idx}) missing for {old_n}→{new_n}"
-                ));
+                let p = get_new(lv, sibling_idx).unwrap_or_else(|| {
+                    panic!("ELSE branch: sibling ({lv},{sibling_idx}) missing for {old_n}→{new_n}")
+                });
                 path.push(p);
             }
             n_loop >>= 1;

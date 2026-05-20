@@ -5,7 +5,7 @@
 //! explicitly supports multi-signature on the same checkpoint, enabling
 //! "previous apex revokes; new apex co-signs" without state migration.
 //!
-//! Format reference: https://github.com/C2SP/C2SP/blob/main/signed-note.md
+//! Format reference: <https://github.com/C2SP/C2SP/blob/main/signed-note.md>
 //! and tlog-checkpoint.md. This module implements the body+signature
 //! wire format and ed25519 verification; signing is performed by the
 //! apex via its own keying surface (Sigstore Cosign, ssh-keygen, or
@@ -167,7 +167,9 @@ impl NoteSignature {
         let after = line
             .strip_prefix("\u{2014} ")
             .ok_or(ParseError::MissingEmDash)?;
-        let (name, b64) = after.split_once(' ').ok_or(ParseError::MalformedSignature)?;
+        let (name, b64) = after
+            .split_once(' ')
+            .ok_or(ParseError::MalformedSignature)?;
         let bytes = BASE64
             .decode(b64)
             .map_err(|_| ParseError::MalformedSignature)?;
@@ -239,11 +241,7 @@ impl SignedCheckpoint {
     /// Returns `Ok(true)` if any signature line matches `(signer_name,
     /// pubkey)` and verifies; `Ok(false)` if no matching key-hash
     /// found; `Err(_)` on cryptographic failure.
-    pub fn verify_signer(
-        &self,
-        signer_name: &str,
-        pubkey: &[u8; 32],
-    ) -> Result<bool, VerifyError> {
+    pub fn verify_signer(&self, signer_name: &str, pubkey: &[u8; 32]) -> Result<bool, VerifyError> {
         let expected_kh = NoteSignature::derive_key_hash(signer_name, pubkey);
         let body = self.checkpoint.body_bytes();
         let vk = VerifyingKey::from_bytes(pubkey).map_err(|_| VerifyError::BadPublicKey)?;
@@ -674,10 +672,7 @@ mod tests {
         for i in 0..4u64 {
             let proof = make_proof(&leaves, i);
             let r = signed.verify_inclusion_proof(&proof, &leaves[i as usize], "apex", &pk);
-            assert!(
-                r.is_ok(),
-                "leaf {i}: should accept; got {r:?}"
-            );
+            assert!(r.is_ok(), "leaf {i}: should accept; got {r:?}");
         }
     }
 
