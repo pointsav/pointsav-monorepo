@@ -28,7 +28,7 @@ async fn main() {
     let upload_route = warp::post().and(warp::path("upload")).and(warp::header::<String>("x-file-name")).and(warp::body::bytes()).and_then(handle_upload);
 
     let cors = warp::cors().allow_any_origin().allow_headers(vec!["Content-Type", "x-file-name"]).allow_methods(vec!["POST"]);
-    
+
     warp::serve(translate_route.or(authorize_route).or(upload_route).with(cors)).run(([0, 0, 0, 0], HTTP_PORT)).await;
 }
 
@@ -39,7 +39,7 @@ fn with_node_id(node_id: String) -> impl Filter<Extract = (String,), Error = std
 async fn handle_upload(filename: String, body: Bytes) -> Result<impl warp::Reply, warp::Rejection> {
     let safe_filename = filename.replace("/", "_").replace("\\", "_");
     let target_filename = format!("VAULT_INGRESS_MANUAL_{}", safe_filename);
-    
+
     let client = reqwest::Client::new();
     match client.post("http://127.0.0.1:8095/vault/ingress")
         .header("x-file-name", target_filename.clone())
@@ -78,7 +78,7 @@ async fn handle_authorization(auth: AuthorizedPayload, socket: Arc<Mutex<UdpSock
     let data = serde_json::to_string(&payload).unwrap();
     let sock = socket.lock().await;
     let mut success_count = 0;
-    
+
     let target_ips: Vec<&str> = match auth.target.as_str() {
         "NODE-CLOUD-RELAY" => vec!["10.50.0.1"],
         "NODE-LAPTOP-A" => vec!["10.50.0.2"],
