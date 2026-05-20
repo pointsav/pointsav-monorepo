@@ -2,13 +2,13 @@ use anyhow::{bail, Result};
 use clap::{Parser, Subcommand};
 use std::path::PathBuf;
 
-use app_console_content::{
+use system_gateway_mba::{
     auth::compute_fingerprint,
     db::{add_user, disable_user, list_users, open_db, rotate_key},
 };
 
 #[derive(Parser)]
-#[command(name = "proofctl", about = "Manage proof users and SSH keys", version)]
+#[command(name = "proofctl", about = "Manage os-console users and SSH keys", version)]
 struct Cli {
     #[command(subcommand)]
     command: Command,

@@ -1,32 +1,21 @@
-use anyhow::Result;
-use crossterm::{
-    cursor,
-    execute,
-    terminal::{EnterAlternateScreen, LeaveAlternateScreen},
-};
-use ratatui::{
-    backend::CrosstermBackend,
-    layout::{Alignment, Constraint, Direction, Layout},
-    style::{Color, Modifier, Style},
-    widgets::{Block, Borders, Paragraph},
-    Terminal,
-};
-use russh::{
-    server::{Auth, Config, Handler, Msg, Server, Session},
-    Channel, ChannelId,
-};
 use std::{
     io::Write,
     net::SocketAddr,
     sync::{mpsc, Arc},
-    time::{Duration, Instant},
+    time::Duration,
 };
 
-use app_console_content::{
+use anyhow::Result;
+use app_console_content::cartridge::ContentCartridge;
+use app_console_keys::AppConsoleKeys;
+use russh::{
+    server::{Auth, Config, Handler, Msg, Server, Session},
+    Channel, ChannelId,
+};
+use system_gateway_mba::{
     auth::compute_fingerprint,
     db::{find_user, open_db},
-    session::User,
-    ui::status_bar::{fetch_health, HealthState},
+    user::User,
 };
 
 // ---------------------------------------------------------------------------
@@ -59,8 +48,7 @@ impl Write for TerminalHandle {
     }
 
     fn flush(&mut self) -> std::io::Result<()> {
-        let data = self.sink.clone();
-        self.sink.clear();
+        let data = std::mem::take(&mut self.sink);
         self.sender
             .send(data)
             .map_err(|e| std::io::Error::new(std::io::ErrorKind::BrokenPipe, e))
@@ -104,16 +92,16 @@ impl Handler for AppSession {
         let fingerprint = compute_fingerprint(key);
         match open_db().and_then(|conn| find_user(&conn, &fingerprint)) {
             Ok(Some(user)) => {
-                eprintln!("proof: auth accepted for {}@{}", user.username, user.tenant.as_str());
+                eprintln!("os-console: auth accepted for {}@{}", user.username, user.tenant.as_str());
                 self.user = Some(user);
                 Ok(Auth::Accept)
             }
             Ok(None) => {
-                eprintln!("proof: auth rejected — fingerprint not registered: {fingerprint}");
+                eprintln!("os-console: auth rejected — fingerprint not registered: {fingerprint}");
                 Ok(Auth::Reject { proceed_with_methods: None, partial_success: false })
             }
             Err(e) => {
-                eprintln!("proof: auth db error: {e}");
+                eprintln!("os-console: auth db error: {e}");
                 Ok(Auth::Reject { proceed_with_methods: None, partial_success: false })
             }
         }
@@ -157,34 +145,33 @@ impl Handler for AppSession {
         let user = match self.user.take() {
             Some(u) => u,
             None => {
-                eprintln!("proof: shell_request without authenticated user — rejecting");
+                eprintln!("os-console: shell_request without authenticated user — rejecting");
                 return Ok(());
             }
         };
-
-        // Fetch health state before entering the blocking render loop.
-        let health = fetch_health().await;
 
         let handle = self.handle.take().expect("handle set in channel_open_session");
         let ch_id = self.channel_id.unwrap_or(channel);
 
         let terminal_handle = TerminalHandle::new(handle, ch_id);
-        let backend = CrosstermBackend::new(terminal_handle);
-        let mut terminal = Terminal::new(backend)?;
-        terminal.resize(ratatui::layout::Rect {
-            x: 0,
-            y: 0,
-            width: cols,
-            height: rows,
-        })?;
+        let backend = ratatui::backend::CrosstermBackend::new(terminal_handle);
+        let mut terminal = ratatui::Terminal::new(backend)?;
+        terminal.resize(ratatui::layout::Rect { x: 0, y: 0, width: cols, height: rows })?;
 
         let (input_tx, input_rx) = mpsc::sync_channel::<u8>(256);
         self.input_tx = Some(input_tx);
 
         session.channel_success(channel)?;
 
-        let started = Instant::now();
-        tokio::task::spawn_blocking(move || run_tui(terminal, input_rx, user, health, started));
+        let username = user.username.clone();
+        let tenant = user.tenant.as_str().to_string();
+
+        tokio::task::spawn_blocking(move || {
+            let mut chassis = AppConsoleKeys::new(username, tenant);
+            chassis.set_mba_active();
+            chassis.register(Box::new(ContentCartridge::new()));
+            chassis.run_with_bytes(terminal, input_rx);
+        });
 
         Ok(())
     }
@@ -219,81 +206,6 @@ impl Handler for AppSession {
 }
 
 // ---------------------------------------------------------------------------
-// run_tui — ratatui render loop (runs in spawn_blocking)
-// ---------------------------------------------------------------------------
-
-fn run_tui(
-    mut terminal: Terminal<CrosstermBackend<TerminalHandle>>,
-    input_rx: mpsc::Receiver<u8>,
-    user: User,
-    health: HealthState,
-    started: Instant,
-) {
-    {
-        let backend = terminal.backend_mut();
-        let _ = execute!(backend, EnterAlternateScreen, cursor::Hide);
-    }
-
-    loop {
-        let elapsed = started.elapsed().as_secs();
-
-        let draw_result = terminal.draw(|f| {
-            let area = f.area();
-
-            // Split: content fills remaining rows; status bar is 1 row at bottom.
-            let chunks = Layout::default()
-                .direction(Direction::Vertical)
-                .constraints([Constraint::Fill(1), Constraint::Length(1)])
-                .split(area);
-
-            // --- Content area ---
-            let title = format!(" PROOFREADER — {}@{} ", user.username, user.tenant.as_str());
-            let outer = Block::default()
-                .borders(Borders::ALL)
-                .border_style(Style::default().fg(Color::Cyan))
-                .title(title)
-                .title_alignment(Alignment::Center);
-            f.render_widget(outer, chunks[0]);
-
-            let inner = Layout::default()
-                .direction(Direction::Vertical)
-                .constraints([Constraint::Fill(1), Constraint::Length(1)])
-                .margin(1)
-                .split(chunks[0]);
-
-            let body = format!(
-                "Session 2 — Auth complete\n\nLogged in as: {}@{}\n\nPress  q  to quit",
-                user.username,
-                user.tenant.as_str(),
-            );
-            let content = Paragraph::new(body)
-                .alignment(Alignment::Center)
-                .style(Style::default().fg(Color::White).add_modifier(Modifier::BOLD));
-            f.render_widget(content, inner[0]);
-
-            // --- Status bar ---
-            app_console_content::ui::status_bar::render(f, chunks[1], &user, &health, elapsed);
-        });
-
-        if draw_result.is_err() {
-            break;
-        }
-
-        match input_rx.recv_timeout(Duration::from_millis(500)) {
-            Ok(b'q') | Ok(3) => break,
-            Ok(_) => {}
-            Err(mpsc::RecvTimeoutError::Timeout) => {}
-            Err(mpsc::RecvTimeoutError::Disconnected) => break,
-        }
-    }
-
-    {
-        let backend = terminal.backend_mut();
-        let _ = execute!(backend, LeaveAlternateScreen, cursor::Show);
-    }
-}
-
-// ---------------------------------------------------------------------------
 // AppServer — creates a new AppSession per incoming connection
 // ---------------------------------------------------------------------------
 
@@ -302,18 +214,16 @@ struct AppServer;
 
 impl Server for AppServer {
     type Handler = AppSession;
-
     fn new_client(&mut self, _peer_addr: Option<SocketAddr>) -> AppSession {
         AppSession::new()
     }
 }
 
 // ---------------------------------------------------------------------------
-// main
+// run — called from main when ssh-server feature is enabled
 // ---------------------------------------------------------------------------
 
-#[tokio::main]
-async fn main() -> Result<()> {
+pub async fn run() -> Result<()> {
     let key = russh::keys::PrivateKey::random(
         &mut rand::rng(),
         russh::keys::Algorithm::Ed25519,
@@ -329,10 +239,9 @@ async fn main() -> Result<()> {
     });
 
     let addr: SocketAddr = "0.0.0.0:2222".parse()?;
-    eprintln!("proof: listening on {addr}  (ssh -p 2222 proof@localhost)");
+    eprintln!("os-console: listening on {addr}  (ssh -p 2222 proof@localhost)");
 
     let mut server = AppServer;
     server.run_on_address(config, addr).await?;
-
     Ok(())
 }

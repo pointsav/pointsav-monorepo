@@ -2,7 +2,7 @@ use anyhow::Result;
 use rusqlite::{params, Connection};
 use std::path::PathBuf;
 
-use crate::session::{Tenant, User};
+use crate::user::{Tenant, User};
 
 pub fn db_path() -> PathBuf {
     let home = std::env::var("HOME").unwrap_or_else(|_| "/tmp".into());

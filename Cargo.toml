@@ -3,6 +3,7 @@ resolver = "2"
 members = [
     "app-console-keys",
     "app-console-content",
+    "system-gateway-mba",
     "os-console",
 ]
 

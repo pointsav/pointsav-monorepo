@@ -1,0 +1,16 @@
+[package]
+name = "system-gateway-mba"
+version = "0.1.0"
+edition = "2021"
+description = "Machine-Based Authorization gateway — SSH fingerprint auth, user registry, proofctl CLI"
+
+[[bin]]
+name = "proofctl"
+path = "src/bin/proofctl.rs"
+
+[dependencies]
+anyhow = "1"
+rusqlite = { version = "0.32", features = ["bundled"] }
+russh = "0.60"
+clap = { version = "4", features = ["derive"] }
+chrono = "0.4"
