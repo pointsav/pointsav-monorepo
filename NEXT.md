@@ -1,22 +1,24 @@
 ---
 archive: project-proofreader
-updated: 2026-05-16
+updated: 2026-05-20
 ---
 
 # NEXT — project-proofreader
 
-> Full strategic plan: `.agent/plans/tui-pivot-2030.md`
+> Architecture plan: `.agent/plans/os-console-platform.md`
+> Coding roadmap: `.agent/plans/leapfrog-2030-coding.md`
 > Session orientation: `.agent/session-start.md`
 
 ---
 
-## Direction (set 2026-05-16)
+## Direction (updated 2026-05-20)
 
-**Leapfrog 2030 TUI pivot.** Web UI → TUI over SSH.
-Users type `ssh proof@host` (port 2222). Keyboard-native proofread + draft.
-Stack: `ratatui + crossterm + russh + tui-textarea + similar + syntect`.
-Doctrine anchor: claim #45 (TUI-as-Corpus-Producer).
-`service-proofreader` (9092) backend unchanged. All `/v1/*` endpoints reused.
+**os-console platform — chassis-first.** Full Leapfrog 2030 pivot: os-console binary +
+app-console-keys chassis + compiled-in cartridges (F1-F12). app-console-content (F4)
+is Phase 3 cartridge, not standalone binary. MBA peer-to-peer (system-gateway-mba).
+Doorman endpoint: `http://localhost:8011`. Phase 1 = chassis.
+
+**Pending rename:** project-proofreader → project-console (outbox msg sent to Command).
 
 ---
 
@@ -37,17 +39,11 @@ Doctrine anchor: claim #45 (TUI-as-Corpus-Producer).
 - [ ] **Open GCE firewall port 2222** — needed before Phase 0 spike can be tested
   externally. Operator action. `[2026-05-16 totebox@claude-code]`
 
-- [ ] **Read `conventions/tui-corpus-producer.md`** — Doctrine claim #45 implementation spec;
-  inaccessible from this cluster. Command Session to relay task-type taxonomy +
-  verdict-signing spec. `[2026-05-16 totebox@claude-code]`
+- [x] **Read `conventions/tui-corpus-producer.md`** — relayed inline via inbox msg `command-20260517-tui-pivot-relay`. Key specs: /feedback keybinding (G/R/B verdicts), adapter quality budget (200–500 interactions), per-tenant adapter ownership. `[2026-05-19 totebox@claude-code]`
 
-- [ ] **slm-cli source review** — `pointsav-monorepo/service-slm/crates/slm-cli/` is the
-  reference TUI for slash-command patterns. Command to relay or confirm access.
-  `[2026-05-16 totebox@claude-code]`
+- [ ] **slm-cli source review** — `pointsav-monorepo/service-slm/crates/slm-cli/` does NOT exist yet (Phase 4 item in project-slm). No reference implementation available. Use inbox relay spec (§5) as design guide for slash commands. `[2026-05-19 totebox@claude-code]`
 
-- [ ] **Domain migration commit `9ede81f` status** — Command to confirm whether the stale
-  woodfinegroup catalog commit on `cluster/project-proofreader` in the WFD sub-clone needs
-  a rebase, or whether the history rewrite already resolved it. `[2026-05-16 totebox@claude-code]`
+- [x] **Domain migration commit `9ede81f` status** — RESOLVED. WFD sub-clone at `7fdf36b`; `git ls-tree` confirms no `proofreader` entries — filter-repo history rewrite cleaned the stale woodfinegroup catalog. No rebase needed. `[2026-05-19 totebox@claude-code]`
 
 ---
 
@@ -169,8 +165,8 @@ Doctrine anchor: claim #45 (TUI-as-Corpus-Producer).
 | Q3 | `prose-draft` task-type string in corpus directory tree? | Waiting Command |
 | Q4 | `local-proofreader-public.service` source backfilled? | Waiting Command |
 | Q5 | GCE firewall port 2222 — who opens it? | Waiting operator |
-| Q6 | `conventions/tui-corpus-producer.md` — task-type taxonomy? | Waiting Command |
-| Q7 | `slm-cli` verdict-signing mechanism? | Waiting Command relay |
+| Q6 | `conventions/tui-corpus-producer.md` — task-type taxonomy? | **Resolved** — relayed inline 2026-05-17 |
+| Q7 | `slm-cli` verdict-signing mechanism? | **Blocked** — slm-cli crate not yet written (project-slm Phase 4) |
 | Q8 | russh FIDO2 (`sk-ssh-ed25519`) key support? | Engineering research Phase 1 |
 
 ---
