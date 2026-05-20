@@ -7,6 +7,11 @@ Attribution format: `[YYYY-MM-DD role@engine]`
 
 ## Hot — pick up here next session
 
+- [ ] **NOTAM unreadable — permission denied** `[2026-05-20 totebox@claude-code]`
+  - Both `/srv/foundry/NOTAM.md` and `~/Foundry/NOTAM.md` return `permission denied` at Totebox session startup
+  - Flagged to Command via outbox — no hazards known from prior sessions but cannot confirm
+  - Command to investigate + restore read access before next session
+
 - [ ] **Key Plans foundation — 4 operator decisions needed** `[2026-05-17 totebox@claude-code]`
   - Briefing: `.agent/plans/key-plans-foundation-briefing.md` (225 lines, executive digest)
   - Deep study: `.agent/plans/key-plans-foundation-study.md` (711 lines, full inventory + gap analysis)
