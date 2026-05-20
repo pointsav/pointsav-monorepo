@@ -1,12 +1,12 @@
-## 2026-05-18 | Totebox | claude-code (overnight build)
+# Session Context Archive — project-knowledge cluster
 
-**Done:**
-- 12 signed commits, ~3500 LOC across Phases 0–4 of learning-loop-master-plan
-- Key modules: `corpus_gate.rs`, `adapter_registry.rs`, `cost_ledger.rs`, `metrics.rs`
-- D5 Sprint 1: `CanonicalMessage` + `ContentBlock` replace flat `ChatMessage`
-- c67bb284 drain fix; multiple NEXT.md/outbox ops commits
+Entries pushed from session-context.md when the 3-entry rolling window fills.
+Newest first.
 
-**Pending carry-forward:**
-- Phase 4 outboxes to forward to project-editorial
-- Tier C auth (Anthropic API key) not yet set in production env
-- Yo-Yo #1 packer image rebuild (operator task, from laptop)
+---
+
+## 2026-05-17 | Totebox | claude-code
+
+**Done:** Full UI/UX + content + link audit across all 3 wikis (304 + 18 + 5 sitemap URLs). THREE-WIKI-REBUILD-MASTER.md plan authored from 4 content audit sub-agents + 3 UI/UX audit sub-agents. C1–C7 corporate wiki fixes committed. PJ6/PJ8 verified.
+
+**Pending:** Stage 6 + binary rebuild (P1). Engine bugs P0-A through P0-H identified; Sprint AD candidates listed.
