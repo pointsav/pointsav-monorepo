@@ -10,7 +10,8 @@ use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use ed25519_dalek::{Signer, SigningKey};
 use system_core::{
     rfc9162_internal_hash, rfc9162_leaf_hash, Capability, CapabilityType, Checkpoint,
-    InclusionProof, LedgerAnchor, NoteSignature, Right, SignedCheckpoint, WitnessRecord,
+    ConsistencyProof, InclusionProof, LedgerAnchor, NoteSignature, Right, SignedCheckpoint,
+    WitnessRecord,
 };
 use system_ledger::{InMemoryLedger, LedgerConsumer};
 
@@ -316,6 +317,92 @@ fn bench_apply_witness_record_with_proof(c: &mut Criterion) {
     );
 }
 
+// ---------- Phase 1A.5 consistency-proof benchmarks ----------
+
+fn bench_verify_consistency_proof_raw(c: &mut Criterion) {
+    // 4→8 transition. Per RFC 9162 §2.1.4 PROOF(4, 8) = [MTH(leaves[4..7])].
+    // Since old_n=4 is a power of 2 and old_n=new_n/2, the proof contains
+    // exactly one hash: the Merkle root of the four right-hand leaves.
+    let leaves: Vec<[u8; 32]> = (0..8u64)
+        .map(|i| rfc9162_leaf_hash(format!("leaf-{i}").as_bytes()))
+        .collect();
+    let old_root = build_merkle_root(&leaves[..4]);
+    let new_root = build_merkle_root(&leaves);
+    let right_root = rfc9162_internal_hash(
+        &rfc9162_internal_hash(&leaves[4], &leaves[5]),
+        &rfc9162_internal_hash(&leaves[6], &leaves[7]),
+    );
+    let proof = ConsistencyProof {
+        hashes: vec![right_root],
+    };
+    c.bench_function(
+        "ConsistencyProof::verify (raw, 4→8 transition — 1-hash proof)",
+        |b| b.iter(|| black_box(proof.verify(old_root, 4, new_root, 8).unwrap())),
+    );
+}
+
+fn bench_signed_checkpoint_verify_consistency_proof(c: &mut Criterion) {
+    let (sk, pk) = keypair(0x77);
+    let leaves: Vec<[u8; 32]> = (0..8u64)
+        .map(|i| rfc9162_leaf_hash(format!("leaf-{i}").as_bytes()))
+        .collect();
+    let old_root = build_merkle_root(&leaves[..4]);
+    let new_root = build_merkle_root(&leaves);
+    let right_root = rfc9162_internal_hash(
+        &rfc9162_internal_hash(&leaves[4], &leaves[5]),
+        &rfc9162_internal_hash(&leaves[6], &leaves[7]),
+    );
+    let proof = ConsistencyProof {
+        hashes: vec![right_root],
+    };
+    let old_cp = Checkpoint {
+        origin: "foundry.bench.cap-ledger".to_string(),
+        tree_size: 4,
+        root_hash: old_root,
+        extensions: vec![],
+    };
+    let body = old_cp.body_bytes();
+    let key_hash = NoteSignature::derive_key_hash("apex", &pk);
+    let sig = sk.sign(&body).to_bytes();
+    let old_signed_exact = SignedCheckpoint {
+        checkpoint: old_cp,
+        signatures: vec![NoteSignature {
+            signer_name: "apex".to_string(),
+            key_hash,
+            signature: sig,
+        }],
+    };
+    let new_cp = Checkpoint {
+        origin: "foundry.bench.cap-ledger".to_string(),
+        tree_size: 8,
+        root_hash: new_root,
+        extensions: vec![],
+    };
+    let body = new_cp.body_bytes();
+    let key_hash = NoteSignature::derive_key_hash("apex", &pk);
+    let sig = sk.sign(&body).to_bytes();
+    let new_signed = SignedCheckpoint {
+        checkpoint: new_cp,
+        signatures: vec![NoteSignature {
+            signer_name: "apex".to_string(),
+            key_hash,
+            signature: sig,
+        }],
+    };
+    c.bench_function(
+        "SignedCheckpoint::verify_consistency_proof (composed, 4→8 tree)",
+        |b| {
+            b.iter(|| {
+                black_box(
+                    new_signed
+                        .verify_consistency_proof(&proof, 4, 8, &old_signed_exact, "apex", &pk)
+                        .unwrap(),
+                )
+            })
+        },
+    );
+}
+
 criterion_group!(
     benches,
     bench_capability_hash,
@@ -328,5 +415,7 @@ criterion_group!(
     bench_verify_inclusion_proof_raw_1024_leaves,
     bench_signed_checkpoint_verify_inclusion_proof,
     bench_apply_witness_record_with_proof,
+    bench_verify_consistency_proof_raw,
+    bench_signed_checkpoint_verify_consistency_proof,
 );
 criterion_main!(benches);
