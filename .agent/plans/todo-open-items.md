@@ -1,7 +1,18 @@
 # Open items — project-editorial
 
-> Persistent TODO tracker. Updated at session end. Last updated: 2026-05-19.
+> Persistent TODO tracker. Updated at session end. Last updated: 2026-05-20.
 > Completed items remain here (checked) for one session before archiving to `archive/`.
+
+---
+
+## DONE — 2026-05-20 session
+
+- [x] **Drafts-outbound cleanup** — `refined/co-location/woodfine/` (11 files, closed batch) git-removed; empty dirs cleared
+- [x] **Phase E design draft** — `design-phase-e-bilingual-routing.draft.md` written; outbox message to project-knowledge added
+
+## PENDING — project-editorial (next session)
+
+- [ ] **leapfrog-facts.es.yaml** — produce ES DYK content for all 3 wikis (documentation, projects, corporate) before Phase E ships; required by §11 of Phase E draft
 
 ---
 
@@ -31,9 +42,9 @@
 - [ ] **Admin README fixes** — pointsav-media-assets + woodfine-media-assets (admin-tier commits)
 - [ ] **Route design drafts** — forward project-editorial outbox routing message to project-design inbox (5 DESIGN-RESEARCH + component drafts)
 
-## PENDING — project-editorial (next session)
+## PENDING — project-editorial (carry-forward, low priority)
 
-- [ ] **Bilingual home routing** (Phase E) — `index.es.md` exists but `index()` never reads it; deferred to Phase E per design draft; low priority, requires Rust change → design draft to project-knowledge
+- [ ] **leapfrog-facts.es.yaml content** — produce ES DYK for all 3 wikis (see DONE block above + §11 of Phase E draft)
 
 ---
 
