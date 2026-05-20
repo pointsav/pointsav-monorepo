@@ -1,61 +1,58 @@
 # NEXT.md — system-ledger
 
-> Last updated: 2026-04-27
+> Last updated: 2026-05-20
 > Read at session start. Update before session end.
 
 ---
 
 ## Right now
 
-- Skeleton landed. Phase 1A increment 3 work shape: fill the four
-  module stubs in this order — cache → revocation → apex → witness
-  — then wire `LedgerConsumer` impl on `InMemoryLedger`. Each is a
-  separate commit per cluster task #18 / #19 / #11 / #12 / #20.
+- Nothing in progress. Group 2D test-gap items are queued below.
 
 ## Queue
 
-- Implement `cache::CheckpointCache` per task #18: insert / lookup
-  by `(origin, tree_size)` and `(origin, root_hash)`; LRU eviction
-  at `capacity`; tests for insert / lookup / eviction / miss.
-- Implement `revocation::RevocationSet` per task #19: add the
-  `apply_revocation` API; sidecar `detail` HashMap accessor;
-  membership tests; replay-of-already-revoked is a no-op (idempotent).
-- Implement `apex::ApexHistory` per task #11: `record_apex(name,
-  pubkey, effective_from)`; `apply_apex_handover(...)` that closes
-  the prior apex's `effective_until` and appends the new entry;
-  `verify_checkpoint_against_apex(checkpoint, height)` that enforces
-  the post-handover invariant. Tests: full handover ceremony fixture
-  per inbox brief Phase 1A item 4.
-- Implement `witness::verify_witness_signature` per task #12: shell
-  out to `ssh-keygen -Y verify` with namespace
-  `capability-witness-v1`; wrap stdin / stdout / exit code; tests
-  use `tempfile` + a fixed test keypair generated via
-  `ssh-keygen -t ed25519 -f /tmp/test_key -N ""`.
-- Wire the `LedgerConsumer` impl on `InMemoryLedger` per task #20:
-  `consult_capability` orchestrates revocation check → apex
-  validity → expiry check (with witness extension path); end-to-end
-  integration tests.
-- criterion benchmarks per task #21: surface cache-hit / cache-miss
-  / verify-signer / full-consult numbers for Master 4b deliverable.
+- **Group 2D — test gap closure (3 items):**
+  - Add `ConsultError::InconsistentState` explicit test.
+  - Add `LedgerError::NoApexForCheckpoint` explicit test.
+  - Add `apply_witness_record` at handover height test (confirm inclusion
+    proof is checked against the handover checkpoint root).
 
 ## Blocked
 
-- Nothing blocking; module order is strictly internal.
+- Nothing currently blocked.
 
 ## Deferred
 
-- `MoonshotDatabaseLedger` impl — Deferred: requires
-  `moonshot-database` to ship (currently 4-file placeholder per
-  registry). Trait keeps the door open per
-  `worm-ledger-design.md` §3 D7 dual-target pattern.
-- Multi-threaded / concurrent `LedgerConsumer` — Deferred: v0.1.x
-  is single-writer matching the kernel substrate model. Future
-  MINOR may add `Arc<Mutex<_>>` wrapping or fine-grained locking.
+- **`MoonshotDatabaseLedger` impl** — requires `moonshot-database` to
+  ship (currently 4-file placeholder per registry). Trait keeps the
+  door open per `worm-ledger-design.md` §3 D7 dual-target pattern.
+- **Multi-threaded `LedgerConsumer`** — v0.1.x is single-writer per
+  the kernel substrate model. Future MINOR may add Arc<Mutex<_>>.
 
 ## Recently done
 
-- 2026-04-27: skeleton commit — four module stubs + `LedgerConsumer`
-  trait + `Verdict` / `RefuseReason` enums + `InMemoryLedger`
-  struct (impl pending). Workspace member; `cargo check -p
-  system-ledger` passes; zero warnings; framework §9 activation
-  complete.
+- 2026-05-20: Group 2C hygiene — CLAUDE.md + NEXT.md + ARCHITECTURE.md
+  updated to reflect v0.2.1 fully-delivered state. BENCHMARKS.md added.
+- 2026-04-28 (Phase 1A.5): `apply_witness_record` upgraded to take
+  `InclusionProof` parameter; witness arrivals now Merkle-proof-gated.
+  system-ledger 0.2.0 → 0.2.1. BENCH-v0.2.0.md clean run produced.
+- 2026-04-27 (Phase 1A.4): LedgerConsumer trait signature change for
+  `apply_witness_record`; `current_checkpoint` field + setter on
+  InMemoryLedger; `witness_record_leaf_hash` uses rfc9162_leaf_hash.
+  4 new lib tests + 1 migrated. system-ledger 0.1.5 → 0.2.0 (MINOR:
+  breaking trait-signature change). 4 criterion benches for inclusion
+  proof path.
+- 2026-04-27 (Phase 1A.3 — benchmarks): 6 criterion benches
+  (cache hit 8.08 ns, cache miss 338 ns, verify_signer 3.40 ms,
+  consult 3.39 ms). system-ledger 0.2.0 → 0.2.1 PATCH.
+- 2026-04-27 (Phase 1A.3 — LedgerConsumer impl): Full InMemoryLedger
+  on the LedgerConsumer trait. End-to-end N+3+ ceremony test. 13 lib
+  tests. 40 total.
+- 2026-04-27 (Phase 1A.3 — witness.rs): ssh-keygen -Y verify wrapper.
+  Cross-namespace rejection security property test. 5 tests.
+- 2026-04-27 (Phase 1A.3 — apex.rs): ApexHistory + post-handover
+  invariant. 10 tests.
+- 2026-04-27 (Phase 1A.3 — cache.rs + revocation.rs): CheckpointCache
+  LRU + RevocationSet. 12 tests.
+- 2026-04-27 (Phase 1A increment 3): crate created; skeleton commit;
+  module stubs; workspace member.
