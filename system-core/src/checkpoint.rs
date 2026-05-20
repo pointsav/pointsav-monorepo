@@ -5,7 +5,7 @@
 //! explicitly supports multi-signature on the same checkpoint, enabling
 //! "previous apex revokes; new apex co-signs" without state migration.
 //!
-//! Format reference: https://github.com/C2SP/C2SP/blob/main/signed-note.md
+//! Format reference: <https://github.com/C2SP/C2SP/blob/main/signed-note.md>
 //! and tlog-checkpoint.md. This module implements the body+signature
 //! wire format and ed25519 verification; signing is performed by the
 //! apex via its own keying surface (Sigstore Cosign, ssh-keygen, or
