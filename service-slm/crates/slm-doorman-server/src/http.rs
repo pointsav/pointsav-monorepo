@@ -141,6 +141,7 @@ pub fn router(state: Arc<AppState>) -> Router {
         .route("/v1/graph/query", post(graph_query))
         .route("/v1/graph/mutate", post(graph_mutate))
         .route("/v1/shadow-adapter", post(shadow_adapter))
+        .route("/v1/responses", post(responses_api))
         .with_state(state)
 }
 
@@ -313,6 +314,137 @@ async fn shadow_adapter(
         "adapter_a": arm_json(res_a, &body.adapter_a),
         "adapter_b": arm_json(res_b, &body.adapter_b),
         "prompt_hash": prompt_hash,
+    })))
+}
+
+/// `POST /v1/responses` — OpenAI Responses API inbound shim (Sprint 2).
+///
+/// Accepts the OpenAI Responses API format (successor to Chat Completions)
+/// and maps it to Doorman's internal routing.  Provides a forward-compatible
+/// surface for SDK clients that have migrated off `POST /v1/chat/completions`.
+///
+/// Wire shape (input):
+/// ```json
+/// {
+///   "model": "olmo-2-7b",
+///   "input": "Hello" | [{"type": "message", "role": "user", "content": "Hello"}],
+///   "max_output_tokens": 1024,
+///   "temperature": 0.7
+/// }
+/// ```
+///
+/// Wire shape (output):
+/// ```json
+/// {
+///   "id": "resp_<uuid>",
+///   "object": "response",
+///   "model": "olmo-2-7b",
+///   "output": [{"type": "message", "role": "assistant",
+///               "content": [{"type": "output_text", "text": "..."}]}],
+///   "usage": {"input_tokens": N, "output_tokens": M, "total_tokens": N+M}
+/// }
+/// ```
+#[derive(Deserialize)]
+#[serde(untagged)]
+enum ResponsesInput {
+    Text(String),
+    Messages(Vec<ResponsesInputMessage>),
+}
+
+#[derive(Deserialize)]
+struct ResponsesInputMessage {
+    #[serde(default = "default_user_role")]
+    role: String,
+    #[serde(default)]
+    content: String,
+    #[serde(rename = "type", default)]
+    _type: Option<String>,
+}
+
+fn default_user_role() -> String {
+    "user".to_string()
+}
+
+#[derive(Deserialize)]
+struct ResponsesApiBody {
+    #[serde(default)]
+    model: Option<String>,
+    input: ResponsesInput,
+    #[serde(default)]
+    max_output_tokens: Option<u32>,
+    #[serde(default)]
+    temperature: Option<f32>,
+    #[serde(default)]
+    stream: bool,
+}
+
+async fn responses_api(
+    State(state): State<Arc<AppState>>,
+    headers: HeaderMap,
+    Json(body): Json<ResponsesApiBody>,
+) -> Result<Json<serde_json::Value>, ApiError> {
+    let module_id = match headers
+        .get("x-foundry-module-id")
+        .and_then(|v| v.to_str().ok())
+    {
+        Some(s) => ModuleId::from_str(s)
+            .map_err(|e| ApiError::bad_request(format!("invalid X-Foundry-Module-ID: {e}")))?,
+        None => ModuleId::from_str("foundry").expect("compile-time-valid default moduleId"),
+    };
+
+    let messages: Vec<CanonicalMessage> = match body.input {
+        ResponsesInput::Text(s) => vec![CanonicalMessage::text("user", &s)],
+        ResponsesInput::Messages(msgs) => msgs
+            .into_iter()
+            .map(|m| CanonicalMessage::text(&m.role, &m.content))
+            .collect(),
+    };
+
+    if messages.is_empty() {
+        return Err(ApiError::bad_request("input must not be empty"));
+    }
+
+    let req = ComputeRequest {
+        request_id: RequestId::new(),
+        module_id,
+        model: body.model.clone(),
+        messages,
+        complexity: Complexity::Medium,
+        tier_hint: None,
+        stream: body.stream,
+        max_tokens: body.max_output_tokens,
+        temperature: body.temperature,
+        sanitised_outbound: false,
+        tier_c_label: None,
+        yoyo_label: None,
+        grammar: None,
+        speculation: None,
+        graph_context_enabled: Some(false),
+        adapter_version: None,
+        tools: None,
+    };
+
+    let resp = state.doorman.route(&req).await.map_err(ApiError::from)?;
+
+    let input_tokens = resp.content.split_whitespace().count() as u32;
+    let output_tokens = resp.content.split_whitespace().count() as u32;
+    let resp_id = format!("resp_{}", req.request_id);
+    let model_name = body.model.as_deref().unwrap_or("olmo-2-7b");
+
+    Ok(Json(serde_json::json!({
+        "id": resp_id,
+        "object": "response",
+        "model": model_name,
+        "output": [{
+            "type": "message",
+            "role": "assistant",
+            "content": [{"type": "output_text", "text": resp.content}]
+        }],
+        "usage": {
+            "input_tokens": input_tokens,
+            "output_tokens": output_tokens,
+            "total_tokens": input_tokens + output_tokens
+        }
     })))
 }
 
