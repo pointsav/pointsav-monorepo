@@ -185,6 +185,26 @@ header .tag {
 #text-content.md-view hr { border: none; border-top: 1px solid #e1e4e8; margin: 1.5em 0; }
 #text-content.md-view img { max-width: 100%; }
 
+/* ── Click-to-source: hover + flash when editor is open ──────────────── */
+#text-content.click-to-edit h1, #text-content.click-to-edit h2,
+#text-content.click-to-edit h3, #text-content.click-to-edit h4,
+#text-content.click-to-edit h5, #text-content.click-to-edit h6,
+#text-content.click-to-edit p,  #text-content.click-to-edit li,
+#text-content.click-to-edit blockquote, #text-content.click-to-edit pre {
+  cursor: pointer; border-radius: 3px; transition: background 0.1s;
+}
+#text-content.click-to-edit h1:hover, #text-content.click-to-edit h2:hover,
+#text-content.click-to-edit h3:hover, #text-content.click-to-edit h4:hover,
+#text-content.click-to-edit h5:hover, #text-content.click-to-edit h6:hover,
+#text-content.click-to-edit p:hover,  #text-content.click-to-edit li:hover,
+#text-content.click-to-edit blockquote:hover { background: rgba(77,159,255,0.07); }
+#text-content.click-to-edit.md-view pre:hover { background: rgba(77,159,255,0.07); }
+@keyframes preview-flash {
+  from { background-color: rgba(77,159,255,0.30); }
+  to   { background-color: rgba(77,159,255,0); }
+}
+.preview-click-flash { animation: preview-flash 0.55s ease-out; }
+
 #text-content.code-view {
   min-height: 100%; background: #1e1e1e;
   font-family: "SF Mono","Fira Code","Consolas","Monaco",monospace;
@@ -584,7 +604,9 @@ function showEditorPanel(content) {
   setDirty(false);
   showEditorStatus('', null, 0);
   updateGutterLines();
-  updateGutterActive();
+  updateEditorPos();
+  const isMarkdown = editorPath && editorPath.split('.').pop().toLowerCase() === 'md';
+  document.getElementById('text-content').classList.toggle('click-to-edit', isMarkdown);
 }
 
 function hideEditorPanel() {
@@ -595,7 +617,62 @@ function hideEditorPanel() {
   setDirty(false);
   const gutter = document.getElementById('editor-gutter');
   if (gutter) { gutter.innerHTML = ''; gutter.dataset.lineCount = '0'; gutter.dataset.activeLine = '0'; }
+  document.getElementById('text-content').classList.remove('click-to-edit');
 }
+
+// ── Click-to-source: click rendered preview → jump editor to that line ───────
+const CLICK_BLOCKS = new Set(['h1','h2','h3','h4','h5','h6','p','li','blockquote','pre']);
+
+document.getElementById('text-content').addEventListener('click', e => {
+  if (!editorPath) return;
+  if (editorPath.split('.').pop().toLowerCase() !== 'md') return;
+
+  // Walk up to nearest block element
+  let el = e.target;
+  while (el && el !== e.currentTarget) {
+    if (CLICK_BLOCKS.has(el.tagName.toLowerCase())) break;
+    el = el.parentElement;
+  }
+  if (!el || el === e.currentTarget) return;
+
+  const ta  = document.getElementById('editor-textarea');
+  const src = ta.value;
+  const tag = el.tagName.toLowerCase();
+
+  // Build search string from element content
+  let searchStr;
+  if (/^h[1-6]$/.test(tag)) {
+    const level = parseInt(tag[1]);
+    searchStr = '#'.repeat(level) + ' ' + el.textContent.trim().slice(0, 50);
+  } else if (tag === 'pre') {
+    const langClass = el.querySelector('code') ? el.querySelector('code').className : '';
+    const lang = langClass.replace('lang-', '');
+    searchStr = '```' + lang;
+  } else {
+    searchStr = el.textContent.trim().replace(/\s+/g, ' ').slice(0, 50);
+  }
+
+  // Try progressively shorter matches until one lands
+  let idx = -1;
+  for (let len = searchStr.length; len >= Math.min(10, searchStr.length); len = Math.max(10, Math.floor(len * 0.65))) {
+    idx = src.indexOf(searchStr.slice(0, len));
+    if (idx !== -1) break;
+    if (len === 10) break;
+  }
+  if (idx === -1) return;
+
+  // Flash the element in the preview
+  el.classList.add('preview-click-flash');
+  setTimeout(() => el.classList.remove('preview-click-flash'), 550);
+
+  // Move editor cursor to that position and scroll into view
+  ta.selectionStart = ta.selectionEnd = idx;
+  const lineNum = (src.substring(0, idx).match(/\n/g) || []).length;
+  ta.scrollTop = Math.max(0, lineNum * 12 * 1.6 - ta.clientHeight / 2);
+  ta.focus();
+  updateGutterLines();
+  updateEditorPos();
+});
 
 // ── Live preview from editor textarea ────────────────────────────────────────
 function applyEditorPreview() {
@@ -709,14 +786,86 @@ document.getElementById('editor-textarea').addEventListener('scroll', () => {
   if (gutter) gutter.scrollTop = document.getElementById('editor-textarea').scrollTop;
 });
 
-// Tab key in textarea inserts spaces instead of focusing next element
+// ── Editor keyboard features ──────────────────────────────────────────────────
+const AUTO_PAIRS  = { '(':')', '[':']', '{':'}' };
+const AUTO_CLOSERS = new Set([')', ']', '}']);
+
 document.getElementById('editor-textarea').addEventListener('keydown', e => {
+  const ta = e.target;
+  const s = ta.selectionStart, end = ta.selectionEnd;
+
+  // Ctrl+G — go to line
+  if ((e.metaKey || e.ctrlKey) && e.key === 'g') {
+    e.preventDefault();
+    if (document.getElementById('editor-panel').classList.contains('visible')) showGotoBar();
+    return;
+  }
+
+  // Tab — insert two spaces
   if (e.key === 'Tab') {
     e.preventDefault();
-    const ta = e.target;
-    const s = ta.selectionStart, end = ta.selectionEnd;
     ta.value = ta.value.substring(0, s) + '  ' + ta.value.substring(end);
     ta.selectionStart = ta.selectionEnd = s + 2;
+    return;
+  }
+
+  // Bracket auto-close: (, [, {
+  if (AUTO_PAIRS[e.key] && !e.metaKey && !e.ctrlKey && !e.altKey) {
+    e.preventDefault();
+    const closer = AUTO_PAIRS[e.key];
+    if (s !== end) {
+      // Wrap selection
+      const sel = ta.value.substring(s, end);
+      ta.value = ta.value.substring(0, s) + e.key + sel + closer + ta.value.substring(end);
+      ta.selectionStart = s + 1;
+      ta.selectionEnd   = end + 1;
+    } else {
+      // Insert pair, cursor between
+      ta.value = ta.value.substring(0, s) + e.key + closer + ta.value.substring(s);
+      ta.selectionStart = ta.selectionEnd = s + 1;
+    }
+    setDirty(true); schedulePreview(); updateGutterLines(); updateEditorPos();
+    return;
+  }
+
+  // Skip over existing closer when cursor is right before it
+  if (AUTO_CLOSERS.has(e.key) && !e.metaKey && !e.ctrlKey && !e.altKey && s === end) {
+    if (ta.value[s] === e.key) {
+      e.preventDefault();
+      ta.selectionStart = ta.selectionEnd = s + 1;
+      updateEditorPos();
+      return;
+    }
+  }
+
+  // Alt+Up / Alt+Down — move line; Shift+Alt+Down — duplicate line
+  if (e.altKey && !e.metaKey && !e.ctrlKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
+    e.preventDefault();
+    const val    = ta.value;
+    const before = val.substring(0, s);
+    const idx    = (before.match(/\n/g) || []).length;
+    const col    = s - (before.lastIndexOf('\n') + 1);
+    const lines  = val.split('\n');
+
+    if (e.shiftKey && e.key === 'ArrowDown') {
+      // Duplicate line below, place cursor on duplicate at same col
+      lines.splice(idx + 1, 0, lines[idx]);
+      ta.value = lines.join('\n');
+      const newStart = lines.slice(0, idx + 1).reduce((a, l) => a + l.length + 1, 0);
+      ta.selectionStart = ta.selectionEnd = newStart + Math.min(col, lines[idx + 1].length);
+    } else if (e.key === 'ArrowUp' && idx > 0) {
+      [lines[idx - 1], lines[idx]] = [lines[idx], lines[idx - 1]];
+      ta.value = lines.join('\n');
+      const newStart = lines.slice(0, idx - 1).reduce((a, l) => a + l.length + 1, 0);
+      ta.selectionStart = ta.selectionEnd = newStart + Math.min(col, lines[idx - 1].length);
+    } else if (e.key === 'ArrowDown' && idx < lines.length - 1) {
+      [lines[idx], lines[idx + 1]] = [lines[idx + 1], lines[idx]];
+      ta.value = lines.join('\n');
+      const newStart = lines.slice(0, idx + 1).reduce((a, l) => a + l.length + 1, 0);
+      ta.selectionStart = ta.selectionEnd = newStart + Math.min(col, lines[idx + 1].length);
+    }
+    setDirty(true); schedulePreview(); updateGutterLines(); updateEditorPos();
+    return;
   }
 });
 
@@ -868,6 +1017,12 @@ async function openFile(path, name) {
       if (data.writable && typeof data.content === 'string') {
         editorPath  = apiPath;
         editorMtime = data.mtime || 0;
+        const saveBarBtn = document.createElement('button');
+        saveBarBtn.className = 'bar-btn';
+        saveBarBtn.textContent = '💾 Save';
+        saveBarBtn.addEventListener('click', saveFile);
+        document.getElementById('viewer-bar').querySelector('.bar-btn')
+          .insertAdjacentElement('afterend', saveBarBtn);
         showEditorPanel(data.content);
         // For iframe HTML, set up srcdoc on the same content so live preview works
         if (mode === 'iframe') {
