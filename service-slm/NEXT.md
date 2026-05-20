@@ -1,6 +1,6 @@
 # NEXT.md — service-slm
 
-> Last updated: 2026-05-18 (overnight build — 12 signed commits, 15 of 24 approved learning-loop items shipped)
+> Last updated: 2026-05-20 (P1-1.3/1.4/1.7 + Sprint 2 Anthropic native outbound)
 > Read at session start. Update before session end so the next
 > session knows where to pick up.
 
@@ -123,7 +123,7 @@ plan; `ARCHITECTURE.md` §15 for substrate documentation.
 - [ ] P2-2.6 `/v1/editorial/grammar` — blocked on editorial vocab.
 - [ ] P2-2.7 deprecate `/v1/draft/generate` — architectural cleanup.
 - [ ] P2-2.8 Local vector index + retrieval (sqlite-vec).
-- [ ] P3-3.2 Canary task set + `bin/canary-run.sh`.
+- [x] P3-3.2 Canary task set + `bin/canary-run.sh` — landed `77481f74`.
 - [x] P3-3.3-followup adapter A/B dual-dispatch — landed c7ebd778.
 - [ ] P3-3.4-followup Sigstore adapter signing (operator key).
 - [x] P3-3.5-followup wire `write_audit` → `cost_ledger.append` — landed `80083e6e`; awaiting Stage 6.

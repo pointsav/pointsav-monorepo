@@ -26,7 +26,7 @@ use std::sync::Arc;
 use std::time::Instant;
 
 use serde::{Deserialize, Serialize};
-use slm_core::{CanonicalMessage, ContentBlock, ComputeRequest, ComputeResponse, GrammarConstraint, Tier};
+use slm_core::{CanonicalMessage, ContentBlock, ComputeRequest, ComputeResponse, GrammarConstraint, Tier, ToolDef};
 use tracing::debug;
 
 use crate::error::{DoormanError, Result};
@@ -272,17 +272,6 @@ impl ExternalTierClient {
             .cloned()
             .unwrap_or_default();
 
-        // 6. Wire — OpenAI-compatible POST. (All three providers expose
-        //    OpenAI-compatible shims in 2026; native per-provider
-        //    request shapes can land in a follow-up if needed.)
-        let body = OpenAiChatRequest {
-            model: provider_model.to_string(),
-            messages: canonical_to_oai(&req.messages),
-            stream: req.stream,
-            max_tokens: req.max_tokens,
-            temperature: req.temperature,
-        };
-        let url = format!("{}/v1/chat/completions", endpoint.trim_end_matches('/'));
         debug!(
             target: "slm_doorman::tier::external",
             provider = provider.as_str(),
@@ -291,44 +280,80 @@ impl ExternalTierClient {
             "tier-C request"
         );
 
+        // 6. Wire — Anthropic uses its native Messages API; Gemini and OpenAI
+        //    use their OpenAI-compatible shims.
         let started = Instant::now();
-        let resp = self
-            .http
-            .post(&url)
-            .bearer_auth(&api_key)
-            .header("X-Foundry-Request-ID", req.request_id.to_string())
-            .header("X-Foundry-Module-ID", req.module_id.as_str())
-            .header("X-Foundry-Tier-C-Label", label)
-            .json(&body)
-            .send()
-            .await?
-            .error_for_status()?;
+        let (content, content_blocks, prompt_toks, completion_toks) =
+            if provider == TierCProvider::Anthropic {
+                // Native Anthropic Messages API.
+                let (system_msg, user_msgs) = split_system(&req.messages);
+                let ant_body = AnthropicRequest {
+                    model: provider_model.to_string(),
+                    messages: user_msgs,
+                    max_tokens: req.max_tokens.unwrap_or(1024),
+                    system: system_msg,
+                    stream: false,
+                    tools: req.tools.as_deref().map(tools_to_anthropic),
+                };
+                let url = format!("{}/v1/messages", endpoint.trim_end_matches('/'));
+                let resp = self
+                    .http
+                    .post(&url)
+                    .header("x-api-key", &api_key)
+                    .header("anthropic-version", "2023-06-01")
+                    .header("X-Foundry-Request-ID", req.request_id.to_string())
+                    .header("X-Foundry-Module-ID", req.module_id.as_str())
+                    .json(&ant_body)
+                    .send()
+                    .await?
+                    .error_for_status()?;
+                let ar: AnthropicResponse = resp.json().await?;
+                let usage = ar.usage.unwrap_or_default();
+                let (content, blocks) = anthropic_blocks_to_compute(ar.content);
+                (content, blocks, usage.input_tokens, usage.output_tokens)
+            } else {
+                // OpenAI-compatible (Gemini / OpenAI native).
+                let oai_body = OpenAiChatRequest {
+                    model: provider_model.to_string(),
+                    messages: canonical_to_oai(&req.messages),
+                    stream: req.stream,
+                    max_tokens: req.max_tokens,
+                    temperature: req.temperature,
+                };
+                let url = format!("{}/v1/chat/completions", endpoint.trim_end_matches('/'));
+                let resp = self
+                    .http
+                    .post(&url)
+                    .bearer_auth(&api_key)
+                    .header("X-Foundry-Request-ID", req.request_id.to_string())
+                    .header("X-Foundry-Module-ID", req.module_id.as_str())
+                    .header("X-Foundry-Tier-C-Label", label)
+                    .json(&oai_body)
+                    .send()
+                    .await?
+                    .error_for_status()?;
+                let body: OpenAiChatResponse = resp.json().await?;
+                let text = body
+                    .choices
+                    .into_iter()
+                    .next()
+                    .map(|c| c.message.content)
+                    .ok_or_else(|| DoormanError::UpstreamShape("no choices in response".into()))?;
+                let usage = body.usage.unwrap_or_default();
+                (text, Vec::new(), usage.prompt_tokens, usage.completion_tokens)
+            };
         let inference_ms = started.elapsed().as_millis() as u64;
-
-        let body: OpenAiChatResponse = resp.json().await?;
-        let content = body
-            .choices
-            .into_iter()
-            .next()
-            .map(|c| c.message.content)
-            .ok_or_else(|| DoormanError::UpstreamShape("no choices in response".into()))?;
-        let usage = body.usage.unwrap_or_default();
-        let cost_usd =
-            self.config
-                .pricing
-                .cost_usd(provider, usage.prompt_tokens, usage.completion_tokens);
+        let cost_usd = self.config.pricing.cost_usd(provider, prompt_toks, completion_toks);
 
         Ok(ComputeResponse {
             request_id: req.request_id,
             tier_used: Tier::External,
             model: model_id.to_string(),
             content,
-            content_blocks: Vec::new(),
+            content_blocks,
             inference_ms,
             cost_usd,
             upstream_version: Some(provider.as_str().to_string()),
-            // Tier C (Anthropic) does not expose adapter info — Claude is a
-            // hosted model with no LoRA composition surface.
             adapter_version: None,
         })
     }
@@ -443,6 +468,146 @@ fn is_false(b: &bool) -> bool {
     !*b
 }
 
+// ── Anthropic native wire types ──────────────────────────────────────────
+
+#[derive(Serialize)]
+struct AnthropicRequest {
+    model: String,
+    messages: Vec<AnthropicWireMessage>,
+    max_tokens: u32,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    system: Option<String>,
+    #[serde(skip_serializing_if = "is_false")]
+    stream: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    tools: Option<Vec<AnthropicToolDef>>,
+}
+
+#[derive(Serialize)]
+struct AnthropicWireMessage {
+    role: String,
+    content: serde_json::Value,
+}
+
+#[derive(Serialize)]
+struct AnthropicToolDef {
+    name: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    description: Option<String>,
+    input_schema: serde_json::Value,
+}
+
+#[derive(Deserialize)]
+struct AnthropicResponse {
+    #[serde(default)]
+    content: Vec<AnthropicBlock>,
+    #[serde(default)]
+    usage: Option<AnthropicUsage>,
+}
+
+#[derive(Deserialize)]
+struct AnthropicBlock {
+    #[serde(rename = "type")]
+    kind: String,
+    #[serde(default)]
+    text: Option<String>,
+    #[serde(default)]
+    id: Option<String>,
+    #[serde(default)]
+    name: Option<String>,
+    #[serde(default)]
+    input: Option<serde_json::Value>,
+}
+
+#[derive(Deserialize, Default)]
+struct AnthropicUsage {
+    #[serde(default)]
+    input_tokens: u32,
+    #[serde(default)]
+    output_tokens: u32,
+}
+
+/// Extract the first system-role message as the top-level `system` field;
+/// return remaining messages in Anthropic wire format.
+fn split_system(msgs: &[CanonicalMessage]) -> (Option<String>, Vec<AnthropicWireMessage>) {
+    let mut system: Option<String> = None;
+    let mut out = Vec::new();
+    for msg in msgs {
+        if msg.role.as_str() == "system" {
+            let text = msg.content.iter().filter_map(|b| match b {
+                ContentBlock::Text { text } => Some(text.as_str()),
+                _ => None,
+            }).collect::<Vec<_>>().join("\n");
+            system = Some(text);
+        } else {
+            out.push(canonical_block_to_anthropic(msg));
+        }
+    }
+    (system, out)
+}
+
+fn canonical_block_to_anthropic(msg: &CanonicalMessage) -> AnthropicWireMessage {
+    let role = msg.role.as_str().to_string();
+    // If content is a single text block, send as plain string for brevity.
+    // Otherwise send as an array of Anthropic content blocks.
+    let text_only: Vec<&str> = msg.content.iter().filter_map(|b| match b {
+        ContentBlock::Text { text } => Some(text.as_str()),
+        _ => None,
+    }).collect();
+    let has_only_text = msg.content.len() == text_only.len();
+
+    if has_only_text && msg.content.len() == 1 {
+        AnthropicWireMessage {
+            role,
+            content: serde_json::Value::String(text_only[0].to_string()),
+        }
+    } else {
+        let blocks: Vec<serde_json::Value> = msg.content.iter().map(|b| match b {
+            ContentBlock::Text { text } =>
+                serde_json::json!({"type": "text", "text": text}),
+            ContentBlock::ToolUse { id, name, input } =>
+                serde_json::json!({"type": "tool_use", "id": id, "name": name, "input": input}),
+            ContentBlock::ToolResult { tool_use_id, content } =>
+                serde_json::json!({"type": "tool_result", "tool_use_id": tool_use_id, "content": content}),
+            ContentBlock::Thinking { thinking } =>
+                serde_json::json!({"type": "text", "text": thinking}),
+        }).collect();
+        AnthropicWireMessage { role, content: serde_json::Value::Array(blocks) }
+    }
+}
+
+fn tools_to_anthropic(tools: &[ToolDef]) -> Vec<AnthropicToolDef> {
+    tools.iter().map(|t| AnthropicToolDef {
+        name: t.name.clone(),
+        description: t.description.clone(),
+        input_schema: t.input_schema.clone(),
+    }).collect()
+}
+
+/// Map Anthropic response content blocks to (text, content_blocks).
+fn anthropic_blocks_to_compute(blocks: Vec<AnthropicBlock>) -> (String, Vec<ContentBlock>) {
+    let mut text_parts = Vec::new();
+    let mut content_blocks = Vec::new();
+    for b in blocks {
+        match b.kind.as_str() {
+            "text" => {
+                if let Some(t) = b.text {
+                    text_parts.push(t);
+                }
+            }
+            "tool_use" => {
+                content_blocks.push(ContentBlock::ToolUse {
+                    id: b.id.unwrap_or_default(),
+                    name: b.name.unwrap_or_default(),
+                    input: b.input.unwrap_or(serde_json::Value::Null),
+                });
+            }
+            _ => {}
+        }
+    }
+    (text_parts.join(""), content_blocks)
+}
+
 // `Arc` is currently unused at module level but exported — silence any
 // clippy nag. The `Arc<dyn BearerTokenProvider>` shape lives in
 // `tier::yoyo`; Tier C uses static keys instead.
@@ -484,12 +649,20 @@ mod tests {
         }
     }
 
-    fn ok_body() -> serde_json::Value {
+    fn oai_ok_body() -> serde_json::Value {
         serde_json::json!({
             "choices": [
                 { "message": { "role": "assistant", "content": "GROUNDED" } }
             ],
             "usage": { "prompt_tokens": 50, "completion_tokens": 20 }
+        })
+    }
+
+    fn anthropic_ok_body() -> serde_json::Value {
+        serde_json::json!({
+            "content": [{"type": "text", "text": "GROUNDED"}],
+            "stop_reason": "end_turn",
+            "usage": {"input_tokens": 50, "output_tokens": 20}
         })
     }
 
@@ -509,25 +682,21 @@ mod tests {
         })
     }
 
-    /// Happy path — allowlisted label + recognised provider + 200
-    /// returns content and computes per-token cost.
+    /// Happy path — Anthropic provider uses native /v1/messages with x-api-key;
+    /// response parsed from Anthropic format; per-token cost computed.
     #[tokio::test]
-    async fn happy_path_allowlist_match_returns_content_and_cost() {
+    async fn happy_path_anthropic_native_messages_api() {
         let server = MockServer::start().await;
         Mock::given(method("POST"))
-            .and(path("/v1/chat/completions"))
-            .and(header(
-                "authorization",
-                "Bearer sk-ant-test-key-DO-NOT-USE-LIVE",
-            ))
+            .and(path("/v1/messages"))
+            .and(header("x-api-key", "sk-ant-test-key-DO-NOT-USE-LIVE"))
+            .and(header("anthropic-version", "2023-06-01"))
             .and(header("x-foundry-module-id", "foundry"))
-            .and(header("x-foundry-tier-c-label", "citation-grounding"))
-            .respond_with(ResponseTemplate::new(200).set_body_json(ok_body()))
+            .respond_with(ResponseTemplate::new(200).set_body_json(anthropic_ok_body()))
             .expect(1)
             .mount(&server)
             .await;
 
-        // Anthropic Haiku ~ $0.25 / mtok in, $1.25 / mtok out (mock rates).
         let pricing = TierCPricing {
             anthropic_input_per_mtok_usd: 0.25,
             anthropic_output_per_mtok_usd: 1.25,
@@ -540,17 +709,55 @@ mod tests {
                 Some("anthropic:claude-haiku-4-5"),
             ))
             .await
-            .expect("happy path 200");
+            .expect("Anthropic native happy path");
         assert_eq!(resp.tier_used, Tier::External);
         assert_eq!(resp.model, "anthropic:claude-haiku-4-5");
         assert_eq!(resp.content, "GROUNDED");
+        assert!(resp.content_blocks.is_empty(), "text response: no tool blocks");
         assert_eq!(resp.upstream_version.as_deref(), Some("anthropic"));
-        // 50 in × $0.25/M + 20 out × $1.25/M = 0.0000125 + 0.000025 = 0.0000375
+        // 50 in × $0.25/M + 20 out × $1.25/M = 0.0000375
         assert!(
             (resp.cost_usd - 0.0000375).abs() < 1e-12,
             "expected $0.0000375, got ${}",
             resp.cost_usd
         );
+    }
+
+    /// Anthropic native path — tool_use response populates content_blocks.
+    #[tokio::test]
+    async fn anthropic_native_tool_use_response_populates_content_blocks() {
+        let server = MockServer::start().await;
+        let tool_body = serde_json::json!({
+            "content": [{
+                "type": "tool_use",
+                "id": "tool_abc123",
+                "name": "get_weather",
+                "input": {"location": "London"}
+            }],
+            "stop_reason": "tool_use",
+            "usage": {"input_tokens": 30, "output_tokens": 15}
+        });
+        Mock::given(method("POST"))
+            .and(path("/v1/messages"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(tool_body))
+            .mount(&server)
+            .await;
+
+        let client = anthropic_client(server.uri(), TierCPricing::default());
+        let resp = client
+            .complete(&req_for(Some("citation-grounding"), Some("anthropic:claude-haiku-4-5")))
+            .await
+            .expect("tool_use response");
+        assert!(resp.content.is_empty(), "tool_use: text content must be empty");
+        assert_eq!(resp.content_blocks.len(), 1);
+        match &resp.content_blocks[0] {
+            slm_core::ContentBlock::ToolUse { id, name, input } => {
+                assert_eq!(id, "tool_abc123");
+                assert_eq!(name, "get_weather");
+                assert_eq!(input["location"], "London");
+            }
+            other => panic!("expected ToolUse, got {other:?}"),
+        }
     }
 
     /// Unallowlisted label — no network attempt; immediate
