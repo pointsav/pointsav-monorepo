@@ -1,6 +1,10 @@
 [workspace]
 resolver = "2"
-members = ["app-console-content"]
+members = [
+    "app-console-keys",
+    "app-console-content",
+    "os-console",
+]
 
 [workspace.package]
 edition = "2021"

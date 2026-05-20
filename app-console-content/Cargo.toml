@@ -13,9 +13,16 @@ name = "proofctl"
 path = "src/bin/proofctl.rs"
 
 [dependencies]
+app-console-keys = { path = "../app-console-keys" }
 ratatui = "0.30"
 crossterm = { version = "0.28", features = ["event-stream"] }
 russh = "0.60"
 tokio = { version = "1", features = ["full"] }
 rand = "0.10"
 anyhow = "1"
+rusqlite = { version = "0.32", features = ["bundled"] }
+clap = { version = "4", features = ["derive"] }
+chrono = "0.4"
+reqwest = { version = "0.12", features = ["json"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"

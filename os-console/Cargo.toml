@@ -1,0 +1,20 @@
+[package]
+name = "os-console"
+version = "0.1.0"
+edition = "2021"
+description = "os-console — keyboard-native terminal interface for the Totebox Archive"
+
+[[bin]]
+name = "os-console"
+path = "src/main.rs"
+
+[features]
+ssh-server = ["dep:russh", "dep:rand", "dep:tokio"]
+
+[dependencies]
+app-console-keys = { path = "../app-console-keys" }
+app-console-content = { path = "../app-console-content" }
+anyhow = "1"
+tokio = { version = "1", features = ["full"], optional = true }
+russh = { version = "0.60", optional = true }
+rand = { version = "0.10", optional = true }
