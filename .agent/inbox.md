@@ -4,7 +4,7 @@ to: totebox@project-proofreader
 re: TUI pivot relay — conventions/tui-corpus-producer.md + slm-cli status + inbox resolution
 created: 2026-05-17T00:00:00Z
 priority: normal
-status: pending
+status: actioned
 msg-id: command-20260517-tui-pivot-relay
 ---
 
