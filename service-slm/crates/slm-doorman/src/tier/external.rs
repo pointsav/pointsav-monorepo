@@ -323,6 +323,7 @@ impl ExternalTierClient {
             tier_used: Tier::External,
             model: model_id.to_string(),
             content,
+            content_blocks: Vec::new(),
             inference_ms,
             cost_usd,
             upstream_version: Some(provider.as_str().to_string()),
@@ -479,6 +480,7 @@ mod tests {
             speculation: None,
             graph_context_enabled: None,
             adapter_version: None,
+            tools: None,
         }
     }
 
