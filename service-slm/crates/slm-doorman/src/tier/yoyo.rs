@@ -238,6 +238,16 @@ impl YoYoTierClient {
                 Some(serde_json::json!({"structured_outputs": {"json": v}}))
             }
         };
+        let tools = req.tools.as_ref().map(|defs| {
+            defs.iter().map(|d| OaiToolDef {
+                kind: "function",
+                function: OaiFunctionDef {
+                    name: d.name.clone(),
+                    description: d.description.clone(),
+                    parameters: d.input_schema.clone(),
+                },
+            }).collect::<Vec<_>>()
+        });
         let body = OpenAiChatRequest {
             model: model.clone(),
             messages: canonical_to_oai(&req.messages),
@@ -245,6 +255,7 @@ impl YoYoTierClient {
             max_tokens: req.max_tokens,
             temperature: req.temperature,
             extra_body,
+            tools,
         };
         let url = format!(
             "{}/v1/chat/completions",
@@ -342,6 +353,16 @@ impl YoYoTierClient {
             }
         };
 
+        let tools = req.tools.as_ref().map(|defs| {
+            defs.iter().map(|d| OaiToolDef {
+                kind: "function",
+                function: OaiFunctionDef {
+                    name: d.name.clone(),
+                    description: d.description.clone(),
+                    parameters: d.input_schema.clone(),
+                },
+            }).collect::<Vec<_>>()
+        });
         let body = OpenAiChatRequest {
             model: model.clone(),
             messages: canonical_to_oai(&req.messages),
@@ -349,6 +370,7 @@ impl YoYoTierClient {
             max_tokens: req.max_tokens,
             temperature: req.temperature,
             extra_body,
+            tools,
         };
         let url = format!(
             "{}/v1/chat/completions",
@@ -382,18 +404,30 @@ impl YoYoTierClient {
             .map(|s| s.to_string());
 
         let body: OpenAiChatResponse = resp.json().await?;
-        let content = body
+        let msg = body
             .choices
             .into_iter()
             .next()
-            .map(|c| c.message.content)
+            .map(|c| c.message)
             .ok_or_else(|| DoormanError::UpstreamShape("no choices in response".into()))?;
+
+        let (content, content_blocks) = if !msg.tool_calls.is_empty() {
+            let blocks = msg.tool_calls.into_iter().map(|tc| {
+                let input = serde_json::from_str(&tc.function.arguments)
+                    .unwrap_or(serde_json::Value::Null);
+                ContentBlock::ToolUse { id: tc.id, name: tc.function.name, input }
+            }).collect();
+            (String::new(), blocks)
+        } else {
+            (msg.content.unwrap_or_default(), Vec::new())
+        };
 
         Ok(ComputeResponse {
             request_id: req.request_id,
             tier_used: Tier::Yoyo,
             model,
             content,
+            content_blocks,
             inference_ms,
             cost_usd: self.config.pricing.yoyo_cost_usd(inference_ms),
             upstream_version,
@@ -636,6 +670,21 @@ fn canonical_to_oai(msgs: &[CanonicalMessage]) -> Vec<OaiWireMessage> {
 }
 
 #[derive(Serialize)]
+struct OaiToolDef {
+    #[serde(rename = "type")]
+    kind: &'static str,
+    function: OaiFunctionDef,
+}
+
+#[derive(Serialize)]
+struct OaiFunctionDef {
+    name: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    description: Option<String>,
+    parameters: serde_json::Value,
+}
+
+#[derive(Serialize)]
 struct OpenAiChatRequest {
     model: String,
     messages: Vec<OaiWireMessage>,
@@ -652,6 +701,9 @@ struct OpenAiChatRequest {
     /// `guided_grammar` top-level extra_body fields were removed in vLLM 0.12.
     #[serde(skip_serializing_if = "Option::is_none")]
     extra_body: Option<serde_json::Value>,
+    /// Tool definitions (P1-1.7). Forwarded from `ComputeRequest.tools`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    tools: Option<Vec<OaiToolDef>>,
 }
 
 #[derive(Deserialize)]
@@ -666,7 +718,22 @@ struct OpenAiChatChoice {
 
 #[derive(Deserialize)]
 struct OaiResponseMessage {
-    content: String,
+    #[serde(default)]
+    content: Option<String>,
+    #[serde(default)]
+    tool_calls: Vec<OaiResponseToolCall>,
+}
+
+#[derive(Deserialize)]
+struct OaiResponseToolCall {
+    id: String,
+    function: OaiResponseFunction,
+}
+
+#[derive(Deserialize)]
+struct OaiResponseFunction {
+    name: String,
+    arguments: String,
 }
 
 fn is_false(b: &bool) -> bool {
@@ -700,6 +767,7 @@ mod tests {
             speculation: None,
             graph_context_enabled: None,
             adapter_version: None,
+            tools: None,
         }
     }
 
