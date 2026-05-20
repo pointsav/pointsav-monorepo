@@ -1,9 +1,9 @@
 ---
-archive: project-proofreader
+archive: project-console
 updated: 2026-05-20
 ---
 
-# NEXT — project-proofreader
+# NEXT — project-console
 
 > Architecture plan: `.agent/plans/os-console-platform.md`
 > Coding roadmap: `.agent/plans/leapfrog-2030-coding.md`
@@ -15,10 +15,10 @@ updated: 2026-05-20
 
 **os-console platform — chassis-first.** Full Leapfrog 2030 pivot: os-console binary +
 app-console-keys chassis + compiled-in cartridges (F1-F12). app-console-content (F4)
-is Phase 3 cartridge, not standalone binary. MBA peer-to-peer (system-gateway-mba).
-Doorman endpoint: `http://localhost:8011`. Phase 1 = chassis.
+is Phase 3 cartridge. MBA peer-to-peer (system-gateway-mba).
+Doorman endpoint: `http://localhost:8011`. **Phase 1 COMPLETE. Phase 2 = auth + MBA next.**
 
-**Pending rename:** project-proofreader → project-console (outbox msg sent to Command).
+**Rename done:** project-proofreader → project-console (directory + branch). ✓
 
 ---
 
@@ -60,16 +60,16 @@ Doorman endpoint: `http://localhost:8011`. Phase 1 = chassis.
 
 ---
 
-## Phase 1 — Auth & sessions (est. 1 week) `[ NOT STARTED ]`
+## Phase 1 — Chassis `[ COMPLETE ]` ✓
 
-- [ ] SQLite schema: `users (id, fingerprint, username, tenant, role, created_at, active)`
-- [ ] `src/auth.rs` — russh `auth_publickey` handler; fingerprint lookup
-- [ ] `src/session.rs` — session struct with user + tenant binding
-- [ ] `src/proofctl.rs` — admin CLI: `user add / list / disable / rotate-key`
-- [ ] Status bar: `username@tenant` + tier state + session duration
-- [ ] Basic pane structure + F1 help overlay
+- [x] `app-console-keys/` lib crate created — `Cartridge` trait, `FKey` enum, `AppConsoleKeys` chassis, F-key tab strip widget, status bar widget, `ConsoleConfig`
+- [x] `os-console/` bin crate created — local PTY mode (`run_local`); SSH mode behind `#[cfg(feature = "ssh-server")]` stub
+- [x] `app-console-content/src/cartridge.rs` — `ContentCartridge` implementing `Cartridge` (F4 placeholder)
+- [x] Workspace `Cargo.toml` updated: 3 members (`app-console-keys`, `app-console-content`, `os-console`)
+- [x] `cargo build`, `cargo build --release` green
+- [x] Session 2 backfill committed: `auth.rs`, `db.rs`, `session.rs`, `ui/status_bar.rs`, `proofctl` CLI
 
-**Gate:** `ssh -p 2222 proof@host` with registered key → TUI with identity in status bar.
+**Gate:** ✓ Passed (`cargo build` green; `os-console` binary produces F-key tab strip + Content pane + status bar in local PTY mode).
 
 ---
 
@@ -205,11 +205,18 @@ Doorman endpoint: `http://localhost:8011`. Phase 1 = chassis.
 - [x] `session-start.md` updated to reflect chassis-first architecture and new plans
 - [x] All artifacts committed: `f7ad7dc`
 
+## Completed (2026-05-20 — session 4)
+
+- [x] **Rename actioned by Command** — directory + branch now `project-console` ✓
+- [x] **Phase 1 COMPLETE** — `app-console-keys` lib crate (Cartridge trait, FKey enum, chassis, tab strip, status bar, config); `os-console` bin crate (local PTY mode, SSH feature-gated stub); `ContentCartridge` in `app-console-content`; workspace updated to 3 members
+- [x] Session 2 backfill committed to monorepo: `auth.rs`, `db.rs`, `session.rs`, `ui/status_bar.rs`, full `proofctl` CLI — monorepo SHA `13848313`
+- [x] Phase 1 chassis committed to monorepo — `8d02bd56`; `cargo build` + `cargo build --release` both green
+
 ---
 
 ## Codebase notes
 
-- **`pointsav-monorepo/` source tree:** `app-console-content/` crate created (Session 1 spike). `cargo build` green as of 2026-05-17.
+- **`pointsav-monorepo/` source tree:** 3 crates: `app-console-keys` (lib), `app-console-content` (lib + 2 bins), `os-console` (bin). `cargo build` green as of 2026-05-20.
 - **`woodfine-fleet-deployment/` sub-clone:** intact at `7fdf36b` (post-security-cleanup canonical HEAD). ✓
-- **`os-console/`:** does not exist yet. Phase 7 creates it.
+- **`os-console/`:** EXISTS. Phase 1 binary. Local PTY mode. SSH server: Phase 2.
 - **`service-proofreader/`:** not on disk; API fully documented. Backend runs from compiled binary at `/usr/local/bin/service-proofreader`.
