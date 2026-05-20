@@ -5,6 +5,26 @@ opened: 2026-05-14
 state: active
 slm_endpoint: http://localhost:8011
 module_id: infrastructure
+
+tetrad:                                # added 2026-05-18 — Phase 4.4 hardening; canonical declaration parallel to the prose `## Tetrad` section below
+  vendor:
+    repo: pointsav-monorepo
+    branch: cluster/project-infrastructure
+    focus: [app-infrastructure-onprem, app-infrastructure-leased, app-infrastructure-cloud, app-network-admin, os-infrastructure, os-network-admin]
+    status: active
+  customer:
+    repo: woodfine-fleet-deployment
+    focus: [fleet-infrastructure-onprem, fleet-infrastructure-leased, fleet-infrastructure-cloud, route-network-admin]
+    status: leg-pending
+  deployment:
+    instances: [fleet-infrastructure-onprem-1, fleet-infrastructure-leased-1, fleet-infrastructure-cloud-1, route-network-admin-1]
+    status: leg-pending — gated on WireGuard Part A
+  wiki:
+    target: content-wiki-documentation
+    planned_topics:
+      published: [infrastructure-os.md, os-network-admin.md]
+      pending: [sovereign-mesh.md]
+    status: leg-pending
 ---
 
 # project-infrastructure — Cluster Manifest

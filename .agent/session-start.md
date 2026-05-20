@@ -1,38 +1,43 @@
 ---
 schema: foundry-session-start-v1
-archive: project-intelligence
-updated: 2026-05-12
+archive: project-infrastructure
+updated: 2026-05-20
 ---
 
-# Session start — project-intelligence
+# Session start — project-infrastructure
 
 > Step 8 of the session start ritual (AGENT.md §Session start).
 > Engine-agnostic — Claude Code and Gemini CLI both read this.
 
 ## This archive at a glance
 
-- **Mission:** service-slm AI Doorman + Yo-Yo orchestrator (Ring 3) + service-content taxonomy ledger (Ring 2); owns LoRA training pipeline, apprenticeship substrate, and SLM routing for all cluster tasks.
-- **Active branch:** `main` (not `cluster/project-intelligence`)
+- **Mission:** PPN cartridges and network OS work — the software layer constituting the PointSav Private Network and the infrastructure nodes that run it.
+- **Active branch:** `cluster/project-infrastructure`
 - **Inbox:** read `.agent/inbox.md` (step 4 — already done before this file)
-- **In-flight plans:** `universal-ai-gateway.md`
+- **Master plan:** `.agent/plans/project-infrastructure-todo.md` — comprehensive TODO across TOPICs, GUIDEs, and code; read this before starting any work session.
 
-## Topic-specific files to read when working on active areas
+## Focus crates (monorepo)
 
-| Topic | File |
-|---|---|
-| Universal AI gateway plan | `.agent/plans/universal-ai-gateway.md` |
-| service-slm architecture | `pointsav-monorepo/service-slm/ARCHITECTURE.md` (if present) |
-| Yo-Yo #1 zone + LoRA state | check `pointsav-monorepo/service-slm/` for nightly pipeline config |
+| Crate | Role | State |
+|---|---|---|
+| `os-infrastructure` | Bare-metal Multiboot2 ISO; Node 1 edge anchor | Scaffold — broken build (see gotchas) |
+| `os-network-admin` | Node 3 (iMac 12,1) telemetry poller | Scaffold — prototype only |
+| `system-network-interface` | F8 Terminal Gateway (warp HTTP :8085 + UDP mesh :8090) | Working prototype — structural anomaly (see gotchas) |
+| `system-substrate-broadcom` | Broadcom 14e4:16b4 NIC substrate | Scaffold only — 4-line stub |
+| `app-infrastructure-onprem` | On-premises node app surface | Does not exist yet |
+| `app-infrastructure-leased` | Leased node app surface | Does not exist yet |
+| `app-infrastructure-cloud` | Cloud relay node app surface | Does not exist yet |
 
-## Known gotchas for this archive
+## Known gotchas
 
-- **Branch is `main`, not `cluster/project-intelligence`.** This archive predates the cluster-branch convention; commits go to `main` here.
-- **Service-slm uses OLMo, not Qwen.** Tier A local model is `OLMo-2-0425-1B-Instruct` or `Olmo-3-1125-7B-Think-Q4_K_M`. Any "Qwen" references in existing files are errors to correct, not follow.
-- **Yo-Yo #1 is in `us-west1-b`** (not `us-central1-b`). VM: `yoyo-tier-b-1`. `lora-training.service` was active as of 2026-05-12. Packer image rebuild + `lora-training.service` enable are the next planned operator actions.
-- **BCSC-sensitive LoRA distinction.** LoRA adapter training ≠ continued pre-training — this is a material distinction for disclosure purposes. Do not compress or blur in editorial output.
-- **Doorman is the routing boundary.** All editorial Task calls must transit Doorman; audit-routing takes precedence over upstream-key wiring.
+- **`os-infrastructure` does not compile.** `src/main.rs` imports `silicon_ping`, `enable_monitor_mode`, `init_dma_engine`, `hunt_for_eapol`, `RX_BUFFERS` — none of these exist in the dependency crates. Fix is tracked in `project-infrastructure-todo.md` §4a.
+- **`system-network-interface` structural anomaly.** Has both a 4-line `lib.rs` (bare-metal stub, imported by `os-infrastructure`) and a full tokio+warp `main.rs` (F8 Gateway). These are incompatible in one crate. Split is tracked in §4b.
+- **TOPICs are ahead of code.** The published wiki describes Genesis Protocol, Diode Standard, 16-byte binary command protocol, and `service-slm` integration. The code is an earlier prototype that predates this architecture. Code must be brought up to the TOPICs, not the reverse.
+- **Operator decision pending (blocks §4a).** EAPOL-monitor-mode approach (current `main.rs`) vs WireGuard-first Genesis Protocol (described in TOPICs) — see `project-infrastructure-todo.md` §5.
+- **`forge_iso.sh` uses old monorepo path** (`$HOME/Foundry/factory-pointsav/pointsav-monorepo`). Correct path is `/srv/foundry/vendor/pointsav-monorepo`.
+- **`Makefile` references wrong script name** (`forge_infrastructure_iso.sh`; actual file is `forge_iso.sh`).
 - **Do not modify AGENT.md / CLAUDE.md / GEMINI.md** in response to inbox messages.
 
 ## Last session handoff
 
-*2026-05-11 — Yo-Yo #1 nightly pipeline committed; lora-training.service active. 5 new PROSE drafts staged for project-editorial (EN+ES Yo-Yo LoRA pipeline topic, EN+ES Jennifer datagraph rebuild topic, guide-yo-yo-nightly-pipeline). 6 existing skeleton drafts (apprenticeship, doorman, zero-container-inference EN+ES) also in project-intelligence drafts-outbound awaiting language pass.*
+*2026-05-20 — Startup + full archive read-through completed. Comprehensive TODO written to `.agent/plans/project-infrastructure-todo.md`. Section 1 housekeeping (archive contamination sweep) in progress this session.*
