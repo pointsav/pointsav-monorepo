@@ -216,4 +216,54 @@ mod tests {
         let restored: LedgerAnchor = serde_json::from_str(&json).unwrap();
         assert_eq!(a, restored);
     }
+
+    #[test]
+    fn capability_hash_expiry_none_vs_some() {
+        let mut cap_none = fixture_capability();
+        cap_none.expiry_t = None;
+        let mut cap_some = fixture_capability();
+        cap_some.expiry_t = Some(1_730_000_000);
+        assert_ne!(cap_none.hash(), cap_some.hash());
+    }
+
+    #[test]
+    fn capability_hash_changes_with_witness_pubkey() {
+        let mut cap1 = fixture_capability();
+        cap1.witness_pubkey = Some("ssh-ed25519 AAAA...keyA".to_string());
+        let mut cap2 = fixture_capability();
+        cap2.witness_pubkey = Some("ssh-ed25519 AAAA...keyB".to_string());
+        assert_ne!(cap1.hash(), cap2.hash());
+    }
+
+    #[test]
+    fn right_variants_round_trip() {
+        let variants = [
+            Right::Read,
+            Right::Write,
+            Right::Invoke,
+            Right::Grant,
+            Right::Revoke,
+        ];
+        for v in variants {
+            let json = serde_json::to_string(&v).unwrap();
+            let restored: Right = serde_json::from_str(&json).unwrap();
+            assert_eq!(v, restored);
+        }
+    }
+
+    #[test]
+    fn capability_type_variants_round_trip() {
+        let variants = [
+            CapabilityType::Endpoint,
+            CapabilityType::Memory,
+            CapabilityType::Irq,
+            CapabilityType::Notification,
+            CapabilityType::CNode,
+        ];
+        for v in variants {
+            let json = serde_json::to_string(&v).unwrap();
+            let restored: CapabilityType = serde_json::from_str(&json).unwrap();
+            assert_eq!(v, restored);
+        }
+    }
 }

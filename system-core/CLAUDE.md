@@ -1,6 +1,6 @@
 # CLAUDE.md — system-core
 
-> **State:** Active  —  **Last updated:** 2026-04-28
+> **State:** Active  —  **Last updated:** 2026-05-20
 > **Version:** 0.2.0  (per `~/Foundry/CLAUDE.md` §7 and DOCTRINE.md §VIII)
 > **Registry row:** `pointsav-monorepo/.claude/rules/project-registry.md`
 
@@ -19,19 +19,15 @@ container), `system-audit` (audit sub-ledger).
 
 ## Current state
 
-Phase 1A increment 1 of the project-system cluster brief
-(`~/Foundry/clones/project-system/.claude/inbox.md`). The
-`Capability`, `WitnessRecord`, `LedgerAnchor`, `CapabilityType`, and
-`Right` types are defined per `system-substrate-doctrine.md` §3.1 +
-§5.1. Six unit tests cover serialisation round-trips and hash
-determinism. No runtime ledger code yet — the kernel-side consultation
-simulator (Phase 1A item 3 in the brief) lives in `system-substrate`
-or a new `system-capability-ledger` crate; the architecture decision
-is open and tracked in `ARCHITECTURE.md`.
+Phase 1A structurally complete at v0.2.0. Six source modules:
+`lib.rs` (Capability, WitnessRecord, LedgerAnchor, CapabilityType,
+Right), `checkpoint.rs` (C2SP signed-note + apex-cosigning, composed
+`verify_inclusion_proof` + `verify_consistency_proof`),
+`inclusion_proof.rs` (RFC 9162 §2.1.3), `consistency_proof.rs`
+(RFC 9162 §2.1.4). 62 tests total; zero warnings.
 
-`master-relay.rs` at the project root is residual sketch material
-(predates this cluster); it is NOT a binary target and is preserved
-in place pending defect closure.
+Kernel-side state machine resolved to sibling crate `system-ledger`
+(architecture decision per ARCHITECTURE.md §3).
 
 ## Build and test
 
@@ -40,22 +36,20 @@ cargo check -p system-core
 cargo test  -p system-core
 ```
 
-Six tests pass on Rust stable. No external services required; pure-
-data primitives.
+62 tests pass on Rust stable. No external services required.
 
 ## File layout
 
 ```
 system-core/
-├── Cargo.toml         # workspace member as of v0.1.20
-├── README.md          # bilingual pair (English)
-├── README.es.md       # bilingual pair (Spanish overview)
-├── CLAUDE.md          # this file
-├── AGENTS.md          # vendor-neutral pointer
-├── NEXT.md            # open items
-├── ARCHITECTURE.md    # Phase 1A architecture intent
-├── src/lib.rs         # Capability + WitnessRecord + LedgerAnchor
-└── master-relay.rs    # residual sketch — pending defect closure
+├── Cargo.toml
+├── README.md / README.es.md   # bilingual pair
+├── CLAUDE.md / AGENTS.md / NEXT.md / ARCHITECTURE.md
+└── src/
+    ├── lib.rs                 # Capability + WitnessRecord + LedgerAnchor
+    ├── checkpoint.rs          # C2SP signed-note; verify_inclusion/consistency_proof
+    ├── inclusion_proof.rs     # RFC 9162 §2.1.3
+    └── consistency_proof.rs   # RFC 9162 §2.1.4
 ```
 
 ## Hard constraints — do not violate
@@ -77,10 +71,10 @@ system-core/
 
 ## Dependencies on other projects
 
-- Consumed by: `system-substrate` (kernel binding), `system-security`,
-  `system-audit`, `system-verification`, eventually
-  `system-capability-ledger` (or extension of `system-substrate`).
-- Consumes: nothing in the workspace today; pure data definitions.
+- Consumed by: `system-ledger` (state machine), `system-substrate`
+  (kernel binding), `system-security`, `system-audit`,
+  `system-verification`.
+- Consumes: nothing in the workspace; leaf crate.
 
 ## Commit convention
 
