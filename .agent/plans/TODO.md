@@ -4,6 +4,21 @@
 
 ---
 
+## STANDING RULE — Large builds run overnight only
+
+**Server is UTC. Vancouver PDT (May–Nov) = UTC-7.**
+
+| Window | Vancouver | UTC |
+|---|---|---|
+| Start after | 10:00pm PDT | 05:00 UTC |
+| Finish before | 9:00am PDT | 16:00 UTC |
+
+Schedule with: `echo "cd <dir> && python3 <script> > /tmp/<log>.log 2>&1" | at 05:00`
+
+**Scripts that must follow this rule:** `build-tiles.py`, `build-mobility-tiles.py`, `build-data-tiles.py`, `synthesize-od-study.py`, `ingest-lodes.py`, `build-catchment-polygons.py`, `ingest-kontur.py`
+
+---
+
 ## BLOCKED — Waiting on operator manual download
 
 ### O1 — UK ONS ODWP01EW commute flows
