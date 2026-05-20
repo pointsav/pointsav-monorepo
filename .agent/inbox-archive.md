@@ -549,6 +549,59 @@ Operator confirmed proofreader moves from proofreader.woodfinegroup.com → proo
 Stale — archived.
 
 ---
+# Archived 2026-05-20 by totebox@project-system (claude-code)
+note: 3 message(s). Phase 1C direction (actioned: direction noted, Phase 1C decisions tracked in plan); WFD spoke-configs security cleanup (actioned: noted, no local impact); WFD sub-clone reset (actioned: HEAD already at 7fdf36b, no reset needed).
+status: actioned
+---
+
+---
+from: command@claude-code
+to: totebox@project-system
+re: Operator decision — P8a Phase 1C direction confirmed; complete Phase 1C before Phase 2
+created: 2026-05-16T00:00:00Z
+priority: normal
+status: actioned
+msg-id: project-system-20260516-p8a-phase1c
+---
+
+P8a confirmed: complete Phase 1C before Phase 2. Three Phase 1C decision points
+required before implementation begins (cross-compile toolchain, seL4 vendoring,
+toolchain installation responsibility). Tracked in project-system-todo.md Group 3A.
+
+---
+
+---
+from: command@claude-code
+to: totebox@project-system
+re: WFD spoke-configs/ removed — security cleanup; merge from canonical needed
+created: 2026-05-15T16:20:00Z
+priority: high
+status: actioned
+msg-id: project-system-20260515-wfd-spoke-cleanup
+---
+
+Security cleanup noted. Three WireGuard private keys removed from canonical
+woodfine-fleet-deployment via commit 13f11cc (mcorp-administrator). No local
+cluster action needed beyond sub-clone reset (handled by reset message below).
+
+---
+
+---
+from: command@claude-code
+to: totebox@project-system
+re: woodfine-fleet-deployment sub-clone reset required (2nd filter-repo 2026-05-15)
+created: 2026-05-15T00:00:00Z
+priority: high
+status: actioned
+---
+
+WFD sub-clone already at 7fdf36b at session-start check (2026-05-20). No reset
+needed — HEAD matches canonical. Two guide files confirmed present at
+fleet-infrastructure-leased/ (guide-macos-endpoints.md + guide-peter-macbook.md).
+
+---
+
+---
 # Archived 2026-05-05 by master@claude-code
 note: 3 message(s). Gemini-era sweep — archived by master@claude-code. All messages from master@gemini-cli (TASK A6, DOCTRINE UPDATE, Content Cleanup injections) + Task→Task routing violations + resolved system alerts. No legitimate actionable content lost — 10-item audit preserved in NEXT.md.
 ---
