@@ -157,6 +157,7 @@ mod tests {
                 speculation: None,
                 graph_context_enabled: None,
                 adapter_version: None,
+                tools: None,
             }
         };
         let selected = registry.select_optimal(&dummy_req).await;
@@ -189,6 +190,7 @@ mod tests {
                 speculation: None,
                 graph_context_enabled: None,
                 adapter_version: None,
+                tools: None,
             }
         };
         let selected = registry.select_optimal(&dummy_req).await;

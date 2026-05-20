@@ -801,6 +801,7 @@ mod tests {
             speculation: None,
             graph_context_enabled: None,
             adapter_version: None,
+            tools: None,
         }
     }
 

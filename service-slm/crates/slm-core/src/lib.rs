@@ -111,6 +111,22 @@ impl From<ChatMessage> for CanonicalMessage {
     }
 }
 
+/// A tool definition forwarded from the Anthropic Messages API `tools` array.
+///
+/// Matches the Anthropic wire shape:
+/// ```json
+/// {"name": "get_weather", "description": "...", "input_schema": {"type": "object", ...}}
+/// ```
+/// Tier translation: local and Yo-Yo tiers convert to OpenAI `tools[].function`; external
+/// tier passes through natively. Tool definitions are optional; absent means no tool use.
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct ToolDef {
+    pub name: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    pub input_schema: serde_json::Value,
+}
+
 /// Decode-time grammar constraint that the caller wants the Doorman to
 /// enforce on the backend's output.
 ///
@@ -201,6 +217,10 @@ pub struct ComputeRequest {
     /// for retrospective adapter-version-aware audit queries.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub adapter_version: Option<String>,
+    /// Tool definitions forwarded from the Anthropic Messages API (P1-1.7).
+    /// Absent from most requests; backends convert to OpenAI `tools` array.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tools: Option<Vec<ToolDef>>,
 }
 
 #[cfg(test)]
@@ -227,6 +247,7 @@ mod tests {
             speculation: None,
             graph_context_enabled: None,
             adapter_version: None,
+            tools: None,
         }
     }
 
@@ -518,7 +539,15 @@ pub struct ComputeResponse {
     pub request_id: RequestId,
     pub tier_used: Tier,
     pub model: String,
+    /// Plain-text content (all text blocks concatenated). Non-empty for
+    /// text-only responses; may be empty when `content_blocks` contains
+    /// only `ToolUse` blocks (P1-1.7).
     pub content: String,
+    /// Rich content blocks (P1-1.7). Empty for plain-text responses
+    /// (callers use `content` directly). Populated when the model
+    /// returns tool-use blocks; may contain `ToolUse` and/or `Text`.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub content_blocks: Vec<ContentBlock>,
     pub inference_ms: u64,
     pub cost_usd: f64,
     /// Yo-Yo or external-API implementation version, opaque string.

@@ -45,7 +45,7 @@ use slm_core::{
     ApprenticeshipAttempt, ApprenticeshipBrief, AuditCaptureRequest, AuditCaptureResponse,
     AuditProxyRequest, CanonicalMessage, ChatMessage, Complexity, ContentBlock, ComputeRequest,
     DeferReason, ExtractionRequest, ExtractionResponse, GrammarConstraint, ModuleId, RequestId,
-    Role, Tier,
+    Role, Tier, ToolDef,
 };
 use slm_doorman::ledger::{
     AuditEntry, CompletionStatus,
@@ -226,6 +226,7 @@ async fn shadow_adapter(
         speculation: None,
         graph_context_enabled: Some(false),
         adapter_version: None,
+        tools: None,
     };
     let req_b = ComputeRequest {
         request_id: RequestId::new(),
@@ -244,6 +245,7 @@ async fn shadow_adapter(
         speculation: None,
         graph_context_enabled: Some(false),
         adapter_version: None,
+        tools: None,
     };
 
     // Concurrent dispatch — both arms run simultaneously.
@@ -536,6 +538,7 @@ async fn chat_completions(
         speculation: None,
         graph_context_enabled: None,
         adapter_version: None,
+        tools: None,
     };
 
     let resp = state.doorman.route(&req).await.map_err(ApiError::from)?;
@@ -849,6 +852,7 @@ async fn extract(State(state): State<Arc<AppState>>, raw: Bytes) -> impl IntoRes
         speculation: None,
         graph_context_enabled: None,
         adapter_version: None,
+        tools: None,
     };
 
     // 5. Route — no Tier A fallback.
@@ -1566,6 +1570,16 @@ struct AnthropicMessagesBody {
     metadata: Option<serde_json::Value>,
     #[serde(default)]
     stop_sequences: Option<Vec<String>>,
+    #[serde(default)]
+    tools: Option<Vec<AnthropicToolDef>>,
+}
+
+#[derive(Deserialize)]
+struct AnthropicToolDef {
+    name: String,
+    #[serde(default)]
+    description: Option<String>,
+    input_schema: serde_json::Value,
 }
 
 #[derive(Deserialize)]
@@ -1673,6 +1687,14 @@ fn anthropic_to_compute_request(
             (Complexity::Medium, Some("trainer".to_string()), None, None)
         };
 
+    let tools = body.tools.map(|defs| {
+        defs.into_iter().map(|d| ToolDef {
+            name: d.name,
+            description: d.description,
+            input_schema: d.input_schema,
+        }).collect()
+    });
+
     ComputeRequest {
         request_id,
         module_id,
@@ -1690,19 +1712,41 @@ fn anthropic_to_compute_request(
         speculation: None,
         graph_context_enabled: Some(false),
         adapter_version: None,
+        tools,
     }
 }
 
 /// Build a non-streaming Anthropic Messages API response body.
 fn compute_to_anthropic_response(resp: &slm_core::ComputeResponse, model: &str) -> serde_json::Value {
-    let output_tokens = resp.content.split_whitespace().count() as u32;
+    let (content_json, output_tokens, stop_reason) = if resp.content_blocks.is_empty() {
+        let tokens = resp.content.split_whitespace().count() as u32;
+        let blocks = serde_json::json!([{"type": "text", "text": resp.content}]);
+        (blocks, tokens, "end_turn")
+    } else {
+        let blocks: Vec<serde_json::Value> = resp.content_blocks.iter().map(|b| match b {
+            ContentBlock::Text { text } => serde_json::json!({"type": "text", "text": text}),
+            ContentBlock::ToolUse { id, name, input } => serde_json::json!({
+                "type": "tool_use", "id": id, "name": name, "input": input
+            }),
+            ContentBlock::ToolResult { tool_use_id, content } => serde_json::json!({
+                "type": "tool_result", "tool_use_id": tool_use_id, "content": content
+            }),
+            ContentBlock::Thinking { thinking } => serde_json::json!({"type": "thinking", "thinking": thinking}),
+        }).collect();
+        let has_tool_use = resp.content_blocks.iter().any(|b| matches!(b, ContentBlock::ToolUse { .. }));
+        let tokens: u32 = resp.content_blocks.iter().filter_map(|b| {
+            if let ContentBlock::Text { text } = b { Some(text.split_whitespace().count() as u32) } else { None }
+        }).sum();
+        let reason = if has_tool_use { "tool_use" } else { "end_turn" };
+        (serde_json::Value::Array(blocks), tokens, reason)
+    };
     serde_json::json!({
         "id": format!("msg_{}", resp.request_id),
         "type": "message",
         "role": "assistant",
-        "content": [{"type": "text", "text": resp.content}],
+        "content": content_json,
         "model": model,
-        "stop_reason": "end_turn",
+        "stop_reason": stop_reason,
         "stop_sequence": null,
         "usage": {
             "input_tokens": 0,
@@ -1859,32 +1903,64 @@ fn build_stream_body(
 /// and Tier A (local_stream) streaming paths are unavailable.
 fn anthropic_sse_body(resp: &slm_core::ComputeResponse, model: &str) -> String {
     let msg_id = format!("msg_{}", resp.request_id);
-    let output_tokens = resp.content.split_whitespace().count() as u32;
 
-    let e_start = serde_json::json!({
-        "type": "message_start",
-        "message": {
+    // For tool-use responses emit one content_block per block; for plain text
+    // emit the standard text_delta burst.
+    if resp.content_blocks.is_empty() {
+        let output_tokens = resp.content.split_whitespace().count() as u32;
+        let e_start = serde_json::json!({"type": "message_start", "message": {
             "id": &msg_id, "type": "message", "role": "assistant",
             "content": [], "model": model,
             "stop_reason": null, "stop_sequence": null,
             "usage": {"input_tokens": 0, "output_tokens": 0}
+        }});
+        let e_cb_start = serde_json::json!({"type": "content_block_start", "index": 0, "content_block": {"type": "text", "text": ""}});
+        let e_cb_delta = serde_json::json!({"type": "content_block_delta", "index": 0, "delta": {"type": "text_delta", "text": resp.content}});
+        let e_cb_stop  = serde_json::json!({"type": "content_block_stop", "index": 0});
+        let e_msg_delta = serde_json::json!({"type": "message_delta", "delta": {"stop_reason": "end_turn", "stop_sequence": null}, "usage": {"output_tokens": output_tokens}});
+        let e_msg_stop  = serde_json::json!({"type": "message_stop"});
+        format!(
+            "event: message_start\ndata: {e_start}\n\n\
+             event: content_block_start\ndata: {e_cb_start}\n\n\
+             event: content_block_delta\ndata: {e_cb_delta}\n\n\
+             event: content_block_stop\ndata: {e_cb_stop}\n\n\
+             event: message_delta\ndata: {e_msg_delta}\n\n\
+             event: message_stop\ndata: {e_msg_stop}\n\n"
+        )
+    } else {
+        let has_tool_use = resp.content_blocks.iter().any(|b| matches!(b, ContentBlock::ToolUse { .. }));
+        let stop_reason = if has_tool_use { "tool_use" } else { "end_turn" };
+        let e_start = serde_json::json!({"type": "message_start", "message": {
+            "id": &msg_id, "type": "message", "role": "assistant",
+            "content": [], "model": model,
+            "stop_reason": null, "stop_sequence": null,
+            "usage": {"input_tokens": 0, "output_tokens": 0}
+        }});
+        let mut out = format!("event: message_start\ndata: {e_start}\n\n");
+        for (i, block) in resp.content_blocks.iter().enumerate() {
+            let (cb_start, cb_delta) = match block {
+                ContentBlock::Text { text } => (
+                    serde_json::json!({"type": "content_block_start", "index": i, "content_block": {"type": "text", "text": ""}}),
+                    serde_json::json!({"type": "content_block_delta", "index": i, "delta": {"type": "text_delta", "text": text}}),
+                ),
+                ContentBlock::ToolUse { id, name, input } => (
+                    serde_json::json!({"type": "content_block_start", "index": i, "content_block": {"type": "tool_use", "id": id, "name": name, "input": {}}}),
+                    serde_json::json!({"type": "content_block_delta", "index": i, "delta": {"type": "input_json_delta", "partial_json": serde_json::to_string(input).unwrap_or_default()}}),
+                ),
+                _ => continue,
+            };
+            let cb_stop = serde_json::json!({"type": "content_block_stop", "index": i});
+            out.push_str(&format!(
+                "event: content_block_start\ndata: {cb_start}\n\n\
+                 event: content_block_delta\ndata: {cb_delta}\n\n\
+                 event: content_block_stop\ndata: {cb_stop}\n\n"
+            ));
         }
-    });
-    let e_cb_start = serde_json::json!({"type": "content_block_start", "index": 0, "content_block": {"type": "text", "text": ""}});
-    let e_cb_delta = serde_json::json!({"type": "content_block_delta", "index": 0, "delta": {"type": "text_delta", "text": resp.content}});
-    let e_cb_stop  = serde_json::json!({"type": "content_block_stop",  "index": 0});
-    let e_msg_delta = serde_json::json!({"type": "message_delta", "delta": {"stop_reason": "end_turn", "stop_sequence": null}, "usage": {"output_tokens": output_tokens}});
-    let e_msg_stop  = serde_json::json!({"type": "message_stop"});
-
-    format!(
-        "event: message_start\ndata: {}\n\n\
-         event: content_block_start\ndata: {}\n\n\
-         event: content_block_delta\ndata: {}\n\n\
-         event: content_block_stop\ndata: {}\n\n\
-         event: message_delta\ndata: {}\n\n\
-         event: message_stop\ndata: {}\n\n",
-        e_start, e_cb_start, e_cb_delta, e_cb_stop, e_msg_delta, e_msg_stop
-    )
+        let e_msg_delta = serde_json::json!({"type": "message_delta", "delta": {"stop_reason": stop_reason, "stop_sequence": null}, "usage": {"output_tokens": 0}});
+        let e_msg_stop  = serde_json::json!({"type": "message_stop"});
+        out.push_str(&format!("event: message_delta\ndata: {e_msg_delta}\n\nevent: message_stop\ndata: {e_msg_stop}\n\n"));
+        out
+    }
 }
 
 async fn anthropic_messages(

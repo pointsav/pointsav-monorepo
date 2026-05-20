@@ -701,3 +701,123 @@ async fn shadow_adapter_rejects_missing_adapter_ids() {
     let resp = app.oneshot(req).await.unwrap();
     assert_eq!(resp.status(), StatusCode::BAD_REQUEST, "empty adapter_b must return 400");
 }
+
+// ── P1-1.7 — tool-use round-trip ─────────────────────────────────────────────
+
+#[tokio::test]
+async fn tools_forwarded_to_backend_and_tool_use_response_emitted() {
+    // Mock: GET /health (busy check) + POST /v1/chat/completions returns tool_calls.
+    let mock = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path("/health"))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .set_body_json(json!({"status": "ok", "slots_idle": 1})),
+        )
+        .mount(&mock)
+        .await;
+    Mock::given(method("POST"))
+        .and(path("/v1/chat/completions"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+            "choices": [{
+                "message": {
+                    "role": "assistant",
+                    "content": null,
+                    "tool_calls": [{
+                        "id": "call_abc",
+                        "type": "function",
+                        "function": {
+                            "name": "get_weather",
+                            "arguments": "{\"location\":\"NYC\"}"
+                        }
+                    }]
+                }
+            }]
+        })))
+        .mount(&mock)
+        .await;
+
+    let state = app_state_with_local(mock.uri());
+    let app = router(state);
+
+    let resp = app.oneshot(messages_request(json!({
+        "model": "claude-haiku-4-5-20251001",
+        "max_tokens": 256,
+        "tools": [{
+            "name": "get_weather",
+            "description": "Get current weather",
+            "input_schema": {
+                "type": "object",
+                "properties": {"location": {"type": "string"}},
+                "required": ["location"]
+            }
+        }],
+        "messages": [{"role": "user", "content": "What is the weather in NYC?"}]
+    }))).await.unwrap();
+
+    assert_eq!(resp.status(), StatusCode::OK);
+    let body = response_body(resp).await;
+    // Response must contain a tool_use content block
+    let content = body["content"].as_array().expect("content array");
+    let tool_block = content.iter().find(|b| b["type"] == "tool_use")
+        .expect("tool_use block in content");
+    assert_eq!(tool_block["id"], "call_abc");
+    assert_eq!(tool_block["name"], "get_weather");
+    assert_eq!(tool_block["input"]["location"], "NYC");
+    // stop_reason must be "tool_use" when tool_calls are present
+    assert_eq!(body["stop_reason"], "tool_use");
+}
+
+#[tokio::test]
+async fn tool_use_response_stop_reason_is_tool_use() {
+    // Regression guard: when the backend returns tool_calls, stop_reason must
+    // be "tool_use" (not "end_turn"). Sprint 0b streaming tool_use SSE is
+    // deferred to Sprint 1 (requires build_stream_body tool_call delta parsing).
+    let mock = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path("/health"))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .set_body_json(json!({"status": "ok", "slots_idle": 1})),
+        )
+        .mount(&mock)
+        .await;
+    Mock::given(method("POST"))
+        .and(path("/v1/chat/completions"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+            "choices": [{
+                "message": {
+                    "role": "assistant",
+                    "content": null,
+                    "tool_calls": [{
+                        "id": "call_xyz",
+                        "type": "function",
+                        "function": {"name": "bash", "arguments": "{\"cmd\":\"ls\"}"}
+                    }]
+                }
+            }]
+        })))
+        .mount(&mock)
+        .await;
+
+    let state = app_state_with_local(mock.uri());
+    let app = router(state);
+
+    let resp = app.oneshot(messages_request(json!({
+        "model": "claude-haiku-4-5-20251001",
+        "max_tokens": 64,
+        "tools": [{"name": "bash", "description": "Run a shell command",
+                   "input_schema": {"type": "object", "properties": {"cmd": {"type": "string"}}}}],
+        "messages": [{"role": "user", "content": "list files"}]
+    }))).await.unwrap();
+
+    assert_eq!(resp.status(), StatusCode::OK);
+    let body = response_body(resp).await;
+    assert_eq!(body["stop_reason"], "tool_use",
+        "tool_calls response must set stop_reason=tool_use");
+    let content = body["content"].as_array().unwrap();
+    let tool_block = content.iter().find(|b| b["type"] == "tool_use")
+        .expect("tool_use block must be present");
+    assert_eq!(tool_block["id"], "call_xyz");
+    assert_eq!(tool_block["name"], "bash");
+}
