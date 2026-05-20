@@ -3,7 +3,7 @@
 > **Scope: this archive only.** Cross-repo and workspace-level items live at `~/Foundry/NEXT.md`.
 > Full TODO with all sections and sequencing: `.agent/plans/project-infrastructure-todo.md`.
 
-Last updated: 2026-05-20.
+Last updated: 2026-05-20 (session 2).
 
 ---
 
@@ -31,47 +31,39 @@ Last updated: 2026-05-20.
 
 ---
 
-## Code — fix broken build (no decisions needed)
-
-- [ ] **Fix `os-infrastructure/Makefile`** — references `forge_infrastructure_iso.sh`;
-  actual file is `forge_iso.sh`. One-line fix. [2026-05-20 task@claude-code]
-
-- [ ] **Fix `os-infrastructure/forge_iso.sh`** — hardcoded path
-  `$HOME/Foundry/factory-pointsav/pointsav-monorepo`; correct to
-  `/srv/foundry/vendor/pointsav-monorepo`. [2026-05-20 task@claude-code]
-
-- [ ] **Gitignore build artifacts** — `build_iso/*.elf`, `build_iso/staging/`, `*.iso`,
-  `linker.ld` in `os-infrastructure/` and `os-network-admin/`. [2026-05-20 task@claude-code]
+## Code — fix broken build
 
 - [ ] **Resolve missing symbols in `os-infrastructure/src/main.rs`** — blocked on EAPOL
   vs Genesis Protocol decision above. [2026-05-20 task@claude-code]
 
-- [ ] **Split `system-network-interface`** — `lib.rs` (bare-metal stub) and `main.rs`
-  (F8 Gateway binary) cannot coexist in one crate. Extract gateway to `app-network-admin/`
-  or equivalent. [2026-05-20 task@claude-code]
+---
+
+## TOPIC leg — drafts staged, needs editorial pickup
+
+- [ ] **Pick up `topic-sovereign-mesh.draft.md` + `.es.md` from drafts-outbound**
+  Staged at `.agent/drafts-outbound/`. Message sent to project-editorial outbox.
+  Full PPN architecture topic — expands the one-sentence stub at
+  `infrastructure/sovereign-mesh.md` in content-wiki-documentation.
+  [2026-05-20 task@claude-code]
 
 ---
 
-## TOPIC leg — one gap
-
-- [ ] **Expand `infrastructure/sovereign-mesh.md` from stub to full topic**
-  Currently one sentence (since 2026-05-07). Needs: WireGuard overlay, hub-spoke topology,
-  `ppn0` interface, 16-byte command packets on port 8090, Genesis Protocol relationship.
-  Stage to `drafts-outbound/` → project-editorial. [2026-05-20 task@claude-code]
-
----
-
-## GUIDE leg — misaligned files (fix regardless of operator decisions)
+## GUIDE leg — cross-repo fix (Command Session scope)
 
 - [ ] **`fleet-infrastructure-leased/guide-deploy-vpn.md`** — fix hardcoded path
   `$HOME/Foundry/pointsav-monorepo/` → `/srv/foundry/vendor/pointsav-monorepo/`.
+  Edit lives in `customer/woodfine-fleet-deployment` — Command Session admin-tier.
   [2026-05-20 task@claude-code]
 
 ---
 
-## App surface scaffolds (low effort, no decisions needed)
+## Completed this cluster (archived for reference)
 
-- [ ] Create `app-infrastructure-onprem/` — `README.md` + `README.es.md`
-- [ ] Create `app-infrastructure-leased/` — `README.md` + `README.es.md`
-- [ ] Create `app-infrastructure-cloud/` — `README.md` + `README.es.md`
-  [2026-05-20 task@claude-code]
+- [x] Sweep project-intelligence contamination from archive (2026-05-20 session 1)
+- [x] Fix `session-start.md`, `manifest.md` slug mismatch, `NEXT.md`, memory init (session 1)
+- [x] Stage `sovereign-mesh.md` + `.es.md` drafts to `drafts-outbound/` (session 2)
+- [x] Fix `os-infrastructure/Makefile` script name (session 2)
+- [x] Fix `os-infrastructure/forge_iso.sh` hardcoded path (session 2)
+- [x] Gitignore build artifacts in `os-infrastructure/` and `os-network-admin/` (session 2)
+- [x] Create `app-infrastructure-onprem/`, `-leased/`, `-cloud/` Reserved-folder scaffolds (session 2)
+- [x] Split `system-network-interface` → extract F8 Gateway binary to `app-network-admin/` (session 2)
