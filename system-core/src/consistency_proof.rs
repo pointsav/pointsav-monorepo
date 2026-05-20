@@ -5,7 +5,7 @@
 //! replication-safety primitive for ledger-mirror catch-up and
 //! multi-witness checkpoint advancement.
 //!
-//! Reuses [`inclusion_proof::rfc9162_internal_hash`]; no new hash helper.
+//! Reuses `rfc9162_internal_hash` from `inclusion_proof`; no new hash helper.
 //! Per RFC 9162 §2.1.4. Composed kernel-facing API:
 //! [`crate::checkpoint::SignedCheckpoint::verify_consistency_proof`].
 
