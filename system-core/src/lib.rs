@@ -16,7 +16,7 @@ pub mod checkpoint;
 pub mod consistency_proof;
 pub mod inclusion_proof;
 pub use checkpoint::{
-    CheckpointConsistencyError, CheckpointInclusionError, Checkpoint, NoteSignature,
+    Checkpoint, CheckpointConsistencyError, CheckpointInclusionError, NoteSignature,
     SignedCheckpoint,
 };
 pub use consistency_proof::{ConsistencyProof, ConsistencyVerifyError};
