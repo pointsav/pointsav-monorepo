@@ -1,6 +1,6 @@
 # NEXT.md — service-slm
 
-> Last updated: 2026-05-20 (P1-1.3/1.4/1.7 + Sprint 2 Anthropic native outbound)
+> Last updated: 2026-05-20 (Sprint 3 slm-mcp-server + Sprint 2a/2b native Anthropic + Responses API)
 > Read at session start. Update before session end so the next
 > session knows where to pick up.
 
@@ -167,7 +167,11 @@ plan; `ARCHITECTURE.md` §15 for substrate documentation.
 
 - [x] **Task 3:** 503 busy-rejection — `is_busy()` health probe + `TierABusy` error + `Retry-After: 30` header + Tier B escalation — landed `c38e66de`/`e2a93a99`/`160668cd`; awaiting Stage 6.
 - [x] **Task 4:** Anthropic shim integration tests — 14 tests in `anthropic_shim_test.rs`; fixed `doorman_error_to_status` E0004 + shadow diff-length bug — landed `93620c1b`; awaiting Stage 6.
+- [x] **Sprint 2a:** Tier C switched to native Anthropic Messages API (`/v1/messages`, `x-api-key`, `anthropic-version` header); tool_use content blocks in response; updated test suite.
+- [x] **Sprint 2b:** `POST /v1/responses` OpenAI Responses API shim — accepts string/array input; returns Responses shape; 2 tests in `http_test.rs`.
+- [x] **Sprint 3:** `crates/slm-mcp-server/` — 6 Foundry MCP tools via rmcp 1.7.0 stdio; `.mcp.json` at repo root; `slm-mcp-server` binary. 250 tests pass.
 - [ ] **Sprint 0b:** Replace fake-SSE `anthropic_sse_body()` with real per-token streaming (~60 LOC). File: `crates/slm-doorman-server/src/http.rs`. No blockers.
+- [ ] **Sprint 3 — deploy:** `cargo build --release -p slm-mcp-server && sudo cp target/release/slm-mcp-server /usr/local/bin/` + update `.mcp.json` path.
 - [ ] **P3-3.2 followup:** Flesh out canary task set + `bin/canary-run.sh` (skeleton in `9454bac4`).
 - [ ] **P1-1.7:** Tool-use round-trip (~300 LOC) — awaiting operator API-shape approval (`tools: Vec<ToolDef>` + `ContentBlock` response).
 
