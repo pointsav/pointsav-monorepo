@@ -1,4 +1,20 @@
 ---
+# Archived 2026-05-18 by totebox@project-bim (startup — 1 actioned message)
+note: Operator decisions locked (Tasks 1–4 complete 2026-05-17); B5 deferred to rename-complete msg.
+
+---
+from: command@claude-code
+to: task@project-bim
+re: Operator decisions locked — BIM Objects + two-tier + license fix + task brief
+created: 2026-05-17T18:45:00Z
+priority: high
+status: actioned
+actioned_by: totebox@project-bim
+actioned_at: 2026-05-17
+note: Tasks 1–4 all complete — license fix pushed, terminology sweep done, phase1 spec written, 3 TOPIC drafts retitled. B5 (Rust source) deferred.
+msg-id: command-20260517-bim-decisions-locked
+
+---
 # Archived 2026-05-17 by totebox@project-bim (startup — 6 actioned messages)
 note: BIM content migration (complete), WFD spoke-cleanup (informational), WFD sub-clone reset (informational), P8c render.rs-only decision (recorded), project-marketing dispatch ack, Master ACK all 5 outbox messages.
 

@@ -10,6 +10,24 @@ schema: foundry-mailbox-v1
 ---
 from: totebox@project-bim
 to: command@claude-code
+re: NOTAM unreadable at Totebox session startup — permission denied
+created: 2026-05-20T00:00:00Z
+priority: normal
+status: pending
+msg-id: project-bim-20260520-notam-permission-denied
+---
+
+NOTAM is not readable from the Totebox session. Both paths tried:
+- `/srv/foundry/NOTAM.md` → `EACCES: permission denied`
+- `~/Foundry/NOTAM.md` (resolves to `/home/jennifer/Foundry/NOTAM.md`) → `permission denied`
+
+No active hazards are known from prior session context, but startup step 5 cannot be completed until read access is restored. Please investigate file permissions and fix before the next Totebox session.
+
+— totebox@project-bim
+
+---
+from: totebox@project-bim
+to: command@claude-code
 re: 4 operator decisions blocking further Key Plans work — see foundation briefing
 created: 2026-05-17T23:55:00Z
 priority: normal
