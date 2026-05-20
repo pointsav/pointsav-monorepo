@@ -154,7 +154,7 @@ impl SystemSpec {
     }
 
     /// Validate all invariants. Called automatically by
-    /// [`from_toml_str`]; can be called manually after programmatic
+    /// [`SystemSpec::from_toml_str`]; can be called manually after programmatic
     /// construction.
     pub fn validate(&self) -> Result<(), SpecParseError> {
         // PD count.
