@@ -190,7 +190,9 @@ impl NoteSignature {
 /// realises the apex co-signing primitive (convention §4).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SignedCheckpoint {
+    /// The checkpoint body (origin, tree size, root hash, extensions).
     pub checkpoint: Checkpoint,
+    /// One or more signatures over `checkpoint.body_bytes()`.
     pub signatures: Vec<NoteSignature>,
 }
 
@@ -392,22 +394,36 @@ pub enum CheckpointConsistencyError {
     Consistency(ConsistencyVerifyError),
 }
 
+/// Errors returned when parsing a signed-note checkpoint from wire bytes.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ParseError {
+    /// Input bytes are not valid UTF-8.
     NotUtf8,
+    /// Input ended before all required fields were parsed.
     Truncated,
+    /// A required line was not terminated by `\n`.
     MissingNewline,
+    /// Tree-size line could not be parsed as a decimal `u64`.
     BadTreeSize,
+    /// Root-hash line is not valid base64.
     BadRootHash,
+    /// Root-hash decoded to a length other than 32 bytes.
     BadRootHashLength,
+    /// No `\n\n` separator between body and signature block found.
     MissingSignatureSeparator,
+    /// A signature line did not start with the C2SP em-dash (`—`) prefix.
     MissingEmDash,
+    /// A signature line's payload could not be base64-decoded, or decoded
+    /// to a length other than 68 bytes (4-byte key-hash + 64-byte sig).
     MalformedSignature,
+    /// Signature block contained no parseable signature lines.
     NoSignatures,
 }
 
+/// Errors returned by ed25519 signature verification.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum VerifyError {
+    /// The provided public-key bytes are not a valid ed25519 point.
     BadPublicKey,
 }
 
