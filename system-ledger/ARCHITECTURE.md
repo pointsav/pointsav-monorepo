@@ -99,6 +99,14 @@ pub trait LedgerConsumer {
         new_apex_pubkey: &[u8; 32],
         handover_checkpoint: &SignedCheckpoint,
     ) -> Result<(), LedgerError>;
+
+    fn apply_witness_record(
+        &mut self,
+        record: &WitnessRecord,
+        proof: InclusionProof,
+        apex_name: &str,
+        apex_pubkey: &[u8; 32],
+    ) -> Result<(), LedgerError>;
 }
 ```
 
@@ -133,11 +141,11 @@ dual-target pattern).
    - All OK: return ExtendThenAllow { new_expiry_t: witness.new_expiry_t }
 ```
 
-The Merkle inclusion proof check (step 4 last) currently relies on
-the consumer pre-validating that the witness record is in the
-ledger; full RFC 9162 inclusion-proof machinery lives in
-`system-core` (queued in `system-core/NEXT.md`) and will plug in
-once available.
+The Merkle inclusion proof check is enforced via `apply_witness_record`
+(Phase 1A.4 / v0.2.0): the caller MUST supply an `InclusionProof` when
+committing a witness record. `SignedCheckpoint::verify_inclusion_proof`
+(from `system-core`) validates signature + Merkle path atomically before
+the record is inserted into `witnessed`. No trust shortcut remains.
 
 ## 4. Cross-references
 
@@ -155,20 +163,27 @@ once available.
 
 ## 5. Verification
 
-Skeleton commit: `cargo check -p system-ledger` passes; zero
-warnings; zero tests (tests land alongside each module
-implementation).
+**44 tests passing** on `cargo test -p system-ledger` (Rust stable),
+zero warnings. **10 criterion benchmarks** in `benches/consult.rs`.
 
-Test plan as modules land:
-- `cache`: insert / lookup / eviction / miss
-- `revocation`: apply / contains / idempotent replay
-- `apex`: handover ceremony fixture per inbox brief Phase 1A item 4
-  (revocation entry by P-old → handover with both sigs → next-only-
-  P-new accepted → P-old after handover REFUSED)
-- `witness`: ssh-keygen -Y verify shell-out happy path + signature
-  failure path + namespace cross-replay rejection
-- `lib::LedgerConsumer`: end-to-end (cap → consult → revoke →
-  re-consult refuses; cap with expiry → consult-past-expiry without
-  witness refuses; with valid witness extends; with invalid sig
-  refuses with WitnessSignatureInvalid)
-- criterion benchmarks per task #21 — Master 4b deliverable
+| Module | Tests |
+|---|---|
+| `cache.rs` | 7 (insert, lookup by tree_size + root_hash, eviction, miss) |
+| `revocation.rs` | 5 (apply, contains, idempotent replay) |
+| `apex.rs` | 10 (handover ceremony, post-handover invariant, StaleApex) |
+| `witness.rs` | 5 (ssh-keygen happy path, sig failure, namespace cross-replay rejection) |
+| `lib.rs` | 17 (consult, revoke, expiry, witness path, full N+3+ ceremony end-to-end) |
+
+Key benchmark results (Intel Xeon 2.20 GHz; full table in `BENCHMARKS.md`):
+
+| Benchmark | Mean |
+|---|---|
+| cache hit (most-recent) | 11.2 ns |
+| cache miss (full 64-entry scan) | 362 ns |
+| `verify_signer` (1-sig ed25519) | 4.01 ms |
+| `consult_capability` (Allow path) | 3.74 ms |
+| `apply_witness_record` (full path) | 3.71 ms |
+| `InclusionProof::verify` (raw, 1024-leaf) | 17.74 µs |
+
+Cache hit is ~358,000× faster than ed25519 verify — architecturally
+critical for the kernel-side invocation hot path.
