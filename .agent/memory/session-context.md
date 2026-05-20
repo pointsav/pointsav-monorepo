@@ -4,6 +4,23 @@ Rolling 3-session summary. Newest entry first. Push oldest to session-context-ar
 
 ---
 
+## 2026-05-20 | totebox@claude-code | Sonnet 4.6
+
+**Done this session:**
+- Startup + shutdown only. No editorial work performed.
+
+**Pending / carry-forward:**
+- Stage 6: content-wiki-documentation, content-wiki-projects, content-wiki-corporate, woodfine-fleet-deployment — Command Session task.
+- pointsav-monorepo `readme-fixes-2026-05-16` → main merge + service restart — Command Session task.
+- Route design drafts to project-design — Command Session to forward outbox message.
+- Phase E bilingual home routing — deferred, low priority, needs Rust change → project-knowledge.
+- Italy co-location stub — needs data from project-gis.
+
+**Operator preferences surfaced:**
+- No new preferences this session.
+
+---
+
 ## 2026-05-19 (continuation) | totebox@claude-code | Sonnet 4.6
 
 **Done this session:**
