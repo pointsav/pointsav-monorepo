@@ -190,6 +190,21 @@ Doorman endpoint: `http://localhost:8011`. Phase 1 = chassis.
 - [x] `app-console-content/src/bin/proofctl.rs` — stub binary
 - [x] **Phase 0 gate passed** — ratatui frame renders over SSH port 2222; committed
 
+## Completed (2026-05-20 — session 3)
+
+- [x] Full architecture Q&A resolved: os-console/app-console-keys/cartridge hierarchy; MBA peer-to-peer vs PPN isolation; F-key map canonical; service-input Ring 1; PDF=pdfium-render Kitty/Sixel
+- [x] Plan written: `.agent/plans/os-console-platform.md` — consolidated architecture reference (supersedes tui-pivot-2030.md Phase 7 deferral + wrong port)
+- [x] Plan written: `.agent/plans/leapfrog-2030-coding.md` — chassis-first phased coding roadmap (9 phases, Phase 0 done, Phase 1 next)
+- [x] Draft TOPIC: `topic-machine-based-authorization.md` — Geometric Security, peer-to-peer, pairing ceremony
+- [x] Draft TOPIC: `topic-pointsav-private-network.md` — hub-and-spoke WireGuard, Mesh Fusion, PPN vs MBA isolation
+- [x] Draft TOPIC: `topic-os-console-platform.md` — os-console binary, app-console-keys chassis, Cartridge architecture
+- [x] Draft TOPIC: `topic-input-machine.md` — F12 The Anchor, service-input Ring 1, SYS-ADR-10, Zero-Form
+- [x] Draft GUIDE: `guide-mba-pairing-ceremony.md` — proofctl user add/list/rotate-key/disable + pairings.yaml
+- [x] Draft GUIDE: `guide-os-console-operator.md` — terminal requirements, F-key map, slash commands, config
+- [x] Outbox message to Command: rename project-proofreader→project-console, add content-wiki-documentation sub-clone, add app-console-gis/slm/system to catalog, fix Doorman port in manifest.md
+- [x] `session-start.md` updated to reflect chassis-first architecture and new plans
+- [x] All artifacts committed: `f7ad7dc`
+
 ---
 
 ## Codebase notes
