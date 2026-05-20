@@ -113,10 +113,10 @@ plan; `ARCHITECTURE.md` §15 for substrate documentation.
 
 ### DEFERRED — next coding session
 
-- [ ] P1-1.4 F12 review-subdir refactor — operator design-review the
-  in-place-vs-_review/ decision before landing.
-- [ ] P1-1.7 Tool-use round-trip — ~300 LOC; operator API-shape
-  review (`tools: Vec<ToolDef>` + `ContentBlock` response).
+- [x] P1-1.4 F12 corpus promotion gate — in-place layout; `bin/promote-corpus.sh`
+  (operator SSH-signed, namespace corpus-promote-v1); SYS-ADR-10 closed.
+- [x] P1-1.7 Tool-use round-trip — `ToolDef` + `content_blocks: Vec<ContentBlock>`;
+  OAI tool_calls wiring across Tier A/B; 2 new shim tests; 246 pass.
 - [ ] P2-2.2 RelatedTo edges substrate — needs editorial taxonomy
   ratification (outbox staged).
 - [ ] P2-2.3 `/v1/editorial/seed` — depends on P2-2.2 + P2-2.1 wiring.
@@ -124,7 +124,7 @@ plan; `ARCHITECTURE.md` §15 for substrate documentation.
 - [ ] P2-2.7 deprecate `/v1/draft/generate` — architectural cleanup.
 - [ ] P2-2.8 Local vector index + retrieval (sqlite-vec).
 - [ ] P3-3.2 Canary task set + `bin/canary-run.sh`.
-- [ ] P3-3.3-followup adapter A/B dual-dispatch (skeleton shipped).
+- [x] P3-3.3-followup adapter A/B dual-dispatch — landed c7ebd778.
 - [ ] P3-3.4-followup Sigstore adapter signing (operator key).
 - [x] P3-3.5-followup wire `write_audit` → `cost_ledger.append` — landed `80083e6e`; awaiting Stage 6.
 
