@@ -1,6 +1,7 @@
 use std::{
     collections::BTreeMap,
-    io,
+    io::{self, Write},
+    sync::mpsc,
     time::{Duration, Instant},
 };
 
@@ -130,6 +131,35 @@ impl AppConsoleKeys {
         }
 
         ChassisAction::None
+    }
+
+    pub fn set_mba_active(&mut self) {
+        self.mba_status = MbaStatus::Active;
+    }
+
+    /// Run driven by raw SSH bytes; `terminal` writes to a TerminalHandle defined in os-console.
+    pub fn run_with_bytes<W: Write + Send>(
+        mut self,
+        mut terminal: ratatui::Terminal<CrosstermBackend<W>>,
+        rx: mpsc::Receiver<u8>,
+    ) {
+        let mut parser = crate::input_bytes::ByteParser::new();
+        loop {
+            if terminal.draw(|f| self.render(f)).is_err() {
+                break;
+            }
+            match rx.recv_timeout(Duration::from_millis(16)) {
+                Ok(byte) => {
+                    if let Some(ev) = parser.push(byte) {
+                        if let ChassisAction::Quit = self.handle_event(&ev) {
+                            break;
+                        }
+                    }
+                }
+                Err(mpsc::RecvTimeoutError::Timeout) => {}
+                Err(mpsc::RecvTimeoutError::Disconnected) => break,
+            }
+        }
     }
 
     /// Run in local crossterm PTY mode (default; no SSH required).
