@@ -1,11 +1,12 @@
 ---
 schema: foundry-cluster-manifest-v1
-cluster_name: project-proofreader
-cluster_branch: cluster/project-proofreader
+cluster_name: project-console
+cluster_branch: cluster/project-console
 created: 2026-04-27
+renamed: 2026-05-20  # project-proofreader → project-console; scope broadened to full Console OS family
 state: active
 slm_endpoint: http://localhost:8011
-module_id: proofreader
+module_id: console
 
 # Tetrad upgrade 2026-04-28 per Master inbox broadcast (Doctrine
 # claim #37 / v0.0.10): triad → tetrad with wiki leg added as the
@@ -15,8 +16,8 @@ tetrad:
     - repo: pointsav-monorepo
       path: pointsav-monorepo/
       upstream: vendor/pointsav-monorepo
-      focus: service-proofreader/ (NEW project — operational write-assistant HTTP service) + app-console-proofreader/ (NEW project — Console-OS pattern thin web app UI)
-      status: active (Round 7 PP.1 LIVE — corpus event-pair capture in production at HEAD eb0ffd3; Round 6 + verdict feature staged in working tree pending pwoodfine SSH key chmod 0600)
+      focus: os-console/ + app-console-proofreader/ (LIVE at proofreader.pointsav.com) + app-console-gis/ (Reserved; F8) + app-console-slm/ (Reserved; F9) + app-console-system/ (Reserved; F11)
+      status: active (proofreader LIVE; app-console-proofreader at eb0ffd3)
   customer:
     - fleet_deployment_repo: vendor/pointsav-fleet-deployment
       catalog_subfolders:
@@ -41,7 +42,7 @@ tetrad:
       status: active (HTTPS LIVE on https://proofreader.pointsav.com/ since 2026-05-03)
   wiki:
     - repo: vendor/content-wiki-documentation
-      drafts_via: clones/project-proofreader/.claude/drafts-outbound/
+      drafts_via: clones/project-console/.agent/drafts-outbound/
       gateway: project-language Task
       planned_topics:
         - topic-language-protocol-substrate.md (architecture TOPIC — explicit-protocol-selection vs. auto-detection rationale per Cornell anti-homogenization study; three-stage pipeline composition) — SKELETON STAGED 2026-04-28
@@ -57,25 +58,30 @@ clones:
     role: primary
     path: pointsav-monorepo/
     upstream: vendor/pointsav-monorepo
-    focus: service-proofreader/ + app-console-proofreader/ (NEW projects)
-  - repo: pointsav-fleet-deployment
+    focus: os-console/ + app-console-proofreader/ + app-console-gis/ + app-console-slm/ + app-console-system/
+  - repo: woodfine-fleet-deployment
     role: sibling
-    path: pointsav-fleet-deployment/
-    upstream: vendor/pointsav-fleet-deployment
-    focus: gateway-orchestration-proofreader/ catalog subfolder (NEW); deployment instance manifest
+    path: woodfine-fleet-deployment/
+    upstream: customer/woodfine-fleet-deployment
+    focus: customer-tier catalog entries for console-OS deployments
+  - repo: content-wiki-documentation
+    role: wiki
+    path: content-wiki-documentation/
+    upstream: vendor/content-wiki-documentation
+    focus: topic-language-protocol-substrate.md + topic-editorial-pipeline-three-stages.md + topic-customer-tier-catalog-pattern.md (plus 2 candidates)
 
 trajectory_capture: enabled (L1 capture-edit hook installed in both sub-clones at provisioning)
 
 adapter_routing:
   trains:
-    - cluster-project-proofreader   # own cluster adapter — operational-app development skill
-    - engineering-pointsav          # Vendor engineering corpus
-    - tenant-pointsav               # PointSav-voice editorial work captured via the proofreader
+    - cluster-project-console      # own cluster adapter — Console OS development skill
+    - engineering-pointsav         # Vendor engineering corpus
+    - tenant-pointsav              # PointSav-voice editorial work captured via the proofreader
   consumes:
-    - constitutional-doctrine       # always
-    - engineering-pointsav          # always — Vendor knowledge
-    - cluster-project-proofreader   # own cluster context
-    - role-task                     # current role
+    - constitutional-doctrine      # always
+    - engineering-pointsav         # always — Vendor knowledge
+    - cluster-project-console      # own cluster context
+    - role-task                    # current role
     - tenant-pointsav | tenant-woodfine  # composed at request time per which tenant the editorial work is for
 
 apprenticeship_task_types:
@@ -96,32 +102,22 @@ apprenticeship_task_types:
   # LEGAL templates volume-gated; not in initial set
 ---
 
-# Cluster manifest — project-proofreader
+# Cluster manifest — project-console
 
-Multi-clone N=2 cluster (seventh cluster overall). Two sub-clones in
+Multi-clone N=3 cluster (seventh cluster overall; renamed from project-proofreader 2026-05-20). Three sub-clones in
 one cluster directory; one Task session writes to one `.git/index` at
 a time per Doctrine §IV.c.
 
 ## Mission
 
-Operational write-assistant for SMB-shaped editorial work, deployed at
-**https://proofreader.pointsav.com** (Vendor-tier UI domain). Owns:
+Console OS (`os-console`) cluster — the AGPL-3.0 operating-system family that owns all `app-console-*` TUI/UI surfaces. Deployed public surface:
+**https://proofreader.pointsav.com** (app-console-proofreader LIVE). Owns:
 
-- `service-proofreader/` Rust crate (NEW project in pointsav-monorepo)
-  — HTTP service: text in + protocol → improved text + diff out;
-  consumes service-slm Doorman (Tier A/B/C) + service-content
-  (retrieval-augmented context) + service-disclosure (CFG +
-  templates) at request time.
-- `app-console-proofreader/` Rust/Axum thin web app (NEW project in
-  pointsav-monorepo) — Console-OS pattern UI: paste box + explicit
-  protocol selector + side-by-side diff with flag-don't-rewrite
-  default + "explain why" affordance + "regenerate via Tier B" button
-  + Tier-C escape (allowlist).
-- New Vendor-tier catalog folder
-  `vendor/pointsav-fleet-deployment/gateway-orchestration-proofreader/`
-  with deployment runbook (Task drafts; Master ships
-  `infrastructure/local-proofreader/` workspace-tier artefacts when
-  Task signals ready).
+- `os-console/` — Console OS module (AGPL-3.0-or-later)
+- `app-console-proofreader/` — write-assistant UI (LIVE at proofreader.pointsav.com): paste box + explicit protocol selector + side-by-side diff with flag-don't-rewrite default + "explain why" + verdict capture.
+- `app-console-gis/` — Reserved; F8 GIS surface
+- `app-console-slm/` — Reserved; F9 SLM surface
+- `app-console-system/` — Reserved; F11 system surface
 
 The user said:
 
@@ -148,8 +144,7 @@ content, so iteration happens against live deployment.
 
 ## Branch + remotes
 
-`cluster/project-proofreader` in each sub-clone (created 2026-04-27 from
-local upstream `main`).
+`cluster/project-console` in each sub-clone (created 2026-04-27 as cluster/project-proofreader; renamed 2026-05-20).
 
 - pointsav-monorepo: `origin` admin alias + `origin-staging-j` +
   `origin-staging-p`
@@ -168,30 +163,18 @@ Enabled. L1 capture hook installed in both sub-clones at provisioning.
   via outbox-to-Master, Master relays to you and you upgrade Cargo
   dependency to consume the published crate.
 - **`project-slm` Task** owns service-slm Doorman + service-content.
-  service-proofreader consumes both at request time. Doorman live at
-  `127.0.0.1:9080` per workspace v0.1.13; routes Tier A → local OLMo
-  3 7B at `127.0.0.1:8080` (live).
+  service-proofreader consumes both at request time. Doorman at
+  `http://localhost:8011`; routes Tier A → local OLMo 3 7B (live).
 - **`project-knowledge` Task** owns app-mediakit-knowledge wiki engine.
   No direct cross-cluster dependency for project-proofreader; the
   proofreader is its own deployment instance.
 
 ## Mailbox
 
-- Inbox: `~/Foundry/clones/project-proofreader/.claude/inbox.md`
-- Outbox: `~/Foundry/clones/project-proofreader/.claude/outbox.md`
-- Trajectory log: `~/Foundry/clones/project-proofreader/.claude/trajectory-log.md`
+- Inbox: `~/Foundry/clones/project-console/.agent/inbox.md`
+- Outbox: `~/Foundry/clones/project-console/.agent/outbox.md`
+- Trajectory log: `~/Foundry/clones/project-console/.agent/trajectory-log.md`
 
 ---
 
-*Provisioned 2026-04-27 in workspace v0.1.22 / Doctrine v0.0.8.*
-eader/.claude/trajectory-log.md`
-
----
-
-*Provisioned 2026-04-27 in workspace v0.1.22 / Doctrine v0.0.8.*
-d`
-- Trajectory log: `~/Foundry/clones/project-proofreader/.claude/trajectory-log.md`
-
----
-
-*Provisioned 2026-04-27 in workspace v0.1.22 / Doctrine v0.0.8.*
+*Provisioned 2026-04-27 in workspace v0.1.22 / Doctrine v0.0.8. Renamed project-proofreader → project-console 2026-05-20.*
