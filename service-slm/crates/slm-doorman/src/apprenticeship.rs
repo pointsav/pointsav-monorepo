@@ -378,7 +378,7 @@ fn write_shadow_tuple(
     // The index is opened per-call so the in-memory HashSet always
     // reflects the latest on-disk state. Cost is one file read on each
     // write (~ms for current corpus size). Optimisation: cache the
-    // CorpusIndex in AppState — deferred to P1-1.4 (review-subdir refactor).
+    // CorpusIndex in AppState — deferred (low priority at current corpus sizes).
     let gate_index = crate::corpus_gate::CorpusIndex::open(corpus_root)?;
     let gate_outcome = crate::corpus_gate::check(
         &gate_index,
