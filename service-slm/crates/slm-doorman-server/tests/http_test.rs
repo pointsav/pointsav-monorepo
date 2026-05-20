@@ -2958,3 +2958,71 @@ async fn anthropic_messages_streaming_returns_sse_with_all_six_events() {
     assert!(body_str.contains("streamed response") || body_str.contains("streamed "),
             "SSE body must contain the response tokens");
 }
+
+// ===========================================================================
+// Section N — POST /v1/responses (OpenAI Responses API, Sprint 2)
+// ===========================================================================
+
+/// POST /v1/responses with string input → 200 with Responses API output shape.
+#[tokio::test]
+async fn responses_api_string_input_returns_responses_shape() {
+    let server = MockServer::start().await;
+    Mock::given(method("POST"))
+        .and(path("/v1/chat/completions"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+            "choices": [{"message": {"role": "assistant", "content": "pong"}}]
+        })))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    let state = app_state_with_local(server.uri());
+    let app = router(state);
+
+    let req_body = json!({"model": "olmo-2-7b", "input": "ping"});
+    let resp = app
+        .oneshot(post_json("/v1/responses", &req_body))
+        .await
+        .expect("oneshot");
+
+    assert_eq!(resp.status(), StatusCode::OK);
+    let body = body_json(resp).await;
+    assert_eq!(body["object"], "response");
+    assert_eq!(body["model"], "olmo-2-7b");
+    assert!(body["id"].as_str().unwrap_or("").starts_with("resp_"),
+            "id must start with resp_");
+    let output = &body["output"][0];
+    assert_eq!(output["type"], "message");
+    assert_eq!(output["role"], "assistant");
+    assert_eq!(output["content"][0]["type"], "output_text");
+    assert_eq!(output["content"][0]["text"], "pong");
+}
+
+/// POST /v1/responses with array input → routes correctly.
+#[tokio::test]
+async fn responses_api_array_input_routes_correctly() {
+    let server = MockServer::start().await;
+    Mock::given(method("POST"))
+        .and(path("/v1/chat/completions"))
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+            "choices": [{"message": {"role": "assistant", "content": "array-ok"}}]
+        })))
+        .expect(1)
+        .mount(&server)
+        .await;
+
+    let state = app_state_with_local(server.uri());
+    let app = router(state);
+
+    let req_body = json!({
+        "input": [{"type": "message", "role": "user", "content": "hello"}]
+    });
+    let resp = app
+        .oneshot(post_json("/v1/responses", &req_body))
+        .await
+        .expect("oneshot");
+
+    assert_eq!(resp.status(), StatusCode::OK);
+    let body = body_json(resp).await;
+    assert_eq!(body["output"][0]["content"][0]["text"], "array-ok");
+}
