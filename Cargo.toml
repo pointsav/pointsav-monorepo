@@ -5,13 +5,11 @@ members = [
     "service-content",
     "app-console-content",
     "tool-acs-miner",
-    "app-console-input",
     "system-gateway-mba",
     "service-fs",
     "system-security",
     "xtask",
     "app-console-keys",
-    "app-console-system",
     "os-console"
 ]
 
