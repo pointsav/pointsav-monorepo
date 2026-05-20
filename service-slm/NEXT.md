@@ -170,10 +170,10 @@ plan; `ARCHITECTURE.md` §15 for substrate documentation.
 - [x] **Sprint 2a:** Tier C switched to native Anthropic Messages API (`/v1/messages`, `x-api-key`, `anthropic-version` header); tool_use content blocks in response; updated test suite.
 - [x] **Sprint 2b:** `POST /v1/responses` OpenAI Responses API shim — accepts string/array input; returns Responses shape; 2 tests in `http_test.rs`.
 - [x] **Sprint 3:** `crates/slm-mcp-server/` — 6 Foundry MCP tools via rmcp 1.7.0 stdio; `.mcp.json` at repo root; `slm-mcp-server` binary. 250 tests pass.
-- [ ] **Sprint 0b:** Replace fake-SSE `anthropic_sse_body()` with real per-token streaming (~60 LOC). File: `crates/slm-doorman-server/src/http.rs`. No blockers.
-- [ ] **Sprint 3 — deploy:** `cargo build --release -p slm-mcp-server && sudo cp target/release/slm-mcp-server /usr/local/bin/` + update `.mcp.json` path.
-- [ ] **P3-3.2 followup:** Flesh out canary task set + `bin/canary-run.sh` (skeleton in `9454bac4`).
-- [ ] **P1-1.7:** Tool-use round-trip (~300 LOC) — awaiting operator API-shape approval (`tools: Vec<ToolDef>` + `ContentBlock` response).
+- [x] **Sprint 0b:** Real per-token streaming via `yoyo_stream` + `local_stream`; `anthropic_sse_body()` kept as last-resort buffered fallback only. Done.
+- [ ] **Sprint 3 — deploy:** `cargo build --release -p slm-mcp-server && sudo cp target/release/slm-mcp-server /usr/local/bin/` — then `.mcp.json` at repo root is ready.
+- [x] **P3-3.2 followup:** Canary task set + `bin/canary-run.sh` — landed `77481f74`. Done.
+- [x] **P1-1.7:** Tool-use round-trip — `ToolDef` + `content_blocks`; OAI wiring Tier A/B; 2 shim tests. Landed `661909d1`. Done.
 
 ---
 
@@ -283,7 +283,7 @@ plan; `ARCHITECTURE.md` §15 for substrate documentation.
 - [x] **`start-yoyo.sh --runtime=<duration>`** — committed; watchdog tested and verified (stopped VM exactly at T+60min, 2026-05-15). ✓
 - [x] Set `SLM_YOYO_HOURLY_USD=0.84` + `SLM_YOYO_WEIGHTS_GCS_BUCKET=woodfine-node-gcp-free-foundry-substrate` in `/etc/local-doorman/local-doorman.env` ✓
 - [ ] Next Packer image rebuild — bake vllm.service mask + llama-server.service enable; prevents SSH-on-every-restart
-- [ ] **Sprint 0b: real per-token streaming** — replace fake-SSE burst in `http.rs::anthropic_sse_body()` with true token stream (~60 LOC)
+- [x] **Sprint 0b: real per-token streaming** — `yoyo_stream` + `local_stream` provide real streaming; `anthropic_sse_body()` is last-resort fallback only. Done.
 - [ ] LoRA training marker (Test 11): workspace dispatch service needs to be written
 - [ ] ProtectHome fix: `/srv/foundry/infrastructure/local-content/local-content.service` line 51 (outboxed)
 
