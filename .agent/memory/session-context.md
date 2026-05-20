@@ -1,74 +1,53 @@
-# Session Context — Rolling 3-Session Summary
+# Session Context — project-knowledge cluster
 
----
-
-## 2026-05-21 | Totebox | claude-code
-
-**Done this session:**
-- Fixed `is_busy()` always-true bug — llama-server v1 omits `slots_idle` from `/health`; changed to `Option<u32>` + new test. Committed `6a80c5e3`. 125 slm-doorman tests pass.
-- Built and deployed `slm-doorman-server` + `slm-mcp-server` release binaries (from `CARGO_TARGET_DIR=/srv/foundry/cargo-target/mathew`).
-- Wired env vars in `/etc/local-doorman/local-doorman.env`: `SERVICE_CONTENT_ENDPOINT`, `SLM_SHIM_TRAINING_CAPTURE=true`, `SLM_AUDIT_DIR=/var/lib/local-doorman/audit`.
-- Fixed `ReadWritePaths` in `local-doorman.service` to include `/srv/foundry/data/cost-ledger`.
-- Created `/var/lib/local-doorman/audit` directory with correct ownership.
-- Verified end-to-end: Doorman `/v1/messages` → OLMo Tier A → Anthropic format response ✅.
-- Confirmed training capture active: shadow brief enqueued on each commit.
-- Tuned llama-server: `--threads 6` (from 3), `--threads-batch 8`, `CPUQuota=600%`. Applied to `/etc/systemd/system/local-slm.service` (system file).
-- Perf comparison: baseline 1.71 tok/s (threads=3), tuned 1.95 tok/s (threads=6). Bottleneck is memory bandwidth, not compute. Plan written: `.agent/plans/olmo-performance-tuning.md`.
-- Started `local-content` service (graph loading; 16-min startup).
-
-**Pending / carry-forward:**
-- Stage 6 promote (~43 commits) — Command Session task; rebase required first (see inbox message)
-- Tier C commercial API key — operator from laptop (deliberate: test local-only first)
-- ANTHROPIC_BASE_URL routing for Claude Code — not yet set; discuss with operator
-- local-slm.service + local-doorman.service changes are system files; track in `~/Foundry/infrastructure/local-slm/` — not committed in this archive
-- `flash-attn on` test — see performance plan
-- IQ4_XS quantization — potential ~1.2x speed gain
-
-**Operator preferences surfaced:**
-- "local level working 100% before going beyond" — test Tier A thoroughly before adding commercial API key (Tier C). No ANTHROPIC_API_KEY for now.
-- Terse responses; keep going on typos.
+Rolling 3-session summary. Newest on top. Keep only 3 entries; push oldest to `session-context-archive.md`.
 
 ---
 
 ## 2026-05-20 | Totebox | claude-code
 
 **Done this session:**
-- Sprint 2a: Tier C switched to native Anthropic Messages API in `external.rs` — `split_system()`, `AnthropicRequest/Response` wire structs, updated `happy_path` test to mock `/v1/messages` + `x-api-key`. 1 commit.
-- Sprint 2b: `POST /v1/responses` OpenAI Responses API shim in `http.rs`; `ResponsesApiBody` + `ResponsesInput` structs; 2 tests in `http_test.rs`. 1 commit.
-- P1-1.3: `bin/eval-adapter.sh` — F12 holdout scoring gate, difflib SequenceMatcher, `promoted: true` when regression ≤ 5%. 1 commit.
-- P1-1.4: `bin/promote-corpus.sh` — operator SSH-signed corpus promotion gate; SYS-ADR-10 closed. 1 commit.
-- P1-1.7: Tool-use round-trip — `ToolDef` + `content_blocks: Vec<ContentBlock>`; OAI tool_calls wiring Tier A/B; 2 shim tests. 1 commit.
-- Sprint 3: `crates/slm-mcp-server/` — 6 Foundry MCP tools via rmcp 1.7.0 stdio (query-datagraph, mutate-datagraph, get-entity-context, get-corpus-stats, submit-extraction, doorman-health). `.mcp.json` at repo root. `bed0f229`. 250 tests pass.
-- NEXT.md cleanup: ticked Sprint 0b / P3-3.2 / P1-1.7 done. `dd9eaa34`.
+- G2 (`a06f64f`, Peter): `README-TOTEBOX-EGRESS.md` removed from woodfine-fleet-deployment cluster-clone. Canonical `/srv/foundry/customer/woodfine-fleet-deployment/` copy still present — Command Session admin-tier commit required (outbox updated).
+- PJ2 (`b138b99`, Jennifer): 5 country co-location index stubs expanded (Italy, Mexico, Nordics, Poland, Spain) — 2 new sections each (Anchor Network + convergence pattern), Provenance block added, quality partial→complete; ES frontmatter `paired_with:` bug fixed in all 5 ES stubs; `language_protocol: PROSE-TOPIC` → `TRANSLATE-ES`.
+- C8–C10 (`cb53200`, Peter): 10 new corporate wiki topics + 10 ES bilingual pairs (20 files): 4 company-identity (corporate-structure, vendor-customer-model, co-location-investment-thesis, regulatory-posture) + 6 operational (continuous-disclosure, property-ledger-technology, investor-access, data-governance, asset-evaluation, technology-services).
+- Corporate wiki housekeeping (`ebc2939`, Peter): `featured-topic.yaml` expanded to 15-topic rotation pool; `leapfrog-facts.yaml` expanded to 9 facts; `about.md` content scope updated; `NEXT.md` updated; `.agent/rules/` bootstrap (repo-layout.md + cleanup-log.md created).
+- Projects wiki housekeeping (`bffe4e3`, Jennifer): `NEXT.md` fully current (PJ1–PJ8 closed); `CLAUDE.md` created (was missing).
 
 **Pending / carry-forward:**
-- Stage 6 promote (~42 commits now) — Command Session task
-- Rebuild + redeploy Doorman (after Stage 6) — Command Session
-- Sprint 3 binary deploy: `cargo build --release -p slm-mcp-server && sudo cp target/release/slm-mcp-server /usr/local/bin/`
-- P2-2.2 RelatedTo edges — blocked on editorial taxonomy ratification
-- P2-2.7, P2-2.8 — deferred (service-content scope / sqlite-vec setup)
-- Operator tasks: GCP billing budget, sign eval holdout, sign verdict batch
+- **Items 6 + 7 deferred:** corporate glossary expansion (`glossary-corporate.csv`, 459 rows, many incomplete) + documentation wiki thin-category audit. Start here next session.
+- **D10:** wikilink validation pass — blocked on Stage 6 binary rebuild (Command Session scope).
+- **G2 canonical:** `README-TOTEBOX-EGRESS.md` still at `/srv/foundry/customer/woodfine-fleet-deployment/` — Command Session must `git rm` + admin-tier commit.
+- **Stage 6 outstanding:** content-wiki-projects (6 commits), content-wiki-corporate (10 commits, blocked on cluster/canonical divergence), content-wiki-documentation (4 commits), monorepo (16 commits).
 
 **Operator preferences surfaced:**
-- Terse responses, no trailing summaries.
-- Keep going on typos ("just a typo keep going").
+- "do them all in parallel" / "yes" → execute all items immediately in parallel without re-asking.
+- No trailing summaries mid-session; concise updates only.
 
 ---
 
 ## 2026-05-19 | Totebox | claude-code
 
 **Done this session:**
-- Task 3 (503 busy-rejection): `TierABusy` error variant + `is_busy()` health probe + `Box::pin` escalation + `Retry-After: 30` header. 3 commits (`c38e66de`, `e2a93a99`, `160668cd`). 123 slm-doorman tests pass.
-- Task 4 (Anthropic shim integration): 5 new tests in `anthropic_shim_test.rs` (14 total). Fixed latent `doorman_error_to_status` E0004 compile error and `shadow_with_local_source_tier_returns_202` diff-length bug in `http_test.rs`. 1 commit (`93620c1b`). 241 workspace tests pass.
-- Struck P3-3.5-followup in NEXT.md (was already done as of `80083e6e`).
+- D3 complete (`cf72e67`): `substrate/_index.md`+`.es.md` expanded from 7→32 articles across 6 thematic sections; `patterns/_index.md`+`.es.md` expanded from 3→10 articles across 4 thematic sections. Bilingual.
+- D6 complete (`a07bdf5`): governance category completion. `sovereign-airlock-doctrine` EN+ES fully rewritten (stale vocabulary, wrong company names, broken frontmatter, dead wikilinks). `moonshot-initiatives`, `ontological-governance`, `sovereign-replacement-initiative` EN+ES elevated stub→complete. `governance/_index.md`+`.es.md` expanded with 3 new sections, 8 previously-unlisted articles.
+- Projects wiki: PJ1 (methodology tier table fix), PJ4 (heading audit), PJ5 (slug normalise), PJ7 (leapfrog-facts prefix fix) — all committed before context compaction, recorded in THREE-WIKI-REBUILD-MASTER.md.
+- Outbox updated with consolidated 4-commit documentation wiki promote request.
 
 **Pending / carry-forward:**
-- NEXT.md needs Task 3 + Task 4 struck (done next session)
-- Sprint 0b: real per-token streaming — done via yoyo_stream + local_stream
-- P3-3.2: canary task set + `bin/canary-run.sh` — done as `77481f74`
-- P1-1.7: tool-use round-trip — done as `661909d1`
-- Stage 6: 36 commits unpromoted (Command Session task)
+- D10: wikilink validation pass — blocked on Stage 6 binary rebuild (must happen from Command Session via `bin/promote.sh` + `cargo build --release` + service restart).
+- PJ2: 6 country index stubs (Canada, Italy, Mexico, Nordics, Poland, Spain) — needs real GIS data, multi-session research effort.
+- content-wiki-documentation: 4 commits ahead of origin/main.
+- content-wiki-projects: 4 commits ahead of origin/main.
+- monorepo sub-clone: 16 commits ahead (Sprints R–AE) — Stage 6 pending Command Session.
 
 **Operator preferences surfaced:**
-- No new preferences this session. Existing: terse responses, no trailing summaries.
+- Sequential work directives ("X next") — execute immediately without re-asking for confirmation.
+- No trailing summaries needed mid-session; keep updates concise.
 
+---
+
+## 2026-05-18 | Totebox | claude-code
+
+**Done:** D5 (short_description on 162 EN+ES docs wiki articles), D8 (governance/_index + design-system/_index frontmatter), D1/D2/D4/D7/D9 verified moot or done. PJ3 (short_description on 26 EN+ES projects wiki articles). nightly-datagraph-rebuild stub expanded. All P0 engine bugs (A–H) shipped in Sprints AD+AE.
+
+**Pending:** D3 (substrate/patterns _index MOC), D6 (governance stubs), D10 (post-Stage-6 validation). PJ1/PJ5/PJ7 carried to next session.
