@@ -96,5 +96,61 @@ Newest on top. Append a dated block when a session includes meaningful cleanup w
 
 ---
 
+## 2026-05-20 — Group 2 mechanical hygiene — system-core, system-ledger, moonshot-toolkit
+
+Closed all 6 sub-groups of the Group 2 plan (project-system-todo.md). Six commits.
+
+**Group 2A — system-core rustdoc + doc updates (`dcb2700`, Peter Woodfine)**
+- Added per-variant rustdoc to `CapabilityType` (5 variants) and `Right` (5 variants)
+  in `src/lib.rs`; field docs on `Capability`, `WitnessRecord`; `/// # Examples`
+  block on `Capability::hash()`.
+- 4 new tests: `capability_hash_expiry_none_vs_some`,
+  `capability_hash_changes_with_witness_pubkey`, `right_variants_round_trip`,
+  `capability_type_variants_round_trip`. Total: 62 tests (was 51+1 doctest = 52).
+- `system-core/ARCHITECTURE.md` §3 resolved to IMPLEMENTED; §5 updated to 62 tests.
+- `system-core/NEXT.md` fully rewritten to reflect v0.2.0 structurally complete state.
+- `system-core/CLAUDE.md` updated: current state, test count, file layout.
+- `system-core/master-relay.rs` deleted (`git rm`; legacy stub with hardcoded
+  nonexistent `/bin/service-*` paths, never a `[[bin]]` target).
+
+**Group 2B — 11 new negative-path tests in system-core (`334462b`, Peter Woodfine)**
+- `checkpoint.rs`: 7 tests covering `ParseError` variants (NotUtf8, Truncated,
+  MissingNewline, BadRootHashLength, MissingSignatureSeparator), `VerifyError::BadPublicKey`
+  (y=2 is a quadratic non-residue on Ed25519; smallest non-curve point per Legendre
+  symbol computation), `consistency_proof_new_signature_invalid_rejects`.
+- `lib.rs`: 4 tests covering `capability_hash_expiry_none_vs_some`,
+  `capability_hash_changes_with_witness_pubkey`, round-trip serialisation variants.
+- Ed25519 non-curve point: `[0u8; 32]` (y=0) IS accepted by ed25519-dalek v2.2.0
+  `from_bytes` (4-torsion, not rejected). Used `bad_pubkey[0] = 2` (y=2, QNR mod p).
+
+**Group 2C — system-ledger doc updates + BENCHMARKS.md (`0881091`, Jennifer Woodfine)**
+- `system-ledger/CLAUDE.md`, `NEXT.md`, `ARCHITECTURE.md` all updated from skeleton
+  language to v0.2.1 fully-implemented state.
+- `system-ledger/BENCHMARKS.md` created: 10 criterion benchmark results from
+  `BENCH-v0.2.0.md`, run conditions, architectural observations.
+
+**Group 2D — 3 new gap tests in system-ledger (`cb935f9`, Peter Woodfine)**
+- `consult_with_bad_apex_pubkey_returns_inconsistent_state`: bad_pk[0]=2 (non-curve)
+  → `ConsultError::InconsistentState`.
+- `apply_witness_record_no_apex_returns_no_apex_for_checkpoint`: no genesis →
+  `LedgerError::NoApexForCheckpoint`.
+- `apply_witness_record_at_handover_height_succeeds`: 2-leaf Merkle tree, tree_size
+  matches proof (must match for verify_inclusion_proof), handover path → Ok.
+  Bug during development: original test used tree_size=50 but proof covered 2 leaves
+  → `TreeSizeMismatch`. Fixed by setting checkpoint tree_size=2.
+- Total: 47 tests (was 44).
+
+**Group 2E — moonshot-toolkit ARCHITECTURE.md drift audit (`no-commit` — already applied)**
+- Read `AUDIT-moonshot-toolkit-arch-vs-cli.md` (9 proposed edits) against current
+  `ARCHITECTURE.md`. All 9 edits already applied in a prior session.
+  No code changes needed; confirmed complete.
+
+**Group 2F — clippy/fmt/rustdoc CI pass (`54fb7e7`, Jennifer Woodfine)**
+- `cargo fmt`: fixed 5 diffs system-core, 9 diffs system-ledger, 4 diffs moonshot-toolkit.
+- `cargo clippy -D warnings`: fixed `push_str("…")` → `push('…')` in moonshot-toolkit.
+- `cargo doc --no-deps`: fixed 7 broken intra-doc links (3 system-core, 3 system-ledger,
+  1 moonshot-toolkit) and 1 bare URL in system-core/checkpoint.rs.
+- Final state: 0 warnings across all three crates for clippy, fmt, doc.
+  139 tests passing (62 + 47 + 30).
 
 > **Archived entries:** session logs before this point are in `cleanup-log-archive.md`.
