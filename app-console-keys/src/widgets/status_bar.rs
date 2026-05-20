@@ -24,7 +24,6 @@ impl MbaStatus {
     }
 }
 
-#[allow(clippy::too_many_arguments)]
 pub fn render(
     frame: &mut Frame,
     area: Rect,
@@ -33,20 +32,13 @@ pub fn render(
     mba: &MbaStatus,
     active: FKey,
     elapsed_secs: u64,
-    pending_pairs: u16,
 ) {
     let h = elapsed_secs / 3600;
     let m = (elapsed_secs % 3600) / 60;
     let s = elapsed_secs % 60;
 
-    let badge = if pending_pairs > 0 {
-        format!("  │  [{} pending]", pending_pairs)
-    } else {
-        String::new()
-    };
-
     let text = format!(
-        " {}@{}  │  {}  │  {}  │  {:02}:{:02}:{:02}{} ",
+        " {}@{}  │  {}  │  {}  │  {:02}:{:02}:{:02} ",
         username,
         tenant,
         mba.label(),
@@ -54,7 +46,6 @@ pub fn render(
         h,
         m,
         s,
-        badge,
     );
 
     let (bg, fg) = match mba {
@@ -63,6 +54,9 @@ pub fn render(
         MbaStatus::Pending => (Color::Blue, Color::White),
     };
 
-    let style = Style::default().fg(fg).bg(bg).add_modifier(Modifier::BOLD);
+    let style = Style::default()
+        .fg(fg)
+        .bg(bg)
+        .add_modifier(Modifier::BOLD);
     frame.render_widget(Paragraph::new(text).style(style), area);
 }
