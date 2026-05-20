@@ -1,6 +1,6 @@
 # CLAUDE.md — system-ledger
 
-> **State:** Active  —  **Last updated:** 2026-04-27
+> **State:** Active  —  **Last updated:** 2026-05-20
 > **Version:** 0.2.1  (per `~/Foundry/CLAUDE.md` §7 and DOCTRINE.md §VIII)
 > **Registry row:** `pointsav-monorepo/.claude/rules/project-registry.md`
 
@@ -21,40 +21,44 @@ substrate-tier vs application-tier consumer, decoupled by layer.
 
 ## Current state
 
-**Skeleton commit landed.** All four modules (`cache`, `revocation`,
-`apex`, `witness`) plus `lib.rs` with `LedgerConsumer` trait + types
-exist as compilable stubs. Public API surface defined per Master's
-proposed layout. NO functional behaviour yet — module impls land in
-subsequent commits per cluster task list (#18 cache, #19 revocation,
-#11 apex, #12 witness, #20 LedgerConsumer impl, #21 benchmarks).
+Phase 1A structurally complete at v0.2.1. All five modules fully
+implemented: `cache.rs` (CheckpointCache LRU 64-entry), `revocation.rs`
+(RevocationSet O(1) HashSet + audit sidecar), `apex.rs` (ApexHistory
++ N+3+ post-handover invariant), `witness.rs` (ssh-keygen -Y verify
+wrapper, namespace `capability-witness-v1`), `lib.rs` (LedgerConsumer
+trait + InMemoryLedger). 44 tests + 10 criterion benchmarks.
+
+`apply_witness_record` takes an `InclusionProof` parameter (since
+v0.2.0): witness arrivals are Merkle-inclusion-proof gated, no trust
+shortcut.
 
 ## Build and test
 
 ```
 cargo check -p system-ledger
 cargo test  -p system-ledger
+cargo bench -p system-ledger   # criterion; release profile
 ```
 
-Skeleton has zero tests today; tests land alongside each module
-implementation.
+44 tests pass on Rust stable. `witness.rs` tests require
+`/usr/bin/ssh-keygen` in PATH (present on the workspace VM).
 
 ## File layout
 
 ```
 system-ledger/
-├── Cargo.toml             # workspace member as of v0.1.21
-├── README.md              # bilingual pair (English)
-├── README.es.md           # bilingual pair (Spanish overview)
-├── CLAUDE.md              # this file
-├── AGENTS.md              # vendor-neutral pointer
-├── NEXT.md                # open items
-├── ARCHITECTURE.md        # Phase 1A increment 3 architecture
+├── Cargo.toml
+├── README.md / README.es.md   # bilingual pair
+├── CLAUDE.md / AGENTS.md / NEXT.md / ARCHITECTURE.md
+├── BENCHMARKS.md              # published benchmark numbers
+├── benches/
+│   └── consult.rs             # 10 criterion benchmarks
 └── src/
-    ├── lib.rs             # LedgerConsumer trait + Verdict / RefuseReason / errors / InMemoryLedger
-    ├── cache.rs           # CheckpointCache (skeleton; fill per #18)
-    ├── revocation.rs      # RevocationSet + RevocationEvent (skeleton; fill per #19)
-    ├── apex.rs            # ApexHistory + ApexEntry (skeleton; fill per #11)
-    └── witness.rs         # ssh-keygen -Y verify wrapper (skeleton; fill per #12)
+    ├── lib.rs       # LedgerConsumer trait + InMemoryLedger
+    ├── cache.rs     # CheckpointCache — LRU 64-entry
+    ├── revocation.rs# RevocationSet
+    ├── apex.rs      # ApexHistory + N+3+ invariant
+    └── witness.rs   # ssh-keygen -Y verify wrapper
 ```
 
 ## Hard constraints — do not violate
@@ -70,9 +74,11 @@ system-ledger/
   retired apex MUST be refused on checkpoints at or above the
   retirement height. The kernel verifier enforces this; do not
   add escape hatches.
+- `tempfile` is a `[dev-dependencies]` entry used by `witness.rs`
+  tests. Do not promote it to a regular dependency.
 - The crate stays buildable on every commit (`cargo check -p
-  system-ledger` passes). Skeleton stubs return `NotImplemented`
-  errors where impls are pending; never broken builds.
+  system-ledger` and `cargo test -p system-ledger` pass). Never
+  push a broken build to the cluster branch.
 
 ## Dependencies on other projects
 
