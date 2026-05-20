@@ -200,223 +200,61 @@ Newest on top. Append a dated block when a session includes meaningful cleanup w
 
 ---
 
-## 2026-05-27 — app-orchestration-slm Steps 3+4 — chassis self-registration + adapter-hub
+## 2026-05-20 — Group 2 mechanical hygiene — system-core, system-ledger, moonshot-toolkit
 
-- **Step 3:** `slm-doorman-server/src/main.rs` — added non-blocking chassis self-registration.
-  When `SLM_ORCHESTRATION_ENDPOINT` is set, a `tokio::spawn` POSTs
-  `{module_id, archive_id, doorman_endpoint, tier_b_subscribed}` to the chassis
-  `/v1/discovery/register` endpoint at startup. Four new env vars documented in the module
-  doc comment alongside existing `SLM_*` vars. Zero impact on existing deployments (guarded
-  by env var presence check). `reqwest` and `serde_json` were already in `Cargo.toml`.
+Closed all 6 sub-groups of the Group 2 plan (project-system-todo.md). Six commits.
 
-- **Step 4:** extracted `slm-doorman/src/adapter_registry.rs` (dead code — not exported
-  from lib.rs, zero callers) → new crate `service-slm/crates/adapter-hub/`. Added:
-  `fuse_adapters(base, overlays) -> String` stub (returns symbolic composed ID; real GGUF
-  merge deferred until llama.cpp LoRA hot-swap PR upstream). Added `serde_yaml = "0.9"` to
-  workspace deps (was missing; adapter_registry.rs used it but could never compile as-is).
-  `slm-doorman/src/lib.rs` re-exports `AdapterEntry`, `AdapterRegistry`, `fuse_adapters`.
-  5 tests migrated + 1 new `fuse_adapters_stub` test — all 5 pass.
+**Group 2A — system-core rustdoc + doc updates (`dcb2700`, Peter Woodfine)**
+- Added per-variant rustdoc to `CapabilityType` (5 variants) and `Right` (5 variants)
+  in `src/lib.rs`; field docs on `Capability`, `WitnessRecord`; `/// # Examples`
+  block on `Capability::hash()`.
+- 4 new tests: `capability_hash_expiry_none_vs_some`,
+  `capability_hash_changes_with_witness_pubkey`, `right_variants_round_trip`,
+  `capability_type_variants_round_trip`. Total: 62 tests (was 51+1 doctest = 52).
+- `system-core/ARCHITECTURE.md` §3 resolved to IMPLEMENTED; §5 updated to 62 tests.
+- `system-core/NEXT.md` fully rewritten to reflect v0.2.0 structurally complete state.
+- `system-core/CLAUDE.md` updated: current state, test count, file layout.
+- `system-core/master-relay.rs` deleted (`git rm`; legacy stub with hardcoded
+  nonexistent `/bin/service-*` paths, never a `[[bin]]` target).
 
-- **Commit:** `99e2f06a` (Jennifer). `cargo check --workspace` clean. Pre-existing
-  `micro_node` integration test failure (stale `AppState` fields) unchanged.
+**Group 2B — 11 new negative-path tests in system-core (`334462b`, Peter Woodfine)**
+- `checkpoint.rs`: 7 tests covering `ParseError` variants (NotUtf8, Truncated,
+  MissingNewline, BadRootHashLength, MissingSignatureSeparator), `VerifyError::BadPublicKey`
+  (y=2 is a quadratic non-residue on Ed25519; smallest non-curve point per Legendre
+  symbol computation), `consistency_proof_new_signature_invalid_rejects`.
+- `lib.rs`: 4 tests covering `capability_hash_expiry_none_vs_some`,
+  `capability_hash_changes_with_witness_pubkey`, round-trip serialisation variants.
+- Ed25519 non-curve point: `[0u8; 32]` (y=0) IS accepted by ed25519-dalek v2.2.0
+  `from_bytes` (4-torsion, not rejected). Used `bad_pubkey[0] = 2` (y=2, QNR mod p).
 
-- **Stage 6 pending:** `99e2f06a` (and prior `49a802a2` MVP scaffold) need `bin/promote.sh`
-  from Command Session.
+**Group 2C — system-ledger doc updates + BENCHMARKS.md (`0881091`, Jennifer Woodfine)**
+- `system-ledger/CLAUDE.md`, `NEXT.md`, `ARCHITECTURE.md` all updated from skeleton
+  language to v0.2.1 fully-implemented state.
+- `system-ledger/BENCHMARKS.md` created: 10 criterion benchmark results from
+  `BENCH-v0.2.0.md`, run conditions, architectural observations.
 
----
+**Group 2D — 3 new gap tests in system-ledger (`cb935f9`, Peter Woodfine)**
+- `consult_with_bad_apex_pubkey_returns_inconsistent_state`: bad_pk[0]=2 (non-curve)
+  → `ConsultError::InconsistentState`.
+- `apply_witness_record_no_apex_returns_no_apex_for_checkpoint`: no genesis →
+  `LedgerError::NoApexForCheckpoint`.
+- `apply_witness_record_at_handover_height_succeeds`: 2-leaf Merkle tree, tree_size
+  matches proof (must match for verify_inclusion_proof), handover path → Ok.
+  Bug during development: original test used tree_size=50 but proof covered 2 leaves
+  → `TreeSizeMismatch`. Fixed by setting checkpoint tree_size=2.
+- Total: 47 tests (was 44).
 
-## 2026-05-12 — Phase 4 Steps 4.4+4.5 — redb wikilink graph + blake3 content hashes
+**Group 2E — moonshot-toolkit ARCHITECTURE.md drift audit (`no-commit` — already applied)**
+- Read `AUDIT-moonshot-toolkit-arch-vs-cli.md` (9 proposed edits) against current
+  `ARCHITECTURE.md`. All 9 edits already applied in a prior session.
+  No code changes needed; confirmed complete.
 
-- **`src/links.rs`** (new, 230 lines): `LinkGraph` struct backed by redb. Two tables in
-  `<state_dir>/links.redb`: `outlinks` (composite key `"from_slug\x00to_slug"` → u8 sentinel;
-  supports prefix scan for outlinks and full-scan filter for backlinks) and `hashes`
-  (`"slug\x00revision_sha"` → 32-byte blake3 digest; federation-seam baseline for Phase 7).
-  Public API: `open_or_create`, `rebuild_for_slug`, `backlinks`, `record_hash`,
-  `lookup_by_hash`, `for_testing`. Wikilink parser: regex `r"\[\[([^\]|#\[]+)"`, output
-  slugified (lowercased, spaces → hyphens, anchors/aliases stripped). `for_testing()` uses
-  tempfile + atomic counter for isolated parallel test databases.
-
-- **`tests/links_test.rs`** (new, 133 lines): 7 integration tests — 6 unit-level graph
-  tests (backlink add/clear, multiple sources, self-links, blake3 round-trip, unknown hash)
-  + 1 route-level test (`whatlinkshere_returns_backlinks_from_graph` via tempfile fixture +
-  oneshot router pattern matching `tests/feeds_test.rs`).
-
-- **Wiring across 20 files:**
-  - `src/error.rs`: new `WikiError::LinkGraph(String)` variant; mapped to HTTP 500.
-  - `src/lib.rs`: `pub mod links;` added.
-  - `src/main.rs`: `LinkGraph::open_or_create(&state_dir.join("links.redb"))` at startup
-    (after git repo and glossary); stored in `Arc<LinkGraph>`; passed as `AppState.links`.
-  - `src/server.rs`: `AppState.links: Arc<LinkGraph>` field; `GET /special/whatlinkshere/{slug}`
-    route + `what_links_here` handler (reads `backlinks()`, renders HTML list); "What links here"
-    link in article footer chrome. All `AppState` test constructors updated.
-  - `src/edit.rs`: `post_edit` and `post_create` both call `record_hash(slug, oid_sha, body)`
-    after git commit succeeds, and `rebuild_for_slug(slug, body)` unconditionally. Failures
-    logged non-fatally (link graph is derived state, rebuildable).
-  - All 11 pre-existing integration test files: `links: LinkGraph::for_testing()` added to
-    `AppState` construction (1–2 lines each).
-
-- **Cargo**: `redb = "4.1"` + `blake3 = "1.8"` added to `[dependencies]`.
-
-- **Test results**: 7/7 `links_test` pass (`cargo test --test links_test`). `cargo check`
-  clean. Pre-existing `doorman_stubs_return_correct_json_shape` failure unchanged (unrelated).
-
-- **Stage 6 needed**: Wikipedia Parity Phases 1+2A+3 commits (`3b557cf`, `68c643c`, `b8a1ad8`,
-  `3cee49d`) + this Phase 4 commit (`177813e`) + cleanup-log entry (this commit) need
-  `bin/promote.sh` from Command Session to reach canonical `pointsav/pointsav-monorepo` main.
-
-- **Pending**: Step 4.6 (MCP server via rmcp) and Step 4.7 (git smart-HTTP remote) per
-  `docs/PHASE-4-PLAN.md`. Deploy: `systemctl restart local-knowledge-documentation.service`
-  after Stage 6 binary rebuild.
-
----
-
-
-## 2026-05-12 — Wikipedia Parity Phase 3 — keyboard shortcuts + TOC pin + AJAX page navigation
-
-- **wiki.js rewritten** (~619 lines → ~530 lines). Module-level state vars added for idempotent
-  re-init on AJAX navigation: `_sectionObserver`, `_hoverCard`, `_hoverTimer`, `_hoverTarget`,
-  `_hoverCache`, `_glossaryTip`, `_fnTip`.
-
-- **5 content-dependent init functions extracted/renamed** to support AJAX page swap:
-  `initHoverCards()`, `initGlossaryTooltips()`, `initFootnoteTooltips()`,
-  `initNavboxes()`, `initCollapsibleSections()`, `initActiveTocTracking()` (stores observer
-  ref in `_sectionObserver`; disconnects before content swap). Called at boot and in
-  `reinitContentInteractions()` after every AJAX navigation.
-
-- **Keyboard shortcuts (Part 1)**: `?` key toggles shortcut help overlay; `Esc` closes it.
-  AccessKey attributes added to server.rs — `accesskey="r"` (Read), `accesskey="e"` (Edit),
-  `accesskey="s"` (View source), `accesskey="h"` (View history), `accesskey="t"` (Talk).
-  Browsers trigger via Alt+Shift+key (Firefox/Linux), Alt+key (Chrome), Ctrl+Option (macOS).
-
-- **TOC pin button (Part 2)**: `button.toc-pin-btn #toc-pin-btn` added to `div.toc-header` in
-  server.rs (after the existing `[hide]` toggle). `initTocPin()` in wiki.js — pin state
-  persisted to `localStorage['wiki-toc-pinned']`; pinned TOC cannot be collapsed by the hide
-  button; `applyPinState()` toggles `toc-pinned` class + `aria-pressed` + button text.
-
-- **AJAX page navigation (Part 3)**: `initAjaxNavigation()` intercepts `/wiki/*` link clicks
-  and `popstate` events. `navigateTo()` uses `fetch()` + `DOMParser` + DOM swap of
-  `#mw-content-text`, `#vector-toc`, `h1.page-title`, `nav #p-views`, `.wiki-breadcrumb`,
-  `document.title`. Loading bar (`#wiki-loading-bar`) with CSS-driven progress at page top.
-  Modifier clicks (Ctrl/Meta/Alt/Shift) and non-`/wiki/` links fall through to full navigation.
-  On fetch error → `window.location.href` fallback. `history.pushState` for forward nav;
-  `history.replaceState` seeds initial state. Uses `.then/.catch` (not async/await) for
-  broad browser compat.
-
-- **CSS additions** (~80 lines appended): `#wiki-loading-bar` (fixed top-of-page progress bar);
-  `#toc-pin-btn` + `.toc-pin-active` (pin button next to hide toggle); `#wiki-shortcut-overlay`
-  + `#wiki-shortcut-panel` + `#wiki-shortcut-close` + `.wiki-shortcut-note` (keyboard overlay).
-
-- **Commit**: `3cee49d` (Jennifer). 60/60 lib tests pass. `doorman_stubs_return_correct_json_shape`
-  pre-existing failure, unrelated.
-
-- **Deployment**: Release build needed; install + `systemctl restart` pending for both services.
-
----
-
-## 2026-05-27 — app-orchestration-slm MVP scaffold
-
-- **New project directory** `app-orchestration-slm/` created — commercial Yo-Yo broker chassis
-  implementing DOCTRINE claim #23 (multi-Totebox paid tier). Follows the `app-orchestration-bim`
-  chassis pattern, deploys as `gateway-orchestration-slm-N` on `os-orchestration` host.
-
-- **Three-crate Cargo workspace** (standalone, not a monorepo root member):
-  - `orchestration-slm-core` — shared wire types: `FleetMember`, `RegistrationRequest`,
-    `ReadyzResponse`, `YoyoLabel`, `CHASSIS_VERSION`
-  - `orchestration-slm` — business logic: `FleetRegistry` (in-memory RwLock HashMap),
-    `YoyoProxyClient` (reqwest client with 90s timeout), `MeteringLedger` (per-tenant
-    in-process cost metering), `ChassisError` (thiserror enum)
-  - `orchestration-slm-server` — axum binary on `:9180`, 7 MVP endpoints
-
-- **MVP endpoints live:**
-  `GET /healthz`, `GET /readyz` (Yo-Yo probe + fleet count), `GET /v1/fleet`,
-  `POST /v1/discovery/register`, `POST /v1/yoyo/proxy`, `POST /v1/yoyo/trainer`,
-  `POST /v1/yoyo/graph`
-
-- **Auth model (MVP):** `Authorization: Bearer <module-id>` → fleet lookup (401 if unregistered),
-  `X-Foundry-Module-ID` header match (403 if spoofed), `tier_b_subscribed` flag (402 if free tier).
-  SSH-signed token validation deferred to Phase 3.
-
-- **No new Yo-Yo VMs.** Chassis front-ends existing Yo-Yo #1 (`"trainer"` L4 24GB) and
-  Yo-Yo #2 (`"graph"` H100 80GB) via `ORCHESTRATION_YOYO_TRAINER_ENDPOINT` /
-  `ORCHESTRATION_YOYO_GRAPH_ENDPOINT` env vars.
-
-- **Tests:** 13 tests across fleet.rs + metering.rs + http.rs; all pass. `cargo check --workspace`
-  clean (0 warnings, 0 errors).
-
-- **Registry:** `app-orchestration-slm` row added as Scaffold-coded; total 105 rows.
-
-- **Stage 6 pending:** commit needs `bin/promote.sh` from Command Session.
-
-- **Pending (post-MVP):**
-  - Step 3: update Doorman `slm-doorman-server/src/main.rs` to POST to
-    `SLM_ORCHESTRATION_ENDPOINT` on startup (chassis self-registration)
-  - Step 4: `adapter-hub` crate split from `slm-doorman/src/adapter_registry.rs`
-  - Step 5: `lora-forge` scaffold + `build-corpus`
-  - Step 6: rename `compute/packer/scripts/lora-training.sh` → `lora-loom/run.sh`
-  - Phase 2: `/v1/graph/federated`, `/v1/training/schedule`, `/v1/adapters`
-
----
-
-## 2026-05-12 — Wikipedia Parity Phase 2A — article typography regression fix + color token port
-
-- **Regression fix**: Phase 1 changed `article.wiki-article` → `div #mw-content-text`, silently
-  breaking all `article { }` CSS rules (article typography: Georgia serif, heading borders, link
-  colors, code blocks, blockquotes, tables). Fixed by replacing the entire article-body block
-  (lines 118–197) with `.page-body { }` equivalents. `.page-body` is the `div.page-body` wrapper
-  that the server renders inside `div#mw-content-text`.
-
-- **`--mw-*` tokens wired into article rules**: `.page-body a` → `var(--mw-color-link)`,
-  `.page-body a:visited` → `var(--mw-color-link-visited)`, code/pre backgrounds →
-  `var(--mw-color-base-10)`, borders → `var(--mw-color-base-50)`.
-
-- **9 hardcoded hex colors in secondary `:root` block ported** to existing CSS variables:
-  `--toc-bg`, `--tab-active-border`, `--tab-hover-bg`, `--density-btn-bg`,
-  `--density-btn-active-bg`, `--density-btn-active-fg`, `--hatnote-color`, `--cat-bg`.
-
-- **4 body-level hardcoded colors ported**: `.wiki-lang-btn:hover color` → `var(--bg)`;
-  `.wiki-home-featured background` → `var(--mw-color-base-10)`; `.wiki-home-dyk background` →
-  `var(--bg)`; `a.wiki-redlink color` → `var(--mw-color-link-redlink)`.
-
-- **Left unchanged** (UI-specific palettes with no matching token): `#b58900` FLI notice border;
-  `#a55858`/`#d73c3c`/`#b52e2e`/`#ffeef0`/`#f5c2c7` editor/auth error-state palette.
-
-- **Commit**: `68c643c` (Jennifer). 60/60 lib tests pass. `doorman_stubs_return_correct_json_shape`
-  pre-existing failure, unrelated to this change.
-
-- **Deployment**: Release build in progress; install + `systemctl restart` pending.
-
----
-
-## 2026-05-12 — Wikipedia Parity Phase 1 DOM standardisation
-
-- **7 structural class/ID names renamed** to MediaWiki/Vector 2022 equivalents across
-  `src/server.rs`, `static/style.css`, `static/wiki.js` (commit `3b557cf`, Peter).
-  PointSav-specific classes (`wiki-home-*`, `wiki-cat-*`, `wiki-special-*`, etc.) left unchanged.
-
-  | Old | New | Scope |
-  |---|---|---|
-  | `.site-header` / `#site-header` | `.mw-header` / `#mw-header` | `<header>` chrome |
-  | `div.wiki-left-rail` | `div #mw-panel` | left sidebar |
-  | `nav.wiki-nav-portlet` | `nav.vector-main-menu` | nav portlet |
-  | `nav.wiki-toc` / `#wiki-toc` | `nav.vector-toc` / `#vector-toc` | TOC |
-  | `main.wiki-main` | `main.mw-body` | page body wrapper |
-  | `nav.wiki-action-tabs` | `nav #p-views` | Read/Edit/History tabs |
-  | `article.wiki-article` | `div #mw-content-text` | article body |
-
-- **CSS custom properties seeded** in `:root` — 9 `--mw-*` aliases referencing the
-  existing PointSav variables (Phase 2 token port entrypoints). No existing rules broken.
-
-- **Maud syntax fix applied**: in Rust 2021, `element#id` (no preceding `.class`) is a
-  reserved prefixed identifier. Correct form is `element #id` (space before `#`). Affected
-  three elements: `div #mw-panel`, `nav #p-views`, `div #mw-content-text`.
-
-- **One test updated**: `server::tests::wiki_page_renders_navigation_portlet` assertion
-  changed from `"wiki-nav-portlet"` to `"vector-main-menu"`. 60/60 lib tests pass.
-  `doorman_stubs_return_correct_json_shape` failure confirmed pre-existing (unrelated to
-  this change).
-
-- **No new open questions** from this session.
-
----
+**Group 2F — clippy/fmt/rustdoc CI pass (`54fb7e7`, Jennifer Woodfine)**
+- `cargo fmt`: fixed 5 diffs system-core, 9 diffs system-ledger, 4 diffs moonshot-toolkit.
+- `cargo clippy -D warnings`: fixed `push_str("…")` → `push('…')` in moonshot-toolkit.
+- `cargo doc --no-deps`: fixed 7 broken intra-doc links (3 system-core, 3 system-ledger,
+  1 moonshot-toolkit) and 1 bare URL in system-core/checkpoint.rs.
+- Final state: 0 warnings across all three crates for clippy, fmt, doc.
+  139 tests passing (62 + 47 + 30).
 
 > **Archived entries:** session logs before this point are in `cleanup-log-archive.md`.
