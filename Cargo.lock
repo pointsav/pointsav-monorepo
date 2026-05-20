@@ -176,17 +176,12 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "app-console-keys",
- "chrono",
- "clap",
  "crossterm 0.28.1",
- "rand 0.10.1",
  "ratatui",
  "reqwest",
- "rusqlite",
- "russh",
  "serde",
  "serde_json",
- "tokio",
+ "system-gateway-mba",
 ]
 
 [[package]]
@@ -2321,7 +2316,9 @@ dependencies = [
  "app-console-content",
  "app-console-keys",
  "rand 0.10.1",
+ "ratatui",
  "russh",
+ "system-gateway-mba",
  "tokio",
 ]
 
@@ -3650,6 +3647,17 @@ checksum = "8e1d1b10ced5ca923a1fcb8d03e96b8d3268065d724548c0211415ff6ac6bac4"
 dependencies = [
  "core-foundation-sys",
  "libc",
+]
+
+[[package]]
+name = "system-gateway-mba"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "chrono",
+ "clap",
+ "rusqlite",
+ "russh",
 ]
 
 [[package]]

@@ -5,16 +5,10 @@ use std::path::PathBuf;
 use system_gateway_mba::{
     auth::compute_fingerprint,
     db::{add_user, disable_user, list_users, open_db, rotate_key},
-    pairing::normalize,
-    pairing_db::{get_by_code, list_pending, set_state, sweep_expired},
 };
 
 #[derive(Parser)]
-#[command(
-    name = "proofctl",
-    about = "Manage os-console users and SSH keys",
-    version
-)]
+#[command(name = "proofctl", about = "Manage os-console users and SSH keys", version)]
 struct Cli {
     #[command(subcommand)]
     command: Command,
@@ -25,11 +19,6 @@ enum Command {
     User {
         #[command(subcommand)]
         action: UserAction,
-    },
-    /// Manage connection requests (zero-jargon pairing)
-    Pair {
-        #[command(subcommand)]
-        action: PairAction,
     },
 }
 
@@ -57,34 +46,13 @@ enum UserAction {
     },
 }
 
-#[derive(Subcommand)]
-enum PairAction {
-    /// Show pending connection requests
-    List,
-    /// Approve a connection request by its code
-    Approve {
-        /// The 8-character code shown on the user's screen (e.g. K7Q2-9XMT)
-        code: String,
-    },
-    /// Decline a connection request
-    Deny {
-        /// The 8-character code
-        code: String,
-    },
-}
-
 fn main() -> Result<()> {
     let cli = Cli::parse();
     let conn = open_db()?;
 
     match cli.command {
         Command::User { action } => match action {
-            UserAction::Add {
-                username,
-                tenant,
-                key_file,
-                role,
-            } => {
+            UserAction::Add { username, tenant, key_file, role } => {
                 if !["pointsav", "woodfine"].contains(&tenant.as_str()) {
                     bail!("tenant must be 'pointsav' or 'woodfine'");
                 }
@@ -99,8 +67,8 @@ fn main() -> Result<()> {
                     println!("No users registered.");
                 } else {
                     println!(
-                        "{:<20} {:<10} {:<10} {:<6} FINGERPRINT",
-                        "USERNAME", "TENANT", "ROLE", "ACTIVE"
+                        "{:<20} {:<10} {:<10} {:<6} {}",
+                        "USERNAME", "TENANT", "ROLE", "ACTIVE", "FINGERPRINT"
                     );
                     for (fp, name, tenant, role, active) in &users {
                         println!(
@@ -129,51 +97,6 @@ fn main() -> Result<()> {
                     bail!("user '{}' not found or not active", username);
                 }
                 println!("Updated key for {username}: {fingerprint}");
-            }
-        },
-
-        Command::Pair { action } => match action {
-            PairAction::List => {
-                sweep_expired(&conn)?;
-                let pending = list_pending(&conn)?;
-                if pending.is_empty() {
-                    println!("No pending connection requests.");
-                } else {
-                    println!("{:<12} {:<20} {:<10} REQUESTED", "CODE", "USER", "TENANT");
-                    for (_, code, user, tenant, created) in &pending {
-                        println!(
-                            "{:<12} {:<20} {:<10} {}",
-                            code,
-                            user,
-                            tenant,
-                            &created[..19]
-                        );
-                    }
-                }
-            }
-            PairAction::Approve { code } => {
-                sweep_expired(&conn)?;
-                let normalized = normalize(&code);
-                match get_by_code(&conn, &normalized)? {
-                    Some((request_id, username, tenant, fingerprint, _public_key)) => {
-                        add_user(&conn, &fingerprint, &username, &tenant, "editor")?;
-                        set_state(&conn, &request_id, "approved")?;
-                        println!("Approved — {username}@{tenant} can now connect.");
-                        println!("Fingerprint: {fingerprint}");
-                    }
-                    None => bail!("code '{}' not found or already used", code),
-                }
-            }
-            PairAction::Deny { code } => {
-                sweep_expired(&conn)?;
-                let normalized = normalize(&code);
-                match get_by_code(&conn, &normalized)? {
-                    Some((request_id, username, _, _, _)) => {
-                        set_state(&conn, &request_id, "denied")?;
-                        println!("Declined connection request from {username}.");
-                    }
-                    None => bail!("code '{}' not found or already used", code),
-                }
             }
         },
     }

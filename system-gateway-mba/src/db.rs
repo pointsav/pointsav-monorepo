@@ -29,21 +29,7 @@ fn migrate(conn: &Connection) -> Result<()> {
             role        TEXT    NOT NULL DEFAULT 'editor',
             active      INTEGER NOT NULL DEFAULT 1,
             created_at  TEXT    NOT NULL
-        );
-        CREATE TABLE IF NOT EXISTS pairing_requests (
-            request_id  TEXT PRIMARY KEY,
-            code        TEXT UNIQUE NOT NULL,
-            username    TEXT NOT NULL,
-            tenant      TEXT NOT NULL,
-            fingerprint TEXT NOT NULL,
-            public_key  TEXT NOT NULL,
-            role        TEXT NOT NULL DEFAULT 'editor',
-            state       TEXT NOT NULL DEFAULT 'pending',
-            attempts    INTEGER NOT NULL DEFAULT 0,
-            created_at  TEXT NOT NULL,
-            expires_at  TEXT NOT NULL
-        );
-        CREATE INDEX IF NOT EXISTS idx_pairing_code ON pairing_requests(code);",
+        );",
     )?;
     Ok(())
 }
@@ -63,11 +49,7 @@ pub fn find_user(conn: &Connection, fingerprint: &str) -> Result<Option<User>> {
     match result {
         Ok((username, tenant_str, role)) => {
             let tenant = Tenant::from_str(&tenant_str).unwrap_or(Tenant::Pointsav);
-            Ok(Some(User {
-                username,
-                tenant,
-                role,
-            }))
+            Ok(Some(User { username, tenant, role }))
         }
         Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
         Err(e) => Err(e.into()),
@@ -90,7 +72,6 @@ pub fn add_user(
     Ok(())
 }
 
-#[allow(clippy::type_complexity)]
 pub fn list_users(conn: &Connection) -> Result<Vec<(String, String, String, String, bool)>> {
     let mut stmt = conn.prepare(
         "SELECT fingerprint, username, tenant, role, active FROM users ORDER BY created_at",

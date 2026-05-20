@@ -9,12 +9,14 @@ name = "os-console"
 path = "src/main.rs"
 
 [features]
-ssh-server = ["dep:russh", "dep:rand", "dep:tokio"]
+ssh-server = ["dep:russh", "dep:rand", "dep:tokio", "dep:ratatui"]
 
 [dependencies]
 app-console-keys = { path = "../app-console-keys" }
 app-console-content = { path = "../app-console-content" }
+system-gateway-mba = { path = "../system-gateway-mba" }
 anyhow = "1"
 tokio = { version = "1", features = ["full"], optional = true }
 russh = { version = "0.60", optional = true }
 rand = { version = "0.10", optional = true }
+ratatui = { version = "0.30", optional = true }

@@ -7,8 +7,7 @@ use std::{
 
 use anyhow::Result;
 use app_console_content::cartridge::ContentCartridge;
-use app_console_input::InputCartridge;
-use app_console_keys::{AppConsoleKeys, ConsoleConfig};
+use app_console_keys::AppConsoleKeys;
 use russh::{
     server::{Auth, Config, Handler, Msg, Server, Session},
     Channel, ChannelId,
@@ -38,10 +37,7 @@ impl TerminalHandle {
                 }
             }
         });
-        Self {
-            sender,
-            sink: Vec::new(),
-        }
+        Self { sender, sink: Vec::new() }
     }
 }
 
@@ -96,27 +92,17 @@ impl Handler for AppSession {
         let fingerprint = compute_fingerprint(key);
         match open_db().and_then(|conn| find_user(&conn, &fingerprint)) {
             Ok(Some(user)) => {
-                eprintln!(
-                    "os-console: auth accepted for {}@{}",
-                    user.username,
-                    user.tenant.as_str()
-                );
+                eprintln!("os-console: auth accepted for {}@{}", user.username, user.tenant.as_str());
                 self.user = Some(user);
                 Ok(Auth::Accept)
             }
             Ok(None) => {
                 eprintln!("os-console: auth rejected — fingerprint not registered: {fingerprint}");
-                Ok(Auth::Reject {
-                    proceed_with_methods: None,
-                    partial_success: false,
-                })
+                Ok(Auth::Reject { proceed_with_methods: None, partial_success: false })
             }
             Err(e) => {
                 eprintln!("os-console: auth db error: {e}");
-                Ok(Auth::Reject {
-                    proceed_with_methods: None,
-                    partial_success: false,
-                })
+                Ok(Auth::Reject { proceed_with_methods: None, partial_success: false })
             }
         }
     }
@@ -164,21 +150,13 @@ impl Handler for AppSession {
             }
         };
 
-        let handle = self
-            .handle
-            .take()
-            .expect("handle set in channel_open_session");
+        let handle = self.handle.take().expect("handle set in channel_open_session");
         let ch_id = self.channel_id.unwrap_or(channel);
 
         let terminal_handle = TerminalHandle::new(handle, ch_id);
         let backend = ratatui::backend::CrosstermBackend::new(terminal_handle);
         let mut terminal = ratatui::Terminal::new(backend)?;
-        terminal.resize(ratatui::layout::Rect {
-            x: 0,
-            y: 0,
-            width: cols,
-            height: rows,
-        })?;
+        terminal.resize(ratatui::layout::Rect { x: 0, y: 0, width: cols, height: rows })?;
 
         let (input_tx, input_rx) = mpsc::sync_channel::<u8>(256);
         self.input_tx = Some(input_tx);
@@ -189,14 +167,9 @@ impl Handler for AppSession {
         let tenant = user.tenant.as_str().to_string();
 
         tokio::task::spawn_blocking(move || {
-            let cfg = ConsoleConfig::load();
-            let content =
-                ContentCartridge::new_for(&username, &tenant, &cfg.profile.proof_endpoint);
-            let input = InputCartridge::new_for(&username, &tenant, &cfg.profile.ingest_endpoint);
             let mut chassis = AppConsoleKeys::new(username, tenant);
             chassis.set_mba_active();
-            chassis.register(Box::new(content));
-            chassis.register(Box::new(input));
+            chassis.register(Box::new(ContentCartridge::new()));
             chassis.run_with_bytes(terminal, input_rx);
         });
 
@@ -251,8 +224,11 @@ impl Server for AppServer {
 // ---------------------------------------------------------------------------
 
 pub async fn run() -> Result<()> {
-    let key = russh::keys::PrivateKey::random(&mut rand::rng(), russh::keys::Algorithm::Ed25519)
-        .expect("ed25519 key generation failed");
+    let key = russh::keys::PrivateKey::random(
+        &mut rand::rng(),
+        russh::keys::Algorithm::Ed25519,
+    )
+    .expect("ed25519 key generation failed");
 
     let config = Arc::new(Config {
         inactivity_timeout: Some(Duration::from_secs(3600)),
