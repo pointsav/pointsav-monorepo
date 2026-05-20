@@ -147,14 +147,14 @@ impl SystemSpec {
     /// Parse a `system-spec.toml` from text. Validates all
     /// invariants; returns the first failure encountered.
     pub fn from_toml_str(text: &str) -> Result<Self, SpecParseError> {
-        let spec: SystemSpec = toml::from_str(text)
-            .map_err(|e| SpecParseError::TomlError(e.to_string()))?;
+        let spec: SystemSpec =
+            toml::from_str(text).map_err(|e| SpecParseError::TomlError(e.to_string()))?;
         spec.validate()?;
         Ok(spec)
     }
 
     /// Validate all invariants. Called automatically by
-    /// [`from_toml_str`]; can be called manually after programmatic
+    /// [`SystemSpec::from_toml_str`]; can be called manually after programmatic
     /// construction.
     pub fn validate(&self) -> Result<(), SpecParseError> {
         // PD count.
@@ -173,8 +173,7 @@ impl SystemSpec {
         }
 
         // Channels-per-PD count.
-        let mut counts: std::collections::HashMap<&str, usize> =
-            std::collections::HashMap::new();
+        let mut counts: std::collections::HashMap<&str, usize> = std::collections::HashMap::new();
         for ch in &self.channels {
             *counts.entry(ch.end_a.as_str()).or_insert(0) += 1;
             *counts.entry(ch.end_b.as_str()).or_insert(0) += 1;
