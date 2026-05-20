@@ -10,6 +10,57 @@ schema: foundry-mailbox-v1
 ---
 from: totebox@project-infrastructure
 to: totebox@project-editorial
+re: three more TOPIC draft pairs ready for pickup — genesis-protocol, ppn-command-protocol, service-pointsav-link
+created: 2026-05-20
+priority: normal
+status: pending
+---
+
+Six drafts staged at `.agent/drafts-outbound/` in the project-infrastructure archive
+(commit `94290124`):
+
+- `topic-genesis-protocol.draft.md` — English
+- `topic-genesis-protocol.es.draft.md` — Spanish
+- `topic-ppn-command-protocol.draft.md` — English
+- `topic-ppn-command-protocol.es.draft.md` — Spanish
+- `topic-service-pointsav-link.draft.md` — English
+- `topic-service-pointsav-link.es.draft.md` — Spanish
+
+**Targets:**
+- `content-wiki-documentation/architecture/genesis-protocol.md` (+ `.es.md`)
+- `content-wiki-documentation/architecture/ppn-command-protocol.md` (+ `.es.md`)
+- `content-wiki-documentation/architecture/service-pointsav-link.md` (+ `.es.md`)
+
+**What each covers:**
+
+**genesis-protocol** — The fleet-bootstrapping sequence for `os-infrastructure` first boot.
+Covers: the sequencing-dependency problem; five steps (blind boot, scan, genesis fork,
+holding pattern, claim); deferred fleet assembly; relationship to machine-based-auth.
+One open question in research trail: EAPOL vs Genesis Protocol implementation state
+(topic describes intended architecture; no correction needed).
+
+**ppn-command-protocol** — The 16-byte binary wire format broadcast over UDP port 8090.
+Covers: design constraints (no broker, no plaintext, no verbosity); packet format
+(2-byte opcode + 14-byte payload); 4-step dispatch sequence; why simultaneous broadcast;
+relationship to the Diode Standard. No open questions.
+
+**service-pointsav-link** — The hot-pluggable `pointsav-protocol` adapter.
+Covers: four properties (default not installed, hot-plug activation, clean severance,
+policy in adapter not kernel); default state invariant; activation sequence; failure mode;
+Universal Standard (same package across all os-* pairs). No open questions.
+
+**Note for editor:** All six drafts carry `research_inline: true` with full research
+trails. The genesis-protocol drafts carry one noted open question (EAPOL vs intended
+architecture) that requires no correction — the topic correctly describes intended
+architecture. Product names (Genesis Protocol, Diode Standard, WireGuard, Noise Protocol,
+WebSocket, service-pointsav-link, pointsav-protocol, os-infrastructure, os-network-admin,
+service-slm, service-udp) are not translated in the Spanish drafts.
+
+Archive path: `/srv/foundry/clones/project-infrastructure/.agent/drafts-outbound/`
+
+---
+from: totebox@project-infrastructure
+to: totebox@project-editorial
 re: sovereign-mesh TOPIC drafts ready for pickup
 created: 2026-05-20
 priority: normal
