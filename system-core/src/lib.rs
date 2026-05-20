@@ -32,10 +32,15 @@ use sha2::{Digest, Sha256};
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum CapabilityType {
+    /// seL4 IPC endpoint — synchronous send/receive.
     Endpoint,
+    /// Memory frame or page-table capability.
     Memory,
+    /// IRQ control capability (seL4 `IRQControl`).
     Irq,
+    /// Async notification object.
     Notification,
+    /// Capability-node (seL4 `CNode`) — holds other capabilities.
     CNode,
 }
 
@@ -44,10 +49,15 @@ pub enum CapabilityType {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum Right {
+    /// Read data from the target object.
     Read,
+    /// Write data to the target object.
     Write,
+    /// Invoke the capability (seL4 `invoke` path).
     Invoke,
+    /// Derive or copy the capability to another CNode slot.
     Grant,
+    /// Revoke derived copies of the capability.
     Revoke,
 }
 
@@ -72,7 +82,9 @@ pub struct LedgerAnchor {
 /// Merkle root before honoring an invocation.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Capability {
+    /// The seL4 kernel-object type this capability addresses.
     pub cap_type: CapabilityType,
+    /// Permitted operations on the target object.
     pub rights: Vec<Right>,
     /// Seconds since UNIX epoch (UTC). `None` = no built-in expiry
     /// (seL4 default). `Some(t)` = MUST NOT be honored after `t`
@@ -81,6 +93,8 @@ pub struct Capability {
     /// SSH-format public key authorised to extend `expiry_t`.
     /// `None` = non-extensible (pure time-bound, no witness model).
     pub witness_pubkey: Option<String>,
+    /// Merkle log checkpoint that anchors this capability on the
+    /// customer-rooted ledger.
     pub ledger_anchor: LedgerAnchor,
 }
 
@@ -88,6 +102,26 @@ impl Capability {
     /// Canonical SHA-256 hash for witness-record binding. v0.1.x:
     /// serde JSON; future MINOR may swap to canonical CBOR per
     /// `worm-ledger-design.md` §3 D3.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use system_core::{Capability, CapabilityType, Right, LedgerAnchor};
+    /// let cap = Capability {
+    ///     cap_type: CapabilityType::Endpoint,
+    ///     rights: vec![Right::Invoke],
+    ///     expiry_t: None,
+    ///     witness_pubkey: None,
+    ///     ledger_anchor: LedgerAnchor {
+    ///         origin: "foundry.test.capability-ledger".to_string(),
+    ///         tree_size: 1,
+    ///         root_hash: [0u8; 32],
+    ///     },
+    /// };
+    /// let h1 = cap.hash();
+    /// let h2 = cap.hash();
+    /// assert_eq!(h1, h2); // deterministic
+    /// ```
     pub fn hash(&self) -> Hash256 {
         let bytes = serde_json::to_vec(self).expect("Capability serializable");
         let mut hasher = Sha256::new();
@@ -102,6 +136,7 @@ impl Capability {
 /// appears in the current ledger Merkle root before extending.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct WitnessRecord {
+    /// `Capability::hash()` of the capability being extended.
     pub capability_hash: Hash256,
     /// MUST be greater than the previous `expiry_t`.
     pub new_expiry_t: u64,
