@@ -3,7 +3,7 @@
 > **Scope: this archive only.** Cross-repo and workspace-level items live at `~/Foundry/NEXT.md`.
 > Full TODO with all sections and sequencing: `.agent/plans/project-infrastructure-todo.md`.
 
-Last updated: 2026-05-20 (session 2).
+Last updated: 2026-05-20 (session 3).
 
 ---
 
@@ -40,11 +40,12 @@ Last updated: 2026-05-20 (session 2).
 
 ## TOPIC leg — drafts staged, needs editorial pickup
 
-- [ ] **Pick up `topic-sovereign-mesh.draft.md` + `.es.md` from drafts-outbound**
-  Staged at `.agent/drafts-outbound/`. Message sent to project-editorial outbox.
-  Full PPN architecture topic — expands the one-sentence stub at
-  `infrastructure/sovereign-mesh.md` in content-wiki-documentation.
-  [2026-05-20 task@claude-code]
+Five draft pairs in `.agent/drafts-outbound/`; pickup notice sent to project-editorial.
+
+- [ ] `topic-sovereign-mesh` + `.es` — expands stub at `infrastructure/sovereign-mesh.md` [session 2]
+- [ ] `topic-genesis-protocol` + `.es` — new; `architecture/genesis-protocol.md` [session 3]
+- [ ] `topic-ppn-command-protocol` + `.es` — new; `architecture/ppn-command-protocol.md` [session 3]
+- [ ] `topic-service-pointsav-link` + `.es` — new; `architecture/service-pointsav-link.md` [session 3]
 
 ---
 
