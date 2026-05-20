@@ -121,7 +121,7 @@ pub trait LedgerConsumer {
     ) -> Result<Verdict, ConsultError>;
 
     /// Apply a revocation event to the ledger state. After this
-    /// call, subsequent [`consult_capability`] for the revoked
+    /// call, subsequent [`LedgerConsumer::consult_capability`] for the revoked
     /// capability returns [`Verdict::Refuse`] with [`RefuseReason::Revoked`].
     fn apply_revocation(&mut self, event: revocation::RevocationEvent) -> Result<(), LedgerError>;
 
@@ -174,7 +174,7 @@ pub trait LedgerConsumer {
     /// The §4 N+3+ post-handover invariant — "P-old's signature on
     /// checkpoints at heights AFTER the handover MUST be refused" —
     /// is a separate property, covered end-to-end by
-    /// [`apply_apex_handover`] + [`consult_capability`] together.
+    /// [`LedgerConsumer::apply_apex_handover`] + [`LedgerConsumer::consult_capability`] together.
     /// It is verified at the integration-test level
     /// (`full_handover_ceremony_end_to_end`).
     fn apply_witness_record(
@@ -230,7 +230,7 @@ impl InMemoryLedger {
 
     /// Set the current ledger root checkpoint. The consumer calls
     /// this when a new checkpoint arrives via the WORM ledger
-    /// stream. Subsequent [`apply_witness_record`] calls verify
+    /// stream. Subsequent [`LedgerConsumer::apply_witness_record`] calls verify
     /// inclusion proofs against this checkpoint's Merkle root.
     pub fn set_current_checkpoint(&mut self, checkpoint: SignedCheckpoint) {
         self.cache.insert(checkpoint.clone());
@@ -970,10 +970,7 @@ mod tests {
         };
         let handover_cp = SignedCheckpoint {
             checkpoint: cp_body,
-            signatures: vec![
-                make_sig("apex-old", &sk_old),
-                make_sig("apex-new", &sk_new),
-            ],
+            signatures: vec![make_sig("apex-old", &sk_old), make_sig("apex-new", &sk_new)],
         };
 
         // Apply handover; current_checkpoint is set to handover_cp (height 50).

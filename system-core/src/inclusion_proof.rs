@@ -19,7 +19,7 @@
 //! # Verification algorithm
 //!
 //! Per RFC 9162 §2.1.3 verbatim. The kernel-facing API is
-//! [`SignedCheckpoint::verify_inclusion_proof`] (composed primitive
+//! [`crate::SignedCheckpoint::verify_inclusion_proof`] (composed primitive
 //! with signature verification); the raw `InclusionProof::verify`
 //! is exposed as the building block but Master directive 2026-04-27
 //! says treat the composition as load-bearing.
