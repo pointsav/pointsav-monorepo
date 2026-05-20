@@ -905,4 +905,85 @@ mod tests {
             "expected Consistency error, got {r:?}"
         );
     }
+
+    // ---------- ParseError variant tests ----------
+
+    #[test]
+    fn parse_error_not_utf8() {
+        let bad_bytes = b"\xFF\xFE invalid utf-8";
+        assert_eq!(Checkpoint::parse_body(bad_bytes), Err(ParseError::NotUtf8));
+    }
+
+    #[test]
+    fn parse_error_truncated() {
+        assert_eq!(Checkpoint::parse_body(b""), Err(ParseError::Truncated));
+    }
+
+    #[test]
+    fn parse_error_missing_newline() {
+        // First line has no trailing \n — stripped_suffix returns None.
+        assert_eq!(
+            Checkpoint::parse_body(b"foundry.test.no-newline"),
+            Err(ParseError::MissingNewline)
+        );
+    }
+
+    #[test]
+    fn parse_error_bad_root_hash_length() {
+        // "AAAA" decodes to 3 bytes — not the required 32 → BadRootHashLength.
+        let body = b"foundry.test.cap-ledger\n100\nAAAA\n";
+        assert_eq!(
+            Checkpoint::parse_body(body),
+            Err(ParseError::BadRootHashLength)
+        );
+    }
+
+    #[test]
+    fn parse_error_missing_signature_separator() {
+        // Wire text with no \n\n between body and signature block.
+        let wire = "foundry.test.cap-ledger\n100\nAAAA\n— apex AAAA\n";
+        assert_eq!(
+            SignedCheckpoint::parse(wire),
+            Err(ParseError::MissingSignatureSeparator)
+        );
+    }
+
+    // ---------- VerifyError::BadPublicKey ----------
+
+    #[test]
+    fn verify_error_bad_public_key() {
+        // y=2 is a quadratic non-residue on Ed25519 (verified: Legendre(u/v, p)=-1
+        // for y=2 where u=y^2-1, v=d*y^2+1). CompressedEdwardsY::decompress()
+        // returns None → VerifyError::BadPublicKey.
+        let (sk, _) = fixed_keypair(7);
+        let cp = fixture_checkpoint();
+        let sig = sign(&cp, "apex-test", &sk);
+        let signed = SignedCheckpoint {
+            checkpoint: cp,
+            signatures: vec![sig],
+        };
+        let mut bad_pubkey = [0u8; 32];
+        bad_pubkey[0] = 2; // y=2, no corresponding x exists on Ed25519
+        assert_eq!(
+            signed.verify_signer("apex-test", &bad_pubkey),
+            Err(VerifyError::BadPublicKey)
+        );
+    }
+
+    // ---------- NewSignatureInvalid coverage ----------
+
+    #[test]
+    fn consistency_proof_new_signature_invalid_rejects() {
+        // Old checkpoint signed by sk1 (correct); new checkpoint signed by sk2
+        // (different key). Passing pk1 → old sig verifies, new sig doesn't →
+        // NewSignatureInvalid.
+        let (sk1, pk1) = fixed_keypair(41);
+        let (sk2, _pk2) = fixed_keypair(43);
+        let (old_sc, _) = signed_checkpoint_n_leaves(4, "apex", &sk1);
+        let (new_sc, _) = signed_checkpoint_n_leaves(7, "apex", &sk2);
+        let proof = make_consistency_proof_for_test(4, 7);
+
+        let r = new_sc.verify_consistency_proof(&proof, 4, 7, &old_sc, "apex", &pk1);
+        assert_eq!(r, Err(CheckpointConsistencyError::NewSignatureInvalid));
+    }
 }
