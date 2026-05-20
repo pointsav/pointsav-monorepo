@@ -24,4 +24,4 @@ updated: 2026-05-14
 
 ## Last session handoff
 
-*2026-05-18 — PointSav site content editing session. Changes to software.pointsav.com (software + licensing pages) and home.pointsav.com (home, disclaimer, contact). All committed to cluster/project-software; Stage 6 pending. Disk-based HTML serving implemented — no rebuild needed for future HTML edits. See memory/project_pointsav_site_files.md for all file locations.*
+*2026-05-20 — SEO session (brand search experience for pointsav + woodfinegroup). Researched both home pages; drafted full SEO head blocks (meta description, canonical, OG, Twitter card, JSON-LD Organization schema). Operator approved preview but paused for next session. Plan ready to apply: `.agent/plans/seo-home-pages.md`. Two open questions before applying: (1) social profiles for sameAs? (2) scope subpages + software.pointsav.com in same pass? See NEXT.md.*
