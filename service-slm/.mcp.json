@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "foundry": {
+      "command": "/usr/local/bin/slm-mcp-server",
+      "args": ["--doorman", "http://127.0.0.1:9080"],
+      "env": {
+        "SLM_MODULE_ID": "mcp-foundry",
+        "RUST_LOG": "warn"
+      },
+      "type": "stdio"
+    }
+  }
+}
