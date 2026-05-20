@@ -889,6 +889,107 @@ mod tests {
         assert!(ledger.is_witness_logged(&witness));
     }
 
+    // ---------- Group 2D: ConsultError, LedgerError, handover-height ----------
+
+    #[test]
+    fn consult_with_bad_apex_pubkey_returns_inconsistent_state() {
+        // Apex stored with a non-curve pubkey ([2, 0, ..] — quadratic non-residue
+        // on Ed25519). verify_signer → VerifyError::BadPublicKey → InconsistentState.
+        let mut ledger = InMemoryLedger::new();
+        let mut bad_pk = [0u8; 32];
+        bad_pk[0] = 2; // same non-curve point used in system-core's verify_error_bad_public_key
+        ledger.apex.record_genesis("apex", bad_pk, 0).unwrap();
+        let (sk_any, _) = keypair(0x77);
+        let root = signed_checkpoint(5, 0xAA, &[("apex", &sk_any)]);
+        let cap = fixture_capability(None);
+        let result = ledger.consult_capability(&cap, &root, 1000, None);
+        assert!(
+            matches!(result, Err(ConsultError::InconsistentState(_))),
+            "expected InconsistentState, got {result:?}"
+        );
+    }
+
+    #[test]
+    fn apply_witness_record_no_apex_returns_no_apex_for_checkpoint() {
+        // No genesis → apex history empty → check_height returns NoApex.
+        let (sk, _) = keypair(0x11);
+        let mut ledger = InMemoryLedger::new(); // deliberately no genesis
+        let cp = signed_checkpoint(4, 0xAA, &[("apex", &sk)]);
+        ledger.set_current_checkpoint(cp);
+        let witness = WitnessRecord {
+            capability_hash: [0xAA; 32],
+            new_expiry_t: 2000,
+            signature: vec![],
+        };
+        let proof = InclusionProof {
+            leaf_index: 0,
+            tree_size: 1,
+            sibling_hashes: vec![],
+        };
+        let r = ledger.apply_witness_record(witness, proof);
+        assert_eq!(r, Err(LedgerError::NoApexForCheckpoint));
+    }
+
+    #[test]
+    fn apply_witness_record_at_handover_height_succeeds() {
+        // At handover height, apply_witness_record routes through ApexVerdict::Handover
+        // and verifies the inclusion proof under old_apex's key.
+        let (sk_old, pk_old) = keypair(0x11);
+        let (sk_new, pk_new) = keypair(0x22);
+        let mut ledger = ledger_with_genesis("apex-old", &sk_old);
+
+        // Build a 2-leaf Merkle tree where leaf 0 is the witness record.
+        let witness = WitnessRecord {
+            capability_hash: [0xEE; 32],
+            new_expiry_t: 9000,
+            signature: vec![7, 8, 9],
+        };
+        let leaf0 = witness_leaf_hash(&witness);
+        let leaves = [leaf0, [0x55u8; 32]];
+        let root = build_merkle_root(&leaves);
+        let proof = make_inclusion_proof(&leaves, 0);
+
+        // Build handover checkpoint at height = tree size (2 leaves).
+        // tree_size in checkpoint must match proof.tree_size (both = 2).
+        // Signed by BOTH old and new apex (required for apply_apex_handover).
+        let cp_body = Checkpoint {
+            origin: "foundry.test.cap-ledger".to_string(),
+            tree_size: 2, // must match leaves.len() so verify_inclusion_proof passes
+            root_hash: root,
+            extensions: vec![],
+        };
+        let body_bytes = cp_body.body_bytes();
+        let make_sig = |name: &str, sk: &SigningKey| {
+            let pk = sk.verifying_key().to_bytes();
+            let key_hash = NoteSignature::derive_key_hash(name, &pk);
+            NoteSignature {
+                signer_name: name.to_string(),
+                key_hash,
+                signature: sk.sign(&body_bytes).to_bytes(),
+            }
+        };
+        let handover_cp = SignedCheckpoint {
+            checkpoint: cp_body,
+            signatures: vec![
+                make_sig("apex-old", &sk_old),
+                make_sig("apex-new", &sk_new),
+            ],
+        };
+
+        // Apply handover; current_checkpoint is set to handover_cp (height 50).
+        ledger
+            .apply_apex_handover("apex-old", &pk_old, "apex-new", &pk_new, &handover_cp)
+            .unwrap();
+
+        // apply_witness_record at handover height should succeed via old_apex path.
+        let r = ledger.apply_witness_record(witness.clone(), proof);
+        assert!(
+            r.is_ok(),
+            "apply_witness_record at handover height should succeed; got {r:?}"
+        );
+        assert!(ledger.is_witness_logged(&witness));
+    }
+
     #[test]
     fn full_handover_ceremony_end_to_end() {
         // Inbox brief Phase 1A item 4 — END-TO-END ceremony.
