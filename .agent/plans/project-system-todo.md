@@ -1,0 +1,501 @@
+---
+schema: foundry-plan-v1
+title: project-system — Comprehensive Work Plan
+created: 2026-05-20
+updated: 2026-05-20 (substance pass complete for Group 1B; Group 0 housekeeping done)
+author: task@claude-code (session startup, sonnet-4-6)
+status: active
+---
+
+# project-system — Comprehensive Work Plan
+
+> Living document. Check items off as they complete. Add new items as they surface.
+> Update the `updated:` frontmatter date on each edit.
+>
+> Sources synthesized into this plan:
+> - `.agent/manifest.md` — tetrad legs and cluster scope
+> - `.agent/CHECKLIST-stage6-promotion-readiness.md` — v1.0.0 readiness detail
+> - `.agent/BENCH-v0.2.0.md` — benchmark report
+> - `.agent/RESEARCH-netbsd-veriexec-bootflow.md` — Phase 2 forward-prep
+> - `.agent/SURVEY-os-candidates-for-phase2.md` — Phase 2 os-* candidates
+> - `.agent/STAGING-outbox-draft.md` — last outbox to Master
+> - `.agent/AUDIT-moonshot-toolkit-arch-vs-cli.md` — moonshot-toolkit drift
+> - `.agent/drafts-outbound/*` — all 8 staged drafts
+> - `cleanup-log.md` — session history and open questions
+
+---
+
+## How to use this plan
+
+- Work top-to-bottom within each group.
+- Items marked **[BLOCKED: ...]** cannot start until the named blocker resolves.
+- Items marked **[OPERATOR DECISION]** require an answer from the operator before proceeding.
+- Items marked **[MASTER DECISION]** require Master Claude sign-off.
+- Items marked **[MECHANICAL]** are low-judgment, can be sub-agented or done quickly.
+- Strike through `~~item~~` when superseded rather than deleting it.
+
+---
+
+## Group 0 — Immediate / housekeeping (do before any new work)
+
+- [x] **Reset WFD sub-clone to canonical HEAD** _(done 2026-05-20 — HEAD already at 7fdf36b; no reset needed)_
+
+- [x] **Confirm WFD spoke-configs awareness** _(done 2026-05-20 — noted; 3 inbox messages archived to inbox-archive.md)_
+
+- [ ] **Preserve BENCH numbers to tracked file before next VM restart**
+  `/tmp/bench-system-ledger.log` is on tmpfs and will not survive reboot. The `.agent/BENCH-v0.2.0.md` file here IS tracked locally but is not in the monorepo. The numbers need to be committed into a tracked crate file before Stage-6 promotion.
+  Target: `system-ledger/BENCHMARKS.md` (new file) or appended to `system-ledger/ARCHITECTURE.md` §5.
+  _Source: BENCH-v0.2.0.md §7 warning_
+
+---
+
+## Group 1 — Content artifacts: complete existing drafts
+
+These artifacts are staged in `.agent/drafts-outbound/` with full substance written. They need the language-pass gate, then committed to their target repos.
+
+### 1A — README drafts (ready for language pass)
+
+Three pairs of README drafts are effectively publication-ready. They need:
+1. A language pass by project-editorial (BCSC posture, banned-vocab check, bilingual alignment)
+2. Then commitment to `pointsav-monorepo` replacing the stale existing READMEs
+
+- [x] **Route README-system-core.draft.md + .es.md → project-editorial** _(done 2026-05-20 — outbox msg project-system-20260520-readme-drafts-ready)_
+- [x] **Route README-system-ledger.draft.md + .es.md → project-editorial** _(done 2026-05-20 — same outbox message)_
+- [x] **Route README-moonshot-toolkit.draft.md + .es.md → project-editorial** _(done 2026-05-20 — same outbox message)_
+
+- [ ] **Apply approved README drafts to monorepo** (after editorial returns them)
+  `system-core/README.md`, `system-ledger/README.md`, `moonshot-toolkit/README.md`
+  Commit via `bin/commit-as-next.sh`.
+
+### 1B — TOPIC: Merkle Proofs as a Substrate Primitive ✓
+
+The TOPIC substance pass is complete (2026-05-20). Full prose written for all 8 sections from source code + BENCH-v0.2.0.md numbers. File at `.agent/drafts-outbound/topic-merkle-proofs-as-substrate-primitive.md`.
+
+- [x] **Write substance for §1 — What Merkle proofs are** _(done 2026-05-20)_
+- [x] **Write substance for §2 — Two flavours: inclusion and consistency** _(done 2026-05-20)_
+- [x] **Write substance for §3 — Inclusion proofs in `system-core`** _(done 2026-05-20)_
+- [x] **Write substance for §4 — Consistency proofs in `system-core`** _(done 2026-05-20)_
+- [x] **Write substance for §5 — Composed primitives on `SignedCheckpoint`** _(done 2026-05-20)_
+- [x] **Write substance for §6 — Consumer integration in `system-ledger`** _(done 2026-05-20)_
+- [x] **Write substance for §7 — Why this matters as a substrate primitive** _(done 2026-05-20)_
+- [x] **Write substance for §8 — Cross-references** _(done 2026-05-20)_
+
+- [x] **Update Spanish overview** _(done 2026-05-20 — full strategic-adaptation panorama written for all 8 sections)_
+
+- [x] **Route completed TOPIC → project-editorial outbox** _(done 2026-05-20 — outbox message project-system-20260520-topic-merkle-ready written)_
+
+### 1C — TOPIC: The Capability Ledger Substrate ✓
+
+Target: `vendor/content-wiki-documentation/topic-capability-ledger-substrate.md`
+
+- [x] **Create TOPIC with full substance** _(done 2026-05-20 — all 9 sections written from source code; file at `.agent/drafts-outbound/topic-capability-ledger-substrate.md`)_
+- [x] **Create Spanish panorama** _(done 2026-05-20 — `.agent/drafts-outbound/topic-capability-ledger-substrate.es.md`)_
+- [x] **Route → project-editorial outbox** _(done 2026-05-20 — outbox message project-system-20260520-topic-capability-ready written)_
+
+### 1D — TOPIC: The Two-Bottoms Sovereign Substrate (not started)
+
+Target: `vendor/content-wiki-documentation/topic-two-bottoms-sovereign-substrate.md`
+Listed in manifest `planned_topics`. Write after Phase 2 work begins (future-leaning content needs Phase 2 proof-points to be credible).
+
+- [ ] **Create TOPIC skeleton with `foundry-draft-v1` frontmatter**
+  _[BLOCKED: Phase 2 prototype should be underway first so §5 can be concrete, not speculative]_
+  Planned sections:
+  - §1 The two-bottoms design (native seL4 + compat NetBSD)
+  - §2 Why NetBSD, not Linux, as the compat bottom
+  - §3 Verified-image boot via Veriexec (strict mode 3)
+  - §4 The thin shim — Cargo feature flag, `CapabilityInvoker` trait
+  - §5 Rump kernels as the IT/OT bridge
+  - §6 Customer verification chain (build.sh + veriexecgen + apex signing)
+  - §7 Cross-references
+
+- [ ] **Write all sections** (after Phase 2 first-deliverable exists)
+- [ ] **Create Spanish pair**
+- [ ] **Route → project-editorial outbox**
+
+### 1E — GUIDEs: substrate rollout (not started)
+
+These are the vendor-side operational GUIDEs showing how to roll out the substrate to each fleet infrastructure tier. Target: `pointsav-fleet-deployment/fleet-infrastructure-{onprem,cloud,leased}/`.
+
+- [ ] **[BLOCKED: Phase 1C complete]** Draft `GUIDE-substrate-rollout-onprem.md`
+  Content: how to install and verify `system-core` + `system-ledger` + `moonshot-toolkit` on an on-premises Totebox instance.
+
+- [ ] **[BLOCKED: Phase 1C complete]** Draft `GUIDE-substrate-rollout-cloud.md`
+  Content: same for cloud-hosted fleet infrastructure.
+
+- [ ] **[BLOCKED: Phase 1C complete]** Draft `GUIDE-substrate-rollout-leased.md`
+  Content: same for leased/VPN infrastructure.
+
+All three will route through project-editorial after drafting.
+
+---
+
+## Group 2 — Crate documentation hygiene (pre-v1.0.0)
+
+These are the doc-quality items identified in `CHECKLIST-stage6-promotion-readiness.md`.
+Prerequisite for Stage-6 promotion of `system-core` and `system-ledger` to v1.0.0.
+
+### 2A — `system-core` hygiene (all MECHANICAL)
+
+- [ ] **Delete `system-core/master-relay.rs`**
+  `git rm system-core/master-relay.rs` — residual sketch, not a Cargo target, defect per repo-layout rule.
+
+- [ ] **Update `system-core/CLAUDE.md` version header**
+  Header still reads `Version: 0.1.4`; current is `0.2.0`.
+
+- [ ] **Clean `system-core/NEXT.md` queue**
+  Remove resolved items (inclusion_proof, consistency_proof, LedgerEntry enum).
+  Remaining open items: `Capability::canonical_bytes()` (CBOR), `IRQHandler` cap_type variant, `no_std` carve-out.
+  Unblock the "Blocked" section (it is no longer blocked).
+
+- [ ] **Update `system-core/ARCHITECTURE.md` §5 test count**
+  §5 "Verification" still lists 16 unit tests; actual is 51. Update.
+
+- [ ] **Update `system-core/ARCHITECTURE.md` §3 system-ledger status**
+  §3 still says "Status: `system-ledger` not yet created". Update to "RESOLVED + IMPLEMENTED".
+
+- [ ] **Add `///` rustdoc to all `pub` items in `system-core/src/lib.rs`**
+  Missing on: `Capability::cap_type`, `Capability::rights`, `Capability::ledger_anchor`,
+  all `WitnessRecord` fields, all `LedgerAnchor` fields, all `CapabilityType` variants, all `Right` variants.
+  Add `/// # Examples` block to `Capability::hash()`.
+
+- [ ] **Add `///` rustdoc to `ParseError` and `VerifyError` variants in `checkpoint.rs`**
+  No variant-level docs currently. Each variant needs a one-line description of the condition that produces it.
+
+- [ ] **Add missing Cargo.toml metadata to `system-core/Cargo.toml`**
+  Missing: `description`, `license`, `repository`, `keywords`, `categories`, `rust-version`.
+  _[OPERATOR DECISION: what SPDX license value? Check `factory-release-engineering/LICENSE-MATRIX.md`]_
+
+### 2B — `system-core` test gap closure
+
+- [ ] **Add negative-path tests in `lib.rs`**
+  No test for `Capability` hash sensitivity to `expiry_t: None` vs `Some`.
+  No test that changing `witness_pubkey` changes hash.
+  No `Right` / `CapabilityType` round-trip exhaustion.
+  Target: 4 additional tests.
+
+- [ ] **Add `ParseError` variant tests in `checkpoint.rs`**
+  Missing coverage for: `NotUtf8`, `Truncated`, `MissingNewline`, `BadRootHashLength`, `MissingSignatureSeparator`.
+  At least one test per `ParseError` variant.
+
+- [ ] **Add `VerifyError::BadPublicKey` explicit test in `checkpoint.rs`**
+  Currently no test passes a malformed 32-byte pubkey to `verify_signer` to trigger `BadPublicKey`.
+
+- [ ] **Add `verify_consistency_proof` `NewSignatureInvalid` coverage**
+  Existing test only reaches `OldSignatureInvalid`. Need one test where old sig is valid but new sig is invalid.
+
+- [ ] **[OPTIONAL, OPERATOR DECISION] Property-based tests for `ConsistencyProof::verify`**
+  proptest/quickcheck fuzz over `(old_size, new_size)` pairs to confirm no panics on edge inputs.
+  Decision: is the full-grid 1..=8 test sufficient, or is proptest worth adding?
+
+### 2C — `system-ledger` hygiene (all MECHANICAL)
+
+- [ ] **Update `system-ledger/CLAUDE.md` "Current state" body**
+  Confirm it no longer says "Skeleton commit landed." Should describe v0.2.1 delivered state.
+
+- [ ] **Clean `system-ledger/NEXT.md` queue**
+  Remove completed items (#18 cache, #19 revocation, #11 apex, #12 witness, #20 LedgerConsumer, #21 benchmarks).
+  Remaining open: `MoonshotDatabaseLedger` (Deferred), multi-threaded LedgerConsumer (Deferred).
+
+- [ ] **Update `system-ledger/ARCHITECTURE.md` §3 decision-flow stale text**
+  §3 currently reads "currently relies on the consumer pre-validating...". This is no longer accurate —
+  `apply_witness_record` now validates via `InclusionProof`. Update to reflect v0.2.0 production path.
+
+- [ ] **Update `system-ledger/ARCHITECTURE.md` §5 "Verification"**
+  Still says "Skeleton: zero tests". Update to: 44 tests + 10 criterion benches, all passing.
+
+- [ ] **Add `description`, `license`, `repository`, `keywords`, `categories`, `rust-version` to `system-ledger/Cargo.toml`**
+  _[OPERATOR DECISION: same license question as system-core]_
+
+- [ ] **Document `tempfile` in `system-ledger` `CLAUDE.md` hard constraints**
+  `tempfile = "3"` is in `[dependencies]` (not dev-deps) because it is used in production `witness.rs`.
+  This blocks any future `no_std` path. Document explicitly.
+
+- [ ] **Commit `BENCH-v0.2.0.md` numbers to `system-ledger/BENCHMARKS.md`**
+  Copy the §3 table and §6 recommendation from `BENCH-v0.2.0.md` to a tracked file.
+  Add hardware qualifier: Intel Xeon 2.20 GHz, GCP n2-class, ARM will be 10–50× slower for Ed25519.
+
+### 2D — `system-ledger` test gap closure
+
+- [ ] **Add test for `ConsultError::InconsistentState`**
+  Path: `consult_capability` → apex returns `Err(VerifyError::BadPublicKey)` due to malformed stored pubkey.
+  No test currently triggers this path.
+
+- [ ] **Add explicit test for `LedgerError::NoApexForCheckpoint`**
+  Currently only exercised implicitly.
+
+- [ ] **Add test for `apply_witness_record` at handover height (`ApexVerdict::Handover` branch)**
+  The branch where either apex's signature suffices for inclusion-proof verification.
+  Not covered by any existing test.
+
+- [ ] **Document `WitnessVerifyError::TempFileFailed` and `NonUtf8Path` coverage decision**
+  These are infrastructure-failure paths. Either add integration-level coverage or document as untestable in CI.
+
+### 2E — `moonshot-toolkit` ARCHITECTURE.md drift fixes
+
+From `AUDIT-moonshot-toolkit-arch-vs-cli.md`:
+
+- [ ] **[MECHANICAL] Fix `ProtectionDomain` fields in ARCHITECTURE.md §3**
+  Doc has `entry_points`, `assigned_memory_regions`, `assigned_channels` — none exist in code.
+  Code has `binary` (path) and `stack_bytes` — neither is documented.
+  Replace with actual shipped fields: `name`, `binary`, `priority`, `stack_bytes`.
+
+- [ ] **[MECHANICAL] Fix `BuildPlan` struct block in ARCHITECTURE.md §3**
+  Doc has `input_hashes: Vec<Hash256>` field — does not exist in code.
+  Replace with the three actual fields: `spec_hash`, `steps`, `plan_hash`.
+
+- [ ] **[MECHANICAL] Update §6 Verification test count**
+  Still says "0 tests at activation". Update to: "Phase 1B ships 30 tests..."
+
+- [ ] **[MECHANICAL] Add validation rule: "No duplicate PD names" to §3 spec.rs**
+
+- [ ] **[MECHANICAL] Add `--format` flag documentation to `plan` subcommand description**
+
+- [ ] **[MECHANICAL] Add `validate` stdout summary documentation**
+
+- [ ] **[MECHANICAL] Add exit-code, stdout/stderr, and `build` plan_hash prefix to §3 CLI block**
+
+- [ ] **[MECHANICAL] Document `EmptySpec` guard in `plan.rs` section**
+
+- [ ] **[MECHANICAL] Remove "TOML /" from `plan` description — code only outputs JSON**
+
+### 2F — CI verification pass (before Stage-6 promotion)
+
+Run these on a clean HEAD and log results in `cleanup-log.md`:
+
+- [ ] `cargo clippy -p system-core -- -D warnings`
+- [ ] `cargo fmt --check -p system-core`
+- [ ] `cargo doc -p system-core --no-deps` (zero warnings)
+- [ ] `cargo clippy -p system-ledger -- -D warnings`
+- [ ] `cargo fmt --check -p system-ledger`
+- [ ] `cargo doc -p system-ledger --no-deps` (zero warnings)
+- [ ] `cargo clippy -p moonshot-toolkit -- -D warnings`
+- [ ] `cargo fmt --check -p moonshot-toolkit`
+
+---
+
+## Group 3 — Architecture decisions (gate items — need answers before code)
+
+### 3A — Phase 1C decisions (seL4 cross-compile)
+
+_[OPERATOR DECISION required for all three — surface to operator/Master before scheduling Phase 1C session]_
+
+- [ ] **Decision: cross-compile toolchain**
+  Options: (a) Nix-pinned toolchain, (b) Bazel hermetic toolchain, (c) Docker image with fixed toolchain,
+  (d) operator-installed system dependency (`apt-get install gcc-aarch64-linux-gnu`).
+  Implications: determines reproducible-build harness design and `plan_hash` stability guarantee.
+
+- [ ] **Decision: seL4 source vendoring strategy**
+  Options: (a) git submodule pinned to seL4 v15.0.0 + Microkit 2.2.0,
+  (b) Cargo `build.rs` fetch at compile time (breaks hermetic-build property),
+  (c) `vendor-sel4-kernel` snapshot (already exists at 1074 files; needs maintenance commitment).
+  Recommendation: (c) if `vendor-sel4-kernel` is current; verify its contents first.
+
+- [ ] **Decision: toolchain installation ownership**
+  Options: (a) operator-trigger one-time install,
+  (b) Master-trigger via `infrastructure/configure/`,
+  (c) Task-trigger per-cluster (apt-get in a setup script).
+
+### 3B — Stage-6 promotion decisions
+
+_[OPERATOR DECISION + MASTER DECISION]_
+
+- [ ] **Decision: license SPDX value for `system-core/Cargo.toml` and `system-ledger/Cargo.toml`**
+  Source of truth: `vendor/factory-release-engineering/LICENSE-MATRIX.md`.
+  Required before Cargo.toml metadata can be completed.
+
+- [ ] **Decision: `LedgerConsumer` trait API finality**
+  Is `consult_capability(cap, current_root, now, witness: Option<…>)` the final v1.0.0 signature?
+  If not, a MINOR (0.3.0) bump is needed before v1.0.0 freezes the API.
+
+- [ ] **Decision: promote system-core + system-ledger together or independently?**
+  Recommendation: together (they are a designed unit; the bench file cross-references both).
+
+- [ ] **Decision: v1.0.0 commit attribution**
+  Normal alternating-toggle (jwoodfine/pwoodfine) via `bin/commit-as-next.sh`, or admin-tier?
+
+### 3C — Cross-cluster Cargo dependency (project-data)
+
+_[MASTER DECISION — surfaced in STAGING-outbox-draft.md §6]_
+
+- [ ] **Decision: system-core API stability for Stage-6**
+  If stable → promote-then-consume (zero bridging machinery for project-data's `service-fs`).
+  If breaking changes still expected → Cargo `[patch]` bridge in project-data.
+
+- [ ] **Decision: should `fs-anchor-emitter` promote same Stage-6 run as `system-core`?**
+
+### 3D — Phase 2 decisions
+
+_[OPERATOR DECISION — from RESEARCH-netbsd-veriexec-bootflow.md §8]_
+
+- [ ] **Decision: AArch64 hardware target**
+  Options: (a) QEMU AArch64 VM on workspace VM (available immediately, no cost),
+  (b) physical Raspberry Pi 4/5 or Honeycomb LX2 (requires procurement),
+  (c) leased cloud AArch64 bare-metal.
+  Recommendation: QEMU first for prototype.
+
+- [ ] **Decision: shim crate location**
+  Options: (a) add implementation to existing `system-substrate/` (already Scaffold-coded as "hardware bridge"),
+  (b) new crate `system-substrate-netbsd/` parallel to `system-substrate-broadcom/`.
+
+- [ ] **Decision: Phase 2 os-* candidate**
+  Survey recommendation: `os-console` (primary), `os-totebox` (backup).
+  `os-console` has more active Python scaffold; `os-totebox` is the doctrine-named compat-bottom boot vehicle.
+
+- [ ] **Decision: image signing key for `signatures.veriexec`**
+  Options: (a) use existing `ps-administrator` SSH key from identity store,
+  (b) generate dedicated "Foundry image signing" key (requires Master — identity store is Master-tier).
+
+---
+
+## Group 4 — Phase 1C: seL4 cross-compile (gate: Group 3A decisions)
+
+_[BLOCKED: 3 decisions from Group 3A required first]_
+
+- [ ] **Install AArch64 cross-compile toolchain on workspace VM**
+  Based on decision in 3A. Likely: `apt-get install gcc-aarch64-linux-gnu binutils-aarch64-linux-gnu`.
+
+- [ ] **Audit `vendor-sel4-kernel/` contents and version**
+  Confirm seL4 version, Microkit version, and that it matches `moonshot-toolkit/ARCHITECTURE.md` §5 reference.
+  (seL4 v15.0.0, Microkit 2.2.0, rust-sel4 4.0.0 per manifest)
+
+- [ ] **Implement `moonshot-toolkit build` subcommand — actual execution**
+  Replace the "would run" stub with real `std::process::Command` invocations.
+  Each `BuildStep` variant (`CompilePd`, `AssembleImage`) gets an executor function.
+  Gate: hermetic build property must hold (no network at build time).
+
+- [ ] **Write a minimal `system-spec.toml` for a seL4 hello-world**
+  One PD, no channels, one memory region (UART for output).
+  This is the validation fixture for `moonshot-toolkit build`.
+
+- [ ] **Boot seL4 hello-world in QEMU AArch64**
+  `qemu-system-aarch64 -machine virt -cpu cortex-a72 -m 2G -nographic \`
+  `-kernel <image> -append "..."`
+  Confirm PD runs and outputs via UART.
+
+- [ ] **Cosign the resulting image with Sigstore Cosign + customer-apex key**
+  Per `system-substrate-doctrine.md` §6.1 release-artefact format.
+  The `plan_hash` becomes the signed artefact.
+
+- [ ] **Write Phase 1C commit(s) and stage for promotion**
+  moonshot-toolkit v0.1.x → v0.2.0 (MINOR: `build` now actually builds).
+  Outbox to Command Session: "Phase 1C closed; Phase 2 greenlit."
+
+---
+
+## Group 5 — Phase 2: NetBSD compat-bottom prototype (gate: Phase 1C + Group 3D decisions)
+
+_[BLOCKED: Phase 1C must close; Group 3D decisions required]_
+
+### 5A — NetBSD AArch64 VM provisioning
+
+- [ ] **Cross-compile NetBSD AArch64 image on workspace VM**
+  `./build.sh -m evbarm -a aarch64 -U MKREPRO=yes tools distribution release`
+  KERNCONF: `GENERIC64` (includes `options VERIFIED_EXEC`).
+  Estimated build time: 2–4 hours for first `tools` phase.
+  _Source: RESEARCH-netbsd-veriexec-bootflow.md §3.5_
+
+- [ ] **Boot NetBSD AArch64 in QEMU on workspace VM**
+  `qemu-system-aarch64 -machine virt -cpu cortex-a72 -m 2G ...`
+  Confirm boot to login prompt.
+
+- [ ] **Set up Veriexec in strict mode 3**
+  Run `veriexecgen -s SHA512 -D <rootfs> > /etc/signatures.veriexec`.
+  Confirm: `veriexec(8) dump` shows loaded table.
+  Confirm: `sysctl kern.veriexec.strict=3` takes effect.
+  Confirm: an unregistered binary is refused exec with EPERM.
+
+- [ ] **Sign `signatures.veriexec` with apex key**
+  `ssh-keygen -Y sign -f <apex-key> -n foundry-image-v1 signatures.veriexec`
+  Key: per Group 3D decision.
+
+### 5B — Compat-bottom shim crate
+
+- [ ] **Create / extend shim crate** (per Group 3D shim-location decision)
+  Implement `CapabilityInvoker` trait (NetBSD compat backend via POSIX).
+  seL4 native backend is a stub (Phase 4).
+  Cargo feature flags: `features = ["compat"]` / `features = ["native"]`.
+
+- [ ] **Add chosen `os-*` candidate to workspace `[members]`**
+  Whichever of `os-console` or `os-totebox` is chosen in Group 3D.
+  Confirm `cargo check -p <os-*>` passes on Linux before compat-bottom work begins.
+
+- [ ] **Port chosen `os-*` binary to depend on shim crate**
+  Replace Python relay (in `os-console`) or cargo-new stub (in `os-totebox`) with Rust binary
+  that calls `system-core` types and routes through `CapabilityInvoker`.
+
+- [ ] **Build and run chosen `os-*` binary on Linux (workspace VM)**
+  Baseline run: confirm capability event flows to `service-fs` WORM ledger (`127.0.0.1:9100`).
+  Verify `system-core::verify_inclusion_proof` on the event succeeds.
+  Verify `system-ledger::consult_capability` returns `Verdict::Allow`.
+
+- [ ] **Cross-compile chosen `os-*` binary for AArch64 NetBSD**
+  Build with `--target aarch64-unknown-netbsd` (or the correct target triple).
+  Confirm `cargo check` passes under the compat feature flag.
+
+- [ ] **Run `os-*` binary on QEMU AArch64 NetBSD VM**
+  Add binary to `signatures.veriexec` → re-sign → re-image → boot.
+  Confirm same capability event flows through and `verify_inclusion_proof` succeeds.
+
+- [ ] **Demo end-state confirmation**
+  Same `os-*` binary: runs on Ubuntu/x86_64 (workspace VM) AND on QEMU AArch64 NetBSD.
+  Capability event visible in WORM ledger on both platforms.
+  `Verdict::Allow` returned on both platforms.
+
+---
+
+## Group 6 — Stage-6 promotion (gate: Group 2 hygiene + Group 3B decisions)
+
+_[BLOCKED: Groups 2 + 3B must complete first]_
+
+- [ ] **Quiet-VM bench re-run for `verify_inclusion_proof composed`**
+  Current number (4.72 ms, ±11% CI, 22 outliers) is not publication-quality.
+  Needs a run with 1-min load average < 1.0 on the workspace VM.
+  Schedule with operator when workspace is idle.
+
+- [ ] **Add consistency-proof bench to `system-ledger/benches/consult.rs`**
+  Minimum: `ConsistencyProof::verify` raw for a 4→8 transition.
+  Optional: composed `SignedCheckpoint::verify_consistency_proof` at same sizes.
+
+- [ ] **Run full CI verification pass (Group 2F) on clean HEAD**
+
+- [ ] **Stage system-core + system-ledger v1.0.0 version bumps**
+  MAJOR: this is the first declared-stable API; v1.0.0 freezes the public surface.
+  Update `Cargo.toml`, `CLAUDE.md` headers, `CHANGELOG.md` entries.
+
+- [ ] **Commit via `bin/commit-as-next.sh` on `cluster/project-system`**
+
+- [ ] **Outbox to Command Session: "Stage-6 ready — system-core 1.0.0 + system-ledger 1.0.0"**
+  Command Session runs `bin/promote.sh` (Stage 6) — not this Totebox.
+
+---
+
+## Group 7 — Ongoing housekeeping
+
+- [ ] **WFD sub-clone: action any new guides needed for cluster-totebox-corporate or cluster-totebox-personnel**
+  WFD has extensive operational guides for the running fleet. These are separate from project-system substrate work but this Totebox owns the WFD sub-clone for substrate-related guide work.
+  Review WFD `NEXT.md` after the sub-clone reset.
+
+- [ ] **STAGING-cargo-dep-options.md decision** (from `.agent/`)
+  Master decision pending on whether project-data's `service-fs` uses Cargo `[patch]` or waits for Stage-6 to consume `system-core`.
+  Once decided, either: close the staging doc, or action the `[patch]` setup in project-data.
+
+- [ ] **`system-core/master-relay.rs` deletion** (listed in Group 2A — pull forward if doing any system-core work)
+
+---
+
+## Appendix — Key reference locations
+
+| What | Where |
+|---|---|
+| Doctrine claims #33 + #34 | `~/Foundry/DOCTRINE.md` §II |
+| Kernel binding + Mechanism A spec | `~/Foundry/conventions/system-substrate-doctrine.md` §3–§5 |
+| WORM-ledger 4-layer stack | `~/Foundry/conventions/worm-ledger-design.md` §2 |
+| Phase 2 NetBSD research | `.agent/RESEARCH-netbsd-veriexec-bootflow.md` |
+| Phase 2 os-* candidate survey | `.agent/SURVEY-os-candidates-for-phase2.md` |
+| v1.0.0 readiness detail (all sub-items) | `.agent/CHECKLIST-stage6-promotion-readiness.md` |
+| Benchmark numbers | `.agent/BENCH-v0.2.0.md` |
+| moonshot-toolkit architecture drift detail | `.agent/AUDIT-moonshot-toolkit-arch-vs-cli.md` |
+| All 8 staged drafts | `.agent/drafts-outbound/` |
+| Cross-cluster Cargo dep options | `.agent/STAGING-cargo-dep-options.md` |
+| Project registry (all 97 rows) | `.claude/rules/project-registry.md` |
+| Open questions log | `.claude/rules/cleanup-log.md` |
