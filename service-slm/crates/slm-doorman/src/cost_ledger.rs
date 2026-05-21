@@ -54,6 +54,31 @@ pub struct CostRow {
     pub adapter_version: Option<String>,
 }
 
+/// One Yo-Yo VM lifecycle event (G7 — BRIEF-flow-restructure.md). Distinct from
+/// `CostRow` (per-inference): this captures VM wall-clock cost — boot, idle,
+/// load, and preempt hours — that per-request `cost_usd` accounting is blind to.
+/// The ~$50 spot incident was invisible to the ledger precisely because nothing
+/// recorded these. Written to the sibling file `<date>.vm-hours.jsonl`.
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct VmHoursRow {
+    /// ISO 8601 UTC timestamp of the lifecycle event.
+    pub ts: String,
+    /// GCP instance name (e.g. `yoyo-tier-b-1`).
+    pub instance: String,
+    /// `started` | `stopped`.
+    pub event: String,
+    /// GCP zone the VM ran in.
+    pub zone: String,
+    /// Billed wall-clock seconds for a completed run (0 for a `started` event).
+    pub billed_seconds: u64,
+    /// Estimated VM cost in USD for `billed_seconds` (0 for a `started` event).
+    pub vm_cost_usd: f64,
+    /// Why the VM stopped, if known: `idle` | `operator` | `deadman` |
+    /// `preempted` | `budget-ceiling`. None for `started` events.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub stop_reason: Option<String>,
+}
+
 /// Append-only daily cost ledger writer. One process owns one
 /// `CostLedger`; the internal mutex serialises concurrent writes from
 /// multiple request handlers.
@@ -121,6 +146,10 @@ impl CostLedger {
             total_inference_ms: 0,
             by_tier: std::collections::HashMap::new(),
             by_model: std::collections::HashMap::new(),
+            // Populated up front so a day with VM-hours rows but no inference
+            // rows (the exact $50-incident shape) still reports VM cost — the
+            // `!path.exists()` early return below would otherwise skip it.
+            vm_hours_cost_usd: self.vm_hours_cost(date)?,
         };
         if !path.exists() {
             return Ok(rollup);
@@ -147,6 +176,47 @@ impl CostLedger {
             *rollup.by_model.entry(row.model.clone()).or_default() += row.cost_usd;
         }
         Ok(rollup)
+    }
+
+    /// Append one VM-hours lifecycle row (G7) to `<date>.vm-hours.jsonl`.
+    /// The date is sliced from `row.ts`; the in-process mutex keeps the line whole.
+    pub fn append_vm_hours(&self, row: &VmHoursRow) -> std::io::Result<()> {
+        let date = row.ts.get(0..10).unwrap_or("1970-01-01");
+        let path = self.base_dir.join(format!("{date}.vm-hours.jsonl"));
+        let line = serde_json::to_string(row)
+            .map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))?;
+        let _guard = self.inner.lock().expect("cost ledger mutex poisoned");
+        let mut f = OpenOptions::new().create(true).append(true).open(&path)?;
+        f.write_all(line.as_bytes())?;
+        f.write_all(b"\n")?;
+        f.flush()?;
+        Ok(())
+    }
+
+    /// Sum the Yo-Yo VM-wall-clock cost recorded for the given UTC date
+    /// (`<date>.vm-hours.jsonl`). Returns 0.0 when the file is missing.
+    /// Malformed rows are skipped, mirroring `daily_rollup`.
+    pub fn vm_hours_cost(&self, date: &str) -> std::io::Result<f64> {
+        let path = self.base_dir.join(format!("{date}.vm-hours.jsonl"));
+        if !path.exists() {
+            return Ok(0.0);
+        }
+        let f = std::fs::File::open(&path)?;
+        let mut total = 0.0;
+        for line in BufReader::new(f).lines() {
+            let line = match line {
+                Ok(l) => l,
+                Err(_) => continue,
+            };
+            let trimmed = line.trim();
+            if trimmed.is_empty() {
+                continue;
+            }
+            if let Ok(row) = serde_json::from_str::<VmHoursRow>(trimmed) {
+                total += row.vm_cost_usd;
+            }
+        }
+        Ok(total)
     }
 
     fn path_for(&self, ts: &str) -> PathBuf {
@@ -198,6 +268,22 @@ pub fn append_global(row: &CostRow) {
     }
 }
 
+/// Append a VM-hours lifecycle row (G7) to the global ledger if installed;
+/// no-op otherwise. Errors are swallowed with a `tracing::warn` — ledger
+/// failure must never propagate into a VM lifecycle path.
+pub fn append_vm_hours_global(row: &VmHoursRow) {
+    if let Some(ledger) = GLOBAL.get() {
+        if let Err(e) = ledger.append_vm_hours(row) {
+            tracing::warn!(
+                target: "slm_doorman::cost_ledger",
+                error = %e,
+                instance = %row.instance,
+                "VM-hours ledger append failed (non-fatal)"
+            );
+        }
+    }
+}
+
 /// Diagnostic: returns true when the global cost ledger has been installed.
 pub fn is_initialized() -> bool {
     GLOBAL.get().is_some()
@@ -214,6 +300,10 @@ pub struct DailyRollup {
     pub by_tier: std::collections::HashMap<String, f64>,
     /// Per-model $ subtotal.
     pub by_model: std::collections::HashMap<String, f64>,
+    /// Total Yo-Yo VM-wall-clock cost for the day, from the `<date>.vm-hours.jsonl`
+    /// sibling ledger (G7). Per-inference `cost_usd` is blind to boot/idle/preempt
+    /// VM-hours; this field is what makes that spend visible.
+    pub vm_hours_cost_usd: f64,
 }
 
 #[cfg(test)]
@@ -287,6 +377,54 @@ mod tests {
         let rollup = ledger.daily_rollup("1970-01-01").unwrap();
         assert_eq!(rollup.request_count, 0);
         assert_eq!(rollup.total_cost_usd, 0.0);
+        assert_eq!(rollup.vm_hours_cost_usd, 0.0);
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn vm_hours_append_and_rollup() {
+        let dir = tmp_dir();
+        let ledger = CostLedger::new(&dir).unwrap();
+        ledger
+            .append_vm_hours(&VmHoursRow {
+                ts: "2026-05-21T08:00:00Z".to_string(),
+                instance: "yoyo-tier-b-1".to_string(),
+                event: "stopped".to_string(),
+                zone: "us-west1-a".to_string(),
+                billed_seconds: 3600,
+                vm_cost_usd: 0.71,
+                stop_reason: Some("idle".to_string()),
+            })
+            .unwrap();
+        ledger
+            .append_vm_hours(&VmHoursRow {
+                ts: "2026-05-21T14:00:00Z".to_string(),
+                instance: "yoyo-tier-b-1".to_string(),
+                event: "stopped".to_string(),
+                zone: "us-west1-a".to_string(),
+                billed_seconds: 1800,
+                vm_cost_usd: 0.36,
+                stop_reason: Some("operator".to_string()),
+            })
+            .unwrap();
+
+        let cost = ledger.vm_hours_cost("2026-05-21").unwrap();
+        assert!((cost - 1.07).abs() < 1e-9);
+
+        // daily_rollup surfaces VM-hours cost even with zero inference rows —
+        // the exact case the $50 incident was invisible under.
+        let rollup = ledger.daily_rollup("2026-05-21").unwrap();
+        assert_eq!(rollup.request_count, 0);
+        assert!((rollup.vm_hours_cost_usd - 1.07).abs() < 1e-9);
+
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn vm_hours_cost_missing_file_is_zero() {
+        let dir = tmp_dir();
+        let ledger = CostLedger::new(&dir).unwrap();
+        assert_eq!(ledger.vm_hours_cost("1970-01-01").unwrap(), 0.0);
         std::fs::remove_dir_all(&dir).ok();
     }
 

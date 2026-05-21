@@ -118,6 +118,10 @@ pub struct IdleMonitorConfig {
     /// allowing the VM to boot before being counted as unreachable again.
     /// Default 90.
     pub restart_boot_grace: Duration,
+    /// On-demand VM rate in USD/hour — used to estimate `vm_cost_usd` for the
+    /// G7 VM-hours ledger row written on each confirmed stop. Default 0.71
+    /// (g2-standard-4 + L4 on-demand). Env: SLM_YOYO_RATE_USD_PER_HOUR.
+    pub rate_usd_per_hour: f64,
 }
 
 impl IdleMonitorConfig {
@@ -148,6 +152,10 @@ impl IdleMonitorConfig {
             .ok()
             .and_then(|s| s.parse().ok())
             .unwrap_or(90);
+        let rate_usd_per_hour: f64 = std::env::var("SLM_YOYO_RATE_USD_PER_HOUR")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(0.71);
 
         Some(Self {
             yoyo_endpoint,
@@ -161,6 +169,7 @@ impl IdleMonitorConfig {
             auto_restart_enabled,
             max_restarts_per_hour,
             restart_boot_grace: Duration::from_secs(restart_boot_grace_secs),
+            rate_usd_per_hour,
         })
     }
 }
@@ -176,6 +185,13 @@ pub fn gcp_stop_url(project: &str, zone: &str, instance: &str) -> String {
 pub fn gcp_start_url(project: &str, zone: &str, instance: &str) -> String {
     format!(
         "https://compute.googleapis.com/compute/v1/projects/{project}/zones/{zone}/instances/{instance}/start"
+    )
+}
+
+/// GET URL for the instance resource — used by the G10 stop-verification poll.
+pub fn gcp_get_url(project: &str, zone: &str, instance: &str) -> String {
+    format!(
+        "https://compute.googleapis.com/compute/v1/projects/{project}/zones/{zone}/instances/{instance}"
     )
 }
 
@@ -263,12 +279,12 @@ pub async fn run_idle_monitor(config: IdleMonitorConfig) {
                         instance = %config.gcp_instance,
                         "Yo-Yo idle threshold reached; sending GCP stop request"
                     );
-                    match stop_gcp_instance(&client, &config).await {
+                    match stop_gcp_instance(&client, &config, "idle").await {
                         Ok(()) => {
                             info!(
                                 target: "slm_doorman::idle_monitor",
                                 instance = %config.gcp_instance,
-                                "GCP stop request accepted"
+                                "Yo-Yo VM stopped and verified TERMINATED (idle shutdown)"
                             );
                             stop_sent = true;
                         }
@@ -327,12 +343,12 @@ pub async fn run_idle_monitor(config: IdleMonitorConfig) {
                                 instance = %config.gcp_instance,
                                 "Yo-Yo metrics unreachable past safety threshold (crash-guard); sending stop"
                             );
-                            match stop_gcp_instance(&client, &config).await {
+                            match stop_gcp_instance(&client, &config, "crash-guard").await {
                                 Ok(()) => {
                                     info!(
                                         target: "slm_doorman::idle_monitor",
                                         instance = %config.gcp_instance,
-                                        "GCP stop request accepted (crash-guard)"
+                                        "Yo-Yo VM stopped and verified TERMINATED (crash-guard)"
                                     );
                                     stop_sent = true;
                                 }
@@ -471,10 +487,13 @@ async fn fetch_gcp_adc_token(client: &reqwest::Client) -> Result<String, String>
     Ok(t.access_token)
 }
 
-/// POST `instances.stop` to the GCP Compute Engine API.
+/// POST `instances.stop`, then VERIFY the VM reaches TERMINATED (G10) before
+/// reporting success — the API call only ACCEPTS the stop. On a confirmed stop
+/// it writes a G7 VM-hours ledger row tagged with `stop_reason`.
 async fn stop_gcp_instance(
     client: &reqwest::Client,
     config: &IdleMonitorConfig,
+    stop_reason: &str,
 ) -> Result<(), String> {
     let token = fetch_gcp_adc_token(client).await?;
     let url = gcp_stop_url(&config.gcp_project, &config.gcp_zone, &config.gcp_instance);
@@ -487,11 +506,93 @@ async fn stop_gcp_instance(
         .send()
         .await
         .map_err(|e| format!("GCP API request failed: {e}"))?;
-    if resp.status().is_success() {
-        Ok(())
-    } else {
-        Err(format!("GCP instances.stop returned HTTP {}", resp.status()))
+    if !resp.status().is_success() {
+        return Err(format!("GCP instances.stop returned HTTP {}", resp.status()));
     }
+    // G10: the API only ACCEPTS the stop. Poll the instance status until it
+    // reaches TERMINATED before reporting success — "shut down" must mean
+    // verified-down, not just requested.
+    let deadline = Instant::now() + Duration::from_secs(120);
+    loop {
+        match get_gcp_instance(client, config).await {
+            Ok((status, last_start)) if status == "TERMINATED" || status == "STOPPED" => {
+                // G7: record the VM-hours lifecycle row now the stop is confirmed.
+                record_vm_hours_stop(config, stop_reason, last_start.as_deref());
+                return Ok(());
+            }
+            Ok(_) => {}
+            Err(e) => {
+                tracing::debug!(
+                    target: "slm_doorman::idle_monitor",
+                    error = %e,
+                    "stop-verification status poll failed; retrying"
+                );
+            }
+        }
+        if Instant::now() >= deadline {
+            return Err(
+                "stop accepted but VM did not reach TERMINATED within 120s".to_string(),
+            );
+        }
+        tokio::time::sleep(Duration::from_secs(5)).await;
+    }
+}
+
+/// GET the instance resource; returns `(status, lastStartTimestamp)`.
+/// `status` is `RUNNING` | `TERMINATED` | `STOPPING` | `PROVISIONING` | ...
+async fn get_gcp_instance(
+    client: &reqwest::Client,
+    config: &IdleMonitorConfig,
+) -> Result<(String, Option<String>), String> {
+    #[derive(serde::Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    struct InstanceResp {
+        status: String,
+        #[serde(default)]
+        last_start_timestamp: Option<String>,
+    }
+    let token = fetch_gcp_adc_token(client).await?;
+    let url = gcp_get_url(&config.gcp_project, &config.gcp_zone, &config.gcp_instance);
+    let resp = client
+        .get(&url)
+        .bearer_auth(&token)
+        .send()
+        .await
+        .map_err(|e| format!("GCP API request failed: {e}"))?;
+    if !resp.status().is_success() {
+        return Err(format!("GCP instances.get returned HTTP {}", resp.status()));
+    }
+    let info: InstanceResp = resp
+        .json()
+        .await
+        .map_err(|e| format!("instance JSON parse failed: {e}"))?;
+    Ok((info.status, info.last_start_timestamp))
+}
+
+/// G7: write a `stopped` VM-hours row to the global cost ledger. `billed_seconds`
+/// is derived from the GCE `lastStartTimestamp` — best-effort: an absent or
+/// unparseable value records the event with zero billed time rather than
+/// dropping it. Ledger-append failure is swallowed (non-fatal).
+fn record_vm_hours_stop(config: &IdleMonitorConfig, stop_reason: &str, last_start: Option<&str>) {
+    let now = chrono::Utc::now();
+    let billed_seconds: u64 = last_start
+        .and_then(|s| chrono::DateTime::parse_from_rfc3339(s).ok())
+        .map(|start| {
+            (now - start.with_timezone(&chrono::Utc))
+                .num_seconds()
+                .max(0) as u64
+        })
+        .unwrap_or(0);
+    let vm_cost_usd = billed_seconds as f64 / 3600.0 * config.rate_usd_per_hour;
+    slm_doorman::cost_ledger::append_vm_hours_global(&slm_doorman::cost_ledger::VmHoursRow {
+        ts: now.to_rfc3339(),
+        instance: config.gcp_instance.clone(),
+        event: "stopped".to_string(),
+        zone: config.gcp_zone.clone(),
+        billed_seconds,
+        vm_cost_usd,
+        stop_reason: Some(stop_reason.to_string()),
+    });
 }
 
 /// POST `instances.start` to the GCP Compute Engine API.
@@ -697,6 +798,15 @@ mod tests {
         assert_eq!(
             url,
             "https://compute.googleapis.com/compute/v1/projects/my-project/zones/europe-west4-a/instances/yoyo-tier-b-1/start"
+        );
+    }
+
+    #[test]
+    fn gcp_get_url_is_well_formed() {
+        let url = gcp_get_url("my-project", "europe-west4-a", "yoyo-tier-b-1");
+        assert_eq!(
+            url,
+            "https://compute.googleapis.com/compute/v1/projects/my-project/zones/europe-west4-a/instances/yoyo-tier-b-1"
         );
     }
 
