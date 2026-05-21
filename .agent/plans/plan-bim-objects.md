@@ -2,8 +2,9 @@
 schema: foundry-plan-v1
 archive: project-bim
 topic: bim-objects
-status: draft-v1
+status: draft-v2
 created: 2026-05-20
+updated: 2026-05-21
 sources: |
   inputs/plan-bim-objects (operator notes)
   inputs/DISCOVERY_MCorp_Sketches_Key Plans_Summary.pdf
@@ -23,14 +24,25 @@ sources: |
   inputs/--- April 01, 2025 -- Collaborators #11 ---/ (4 files)
   inputs/--- March 03, 2025 -- Collaborators #32 ---/ (3 files)
   inputs/--- May 06, 2025 -- Collaborators #27 ---/ (5 files)
+  CONSTRUCTION_2026_01_06_Key Plan_Professional Office_FFE_FIN.xlsx
+    tabs: Summary_Key Plans, Summary_V3, Summary_Retail and Tech Industr,
+          Summary_Common Areas, Summary_Amenities, Loading and Recycling,
+          Upper Floors_Building Core, Public Lobby Washroom,
+          Building Manager + Mail Room
+operator_answers:
+  Q1: "Professional Centre Key Plans = 13 (confirmed)"
+  Q2: "Sizes from FIN.xlsx Summary_Key Plans tab — authoritative"
+  Q3: "Corporate Office = no dimensions yet; sized against Floor Plate at the end"
+  Q4: "Landscaping eco-region variants deferred"
+  Q5: "Retail Select and Tech Industrial — Key Plans compose directly into Floor Plates (no Tile layer)"
+  Q6: "DTCG-to-Rust linkage = open; decide at Rust engine scaffold time"
 ---
 
 # Plan — BIM Objects: Key Plans, Tiles, Floor Plates
 
-> **First draft — compiled 2026-05-20 from operator notes + 15 source documents.**
-> This document is the working specification for the BIM Object Library:
-> the complete taxonomy of Key Plans, Tiles, and Floor Plates, plus
-> the Rust engine (`tool-buildingwidth`) that computes nesting between them.
+> **Draft v2 — updated 2026-05-21.** Authoritative sizes from FIN.xlsx folded in.
+> Q1–Q6 resolved. Command Decisions 1–4 incorporated.
+> This document is the working specification for the BIM Object Library.
 
 ---
 
@@ -52,9 +64,42 @@ is not 50% of Private Office Medium — with a consistent three-zone structure
 across every Key Plan.
 
 The digital artifact of this system is the **BIM Object Library**: a catalog
-of BIM objects organized as Key Plans → Tiles → Floor Plates. Architects
+of BIM Objects organized as Key Plans → Tiles → Floor Plates. Architects
 deliver Key Plans; the `tool-buildingwidth` Rust engine computes how they
 nest into Tiles, and how Tiles nest into Floor Plates.
+
+---
+
+## Command Decisions (received 2026-05-20)
+
+Four decisions received via inbox `command-20260520-bim-foundation-decisions`.
+These apply to all work in this archive going forward.
+
+**Decision 1 — Naming convention**
+Use **descriptive display names** (Index PDF style) as labels on `bim.woodfinegroup.com`.
+Codes (PO-1, M-1, B-1, etc.) are internal-only keys in DTCG JSON — not shown to users.
+- Private Office: size IS the descriptor → "Private Office — Small / Medium / Large"
+- Medical: specialisation IS the descriptor → "Medical — Chiropractor / Dentist / GP"
+- Business and others: follow the Index PDF descriptive pattern
+- Throughout all user-facing copy: **BIM Objects** (not "tokens")
+
+**Decision 2 — HTML BIM_TOKENS block**
+**Delete** the inline `BIM_TOKENS` block from `building-width-calculator.html`.
+The page must fetch values directly from DTCG JSON files at render time.
+Single source of truth — no manual sync.
+
+**Decision 3 — Scope**
+All three building types are in scope now:
+- Professional Centre (offices + Medical + Business + common areas)
+- Retail Select (6 tiles: A-RS through M-RS)
+- Tech Industrial (5 tiles: A-TI through M-TI)
+- All 12 Professional Centre common-area Key Plans
+
+**Decision 4 — Tile disambiguation**
+- Type-prefixed tile codes as internal keys: Corporate Office → CO-A/B/C; Retail Select → RS-A/B/C; Tech Industrial → TI-A/B/C
+- Corridor Expander T = **300 SF** (diagram value is operative)
+- Arithmetic gaps between tile row sums and target sizes are **intentional by design** — `tool-buildingwidth` manages Tile/Key-Plan/Floor-Plate size negotiation at build time; add `$description` note to DTCG entries
+- J/K/L/M tiles: create **stub DTCG entries** with `status: reserved` and note source not yet located
 
 ---
 
@@ -64,36 +109,33 @@ nest into Tiles, and how Tiles nest into Floor Plates.
 |---|---|---|---|
 | Professional Centres | 3–5 | 19,000–25,000 | 3 elevators; offset pulled-back core |
 | Suburban Office | 6–9 | 17,000–23,000 | 4 elevators; offset pulled-back core |
-| Retail Select | 1 | 4,500 / 6,700 / 7,700 | Strip retail; S/M/L |
-| Tech Industrial | 1 | 7,200 / 8,400 | Industrial flex; M/L |
+| Retail Select | 1 | 4,500 / 6,700 / 7,700 | Strip retail; S/M/L; Key Plans → Floor Plates directly |
+| Tech Industrial | 1 | 7,200 / 8,400 | Industrial flex; M/L; Key Plans → Floor Plates directly |
 
-**Offset Pulled-Back Core** (shared by Professional Centres and Suburban Office):
-- Building core pushed toward rear of building, not centered
+**Offset Pulled-Back Core** (Professional Centres + Suburban Office):
+- Building core pushed toward rear, not centered
 - Enables full-length perimeter corridor without internal tenant corridors
-- Supports adaptive reuse conversion (residential, warehouse) without major reconfiguration
-- Long unobstructed floor plates ideal for Tiles nesting
+- Supports adaptive reuse (residential, warehouse) without major reconfiguration
 
 ---
 
 ## Three-Zone Framework
 
-Every Key Plan (with the exception of pure-circulation and infrastructure types)
-is organized on the same three-zone cross-section from facade to core:
+Every Key Plan (except pure-circulation and infrastructure types) has this
+cross-section from facade to core:
 
 ```
 [FACADE]  Zone 1 — Habitat  |  Zone 2 — Magazine  |  Zone 3 — Corridor  [CORE]
 ```
 
-| Zone | Purpose | Depth (typical range) | Standard |
+| Zone | Purpose | Depth range | Standard |
 |---|---|---|---|
 | Zone 1 — Habitat | All desks/workstations; natural light required | 4.7m – 7.2m | European Lighting Standard (6m desk-to-window rule) |
-| Zone 2 — Magazine | Storage, bookshelves, secondary functions; depth set by the Key Plan | 1.3m – 9.3m | Variable — derived from furniture layout |
+| Zone 2 — Magazine | Storage, secondary functions; adjustable | 1.3m – 9.3m | Derived from furniture layout; `tool-buildingwidth` varies this to hit Tile targets |
 | Zone 3 — Corridor | Central circulation running floor length | 2.0m – 3.1m | ~20% oversized from code minimum for wellness |
 
-The Zone 1 depth is the primary driver of building width per Key Plan type.
-Zone 3 corridor depth is consistent within a Key Plan category (typically 3.0m
-for professional tenants). Zone 2 is the adjustable layer — the `tool-buildingwidth`
-engine varies Zone 2 depth to achieve integer-multiple Tile nesting.
+Zone 1 depth drives building width per Key Plan type. Zone 2 is the adjustable
+layer. Zone 3 is consistent within a category.
 
 ---
 
@@ -101,145 +143,171 @@ engine varies Zone 2 depth to achieve integer-multiple Tile nesting.
 
 ### Definition
 
-A Key Plan is the smallest BIM Object unit. It represents a single leaseable
-or infrastructure space, defined by:
+A Key Plan is the smallest BIM Object unit. Defined by:
 - Furniture arrangement (specific manufacturer SKUs)
 - Zone 1/2/3 dimensions
 - Net leasable area (m² and SF)
-- Facade frontage requirement
+- Facade frontage
 - Accessibility compliance
 - Occupancy count
-- Building Width Calculator integration (Zone depths feed directly into Rust engine)
 
-Key Plans are authored by architects. Woodfine provides the briefing (zone
-requirements, furniture program, accessibility standard); the architect delivers
-the final spatial geometry.
+Key Plans are authored by architects from Woodfine's equipment programs and
+zone requirements. Infrastructure Key Plans (Lobby Atrium, Emergency Stairwell,
+etc.) are self-contained — they appear directly in Floor Plates without a
+Tile wrapper.
 
-**Key Plans that are themselves self-contained (e.g., Lobby Atrium, Emergency
-Stairwell) do not need a Tile wrapper — they appear directly in Floor Plates
-at Key Plan level.**
+All sizes below are from `CONSTRUCTION_2026_01_06_Key Plan_Professional
+Office_FFE_FIN.xlsx` Tab `Summary_Key Plans` (V3, 2025-11-29), the
+operator-designated authoritative source. Spreadsheet note: "NB — Not drawn
+to scale — Approximate square footages." Zone depth columns in raw extraction
+were offset by one; corrected by cross-reference with PDF samples.
 
 ---
 
-### Key Plan Registry — 72 entries
+### Key Plan Registry
 
-#### GENERAL KEY PLANS (25)
+#### 1. Private Office (3)
 
-**Private Office** — facade-facing; individual lease; Building ID issued per desk
+Facade-facing; individual lease; Building ID issued per desk.
 
-| Code | Name | Area (m²) | Area (SF) | Zone 1 | Zone 2 | Zone 3 |
+| Code | Display name | m² | SF | Z1 (m) | Z2 (m) | Z3 (m) |
 |---|---|---|---|---|---|---|
-| PO-1 | Private Office Small | 30 | 325 | 6.0m | 3.8m | 2.0m |
-| PO-2 | Private Office Medium | 43 | 465 | 6.0m | ~5.0m | 2.0m |
-| PO-3 | Private Office Large | 64 | 685 | 6.0m | ~7.0m | 2.0m |
+| PO-1 | Private Office — Small | 30.19 | 325 | 6.0 | 3.8 | 2.0 |
+| PO-2 | Private Office — Medium | 43.20 | 465 | 6.0 | 3.8 | 2.0 |
+| PO-3 | Private Office — Large | 63.64 | 685 | 6.0 | 3.8 | 2.0 |
 
-Furniture (PO-1 sample): 1 desk + chair, 1 × 3-person round table, 2 side chairs,
-1 filing cabinet, 1 credenza, 1 bookshelf, 1 coat rack.
+Furniture (PO-1): desk + chair, 3-person round table, 2 side chairs, filing
+cabinet, credenza, bookshelf, coat rack.
+Note: Zone 2 = 3.8m across all sizes; frontage width increases, not depth.
+Desks perpendicular to facade require +0.7m in Zone 1 for three desks in series.
 
-**Corporate Office** — full Tile; no sub-lease; one climate zone per Tile
+---
 
-| Code | Name | Notes |
-|---|---|---|
-| CO-FF | Corporate Office — Full Floor | Entire floor plate; bespoke |
-| CO-1/2 | Corporate Office — 1/2 Floor | |
-| CO-1/3 | Corporate Office — 1/3 Floor | |
-| CO-1/4 | Corporate Office — 1/4 Floor | |
-| CO-1/8 | Corporate Office — 1/8 Floor | Minimum viable Corporate Tile |
+#### 2. Corporate Office (5)
 
-Note: Corporate Office is the minimum Tile size for avoiding exposed columns in
-smaller tenancies. CO-1/8 is the smallest Corporate Tile.
+Full Tile; no sub-lease; one climate zone per Tile. **Dimensions TBD** —
+sized as a proportion of the Floor Plate (Q3 resolution). Corporate Office
+is the minimum Tile size for avoiding exposed columns in smaller tenancies.
 
-**Professional Office — Medical**
-
-| Code | Name | Area (SF) | Key features |
+| Code | Display name | m² | SF |
 |---|---|---|---|
-| M-1 | Medical — Chiropractor / Dentist Small | ~2,402 | 2 exam/dental chairs, reception, sterilization, imaging, file room |
-| M-2 | Medical — Dentist Medium | ~3,568 | 4 dental chairs, 2-3 sinks, autoclave, imaging, storage |
-| M-3 | Medical — General Practitioner Large | ~5,231 | 6 chairs, multiple exam rooms, full support suite |
+| CO-FF | Corporate Office — Full Floor | TBD | TBD |
+| CO-1/2 | Corporate Office — Half Floor | TBD | TBD |
+| CO-1/3 | Corporate Office — Third Floor | TBD | TBD |
+| CO-1/4 | Corporate Office — Quarter Floor | TBD | TBD |
+| CO-1/8 | Corporate Office — Eighth Floor | TBD | TBD |
 
-**Professional Office — Business**
+Tile codes (Decision 4): CO-A, CO-B, CO-C, CO-D, CO-E (type-prefixed).
 
-| Code | Name | Area (m²) | Area (SF) | Zone 1 | Zone 2 | Zone 3 |
+---
+
+#### 3. Professional Office — Medical (3)
+
+| Code | Display name | m² | SF | Z1 (m) | Z2 (m) | Z3 (m) |
 |---|---|---|---|---|---|---|
-| B-1 | Business Small | 311 | 3,350 | 6.0m | 5.1m | 2.75m |
-| B-2 | Business Medium | 400 | 4,301 | 6.0m | 5.1m | 2.75m |
-| B-3 | Business Large | 486–699 | 5,231–7,524 | 7.2m | 4.9m | 2.9m |
+| M-1 | Medical — Chiropractor | 223 | 2,401 | 7.20 | 4.87 | TBD |
+| M-2 | Medical — Dentist | 331 | 3,568 | 7.20 | 4.87 | TBD |
+| M-3 | Medical — General Practitioner | 486 | 5,231 | 7.20 | 4.87 | TBD |
 
-Width range (B-1 to B-3): 25.3m to 32.3m total facade frontage.
-Zone 2 provides the width adjustment variable (options A–D for each size).
+Key rooms: reception, exam/dental chairs (2/4/6), file room, autoclave,
+sterilization, imaging, storage, washroom.
 
-**Professional Office — Laboratory**
+---
 
-| Code | Name | Area (m²) | Area (SF) | Workstations | Occupancy |
-|---|---|---|---|---|---|
-| L-1 | Laboratory Small (Medical) | 195 | 2,099 | 20 (9.7m²/ea) | 34 (5.7m²/pp) |
-| L-2 | Laboratory Medium (Research) | 316 | 3,401 | 33 (9.5m²/ea) | 49 (6.4m²/pp) |
-| L-3 | Laboratory Large | 401 | 4,313 | 45 (8.9m²/ea) | 61 (6.5m²/pp) |
+#### 4. Professional Office — Business (3)
 
-Zone dimensions (all three): Z1=6.7m (22'3"), Z2=4.8m (15'9"), Z3=3.1m (10').
-Rooms: reception, 1-2 offices, 3-9 benches, staff room, storage, mechanical, clean room.
+| Code | Display name | m² | SF | Z1 (m) | Z2 (m) | Z3 (m) |
+|---|---|---|---|---|---|---|
+| B-1 | Business — Small | 311.22 | 3,350 | 6.00 | 7.30 | 2.75 |
+| B-2 | Business — Medium | 399.66 | 4,301 | 6.00 | 7.30 | 2.75 |
+| B-3 | Business — Large | 669.00 | 7,201 | 6.00 | 7.30 | 2.90 |
 
-**Professional Office — Academic**
+Width options A–D available per size; Zone 2 adjustable up to 7.30m max.
+Total facade frontage range: 25.3m – 32.3m.
 
-| Code | Name | Area (m²) | Area (SF) | Occupancy |
-|---|---|---|---|---|
-| A-1 | Academic Small | 88–110 | 944–1,189 | 21–25 (4.1–4.4m²/pp) |
-| A-2 | Academic Medium | 240 | 2,586 | 63 (3.8m²/pp) |
-| A-3 | Academic Large | 327–376 | 3,523–4,050 | 82–103 (3.9–4.6m²/pp) |
+---
 
-Zone dimensions: Z1=4.7m (15'5"), Z2=3.0m (9'10"), Z3=TBD.
-Configurations: seminar/podium (A-1), multi-use seminar (A-2), tiered auditorium ~60 cap (A-3).
+#### 5. Professional Office — Laboratory (3)
 
-**Professional Office — Civic**
+| Code | Display name | m² | SF | Z1 (m) | Z2 (m) | Z3 (m) | Frontage |
+|---|---|---|---|---|---|---|---|
+| L-1 | Laboratory — Medical | 195.00 | 2,099 | 6.78 | 4.80 | 3.10 | ~16.8m |
+| L-2 | Laboratory — Research | 315.96 | 3,401 | 6.78 | 4.80 | 3.10 | ~27.3m |
+| L-3 | Laboratory — Large | 400.69 | 4,313 | 6.78 | 4.80 | 3.10 | ~34.6m |
 
-| Code | Name | Area (m²) | Area (SF) |
+Key rooms: reception, 1–2 offices, 3–9 benches, staff room, storage, mechanical, clean room.
+Occupancy: L-1=34 (5.7m²/pp), L-2=49 (6.4m²/pp), L-3=61 (6.5m²/pp).
+
+---
+
+#### 6. Professional Office — Academic (3)
+
+| Code | Display name | m² | SF | Z1 (m) | Z2 (m) | Z3 (m) |
+|---|---|---|---|---|---|---|
+| A-1 | Academic — Small | 105 | 1,131 | 4.70 | 3.00 | TBD |
+| A-2 | Academic — Medium | 240 | 2,583 | 4.70 | 3.00 | TBD |
+| A-3 | Academic — Large | 378 | 4,070 | 4.70 | 3.00 | TBD |
+
+Configurations: seminar/podium (A-1), multi-use seminar (A-2), tiered
+auditorium ~60 capacity (A-3).
+Occupancy: A-1=21–25, A-2=63, A-3=82–103.
+
+---
+
+#### 7. Professional Office — Civic (3)
+
+| Code | Display name | m² | SF | Z1 (m) | Z2 (m) | Z3 (m) |
+|---|---|---|---|---|---|---|
+| C-1 | Civic — Small | 270 | 2,912 | 6.00 | 7.23 | TBD |
+| C-2 | Civic — Medium | 577 | 6,215 | 6.00 | 7.23 | TBD |
+| C-3 | Civic — Large | 822 | 8,850 | 6.00 | 7.23 | TBD |
+
+Key rooms: offices, clerk desks, conference rooms, staff room, restrooms, communal corridor.
+
+---
+
+#### 8. Circulation & Utility (2)
+
+| Code | Display name | m² | Notes |
 |---|---|---|---|
-| C-1 | Civic Small | 270 | 2,912 |
-| C-2 | Civic Medium | 577 | 6,215 |
-| C-3 | Civic Large | 822 | 8,850 |
-
-Layout: offices, clerk desks, conference rooms, staff room, restrooms, communal corridor.
-Color zones: Yellow (work areas), Orange (internal corridor), Green (support), Blue (communal).
-
-**Circulation & Utility**
-
-| Code | Name | Notes |
-|---|---|---|
-| R-1 | Corridor Expanders | Adjustable corridor widths; fills remainder between Tiles |
-| V-1 | Meter Room | Utility infrastructure; no Zone 1 requirement |
+| R-1 | Corridor Expanders | variable | Fills remainder gaps; width adjustable |
+| T | Corridor Expander T | 300 SF | Decision 4: 300 SF is operative value |
+| V-1 | Meter Room | TBD | Utility; no Zone 1 requirement |
 
 ---
 
-#### PROFESSIONAL CENTRE KEY PLANS (13–14)
+#### 9. Professional Centre Infrastructure (13)
 
-Infrastructure Key Plans for the Professional Centre development class.
-These appear in Floor Plates directly (not wrapped in leasing Tiles).
+Sizes TBD — architect delivers drawings from the equipment programs below.
+These Key Plans appear directly in Floor Plates (not wrapped in Tiles).
 
-| Code | Name |
-|---|---|
-| N-1 | Tenant Lounge |
-| EE-1 | Lobby Atrium |
-| O-1 | Building Manager Office |
-| P-1 | Mail Room |
-| S-1 | Elevator Lobby |
-| U-1 | Tenant Restroom |
-| X-1 | Loading |
-| Y-1 | Recycling |
-| Z-1 | Bike Room |
-| AA-1 | Workbench |
-| BB-1 | Building Staff Lockers |
-| CC-1 | Coffee / Bread |
-| DD-1 | Public Restrooms |
+| Code | Display name | Sizes | Equipment program |
+|---|---|---|---|
+| N-1 | Tenant Lounge | S/M/L | Seating, kitchenette |
+| EE-1 | Lobby Atrium | S/M/L | Entry, reception |
+| O-1 | Building Manager Office | M/L | Manager desk+table, asst. manager desk, mail supervisor desk, night watch desk, 2–4 mail charts, 6–12 shelves, first aid |
+| P-1 | Mail Room | (part of O-1) | Combined Key Plan tab in FIN.xlsx; architect to confirm split or merge |
+| S-1 | Elevator Lobby | M/L | 3 (M) / 4 (L) elevator cabs, service staircase |
+| U-1 | Tenant Restroom | M/L | 2 shared sinks, 2 stalls each gender, mop room |
+| X-1 | Loading | M/L | 1–2 grad doors, 1–2 service doors, 1–2 refuse bins + compactors |
+| Y-1 | Recycling | M/L | Paper / plastic / glass bins (1–2 each) |
+| Z-1 | Bike Room | M/L | 12 (M) / 24 (L) bike racks, exterior door |
+| AA-1 | Workbench | M/L | 1 (M) / 2 (L) workbench units |
+| BB-1 | Building Staff Lockers | M/L | 5 (M) / 10 (L) lockers, 2–4 showers |
+| CC-1 | Coffee / Bread | S/M/L | Kitchenette |
+| DD-1 | Public Restrooms | M/L | 2–3 shared sinks, 2–4 stalls each gender, 1 family/maternal/accessible room |
 
-*Note: source says 14 entries; one entry to be confirmed against the FIN.xlsx index.*
+*Q1 resolved: 13 entries confirmed.*
 
 ---
 
-#### SUBURBAN OFFICE KEY PLANS (14)
+#### 10. Suburban Office Infrastructure (14)
 
-Mirror of Professional Centre set with `-2` suffix; adds Mop Room.
+Mirror of Professional Centre set with `-2` suffix. Adds Mop Room (W-2).
+FIN.xlsx note: "Suburban Office doesn't need additional washroom stalls —
+the Floor Plates are smaller, so each floor may have the same occupancy or less."
 
-| Code | Name |
+| Code | Display name |
 |---|---|
 | N-2 | Tenant Lounge |
 | EE-2 | Lobby Atrium |
@@ -258,53 +326,91 @@ Mirror of Professional Centre set with `-2` suffix; adds Mop Room.
 
 ---
 
-#### RETAIL SELECT KEY PLANS (3)
+#### 11. Retail Select Key Plans (3)
 
-| Code | Name |
-|---|---|
-| RA-1 | Retail Leasehold Small |
-| RB-2 | Retail Leasehold Medium |
-| RC-3 | Retail Leasehold Large |
+**Q5 resolved:** RS Key Plans compose directly into Floor Plates — no Tile layer.
+
+Floor Plate composition: Left End Cap + Mechanical Room + n(RA/RB/RC) + Right End Cap.
+Floor Plate targets: Small=4,500 SF, Medium=6,700 SF, Large=7,700 SF.
+Zone depths (RS): Z1=6.0m, Z2=3.8m, Z3=2.0m.
+
+| Code | Display name | m² | SF |
+|---|---|---|---|
+| RA-1 | Retail Leasehold — Small | TBD | TBD |
+| RB-2 | Retail Leasehold — Medium | TBD | TBD |
+| RC-3 | Retail Leasehold — Large | TBD | TBD |
+
+Also in RS Floor Plates (non-leasehold Key Plans): End Cap S/M, Mechanical Room, Spacer M/L — sizes TBD.
+Tile codes (Decision 4): RS-A through RS-M (type-prefixed).
 
 ---
 
-#### TECH INDUSTRIAL KEY PLANS (3)
+#### 12. Tech Industrial Key Plans (3)
 
-| Code | Name |
-|---|---|
-| TI-1 | Tech Leasehold Small |
-| TI-2 | Tech Leasehold Medium |
-| TI-3 | Tech Leasehold Large |
+**Q5 resolved:** TI Key Plans compose directly into Floor Plates — no Tile layer.
+
+Floor Plate composition: Left End Cap + Mechanical Room + n(TI-2/TI-3) + Right End Cap.
+Floor Plate targets: Medium=7,200 SF, Large=8,400 SF.
+Zone depths (TI): Z1=6.0m, Z2=3.8m, Z3=2.0m.
+
+| Code | Display name | m² | SF |
+|---|---|---|---|
+| TI-1 | Tech Leasehold — Small | TBD | TBD |
+| TI-2 | Tech Leasehold — Medium | TBD | TBD |
+| TI-3 | Tech Leasehold — Large | TBD | TBD |
+
+Also in TI Floor Plates: End Cap M/L, Mechanical Room, Spacers M/L — sizes TBD.
+Tile codes (Decision 4): TI-A through TI-M (type-prefixed).
 
 ---
 
-#### LANDSCAPING KEY PLANS (4)
+#### 13. Landscaping (2 active — eco-region variants deferred)
 
-Eco-region variants — same geometry, different planting palette.
+*Q4 resolved: Boreal Plains / Fescue Grassland / Parkland Natural variants deferred to later iteration.*
 
-| Code | Name | Eco-region |
+| Code | Display name | m² |
 |---|---|---|
-| LL-1a | Bioswales | Boreal Plains |
-| LL-1b | Bioswales | Fescue Grassland |
-| LL-1c | Bioswales | Parkland Natural |
-| LL-2 | Irrigation Gallery | (all) |
+| LL-1 | Bioswales | TBD |
+| LL-2 | Irrigation Gallery | TBD |
 
 ---
 
-#### PARKING KEY PLANS (11)
+#### 14. Parking (6 active — eco-region variants deferred)
 
-| Code | Name | Eco-region |
+*Q4 resolved: eco-region variants for PP-1 + PP-2 deferred.*
+
+| Code | Display name | m² |
 |---|---|---|
-| PP-1a | Parking Stalls | Boreal Plains |
-| PP-1b | Parking Stalls | Fescue Grassland |
-| PP-1c | Parking Stalls | Parkland Natural |
-| PP-2a | Accessible Parking | Boreal Plains |
-| PP-2b | Accessible Parking | Fescue Grassland |
-| PP-2c | Accessible Parking | Parkland Natural |
-| PP-3 | Sidewalks | — |
-| PP-4 | Snowdrops | — |
-| PP-5 | Signage | — |
-| PP-6 | Lighting | — |
+| PP-1 | Parking Stalls | TBD |
+| PP-2 | Accessible Parking | TBD |
+| PP-3 | Sidewalks | TBD |
+| PP-4 | Snowdrops | TBD |
+| PP-5 | Signage | TBD |
+| PP-6 | Lighting | TBD |
+
+---
+
+### Key Plan count summary
+
+| Category | Count | Sizes confirmed | Sizes TBD |
+|---|---|---|---|
+| Private Office | 3 | 3 | — |
+| Corporate Office | 5 | — | 5 (floor-plate dependent) |
+| Medical | 3 | 3 | — |
+| Business | 3 | 3 | — |
+| Laboratory | 3 | 3 | — |
+| Academic | 3 | 3 | — |
+| Civic | 3 | 3 | — |
+| Circulation & Utility | 3 | — | 3 |
+| Professional Centre Infrastructure | 13 | — | 13 (architect drawings) |
+| Suburban Office Infrastructure | 14 | — | 14 (architect drawings) |
+| Retail Select | 3 (+3 components) | — | 6 |
+| Tech Industrial | 3 (+3 components) | — | 6 |
+| Landscaping | 2 | — | 2 |
+| Parking | 6 | — | 6 |
+| **Total active** | **66** | **15** | **51** |
+
+*9 eco-region variants deferred (LL-1 ×3, PP-1 ×3, PP-2 ×3); will bring total to 75 when added.*
 
 ---
 
@@ -314,72 +420,75 @@ Eco-region variants — same geometry, different planting palette.
 
 A Tile is a BIM Object composed of one or more Key Plans within a single
 **Climate Zone**. One Tile = one climate zone = one HVAC control boundary.
-Demising walls within a Tile share climate zone control.
 
-Tiles come in two standard sizes:
-- **2,700 SF** — base module (single leasing bay)
-- **6,000 SF** — end-cap module (corner + stairwell integration)
+Standard sizes: **2,700 SF** (base module) and **6,000 SF** (end-cap module).
+
+**Decision 4 note:** arithmetic gaps between tile row sums and target SF are
+intentional — `tool-buildingwidth` negotiates the trade-off at build time.
+DTCG entries carry a `$description` noting this.
 
 ### Tile Composition Rules
 
 ```
 T_Basic    = n(PO-1) + p(PO-2) + q(PO-3)
 T_Compound = n(PO-1) + p(PO-2) + q(PO-3) + r(A-* | L-* | M-* | B-* | C-*)
-T_Special  = n(PO-1) + p(PO-2) + q(PO-3) + r(A-* | L-* | M-* | B-* | C-*)
-              [same as Compound but occupies corner/end-cap position in Floor Plate]
+T_Special  = same as Compound, occupies corner / end-cap position in Floor Plate
 ```
 
-Where n, p, q, r are non-negative integers (zero allowed).
-
-**Key rule:** A Key Plan that is inherently a full Tile (e.g., Lobby Atrium EE-1,
-Emergency Stairwell) does NOT get wrapped in a Tile — it appears directly in the
-Floor Plate at Key Plan level.
+Self-contained Key Plans (Lobby Atrium EE-1, Emergency Stairwell) appear
+directly in the Floor Plate — not wrapped in a Tile.
 
 ### Tile Registry
 
-#### 2,700 SF Tiles
+#### 2,700 SF Tiles (Professional Centre + Suburban Office)
 
-| Tile | Type | Composition | Climate Zones | Doors | Service Hookups |
-|---|---|---|---|---|---|
-| Tile A | Corporate | Corporate Office (full tile) | 1 | 9 | 9 |
-| Tile B-1 | Private Mix | PO-1 (300 SF) + PO-3 (500 SF) + PO-2 (450 SF) + B-1 small portion (800 SF) | 1 | TBD | TBD |
-| Tile C-1 | Prof Medium | B-2 (2,000 SF) + PO-2 (450 SF) + PO-1 (300 SF) | 1 | TBD | TBD |
-| Tile C-2 | Prof Large | B-3 (2,400 SF) + PO-1 (300 SF) | 1 | TBD | TBD |
+| Internal code | Display name | Composition | Climate zones |
+|---|---|---|---|
+| CO-A | Corporate Office | Corporate Office (full tile) | 1 |
+| B-1 | Private Mix | PO-1 + PO-2 + PO-3 + partial B-* | 1 |
+| C-1 | Professional Medium | B-2 + PO-2 + PO-1 | 1 |
+| C-2 | Professional Large | B-3 + PO-1 | 1 |
 
 #### 6,000 SF End-Cap Tiles
 
-| Tile | Type | Composition | Notes |
+| Internal code | Display name | Composition | Notes |
 |---|---|---|---|
-| Tile A-1 | Corporate End-Cap | Corporate Office (6,000 SF) | Includes Emergency Stairwell, Corridor E |
-| Tile B-2 | Private Mix End-Cap | PO-1 + PO-2 (×2) + PO-3, Corridors D+E | Corner of floor plate |
-| Tile C-3 | Prof Medium End-Cap | B-2 (×2) + PO-2, Corridors D+E | |
-| Tile C-4 | Prof Large End-Cap | B-3 + PO-3 + PO-2 + PO-1, Corridors D+E | |
+| CO-A-EC | Corporate End-Cap | Corporate Office (6,000 SF) | Emergency Stairwell + Corridor E |
+| B-2-EC | Private Mix End-Cap | PO-1 + PO-2 ×2 + PO-3 | Corner position |
+| C-3-EC | Prof Medium End-Cap | B-2 ×2 + PO-2 | Corridors D+E |
+| C-4-EC | Prof Large End-Cap | B-3 + PO-3 + PO-2 + PO-1 | Corridors D+E |
+
+#### Stub Tiles (Decision 4 — reserved)
+
+| Internal code | Status | Note |
+|---|---|---|
+| J | reserved | Source document referenced in Tiles PDF p.3 footnote not yet located |
+| K | reserved | Same — values withheld pending V13 or source confirmation |
+| L | reserved | Same |
+| M | reserved | Same |
+
+#### Retail Select Tiles — RS-A through RS-M (Decision 4)
+#### Tech Industrial Tiles — TI-A through TI-M (Decision 4)
+
+Detailed composition TBD when RS/TI Key Plan sizes are confirmed.
 
 ### Climate Zone Identity
 
-Climate zone = Tile boundary. This means:
-- Two Tiles sharing a demising wall = two separate climate zones
-- A tenant occupying multiple Tiles has multiple climate zones (or they consolidate to a Corporate Tile)
-- For residential conversion: each Tile maps naturally to a residential suite HVAC zone
+One Tile = one climate zone = one HVAC boundary. For residential conversion,
+each Tile maps naturally to a residential suite HVAC zone.
 
 ---
 
 ## Part 3 — Floor Plates
 
-### Definition
-
-A Floor Plate is a BIM Object composed of a combination of Tiles, Key Plans
-(infrastructure-level), and the Building Core. Floor Plates define the leasable
-configuration of an entire building floor.
-
 ### Floor Plate Matrix (9 types)
 
-| ID | Name | Development Class | Size (SF) | Floors Used |
+| ID | Name | Development class | Target SF | Floors |
 |---|---|---|---|---|
 | FP-PC-M | Main Floor — Professional Centres | Professional Centres | 19,000–25,000 | Ground |
 | FP-SO-M | Main Floor — Suburban Office | Suburban Office | 17,000–23,000 | Ground |
-| FP-PC-TL | Second Floor Tenant Lounge — Professional Centres | Professional Centres | 19,000–25,000 | 2 |
-| FP-SO-TL | Second Floor Tenant Lounge — Suburban Office | Suburban Office | 17,000–23,000 | 2 |
+| FP-PC-TL | Tenant Lounge Floor — Professional Centres | Professional Centres | 19,000–25,000 | 2 |
+| FP-SO-TL | Tenant Lounge Floor — Suburban Office | Suburban Office | 17,000–23,000 | 2 |
 | FP-TI-M | Medium Floor Plate — Tech Industrial | Tech Industrial | 7,200 | 1 |
 | FP-TI-L | Large Floor Plate — Tech Industrial | Tech Industrial | 8,400 | 1 |
 | FP-RS-S | Small Floor Plate — Retail Select | Retail Select | 4,500 | 1 |
@@ -388,20 +497,15 @@ configuration of an entire building floor.
 
 ### Composition Rules
 
+**Professional Centres + Suburban Office:**
 ```
-Floor Plate = T_Basic + T_Compound + T_Special + Building Core + Infrastructure Key Plans
-
-Where:
-  T_Basic    = T_Compound   → Corporate Office equivalent
-  T_Basic    = T_Compound = T_Special → Climate Zone = Structural Grid
-  Infrastructure Key Plans  → EE-1/2 (Lobby), N-1/2 (Tenant Lounge),
-                              S-1/2 (Elevator Lobby), U-1/2 (Restrooms),
-                              Emergency Staircases, etc.
+Floor Plate = T_Basic + T_Compound + T_Special
+            + Building Core + Infrastructure Key Plans (EE, N, S, U, staircases…)
 ```
 
 **Retail Select:**
 ```
-Floor Plate = Left End Cap + Mechanical Room + n(RA-1 | RB-2 | RC-3) + Right End Cap
+Floor Plate = Left End Cap + Mechanical Room + n(RA | RB | RC) + Right End Cap
 ```
 
 **Tech Industrial:**
@@ -411,26 +515,21 @@ Floor Plate = Left End Cap + Mechanical Room + n(TI-2 | TI-3) + Right End Cap
 
 ### The "Ring"
 
-The Floor Plates Methodology documents describe a "ring" — the structural and
-circulation annulus around the building core. The ring defines:
-- The separation between leasing Tiles and the building core
-- The routing path for corridor connections to elevators and stairs
-- The minimum Tile depth before the ring begins
+The "ring" is the structural and circulation annulus around the building core.
+It defines the separation between leasing Tiles and the core, the corridor
+routing to elevators and stairs, and the minimum Tile depth. The Rust engine
+accounts for ring geometry when computing remainder-free nesting.
 
-The Rust engine must account for ring geometry when computing remainder-free nesting.
+### Bi-Directional Solver
 
-### Bi-Directional Solver Requirement
+`tool-buildingwidth` solves two directions:
 
-The `tool-buildingwidth` Rust engine must solve two directions:
+**Forward:** Key Plan dimensions + Tile types → valid Floor Plate sizes.
 
-**Forward (Design):** Given Key Plan dimensions + Tile types → compute valid Floor Plate sizes.
-
-**Reverse (Fit-Out):** Given a fixed Floor Plate size + fixed Key Plan sizes → find Tile
-adjustments (Zone 2 depth variation, Corridor Expander R-1 insertion) that eliminate remainder.
-
-If exact fit is impossible with standard Tiles: compute required **Special Tile** dimensions
-(a non-standard Tile that fills the gap). Output the Special Tile specification so an
-architect can design it.
+**Reverse:** Fixed Floor Plate + fixed Key Plan sizes → Tile adjustments
+(Zone 2 depth variation + R-1/T Corridor Expander insertion) that eliminate
+remainder. If no standard Tile achieves zero remainder: output required
+Special Tile dimensions for architect.
 
 ---
 
@@ -438,123 +537,67 @@ architect can design it.
 
 ### Purpose
 
-The Building Width Calculator determines the total building width (facade to core)
-required to accommodate a given set of Key Plans in a given Tile configuration.
+Determines total building width (facade to core) for a given Key Plan / Tile combination.
 
-Inputs:
-- Key Plan type(s) and count
-- Tile composition
-- Floor Plate target size
+**Inputs:** Key Plan type(s) + count, Tile composition, Floor Plate target SF
+**Outputs:** Z1 required, Z2 options (A/B/C/D), Z3 width, total building width, remainder
 
-Outputs:
-- Zone 1 depth required (driven by largest Key Plan in Tile)
-- Zone 2 depth options (A/B/C/D variants per Key Plan type)
-- Zone 3 corridor width
-- Total building width
-- Whether the combination achieves a remainder-free Floor Plate
+### Width data by Key Plan type
 
-### Width Data by Key Plan Type
-
-**Private Office:**
-```
-PO-1: Total width ~11.8m  (Z1=6.0m, Z2=3.8m, Z3=2.0m)
-PO-2: Total width ~varies  (Z1=6.0m, Z2=~5.0m, Z3=2.0m)
-PO-3: Total width ~varies  (Z1=6.0m, Z2=~7.0m, Z3=2.0m)
-```
-
-**Professional — Laboratory (all three sizes):**
-```
-Z1 = 6.7m (22'3"), Z2 = 4.8m (15'9"), Z3 = 3.1m (10')
-L-1 facade frontage: 55'3" (~16.8m)
-L-2 facade frontage: 89'6" (~27.3m)
-L-3 facade frontage: 113'6" (~34.6m)
-```
-
-**Professional — Academic (all three sizes):**
-```
-Z1 = 4.7m (15'5"), Z2 = 3.0m (9'10"), Z3 = TBD
-```
-
-**Professional — Business (B-1 through B-3):**
-```
-Width range: 25.3m – 32.3m total
-Width options per size:
-  Option A: Z1=5.51m, Z2=5.76m, Z3=2.75m
-  Option B: higher Z1, adjusted Z2
-  Option C: higher still
-  Option D: maximum width variant
-```
-
-**Professional — Medical:**
-```
-M-1: ~2,401 SF
-M-2: ~3,568 SF
-M-3: ~5,231 SF
-```
-*Note: M-2 and M-3 facade widths appear incorrectly transcribed in source PDFs — confirm
-from the FIN.xlsx before these feed into the Rust engine.*
+| Type | Z1 (m) | Z2 (m) | Z3 (m) | Notes |
+|---|---|---|---|---|
+| Private Office (all) | 6.0 | 3.8 | 2.0 | Z2 same across PO-1/2/3; frontage changes |
+| Medical (all) | 7.20 | 4.87 | TBD | |
+| Business S/M | 6.00 | 7.30 | 2.75 | Width options A–D; total 25.3–32.3m |
+| Business L | 6.00 | 7.30 | 2.90 | |
+| Laboratory (all) | 6.78 | 4.80 | 3.10 | Frontage: L-1=16.8m, L-2=27.3m, L-3=34.6m |
+| Academic (all) | 4.70 | 3.00 | TBD | |
+| Civic (all) | 6.00 | 7.23 | TBD | |
+| RS + TI | 6.0 | 3.8 | 2.0 | Same as Private Office standard |
 
 ---
 
 ## Rust Engine — `tool-buildingwidth`
 
-### Current State
+New crate at `pointsav-monorepo/tool-buildingwidth/` (not yet scaffolded).
 
-`tool-buildingwidth` exists as a DTCG token file
-(`woodfine-bim-library/tokens/bim/building-width-calculator.dtcg.json`).
-The operator notes say it needs to be expanded to a **RUST ENGINE**.
+### Responsibilities
 
-The engine will live at:
-```
-pointsav-monorepo/tool-buildingwidth/
-```
-(New crate, not yet scaffolded.)
+1. Key Plan → Tile nesting (compute valid 2,700 SF / 6,000 SF compositions)
+2. Tile → Floor Plate nesting (accounting for Building Core + ring)
+3. Bi-directional solver (forward + reverse as above)
+4. Special Tile detection (when no standard Tile achieves zero remainder)
+5. Corridor Expander insertion (R-1 + T = 300 SF) before declaring Special Tile
 
-### Engine Responsibilities
-
-1. **Key Plan → Tile nesting:** given a list of Key Plans and their Zone dimensions,
-   compute valid Tile compositions that achieve a target Tile size (2,700 SF or
-   6,000 SF) without remainder.
-
-2. **Tile → Floor Plate nesting:** given a list of Tiles and a Floor Plate target,
-   compute a valid Floor Plate arrangement (accounting for Building Core + ring).
-
-3. **Bi-directional:** accept either (Key Plan sizes fixed, Floor Plate fixed → solve Tiles)
-   or (Key Plan sizes fixed, Tile targets fixed → compute Floor Plate sizes).
-
-4. **Special Tile detection:** if no standard Tile composition achieves zero remainder,
-   output the required Special Tile dimensions.
-
-5. **Corridor Expander insertion:** insert R-1 Corridor Expanders to absorb small
-   remainder values before declaring a Special Tile necessary.
-
-### Proposed Data Model
+### Proposed data model
 
 ```rust
 struct KeyPlan {
-    code: String,            // PO-1, L-1, B-2, EE-1, etc.
+    code: String,
+    display_name: String,        // Decision 1: descriptive; codes are internal-only
     category: KeyPlanCategory,
     area_m2: f64,
     area_sf: f64,
-    zone1_depth_m: f64,      // Habitat
-    zone2_depth_m: f64,      // Magazine
-    zone3_depth_m: f64,      // Corridor
+    zone1_depth_m: f64,
+    zone2_depth_m: f64,
+    zone3_depth_m: f64,
     facade_frontage_m: f64,
-    is_self_contained: bool, // true → appears in Floor Plate directly, not in a Tile
+    is_self_contained: bool,     // true → direct Floor Plate placement, no Tile
 }
 
 struct Tile {
-    code: String,            // Tile-A, Tile-B1, etc.
-    tile_type: TileType,     // Basic | Compound | Special | EndCap
-    area_sf: f64,            // 2700 or 6000 standard; Special tiles are variable
-    key_plans: Vec<(String, u32)>, // (code, count)
-    climate_zones: u32,      // always 1 per standard Tile
+    code: String,                // CO-A, RS-B, TI-C, etc. (Decision 4: type-prefixed)
+    tile_type: TileType,         // Basic | Compound | Special | EndCap | Reserved
+    area_sf: f64,
+    key_plans: Vec<(String, u32)>,
+    climate_zones: u32,
     doors: u32,
     service_hookups: u32,
+    arithmetic_gap_note: Option<String>, // Decision 4: intentional gap explanation
 }
 
 struct FloorPlate {
-    code: String,            // FP-PC-M, FP-RS-S, etc.
+    code: String,
     development_class: DevelopmentClass,
     area_sf_min: f64,
     area_sf_max: f64,
@@ -564,73 +607,57 @@ struct FloorPlate {
 }
 ```
 
-### Relationship to DTCG Tokens
+### DTCG relationship
 
-The existing `building-width-calculator.dtcg.json` captures the Zone depth
-constants per Key Plan type. The Rust engine reads these token values as its
-configuration input — the DTCG file is the data source; the crate is the
-computation layer.
+`building-width-calculator.dtcg.json` holds Zone depth constants per Key Plan type.
+The Rust engine reads these at runtime as its configuration input (Q6: linkage pattern
+decided at scaffold time — runtime reading preferred per `app-orchestration-bim` pattern).
 
 ---
 
 ## Deliverables
 
-### Deliverable 1 — BIM Objects: Key Plans (72 entries)
+### Deliverable 1 — Key Plans Registry ← READY TO IMPLEMENT
 
-A structured list of all 72 Key Plans with:
-- Code, name, category, development class
-- Area (m² and SF)
-- Zone 1/2/3 depths
-- Facade frontage
-- Occupancy count
-- `is_self_contained` flag
+**Output:** `woodfine-bim-library/key-plans/key-plans-registry.md`
+**Format:** Markdown table (human-verifiable; consistent with SYS-ADR-07)
+**Content:** Full Key Plan registry from this document's Part 1 section
+**Also copy to:** `outputs/plan-bim-objects.md` → accessible via `fpull bim outputs/`
+**Commit:** `woodfine-bim-library` sub-clone via `commit-as-next.sh`
 
-**Verify against:** `CONSTRUCTION_MCorp_2026_01_06_Database_Floor Plans_Key Plans_Index_FIN.xlsx`
-This is the master database — spreadsheet wins over PDF extracts on any conflict.
+Verification:
+- Private Office sizes: 30.19 / 43.20 / 63.64 m² (FIN.xlsx Summary_Key Plans)
+- Medical sizes: 223 / 331 / 486 m² (Q2 resolved)
+- Laboratory Z1=6.78m, Z2=4.80m, Z3=3.10m
+- Corporate Office rows show TBD with floor-plate-dependent explanation
+- RS/TI rows note "composes directly into Floor Plates — no Tile layer"
 
-### Deliverable 2 — BIM Objects: Tiles
+### Deliverable 2 — Tiles Registry
 
-Structured list of all Tiles with composition rules, standard sizes, end-cap variants.
-
+**Output:** `woodfine-bim-library/tiles/tiles-registry.md`
+Structured list of all Tiles with Decision 4 type-prefixed codes, composition rules,
+stub entries for J/K/L/M with `status: reserved`.
 **Verify against:** `CONSTRUCTION_2026_01_06_Tear Sheet_Floor Plates_Tiles_Alternatives_V2_FIN.xlsx`
 
-### Deliverable 3 — Rust Engine: `tool-buildingwidth`
+### Deliverable 3 — Decision 2: Delete BIM_TOKENS block
 
-New crate at `pointsav-monorepo/tool-buildingwidth/`. See engine section above.
+**File:** `preview/building-width-calculator.html`
+Delete the inline BIM_TOKENS block; wire DTCG JSON fetch at render time.
 
----
+### Deliverable 4 — Rust Engine: `tool-buildingwidth`
 
-## Open Questions
-
-1. **Professional Centre Key Plans: 13 or 14?** Directory lists 13 named entries but source
-   says 14. What is the 14th? (Possible: Mop Room W-1, a second café type, Parking Lobby.)
-
-2. **Medical width notation:** M-2 and M-3 widths appear incorrectly transcribed in source
-   PDFs. Confirm from FIN.xlsx before building Rust data model.
-
-3. **Corporate Office sizing:** CO-1/8 = one 2,700 SF Tile? Or does CO-1/8 have its own
-   distinct area? Clarify before the Rust data model is finalized.
-
-4. **Eco-region variants:** Are Landscaping and Parking eco-region variants separate BIM
-   Objects (different geometry) or same geometry with a different material tag?
-
-5. **Retail Select and Tech Industrial Tiles:** Do RS and TI use named Tiles, or do their
-   Key Plans compose directly into Floor Plates without an intermediate Tile layer?
-
-6. **DTCG → Rust engine linkage:** Does `tool-buildingwidth` read the DTCG token file at
-   runtime, or compile token values as constants? Runtime preferred (consistent with
-   `app-orchestration-bim` pattern).
+New crate at `pointsav-monorepo/tool-buildingwidth/`.
+Depends on: Deliverable 1 + 2 complete; DTCG files up to date.
 
 ---
 
-## Implementation Order
+## Resolved questions
 
-1. Reconcile Key Plans list against FIN.xlsx master database → confirm 72 entries,
-   resolve open questions 1, 3, 4.
-2. Resolve Medical width notation (question 2).
-3. Scaffold `tool-buildingwidth` crate in `pointsav-monorepo` with data types above.
-4. Implement Key Plan → Tile nesting (forward direction).
-5. Implement Tile → Floor Plate nesting (forward direction).
-6. Implement bi-directional solver with Corridor Expander insertion + Special Tile detection.
-7. Wire DTCG token file as runtime data source (question 6).
-8. Add BIM Object entries to `bim.woodfinegroup.com` library pages.
+| # | Question | Resolution |
+|---|---|---|
+| Q1 | Professional Centre count | **13** confirmed |
+| Q2 | Medical width notation in PDFs | Use FIN.xlsx sizes: 223 / 331 / 486 m² |
+| Q3 | Corporate Office sizing | **TBD** — sized against Floor Plate at the end |
+| Q4 | Eco-region variants (landscaping/parking) | **Deferred** to later iteration |
+| Q5 | RS/TI Tile layer | **No Tile layer** — Key Plans compose directly into Floor Plates |
+| Q6 | DTCG-to-Rust linkage | **Open** — decide at Rust engine scaffold time |
