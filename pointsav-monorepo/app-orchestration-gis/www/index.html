@@ -1359,6 +1359,20 @@
         return { type: 'FeatureCollection', features: [{ type: 'Feature', geometry: { type: 'Polygon', coordinates: [coords] }, properties: {} }] };
     }
 
+    // World polygon minus the radius circle — used for the vignette / data-horizon mask
+    function makeMaskGeoJSON(center, radiusKm) {
+        const circle = makeCircleGeoJSON(center, radiusKm).features[0].geometry.coordinates[0];
+        const hole = [...circle].reverse(); // reverse winding = punch hole in exterior
+        return {
+            type: 'Feature',
+            geometry: { type: 'Polygon', coordinates: [
+                [[-180,-85],[180,-85],[180,85],[-180,85],[-180,-85]], // world exterior
+                hole,
+            ]},
+            properties: {},
+        };
+    }
+
     function flyToOverview() {
         const r = REGIONS[currentRegion];
         showOverview(); // handles all Co-location Level layer state
@@ -1495,10 +1509,10 @@
                     <div style="font-size:10px;color:var(--text-muted);margin-top:3px;">— in Top 400 ${countryName(p.iso)}</div>
                 </div>
                 <div class="data-block">
-                    <div class="data-label">Sites in Ring</div>
+                    <div class="data-label">Retailers</div>
                     <div class="rank-num">${count3km !== null ? count3km.toLocaleString() : '—'}</div>
-                    <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">at 3 km</div>
-                    ${count1km !== null ? `<div style="font-size:10px;color:var(--text-muted);margin-top:3px;">${count1km} · 1 km</div>` : ''}
+                    <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">within 3 km ring</div>
+                    ${count1km !== null ? `<div style="font-size:10px;color:var(--text-muted);margin-top:3px;">${count1km} within 1 km</div>` : ''}
                 </div>
             </div>
             <div class="data-block">
@@ -2058,8 +2072,15 @@
 
                 // ── Detail overlay: three rings + member store dots (shown on NEW cluster click) ──
                 const _empty = { type: 'FeatureCollection', features: [] };
-                map.addSource('sim-detail-ring-src', { type: 'geojson', data: _empty });
-                map.addSource('sim-detail-dot-src',  { type: 'geojson', data: _empty });
+                map.addSource('sim-detail-ring-src',    { type: 'geojson', data: _empty });
+                map.addSource('sim-detail-dot-src',     { type: 'geojson', data: _empty });
+                map.addSource('sim-detail-vignette-src',{ type: 'geojson', data: _empty });
+
+                // Data-horizon vignette mask — dims world outside 150km (D2: opacity 0.22)
+                map.addLayer({ id: 'sim-vignette', type: 'fill', source: 'sim-detail-vignette-src',
+                    layout: { visibility: 'none' },
+                    paint: { 'fill-color': '#0b1220', 'fill-opacity': 0.22 },
+                }, 'sim-ab-old');
 
                 // Layers inserted *before* sim-ab-old so they render beneath cluster dots
                 map.addLayer({ id: 'sim-150km-line',  type: 'line',   source: 'sim-detail-ring-src',
@@ -2076,26 +2097,29 @@
                 }, 'sim-ab-old');
                 map.addLayer({ id: 'sim-co-fill',     type: 'fill',   source: 'sim-detail-ring-src',
                     filter: ['==', ['get', 'ring_type'], 'co_loc'], layout: { visibility: 'none' },
-                    paint: { 'fill-color': '#1E40AF', 'fill-opacity': 0.04 },
+                    paint: { 'fill-color': '#164679', 'fill-opacity': 0.05 },
                 }, 'sim-ab-old');
                 map.addLayer({ id: 'sim-co-line-t23', type: 'line',   source: 'sim-detail-ring-src',
                     filter: ['all', ['==', ['get', 'ring_type'], 'co_loc'], ['!=', ['get', 'tier'], 1]],
                     layout: { visibility: 'none' },
-                    paint: { 'line-color': '#1E40AF', 'line-width': 1.5, 'line-opacity': 0.7, 'line-dasharray': [3, 2] },
+                    paint: { 'line-color': '#164679', 'line-width': 1.5, 'line-opacity': 0.65, 'line-dasharray': [3, 2] },
                 }, 'sim-ab-old');
                 map.addLayer({ id: 'sim-co-line-t1',  type: 'line',   source: 'sim-detail-ring-src',
                     filter: ['all', ['==', ['get', 'ring_type'], 'co_loc'], ['==', ['get', 'tier'], 1]],
                     layout: { visibility: 'none' },
-                    paint: { 'line-color': '#0A3070', 'line-width': 2, 'line-opacity': 0.9 },
+                    paint: { 'line-color': '#164679', 'line-width': 2.5, 'line-opacity': 0.90 },
                 }, 'sim-ab-old');
                 map.addLayer({ id: 'sim-member-dots', type: 'circle', source: 'sim-detail-dot-src',
                     layout: { visibility: 'none' },
                     paint: {
                         'circle-radius': ['interpolate', ['linear'], ['zoom'], 8, 4, 12, 7, 14, 10],
                         'circle-color': ['match', ['get', 'cls'],
-                            'hypermarket', '#FACC15', 'hardware', '#2DD4BF',
-                            'warehouse',   '#22D3EE', 'lifestyle', '#E879F9', '#94A3B8'],
-                        'circle-stroke-width': 1.25, 'circle-stroke-color': '#0b1220', 'circle-opacity': 1.0,
+                            'hypermarket', '#EAB308', 'hardware', '#B54708',
+                            'warehouse',   '#0E7490', 'lifestyle', '#A21CAF', '#94A3B8'],
+                        'circle-stroke-width': 1.5,
+                        'circle-stroke-color': ['match', ['get', 'cls'],
+                            'hypermarket', '#111827', '#FFFFFF'],
+                        'circle-opacity': 1.0,
                     },
                 }, 'sim-ab-old');
 
@@ -2149,6 +2173,8 @@
             })
             .catch(() => {});
 
+        const SIM_DETAIL_LAYERS = ['sim-vignette','sim-150km-line','sim-35km-fill','sim-35km-line','sim-co-fill','sim-co-line-t23','sim-co-line-t1','sim-member-dots'];
+
         function showSimDetail(feature) {
             const p = feature.properties;
             const [lon, lat] = feature.geometry.coordinates;
@@ -2161,6 +2187,11 @@
             r150.properties = { ring_type: '150km' };
             map.getSource('sim-detail-ring-src').setData({ type: 'FeatureCollection', features: [co, r35, r150] });
 
+            // Vignette: world minus 150km circle
+            if (map.getSource('sim-detail-vignette-src')) {
+                map.getSource('sim-detail-vignette-src').setData(makeMaskGeoJSON([lon, lat], 150));
+            }
+
             let members = [];
             try { members = typeof p.members_detail === 'string' ? JSON.parse(p.members_detail) : (p.members_detail || []); } catch(e) {}
             map.getSource('sim-detail-dot-src').setData({
@@ -2170,16 +2201,15 @@
                     properties: { chain: m.chain, cls: m.cls },
                 })),
             });
-            ['sim-150km-line','sim-35km-fill','sim-35km-line','sim-co-fill','sim-co-line-t23','sim-co-line-t1','sim-member-dots']
-                .forEach(id => { if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', 'visible'); });
+            SIM_DETAIL_LAYERS.forEach(id => { if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', 'visible'); });
         }
 
         function clearSimDetail() {
             const empty = { type: 'FeatureCollection', features: [] };
-            if (map.getSource('sim-detail-ring-src')) map.getSource('sim-detail-ring-src').setData(empty);
-            if (map.getSource('sim-detail-dot-src'))  map.getSource('sim-detail-dot-src').setData(empty);
-            ['sim-150km-line','sim-35km-fill','sim-35km-line','sim-co-fill','sim-co-line-t23','sim-co-line-t1','sim-member-dots']
-                .forEach(id => { if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', 'none'); });
+            if (map.getSource('sim-detail-ring-src'))     map.getSource('sim-detail-ring-src').setData(empty);
+            if (map.getSource('sim-detail-dot-src'))      map.getSource('sim-detail-dot-src').setData(empty);
+            if (map.getSource('sim-detail-vignette-src')) map.getSource('sim-detail-vignette-src').setData(empty);
+            SIM_DETAIL_LAYERS.forEach(id => { if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', 'none'); });
         }
 
         // ── Merged-ring panel: list constituent clusters for user to select one ──
