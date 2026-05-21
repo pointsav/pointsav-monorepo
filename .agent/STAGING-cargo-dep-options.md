@@ -1,5 +1,14 @@
 # Cross-Cluster Cargo Dependency Visibility — Options Analysis
 
+> **Status (2026-05-21):** Resolution recommended — **Option E** (block on
+> Stage-6). `system-core` v0.2.0 is structurally complete and API-stable;
+> Stage-6 is pending only three operator/Master decisions (see outbox msg
+> `project-system-20260521-v100-gate-decisions`). The cost of waiting is now
+> near-zero. `service-fs-anchor-emitter` should stub or defer the
+> `SignedCheckpoint` dependency until `system-core` lands on `main` via
+> Stage-6 promotion. No Cargo `[patch]` bridging required. Master/Operator
+> confirmation of this resolution closes this document.
+
 Prepared for Master Claude outbox. Context: `service-fs-anchor-emitter`
 (in `~/Foundry/clones/project-data/`, on branch `cluster/project-data`)
 needs `system_core::SignedCheckpoint` (defined in `~/Foundry/clones/project-system/`,
