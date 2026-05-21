@@ -47,7 +47,7 @@ struct VerdictRequest {
     verdict: String,
 }
 
-pub fn submit_proofread(text: &str, protocol: &str, tenant: &str) -> Result<ProofreadResponse> {
+pub fn submit_proofread(text: &str, protocol: &str, tenant: &str, endpoint: &str) -> Result<ProofreadResponse> {
     let client = reqwest::blocking::Client::builder()
         .timeout(Duration::from_secs(300))
         .build()?;
@@ -56,8 +56,9 @@ pub fn submit_proofread(text: &str, protocol: &str, tenant: &str) -> Result<Proo
         protocol: protocol.to_string(),
         tenant: tenant.to_string(),
     };
+    let url = format!("{}/v1/proofread", endpoint.trim_end_matches('/'));
     let resp = client
-        .post("http://127.0.0.1:9092/v1/proofread")
+        .post(&url)
         .json(&req)
         .send()?;
     if !resp.status().is_success() {
@@ -67,7 +68,7 @@ pub fn submit_proofread(text: &str, protocol: &str, tenant: &str) -> Result<Proo
     Ok(resp.json::<ProofreadResponse>()?)
 }
 
-pub fn post_verdict(request_id: &str, tenant: &str, verdict: &str) -> Result<()> {
+pub fn post_verdict(request_id: &str, tenant: &str, verdict: &str, endpoint: &str) -> Result<()> {
     let client = reqwest::blocking::Client::builder()
         .timeout(Duration::from_secs(30))
         .build()?;
@@ -77,8 +78,9 @@ pub fn post_verdict(request_id: &str, tenant: &str, verdict: &str) -> Result<()>
         tenant: tenant.to_string(),
         verdict: verdict.to_string(),
     };
+    let url = format!("{}/v1/verdict", endpoint.trim_end_matches('/'));
     let _ = client
-        .post("http://127.0.0.1:9092/v1/verdict")
+        .post(&url)
         .json(&req)
         .send()?
         .text();

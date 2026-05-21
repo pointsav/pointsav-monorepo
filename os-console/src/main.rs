@@ -15,9 +15,19 @@ fn inner_main() -> anyhow::Result<()> {
 fn inner_main() -> anyhow::Result<()> {
     use app_console_content::cartridge::ContentCartridge;
     use app_console_input::InputCartridge;
-    use app_console_keys::AppConsoleKeys;
-    let mut chassis = AppConsoleKeys::new("operator", "local");
-    chassis.register(Box::new(ContentCartridge::new()));
-    chassis.register(Box::new(InputCartridge::new()));
+    use app_console_keys::{AppConsoleKeys, ConsoleConfig};
+    let cfg = ConsoleConfig::load();
+    let p = &cfg.profile;
+    let mut chassis = AppConsoleKeys::new(&p.username, &p.tenant);
+    chassis.register(Box::new(ContentCartridge::new_for(
+        &p.username,
+        &p.tenant,
+        &p.proof_endpoint,
+    )));
+    chassis.register(Box::new(InputCartridge::new_for(
+        &p.username,
+        &p.tenant,
+        &p.ingest_endpoint,
+    )));
     chassis.run_local()
 }
