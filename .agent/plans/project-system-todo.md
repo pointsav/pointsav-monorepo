@@ -2,7 +2,7 @@
 schema: foundry-plan-v1
 title: project-system — Comprehensive Work Plan
 created: 2026-05-20
-updated: 2026-05-20 (substance pass complete for Group 1B; Group 0 housekeeping done)
+updated: 2026-05-21 (Group 6 bench item closed; consistency-proof bench fix committed d2f6a5a)
 author: task@claude-code (session startup, sonnet-4-6)
 status: active
 ---
@@ -353,9 +353,8 @@ _[BLOCKED: Groups 2 + 3B must complete first]_
   Needs a run with 1-min load average < 1.0 on the workspace VM.
   Schedule with operator when workspace is idle.
 
-- [ ] **Add consistency-proof bench to `system-ledger/benches/consult.rs`**
-  Minimum: `ConsistencyProof::verify` raw for a 4→8 transition.
-  Optional: composed `SignedCheckpoint::verify_consistency_proof` at same sizes.
+- [x] **Add consistency-proof bench to `system-ledger/benches/consult.rs`** _(done 2026-05-21, commit `d2f6a5a` — benches 11-12; BENCHMARKS.md updated to 12 entries)_
+  Results: ConsistencyProof::verify (raw, 4→8) 10.86 µs [10.73, 11.00]; verify_consistency_proof (composed) 8.37 ms [8.22, 8.53].
 
 - [ ] **Run full CI verification pass (Group 2F) on clean HEAD**
 
@@ -380,7 +379,7 @@ _[BLOCKED: Groups 2 + 3B must complete first]_
   Master decision pending on whether project-data's `service-fs` uses Cargo `[patch]` or waits for Stage-6 to consume `system-core`.
   Once decided, either: close the staging doc, or action the `[patch]` setup in project-data.
 
-- [ ] **`system-core/master-relay.rs` deletion** (listed in Group 2A — pull forward if doing any system-core work)
+- [x] ~~**`system-core/master-relay.rs` deletion**~~ _(done in Group 2A, commit `dcb2700`)_
 
 ---
 
