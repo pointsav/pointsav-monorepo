@@ -1,0 +1,101 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build-linux:
+    name: Build — Linux x86_64
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: linux-x86_64-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Build
+        working-directory: pointsav-monorepo
+        run: cargo build --release --bin os-console
+
+      - name: Stage artifact
+        run: |
+          cp pointsav-monorepo/target/release/os-console os-console-linux-x86_64
+          chmod +x os-console-linux-x86_64
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: os-console-linux-x86_64
+          path: os-console-linux-x86_64
+
+  build-macos:
+    name: Build — macOS universal (Intel + Apple Silicon)
+    runs-on: macos-13
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-apple-darwin,aarch64-apple-darwin
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: macos-universal-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Build x86_64
+        working-directory: pointsav-monorepo
+        run: cargo build --release --bin os-console --target x86_64-apple-darwin
+
+      - name: Build aarch64
+        working-directory: pointsav-monorepo
+        run: cargo build --release --bin os-console --target aarch64-apple-darwin
+
+      - name: Create universal binary
+        run: |
+          lipo -create -output os-console-macos-universal \
+            pointsav-monorepo/target/x86_64-apple-darwin/release/os-console \
+            pointsav-monorepo/target/aarch64-apple-darwin/release/os-console
+          chmod +x os-console-macos-universal
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: os-console-macos-universal
+          path: os-console-macos-universal
+
+  release:
+    name: Create GitHub Release
+    needs: [build-linux, build-macos]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            artifacts/os-console-linux-x86_64/os-console-linux-x86_64
+            artifacts/os-console-macos-universal/os-console-macos-universal
+          generate_release_notes: true
