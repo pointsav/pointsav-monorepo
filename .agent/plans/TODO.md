@@ -1,5 +1,5 @@
 # project-gis — Master TODO
-> **Last updated:** 2026-05-20
+> **Last updated:** 2026-05-21
 > This is the canonical session-to-session work queue. Update when items are started, completed, or reprioritized.
 
 ---
@@ -38,19 +38,61 @@ Schedule with: `echo "cd <dir> && python3 <script> > /tmp/<log>.log 2>&1" | at 0
 
 ---
 
-## PENDING — Open decisions
+## PENDING — Open decisions (operator sign-off required)
 
 ### D1 — Path C tier composition (T1 qualification)
 - **Decision:** Add HW∧HM (hypermarket anchor AND high mobility) as a T1-qualifying path?
 - **Impact:** ~+199 US T1 clusters; brings US T1 to ~475
 - **Trade-off:** Makes T1 less purely "regional draw" and more "high mobility regardless of format"
 - **Owner:** Jennifer (operator decision)
+- **Plan:** `DBSCAN-TRIANGULATION-REDESIGN-2026-05-20.md` §11 (OD3)
+
+### D2 — Vignette opacity final value
+- **Decision:** 0.20 / 0.22 / 0.25 — validate on Alberta sim first
+- **Plan:** `VISUAL-DESIGN-SYSTEM-2026-05-20.md` §16 (OD-V1)
+
+### D3 — 35km ring solid vs. dashed
+- **Decision:** Solid = "real trade area" / dashed = "estimated"
+- **Note:** MITMA-measured variant already uses solid; generalise or keep dashed for non-MITMA?
+- **Plan:** `RING-HIERARCHY-DESIGN-2026-05-20.md` §11 (OD-R2)
+
+### D4 — Data horizon arc label copy
+- **Decision:** `Data horizon — 150 km` vs `Regional boundary` vs nothing
+- **Plan:** `RING-HIERARCHY-DESIGN-2026-05-20.md` §11 (OD-R3)
+
+### D5 — Retire `layer3-radius.pmtiles` timing
+- **Decision:** Same commit as ring redesign vs. separate cleanup commit
+- **Risk:** Live regression if retired before `proximity-circle-src` confirmed stable
+- **Plan:** `RING-HIERARCHY-DESIGN-2026-05-20.md` §11 (OD-R1)
 
 ---
 
 ---
 
 ## READY — Next sprint work
+
+### P17-V — Phase 17: Visual / DBSCAN redesign (Alberta sim → production)
+Research complete (three plan files committed 4cfd19f5). Implementation sequence per `RING-HIERARCHY-DESIGN-2026-05-20.md` §12 and `VISUAL-DESIGN-SYSTEM-2026-05-20.md` §17:
+
+| Step | Task | Prereq | Effort |
+|---|---|---|---|
+| V1 | **Alberta sim — three-ring hierarchy** | — | ~40 lines JS; `RING-HIERARCHY-DESIGN` §10 |
+| V2 | **Alberta sim — retailer-first visual** (hull + dots + centroid glyph) | members_detail now in GeoJSON ✓ | ~60 lines JS |
+| V3 | **Palette conflict fixes** (live map dot colors C1–C4) | Operator colour approval | `VISUAL-DESIGN-SYSTEM` §1–§4 |
+| V4 | **Ring semantics** — `ringKmForTier(tier)`; retire `currentRadius`; remove `.radius-selector` buttons | Operator ring approval | `RING-HIERARCHY-DESIGN` §6 |
+| V5 | **Ring weight stratification** — 2px/1.5px/1px hierarchy | — | Paint property change only |
+| V6 | **150km ring repaint** — remove blur; `#64748B` slate; `[6,4]` dash; 1px/0.5 opacity | — | `RING-HIERARCHY-DESIGN` §4 |
+| V7 | **Vignette mask** — `data-horizon-mask` layer; `makeMaskGeoJSON()`; 0.22 opacity | D2 sign-off | `RING-HIERARCHY-DESIGN` §4; `VISUAL-DESIGN-SYSTEM` §9 |
+| V8 | **Data horizon arc label** — italic annotation at 150km north point | D4 sign-off | `RING-HIERARCHY-DESIGN` §4 |
+| V9 | **Transition model** — stagger S3 reveal; 150ms selection eases | — | `VISUAL-DESIGN-SYSTEM` §7 |
+| V10 | **BentoBox upgrade** — tabular numerics; type scale; state-bound legend | — | `VISUAL-DESIGN-SYSTEM` §11–§13 |
+| V11 | **Button/toggle rename** — `Show trade area`; persistent pill; `catchmentActive` → `dataLayerActive` | — | `RING-HIERARCHY-DESIGN` §7 |
+| V12 | **DBSCAN build-clusters.py rewrite** | Alberta sim operator sign-off | `DBSCAN-TRIANGULATION-REDESIGN-2026-05-20.md` |
+| V13 | **clusters-meta.json schema** — add `members[]`, `mc`, `tight`, `span_m` fields | V12 | After DBSCAN rewrite |
+| V14 | **Mobility per-cluster pre-clip** — `build-mobility-tiles.py` per-cluster files | Overnight build; D5 | `RING-HIERARCHY-DESIGN` §8 |
+| V15 | **Retire `layer3-radius.pmtiles`** — remove `radius-fill`/`radius-line` layers | V4 stable | D5 sign-off |
+
+**MVP polish (do these first, cheapest leverage):** V5 (ring weights), V9 (transitions), V10 tabular numerics only.
 
 ### P17-A — Phase 17: AEC Tier 1 layers (regulatory + environmental)
 Priority order based on effort/value ratio. All US-only, all public domain, all PMTiles-viable.
@@ -142,6 +184,11 @@ All delivered as new fields in clusters-meta.json, not tile layers. Run `synthes
 | Phase 16: config.py EU anchors update | session (2026-05-19) |
 | Phase 16: layer3-catchment.pmtiles rebuild (1.7GB → 30MB) | session (2026-05-19) |
 | Phase 16: Kontur Population migration (WorldPop deleted, disk 32G→7G) | session (2026-05-19) |
-| Phase 16: ingest-kontur.py written + validated | session (2026-05-19) — **NOT YET COMMITTED** |
+| Phase 16: ingest-kontur.py written + validated | 49af6829 (2026-05-20) |
 | Phase 16: od-study rerun with Kontur (1,928,815 cells, T1=443) | session (2026-05-19) |
-| AEC research: weather/regulatory/infrastructure — 3 plan files | session (2026-05-20) |
+| AEC research: weather/regulatory/infrastructure — 3 plan files | 6a600f81 (2026-05-20) |
+| DBSCAN redesign research → DBSCAN-TRIANGULATION-REDESIGN-2026-05-20.md | 4cfd19f5 (2026-05-21) |
+| Ring hierarchy research → RING-HIERARCHY-DESIGN-2026-05-20.md | 4cfd19f5 (2026-05-21) |
+| Visual design system research → VISUAL-DESIGN-SYSTEM-2026-05-20.md | 4cfd19f5 (2026-05-21) |
+| Alberta sim delta palette fix (slate/green/rose/violet) | 4cfd19f5 (2026-05-21) |
+| sim-ab members_detail bug fixed; GeoJSON regenerated | 4cfd19f5 (2026-05-21) |
