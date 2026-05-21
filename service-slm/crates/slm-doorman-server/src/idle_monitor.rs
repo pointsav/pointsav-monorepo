@@ -195,6 +195,13 @@ pub fn gcp_get_url(project: &str, zone: &str, instance: &str) -> String {
     )
 }
 
+/// POST URL for `instances.setMetadata` — used by the G17 last-stop-reason write.
+pub fn gcp_set_metadata_url(project: &str, zone: &str, instance: &str) -> String {
+    format!(
+        "https://compute.googleapis.com/compute/v1/projects/{project}/zones/{zone}/instances/{instance}/setMetadata"
+    )
+}
+
 // ── Main loop ─────────────────────────────────────────────────────────────────
 
 /// Run the idle monitor loop. Call via `tokio::spawn(run_idle_monitor(config))`.
@@ -365,6 +372,34 @@ pub async fn run_idle_monitor(config: IdleMonitorConfig) {
                 } else if config.auto_restart_enabled
                     && unreachable_for >= PREEMPTION_PROBE_THRESHOLD
                 {
+                    // G17: a deliberate stop (operator / deadman / idle /
+                    // crash-guard / budget-ceiling) is sticky — never auto-restart
+                    // it. Only a genuine preemption (reason absent, `running`, or
+                    // `preempted`) warrants recovery.
+                    let deliberate = match get_gcp_instance(&client, &config).await {
+                        Ok(inst) => matches!(
+                            inst.last_stop_reason().unwrap_or(""),
+                            "operator" | "deadman" | "idle" | "crash-guard" | "budget-ceiling"
+                        ),
+                        Err(e) => {
+                            warn!(
+                                target: "slm_doorman::idle_monitor",
+                                error = %e,
+                                "could not read last-stop-reason; proceeding with restart decision"
+                            );
+                            false
+                        }
+                    };
+                    if deliberate {
+                        warn!(
+                            target: "slm_doorman::idle_monitor",
+                            instance = %config.gcp_instance,
+                            "Yo-Yo VM is down by a deliberate stop (sticky) — NOT auto-restarting"
+                        );
+                        // Mark settled so we don't re-evaluate every poll cycle.
+                        stop_sent = true;
+                        continue;
+                    }
                     // Preemption detected: VM is unreachable and we didn't stop it.
                     // Attempt instances.start subject to the rolling budget.
                     let now = Instant::now();
@@ -515,9 +550,12 @@ async fn stop_gcp_instance(
     let deadline = Instant::now() + Duration::from_secs(120);
     loop {
         match get_gcp_instance(client, config).await {
-            Ok((status, last_start)) if status == "TERMINATED" || status == "STOPPED" => {
+            Ok(inst) if inst.status == "TERMINATED" || inst.status == "STOPPED" => {
+                // G17: tag the stop as deliberate so a restarted idle monitor
+                // treats it as sticky and does not auto-restart it.
+                set_stop_reason(client, config, stop_reason).await;
                 // G7: record the VM-hours lifecycle row now the stop is confirmed.
-                record_vm_hours_stop(config, stop_reason, last_start.as_deref());
+                record_vm_hours_stop(config, stop_reason, inst.last_start_timestamp.as_deref());
                 return Ok(());
             }
             Ok(_) => {}
@@ -538,18 +576,53 @@ async fn stop_gcp_instance(
     }
 }
 
-/// GET the instance resource; returns `(status, lastStartTimestamp)`.
+/// One GCE instance metadata key/value pair.
+#[derive(serde::Deserialize, serde::Serialize, Clone)]
+struct MetadataItem {
+    key: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    value: Option<String>,
+}
+
+/// Subset of the GCE instance resource the idle monitor reads.
+struct GcpInstance {
+    status: String,
+    last_start_timestamp: Option<String>,
+    metadata_fingerprint: String,
+    metadata_items: Vec<MetadataItem>,
+}
+
+impl GcpInstance {
+    /// The `last-stop-reason` metadata value, if set (G17).
+    fn last_stop_reason(&self) -> Option<&str> {
+        self.metadata_items
+            .iter()
+            .find(|i| i.key == "last-stop-reason")
+            .and_then(|i| i.value.as_deref())
+    }
+}
+
+/// GET the instance resource — status, lastStartTimestamp, and metadata.
 /// `status` is `RUNNING` | `TERMINATED` | `STOPPING` | `PROVISIONING` | ...
 async fn get_gcp_instance(
     client: &reqwest::Client,
     config: &IdleMonitorConfig,
-) -> Result<(String, Option<String>), String> {
+) -> Result<GcpInstance, String> {
+    #[derive(serde::Deserialize, Default)]
+    struct MetadataResp {
+        #[serde(default)]
+        fingerprint: String,
+        #[serde(default)]
+        items: Vec<MetadataItem>,
+    }
     #[derive(serde::Deserialize)]
     #[serde(rename_all = "camelCase")]
     struct InstanceResp {
         status: String,
         #[serde(default)]
         last_start_timestamp: Option<String>,
+        #[serde(default)]
+        metadata: MetadataResp,
     }
     let token = fetch_gcp_adc_token(client).await?;
     let url = gcp_get_url(&config.gcp_project, &config.gcp_zone, &config.gcp_instance);
@@ -566,7 +639,71 @@ async fn get_gcp_instance(
         .json()
         .await
         .map_err(|e| format!("instance JSON parse failed: {e}"))?;
-    Ok((info.status, info.last_start_timestamp))
+    Ok(GcpInstance {
+        status: info.status,
+        last_start_timestamp: info.last_start_timestamp,
+        metadata_fingerprint: info.metadata.fingerprint,
+        metadata_items: info.metadata.items,
+    })
+}
+
+/// G17: record why the VM was stopped as the `last-stop-reason` instance
+/// metadata key, so a (possibly restarted) idle monitor can tell a deliberate
+/// stop from a preemption and not auto-restart a VM someone meant to be down.
+/// Best-effort — every failure is logged, never propagated.
+async fn set_stop_reason(client: &reqwest::Client, config: &IdleMonitorConfig, reason: &str) {
+    #[derive(serde::Serialize)]
+    struct SetMetadataBody {
+        fingerprint: String,
+        items: Vec<MetadataItem>,
+    }
+    let inst = match get_gcp_instance(client, config).await {
+        Ok(i) => i,
+        Err(e) => {
+            warn!(
+                target: "slm_doorman::idle_monitor",
+                error = %e,
+                "could not read metadata to set last-stop-reason"
+            );
+            return;
+        }
+    };
+    // Preserve every existing metadata item, replacing only last-stop-reason —
+    // setMetadata is a whole-replace operation.
+    let mut items: Vec<MetadataItem> = inst
+        .metadata_items
+        .into_iter()
+        .filter(|i| i.key != "last-stop-reason")
+        .collect();
+    items.push(MetadataItem {
+        key: "last-stop-reason".to_string(),
+        value: Some(reason.to_string()),
+    });
+    let token = match fetch_gcp_adc_token(client).await {
+        Ok(t) => t,
+        Err(e) => {
+            warn!(target: "slm_doorman::idle_monitor", error = %e, "ADC token fetch failed for setMetadata");
+            return;
+        }
+    };
+    let url = gcp_set_metadata_url(&config.gcp_project, &config.gcp_zone, &config.gcp_instance);
+    let body = SetMetadataBody {
+        fingerprint: inst.metadata_fingerprint,
+        items,
+    };
+    match client.post(&url).bearer_auth(&token).json(&body).send().await {
+        Ok(r) if r.status().is_success() => {}
+        Ok(r) => warn!(
+            target: "slm_doorman::idle_monitor",
+            status = %r.status(),
+            "setMetadata for last-stop-reason returned non-success"
+        ),
+        Err(e) => warn!(
+            target: "slm_doorman::idle_monitor",
+            error = %e,
+            "setMetadata for last-stop-reason failed"
+        ),
+    }
 }
 
 /// G7: write a `stopped` VM-hours row to the global cost ledger. `billed_seconds`
@@ -807,6 +944,15 @@ mod tests {
         assert_eq!(
             url,
             "https://compute.googleapis.com/compute/v1/projects/my-project/zones/europe-west4-a/instances/yoyo-tier-b-1"
+        );
+    }
+
+    #[test]
+    fn gcp_set_metadata_url_is_well_formed() {
+        let url = gcp_set_metadata_url("my-project", "europe-west4-a", "yoyo-tier-b-1");
+        assert_eq!(
+            url,
+            "https://compute.googleapis.com/compute/v1/projects/my-project/zones/europe-west4-a/instances/yoyo-tier-b-1/setMetadata"
         );
     }
 
