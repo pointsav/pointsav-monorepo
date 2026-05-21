@@ -61,10 +61,15 @@ do now. **Not** in this phase: `auth.rs` / `pending.rs` (Phase 7 — gated).
 The convention-first deliverable (Decision 1). This **unblocks project-editorial's
 12 flagship TOPIC rewrites** — they rewrite against it once, no double-touch.
 
-- [ ] **2.1** Spec the inline claim-authoring convention: the markdown syntax for "this span is a claim" + its citation set. Hard requirement: **degrades gracefully** — claim-annotated markdown renders correctly on *today's* engine (annotations inert/invisible); the future engine extracts structure. No separate sidecar file.
-- [ ] **2.2** Spec the per-claim fields a claim carries: ID, content hash, citation set, `valid_at`, `published_at`, confidence grade.
-- [ ] **2.3** Stage the convention as a CONVENTION-* artifact; route a copy to project-editorial (they need it for their Track A2 rewrites) and to project-design if it affects rendering tokens.
-- [ ] **2.4** Cross-cluster: notify project-editorial the convention has landed → their 12 rewrites proceed against it.
+- [x] **2.1** Spec the inline claim-authoring convention: the markdown syntax for "this span is a claim" + its citation set. Hard requirement: **degrades gracefully** — claim-annotated markdown renders correctly on *today's* engine (annotations inert/invisible); the future engine extracts structure. No separate sidecar file. [2026-05-21 totebox@claude-code — HTML-comment carrier; `render.rs:181` `unsafe=true` confirms pass-through]
+- [x] **2.2** Spec the per-claim fields a claim carries: ID, content hash, citation set, `valid_at`, `published_at`, confidence grade. [2026-05-21 totebox@claude-code — split into 4 authored fields + 4 engine-derived fields; `content_hash`/`published_at` are derived, never authored]
+- [x] **2.3** Stage the convention as a CONVENTION-* artifact; route a copy to project-editorial (they need it for their Track A2 rewrites) and to project-design if it affects rendering tokens. [2026-05-21 totebox@claude-code — `.agent/plans/claim-authoring-convention.PROPOSAL.md`; routed to Command (ratify), project-editorial + project-design (outbox)]
+- [ ] **2.4** Cross-cluster: notify project-editorial the convention has **landed** → their 12 rewrites proceed against it. *Heads-up sent 2026-05-21; LANDED confirmation pending Command ratification.* [2026-05-21 totebox@claude-code]
+
+> **Carry-forward — Engine Verification Gate.** The convention §3 names one
+> unverified fact: comrak with `render.rs:167–182` options + `unsafe=true` must
+> emit `<!--claim …-->` markers into output HTML unchanged. Owner: Phase 3.1
+> (a render-pass test discharges it).
 
 ---
 
