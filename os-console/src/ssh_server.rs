@@ -7,6 +7,7 @@ use std::{
 
 use anyhow::Result;
 use app_console_content::cartridge::ContentCartridge;
+use app_console_input::InputCartridge;
 use app_console_keys::AppConsoleKeys;
 use russh::{
     server::{Auth, Config, Handler, Msg, Server, Session},
@@ -167,10 +168,12 @@ impl Handler for AppSession {
         let tenant = user.tenant.as_str().to_string();
 
         tokio::task::spawn_blocking(move || {
-            let cartridge = ContentCartridge::new_for(&username, &tenant);
+            let content = ContentCartridge::new_for(&username, &tenant);
+            let input = InputCartridge::new_for(&username, &tenant);
             let mut chassis = AppConsoleKeys::new(username, tenant);
             chassis.set_mba_active();
-            chassis.register(Box::new(cartridge));
+            chassis.register(Box::new(content));
+            chassis.register(Box::new(input));
             chassis.run_with_bytes(terminal, input_rx);
         });
 
