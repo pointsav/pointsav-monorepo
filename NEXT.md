@@ -1,7 +1,7 @@
 # NEXT — project-orchestration
 
 > Implementation scope: Totebox Orchestration transition Phases 1–3.
-> Full plan: `/home/mathew/.claude/plans/before-we-do-that-humming-emerson.md`
+> Full plan: `.agent/plans/totebox-ppn-infrastructure-master-plan.md`
 > Opened: 2026-05-08
 
 ---
@@ -134,6 +134,6 @@ See plan file §"Two-VM transition" for full detail.
 
 ## Key references
 
-- Plan file: `/home/mathew/.claude/plans/before-we-do-that-humming-emerson.md`
+- Plan file: `.agent/plans/totebox-ppn-infrastructure-master-plan.md`
 - Cluster manifest: `.agent/manifest.md`
 - app-orchestration-gis reference impl: `clones/project-gis/pointsav-monorepo/app-orchestration-gis/`
