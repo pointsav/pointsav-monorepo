@@ -1154,29 +1154,23 @@
         selectedClusterCoords = null;
         setNavContext(REGIONS[currentRegion]?.label || 'Overview', flyToOverview, 'Retail View');
 
-        // GeoJSON layers first (instant paint from in-memory clusters-meta) — no tile I/O
+        // Rings draw from in-memory clusterMeta — instant, no tile I/O
         if (map.getLayer('proximity-fill')) map.setLayoutProperty('proximity-fill', 'visibility', 'visible');
         if (map.getLayer('proximity-line')) map.setLayoutProperty('proximity-line', 'visibility', 'visible');
         if (map.getLayer('proximity-merged-label')) map.setLayoutProperty('proximity-merged-label', 'visibility', 'visible');
         updateProximityRings();
-        // Reveal all-locations dots — already pre-warmed at z>=RETAIL_PREFETCH_ZOOM with opacity 0
+
+        // Hide bubbles immediately — rings are already painted, no blank gap
+        // (nodes also has maxzoom:RETAIL_ZOOM_THRESHOLD as a renderer-level backstop)
+        if (map.getLayer('nodes'))      map.setLayoutProperty('nodes',      'visibility', 'none');
+        if (map.getLayer('nodes-halo')) map.setLayoutProperty('nodes-halo', 'visibility', 'none');
+
+        // Reveal individual store dots — pre-warmed at z>=RETAIL_PREFETCH_ZOOM
         if (map.getLayer('all-locations')) {
             map.setLayoutProperty('all-locations', 'visibility', 'visible');
             map.setPaintProperty('all-locations', 'circle-opacity', 0.70);
         }
-        // Re-apply chain-search dot highlight if a chain is active
         applyChainFilterStyling();
-
-        // Keep cluster bubbles visible until all layer1 tiles are rendered (map.idle = fully settled)
-        let nodesHidden = false;
-        const hideNodes = () => {
-            if (nodesHidden || overviewActive) return; // guard: user may have gone back
-            nodesHidden = true;
-            if (map.getLayer('nodes'))      map.setLayoutProperty('nodes',      'visibility', 'none');
-            if (map.getLayer('nodes-halo')) map.setLayoutProperty('nodes-halo', 'visibility', 'none');
-        };
-        const safetyId = setTimeout(hideNodes, 2000);
-        map.once('idle', () => { clearTimeout(safetyId); hideNodes(); });
     }
 
     // Convert compact clusterMeta entry to the property shape expected by showClusterDetail
@@ -1813,6 +1807,7 @@
         map.addLayer({
             id: 'nodes-halo', type: 'circle',
             source: 'data',
+            maxzoom: RETAIL_ZOOM_THRESHOLD,
             filter: ['==', ['get', 'tier'], 1],
             paint: {
                 'circle-radius': ['interpolate', ['linear'], ['zoom'], 3, 12, 14, 34],
@@ -1826,6 +1821,7 @@
         map.addLayer({
             id: 'nodes', type: 'circle',
             source: 'data',
+            maxzoom: RETAIL_ZOOM_THRESHOLD,
             layout: { visibility: 'visible' },
             filter: ['<', ['get', 'tier'], 4],
             paint: {
