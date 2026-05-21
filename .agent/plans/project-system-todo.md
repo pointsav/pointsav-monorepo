@@ -2,7 +2,7 @@
 schema: foundry-plan-v1
 title: project-system — Comprehensive Work Plan
 created: 2026-05-20
-updated: 2026-05-21 (Group 6 bench item closed; consistency-proof bench fix committed d2f6a5a)
+updated: 2026-05-21 (Group 6 mechanical items complete; v1.0.0 bumps gated on 3B decisions)
 author: task@claude-code (session startup, sonnet-4-6)
 status: active
 ---
@@ -356,16 +356,22 @@ _[BLOCKED: Groups 2 + 3B must complete first]_
 - [x] **Add consistency-proof bench to `system-ledger/benches/consult.rs`** _(done 2026-05-21, commit `d2f6a5a` — benches 11-12; BENCHMARKS.md updated to 12 entries)_
   Results: ConsistencyProof::verify (raw, 4→8) 10.86 µs [10.73, 11.00]; verify_consistency_proof (composed) 8.37 ms [8.22, 8.53].
 
-- [ ] **Run full CI verification pass (Group 2F) on clean HEAD**
+- [x] **Run full CI verification pass on clean HEAD** _(done 2026-05-21 — clippy, fmt, cargo doc all clean across system-core, system-ledger, moonshot-toolkit)_
+
+- [x] **Fill Cargo.toml metadata** _(done 2026-05-21, commit `6e25c46` — license AGPL-3.0-or-later from LICENSE-MATRIX.md §4.2; description, repository, keywords, categories, rust-version on all three crates)_
+
+- [x] **system-core/ARCHITECTURE.md corrections** _(done 2026-05-21, commit `6e25c46` — test count 51→62; no_std roadmap + MSRV documented; system-ledger bench ref updated)_
+
+- [x] **Outbox to Command Session: Group 3B gate decisions** _(done 2026-05-21, commit `6e25c46` — msg project-system-20260521-v100-gate-decisions)_
+  Surfaces: LedgerConsumer API finality, promote-together-or-separate, commit attribution, quiet-VM bench re-run.
 
 - [ ] **Stage system-core + system-ledger v1.0.0 version bumps**
-  MAJOR: this is the first declared-stable API; v1.0.0 freezes the public surface.
-  Update `Cargo.toml`, `CLAUDE.md` headers, `CHANGELOG.md` entries.
+  _[BLOCKED: Group 3B Decision 1 (LedgerConsumer API finality) + Decision 2 (promote strategy) + Decision 3 (attribution) — awaiting Master/Operator reply to outbox msg project-system-20260521-v100-gate-decisions]_
+  MAJOR: first declared-stable API; v1.0.0 freezes the public surface.
+  When unblocked: update `Cargo.toml`, `CLAUDE.md` headers, `CHANGELOG.md` entries.
 
-- [ ] **Commit via `bin/commit-as-next.sh` on `cluster/project-system`**
-
-- [ ] **Outbox to Command Session: "Stage-6 ready — system-core 1.0.0 + system-ledger 1.0.0"**
-  Command Session runs `bin/promote.sh` (Stage 6) — not this Totebox.
+- [ ] **Commit v1.0.0 bumps and outbox "Stage-6 ready" to Command Session**
+  _[BLOCKED: follows v1.0.0 bumps above]_
 
 ---
 
