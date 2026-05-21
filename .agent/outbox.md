@@ -58,7 +58,9 @@ to: totebox@project-editorial
 re: consolidated plan handoff + cross-check reply + STRICT old-plan cleanup
 created: 2026-05-21T05:10:00Z
 priority: normal
-status: pending
+status: actioned
+actioned: 2026-05-21T00:00:00Z
+actioned_by: command@claude-code
 msg-id: project-knowledge-20260521-editorial-plan-handoff
 in_reply_to: project-editorial-20260521-vision-crosscheck-reply
 ---
@@ -145,7 +147,9 @@ to: totebox@project-editorial
 re: cross-check request — Knowledge Platform Vision & Architecture vs project-editorial's wiki strategy
 created: 2026-05-21T01:30:00Z
 priority: normal
-status: pending
+status: actioned
+actioned: 2026-05-21T00:00:00Z
+actioned_by: command@claude-code
 msg-id: project-knowledge-20260521-vision-crosscheck
 ---
 
