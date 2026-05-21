@@ -1,5 +1,5 @@
 # project-gis — Master TODO
-> **Last updated:** 2026-05-21
+> **Last updated:** 2026-05-21 (session 2)
 > This is the canonical session-to-session work queue. Update when items are started, completed, or reprioritized.
 
 ---
@@ -192,3 +192,7 @@ All delivered as new fields in clusters-meta.json, not tile layers. Run `synthes
 | Visual design system research → VISUAL-DESIGN-SYSTEM-2026-05-20.md | 4cfd19f5 (2026-05-21) |
 | Alberta sim delta palette fix (slate/green/rose/violet) | 4cfd19f5 (2026-05-21) |
 | sim-ab members_detail bug fixed; GeoJSON regenerated | 4cfd19f5 (2026-05-21) |
+| GIS UX redesign research (5 agents) → GIS-UX-REDESIGN-2026-05-21.md | session (2026-05-21) |
+| TIER_COLORS migrated to Woodfine tokens (#164679/#54924E/#EAB308/#991B1B) | session (2026-05-21) |
+| BentoBox badge 42px→13px compact chip; ranking → Top 400 NA/EU format | session (2026-05-21) |
+| Sim popup removed; sim clicks route to #inspector panel | session (2026-05-21) |
