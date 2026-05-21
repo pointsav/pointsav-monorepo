@@ -320,23 +320,28 @@ fn bench_apply_witness_record_with_proof(c: &mut Criterion) {
 // ---------- Phase 1A.5 consistency-proof benchmarks ----------
 
 fn bench_verify_consistency_proof_raw(c: &mut Criterion) {
-    // 4→8 transition. Per RFC 9162 §2.1.4 PROOF(4, 8) = [MTH(leaves[4..7])].
-    // Since old_n=4 is a power of 2 and old_n=new_n/2, the proof contains
-    // exactly one hash: the Merkle root of the four right-hand leaves.
+    // 4→8 transition. Proof per the accumulator verifier algorithm (not the
+    // RFC generation function): anchor=leaves[3], then two BOTH-branch
+    // siblings (leaves[2], internal(l0,l1)), then one ELSE-branch sibling
+    // (right-half root internal(internal(l4,l5),internal(l6,l7))). 4 hashes.
     let leaves: Vec<[u8; 32]> = (0..8u64)
         .map(|i| rfc9162_leaf_hash(format!("leaf-{i}").as_bytes()))
         .collect();
     let old_root = build_merkle_root(&leaves[..4]);
     let new_root = build_merkle_root(&leaves);
-    let right_root = rfc9162_internal_hash(
-        &rfc9162_internal_hash(&leaves[4], &leaves[5]),
-        &rfc9162_internal_hash(&leaves[6], &leaves[7]),
-    );
     let proof = ConsistencyProof {
-        hashes: vec![right_root],
+        hashes: vec![
+            leaves[3],
+            leaves[2],
+            rfc9162_internal_hash(&leaves[0], &leaves[1]),
+            rfc9162_internal_hash(
+                &rfc9162_internal_hash(&leaves[4], &leaves[5]),
+                &rfc9162_internal_hash(&leaves[6], &leaves[7]),
+            ),
+        ],
     };
     c.bench_function(
-        "ConsistencyProof::verify (raw, 4→8 transition — 1-hash proof)",
+        "ConsistencyProof::verify (raw, 4→8 transition — 4-hash proof)",
         |b| b.iter(|| black_box(proof.verify(old_root, 4, new_root, 8).unwrap())),
     );
 }
@@ -348,12 +353,16 @@ fn bench_signed_checkpoint_verify_consistency_proof(c: &mut Criterion) {
         .collect();
     let old_root = build_merkle_root(&leaves[..4]);
     let new_root = build_merkle_root(&leaves);
-    let right_root = rfc9162_internal_hash(
-        &rfc9162_internal_hash(&leaves[4], &leaves[5]),
-        &rfc9162_internal_hash(&leaves[6], &leaves[7]),
-    );
     let proof = ConsistencyProof {
-        hashes: vec![right_root],
+        hashes: vec![
+            leaves[3],
+            leaves[2],
+            rfc9162_internal_hash(&leaves[0], &leaves[1]),
+            rfc9162_internal_hash(
+                &rfc9162_internal_hash(&leaves[4], &leaves[5]),
+                &rfc9162_internal_hash(&leaves[6], &leaves[7]),
+            ),
+        ],
     };
     let old_cp = Checkpoint {
         origin: "foundry.bench.cap-ledger".to_string(),
