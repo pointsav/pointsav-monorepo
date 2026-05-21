@@ -14,7 +14,7 @@ Last updated: 2026-05-08.
 
 Implement the three-phase transition from the legacy Master/Root/Task
 session model to the Command/Totebox model. See the plan file at
-`/home/mathew/.claude/plans/before-we-do-that-humming-emerson.md`.
+`.agent/plans/totebox-ppn-infrastructure-master-plan.md`.
 
 **Phase 1 — Declare vocabulary (~2 hours):**
 - `CLAUDE.md` §11: Master → Command Session, Task → Totebox Session, Root → eliminated
@@ -55,13 +55,13 @@ Phases 1 and 2 workspace changes (CLAUDE.md, AGENT.md, bin/, pairings.yaml)
 are **Command Session scope** — commit at `~/Foundry/` using
 `bin/commit-as-next.sh`. Do not commit workspace files from this cluster.
 
-Phase 3 Rust code (`app-orchestration-command/`) is Task Session scope —
+Phase 3 Rust code (`app-orchestration-command/`) is Totebox Session scope —
 commit from this cluster using `bin/commit-as-next.sh`.
 
 ---
 
 ## 4. Key references
 
-- Plan: `/home/mathew/.claude/plans/before-we-do-that-humming-emerson.md`
+- Plan: `.agent/plans/totebox-ppn-infrastructure-master-plan.md`
 - Cluster wiki draft pipeline: `~/Foundry/conventions/cluster-wiki-draft-pipeline.md`
 - TOPIC/GUIDE drafts already staged: `~/Foundry/.agent/drafts-outbound/topic-*.draft.md` + `guide-*.draft.md`
