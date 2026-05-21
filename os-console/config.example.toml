@@ -1,0 +1,16 @@
+# os-console user configuration
+# Place this file at: ~/.config/os-console/config.toml
+#
+# Required fields: username, tenant
+# All endpoint fields are optional — defaults shown below work on the VM.
+# For remote users, set proof_endpoint and ingest_endpoint to the hosted service URLs.
+
+[profile]
+username = "jennifer"
+tenant   = "woodfine"
+
+# Proofreader service — POST /v1/proofread and /v1/verdict
+proof_endpoint = "http://127.0.0.1:9092"
+
+# Ingest service — POST /v1/append
+ingest_endpoint = "http://127.0.0.1:9100"

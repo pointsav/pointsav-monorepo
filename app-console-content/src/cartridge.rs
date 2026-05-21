@@ -49,21 +49,27 @@ enum ContentState {
 pub struct ContentCartridge {
     username: String,
     tenant: String,
+    proof_endpoint: String,
     state: ContentState,
     textarea: TextArea<'static>,
 }
 
 impl ContentCartridge {
     pub fn new() -> Self {
-        Self::new_for("operator", "local")
+        Self::new_for("operator", "local", "http://127.0.0.1:9092")
     }
 
-    pub fn new_for(username: impl Into<String>, tenant: impl Into<String>) -> Self {
+    pub fn new_for(
+        username: impl Into<String>,
+        tenant: impl Into<String>,
+        proof_endpoint: impl Into<String>,
+    ) -> Self {
         let mut ta = TextArea::default();
         ta.set_placeholder_text(PLACEHOLDER);
         Self {
             username: username.into(),
             tenant: tenant.into(),
+            proof_endpoint: proof_endpoint.into(),
             state: ContentState::Input { protocol_idx: DEFAULT_PROTOCOL_IDX },
             textarea: ta,
         }
@@ -277,10 +283,11 @@ impl ContentCartridge {
             }
             let protocol = PROTOCOLS[protocol_idx].0.to_string();
             let tenant = self.tenant.clone();
+            let endpoint = self.proof_endpoint.clone();
             let text_clone = text.clone();
             let (tx, rx) = mpsc::channel();
             thread::spawn(move || {
-                let _ = tx.send(proofreader::submit_proofread(&text_clone, &protocol, &tenant));
+                let _ = tx.send(proofreader::submit_proofread(&text_clone, &protocol, &tenant, &endpoint));
             });
             self.state = ContentState::Submitting {
                 original: text,
@@ -336,8 +343,9 @@ impl ContentCartridge {
                 if let ContentState::Results { response, .. } = &self.state {
                     let rid = response.request_id.clone();
                     let tenant = self.tenant.clone();
+                    let endpoint = self.proof_endpoint.clone();
                     thread::spawn(move || {
-                        let _ = proofreader::post_verdict(&rid, &tenant, "accept");
+                        let _ = proofreader::post_verdict(&rid, &tenant, "accept", &endpoint);
                     });
                 }
                 self.reset_textarea(DEFAULT_PROTOCOL_IDX);
@@ -346,8 +354,9 @@ impl ContentCartridge {
                 if let ContentState::Results { response, .. } = &self.state {
                     let rid = response.request_id.clone();
                     let tenant = self.tenant.clone();
+                    let endpoint = self.proof_endpoint.clone();
                     thread::spawn(move || {
-                        let _ = proofreader::post_verdict(&rid, &tenant, "reject");
+                        let _ = proofreader::post_verdict(&rid, &tenant, "reject", &endpoint);
                     });
                 }
                 self.reset_textarea(DEFAULT_PROTOCOL_IDX);
