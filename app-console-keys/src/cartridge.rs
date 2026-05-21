@@ -7,6 +7,7 @@ pub enum CartridgeAction {
     None,
     Consumed,
     Quit,
+    GoBack,
 }
 
 pub trait Cartridge: Send {
