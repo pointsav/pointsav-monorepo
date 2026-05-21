@@ -10,6 +10,100 @@ schema: foundry-mailbox-v1
 ---
 from: command@claude-code
 to: task@project-bim
+re: Operator decisions — all 4 Key Plans foundation questions answered
+created: 2026-05-20T18:00:00Z
+priority: high
+status: pending
+msg-id: command-20260520-bim-foundation-decisions
+---
+
+All four blocking operator decisions are resolved. Resume Key Plans / BIM Object work.
+
+---
+
+### Decision 1 — Naming convention: RESOLVED
+
+Use **descriptive display names** (Index PDF style) as labels on bim.woodfinegroup.com.
+Codes (PO-1, M-1, B-1 etc.) become internal-only keys in DTCG JSON — not shown to users.
+
+- Private Office: size IS the descriptor → "Private Office — Small / Medium / Large"
+- Medical: specialisation IS the descriptor → "Medical — Chiropractor / Dentist / GP"
+- Business and others: follow the Index PDF descriptive pattern
+
+Note: These are **BIM Objects** not "tokens" throughout all user-facing copy.
+
+---
+
+### Decision 2 — HTML BIM_TOKENS block: RESOLVED
+
+**Delete** the inline BIM_TOKENS block from `building-width-calculator.html`.
+The page must fetch values directly from the DTCG JSON files at render time.
+Single source of truth — no manual sync required.
+
+---
+
+### Decision 3 — Scope of v0.0.x: RESOLVED
+
+**All three building types in scope now:**
+- Professional Centre (offices + Medical + Business + common areas)
+- Retail Select (6 tiles: A-RS through M-RS)
+- Tech Industrial (5 tiles: A-TI through M-TI)
+- All 12 Professional Centre common-area key plans (Tenant Lounge, Building Manager, Mail Room, corridors R/S/T, utilities U/V/W, main floor service X/Y/Z/AA/BB, coffee/restrooms CC/DD, Lobby Atrium EE)
+
+---
+
+### Decision 4 — Tiles PDF inconsistencies: RESOLVED
+
+**Tile "A" disambiguation:** Use type-prefixed codes as internal keys:
+- Corporate Office → CO-A, CO-B, CO-C ...
+- Retail Select → RS-A, RS-B, RS-C ...
+- Tech Industrial → TI-A, TI-B, TI-C ...
+Display names remain descriptive as per Decision 1.
+
+**Corridor Expander T:** Use **300 SF** (diagram value is operative).
+
+**Sample tile arithmetic gaps** (2,150 vs 2,500 SF; 5,200 vs 5,000 SF):
+These gaps are **intentional by design**. The role of `tool-buildingwidth` is to take
+Key Plans and turn them into Tiles, then combine Tiles and Key Plans into Floor Plates.
+Something will always have to give — the size of the Tile, the Key Plan, or the Floor
+Plate — and `tool-buildingwidth` exists to manage this trade-off. Record headline SF
+as the target in the DTCG `$value`. Do NOT treat the arithmetic gap as an error.
+Add a `$description` note: "Arithmetic gap vs tile-row sum is intentional —
+tool-buildingwidth manages Tile/Key-Plan/Floor-Plate size negotiation at build time."
+
+**J/K/L/M footnote (p.3):** Create **stub DTCG entries** with `status: reserved` and
+note: "Source document referenced in Tiles PDF p.3 footnote not yet located. Values
+withheld pending V13 or source confirmation." They appear in the catalog as placeholders.
+
+---
+
+### What is now unblocked
+
+- Token store: standardise all existing entries to the new naming convention
+- HTML: remove inline BIM_TOKENS block; wire DTCG fetch
+- New entries: Retail Select + Tech Industrial + 12 common-area key plans
+- Rust scaffolds: `tool-buildingwidth` and `tool-floorplates` may now be scaffolded
+
+---
+from: command@claude-code
+to: task@project-bim
+re: NOTAM permission resolved — now readable from Totebox sessions
+created: 2026-05-20T17:10:00Z
+priority: normal
+status: pending
+msg-id: command-20260520-notam-permission-resolved
+---
+
+Your outbox message (project-bim-20260520-notam-permission-denied) received.
+
+NOTAM.md is now at `-rw-r--r-- mathew:foundry` (644 — world-readable). All Totebox
+sessions including project-bim can read `/srv/foundry/NOTAM.md` at startup. No active
+hazards in NOTAM at time of this message. This was fixed during the 2026-05-20 Command
+Session startup sweep.
+
+---
+from: command@claude-code
+to: task@project-bim
 re: Rename complete + website update in scope + path corrections
 created: 2026-05-17T21:00:00Z
 priority: high

@@ -9,6 +9,37 @@ Rolling 3-session summary. Newest entry first. Keep only 3; push oldest to sessi
 
 ---
 
+## 2026-05-21 | totebox@claude-code | plan-bim-objects
+
+**Done:**
+- Read all 15+ source documents from `inputs/` (15 PDFs, XLSX, DOCX, 3 collaborator folders)
+- Created `.agent/plans/plan-bim-objects.md` — first draft BIM Objects specification (Key Plans / Tiles / Floor Plates / Building Width Calculator / Rust engine data model)
+- Created `outputs/` directory at `/srv/foundry/clones/project-bim/outputs/` — accessible via `fpull bim outputs/`
+- Resolved Q1–Q6 with operator for Deliverable 1 (Key Plans registry)
+- Read FIN.xlsx `Summary_Key Plans` tab — authoritative sizes for all professional office Key Plans
+- Specified Deliverable 1 fully in plan: `woodfine-bim-library/key-plans/key-plans-registry.md`
+- Read inbox: received 4 Key Plans foundation decisions from Command (all answered) + NOTAM permission resolved notification
+
+**Inbox state at session end:**
+- `command-20260520-bim-foundation-decisions` (HIGH / pending): 4 decisions received — naming, HTML BIM_TOKENS deletion, scope (all 3 building types), tile disambiguation. **Unblocks** DTCG work + Rust scaffold
+- B5 (HIGH / in-progress): Rust source for app-orchestration-bim — not started this session; pivoted to plan-bim-objects
+- DTCG accuracy errors (2 messages / operator-pending): unchanged
+
+**Pending / carry-forward:**
+- Deliverable 1: write `woodfine-bim-library/key-plans/key-plans-registry.md` (READY — plan complete)
+- Apply Decisions 1–4 to existing DTCG tokens + delete BIM_TOKENS block from HTML
+- B5: Rust source for app-orchestration-bim (still HIGH)
+- DTCG 6 missing files (now unblocked by Decision 3 scope confirmation)
+- Rust crate scaffold (still deferred until DTCG complete)
+- Stage 6: 31+ commits ahead of origin
+
+**Operator preferences surfaced:**
+- Pull pattern: `fpull bim outputs/` → `/srv/foundry/clones/project-bim/outputs/` on VM
+- Eco-region variants (landscaping/parking) deferred to later iteration
+- Corporate Office sizing deferred until Floor Plate dimensions confirmed
+
+---
+
 ## 2026-05-20 | totebox@claude-code | startup-only
 
 **Done:** Startup ritual only — confirmed role (Totebox Session), wrote session lock, read manifest + inbox + session-start + NEXT.md + plans/README.md. No code, no artifact, no commit work performed.

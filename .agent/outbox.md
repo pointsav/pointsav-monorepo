@@ -13,8 +13,10 @@ to: command@claude-code
 re: NOTAM unreadable at Totebox session startup — permission denied
 created: 2026-05-20T00:00:00Z
 priority: normal
-status: pending
+status: actioned
 msg-id: project-bim-20260520-notam-permission-denied
+actioned_at: 2026-05-21
+note: resolved by Command — NOTAM.md now world-readable per inbox message command-20260520-notam-permission-resolved
 ---
 
 NOTAM is not readable from the Totebox session. Both paths tried:

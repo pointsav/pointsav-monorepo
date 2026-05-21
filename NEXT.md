@@ -7,20 +7,28 @@ Attribution format: `[YYYY-MM-DD role@engine]`
 
 ## Hot — pick up here next session
 
-- [ ] **NOTAM unreadable — permission denied** `[2026-05-20 totebox@claude-code]`
-  - Both `/srv/foundry/NOTAM.md` and `~/Foundry/NOTAM.md` return `permission denied` at Totebox session startup
-  - Flagged to Command via outbox — no hazards known from prior sessions but cannot confirm
-  - Command to investigate + restore read access before next session
+- [x] **NOTAM unreadable — resolved 2026-05-20** `[2026-05-20 totebox@claude-code]`
+  - Fixed by Command: NOTAM.md now `-rw-r--r-- mathew:foundry` (world-readable). Outbox message actioned.
 
-- [ ] **Key Plans foundation — 4 operator decisions needed** `[2026-05-17 totebox@claude-code]`
-  - Briefing: `.agent/plans/key-plans-foundation-briefing.md` (225 lines, executive digest)
-  - Deep study: `.agent/plans/key-plans-foundation-study.md` (711 lines, full inventory + gap analysis)
-  - **Decision 1** — canonical naming convention (codes PO-1/M-1/B-1 vs sizes Small/Medium/Large vs specialisations Chiropractor/Dentist/GP)
-  - **Decision 2** — HTML `BIM_TOKENS` block: delete + fetch DTCG, or treat drift as lint-catchable bug
-  - **Decision 3** — scope of v0.0.x (Professional Centre only, or include Retail Select + Tech Industrial + 12 common-area key plans)
-  - **Decision 4** — resolve Tiles PDF internal inconsistencies (Tile A reuse, Corridor Expander T 100 vs 300 SF, sample-tile arithmetic gaps, J/K/L/M footnote vocab)
-  - **Pause until resolved:** further HTML `BIM_TOKENS` edits, new DTCG token additions, Rust crate scaffold
-  - **Safe to continue:** TOPIC/DESIGN-RESEARCH drafts (living documents), HTML cosmetic polish, source-document research, project.woodfinegroup.com content
+- [x] **Key Plans foundation — 4 operator decisions received 2026-05-20** `[2026-05-20 totebox@claude-code]`
+  - All 4 decisions answered via inbox `command-20260520-bim-foundation-decisions`
+  - Decision 1: descriptive display names (Index PDF style); codes (PO-1/M-1/B-1) are internal-only DTCG keys
+  - Decision 2: **delete** inline BIM_TOKENS block from `building-width-calculator.html`; fetch from DTCG at render time
+  - Decision 3: all 3 building types in scope now (Professional Centre + Retail Select + Tech Industrial + 12 common-area Key Plans)
+  - Decision 4: type-prefixed tile codes (CO-A, RS-A, TI-A); Corridor Expander T = 300 SF; arithmetic gaps intentional by design; J/K/L/M as stub DTCG entries with `status: reserved`
+  - **Now unblocked:** DTCG token standardisation, HTML BIM_TOKENS removal, Rust crate scaffold
+
+- [ ] **Deliverable 1: key-plans-registry.md — ready to implement** `[2026-05-21 totebox@claude-code]`
+  - Plan: `.agent/plans/plan-bim-objects.md` (full spec with authoritative sizes from FIN.xlsx)
+  - Output file: `woodfine-bim-library/key-plans/key-plans-registry.md`
+  - Also copy to `outputs/` for `fpull bim outputs/` access
+  - All Q1–Q6 resolved; authoritative sizes sourced from `CONSTRUCTION_2026_01_06_Key Plan_Professional Office_FFE_FIN.xlsx` Tab `Summary_Key Plans`
+  - Infrastructure Key Plan m² = TBD (architect drawings); equipment programs documented in plan
+
+- [ ] **Apply Decision 1–4 to existing DTCG tokens + HTML** `[2026-05-21 totebox@claude-code]`
+  - Standardise naming in all existing DTCG entries to Decision 1 convention
+  - Delete BIM_TOKENS block from `building-width-calculator.html` (Decision 2)
+  - Add stub entries for RS/TI tiles and J/K/L/M placeholders (Decisions 3 + 4)
 
 - [x] **HTML print layout — resolved 2026-05-17** `[2026-05-17 totebox@claude-code]`
   - Root cause: `@page { size: landscape; margin: 0.3in }` + `slide { width: 10.4in }` triple-stacked margins; Chrome silently ignored
