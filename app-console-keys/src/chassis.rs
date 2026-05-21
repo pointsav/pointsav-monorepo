@@ -34,6 +34,7 @@ pub enum ChassisAction {
 pub struct AppConsoleKeys {
     cartridges: BTreeMap<FKey, Box<dyn Cartridge>>,
     active: FKey,
+    previous: FKey,
     started: Instant,
     mba_status: MbaStatus,
     username: String,
@@ -45,6 +46,7 @@ impl AppConsoleKeys {
         Self {
             cartridges: BTreeMap::new(),
             active: FKey::F4,
+            previous: FKey::F4,
             started: Instant::now(),
             mba_status: MbaStatus::Inactive("not configured".into()),
             username: username.into(),
@@ -101,9 +103,12 @@ impl AppConsoleKeys {
     }
 
     pub fn handle_event(&mut self, event: &Event) -> ChassisAction {
-        // F12 always routes to The Anchor (SYS-ADR-10) — unconditional
+        // F12 always routes to The Anchor (SYS-ADR-10) — unconditional, stores previous
         if let Event::Key(key) = event {
             if key.code == KeyCode::F(12) {
+                if self.active != FKey::F12 {
+                    self.previous = self.active;
+                }
                 self.active = FKey::F12;
                 return ChassisAction::None;
             }
@@ -113,7 +118,11 @@ impl AppConsoleKeys {
         if let Some(c) = self.cartridges.get_mut(&self.active) {
             match c.handle_event(event) {
                 CartridgeAction::Consumed => return ChassisAction::None,
-                CartridgeAction::Quit => return ChassisAction::Quit,
+                CartridgeAction::Quit     => return ChassisAction::Quit,
+                CartridgeAction::GoBack   => {
+                    self.active = self.previous;
+                    return ChassisAction::None;
+                }
                 CartridgeAction::None => {}
             }
         }
@@ -127,6 +136,9 @@ impl AppConsoleKeys {
                 return ChassisAction::Quit;
             }
             if let Some(fkey) = FKey::from_keycode(key.code) {
+                if self.active != fkey {
+                    self.previous = self.active;
+                }
                 self.active = fkey;
                 return ChassisAction::None;
             }

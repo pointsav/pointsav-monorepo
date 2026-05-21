@@ -27,10 +27,7 @@ struct PathInput {
 
 impl PathInput {
     fn new() -> Self {
-        Self {
-            text: String::new(),
-            cursor: 0,
-        }
+        Self { text: String::new(), cursor: 0 }
     }
 
     fn handle_key(&mut self, key: &crossterm::event::KeyEvent) -> Option<PathInputAction> {
@@ -46,36 +43,44 @@ impl PathInput {
                 self.text.insert(self.cursor, c);
                 self.cursor += c.len_utf8();
             }
-            KeyCode::Backspace if self.cursor > 0 => {
-                let len = self.text[..self.cursor]
-                    .chars()
-                    .last()
-                    .map(|c| c.len_utf8())
-                    .unwrap_or(1);
-                self.cursor -= len;
-                self.text.remove(self.cursor);
+            KeyCode::Backspace => {
+                if self.cursor > 0 {
+                    let len = self.text[..self.cursor]
+                        .chars()
+                        .last()
+                        .map(|c| c.len_utf8())
+                        .unwrap_or(1);
+                    self.cursor -= len;
+                    self.text.remove(self.cursor);
+                }
             }
-            KeyCode::Delete if self.cursor < self.text.len() => {
-                self.text.remove(self.cursor);
+            KeyCode::Delete => {
+                if self.cursor < self.text.len() {
+                    self.text.remove(self.cursor);
+                }
             }
-            KeyCode::Left if self.cursor > 0 => {
-                let len = self.text[..self.cursor]
-                    .chars()
-                    .last()
-                    .map(|c| c.len_utf8())
-                    .unwrap_or(1);
-                self.cursor -= len;
+            KeyCode::Left => {
+                if self.cursor > 0 {
+                    let len = self.text[..self.cursor]
+                        .chars()
+                        .last()
+                        .map(|c| c.len_utf8())
+                        .unwrap_or(1);
+                    self.cursor -= len;
+                }
             }
-            KeyCode::Right if self.cursor < self.text.len() => {
-                let len = self.text[self.cursor..]
-                    .chars()
-                    .next()
-                    .map(|c| c.len_utf8())
-                    .unwrap_or(1);
-                self.cursor += len;
+            KeyCode::Right => {
+                if self.cursor < self.text.len() {
+                    let len = self.text[self.cursor..]
+                        .chars()
+                        .next()
+                        .map(|c| c.len_utf8())
+                        .unwrap_or(1);
+                    self.cursor += len;
+                }
             }
             KeyCode::Home => self.cursor = 0,
-            KeyCode::End => self.cursor = self.text.len(),
+            KeyCode::End  => self.cursor = self.text.len(),
             _ => {}
         }
         None
@@ -98,11 +103,10 @@ impl PathInput {
             Span::raw(after.to_string()),
         ]);
         frame.render_widget(
-            Paragraph::new(line).block(
-                Block::default()
-                    .borders(Borders::ALL)
-                    .border_style(Style::default().fg(Color::White)),
-            ),
+            Paragraph::new(line)
+                .block(Block::default().borders(Borders::ALL).border_style(
+                    Style::default().fg(Color::White),
+                )),
             area,
         );
     }
@@ -117,9 +121,7 @@ enum PathInputAction {
 
 enum InputState {
     Entry,
-    Confirm {
-        path: String,
-    },
+    Confirm { path: String },
     Submitting {
         path: String,
         spinner: usize,
@@ -139,25 +141,19 @@ enum InputState {
 pub struct InputCartridge {
     username: String,
     tenant: String,
-    ingest_endpoint: String,
     state: InputState,
     path_input: PathInput,
 }
 
 impl InputCartridge {
     pub fn new() -> Self {
-        Self::new_for("operator", "local", "http://127.0.0.1:9100")
+        Self::new_for("operator", "local")
     }
 
-    pub fn new_for(
-        username: impl Into<String>,
-        tenant: impl Into<String>,
-        ingest_endpoint: impl Into<String>,
-    ) -> Self {
+    pub fn new_for(username: impl Into<String>, tenant: impl Into<String>) -> Self {
         Self {
             username: username.into(),
             tenant: tenant.into(),
-            ingest_endpoint: ingest_endpoint.into(),
             state: InputState::Entry,
             path_input: PathInput::new(),
         }
@@ -194,11 +190,7 @@ impl InputCartridge {
 
         let block = Block::default()
             .borders(Borders::ALL)
-            .border_style(
-                Style::default()
-                    .fg(Color::Magenta)
-                    .add_modifier(Modifier::BOLD),
-            )
+            .border_style(Style::default().fg(Color::Magenta).add_modifier(Modifier::BOLD))
             .title(" F12: Input Machine — The Anchor (SYS-ADR-10) ");
         let inner = block.inner(modal);
         frame.render_widget(block, modal);
@@ -234,21 +226,14 @@ impl InputCartridge {
 
         let block = Block::default()
             .borders(Borders::ALL)
-            .border_style(
-                Style::default()
-                    .fg(Color::Yellow)
-                    .add_modifier(Modifier::BOLD),
-            )
+            .border_style(Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD))
             .title(" F12: Input Machine — Confirm Ingest ");
         let inner = block.inner(modal);
         frame.render_widget(block, modal);
 
         let lines = vec![
             Line::from(""),
-            Line::from(Span::styled(
-                "  Submit this file for ingest?",
-                Style::default().fg(Color::White),
-            )),
+            Line::from(Span::styled("  Submit this file for ingest?", Style::default().fg(Color::White))),
             Line::from(""),
             Line::from(vec![
                 Span::styled("  Path: ", Style::default().fg(Color::DarkGray)),
@@ -273,11 +258,7 @@ impl InputCartridge {
         let inner = block.inner(modal);
         frame.render_widget(block, modal);
 
-        let mid = Rect {
-            y: inner.y + inner.height / 2,
-            height: 2,
-            ..inner
-        };
+        let mid = Rect { y: inner.y + inner.height / 2, height: 2, ..inner };
         frame.render_widget(
             Paragraph::new(format!(
                 "  {} Submitting to service-fs — please wait…",
@@ -381,50 +362,40 @@ impl Cartridge for InputCartridge {
 
     fn render(&mut self, frame: &mut Frame, area: Rect) {
         // Poll HTTP result
-        let new_state: Option<InputState> =
-            if let InputState::Submitting { rx, path, .. } = &mut self.state {
-                match rx.try_recv() {
-                    Ok(Ok(result)) => {
-                        let ts = chrono::Utc::now().to_rfc3339();
-                        let _ = audit::append(&IngestRecord {
-                            created_at: ts,
-                            username: self.username.clone(),
-                            tenant: self.tenant.clone(),
-                            path: path.clone(),
-                            ledger_id: result.ledger_root.clone(),
-                            status: if result.warning.is_some() {
-                                "warned".into()
-                            } else {
-                                "ok".into()
-                            },
-                        });
-                        Some(InputState::Done {
-                            path: path.clone(),
-                            result,
-                        })
-                    }
-                    Ok(Err(e)) => {
-                        let ts = chrono::Utc::now().to_rfc3339();
-                        let _ = audit::append(&IngestRecord {
-                            created_at: ts,
-                            username: self.username.clone(),
-                            tenant: self.tenant.clone(),
-                            path: path.clone(),
-                            ledger_id: None,
-                            status: "error".into(),
-                        });
-                        Some(InputState::Error {
-                            message: e.to_string(),
-                        })
-                    }
-                    Err(mpsc::TryRecvError::Disconnected) => Some(InputState::Error {
-                        message: "HTTP thread disconnected".into(),
-                    }),
-                    Err(mpsc::TryRecvError::Empty) => None,
+        let new_state: Option<InputState> = if let InputState::Submitting { rx, path, .. } = &mut self.state {
+            match rx.try_recv() {
+                Ok(Ok(result)) => {
+                    let ts = chrono::Utc::now().to_rfc3339();
+                    let _ = audit::append(&IngestRecord {
+                        created_at: ts,
+                        username: self.username.clone(),
+                        tenant: self.tenant.clone(),
+                        path: path.clone(),
+                        ledger_id: result.ledger_root.clone(),
+                        status: if result.warning.is_some() { "warned".into() } else { "ok".into() },
+                    });
+                    Some(InputState::Done { path: path.clone(), result })
                 }
-            } else {
-                None
-            };
+                Ok(Err(e)) => {
+                    let ts = chrono::Utc::now().to_rfc3339();
+                    let _ = audit::append(&IngestRecord {
+                        created_at: ts,
+                        username: self.username.clone(),
+                        tenant: self.tenant.clone(),
+                        path: path.clone(),
+                        ledger_id: None,
+                        status: "error".into(),
+                    });
+                    Some(InputState::Error { message: e.to_string() })
+                }
+                Err(mpsc::TryRecvError::Disconnected) => {
+                    Some(InputState::Error { message: "HTTP thread disconnected".into() })
+                }
+                Err(mpsc::TryRecvError::Empty) => None,
+            }
+        } else {
+            None
+        };
         if let Some(ns) = new_state {
             self.state = ns;
         }
@@ -442,19 +413,19 @@ impl Cartridge for InputCartridge {
         }
 
         let cmd = match &self.state {
-            InputState::Entry => Cmd::Entry,
-            InputState::Confirm { path } => Cmd::Confirm(path.as_str()),
-            InputState::Submitting { spinner, .. } => Cmd::Submitting(*spinner),
-            InputState::Done { path, result } => Cmd::Done(path.as_str(), result),
-            InputState::Error { message } => Cmd::Error(message.as_str()),
+            InputState::Entry                       => Cmd::Entry,
+            InputState::Confirm { path }            => Cmd::Confirm(path.as_str()),
+            InputState::Submitting { spinner, .. }  => Cmd::Submitting(*spinner),
+            InputState::Done { path, result }       => Cmd::Done(path.as_str(), result),
+            InputState::Error { message }           => Cmd::Error(message.as_str()),
         };
 
         match cmd {
-            Cmd::Entry => self.render_entry(frame, area),
-            Cmd::Confirm(p) => Self::render_confirm(frame, area, p),
-            Cmd::Submitting(sp) => Self::render_submitting(frame, area, sp),
-            Cmd::Done(p, r) => Self::render_done(frame, area, p, r),
-            Cmd::Error(m) => Self::render_error(frame, area, m),
+            Cmd::Entry              => self.render_entry(frame, area),
+            Cmd::Confirm(p)         => Self::render_confirm(frame, area, p),
+            Cmd::Submitting(sp)     => Self::render_submitting(frame, area, sp),
+            Cmd::Done(p, r)         => Self::render_done(frame, area, p, r),
+            Cmd::Error(m)           => Self::render_error(frame, area, m),
         }
     }
 
@@ -494,18 +465,12 @@ impl Cartridge for InputCartridge {
                         };
                         let username = self.username.clone();
                         let tenant = self.tenant.clone();
-                        let endpoint = self.ingest_endpoint.clone();
                         let path_clone = path.clone();
                         let (tx, rx) = mpsc::channel();
                         thread::spawn(move || {
-                            let _ =
-                                tx.send(ingest::submit(&path_clone, &username, &tenant, &endpoint));
+                            let _ = tx.send(ingest::submit(&path_clone, &username, &tenant));
                         });
-                        self.state = InputState::Submitting {
-                            path,
-                            spinner: 0,
-                            rx,
-                        };
+                        self.state = InputState::Submitting { path, spinner: 0, rx };
                     }
                     KeyCode::Char('n') | KeyCode::Char('N') | KeyCode::Esc => {
                         self.reset();
