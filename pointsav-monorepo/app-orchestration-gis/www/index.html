@@ -1398,6 +1398,17 @@
         ['sim-ab-old', 'sim-ab-new', 'sim-ab-labels'].forEach(id => {
             if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', on ? 'visible' : 'none');
         });
+        // Suppress production proximity rings while sim is active — they represent the old
+        // anchor-pin method and would obscure the new DBSCAN rings underneath
+        const proximityLayers = ['proximity-fill', 'proximity-line', 'proximity-merged-label'];
+        if (on) {
+            proximityLayers.forEach(id => { if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', 'none'); });
+        } else {
+            // Restore only if still in retail level (cluster selected)
+            if (selectedClusterId) {
+                proximityLayers.forEach(id => { if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', 'visible'); });
+            }
+        }
         if (!on) clearSimDetail();
         btn.classList.toggle('lc-active', on);
     }
