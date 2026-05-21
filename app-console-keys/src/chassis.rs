@@ -15,7 +15,9 @@ use crossterm::{
 use ratatui::{
     backend::CrosstermBackend,
     layout::{Constraint, Direction, Layout},
-    widgets::Paragraph,
+    style::{Color, Modifier, Style},
+    text::{Line, Span},
+    widgets::{Block, Borders, Paragraph},
     Frame, Terminal,
 };
 
@@ -31,6 +33,12 @@ pub enum ChassisAction {
     Quit,
 }
 
+pub struct PairingInfo {
+    pub fingerprint: String,
+    pub host: String,
+    pub port: u16,
+}
+
 pub struct AppConsoleKeys {
     cartridges: BTreeMap<FKey, Box<dyn Cartridge>>,
     active: FKey,
@@ -39,6 +47,7 @@ pub struct AppConsoleKeys {
     mba_status: MbaStatus,
     username: String,
     tenant: String,
+    pairing_info: Option<PairingInfo>,
 }
 
 impl AppConsoleKeys {
@@ -51,7 +60,12 @@ impl AppConsoleKeys {
             mba_status: MbaStatus::Inactive("not configured".into()),
             username: username.into(),
             tenant: tenant.into(),
+            pairing_info: None,
         }
+    }
+
+    pub fn set_pairing_info(&mut self, info: PairingInfo) {
+        self.pairing_info = Some(info);
     }
 
     pub fn register(&mut self, cartridge: Box<dyn Cartridge>) {
@@ -81,7 +95,26 @@ impl AppConsoleKeys {
         let installed = self.installed();
         crate::widgets::fkey_strip::render(frame, chunks[0], self.active, &installed);
 
-        if let Some(c) = self.cartridges.get_mut(&self.active) {
+        // Pairing screen: shown when MBA is INACTIVE and we have key info
+        let mba_inactive = matches!(self.mba_status, MbaStatus::Inactive(_));
+        if mba_inactive {
+            if let Some(info) = &self.pairing_info {
+                Self::render_pairing_screen(
+                    frame,
+                    chunks[1],
+                    &self.username,
+                    &self.tenant,
+                    &info.fingerprint,
+                    &info.host,
+                    info.port,
+                );
+            } else {
+                frame.render_widget(
+                    Paragraph::new("\n  MBA LINK INACTIVE — configure ~/.config/os-console/config.toml"),
+                    chunks[1],
+                );
+            }
+        } else if let Some(c) = self.cartridges.get_mut(&self.active) {
             c.render(frame, chunks[1]);
         } else {
             frame.render_widget(
@@ -149,6 +182,74 @@ impl AppConsoleKeys {
 
     pub fn set_mba_active(&mut self) {
         self.mba_status = MbaStatus::Active;
+    }
+
+    fn render_pairing_screen(
+        frame: &mut Frame,
+        area: ratatui::layout::Rect,
+        username: &str,
+        tenant: &str,
+        fingerprint: &str,
+        host: &str,
+        port: u16,
+    ) {
+        let block = Block::default()
+            .borders(Borders::ALL)
+            .border_style(Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD))
+            .title(" MBA Pairing Required — Pairing as Permission ");
+        let inner = block.inner(area);
+        frame.render_widget(block, area);
+
+        let lines = vec![
+            Line::from(""),
+            Line::from(Span::styled(
+                "  This machine is not yet paired with os-totebox.",
+                Style::default().fg(Color::White),
+            )),
+            Line::from(""),
+            Line::from(vec![
+                Span::styled("  Your fingerprint:  ", Style::default().fg(Color::DarkGray)),
+                Span::styled(fingerprint.to_string(), Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)),
+            ]),
+            Line::from(""),
+            Line::from(Span::styled(
+                "  Have an operator run on the os-totebox machine:",
+                Style::default().fg(Color::White),
+            )),
+            Line::from(""),
+            Line::from(Span::styled(
+                format!("    proofctl user add {} \\", username),
+                Style::default().fg(Color::LightGreen),
+            )),
+            Line::from(Span::styled(
+                format!("      --tenant {} \\", tenant),
+                Style::default().fg(Color::LightGreen),
+            )),
+            Line::from(Span::styled(
+                "      --key-file <path/to/your/id_ed25519.pub>",
+                Style::default().fg(Color::LightGreen),
+            )),
+            Line::from(""),
+            Line::from(vec![
+                Span::styled("  Connecting to:  ", Style::default().fg(Color::DarkGray)),
+                Span::styled(
+                    format!("{}:{}", host, port),
+                    Style::default().fg(Color::Yellow),
+                ),
+            ]),
+            Line::from(""),
+            Line::from(Span::styled(
+                "  After the operator has registered your key, restart os-console.",
+                Style::default().fg(Color::DarkGray),
+            )),
+            Line::from(""),
+            Line::from(Span::styled(
+                "  [Q / Ctrl-C: quit]",
+                Style::default().fg(Color::DarkGray),
+            )),
+        ];
+
+        frame.render_widget(Paragraph::new(lines), inner);
     }
 
     /// Run driven by raw SSH bytes; `terminal` writes to a TerminalHandle defined in os-console.

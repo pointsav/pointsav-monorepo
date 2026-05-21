@@ -1,9 +1,6 @@
 use std::sync::Arc;
 
-use russh::{
-    client,
-    keys::{load_secret_key, PrivateKeyWithHashAlg},
-};
+use russh::{client, keys::{load_secret_key, PrivateKeyWithHashAlg}};
 use system_gateway_mba::auth::compute_fingerprint;
 
 pub struct MbaResult {
@@ -26,15 +23,17 @@ impl client::Handler for MbaHandler {
     }
 }
 
-pub async fn connect_mba(host: &str, port: u16, username: &str, key_path: &str) -> MbaResult {
+pub async fn connect_mba(
+    host: &str,
+    port: u16,
+    username: &str,
+    key_path: &str,
+) -> MbaResult {
     let key = match load_secret_key(key_path, None) {
         Ok(k) => k,
         Err(e) => {
             eprintln!("os-console: MBA: failed to load key at {key_path}: {e}");
-            return MbaResult {
-                active: false,
-                fingerprint: "(key load failed)".into(),
-            };
+            return MbaResult { active: false, fingerprint: "(key load failed)".into() };
         }
     };
 
@@ -45,10 +44,7 @@ pub async fn connect_mba(host: &str, port: u16, username: &str, key_path: &str) 
         Ok(h) => h,
         Err(e) => {
             eprintln!("os-console: MBA: connection to {host}:{port} failed: {e}");
-            return MbaResult {
-                active: false,
-                fingerprint,
-            };
+            return MbaResult { active: false, fingerprint };
         }
     };
 
@@ -56,24 +52,15 @@ pub async fn connect_mba(host: &str, port: u16, username: &str, key_path: &str) 
     match handle.authenticate_publickey(username, key_with_alg).await {
         Ok(result) if result.success() => {
             eprintln!("os-console: MBA: link active — {username}@{host}:{port}");
-            MbaResult {
-                active: true,
-                fingerprint,
-            }
+            MbaResult { active: true, fingerprint }
         }
         Ok(_) => {
             eprintln!("os-console: MBA: fingerprint not registered — {fingerprint}");
-            MbaResult {
-                active: false,
-                fingerprint,
-            }
+            MbaResult { active: false, fingerprint }
         }
         Err(e) => {
             eprintln!("os-console: MBA: auth error: {e}");
-            MbaResult {
-                active: false,
-                fingerprint,
-            }
+            MbaResult { active: false, fingerprint }
         }
     }
 }
