@@ -96,6 +96,55 @@ Newest on top. Append a dated block when a session includes meaningful cleanup w
 
 ---
 
+## 2026-05-21 — Groups 6 + 7 — Stage-6 prep + WFD housekeeping
+
+Five commits to project-system cluster branch, one commit to WFD sub-repo.
+
+**Consistency-proof bench fix + BENCHMARKS.md (`d2f6a5a`, Jennifer Woodfine)**
+- `system-ledger/benches/consult.rs` benches 11–12 were broken: proof was
+  constructed with 1 hash (MTH of right subtree per RFC generation algorithm)
+  but the accumulator verifier requires 4 hashes for 4→8: anchor=leaves[3],
+  two BOTH-branch siblings (leaves[2], internal(l0,l1)), one ELSE-branch
+  sibling (right-half root). Fixed PathTooShort panic.
+- BENCHMARKS.md extended from 10 to 12 entries. Bench 11: 10.86 µs [10.73,
+  11.00]. Bench 12: 8.37 ms [8.22, 8.53]. New consistency-proof architectural
+  observation: composed cost ≈ 2× verify_signer (two Ed25519 ops); raw proof
+  is a trivial fraction.
+
+**Cargo.toml metadata + ARCHITECTURE.md corrections (`6e25c46`, Jennifer Woodfine)**
+- `license = "AGPL-3.0-or-later"` added to system-core, system-ledger,
+  moonshot-toolkit Cargo.toml — resolved from LICENSE-MATRIX.md §4.2
+  (system-* and moonshot-* prefix categories both AGPL-3.0-or-later).
+- `description`, `repository`, `keywords`, `categories`, `rust-version` filled
+  on all three crates. MSRV: system-core/system-ledger 1.73 (div_ceil);
+  moonshot-toolkit 1.74 (clap 4.5+).
+- system-core/ARCHITECTURE.md: §3 system-ledger ref corrected (44→47 tests,
+  10→12 benches); §5 test count 51→62; test lists extended for Group 2A/B
+  additions; new §5 "Platform requirements and no_std roadmap" declaring MSRV
+  and documenting the planned no_std carve-out MINOR.
+- Outbox to Command Session: 4 Group 3B gate decisions needed for v1.0.0
+  (LedgerConsumer API finality, promote strategy, attribution, quiet-VM bench).
+
+**STAGING-cargo-dep-options.md resolution note (`bb5d415`, Jennifer Woodfine)**
+- Added header resolving to Option E: block on Stage-6. system-core v0.2.0 is
+  API-stable; no Cargo [patch] bridging required.
+
+**WFD sub-repo housekeeping (`9ba968d`, Peter Woodfine, WFD branch)**
+- Created `woodfine-fleet-deployment/CLAUDE.md` — was missing; the only
+  required root file absent per repo-layout.md.
+- Added `fleet-infrastructure-leased/README.es.md` and
+  `node-console-operator/README.es.md` — bilingual audit found these two gaps;
+  all 16 present deployment directories now have paired READMEs.
+- `NEXT.md` updated: 3 prior open items closed; new open question surfaced —
+  `gateway-orchestration-gis-1` and `gateway-knowledge-documentation-1` in the
+  registry but absent from HEAD 7fdf36b (possible filter-repo removal).
+
+**Open questions surfaced this session:**
+- WFD registry drift: `gateway-orchestration-gis-1` and
+  `gateway-knowledge-documentation-1` listed as Scaffold-coded but absent from
+  `cluster/project-system` HEAD. Needs reconciliation against WFD `main`.
+- Quiet-VM bench re-run for bench #9 still pending (load avg < 1.0 required).
+
 ## 2026-05-20 — Group 2 mechanical hygiene — system-core, system-ledger, moonshot-toolkit
 
 Closed all 6 sub-groups of the Group 2 plan (project-system-todo.md). Six commits.
