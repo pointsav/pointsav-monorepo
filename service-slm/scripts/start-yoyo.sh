@@ -327,6 +327,8 @@ provision_vm_in_zone() {
     # Phase 0 G3/G8: the VM-side dead-man's-switch reads max-lifetime-seconds and
     # self-stops the VM when the day's remaining budget would be spent.
     meta_kv+=("max-lifetime-seconds=${MAX_LIFETIME_SECONDS}")
+    # G17: a fresh VM starts in the `running` state — no deliberate-stop tag.
+    meta_kv+=("last-stop-reason=running")
     local meta_arg=""
     if [[ "${#meta_kv[@]}" -gt 0 ]]; then
         meta_arg="--metadata=$(IFS=','; printf '%s' "${meta_kv[*]}")"
@@ -518,10 +520,13 @@ attempt_start_once() {
         # Phase 0 G3/G8: refresh the dead-man's-switch max-lifetime with today's
         # budget-derived value before the VM boots, so an existing VM honours
         # the remaining daily budget rather than a stale create-time value.
+        # G17: also clear last-stop-reason to `running` — a fresh start cancels
+        # any prior deliberate-stop tag so a later genuine preemption is still
+        # recoverable by the idle monitor.
         gcloud compute instances add-metadata "${INSTANCE}" \
             --project="${PROJECT}" --zone="${known_zone}" \
-            --metadata="max-lifetime-seconds=${MAX_LIFETIME_SECONDS}" >/dev/null 2>&1 \
-            || log "WARN: could not refresh max-lifetime-seconds metadata (deadman may use a stale value)."
+            --metadata="max-lifetime-seconds=${MAX_LIFETIME_SECONDS},last-stop-reason=running" >/dev/null 2>&1 \
+            || log "WARN: could not refresh instance metadata (deadman / idle monitor may use stale values)."
         err=$(gcloud compute instances start "${INSTANCE}" \
             --project="${PROJECT}" --zone="${known_zone}" 2>&1)
         if [[ $? -eq 0 ]]; then
