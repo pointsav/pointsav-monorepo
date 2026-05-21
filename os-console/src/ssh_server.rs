@@ -167,9 +167,10 @@ impl Handler for AppSession {
         let tenant = user.tenant.as_str().to_string();
 
         tokio::task::spawn_blocking(move || {
+            let cartridge = ContentCartridge::new_for(&username, &tenant);
             let mut chassis = AppConsoleKeys::new(username, tenant);
             chassis.set_mba_active();
-            chassis.register(Box::new(ContentCartridge::new()));
+            chassis.register(Box::new(cartridge));
             chassis.run_with_bytes(terminal, input_rx);
         });
 
