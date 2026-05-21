@@ -63,7 +63,7 @@ impl LocalTierClient {
             Err(_) => return false,
         };
         match resp.json::<LlamaHealthResponse>().await {
-            Ok(h) => h.slots_idle == 0,
+            Ok(h) => h.slots_idle.map_or(false, |n| n == 0),
             Err(_) => false,
         }
     }
@@ -232,13 +232,11 @@ impl LocalTierClient {
 }
 
 /// Minimal subset of the llama-server `/health` response we care about.
-/// Unknown fields are ignored via `#[serde(default)]` on the one field
-/// we need — adding fields to llama-server never breaks this struct.
+/// Unknown fields are ignored. `slots_idle` is `Option` because newer
+/// llama-server versions omit it from `/health`; absent means not busy.
 #[derive(Deserialize)]
 struct LlamaHealthResponse {
-    /// Number of inference slots currently idle. 0 means fully saturated.
-    #[serde(default)]
-    slots_idle: u32,
+    slots_idle: Option<u32>,
 }
 
 #[derive(Serialize)]
@@ -768,6 +766,34 @@ mod tests {
             .complete(&req())
             .await
             .expect("idle slots must succeed");
+        assert_eq!(resp.content, "PONG");
+    }
+
+    /// When `/health` omits `slots_idle` (newer llama-server), `is_busy()`
+    /// returns `false` and `complete()` proceeds normally.
+    #[tokio::test]
+    async fn health_check_missing_slots_idle_falls_through_to_inference() {
+        let server = MockServer::start().await;
+        Mock::given(method("GET"))
+            .and(path("/health"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+                "status": "ok"
+            })))
+            .expect(1)
+            .mount(&server)
+            .await;
+        Mock::given(method("POST"))
+            .and(path("/v1/chat/completions"))
+            .respond_with(ResponseTemplate::new(200).set_body_json(ok_body()))
+            .expect(1)
+            .mount(&server)
+            .await;
+
+        let client = client(server.uri());
+        let resp = client
+            .complete(&req())
+            .await
+            .expect("missing slots_idle must not block inference");
         assert_eq!(resp.content, "PONG");
     }
 
