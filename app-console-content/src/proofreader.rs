@@ -4,14 +4,14 @@ use std::time::Duration;
 
 pub const PROTOCOLS: &[(&str, &str)] = &[
     ("prose-architecture", "PROSE — ARCHITECTURE"),
-    ("prose-guide", "PROSE — GUIDE (operational runbook)"),
-    ("prose-memo", "PROSE — MEMO"),
-    ("prose-readme", "PROSE — README"),
-    ("prose-topic", "PROSE — TOPIC (content-wiki)"),
-    ("comms-chat", "COMMS — chat"),
-    ("comms-email", "COMMS — email"),
+    ("prose-guide",        "PROSE — GUIDE (operational runbook)"),
+    ("prose-memo",         "PROSE — MEMO"),
+    ("prose-readme",       "PROSE — README"),
+    ("prose-topic",        "PROSE — TOPIC (content-wiki)"),
+    ("comms-chat",         "COMMS — chat"),
+    ("comms-email",        "COMMS — email"),
     ("comms-ticket-comment", "COMMS — ticket comment"),
-    ("translate-en-es", "TRANSLATE — EN → ES"),
+    ("translate-en-es",    "TRANSLATE — EN → ES"),
 ];
 
 pub const DEFAULT_PROTOCOL_IDX: usize = 4; // prose-topic
@@ -47,12 +47,7 @@ struct VerdictRequest {
     verdict: String,
 }
 
-pub fn submit_proofread(
-    text: &str,
-    protocol: &str,
-    tenant: &str,
-    endpoint: &str,
-) -> Result<ProofreadResponse> {
+pub fn submit_proofread(text: &str, protocol: &str, tenant: &str) -> Result<ProofreadResponse> {
     let client = reqwest::blocking::Client::builder()
         .timeout(Duration::from_secs(300))
         .build()?;
@@ -61,8 +56,10 @@ pub fn submit_proofread(
         protocol: protocol.to_string(),
         tenant: tenant.to_string(),
     };
-    let url = format!("{}/v1/proofread", endpoint.trim_end_matches('/'));
-    let resp = client.post(&url).json(&req).send()?;
+    let resp = client
+        .post("http://127.0.0.1:9092/v1/proofread")
+        .json(&req)
+        .send()?;
     if !resp.status().is_success() {
         let body = resp.text().unwrap_or_default();
         bail!("service-proofreader: {}", body);
@@ -70,7 +67,7 @@ pub fn submit_proofread(
     Ok(resp.json::<ProofreadResponse>()?)
 }
 
-pub fn post_verdict(request_id: &str, tenant: &str, verdict: &str, endpoint: &str) -> Result<()> {
+pub fn post_verdict(request_id: &str, tenant: &str, verdict: &str) -> Result<()> {
     let client = reqwest::blocking::Client::builder()
         .timeout(Duration::from_secs(30))
         .build()?;
@@ -80,7 +77,10 @@ pub fn post_verdict(request_id: &str, tenant: &str, verdict: &str, endpoint: &st
         tenant: tenant.to_string(),
         verdict: verdict.to_string(),
     };
-    let url = format!("{}/v1/verdict", endpoint.trim_end_matches('/'));
-    let _ = client.post(&url).json(&req).send()?.text();
+    let _ = client
+        .post("http://127.0.0.1:9092/v1/verdict")
+        .json(&req)
+        .send()?
+        .text();
     Ok(())
 }
