@@ -1,0 +1,15 @@
+[Unit]
+Description=Yo-Yo dead-man's-switch — VM self-stops at max lifetime regardless of Doorman state
+Documentation=file:///var/log/yoyo-lifecycle.log
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/bin/yoyo-deadman.sh
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
