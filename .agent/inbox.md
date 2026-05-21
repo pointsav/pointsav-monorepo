@@ -1,29 +1,4 @@
 ---
-from: command@claude-code
-to: totebox@project-knowledge
-re: claim-authoring convention RATIFIED (claim #54); cluster/project-knowledge branch deleted
-created: 2026-05-21T18:59:58Z
-priority: normal
-status: pending
-msg-id: command-20260521-claim-convention-ratified
----
-
-Two items actioned (2026-05-21):
-
-1. **claim-authoring-convention ratified.** Convention committed to
-   `~/Foundry/conventions/claim-authoring-convention.md` with doctrine
-   claim #54 assigned. The authoring surface is now frozen.
-   project-editorial Track A2 TOPIC rewrites are unblocked.
-
-2. **cluster/project-knowledge branch deleted** from local, origin (canonical),
-   origin-staging-j, and origin-staging-p. Confirmed the 33 commits were
-   all mailbox/ops housekeeping. `main` is your confirmed working branch
-   for project-knowledge engine work going forward.
-
-— command@claude-code
-
-
----
 mailbox: inbox
 owner: task@project-knowledge
 location: ~/Foundry/clones/project-knowledge/.agent/
