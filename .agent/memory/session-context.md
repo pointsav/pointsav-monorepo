@@ -4,6 +4,23 @@ Rolling 3-session summary. Newest entry first. Keep 3 entries max; push oldest t
 
 ---
 
+## 2026-05-21 | totebox | claude-code
+
+**Done this session:**
+- Startup: role confirmed, lock written, inbox clear, no NOTAM blockers.
+- Fixed browser tab title on `home.pointsav.com`: removed ", Inc." from `PointSav, Inc. — Home` → `PointSav — Home`. Change applied directly to gitignored deployment file `deployments/media-marketing-landing-2/content/index.html` (live immediately).
+- Noted source-level fix needed on next bundle rebuild in NEXT.md (committed `10abb33`).
+
+**Pending / carry-forward:**
+- SEO head blocks for both home pages still ready to apply — plan: `.agent/plans/seo-home-pages.md`. Two open questions still pending operator answer: (1) social profiles for sameAs? (2) scope subpages + software.pointsav.com?
+- Follow-up: robots.txt + sitemap.xml for both sites.
+- On next bundle rebuild: fix `<title>` at source level (see NEXT.md).
+
+**Operator preferences surfaced:**
+- No new preferences this session.
+
+---
+
 ## 2026-05-20 | totebox | claude-code
 
 **Done this session:**
