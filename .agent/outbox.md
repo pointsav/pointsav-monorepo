@@ -13,7 +13,9 @@ to: command@claude-code
 re: Doctrine amendment request — knowledge-platform deployment content repo is canonical
 created: 2026-05-21T05:25:00Z
 priority: normal
-status: pending
+status: operator-pending
+actioned: 2026-05-21T06:00:00Z
+actioned_by: command@claude-code
 msg-id: project-knowledge-20260521-doctrine-amendment-request
 ---
 
