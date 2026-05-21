@@ -2,6 +2,34 @@
 
 ---
 
+## 2026-05-21 | Totebox | claude-code
+
+**Done this session:**
+- Fixed `is_busy()` always-true bug — llama-server v1 omits `slots_idle` from `/health`; changed to `Option<u32>` + new test. Committed `6a80c5e3`. 125 slm-doorman tests pass.
+- Built and deployed `slm-doorman-server` + `slm-mcp-server` release binaries (from `CARGO_TARGET_DIR=/srv/foundry/cargo-target/mathew`).
+- Wired env vars in `/etc/local-doorman/local-doorman.env`: `SERVICE_CONTENT_ENDPOINT`, `SLM_SHIM_TRAINING_CAPTURE=true`, `SLM_AUDIT_DIR=/var/lib/local-doorman/audit`.
+- Fixed `ReadWritePaths` in `local-doorman.service` to include `/srv/foundry/data/cost-ledger`.
+- Created `/var/lib/local-doorman/audit` directory with correct ownership.
+- Verified end-to-end: Doorman `/v1/messages` → OLMo Tier A → Anthropic format response ✅.
+- Confirmed training capture active: shadow brief enqueued on each commit.
+- Tuned llama-server: `--threads 6` (from 3), `--threads-batch 8`, `CPUQuota=600%`. Applied to `/etc/systemd/system/local-slm.service` (system file).
+- Perf comparison: baseline 1.71 tok/s (threads=3), tuned 1.95 tok/s (threads=6). Bottleneck is memory bandwidth, not compute. Plan written: `.agent/plans/olmo-performance-tuning.md`.
+- Started `local-content` service (graph loading; 16-min startup).
+
+**Pending / carry-forward:**
+- Stage 6 promote (~43 commits) — Command Session task; rebase required first (see inbox message)
+- Tier C commercial API key — operator from laptop (deliberate: test local-only first)
+- ANTHROPIC_BASE_URL routing for Claude Code — not yet set; discuss with operator
+- local-slm.service + local-doorman.service changes are system files; track in `~/Foundry/infrastructure/local-slm/` — not committed in this archive
+- `flash-attn on` test — see performance plan
+- IQ4_XS quantization — potential ~1.2x speed gain
+
+**Operator preferences surfaced:**
+- "local level working 100% before going beyond" — test Tier A thoroughly before adding commercial API key (Tier C). No ANTHROPIC_API_KEY for now.
+- Terse responses; keep going on typos.
+
+---
+
 ## 2026-05-20 | Totebox | claude-code
 
 **Done this session:**
@@ -44,17 +72,3 @@
 **Operator preferences surfaced:**
 - No new preferences this session. Existing: terse responses, no trailing summaries.
 
----
-
-## 2026-05-18 | Totebox | claude-code (overnight build)
-
-**Done:**
-- 12 signed commits, ~3500 LOC across Phases 0–4 of learning-loop-master-plan
-- Key modules: `corpus_gate.rs`, `adapter_registry.rs`, `cost_ledger.rs`, `metrics.rs`
-- D5 Sprint 1: `CanonicalMessage` + `ContentBlock` replace flat `ChatMessage`
-- c67bb284 drain fix; multiple NEXT.md/outbox ops commits
-
-**Pending carry-forward:**
-- Phase 4 outboxes to forward to project-editorial
-- Tier C auth (Anthropic API key) not yet set in production env
-- Yo-Yo #1 packer image rebuild (operator task, from laptop)
