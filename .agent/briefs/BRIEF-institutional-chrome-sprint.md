@@ -1,3 +1,8 @@
+---
+artifact: brief
+status: active
+---
+
 # Plan: Three-site wiki redesign — institutional chrome sprint
 
 ## Execution status (as of 2026-05-17)

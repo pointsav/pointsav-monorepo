@@ -1,4 +1,5 @@
 ---
+artifact: brief
 schema: foundry-plan-v1
 slug: knowledge-platform-editorial-plan
 status: active
@@ -28,7 +29,7 @@ supersedes:
 > `KNOWLEDGE-PLATFORM-VISION.md`.
 >
 > **Type:** execution plan (downstream). **Upstream:** `KNOWLEDGE-PLATFORM-VISION.md`
-> (project-knowledge `.agent/plans/`). **Sibling:** `KNOWLEDGE-PLATFORM-PLAN.md`
+> (project-knowledge `.agent/briefs/`). **Sibling:** `KNOWLEDGE-PLATFORM-PLAN.md`
 > (project-knowledge's engine execution plan). The three synchronize per
 > Vision §14 — this plan references the vision by section, never restates it.
 >

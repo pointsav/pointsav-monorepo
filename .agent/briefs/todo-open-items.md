@@ -49,10 +49,10 @@
 
 ## PENDING — project-editorial
 
-- [ ] **Active plan:** `KNOWLEDGE-PLATFORM-EDITORIAL-PLAN.md` — next: A0 (encode the standard into style guides) → D1/D2 (editorial linter + failure-mode registry); E1/E4 are cheap, run first
+- [ ] **Active plan:** `.agent/briefs/BRIEF-KNOWLEDGE-PLATFORM-EDITORIAL-PLAN.md` — next: A0 (encode the standard into style guides) → D1/D2 (editorial linter + failure-mode registry); E1/E4 are cheap, run first
 - [ ] **A2 HELD** — Top-12 TOPIC rewrites wait for project-knowledge's claim-authoring convention (their Phase 2.4)
 - [ ] **Inbox triage** — 4 pending messages: project-system (capability-ledger + merkle-proofs TOPICs, 6 README drafts), Command (LICENSE artifacts incl. one project-knowledge item)
-- [ ] **Old-plan deletions parked** — execute after the overhaul ships, on operator go-ahead (delete set in `KNOWLEDGE-PLATFORM-EDITORIAL-PLAN.md` §9)
+- [ ] **Old-plan deletions parked** — execute after the overhaul ships, on operator go-ahead (delete set in `BRIEF-KNOWLEDGE-PLATFORM-EDITORIAL-PLAN.md` §9)
 
 ---
 
@@ -66,4 +66,4 @@
 | `content-wiki-corporate/reference-invariants.yaml` | "Holding structure" panel data |
 | `pointsav-monorepo/app-mediakit-knowledge/src/server.rs:1150` | Hardcoded "From the doctrine" block to replace |
 | `pointsav-monorepo/app-mediakit-knowledge/src/server.rs:1271` | Hardcoded sister surfaces to replace |
-| `.agent/plans/overhaul-progress.md` | Broader wiki overhaul progress tracker |
+| `.agent/briefs/BRIEF-overhaul-progress.md` | Broader wiki overhaul progress tracker |

@@ -1,7 +1,8 @@
 ---
+artifact: brief
 schema: foundry-plan-v1
 slug: overhaul-documentation-pointsav-com
-status: in-progress
+status: archived
 phase: 1
 owner: project-editorial
 created: 2026-05-14

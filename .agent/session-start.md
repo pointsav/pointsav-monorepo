@@ -22,7 +22,7 @@ updated: 2026-05-12
 |---|---|
 | Design token routing rules | `.agent/rules/design-tokens.md` |
 | Cross-repo handoff state | `.agent/rules/handoffs-outbound.md` |
-| Artifact routing + lifecycle | `.agent/plans/README.md` |
+| Artifact routing + lifecycle | `.agent/briefs/README.md` |
 
 ## Known gotchas for this archive
 
@@ -39,8 +39,8 @@ A two-phase corpus overhaul of `documentation.pointsav.com` is in progress.
 
 | File | Purpose |
 |---|---|
-| `.agent/plans/overhaul-documentation-pointsav-com.md` | Master plan — 15 sections; single source of truth |
-| `.agent/plans/overhaul-progress.md` | Progress tracker — current phase, sub-phase, per-item state |
+| `.agent/briefs/BRIEF-overhaul-documentation-pointsav-com.md` | Master plan — 15 sections; single source of truth |
+| `.agent/briefs/BRIEF-overhaul-progress.md` | Progress tracker — current phase, sub-phase, per-item state |
 
 **Phase routing:**
 - **Gemini CLI** owns Phase 0 (vocabulary baseline) + Phase 1 (analysis + light work)
@@ -58,7 +58,7 @@ A two-phase corpus overhaul of `documentation.pointsav.com` is in progress.
 - *Phase D + E2 (theming + stub suppression): per-site SVG wordmarks, CSS theme blocks, right-nav links, stub filter — `ada53ef8`*
 - *Branch: `pointsav-monorepo` on `readme-fixes-2026-05-16`, 3 commits ahead of `origin/main`*
 - *Outbox message sent to Command: Stage 6 + project-knowledge build request*
-- *Full plan: `.agent/plans/institutional-chrome-sprint.md`*
+- *Full plan: `.agent/briefs/BRIEF-institutional-chrome-sprint.md`*
 
 *Next session: E1 + E3 + E4 quality gates (after Command does Stage 6 + project-knowledge builds).*
 ```
