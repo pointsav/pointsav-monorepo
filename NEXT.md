@@ -19,6 +19,18 @@ plan — 8 phases). All prior knowledge-platform, Wikipedia-parity, and blueprin
 plans were superseded and removed 2026-05-21; the parity plans are archived
 under `.agent/plans/archive/`.
 
+**Execution progress:**
+
+- [x] Phase 2 — claim-authoring convention specced + staged + routed
+  (`.agent/plans/claim-authoring-convention.PROPOSAL.md`). [2026-05-21 totebox@claude-code]
+- [ ] Phase 2.4 — confirm to project-editorial once Command **ratifies** the
+  convention (heads-up already sent). [2026-05-21 totebox@claude-code]
+- [ ] Phase 3.1 — discharge the convention's Engine Verification Gate: a
+  render-pass test that comrak emits `<!--claim …-->` markers unchanged.
+  [2026-05-21 totebox@claude-code]
+- [ ] Phase 1 (engine dead-code descope) — **paused** pending the cluster-branch
+  topology fix (see BLOCKER below).
+
 ---
 
 ## app-mediakit-knowledge — Phase 6A shipped (2026-05-13)
