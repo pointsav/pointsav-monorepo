@@ -1,7 +1,7 @@
 # NEXT — project-orchestration
 
 > Implementation scope: Totebox Orchestration transition Phases 1–3.
-> Full plan: `/home/mathew/.claude/plans/before-we-do-that-humming-emerson.md`
+> Full plan: `.agent/plans/totebox-ppn-infrastructure-master-plan.md`
 > Opened: 2026-05-08
 
 ---
@@ -13,16 +13,8 @@ These edits happen in `~/Foundry/`, not this cluster.
 - [x] **P1.1** `CLAUDE.md` §11: Master → Command Session, Task → Totebox Session, Root → eliminated
 - [x] **P1.2** `AGENT.md` session roles table: same vocabulary change
 - [x] **P1.3** `bin/claude-role.sh`: Command / Totebox / error-on-vendor output
-- [ ] **P1.4** `MANIFEST.md`: add "As a Totebox Orchestration" section
-  - Names vault-privategit-source-1 as Command instance
-  - Lists os-orchestration node + os-mediakit node (planned)
-  - 13 active Totebox Archives + 2 planned (project-source, project-woodfine)
-  - `service-slm` Doorman as the shared Orchestration SLM layer
-- [ ] **P1.5** Correct `systems/os-orchestration.md` user-guide article:
-  - Remove: "NetworkAdminOS maintains the MBA registry" claim
-  - Correct: no central registry; COMMAND's pairings.yaml + MANIFEST.md = topology record
-  - Correct: `system-mba-shim` is the MVP transitional layer only
-  - Location: `vendor/content-wiki-documentation/` — use project-editorial Totebox Session
+- [x] **P1.4** `MANIFEST.md`: add "As a Totebox Orchestration" section `[closed: 2026-05-09 command@claude-code]`
+- [x] **P1.5** Correct `systems/os-orchestration.md` user-guide article `[closed: 2026-05-12 totebox@project-editorial]`
 
 ---
 
@@ -30,24 +22,13 @@ These edits happen in `~/Foundry/`, not this cluster.
 
 These edits happen in `~/Foundry/` (COMMAND scope) and this cluster (Totebox scope).
 
-- [ ] **P2.1** Update `foundry-cluster-manifest-v1` schema docs with `slm_endpoint:` field
-- [ ] **P2.2** Add `slm_endpoint: http://localhost:8011` to all 13 cluster `.agent/manifest.md` files
-      Clusters to update: project-bim, project-bookkeeping, project-command, project-data,
-      project-design, project-editorial, project-gis, project-intelligence, project-knowledge,
-      project-marketing, project-orgcharts, project-proofreader, project-system
-- [ ] **P2.3** Create `slm/` dir in each of 13 clusters:
-      - `slm/MODULE_ID` — the tenant identifier (e.g. `editorial`, `bim`, `gis`, etc.)
-      - `slm/endpoint.txt` — `http://localhost:8011`
-      - `slm/README.md` — one sentence: "SLM routing for this archive via the shared Doorman."
-- [ ] **P2.3b** Create `pairings.yaml` at workspace root (`~/Foundry/pairings.yaml`)
-      One entry per active archive: endpoint, module_id, paired_on, type
-- [ ] **P2.4** Provision `clones/project-source/` (PointSav canonical-tier development archive)
-      - Clone: pointsav-monorepo, pointsav-design-system
-      - Replaces Root sessions in vendor/ for PointSav canonical work
-- [ ] **P2.5** Provision `clones/project-woodfine/` (Woodfine customer-tier development archive)
-      - Clone: woodfine-fleet-deployment
-      - Replaces Root sessions in customer/ for Woodfine work
-- [ ] **P2.6** Update `PROJECT-CLONES.md`: use "Totebox Archive" language, add SLM column (15 archives)
+- [x] **P2.1** Update `foundry-cluster-manifest-v1` schema docs with `slm_endpoint:` field `[closed: 2026-05-14 command@claude-code]`
+- [x] **P2.2** Add `slm_endpoint: http://localhost:8011` to all 13 cluster `.agent/manifest.md` files `[closed: 2026-05-14 command@claude-code]`
+- [x] **P2.3** Create `slm/` dir in each of 13 clusters `[closed: 2026-05-14 command@claude-code]`
+- [x] **P2.3b** Create `pairings.yaml` at workspace root `[closed: 2026-05-14 command@claude-code]`
+- [x] **P2.4** Provision `clones/project-source/` `[closed: 2026-05-14 command@claude-code]`
+- [x] **P2.5** Provision `clones/project-woodfine/` `[closed: 2026-05-14 command@claude-code]`
+- [x] **P2.6** Update `PROJECT-CLONES.md`: use "Totebox Archive" language, add SLM column (15 archives) `[closed: 2026-05-14 command@claude-code]`
 
 ---
 
@@ -55,7 +36,7 @@ These edits happen in `~/Foundry/` (COMMAND scope) and this cluster (Totebox sco
 
 Write code in `pointsav-monorepo/` on branch `cluster/project-orchestration`.
 
-### P3.1 — bin/open-archive.sh
+### P3.1 — bin/open-archive.sh `[closed: 2026-05-14 command@claude-code]`
 
 Shell script at `~/Foundry/bin/open-archive.sh <archive-name>`:
 
@@ -70,7 +51,7 @@ Shell script at `~/Foundry/bin/open-archive.sh <archive-name>`:
 5. Exec: claude --cwd ~/Foundry/clones/<archive>/
 ```
 
-### P3.2 — bin/list-archives.sh
+### P3.2 — bin/list-archives.sh `[closed: 2026-05-14 command@claude-code]`
 
 Shell script at `~/Foundry/bin/list-archives.sh`:
 
@@ -134,6 +115,6 @@ See plan file §"Two-VM transition" for full detail.
 
 ## Key references
 
-- Plan file: `/home/mathew/.claude/plans/before-we-do-that-humming-emerson.md`
+- Plan file: `.agent/plans/totebox-ppn-infrastructure-master-plan.md`
 - Cluster manifest: `.agent/manifest.md`
 - app-orchestration-gis reference impl: `clones/project-gis/pointsav-monorepo/app-orchestration-gis/`

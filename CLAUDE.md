@@ -13,8 +13,9 @@ Last updated: 2026-05-08.
 ## 1. Cluster mission
 
 Implement the three-phase transition from the legacy Master/Root/Task
-session model to the Command/Totebox model. See the plan file at
-`/home/mathew/.claude/plans/before-we-do-that-humming-emerson.md`.
+session model to the Command/Totebox model. Workspace plan at
+`/srv/foundry/.agent/plans/` (operator-private plans were superseded by
+the workspace-tracked plan files in 2026-05).
 
 **Phase 1 — Declare vocabulary (~2 hours):**
 - `CLAUDE.md` §11: Master → Command Session, Task → Totebox Session, Root → eliminated
@@ -62,6 +63,6 @@ commit from this cluster using `bin/commit-as-next.sh`.
 
 ## 4. Key references
 
-- Plan: `/home/mathew/.claude/plans/before-we-do-that-humming-emerson.md`
+- Plan: `.agent/plans/totebox-ppn-infrastructure-master-plan.md`
 - Cluster wiki draft pipeline: `~/Foundry/conventions/cluster-wiki-draft-pipeline.md`
 - TOPIC/GUIDE drafts already staged: `~/Foundry/.agent/drafts-outbound/topic-*.draft.md` + `guide-*.draft.md`
