@@ -1,7 +1,15 @@
 # Open items — project-editorial
 
-> Persistent TODO tracker. Updated at session end. Last updated: 2026-05-20.
+> Persistent TODO tracker. Updated at session end. Last updated: 2026-05-21.
 > Completed items remain here (checked) for one session before archiving to `archive/`.
+
+---
+
+## DONE — 2026-05-21 session
+
+- [x] **Knowledge-platform plan** — built `award-winning-wiki-overhaul.md` (5-track, 7 research agents), then adopted project-knowledge's proposed plan; committed self-contained `KNOWLEDGE-PLATFORM-EDITORIAL-PLAN.md` (`b8c19dfd`)
+- [x] **Cross-check with project-knowledge** — reconciled against `KNOWLEDGE-PLATFORM-VISION.md` rev 4; 2 outbox replies + SITUATION message to Command
+- [x] **Gate 0 ratified** — 5 Lucidity-Protocol-vs-Bloomberg-standard reconciliations
 
 ---
 
@@ -41,7 +49,10 @@
 
 ## PENDING — project-editorial
 
-*(none — all editorial work complete for Phase E prerequisites)*
+- [ ] **Active plan:** `KNOWLEDGE-PLATFORM-EDITORIAL-PLAN.md` — next: A0 (encode the standard into style guides) → D1/D2 (editorial linter + failure-mode registry); E1/E4 are cheap, run first
+- [ ] **A2 HELD** — Top-12 TOPIC rewrites wait for project-knowledge's claim-authoring convention (their Phase 2.4)
+- [ ] **Inbox triage** — 4 pending messages: project-system (capability-ledger + merkle-proofs TOPICs, 6 README drafts), Command (LICENSE artifacts incl. one project-knowledge item)
+- [ ] **Old-plan deletions parked** — execute after the overhaul ships, on operator go-ahead (delete set in `KNOWLEDGE-PLATFORM-EDITORIAL-PLAN.md` §9)
 
 ---
 
