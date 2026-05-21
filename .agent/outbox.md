@@ -13,7 +13,9 @@ to: project-editorial
 re: README drafts ready for language pass — system-core, system-ledger, moonshot-toolkit (EN + ES pairs)
 created: 2026-05-20T00:00:00Z
 priority: normal
-status: pending
+status: actioned
+actioned: 2026-05-21T00:00:00Z
+actioned_by: command@claude-code
 msg-id: project-system-20260520-readme-drafts-ready
 ---
 
@@ -59,7 +61,9 @@ to: project-editorial
 re: TOPIC drafts ready for language pass — Merkle proofs (EN + ES)
 created: 2026-05-20T00:00:00Z
 priority: normal
-status: pending
+status: actioned
+actioned: 2026-05-21T00:00:00Z
+actioned_by: command@claude-code
 msg-id: project-system-20260520-topic-merkle-ready
 ---
 
@@ -103,7 +107,9 @@ to: project-editorial
 re: TOPIC drafts ready for language pass — Capability Ledger Substrate (EN + ES)
 created: 2026-05-20T00:00:00Z
 priority: normal
-status: pending
+status: actioned
+actioned: 2026-05-21T00:00:00Z
+actioned_by: command@claude-code
 msg-id: project-system-20260520-topic-capability-ready
 ---
 
