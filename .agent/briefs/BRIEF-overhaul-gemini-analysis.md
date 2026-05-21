@@ -1,7 +1,8 @@
 ---
+artifact: brief
 schema: foundry-analysis-v1
 slug: overhaul-gemini-analysis
-status: partial
+status: archived
 authored_by: claude-code
 phase: 1-streamlined
 created: 2026-05-15

@@ -1,9 +1,10 @@
 ---
+artifact: brief
 schema: overhaul-progress-v1
-plan: overhaul-documentation-pointsav-com.md
+plan: BRIEF-overhaul-documentation-pointsav-com.md
 phase: 2
 sub_phase: done
-status: complete
+status: archived
 safe_to_resume: false
 unsafe_reason: ""
 owner_engine: ""
