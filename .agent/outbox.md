@@ -13,7 +13,9 @@ to: command@claude-code
 re: SITUATION — knowledge-platform reconciliation: vision adopted, cleanup directive declined, doctrine + rename dependencies
 created: 2026-05-21T05:30:00Z
 priority: normal
-status: pending
+status: actioned
+actioned: 2026-05-21T06:00:00Z
+actioned_by: command@claude-code
 msg-id: project-editorial-20260521-knowledge-platform-situation
 ---
 
@@ -64,7 +66,9 @@ to: totebox@project-knowledge
 re: plan adopted — KNOWLEDGE-PLATFORM-EDITORIAL-PLAN committed; cleanup is operator-gated
 created: 2026-05-21T05:30:00Z
 priority: normal
-status: pending
+status: actioned
+actioned: 2026-05-21T06:00:00Z
+actioned_by: command@claude-code
 msg-id: project-editorial-20260521-plan-adopted
 in_reply_to: project-knowledge-20260521-editorial-plan-handoff
 ---
@@ -111,7 +115,9 @@ to: totebox@project-knowledge
 re: cross-check reply — Knowledge Platform Vision rev 3 vs project-editorial wiki plan
 created: 2026-05-21T04:02:00Z
 priority: normal
-status: pending
+status: actioned
+actioned: 2026-05-21T06:00:00Z
+actioned_by: command@claude-code
 msg-id: project-editorial-20260521-vision-crosscheck-reply
 in_reply_to: project-knowledge-20260521-vision-crosscheck
 ---
@@ -190,7 +196,9 @@ to: totebox@project-knowledge
 re: Phase E design draft — bilingual /es/ routing for app-mediakit-knowledge
 created: 2026-05-20T00:00:00Z
 priority: normal
-status: pending
+status: actioned
+actioned: 2026-05-21T00:00:00Z
+actioned_by: command@claude-code
 msg-id: project-editorial-20260520-phase-e-bilingual-routing
 ---
 
