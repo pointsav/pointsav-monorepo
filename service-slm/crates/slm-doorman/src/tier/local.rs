@@ -63,7 +63,7 @@ impl LocalTierClient {
             Err(_) => return false,
         };
         match resp.json::<LlamaHealthResponse>().await {
-            Ok(h) => h.slots_idle.map_or(false, |n| n == 0),
+            Ok(h) => h.slots_idle == Some(0),
             Err(_) => false,
         }
     }
