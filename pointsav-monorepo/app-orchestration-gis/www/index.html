@@ -1100,6 +1100,10 @@
         if (map.getSource('anchors')) {
             map.getSource('anchors').setData({ type: 'FeatureCollection', features: [] });
         }
+        if (map.getSource('cluster-centroid-src')) {
+            map.getSource('cluster-centroid-src').setData({ type: 'FeatureCollection', features: [] });
+            if (map.getLayer('cluster-centroid')) map.setLayoutProperty('cluster-centroid', 'visibility', 'none');
+        }
         const region = REGION_SUMMARY[currentRegion];
         const s = region[`${currentRadius}km`];
         document.getElementById('inspector').innerHTML = `
@@ -1659,6 +1663,11 @@
             type: 'geojson',
             data: { type: 'FeatureCollection', features: [] },
         });
+        // Small centroid marker — shown in retail mode at the ring centre
+        map.addSource('cluster-centroid-src', {
+            type: 'geojson',
+            data: { type: 'FeatureCollection', features: [] },
+        });
 
         // Load cluster data into memory: nodes GeoJSON source + ring generation + BentoBox fallback
         fetch('data/clusters-meta.json')
@@ -1737,6 +1746,21 @@
                 'text-color': '#ffffff',
                 'text-halo-color': '#1E40AF',
                 'text-halo-width': 2,
+            },
+        });
+
+        // Cluster centroid — small pin dot visible in retail mode at the ring centre
+        map.addLayer({
+            id: 'cluster-centroid', type: 'circle',
+            source: 'cluster-centroid-src',
+            layout: { visibility: 'none' },
+            paint: {
+                'circle-radius': ['interpolate', ['linear'], ['zoom'], 9, 4, 14, 6],
+                'circle-color': ['match', ['get', 'tier'],
+                    1, '#164679', 2, '#54924E', 3, '#EAB308', '#991B1B'],
+                'circle-stroke-width': 2,
+                'circle-stroke-color': ['match', ['get', 'tier'], 3, '#111827', '#FFFFFF'],
+                'circle-opacity': 1.0,
             },
         });
 
@@ -2269,16 +2293,30 @@
             overviewActive = false;
             selectedClusterId = p.cluster_id || null;
 
-            showClusterDetail(p, coords);
-            // If catchment was active for a previous cluster, update it to the new one
-            if (catchmentActive && selectedClusterId) {
-                showCatchmentForCluster(selectedClusterId);
+            // Derive ring radius from tier: T1 Regional = 1km (tight), all others = 3km
+            const v3tier = p.tier ?? 4;
+            const autoKm = v3tier === 1 ? 1 : 3;
+            if (autoKm !== currentRadius) {
+                currentRadius = autoKm;
+                document.querySelectorAll('.radius-btn').forEach(b =>
+                    b.classList.toggle('active', b.textContent.trim().startsWith(String(autoKm))));
             }
 
-            // Ring centre is not individually marked — anchor store is visible via all-locations
-            map.getSource('anchors').setData({ type: 'FeatureCollection', features: [] });
+            showClusterDetail(p, coords);
+            if (catchmentActive && selectedClusterId) showCatchmentForCluster(selectedClusterId);
 
-            // Switch to Retail Level: hide bubbles, show all retailers + ALL cluster rings
+            // Mark ring centre with a small tier-coloured dot
+            map.getSource('anchors').setData({ type: 'FeatureCollection', features: [] });
+            if (map.getSource('cluster-centroid-src')) {
+                map.getSource('cluster-centroid-src').setData({
+                    type: 'FeatureCollection',
+                    features: [{ type: 'Feature', geometry: { type: 'Point', coordinates: coords },
+                                 properties: { tier: v3tier } }],
+                });
+                map.setLayoutProperty('cluster-centroid', 'visibility', 'visible');
+            }
+
+            // Switch to Retail Level: hide bubbles, show individual stores + rings
             map.setLayoutProperty('nodes', 'visibility', 'none');
             if (map.getLayer('nodes-halo')) map.setLayoutProperty('nodes-halo', 'visibility', 'none');
             map.setLayoutProperty('all-locations', 'visibility', 'visible');
@@ -2287,8 +2325,8 @@
             if (map.getLayer('proximity-merged-label')) map.setLayoutProperty('proximity-merged-label', 'visibility', 'visible');
             updateProximityRings();
 
-            // Fly to cluster at zoom 14 so the ring is clearly visible and neighbours are in frame
-            const targetZoom = Math.max(map.getZoom(), 14);
+            // Fly to cluster — zoom in enough to see the ring clearly
+            const targetZoom = Math.max(map.getZoom(), autoKm === 1 ? 15 : 14);
             map.flyTo({ center: coords, zoom: targetZoom, duration: 1200, essential: true });
         }
         // Expose both functions on window so injected panel onclick handlers can call them
