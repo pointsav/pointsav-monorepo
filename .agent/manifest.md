@@ -6,9 +6,9 @@ renamed_from: project-language
 renamed: 2026-05-05
 created: 2026-04-27
 state: active
-slm_endpoint: http://localhost:8011
+slm_endpoint: http://localhost:9080
 module_id: editorial
-editorial_gateway_role: true       # this cluster IS service-language per workspace v0.1.31 (Doctrine claim #35); refines bulk drafts from Master/Root/Task drafts-outbound input ports per cluster-wiki-draft-pipeline.md
+editorial_gateway_role: true       # this cluster performs the service-language gateway role per workspace v0.1.31 (Doctrine claim #35); refines bulk drafts from Master/Root/Task drafts-outbound input ports per cluster-wiki-draft-pipeline.md. service-language as a named crate is leg-pending — not scaffolded; the gateway role is performed by this cluster's sessions.
 
 tetrad:                            # upgraded from `triad:` per Doctrine v0.0.10 / claim #37 (Project Tetrad Discipline, ratified 2026-04-28); supersedes project-triad-discipline.md
   vendor:
@@ -16,6 +16,7 @@ tetrad:                            # upgraded from `triad:` per Doctrine v0.0.10
       path: pointsav-monorepo/
       upstream: vendor/pointsav-monorepo
       focus: service-disclosure/ (NEW project — TOPIC/GUIDE/README schemas + CFG validators + genre template registry + frontmatter validators)
+      leg_status: leg-pending           # service-disclosure crate not yet scaffolded (2026-05-21); D3 genre templates staged at clones/project-editorial/.agent/editorial-qa/templates/ pending the crate
     - repo: content-wiki-documentation
       path: content-wiki-documentation/
       upstream: vendor/content-wiki-documentation
@@ -27,7 +28,7 @@ tetrad:                            # upgraded from `triad:` per Doctrine v0.0.10
     - repo: factory-release-engineering
       path: factory-release-engineering/
       upstream: vendor/factory-release-engineering
-      focus: read-mode + propose-via-outbox; project-language Task may READ governance content as wiki source and SUGGEST edits via outbox; never commits directly. Master coordinates governance edits via §8 admin-tier procedure.
+      focus: read-mode + propose-via-outbox; project-editorial Task may READ governance content as wiki source and SUGGEST edits via outbox; never commits directly. Master coordinates governance edits via §8 admin-tier procedure.
       access_mode: read-only-write-via-outbox-handoff
   customer:
     - fleet_deployment_repo: customer/woodfine-fleet-deployment
@@ -49,7 +50,7 @@ tetrad:                            # upgraded from `triad:` per Doctrine v0.0.10
   wiki:                                                # fourth leg per Doctrine v0.0.10 / claim #37 (Project Tetrad Discipline, ratified 2026-04-28)
     - repo: vendor/content-wiki-documentation
       drafts_via: cross-cluster sweep                  # THIS cluster IS the editorial gateway — refines drafts from all three input ports (Master/Root/Task drafts-outbound), not just self-staged
-      gateway: project-language Task (this cluster)
+      gateway: project-editorial Task (this cluster)
       role: refines bulk drafts from Master + Root + Task drafts-outbound input ports per cluster-wiki-draft-pipeline.md (Doctrine claim #35); also self-stages drafts about its own substrate-explainer subjects
       planned_topics:
         - topic-trajectory-substrate                   # Doctrine claim #19; referenced everywhere in apprenticeship prose
@@ -184,7 +185,7 @@ design_extraction_rules:
     description: Mandates routing of generic design tokens to pointsav-design-system and branded tokens to respective media asset repositories.
 ---
 
-# Cluster manifest — project-language
+# Cluster manifest — project-editorial
 
 Multi-clone N=5 cluster (sixth multi-clone cluster overall). Five sub-clones
 in one cluster directory; one Task session writes to one `.git/index` at a
@@ -222,7 +223,7 @@ forkable practice. Owns:
 5. **`~/Foundry/conventions/adapter-composition.md`** — composition algebra
 6. **`~/Foundry/conventions/system-substrate-doctrine.md`** — kernel
    substrate beneath all this
-7. **Cluster manifest** at `.claude/manifest.md` — your scope
+7. **Cluster manifest** at `.agent/manifest.md` — your scope
 8. **`~/Foundry/CLAUDE.md`** §6 (Bloomberg-grade language standard + BCSC
    posture) + §11 (action matrix) + §13 (root-files-discipline) + §14
    (TOPIC vs GUIDE)
@@ -232,6 +233,15 @@ forkable practice. Owns:
 
 `cluster/project-language` in each sub-clone (created 2026-04-27 from local
 upstream `main`).
+
+> **Drift note (D6, 2026-05-21).** The cluster was renamed project-language →
+> project-editorial on 2026-05-05. Identity references in this manifest are
+> updated. Two artefact identifiers deliberately retain the pre-rename name and
+> are *not* propagated, because the underlying artefacts were not renamed:
+> the sub-clone branches (`cluster/project-language`) and the adapter names
+> (`cluster-project-language` in `adapter_routing:`). Additionally, the
+> `content-wiki-documentation` sub-clone commits editorial work directly on
+> `main` rather than a cluster branch. Surfaced, not propagated.
 
 Engineering-tier sub-clones (pointsav-monorepo, content-wiki-documentation,
 pointsav-fleet-deployment): `origin` admin alias + `origin-staging-j` +
@@ -246,31 +256,31 @@ per CLAUDE.md §2; Task does NOT push here. Read-mode + propose-via-outbox.
 
 Enabled. L1 capture hook installed in all 5 sub-clones at provisioning.
 Every commit on `cluster/project-language` enters
-`~/Foundry/data/training-corpus/engineering/project-language/<sha>.jsonl`.
+`~/Foundry/data/training-corpus/engineering/project-editorial/<sha>.jsonl`.
 
 ## Cross-cluster coordination
 
 - **`project-proofreader` Task** consumes `service-disclosure/` Rust crate
-  via Cargo dependency. When `project-language` ships new schemas /
+  via Cargo dependency. When `project-editorial` ships new schemas /
   templates / CFG, project-proofreader picks them up via version bump. No
   mailbox handoff needed for routine version bumps; mailbox handoff for
   breaking changes (semver MAJOR).
 - **`project-knowledge` Task** owns the wiki engine (`app-mediakit-knowledge`)
-  that renders content this cluster authors. If project-language needs
+  that renders content this cluster authors. If project-editorial needs
   engine support (e.g., `category:` frontmatter parsing for by-category
   panels, `TOPIC-HOME.md` as home), surface to Master via outbox; Master
   relays to project-knowledge Task.
 - **`project-slm` Task** owns `service-content` (data substrate) and
-  `service-slm` (Doorman). project-language's apprenticeship corpus feeds
+  `service-slm` (Doorman). project-editorial's apprenticeship corpus feeds
   into the per-tenant adapter training pipeline that runs through
   service-slm. Cross-cluster contract is stable; no immediate coordination
   needed.
 
 ## Mailbox
 
-- Inbox: `~/Foundry/clones/project-language/.claude/inbox.md`
-- Outbox: `~/Foundry/clones/project-language/.claude/outbox.md`
-- Trajectory log: `~/Foundry/clones/project-language/.claude/trajectory-log.md`
+- Inbox: `~/Foundry/clones/project-editorial/.agent/inbox.md`
+- Outbox: `~/Foundry/clones/project-editorial/.agent/outbox.md`
+- Trajectory log: `~/Foundry/clones/project-editorial/.agent/trajectory-log.md`
 
 ---
 
