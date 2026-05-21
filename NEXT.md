@@ -44,6 +44,17 @@ under `.agent/plans/archive/`.
 
 ## Currently open
 
+### BLOCKER — stale `cluster/project-knowledge` branch (Stage-6 landmine)
+
+- [ ] **Escalated to Command Session** 2026-05-21 (outbox msg-id
+  `project-knowledge-20260521-cluster-branch-topology-drift`). Branch
+  `cluster/project-knowledge` diverged from `main` at merge-base `7cf4d6eb`
+  (2026-05-03): `main` is 374 commits ahead, the cluster branch only 33
+  (mailbox/ops). A Stage-6 promote of the cluster branch as-is would revert
+  374 canonical commits. Command must decide: delete the stale branch, or
+  reconcile it to `main`. **`KNOWLEDGE-PLATFORM-PLAN.md` Phase 1 is paused**
+  until the canonical working branch is confirmed. [2026-05-21 totebox@claude-code]
+
 ### Layout hygiene — defect closures queued
 
 Rule source: `.claude/rules/repo-layout.md` (introduced 2026-04-23).
