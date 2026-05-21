@@ -105,12 +105,17 @@ def split_frontmatter(text):
 
 
 def strip_code_blocks(body):
-    """Remove fenced and inline code so code content is not prose-linted.
+    """Remove fenced code, inline code, and HTML comments before prose checks.
 
     A term inside a code span is being *mentioned* (e.g. a style guide
     quoting a banned word), not *used* — it must not trip the prose checks.
+    HTML comments — including claim-authoring markers (`<!--claim ...-->`,
+    claim-authoring-convention §3) — are metadata, not rendered prose: they
+    are stripped so they neither count toward sentence length nor scan for
+    banned vocabulary.
     """
     body = re.sub(r"```.*?```", "", body, flags=re.S)
+    body = re.sub(r"<!--.*?-->", "", body, flags=re.S)
     body = re.sub(r"`[^`\n]+`", "", body)
     return body
 
