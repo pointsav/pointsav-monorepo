@@ -38,6 +38,17 @@ Schedule with: `echo "cd <dir> && python3 <script> > /tmp/<log>.log 2>&1" | at 0
 
 ---
 
+## RESUME HERE — Next session start
+
+### R1 — Bubble/ring overlap bug (unresolved as of 2026-05-21 end)
+- **Symptom:** At z≥9 (retail level), proximity rings appear but cluster bubble nodes do NOT disappear
+- **Confirmed:** Server sends `no-cache` headers; browser is getting fresh file
+- **Latest fix deployed:** `setRetailLevel()` now sets both `visibility:'none'` AND `circle-opacity:0` on nodes/nodes-halo before showing rings
+- **Next step:** User tests after hard-refresh (Ctrl+Shift+R). If still broken, open F12 → Console and check for JS errors during zoom-in
+- **Code location:** `setRetailLevel()` ~line 1149; `showOverview()` ~line 1076; `drillIntoCluster()` ~line 2285
+
+---
+
 ## PENDING — Open decisions (operator sign-off required)
 
 ### D1 — Path C tier composition (T1 qualification)
@@ -196,3 +207,4 @@ All delivered as new fields in clusters-meta.json, not tile layers. Run `synthes
 | TIER_COLORS migrated to Woodfine tokens (#164679/#54924E/#EAB308/#991B1B) | session (2026-05-21) |
 | BentoBox badge 42px→13px compact chip; ranking → Top 400 NA/EU format | session (2026-05-21) |
 | Sim popup removed; sim clicks route to #inspector panel | session (2026-05-21) |
+| Zoom transition: removed maxzoom:9 (clean zoomend swap); opacity+visibility dual-kill on nodes | session (2026-05-21) |

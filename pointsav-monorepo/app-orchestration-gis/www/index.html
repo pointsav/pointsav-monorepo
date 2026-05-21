@@ -1088,10 +1088,12 @@
         if (map.getSource('proximity-merged-label-src')) map.getSource('proximity-merged-label-src').setData({ type: 'FeatureCollection', features: [] });
         // Restore Co-location Level layers (V3: tier is radius-independent)
         if (map.getLayer('nodes')) {
+            map.setPaintProperty('nodes', 'circle-opacity', 0.88);
             map.setLayoutProperty('nodes', 'visibility', 'visible');
             map.setFilter('nodes', ['<', ['get', 'tier'], 4]);
         }
         if (map.getLayer('nodes-halo')) {
+            map.setPaintProperty('nodes-halo', 'circle-opacity', 0.10);
             map.setLayoutProperty('nodes-halo', 'visibility', 'visible');
             map.setFilter('nodes-halo', ['==', ['get', 'tier'], 1]);
         }
@@ -1154,16 +1156,21 @@
         selectedClusterCoords = null;
         setNavContext(REGIONS[currentRegion]?.label || 'Overview', flyToOverview, 'Retail View');
 
-        // Rings draw from in-memory clusterMeta — instant, no tile I/O
+        // Hide bubbles: layout (tile skip) + paint (GPU) for belt-and-suspenders reliability
+        if (map.getLayer('nodes')) {
+            map.setLayoutProperty('nodes', 'visibility', 'none');
+            map.setPaintProperty('nodes', 'circle-opacity', 0);
+        }
+        if (map.getLayer('nodes-halo')) {
+            map.setLayoutProperty('nodes-halo', 'visibility', 'none');
+            map.setPaintProperty('nodes-halo', 'circle-opacity', 0);
+        }
+
+        // Show rings — all visibility changes batch into same MapLibre render frame
         if (map.getLayer('proximity-fill')) map.setLayoutProperty('proximity-fill', 'visibility', 'visible');
         if (map.getLayer('proximity-line')) map.setLayoutProperty('proximity-line', 'visibility', 'visible');
         if (map.getLayer('proximity-merged-label')) map.setLayoutProperty('proximity-merged-label', 'visibility', 'visible');
         updateProximityRings();
-
-        // Hide bubbles immediately — rings are already painted, no blank gap
-        // (nodes also has maxzoom:RETAIL_ZOOM_THRESHOLD as a renderer-level backstop)
-        if (map.getLayer('nodes'))      map.setLayoutProperty('nodes',      'visibility', 'none');
-        if (map.getLayer('nodes-halo')) map.setLayoutProperty('nodes-halo', 'visibility', 'none');
 
         // Reveal individual store dots — pre-warmed at z>=RETAIL_PREFETCH_ZOOM
         if (map.getLayer('all-locations')) {
@@ -1807,7 +1814,6 @@
         map.addLayer({
             id: 'nodes-halo', type: 'circle',
             source: 'data',
-            maxzoom: RETAIL_ZOOM_THRESHOLD,
             filter: ['==', ['get', 'tier'], 1],
             paint: {
                 'circle-radius': ['interpolate', ['linear'], ['zoom'], 3, 12, 14, 34],
@@ -1821,7 +1827,6 @@
         map.addLayer({
             id: 'nodes', type: 'circle',
             source: 'data',
-            maxzoom: RETAIL_ZOOM_THRESHOLD,
             layout: { visibility: 'visible' },
             filter: ['<', ['get', 'tier'], 4],
             paint: {
@@ -2312,9 +2317,13 @@
                 map.setLayoutProperty('cluster-centroid', 'visibility', 'visible');
             }
 
-            // Switch to Retail Level: hide bubbles, show individual stores + rings
+            // Switch to Retail Level: hide bubbles (layout + paint for reliability)
             map.setLayoutProperty('nodes', 'visibility', 'none');
-            if (map.getLayer('nodes-halo')) map.setLayoutProperty('nodes-halo', 'visibility', 'none');
+            map.setPaintProperty('nodes', 'circle-opacity', 0);
+            if (map.getLayer('nodes-halo')) {
+                map.setLayoutProperty('nodes-halo', 'visibility', 'none');
+                map.setPaintProperty('nodes-halo', 'circle-opacity', 0);
+            }
             map.setLayoutProperty('all-locations', 'visibility', 'visible');
             map.setLayoutProperty('proximity-fill', 'visibility', 'visible');
             map.setLayoutProperty('proximity-line', 'visibility', 'visible');
