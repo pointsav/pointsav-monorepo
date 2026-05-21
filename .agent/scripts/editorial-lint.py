@@ -231,9 +231,13 @@ def lint_file(path, banned):
     else:
         warns.append("unrecognized schema: %r (generic lint only)" % schema)
 
-    for n in find_body_h1(body):
-        errors.append("body H1 at body line %d — title comes from frontmatter "
-                       "(content-contract §5.2)" % n)
+    # Body H1 is a published-content rule (content-contract §5.2 — the title
+    # comes from frontmatter). A foundry-draft-v1 working document legitimately
+    # carries a document title; the H1 is stripped when the draft is published.
+    if schema != "foundry-draft-v1":
+        for n in find_body_h1(body):
+            errors.append("body H1 at body line %d — title comes from "
+                           "frontmatter (content-contract §5.2)" % n)
 
     for term, count in banned_hits(body, banned):
         errors.append("banned vocabulary: %r x%d" % (term, count))
