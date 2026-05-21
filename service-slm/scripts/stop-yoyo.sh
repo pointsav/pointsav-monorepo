@@ -78,6 +78,14 @@ if [[ "${SNAPSHOT_BEFORE_STOP}" == "true" ]]; then
 fi
 
 # ── Stop ─────────────────────────────────────────────────────────────────────
+# G17: tag the stop as deliberate (operator) BEFORE stopping, so the Doorman
+# idle monitor reads `last-stop-reason=operator` and treats the VM as sticky —
+# a deliberate stop must never be silently auto-restarted.
+gcloud compute instances add-metadata "${INSTANCE}" \
+    --project="${PROJECT}" --zone="${ZONE}" \
+    --metadata=last-stop-reason=operator >/dev/null 2>&1 \
+    || log "WARN: could not set last-stop-reason metadata (idle monitor may auto-restart)."
+
 log "Stopping ${INSTANCE} in ${PROJECT}/${ZONE} ..."
 err=$(gcloud compute instances stop "${INSTANCE}" \
     --project="${PROJECT}" --zone="${ZONE}" 2>&1)
