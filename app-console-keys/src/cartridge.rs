@@ -5,6 +5,7 @@ use crate::fkey::FKey;
 
 pub enum CartridgeAction {
     None,
+    Consumed,
     Quit,
 }
 

@@ -101,32 +101,34 @@ impl AppConsoleKeys {
     }
 
     pub fn handle_event(&mut self, event: &Event) -> ChassisAction {
+        // F12 always routes to The Anchor (SYS-ADR-10) — unconditional
         if let Event::Key(key) = event {
-            // Global quit
+            if key.code == KeyCode::F(12) {
+                self.active = FKey::F12;
+                return ChassisAction::None;
+            }
+        }
+
+        // Delegate to active cartridge first; only handle globally if not consumed
+        if let Some(c) = self.cartridges.get_mut(&self.active) {
+            match c.handle_event(event) {
+                CartridgeAction::Consumed => return ChassisAction::None,
+                CartridgeAction::Quit => return ChassisAction::Quit,
+                CartridgeAction::None => {}
+            }
+        }
+
+        // Cartridge did not consume — apply chassis-level bindings
+        if let Event::Key(key) = event {
             if key.code == KeyCode::Char('q')
                 || (key.code == KeyCode::Char('c')
                     && key.modifiers.contains(KeyModifiers::CONTROL))
             {
                 return ChassisAction::Quit;
             }
-
-            // F12 = The Anchor (SYS-ADR-10): always intercept regardless of active cartridge
-            if key.code == KeyCode::F(12) {
-                self.active = FKey::F12;
-                return ChassisAction::None;
-            }
-
-            // Any other F-key switches the active cartridge
             if let Some(fkey) = FKey::from_keycode(key.code) {
                 self.active = fkey;
                 return ChassisAction::None;
-            }
-        }
-
-        // Delegate remaining events to the active cartridge
-        if let Some(c) = self.cartridges.get_mut(&self.active) {
-            if let CartridgeAction::Quit = c.handle_event(event) {
-                return ChassisAction::Quit;
             }
         }
 
