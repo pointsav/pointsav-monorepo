@@ -1,8 +1,36 @@
 # NEXT.md — service-slm
 
-> Last updated: 2026-05-20 (Sprint 3 slm-mcp-server + Sprint 2a/2b native Anthropic + Responses API)
+> Last updated: 2026-05-21 (is_busy fix + deploy + local flow verified + perf tuning)
 > Read at session start. Update before session end so the next
 > session knows where to pick up.
+
+---
+
+## SESSION 2026-05-21 — IS_BUSY FIX + DEPLOY + LOCAL FLOW VERIFIED
+
+**Shipped:**
+- [x] `fix(slm)`: `is_busy()` always-true when llama-server omits `slots_idle` — `Option<u32>` fix + new test. Commit `6a80c5e3`. 125 slm-doorman tests pass.
+- [x] Built + deployed `slm-doorman-server` and `slm-mcp-server` release binaries.
+- [x] Wired env vars: `SERVICE_CONTENT_ENDPOINT`, `SLM_SHIM_TRAINING_CAPTURE=true`, `SLM_AUDIT_DIR=/var/lib/local-doorman/audit`.
+- [x] Fixed `ReadWritePaths` + created audit dir.
+- [x] End-to-end verified: `/v1/messages` → Tier A OLMo → Anthropic response format ✅.
+- [x] Training capture confirmed live (shadow brief enqueued on commit hook).
+- [x] Perf tuning: `--threads 6 --threads-batch 8 CPUQuota=600%` applied to `local-slm.service` (system file). Baseline 1.71 tok/s → 1.95 tok/s (+14%). Memory BW is bottleneck. Plan: `.agent/plans/olmo-performance-tuning.md`.
+
+**IMMEDIATE — Command Session:**
+- [ ] Stage 6 promote (~43 commits). **Rebase required first** — see inbox message `command-20260520-stage6-rebase-required`. Totebox must: commit external.rs (already done), `git rebase origin/main`, push staging mirrors, then notify outbox.
+- [ ] Sync `~/Foundry/infrastructure/local-slm/` with new `--threads 6 --threads-batch 8` + `CPUQuota=600%` changes.
+- [ ] `bin/sync-local.sh --all` after Stage 6.
+
+**IMMEDIATE — Operator:**
+- [ ] Commercial API key (ANTHROPIC_API_KEY) when ready to enable Tier C. Local-only testing first (deliberate).
+- [ ] `ANTHROPIC_BASE_URL` discussion: route Claude Code through Doorman? OLMo 7B too slow for coding — discuss.
+- [ ] GCP Billing Budget (see below).
+
+**Performance — next steps:**
+- [ ] Try `--flash-attn on` in `local-slm.service` (currently `auto`).
+- [ ] Evaluate IQ4_XS quantization for ~1.2x speed gain.
+- [ ] mistralrs-server as D43 target (SLM-STACK spec) — better AVX2 kernels.
 
 ---
 

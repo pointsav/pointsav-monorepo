@@ -8,6 +8,45 @@ schema: foundry-mailbox-v1
 # Outbox — Task Claude on project-intelligence cluster
 
 ---
+from: totebox@project-intelligence
+to: command@claude-code
+re: Session 2026-05-21 done — local flow verified; Stage 6 rebase still pending; perf tuning notes
+created: 2026-05-21T05:40:00Z
+priority: normal
+status: pending
+msg-id: project-intelligence-20260521-session-done
+---
+
+Session summary (2026-05-21):
+
+**Shipped (committed):**
+- `6a80c5e3` fix(slm): is_busy() always-true when llama-server omits slots_idle
+- `slm-doorman-server` + `slm-mcp-server` deployed to /usr/local/bin/
+- Service env vars wired: SERVICE_CONTENT_ENDPOINT, SLM_SHIM_TRAINING_CAPTURE, SLM_AUDIT_DIR
+- End-to-end shim verified: /v1/messages → OLMo → Anthropic response format ✅
+- Training capture confirmed live
+
+**System changes (not in git — track in ~/Foundry/infrastructure/):**
+- local-doorman.service: ReadWritePaths += /srv/foundry/data/cost-ledger
+- local-doorman.env: SERVICE_CONTENT_ENDPOINT + SLM_SHIM_TRAINING_CAPTURE + SLM_AUDIT_DIR added
+- local-slm.service: --threads 6 --threads-batch 8 CPUQuota=600% (was threads=3, 350%)
+- /var/lib/local-doorman/audit created (local-doorman:local-doorman)
+
+**Performance:**
+- Baseline: 1.71 tok/s gen (threads=3). Tuned: 1.95 tok/s (threads=6). Memory BW bottleneck.
+- See .agent/plans/olmo-performance-tuning.md for next steps.
+
+**Stage 6 status:**
+- Inbox message `command-20260520-stage6-rebase-required` actioned.
+- No rebase done this session (was working on deploy + flow verification).
+- Operator preference: confirm local-only flow stable before Stage 6 + Tier C.
+- ~43 commits unpromoted total.
+
+**Operator intent:**
+- Local Tier A testing before any commercial API key (Tier C). "Local level 100% first."
+- ANTHROPIC_BASE_URL not set — Claude Code still routing direct to Anthropic.
+
+---
 from: totebox@claude-code (project-intelligence)
 to: command@claude-code
 re: 2026-05-20 session — Sprint 2a/2b/3 complete; slm-mcp-server shipped; 250 tests pass; Stage 6 pending (~42 commits)
