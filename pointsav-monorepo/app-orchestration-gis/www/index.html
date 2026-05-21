@@ -1131,6 +1131,9 @@
                     <span class="lc-dot" style="background:#e5e7eb"></span>Catchment Areas
                     <span class="lc-planned">Planned</span>
                 </div>
+                <button class="lc-btn" id="lc-sim-ab" onclick="toggleSimLayer(this)" style="display:none">
+                    <span class="lc-dot" style="background:linear-gradient(135deg,#b45309 50%,#22C55E 50%)"></span>DBSCAN Sim (AB)
+                </button>
             </div>
             <div style="padding:16px 0 4px;text-align:center;font-size:11px;color:var(--text-muted);font-style:italic;">
                 Select a cluster node to inspect
@@ -1374,6 +1377,14 @@
         const newVis  = (current === 'visible') ? 'none' : 'visible';
         map.setLayoutProperty(layerId, 'visibility', newVis);
         btn.classList.toggle('lc-active', newVis === 'visible');
+    }
+
+    function toggleSimLayer(btn) {
+        const on = !btn.classList.contains('lc-active');
+        ['sim-ab-old', 'sim-ab-new', 'sim-ab-labels'].forEach(id => {
+            if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', on ? 'visible' : 'none');
+        });
+        btn.classList.toggle('lc-active', on);
     }
 
     // ── Adaptive zoom helper (Item 5) ────────────────────────────────
@@ -1997,6 +2008,84 @@
                 'heatmap-opacity': ['interpolate', ['linear'], ['zoom'], 6, 0.7, 14, 0.8],
             },
         }, 'proximity-fill');
+
+        // ── DBSCAN simulation overlay (Alberta) ─────────────────────────────────
+        fetch('data/sim-ab-dbscan.geojson')
+            .then(r => r.ok ? r.json() : null)
+            .then(gj => {
+                if (!gj) return;
+                map.addSource('sim-ab-src', { type: 'geojson', data: gj });
+                // OLD: amber semi-transparent circles at anchor pins
+                map.addLayer({
+                    id: 'sim-ab-old', type: 'circle',
+                    source: 'sim-ab-src',
+                    filter: ['==', ['get', 'kind'], 'old'],
+                    layout: { visibility: 'none' },
+                    paint: {
+                        'circle-radius': ['interpolate', ['linear'], ['zoom'], 6, 5, 12, 12],
+                        'circle-color': '#b45309',
+                        'circle-opacity': 0.40,
+                        'circle-stroke-width': 1.5,
+                        'circle-stroke-color': '#78350f',
+                        'circle-stroke-opacity': 0.55,
+                    },
+                });
+                // NEW: coloured circles at DBSCAN centroids (green=upgraded, slate=same, rose=down, violet=new)
+                map.addLayer({
+                    id: 'sim-ab-new', type: 'circle',
+                    source: 'sim-ab-src',
+                    filter: ['==', ['get', 'kind'], 'new'],
+                    layout: { visibility: 'none' },
+                    paint: {
+                        'circle-radius': ['interpolate', ['linear'], ['zoom'], 6, 8, 12, 18],
+                        'circle-color': ['get', 'colour'],
+                        'circle-opacity': 0.85,
+                        'circle-stroke-width': 1.5,
+                        'circle-stroke-color': '#0b1220',
+                        'circle-stroke-opacity': 1.0,
+                    },
+                });
+                // Tier label on new clusters at zoom ≥ 9
+                map.addLayer({
+                    id: 'sim-ab-labels', type: 'symbol',
+                    source: 'sim-ab-src',
+                    filter: ['==', ['get', 'kind'], 'new'],
+                    minzoom: 9,
+                    layout: {
+                        visibility: 'none',
+                        'text-field': ['concat', 'T', ['to-string', ['get', 'tier']]],
+                        'text-size': 10,
+                        'text-offset': [0, -2.2],
+                        'text-anchor': 'bottom',
+                        'text-font': ['Noto Sans Regular'],
+                    },
+                    paint: { 'text-color': '#e2e8f0', 'text-halo-color': '#0b1220', 'text-halo-width': 1.5 },
+                });
+                // Click → simple popup (not full bento — sim data only)
+                ['sim-ab-new', 'sim-ab-old'].forEach(layerId => {
+                    map.on('click', layerId, e => {
+                        const p = e.features[0].properties;
+                        const body = p.kind === 'new'
+                            ? `<b>${p.tier_label} (T${p.tier})</b> — ${p.prox}<br>` +
+                              `Chains: ${p.chains}<br>` +
+                              `Delta: <b>${p.delta}</b>${p.old_tier ? ` (was T${p.old_tier})` : ''}` +
+                              (p.shift_km ? `<br>Centre shift: ${p.shift_km} km` : '') +
+                              `<br><span style="color:#888;font-size:10px">NEW DBSCAN centroid</span>`
+                            : `<b>OLD T${p.tier} · ${p.anchor}</b><br>` +
+                              `Chains: ${p.chains}<br>` +
+                              `<span style="color:#888;font-size:10px">current anchor-pin cluster</span>`;
+                        new maplibregl.Popup({ closeButton: true, maxWidth: '280px' })
+                            .setLngLat(e.lngLat)
+                            .setHTML(`<div style="font-size:12px;line-height:1.5">${body}</div>`)
+                            .addTo(map);
+                    });
+                    map.on('mouseenter', layerId, () => { map.getCanvas().style.cursor = 'pointer'; });
+                    map.on('mouseleave', layerId, () => { map.getCanvas().style.cursor = '';         });
+                });
+                const btn = document.getElementById('lc-sim-ab');
+                if (btn) btn.style.display = '';
+            })
+            .catch(() => {});
 
         // ── Merged-ring panel: list constituent clusters for user to select one ──
         function showMergedGroupPanel(memberIds, lngLat) {
