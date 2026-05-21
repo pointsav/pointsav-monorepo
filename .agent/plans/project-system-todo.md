@@ -2,7 +2,7 @@
 schema: foundry-plan-v1
 title: project-system — Comprehensive Work Plan
 created: 2026-05-20
-updated: 2026-05-21 (Group 6 mechanical items complete; v1.0.0 bumps gated on 3B decisions)
+updated: 2026-05-21 (Group 6 mechanical done; Group 7 complete)
 author: task@claude-code (session startup, sonnet-4-6)
 status: active
 ---
@@ -375,15 +375,22 @@ _[BLOCKED: Groups 2 + 3B must complete first]_
 
 ---
 
-## Group 7 — Ongoing housekeeping
+## Group 7 — Ongoing housekeeping ✓ _(done 2026-05-21)_
 
-- [ ] **WFD sub-clone: action any new guides needed for cluster-totebox-corporate or cluster-totebox-personnel**
-  WFD has extensive operational guides for the running fleet. These are separate from project-system substrate work but this Totebox owns the WFD sub-clone for substrate-related guide work.
-  Review WFD `NEXT.md` after the sub-clone reset.
+- [x] **WFD sub-clone housekeeping** _(done 2026-05-21, WFD commit `9ba968d`)_
+  - Created repo-level `CLAUDE.md` (was missing; required per repo-layout.md)
+  - Bilingual README audit: added `README.es.md` to `fleet-infrastructure-leased`
+    and `node-console-operator` — all 16 present directories now paired
+  - `NEXT.md` updated: closed 3 items; surfaced registry-drift open question
+    (`gateway-orchestration-gis-1` + `gateway-knowledge-documentation-1` absent
+    from HEAD 7fdf36b — needs reconciliation against main)
+  - No new guides needed for cluster-totebox-corporate or cluster-totebox-personnel
+    (existing guides are current; no substrate-adjacent work surfaced)
 
-- [ ] **STAGING-cargo-dep-options.md decision** (from `.agent/`)
-  Master decision pending on whether project-data's `service-fs` uses Cargo `[patch]` or waits for Stage-6 to consume `system-core`.
-  Once decided, either: close the staging doc, or action the `[patch]` setup in project-data.
+- [x] **STAGING-cargo-dep-options.md decision** _(done 2026-05-21, commit `bb5d415`)_
+  Resolved as Option E: block on Stage-6. `system-core` v0.2.0 is API-stable;
+  Stage-6 imminent pending 3B decisions. No Cargo `[patch]` required.
+  Master/Operator confirmation closes the document.
 
 - [x] ~~**`system-core/master-relay.rs` deletion**~~ _(done in Group 2A, commit `dcb2700`)_
 
