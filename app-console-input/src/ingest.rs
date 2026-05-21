@@ -22,7 +22,7 @@ pub struct IngestResult {
     pub warning: Option<String>,
 }
 
-pub fn submit(path: &str, username: &str, tenant: &str) -> Result<IngestResult> {
+pub fn submit(path: &str, username: &str, tenant: &str, endpoint: &str) -> Result<IngestResult> {
     let client = reqwest::blocking::Client::builder()
         .timeout(Duration::from_secs(30))
         .build()?;
@@ -38,8 +38,9 @@ pub fn submit(path: &str, username: &str, tenant: &str) -> Result<IngestResult> 
         }),
     };
 
+    let url = format!("{}/v1/append", endpoint.trim_end_matches('/'));
     let resp = client
-        .post("http://127.0.0.1:9100/v1/append")
+        .post(&url)
         .header("X-Foundry-Module-ID", tenant)
         .header("Content-Type", "application/json")
         .json(&body)

@@ -141,19 +141,25 @@ enum InputState {
 pub struct InputCartridge {
     username: String,
     tenant: String,
+    ingest_endpoint: String,
     state: InputState,
     path_input: PathInput,
 }
 
 impl InputCartridge {
     pub fn new() -> Self {
-        Self::new_for("operator", "local")
+        Self::new_for("operator", "local", "http://127.0.0.1:9100")
     }
 
-    pub fn new_for(username: impl Into<String>, tenant: impl Into<String>) -> Self {
+    pub fn new_for(
+        username: impl Into<String>,
+        tenant: impl Into<String>,
+        ingest_endpoint: impl Into<String>,
+    ) -> Self {
         Self {
             username: username.into(),
             tenant: tenant.into(),
+            ingest_endpoint: ingest_endpoint.into(),
             state: InputState::Entry,
             path_input: PathInput::new(),
         }
@@ -465,10 +471,11 @@ impl Cartridge for InputCartridge {
                         };
                         let username = self.username.clone();
                         let tenant = self.tenant.clone();
+                        let endpoint = self.ingest_endpoint.clone();
                         let path_clone = path.clone();
                         let (tx, rx) = mpsc::channel();
                         thread::spawn(move || {
-                            let _ = tx.send(ingest::submit(&path_clone, &username, &tenant));
+                            let _ = tx.send(ingest::submit(&path_clone, &username, &tenant, &endpoint));
                         });
                         self.state = InputState::Submitting { path, spinner: 0, rx };
                     }

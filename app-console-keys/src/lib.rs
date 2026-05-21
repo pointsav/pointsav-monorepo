@@ -7,4 +7,5 @@ pub mod widgets;
 
 pub use cartridge::{Cartridge, CartridgeAction};
 pub use chassis::{AppConsoleKeys, ChassisAction};
+pub use config::ConsoleConfig;
 pub use fkey::FKey;
