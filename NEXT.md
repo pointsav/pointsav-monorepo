@@ -6,7 +6,18 @@
 > Read at session start when a Root Claude opens in this repo. Update
 > at session end when repo-scope open items change.
 
-Last updated: 2026-05-17.
+Last updated: 2026-05-21.
+
+---
+
+## Knowledge platform — canonical plan
+
+The three-wiki knowledge platform is governed by two documents in
+`.agent/plans/`: **`KNOWLEDGE-PLATFORM-VISION.md`** (vision & architecture —
+upstream) and **`KNOWLEDGE-PLATFORM-PLAN.md`** (project-knowledge execution
+plan — 8 phases). All prior knowledge-platform, Wikipedia-parity, and blueprint
+plans were superseded and removed 2026-05-21; the parity plans are archived
+under `.agent/plans/archive/`.
 
 ---
 
