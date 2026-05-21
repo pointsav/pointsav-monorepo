@@ -4,6 +4,31 @@ Rolling 3-session summary. Newest entry first. Push oldest to session-context-ar
 
 ---
 
+## 2026-05-21 | totebox@claude-code | Opus 4.7
+
+**Done this session:**
+- Built `award-winning-wiki-overhaul.md` — consolidated the 3 blueprint files (INPUT-KNOWLEDGE-PLATFORM-BLUEPRINT, MASTER_STRATEGY, FINAL_EXECUTION) into a 5-track plan; 4 research agents (editorial gap, engine state, design tokens, archived drafts).
+- Gate 0 ratified by operator — 5 Lucidity-Protocol-vs-Bloomberg-standard conflict reconciliations.
+- 3 more research agents — AI writing craft + AI-writing QA + project-editorial substrate audit → Track D (editorial QA substrate); §2.2 services-optional bypass posture; Track E from a project-intelligence state check.
+- Cross-checked project-knowledge's `KNOWLEDGE-PLATFORM-VISION.md` (rev 4): Main Page ownership → project-knowledge, repo rename `content-wiki-* → media-knowledge-*`, source-of-truth inversion, claim-native model.
+- **Adopted** project-knowledge's proposed editorial plan; finalized it (re-inserted §3 bypass posture, inlined all referenced detail → self-contained); committed as `KNOWLEDGE-PLATFORM-EDITORIAL-PLAN.md` (`b8c19dfd`). It supersedes `award-winning-wiki-overhaul.md` + the 3 blueprints + the overhaul-* plans.
+- Outbox: cross-check reply + plan-adopted reply to project-knowledge; SITUATION message to Command/Master.
+
+**Pending / carry-forward:**
+- **Active plan: `KNOWLEDGE-PLATFORM-EDITORIAL-PLAN.md`.** Next: A0 (encode the standard into style guides) → D1/D2 (editorial linter + failure-mode registry). E1/E4 are cheap, run first.
+- **A2 HELD** — Top-12 TOPIC rewrites wait for project-knowledge's claim-authoring convention (their Phase 2.4); they route it to our inbox when specced.
+- **4 pending inbox messages NOT actioned** — project-system (capability-ledger + merkle-proofs TOPICs, 6 README drafts), Command (LICENSE artifacts incl. one project-knowledge item). Triage next session.
+- **Old-plan deletions parked** — execute after the overhaul ships, on operator go-ahead (delete set in plan §9). The 3 blueprint files + `award-winning-wiki-overhaul.md` remain untracked, intentionally.
+- Doctrine amendment for the source-of-truth inversion pending from Master; repo rename pending from operator.
+- `service-content` runtime-hung (project-intelligence scope) — E1 handoff staged in outbox.
+
+**Operator preferences surfaced:**
+- Superseded plans are deleted only after the overhaul ships, on explicit operator go-ahead — not on a peer cluster's directive. Peer Totebox clusters cannot direct deletions in another cluster's archive.
+- When adopting another cluster's proposed plan, inline referenced detail so the plan is self-contained.
+- Editorial work must never block on `service-content` / `service-slm` — bypass by default.
+
+---
+
 ## 2026-05-20 | totebox@claude-code | Sonnet 4.6
 
 **Done this session:**
@@ -41,23 +66,3 @@ Rolling 3-session summary. Newest entry first. Push oldest to session-context-ar
 
 **Operator preferences surfaced:**
 - No new preferences this session.
-
----
-
-## 2026-05-19 | totebox@claude-code | Sonnet 4.6
-
-**Done this session:**
-- Corporate wiki lede rewritten using DataGraph-aligned language from `cluster-totebox-jennifer/service-content/domains/corporate.csv` — "Principal Manager for a portfolio of direct-hold solutions…" — replacing incorrect outbox draft that used "fractional equity in a named property" framing. Commit `188dabd`.
-- index.es.md: status active, BCSC disclosure paragraph added, Spanish strategic adaptation written. Same commit.
-- featured-topic.yaml: rotated from topic-interest-coverage-ratio → topic-redemption-elimination (rotation 2). Same commit.
-- Command Session outbox message (2026-05-18T02:55:00Z re: corporate wiki lede) marked actioned.
-- GIS drafts batch reviewed: topic-gis-nordic-uk-coverage.md + .es.md written and committed to content-wiki-projects (`a9d5325`); all other 8 drafts confirmed already committed in prior sessions.
-- from-project-gis/ drafts-outbound cleared (9 files removed, `f82b4ee6`); Italy stub (`topic-co-location-index-italy`) bounced to handoffs-outbound — needs real cluster data from project-gis before publishing.
-
-**Pending / carry-forward:**
-- Phase 1c — resolved this continuation session.
-- Stage 6 promotions needed for content-wiki-corporate, content-wiki-projects, woodfine-fleet-deployment sub-clones — Command Session task.
-- Phase E bilingual home routing — deferred, low priority.
-
-**Operator preferences surfaced:**
-- DataGraph at cluster-totebox-jennifer is the authoritative source for corporate wiki vocabulary. Always check it before drafting lede or terminology for content-wiki-corporate. Outbox message language is a starting point, not final word.
