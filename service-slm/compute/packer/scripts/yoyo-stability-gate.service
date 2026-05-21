@@ -1,0 +1,18 @@
+[Unit]
+Description=Yo-Yo stability gate — defer model load until the VM survives the stability window
+Documentation=file:///var/log/yoyo-lifecycle.log
+After=network-online.target local-fs.target
+Wants=network-online.target
+RequiresMountsFor=/data/weights
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/bin/yoyo-stability-gate.sh
+StandardOutput=journal
+StandardError=journal
+# Window (default 120 s) + headroom for the model-start it triggers.
+TimeoutStartSec=900
+
+[Install]
+WantedBy=multi-user.target
