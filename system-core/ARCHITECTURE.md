@@ -108,7 +108,7 @@ MINOR (mirrors the `LedgerBackend` trait pattern in
 
 **RESOLVED + IMPLEMENTED.** `system-ledger` v0.2.1 is an active workspace
 member. All five modules (cache, revocation, apex, witness, lib) are fully
-implemented with 44 tests and 10 criterion benchmarks. See `system-ledger/`
+implemented with 47 tests and 12 criterion benchmarks. See `system-ledger/`
 for the full implementation.
 
 ## 4. Cross-references
@@ -130,19 +130,42 @@ for the full implementation.
   state-machine consumer of these primitives. Owns checkpoint cache,
   revocation set, apex history, witness verification.
 
-## 5. Verification
+## 5. Platform requirements and `no_std` roadmap
 
-**51 tests passing** on `cargo test -p system-core` (Rust stable), zero warnings.
+**MSRV: Rust 1.73.** `usize::div_ceil` (stabilised in 1.73.0, 2023-10-05) is
+used in the Merkle-tree helpers in `inclusion_proof.rs` and
+`consistency_proof.rs`. No unstable features are used.
 
-**Capability data-shape (`lib::tests`)** (6 tests):
+**Current `std` dependency.** v0.2.x uses `std` via `Vec`, `String`, and
+`serde_json`. All `use std::...` rather than `use core::...`.
+
+**Planned `no_std` carve-out (future MINOR, not v1.0.0).** The kernel may
+consume `system-core` directly on a `no_std` seL4 target. A future MINOR
+(e.g., v1.1.0) will add a `features = ["std"]` gate, moving `String` fields
+in `Capability` and `NoteSignature` behind an allocator feature. The
+`no_std + alloc` path is architecturally feasible without API breakage
+(no filesystem, network, or thread primitives are used). JSON serialisation
+via `serde_json` requires `std`; `no_std` deserialization would use a
+`serde` derive with a custom deserializer or CBOR via `ciborium`. Tracked
+in `NEXT.md` under the `Capability::canonical_bytes()` CBOR-stability item.
+
+## 6. Verification
+
+**62 tests passing** on `cargo test -p system-core` (Rust stable), zero warnings.
+
+**Capability data-shape (`lib::tests`)** (10 tests):
 - `capability_serialises_round_trip`
 - `capability_hash_is_deterministic`
 - `capability_hash_changes_with_expiry`
 - `capability_hash_changes_with_anchor`
 - `witness_record_serialises_round_trip`
 - `ledger_anchor_serialises_round_trip`
+- `capability_hash_expiry_none_vs_some`
+- `capability_hash_changes_with_witness_pubkey`
+- `right_variants_round_trip`
+- `capability_type_variants_round_trip`
 
-**C2SP signed-note + apex-cosigning (`checkpoint::tests`)** (10 tests):
+**C2SP signed-note + apex-cosigning (`checkpoint::tests`)** (17 tests):
 - `checkpoint_body_round_trip`
 - `checkpoint_with_extensions_round_trip`
 - `key_hash_derivation_is_deterministic`
@@ -153,6 +176,11 @@ for the full implementation.
 - `multi_sig_apex_handover_round_trip`
 - `handover_fails_if_only_one_signs`
 - `body_tampering_breaks_signature`
+- `parse_error_not_utf8`, `parse_error_truncated`, `parse_error_missing_newline`,
+  `parse_error_bad_root_hash_length`, `parse_error_missing_signature_separator`
+  — all five parse-failure variants
+- `verify_error_bad_public_key_rejects` — y=2 (quadratic non-residue mod p)
+- `consistency_proof_new_signature_invalid_rejects`
 
 **RFC 9162 §2.1.3 inclusion proofs (`inclusion_proof::tests`)** (14 tests):
 - `rfc9162_leaf_hash_includes_zero_prefix`

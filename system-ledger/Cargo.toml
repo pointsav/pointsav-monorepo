@@ -2,6 +2,12 @@
 name = "system-ledger"
 version = "0.2.1"
 edition = "2021"
+rust-version = "1.73"
+description = "Kernel-side state machine for the Capability Ledger Substrate: LRU checkpoint cache, revocation set, apex history with post-handover invariant, and proof-verified witness record application."
+license = "AGPL-3.0-or-later"
+repository = "https://github.com/pointsav/pointsav-monorepo"
+keywords = ["ledger", "capability", "merkle", "substrate", "cache"]
+categories = ["cryptography", "data-structures"]
 
 [dependencies]
 system-core = { path = "../system-core" }
