@@ -141,3 +141,33 @@ Refined output staging area: `clones/project-language/.claude/drafts-outbound/re
 | Destination role | **Master Claude** or **Root Claude** at destination |
 | State | `closed` |
 | Notes | 5 English topics + 5 Spanish strategic adaptations committed by Gemini CLI session (96c3f26, cfd74f0) and outside voice cleanup commit (3c16de8, 2026-05-04). Closes project-gis gateway pass. |
+
+---
+
+## project-intelligence inbound batch — E4 triage (2026-05-21)
+
+Editorial-plan §6 E4: locate + triage the drafts project-intelligence routed to
+project-editorial (referenced in the plan as commit `478c9465`).
+
+**Located:** `clones/project-intelligence/.agent/drafts-outbound/` — 11 files
+(5 TOPIC EN+ES pairs + 1 GUIDE). Commit `478c9465` is in project-intelligence's
+repo, not this one; the drafts are read from their drafts-outbound directly.
+
+**Disposition — NOT folded into Track A.** Track A scope is the fixed Top-12
+(plan §4 A2) plus the three Main Pages; none of these 11 files are in it. They
+are project-intelligence-domain pipeline documentation, a separate editorial-
+gateway queue.
+
+| Draft | Triage |
+|---|---|
+| topic-apprenticeship-substrate (.md/.es) | Skip — prior session (inbox-archive) confirmed the published `content-wiki-documentation/architecture/apprenticeship-substrate.md` is authoritative; draft is an older skeleton. |
+| topic-doorman-protocol (.md/.es) | Skip — published version rewritten at `96e221d` is authoritative. |
+| topic-zero-container-inference (.md/.es) | Skip — published at `8a4fd6c`. (Separate flag: published version names competitors by product — future editorial cleanup, not E4.) |
+| topic-yo-yo-lora-training-pipeline (.md/.es) | **Blocked** — `state: draft-pending-language-pass`. "Yo-Yo" is a Do-Not-Use term; filename + body need a canonical rename before any language pass. |
+| topic-jennifer-datagraph-rebuild (.md/.es) | **Blocked** — personal name in filename + title; violates the no-personal-names rule. project-intelligence must re-name to a role noun / codename. |
+| guide-yo-yo-nightly-pipeline | **Blocked** — same "Yo-Yo" Do-Not-Use issue. |
+
+**State:** `pending-source-rename` — the three non-skip drafts cannot enter a
+language pass until project-intelligence resolves the two naming blockers.
+Flagged to project-intelligence outbox 2026-05-21. No project-editorial commit
+to content repos results from E4.
