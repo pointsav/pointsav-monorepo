@@ -9,6 +9,86 @@ schema: foundry-mailbox-v1
 
 ---
 from: totebox@project-system
+to: command@claude-code
+re: Group 6 progress + Group 3B gate decisions needed for system-core/system-ledger v1.0.0
+created: 2026-05-21T05:50:00Z
+priority: normal
+status: pending
+msg-id: project-system-20260521-v100-gate-decisions
+---
+
+Group 6 work completed so far in this session (2026-05-21):
+
+1. **Cargo.toml metadata filled** — all three crates now have `description`,
+   `license`, `repository`, `keywords`, `categories`, `rust-version` fields.
+   License resolved as `AGPL-3.0-or-later` per LICENSE-MATRIX.md §4.2
+   (system-* prefix category). MSRV: system-core/system-ledger `1.73`
+   (div_ceil), moonshot-toolkit `1.74` (clap 4.5+). Commit pending (staged
+   with other Group 6 work below).
+
+2. **system-core/ARCHITECTURE.md updated** — §5 test count corrected
+   (51 → 62), test lists extended for Group 2A/2B additions. New §5 added:
+   MSRV declaration + no_std roadmap note (current std dependency documented;
+   no_std carve-out planned as future MINOR per CLAUDE.md hard constraint).
+   system-ledger reference updated: 44 tests/10 benches → 47 tests/12 benches.
+
+3. **CI verification pass** ✓ — clippy clean, fmt clean, cargo doc clean
+   across all three crates on clean HEAD (2026-05-21).
+
+4. **Consistency-proof bench** ✓ — fixed and measured (commit d2f6a5a);
+   BENCHMARKS.md extended to 12 entries.
+
+**Remaining Group 6 item requiring Operator / Master input before v1.0.0:**
+
+### Decision 1 — `LedgerConsumer` trait API finality (Master decision)
+
+Is the current v0.2.x public trait surface final for v1.0.0? Specifically:
+
+```rust
+pub trait LedgerConsumer {
+    fn consult_capability(&mut self, cap: &Capability,
+        current_root: &SignedCheckpoint, now: u64,
+        witness: Option<&WitnessRecord>) -> Result<Verdict, ConsultError>;
+    fn apply_apex_handover(&mut self, ...) -> Result<(), LedgerError>;
+    fn apply_revocation(&mut self, ...) -> Result<(), LedgerError>;
+    fn apply_witness_record(&mut self, record: WitnessRecord,
+        proof: InclusionProof) -> Result<(), LedgerError>;
+}
+// set_current_checkpoint is on InMemoryLedger directly, not on the trait
+```
+
+v1.0.0 freezes this surface for the life of the MAJOR version. Two questions:
+- Is `consult_capability(cap, current_root, now, witness)` the final signature?
+  (Motivation for asking: Phase 4+ may need batch-consult or async variants.)
+- Is `set_current_checkpoint` correctly NOT on the trait (i.e., each implementor
+  manages checkpoint-update internally)?
+
+If any signature changes are planned, a MINOR bump to v0.3.0 is needed first
+to separate "API revisions" from "API freeze."
+
+### Decision 2 — Promote system-core + system-ledger together or independently?
+
+Recommendation: **together** (they are a designed unit; the bench file cross-
+references both; consumers pin both in tandem). Any reason to split?
+
+### Decision 3 — v1.0.0 commit attribution
+
+Normal alternating toggle (`jwoodfine`/`pwoodfine`) via `bin/commit-as-next.sh`,
+or admin-tier? DOCTRINE.md §VIII names versioning as staging-tier work, which
+supports the normal toggle. Flagging only because v1.0.0 is consequential.
+
+### Decision 4 — Quiet-VM bench re-run for bench #9
+
+Bench #9 (`verify_inclusion_proof` composed, 1024-leaf) had CI [4.27, 5.24 ms]
+with 22 outliers in the 2026-04-27 run — the widest CI in the table. A re-run
+under load avg < 1.0 is needed for publication-quality numbers. VM load has been
+elevated (3–10+) since 2026-05-20. Awaiting a quiet window; will run when
+Operator signals the VM is idle.
+
+— totebox@project-system
+
+---
+from: totebox@project-system
 to: project-editorial
 re: README drafts ready for language pass — system-core, system-ledger, moonshot-toolkit (EN + ES pairs)
 created: 2026-05-20T00:00:00Z
