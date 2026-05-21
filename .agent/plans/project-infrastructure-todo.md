@@ -1,7 +1,7 @@
 ---
 title: project-infrastructure — Comprehensive TODO
 created: 2026-05-20
-updated: 2026-05-20 (session 2)
+updated: 2026-05-20 (session 3)
 status: active
 author: task@claude-code
 ---
@@ -56,29 +56,21 @@ promoted via project-editorial, committed by Command Session admin-tier.
 
 ### 2b — New TOPICs
 
-- [ ] **`topic-genesis-protocol.md` + `.es.md`** — dedicated deep-dive on the Genesis Protocol
-  (currently described briefly in `infrastructure-os.md` §2 but warrants its own topic):
-  - Blind boot sequence (ignores DHCP/DNS; seL4 keypair generation at first boot)
-  - Private Network of One (no beacon found → self-genesis)
-  - Holding pattern (hardened WebSocket endpoint waiting for admin claim)
-  - Claim sequence (admin presents fiduciary key; node verifies; joins mesh)
-  - Deferred fleet assembly (fifty nodes ship to fifty locations; admin claims all later)
-  - Relationship to `machine-based-auth` (fiduciary keypairs)
+- [x] **`topic-genesis-protocol.md` + `.es.md`** — done 2026-05-20 session 3.
+  Staged at `.agent/drafts-outbound/topic-genesis-protocol.draft.md` + `.es.draft.md`.
+  Covers: sequencing-dependency problem; 5-step sequence (blind boot, scan, genesis fork,
+  holding pattern, claim); deferred fleet assembly; relationship to machine-based-auth.
+  One noted open question (EAPOL vs intended arch — no correction needed to topic).
 
-- [ ] **`topic-ppn-command-protocol.md` + `.es.md`** — the 16-byte binary command format
-  (referenced in `os-network-admin.md` but never detailed anywhere):
-  - Two-byte operation code + target node identifier
-  - Broadcast vs addressed delivery
-  - F8 translation chain: natural language → `service-slm` → 16-byte binary → UDP broadcast
-  - Human-in-the-loop verification step (per `guide-mesh-execution.md`)
-  - No message broker; no third-party service in the command path
+- [x] **`topic-ppn-command-protocol.md` + `.es.md`** — done 2026-05-20 session 3.
+  Staged at `.agent/drafts-outbound/topic-ppn-command-protocol.draft.md` + `.es.draft.md`.
+  Covers: design constraints (no broker, no plaintext, no verbosity); 16-byte packet format;
+  4-step dispatch sequence; simultaneous broadcast rationale; Diode Standard relationship.
 
-- [ ] **`topic-service-pointsav-link.md` + `.es.md`** — `service-pointsav-link` adapter
-  (Diode Standard enforcer, referenced in `diode-standard.md` but not yet its own topic):
-  - Default state: not installed; Subject has no concept of phoning home
-  - Activation: hot-plugged by operator; brings Subject under fleet management
-  - Failure mode: adapter crash severs the link cleanly; Subject continues standalone
-  - Policy lives in the adapter, not the kernel — updateable without touching OS
+- [x] **`topic-service-pointsav-link.md` + `.es.md`** — done 2026-05-20 session 3.
+  Staged at `.agent/drafts-outbound/topic-service-pointsav-link.draft.md` + `.es.draft.md`.
+  Covers: four properties (default off, hot-plug activation, clean severance, policy in adapter);
+  default state invariant; activation sequence; failure mode; Universal Standard.
 
 ### 2c — Stub expansion needed (from audit; not yet read fully)
 

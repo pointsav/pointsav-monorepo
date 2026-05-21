@@ -5,6 +5,39 @@ a fourth entry is added.
 
 ---
 
+## 2026-05-20 session 3 | Totebox | claude-code
+
+**Done this session:**
+- Wrote three TOPIC draft pairs (EN + ES) and committed to drafts-outbound:
+  - `topic-genesis-protocol` — 5-step Genesis Protocol, deferred fleet assembly,
+    machine-based-auth relationship. One open question noted (EAPOL vs intended arch).
+  - `topic-ppn-command-protocol` — 16-byte binary packet, 4-step dispatch, simultaneous
+    broadcast rationale, Diode Standard relationship.
+  - `topic-service-pointsav-link` — four properties (default off, hot-plug, clean severance,
+    policy in adapter not kernel), Universal Standard.
+- Sent outbox pickup notice to project-editorial covering all five staged draft pairs
+  (sovereign-mesh from session 2 + three new pairs from this session).
+- Updated NEXT.md TOPIC leg to list all four pending draft pairs.
+
+**Commits this session:**
+- `94290124` — editorial: stage three TOPIC draft pairs (genesis-protocol, ppn-command-protocol, service-pointsav-link EN+ES)
+- `de899d74` — outbox: notify project-editorial of three new TOPIC draft pairs
+- `4d5b6272` — next: update TOPIC leg — add three new draft pairs staged session 3
+
+**Pending / carry-forward:**
+- All 4 operator decisions still blocking (EAPOL vs Genesis Protocol; subnet ratification;
+  GCP static IP; Laptop A/B IPs + DNS)
+- `os-infrastructure/src/main.rs` missing symbols — blocked on above
+- 5 draft pairs in drafts-outbound awaiting project-editorial pickup
+- GUIDE fixes (guide-deploy-vpn.md, guide-mesh-orchestration.md) — some cross-repo / Command Session scope
+- Section 4c new code work (Genesis Protocol impl, F8/service-slm wiring, binary protocol) — blocked on decisions
+
+**Operator preferences surfaced:**
+- Asked "what else is on the list" — wants a clear view of remaining work before shutdown
+- No new preferences beyond sessions 1+2
+
+---
+
 ## 2026-05-20 session 2 | Totebox | claude-code
 
 **Done this session:**
