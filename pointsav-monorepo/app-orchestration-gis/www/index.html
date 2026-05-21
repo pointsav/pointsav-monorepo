@@ -1384,6 +1384,7 @@
         ['sim-ab-old', 'sim-ab-new', 'sim-ab-labels'].forEach(id => {
             if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', on ? 'visible' : 'none');
         });
+        if (!on) clearSimDetail();
         btn.classList.toggle('lc-active', on);
     }
 
@@ -2061,10 +2062,56 @@
                     },
                     paint: { 'text-color': '#e2e8f0', 'text-halo-color': '#0b1220', 'text-halo-width': 1.5 },
                 });
+
+                // ── Detail overlay: three rings + member store dots (shown on NEW cluster click) ──
+                const _empty = { type: 'FeatureCollection', features: [] };
+                map.addSource('sim-detail-ring-src', { type: 'geojson', data: _empty });
+                map.addSource('sim-detail-dot-src',  { type: 'geojson', data: _empty });
+
+                // Layers inserted *before* sim-ab-old so they render beneath cluster dots
+                map.addLayer({ id: 'sim-150km-line',  type: 'line',   source: 'sim-detail-ring-src',
+                    filter: ['==', ['get', 'ring_type'], '150km'], layout: { visibility: 'none' },
+                    paint: { 'line-color': '#64748B', 'line-width': 1, 'line-opacity': 0.5, 'line-dasharray': [6, 4] },
+                }, 'sim-ab-old');
+                map.addLayer({ id: 'sim-35km-fill',   type: 'fill',   source: 'sim-detail-ring-src',
+                    filter: ['==', ['get', 'ring_type'], '35km'], layout: { visibility: 'none' },
+                    paint: { 'fill-color': '#f97316', 'fill-opacity': 0.08 },
+                }, 'sim-ab-old');
+                map.addLayer({ id: 'sim-35km-line',   type: 'line',   source: 'sim-detail-ring-src',
+                    filter: ['==', ['get', 'ring_type'], '35km'], layout: { visibility: 'none' },
+                    paint: { 'line-color': '#c2410c', 'line-width': 1.5, 'line-opacity': 0.85, 'line-dasharray': [6, 4] },
+                }, 'sim-ab-old');
+                map.addLayer({ id: 'sim-co-fill',     type: 'fill',   source: 'sim-detail-ring-src',
+                    filter: ['==', ['get', 'ring_type'], 'co_loc'], layout: { visibility: 'none' },
+                    paint: { 'fill-color': '#1E40AF', 'fill-opacity': 0.04 },
+                }, 'sim-ab-old');
+                map.addLayer({ id: 'sim-co-line-t23', type: 'line',   source: 'sim-detail-ring-src',
+                    filter: ['all', ['==', ['get', 'ring_type'], 'co_loc'], ['!=', ['get', 'tier'], 1]],
+                    layout: { visibility: 'none' },
+                    paint: { 'line-color': '#1E40AF', 'line-width': 1.5, 'line-opacity': 0.7, 'line-dasharray': [3, 2] },
+                }, 'sim-ab-old');
+                map.addLayer({ id: 'sim-co-line-t1',  type: 'line',   source: 'sim-detail-ring-src',
+                    filter: ['all', ['==', ['get', 'ring_type'], 'co_loc'], ['==', ['get', 'tier'], 1]],
+                    layout: { visibility: 'none' },
+                    paint: { 'line-color': '#0A3070', 'line-width': 2, 'line-opacity': 0.9 },
+                }, 'sim-ab-old');
+                map.addLayer({ id: 'sim-member-dots', type: 'circle', source: 'sim-detail-dot-src',
+                    layout: { visibility: 'none' },
+                    paint: {
+                        'circle-radius': ['interpolate', ['linear'], ['zoom'], 8, 4, 12, 7, 14, 10],
+                        'circle-color': ['match', ['get', 'cls'],
+                            'hypermarket', '#FACC15', 'hardware', '#2DD4BF',
+                            'warehouse',   '#22D3EE', 'lifestyle', '#E879F9', '#94A3B8'],
+                        'circle-stroke-width': 1.25, 'circle-stroke-color': '#0b1220', 'circle-opacity': 1.0,
+                    },
+                }, 'sim-ab-old');
+
                 // Click → simple popup (not full bento — sim data only)
                 ['sim-ab-new', 'sim-ab-old'].forEach(layerId => {
                     map.on('click', layerId, e => {
-                        const p = e.features[0].properties;
+                        const feat = e.features[0];
+                        const p = feat.properties;
+                        if (p.kind === 'new') showSimDetail(feat); else clearSimDetail();
                         const body = p.kind === 'new'
                             ? `<b>${p.tier_label} (T${p.tier})</b> — ${p.prox}<br>` +
                               `Chains: ${p.chains}<br>` +
@@ -2086,6 +2133,39 @@
                 if (btn) btn.style.display = '';
             })
             .catch(() => {});
+
+        function showSimDetail(feature) {
+            const p = feature.properties;
+            const [lon, lat] = feature.geometry.coordinates;
+            const coKm = p.tier === 1 ? 1 : 3;
+            const co   = makeCircleGeoJSON([lon, lat], coKm).features[0];
+            const r35  = makeCircleGeoJSON([lon, lat], 35  ).features[0];
+            const r150 = makeCircleGeoJSON([lon, lat], 150 ).features[0];
+            co.properties   = { ring_type: 'co_loc', tier: p.tier };
+            r35.properties  = { ring_type: '35km' };
+            r150.properties = { ring_type: '150km' };
+            map.getSource('sim-detail-ring-src').setData({ type: 'FeatureCollection', features: [co, r35, r150] });
+
+            let members = [];
+            try { members = typeof p.members_detail === 'string' ? JSON.parse(p.members_detail) : (p.members_detail || []); } catch(e) {}
+            map.getSource('sim-detail-dot-src').setData({
+                type: 'FeatureCollection',
+                features: members.map(m => ({
+                    type: 'Feature', geometry: { type: 'Point', coordinates: [m.lon, m.lat] },
+                    properties: { chain: m.chain, cls: m.cls },
+                })),
+            });
+            ['sim-150km-line','sim-35km-fill','sim-35km-line','sim-co-fill','sim-co-line-t23','sim-co-line-t1','sim-member-dots']
+                .forEach(id => { if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', 'visible'); });
+        }
+
+        function clearSimDetail() {
+            const empty = { type: 'FeatureCollection', features: [] };
+            if (map.getSource('sim-detail-ring-src')) map.getSource('sim-detail-ring-src').setData(empty);
+            if (map.getSource('sim-detail-dot-src'))  map.getSource('sim-detail-dot-src').setData(empty);
+            ['sim-150km-line','sim-35km-fill','sim-35km-line','sim-co-fill','sim-co-line-t23','sim-co-line-t1','sim-member-dots']
+                .forEach(id => { if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', 'none'); });
+        }
 
         // ── Merged-ring panel: list constituent clusters for user to select one ──
         function showMergedGroupPanel(memberIds, lngLat) {
