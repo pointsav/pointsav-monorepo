@@ -13,10 +13,10 @@ updated: 2026-05-20
 
 ## Direction (updated 2026-05-20)
 
-**os-console platform — chassis-first.** Full Leapfrog 2030 pivot: os-console binary +
-app-console-keys chassis + compiled-in cartridges (F1-F12). app-console-content (F4)
-is Phase 3 cartridge. MBA peer-to-peer (system-gateway-mba).
-Doorman endpoint: `http://localhost:8011`. **Phase 1 COMPLETE. Phase 2 = auth + MBA next.**
+**os-console platform — local distributable TUI binary.** Phases 1–5 of leapfrog-2030-coding.md
+COMPLETE. Binary runs locally on user machines; connects to os-totebox via MBA peer-to-peer
+(russh client). GitHub Actions CI releases Linux x86_64 + macOS universal binaries.
+Doorman endpoint: `http://localhost:8011`. **Phase 6+ = PDF, more cartridges, live MBA heartbeat.**
 
 **Rename done:** project-proofreader → project-console (directory + branch). ✓
 
@@ -73,40 +73,41 @@ Doorman endpoint: `http://localhost:8011`. **Phase 1 COMPLETE. Phase 2 = auth + 
 
 ---
 
-## Phase 2 — Proofread core (est. 2 weeks) `[ NOT STARTED ]`
+## Phase 2 — system-gateway-mba + SSH server `[ COMPLETE ]` ✓
 
-- [ ] `tui-textarea` integration for paste input
-- [ ] `Event::Paste` → atomic buffer insert
-- [ ] Protocol picker (18 GenreTemplate variants via `nucleo` fuzzy filter)
-- [ ] HTTP client to `service-proofreader /v1/proofread` (300s timeout; spinner during wait)
-- [ ] Status bar feedback during pipeline stages (poll `/v1/health/ready`)
-- [ ] `similar::TextDiff` → `Vec<Suggestion>` with severity from `findings`
-- [ ] `syntect` 24-bit colorization for diff panes
-- [ ] `tui-scrollview` for long documents
-- [ ] Per-suggestion verdict keybindings (`a`/`r`/`e`/`A`/`R`)
-- [ ] POST `/v1/verdict` on session complete → corpus event
-
-**Gate:** Full proofread workflow over SSH, feature-equivalent to the former web UI.
+See leapfrog-2030-coding.md. Committed `af462797`. Gate passed: `jennifer@woodfine | MBA LINK ACTIVE`.
 
 ---
 
-## Phase 3 — F12 gate + offline mode (est. 1 week) `[ NOT STARTED ]`
+## Phase 3 — Full proofread workflow `[ COMPLETE ]` ✓
 
-- [ ] `src/ui/f12_gate.rs` — SYS-ADR-10 ingest gate widget (file path input + confirm)
-- [ ] All file/text ingest routes through F12; cannot be bypassed from other panes
-- [ ] Offline detection: poll `/v1/health/ready`; switch to deterministic-only mode
-- [ ] Disabled-state UX: greyed inference UI; `/status` shows what's offline
-- [ ] Tantivy search: `/search <query>` → service-content Tantivy index at 9081
-
-**Gate:** SYS-ADR-10 and Doctrine claim #54 compliant; offline mode functional.
+ContentCartridge: tui-textarea input, Tab→protocol picker (9 protocols), Ctrl-S→300s HTTP
+submit via std::thread, similar::TextDiff diff view, A/R verdict POST. Gate passed: render over SSH.
+Committed `480dd105`.
 
 ---
 
-## Phase 4 — Draft mode (est. 2 weeks) `[ NOT STARTED ]`
+## Phase 4 — F12 Input Machine `[ COMPLETE ]` ✓
 
-- [ ] `/new` command → fuzzy protocol picker
-- [ ] Entity context: fuzzy search → `service-content /graph/neighborhood/<id>` RAG fetch
-- [ ] Doorman Tier B request with RAG context + protocol scaffolding
+InputCartridge: path entry modal, confirm dialog, service-fs POST, SQLite audit log,
+CartridgeAction::GoBack, chassis `previous: FKey`. SYS-ADR-10 compliant. Committed `0b8088c4`.
+
+---
+
+## Phase 5 — Distributable binaries + MBA peer-to-peer `[ COMPLETE ]` ✓
+
+- Configurable endpoints via `~/.config/os-console/config.toml` (`proof_endpoint`, `ingest_endpoint`, `totebox_host`, `totebox_ssh_port`, `ssh_key_path`) — committed `a020a2cd`
+- GitHub Actions `.github/workflows/release.yml`: Linux x86_64 + macOS universal (Intel+ARM via lipo) — committed `a020a2cd`
+- `os-console/src/mba_client.rs`: russh CLIENT connects to os-totebox port 2222; `authenticate_publickey` with user's SSH key; `PrivateKeyWithHashAlg`; fingerprint via `compute_fingerprint` — committed `ce6c6621`
+- Pairing ceremony TUI: when MBA INACTIVE, chassis renders pairing screen with fingerprint + `proofctl user add` instructions — committed `ce6c6621`
+
+**Pending for Phase 5 to be operationally complete:**
+- [ ] GCE firewall port 2222 open for external access — Command Session action `[2026-05-21]`
+- [ ] Service-proofreader (9092) + service-fs (9100) public endpoints — infrastructure `[2026-05-21]`
+- [ ] Peter's SSH key generated + registered via `proofctl user add peter` `[2026-05-21]`
+- [ ] Tag `v0.1.0` to trigger first CI release build `[2026-05-21]`
+- [ ] Three per-user `config.toml` files created (mathew, jennifer, peter) `[2026-05-21]`
+- [ ] **Stage 6 pending** — 13 commits on `cluster/project-proofreader` unpromoted to canonical `[2026-05-21]`
 - [ ] SSE consumer for streaming token output (`.content` field, not `.choices[0]`)
 - [ ] Streaming render into draft pane at 60Hz
 - [ ] `/regenerate` — cancel + retry at same or higher tier
@@ -204,6 +205,17 @@ Doorman endpoint: `http://localhost:8011`. **Phase 1 COMPLETE. Phase 2 = auth + 
 - [x] Outbox message to Command: rename project-proofreader→project-console, add content-wiki-documentation sub-clone, add app-console-gis/slm/system to catalog, fix Doorman port in manifest.md
 - [x] `session-start.md` updated to reflect chassis-first architecture and new plans
 - [x] All artifacts committed: `f7ad7dc`
+
+## Completed (2026-05-21 — session 5)
+
+- [x] Phase 2 COMPLETE (picked up from compaction): system-gateway-mba, SSH server, MBA gate `af462797`
+- [x] Phase 3 COMPLETE: ContentCartridge full proofread workflow `480dd105`
+- [x] Phase 4 COMPLETE: F12 InputCartridge (The Anchor, SYS-ADR-10) `0b8088c4`
+- [x] Phase 5 COMPLETE: configurable endpoints, GitHub Actions release CI `a020a2cd`
+- [x] Phase 5 cont.: MBA peer-to-peer russh client, pairing ceremony TUI `ce6c6621`
+- [x] Architecture pivot: local distributable TUI binaries (not SSH server-side TUI)
+- [x] Per-user config.toml pattern established (username, tenant, endpoints, ssh_key_path, totebox_host)
+- [x] "Pairing as Permission" TUI: fingerprint display + `proofctl user add` instructions in chassis
 
 ## Completed (2026-05-20 — session 4)
 

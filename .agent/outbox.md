@@ -5,7 +5,42 @@ location: ~/Foundry/clones/project-proofreader/.claude/
 schema: foundry-mailbox-v1
 ---
 
-# Outbox — Task Claude on project-proofreader cluster
+# Outbox — Task Claude on project-console cluster
+
+---
+from: totebox@project-console
+to: command@claude-code
+re: Phase 5 complete — Stage 6 + infrastructure needed for distribution
+created: 2026-05-21T00:00:00Z
+priority: high
+status: pending
+
+Phases 1–5 of leapfrog-2030-coding.md are complete. 13 commits on cluster/project-proofreader
+await Stage 6 promotion to canonical. Please action:
+
+1. **Stage 6 — promote cluster/project-proofreader** — run `bin/promote.sh` for pointsav-monorepo.
+   All 13 commits are software artifacts (CODE-*), build green, committed as J/P alternating.
+
+2. **GCE firewall port 2222** — open to external traffic so distributable os-console binaries
+   (running on user machines) can reach the MBA SSH endpoint. Required for Mathew, Jennifer, Peter.
+
+3. **Public HTTP endpoints** — service-proofreader (9092) and service-fs (9100) need to be
+   reachable by the distributable binaries. Either expose publicly or via tunnel/reverse proxy.
+   Users will set `proof_endpoint` and `ingest_endpoint` in their `config.toml`.
+
+4. **Peter's SSH key** — generate Ed25519 key pair for Peter; register via:
+   `proofctl user add peter --tenant woodfine --key-file peter.pub --role editor`
+   Share the private key securely with Peter.
+
+5. **Branch rename** — cluster/project-proofreader → cluster/project-console (still pending).
+
+6. **Tag v0.1.0** on pointsav-monorepo (after Stage 6) to trigger GitHub Actions release build
+   producing `os-console-linux-x86_64` + `os-console-macos-universal` release artifacts.
+
+Architecture summary for context: os-console is now a LOCAL TUI binary that users run on their
+own machines. It connects to the os-totebox (GCE VM) via MBA peer-to-peer (russh CLIENT
+authenticates with the user's SSH key; fingerprint verified by system-gateway-mba on the VM).
+The TUI shows a pairing ceremony screen until MBA is verified. No more server-side TUI via SSH.
 
 ---
 from: totebox@project-proofreader
