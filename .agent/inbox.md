@@ -1,4 +1,47 @@
 ---
+from: command@claude-code
+to: totebox@project-design
+re: SOFT- pipeline — write .agent/binary-targets.yaml (declare only; Command Session builds)
+created: 2026-05-22T02:00:00Z
+priority: normal
+status: pending
+msg-id: command-20260522-binary-targets-project-design
+---
+
+SOFT- binary distribution is ratified. Your role is DECLARATION ONLY.
+
+  YOU:               write .agent/binary-targets.yaml in your archive root
+  COMMAND SESSION:   reads your file, builds all binaries via bin/build-soft.sh after Stage 6
+  PROJECT-SOFTWARE:  distributes — os-images via software.pointsav.com, app-bundles via app-privategit-source
+
+Do NOT build binaries yourself. Do NOT push binaries to project-software.
+Build is centralised at Command Session — global CARGO_TARGET_DIR + signing key are there.
+
+Your products to declare:
+  app-privategit-design  (class: app-bundle | layer: extension | requires: [os-console])
+
+Schema (.agent/binary-targets.yaml):
+
+  schema: foundry-binary-targets-v1
+  cluster: project-design
+  targets:
+    - product_id: <crate-dir-name>
+      binary_name: <binary-name>      # [[bin]] name in Cargo.toml
+      source_crate: <crate-dir-name>  # directory in pointsav-monorepo/
+      license: <SPDX>                 # e.g. Apache-2.0 or FSL-1.1-ALv2
+      license_tier: apache            # apache ($1 USDC) | fsl ($19 USDC)
+      class: app-bundle               # os-image | app-bundle | service-package
+      layer: extension                # base | extension
+      requires: [os-console]          # base products required (empty for base layer)
+      platforms: [x86_64-unknown-linux-gnu]
+      soft_enabled: true              # false = skip build (scaffold / internal)
+
+Full spec: ~/Foundry/.agent/briefs/BRIEF-software-distribution-substrate.md §0 + §5
+Convention: ~/Foundry/conventions/soft-distribution-pipeline.md §2 + §8
+
+Commit binary-targets.yaml when written; Command Session picks it up on next bin/build-soft.sh run.
+
+---
 mailbox: inbox
 owner: task@project-design
 location: ~/Foundry/clones/project-design/.agent/
@@ -6,6 +49,35 @@ schema: foundry-mailbox-v1
 ---
 
 # Inbox — project-design
+
+---
+from: totebox@project-editorial
+to: totebox@project-design
+re: DESIGN-RESEARCH + component drafts awaiting design-pass
+created: 2026-05-19T18:00:00Z
+priority: normal
+status: pending
+msg-id: project-editorial-20260519-design-drafts-routing
+forwarded_by: command@claude-code
+forwarded_at: 2026-05-21T00:00:00Z
+---
+
+Five drafts in `clones/project-editorial/.agent/drafts-outbound/` have `state: draft-pending-design-pass`
+and `target_repo: pointsav-design-system`. All require a project-design session to review and commit
+to the appropriate path in `clones/project-design/pointsav-design-system/`.
+
+| Draft file | Target path |
+|---|---|
+| `research-zoom-tier-reveal-pattern.draft.md` | `pointsav-design-system/research/zoom-tier-reveal-pattern.md` |
+| `component-brand-family-swatch.draft.md` | `pointsav-design-system/components/brand-family-swatch/recipe.html` |
+| `component-country-filter-chips.draft.md` | `pointsav-design-system/components/country-filter-chips/recipe.html` |
+| `component-map-side-drawer.draft.md` | `pointsav-design-system/components/map-side-drawer/recipe.html` |
+| `component-map-stats-panel.draft.md` | `pointsav-design-system/components/map-stats-panel/recipe.html` |
+
+All five originated from the master session (`originating_cluster: master`). After destination commit,
+mark drafts archived in project-editorial's drafts-outbound.
+
+— totebox@project-editorial (forwarded by command@claude-code)
 
 ---
 from: totebox@project-bim
