@@ -50,7 +50,6 @@ use tokio::fs;
 
 use crate::assets::StaticAsset;
 use crate::auth::CurrentUser;
-use crate::collab::CollabRooms;
 use crate::error::WikiError;
 use crate::jsonld::jsonld_for_topic;
 use crate::render::{extract_headings, inject_edit_pencils, parse_page, render_html_raw, Frontmatter, TranslationMap};
@@ -84,14 +83,6 @@ pub struct AppState {
     /// Phase 4 Step 4.1: git2 repository for content versioning. Mutex-wrapped
     /// because Repository is not thread-safe for mutating operations.
     pub git: Arc<Mutex<git2::Repository>>,
-    /// Phase 2 Step 7: per-slug collab WebSocket rooms. Always present
-    /// (cheap empty default); only the `/ws/collab/{slug}` route uses
-    /// it, and that route is only mounted when `enable_collab` is true.
-    pub collab: Arc<CollabRooms>,
-    /// Phase 2 Step 7: when true, mount the `/ws/collab/{slug}` route
-    /// and template `window.WIKI_COLLAB_ENABLED = true` into the editor
-    /// page so `saa-init.js` lazy-loads the collab JS bundle.
-    pub enable_collab: bool,
     /// Phase 4 Step 4.7: tenant name for the read-only git remote.
     pub git_tenant: String,
     /// Phase 4 Step 4.6: when true, mount `POST /mcp` and expose the
@@ -113,7 +104,6 @@ pub struct AppState {
 }
 
 pub fn router(state: AppState) -> Router {
-    let collab_enabled = state.enable_collab;
     let mcp_enabled = state.mcp_enabled;
     let mut r = Router::new()
         .route("/", get(index))
@@ -187,12 +177,6 @@ pub fn router(state: AppState) -> Router {
         .route("/special/categories", get(categories_index_page))
         // Phase 4 Step 4.8 — OpenAPI 3.1 specification
         .route("/openapi.yaml", get(openapi_yaml));
-    // Phase 2 Step 7 — collab WebSocket relay; only mounted when the CLI
-    // flag is set (default off — production deploys without --enable-collab
-    // never expose the route).
-    if collab_enabled {
-        r = r.route("/ws/collab/{slug}", get(crate::collab::ws_collab));
-    }
     // Phase 4 Step 4.6 — MCP JSON-RPC 2.0 endpoint; only mounted when
     // --enable-mcp is set (default off).
     if mcp_enabled {
@@ -3382,10 +3366,7 @@ mod tests {
                 // file never triggers a load.
                 citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
                 search: Arc::new(index),
-                git: Arc::new(Mutex::new(repo)),
-                collab: Arc::new(crate::collab::CollabRooms::new()),
-                enable_collab: false,
-                site_title: "PointSav Documentation Wiki".to_string(),
+                git: Arc::new(Mutex::new(repo)),                site_title: "PointSav Documentation Wiki".to_string(),
                 git_tenant: "pointsav".to_string(),
             mcp_enabled: false,
                 glossary: Arc::new(crate::glossary::Glossary::default()),
@@ -3552,10 +3533,7 @@ mod tests {
             guide_dir_2: None,
             citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
             search: Arc::new(index),
-            git: Arc::new(Mutex::new(repo)),
-            collab: Arc::new(crate::collab::CollabRooms::new()),
-            enable_collab: false,
-            site_title: "PointSav Documentation Wiki".to_string(),
+            git: Arc::new(Mutex::new(repo)),            site_title: "PointSav Documentation Wiki".to_string(),
             git_tenant: "pointsav".to_string(),
             mcp_enabled: false,
             glossary: Arc::new(crate::glossary::Glossary::default()),
@@ -3627,10 +3605,7 @@ mod tests {
             guide_dir_2: None,
             citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
             search: Arc::new(index),
-            git: Arc::new(Mutex::new(repo)),
-            collab: Arc::new(crate::collab::CollabRooms::new()),
-            enable_collab: false,
-            site_title: "PointSav Documentation Wiki".to_string(),
+            git: Arc::new(Mutex::new(repo)),            site_title: "PointSav Documentation Wiki".to_string(),
             git_tenant: "pointsav".to_string(),
             mcp_enabled: false,
             glossary: Arc::new(crate::glossary::Glossary::default()),
@@ -3680,10 +3655,7 @@ mod tests {
             guide_dir_2: None,
             citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
             search: Arc::new(index),
-            git: Arc::new(Mutex::new(repo)),
-            collab: Arc::new(crate::collab::CollabRooms::new()),
-            enable_collab: false,
-            site_title: "PointSav Documentation Wiki".to_string(),
+            git: Arc::new(Mutex::new(repo)),            site_title: "PointSav Documentation Wiki".to_string(),
             git_tenant: "pointsav".to_string(),
             mcp_enabled: false,
             glossary: Arc::new(crate::glossary::Glossary::default()),
@@ -3730,10 +3702,7 @@ mod tests {
             guide_dir_2: None,
             citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
             search: Arc::new(index),
-            git: Arc::new(Mutex::new(repo)),
-            collab: Arc::new(crate::collab::CollabRooms::new()),
-            enable_collab: false,
-            site_title: "PointSav Documentation Wiki".to_string(),
+            git: Arc::new(Mutex::new(repo)),            site_title: "PointSav Documentation Wiki".to_string(),
             git_tenant: "pointsav".to_string(),
             mcp_enabled: false,
             glossary: Arc::new(crate::glossary::Glossary::default()),
@@ -3787,10 +3756,7 @@ mod tests {
             guide_dir_2: None,
             citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
             search: Arc::new(index),
-            git: Arc::new(Mutex::new(repo)),
-            collab: Arc::new(crate::collab::CollabRooms::new()),
-            enable_collab: false,
-            site_title: "PointSav Documentation Wiki".to_string(),
+            git: Arc::new(Mutex::new(repo)),            site_title: "PointSav Documentation Wiki".to_string(),
             git_tenant: "pointsav".to_string(),
             mcp_enabled: false,
             glossary: Arc::new(crate::glossary::Glossary::default()),
@@ -3847,10 +3813,7 @@ mod tests {
             guide_dir_2: None,
             citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
             search: Arc::new(index),
-            git: Arc::new(Mutex::new(repo)),
-            collab: Arc::new(crate::collab::CollabRooms::new()),
-            enable_collab: false,
-            site_title: "PointSav Documentation Wiki".to_string(),
+            git: Arc::new(Mutex::new(repo)),            site_title: "PointSav Documentation Wiki".to_string(),
             git_tenant: "pointsav".to_string(),
             mcp_enabled: false,
             glossary: Arc::new(crate::glossary::Glossary::default()),
@@ -3900,10 +3863,7 @@ mod tests {
             guide_dir_2: None,
             citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
             search: Arc::new(index),
-            git: Arc::new(Mutex::new(repo)),
-            collab: Arc::new(crate::collab::CollabRooms::new()),
-            enable_collab: false,
-            site_title: "Test Wiki".to_string(),
+            git: Arc::new(Mutex::new(repo)),            site_title: "Test Wiki".to_string(),
             git_tenant: "pointsav".to_string(),
             mcp_enabled: false,
             glossary: Arc::new(crate::glossary::Glossary::default()),
@@ -3964,10 +3924,7 @@ mod tests {
             guide_dir_2: None,
             citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
             search: Arc::new(index),
-            git: Arc::new(Mutex::new(repo)),
-            collab: Arc::new(crate::collab::CollabRooms::new()),
-            enable_collab: false,
-            site_title: "PointSav Documentation Wiki".to_string(),
+            git: Arc::new(Mutex::new(repo)),            site_title: "PointSav Documentation Wiki".to_string(),
             git_tenant: "pointsav".to_string(),
             mcp_enabled: false,
             glossary: Arc::new(crate::glossary::Glossary::default()),
@@ -4025,10 +3982,7 @@ mod tests {
             guide_dir_2: None,
             citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
             search: Arc::new(index),
-            git: Arc::new(Mutex::new(repo)),
-            collab: Arc::new(crate::collab::CollabRooms::new()),
-            enable_collab: false,
-            site_title: "PointSav Documentation Wiki".to_string(),
+            git: Arc::new(Mutex::new(repo)),            site_title: "PointSav Documentation Wiki".to_string(),
             git_tenant: "pointsav".to_string(),
             mcp_enabled: false,
             glossary: Arc::new(crate::glossary::Glossary::default()),
@@ -4088,10 +4042,7 @@ mod tests {
             guide_dir_2: None,
             citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
             search: Arc::new(index),
-            git: Arc::new(Mutex::new(repo)),
-            collab: Arc::new(crate::collab::CollabRooms::new()),
-            enable_collab: false,
-            site_title: "PointSav Documentation Wiki".to_string(),
+            git: Arc::new(Mutex::new(repo)),            site_title: "PointSav Documentation Wiki".to_string(),
             git_tenant: "pointsav".to_string(),
             mcp_enabled: false,
             glossary: Arc::new(crate::glossary::Glossary::default()),
@@ -4144,10 +4095,7 @@ mod tests {
             guide_dir_2: None,
             citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
             search: Arc::new(index),
-            git: Arc::new(Mutex::new(repo)),
-            collab: Arc::new(crate::collab::CollabRooms::new()),
-            enable_collab: false,
-            site_title: "PointSav Documentation Wiki".to_string(),
+            git: Arc::new(Mutex::new(repo)),            site_title: "PointSav Documentation Wiki".to_string(),
             git_tenant: "pointsav".to_string(),
             mcp_enabled: false,
             glossary: Arc::new(crate::glossary::Glossary::default()),
