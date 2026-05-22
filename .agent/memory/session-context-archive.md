@@ -5,6 +5,25 @@ Newest first.
 
 ---
 
+## 2026-05-20 | Totebox | claude-code
+
+**Done this session:**
+- G2 (`a06f64f`, Peter): `README-TOTEBOX-EGRESS.md` removed from woodfine-fleet-deployment cluster-clone. Canonical copy still present — Command Session admin-tier commit required (outbox updated).
+- PJ2 (`b138b99`, Jennifer): 5 country co-location index stubs expanded (Italy, Mexico, Nordics, Poland, Spain); ES frontmatter `paired_with:` bug fixed; `language_protocol` → `TRANSLATE-ES`.
+- C8–C10 (`cb53200`, Peter): 10 new corporate wiki topics + 10 ES bilingual pairs (20 files).
+- Corporate wiki housekeeping (`ebc2939`, Peter): `featured-topic.yaml` 15-topic pool; `leapfrog-facts.yaml` 9 facts; `.agent/rules/` bootstrap.
+- Projects wiki housekeeping (`bffe4e3`, Jennifer): `NEXT.md` current; `CLAUDE.md` created.
+
+**Pending / carry-forward:**
+- Items 6 + 7 deferred (corporate glossary + thin-category audit).
+- D10 wikilink validation — blocked on Stage 6 rebuild.
+- G2 canonical removal — Command Session.
+- Stage 6 outstanding: content-wiki-projects (6), content-wiki-corporate (10, blocked on divergence), content-wiki-documentation (4), monorepo (16).
+
+**Operator preferences surfaced:**
+- "do them all in parallel" / "yes" → execute immediately in parallel without re-asking.
+- No trailing summaries mid-session; concise updates only.
+
 ## 2026-05-19 | Totebox | claude-code
 
 **Done:** D3 (`cf72e67` — substrate/patterns `_index` MOC expanded 7→32 and 3→10, bilingual). D6 (`a07bdf5` — governance category complete: `sovereign-airlock-doctrine` EN+ES rewritten, 3 stubs elevated, `_index` expanded). Projects wiki PJ1/PJ4/PJ5/PJ7 committed. Outbox: consolidated 4-commit documentation promote request.
