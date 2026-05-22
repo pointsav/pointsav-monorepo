@@ -9,11 +9,75 @@ schema: foundry-mailbox-v1
 
 ---
 from: task@project-gis
+to: command@foundry
+re: Phase 17 complete — EU taxonomy audit; 12 zero-cost chain activations; 5,273 clusters; T1=1,136
+created: 2026-05-22T20:00:00Z
+msg-id: phase17-complete-20260522
+---
+
+Phase 17 committed (af434817, jwoodfine). EU country-by-country taxonomy audit complete.
+
+## Chains activated (zero-cost — data already ingested, taxonomy gap only)
+
+| Chain | ISO | Records | Note |
+|---|---|---|---|
+| carrefour-hypermarket-es | ES | 326 | Q217599 |
+| alcampo-es | ES | 323 | Q2832081 (Auchan ES) |
+| leclerc-es | ES | 220 | |
+| carrefour-hypermarket-it | IT | 215 | Q217599 |
+| famila-it | IT | 215 | Selex group |
+| ipercoop-it | IT | 101 | Coop Italia hyper |
+| auchan-pl | PL | 120 | Q758603 — fixes 0% T1 country |
+| carrefour-hypermarket-pl | PL | 114 | Q217599 — fixes 0% T1 country |
+| maxi-ica-se | SE | 50 | Q104553487 — Sweden's #1 large-format |
+
+## Correction applied
+
+- `clas-ohlson-se` demoted from hardware — small-format housewares, not home-improvement anchor
+
+## T1 uplift (EU)
+
+| ISO | Before | After | Delta |
+|---|---|---|---|
+| PL | 0 | 17 | +17 |
+| IT | 3 | 8 | +5 |
+| ES | 25 | 29 | +4 |
+| SE | 8 | 4 | -4 (correct — false hardware signals removed) |
+| EU total | ~101 | ~123 | +22 |
+
+## Overall rebuild result
+
+- 5,273 clusters; T1=1,136 / T2=3,865 / T3=272
+- layer2-clusters.pmtiles (37.7 MB) deployed
+- clusters-meta.json (11 MB) deployed
+
+## Data gap identified (NOT yet fixed — requires re-ingest)
+
+`ikea-nordics.yaml` uses `multi_country: true` → stores land with `iso_country_code: "NORDICS"`
+(not a real ISO). ikea-se/dk/no/fi chain_ids have 0 ingested records. DK and NO have literally
+no usable IKEA data. Fix: per-country YAML with ISO bbox filtering.
+
+## Next ingest work queued
+
+| Chain | ISO | Stores | Priority |
+|---|---|---|---|
+| ikea-se, ikea-dk, ikea-no, ikea-fi | SE/DK/NO/FI | ~26 total | HIGH — Nordic IKEA gap |
+| kaufland-pl | PL | ~220 | HIGH — largest remaining PL opportunity |
+| foetex-dk | DK | ~100 | MEDIUM — fixes thin DK hypermarket |
+| wickes-uk | GB | ~230 | HIGH — already flagged in chain-coverage-audit |
+| interspar-at | AT | ~70 | LOW |
+
+---
+from: task@project-gis
 to: command@claude-code
 re: DELIVERY REQUEST — colocation-tier-summary to project-jennifer
 created: 2026-05-22T00:00:00Z
 priority: normal
 msg-id: delivery-20260522-colocation-summary-jennifer
+status: actioned
+actioned_by: command@claude-code
+actioned_at: 2026-05-22T17:56:00Z
+note: files copied to project-jennifer outputs/co-locations/; inbox message prepended
 ---
 
 Two files are staged in this cluster's drafts-outbound and need delivery
