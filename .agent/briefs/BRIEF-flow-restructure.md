@@ -70,10 +70,13 @@ plan (Phases 0–8) with gates and commit guidance. Start here tomorrow.
 **Phase 2 — DONE** (2026-05-22 session 2): `foundry-nodeclass` crate — 392 LOC, 11 unit tests + doctest, NodeClass::as_str() added session 3.
 **Phase 3 — DONE** (2026-05-22 session 2): `SqliteGraphStore` + runtime backend selection + background CORPUS drain + hardcoded base_dir fixed. cargo check clean. lbug linker (cargo build) pre-existing blocker — Option 1 locked.
 **Phase 4 — DONE** (2026-05-22 session 3): `build_doorman()` gates local on `supports_on_node_ai()` + `SLM_FORCE_BROKER_MODE`; `select_tier()` invariant test; `/readyz` reports node_class/tier_a/tier_a_reason/ai_available; `local-doorman.service` → soft `Wants=`; 241+ tests green.
+**Phase 5 — DONE** (2026-05-22 session 4): `tests/micro_node.rs` (5 integration tests — readyz, 503, healthz, force-broker, hardware sanity); 8 `SqliteGraphStore` round-trip tests in `service-content/src/graph.rs`; `scripts/run-micro-sandbox.sh` cgroup sandbox (MemoryMax=1G, CPUQuota=25%); 260/260 tests pass. Commit: `32213020`.
 
-**▶ RESUME HERE — Phase 5 (§8.E):**
-- `TOTEBOX_NODE_CLASS=micro` integration tests: `tests/micro_node.rs` in service-slm — broker has no Tier A, `/readyz` honest, AI request → 503 clean; sqlite GraphStore round-trips.
-- cgroup sandbox script: `scripts/run-micro-sandbox.sh` via `systemd-run --user -p MemoryMax=1G -p CPUQuota=25%`.
+**▶ RESUME HERE — Phase 6 (§8.F, deferred items):**
+- `latency_class` field in `slm-core` (corrected W1 — see §8.F)
+- Broker discipline — quarantine `idle_monitor.rs` behind `BackendLifecycle` trait
+- Reconcile Tier A model drift (1B vs 7B-Think in env files)
+- GF-1 async audit off hot path · GF-2 Tier A client timeouts
 
 **Pending — Command Session (not Totebox scope):**
 - Rebuild the `slm-yoyo` Packer image so Phase-0 G3/G17 take effect on the VM.
