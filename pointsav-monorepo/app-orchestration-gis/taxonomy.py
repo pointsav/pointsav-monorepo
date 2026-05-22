@@ -238,6 +238,7 @@ BRAND_FILL: dict[str, dict[str, list[str]]] = {
         ],
         "FI": [
             "k-rauta-fi",
+            "bauhaus-fi",  # 6 records, Q532716 — Phase 18 2026-05-22
         ],
         "IS": [
             "husasmidjan-is",
@@ -395,7 +396,7 @@ DISPLAY_NAMES: dict[str, str] = {
     "gamma-nl": "Gamma",
     "karwei-nl": "Karwei",
     "leroy-merlin-pt": "Leroy Merlin",
-    "bauhaus-se": "Bauhaus", "bauhaus-dk": "Bauhaus", "bauhaus-no": "Bauhaus",
+    "bauhaus-se": "Bauhaus", "bauhaus-dk": "Bauhaus", "bauhaus-no": "Bauhaus", "bauhaus-fi": "Bauhaus",
     "clas-ohlson-se": "Clas Ohlson",
     "imerco-dk": "Imerco",
     "silvan-dk": "Silvan",
