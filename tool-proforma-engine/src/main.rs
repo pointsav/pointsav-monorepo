@@ -2,6 +2,7 @@ use clap::{Parser, Subcommand};
 use proforma_engine::{
     compute, Assumptions,
     excel::{pclp1, titleco, wcp},
+    html,
     report::{d1_dev_classes, d2_direct_hold, d3_wcp},
 };
 use std::io::{self, Read};
@@ -21,6 +22,10 @@ struct Cli {
     /// Write output to this file instead of stdout.
     #[arg(short, long, global = true)]
     out: Option<PathBuf>,
+
+    /// Render as a self-contained HTML page instead of markdown.
+    #[arg(long, global = true)]
+    html: bool,
 }
 
 #[derive(Subcommand)]
@@ -62,7 +67,8 @@ fn main() {
                 std::process::exit(1);
             });
             let md = d2_direct_hold::render(&data);
-            write_output(&md, cli.out.as_ref());
+            let out = if cli.html { html::render(&md, &data.title) } else { md };
+            write_output(&out, cli.out.as_ref());
         }
         Some(Command::Wcp { xlsx }) => {
             let data = wcp::read(&xlsx).unwrap_or_else(|e| {
@@ -70,7 +76,8 @@ fn main() {
                 std::process::exit(1);
             });
             let md = d3_wcp::render(&data);
-            write_output(&md, cli.out.as_ref());
+            let out = if cli.html { html::render(&md, &data.title) } else { md };
+            write_output(&out, cli.out.as_ref());
         }
         Some(Command::DevClasses { xlsx }) => {
             let base = titleco::read(&xlsx).unwrap_or_else(|e| {
@@ -78,7 +85,9 @@ fn main() {
                 std::process::exit(1);
             });
             let md = d1_dev_classes::render(&base);
-            write_output(&md, cli.out.as_ref());
+            let title = format!("Development Classes — {}", base.entity);
+            let out = if cli.html { html::render(&md, &title) } else { md };
+            write_output(&out, cli.out.as_ref());
         }
         None => {
             // Legacy: JSON assumptions → sensitivity engine
