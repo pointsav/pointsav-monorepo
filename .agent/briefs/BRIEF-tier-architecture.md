@@ -1,3 +1,8 @@
+---
+artifact: brief
+status: active
+---
+
 # Tier Architecture Policy — 2026
 
 > Authored: 2026-05-14 task@project-intelligence (Opus deep-think)
