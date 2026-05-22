@@ -94,7 +94,11 @@ pub fn compute(class: &DevClass, base: &TitlecoProforma) -> DevClassOutput {
     let total_leasable = office_sqft + class.retail_sqft;
 
     // Gross floor area adds ~27% for structure/common areas (ratio from TitleCo base)
-    let base_gfa_ratio = if base.total_sqft > 0.0 { 80_080.0 / base.total_sqft } else { 1.257 };
+    let base_gfa_ratio = if base.total_sqft > 0.0 {
+        80_080.0 / base.total_sqft
+    } else {
+        1.257
+    };
     let gross_floor_area = total_leasable * base_gfa_ratio;
 
     // Development cost — use base construction rate per GFA sqft
@@ -114,11 +118,15 @@ pub fn compute(class: &DevClass, base: &TitlecoProforma) -> DevClassOutput {
 
     // Stabilised revenue and NOI
     // Use office rate from base (first area with rate > 0)
-    let office_rate = base.areas.iter()
+    let office_rate = base
+        .areas
+        .iter()
         .find(|a| a.label.contains("Office") && a.rate_per_sqft > 0.0)
         .map(|a| a.rate_per_sqft)
         .unwrap_or(38.0);
-    let retail_rate = base.areas.iter()
+    let retail_rate = base
+        .areas
+        .iter()
         .find(|a| a.label.contains("Retail") && a.rate_per_sqft > 0.0)
         .map(|a| a.rate_per_sqft)
         .unwrap_or(45.0);
@@ -126,8 +134,16 @@ pub fn compute(class: &DevClass, base: &TitlecoProforma) -> DevClassOutput {
     let stabilised_gross_rev = office_sqft * office_rate + class.retail_sqft * retail_rate;
     let stabilised_noi = stabilised_gross_rev * (1.0 - OPEX_RATIO);
     let cap_rate = base.net_initial_yield;
-    let stabilised_av = if cap_rate > 0.0 { stabilised_noi / cap_rate } else { 0.0 };
-    let development_yield = if total_dev_cost > 0.0 { stabilised_noi / total_dev_cost } else { 0.0 };
+    let stabilised_av = if cap_rate > 0.0 {
+        stabilised_noi / cap_rate
+    } else {
+        0.0
+    };
+    let development_yield = if total_dev_cost > 0.0 {
+        stabilised_noi / total_dev_cost
+    } else {
+        0.0
+    };
 
     // Debt and equity
     let debt = total_dev_cost * LTV_ON_COST;
@@ -136,9 +152,8 @@ pub fn compute(class: &DevClass, base: &TitlecoProforma) -> DevClassOutput {
     let mut years = Vec::with_capacity(10);
     let mut ending_cash: f64 = 0.0;
 
-    for i in 0..10usize {
+    for (i, &occ) in OCCUPANCY.iter().enumerate() {
         let year = i as u32 + 1;
-        let occ = OCCUPANCY[i];
 
         let gross_rev = stabilised_gross_rev * occ;
         let opex = gross_rev * OPEX_RATIO;
@@ -148,7 +163,11 @@ pub fn compute(class: &DevClass, base: &TitlecoProforma) -> DevClassOutput {
 
         // Balance sheet
         let wip = if i == 0 { total_dev_cost } else { 0.0 };
-        let asset_value = if occ > 0.0 && cap_rate > 0.0 { noi / cap_rate } else { 0.0 };
+        let asset_value = if occ > 0.0 && cap_rate > 0.0 {
+            noi / cap_rate
+        } else {
+            0.0
+        };
         let total_assets = asset_value + wip + ending_cash;
         let equity = (total_assets - debt).max(0.0);
 
@@ -191,9 +210,15 @@ pub fn compute(class: &DevClass, base: &TitlecoProforma) -> DevClassOutput {
 }
 
 fn fmt_m(v: f64) -> String {
-    if v == 0.0 { return "—".to_string(); }
+    if v == 0.0 {
+        return "—".to_string();
+    }
     let m = v / 1_000_000.0;
-    if m < 0.0 { format!("({:.2}M)", m.abs()) } else { format!("{:.2}M", m) }
+    if m < 0.0 {
+        format!("({:.2}M)", m.abs())
+    } else {
+        format!("{:.2}M", m)
+    }
 }
 
 fn fmt_pct(v: f64) -> String {
@@ -234,29 +259,65 @@ fn render_one(out: &DevClassOutput) -> String {
     s.push_str("### Income Statement\n\n");
     s.push_str(&yr_header());
     s.push_str(&sep());
-    s.push_str(&yr_row("Revenue", out.years.iter().map(|y| y.revenue).collect()));
-    s.push_str(&yr_row("Operating Costs", out.years.iter().map(|y| y.operating_costs).collect()));
-    s.push_str(&yr_row("**NOI**", out.years.iter().map(|y| y.noi).collect()));
-    s.push_str(&yr_row("Interest", out.years.iter().map(|y| y.interest).collect()));
-    s.push_str(&yr_row("**EBT**", out.years.iter().map(|y| y.ebt).collect()));
+    s.push_str(&yr_row(
+        "Revenue",
+        out.years.iter().map(|y| y.revenue).collect(),
+    ));
+    s.push_str(&yr_row(
+        "Operating Costs",
+        out.years.iter().map(|y| y.operating_costs).collect(),
+    ));
+    s.push_str(&yr_row(
+        "**NOI**",
+        out.years.iter().map(|y| y.noi).collect(),
+    ));
+    s.push_str(&yr_row(
+        "Interest",
+        out.years.iter().map(|y| y.interest).collect(),
+    ));
+    s.push_str(&yr_row(
+        "**EBT**",
+        out.years.iter().map(|y| y.ebt).collect(),
+    ));
 
     // Balance Sheet
     s.push_str("\n### Balance Sheet\n\n");
     s.push_str(&yr_header());
     s.push_str(&sep());
-    s.push_str(&yr_row("Total Assets", out.years.iter().map(|y| y.total_assets).collect()));
+    s.push_str(&yr_row(
+        "Total Assets",
+        out.years.iter().map(|y| y.total_assets).collect(),
+    ));
     s.push_str(&yr_row("Debt", out.years.iter().map(|y| y.debt).collect()));
-    s.push_str(&yr_row("**Equity**", out.years.iter().map(|y| y.equity).collect()));
+    s.push_str(&yr_row(
+        "**Equity**",
+        out.years.iter().map(|y| y.equity).collect(),
+    ));
 
     // Cash Flow
     s.push_str("\n### Cash Flow Statement\n\n");
     s.push_str(&yr_header());
     s.push_str(&sep());
-    s.push_str(&yr_row("CF from Operations", out.years.iter().map(|y| y.cf_from_operations).collect()));
-    s.push_str(&yr_row("Capex", out.years.iter().map(|y| y.capex).collect()));
-    s.push_str(&yr_row("Debt Drawdown", out.years.iter().map(|y| y.debt_drawdown).collect()));
-    s.push_str(&yr_row("Distributions", out.years.iter().map(|y| y.distributions).collect()));
-    s.push_str(&yr_row("Ending Cash", out.years.iter().map(|y| y.ending_cash).collect()));
+    s.push_str(&yr_row(
+        "CF from Operations",
+        out.years.iter().map(|y| y.cf_from_operations).collect(),
+    ));
+    s.push_str(&yr_row(
+        "Capex",
+        out.years.iter().map(|y| y.capex).collect(),
+    ));
+    s.push_str(&yr_row(
+        "Debt Drawdown",
+        out.years.iter().map(|y| y.debt_drawdown).collect(),
+    ));
+    s.push_str(&yr_row(
+        "Distributions",
+        out.years.iter().map(|y| y.distributions).collect(),
+    ));
+    s.push_str(&yr_row(
+        "Ending Cash",
+        out.years.iter().map(|y| y.ending_cash).collect(),
+    ));
 
     s
 }
@@ -272,7 +333,11 @@ pub fn render(base: &TitlecoProforma) -> String {
         "> Base assumptions from TitleCo 3: construction ${:.2}/sqft GFA, \
         office ${:.0}/sqft NLA, TI ${:.0}/sqft NLA, cap rate {:.2}%.\n\n",
         base.construction_rate,
-        base.areas.iter().find(|a| a.label.contains("Office")).map(|a| a.rate_per_sqft).unwrap_or(38.0),
+        base.areas
+            .iter()
+            .find(|a| a.label.contains("Office"))
+            .map(|a| a.rate_per_sqft)
+            .unwrap_or(38.0),
         base.ti_rate,
         base.net_initial_yield * 100.0,
     ));
@@ -281,7 +346,7 @@ pub fn render(base: &TitlecoProforma) -> String {
         let result = compute(class, base);
         out.push_str("---\n\n");
         out.push_str(&render_one(&result));
-        out.push_str("\n");
+        out.push('\n');
     }
 
     out

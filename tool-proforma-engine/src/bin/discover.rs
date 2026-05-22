@@ -28,7 +28,7 @@ fn main() {
     if args.len() == 2 {
         println!("=== {} ===", path.file_name().unwrap().to_string_lossy());
         for name in &sheet_names {
-            match wb.worksheet_range(&name) {
+            match wb.worksheet_range(name) {
                 Ok(range) => {
                     let (rows, cols) = range.get_size();
                     println!("  sheet {:?}  {} rows × {} cols", name, rows, cols);
@@ -73,7 +73,13 @@ fn main() {
         (rs, re)
     };
 
-    println!("Sheet {:?}: {} rows × {} cols (cols A–{})", sheet, nrows, ncols, col_letter(ncols.saturating_sub(1)));
+    println!(
+        "Sheet {:?}: {} rows × {} cols (cols A–{})",
+        sheet,
+        nrows,
+        ncols,
+        col_letter(ncols.saturating_sub(1))
+    );
     println!();
 
     // Header row
@@ -153,7 +159,7 @@ fn col_letter(idx: usize) -> String {
 }
 
 fn col_from_str(s: &str) -> usize {
-    s.chars().fold(0usize, |acc, c| {
-        acc * 26 + (c as u8 - b'A') as usize + 1
-    }) - 1
+    s.chars()
+        .fold(0usize, |acc, c| acc * 26 + (c as u8 - b'A') as usize + 1)
+        - 1
 }
