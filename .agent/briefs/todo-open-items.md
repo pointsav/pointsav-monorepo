@@ -1,7 +1,16 @@
 # Open items — project-editorial
 
-> Persistent TODO tracker. Updated at session end. Last updated: 2026-05-21.
+> Persistent TODO tracker. Updated at session end. Last updated: 2026-05-22.
 > Completed items remain here (checked) for one session before archiving to `archive/`.
+
+---
+
+## DONE — 2026-05-22 session
+
+- [x] **Briefs migration** — `.agent/plans/` → `.agent/briefs/`, `BRIEF-` prefix + frontmatter + README (`e5bd2514`)
+- [x] **Editorial plan AUTO block (items 1–10)** — E1, E4, A0, D1, D2, D3, D4, D6, A1, E-ruleset committed; editorial-QA substrate built at `.agent/editorial-qa/`
+- [x] **A2 — twelve flagship TOPIC rewrites (EN+ES)** — Bloomberg lede + Gate-0 + claim markup per claim-authoring-convention #54 (`d71f0c3`…`63d133a`)
+- [x] **A4 close-out** — wikilink audit 0 broken across all 3 wikis; `wikilink-audit.py` added (`19c64001`); plan §12 close-out recorded; Stage 6 publish request routed to Command
 
 ---
 
@@ -49,9 +58,12 @@
 
 ## PENDING — project-editorial
 
-- [ ] **Active plan:** `.agent/briefs/BRIEF-KNOWLEDGE-PLATFORM-EDITORIAL-PLAN.md` — next: A0 (encode the standard into style guides) → D1/D2 (editorial linter + failure-mode registry); E1/E4 are cheap, run first
-- [ ] **A2 HELD** — Top-12 TOPIC rewrites wait for project-knowledge's claim-authoring convention (their Phase 2.4)
-- [ ] **Inbox triage** — 4 pending messages: project-system (capability-ledger + merkle-proofs TOPICs, 6 README drafts), Command (LICENSE artifacts incl. one project-knowledge item)
+- [ ] **Editorial plan — A4 close-out complete.** Track A (project-editorial execution) + Track D (except D5) + E1/E4/E-ruleset done; recorded in `BRIEF-KNOWLEDGE-PLATFORM-EDITORIAL-PLAN.md` §12. Plan kept `status: active` — archival is operator-gated per §9.
+- [ ] **D5 — apprenticeship verdict-signing loop** — joint with project-intelligence; needs an operator signing identity. Operator action.
+- [ ] **Claim-validation linter pass** — add claim-authoring-convention §9 checks to `editorial-lint.py` (Track D follow-up).
+- [ ] **E2 / E3 / E5 / E-claim / E-rename** — cross-cluster handshakes; E-rename gated on the operator's `content-wiki-* → media-knowledge-*` GitHub rename.
+- [ ] **A1 review pass** — review Main Page lede prose when project-knowledge branches each Main Page.
+- [ ] **Inbox triage** — pending language-pass requests: project-system (capability-ledger + merkle-proofs TOPICs, 6 README drafts), Command (3 LICENSE artifacts).
 - [ ] **Old-plan deletions parked** — execute after the overhaul ships, on operator go-ahead (delete set in `BRIEF-KNOWLEDGE-PLATFORM-EDITORIAL-PLAN.md` §9)
 
 ---
