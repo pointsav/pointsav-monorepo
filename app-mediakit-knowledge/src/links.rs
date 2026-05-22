@@ -13,10 +13,17 @@
 use redb::{Database, ReadableDatabase, ReadableTable, TableDefinition};
 use regex::Regex;
 use std::{path::Path, sync::Arc};
+use crate::claim::Claim;
 use crate::error::WikiError;
 
 const OUTLINKS: TableDefinition<&str, u8> = TableDefinition::new("outlinks");
 const HASHES: TableDefinition<&str, &[u8]> = TableDefinition::new("hashes");
+
+// Phase 3.3 — claim-dependency graph. Composite key
+// `from_claim_id\x00to_claim_id` → u8 sentinel; claim ids are global
+// (`<slug>:<local-id>`, convention §7). Forward scan = `depends_on`;
+// reverse scan = `cited_by` (dependents). Mirrors the OUTLINKS pattern.
+const CLAIM_DEPS: TableDefinition<&str, u8> = TableDefinition::new("claim_deps");
 
 pub struct LinkGraph {
     db: Arc<Database>,
@@ -36,6 +43,7 @@ impl LinkGraph {
         let wtx = db.begin_write().map_err(|e| WikiError::LinkGraph(e.to_string()))?;
         let _ = wtx.open_table(OUTLINKS).map_err(|e| WikiError::LinkGraph(e.to_string()))?;
         let _ = wtx.open_table(HASHES).map_err(|e| WikiError::LinkGraph(e.to_string()))?;
+        let _ = wtx.open_table(CLAIM_DEPS).map_err(|e| WikiError::LinkGraph(e.to_string()))?;
         wtx.commit().map_err(|e| WikiError::LinkGraph(e.to_string()))?;
 
         Ok(Self { db: Arc::new(db) })
@@ -154,6 +162,116 @@ impl LinkGraph {
 
         Ok(result)
     }
+
+    /// Rebuild the claim-dependency edges for `slug`. Deletes every edge
+    /// originating from this slug's claims, then inserts one edge per
+    /// `depends_on` reference. A bare reference (same-file) is namespaced
+    /// with `slug`; a reference already containing `:` is global.
+    pub fn rebuild_claims_for_slug(&self, slug: &str, claims: &[Claim]) -> Result<(), WikiError> {
+        let from_prefix = format!("{}:", slug);
+
+        let wtx = self.db.begin_write().map_err(|e| WikiError::LinkGraph(e.to_string()))?;
+        {
+            let mut table = wtx
+                .open_table(CLAIM_DEPS)
+                .map_err(|e| WikiError::LinkGraph(e.to_string()))?;
+
+            // Remove existing edges whose `from` claim belongs to this slug.
+            let to_remove: Vec<String> = table
+                .iter()
+                .map_err(|e| WikiError::LinkGraph(e.to_string()))?
+                .filter_map(|r| r.ok())
+                .filter_map(|(k, _)| {
+                    let key = k.value();
+                    if key.starts_with(from_prefix.as_str()) {
+                        Some(key.to_owned())
+                    } else {
+                        None
+                    }
+                })
+                .collect();
+            for key in &to_remove {
+                table
+                    .remove(key.as_str())
+                    .map_err(|e| WikiError::LinkGraph(e.to_string()))?;
+            }
+
+            for claim in claims {
+                for dep in &claim.depends_on {
+                    let to = normalise_claim_ref(dep, slug);
+                    let key = format!("{}\x00{}", claim.id, to);
+                    table
+                        .insert(key.as_str(), 0u8)
+                        .map_err(|e| WikiError::LinkGraph(e.to_string()))?;
+                }
+            }
+        }
+        wtx.commit().map_err(|e| WikiError::LinkGraph(e.to_string()))?;
+        Ok(())
+    }
+
+    /// The claims that `claim_id` declares a `depends_on` edge to.
+    pub fn claim_depends_on(&self, claim_id: &str) -> Result<Vec<String>, WikiError> {
+        let prefix = format!("{}\x00", claim_id);
+
+        let rtx = self.db.begin_read().map_err(|e| WikiError::LinkGraph(e.to_string()))?;
+        let table = rtx
+            .open_table(CLAIM_DEPS)
+            .map_err(|e| WikiError::LinkGraph(e.to_string()))?;
+
+        let results = table
+            .iter()
+            .map_err(|e| WikiError::LinkGraph(e.to_string()))?
+            .filter_map(|r| r.ok())
+            .filter_map(|(k, _)| {
+                let key = k.value();
+                if key.starts_with(prefix.as_str()) {
+                    key.find('\x00').map(|pos| key[pos + 1..].to_owned())
+                } else {
+                    None
+                }
+            })
+            .collect();
+
+        Ok(results)
+    }
+
+    /// The claims that declare a `depends_on` edge **to** `claim_id` — the
+    /// reverse direction, `cited_by` in the claim graph. Full-scan O(n).
+    pub fn claim_dependents(&self, claim_id: &str) -> Result<Vec<String>, WikiError> {
+        let suffix = format!("\x00{}", claim_id);
+
+        let rtx = self.db.begin_read().map_err(|e| WikiError::LinkGraph(e.to_string()))?;
+        let table = rtx
+            .open_table(CLAIM_DEPS)
+            .map_err(|e| WikiError::LinkGraph(e.to_string()))?;
+
+        let results = table
+            .iter()
+            .map_err(|e| WikiError::LinkGraph(e.to_string()))?
+            .filter_map(|r| r.ok())
+            .filter_map(|(k, _)| {
+                let key = k.value();
+                if key.ends_with(suffix.as_str()) {
+                    key.find('\x00').map(|pos| key[..pos].to_owned())
+                } else {
+                    None
+                }
+            })
+            .collect();
+
+        Ok(results)
+    }
+}
+
+/// Namespace a `depends_on` reference to its global form (convention §7).
+/// A reference already containing `:` is global; a bare one is same-file.
+fn normalise_claim_ref(dep: &str, slug: &str) -> String {
+    if dep.contains(':') {
+        dep.to_string()
+    } else {
+        format!("{}:{}", slug, dep)
+    }
 }
 
 /// Parse `[[target]]` wikilinks from Markdown body. Returns the slug form of
@@ -225,5 +343,56 @@ mod tests {
         let expected = blake3::hash(body);
         let result = g.lookup_by_hash(expected.as_bytes()).unwrap();
         assert_eq!(result, Some(("my-slug".to_owned(), "abc123".to_owned())));
+    }
+
+    #[test]
+    fn claim_deps_round_trip() {
+        let g = graph();
+        let ex = crate::claim::extract_claims(
+            "<!--claim id=a confidence=established cites=[x] depends_on=[b]-->t<!--/claim-->",
+            "topic-one",
+        );
+        g.rebuild_claims_for_slug("topic-one", &ex.claims).unwrap();
+        assert_eq!(
+            g.claim_depends_on("topic-one:a").unwrap(),
+            vec!["topic-one:b"]
+        );
+        // The reverse direction — `cited_by`.
+        assert_eq!(
+            g.claim_dependents("topic-one:b").unwrap(),
+            vec!["topic-one:a"]
+        );
+    }
+
+    #[test]
+    fn claim_deps_global_ref_is_preserved() {
+        let g = graph();
+        let ex = crate::claim::extract_claims(
+            "<!--claim id=a confidence=established cites=[x] \
+             depends_on=[other-topic:c]-->t<!--/claim-->",
+            "topic-one",
+        );
+        g.rebuild_claims_for_slug("topic-one", &ex.claims).unwrap();
+        assert_eq!(
+            g.claim_depends_on("topic-one:a").unwrap(),
+            vec!["other-topic:c"]
+        );
+    }
+
+    #[test]
+    fn claim_deps_cleared_when_rebuilt_without_the_edge() {
+        let g = graph();
+        let with_dep = crate::claim::extract_claims(
+            "<!--claim id=a confidence=established cites=[x] depends_on=[b]-->t<!--/claim-->",
+            "t",
+        );
+        g.rebuild_claims_for_slug("t", &with_dep.claims).unwrap();
+        let without_dep = crate::claim::extract_claims(
+            "<!--claim id=a confidence=structural cites=[]-->t<!--/claim-->",
+            "t",
+        );
+        g.rebuild_claims_for_slug("t", &without_dep.claims).unwrap();
+        assert!(g.claim_depends_on("t:a").unwrap().is_empty());
+        assert!(g.claim_dependents("t:b").unwrap().is_empty());
     }
 }
