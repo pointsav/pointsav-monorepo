@@ -1,19 +1,24 @@
-#![no_std]
-#![no_main]
+#![cfg_attr(not(test), no_std)]
+#![cfg_attr(not(test), no_main)]
 
+#[cfg(not(test))]
 extern "C" {
     fn microkit_dbg_puts(s: *const u8);
 }
 
+#[cfg(not(test))]
 const TELEMETRY_ADDR: usize = 0x4000000;
+#[cfg(not(test))]
 const RESET_CHANNEL: u64 = 10;
 
+#[cfg(not(test))]
 fn print(s: &[u8]) {
     unsafe {
         microkit_dbg_puts(s.as_ptr());
     }
 }
 
+#[cfg(not(test))]
 #[no_mangle]
 pub extern "C" fn init() {
     print(b"MUSCLE: Core Ignition. Setting heartbeat...\n\0");
@@ -32,6 +37,7 @@ pub extern "C" fn init() {
     }
 }
 
+#[cfg(not(test))]
 #[no_mangle]
 pub extern "C" fn notified(ch: u64) {
     if ch == RESET_CHANNEL {
@@ -40,6 +46,7 @@ pub extern "C" fn notified(ch: u64) {
     }
 }
 
+#[cfg(not(test))]
 #[panic_handler]
 fn panic(_info: &core::panic::PanicInfo) -> ! {
     loop {}
