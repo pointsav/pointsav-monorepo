@@ -38,21 +38,26 @@ Next in `KNOWLEDGE-PLATFORM-PLAN.md` order after Phase 4 complete. Self-containe
 detect `Accept-Language: es` header + `/es/{slug}` URL prefix; serve `{slug}.es.md` if
 present, else fall through to English with a language toggle. No cross-cluster dependency.
 
-## Open: crate hygiene
+## Closed: crate hygiene (Commit K, 2026-05-22)
 
-`cargo fmt` reformats ~37 files; `cargo clippy -D warnings` has pre-existing lints in
-`feeds.rs`, `glossary.rs`, `history.rs`, `edit.rs`. Pre-dates Phase 3. Standalone task —
-do not bundle into feature commits. Flagged to Command.
+`cargo fmt` + `cargo clippy -D warnings` — 24 pre-existing lints fixed across
+`feeds.rs`, `glossary.rs`, `history.rs`, `render.rs`, `search.rs`, `server.rs`,
+`edit.rs`, `main.rs`, and test files. Committed 11d482f2.
 
-## Open: CLAUDE.md / ARCHITECTURE.md accuracy pass
+## Closed: RATIFIED_CATEGORIES → 12 items (Commit K, 2026-05-22)
 
-Both files still describe removed features (real-time collab, Doorman proxy stubs, three
-redundant MCP read tools). Removed in Phase 1 (Commits 2026-05-22) but docs not updated.
-Low urgency — address before Stage 6 promotion of Phase 1 batch.
+Added "company" (after "infrastructure") and "help" (after "reference").
+All 8 home_test integration tests now pass. Committed 11d482f2.
+
+## Closed: CLAUDE.md / ARCHITECTURE.md accuracy pass (Commit L, 2026-05-22)
+
+Both files updated: collab removed from Phase 2 row; Phase 5 marked shipped;
+new KNOWLEDGE-PLATFORM-PLAN.md phases 1/3/4/5 documented. Committed 6180b074.
 
 ## Open: Stage 6 promotion
 
-**11 commits unpromoted on monorepo `main`** (Phase 1 ×4, Phase 3 A–E ×5, Phase 4 F–H ×2+).
+**13 commits unpromoted on monorepo `main`** (Phase 1 ×4, Phase 3 A–E ×5, Phase 4 F–H ×2,
+Phase 5 I–J ×2, crate hygiene K–L ×2).
 Promote via `~/Foundry/bin/promote.sh` from Command Session. Binary rebuild required after
 promote. Outbox messages sent.
 
