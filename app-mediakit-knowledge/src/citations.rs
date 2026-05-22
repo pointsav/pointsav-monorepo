@@ -31,6 +31,7 @@ use std::collections::BTreeMap;
 use std::path::Path;
 use std::sync::Arc;
 
+use crate::claim::Claim;
 use crate::error::WikiError;
 use crate::server::AppState;
 
@@ -188,9 +189,123 @@ pub async fn get_citations(
     Ok(Json(entries))
 }
 
+// ─── Phase 3.2 — per-claim citation resolution ──────────────────────────────
+//
+// The article-level resolver above (`load_registry`) is extended here to the
+// per-claim grain: a claim (`claim.rs`) carries a `cites` set of registry IDs,
+// and each is resolved against the registry. Unresolved IDs are a linter error
+// (convention §9) and an amber/red signal for the citation ribbon.
+
+/// One citation ID that resolved against the registry.
+#[derive(Debug, Clone, Serialize)]
+pub struct ResolvedCite {
+    pub id: String,
+    pub title: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub url: Option<String>,
+}
+
+/// The outcome of resolving one claim's `cites` set — convention §6, Plan §3.2.
+#[derive(Debug, Clone, Default, Serialize)]
+pub struct ClaimCitations {
+    /// Cites that matched a registry entry (by `id` or alias).
+    pub resolved: Vec<ResolvedCite>,
+    /// Cites with no matching registry entry.
+    pub unresolved: Vec<String>,
+}
+
+impl ClaimCitations {
+    /// True when every cite resolved. An empty `cites` set is trivially
+    /// fully resolved — valid for `structural` claims (convention §4.3).
+    pub fn all_resolved(&self) -> bool {
+        self.unresolved.is_empty()
+    }
+}
+
+/// Look up one citation ID in the registry, matching the entry `id` or any
+/// of its declared `aliases`.
+pub fn resolve<'a>(registry: &'a [CitationEntry], cite_id: &str) -> Option<&'a CitationEntry> {
+    registry
+        .iter()
+        .find(|e| e.id == cite_id || e.aliases.iter().any(|a| a == cite_id))
+}
+
+/// Resolve every ID in a claim's `cites` set against the registry.
+pub fn resolve_claim_cites(claim: &Claim, registry: &[CitationEntry]) -> ClaimCitations {
+    let mut out = ClaimCitations::default();
+    for cite_id in &claim.cites {
+        match resolve(registry, cite_id) {
+            Some(entry) => out.resolved.push(ResolvedCite {
+                id: entry.id.clone(),
+                title: entry.title.clone(),
+                url: entry.url.clone(),
+            }),
+            None => out.unresolved.push(cite_id.clone()),
+        }
+    }
+    out
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// Build a minimal registry entry for resolution tests.
+    fn entry(id: &str, aliases: &[&str]) -> CitationEntry {
+        CitationEntry {
+            id: id.to_string(),
+            title: format!("Title of {id}"),
+            url: Some(format!("https://example.com/{id}")),
+            publisher: None,
+            jurisdiction: None,
+            entry_type: None,
+            evidence_class: None,
+            last_verified: None,
+            aliases: aliases.iter().map(|s| s.to_string()).collect(),
+            extra: BTreeMap::new(),
+        }
+    }
+
+    #[test]
+    fn resolve_matches_by_id() {
+        let reg = vec![entry("ni-51-102", &[])];
+        assert!(resolve(&reg, "ni-51-102").is_some());
+        assert!(resolve(&reg, "no-such-id").is_none());
+    }
+
+    #[test]
+    fn resolve_matches_by_alias() {
+        let reg = vec![entry("ni-51-102", &["ni51102"])];
+        assert_eq!(
+            resolve(&reg, "ni51102").map(|e| e.id.as_str()),
+            Some("ni-51-102")
+        );
+    }
+
+    #[test]
+    fn resolve_claim_cites_splits_resolved_and_unresolved() {
+        let reg = vec![entry("git-scm", &[]), entry("rfc-9162", &[])];
+        let ex = crate::claim::extract_claims(
+            "<!--claim id=c confidence=established \
+             cites=[git-scm,missing-id,rfc-9162]-->x<!--/claim-->",
+            "topic",
+        );
+        let res = resolve_claim_cites(&ex.claims[0], &reg);
+        assert_eq!(res.resolved.len(), 2);
+        assert_eq!(res.unresolved, vec!["missing-id"]);
+        assert!(!res.all_resolved());
+    }
+
+    #[test]
+    fn structural_claim_with_no_cites_is_fully_resolved() {
+        let ex = crate::claim::extract_claims(
+            "<!--claim id=c confidence=structural cites=[]-->x<!--/claim-->",
+            "topic",
+        );
+        let res = resolve_claim_cites(&ex.claims[0], &[]);
+        assert!(res.all_resolved());
+        assert!(res.resolved.is_empty());
+    }
 
     #[tokio::test]
     async fn parses_minimal_yaml() {
