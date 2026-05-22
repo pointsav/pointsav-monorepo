@@ -10,10 +10,20 @@
 > (rationale, agent reports, supersessions).
 > **This file is what the build follows.** Where the two disagree, this file wins.
 >
-> **Status: COMPLETE — ready to build.** All §6 build-gating decisions are
-> settled (2026-05-22). The geometric build (§3) freezes as written; §7 adds an
-> additive economic + provenance layer for the wiki leg; §8 sets the
-> artifact-first build start.
+> **Status: S2 COMPLETE (2026-05-22).** Pipeline ran overnight; 5,163 clusters
+> produced (T1=1,114 / T2=3,751 / T3=298). Frontend patched for §2 schema.
+> Retailer-dots bug fixed (commit 16dd4122). OD pipeline completed: real
+> `demand_rank_in_tier` values in clusters-meta.json.
+>
+> **Remaining work (next session — start here):**
+> - §3 step 11: `generate-rm-topics.py` (one TOPIC per RM)
+> - §3 step 2/3: `region_engine.py` Nominatim override delete + `metro-markets.json`
+> - §4 frontend: single `View`/`setView()` authority; BentoBox two-view;
+>   retire 1km/3km toggle + ring-merge panel + layer3-radius layers
+> - layer1-locations.pmtiles rebuild (new chains: menards-us, coop-forum-se, etc.)
+> - fix `nodes` circle-radius expression (`['get','score_final']` → `['get','tier']`)
+> - §7.1: economic-indicator block for RM records (gates wiki leg)
+> - §8: artifact-first TOPIC/GUIDE/DESIGN drafts
 
 ---
 
