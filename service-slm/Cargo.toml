@@ -18,6 +18,7 @@ rust-version = "1.85"
 [workspace.dependencies]
 slm-core = { path = "crates/slm-core" }
 slm-doorman = { path = "crates/slm-doorman" }
+foundry-nodeclass = { path = "../foundry-nodeclass" }
 
 # Async runtime
 tokio = { version = "1.40", features = ["full"] }
