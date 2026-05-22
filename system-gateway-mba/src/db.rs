@@ -29,7 +29,21 @@ fn migrate(conn: &Connection) -> Result<()> {
             role        TEXT    NOT NULL DEFAULT 'editor',
             active      INTEGER NOT NULL DEFAULT 1,
             created_at  TEXT    NOT NULL
-        );",
+        );
+        CREATE TABLE IF NOT EXISTS pairing_requests (
+            request_id  TEXT PRIMARY KEY,
+            code        TEXT UNIQUE NOT NULL,
+            username    TEXT NOT NULL,
+            tenant      TEXT NOT NULL,
+            fingerprint TEXT NOT NULL,
+            public_key  TEXT NOT NULL,
+            role        TEXT NOT NULL DEFAULT 'editor',
+            state       TEXT NOT NULL DEFAULT 'pending',
+            attempts    INTEGER NOT NULL DEFAULT 0,
+            created_at  TEXT NOT NULL,
+            expires_at  TEXT NOT NULL
+        );
+        CREATE INDEX IF NOT EXISTS idx_pairing_code ON pairing_requests(code);",
     )?;
     Ok(())
 }
