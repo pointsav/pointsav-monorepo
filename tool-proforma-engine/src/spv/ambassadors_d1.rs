@@ -3,6 +3,22 @@ use crate::excel::wcp::{WcpBook, WcpData, WcpFairDiv, WcpIncome, WcpLp, WcpMarke
 const AD1_SHARES: f64 = 3_000_000.0;
 const AD1_SHARE_PRICE: f64 = 1.0;
 
+pub fn derivation_json(wcp: &WcpData) -> serde_json::Value {
+    let sf = AD1_SHARES / wcp.shares_outstanding;
+    serde_json::json!({
+        "source_model": "WCP 42M Excel",
+        "source_entity": wcp.entity,
+        "method": "proportional_scale",
+        "description": "Ambassadors Direct 1 Inc. holds 3,000,000 WCP common shares (30% of 10M outstanding). All dollar totals are scaled by shares_held / wcp_total_shares. Per-share metrics are carried through unchanged.",
+        "shares_held": AD1_SHARES,
+        "wcp_total_shares": wcp.shares_outstanding,
+        "scale_factor": sf,
+        "share_price": AD1_SHARE_PRICE,
+        "total_investment": AD1_SHARES * AD1_SHARE_PRICE,
+        "authority": "spv-bencal governance document — Ambassadors Direct 1 Inc. share register"
+    })
+}
+
 /// Derive Ambassadors Direct 1 Inc. WcpData from the parent WCP model.
 /// AD1 holds 3,000,000 WCP common shares (30% of 10M outstanding).
 /// All totals scale by 0.30; per-share metrics are unchanged.

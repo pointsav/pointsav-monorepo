@@ -14,7 +14,7 @@
 //! Doctrine claim #34 (citation substrate) and convention
 //! `citation-substrate.md` are the authoritative specs.
 
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
@@ -124,6 +124,7 @@ impl CitationRegistry {
 
     /// Convenience: returns true when the registry is empty (no file, or
     /// empty `citations:` map).
+    #[allow(dead_code)]
     pub fn is_empty(&self) -> bool {
         self.len() == 0
     }
@@ -131,6 +132,7 @@ impl CitationRegistry {
     /// Resolve a query string to a canonical entry. Match precedence:
     /// 1. Exact case-insensitive match against id / title / url / alias.
     /// 2. URL prefix match (rare — registry URLs are full canonical URLs).
+    ///
     /// Returns `None` when nothing matches; the caller decides whether
     /// to surface as a 404 or fall back to `[external: <url>]`.
     pub fn resolve(&self, query: &str) -> Option<CitationEntry> {

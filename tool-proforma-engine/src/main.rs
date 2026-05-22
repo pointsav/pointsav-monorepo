@@ -4,7 +4,7 @@ use proforma_engine::{
     excel::{pclp1, titleco, wcp},
     html,
     report::{d1_dev_classes, d2_direct_hold, d3_wcp},
-    spv::{ambassadors_d1, ambassadors_d2, bencal},
+    spv::{ambassadors_d1, ambassadors_d2, audited_json, bencal},
     Assumptions,
 };
 use std::io::{self, Read};
@@ -88,7 +88,11 @@ fn main() {
                 serde_json::to_string_pretty(&data).expect("serialisation failed")
             } else {
                 let md = d2_direct_hold::render(&data);
-                if cli.html { html::render(&md, &data.title) } else { md }
+                if cli.html {
+                    html::render(&md, &data.title)
+                } else {
+                    md
+                }
             };
             write_output(&out, cli.out.as_ref());
         }
@@ -101,7 +105,11 @@ fn main() {
                 serde_json::to_string_pretty(&data).expect("serialisation failed")
             } else {
                 let md = d3_wcp::render(&data);
-                if cli.html { html::render(&md, &data.title) } else { md }
+                if cli.html {
+                    html::render(&md, &data.title)
+                } else {
+                    md
+                }
             };
             write_output(&out, cli.out.as_ref());
         }
@@ -115,11 +123,19 @@ fn main() {
             } else {
                 let md = d1_dev_classes::render(&base);
                 let title = format!("Development Classes — {}", base.entity);
-                if cli.html { html::render(&md, &title) } else { md }
+                if cli.html {
+                    html::render(&md, &title)
+                } else {
+                    md
+                }
             };
             write_output(&out, cli.out.as_ref());
         }
-        Some(Command::SpvBencal { pclp, wcp: wcp_path, out_dir }) => {
+        Some(Command::SpvBencal {
+            pclp,
+            wcp: wcp_path,
+            out_dir,
+        }) => {
             let pclp_data = pclp1::read(&pclp).unwrap_or_else(|e| {
                 eprintln!("error reading {:?}: {e}", pclp);
                 std::process::exit(1);
@@ -140,19 +156,19 @@ fn main() {
             let ad2 = ambassadors_d2::derive(&pclp_data);
             let ad2_md = d2_direct_hold::render(&ad2);
             let ad2_title = format!("Direct-Hold Solution — {}", ad2.entity);
-            let ad2_json = serde_json::to_string_pretty(&ad2).expect("serialisation failed");
+            let ad2_json = audited_json(&ad2, ambassadors_d2::derivation_json(&pclp_data));
             write_trio("ambassadors-d2", &ad2_md, &ad2_title, &ad2_json);
 
             // Ambassadors Direct 1 Inc. — d3-wcp format
             let ad1 = ambassadors_d1::derive(&wcp_data);
             let ad1_md = d3_wcp::render(&ad1);
-            let ad1_json = serde_json::to_string_pretty(&ad1).expect("serialisation failed");
+            let ad1_json = audited_json(&ad1, ambassadors_d1::derivation_json(&wcp_data));
             write_trio("ambassadors-d1", &ad1_md, &ad1.title, &ad1_json);
 
             // BenCal Holdings Inc. — d3-wcp format
             let bc = bencal::derive(&wcp_data, &pclp_data);
             let bc_md = d3_wcp::render(&bc);
-            let bc_json = serde_json::to_string_pretty(&bc).expect("serialisation failed");
+            let bc_json = audited_json(&bc, bencal::derivation_json(&wcp_data, &pclp_data));
             write_trio("bencal", &bc_md, &bc.entity, &bc_json);
 
             eprintln!("wrote 9 files to {}", out_dir.display());

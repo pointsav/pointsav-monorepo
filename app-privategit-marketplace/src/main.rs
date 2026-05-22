@@ -18,6 +18,7 @@ use tower_http::services::ServeDir;
 #[derive(Clone)]
 struct AppState {
     wallet_address: String,
+    #[allow(dead_code)]
     fs_endpoint: String,
     catalog_path: String,
     receipts_dir: String,

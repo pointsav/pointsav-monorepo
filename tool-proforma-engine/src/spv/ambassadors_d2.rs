@@ -3,6 +3,22 @@ use crate::excel::pclp1::{Pclp1Data, Pclp1Year};
 const AD2_UNITS: f64 = 250_000.0;
 const AD2_UNIT_PRICE: f64 = 100.0;
 
+pub fn derivation_json(pclp: &Pclp1Data) -> serde_json::Value {
+    let sf = AD2_UNITS / pclp.assumptions.diluted_units;
+    serde_json::json!({
+        "source_model": "PCLP 1 Excel",
+        "source_entity": pclp.entity,
+        "method": "proportional_scale",
+        "description": "Ambassadors Direct 2 LP holds 250,000 Professional Centres Canada LP units at $100/unit ($25M total investment). All dollar totals are scaled by units_held / pclp_diluted_units. Per-unit metrics are carried through unchanged.",
+        "units_held": AD2_UNITS,
+        "pclp_diluted_units": pclp.assumptions.diluted_units,
+        "scale_factor": sf,
+        "unit_price": AD2_UNIT_PRICE,
+        "total_investment": AD2_UNITS * AD2_UNIT_PRICE,
+        "authority": "spv-bencal governance document — Ambassadors Direct 2 LP subscription agreement"
+    })
+}
+
 /// Derive Ambassadors Direct 2 LP Pclp1Data from the parent PCLP 1 model.
 /// AD2 LP holds 250,000 Professional Centres Canada LP units at $100/unit = $25M.
 /// All dollar totals scale by 250,000 / diluted_units; per-unit metrics are unchanged.
@@ -39,7 +55,7 @@ fn scale_year(y: &Pclp1Year, sf: f64) -> Pclp1Year {
         ebitda: y.ebitda * sf,
         interest_net: y.interest_net * sf,
         funding_from_ops: y.funding_from_ops * sf,
-        interest_coverage: y.interest_coverage,   // ratio — unchanged
+        interest_coverage: y.interest_coverage, // ratio — unchanged
         debt_service_ratio: y.debt_service_ratio, // ratio — unchanged
         // Cash flow totals
         opening_cash: y.opening_cash * sf,

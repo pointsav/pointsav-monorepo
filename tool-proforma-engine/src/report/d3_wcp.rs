@@ -127,8 +127,14 @@ pub fn render(data: &WcpData) -> String {
     out.push_str(&separator());
     for (i, lp) in data.lps.iter().enumerate() {
         let label = LP_SHORT_NAMES.get(i).copied().unwrap_or(lp.name.as_str());
-        out.push_str(&yr_row_m(&format!("{label} — Advisory Fee"), &lp.advisory_fee));
-        out.push_str(&yr_row_m(&format!("{label} — Distributions"), &lp.distributions));
+        out.push_str(&yr_row_m(
+            &format!("{label} — Advisory Fee"),
+            &lp.advisory_fee,
+        ));
+        out.push_str(&yr_row_m(
+            &format!("{label} — Distributions"),
+            &lp.distributions,
+        ));
         out.push_str(&yr_row_m(&format!("{label} — NAV"), &lp.nav));
     }
 
