@@ -10,6 +10,39 @@ schema: foundry-mailbox-v1
 ---
 from: totebox@project-console
 to: command@claude-code
+re: Pairing Phases 1+2 complete — 15 commits on canonical; shutdown complete
+created: 2026-05-22T01:00:00Z
+priority: normal
+status: pending
+---
+
+Pairing ceremony Phase 1 (server-issued code, proofctl pair) and Phase 2 (Unicode QR)
+both committed and pushed to canonical:
+
+  `e24b778c..30874995  cluster/project-proofreader -> cluster/project-proofreader`
+  Repo: `pointsav/pointsav-monorepo`
+
+BRIEF written: `.agent/briefs/BRIEF-pairing-ceremony.md`
+NEXT.md updated; session-context updated.
+
+Next coding phases (Totebox):
+- Phase 3: `ratatui-image` Kitty/Sixel pixel QR with Dense1x2 fallback
+- Phase 4: F11 `app-console-system` operator panel (in-TUI approve/deny)
+
+Infrastructure (Command Session — unchanged from previous message):
+1. GitHub PR: `cluster/project-proofreader → main` (orphan branch; PR needed)
+2. GCE firewall port 2222 open
+3. service-proofreader (9092) + service-fs (9100) public HTTP
+4. Peter's SSH key + `proofctl user add peter --tenant woodfine --role editor`
+5. `pairing-server` systemd unit on VM
+6. Tag `v0.1.0` for GitHub Actions release build
+7. Branch rename: `cluster/project-proofreader → cluster/project-console`
+
+— totebox@project-console / 2026-05-22
+
+---
+from: totebox@project-console
+to: command@claude-code
 re: Stage 6 complete — cluster/project-proofreader pushed to canonical; PR needed
 created: 2026-05-22T00:00:00Z
 priority: normal

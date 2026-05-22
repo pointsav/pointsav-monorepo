@@ -107,7 +107,7 @@ CartridgeAction::GoBack, chassis `previous: FKey`. SYS-ADR-10 compliant. Committ
 - [ ] Peter's SSH key generated + registered via `proofctl user add peter` `[2026-05-21]`
 - [ ] Tag `v0.1.0` to trigger first CI release build `[2026-05-21]`
 - [ ] Three per-user `config.toml` files created (mathew, jennifer, peter) `[2026-05-21]`
-- [ ] **Stage 6 pending** — 13 commits on `cluster/project-proofreader` unpromoted to canonical `[2026-05-21]`
+- [x] **Stage 6 complete** — all 15 commits pushed to canonical; GitHub PR `cluster/project-proofreader → main` still needed `[2026-05-22]`
 - [ ] SSE consumer for streaming token output (`.content` field, not `.choices[0]`)
 - [ ] Streaming render into draft pane at 60Hz
 - [ ] `/regenerate` — cancel + retry at same or higher tier
@@ -223,6 +223,15 @@ CartridgeAction::GoBack, chassis `previous: FKey`. SYS-ADR-10 compliant. Committ
 - [x] **Phase 1 COMPLETE** — `app-console-keys` lib crate (Cartridge trait, FKey enum, chassis, tab strip, status bar, config); `os-console` bin crate (local PTY mode, SSH feature-gated stub); `ContentCartridge` in `app-console-content`; workspace updated to 3 members
 - [x] Session 2 backfill committed to monorepo: `auth.rs`, `db.rs`, `session.rs`, `ui/status_bar.rs`, full `proofctl` CLI — monorepo SHA `13848313`
 - [x] Phase 1 chassis committed to monorepo — `8d02bd56`; `cargo build` + `cargo build --release` both green
+
+---
+
+## Completed (2026-05-22 — session 6)
+
+- [x] **Phase 6 pairing ceremony MVP (d6267e39)** — server-issued 8-char Crockford code; `pairing-server` binary (tiny_http, port 9201); `proofctl pair list/approve/deny`; `PairingState` enum + background poll (`spawn_status_poll`); zero-jargon TUI screens (Unpaired → AwaitingApproval → Approved/Denied/Expired/Error)
+- [x] **Phase 2 QR code (30874995)** — `qrcode 0.14` Dense1x2 Unicode QR beside code pill on wide terminals; narrow fallback; QR encodes `PAIR:<code>`; `app-console-keys/src/qr.rs`
+- [x] Both commits pushed to canonical (`cluster/project-proofreader`); Stage 6 complete
+- [x] BRIEF-pairing-ceremony.md written to `.agent/briefs/`
 
 ---
 
