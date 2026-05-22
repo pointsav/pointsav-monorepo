@@ -1,3 +1,8 @@
+---
+artifact: brief
+status: active
+---
+
 # Knowledge Platform — Vision & Architecture (2026)
 
 > **Created:** 2026-05-21 · Totebox@claude-code · project-knowledge cluster

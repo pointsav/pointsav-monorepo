@@ -1,3 +1,8 @@
+---
+artifact: brief
+status: active
+---
+
 # Sovereign AI Routing — Comprehensive Plan
 # Claude Code → Yo-Yo → Own Model Compound Flywheel
 

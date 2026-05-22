@@ -1,4 +1,6 @@
 ---
+artifact: brief
+status: active
 title: lbug 0.16.1 build blocker — service-content deploy
 created: 2026-05-13
 status: blocked

@@ -1,3 +1,8 @@
+---
+artifact: brief
+status: archived
+---
+
 # WIKIPEDIA-PARITY-RESEARCH-LOG.md — Muscle Memory Audit
 
 > Detailed log of MediaWiki Vector 2022 characteristics to be ported to `app-mediakit-knowledge`.

@@ -1,4 +1,6 @@
 ---
+artifact: brief
+status: active
 schema: foundry-convention-v1
 convention_name: claim-authoring-convention
 ratified: PENDING — Command Session

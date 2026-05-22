@@ -1,3 +1,8 @@
+---
+artifact: brief
+status: active
+---
+
 # Sovereign Stack Master Plan — 2026
 
 > Authored: 2026-05-14 task@project-intelligence (three parallel Opus deep-thinks)

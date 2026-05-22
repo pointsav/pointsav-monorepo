@@ -1,3 +1,8 @@
+---
+artifact: brief
+status: archived
+---
+
 # WIKIPEDIA-PARITY-MASTER-PLAN.md — Leapfrog 2030 Wiki Engine
 
 > **Updated:** 2026-05-18 (Sprint AE — tagline from site_title; search index excludes system/hidden files)

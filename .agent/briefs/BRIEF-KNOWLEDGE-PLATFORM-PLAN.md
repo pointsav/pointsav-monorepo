@@ -1,3 +1,8 @@
+---
+artifact: brief
+status: active
+---
+
 # Knowledge Platform — project-knowledge Execution Plan
 
 > **Created:** 2026-05-21 · Totebox@claude-code · project-knowledge cluster

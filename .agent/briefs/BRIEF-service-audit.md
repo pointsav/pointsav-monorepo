@@ -1,3 +1,8 @@
+---
+artifact: brief
+status: active
+---
+
 # Audit: service-slm & service-content — Development Plan
 
 > Authored: 2026-05-16 Opus deep-think (226K tokens, 25 tool uses)

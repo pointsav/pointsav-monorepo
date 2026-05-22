@@ -1,3 +1,8 @@
+---
+artifact: brief
+status: active
+---
+
 # Universal AI Gateway — Multi-Week Implementation Plan
 
 > Authored: 2026-05-12 task@project-intelligence  

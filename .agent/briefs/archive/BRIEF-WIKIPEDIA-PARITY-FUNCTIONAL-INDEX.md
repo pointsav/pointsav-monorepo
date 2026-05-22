@@ -1,3 +1,8 @@
+---
+artifact: brief
+status: archived
+---
+
 # WIKIPEDIA-PARITY-FUNCTIONAL-INDEX.md
 
 > **Purpose:** A 100% comprehensive inventory of the MediaWiki Vector 2022 functional surface area.

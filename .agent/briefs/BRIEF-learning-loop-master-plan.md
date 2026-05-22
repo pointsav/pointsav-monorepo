@@ -1,3 +1,8 @@
+---
+artifact: brief
+status: active
+---
+
 # Learning Loop Master Plan — service-slm + service-content
 > **Authored:** 2026-05-18 totebox@claude-code (project-intelligence)
 > **Synthesis of:** 10-agent parallel audit consolidating MASTER-PLAN-2026.md, leapfrog-2026.md, service-slm-architecture-2026.md, service-content-architecture-2026.md, tier-architecture-2026.md, sovereign-routing-comprehensive.md, universal-ai-gateway.md, service-audit-2026-05-16.md, service-slm-hardening-2026-05-18.md, d5-canonical-message-sprint1.md.

@@ -1,4 +1,6 @@
 ---
+artifact: brief
+status: active
 topic: OLMo 7B Q4_K_M performance tuning
 created: 2026-05-21
 status: in-progress
