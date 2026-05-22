@@ -1,3 +1,8 @@
+---
+artifact: brief
+status: active
+---
+
 # service-slm + service-content — Testing & Hardening
 > Updated: 2026-05-18 totebox@project-intelligence  
 > Prior plan (crash recovery) superseded — Blocks 1 & 2 fully shipped.

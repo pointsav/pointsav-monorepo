@@ -1,3 +1,8 @@
+---
+artifact: brief
+status: active
+---
+
 # service-content Architecture Analysis — 2026-05-14
 
 > Authored: 2026-05-14 Opus agent via task@project-intelligence
