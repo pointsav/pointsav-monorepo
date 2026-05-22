@@ -111,14 +111,23 @@ BRAND_FILL: dict[str, dict[str, list[str]]] = {
         ],
         "ES": [
             "mercadona-es",
+            "carrefour-hypermarket-es",  # 326 records, Q217599 — Phase 17 2026-05-22
+            "alcampo-es",               # 323 records, Q2832081 (Auchan ES) — Phase 17 2026-05-22
+            "leclerc-es",               # 220 records — Phase 17 2026-05-22
         ],
         "IT": [
             "esselunga-it",
+            "carrefour-hypermarket-it",  # 215 records, Q217599 — Phase 17 2026-05-22
+            "famila-it",                # 215 records (Selex group) — Phase 17 2026-05-22
+            "ipercoop-it",             # 101 records (Coop Italia hyper) — Phase 17 2026-05-22
         ],
         "GR": [
             "sklavenitis-gr",
         ],
-        "PL": [],    # no ingested hypermarket anchor in PL yet
+        "PL": [
+            "auchan-pl",               # 120 records, Q758603 — Phase 17 2026-05-22
+            "carrefour-hypermarket-pl", # 114 records, Q217599 — Phase 17 2026-05-22
+        ],
         "AT": [
             "billa-plus-at",
         ],
@@ -130,6 +139,7 @@ BRAND_FILL: dict[str, dict[str, list[str]]] = {
         ],
         "SE": [
             "coop-forum-se",
+            "maxi-ica-se",  # 50 records, Q104553487 (ICA Maxi Stormarknad) — Phase 17 2026-05-22
         ],
         "DK": [
             "bilka-dk",
@@ -207,7 +217,7 @@ BRAND_FILL: dict[str, dict[str, list[str]]] = {
         ],
         "SE": [
             "bauhaus-se",
-            "clas-ohlson-se",
+            # clas-ohlson-se demoted 2026-05-22: small-format housewares, not home-improvement anchor
         ],
         "DK": [
             "imerco-dk",

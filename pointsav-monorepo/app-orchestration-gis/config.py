@@ -83,6 +83,15 @@ ALPHA_HYPERMARKET = {
         "continente-pt",
         # Albert Heijn XL NL: Ahold Delhaize large-format hypermarket (~85 stores)
         "albert-heijn-xl-nl",
+        # Phase 17 — zero-cost activations (data already ingested) — 2026-05-22:
+        # ES: Carrefour hypermarket (326 records, Q217599), Alcampo/Auchan (323, Q2832081), Leclerc (220)
+        "carrefour-hypermarket-es", "alcampo-es", "leclerc-es",
+        # IT: Carrefour Iper (215, Q217599), Famila/Selex (215), Ipercoop (101)
+        "carrefour-hypermarket-it", "famila-it", "ipercoop-it",
+        # PL: Auchan (120, Q758603), Carrefour hypermarket (114, Q217599) — fixes zero-T1 country
+        "auchan-pl", "carrefour-hypermarket-pl",
+        # SE: ICA Maxi Stormarknad (50 records, Q104553487) — Sweden's #1 large-format hypermarket
+        "maxi-ica-se",
     }
 }
 
@@ -188,12 +197,15 @@ REGION_CONFIG = {
         "warehouse": ["costco-mx", "sams-club-mx"]
     },
     "ES": {
-        "anchor":    ["mercadona-es", "ikea-es", "costco-es", "makro-es"],
+        # Phase 17 (2026-05-22): carrefour-hypermarket-es + alcampo-es + leclerc-es wired in
+        "anchor":    ["mercadona-es", "carrefour-hypermarket-es", "alcampo-es", "leclerc-es",
+                      "ikea-es", "costco-es", "makro-es"],
         "hardware":  ["leroy-merlin-es", "brico-depot-es", "bauhaus-es"],
         "warehouse": ["costco-es", "makro-es"]
     },
     "IT": {
-        "anchor":    ["esselunga-it", "ikea-it"],
+        # Phase 17 (2026-05-22): carrefour-hypermarket-it + famila-it + ipercoop-it wired in
+        "anchor":    ["esselunga-it", "carrefour-hypermarket-it", "famila-it", "ipercoop-it", "ikea-it"],
         "hardware":  ["leroy-merlin-it", "obi-it", "bricocenter-it"],
         "warehouse": ["metro-it"]
     },
@@ -203,16 +215,18 @@ REGION_CONFIG = {
         "warehouse": ["the-mart-gr"]
     },
     "PL": {
-        "anchor":    ["ikea-pl", "makro-pl"],
+        # Phase 17 (2026-05-22): auchan-pl + carrefour-hypermarket-pl wired in — fixes zero-hypermarket country
+        "anchor":    ["auchan-pl", "carrefour-hypermarket-pl", "ikea-pl", "makro-pl"],
         "hardware":  ["leroy-merlin-pl", "obi-pl", "castorama-pl"],
         "warehouse": ["makro-pl", "selgros-pl"]
     },
     # NORDICS region kept for legacy build-clusters.py; new build-clusters-v2.py uses taxonomy.py per-ISO
+    # Phase 17 (2026-05-22): maxi-ica-se added; clas-ohlson-se removed (housewares, not HW anchor)
     "NORDICS": {
         "anchor":    ["ikea-se", "ikea-dk", "ikea-no", "ikea-fi",
                       "bilka-dk", "prisma-fi", "k-citymarket-fi", "obs-coop-no", "hagkaup-is",
-                      "costco-se", "costco-is", "coop-forum-se"],
-        "hardware":  ["clas-ohlson-se", "k-rauta-fi", "imerco-dk", "obs-bygg-no",
+                      "costco-se", "costco-is", "coop-forum-se", "maxi-ica-se"],
+        "hardware":  ["k-rauta-fi", "imerco-dk", "obs-bygg-no",
                       "husasmidjan-is", "bauhaus-se", "silvan-dk", "byko-is"],
         "warehouse": ["costco-se", "costco-is"]
     },
