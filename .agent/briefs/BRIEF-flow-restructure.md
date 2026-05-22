@@ -1,6 +1,8 @@
 ---
 artifact: brief
 status: active
+artifact: brief
+status: active
 title: project-intelligence — Totebox fleet architecture (rebuilt on the $7-node doctrine)
 created: 2026-05-21
 rebuilt: 2026-05-22
