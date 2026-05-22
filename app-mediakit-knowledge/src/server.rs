@@ -135,10 +135,6 @@ pub fn router(state: AppState) -> Router {
         )
         // Phase 2 Step 5 — citation registry for autocomplete
         .route("/api/citations", get(crate::citations::get_citations))
-        // Phase 2 Step 6 — three-keystroke ladder stubs (501 until Phase 4
-        // wires the Doorman MCP server)
-        .route("/api/doorman/complete", post(doorman_complete))
-        .route("/api/doorman/instruct", post(doorman_instruct))
         // D2: search autocomplete
         .route("/api/complete", get(search_complete))
         // Leapfrog: Page Preview hover endpoint
@@ -470,64 +466,6 @@ async fn search_page(
         maybe_user.as_ref(),
         pending_count,
     ))
-}
-
-/// Stub handler for Phase 2 Step 6 Doorman endpoints.
-///
-/// Returns `501 Not Implemented` with a JSON body indicating that the full
-/// Doorman MCP integration lands in Phase 4. The client-side handlers in
-/// `saa-init.js` check for this status and display a one-time toast rather
-/// than treating it as an error.
-/// E3: Doorman `/complete` — forwards request body to WIKI_DOORMAN_URL when set.
-/// Returns 501 with a JSON explanation when WIKI_DOORMAN_URL is unset.
-async fn doorman_complete(
-    State(state): State<Arc<AppState>>,
-    Json(body): Json<serde_json::Value>,
-) -> impl IntoResponse {
-    doorman_proxy(&state, "/v1/complete", body).await
-}
-
-/// E3: Doorman `/instruct` — same forwarding logic as `/complete`.
-async fn doorman_instruct(
-    State(state): State<Arc<AppState>>,
-    Json(body): Json<serde_json::Value>,
-) -> impl IntoResponse {
-    doorman_proxy(&state, "/v1/instruct", body).await
-}
-
-async fn doorman_proxy(
-    state: &Arc<AppState>,
-    path: &str,
-    body: serde_json::Value,
-) -> Response {
-    let _ = state; // AppState doesn't need DOORMAN_URL; read from env directly.
-    let doorman_url = match std::env::var("WIKI_DOORMAN_URL") {
-        Ok(u) if !u.is_empty() => u,
-        _ => {
-            return (StatusCode::NOT_IMPLEMENTED, Json(json!({
-                "error": "Doorman not configured — set WIKI_DOORMAN_URL to enable",
-                "hint": "WIKI_DOORMAN_URL=http://localhost:9091",
-                "phase": 4,
-                "reason": "Phase 4 Step 4.6 wires Doorman MCP integration; set WIKI_DOORMAN_URL to enable"
-            }))).into_response();
-        }
-    };
-    let url = format!("{}{}", doorman_url.trim_end_matches('/'), path);
-    // Re-use reqwest::Client if available; we create a one-shot client here since
-    // doorman calls are infrequent editor interactions, not high-throughput paths.
-    let client = reqwest::Client::new();
-    match client.post(&url).json(&body).send().await {
-        Ok(resp) => {
-            let status = resp.status();
-            let bytes = resp.bytes().await.unwrap_or_default();
-            (axum::http::StatusCode::from_u16(status.as_u16()).unwrap_or(StatusCode::BAD_GATEWAY),
-             [(header::CONTENT_TYPE, "application/json")],
-             bytes).into_response()
-        }
-        Err(e) => {
-            (StatusCode::BAD_GATEWAY, Json(json!({"error": format!("Doorman unreachable: {e}")}))).into_response()
-        }
-    }
 }
 
 // ─── Home-page data types ───────────────────────────────────────────────────
