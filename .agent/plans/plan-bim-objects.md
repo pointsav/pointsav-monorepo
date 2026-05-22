@@ -2,9 +2,9 @@
 schema: foundry-plan-v1
 archive: project-bim
 topic: bim-objects
-status: draft-v2
+status: active-live
 created: 2026-05-20
-updated: 2026-05-21
+updated: 2026-05-22
 sources: |
   inputs/plan-bim-objects (operator notes)
   inputs/DISCOVERY_MCorp_Sketches_Key Plans_Summary.pdf
@@ -40,8 +40,8 @@ operator_answers:
 
 # Plan — BIM Objects: Key Plans, Tiles, Floor Plates
 
-> **Draft v2 — updated 2026-05-21.** Authoritative sizes from FIN.xlsx folded in.
-> Q1–Q6 resolved. Command Decisions 1–4 incorporated.
+> **Active — live 2026-05-22.** Key Plans catalog shipped to `https://bim.woodfinegroup.com/tokens/key-plans.dtcg`.
+> Authoritative sizes from FIN.xlsx folded in. Q1–Q6 resolved. Command Decisions 1–4 incorporated.
 > This document is the working specification for the BIM Object Library.
 
 ---
@@ -205,12 +205,14 @@ Tile codes (Decision 4): CO-A, CO-B, CO-C, CO-D, CO-E (type-prefixed).
 
 | Code | Display name | m² | SF | Z1 (m) | Z2 (m) | Z3 (m) |
 |---|---|---|---|---|---|---|
-| M-1 | Medical — Chiropractor | 223 | 2,401 | 7.20 | 4.87 | TBD |
-| M-2 | Medical — Dentist | 331 | 3,568 | 7.20 | 4.87 | TBD |
-| M-3 | Medical — General Practitioner | 486 | 5,231 | 7.20 | 4.87 | TBD |
+| M-1 | Medical — Small | 223 | 2,401 | 7.20 | 4.87 | 2.90 |
+| M-2 | Medical — Medium | 331 | 3,568 | 7.20 | 4.87 | 2.90 |
+| M-3 | Medical — Large | 486 | 5,231 | 7.20 | 4.87 | 2.90 |
 
-Key rooms: reception, exam/dental chairs (2/4/6), file room, autoclave,
-sterilization, imaging, storage, washroom.
+Key rooms: reception, exam/dental chairs (2/4/6), doctor offices (1/1/2),
+file room, autoclave, sterilization, imaging, storage, washroom.
+*Operator decision 2026-05-22: size IS the descriptor; specialisation names
+(Chiropractor/Dentist/GP) removed from display names.*
 
 ---
 
@@ -231,8 +233,8 @@ Total facade frontage range: 25.3m – 32.3m.
 
 | Code | Display name | m² | SF | Z1 (m) | Z2 (m) | Z3 (m) | Frontage |
 |---|---|---|---|---|---|---|---|
-| L-1 | Laboratory — Medical | 195.00 | 2,099 | 6.78 | 4.80 | 3.10 | ~16.8m |
-| L-2 | Laboratory — Research | 315.96 | 3,401 | 6.78 | 4.80 | 3.10 | ~27.3m |
+| L-1 | Laboratory — Small | 195.00 | 2,099 | 6.78 | 4.80 | 3.10 | ~16.8m |
+| L-2 | Laboratory — Medium | 315.96 | 3,401 | 6.78 | 4.80 | 3.10 | ~27.3m |
 | L-3 | Laboratory — Large | 400.69 | 4,313 | 6.78 | 4.80 | 3.10 | ~34.6m |
 
 Key rooms: reception, 1–2 offices, 3–9 benches, staff room, storage, mechanical, clean room.
@@ -617,20 +619,73 @@ decided at scaffold time — runtime reading preferred per `app-orchestration-bi
 
 ## Deliverables
 
-### Deliverable 1 — Key Plans Registry ← READY TO IMPLEMENT
+### Deliverable 1 — Key Plans Catalog ← SHIPPED 2026-05-22
 
-**Output:** `woodfine-bim-library/key-plans/key-plans-registry.md`
-**Format:** Markdown table (human-verifiable; consistent with SYS-ADR-07)
-**Content:** Full Key Plan registry from this document's Part 1 section
-**Also copy to:** `outputs/plan-bim-objects.md` → accessible via `fpull bim outputs/`
-**Commit:** `woodfine-bim-library` sub-clone via `commit-as-next.sh`
+**Live URL:** `https://bim.woodfinegroup.com/tokens/key-plans.dtcg`
+**Binary:** `app-orchestration-bim v0.0.3` — `/usr/local/bin/app-orchestration-bim`
+**Service:** `local-bim-orchestration` (systemd, port 9096, nginx reverse proxy)
+**Data source:** `pointsav-design-system/tokens/bim/key-plans.dtcg.json`
 
-Verification:
-- Private Office sizes: 30.19 / 43.20 / 63.64 m² (FIN.xlsx Summary_Key Plans)
-- Medical sizes: 223 / 331 / 486 m² (Q2 resolved)
-- Laboratory Z1=6.78m, Z2=4.80m, Z3=3.10m
-- Corporate Office rows show TBD with floor-plate-dependent explanation
-- RS/TI rows note "composes directly into Floor Plates — no Tile layer"
+**What ships:**
+- 24 Key Plan cards across 7 active categories (Private Office, Medical, Business,
+  Laboratory, Academic, Civic, Corporate Office)
+- Cards ordered Small → Medium → Large within each category;
+  Corporate Office sorted last
+- Each card: display name, area (m² / SF), zone note, internal code (e.g. PO-1)
+- SVG blueprint diagram per card (see SVG Diagram System below)
+
+**Original registry output deferred:** `woodfine-bim-library/key-plans/key-plans-registry.md`
+still to be written as a standalone Markdown artifact (Deliverable 1b).
+
+### SVG Diagram System — shipped in v0.0.3
+
+Each Key Plan card renders a server-side SVG blueprint floor plan
+via `render_kp_zone_svg()` in `app-orchestration-bim/src/main.rs`.
+
+**Layout:** 180×112 viewBox. Left 22px reserved for Z1/Z2/Z3 depth labels.
+Drawing area: x=22, y=10, max_w=153, h=94. FACADE label top, CORE label bottom.
+
+**Proportional width:** Plan width scales with facade frontage (area_m² / total_depth),
+normalized to 6 m reference → 153px max. Clamped to [30%, 100%] of max.
+Private Office S/M/L visibly narrow-to-wide (65/93/138px). All other categories
+clamp to max (frontages >> 6m) — size differences shown through furniture only.
+
+**Zone fills:** Z1=#fff9f4 (warm cream), Z2=#fafae8 (pale yellow), Z3=#f0f8f2 (pale green).
+Zone boundary: dashed line `stroke="#8a9aaa"`. Perimeter: accent colour per category.
+Mullion ticks: 4 evenly spaced along facade edge.
+
+**Accent colours:** private-office=#1a3a5c, medical=#7a1a1a, laboratory=#1a4060,
+business=#7a4a00, academic=#4a4800, civic=#1a5430.
+
+**Size tier thresholds** (derived from area_m², per category):
+
+| Category | Small (tier 0) | Medium (tier 1) | Large (tier 2) |
+|---|---|---|---|
+| private-office | < 38 m² | < 55 m² | ≥ 55 m² |
+| medical | < 270 m² | < 410 m² | ≥ 410 m² |
+| laboratory | < 260 m² | < 370 m² | ≥ 370 m² |
+| academic | < 175 m² | < 315 m² | ≥ 315 m² |
+| business | < 360 m² | < 545 m² | ≥ 545 m² |
+| civic | < 420 m² | < 700 m² | ≥ 700 m² |
+
+**Furniture per category and tier** (from architect sketches
+`DISCOVERY_MCorp_Sketches_Key Plans_Summary.pdf`):
+
+| Category | Z1 (S) | Z1 (M) | Z1 (L) | Z2 | Z3 |
+|---|---|---|---|---|---|
+| Private Office | 1 desk | 2 desks | 3 desks | credenza + filing | door arc |
+| Medical | 1 doc office + 2 dental chairs | 1 doc office + 4 chairs | 2 doc offices + 6 chairs | sterilization bench + autoclave | washroom |
+| Laboratory | reception + 1 office + 3 bench clusters | reception + 2 offices + 5 clusters | reception + 2 offices + 7 clusters | staff room + storage bench | sterilization strip |
+| Business | 2 exec offices + 3×3 workstations | 3 exec offices + 4×4 workstations | 5 exec offices + 5×5 workstations | 1 conf table + staff room | restroom box |
+| Academic | workstation bank + conf table + 2 round tables | left+right banks + oval table + round table | theater seats + workstation bank + 3 round tables | instructor desks + storage | — |
+| Civic | 2 offices + 1 conf room + reception | 4 offices + 2 conf rooms + reception | 5 offices + 2 conf rooms + court room (theater seating) | staff room + restroom | corridor + door arc |
+
+All furniture drawn as SVG primitives: `desk!` (15×9 rect + chair circle),
+`round_table!` (circle + N chair circles), `door!` (line + arc), office boxes
+(thin-stroked rects with `fill="#e8e0d0"`), workstations (`fill="#d0c8e0"`),
+dental chairs (`fill="#d0e4d0"`), lab benches (`fill="#c0d0c8"`).
+
+---
 
 ### Deliverable 2 — Tiles Registry
 
