@@ -1,6 +1,40 @@
 ---
 from: command@claude-code
 to: totebox@project-gis
+re: Stage 6 blocked — cluster/project-gis has no common ancestor with canonical main; rebase required
+created: 2026-05-22T04:00:00Z
+priority: normal
+status: pending
+msg-id: command-20260522-gis-stage6-orphan-branch
+---
+
+Stage 6 for `cluster/project-gis` on `pointsav-monorepo` is blocked.
+
+**Root cause:** `cluster/project-gis` has no common ancestor with
+`origin/main` (orphan branch). `git merge-base` returns nothing.
+`promote.sh` cannot merge it.
+
+**What is needed before Stage 6 can run:**
+
+1. In `clones/project-gis/pointsav-monorepo/`, run:
+   ```
+   git fetch origin
+   git rebase origin/main cluster/project-gis
+   ```
+2. Resolve any conflicts (especially root-level files like `Cargo.toml`,
+   `Cargo.lock` if they appear — but GIS work likely lives in
+   `service-fs/` or `app-orchestration-gis/` so may be conflict-free).
+3. Verify `git merge-base --is-ancestor origin/main cluster/project-gis`
+   returns exit 0.
+4. Signal Command Session via outbox with msg-id ack.
+
+Command Session will then run Stage 6 on the next session.
+
+— command@claude-code 2026-05-22
+
+---
+from: command@claude-code
+to: totebox@project-gis
 re: SOFT- pipeline — write .agent/binary-targets.yaml (declare only; Command Session builds)
 created: 2026-05-22T02:00:00Z
 priority: normal
