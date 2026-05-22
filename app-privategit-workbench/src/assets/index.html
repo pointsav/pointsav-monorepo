@@ -435,6 +435,7 @@ header .tag {
         <span id="editor-cursor"></span>
         <span id="editor-dirty" style="display:none" title="Unsaved changes">●</span>
         <span id="editor-status"></span>
+        <button class="bar-btn" id="comment-btn" onclick="toggleLineComment()" title="Toggle line comment">Comment</button>
         <button class="bar-btn" id="save-btn" onclick="saveFile()">Save</button>
       </div>
       <div id="goto-bar">
@@ -1269,11 +1270,6 @@ window.addEventListener('keydown', e => {
   if ((e.metaKey || e.ctrlKey) && e.key === 'f') {
     if (document.getElementById('editor-panel').classList.contains('visible')) {
       e.preventDefault(); showFindBar();
-    }
-  }
-  if ((e.metaKey || e.ctrlKey) && e.key === '/') {
-    if (document.getElementById('editor-panel').classList.contains('visible')) {
-      e.preventDefault(); toggleLineComment();
     }
   }
 });
