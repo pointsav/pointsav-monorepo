@@ -17,6 +17,7 @@ path = "src/lib.rs"
 [dependencies]
 slm-core = { workspace = true }
 slm-doorman = { workspace = true }
+foundry-nodeclass = { workspace = true }
 
 tokio = { workspace = true }
 tokio-stream = { workspace = true }
