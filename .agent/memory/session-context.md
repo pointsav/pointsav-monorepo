@@ -2,6 +2,29 @@
 
 ---
 
+### 2026-05-22 | totebox@project-console | claude-sonnet-4-6
+
+**Done this session:**
+- Phase 6 pairing ceremony MVP (d6267e39): server-issued 8-char Crockford code; `pairing-server` binary (tiny_http port 9201); `proofctl pair list/approve/deny`; `PairingState`/`PairingEvent` enums; background `spawn_status_poll` thread; zero-jargon TUI screens in chassis
+- Phase 2 Unicode QR (30874995): `qrcode 0.14` Dense1x2 half-block QR beside code pill on wide terminals; narrow fallback; QR encodes `PAIR:<code>`; `app-console-keys/src/qr.rs`
+- Both commits pushed to canonical: `e24b778c..30874995 cluster/project-proofreader`
+- BRIEF-pairing-ceremony.md created; NEXT.md updated; session-context updated
+
+**Pending / carry-forward:**
+- GitHub PR: `cluster/project-proofreader → main` on pointsav/pointsav-monorepo (orphan branch; needs `--allow-unrelated-histories` or squash)
+- Phase 3 QR: `ratatui-image` Kitty/Sixel pixel-perfect QR with Dense1x2 fallback
+- Phase 4: F11 `app-console-system` operator panel (approve/deny pair requests in-TUI)
+- Deploy `pairing-server` to VM with systemd unit
+- GCE firewall port 2222 open for external MBA connections
+- Tag `v0.1.0` to trigger GitHub Actions release build
+- Peter's SSH key: Ed25519 + `proofctl user add peter --tenant woodfine`
+- Three per-user config.toml files (mathew, jennifer, peter)
+
+**Operator preferences surfaced:**
+- "lets keep going" = continue next phase in sequence without asking; minimal confirmation needed on sequential coding phases
+
+---
+
 ### 2026-05-21 | totebox@project-console | claude-sonnet-4-6
 
 **Done this session:**
@@ -9,26 +32,11 @@
 - Phase 3 COMPLETE: ContentCartridge full proofread workflow — tui-textarea, 9-protocol picker, Ctrl-S → 300s HTTP submit via std::thread, similar::TextDiff diff view, A/R verdict POST
 - Phase 4 COMPLETE: F12 InputCartridge (The Anchor) — path modal, confirm dialog, service-fs POST, SQLite audit, CartridgeAction::GoBack, chassis `previous: FKey`
 - Architecture pivot: operator clarified that os-console should be LOCAL distributable binaries (not server-side SSH TUI). Three users: Mathew (Linux Mint), Jennifer (macOS 13.x), Peter (macOS current)
-- Phase 5 COMPLETE: configurable endpoints in ConsoleConfig (`proof_endpoint`, `ingest_endpoint`, `totebox_host`, `totebox_ssh_port`, `ssh_key_path`); GitHub Actions release CI (Linux x86_64 + macOS universal); `os-console/config.example.toml`
-- Phase 5 cont.: MBA peer-to-peer — `os-console/src/mba_client.rs` uses russh CLIENT, `authenticate_publickey` with `PrivateKeyWithHashAlg::new(Arc::new(key), None)`, fingerprint via `compute_fingerprint`
-- Pairing ceremony built into TUI: chassis shows pairing screen with fingerprint + `proofctl user add` instructions when MBA INACTIVE
+- Phase 5 COMPLETE: configurable endpoints in ConsoleConfig; GitHub Actions release CI (Linux x86_64 + macOS universal)
+- Phase 5 cont.: MBA peer-to-peer — `os-console/src/mba_client.rs`; pairing ceremony TUI (static `proofctl user add` screen)
 - All committed: 5 new commits (af462797, 480dd105, 0b8088c4, a020a2cd, ce6c6621)
 
-**Pending / carry-forward:**
-- Stage 6: 13 unpromoted commits on cluster/project-proofreader — needs `bin/promote.sh` (Command Session)
-- GCE firewall port 2222 needs opening for external MBA connections
-- Service-proofreader (9092) + service-fs (9100) need public HTTP endpoints for remote users
-- Peter's SSH key: not yet generated/registered (`proofctl user add peter`)
-- Tag `v0.1.0` on monorepo to trigger first GitHub Actions release build
-- Three per-user config.toml files to write for Mathew, Jennifer, Peter
-- MBA live heartbeat: current v1 verifies at startup only; future phase needs persistent SSH session
-- Phase 6+: PDF rendering (pdfium-render, Kitty protocol), more cartridges (F2 people, F3 email, F11 system)
-- Branch rename: cluster/project-proofreader → cluster/project-console (still pending)
-
-**Operator preferences surfaced:**
-- "Pairing as Permission" and MBA peer-to-peer are core to the architecture; should be in TUI from day 1
-- Distributable local binaries was the intent all along; server-side SSH TUI was a prototype approach
-- User expects architecture to simulate the full os-console ↔ os-totebox connection model
+**Pending at close:** Stage 6, Phase 6 pairing ceremony (server-issued code, zero-jargon flow).
 
 ---
 
@@ -37,11 +45,3 @@
 **Done:** Architecture Q&A; os-console-platform.md + leapfrog-2030-coding.md plans; 4 TOPICs + 2 GUIDEs drafted; Phase 1 chassis (app-console-keys); rename project-proofreader→project-console actioned.
 
 **Pending at close:** Phase 2 (MBA + SSH server), Stage 6.
-
----
-
-### 2026-05-17 | totebox@project-proofreader | claude-sonnet-4-6
-
-**Done:** Phase 0 spike — russh + ratatui SSH TUI on port 2222; workspace Cargo.toml; proofctl stub; gate passed.
-
-**Pending at close:** Phase 1 (chassis), architecture Q&A.

@@ -66,8 +66,9 @@ similar 2.5 + syntect 5.2 + nucleo 0.5 + rusqlite 0.32 + pdfium-render 0.8 (Phas
 
 ## Last session handoff
 
-*2026-05-20 (session 3): Architecture fully resolved. os-console platform plans written
-(`os-console-platform.md`, `leapfrog-2030-coding.md`). 4 TOPIC drafts (MBA, PPN, os-console,
-Input Machine) + 2 GUIDE drafts (MBA pairing ceremony, operator reference) staged to
-`drafts-outbound/`. Outbox msg to Command requesting rename + catalog additions. Phase 1
-(chassis: `app-console-keys` lib crate + Cartridge trait) is next coding task.*
+*2026-05-22 (session 6): Phase 6 pairing ceremony MVP complete (d6267e39) — server-issued
+8-char code, `pairing-server` binary, `proofctl pair approve/deny`, `PairingState` enum,
+background poll. Phase 2 Unicode QR complete (30874995) — `qrcode 0.14` Dense1x2 beside
+code pill, narrow fallback. Both pushed to canonical (15 commits total). BRIEF written at
+`.agent/briefs/BRIEF-pairing-ceremony.md`. Next: Phase 3 (Kitty/Sixel QR) or Phase 4
+(F11 system panel). Infrastructure still waiting on Command Session (see outbox).*
