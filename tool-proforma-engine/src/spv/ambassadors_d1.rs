@@ -3,6 +3,24 @@ use crate::excel::wcp::{WcpBook, WcpData, WcpFairDiv, WcpIncome, WcpLp, WcpMarke
 const AD1_SHARES: f64 = 3_000_000.0;
 const AD1_SHARE_PRICE: f64 = 1.0;
 
+// SPV annual maintenance costs — PUBLISHED_MCorp_2024_02_07_SPV Info Guide V3_Tab 04b
+// Legal: annual GP + LP maintenance ($500 + $200 legal + $95 + $45 + $305 filing = $1,145)
+// Legal setup Y1: law firm KYC + SPV summary + GP incorporation + LP formation + tax opinion ($7,730)
+// Accounting: YE statements + CRA filings + bank fee ($1,100 + $1,100 + $179 + $20 = $2,399)
+// Accounting setup Y1: accounting KYC $275 + bank account opening $1,100 = $1,375
+const SPV_LEGAL_ANNUAL: f64 = 1_145.0;
+const SPV_LEGAL_SETUP: f64 = 7_730.0;
+const SPV_ACCT_ANNUAL: f64 = 2_399.0;
+const SPV_ACCT_SETUP: f64 = 1_375.0;
+
+fn spv_legal(y: usize) -> f64 {
+    if y == 0 { SPV_LEGAL_ANNUAL + SPV_LEGAL_SETUP } else { SPV_LEGAL_ANNUAL }
+}
+
+fn spv_acct(y: usize) -> f64 {
+    if y == 0 { SPV_ACCT_ANNUAL + SPV_ACCT_SETUP } else { SPV_ACCT_ANNUAL }
+}
+
 pub fn derivation_json(wcp: &WcpData) -> serde_json::Value {
     let sf = AD1_SHARES / wcp.shares_outstanding;
     serde_json::json!({
@@ -25,6 +43,33 @@ pub fn derivation_json(wcp: &WcpData) -> serde_json::Value {
 pub fn derive(wcp: &WcpData) -> WcpData {
     let sf = AD1_SHARES / wcp.shares_outstanding;
 
+    let inc = &wcp.income;
+    let income = WcpIncome {
+        gross_income: std::array::from_fn(|y| inc.gross_income[y] * sf),
+        referral_fees: std::array::from_fn(|y| inc.referral_fees[y] * sf),
+        wpi_consulting: std::array::from_fn(|y| inc.wpi_consulting[y] * sf),
+        // Replace scaled WCP G&A with actual SPV legal/accounting maintenance costs.
+        gna_nyc: std::array::from_fn(spv_legal),
+        gna_berlin: std::array::from_fn(spv_acct),
+        total_expenses: std::array::from_fn(|y| {
+            (inc.total_expenses[y] - inc.gna_nyc[y] - inc.gna_berlin[y]) * sf
+                + spv_legal(y) + spv_acct(y)
+        }),
+        ebitda: std::array::from_fn(|y| {
+            inc.ebitda[y] * sf
+                + (inc.gna_nyc[y] + inc.gna_berlin[y]) * sf
+                - spv_legal(y) - spv_acct(y)
+        }),
+        ebitda_per_share: [0.0; 10],
+        taxes: std::array::from_fn(|y| inc.taxes[y] * sf),
+        earnings: std::array::from_fn(|y| {
+            inc.earnings[y] * sf
+                + (inc.gna_nyc[y] + inc.gna_berlin[y]) * sf
+                - spv_legal(y) - spv_acct(y)
+        }),
+        earnings_per_share: [0.0; 10],
+    };
+
     WcpData {
         title: wcp.title.clone(),
         entity: "Ambassadors Direct 1 Inc.".to_string(),
@@ -32,10 +77,12 @@ pub fn derive(wcp: &WcpData) -> WcpData {
         shares_outstanding: AD1_SHARES,
         price_per_share: AD1_SHARE_PRICE,
         lps: wcp.lps.iter().map(|lp| scale_lp(lp, sf)).collect(),
-        income: scale_income(&wcp.income, sf),
+        income,
         book: scale_book(&wcp.book, sf),
         market: scale_market(&wcp.market, sf),
         fair_div: scale_fair_div(&wcp.fair_div, sf),
+        gna_label_1: "Legal Services".to_string(),
+        gna_label_2: "Accounting Services".to_string(),
     }
 }
 
@@ -48,21 +95,6 @@ fn scale_lp(lp: &WcpLp, sf: f64) -> WcpLp {
     }
 }
 
-fn scale_income(inc: &WcpIncome, sf: f64) -> WcpIncome {
-    WcpIncome {
-        gross_income: std::array::from_fn(|y| inc.gross_income[y] * sf),
-        referral_fees: std::array::from_fn(|y| inc.referral_fees[y] * sf),
-        wpi_consulting: std::array::from_fn(|y| inc.wpi_consulting[y] * sf),
-        gna_nyc: std::array::from_fn(|y| inc.gna_nyc[y] * sf),
-        gna_berlin: std::array::from_fn(|y| inc.gna_berlin[y] * sf),
-        total_expenses: std::array::from_fn(|y| inc.total_expenses[y] * sf),
-        ebitda: std::array::from_fn(|y| inc.ebitda[y] * sf),
-        ebitda_per_share: inc.ebitda_per_share,
-        taxes: std::array::from_fn(|y| inc.taxes[y] * sf),
-        earnings: std::array::from_fn(|y| inc.earnings[y] * sf),
-        earnings_per_share: inc.earnings_per_share,
-    }
-}
 
 fn scale_book(book: &WcpBook, sf: f64) -> WcpBook {
     WcpBook {

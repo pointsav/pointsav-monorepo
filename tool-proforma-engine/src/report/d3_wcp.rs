@@ -77,8 +77,8 @@ pub fn render(data: &WcpData) -> String {
     out.push_str(&yr_header());
     out.push_str(&separator());
     out.push_str(&yr_row_m("Gross Income", &data.income.gross_income));
-    out.push_str(&yr_row_m("G&A — New York City", &data.income.gna_nyc));
-    out.push_str(&yr_row_m("G&A — Berlin", &data.income.gna_berlin));
+    out.push_str(&yr_row_m(&data.gna_label_1, &data.income.gna_nyc));
+    out.push_str(&yr_row_m(&data.gna_label_2, &data.income.gna_berlin));
     out.push_str(&yr_row_m(
         "Total Operating Expenses",
         &data.income.total_expenses,

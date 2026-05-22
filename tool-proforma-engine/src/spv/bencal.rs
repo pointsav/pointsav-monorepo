@@ -11,6 +11,20 @@ const BENCAL_AD2_UNITS: f64 = 25_000.0;
 // WCP share-sale commission income: $100K/year spread over Y1–Y3.
 const COMMISSION_PER_YEAR: f64 = 100_000.0;
 
+// SPV annual maintenance costs — PUBLISHED_MCorp_2024_02_07_SPV Info Guide V3_Tab 04b
+const SPV_LEGAL_ANNUAL: f64 = 1_145.0;
+const SPV_LEGAL_SETUP: f64 = 7_730.0;
+const SPV_ACCT_ANNUAL: f64 = 2_399.0;
+const SPV_ACCT_SETUP: f64 = 1_375.0;
+
+fn spv_legal(y: usize) -> f64 {
+    if y == 0 { SPV_LEGAL_ANNUAL + SPV_LEGAL_SETUP } else { SPV_LEGAL_ANNUAL }
+}
+
+fn spv_acct(y: usize) -> f64 {
+    if y == 0 { SPV_ACCT_ANNUAL + SPV_ACCT_SETUP } else { SPV_ACCT_ANNUAL }
+}
+
 pub fn derivation_json(wcp: &WcpData, pclp: &Pclp1Data) -> serde_json::Value {
     let wcp_sf = BENCAL_AD1_STAKE * AD1_WCP_STAKE;
     let pclp_sf = BENCAL_AD2_UNITS / pclp.assumptions.diluted_units;
@@ -80,18 +94,29 @@ pub fn derive(wcp: &WcpData, pclp: &Pclp1Data) -> WcpData {
         }),
         referral_fees: std::array::from_fn(|y| wcp.income.referral_fees[y] * wcp_sf),
         wpi_consulting: std::array::from_fn(|y| wcp.income.wpi_consulting[y] * wcp_sf),
-        gna_nyc: std::array::from_fn(|y| wcp.income.gna_nyc[y] * wcp_sf),
-        gna_berlin: std::array::from_fn(|y| wcp.income.gna_berlin[y] * wcp_sf),
+        // Replace scaled WCP G&A with actual BenCal SPV legal/accounting maintenance costs.
+        gna_nyc: std::array::from_fn(spv_legal),
+        gna_berlin: std::array::from_fn(spv_acct),
         total_expenses: std::array::from_fn(|y| {
-            wcp.income.total_expenses[y] * wcp_sf + pclp.years[y].total_expenses * pclp_sf
+            (wcp.income.total_expenses[y] - wcp.income.gna_nyc[y] - wcp.income.gna_berlin[y])
+                * wcp_sf
+                + pclp.years[y].total_expenses * pclp_sf
+                + spv_legal(y)
+                + spv_acct(y)
         }),
         ebitda: std::array::from_fn(|y| {
-            wcp.income.ebitda[y] * wcp_sf + pclp.years[y].ebitda * pclp_sf + commission[y]
+            wcp.income.ebitda[y] * wcp_sf
+                + (wcp.income.gna_nyc[y] + wcp.income.gna_berlin[y]) * wcp_sf
+                - spv_legal(y) - spv_acct(y)
+                + pclp.years[y].ebitda * pclp_sf
+                + commission[y]
         }),
         ebitda_per_share: [0.0; 10],
         taxes: std::array::from_fn(|y| wcp.income.taxes[y] * wcp_sf),
         earnings: std::array::from_fn(|y| {
             wcp.income.earnings[y] * wcp_sf
+                + (wcp.income.gna_nyc[y] + wcp.income.gna_berlin[y]) * wcp_sf
+                - spv_legal(y) - spv_acct(y)
                 + pclp.years[y].funding_from_ops * pclp_sf
                 + commission[y]
         }),
@@ -140,5 +165,7 @@ pub fn derive(wcp: &WcpData, pclp: &Pclp1Data) -> WcpData {
         book,
         market,
         fair_div,
+        gna_label_1: "Legal Services".to_string(),
+        gna_label_2: "Accounting Services".to_string(),
     }
 }

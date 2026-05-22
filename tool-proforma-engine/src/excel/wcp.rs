@@ -70,6 +70,10 @@ pub struct WcpData {
     pub book: WcpBook,
     pub market: WcpMarket,
     pub fair_div: WcpFairDiv,
+    /// Display label for the first G&A expense row (defaults to "G&A — New York City").
+    pub gna_label_1: String,
+    /// Display label for the second G&A expense row (defaults to "G&A — Berlin").
+    pub gna_label_2: String,
 }
 
 pub fn read<P: AsRef<Path>>(path: P) -> Result<WcpData, Box<dyn std::error::Error>> {
@@ -155,5 +159,7 @@ pub fn read<P: AsRef<Path>>(path: P) -> Result<WcpData, Box<dyn std::error::Erro
         book,
         market,
         fair_div,
+        gna_label_1: "G&A — New York City".to_string(),
+        gna_label_2: "G&A — Berlin".to_string(),
     })
 }
