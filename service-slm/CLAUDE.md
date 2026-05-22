@@ -1,6 +1,6 @@
 # CLAUDE.md — service-slm
 
-> **State:** Active  —  **Last updated:** 2026-05-07
+> **State:** Active  —  **Last updated:** 2026-05-22
 > **Registry row:** `pointsav-monorepo/.agent/rules/project-registry.md`
 >
 > When state changes, update this header AND the registry row in the
@@ -14,10 +14,25 @@ service-slm is the single secure boundary between the isolated
 Totebox Archive and any external Large Language Model. It implements
 the Doorman Protocol: sanitise outbound payloads, route them to
 external compute (local if the host has the resources, otherwise the
-yo-yo substrate on GCP), receive structured deltas, and rehydrate
+Yo-Yo substrate on GCP), receive structured deltas, and rehydrate
 them back into the ledger. service-slm does not generate text; it
 gates compute. Read-side sibling for long-term semantic memory is
 service-content — see `ARCHITECTURE.md` Ring 3a.
+
+### Node-class deployment model
+
+The Doorman's behavior is **node-class-dependent** (ratified Doctrine
+claims #49 and #54; `conventions/four-tier-slm-substrate.md`):
+
+| Node class | Doorman role | Tier A |
+|---|---|---|
+| **$7/mo e2-micro (Micro)** | Pure broker — routes, sanitises, audits, MCP. Hosts no model. | Unavailable. `/readyz` reports `tier_a: unavailable` from node-class probe — never from a model-load attempt. |
+| **NUC / hardware Totebox** | Broker + on-device inference gateway. | Available. OLMo 1B narrow specialist (~5–15 tok/s). |
+| **Yo-Yo / GPU (Accelerated)** | Full AI gateway. | Tier A + B + C available. |
+
+Detection is provided by the `foundry-nodeclass` leaf crate (`../foundry-nodeclass`).
+The env override `TOTEBOX_NODE_CLASS=micro|hardware|accelerated` forces a class
+for testing. See `BRIEF-flow-restructure.md` §2–§3 for the full rationale.
 
 ## Current state
 
