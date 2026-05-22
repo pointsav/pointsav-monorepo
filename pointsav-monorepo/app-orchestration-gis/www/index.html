@@ -93,11 +93,9 @@
         .nav-btn .icon  { font-size: 24px; font-weight: bold; line-height: 1; }
         .nav-btn .label { font-size: 9px; font-weight: 800; margin-top: 4px; text-transform: uppercase; }
 
-
         /* ── Responsive ───────────────────────────────────────────── */
         @media (max-width: 768px) {
             #data-panel      { top: auto; bottom: 0; left: 0; width: 100%; border-radius: 20px 20px 0 0; max-height: 45vh; }
-
             .nav-cluster     { bottom: 52vh; right: 12px; }
             .nav-btn         { width: 80px; }
         }
@@ -284,7 +282,6 @@
         </div>
     </aside>
 
-
     <div class="nav-cluster">
         <button class="nav-btn home-btn" id="map-back-btn" style="display:none;" onclick="mapNavBack()">
             <span class="icon" style="font-size:18px;">←</span>
@@ -366,12 +363,18 @@
         return TIER2_TO_V2[p.tier] ?? (TIER2_TO_V2[p.rank_3km] ?? (p.rank_3km ?? p.rank_1km ?? 0));
     }
     const NEUTRAL = { fill: '#e2e8f0', text: '#6B7280', name: '—' };
-    // Static fallback only — showOverview() computes live counts from clusterMeta when loaded.
     const REGION_SUMMARY = {
-        NA: { label: 'North America', total: 5163, t1: 1114, t2: 3751, t3: 298 },
-        EU: { label: 'Europe',        total: 0,    t1: 0,    t2: 0,    t3: 0   },
+        NA: {
+            label: 'North America',
+            '1km': { total: 7704, t3: 124, t2: 1127, t1: 1637 },
+            '3km': { total: 7704, t3: 124, t2: 1127, t1: 1637 },
+        },
+        EU: {
+            label: 'Europe',
+            '1km': { total: 1658, t3: 27, t2: 204, t1: 370 },
+            '3km': { total: 1658, t3: 27, t2: 204, t1: 370 },
+        },
     };
-    const NA_ISOS = new Set(['US', 'CA', 'MX']);
 
     function tierColor(rankVal) { return TIER_COLORS[rankVal] ?? NEUTRAL; }
 
@@ -520,7 +523,13 @@
                 // The zoomend handler has no branch for (!catchmentActive && !overviewActive),
                 // so we must explicitly re-show proximity rings, retailer dots, and refresh
                 // ring geometry. Cluster bubbles stay hidden (we are still drilled into a cluster).
-                applyView();
+                if (map.getLayer('proximity-fill')) map.setLayoutProperty('proximity-fill', 'visibility', 'visible');
+                if (map.getLayer('proximity-line')) map.setLayoutProperty('proximity-line', 'visibility', 'visible');
+                if (map.getLayer('proximity-merged-label')) map.setLayoutProperty('proximity-merged-label', 'visibility', 'visible');
+                if (map.getLayer('all-locations')) {
+                    map.setLayoutProperty('all-locations', 'visibility', 'visible');
+                    map.setPaintProperty('all-locations', 'circle-opacity', 0.70);
+                }
                 updateProximityRings();
             }
         }
@@ -650,45 +659,13 @@
             defaultRadius: 3,
         },
     };
-    // ── View state — single authority for all layer visibility ───────────────
-    // mode: 'OVERVIEW' (bubbles) | 'RETAIL' (rings, auto-zoom) | 'CLUSTER' (drilled in)
-    const VIEW = { mode: 'OVERVIEW', fromMarket: null };
-
-    function anchorFilter() {
-        return ['any',
-            ['match', ['get', 'brand_family'], ['Hypermarket', 'Hardware', 'Warehouse'], true, false],
-            ['match', ['get', 'category_id'],  ['hospital', 'university'], true, false],
-        ];
-    }
-    let coTenantsVisible = false;
-
-    function applyView() {
-        const local = VIEW.mode === 'RETAIL' || VIEW.mode === 'CLUSTER';
-        if (map.getLayer('nodes')) {
-            map.setLayoutProperty('nodes', 'visibility', local ? 'none' : 'visible');
-            map.setPaintProperty('nodes', 'circle-opacity', local ? 0 : 0.88);
-        }
-        if (map.getLayer('nodes-halo')) {
-            map.setLayoutProperty('nodes-halo', 'visibility', local ? 'none' : 'visible');
-            map.setPaintProperty('nodes-halo', 'circle-opacity', local ? 0 : 0.10);
-        }
-        if (map.getLayer('proximity-fill')) map.setLayoutProperty('proximity-fill', 'visibility', local ? 'visible' : 'none');
-        if (map.getLayer('proximity-line')) map.setLayoutProperty('proximity-line', 'visibility', local ? 'visible' : 'none');
-        if (map.getLayer('all-locations')) {
-            map.setLayoutProperty('all-locations', 'visibility', local ? 'visible' : 'none');
-            if (local) map.setPaintProperty('all-locations', 'circle-opacity', 0.70);
-        }
-        if (!local && map.getSource('proximity-circle-src')) {
-            map.getSource('proximity-circle-src').setData({ type: 'FeatureCollection', features: [] });
-        }
-    }
-
+    let currentRadius = 3;
     let currentRegion = 'NA';
     let selectedClusterId = null;
+    let overviewActive = true;
 
     let selectedClusterProps  = null;
     let selectedClusterCoords = null;
-    let overviewActive = true; // legacy alias — kept for catchment/sim code; kept in sync by showOverview/setRetailLevel/drillIntoCluster
     // Zoom threshold between Co-location Level (bubbles) and Retail Level (All Locations + rings)
     // Lowered 11 → 9 (Sprint 9): rings + retailers become useful at regional zoom (~250 km viewport)
     const RETAIL_ZOOM_THRESHOLD = 9;
@@ -743,20 +720,25 @@
         const r = REGIONS[key];
         if (!r || key === currentRegion) return;
         currentRegion = key;
+        overviewActive = true;
         map.setMinZoom(r.minZoom);
         updateRegionTabs(key);
+        // shroud not updated here — only on explicit switchRegion to avoid snap during free pan
         if (map.getSource('anchors')) {
             map.getSource('anchors').setData({ type: 'FeatureCollection', features: [] });
         }
-        showOverview();
+        if (map.getLayer('nodes')) setRadius(r.defaultRadius);
+        // setRadius calls showOverview() internally when overviewActive=true
     }
 
     function switchRegion(key, { animate = true } = {}) {
         const r = REGIONS[key];
         if (!r) return;
         currentRegion = key;
+        overviewActive = true;
         map.setMinZoom(r.minZoom);
         updateRegionTabs(key);
+        if (map.getLayer('nodes')) setRadius(r.defaultRadius);
 
         const afterMove = () => {
             map.dragPan.enable(); map.scrollZoom.enable(); map.keyboard.enable();
@@ -786,6 +768,25 @@
         }
     }
 
+    function setRadius(km, btn) {
+        currentRadius = km;
+        // V3: tier is radius-independent; radius toggle only affects proximity rings
+        if (selectedClusterId) {
+            map.setFilter('nodes', ['all', ['<', ['get', 'tier'], 4], ['!=', ['get', 'cluster_id'], selectedClusterId]]);
+        } else {
+            map.setFilter('nodes', ['<', ['get', 'tier'], 4]);
+        }
+        map.setPaintProperty('nodes', 'circle-color', colorMatchExpr());
+        if (map.getLayer('nodes-halo'))  map.setFilter('nodes-halo',  ['==', ['get', 'tier'], 1]);
+        if (map.getLayer('nodes-label')) map.setFilter('nodes-label', ['<=', ['get', 'tier'], 2]);
+        if (activeChainFilter) reapplyChainHighlight();
+        // Refresh overview counts or redraw proximity ring depending on mode
+        if (overviewActive) {
+            showOverview();
+        } else {
+            updateProximityRings();
+        }
+    }
 
     // ── Chain / retailer filter ───────────────────────────────────────
     function chainFilterExpr(brandName) {
@@ -870,7 +871,7 @@
         if (inp) inp.value = '';
         if (clr) clr.style.display = 'none';
         closeDropdown();
-        if (VIEW.mode === 'OVERVIEW') showOverview();
+        if (overviewActive) showOverview();
     }
 
     // ── Search: dual-mode — retailer brands + Nominatim geocoding ─────
@@ -1065,25 +1066,33 @@
         dropdownFocusIdx = -1;
     }
 
-    // ── Co-location Level: cluster bubbles visible, rings/retail hidden ──────
+    // ── Co-location Level: cluster bubbles visible, All Locations hidden ──────
     function showOverview() {
-        const wasRetail = VIEW.mode === 'RETAIL';
-        VIEW.mode = 'OVERVIEW';
-        VIEW.fromMarket = null;
-        overviewActive = true; // keep legacy alias in sync
+        setNavContext(null);
+        overviewActive = true;
         selectedClusterId = null;
         selectedClusterProps  = null;
         selectedClusterCoords = null;
         catchmentActive = false;
         hideCatchment();
-        applyView();
+        if (map.getLayer('proximity-fill')) map.setLayoutProperty('proximity-fill', 'visibility', 'none');
+        if (map.getLayer('proximity-line')) map.setLayoutProperty('proximity-line', 'visibility', 'none');
+        if (map.getLayer('proximity-merged-label')) map.setLayoutProperty('proximity-merged-label', 'visibility', 'none');
+        if (map.getSource('proximity-circle-src')) map.getSource('proximity-circle-src').setData({ type: 'FeatureCollection', features: [] });
+        if (map.getSource('proximity-merged-label-src')) map.getSource('proximity-merged-label-src').setData({ type: 'FeatureCollection', features: [] });
+        // Restore Co-location Level layers (V3: tier is radius-independent)
         if (map.getLayer('nodes')) {
+            map.setPaintProperty('nodes', 'circle-opacity', 0.88);
+            map.setLayoutProperty('nodes', 'visibility', 'visible');
             map.setFilter('nodes', ['<', ['get', 'tier'], 4]);
         }
         if (map.getLayer('nodes-halo')) {
+            map.setPaintProperty('nodes-halo', 'circle-opacity', 0.10);
+            map.setLayoutProperty('nodes-halo', 'visibility', 'visible');
             map.setFilter('nodes-halo', ['==', ['get', 'tier'], 1]);
         }
         if (map.getLayer('nodes-label')) map.setFilter('nodes-label', ['<=', ['get', 'tier'], 2]);
+        if (map.getLayer('all-locations')) map.setLayoutProperty('all-locations', 'visibility', 'none');
         if (map.getSource('anchors')) {
             map.getSource('anchors').setData({ type: 'FeatureCollection', features: [] });
         }
@@ -1091,69 +1100,87 @@
             map.getSource('cluster-centroid-src').setData({ type: 'FeatureCollection', features: [] });
             if (map.getLayer('cluster-centroid')) map.setLayoutProperty('cluster-centroid', 'visibility', 'none');
         }
-        setNavContext(null);
-        // Coming from Retail Level: ease zoom back below threshold to prevent immediate re-entry
-        if (wasRetail && map.getZoom() >= RETAIL_ZOOM_THRESHOLD) {
-            map.easeTo({ zoom: RETAIL_ZOOM_THRESHOLD - 0.6, duration: 500, essential: true });
-        }
-
-        // Compute live counts from loaded cluster data; fall back to static REGION_SUMMARY
-        const regionLabel = REGIONS[currentRegion]?.label || currentRegion;
-        let total = 0, t1 = 0, t2 = 0, t3 = 0;
+        // Compute live counts from clusterMeta filtered to current region
+        const regionKey = currentRegion;
+        const regionLabel = REGIONS[regionKey]?.label || regionKey;
+        let liveTotal = 0, liveT1 = 0, liveT2 = 0, liveT3 = 0;
         if (clusterMeta) {
-            const isNA = currentRegion === 'NA';
-            const slice = clusterMeta.filter(c => isNA ? NA_ISOS.has(c.iso) : !NA_ISOS.has(c.iso));
-            total = slice.length;
-            t1 = slice.filter(c => c.t === 1).length;
-            t2 = slice.filter(c => c.t === 2).length;
-            t3 = slice.filter(c => c.t === 3).length;
-        } else {
-            const s = REGION_SUMMARY[currentRegion];
-            total = s.total; t1 = s.t1; t2 = s.t2; t3 = s.t3;
+            const regionISOs = regionKey === 'NA' ? ['US','CA','MX'] : null; // null = all non-NA
+            for (const c of clusterMeta) {
+                const inRegion = regionISOs ? regionISOs.includes(c.iso)
+                                            : !['US','CA','MX'].includes(c.iso);
+                if (!inRegion) continue;
+                liveTotal++;
+                if (c.t === 1) liveT1++;
+                else if (c.t === 2) liveT2++;
+                else if (c.t === 3) liveT3++;
+            }
         }
         document.getElementById('inspector').innerHTML = `
             <div class="data-block">
-                <div class="data-label">Coverage · ${regionLabel}</div>
-                <div class="data-value">${total.toLocaleString()}</div>
-                <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">co-location markets</div>
-                ${activeChainFilter ? `<div class="chain-filter-pill">${activeChainFilter} <span onclick="clearChainFilter()" style="cursor:pointer;opacity:0.7;">×</span></div>` : ''}
+                <div class="data-label">Coverage · ${escapeHtml(regionLabel)}</div>
+                <div class="data-value">${liveTotal ? liveTotal.toLocaleString() : '—'}</div>
+                <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">co-location clusters</div>
+                ${activeChainFilter ? `<div class="chain-filter-pill">${escapeHtml(activeChainFilter)} <span onclick="clearChainFilter()" style="cursor:pointer;opacity:0.7;">×</span></div>` : ''}
             </div>
             <div class="data-block">
-                <div class="data-label">Composition Tiers</div>
+                <div class="data-label">Quality Tiers</div>
                 <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;">
-                    <span class="tier-badge" style="background:#164679;color:#fff;font-size:12px;">Regional&nbsp;${t1}</span>
-                    <span class="tier-badge" style="background:#54924E;color:#fff;font-size:12px;">District&nbsp;${t2}</span>
-                    ${t3 > 0 ? `<span class="tier-badge" style="background:#EAB308;color:#111827;font-size:12px;">Local&nbsp;${t3}</span>` : ''}
+                    <span class="tier-badge" style="background:#164679;color:#fff;font-size:12px;">T1 Regional &nbsp;${liveT1}</span>
+                    <span class="tier-badge" style="background:#54924E;color:#fff;font-size:12px;">T2 District &nbsp;${liveT2}</span>
+                    <span class="tier-badge" style="background:#EAB308;color:#111827;font-size:12px;">T3 Local &nbsp;${liveT3}</span>
                 </div>
             </div>
             <div class="data-block">
                 <div class="data-label">Layers</div>
                 <button class="lc-btn lc-active" id="lc-clusters" onclick="toggleLayer('nodes', this)">
-                    <span class="lc-dot" style="background:#164679"></span>Co-location Markets
+                    <span class="lc-dot" style="background:#0A3070"></span>Co-location Clusters
                 </button>
+                <div class="lc-btn lc-disabled">
+                    <span class="lc-dot" style="background:#e5e7eb"></span>Catchment Areas
+                    <span class="lc-planned">Planned</span>
+                </div>
                 <button class="lc-btn" id="lc-sim-ab" onclick="toggleSimLayer(this)" style="display:none">
                     <span class="lc-dot" style="background:linear-gradient(135deg,#164679 50%,#54924E 50%)"></span>Co-location Model · AB test
                 </button>
             </div>
             <div style="padding:16px 0 4px;text-align:center;font-size:11px;color:var(--text-muted);font-style:italic;">
-                Select a market node to inspect
+                Select a cluster node to inspect
             </div>
         `;
     }
 
-    // ── Retail Level: rings + retailer dots visible; bubbles hidden ──────────
+    // ── Retail Level: All Locations + proximity rings, no cluster bubbles ──────
     function setRetailLevel() {
-        if (VIEW.mode !== 'OVERVIEW') return;
-        VIEW.mode = 'RETAIL';
-        overviewActive = false; // keep legacy alias in sync
+        if (!overviewActive) return;
+        overviewActive = false;
         selectedClusterId = null;
         selectedClusterProps = null;
         selectedClusterCoords = null;
-        applyView();
+        setNavContext(REGIONS[currentRegion]?.label || 'Overview', flyToOverview, 'Retail View');
+
+        // Hide bubbles: layout (tile skip) + paint (GPU) for belt-and-suspenders reliability
+        if (map.getLayer('nodes')) {
+            map.setLayoutProperty('nodes', 'visibility', 'none');
+            map.setPaintProperty('nodes', 'circle-opacity', 0);
+        }
+        if (map.getLayer('nodes-halo')) {
+            map.setLayoutProperty('nodes-halo', 'visibility', 'none');
+            map.setPaintProperty('nodes-halo', 'circle-opacity', 0);
+        }
+
+        // Show rings — all visibility changes batch into same MapLibre render frame
+        if (map.getLayer('proximity-fill')) map.setLayoutProperty('proximity-fill', 'visibility', 'visible');
+        if (map.getLayer('proximity-line')) map.setLayoutProperty('proximity-line', 'visibility', 'visible');
+        if (map.getLayer('proximity-merged-label')) map.setLayoutProperty('proximity-merged-label', 'visibility', 'visible');
         updateProximityRings();
+
+        // Reveal individual store dots — pre-warmed at z>=RETAIL_PREFETCH_ZOOM
+        if (map.getLayer('all-locations')) {
+            map.setLayoutProperty('all-locations', 'visibility', 'visible');
+            map.setPaintProperty('all-locations', 'circle-opacity', 0.70);
+        }
         applyChainFilterStyling();
-        // Back returns to Co-location view at current zoom (no fly)
-        setNavContext('Co-location view', showOverview, 'Retailers');
     }
 
     // Convert compact clusterMeta entry (§2 schema) to the property shape expected by showClusterDetail
@@ -1233,16 +1260,15 @@
 
     // Return the nearest cluster whose ring encloses (lon, lat), or null
     function findEnclosingCluster(lon, lat) {
-        if (!clusterMeta || VIEW.mode === 'OVERVIEW') return null;
+        if (!clusterMeta || overviewActive) return null;
         const b   = map.getBounds();
-        const pad = 3 / 111; // 3 km max ring radius buffer
+        const pad = (currentRadius * 2) / 111;
         let best = null, bestDist = Infinity;
         for (const c of clusterMeta) {
             if (c.lon < b.getWest() - pad || c.lon > b.getEast() + pad) continue;
             if (c.lat < b.getSouth() - pad || c.lat > b.getNorth() + pad) continue;
             const d = haversineKm(lon, lat, c.lon, c.lat);
-            const ringKm = c.rr || 3;
-            if (d <= ringKm && d < bestDist) { best = c; bestDist = d; }
+            if (d <= currentRadius && d < bestDist) { best = c; bestDist = d; }
         }
         return best;
     }
@@ -1277,37 +1303,78 @@
     }
 
     function updateProximityRings() {
-        const local = VIEW.mode === 'RETAIL' || VIEW.mode === 'CLUSTER';
-        if (!local || !map.getSource('proximity-circle-src')) return;
+        if (overviewActive || !map.getSource('proximity-circle-src')) return;
         let candidates;
         if (clusterMeta) {
+            // In-memory path: all clusters visible regardless of viewport tile load state
             const b   = map.getBounds();
-            const pad = 3 / 111; // 3 km max ring radius buffer
+            const pad = (currentRadius * 2) / 111; // degrees of latitude padding
             candidates = clusterMeta
                 .filter(c => c.lon >= b.getWest() - pad && c.lon <= b.getEast() + pad
                           && c.lat >= b.getSouth() - pad && c.lat <= b.getNorth() + pad)
-                .map(c => ({ cluster_id: c.id, rank: (4 - (c.t || 3)), coords: [c.lon, c.lat], ringKm: c.rr || 3 }));
+                .map(c => ({ cluster_id: c.id, rank: (4 - (c.t || 3)), coords: [c.lon, c.lat] }));
         } else {
+            // Fallback: querySourceFeatures (viewport-tile-limited)
             const seen = new Set();
+            const rankField = `rank_${currentRadius}km`;
             candidates = [];
             for (const f of map.querySourceFeatures('data', { sourceLayer: 'clusters' })) {
                 const cid = f.properties?.cluster_id;
                 if (!cid || seen.has(cid)) continue;
                 seen.add(cid);
-                candidates.push({
-                    cluster_id: cid,
-                    rank: f.properties?.rank ?? 1,
-                    coords: f.geometry.coordinates,
-                    ringKm: f.properties?.ring_radius_km || 3,
-                });
+                candidates.push({ cluster_id: cid, rank: f.properties?.[rankField] || 1, coords: f.geometry.coordinates });
             }
         }
-        const circles = candidates.map(({ cluster_id, rank, coords, ringKm }) => {
-            const circle = makeCircleGeoJSON(coords, ringKm);
-            circle.features[0].properties = { cluster_id, rank };
-            return circle.features[0];
-        });
+
+        // At 3km, merge overlapping cluster rings into a single representative ring.
+        // At 1km, clusters are tight co-tenancy parks — render individually as before.
+        const circles = [];
+        const labelPoints = [];
+        if (currentRadius >= 3) {
+            const groups = groupOverlappingClusters(candidates, currentRadius);
+            for (const group of groups) {
+                if (group.length === 1) {
+                    // Singleton: render as before
+                    const { cluster_id, rank, coords } = group[0];
+                    const circle = makeCircleGeoJSON(coords, currentRadius);
+                    circle.features[0].properties = { cluster_id, rank, merged_count: 1, member_ids: cluster_id };
+                    circles.push(circle.features[0]);
+                } else {
+                    // Merged group: centroid of member centroids, best rank of the group
+                    const meanLon = group.reduce((s, c) => s + c.coords[0], 0) / group.length;
+                    const meanLat = group.reduce((s, c) => s + c.coords[1], 0) / group.length;
+                    const bestRank = Math.max(...group.map(c => c.rank));
+                    const representativeId = group.reduce((best, c) => c.rank > best.rank ? c : best, group[0]).cluster_id;
+                    const memberIds = group.map(c => c.cluster_id).join(',');
+                    const circle = makeCircleGeoJSON([meanLon, meanLat], currentRadius);
+                    circle.features[0].properties = {
+                        cluster_id: representativeId,
+                        rank: bestRank,
+                        merged_count: group.length,
+                        member_ids: memberIds,
+                    };
+                    circles.push(circle.features[0]);
+                    // Label point at the centroid for the count badge
+                    labelPoints.push({
+                        type: 'Feature',
+                        geometry: { type: 'Point', coordinates: [meanLon, meanLat] },
+                        properties: { label: `${group.length} clusters`, merged_count: group.length, member_ids: memberIds },
+                    });
+                }
+            }
+        } else {
+            // 1km: no merging — render each ring individually
+            for (const { cluster_id, rank, coords } of candidates) {
+                const circle = makeCircleGeoJSON(coords, currentRadius);
+                circle.features[0].properties = { cluster_id, rank, merged_count: 1, member_ids: cluster_id };
+                circles.push(circle.features[0]);
+            }
+        }
+
         map.getSource('proximity-circle-src').setData({ type: 'FeatureCollection', features: circles });
+        if (map.getSource('proximity-merged-label-src')) {
+            map.getSource('proximity-merged-label-src').setData({ type: 'FeatureCollection', features: labelPoints });
+        }
     }
 
     function makeCircleGeoJSON(center, radiusKm) {
@@ -1418,7 +1485,8 @@
     function enterSimTestBed() {
         simActive = true;
         // Hide every production layer; the sim surface owns the screen
-        ['nodes', 'nodes-halo', 'nodes-label', 'all-locations', 'proximity-fill', 'proximity-line']
+        ['nodes', 'nodes-halo', 'nodes-label', 'all-locations',
+         'proximity-fill', 'proximity-line', 'proximity-merged-label']
             .forEach(id => { if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', 'none'); });
         buildSimRings();
         simView.mode = map.getZoom() >= RETAIL_ZOOM_THRESHOLD ? 'LOCAL' : 'GLOBAL';
@@ -1476,9 +1544,7 @@
         const p = selectedClusterProps;
         if (!p) return;
         const clusterName = p.display_name || (p.anchor_label + (p.city ? ', ' + p.city : ''));
-        const backLabel = VIEW.fromMarket || 'Co-location view';
-        const backFn    = VIEW.fromMarket ? () => showMarketDetail(VIEW.fromMarket) : showOverview;
-        setNavContext(backLabel, backFn, clusterName);
+        setNavContext(REGIONS[currentRegion].label, flyToOverview, clusterName);
         const tvKey  = effectiveTierKey(p);
         const tc     = tierColor(tvKey);
 
@@ -1504,12 +1570,6 @@
         // Cell 2 — tier badge (dominant) + composition chip
         const tierDesc  = p.tier_descriptor || tc.name;
         const predHover = preds.length > 0 ? ` title="${preds.join(', ')}"` : '';
-
-        // Cell 3 — tier rank (dist_rank_in_tier from §2 schema)
-        const distRank = p.dist_rank_in_tier != null ? p.dist_rank_in_tier : null;
-
-        // Cell 4 — member count
-        const count3km  = p.count_3km != null ? parseInt(p.count_3km) : (p.member_count ?? null);
 
         // Cell 6 — catchment
         const primaryPop   = p.pp != null ? parseInt(p.pp) : null;
@@ -1538,20 +1598,21 @@
             <div class="data-block bento-tier-cell">
                 <span class="tier-badge bento-tier-badge"
                       role="status"
-                      aria-label="${tc.name} tier cluster${count3km !== null ? '; ' + count3km + ' stores within 3 km' : ''}"
+                      aria-label="${tc.name} tier cluster"
                       style="background:${tc.fill};color:${tc.text};"${predHover}>${tc.name}</span>
                 <div class="bento-composition-chip">${tierDesc}</div>
             </div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
                 <div class="data-block">
-                    <div class="data-label">Tier Rank</div>
-                    <div class="rank-num">${distRank != null ? '#' + distRank : '—'}</div>
-                    <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">${tc.name} · ${countryName(p.iso)}</div>
+                    <div class="data-label">Geometric Rank</div>
+                    <div class="rank-num">${p.dist_pctile != null ? Math.round(p.dist_pctile) : '—'}</div>
+                    <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">compactness pctile</div>
+                    ${p.span_km != null ? `<div style="font-size:10px;color:var(--text-muted);margin-top:3px;">${parseFloat(p.span_km).toFixed(2)} km span</div>` : ''}
                 </div>
                 <div class="data-block">
                     <div class="data-label">Members</div>
-                    <div class="rank-num">${count3km != null ? count3km : '—'}</div>
-                    <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">anchors in ring</div>
+                    <div class="rank-num">${p.member_count != null ? p.member_count : (p.count_3km !== null ? p.count_3km : '—')}</div>
+                    <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">anchor locations</div>
                 </div>
             </div>
             <div class="data-block">
@@ -1611,15 +1672,6 @@
                 <div class="data-label">Civic Context</div>
                 <div style="font-size:12px;color:var(--text-main);margin-top:4px;line-height:1.5;">${civicLine}</div>
             </div>` : ''}
-            <div class="data-block" style="padding-top:6px;padding-bottom:0;">
-                <div class="data-label" style="margin-bottom:6px;">Retailer Map Filter</div>
-                <div style="display:flex;gap:6px;">
-                    <button id="btn-anchors-only" onclick="setCoTenants(false)"
-                        style="flex:1;padding:6px 4px;font-size:10px;font-weight:700;border-radius:6px;border:1px solid var(--border-soft);cursor:pointer;background:${coTenantsVisible ? '#f8fafc' : 'var(--brand-primary)'};color:${coTenantsVisible ? 'var(--text-muted)' : '#fff'};">Anchors</button>
-                    <button id="btn-all-retailers" onclick="setCoTenants(true)"
-                        style="flex:1;padding:6px 4px;font-size:10px;font-weight:700;border-radius:6px;border:1px solid var(--border-soft);cursor:pointer;background:${coTenantsVisible ? 'var(--brand-primary)' : '#f8fafc'};color:${coTenantsVisible ? '#fff' : 'var(--text-muted)'};">All Retailers</button>
-                </div>
-            </div>
             <div id="sel-el" class="sel-el-block data-block" style="border-bottom:none;">
                 <div class="data-label">Selected Location</div>
                 <div style="font-size:11px;color:var(--text-muted);font-style:italic;padding:4px 0;">
@@ -1679,7 +1731,6 @@
             data: { type: 'FeatureCollection', features: [] },
         });
 
-
         // All-locations source (hidden by default)
         map.addSource('locations-src', {
             type: 'vector',
@@ -1720,7 +1771,7 @@
                     })),
                 };
                 if (map.getSource('data')) map.getSource('data').setData(nodesGeoJSON);
-                if (VIEW.mode !== 'OVERVIEW') updateProximityRings();
+                if (!overviewActive) updateProximityRings();
             })
             .catch(() => { /* rings fall back to querySourceFeatures */ });
 
@@ -1748,6 +1799,30 @@
             },
         });
 
+        // GeoJSON source for merged-ring count labels (populated by updateProximityRings)
+        map.addSource('proximity-merged-label-src', {
+            type: 'geojson',
+            data: { type: 'FeatureCollection', features: [] },
+        });
+        // Label layer: count badge drawn at centroid of merged groups
+        map.addLayer({
+            id: 'proximity-merged-label', type: 'symbol',
+            source: 'proximity-merged-label-src',
+            layout: {
+                visibility: 'none',
+                'text-field': ['get', 'label'],
+                'text-size': 11,
+                'text-font': ['Noto Sans Bold', 'Open Sans Bold', 'Arial Unicode MS Bold'],
+                'text-anchor': 'center',
+                'text-allow-overlap': true,
+                'text-ignore-placement': true,
+            },
+            paint: {
+                'text-color': '#ffffff',
+                'text-halo-color': '#1E40AF',
+                'text-halo-width': 2,
+            },
+        });
 
         // Cluster centroid — small pin dot visible in retail mode at the ring centre
         map.addLayer({
@@ -1764,13 +1839,11 @@
             },
         });
 
-
-        // Layer: individual store locations — anchor categories only by default
+        // Layer: all individual store locations
         map.addLayer({
             id: 'all-locations', type: 'circle',
             source: 'locations-src', 'source-layer': 'locations',
             layout: { visibility: 'none' },
-            filter: anchorFilter(),
             paint: {
                 'circle-radius': ['interpolate', ['linear'], ['zoom'],
                     2, 1.5,
@@ -1809,9 +1882,9 @@
             filter: ['<', ['get', 'tier'], 4],
             paint: {
                 'circle-radius': ['interpolate', ['linear'], ['zoom'],
-                    2,  ['match', ['get', 'tier'], 1, 7,   2, 5,   3, 3.5, 3.5],
-                    10, ['match', ['get', 'tier'], 1, 14,  2, 10,  3, 7,   7  ],
-                    14, ['match', ['get', 'tier'], 1, 20,  2, 15,  3, 10,  10 ]],
+                    2,  ['match', ['get', 'tier'], 1, 7,  2, 5,  3, 4,  4],
+                    8,  ['match', ['get', 'tier'], 1, 15, 2, 11, 3, 8,  7],
+                    14, ['match', ['get', 'tier'], 1, 22, 2, 16, 3, 12, 9]],
                 'circle-color': colorMatchExpr(),
                 'circle-stroke-width': 1.5,
                 'circle-stroke-color': 'rgba(10, 48, 112, 0.25)',
@@ -1827,8 +1900,9 @@
             filter: ['==', ['get', 'cluster_id'], ''],
             paint: {
                 'circle-radius': ['interpolate', ['linear'], ['zoom'],
-                    2,  ['match', ['get', 'tier'], 1, 28, 2, 20, 3, 14, 14],
-                    14, ['match', ['get', 'tier'], 1, 80, 2, 60, 3, 40, 40]],
+                    2,  ['*', ['get', 'rank_1km'], 4],
+                    3,  ['*', ['get', 'rank_1km'], 4],
+                    14, ['*', ['get', 'rank_1km'], 14]],
                 'circle-color':          'rgba(0,0,0,0)',
                 'circle-stroke-width':   3.5,
                 'circle-stroke-color':   '#EAB308',
@@ -2183,18 +2257,59 @@
             });
         }
 
+        // ── Merged-ring panel: list constituent clusters for user to select one ──
+        function showMergedGroupPanel(memberIds, lngLat) {
+            const members = memberIds
+                .map(id => clusterIndex?.get(id))
+                .filter(Boolean)
+                .sort((a, b) => (b.dr || 0) - (a.dr || 0)); // highest dist_rank first
+            if (!members.length) return;
+
+            const tierColor = (tier) => {
+                if (tier === 1) return '#0A3070';
+                if (tier === 2) return '#1E40AF';
+                if (tier === 3) return '#64748B';
+                return '#CBD5E1';
+            };
+
+            const itemsHTML = members.map(c => {
+                const name  = c.mkt || c.id;
+                const sub   = c.mrgn || '';
+                const color = tierColor(c.t ?? 0);
+                return `<div class="merged-group-item" onclick="drillIntoCluster(metaToClusterProps(clusterIndex.get('${c.id}')), [${c.lon}, ${c.lat}])" onmousedown="event.preventDefault()">
+                    <div class="merged-group-item-tier" style="background:${color};"></div>
+                    <div>
+                        <div class="merged-group-item-name">${escapeHtml(name)}</div>
+                        ${sub ? `<div class="merged-group-item-sub">${escapeHtml(sub)}</div>` : ''}
+                    </div>
+                </div>`;
+            }).join('');
+
+            document.getElementById('inspector').innerHTML = `
+                <div class="merged-group-header">${members.length} overlapping clusters — select one</div>
+                ${itemsHTML}
+                <div style="margin-top:8px;">
+                    <button class="back-btn" onclick="showOverview()">← Back to Overview</button>
+                </div>
+            `;
+            // Fly to the clicked point to keep the rings in frame
+            if (lngLat) {
+                map.flyTo({ center: [lngLat.lng, lngLat.lat], zoom: Math.max(map.getZoom(), 12), duration: 600, essential: true });
+            }
+        }
 
         // ── Cluster zoom helper — shared by nodes click + proximity-fill click ──
-        function drillIntoCluster(p, coords, fromMarket = null) {
-            VIEW.mode = 'CLUSTER';
-            VIEW.fromMarket = fromMarket;
-            overviewActive = false; // keep legacy alias in sync
+        function drillIntoCluster(p, coords) {
+            overviewActive = false;
             selectedClusterId = p.cluster_id || null;
-            selectedClusterProps  = p;
-            selectedClusterCoords = coords;
 
-            applyView();
-            updateProximityRings();
+            // Derive ring radius from tier: T1 Regional = 1km (tight), all others = 3km
+            const v3tier = p.tier ?? 4;
+            const autoKm = v3tier === 1 ? 1 : 3;
+            currentRadius = (p.tier ?? 4) === 1 ? 1 : 3;
+
+            showClusterDetail(p, coords);
+            if (catchmentActive && selectedClusterId) showCatchmentForCluster(selectedClusterId);
 
             // Mark ring centre with a small tier-coloured dot
             map.getSource('anchors').setData({ type: 'FeatureCollection', features: [] });
@@ -2202,24 +2317,108 @@
                 map.getSource('cluster-centroid-src').setData({
                     type: 'FeatureCollection',
                     features: [{ type: 'Feature', geometry: { type: 'Point', coordinates: coords },
-                                 properties: { tier: p.tier ?? 4 } }],
+                                 properties: { tier: v3tier } }],
                 });
                 map.setLayoutProperty('cluster-centroid', 'visibility', 'visible');
             }
 
-            showClusterDetail(p, coords);
-            if (catchmentActive && selectedClusterId) showCatchmentForCluster(selectedClusterId);
+            // Switch to Retail Level: hide bubbles (layout + paint for reliability)
+            map.setLayoutProperty('nodes', 'visibility', 'none');
+            map.setPaintProperty('nodes', 'circle-opacity', 0);
+            if (map.getLayer('nodes-halo')) {
+                map.setLayoutProperty('nodes-halo', 'visibility', 'none');
+                map.setPaintProperty('nodes-halo', 'circle-opacity', 0);
+            }
+            map.setLayoutProperty('all-locations', 'visibility', 'visible');
+            map.setPaintProperty('all-locations', 'circle-opacity', 0.70);
+            map.setLayoutProperty('proximity-fill', 'visibility', 'visible');
+            map.setLayoutProperty('proximity-line', 'visibility', 'visible');
+            if (map.getLayer('proximity-merged-label')) map.setLayoutProperty('proximity-merged-label', 'visibility', 'visible');
+            updateProximityRings();
 
-            map.flyTo({ center: coords, zoom: Math.max(map.getZoom(), 14), duration: 1200, essential: true });
+            // Fly to cluster — zoom in enough to see the ring clearly
+            const targetZoom = Math.max(map.getZoom(), autoKm === 1 ? 15 : 14);
+            map.flyTo({ center: coords, zoom: targetZoom, duration: 1200, essential: true });
         }
+        // Expose both functions on window so injected panel onclick handlers can call them
         window.drillIntoCluster = drillIntoCluster;
+        window.showMergedGroupPanel = showMergedGroupPanel;
+
+        // ── Regional Market index (rm key → sorted cluster array) ───────
+        let clustersByRM = null;
+        function buildRMIndex() {
+            if (!clusterMeta || clustersByRM) return;
+            clustersByRM = new Map();
+            for (const c of clusterMeta) {
+                const key = c.rm || ('_solo_' + c.id);
+                if (!clustersByRM.has(key)) clustersByRM.set(key, []);
+                clustersByRM.get(key).push(c);
+            }
+            // Sort each RM's clusters: T1 first, then by dist_rank desc
+            for (const clusters of clustersByRM.values()) {
+                clusters.sort((a, b) => (a.t - b.t) || (b.dr - a.dr));
+            }
+        }
+
+        function showRegionalMarketPanel(rmKey) {
+            buildRMIndex();
+            const clusters = clustersByRM?.get(rmKey);
+            if (!clusters || clusters.length === 0) return;
+            const first = clusters[0];
+            const rmName   = first.mkt  || rmKey;
+            const metro    = first.mrgn || '';
+            const country  = countryName(first.iso);
+            const tierDotColor = (t) => t === 1 ? '#164679' : t === 2 ? '#54924E' : '#EAB308';
+            const itemsHTML = clusters.map(c => {
+                const props = metaToClusterProps(c);
+                const tvKey = effectiveTierKey(props);
+                const tc    = tierColor(tvKey);
+                return `<div class="merged-group-item"
+                    onclick="drillIntoCluster(metaToClusterProps(clusterIndex.get('${c.id}')), [${c.lon}, ${c.lat}])"
+                    onmousedown="event.preventDefault()">
+                    <div class="merged-group-item-tier" style="background:${tc.fill};"></div>
+                    <div>
+                        <div class="merged-group-item-name">${escapeHtml(c.mkt || c.td || c.id)}</div>
+                        <div class="merged-group-item-sub">${escapeHtml(c.td || '')}${c.span ? ' · ' + c.span.toFixed(1) + ' km span' : ''}</div>
+                    </div>
+                </div>`;
+            }).join('');
+
+            setNavContext(REGIONS[currentRegion]?.label || 'Overview', flyToOverview, rmName);
+            document.getElementById('inspector').innerHTML = `
+                <div class="data-block">
+                    <div class="region-hero-block">
+                        <div class="region-name-hero">${escapeHtml(rmName)}</div>
+                        <div class="region-secondary-geo">${escapeHtml([metro, country].filter(Boolean).join(' · '))}</div>
+                    </div>
+                </div>
+                <div class="data-block">
+                    <div class="data-label">${clusters.length} co-location${clusters.length > 1 ? 's' : ''} in this market</div>
+                    ${itemsHTML}
+                </div>
+            `;
+        }
+        window.showRegionalMarketPanel = showRegionalMarketPanel;
 
         // ── Click handler: proximity-fill (Retail Level ring navigation) ──
         map.on('click', 'proximity-fill', (e) => {
             // Retailer dot on top — let all-locations handler take it
             const retailerHits = map.queryRenderedFeatures(e.point, { layers: ['all-locations', 'individual-points'] });
             if (retailerHits.length) return;
-            const cid = e.features[0]?.properties?.cluster_id;
+
+            const props = e.features[0]?.properties;
+            if (!props) return;
+
+            // Merged ring: show constituent cluster list instead of drilling directly
+            const mergedCount = props.merged_count || 1;
+            if (mergedCount > 1 && props.member_ids) {
+                const memberIds = String(props.member_ids).split(',');
+                showMergedGroupPanel(memberIds, e.lngLat);
+                e.stopPropagation();
+                return;
+            }
+
+            const cid = props.cluster_id;
             if (!cid || !clusterIndex?.has(cid)) return;
             const c = clusterIndex.get(cid);
             drillIntoCluster(metaToClusterProps(c), [c.lon, c.lat]);
@@ -2233,124 +2432,91 @@
             const cid = e.features[0]?.properties?.cluster_id;
             if (!cid || !clusterIndex?.has(cid)) return;
             const c = clusterIndex.get(cid);
-            drillIntoCluster(metaToClusterProps(c), [c.lon, c.lat]);
+            buildRMIndex();
+            const rmKey    = c.rm || ('_solo_' + c.id);
+            const rmGroup  = clustersByRM?.get(rmKey);
+            if (rmGroup && rmGroup.length > 1) {
+                showRegionalMarketPanel(rmKey);
+                map.flyTo({ center: [c.lon, c.lat], zoom: Math.max(map.getZoom(), 10), duration: 600, essential: true });
+            } else {
+                drillIntoCluster(metaToClusterProps(c), [c.lon, c.lat]);
+            }
         });
-
 
         // Rebuild proximity rings after every pan in Retail Level
         map.on('moveend', updateProximityRings);
 
         // Re-run ring generation when cluster tile data finishes loading (handles tile-load lag after zoom)
         map.on('sourcedata', (e) => {
-            if (e.sourceId === 'data' && e.isSourceLoaded && VIEW.mode !== 'OVERVIEW') {
+            if (e.sourceId === 'data' && e.isSourceLoaded && !overviewActive) {
                 updateProximityRings();
             }
         });
 
-        // Auto-transition: OVERVIEW → RETAIL on zoom-in past threshold.
-        // RETAIL/CLUSTER → OVERVIEW only via explicit Back button, or auto on zoom-out.
+        // Auto-transition: Co-location Level → Retail Level based on zoom
+        // Retail Level → Co-location Level only via explicit Back button (never auto-revert)
         map.on('zoomend', () => {
             const z = map.getZoom();
-            // Sim test bed owns its own zoom transitions
+            // Alberta test bed owns the zoom transition while active. Hysteresis:
+            // rings appear at the retail threshold and PERSIST on zoom-out down to
+            // SIM_BUBBLE_ZOOM — a modest zoom-out never drops you back to bubbles.
             if (simActive) {
                 let mode = simView.mode;
                 if (z >= RETAIL_ZOOM_THRESHOLD)  mode = 'LOCAL';
                 else if (z < SIM_BUBBLE_ZOOM)    mode = 'GLOBAL';
+                // between SIM_BUBBLE_ZOOM and the threshold: keep current mode
                 if (mode !== simView.mode) { simView.mode = mode; applySimView(); }
                 return;
             }
-            // Zoom out below threshold → return to Co-location Level
-            // Exception: catchment active — keep cluster selection, just hide rings at this zoom
-            if (VIEW.mode !== 'OVERVIEW' && z < RETAIL_ZOOM_THRESHOLD) {
+            // Zoom out below Retail threshold → revert to Co-location Level,
+            // EXCEPT when catchment is active: the 150 km secondary ring requires
+            // z~7.5–8.0 to frame, below the threshold by design. Keep cluster
+            // selection and catchment layers; hide proximity rings at that zoom.
+            if (!overviewActive && z < RETAIL_ZOOM_THRESHOLD) {
                 if (catchmentActive && selectedClusterId) {
                     if (map.getLayer('proximity-fill')) map.setLayoutProperty('proximity-fill', 'visibility', 'none');
                     if (map.getLayer('proximity-line')) map.setLayoutProperty('proximity-line', 'visibility', 'none');
+                    if (map.getLayer('proximity-merged-label')) map.setLayoutProperty('proximity-merged-label', 'visibility', 'none');
                     if (map.getLayer('all-locations')) map.setLayoutProperty('all-locations', 'visibility', 'none');
                     return;
                 }
-                // In showOverview(): wasRetail branch eases zoom — suppress that here since
-                // we're already zooming out (avoid double-move)
-                VIEW.mode = 'RETAIL'; // temporarily trick showOverview into NOT easing
                 showOverview();
                 return;
             }
-            // Restore local layers when zooming back in with catchment active
-            if (VIEW.mode === 'CLUSTER' && z >= RETAIL_ZOOM_THRESHOLD && catchmentActive && selectedClusterId) {
-                applyView();
+            // Restore retail layers when zooming back above threshold in cluster+catchment context
+            if (!overviewActive && z >= RETAIL_ZOOM_THRESHOLD && catchmentActive && selectedClusterId) {
+                if (map.getLayer('proximity-fill')) map.setLayoutProperty('proximity-fill', 'visibility', 'visible');
+                if (map.getLayer('proximity-line')) map.setLayoutProperty('proximity-line', 'visibility', 'visible');
+                if (map.getLayer('proximity-merged-label')) map.setLayoutProperty('proximity-merged-label', 'visibility', 'visible');
+                if (map.getLayer('all-locations')) {
+                    map.setLayoutProperty('all-locations', 'visibility', 'visible');
+                    map.setPaintProperty('all-locations', 'circle-opacity', 0.70);
+                }
                 updateProximityRings();
             }
-            // Auto-enter Retail Level on zoom-in (overview only)
-            if (VIEW.mode === 'OVERVIEW' && z >= RETAIL_ZOOM_THRESHOLD) {
+            if (overviewActive && z >= RETAIL_ZOOM_THRESHOLD) {
                 setRetailLevel();
-            } else if (VIEW.mode === 'OVERVIEW' && z >= RETAIL_PREFETCH_ZOOM) {
-                // Pre-warm all-locations tiles invisibly before threshold
+            } else if (overviewActive && z >= RETAIL_PREFETCH_ZOOM) {
+                // Pre-warm layer1 (all-locations) tile cache 2 levels before threshold
+                // Mount hidden (opacity 0); setRetailLevel bumps opacity at threshold cross
                 if (map.getLayer('all-locations') && map.getLayoutProperty('all-locations', 'visibility') !== 'visible') {
                     map.setPaintProperty('all-locations', 'circle-opacity', 0);
                     map.setLayoutProperty('all-locations', 'visibility', 'visible');
                 }
-                setNavContext('Co-location view', showOverview, 'Zooming in…');
-            } else if (VIEW.mode === 'OVERVIEW' && z < RETAIL_PREFETCH_ZOOM) {
+                setNavContext(REGIONS[currentRegion]?.label || 'Overview', flyToOverview, 'Zooming in');
+            } else if (overviewActive && z < RETAIL_PREFETCH_ZOOM) {
                 setNavContext(null);
             }
-            // Safety net: no cluster nodes visible at threshold → force Retail
-            if (VIEW.mode === 'OVERVIEW' && z >= RETAIL_ZOOM_THRESHOLD) {
+            // Tile-load safety net: if after idle the nodes layer has nothing at threshold zoom,
+            // force Retail Level so the user isn't stuck on a blank Co-location Level
+            if (overviewActive && z >= RETAIL_ZOOM_THRESHOLD) {
                 map.once('idle', () => {
-                    if (VIEW.mode !== 'OVERVIEW') return;
-                    if (map.queryRenderedFeatures({ layers: ['nodes'] }).length === 0) setRetailLevel();
+                    if (!overviewActive) return;
+                    const visible = map.queryRenderedFeatures({ layers: ['nodes'] });
+                    if (visible.length === 0) setRetailLevel();
                 });
             }
         });
-
-        // ── Regional Market parent panel ──────────────────────────────
-        function showMarketDetail(marketName) {
-            if (!clusterMeta || !marketName) return;
-            const members = clusterMeta
-                .filter(c => c.mkt === marketName)
-                .sort((a, b) => (a.dr || 999) - (b.dr || 999));
-            if (members.length < 2) {
-                if (members.length === 1) drillIntoCluster(metaToClusterProps(members[0]), [members[0].lon, members[0].lat]);
-                return;
-            }
-            // Layer state stays OVERVIEW (bubbles on map) — only inspector changes
-            VIEW.fromMarket = null;
-            applyView();
-            setNavContext('Co-location view', showOverview, marketName);
-            const items = members.map(c => {
-                const tc = tierColor(TIER2_TO_V2[c.t] ?? 0);
-                return `<div class="merged-group-item"
-                    onclick="drillIntoCluster(metaToClusterProps(clusterIndex.get('${c.id}')), [${c.lon}, ${c.lat}], '${escapeAttr(marketName)}')"
-                    onmousedown="event.preventDefault()">
-                    <div class="merged-group-item-tier" style="background:${tc.fill};"></div>
-                    <div>
-                        <div class="merged-group-item-name">${escapeHtml(c.mkt || c.id)}</div>
-                        ${c.mrgn ? `<div class="merged-group-item-sub">${escapeHtml(c.mrgn)}</div>` : ''}
-                    </div>
-                </div>`;
-            }).join('');
-            document.getElementById('inspector').innerHTML = `
-                <div class="data-block">
-                    <div class="data-label">Regional Market</div>
-                    <div class="data-value" style="font-size:16px;">${escapeHtml(marketName)}</div>
-                    <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">${members.length} co-location markets</div>
-                </div>
-                ${items}
-            `;
-        }
-
-        // ── Retailer map filter toggle ─────────────────────────────────
-        function setCoTenants(show) {
-            coTenantsVisible = show;
-            const anchorBtn = document.getElementById('btn-anchors-only');
-            const allBtn    = document.getElementById('btn-all-retailers');
-            if (anchorBtn) { anchorBtn.style.background = !show ? 'var(--brand-primary)' : '#f8fafc'; anchorBtn.style.color = !show ? '#fff' : 'var(--text-muted)'; }
-            if (allBtn)    { allBtn.style.background    =  show ? 'var(--brand-primary)' : '#f8fafc'; allBtn.style.color    =  show ? '#fff' : 'var(--text-muted)'; }
-            if (map.getLayer('all-locations')) {
-                map.setFilter('all-locations', show ? null : anchorFilter());
-            }
-        }
-
-        window.showMarketDetail = showMarketDetail;
-        window.setCoTenants     = setCoTenants;
 
         updateMapPadding();
         window.addEventListener('resize', updateMapPadding);
@@ -2417,7 +2583,7 @@
 
         // Empty map space: Back button is the only way out of cluster-zoom mode
         map.on('click', (e) => {
-            if (!selectedClusterId || VIEW.mode === 'OVERVIEW') return;
+            if (!selectedClusterId || !overviewActive) return;
             const hit = map.queryRenderedFeatures(e.point, {
                 layers: ['nodes', 'nodes-halo', 'all-locations', 'individual-points'],
             });
@@ -2427,7 +2593,7 @@
 
         // Auto-detect active region when map center crosses into a different region's bounds
         map.on('moveend', () => {
-            if (VIEW.mode !== 'OVERVIEW' || simActive) return;
+            if (!overviewActive || simActive) return;
             const { lng, lat } = map.getCenter();
             for (const [key, r] of Object.entries(REGIONS)) {
                 if (key === currentRegion) continue;
