@@ -982,6 +982,7 @@ fn home_chrome(
                 meta charset="utf-8";
                 meta name="viewport" content="width=device-width, initial-scale=1";
                 title { (site_title) }
+                link rel="stylesheet" href="/static/tokens.css";
                 link rel="stylesheet" href="/static/style.css";
             }
             body {
@@ -1871,6 +1872,7 @@ fn wiki_chrome(
                 meta charset="utf-8";
                 meta name="viewport" content="width=device-width, initial-scale=1";
                 title { (page_title) }
+                link rel="stylesheet" href="/static/tokens.css";
                 link rel="stylesheet" href="/static/style.css";
                 // JSON-LD baseline (Phase 2 Step 1) — schema.org TechArticle /
                 // DefinedTerm. Cumulative across phases; AEO crawlers + downstream
@@ -3327,6 +3329,7 @@ fn chrome(_title: &str, body: Markup, site_title: &str, user: Option<&User>, pen
                 meta charset="utf-8";
                 meta name="viewport" content="width=device-width, initial-scale=1";
                 title { (site_title) }
+                link rel="stylesheet" href="/static/tokens.css";
                 link rel="stylesheet" href="/static/style.css";
             }
             body {
