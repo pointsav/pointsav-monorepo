@@ -29,12 +29,25 @@ under `.agent/plans/archive/`.
   (`8f51ddfc` templates, `959f8e6f` Doorman, `bf35f38d` MCP read tools,
   `3d9cd9ec` collab). Compiles + full `cargo test` green.
   [2026-05-22 totebox@claude-code]
-- [ ] **Stage 6 — Phase 1 commits unpromoted.** The 4 Phase 1 commits are on
-  local `main`, not on canonical. Command Session promotes + rebuilds the
-  binary. Outbox notified. [2026-05-22 totebox@claude-code]
-- [ ] Phase 3.1 — discharge the convention's Engine Verification Gate: a
-  render-pass test that comrak emits `<!--claim …-->` markers unchanged.
-  [2026-05-21 totebox@claude-code]
+- [x] **Phase 3 Commits A–C** — claim-layer engine foundation. `7887f8ec`
+  (`claim.rs` extractor + Engine Verification Gate discharged), `c41bf85e`
+  (per-claim citation resolution), `77e0d0a8` (claim graph in redb). All
+  tested green. [2026-05-22 totebox@claude-code]
+- [ ] **Phase 3 Commit D — RESUME HERE next session.** §3.5 two-clock
+  temporality. Operator chose **Option A** — per-span `gix-blame` for
+  `published_at` (not coarse file-level) — plus the `?asof=` past-revision
+  view. Then Commit E (§3.7 JSON content-negotiation + §3.8 JSON-LD).
+  Full pick-up detail: `.agent/briefs/BRIEF-knowledge-platform-phase3.md`.
+  [2026-05-22 totebox@claude-code]
+- [ ] **Phase 3.4 — continuous citation verification** — deferred out of the
+  A–E tranche; its own sub-project (HTTP client + background scheduler +
+  drift detection). [2026-05-22 totebox@claude-code]
+- [ ] **Phase 3.6 — claim-record MCP API** (`query_claims`) — deferred;
+  cross-cluster, must reconcile with `service-slm`'s `slm-mcp-server`. Outbox
+  sent to project-intelligence. [2026-05-22 totebox@claude-code]
+- [ ] **Stage 6 — 7 commits unpromoted** on monorepo `main` (Phase 1 ×4 +
+  Phase 3 A/B/C ×3). Command Session promotes + rebuilds the binary. Outbox
+  notified. [2026-05-22 totebox@claude-code]
 - [ ] **Crate-hygiene drift (pre-existing, NOT Phase 1).** `app-mediakit-knowledge`
   is not `cargo fmt`-clean (a `cargo fmt` run reformats ~37 files) and
   `cargo clippy --all-targets -- -D warnings` fails with pre-existing lints in

@@ -4,6 +4,28 @@ Rolling 3-session summary. Newest on top. Keep only 3 entries; push oldest to `s
 
 ---
 
+## 2026-05-22 | Totebox | claude-code
+
+**Done this session — Phase 1 + Phase 2 complete; Phase 3 Commits A–C:**
+- **Branch-topology blocker found + escalated.** The monorepo's `cluster/project-knowledge` branch had diverged badly from `main` (a stale 2026-05-03 relic, 374 commits behind). Escalated to Command; Command deleted it — **`main` is the confirmed working branch** for project-knowledge engine work.
+- **Phase 2 (claim-authoring convention)** — specced, staged, routed; Command ratified it as **doctrine claim #54** (`~/Foundry/conventions/claim-authoring-convention.md`). LANDED notice sent to project-editorial (their Track-A2 unblocked).
+- **Phase 1 (engine dead-code descope) COMPLETE** — 4 commits on monorepo `main`: `8f51ddfc` templates, `959f8e6f` Doorman, `bf35f38d` MCP read tools, `3d9cd9ec` collab. ~−2,600 lines; full `cargo test` green. Fixed a latent implicit-dep bug (tokio `io-util` was transitively via axum `ws`).
+- **Phase 3 (claim-layer engine) — Commits A/B/C** on `main`: `7887f8ec` (`claim.rs` extractor + Engine Verification Gate discharged), `c41bf85e` (per-claim citation resolution), `77e0d0a8` (claim graph in redb).
+- Wrote `.agent/binary-targets.yaml` — SOFT- pipeline declaration for `app-mediakit-knowledge`.
+
+**Pending / carry-forward (resume tomorrow):**
+- **Phase 3 Commit D — start here.** §3.5 two-clock temporality. **Operator chose Option A**: per-span `gix-blame` for `published_at` (not coarse file-level). Plus `?asof=` past-revision view. Then Commit E (§3.7 JSON content-negotiation + §3.8 JSON-LD). Full pick-up detail: `.agent/briefs/BRIEF-knowledge-platform-phase3.md`.
+- **Deferred:** §3.4 continuous citation verification (own sub-project); §3.6 claim-record MCP API — outbox sent to project-intelligence for `slm-mcp-server` reconciliation.
+- **Stage 6:** 7 commits unpromoted on monorepo `main` (Phase 1 ×4 + Phase 3 ×3) — Command scope.
+- **Crate-hygiene drift (pre-existing):** `app-mediakit-knowledge` is not `cargo fmt`/`clippy -D warnings`-clean — standalone task logged in `NEXT.md`.
+- **Crate-doc accuracy pass:** crate `CLAUDE.md`/`ARCHITECTURE.md` still describe collab/Doorman/removed-MCP-tools as shipped — logged in `NEXT.md`.
+
+**Operator preferences surfaced:**
+- Per-commit discipline endorsed — small, compile-and-test-verified commits; present a plan for multi-step engine work, then execute on go-ahead.
+- Surface drift, don't bundle it — pre-existing fmt/clippy non-compliance was reverted out of the Phase 1 descope, not silently absorbed into a feature commit.
+
+---
+
 ## 2026-05-21 | Totebox | claude-code
 
 **Done this session — knowledge-platform re-architecture + plan consolidation:**
@@ -41,24 +63,3 @@ Rolling 3-session summary. Newest on top. Keep only 3 entries; push oldest to `s
 - **Stage 6 outstanding:** content-wiki-projects (6 commits), content-wiki-corporate (10 commits, blocked on cluster/canonical divergence), content-wiki-documentation (4 commits), monorepo (16 commits).
 
 **Operator preferences surfaced:** None new this session.
-
----
-
-## 2026-05-20 | Totebox | claude-code
-
-**Done this session:**
-- G2 (`a06f64f`, Peter): `README-TOTEBOX-EGRESS.md` removed from woodfine-fleet-deployment cluster-clone. Canonical copy still present — Command Session admin-tier commit required (outbox updated).
-- PJ2 (`b138b99`, Jennifer): 5 country co-location index stubs expanded (Italy, Mexico, Nordics, Poland, Spain); ES frontmatter `paired_with:` bug fixed; `language_protocol` → `TRANSLATE-ES`.
-- C8–C10 (`cb53200`, Peter): 10 new corporate wiki topics + 10 ES bilingual pairs (20 files).
-- Corporate wiki housekeeping (`ebc2939`, Peter): `featured-topic.yaml` 15-topic pool; `leapfrog-facts.yaml` 9 facts; `.agent/rules/` bootstrap.
-- Projects wiki housekeeping (`bffe4e3`, Jennifer): `NEXT.md` current; `CLAUDE.md` created.
-
-**Pending / carry-forward:**
-- Items 6 + 7 deferred (corporate glossary + thin-category audit).
-- D10 wikilink validation — blocked on Stage 6 rebuild.
-- G2 canonical removal — Command Session.
-- Stage 6 outstanding: content-wiki-projects (6), content-wiki-corporate (10, blocked on divergence), content-wiki-documentation (4), monorepo (16).
-
-**Operator preferences surfaced:**
-- "do them all in parallel" / "yes" → execute immediately in parallel without re-asking.
-- No trailing summaries mid-session; concise updates only.
