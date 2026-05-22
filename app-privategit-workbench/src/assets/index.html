@@ -255,6 +255,27 @@ header .tag {
 #goto-input:focus { border-color: #4d9fff; }
 .goto-hint { font-size: 10px; color: #444; white-space: nowrap; }
 
+/* ── Find/Replace bar ─────────────────────────────────────────────── */
+#find-bar {
+  display: none; flex-direction: column; flex-shrink: 0;
+  background: #252526; border-bottom: 1px solid #333; border-left: 1px solid #333;
+  padding: 4px 8px; gap: 3px;
+}
+#find-bar.visible { display: flex; }
+.find-row { display: flex; align-items: center; gap: 5px; }
+.find-row input {
+  flex: 1; min-width: 0; background: #3c3c3c; border: 1px solid #555;
+  border-radius: 3px; color: #eee; font-size: 12px; padding: 3px 8px; outline: none;
+}
+.find-row input:focus { border-color: #4d9fff; }
+#find-count { font-size: 10px; color: #666; white-space: nowrap; min-width: 54px; text-align: right; }
+.find-btn {
+  font-size: 11px; color: #999; background: #3c3c3c; border: 1px solid #555;
+  border-radius: 3px; padding: 2px 7px; cursor: pointer; line-height: 1.6;
+  white-space: nowrap; flex-shrink: 0;
+}
+.find-btn:hover { background: #4a4a4a; color: #eee; }
+
 #editor-wrap {
   flex: 1;
   display: flex;
@@ -420,6 +441,20 @@ header .tag {
         <span class="goto-label">Go to line:</span>
         <input id="goto-input" type="number" min="1" placeholder="…" autocomplete="off">
         <span class="goto-hint">↵ jump · Esc close</span>
+      </div>
+      <div id="find-bar">
+        <div class="find-row">
+          <input id="find-input" type="text" placeholder="Find…" autocomplete="off" spellcheck="false">
+          <span id="find-count"></span>
+          <button class="find-btn" id="find-prev" title="Previous (Shift+Enter)">↑</button>
+          <button class="find-btn" id="find-next" title="Next (Enter)">↓</button>
+          <button class="find-btn" id="find-close" title="Close (Esc)">✕</button>
+        </div>
+        <div class="find-row">
+          <input id="replace-input" type="text" placeholder="Replace with…" autocomplete="off" spellcheck="false">
+          <button class="find-btn" id="replace-one">Replace</button>
+          <button class="find-btn" id="replace-all-btn">All</button>
+        </div>
       </div>
       <div id="editor-wrap">
         <div id="editor-gutter"></div>
@@ -614,6 +649,7 @@ function showEditorPanel(content) {
 function hideEditorPanel() {
   document.getElementById('editor-panel').classList.remove('visible');
   document.getElementById('resizer2').style.display = 'none';
+  document.getElementById('find-bar').classList.remove('visible');
   editorPath  = null;
   editorMtime = 0;
   setDirty(false);
@@ -1076,10 +1112,170 @@ function printCurrent() {
   }
 }
 
+// ── Find / Replace ────────────────────────────────────────────────────────────
+let findMatches = [];
+let findIdx     = -1;
+
+function escapeRegex(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+
+function buildFindMatches() {
+  const term = document.getElementById('find-input').value;
+  const ta   = document.getElementById('editor-textarea');
+  findMatches = [];
+  if (!term) return;
+  const re = new RegExp(escapeRegex(term), 'gi');
+  let m;
+  while ((m = re.exec(ta.value)) !== null) {
+    findMatches.push({ start: m.index, end: m.index + m[0].length });
+  }
+}
+
+function updateFindCount() {
+  const el   = document.getElementById('find-count');
+  const term = document.getElementById('find-input').value;
+  if (!term)              { el.textContent = ''; return; }
+  if (!findMatches.length){ el.textContent = 'No results'; return; }
+  el.textContent = (findIdx + 1) + ' / ' + findMatches.length;
+}
+
+function findGo(dir) {
+  if (!findMatches.length) { updateFindCount(); return; }
+  findIdx = (findIdx + dir + findMatches.length) % findMatches.length;
+  const m  = findMatches[findIdx];
+  const ta = document.getElementById('editor-textarea');
+  ta.focus();
+  ta.selectionStart = m.start;
+  ta.selectionEnd   = m.end;
+  const line = ta.value.substring(0, m.start).split('\n').length - 1;
+  ta.scrollTop = Math.max(0, line * 12 * 1.6 - ta.clientHeight / 3);
+  updateFindCount();
+}
+
+function showFindBar() {
+  const bar = document.getElementById('find-bar');
+  bar.classList.add('visible');
+  const inp = document.getElementById('find-input');
+  const ta  = document.getElementById('editor-textarea');
+  const sel = ta.value.substring(ta.selectionStart, ta.selectionEnd);
+  if (sel && !sel.includes('\n')) inp.value = sel;
+  inp.focus(); inp.select();
+  buildFindMatches();
+  findIdx = -1;
+  if (findMatches.length) findGo(1); else updateFindCount();
+}
+
+function hideFindBar() {
+  document.getElementById('find-bar').classList.remove('visible');
+  document.getElementById('editor-textarea').focus();
+}
+
+document.getElementById('find-input').addEventListener('input', () => {
+  buildFindMatches(); findIdx = -1;
+  if (findMatches.length) findGo(1); else updateFindCount();
+});
+document.getElementById('find-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter')  { e.preventDefault(); findGo(e.shiftKey ? -1 : 1); }
+  if (e.key === 'Escape') { e.preventDefault(); hideFindBar(); }
+});
+document.getElementById('replace-input').addEventListener('keydown', e => {
+  if (e.key === 'Escape') { e.preventDefault(); hideFindBar(); }
+});
+document.getElementById('find-prev').addEventListener('click', () => findGo(-1));
+document.getElementById('find-next').addEventListener('click', () => findGo(1));
+document.getElementById('find-close').addEventListener('click', hideFindBar);
+
+document.getElementById('replace-one').addEventListener('click', () => {
+  if (!findMatches.length) return;
+  if (findIdx < 0) { findGo(1); return; }
+  const ta     = document.getElementById('editor-textarea');
+  const repVal = document.getElementById('replace-input').value;
+  const m      = findMatches[findIdx];
+  ta.focus(); ta.selectionStart = m.start; ta.selectionEnd = m.end;
+  document.execCommand('insertText', false, repVal);
+  setDirty(true); schedulePreview(); updateGutterLines();
+  const savedIdx = findIdx;
+  buildFindMatches();
+  if (!findMatches.length) { findIdx = -1; updateFindCount(); return; }
+  findIdx = Math.min(savedIdx, findMatches.length - 1);
+  const next = findMatches[findIdx];
+  ta.selectionStart = next.start; ta.selectionEnd = next.end;
+  updateFindCount();
+});
+
+document.getElementById('replace-all-btn').addEventListener('click', () => {
+  const findVal = document.getElementById('find-input').value;
+  if (!findVal || !findMatches.length) return;
+  const ta     = document.getElementById('editor-textarea');
+  const repVal = document.getElementById('replace-input').value;
+  const newVal = ta.value.replace(new RegExp(escapeRegex(findVal), 'gi'), repVal);
+  ta.focus(); ta.select();
+  document.execCommand('insertText', false, newVal);
+  setDirty(true); schedulePreview(); updateGutterLines();
+  buildFindMatches(); findIdx = -1; updateFindCount();
+});
+
+// ── Toggle line comment ───────────────────────────────────────────────────────
+function commentPrefix() {
+  if (!editorPath) return '# ';
+  const ext = editorPath.split('.').pop().toLowerCase();
+  return ['rs','js','ts','jsx','tsx','css','scss','go','java','c','cpp','h','hpp'].includes(ext)
+    ? '// ' : '# ';
+}
+
+function toggleLineComment() {
+  const ta     = document.getElementById('editor-textarea');
+  const val    = ta.value;
+  const ss     = ta.selectionStart;
+  const se     = ta.selectionEnd;
+  const prefix = commentPrefix();
+  const marker = prefix.trimEnd();
+
+  const lineStart = val.lastIndexOf('\n', ss - 1) + 1;
+  const lineEndRaw = val.indexOf('\n', se);
+  const blockEnd  = lineEndRaw === -1 ? val.length : lineEndRaw;
+
+  const lines = val.substring(lineStart, blockEnd).split('\n');
+  const nonEmpty = lines.filter(l => l.trim());
+  const allCommented = nonEmpty.length > 0 && nonEmpty.every(l => l.trimStart().startsWith(marker));
+
+  const newLines = lines.map(l => {
+    if (allCommented) {
+      const trimmed = l.trimStart();
+      const lead    = l.slice(0, l.length - trimmed.length);
+      if (trimmed.startsWith(prefix))  return lead + trimmed.slice(prefix.length);
+      if (trimmed.startsWith(marker))  return lead + trimmed.slice(marker.length);
+      return l;
+    } else {
+      if (!l.trim()) return l;
+      const lead = l.slice(0, l.length - l.trimStart().length);
+      return lead + prefix + l.trimStart();
+    }
+  });
+
+  const newBlock = newLines.join('\n');
+  ta.focus(); ta.selectionStart = lineStart; ta.selectionEnd = blockEnd;
+  document.execCommand('insertText', false, newBlock);
+
+  const delta = newBlock.length - (blockEnd - lineStart);
+  ta.selectionStart = lineStart;
+  ta.selectionEnd   = Math.max(lineStart, se + delta);
+  setDirty(true); schedulePreview(); updateGutterLines(); updateEditorPos();
+}
+
 // ── Keyboard shortcuts ────────────────────────────────────────────────────────
 window.addEventListener('keydown', e => {
   if ((e.metaKey || e.ctrlKey) && e.key === 'p') { e.preventDefault(); printCurrent(); }
   if ((e.metaKey || e.ctrlKey) && e.key === 's') { e.preventDefault(); saveFile(); }
+  if ((e.metaKey || e.ctrlKey) && e.key === 'f') {
+    if (document.getElementById('editor-panel').classList.contains('visible')) {
+      e.preventDefault(); showFindBar();
+    }
+  }
+  if ((e.metaKey || e.ctrlKey) && e.key === '/') {
+    if (document.getElementById('editor-panel').classList.contains('visible')) {
+      e.preventDefault(); toggleLineComment();
+    }
+  }
 });
 
 // ── Mark a tree item active ───────────────────────────────────────────────────
