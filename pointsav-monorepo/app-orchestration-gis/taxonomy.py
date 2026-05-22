@@ -128,6 +128,7 @@ BRAND_FILL: dict[str, dict[str, list[str]]] = {
             "auchan-pl",               # 120 records, Q758603 — Phase 17 2026-05-22
             "carrefour-hypermarket-pl", # 114 records, Q217599 — Phase 17 2026-05-22
             "kaufland-pl",             # 253 records, Q685967 (Schwarz Group) — Phase 18 2026-05-22
+            "leclerc-pl",              # 36 records, Q1273376 — Phase 18 2026-05-22
         ],
         "AT": [
             "billa-plus-at",
@@ -135,6 +136,7 @@ BRAND_FILL: dict[str, dict[str, list[str]]] = {
         ],
         "NL": [
             "albert-heijn-xl-nl",
+            "jumbo-nl",  # 8 records, Q14716185 (Jumbo Foodmarkt large-format) — Phase 18 2026-05-22
         ],
         "PT": [
             "continente-pt",
@@ -340,7 +342,7 @@ DISPLAY_NAMES: dict[str, str] = {
     "sainsburys-uk": "Sainsbury's",
     "asda-uk": "ASDA",
     "morrisons-uk": "Morrisons",
-    "leclerc-fr": "E.Leclerc",
+    "leclerc-fr": "E.Leclerc", "leclerc-pl": "E.Leclerc",
     "carrefour-hypermarket-fr": "Carrefour",
     "auchan-fr": "Auchan",
     "kaufland-de": "Kaufland", "kaufland-pl": "Kaufland",
@@ -350,7 +352,7 @@ DISPLAY_NAMES: dict[str, str] = {
     "esselunga-it": "Esselunga",
     "sklavenitis-gr": "Sklavenitis",
     "billa-plus-at": "Billa Plus", "interspar-at": "Interspar",
-    "albert-heijn-xl-nl": "Albert Heijn XL",
+    "albert-heijn-xl-nl": "Albert Heijn XL", "jumbo-nl": "Jumbo Foodmarkt",
     "continente-pt": "Continente",
     "coop-forum-se": "Coop Forum / Stora Coop",
     "bilka-dk": "Bilka", "foetex-dk": "Føtex",
