@@ -92,7 +92,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
         _ => {
             let db_path = format!("{}/entities.lbug", graph_dir);
-            info!(db_path, backend = "ladybug", "opening LadybugDB graph store");
+            info!(
+                db_path,
+                backend = "ladybug",
+                "opening LadybugDB graph store"
+            );
             Arc::new(
                 LbugGraphStore::new(&db_path)
                     .expect("[SYSTEM] Failed to open LadybugDB graph store"),
@@ -183,12 +187,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 for entry in entries.flatten() {
                     let path = entry.path();
                     if path.extension().and_then(|s| s.to_str()) == Some("json") {
-                        let filename =
-                            path.file_name().unwrap().to_str().unwrap().to_string();
-                        let already_done = ledgers_drain
-                            .lock()
-                            .unwrap()
-                            .contains(&filename);
+                        let filename = path.file_name().unwrap().to_str().unwrap().to_string();
+                        let already_done = ledgers_drain.lock().unwrap().contains(&filename);
                         if filename.starts_with("CORPUS_") && !already_done {
                             if process_corpus(
                                 &path,
