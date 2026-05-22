@@ -89,6 +89,19 @@ pub struct Claim {
     pub content_hash: String,
     /// Containing TOPIC slug — derived (convention §5).
     pub topic_slug: String,
+    /// First 1-based line of this claim's content span within `body_md`.
+    /// Used by `history::blame_published_at` to compute `published_at`.
+    /// Includes the opening marker's closing `-->` newline so that edits
+    /// to the marker fields (cites, confidence) also update the timestamp.
+    pub line_start: u32,
+    /// Last 1-based line of this claim's content span within `body_md`
+    /// (inclusive). Covers through the final character before `<!--/claim-->`.
+    pub line_end: u32,
+    /// Committer timestamp (RFC 3339 UTC) of the newest commit whose blame
+    /// touches `line_start..=line_end` — engine-derived (convention §5).
+    /// `None` until `history::blame_published_at` is called, or when the
+    /// content directory has no git history for this file.
+    pub published_at: Option<String>,
 }
 
 /// The result of extracting claims from one TOPIC body.
@@ -148,6 +161,17 @@ pub fn extract_claims(body_md: &str, topic_slug: &str) -> Extraction {
         let close_end = content_start + close_rel + CLOSE_MARKER.len();
         cursor = close_end;
 
+        // §3.5: line range of the claim's content span within body_md.
+        // line_start covers the opening marker's trailing newline so that
+        // changes to marker fields (id, cites, confidence) are captured
+        // by blame_published_at.
+        let line_start = byte_to_line(body_md, content_start);
+        let line_end = if close_rel == 0 {
+            line_start
+        } else {
+            byte_to_line(body_md, content_start + close_rel - 1)
+        };
+
         match parse_opening(marker_inner) {
             Ok(fields) => {
                 if !seen.insert(fields.id.clone()) {
@@ -178,6 +202,9 @@ pub fn extract_claims(body_md: &str, topic_slug: &str) -> Extraction {
                     text,
                     content_hash,
                     topic_slug: topic_slug.to_string(),
+                    line_start,
+                    line_end,
+                    published_at: None,
                 });
             }
             Err(why) => out.warnings.push(format!(
@@ -272,6 +299,12 @@ fn parse_list(v: &str) -> Result<Vec<String>, String> {
 /// markdown reflow (line wrapping) but changes on any word edit.
 fn normalise(text: &str) -> String {
     text.split_whitespace().collect::<Vec<_>>().join(" ")
+}
+
+/// 1-based line number of the character at `byte` in `text`.
+/// Counts `\n` characters in `text[..byte]`.
+fn byte_to_line(text: &str, byte: usize) -> u32 {
+    (text[..byte.min(text.len())].matches('\n').count() + 1) as u32
 }
 
 #[cfg(test)]
@@ -424,5 +457,31 @@ mod tests {
         let ex = extract_claims("Just ordinary prose with no markers.", "t");
         assert!(ex.claims.is_empty());
         assert!(ex.warnings.is_empty());
+    }
+
+    #[test]
+    fn tracks_line_numbers_for_blame() {
+        // Body has 7 lines; claim occupies lines 3–5 (opening marker line
+        // through last prose line, inclusive).
+        let body = concat!(
+            "Line 1\n",
+            "Line 2\n",
+            "<!--claim id=x confidence=structural cites=[]-->\n",
+            "Claim line 1\n",
+            "Claim line 2\n",
+            "<!--/claim-->\n",
+            "Line 7",
+        );
+        let ex = extract_claims(body, "t");
+        assert_eq!(ex.warnings, Vec::<String>::new());
+        assert_eq!(ex.claims.len(), 1);
+        let c = &ex.claims[0];
+        // Opening marker is on line 3; content_start points to the '\n'
+        // that ends that line → line_start = 3.
+        assert_eq!(c.line_start, 3);
+        // Last char of content is the '\n' after "Claim line 2" → line_end = 5.
+        assert_eq!(c.line_end, 5);
+        // published_at is None until blame_published_at is called.
+        assert_eq!(c.published_at, None);
     }
 }
