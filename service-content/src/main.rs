@@ -4,13 +4,15 @@ mod graph;
 mod http;
 mod taxonomy;
 
-use graph::{GraphEntity, GraphStore, LbugGraphStore};
+use graph::{GraphEntity, GraphStore, LbugGraphStore, SqliteGraphStore};
 use notify::{Event, RecursiveMode, Watcher};
 use serde_json::Value;
+use std::collections::HashSet;
 use std::fs;
 use std::io::{BufRead, Write};
 use std::path::Path;
-use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::Duration;
 use tracing::{error, info, warn};
@@ -33,7 +35,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let doorman_endpoint = std::env::var("SLM_DOORMAN_ENDPOINT")
         .unwrap_or_else(|_| "http://127.0.0.1:9080".to_string());
     let base_dir = std::env::var("SERVICE_CONTENT_BASE_DIR")
-        .unwrap_or_else(|_| "/home/mathew/deployments/woodfine-fleet-deployment/cluster-totebox-personnel-1/service-fs/data".to_string());
+        .unwrap_or_else(|_| "/var/lib/service-content/data".to_string());
     let module_id =
         std::env::var("SERVICE_CONTENT_MODULE_ID").unwrap_or_else(|_| "woodfine".to_string());
 
@@ -67,15 +69,41 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let graph_dir = std::env::var("SERVICE_CONTENT_GRAPH_DIR")
         .unwrap_or_else(|_| format!("{}/service-content/graph", base_dir));
     fs::create_dir_all(&graph_dir)?;
-    let graph_db_path = format!("{}/entities.lbug", graph_dir);
 
-    let graph_store: Arc<dyn GraphStore> = Arc::new(
-        LbugGraphStore::new(&graph_db_path).expect("[SYSTEM] Failed to open LadybugDB graph store"),
-    );
+    // Backend selection: env override > node-class detection.
+    // Micro ($7/mo) → SQLite (fits in ~1 GB RAM).
+    // Hardware/Accelerated → LadybugDB (graph-native, higher RAM available).
+    let backend = std::env::var("SERVICE_CONTENT_GRAPH_BACKEND").unwrap_or_else(|_| {
+        let caps = foundry_nodeclass::detect();
+        match caps.node_class {
+            foundry_nodeclass::NodeClass::Micro => "sqlite".to_string(),
+            _ => "ladybug".to_string(),
+        }
+    });
+
+    let graph_store: Arc<dyn GraphStore> = match backend.as_str() {
+        "sqlite" => {
+            let db_path = format!("{}/entities.sqlite", graph_dir);
+            info!(db_path, backend = "sqlite", "opening SQLite graph store");
+            Arc::new(
+                SqliteGraphStore::new(&db_path)
+                    .expect("[SYSTEM] Failed to open SQLite graph store"),
+            )
+        }
+        _ => {
+            let db_path = format!("{}/entities.lbug", graph_dir);
+            info!(db_path, backend = "ladybug", "opening LadybugDB graph store");
+            Arc::new(
+                LbugGraphStore::new(&db_path)
+                    .expect("[SYSTEM] Failed to open LadybugDB graph store"),
+            )
+        }
+    };
+
     graph_store
         .init_schema()
         .expect("[SYSTEM] Failed to initialise graph schema");
-    info!(graph_db_path, "graph store ready");
+    info!(backend, "graph store ready");
 
     // ── Processed-ledger persistence ─────────────────────────────────────────
     // STATE_DIR defaults to graph_dir so the JSONL lives alongside the graph DB.
@@ -86,9 +114,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         std::env::var("SERVICE_CONTENT_STATE_DIR").unwrap_or_else(|_| graph_dir.clone());
     fs::create_dir_all(&state_dir)?;
     let processed_ledgers_path = Path::new(&state_dir).join("processed_ledgers.jsonl");
-    let mut processed_ledgers = load_processed_ledgers(&processed_ledgers_path);
+    let processed_ledgers: Arc<Mutex<HashSet<String>>> =
+        Arc::new(Mutex::new(load_processed_ledgers(&processed_ledgers_path)));
     info!(
-        count = processed_ledgers.len(),
+        count = processed_ledgers.lock().unwrap().len(),
         path = %processed_ledgers_path.display(),
         "loaded processed ledger entries"
     );
@@ -112,6 +141,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         Err(e) => warn!(error = %e, "taxonomy load failed (non-fatal)"),
     }
 
+    // ── Ready flag — set to true once initial CORPUS drain completes ──────────
+    let ready: Arc<AtomicBool> = Arc::new(AtomicBool::new(false));
+
     // ── HTTP server (dedicated thread + own tokio runtime) ───────────────────
     // Cannot use reqwest::blocking inside a #[tokio::main] context (nested
     // runtime panic). Keep main synchronous; HTTP server owns its own runtime.
@@ -120,6 +152,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let graph_for_http = Arc::clone(&graph_store);
     let doorman_for_http = doorman_endpoint.clone();
     let ontology_for_http = ontology_dir.clone();
+    let ready_for_http = Arc::clone(&ready);
     std::thread::spawn(move || {
         let rt = tokio::runtime::Runtime::new().expect("Failed to build HTTP tokio runtime");
         rt.block_on(http::run_server(
@@ -127,31 +160,58 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             http_bind,
             doorman_for_http,
             ontology_for_http,
+            ready_for_http,
         ));
     });
 
-    // ── Process any pre-existing CORPUS_* files ───────────────────────────────
-    if let Ok(entries) = fs::read_dir(Path::new(&corpus_dir)) {
-        for entry in entries.flatten() {
-            let path = entry.path();
-            if path.extension().and_then(|s| s.to_str()) == Some("json") {
-                let filename = path.file_name().unwrap().to_str().unwrap().to_string();
-                if filename.starts_with("CORPUS_") && !processed_ledgers.contains(&filename) {
-                    if process_corpus(&path, &crm_dir, &doorman_endpoint, &module_id, &graph_store)
-                    {
-                        append_processed_ledger(&processed_ledgers_path, &filename);
+    // ── Initial CORPUS drain — runs in background thread ──────────────────────
+    // Previously ran synchronously here (the 16-min startup block). Now spawned
+    // so the watcher starts immediately. The `ready` flag gates healthz and
+    // graph_context until the drain finishes.
+    {
+        let corpus_dir_drain = corpus_dir.clone();
+        let crm_dir_drain = crm_dir.clone();
+        let doorman_drain = doorman_endpoint.clone();
+        let module_drain = module_id.clone();
+        let graph_drain = Arc::clone(&graph_store);
+        let ledgers_drain = Arc::clone(&processed_ledgers);
+        let processed_path_drain = processed_ledgers_path.clone();
+        let ready_drain = Arc::clone(&ready);
+
+        std::thread::spawn(move || {
+            if let Ok(entries) = fs::read_dir(Path::new(&corpus_dir_drain)) {
+                for entry in entries.flatten() {
+                    let path = entry.path();
+                    if path.extension().and_then(|s| s.to_str()) == Some("json") {
+                        let filename =
+                            path.file_name().unwrap().to_str().unwrap().to_string();
+                        let already_done = ledgers_drain
+                            .lock()
+                            .unwrap()
+                            .contains(&filename);
+                        if filename.starts_with("CORPUS_") && !already_done {
+                            if process_corpus(
+                                &path,
+                                &crm_dir_drain,
+                                &doorman_drain,
+                                &module_drain,
+                                &graph_drain,
+                            ) {
+                                append_processed_ledger(&processed_path_drain, &filename);
+                            }
+                            ledgers_drain.lock().unwrap().insert(filename);
+                        }
                     }
-                    // Always push to in-memory list to prevent same-session re-triggers.
-                    // Failed files are not in the JSONL, so they will retry on next restart.
-                    processed_ledgers.push(filename);
                 }
             }
-        }
+            ready_drain.store(true, Ordering::Release);
+            info!("corpus drain complete — service ready");
+        });
     }
 
-    // ── Watcher loop (blocking — runs on the main task) ───────────────────────
-    // std::sync::mpsc is fine here; recv() blocks the main async task's thread
-    // but the HTTP server lives on a separate tokio worker thread.
+    // ── Watcher loop (blocking — runs on the main thread) ────────────────────
+    // std::sync::mpsc is fine here; recv() blocks the main thread but the HTTP
+    // server and CORPUS drain each live on their own threads.
     let (tx, rx) = std::sync::mpsc::channel();
     let mut watcher = notify::recommended_watcher(tx)?;
     watcher.watch(Path::new(&corpus_dir), RecursiveMode::NonRecursive)?;
@@ -165,12 +225,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     if let Some(extension) = path.extension() {
                         if extension == "json" {
                             let filename = path.file_name().unwrap().to_str().unwrap().to_string();
-                            if filename.starts_with("CORPUS_")
-                                && !processed_ledgers.contains(&filename)
-                            {
+                            let already_done =
+                                processed_ledgers.lock().unwrap().contains(&filename);
+                            if filename.starts_with("CORPUS_") && !already_done {
                                 info!(corpus_file = %filename, "new corpus detected");
                                 thread::sleep(Duration::from_millis(250));
-                                processed_ledgers.push(filename.clone());
+                                processed_ledgers.lock().unwrap().insert(filename.clone());
                                 if process_corpus(
                                     &path,
                                     &crm_dir,
@@ -201,12 +261,11 @@ fn validate_module_id(s: &str) -> bool {
 }
 
 /// Load the set of already-processed CORPUS filenames from the sidecar JSONL.
-/// Returns an empty Vec if the file does not exist or cannot be read — a missing
-/// file is not an error; it just means all CORPUS files will be processed.
-fn load_processed_ledgers(path: &Path) -> Vec<String> {
+/// Returns an empty set if the file does not exist or cannot be read.
+fn load_processed_ledgers(path: &Path) -> HashSet<String> {
     let file = match fs::File::open(path) {
         Ok(f) => f,
-        Err(_) => return Vec::new(),
+        Err(_) => return HashSet::new(),
     };
     std::io::BufReader::new(file)
         .lines()
