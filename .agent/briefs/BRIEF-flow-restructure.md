@@ -46,6 +46,41 @@ classes, not the fleet default.
 
 ---
 
+## Status — resume point (2026-05-22)
+
+**Phase 0 — DONE** (Yo-Yo cost hardening, the paid AI tier): 3 signed commits
+— `35e2dea7`, `ed63476c`, `a10539c6`. Yo-Yo spend is hard-capped at $3/day,
+shutdown is verified, deliberate stops are sticky. Details in §5.
+
+**This BRIEF — rebuilt 2026-05-22** on the $7-node doctrine. §8 is the full
+per-repo to-do list; §9 the execution order; §10 the definition of done. BRIEF
+commits this session: `5e41beb9` (rebuild), `8b5bd01b` (§8/§9 concrete plan),
++ this Status section.
+
+**▶ RESUME HERE — §9 execution order, step 1:** build the `foundry-nodeclass`
+crate (§8.B), then `SqliteGraphStore` (§8.D) — THE blocker; nothing about the
+$7-node fleet is real until `service-content` boots on a 1 GB node.
+
+**Open decision for the operator:** the lbug single-binary caveat in §8.D —
+Option 1 (accept ~tens-of-MB disk bloat, ship now — *recommended*) vs Option 3
+(LadybugDB as a side-car process, a Leapfrog follow-up). Resolve before §8.D
+coding starts.
+
+**Pending — Command Session (not Totebox scope):**
+- Rebuild the `slm-yoyo` Packer image so Phase-0 G3/G17 take effect on the VM.
+- Stage 6 promote — local `main` carries ~16 unpromoted commits (Phase 0 ×3 +
+  3 BRIEF commits + pre-session backlog); needs a `git rebase origin/main`
+  first (archive inbox `command-20260520-stage6-rebase-required`).
+- Outbox note re: the original investigation drifting from ratified doctrine
+  (§6) — queued as a §8.A to-do, not yet sent.
+
+**In-flight / uncommitted:** none — BRIEF + all Phase 0 work committed. Untracked
+and intentionally so: `compute/packer/scripts/yoyo-stability-gate.{service,sh}`
+(W5/G4, spot-only — Phase 4) and `.claude/` + the archive `CLAUDE.md`
+(harness/pre-existing, not this session's work).
+
+---
+
 ## 1. The deployment model — ratified doctrine
 
 `DOCTRINE.md` claim #49 and #54, verbatim: *"the neutral state ... is a
