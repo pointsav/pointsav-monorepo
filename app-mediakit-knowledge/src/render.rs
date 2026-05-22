@@ -633,4 +633,52 @@ mod tests {
             Some("The five structural properties that define the platform.")
         );
     }
+
+    /// Engine Verification Gate — `claim-authoring-convention.md` §3.
+    /// Claim markers authored as HTML comments must pass through comrak
+    /// unchanged and inert: the markers survive verbatim in the output,
+    /// the claim prose renders normally, and surrounding content is
+    /// unaffected. This proves the convention's graceful-degradation
+    /// guarantee against the engine's actual comrak option set.
+    #[test]
+    fn claim_markers_pass_through_inert() {
+        // Block claim — markers on their own lines.
+        let block = "Before the claim.\n\n\
+            <!--claim id=derived-state cites=[] confidence=structural-->\n\
+            The search index is derived state.\n\
+            <!--/claim-->\n\n\
+            After the claim.\n";
+        let html = render_html(block, std::path::Path::new("."));
+        assert!(
+            html.contains("<!--claim id=derived-state cites=[] confidence=structural-->"),
+            "opening marker must survive verbatim: {html}"
+        );
+        assert!(
+            html.contains("<!--/claim-->"),
+            "closing marker must survive verbatim: {html}"
+        );
+        assert!(
+            html.contains("The search index is derived state."),
+            "claim prose must render: {html}"
+        );
+        assert!(
+            html.contains("Before the claim.") && html.contains("After the claim."),
+            "surrounding prose must be unaffected: {html}"
+        );
+
+        // Inline claim — markers mid-paragraph.
+        let inline =
+            "An auditor <!--claim id=audit confidence=established cites=[rfc-9162]-->can verify \
+             integrity<!--/claim--> independently.";
+        let html2 = render_html(inline, std::path::Path::new("."));
+        assert!(
+            html2.contains("<!--claim id=audit confidence=established cites=[rfc-9162]-->")
+                && html2.contains("<!--/claim-->"),
+            "inline markers must survive verbatim: {html2}"
+        );
+        assert!(
+            html2.contains("can verify integrity"),
+            "inline claim prose must render: {html2}"
+        );
+    }
 }
