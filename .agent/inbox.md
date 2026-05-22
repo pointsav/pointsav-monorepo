@@ -4,7 +4,7 @@ to: totebox@project-console
 re: Stage 6 blocker — cluster/project-proofreader has no common ancestor with main (orphan branch)
 created: 2026-05-22T03:00:00Z
 priority: high
-status: pending
+status: operator-pending
 msg-id: command-20260522-console-stage6-orphan-branch
 ---
 
