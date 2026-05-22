@@ -9,11 +9,7 @@ pub enum PairingState {
     /// MBA probe failed; pairing request not yet sent
     Unpaired { fingerprint: String },
     /// POST pair/request sent; showing code, waiting for operator
-    AwaitingApproval {
-        code: String,
-        request_id: String,
-        fingerprint: String,
-    },
+    AwaitingApproval { code: String, request_id: String, fingerprint: String },
     /// Operator approved; MBA link transitioning to active
     Approved,
     /// Operator declined
@@ -26,9 +22,7 @@ pub enum PairingState {
 
 impl Default for PairingState {
     fn default() -> Self {
-        PairingState::Unpaired {
-            fingerprint: String::new(),
-        }
+        PairingState::Unpaired { fingerprint: String::new() }
     }
 }
 
@@ -73,12 +67,7 @@ pub fn post_pair_request(
         .build()?;
     let resp: PairResponse = client
         .post(&url)
-        .json(&PairRequest {
-            username,
-            tenant,
-            public_key,
-            fingerprint,
-        })
+        .json(&PairRequest { username, tenant, public_key, fingerprint })
         .send()?
         .error_for_status()?
         .json()?;
@@ -106,11 +95,7 @@ pub fn spawn_status_poll(base_url: String, request_id: String) -> mpsc::Receiver
                 base_url.trim_end_matches('/'),
                 request_id
             );
-            match client
-                .get(&url)
-                .send()
-                .and_then(|r| r.json::<StatusResponse>())
-            {
+            match client.get(&url).send().and_then(|r| r.json::<StatusResponse>()) {
                 Ok(s) => match s.state.as_str() {
                     "approved" => {
                         let _ = tx.send(PairingEvent::Approved);

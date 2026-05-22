@@ -5,6 +5,8 @@ use std::path::PathBuf;
 use system_gateway_mba::{
     auth::compute_fingerprint,
     db::{add_user, disable_user, list_users, open_db, rotate_key},
+    pairing::normalize,
+    pairing_db::{get_by_code, list_pending, set_state, sweep_expired},
 };
 
 #[derive(Parser)]
@@ -19,6 +21,11 @@ enum Command {
     User {
         #[command(subcommand)]
         action: UserAction,
+    },
+    /// Manage connection requests (zero-jargon pairing)
+    Pair {
+        #[command(subcommand)]
+        action: PairAction,
     },
 }
 
@@ -43,6 +50,22 @@ enum UserAction {
         username: String,
         #[arg(long = "key-file")]
         key_file: PathBuf,
+    },
+}
+
+#[derive(Subcommand)]
+enum PairAction {
+    /// Show pending connection requests
+    List,
+    /// Approve a connection request by its code
+    Approve {
+        /// The 8-character code shown on the user's screen (e.g. K7Q2-9XMT)
+        code: String,
+    },
+    /// Decline a connection request
+    Deny {
+        /// The 8-character code
+        code: String,
     },
 }
 
@@ -97,6 +120,45 @@ fn main() -> Result<()> {
                     bail!("user '{}' not found or not active", username);
                 }
                 println!("Updated key for {username}: {fingerprint}");
+            }
+        },
+
+        Command::Pair { action } => match action {
+            PairAction::List => {
+                sweep_expired(&conn)?;
+                let pending = list_pending(&conn)?;
+                if pending.is_empty() {
+                    println!("No pending connection requests.");
+                } else {
+                    println!("{:<12} {:<20} {:<10} {}", "CODE", "USER", "TENANT", "REQUESTED");
+                    for (_, code, user, tenant, created) in &pending {
+                        println!("{:<12} {:<20} {:<10} {}", code, user, tenant, &created[..19]);
+                    }
+                }
+            }
+            PairAction::Approve { code } => {
+                sweep_expired(&conn)?;
+                let normalized = normalize(&code);
+                match get_by_code(&conn, &normalized)? {
+                    Some((request_id, username, tenant, fingerprint, _public_key)) => {
+                        add_user(&conn, &fingerprint, &username, &tenant, "editor")?;
+                        set_state(&conn, &request_id, "approved")?;
+                        println!("Approved — {username}@{tenant} can now connect.");
+                        println!("Fingerprint: {fingerprint}");
+                    }
+                    None => bail!("code '{}' not found or already used", code),
+                }
+            }
+            PairAction::Deny { code } => {
+                sweep_expired(&conn)?;
+                let normalized = normalize(&code);
+                match get_by_code(&conn, &normalized)? {
+                    Some((request_id, username, _, _, _)) => {
+                        set_state(&conn, &request_id, "denied")?;
+                        println!("Declined connection request from {username}.");
+                    }
+                    None => bail!("code '{}' not found or already used", code),
+                }
             }
         },
     }
