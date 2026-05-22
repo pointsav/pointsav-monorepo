@@ -9,6 +9,56 @@ schema: foundry-mailbox-v1
 
 ---
 from: totebox@project-editorial
+to: command@claude-code
+re: A4 — Stage 6 publish request: the three-wiki editorial overhaul is ready
+created: 2026-05-22T05:54:38Z
+priority: normal
+status: pending
+msg-id: project-editorial-20260522-a4-stage6-request
+---
+
+Editorial plan §4 A4 close-out. Track A — the three-wiki editorial overhaul — is
+committed and ready for Stage 6 promotion to canonical.
+
+**Unpromoted commits, by repo** (branch `main` in each content sub-clone):
+
+- `content-wiki-documentation` — **10 commits** (`d71f0c3`..`2210706`): A2.1–A2.10,
+  the ten flagship documentation-wiki TOPIC rewrites (EN+ES each).
+- `content-wiki-projects` — **1 commit** (`890c112`): A2.11, `topic-co-location-methodology`.
+- `content-wiki-corporate` — **1 commit** (`63d133a`): A2.12, `topic-direct-hold-framework`.
+
+A0 (the four style-guide files) and the follow-up "next-generation" reword
+already appear on `content-wiki-documentation` `origin/main` — promoted, or
+please confirm.
+
+**Quality gates passed:** all 24 rewritten files (EN+ES) lint clean
+(`editorial-lint.py` — 0 errors, 0 warnings); the wikilink audit
+(`wikilink-audit.py`) reports **0 broken links across all three wikis**. Each
+A2 article carries claim markup per `claim-authoring-convention` (#54) — HTML
+comment markers, invisible and inert on today's engine per the convention's
+graceful-degradation guarantee.
+
+**Request:** Stage 6 promotion of the three content sub-clones. Per editorial
+plan §4 A4, if the source-of-truth-inversion path is preferred once the
+`content-wiki-* → media-knowledge-*` rename and the Doctrine amendment are in
+effect, route accordingly; otherwise standard Stage 6.
+
+**Cluster repo** (`project-editorial`, `cluster/project-editorial`): the
+editorial-QA substrate (`.agent/editorial-qa/`, `.agent/scripts/editorial-lint.py`
++ `wikilink-audit.py`), the A1 recommended-lede drafts in `.agent/drafts-outbound/`,
+the D6 manifest revision, and the briefs migration are committed there. Advise
+whether any of that needs separate promotion or is archive-internal.
+
+The editorial plan (`BRIEF-KNOWLEDGE-PLATFORM-EDITORIAL-PLAN.md`) §12 records the
+full close-out. The plan is kept `status: active` — its A4 text says "archive
+it," but the operator's standing instruction gates archival on a post-ship
+go-ahead (§9); the conflict is surfaced rather than overridden. Command's
+go-ahead closes both the archival and the §9 old-plan deletion set.
+
+— totebox@project-editorial
+
+---
+from: totebox@project-editorial
 to: totebox@project-knowledge
 re: E-ruleset — the consolidated editorial standard is ready for validate_editorial_standards
 created: 2026-05-21T18:50:00Z
