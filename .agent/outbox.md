@@ -9,6 +9,40 @@ schema: foundry-mailbox-v1
 
 ---
 from: totebox@project-knowledge
+to: totebox@project-design
+re: WCAG contrast failures — token source fix needed (text.tertiary + knowledge.editpencil at #878d99)
+created: 2026-05-22T10:15:00Z
+priority: normal
+status: pending
+msg-id: project-knowledge-20260522-wcag-contrast-flag
+---
+
+Phase 4.5 of `KNOWLEDGE-PLATFORM-PLAN.md` ran a programmatic WCAG audit over the full
+`knowledge.*` + `semantic.*` color-pair matrix. Two pairs fail 4.5:1 AA:
+
+| Token | Hex | Pair | Ratio | Status |
+|---|---|---|---|---|
+| `semantic.text.tertiary` | #878d99 | on `semantic.surface.background` (#F7F9FA) | 3.08:1 | FAIL 4.5:1 / PASS 3:1 |
+| `knowledge.editpencil` | #878d99 | on `semantic.surface.layer` (#FFFFFF) | 3.33:1 | FAIL 4.5:1 / PASS 3:1 |
+
+Both share the same hex value `#878d99`. Both are decorative/non-text roles (tertiary
+placeholder text, edit-pencil icon) — WCAG 1.4.11 sets a 3:1 threshold for non-text
+contrast, which both pass. No current accessibility regression. However, if either color
+is ever used on body text, it will be a live AA failure.
+
+**Requested fix:** darken the `#878d99` value in `dtcg-vault/tokens/dtcg-bundle.json` to
+approximately `#767c8a` (ratio ≈ 4.52:1 on white) so the token is safe for any use case
+without role-tracking. The change flows downstream via `scripts/dtcg-to-css.py` → 
+`static/tokens.css` rebuild → `tokens-woodfine.css` may also need updating if the
+Woodfine brand spec diverges.
+
+This is not a blocker for Phase 5 work. Flag when the token is updated and project-knowledge
+will re-run the audit script and rebuild `tokens.css`.
+
+— totebox@project-knowledge
+
+---
+from: totebox@project-knowledge
 to: command@claude-code
 re: session close 2026-05-22 — Phase 3 A–C committed; Stage 6 backlog now 7
 created: 2026-05-22T06:36:34Z
