@@ -58,7 +58,10 @@ CHAIN_FAMILY = {
     "ikea-es":                  "Lifestyle",
     "ikea-gr":                  "Lifestyle",
     "ikea-it":                  "Lifestyle",
-    "ikea-nordics":             "Lifestyle",
+    "ikea-se":                  "Lifestyle",
+    "ikea-dk":                  "Lifestyle",
+    "ikea-no":                  "Lifestyle",
+    "ikea-fi":                  "Lifestyle",
     "ikea-pl":                  "Lifestyle",
     "ikea-fr":                  "Lifestyle",
     "ikea-de":                  "Lifestyle",
@@ -314,7 +317,7 @@ def build_layer2():
 
 
 def build_clusters_meta():
-    """Extract minimal cluster centroids → www/data/clusters-meta.json for in-browser ring generation."""
+    """Extract cluster records → www/data/clusters-meta.json (§2 schema)."""
     print("\n[Meta] Building clusters-meta.json...")
     clusters_path = WORK_DIR / "clusters.geojson"
     if not clusters_path.exists():
@@ -322,57 +325,48 @@ def build_clusters_meta():
         return False
     with open(clusters_path) as f:
         fc = json.load(f)
-    def _try_json(v):
-        if not v:
-            return []
-        try:
-            return json.loads(v)
-        except Exception:
-            return []
 
     meta = []
+    tier_counts: dict = {}
     for feat in fc.get("features", []):
         p = feat.get("properties", {})
         coords = feat.get("geometry", {}).get("coordinates", [])
         if not coords or len(coords) < 2:
             continue
+        tier = int(p.get("tier") or 0)
+        tier_counts[tier] = tier_counts.get(tier, 0) + 1
+        members = p.get("members") or []
+        if isinstance(members, str):
+            try:
+                members = json.loads(members)
+            except Exception:
+                members = []
         meta.append({
-            # Ring generation — anchor store location (detection origin, ring centre)
-            "id":  p.get("cluster_id", ""),
-            "lon": round(float(coords[0]), 5),
-            "lat": round(float(coords[1]), 5),
-            "r1":  int(p.get("rank_1km", 1) or 1),
-            "r2":  int(p.get("rank_2km", 1) or 1),
-            "r3":  int(p.get("rank_3km", 1) or 1),
-            # Geometry fields
-            "c1":   int(p.get("count_1km") or 1),
-            "c3":   int(p.get("count_3km") or 1),
-            "clat": round(float(p.get("centroid_lat") or coords[1]), 5),
-            "clon": round(float(p.get("centroid_lon") or coords[0]), 5),
+            "id":   p.get("cluster_id", ""),
+            "lon":  round(float(coords[0]), 5),
+            "lat":  round(float(coords[1]), 5),
+            # Tier + geometry
+            "t":    tier,
             "td":   p.get("tier_descriptor") or "",
-            # BentoBox fields (used when PMTile tile not loaded for that cluster)
-            "anc": p.get("anchor_label") or p.get("primary_anchor") or "",
-            "dn":  p.get("display_name") or "",
-            "cty": p.get("city") or "",
-            "mkt_conf": p.get("mkt_conf") or "low",
-            "st":  p.get("state") or "",
-            "iso": p.get("iso") or "",
-            "rgn": p.get("region_name") or "",
-            "sc":  int(round(float(p.get("score_final") or p.get("score") or 0))),
-            "nr":  p.get("national_rank"),
-            "nro": p.get("national_rank_of"),
-            "nar": p.get("na_rank"),
-            "naro": p.get("na_rank_of"),
-            "hw":  _try_json(p.get("hw_list")),
-            "wh":  _try_json(p.get("wh_list")),
-            "sub": _try_json(p.get("sub_entities_display")),
-            "mz":  p.get("merged_zones") or [],
-            "ub":  int(p.get("unique_brands") or 0),
-            # Civic context — per-tier counts for bento breakdown (G14 override 2026-05-16)
-            "hcr": int(p.get("hc_count_regional") or 0),
-            "hcd": int(p.get("hc_count_district") or 0),
-            "her": int(p.get("he_count_regional") or 0),
-            "hes": int(p.get("he_count_small") or 0),
+            "span": round(float(p.get("span_km") or 0.0), 3),
+            "tight": 1 if p.get("tight_intact") else 0,
+            "rr":   round(float(p.get("ring_radius_km") or 0.0), 2),
+            # Ranking
+            "dr":   round(float(p.get("dist_rank_in_tier") or 0.0), 4),
+            "dp":   int(p.get("dist_pctile") or 0),
+            "dmr":  round(float(p.get("demand_rank_in_tier") or 0.5), 4),
+            "dmb":  p.get("demand_basis") or "interim-none",
+            # Market identity
+            "rm":   p.get("regional_market") or "",
+            "mkt":  p.get("market_name") or "",
+            "mrgn": p.get("market_region") or "",
+            "metro": p.get("metro_market") or "",
+            "conf": p.get("mkt_conf") or "low",
+            "iso":  p.get("iso") or "",
+            "cont": p.get("continent") or "",
+            # Members
+            "mc":   int(p.get("member_count") or len(members)),
+            "members": members,
         })
     out = WWW_DIR / "data" / "clusters-meta.json"
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -380,6 +374,8 @@ def build_clusters_meta():
         json.dump(meta, f, separators=(',', ':'))
     size_kb = out.stat().st_size / 1000
     print(f"  Done: {len(meta)} clusters, {size_kb:.0f} KB → {out}")
+    for t in sorted(tier_counts):
+        print(f"  T{t}: {tier_counts[t]}")
     return True
 
 
