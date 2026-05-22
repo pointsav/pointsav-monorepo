@@ -127,6 +127,7 @@ BRAND_FILL: dict[str, dict[str, list[str]]] = {
         "PL": [
             "auchan-pl",               # 120 records, Q758603 — Phase 17 2026-05-22
             "carrefour-hypermarket-pl", # 114 records, Q217599 — Phase 17 2026-05-22
+            "kaufland-pl",             # 253 records, Q685967 (Schwarz Group) — Phase 18 2026-05-22
         ],
         "AT": [
             "billa-plus-at",
@@ -143,6 +144,7 @@ BRAND_FILL: dict[str, dict[str, list[str]]] = {
         ],
         "DK": [
             "bilka-dk",
+            "foetex-dk",  # 103 records, Q3093871 (Salling Group) — Phase 18 2026-05-22
         ],
         "NO": [
             "obs-coop-no",
@@ -173,6 +175,7 @@ BRAND_FILL: dict[str, dict[str, list[str]]] = {
         ],
         "GB": [
             "bq-uk",
+            "wickes-uk",  # 236 records, Q7998350 (Travis Perkins) — Phase 18 2026-05-22
         ],
         "FR": [
             "leroy-merlin-fr",
@@ -222,9 +225,11 @@ BRAND_FILL: dict[str, dict[str, list[str]]] = {
         "DK": [
             "imerco-dk",
             "silvan-dk",
+            "bauhaus-dk",  # 20 records, Q532716 — Phase 18 2026-05-22
         ],
         "NO": [
             "obs-bygg-no",
+            "bauhaus-no",  # 2 records (OSM sparse in NO), Q532716 — Phase 18 2026-05-22
         ],
         "FI": [
             "k-rauta-fi",
@@ -337,7 +342,7 @@ DISPLAY_NAMES: dict[str, str] = {
     "leclerc-fr": "E.Leclerc",
     "carrefour-hypermarket-fr": "Carrefour",
     "auchan-fr": "Auchan",
-    "kaufland-de": "Kaufland",
+    "kaufland-de": "Kaufland", "kaufland-pl": "Kaufland",
     "ecenter-de": "E center",
     "marktkauf-de": "Marktkauf",
     "mercadona-es": "Mercadona",
@@ -347,7 +352,7 @@ DISPLAY_NAMES: dict[str, str] = {
     "albert-heijn-xl-nl": "Albert Heijn XL",
     "continente-pt": "Continente",
     "coop-forum-se": "Coop Forum / Stora Coop",
-    "bilka-dk": "Bilka",
+    "bilka-dk": "Bilka", "foetex-dk": "Føtex",
     "obs-coop-no": "OBS Coop",
     "k-citymarket-fi": "K-Citymarket",
     "prisma-fi": "Prisma",
@@ -361,7 +366,7 @@ DISPLAY_NAMES: dict[str, str] = {
     "alaska-industrial-hardware-us": "Alaska Industrial Hardware",
     "canadian-tire-ca": "Canadian Tire",
     "peavey-mart-ca": "Peavey Mart",
-    "bq-uk": "B&Q",
+    "bq-uk": "B&Q", "wickes-uk": "Wickes",
     "leroy-merlin-fr": "Leroy Merlin",
     "castorama-fr": "Castorama",
     "hornbach-de": "Hornbach",
@@ -385,7 +390,7 @@ DISPLAY_NAMES: dict[str, str] = {
     "gamma-nl": "Gamma",
     "karwei-nl": "Karwei",
     "leroy-merlin-pt": "Leroy Merlin",
-    "bauhaus-se": "Bauhaus",
+    "bauhaus-se": "Bauhaus", "bauhaus-dk": "Bauhaus", "bauhaus-no": "Bauhaus",
     "clas-ohlson-se": "Clas Ohlson",
     "imerco-dk": "Imerco",
     "silvan-dk": "Silvan",
