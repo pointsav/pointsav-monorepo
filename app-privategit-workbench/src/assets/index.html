@@ -928,6 +928,21 @@ async function saveFile() {
   showEditorStatus('Saved', '#89d185', 2500);
 }
 
+// ── Close current file ────────────────────────────────────────────────────────
+function closeFile() {
+  if (editorDirty && !confirm('You have unsaved changes. Close anyway?')) return;
+  currentPath = null;
+  viewMode    = 'none';
+  hideEditorPanel();
+  document.getElementById('viewer-placeholder').style.display = '';
+  document.getElementById('preview-frame').style.display      = 'none';
+  document.getElementById('text-viewer').style.display        = 'none';
+  document.getElementById('image-viewer').style.display       = 'none';
+  document.getElementById('bar-path').textContent = '';
+  document.getElementById('viewer-bar').querySelectorAll('.bar-btn, .bar-link').forEach(el => el.remove());
+  setTreeActive(null);
+}
+
 // ── Viewer helpers ────────────────────────────────────────────────────────────
 function hideViewerContent() {
   document.getElementById('viewer-placeholder').style.display = 'none';
@@ -961,10 +976,19 @@ function updateBar(name, path) {
   link.rel = 'noreferrer';
   link.textContent = 'open in new tab ↗';
   bar.appendChild(link);
+
+  const closeBtn = document.createElement('button');
+  closeBtn.className = 'bar-btn';
+  closeBtn.textContent = '✕';
+  closeBtn.title = 'Close file';
+  closeBtn.addEventListener('click', closeFile);
+  bar.appendChild(closeBtn);
 }
 
 // ── Open file in viewer + optional editor ─────────────────────────────────────
 async function openFile(path, name) {
+  if (path === currentPath) return;
+  if (editorDirty && !confirm('You have unsaved changes. Open a different file?')) return;
   currentPath = path;
   const fname = name || path.split('/').pop();
   const mode  = fileMode(fname);
