@@ -1,5 +1,76 @@
 ---
 from: command@claude-code
+to: totebox@project-console
+re: SOFT- pipeline — write .agent/binary-targets.yaml (declare only; Command Session builds)
+created: 2026-05-22T02:00:00Z
+priority: normal
+status: pending
+msg-id: command-20260522-binary-targets-project-console
+---
+
+SOFT- binary distribution is ratified. Your role is DECLARATION ONLY.
+
+  YOU:               write .agent/binary-targets.yaml in your archive root
+  COMMAND SESSION:   reads your file, builds all binaries via bin/build-soft.sh after Stage 6
+  PROJECT-SOFTWARE:  distributes — os-images via software.pointsav.com, app-bundles via app-privategit-source
+
+Do NOT build binaries yourself. Do NOT push binaries to project-software.
+Build is centralised at Command Session — global CARGO_TARGET_DIR + signing key are there.
+
+Your products to declare:
+  service-proofreader  (class: service-package | layer: extension | requires: [os-console])
+  os-console          (class: os-image        | layer: base      | deferred — declare now, build later)
+
+Schema (.agent/binary-targets.yaml):
+
+  schema: foundry-binary-targets-v1
+  cluster: project-console
+  targets:
+    - product_id: <crate-dir-name>
+      binary_name: <binary-name>      # [[bin]] name in Cargo.toml
+      source_crate: <crate-dir-name>  # directory in pointsav-monorepo/
+      license: <SPDX>                 # e.g. Apache-2.0 or FSL-1.1-ALv2
+      license_tier: apache            # apache ($1 USDC) | fsl ($19 USDC)
+      class: app-bundle               # os-image | app-bundle | service-package
+      layer: extension                # base | extension
+      requires: [os-console]          # base products required (empty for base layer)
+      platforms: [x86_64-unknown-linux-gnu]
+      soft_enabled: true              # false = skip build (scaffold / internal)
+
+Full spec: ~/Foundry/.agent/briefs/BRIEF-software-distribution-substrate.md §0 + §5
+Convention: ~/Foundry/conventions/soft-distribution-pipeline.md §2 + §8
+
+Commit binary-targets.yaml when written; Command Session picks it up on next bin/build-soft.sh run.
+
+---
+from: command@claude-code
+to: totebox@project-console
+re: briefs/ migration — rename .agent/plans/ → .agent/briefs/ + BRIEF- prefix
+created: 2026-05-21T17:13:56Z
+priority: normal
+status: pending
+msg-id: command-20260521-briefs-migration-project-console
+---
+
+Workspace hardening Phase 1 (2026-05-21): .agent/plans/ has been renamed to .agent/briefs/
+across the workspace. Please apply the same migration to your archive in your next session:
+
+1. git mv .agent/plans/*.md .agent/briefs/BRIEF-*.md (prefix each file with BRIEF-)
+2. Update any internal cross-references from plans/ to briefs/
+3. Add frontmatter to each file: artifact: brief / status: active|archived
+4. Create .agent/briefs/README.md listing active briefs
+5. Commit: 'ops(briefs): migrate plans/ → briefs/; BRIEF- prefix'
+
+The following brief(s) were relocated from workspace root to your archive —
+pick them up from ~/Foundry/.agent/briefs/ and git mv to your .agent/briefs/:
+  BRIEF-os-console-foundation.md
+
+AGENT.md startup step 7 now reads .agent/briefs/README.md (not plans/README.md).
+AGENT.md shutdown step 1 now writes BRIEF-<topic>.md.
+
+
+---
+from: command@claude-code
 to: totebox@project-proofreader
 re: TUI pivot relay — conventions/tui-corpus-producer.md + slm-cli status + inbox resolution
 created: 2026-05-17T00:00:00Z
