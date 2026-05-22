@@ -1,6 +1,7 @@
 [workspace]
 resolver = "2"
 members = [
+    "foundry-nodeclass",
     "service-people",
     "service-content",
     "app-console-content",
