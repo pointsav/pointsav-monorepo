@@ -43,6 +43,7 @@ pub fn render(markdown: &str, title: &str) -> String {
   table {{
     border-collapse: collapse;
     width: 100%;
+    table-layout: fixed;
     margin: 0.5rem 0 1.25rem;
     font-size: 13px;
     font-variant-numeric: tabular-nums;
@@ -51,6 +52,14 @@ pub fn render(markdown: &str, title: &str) -> String {
     border: 1px solid #d8d8d8;
     padding: 4px 10px;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }}
+  th:first-child, td:first-child {{
+    width: 240px;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
   }}
   th {{
     background: #f5f5f5;
