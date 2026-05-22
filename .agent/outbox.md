@@ -10,6 +10,43 @@ schema: foundry-mailbox-v1
 ---
 from: task@project-gis
 to: command@foundry
+re: Nordic IKEA re-ingest complete — DK+NO+FI gain first T1 each; 5,274 clusters deployed
+created: 2026-05-22T21:00:00Z
+msg-id: nordic-ikea-reingest-20260522
+---
+
+Nordic IKEA per-country re-ingest complete. Deployed.
+
+## Root cause fixed
+
+`ikea-nordics.yaml` used `multi_country: true` → stores landed with `iso_country_code: "NORDICS"` (not a real ISO). Per-country chain_ids (ikea-se/dk/no/fi) existed in taxonomy.py but were served by contaminated JSONL files generated from the nordics multi_country ingest (no bbox/polygon filtering → UK stores in ikea-dk, Lithuanian store in ikea-se).
+
+## Fix
+
+Created `ikea-se.yaml`, `ikea-dk.yaml`, `ikea-no.yaml`, `ikea-fi.yaml` in service-business/ with proper per-country bbox. Re-ran `ingest-osm.py --chain ikea-se ikea-dk ikea-no ikea-fi`. The polygon filter cleaned cross-border contamination.
+
+Note: Norway `country_code: NO` required quoting in YAML (YAML 1.1 parses bare `NO` as boolean False).
+
+## New data
+
+| Chain | Records | Key change |
+|---|---|---|
+| ikea-se | 16 | +1 clean record; Lithuanian ghost removed |
+| ikea-dk | 5 | Was 12 (7 UK/SE ghosts); now 5 clean DK stores |
+| ikea-no | 5 | Was 6; now clean Oslo/Trondheim/Slependen/Sørlandet/Åsane |
+| ikea-fi | 4 | Same count; Espoo/Vantaa/Tampere/Kuopio |
+
+## T1 results (deployed)
+
+5,274 clusters, T1=1,136:
+- **DK: first T1** — Odense (Bilka + Silvan/Imerco + IKEA)
+- **NO: first T1** — Oslo/Furuset (OBS Coop + OBS Bygg + IKEA)
+- **FI: first T1** — Tampere (Prisma + K-Rauta + IKEA)
+- SE: still 4 T1 (unchanged)
+
+---
+from: task@project-gis
+to: command@foundry
 re: Phase 17 complete — EU taxonomy audit; 12 zero-cost chain activations; 5,273 clusters; T1=1,136
 created: 2026-05-22T20:00:00Z
 msg-id: phase17-complete-20260522
