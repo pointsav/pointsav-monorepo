@@ -41,7 +41,6 @@ pub fn get_state_by_id(conn: &Connection, request_id: &str) -> Result<Option<Str
     }
 }
 
-#[allow(clippy::type_complexity)]
 pub fn get_by_code(
     conn: &Connection,
     code: &str,
@@ -75,8 +74,9 @@ pub fn set_state(conn: &Connection, request_id: &str, state: &str) -> Result<usi
     Ok(n)
 }
 
-#[allow(clippy::type_complexity)]
-pub fn list_pending(conn: &Connection) -> Result<Vec<(String, String, String, String, String)>> {
+pub fn list_pending(
+    conn: &Connection,
+) -> Result<Vec<(String, String, String, String, String)>> {
     // Returns (request_id, code, username, tenant, created_at)
     let mut stmt = conn.prepare(
         "SELECT request_id, code, username, tenant, created_at
