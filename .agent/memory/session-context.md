@@ -4,6 +4,26 @@ Rolling 3-session summary. Newest entry first. Push oldest to session-context-ar
 
 ---
 
+## 2026-05-22 | totebox@claude-code | Opus 4.7 (1M)
+
+**Done this session (large session — ~40 commits across cluster repo + 3 content sub-clones):**
+- **Briefs migration** — `.agent/plans/` → `.agent/briefs/`, `BRIEF-` prefix + `artifact: brief` frontmatter + new README; 2 relocated workspace briefs brought in (`e5bd2514`).
+- **Editorial-plan AUTO block (10 items)** — E1 (flagged service-content to project-intelligence), E4 (project-intelligence inbound triage), A0 (Gate-0 standard into the 4 style guides), D1 (`editorial-lint.py` + `banned-vocabulary.txt`), D2 (failure-mode registry), A1 (3 recommended Main Page ledes, EN+ES), D4 (canonical `editorial-standard.md` + `CORPUS-SCHEMA.md`), D3 (16 genre templates), D6 (manifest revision), E-ruleset (routed to project-knowledge). Editorial-QA substrate built at `.agent/editorial-qa/`.
+- **A2 — all 12 flagship TOPIC rewrites** (EN+ES = 24 files): Bloomberg 4-paragraph Crisis-first lede + Gate-0 + claim markup per `claim-authoring-convention` #54. 10 in content-wiki-documentation, 1 projects, 1 corporate. All lint clean.
+- **A4 close-out** — built `wikilink-audit.py`; 0 broken links across all 3 wikis; plan §12 + top status banner; Stage 6 publish request to Command.
+
+**Pending / carry-forward:**
+- **Editorial plan: project-editorial's autonomous execution is COMPLETE.** Status banner + §12 in `BRIEF-KNOWLEDGE-PLATFORM-EDITORIAL-PLAN.md`.
+- Pending, none project-editorial-executable: Stage 6 promotion (Command — request in outbox); D5 apprenticeship loop (operator signing identity); E2/E3/E5/E-claim/E-rename (cross-cluster / operator GitHub rename); A1 review pass (project-knowledge branches Main Pages); claim-validation linter pass (Track-D follow-up on `editorial-lint.py`); plan archival + §9 old-plan deletion (operator go-ahead, post-ship).
+- Inbox: 4 messages actioned this session (briefs-migration, briefs-cleanup-ack, doctrine-ratified, project-knowledge plan handoff) — archive at next startup. 4 still pending: 3 project-system language-pass batches + 1 Command LICENSE-artifacts batch — language-pass backlog, not yet triaged.
+- Branch drift (recorded in manifest D6 note): content sub-clones commit editorial work to `main`; sub-clone branches retain the pre-rename `cluster/project-language`.
+
+**Operator preferences surfaced:**
+- **AUTO working mode** — when the operator approves an AUTO run, execute autonomously: commit per track/article, surface §10 stop conditions, report at the end. Do not re-ask permission for in-scope work.
+- **At-a-glance status** — when asked to update a brief, put a clear status banner at the top, not only a detail section at the end.
+
+---
+
 ## 2026-05-21 | totebox@claude-code | Opus 4.7
 
 **Done this session:**
@@ -36,29 +56,6 @@ Rolling 3-session summary. Newest entry first. Push oldest to session-context-ar
 
 **Pending / carry-forward:**
 - Stage 6: content-wiki-documentation, content-wiki-projects, content-wiki-corporate, woodfine-fleet-deployment — Command Session task.
-- pointsav-monorepo `readme-fixes-2026-05-16` → main merge + service restart — Command Session task.
-- Route design drafts to project-design — Command Session to forward outbox message.
-- Phase E bilingual home routing — deferred, low priority, needs Rust change → project-knowledge.
-- Italy co-location stub — needs data from project-gis.
-
-**Operator preferences surfaced:**
-- No new preferences this session.
-
----
-
-## 2026-05-19 (continuation) | totebox@claude-code | Sonnet 4.6
-
-**Done this session:**
-- Phase 1c resolved: `topic-` prefix confirmed canonical for content-wiki-projects; all 31 EN+ES pairs already use it; outbox message sent to unblock Command Stage 6 (commit `ea074049`).
-- Vendor co-location drafts: location-intelligence-ux TOPIC pair (EN+ES) committed to content-wiki-documentation/applications/ (`a2baf95`); all 6 vendor refined/ drafts removed from drafts-outbound (`01379316`).
-- E1 wikilink fixes (13 files): delink reverse-funnel-editorial-pattern + service-minutebook/bookkeeper; fix sel4-foundation→sel4-microkernel-substrate in 7 ES files; remove broken cross-category _index links (`19cd854`).
-- E3 status field: brand-family-swatch + brand-typography pairs — added `status: active` (`80de908`).
-- E4 title case: foundry-services-slice-model sentence case; slug drift logged in cleanup-log.md (`d8d82cf`).
-- Outbox pruned: 12 actioned/stale messages archived to outbox-archive.md; routing message added for 5 DESIGN-RESEARCH + component drafts → project-design (`487d1da3`).
-- todo-open-items.md: archived 3 old DONE blocks; marked all new completed items (`6ca2e592`).
-
-**Pending / carry-forward:**
-- Stage 6 for content-wiki-documentation, content-wiki-projects, content-wiki-corporate, woodfine-fleet-deployment — Command Session task.
 - pointsav-monorepo `readme-fixes-2026-05-16` → main merge + service restart — Command Session task.
 - Route design drafts to project-design — Command Session to forward outbox message.
 - Phase E bilingual home routing — deferred, low priority, needs Rust change → project-knowledge.
