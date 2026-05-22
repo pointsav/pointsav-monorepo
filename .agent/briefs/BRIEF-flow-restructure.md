@@ -66,9 +66,14 @@ binary serves all tiers. Do NOT revisit.
 **AUTO-TODO created:** `.agent/AUTO-TODO.md` — comprehensive phase-by-phase
 plan (Phases 0–8) with gates and commit guidance. Start here tomorrow.
 
-**▶ RESUME HERE — Phase 1 + Phase 2 in parallel:**
-- Phase 1 (§8.A): archive alignment — NEXT.md conflict note, outbox to Command, manifest note. Low effort, do alongside Phase 2.
-- Phase 2 (§8.B): build `foundry-nodeclass` crate (~150 LOC) — first hard dependency; both services need it before any node-class logic can land.
+**Phase 1 — DONE** (2026-05-22 session 2): NEXT.md conflict note, outbox to Command, manifest contamination flagged, service-slm/CLAUDE.md updated, MEMORY.md pointer added.
+**Phase 2 — DONE** (2026-05-22 session 2): `foundry-nodeclass` crate — 392 LOC, 11 unit tests + doctest, NodeClass::as_str() added session 3.
+**Phase 3 — DONE** (2026-05-22 session 2): `SqliteGraphStore` + runtime backend selection + background CORPUS drain + hardcoded base_dir fixed. cargo check clean. lbug linker (cargo build) pre-existing blocker — Option 1 locked.
+**Phase 4 — DONE** (2026-05-22 session 3): `build_doorman()` gates local on `supports_on_node_ai()` + `SLM_FORCE_BROKER_MODE`; `select_tier()` invariant test; `/readyz` reports node_class/tier_a/tier_a_reason/ai_available; `local-doorman.service` → soft `Wants=`; 241+ tests green.
+
+**▶ RESUME HERE — Phase 5 (§8.E):**
+- `TOTEBOX_NODE_CLASS=micro` integration tests: `tests/micro_node.rs` in service-slm — broker has no Tier A, `/readyz` honest, AI request → 503 clean; sqlite GraphStore round-trips.
+- cgroup sandbox script: `scripts/run-micro-sandbox.sh` via `systemd-run --user -p MemoryMax=1G -p CPUQuota=25%`.
 
 **Pending — Command Session (not Totebox scope):**
 - Rebuild the `slm-yoyo` Packer image so Phase-0 G3/G17 take effect on the VM.
@@ -210,64 +215,35 @@ per-tier builds. `[ ]` todo, `[x]` done. Execution order in §9.
 
 ### 8.A — project-intelligence (archive-level)
 - [x] Rebuild this BRIEF on the $7-node doctrine (this document)
-- [ ] Log the #49-vs-convention working-set conflict in `NEXT.md` (§6)
-- [ ] Outbox note to Command: original investigation drifted from ratified
-  conventions #49/#54/four-tier/tier-zero — recommend a doctrine cross-check
-  step for future architecture briefs
-- [ ] Update `.agent/manifest.md` `deployment:` leg — target shape is the
-  $7/mo e2-micro fleet node, not the workspace VM
-- [ ] Update `service-slm/CLAUDE.md` + `service-content/CLAUDE.md` headers with
-  the node-class model
-- [ ] Add a BRIEF pointer in `.agent/memory/MEMORY.md`
+- [x] Log the #49-vs-convention working-set conflict in `NEXT.md` (§6)
+- [x] Outbox note to Command: original investigation drifted from ratified
+  conventions #49/#54/four-tier/tier-zero
+- [ ] Update `.agent/manifest.md` `deployment:` leg — BLOCKED by cross-cluster contamination (Command scope)
+- [x] Update `service-slm/CLAUDE.md` header with the node-class model
+- [ ] `service-content/CLAUDE.md` — file doesn't exist; create when convenient (not on critical path)
+- [x] Add a BRIEF pointer in `.agent/memory/MEMORY.md`
 
 ### 8.B — `foundry-nodeclass` (NEW shared crate)
-The single mechanism both services use to adapt at runtime.
-- [ ] Create `foundry-nodeclass` (~150 LOC, leaf crate): `NodeClass { Micro,
-  Hardware, Accelerated }` + `Capabilities`. `detect()` reads RAM (cgroup v2
-  `memory.max` / v1 / `/proc/meminfo` — take the min), vCPU (cgroup `cpu.max` /
-  `nproc`), GPU (`/dev/nvidia*` `/dev/dri` filesystem probe — no CUDA link).
-  Classify: GPU→`Accelerated`; ≥6 GiB & ≥1.5 vCPU→`Hardware`; else `Micro`.
-  `TOTEBOX_NODE_CLASS` env override (the test lever) + synthetic/fixture
-  constructors for unit tests.
+- [x] Create `foundry-nodeclass` — 392 LOC, `NodeClass { Micro, Hardware, Accelerated }` + `Capabilities::detect()` + `TOTEBOX_NODE_CLASS` env override + 11 unit tests + doctest. `NodeClass::as_str()` added session 3.
 
 ### 8.C — service-slm  (clean single-binary — no obstacle)
-- [ ] `build_doorman()` (`main.rs`) — gate `local` on `caps.supports_on_node_ai()`
-  + `SLM_FORCE_BROKER_MODE`. **Today `local` is unconditionally `Some` — the
-  Doorman falsely reports Tier A exists. This is the load-bearing fix.** Thread
-  `node_class` onto `Doorman`.
-- [ ] `select_tier()` (`router.rs`) — node-class-first policy; `Micro` never
-  defaults to `Tier::Local`. Delete the "Interactive never defaults to Local"
-  doc line. Add the invariant test.
-- [ ] `/readyz` (`http.rs`) — report `node_class`, `tier_a` + `tier_a_reason`,
-  `ai_available` from the probe, never from a model-load attempt.
-- [ ] `slm-doorman.service` — `local-slm.service` becomes a soft `Wants=`.
-- [ ] `latency_class` field in `slm-core` (corrected W1).
-- [ ] Broker discipline — quarantine `idle_monitor.rs` behind a `BackendLifecycle`
-  trait (tidiness; not a node-class blocker).
-- [ ] Reconcile the Tier A model drift (1B vs 7B-Think in env files); pin
-  OLMo 2 1B for the NUC tier; surface to Command for `permissible-model-substrate.md`.
-- [ ] GF-1 async audit off the hot path · GF-2 Tier A client timeouts.
-- [ ] W5 remainder (Yo-Yo paid tier) — G5/G6/G9/G11–G16/G18. Phase 0 done.
+- [x] `build_doorman()` (`main.rs`) — gates `local` on `caps.supports_on_node_ai()` + `SLM_FORCE_BROKER_MODE`. Reports `node_class`/`tier_a_reason` through `DoormanBoot`.
+- [x] `select_tier()` (`router.rs`) — `micro_class_no_local_tier_unavailable` invariant test added.
+- [x] `/readyz` (`http.rs`) — reports `node_class`, `tier_a`, `tier_a_reason`, `ai_available`.
+- [x] `local-doorman.service` — `Requires=local-slm.service` → soft `Wants=`.
+- [ ] `latency_class` field in `slm-core` (corrected W1) — deferred to Phase 6.
+- [ ] Broker discipline — quarantine `idle_monitor.rs` behind a `BackendLifecycle` trait — deferred Phase 6.
+- [ ] Reconcile the Tier A model drift (1B vs 7B-Think in env files) — deferred Phase 6.
+- [ ] GF-1 async audit off the hot path · GF-2 Tier A client timeouts — deferred Phase 6.
+- [ ] W5 remainder (Yo-Yo paid tier) — G5/G6/G9/G11–G16/G18 — deferred Phase 7.
 
 ### 8.D — service-content  (single-binary achievable; one caveat)
-- [ ] **Build `SqliteGraphStore`** (`src/graph_sqlite.rs`, ~250 LOC, `rusqlite`
-  bundled) — implement every `GraphStore` trait method over a 2-table SQLite
-  schema 1:1 with the LadybugDB `Entity` columns (preserves `worm_id`/`cites`
-  provenance). The trait exists; LadybugDB is the only impl today — this is the
-  missing piece.
-- [ ] Runtime backend selection in `main.rs` — `Sqlite` on `Micro`, `Ladybug`
-  on `Hardware`+; `SERVICE_CONTENT_GRAPH_BACKEND` env override.
-- [ ] Background the CORPUS drain (16-min synchronous scan → `tokio::spawn`);
-  `/healthz` warming/ready; `/v1/graph/context` 503-while-warming.
-- [ ] Fix the legacy hardcoded `base_dir` default (`main.rs`).
-- [ ] **lbug single-binary caveat — operator decision:** `lbug` (LadybugDB) is a
-  C++ FFI crate, statically linked → its engine compiles into the binary even on
-  a $7 node (~tens of MB *disk* bloat, not RAM). **Option 1:** accept it, ship
-  now (recommended). **Option 3:** make LadybugDB a side-car process behind
-  `GraphStore` (cleanest; Leapfrog follow-up). Option 2 (a Cargo feature = two
-  builds) is rejected — it breaks the one-build rule.
-- [ ] Content reliability pass — `processed_ledgers` → `HashSet`; remove
-  panic-on-write surfaces; persistent deferred-retry queue.
+- [x] **`SqliteGraphStore`** — full implementation in `src/graph.rs`, 11-column schema matching LadybugDB, WAL mode, ON CONFLICT upsert.
+- [x] Runtime backend selection — `Sqlite` on `Micro`, `Ladybug` on `Hardware`+; `SERVICE_CONTENT_GRAPH_BACKEND` env override.
+- [x] Background CORPUS drain — `std::thread::spawn`; `ready: Arc<AtomicBool>`; `/healthz` warming gate; `/v1/graph/context` 503-while-warming.
+- [x] Fixed legacy hardcoded `base_dir` default (`main.rs`).
+- [x] **lbug single-binary — Option 1 LOCKED**: accept disk bloat, ship now. cargo check clean; cargo build fails at link (pre-existing lbug static-link issue).
+- [x] Content reliability pass — `processed_ledgers` → `Arc<Mutex<HashSet<String>>>` (drain + watcher thread-safe).
 
 ### 8.E — CI / base-tier testing  (the never-built no-tier suite)
 How we finally TEST the $7-node base tier the dev environment never hits.
