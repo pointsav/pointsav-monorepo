@@ -4,6 +4,29 @@ Entries aged out of the rolling 3-session summary in `session-context.md`. Newes
 
 ---
 
+## 2026-05-19 (continuation) | totebox@claude-code | Sonnet 4.6
+
+**Done this session:**
+- Phase 1c resolved: `topic-` prefix confirmed canonical for content-wiki-projects; all 31 EN+ES pairs already use it; outbox message sent to unblock Command Stage 6 (commit `ea074049`).
+- Vendor co-location drafts: location-intelligence-ux TOPIC pair (EN+ES) committed to content-wiki-documentation/applications/ (`a2baf95`); all 6 vendor refined/ drafts removed from drafts-outbound (`01379316`).
+- E1 wikilink fixes (13 files): delink reverse-funnel-editorial-pattern + service-minutebook/bookkeeper; fix sel4-foundation→sel4-microkernel-substrate in 7 ES files; remove broken cross-category _index links (`19cd854`).
+- E3 status field: brand-family-swatch + brand-typography pairs — added `status: active` (`80de908`).
+- E4 title case: foundry-services-slice-model sentence case; slug drift logged in cleanup-log.md (`d8d82cf`).
+- Outbox pruned: 12 actioned/stale messages archived to outbox-archive.md; routing message added for 5 DESIGN-RESEARCH + component drafts → project-design (`487d1da3`).
+- todo-open-items.md: archived 3 old DONE blocks; marked all new completed items (`6ca2e592`).
+
+**Pending / carry-forward:**
+- Stage 6 for content-wiki-documentation, content-wiki-projects, content-wiki-corporate, woodfine-fleet-deployment — Command Session task.
+- pointsav-monorepo `readme-fixes-2026-05-16` → main merge + service restart — Command Session task.
+- Route design drafts to project-design — Command Session to forward outbox message.
+- Phase E bilingual home routing — deferred, low priority, needs Rust change → project-knowledge.
+- Italy co-location stub — needs data from project-gis.
+
+**Operator preferences surfaced:**
+- No new preferences this session.
+
+---
+
 ## 2026-05-19 | totebox@claude-code | Sonnet 4.6
 
 **Done this session:**
