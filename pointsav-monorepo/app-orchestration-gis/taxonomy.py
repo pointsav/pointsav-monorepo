@@ -103,6 +103,8 @@ BRAND_FILL: dict[str, dict[str, list[str]]] = {
             "leclerc-fr",
             "carrefour-hypermarket-fr",
             "auchan-fr",
+            "geant-casino-fr",       # 10 records, Q2901839 (Casino Group) — Phase 18 2026-05-22
+            "intermarche-hyper-fr",  # 56 records, Q2029154 (Les Mousquetaires) — Phase 18 2026-05-22
         ],
         "DE": [
             "kaufland-de",
@@ -349,6 +351,7 @@ DISPLAY_NAMES: dict[str, str] = {
     "leclerc-fr": "E.Leclerc", "leclerc-pl": "E.Leclerc",
     "carrefour-hypermarket-fr": "Carrefour",
     "auchan-fr": "Auchan",
+    "geant-casino-fr": "Géant Casino", "intermarche-hyper-fr": "Intermarché Hyper",
     "kaufland-de": "Kaufland", "kaufland-pl": "Kaufland",
     "ecenter-de": "E center",
     "marktkauf-de": "Marktkauf", "globus-de": "Globus",
