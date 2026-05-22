@@ -25,11 +25,28 @@ under `.agent/plans/archive/`.
   ratified by Command as doctrine claim #54
   (`~/Foundry/conventions/claim-authoring-convention.md`); LANDED notice sent
   to project-editorial. [2026-05-21 totebox@claude-code]
+- [x] **Phase 1 — engine dead-code descope COMPLETE.** 4 commits on `main`
+  (`8f51ddfc` templates, `959f8e6f` Doorman, `bf35f38d` MCP read tools,
+  `3d9cd9ec` collab). Compiles + full `cargo test` green.
+  [2026-05-22 totebox@claude-code]
+- [ ] **Stage 6 — Phase 1 commits unpromoted.** The 4 Phase 1 commits are on
+  local `main`, not on canonical. Command Session promotes + rebuilds the
+  binary. Outbox notified. [2026-05-22 totebox@claude-code]
 - [ ] Phase 3.1 — discharge the convention's Engine Verification Gate: a
   render-pass test that comrak emits `<!--claim …-->` markers unchanged.
   [2026-05-21 totebox@claude-code]
-- [ ] Phase 1 (engine dead-code descope) — **unblocked** 2026-05-21; working
-  branch confirmed `main`. In progress. [2026-05-21 totebox@claude-code]
+- [ ] **Crate-hygiene drift (pre-existing, NOT Phase 1).** `app-mediakit-knowledge`
+  is not `cargo fmt`-clean (a `cargo fmt` run reformats ~37 files) and
+  `cargo clippy --all-targets -- -D warnings` fails with pre-existing lints in
+  `feeds.rs`, `glossary.rs`, `history.rs`, `edit.rs` etc. — files Phase 1 never
+  touched. This contradicts the crate `CLAUDE.md`'s stated standard. Needs its
+  own fmt + clippy cleanup task; do not bundle into feature work.
+  [2026-05-22 totebox@claude-code]
+- [ ] **Crate-doc accuracy pass (post-Phase-1).** `app-mediakit-knowledge`
+  `CLAUDE.md`, `ARCHITECTURE.md`, and `NEXT.md` still describe collab / Doorman
+  / the removed MCP read tools as shipped, and `CLAUDE.md` lists the
+  now-deleted `docs/STEP-7-COLLAB-SMOKE.md`. Needs a descope-wide doc-sync pass.
+  [2026-05-22 totebox@claude-code]
 
 ---
 

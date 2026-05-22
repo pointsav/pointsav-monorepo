@@ -1,0 +1,17 @@
+# SOFT- binary distribution — product declaration for project-knowledge.
+# Declaration only. Command Session reads this and builds via bin/build-soft.sh
+# after Stage 6. Do NOT build binaries from this archive.
+# Spec: ~/Foundry/conventions/soft-distribution-pipeline.md §2 + §8
+schema: foundry-binary-targets-v1
+cluster: project-knowledge
+targets:
+  - product_id: app-mediakit-knowledge
+    binary_name: app-mediakit-knowledge      # [[bin]] name in Cargo.toml
+    source_crate: app-mediakit-knowledge     # directory in pointsav-monorepo/
+    license: Apache-2.0                      # SPDX — per crate Cargo.toml
+    license_tier: apache                     # apache ($1 USDC)
+    class: app-bundle
+    layer: extension
+    requires: [os-console]
+    platforms: [x86_64-unknown-linux-gnu]
+    soft_enabled: true
