@@ -56,6 +56,31 @@ under `.agent/plans/archive/`.
 
 ## Currently open
 
+### Doctrine conflict — claim #49 vs. tier-zero working-set convention
+
+- [ ] **Resolve in DOCTRINE.md or convention:** DOCTRINE.md claim #49 states
+  "the full substrate runs at \[$7/mo e2-micro\] size" but
+  `conventions/tier-zero-customer-side-sovereign-specialist.md` §1 specifies a
+  "2–4 GB working set" for the Tier A (1B specialist) node. These are not
+  contradictory — claim #49 means the *deterministic substrate only* (claim #54:
+  AI is value-add, not load-bearing); Tier A is a NUC-class property, not the
+  fleet default. The doctrine language is ambiguous without that gloss.
+  **Recommendation (surface to Command):** add one clarifying sentence to claim
+  #49: "the deterministic substrate (claim #54) runs at this size; on-node AI
+  is a property of the NUC / hardware-Totebox rung." [2026-05-22 totebox@claude-code]
+  Reference: `BRIEF-flow-restructure.md` §6.
+
+### BLOCKED — `.agent/manifest.md` contamination (cross-cluster rebase artefact)
+
+- [ ] **Command Session must resolve:** a Stage-6 rebase 2026-05-22 pulled
+  `project-knowledge`'s `.agent/manifest.md`, `.agent/outbox.md`, and
+  `.agent/memory/` into the project-intelligence working tree. The manifest
+  currently describes `cluster_name: project-knowledge`, not project-intelligence.
+  project-intelligence cannot safely update its manifest until Command reverts
+  or replaces this file. **Do not edit `.agent/manifest.md`** until Command
+  confirms the correct content is in place. [2026-05-22 totebox@claude-code]
+  Reference: session-context.md contamination note.
+
 ### BLOCKER — stale `cluster/project-knowledge` branch (Stage-6 landmine)
 
 - [ ] **Escalated to Command Session** 2026-05-21 (outbox msg-id
