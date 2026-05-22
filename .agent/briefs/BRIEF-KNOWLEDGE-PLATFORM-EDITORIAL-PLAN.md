@@ -6,7 +6,7 @@ status: active
 phase: editorial
 owner: project-editorial
 created: 2026-05-21
-last_edited: 2026-05-21
+last_edited: 2026-05-22
 engines: [claude-code]
 upstream: KNOWLEDGE-PLATFORM-VISION.md (project-knowledge)
 sibling: KNOWLEDGE-PLATFORM-PLAN.md (project-knowledge)
@@ -265,9 +265,44 @@ The §4 method and Track D draw on a 2026-05-21 research sweep (multi-agent):
   16 templates, and closed apprenticeship loop are ~20% built; Track D closes
   the gap.
 
+## 12. Execution record — close-out (2026-05-22)
+
+project-editorial's autonomous execution of this plan is complete. What remains
+is gated on other clusters or the operator.
+
+**Track A — editorial overhaul: project-editorial execution complete.**
+- A0 — Gate-0 standard encoded into the four style-guide files (`f646da2`).
+- A1 — three recommended Main Page ledes (EN+ES) drafted and staged to
+  `drafts-outbound/` for project-knowledge (`aefeee53`). The *review* half waits
+  on project-knowledge branching each Main Page.
+- A2 — all twelve flagship TOPICs rewritten (EN+ES), Bloomberg lede + Gate-0 +
+  claim markup per claim-authoring-convention #54 (`d71f0c3`…`63d133a`).
+- A3 — acceptance criteria applied inline per article.
+- A4 — wikilink audit clean: **0 unresolved targets across all three wikis**
+  (`wikilink-audit.py`, `19c64001`). Publish request routed to Command below.
+
+**Track D — editorial QA substrate: complete except D5.**
+- D1 editorial-lint.py, D2 failure-mode registry, D3 sixteen genre templates,
+  D4 canonical standard + CORPUS-SCHEMA, D6 manifest revision — all committed.
+- D5 (apprenticeship verdict-signing) — needs an operator signing identity;
+  operator action, not project-editorial-executable.
+- Follow-up: editorial-lint.py does not yet carry the claim-validation pass of
+  claim-authoring-convention §9 — a Track D enhancement.
+
+**Track E — cross-cluster:** E1, E4, E-ruleset done. E2 / E3 / E5 / E-claim /
+E-rename remain — cross-cluster handshakes or operator-gated (the GitHub repo
+rename).
+
+**Publish + archival.** All A0/A2 commits sit on `main` in the three content
+sub-clones, unpromoted; Stage 6 is Command's. **This plan is NOT archived.**
+A4 of §4 says "archive it," but the operator's standing instruction (§9) gates
+archival of superseded/closed plans on an explicit post-ship go-ahead. The two
+conflict; per *surface conflicts, do not silently override*, the plan stays
+`status: active` until Command issues the go-ahead.
+
 ---
 
 *Adopted 2026-05-21 by project-editorial from project-knowledge's proposed
 draft, re-basing `award-winning-wiki-overhaul.md` onto
 `KNOWLEDGE-PLATFORM-VISION.md` rev 4; detail inlined for self-containment.
-project-editorial owns this document.*
+project-editorial owns this document. Track-A close-out recorded 2026-05-22.*
