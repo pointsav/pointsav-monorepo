@@ -1,16 +1,16 @@
 use axum::http::{Request, StatusCode};
 use http_body_util::BodyExt;
-use tower::ServiceExt;
-use std::sync::{Arc, Mutex};
 use std::path::PathBuf;
+use std::sync::{Arc, Mutex};
 use tempfile::TempDir;
+use tower::ServiceExt;
 
 use app_mediakit_knowledge::server::{router, AppState};
 
 async fn fixture_state() -> (AppState, TempDir, TempDir) {
     let content_dir = tempfile::tempdir().unwrap();
     let state_dir = tempfile::tempdir().unwrap();
-    
+
     // Initialise git repo
     let repo = app_mediakit_knowledge::git::open_or_init(content_dir.path()).unwrap();
     app_mediakit_knowledge::git::ensure_commit_identity_from_env(&repo).unwrap();
@@ -26,12 +26,13 @@ async fn fixture_state() -> (AppState, TempDir, TempDir) {
             guide_dir_2: None,
             citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
             search: Arc::new(search),
-            git: Arc::new(Mutex::new(repo)),            git_tenant: "pointsav".to_string(),
+            git: Arc::new(Mutex::new(repo)),
+            git_tenant: "pointsav".to_string(),
             mcp_enabled: false,
             glossary: Arc::new(app_mediakit_knowledge::glossary::Glossary::default()),
-                links: app_mediakit_knowledge::links::LinkGraph::for_testing(),
-                brand_theme: None,
-                db: None,
+            links: app_mediakit_knowledge::links::LinkGraph::for_testing(),
+            brand_theme: None,
+            db: None,
             site_title: "Test Wiki".to_string(),
         },
         content_dir,
@@ -55,7 +56,9 @@ async fn test_history_list() {
         .method("POST")
         .uri("/create")
         .header("Content-Type", "application/json")
-        .body(axum::body::Body::from(serde_json::to_vec(&create_payload).unwrap()))
+        .body(axum::body::Body::from(
+            serde_json::to_vec(&create_payload).unwrap(),
+        ))
         .unwrap();
     let resp = app.clone().oneshot(req).await.unwrap();
     assert_eq!(resp.status(), StatusCode::CREATED);
@@ -68,7 +71,9 @@ async fn test_history_list() {
         .method("POST")
         .uri(format!("/edit/{}", slug))
         .header("Content-Type", "application/json")
-        .body(axum::body::Body::from(serde_json::to_vec(&edit_payload).unwrap()))
+        .body(axum::body::Body::from(
+            serde_json::to_vec(&edit_payload).unwrap(),
+        ))
         .unwrap();
     let resp = app.clone().oneshot(req).await.unwrap();
     assert_eq!(resp.status(), StatusCode::OK);
@@ -81,10 +86,10 @@ async fn test_history_list() {
         .unwrap();
     let resp = app.oneshot(req).await.unwrap();
     assert_eq!(resp.status(), StatusCode::OK);
-    
+
     let body = resp.into_body().collect().await.unwrap().to_bytes();
     let html = String::from_utf8_lossy(&body);
-    
+
     assert!(html.contains("History: test-topic"));
     assert!(html.contains("create: test-topic"));
     assert!(html.contains("edit: test-topic"));
@@ -106,7 +111,9 @@ async fn test_blame_annotation() {
         .method("POST")
         .uri("/create")
         .header("Content-Type", "application/json")
-        .body(axum::body::Body::from(serde_json::to_vec(&create_payload).unwrap()))
+        .body(axum::body::Body::from(
+            serde_json::to_vec(&create_payload).unwrap(),
+        ))
         .unwrap();
     let resp = app.clone().oneshot(req).await.unwrap();
     assert_eq!(resp.status(), StatusCode::CREATED);
@@ -119,7 +126,9 @@ async fn test_blame_annotation() {
         .method("POST")
         .uri(format!("/edit/{}", slug))
         .header("Content-Type", "application/json")
-        .body(axum::body::Body::from(serde_json::to_vec(&edit_payload).unwrap()))
+        .body(axum::body::Body::from(
+            serde_json::to_vec(&edit_payload).unwrap(),
+        ))
         .unwrap();
     let resp = app.clone().oneshot(req).await.unwrap();
     assert_eq!(resp.status(), StatusCode::OK);
@@ -132,10 +141,10 @@ async fn test_blame_annotation() {
         .unwrap();
     let resp = app.oneshot(req).await.unwrap();
     assert_eq!(resp.status(), StatusCode::OK);
-    
+
     let body = resp.into_body().collect().await.unwrap().to_bytes();
     let html = String::from_utf8_lossy(&body);
-    
+
     assert!(html.contains("Blame: blame-topic"));
     assert!(html.contains("Line 1"));
     assert!(html.contains("Line 2"));
@@ -146,9 +155,13 @@ async fn test_empty_history() {
     let (state, content_dir, _state_dir) = fixture_state().await;
     let app = router(state.clone());
     let slug = "no-history";
-    
+
     // Create file WITHOUT git commit (manual write)
-    std::fs::write(content_dir.path().join(format!("{}.md", slug)), "No history").unwrap();
+    std::fs::write(
+        content_dir.path().join(format!("{}.md", slug)),
+        "No history",
+    )
+    .unwrap();
 
     let req = Request::builder()
         .method("GET")
@@ -157,10 +170,10 @@ async fn test_empty_history() {
         .unwrap();
     let resp = app.oneshot(req).await.unwrap();
     assert_eq!(resp.status(), StatusCode::OK);
-    
+
     let body = resp.into_body().collect().await.unwrap().to_bytes();
     let html = String::from_utf8_lossy(&body);
-    
+
     assert!(html.contains("No revision history yet."));
 }
 

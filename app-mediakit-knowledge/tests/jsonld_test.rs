@@ -28,13 +28,14 @@ async fn fixture_state() -> (AppState, tempfile::TempDir, tempfile::TempDir) {
         guide_dir_2: None,
         citations_yaml: std::path::PathBuf::from("/nonexistent/citations.yaml"),
         search: Arc::new(index),
-        git: Arc::new(Mutex::new(repo)),        site_title: "PointSav Documentation Wiki".to_string(),
+        git: Arc::new(Mutex::new(repo)),
+        site_title: "PointSav Documentation Wiki".to_string(),
         git_tenant: "pointsav".to_string(),
         mcp_enabled: false,
         glossary: Arc::new(app_mediakit_knowledge::glossary::Glossary::default()),
-                links: app_mediakit_knowledge::links::LinkGraph::for_testing(),
-                brand_theme: None,
-                db: None,
+        links: app_mediakit_knowledge::links::LinkGraph::for_testing(),
+        brand_theme: None,
+        db: None,
     };
     (state, dir, state_dir)
 }
@@ -95,13 +96,14 @@ async fn fli_topic_carries_additional_property() {
         guide_dir_2: None,
         citations_yaml: std::path::PathBuf::from("/nonexistent/citations.yaml"),
         search: Arc::new(index),
-        git: Arc::new(Mutex::new(repo)),        site_title: "PointSav Documentation Wiki".to_string(),
+        git: Arc::new(Mutex::new(repo)),
+        site_title: "PointSav Documentation Wiki".to_string(),
         git_tenant: "pointsav".to_string(),
         mcp_enabled: false,
         glossary: Arc::new(app_mediakit_knowledge::glossary::Glossary::default()),
-                links: app_mediakit_knowledge::links::LinkGraph::for_testing(),
-                brand_theme: None,
-                db: None,
+        links: app_mediakit_knowledge::links::LinkGraph::for_testing(),
+        brand_theme: None,
+        db: None,
     };
     let app = router(state);
     let resp = app
