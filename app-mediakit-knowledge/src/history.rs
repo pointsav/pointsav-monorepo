@@ -1,4 +1,6 @@
+use std::collections::HashMap;
 use std::path::Path;
+use crate::claim::Claim;
 use crate::error::WikiError;
 use chrono::{TimeZone, Utc};
 
@@ -269,4 +271,54 @@ pub fn get_file_at_rev(content_dir: &Path, slug: &str, rev: &str) -> Result<Stri
 fn format_time(time: gix::date::Time) -> String {
     let dt = Utc.timestamp_opt(time.seconds, 0).unwrap();
     dt.to_rfc3339()
+}
+
+/// Enrich each claim with `published_at` — the RFC 3339 UTC timestamp of
+/// the newest git commit whose blame touches the claim's line range.
+///
+/// `fm_line_count` is the number of `\n` characters in the frontmatter
+/// block of the full file (everything before `body_md`). Adding it to a
+/// claim's body-relative `line_start`/`line_end` yields the absolute
+/// 1-based file line numbers that `topic_blame` addresses.
+///
+/// Silently leaves `published_at` as `None` when blame is unavailable
+/// (e.g. `content_dir` is not a git repository, or the file has no
+/// committed history yet). This is the expected behaviour in test contexts.
+pub fn blame_published_at(
+    content_dir: &Path,
+    slug: &str,
+    fm_line_count: u32,
+    claims: &mut [Claim],
+) {
+    if claims.is_empty() {
+        return;
+    }
+    let blame = match topic_blame(content_dir, slug) {
+        Ok(b) => b,
+        Err(_) => return,
+    };
+
+    // Build line → newest timestamp map. ISO 8601 / RFC 3339 strings from
+    // format_time() are UTC and sort lexicographically = chronologically,
+    // so plain string comparison is correct for "newest".
+    let mut line_ts: HashMap<u32, String> = HashMap::with_capacity(blame.len());
+    for bl in blame {
+        line_ts
+            .entry(bl.line_number as u32)
+            .and_modify(|ts| {
+                if bl.timestamp_iso > *ts {
+                    *ts = bl.timestamp_iso.clone();
+                }
+            })
+            .or_insert(bl.timestamp_iso);
+    }
+
+    for claim in claims.iter_mut() {
+        let abs_start = claim.line_start + fm_line_count;
+        let abs_end = claim.line_end + fm_line_count;
+        claim.published_at = (abs_start..=abs_end)
+            .filter_map(|ln| line_ts.get(&ln))
+            .max()
+            .cloned();
+    }
 }

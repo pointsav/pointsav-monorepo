@@ -270,6 +270,10 @@ struct WikiPageQuery {
     redirectedfrom: Option<String>,
     #[serde(default)]
     printable: bool,
+    /// Past-revision view: a git SHA prefix, ref name, or `SHA~` parent
+    /// shorthand. When present, reads from git history instead of disk
+    /// (content_dir only). Blame enrichment is skipped for past revisions.
+    asof: Option<String>,
 }
 
 /// `GET /wanted` — "Wanted articles" page.
@@ -1595,7 +1599,17 @@ async fn wiki_page(
 
     // Try content_dir first; if not found, try guide_dir then guide_dir_2.
     let primary_path = state.content_dir.join(format!("{slug}.md"));
-    let text = match fs::read_to_string(&primary_path).await {
+
+    // §3.5: past-revision view — read from git history when ?asof= is set.
+    // Only content_dir is git-tracked; guide_dir articles always use the
+    // disk path. Any git error (unknown rev, empty repo) becomes a 404.
+    let text = if let Some(ref rev) = q.asof {
+        match crate::history::get_file_at_rev(&state.content_dir, &slug, rev) {
+            Ok(t) if !t.is_empty() => t,
+            _ => return Err(WikiError::NotFound(slug)),
+        }
+    } else {
+    match fs::read_to_string(&primary_path).await {
         Ok(t) => t,
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
             let guide_dirs: &[Option<&PathBuf>] = &[state.guide_dir.as_ref(), state.guide_dir_2.as_ref()];
@@ -1645,7 +1659,8 @@ async fn wiki_page(
             }
         }
         Err(e) => return Err(e.into()),
-    };
+    }
+    }; // end of asof / disk read block
     let mut parsed = parse_page(&text)?;
 
     // A5: redirect_to frontmatter — 301 before any rendering.
@@ -1696,18 +1711,56 @@ async fn wiki_page(
         }
     }
 
+    // §3.5: extract claims and enrich with per-span blame timestamps.
+    // fm_line_count converts body-relative line numbers to absolute file
+    // lines that topic_blame addresses. Blame is skipped for past-revision
+    // views (?asof=) — the claim graph reflects HEAD, not the past revision.
+    // _claims is consumed by Commit E (JSON content-negotiation + JSON-LD).
+    let fm_line_count = text[..text.len().saturating_sub(parsed.body_md.len())]
+        .matches('\n')
+        .count() as u32;
+    let mut _claims = crate::claim::extract_claims(&parsed.body_md, &slug).claims;
+    if q.asof.is_none() {
+        crate::history::blame_published_at(
+            &state.content_dir,
+            &slug,
+            fm_line_count,
+            &mut _claims,
+        );
+    }
+
     // Two-step render: extract headings from clean comrak output (no edit pencils),
     // then inject pencils for the final body HTML. This keeps TOC text clean.
     let raw_html = render_html_raw(&parsed.body_md, &state.content_dir);
     let raw_html = crate::glossary::inject_glossary_tooltips(&raw_html, &state.glossary);
     let headings = extract_headings(&raw_html);
     let body_html = inject_edit_pencils(&raw_html);
+
+    // §3.5: past-revision notice — minimal engine-side render.
+    // Freshness-ribbon visual is project-design component `component-freshness-ribbon`.
+    let body_html = if let Some(ref rev) = q.asof {
+        let notice = format!(
+            concat!(
+                r#"<div class="wiki-asof-notice" style="background:#fef3cd;"#,
+                r#"border:1px solid #ffc107;padding:.5em 1em;margin-bottom:1em;"#,
+                r#"border-radius:3px"><strong>Historical revision:</strong> "#,
+                r#"showing <code>{slug}</code> as of <code>{rev}</code>. "#,
+                r#"<a href="/wiki/{slug}">Return to current revision.</a></div>"#,
+            ),
+            slug = &slug,
+            rev = rev,
+        );
+        format!("{notice}{body_html}")
+    } else {
+        body_html
+    };
+
     let title = parsed
         .frontmatter
         .title
         .clone()
         .unwrap_or_else(|| slug.clone());
-        
+
     let pending_count = pending_count_for(&state, maybe_user.as_ref()).await;
     let redirected_from = q.redirectedfrom.as_deref();
     Ok(wiki_chrome(&title, &slug, parsed.frontmatter, &body_html, headings, &state.site_title, state.brand_theme.as_deref(), maybe_user.as_ref(), pending_count, redirected_from, q.printable).into_response())
@@ -4119,5 +4172,23 @@ mod tests {
             !html.contains("wiki-lang-switcher"),
             "language switcher should NOT appear when no sibling exists: {html}"
         );
+    }
+
+    /// ?asof= with an unknown revision returns 404. The test content dir is
+    /// an empty git repo (no commits), so any SHA is unknown.
+    #[tokio::test]
+    async fn wiki_page_asof_unknown_revision_returns_404() {
+        let (state, _dir, _state_dir) = fixture_state().await;
+        let app = router(state);
+        let resp = app
+            .oneshot(
+                Request::builder()
+                    .uri("/wiki/topic-test?asof=deadbeefdeadbeef")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(resp.status(), StatusCode::NOT_FOUND);
     }
 }
