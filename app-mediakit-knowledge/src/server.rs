@@ -4452,4 +4452,184 @@ mod tests {
             .unwrap();
         assert_eq!(resp.status(), StatusCode::NOT_FOUND);
     }
+
+    // ── Phase 5.1: bilingual /es/ routing tests ───────────────────────────────
+
+    /// /es/ serves index.es.md with lang="es" when the ES index exists.
+    #[tokio::test]
+    async fn home_es_serves_es_index_when_present() {
+        let (state, dir, _state_dir) = fixture_state().await;
+        tokio::fs::write(
+            dir.path().join("index.md"),
+            "---\ntitle: Home EN\n---\nEnglish home content.\n",
+        ).await.unwrap();
+        tokio::fs::write(
+            dir.path().join("index.es.md"),
+            "---\ntitle: Inicio\n---\nContenido en español.\n",
+        ).await.unwrap();
+        let app = router(state);
+        let resp = app
+            .oneshot(Request::builder().uri("/es/").body(Body::empty()).unwrap())
+            .await
+            .unwrap();
+        assert_eq!(resp.status(), StatusCode::OK);
+        let body = resp.into_body().collect().await.unwrap().to_bytes();
+        let html = std::str::from_utf8(&body).unwrap();
+        assert!(html.contains(r#"lang="es""#), "should have lang=es: {html}");
+        assert!(html.contains("Contenido en español"), "should serve ES content: {html}");
+    }
+
+    /// /es/ falls back to index.md (returning 200) when index.es.md is absent.
+    #[tokio::test]
+    async fn home_es_falls_back_to_en_when_no_es_index() {
+        let (state, dir, _state_dir) = fixture_state().await;
+        tokio::fs::write(
+            dir.path().join("index.md"),
+            "---\ntitle: Home EN\n---\nEnglish home content.\n",
+        ).await.unwrap();
+        let app = router(state);
+        let resp = app
+            .oneshot(Request::builder().uri("/es/").body(Body::empty()).unwrap())
+            .await
+            .unwrap();
+        assert_eq!(resp.status(), StatusCode::OK);
+        let body = resp.into_body().collect().await.unwrap().to_bytes();
+        let html = std::str::from_utf8(&body).unwrap();
+        assert!(html.contains("English home content"), "fallback should serve EN content: {html}");
+    }
+
+    /// /es/wiki/{slug} serves the .es.md file with lang="es" when it exists.
+    #[tokio::test]
+    async fn wiki_page_es_serves_es_article_when_present() {
+        let (state, dir, _state_dir) = fixture_state().await;
+        tokio::fs::write(
+            dir.path().join("topic-test.es.md"),
+            "---\ntitle: Tema de Prueba\n---\n# Encabezado\n\nContenido en español.\n",
+        ).await.unwrap();
+        let app = router(state);
+        let resp = app
+            .oneshot(
+                Request::builder()
+                    .uri("/es/wiki/topic-test")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(resp.status(), StatusCode::OK);
+        let body = resp.into_body().collect().await.unwrap().to_bytes();
+        let html = std::str::from_utf8(&body).unwrap();
+        assert!(html.contains(r#"lang="es""#), "should have lang=es: {html}");
+        assert!(html.contains("Encabezado"), "should serve ES body content: {html}");
+    }
+
+    /// /es/wiki/{slug} falls back to the EN article (200, lang="en") when
+    /// no .es.md sibling exists.
+    #[tokio::test]
+    async fn wiki_page_es_falls_back_to_en_when_no_es_article() {
+        let (state, _dir, _state_dir) = fixture_state().await;
+        let app = router(state);
+        let resp = app
+            .oneshot(
+                Request::builder()
+                    .uri("/es/wiki/topic-test")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(resp.status(), StatusCode::OK);
+        let body = resp.into_body().collect().await.unwrap().to_bytes();
+        let html = std::str::from_utf8(&body).unwrap();
+        assert!(html.contains(r#"lang="en""#), "fallback should have lang=en: {html}");
+        assert!(html.contains("Test Topic"), "fallback should serve EN content: {html}");
+    }
+
+    /// /es/wiki/{slug} returns 404 when the slug exists in neither locale.
+    #[tokio::test]
+    async fn wiki_page_es_returns_404_for_unknown_slug() {
+        let (state, _dir, _state_dir) = fixture_state().await;
+        let app = router(state);
+        let resp = app
+            .oneshot(
+                Request::builder()
+                    .uri("/es/wiki/does-not-exist")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(resp.status(), StatusCode::NOT_FOUND);
+    }
+
+    /// The EN home page nav contains a link to /es/.
+    #[tokio::test]
+    async fn home_has_lang_toggle_to_es() {
+        let (state, dir, _state_dir) = fixture_state().await;
+        tokio::fs::write(
+            dir.path().join("index.md"),
+            "---\ntitle: Home\n---\nHome content.\n",
+        ).await.unwrap();
+        let app = router(state);
+        let resp = app
+            .oneshot(Request::builder().uri("/").body(Body::empty()).unwrap())
+            .await
+            .unwrap();
+        assert_eq!(resp.status(), StatusCode::OK);
+        let body = resp.into_body().collect().await.unwrap().to_bytes();
+        let html = std::str::from_utf8(&body).unwrap();
+        assert!(html.contains(r#"href="/es/""#), "EN home nav should link to /es/: {html}");
+    }
+
+    /// The ES article page nav contains a link back to the EN article.
+    #[tokio::test]
+    async fn wiki_page_es_has_lang_toggle_to_en() {
+        let (state, dir, _state_dir) = fixture_state().await;
+        tokio::fs::write(
+            dir.path().join("topic-test.es.md"),
+            "---\ntitle: Tema de Prueba\n---\nContenido en español.\n",
+        ).await.unwrap();
+        let app = router(state);
+        let resp = app
+            .oneshot(
+                Request::builder()
+                    .uri("/es/wiki/topic-test")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(resp.status(), StatusCode::OK);
+        let body = resp.into_body().collect().await.unwrap().to_bytes();
+        let html = std::str::from_utf8(&body).unwrap();
+        assert!(
+            html.contains(r#"href="/wiki/topic-test""#),
+            "ES article nav should link to EN article: {html}"
+        );
+    }
+
+    /// The ES article page head contains hreflang="en" and rel="canonical" tags.
+    #[tokio::test]
+    async fn wiki_page_es_has_hreflang_tags() {
+        let (state, dir, _state_dir) = fixture_state().await;
+        tokio::fs::write(
+            dir.path().join("topic-test.es.md"),
+            "---\ntitle: Tema de Prueba\n---\nContenido en español.\n",
+        ).await.unwrap();
+        let app = router(state);
+        let resp = app
+            .oneshot(
+                Request::builder()
+                    .uri("/es/wiki/topic-test")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(resp.status(), StatusCode::OK);
+        let body = resp.into_body().collect().await.unwrap().to_bytes();
+        let html = std::str::from_utf8(&body).unwrap();
+        assert!(html.contains(r#"hreflang="en""#), "ES article head should have hreflang=en: {html}");
+        assert!(html.contains(r#"rel="canonical""#), "ES article head should have canonical link: {html}");
+    }
 }
