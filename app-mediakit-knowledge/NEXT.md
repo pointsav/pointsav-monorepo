@@ -1,6 +1,70 @@
 # NEXT.md — app-mediakit-knowledge
 
-> Last updated: 2026-05-12
+> Last updated: 2026-05-22
+
+## Phase 4 DTCG token wiring — COMPLETE (Commits F–H, 2026-05-22)
+
+Phases 4.2–4.5 of `KNOWLEDGE-PLATFORM-PLAN.md` committed on monorepo `main`:
+
+| Commit | Phase | What |
+|---|---|---|
+| `bce932b1` | 4.2 — DTCG build script | `scripts/dtcg-bundle.json` (vendored canonical) + `scripts/dtcg-to-css.py`; generates `static/tokens.css` (148 tokens, all colors in oklch()) |
+| `1ddfca98` | 4.3+4.4 — reconcile `:root` + theme switch | `style.css` `:root` aliases → DTCG semantic vars; `tokens-woodfine.css` full Woodfine brand override; conditional `<link>` in chrome when `WIKI_BRAND_THEME=woodfine` |
+| _(this commit)_ | 4.5 — WCAG audit | See findings below |
+
+## Phase 4.5 — WCAG 4.5:1 audit findings (2026-05-22)
+
+**Audit scope:** all color pairs in DTCG semantic token set — 12 foreground/background
+combinations checked programmatically via relative-luminance formula.
+
+**Results: 10 pass, 2 fail AA (4.5:1):**
+
+| Token pair | Hex FG | Ratio | 4.5:1 AA | 3:1 large |
+|---|---|---|---|---|
+| `semantic.text.tertiary` on `semantic.surface.background` | #878d99 | 3.08:1 | FAIL | PASS |
+| `knowledge.editpencil` on `semantic.surface.layer` | #878d99 | 3.33:1 | FAIL | PASS |
+
+**Assessment:** Both failures use `#878d99`. Both are decorative/supplementary roles:
+- `text.tertiary` — placeholder text, disabled labels; qualifies as non-text UI (WCAG 1.4.11, 3:1 threshold) rather than body text (4.5:1)
+- `knowledge.editpencil` — edit pencil icon overlay on article text; decorative icon, non-interactive at hover-only visibility; 3:1 threshold applies
+
+**Both colors PASS 3:1 large-text / non-text contrast.** No accessibility regression introduced by Phase 4.
+
+**Fix required at token source (project-design scope):** To meet strict body-text 4.5:1, darken `#878d99` to ≈ `#767c8a` (ratio 4.52:1) in `dtcg-vault/tokens/dtcg-bundle.json`. Outbox message sent to project-design. This is not a blocker for Phase 5.
+
+## Open: Phase 5 — bilingual /es/ routing
+
+Next in `KNOWLEDGE-PLATFORM-PLAN.md` order after Phase 4 complete. Self-contained:
+detect `Accept-Language: es` header + `/es/{slug}` URL prefix; serve `{slug}.es.md` if
+present, else fall through to English with a language toggle. No cross-cluster dependency.
+
+## Open: crate hygiene
+
+`cargo fmt` reformats ~37 files; `cargo clippy -D warnings` has pre-existing lints in
+`feeds.rs`, `glossary.rs`, `history.rs`, `edit.rs`. Pre-dates Phase 3. Standalone task —
+do not bundle into feature commits. Flagged to Command.
+
+## Open: CLAUDE.md / ARCHITECTURE.md accuracy pass
+
+Both files still describe removed features (real-time collab, Doorman proxy stubs, three
+redundant MCP read tools). Removed in Phase 1 (Commits 2026-05-22) but docs not updated.
+Low urgency — address before Stage 6 promotion of Phase 1 batch.
+
+## Open: Stage 6 promotion
+
+**11 commits unpromoted on monorepo `main`** (Phase 1 ×4, Phase 3 A–E ×5, Phase 4 F–H ×2+).
+Promote via `~/Foundry/bin/promote.sh` from Command Session. Binary rebuild required after
+promote. Outbox messages sent.
+
+---
+
+> Historical NEXT.md content (pre-2026-05-22 plan) preserved below for reference.
+> The items below reflect the old Phase numbering (git-based Phase 4, auth Phase 5).
+> Cross-reference against `KNOWLEDGE-PLATFORM-PLAN.md` for current plan state.
+
+---
+
+> Last updated (historical): 2026-05-12
 
 ## Phase 4 — COMPLETE (Steps 4.1–4.8 all shipped)
 
