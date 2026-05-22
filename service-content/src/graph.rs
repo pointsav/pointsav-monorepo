@@ -402,8 +402,8 @@ impl GraphStore for SqliteGraphStore {
                 module_id,
                 entity.entity_name.to_lowercase().replace(' ', "_")
             );
-            let cites_json = serde_json::to_string(&entity.cites)
-                .unwrap_or_else(|_| "[]".to_string());
+            let cites_json =
+                serde_json::to_string(&entity.cites).unwrap_or_else(|_| "[]".to_string());
 
             // created_at is set only on first INSERT; ON CONFLICT leaves it unchanged.
             conn.execute(
@@ -463,7 +463,10 @@ impl GraphStore for SqliteGraphStore {
             .map_err(|e| anyhow!("query_context prepare failed: {}", e))?;
 
         let rows = stmt
-            .query_map(params![module_id, pattern, limit as i64], sqlite_row_to_entity)
+            .query_map(
+                params![module_id, pattern, limit as i64],
+                sqlite_row_to_entity,
+            )
             .map_err(|e| anyhow!("query_context execute failed: {}", e))?;
 
         rows.collect::<std::result::Result<Vec<_>, _>>()
@@ -538,7 +541,11 @@ fn sqlite_row_to_entity(row: &rusqlite::Row<'_>) -> rusqlite::Result<GraphEntity
         classification: row.get(1)?,
         role_vector: if role.is_empty() { None } else { Some(role) },
         location_vector: if loc.is_empty() { None } else { Some(loc) },
-        contact_vector: if contact.is_empty() { None } else { Some(contact) },
+        contact_vector: if contact.is_empty() {
+            None
+        } else {
+            Some(contact)
+        },
         module_id: row.get(5)?,
         confidence: row.get(6)?,
         worm_id: if worm.is_empty() { None } else { Some(worm) },
@@ -643,4 +650,161 @@ fn rows_to_entities(result: lbug::QueryResult<'_>) -> Result<Vec<GraphEntity>> {
         });
     }
     Ok(out)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn in_memory_store() -> SqliteGraphStore {
+        let store = SqliteGraphStore::new(":memory:").expect("open :memory:");
+        store.init_schema().expect("init_schema");
+        store
+    }
+
+    fn entity(name: &str, cls: &str, module: &str) -> GraphEntity {
+        GraphEntity {
+            entity_name: name.to_string(),
+            classification: cls.to_string(),
+            role_vector: Some(format!("{} role", name)),
+            location_vector: Some("Vancouver".to_string()),
+            contact_vector: None,
+            module_id: module.to_string(),
+            confidence: 0.9,
+            worm_id: Some("CORPUS_TEST".to_string()),
+            cites: vec!["cite-1".to_string()],
+        }
+    }
+
+    #[test]
+    fn round_trip_upsert_and_list() {
+        let store = in_memory_store();
+        let entities = vec![
+            entity("Alice", "Person", "mod-a"),
+            entity("Acme Corp", "Company", "mod-a"),
+        ];
+        let n = store.upsert_entities("mod-a", &entities).unwrap();
+        assert_eq!(n, 2);
+
+        let listed = store.list_entities("mod-a").unwrap();
+        assert_eq!(listed.len(), 2);
+        let names: Vec<&str> = listed.iter().map(|e| e.entity_name.as_str()).collect();
+        assert!(names.contains(&"Alice"));
+        assert!(names.contains(&"Acme Corp"));
+    }
+
+    #[test]
+    fn upsert_idempotent() {
+        let store = in_memory_store();
+        let e = vec![entity("Alice", "Person", "mod-a")];
+        store.upsert_entities("mod-a", &e).unwrap();
+        store.upsert_entities("mod-a", &e).unwrap();
+        assert_eq!(store.count_all().unwrap(), 1);
+    }
+
+    #[test]
+    fn count_all_across_modules() {
+        let store = in_memory_store();
+        store
+            .upsert_entities("mod-a", &[entity("Alice", "Person", "mod-a")])
+            .unwrap();
+        store
+            .upsert_entities(
+                "mod-b",
+                &[
+                    entity("Bob", "Person", "mod-b"),
+                    entity("Carol", "Person", "mod-b"),
+                ],
+            )
+            .unwrap();
+        assert_eq!(store.count_all().unwrap(), 3);
+    }
+
+    #[test]
+    fn list_entities_scoped_to_module() {
+        let store = in_memory_store();
+        store
+            .upsert_entities("mod-a", &[entity("Alice", "Person", "mod-a")])
+            .unwrap();
+        store
+            .upsert_entities("mod-b", &[entity("Bob", "Person", "mod-b")])
+            .unwrap();
+        let a = store.list_entities("mod-a").unwrap();
+        assert_eq!(a.len(), 1);
+        assert_eq!(a[0].entity_name, "Alice");
+    }
+
+    #[test]
+    fn query_context_returns_matches() {
+        let store = in_memory_store();
+        store
+            .upsert_entities(
+                "mod-a",
+                &[
+                    entity("Alice", "Person", "mod-a"),
+                    entity("Bob", "Person", "mod-a"),
+                ],
+            )
+            .unwrap();
+        let results = store.query_context("mod-a", "Alice", 10).unwrap();
+        assert!(
+            !results.is_empty(),
+            "query_context should return at least one result"
+        );
+        assert!(results.iter().any(|e| e.entity_name == "Alice"));
+    }
+
+    #[test]
+    fn delete_by_classification_removes_correct_entities() {
+        let store = in_memory_store();
+        store
+            .upsert_entities(
+                "mod-a",
+                &[
+                    entity("Alice", "Person", "mod-a"),
+                    entity("Acme Corp", "Company", "mod-a"),
+                ],
+            )
+            .unwrap();
+        store.delete_by_classification("mod-a", "Person").unwrap();
+        let remaining = store.list_entities("mod-a").unwrap();
+        assert_eq!(remaining.len(), 1);
+        assert_eq!(remaining[0].classification, "Company");
+    }
+
+    #[test]
+    fn delete_by_classification_and_location_scoped() {
+        let store = in_memory_store();
+        let mut e_vancouver = entity("Alice", "Person", "mod-a");
+        e_vancouver.location_vector = Some("Vancouver".to_string());
+        let mut e_toronto = entity("Bob", "Person", "mod-a");
+        e_toronto.location_vector = Some("Toronto".to_string());
+        store
+            .upsert_entities("mod-a", &[e_vancouver, e_toronto])
+            .unwrap();
+        store
+            .delete_by_classification_and_location("mod-a", "Person", "Vancouver")
+            .unwrap();
+        let remaining = store.list_entities("mod-a").unwrap();
+        assert_eq!(remaining.len(), 1);
+        assert_eq!(remaining[0].entity_name, "Bob");
+    }
+
+    #[test]
+    fn worm_id_and_cites_preserved() {
+        let store = in_memory_store();
+        let mut e = entity("Alice", "Person", "mod-a");
+        e.worm_id = Some("CORPUS_01ABCDEF".to_string());
+        e.cites = vec![
+            "cite-doctrine-49".to_string(),
+            "cite-doctrine-54".to_string(),
+        ];
+        store.upsert_entities("mod-a", &[e]).unwrap();
+        let listed = store.list_entities("mod-a").unwrap();
+        assert_eq!(listed[0].worm_id.as_deref(), Some("CORPUS_01ABCDEF"));
+        assert_eq!(
+            listed[0].cites,
+            vec!["cite-doctrine-49", "cite-doctrine-54"]
+        );
+    }
 }
