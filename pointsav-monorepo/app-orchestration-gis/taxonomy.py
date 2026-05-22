@@ -183,6 +183,8 @@ BRAND_FILL: dict[str, dict[str, list[str]]] = {
         "FR": [
             "leroy-merlin-fr",
             "castorama-fr",
+            "bricomarch-fr",  # 497 records, Q2896882 (Les Mousquetaires) — Phase 18 2026-05-22
+            "brico-depot-fr", # 137 records, Q3007003 (Kingfisher) — Phase 18 2026-05-22
         ],
         "DE": [
             "hornbach-de",
@@ -371,7 +373,7 @@ DISPLAY_NAMES: dict[str, str] = {
     "peavey-mart-ca": "Peavey Mart",
     "bq-uk": "B&Q", "wickes-uk": "Wickes",
     "leroy-merlin-fr": "Leroy Merlin",
-    "castorama-fr": "Castorama",
+    "castorama-fr": "Castorama", "bricomarch-fr": "Bricomarché", "brico-depot-fr": "Brico Dépôt",
     "hornbach-de": "Hornbach",
     "obi-de": "OBI",
     "bauhaus-de": "Bauhaus",
