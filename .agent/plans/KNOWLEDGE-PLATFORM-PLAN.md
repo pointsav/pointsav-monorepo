@@ -47,12 +47,20 @@ Precondition for everything user-visible. project-knowledge Totebox cannot run
 The *dead*-code removals from Vision §10. None depend on `os-mediakit`; safe to
 do now. **Not** in this phase: `auth.rs` / `pending.rs` (Phase 7 — gated).
 
-- [ ] **1.1** Remove the MCP redundant read tools (`search_topics`, `get_revision`, `list_backlinks`) — keep the MCP transport (Decision 3; Vision §8).
-- [ ] **1.2** Remove real-time collab (`collab.rs`, `--enable-collab`, the yjs route + bundle).
-- [ ] **1.3** Remove the Doorman proxy stubs (`/api/doorman/*`) — dead, no `WIKI_DOORMAN_URL` deploy.
-- [ ] **1.4** Delete the dead `templates/*.html` (engine renders via `maud`; unreferenced).
-- [ ] **1.5** Shrink `openapi.yaml` to the surviving public read routes (or drop — decide at edit time).
-- [ ] **1.6** One pass for the `AppState` field deletions + the ~20 test-fixture edits they ripple to (batch, not per-feature). Run the full test suite.
+- [x] **1.1** Remove the MCP redundant read tools (`search_topics`, `get_revision`, `list_backlinks`) — keep the MCP transport (Decision 3; Vision §8). [2026-05-22 totebox@claude-code — `bf35f38d`; transport + `create_topic`/`propose_edit`/`link_citation` retained]
+- [x] **1.2** Remove real-time collab (`collab.rs`, `--enable-collab`, the yjs route + bundle). [2026-05-22 totebox@claude-code — `3d9cd9ec`; also `cm-collab.bundle.js`, `entry-collab.js`, `futures-util`, axum `ws` feature; `io-util` made explicit on tokio]
+- [x] **1.3** Remove the Doorman proxy stubs (`/api/doorman/*`) — dead, no `WIKI_DOORMAN_URL` deploy. [2026-05-22 totebox@claude-code — `959f8e6f`; also `reqwest` dep]
+- [x] **1.4** Delete the dead `templates/*.html` (engine renders via `maud`; unreferenced). [2026-05-22 totebox@claude-code — `8f51ddfc`]
+- [x] **1.5** Shrink `openapi.yaml` to the surviving public read routes (or drop — decide at edit time). [2026-05-22 totebox@claude-code — DECISION: kept the spec, minimal-fix only — removed `/api/doorman/*` entries + `DoormanStubResponse` schema, corrected `/mcp` tools 6→3. A full shrink is deferred as its own task.]
+- [x] **1.6** One pass for the `AppState` field deletions + the ~20 test-fixture edits they ripple to (batch, not per-feature). Run the full test suite. [2026-05-22 totebox@claude-code — `collab`/`enable_collab` removed; 33 constructor sites (21 test files + 12 in-`server.rs` fixtures); full `cargo test` green]
+
+> **Phase 1 COMPLETE** 2026-05-22 — 4 commits on `main` (`8f51ddfc`, `959f8e6f`,
+> `bf35f38d`, `3d9cd9ec`). Compiles + full test suite passes. Commits are
+> unpromoted — Stage 6 pending (Command). **Out-of-scope finding:** the crate
+> was already not `cargo fmt`-clean (37-file reformat churn) and not
+> `clippy -D warnings`-clean (pre-existing lints in `feeds.rs`/`glossary.rs`/
+> `history.rs` etc., untouched by Phase 1) — surfaced as a separate
+> crate-hygiene item in `NEXT.md`, not bundled into the descope.
 
 ---
 
