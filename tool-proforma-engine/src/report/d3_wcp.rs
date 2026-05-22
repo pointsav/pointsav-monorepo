@@ -23,6 +23,22 @@ fn fmt_dollar(v: f64) -> String {
     }
 }
 
+fn fmt_smart(v: f64) -> String {
+    if v == 0.0 {
+        return "—".to_string();
+    }
+    let abs = v.abs();
+    if abs >= 1_000_000.0 {
+        let m = v / 1_000_000.0;
+        if m < 0.0 { format!("({:.2}M)", m.abs()) } else { format!("{:.2}M", m) }
+    } else if abs >= 1_000.0 {
+        let k = v / 1_000.0;
+        if k < 0.0 { format!("({:.1}K)", k.abs()) } else { format!("{:.1}K", k) }
+    } else {
+        if v < 0.0 { format!("(${:.0})", v.abs()) } else { format!("${:.0}", v) }
+    }
+}
+
 fn fmt_pct(v: f64) -> String {
     format!("{:.2}%", v * 100.0)
 }
@@ -42,6 +58,11 @@ fn yr_row_m(label: &str, vals: &[f64; 10]) -> String {
 
 fn yr_row_d(label: &str, vals: &[f64; 10]) -> String {
     let cells: Vec<String> = vals.iter().map(|&v| fmt_dollar(v)).collect();
+    format!("| {} | {} |\n", label, cells.join(" | "))
+}
+
+fn yr_row_smart(label: &str, vals: &[f64; 10]) -> String {
+    let cells: Vec<String> = vals.iter().map(|&v| fmt_smart(v)).collect();
     format!("| {} | {} |\n", label, cells.join(" | "))
 }
 
@@ -77,8 +98,8 @@ pub fn render(data: &WcpData) -> String {
     out.push_str(&yr_header());
     out.push_str(&separator());
     out.push_str(&yr_row_m("Gross Income", &data.income.gross_income));
-    out.push_str(&yr_row_m(&data.gna_label_1, &data.income.gna_nyc));
-    out.push_str(&yr_row_m(&data.gna_label_2, &data.income.gna_berlin));
+    out.push_str(&yr_row_smart(&data.gna_label_1, &data.income.gna_nyc));
+    out.push_str(&yr_row_smart(&data.gna_label_2, &data.income.gna_berlin));
     out.push_str(&yr_row_m(
         "Total Operating Expenses",
         &data.income.total_expenses,
