@@ -1,8 +1,8 @@
 //! Integration tests for Phase 6 Part A: slug normalisation + redirect hatnote.
 
+use std::path::PathBuf;
 use std::sync::Arc;
 use std::sync::Mutex;
-use std::path::PathBuf;
 
 use app_mediakit_knowledge::links::LinkGraph;
 use app_mediakit_knowledge::server::{router, AppState};
@@ -12,12 +12,9 @@ use axum::http::{Request, StatusCode};
 use tower::ServiceExt;
 
 async fn make_state(content_dir: &tempfile::TempDir, state_dir: &tempfile::TempDir) -> AppState {
-    let index = app_mediakit_knowledge::search::build_index(
-        content_dir.path(),
-        state_dir.path(),
-    )
-    .await
-    .unwrap();
+    let index = app_mediakit_knowledge::search::build_index(content_dir.path(), state_dir.path())
+        .await
+        .unwrap();
     let repo = app_mediakit_knowledge::git::open_or_init(content_dir.path()).unwrap();
     AppState {
         content_dir: content_dir.path().to_path_buf(),
@@ -25,7 +22,8 @@ async fn make_state(content_dir: &tempfile::TempDir, state_dir: &tempfile::TempD
         guide_dir_2: None,
         citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
         search: Arc::new(index),
-        git: Arc::new(Mutex::new(repo)),        site_title: "Test Wiki".to_string(),
+        git: Arc::new(Mutex::new(repo)),
+        site_title: "Test Wiki".to_string(),
         git_tenant: "pointsav".to_string(),
         mcp_enabled: false,
         glossary: Arc::new(app_mediakit_knowledge::glossary::Glossary::default()),
@@ -128,7 +126,9 @@ async fn redirected_from_hatnote_rendered() {
         .unwrap();
 
     assert_eq!(resp.status(), StatusCode::OK);
-    let body = axum::body::to_bytes(resp.into_body(), usize::MAX).await.unwrap();
+    let body = axum::body::to_bytes(resp.into_body(), usize::MAX)
+        .await
+        .unwrap();
     let html = std::str::from_utf8(&body).unwrap();
     assert!(
         html.contains("wiki-redirected-from"),
@@ -166,7 +166,9 @@ async fn wikilink_href_normalised_no_trailing_quote() {
         .unwrap();
 
     assert_eq!(resp.status(), StatusCode::OK);
-    let body = axum::body::to_bytes(resp.into_body(), usize::MAX).await.unwrap();
+    let body = axum::body::to_bytes(resp.into_body(), usize::MAX)
+        .await
+        .unwrap();
     let html = std::str::from_utf8(&body).unwrap();
     assert!(
         html.contains(r#"href="/wiki/some-topic""#),

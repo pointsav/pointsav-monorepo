@@ -14,7 +14,11 @@
 //! - `short_description`: one-sentence article summary; rendered as italic
 //!   subtitle below the H1 (Wikipedia Vector 2022 article-subtitle pattern)
 
-use comrak::{Arena, format_html, nodes::{NodeHtmlBlock, NodeValue}, parse_document, Options};
+use comrak::{
+    format_html,
+    nodes::{NodeHtmlBlock, NodeValue},
+    parse_document, Arena, Options,
+};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
@@ -189,11 +193,26 @@ pub fn render_html_raw(body_md: &str, content_dir: &std::path::Path) -> String {
             let data = node.data.borrow();
             if let NodeValue::CodeBlock(ref cb) = data.value {
                 if cb.info == "infobox" {
-                    render_infobox(&cb.literal).map(|html| NodeValue::HtmlBlock(NodeHtmlBlock { block_type: 6, literal: html }))
+                    render_infobox(&cb.literal).map(|html| {
+                        NodeValue::HtmlBlock(NodeHtmlBlock {
+                            block_type: 6,
+                            literal: html,
+                        })
+                    })
                 } else if cb.info == "navbox" {
-                    render_navbox(&cb.literal).map(|html| NodeValue::HtmlBlock(NodeHtmlBlock { block_type: 6, literal: html }))
+                    render_navbox(&cb.literal).map(|html| {
+                        NodeValue::HtmlBlock(NodeHtmlBlock {
+                            block_type: 6,
+                            literal: html,
+                        })
+                    })
                 } else if cb.info == "main" {
-                    render_main(&cb.literal).map(|html| NodeValue::HtmlBlock(NodeHtmlBlock { block_type: 6, literal: html }))
+                    render_main(&cb.literal).map(|html| {
+                        NodeValue::HtmlBlock(NodeHtmlBlock {
+                            block_type: 6,
+                            literal: html,
+                        })
+                    })
                 } else {
                     None
                 }
@@ -224,24 +243,40 @@ fn render_infobox(yaml: &str) -> Option<String> {
     let map: serde_yaml::Mapping = serde_yaml::from_str(yaml).ok()?;
 
     let get_str = |key: &str| -> Option<String> {
-        map.get(&serde_yaml::Value::String(key.to_string()))
-            .and_then(|v| if let serde_yaml::Value::String(s) = v { Some(s.clone()) } else { None })
+        map.get(serde_yaml::Value::String(key.to_string()))
+            .and_then(|v| {
+                if let serde_yaml::Value::String(s) = v {
+                    Some(s.clone())
+                } else {
+                    None
+                }
+            })
     };
-    let title         = get_str("title");
-    let image         = get_str("image");
+    let title = get_str("title");
+    let image = get_str("image");
     let image_caption = get_str("image_caption");
 
     let mut html = String::from("<table class=\"infobox\">\n");
     if let Some(ref t) = title {
-        html.push_str(&format!("<caption class=\"infobox-title\">{}</caption>\n", escape_html(t)));
+        html.push_str(&format!(
+            "<caption class=\"infobox-title\">{}</caption>\n",
+            escape_html(t)
+        ));
     }
     html.push_str("<tbody>\n");
     if let Some(ref img) = image {
         let alt = image_caption.as_deref().or(title.as_deref()).unwrap_or("");
         html.push_str("<tr><td colspan=\"2\" class=\"infobox-image\">");
-        html.push_str(&format!("<img src=\"{}\" alt=\"{}\">", escape_html(img), escape_html(alt)));
+        html.push_str(&format!(
+            "<img src=\"{}\" alt=\"{}\">",
+            escape_html(img),
+            escape_html(alt)
+        ));
         if let Some(ref cap) = image_caption {
-            html.push_str(&format!("<div class=\"infobox-caption\">{}</div>", escape_html(cap)));
+            html.push_str(&format!(
+                "<div class=\"infobox-caption\">{}</div>",
+                escape_html(cap)
+            ));
         }
         html.push_str("</td></tr>\n");
     }
@@ -249,9 +284,15 @@ fn render_infobox(yaml: &str) -> Option<String> {
     const RESERVED: &[&str] = &["title", "image", "image_caption"];
     for (k, v) in &map {
         let key = yaml_val_to_string(k);
-        if RESERVED.contains(&key.as_str()) { continue; }
+        if RESERVED.contains(&key.as_str()) {
+            continue;
+        }
         let val = yaml_val_to_string(v);
-        html.push_str(&format!("<tr><th>{}</th><td>{}</td></tr>\n", escape_html(&key), escape_html(&val)));
+        html.push_str(&format!(
+            "<tr><th>{}</th><td>{}</td></tr>\n",
+            escape_html(&key),
+            escape_html(&val)
+        ));
     }
     html.push_str("</tbody>\n</table>\n");
     Some(html)
@@ -271,7 +312,10 @@ fn render_infobox(yaml: &str) -> Option<String> {
 /// Returns None if the YAML fails to parse.
 fn render_navbox(yaml: &str) -> Option<String> {
     let val: serde_yaml::Value = serde_yaml::from_str(yaml).ok()?;
-    let title = val.get("title").and_then(|v| v.as_str()).unwrap_or("Navigation");
+    let title = val
+        .get("title")
+        .and_then(|v| v.as_str())
+        .unwrap_or("Navigation");
     let mut html = format!(
         "<div class=\"navbox\">\n<div class=\"navbox-title\">{}</div>\n<div class=\"navbox-content\">\n",
         escape_html(title)
@@ -284,7 +328,11 @@ fn render_navbox(yaml: &str) -> Option<String> {
                 for link in links {
                     let text = link.get("text").and_then(|t| t.as_str()).unwrap_or("");
                     let slug = link.get("slug").and_then(|s| s.as_str()).unwrap_or("");
-                    html.push_str(&format!("<li><a href=\"/wiki/{}\">{}</a></li>\n", escape_html(slug), escape_html(text)));
+                    html.push_str(&format!(
+                        "<li><a href=\"/wiki/{}\">{}</a></li>\n",
+                        escape_html(slug),
+                        escape_html(text)
+                    ));
                 }
             }
             html.push_str("</ul>\n</div>\n");
@@ -303,7 +351,9 @@ fn render_navbox(yaml: &str) -> Option<String> {
 /// Renders with `class="wiki-hatnote"` so it shares the existing hatnote styling.
 fn render_main(body: &str) -> Option<String> {
     let body = body.trim();
-    if body.is_empty() { return None; }
+    if body.is_empty() {
+        return None;
+    }
     let (slug, display) = if let Some(pipe) = body.find('|') {
         (body[..pipe].trim(), body[pipe + 1..].trim().to_string())
     } else {
@@ -338,7 +388,10 @@ fn yaml_val_to_string(v: &serde_yaml::Value) -> String {
 }
 
 fn escape_html(s: &str) -> String {
-    s.replace('&', "&amp;").replace('<', "&lt;").replace('>', "&gt;").replace('"', "&quot;")
+    s.replace('&', "&amp;")
+        .replace('<', "&lt;")
+        .replace('>', "&gt;")
+        .replace('"', "&quot;")
 }
 
 /// Walk rendered HTML and prefix any `href="slug" data-wikilink="true"` generated
@@ -348,7 +401,7 @@ fn inject_wiki_prefixes(html: &str, content_dir: &std::path::Path) -> String {
     // We split on the marker and reconstruct.
     let mut out = String::with_capacity(html.len() + 128);
     let mut rest = html;
-    
+
     while let Some(pos) = rest.find(" data-wikilink=\"true\">") {
         // Look backwards for the href="
         let before_marker = &rest[..pos];
@@ -371,14 +424,18 @@ fn inject_wiki_prefixes(html: &str, content_dir: &std::path::Path) -> String {
                 let norm_slug = decoded.trim().to_lowercase().replace(' ', "-");
 
                 let is_redlink = !content_dir.join(format!("{}.md", norm_slug)).exists();
-                let redlink_class = if is_redlink { " class=\"wiki-redlink\"" } else { "" };
+                let redlink_class = if is_redlink {
+                    " class=\"wiki-redlink\""
+                } else {
+                    ""
+                };
 
                 out.push_str(prefix);
                 out.push_str("/wiki/");
                 out.push_str(&norm_slug);
                 out.push_str("\" data-wikilink=\"true\"");
                 out.push_str(redlink_class);
-                out.push_str(">");
+                out.push('>');
             }
         } else {
             // Malformed, just copy
@@ -410,10 +467,10 @@ pub fn inject_edit_pencils(html: &str) -> String {
         let tag_start = rest
             .find("<h2")
             .into_iter()
-            .chain(rest.find("<h3").into_iter())
-            .chain(rest.find("<h4").into_iter())
-            .chain(rest.find("<h5").into_iter())
-            .chain(rest.find("<h6").into_iter())
+            .chain(rest.find("<h3"))
+            .chain(rest.find("<h4"))
+            .chain(rest.find("<h5"))
+            .chain(rest.find("<h6"))
             .min();
 
         match tag_start {
@@ -549,8 +606,14 @@ mod tests {
     #[test]
     fn renders_wikilinks() {
         let html = render_html("see [[Other Page]] for context", std::path::Path::new("."));
-        assert!(html.contains("Other Page"), "wikilink text should be in output: {html}");
-        assert!(html.contains("href"), "wikilink should produce an anchor: {html}");
+        assert!(
+            html.contains("Other Page"),
+            "wikilink text should be in output: {html}"
+        );
+        assert!(
+            html.contains("href"),
+            "wikilink should produce an anchor: {html}"
+        );
     }
 
     #[test]
@@ -587,7 +650,12 @@ mod tests {
         let md = "## Alpha\n\ntext\n\n### Beta\n\nmore\n";
         let raw = render_html_raw(md, std::path::Path::new("."));
         let headings = extract_headings(&raw);
-        assert_eq!(headings.len(), 2, "should extract 2 headings: {:?}", headings);
+        assert_eq!(
+            headings.len(),
+            2,
+            "should extract 2 headings: {:?}",
+            headings
+        );
         assert_eq!(headings[0].1, "Alpha");
         assert_eq!(headings[0].2, 2);
         assert_eq!(headings[1].1, "Beta");
