@@ -64,11 +64,7 @@ pub async fn handler(
 
 // ─── Method dispatch ────────────────────────────────────────────────────────
 
-async fn dispatch(
-    state: &AppState,
-    method: &str,
-    params: &Value,
-) -> Result<Value, (i32, String)> {
+async fn dispatch(state: &AppState, method: &str, params: &Value) -> Result<Value, (i32, String)> {
     match method {
         "initialize" => initialize(params),
         "initialized" | "notifications/initialized" => Ok(Value::Null),
@@ -188,10 +184,7 @@ fn tool_propose_edit(args: &Value) -> Result<String, (i32, String)> {
     ))
 }
 
-async fn tool_link_citation(
-    state: &AppState,
-    args: &Value,
-) -> Result<String, (i32, String)> {
+async fn tool_link_citation(state: &AppState, args: &Value) -> Result<String, (i32, String)> {
     let query = args
         .get("query")
         .and_then(|v| v.as_str())
@@ -203,20 +196,15 @@ async fn tool_link_citation(
     let matches: Vec<Value> = entries
         .iter()
         .filter(|c| {
-            c.id.to_lowercase().contains(&q_lower)
-                || c.title.to_lowercase().contains(&q_lower)
+            c.id.to_lowercase().contains(&q_lower) || c.title.to_lowercase().contains(&q_lower)
         })
         .take(10)
-        .map(|c| {
-            json!({ "id": c.id, "title": c.title, "url": c.url })
-        })
+        .map(|c| json!({ "id": c.id, "title": c.title, "url": c.url }))
         .collect();
-    Ok(
-        serde_json::to_string_pretty(
-            &json!({ "query": query, "count": matches.len(), "matches": matches }),
-        )
-        .unwrap(),
+    Ok(serde_json::to_string_pretty(
+        &json!({ "query": query, "count": matches.len(), "matches": matches }),
     )
+    .unwrap())
 }
 
 // ─── resources/list ─────────────────────────────────────────────────────────
