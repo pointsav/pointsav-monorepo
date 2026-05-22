@@ -213,42 +213,6 @@ paths:
                 items:
                   type: object
 
-  /api/doorman/complete:
-    post:
-      tags: [phase-2]
-      summary: Doorman completion (stub until Phase 4 wires WIKI_DOORMAN_URL)
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-      responses:
-        "501":
-          description: Not implemented — set WIKI_DOORMAN_URL to enable
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/DoormanStubResponse"
-
-  /api/doorman/instruct:
-    post:
-      tags: [phase-2]
-      summary: Doorman instruction (stub until Phase 4 wires WIKI_DOORMAN_URL)
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-      responses:
-        "501":
-          description: Not implemented — set WIKI_DOORMAN_URL to enable
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/DoormanStubResponse"
-
   /feed.atom:
     get:
       tags: [phase-3]
@@ -735,16 +699,3 @@ components:
           type: string
         data: {}
       required: [code, message]
-
-    DoormanStubResponse:
-      type: object
-      properties:
-        error:
-          type: string
-        hint:
-          type: string
-        phase:
-          type: integer
-        reason:
-          type: string
-      required: [error, phase, reason]
