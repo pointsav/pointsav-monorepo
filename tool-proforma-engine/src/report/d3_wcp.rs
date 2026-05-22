@@ -101,7 +101,7 @@ pub fn render(data: &WcpData) -> String {
         &data.book.cumulative_fcf_wci,
     ));
     out.push_str(&yr_row_m(
-        "10% Ownership in Woodfine LPs",
+        "10% Ownership in Direct-Hold Solution",
         &data.book.beneficial_ownership_lps,
     ));
     out.push_str(&yr_row_m("**Book Value**", &data.book.book_value));
@@ -111,24 +111,25 @@ pub fn render(data: &WcpData) -> String {
     ));
 
     // ── Page 2: Revenue Generator ─────────────────────────────────────────────
-    out.push_str("\n\n---\n\n## Revenue Generator — LP Fund Cash Flow Timeline\n\n");
-    out.push_str("Shows when each fund enters cash flow (first non-zero distribution year).\n\n");
+    out.push_str("\n\n---\n\n## Revenue Generator — Direct-Hold Solutions Cash Flow Timeline\n\n");
+    out.push_str("Shows when each direct-hold solution enters cash flow (first non-zero distribution year).\n\n");
+
+    const LP_SHORT_NAMES: [&str; 6] = [
+        "Professional Centres Canada LP",
+        "Professional Centres United States LP",
+        "Professional Centres Spain SOCIMI",
+        "Professional Centres Mexico FIBRA",
+        "Vertical Warehouse LP",
+        "Parking Structure LP",
+    ];
 
     out.push_str(&yr_header());
     out.push_str(&separator());
-    for lp in &data.lps {
-        // Advisory fee
-        out.push_str(&yr_row_m(
-            &format!("{} — Advisory Fee", lp.name),
-            &lp.advisory_fee,
-        ));
-        // Distributions
-        out.push_str(&yr_row_m(
-            &format!("{} — Distributions", lp.name),
-            &lp.distributions,
-        ));
-        // NAV
-        out.push_str(&yr_row_m(&format!("{} — NAV", lp.name), &lp.nav));
+    for (i, lp) in data.lps.iter().enumerate() {
+        let label = LP_SHORT_NAMES.get(i).copied().unwrap_or(lp.name.as_str());
+        out.push_str(&yr_row_m(&format!("{label} — Advisory Fee"), &lp.advisory_fee));
+        out.push_str(&yr_row_m(&format!("{label} — Distributions"), &lp.distributions));
+        out.push_str(&yr_row_m(&format!("{label} — NAV"), &lp.nav));
     }
 
     // ── Page 3: Valuation Matrix ──────────────────────────────────────────────
