@@ -682,6 +682,8 @@
     const RETAIL_ZOOM_THRESHOLD = 9;
     // Pre-warm threshold: mount layer1 invisibly 2 levels before retail to eliminate paint stall
     const RETAIL_PREFETCH_ZOOM = 7;
+    // Sim test bed: hysteresis floor — rings persist on zoom-out down to this zoom
+    const SIM_BUBBLE_ZOOM = 6;
     let activeChainFilter = null;
     let dropdownFocusIdx  = -1;
     // In-memory cluster data for ring generation and BentoBox fallback (loaded at startup)
@@ -693,6 +695,13 @@
     let catchmentSubLayer  = 'pop';  // 'pop' | 'spend' | 'rank'
     let catchmentReach     = 'home'; // 'home' | 'work' (work = planned)
     let catchmentCentroidCache = {}; // cluster_id → GeoJSON FeatureCollection
+
+    // ── Alberta co-location test bed — Centre / Bubble / Ring model (S0) ─────
+    let simActive      = false;
+    let simGeoJSON     = null;
+    let simNewFeatures = [];           // DBSCAN co-locations, each tagged .sim_idx
+    const simView      = { mode: 'GLOBAL' }; // GLOBAL = bubbles · LOCAL = rings
+    let simSelected    = null;         // the inspected co-location feature, or null
 
     const map = new maplibregl.Map({
         container: 'map',
@@ -1129,16 +1138,12 @@
                 <button class="lc-btn lc-active" id="lc-clusters" onclick="toggleLayer('nodes', this)">
                     <span class="lc-dot" style="background:#0A3070"></span>Co-location Clusters
                 </button>
-
-                <button class="lc-btn" id="lc-locations" onclick="toggleLayer('all-locations', this)">
-                    <span class="lc-dot" style="background:var(--text-muted)"></span>All Locations
-                </button>
                 <div class="lc-btn lc-disabled">
                     <span class="lc-dot" style="background:#e5e7eb"></span>Catchment Areas
                     <span class="lc-planned">Planned</span>
                 </div>
                 <button class="lc-btn" id="lc-sim-ab" onclick="toggleSimLayer(this)" style="display:none">
-                    <span class="lc-dot" style="background:linear-gradient(135deg,#b45309 50%,#22C55E 50%)"></span>DBSCAN Sim (AB)
+                    <span class="lc-dot" style="background:linear-gradient(135deg,#164679 50%,#54924E 50%)"></span>Co-location Model · AB test
                 </button>
             </div>
             <div style="padding:16px 0 4px;text-align:center;font-size:11px;color:var(--text-muted);font-style:italic;">
@@ -1398,25 +1403,87 @@
         btn.classList.toggle('lc-active', newVis === 'visible');
     }
 
-    function toggleSimLayer(btn) {
-        const on = !btn.classList.contains('lc-active');
-        ['sim-ab-old', 'sim-ab-new', 'sim-ab-labels'].forEach(id => {
+    // ── Alberta test bed — single visibility authority for the sim surface ───
+    // No centre dot — the co-location mid-point is theoretical; a dot there is
+    // mistaken for a real retailer. The faint sim-ring-fill carries the click.
+    const SIM_RING_LAYERS   = ['sim-ring-fill', 'sim-ring-t234', 'sim-ring-t1', 'sim-ab-labels'];
+    const SIM_DETAIL_LAYERS = ['sim-vignette', 'sim-150km-line', 'sim-35km-fill', 'sim-35km-line', 'sim-member-dots'];
+
+    // Build one co-location ring polygon per DBSCAN cluster (1 km T1 · 3 km T2+).
+    function buildSimRings() {
+        if (!map.getSource('sim-rings-src') || !simNewFeatures.length) return;
+        const rings = simNewFeatures.map(f => {
+            const [lon, lat] = f.geometry.coordinates;
+            const km = f.properties.tier === 1 ? 1 : 3;
+            const c = makeCircleGeoJSON([lon, lat], km).features[0];
+            c.properties = { tier: f.properties.tier, radius_km: km, sim_idx: f.properties.sim_idx };
+            return c;
+        });
+        map.getSource('sim-rings-src').setData({ type: 'FeatureCollection', features: rings });
+    }
+
+    // Derive every sim layer's visibility from (simActive, simView.mode). The only writer.
+    function applySimView() {
+        const setVis = (ids, on) => ids.forEach(id => {
             if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', on ? 'visible' : 'none');
         });
-        // Suppress production proximity rings while sim is active — they represent the old
-        // anchor-pin method and would obscure the new DBSCAN rings underneath
-        const proximityLayers = ['proximity-fill', 'proximity-line', 'proximity-merged-label'];
-        if (on) {
-            proximityLayers.forEach(id => { if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', 'none'); });
-        } else {
-            // Restore only if still in retail level (cluster selected)
-            if (selectedClusterId) {
-                proximityLayers.forEach(id => { if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', 'visible'); });
-            }
-        }
-        if (!on) clearSimDetail();
-        btn.classList.toggle('lc-active', on);
+        const local = simView.mode === 'LOCAL';
+        setVis(['sim-ab-new'], simActive && !local);   // tier bubbles — global zoom
+        setVis(SIM_RING_LAYERS, simActive && local);   // rings + centre dot + labels — local zoom
+        setVis(SIM_DETAIL_LAYERS, simActive && local && !!simSelected); // selected-cluster context
     }
+
+    // Sim test-bed overview panel — entry point + tier legend + exit control.
+    function showSimPanel() {
+        simSelected = null;
+        applySimView();
+        const tc = { 1: 0, 2: 0, 3: 0, 4: 0 };
+        simNewFeatures.forEach(f => { tc[f.properties.tier] = (tc[f.properties.tier] || 0) + 1; });
+        document.getElementById('inspector').innerHTML = `
+            <div class="data-block">
+                <div class="data-label">Co-location Model · Alberta test</div>
+                <div style="font-size:11px;color:var(--text-muted);margin-top:6px;line-height:1.55;">
+                    ${simNewFeatures.length} DBSCAN co-locations. Zoom out for tier bubbles; zoom in past z9
+                    for trade-area rings centred on the co-location mid-point. Click any to inspect.</div>
+            </div>
+            <div class="data-block">
+                <div class="data-label">Tiers</div>
+                <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;">
+                    <span class="tier-badge" style="background:#164679;color:#fff;font-size:12px;">Regional&nbsp;${tc[1]}</span>
+                    <span class="tier-badge" style="background:#54924E;color:#fff;font-size:12px;">District&nbsp;${tc[2]}</span>
+                    <span class="tier-badge" style="background:#EAB308;color:#111827;font-size:12px;">Local&nbsp;${tc[3]}</span>
+                </div>
+            </div>
+            <button class="back-btn" style="margin-top:14px;" onclick="exitSimTestBed()">← Exit test bed</button>`;
+    }
+
+    function enterSimTestBed() {
+        simActive = true;
+        // Hide every production layer; the sim surface owns the screen
+        ['nodes', 'nodes-halo', 'nodes-label', 'all-locations',
+         'proximity-fill', 'proximity-line', 'proximity-merged-label']
+            .forEach(id => { if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', 'none'); });
+        buildSimRings();
+        simView.mode = map.getZoom() >= RETAIL_ZOOM_THRESHOLD ? 'LOCAL' : 'GLOBAL';
+        simSelected = null;
+        applySimView();
+        showSimPanel();
+    }
+
+    function exitSimTestBed() {
+        simActive = false;
+        simSelected = null;
+        applySimView();   // hides all sim layers
+        ['sim-detail-ring-src', 'sim-detail-dot-src', 'sim-detail-vignette-src'].forEach(s => {
+            if (map.getSource(s)) map.getSource(s).setData({ type: 'FeatureCollection', features: [] });
+        });
+        showOverview();   // restores production layers + rebuilds the bento
+        const b = document.getElementById('lc-sim-ab');
+        if (b) b.style.display = '';   // showOverview re-creates it hidden
+    }
+
+    // Bento button entry point — the button only exists while the test bed is off
+    function toggleSimLayer() { enterSimTestBed(); }
 
     // ── Adaptive zoom helper (Item 5) ────────────────────────────────
     function computeAdaptiveMaxZoom(allLons, allLats) {
@@ -2053,183 +2120,150 @@
             },
         }, 'proximity-fill');
 
-        // ── DBSCAN simulation overlay (Alberta) ─────────────────────────────────
+        // ── Alberta co-location test bed — Centre / Bubble / Ring model (S0) ─────
         fetch('data/sim-ab-dbscan.geojson')
             .then(r => r.ok ? r.json() : null)
             .then(gj => {
                 if (!gj) return;
+                simGeoJSON = gj;
+                simNewFeatures = gj.features
+                    .filter(f => f.properties.kind === 'new')
+                    .map((f, i) => { f.properties.sim_idx = i; return f; });
                 map.addSource('sim-ab-src', { type: 'geojson', data: gj });
-                // OLD: amber semi-transparent circles at anchor pins
-                map.addLayer({
-                    id: 'sim-ab-old', type: 'circle',
-                    source: 'sim-ab-src',
-                    filter: ['==', ['get', 'kind'], 'old'],
-                    layout: { visibility: 'none' },
-                    paint: {
-                        'circle-radius': ['interpolate', ['linear'], ['zoom'], 6, 5, 12, 12],
-                        'circle-color': '#b45309',
-                        'circle-opacity': 0.40,
-                        'circle-stroke-width': 1.5,
-                        'circle-stroke-color': '#78350f',
-                        'circle-stroke-opacity': 0.55,
-                    },
-                });
-                // NEW: coloured circles at DBSCAN centroids (green=upgraded, slate=same, rose=down, violet=new)
-                map.addLayer({
-                    id: 'sim-ab-new', type: 'circle',
-                    source: 'sim-ab-src',
-                    filter: ['==', ['get', 'kind'], 'new'],
-                    layout: { visibility: 'none' },
-                    paint: {
-                        'circle-radius': ['interpolate', ['linear'], ['zoom'], 6, 8, 12, 18],
-                        'circle-color': ['get', 'colour'],
-                        'circle-opacity': 0.85,
-                        'circle-stroke-width': 1.5,
-                        'circle-stroke-color': '#0b1220',
-                        'circle-stroke-opacity': 1.0,
-                    },
-                });
-                // Tier label on new clusters at zoom ≥ 9
-                map.addLayer({
-                    id: 'sim-ab-labels', type: 'symbol',
-                    source: 'sim-ab-src',
-                    filter: ['==', ['get', 'kind'], 'new'],
-                    minzoom: 9,
-                    layout: {
-                        visibility: 'none',
-                        'text-field': ['concat', 'T', ['to-string', ['get', 'tier']]],
-                        'text-size': 10,
-                        'text-offset': [0, -2.2],
-                        'text-anchor': 'bottom',
-                        'text-font': ['Noto Sans Regular'],
-                    },
-                    paint: { 'text-color': '#e2e8f0', 'text-halo-color': '#0b1220', 'text-halo-width': 1.5 },
-                });
 
-                // ── Detail overlay: three rings + member store dots (shown on NEW cluster click) ──
+                // Tier palette (V3 tier → colour): 1 Regional · 2 District · 3 Local · 4 Fringe
+                const SIM_TIER_COLOR = ['match', ['get', 'tier'],
+                    1, '#164679', 2, '#54924E', 3, '#EAB308', '#991B1B'];
+
                 const _empty = { type: 'FeatureCollection', features: [] };
+                map.addSource('sim-rings-src',          { type: 'geojson', data: _empty });
                 map.addSource('sim-detail-ring-src',    { type: 'geojson', data: _empty });
                 map.addSource('sim-detail-dot-src',     { type: 'geojson', data: _empty });
                 map.addSource('sim-detail-vignette-src',{ type: 'geojson', data: _empty });
 
-                // Data-horizon vignette mask — dims world outside 150km (D2: opacity 0.22)
+                // Layers added bottom-to-top (add order = stacking order).
+
+                // Data-horizon vignette — dims the world outside 150 km of the selected centre
                 map.addLayer({ id: 'sim-vignette', type: 'fill', source: 'sim-detail-vignette-src',
                     layout: { visibility: 'none' },
-                    paint: { 'fill-color': '#0b1220', 'fill-opacity': 0.22 },
-                }, 'sim-ab-old');
-
-                // Layers inserted *before* sim-ab-old so they render beneath cluster dots
-                map.addLayer({ id: 'sim-150km-line',  type: 'line',   source: 'sim-detail-ring-src',
+                    paint: { 'fill-color': '#0b1220', 'fill-opacity': 0.22 } });
+                // Selected-cluster catchment context — 150 km / 35 km
+                map.addLayer({ id: 'sim-150km-line', type: 'line', source: 'sim-detail-ring-src',
                     filter: ['==', ['get', 'ring_type'], '150km'], layout: { visibility: 'none' },
-                    paint: { 'line-color': '#64748B', 'line-width': 1, 'line-opacity': 0.5, 'line-dasharray': [6, 4] },
-                }, 'sim-ab-old');
-                map.addLayer({ id: 'sim-35km-fill',   type: 'fill',   source: 'sim-detail-ring-src',
+                    paint: { 'line-color': '#64748B', 'line-width': 1, 'line-opacity': 0.5, 'line-dasharray': [6, 4] } });
+                map.addLayer({ id: 'sim-35km-fill', type: 'fill', source: 'sim-detail-ring-src',
                     filter: ['==', ['get', 'ring_type'], '35km'], layout: { visibility: 'none' },
-                    paint: { 'fill-color': '#f97316', 'fill-opacity': 0.08 },
-                }, 'sim-ab-old');
-                map.addLayer({ id: 'sim-35km-line',   type: 'line',   source: 'sim-detail-ring-src',
+                    paint: { 'fill-color': '#f97316', 'fill-opacity': 0.08 } });
+                map.addLayer({ id: 'sim-35km-line', type: 'line', source: 'sim-detail-ring-src',
                     filter: ['==', ['get', 'ring_type'], '35km'], layout: { visibility: 'none' },
-                    paint: { 'line-color': '#c2410c', 'line-width': 1.5, 'line-opacity': 0.85, 'line-dasharray': [6, 4] },
-                }, 'sim-ab-old');
-                map.addLayer({ id: 'sim-co-fill',     type: 'fill',   source: 'sim-detail-ring-src',
-                    filter: ['==', ['get', 'ring_type'], 'co_loc'], layout: { visibility: 'none' },
-                    paint: { 'fill-color': '#164679', 'fill-opacity': 0.05 },
-                }, 'sim-ab-old');
-                map.addLayer({ id: 'sim-co-line-t23', type: 'line',   source: 'sim-detail-ring-src',
-                    filter: ['all', ['==', ['get', 'ring_type'], 'co_loc'], ['!=', ['get', 'tier'], 1]],
+                    paint: { 'line-color': '#c2410c', 'line-width': 1.5, 'line-opacity': 0.85, 'line-dasharray': [6, 4] } });
+
+                // LOCAL ZOOM — one co-location ring per cluster, centred on the mid-point
+                map.addLayer({ id: 'sim-ring-fill', type: 'fill', source: 'sim-rings-src',
                     layout: { visibility: 'none' },
-                    paint: { 'line-color': '#164679', 'line-width': 1.5, 'line-opacity': 0.65, 'line-dasharray': [3, 2] },
-                }, 'sim-ab-old');
-                map.addLayer({ id: 'sim-co-line-t1',  type: 'line',   source: 'sim-detail-ring-src',
-                    filter: ['all', ['==', ['get', 'ring_type'], 'co_loc'], ['==', ['get', 'tier'], 1]],
-                    layout: { visibility: 'none' },
-                    paint: { 'line-color': '#164679', 'line-width': 2.5, 'line-opacity': 0.90 },
-                }, 'sim-ab-old');
+                    paint: { 'fill-color': SIM_TIER_COLOR, 'fill-opacity': 0.06 } });
+                // T2/T3/T4 — 3 km loose ring, dashed, colour by tier
+                map.addLayer({ id: 'sim-ring-t234', type: 'line', source: 'sim-rings-src',
+                    filter: ['!=', ['get', 'tier'], 1], layout: { visibility: 'none' },
+                    paint: { 'line-color': SIM_TIER_COLOR, 'line-width': 1.5, 'line-opacity': 0.8, 'line-dasharray': [3, 2] } });
+                // T1 — 1 km tight ring, solid navy
+                map.addLayer({ id: 'sim-ring-t1', type: 'line', source: 'sim-rings-src',
+                    filter: ['==', ['get', 'tier'], 1], layout: { visibility: 'none' },
+                    paint: { 'line-color': '#164679', 'line-width': 2.5, 'line-opacity': 0.95 } });
+                // Selected-cluster member store dots
                 map.addLayer({ id: 'sim-member-dots', type: 'circle', source: 'sim-detail-dot-src',
                     layout: { visibility: 'none' },
                     paint: {
                         'circle-radius': ['interpolate', ['linear'], ['zoom'], 8, 4, 12, 7, 14, 10],
                         'circle-color': ['match', ['get', 'cls'],
                             'hypermarket', '#EAB308', 'hardware', '#B54708',
-                            'warehouse',   '#0E7490', 'lifestyle', '#A21CAF', '#94A3B8'],
+                            'warehouse', '#0E7490', 'lifestyle', '#A21CAF', '#94A3B8'],
                         'circle-stroke-width': 1.5,
-                        'circle-stroke-color': ['match', ['get', 'cls'],
-                            'hypermarket', '#111827', '#FFFFFF'],
-                        'circle-opacity': 1.0,
-                    },
-                }, 'sim-ab-old');
+                        'circle-stroke-color': ['match', ['get', 'cls'], 'hypermarket', '#111827', '#FFFFFF'],
+                        'circle-opacity': 1.0 } });
 
-                // Click → inspector panel (no popup)
-                const DELTA_COLORS = { upgraded:'#22C55E', new:'#A855F7', downgraded:'#F43F5E', unchanged:'#94A3B8' };
-                ['sim-ab-new', 'sim-ab-old'].forEach(layerId => {
-                    map.on('click', layerId, e => {
-                        const feat = e.features[0];
-                        const p = feat.properties;
-                        if (p.kind === 'new') {
-                            showSimDetail(feat);
-                            const deltaColor = DELTA_COLORS[p.delta] || '#94A3B8';
-                            document.getElementById('inspector').innerHTML = `
-                                <div style="padding:0;">
-                                    <div class="data-label" style="margin-bottom:8px;">Sim · New DBSCAN Cluster</div>
-                                    <div class="data-value" style="font-size:18px;color:var(--brand-primary);">${escapeHtml(p.tier_label || 'T' + p.tier)}</div>
-                                    <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">T${p.tier} · ${escapeHtml(p.prox || '')}</div>
-                                    <div class="data-block" style="margin-top:12px;">
-                                        <div class="data-label">Chains</div>
-                                        <div style="font-size:12px;margin-top:2px;">${escapeHtml(p.chains || '')}</div>
-                                    </div>
-                                    <div class="data-block">
-                                        <div class="data-label">Delta</div>
-                                        <div style="font-weight:700;color:${deltaColor};margin-top:2px;">${escapeHtml(p.delta || '')}${p.old_tier ? ` (was T${p.old_tier})` : ''}</div>
-                                        ${p.shift_km ? `<div style="font-size:10px;color:var(--text-muted);margin-top:3px;">Centre shift: ${p.shift_km} km</div>` : ''}
-                                    </div>
-                                    <div style="font-size:10px;color:var(--text-muted);margin-top:4px;font-style:italic;">DBSCAN centroid · simulation only</div>
-                                    <button class="back-btn" style="margin-top:14px;" onclick="showOverview()">← Back to Overview</button>
-                                </div>`;
-                        } else {
-                            clearSimDetail();
-                            document.getElementById('inspector').innerHTML = `
-                                <div style="padding:0;">
-                                    <div class="data-label" style="margin-bottom:8px;">Sim · Current Cluster</div>
-                                    <div class="data-value" style="font-size:18px;color:var(--brand-primary);">T${p.tier} · ${escapeHtml(p.anchor || '')}</div>
-                                    <div class="data-block" style="margin-top:12px;">
-                                        <div class="data-label">Chains</div>
-                                        <div style="font-size:12px;margin-top:2px;">${escapeHtml(p.chains || '')}</div>
-                                    </div>
-                                    <div style="font-size:10px;color:var(--text-muted);margin-top:4px;font-style:italic;">Current anchor-pin cluster</div>
-                                    <button class="back-btn" style="margin-top:14px;" onclick="showOverview()">← Back to Overview</button>
-                                </div>`;
-                        }
-                        e.stopPropagation();
-                    });
-                    map.on('mouseenter', layerId, () => { map.getCanvas().style.cursor = 'pointer'; });
-                    map.on('mouseleave', layerId, () => { map.getCanvas().style.cursor = '';         });
+                // GLOBAL ZOOM — co-locations as tier bubbles at the DBSCAN mid-point
+                map.addLayer({ id: 'sim-ab-new', type: 'circle', source: 'sim-ab-src',
+                    filter: ['==', ['get', 'kind'], 'new'], layout: { visibility: 'none' },
+                    paint: {
+                        'circle-radius': ['interpolate', ['linear'], ['zoom'],
+                            3, ['match', ['get', 'tier'], 1, 7, 2, 5, 3, 4, 4],
+                            8, ['match', ['get', 'tier'], 1, 15, 2, 11, 3, 8, 7]],
+                        'circle-color': SIM_TIER_COLOR,
+                        'circle-opacity': 0.85,
+                        'circle-stroke-width': 1.5, 'circle-stroke-color': '#0b1220',
+                        'circle-stroke-opacity': 0.9 } });
+                // Tier label — sits with the ring/centre at local zoom
+                map.addLayer({ id: 'sim-ab-labels', type: 'symbol', source: 'sim-ab-src',
+                    filter: ['==', ['get', 'kind'], 'new'], layout: {
+                        visibility: 'none',
+                        'text-field': ['concat', 'T', ['to-string', ['get', 'tier']]],
+                        'text-size': 10, 'text-offset': [0, -1.6], 'text-anchor': 'bottom',
+                        'text-font': ['Noto Sans Regular'] },
+                    paint: { 'text-color': '#0b1220', 'text-halo-color': '#ffffff', 'text-halo-width': 1.5 } });
+
+                // ── Click → inspector (bubble at global zoom, ring at local zoom) ──
+                const openSimCluster = (feat, drill) => {
+                    const p = feat.properties;
+                    const [lon, lat] = feat.geometry.coordinates;
+                    simSelected = feat;
+                    setSimDetailData(feat);
+                    applySimView();
+                    document.getElementById('inspector').innerHTML = `
+                        <div style="padding:0;">
+                            <div class="data-label" style="margin-bottom:8px;">Co-location · DBSCAN (Alberta test)</div>
+                            <div class="data-value" style="font-size:18px;color:var(--brand-primary);">${escapeHtml(p.tier_label || ('T' + p.tier))}</div>
+                            <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">Tier ${p.tier} · ${escapeHtml(p.prox || '')} · ring ${p.tier === 1 ? '1' : '3'} km</div>
+                            <div class="data-block" style="margin-top:12px;">
+                                <div class="data-label">Chains (${p.n_chains || '—'})</div>
+                                <div style="font-size:12px;margin-top:2px;">${escapeHtml(p.chains || '')}</div>
+                            </div>
+                            <div class="data-block">
+                                <div class="data-label">Members</div>
+                                <div style="font-size:12px;margin-top:2px;">${p.member_count || '—'} stores · ${escapeHtml(p.classes || '')}</div>
+                            </div>
+                            <div class="data-block">
+                                <div class="data-label">Compactness</div>
+                                <div style="font-size:12px;margin-top:2px;">span ${p.span_km ?? '—'} km · ${p.tight_intact ? 'tight (≤1 km)' : 'loose'} · distance-rank ${p.dist_pctile ?? '—'}%ile in T${p.tier}</div>
+                            </div>
+                            <div style="font-size:10px;color:var(--text-muted);margin-top:6px;font-style:italic;">Centre = co-location mid-point · simulation only</div>
+                            <button class="back-btn" style="margin-top:14px;" onclick="showSimPanel()">← Co-locations</button>
+                        </div>`;
+                    if (drill) map.flyTo({ center: [lon, lat],
+                        zoom: Math.max(map.getZoom(), p.tier === 1 ? 15 : 14),
+                        duration: 900, essential: true });
+                };
+                map.on('click', 'sim-ab-new', e => { openSimCluster(e.features[0], true); e.stopPropagation(); });
+                map.on('click', 'sim-ring-fill', e => {
+                    const feat = simNewFeatures[e.features[0].properties.sim_idx];
+                    if (feat) openSimCluster(feat, false);
+                    e.stopPropagation();
                 });
-                const btn = document.getElementById('lc-sim-ab');
-                if (btn) btn.style.display = '';
+                ['sim-ab-new', 'sim-ring-fill'].forEach(layerId => {
+                    map.on('mouseenter', layerId, () => { map.getCanvas().style.cursor = 'pointer'; });
+                    map.on('mouseleave', layerId, () => { map.getCanvas().style.cursor = ''; });
+                });
+
+                const simBtn = document.getElementById('lc-sim-ab');
+                if (simBtn) simBtn.style.display = '';
             })
             .catch(() => {});
 
-        const SIM_DETAIL_LAYERS = ['sim-vignette','sim-150km-line','sim-35km-fill','sim-35km-line','sim-co-fill','sim-co-line-t23','sim-co-line-t1','sim-member-dots'];
-
-        function showSimDetail(feature) {
+        // Feed the selected-cluster detail sources (35 km / 150 km context + member dots).
+        // Visibility is owned by applySimView — this only sets data.
+        function setSimDetailData(feature) {
             const p = feature.properties;
             const [lon, lat] = feature.geometry.coordinates;
-            const coKm = p.tier === 1 ? 1 : 3;
-            const co   = makeCircleGeoJSON([lon, lat], coKm).features[0];
-            const r35  = makeCircleGeoJSON([lon, lat], 35  ).features[0];
-            const r150 = makeCircleGeoJSON([lon, lat], 150 ).features[0];
-            co.properties   = { ring_type: 'co_loc', tier: p.tier };
+            const r35  = makeCircleGeoJSON([lon, lat], 35 ).features[0];
+            const r150 = makeCircleGeoJSON([lon, lat], 150).features[0];
             r35.properties  = { ring_type: '35km' };
             r150.properties = { ring_type: '150km' };
-            map.getSource('sim-detail-ring-src').setData({ type: 'FeatureCollection', features: [co, r35, r150] });
-
-            // Vignette: world minus 150km circle
+            map.getSource('sim-detail-ring-src').setData({ type: 'FeatureCollection', features: [r35, r150] });
             if (map.getSource('sim-detail-vignette-src')) {
                 map.getSource('sim-detail-vignette-src').setData(makeMaskGeoJSON([lon, lat], 150));
             }
-
             let members = [];
-            try { members = typeof p.members_detail === 'string' ? JSON.parse(p.members_detail) : (p.members_detail || []); } catch(e) {}
+            try { members = typeof p.members_detail === 'string' ? JSON.parse(p.members_detail) : (p.members_detail || []); } catch (e) {}
             map.getSource('sim-detail-dot-src').setData({
                 type: 'FeatureCollection',
                 features: members.map(m => ({
@@ -2237,15 +2271,6 @@
                     properties: { chain: m.chain, cls: m.cls },
                 })),
             });
-            SIM_DETAIL_LAYERS.forEach(id => { if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', 'visible'); });
-        }
-
-        function clearSimDetail() {
-            const empty = { type: 'FeatureCollection', features: [] };
-            if (map.getSource('sim-detail-ring-src'))     map.getSource('sim-detail-ring-src').setData(empty);
-            if (map.getSource('sim-detail-dot-src'))      map.getSource('sim-detail-dot-src').setData(empty);
-            if (map.getSource('sim-detail-vignette-src')) map.getSource('sim-detail-vignette-src').setData(empty);
-            SIM_DETAIL_LAYERS.forEach(id => { if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', 'none'); });
         }
 
         // ── Merged-ring panel: list constituent clusters for user to select one ──
@@ -2398,6 +2423,17 @@
         // Retail Level → Co-location Level only via explicit Back button (never auto-revert)
         map.on('zoomend', () => {
             const z = map.getZoom();
+            // Alberta test bed owns the zoom transition while active. Hysteresis:
+            // rings appear at the retail threshold and PERSIST on zoom-out down to
+            // SIM_BUBBLE_ZOOM — a modest zoom-out never drops you back to bubbles.
+            if (simActive) {
+                let mode = simView.mode;
+                if (z >= RETAIL_ZOOM_THRESHOLD)  mode = 'LOCAL';
+                else if (z < SIM_BUBBLE_ZOOM)    mode = 'GLOBAL';
+                // between SIM_BUBBLE_ZOOM and the threshold: keep current mode
+                if (mode !== simView.mode) { simView.mode = mode; applySimView(); }
+                return;
+            }
             // Zoom out below Retail threshold → revert to Co-location Level,
             // EXCEPT when catchment is active: the 150 km secondary ring requires
             // z~7.5–8.0 to frame, below the threshold by design. Keep cluster
@@ -2523,7 +2559,7 @@
 
         // Auto-detect active region when map center crosses into a different region's bounds
         map.on('moveend', () => {
-            if (!overviewActive) return;
+            if (!overviewActive || simActive) return;
             const { lng, lat } = map.getCenter();
             for (const [key, r] of Object.entries(REGIONS)) {
                 if (key === currentRegion) continue;
