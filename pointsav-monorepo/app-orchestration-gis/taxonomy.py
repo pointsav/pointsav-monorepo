@@ -131,6 +131,7 @@ BRAND_FILL: dict[str, dict[str, list[str]]] = {
         ],
         "AT": [
             "billa-plus-at",
+            "interspar-at",  # 85 records, Q1364056 (SPAR Austria) — Phase 18 2026-05-22
         ],
         "NL": [
             "albert-heijn-xl-nl",
@@ -348,7 +349,7 @@ DISPLAY_NAMES: dict[str, str] = {
     "mercadona-es": "Mercadona",
     "esselunga-it": "Esselunga",
     "sklavenitis-gr": "Sklavenitis",
-    "billa-plus-at": "Billa Plus",
+    "billa-plus-at": "Billa Plus", "interspar-at": "Interspar",
     "albert-heijn-xl-nl": "Albert Heijn XL",
     "continente-pt": "Continente",
     "coop-forum-se": "Coop Forum / Stora Coop",
