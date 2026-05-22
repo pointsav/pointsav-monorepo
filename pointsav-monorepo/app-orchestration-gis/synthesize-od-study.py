@@ -159,6 +159,8 @@ def main():
                     s_whs += whs
 
             catchment[cid] = {
+                "lat": clat,
+                "lon": clon,
                 "pp": round(p_pop),
                 "sp": round(s_pop),
                 "pg": round(p_gro),
