@@ -420,6 +420,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "foundry-nodeclass"
+version = "0.1.0"
+
+[[package]]
 name = "fs2"
 version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1753,6 +1757,7 @@ dependencies = [
  "axum",
  "base64",
  "chrono",
+ "foundry-nodeclass",
  "fs2",
  "metrics",
  "metrics-exporter-prometheus",

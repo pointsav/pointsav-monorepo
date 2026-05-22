@@ -41,6 +41,16 @@ pub enum NodeClass {
     Accelerated,
 }
 
+impl NodeClass {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            NodeClass::Micro => "micro",
+            NodeClass::Hardware => "hardware",
+            NodeClass::Accelerated => "accelerated",
+        }
+    }
+}
+
 /// Capability flags derived from the detected `NodeClass`.
 ///
 /// Obtain via `detect()` at service startup, then thread through to any

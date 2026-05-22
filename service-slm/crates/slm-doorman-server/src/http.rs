@@ -121,6 +121,12 @@ pub struct AppState {
     /// When `None`, auth is disabled (community-tier / development mode).
     /// Set via `SLM_GATEWAY_TOKEN` env var at boot.
     pub gateway_token: Option<String>,
+    /// Node class detected at Doorman startup via `foundry-nodeclass::detect()`.
+    /// One of: "micro", "hardware", "accelerated". Reported by `/readyz`.
+    pub node_class: &'static str,
+    /// Why Tier A is available or unavailable. Reported by `/readyz`.
+    /// "available" | "micro-node-class" | "force-broker-mode"
+    pub tier_a_reason: &'static str,
 }
 
 pub fn router(state: Arc<AppState>) -> Router {
@@ -565,9 +571,15 @@ async fn readyz(State(state): State<Arc<AppState>>) -> impl IntoResponse {
         Some(now.saturating_sub(last_dispatch))
     };
 
+    let tier_a = state.doorman.has_local();
+    let ai_available = tier_a || state.doorman.has_yoyo() || state.doorman.has_external();
     let body = serde_json::json!({
         "ready": true,
-        "has_local": state.doorman.has_local(),
+        "node_class": state.node_class,
+        "tier_a": tier_a,
+        "tier_a_reason": state.tier_a_reason,
+        "ai_available": ai_available,
+        "has_local": tier_a,
         "has_yoyo": state.doorman.has_yoyo(),
         "has_external": state.doorman.has_external(),
         "lark_validation_active": state.doorman.has_lark_validator(),

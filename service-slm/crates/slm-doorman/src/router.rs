@@ -824,6 +824,21 @@ mod tests {
     }
 
     #[test]
+    fn micro_class_no_local_tier_unavailable() {
+        // On Micro nodes build_doorman() sets local=None. Verify that a Doorman
+        // without a local client rejects every Local tier request, regardless of
+        // complexity or hint — DOCTRINE.md claims #49/#54 invariant.
+        let doorman = Doorman::new(DoormanConfig::default(), ledger());
+        for hint in [None, Some(Tier::Local)] {
+            let result = doorman.select_tier(&req(Complexity::Low, hint, None));
+            assert!(
+                matches!(result, Err(DoormanError::TierUnavailable(Tier::Local))),
+                "expected TierUnavailable(Local) but got {result:?}"
+            );
+        }
+    }
+
+    #[test]
     fn high_complexity_prefers_yoyo_when_configured() {
         // Pure selection logic — no network. We construct a Doorman with
         // a Yo-Yo config that points at a bogus endpoint; select_tier

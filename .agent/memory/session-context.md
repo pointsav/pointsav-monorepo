@@ -7,6 +7,35 @@ from Command Stage-6 rebase 2026-05-22 — flagged for Command; see outbox).
 
 ---
 
+## Session: 2026-05-22 session 3 | Role: totebox | Engine: claude-code
+
+### Done this session
+- **Phase 4 (service-slm Doorman node-class gating)**:
+  - `foundry-nodeclass/src/lib.rs`: added `NodeClass::as_str()` method
+  - `slm-doorman-server/Cargo.toml`: added `foundry-nodeclass = { workspace = true }`
+  - `slm-doorman-server/src/main.rs`: reworked `build_doorman()` → `DoormanBoot`; detects node class via `foundry_nodeclass::detect()`; gates `local` client on `caps.supports_on_node_ai() && !SLM_FORCE_BROKER_MODE`; returns `node_class: &'static str` + `tier_a_reason: &'static str`
+  - `slm-doorman-server/src/http.rs`: added `node_class: &'static str` + `tier_a_reason: &'static str` to `AppState`; `readyz` now emits `node_class`, `tier_a`, `tier_a_reason`, `ai_available`; ~19 AppState construction sites updated in lib.rs + test files
+  - `slm-doorman/src/router.rs`: added `micro_class_no_local_tier_unavailable` invariant test
+  - `infrastructure/local-doorman/local-doorman.service`: `Requires=local-slm.service` → `Wants=` (soft dep); workspace git, Command must commit
+  - `BRIEF-flow-restructure.md`: Phases 1–4 marked done, Phase 5 resume point set
+  - `NEXT.md`: Phase 4 complete note + Stage 6 promote reminder
+  - Outbox: added message to Command re: infrastructure change needing workspace commit
+- `cargo check --workspace` clean; `cargo test --workspace` running (in progress at session end)
+
+### Pending / carry-forward
+- **`cargo test --workspace`** running in background — verify all 241+ tests green before committing
+- **Commit Phase 4** via `commit-as-next.sh` — 11 files modified in project-intelligence archive
+- **Phase 5**: `TOTEBOX_NODE_CLASS=micro` integration tests + cgroup sandbox (`tests/micro_node.rs`)
+- **Workspace commit** (Command scope): `infrastructure/local-doorman/local-doorman.service` needs staging + commit from `/srv/foundry/`
+- **Stage 6 promote**: 10+ commits ahead of origin/main; needs `git rebase origin/main` first (Command scope)
+- `service-content/CLAUDE.md` doesn't exist — low priority
+- Inbox `project-editorial-20260521-e4-triage-naming-blockers` — 3 drafts need rename before re-staging
+
+### Operator preferences surfaced
+- No new preferences surfaced this session
+
+---
+
 ## 2026-05-22 | Totebox | claude-sonnet-4-6
 
 **Done this session:**

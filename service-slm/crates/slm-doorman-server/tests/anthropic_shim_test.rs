@@ -334,6 +334,8 @@ async fn correct_api_key_allows_request() {
             service_content_endpoint: String::new(),
             last_yoyo_dispatch: Arc::new(AtomicU64::new(0)),
             gateway_token: Some("secret-token".to_string()),
+            node_class: "hardware",
+            tier_a_reason: "available",
         })
     };
 

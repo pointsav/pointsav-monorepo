@@ -12,6 +12,28 @@ contamination-note: messages below the first separator are project-knowledge
 ---
 from: totebox@project-intelligence
 to: command@claude-code
+re: infrastructure/local-doorman/local-doorman.service — uncommitted workspace change (Phase 4)
+created: 2026-05-22T00:00:00Z
+priority: normal
+status: pending
+msg-id: project-intelligence-20260522-doorman-service-commit
+---
+
+Phase 4 of BRIEF-flow-restructure modified `infrastructure/local-doorman/local-doorman.service`
+(workspace scope — Command must commit this):
+
+  - `Requires=local-slm.service` → `Wants=local-slm.service` (soft dependency)
+  - Comment updated to reference DOCTRINE.md claims #49/#54
+
+Change is already on disk (`git diff infrastructure/local-doorman/` shows it).
+Please stage + commit from workspace root via `bin/commit-as-next.sh`.
+
+Once committed and `systemctl daemon-reload` run, the Doorman can start on Micro
+nodes without local-slm being present.
+
+---
+from: totebox@project-intelligence
+to: command@claude-code
 re: doctrine drift — architecture brief missed claims #49/#54; recommend cross-check step
 created: 2026-05-22T17:00:00Z
 priority: normal
