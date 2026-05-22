@@ -33,7 +33,7 @@
 
 use axum::{
     extract::{Path, Query, State},
-    http::{header, HeaderValue, StatusCode},
+    http::{header, HeaderMap, HeaderValue, StatusCode},
     response::{IntoResponse, Response},
     routing::{get, post},
     Json, Router,
@@ -1579,6 +1579,7 @@ async fn wiki_page(
     Path(slug): Path<String>,
     Query(q): Query<WikiPageQuery>,
     CurrentUser(maybe_user): CurrentUser,
+    headers: HeaderMap,
 ) -> Result<Response, WikiError> {
     // Slug safety: reject path traversal. Allow at most one `/` separator
     // for category-scoped slugs (`architecture/compounding-substrate`).
@@ -1715,18 +1716,43 @@ async fn wiki_page(
     // fm_line_count converts body-relative line numbers to absolute file
     // lines that topic_blame addresses. Blame is skipped for past-revision
     // views (?asof=) — the claim graph reflects HEAD, not the past revision.
-    // _claims is consumed by Commit E (JSON content-negotiation + JSON-LD).
     let fm_line_count = text[..text.len().saturating_sub(parsed.body_md.len())]
         .matches('\n')
         .count() as u32;
-    let mut _claims = crate::claim::extract_claims(&parsed.body_md, &slug).claims;
+    let mut claims = crate::claim::extract_claims(&parsed.body_md, &slug).claims;
     if q.asof.is_none() {
         crate::history::blame_published_at(
             &state.content_dir,
             &slug,
             fm_line_count,
-            &mut _claims,
+            &mut claims,
         );
+    }
+
+    // §3.7: JSON content-negotiation — return structured JSON when the client
+    // prefers application/json. Skips the HTML render path entirely.
+    let wants_json = headers
+        .get(header::ACCEPT)
+        .and_then(|v| v.to_str().ok())
+        .map(|s| s.split(',').any(|part| part.trim().starts_with("application/json")))
+        .unwrap_or(false);
+    if wants_json {
+        let blake3_hex = blake3::hash(text.as_bytes()).to_hex().to_string();
+        let revision_sha = crate::history::topic_history(&state.content_dir, &slug, 1)
+            .ok()
+            .and_then(|mut h| h.drain(..).next())
+            .map(|e| e.sha)
+            .unwrap_or_default();
+        let backlinks = state.links.backlinks(&slug).unwrap_or_default();
+        return Ok(Json(json!({
+            "frontmatter": serde_json::to_value(&parsed.frontmatter).unwrap_or_default(),
+            "body_md": parsed.body_md,
+            "blake3": blake3_hex,
+            "revision_sha": revision_sha,
+            "backlinks": backlinks,
+            "claims": claims,
+        }))
+        .into_response());
     }
 
     // Two-step render: extract headings from clean comrak output (no edit pencils),
@@ -4172,6 +4198,39 @@ mod tests {
             !html.contains("wiki-lang-switcher"),
             "language switcher should NOT appear when no sibling exists: {html}"
         );
+    }
+
+    /// Accept: application/json returns a JSON object with the expected keys.
+    #[tokio::test]
+    async fn wiki_page_json_content_negotiation_returns_json() {
+        let (state, _dir, _state_dir) = fixture_state().await;
+        let app = router(state);
+        let resp = app
+            .oneshot(
+                Request::builder()
+                    .uri("/wiki/topic-test")
+                    .header("accept", "application/json")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(resp.status(), StatusCode::OK);
+        let ct = resp
+            .headers()
+            .get("content-type")
+            .and_then(|v| v.to_str().ok())
+            .unwrap_or("");
+        assert!(ct.contains("application/json"), "content-type should be JSON: {ct}");
+        let body = resp.into_body().collect().await.unwrap().to_bytes();
+        let val: serde_json::Value = serde_json::from_slice(&body).unwrap();
+        assert!(val.get("frontmatter").is_some(), "missing frontmatter key");
+        assert!(val.get("body_md").is_some(), "missing body_md key");
+        assert!(val.get("blake3").is_some(), "missing blake3 key");
+        assert!(val.get("revision_sha").is_some(), "missing revision_sha key");
+        assert!(val.get("backlinks").is_some(), "missing backlinks key");
+        assert!(val.get("claims").is_some(), "missing claims key");
+        assert_eq!(val["frontmatter"]["title"], "Test Topic");
     }
 
     /// ?asof= with an unknown revision returns 404. The test content dir is
