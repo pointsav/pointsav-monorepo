@@ -555,6 +555,8 @@ function mdToHtml(src) {
 
     if (!line.trim()) { i++; continue; }
 
+    if (line.startsWith('\x00CB')) { out += line + '\n'; i++; continue; }
+
     let para = '';
     while (i < lines.length) {
       const l = lines[i];
