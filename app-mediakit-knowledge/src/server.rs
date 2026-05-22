@@ -56,6 +56,28 @@ use crate::render::{extract_headings, inject_edit_pencils, parse_page, render_ht
 use crate::search::{search as run_search, SearchIndex};
 use crate::users::User;
 
+#[derive(Clone, Copy, PartialEq, Eq, Default)]
+enum Locale {
+    #[default]
+    En,
+    Es,
+}
+
+impl Locale {
+    fn lang_attr(self) -> &'static str {
+        match self {
+            Locale::En => "en",
+            Locale::Es => "es",
+        }
+    }
+    fn suffix(self) -> &'static str {
+        match self {
+            Locale::En => "",
+            Locale::Es => ".es",
+        }
+    }
+}
+
 #[derive(Clone)]
 pub struct AppState {
     pub content_dir: PathBuf,
@@ -109,6 +131,8 @@ pub fn router(state: AppState) -> Router {
         .route("/", get(index))
         // Wildcard capture allows category-scoped slugs: `/wiki/architecture/compounding-substrate`
         .route("/wiki/{*slug}", get(wiki_page))
+        .route("/es/",              get(home_es))
+        .route("/es/wiki/{*slug}",  get(wiki_page_es))
         .route("/static/{*path}", get(static_asset))
         .route("/healthz", get(healthz))
         // Phase 2 Step 2 — edit endpoint
@@ -859,6 +883,19 @@ async fn load_category_descriptions(content_dir: &FsPath, categories: &[&str]) -
     map
 }
 
+async fn load_dyk_localized(content_dir: &FsPath, locale: Locale) -> Option<LeapfrogFacts> {
+    if locale == Locale::Es {
+        let es_path = content_dir.join(format!("leapfrog-facts{}.yaml", locale.suffix()));
+        if es_path.exists() {
+            let text = fs::read_to_string(&es_path).await.ok()?;
+            if let Ok(facts) = serde_yaml::from_str(&text) {
+                return Some(facts);
+            }
+        }
+    }
+    load_dyk(content_dir).await
+}
+
 fn bucket_guides_by_domain(guides: &[TopicSummary]) -> BTreeMap<String, Vec<TopicSummary>> {
     let mut map = BTreeMap::new();
     for g in guides {
@@ -930,6 +967,7 @@ const WORDMARK_POINTSAV: &str = r##"<svg xmlns="http://www.w3.org/2000/svg" view
 const WORDMARK_WOODFINE: &str = r##"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 350 40"><text x="0" y="30" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="24" font-weight="800" fill="#111827" letter-spacing="-0.03em">WOODFINE CAPITAL PROJECTS</text></svg>"##;
 
 fn home_chrome(
+    locale: Locale,
     home_fm: &crate::render::Frontmatter,
     home_html: &str,
     buckets: &CategoryBuckets,
@@ -977,7 +1015,7 @@ fn home_chrome(
 
     html! {
         (DOCTYPE)
-        html lang="en" data-theme=[brand_theme] {
+        html lang=(locale.lang_attr()) {
             head {
                 meta charset="utf-8";
                 meta name="viewport" content="width=device-width, initial-scale=1";
@@ -987,11 +1025,63 @@ fn home_chrome(
                     link rel="stylesheet" href="/static/tokens-woodfine.css";
                 }
                 link rel="stylesheet" href="/static/style.css";
+                // Anti-FOUT: apply stored theme before first paint
+                script { (PreEscaped(r#"(function(){var t=localStorage.getItem('wiki-theme')||'auto';document.documentElement.setAttribute('data-theme',t);var w=localStorage.getItem('wiki-width')||'standard';document.documentElement.setAttribute('data-width',w);}());"#)) }
+                // hreflang + canonical for bilingual home
+                @match locale {
+                    Locale::En => {
+                        link rel="alternate" hreflang="es" href="/es/";
+                        link rel="canonical" href="/";
+                    }
+                    Locale::Es => {
+                        link rel="alternate" hreflang="en" href="/";
+                        link rel="canonical" href="/es/";
+                    }
+                }
             }
             body {
                 a.skip-to-content href="#mp-main" { "Skip to content" }
-                header.shell-header #mw-header {
-                    div.utility-row {
+                header.mw-header #mw-header {
+                    a.site-title href="/" { (site_title) }
+                    form.header-search #header-search-form action="/search" method="get" {
+                        div.header-search-wrap {
+                            input #header-search-q type="search" name="q" placeholder="Search articles…" autocomplete="off";
+                            div #search-autocomplete-dropdown style="display:none;" {}
+                        }
+                        button type="submit" { "Search" }
+                    }
+                    div.wiki-appearance-wrap #wiki-appearance-wrap {
+                        button.wiki-appearance-btn #wiki-appearance-btn
+                            aria-expanded="false"
+                            aria-controls="wiki-appearance-menu"
+                            title="Appearance"
+                        { "Aa" }
+                        div.wiki-appearance-menu #wiki-appearance-menu role="dialog" aria-label="Appearance" hidden="" {
+                            div.wiki-appearance-section {
+                                p.wiki-appearance-label { "Color" }
+                                div.wiki-appearance-options #wiki-theme-options {
+                                    button.wiki-appearance-opt #theme-auto data-theme-val="auto" { "Automatic" }
+                                    button.wiki-appearance-opt #theme-light data-theme-val="light" { "Light" }
+                                    button.wiki-appearance-opt #theme-dark data-theme-val="dark" { "Dark" }
+                                }
+                            }
+                            div.wiki-appearance-section {
+                                p.wiki-appearance-label { "Width" }
+                                div.wiki-appearance-options #wiki-width-options {
+                                    button.wiki-appearance-opt #width-standard data-width-val="standard" { "Standard" }
+                                    button.wiki-appearance-opt #width-wide data-width-val="wide" { "Wide" }
+                                }
+                            }
+                        }
+                    }
+                    nav.site-nav {
+                        a href="/" { "Home" }
+                        a href="/special/all-pages" { "All pages" }
+                        a href="/special/categories" { "Categories" }
+                        a href="/special/recent-changes" { "Recent changes" }
+                        a.lang-toggle href=(match locale { Locale::En => "/es/", Locale::Es => "/" }) {
+                            (match locale { Locale::En => "ES", Locale::Es => "EN" })
+                        }
                         (auth_nav_widget(user, pending_count))
                     }
                     div.brand-row {
@@ -1482,8 +1572,29 @@ async fn index(
     State(state): State<Arc<AppState>>,
     CurrentUser(maybe_user): CurrentUser,
 ) -> Result<Markup, WikiError> {
+    home_inner(state, Locale::En, maybe_user).await
+}
+
+async fn home_es(
+    State(state): State<Arc<AppState>>,
+    CurrentUser(maybe_user): CurrentUser,
+) -> Result<Markup, WikiError> {
+    home_inner(state, Locale::Es, maybe_user).await
+}
+
+async fn home_inner(
+    state: Arc<AppState>,
+    locale: Locale,
+    maybe_user: Option<User>,
+) -> Result<Markup, WikiError> {
     let pending_count = pending_count_for(&state, maybe_user.as_ref()).await;
-    let home_path = state.content_dir.join("index.md");
+    // Prefer locale-specific index (index.es.md) when available.
+    let home_path = state.content_dir.join(format!("index{}.md", locale.suffix()));
+    let home_path = if home_path.exists() {
+        home_path
+    } else {
+        state.content_dir.join("index.md")
+    };
     if !home_path.exists() {
         return placeholder_index(&state, maybe_user.as_ref(), pending_count).await;
     }
@@ -1496,12 +1607,10 @@ async fn index(
     let home_html = crate::render::render_html_raw(&home_parsed.body_md, &state.content_dir);
     let home_html = crate::glossary::inject_glossary_tooltips(&home_html, &state.glossary);
     let featured = load_featured(&state.content_dir, &buckets).await;
-    let dyk = load_dyk(&state.content_dir).await;
+    let dyk = load_dyk_localized(&state.content_dir, locale).await;
     let ref_inv = load_reference_invariants(&state.content_dir).await;
     let cat_descriptions = load_category_descriptions(&state.content_dir, RATIFIED_CATEGORIES).await;
 
-    // Collect guide summaries for the dedicated guides section.
-    // A guide is any entry whose filename stem starts with "guide-".
     let mut guide_summaries: Vec<TopicSummary> = buckets
         .values()
         .flatten()
@@ -1517,6 +1626,7 @@ async fn index(
     guide_summaries.sort_by(|a, b| a.title.cmp(&b.title));
 
     Ok(home_chrome(
+        locale,
         &home_parsed.frontmatter,
         &home_html,
         &buckets,
@@ -1585,6 +1695,27 @@ async fn wiki_page(
     CurrentUser(maybe_user): CurrentUser,
     headers: HeaderMap,
 ) -> Result<Response, WikiError> {
+    wiki_page_inner(state, slug, Locale::En, q, maybe_user, headers).await
+}
+
+async fn wiki_page_es(
+    State(state): State<Arc<AppState>>,
+    Path(slug): Path<String>,
+    Query(q): Query<WikiPageQuery>,
+    CurrentUser(maybe_user): CurrentUser,
+    headers: HeaderMap,
+) -> Result<Response, WikiError> {
+    wiki_page_inner(state, slug, Locale::Es, q, maybe_user, headers).await
+}
+
+async fn wiki_page_inner(
+    state: Arc<AppState>,
+    slug: String,
+    locale: Locale,
+    q: WikiPageQuery,
+    maybe_user: Option<User>,
+    headers: HeaderMap,
+) -> Result<Response, WikiError> {
     // Slug safety: reject path traversal. Allow at most one `/` separator
     // for category-scoped slugs (`architecture/compounding-substrate`).
     if slug.contains("..") || slug.is_empty() {
@@ -1602,8 +1733,18 @@ async fn wiki_page(
         }
     }
 
+    // For ES locale, try the .es.md sibling first (before the EN file).
+    // `effective_locale` reflects what was actually served; used for lang= and hreflang.
+    let mut effective_locale = Locale::En;
+    if locale == Locale::Es && q.asof.is_none() {
+        let es_path = state.content_dir.join(format!("{slug}{}.md", Locale::Es.suffix()));
+        if es_path.exists() {
+            effective_locale = Locale::Es;
+        }
+    }
+
     // Try content_dir first; if not found, try guide_dir then guide_dir_2.
-    let primary_path = state.content_dir.join(format!("{slug}.md"));
+    let primary_path = state.content_dir.join(format!("{slug}{}.md", effective_locale.suffix()));
 
     // §3.5: past-revision view — read from git history when ?asof= is set.
     // Only content_dir is git-tracked; guide_dir articles always use the
@@ -1793,7 +1934,7 @@ async fn wiki_page(
 
     let pending_count = pending_count_for(&state, maybe_user.as_ref()).await;
     let redirected_from = q.redirectedfrom.as_deref();
-    Ok(wiki_chrome(&title, &slug, parsed.frontmatter, &body_html, headings, &state.site_title, state.brand_theme.as_deref(), maybe_user.as_ref(), pending_count, redirected_from, q.printable).into_response())
+    Ok(wiki_chrome(effective_locale, &title, &slug, parsed.frontmatter, &body_html, headings, &state.site_title, state.brand_theme.as_deref(), maybe_user.as_ref(), pending_count, redirected_from, q.printable).into_response())
 }
 
 async fn static_asset(Path(path): Path<String>) -> Response {
@@ -1831,6 +1972,7 @@ async fn static_asset(Path(path): Path<String>) -> Response {
 /// - Per-section [edit] pencils (injected into rendered HTML by render module)
 /// - Footer block: categories → license → about/contact links
 fn wiki_chrome(
+    locale: Locale,
     title: &str,
     slug: &str,
     fm: Frontmatter,
@@ -1870,7 +2012,7 @@ fn wiki_chrome(
 
     html! {
         (DOCTYPE)
-        html lang="en" data-theme=[brand_theme] {
+        html lang=(locale.lang_attr()) {
             head {
                 meta charset="utf-8";
                 meta name="viewport" content="width=device-width, initial-scale=1";
@@ -1880,6 +2022,20 @@ fn wiki_chrome(
                     link rel="stylesheet" href="/static/tokens-woodfine.css";
                 }
                 link rel="stylesheet" href="/static/style.css";
+                // Anti-FOUT: apply stored theme/width before first paint to
+                // avoid a flash of the default light theme for dark-mode users.
+                script { (PreEscaped(r#"(function(){var t=localStorage.getItem('wiki-theme')||'auto';document.documentElement.setAttribute('data-theme',t);var w=localStorage.getItem('wiki-width')||'standard';document.documentElement.setAttribute('data-width',w);}());"#)) }
+                // hreflang + canonical for bilingual articles
+                @match locale {
+                    Locale::En => {
+                        link rel="alternate" hreflang="es" href={ "/es/wiki/" (slug) };
+                        link rel="canonical" href={ "/wiki/" (slug) };
+                    }
+                    Locale::Es => {
+                        link rel="alternate" hreflang="en" href={ "/wiki/" (slug) };
+                        link rel="canonical" href={ "/es/wiki/" (slug) };
+                    }
+                }
                 // JSON-LD baseline (Phase 2 Step 1) — schema.org TechArticle /
                 // DefinedTerm. Cumulative across phases; AEO crawlers + downstream
                 // consumers ingest the structured data.
@@ -1897,8 +2053,45 @@ fn wiki_chrome(
                         }
                     }
                 }
-                header.shell-header #mw-header {
-                    div.utility-row {
+                header.mw-header #mw-header {
+                    a.site-title href="/" { (site_title) }
+                    form.header-search #header-search-form action="/search" method="get" {
+                        div.header-search-wrap {
+                            input #header-search-q type="search" name="q" placeholder="Search articles…" autocomplete="off";
+                            div #search-autocomplete-dropdown style="display:none;" {}
+                        }
+                        button type="submit" { "Search" }
+                    }
+                    // Appearance menu button + popover
+                    div.wiki-appearance-wrap #wiki-appearance-wrap {
+                        button.wiki-appearance-btn #wiki-appearance-btn
+                            aria-expanded="false"
+                            aria-controls="wiki-appearance-menu"
+                            title="Appearance"
+                        { "Aa" }
+                        div.wiki-appearance-menu #wiki-appearance-menu role="dialog" aria-label="Appearance" hidden="" {
+                            div.wiki-appearance-section {
+                                p.wiki-appearance-label { "Color" }
+                                div.wiki-appearance-options #wiki-theme-options {
+                                    button.wiki-appearance-opt #theme-auto data-theme-val="auto" { "Automatic" }
+                                    button.wiki-appearance-opt #theme-light data-theme-val="light" { "Light" }
+                                    button.wiki-appearance-opt #theme-dark data-theme-val="dark" { "Dark" }
+                                }
+                            }
+                            div.wiki-appearance-section {
+                                p.wiki-appearance-label { "Width" }
+                                div.wiki-appearance-options #wiki-width-options {
+                                    button.wiki-appearance-opt #width-standard data-width-val="standard" { "Standard" }
+                                    button.wiki-appearance-opt #width-wide data-width-val="wide" { "Wide" }
+                                }
+                            }
+                        }
+                    }
+                    nav.site-nav {
+                        a href="/" { "Home" }
+                        a.lang-toggle href=(match locale { Locale::En => format!("/es/wiki/{slug}"), Locale::Es => format!("/wiki/{slug}") }) {
+                            (match locale { Locale::En => "ES", Locale::Es => "EN" })
+                        }
                         (auth_nav_widget(user, pending_count))
                     }
                     div.brand-row {
