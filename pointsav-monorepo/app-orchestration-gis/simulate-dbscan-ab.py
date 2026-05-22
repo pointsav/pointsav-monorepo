@@ -241,50 +241,95 @@ def tight_intact(indices, records):
 def evaluate_tier_new(indices, records):
     members = [records[i] for i in indices]
     chains  = {m["chain_id"] for m in members}
-    owners  = {m["owner"]    for m in members}
     classes = {m["cls"]      for m in members}
 
     has_hyper = "hypermarket" in classes
     has_hw    = "hardware"    in classes
-    has_wh    = "warehouse"   in classes
+    has_wh    = "warehouse"   in classes   # warehouse club (Costco)
+    has_life  = "lifestyle"   in classes   # lifestyle / furniture (IKEA)
 
-    ti = tight_intact(indices, records)
+    ti = tight_intact(indices, records)    # geometric flag — NOT a tier input
 
-    # T1 Regional: tight ≤1km, ≥3 distinct chains, ≥2 owners, Hypermarket∧(HW∨WH)
-    if ti and len(chains) >= 3 and len(owners) >= 2 and has_hyper and (has_hw or has_wh):
+    # Tier is retailer-category COMPOSITION only (BRIEF-VARIABLE-DISTANCE §1).
+    # Tightness/distance is a separate rank axis and never gates the tier.
+
+    # T1 Regional: Hypermarket ∧ Hardware ∧ (Warehouse club ∨ Lifestyle)
+    if has_hyper and has_hw and (has_wh or has_life):
         return 1, ti
 
-    # T2 District: Hypermarket ∧ (Hardware ∨ Warehouse)
-    if has_hyper and (has_hw or has_wh):
+    # T2 District: Hypermarket ∧ at least one major co-anchor
+    if has_hyper and (has_hw or has_wh or has_life):
         return 2, ti
 
-    # T3 Local: ≥2 distinct chains
+    # T3 Local: any co-location of ≥2 distinct chains
     if len(chains) >= 2:
         return 3, ti
 
-    return None, ti  # singleton → rings layer
+    return None, ti  # singleton → not a co-location
+
+
+def split_greedy_tight(indices, records, max_d, atom_of):
+    """Greedy clique partition that never separates a frozen tight nucleus.
+    Atoms (Pass-1 tight components) move as units; an atom joins a group only
+    if every one of its members is within max_d of every member already in
+    the group."""
+    atoms = {}
+    for idx in indices:
+        atoms.setdefault(atom_of[idx], []).append(idx)
+    # seed with the largest nuclei first; atom id breaks ties deterministically
+    remaining = sorted(atoms.keys(), key=lambda a: (-len(atoms[a]), a))
+    groups = []
+    while remaining:
+        seed = remaining.pop(0)
+        group = list(atoms[seed])
+        still = []
+        for cand in remaining:
+            fits = all(
+                haversine_km(float(records[c]["latitude"]), float(records[c]["longitude"]),
+                             float(records[g]["latitude"]), float(records[g]["longitude"])) <= max_d
+                for c in atoms[cand] for g in group
+            )
+            if fits:
+                group.extend(atoms[cand])
+            else:
+                still.append(cand)
+        remaining = still
+        groups.append(group)
+    return groups
 
 
 def run_new(records):
+    """Two-pass tight-first DBSCAN. Pass 1 freezes tight (≤TAU_TIGHT) nuclei;
+    Pass 2 groups at TAU_LOOSE with those nuclei moving as atomic units, so a
+    tight pairing is never dissolved into a looser blob by seed order."""
     n    = len(records)
     grid = build_grid(records)
 
-    # Build proximity graph at TAU_LOOSE_KM
-    edges = set()
-    for i, r in enumerate(records):
-        lat, lon = float(r["latitude"]), float(r["longitude"])
-        for j, d in neighbours_within(lat, lon, records, grid, TAU_LOOSE_KM):
-            if j != i:
-                edges.add((min(i, j), max(i, j)))
+    def graph_edges(radius):
+        e = set()
+        for i, r in enumerate(records):
+            lat, lon = float(r["latitude"]), float(r["longitude"])
+            for j, d in neighbours_within(lat, lon, records, grid, radius):
+                if j != i:
+                    e.add((min(i, j), max(i, j)))
+        return e
 
-    comps = union_find(n, edges)
+    # ── Pass 1 — TIGHT graph: freeze co-location nuclei at TAU_TIGHT_KM ──
+    tight_comps = union_find(n, graph_edges(TAU_TIGHT_KM))
+    atom_of = {}
+    for atom_id, comp in enumerate(tight_comps):
+        for idx in comp:
+            atom_of[idx] = atom_id
+
+    # ── Pass 2 — LOOSE graph at TAU_LOOSE_KM; nuclei never split ──
+    loose_comps = union_find(n, graph_edges(TAU_LOOSE_KM))
 
     clusters   = []
     singletons = 0
-    for comp in comps:
-        # Split if component is too spread
+    for comp in loose_comps:
+        # Split only if the component exceeds the 3 km membership cap
         if component_diameter(comp, records) > TAU_LOOSE_KM:
-            groups = split_greedy(comp, records, TAU_LOOSE_KM)
+            groups = split_greedy_tight(comp, records, TAU_LOOSE_KM, atom_of)
         else:
             groups = [comp]
 
@@ -308,6 +353,7 @@ def run_new(records):
                 "is_centroid": True,
                 "tier": tier,
                 "tight": ti,
+                "span_km": round(component_diameter(group, records), 3),
                 "n_chains": len(chains),
                 "n_owners": len(owners),
                 "chains": chains,
@@ -322,6 +368,22 @@ def run_new(records):
 
     print(f"  {len(clusters)} tiered clusters  |  {singletons} ring-layer singletons")
     return clusters
+
+
+def assign_distance_ranks(clusters):
+    """Stage-1 geometric rank: inverted percentile of span_km, computed WITHIN
+    tier. Alberta sim = one country / one continent, so the pool is per-tier
+    (production blends Country + continent percentiles — see BRIEF §3)."""
+    by_tier = defaultdict(list)
+    for c in clusters:
+        by_tier[c["tier"]].append(c)
+    for tier, group in by_tier.items():
+        ordered = sorted(group, key=lambda c: (c["span_km"], c["lat"], c["lon"]))
+        m = len(ordered)
+        for i, c in enumerate(ordered):
+            frac = i / (m - 1) if m > 1 else 0.0          # 0.0 = tightest in tier
+            c["dist_rank_in_tier"] = round(frac, 3)
+            c["dist_pctile"]       = int(round(100 * (1 - frac)))  # 100 = tightest
 
 
 # ── DELTA MATCHING ─────────────────────────────────────────────────────────────
@@ -390,7 +452,11 @@ def build_geojson(old, new, scope_label):
                 "tier":         nc["tier"],
                 "tier_label":   TIER_LABEL.get(nc["tier"], "?"),
                 "tight":        nc.get("tight", False),
+                "tight_intact": nc.get("tight", False),
                 "prox":         prox,
+                "span_km":      nc.get("span_km", 0.0),
+                "dist_rank_in_tier": nc.get("dist_rank_in_tier", 0.0),
+                "dist_pctile":  nc.get("dist_pctile", 0),
                 "n_chains":     nc["n_chains"],
                 "n_owners":     nc["n_owners"],
                 "chains":       ", ".join(nc["chains"]),
@@ -443,6 +509,10 @@ def main():
         dist2[c["tier"]] += 1
     for t in sorted(dist2):
         print(f"    T{t}: {dist2[t]}")
+    print()
+
+    print("Stage-1 geometric rank (span_km percentile within tier)...")
+    assign_distance_ranks(new)
     print()
 
     print("Matching deltas...")
