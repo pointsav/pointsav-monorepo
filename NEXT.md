@@ -7,6 +7,25 @@ Attribution format: `[YYYY-MM-DD role@engine]`
 
 ## Hot — pick up here next session
 
+- [x] **Key Plans SVG size-specific furniture — shipped 2026-05-22** `[2026-05-22 totebox@claude-code]`
+  - `app-orchestration-bim v0.0.3` (commit 8ce0b9ba) — size_tier per category from area_m²
+  - PO: 1/2/3 desks; Medical: 2/4/6 chairs + 1/1/2 doc offices; Lab: 3/5/7 bench clusters
+  - Business: 3×3/4×4/5×5 workstations + 2/3/5 exec offices + 1/1/2 conf tables
+  - Academic: workstation bank → dual banks → theater seats; Civic: 2/4/5 offices + court room (L)
+  - Brief: `.agent/briefs/BRIEF-key-plans-site.md`
+
+- [ ] **Corporate Office SVG diagrams** `[2026-05-22 totebox@claude-code]`
+  - Currently `_ => {}` — no furniture; zone structure only
+  - Blocked on zone depth data for Corporate Office sizes
+
+- [ ] **Deliverable 1b — key-plans-registry.md** `[2026-05-22 totebox@claude-code]`
+  - Write `woodfine-bim-library/key-plans/key-plans-registry.md` standalone Markdown
+  - All data in `.agent/plans/plan-bim-objects.md` Part 1
+
+- [ ] **Binary ledger — app-orchestration-bim v0.0.3** `[2026-05-22 totebox@claude-code]`
+  - Command Session: update `data/binary-ledger/app-orchestration-bim.jsonl`
+  - sha256 `/usr/local/bin/app-orchestration-bim` must match ledger entry
+
 - [x] **NOTAM unreadable — resolved 2026-05-20** `[2026-05-20 totebox@claude-code]`
   - Fixed by Command: NOTAM.md now `-rw-r--r-- mathew:foundry` (world-readable). Outbox message actioned.
 
