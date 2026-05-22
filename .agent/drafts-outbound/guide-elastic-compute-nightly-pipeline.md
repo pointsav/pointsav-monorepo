@@ -36,7 +36,7 @@ notes_for_editor: |
      as well as on success — clear the ledger if a parsing bug corrupted a run.
 ---
 
-# GUIDE — Yo-Yo #1 Nightly Pipeline
+# GUIDE — Elastic Compute #1 Nightly Pipeline
 
 ## Prerequisites
 
@@ -59,17 +59,17 @@ are present in the standard workspace image.
 All commands run from the `service-slm/` directory of the pointsav-monorepo
 cluster.
 
-**Normal mode** — boots Yo-Yo #1, runs the full 4-hour pipeline (2h DataGraph
+**Normal mode** — boots Elastic Compute #1, runs the full 4-hour pipeline (2h DataGraph
 + 2h Training):
 
 ```
 ./scripts/nightly-run.sh
 ```
 
-**Workspace-only mode** (`--no-yoyo`) — skips the Yo-Yo #1 VM lifecycle and
+**Workspace-only mode** (`--no-yoyo`) — skips the Elastic Compute #1 VM lifecycle and
 runs against local Tier A (OLMo 3 7B Q4 on llama-server). Entity extraction
 uses the smaller model. Useful for testing the DataGraph phase without incurring
-Yo-Yo #1 VM costs:
+Elastic Compute #1 VM costs:
 
 ```
 ./scripts/nightly-run.sh --no-yoyo
@@ -138,7 +138,7 @@ progresses through three states:
 
 | Filename suffix | State |
 |---|---|
-| `.json` (no suffix) | Dispatched — waiting for Yo-Yo #1 pickup |
+| `.json` (no suffix) | Dispatched — waiting for Elastic Compute #1 pickup |
 | `.json.claimed` | In progress — `lora-training.sh` has claimed the marker and training is running |
 | `.json.claimed.completed` | Finished — adapter written and adapter-publish triggered |
 
@@ -161,7 +161,7 @@ reached its 50-tuple threshold. The run is not an error — the pipeline logged
 ## Packer Image Rebuild (Intended Operator Action)
 
 The QLoRA training stack (peft, bitsandbytes, trl, accelerate) and the OLMo 3
-7B Think safetensor weights are intended to be baked into the Yo-Yo #1 VM
+7B Think safetensor weights are intended to be baked into the Elastic Compute #1 VM
 image via Packer. Until the image is rebuilt, `lora-training.sh` falls back
 to a pip install on first run, which adds several minutes to Phase 2 startup
 and is not suitable for a reliable nightly schedule.
@@ -177,12 +177,12 @@ This requires Packer installed on the workspace VM and appropriate GCP
 credentials. The build creates a new GCE machine image. After the build
 completes, update the `yoyo_machine_image` variable in the OpenTofu
 infrastructure configuration and run `tofu apply` to roll the new image
-to Yo-Yo #1.
+to Elastic Compute #1.
 
 ## Enabling Training After Image Rebuild
 
-Once the image is rebuilt and deployed to Yo-Yo #1, enable the training
-service on the Yo-Yo VM:
+Once the image is rebuilt and deployed to Elastic Compute #1, enable the training
+service on the Elastic Compute VM:
 
 ```
 sudo systemctl enable --now lora-training.service
@@ -191,12 +191,12 @@ sudo systemctl enable --now lora-training.service
 This activates the training watcher loop. From that point forward, any
 `.json` marker in the pending directory will be claimed and processed
 automatically. The adapter output will be written to
-`/data/weights/adapters/<tenant>/<role>/v<N>/` on the Yo-Yo VM and uploaded
+`/data/weights/adapters/<tenant>/<role>/v<N>/` on the Elastic Compute VM and uploaded
 to GCS by `adapter-publish.service`.
 
 ## Test Matrix
 
-Run the Yo-Yo flow tests to verify the DataGraph and training paths without
+Run the Elastic Compute flow tests to verify the DataGraph and training paths without
 running a full nightly cycle:
 
 ```
@@ -213,5 +213,5 @@ Key tests for the nightly pipeline:
 All other tests in the suite verify Doorman routing, Tier A fallback, and
 apprenticeship substrate wiring. A passing Test 10 and Test 11 indicates
 the nightly pipeline is correctly wired end-to-end. The full test suite
-runs in under two minutes against local services only — no Yo-Yo #1 VM
+runs in under two minutes against local services only — no Elastic Compute #1 VM
 required.

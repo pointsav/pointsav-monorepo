@@ -19,7 +19,7 @@ references:
   - conventions/apprenticeship-substrate.md §12 (CPT Trigger Discipline)
   - conventions/four-tier-slm-substrate.md
 notes_for_editor: |
-  This TOPIC covers the nightly LoRA adapter training pipeline on Yo-Yo #1.
+  This TOPIC covers the nightly LoRA adapter training pipeline on Elastic Compute #1.
   The code is complete and committed; the Packer image rebuild and
   lora-training.service activation are the next operator actions (intended).
   Use "intended" / "will be enabled" language for those two steps only.
@@ -35,11 +35,11 @@ notes_for_editor: |
   deployed. The pipeline code itself is correct and confirmed working.
 ---
 
-# TOPIC — Yo-Yo #1 Nightly LoRA Training Pipeline
+# TOPIC — Elastic Compute #1 Nightly LoRA Training Pipeline
 
 ## Overview
 
-Yo-Yo #1 is a g2-standard-4 Google Cloud spot instance equipped with a
+Elastic Compute #1 is a g2-standard-4 Google Cloud spot instance equipped with a
 single NVIDIA L4 GPU (24 GB VRAM). Each night it runs a two-phase, four-hour
 pipeline that produces fine-tuned adapter weights for the workspace language
 model. Phase 1 extracts structured business entities from the jennifer data
@@ -64,13 +64,13 @@ defaulting to 7200 seconds (two hours) each.
 
 ## Phase 1 — DataGraph Rebuild
 
-At the start of the nightly window, `start-yoyo.sh` boots the Yo-Yo #1 VM
+At the start of the nightly window, `start-yoyo.sh` boots the Elastic Compute #1 VM
 and waits up to 90 minutes for vLLM to signal readiness. Once the inference
 server is live, `jennifer-datagraph-rebuild.sh` processes three document
 streams from the jennifer deployment: meeting transcript markdown files,
 agent research YAML and markdown files, and contact source JSON records.
 For each document, the script calls `POST :9080/v1/chat/completions` through
-the Doorman, which routes the payload to the 32B Think model on the Yo-Yo VM.
+the Doorman, which routes the payload to the 32B Think model on the Elastic Compute VM.
 The model returns a structured JSON array of named entities — people,
 companies, projects, accounts, and locations — constrained by a JSON Schema
 grammar so the output is machine-parseable without post-processing. The
@@ -90,7 +90,7 @@ drawn from the apprenticeship routing substrate). When either bucket reaches
 `SLM_YOYO_WEIGHTS_GCS_BUCKET` environment variable is set, syncs the
 relevant corpus directory to the configured GCS bucket.
 
-On the Yo-Yo VM, `lora-training.sh` polls the training-pending directory
+On the Elastic Compute VM, `lora-training.sh` polls the training-pending directory
 every 30 seconds. When a marker appears, it claims the marker with an atomic
 rename (appending `.claimed`), pulls the corpus from GCS, and runs QLoRA
 using the peft, bitsandbytes, and trl libraries.
@@ -134,7 +134,7 @@ explicit labels for every token.
 ## Adapter Output and Publication
 
 When training completes, the adapter is saved to
-`/data/weights/adapters/<tenant>/<role>/v<N>/` on the Yo-Yo VM. The adapter
+`/data/weights/adapters/<tenant>/<role>/v<N>/` on the Elastic Compute VM. The adapter
 directory contains the LoRA weight files and tokenizer configuration — total
 size is typically 1 to 3 GB. `lora-training.sh` then signals
 `adapter-publish.service`, which uploads the adapter directory to the
@@ -163,9 +163,9 @@ nightly training is adapter-only.
 
 The nightly pipeline code is complete. The workspace language model service
 passes 177 of 177 tests. The Packer image rebuild that bakes the training
-Python stack (peft, bitsandbytes, trl) into the Yo-Yo VM is the next
+Python stack (peft, bitsandbytes, trl) into the Elastic Compute VM is the next
 intended operator action. Once that image is deployed, `lora-training.service`
-on the Yo-Yo VM will be enabled with `systemctl enable --now lora-training.service`.
+on the Elastic Compute VM will be enabled with `systemctl enable --now lora-training.service`.
 Until the image is rebuilt, the training phase runs in marker-only mode:
 `corpus-threshold.py` writes and dispatches the GCS marker, but
 `lora-training.sh` is not yet active on the runtime VM image.

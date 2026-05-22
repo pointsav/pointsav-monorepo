@@ -20,16 +20,16 @@ references:
   - conventions/four-tier-slm-substrate.md
 notes_for_editor: |
   Traducción completa al español de topic-yo-yo-lora-training-pipeline.md.
-  Los términos técnicos (QLoRA, LoRA, Yo-Yo #1, L4 GPU, GCS, LadybugDB,
+  Los términos técnicos (QLoRA, LoRA, Elastic Compute #1, L4 GPU, GCS, LadybugDB,
   vLLM, OLMo, peft, bitsandbytes, trl, SFT, DPO, NF4) se mantienen en inglés.
   Verificar precisión técnica y fluidez del español antes de publicar.
 ---
 
-# TOPIC — Pipeline de Entrenamiento LoRA Nocturno en Yo-Yo #1
+# TOPIC — Pipeline de Entrenamiento LoRA Nocturno en Elastic Compute #1
 
 ## Descripción general
 
-Yo-Yo #1 es una instancia spot g2-standard-4 de Google Cloud equipada con
+Elastic Compute #1 es una instancia spot g2-standard-4 de Google Cloud equipada con
 una GPU NVIDIA L4 de 24 GB de VRAM. Cada noche ejecuta un pipeline de dos
 fases y cuatro horas de duración que produce pesos adaptadores ajustados para
 el modelo de lenguaje del espacio de trabajo. La Fase 1 extrae entidades de
@@ -57,14 +57,14 @@ tiene un presupuesto de tiempo configurable, con un valor predeterminado de
 
 ## Fase 1 — Reconstrucción del DataGraph
 
-Al inicio de la ventana nocturna, `start-yoyo.sh` arranca la VM de Yo-Yo #1
+Al inicio de la ventana nocturna, `start-yoyo.sh` arranca la VM de Elastic Compute #1
 y espera hasta 90 minutos a que vLLM señale su disponibilidad. Una vez que
 el servidor de inferencia está activo, `jennifer-datagraph-rebuild.sh` procesa
 tres flujos de documentos del despliegue de jennifer: archivos markdown de
 transcripciones de reuniones, archivos YAML y markdown de investigación de
 agentes, y registros JSON de fuentes de contactos. Para cada documento, el
 script llama a `POST :9080/v1/chat/completions` a través de Doorman, que
-enruta la carga útil al modelo 32B Think en la VM de Yo-Yo. El modelo devuelve
+enruta la carga útil al modelo 32B Think en la VM de Elastic Compute. El modelo devuelve
 un arreglo JSON estructurado de entidades nombradas — personas, empresas,
 proyectos, cuentas y ubicaciones — restringido por una gramática JSON Schema
 para que la salida sea procesable por máquina sin postprocesamiento. El script
@@ -86,7 +86,7 @@ de entrenamiento pendiente y, si la variable de entorno
 `SLM_YOYO_WEIGHTS_GCS_BUCKET` está configurada, sincroniza el directorio del
 corpus relevante con el bucket de GCS configurado.
 
-En la VM de Yo-Yo, `lora-training.sh` verifica el directorio de entrenamiento
+En la VM de Elastic Compute, `lora-training.sh` verifica el directorio de entrenamiento
 pendiente cada 30 segundos. Cuando aparece un marcador, lo reclama mediante un
 renombrado atómico (añadiendo `.claimed`), descarga el corpus desde GCS y
 ejecuta QLoRA usando las bibliotecas peft, bitsandbytes y trl.
@@ -131,7 +131,7 @@ respuestas preferidas sin requerir etiquetas explícitas para cada token.
 ## Salida del adaptador y publicación
 
 Cuando el entrenamiento finaliza, el adaptador se guarda en
-`/data/weights/adapters/<tenant>/<role>/v<N>/` en la VM de Yo-Yo. El directorio
+`/data/weights/adapters/<tenant>/<role>/v<N>/` en la VM de Elastic Compute. El directorio
 del adaptador contiene los archivos de pesos LoRA y la configuración del
 tokenizador — el tamaño total es típicamente de 1 a 3 GB. Luego,
 `lora-training.sh` indica a `adapter-publish.service` que cargue el directorio
@@ -163,9 +163,9 @@ es exclusivamente de adaptadores.
 El código del pipeline nocturno está completo. El servicio de modelo de
 lenguaje del espacio de trabajo pasa 177 de 177 pruebas. La reconstrucción
 de la imagen Packer que incorpora el stack Python de entrenamiento (peft,
-bitsandbytes, trl) a la VM de Yo-Yo es la siguiente acción prevista del
+bitsandbytes, trl) a la VM de Elastic Compute es la siguiente acción prevista del
 operador. Una vez desplegada esa imagen, se habilitará `lora-training.service`
-en la VM de Yo-Yo con `systemctl enable --now lora-training.service`. Hasta
+en la VM de Elastic Compute con `systemctl enable --now lora-training.service`. Hasta
 que la imagen sea reconstruida, la fase de entrenamiento opera en modo solo
 marcador: `corpus-threshold.py` escribe y despacha el marcador de GCS, pero
 `lora-training.sh` aún no está activo en la imagen de VM en producción.
