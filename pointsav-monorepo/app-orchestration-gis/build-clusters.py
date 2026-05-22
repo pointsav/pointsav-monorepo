@@ -1,559 +1,480 @@
 #!/usr/bin/env python3
 """
-build-clusters.py — 3-Tier Leapfrog 2030 (Alpha-Secondary Restriction)
+build-clusters.py — Two-pass tight-first DBSCAN co-location engine.
 
-Multi-radius output: rank_1km / rank_3km per cluster.
-Tier gate is retail-only (Alpha HW + Alpha WH). Civic (hospital/university)
-contributes to proximity score and info card only — not to tier gate.
-Proximity score: linear sum HW + WH + HC + HE alpha secondaries, max 400.
-Chain sets imported exclusively from config.py — no inline overrides.
+Replaces the anchor-centric ring scan with the DBSCAN proximity graph
+validated in simulate-dbscan-ab.py.  Reads per-chain JSONL files declared
+in taxonomy.py.  Emits the §2 schema from BRIEF-BUILD-SPEC-2026-05-22.
+
+Key changes vs the old code:
+  - Tier = retailer-category COMPOSITION ONLY (no IoU, no demand, no civic gate)
+  - Geometry = centroid (never an anchor pin)
+  - cluster_id = centroid-derived: co_{iso}_{clat5}_{clon5}
+  - Two-pass DBSCAN: TAU_TIGHT=1.0 km freezes nuclei; TAU_LOOSE=3.0 km expands
+  - Civic stores (hospital/university) added to members[] but never gate tier
+  - span_km = max pairwise diameter of retail members
+  - tight_intact flag: True iff all retail members are within 1 km of each other
+
+Reads:   service-fs/service-business/<chain_id>.jsonl  (per taxonomy.py BRAND_FILL)
+         service-places/cleansed-civic-osm.jsonl        (hospitals + universities)
+Writes:  work/clusters.geojson
 """
+
 import json
 import math
+import re
 import sys
+from collections import defaultdict
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 from config import (
-    SERVICE_BUSINESS_CLEANSED, SERVICE_PLACES_CLEANSED, WORK_DIR,
-    REGION_CONFIG, ISO_TO_REGION, BOUNDARIES_DIR,
-    ALPHA_HYPERMARKET, ALPHA_LIFESTYLE, ALPHA_HARDWARE, ALPHA_WAREHOUSE,
-    GENERIC_HARDWARE, GENERIC_WAREHOUSE,
-    CHAIN_FAMILIES, CHAIN_SUB_LABELS, ANCHOR_DISPLAY_NAMES,
-    SECONDARY_RADIUS_KM, TERTIARY_RADIUS_KM,
-    CALIBRATION_THRESHOLD, DEFAULT_CATCHMENT_KM, DENSE_CATCHMENT_KM,
+    TOTEBOX_DATA_PATH, BOUNDARIES_DIR, WORK_DIR,
+    CHAIN_FAMILIES, CHAIN_SUB_LABELS,
+)
+from taxonomy import (
+    BRAND_FILL, ALL_DISPLAY_ISO, ISO_TO_CONTINENT,
+    DISPLAY_NAMES, category_of, tier_of, ring_radius_km,
 )
 from utils.region_engine import RegionEngine
 
 WORK_DIR.mkdir(parents=True, exist_ok=True)
 
-RADII_KM = [1.0, 3.0]
+CHAIN_DIR        = TOTEBOX_DATA_PATH / "service-fs" / "service-business"
+SERVICE_PLACES   = TOTEBOX_DATA_PATH / "service-places" / "cleansed-civic-osm.jsonl"
 
-DENSE_URBAN_BOXES = [
-    (-79.7, 43.5, -79.1, 43.9),   # Toronto
-    (-88.0, 41.7, -87.5, 42.1),   # Chicago
-    (-118.7, 33.7, -118.0, 34.2), # Los Angeles
-    (-74.1, 40.5, -73.7, 40.9),   # New York
-    (-123.3, 49.0, -122.9, 49.4), # Vancouver
-    (-3.9, 40.2, -2.5, 40.7),     # Madrid
-]
+TAU_TIGHT_KM = 1.0
+TAU_LOOSE_KM = 3.0
+CIVIC_RADIUS_KM = 5.0   # civic stores added to members if within this radius of centroid
 
+
+# ── HAVERSINE ─────────────────────────────────────────────────────────────────
 
 def haversine_km(lat1, lon1, lat2, lon2) -> float:
     R = 6371.0
-    phi1, phi2 = math.radians(lat1), math.radians(lat2)
-    dphi = math.radians(lat2 - lat1)
-    dlam = math.radians(lon2 - lon1)
-    a = math.sin(dphi / 2) ** 2 + math.cos(phi1) * math.cos(phi2) * math.sin(dlam / 2) ** 2
+    ph1, ph2 = math.radians(lat1), math.radians(lat2)
+    a = (math.sin(math.radians(lat2 - lat1) / 2) ** 2
+         + math.cos(ph1) * math.cos(ph2)
+         * math.sin(math.radians(lon2 - lon1) / 2) ** 2)
     return R * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
 
 
-def linear_score(dist_km: float, max_dist_km: float) -> float:
-    return max(0.0, (max_dist_km - dist_km) / max_dist_km) * 100.0
+# ── SPATIAL GRID ──────────────────────────────────────────────────────────────
 
-
-def load_cleansed_jsonl(path: Path) -> list:
-    res = []
-    if not path.exists():
-        print(f"  WARNING: {path} not found")
-        return res
-    with open(path) as f:
-        for line in f:
-            try:
-                res.append(json.loads(line))
-            except Exception:
-                pass
-    return res
-
-
-def build_grid(recs, size=0.1):
-    g = {}
-    for r in recs:
+def build_grid(recs: list, size: float = 0.1) -> dict:
+    g: dict = {}
+    for idx, r in enumerate(recs):
         cell = (int(float(r["latitude"]) / size), int(float(r["longitude"]) / size))
-        g.setdefault(cell, []).append(r)
+        g.setdefault(cell, []).append(idx)
     return g
 
 
-def query_grid_with_dist(plat, plon, g, r_km, size=0.1):
-    """Returns list of (record, dist_km) for all records within r_km."""
-    res = []
+def neighbours_within(lat: float, lon: float, recs: list, grid: dict,
+                       r_km: float, size: float = 0.1) -> list[tuple[int, float]]:
     deg = (r_km + 0.5) / 111.0
-    for lat_c in range(int((plat - deg) / size), int((plat + deg) / size) + 1):
-        for lon_c in range(int((plon - deg) / size), int((plon + deg) / size) + 1):
-            for r in g.get((lat_c, lon_c), []):
-                d = haversine_km(plat, plon, float(r["latitude"]), float(r["longitude"]))
+    result = []
+    for la in range(int((lat - deg) / size), int((lat + deg) / size) + 1):
+        for lo in range(int((lon - deg) / size), int((lon + deg) / size) + 1):
+            for idx in grid.get((la, lo), []):
+                d = haversine_km(lat, lon, float(recs[idx]["latitude"]),
+                                 float(recs[idx]["longitude"]))
                 if d <= r_km:
-                    res.append((r, d))
-    return res
+                    result.append((idx, d))
+    return result
 
 
-def within(recs_with_dist, r_km):
-    return [r for r, d in recs_with_dist if d <= r_km]
+# ── UNION-FIND ────────────────────────────────────────────────────────────────
+
+def union_find(n: int, edges: set) -> list[list[int]]:
+    parent = list(range(n))
+    rank = [0] * n
+
+    def find(x):
+        while parent[x] != x:
+            parent[x] = parent[parent[x]]
+            x = parent[x]
+        return x
+
+    def union(a, b):
+        ra, rb = find(a), find(b)
+        if ra == rb:
+            return
+        if rank[ra] < rank[rb]:
+            ra, rb = rb, ra
+        parent[rb] = ra
+        if rank[ra] == rank[rb]:
+            rank[ra] += 1
+
+    for a, b in edges:
+        union(a, b)
+    comps: dict = defaultdict(list)
+    for i in range(n):
+        comps[find(i)].append(i)
+    return list(comps.values())
 
 
-def count_distinct_institutions(recs_with_dist, r_km, cluster_km=0.3) -> int:
-    """Count distinct institutions within r_km by grouping OSM nodes within cluster_km.
-    A large campus (100 OSM nodes all within 300m) counts as 1 institution."""
-    candidates = [(r, d) for r, d in recs_with_dist if d <= r_km]
-    if not candidates:
-        return 0
-    # Greedy spatial clustering — assign each node to the nearest already-seen centroid
-    centroids: list[tuple[float, float]] = []
-    for r, _ in candidates:
-        lat = float(r["latitude"])
-        lon = float(r["longitude"])
-        assigned = False
-        for clat, clon in centroids:
-            if haversine_km(lat, lon, clat, clon) <= cluster_km:
-                assigned = True
-                break
-        if not assigned:
-            centroids.append((lat, lon))
-    return len(centroids)
+# ── CLUSTER GEOMETRY ──────────────────────────────────────────────────────────
+
+def component_diameter(indices: list[int], recs: list) -> float:
+    max_d = 0.0
+    for i in range(len(indices)):
+        for j in range(i + 1, len(indices)):
+            a, b = recs[indices[i]], recs[indices[j]]
+            d = haversine_km(float(a["latitude"]), float(a["longitude"]),
+                             float(b["latitude"]), float(b["longitude"]))
+            if d > max_d:
+                max_d = d
+    return max_d
 
 
-def count_distinct_by_tier(recs_with_dist, r_km, cluster_km, tier_field, tier_label) -> int:
-    """Count distinct institutions within r_km whose tier_field matches tier_label."""
-    candidates = [(r, d) for r, d in recs_with_dist
-                  if d <= r_km and r.get(tier_field) == tier_label]
-    if not candidates:
-        return 0
-    centroids: list[tuple[float, float]] = []
-    for r, _ in candidates:
-        lat = float(r["latitude"])
-        lon = float(r["longitude"])
-        assigned = False
-        for clat, clon in centroids:
-            if haversine_km(lat, lon, clat, clon) <= cluster_km:
-                assigned = True
-                break
-        if not assigned:
-            centroids.append((lat, lon))
-    return len(centroids)
+def split_greedy_tight(indices: list[int], recs: list, max_d: float,
+                       atom_of: dict) -> list[list[int]]:
+    """Greedy clique partition that never splits tight nuclei (Pass-1 atoms)."""
+    atoms: dict = {}
+    for idx in indices:
+        atoms.setdefault(atom_of[idx], []).append(idx)
+    remaining = sorted(atoms.keys(), key=lambda a: (-len(atoms[a]), a))
+    groups = []
+    while remaining:
+        seed = remaining.pop(0)
+        group = list(atoms[seed])
+        still = []
+        for cand in remaining:
+            fits = all(
+                haversine_km(float(recs[c]["latitude"]), float(recs[c]["longitude"]),
+                             float(recs[g]["latitude"]), float(recs[g]["longitude"])) <= max_d
+                for c in atoms[cand] for g in group
+            )
+            if fits:
+                group.extend(atoms[cand])
+            else:
+                still.append(cand)
+        remaining = still
+        groups.append(group)
+    return groups
 
 
-def nearest_dist(recs_with_dist, fallback):
-    dists = [d for _, d in recs_with_dist]
-    return min(dists) if dists else fallback
+def tight_intact(indices: list[int], recs: list) -> bool:
+    for i in range(len(indices)):
+        for j in range(i + 1, len(indices)):
+            a, b = recs[indices[i]], recs[indices[j]]
+            if haversine_km(float(a["latitude"]), float(a["longitude"]),
+                            float(b["latitude"]), float(b["longitude"])) > TAU_TIGHT_KM:
+                return False
+    return True
 
 
-def evaluate_tier(nhw_a, nwh_a, nhw_g, nwh_g) -> int | None:
-    """
-    Returns tier 1–3 or None. Civic data is not a gate — info card only.
+# ── DATA LOADING ──────────────────────────────────────────────────────────────
 
-    T3 Apex:  Alpha_HW AND Alpha_WH both present
-    T2 Hub:   Alpha_HW OR Alpha_WH (one alpha secondary)
-    T1 Valid: Generic_HW or Generic_WH only (no alpha)
-    None:     No secondary at all — not a cluster
-    """
-    h_a = len(nhw_a) > 0
-    w_a = len(nwh_a) > 0
-    h_g = len(nhw_g) > 0
-    w_g = len(nwh_g) > 0
-
-    if h_a and w_a:
-        return 3
-    if h_a or w_a:
-        return 2
-    if h_g or w_g:
-        return 1
-    return None
-
-
-def compute_clusters():
-    print("Loading cleansed data layers...")
-    all_locs   = load_cleansed_jsonl(SERVICE_BUSINESS_CLEANSED)
-    all_places = load_cleansed_jsonl(SERVICE_PLACES_CLEANSED)
-
-    # Reverse-geocoding engine (offline, no runtime API calls)
-    region_engine = RegionEngine(BOUNDARIES_DIR)
-    print(f"  business: {len(all_locs)} records, places: {len(all_places)} records")
-
-    print("Building spatial grids...")
-    # Deduplicate civic records by coordinate (cross-country bbox overlap causes duplicates)
-    def dedup_places(recs):
-        seen, out = set(), []
-        for r in recs:
-            key = (round(float(r["latitude"]), 4), round(float(r["longitude"]), 4))
-            if key not in seen:
-                seen.add(key)
-                out.append(r)
-        return out
-
-    hc_raw = [r for r in all_places if r.get("category_id") == "hospital"]
-    he_raw = [r for r in all_places if r.get("category_id") == "university"]
-    hc_g = build_grid(dedup_places(hc_raw))
-    he_g = build_grid(dedup_places(he_raw))
-    print(f"  hospitals: {sum(len(v) for v in hc_g.values())} (raw {len(hc_raw)}), "
-          f"universities: {sum(len(v) for v in he_g.values())} (raw {len(he_raw)})")
-
-    # Canonicalize sub-entities to their parent chain_id
-    def canonical_cid(r):
-        cid = r.get("chain_id", "")
-        return CHAIN_FAMILIES.get(cid, cid)
-
-    locs_by_cid = {}
-    for r in all_locs:
-        cid = canonical_cid(r)
-        if cid:
-            locs_by_cid.setdefault(cid, []).append(r)
-
-    # Also index sub-entity chain_ids separately for info-card display
-    sub_locs_by_cid = {}
-    for r in all_locs:
-        raw_cid = r.get("chain_id", "")
-        if raw_cid in CHAIN_FAMILIES:
-            sub_locs_by_cid.setdefault(raw_cid, []).append(r)
-
-    max_r = max(RADII_KM)
-    clusters = []
-
-    # Union of all 4 alpha classes per continent — any member can initiate a cluster.
-    _all_alpha = {
-        cont: (ALPHA_HYPERMARKET.get(cont, set()) | ALPHA_LIFESTYLE.get(cont, set()) |
-               ALPHA_HARDWARE.get(cont, set())    | ALPHA_WAREHOUSE.get(cont, set()))
-        for cont in ("NA", "EU")
-    }
-
-    for r_key, r_roles in REGION_CONFIG.items():
-        cont = "NA" if r_key in ("US", "CA", "MX") else "EU"
-
-        hw_a_recs = [r for cid in r_roles.get("hardware",  []) if cid in ALPHA_HARDWARE[cont]   for r in locs_by_cid.get(cid, [])]
-        hw_g_recs = [r for cid in r_roles.get("hardware",  []) if cid in GENERIC_HARDWARE[cont]  for r in locs_by_cid.get(cid, [])]
-        wh_a_recs = [r for cid in r_roles.get("warehouse", []) if cid in ALPHA_WAREHOUSE[cont]   for r in locs_by_cid.get(cid, [])]
-        wh_g_recs = [r for cid in r_roles.get("warehouse", []) if cid in GENERIC_WAREHOUSE[cont] for r in locs_by_cid.get(cid, [])]
-        # Cross-class co-tenants for V3 composition predicates (T1: Lifestyle∧Hyper, Warehouse∧Hyper)
-        hyper_a_recs = [r for cid in r_roles.get("anchor", []) if cid in ALPHA_HYPERMARKET[cont] for r in locs_by_cid.get(cid, [])]
-        ls_a_recs    = [r for cid in r_roles.get("anchor", []) if cid in ALPHA_LIFESTYLE[cont]   for r in locs_by_cid.get(cid, [])]
-
-        hw_a_grid    = build_grid(hw_a_recs)
-        hw_g_grid    = build_grid(hw_g_recs)
-        wh_a_grid    = build_grid(wh_a_recs)
-        wh_g_grid    = build_grid(wh_g_recs)
-        hyper_a_grid = build_grid(hyper_a_recs)
-        ls_a_grid    = build_grid(ls_a_recs)
-
-        for anchor_cid in r_roles.get("anchor", []):
-            if anchor_cid not in _all_alpha[cont]:
+def load_chain_jsonl(chain_id: str) -> list:
+    path = CHAIN_DIR / f"{chain_id}.jsonl"
+    if not path.exists():
+        return []
+    recs = []
+    with open(path) as f:
+        for line in f:
+            line = line.strip()
+            if not line:
                 continue
-            for pri in locs_by_cid.get(anchor_cid, []):
-                plat = float(pri["latitude"])
-                plon = float(pri["longitude"])
+            try:
+                r = json.loads(line)
+                r["chain_id"] = chain_id
+                recs.append(r)
+            except Exception:
+                pass
+    return recs
 
-                # Single query at max radius (3km); sub-radii filter from results
-                hw_a_wd    = query_grid_with_dist(plat, plon, hw_a_grid,    max_r)
-                hw_g_wd    = query_grid_with_dist(plat, plon, hw_g_grid,    max_r)
-                wh_a_wd    = query_grid_with_dist(plat, plon, wh_a_grid,    max_r)
-                wh_g_wd    = query_grid_with_dist(plat, plon, wh_g_grid,    max_r)
-                hyper_a_wd = query_grid_with_dist(plat, plon, hyper_a_grid, max_r)
-                ls_a_wd    = query_grid_with_dist(plat, plon, ls_a_grid,    max_r)
-                nhc_wd  = query_grid_with_dist(plat, plon, hc_g, TERTIARY_RADIUS_KM)
-                nhe_wd  = query_grid_with_dist(plat, plon, he_g, TERTIARY_RADIUS_KM)
 
-                nhc = within(nhc_wd, TERTIARY_RADIUS_KM)
-                nhe = within(nhe_wd, TERTIARY_RADIUS_KM)
-                # Count distinct institutions (300m cluster radius collapses campus sub-nodes)
-                hc_distinct = count_distinct_institutions(nhc_wd, TERTIARY_RADIUS_KM, 0.3)
-                he_distinct = count_distinct_institutions(nhe_wd, TERTIARY_RADIUS_KM, 0.3)
-                # Per-tier civic counts for bento breakdown (G14 override 2026-05-16)
-                hc_regional = count_distinct_by_tier(nhc_wd, TERTIARY_RADIUS_KM, 0.3, "hospital_tier", "regional")
-                hc_district = count_distinct_by_tier(nhc_wd, TERTIARY_RADIUS_KM, 0.3, "hospital_tier", "district")
-                he_regional = count_distinct_by_tier(nhe_wd, TERTIARY_RADIUS_KM, 0.3, "university_tier", "regional")
-                he_small    = count_distinct_by_tier(nhe_wd, TERTIARY_RADIUS_KM, 0.3, "university_tier", "small")
+def load_civic_jsonl() -> list:
+    recs = []
+    if not SERVICE_PLACES.exists():
+        print(f"  WARNING: {SERVICE_PLACES} not found — civic data skipped")
+        return recs
+    with open(SERVICE_PLACES) as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                recs.append(json.loads(line))
+            except Exception:
+                pass
+    return recs
 
-                # Evaluate tier at each secondary radius (civics not in gate)
-                ranks = {}
-                for r_km in RADII_KM:
-                    tier = evaluate_tier(
-                        within(hw_a_wd, r_km), within(wh_a_wd, r_km),
-                        within(hw_g_wd, r_km), within(wh_g_wd, r_km),
-                    )
-                    ranks[r_km] = tier or 0
 
-                if not any(ranks.values()):
-                    continue
+# ── CLUSTER ID ────────────────────────────────────────────────────────────────
 
-                # Decomposed proximity scores (alpha secondaries, max 400 total)
-                d_hw = nearest_dist(hw_a_wd, max_r)
-                d_wh = nearest_dist(wh_a_wd, max_r)
-                d_hc = nearest_dist(nhc_wd, TERTIARY_RADIUS_KM)
-                d_he = nearest_dist(nhe_wd, TERTIARY_RADIUS_KM)
-                s_hw = linear_score(d_hw, max_r)
-                s_wh = linear_score(d_wh, max_r)
-                s_hc = linear_score(d_hc, TERTIARY_RADIUS_KM)
-                s_he = linear_score(d_he, TERTIARY_RADIUS_KM)
-                score = s_hw + s_wh + s_hc + s_he
+def make_cluster_id(iso: str, clat: float, clon: float) -> str:
+    lat5 = f"{abs(clat):.5f}".replace(".", "")
+    lon5 = f"{abs(clon):.5f}".replace(".", "")
+    lat_sign = "n" if clat >= 0 else "s"
+    lon_sign = "e" if clon >= 0 else "w"
+    return f"co_{iso.lower()}_{lat_sign}{lat5}_{lon_sign}{lon5}"
 
-                # Generic bonus score (informational, not used for national_rank)
-                d_hw_g = nearest_dist(hw_g_wd, max_r)
-                d_wh_g = nearest_dist(wh_g_wd, max_r)
-                generic_score = linear_score(d_hw_g, max_r) + linear_score(d_wh_g, max_r)
 
-                hw_ids    = list({r.get("chain_id", "") for r, _ in hw_a_wd + hw_g_wd})
-                wh_ids    = list({r.get("chain_id", "") for r, _ in wh_a_wd + wh_g_wd})
-                hyper_ids = list({r.get("chain_id", "") for r, _ in hyper_a_wd if r.get("chain_id") != anchor_cid})
-                ls_ids    = list({r.get("chain_id", "") for r, _ in ls_a_wd    if r.get("chain_id") != anchor_cid})
+# ── TIER DESCRIPTOR ───────────────────────────────────────────────────────────
 
-                # Anchor details for click-to-inspect (per category, with cat field for dot coloring)
-                anchor_details = []
-                for r, d in sorted(hw_a_wd + hw_g_wd, key=lambda x: x[1]):
-                    anchor_details.append({
-                        "lat": round(float(r["latitude"]), 5),
-                        "lon": round(float(r["longitude"]), 5),
-                        "n": r.get("chain_id", ""),
-                        "d": round(d, 2),
-                        "cat": "hardware",
-                        "addr": (r.get("street_address") or "").strip() or None,
-                        "city": (r.get("city") or "").strip() or None,
-                        "rgn":  (r.get("region") or "").strip() or None,
-                    })
-                for r, d in sorted(wh_a_wd + wh_g_wd, key=lambda x: x[1]):
-                    anchor_details.append({
-                        "lat": round(float(r["latitude"]), 5),
-                        "lon": round(float(r["longitude"]), 5),
-                        "n": r.get("chain_id", ""),
-                        "d": round(d, 2),
-                        "cat": "warehouse",
-                        "addr": (r.get("street_address") or "").strip() or None,
-                        "city": (r.get("city") or "").strip() or None,
-                        "rgn":  (r.get("region") or "").strip() or None,
-                    })
-                for r, d in sorted(nhc_wd, key=lambda x: x[1])[:6]:
-                    anchor_details.append({
-                        "lat": round(float(r["latitude"]), 5),
-                        "lon": round(float(r["longitude"]), 5),
-                        "n": r.get("location_name", "Hospital"),
-                        "d": round(d, 2),
-                        "cat": "medical",
-                        "addr": None,
-                        "city": (r.get("city") or "").strip() or None,
-                        "rgn":  (r.get("region") or "").strip() or None,
-                    })
-                for r, d in sorted(nhe_wd, key=lambda x: x[1])[:6]:
-                    anchor_details.append({
-                        "lat": round(float(r["latitude"]), 5),
-                        "lon": round(float(r["longitude"]), 5),
-                        "n": r.get("location_name", "University"),
-                        "d": round(d, 2),
-                        "cat": "academic",
-                        "addr": None,
-                        "city": (r.get("city") or "").strip() or None,
-                        "rgn":  (r.get("region") or "").strip() or None,
-                    })
+def tier_descriptor(cats: set[str]) -> str:
+    retail = cats & {"hypermarket", "hardware", "price_club", "lifestyle"}
+    parts = []
+    for k, label in [("hypermarket", "Hypermarket"), ("lifestyle", "Lifestyle"),
+                     ("hardware", "Hardware"), ("price_club", "Price Club")]:
+        if k in retail:
+            parts.append(label)
+    return " + ".join(parts) if parts else "Unknown"
 
-                # Geometric centroid of commercial co-location stores (anchor + hardware + warehouse)
-                _commercial = [(s['lat'], s['lon']) for s in anchor_details
-                               if s.get('cat') in ('hardware', 'warehouse')]
-                if _commercial:
-                    _all_lats = [plat] + [s[0] for s in _commercial]
-                    _all_lons = [plon] + [s[1] for s in _commercial]
-                    centroid_lat = round(sum(_all_lats) / len(_all_lats), 5)
-                    centroid_lon = round(sum(_all_lons) / len(_all_lons), 5)
-                else:
-                    centroid_lat, centroid_lon = round(plat, 5), round(plon, 5)
 
-                # Commercial store counts at each radius (from anchor, hardware + warehouse only)
-                count_1km = sum(1 for s in anchor_details
-                                if s.get('cat') in ('hardware', 'warehouse') and s['d'] <= 1.0) + 1
-                count_3km = sum(1 for s in anchor_details
-                                if s.get('cat') in ('hardware', 'warehouse') and s['d'] <= 3.0) + 1
+# ── TWO-PASS DBSCAN PER ISO ───────────────────────────────────────────────────
 
-                # Tier descriptor: categorical composition (which anchor classes are present).
-                # Anchor class from 4-class taxonomy (D5 2026-05-16).
-                _hyper_ids     = set().union(*ALPHA_HYPERMARKET.values())
-                _lifestyle_ids = set().union(*ALPHA_LIFESTYLE.values())
-                _wh_ids        = set().union(*ALPHA_WAREHOUSE.values())
-                _hw_ids        = set().union(*ALPHA_HARDWARE.values()) | set().union(*GENERIC_HARDWARE.values())
-                if anchor_cid in _wh_ids:
-                    _anchor_cat = 'Warehouse'
-                elif anchor_cid in _lifestyle_ids:
-                    _anchor_cat = 'Lifestyle'
-                elif anchor_cid in _hw_ids:
-                    _anchor_cat = 'Hardware'
-                else:
-                    _anchor_cat = 'Hypermarket'
-                _cats = set()
-                _cats.add(_anchor_cat)
-                if any(s.get('cat') == 'hardware' for s in anchor_details):
-                    _cats.add('Hardware')
-                if any(s.get('cat') == 'warehouse' for s in anchor_details):
-                    _cats.add('Warehouse')
-                # Composition descriptor (secondary chip in bento, per D2 2026-05-16).
-                _has_h = 'Hypermarket' in _cats
-                _has_l = 'Lifestyle' in _cats
-                _has_w = 'Warehouse' in _cats
-                _has_hw = 'Hardware' in _cats
-                if _has_h and _has_l and _has_hw and _has_w:
-                    tier_descriptor = 'Hypermarket + Lifestyle + Hardware + Warehouse'
-                elif _has_h and _has_hw and _has_w:
-                    tier_descriptor = 'Hypermarket + Hardware + Warehouse'
-                elif _has_l and _has_h and _has_hw:
-                    tier_descriptor = 'Lifestyle + Hypermarket + Hardware'
-                elif _has_l and _has_h and _has_w:
-                    tier_descriptor = 'Lifestyle + Hypermarket + Warehouse'
-                elif _has_h and _has_hw:
-                    tier_descriptor = 'Hypermarket + Hardware'
-                elif _has_h and _has_w:
-                    tier_descriptor = 'Hypermarket + Warehouse'
-                elif _has_l and _has_h:
-                    tier_descriptor = 'Lifestyle + Hypermarket'
-                elif _has_hw and _has_w:
-                    tier_descriptor = 'Hardware + Warehouse'
-                elif _has_l and _has_hw:
-                    tier_descriptor = 'Lifestyle + Hardware'
-                elif _has_l and _has_w:
-                    tier_descriptor = 'Lifestyle + Warehouse'
-                elif _has_h:
-                    tier_descriptor = 'Hypermarket'
-                elif _has_l:
-                    tier_descriptor = 'Lifestyle'
-                elif _has_hw:
-                    tier_descriptor = 'Hardware'
-                elif _has_w:
-                    tier_descriptor = 'Warehouse'
-                else:
-                    tier_descriptor = 'Fringe'
+def run_dbscan_for_iso(iso: str, recs: list) -> list[dict]:
+    """Run two-pass tight-first DBSCAN on recs, all from one ISO country.
+    Returns list of raw cluster dicts (no civic, no geocoding yet)."""
+    n = len(recs)
+    if n == 0:
+        return []
 
-                # Sub-entity display labels (within 200m of anchor)
-                sub_labels = []
-                anchor_sub_map = CHAIN_SUB_LABELS.get(anchor_cid, {})
-                for sub_cid, label in anchor_sub_map.items():
-                    for sub_rec in sub_locs_by_cid.get(sub_cid, []):
-                        d = haversine_km(plat, plon, float(sub_rec["latitude"]), float(sub_rec["longitude"]))
-                        if d <= 0.200:
-                            sub_labels.append(label)
-                            break
+    grid = build_grid(recs)
 
-                is_dense = any(
-                    b[0] <= plon <= b[2] and b[1] <= plat <= b[3]
-                    for b in DENSE_URBAN_BOXES
-                )
+    def graph_edges(radius):
+        e = set()
+        for i, r in enumerate(recs):
+            lat, lon = float(r["latitude"]), float(r["longitude"])
+            for j, _ in neighbours_within(lat, lon, recs, grid, radius):
+                if j != i:
+                    e.add((min(i, j), max(i, j)))
+        return e
 
-                # Geographic display name + offline reverse-geocoded region
-                iso_str      = (pri.get("iso_country_code", "") or "").strip()
-                anchor_label = ANCHOR_DISPLAY_NAMES.get(anchor_cid, anchor_cid)
-                region_name  = region_engine.resolve(plat, plon, iso_str)
+    # Pass 1 — freeze tight (≤1 km) nuclei
+    tight_comps = union_find(n, graph_edges(TAU_TIGHT_KM))
+    atom_of = {}
+    for atom_id, comp in enumerate(tight_comps):
+        for idx in comp:
+            atom_of[idx] = atom_id
 
-                # Settlement-level market name — derived from centroid, not POI addr:city
-                cluster_id_tmp = (
-                    f"c_{anchor_cid}_{round(plat, 3)}_{round(plon, 3)}"
-                    .replace(".", "x").replace("-", "_")
-                )
-                city_str, mkt_conf = region_engine.resolve_market(
-                    plat, plon, iso_str, cluster_id=cluster_id_tmp
-                )
-                state_str = (pri.get("region", "") or "").strip()
+    # Pass 2 — group at loose (≤3 km); atoms never split
+    loose_comps = union_find(n, graph_edges(TAU_LOOSE_KM))
 
-                if city_str:
-                    display_name = f"{city_str}, {state_str}" if state_str else f"{city_str}, {iso_str}"
-                else:
-                    display_name = f"{anchor_label} ({iso_str})"
+    clusters = []
+    for comp in loose_comps:
+        if component_diameter(comp, recs) > TAU_LOOSE_KM:
+            groups = split_greedy_tight(comp, recs, TAU_LOOSE_KM, atom_of)
+        else:
+            groups = [comp]
 
-                clusters.append({
-                    "cluster_id": (
-                        f"c_{anchor_cid}_{round(plat, 3)}_{round(plon, 3)}"
-                        .replace(".", "x").replace("-", "_")
-                    ),
-                    "rank_1km":   ranks[1.0],
-                    "rank_3km":   ranks[3.0],
-                    "score":      round(score, 1),
-                    "score_hw":   round(s_hw, 1),
-                    "score_wh":   round(s_wh, 1),
-                    "score_hc":   round(s_hc, 1),
-                    "score_he":   round(s_he, 1),
-                    "generic_score": round(generic_score, 1),
-                    "primary_anchor": anchor_cid,
-                    "anchor_label": anchor_label,
-                    "hw_list":    json.dumps(hw_ids),
-                    "wh_list":    json.dumps(wh_ids),
-                    "hyper_list": json.dumps(hyper_ids),
-                    "ls_list":    json.dumps(ls_ids),
-                    "hc_count":          hc_distinct,
-                    "he_count":          he_distinct,
-                    "hc_count_regional": hc_regional,
-                    "hc_count_district": hc_district,
-                    "he_count_regional": he_regional,
-                    "he_count_small":    he_small,
-                    "anchor_details": json.dumps(anchor_details),
-                    "sub_entities_display": json.dumps(sub_labels),
-                    "display_name": display_name,
-                    "region_name": region_name,
-                    "city":       city_str,
-                    "mkt_conf":   mkt_conf,
-                    "state":      state_str,
-                    "iso":        iso_str,
-                    "catchment_radius_km": DENSE_CATCHMENT_KM if is_dense else DEFAULT_CATCHMENT_KM,
-                    "last_computed": "2026-05-08",
-                    "count_1km":  count_1km,
-                    "count_3km":  count_3km,
-                    "centroid_lat": centroid_lat,
-                    "centroid_lon": centroid_lon,
-                    "tier_descriptor": tier_descriptor,
-                    "_lat": plat,
-                    "_lon": plon,
-                })
+        for group in groups:
+            members = [recs[i] for i in group]
+            # Deduplicate same store appearing via multiple chain queries
+            seen_locs: set = set()
+            unique_members = []
+            for m in members:
+                key = (round(float(m["latitude"]), 4), round(float(m["longitude"]), 4))
+                if key not in seen_locs:
+                    seen_locs.add(key)
+                    unique_members.append(m)
+            members = unique_members
+            group_indices = list(range(len(members)))  # re-index after dedup
+
+            cats = {category_of(m["chain_id"]) for m in members
+                    if category_of(m["chain_id"]) is not None}
+            tier = tier_of(cats)
+            if tier is None:
+                continue
+
+            lats = [float(m["latitude"])  for m in members]
+            lons = [float(m["longitude"]) for m in members]
+            clat = sum(lats) / len(lats)
+            clon = sum(lons) / len(lons)
+
+            span = round(component_diameter(list(range(len(members))), members), 3)
+            ti   = all(
+                haversine_km(float(members[i]["latitude"]), float(members[i]["longitude"]),
+                             float(members[j]["latitude"]), float(members[j]["longitude"])) <= TAU_TIGHT_KM
+                for i in range(len(members)) for j in range(i + 1, len(members))
+            )
+
+            clusters.append({
+                "iso":        iso,
+                "clat":       clat,
+                "clon":       clon,
+                "tier":       tier,
+                "tier_descriptor": tier_descriptor(cats),
+                "span_km":    span,
+                "tight_intact": ti,
+                "ring_radius_km": 1.0 if (tier == 1 and ti) else 3.0,
+                "members":    members,
+                "cats":       cats,
+            })
 
     return clusters
 
 
+# ── CIVIC ENRICHMENT ──────────────────────────────────────────────────────────
+
+def enrich_with_civic(clusters: list[dict], civic_recs: list) -> None:
+    """Add nearby civic stores (hospital/university) to each cluster's members.
+    Civic never affects tier — descriptor / info only."""
+    if not civic_recs:
+        return
+    civic_grid = build_grid(civic_recs)
+    for c in clusters:
+        clat, clon = c["clat"], c["clon"]
+        nearby = neighbours_within(clat, clon, civic_recs, civic_grid, CIVIC_RADIUS_KM)
+        for idx, d in nearby:
+            r = civic_recs[idx]
+            cat = r.get("category_id") or r.get("category", "")
+            if cat not in ("hospital", "university"):
+                continue
+            c["members"].append({
+                "chain_id":    cat,
+                "latitude":    r["latitude"],
+                "longitude":   r["longitude"],
+                "location_name": r.get("location_name") or cat.title(),
+                "_civic":      True,
+                "_dist_km":    round(d, 2),
+            })
+
+
+# ── GEOCODING + SCHEMA ASSEMBLY ───────────────────────────────────────────────
+
+def assemble_feature(c: dict, engine: RegionEngine) -> dict:
+    iso   = c["iso"]
+    clat  = round(c["clat"], 5)
+    clon  = round(c["clon"], 5)
+
+    city, mkt_conf = engine.resolve_market(clat, clon, iso)
+    region_name    = engine.resolve(clat, clon, iso) or ""
+
+    cluster_id = make_cluster_id(iso, clat, clon)
+
+    if city:
+        iso_str = c.get("iso") or iso
+        state_strs = {m.get("region") or "" for m in c["members"] if not m.get("_civic")}
+        state_str = next((s for s in state_strs if s), "")
+        market_name = f"{city}, {state_str}" if state_str else city
+    else:
+        market_name = region_name or iso
+
+    regional_market = (
+        "rm_" + iso.lower() + "_" +
+        re.sub(r"[^a-z0-9]+", "_", (city or region_name or iso).lower()).strip("_")
+    )
+
+    retail_members = [m for m in c["members"] if not m.get("_civic")]
+    civic_members  = [m for m in c["members"] if m.get("_civic")]
+
+    members_out = []
+    for m in retail_members:
+        members_out.append({
+            "chain_id":    m["chain_id"],
+            "category":    category_of(m["chain_id"]) or "unknown",
+            "name":        DISPLAY_NAMES.get(m["chain_id"], m["chain_id"]),
+            "lat":         round(float(m["latitude"]), 5),
+            "lon":         round(float(m["longitude"]), 5),
+            "addr":        (m.get("street_address") or "").strip() or None,
+            "city":        (m.get("city") or "").strip() or None,
+        })
+    for m in civic_members:
+        members_out.append({
+            "chain_id":    m["chain_id"],
+            "category":    "medical" if m["chain_id"] == "hospital" else "education",
+            "name":        m.get("location_name", m["chain_id"].title()),
+            "lat":         round(float(m["latitude"]), 5),
+            "lon":         round(float(m["longitude"]), 5),
+            "dist_km":     m.get("_dist_km"),
+            "addr":        None,
+            "city":        (m.get("city") or "").strip() or None,
+        })
+
+    props = {
+        "cluster_id":        cluster_id,
+        "tier":              c["tier"],
+        "tier_descriptor":   c["tier_descriptor"],
+        "span_km":           c["span_km"],
+        "tight_intact":      c["tight_intact"],
+        "ring_radius_km":    c["ring_radius_km"],
+        "dist_rank_in_tier": 0.0,   # set by build-geometric-ranking.py
+        "dist_pctile":       50,    # set by build-geometric-ranking.py
+        "demand_rank_in_tier": 0.5, # set by build-demand-ranking.py
+        "demand_basis":      "interim-none",
+        "regional_market":   regional_market,
+        "market_name":       market_name,
+        "market_region":     region_name,
+        "metro_market":      "",    # set by build-regional-markets.py if metro catalog present
+        "mkt_conf":          mkt_conf,
+        "iso":               iso,
+        "continent":         ISO_TO_CONTINENT.get(iso, "?"),
+        "members":           json.dumps(members_out),
+        "member_count":      len(retail_members),
+        "seed_lat":          round(float(retail_members[0]["latitude"]), 5) if retail_members else clat,
+        "seed_lon":          round(float(retail_members[0]["longitude"]), 5) if retail_members else clon,
+        "last_computed":     "2026-05-22",
+    }
+
+    return {
+        "type": "Feature",
+        "geometry": {"type": "Point", "coordinates": [clon, clat]},
+        "properties": props,
+    }
+
+
+# ── MAIN ──────────────────────────────────────────────────────────────────────
+
 def main():
-    print("Computing clusters (1km / 3km secondary radii)...")
-    cls = compute_clusters()
-    print(f"  {len(cls)} clusters with at least one valid tier")
+    print("build-clusters.py — two-pass DBSCAN (2026-05-22)")
+    print("Loading boundary engine...")
+    engine = RegionEngine(BOUNDARIES_DIR)
 
-    # Tier-1 calibration check
-    tier1_count = sum(1 for c in cls if c["rank_3km"] == 1)
-    tier1_rate  = tier1_count / len(cls) if cls else 0
-    print(f"  Tier-1 rate at 3km: {tier1_rate:.1%} (threshold {CALIBRATION_THRESHOLD:.0%})")
-    if tier1_rate > CALIBRATION_THRESHOLD:
-        print("  WARNING: Tier-1 rate exceeds calibration threshold — consider tightening secondary radius")
+    print("Loading civic data...")
+    civic_recs = load_civic_jsonl()
+    print(f"  {len(civic_recs)} civic records")
 
-    # Tier distribution summary
-    for t in [3, 2, 1]:
-        n = sum(1 for c in cls if c["rank_3km"] == t)
-        print(f"  T{t}: {n} clusters")
+    all_features = []
+    total_singletons = 0
+    tier_counts = {1: 0, 2: 0, 3: 0}
 
-    # National rank by proximity score within each ISO country
-    by_iso = {}
-    for c in cls:
-        by_iso.setdefault(c["iso"], []).append(c)
-    for iso, country_cls in by_iso.items():
-        country_cls.sort(key=lambda x: x["score"], reverse=True)
-        for i, c in enumerate(country_cls):
-            c["national_rank"] = f"{i + 1} of {len(country_cls)}"
+    for iso in ALL_DISPLAY_ISO:
+        chain_map = {}
+        for cat in ("hypermarket", "hardware", "price_club", "lifestyle"):
+            for cid in (BRAND_FILL.get(cat) or {}).get(iso, []):
+                recs = load_chain_jsonl(cid)
+                for r in recs:
+                    # normalise iso_country_code to this ISO (handles legacy NORDICS codes)
+                    r["iso_country_code"] = iso
+                    chain_map.setdefault(cid, []).append(r)
 
-    # National rank within tier (e.g., "3 of 113 T4 sites in US")
-    by_iso_tier = {}
-    for c in cls:
-        key = (c["iso"], c["rank_3km"])
-        by_iso_tier.setdefault(key, []).append(c)
-    for (iso, tier), tier_cls in by_iso_tier.items():
-        tier_cls.sort(key=lambda x: x["score"], reverse=True)
-        for i, c in enumerate(tier_cls):
-            c["national_rank_in_tier"] = f"{i + 1} of {len(tier_cls)} T{tier} in {iso}"
+        all_recs = [r for recs in chain_map.values() for r in recs]
+        if not all_recs:
+            continue
 
-    # display_name collision detection: if two clusters share the same display_name,
-    # prefix with anchor brand to disambiguate
-    name_counts: dict = {}
-    for c in cls:
-        name_counts[c["display_name"]] = name_counts.get(c["display_name"], 0) + 1
-    for c in cls:
-        if name_counts[c["display_name"]] > 1:
-            c["display_name"] = f"{c['anchor_label']} {c['display_name']}"
+        print(f"  {iso}: {len(all_recs)} retail records from {len(chain_map)} chains")
+        clusters = run_dbscan_for_iso(iso, all_recs)
+        enrich_with_civic(clusters, civic_recs)
 
-    features = [
-        {
-            "type": "Feature",
-            "geometry": {"type": "Point", "coordinates": [c["_lon"], c["_lat"]]},
-            "properties": {k: v for k, v in c.items() if not k.startswith("_")},
-        }
-        for c in cls
-    ]
+        for c in clusters:
+            feat = assemble_feature(c, engine)
+            all_features.append(feat)
+            tier_counts[c["tier"]] = tier_counts.get(c["tier"], 0) + 1
+
+    print(f"\n{len(all_features)} co-locations total")
+    for t in sorted(tier_counts):
+        print(f"  T{t}: {tier_counts[t]}")
+
+    # Deduplicate clusters by cluster_id (centroid collision across ISO boundaries)
+    seen_ids: set = set()
+    deduped = []
+    for f in all_features:
+        cid = f["properties"]["cluster_id"]
+        if cid not in seen_ids:
+            seen_ids.add(cid)
+            deduped.append(f)
+    if len(deduped) < len(all_features):
+        print(f"  Deduplicated {len(all_features) - len(deduped)} centroid collisions")
+    all_features = deduped
 
     out = WORK_DIR / "clusters.geojson"
     with open(out, "w") as f:
-        json.dump({"type": "FeatureCollection", "features": features}, f, indent=2)
-    print(f"Written {len(cls)} clusters → {out}")
+        json.dump({"type": "FeatureCollection", "features": all_features}, f)
+    print(f"\nWritten {len(all_features)} clusters → {out}")
 
 
 if __name__ == "__main__":
