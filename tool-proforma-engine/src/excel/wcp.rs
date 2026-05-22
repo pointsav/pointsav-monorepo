@@ -84,7 +84,7 @@ pub fn read<P: AsRef<Path>>(path: P) -> Result<WcpData, Box<dyn std::error::Erro
     // So: r(N) = N directly (no -1); column [X] = letter_index(X) + 1.
     let r = |row: u32| row;
     // Y1–Y10 in columns [H]–[Q] = absolute 8–17
-    let yc = |y: usize| (8 + y) as u32;
+    let yc = |y: usize| (6 + y) as u32;
 
     // Header metadata: col [B] = absolute col 2
     let title = get_str(&range, r(1), 2);
