@@ -1,5 +1,5 @@
 # project-gis — Master TODO
-> **Last updated:** 2026-05-21 (session 2)
+> **Last updated:** 2026-05-22 (session 3)
 > This is the canonical session-to-session work queue. Update when items are started, completed, or reprioritized.
 
 ---
@@ -40,12 +40,33 @@ Schedule with: `echo "cd <dir> && python3 <script> > /tmp/<log>.log 2>&1" | at 0
 
 ## RESUME HERE — Next session start
 
-### R1 — Bubble/ring overlap bug (unresolved as of 2026-05-21 end)
-- **Symptom:** At z≥9 (retail level), proximity rings appear but cluster bubble nodes do NOT disappear
-- **Confirmed:** Server sends `no-cache` headers; browser is getting fresh file
-- **Latest fix deployed:** `setRetailLevel()` now sets both `visibility:'none'` AND `circle-opacity:0` on nodes/nodes-halo before showing rings
-- **Next step:** User tests after hard-refresh (Ctrl+Shift+R). If still broken, open F12 → Console and check for JS errors during zoom-in
-- **Code location:** `setRetailLevel()` ~line 1149; `showOverview()` ~line 1076; `drillIntoCluster()` ~line 2285
+### R2 — Frontend §4 refactor (pending)
+Per BRIEF-BUILD-SPEC §4 — these are NOT yet done:
+- **Single `View`/`setView()`/`applyView()` authority** — every layer visibility derived from View; this closes R1 by construction
+- **BentoBox two-view** — `showMarketDetail()` (Regional Market parent view, 2+ co-location markets) + 3-level breadcrumb
+- **Retire** the 1km/3km radius toggle, `showMergedGroupPanel` / ring-merge logic, dead `layer3-radius` layers, "All Locations" bento toggle
+- **Non-anchor retailers off default** — anchors-only default + optional co-tenant toggle
+- **Code:** `index.html` — scattered setLayoutProperty calls across drillIntoCluster/showOverview/setRetailLevel
+
+### R3 — `nodes` circle-radius expression broken
+- **Symptom:** `['get', 'score_final']` at ~line 1924 — `score_final` doesn't exist in §2 schema
+- **Fix:** Change expression to use `['get', 'tier']` or hardcoded radius by tier
+- **File:** `index.html` ~line 1924
+
+### R4 — layer1-locations.pmtiles stale
+- **Issue:** New chains (menards-us, coop-forum-se updated, ikea splits) not in layer1
+- **Fix:** `python3 build-tiles.py --layer 1` — OVERNIGHT BUILD (528 MB+); schedule after 05:00 UTC
+- **Note:** layer2-clusters.pmtiles is current (rebuilt 2026-05-22)
+
+### R5 — `generate-rm-topics.py` not yet written
+- **Spec:** BRIEF-BUILD-SPEC §3 step 11 — one TOPIC per Regional Market → `.agent/drafts-outbound/`
+- **Prereq:** `regional-markets.json` exists; `clusters-meta.json` §2 schema is live
+
+---
+
+### ~~R1 — Bubble/ring overlap + retailer dots hidden~~ FIXED 2026-05-22
+- Nodes/nodes-halo: visibility+opacity dual-kill in `setRetailLevel()` ✓ (commit 4b62f1a8)
+- Retailer dots at retail zoom: `drillIntoCluster()` missing `circle-opacity` reset — FIXED (commit 16dd4122)
 
 ---
 
@@ -189,6 +210,18 @@ All delivered as new fields in clusters-meta.json, not tile layers. Run `synthes
 ## DONE THIS PHASE (archive reference)
 
 | Item | Commit / date |
+|---|---|
+| S2 production build: 5,163 clusters (T1=1,114/T2=3,751/T3=298) | nightly-rebuild.sh 2026-05-22 |
+| taxonomy.py, build-clusters.py, build-geometric-ranking.py rewrites | fc23ad04 |
+| build-demand-ranking.py, build-regional-markets.py, generate-top400.py new | fc23ad04 |
+| synthesize-od-study.py lat/lon patch; OD pipeline overnight (real demand_rank) | fc23ad04 |
+| nightly-rebuild.sh 9-step pipeline written | fc23ad04 |
+| menards-us ingest: 362 records (Q4224987, name_query fallback) | session 2026-05-22 |
+| ikea-nordics split → ikea-se/dk/no/fi/is | session 2026-05-22 |
+| coop-forum-se re-ingest: 1→92 records | session 2026-05-22 |
+| lowes-ca removed from taxonomy | session 2026-05-22 |
+| index.html §2 schema patch: metaToClusterProps() + 4 other patches | session 2026-05-22 |
+| Retailer dots fix: drillIntoCluster() circle-opacity=0.70 | 16dd4122 |
 |---|---|
 | Phase 15: wegmans/winco/sprouts ingest | c5662554 (2026-05-18) |
 | Phase 16: esselunga/sklavenitis/billa-plus/continente/albert-heijn-xl ingest | session (2026-05-19) |
