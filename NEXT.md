@@ -6,7 +6,7 @@
 > Read at session start when a Root Claude opens in this repo. Update
 > at session end when repo-scope open items change.
 
-Last updated: 2026-05-21.
+Last updated: 2026-05-22.
 
 ---
 
@@ -55,6 +55,17 @@ under `.agent/plans/archive/`.
 ---
 
 ## Currently open
+
+### service-slm Phase 4 complete — Stage 6 pending
+
+- [ ] **Commit Phase 4 changes** (session 3, 2026-05-22): `build_doorman()` node-class
+  gate + `SLM_FORCE_BROKER_MODE`; `select_tier()` Micro invariant test; `/readyz`
+  reports `node_class`/`tier_a`/`tier_a_reason`/`ai_available`; `local-doorman.service`
+  `Requires=` → `Wants=`; `NodeClass::as_str()` in foundry-nodeclass. Phase 5
+  (micro integration tests + cgroup sandbox) is the next unblocked item.
+  [2026-05-22 totebox@claude-code]
+- [ ] **Stage 6 promote** — local main is 10+ commits ahead of origin/main;
+  Command must `git rebase origin/main` then `bin/promote.sh`. [2026-05-22 totebox@claude-code]
 
 ### Doctrine conflict — claim #49 vs. tier-zero working-set convention
 
