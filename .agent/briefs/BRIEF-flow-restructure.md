@@ -160,84 +160,109 @@ Keep the `latency_class` idea, but routing is **node-class-first**:
 
 ## 8. THE TO-DO LIST — per repo
 
-Work it top to bottom within each repo. `[ ]` todo, `[x]` done. Execution order
-across repos is in §9.
+Concrete engineering plan, verified by an Opus software-engineering review
+(2026-05-22). **Single-binary principle:** ONE build of `service-slm` and ONE of
+`service-content` runs every node class with **no code alterations** — a runtime
+probe detects the node and selects tiers/backends. No `#[cfg]` tier flags, no
+per-tier builds. `[ ]` todo, `[x]` done. Execution order in §9.
 
 ### 8.A — project-intelligence (archive-level)
 - [x] Rebuild this BRIEF on the $7-node doctrine (this document)
 - [ ] Log the #49-vs-convention working-set conflict in `NEXT.md` (§6)
-- [ ] Outbox note to Command: original flow-restructure investigation drifted
-  from ratified conventions #49/#54/four-tier/tier-zero — recommend a doctrine
-  cross-check step for future architecture briefs
-- [ ] Update `.agent/manifest.md` `deployment:` leg — the target deployment
-  shape is the $7/mo e2-micro fleet node, not the workspace VM
-- [ ] Update `service-slm/CLAUDE.md` + `service-content/CLAUDE.md` headers to
-  state the node-class model (fleet = $7 node, deterministic + broker)
-- [ ] `.agent/memory/` already carries `project_flow_cpu_wall_correction`; add a
-  pointer to this rebuilt BRIEF
+- [ ] Outbox note to Command: original investigation drifted from ratified
+  conventions #49/#54/four-tier/tier-zero — recommend a doctrine cross-check
+  step for future architecture briefs
+- [ ] Update `.agent/manifest.md` `deployment:` leg — target shape is the
+  $7/mo e2-micro fleet node, not the workspace VM
+- [ ] Update `service-slm/CLAUDE.md` + `service-content/CLAUDE.md` headers with
+  the node-class model
+- [ ] Add a BRIEF pointer in `.agent/memory/MEMORY.md`
 
-### 8.B — service-slm
-- [ ] **Node-class capability probe** — at startup the Doorman detects RAM / CPU
-  / GPU and computes which tiers are physically possible. `/readyz` reports
-  `tier_a: ok|unavailable` from the probe, never from a model-load attempt.
-- [ ] **Corrected W1 routing** — `latency_class` field in `slm-core`;
-  `select_tier` keyed node-class-first (§7). Delete "Interactive never defaults
-  to Local." Add the invariant: on a node where Tier A exists, interactive never
-  hard-refuses it.
-- [ ] **Broker discipline** — enforce "the Doorman operates no inference
-  infrastructure / hosts no model." Quarantine `idle_monitor.rs` (Yo-Yo
-  lifecycle) behind a `BackendLifecycle` trait; the broker discovers backends,
-  never builds them.
-- [ ] Reconcile the **Tier A model drift** — `local-slm.service` vs
-  `local-doorman.service` disagree (1B vs 7B-Think); pin to OLMo 2 1B for the
-  NUC Tier A; surface to Command for `permissible-model-substrate.md`.
-- [ ] GF-1 — async audit/metrics/cost-ledger off the response hot path.
-- [ ] GF-2 — Tier A HTTP client timeouts (`tier/local.rs` has none).
-- [ ] W5 remainder (Yo-Yo hardening, the paid tier) — G5/G6/G9/G14/G18 +
-  G11–G16: orphan reaper, `yoyo-status`, per-instance state, etc. Phase 0
-  (G1/G3/G7/G8/G10/G17) already done.
-- [ ] Audit cgroup/`MemoryMax` settings for the $7-node footprint (Doorman is
-  `512M` — confirm it holds; the broker must be tiny).
+### 8.B — `foundry-nodeclass` (NEW shared crate)
+The single mechanism both services use to adapt at runtime.
+- [ ] Create `foundry-nodeclass` (~150 LOC, leaf crate): `NodeClass { Micro,
+  Hardware, Accelerated }` + `Capabilities`. `detect()` reads RAM (cgroup v2
+  `memory.max` / v1 / `/proc/meminfo` — take the min), vCPU (cgroup `cpu.max` /
+  `nproc`), GPU (`/dev/nvidia*` `/dev/dri` filesystem probe — no CUDA link).
+  Classify: GPU→`Accelerated`; ≥6 GiB & ≥1.5 vCPU→`Hardware`; else `Micro`.
+  `TOTEBOX_NODE_CLASS` env override (the test lever) + synthetic/fixture
+  constructors for unit tests.
 
-### 8.C — service-content
-- [ ] **LadybugDB → SQLite-graph backend (THE blocker, §4)** — finish/implement
-  the SQLite-graph `GraphStore` impl that `ARCHITECTURE.md` §4 already specifies
-  for Tier 0; make it the default for $7-node / Tier-0 deployments. Keep
-  LadybugDB as an opt-in for large nodes.
-- [ ] Fit + boot on a tiny node — clamp any buffer pool to the code default;
-  background the synchronous CORPUS-drain so startup is seconds, not 16 min
-  (the old GF-5 work — now a fitness-to-boot prerequisite, not an optimization).
-- [ ] Readiness gating — `/healthz` reports `warming` during load;
-  `/v1/graph/context` returns a 503 signal, never a silently-empty graph.
-- [ ] Verify the deterministic substrate's total RSS fits ~1 GB on the SQLite
-  backend; if it cannot, commit the floor to e2-small (~$14/mo) and record it.
+### 8.C — service-slm  (clean single-binary — no obstacle)
+- [ ] `build_doorman()` (`main.rs`) — gate `local` on `caps.supports_on_node_ai()`
+  + `SLM_FORCE_BROKER_MODE`. **Today `local` is unconditionally `Some` — the
+  Doorman falsely reports Tier A exists. This is the load-bearing fix.** Thread
+  `node_class` onto `Doorman`.
+- [ ] `select_tier()` (`router.rs`) — node-class-first policy; `Micro` never
+  defaults to `Tier::Local`. Delete the "Interactive never defaults to Local"
+  doc line. Add the invariant test.
+- [ ] `/readyz` (`http.rs`) — report `node_class`, `tier_a` + `tier_a_reason`,
+  `ai_available` from the probe, never from a model-load attempt.
+- [ ] `slm-doorman.service` — `local-slm.service` becomes a soft `Wants=`.
+- [ ] `latency_class` field in `slm-core` (corrected W1).
+- [ ] Broker discipline — quarantine `idle_monitor.rs` behind a `BackendLifecycle`
+  trait (tidiness; not a node-class blocker).
+- [ ] Reconcile the Tier A model drift (1B vs 7B-Think in env files); pin
+  OLMo 2 1B for the NUC tier; surface to Command for `permissible-model-substrate.md`.
+- [ ] GF-1 async audit off the hot path · GF-2 Tier A client timeouts.
+- [ ] W5 remainder (Yo-Yo paid tier) — G5/G6/G9/G11–G16/G18. Phase 0 done.
+
+### 8.D — service-content  (single-binary achievable; one caveat)
+- [ ] **Build `SqliteGraphStore`** (`src/graph_sqlite.rs`, ~250 LOC, `rusqlite`
+  bundled) — implement every `GraphStore` trait method over a 2-table SQLite
+  schema 1:1 with the LadybugDB `Entity` columns (preserves `worm_id`/`cites`
+  provenance). The trait exists; LadybugDB is the only impl today — this is the
+  missing piece.
+- [ ] Runtime backend selection in `main.rs` — `Sqlite` on `Micro`, `Ladybug`
+  on `Hardware`+; `SERVICE_CONTENT_GRAPH_BACKEND` env override.
+- [ ] Background the CORPUS drain (16-min synchronous scan → `tokio::spawn`);
+  `/healthz` warming/ready; `/v1/graph/context` 503-while-warming.
+- [ ] Fix the legacy hardcoded `base_dir` default (`main.rs`).
+- [ ] **lbug single-binary caveat — operator decision:** `lbug` (LadybugDB) is a
+  C++ FFI crate, statically linked → its engine compiles into the binary even on
+  a $7 node (~tens of MB *disk* bloat, not RAM). **Option 1:** accept it, ship
+  now (recommended). **Option 3:** make LadybugDB a side-car process behind
+  `GraphStore` (cleanest; Leapfrog follow-up). Option 2 (a Cargo feature = two
+  builds) is rejected — it breaks the one-build rule.
 - [ ] Content reliability pass — `processed_ledgers` → `HashSet`; remove
   panic-on-write surfaces; persistent deferred-retry queue.
 
-### 8.D — gated (NUC rung; not now)
+### 8.E — CI / base-tier testing  (the never-built no-tier suite)
+How we finally TEST the $7-node base tier the dev environment never hits.
+- [ ] Forced-class tests — `TOTEBOX_NODE_CLASS=micro` integration tests in both
+  services (`tests/micro_node.rs`): broker has no Tier A, `/readyz` honest, an
+  AI request → clean 503 with no model-load attempt; `SqliteGraphStore` round-trips.
+- [ ] **cgroup sandbox** — `scripts/run-micro-sandbox.sh` via
+  `systemd-run --user -p MemoryMax=1G -p CPUQuota=25%` (no container —
+  `zero-container-runtime.md`). The real test: the substrate must boot + serve
+  in 1 GB; `MemoryMax=1G` auto-OOM-kills a wrong (LadybugDB) backend selection.
+- [ ] The no-tier CI matrix (`node_class_matrix.rs`) — every (node-class × tiers)
+  cell; the deterministic-operations suite passes in every row. This *is* the
+  `substrate-without-inference-base-case.md` §8 suite — mandated, never built.
+- [ ] `compute/opentofu/` — a `node-micro` e2-micro profile; real-hardware
+  matrix run gated to MINOR releases.
+
+### 8.F — gated (NUC on-device AI; not now)
 - [ ] Tier A on-device 1B specialist as a real product — `LocalInferenceBackend`
-  trait, accelerator backends, model packaging. **Gated** behind: §8.C done +
+  trait, accelerator backends, model packaging. **Gated** behind: §8.D done +
   the $7-node fleet verified booting + a named hardware-Totebox customer.
 
 ---
 
 ## 9. Execution order
 
-1. **service-content SQLite-graph backend (§8.C item 1)** — the blocker;
-   nothing about the $7-node fleet is real until `service-content` boots on a
-   tiny node. Start here.
-2. **service-slm node-class probe (§8.B item 1)** — so the Doorman behaves
-   correctly (no OOM, honest `/readyz`) on a $7 node.
-3. **§8.C fit/boot + §8.B corrected W1** — in parallel; both are small once 1–2
-   land.
-4. **Archive alignment (§8.A)** — manifest, NEXT.md conflict log, Command
-   outbox — can happen any time; do it alongside 1–3.
-5. **GF-1 / GF-2 + service-content reliability** — small wins, after the
-   foundation.
-6. **W5 remainder** — the Yo-Yo paid tier; independent, schedule as capacity
-   allows.
-7. **§8.D Tier A on-device build** — gated; not until the fleet foundation is
-   verified.
+1. **`foundry-nodeclass` crate (§8.B)** — both services depend on it; build first.
+2. **`SqliteGraphStore` + runtime backend selection (§8.D)** — THE blocker;
+   nothing about the $7-node fleet is real until `service-content` boots tiny.
+3. **service-slm `build_doorman()` Tier-A gate + `/readyz` (§8.C)** — stops the
+   Doorman falsely reporting Tier A / OOMing on a $7 node.
+4. **§8.E base-tier tests + cgroup sandbox** — stand up early; it is how every
+   later change is verified against the $7-node target.
+5. **§8.C `select_tier`/`latency_class` + §8.D fit-boot/reliability** — parallel.
+6. **Archive alignment (§8.A)** — manifest, NEXT.md, Command outbox — any time.
+7. **GF-1 / GF-2** — small wins after the foundation.
+8. **W5 remainder** — the Yo-Yo paid tier; independent.
+9. **§8.F on-device AI build** — gated.
 
 ---
 
