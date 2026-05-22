@@ -210,7 +210,7 @@ fn load_processed_ledgers(path: &Path) -> Vec<String> {
     };
     std::io::BufReader::new(file)
         .lines()
-        .filter_map(|l| l.ok())
+        .map_while(Result::ok)
         .map(|l| l.trim().to_string())
         .filter(|l| !l.is_empty())
         .collect()
