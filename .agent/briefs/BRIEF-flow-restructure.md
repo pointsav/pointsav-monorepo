@@ -48,33 +48,38 @@ classes, not the fleet default.
 
 ---
 
-## Status — resume point (2026-05-22)
+## Status — resume point (2026-05-22, session 2)
 
-**Phase 0 — DONE** (Yo-Yo cost hardening, the paid AI tier): 3 signed commits
-— `35e2dea7`, `ed63476c`, `a10539c6`. Yo-Yo spend is hard-capped at $3/day,
-shutdown is verified, deliberate stops are sticky. Details in §5.
+**lbug decision — LOCKED as Option 1** (2026-05-22). Agent-confirmed: current
+binary is already shared-linked at 4.2 MB + 27 MB liblbug.so; static build
+would be ~17.7 MB total (~13.5 MB delta). The ~2 GB RAM problem is LadybugDB
+mmap — `SqliteGraphStore` solves that independently. Disk bloat accepted; one
+binary serves all tiers. Do NOT revisit.
 
-**This BRIEF — rebuilt 2026-05-22** on the $7-node doctrine. §8 is the full
-per-repo to-do list; §9 the execution order; §10 the definition of done. BRIEF
-commits this session: `5e41beb9` (rebuild), `8b5bd01b` (§8/§9 concrete plan),
-+ this Status section.
+**Phase 0 — DONE** (Yo-Yo cost hardening): `35e2dea7`, `ed63476c`, `a10539c6`.
 
-**▶ RESUME HERE — §9 execution order, step 1:** build the `foundry-nodeclass`
-crate (§8.B), then `SqliteGraphStore` (§8.D) — THE blocker; nothing about the
-$7-node fleet is real until `service-content` boots on a 1 GB node.
+**Phase 0 inbox tasks — DONE** (2026-05-22 session 2):
+- `b2a09597` — `.agent/binary-targets.yaml` declared (slm-doorman-server)
+- `9fbff79d` — briefs migration: all `.agent/plans/` → `.agent/briefs/BRIEF-*`
+- `335a8575` — frontmatter (`artifact: brief` / `status`) on all 18 briefs
 
-**Open decision for the operator:** the lbug single-binary caveat in §8.D —
-Option 1 (accept ~tens-of-MB disk bloat, ship now — *recommended*) vs Option 3
-(LadybugDB as a side-car process, a Leapfrog follow-up). Resolve before §8.D
-coding starts.
+**AUTO-TODO created:** `.agent/AUTO-TODO.md` — comprehensive phase-by-phase
+plan (Phases 0–8) with gates and commit guidance. Start here tomorrow.
+
+**▶ RESUME HERE — Phase 1 + Phase 2 in parallel:**
+- Phase 1 (§8.A): archive alignment — NEXT.md conflict note, outbox to Command, manifest note. Low effort, do alongside Phase 2.
+- Phase 2 (§8.B): build `foundry-nodeclass` crate (~150 LOC) — first hard dependency; both services need it before any node-class logic can land.
 
 **Pending — Command Session (not Totebox scope):**
 - Rebuild the `slm-yoyo` Packer image so Phase-0 G3/G17 take effect on the VM.
-- Stage 6 promote — local `main` carries ~16 unpromoted commits (Phase 0 ×3 +
-  3 BRIEF commits + pre-session backlog); needs a `git rebase origin/main`
-  first (archive inbox `command-20260520-stage6-rebase-required`).
-- Outbox note re: the original investigation drifting from ratified doctrine
-  (§6) — queued as a §8.A to-do, not yet sent.
+- Stage 6 promote — local `main` is now 7 commits ahead of origin/main; needs
+  `git rebase origin/main` first (see inbox `command-20260520-stage6-rebase-required`).
+- Outbox note re: original investigation drifting from ratified doctrine (§6) — queued in §8.A.
+
+**Also pending (inbox, not AUTO-TODO critical path):**
+- `project-editorial-20260521-e4-triage-naming-blockers` — 3 drafts in
+  `drafts-outbound/` blocked on Do-Not-Use "Yo-Yo" rename + personal name in
+  filename. Rename and re-stage before next project-editorial sweep.
 
 **In-flight / uncommitted:** none — BRIEF + all Phase 0 work committed. Untracked
 and intentionally so: `compute/packer/scripts/yoyo-stability-gate.{service,sh}`
