@@ -108,6 +108,7 @@ BRAND_FILL: dict[str, dict[str, list[str]]] = {
             "kaufland-de",
             "ecenter-de",
             "marktkauf-de",
+            "globus-de",  # 125 records, Q528681 (Globus Holding) — Phase 18 2026-05-22
         ],
         "ES": [
             "mercadona-es",
@@ -350,7 +351,7 @@ DISPLAY_NAMES: dict[str, str] = {
     "auchan-fr": "Auchan",
     "kaufland-de": "Kaufland", "kaufland-pl": "Kaufland",
     "ecenter-de": "E center",
-    "marktkauf-de": "Marktkauf",
+    "marktkauf-de": "Marktkauf", "globus-de": "Globus",
     "mercadona-es": "Mercadona",
     "esselunga-it": "Esselunga",
     "sklavenitis-gr": "Sklavenitis",
