@@ -4,12 +4,8 @@ use tiny_http::{Header, Request, Response, Server};
 
 use crate::{
     db::{add_user, open_db},
-    pairing::{
-        new_code, normalize, ApproveBody, PairRequestBody, PairResponseBody, StatusResponseBody,
-    },
-    pairing_db::{
-        get_by_code, get_state_by_id, insert_request, list_pending, set_state, sweep_expired,
-    },
+    pairing::{new_code, normalize, ApproveBody, PairRequestBody, PairResponseBody, StatusResponseBody},
+    pairing_db::{get_by_code, get_state_by_id, insert_request, list_pending, set_state, sweep_expired},
 };
 
 type BoxResp = Response<std::io::Cursor<Vec<u8>>>;
@@ -69,10 +65,7 @@ fn handle_pair_request(req: &mut Request) -> BoxResp {
         code: code.clone(),
         expires_at: expires_at.clone(),
     };
-    eprintln!(
-        "pair-server: new request — {code} for {}@{}",
-        body.username, body.tenant
-    );
+    eprintln!("pair-server: new request — {code} for {}@{}", body.username, body.tenant);
     json_ok(serde_json::to_value(resp).unwrap())
 }
 
@@ -200,7 +193,9 @@ pub fn run_server(addr: &str) -> Result<()> {
             ("POST", "/v1/pair/approve") => handle_approve(&mut request),
             ("POST", "/v1/pair/deny") => handle_deny(&mut request),
             ("GET", "/v1/pair/pending") => handle_pending(),
-            _ if method == "GET" && url.starts_with("/v1/pair/status/") => handle_status(&url),
+            _ if method == "GET" && url.starts_with("/v1/pair/status/") => {
+                handle_status(&url)
+            }
             _ => json_err(404, "not found"),
         };
 
