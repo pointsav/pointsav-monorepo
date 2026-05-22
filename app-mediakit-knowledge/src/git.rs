@@ -1,6 +1,6 @@
+use crate::error::WikiError;
 use git2::{Commit, Repository, Signature};
 use std::path::{Path, PathBuf};
-use crate::error::WikiError;
 
 /// Opens the git repository at `content_dir` if one exists, or initialises a new one.
 pub fn open_or_init(content_dir: &Path) -> Result<Repository, WikiError> {
@@ -21,36 +21,45 @@ pub fn commit_topic(
     author_name: &str,
     message: &str,
 ) -> Result<git2::Oid, WikiError> {
-    let mut index = repo.index().map_err(|e| WikiError::WriteFailed(format!("git index failed: {e}")))?;
+    let mut index = repo
+        .index()
+        .map_err(|e| WikiError::WriteFailed(format!("git index failed: {e}")))?;
     let path = Path::new(slug).with_extension("md");
-    index.add_path(&path).map_err(|e| WikiError::WriteFailed(format!("git add failed: {e}")))?;
-    index.write().map_err(|e| WikiError::WriteFailed(format!("git index write failed: {e}")))?;
+    index
+        .add_path(&path)
+        .map_err(|e| WikiError::WriteFailed(format!("git add failed: {e}")))?;
+    index
+        .write()
+        .map_err(|e| WikiError::WriteFailed(format!("git index write failed: {e}")))?;
 
-    let tree_id = index.write_tree().map_err(|e| WikiError::WriteFailed(format!("git write tree failed: {e}")))?;
-    let tree = repo.find_tree(tree_id).map_err(|e| WikiError::WriteFailed(format!("git find tree failed: {e}")))?;
+    let tree_id = index
+        .write_tree()
+        .map_err(|e| WikiError::WriteFailed(format!("git write tree failed: {e}")))?;
+    let tree = repo
+        .find_tree(tree_id)
+        .map_err(|e| WikiError::WriteFailed(format!("git find tree failed: {e}")))?;
 
     let sig = if author_name.is_empty() || author_email.is_empty() {
-        repo.signature().map_err(|e| WikiError::WriteFailed(format!("git default signature failed: {e}")))?
+        repo.signature()
+            .map_err(|e| WikiError::WriteFailed(format!("git default signature failed: {e}")))?
     } else {
         Signature::now(author_name, author_email)
             .map_err(|e| WikiError::WriteFailed(format!("git signature failed: {e}")))?
     };
 
     let parent_commit = match repo.head() {
-        Ok(head) => Some(head.peel_to_commit().map_err(|e| WikiError::WriteFailed(format!("git peel to commit failed: {e}")))?),
+        Ok(head) => Some(
+            head.peel_to_commit()
+                .map_err(|e| WikiError::WriteFailed(format!("git peel to commit failed: {e}")))?,
+        ),
         Err(_) => None,
     };
 
     let parents: Vec<&Commit> = parent_commit.as_ref().map(|c| vec![c]).unwrap_or_default();
 
-    let commit_id = repo.commit(
-        Some("HEAD"),
-        &sig,
-        &sig,
-        message,
-        &tree,
-        &parents,
-    ).map_err(|e| WikiError::WriteFailed(format!("git commit failed: {e}")))?;
+    let commit_id = repo
+        .commit(Some("HEAD"), &sig, &sig, message, &tree, &parents)
+        .map_err(|e| WikiError::WriteFailed(format!("git commit failed: {e}")))?;
 
     Ok(commit_id)
 }
@@ -75,9 +84,15 @@ pub fn ensure_commit_identity_from_env(repo: &Repository) -> Result<(), WikiErro
         }
     };
 
-    let mut config = repo.config().map_err(|e| WikiError::WriteFailed(format!("git config failed: {e}")))?;
-    config.set_str("user.name", name).map_err(|e| WikiError::WriteFailed(format!("git set user.name failed: {e}")))?;
-    config.set_str("user.email", email).map_err(|e| WikiError::WriteFailed(format!("git set user.email failed: {e}")))?;
+    let mut config = repo
+        .config()
+        .map_err(|e| WikiError::WriteFailed(format!("git config failed: {e}")))?;
+    config
+        .set_str("user.name", name)
+        .map_err(|e| WikiError::WriteFailed(format!("git set user.name failed: {e}")))?;
+    config
+        .set_str("user.email", email)
+        .map_err(|e| WikiError::WriteFailed(format!("git set user.email failed: {e}")))?;
 
     Ok(())
 }
