@@ -106,7 +106,7 @@ async fn test_initialize_handshake() {
 // ─── tools/list ─────────────────────────────────────────────────────────────
 
 #[tokio::test]
-async fn test_tools_list_returns_six() {
+async fn test_tools_list_returns_three() {
     let (state, _cd, _sd) = fixture().await;
     let app = router(state);
     let resp = post_mcp(
@@ -115,45 +115,14 @@ async fn test_tools_list_returns_six() {
     )
     .await;
     let tools = resp["result"]["tools"].as_array().unwrap();
-    assert_eq!(tools.len(), 6);
+    assert_eq!(tools.len(), 3);
     let names: Vec<&str> = tools
         .iter()
         .map(|t| t["name"].as_str().unwrap())
         .collect();
-    assert!(names.contains(&"search_topics"));
-    assert!(names.contains(&"get_revision"));
     assert!(names.contains(&"create_topic"));
     assert!(names.contains(&"propose_edit"));
     assert!(names.contains(&"link_citation"));
-    assert!(names.contains(&"list_backlinks"));
-}
-
-// ─── tools/call search_topics ───────────────────────────────────────────────
-
-#[tokio::test]
-async fn test_tools_call_search_topics() {
-    let (state, _cd, _sd) = fixture().await;
-    let app = router(state);
-    let resp = post_mcp(
-        app,
-        json!({
-            "jsonrpc": "2.0",
-            "id": 3,
-            "method": "tools/call",
-            "params": {
-                "name": "search_topics",
-                "arguments": { "query": "body text", "limit": 5 }
-            }
-        }),
-    )
-    .await;
-    assert!(resp["error"].is_null(), "unexpected error: {}", resp["error"]);
-    let content = &resp["result"]["content"];
-    assert!(content.is_array());
-    assert_eq!(content[0]["type"], "text");
-    let text = content[0]["text"].as_str().unwrap();
-    let parsed: Value = serde_json::from_str(text).unwrap();
-    assert!(parsed["hits"].is_array());
 }
 
 // ─── resources/read ─────────────────────────────────────────────────────────

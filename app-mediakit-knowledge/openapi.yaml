@@ -385,8 +385,7 @@ paths:
         Implements: initialize, tools/list, tools/call, resources/list,
         resources/read, prompts/list, prompts/get.
 
-        Tools: search_topics, get_revision, create_topic, propose_edit,
-        link_citation, list_backlinks.
+        Tools: create_topic, propose_edit, link_citation.
 
         Resources: wiki://topic/{slug}
         Prompts: cite-this-page, summarize-topic, draft-related-topic
@@ -414,16 +413,15 @@ paths:
                   id: 2
                   method: tools/list
                   params: {}
-              tools_call_search:
+              tools_call_link_citation:
                 value:
                   jsonrpc: "2.0"
                   id: 3
                   method: tools/call
                   params:
-                    name: search_topics
+                    name: link_citation
                     arguments:
-                      query: compounding substrate
-                      limit: 5
+                      query: ni-51-102
       responses:
         "200":
           description: JSON-RPC 2.0 response
