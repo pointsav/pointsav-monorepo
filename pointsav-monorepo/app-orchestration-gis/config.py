@@ -90,7 +90,9 @@ ALPHA_HYPERMARKET = {
 ALPHA_LIFESTYLE = {
     "NA": {"ikea-us", "ikea-ca", "ikea-mx"},
     "EU": {
-        "ikea-es", "ikea-it", "ikea-gr", "ikea-pl", "ikea-nordics",
+        "ikea-es", "ikea-it", "ikea-gr", "ikea-pl",
+        # ikea-nordics split into per-country (pre-freeze fix 2026-05-22)
+        "ikea-se", "ikea-dk", "ikea-no", "ikea-fi",
         "ikea-fr", "ikea-de", "ikea-uk",
         "ikea-at", "ikea-nl", "ikea-pt",
     },
@@ -116,7 +118,8 @@ ALPHA_HARDWARE = {
     }
 }
 GENERIC_HARDWARE = {
-    "NA": {"lowes-us", "lowes-ca", "canadian-tire-ca", "peavey-mart-ca"},
+    # lowes-ca removed 2026-05-22: Lowe's exited Canada; 1 stale record
+    "NA": {"lowes-us", "canadian-tire-ca", "peavey-mart-ca"},
     "EU": {
         # ── TODO: these chains need better OSM brand:wikidata coverage ──────────
         # Each currently has 0 records. Once re-ingested with sufficient data,
@@ -176,7 +179,7 @@ REGION_CONFIG = {
     },
     "CA": {
         "anchor":    ["walmart-ca", "ikea-ca", "real-canadian-superstore-ca", "home-depot-ca", "costco-ca"],
-        "hardware":  ["home-depot-ca", "lowes-ca", "canadian-tire-ca"],
+        "hardware":  ["home-depot-ca", "canadian-tire-ca"],  # lowes-ca removed 2026-05-22
         "warehouse": ["costco-ca"]
     },
     "MX": {
@@ -204,9 +207,13 @@ REGION_CONFIG = {
         "hardware":  ["leroy-merlin-pl", "obi-pl", "castorama-pl"],
         "warehouse": ["makro-pl", "selgros-pl"]
     },
+    # NORDICS region kept for legacy build-clusters.py; new build-clusters-v2.py uses taxonomy.py per-ISO
     "NORDICS": {
-        "anchor":    ["ikea-nordics", "bilka-dk", "prisma-fi", "k-citymarket-fi", "obs-coop-no", "hagkaup-is", "costco-se", "costco-is"],
-        "hardware":  ["clas-ohlson-se", "k-rauta-fi", "imerco-dk", "obs-bygg-no", "husasmidjan-is", "bauhaus-se", "silvan-dk", "byko-is"],
+        "anchor":    ["ikea-se", "ikea-dk", "ikea-no", "ikea-fi",
+                      "bilka-dk", "prisma-fi", "k-citymarket-fi", "obs-coop-no", "hagkaup-is",
+                      "costco-se", "costco-is", "coop-forum-se"],
+        "hardware":  ["clas-ohlson-se", "k-rauta-fi", "imerco-dk", "obs-bygg-no",
+                      "husasmidjan-is", "bauhaus-se", "silvan-dk", "byko-is"],
         "warehouse": ["costco-se", "costco-is"]
     },
     # Phase B: France, Germany, UK (data ingested 2026-05-05)
@@ -381,7 +388,8 @@ ANCHOR_DISPLAY_NAMES: dict = {
     # IKEA
     "ikea-us": "IKEA", "ikea-ca": "IKEA", "ikea-mx": "IKEA",
     "ikea-es": "IKEA", "ikea-it": "IKEA", "ikea-gr": "IKEA",
-    "ikea-pl": "IKEA", "ikea-nordics": "IKEA",
+    "ikea-pl": "IKEA",
+    "ikea-se": "IKEA", "ikea-dk": "IKEA", "ikea-no": "IKEA", "ikea-fi": "IKEA",
     "ikea-fr": "IKEA", "ikea-de": "IKEA", "ikea-uk": "IKEA",
     "ikea-at": "IKEA", "ikea-nl": "IKEA", "ikea-pt": "IKEA",
     # Hardware / Home improvement anchors
