@@ -4,6 +4,7 @@ use proforma_engine::{
     excel::{pclp1, titleco, wcp},
     html,
     report::{d1_dev_classes, d2_direct_hold, d3_wcp},
+    spv::{ambassadors_d1, ambassadors_d2, bencal},
     Assumptions,
 };
 use std::io::{self, Read};
@@ -49,6 +50,18 @@ enum Command {
     DevClasses {
         /// Path to TitleCo 3 Excel file (.xlsx)
         xlsx: PathBuf,
+    },
+    /// SPV — BenCal / Ambassadors Direct 1 & 2: derive three reports from WCP + PCLP 1 Excel.
+    SpvBencal {
+        /// Path to PCLP 1 Excel file (.xlsx)
+        #[arg(long)]
+        pclp: PathBuf,
+        /// Path to WCP 42M Excel file (.xlsx)
+        #[arg(long)]
+        wcp: PathBuf,
+        /// Output directory (default: current directory)
+        #[arg(long, default_value = ".")]
+        out_dir: PathBuf,
     },
 }
 
@@ -105,6 +118,44 @@ fn main() {
                 if cli.html { html::render(&md, &title) } else { md }
             };
             write_output(&out, cli.out.as_ref());
+        }
+        Some(Command::SpvBencal { pclp, wcp: wcp_path, out_dir }) => {
+            let pclp_data = pclp1::read(&pclp).unwrap_or_else(|e| {
+                eprintln!("error reading {:?}: {e}", pclp);
+                std::process::exit(1);
+            });
+            let wcp_data = wcp::read(&wcp_path).unwrap_or_else(|e| {
+                eprintln!("error reading {:?}: {e}", wcp_path);
+                std::process::exit(1);
+            });
+
+            let write_trio = |stem: &str, md: &str, title: &str, json_str: &str| {
+                let base = out_dir.join(stem);
+                write_output(md, Some(&base.with_extension("md")));
+                write_output(&html::render(md, title), Some(&base.with_extension("html")));
+                write_output(json_str, Some(&base.with_extension("json")));
+            };
+
+            // Ambassadors Direct 2 LP — d2-direct-hold format
+            let ad2 = ambassadors_d2::derive(&pclp_data);
+            let ad2_md = d2_direct_hold::render(&ad2);
+            let ad2_title = format!("Direct-Hold Solution — {}", ad2.entity);
+            let ad2_json = serde_json::to_string_pretty(&ad2).expect("serialisation failed");
+            write_trio("ambassadors-d2", &ad2_md, &ad2_title, &ad2_json);
+
+            // Ambassadors Direct 1 Inc. — d3-wcp format
+            let ad1 = ambassadors_d1::derive(&wcp_data);
+            let ad1_md = d3_wcp::render(&ad1);
+            let ad1_json = serde_json::to_string_pretty(&ad1).expect("serialisation failed");
+            write_trio("ambassadors-d1", &ad1_md, &ad1.title, &ad1_json);
+
+            // BenCal Holdings Inc. — d3-wcp format
+            let bc = bencal::derive(&wcp_data, &pclp_data);
+            let bc_md = d3_wcp::render(&bc);
+            let bc_json = serde_json::to_string_pretty(&bc).expect("serialisation failed");
+            write_trio("bencal", &bc_md, &bc.entity, &bc_json);
+
+            eprintln!("wrote 9 files to {}", out_dir.display());
         }
         None => {
             // Legacy: JSON assumptions → sensitivity engine

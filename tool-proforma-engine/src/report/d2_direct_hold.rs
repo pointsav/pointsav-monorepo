@@ -76,8 +76,8 @@ pub fn render(data: &Pclp1Data) -> String {
 
     // ── Page 1: Income Statement ──────────────────────────────────────────────
     out.push_str(&format!(
-        "# Direct-Hold Solution — Professional Centres Canada LP\n\n**{}** — {}\n\n",
-        data.entity, data.date
+        "# Direct-Hold Solution — {}\n\n**{}** — {}\n\n",
+        data.entity, data.entity, data.date
     ));
     out.push_str("---\n\n");
     out.push_str("## Income Statement\n\n");
