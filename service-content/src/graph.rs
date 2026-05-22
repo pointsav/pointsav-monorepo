@@ -1,7 +1,8 @@
 use anyhow::{anyhow, Result};
 use lbug::{Connection, Database, SystemConfig, Value};
+use rusqlite::params;
 use serde::{Deserialize, Serialize};
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GraphEntity {
@@ -337,6 +338,215 @@ impl GraphStore for LbugGraphStore {
         Ok(0)
     }
 }
+
+// ── SqliteGraphStore ─────────────────────────────────────────────────────────
+
+/// SQLite-backed `GraphStore` for Micro ($7/mo) nodes.
+///
+/// Uses the same logical schema as `LbugGraphStore` (identical column set) so
+/// entities are portable between backends. `rusqlite` is compiled with the
+/// `bundled` feature — no runtime dependency on a system SQLite.
+///
+/// Selected at startup when `foundry_nodeclass::detect()` returns `Micro`, or
+/// when `SERVICE_CONTENT_GRAPH_BACKEND=sqlite` is set explicitly.
+pub struct SqliteGraphStore {
+    conn: Arc<Mutex<rusqlite::Connection>>,
+}
+
+impl SqliteGraphStore {
+    pub fn new(db_path: &str) -> Result<Self> {
+        let conn = rusqlite::Connection::open(db_path)
+            .map_err(|e| anyhow!("Failed to open SQLite graph store at {}: {}", db_path, e))?;
+        // WAL mode: readers don't block writers; NORMAL sync: safe on a single node.
+        conn.execute_batch("PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL;")
+            .map_err(|e| anyhow!("SQLite PRAGMA setup failed: {}", e))?;
+        Ok(Self {
+            conn: Arc::new(Mutex::new(conn)),
+        })
+    }
+}
+
+impl GraphStore for SqliteGraphStore {
+    fn init_schema(&self) -> Result<()> {
+        let conn = self.conn.lock().unwrap();
+        conn.execute_batch(
+            "CREATE TABLE IF NOT EXISTS entity (
+                id              TEXT PRIMARY KEY,
+                entity_name     TEXT NOT NULL,
+                classification  TEXT NOT NULL,
+                role_vector     TEXT NOT NULL DEFAULT '',
+                location_vector TEXT NOT NULL DEFAULT '',
+                contact_vector  TEXT NOT NULL DEFAULT '',
+                module_id       TEXT NOT NULL,
+                confidence      REAL NOT NULL DEFAULT 0.0,
+                created_at      TEXT NOT NULL DEFAULT '',
+                worm_id         TEXT NOT NULL DEFAULT '',
+                cites_json      TEXT NOT NULL DEFAULT '[]'
+            );
+            CREATE INDEX IF NOT EXISTS idx_entity_module
+                ON entity(module_id);
+            CREATE INDEX IF NOT EXISTS idx_entity_module_cls
+                ON entity(module_id, classification);",
+        )
+        .map_err(|e| anyhow!("init_schema failed: {}", e))
+    }
+
+    fn upsert_entities(&self, module_id: &str, entities: &[GraphEntity]) -> Result<usize> {
+        let conn = self.conn.lock().unwrap();
+        let now = chrono::Utc::now().to_rfc3339();
+        let mut count = 0usize;
+
+        for entity in entities {
+            let id = format!(
+                "{}__{}",
+                module_id,
+                entity.entity_name.to_lowercase().replace(' ', "_")
+            );
+            let cites_json = serde_json::to_string(&entity.cites)
+                .unwrap_or_else(|_| "[]".to_string());
+
+            // created_at is set only on first INSERT; ON CONFLICT leaves it unchanged.
+            conn.execute(
+                "INSERT INTO entity(
+                    id, entity_name, classification, role_vector,
+                    location_vector, contact_vector, module_id, confidence,
+                    created_at, worm_id, cites_json)
+                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)
+                 ON CONFLICT(id) DO UPDATE SET
+                    entity_name     = excluded.entity_name,
+                    classification  = excluded.classification,
+                    role_vector     = excluded.role_vector,
+                    location_vector = excluded.location_vector,
+                    contact_vector  = excluded.contact_vector,
+                    module_id       = excluded.module_id,
+                    confidence      = excluded.confidence,
+                    worm_id         = excluded.worm_id,
+                    cites_json      = excluded.cites_json",
+                params![
+                    id,
+                    entity.entity_name,
+                    entity.classification,
+                    entity.role_vector.as_deref().unwrap_or(""),
+                    entity.location_vector.as_deref().unwrap_or(""),
+                    entity.contact_vector.as_deref().unwrap_or(""),
+                    entity.module_id,
+                    entity.confidence,
+                    now,
+                    entity.worm_id.as_deref().unwrap_or(""),
+                    cites_json,
+                ],
+            )
+            .map_err(|e| anyhow!("Failed to upsert entity '{}': {}", entity.entity_name, e))?;
+
+            count += 1;
+        }
+        Ok(count)
+    }
+
+    fn query_context(
+        &self,
+        module_id: &str,
+        query: &str,
+        limit: usize,
+    ) -> Result<Vec<GraphEntity>> {
+        let conn = self.conn.lock().unwrap();
+        let pattern = format!("%{}%", query.to_lowercase());
+
+        let mut stmt = conn
+            .prepare(
+                "SELECT entity_name, classification, role_vector, location_vector,
+                        contact_vector, module_id, confidence, worm_id, cites_json
+                 FROM entity
+                 WHERE module_id = ?1 AND lower(entity_name) LIKE ?2
+                 LIMIT ?3",
+            )
+            .map_err(|e| anyhow!("query_context prepare failed: {}", e))?;
+
+        let rows = stmt
+            .query_map(params![module_id, pattern, limit as i64], sqlite_row_to_entity)
+            .map_err(|e| anyhow!("query_context execute failed: {}", e))?;
+
+        rows.collect::<std::result::Result<Vec<_>, _>>()
+            .map_err(|e| anyhow!("query_context row mapping failed: {}", e))
+    }
+
+    fn list_entities(&self, module_id: &str) -> Result<Vec<GraphEntity>> {
+        let conn = self.conn.lock().unwrap();
+
+        let mut stmt = conn
+            .prepare(
+                "SELECT entity_name, classification, role_vector, location_vector,
+                        contact_vector, module_id, confidence, worm_id, cites_json
+                 FROM entity
+                 WHERE module_id = ?1",
+            )
+            .map_err(|e| anyhow!("list_entities prepare failed: {}", e))?;
+
+        let rows = stmt
+            .query_map(params![module_id], sqlite_row_to_entity)
+            .map_err(|e| anyhow!("list_entities execute failed: {}", e))?;
+
+        rows.collect::<std::result::Result<Vec<_>, _>>()
+            .map_err(|e| anyhow!("list_entities row mapping failed: {}", e))
+    }
+
+    fn count_all(&self) -> Result<usize> {
+        let conn = self.conn.lock().unwrap();
+        let n: i64 = conn
+            .query_row("SELECT COUNT(*) FROM entity", [], |r| r.get(0))
+            .map_err(|e| anyhow!("count_all failed: {}", e))?;
+        Ok(n as usize)
+    }
+
+    fn delete_by_classification(&self, module_id: &str, classification: &str) -> Result<usize> {
+        let conn = self.conn.lock().unwrap();
+        let n = conn
+            .execute(
+                "DELETE FROM entity WHERE module_id = ?1 AND classification = ?2",
+                params![module_id, classification],
+            )
+            .map_err(|e| anyhow!("delete_by_classification failed: {}", e))?;
+        Ok(n)
+    }
+
+    fn delete_by_classification_and_location(
+        &self,
+        module_id: &str,
+        classification: &str,
+        location: &str,
+    ) -> Result<usize> {
+        let conn = self.conn.lock().unwrap();
+        let n = conn
+            .execute(
+                "DELETE FROM entity
+                 WHERE module_id = ?1 AND classification = ?2 AND location_vector = ?3",
+                params![module_id, classification, location],
+            )
+            .map_err(|e| anyhow!("delete_by_classification_and_location failed: {}", e))?;
+        Ok(n)
+    }
+}
+
+fn sqlite_row_to_entity(row: &rusqlite::Row<'_>) -> rusqlite::Result<GraphEntity> {
+    let role: String = row.get(2)?;
+    let loc: String = row.get(3)?;
+    let contact: String = row.get(4)?;
+    let worm: String = row.get(7)?;
+    let cites_json: String = row.get(8)?;
+    Ok(GraphEntity {
+        entity_name: row.get(0)?,
+        classification: row.get(1)?,
+        role_vector: if role.is_empty() { None } else { Some(role) },
+        location_vector: if loc.is_empty() { None } else { Some(loc) },
+        contact_vector: if contact.is_empty() { None } else { Some(contact) },
+        module_id: row.get(5)?,
+        confidence: row.get(6)?,
+        worm_id: if worm.is_empty() { None } else { Some(worm) },
+        cites: serde_json::from_str(&cites_json).unwrap_or_default(),
+    })
+}
+
+// ── LbugGraphStore helpers ────────────────────────────────────────────────────
 
 /// Extract a `String` from a `Value::String`, or return empty string.
 fn val_to_string(v: &Value) -> String {

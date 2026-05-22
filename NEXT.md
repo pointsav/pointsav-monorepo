@@ -81,6 +81,18 @@ under `.agent/plans/archive/`.
   confirms the correct content is in place. [2026-05-22 totebox@claude-code]
   Reference: session-context.md contamination note.
 
+### lbug static-link linker error — pre-existing, cargo build blocked
+
+- [ ] **lbug 0.16 static archive (`liblbug.a`) is missing antlr4/utf8proc symbols.**
+  `cargo build -p service-content` fails at link time. The deployed binary uses
+  `liblbug.so.0` at `/usr/local/lib/` (a complete shared library, all C++ deps
+  bundled). Cargo is forcing static link via `--whole-archive liblbug.a`
+  (lbug's build.rs), not the shared library. Fix: either patch lbug's build.rs
+  to emit `cargo:rustc-link-lib=dylib=lbug`, or set an env var in the service's
+  `.cargo/config.toml`. `cargo check -p service-content` passes — code is
+  type-correct. This is a pre-existing issue, not introduced by Phase 3.
+  [2026-05-22 totebox@claude-code]
+
 ### BLOCKER — stale `cluster/project-knowledge` branch (Stage-6 landmine)
 
 - [ ] **Escalated to Command Session** 2026-05-21 (outbox msg-id
