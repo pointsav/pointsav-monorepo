@@ -1,0 +1,8 @@
+{
+  "cap_rate": 0.0625,
+  "occupancy": 0.95,
+  "lease_up_months": 12,
+  "dev_yield": 0.105,
+  "debt_rate": 0.05,
+  "market_yield": 0.08
+}

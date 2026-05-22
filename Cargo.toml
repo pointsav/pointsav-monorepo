@@ -16,7 +16,8 @@ members = [
     "app-privategit-source",
     "os-privategit",
     "tool-wallet",
-    "app-privategit-workbench"
+    "app-privategit-workbench",
+    "tool-proforma-engine"
 ]
 
 [profile.dev]
