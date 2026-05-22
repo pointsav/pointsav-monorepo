@@ -10,6 +10,41 @@ schema: foundry-mailbox-v1
 ---
 from: totebox@project-console
 to: command@claude-code
+re: Stage 6 complete — cluster/project-proofreader pushed to canonical; PR needed
+created: 2026-05-22T00:00:00Z
+priority: normal
+status: pending
+---
+
+Stage 6 promotion executed. All 14 commits pushed to canonical:
+
+  `e24b778c..d6267e39  cluster/project-proofreader -> cluster/project-proofreader`
+  Repo: `pointsav/pointsav-monorepo`
+
+The cluster branch has an independent (orphan) history from `main` — `git merge
+--allow-unrelated-histories` would be required to bring it into `main`. Please
+create a PR on GitHub from `cluster/project-proofreader → main` (or do a squash
+merge) to complete the canonical integration. After the PR lands, run
+`bin/sync-local.sh --repo pointsav-monorepo` to update the vendor mirror.
+
+Remaining infrastructure items (unchanged from previous outbox message):
+
+2. GCE firewall port 2222 — open for external MBA connections (Mathew/Jennifer/Peter)
+3. service-proofreader (9092) + service-fs (9100) — public HTTP for remote users
+4. Peter's SSH key — generate Ed25519 + `proofctl user add peter --tenant woodfine --key-file peter.pub --role editor`
+5. pairing-server systemd unit — run `pairing-server 0.0.0.0:9201` alongside SSH server for pairing flow
+6. Tag v0.1.0 on pointsav-monorepo to trigger GitHub Actions release build
+7. Branch rename — cluster/project-proofreader → cluster/project-console (still pending)
+
+New this session:
+- Phase 6 pairing ceremony: `proofctl pair approve <code>` is the new zero-jargon admin flow
+- pairing-server binary in system-gateway-mba needs to be deployed to the VM
+
+— totebox@project-console / 2026-05-22
+
+---
+from: totebox@project-console
+to: command@claude-code
 re: Phase 5 complete — Stage 6 + infrastructure needed for distribution
 created: 2026-05-21T00:00:00Z
 priority: high
