@@ -65,16 +65,6 @@ enum Command {
         #[arg(long, env = "WIKI_GUIDE_DIR_2")]
         guide_dir_2: Option<PathBuf>,
 
-        /// Phase 2 Step 7: enable real-time collaborative editing via
-        /// y-codemirror.next + a tokio broadcast WebSocket relay at
-        /// `/ws/collab/{slug}`. Default off; the route is only mounted
-        /// when this flag is set, and `cm-collab.bundle.js` is only
-        /// loaded by the editor when `window.WIKI_COLLAB_ENABLED` is
-        /// templated by the server. Two operators editing the same
-        /// TOPIC see each other's cursors.
-        #[arg(long, env = "WIKI_ENABLE_COLLAB")]
-        enable_collab: bool,
-
         /// Display name shown in the browser tab, site header, and home-page
         /// H1 fallback. Allows the same binary to serve multiple wiki
         /// instances with different branding.
@@ -131,14 +121,13 @@ async fn main() -> Result<()> {
             state_dir,
             guide_dir,
             guide_dir_2,
-            enable_collab,
             site_title,
             git_tenant,
             enable_mcp,
             admin_username,
             admin_password_hash,
             brand_theme,
-        } => serve(content_dir, guide_dir, guide_dir_2, bind, citations_yaml, state_dir, enable_collab, site_title, git_tenant, enable_mcp, admin_username, admin_password_hash, brand_theme).await,
+        } => serve(content_dir, guide_dir, guide_dir_2, bind, citations_yaml, state_dir, site_title, git_tenant, enable_mcp, admin_username, admin_password_hash, brand_theme).await,
     }
 }
 
@@ -149,7 +138,6 @@ async fn serve(
     bind: SocketAddr,
     citations_yaml: PathBuf,
     state_dir: PathBuf,
-    enable_collab: bool,
     site_title: String,
     git_tenant: String,
     enable_mcp: bool,
@@ -265,9 +253,6 @@ async fn serve(
         None
     };
 
-    if enable_collab {
-        tracing::info!("collab WebSocket relay enabled at /ws/collab/{{slug}}");
-    }
     tracing::info!(git_tenant = %git_tenant, "git remote enabled at /git-server/{}/info/refs", git_tenant);
     let state = AppState {
         content_dir,
@@ -276,8 +261,6 @@ async fn serve(
         citations_yaml,
         search: search_arc,
         git: Arc::new(std::sync::Mutex::new(git_repo)),
-        collab: Arc::new(app_mediakit_knowledge::collab::CollabRooms::new()),
-        enable_collab,
         site_title,
         git_tenant,
         mcp_enabled: enable_mcp,

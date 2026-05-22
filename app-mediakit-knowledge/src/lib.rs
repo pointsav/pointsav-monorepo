@@ -9,7 +9,6 @@
 pub mod assets;
 pub mod auth;
 pub mod citations;
-pub mod collab;
 pub mod config;
 pub mod edit;
 pub mod error;
