@@ -27,6 +27,10 @@ struct Cli {
     /// Render as a self-contained HTML page instead of markdown.
     #[arg(long, global = true)]
     html: bool,
+
+    /// Emit the raw parsed data as pretty-printed JSON instead of a report.
+    #[arg(long, global = true)]
+    json: bool,
 }
 
 #[derive(Subcommand)]
@@ -67,11 +71,11 @@ fn main() {
                 eprintln!("error reading {:?}: {e}", xlsx);
                 std::process::exit(1);
             });
-            let md = d2_direct_hold::render(&data);
-            let out = if cli.html {
-                html::render(&md, &data.title)
+            let out = if cli.json {
+                serde_json::to_string_pretty(&data).expect("serialisation failed")
             } else {
-                md
+                let md = d2_direct_hold::render(&data);
+                if cli.html { html::render(&md, &data.title) } else { md }
             };
             write_output(&out, cli.out.as_ref());
         }
@@ -80,11 +84,11 @@ fn main() {
                 eprintln!("error reading {:?}: {e}", xlsx);
                 std::process::exit(1);
             });
-            let md = d3_wcp::render(&data);
-            let out = if cli.html {
-                html::render(&md, &data.title)
+            let out = if cli.json {
+                serde_json::to_string_pretty(&data).expect("serialisation failed")
             } else {
-                md
+                let md = d3_wcp::render(&data);
+                if cli.html { html::render(&md, &data.title) } else { md }
             };
             write_output(&out, cli.out.as_ref());
         }
@@ -93,12 +97,12 @@ fn main() {
                 eprintln!("error reading {:?}: {e}", xlsx);
                 std::process::exit(1);
             });
-            let md = d1_dev_classes::render(&base);
-            let title = format!("Development Classes — {}", base.entity);
-            let out = if cli.html {
-                html::render(&md, &title)
+            let out = if cli.json {
+                serde_json::to_string_pretty(&base).expect("serialisation failed")
             } else {
-                md
+                let md = d1_dev_classes::render(&base);
+                let title = format!("Development Classes — {}", base.entity);
+                if cli.html { html::render(&md, &title) } else { md }
             };
             write_output(&out, cli.out.as_ref());
         }

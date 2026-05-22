@@ -4,7 +4,7 @@ use std::path::Path;
 use super::{get_f64, get_str};
 
 /// Input assumptions read from the left-hand side of the PCLP 1_250M sheet.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize)]
 pub struct Pclp1Assumptions {
     pub dev_yield: f64,
     pub cap_rate: f64,
@@ -26,7 +26,7 @@ pub struct Pclp1Assumptions {
 
 /// Per-year income statement, cash flow, debenture, asset, and valuation rows.
 /// Index 0 = Y1, index 9 = Y10.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize)]
 pub struct Pclp1Year {
     pub year: u32,
     // Income
@@ -88,7 +88,7 @@ pub struct Pclp1Year {
 }
 
 /// Full parsed PCLP 1 model.
-#[derive(Debug)]
+#[derive(Debug, serde::Serialize)]
 pub struct Pclp1Data {
     pub title: String,
     pub entity: String,

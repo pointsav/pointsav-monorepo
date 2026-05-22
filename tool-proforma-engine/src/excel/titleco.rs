@@ -4,7 +4,7 @@ use std::path::Path;
 use super::{get_f64, get_str};
 
 /// One rentable component (retail or office floor).
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize)]
 pub struct TitlecoArea {
     pub label: String,
     pub sqft: f64,
@@ -14,7 +14,7 @@ pub struct TitlecoArea {
 
 /// Full static development proforma extracted from TitleCo 3.
 /// Provides the per-sqft cost and rent assumptions used by the D1 engine.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize)]
 pub struct TitlecoProforma {
     pub title: String,
     pub entity: String,

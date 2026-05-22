@@ -4,7 +4,7 @@ use std::path::Path;
 use super::{get_f64, get_str};
 
 /// One LP fund tracked in the WCP 42M model.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize)]
 pub struct WcpLp {
     pub name: String,
     /// Advisory fee Y1–Y10
@@ -16,7 +16,7 @@ pub struct WcpLp {
 }
 
 /// Corporate income statement (Y1–Y10).
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize)]
 pub struct WcpIncome {
     pub gross_income: [f64; 10],
     pub referral_fees: [f64; 10],
@@ -32,7 +32,7 @@ pub struct WcpIncome {
 }
 
 /// Book valuation (Y1–Y10).
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize)]
 pub struct WcpBook {
     pub cumulative_fcf_wci: [f64; 10],
     pub beneficial_ownership_lps: [f64; 10],
@@ -41,7 +41,7 @@ pub struct WcpBook {
 }
 
 /// Market valuation (Y1–Y10).
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize)]
 pub struct WcpMarket {
     pub earnings_valuation: [f64; 10],
     pub market_valuation: [f64; 10],
@@ -50,7 +50,7 @@ pub struct WcpMarket {
 }
 
 /// Fair and dividend valuations (Y1–Y10).
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize)]
 pub struct WcpFairDiv {
     pub fair_value_per_share: [f64; 10],
     pub dividend_valuation: [f64; 10],
@@ -58,7 +58,7 @@ pub struct WcpFairDiv {
 }
 
 /// Full parsed WCP 42M model.
-#[derive(Debug)]
+#[derive(Debug, serde::Serialize)]
 pub struct WcpData {
     pub title: String,
     pub entity: String,
