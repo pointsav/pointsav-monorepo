@@ -1,4 +1,11 @@
 ---
+# Archived 2026-05-22 by task@project-gis (session 4 — inbox sweep)
+note: 2 command messages archived — both actioned.
+  (1) command-20260522-gis-stage6-orphan-branch — rebase complete; merge-base --is-ancestor exit 0; ack in outbox.
+  (2) command-20260522-binary-targets-project-gis — .agent/binary-targets.yaml already committed (4cdf7d3d); all 3 products declared.
+---
+
+---
 # Archived 2026-05-16 by task@project-gis (post-Block-6 cleanup)
 note: 1 command message archived — actioned.
   (1) Sprint 11 P2a-d operator decisions — all recorded in commit 78ec4fb7.
