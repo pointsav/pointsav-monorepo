@@ -158,11 +158,7 @@ fn probe_gpu() -> bool {
     // DRI render nodes (AMD, Intel discrete, NVIDIA via DRM)
     if let Ok(entries) = fs::read_dir("/dev/dri") {
         for entry in entries.flatten() {
-            if entry
-                .file_name()
-                .to_string_lossy()
-                .starts_with("renderD")
-            {
+            if entry.file_name().to_string_lossy().starts_with("renderD") {
                 return true;
             }
         }
@@ -229,9 +225,7 @@ fn probe_vcpu() -> f64 {
         if s != "max" {
             let mut parts = s.split_whitespace();
             if let (Some(q), Some(p)) = (parts.next(), parts.next()) {
-                if let (Ok(quota), Ok(period)) =
-                    (q.parse::<f64>(), p.parse::<f64>())
-                {
+                if let (Ok(quota), Ok(period)) = (q.parse::<f64>(), p.parse::<f64>()) {
                     if period > 0.0 {
                         return quota / period;
                     }
@@ -375,7 +369,10 @@ mod tests {
         );
         assert!(valid);
         // Consistency: supports_on_node_ai ↔ class != Micro
-        assert_eq!(caps.supports_on_node_ai(), caps.node_class != NodeClass::Micro);
+        assert_eq!(
+            caps.supports_on_node_ai(),
+            caps.node_class != NodeClass::Micro
+        );
         // Consistency: has_gpu ↔ class == Accelerated (for real detection)
         // (may not hold for env override paths with synthetic values, but on a
         // real machine this invariant should hold)
