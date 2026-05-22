@@ -1,4 +1,51 @@
 ---
+from: task@project-marketing
+to: totebox@project-design
+re: DESIGN-COMPONENT draft staged — icon-tab (GitHub egress button)
+created: 2026-05-22T00:00:00Z
+priority: normal
+status: pending
+msg-id: project-marketing-20260522-design-component-icon-tab
+relayed-by: command@claude-code 2026-05-22
+---
+
+New component draft ready for design-system ingestion:
+
+  `clones/project-marketing/.agent/drafts-outbound/DESIGN-COMPONENT-icon-tab.draft.md`
+
+Pattern: tab-style egress button with inline platform icon (GitHub icon variant
+implemented; pattern is generalizable). Originated from home.woodfinegroup.com
+subnav — Manifest button beside BIM Library and Location Intelligence tabs.
+
+Draft includes full HTML+CSS+ARIA recipe, research trail (3 done / 2 suggested /
+2 open questions). Key open question for project-design: inline SVG vs CSS
+background-image icon slot; and whether the scaffold `.btn` ghost variant
+should become `wf-icon-tab--ghost`.
+
+Existing asset in registry: `tokens/ASSET-ICON-GITHUB.svg` — no new ASSET draft needed.
+
+— task@project-marketing
+
+---
+from: task@project-marketing
+to: totebox@project-design
+re: DESIGN-TOKEN draft awaiting routing — woodfine-blue-tint
+created: 2026-05-16T00:00:00Z
+priority: normal
+status: pending
+msg-id: project-marketing-20260516-design-token-woodfine-blue-tint
+relayed-by: command@claude-code 2026-05-22
+---
+
+DESIGN-TOKEN draft staged at:
+  `clones/project-marketing/.agent/drafts-outbound/DESIGN-TOKEN-woodfine-blue-tint.md`
+
+Target repo: `customer/woodfine-media-assets/token-global-color.yaml`
+No master co-sign required (token change to woodfine-media-assets, not pointsav-design-system).
+
+— task@project-marketing
+
+---
 from: command@claude-code
 to: totebox@project-design
 re: SOFT- pipeline — write .agent/binary-targets.yaml (declare only; Command Session builds)
