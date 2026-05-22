@@ -14,7 +14,7 @@ use crossterm::{
 };
 use ratatui::{
     backend::CrosstermBackend,
-    layout::{Constraint, Direction, Layout},
+    layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
     text::{Line, Span},
     widgets::{Block, Borders, Paragraph},
@@ -24,6 +24,7 @@ use ratatui::{
 use crate::{
     cartridge::{Cartridge, CartridgeAction},
     fkey::FKey,
+    pairing::{PairingEvent, PairingState},
     widgets::status_bar::MbaStatus,
 };
 use std::collections::BTreeSet;
@@ -31,12 +32,6 @@ use std::collections::BTreeSet;
 pub enum ChassisAction {
     None,
     Quit,
-}
-
-pub struct PairingInfo {
-    pub fingerprint: String,
-    pub host: String,
-    pub port: u16,
 }
 
 pub struct AppConsoleKeys {
@@ -47,7 +42,8 @@ pub struct AppConsoleKeys {
     mba_status: MbaStatus,
     username: String,
     tenant: String,
-    pairing_info: Option<PairingInfo>,
+    pairing_state: PairingState,
+    pair_rx: Option<mpsc::Receiver<PairingEvent>>,
 }
 
 impl AppConsoleKeys {
@@ -60,17 +56,33 @@ impl AppConsoleKeys {
             mba_status: MbaStatus::Inactive("not configured".into()),
             username: username.into(),
             tenant: tenant.into(),
-            pairing_info: None,
+            pairing_state: PairingState::default(),
+            pair_rx: None,
         }
     }
 
-    pub fn set_pairing_info(&mut self, info: PairingInfo) {
-        self.pairing_info = Some(info);
+    pub fn set_mba_active(&mut self) {
+        self.mba_status = MbaStatus::Active;
+    }
+
+    pub fn set_pairing_unpaired(&mut self, fingerprint: String) {
+        self.pairing_state = PairingState::Unpaired { fingerprint };
+    }
+
+    pub fn set_pairing_awaiting(&mut self, code: String, request_id: String, fingerprint: String) {
+        self.pairing_state = PairingState::AwaitingApproval { code, request_id, fingerprint };
+    }
+
+    pub fn set_pairing_error(&mut self, msg: String) {
+        self.pairing_state = PairingState::Error(msg);
+    }
+
+    pub fn set_pair_rx(&mut self, rx: mpsc::Receiver<PairingEvent>) {
+        self.pair_rx = Some(rx);
     }
 
     pub fn register(&mut self, cartridge: Box<dyn Cartridge>) {
         let fkey = cartridge.fkey();
-        // Default to first registered cartridge if none set yet
         if self.cartridges.is_empty() {
             self.active = fkey;
         }
@@ -81,39 +93,43 @@ impl AppConsoleKeys {
         self.cartridges.keys().copied().collect()
     }
 
+    fn apply_pairing_event(&mut self, ev: PairingEvent) {
+        match ev {
+            PairingEvent::Approved => {
+                self.mba_status = MbaStatus::Active;
+                self.pairing_state = PairingState::Approved;
+            }
+            PairingEvent::Denied => {
+                self.pairing_state = PairingState::Denied;
+            }
+            PairingEvent::Expired => {
+                self.pairing_state = PairingState::Expired;
+            }
+            PairingEvent::Error(e) => {
+                if matches!(self.pairing_state, PairingState::AwaitingApproval { .. }) {
+                    self.pairing_state = PairingState::Error(e);
+                }
+            }
+        }
+    }
+
     pub fn render(&mut self, frame: &mut Frame) {
         let area = frame.area();
         let chunks = Layout::default()
             .direction(Direction::Vertical)
             .constraints([
-                Constraint::Length(1), // F-key tab strip
-                Constraint::Fill(1),   // cartridge content
-                Constraint::Length(1), // status bar
+                Constraint::Length(1),
+                Constraint::Fill(1),
+                Constraint::Length(1),
             ])
             .split(area);
 
         let installed = self.installed();
         crate::widgets::fkey_strip::render(frame, chunks[0], self.active, &installed);
 
-        // Pairing screen: shown when MBA is INACTIVE and we have key info
         let mba_inactive = matches!(self.mba_status, MbaStatus::Inactive(_));
         if mba_inactive {
-            if let Some(info) = &self.pairing_info {
-                Self::render_pairing_screen(
-                    frame,
-                    chunks[1],
-                    &self.username,
-                    &self.tenant,
-                    &info.fingerprint,
-                    &info.host,
-                    info.port,
-                );
-            } else {
-                frame.render_widget(
-                    Paragraph::new("\n  MBA LINK INACTIVE — configure ~/.config/os-console/config.toml"),
-                    chunks[1],
-                );
-            }
+            Self::render_pairing_screen(frame, chunks[1], &self.pairing_state);
         } else if let Some(c) = self.cartridges.get_mut(&self.active) {
             c.render(frame, chunks[1]);
         } else {
@@ -136,7 +152,6 @@ impl AppConsoleKeys {
     }
 
     pub fn handle_event(&mut self, event: &Event) -> ChassisAction {
-        // F12 always routes to The Anchor (SYS-ADR-10) — unconditional, stores previous
         if let Event::Key(key) = event {
             if key.code == KeyCode::F(12) {
                 if self.active != FKey::F12 {
@@ -147,12 +162,11 @@ impl AppConsoleKeys {
             }
         }
 
-        // Delegate to active cartridge first; only handle globally if not consumed
         if let Some(c) = self.cartridges.get_mut(&self.active) {
             match c.handle_event(event) {
                 CartridgeAction::Consumed => return ChassisAction::None,
-                CartridgeAction::Quit     => return ChassisAction::Quit,
-                CartridgeAction::GoBack   => {
+                CartridgeAction::Quit => return ChassisAction::Quit,
+                CartridgeAction::GoBack => {
                     self.active = self.previous;
                     return ChassisAction::None;
                 }
@@ -160,7 +174,6 @@ impl AppConsoleKeys {
             }
         }
 
-        // Cartridge did not consume — apply chassis-level bindings
         if let Event::Key(key) = event {
             if key.code == KeyCode::Char('q')
                 || (key.code == KeyCode::Char('c')
@@ -180,79 +193,189 @@ impl AppConsoleKeys {
         ChassisAction::None
     }
 
-    pub fn set_mba_active(&mut self) {
-        self.mba_status = MbaStatus::Active;
+    fn render_pairing_screen(frame: &mut Frame, area: Rect, state: &PairingState) {
+        match state {
+            PairingState::Unpaired { .. } => {
+                let block = Block::default()
+                    .borders(Borders::ALL)
+                    .border_style(Style::default().fg(Color::Blue))
+                    .title(" Connecting to your workspace ");
+                let inner = block.inner(area);
+                frame.render_widget(block, area);
+                let lines = vec![
+                    Line::from(""),
+                    Line::from(Span::styled(
+                        "  Connecting to your workspace…",
+                        Style::default().fg(Color::White).add_modifier(Modifier::BOLD),
+                    )),
+                    Line::from(""),
+                    Line::from(Span::styled(
+                        "  Sending connection request to your administrator.",
+                        Style::default().fg(Color::Gray),
+                    )),
+                    Line::from(""),
+                    Line::from(Span::styled(
+                        "  [Q / Ctrl-C: quit]",
+                        Style::default().fg(Color::DarkGray),
+                    )),
+                ];
+                frame.render_widget(Paragraph::new(lines), inner);
+            }
+
+            PairingState::AwaitingApproval { code, .. } => {
+                let block = Block::default()
+                    .borders(Borders::ALL)
+                    .border_style(
+                        Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD),
+                    )
+                    .title(" Connect this computer to your workspace ");
+                let inner = block.inner(area);
+                frame.render_widget(block, area);
+
+                let lines = vec![
+                    Line::from(""),
+                    Line::from(Span::styled(
+                        "  Share this code with your administrator:",
+                        Style::default().fg(Color::White),
+                    )),
+                    Line::from(""),
+                    Line::from(""),
+                    Line::from(vec![
+                        Span::raw("          "),
+                        Span::styled(
+                            format!("   {}   ", code),
+                            Style::default()
+                                .fg(Color::Cyan)
+                                .bg(Color::DarkGray)
+                                .add_modifier(Modifier::BOLD),
+                        ),
+                    ]),
+                    Line::from(""),
+                    Line::from(""),
+                    Line::from(Span::styled(
+                        "  Your administrator approves it — this screen updates automatically.",
+                        Style::default().fg(Color::Gray),
+                    )),
+                    Line::from(""),
+                    Line::from(Span::styled(
+                        "  ◌  Waiting for approval…",
+                        Style::default().fg(Color::Blue),
+                    )),
+                    Line::from(""),
+                    Line::from(Span::styled(
+                        "  [Q / Ctrl-C: quit and come back later]",
+                        Style::default().fg(Color::DarkGray),
+                    )),
+                ];
+                frame.render_widget(Paragraph::new(lines), inner);
+            }
+
+            PairingState::Approved => {} // mba_status is Active — normal chassis renders
+
+            PairingState::Denied => {
+                let block = Block::default()
+                    .borders(Borders::ALL)
+                    .border_style(Style::default().fg(Color::Yellow))
+                    .title(" Connection not approved ");
+                let inner = block.inner(area);
+                frame.render_widget(block, area);
+                let lines = vec![
+                    Line::from(""),
+                    Line::from(Span::styled(
+                        "  Your administrator didn't approve this computer.",
+                        Style::default().fg(Color::White).add_modifier(Modifier::BOLD),
+                    )),
+                    Line::from(""),
+                    Line::from(Span::styled(
+                        "  This is usually a quick mix-up. Talk to your administrator,",
+                        Style::default().fg(Color::Gray),
+                    )),
+                    Line::from(Span::styled(
+                        "  then restart os-console to try again.",
+                        Style::default().fg(Color::Gray),
+                    )),
+                    Line::from(""),
+                    Line::from(Span::styled(
+                        "  [Q / Ctrl-C: quit]",
+                        Style::default().fg(Color::DarkGray),
+                    )),
+                ];
+                frame.render_widget(Paragraph::new(lines), inner);
+            }
+
+            PairingState::Expired => {
+                let block = Block::default()
+                    .borders(Borders::ALL)
+                    .border_style(Style::default().fg(Color::Yellow))
+                    .title(" Connection code expired ");
+                let inner = block.inner(area);
+                frame.render_widget(block, area);
+                let lines = vec![
+                    Line::from(""),
+                    Line::from(Span::styled(
+                        "  The code timed out — nothing was lost.",
+                        Style::default().fg(Color::White).add_modifier(Modifier::BOLD),
+                    )),
+                    Line::from(""),
+                    Line::from(Span::styled(
+                        "  Restart os-console to get a fresh code.",
+                        Style::default().fg(Color::Gray),
+                    )),
+                    Line::from(""),
+                    Line::from(Span::styled(
+                        "  [Q / Ctrl-C: quit]",
+                        Style::default().fg(Color::DarkGray),
+                    )),
+                ];
+                frame.render_widget(Paragraph::new(lines), inner);
+            }
+
+            PairingState::Error(msg) => {
+                let block = Block::default()
+                    .borders(Borders::ALL)
+                    .border_style(Style::default().fg(Color::Yellow))
+                    .title(" Can't reach your workspace ");
+                let inner = block.inner(area);
+                frame.render_widget(block, area);
+                let lines = vec![
+                    Line::from(""),
+                    Line::from(Span::styled(
+                        "  We couldn't connect right now.",
+                        Style::default().fg(Color::White).add_modifier(Modifier::BOLD),
+                    )),
+                    Line::from(""),
+                    Line::from(Span::styled(
+                        "  This is almost always a network hiccup, not a problem with your computer.",
+                        Style::default().fg(Color::Gray),
+                    )),
+                    Line::from(""),
+                    Line::from(vec![
+                        Span::styled("  Detail:  ", Style::default().fg(Color::DarkGray)),
+                        Span::styled(msg.as_str(), Style::default().fg(Color::DarkGray)),
+                    ]),
+                    Line::from(""),
+                    Line::from(Span::styled(
+                        "  [Q / Ctrl-C: quit]",
+                        Style::default().fg(Color::DarkGray),
+                    )),
+                ];
+                frame.render_widget(Paragraph::new(lines), inner);
+            }
+        }
     }
 
-    fn render_pairing_screen(
-        frame: &mut Frame,
-        area: ratatui::layout::Rect,
-        username: &str,
-        tenant: &str,
-        fingerprint: &str,
-        host: &str,
-        port: u16,
-    ) {
-        let block = Block::default()
-            .borders(Borders::ALL)
-            .border_style(Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD))
-            .title(" MBA Pairing Required — Pairing as Permission ");
-        let inner = block.inner(area);
-        frame.render_widget(block, area);
-
-        let lines = vec![
-            Line::from(""),
-            Line::from(Span::styled(
-                "  This machine is not yet paired with os-totebox.",
-                Style::default().fg(Color::White),
-            )),
-            Line::from(""),
-            Line::from(vec![
-                Span::styled("  Your fingerprint:  ", Style::default().fg(Color::DarkGray)),
-                Span::styled(fingerprint.to_string(), Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)),
-            ]),
-            Line::from(""),
-            Line::from(Span::styled(
-                "  Have an operator run on the os-totebox machine:",
-                Style::default().fg(Color::White),
-            )),
-            Line::from(""),
-            Line::from(Span::styled(
-                format!("    proofctl user add {} \\", username),
-                Style::default().fg(Color::LightGreen),
-            )),
-            Line::from(Span::styled(
-                format!("      --tenant {} \\", tenant),
-                Style::default().fg(Color::LightGreen),
-            )),
-            Line::from(Span::styled(
-                "      --key-file <path/to/your/id_ed25519.pub>",
-                Style::default().fg(Color::LightGreen),
-            )),
-            Line::from(""),
-            Line::from(vec![
-                Span::styled("  Connecting to:  ", Style::default().fg(Color::DarkGray)),
-                Span::styled(
-                    format!("{}:{}", host, port),
-                    Style::default().fg(Color::Yellow),
-                ),
-            ]),
-            Line::from(""),
-            Line::from(Span::styled(
-                "  After the operator has registered your key, restart os-console.",
-                Style::default().fg(Color::DarkGray),
-            )),
-            Line::from(""),
-            Line::from(Span::styled(
-                "  [Q / Ctrl-C: quit]",
-                Style::default().fg(Color::DarkGray),
-            )),
-        ];
-
-        frame.render_widget(Paragraph::new(lines), inner);
+    fn drain_pair_events(&mut self) {
+        let events: Vec<PairingEvent> = self
+            .pair_rx
+            .as_ref()
+            .map(|rx| std::iter::from_fn(|| rx.try_recv().ok()).collect())
+            .unwrap_or_default();
+        for ev in events {
+            self.apply_pairing_event(ev);
+        }
     }
 
-    /// Run driven by raw SSH bytes; `terminal` writes to a TerminalHandle defined in os-console.
+    /// Run driven by raw SSH bytes.
     pub fn run_with_bytes<W: Write + Send>(
         mut self,
         mut terminal: ratatui::Terminal<CrosstermBackend<W>>,
@@ -260,6 +383,7 @@ impl AppConsoleKeys {
     ) {
         let mut parser = crate::input_bytes::ByteParser::new();
         loop {
+            self.drain_pair_events();
             if terminal.draw(|f| self.render(f)).is_err() {
                 break;
             }
@@ -277,7 +401,7 @@ impl AppConsoleKeys {
         }
     }
 
-    /// Run in local crossterm PTY mode (default; no SSH required).
+    /// Run in local crossterm PTY mode (default).
     pub fn run_local(mut self) -> Result<()> {
         enable_raw_mode()?;
         let mut stdout = io::stdout();
@@ -288,6 +412,7 @@ impl AppConsoleKeys {
 
         let run_result = (|| -> Result<()> {
             loop {
+                self.drain_pair_events();
                 terminal.draw(|f| self.render(f))?;
                 if event::poll(Duration::from_millis(16))? {
                     let ev = event::read()?;
