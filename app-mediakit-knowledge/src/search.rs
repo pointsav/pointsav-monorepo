@@ -77,10 +77,7 @@ fn build_schema() -> (Schema, SearchFields) {
 ///
 /// Bilingual sibling files (`*.es.md`) are skipped — searching them would
 /// surface duplicate hits for the same TOPIC.
-pub async fn build_index(
-    content_dir: &Path,
-    state_dir: &Path,
-) -> Result<SearchIndex, WikiError> {
+pub async fn build_index(content_dir: &Path, state_dir: &Path) -> Result<SearchIndex, WikiError> {
     let index_dir = state_dir.join("search");
     tokio::fs::create_dir_all(&index_dir).await?;
 
@@ -147,9 +144,20 @@ pub async fn build_index(
 /// Repo-management file stems excluded from the search index — mirrors
 /// SYSTEM_FILE_STEMS in server.rs. Both lists must stay in sync.
 const SEARCH_EXCLUDED_STEMS: &[&str] = &[
-    "README", "CHANGELOG", "MANIFEST", "CLAUDE", "NEXT", "NOTAM",
-    "TRADEMARK", "CODE_OF_CONDUCT", "BUDGET", "DOCTRINE", "LICENSE",
-    "CONTRIBUTING", "SECURITY", "AGENT",
+    "README",
+    "CHANGELOG",
+    "MANIFEST",
+    "CLAUDE",
+    "NEXT",
+    "NOTAM",
+    "TRADEMARK",
+    "CODE_OF_CONDUCT",
+    "BUDGET",
+    "DOCTRINE",
+    "LICENSE",
+    "CONTRIBUTING",
+    "SECURITY",
+    "AGENT",
 ];
 
 fn is_excluded_stem(stem: &str) -> bool {
@@ -184,7 +192,11 @@ async fn collect_topics(content_dir: &Path) -> Result<Vec<(String, String, Strin
                 let Some(stem) = sub_path.file_stem().and_then(|s| s.to_str()) else {
                     continue;
                 };
-                if stem.ends_with(".es") || stem == "index" || stem == "_index" || stem.starts_with('_') {
+                if stem.ends_with(".es")
+                    || stem == "index"
+                    || stem == "_index"
+                    || stem.starts_with('_')
+                {
                     continue;
                 }
                 let slug = format!("{subdir_name}/{stem}");
@@ -196,7 +208,11 @@ async fn collect_topics(content_dir: &Path) -> Result<Vec<(String, String, Strin
                     Ok(p) => p,
                     Err(_) => continue,
                 };
-                let title = parsed.frontmatter.title.clone().unwrap_or_else(|| stem.to_string());
+                let title = parsed
+                    .frontmatter
+                    .title
+                    .clone()
+                    .unwrap_or_else(|| stem.to_string());
                 out.push((slug, title, parsed.body_md));
             }
         } else {
@@ -211,7 +227,8 @@ async fn collect_topics(content_dir: &Path) -> Result<Vec<(String, String, Strin
             if is_excluded_stem(stem) {
                 continue;
             }
-            if stem.ends_with(".es") || stem == "index" || stem == "_index" || stem.starts_with('_') {
+            if stem.ends_with(".es") || stem == "index" || stem == "_index" || stem.starts_with('_')
+            {
                 continue;
             }
             let text = match tokio::fs::read_to_string(&path).await {
@@ -222,7 +239,11 @@ async fn collect_topics(content_dir: &Path) -> Result<Vec<(String, String, Strin
                 Ok(p) => p,
                 Err(_) => continue,
             };
-            let title = parsed.frontmatter.title.clone().unwrap_or_else(|| stem.to_string());
+            let title = parsed
+                .frontmatter
+                .title
+                .clone()
+                .unwrap_or_else(|| stem.to_string());
             out.push((stem.to_string(), title, parsed.body_md));
         }
     }
@@ -232,7 +253,11 @@ async fn collect_topics(content_dir: &Path) -> Result<Vec<(String, String, Strin
 /// Run a search query and return the top-N hits, scored by BM25 against
 /// the title + body fields. Snippets are a simple body-prefix (Phase 3
 /// Step 3.1; Phase 3.2+ may upgrade to highlighter-based snippets).
-pub fn search(idx: &SearchIndex, query_str: &str, limit: usize) -> Result<Vec<SearchHit>, WikiError> {
+pub fn search(
+    idx: &SearchIndex,
+    query_str: &str,
+    limit: usize,
+) -> Result<Vec<SearchHit>, WikiError> {
     if query_str.trim().is_empty() {
         return Ok(Vec::new());
     }
@@ -285,7 +310,7 @@ fn snippet_from_body(body: &str) -> String {
         trimmed.to_string()
     } else {
         let mut out: String = trimmed.chars().take(180).collect();
-        out.push_str("…");
+        out.push('…');
         out
     }
 }
@@ -338,9 +363,21 @@ mod tests {
         let content_dir = tempfile::tempdir().unwrap();
         let state_dir = tempfile::tempdir().unwrap();
         for (slug, title, body) in &[
-            ("topic-alpha", "Alpha Subject", "Alpha discusses the substrate. Substrate is the load-bearing concept."),
-            ("topic-beta", "Beta Subject", "Beta covers continuous disclosure and the BCSC posture in detail."),
-            ("topic-gamma", "Gamma Subject", "Gamma is unrelated content for control."),
+            (
+                "topic-alpha",
+                "Alpha Subject",
+                "Alpha discusses the substrate. Substrate is the load-bearing concept.",
+            ),
+            (
+                "topic-beta",
+                "Beta Subject",
+                "Beta covers continuous disclosure and the BCSC posture in detail.",
+            ),
+            (
+                "topic-gamma",
+                "Gamma Subject",
+                "Gamma is unrelated content for control.",
+            ),
         ] {
             tokio::fs::write(
                 content_dir.path().join(format!("{slug}.md")),
@@ -349,7 +386,9 @@ mod tests {
             .await
             .unwrap();
         }
-        let index = build_index(content_dir.path(), state_dir.path()).await.unwrap();
+        let index = build_index(content_dir.path(), state_dir.path())
+            .await
+            .unwrap();
         (index, content_dir, state_dir)
     }
 
@@ -407,7 +446,9 @@ mod tests {
         )
         .await
         .unwrap();
-        let index = build_index(content_dir.path(), state_dir.path()).await.unwrap();
+        let index = build_index(content_dir.path(), state_dir.path())
+            .await
+            .unwrap();
         let hits = search(&index, "English", 10).unwrap();
         assert_eq!(hits.len(), 1);
         assert_eq!(hits[0].slug, "topic-bi");
@@ -432,12 +473,16 @@ mod tests {
         for stem in &["README", "CLAUDE", "AGENT", "NEXT", "CHANGELOG"] {
             tokio::fs::write(
                 content_dir.path().join(format!("{stem}.md")),
-                format!("---\ntitle: {stem}\n---\nUnique system-file keyword: xyzzy-{stem}-sentinel.\n"),
+                format!(
+                    "---\ntitle: {stem}\n---\nUnique system-file keyword: xyzzy-{stem}-sentinel.\n"
+                ),
             )
             .await
             .unwrap();
         }
-        let index = build_index(content_dir.path(), state_dir.path()).await.unwrap();
+        let index = build_index(content_dir.path(), state_dir.path())
+            .await
+            .unwrap();
         // System-file sentinels must not appear in search results.
         for stem in &["README", "CLAUDE", "AGENT", "NEXT", "CHANGELOG"] {
             let hits = search(&index, &format!("xyzzy-{stem}-sentinel"), 10).unwrap();

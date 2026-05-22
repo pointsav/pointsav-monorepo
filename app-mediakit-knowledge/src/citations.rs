@@ -101,7 +101,7 @@ struct RawCitationRecord {
     #[serde(default)]
     evidence_class: Option<String>,
     #[serde(default)]
-    last_verified: Option<serde_yaml::Value>,  // may be a date or a string
+    last_verified: Option<serde_yaml::Value>, // may be a date or a string
     #[serde(default)]
     aliases: Vec<String>,
     #[serde(flatten)]
@@ -114,10 +114,7 @@ struct RawCitationRecord {
 /// On any I/O or parse error, returns `WikiError::CitationLoadFailed`.
 pub async fn load_registry(path: &Path) -> Result<Vec<CitationEntry>, WikiError> {
     let raw = tokio::fs::read_to_string(path).await.map_err(|e| {
-        WikiError::CitationLoadFailed(format!(
-            "cannot read {}: {e}",
-            path.display()
-        ))
+        WikiError::CitationLoadFailed(format!("cannot read {}: {e}", path.display()))
     })?;
 
     // The workspace `citations.yaml` opens with an optional YAML frontmatter
@@ -136,10 +133,7 @@ pub async fn load_registry(path: &Path) -> Result<Vec<CitationEntry>, WikiError>
     };
 
     let file: CitationFile = serde_yaml::from_str(body).map_err(|e| {
-        WikiError::CitationLoadFailed(format!(
-            "cannot parse {}: {e}",
-            path.display()
-        ))
+        WikiError::CitationLoadFailed(format!("cannot parse {}: {e}", path.display()))
     })?;
 
     let mut entries: Vec<CitationEntry> = file
@@ -326,7 +320,10 @@ citations:
         assert_eq!(entries[0].id, "test-id");
         assert_eq!(entries[0].title, "Test Entry");
         assert_eq!(entries[0].url.as_deref(), Some("https://example.com"));
-        assert_eq!(entries[0].jurisdiction.as_deref(), Some("test-jurisdiction"));
+        assert_eq!(
+            entries[0].jurisdiction.as_deref(),
+            Some("test-jurisdiction")
+        );
     }
 
     #[tokio::test]

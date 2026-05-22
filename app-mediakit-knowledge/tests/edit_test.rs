@@ -31,13 +31,14 @@ async fn fixture_state() -> (AppState, tempfile::TempDir, tempfile::TempDir) {
         guide_dir_2: None,
         citations_yaml: std::path::PathBuf::from("/nonexistent/citations.yaml"),
         search: Arc::new(index),
-        git: Arc::new(Mutex::new(repo)),        site_title: "PointSav Documentation Wiki".to_string(),
+        git: Arc::new(Mutex::new(repo)),
+        site_title: "PointSav Documentation Wiki".to_string(),
         git_tenant: "pointsav".to_string(),
         mcp_enabled: false,
         glossary: Arc::new(app_mediakit_knowledge::glossary::Glossary::default()),
-                links: app_mediakit_knowledge::links::LinkGraph::for_testing(),
-                brand_theme: None,
-                db: None,
+        links: app_mediakit_knowledge::links::LinkGraph::for_testing(),
+        brand_theme: None,
+        db: None,
     };
     (state, dir, state_dir)
 }
@@ -59,13 +60,19 @@ async fn get_edit_returns_editor_page_for_existing_slug() {
     let body = resp.into_body().collect().await.unwrap().to_bytes();
     let html = std::str::from_utf8(&body).unwrap();
     assert!(html.contains("topic-existing"), "slug: {html}");
-    assert!(html.contains(r#"id="saa-editor""#), "editor mount slot missing");
+    assert!(
+        html.contains(r#"id="saa-editor""#),
+        "editor mount slot missing"
+    );
     assert!(
         html.contains("/static/vendor/cm-saa.bundle.js"),
         "vendor bundle script tag missing"
     );
     assert!(html.contains("/static/saa-init.js"), "init script missing");
-    assert!(html.contains("window.SAA_SLUG"), "SAA_SLUG injection missing");
+    assert!(
+        html.contains("window.SAA_SLUG"),
+        "SAA_SLUG injection missing"
+    );
     assert!(
         html.contains("window.SAA_INITIAL"),
         "SAA_INITIAL injection missing"
@@ -90,7 +97,10 @@ async fn get_edit_returns_editor_page_for_nonexistent_slug() {
     assert_eq!(resp.status(), StatusCode::OK);
     let body = resp.into_body().collect().await.unwrap().to_bytes();
     let html = std::str::from_utf8(&body).unwrap();
-    assert!(html.contains(r#"id="saa-editor""#), "editor mount slot missing");
+    assert!(
+        html.contains(r#"id="saa-editor""#),
+        "editor mount slot missing"
+    );
     // Initial doc for a nonexistent slug serialises to "" (empty string).
     assert!(
         html.contains(r#"window.SAA_INITIAL="""#),
@@ -118,13 +128,14 @@ async fn get_edit_initial_json_round_trips_special_chars() {
         guide_dir_2: None,
         citations_yaml: std::path::PathBuf::from("/nonexistent/citations.yaml"),
         search: Arc::new(index),
-        git: Arc::new(Mutex::new(repo)),        site_title: "PointSav Documentation Wiki".to_string(),
+        git: Arc::new(Mutex::new(repo)),
+        site_title: "PointSav Documentation Wiki".to_string(),
         git_tenant: "pointsav".to_string(),
         mcp_enabled: false,
         glossary: Arc::new(app_mediakit_knowledge::glossary::Glossary::default()),
-                links: app_mediakit_knowledge::links::LinkGraph::for_testing(),
-                brand_theme: None,
-                db: None,
+        links: app_mediakit_knowledge::links::LinkGraph::for_testing(),
+        brand_theme: None,
+        db: None,
     };
     let app = router(state);
     let resp = app

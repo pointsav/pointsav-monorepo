@@ -21,13 +21,14 @@ async fn fixture_state() -> (AppState, tempfile::TempDir, tempfile::TempDir) {
         guide_dir_2: None,
         citations_yaml: std::path::PathBuf::from("/nonexistent/citations.yaml"),
         search: Arc::new(index),
-        git: Arc::new(Mutex::new(repo)),        site_title: "PointSav Documentation Wiki".to_string(),
+        git: Arc::new(Mutex::new(repo)),
+        site_title: "PointSav Documentation Wiki".to_string(),
         git_tenant: "pointsav".to_string(),
         mcp_enabled: false,
         glossary: Arc::new(app_mediakit_knowledge::glossary::Glossary::default()),
-                links: app_mediakit_knowledge::links::LinkGraph::for_testing(),
-                brand_theme: None,
-                db: None,
+        links: app_mediakit_knowledge::links::LinkGraph::for_testing(),
+        brand_theme: None,
+        db: None,
     };
     (state, dir, state_dir)
 }
@@ -64,7 +65,10 @@ async fn api_squiggle_rules_returns_json_array() {
     // Each entry has the expected shape
     for rule in arr {
         for field in &["id", "severity", "pattern", "flags", "message", "citation"] {
-            assert!(rule.get(*field).is_some(), "rule missing field {field}: {rule}");
+            assert!(
+                rule.get(*field).is_some(),
+                "rule missing field {field}: {rule}"
+            );
         }
         let severity = rule["severity"].as_str().unwrap_or("");
         assert!(
