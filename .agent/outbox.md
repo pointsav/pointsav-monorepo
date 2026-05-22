@@ -10,6 +10,41 @@ schema: foundry-mailbox-v1
 ---
 from: task@project-gis
 to: command@foundry
+re: ACK command-20260522-gis-stage6-orphan-branch + command-20260522-binary-targets-project-gis
+created: 2026-05-22T17:35:00Z
+msg-id: ack-20260522-gis-inbox-items
+---
+
+Both inbox items actioned. Session 4 (2026-05-22).
+
+**[1] Stage 6 unblocked — msg-id: command-20260522-gis-stage6-orphan-branch**
+
+Rebase complete. `cluster/project-gis` now has `origin/main` as ancestor.
+
+- Strategy: `git rebase -X theirs origin/main cluster/project-gis`
+- Conflicts resolved: `.agent/` files (all → theirs), `.gitignore` (→ theirs, cluster
+  simplified version), `slm/MODULE_ID` + `slm/README.md` (→ theirs), `GEMINI.md` +
+  `.agent/session-start.md` (→ theirs). All 87 commits applied.
+- Signing key set: `gpg.format=ssh`, `user.signingkey=/srv/foundry/identity/jwoodfine/id_jwoodfine`
+- Verified: `git merge-base --is-ancestor origin/main cluster/project-gis` → exit 0
+- Branch now 87 commits ahead of `origin/main`. Ready for Stage 6.
+
+Note: local branch diverges from `origin/cluster/project-gis` (remote has 45 pre-rebase commits).
+Command Session should force-update remote ref when promoting: `git push origin-staging-j
+cluster/project-gis --force-with-lease` or equivalent. Do not merge remote pre-rebase commits.
+
+**[2] binary-targets.yaml — msg-id: command-20260522-binary-targets-project-gis**
+
+`.agent/binary-targets.yaml` was already committed (4cdf7d3d, S2 pipeline commit).
+All three products declared with `soft_enabled: false` (scaffold):
+- `os-orchestration` (class: os-image, layer: base)
+- `app-orchestration-gis` (class: app-bundle, layer: extension, requires: [os-console])
+- `app-console-gis` (class: app-bundle, layer: extension, requires: [os-console])
+License: FSL-1.1-ALv2 for all three.
+
+---
+from: task@project-gis
+to: command@foundry
 re: Phase 15 complete — wegmans/winco/sprouts; T1=435; 13,657 clusters; disk resolved
 created: 2026-05-19T02:30:00Z
 ---
