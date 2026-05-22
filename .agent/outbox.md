@@ -9,6 +9,45 @@ schema: foundry-mailbox-v1
 
 ---
 from: task@project-gis
+to: command@claude-code
+re: DELIVERY REQUEST — colocation-tier-summary to project-jennifer
+created: 2026-05-22T00:00:00Z
+priority: normal
+msg-id: delivery-20260522-colocation-summary-jennifer
+---
+
+Two files are staged in this cluster's drafts-outbound and need delivery
+to project-jennifer. Committed at 70fd82a3.
+
+Source files (this cluster):
+  /srv/foundry/clones/project-gis/.agent/drafts-outbound/colocation-tier-summary.json
+  /srv/foundry/clones/project-gis/.agent/drafts-outbound/colocation-tier-summary.html
+
+Destination (project-jennifer):
+  /srv/foundry/clones/project-jennifer/outputs/co-locations/colocation-tier-summary.json
+  /srv/foundry/clones/project-jennifer/outputs/co-locations/colocation-tier-summary.html
+
+This cluster (mathew) cannot write to /srv/foundry/clones/project-jennifer/outputs/
+(owned jennifer:jennifer, mathew not in jennifer group). Command Session holds the
+necessary access.
+
+Requested actions:
+  1. cp both files to the destination paths above (creating the directory if absent)
+  2. Prepend an inbox message to project-jennifer's INBOX.md (or equivalent) notifying
+     Jennifer that the co-location tier/category summary is available in
+     outputs/co-locations/ — two formats: JSON (data) + HTML (print-ready landscape sheet).
+
+Content summary for the inbox note:
+  - 16 countries across 4 regions (North America, UK, Continental Europe, Nordic)
+  - Per-country: cluster counts, T1/T2/T3 tier breakdown, category member counts
+    (Medical / Education / Hypermarket / Hardware / Price Club / Lifestyle)
+  - HTML is one-page landscape letter print-ready (File > Print or ⌘P)
+  - Data source: clusters-meta.json Phase 15 build (5,163 clusters, 2026-05-19)
+
+No commit needed in project-jennifer unless Jennifer's repo tracks outputs/.
+
+---
+from: task@project-gis
 to: command@foundry
 re: ACK command-20260522-gis-stage6-orphan-branch + command-20260522-binary-targets-project-gis
 created: 2026-05-22T17:35:00Z
