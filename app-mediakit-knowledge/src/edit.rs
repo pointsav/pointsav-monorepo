@@ -18,16 +18,15 @@
 //! and anything that would resolve outside `<content_dir>`. Phase 6 lands the
 //! full normalisation rules.
 
+use crate::auth::LoggedInUser;
 use axum::{
     extract::{Path, State},
     http::StatusCode,
     response::{IntoResponse, Response},
     Json,
 };
-use crate::auth::LoggedInUser;
 use maud::{html, Markup, PreEscaped, DOCTYPE};
 use serde::Deserialize;
-use std::path::PathBuf;
 use std::sync::Arc;
 use tempfile::NamedTempFile;
 use tokio::task;
@@ -87,8 +86,7 @@ pub async fn get_edit(
     let slug_json = serde_json::to_string(&slug)
         .unwrap_or_else(|_| "\"\"".to_string())
         .replace("</", "<\\/");
-    let role_json = serde_json::to_string(&user.role)
-        .unwrap_or_else(|_| "\"editor\"".to_string());
+    let role_json = serde_json::to_string(&user.role).unwrap_or_else(|_| "\"editor\"".to_string());
 
     Ok(html! {
         (DOCTYPE)
@@ -192,7 +190,10 @@ pub async fn post_edit(
 
     // Phase 4 Step 4.1: commit to git. Failures are logged but not fatal.
     {
-        let git_repo = state.git.lock().map_err(|e| WikiError::WriteFailed(format!("git lock failed: {e}")))?;
+        let git_repo = state
+            .git
+            .lock()
+            .map_err(|e| WikiError::WriteFailed(format!("git lock failed: {e}")))?;
         let _ = crate::git::ensure_commit_identity_from_env(&git_repo);
         let commit_msg = if req.edit_summary.trim().is_empty() {
             format!("edit: {slug}")
@@ -202,7 +203,11 @@ pub async fn post_edit(
         match crate::git::commit_topic(&git_repo, &slug, &req.body, "", "", &commit_msg) {
             Ok(oid) => {
                 tracing::info!(slug = %slug, "committed edit to git");
-                if let Err(e) = state.links.record_hash(&slug, &oid.to_string(), req.body.as_bytes()) {
+                if let Err(e) =
+                    state
+                        .links
+                        .record_hash(&slug, &oid.to_string(), req.body.as_bytes())
+                {
                     tracing::warn!(slug = %slug, error = %e, "blake3 hash record failed after edit");
                 }
             }
@@ -250,12 +255,19 @@ pub async fn post_create(
 
     // Phase 4 Step 4.1: commit to git. Failures are logged but not fatal.
     {
-        let git_repo = state.git.lock().map_err(|e| WikiError::WriteFailed(format!("git lock failed: {e}")))?;
+        let git_repo = state
+            .git
+            .lock()
+            .map_err(|e| WikiError::WriteFailed(format!("git lock failed: {e}")))?;
         let _ = crate::git::ensure_commit_identity_from_env(&git_repo);
-        match crate::git::commit_topic(&git_repo, &slug, &body, "", "", &format!("create: {slug}")) {
+        match crate::git::commit_topic(&git_repo, &slug, &body, "", "", &format!("create: {slug}"))
+        {
             Ok(oid) => {
                 tracing::info!(slug = %slug, "committed create to git");
-                if let Err(e) = state.links.record_hash(&slug, &oid.to_string(), body.as_bytes()) {
+                if let Err(e) = state
+                    .links
+                    .record_hash(&slug, &oid.to_string(), body.as_bytes())
+                {
                     tracing::warn!(slug = %slug, error = %e, "blake3 hash record failed after create");
                 }
             }
@@ -291,16 +303,16 @@ pub fn derive_slug(title: &str) -> String {
 /// the same directory as the target so the rename stays on the same
 /// filesystem (cross-fs renames are non-atomic on Linux).
 pub(crate) async fn atomic_write(
-    content_dir: &PathBuf,
-    target: &PathBuf,
+    content_dir: &std::path::Path,
+    target: &std::path::Path,
     body: &str,
 ) -> Result<(), WikiError> {
-    let dir = content_dir.clone();
-    let tgt = target.clone();
+    let dir = content_dir.to_path_buf();
+    let tgt = target.to_path_buf();
     let body_owned = body.to_string();
     task::spawn_blocking(move || -> Result<(), WikiError> {
-        let mut tmp = NamedTempFile::new_in(&dir)
-            .map_err(|e| WikiError::WriteFailed(e.to_string()))?;
+        let mut tmp =
+            NamedTempFile::new_in(&dir).map_err(|e| WikiError::WriteFailed(e.to_string()))?;
         std::io::Write::write_all(&mut tmp, body_owned.as_bytes())
             .map_err(|e| WikiError::WriteFailed(e.to_string()))?;
         tmp.persist(&tgt)

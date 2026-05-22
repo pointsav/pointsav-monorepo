@@ -7,8 +7,8 @@
 //! - `POST /special/logout` clears the session cookie
 //! - `GET /special/create-account` accessible with a valid admin session
 
-use app_mediakit_knowledge::{search, users};
 use app_mediakit_knowledge::server::{router, AppState};
+use app_mediakit_knowledge::{search, users};
 use axum::{
     body::Body,
     http::{Request, StatusCode},
@@ -32,7 +32,8 @@ async fn authless_state() -> (AppState, tempfile::TempDir, tempfile::TempDir) {
         guide_dir_2: None,
         citations_yaml: std::path::PathBuf::from("/nonexistent/citations.yaml"),
         search: Arc::new(index),
-        git: Arc::new(Mutex::new(repo)),        site_title: "PointSav Documentation Wiki".to_string(),
+        git: Arc::new(Mutex::new(repo)),
+        site_title: "PointSav Documentation Wiki".to_string(),
         git_tenant: "pointsav".to_string(),
         mcp_enabled: false,
         glossary: Arc::new(app_mediakit_knowledge::glossary::Glossary::default()),
@@ -67,7 +68,8 @@ async fn auth_state_with_token() -> (AppState, String, tempfile::TempDir, tempfi
         guide_dir_2: None,
         citations_yaml: std::path::PathBuf::from("/nonexistent/citations.yaml"),
         search: Arc::new(index),
-        git: Arc::new(Mutex::new(repo)),        site_title: "PointSav Documentation Wiki".to_string(),
+        git: Arc::new(Mutex::new(repo)),
+        site_title: "PointSav Documentation Wiki".to_string(),
         git_tenant: "pointsav".to_string(),
         mcp_enabled: false,
         glossary: Arc::new(app_mediakit_knowledge::glossary::Glossary::default()),
@@ -115,7 +117,9 @@ async fn login_with_invalid_credentials_redirects_with_error() {
                 .method("POST")
                 .uri("/special/login")
                 .header("content-type", "application/x-www-form-urlencoded")
-                .body(Body::from("username=wikiadmin&password=wrongpassword&next=%2F"))
+                .body(Body::from(
+                    "username=wikiadmin&password=wrongpassword&next=%2F",
+                ))
                 .unwrap(),
         )
         .await
