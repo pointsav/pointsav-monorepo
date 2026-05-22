@@ -10,11 +10,11 @@
 //! - `HASHES`: composite key `"slug\x00revision_sha"` → 32-byte blake3 digest.
 //!   Federation-seam baseline (Phase 7 lights up an efficient reverse index).
 
+use crate::claim::Claim;
+use crate::error::WikiError;
 use redb::{Database, ReadableDatabase, ReadableTable, TableDefinition};
 use regex::Regex;
 use std::{path::Path, sync::Arc};
-use crate::claim::Claim;
-use crate::error::WikiError;
 
 const OUTLINKS: TableDefinition<&str, u8> = TableDefinition::new("outlinks");
 const HASHES: TableDefinition<&str, &[u8]> = TableDefinition::new("hashes");
@@ -40,11 +40,20 @@ impl LinkGraph {
         .map_err(|e| WikiError::LinkGraph(e.to_string()))?;
 
         // Ensure both tables exist on first open.
-        let wtx = db.begin_write().map_err(|e| WikiError::LinkGraph(e.to_string()))?;
-        let _ = wtx.open_table(OUTLINKS).map_err(|e| WikiError::LinkGraph(e.to_string()))?;
-        let _ = wtx.open_table(HASHES).map_err(|e| WikiError::LinkGraph(e.to_string()))?;
-        let _ = wtx.open_table(CLAIM_DEPS).map_err(|e| WikiError::LinkGraph(e.to_string()))?;
-        wtx.commit().map_err(|e| WikiError::LinkGraph(e.to_string()))?;
+        let wtx = db
+            .begin_write()
+            .map_err(|e| WikiError::LinkGraph(e.to_string()))?;
+        let _ = wtx
+            .open_table(OUTLINKS)
+            .map_err(|e| WikiError::LinkGraph(e.to_string()))?;
+        let _ = wtx
+            .open_table(HASHES)
+            .map_err(|e| WikiError::LinkGraph(e.to_string()))?;
+        let _ = wtx
+            .open_table(CLAIM_DEPS)
+            .map_err(|e| WikiError::LinkGraph(e.to_string()))?;
+        wtx.commit()
+            .map_err(|e| WikiError::LinkGraph(e.to_string()))?;
 
         Ok(Self { db: Arc::new(db) })
     }
@@ -55,8 +64,8 @@ impl LinkGraph {
         use std::sync::atomic::{AtomicU64, Ordering};
         static COUNTER: AtomicU64 = AtomicU64::new(0);
         let n = COUNTER.fetch_add(1, Ordering::Relaxed);
-        let path = std::env::temp_dir()
-            .join(format!("wiki-links-{}-{}.redb", std::process::id(), n));
+        let path =
+            std::env::temp_dir().join(format!("wiki-links-{}-{}.redb", std::process::id(), n));
         Arc::new(Self::open_or_create(&path).expect("link graph test init failed"))
     }
 
@@ -66,9 +75,14 @@ impl LinkGraph {
         let targets = parse_wikilinks(body);
         let prefix = format!("{}\x00", slug);
 
-        let wtx = self.db.begin_write().map_err(|e| WikiError::LinkGraph(e.to_string()))?;
+        let wtx = self
+            .db
+            .begin_write()
+            .map_err(|e| WikiError::LinkGraph(e.to_string()))?;
         {
-            let mut table = wtx.open_table(OUTLINKS).map_err(|e| WikiError::LinkGraph(e.to_string()))?;
+            let mut table = wtx
+                .open_table(OUTLINKS)
+                .map_err(|e| WikiError::LinkGraph(e.to_string()))?;
 
             // Collect existing keys for this slug (avoids borrow-while-mutate).
             let to_remove: Vec<String> = table
@@ -86,15 +100,20 @@ impl LinkGraph {
                 .collect();
 
             for key in &to_remove {
-                table.remove(key.as_str()).map_err(|e| WikiError::LinkGraph(e.to_string()))?;
+                table
+                    .remove(key.as_str())
+                    .map_err(|e| WikiError::LinkGraph(e.to_string()))?;
             }
 
             for target in &targets {
                 let key = format!("{}\x00{}", slug, target);
-                table.insert(key.as_str(), 0u8).map_err(|e| WikiError::LinkGraph(e.to_string()))?;
+                table
+                    .insert(key.as_str(), 0u8)
+                    .map_err(|e| WikiError::LinkGraph(e.to_string()))?;
             }
         }
-        wtx.commit().map_err(|e| WikiError::LinkGraph(e.to_string()))?;
+        wtx.commit()
+            .map_err(|e| WikiError::LinkGraph(e.to_string()))?;
         Ok(())
     }
 
@@ -104,8 +123,13 @@ impl LinkGraph {
     pub fn backlinks(&self, target: &str) -> Result<Vec<String>, WikiError> {
         let suffix = format!("\x00{}", target);
 
-        let rtx = self.db.begin_read().map_err(|e| WikiError::LinkGraph(e.to_string()))?;
-        let table = rtx.open_table(OUTLINKS).map_err(|e| WikiError::LinkGraph(e.to_string()))?;
+        let rtx = self
+            .db
+            .begin_read()
+            .map_err(|e| WikiError::LinkGraph(e.to_string()))?;
+        let table = rtx
+            .open_table(OUTLINKS)
+            .map_err(|e| WikiError::LinkGraph(e.to_string()))?;
 
         let results = table
             .iter()
@@ -125,17 +149,30 @@ impl LinkGraph {
     }
 
     /// Store the blake3 hash of `body` keyed by `(slug, revision_sha)`.
-    pub fn record_hash(&self, slug: &str, revision_sha: &str, body: &[u8]) -> Result<(), WikiError> {
+    pub fn record_hash(
+        &self,
+        slug: &str,
+        revision_sha: &str,
+        body: &[u8],
+    ) -> Result<(), WikiError> {
         let hash = blake3::hash(body);
         let hash_bytes: &[u8] = hash.as_bytes();
         let key = format!("{}\x00{}", slug, revision_sha);
 
-        let wtx = self.db.begin_write().map_err(|e| WikiError::LinkGraph(e.to_string()))?;
+        let wtx = self
+            .db
+            .begin_write()
+            .map_err(|e| WikiError::LinkGraph(e.to_string()))?;
         {
-            let mut table = wtx.open_table(HASHES).map_err(|e| WikiError::LinkGraph(e.to_string()))?;
-            table.insert(key.as_str(), hash_bytes).map_err(|e| WikiError::LinkGraph(e.to_string()))?;
+            let mut table = wtx
+                .open_table(HASHES)
+                .map_err(|e| WikiError::LinkGraph(e.to_string()))?;
+            table
+                .insert(key.as_str(), hash_bytes)
+                .map_err(|e| WikiError::LinkGraph(e.to_string()))?;
         }
-        wtx.commit().map_err(|e| WikiError::LinkGraph(e.to_string()))?;
+        wtx.commit()
+            .map_err(|e| WikiError::LinkGraph(e.to_string()))?;
         Ok(())
     }
 
@@ -143,8 +180,13 @@ impl LinkGraph {
     ///
     /// Linear scan — Phase 7 lights up an efficient reverse index path.
     pub fn lookup_by_hash(&self, hash: &[u8; 32]) -> Result<Option<(String, String)>, WikiError> {
-        let rtx = self.db.begin_read().map_err(|e| WikiError::LinkGraph(e.to_string()))?;
-        let table = rtx.open_table(HASHES).map_err(|e| WikiError::LinkGraph(e.to_string()))?;
+        let rtx = self
+            .db
+            .begin_read()
+            .map_err(|e| WikiError::LinkGraph(e.to_string()))?;
+        let table = rtx
+            .open_table(HASHES)
+            .map_err(|e| WikiError::LinkGraph(e.to_string()))?;
 
         let result = table
             .iter()
@@ -170,7 +212,10 @@ impl LinkGraph {
     pub fn rebuild_claims_for_slug(&self, slug: &str, claims: &[Claim]) -> Result<(), WikiError> {
         let from_prefix = format!("{}:", slug);
 
-        let wtx = self.db.begin_write().map_err(|e| WikiError::LinkGraph(e.to_string()))?;
+        let wtx = self
+            .db
+            .begin_write()
+            .map_err(|e| WikiError::LinkGraph(e.to_string()))?;
         {
             let mut table = wtx
                 .open_table(CLAIM_DEPS)
@@ -206,7 +251,8 @@ impl LinkGraph {
                 }
             }
         }
-        wtx.commit().map_err(|e| WikiError::LinkGraph(e.to_string()))?;
+        wtx.commit()
+            .map_err(|e| WikiError::LinkGraph(e.to_string()))?;
         Ok(())
     }
 
@@ -214,7 +260,10 @@ impl LinkGraph {
     pub fn claim_depends_on(&self, claim_id: &str) -> Result<Vec<String>, WikiError> {
         let prefix = format!("{}\x00", claim_id);
 
-        let rtx = self.db.begin_read().map_err(|e| WikiError::LinkGraph(e.to_string()))?;
+        let rtx = self
+            .db
+            .begin_read()
+            .map_err(|e| WikiError::LinkGraph(e.to_string()))?;
         let table = rtx
             .open_table(CLAIM_DEPS)
             .map_err(|e| WikiError::LinkGraph(e.to_string()))?;
@@ -241,7 +290,10 @@ impl LinkGraph {
     pub fn claim_dependents(&self, claim_id: &str) -> Result<Vec<String>, WikiError> {
         let suffix = format!("\x00{}", claim_id);
 
-        let rtx = self.db.begin_read().map_err(|e| WikiError::LinkGraph(e.to_string()))?;
+        let rtx = self
+            .db
+            .begin_read()
+            .map_err(|e| WikiError::LinkGraph(e.to_string()))?;
         let table = rtx
             .open_table(CLAIM_DEPS)
             .map_err(|e| WikiError::LinkGraph(e.to_string()))?;

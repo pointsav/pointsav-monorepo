@@ -7,7 +7,6 @@
 //!   POST /special/pending/{id}/reject     — reject with optional note
 //!   GET  /special/contributions/{username} — editor's submission history
 
-use std::sync::Arc;
 use axum::{
     extract::{Path, State},
     http::StatusCode,
@@ -15,9 +14,10 @@ use axum::{
     Form,
 };
 use maud::{html, Markup, DOCTYPE};
-use rusqlite::{Connection, OptionalExtension, params};
+use rusqlite::{params, Connection, OptionalExtension};
 use serde::Deserialize;
 use similar::{ChangeTag, TextDiff};
+use std::sync::Arc;
 use uuid::Uuid;
 
 use crate::auth::{AdminUser, LoggedInUser};
@@ -268,7 +268,12 @@ pub async fn review_queue(
             }
         }
     };
-    pending_chrome("Pending changes", &state.site_title, &admin.username, content)
+    pending_chrome(
+        "Pending changes",
+        &state.site_title,
+        &admin.username,
+        content,
+    )
 }
 
 pub async fn review_detail(
@@ -447,7 +452,11 @@ pub async fn contributions(
     Path(username): Path<String>,
 ) -> Response {
     if !user.is_admin() && user.username != username {
-        return (StatusCode::FORBIDDEN, "You can only view your own contributions.").into_response();
+        return (
+            StatusCode::FORBIDDEN,
+            "You can only view your own contributions.",
+        )
+            .into_response();
     }
 
     let edits = if let Some(db) = state.db.as_ref() {

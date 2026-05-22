@@ -38,8 +38,8 @@ use axum::{
     routing::{get, post},
     Json, Router,
 };
-use regex::Regex;
 use maud::{html, Markup, PreEscaped, DOCTYPE};
+use regex::Regex;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::collections::BTreeMap;
@@ -52,7 +52,9 @@ use crate::assets::StaticAsset;
 use crate::auth::CurrentUser;
 use crate::error::WikiError;
 use crate::jsonld::jsonld_for_topic;
-use crate::render::{extract_headings, inject_edit_pencils, parse_page, render_html_raw, Frontmatter, TranslationMap};
+use crate::render::{
+    extract_headings, inject_edit_pencils, parse_page, render_html_raw, Frontmatter, TranslationMap,
+};
 use crate::search::{search as run_search, SearchIndex};
 use crate::users::User;
 
@@ -131,8 +133,8 @@ pub fn router(state: AppState) -> Router {
         .route("/", get(index))
         // Wildcard capture allows category-scoped slugs: `/wiki/architecture/compounding-substrate`
         .route("/wiki/{*slug}", get(wiki_page))
-        .route("/es/",              get(home_es))
-        .route("/es/wiki/{*slug}",  get(wiki_page_es))
+        .route("/es/", get(home_es))
+        .route("/es/wiki/{*slug}", get(wiki_page_es))
         .route("/static/{*path}", get(static_asset))
         .route("/healthz", get(healthz))
         // Phase 2 Step 2 — edit endpoint
@@ -178,17 +180,41 @@ pub fn router(state: AppState) -> Router {
         // Sprint C4 — Talk namespace
         .route("/talk/{*slug}", get(talk_page).post(talk_post))
         // Phase 5 — auth + edit review
-        .route("/special/login", get(crate::auth::get_login).post(crate::auth::post_login))
+        .route(
+            "/special/login",
+            get(crate::auth::get_login).post(crate::auth::post_login),
+        )
         .route("/special/logout", post(crate::auth::post_logout))
-        .route("/special/create-account", get(crate::auth::get_create_account).post(crate::auth::post_create_account))
-        .route("/special/pending-changes", get(crate::pending::review_queue))
+        .route(
+            "/special/create-account",
+            get(crate::auth::get_create_account).post(crate::auth::post_create_account),
+        )
+        .route(
+            "/special/pending-changes",
+            get(crate::pending::review_queue),
+        )
         .route("/special/pending/{id}", get(crate::pending::review_detail))
-        .route("/special/pending/{id}/accept", post(crate::pending::accept_edit))
-        .route("/special/pending/{id}/reject", post(crate::pending::reject_edit))
-        .route("/special/contributions/{username}", get(crate::pending::contributions))
+        .route(
+            "/special/pending/{id}/accept",
+            post(crate::pending::accept_edit),
+        )
+        .route(
+            "/special/pending/{id}/reject",
+            post(crate::pending::reject_edit),
+        )
+        .route(
+            "/special/contributions/{username}",
+            get(crate::pending::contributions),
+        )
         // Phase 4 Step 4.7 — read-only git remote (smart-HTTP)
-        .route("/git-server/{tenant}/info/refs", get(crate::git_protocol::info_refs))
-        .route("/git-server/{tenant}/git-upload-pack", post(crate::git_protocol::upload_pack))
+        .route(
+            "/git-server/{tenant}/info/refs",
+            get(crate::git_protocol::info_refs),
+        )
+        .route(
+            "/git-server/{tenant}/git-upload-pack",
+            post(crate::git_protocol::upload_pack),
+        )
         // axum 0.8 doesn't allow a literal `.md` suffix after a dynamic
         // segment, so the route captures `{slug}` as a single segment and
         // the handler strips an optional trailing `.md` for the
@@ -224,16 +250,24 @@ async fn search_complete(
     let topic_files = collect_all_topic_files(
         &state.content_dir,
         &[state.guide_dir.as_deref(), state.guide_dir_2.as_deref()],
-    ).await.unwrap_or_default();
+    )
+    .await
+    .unwrap_or_default();
 
     let mut hits = Vec::new();
     for tf in &topic_files {
-        if hits.len() >= 10 { break; }
+        if hits.len() >= 10 {
+            break;
+        }
         let title = if let Ok(text) = fs::read_to_string(&tf.path).await {
             if let Ok(p) = crate::render::parse_page(&text) {
                 p.frontmatter.title.unwrap_or_else(|| tf.slug.clone())
-            } else { tf.slug.clone() }
-        } else { tf.slug.clone() };
+            } else {
+                tf.slug.clone()
+            }
+        } else {
+            tf.slug.clone()
+        };
         if title.to_lowercase().contains(&q) || tf.slug.to_lowercase().contains(&q) {
             hits.push(json!({"title": title, "slug": tf.slug}));
         }
@@ -248,18 +282,18 @@ async fn preview_api(
     if slug.contains("..") || slug.is_empty() {
         return Err(WikiError::NotFound(slug));
     }
-    
+
     let path = state.content_dir.join(format!("{slug}.md"));
     let text = match fs::read_to_string(&path).await {
         Ok(t) => t,
         Err(_) => return Err(WikiError::NotFound(slug)),
     };
-    
+
     let parsed = parse_page(&text)?;
     let title = parsed.frontmatter.title.unwrap_or_else(|| slug.clone());
     let snippet = crate::feeds::first_paragraph_snippet(&parsed.body_md, 300);
     let image_url = crate::feeds::first_image_url(&parsed.body_md);
-    
+
     Ok(Json(json!({
         "title": title,
         "snippet": snippet,
@@ -310,9 +344,7 @@ struct WikiPageQuery {
 /// Collects all topic slugs, picks one using a time-seeded index (no external
 /// crate needed), and issues a 302 redirect to `/wiki/<slug>`. Returns 404
 /// when the content directory is empty.
-async fn random_page(
-    State(state): State<Arc<AppState>>,
-) -> Result<Response, WikiError> {
+async fn random_page(State(state): State<Arc<AppState>>) -> Result<Response, WikiError> {
     let topic_files = collect_all_topic_files(
         &state.content_dir,
         &[state.guide_dir.as_deref(), state.guide_dir_2.as_deref()],
@@ -564,7 +596,9 @@ const RATIFIED_CATEGORIES: &[&str] = &[
     "applications",
     "governance",
     "infrastructure",
+    "company",
     "reference",
+    "help",
     "design-system",
 ];
 
@@ -684,12 +718,10 @@ pub async fn collect_all_topic_files(
     guide_dirs: &[Option<&FsPath>],
 ) -> std::io::Result<Vec<TopicFile>> {
     let mut files = collect_topic_files(content_dir).await?;
-    for gd_opt in guide_dirs {
-        if let Some(gd) = gd_opt {
-            if gd.is_dir() {
-                if let Ok(guide_files) = collect_topic_files(gd).await {
-                    files.extend(guide_files);
-                }
+    for gd in guide_dirs.iter().flatten() {
+        if gd.is_dir() {
+            if let Ok(guide_files) = collect_topic_files(gd).await {
+                files.extend(guide_files);
             }
         }
     }
@@ -798,7 +830,13 @@ fn recent_topics_by_last_edited(buckets: &CategoryBuckets, n: usize) -> Vec<Topi
         }
         // Try git commit date.
         if let Ok(output) = std::process::Command::new("git")
-            .args(["log", "-1", "--format=%cI", "--", t.file_path.to_str().unwrap_or("")])
+            .args([
+                "log",
+                "-1",
+                "--format=%cI",
+                "--",
+                t.file_path.to_str().unwrap_or(""),
+            ])
             .output()
         {
             let s = String::from_utf8_lossy(&output.stdout).trim().to_string();
@@ -839,10 +877,10 @@ async fn load_featured(content_dir: &FsPath, buckets: &CategoryBuckets) -> Optio
     let path = content_dir.join("featured-topic.yaml");
     let text = fs::read_to_string(path).await.ok()?;
     let pin: FeaturedTopicPin = serde_yaml::from_str(&text).ok()?;
-    
+
     // Find the topic summary in buckets to get title and snippet
     let summary = buckets.values().flatten().find(|t| t.slug == pin.slug)?;
-    
+
     Some(FeaturedArticle {
         title: summary.title.clone(),
         slug: summary.slug.clone(),
@@ -867,10 +905,15 @@ fn extract_short_description(text: &str) -> Option<String> {
     let end = after_first.find("\n---")?;
     let fm_text = &after_first[..end];
     let val: serde_yaml::Value = serde_yaml::from_str(fm_text).ok()?;
-    val.get("short_description")?.as_str().map(|s| s.to_string())
+    val.get("short_description")?
+        .as_str()
+        .map(|s| s.to_string())
 }
 
-async fn load_category_descriptions(content_dir: &FsPath, categories: &[&str]) -> BTreeMap<String, String> {
+async fn load_category_descriptions(
+    content_dir: &FsPath,
+    categories: &[&str],
+) -> BTreeMap<String, String> {
     let mut map = BTreeMap::new();
     for cat in categories {
         let path = content_dir.join(cat).join("_index.md");
@@ -901,16 +944,27 @@ fn bucket_guides_by_domain(guides: &[TopicSummary]) -> BTreeMap<String, Vec<Topi
     for g in guides {
         let domain = if g.slug.contains("slm") || g.slug.contains("doorman") {
             "AI & SLM"
-        } else if g.slug.contains("personnel") || g.slug.contains("entra") || g.slug.contains("linkedin") {
+        } else if g.slug.contains("personnel")
+            || g.slug.contains("entra")
+            || g.slug.contains("linkedin")
+        {
             "Personnel"
-        } else if g.slug.contains("network") || g.slug.contains("mesh") || g.slug.contains("command") {
+        } else if g.slug.contains("network")
+            || g.slug.contains("mesh")
+            || g.slug.contains("command")
+        {
             "Network & Command"
-        } else if g.slug.contains("infrastructure") || g.slug.contains("provision") || g.slug.contains("lxc") {
+        } else if g.slug.contains("infrastructure")
+            || g.slug.contains("provision")
+            || g.slug.contains("lxc")
+        {
             "Infrastructure"
         } else {
             "General"
         };
-        map.entry(domain.to_string()).or_insert_with(Vec::new).push(g.clone());
+        map.entry(domain.to_string())
+            .or_insert_with(Vec::new)
+            .push(g.clone());
     }
     map
 }
@@ -921,7 +975,7 @@ fn bucket_guides_by_domain(guides: &[TopicSummary]) -> BTreeMap<String, Vec<Topi
 /// categories (excludes `index.md`, `_index.md`, and `*.es.md` siblings,
 /// matching `bucket_topics_by_category()` discipline).
 ///
-/// `category_count` is `RATIFIED_CATEGORIES.len()` — always 10, signalling
+/// `category_count` is `RATIFIED_CATEGORIES.len()` — always 12, signalling
 /// the platform's intended scope rather than only categories with
 /// articles.
 ///
@@ -955,10 +1009,11 @@ fn compute_home_stats(buckets: &CategoryBuckets) -> HomeStats {
 /// - Two-column main panel:
 ///   - Left: Optional featured TOPIC panel
 ///   - Right: Optional Leapfrog 2030 inventions bullet panel
-/// - By-category grid (all 10 ratified categories; empty ones show
+/// - By-category grid (all 12 ratified categories; empty ones show
 ///   "0 articles — in preparation")
 /// - Recent additions feed (top 5, sorted by `last_edited` descending)
 /// - Site footer with bilingual notice
+///
 /// How many articles to preview per category before showing "All N →".
 /// Categories with ≤ PREVIEW_LIMIT articles always show the full list.
 const PREVIEW_LIMIT: usize = 8;
@@ -966,6 +1021,7 @@ const PREVIEW_LIMIT: usize = 8;
 const WORDMARK_POINTSAV: &str = r##"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 40"><text x="0" y="30" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="24" font-weight="800" fill="#09090B" letter-spacing="-0.03em">POINT-SAV DIGITAL SYSTEMS</text></svg>"##;
 const WORDMARK_WOODFINE: &str = r##"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 350 40"><text x="0" y="30" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="24" font-weight="800" fill="#111827" letter-spacing="-0.03em">WOODFINE CAPITAL PROJECTS</text></svg>"##;
 
+#[allow(clippy::too_many_arguments)]
 fn home_chrome(
     locale: Locale,
     home_fm: &crate::render::Frontmatter,
@@ -993,9 +1049,7 @@ fn home_chrome(
         guides.iter().map(|g| g.slug.as_str()).collect();
     let mut uncategorised: Vec<&TopicSummary> = buckets
         .iter()
-        .filter(|(cat, _)| {
-            !RATIFIED_CATEGORIES.contains(&cat.as_str()) && cat.as_str() != "root"
-        })
+        .filter(|(cat, _)| !RATIFIED_CATEGORIES.contains(&cat.as_str()) && cat.as_str() != "root")
         .flat_map(|(_, topics)| topics.iter())
         .filter(|t| !guide_slug_set.contains(t.slug.as_str()))
         .collect();
@@ -1007,7 +1061,9 @@ fn home_chrome(
         let mut out = String::new();
         let offset = s.len() % 3;
         for (i, ch) in s.chars().enumerate() {
-            if i > 0 && (i + 3 - offset) % 3 == 0 { out.push(','); }
+            if i > 0 && (i + 3 - offset) % 3 == 0 {
+                out.push(',');
+            }
             out.push(ch);
         }
         out
@@ -1455,7 +1511,11 @@ fn humanize_category(s: &str) -> String {
 
 /// Current flat-listing index behaviour, preserved for the absent-`index.md`
 /// case. Extracted verbatim from the pre-iteration-1 `index()` handler.
-async fn placeholder_index(state: &AppState, user: Option<&User>, pending_count: i64) -> Result<Markup, WikiError> {
+async fn placeholder_index(
+    state: &AppState,
+    user: Option<&User>,
+    pending_count: i64,
+) -> Result<Markup, WikiError> {
     let mut entries = fs::read_dir(&state.content_dir).await?;
     let mut pages: Vec<String> = Vec::new();
     while let Some(entry) = entries.next_entry().await? {
@@ -1505,7 +1565,12 @@ async fn category_page(
     CurrentUser(maybe_user): CurrentUser,
 ) -> Result<Markup, WikiError> {
     let pending_count = pending_count_for(&state, maybe_user.as_ref()).await;
-    let buckets = bucket_topics_by_category(&state.content_dir, state.guide_dir.as_deref(), state.guide_dir_2.as_deref()).await?;
+    let buckets = bucket_topics_by_category(
+        &state.content_dir,
+        state.guide_dir.as_deref(),
+        state.guide_dir_2.as_deref(),
+    )
+    .await?;
     let empty: Vec<TopicSummary> = Vec::new();
     let topics = buckets.get(&name).unwrap_or(&empty);
     let display = humanize_category(&name);
@@ -1518,7 +1583,10 @@ async fn category_page(
             match fs::read_to_string(&index_path).await {
                 Ok(text) => {
                     if let Ok(parsed) = crate::render::parse_page(&text) {
-                        Some(crate::render::render_html_raw(&parsed.body_md, &state.content_dir))
+                        Some(crate::render::render_html_raw(
+                            &parsed.body_md,
+                            &state.content_dir,
+                        ))
                     } else {
                         None
                     }
@@ -1589,7 +1657,9 @@ async fn home_inner(
 ) -> Result<Markup, WikiError> {
     let pending_count = pending_count_for(&state, maybe_user.as_ref()).await;
     // Prefer locale-specific index (index.es.md) when available.
-    let home_path = state.content_dir.join(format!("index{}.md", locale.suffix()));
+    let home_path = state
+        .content_dir
+        .join(format!("index{}.md", locale.suffix()));
     let home_path = if home_path.exists() {
         home_path
     } else {
@@ -1601,7 +1671,12 @@ async fn home_inner(
 
     let home_text = fs::read_to_string(&home_path).await?;
     let home_parsed = crate::render::parse_page(&home_text)?;
-    let buckets = bucket_topics_by_category(&state.content_dir, state.guide_dir.as_deref(), state.guide_dir_2.as_deref()).await?;
+    let buckets = bucket_topics_by_category(
+        &state.content_dir,
+        state.guide_dir.as_deref(),
+        state.guide_dir_2.as_deref(),
+    )
+    .await?;
     let recent = recent_topics_by_last_edited(&buckets, 10);
     let stats = compute_home_stats(&buckets);
     let home_html = crate::render::render_html_raw(&home_parsed.body_md, &state.content_dir);
@@ -1609,7 +1684,8 @@ async fn home_inner(
     let featured = load_featured(&state.content_dir, &buckets).await;
     let dyk = load_dyk_localized(&state.content_dir, locale).await;
     let ref_inv = load_reference_invariants(&state.content_dir).await;
-    let cat_descriptions = load_category_descriptions(&state.content_dir, RATIFIED_CATEGORIES).await;
+    let cat_descriptions =
+        load_category_descriptions(&state.content_dir, RATIFIED_CATEGORIES).await;
 
     let mut guide_summaries: Vec<TopicSummary> = buckets
         .values()
@@ -1617,7 +1693,7 @@ async fn home_inner(
         .filter(|t| {
             t.slug
                 .split('/')
-                .last()
+                .next_back()
                 .map(|s| s.starts_with("guide-"))
                 .unwrap_or(false)
         })
@@ -1737,14 +1813,18 @@ async fn wiki_page_inner(
     // `effective_locale` reflects what was actually served; used for lang= and hreflang.
     let mut effective_locale = Locale::En;
     if locale == Locale::Es && q.asof.is_none() {
-        let es_path = state.content_dir.join(format!("{slug}{}.md", Locale::Es.suffix()));
+        let es_path = state
+            .content_dir
+            .join(format!("{slug}{}.md", Locale::Es.suffix()));
         if es_path.exists() {
             effective_locale = Locale::Es;
         }
     }
 
     // Try content_dir first; if not found, try guide_dir then guide_dir_2.
-    let primary_path = state.content_dir.join(format!("{slug}{}.md", effective_locale.suffix()));
+    let primary_path = state
+        .content_dir
+        .join(format!("{slug}{}.md", effective_locale.suffix()));
 
     // §3.5: past-revision view — read from git history when ?asof= is set.
     // Only content_dir is git-tracked; guide_dir articles always use the
@@ -1755,57 +1835,56 @@ async fn wiki_page_inner(
             _ => return Err(WikiError::NotFound(slug)),
         }
     } else {
-    match fs::read_to_string(&primary_path).await {
-        Ok(t) => t,
-        Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
-            let guide_dirs: &[Option<&PathBuf>] = &[state.guide_dir.as_ref(), state.guide_dir_2.as_ref()];
-            let mut found: Option<String> = None;
-            for gd_opt in guide_dirs {
-                if let Some(gd) = gd_opt {
+        match fs::read_to_string(&primary_path).await {
+            Ok(t) => t,
+            Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
+                let guide_dirs: &[Option<&PathBuf>] =
+                    &[state.guide_dir.as_ref(), state.guide_dir_2.as_ref()];
+                let mut found: Option<String> = None;
+                for gd in guide_dirs.iter().flatten() {
                     let gp = gd.join(format!("{slug}.md"));
                     if let Ok(t) = fs::read_to_string(&gp).await {
                         found = Some(t);
                         break;
                     }
                 }
-            }
-            match found {
-                Some(t) => t,
-                None => {
-                    // Slug normalization fallback: if the slug has uppercase or
-                    // spaces, try the lowercase+hyphenated form and redirect.
-                    let norm = slug.to_lowercase().replace(' ', "-");
-                    if norm != slug {
-                        let norm_path = state.content_dir.join(format!("{norm}.md"));
-                        if norm_path.exists() {
-                            let location = format!("/wiki/{norm}");
-                            return Ok(Response::builder()
-                                .status(StatusCode::MOVED_PERMANENTLY)
-                                .header(header::LOCATION, location)
-                                .body(axum::body::Body::empty())
-                                .unwrap());
+                match found {
+                    Some(t) => t,
+                    None => {
+                        // Slug normalization fallback: if the slug has uppercase or
+                        // spaces, try the lowercase+hyphenated form and redirect.
+                        let norm = slug.to_lowercase().replace(' ', "-");
+                        if norm != slug {
+                            let norm_path = state.content_dir.join(format!("{norm}.md"));
+                            if norm_path.exists() {
+                                let location = format!("/wiki/{norm}");
+                                return Ok(Response::builder()
+                                    .status(StatusCode::MOVED_PERMANENTLY)
+                                    .header(header::LOCATION, location)
+                                    .body(axum::body::Body::empty())
+                                    .unwrap());
+                            }
                         }
-                    }
-                    // Bare-slug resolver: if the slug has no directory component,
-                    // search category subdirectories for a unique stem match and
-                    // 301-redirect to the qualified slug. Fixes wikilinks that were
-                    // written before the Wave-1 category-subdirectory migration.
-                    if !slug.contains('/') {
-                        if let Some(full) = resolve_bare_slug(&state, &slug).await {
-                            let location = format!("/wiki/{full}");
-                            return Ok(Response::builder()
-                                .status(StatusCode::MOVED_PERMANENTLY)
-                                .header(header::LOCATION, location)
-                                .body(axum::body::Body::empty())
-                                .unwrap());
+                        // Bare-slug resolver: if the slug has no directory component,
+                        // search category subdirectories for a unique stem match and
+                        // 301-redirect to the qualified slug. Fixes wikilinks that were
+                        // written before the Wave-1 category-subdirectory migration.
+                        if !slug.contains('/') {
+                            if let Some(full) = resolve_bare_slug(&state, &slug).await {
+                                let location = format!("/wiki/{full}");
+                                return Ok(Response::builder()
+                                    .status(StatusCode::MOVED_PERMANENTLY)
+                                    .header(header::LOCATION, location)
+                                    .body(axum::body::Body::empty())
+                                    .unwrap());
+                            }
                         }
+                        return Err(WikiError::NotFound(slug));
                     }
-                    return Err(WikiError::NotFound(slug));
                 }
             }
+            Err(e) => return Err(e.into()),
         }
-        Err(e) => return Err(e.into()),
-    }
     }; // end of asof / disk read block
     let mut parsed = parse_page(&text)?;
 
@@ -1834,7 +1913,13 @@ async fn wiki_page_inner(
     //
     // This means every article that has a sibling gets the language toggle
     // without requiring the content author to maintain `translations:` by hand.
-    if parsed.frontmatter.translations.as_ref().map(|t| t.is_empty()).unwrap_or(true) {
+    if parsed
+        .frontmatter
+        .translations
+        .as_ref()
+        .map(|t| t.is_empty())
+        .unwrap_or(true)
+    {
         let is_es = slug.ends_with(".es");
         if is_es {
             // Case B: we're on an ES article; offer EN link.
@@ -1866,12 +1951,7 @@ async fn wiki_page_inner(
         .count() as u32;
     let mut claims = crate::claim::extract_claims(&parsed.body_md, &slug).claims;
     if q.asof.is_none() {
-        crate::history::blame_published_at(
-            &state.content_dir,
-            &slug,
-            fm_line_count,
-            &mut claims,
-        );
+        crate::history::blame_published_at(&state.content_dir, &slug, fm_line_count, &mut claims);
     }
 
     // §3.7: JSON content-negotiation — return structured JSON when the client
@@ -1879,7 +1959,10 @@ async fn wiki_page_inner(
     let wants_json = headers
         .get(header::ACCEPT)
         .and_then(|v| v.to_str().ok())
-        .map(|s| s.split(',').any(|part| part.trim().starts_with("application/json")))
+        .map(|s| {
+            s.split(',')
+                .any(|part| part.trim().starts_with("application/json"))
+        })
         .unwrap_or(false);
     if wants_json {
         let blake3_hex = blake3::hash(text.as_bytes()).to_hex().to_string();
@@ -1934,7 +2017,21 @@ async fn wiki_page_inner(
 
     let pending_count = pending_count_for(&state, maybe_user.as_ref()).await;
     let redirected_from = q.redirectedfrom.as_deref();
-    Ok(wiki_chrome(effective_locale, &title, &slug, parsed.frontmatter, &body_html, headings, &state.site_title, state.brand_theme.as_deref(), maybe_user.as_ref(), pending_count, redirected_from, q.printable).into_response())
+    Ok(wiki_chrome(
+        effective_locale,
+        &title,
+        &slug,
+        parsed.frontmatter,
+        &body_html,
+        headings,
+        &state.site_title,
+        state.brand_theme.as_deref(),
+        maybe_user.as_ref(),
+        pending_count,
+        redirected_from,
+        q.printable,
+    )
+    .into_response())
 }
 
 async fn static_asset(Path(path): Path<String>) -> Response {
@@ -1971,6 +2068,7 @@ async fn static_asset(Path(path): Path<String>) -> Response {
 /// - Reader density toggle (Off / Exceptions only / All; localStorage)
 /// - Per-section [edit] pencils (injected into rendered HTML by render module)
 /// - Footer block: categories → license → about/contact links
+#[allow(clippy::too_many_arguments)]
 fn wiki_chrome(
     locale: Locale,
     title: &str,
@@ -1992,22 +2090,24 @@ fn wiki_chrome(
 
     // B5: Precompute ToC entries with hierarchical section numbers (1, 2, 2.1, etc.)
     let numbered_headings: Vec<(String, String, u8, String)> = {
-        let mut counters = vec![0usize; 7];
-        headings.iter().map(|(id, text, level)| {
-            let lvl = *level as usize;
-            counters[lvl] += 1;
-            for c in &mut counters[lvl + 1..] {
-                *c = 0;
-            }
-            let num = counters[1..=lvl]
-                .iter()
-                .skip_while(|n| **n == 0)
-                .map(|n| n.to_string())
-                .collect::<Vec<_>>()
-                .join(".");
-            (id.clone(), text.clone(), *level, num)
-        })
-        .collect()
+        let mut counters = [0usize; 7];
+        headings
+            .iter()
+            .map(|(id, text, level)| {
+                let lvl = *level as usize;
+                counters[lvl] += 1;
+                for c in &mut counters[lvl + 1..] {
+                    *c = 0;
+                }
+                let num = counters[1..=lvl]
+                    .iter()
+                    .skip_while(|n| **n == 0)
+                    .map(|n| n.to_string())
+                    .collect::<Vec<_>>()
+                    .join(".");
+                (id.clone(), text.clone(), *level, num)
+            })
+            .collect()
     };
 
     html! {
@@ -2587,7 +2687,9 @@ async fn what_links_here(
                 }
             }
         },
-        &state.site_title, maybe_user.as_ref(), pending_count,
+        &state.site_title,
+        maybe_user.as_ref(),
+        pending_count,
     ))
 }
 
@@ -2604,9 +2706,11 @@ async fn page_info(
     // Load the article file to extract frontmatter.
     let md_path = state.content_dir.join(format!("{slug}.md"));
     let (title, category, status, last_edited, word_count) = if md_path.exists() {
-        let raw = tokio::fs::read_to_string(&md_path).await.unwrap_or_default();
-        let parsed = crate::render::parse_page(&raw)
-            .unwrap_or_else(|_| crate::render::ParsedPage {
+        let raw = tokio::fs::read_to_string(&md_path)
+            .await
+            .unwrap_or_default();
+        let parsed =
+            crate::render::parse_page(&raw).unwrap_or_else(|_| crate::render::ParsedPage {
                 frontmatter: crate::render::Frontmatter::default(),
                 body_md: raw.clone(),
             });
@@ -2618,7 +2722,13 @@ async fn page_info(
         let word_count = parsed.body_md.split_whitespace().count();
         (title, category, status, last_edited, word_count)
     } else {
-        (slug.clone(), "—".to_string(), "—".to_string(), "—".to_string(), 0)
+        (
+            slug.clone(),
+            "—".to_string(),
+            "—".to_string(),
+            "—".to_string(),
+            0,
+        )
     };
 
     Ok(chrome(
@@ -2635,7 +2745,9 @@ async fn page_info(
             }
             p { a href={ "/wiki/" (slug) } { "← Back to article" } }
         },
-        &state.site_title, maybe_user.as_ref(), pending_count,
+        &state.site_title,
+        maybe_user.as_ref(),
+        pending_count,
     ))
 }
 
@@ -2650,9 +2762,11 @@ async fn cite_page(
 
     let md_path = state.content_dir.join(format!("{slug}.md"));
     let (title, last_edited) = if md_path.exists() {
-        let raw = tokio::fs::read_to_string(&md_path).await.unwrap_or_default();
-        let parsed = crate::render::parse_page(&raw)
-            .unwrap_or_else(|_| crate::render::ParsedPage {
+        let raw = tokio::fs::read_to_string(&md_path)
+            .await
+            .unwrap_or_default();
+        let parsed =
+            crate::render::parse_page(&raw).unwrap_or_else(|_| crate::render::ParsedPage {
                 frontmatter: crate::render::Frontmatter::default(),
                 body_md: raw.clone(),
             });
@@ -2668,10 +2782,9 @@ async fn cite_page(
     let url = format!("https://documentation.pointsav.com/wiki/{slug}");
     let site = &state.site_title;
     let apa = format!("PointSav Digital Systems. ({last_edited}). {title}. {site}. {url}");
-    let mla = format!(
-        "PointSav Digital Systems. \"{title}.\" {site}, {last_edited}, {url}."
-    );
-    let wiki = format!("{{{{cite web|url={url}|title={title}|website={site}|date={last_edited}}}}}");
+    let mla = format!("PointSav Digital Systems. \"{title}.\" {site}, {last_edited}, {url}.");
+    let wiki =
+        format!("{{{{cite web|url={url}|title={title}|website={site}|date={last_edited}}}}}");
 
     Ok(chrome(
         &format!("Cite: {title} — {site}"),
@@ -2686,7 +2799,9 @@ async fn cite_page(
             pre.wiki-cite-block { (wiki) }
             p { a href={ "/wiki/" (slug) } { "← Back to article" } }
         },
-        &state.site_title, maybe_user.as_ref(), pending_count,
+        &state.site_title,
+        maybe_user.as_ref(),
+        pending_count,
     ))
 }
 
@@ -2697,7 +2812,11 @@ async fn cite_page(
 /// Walks `content_dir` recursively, emits one `<url>` per TOPIC (excluding
 /// `*.es.md` bilingual siblings). Content-Type: `application/xml; charset=utf-8`.
 async fn sitemap_xml(State(state): State<Arc<AppState>>) -> Result<Response, WikiError> {
-    let topic_files = collect_all_topic_files(&state.content_dir, &[state.guide_dir.as_deref(), state.guide_dir_2.as_deref()]).await?;
+    let topic_files = collect_all_topic_files(
+        &state.content_dir,
+        &[state.guide_dir.as_deref(), state.guide_dir_2.as_deref()],
+    )
+    .await?;
     let mut slugs: Vec<String> = topic_files.into_iter().map(|tf| tf.slug).collect();
     slugs.sort();
 
@@ -2706,9 +2825,7 @@ async fn sitemap_xml(State(state): State<Arc<AppState>>) -> Result<Response, Wik
          <urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n",
     );
     for slug in &slugs {
-        xml.push_str(&format!(
-            "  <url><loc>/wiki/{slug}</loc></url>\n"
-        ));
+        xml.push_str(&format!("  <url><loc>/wiki/{slug}</loc></url>\n"));
     }
     xml.push_str("</urlset>\n");
 
@@ -2741,8 +2858,13 @@ async fn robots_txt() -> Response {
 /// surfaces (JSON-LD, Atom, JSON Feed, sitemap). Content-Type:
 /// `text/markdown; charset=utf-8`.
 async fn llms_txt(State(state): State<Arc<AppState>>) -> Result<Response, WikiError> {
-    let topic_files = collect_all_topic_files(&state.content_dir, &[state.guide_dir.as_deref(), state.guide_dir_2.as_deref()]).await?;
-    let mut tf_list: Vec<(String, PathBuf)> = topic_files.into_iter()
+    let topic_files = collect_all_topic_files(
+        &state.content_dir,
+        &[state.guide_dir.as_deref(), state.guide_dir_2.as_deref()],
+    )
+    .await?;
+    let mut tf_list: Vec<(String, PathBuf)> = topic_files
+        .into_iter()
         .map(|tf| (tf.slug, tf.path))
         .collect();
     tf_list.sort_by(|a, b| a.0.cmp(&b.0));
@@ -2806,14 +2928,13 @@ async fn llms_txt(State(state): State<Arc<AppState>>) -> Result<Response, WikiEr
 fn llms_txt_snippet(body_md: &str, max_chars: usize) -> String {
     let first = body_md
         .lines()
-        .filter(|l| {
+        .find(|l| {
             let t = l.trim();
             !t.is_empty() && !t.starts_with('#') && !t.starts_with("---")
         })
-        .next()
         .unwrap_or("");
     let clean: String = first
-        .trim_start_matches(|c| matches!(c, '-' | '*' | '+' | '>' | ' '))
+        .trim_start_matches(['-', '*', '+', '>', ' '])
         .chars()
         .filter(|&c| c != '`' && c != '*' && c != '_')
         .collect();
@@ -2884,7 +3005,9 @@ async fn recent_changes_page(
                 return Ok(chrome(
                     &format!("Recent changes — {}", state.site_title),
                     html! { h1 { "Recent changes" } p { "No git history yet." } },
-                    &state.site_title, maybe_user.as_ref(), pending_count,
+                    &state.site_title,
+                    maybe_user.as_ref(),
+                    pending_count,
                 ));
             }
         };
@@ -2894,23 +3017,43 @@ async fn recent_changes_page(
                 return Ok(chrome(
                     &format!("Recent changes — {}", state.site_title),
                     html! { h1 { "Recent changes" } p { "Empty repository." } },
-                    &state.site_title, maybe_user.as_ref(), pending_count,
+                    &state.site_title,
+                    maybe_user.as_ref(),
+                    pending_count,
                 ));
             }
         };
         let mut out = Vec::new();
-        let ancestors = id.ancestors().all()
+        let ancestors = id
+            .ancestors()
+            .all()
             .map_err(|e| WikiError::WriteFailed(format!("gix ancestors: {e}")))?;
         for item in ancestors.take(50) {
-            let item = match item { Ok(i) => i, Err(_) => continue };
-            let commit = match item.object() { Ok(c) => c, Err(_) => continue };
-            let author = match commit.author() { Ok(a) => a, Err(_) => continue };
-            let message = match commit.message() { Ok(m) => m, Err(_) => continue };
-            let time = match commit.time() { Ok(t) => t, Err(_) => continue };
+            let item = match item {
+                Ok(i) => i,
+                Err(_) => continue,
+            };
+            let commit = match item.object() {
+                Ok(c) => c,
+                Err(_) => continue,
+            };
+            let author = match commit.author() {
+                Ok(a) => a,
+                Err(_) => continue,
+            };
+            let message = match commit.message() {
+                Ok(m) => m,
+                Err(_) => continue,
+            };
+            let time = match commit.time() {
+                Ok(t) => t,
+                Err(_) => continue,
+            };
             let ts = {
                 use chrono::{TimeZone, Utc};
                 let secs = time.seconds;
-                Utc.timestamp_opt(secs, 0).single()
+                Utc.timestamp_opt(secs, 0)
+                    .single()
                     .map(|dt| dt.format("%Y-%m-%d %H:%M").to_string())
                     .unwrap_or_else(|| secs.to_string())
             };
@@ -2953,7 +3096,9 @@ async fn recent_changes_page(
                 }
             }
         },
-        &state.site_title, maybe_user.as_ref(), pending_count,
+        &state.site_title,
+        maybe_user.as_ref(),
+        pending_count,
     ))
 }
 
@@ -2967,7 +3112,8 @@ async fn all_pages_page(
     let topic_files = collect_all_topic_files(
         &state.content_dir,
         &[state.guide_dir.as_deref(), state.guide_dir_2.as_deref()],
-    ).await?;
+    )
+    .await?;
 
     // Collect (title, slug) pairs, sorted by title.
     let mut pages: Vec<(String, String)> = Vec::new();
@@ -2975,16 +3121,22 @@ async fn all_pages_page(
         let title = if let Ok(text) = fs::read_to_string(&tf.path).await {
             if let Ok(parsed) = crate::render::parse_page(&text) {
                 parsed.frontmatter.title.unwrap_or_else(|| tf.slug.clone())
-            } else { tf.slug.clone() }
-        } else { tf.slug.clone() };
+            } else {
+                tf.slug.clone()
+            }
+        } else {
+            tf.slug.clone()
+        };
         pages.push((title, tf.slug.clone()));
     }
-    pages.sort_by(|a, b| a.0.to_lowercase().cmp(&b.0.to_lowercase()));
+    pages.sort_by_key(|a| a.0.to_lowercase());
 
     // Group by first letter.
     let mut groups: BTreeMap<char, Vec<(String, String)>> = BTreeMap::new();
     for (title, slug) in pages {
-        let ch = title.chars().next()
+        let ch = title
+            .chars()
+            .next()
             .unwrap_or('#')
             .to_uppercase()
             .next()
@@ -3014,7 +3166,9 @@ async fn all_pages_page(
                 }
             }
         },
-        &state.site_title, maybe_user.as_ref(), pending_count,
+        &state.site_title,
+        maybe_user.as_ref(),
+        pending_count,
     ))
 }
 
@@ -3029,7 +3183,8 @@ async fn categories_index_page(
     let topic_files = collect_all_topic_files(
         &state.content_dir,
         &[state.guide_dir.as_deref(), state.guide_dir_2.as_deref()],
-    ).await?;
+    )
+    .await?;
 
     // Collect category → count pairs.
     let mut cat_counts: BTreeMap<String, usize> = BTreeMap::new();
@@ -3054,16 +3209,21 @@ async fn categories_index_page(
     let mut groups: BTreeMap<char, Vec<(String, String, usize)>> = BTreeMap::new();
     for (cat_slug, count) in &cat_counts {
         let display = humanize_category(cat_slug);
-        let ch = display.chars().next()
+        let ch = display
+            .chars()
+            .next()
             .unwrap_or('#')
             .to_uppercase()
             .next()
             .unwrap_or('#');
         let key = if ch.is_ascii_alphabetic() { ch } else { '#' };
-        groups.entry(key).or_default().push((display, cat_slug.clone(), *count));
+        groups
+            .entry(key)
+            .or_default()
+            .push((display, cat_slug.clone(), *count));
     }
     for entries in groups.values_mut() {
-        entries.sort_by(|a, b| a.0.to_lowercase().cmp(&b.0.to_lowercase()));
+        entries.sort_by_key(|a| a.0.to_lowercase());
     }
 
     Ok(chrome(
@@ -3090,7 +3250,9 @@ async fn categories_index_page(
                 }
             }
         },
-        &state.site_title, maybe_user.as_ref(), pending_count,
+        &state.site_title,
+        maybe_user.as_ref(),
+        pending_count,
     ))
 }
 
@@ -3105,7 +3267,8 @@ async fn statistics_page(
     let topic_files = collect_all_topic_files(
         &state.content_dir,
         &[state.guide_dir.as_deref(), state.guide_dir_2.as_deref()],
-    ).await?;
+    )
+    .await?;
 
     let article_count = topic_files.len();
     let mut category_set: std::collections::HashSet<String> = std::collections::HashSet::new();
@@ -3120,7 +3283,9 @@ async fn statistics_page(
                 }
                 if let Some(ref le) = parsed.frontmatter.last_edited {
                     let is_newer = most_recent.as_ref().map_or(true, |mr| le > mr);
-                    if is_newer { most_recent = Some(le.clone()); }
+                    if is_newer {
+                        most_recent = Some(le.clone());
+                    }
                 }
                 let html = crate::render::render_html_raw(&text, &state.content_dir);
                 redlink_count += re_redlink.find_iter(&html).count();
@@ -3144,7 +3309,9 @@ async fn statistics_page(
                 }
             }
         },
-        &state.site_title, maybe_user.as_ref(), pending_count,
+        &state.site_title,
+        maybe_user.as_ref(),
+        pending_count,
     ))
 }
 
@@ -3219,7 +3386,9 @@ async fn talk_page(
                 }
             }
         },
-        &state.site_title, maybe_user.as_ref(), pending_count,
+        &state.site_title,
+        maybe_user.as_ref(),
+        pending_count,
     ))
 }
 
@@ -3244,7 +3413,9 @@ async fn talk_post(
     let section_title = form.section_title.trim().to_string();
     let body_text = form.body.trim().to_string();
     if section_title.is_empty() || body_text.is_empty() {
-        return Err(WikiError::SlugInvalid("section_title and body are required".into()));
+        return Err(WikiError::SlugInvalid(
+            "section_title and body are required".into(),
+        ));
     }
 
     let talk_dir = state.content_dir.join("talk");
@@ -3252,7 +3423,9 @@ async fn talk_post(
     let talk_path = talk_file_path(&state.content_dir, &slug);
 
     let existing = if talk_path.is_file() {
-        tokio::fs::read_to_string(&talk_path).await.unwrap_or_default()
+        tokio::fs::read_to_string(&talk_path)
+            .await
+            .unwrap_or_default()
     } else {
         String::new()
     };
@@ -3328,7 +3501,13 @@ async fn history_page(
     };
 
     let pending_count = pending_count_for(&state, maybe_user.as_ref()).await;
-    Ok(chrome(&format!("History: {}", slug), body, &state.site_title, maybe_user.as_ref(), pending_count))
+    Ok(chrome(
+        &format!("History: {}", slug),
+        body,
+        &state.site_title,
+        maybe_user.as_ref(),
+        pending_count,
+    ))
 }
 
 async fn blame_page(
@@ -3365,7 +3544,13 @@ async fn blame_page(
     };
 
     let pending_count = pending_count_for(&state, maybe_user.as_ref()).await;
-    Ok(chrome(&format!("Blame: {}", slug), body, &state.site_title, maybe_user.as_ref(), pending_count))
+    Ok(chrome(
+        &format!("Blame: {}", slug),
+        body,
+        &state.site_title,
+        maybe_user.as_ref(),
+        pending_count,
+    ))
 }
 
 #[derive(Deserialize)]
@@ -3394,7 +3579,9 @@ async fn diff_page(
         let old = crate::history::get_file_at_rev(&content_dir, &slug2, &a2).unwrap_or_default();
         let new = crate::history::get_file_at_rev(&content_dir, &slug2, &b2).unwrap_or_default();
         (old, new)
-    }).await.map_err(|e| WikiError::WriteFailed(format!("diff spawn: {e}")))?;
+    })
+    .await
+    .map_err(|e| WikiError::WriteFailed(format!("diff spawn: {e}")))?;
 
     // Build two-column rows: (left_html, right_html, row_class)
     let line_diff = similar::TextDiff::from_lines(&old_text, &new_text);
@@ -3404,7 +3591,11 @@ async fn diff_page(
     let mut pending_del: Vec<String> = Vec::new();
     let mut pending_ins: Vec<String> = Vec::new();
 
-    fn flush_pending(del: &mut Vec<String>, ins: &mut Vec<String>, rows: &mut Vec<(String, String, &'static str)>) {
+    fn flush_pending(
+        del: &mut Vec<String>,
+        ins: &mut Vec<String>,
+        rows: &mut Vec<(String, String, &'static str)>,
+    ) {
         let max = del.len().max(ins.len());
         for i in 0..max {
             let old_line = del.get(i).map(|s| s.as_str()).unwrap_or("");
@@ -3414,9 +3605,13 @@ async fn diff_page(
             } else {
                 (html_escape(old_line), html_escape(new_line))
             };
-            let cls = if old_line.is_empty() { "diff-row-ins" }
-                      else if new_line.is_empty() { "diff-row-del" }
-                      else { "diff-row-chg" };
+            let cls = if old_line.is_empty() {
+                "diff-row-ins"
+            } else if new_line.is_empty() {
+                "diff-row-del"
+            } else {
+                "diff-row-chg"
+            };
             rows.push((left_html, right_html, cls));
         }
         del.clear();
@@ -3464,11 +3659,19 @@ async fn diff_page(
     };
 
     let pending_count = pending_count_for(&state, maybe_user.as_ref()).await;
-    Ok(chrome(&format!("Diff: {}", slug), body, &state.site_title, maybe_user.as_ref(), pending_count))
+    Ok(chrome(
+        &format!("Diff: {}", slug),
+        body,
+        &state.site_title,
+        maybe_user.as_ref(),
+        pending_count,
+    ))
 }
 
 fn html_escape(s: &str) -> String {
-    s.replace('&', "&amp;").replace('<', "&lt;").replace('>', "&gt;")
+    s.replace('&', "&amp;")
+        .replace('<', "&lt;")
+        .replace('>', "&gt;")
 }
 
 /// Build (left_html, right_html) from a word-level diff of two lines.
@@ -3488,21 +3691,30 @@ fn word_diff_pair(old_line: &str, new_line: &str) -> (String, String) {
                     right.push_str(&e);
                 }
             }
-            similar::DiffOp::Delete { old_index, old_len, .. } => {
+            similar::DiffOp::Delete {
+                old_index, old_len, ..
+            } => {
                 left.push_str("<del>");
                 for s in &old_sl[old_index..old_index + old_len] {
                     left.push_str(&html_escape(s));
                 }
                 left.push_str("</del>");
             }
-            similar::DiffOp::Insert { new_index, new_len, .. } => {
+            similar::DiffOp::Insert {
+                new_index, new_len, ..
+            } => {
                 right.push_str("<ins>");
                 for s in &new_sl[new_index..new_index + new_len] {
                     right.push_str(&html_escape(s));
                 }
                 right.push_str("</ins>");
             }
-            similar::DiffOp::Replace { old_index, old_len, new_index, new_len } => {
+            similar::DiffOp::Replace {
+                old_index,
+                old_len,
+                new_index,
+                new_len,
+            } => {
                 left.push_str("<del>");
                 for s in &old_sl[old_index..old_index + old_len] {
                     left.push_str(&html_escape(s));
@@ -3520,7 +3732,13 @@ fn word_diff_pair(old_line: &str, new_line: &str) -> (String, String) {
 }
 
 /// Shared shell for non-article pages (search, category, errors).
-fn chrome(_title: &str, body: Markup, site_title: &str, user: Option<&User>, pending_count: i64) -> Markup {
+fn chrome(
+    _title: &str,
+    body: Markup,
+    site_title: &str,
+    user: Option<&User>,
+    pending_count: i64,
+) -> Markup {
     html! {
         (DOCTYPE)
         html lang="en" {
@@ -3601,11 +3819,15 @@ fn auth_nav_widget(user: Option<&User>, pending_count: i64) -> Markup {
 }
 
 async fn pending_count_for(state: &AppState, user: Option<&User>) -> i64 {
-    let Some(u) = user else { return 0; };
+    let Some(u) = user else {
+        return 0;
+    };
     if !u.is_admin() {
         return 0;
     }
-    let Some(db) = &state.db else { return 0; };
+    let Some(db) = &state.db else {
+        return 0;
+    };
     let db = db.clone();
     tokio::task::spawn_blocking(move || {
         let conn = db.lock().unwrap();
@@ -3647,13 +3869,15 @@ mod tests {
                 // file never triggers a load.
                 citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
                 search: Arc::new(index),
-                git: Arc::new(Mutex::new(repo)),                site_title: "PointSav Documentation Wiki".to_string(),
+                git: Arc::new(Mutex::new(repo)),
+                site_title: "PointSav Documentation Wiki".to_string(),
                 git_tenant: "pointsav".to_string(),
-            mcp_enabled: false,
+                mcp_enabled: false,
                 glossary: Arc::new(crate::glossary::Glossary::default()),
                 links: crate::links::LinkGraph::for_testing(),
                 brand_theme: None,
-                db: None,            },
+                db: None,
+            },
             dir,
             state_dir,
         )
@@ -3664,7 +3888,12 @@ mod tests {
         let (state, _dir, _state_dir) = fixture_state().await;
         let app = router(state);
         let resp = app
-            .oneshot(Request::builder().uri("/healthz").body(Body::empty()).unwrap())
+            .oneshot(
+                Request::builder()
+                    .uri("/healthz")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
             .await
             .unwrap();
         assert_eq!(resp.status(), StatusCode::OK);
@@ -3687,7 +3916,10 @@ mod tests {
         let body = resp.into_body().collect().await.unwrap().to_bytes();
         let html = std::str::from_utf8(&body).unwrap();
         assert!(html.contains("Test Topic"), "title should appear: {html}");
-        assert!(html.contains("Heading"), "body heading should appear: {html}");
+        assert!(
+            html.contains("Heading"),
+            "body heading should appear: {html}"
+        );
     }
 
     #[tokio::test]
@@ -3742,11 +3974,20 @@ mod tests {
         assert_eq!(resp.status(), StatusCode::OK);
         let body = resp.into_body().collect().await.unwrap().to_bytes();
         let html = std::str::from_utf8(&body).unwrap();
-        assert!(html.contains("Article"), "Article tab should appear: {html}");
+        assert!(
+            html.contains("Article"),
+            "Article tab should appear: {html}"
+        );
         assert!(html.contains("Talk"), "Talk tab should appear: {html}");
         assert!(html.contains("Read"), "Read tab should appear: {html}");
-        assert!(html.contains("View source"), "View source tab should appear (unauthenticated): {html}");
-        assert!(html.contains("View history"), "View history tab should appear: {html}");
+        assert!(
+            html.contains("View source"),
+            "View source tab should appear (unauthenticated): {html}"
+        );
+        assert!(
+            html.contains("View history"),
+            "View history tab should appear: {html}"
+        );
     }
 
     /// Verify that the tagline appears below the page title (item 9).
@@ -3814,13 +4055,15 @@ mod tests {
             guide_dir_2: None,
             citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
             search: Arc::new(index),
-            git: Arc::new(Mutex::new(repo)),            site_title: "PointSav Documentation Wiki".to_string(),
+            git: Arc::new(Mutex::new(repo)),
+            site_title: "PointSav Documentation Wiki".to_string(),
             git_tenant: "pointsav".to_string(),
             mcp_enabled: false,
             glossary: Arc::new(crate::glossary::Glossary::default()),
-                links: crate::links::LinkGraph::for_testing(),
-                brand_theme: None,
-                db: None,        };
+            links: crate::links::LinkGraph::for_testing(),
+            brand_theme: None,
+            db: None,
+        };
         let app = router(state);
         let resp = app
             .oneshot(
@@ -3860,9 +4103,18 @@ mod tests {
             .unwrap();
         let body = resp.into_body().collect().await.unwrap().to_bytes();
         let html = std::str::from_utf8(&body).unwrap();
-        assert!(html.contains("Exceptions only"), "density toggle should appear: {html}");
-        assert!(html.contains("density-off"), "Off button should appear: {html}");
-        assert!(html.contains("density-all"), "All button should appear: {html}");
+        assert!(
+            html.contains("Exceptions only"),
+            "density toggle should appear: {html}"
+        );
+        assert!(
+            html.contains("density-off"),
+            "Off button should appear: {html}"
+        );
+        assert!(
+            html.contains("density-all"),
+            "All button should appear: {html}"
+        );
     }
 
     /// Verify that per-section [edit] pencils appear on headings.
@@ -3886,13 +4138,15 @@ mod tests {
             guide_dir_2: None,
             citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
             search: Arc::new(index),
-            git: Arc::new(Mutex::new(repo)),            site_title: "PointSav Documentation Wiki".to_string(),
+            git: Arc::new(Mutex::new(repo)),
+            site_title: "PointSav Documentation Wiki".to_string(),
             git_tenant: "pointsav".to_string(),
             mcp_enabled: false,
             glossary: Arc::new(crate::glossary::Glossary::default()),
-                links: crate::links::LinkGraph::for_testing(),
-                brand_theme: None,
-                db: None,        };
+            links: crate::links::LinkGraph::for_testing(),
+            brand_theme: None,
+            db: None,
+        };
         let app = router(state);
         let resp = app
             .oneshot(
@@ -3936,13 +4190,15 @@ mod tests {
             guide_dir_2: None,
             citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
             search: Arc::new(index),
-            git: Arc::new(Mutex::new(repo)),            site_title: "PointSav Documentation Wiki".to_string(),
+            git: Arc::new(Mutex::new(repo)),
+            site_title: "PointSav Documentation Wiki".to_string(),
             git_tenant: "pointsav".to_string(),
             mcp_enabled: false,
             glossary: Arc::new(crate::glossary::Glossary::default()),
-                links: crate::links::LinkGraph::for_testing(),
-                brand_theme: None,
-                db: None,        };
+            links: crate::links::LinkGraph::for_testing(),
+            brand_theme: None,
+            db: None,
+        };
         let app = router(state);
         let resp = app
             .oneshot(
@@ -3955,9 +4211,15 @@ mod tests {
             .unwrap();
         let body = resp.into_body().collect().await.unwrap().to_bytes();
         let html = std::str::from_utf8(&body).unwrap();
-        assert!(html.contains("Alpha"), "category Alpha should appear: {html}");
+        assert!(
+            html.contains("Alpha"),
+            "category Alpha should appear: {html}"
+        );
         assert!(html.contains("Beta"), "category Beta should appear: {html}");
-        assert!(html.contains("wiki-categories"), "categories block should appear: {html}");
+        assert!(
+            html.contains("wiki-categories"),
+            "categories block should appear: {html}"
+        );
     }
 
     // Iteration-2 tests — additive; all existing tests remain unchanged.
@@ -3983,13 +4245,15 @@ mod tests {
             guide_dir_2: None,
             citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
             search: Arc::new(index),
-            git: Arc::new(Mutex::new(repo)),            site_title: "PointSav Documentation Wiki".to_string(),
+            git: Arc::new(Mutex::new(repo)),
+            site_title: "PointSav Documentation Wiki".to_string(),
             git_tenant: "pointsav".to_string(),
             mcp_enabled: false,
             glossary: Arc::new(crate::glossary::Glossary::default()),
-                links: crate::links::LinkGraph::for_testing(),
-                brand_theme: None,
-                db: None,        };
+            links: crate::links::LinkGraph::for_testing(),
+            brand_theme: None,
+            db: None,
+        };
         let app = router(state);
         let resp = app
             .oneshot(
@@ -4037,13 +4301,15 @@ mod tests {
             guide_dir_2: None,
             citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
             search: Arc::new(index),
-            git: Arc::new(Mutex::new(repo)),            site_title: "PointSav Documentation Wiki".to_string(),
+            git: Arc::new(Mutex::new(repo)),
+            site_title: "PointSav Documentation Wiki".to_string(),
             git_tenant: "pointsav".to_string(),
             mcp_enabled: false,
             glossary: Arc::new(crate::glossary::Glossary::default()),
-                links: crate::links::LinkGraph::for_testing(),
-                brand_theme: None,
-                db: None,        };
+            links: crate::links::LinkGraph::for_testing(),
+            brand_theme: None,
+            db: None,
+        };
         let app = router(state);
         let resp = app
             .oneshot(
@@ -4077,7 +4343,9 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         let state_dir = tempfile::tempdir().unwrap();
         // Create architecture/ subdirectory with one TOPIC.
-        tokio::fs::create_dir_all(dir.path().join("architecture")).await.unwrap();
+        tokio::fs::create_dir_all(dir.path().join("architecture"))
+            .await
+            .unwrap();
         tokio::fs::write(
             dir.path().join("architecture/compounding-substrate.md"),
             "---\ntitle: The Compounding Substrate\ncategory: architecture\n---\nSubstrate body.\n",
@@ -4094,13 +4362,15 @@ mod tests {
             guide_dir_2: None,
             citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
             search: Arc::new(index),
-            git: Arc::new(Mutex::new(repo)),            site_title: "PointSav Documentation Wiki".to_string(),
+            git: Arc::new(Mutex::new(repo)),
+            site_title: "PointSav Documentation Wiki".to_string(),
             git_tenant: "pointsav".to_string(),
             mcp_enabled: false,
             glossary: Arc::new(crate::glossary::Glossary::default()),
-                links: crate::links::LinkGraph::for_testing(),
-                brand_theme: None,
-                db: None,        };
+            links: crate::links::LinkGraph::for_testing(),
+            brand_theme: None,
+            db: None,
+        };
         let app = router(state);
         let resp = app
             .oneshot(
@@ -4111,7 +4381,11 @@ mod tests {
             )
             .await
             .unwrap();
-        assert_eq!(resp.status(), StatusCode::OK, "subdirectory TOPIC should resolve");
+        assert_eq!(
+            resp.status(),
+            StatusCode::OK,
+            "subdirectory TOPIC should resolve"
+        );
         let body = resp.into_body().collect().await.unwrap().to_bytes();
         let html = std::str::from_utf8(&body).unwrap();
         assert!(
@@ -4127,7 +4401,9 @@ mod tests {
     async fn wiki_page_bare_slug_redirects_to_qualified() {
         let dir = tempfile::tempdir().unwrap();
         let state_dir = tempfile::tempdir().unwrap();
-        tokio::fs::create_dir_all(dir.path().join("architecture")).await.unwrap();
+        tokio::fs::create_dir_all(dir.path().join("architecture"))
+            .await
+            .unwrap();
         tokio::fs::write(
             dir.path().join("architecture/bare-slug-test.md"),
             "---\ntitle: Bare Slug Test\ncategory: architecture\n---\nBody.\n",
@@ -4144,7 +4420,8 @@ mod tests {
             guide_dir_2: None,
             citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
             search: Arc::new(index),
-            git: Arc::new(Mutex::new(repo)),            site_title: "Test Wiki".to_string(),
+            git: Arc::new(Mutex::new(repo)),
+            site_title: "Test Wiki".to_string(),
             git_tenant: "pointsav".to_string(),
             mcp_enabled: false,
             glossary: Arc::new(crate::glossary::Glossary::default()),
@@ -4169,8 +4446,7 @@ mod tests {
         );
         let location = resp.headers().get("location").unwrap().to_str().unwrap();
         assert_eq!(
-            location,
-            "/wiki/architecture/bare-slug-test",
+            location, "/wiki/architecture/bare-slug-test",
             "redirect location should be the path-qualified slug"
         );
     }
@@ -4188,7 +4464,9 @@ mod tests {
         .await
         .unwrap();
         // Architecture subdirectory with one TOPIC.
-        tokio::fs::create_dir_all(dir.path().join("architecture")).await.unwrap();
+        tokio::fs::create_dir_all(dir.path().join("architecture"))
+            .await
+            .unwrap();
         tokio::fs::write(
             dir.path().join("architecture/my-article.md"),
             "---\ntitle: My Article\ncategory: architecture\n---\nContent here.\n",
@@ -4205,13 +4483,15 @@ mod tests {
             guide_dir_2: None,
             citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
             search: Arc::new(index),
-            git: Arc::new(Mutex::new(repo)),            site_title: "PointSav Documentation Wiki".to_string(),
+            git: Arc::new(Mutex::new(repo)),
+            site_title: "PointSav Documentation Wiki".to_string(),
             git_tenant: "pointsav".to_string(),
             mcp_enabled: false,
             glossary: Arc::new(crate::glossary::Glossary::default()),
-                links: crate::links::LinkGraph::for_testing(),
-                brand_theme: None,
-                db: None,        };
+            links: crate::links::LinkGraph::for_testing(),
+            brand_theme: None,
+            db: None,
+        };
         let app = router(state);
         let resp = app
             .oneshot(Request::builder().uri("/").body(Body::empty()).unwrap())
@@ -4263,13 +4543,15 @@ mod tests {
             guide_dir_2: None,
             citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
             search: Arc::new(index),
-            git: Arc::new(Mutex::new(repo)),            site_title: "PointSav Documentation Wiki".to_string(),
+            git: Arc::new(Mutex::new(repo)),
+            site_title: "PointSav Documentation Wiki".to_string(),
             git_tenant: "pointsav".to_string(),
             mcp_enabled: false,
             glossary: Arc::new(crate::glossary::Glossary::default()),
-                links: crate::links::LinkGraph::for_testing(),
-                brand_theme: None,
-                db: None,        };
+            links: crate::links::LinkGraph::for_testing(),
+            brand_theme: None,
+            db: None,
+        };
         let app = router(state);
         let resp = app
             .oneshot(
@@ -4323,13 +4605,15 @@ mod tests {
             guide_dir_2: None,
             citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
             search: Arc::new(index),
-            git: Arc::new(Mutex::new(repo)),            site_title: "PointSav Documentation Wiki".to_string(),
+            git: Arc::new(Mutex::new(repo)),
+            site_title: "PointSav Documentation Wiki".to_string(),
             git_tenant: "pointsav".to_string(),
             mcp_enabled: false,
             glossary: Arc::new(crate::glossary::Glossary::default()),
-                links: crate::links::LinkGraph::for_testing(),
-                brand_theme: None,
-                db: None,        };
+            links: crate::links::LinkGraph::for_testing(),
+            brand_theme: None,
+            db: None,
+        };
         let app = router(state);
         let resp = app
             .oneshot(
@@ -4376,13 +4660,15 @@ mod tests {
             guide_dir_2: None,
             citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
             search: Arc::new(index),
-            git: Arc::new(Mutex::new(repo)),            site_title: "PointSav Documentation Wiki".to_string(),
+            git: Arc::new(Mutex::new(repo)),
+            site_title: "PointSav Documentation Wiki".to_string(),
             git_tenant: "pointsav".to_string(),
             mcp_enabled: false,
             glossary: Arc::new(crate::glossary::Glossary::default()),
-                links: crate::links::LinkGraph::for_testing(),
-                brand_theme: None,
-                db: None,        };
+            links: crate::links::LinkGraph::for_testing(),
+            brand_theme: None,
+            db: None,
+        };
         let app = router(state);
         let resp = app
             .oneshot(
@@ -4423,13 +4709,19 @@ mod tests {
             .get("content-type")
             .and_then(|v| v.to_str().ok())
             .unwrap_or("");
-        assert!(ct.contains("application/json"), "content-type should be JSON: {ct}");
+        assert!(
+            ct.contains("application/json"),
+            "content-type should be JSON: {ct}"
+        );
         let body = resp.into_body().collect().await.unwrap().to_bytes();
         let val: serde_json::Value = serde_json::from_slice(&body).unwrap();
         assert!(val.get("frontmatter").is_some(), "missing frontmatter key");
         assert!(val.get("body_md").is_some(), "missing body_md key");
         assert!(val.get("blake3").is_some(), "missing blake3 key");
-        assert!(val.get("revision_sha").is_some(), "missing revision_sha key");
+        assert!(
+            val.get("revision_sha").is_some(),
+            "missing revision_sha key"
+        );
         assert!(val.get("backlinks").is_some(), "missing backlinks key");
         assert!(val.get("claims").is_some(), "missing claims key");
         assert_eq!(val["frontmatter"]["title"], "Test Topic");
@@ -4462,11 +4754,15 @@ mod tests {
         tokio::fs::write(
             dir.path().join("index.md"),
             "---\ntitle: Home EN\n---\nEnglish home content.\n",
-        ).await.unwrap();
+        )
+        .await
+        .unwrap();
         tokio::fs::write(
             dir.path().join("index.es.md"),
             "---\ntitle: Inicio\n---\nContenido en español.\n",
-        ).await.unwrap();
+        )
+        .await
+        .unwrap();
         let app = router(state);
         let resp = app
             .oneshot(Request::builder().uri("/es/").body(Body::empty()).unwrap())
@@ -4476,7 +4772,10 @@ mod tests {
         let body = resp.into_body().collect().await.unwrap().to_bytes();
         let html = std::str::from_utf8(&body).unwrap();
         assert!(html.contains(r#"lang="es""#), "should have lang=es: {html}");
-        assert!(html.contains("Contenido en español"), "should serve ES content: {html}");
+        assert!(
+            html.contains("Contenido en español"),
+            "should serve ES content: {html}"
+        );
     }
 
     /// /es/ falls back to index.md (returning 200) when index.es.md is absent.
@@ -4486,7 +4785,9 @@ mod tests {
         tokio::fs::write(
             dir.path().join("index.md"),
             "---\ntitle: Home EN\n---\nEnglish home content.\n",
-        ).await.unwrap();
+        )
+        .await
+        .unwrap();
         let app = router(state);
         let resp = app
             .oneshot(Request::builder().uri("/es/").body(Body::empty()).unwrap())
@@ -4495,7 +4796,10 @@ mod tests {
         assert_eq!(resp.status(), StatusCode::OK);
         let body = resp.into_body().collect().await.unwrap().to_bytes();
         let html = std::str::from_utf8(&body).unwrap();
-        assert!(html.contains("English home content"), "fallback should serve EN content: {html}");
+        assert!(
+            html.contains("English home content"),
+            "fallback should serve EN content: {html}"
+        );
     }
 
     /// /es/wiki/{slug} serves the .es.md file with lang="es" when it exists.
@@ -4505,7 +4809,9 @@ mod tests {
         tokio::fs::write(
             dir.path().join("topic-test.es.md"),
             "---\ntitle: Tema de Prueba\n---\n# Encabezado\n\nContenido en español.\n",
-        ).await.unwrap();
+        )
+        .await
+        .unwrap();
         let app = router(state);
         let resp = app
             .oneshot(
@@ -4520,7 +4826,10 @@ mod tests {
         let body = resp.into_body().collect().await.unwrap().to_bytes();
         let html = std::str::from_utf8(&body).unwrap();
         assert!(html.contains(r#"lang="es""#), "should have lang=es: {html}");
-        assert!(html.contains("Encabezado"), "should serve ES body content: {html}");
+        assert!(
+            html.contains("Encabezado"),
+            "should serve ES body content: {html}"
+        );
     }
 
     /// /es/wiki/{slug} falls back to the EN article (200, lang="en") when
@@ -4541,8 +4850,14 @@ mod tests {
         assert_eq!(resp.status(), StatusCode::OK);
         let body = resp.into_body().collect().await.unwrap().to_bytes();
         let html = std::str::from_utf8(&body).unwrap();
-        assert!(html.contains(r#"lang="en""#), "fallback should have lang=en: {html}");
-        assert!(html.contains("Test Topic"), "fallback should serve EN content: {html}");
+        assert!(
+            html.contains(r#"lang="en""#),
+            "fallback should have lang=en: {html}"
+        );
+        assert!(
+            html.contains("Test Topic"),
+            "fallback should serve EN content: {html}"
+        );
     }
 
     /// /es/wiki/{slug} returns 404 when the slug exists in neither locale.
@@ -4569,7 +4884,9 @@ mod tests {
         tokio::fs::write(
             dir.path().join("index.md"),
             "---\ntitle: Home\n---\nHome content.\n",
-        ).await.unwrap();
+        )
+        .await
+        .unwrap();
         let app = router(state);
         let resp = app
             .oneshot(Request::builder().uri("/").body(Body::empty()).unwrap())
@@ -4578,7 +4895,10 @@ mod tests {
         assert_eq!(resp.status(), StatusCode::OK);
         let body = resp.into_body().collect().await.unwrap().to_bytes();
         let html = std::str::from_utf8(&body).unwrap();
-        assert!(html.contains(r#"href="/es/""#), "EN home nav should link to /es/: {html}");
+        assert!(
+            html.contains(r#"href="/es/""#),
+            "EN home nav should link to /es/: {html}"
+        );
     }
 
     /// The ES article page nav contains a link back to the EN article.
@@ -4588,7 +4908,9 @@ mod tests {
         tokio::fs::write(
             dir.path().join("topic-test.es.md"),
             "---\ntitle: Tema de Prueba\n---\nContenido en español.\n",
-        ).await.unwrap();
+        )
+        .await
+        .unwrap();
         let app = router(state);
         let resp = app
             .oneshot(
@@ -4615,7 +4937,9 @@ mod tests {
         tokio::fs::write(
             dir.path().join("topic-test.es.md"),
             "---\ntitle: Tema de Prueba\n---\nContenido en español.\n",
-        ).await.unwrap();
+        )
+        .await
+        .unwrap();
         let app = router(state);
         let resp = app
             .oneshot(
@@ -4629,7 +4953,13 @@ mod tests {
         assert_eq!(resp.status(), StatusCode::OK);
         let body = resp.into_body().collect().await.unwrap().to_bytes();
         let html = std::str::from_utf8(&body).unwrap();
-        assert!(html.contains(r#"hreflang="en""#), "ES article head should have hreflang=en: {html}");
-        assert!(html.contains(r#"rel="canonical""#), "ES article head should have canonical link: {html}");
+        assert!(
+            html.contains(r#"hreflang="en""#),
+            "ES article head should have hreflang=en: {html}"
+        );
+        assert!(
+            html.contains(r#"rel="canonical""#),
+            "ES article head should have canonical link: {html}"
+        );
     }
 }

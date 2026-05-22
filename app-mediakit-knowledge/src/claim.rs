@@ -243,9 +243,8 @@ fn parse_opening(inner: &str) -> Result<OpeningFields, String> {
             "id" => id = Some(parse_bareword(value)?),
             "confidence" => {
                 let v = parse_bareword(value)?;
-                confidence = Some(
-                    Confidence::parse(&v).ok_or_else(|| format!("unknown confidence `{v}`"))?,
-                );
+                confidence =
+                    Some(Confidence::parse(&v).ok_or_else(|| format!("unknown confidence `{v}`"))?);
             }
             "valid_at" => valid_at = Some(parse_bareword(value)?),
             "cites" => cites = Some(parse_list(value)?),
@@ -278,7 +277,9 @@ fn parse_bareword(v: &str) -> Result<String, String> {
         .chars()
         .all(|c| c.is_ascii_alphanumeric() || matches!(c, '.' | '_' | ':' | '-'))
     {
-        return Err(format!("value `{v}` has characters outside [A-Za-z0-9._:-]"));
+        return Err(format!(
+            "value `{v}` has characters outside [A-Za-z0-9._:-]"
+        ));
     }
     Ok(v.to_string())
 }

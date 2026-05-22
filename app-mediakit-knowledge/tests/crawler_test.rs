@@ -48,12 +48,13 @@ async fn fixture_state() -> (AppState, tempfile::TempDir, tempfile::TempDir) {
         guide_dir_2: None,
         citations_yaml: std::path::PathBuf::from("/nonexistent/citations.yaml"),
         search: Arc::new(index),
-        git: Arc::new(Mutex::new(repo)),        git_tenant: "pointsav".to_string(),
+        git: Arc::new(Mutex::new(repo)),
+        git_tenant: "pointsav".to_string(),
         mcp_enabled: false,
         glossary: Arc::new(app_mediakit_knowledge::glossary::Glossary::default()),
-                links: app_mediakit_knowledge::links::LinkGraph::for_testing(),
-                brand_theme: None,
-                db: None,
+        links: app_mediakit_knowledge::links::LinkGraph::for_testing(),
+        brand_theme: None,
+        db: None,
         site_title: "PointSav Knowledge".to_string(),
     };
 

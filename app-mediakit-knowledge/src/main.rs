@@ -127,10 +127,27 @@ async fn main() -> Result<()> {
             admin_username,
             admin_password_hash,
             brand_theme,
-        } => serve(content_dir, guide_dir, guide_dir_2, bind, citations_yaml, state_dir, site_title, git_tenant, enable_mcp, admin_username, admin_password_hash, brand_theme).await,
+        } => {
+            serve(
+                content_dir,
+                guide_dir,
+                guide_dir_2,
+                bind,
+                citations_yaml,
+                state_dir,
+                site_title,
+                git_tenant,
+                enable_mcp,
+                admin_username,
+                admin_password_hash,
+                brand_theme,
+            )
+            .await
+        }
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 async fn serve(
     content_dir: PathBuf,
     guide_dir: Option<PathBuf>,
@@ -153,13 +170,19 @@ async fn serve(
     }
     if let Some(ref gd) = guide_dir {
         if !gd.is_dir() {
-            bail!("guide directory does not exist or is not a directory: {}", gd.display());
+            bail!(
+                "guide directory does not exist or is not a directory: {}",
+                gd.display()
+            );
         }
         tracing::info!(guide_dir = %gd.display(), "guide directory enabled");
     }
     if let Some(ref gd2) = guide_dir_2 {
         if !gd2.is_dir() {
-            bail!("guide directory 2 does not exist or is not a directory: {}", gd2.display());
+            bail!(
+                "guide directory 2 does not exist or is not a directory: {}",
+                gd2.display()
+            );
         }
         tracing::info!(guide_dir_2 = %gd2.display(), "guide directory 2 enabled");
     }
@@ -183,7 +206,9 @@ async fn serve(
     {
         let (tx, mut rx) = mpsc::channel::<notify::Result<notify::Event>>(64);
         let mut watcher: RecommendedWatcher = Watcher::new(
-            move |res| { let _ = tx.blocking_send(res); },
+            move |res| {
+                let _ = tx.blocking_send(res);
+            },
             notify::Config::default(),
         )?;
         watcher.watch(&content_dir, RecursiveMode::Recursive)?;
@@ -193,12 +218,11 @@ async fn serve(
             let _w = watcher; // keep alive in this task
             while let Some(event) = rx.recv().await {
                 let Ok(ev) = event else { continue };
-                let is_write = matches!(
-                    ev.kind,
-                    EventKind::Create(_) | EventKind::Modify(_)
-                );
+                let is_write = matches!(ev.kind, EventKind::Create(_) | EventKind::Modify(_));
                 let is_remove = matches!(ev.kind, EventKind::Remove(_));
-                if !is_write && !is_remove { continue }
+                if !is_write && !is_remove {
+                    continue;
+                }
                 for path in &ev.paths {
                     if path.extension().map(|e| e == "md").unwrap_or(false) {
                         let slug = content_path_to_slug(&cdir, path);
@@ -232,9 +256,8 @@ async fn serve(
 
     // Phase 4 Steps 4.4+4.5: open or create the redb link graph.
     tracing::info!("opening link graph");
-    let link_graph = app_mediakit_knowledge::links::LinkGraph::open_or_create(
-        &state_dir.join("links.redb"),
-    )?;
+    let link_graph =
+        app_mediakit_knowledge::links::LinkGraph::open_or_create(&state_dir.join("links.redb"))?;
     let link_graph = Arc::new(link_graph);
     tracing::info!("link graph ready");
 
