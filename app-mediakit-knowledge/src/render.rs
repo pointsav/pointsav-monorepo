@@ -15,13 +15,13 @@
 //!   subtitle below the H1 (Wikipedia Vector 2022 article-subtitle pattern)
 
 use comrak::{Arena, format_html, nodes::{NodeHtmlBlock, NodeValue}, parse_document, Options};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
 /// Translation entry: language code (e.g. "es") → slug of sibling page.
 pub type TranslationMap = BTreeMap<String, String>;
 
-#[derive(Debug, Default, Deserialize)]
+#[derive(Debug, Default, Deserialize, Serialize)]
 pub struct Frontmatter {
     #[serde(default)]
     pub title: Option<String>,
