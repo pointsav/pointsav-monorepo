@@ -1,0 +1,13 @@
+schema: foundry-binary-targets-v1
+cluster: project-intelligence
+targets:
+  - product_id: slm-doorman-server
+    binary_name: slm-doorman-server
+    source_crate: service-slm
+    license: Apache-2.0
+    license_tier: apache
+    class: service-package
+    layer: extension
+    requires: [os-console]
+    platforms: [x86_64-unknown-linux-gnu]
+    soft_enabled: true
