@@ -38,7 +38,7 @@ to: totebox@project-intelligence
 re: SOFT- pipeline — write .agent/binary-targets.yaml (declare only; Command Session builds)
 created: 2026-05-22T02:00:00Z
 priority: normal
-status: pending
+status: actioned
 msg-id: command-20260522-binary-targets-project-intelligence
 ---
 
@@ -81,7 +81,7 @@ to: totebox@project-intelligence
 re: briefs/ migration — rename .agent/plans/ → .agent/briefs/ + BRIEF- prefix
 created: 2026-05-21T17:13:56Z
 priority: normal
-status: pending
+status: actioned
 msg-id: command-20260521-briefs-migration-project-intelligence
 ---
 
