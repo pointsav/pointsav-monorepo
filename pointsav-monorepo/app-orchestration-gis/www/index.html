@@ -1185,42 +1185,70 @@
         applyChainFilterStyling();
     }
 
-    // Convert compact clusterMeta entry to the property shape expected by showClusterDetail
+    // Convert compact clusterMeta entry (§2 schema) to the property shape expected by showClusterDetail
     function metaToClusterProps(c) {
+        // Derive legacy fields from members array (§2 schema)
+        let members = [];
+        try { members = Array.isArray(c.members) ? c.members : JSON.parse(c.members || '[]'); } catch(_) {}
+        const hyperM = members.filter(m => m.category === 'hypermarket');
+        const hwM    = members.filter(m => m.category === 'hardware');
+        const whM    = members.filter(m => m.category === 'price_club');
+        const lifeM  = members.filter(m => m.category === 'lifestyle');
+        const civicM = members.filter(m => m.category === 'medical' || m.category === 'education');
+        const anchorName = (hyperM[0] || lifeM[0] || members[0])?.name || '';
         return {
-            cluster_id: c.id,
-            anchor_label: c.anc, primary_anchor: c.anc,
-            display_name: c.dn,
-            city: c.cty, state: c.st, iso: c.iso,
-            region_name: c.rgn,
-            score_final: c.sc, score: c.sc,
-            rank_1km: c.r1, rank_2km: c.r2, rank_3km: c.r3,
-            national_rank: c.nr, national_rank_of: c.nro,
-            na_rank: c.nar, na_rank_of: c.naro,
-            count_1km: c.c1, count_3km: c.c3,
-            tier_descriptor: c.td,
-            hw_list: JSON.stringify(c.hw || []),
-            merged_zones: c.mz || [],
-            unique_brands: c.ub || 0,
-            wh_list: JSON.stringify(c.wh || []),
-            sub_entities_display: JSON.stringify(c.sub || []),
+            cluster_id:           c.id,
+            // Market identity
+            display_name:         c.mkt  || '',
+            anchor_label:         anchorName,
+            primary_anchor:       anchorName,
+            city:                 c.mkt  || '',
+            state:                c.mrgn || '',
+            iso:                  c.iso  || '',
+            region_name:          c.mrgn || '',
+            mkt_conf:             c.conf || 'low',
+            // Tier (§2: c.t)
+            tier:                 c.t    ?? 0,
+            tier_descriptor:      c.td   || '',
+            // Compactness + ranking (§2 fields)
+            span_km:              c.span,
+            tight_intact:         !!c.tight,
+            ring_radius_km:       c.rr,
+            dist_rank_in_tier:    c.dr,
+            dist_pctile:          c.dp,
+            demand_rank_in_tier:  c.dmr,
+            demand_basis:         c.dmb  || 'interim-none',
+            regional_market:      c.rm   || '',
+            market_name:          c.mkt  || '',
+            market_region:        c.mrgn || '',
+            metro_market:         c.metro || '',
+            continent:            c.cont || '',
+            member_count:         c.mc   || members.length,
+            // Legacy ring-count proxies
+            count_1km:            null,
+            count_3km:            c.mc   || null,
+            rank_1km:             c.dp   ?? null,
+            rank_3km:             c.dp   ?? null,
+            // Anchor pill lists (built from members array)
+            hw_list:              JSON.stringify(hwM.map(m => m.chain_id)),
+            wh_list:              JSON.stringify(whM.map(m => m.chain_id)),
+            sub_entities_display: JSON.stringify(lifeM.map(m => m.name)),
+            merged_zones:         [],
+            unique_brands:        members.filter(m => !m.dist_km).length,
             // Catchment population + spend (synthesize-od-study.py)
             pp: c.pp, sp: c.sp,
             pg: c.pg, sg: c.sg,
             ph: c.ph, sh: c.sh,
             pw: c.pw, sw: c.sw,
             rp: c.rp, rg: c.rg, rh: c.rh, rw: c.rw,
-            // Mobility provenance (synthesize-od-study.py + build-mobility-tiles.py)
+            // Mobility provenance
             mobility_source:  c.mobility_source  || 'radius',
             mobility_vintage: c.mobility_vintage || 'worldpop-2026',
-            // Civic context — per-tier counts (G14 override 2026-05-16)
-            hc_count_regional: c.hcr || 0,
-            hc_count_district: c.hcd || 0,
-            he_count_regional: c.her || 0,
-            he_count_small:    c.hes || 0,
-            // V3 tier engine fields (build-geometric-ranking.py)
-            tier:                  c.tier,
-            tier_predicates_fired: c.tier_predicates_fired,
+            // Civic context (from members array)
+            hc_count_regional: civicM.filter(m => m.category === 'medical').length,
+            hc_count_district: 0,
+            he_count_regional: civicM.filter(m => m.category === 'education').length,
+            he_count_small:    0,
         };
     }
 
@@ -1283,11 +1311,10 @@
             // In-memory path: all clusters visible regardless of viewport tile load state
             const b   = map.getBounds();
             const pad = (currentRadius * 2) / 111; // degrees of latitude padding
-            const rk  = `r${currentRadius}`;
             candidates = clusterMeta
                 .filter(c => c.lon >= b.getWest() - pad && c.lon <= b.getEast() + pad
                           && c.lat >= b.getSouth() - pad && c.lat <= b.getNorth() + pad)
-                .map(c => ({ cluster_id: c.id, rank: c[rk] || 1, coords: [c.lon, c.lat] }));
+                .map(c => ({ cluster_id: c.id, rank: (4 - (c.t || 3)), coords: [c.lon, c.lat] }));
         } else {
             // Fallback: querySourceFeatures (viewport-tile-limited)
             const seen = new Set();
@@ -1751,15 +1778,11 @@
                         geometry: { type: 'Point', coordinates: [c.lon, c.lat] },
                         properties: {
                             cluster_id:   c.id,
-                            tier:         c.tier ?? 4,
-                            rank_1km:     c.r1,
-                            rank_3km:     c.r3,
-                            score_final:  c.sc,
-                            display_name: c.dn || '',
-                            // Sprint 12 — restore search-filter properties dropped in Sprint 8
-                            // PMTiles→GeoJSON conversion. Native arrays for MapLibre ['in', id, …].
-                            hw_list:      c.hw || [],
-                            wh_list:      c.wh || [],
+                            tier:         c.t  ?? 0,
+                            ring_radius_km: c.rr || 3.0,
+                            display_name: c.mkt || '',
+                            hw_list:      [],
+                            wh_list:      [],
                         },
                     })),
                 };
@@ -2278,7 +2301,7 @@
             const members = memberIds
                 .map(id => clusterIndex?.get(id))
                 .filter(Boolean)
-                .sort((a, b) => (b.r3 || 0) - (a.r3 || 0)); // highest rank first
+                .sort((a, b) => (b.dr || 0) - (a.dr || 0)); // highest dist_rank first
             if (!members.length) return;
 
             const tierColor = (tier) => {
@@ -2289,9 +2312,9 @@
             };
 
             const itemsHTML = members.map(c => {
-                const name  = c.dn || c.anc || c.id;
-                const sub   = [c.cty, c.st].filter(Boolean).join(', ');
-                const color = tierColor(c.tier ?? 4);
+                const name  = c.mkt || c.id;
+                const sub   = c.mrgn || '';
+                const color = tierColor(c.t ?? 0);
                 return `<div class="merged-group-item" onclick="drillIntoCluster(metaToClusterProps(clusterIndex.get('${c.id}')), [${c.lon}, ${c.lat}])" onmousedown="event.preventDefault()">
                     <div class="merged-group-item-tier" style="background:${color};"></div>
                     <div>
