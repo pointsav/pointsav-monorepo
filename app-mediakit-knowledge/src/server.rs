@@ -983,6 +983,9 @@ fn home_chrome(
                 meta name="viewport" content="width=device-width, initial-scale=1";
                 title { (site_title) }
                 link rel="stylesheet" href="/static/tokens.css";
+                @if woodfine_theme {
+                    link rel="stylesheet" href="/static/tokens-woodfine.css";
+                }
                 link rel="stylesheet" href="/static/style.css";
             }
             body {
@@ -1873,6 +1876,9 @@ fn wiki_chrome(
                 meta name="viewport" content="width=device-width, initial-scale=1";
                 title { (page_title) }
                 link rel="stylesheet" href="/static/tokens.css";
+                @if woodfine_theme {
+                    link rel="stylesheet" href="/static/tokens-woodfine.css";
+                }
                 link rel="stylesheet" href="/static/style.css";
                 // JSON-LD baseline (Phase 2 Step 1) — schema.org TechArticle /
                 // DefinedTerm. Cumulative across phases; AEO crawlers + downstream
