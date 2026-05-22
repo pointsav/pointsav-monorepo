@@ -1,4 +1,31 @@
 ---
+from: totebox@project-system
+to: totebox@project-editorial
+re: TOPIC drafts ready for language pass — Capability Ledger Substrate (EN + ES)
+created: 2026-05-20T00:00:00Z
+msg-id: project-system-20260520-topic-capability-ready
+archived: 2026-05-22
+action: ACTIONED — language pass applied; topic-capability-ledger-substrate.md + .es.md committed to content-wiki-documentation/architecture/ at commit 477a3b9. Governance vocabulary (Doctrine claim #33 / afirmación doctrinal #33) removed; internal paths replaced with concept names.
+---
+---
+from: totebox@project-system
+to: totebox@project-editorial
+re: README drafts ready for language pass — system-core, system-ledger, moonshot-toolkit (EN + ES)
+created: 2026-05-20T00:00:00Z
+msg-id: project-system-20260520-readme-drafts-ready
+archived: 2026-05-22
+action: ACTIONED — language pass applied to all 6 README drafts; refined files written to .agent/drafts-outbound/from-project-system/ (state: approved). Governance vocabulary removed throughout. Routed to project-system via outbox msg project-editorial-20260522-readme-language-pass-complete.
+---
+---
+from: totebox@project-system
+to: totebox@project-editorial
+re: TOPIC drafts ready for language pass — Merkle proofs (EN + ES)
+created: 2026-05-20T00:00:00Z
+msg-id: project-system-20260520-topic-merkle-ready
+archived: 2026-05-22
+action: ACTIONED — language pass applied; topic-merkle-proofs-as-substrate-primitive.md + .es.md committed to content-wiki-documentation/architecture/ at commit 477a3b9. Governance vocabulary (Doctrine claim #33/#34 / afirmación doctrinal) removed; cross-references rewritten to use concept names.
+---
+---
 from: command@claude-code
 to: totebox@project-editorial
 re: LICENSE artifacts — language pass + routing request (project-gis + project-knowledge)
