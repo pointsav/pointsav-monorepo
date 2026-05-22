@@ -232,42 +232,109 @@ impl AppConsoleKeys {
                 let inner = block.inner(area);
                 frame.render_widget(block, area);
 
-                let lines = vec![
-                    Line::from(""),
-                    Line::from(Span::styled(
-                        "  Share this code with your administrator:",
-                        Style::default().fg(Color::White),
-                    )),
-                    Line::from(""),
-                    Line::from(""),
-                    Line::from(vec![
-                        Span::raw("          "),
-                        Span::styled(
-                            format!("   {}   ", code),
-                            Style::default()
-                                .fg(Color::Cyan)
-                                .bg(Color::DarkGray)
-                                .add_modifier(Modifier::BOLD),
-                        ),
-                    ]),
-                    Line::from(""),
-                    Line::from(""),
-                    Line::from(Span::styled(
-                        "  Your administrator approves it — this screen updates automatically.",
-                        Style::default().fg(Color::Gray),
-                    )),
-                    Line::from(""),
-                    Line::from(Span::styled(
-                        "  ◌  Waiting for approval…",
-                        Style::default().fg(Color::Blue),
-                    )),
-                    Line::from(""),
-                    Line::from(Span::styled(
-                        "  [Q / Ctrl-C: quit and come back later]",
-                        Style::default().fg(Color::DarkGray),
-                    )),
-                ];
-                frame.render_widget(Paragraph::new(lines), inner);
+                // QR encodes the raw code (uppercase, no dash) for compact version-1 QR.
+                let qr_content = format!("PAIR:{}", code.replace('-', ""));
+                let qr_text = crate::qr::qr_unicode(&qr_content);
+                let qr_col_w: u16 = qr_text
+                    .lines()
+                    .find(|l| !l.is_empty())
+                    .map(|l| l.chars().count() as u16)
+                    .unwrap_or(30);
+
+                if !qr_text.is_empty() && inner.width >= qr_col_w + 32 {
+                    // Wide layout: QR on left, code pill + instructions on right.
+                    let cols = Layout::default()
+                        .direction(Direction::Horizontal)
+                        .constraints([
+                            Constraint::Length(qr_col_w),
+                            Constraint::Fill(1),
+                        ])
+                        .split(inner);
+
+                    let qr_lines: Vec<Line> =
+                        qr_text.lines().map(|l| Line::from(l.to_string())).collect();
+                    frame.render_widget(Paragraph::new(qr_lines), cols[0]);
+
+                    let right = vec![
+                        Line::from(""),
+                        Line::from(""),
+                        Line::from(Span::styled(
+                            " Share this code with your administrator:",
+                            Style::default().fg(Color::White),
+                        )),
+                        Line::from(""),
+                        Line::from(""),
+                        Line::from(vec![
+                            Span::raw("  "),
+                            Span::styled(
+                                format!("  {}  ", code),
+                                Style::default()
+                                    .fg(Color::Cyan)
+                                    .bg(Color::DarkGray)
+                                    .add_modifier(Modifier::BOLD),
+                            ),
+                        ]),
+                        Line::from(""),
+                        Line::from(""),
+                        Line::from(Span::styled(
+                            " Your administrator approves it.",
+                            Style::default().fg(Color::Gray),
+                        )),
+                        Line::from(Span::styled(
+                            " This screen updates automatically.",
+                            Style::default().fg(Color::Gray),
+                        )),
+                        Line::from(""),
+                        Line::from(Span::styled(
+                            " ◌  Waiting for approval…",
+                            Style::default().fg(Color::Blue),
+                        )),
+                        Line::from(""),
+                        Line::from(Span::styled(
+                            " [Q / Ctrl-C: quit and come back later]",
+                            Style::default().fg(Color::DarkGray),
+                        )),
+                    ];
+                    frame.render_widget(Paragraph::new(right), cols[1]);
+                } else {
+                    // Narrow layout: code pill only.
+                    let lines = vec![
+                        Line::from(""),
+                        Line::from(Span::styled(
+                            "  Share this code with your administrator:",
+                            Style::default().fg(Color::White),
+                        )),
+                        Line::from(""),
+                        Line::from(""),
+                        Line::from(vec![
+                            Span::raw("          "),
+                            Span::styled(
+                                format!("   {}   ", code),
+                                Style::default()
+                                    .fg(Color::Cyan)
+                                    .bg(Color::DarkGray)
+                                    .add_modifier(Modifier::BOLD),
+                            ),
+                        ]),
+                        Line::from(""),
+                        Line::from(""),
+                        Line::from(Span::styled(
+                            "  Your administrator approves it — this screen updates automatically.",
+                            Style::default().fg(Color::Gray),
+                        )),
+                        Line::from(""),
+                        Line::from(Span::styled(
+                            "  ◌  Waiting for approval…",
+                            Style::default().fg(Color::Blue),
+                        )),
+                        Line::from(""),
+                        Line::from(Span::styled(
+                            "  [Q / Ctrl-C: quit and come back later]",
+                            Style::default().fg(Color::DarkGray),
+                        )),
+                    ];
+                    frame.render_widget(Paragraph::new(lines), inner);
+                }
             }
 
             PairingState::Approved => {} // mba_status is Active — normal chassis renders
