@@ -301,7 +301,6 @@ pub fn render(data: &Pclp1Data) -> String {
 
     // ── Page 2: Financial Forecast (verbatim AA12:AN35 layout) ───────────────
     out.push_str("\n\n---\n\n## Financial Forecast — Per Unit\n\n");
-    out.push_str("> Verbatim reproduction of Financial Forecast section.\n\n");
 
     out.push_str(&header_row(yrs));
     out.push_str(&separator(10));
