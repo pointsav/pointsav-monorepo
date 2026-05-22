@@ -21,7 +21,11 @@ pub fn compute(a: &Assumptions) -> ProformaOutput {
         let lf = if STAB_IDX.contains(&i) { lease_f } else { 1.0 };
 
         // NOI: zero in construction years (Y1–Y3); stressed in all others.
-        let noi = if i < 3 { 0.0 } else { BASE_NOI[i] * occ_f * dev_f * lf };
+        let noi = if i < 3 {
+            0.0
+        } else {
+            BASE_NOI[i] * occ_f * dev_f * lf
+        };
 
         let ebitda = noi - expenses[i];
 
@@ -55,17 +59,33 @@ pub fn compute(a: &Assumptions) -> ProformaOutput {
         } else {
             (asset_val - BASE_DEBT[i]) / DILUTED
         };
-        let asset_per_unit = if i < 3 { BASE_ASSET_PU[i] } else { asset_val / DILUTED };
+        let asset_per_unit = if i < 3 {
+            BASE_ASSET_PU[i]
+        } else {
+            asset_val / DILUTED
+        };
 
         // DSCR = EBITDA ÷ interest (undefined when interest ≤ 0).
-        let coverage = if interest > 0.0 { Some(ebitda / interest) } else { None };
-        let debt_to_av = if asset_val > 0.0 { BASE_DEBT[i] / asset_val } else { 0.0 };
+        let coverage = if interest > 0.0 {
+            Some(ebitda / interest)
+        } else {
+            None
+        };
+        let debt_to_av = if asset_val > 0.0 {
+            BASE_DEBT[i] / asset_val
+        } else {
+            0.0
+        };
 
         // Market value: Y1–Y7 from fixed proforma schedule; Y8–Y10 = dist ÷ market_yield.
         let mv_per_unit = if i < 7 {
             BASE_MV_PU_FIXED[i]
         } else {
-            if a.market_yield > 0.0 { dist_per_unit / a.market_yield } else { 0.0 }
+            if a.market_yield > 0.0 {
+                dist_per_unit / a.market_yield
+            } else {
+                0.0
+            }
         };
 
         years.push(YearOutput {

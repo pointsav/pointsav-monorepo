@@ -1,9 +1,10 @@
 use clap::{Parser, Subcommand};
 use proforma_engine::{
-    compute, Assumptions,
+    compute,
     excel::{pclp1, titleco, wcp},
     html,
     report::{d1_dev_classes, d2_direct_hold, d3_wcp},
+    Assumptions,
 };
 use std::io::{self, Read};
 use std::path::PathBuf;
@@ -67,7 +68,11 @@ fn main() {
                 std::process::exit(1);
             });
             let md = d2_direct_hold::render(&data);
-            let out = if cli.html { html::render(&md, &data.title) } else { md };
+            let out = if cli.html {
+                html::render(&md, &data.title)
+            } else {
+                md
+            };
             write_output(&out, cli.out.as_ref());
         }
         Some(Command::Wcp { xlsx }) => {
@@ -76,7 +81,11 @@ fn main() {
                 std::process::exit(1);
             });
             let md = d3_wcp::render(&data);
-            let out = if cli.html { html::render(&md, &data.title) } else { md };
+            let out = if cli.html {
+                html::render(&md, &data.title)
+            } else {
+                md
+            };
             write_output(&out, cli.out.as_ref());
         }
         Some(Command::DevClasses { xlsx }) => {
@@ -86,7 +95,11 @@ fn main() {
             });
             let md = d1_dev_classes::render(&base);
             let title = format!("Development Classes — {}", base.entity);
-            let out = if cli.html { html::render(&md, &title) } else { md };
+            let out = if cli.html {
+                html::render(&md, &title)
+            } else {
+                md
+            };
             write_output(&out, cli.out.as_ref());
         }
         None => {
@@ -110,8 +123,7 @@ fn main() {
                 std::process::exit(1);
             });
             let output = compute(&assumptions);
-            let json_out =
-                serde_json::to_string_pretty(&output).expect("serialisation failed");
+            let json_out = serde_json::to_string_pretty(&output).expect("serialisation failed");
             write_output(&json_out, cli.out.as_ref());
         }
     }

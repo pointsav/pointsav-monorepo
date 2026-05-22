@@ -182,28 +182,33 @@ async fn v1_license(
     if rpath.exists() {
         if let Ok(raw) = fs::read_to_string(&rpath) {
             if let Ok(receipt) = serde_json::from_str::<LicenseReceipt>(&raw) {
-                return (StatusCode::OK, Json(json!({
-                    "status": "confirmed",
-                    "license_key": receipt.license_key,
-                    "product_id": receipt.product_id,
-                    "confirmed_at": receipt.confirmed_at,
-                    "customer_ref": receipt.customer_ref
-                })));
+                return (
+                    StatusCode::OK,
+                    Json(json!({
+                        "status": "confirmed",
+                        "license_key": receipt.license_key,
+                        "product_id": receipt.product_id,
+                        "confirmed_at": receipt.confirmed_at,
+                        "customer_ref": receipt.customer_ref
+                    })),
+                );
             }
         }
     }
 
     // 2. Verify via tool-wallet check
     let wallet_addr = state.wallet_address.clone();
-    let rpc_url = std::env::var("POLYGON_RPC_URL")
-        .unwrap_or_else(|_| "https://polygon-rpc.com".into());
+    let rpc_url =
+        std::env::var("POLYGON_RPC_URL").unwrap_or_else(|_| "https://polygon-rpc.com".into());
 
     let result = Command::new("tool-wallet")
         .args([
             "check",
             &tx_hash,
-            "--rpc-url", &rpc_url,
-            "--wallet-address", &wallet_addr,
+            "--rpc-url",
+            &rpc_url,
+            "--wallet-address",
+            &wallet_addr,
         ])
         .output();
 
@@ -264,13 +269,16 @@ async fn v1_license(
                         let _ = fs::write(&rpath, raw);
                     }
 
-                    return (StatusCode::OK, Json(json!({
-                        "status": "confirmed",
-                        "license_key": license_key,
-                        "product_id": product_id,
-                        "confirmed_at": confirmed_at,
-                        "customer_ref": customer_ref
-                    })));
+                    return (
+                        StatusCode::OK,
+                        Json(json!({
+                            "status": "confirmed",
+                            "license_key": license_key,
+                            "product_id": product_id,
+                            "confirmed_at": confirmed_at,
+                            "customer_ref": customer_ref
+                        })),
+                    );
                 } else {
                     return (
                         StatusCode::ACCEPTED,
@@ -312,11 +320,15 @@ async fn v1_claim(
 ) -> (StatusCode, Json<Value>) {
     let claimed_at = Utc::now().to_rfc3339();
     let token = hex::encode(Sha256::digest(
-        format!("{}|{}|{}", req.binary_sha256, req.wallet_address, claimed_at).as_bytes(),
+        format!(
+            "{}|{}|{}",
+            req.binary_sha256, req.wallet_address, claimed_at
+        )
+        .as_bytes(),
     ));
 
-    let claim_dir = PathBuf::from(&state.claims_dir)
-        .join(req.wallet_address.trim_start_matches("0x"));
+    let claim_dir =
+        PathBuf::from(&state.claims_dir).join(req.wallet_address.trim_start_matches("0x"));
     let _ = fs::create_dir_all(&claim_dir);
     let short = &req.binary_sha256[..16.min(req.binary_sha256.len())];
     let claim_file = claim_dir.join(format!("{short}.json"));
@@ -326,7 +338,10 @@ async fn v1_claim(
         "wallet_address": req.wallet_address,
         "claimed_at": claimed_at
     });
-    let _ = fs::write(claim_file, serde_json::to_string_pretty(&payload).unwrap_or_default());
+    let _ = fs::write(
+        claim_file,
+        serde_json::to_string_pretty(&payload).unwrap_or_default(),
+    );
 
     (
         StatusCode::OK,
@@ -356,17 +371,16 @@ async fn main() -> Result<()> {
         .with_env_filter(std::env::var("RUST_LOG").unwrap_or_else(|_| "info".into()))
         .init();
 
-    let bind_addr =
-        std::env::var("MARKETPLACE_BIND").unwrap_or_else(|_| "127.0.0.1:9202".into());
+    let bind_addr = std::env::var("MARKETPLACE_BIND").unwrap_or_else(|_| "127.0.0.1:9202".into());
     let wallet_address = std::env::var("POLYGON_WALLET_ADDRESS").unwrap_or_default();
     let fs_endpoint =
         std::env::var("FS_ENDPOINT").unwrap_or_else(|_| "http://127.0.0.1:8020".into());
     let catalog_path = std::env::var("CATALOG_PATH")
         .unwrap_or_else(|_| "/var/lib/local-software/catalog/products.yaml".into());
-    let receipts_dir = std::env::var("RECEIPTS_DIR")
-        .unwrap_or_else(|_| "/var/lib/local-software/receipts".into());
-    let claims_dir = std::env::var("CLAIMS_DIR")
-        .unwrap_or_else(|_| "/var/lib/local-software/claims".into());
+    let receipts_dir =
+        std::env::var("RECEIPTS_DIR").unwrap_or_else(|_| "/var/lib/local-software/receipts".into());
+    let claims_dir =
+        std::env::var("CLAIMS_DIR").unwrap_or_else(|_| "/var/lib/local-software/claims".into());
     let source_base_url = std::env::var("SOURCE_BASE_URL")
         .unwrap_or_else(|_| "https://software.pointsav.com/releases".into());
 

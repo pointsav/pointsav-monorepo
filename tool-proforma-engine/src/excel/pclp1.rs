@@ -112,30 +112,28 @@ pub fn read<P: AsRef<Path>>(path: P) -> Result<Pclp1Data, Box<dyn std::error::Er
     // Year columns Y1–Y10 are relative D–M (absolute 4–13).
     // Financial Forecast columns Y1–Y10 are relative AE–AN (absolute 30–39).
 
-    let title  = get_str(&range, r(1), 2); // absolute C1
+    let title = get_str(&range, r(1), 2); // absolute C1
     let entity = get_str(&range, r(2), 2); // absolute C2
-    let date   = get_str(&range, r(3), 2); // absolute C3
+    let date = get_str(&range, r(3), 2); // absolute C3
 
     // Assumptions: value in absolute col D (index 3) = relative col C
     let assumptions = Pclp1Assumptions {
-        dev_yield:              get_f64(&range, r(10), 3),
-        cap_rate:               get_f64(&range, r(12), 3),
-        total_equity:           get_f64(&range, r(15), 3),
-        cost_per_unit:          get_f64(&range, r(16), 3),
-        advisory_fee_pct:       get_f64(&range, r(19), 3),
-        benetti_dilution:       get_f64(&range, r(21), 3),
-        board_expense:          get_f64(&range, r(23), 3),
-        admin_costs:            get_f64(&range, r(24), 3),
-        debenture_interest_rate:get_f64(&range, r(29), 3),
-        interest_on_cash:       get_f64(&range, r(30), 3),
-        debenture_buyback_pct:  get_f64(&range, r(31), 3),
-        min_cash_balance:       get_f64(&range, r(33), 3),
-        working_capital_reserve:get_f64(&range, r(34), 3),
-        diluted_units:          get_f64(&range, r(45), 3),
+        dev_yield: get_f64(&range, r(10), 3),
+        cap_rate: get_f64(&range, r(12), 3),
+        total_equity: get_f64(&range, r(15), 3),
+        cost_per_unit: get_f64(&range, r(16), 3),
+        advisory_fee_pct: get_f64(&range, r(19), 3),
+        benetti_dilution: get_f64(&range, r(21), 3),
+        board_expense: get_f64(&range, r(23), 3),
+        admin_costs: get_f64(&range, r(24), 3),
+        debenture_interest_rate: get_f64(&range, r(29), 3),
+        interest_on_cash: get_f64(&range, r(30), 3),
+        debenture_buyback_pct: get_f64(&range, r(31), 3),
+        min_cash_balance: get_f64(&range, r(33), 3),
+        working_capital_reserve: get_f64(&range, r(34), 3),
+        diluted_units: get_f64(&range, r(45), 3),
         // Year labels in Financial Forecast section: row 12, absolute AE–AN (30–39)
-        year_labels: std::array::from_fn(|y| {
-            get_str(&range, r(12), (30 + y) as u32)
-        }),
+        year_labels: std::array::from_fn(|y| get_str(&range, r(12), (30 + y) as u32)),
     };
 
     // Main year data: Y1–Y10 in absolute cols E–N (4–13)
@@ -149,11 +147,19 @@ pub fn read<P: AsRef<Path>>(path: P) -> Result<Pclp1Data, Box<dyn std::error::Er
 
     let parse_cov = |y: usize, row: u32| -> Option<f64> {
         let v = get_f64(&range, r(row), yr_col(y));
-        if v == 0.0 { None } else { Some(v) }
+        if v == 0.0 {
+            None
+        } else {
+            Some(v)
+        }
     };
     let parse_ff_cov = |y: usize, row: u32| -> Option<f64> {
         let v = get_f64(&range, r(row), ff_col(y));
-        if v == 0.0 { None } else { Some(v) }
+        if v == 0.0 {
+            None
+        } else {
+            Some(v)
+        }
     };
 
     let mut years = Vec::with_capacity(10);
@@ -161,57 +167,57 @@ pub fn read<P: AsRef<Path>>(path: P) -> Result<Pclp1Data, Box<dyn std::error::Er
         let yc = yr_col(y);
         years.push(Pclp1Year {
             year: y as u32 + 1,
-            noi:                    get_f64(&range, r(57), yc),
-            income_continuity:      get_f64(&range, r(58), yc),
-            issue_costs:            get_f64(&range, r(61), yc),
-            financing_costs:        get_f64(&range, r(62), yc),
-            advisory_fees:          get_f64(&range, r(63), yc),
-            admin_compliance:       get_f64(&range, r(64), yc),
-            board_of_directors:     get_f64(&range, r(65), yc),
-            total_expenses:         get_f64(&range, r(66), yc),
-            ebitda:                 get_f64(&range, r(68), yc),
-            interest_net:           get_f64(&range, r(69), yc),
-            funding_from_ops:       get_f64(&range, r(72), yc),
-            interest_coverage:      parse_cov(y, 74),
-            debt_service_ratio:     parse_cov(y, 75),
-            opening_cash:           get_f64(&range, r(79), yc),
-            new_equity:             get_f64(&range, r(80), yc),
-            new_debt_gross:         get_f64(&range, r(81), yc),
-            capex:                  get_f64(&range, r(82), yc),
-            debt_repayment:         get_f64(&range, r(83), yc),
-            distributions:          get_f64(&range, r(84), yc),
-            ending_cash:            get_f64(&range, r(86), yc),
-            opening_debt:           get_f64(&range, r(89), yc),
-            debt_additions:         get_f64(&range, r(90), yc),
-            debt_payments:          get_f64(&range, r(91), yc),
-            ending_debt:            get_f64(&range, r(92), yc),
-            opening_assets:         get_f64(&range, r(96), yc),
-            total_capital_assets:   get_f64(&range, r(100), yc),
+            noi: get_f64(&range, r(57), yc),
+            income_continuity: get_f64(&range, r(58), yc),
+            issue_costs: get_f64(&range, r(61), yc),
+            financing_costs: get_f64(&range, r(62), yc),
+            advisory_fees: get_f64(&range, r(63), yc),
+            admin_compliance: get_f64(&range, r(64), yc),
+            board_of_directors: get_f64(&range, r(65), yc),
+            total_expenses: get_f64(&range, r(66), yc),
+            ebitda: get_f64(&range, r(68), yc),
+            interest_net: get_f64(&range, r(69), yc),
+            funding_from_ops: get_f64(&range, r(72), yc),
+            interest_coverage: parse_cov(y, 74),
+            debt_service_ratio: parse_cov(y, 75),
+            opening_cash: get_f64(&range, r(79), yc),
+            new_equity: get_f64(&range, r(80), yc),
+            new_debt_gross: get_f64(&range, r(81), yc),
+            capex: get_f64(&range, r(82), yc),
+            debt_repayment: get_f64(&range, r(83), yc),
+            distributions: get_f64(&range, r(84), yc),
+            ending_cash: get_f64(&range, r(86), yc),
+            opening_debt: get_f64(&range, r(89), yc),
+            debt_additions: get_f64(&range, r(90), yc),
+            debt_payments: get_f64(&range, r(91), yc),
+            ending_debt: get_f64(&range, r(92), yc),
+            opening_assets: get_f64(&range, r(96), yc),
+            total_capital_assets: get_f64(&range, r(100), yc),
             assets_generating_rent: get_f64(&range, r(102), yc),
             buildings_under_construction: get_f64(&range, r(104), yc),
-            debt_to_dev_cost:       get_f64(&range, r(106), yc),
-            asset_value_total:      get_f64(&range, r(109), yc),
-            asset_value_per_unit:   get_f64(&range, r(110), yc),
-            nav_total:              get_f64(&range, r(114), yc),
-            nav_per_unit:           get_f64(&range, r(115), yc),
-            distribution_yield:     get_f64(&range, r(116), yc),
-            total_expense_ratio:    get_f64(&range, r(117), yc),
-            distributions_to_lps:   get_f64(&range, r(120), yc),
-            dist_per_unit:          get_f64(&range, r(122), yc),
-            dist_yield_on_cost:     get_f64(&range, r(123), yc),
+            debt_to_dev_cost: get_f64(&range, r(106), yc),
+            asset_value_total: get_f64(&range, r(109), yc),
+            asset_value_per_unit: get_f64(&range, r(110), yc),
+            nav_total: get_f64(&range, r(114), yc),
+            nav_per_unit: get_f64(&range, r(115), yc),
+            distribution_yield: get_f64(&range, r(116), yc),
+            total_expense_ratio: get_f64(&range, r(117), yc),
+            distributions_to_lps: get_f64(&range, r(120), yc),
+            dist_per_unit: get_f64(&range, r(122), yc),
+            dist_yield_on_cost: get_f64(&range, r(123), yc),
             // Financial Forecast per-unit
-            ff_revenue_pu:          get_f64(&range, r(13), ff_col(y)),
-            ff_dist_pu:             get_f64(&range, r(14), ff_col(y)),
-            ff_dist_yield_on_cost:  get_f64(&range, r(16), ff_col(y)),
-            ff_asset_value_pu:      get_f64(&range, r(18), ff_col(y)),
-            ff_total_debt_pu:       get_f64(&range, r(19), ff_col(y)),
-            ff_nav_pu:              get_f64(&range, r(21), ff_col(y)),
-            ff_market_value_pu:     get_f64(&range, r(23), ff_col(y)),
-            ff_coverage:            parse_ff_cov(y, 30),
-            ff_debt_to_dev_cost:    get_f64(&range, r(31), ff_col(y)),
-            ff_debt_to_av:          get_f64(&range, r(32), ff_col(y)),
-            ff_ter:                 get_f64(&range, r(34), ff_col(y)),
-            ff_sqft:                get_f64(&range, r(35), ff_col(y)),
+            ff_revenue_pu: get_f64(&range, r(13), ff_col(y)),
+            ff_dist_pu: get_f64(&range, r(14), ff_col(y)),
+            ff_dist_yield_on_cost: get_f64(&range, r(16), ff_col(y)),
+            ff_asset_value_pu: get_f64(&range, r(18), ff_col(y)),
+            ff_total_debt_pu: get_f64(&range, r(19), ff_col(y)),
+            ff_nav_pu: get_f64(&range, r(21), ff_col(y)),
+            ff_market_value_pu: get_f64(&range, r(23), ff_col(y)),
+            ff_coverage: parse_ff_cov(y, 30),
+            ff_debt_to_dev_cost: get_f64(&range, r(31), ff_col(y)),
+            ff_debt_to_av: get_f64(&range, r(32), ff_col(y)),
+            ff_ter: get_f64(&range, r(34), ff_col(y)),
+            ff_sqft: get_f64(&range, r(35), ff_col(y)),
         });
     }
 

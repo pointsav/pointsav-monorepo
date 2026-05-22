@@ -25,10 +25,7 @@ pub fn cell_str(cell: &Data) -> String {
 
 /// Read a float at (row, col) from a range (0-indexed); 0.0 if out of bounds or empty.
 pub fn get_f64(range: &calamine::Range<Data>, row: u32, col: u32) -> f64 {
-    range
-        .get_value((row, col))
-        .map(cell_f64)
-        .unwrap_or(0.0)
+    range.get_value((row, col)).map(cell_f64).unwrap_or(0.0)
 }
 
 /// Read a string at (row, col); empty string if out of bounds or non-string.

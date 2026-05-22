@@ -46,9 +46,16 @@ fn yr_row_d(label: &str, vals: &[f64; 10]) -> String {
 }
 
 fn yr_row_p(label: &str, vals: &[f64; 10]) -> String {
-    let cells: Vec<String> = vals.iter().map(|&v| {
-        if v == 0.0 { "—".to_string() } else { fmt_pct(v) }
-    }).collect();
+    let cells: Vec<String> = vals
+        .iter()
+        .map(|&v| {
+            if v == 0.0 {
+                "—".to_string()
+            } else {
+                fmt_pct(v)
+            }
+        })
+        .collect();
     format!("| {} | {} |\n", label, cells.join(" | "))
 }
 
@@ -72,35 +79,54 @@ pub fn render(data: &WcpData) -> String {
     out.push_str(&yr_row_m("Gross Income", &data.income.gross_income));
     out.push_str(&yr_row_m("G&A — New York City", &data.income.gna_nyc));
     out.push_str(&yr_row_m("G&A — Berlin", &data.income.gna_berlin));
-    out.push_str(&yr_row_m("Total Operating Expenses", &data.income.total_expenses));
+    out.push_str(&yr_row_m(
+        "Total Operating Expenses",
+        &data.income.total_expenses,
+    ));
     out.push_str(&yr_row_m("**EBITDA**", &data.income.ebitda));
     out.push_str(&yr_row_d("EBITDA per Share", &data.income.ebitda_per_share));
     out.push_str(&yr_row_m("Taxes (27%)", &data.income.taxes));
     out.push_str(&yr_row_m("**Earnings**", &data.income.earnings));
-    out.push_str(&yr_row_d("Earnings per Share", &data.income.earnings_per_share));
+    out.push_str(&yr_row_d(
+        "Earnings per Share",
+        &data.income.earnings_per_share,
+    ));
 
     // ── Balance Sheet ─────────────────────────────────────────────────────────
     out.push_str("\n---\n\n## Balance Sheet — 10-Year Forecast (CAD)\n\n");
     out.push_str(&yr_header());
     out.push_str(&separator());
-    out.push_str(&yr_row_m("Cumulative Free Cash Flow (WCI)", &data.book.cumulative_fcf_wci));
-    out.push_str(&yr_row_m("10% Ownership in Woodfine LPs", &data.book.beneficial_ownership_lps));
+    out.push_str(&yr_row_m(
+        "Cumulative Free Cash Flow (WCI)",
+        &data.book.cumulative_fcf_wci,
+    ));
+    out.push_str(&yr_row_m(
+        "10% Ownership in Woodfine LPs",
+        &data.book.beneficial_ownership_lps,
+    ));
     out.push_str(&yr_row_m("**Book Value**", &data.book.book_value));
-    out.push_str(&yr_row_d("Book Value per Share", &data.book.book_value_per_share));
+    out.push_str(&yr_row_d(
+        "Book Value per Share",
+        &data.book.book_value_per_share,
+    ));
 
     // ── Page 2: Revenue Generator ─────────────────────────────────────────────
     out.push_str("\n\n---\n\n## Revenue Generator — LP Fund Cash Flow Timeline\n\n");
-    out.push_str(
-        "Shows when each fund enters cash flow (first non-zero distribution year).\n\n",
-    );
+    out.push_str("Shows when each fund enters cash flow (first non-zero distribution year).\n\n");
 
     out.push_str(&yr_header());
     out.push_str(&separator());
     for lp in &data.lps {
         // Advisory fee
-        out.push_str(&yr_row_m(&format!("{} — Advisory Fee", lp.name), &lp.advisory_fee));
+        out.push_str(&yr_row_m(
+            &format!("{} — Advisory Fee", lp.name),
+            &lp.advisory_fee,
+        ));
         // Distributions
-        out.push_str(&yr_row_m(&format!("{} — Distributions", lp.name), &lp.distributions));
+        out.push_str(&yr_row_m(
+            &format!("{} — Distributions", lp.name),
+            &lp.distributions,
+        ));
         // NAV
         out.push_str(&yr_row_m(&format!("{} — NAV", lp.name), &lp.nav));
     }
@@ -111,26 +137,53 @@ pub fn render(data: &WcpData) -> String {
     out.push_str("### Market Valuation\n\n");
     out.push_str(&yr_header());
     out.push_str(&separator());
-    out.push_str(&yr_row_m("Earnings Valuation", &data.market.earnings_valuation));
-    out.push_str(&yr_row_m("**Market Valuation**", &data.market.market_valuation));
-    out.push_str(&yr_row_d("Market Value per Share", &data.market.market_value_per_share));
+    out.push_str(&yr_row_m(
+        "Earnings Valuation",
+        &data.market.earnings_valuation,
+    ));
+    out.push_str(&yr_row_m(
+        "**Market Valuation**",
+        &data.market.market_valuation,
+    ));
+    out.push_str(&yr_row_d(
+        "Market Value per Share",
+        &data.market.market_value_per_share,
+    ));
     {
-        let pe: Vec<String> = data.market.pe_ratio.iter().map(|&v| {
-            if v == 0.0 { "—".to_string() } else { format!("{:.2}x", v) }
-        }).collect();
+        let pe: Vec<String> = data
+            .market
+            .pe_ratio
+            .iter()
+            .map(|&v| {
+                if v == 0.0 {
+                    "—".to_string()
+                } else {
+                    format!("{:.2}x", v)
+                }
+            })
+            .collect();
         out.push_str(&format!("| P/E Ratio | {} |\n", pe.join(" | ")));
     }
 
     out.push_str("\n### Fair Valuation\n\n");
     out.push_str(&yr_header());
     out.push_str(&separator());
-    out.push_str(&yr_row_d("Fair Value per Share", &data.fair_div.fair_value_per_share));
+    out.push_str(&yr_row_d(
+        "Fair Value per Share",
+        &data.fair_div.fair_value_per_share,
+    ));
 
     out.push_str("\n### Dividend Valuation\n\n");
     out.push_str(&yr_header());
     out.push_str(&separator());
-    out.push_str(&yr_row_m("Dividend Valuation", &data.fair_div.dividend_valuation));
-    out.push_str(&yr_row_d("Dividend Value per Share", &data.fair_div.dividend_value_per_share));
+    out.push_str(&yr_row_m(
+        "Dividend Valuation",
+        &data.fair_div.dividend_valuation,
+    ));
+    out.push_str(&yr_row_d(
+        "Dividend Value per Share",
+        &data.fair_div.dividend_value_per_share,
+    ));
 
     out.push_str("\n### Ratio Summary\n\n");
     out.push_str(&yr_header());

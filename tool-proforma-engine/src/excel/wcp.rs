@@ -87,11 +87,11 @@ pub fn read<P: AsRef<Path>>(path: P) -> Result<WcpData, Box<dyn std::error::Erro
     let yc = |y: usize| (8 + y) as u32;
 
     // Header metadata: col [B] = absolute col 2
-    let title  = get_str(&range, r(1), 2);
+    let title = get_str(&range, r(1), 2);
     let entity = get_str(&range, r(2), 2);
-    let date   = get_str(&range, r(4), 2);
-    let shares_outstanding = get_f64(&range, r(8), 5);   // col [E] = absolute 5
-    let price_per_share    = get_f64(&range, r(9), 5);
+    let date = get_str(&range, r(4), 2);
+    let shares_outstanding = get_f64(&range, r(8), 5); // col [E] = absolute 5
+    let price_per_share = get_f64(&range, r(9), 5);
 
     // LP blocks: name in col [B] (absolute 2); advisory/dist/nav on following 3 rows, data in [H]–[Q].
     // Blocks at discover rows 19, 24, 29, 34, 39, 44.
@@ -104,43 +104,43 @@ pub fn read<P: AsRef<Path>>(path: P) -> Result<WcpData, Box<dyn std::error::Erro
         }
         lps.push(WcpLp {
             name,
-            advisory_fee:  std::array::from_fn(|y| get_f64(&range, r(nr + 1), yc(y))),
+            advisory_fee: std::array::from_fn(|y| get_f64(&range, r(nr + 1), yc(y))),
             distributions: std::array::from_fn(|y| get_f64(&range, r(nr + 2), yc(y))),
-            nav:           std::array::from_fn(|y| get_f64(&range, r(nr + 3), yc(y))),
+            nav: std::array::from_fn(|y| get_f64(&range, r(nr + 3), yc(y))),
         });
     }
 
     let income = WcpIncome {
-        gross_income:     std::array::from_fn(|y| get_f64(&range, r(54), yc(y))),
-        referral_fees:    std::array::from_fn(|y| get_f64(&range, r(57), yc(y))),
-        wpi_consulting:   std::array::from_fn(|y| get_f64(&range, r(58), yc(y))),
-        gna_nyc:          std::array::from_fn(|y| get_f64(&range, r(59), yc(y))),
-        gna_berlin:       std::array::from_fn(|y| get_f64(&range, r(60), yc(y))),
-        total_expenses:   std::array::from_fn(|y| get_f64(&range, r(61), yc(y))),
-        ebitda:           std::array::from_fn(|y| get_f64(&range, r(63), yc(y))),
+        gross_income: std::array::from_fn(|y| get_f64(&range, r(54), yc(y))),
+        referral_fees: std::array::from_fn(|y| get_f64(&range, r(57), yc(y))),
+        wpi_consulting: std::array::from_fn(|y| get_f64(&range, r(58), yc(y))),
+        gna_nyc: std::array::from_fn(|y| get_f64(&range, r(59), yc(y))),
+        gna_berlin: std::array::from_fn(|y| get_f64(&range, r(60), yc(y))),
+        total_expenses: std::array::from_fn(|y| get_f64(&range, r(61), yc(y))),
+        ebitda: std::array::from_fn(|y| get_f64(&range, r(63), yc(y))),
         ebitda_per_share: std::array::from_fn(|y| get_f64(&range, r(64), yc(y))),
-        taxes:            std::array::from_fn(|y| get_f64(&range, r(66), yc(y))),
-        earnings:         std::array::from_fn(|y| get_f64(&range, r(68), yc(y))),
+        taxes: std::array::from_fn(|y| get_f64(&range, r(66), yc(y))),
+        earnings: std::array::from_fn(|y| get_f64(&range, r(68), yc(y))),
         earnings_per_share: std::array::from_fn(|y| get_f64(&range, r(69), yc(y))),
     };
 
     let book = WcpBook {
-        cumulative_fcf_wci:    std::array::from_fn(|y| get_f64(&range, r(74), yc(y))),
+        cumulative_fcf_wci: std::array::from_fn(|y| get_f64(&range, r(74), yc(y))),
         beneficial_ownership_lps: std::array::from_fn(|y| get_f64(&range, r(75), yc(y))),
-        book_value:            std::array::from_fn(|y| get_f64(&range, r(76), yc(y))),
-        book_value_per_share:  std::array::from_fn(|y| get_f64(&range, r(77), yc(y))),
+        book_value: std::array::from_fn(|y| get_f64(&range, r(76), yc(y))),
+        book_value_per_share: std::array::from_fn(|y| get_f64(&range, r(77), yc(y))),
     };
 
     let market = WcpMarket {
-        earnings_valuation:    std::array::from_fn(|y| get_f64(&range, r(80), yc(y))),
-        market_valuation:      std::array::from_fn(|y| get_f64(&range, r(82), yc(y))),
-        pe_ratio:              std::array::from_fn(|y| get_f64(&range, r(83), yc(y))),
+        earnings_valuation: std::array::from_fn(|y| get_f64(&range, r(80), yc(y))),
+        market_valuation: std::array::from_fn(|y| get_f64(&range, r(82), yc(y))),
+        pe_ratio: std::array::from_fn(|y| get_f64(&range, r(83), yc(y))),
         market_value_per_share: std::array::from_fn(|y| get_f64(&range, r(84), yc(y))),
     };
 
     let fair_div = WcpFairDiv {
-        fair_value_per_share:    std::array::from_fn(|y| get_f64(&range, r(91), yc(y))),
-        dividend_valuation:      std::array::from_fn(|y| get_f64(&range, r(95), yc(y))),
+        fair_value_per_share: std::array::from_fn(|y| get_f64(&range, r(91), yc(y))),
+        dividend_valuation: std::array::from_fn(|y| get_f64(&range, r(95), yc(y))),
         dividend_value_per_share: std::array::from_fn(|y| get_f64(&range, r(96), yc(y))),
     };
 
