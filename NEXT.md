@@ -226,6 +226,13 @@ CartridgeAction::GoBack, chassis `previous: FKey`. SYS-ADR-10 compliant. Committ
 
 ---
 
+## Completed (2026-05-23 — session 7)
+
+- [x] **Stage 6 rebase COMPLETE** — 11 os-console commits rebased onto local `main` (tip `9afc9e25`); all Cargo.toml member-list + per-crate conflicts resolved cleanly
+- [x] **Push BLOCKED** — escalated to Command: local `main` and remotes share zero common ancestors (full history divergence); outbox `project-console-20260522-stage6-history-divergence` sent; inbox msg `operator-pending`
+- [x] **binary-targets.yaml written** — os-console, pairing-server, proofctl declared; service-proofreader absent from cluster branch, flagged to Command
+- [x] **build-request outbox sent** — `project-console-20260523-build-request`
+
 ## Completed (2026-05-22 — session 6)
 
 - [x] **Phase 6 pairing ceremony MVP (d6267e39)** — server-issued 8-char Crockford code; `pairing-server` binary (tiny_http, port 9201); `proofctl pair list/approve/deny`; `PairingState` enum + background poll (`spawn_status_poll`); zero-jargon TUI screens (Unpaired → AwaitingApproval → Approved/Denied/Expired/Error)
