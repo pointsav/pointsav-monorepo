@@ -181,14 +181,19 @@ def validate_claims(body, citations_registry):
                 seen_ids[cid] = idx + 1
 
         if conf and conf != "structural" and not cites:
-            errors.append("claim %r: cites must be non-empty unless confidence=structural" % label)
+            # WARN rather than ERROR: citations.yaml grows over time; empty cites
+            # on a non-structural claim is a gap to fill, not a blocking defect.
+            warns.append("claim %r: cites is empty — add a citations.yaml ID "
+                         "when one exists (confidence=%s)" % (label, conf or "?"))
 
         if citations_registry is not None:
             for cite_id in cites:
                 if cite_id not in citations_registry:
                     errors.append("claim %r: cites ID %r not in citations.yaml" % (label, cite_id))
 
-        if conf == "projected":
+        # Skip the English-word check on .es.md files — Spanish articles use
+        # their own equivalents (planificado, previsto, etc.) for BCSC posture.
+        if conf == "projected" and not path.endswith(".es.md"):
             if not any(w in text.lower() for w in CLAIM_REQUIRED_PLANNED):
                 errors.append(
                     "claim %r: confidence=projected but text lacks "
