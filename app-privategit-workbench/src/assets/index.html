@@ -226,6 +226,7 @@ header .tag {
   flex-direction: column;
   width: 440px; min-width: 200px; flex-shrink: 0;
   background: #1e1e1e;
+  position: relative;
 }
 #editor-panel.visible { display: flex; }
 
@@ -275,6 +276,30 @@ header .tag {
   white-space: nowrap; flex-shrink: 0;
 }
 .find-btn:hover { background: #4a4a4a; color: #eee; }
+
+/* ── Document Outline panel ────────────────────────────────────────────── */
+#outline-panel {
+  display: none; position: absolute; top: 33px; right: 8px;
+  width: 300px; max-height: 360px;
+  background: #252526; border: 1px solid #555; border-radius: 4px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.65);
+  flex-direction: column; z-index: 100;
+}
+#outline-panel.visible { display: flex; }
+#outline-filter {
+  background: #3c3c3c; border: none; border-bottom: 1px solid #444;
+  color: #eee; font-size: 12px; padding: 5px 10px; outline: none;
+  border-radius: 4px 4px 0 0; width: 100%; box-sizing: border-box;
+}
+#outline-list { overflow-y: auto; flex: 1; }
+.outline-item {
+  padding: 4px 10px; font-size: 12px; color: #ccc; cursor: pointer;
+  display: flex; align-items: baseline; gap: 6px;
+  overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+}
+.outline-item:hover, .outline-item.outline-focused { background: #094771; color: #eee; }
+.outline-depth { color: #569cd6; font-size: 10px; width: 22px; flex-shrink: 0; text-align: right; }
+.outline-empty { padding: 10px; font-size: 11px; color: #555; text-align: center; }
 
 #editor-wrap {
   flex: 1;
@@ -447,6 +472,7 @@ header .tag {
         <span id="editor-cursor"></span>
         <span id="editor-dirty" style="display:none" title="Unsaved changes">●</span>
         <span id="editor-status"></span>
+        <button class="bar-btn" id="outline-btn" onclick="showOutline()" title="Document outline (Cmd+Shift+O)">Outline</button>
         <button class="bar-btn" id="comment-btn" onclick="toggleLineComment()" title="Toggle line comment">Comment</button>
         <button class="bar-btn" id="save-btn" onclick="saveFile()">Save</button>
       </div>
@@ -454,6 +480,10 @@ header .tag {
         <span class="goto-label">Go to line:</span>
         <input id="goto-input" type="number" min="1" placeholder="…" autocomplete="off">
         <span class="goto-hint">↵ jump · Esc close</span>
+      </div>
+      <div id="outline-panel">
+        <input id="outline-filter" type="text" placeholder="Filter symbols…" autocomplete="off" spellcheck="false">
+        <div id="outline-list"></div>
       </div>
       <div id="find-bar">
         <div class="find-row">
@@ -1275,6 +1305,101 @@ function toggleLineComment() {
   setDirty(true); schedulePreview(); updateGutterLines(); updateEditorPos();
 }
 
+// ── Document Outline (Cmd+Shift+O) ───────────────────────────────────────────
+let outlineRawItems = [];
+let outlineFocusIdx = -1;
+
+function buildOutlineRaw() {
+  const ta  = document.getElementById('editor-textarea');
+  const ext = editorPath ? editorPath.split('.').pop().toLowerCase() : '';
+  const lines = ta.value.split('\n');
+  outlineRawItems = [];
+  let offset = 0;
+  for (const line of lines) {
+    if (ext === 'toml') {
+      const m = line.match(/^\[([\w. -]+)\]$/);
+      if (m) outlineRawItems.push({ label: '[' + m[1] + ']', depth: -1, offset });
+    } else {
+      const m = line.match(/^(#{1,6})\s+(.+)/);
+      if (m) outlineRawItems.push({ label: m[2].trim(), depth: m[1].length, offset });
+    }
+    offset += line.length + 1;
+  }
+}
+
+function renderOutline(filter) {
+  const list  = document.getElementById('outline-list');
+  const lower = (filter || '').toLowerCase();
+  const shown = outlineRawItems.filter(it => !lower || it.label.toLowerCase().includes(lower));
+  list.innerHTML = '';
+  if (!shown.length) {
+    list.innerHTML = '<div class="outline-empty">No symbols found</div>';
+    outlineFocusIdx = -1;
+    return;
+  }
+  shown.forEach(item => {
+    const div   = document.createElement('div');
+    div.className = 'outline-item';
+    const tag   = item.depth < 0 ? '§' : 'H' + item.depth;
+    const indent = item.depth > 1 ? (item.depth - 1) * 10 : 0;
+    div.style.paddingLeft = (10 + indent) + 'px';
+    div.innerHTML = `<span class="outline-depth">${tag}</span><span>${item.label}</span>`;
+    div.addEventListener('click', () => {
+      const ta = document.getElementById('editor-textarea');
+      ta.focus();
+      ta.selectionStart = ta.selectionEnd = item.offset;
+      const lineNum = ta.value.substring(0, item.offset).split('\n').length - 1;
+      ta.scrollTop = Math.max(0, lineNum * 12 * 1.6 - ta.clientHeight / 3);
+      hideOutline();
+      updateEditorPos();
+    });
+    list.appendChild(div);
+  });
+  outlineFocusIdx = -1;
+}
+
+function showOutline() {
+  buildOutlineRaw();
+  const panel = document.getElementById('outline-panel');
+  panel.classList.add('visible');
+  const inp = document.getElementById('outline-filter');
+  inp.value = '';
+  renderOutline('');
+  inp.focus();
+}
+
+function hideOutline() {
+  document.getElementById('outline-panel').classList.remove('visible');
+  document.getElementById('editor-textarea').focus();
+}
+
+document.getElementById('outline-filter').addEventListener('input', e => {
+  renderOutline(e.target.value);
+});
+
+document.getElementById('outline-filter').addEventListener('keydown', e => {
+  const list  = document.getElementById('outline-list');
+  const items = list.querySelectorAll('.outline-item');
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    if (outlineFocusIdx >= 0) items[outlineFocusIdx].classList.remove('outline-focused');
+    outlineFocusIdx = Math.min(outlineFocusIdx + 1, items.length - 1);
+    if (outlineFocusIdx >= 0) { items[outlineFocusIdx].classList.add('outline-focused'); items[outlineFocusIdx].scrollIntoView({ block: 'nearest' }); }
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    if (outlineFocusIdx >= 0) items[outlineFocusIdx].classList.remove('outline-focused');
+    outlineFocusIdx = Math.max(outlineFocusIdx - 1, 0);
+    if (outlineFocusIdx >= 0) { items[outlineFocusIdx].classList.add('outline-focused'); items[outlineFocusIdx].scrollIntoView({ block: 'nearest' }); }
+  } else if (e.key === 'Enter') {
+    e.preventDefault();
+    const focused = list.querySelector('.outline-focused') || list.querySelector('.outline-item');
+    if (focused) focused.click();
+  } else if (e.key === 'Escape') {
+    e.preventDefault();
+    hideOutline();
+  }
+});
+
 // ── Keyboard shortcuts ────────────────────────────────────────────────────────
 window.addEventListener('keydown', e => {
   if ((e.metaKey || e.ctrlKey) && e.key === 'p') { e.preventDefault(); printCurrent(); }
@@ -1282,6 +1407,11 @@ window.addEventListener('keydown', e => {
   if ((e.metaKey || e.ctrlKey) && e.key === 'f') {
     if (document.getElementById('editor-panel').classList.contains('visible')) {
       e.preventDefault(); showFindBar();
+    }
+  }
+  if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === 'O') {
+    if (document.getElementById('editor-panel').classList.contains('visible')) {
+      e.preventDefault(); showOutline();
     }
   }
 });
