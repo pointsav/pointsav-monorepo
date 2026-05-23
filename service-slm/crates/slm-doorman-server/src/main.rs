@@ -9,7 +9,7 @@
 //! Environment configuration:
 //!   SLM_BIND_ADDR             default 127.0.0.1:9080
 //!   SLM_LOCAL_ENDPOINT        default http://127.0.0.1:8080  (Tier A)
-//!   SLM_LOCAL_MODEL           default olmo-3-7b-instruct
+//!   SLM_LOCAL_MODEL           default olmo-2-0425-1b-instruct
 //!   SLM_FORCE_BROKER_MODE     set `true` or `1` to disable Tier A even on
 //!                             capable hardware. Useful for testing broker-only
 //!                             mode or deploying on Hardware without a model.
@@ -411,7 +411,7 @@ fn build_doorman() -> anyhow::Result<DoormanBoot> {
             endpoint: std::env::var("SLM_LOCAL_ENDPOINT")
                 .unwrap_or_else(|_| "http://127.0.0.1:8080".to_string()),
             default_model: std::env::var("SLM_LOCAL_MODEL")
-                .unwrap_or_else(|_| "olmo-3-7b-instruct".to_string()),
+                .unwrap_or_else(|_| "olmo-2-0425-1b-instruct".to_string()),
         }))
     } else {
         info!(
