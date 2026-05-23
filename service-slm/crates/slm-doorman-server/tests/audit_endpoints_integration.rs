@@ -119,6 +119,7 @@ fn app_state_with_proxy_and_ledger_dir(
         gateway_token: None,
         node_class: "hardware",
         tier_a_reason: "available",
+        idle_monitor: None,
     })
 }
 

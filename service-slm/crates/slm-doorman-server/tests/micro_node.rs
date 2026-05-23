@@ -46,6 +46,7 @@ fn micro_state() -> Arc<AppState> {
         gateway_token: None,
         node_class: "micro",
         tier_a_reason: "micro-node-class",
+        idle_monitor: None,
     })
 }
 
@@ -139,6 +140,7 @@ async fn force_broker_mode_readyz_surfaces_override_reason() {
         gateway_token: None,
         node_class: "hardware",        // detected as Hardware
         tier_a_reason: "force-broker-mode", // but SLM_FORCE_BROKER_MODE=true overrode it
+        idle_monitor: None,
     });
 
     let resp = router(state)
@@ -191,6 +193,7 @@ async fn hardware_readyz_shows_tier_a_available() {
         gateway_token: None,
         node_class: "hardware",
         tier_a_reason: "available",
+        idle_monitor: None,
     });
 
     let resp = router(state)

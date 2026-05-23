@@ -336,6 +336,7 @@ async fn correct_api_key_allows_request() {
             gateway_token: Some("secret-token".to_string()),
             node_class: "hardware",
             tier_a_reason: "available",
+            idle_monitor: None,
         })
     };
 

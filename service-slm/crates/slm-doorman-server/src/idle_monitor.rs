@@ -36,6 +36,7 @@
 //!                                  resuming /metrics polling; default 90
 
 use std::collections::VecDeque;
+use std::pin::Pin;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
@@ -1049,5 +1050,70 @@ mod tests {
         let mut budget = RestartBudget::new(Duration::from_secs(3600));
         assert!(!budget.try_consume(0, Instant::now()));
         assert_eq!(budget.count(), 0);
+    }
+}
+
+// ── BackendLifecycle trait ─────────────────────────────────────────────────────
+
+/// Lifecycle interface for a backend managed by the Doorman.
+/// Object-safe: uses `Pin<Box<dyn Future>>` so implementors can be stored as
+/// `Arc<dyn BackendLifecycle>` in `AppState`.
+pub trait BackendLifecycle: Send + Sync + 'static {
+    fn start(&self) -> Pin<Box<dyn std::future::Future<Output = ()> + Send>>;
+    fn stop(&self) -> Pin<Box<dyn std::future::Future<Output = ()> + Send>>;
+    fn is_healthy(&self) -> Pin<Box<dyn std::future::Future<Output = bool> + Send>>;
+    fn name(&self) -> &'static str;
+}
+
+/// Wraps `IdleMonitorConfig` behind `BackendLifecycle`.
+/// `start()` spawns the idle monitor task; `stop()` is a no-op (the task
+/// stops when the process exits); `is_healthy()` probes `/metrics`.
+pub struct IdleMonitorHandle {
+    config: Arc<IdleMonitorConfig>,
+}
+
+impl IdleMonitorHandle {
+    pub fn new(config: IdleMonitorConfig) -> Self {
+        Self { config: Arc::new(config) }
+    }
+}
+
+impl BackendLifecycle for IdleMonitorHandle {
+    fn start(&self) -> Pin<Box<dyn std::future::Future<Output = ()> + Send>> {
+        let config = (*self.config).clone();
+        Box::pin(async move {
+            tokio::spawn(run_idle_monitor(config));
+        })
+    }
+
+    fn stop(&self) -> Pin<Box<dyn std::future::Future<Output = ()> + Send>> {
+        Box::pin(async move {
+            warn!(
+                target: "slm_doorman::idle_monitor",
+                "BackendLifecycle::stop called — graceful stop not implemented; \
+                 monitor stops when the process exits"
+            );
+        })
+    }
+
+    fn is_healthy(&self) -> Pin<Box<dyn std::future::Future<Output = bool> + Send>> {
+        let endpoint = self.config.yoyo_endpoint.clone();
+        let bearer = self.config.yoyo_bearer.clone();
+        Box::pin(async move {
+            let client = reqwest::Client::builder()
+                .timeout(Duration::from_millis(500))
+                .build()
+                .unwrap_or_default();
+            let url = format!("{}/metrics", endpoint.trim_end_matches('/'));
+            let mut req = client.get(&url);
+            if let Some(token) = &bearer {
+                req = req.bearer_auth(token);
+            }
+            req.send().await.map(|r| r.status().is_success()).unwrap_or(false)
+        })
+    }
+
+    fn name(&self) -> &'static str {
+        "yoyo-idle-monitor"
     }
 }
