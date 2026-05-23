@@ -85,9 +85,9 @@
   --motion-duration-fast: 75ms;
   --motion-duration-instant: 0ms;
   --motion-duration-slow: 300ms;
-  --motion-easing-accelerate: [0.4, 0, 1, 1];
-  --motion-easing-decelerate: [0, 0, 0.38, 0.9];
-  --motion-easing-standard: [0.2, 0, 0.38, 0.9];
+  --motion-easing-accelerate: cubic-bezier(0.4, 0, 1, 1);
+  --motion-easing-decelerate: cubic-bezier(0, 0, 0.38, 0.9);
+  --motion-easing-standard: cubic-bezier(0.2, 0, 0.38, 0.9);
 
   /* Primitive — density */
   --density-comfortable: 1;
@@ -107,7 +107,7 @@
   --text-placeholder: oklch(75.58% 0.0172 262.74);
   --text-primary: oklch(16.87% 0.0065 271.0);
   --text-secondary: oklch(42.68% 0.0178 264.37);
-  --text-tertiary: oklch(64.24% 0.0193 264.43);
+  --text-tertiary: oklch(53.03% 0.0202 264.39);
 
   /* Semantic — interactive */
   --interactive-button-primary: oklch(55.65% 0.2431 261.96);
@@ -120,11 +120,11 @@
   /* Semantic — border */
   --border-disabled: oklch(85.97% 0.0107 261.8);
   --border-interactive: oklch(55.65% 0.2431 261.96);
-  --border-strong: oklch(64.24% 0.0193 264.43);
+  --border-strong: oklch(53.03% 0.0202 264.39);
   --border-subtle: oklch(93.06% 0.0059 264.52);
 
   /* Semantic — knowledge */
-  --knowledge-editpencil-color: oklch(64.24% 0.0193 264.43);
+  --knowledge-editpencil-color: oklch(53.03% 0.0202 264.39);
   --knowledge-featured-pin-accent: oklch(62.91% 0.1079 192.4);
   --knowledge-featured-pin-bg: oklch(96.39% 0.0351 196.71);
   --knowledge-hatnote-bg: oklch(93.06% 0.0059 264.52);
@@ -156,7 +156,7 @@
   --article-research-trail-suggested-color: oklch(55.65% 0.2431 261.96);
   --article-research-trail-trail-bg: oklch(93.06% 0.0059 264.52);
   --article-research-trail-trail-border: oklch(93.06% 0.0059 264.52);
-  --article-section-heading-edit-pencil-color: oklch(64.24% 0.0193 264.43);
+  --article-section-heading-edit-pencil-color: oklch(53.03% 0.0202 264.39);
   --article-section-heading-edit-pencil-opacity-default: 0;
   --article-section-heading-edit-pencil-opacity-hover: 1;
   --article-toc-bg: oklch(93.06% 0.0059 264.52);
