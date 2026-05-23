@@ -5,7 +5,7 @@ Active config sections remain in `cleanup-log.md`.
 
 ---
 
-> *Archive compressed — 820 older lines removed. Full history in git log.*
+> *Entries truncated for performance (820 lines removed — see git history).*
 
   `sync/`) plus `main.rs` and `config.rs`; `templates/` (4 HTML
   files); `static/` (13 KB `wiki.js` + 19 KB `style.css`);
