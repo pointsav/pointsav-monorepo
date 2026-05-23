@@ -84,10 +84,19 @@ plan (Phases 0–8) with gates and commit guidance. Start here tomorrow.
   `git rebase origin/main` first (see inbox `command-20260520-stage6-rebase-required`).
 - Outbox note re: original investigation drifting from ratified doctrine (§6) — queued in §8.A.
 
-**Also pending (inbox, not AUTO-TODO critical path):**
-- `project-editorial-20260521-e4-triage-naming-blockers` — 3 drafts in
-  `drafts-outbound/` blocked on Do-Not-Use "Yo-Yo" rename + personal name in
-  filename. Rename and re-stage before next project-editorial sweep.
+**BRIEF consolidation — DONE** (2026-05-23 session 5):
+- BRIEF-service-slm-hardening → archived (pre-Phase-4 state, superseded)
+- BRIEF-vm-hardening-and-consolidation → archived (§3A conflicts resolved; ops content → §12)
+- BRIEF-tier-architecture §2 corrected (7B recommendation deleted; 1B doctrine applied)
+- BRIEF-learning-loop-master-plan → Phase 7+ deferred (7B premise corrected)
+- BRIEF-sovereign-routing-comprehensive → Sprint 0a marked done
+
+**Also pending (inbox, not Phase 6 critical path):**
+- `project-editorial-20260521-e4-triage-naming-blockers` — 2 of 3 drafts resolved:
+  `topic-elastic-compute-lora-training-pipeline` (+ `.es`) and `guide-elastic-compute-nightly-pipeline`
+  are renamed and in `drafts-outbound/`. Third draft (`topic-jennifer-datagraph-rebuild`)
+  confirmed covered by `topic-service-slm-graph-store-migration.md` (already staged).
+  Inbox message marked actioned; outbox notified project-editorial.
 
 **In-flight / uncommitted:** none — BRIEF + all Phase 0 work committed. Untracked
 and intentionally so: `compute/packer/scripts/yoyo-stability-gate.{service,sh}`
@@ -319,3 +328,79 @@ W1/CPU-wall reversal (2) → Tier-A adversarial pair (2) → $7-node architectur
 feasibility (2). Plus a live GCP audit of the Yo-Yo fleet. The decisive round
 grounded everything in DOCTRINE.md #49/#54. This BRIEF supersedes the
 "flow-restructure" framing; the prior Phase 0 Yo-Yo work (§5) is retained intact.
+
+---
+
+## 12. Command Session — operational transition checklist
+
+**Scope: Command Session only. Totebox does not run these steps.**
+Prerequisite: Stage 6 promote must run first (local main is ahead of origin/main).
+
+### 12.1 — Remove the 7B model from the workspace VM
+
+The workspace VM is e2-standard-8 (Hardware-class). The 7B model is wrong for both
+tiers (too large for Tier A = 1B specialist; too slow on CPU for Tier B = GPU-speed).
+Weights file stays on disk; only the running process is stopped.
+
+```bash
+# Belt-and-suspenders: force broker mode in OLD binary before Phase 4 binary lands
+echo "SLM_FORCE_BROKER_MODE=true" | sudo tee -a /etc/local-doorman/local-doorman.env
+sudo systemctl restart local-doorman.service
+curl -s http://127.0.0.1:9080/readyz | python3 -m json.tool  # verify has_local: false
+
+# Stop and disable llama-server
+sudo systemctl stop local-slm.service
+sudo systemctl disable local-slm.service
+systemctl status local-slm.service   # expect: inactive (dead)
+free -h                              # expect: ~6 GB released; swap drops over 2-3 min
+```
+
+### 12.2 — Stage 6 + build + deploy new binaries
+
+Prereq: Stage 6 promote (`bin/promote.sh`); then `bin/sync-local.sh --all`.
+
+```bash
+# Build slm-doorman-server (Phase 4+5 — node-class gate, 260 tests)
+cd /srv/foundry/clones/project-intelligence/service-slm
+cargo build --release -p slm-doorman-server
+sudo cp /srv/foundry/cargo-target/mathew/release/slm-doorman-server \
+    /usr/local/bin/slm-doorman-server
+sudo systemctl restart local-doorman.service
+curl -s http://127.0.0.1:9080/readyz | python3 -m json.tool
+# Expect: node_class, tier_a: false, tier_a_reason: micro-node-class, ai_available: false
+
+# Build service-content (requires liblbug.so at link time)
+ls /usr/local/lib/liblbug.so*    # confirm present
+cargo build --release -p service-content 2>&1 | tail -5
+# If fails: see BRIEF-lbug-build-blocker Options A/B/C
+sudo systemctl stop local-content.service
+sudo cp /srv/foundry/cargo-target/mathew/release/service-content \
+    /usr/local/bin/service-content
+sudo systemctl start local-content.service
+curl -s http://127.0.0.1:9081/healthz   # expect: 200
+
+# Update binary ledger (AGENT.md §10)
+# Verify data/binary-ledger/slm-doorman-server.jsonl + service-content.jsonl
+# last entries match sha256 of installed binaries
+```
+
+### 12.3 — Rebuild Elastic Compute Packer image
+
+So Phase 0 cost guardrails (G3 dead-man's-switch, G17 sticky stops) take effect
+on the next Elastic Compute VM. Without this the running image is pre-Phase-0.
+
+```bash
+cd /srv/foundry/clones/project-intelligence/compute/packer
+packer build slm-yoyo.pkr.hcl
+# Update manifest with new image ID
+```
+
+### 12.4 — End-to-end flow verification (requires Elastic Compute VM running)
+
+```bash
+curl http://127.0.0.1:9081/healthz    # service-content up
+curl http://127.0.0.1:9080/readyz | python3 -m json.tool  # Doorman
+curl -s http://127.0.0.1:9080/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{"model":"olmo","messages":[{"role":"user","content":"ping"}]}'
+```

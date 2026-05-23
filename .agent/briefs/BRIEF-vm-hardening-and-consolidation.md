@@ -1,6 +1,12 @@
 ---
 artifact: brief
-status: active
+status: archived
+archived: 2026-05-23
+archived_reason: >
+  §3A conflicts (lbug + Ring 2/3 coupling) resolved and recorded in
+  flow-restructure §8.D and §4.1 (session 4, operator-approved). §3B/3C/3D
+  BRIEF classification executed session 4. §1+§2 Command Session operational
+  steps absorbed into flow-restructure §12. Nothing unique remains.
 title: VM hardening, single-binary all-tier deploy, and BRIEF consolidation
 created: 2026-05-23
 author: totebox@project-intelligence (claude-sonnet-4-6)
