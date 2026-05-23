@@ -18,6 +18,7 @@ fn inner_main() -> anyhow::Result<()> {
     use app_console_content::cartridge::ContentCartridge;
     use app_console_input::InputCartridge;
     use app_console_keys::{pairing, AppConsoleKeys, ConsoleConfig};
+    use app_console_system::SystemCartridge;
 
     let cfg = ConsoleConfig::load();
     let p = &cfg.profile;
@@ -83,6 +84,7 @@ fn inner_main() -> anyhow::Result<()> {
         &p.tenant,
         &p.ingest_endpoint,
     )));
+    chassis.register(Box::new(SystemCartridge::new(&p.pair_endpoint)));
     chassis.run_local()
 }
 
