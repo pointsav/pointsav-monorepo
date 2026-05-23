@@ -59,6 +59,7 @@ use slm_doorman::{
 };
 use tokio::sync::Semaphore;
 
+use crate::idle_monitor::BackendLifecycle;
 use crate::queue::QueueConfig;
 
 pub struct AppState {
@@ -127,6 +128,10 @@ pub struct AppState {
     /// Why Tier A is available or unavailable. Reported by `/readyz`.
     /// "available" | "micro-node-class" | "force-broker-mode"
     pub tier_a_reason: &'static str,
+    /// Yo-Yo idle monitor lifecycle handle. `Some` when GCP env vars are set
+    /// at boot. Type-erased so `AppState` does not directly reference the
+    /// concrete idle-monitor type (BackendLifecycle broker-discipline, §8.C).
+    pub idle_monitor: Option<Arc<dyn BackendLifecycle>>,
 }
 
 pub fn router(state: Arc<AppState>) -> Router {
