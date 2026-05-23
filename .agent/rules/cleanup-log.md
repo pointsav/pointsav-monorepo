@@ -4,7 +4,7 @@ Living record of in-flight cleanup work, open questions, and decisions made duri
 
 ---
 
-> *Entries truncated for performance (861 lines removed — see git history).*
+> *Entries older than this point truncated for performance (861 lines removed — see git history).*
 
   left unchanged (it refers to deployment-side path relative to
   CWD — independent of monorepo-side layout). Separate `.mmdb` →
