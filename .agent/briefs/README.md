@@ -9,7 +9,7 @@ Durable, git-tracked project briefs for this archive. Read at session start
 
 | Brief | Topic | Status |
 |---|---|---|
-| `BRIEF-knowledge-platform-phase3.md` | Knowledge Platform Phase 3 — claim-layer engine; resume at Commit D | active |
+| `BRIEF-knowledge-platform.md` | Knowledge Platform — Phases 1–5 complete; Phase 6 gated on GitHub rename + Doctrine amendment | active |
 
 ## Artifact routing (this archive)
 
