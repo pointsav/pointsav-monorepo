@@ -49,27 +49,30 @@ updated: 2026-05-22
   project-gis, project-knowledge, project-system drafts-outbound). Route via outbox;
   write refined output to project-editorial's own drafts-outbound.
 
-## Current state (2026-05-22)
+## Current state (2026-05-23)
 
 **Knowledge-platform editorial overhaul: COMPLETE.**
-Track A (12 flagship TOPICs EN+ES), Track D (editorial-QA substrate), Track E
-(cross-cluster coordination) all executed and committed. Stage 6 promotion request
+Track A (12 flagship TOPICs EN+ES), Track D (editorial-QA substrate + claim-validation linter),
+Track E (cross-cluster coordination) all executed and committed. Stage 6 promotion request
 is in outbox (`project-editorial-20260522-a4-stage6-request`); awaiting Command action.
 
-**Active work queue (inbox):**
-1. project-system language-pass batch — Capability Ledger Substrate TOPICs (EN+ES)
-2. project-system language-pass batch — system-core/system-ledger/moonshot-toolkit READMEs ×6
-3. project-system language-pass batch — Merkle proofs TOPICs (EN+ES)
+**Active work queue (inbox): CLEAR**
+All project-system language-pass items complete (2026-05-22). Inbox at 0 pending.
 
 **Pending on Command/operator (not project-editorial-executable):**
-- Stage 6: three-wiki editorial overhaul
+- Stage 6: three-wiki editorial overhaul (content-wiki-documentation commits `69c6030`, `3f798bf` also need Stage 6)
 - E2/E3/E5 cross-cluster items + repo rename (operator GitHub action)
 - D5 apprenticeship loop (operator signing identity)
 - Plan archival + §9 old-plan deletion (operator go-ahead, post-ship)
-- E-claim / claim-validation linter pass (Track-D follow-up)
 - Institutional chrome sprint E1/E3/E4 quality gates (pending project-knowledge build)
 
 ## Last session handoff
+
+*2026-05-23 — Pre-build prep AUTO session.*
+- *Category placement fix: capability-ledger-substrate + merkle-proofs-as-substrate-primitive moved architecture/ → substrate/; slug/category/frontmatter corrected; `_index.md` + `_index.es.md` MOC entries added (`69c6030`)*
+- *Wikilink audit: 0 broken links across all 3 wikis (post-fix verification)*
+- *featured-topic.yaml: capability-ledger-substrate added to 12-entry rotation pool (`3f798bf`)*
+- *editorial-lint.py: claim-authoring-convention §9 claim-validation pass added — 7 checks: id/confidence required, id uniqueness, cites non-empty unless structural, cites resolution, depends_on resolution, projected-language check, balanced markers (`d212863c`)*
 
 *2026-05-22 — Large AUTO session. Editorial plan execution complete.*
 - *Track A: 12 flagship TOPIC rewrites (EN+ES = 24 files), Bloomberg 4-paragraph lede + Gate-0 + claim markup*
@@ -79,7 +82,7 @@ is in outbox (`project-editorial-20260522-a4-stage6-request`); awaiting Command 
 - *A4: wikilink-audit.py built; 0 broken links; plan §12 execution record*
 - *Stage 6 request in outbox: project-editorial-20260522-a4-stage6-request*
 
-*2026-05-22 (this session) — LICENSE artifacts batch actioned.*
+*2026-05-22 (session) — LICENSE artifacts batch actioned.*
 - *LICENSE-DATA-MANIFEST + LICENSE-DISCLAIMER (project-gis): language pass applied; refined at .agent/drafts-outbound/*
 - *LEGAL corrections (project-knowledge): all 3 issues approved; routed to Command outbox*
 - *Inbox: fully clean (4 actioned at startup + 1 actioned this session)*
