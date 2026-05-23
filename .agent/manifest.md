@@ -1,113 +1,193 @@
 ---
 schema: foundry-cluster-manifest-v1
-cluster_name: project-intelligence
-cluster_branch: cluster/project-intelligence
-renamed_from: project-slm
-renamed: 2026-05-05
-created: 2026-04-23
-backfilled: 2026-04-26 (manifest schema), 2026-04-26 (triad per Doctrine v0.0.4), 2026-04-28 (tetrad per Doctrine v0.0.10 claim #37)
-state: active
+cluster_name: project-gis
+cluster_branch: cluster/project-gis
+created: 2026-04-30
+state: provisioning
 slm_endpoint: http://localhost:8011
-module_id: intelligence
+module_id: gis
+doctrine_version: 0.0.14
+doctrine_claims_codified: []
+doctrine_claims_proposed: []   # placeholder; will fold in claims surfaced by Sonnet research
+
+operator: woodfine + pointsav (jointly — Location Intelligence platform)
+working_pattern: research-then-scaffold
+input_shape: open-gis-standards + retail-co-location-analysis
+
+design:
+  rules:
+    - .agent/rules/design-tokens.md
+
+# Cluster mission (workspace v0.1.88, 2026-04-30):
+# Ship a "Location Intelligence" platform — a leapfrog-2030 flat-file
+# open-GIS substrate parallel to project-bim's Building Design System.
+# Same architectural commitments: flat-file storage, open standards,
+# Rust + Tauri, offline-first, EUPL-licensed, seL4-hardened.
+#
+# Three Totebox Archive services to be added (per operator 2026-04-30):
+#   - service-business: retail business locations (Walmart, Home Depot,
+#     Costco, Ikea, regional equivalents)
+#   - service-places: public-purpose locations (hospitals, higher
+#     education, airports)
+#   - service-parking: geo-fence parking lot coordinates
+#
+# Three new app surfaces:
+#   - app-console-gis: query + dataset provider
+#   - app-workplace-gis: PointSav's QGIS — manual layer editor on map
+#   - app-orchestration-gis: meteoblue.com-quality map renderer
+#     (browser-delivered via os-orchestration)
+#
+# Customer-facing deployment: gis.woodfinegroup.com
+# Showcases co-location of Walmart/Ikea + Home Depot/X + Costco
+# within 1km / 2km / 3km of each other.
+#
+# Bridge to BIM: location intelligence supplies the urban-scale
+# context that BIM compositions live in (claim #41 City Code as
+# Composable Geometry depends on a real geographic dataset).
 
 tetrad:
   vendor:
     - repo: pointsav-monorepo
-      path: ./
+      path: ./pointsav-monorepo
       upstream: vendor/pointsav-monorepo
-      focus: service-slm/ (Doorman + slm-core + slm-doorman + slm-doorman-server), Apprenticeship Substrate routing endpoints (claim #32)
-    - repo: pointsav-monorepo
-      path: ./service-content/
-      upstream: vendor/pointsav-monorepo
-      focus: service-content/ (semantic entity extractor + CORPUS ledger watcher + LadybugDB graph — Ring 2)
-      note: formally absorbed into project-slm scope per Master P4 ratification 2026-04-30; every LLM wire change routes through Doorman and the apprenticeship arm; datagraph is the grounding surface for Doctrine claim #44
+      focus: |
+        service-business/, service-places/, service-parking/ (Ring 1
+        boundary ingest), app-console-gis/, app-workplace-gis/,
+        app-orchestration-gis/, os-orchestration/ (mapping browser
+        delivery)
+      status: leg-pending — sub-clone provisioning + scaffold
+    - repo: pointsav-design-system
+      path: ./pointsav-design-system
+      upstream: vendor/pointsav-design-system
+      focus: |
+        DESIGN-* + COMPONENT-* + RESEARCH-* + token-* drafts for the
+        gis.woodfinegroup.com surface (parallel to design-system
+        substrate per Doctrine claim #38)
+      status: leg-pending
   customer:
-    - fleet_deployment_repo: vendor/pointsav-fleet-deployment
-      catalog_subfolder: vault-privategit-source/
-      tenant: pointsav
-      purpose: documentation-of-Doorman-installation-on-the-workspace-VM
-      status: leg-pending — Task to draft guide-doorman-deployment.md (PS.8 in v0.1.42 plan; Q1-Q4 answered)
+    - fleet_deployment_repo: customer/woodfine-fleet-deployment
+      catalog_subfolder: gateway-orchestration-gis/
+      tenant: woodfine
+      purpose: customer-facing-location-intelligence-public-demo
+      status: leg-pending — catalog folder authoring
   deployment:
-    - path: /srv/foundry  # vault-privategit-source-1 (the workspace itself)
-      tenant: pointsav
+    - path: deployments/gateway-orchestration-gis-1
+      tenant: woodfine
       shape: long-running-service
-      shared_with: [project-data]   # workspace VM hosts both Ring 1 (project-data) and Ring 2+3 (project-slm) services
       runtime_artifacts:
-        - /usr/local/bin/llama-server (v0.0.11)
-        - /etc/systemd/system/local-slm.service (v0.0.11)
-        - /var/lib/local-slm/weights/Olmo-3-1125-7B-Think-Q4_K_M.gguf
-        - (planned) /usr/local/bin/slm-doorman-server + local-doorman.service
-      status: tier-A-live; Doorman deployment pending B7 redeploy with SLM_APPRENTICESHIP_ENABLED=true
+        - (planned) /usr/local/bin/app-orchestration-gis
+        - (planned) /etc/systemd/system/local-gateway-orchestration-gis.service
+        - (planned) /var/lib/gateway-orchestration-gis/tiles/
+        - (planned) nginx vhost gis.woodfinegroup.com (HTTPS)
+      status: leg-pending — pre-provisioning
+    - path: clusters/cluster-totebox-personnel-1
+      tenant: woodfine
+      shape: data-archive
+      runtime_artifacts:
+        - service-business JSONL/Parquet (retail locations)
+        - service-places JSONL/Parquet (public-purpose locations)
+        - service-parking JSONL/Parquet (geo-fence polygons)
+      status: leg-pending — data acquisition (Walmart/Home Depot/Costco
+        US/CA/MX/ES + Ikea ES + Home Depot equivalent ES)
   wiki:
-    - repo: vendor/content-wiki-documentation
-      drafts_via: clones/project-intelligence/.agent/drafts-outbound/
+    # project-gis does NOT hold sub-clones of content-wiki repos (removed 2026-05-05).
+    # All wiki drafts route via drafts-outbound model only.
+    - drafts_via: clones/project-gis/.agent/drafts-outbound/
       gateway: project-editorial Task
       planned_topics:
-        - topic-doorman-protocol.md           # the Doorman as security boundary + three-tier compute routing
-        - topic-apprenticeship-substrate.md    # service-slm as first responder + signed-verdict corpus loop (claim #32)
-        - topic-elastic-compute-lora-training-pipeline.md  # Elastic Compute nightly LoRA training pipeline
-        - topic-service-slm-graph-store-migration.md       # service-slm graph store migration
-      status: leg-pending — TOPIC skeletons staged in drafts-outbound/; substance lands as service-slm milestones progress
+        - topic-location-intelligence-platform.md  # what + why; Bloomberg-grade
+        - topic-gis-substrate-architecture.md      # flat-file open-GIS pattern
+        - topic-geo-fence-parking-pattern.md       # service-parking shape
+        - guide-gis-deployment.md                  # how to operate gis.woodfinegroup.com
+        - topic-walmart-homedepot-costco-co-location.md
+        - topic-spanish-retail-equivalents.md
+      status: leg-pending — scaffold after research lands; 6 rescued drafts in drafts-outbound/from-project-gis/
 
-clones:
-  - repo: pointsav-monorepo
-    role: primary
-    path: ./
-    upstream: vendor/pointsav-monorepo
-  - repo: woodfine-fleet-deployment
-    role: secondary
-    path: ./woodfine-fleet-deployment/
-    upstream: customer/woodfine-fleet-deployment
-    focus: vault-privategit-source/ (Doorman deployment GUIDEs + Elastic Compute runbooks)
-    added: 2026-05-05
-trajectory_capture: pending
+# Operator decisions surfaced (in workspace NEXT.md operator-presence carries):
+#   1. Workplace OS deployment naming — operator suggested
+#      "desktop-workplace-gis"; need Nomenclature Matrix amendment
+#   2. service-business storage shape — flat (JSONL/Parquet) vs
+#      database (PostgreSQL+PostGIS); pending Sonnet research outcome
+#   3. Mapping tile/layer delivery stack — pending Sonnet research
+#      (vector tiles via MapLibre? raster via Leaflet? meteoblue uses
+#      proprietary; what's the open-source equivalent?)
 
-software_footprint:
-  target_os: os-totebox
-  monorepo: pointsav-monorepo
-  branch: cluster/project-intelligence
-  owns:
-    - service-slm/        # AI Doorman + Elastic Compute orchestrator
-    - service-content/    # Taxonomy Ledger / LadybugDB knowledge graph
-    - service-disclosure/ # Disclosure substrate
-
-adapter_routing:
-  trains:
-    - cluster-project-intelligence   # own cluster adapter (Doorman + Elastic Compute client + Tier C)
-    - engineering-pointsav           # Vendor engineering corpus (Ring 2+3 services)
-    - apprenticeship-pointsav        # apprenticeship corpus (claim #32; AS-3/AS-4 produce its tuples)
-  consumes:
-    - constitutional-doctrine    # always
-    - engineering-pointsav       # always — Vendor knowledge
-    - cluster-project-intelligence  # own cluster context
-    - role-task                  # current role
-    - apprenticeship-pointsav    # apprenticeship adapter — composed alongside engineering at request time per claim #22
+# Bootstrap commits will be authored by jwoodfine/pwoodfine alternating
+# via bin/commit-as-next.sh once sub-clones are provisioned.
 ---
 
-# Cluster manifest — project-intelligence
+# Cluster manifest — project-gis
 
-Single-clone cluster (N=1). Renamed from project-slm 2026-05-05.
+This file is the cluster-manifest declaration per Doctrine §IV.c +
+v0.0.10 Tetrad amendment. Read at session start.
 
-## Scope
+## Cluster status
 
-Ring 2 + Ring 3 of the three-ring architecture
-(`~/Foundry/conventions/three-ring-architecture.md`):
+**State**: active (2026-05-04 — Master ratification of Gemini-era work)
 
-- `service-slm` — AI Doorman + Elastic Compute orchestrator (Ring 3)
-- `service-content` — Taxonomy Ledger / LadybugDB graph (Ring 2)
+Sub-clones provisioned: pointsav-monorepo, pointsav-design-system,
+woodfine-fleet-deployment, content-wiki-documentation, content-wiki-projects,
+woodfine-media-assets. Monorepo contains service-business, service-places,
+service-fs, app-orchestration-gis crate directories.
 
-## Branch
+Two-deployment architecture in place:
+- `cluster-totebox-personnel-1` — data layer (service-business, service-places, service-fs)
+- `gateway-orchestration-gis-1` — GIS platform (app-orchestration-gis + www)
 
-`cluster/project-intelligence`
+gis.woodfinegroup.com is live. TOTEBOX_DATA_PATH path fixed 2026-05-04 (removed
+spurious `/data/` suffix in config.py and MANIFEST.md).
 
-## Remotes
+## Standing in for v0.1.88+
 
-- `origin` — canonical via admin SSH alias
-- `origin-staging-j` — Jennifer's staging-tier mirror
-- `origin-staging-p` — Peter's staging-tier mirror
+This cluster bootstraps in three phases:
 
-Push policy: staging-tier only. Stage 6 for canonical promotion.
+### Phase 1 — Strategy + cluster shell (THIS COMMIT v0.1.88)
 
----
+- Cluster directory + manifest provisioned
+- Workspace `PROJECT-CLONES.md` updated with project-gis row
+- Sonnet research dispatched (Location Intelligence platform survey;
+  Spain Home Depot equivalent; architecture flat-vs-database; map
+  tile/layer delivery stack)
+- Operator decisions surfaced (Workplace OS deployment naming;
+  storage shape)
 
-*Restored by Command Session 2026-05-22 — manifest was contaminated by Stage-6 rebase that pulled project-knowledge .agent/ content into project-intelligence working tree. Restored from git history (bd2cb2c8^:.agent/manifest.md) with updated planned_topics to reflect current draft filenames.*
+### Phase 2 — Sub-clone provisioning + scaffold (next session)
+
+When operator green-lights the strategy doc, Master:
+- Provisions sub-clones for pointsav-monorepo, pointsav-design-system,
+  woodfine-fleet-deployment in this cluster
+- Scaffolds service-business, service-places, service-parking
+  directories + Cargo.toml stubs
+- Scaffolds app-console-gis, app-workplace-gis, app-orchestration-gis
+  directories
+- Cluster-Task picks up after this point
+
+### Phase 3 — Data acquisition + visualization (Task work)
+
+- Walmart Superstore locations: US, Canada, Mexico, Spain (Spain = Ikea)
+- Home Depot locations: US, Canada, Mexico (Spain = X, per Sonnet research)
+- Costco locations: US, Canada, Mexico, Spain
+- Ingest into service-business
+- Co-location analysis: pairs/triples within 1km / 2km / 3km
+- Visualization at gis.woodfinegroup.com
+
+## What this cluster does NOT do
+
+- BIM (project-bim's scope; cross-references for City Code claim #41)
+- Editorial gateway (project-language's scope; project-gis stages
+  drafts at `.claude/drafts-outbound/`)
+- Doorman/SLM (project-slm's scope; project-gis consumes service-SLM
+  for routine map-annotation work via SERVICE-SLM-PROPOSAL convention
+  per v0.1.86 broadcast)
+
+## Cross-references
+
+- `~/Foundry/CLAUDE.md` §10 + §11 (cluster pattern + tetrad)
+- `~/Foundry/DOCTRINE.md` claims #14, #16, #18, #28, #38
+- `~/Foundry/conventions/four-tier-slm-substrate.md`
+- `~/Foundry/conventions/project-tetrad-discipline.md`
+- `~/Foundry/IT_SUPPORT_Nomenclature_Matrix_V8.md`
+- `~/Foundry/MEMO-2026-03-30-Development-Overview-V8.md` §4
+  (deployment catalog)
+- `~/Foundry/clones/project-bim/.claude/manifest.md` (parallel cluster
+  pattern; same Tetrad shape)
