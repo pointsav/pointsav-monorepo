@@ -1305,7 +1305,7 @@
         });
         const local = prodView.mode === 'LOCAL';
         setVis(['nodes', 'nodes-halo'], !local);
-        setVis(['proximity-fill', 'proximity-line'], local);
+        setVis(['proximity-fill', 'proximity-line-t1', 'proximity-line-t234', 'proximity-ring-label'], local);
         setVis(['all-locations'], local);
         setVis(['cluster-centroid'], local && prodView.selected !== null);
         setVis(['proximity-merged-label'], false);
@@ -1606,22 +1606,34 @@
             type: 'geojson',
             data: { type: 'FeatureCollection', features: [] },
         });
-        // proximity-fill: invisible click target (opacity 0.01) — enables click-to-cluster navigation
+        // proximity-fill: tier-colored subtle fill + click target
         map.addLayer({
             id: 'proximity-fill', type: 'fill',
             source: 'proximity-circle-src',
             layout: { visibility: 'none' },
-            paint: { 'fill-color': '#1a3b6b', 'fill-opacity': 0.01 },
-        });
-        // proximity-line: tier-colored ring — rank field: 3=T1, 2=T2, 1=T3
-        map.addLayer({
-            id: 'proximity-line', type: 'line',
-            source: 'proximity-circle-src',
-            layout: { visibility: 'none' },
             paint: {
-                'line-color': ['match', ['get', 'rank'], 3, '#164679', 2, '#54924E', '#EAB308'],
-                'line-width': ['match', ['get', 'rank'], 3, 2.5, 2, 2.0, 1.5],
-                'line-opacity': ['match', ['get', 'rank'], 3, 0.90, 2, 0.75, 0.55],
+                'fill-color': ['match', ['get', 'rank'], 3, '#164679', 2, '#54924E', '#EAB308'],
+                'fill-opacity': 0.06,
+            },
+        });
+        // proximity-line-t1: T1 solid navy ring
+        map.addLayer({
+            id: 'proximity-line-t1', type: 'line',
+            source: 'proximity-circle-src',
+            filter: ['==', ['get', 'rank'], 3],
+            layout: { visibility: 'none' },
+            paint: { 'line-color': '#164679', 'line-width': 2.5, 'line-opacity': 0.95 },
+        });
+        // proximity-line-t234: T2/T3 dashed tier-colored ring
+        map.addLayer({
+            id: 'proximity-line-t234', type: 'line',
+            source: 'proximity-circle-src',
+            filter: ['!=', ['get', 'rank'], 3],
+            layout: { visibility: 'none', 'line-dasharray': [3, 2] },
+            paint: {
+                'line-color': ['match', ['get', 'rank'], 2, '#54924E', '#EAB308'],
+                'line-width': 1.5,
+                'line-opacity': 0.8,
             },
         });
 
@@ -1647,6 +1659,24 @@
                 'text-color': '#ffffff',
                 'text-halo-color': '#1E40AF',
                 'text-halo-width': 2,
+            },
+        });
+        // proximity-ring-label: T1/T2/T3 text label at ring centroid
+        map.addLayer({
+            id: 'proximity-ring-label', type: 'symbol',
+            source: 'proximity-circle-src',
+            layout: {
+                visibility: 'none',
+                'text-field': ['match', ['get', 'rank'], 3, 'T1', 2, 'T2', 'T3'],
+                'text-size': 10,
+                'text-offset': [0, -1.6],
+                'text-anchor': 'bottom',
+                'text-font': ['Noto Sans Regular'],
+            },
+            paint: {
+                'text-color': '#0b1220',
+                'text-halo-color': '#ffffff',
+                'text-halo-width': 1.5,
             },
         });
 
@@ -2087,7 +2117,9 @@
                 if (catchmentActive && selectedClusterId) {
                     // Catchment rings frame at z~7.5 — keep selection, just hide proximity rings
                     if (map.getLayer('proximity-fill')) map.setLayoutProperty('proximity-fill', 'visibility', 'none');
-                    if (map.getLayer('proximity-line')) map.setLayoutProperty('proximity-line', 'visibility', 'none');
+                    if (map.getLayer('proximity-line-t1')) map.setLayoutProperty('proximity-line-t1', 'visibility', 'none');
+                    if (map.getLayer('proximity-line-t234')) map.setLayoutProperty('proximity-line-t234', 'visibility', 'none');
+                    if (map.getLayer('proximity-ring-label')) map.setLayoutProperty('proximity-ring-label', 'visibility', 'none');
                     if (map.getLayer('all-locations')) map.setLayoutProperty('all-locations', 'visibility', 'none');
                     return;
                 }
