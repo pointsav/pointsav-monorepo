@@ -64,7 +64,7 @@
 
 use foundry_nodeclass::NodeClass;
 use slm_doorman_server::http;
-use slm_doorman_server::idle_monitor::IdleMonitorConfig;
+use slm_doorman_server::idle_monitor::{BackendLifecycle, IdleMonitorConfig, IdleMonitorHandle};
 use std::sync::atomic::AtomicU64;
 use slm_doorman_server::queue::{
     dequeue_shadow, ensure_dirs, reap_expired_leases, release_shadow, QueueConfig, ReleaseOutcome,
@@ -155,6 +155,16 @@ async fn main() -> anyhow::Result<()> {
     let service_content_endpoint = std::env::var("SERVICE_CONTENT_ENDPOINT")
         .unwrap_or_else(|_| http::DEFAULT_SERVICE_CONTENT_ENDPOINT.to_string());
 
+    // Yo-Yo idle monitor — build handle before AppState so it can be stored
+    // as Option<Arc<dyn BackendLifecycle>>. start() is called after state build.
+    let idle_monitor_handle: Option<Arc<dyn BackendLifecycle>> =
+        if let Some(mut idle_cfg) = IdleMonitorConfig::from_env() {
+            idle_cfg.last_yoyo_dispatch = Arc::clone(&last_yoyo_dispatch);
+            Some(Arc::new(IdleMonitorHandle::new(idle_cfg)))
+        } else {
+            None
+        };
+
     let state = Arc::new(http::AppState {
         doorman,
         apprenticeship,
@@ -180,6 +190,7 @@ async fn main() -> anyhow::Result<()> {
         gateway_token: std::env::var("SLM_GATEWAY_TOKEN").ok(),
         node_class,
         tier_a_reason,
+        idle_monitor: idle_monitor_handle,
     });
 
     info!(
@@ -356,24 +367,12 @@ async fn main() -> anyhow::Result<()> {
     }
     // ────────────────────────────────────────────────────────────────────
 
-    // ── Yo-Yo idle monitor (B5) ─────────────────────────────────────────
-    //
-    // Polls llama-server /metrics every 5 min. After SLM_YOYO_IDLE_MINUTES
-    // (default 30) of zero active slots, sends a GCP instances.stop request
-    // via the workspace SA ADC token from the GCE metadata server.
-    // Requires all four GCP env vars — absent any, the monitor does not start.
-    if let Some(mut idle_cfg) = IdleMonitorConfig::from_env() {
-        // Wire in the shared dispatch clock so the idle monitor can account for
-        // Tier B dispatches that occurred between 5-min poll intervals.
-        idle_cfg.last_yoyo_dispatch = Arc::clone(&last_yoyo_dispatch);
-        info!(
-            idle_threshold_secs = idle_cfg.idle_threshold.as_secs(),
-            gcp_instance = %idle_cfg.gcp_instance,
-            "Yo-Yo idle monitor enabled"
-        );
-        tokio::spawn(slm_doorman_server::idle_monitor::run_idle_monitor(idle_cfg));
+    // ── Yo-Yo idle monitor (B5) — started via BackendLifecycle trait ────────
+    if let Some(ref handle) = state.idle_monitor {
+        info!(name = handle.name(), "backend lifecycle: starting");
+        handle.start().await;
     }
-    // ────────────────────────────────────────────────────────────────────
+    // ────────────────────────────────────────────────────────────────────────
 
     let app = http::router(state);
     let listener = tokio::net::TcpListener::bind(bind_addr)
