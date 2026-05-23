@@ -78,7 +78,7 @@ app-mediakit-knowledge/
 ├── CLAUDE.md              this file
 ├── NEXT.md                open items
 ├── ARCHITECTURE.md        phase plan, status, conventions
-├── openapi.yaml           OpenAPI 3.1 spec (751 lines)
+├── openapi.yaml           OpenAPI 3.1 spec (1027 lines)
 ├── src/
 │   ├── server.rs          main HTTP handler, routing, AppState
 │   ├── auth.rs            Phase 5: cookie sessions, auth extractors
