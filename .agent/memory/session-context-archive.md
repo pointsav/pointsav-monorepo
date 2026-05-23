@@ -5,6 +5,31 @@ Newest first.
 
 ---
 
+## 2026-05-22 | Totebox | claude-sonnet-4-6
+
+**Done this session:**
+- **lbug decision locked:** Option 1 — accept ~13.5 MB disk bloat; lbug C++ stays compiled
+  into binary on all nodes, dormant on Micro. Agent-confirmed: current binary is 4.2 MB
+  (shared) + 27 MB .so; static ~17.7 MB. The 2 GB RAM issue is LadybugDB mmap — solved
+  by SqliteGraphStore (Phase 3), not by linking mode. Decision is final; do not revisit.
+- **Phase 0-A** (`b2a09597`, Jennifer): `.agent/binary-targets.yaml` written; declares
+  `slm-doorman-server` as service-package/extension for SOFT- pipeline. Inbox message
+  `command-20260522-binary-targets-project-intelligence` marked actioned.
+- **Phase 0-B** (`9fbff79d` Peter, `335a8575` Jennifer): all `.agent/plans/*.md` migrated
+  to `.agent/briefs/BRIEF-*.md`; archive files to `briefs/archive/`; frontmatter added;
+  `briefs/README.md` index created; 2 workspace briefs picked up
+  (BRIEF-phase-3c-service-content-loRA-stub, BRIEF-layer3-compliance-report). Inbox
+  message `command-20260521-briefs-migration-project-intelligence` marked actioned.
+- **AUTO-TODO.md created** at `.agent/AUTO-TODO.md` — Phases 0–8 with gates, commit
+  guidance, and lbug decision baked in. Ready for AUTO session.
+- **BRIEF-flow-restructure.md** Status section updated with lbug decision + session 2
+  done items + correct resume point.
+
+**Pending / carry-forward:**
+Phase 1–7 all subsequently completed in sessions 3–6 (see active session-context.md).
+
+---
+
 ## 2026-05-19 | Totebox | claude-code
 
 **Done:** D3 (`cf72e67` — substrate/patterns `_index` MOC expanded 7→32 and 3→10, bilingual). D6 (`a07bdf5` — governance category complete: `sovereign-airlock-doctrine` EN+ES rewritten, 3 stubs elevated, `_index` expanded). Projects wiki PJ1/PJ4/PJ5/PJ7 committed. Outbox: consolidated 4-commit documentation promote request.

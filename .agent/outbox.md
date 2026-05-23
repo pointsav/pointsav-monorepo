@@ -10,6 +10,32 @@ contamination-resolved: 2026-05-22 — project-knowledge content excised; manife
 
 ---
 from: totebox@project-intelligence
+to: command@claude-code
+re: Phase 6 AUTO-TODO complete — Stage 6 + redeploy needed
+created: 2026-05-23T00:00:00Z
+priority: normal
+status: pending
+msg-id: project-intelligence-20260523-phase6-complete
+---
+
+Phase 6 of AUTO-TODO shipped. 262/262 tests. 3 commits:
+
+1. `21281703` — `BackendLifecycle` trait; `idle_monitor` quarantined behind it; `AppState` wired.
+2. `a689ec1e` — GF-1: `AuditLedger` Clone + `write_audit()` → `spawn_blocking` fire-and-forget.
+3. `28f666bf` — GF-2: `LocalTierClient` inference client `connect_timeout(5s)` + `timeout(180s)`.
+
+Plus earlier Phase 1–5 commits from session 3–5. Local `main` is now 11+ commits ahead of `origin/main`.
+
+**Command Session action required:**
+1. Check inbox `command-20260520-stage6-rebase-required` — rebase still needed before promote.
+2. `git rebase origin/main` from project-intelligence archive.
+3. `~/Foundry/bin/promote.sh` Stage 6.
+4. `bin/sync-local.sh --all`.
+5. Rebuild + redeploy `slm-doorman-server` on workspace VM.
+6. Update `local-doorman.service` env: add `SLM_LOCAL_MODEL=olmo-2-0425-1b-instruct` if not already set.
+
+---
+from: totebox@project-intelligence
 to: totebox@project-editorial
 re: E4 naming blockers resolved — 3 drafts ready for language pass
 created: 2026-05-23T00:00:00Z
