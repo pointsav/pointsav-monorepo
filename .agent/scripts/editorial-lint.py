@@ -106,11 +106,12 @@ def _parse_claim_list(raw):
     return [raw] if raw else []
 
 
-def validate_claims(body, citations_registry):
+def validate_claims(body, citations_registry, path=""):
     """Claim-validation pass per claim-authoring-convention §9.
 
     Returns (errors, warns). citations_registry is a set of valid IDs from
     citations.yaml, or None if the file is unavailable (skips cites resolution).
+    path is used to skip ES-specific checks on .es.md files.
     """
     errors = []
     warns = []
@@ -405,24 +406,53 @@ def lint_file(path, banned, citations_registry=None):
         warns.append("sentence is %d words (ceiling ~%d): %s"
                      % (wc, SENTENCE_HARD_CEILING, excerpt))
 
-    claim_errors, claim_warns = validate_claims(body, citations_registry)
+    claim_errors, claim_warns = validate_claims(body, citations_registry, path)
     errors.extend(claim_errors)
     warns.extend(claim_warns)
 
     return errors, warns
 
 
+_SKIP_DIRS = {".agent", ".claude", ".git", ".github"}
+_SKIP_ROOT_FILES = {
+    "AGENT.md", "AGENTS.md", "CLAUDE.md", "CODE_OF_CONDUCT.md",
+    "CHANGELOG.md", "NEXT.md", "README.md", "README.es.md",
+    "TRADEMARK.md", "LICENSE.md",
+}
+
+
+def _is_content_article(path, repo_root):
+    """Return True only for wiki articles inside category subdirectories."""
+    rel = os.path.relpath(path, repo_root)
+    parts = rel.split(os.sep)
+    # Skip dot-directories (.agent, .claude, .git, etc.)
+    if any(p.startswith(".") for p in parts):
+        return False
+    # Skip repo-root operational files (no subdirectory component)
+    if len(parts) == 1 and os.path.basename(path) in _SKIP_ROOT_FILES:
+        return False
+    # Skip _index.md MOC landing pages (no frontmatter required)
+    if os.path.basename(path) == "_index.md" or os.path.basename(path) == "_index.es.md":
+        return False
+    return True
+
+
 def collect_markdown(paths):
-    """Expand files and directories into a sorted list of .md files."""
+    """Expand files and directories into a sorted list of wiki article .md files."""
     out = []
     for p in paths:
+        repo_root = p if os.path.isdir(p) else os.path.dirname(p)
         if os.path.isdir(p):
-            for root, _, files in os.walk(p):
+            for root, dirs, files in os.walk(p):
+                dirs[:] = [d for d in dirs if d not in _SKIP_DIRS]
                 for f in files:
                     if f.endswith(".md"):
-                        out.append(os.path.join(root, f))
+                        full = os.path.join(root, f)
+                        if _is_content_article(full, repo_root):
+                            out.append(full)
         elif os.path.isfile(p) and p.endswith(".md"):
-            out.append(p)
+            if _is_content_article(p, repo_root):
+                out.append(p)
         else:
             print("skip (not a .md file or directory): %s" % p, file=sys.stderr)
     return sorted(set(out))
