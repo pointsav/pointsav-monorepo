@@ -16,24 +16,28 @@ consolidates:
 
 ---
 
-## STATUS — 2026-05-23
+## STATUS — 2026-05-23 (session 2)
 
 | Area | State |
 |---|---|
 | Knowledge-platform editorial overhaul | **COMPLETE** (project-editorial scope). Stage 6 pending Command. |
 | Chrome sprint phases B–D + E2 | **COMPLETE** (committed on `readme-fixes-2026-05-16`). |
-| Chrome sprint A2 / A4 | **Pending — this session.** |
+| Chrome sprint A2 / A4 | **COMPLETE this session.** A4: 8 stubs (9fca6cd). A2: 143 title fixes (51e7724). |
 | Chrome sprint E1 / E3 / E4 | **Blocked — awaiting project-knowledge build + Stage 6.** |
-| GitHub presence elevation | **Research complete.** Item 8 + 11 this session; remainder Command/admin-tier. |
+| GitHub presence elevation | **Research complete.** Item 8 + 11 done this session; remainder Command/admin-tier. |
 | Publishing-tier naming | **All project-editorial items done.** Brief archived. |
+| Glossary ES translation | **COMPLETE** (694 lines, f82faeb). |
+| Corporate README cross-link | **COMPLETE** (0fab5ad in content-wiki-corporate). |
+| BCSC README sweep | **COMPLETE** — clean, no changes needed. |
+| Post-pass lint gate | **COMPLETE** — 0 errors, 246 sentence-length warnings (pre-existing). |
 
 ---
 
-## AUTO-approved work queue — 2026-05-23
+## AUTO-approved work queue — 2026-05-23 — COMPLETE ✓
 
-Approved by operator. Execute in order.
+All 6 items executed and committed this session. See STATUS table above.
 
-### 1. A4 — Design-system stub aliases (pre-emptive)
+### 1. A4 — Design-system stub aliases (pre-emptive) ✓
 
 24 slugs were moved from `content-wiki-documentation/design-system/` to
 `pointsav-design-system/` (foundations + components). `redirects.yaml` already

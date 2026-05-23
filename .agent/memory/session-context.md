@@ -4,6 +4,29 @@ Rolling 3-session summary. Newest entry first. Push oldest to session-context-ar
 
 ---
 
+## 2026-05-23 (session 2) | totebox@claude-code | Sonnet 4.6
+
+**Done this session (AUTO execution — 6-item queue):**
+- **A4 — Design-system stubs** — 8 stub articles (4 EN+ES pairs: design-color, design-typography, design-spacing, design-motion) in `design-system/`, pointing to `design.pointsav.com/foundations/*` (`9fca6cd`).
+- **A2 — Title normalisation** — 143 title fixes across all EN + ES articles in content-wiki-documentation; automated sentence-case script + 4 manual edge-case edits (`51e7724`).
+- **Glossary ES** — full Spanish translation of glossary-documentation.es.md (694 lines, from 3-line stub) (`f82faeb`).
+- **README cross-link** — `content-wiki-corporate/README.md` + `.es.md` now link to `projects.woodfinegroup.com` (`0fab5ad` in content-wiki-corporate).
+- **BCSC sweep** — all 3 content-wiki README + index.md files checked; clean, no changes needed.
+- **Lint gate** — 0 errors, 246 sentence-length warnings (pre-existing, not introduced this session).
+- **BRIEF-active-work.md** — status table updated; AUTO queue marked complete.
+
+**Pending / carry-forward:**
+- Stage 6 promotion — content-wiki-documentation, content-wiki-projects, content-wiki-corporate + woodfine-fleet-deployment BIM GUIDEs (Command only).
+- E1/E3/E4 — still blocked on project-knowledge build + Stage 6.
+- Org profile READMEs, media-asset README rewrites — Command/admin-tier.
+- Plan archival + §9 deletions — operator go-ahead post-ship.
+- Yo-Yo files (service-slm-yoyo-operational, yo-yo-lora-training-pipeline) — title normalisation skipped; rename blocked on E4 triage.
+
+**Operator preferences surfaced:**
+- AUTO mode confirmed: execute all approved items autonomously; report at end.
+
+---
+
 ## 2026-05-23 | totebox@claude-code | Sonnet 4.6
 
 **Done this session (pre-build prep + wiki quality sweep):**
