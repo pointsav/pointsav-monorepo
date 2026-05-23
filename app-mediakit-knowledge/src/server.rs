@@ -2470,7 +2470,7 @@ fn wiki_chrome(
                         // IVC masthead band placeholder (UX-DESIGN.md §4.5)
                         div.wiki-ivc-band role="status" aria-label="Verification status" {
                             span.ivc-band-text {
-                                "Verification not yet available — Phase 7"
+                                "Citation verification not yet available."
                             }
                             // Reader density toggle (UX-DESIGN.md §4.6)
                             // Preference persists to localStorage; no machinery honours it
