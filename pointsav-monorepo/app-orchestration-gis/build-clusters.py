@@ -129,10 +129,28 @@ def component_diameter(indices: list[int], recs: list) -> float:
 
 def split_greedy_tight(indices: list[int], recs: list, max_d: float,
                        atom_of: dict) -> list[list[int]]:
-    """Greedy clique partition that never splits tight nuclei (Pass-1 atoms)."""
-    atoms: dict = {}
+    """Greedy clique partition that never splits tight nuclei (Pass-1 atoms).
+
+    Pathological case: dense city centres (e.g. London) produce a single tight
+    atom spanning the whole city because 1-km chains connect every store.  When
+    an atom's own diameter exceeds max_d it cannot form a valid cluster anyway,
+    so we dissolve it into individual stores before the greedy pass runs.
+    """
+    raw_atoms: dict = {}
     for idx in indices:
-        atoms.setdefault(atom_of[idx], []).append(idx)
+        raw_atoms.setdefault(atom_of[idx], []).append(idx)
+
+    # Dissolve any atom that already exceeds max_d — treat each store as its own atom.
+    atoms: dict = {}
+    next_id = max(raw_atoms.keys(), default=-1) + 1
+    for aid, idxs in raw_atoms.items():
+        if len(idxs) > 1 and component_diameter(idxs, recs) > max_d:
+            for idx in idxs:
+                atoms[next_id] = [idx]
+                next_id += 1
+        else:
+            atoms[aid] = idxs
+
     remaining = sorted(atoms.keys(), key=lambda a: (-len(atoms[a]), a))
     groups = []
     while remaining:
