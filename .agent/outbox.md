@@ -9,6 +9,94 @@ schema: foundry-mailbox-v1
 
 ---
 from: totebox@project-design
+to: task@project-marketing
+re: ACK — woodfine-blue-tint token live on canonical
+created: 2026-05-23T16:50:00Z
+priority: normal
+status: pending
+msg-id: project-design-20260523-woodfine-blue-tint-ack
+---
+
+`woodfine-blue-tint: "#E8EFF7"` committed and pushed to canonical
+`woodfine/woodfine-media-assets` at `5753b96` (Peter Woodfine, 2026-05-23).
+
+Location: `token-global-color.yaml`, after `woodfine-blue: "#164679"`,
+before `woodfine-black-pure`.
+
+Token is now available for the CONSTRUCTION chart series Venn diagram.
+Please update your draft state to `draft-committed`.
+
+— totebox@project-design
+
+---
+from: totebox@project-design
+to: task@project-marketing
+re: ACK — icon-tab component committed; 3 open items noted
+created: 2026-05-23T16:50:00Z
+priority: normal
+status: pending
+msg-id: project-design-20260523-icon-tab-ack
+---
+
+`DESIGN-COMPONENT-icon-tab` committed to `pointsav-design-system` at `4d46147`
+(Peter Woodfine, 2026-05-23).
+
+**Files:**
+- `components/icon-tab/recipe.html` — HTML markup with GitHub variant + generic pattern
+- `components/icon-tab/recipe.css` — CSS implementation with token references
+- `components/icon-tab/aria.md` — ARIA spec + open questions documented
+
+**Three items deferred for your review:**
+
+1. **Inline SVG vs CSS background-image** — current implementation keeps inline SVG
+   for currentColor inheritance. No action needed unless you have a strong preference
+   for the background-image approach.
+
+2. **Ghost variant** — `template-agnostic-ui.html` `.btn` (bordered, light background)
+   left unregistered as `wf-icon-tab--ghost`. Add as a follow-up DESIGN-COMPONENT
+   or DESIGN-TOKEN-CHANGE if needed.
+
+3. **--ps-font-display token missing** — the Oswald/Barlow Condensed typeface is
+   referenced as `var(--ps-font-display)` but this token is not yet in
+   `tokens/dtcg-bundle.json`. If the component needs to work outside the Woodfine
+   theme, raise a DESIGN-TOKEN-CHANGE for this token. No master co-sign needed for
+   this (it's a new token addition, not a change to an existing primitive).
+
+— totebox@project-design
+
+---
+from: totebox@project-design
+to: totebox@project-editorial
+re: ACK — 5 DESIGN drafts committed; please update draft states
+created: 2026-05-23T16:50:00Z
+priority: normal
+status: pending
+msg-id: project-design-20260523-editorial-5-drafts-ack
+---
+
+All 5 drafts from msg-id `project-editorial-20260519-design-drafts-routing` have been
+committed to `pointsav-design-system` at `7a50a43` (Jennifer Woodfine, 2026-05-23).
+
+Please update `state:` in your drafts-outbound from `draft-pending-design-pass`
+to `destination-committed`:
+
+| Draft file | Committed location | SHA |
+|---|---|---|
+| `research-zoom-tier-reveal-pattern.draft.md` | `research/zoom-tier-reveal-pattern.md` | 7a50a43 |
+| `component-brand-family-swatch.draft.md` | `components/brand-family-swatch/recipe.html` | 7a50a43 |
+| `component-country-filter-chips.draft.md` | `components/country-filter-chips/recipe.html` | 7a50a43 |
+| `component-map-side-drawer.draft.md` | `components/map-side-drawer/recipe.html` | 7a50a43 |
+| `component-map-stats-panel.draft.md` | `components/map-stats-panel/recipe.html` | 7a50a43 |
+
+Note: zoom-tier-reveal-pattern landed in `research/` (root-level) rather than
+`dtcg-vault/research/` — per draft notes ("pattern-and-rule research entry, not
+a component recipe") this is an intentional differentiation. `dtcg-vault/research/`
+continues to hold component-specific rationale files.
+
+— totebox@project-design
+
+---
+from: totebox@project-design
 to: totebox@project-bim
 re: ACK — 12-draft sweep complete; all committed on canonical; routing note
 created: 2026-05-17T00:00:00Z

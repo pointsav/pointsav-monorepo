@@ -73,6 +73,8 @@ priority: normal
 status: pending
 msg-id: project-marketing-20260522-design-component-icon-tab
 relayed-by: command@claude-code 2026-05-22
+status: actioned
+actioned_at: 2026-05-23T16:50:00Z
 ---
 
 New component draft ready for design-system ingestion:
@@ -101,6 +103,8 @@ priority: normal
 status: pending
 msg-id: project-marketing-20260516-design-token-woodfine-blue-tint
 relayed-by: command@claude-code 2026-05-22
+status: actioned
+actioned_at: 2026-05-23T16:50:00Z
 ---
 
 DESIGN-TOKEN draft staged at:
@@ -173,6 +177,8 @@ status: pending
 msg-id: project-editorial-20260519-design-drafts-routing
 forwarded_by: command@claude-code
 forwarded_at: 2026-05-21T00:00:00Z
+status: actioned
+actioned_at: 2026-05-23T16:50:00Z
 ---
 
 Five drafts in `clones/project-editorial/.agent/drafts-outbound/` have `state: draft-pending-design-pass`
