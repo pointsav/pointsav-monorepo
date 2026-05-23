@@ -1,10 +1,18 @@
 ---
 artifact: brief
-status: active
+status: archived
+archived: 2026-05-23
+archived_reason: >
+  Pre-Phase-4 state. Tasks 2+3 reference local Tier A (7B model) which is
+  being removed from the workspace VM per doctrine correction. Task 4 shim
+  test is valid Phase 6 work but captured in flow-restructure §8.C. Stage 6
+  and VM stability items absorbed into flow-restructure §12. All Phase 2–5
+  engineering shipped (Phases 2–5 DONE per flow-restructure Status block).
 ---
 
 # service-slm + service-content — Testing & Hardening
 > Updated: 2026-05-18 totebox@project-intelligence  
+> **ARCHIVED 2026-05-23** — see BRIEF-flow-restructure.md for current state.
 > Prior plan (crash recovery) superseded — Blocks 1 & 2 fully shipped.
 > Session paused: compute pressure. Resume here.
 

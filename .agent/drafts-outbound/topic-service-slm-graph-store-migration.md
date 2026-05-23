@@ -4,7 +4,7 @@ state: draft-pending-language-pass
 originating_cluster: project-intelligence
 target_repo: content-wiki-documentation
 target_path: ./
-target_filename: topic-jennifer-datagraph-rebuild.md
+target_filename: topic-service-slm-graph-store-migration.md
 audience: vendor-public
 bcsc_class: current-fact
 language_protocol: PROSE-TOPIC
@@ -18,17 +18,18 @@ references:
   - conventions/three-ring-architecture.md
   - conventions/worm-ledger-design.md
 notes_for_editor: |
-  This TOPIC covers the jennifer DataGraph rebuild as a nightly integration
-  test and property-graph update. The routing parity principle is the
-  editorial centrepiece — make sure it reads as a deliberate design decision,
-  not an incidental implementation detail.
+  This TOPIC covers the service-slm graph store migration (LadybugDB → SQLite
+  backend for fleet nodes) and nightly DataGraph rebuild integration test.
+  The routing parity principle is the editorial centrepiece — make sure it
+  reads as a deliberate design decision, not an incidental implementation
+  detail.
   The three-consecutive-HEALTHY gate must be clearly framed as a forward
   criterion (planned/intended) since it has not yet been met.
-  Cross-reference with topic-yo-yo-lora-training-pipeline.md: the DataGraph
-  rebuild is Phase 1 of the same nightly window; the LoRA training TOPIC
-  covers Phase 2.
-  The jennifer-graph is live at service-content (11 MB LadybugDB file) —
-  state this as current fact.
+  Cross-reference with topic-elastic-compute-lora-training-pipeline.md: the
+  DataGraph rebuild is Phase 1 of the same nightly window; the Elastic
+  Compute LoRA training TOPIC covers Phase 2.
+  The graph store is live at service-content (11 MB LadybugDB file on
+  Hardware-class nodes; SQLite on Micro-class nodes) — state as current fact.
 
   UPDATE NOTE (2026-05-12): First successful extraction confirmed — 4–11
   entities per document, pipeline end-to-end verified 2026-05-12. State
@@ -38,7 +39,7 @@ notes_for_editor: |
   format.
 ---
 
-# TOPIC — Jennifer DataGraph Rebuild
+# TOPIC — service-slm Graph Store Migration
 
 ## Overview
 

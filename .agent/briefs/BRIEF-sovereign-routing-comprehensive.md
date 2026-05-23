@@ -27,12 +27,12 @@ means our LoRA adapter trains on OLMo-generated code, not Claude-generated code.
 The compound flywheel still works — it just runs on a different data source than originally
 planned.
 
-**Five things to do this week:**
-1. Set `ANTHROPIC_BASE_URL=http://127.0.0.1:9080` in one project's `.claude/settings.json`
-2. Get a Commercial API key (separate from Max subscription) for Tier C passthrough
-3. Install the 12-line post-commit git hook (captures Tier A/B session diffs)
-4. Verify Sprint 0a shim is live (`curl -s http://127.0.0.1:9080/v1/messages ...`)
-5. **Do not** use Sprint 0a for Claude Code's agent loop (tool-use) until Sprint 1 lands
+**Five things to do this week — status (updated 2026-05-23):**
+1. Set `ANTHROPIC_BASE_URL=http://127.0.0.1:9080` — **deferred**: operator directive 2026-05-18 keeps Tier C unconfigured; Pro Max sessions do not transit Doorman.
+2. Get a Commercial API key — **deferred**: same reason; Tier C UNSET is correct posture.
+3. Install the 12-line post-commit git hook — **pending**
+4. Verify Sprint 0a shim is live — **DONE**: `/v1/messages` shim is implemented and live (Phase 2–4 shipped).
+5. Do not use Sprint 0a for agent loop until Sprint 1 — **holds**: Sprint 1 (CanonicalMessage + ContentBlock) shipped (commit `ae653cdb`); tool-use shim testing is Phase 6 Task 4 scope.
 
 ---
 
