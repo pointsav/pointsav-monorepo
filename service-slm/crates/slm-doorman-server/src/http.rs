@@ -44,8 +44,8 @@ use serde::{Deserialize, Serialize};
 use slm_core::{
     ApprenticeshipAttempt, ApprenticeshipBrief, AuditCaptureRequest, AuditCaptureResponse,
     AuditProxyRequest, CanonicalMessage, ChatMessage, Complexity, ContentBlock, ComputeRequest,
-    DeferReason, ExtractionRequest, ExtractionResponse, GrammarConstraint, ModuleId, RequestId,
-    Role, Tier, ToolDef,
+    DeferReason, ExtractionRequest, ExtractionResponse, GrammarConstraint, LatencyClass, ModuleId,
+    RequestId, Role, Tier, ToolDef,
 };
 use slm_doorman::ledger::{
     AuditEntry, CompletionStatus,
@@ -222,6 +222,7 @@ async fn shadow_adapter(
         model: Some(body.adapter_a.clone()),
         messages: messages.clone(),
         complexity: Complexity::Medium,
+        latency_class: LatencyClass::default(),
         tier_hint: None,
         stream: false,
         max_tokens: Some(max_tokens),
@@ -241,6 +242,7 @@ async fn shadow_adapter(
         model: Some(body.adapter_b.clone()),
         messages,
         complexity: Complexity::Medium,
+        latency_class: LatencyClass::default(),
         tier_hint: None,
         stream: false,
         max_tokens: Some(max_tokens),
@@ -416,6 +418,7 @@ async fn responses_api(
         model: body.model.clone(),
         messages,
         complexity: Complexity::Medium,
+        latency_class: LatencyClass::default(),
         tier_hint: None,
         stream: body.stream,
         max_tokens: body.max_output_tokens,
@@ -671,6 +674,7 @@ async fn chat_completions(
         model: body.model,
         messages: body.messages.into_iter().map(CanonicalMessage::from).collect(),
         complexity,
+        latency_class: LatencyClass::default(),
         tier_hint: None,
         stream: body.stream,
         max_tokens: body.max_tokens,
@@ -985,6 +989,7 @@ async fn extract(State(state): State<Arc<AppState>>, raw: Bytes) -> impl IntoRes
             CanonicalMessage::text("user", req.text),
         ],
         complexity: Complexity::High,
+        latency_class: LatencyClass::default(),
         tier_hint: Some(Tier::Yoyo),
         stream: false,
         max_tokens: Some(2048),
@@ -1845,6 +1850,7 @@ fn anthropic_to_compute_request(
         model: Some(body.model),
         messages,
         complexity,
+        latency_class: LatencyClass::default(),
         tier_hint,
         stream: false, // Doorman always returns buffered; SSE is assembled by the handler
         max_tokens: Some(body.max_tokens),

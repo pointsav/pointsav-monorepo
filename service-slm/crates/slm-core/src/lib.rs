@@ -22,7 +22,7 @@ pub use error::{CoreError, Result};
 pub use mesh::{EnergySource, EnvironmentMetadata, NodeDescriptor, NodeId};
 pub use module_id::ModuleId;
 pub use request_id::RequestId;
-pub use tier::{Complexity, SpeculationRequest, Tier};
+pub use tier::{Complexity, LatencyClass, SpeculationRequest, Tier};
 
 use serde::{Deserialize, Serialize};
 
@@ -172,6 +172,8 @@ pub struct ComputeRequest {
     #[serde(default)]
     pub complexity: Complexity,
     #[serde(default)]
+    pub latency_class: LatencyClass,
+    #[serde(default)]
     pub tier_hint: Option<Tier>,
     #[serde(default)]
     pub stream: bool,
@@ -236,6 +238,7 @@ mod tests {
             model: None,
             messages: vec![CanonicalMessage::text("user", "hello")],
             complexity: Complexity::default(),
+            latency_class: LatencyClass::default(),
             tier_hint: None,
             stream: false,
             max_tokens: None,
