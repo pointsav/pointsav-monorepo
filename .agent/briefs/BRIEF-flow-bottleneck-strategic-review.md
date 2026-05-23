@@ -1,9 +1,9 @@
 ---
 artifact: brief
-status: active
+status: archived
 topic: Why service-slm / service-content are not achieving "flow" — strategic review
 created: 2026-05-21
-status: superseded
+archived: 2026-05-23
 superseded_by: .agent/briefs/BRIEF-flow-restructure.md
 ---
 
