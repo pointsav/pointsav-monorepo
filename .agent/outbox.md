@@ -10,9 +10,110 @@ schema: foundry-mailbox-v1
 ---
 from: task@project-gis
 to: command@foundry
+re: AEC build plan REVISED — EU flood upgraded to regulatory-grade; eco-regions + wildfire added; 13 new layers; EFFIS action needed
+created: 2026-05-23T09:30:00Z
+msg-id: aec-parity-research-20260523
+supersedes: aec-nightly-build-plan-20260523
+---
+
+Opus parity research complete (commits e1792934 + 34a48183). Full findings:
+`.agent/plans/AEC-DATA-PARITY-RESEARCH.md`. Build plan updated:
+`.agent/plans/AEC-NIGHTLY-BUILD-PLAN.md`.
+
+## Three major upgrades from original plan
+
+### 1. EU flood is now regulatory-grade (not just AQUEDUCT proxy)
+
+EU Floods Directive 2007/60/EC requires all member states to publish hazard maps.
+Direct download shapefiles exist for our core EU markets:
+
+| ISO | Dataset | License |
+|---|---|---|
+| GB | EA Flood Map for Planning (Zones 2 & 3) | OGL v3 |
+| FR | Géorisques Zonages Inondation TRI 2020 | Etalab 2.0 |
+| ES | SNCZI Zonas Inundables T100 (1.02 GB, free) | MITECO attribution |
+| IT | IdroGEO PAI (IODL 2.0/CC BY) | Open data |
+| PL/GR/NL/SE/DK/NO/FI/PT | EU Floods Directive INSPIRE WFS | Per national policy, usually open |
+| DE | LAWA via Bundesland WFS | Per-Bundesland, generally free |
+
+These run Night 5 alongside FEMA. New tile layer: `layer12-flood-eu-regulatory.pmtiles`.
+This matches FEMA-quality for GB/FR/ES/IT — significantly above original AQUEDUCT plan.
+
+### 2. Eco-regions added (three-tier system for landscaping)
+
+New Night 3 layers:
+
+| Layer | Source | License | Coverage |
+|---|---|---|---|
+| `layer13-ecoregions-global.pmtiles` | Resolve Ecoregions 2017 | CC BY 4.0 | All 16 ISOs |
+| `layer14-biogeographic-eu.pmtiles` | EEA Biogeographical Regions 2016 | EEA reuse | EU (Habitats Directive frame) |
+| `layer14-ecoregions-us.pmtiles` | EPA Level III | Public domain | US precision |
+
+Resolve 2017 direct download: `https://storage.googleapis.com/teow2016/Ecoregions2017.zip`
+(150 MB, CC BY 4.0, Dinerstein et al. 2017). 846 ecoregions globally. Covers all 16
+tracked ISOs. Also adds `ecoregion_name`, `ecoregion_biome` to clusters-meta.json.
+
+### 3. EFFIS wildfire — formal data request required (Night 5 layer)
+
+EFFIS (JRC wildfire risk for EU) requires a formal data request — not a direct download.
+**Action needed from Command or operator before 2026-05-28:**
+Submit request at: https://forest-fire.emergency.copernicus.eu/applications/data-and-services
+
+Without approval, GWIS FWI raster (free, attribution) serves as fallback.
+Night 5 script handles both paths automatically.
+
+## Additional findings
+
+**CONABIO (MX eco-regions/climate) is CC BY-NC** — blocked for commercial use on
+gis.woodfinegroup.com. Using INEGI climate raster + Resolve 2017 as substitutes.
+No action needed — build scripts will use the open alternatives.
+
+**Canada:** No national FEMA-equivalent yet (FHIMP programme runs 2024–2028).
+Using NRCan Future Flood Susceptibility 2024 (XGBoost model, OGL-Canada) as proxy.
+
+**GWL_FCS30** (CC BY 4.0, Zenodo) added Night 4 as global wetland layer — best open
+NWI equivalent. Centroid sample adds `wetland_class` to clusters-meta.json.
+
+## Revised layer count (Night 1–5)
+
+Original plan: 7 new PMTiles layers.
+Revised plan: **13 new PMTiles layers**.
+
+| Layer | Night | Est. size |
+|---|---|---|
+| layer8-ashrae-zones-us.pmtiles | 2 | ~5 MB |
+| layer8-necb-zones-ca.pmtiles | 2 | ~3 MB |
+| layer8-eu-climate-zones.pmtiles | 2 | ~8 MB |
+| layer9-koppen-global.pmtiles | 3 | ~50 MB |
+| layer13-ecoregions-global.pmtiles | 3 | ~30 MB |
+| layer14-biogeographic-eu.pmtiles | 3 | ~5 MB |
+| layer14-ecoregions-us.pmtiles | 3 | ~3 MB |
+| layer10-seismic-na.pmtiles | 4 | ~100 MB |
+| layer10-seismic-eu.pmtiles | 4 | ~100 MB |
+| layer11-flood-global.pmtiles | 5 | ~500 MB |
+| layer12-fema-sfha-us.pmtiles | 5 | ~300 MB |
+| layer12-flood-eu-regulatory.pmtiles | 5 | ~200 MB |
+| layer15-wildfire-global.pmtiles | 5 | ~50 MB |
+
+Estimated total disk delta: ~1.35 GB. Disk check before Night 5 still required (35 GB free).
+
+## Stage 6 still needed
+
+Commits on `cluster/project-gis`:
+- `a2c974e4` — Phase 19 sport + geometric split
+- `9886d9fa` — AEC nightly build plan
+- `e1792934` — AEC parity research
+- `34a48183` — AEC build plan parity upgrades
+
+All four ready for Stage 6 promotion to canonical main.
+
+---
+from: task@project-gis
+to: command@foundry
 re: AEC layers — 5-night staged build plan; all 16 tracked ISOs; Canada Night 2
 created: 2026-05-23T08:00:00Z
 msg-id: aec-nightly-build-plan-20260523
+superseded-by: aec-parity-research-20260523
 ---
 
 AEC/site-conditions layer rollout queued across 5 nights. Full plan at
