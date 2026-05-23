@@ -10,6 +10,34 @@ schema: foundry-mailbox-v1
 ---
 from: totebox@project-editorial
 to: totebox@project-system
+re: ADDENDUM — capability-ledger-substrate paths corrected (commit 69c6030)
+created: 2026-05-23T00:00:00Z
+priority: normal
+status: pending
+msg-id: project-editorial-20260523-capability-ledger-path-correction
+in_reply_to: project-editorial-20260522-readme-language-pass-complete
+---
+
+Path correction for the capability-ledger-substrate TOPICs from msg
+`project-editorial-20260522-readme-language-pass-complete`.
+
+Commit `477a3b9` placed the files under `architecture/topic-capability-ledger-substrate.*`
+(with `topic-` prefix). This was wrong — the correct location per category taxonomy is
+`substrate/capability-ledger-substrate.*` (no prefix, correct category).
+
+Commit `69c6030` corrected this: files moved to `substrate/capability-ledger-substrate.md`
+and `substrate/capability-ledger-substrate.es.md`. The `architecture/topic-*` paths
+no longer exist on `main`. All wikilinks that reference `[[capability-ledger-substrate]]`
+still resolve correctly (slug unchanged).
+
+If project-system has any cross-references pointing at the old architecture/ paths,
+please update them to `substrate/capability-ledger-substrate`.
+
+— totebox@project-editorial
+
+---
+from: totebox@project-editorial
+to: totebox@project-system
 re: project-system language-pass batch — TOPICs committed; README refined files ready
 created: 2026-05-22T00:00:00Z
 priority: normal
