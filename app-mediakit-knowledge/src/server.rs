@@ -318,6 +318,12 @@ async fn openapi_yaml() -> impl IntoResponse {
 }
 
 #[derive(Deserialize)]
+struct IndexQueryParams {
+    /// Present as `?noredirect=1` (or any value) to suppress Accept-Language → /es/ redirect.
+    noredirect: Option<String>,
+}
+
+#[derive(Deserialize)]
 struct SearchQueryParams {
     #[serde(default)]
     q: String,
@@ -1135,7 +1141,7 @@ fn home_chrome(
                         a href="/special/all-pages" { "All pages" }
                         a href="/special/categories" { "Categories" }
                         a href="/special/recent-changes" { "Recent changes" }
-                        a.lang-toggle href=(match locale { Locale::En => "/es/", Locale::Es => "/" }) {
+                        a.lang-toggle href=(match locale { Locale::En => "/es/", Locale::Es => "/?noredirect=1" }) {
                             (match locale { Locale::En => "ES", Locale::Es => "EN" })
                         }
                         (auth_nav_widget(user, pending_count))
@@ -1639,8 +1645,32 @@ async fn category_page(
 async fn index(
     State(state): State<Arc<AppState>>,
     CurrentUser(maybe_user): CurrentUser,
-) -> Result<Markup, WikiError> {
-    home_inner(state, Locale::En, maybe_user).await
+    Query(params): Query<IndexQueryParams>,
+    headers: HeaderMap,
+) -> Result<Response, WikiError> {
+    if params.noredirect.is_none() && prefers_spanish(&headers) {
+        return Ok(Response::builder()
+            .status(StatusCode::FOUND)
+            .header(header::LOCATION, "/es/")
+            .body(axum::body::Body::empty())
+            .unwrap());
+    }
+    home_inner(state, Locale::En, maybe_user)
+        .await
+        .map(IntoResponse::into_response)
+}
+
+fn prefers_spanish(headers: &HeaderMap) -> bool {
+    headers
+        .get("accept-language")
+        .and_then(|v| v.to_str().ok())
+        .map(|s| {
+            // Check only the first (highest-quality) language tag.
+            let first = s.split(',').next().unwrap_or("").trim();
+            let tag = first.split(';').next().unwrap_or("").trim();
+            tag.eq_ignore_ascii_case("es") || tag.to_ascii_lowercase().starts_with("es-")
+        })
+        .unwrap_or(false)
 }
 
 async fn home_es(
@@ -4960,6 +4990,105 @@ mod tests {
         assert!(
             html.contains(r#"rel="canonical""#),
             "ES article head should have canonical link: {html}"
+        );
+    }
+
+    /// `GET /` with `Accept-Language: es` redirects to `/es/`.
+    #[tokio::test]
+    async fn index_redirects_to_es_on_accept_language() {
+        let (state, dir, _state_dir) = fixture_state().await;
+        tokio::fs::write(
+            dir.path().join("index.md"),
+            "---\ntitle: Home\n---\nHome content.\n",
+        )
+        .await
+        .unwrap();
+        let app = router(state);
+        let resp = app
+            .oneshot(
+                Request::builder()
+                    .uri("/")
+                    .header("Accept-Language", "es,en;q=0.8")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(
+            resp.status(),
+            StatusCode::FOUND,
+            "Accept-Language: es should redirect to /es/"
+        );
+        assert_eq!(resp.headers().get("location").and_then(|v| v.to_str().ok()), Some("/es/"));
+    }
+
+    /// `GET /?noredirect=1` with `Accept-Language: es` serves EN home (no redirect).
+    #[tokio::test]
+    async fn index_noredirect_suppresses_accept_language_redirect() {
+        let (state, dir, _state_dir) = fixture_state().await;
+        tokio::fs::write(
+            dir.path().join("index.md"),
+            "---\ntitle: Home\n---\nHome content.\n",
+        )
+        .await
+        .unwrap();
+        let app = router(state);
+        let resp = app
+            .oneshot(
+                Request::builder()
+                    .uri("/?noredirect=1")
+                    .header("Accept-Language", "es,en;q=0.8")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(
+            resp.status(),
+            StatusCode::OK,
+            "noredirect=1 should suppress Accept-Language redirect"
+        );
+    }
+
+    /// `GET /` with no Accept-Language (or EN preference) serves EN home directly.
+    #[tokio::test]
+    async fn index_no_accept_language_serves_en() {
+        let (state, dir, _state_dir) = fixture_state().await;
+        tokio::fs::write(
+            dir.path().join("index.md"),
+            "---\ntitle: Home\n---\nHome content.\n",
+        )
+        .await
+        .unwrap();
+        let app = router(state);
+        let resp = app
+            .oneshot(Request::builder().uri("/").body(Body::empty()).unwrap())
+            .await
+            .unwrap();
+        assert_eq!(resp.status(), StatusCode::OK, "no Accept-Language should serve EN 200");
+    }
+
+    /// ES home lang-toggle links to `/?noredirect=1` to prevent redirect loop.
+    #[tokio::test]
+    async fn home_es_lang_toggle_links_to_en_with_noredirect() {
+        let (state, dir, _state_dir) = fixture_state().await;
+        tokio::fs::write(
+            dir.path().join("index.es.md"),
+            "---\ntitle: Inicio\n---\nContenido.\n",
+        )
+        .await
+        .unwrap();
+        let app = router(state);
+        let resp = app
+            .oneshot(Request::builder().uri("/es/").body(Body::empty()).unwrap())
+            .await
+            .unwrap();
+        assert_eq!(resp.status(), StatusCode::OK);
+        let body = resp.into_body().collect().await.unwrap().to_bytes();
+        let html = std::str::from_utf8(&body).unwrap();
+        assert!(
+            html.contains(r#"href="/?noredirect=1""#),
+            "ES home nav should link to /?noredirect=1 to prevent redirect loop: {html}"
         );
     }
 }
