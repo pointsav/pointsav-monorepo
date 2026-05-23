@@ -1,10 +1,20 @@
 ---
 artifact: brief
 status: active
+deferred_to: Phase 7
+deferred_reason: >
+  Q1 "Keep 7B on CPU" decision was pre-doctrine-audit (2026-05-18, same day
+  as hardening BRIEF). Corrected doctrine: Tier A = OLMo 2 1B specialist at
+  the NUC rung, not 7B on the workspace VM. GPU/cloud sections (Yo-Yo
+  training, Tier B inference) are unaffected. This plan is valid and becomes
+  operative once the $7-node fleet boots correctly (after Phase 6).
 ---
 
 # Learning Loop Master Plan — service-slm + service-content
 > **Authored:** 2026-05-18 totebox@claude-code (project-intelligence)
+> **Deferred to Phase 7** — Q1 7B-on-VM assumption corrected by doctrine audit
+> 2026-05-22 (BRIEF-flow-restructure §0). Tier A = 1B specialist at NUC rung.
+> GPU/cloud sections unaffected. Resume after Phase 6 complete.
 > **Synthesis of:** 10-agent parallel audit consolidating MASTER-PLAN-2026.md, leapfrog-2026.md, service-slm-architecture-2026.md, service-content-architecture-2026.md, tier-architecture-2026.md, sovereign-routing-comprehensive.md, universal-ai-gateway.md, service-audit-2026-05-16.md, service-slm-hardening-2026-05-18.md, d5-canonical-message-sprint1.md.
 > **Supersedes:** the eight plans above as the operative TODO list. Those plans remain authoritative for design rationale; this plan is the execution sequence.
 

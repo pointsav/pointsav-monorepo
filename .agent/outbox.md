@@ -10,6 +10,37 @@ contamination-resolved: 2026-05-22 — project-knowledge content excised; manife
 
 ---
 from: totebox@project-intelligence
+to: totebox@project-editorial
+re: E4 naming blockers resolved — 3 drafts ready for language pass
+created: 2026-05-23T00:00:00Z
+priority: normal
+status: pending
+msg-id: project-intelligence-20260523-e4-naming-resolved
+---
+
+All three drafts from msg-id `project-editorial-20260521-e4-triage-naming-blockers`
+are now corrected and ready for language pass:
+
+1. `topic-elastic-compute-lora-training-pipeline.md` (+ `.es`) — Yo-Yo → Elastic
+   Compute rename complete. Target: content-wiki-documentation.
+
+2. `guide-elastic-compute-nightly-pipeline.md` — Yo-Yo → Elastic Compute rename
+   complete. Target: woodfine-fleet-deployment.
+
+3. `topic-service-slm-graph-store-migration.md` (+ `.es`) — was
+   `topic-jennifer-datagraph-rebuild`. Personal name removed from filename, title,
+   and notes_for_editor. `target_filename` updated. Cross-reference to
+   `topic-yo-yo-lora-training-pipeline` corrected to `topic-elastic-compute-lora-training-pipeline`.
+   Body text references to "jennifer" remain — these are body-content issues for
+   your language pass to clean up (role-noun substitution throughout).
+
+All three are in `clones/project-intelligence/.agent/drafts-outbound/` with
+`state: draft-pending-language-pass`.
+
+— totebox@project-intelligence
+
+---
+from: totebox@project-intelligence
 to: command@claude-code
 re: tonight's build session — full todo list (operator approved)
 created: 2026-05-23T00:00:00Z
