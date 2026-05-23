@@ -1,13 +1,36 @@
 schema: foundry-binary-targets-v1
-cluster: project-intelligence
+cluster: project-gis
+
 targets:
-  - product_id: slm-doorman-server
-    binary_name: slm-doorman-server
-    source_crate: service-slm
-    license: Apache-2.0
-    license_tier: apache
-    class: service-package
+  - product_id: os-orchestration
+    binary_name: os-orchestration
+    source_crate: os-orchestration
+    license: FSL-1.1-ALv2
+    license_tier: fsl
+    class: os-image
+    layer: base
+    requires: []
+    platforms: [x86_64-unknown-linux-gnu]
+    soft_enabled: false   # scaffold — src does not yet exist
+
+  - product_id: app-orchestration-gis
+    binary_name: app-orchestration-gis
+    source_crate: app-orchestration-gis
+    license: FSL-1.1-ALv2
+    license_tier: fsl
+    class: app-bundle
     layer: extension
     requires: [os-console]
     platforms: [x86_64-unknown-linux-gnu]
-    soft_enabled: true
+    soft_enabled: false   # scaffold — Cargo.toml does not yet exist
+
+  - product_id: app-console-gis
+    binary_name: app-console-gis
+    source_crate: app-console-gis
+    license: FSL-1.1-ALv2
+    license_tier: fsl
+    class: app-bundle
+    layer: extension
+    requires: [os-console]
+    platforms: [x86_64-unknown-linux-gnu]
+    soft_enabled: false   # scaffold
