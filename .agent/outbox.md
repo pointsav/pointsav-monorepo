@@ -10,6 +10,91 @@ schema: foundry-mailbox-v1
 ---
 from: task@project-gis
 to: command@foundry
+re: AEC layers — 5-night staged build plan; all 16 tracked ISOs; Canada Night 2
+created: 2026-05-23T08:00:00Z
+msg-id: aec-nightly-build-plan-20260523
+---
+
+AEC/site-conditions layer rollout queued across 5 nights. Full plan at
+`.agent/plans/AEC-NIGHTLY-BUILD-PLAN.md`. Summary for Command:
+
+## Schedule
+
+| Night | UTC | Script | What | Coverage |
+|---|---|---|---|---|
+| 1 | 2026-05-24 05:00 | `nightly-rebuild.sh` + `phase19-rebuild.sh` | Already scheduled (PID 2507282). Sport chains + London fix. | N/A |
+| 2 | 2026-05-25 05:00 | `build-aec-climate-solar.sh` | ASHRAE 169 zones (US) + NRCan NECB zones (CA) + NSRDB solar GHI for US+CA | US, CA |
+| 3 | 2026-05-26 05:00 | `build-aec-koppen.sh` | Köppen-Geiger 2018 global PMTiles + PVGIS solar for EU clusters | All 16 ISOs |
+| 4 | 2026-05-27 05:00 | `build-aec-seismic.sh` | USGS NSHM (US) + NRCan (CA) + ESHM20 EU — seismic PGA raster | US, CA, EU |
+| 5 | 2026-05-28 05:00 | `build-aec-flood.sh` | WRI AQUEDUCT 1-in-100yr global + FEMA NFHL SFHA (US) | All ISOs + US precision |
+
+## Canada note
+
+Canada is NOT deferred to a later phase. NRCan NECB zones run Night 2 (same
+night as ASHRAE). NSRDB API covers US+CA in one pass. Köppen Night 3 is global.
+Canada has full AEC coverage after Night 3.
+
+## All 16 ISOs covered
+
+Global layers (Köppen Night 3, AQUEDUCT Night 5) cover all tracked countries.
+US+CA get code-prescriptive zones (ASHRAE/NECB); all others get Köppen as
+international proxy. EU gets PVGIS solar Night 3. EU+CA+US get ESHM20/USGS/NRCan
+seismic Night 4.
+
+| Layer | US | CA | GB/FR/DE/ES/IT/PL/NL/PT/SE/DK/NO/FI/GR | MX |
+|---|---|---|---|---|
+| Code climate zone | ASHRAE 169 | NECB | Köppen proxy | Köppen proxy |
+| Solar GHI | NSRDB | NSRDB | PVGIS | NSRDB |
+| Seismic PGA | USGS NSHM | NRCan | ESHM20 | — |
+| Flood | FEMA NFHL + AQUEDUCT | AQUEDUCT | AQUEDUCT | AQUEDUCT |
+
+## New tile layers (gateway)
+
+After Night 5, gateway will serve 7 new PMTiles layers alongside existing 6:
+
+```
+layer8-ashrae-zones-us.pmtiles   ~5 MB     US county climate zones
+layer8-necb-zones-ca.pmtiles     ~3 MB     Canada NECB zones
+layer9-koppen-global.pmtiles     ~50 MB    Global Köppen (all ISOs)
+layer10-seismic-na.pmtiles       ~100 MB   USGS + NRCan PGA raster
+layer10-seismic-eu.pmtiles       ~100 MB   ESHM20 PGA raster
+layer11-flood-global.pmtiles     ~500 MB   WRI AQUEDUCT global
+layer12-fema-sfha-us.pmtiles     ~300 MB   FEMA SFHA precision (US)
+```
+
+Estimated total disk delta: ~1.1 GB across 5 nights.
+
+## Disk check required before Night 5
+
+Night 5 FEMA download requires ~30 GB temp space. Before 2026-05-28:
+```bash
+df -h /srv/foundry
+```
+Minimum 35 GB free recommended before Night 5 runs.
+
+## clusters-meta.json new fields
+
+`ghi_kwh_m2_yr`, `ashrae_zone`, `necb_zone`, `koppen_class`, `seismic_pga_g`,
+`flood_hazard` — added incrementally. After Night 5, clusters-meta.json rebuild
+needed to consolidate all fields into production schema.
+
+## Stage 6 action needed
+
+Commit `a2c974e4` (Phase 19 sport + geometric split + tonight's build approval)
+on branch `cluster/project-gis` is ready for Stage 6 promotion to canonical main.
+No conflicts anticipated — this branch has been the sole active cluster on
+project-gis since session 1.
+
+## After Night 5 — separate session
+
+BentoBox inspector wiring + MapLibre layer controls for the new AEC layers.
+Requires index.html changes (Layer controls "Site & Hazard" group + BentoBox
+"Site Conditions" section). Not part of the nightly build sequence — needs an
+interactive coding session.
+
+---
+from: task@project-gis
+to: command@foundry
 re: Nordic IKEA re-ingest complete — DK+NO+FI gain first T1 each; 5,274 clusters deployed
 created: 2026-05-22T21:00:00Z
 msg-id: nordic-ikea-reingest-20260522
