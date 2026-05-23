@@ -32,13 +32,20 @@ pub fn render(
     mba: &MbaStatus,
     active: FKey,
     elapsed_secs: u64,
+    pending_pairs: u16,
 ) {
     let h = elapsed_secs / 3600;
     let m = (elapsed_secs % 3600) / 60;
     let s = elapsed_secs % 60;
 
+    let badge = if pending_pairs > 0 {
+        format!("  │  [{} pending]", pending_pairs)
+    } else {
+        String::new()
+    };
+
     let text = format!(
-        " {}@{}  │  {}  │  {}  │  {:02}:{:02}:{:02} ",
+        " {}@{}  │  {}  │  {}  │  {:02}:{:02}:{:02}{} ",
         username,
         tenant,
         mba.label(),
@@ -46,6 +53,7 @@ pub fn render(
         h,
         m,
         s,
+        badge,
     );
 
     let (bg, fg) = match mba {
