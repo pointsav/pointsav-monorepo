@@ -51,11 +51,12 @@ compilación local al crate).
 |---|---|---|
 | 1 | renderizado — GET /wiki/{slug}, /static/, /healthz | desplegado |
 | 1.1 | interfaz Wikipedia — pestañas, TOC, hatnote, selector de idioma | desplegado |
-| 2 | edición + colaboración — CodeMirror 6, JSON-LD, guardado atómico, relay yjs | desplegado |
+| 2 | edición — CodeMirror 6, JSON-LD, guardado atómico, señalización SAA, autocompletado de citas | desplegado |
 | 3 | búsqueda + feeds — Tantivy BM25, Atom, JSON Feed, sitemap, llms.txt | desplegado |
 | 4 | sync Git + MCP — git2, historial/blame/diff, grafo redb, blake3, MCP JSON-RPC 2.0, OpenAPI 3.1 | desplegado |
 | 5 núcleo | autenticación + revisión de ediciones — sesiones por cookie, argon2id, cola de revisión | desplegado |
-| 5.1+ | ACLs por página, SSO OIDC, suscripciones webhook, AsyncAPI 3.1 | planificado — condicionado a BP5 |
+| 5.1 | enrutamiento bilingüe /es/ — inicio y artículos en español, respaldo EN, redirección Accept-Language, hreflang | desplegado |
+| 5.2+ | ACLs por página, SSO OIDC, suscripciones webhook, AsyncAPI 3.1 | planificado — condicionado a BP5 |
 | 6 | resolución de wikilinks + identidad portátil | planificado |
 | 7 | interfaz de federación (direccionamiento de contenido blake3 + ActivityPub) | planificado |
 | 8 | modo de divulgación + sellado criptográfico de tiempo | planificado |
