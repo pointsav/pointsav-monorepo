@@ -37,7 +37,7 @@ for testing. See `BRIEF-flow-restructure.md` §2–§3 for the full rationale.
 ## Current state
 
 **Active.** Doorman in production on workspace VM (`local-doorman.service`).
-Tier A (llama-server, OLMo 2 1B Q4) live and verified. **260/260 tests.**
+Tier A (llama-server, OLMo 2 1B Q4) live and verified. **262/262 tests.**
 
 D4 image pipeline code complete as of 2026-05-07 (commit `0140176`): Packer template,
 OpenTofu infrastructure, on-demand scripts, operator runbook. Operator provisioning steps
