@@ -63,33 +63,13 @@ installers:
     size_mb: 118
     path: os-totebox/2026.05.144
 
-licenses:
-  - id: keys-console
-    name: "F*KEYS CONSOLE"
-    description: Operator command surface — work-orders, audits, role assignment
-    module_tag: app-keys-console
-    price_usdc: 180
+license_tiers:
+  - id: apache
+    name: Apache 2.0
+    price_usdc: "1.00"
+    description: Source-readable, fully open; may fork, redistribute, compete.
 
-  - id: command-centre
-    name: Command Centre
-    description: Portfolio overlay — cross-site dashboards, capital planning, GIS-bound analytics
-    module_tag: app-command-centre
-    price_usdc: 420
-
-  - id: business-applications
-    name: Business Applications
-    description: Tenant billing, vendor contracts, occupancy ledgers — runs against your Totebox archive
-    module_tag: app-business-applications
-    price_usdc: 240
-
-  - id: bms-bridge
-    name: BMS Bridge
-    description: Autonomous BACnet/MQTT/Modbus translator between legacy controls and Infrastructure OS
-    module_tag: service-bms-bridge
-    price_usdc: 300
-
-  - id: peak-forecast
-    name: Peak-Load Forecast
-    description: District-thermal and electrical peak-load forecasting — hourly rebuilds against utility data
-    module_tag: service-peak-forecast
-    price_usdc: 360
+  - id: fsl
+    name: FSL
+    price_usdc: "19.00"
+    description: Source-readable, non-compete restriction; converts to Apache 2.0 after two years per version.
