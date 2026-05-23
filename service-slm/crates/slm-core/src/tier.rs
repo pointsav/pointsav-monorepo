@@ -15,7 +15,8 @@ pub struct SpeculationRequest {
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum Tier {
-    /// Tier A — local OLMo 3 7B Q4 (mistral.rs / llama.cpp HTTP on this VM).
+    /// Tier A — on-device OLMo 2 1B specialist (NUC-class hardware Toteboxes only).
+    /// Unavailable on $7/mo e2-micro fleet nodes (DOCTRINE claim #54).
     Local,
     /// Tier B — Yo-Yo OLMo-3-1125-32B-Think on multi-cloud GPU burst.
     Yoyo,
