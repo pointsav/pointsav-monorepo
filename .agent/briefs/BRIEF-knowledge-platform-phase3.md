@@ -1,14 +1,14 @@
 ---
 artifact: brief
 status: active
-topic: knowledge-platform Phase 3+4 — claim-layer + DTCG token wiring
+topic: knowledge-platform Phases 1–5 complete; Phase 6 gated on GitHub rename + Doctrine amendment
 archive: project-knowledge
 created: 2026-05-22
-updated: 2026-05-22
+updated: 2026-05-23
 owner: totebox@project-knowledge
 ---
 
-# BRIEF — Knowledge Platform Phase 3+4 (claim-layer + DTCG token wiring)
+# BRIEF — Knowledge Platform Phases 1–5 complete
 
 ## Mission
 
@@ -90,15 +90,28 @@ All on monorepo `main`, all tested green (94 tests passing after E):
 | `static/style.css` | `:root` reconciled to DTCG var aliases (Phase 4 G) |
 | `static/tokens-woodfine.css` | Woodfine brand override layer (Phase 4 G) |
 
+## Done — KNOWLEDGE-PLATFORM-PLAN.md Phases 1+5 + pre-build polish (2026-05-22–23)
+
+All on monorepo `main`, full test suite green, `cargo clippy -D warnings` clean:
+
+- **K — `11d482f2`** (Phase 1 PLAN) — crate hygiene: `cargo fmt` + `clippy -D warnings` 24 fixes across 9 files; `RATIFIED_CATEGORIES` → 12 items (added "company" + "help").
+- **L — `6180b074`** (Phase 1 PLAN) — docs accuracy: `CLAUDE.md` + `ARCHITECTURE.md` updated (collab removed, Phase 5 shipped, new PLAN phases 1/3/4/5 documented).
+- **M — `f2808e57`** — NEXT.md bookkeeping (Stage 6 count → 13).
+- **I/J — `98642afb` + `76b501ff`** (Phase 5 PLAN) — bilingual `/es/` routing; 8 integration tests.
+- **N — `826d42a5`** — `openapi.yaml` accuracy pass: 15 missing routes added (Phase 5 /es/, auth/pending, `/api/complete`, `/api/preview`, `/category`, `/talk`); category enum corrected; collab flag removed.
+- **O — `c2d4010c`** — Accept-Language → `/es/` auto-redirect; `?noredirect=1` suppression; ES home lang-toggle href updated; 4 tests.
+- **P — `7a7beb46`** — README.md + README.es.md: Phase 2 collab removed, Phase 5.1 bilingual marked shipped, missing `<div>` fixed.
+- **Q — `09992b05`** — NEXT.md bookkeeping (Stage 6 count → 16).
+
 ## Stage 6 status
 
-**12 commits unpromoted on monorepo `main`** — Phase 1 (`8f51ddfc`, `959f8e6f`,
-`bf35f38d`, `3d9cd9ec`) + Phase 3 A–E (`7887f8ec`, `c41bf85e`, `77e0d0a8`,
-`dbd5d3fa`, `9bc39de4`) + Phase 4 F–H (`bce932b1`, `1ddfca98`, `8406001a`).
-Stage 6 promotion + binary rebuild are Command scope; outbox notified.
+**16 commits unpromoted on monorepo `main`** — ready for tonight's build.
+Phase 1 ×4, Phase 3 A–E ×5, Phase 4 F–H ×3, Phase 5 I–J ×2, hygiene K–L ×2, openapi N, Accept-Language O, README P, NEXT Q.
+Stage 6 (`~/Foundry/bin/promote.sh`) + binary rebuild + `sudo systemctl restart` all 3 services — Command scope.
 
 ## Next phase
 
-**Phase 5 — Bilingual /es/ routing.** Self-contained: detect `Accept-Language: es`
-+ `/es/{slug}` URL prefix; serve `{slug}.es.md` if present, else fall through to
-English. No cross-cluster dependency. Next in plan order.
+**Phase 6 — three-instance deployment split.** Gated on:
+1. `content-wiki-*` → `media-knowledge-*` GitHub rename (operator doing manually).
+2. MASTER Doctrine amendment for source-of-truth inversion (content repos canonical; GitHub downstream).
+Neither gate is Totebox scope. No Totebox work until Command confirms both are clear.
