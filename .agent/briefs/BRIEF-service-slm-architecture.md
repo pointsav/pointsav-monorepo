@@ -1,6 +1,8 @@
 ---
 artifact: brief
-status: active
+status: archived
+archived: 2026-05-23
+archived_reason: Sprint 0a prerequisites verified and executed; absorbed by BRIEF-flow-restructure.md §8.C
 ---
 
 # service-slm Architecture Analysis — 2026-05-14
