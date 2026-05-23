@@ -4,26 +4,30 @@
 > This is the **executable plan** — pick it up and run the new build at any time.
 > It consolidates the settled decisions from the four research briefs:
 > `BRIEF-CENTRE-BUBBLE-RING-2026-05-21` · `BRIEF-VARIABLE-DISTANCE-2026-05-21` ·
-> `BRIEF-CATEGORY-TAXONOMY-2026-05-22` · `BRIEF-REGIONAL-MARKETS-2026-05-22`.
-> plus `BRIEF-REGIONAL-MARKETS-2026-05-22` and the holistic review
+> `BRIEF-CATEGORY-TAXONOMY-2026-05-22` · `BRIEF-REGIONAL-MARKETS-2026-05-22` ·
 > `BRIEF-HOLISTIC-REVIEW-2026-05-22`. Those remain the research record
 > (rationale, agent reports, supersessions).
 > **This file is what the build follows.** Where the two disagree, this file wins.
 >
-> **Status: S2 COMPLETE (2026-05-22).** Pipeline ran overnight; 5,163 clusters
-> produced (T1=1,114 / T2=3,751 / T3=298). Frontend patched for §2 schema.
-> Retailer-dots bug fixed (commit 16dd4122). OD pipeline completed: real
-> `demand_rank_in_tier` values in clusters-meta.json.
+> **Status: Phase 19 IMPLEMENTATION COMPLETE (2026-05-23); Phase 19 build
+> scheduled tonight (PID 2507282, 05:00 UTC 2026-05-24).** Phase 18 produced
+> 5,702 clusters (T1=1,157/T2=4,283/T3=262). Phase 19 adds sport as 7th category,
+> geometric T2→T3 split, n≥4 T1 rule, London fix; expected output tonight:
+> T1=1,157 / T2=2,889 / T3=1,656 (committed `a2c974e4`, pwoodfine).
+> AEC layers building across 5 nights — see §10. Stage 6 needed for commits
+> `a2c974e4`, `9886d9fa`, `e1792934`, `34a48183`, `382d5576`.
 >
-> **Remaining work (next session — start here):**
+> **Remaining work:**
+> - ✓ fix `nodes` circle-radius expression (`score_final` → `tier`) — DONE
+> - ✓ §8 artifact-first TOPIC/GUIDE/DESIGN drafts — DISPATCHED `fe5148fd`
+> - §4 frontend: BentoBox two-view (`showMarketDetail`); retire ring-merge
+>   panel (`showMergedGroupPanel`); retire `drillIntoCluster` legacy path;
+>   retire layer3-radius layers
 > - §3 step 11: `generate-rm-topics.py` (one TOPIC per RM)
 > - §3 step 2/3: `region_engine.py` Nominatim override delete + `metro-markets.json`
-> - §4 frontend: single `View`/`setView()` authority; BentoBox two-view;
->   retire 1km/3km toggle + ring-merge panel + layer3-radius layers
-> - layer1-locations.pmtiles rebuild (new chains: menards-us, coop-forum-se, etc.)
-> - fix `nodes` circle-radius expression (`['get','score_final']` → `['get','tier']`)
+> - layer1-locations.pmtiles rebuild (new chains post-Phase-18)
 > - §7.1: economic-indicator block for RM records (gates wiki leg)
-> - §8: artifact-first TOPIC/GUIDE/DESIGN drafts
+> - §10 AEC: Nights 2–5 scripts to be written before each window; see §10
 
 ---
 
@@ -64,17 +68,24 @@ anchor pin. It has three orthogonal axes:
 A co-location belongs to one **Regional Market** (a municipality) which may
 nest under one **Metro Market** (a major metro).
 
-### 1.1 Categories — 6, fixed
-`hypermarket` · `hardware` · `price_club` · `lifestyle` (IKEA) — retail anchors;
+### 1.1 Categories — 7, fixed (Phase 19)
+`hypermarket` · `hardware` · `price_club` · `lifestyle` (IKEA) · `sport`
+(Decathlon-class, ≥3,000 sqm) — retail anchors;
 `medical` · `education` — civic anchors. Civic categories are **not** in the
-tier gate (descriptor / demand-stage only). No other categories.
+tier gate (descriptor / demand-stage only). Sport is a T2/T3 enhancer — it
+**does not enable T1** (see §1.2). No other categories.
 
-### 1.2 Tier rule — composition only
-- **T1 Regional** = `hypermarket ∧ hardware ∧ (price_club ∨ lifestyle)`
-- **T2 District** = `hypermarket ∧ (hardware ∨ price_club ∨ lifestyle)`
-- **T3 Local** = ≥ 2 retail categories present
-- singletons → not a co-location. **Three tiers** — T4/Fringe is undefined
-  (open decision §6).
+### 1.2 Tier rule — composition only (Phase 19)
+- **T1 Regional** = `(hypermarket ∧ hardware ∧ (price_club ∨ lifestyle))` **OR**
+  `n_retail ≥ 4` (any four retail anchor categories)
+- **T1 geometric override → T3**: `span_km < 1.25 ∧ member_count ≤ 2` demotes
+  to T3 (compact 2-anchor clusters — a quality signal, not a Regional cluster)
+- **T2 District** = `hypermarket ∧ n_retail ≥ 2` (catches hardware, lifestyle,
+  sport combinations)
+- **T3 Local** = `n_retail ≥ 2 ∧ ¬has_hyper`
+- singletons → not a co-location. **Three tiers.** Sport adds new T3 combos
+  `{hypermarket, sport}`, `{hardware, sport}` and new T2 `{hypermarket, hardware,
+  sport}` — it does NOT enable T1 on its own.
 
 ### 1.3 Membership & distance
 - **Hard membership cap = 3.0 km** max pairwise diameter, uniform — *not*
@@ -313,9 +324,120 @@ frontmatter + five research-trail fields):
 |---|---|
 | Zoom / bubble / ring, R1 bug, View authority | `BRIEF-CENTRE-BUBBLE-RING-2026-05-21.md` |
 | Tier=composition, span_km, two-stage rank, DBSCAN | `BRIEF-VARIABLE-DISTANCE-2026-05-21.md` |
-| 6 categories, per-country BRAND_FILL, SafeGraph, tier projection | `BRIEF-CATEGORY-TAXONOMY-2026-05-22.md` |
+| 7 categories, per-country BRAND_FILL, tier projection | `BRIEF-CATEGORY-TAXONOMY-2026-05-22.md` |
 | Holistic cross-check — economic/provenance layer, framing discipline | `BRIEF-HOLISTIC-REVIEW-2026-05-22.md` |
 | Regional Market, Metro Market, wiki, Top 400, BentoBox, override | `BRIEF-REGIONAL-MARKETS-2026-05-22.md` |
+| Sport as 7th category — T2/T3 only rationale, BRAND_FILL | `BRIEF-ADD-SPORT-CATEGORY-2026-05-23.md` |
+| Tier rebalance (T2→T3 split, n≥4 T1), sport agent analysis | `BRIEF-SPORT-REBALANCE-LEAPFROG-2026-05-23.md` |
+| AEC layers — nightly build plan (full detail) | `.agent/AEC-NIGHTLY-BUILD-PLAN.md` |
+| AEC parity research — EU regulatory flood, eco-regions, CONABIO | `.agent/AEC-DATA-PARITY-RESEARCH.md` |
 
 Artifacts: `work/taxonomy-census-2026-05-22.md` (150-chain census) ·
 `work/tier-projection.py` (tier counts) · `work/edmonton-area-colocations.md`.
+
+---
+
+## 10. AEC / Site-Conditions Build Plan
+
+Five-night staged rollout of AEC and site-conditions layers for gis.woodfinegroup.com.
+All nights fire at **05:00 UTC** (22:00 Vancouver PDT). Scripts live in
+`pointsav-monorepo/app-orchestration-gis/`.
+Full detail including step-by-step download sources and per-country URL list is in
+`.agent/AEC-NIGHTLY-BUILD-PLAN.md` (canonical) and `.agent/AEC-DATA-PARITY-RESEARCH.md`
+(source + licence table). This section is the BRIEF-level backup.
+
+### 10.1 Schedule
+
+| Night | UTC date | Script | What | Status |
+|---|---|---|---|---|
+| 1 | 2026-05-24 05:00 | `nightly-rebuild.sh` + `phase19-rebuild.sh` | Sport chains + London fix + geometric T2→T3 | **SCHEDULED** PID 2507282 |
+| 2 | 2026-05-25 05:00 | `build-aec-climate-solar.sh` | ASHRAE 169 (US) + NECB (CA) + EU regulatory climate zones + NSRDB/PVGIS solar GHI | script to write |
+| 3 | 2026-05-26 05:00 | `build-aec-koppen-ecozones.sh` | Köppen-Geiger 2018 global + Resolve Ecoregions 2017 (CC BY 4.0) + EEA Biogeo EU + EPA L3 US + PVGIS EU solar | script to write |
+| 4 | 2026-05-27 05:00 | `build-aec-seismic.sh` | USGS NSHM (US) + NRCan (CA) + ESHM20 EU seismic PGA + GWL_FCS30 global wetland | script to write |
+| 5 | 2026-05-28 05:00 | `build-aec-flood.sh` | WRI AQUEDUCT global + FEMA NFHL SFHA (US) + EU regulatory flood (EA/Géorisques/SNCZI/IdroGEO + INSPIRE WFS) + GWIS/EFFIS wildfire | script to write |
+
+⚠ **Before Night 5:** verify ≥35 GB free (`df -h /srv/foundry`); submit EFFIS
+wildfire data request at
+`https://forest-fire.emergency.copernicus.eu/applications/data-and-services`
+(GWIS FWI raster is the automatic fallback if not approved in time).
+
+### 10.2 New PMTiles layers (gateway `tiles/`)
+
+| Layer file | Content | Coverage | Night |
+|---|---|---|---|
+| `layer8-ashrae-zones-us.pmtiles` | ASHRAE 169 / IECC county zones | US | 2 |
+| `layer8-necb-zones-ca.pmtiles` | NRCan NECB HOT2000 zones | CA | 2 |
+| `layer8-eu-climate-zones.pmtiles` | National building-code zones (build-by-join) | FR/ES/IT/DE/GR/PT/FI/PL/SE | 2 |
+| `layer9-koppen-global.pmtiles` | Beck et al. 2018 Köppen-Geiger 1km | All 16 ISOs | 3 |
+| `layer13-ecoregions-global.pmtiles` | Resolve Ecoregions 2017 (CC BY 4.0) | All 16 ISOs | 3 |
+| `layer14-biogeographic-eu.pmtiles` | EEA Biogeographical Regions 2016 | EU (Habitats Directive ref) | 3 |
+| `layer14-ecoregions-us.pmtiles` | EPA Level III ecoregions | US precision | 3 |
+| `layer10-seismic-na.pmtiles` | USGS NSHM 2023 + NRCan 2015 PGA | US + CA | 4 |
+| `layer10-seismic-eu.pmtiles` | ESHM20 PGA raster | EU all ISOs | 4 |
+| `layer11-flood-global.pmtiles` | WRI AQUEDUCT 3.0 1-in-100yr riverine | Global (CA background) | 5 |
+| `layer12-fema-sfha-us.pmtiles` | FEMA NFHL SFHA zones | US regulatory precision | 5 |
+| `layer12-flood-eu-regulatory.pmtiles` | EU Floods Directive shapefiles (per-country) | GB/FR/ES/IT + INSPIRE WFS | 5 |
+| `layer15-wildfire-global.pmtiles` | GWIS FWI or EFFIS (if approved) | Global | 5 |
+
+Total estimated disk delta after Night 5: ~1.35 GB.
+
+### 10.3 New clusters-meta.json fields
+
+| Field | Source | Night |
+|---|---|---|
+| `ashrae_zone` | PNNL county→zone CSV | 2 |
+| `necb_zone` | NRCan HOT2000 MapServer | 2 |
+| `eu_climate_zone` | Build-by-join national codes + GISCO LAU2 | 2 |
+| `ghi_kwh_m2_yr` | NREL NSRDB (US/CA/MX) / PVGIS (EU) | 2+3 |
+| `koppen_class` | Beck 2018 global | 3 |
+| `ecoregion_name` · `ecoregion_biome` | Resolve 2017 global | 3 |
+| `epa_l3_ecoregion` | EPA Level III (US only) | 3 |
+| `seismic_pga_g` | USGS/NRCan/ESHM20/CENAPRED | 4 |
+| `wetland_class` | GWL_FCS30 30m global (CC BY 4.0) | 4 |
+| `flood_hazard` | AQUEDUCT + FEMA (US) + EA/Géorisques/SNCZI/IdroGEO (EU) | 5 |
+| `wildfire_hazard` | GWIS FWI or EFFIS | 5 |
+
+### 10.4 Country coverage (regulatory-grade where bold)
+
+| ISO | Code zone | Solar GHI | Seismic | Flood | Ecoregion |
+|---|---|---|---|---|---|
+| US | **ASHRAE 169** | NSRDB | **USGS NSHM** | **FEMA NFHL** + AQUEDUCT | EPA L3 + Resolve |
+| CA | **NECB** | NSRDB | **NRCan** | Future Flood Susceptibility + AQUEDUCT | Resolve |
+| MX | INEGI raster (CONABIO CC BY-NC blocked) | NSRDB | CENAPRED (conditional) | AQUEDUCT | Resolve |
+| GB | HadUK-Grid ref | PVGIS | ESHM20 | **EA Flood Map OGL** | Resolve + EEA Biogeo |
+| FR | **RE2020** | PVGIS | ESHM20 | **Géorisques TRI 2020** | Resolve + EEA Biogeo |
+| DE | TRY 2017 | PVGIS | ESHM20 | LAWA WFS | Resolve + EEA Biogeo |
+| ES | **CTE DB-HE** | PVGIS | ESHM20 | **SNCZI T100** | Resolve + EEA Biogeo |
+| IT | **DPR 412/1993** | PVGIS | ESHM20 | **IdroGEO PAI** | Resolve + EEA Biogeo |
+| PL | WT 2021 | PVGIS | ESHM20 | INSPIRE WFS | Resolve + EEA Biogeo |
+| NL/DK/NO/FI/GR/PT/SE | National code (where applicable) | PVGIS | ESHM20 | INSPIRE WFS | Resolve + EEA Biogeo |
+
+**Bold** = regulatory-grade (not modelled proxy).
+
+### 10.5 Parity decisions
+
+- **EU flood is regulatory-grade** for GB/FR/ES/IT (direct national shapefiles).
+  All remaining EU ISOs ingest via EU Floods Directive INSPIRE WFS. This matches
+  FEMA-quality for those markets — significantly above AQUEDUCT-only.
+- **Canada has no FEMA equivalent** — FHIMP national programme runs 2024–2028.
+  Using NRCan Future Flood Susceptibility 2024 (XGBoost model, OGL-Canada) as proxy.
+- **CONABIO (MX eco-regions/climate) is CC BY-NC** — blocked for commercial use.
+  Substitute: INEGI climate raster for NMX-C-460 zone join; Resolve 2017 for eco-regions.
+- **EFFIS wildfire** requires formal data request — GWIS FWI raster is the automatic
+  fallback. Both paths are handled in `build-aec-flood.sh`; the script chooses based
+  on presence of the EFFIS file at run time.
+
+### 10.6 After Night 5 — frontend wiring (separate session)
+
+Not a nightly build. Requires an interactive coding session on `index.html`:
+
+1. MapLibre source + layer entries for all 13 new PMTiles layers
+2. **"Site & Hazard" collapsible group** in the layer controls panel
+3. **BentoBox "Site Conditions" section** per cluster — displaying:
+   - Climate Zone (ASHRAE / RE2020 / CTE / Köppen class)
+   - Solar GHI (kWh/m²/yr)
+   - Ecoregion (Resolve 2017 biome name)
+   - Seismic PGA (g)
+   - Flood Exposure (zone label per source)
+   - Wetland Class (GWL_FCS30 or None)
+4. **Wind/snow:** ATC Hazards API point-lookup on cluster click (no tile layer needed)
