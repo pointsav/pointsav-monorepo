@@ -55,3 +55,27 @@ impl Complexity {
         }
     }
 }
+
+/// Caller's latency contract for this request.
+/// Used alongside `Complexity` and node-class to select a tier.
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum LatencyClass {
+    /// Respond as fast as possible; prefer on-device Tier A when available.
+    #[default]
+    Interactive,
+    /// Can tolerate seconds of queuing; prefer Tier B for quality.
+    Background,
+    /// Nightly batch work; always routes via Tier B (route_yoyo_only pattern).
+    Batch,
+}
+
+impl LatencyClass {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            LatencyClass::Interactive => "interactive",
+            LatencyClass::Background => "background",
+            LatencyClass::Batch => "batch",
+        }
+    }
+}
