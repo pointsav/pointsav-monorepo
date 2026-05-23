@@ -38,6 +38,7 @@ import sys
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 EDITORIAL_QA_DIR = os.path.normpath(os.path.join(SCRIPT_DIR, "..", "editorial-qa"))
 BANNED_VOCAB_FILE = os.path.join(EDITORIAL_QA_DIR, "banned-vocabulary.txt")
+CITATIONS_YAML = os.path.expanduser("~/Foundry/citations.yaml")
 
 RESEARCH_TRAIL_FIELDS = [
     "research_done_count",
@@ -53,6 +54,13 @@ RESEARCH_PROVENANCE_ENUM = {
 DOC_REQUIRED_FIELDS = ["title", "slug", "category"]
 TERMINAL_SECTIONS = ["see also", "references", "external links"]
 SENTENCE_HARD_CEILING = 45  # Gate-0 rule 1 — expansion-sentence ceiling
+CONFIDENCE_VALUES = {"established", "reported", "projected", "contested", "structural"}
+CLAIM_REQUIRED_PLANNED = {"planned", "intended", "may", "target"}
+CLAIM_KNOWN_FIELDS = {"id", "confidence", "cites", "valid_at", "depends_on"}
+
+CLAIM_OPEN_RE = re.compile(r"<!--claim\b([^>]*)-->", re.S)
+CLAIM_CLOSE_RE = re.compile(r"<!--/claim-->")
+CLAIM_FIELD_RE = re.compile(r"(\w+)=(\S+)")
 
 # Fallback banned list if the data file is missing — keeps the linter
 # self-contained. The data file, when present, is authoritative.
@@ -74,6 +82,131 @@ def load_banned_vocab():
             if line and not line.startswith("#"):
                 terms.append(line.lower())
     return terms or list(DEFAULT_BANNED)
+
+
+def load_citations_registry():
+    """Return citation IDs from citations.yaml, or None if unavailable."""
+    if not os.path.isfile(CITATIONS_YAML):
+        return None
+    ids = set()
+    with open(CITATIONS_YAML, encoding="utf-8") as fh:
+        for line in fh:
+            m = re.match(r"^([a-z0-9][a-z0-9_.-]*):\s*$", line.strip())
+            if m:
+                ids.add(m.group(1))
+    return ids or None
+
+
+def _parse_claim_list(raw):
+    """Parse a [a,b,c] or bareword value into a list of strings."""
+    raw = raw.strip()
+    if raw.startswith("[") and raw.endswith("]"):
+        inner = raw[1:-1].strip()
+        return [x.strip() for x in inner.split(",") if x.strip()] if inner else []
+    return [raw] if raw else []
+
+
+def validate_claims(body, citations_registry):
+    """Claim-validation pass per claim-authoring-convention §9.
+
+    Returns (errors, warns). citations_registry is a set of valid IDs from
+    citations.yaml, or None if the file is unavailable (skips cites resolution).
+    """
+    errors = []
+    warns = []
+
+    # Collect all markers in source order.
+    markers = []
+    for m in CLAIM_OPEN_RE.finditer(body):
+        markers.append(("open", m.start(), m.end(), m.group(1)))
+    for m in CLAIM_CLOSE_RE.finditer(body):
+        markers.append(("close", m.start(), m.end(), ""))
+    markers.sort(key=lambda x: x[1])
+
+    # Match opens to closes, build claim list.
+    claims = []
+    open_stack = []
+    for kind, start, end, attrs in markers:
+        if kind == "open":
+            open_stack.append((start, end, attrs))
+        else:
+            if not open_stack:
+                errors.append("claim: unmatched <!--/claim--> at body offset %d" % start)
+            else:
+                o_start, o_end, raw_attrs = open_stack.pop()
+                fields = {fm.group(1): fm.group(2)
+                          for fm in CLAIM_FIELD_RE.finditer(raw_attrs)}
+                claims.append({
+                    "span_start": o_start, "span_end": end,
+                    "text": body[o_end:start],
+                    "id": fields.get("id"),
+                    "confidence": fields.get("confidence"),
+                    "cites_raw": fields.get("cites", "[]"),
+                    "depends_on_raw": fields.get("depends_on", "[]"),
+                    "unknown": [k for k in fields if k not in CLAIM_KNOWN_FIELDS],
+                })
+    for o_start, _, _ in open_stack:
+        errors.append("claim: unclosed <!--claim--> at body offset %d" % o_start)
+
+    if not claims:
+        return errors, warns
+
+    # Overlap check.
+    by_start = sorted(claims, key=lambda c: c["span_start"])
+    for i in range(len(by_start) - 1):
+        if by_start[i + 1]["span_start"] < by_start[i]["span_end"]:
+            errors.append("claim: %r overlaps %r" % (
+                by_start[i].get("id") or "?",
+                by_start[i + 1].get("id") or "?"))
+
+    seen_ids = {}
+    for idx, claim in enumerate(claims):
+        cid = claim["id"]
+        conf = claim["confidence"]
+        cites = _parse_claim_list(claim["cites_raw"])
+        text = claim["text"]
+        label = cid or ("claim #%d" % (idx + 1))
+
+        if not cid:
+            errors.append("claim #%d: missing required field: id" % (idx + 1))
+        if not conf:
+            errors.append("claim %r: missing required field: confidence" % label)
+        elif conf not in CONFIDENCE_VALUES:
+            errors.append("claim %r: unknown confidence value %r" % (label, conf))
+
+        if cid:
+            if cid in seen_ids:
+                errors.append("claim: duplicate id %r (first at claim #%d)" % (cid, seen_ids[cid]))
+            else:
+                seen_ids[cid] = idx + 1
+
+        if conf and conf != "structural" and not cites:
+            errors.append("claim %r: cites must be non-empty unless confidence=structural" % label)
+
+        if citations_registry is not None:
+            for cite_id in cites:
+                if cite_id not in citations_registry:
+                    errors.append("claim %r: cites ID %r not in citations.yaml" % (label, cite_id))
+
+        if conf == "projected":
+            if not any(w in text.lower() for w in CLAIM_REQUIRED_PLANNED):
+                errors.append(
+                    "claim %r: confidence=projected but text lacks "
+                    "planned/intended/may/target language" % label)
+
+        for uf in claim["unknown"]:
+            warns.append("claim %r: unknown field %r (ignored)" % (label, uf))
+
+    # depends_on resolution (same-file only; cross-file references get a warn).
+    for claim in claims:
+        label = claim["id"] or "?"
+        for dep in _parse_claim_list(claim["depends_on_raw"]):
+            if ":" in dep:
+                warns.append("claim %r: cross-file depends_on %r cannot be validated at lint time" % (label, dep))
+            elif dep not in seen_ids:
+                errors.append("claim %r: depends_on %r not found in this file" % (label, dep))
+
+    return errors, warns
 
 
 def split_frontmatter(text):
@@ -208,7 +341,7 @@ def banned_hits(body, banned):
     return hits
 
 
-def lint_file(path, banned):
+def lint_file(path, banned, citations_registry=None):
     """Lint one markdown file. Return (errors, warns) as lists of strings."""
     errors, warns = [], []
     with open(path, encoding="utf-8") as fh:
@@ -267,6 +400,10 @@ def lint_file(path, banned):
         warns.append("sentence is %d words (ceiling ~%d): %s"
                      % (wc, SENTENCE_HARD_CEILING, excerpt))
 
+    claim_errors, claim_warns = validate_claims(body, citations_registry)
+    errors.extend(claim_errors)
+    warns.extend(claim_warns)
+
     return errors, warns
 
 
@@ -293,6 +430,9 @@ def main(argv=None):
     args = parser.parse_args(argv)
 
     banned = load_banned_vocab()
+    citations_registry = load_citations_registry()
+    if citations_registry is None:
+        print("note: citations.yaml not found — cites resolution skipped", file=sys.stderr)
     files = collect_markdown(args.paths)
     if not files:
         print("no markdown files to lint", file=sys.stderr)
@@ -300,7 +440,7 @@ def main(argv=None):
 
     total_err = total_warn = 0
     for path in files:
-        errors, warns = lint_file(path, banned)
+        errors, warns = lint_file(path, banned, citations_registry)
         total_err += len(errors)
         total_warn += len(warns)
         if errors or warns:

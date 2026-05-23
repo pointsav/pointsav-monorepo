@@ -1,7 +1,16 @@
 # Open items — project-editorial
 
-> Persistent TODO tracker. Updated at session end. Last updated: 2026-05-22.
+> Persistent TODO tracker. Updated at session end. Last updated: 2026-05-23.
 > Completed items remain here (checked) for one session before archiving to `archive/`.
+
+---
+
+## DONE — 2026-05-23 session
+
+- [x] **Category placement fix** — capability-ledger-substrate + merkle-proofs-as-substrate-primitive moved from `architecture/` to `substrate/`; slug, frontmatter, `_index.md` + `_index.es.md` MOC entries corrected (`69c6030`)
+- [x] **Wikilink audit** — 0 broken links across all 3 wikis (post-category-fix verification)
+- [x] **featured-topic.yaml candidates list** — added `capability-ledger-substrate` + 11 other rotation-pool candidates
+- [x] **Claim-validation linter pass** — `editorial-lint.py` now carries claim-authoring-convention §9 checks: id/confidence required, id uniqueness, cites non-empty unless structural, cites resolution against citations.yaml, depends_on resolution, projected-language check
 
 ---
 
@@ -60,10 +69,9 @@
 
 - [ ] **Editorial plan — A4 close-out complete.** Track A (project-editorial execution) + Track D (except D5) + E1/E4/E-ruleset done; recorded in `BRIEF-KNOWLEDGE-PLATFORM-EDITORIAL-PLAN.md` §12. Plan kept `status: active` — archival is operator-gated per §9.
 - [ ] **D5 — apprenticeship verdict-signing loop** — joint with project-intelligence; needs an operator signing identity. Operator action.
-- [ ] **Claim-validation linter pass** — add claim-authoring-convention §9 checks to `editorial-lint.py` (Track D follow-up).
+- [x] **Claim-validation linter pass** — added claim-authoring-convention §9 checks to `editorial-lint.py` (Track D complete; `2026-05-23`).
 - [ ] **E2 / E3 / E5 / E-claim / E-rename** — cross-cluster handshakes; E-rename gated on the operator's `content-wiki-* → media-knowledge-*` GitHub rename.
 - [ ] **A1 review pass** — review Main Page lede prose when project-knowledge branches each Main Page.
-- [ ] **Inbox triage** — pending language-pass requests: project-system (capability-ledger + merkle-proofs TOPICs, 6 README drafts), Command (3 LICENSE artifacts).
 - [ ] **Old-plan deletions parked** — execute after the overhaul ships, on operator go-ahead (delete set in `BRIEF-KNOWLEDGE-PLATFORM-EDITORIAL-PLAN.md` §9)
 
 ---
