@@ -1,0 +1,14 @@
+schema: foundry-binary-targets-v1
+cluster: project-design
+
+targets:
+  - product_id: app-privategit-design
+    binary_name: app-privategit-design
+    source_crate: app-privategit-design
+    license: FSL-1.1-ALv2
+    license_tier: fsl
+    class: app-bundle
+    layer: extension
+    requires: [os-console]
+    platforms: [x86_64-unknown-linux-gnu]
+    soft_enabled: false   # scaffold — Cargo.toml does not yet exist
