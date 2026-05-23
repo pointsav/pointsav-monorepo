@@ -1,12 +1,20 @@
 ---
 schema: foundry-plan-v1
-archive: project-proofreader
+archive: project-console
 title: "Leapfrog 2030 — TUI Pivot Strategic Plan"
 created: 2026-05-16
-status: active
-authors: [totebox@project-proofreader, opus-research-audit-2026-05-16]
+updated: 2026-05-23
+status: archived
+authors: [totebox@project-console, opus-research-audit-2026-05-16]
 doctrine_anchors: [claim-45, claim-49, claim-54, SYS-ADR-07, SYS-ADR-10, SYS-ADR-19]
 ---
+
+> **ARCHIVED 2026-05-23.** Superseded by `BRIEF-os-console-platform.md` (architecture)
+> and `BRIEF-leapfrog-2030-coding.md` (coding roadmap). **Part 6 (Teardown Plan — sudo
+> commands for web UI services, nginx vhost, cert) remains the Command Session reference.**
+> All other sections are superseded. Note: Doorman port in Part 1 audit table shows 9080
+> (stale) — correct port is 8011 (see BRIEF-os-console-platform.md §10). Part 7 phase
+> numbers are the old sequence — do not use them.
 
 # Leapfrog 2030 — Project Proofreader TUI Pivot
 ## Strategic Plan & Long-Term Development Roadmap

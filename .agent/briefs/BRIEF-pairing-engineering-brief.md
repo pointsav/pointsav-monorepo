@@ -3,9 +3,15 @@ schema: foundry-plan-v1
 archive: project-console
 topic: pairing-engineering-brief
 created: 2026-05-21
-status: draft
+updated: 2026-05-23
+status: archived
 cites: []
 ---
+
+> **ARCHIVED 2026-05-23.** Pre-implementation research. Pairing Phases 1–2 shipped
+> (d6267e39, 30874995). Phase 3+4 implementation guide consolidated into
+> `BRIEF-pairing-phase3-4.md`. §5 (terminal graphics) and §8 Phase 3–4 notes are the
+> sections still referenced by the new brief.
 
 # Engineering Brief — Zero-Jargon Device Pairing & Terminal Graphics for os-console
 

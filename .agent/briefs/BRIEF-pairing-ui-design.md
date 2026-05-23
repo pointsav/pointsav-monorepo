@@ -3,9 +3,14 @@ schema: foundry-plan-v1
 archive: project-console
 topic: pairing-ceremony-ui-design
 created: 2026-05-21
-status: draft
+updated: 2026-05-23
+status: archived
 cites: []
 ---
+
+> **ARCHIVED 2026-05-23.** Pre-implementation research. Pairing Phases 1–2 shipped
+> (d6267e39, 30874995). §2.1 Act 2 (operator panel layout) and §3 (colour palette + design
+> language) referenced by `BRIEF-pairing-phase3-4.md`.
 
 # Pairing Ceremony & Holistic TUI Design — UI Design Brief
 

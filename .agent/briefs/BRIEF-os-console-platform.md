@@ -1,10 +1,11 @@
 ---
 schema: foundry-plan-v1
-archive: project-proofreader
+archive: project-console
 title: "os-console Platform Architecture"
 created: 2026-05-20
+updated: 2026-05-23
 status: active
-authors: [totebox@project-proofreader, claude-sonnet-4-6]
+authors: [totebox@project-console, claude-sonnet-4-6]
 doctrine_anchors: [claim-45, claim-49, claim-54, SYS-ADR-07, SYS-ADR-10, SYS-ADR-19]
 supersedes: tui-pivot-2030.md (Phase 7 deferral section)
 ---
@@ -44,8 +45,8 @@ without being the OS itself. The cartridges are not VMs; they are compiled libra
 ## 2. The base chassis: `app-console-keys`
 
 `app-console-keys` is the always-installed base chassis for `os-console`. Located in
-`pointsav-monorepo/app-console-keys/` — Reserved-folder (no Cargo.toml yet; Phase 1
-creates it).
+`pointsav-monorepo/app-console-keys/` — Active (Phase 1 COMPLETE 2026-05-21; Cargo.toml
++ lib crate present).
 
 **Analogy:** `app-console-keys` is to `os-console` as `service-fs` is to `os-totebox`.
 It is the minimum required component. If a user only wants to connect to one Totebox
@@ -201,9 +202,9 @@ pointsav-monorepo/
 └── [additional system-*, tool-* as needed]
 ```
 
-**Phase 0 refactor note:** `app-console-content/src/main.rs` (standalone spike binary)
-→ `app-console-content/src/lib.rs` (exports `ContentCartridge`). The russh SSH server
-code in main.rs moves to `os-console/src/main.rs` behind `#[cfg(feature = "ssh-server")]`.
+**Phase 1 note (COMPLETE 2026-05-21):** `app-console-content/src/main.rs` (Phase 0 spike)
+refactored to `app-console-content/src/lib.rs` (exports `ContentCartridge`). `os-console`
+is the bin crate; russh SSH server feature-gated behind `#[cfg(feature = "ssh-server")]`.
 
 ---
 
