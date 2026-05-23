@@ -60,9 +60,9 @@ under `.agent/plans/archive/`.
 
 - [x] Phase 4: `build_doorman()` node-class gate + `SLM_FORCE_BROKER_MODE`; `select_tier()` Micro invariant; `/readyz` reports `node_class`/`tier_a`/`tier_a_reason`/`ai_available`; `local-doorman.service` `Requires=` → `Wants=`. [2026-05-22 totebox@claude-code]
 - [x] Phase 5: `tests/micro_node.rs` (5 integration tests); 8 `SqliteGraphStore` round-trip tests; `scripts/run-micro-sandbox.sh` cgroup sandbox. 260/260 tests pass. Commit `32213020`. [2026-05-22 totebox@claude-code]
-- [ ] **Stage 6 promote** — local main is 17+ commits ahead of origin/main;
-  Command must `git rebase origin/main` then `bin/promote.sh`. [2026-05-22 totebox@claude-code]
-- [ ] Phase 6 (deferred): `latency_class` field in `slm-core`; broker discipline (`BackendLifecycle` trait); Tier A model drift reconciliation; GF-1/GF-2 async audit + timeouts. [2026-05-22 totebox@claude-code]
+- [ ] **Stage 6 promote** — 2 commits ahead of origin/main (post-session); Command must `bin/promote.sh`. [2026-05-23 totebox@claude-sonnet-4-6]
+- [ ] **Tonight's build session** — full todo in outbox (`project-intelligence-20260523-build-session-todo`) + BRIEF-vm-hardening-and-consolidation.md. Key: stop local-slm, fix service-content Ring 2/3, deploy Phase 4/5 binaries. [2026-05-23 totebox@claude-sonnet-4-6]
+- [ ] Phase 6 (deferred): `latency_class` in `slm-core`; `BackendLifecycle` trait; Tier A model drift; GF-1/GF-2 async audit + timeouts. [2026-05-22 totebox@claude-code]
 
 ### Doctrine conflict — claim #49 vs. tier-zero working-set convention
 
