@@ -1070,6 +1070,7 @@
         hideCatchment();
         applyView();
         if (map.getSource('proximity-circle-src')) map.getSource('proximity-circle-src').setData({ type: 'FeatureCollection', features: [] });
+        if (map.getSource('proximity-vignette-src')) map.getSource('proximity-vignette-src').setData({ type: 'FeatureCollection', features: [] });
         if (map.getSource('proximity-merged-label-src')) map.getSource('proximity-merged-label-src').setData({ type: 'FeatureCollection', features: [] });
         // Restore Co-location Level paint and filters (applyView handles visibility)
         if (map.getLayer('nodes')) {
@@ -1330,6 +1331,9 @@
             }
         }
         map.getSource('proximity-circle-src').setData({ type: 'FeatureCollection', features: circles });
+        if (map.getSource('proximity-vignette-src')) {
+            map.getSource('proximity-vignette-src').setData({ type: 'FeatureCollection', features: [] });
+        }
         if (map.getSource('proximity-merged-label-src')) {
             map.getSource('proximity-merged-label-src').setData({ type: 'FeatureCollection', features: [] });
         }
@@ -1580,6 +1584,7 @@
             .then(data => {
                 clusterMeta  = data;
                 clusterIndex = new Map(data.map(c => [c.id, c]));
+                if (overviewActive) showOverview(); // refresh tier badge counts now that data is ready
                 // Populate the 'data' GeoJSON source — eliminates tile-fetch latency during zoom
                 const nodesGeoJSON = {
                     type: 'FeatureCollection',
@@ -1606,6 +1611,17 @@
             type: 'geojson',
             data: { type: 'FeatureCollection', features: [] },
         });
+        // World-minus-ring mask — populated on drill, cleared on overview
+        map.addSource('proximity-vignette-src', {
+            type: 'geojson',
+            data: { type: 'FeatureCollection', features: [] },
+        });
+        // proximity-vignette: dark spotlight — dims world outside the selected ring
+        map.addLayer({
+            id: 'proximity-vignette', type: 'fill',
+            source: 'proximity-vignette-src',
+            paint: { 'fill-color': '#0b1220', 'fill-opacity': 0.22 },
+        });
         // proximity-fill: tier-colored subtle fill + click target
         map.addLayer({
             id: 'proximity-fill', type: 'fill',
@@ -1629,11 +1645,12 @@
             id: 'proximity-line-t234', type: 'line',
             source: 'proximity-circle-src',
             filter: ['!=', ['get', 'rank'], 3],
-            layout: { visibility: 'none', 'line-dasharray': [3, 2] },
+            layout: { visibility: 'none' },
             paint: {
                 'line-color': ['match', ['get', 'rank'], 2, '#54924E', '#EAB308'],
                 'line-width': 1.5,
                 'line-opacity': 0.8,
+                'line-dasharray': [3, 2],
             },
         });
 
@@ -1672,6 +1689,8 @@
                 'text-offset': [0, -1.6],
                 'text-anchor': 'bottom',
                 'text-font': ['Noto Sans Regular'],
+                'text-allow-overlap': true,
+                'text-ignore-placement': true,
             },
             paint: {
                 'text-color': '#0b1220',
@@ -1989,6 +2008,9 @@
                 const circle = makeCircleGeoJSON(coords, km);
                 circle.features[0].properties = { cluster_id: selectedClusterId, rank: 4 - v3tier, merged_count: 1, member_ids: selectedClusterId };
                 map.getSource('proximity-circle-src').setData({ type: 'FeatureCollection', features: circle.features });
+            }
+            if (map.getSource('proximity-vignette-src')) {
+                map.getSource('proximity-vignette-src').setData({ type: 'FeatureCollection', features: [makeMaskGeoJSON(coords, km)] });
             }
             if (map.getSource('proximity-merged-label-src')) {
                 map.getSource('proximity-merged-label-src').setData({ type: 'FeatureCollection', features: [] });
