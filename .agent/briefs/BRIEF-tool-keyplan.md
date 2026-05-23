@@ -31,8 +31,9 @@ computed bounding box, and compliance record
 | `pointsav-monorepo/tool-keyplan/Cargo.toml` | committed | Crate manifest (v0.0.1) |
 | `pointsav-monorepo/tool-keyplan/src/main.rs` | committed | Engine implementation |
 | `pointsav-monorepo/tool-keyplan/configs/po-1.toml` | committed | PO-1 input config |
-| `pointsav-monorepo/Cargo.toml` | modified | tool-keyplan added to members |
+| `pointsav-monorepo/Cargo.toml` | committed | tool-keyplan added to members |
 | `pointsav-design-system/tokens/bim/interior.dtcg.json` | committed | Furniture + circulation BIM Objects |
+| `pointsav-design-system/tokens/bim/key-plans.dtcg.json` | committed | PO-1 structured furniture_refs |
 
 ## Furniture BIM Objects — PO-1 (interior.dtcg.json)
 
@@ -98,7 +99,7 @@ Written → /tmp/po-1-out.dtcg.json
 
 - [ ] Refine po-1.toml positions from `DISCOVERY_MCorp_Sketches_Key Plans_Private Office.pdf`
 - [ ] Extend to PO-2 (po-2.toml) and PO-3 (po-3.toml) using same furniture tokens
-- [ ] Update `key-plans.dtcg.json` PO-1 entry to use structured `furniture_refs` instead of inline strings
+- [x] Update `key-plans.dtcg.json` PO-1 entry to use structured `furniture_refs` — done 2026-05-23
 - [ ] Aisle clearance check (875 mm between furniture bounding boxes) — v0.0.2
 - [ ] Extend to Medical, Laboratory, Business, Academic, Civic interior.dtcg.json tokens
 
