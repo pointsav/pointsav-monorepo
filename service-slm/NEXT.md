@@ -1,8 +1,28 @@
 # NEXT.md — service-slm
 
-> Last updated: 2026-05-21 (is_busy fix + deploy + local flow verified + perf tuning)
+> Last updated: 2026-05-23 (Phase 6 AUTO-TODO: LatencyClass, BackendLifecycle, GF-1, GF-2)
 > Read at session start. Update before session end so the next
 > session knows where to pick up.
+
+---
+
+## SESSION 2026-05-23 — PHASE 6 AUTO-TODO COMPLETE
+
+**Shipped (5 commits, 262/262 tests):**
+- [x] `refactor(slm)`: `LatencyClass` enum (`Interactive`/`Background`/`Batch`) in slm-core; `select_tier()` Batch→Yoyo first; 2 new routing tests.
+- [x] `refactor(slm)`: `BackendLifecycle` trait; `AppState.idle_monitor: Option<Arc<dyn BackendLifecycle>>`; `IdleMonitorHandle`; `main.rs` refactored.
+- [x] `fix(slm)`: GF-1 — `AuditLedger` made `Clone` (Arc mutex); `write_audit()` fires append into `spawn_blocking`.
+- [x] `fix(slm)`: GF-2 — `LocalTierClient` inference client `connect_timeout(5s)` + `timeout(180s)`.
+- [x] doc: `SLM_LOCAL_MODEL` default → `"olmo-2-0425-1b-instruct"`; `Tier::Local` doc corrected; CLAUDE.md test count updated.
+
+**IMMEDIATE — Command Session:**
+- [ ] Stage 6 promote (~11 commits on this session alone, total ahead by more). Rebase required per inbox `command-20260520-stage6-rebase-required` — confirm before promote.
+- [ ] After promote: `bin/sync-local.sh --all` + rebuild + redeploy `slm-doorman-server` on workspace VM.
+- [ ] Update `local-doorman.service` env to include `SLM_LOCAL_MODEL=olmo-2-0425-1b-instruct` if not already set.
+
+**Deferred (Command Session scope, not Totebox):**
+- [ ] Rebuild `slm-yoyo` Packer image for Phase-0 G3/G17 (spot config).
+- [ ] `scripts/lora-update.sh` — remains HARD DISABLED; operator approval + `SLM_LORA_AUTO_ENABLE=true` required before activation.
 
 ---
 
