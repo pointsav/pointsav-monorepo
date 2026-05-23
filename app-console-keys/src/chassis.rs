@@ -153,6 +153,11 @@ impl AppConsoleKeys {
         }
 
         let elapsed = self.started.elapsed().as_secs();
+        let pending_pairs = self
+            .cartridges
+            .get(&FKey::F11)
+            .map(|c| c.pending_badge())
+            .unwrap_or(0);
         crate::widgets::status_bar::render(
             frame,
             chunks[2],
@@ -161,6 +166,7 @@ impl AppConsoleKeys {
             &self.mba_status,
             self.active,
             elapsed,
+            pending_pairs,
         );
     }
 
@@ -482,6 +488,9 @@ impl AppConsoleKeys {
             .unwrap_or_default();
         for ev in events {
             self.apply_pairing_event(ev);
+        }
+        for c in self.cartridges.values_mut() {
+            c.tick();
         }
     }
 

@@ -160,9 +160,7 @@ impl Cartridge for SystemCartridge {
         let heading = Paragraph::new(Line::from(vec![
             Span::styled(
                 "Pending Connection Requests",
-                Style::default()
-                    .fg(Color::White)
-                    .add_modifier(Modifier::BOLD),
+                Style::default().fg(Color::White).add_modifier(Modifier::BOLD),
             ),
             Span::styled(
                 format!("  ({})", self.pending.len()),
@@ -187,7 +185,10 @@ impl Cartridge for SystemCartridge {
                     let marker = if i == self.selected { ">" } else { " " };
                     let ts = req.created_at.get(..19).unwrap_or(&req.created_at);
                     let line = Line::from(vec![
-                        Span::styled(format!(" {marker} "), Style::default().fg(Color::Cyan)),
+                        Span::styled(
+                            format!(" {marker} "),
+                            Style::default().fg(Color::Cyan),
+                        ),
                         Span::styled(
                             format!("{:<14}", req.code),
                             Style::default()
@@ -198,7 +199,10 @@ impl Cartridge for SystemCartridge {
                             format!("  {:<28}", format!("{}@{}", req.username, req.tenant)),
                             Style::default().fg(Color::White),
                         ),
-                        Span::styled(ts.to_string(), Style::default().fg(Color::DarkGray)),
+                        Span::styled(
+                            ts.to_string(),
+                            Style::default().fg(Color::DarkGray),
+                        ),
                     ]);
                     if i == self.selected {
                         ListItem::new(line).style(Style::default().bg(Color::DarkGray))
@@ -219,10 +223,7 @@ impl Cartridge for SystemCartridge {
             } else {
                 (Color::Red, "")
             };
-            Line::from(Span::styled(
-                format!("{prefix}{msg}"),
-                Style::default().fg(color),
-            ))
+            Line::from(Span::styled(format!("{prefix}{msg}"), Style::default().fg(color)))
         } else if !self.pending.is_empty() {
             Line::from(vec![
                 Span::styled("[Enter] approve  ", Style::default().fg(Color::DarkGray)),
