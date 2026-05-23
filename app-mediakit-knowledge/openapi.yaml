@@ -8,7 +8,6 @@ info:
     no database; no runtime dependencies beyond the compiled binary.
 
     MCP endpoint (Phase 4 Step 4.6) requires --enable-mcp flag.
-    Collab endpoint (Phase 2 Step 7) requires --enable-collab flag.
     Git remote (Phase 4 Step 4.7) requires --git-tenant flag.
 
   contact:
@@ -28,13 +27,15 @@ tags:
   - name: phase-1.1
     description: "Phase 1.1 — Wikipedia chrome: TOC, hatnote, language switcher, tabs"
   - name: phase-2
-    description: "Phase 2 — edit + collab: JSON-LD, atomic edit, CodeMirror, collab"
+    description: "Phase 2 — edit: JSON-LD, atomic edit, CodeMirror 6, SAA squiggles, citation autocomplete"
   - name: phase-3
     description: "Phase 3 — search + feeds: Tantivy BM25, Atom, JSON Feed, sitemap"
   - name: phase-4
     description: "Phase 4 — git sync + MCP: history, blame, diff, link graph, MCP, git remote"
+  - name: phase-5
+    description: "Phase 5 — bilingual /es/ routing: Spanish home and article pages with EN fallback, hreflang tags"
   - name: special
-    description: "Special pages: recent changes, all pages, statistics, login, pending edits"
+    description: "Special pages: recent changes, all pages, statistics, login, pending edits, cite, page info, categories"
 
 paths:
   /:
@@ -87,6 +88,115 @@ paths:
                 type: string
         "404":
           description: Article not found
+        "301":
+          description: Redirect to canonical lowercase slug form
+
+  /es/:
+    get:
+      tags: [phase-5]
+      summary: Spanish wiki home page
+      description: |
+        Spanish-language home page. Serves `index.es.md` if present, else
+        falls back to English. Sets `lang="es"` and includes `hreflang`
+        alternate link for `en`.
+      responses:
+        "200":
+          description: Spanish home page HTML
+          content:
+            text/html:
+              schema:
+                type: string
+
+  /es/wiki/{slug}:
+    get:
+      tags: [phase-5]
+      summary: Spanish wiki article
+      description: |
+        Renders the `.es.md` variant of the article if it exists; falls back
+        to the English `.md` file with a language toggle prompt. Sets
+        `lang="es"` and includes `hreflang` alternates for `en` and `es`.
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Article slug (may include category prefix, e.g. `architecture/compounding-substrate`)
+      responses:
+        "200":
+          description: Spanish article HTML (or English fallback)
+          content:
+            text/html:
+              schema:
+                type: string
+        "404":
+          description: Article not found in either language
+
+  /category/{name}:
+    get:
+      tags: [phase-1.1]
+      summary: Category index page
+      description: Lists all articles belonging to the given ratified category.
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [architecture, substrate, patterns, services, systems, applications, governance, infrastructure, company, reference, help, design-system]
+      responses:
+        "200":
+          description: Category listing HTML
+          content:
+            text/html:
+              schema:
+                type: string
+        "404":
+          description: Unknown category
+
+  /talk/{slug}:
+    get:
+      tags: [phase-1.1]
+      summary: Article talk page
+      description: Renders the discussion thread for an article.
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Talk page HTML
+          content:
+            text/html:
+              schema:
+                type: string
+    post:
+      tags: [phase-1.1]
+      summary: Post a talk page comment
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                body:
+                  type: string
+                  description: Comment body in Markdown
+              required: [body]
+      responses:
+        "303":
+          description: Redirect to talk page after posting
+        "400":
+          description: Invalid request
 
   /edit/{slug}:
     get:
@@ -212,6 +322,70 @@ paths:
                 type: array
                 items:
                   type: object
+
+  /api/complete:
+    get:
+      tags: [phase-2]
+      summary: Title autocomplete for search box
+      description: |
+        Returns a JSON array of `{title, slug}` objects whose titles or slugs
+        contain the query string (case-insensitive). Capped at 10 results.
+        Used by the CodeMirror editor and navigation search box.
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Prefix or substring to match against article titles and slugs
+      responses:
+        "200":
+          description: Autocomplete hits
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    title:
+                      type: string
+                    slug:
+                      type: string
+                  required: [title, slug]
+
+  /api/preview/{slug}:
+    get:
+      tags: [phase-2]
+      summary: Article preview metadata
+      description: |
+        Returns title, first-paragraph snippet, first image URL, and slug for
+        an article. Used by the hover-preview popover on wikilinks.
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Preview JSON
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  title:
+                    type: string
+                  snippet:
+                    type: string
+                  image_url:
+                    type: string
+                    nullable: true
+                  slug:
+                    type: string
+        "404":
+          description: Article not found
 
   /feed.atom:
     get:
@@ -583,6 +757,160 @@ paths:
         "401":
           description: Invalid credentials
 
+  /special/logout:
+    post:
+      tags: [special]
+      summary: Log out current session
+      responses:
+        "303":
+          description: Redirect to home after logout
+
+  /special/pending-changes:
+    get:
+      tags: [special]
+      summary: Pending edit review queue
+      description: Lists all edits awaiting moderator review. Requires authenticated moderator session.
+      responses:
+        "200":
+          description: Pending changes HTML
+          content:
+            text/html:
+              schema:
+                type: string
+        "403":
+          description: Not authorised
+
+  /special/pending/{id}:
+    get:
+      tags: [special]
+      summary: Pending edit detail
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Pending edit detail HTML
+          content:
+            text/html:
+              schema:
+                type: string
+        "404":
+          description: Pending edit not found
+
+  /special/pending/{id}/accept:
+    post:
+      tags: [special]
+      summary: Accept a pending edit
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "303":
+          description: Redirect to review queue
+        "403":
+          description: Not authorised
+        "404":
+          description: Pending edit not found
+
+  /special/pending/{id}/reject:
+    post:
+      tags: [special]
+      summary: Reject a pending edit
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "303":
+          description: Redirect to review queue
+        "403":
+          description: Not authorised
+        "404":
+          description: Pending edit not found
+
+  /special/contributions/{username}:
+    get:
+      tags: [special]
+      summary: User contribution history
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Contributions page HTML
+          content:
+            text/html:
+              schema:
+                type: string
+        "404":
+          description: User not found
+
+  /special/pageinfo/{slug}:
+    get:
+      tags: [special]
+      summary: Article page information
+      description: Word count, revision count, authors, file size, and wikilink graph stats for an article.
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Page info HTML
+          content:
+            text/html:
+              schema:
+                type: string
+        "404":
+          description: Article not found
+
+  /special/cite/{slug}:
+    get:
+      tags: [special]
+      summary: Citation generator for an article
+      description: Renders APA, MLA, and BibTeX citation formats for the article.
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Citation page HTML
+          content:
+            text/html:
+              schema:
+                type: string
+        "404":
+          description: Article not found
+
+  /special/categories:
+    get:
+      tags: [special]
+      summary: Category index
+      description: Lists all 12 ratified categories with article counts.
+      responses:
+        "200":
+          description: Categories index HTML
+          content:
+            text/html:
+              schema:
+                type: string
+
 components:
   schemas:
     ArticleFrontmatter:
@@ -596,7 +924,7 @@ components:
           description: Must equal the filename stem; immortal after first publish
         category:
           type: string
-          enum: [architecture, substrate, patterns, systems, services, applications, governance, infrastructure, reference, design-system, root]
+          enum: [architecture, substrate, patterns, services, systems, applications, governance, infrastructure, company, reference, help, design-system, root]
         subcategory:
           type: string
         last_edited:
