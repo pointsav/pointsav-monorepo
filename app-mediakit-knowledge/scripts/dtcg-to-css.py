@@ -128,6 +128,8 @@ def emit_section(flat: dict, section_prefix: str, heading: str, lines: list):
         typ = token.get("$type", "")
         if typ == "color" or (isinstance(raw, str) and raw.startswith("#")):
             css_val = hex_to_oklch(raw) if isinstance(raw, str) and raw.startswith("#") else str(raw)
+        elif isinstance(raw, list) and len(raw) == 4 and all(isinstance(x, (int, float)) for x in raw):
+            css_val = f"cubic-bezier({raw[0]}, {raw[1]}, {raw[2]}, {raw[3]})"
         else:
             css_val = str(raw)
         var = to_css_var(path)
