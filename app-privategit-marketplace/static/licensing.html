@@ -1013,6 +1013,20 @@
     padding: 1px 6px;
     border-radius: 2px;
   }
+
+  /* Two-tier mint buttons per product row */
+  .mint-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    justify-self: end;
+    align-items: flex-end;
+  }
+  .mint-group .mint {
+    white-space: nowrap;
+    font-size: 11px;
+    padding: 8px 14px;
+  }
 </style>
 </head>
 
@@ -1049,7 +1063,8 @@
   <main class="subpage-main">
 
     <div class="lic-intro">
-      <p><strong>One page, two transactions.</strong> Claim a free verification token to prove the software you installed came from PointSav, or mint a paid licence token to unlock proprietary modules. Both live in your own multi-chain wallet — no store, no cart, no account. Tax is calculated live against your wallet's billing jurisdiction and shown before you sign.</p>
+      <p><strong>One page, two actions.</strong> Claim a free verification token to confirm the binary you installed came from PointSav, or purchase a pre-compiled, signed OS image licence. Payment is Polygon USDC only — no account, no cart, no subscription. A licence key is issued on confirmed payment and is your authentication credential for the <code>app-privategit-source</code> registry.</p>
+      <p><strong>Apache 2.0 — $1.00 USDC</strong> · source-readable, fully open; may fork, redistribute, compete. <strong>FSL — $19.00 USDC</strong> · source-readable, non-compete restriction; converts to Apache 2.0 automatically after two years. No tax collected — PointSav operates below the CA $30,000 GST small-supplier threshold.</p>
     </div>
 
     <!-- ───────────  Free verification tokens  ─────────── -->
@@ -1060,7 +1075,7 @@
       </div>
 
       <p class="blurb">
-        Every installer downloaded from <code>app-privategit-source</code> is signed against a free, single-use verification token. Claim the token after your install completes; the running software checks it against the chain you minted on, confirming the binary you have is the one we shipped. One per install. Revocable from your wallet.
+        Every installer downloaded from <code>app-privategit-source</code> is signed. Claim a free, single-use verification token after install completes — the running software checks the Ed25519 signature against the embedded public key, confirming the binary is the one PointSav shipped. One per install. No chain transaction required.
         <a class="inline-action" href="#claim">Claim token →</a>
       </p>
     </section>
@@ -1073,49 +1088,102 @@
       </div>
 
       <p class="blurb">
-        Proprietary apps and services on top of the open architecture are gated by licence tokens. Buy once, hold in your wallet, transfer between buildings as your portfolio changes. Tokens are checked at runtime by the relevant <code>app-*</code> or <code>service-*</code> module.
+        Pre-compiled, signed OS images — one-time payment per version. The licence key issued on confirmed payment is your authentication credential for the <code>app-privategit-source</code> registry. Each version is purchased independently; no subscription, no automatic updates. Two tiers per product: Apache 2.0 ($1.00 USDC) or FSL ($19.00 USDC). Payment via Polygon USDC only.
       </p>
 
       <div class="licenses">
 
-        <div class="license">
-          <div class="name">
-            F*KEYS CONSOLE
-            <small>Operator command surface across the PointSav OSes — work-orders, audits, role assignment. <span class="tag">app-keys-console</span></small>
-          </div>
-          <a class="mint" href="/licensing#wallet" aria-label="Mint Keys Console license">$180 →</a>
+        <div class="licenses-head head">
+          <div class="name">Product</div>
+          <div class="col">Apache 2.0 · $1.00 &nbsp;|&nbsp; FSL · $19.00 &nbsp; (Polygon USDC)</div>
         </div>
 
         <div class="license">
           <div class="name">
-            Command Centre
-            <small>Portfolio overlay: cross-site dashboards, capital planning, GIS-bound site analytics. <span class="tag">app-command-centre</span></small>
+            PointSav Console OS
+            <small>Hosted application (Type II) — graphical terminal on existing OS. <span class="tag">os-console</span></small>
           </div>
-          <a class="mint" href="/licensing#wallet" aria-label="Mint Command Centre license">$420 →</a>
+          <div class="mint-group">
+            <a class="mint" href="/licensing#wallet" aria-label="Purchase PointSav Console OS — Apache 2.0">Apache 2.0 · $1.00 →</a>
+            <a class="mint" href="/licensing#wallet" aria-label="Purchase PointSav Console OS — FSL">FSL · $19.00 →</a>
+          </div>
         </div>
 
         <div class="license">
           <div class="name">
-            Business Applications
-            <small>Tenant billing, vendor contracts, occupancy ledgers — runs against your Totebox archive. <span class="tag">app-business-applications</span></small>
+            PointSav Infrastructure OS
+            <small>Lightweight universal hypervisor for infrastructure-node provisioning. <span class="tag">os-infrastructure</span></small>
           </div>
-          <a class="mint" href="/licensing#wallet" aria-label="Mint Business Applications license">$240 →</a>
+          <div class="mint-group">
+            <a class="mint" href="/licensing#wallet" aria-label="Purchase PointSav Infrastructure OS — Apache 2.0">Apache 2.0 · $1.00 →</a>
+            <a class="mint" href="/licensing#wallet" aria-label="Purchase PointSav Infrastructure OS — FSL">FSL · $19.00 →</a>
+          </div>
         </div>
 
         <div class="license">
           <div class="name">
-            BMS Bridge
-            <small>Autonomous BACnet / MQTT / Modbus translator between legacy controls and PointSav Infrastructure OS. <span class="tag">service-bms-bridge</span></small>
+            PointSav MediaKit OS
+            <small>High-performance JeOS for corporate disclosure and digital marketing surfaces. <span class="tag">os-mediakit</span></small>
           </div>
-          <a class="mint" href="/licensing#wallet" aria-label="Mint BMS Bridge license">$300 →</a>
+          <div class="mint-group">
+            <a class="mint" href="/licensing#wallet" aria-label="Purchase PointSav MediaKit OS — Apache 2.0">Apache 2.0 · $1.00 →</a>
+            <a class="mint" href="/licensing#wallet" aria-label="Purchase PointSav MediaKit OS — FSL">FSL · $19.00 →</a>
+          </div>
         </div>
 
         <div class="license">
           <div class="name">
-            Peak-Load Forecast
-            <small>District-thermal and electrical peak-load forecasting service; hourly rebuilds against utility data. <span class="tag">service-peak-forecast</span></small>
+            PointSav Network OS
+            <small>Orchestrates VM map, private network routing, and provisioning authorisation. <span class="tag">os-network-admin</span></small>
           </div>
-          <a class="mint" href="/licensing#wallet" aria-label="Mint Peak-Load Forecast license">$360 →</a>
+          <div class="mint-group">
+            <a class="mint" href="/licensing#wallet" aria-label="Purchase PointSav Network OS — Apache 2.0">Apache 2.0 · $1.00 →</a>
+            <a class="mint" href="/licensing#wallet" aria-label="Purchase PointSav Network OS — FSL">FSL · $19.00 →</a>
+          </div>
+        </div>
+
+        <div class="license">
+          <div class="name">
+            PointSav PrivateGit OS
+            <small>Independent code repository and version control system. <span class="tag">os-privategit</span></small>
+          </div>
+          <div class="mint-group">
+            <a class="mint" href="/licensing#wallet" aria-label="Purchase PointSav PrivateGit OS — Apache 2.0">Apache 2.0 · $1.00 →</a>
+            <a class="mint" href="/licensing#wallet" aria-label="Purchase PointSav PrivateGit OS — FSL">FSL · $19.00 →</a>
+          </div>
+        </div>
+
+        <div class="license">
+          <div class="name">
+            PointSav Workplace OS
+            <small>Bare-metal installation on trusted hardware (Type I) — boots to Console OS. <span class="tag">os-workplace</span></small>
+          </div>
+          <div class="mint-group">
+            <a class="mint" href="/licensing#wallet" aria-label="Purchase PointSav Workplace OS — Apache 2.0">Apache 2.0 · $1.00 →</a>
+            <a class="mint" href="/licensing#wallet" aria-label="Purchase PointSav Workplace OS — FSL">FSL · $19.00 →</a>
+          </div>
+        </div>
+
+        <div class="license">
+          <div class="name">
+            Totebox Integration OS
+            <small>Aggregation and active routing of Totebox Archives across the wider system. <span class="tag">os-interface</span></small>
+          </div>
+          <div class="mint-group">
+            <a class="mint" href="/licensing#wallet" aria-label="Purchase Totebox Integration OS — Apache 2.0">Apache 2.0 · $1.00 →</a>
+            <a class="mint" href="/licensing#wallet" aria-label="Purchase Totebox Integration OS — FSL">FSL · $19.00 →</a>
+          </div>
+        </div>
+
+        <div class="license">
+          <div class="name">
+            Totebox OS
+            <small>Hardware-agnostic micro-kernel foundation for data segregation across Toteboxes. <span class="tag">os-totebox</span></small>
+          </div>
+          <div class="mint-group">
+            <a class="mint" href="/licensing#wallet" aria-label="Purchase Totebox OS — Apache 2.0">Apache 2.0 · $1.00 →</a>
+            <a class="mint" href="/licensing#wallet" aria-label="Purchase Totebox OS — FSL">FSL · $19.00 →</a>
+          </div>
         </div>
 
       </div>
@@ -1132,15 +1200,9 @@
         <div class="wallet-row">
           <div class="label">Connect</div>
           <div class="body">
-            Not connected.
+            Not connected. Polygon USDC only.
             <div class="chains" style="margin-top:10px;">
-              <span class="chain on">ethereum</span>
-              <span class="chain">solana</span>
-              <span class="chain">bitcoin</span>
-              <span class="chain">polygon</span>
-              <span class="chain">base</span>
-              <span class="chain">avalanche</span>
-              <span class="chain dim">+ 2 more</span>
+              <span class="chain on">polygon</span>
             </div>
           </div>
           <a class="btn-primary" href="#connect">Connect wallet →</a>
@@ -1150,13 +1212,11 @@
           <div class="label">Tax</div>
           <div class="body">
             <div class="juris">
-              <span class="auto">Ontario, Canada</span> · HST 13% · auto-detected from wallet billing region
-              <a class="change" href="#change">change</a>
+              No tax collected — PointSav operates below the CA $30,000 GST small-supplier threshold. International customers are zero-rated.
             </div>
             <div class="totals">
-              <span class="k">Subtotal</span>          <span class="v">$180.00 USD</span>
-              <span class="k">Tax · HST 13%</span>    <span class="v">+ $23.40</span>
-              <span class="k total-k">Total</span>     <span class="v total-v">$204.60</span>
+              <span class="k">Subtotal</span>          <span class="v">$1.00 USDC</span>
+              <span class="k total-k">Total</span>     <span class="v total-v">$1.00 USDC</span>
             </div>
           </div>
           <a class="btn-secondary" href="/licensing#wallet">Mint →</a>
@@ -1165,7 +1225,7 @@
     </section>
 
     <div class="lic-note">
-      <p><strong>Tax.</strong> The indirect tax for your wallet's billing jurisdiction — GST/HST, sales tax, VAT, or equivalent — is calculated live, shown before you sign, and remitted on your behalf. Verification tokens carry no tax. Need the installers first? See <a href="/software" style="color:var(--accent);">Software</a>.</p>
+      <p><strong>No tax collected.</strong> PointSav operates below the CA $30,000 GST small-supplier threshold. No GST, BC PST, or equivalent is charged. International customers (US, EU, Spain, Mexico) are zero-rated under Canadian export rules. Need the installers first? See <a href="/software" style="color:var(--accent);">Software</a>.</p>
     </div>
 
   </main>
