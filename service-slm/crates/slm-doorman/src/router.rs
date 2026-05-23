@@ -407,16 +407,21 @@ impl Doorman {
                 adapter_version: None,
             },
         };
-        if let Err(write_err) = self.ledger.append(&entry) {
-            // Audit failure must never silently drop. Surface to logs;
-            // upstream observability picks it up.
-            warn!(
-                target: "slm_doorman::ledger",
-                error = %write_err,
-                request_id = %req.request_id,
-                "failed to append audit entry"
-            );
-        }
+        // Off-load blocking JSONL write to the thread pool (GF-1: avoid
+        // blocking the async hot path on O_APPEND + BufWriter flush).
+        // Fire-and-forget; the JoinHandle is intentionally dropped.
+        let ledger = self.ledger.clone();
+        let entry_for_write = entry.clone();
+        tokio::task::spawn_blocking(move || {
+            if let Err(write_err) = ledger.append(&entry_for_write) {
+                warn!(
+                    target: "slm_doorman::ledger",
+                    error = %write_err,
+                    request_id = %entry_for_write.request_id,
+                    "failed to append audit entry"
+                );
+            }
+        });
 
         // Prometheus metric emit (P3-3.1). The recorder is installed by
         // slm-doorman-server::metrics::init() at startup; if absent, the
