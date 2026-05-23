@@ -1,9 +1,10 @@
 ---
 artifact: brief
-status: active
+status: archived
+archived: 2026-05-23
+archived_reason: measures the 7B model being removed from the VM; no forward value
 topic: OLMo 7B Q4_K_M performance tuning
 created: 2026-05-21
-status: in-progress
 ---
 
 # OLMo 7B Q4_K_M Performance Tuning

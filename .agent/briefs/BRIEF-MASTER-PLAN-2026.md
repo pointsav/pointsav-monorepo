@@ -1,6 +1,8 @@
 ---
 artifact: brief
-status: active
+status: archived
+archived: 2026-05-23
+archived_reason: absorbed by BRIEF-flow-restructure.md (PRIMARY PLAN OF RECORD)
 ---
 
 # Sovereign Stack Master Plan — 2026

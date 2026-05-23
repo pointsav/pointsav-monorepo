@@ -164,6 +164,13 @@ hardware" — but the deployed path is still LadybugDB.
 deployments is THE prerequisite for the fleet to boot.** Everything else is
 downstream of it. LadybugDB stays available as an opt-in for large nodes.
 
+**§4.1 — Ring 2/3 coupling defect (approved addition 2026-05-23):** the current
+`service-content` binary halts graph growth whenever the Doorman is unavailable
+— Ring 2 should be fully functional without Ring 3 (DOCTRINE claim #54). Sprint 1
+fix: write a deterministic `Source` node to the graph before calling the Doorman
+(~30 LOC, `main.rs:198`). Full defect list and 5-sprint PUSH inversion plan:
+`BRIEF-service-content-architecture.md`.
+
 ---
 
 ## 5. What stays — Phase 0 Yo-Yo hardening (DONE)

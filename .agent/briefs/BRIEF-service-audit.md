@@ -1,6 +1,8 @@
 ---
 artifact: brief
-status: active
+status: archived
+archived: 2026-05-23
+archived_reason: absorbed by BRIEF-flow-restructure.md §8; live gaps pulled into BRIEF-vm-hardening-and-consolidation.md todo
 ---
 
 # Audit: service-slm & service-content — Development Plan

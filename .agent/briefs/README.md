@@ -23,19 +23,20 @@ or moving to `briefs/archive/`. All engines read this index at session start (AG
 | [BRIEF-KNOWLEDGE-PLATFORM-PLAN.md](BRIEF-KNOWLEDGE-PLATFORM-PLAN.md) | UNRELATED — knowledge platform 8-phase execution plan |
 | [BRIEF-KNOWLEDGE-PLATFORM-VISION.md](BRIEF-KNOWLEDGE-PLATFORM-VISION.md) | UNRELATED — knowledge platform upstream vision + architecture |
 | [BRIEF-layer3-compliance-report.md](BRIEF-layer3-compliance-report.md) | UNRELATED — security/WireGuard compliance (URGENT — separate track) |
-| [BRIEF-service-audit.md](BRIEF-service-audit.md) | ABSORBED by primary — defect list pre-Phase-4; pending operator approval to archive |
-| [BRIEF-service-slm-architecture.md](BRIEF-service-slm-architecture.md) | ABSORBED by primary — Sprint 0a prerequisite check, executed; pending operator approval to archive |
-| [BRIEF-MASTER-PLAN-2026.md](BRIEF-MASTER-PLAN-2026.md) | ABSORBED by primary — entry-point index superseded; pending operator approval to archive |
-| [BRIEF-olmo-performance-tuning.md](BRIEF-olmo-performance-tuning.md) | ABSORBED — 7B model measurements (model being removed); pending operator approval to archive |
-| [BRIEF-flow-bottleneck-strategic-review.md](BRIEF-flow-bottleneck-strategic-review.md) | Self-declared superseded — mark archived |
+| [BRIEF-flow-bottleneck-strategic-review.md](BRIEF-flow-bottleneck-strategic-review.md) | **archived 2026-05-23** — self-declared superseded by flow-restructure |
 
 ## Archived briefs
 
-| File | Purpose |
-|---|---|
-| [archive/BRIEF-WIKIPEDIA-PARITY-MASTER-PLAN.md](archive/BRIEF-WIKIPEDIA-PARITY-MASTER-PLAN.md) | Wikipedia parity master plan (superseded) |
-| [archive/BRIEF-WIKIPEDIA-PARITY-FUNCTIONAL-INDEX.md](archive/BRIEF-WIKIPEDIA-PARITY-FUNCTIONAL-INDEX.md) | Wikipedia parity functional index (superseded) |
-| [archive/BRIEF-WIKIPEDIA-PARITY-RESEARCH-LOG.md](archive/BRIEF-WIKIPEDIA-PARITY-RESEARCH-LOG.md) | Wikipedia parity research log (superseded) |
+| File | Archived | Reason |
+|---|---|---|
+| [BRIEF-MASTER-PLAN-2026.md](BRIEF-MASTER-PLAN-2026.md) | 2026-05-23 | Absorbed by flow-restructure (PRIMARY PLAN) |
+| [BRIEF-olmo-performance-tuning.md](BRIEF-olmo-performance-tuning.md) | 2026-05-23 | Measures the 7B model removed from VM |
+| [BRIEF-service-audit.md](BRIEF-service-audit.md) | 2026-05-23 | Absorbed by flow-restructure §8; live gaps in vm-hardening todo |
+| [BRIEF-service-slm-architecture.md](BRIEF-service-slm-architecture.md) | 2026-05-23 | Sprint 0a executed; absorbed by flow-restructure §8.C |
+| [BRIEF-flow-bottleneck-strategic-review.md](BRIEF-flow-bottleneck-strategic-review.md) | 2026-05-23 | Self-declared superseded |
+| [archive/BRIEF-WIKIPEDIA-PARITY-MASTER-PLAN.md](archive/BRIEF-WIKIPEDIA-PARITY-MASTER-PLAN.md) | prior | Wikipedia parity master plan (superseded) |
+| [archive/BRIEF-WIKIPEDIA-PARITY-FUNCTIONAL-INDEX.md](archive/BRIEF-WIKIPEDIA-PARITY-FUNCTIONAL-INDEX.md) | prior | Wikipedia parity functional index (superseded) |
+| [archive/BRIEF-WIKIPEDIA-PARITY-RESEARCH-LOG.md](archive/BRIEF-WIKIPEDIA-PARITY-RESEARCH-LOG.md) | prior | Wikipedia parity research log (superseded) |
 
 ---
 
