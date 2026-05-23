@@ -138,7 +138,7 @@ mod tests {
             )),
         };
         let dummy_req = {
-            use slm_core::{CanonicalMessage, Complexity, ModuleId, RequestId};
+            use slm_core::{CanonicalMessage, Complexity, LatencyClass, ModuleId, RequestId};
             use std::str::FromStr;
             ComputeRequest {
                 request_id: RequestId::new(),
@@ -146,6 +146,7 @@ mod tests {
                 model: None,
                 messages: vec![CanonicalMessage::text("user", "hi")],
                 complexity: Complexity::High,
+                latency_class: LatencyClass::default(),
                 tier_hint: None,
                 stream: false,
                 max_tokens: None,
@@ -171,7 +172,7 @@ mod tests {
             nodes: Arc::new(RwLock::new(vec![])),
         };
         let dummy_req = {
-            use slm_core::{CanonicalMessage, Complexity, ModuleId, RequestId};
+            use slm_core::{CanonicalMessage, Complexity, LatencyClass, ModuleId, RequestId};
             use std::str::FromStr;
             ComputeRequest {
                 request_id: RequestId::new(),
@@ -179,6 +180,7 @@ mod tests {
                 model: None,
                 messages: vec![CanonicalMessage::text("user", "hi")],
                 complexity: Complexity::Medium,
+                latency_class: LatencyClass::default(),
                 tier_hint: None,
                 stream: false,
                 max_tokens: None,
