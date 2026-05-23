@@ -3,9 +3,14 @@ schema: foundry-plan-v1
 archive: project-console
 topic: pairing-ceremony-ux-design
 created: 2026-05-21
-status: draft
+updated: 2026-05-23
+status: archived
 cites: []
 ---
+
+> **ARCHIVED 2026-05-23.** Pre-implementation research. Pairing Phases 1–2 shipped
+> (d6267e39, 30874995). §6 (operator journey), §9 (error copy), and vocabulary table §4
+> referenced by `BRIEF-pairing-phase3-4.md` and `BRIEF-pairing-ceremony.md`.
 
 # Pairing Ceremony — UX Design Brief
 

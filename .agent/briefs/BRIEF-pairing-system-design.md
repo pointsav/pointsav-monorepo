@@ -3,9 +3,14 @@ schema: foundry-plan-v1
 archive: project-console
 topic: zero-jargon-pairing-protocol
 created: 2026-05-21
-status: draft
+updated: 2026-05-23
+status: archived
 cites: []
 ---
+
+> **ARCHIVED 2026-05-23.** Pre-implementation research. Pairing Phases 1–2 shipped
+> (d6267e39, 30874995). §7 (Operator UX / F11 panel layout) referenced by
+> `BRIEF-pairing-phase3-4.md` Phase 4 section.
 
 # Pairing System Design — Zero-Jargon Pairing Protocol
 

@@ -92,7 +92,7 @@ to: totebox@project-console
 re: briefs/ migration — rename .agent/plans/ → .agent/briefs/ + BRIEF- prefix
 created: 2026-05-21T17:13:56Z
 priority: normal
-status: pending
+status: actioned
 msg-id: command-20260521-briefs-migration-project-console
 ---
 

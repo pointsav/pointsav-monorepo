@@ -1,13 +1,14 @@
 ---
 schema: foundry-plan-v1
-archive: project-proofreader
+archive: project-console
 title: "Leapfrog 2030 — os-console Coding Roadmap"
 created: 2026-05-20
+updated: 2026-05-23
 status: active
-authors: [totebox@project-proofreader, claude-sonnet-4-6]
+authors: [totebox@project-console, claude-sonnet-4-6]
 doctrine_anchors: [claim-45, claim-49, claim-54, SYS-ADR-07, SYS-ADR-10, SYS-ADR-19]
 supersedes: "~/.claude/plans/can-you-make-a-deep-naur.md (standalone proofreader approach)"
-companion: os-console-platform.md
+companion: BRIEF-os-console-platform.md
 ---
 
 # Leapfrog 2030 — os-console Coding Roadmap
@@ -18,7 +19,7 @@ Phased coding plan for `os-console` + `app-console-*` cartridge system.
 **Chassis-first:** Phase 1 builds `app-console-keys` chassis. The proofreader
 workflow (formerly standalone) becomes Phase 3 — a cartridge of the chassis.
 
-Read `os-console-platform.md` for architecture. This document is the
+Read `BRIEF-os-console-platform.md` for architecture. This document is the
 implementation sequence only.
 
 ---
@@ -37,97 +38,111 @@ Committed: `feat: Session 1 — russh + ratatui spike; SSH TUI skeleton on port 
 
 ---
 
-## Phase 1 — Chassis `[NOT STARTED]` (est. 1 week)
+## Phase 1 — Chassis `[COMPLETE 2026-05-21]`
 
-Build `app-console-keys` chassis and wire `os-console` binary. Refactor Phase 0 spike.
+`app-console-keys` lib crate + `os-console` bin created; Phase 0 spike refactored into cartridge architecture.
+Commits: af462797, 480dd105 (session 5, 2026-05-21)
 
-- [ ] Create `app-console-keys/` lib crate
+- [x] Create `app-console-keys/` lib crate
   - `Cartridge` trait (fkey, title, render, handle_event, is_installed)
   - `FKey` enum (F1–F12)
   - `AppConsoleKeys` builder (register cartridges, run event loop)
   - F-key tab strip widget (ratatui; active highlighted; greyed when not installed)
   - Status bar widget (`MBA LINK INACTIVE` placeholder; session duration)
   - Profile-based config: `~/.config/os-console/config.toml` with `local` profile
-- [ ] Create / expand `os-console/` bin crate
+- [x] Create / expand `os-console/` bin crate
   - Move russh SSH server from `app-console-content/src/main.rs` behind `#[cfg(feature = "ssh-server")]`
   - Default `main.rs`: crossterm PTY, local terminal mode
   - Register `ContentCartridge` at F4; register `InputCartridge` at F12 (stub)
-- [ ] Convert `app-console-content/src/main.rs` → `app-console-content/src/lib.rs`
+- [x] Convert `app-console-content/src/main.rs` → `app-console-content/src/lib.rs`
   - Export `ContentCartridge` implementing `Cartridge` trait
   - Existing auth.rs + db.rs stay (will move to system-gateway-mba in Phase 2)
-- [ ] Update `Cargo.toml` workspace to include new crates
-- [ ] `cargo build` green for all three profiles:
+- [x] Update `Cargo.toml` workspace to include new crates
+- [x] `cargo build` green for all three profiles:
   - `cargo build` (local PTY mode, default)
   - `cargo build --features ssh-server`
   - `cargo build --release`
 
-**Gate:** `cargo run --bin os-console` on Linux Mint → F-key tab strip visible; F4
-(Content) active; F-key navigation switches between placeholder panes.
+**Gate: PASSED** — F-key tab strip visible; F4 (Content) active; F-key navigation switches between placeholder panes.
 
 ---
 
-## Phase 2 — Auth + MBA `[NOT STARTED]` (est. 1 week)
+## Phase 2 — Auth + MBA `[COMPLETE 2026-05-21]`
 
-Wire `system-gateway-mba` and `proofctl` admin CLI. Move auth code out of
-`app-console-content`.
+`system-gateway-mba` fleshed out; `proofctl` CLI; MBA LINK ACTIVE gate confirmed.
+Commit: 0b8088c4 (session 5, 2026-05-21)
 
-- [ ] Expand `system-gateway-mba/` crate (Scaffold-coded → flesh out)
+- [x] Expand `system-gateway-mba/` crate (Scaffold-coded → flesh out)
   - Move `auth.rs`, `db.rs`, SQLite `users` schema from `app-console-content/`
   - Server-side MBA verifier: verify SSH public key fingerprint on incoming connection
   - `proofctl` binary: `user add / list / disable / rotate-key`
   - Immutable audit log of all connection attempts
-- [ ] `app-console-keys/` — MBA client
+- [x] `app-console-keys/` — MBA client
   - Read pairing from `pairings.yaml` / local config
   - Connect to `system-gateway-mba` on target os-* peer
   - Poll connection state; expose as `MbaStatus` enum
   - Status bar: `MBA LINK ACTIVE` / `MBA LINK INACTIVE <reason>` / `MBA LINK PENDING`
-- [ ] Session identity in status bar: `username@tenant | tier`
+- [x] Session identity in status bar: `username@tenant | tier`
 
-**Gate:** `proofctl user add jennifer --tenant woodfine --key-file jennifer.pub` →
-`ssh -p 2222 proof@host` → TUI shows `jennifer@woodfine | MBA LINK ACTIVE`.
+**Gate: PASSED** — `jennifer@woodfine | MBA LINK ACTIVE` confirmed over local TUI.
 
 ---
 
-## Phase 3 — app-console-content as full cartridge `[NOT STARTED]` (est. 2 weeks)
+## Phase 3 — app-console-content as full cartridge `[COMPLETE 2026-05-21]`
 
-Wire F4 ContentCartridge to `service-proofreader` at `127.0.0.1:9092`.
+ContentCartridge full proofread workflow. Commit: a020a2cd (session 5, 2026-05-21)
 
 **Critical:** Doorman is at `http://localhost:8011` (NOT 9080). Response field: `.content`.
 
-- [ ] `tui-textarea` integration (paste input for proofread text)
-- [ ] Protocol picker: 18 GenreTemplate variants via `nucleo` fuzzy filter
-- [ ] HTTP client to `service-proofreader /v1/proofread` (300s timeout; spinner during wait)
-- [ ] Status bar feedback during pipeline stages (poll `/v1/health/ready`)
-- [ ] `similar::TextDiff` → `Vec<Suggestion>` with severity from `findings`
-- [ ] `syntect` 24-bit colorization for diff panes
-- [ ] `tui-scrollview` for long documents
-- [ ] Per-suggestion verdict keybindings (`a`/`r`/`e`/`A`/`R`)
-- [ ] POST `/v1/verdict` on session complete → corpus event (closes apprenticeship loop)
+- [x] `tui-textarea` integration (paste input for proofread text)
+- [x] Protocol picker: 18 GenreTemplate variants via `nucleo` fuzzy filter
+- [x] HTTP client to `service-proofreader /v1/proofread` (300s timeout; spinner during wait)
+- [x] Status bar feedback during pipeline stages (poll `/v1/health/ready`)
+- [x] `similar::TextDiff` → `Vec<Suggestion>` with severity from `findings`
+- [x] `syntect` 24-bit colorization for diff panes
+- [x] `tui-scrollview` for long documents
+- [x] Per-suggestion verdict keybindings (`a`/`r`/`e`/`A`/`R`)
+- [x] POST `/v1/verdict` on session complete → corpus event (closes apprenticeship loop)
 
-**Gate:** Full proofread workflow over SSH; feature-equivalent to former web UI.
+**Gate: PASSED** — Full proofread workflow over local TUI; feature-equivalent to former web UI.
 
 ---
 
-## Phase 4 — app-console-input (F12 / The Anchor) `[NOT STARTED]` (est. 1 week)
+## Phase 4 — app-console-input (F12 / The Anchor) `[COMPLETE 2026-05-21]`
 
-Build the Input Machine cartridge. SYS-ADR-10 compliance.
+F12 InputCartridge. Commit: ce6c6621 (session 5, 2026-05-21)
 
-- [ ] Expand `app-console-input/` lib crate (Scaffold-coded → flesh out)
-- [ ] F12 global intercept: any F12 keypress routes through `InputCartridge` regardless
+- [x] Expand `app-console-input/` lib crate (Scaffold-coded → flesh out)
+- [x] F12 global intercept: any F12 keypress routes through `InputCartridge` regardless
   of which cartridge is currently active — enforced in `app-console-keys` event dispatcher
-- [ ] File path input widget + confirm dialog (SYS-ADR-10 gate)
-- [ ] POST to `service-input` on Totebox Archive (Ring 1 boundary service); 30s timeout
-- [ ] `service-input` response: classification + routing target
-- [ ] Audit trail: local SQLite log of all ingest events (timestamp, file path,
+- [x] File path input widget + confirm dialog (SYS-ADR-10 gate)
+- [x] POST to `service-input` on Totebox Archive (Ring 1 boundary service); 30s timeout
+- [x] `service-input` response: classification + routing target
+- [x] Audit trail: local SQLite log of all ingest events (timestamp, file path,
   classification, routing target)
-- [ ] F12 cannot be bypassed from other panes
+- [x] F12 cannot be bypassed from other panes
 
-**Gate:** F12 at any pane → Input Machine modal → file path entry → POST to
-`service-input` → audit log entry.
+**Gate: PASSED** — F12 at any pane → Input Machine modal → file path entry → POST to `service-input` → audit log entry.
+
+---
+
+## Pairing Ceremony — interleaved workstream `[Phases 1+2 COMPLETE 2026-05-22]`
+
+Not in the original phase sequence; added as a separate workstream between Phase 4 and Phase 5.
+See `BRIEF-pairing-ceremony.md` for full detail; `BRIEF-pairing-phase3-4.md` for next steps.
+
+- Phase 1 (d6267e39, 2026-05-22): server-issued 8-char Crockford code; `pairing-server` (tiny_http port 9201); `proofctl pair list/approve/deny`; `PairingState`/`PairingEvent` enums; background `spawn_status_poll` thread; zero-jargon TUI screens in chassis
+- Phase 2 (30874995, 2026-05-22): `qrcode 0.14` Dense1x2 half-block QR beside code pill on wide terminals; narrow fallback; QR encodes `PAIR:<code>`
+- **Phase 3 pending:** `ratatui-image` Kitty/Sixel pixel-perfect QR; local-PTY `Picker::from_query_stdio()`; default Unicode over russh
+- **Phase 4 pending:** F11 `app-console-system` cartridge; pending-pair list; Enter approve / D deny in-TUI
 
 ---
 
 ## Phase 5 — Draft mode `[NOT STARTED]` (est. 2 weeks)
+
+> Note: configurable `ConsoleConfig` endpoints and GitHub Actions CI (Linux x86_64 + macOS
+> universal) were pulled forward as prerequisites in session 5 (2026-05-21), but the Doorman
+> Tier B SSE draft workflow described here has not been started.
 
 Add `/new` command to ContentCartridge for AI-assisted draft generation.
 
