@@ -4,6 +4,32 @@ Rolling 3-session summary. Newest entry first. Push oldest to session-context-ar
 
 ---
 
+## 2026-05-23 | totebox@claude-code | Sonnet 4.6
+
+**Done this session (pre-build prep + wiki quality sweep):**
+- **Category placement fix** — `capability-ledger-substrate` + `merkle-proofs-as-substrate-primitive` moved from `architecture/topic-*` → `substrate/*`; slug, frontmatter, `_index.md` + `_index.es.md` MOC entries corrected (`69c6030`).
+- **Wikilink audit** — 0 broken links confirmed across all 3 wikis after category fix.
+- **featured-topic.yaml candidates** — `capability-ledger-substrate` + 11 other rotation-pool articles added (`3f798bf`).
+- **Banned vocab sweep** — 19 files across 6 categories: all `utilize*`, `robust`, `seamless`, `leverage` instances removed (`7cd8e3e`, `22face7`).
+- **doorman-protocol claim fix** — `tier-a-verified` confidence changed from `established` → `structural` in EN+ES (`7cd8e3e`).
+- **D1 linter hardening** — claim-validation §9 (id/confidence/uniqueness/cites/depends_on/projected-language), WARN-vs-ERROR fix for empty cites, ES projected-language skip (NameError fix), skip-dirs filter for non-article files (`d212863c`, `f64e279b`, `b8e1665e`).
+- **glossary-documentation.es.md stub** — last missing bilingual pair; linter now reports 0 errors across 366 content-wiki-documentation articles (`583f642`).
+- **NEXT.md dedup** — duplicate "Currently open" heading removed (`b8ddee0`).
+- **Outbox addendum** — path-correction for capability-ledger-substrate (architecture/topic-* → substrate/*) prepended to project-system message (`cd7ae157`).
+
+**Pending / carry-forward:**
+- **Stage 6 promotion** — all three content-wiki-* repos; Command session only. Request in outbox since 2026-05-22.
+- **D5** — operator signing identity; not project-editorial-executable.
+- **E2/E3/E5/E-claim/E-rename** — cross-cluster / operator GitHub rename gated.
+- **Plan archival + §9 old-plan deletion** — operator go-ahead, post-ship.
+- **glossary-documentation.es.md** — stub only; full translation deferred.
+
+**Operator preferences surfaced:**
+- AUTO mode: execute autonomously on approved runs; surface only real blockers; report at end.
+- Build-night goal: 0 lint errors before nightly build; achieved.
+
+---
+
 ## 2026-05-22 | totebox@claude-code | Opus 4.7 (1M)
 
 **Done this session (large session — ~40 commits across cluster repo + 3 content sub-clones):**
@@ -47,19 +73,3 @@ Rolling 3-session summary. Newest entry first. Push oldest to session-context-ar
 - When adopting another cluster's proposed plan, inline referenced detail so the plan is self-contained.
 - Editorial work must never block on `service-content` / `service-slm` — bypass by default.
 
----
-
-## 2026-05-20 | totebox@claude-code | Sonnet 4.6
-
-**Done this session:**
-- Startup + shutdown only. No editorial work performed.
-
-**Pending / carry-forward:**
-- Stage 6: content-wiki-documentation, content-wiki-projects, content-wiki-corporate, woodfine-fleet-deployment — Command Session task.
-- pointsav-monorepo `readme-fixes-2026-05-16` → main merge + service restart — Command Session task.
-- Route design drafts to project-design — Command Session to forward outbox message.
-- Phase E bilingual home routing — deferred, low priority, needs Rust change → project-knowledge.
-- Italy co-location stub — needs data from project-gis.
-
-**Operator preferences surfaced:**
-- No new preferences this session.

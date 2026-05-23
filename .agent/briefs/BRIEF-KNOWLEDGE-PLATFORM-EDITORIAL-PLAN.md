@@ -43,7 +43,7 @@ supersedes:
 
 ---
 
-## Status — 2026-05-22
+## Status — 2026-05-23
 
 **project-editorial's autonomous execution of this plan is COMPLETE.** Full
 close-out record in §12; what follows is the at-a-glance state.
@@ -51,15 +51,14 @@ close-out record in §12; what follows is the at-a-glance state.
 | Track | State |
 |---|---|
 | **A — editorial overhaul** | **Complete.** A0 (Gate-0 into style guides), A1 (3 recommended Main Page ledes drafted), A2 (12 flagship TOPIC rewrites, EN+ES, claim-annotated), A3 (acceptance criteria), A4 (close-out). Wikilink audit: **0 broken** across all 3 wikis. |
-| **D — editorial QA substrate** | **Complete except D5.** D1 linter, D2 failure-mode registry, D3 16 genre templates, D4 canonical standard + CORPUS-SCHEMA, D6 manifest revision — done. D5 (apprenticeship verdict-signing) needs an operator signing identity. |
+| **D — editorial QA substrate** | **Complete except D5.** D1 linter fully hardened 2026-05-23: claim-validation §9, banned-vocab sweep (19 files, 0 lint errors), ES projected-language fix, skip-dirs filter. D2/D3/D4/D6 done. D5 (apprenticeship verdict-signing) needs an operator signing identity. |
 | **E — cross-cluster** | **Partial.** E1, E4, E-ruleset done. E2 / E3 / E5 / E-claim / E-rename are cross-cluster handshakes or operator-gated. |
 
 **Pending — none of it project-editorial-executable:**
-- **Stage 6 promotion** — Command (publish request in the outbox, 2026-05-22).
+- **Stage 6 promotion** — Command (publish request in outbox, 2026-05-22).
 - **D5** — operator signing identity.
 - **E2 / E3 / E5 / E-claim / E-rename** — cross-cluster / the operator's GitHub repo rename.
 - **A1 review pass** — when project-knowledge branches each Main Page.
-- **Claim-validation linter pass** — a Track-D follow-up on `editorial-lint.py`.
 - **Plan archival + §9 old-plan deletion** — operator go-ahead, post-ship.
 
 The plan is kept `status: active` — archival is operator-gated (§9).
