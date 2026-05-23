@@ -5,6 +5,8 @@ Wikipedia-pattern HTTP knowledge wiki for `os-mediakit`. Serves the
 `documentation.pointsav.com`. Built in Rust. No database. No runtime
 dependencies beyond the compiled binary.
 
+<div align="center">
+
 [ 🇪🇸 Leer este documento en Español ](./README.es.md)
 
 </div>
@@ -47,11 +49,12 @@ build).
 |---|---|---|
 | 1 | render — GET /wiki/{slug}, /static/, /healthz | shipped |
 | 1.1 | Wikipedia chrome — tabs, TOC, hatnote, language switcher | shipped |
-| 2 | edit + collab — CodeMirror 6, JSON-LD, atomic save, yjs collab relay | shipped |
+| 2 | edit — CodeMirror 6, JSON-LD, atomic save, SAA squiggles, citation autocomplete | shipped |
 | 3 | search + feeds — Tantivy BM25, Atom, JSON Feed, sitemap, llms.txt | shipped |
 | 4 | Git sync + MCP — git2, history/blame/diff, redb wikilink graph, blake3, native MCP JSON-RPC 2.0, OpenAPI 3.1 | shipped |
 | 5 core | auth + edit review — cookie sessions, argon2id, edit review queue | shipped |
-| 5.1+ | per-page ACLs, OIDC SSO, webhook subscriptions, AsyncAPI 3.1 | planned — gated on BP5 |
+| 5.1 | bilingual /es/ routing — Spanish home + articles, EN fallback, Accept-Language redirect, hreflang | shipped |
+| 5.2+ | per-page ACLs, OIDC SSO, webhook subscriptions, AsyncAPI 3.1 | planned — gated on BP5 |
 | 6 | wikilink resolution + portable identity | planned |
 | 7 | federation seam (blake3 content addressing + ActivityPub) | planned |
 | 8 | disclosure mode + cryptographic timestamping | planned |
