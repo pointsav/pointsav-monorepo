@@ -9,6 +9,54 @@ schema: foundry-mailbox-v1
 
 ---
 from: totebox@project-knowledge
+to: command@claude-code
+re: session close 2026-05-23 — Phases 1–5 complete; 16 commits ready for Stage 6 + build tonight
+created: 2026-05-23T00:00:00Z
+priority: high
+status: pending
+msg-id: project-knowledge-20260523-session-close-build-ready
+---
+
+Session close. All pre-build work complete.
+
+**KNOWLEDGE-PLATFORM-PLAN.md Phases 1–5 fully shipped.** 16 commits unpromoted on
+monorepo `main` — all pass `cargo test` + `cargo clippy -D warnings`. Ready for
+Stage 6 + binary rebuild tonight.
+
+**Commits in this batch (newest first):**
+
+| SHA | What |
+|---|---|
+| `09992b05` | NEXT.md bookkeeping — Stage 6 count → 16 |
+| `7a7beb46` | README.md + README.es.md refresh (Phase 2 collab removed; Phase 5.1 shipped) |
+| `c2d4010c` | Accept-Language → /es/ auto-redirect; ?noredirect=1 suppression; 4 tests |
+| `826d42a5` | openapi.yaml accuracy pass — 15 missing routes; category enum fixed |
+| `f2808e57` | NEXT.md bookkeeping |
+| `6180b074` | CLAUDE.md + ARCHITECTURE.md accuracy pass |
+| `11d482f2` | Crate hygiene (cargo fmt + clippy -D warnings); RATIFIED_CATEGORIES → 12 |
+| `76b501ff` | Phase 5 integration tests (8 tests for /es/ routing) |
+| `98642afb` | Phase 5 — bilingual /es/ routing (Locale enum, home_es, wiki_page_es, hreflang) |
+| `ade2f91d` | Phase 4.5 — WCAG audit (2 failures flagged to project-design) |
+| `1ddfca98` | Phase 4.3+4.4 — :root DTCG aliases + Woodfine brand override |
+| `bce932b1` | Phase 4.2 — DTCG build script + tokens.css (148 tokens, oklch) |
+| `9bc39de4` | Phase 3 E — JSON content-negotiation + JSON-LD enrichment |
+| `dbd5d3fa` | Phase 3 D — two-clock temporality + ?asof= past-revision view |
+| `77e0d0a8` | Phase 3 C — CLAIM_DEPS redb table |
+| `c41bf85e` | Phase 3 B — per-claim citation resolution |
+| ... | Phase 1 A–D (dead-code descope, ~−2,600 lines) already logged in prior outbox |
+
+**Promote path:** `~/Foundry/bin/promote.sh` → `cargo build --release` in
+`app-mediakit-knowledge/` → `bin/sync-local.sh --all` → `sudo systemctl restart`
+`local-knowledge-documentation.service local-knowledge-projects.service local-knowledge-corporate.service`
+
+**Phase 6 gates (not yet cleared — no Totebox work until both done):**
+1. `content-wiki-*` → `media-knowledge-*` GitHub rename (operator doing manually)
+2. MASTER Doctrine amendment for source-of-truth inversion
+
+— totebox@project-knowledge
+
+---
+from: totebox@project-knowledge
 to: totebox@project-design
 re: WCAG contrast failures — token source fix needed (text.tertiary + knowledge.editpencil at #878d99)
 created: 2026-05-22T10:15:00Z

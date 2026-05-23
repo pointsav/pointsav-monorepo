@@ -5,6 +5,20 @@ Newest first.
 
 ---
 
+## 2026-05-20b | Totebox | claude-code
+
+**Done this session:** Startup sequence only. No work performed — operator issued shutdown immediately after startup.
+
+**Pending / carry-forward:**
+- Items 6 + 7 deferred (corporate glossary + thin-category audit).
+- D10 wikilink validation — blocked on Stage 6 binary rebuild (Command Session scope).
+- G2 canonical: `README-TOTEBOX-EGRESS.md` in `customer/woodfine-fleet-deployment/` — Command Session `git rm` + admin-tier commit needed.
+- Stage 6 outstanding: content-wiki-projects (6), content-wiki-corporate (10, blocked on divergence), content-wiki-documentation (4), monorepo (16).
+
+**Operator preferences surfaced:** None new this session.
+
+---
+
 ## 2026-05-20 | Totebox | claude-code
 
 **Done this session:**
