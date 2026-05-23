@@ -1,6 +1,8 @@
 ---
 artifact: brief
-status: active
+status: archived
+archived: 2026-05-23
+superseded_by: BRIEF-active-work.md
 ---
 
 # Plan: Three-site wiki redesign — institutional chrome sprint

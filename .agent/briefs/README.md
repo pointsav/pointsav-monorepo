@@ -19,27 +19,27 @@ Engine-agnostic: all engines (Claude Code, Gemini CLI) read and write here.
 
 | File | Subject | Status |
 |---|---|---|
-| BRIEF-KNOWLEDGE-PLATFORM-EDITORIAL-PLAN.md | Editorial execution plan for the knowledge-platform overhaul (current) | active |
-| BRIEF-institutional-chrome-sprint.md | Three-site wiki redesign — institutional chrome sprint (E1/E3/E4 pending) | active |
-| BRIEF-github-presence-elevation.md | GitHub presence elevation — PointSav & Woodfine (implementation queued) | active |
-| BRIEF-publishing-tier-naming-cross-check.md | Publishing-tier vs canonical taxonomy naming cross-check | active |
-| BRIEF-framework-pointsav-products-services.md | PointSav products & services — research-archive framework | active |
+| BRIEF-active-work.md | Current work queue — consolidated action brief | active |
+| BRIEF-KNOWLEDGE-PLATFORM-EDITORIAL-PLAN.md | Knowledge-platform editorial execution plan (complete; archival operator-gated §9) | active |
+| BRIEF-framework-pointsav-products-services.md | PointSav products & services — research-archive framework (standing reference) | active |
 
 ## Archived briefs
 
-Superseded by `BRIEF-KNOWLEDGE-PLATFORM-EDITORIAL-PLAN.md`. Retained pending the
-operator go-ahead recorded in that plan's §9 delete set — removed only after the
-overhaul ships.
+Superseded briefs retained per standing instruction — deleted only after the
+overhaul ships, on explicit operator go-ahead.
 
-| File | Status |
-|---|---|
-| BRIEF-award-winning-wiki-overhaul.md | archived |
-| BRIEF-FINAL_AWARD_WINNING_WIKI_EXECUTION_PLAN.md | archived |
-| BRIEF-INPUT-KNOWLEDGE-PLATFORM-BLUEPRINT.md | archived |
-| BRIEF-MASTER_STRATEGY_AWARD_WINNING_WIKI.md | archived |
-| BRIEF-overhaul-documentation-pointsav-com.md | archived |
-| BRIEF-overhaul-gemini-analysis.md | archived |
-| BRIEF-overhaul-progress.md | archived |
+| File | Archived | Superseded by |
+|---|---|---|
+| BRIEF-institutional-chrome-sprint.md | 2026-05-23 | BRIEF-active-work.md |
+| BRIEF-github-presence-elevation.md | 2026-05-23 | BRIEF-active-work.md |
+| BRIEF-publishing-tier-naming-cross-check.md | 2026-05-23 | BRIEF-active-work.md |
+| BRIEF-award-winning-wiki-overhaul.md | prior | BRIEF-KNOWLEDGE-PLATFORM-EDITORIAL-PLAN.md |
+| BRIEF-FINAL_AWARD_WINNING_WIKI_EXECUTION_PLAN.md | prior | BRIEF-KNOWLEDGE-PLATFORM-EDITORIAL-PLAN.md |
+| BRIEF-INPUT-KNOWLEDGE-PLATFORM-BLUEPRINT.md | prior | BRIEF-KNOWLEDGE-PLATFORM-EDITORIAL-PLAN.md |
+| BRIEF-MASTER_STRATEGY_AWARD_WINNING_WIKI.md | prior | BRIEF-KNOWLEDGE-PLATFORM-EDITORIAL-PLAN.md |
+| BRIEF-overhaul-documentation-pointsav-com.md | prior | BRIEF-KNOWLEDGE-PLATFORM-EDITORIAL-PLAN.md |
+| BRIEF-overhaul-gemini-analysis.md | prior | BRIEF-KNOWLEDGE-PLATFORM-EDITORIAL-PLAN.md |
+| BRIEF-overhaul-progress.md | prior | BRIEF-KNOWLEDGE-PLATFORM-EDITORIAL-PLAN.md |
 
 ## Non-brief files kept here
 
