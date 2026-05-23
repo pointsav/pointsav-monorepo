@@ -233,10 +233,11 @@ def make_cluster_id(iso: str, clat: float, clon: float) -> str:
 # ── TIER DESCRIPTOR ───────────────────────────────────────────────────────────
 
 def tier_descriptor(cats: set[str]) -> str:
-    retail = cats & {"hypermarket", "hardware", "price_club", "lifestyle"}
+    retail = cats & {"hypermarket", "hardware", "price_club", "lifestyle", "sport"}
     parts = []
     for k, label in [("hypermarket", "Hypermarket"), ("lifestyle", "Lifestyle"),
-                     ("hardware", "Hardware"), ("price_club", "Price Club")]:
+                     ("hardware", "Hardware"), ("price_club", "Price Club"),
+                     ("sport", "Sport")]:
         if k in retail:
             parts.append(label)
     return " + ".join(parts) if parts else "Unknown"
@@ -309,6 +310,11 @@ def run_dbscan_for_iso(iso: str, recs: list) -> list[dict]:
                              float(members[j]["latitude"]), float(members[j]["longitude"])) <= TAU_TIGHT_KM
                 for i in range(len(members)) for j in range(i + 1, len(members))
             )
+
+            # Geometric downgrade: T2 with span < 1.25km and ≤2 members is a
+            # weak co-located pair, not a retail park → reclassify as T3.
+            if tier == 2 and span < 1.25 and len(members) <= 2:
+                tier = 3
 
             clusters.append({
                 "iso":        iso,
@@ -425,7 +431,7 @@ def assemble_feature(c: dict, engine: RegionEngine) -> dict:
         "member_count":      len(retail_members),
         "seed_lat":          round(float(retail_members[0]["latitude"]), 5) if retail_members else clat,
         "seed_lon":          round(float(retail_members[0]["longitude"]), 5) if retail_members else clon,
-        "last_computed":     "2026-05-22",
+        "last_computed":     "2026-05-23",
     }
 
     return {
@@ -438,7 +444,7 @@ def assemble_feature(c: dict, engine: RegionEngine) -> dict:
 # ── MAIN ──────────────────────────────────────────────────────────────────────
 
 def main():
-    print("build-clusters.py — two-pass DBSCAN (2026-05-22)")
+    print("build-clusters.py — two-pass DBSCAN + geometric T2→T3 split (2026-05-23)")
     print("Loading boundary engine...")
     engine = RegionEngine(BOUNDARIES_DIR)
 
@@ -452,7 +458,7 @@ def main():
 
     for iso in ALL_DISPLAY_ISO:
         chain_map = {}
-        for cat in ("hypermarket", "hardware", "price_club", "lifestyle"):
+        for cat in ("hypermarket", "hardware", "price_club", "lifestyle", "sport"):
             for cid in (BRAND_FILL.get(cat) or {}).get(iso, []):
                 recs = load_chain_jsonl(cid)
                 for r in recs:

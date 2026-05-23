@@ -5,15 +5,25 @@
 
 ---
 
-## Decision (operator-confirmed)
+## Decision (operator-confirmed 2026-05-23)
 
-Add `sport` as 5th retail anchor category. Revised T1 rule:
+Add `sport` as 5th retail anchor category. **T1 rule is unchanged** — sport
+is a T2/T3 enhancer only. Rationale: adding sport to T1 would expand EU T1
+by 728% (144 → ~1,192) vs NA T1 by only 26%, making T1 incomparable
+cross-market. EU T1 undercount reflects a price_club gap (Costco), not a
+sport gap. Decathlon in EU retail parks will promote existing T2→T1 only
+when co-located with hypermarket + hardware + (Costco/IKEA) — which is the
+correct signal. See `BRIEF-SPORT-REBALANCE-LEAPFROG-2026-05-23.md` §2 for
+full agent analysis.
 
 ```
-T1 = has_hyper ∧ has_hw ∧ (has_pc ∨ has_life ∨ has_sport)
-T2 = has_hyper ∧ n_retail ≥ 2   (unchanged)
-T3 = n_retail ≥ 2 ∧ ¬has_hyper  (unchanged)
+T1 = has_hyper ∧ has_hw ∧ (has_pc ∨ has_life)   ← UNCHANGED
+T2 = has_hyper ∧ n_retail ≥ 2                    (unchanged)
+T3 = n_retail ≥ 2 ∧ ¬has_hyper                  (unchanged)
 ```
+
+Sport adds new T3 combos ({hypermarket, sport}, {hardware, sport}) and
+new T2 combos ({hypermarket, hardware, sport}). It does NOT enable T1.
 
 Category is same across NA and EU; only BRAND_FILL differs per country.
 
@@ -35,10 +45,11 @@ Category is same across NA and EU; only BRAND_FILL differs per country.
 _RETAIL_CATS = {"hypermarket", "hardware", "price_club", "lifestyle", "sport"}
 ```
 
-### tier_of() — add has_sport:
+### tier_of() — add has_sport (T1 rule unchanged):
 ```python
 has_sport = "sport" in retail
-if has_hyper and has_hw and (has_pc or has_life or has_sport):
+# T1 rule is UNCHANGED — sport does not enable T1
+if has_hyper and has_hw and (has_pc or has_life):
     return 1
 ```
 

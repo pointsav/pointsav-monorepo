@@ -9,8 +9,8 @@ Import:
     from taxonomy import category_of, tier_of, slots_for
 """
 
-# ── 6 CANONICAL CATEGORIES ────────────────────────────────────────────────────
-# 4 retail anchors + 2 civic anchors.  Civic never gate the tier.
+# ── 7 CANONICAL CATEGORIES ────────────────────────────────────────────────────
+# 5 retail anchors + 2 civic anchors.  Civic never gate the tier.
 CATEGORIES = {
     "hypermarket": {
         "label": "Hypermarket",
@@ -32,6 +32,11 @@ CATEGORIES = {
         "naics": "442110",
         "description": "Destination furniture / home goods (IKEA only by design).",
     },
+    "sport": {
+        "label": "Sport / Outdoor Anchor",
+        "naics": "451110",
+        "description": "Destination sporting-goods anchor (Decathlon-class, ≥3,000 sqm).",
+    },
     "medical": {
         "label": "Medical — Regional Hospital",
         "naics": "622110",
@@ -45,7 +50,7 @@ CATEGORIES = {
 }
 
 # Retail-only set used in tier_of()
-_RETAIL_CATS = {"hypermarket", "hardware", "price_club", "lifestyle"}
+_RETAIL_CATS = {"hypermarket", "hardware", "price_club", "lifestyle", "sport"}
 
 # ── CIVIC SCALE THRESHOLDS ────────────────────────────────────────────────────
 THRESHOLDS = {
@@ -282,7 +287,9 @@ BRAND_FILL: dict[str, dict[str, list[str]]] = {
         "NL": [
             "makro-nl",
         ],
-        "PT": [],
+        "PT": [
+            "makro-pt",   # Q704606; ~10 stores since 1989; same Makro-card model as ES/NL/PL
+        ],
         "SE": [
             "costco-se",
         ],
@@ -313,6 +320,23 @@ BRAND_FILL: dict[str, dict[str, list[str]]] = {
         "NO": ["ikea-no"],
         "FI": ["ikea-fi"],
         "IS": [],       # no IKEA in Iceland
+    },
+
+    "sport": {
+        "US": ["rei-us", "bass-pro-shops-us", "cabelas-us"],
+        "CA": ["decathlon-ca"],
+        "GB": ["decathlon-gb"],
+        "FR": ["decathlon-fr"],
+        "DE": ["decathlon-de"],
+        "ES": ["decathlon-es"],
+        "IT": ["decathlon-it"],
+        "NL": ["decathlon-nl"],
+        "PL": ["decathlon-pl"],
+        "PT": ["decathlon-pt"],
+        "SE": ["decathlon-se"],
+        "DK": ["decathlon-dk"],
+        "NO": ["decathlon-no"],
+        "FI": ["decathlon-fi"],
     },
 
     # Civic categories have no BRAND_FILL — detected from OSM civic JSONL
@@ -414,7 +438,14 @@ DISPLAY_NAMES: dict[str, str] = {
     "costco-se": "Costco", "costco-is": "Costco",
     "sams-club-us": "Sam's Club", "sams-club-mx": "Sam's Club",
     "bjs-wholesale-us": "BJ's Wholesale Club",
-    "makro-es": "Makro", "makro-nl": "Makro", "makro-pl": "Makro",
+    "makro-es": "Makro", "makro-nl": "Makro", "makro-pl": "Makro", "makro-pt": "Makro",
+    # Sport
+    "decathlon-fr": "Décathlon", "decathlon-de": "Decathlon", "decathlon-gb": "Decathlon",
+    "decathlon-es": "Decathlon", "decathlon-it": "Decathlon", "decathlon-nl": "Decathlon",
+    "decathlon-pl": "Decathlon", "decathlon-pt": "Decathlon", "decathlon-se": "Decathlon",
+    "decathlon-dk": "Decathlon", "decathlon-no": "Decathlon", "decathlon-fi": "Decathlon",
+    "decathlon-ca": "Decathlon",
+    "rei-us": "REI", "bass-pro-shops-us": "Bass Pro Shops", "cabelas-us": "Cabela's",
     # Lifestyle
     "ikea-us": "IKEA", "ikea-ca": "IKEA", "ikea-mx": "IKEA",
     "ikea-uk": "IKEA", "ikea-fr": "IKEA", "ikea-de": "IKEA",
@@ -447,9 +478,15 @@ def tier_of(cats: set[str]) -> int | None:
     Civic categories (medical, education) are ignored — they never gate the tier.
 
     T1 Regional:  hypermarket ∧ hardware ∧ (price_club ∨ lifestyle)
+                  OR any 4+ retail anchor categories (destination cluster)
     T2 District:  hypermarket ∧ at least one other retail category
     T3 Local:     ≥ 2 distinct retail categories
     None:         singleton — not a co-location
+
+    The n≥4 path handles 4-anchor clusters that lack hardware but still represent
+    destination-grade co-locations (e.g. Walmart + Costco + IKEA + Decathlon).
+    No effect when fewer than 5 categories are active (all size-4 combos in a
+    4-category world already satisfy the primary T1 rule).
     """
     retail = cats & _RETAIL_CATS
     n = len(retail)
@@ -462,6 +499,8 @@ def tier_of(cats: set[str]) -> int | None:
     has_life  = "lifestyle"   in retail
 
     if has_hyper and has_hw and (has_pc or has_life):
+        return 1
+    if n >= 4:   # 4+ anchors = destination regardless of composition
         return 1
     if has_hyper and n >= 2:
         return 2
@@ -476,7 +515,7 @@ def slots_for(iso: str, category: str) -> list[str]:
 def all_chains_for_iso(iso: str) -> dict[str, str]:
     """Return {chain_id: category} for all retail chains declared for iso."""
     result = {}
-    for cat in ("hypermarket", "hardware", "price_club", "lifestyle"):
+    for cat in ("hypermarket", "hardware", "price_club", "lifestyle", "sport"):
         for cid in slots_for(iso, cat):
             result[cid] = cat
     return result

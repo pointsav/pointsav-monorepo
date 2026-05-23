@@ -32,24 +32,36 @@ Three decisions were made by the operator after reviewing agent reports:
 
 ### Decision 1 — Add `sport` as 7th category (5th retail anchor)
 
+**Confirmed 2026-05-23 after Round 2 agent analysis: Option 2 (sport as T2/T3
+enhancer only; T1 rule unchanged). Option 3 (sport enables T1) was rejected.**
+
+Rejection rationale for Option 3:
+- Option 3 would expand EU T1 by **728%** (144 → ~1,192) vs NA T1 by only 26%
+  (1,013 → ~1,280), making T1 cross-market incomparable.
+- Flip candidates ({Hyper+HW+Sport}) have median span 1.397km / mc=3 — demonstrably
+  weaker geometry than current T1 (median span 2.085km / mc=5).
+- EU T1 undercount is a **price_club gap** (Costco sparse in EU), not a sport gap.
+  Option 3 papers over the Costco gap rather than fixing it.
+
 **Sport** (Decathlon-class destination sporting goods, ≥3,000 sqm) is the
-correct addition. Rationale:
+correct addition as T2/T3 enhancer:
 
 - Decathlon alone has ~2,000 stores across 13+ EU countries; it is the most
   frequently co-located non-anchor with hypermarkets in EU retail parks.
 - REI (US, ~180 stores) and Bass Pro/Cabela's (US, ~200 stores combined)
   fill the same slot in the North American market.
-- The format is large-format, destination-draw, retail-park co-locator —
-  matching the geometric and commercial logic of the existing retail categories.
-- Sport is the only category that unlocks significant T3 volume
-  (`{hypermarket, sport}`, `{hardware, sport}`) without inflating T1 unfairly.
+- Sport unlocks significant T3 volume (`{hypermarket, sport}`, `{hardware, sport}`)
+  without inflating T1.
 
-**Revised T1 rule** (unchanged structure, sport added as third T1 anchor option):
+**T1 rule UNCHANGED:**
 ```
-T1 = has_hyper ∧ has_hw ∧ (has_pc ∨ has_life ∨ has_sport)
-T2 = has_hyper ∧ n_retail ≥ 2   (unchanged)
-T3 = n_retail ≥ 2 ∧ ¬has_hyper  (unchanged)
+T1 = has_hyper ∧ has_hw ∧ (has_pc ∨ has_life)   ← unchanged
+T2 = has_hyper ∧ n_retail ≥ 2                    (unchanged)
+T3 = n_retail ≥ 2 ∧ ¬has_hyper                  (unchanged)
 ```
+
+Sport adds new T3 combos ({hypermarket, sport}, {hardware, sport}) and contributes
+to T2 via {hypermarket, hardware, sport}. Does NOT enable T1.
 
 **Category is same across NA and EU; only BRAND_FILL differs per country.**
 This is the invariant the whole taxonomy is built on.
