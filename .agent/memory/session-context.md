@@ -7,6 +7,29 @@ from Command Stage-6 rebase 2026-05-22 — flagged for Command; see outbox).
 
 ---
 
+## Session: 2026-05-23 session 6 | Role: totebox | Engine: claude-sonnet-4-6
+
+### Done this session
+- **Phase 6 of AUTO-TODO complete** — all four deferred items from §8.F shipped (262/262 tests):
+  - `LatencyClass` enum (`Interactive`/`Background`/`Batch`) added to slm-core; `select_tier()` routes Batch→Yoyo first; 2 new routing tests. Commit `b0a... / (latency_class)`.
+  - `BackendLifecycle` object-safe trait in `idle_monitor.rs`; `IdleMonitorHandle` wraps spawn; `AppState.idle_monitor: Option<Arc<dyn BackendLifecycle>>`; all AppState struct literals patched across lib.rs + 4 test files (micro_node, http_test, audit_endpoints, anthropic_shim).
+  - **GF-1**: `AuditLedger` made `Clone` (Arc-wrapped mutex); `write_audit()` fires append into `tokio::task::spawn_blocking` fire-and-forget.
+  - **GF-2**: `LocalTierClient` `reqwest::Client::builder()` with `connect_timeout(5s)` + `timeout(180s)`.
+  - Model drift: `SLM_LOCAL_MODEL` default → `"olmo-2-0425-1b-instruct"`; `Tier::Local` doc corrected.
+- Commits: `21281703` (BackendLifecycle), `a689ec1e` (GF-1), `28f666bf` (GF-2), + ops commit.
+- BRIEF-flow-restructure Phase 6 marked done; NEXT.md updated; session-context rotated.
+
+### Pending / carry-forward
+- **Stage 6 promote** — Command Session scope; local main ~11 commits ahead of origin/main; rebase required per inbox `command-20260520-stage6-rebase-required` before promote.
+- **After promote**: `bin/sync-local.sh --all` + rebuild + redeploy `slm-doorman-server` on workspace VM; update `local-doorman.service` env `SLM_LOCAL_MODEL=olmo-2-0425-1b-instruct`.
+- **service-content Ring 2/3 fix** (~30 LOC, main.rs:198) — write Source node before Doorman call.
+- Phases 7–8 of AUTO-TODO (Yo-Yo W5 remainder, Packer rebuild) — Command scope.
+
+### Operator preferences surfaced
+- AUTO mode with no interruptions — operator lets all phases run through to shutdown.
+
+---
+
 ## Session: 2026-05-23 session 4 | Role: totebox | Engine: claude-sonnet-4-6
 
 ### Done this session
@@ -73,41 +96,3 @@ from Command Stage-6 rebase 2026-05-22 — flagged for Command; see outbox).
 ### Operator preferences surfaced
 - No new preferences surfaced this session
 
----
-
-## 2026-05-22 | Totebox | claude-sonnet-4-6
-
-**Done this session:**
-- **lbug decision locked:** Option 1 — accept ~13.5 MB disk bloat; lbug C++ stays compiled
-  into binary on all nodes, dormant on Micro. Agent-confirmed: current binary is 4.2 MB
-  (shared) + 27 MB .so; static ~17.7 MB. The 2 GB RAM issue is LadybugDB mmap — solved
-  by SqliteGraphStore (Phase 3), not by linking mode. Decision is final; do not revisit.
-- **Phase 0-A** (`b2a09597`, Jennifer): `.agent/binary-targets.yaml` written; declares
-  `slm-doorman-server` as service-package/extension for SOFT- pipeline. Inbox message
-  `command-20260522-binary-targets-project-intelligence` marked actioned.
-- **Phase 0-B** (`9fbff79d` Peter, `335a8575` Jennifer): all `.agent/plans/*.md` migrated
-  to `.agent/briefs/BRIEF-*.md`; archive files to `briefs/archive/`; frontmatter added;
-  `briefs/README.md` index created; 2 workspace briefs picked up
-  (BRIEF-phase-3c-service-content-loRA-stub, BRIEF-layer3-compliance-report). Inbox
-  message `command-20260521-briefs-migration-project-intelligence` marked actioned.
-- **AUTO-TODO.md created** at `.agent/AUTO-TODO.md` — Phases 0–8 with gates, commit
-  guidance, and lbug decision baked in. Ready for AUTO session.
-- **BRIEF-flow-restructure.md** Status section updated with lbug decision + session 2
-  done items + correct resume point.
-
-**Pending / carry-forward:**
-- **▶ START HERE:** Phase 1 (§8.A archive alignment, low effort) + Phase 2 (`foundry-nodeclass`
-  crate, ~150 LOC) — run in parallel per AUTO-TODO.md.
-- Phase 3 (`SqliteGraphStore`, ~250 LOC + runtime backend selection) — THE blocker for fleet boot.
-- Phase 4 (service-slm Doorman node-class fixes — stops false Tier A on Micro).
-- Phase 5 (base-tier tests + cgroup sandbox).
-- Phases 6–7 (small wins, Yo-Yo W5 remainder).
-- Inbox `project-editorial-20260521-e4-triage-naming-blockers` — 3 drafts need Do-Not-Use
-  rename ("Yo-Yo") + personal-name rename before re-staging to drafts-outbound/. Not on
-  critical path; do after Phase 2.
-- Stage 6 promote — 7 commits ahead of origin/main; Command scope; rebase required first.
-
-**Operator preferences surfaced:**
-- Accept binary bloat to keep one build serving all tiers — "zero friction" principle.
-- AUTO-TODO style: phase-gated with explicit gates (cargo test green) between phases.
-- Comprehensive task file preferred over in-session planning.
