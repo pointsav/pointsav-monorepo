@@ -7,6 +7,19 @@ Attribution format: `[YYYY-MM-DD role@engine]`
 
 ## Hot — pick up here next session
 
+- [ ] **tool-keyplan — commit all files** `[2026-05-23 totebox@claude-code]`
+  - 3 sub-repo commits pending (shutdown interrupted before git add):
+    1. Monorepo: `Cargo.toml` + `Cargo.lock` + `app-orchestration-bim/Cargo.toml` + `tool-keyplan/` (Cargo.toml, src/main.rs, configs/po-1.toml)
+    2. Design system: `tokens/bim/interior.dtcg.json` (NEW) + `tokens/bim/key-plans.dtcg.json` (PO-1 furniture_refs)
+    3. Archive: `.agent/briefs/BRIEF-tool-keyplan.md`
+  - Engine validated: ASR A1.2 ✓ European Lighting ✓ Wheelchair ✓ → ALL CONSTRAINTS SATISFIED
+  - PO-1 bounding box: 2558 × 11800 mm = 30.19 m²
+  - Brief: `.agent/briefs/BRIEF-tool-keyplan.md`
+
+- [ ] **Deliverable 1b — key-plans-registry.md** `[2026-05-22 totebox@claude-code]`
+  - Write `woodfine-bim-library/key-plans/key-plans-registry.md` standalone Markdown
+  - All data in `.agent/plans/plan-bim-objects.md` Part 1
+
 - [x] **Key Plans SVG size-specific furniture — shipped 2026-05-22** `[2026-05-22 totebox@claude-code]`
   - `app-orchestration-bim v0.0.3` (commit 8ce0b9ba) — size_tier per category from area_m²
   - PO: 1/2/3 desks; Medical: 2/4/6 chairs + 1/1/2 doc offices; Lab: 3/5/7 bench clusters

@@ -9,6 +9,36 @@ Rolling 3-session summary. Newest entry first. Keep only 3; push oldest to sessi
 
 ---
 
+## 2026-05-23 | totebox@claude-code | tool-keyplan-scaffold
+
+**Done:**
+- Scaffolded `tool-keyplan` Rust crate — TOML config → validated DTCG JSON engine (v0.0.1)
+- Sent 5 parallel web agents to steelcase.com; confirmed specs for Leap V2, Migration SE, Groupwork 36", TS Pedestal, Currency Bookcase, Wing Chair CH445
+- Created `pointsav-design-system/tokens/bim/interior.dtcg.json` — 7 furniture tokens + 1 circulation constraint token
+- Created `pointsav-monorepo/tool-keyplan/` (Cargo.toml, src/main.rs, configs/po-1.toml)
+- Updated `pointsav-monorepo/Cargo.toml` — added tool-keyplan to workspace members
+- Updated `key-plans.dtcg.json` PO-1 — replaced `furniture_program` string array with structured `furniture_refs` + `bounding_box_mm` + `circulation_ref` + structured `compliance`
+- Engine validation passed: ASR A1.2 ✓ (30.19 m²/person ≥ 8.0) European Lighting ✓ Wheelchair ✓ (2558 mm ≥ 1500 mm)
+- Created `.agent/briefs/BRIEF-tool-keyplan.md`
+
+**CRITICAL — ALL FILES UNCOMMITTED (shutdown interrupted before git add):**
+- Monorepo sub-clone: `Cargo.toml` + `Cargo.lock` + `app-orchestration-bim/Cargo.toml` + `tool-keyplan/`
+- Design system: `tokens/bim/interior.dtcg.json` (NEW) + `tokens/bim/key-plans.dtcg.json` (modified PO-1)
+- Archive: `.agent/briefs/BRIEF-tool-keyplan.md`
+- Commit these FIRST at next session start
+
+**Pending / carry-forward:**
+- Deliverable 1b: `woodfine-bim-library/key-plans/key-plans-registry.md` standalone Markdown
+- Corporate Office SVG diagrams: `_ => {}` (no furniture); awaiting zone depth data
+- Apply Decisions 1–4 to DTCG tokens + delete BIM_TOKENS block from HTML
+- DTCG 6 missing files (unblocked)
+- Binary ledger entry at Command Session for v0.0.3
+- Stage 6: 37+ commits ahead of origin on cluster/project-bim
+
+**Operator preferences surfaced:** none new this session.
+
+---
+
 ## 2026-05-22 | totebox@claude-code | key-plans-site-size-specific-furniture
 
 **Done:**
@@ -40,8 +70,6 @@ Rolling 3-session summary. Newest entry first. Keep only 3; push oldest to sessi
 - Committed: 667c5f2 "plan: BIM Objects draft-v2 — authoritative sizes + Q1-Q6 + Decisions 1-4"
 - Copied v2 to `outputs/plan-bim-objects.md` — accessible via `fpull bim outputs/`
 
-**Inbox state at session end:** unchanged from prior session.
-
 **Pending / carry-forward:**
 - Deliverable 1: write `woodfine-bim-library/key-plans/key-plans-registry.md` — READY, all data in plan-bim-objects.md v2
 - Apply Decisions 1–4 to existing DTCG tokens + delete BIM_TOKENS block from HTML
@@ -51,44 +79,3 @@ Rolling 3-session summary. Newest entry first. Keep only 3; push oldest to sessi
 - Stage 6: 32+ commits ahead of origin
 
 **Operator preferences surfaced:** will proceed with Deliverable 1 in next session.
-
----
-
-## 2026-05-21 | totebox@claude-code | plan-bim-objects
-
-**Done:**
-- Read all 15+ source documents from `inputs/` (15 PDFs, XLSX, DOCX, 3 collaborator folders)
-- Created `.agent/plans/plan-bim-objects.md` — first draft BIM Objects specification (Key Plans / Tiles / Floor Plates / Building Width Calculator / Rust engine data model)
-- Created `outputs/` directory at `/srv/foundry/clones/project-bim/outputs/` — accessible via `fpull bim outputs/`
-- Resolved Q1–Q6 with operator for Deliverable 1 (Key Plans registry)
-- Read FIN.xlsx `Summary_Key Plans` tab — authoritative sizes for all professional office Key Plans
-- Specified Deliverable 1 fully in plan: `woodfine-bim-library/key-plans/key-plans-registry.md`
-- Read inbox: received 4 Key Plans foundation decisions from Command (all answered) + NOTAM permission resolved notification
-
-**Inbox state at session end:**
-- `command-20260520-bim-foundation-decisions` (HIGH / pending): 4 decisions received — naming, HTML BIM_TOKENS deletion, scope (all 3 building types), tile disambiguation. **Unblocks** DTCG work + Rust scaffold
-- B5 (HIGH / in-progress): Rust source for app-orchestration-bim — not started this session; pivoted to plan-bim-objects
-- DTCG accuracy errors (2 messages / operator-pending): unchanged
-
-**Pending / carry-forward:**
-- Deliverable 1: write `woodfine-bim-library/key-plans/key-plans-registry.md` (READY — plan complete)
-- Apply Decisions 1–4 to existing DTCG tokens + delete BIM_TOKENS block from HTML
-- B5: Rust source for app-orchestration-bim (still HIGH)
-- DTCG 6 missing files (now unblocked by Decision 3 scope confirmation)
-- Rust crate scaffold (still deferred until DTCG complete)
-- Stage 6: 31+ commits ahead of origin
-
-**Operator preferences surfaced:**
-- Pull pattern: `fpull bim outputs/` → `/srv/foundry/clones/project-bim/outputs/` on VM
-- Eco-region variants (landscaping/parking) deferred to later iteration
-- Corporate Office sizing deferred until Floor Plate dimensions confirmed
-
----
-
-## 2026-05-21 | totebox@claude-code | plan-bim-objects
-
-**Done:** Read 15+ source documents; created plan-bim-objects.md first draft; resolved Q1–Q6; read FIN.xlsx authoritative sizes; specified Deliverable 1.
-
-**Pending:** Deliverable 1 registry MD, DTCG standardisation, HTML BIM_TOKENS removal, Rust scaffold, Stage 6 (~31 commits ahead).
-
-**Operator preferences:** `fpull bim outputs/`; eco-region variants deferred; Corporate Office sizing deferred.
