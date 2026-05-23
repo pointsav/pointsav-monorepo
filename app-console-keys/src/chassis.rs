@@ -20,6 +20,7 @@ use ratatui::{
     widgets::{Block, Borders, Paragraph},
     Frame, Terminal,
 };
+use ratatui_image::{picker::Picker, protocol::StatefulProtocol, StatefulImage};
 
 use crate::{
     cartridge::{Cartridge, CartridgeAction},
@@ -44,6 +45,10 @@ pub struct AppConsoleKeys {
     tenant: String,
     pairing_state: PairingState,
     pair_rx: Option<mpsc::Receiver<PairingEvent>>,
+    // Kitty/Sixel graphics protocol (local PTY path only; None over russh).
+    picker: Option<Picker>,
+    // Cached QR image protocol state for the AwaitingApproval screen.
+    qr_state: Option<StatefulProtocol>,
 }
 
 impl AppConsoleKeys {
@@ -58,6 +63,8 @@ impl AppConsoleKeys {
             tenant: tenant.into(),
             pairing_state: PairingState::default(),
             pair_rx: None,
+            picker: None,
+            qr_state: None,
         }
     }
 
@@ -70,6 +77,12 @@ impl AppConsoleKeys {
     }
 
     pub fn set_pairing_awaiting(&mut self, code: String, request_id: String, fingerprint: String) {
+        // Pre-generate the pixel QR state for Kitty/Sixel rendering if picker is available.
+        let qr_content = format!("PAIR:{}", code.replace('-', ""));
+        self.qr_state = self.picker.as_mut().and_then(|p| {
+            crate::qr::qr_image(&qr_content)
+                .map(|img| p.new_resize_protocol(img))
+        });
         self.pairing_state = PairingState::AwaitingApproval { code, request_id, fingerprint };
     }
 
@@ -129,7 +142,7 @@ impl AppConsoleKeys {
 
         let mba_inactive = matches!(self.mba_status, MbaStatus::Inactive(_));
         if mba_inactive {
-            Self::render_pairing_screen(frame, chunks[1], &self.pairing_state);
+            Self::render_pairing_screen(frame, chunks[1], &self.pairing_state, &mut self.qr_state);
         } else if let Some(c) = self.cartridges.get_mut(&self.active) {
             c.render(frame, chunks[1]);
         } else {
@@ -193,7 +206,12 @@ impl AppConsoleKeys {
         ChassisAction::None
     }
 
-    fn render_pairing_screen(frame: &mut Frame, area: Rect, state: &PairingState) {
+    fn render_pairing_screen(
+        frame: &mut Frame,
+        area: Rect,
+        state: &PairingState,
+        qr_state: &mut Option<StatefulProtocol>,
+    ) {
         match state {
             PairingState::Unpaired { .. } => {
                 let block = Block::default()
@@ -232,8 +250,75 @@ impl AppConsoleKeys {
                 let inner = block.inner(area);
                 frame.render_widget(block, area);
 
-                // QR encodes the raw code (uppercase, no dash) for compact version-1 QR.
+                // QR content — same as what was encoded at set_pairing_awaiting time.
                 let qr_content = format!("PAIR:{}", code.replace('-', ""));
+
+                // Right column: code pill + instructions (always rendered).
+                let right_content = vec![
+                    Line::from(""),
+                    Line::from(""),
+                    Line::from(Span::styled(
+                        " Share this code with your administrator:",
+                        Style::default().fg(Color::White),
+                    )),
+                    Line::from(""),
+                    Line::from(""),
+                    Line::from(vec![
+                        Span::raw("  "),
+                        Span::styled(
+                            format!("  {}  ", code),
+                            Style::default()
+                                .fg(Color::Cyan)
+                                .bg(Color::DarkGray)
+                                .add_modifier(Modifier::BOLD),
+                        ),
+                    ]),
+                    Line::from(""),
+                    Line::from(""),
+                    Line::from(Span::styled(
+                        " Your administrator approves it.",
+                        Style::default().fg(Color::Gray),
+                    )),
+                    Line::from(Span::styled(
+                        " This screen updates automatically.",
+                        Style::default().fg(Color::Gray),
+                    )),
+                    Line::from(""),
+                    Line::from(Span::styled(
+                        " ◌  Waiting for approval…",
+                        Style::default().fg(Color::Blue),
+                    )),
+                    Line::from(""),
+                    Line::from(Span::styled(
+                        " [Q / Ctrl-C: quit and come back later]",
+                        Style::default().fg(Color::DarkGray),
+                    )),
+                ];
+
+                if let Some(proto) = qr_state.as_mut() {
+                    // Kitty/Sixel path: pixel-perfect QR on left, code pill on right.
+                    // Minimum width for the pixel QR column: 20 cells.
+                    let qr_w = inner.width.saturating_sub(36).max(20).min(inner.width / 2);
+                    if inner.width >= qr_w + 32 {
+                        let cols = Layout::default()
+                            .direction(Direction::Horizontal)
+                            .constraints([
+                                Constraint::Length(qr_w),
+                                Constraint::Fill(1),
+                            ])
+                            .split(inner);
+
+                        frame.render_stateful_widget(
+                            StatefulImage::new(),
+                            cols[0],
+                            proto,
+                        );
+                        frame.render_widget(Paragraph::new(right_content), cols[1]);
+                        return;
+                    }
+                }
+
+                // Unicode Dense1x2 fallback (Phase 2 path) or narrow terminal.
                 let qr_text = crate::qr::qr_unicode(&qr_content);
                 let qr_col_w: u16 = qr_text
                     .lines()
@@ -242,7 +327,6 @@ impl AppConsoleKeys {
                     .unwrap_or(30);
 
                 if !qr_text.is_empty() && inner.width >= qr_col_w + 32 {
-                    // Wide layout: QR on left, code pill + instructions on right.
                     let cols = Layout::default()
                         .direction(Direction::Horizontal)
                         .constraints([
@@ -254,48 +338,7 @@ impl AppConsoleKeys {
                     let qr_lines: Vec<Line> =
                         qr_text.lines().map(|l| Line::from(l.to_string())).collect();
                     frame.render_widget(Paragraph::new(qr_lines), cols[0]);
-
-                    let right = vec![
-                        Line::from(""),
-                        Line::from(""),
-                        Line::from(Span::styled(
-                            " Share this code with your administrator:",
-                            Style::default().fg(Color::White),
-                        )),
-                        Line::from(""),
-                        Line::from(""),
-                        Line::from(vec![
-                            Span::raw("  "),
-                            Span::styled(
-                                format!("  {}  ", code),
-                                Style::default()
-                                    .fg(Color::Cyan)
-                                    .bg(Color::DarkGray)
-                                    .add_modifier(Modifier::BOLD),
-                            ),
-                        ]),
-                        Line::from(""),
-                        Line::from(""),
-                        Line::from(Span::styled(
-                            " Your administrator approves it.",
-                            Style::default().fg(Color::Gray),
-                        )),
-                        Line::from(Span::styled(
-                            " This screen updates automatically.",
-                            Style::default().fg(Color::Gray),
-                        )),
-                        Line::from(""),
-                        Line::from(Span::styled(
-                            " ◌  Waiting for approval…",
-                            Style::default().fg(Color::Blue),
-                        )),
-                        Line::from(""),
-                        Line::from(Span::styled(
-                            " [Q / Ctrl-C: quit and come back later]",
-                            Style::default().fg(Color::DarkGray),
-                        )),
-                    ];
-                    frame.render_widget(Paragraph::new(right), cols[1]);
+                    frame.render_widget(Paragraph::new(right_content), cols[1]);
                 } else {
                     // Narrow layout: code pill only.
                     let lines = vec![
@@ -471,6 +514,8 @@ impl AppConsoleKeys {
     /// Run in local crossterm PTY mode (default).
     pub fn run_local(mut self) -> Result<()> {
         enable_raw_mode()?;
+        // Must run after enable_raw_mode — Picker sends XTGETTCAP in raw mode.
+        self.picker = Picker::from_query_stdio().ok();
         let mut stdout = io::stdout();
         execute!(stdout, EnterAlternateScreen, cursor::Hide)?;
 
