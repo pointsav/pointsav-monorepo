@@ -4,7 +4,7 @@ state: draft-pending-language-pass
 originating_cluster: project-intelligence
 target_repo: content-wiki-documentation
 target_path: ./
-target_filename: topic-jennifer-datagraph-rebuild.es.md
+target_filename: topic-service-slm-graph-store-migration.es.md
 audience: vendor-public
 bcsc_class: current-fact
 language_protocol: PROSE-TOPIC
@@ -18,13 +18,13 @@ references:
   - conventions/three-ring-architecture.md
   - conventions/worm-ledger-design.md
 notes_for_editor: |
-  Traducción completa al español de topic-jennifer-datagraph-rebuild.md.
+  Traducción completa al español de topic-service-slm-graph-store-migration.md.
   Los términos técnicos (LadybugDB, service-content, Doorman, vLLM, OLMo,
   GCS, REST, JSON, YAML, gRPC) se mantienen en inglés.
   Verificar precisión técnica y fluidez del español antes de publicar.
 ---
 
-# TOPIC — Reconstrucción del DataGraph de Jennifer
+# TOPIC — Migración del Almacén de Grafos de service-slm
 
 ## Descripción general
 

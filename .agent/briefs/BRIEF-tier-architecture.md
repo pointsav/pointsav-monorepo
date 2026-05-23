@@ -20,9 +20,9 @@ structurally right. Hard rule confirmed: **Tier A must never handle entity extra
 
 | Task class | Correct tier | Rationale |
 |---|---|---|
-| Read file / summarise | Tier A (local 7B) | Zero cost, instant, within 7B quality threshold |
-| Grep / search interpretation | Tier A (local 7B) | Doesn't need reasoning |
-| Tool-call args (flat schema, haiku-tier) | Tier A (local 7B) | 7B reliable; 1B is not |
+| Read file / summarise | Tier A (local 1B, NUC-class only) | Zero cost, instant; fleet nodes have no Tier A |
+| Grep / search interpretation | Tier A (local 1B, NUC-class only) | Doesn't need reasoning |
+| Tool-call args (flat schema, haiku-tier) | Tier A (local 1B, NUC-class only) | 1B specialist, narrow task; fleet → Tier B/C |
 | Moderate code edit / refactor | Tier B "trainer" (Yo-Yo #1) | Good enough, cheap |
 | Entity extraction / DataGraph | Tier B "trainer" (Yo-Yo #1) | Proven at 74 entities; 1B cannot do this |
 | Complex debugging | Tier C (Claude) | Needs real reasoning |
@@ -43,20 +43,13 @@ Eliminates the per-boot retry storm by construction.
 
 ---
 
-## 2. Tier A Model — Recommendation
+## 2. Tier A Model — Corrected (2026-05-23)
 
-**Upgrade to: OLMo 2 1124 7B Instruct Q4_K_M. MemoryMax=6G.**
+**Pre-doctrine-audit error corrected.** The original §2 recommended upgrading to OLMo 2 1124 7B Instruct Q4_K_M for Tier A. This contradicts DOCTRINE claims #49 and #54 and was written before the 2026-05-22 multi-agent doctrine audit (BRIEF-flow-restructure §0).
 
-| Option | Weights (Q4) | KV @ctx 4096 | MemoryMax | VM headroom (16GB) |
-|---|---|---|---|---|
-| OLMo 2 0425 1B (current) | ~0.7GB | ~0.4GB | 3G | Wide |
-| OLMo 2 1124 7B (target) | ~4.5GB | ~0.5GB | 6G | Tight but OK |
-| OLMo 2 1124 13B | ~7.5GB | ~0.7GB | 10G | Not viable |
+**Corrected model:** Tier A = **OLMo 2 1B narrow specialist** (Instruct variant). Tier A is a property of the **NUC/hardware-Totebox rung** — not the $7/mo fleet node and not the workspace VM. The fleet node runs the Doorman as a pure broker with no local model.
 
-Why 7B beats 1B for Tier A tasks:
-- Read/summarise: 1B produces watery output; 7B produces coherent paragraph-level summaries
-- Tool-call JSON args (haiku-tier shim for Sprint 0a): 1B unreliable; 7B handles flat-schema reliably — this is the gating capability for the Anthropic shim
-- Apprenticeship signal quality: 1B pairs too noisy to use for training
+The 7B model currently on the workspace VM (`OLMo-2-0425-7B-Think-Q4_K_M`) is being stopped and disabled per flow-restructure §12. Do not use it as a Tier A reference; it is wrong for both tiers it could pretend to be.
 
 **Never use "Think" variants at Tier A.** Think variants emit reasoning traces before answering — wrong shape for latency-sensitive tasks and wasted KV cache. Think = Tier B (GPU), Instruct = Tier A (CPU).
 
