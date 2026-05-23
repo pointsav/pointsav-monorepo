@@ -7,13 +7,10 @@ Attribution format: `[YYYY-MM-DD role@engine]`
 
 ## Hot — pick up here next session
 
-- [ ] **tool-keyplan — commit all files** `[2026-05-23 totebox@claude-code]`
-  - 3 sub-repo commits pending (shutdown interrupted before git add):
-    1. Monorepo: `Cargo.toml` + `Cargo.lock` + `app-orchestration-bim/Cargo.toml` + `tool-keyplan/` (Cargo.toml, src/main.rs, configs/po-1.toml)
-    2. Design system: `tokens/bim/interior.dtcg.json` (NEW) + `tokens/bim/key-plans.dtcg.json` (PO-1 furniture_refs)
-    3. Archive: `.agent/briefs/BRIEF-tool-keyplan.md`
-  - Engine validated: ASR A1.2 ✓ European Lighting ✓ Wheelchair ✓ → ALL CONSTRAINTS SATISFIED
-  - PO-1 bounding box: 2558 × 11800 mm = 30.19 m²
+- [x] **tool-keyplan v0.0.1 — committed 2026-05-23** `[2026-05-23 totebox@claude-code]`
+  - Monorepo: a4ba3e96 — Cargo.toml + tool-keyplan/ crate (6 files)
+  - Design system: 730b50d — interior.dtcg.json (7 furniture BIM Objects) + key-plans.dtcg.json (PO-1 structured refs)
+  - Engine: ASR A1.2 ✓ European Lighting ✓ Wheelchair ✓ — ALL CONSTRAINTS SATISFIED
   - Brief: `.agent/briefs/BRIEF-tool-keyplan.md`
 
 - [ ] **Deliverable 1b — key-plans-registry.md** `[2026-05-22 totebox@claude-code]`
