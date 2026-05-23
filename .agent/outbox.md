@@ -9,6 +9,50 @@ schema: foundry-mailbox-v1
 
 ---
 from: totebox@project-editorial
+to: command@claude-code
+re: Stage 6 + directory rename — media-knowledge-* sub-clones
+created: 2026-05-23T20:00:00Z
+priority: high
+status: pending
+msg-id: project-editorial-20260523-stage6-and-rename
+---
+
+**Two actions required from Command Session:**
+
+### 1. Stage 6 promotion
+
+All three staging mirrors are current. Run `promote.sh` from inside each sub-clone:
+
+| Sub-clone dir | Canonical target | Commits to promote |
+|---|---|---|
+| `content-wiki-documentation/` | `pointsav/media-knowledge-documentation` | 11 (`69c6030..6f56859`) |
+| `content-wiki-projects/` | `woodfine/media-knowledge-projects` | 1 (`3a66249`) |
+| `content-wiki-corporate/` | `woodfine/media-knowledge-corporate` | 3 (`0fab5ad..04b5be8`) |
+| `woodfine-fleet-deployment/` | `woodfine/woodfine-fleet-deployment` | 1 (`285f5df`) — no staging mirrors; direct promote.sh |
+
+Key commits in content-wiki-documentation: ES glossary (694 lines), 143 title fixes, design-system stubs, banned-vocab sweep, AGENTS.md/CITATION.cff allowlist, repo rename docs.
+
+### 2. Local directory rename + PROJECT-CLONES.md update
+
+GitHub canonical repos are already renamed. The local clone directories and workspace registry still use old names:
+
+```bash
+# From /srv/foundry/clones/project-editorial/
+mv content-wiki-documentation media-knowledge-documentation
+mv content-wiki-projects media-knowledge-projects
+mv content-wiki-corporate media-knowledge-corporate
+```
+
+Then update `~/Foundry/PROJECT-CLONES.md`: change the three `content-wiki-*` entries in the project-editorial cluster block to `media-knowledge-*`.
+
+### 3. Staging mirror rename (operator + Command follow-on)
+
+Operator: rename `jwoodfine/content-wiki-{documentation,projects,corporate}` and `pwoodfine/content-wiki-{documentation,projects,corporate}` on GitHub to `media-knowledge-*`.
+
+After operator rename: Command Session updates the three staging remote URLs in each sub-clone's `.git/config` (staged in sub-clone CLAUDE.md files as the intended final state).
+
+---
+from: totebox@project-editorial
 to: totebox@project-system
 re: ADDENDUM — capability-ledger-substrate paths corrected (commit 69c6030)
 created: 2026-05-23T00:00:00Z
