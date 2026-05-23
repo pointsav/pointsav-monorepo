@@ -155,7 +155,7 @@
       "$type": "color",
       "primary": { "$value": "#0e0f12", "$description": "→ primitive.color.neutral-100 in primitive.json" },
       "secondary": { "$value": "#4a4f59", "$description": "→ primitive.color.neutral-70 in primitive.json" },
-      "tertiary": { "$value": "#878d99", "$description": "→ primitive.color.neutral-50 in primitive.json" },
+      "tertiary": { "$value": "#666c78", "$description": "→ primitive.color.neutral-60 in primitive.json; was #878d99 (neutral-50, 3.21:1 — WCAG AA fail, fixed 2026-05-23)" },
       "placeholder": { "$value": "#aab0bb", "$description": "→ primitive.color.neutral-40 in primitive.json" },
       "on-color": { "$value": "#ffffff" },
       "disabled": { "$value": "#cdd1d8", "$description": "→ primitive.color.neutral-30 in primitive.json" }
@@ -172,7 +172,7 @@
     "border": {
       "$type": "color",
       "subtle": { "$value": "#e6e8ec", "$description": "→ primitive.color.neutral-20 in primitive.json" },
-      "strong": { "$value": "#878d99", "$description": "→ primitive.color.neutral-50 in primitive.json" },
+      "strong": { "$value": "#666c78", "$description": "→ primitive.color.neutral-60 in primitive.json; was #878d99 (neutral-50, WCAG 1.4.11 fail, fixed 2026-05-23)" },
       "interactive": { "$value": "{primitive.color.brand.blue.60}" },
       "disabled": { "$value": "#cdd1d8", "$description": "→ primitive.color.neutral-30 in primitive.json" }
     },
@@ -196,7 +196,7 @@
         "color": { "$value": "{primitive.color.link.redlink}" }
       },
       "editpencil": {
-        "color": { "$value": "#878d99", "$description": "→ semantic.text.tertiary" }
+        "color": { "$value": "#666c78", "$description": "→ semantic.text.tertiary; was #878d99, fixed 2026-05-23" }
       },
       "featured-pin": {
         "bg": { "$value": "{primitive.color.brand.teal.50}" },
@@ -243,7 +243,7 @@
         "bg": { "$type": "color", "$value": "#e6e8ec", "$description": "→ semantic.knowledge.toc.bg" }
       },
       "section": {
-        "heading-edit-pencil-color": { "$type": "color", "$value": "#878d99", "$description": "→ semantic.knowledge.editpencil.color" },
+        "heading-edit-pencil-color": { "$type": "color", "$value": "#666c78", "$description": "→ semantic.knowledge.editpencil.color; was #878d99, fixed 2026-05-23" },
         "heading-edit-pencil-opacity-default": { "$type": "number", "$value": 0 },
         "heading-edit-pencil-opacity-hover": { "$type": "number", "$value": 1 }
       },
