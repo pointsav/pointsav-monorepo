@@ -383,7 +383,8 @@ fn is_false(b: &bool) -> bool {
 mod tests {
     use super::*;
     use slm_core::{
-        CanonicalMessage, Complexity, ComputeRequest, GrammarConstraint, ModuleId, RequestId, Tier,
+        CanonicalMessage, Complexity, ComputeRequest, GrammarConstraint, LatencyClass, ModuleId,
+        RequestId, Tier,
     };
     use std::str::FromStr;
     use wiremock::matchers::{method, path};
@@ -396,6 +397,7 @@ mod tests {
             model: Some("OLMo-3-7B-Q4_K_M.gguf".into()),
             messages: vec![CanonicalMessage::text("user", "ping")],
             complexity: Complexity::Low,
+            latency_class: LatencyClass::default(),
             tier_hint: Some(Tier::Local),
             stream: false,
             max_tokens: Some(20),
