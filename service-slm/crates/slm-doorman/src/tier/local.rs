@@ -10,6 +10,9 @@
 
 use std::time::{Duration, Instant};
 
+const LOCAL_INFERENCE_CONNECT_TIMEOUT_SECS: u64 = 5;
+const LOCAL_INFERENCE_TIMEOUT_SECS: u64 = 180;
+
 use serde::{Deserialize, Serialize};
 use slm_core::{CanonicalMessage, ContentBlock, ComputeRequest, ComputeResponse, GrammarConstraint, Tier};
 use tracing::debug;
@@ -33,10 +36,12 @@ pub struct LocalTierClient {
 
 impl LocalTierClient {
     pub fn new(config: LocalTierConfig) -> Self {
-        Self {
-            config,
-            http: reqwest::Client::new(),
-        }
+        let http = reqwest::Client::builder()
+            .connect_timeout(Duration::from_secs(LOCAL_INFERENCE_CONNECT_TIMEOUT_SECS))
+            .timeout(Duration::from_secs(LOCAL_INFERENCE_TIMEOUT_SECS))
+            .build()
+            .expect("LocalTierClient: failed to build reqwest client");
+        Self { config, http }
     }
 
     pub fn endpoint(&self) -> &str {
