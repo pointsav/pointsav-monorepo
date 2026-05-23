@@ -8,6 +8,23 @@ format: rolling-3-entries  # oldest entry pushed to session-context-archive.md
 
 ---
 
+## 2026-05-23 | Totebox | claude-code
+
+**Done this session:** Startup-then-immediate-shutdown. Stale session lock from 2026-05-20 cleared (PID 702884 dead). No work performed.
+
+**Pending / carry-forward:**
+- [ ] Write `.agent/binary-targets.yaml` — declare `app-privategit-design` binary target (msg-id: command-20260522-binary-targets-project-design)
+- [ ] Process DTCG chart entity-role tokens from project-orgcharts (prerequisite: project-orgcharts Stage 6 must land first; msg-id: project-orgcharts-20260521-chart-tokens-dtcg)
+- [ ] Process icon-tab component draft from project-marketing (msg-id: project-marketing-20260522-design-component-icon-tab)
+- [ ] Process woodfine-blue-tint token draft from project-marketing (msg-id: project-marketing-20260516-design-token-woodfine-blue-tint)
+- [ ] 5 DESIGN drafts from project-editorial awaiting design pass (msg-id: project-editorial-20260519-design-drafts-routing)
+- [ ] Fleet-deployment dirty state: investigate zero-diff modifications; commit GUIDE rename
+- [ ] GIS screenshots: asset-gis-map-screenshots-2026-05-06.md at asset-capture-pending-operator (operator action)
+
+**Operator preferences surfaced:** none new.
+
+---
+
 ## 2026-05-20 | Totebox | claude-code
 
 **Done this session:** Startup-only. Completed all 8 startup steps. Session lock written. Inbox swept (all messages actioned). State survey of all 3 sub-clones.
