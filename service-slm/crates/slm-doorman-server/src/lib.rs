@@ -117,6 +117,7 @@ pub mod test_helpers {
             gateway_token: None,
             node_class: "hardware",
             tier_a_reason: "available",
+            idle_monitor: None,
         })
     }
 
@@ -152,6 +153,7 @@ pub mod test_helpers {
             gateway_token: None,
             node_class: "hardware",
             tier_a_reason: "available",
+            idle_monitor: None,
         })
     }
 
@@ -185,6 +187,7 @@ pub mod test_helpers {
             gateway_token: None,
             node_class: "hardware",
             tier_a_reason: "available",
+            idle_monitor: None,
         })
     }
 
@@ -242,6 +245,7 @@ pub mod test_helpers {
             gateway_token: None,
             node_class: "hardware",
             tier_a_reason: "available",
+            idle_monitor: None,
         })
     }
 
@@ -315,6 +319,7 @@ pub mod test_helpers {
             gateway_token: None,
             node_class: "hardware",
             tier_a_reason: "available",
+            idle_monitor: None,
         });
         (state, ledger_dir)
     }
@@ -367,6 +372,7 @@ pub mod test_helpers {
             gateway_token: None,
             node_class: "hardware",
             tier_a_reason: "available",
+            idle_monitor: None,
         });
         (state, ledger_dir)
     }
@@ -416,6 +422,7 @@ pub mod test_helpers {
             gateway_token,
             node_class: "hardware",
             tier_a_reason: "available",
+            idle_monitor: None,
         })
     }
 
@@ -441,6 +448,7 @@ pub mod test_helpers {
             gateway_token: None,
             node_class: "hardware",
             tier_a_reason: "available",
+            idle_monitor: None,
         })
     }
 }
