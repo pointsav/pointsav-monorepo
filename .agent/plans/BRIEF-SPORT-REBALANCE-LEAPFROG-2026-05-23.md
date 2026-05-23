@@ -1,8 +1,27 @@
 # BRIEF — Sport Category · Tier Rebalance · Leapfrog 2030
 
 > Synthesis brief · 2026-05-23 · captures four-agent research session (2026-05-22).
-> Precedes implementation of Phase 19 (sport ingestion + London fix + UI filter).
+> **STATUS: Phase 19 IMPLEMENTED** — committed `a2c974e4` (2026-05-23, Peter Woodfine).
+> Scheduled to build tonight at 05:00 UTC 2026-05-24 (PID 2507282).
 > Companion: `BRIEF-CATEGORY-TAXONOMY-2026-05-22.md` — original category rationale.
+
+---
+
+## Implementation status (2026-05-23)
+
+| Item | Status | Commit |
+|------|--------|--------|
+| `sport` category added to taxonomy.py | ✓ DONE | a2c974e4 |
+| n≥4 T1 rule added to tier_of() | ✓ DONE | a2c974e4 |
+| Sport BRAND_FILL: Decathlon EU×12+CA, REI, Bass Pro, Cabela's | ✓ DONE | a2c974e4 |
+| Geometric T2→T3 split (span<1.25km ∧ mc≤2) | ✓ DONE | a2c974e4 |
+| London splitter fix (split_greedy_tight diameter guard) | ✓ DONE | a2c974e4 |
+| costco-uk re-ingest (30 clean warehouse records) | ✓ DONE | a2c974e4 |
+| phase19-rebuild.sh (ingest 16 chains → rebuild cluster/tiles) | ✓ DONE | a2c974e4 |
+| Tonight's build scheduled (PID 2507282, 05:00 UTC 2026-05-24) | ✓ SCHEDULED | — |
+| DE lifestyle chains (XXXLutz / Höffner / Segmüller) | DEFERRED Phase 20 | — |
+| Meijer US / Bodega Aurrera MX | DEFERRED Phase 19 or 20 | — |
+| `market_position_pctile` field | DEFERRED | — |
 
 ---
 

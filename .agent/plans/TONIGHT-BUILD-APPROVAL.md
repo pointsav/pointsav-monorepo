@@ -7,16 +7,37 @@
 
 ## What runs tonight
 
-A **Phase 2 cluster + tile rebuild** only. No new chain ingests, no catchment rebuild.
+Two scripts run sequentially (PID 2507282 confirmed running):
 
-| Step | Script | Output | Est. |
-|------|--------|--------|------|
-| 1 | `build-clusters.py` | `work/clusters.geojson` | ~4 min |
-| 2 | `build-tiles.py --layer 2` | `layer2-clusters.pmtiles` + `clusters-meta.json` | ~2 min |
+```
+bash nightly-rebuild.sh >> nightly-rebuild.log 2>&1
+bash phase19-rebuild.sh >> phase19-rebuild.log 2>&1
+```
 
-**Total: ~6 minutes.**
+**Script 1 — nightly-rebuild.sh (~6 min)**
 
-Four changes are applied in this build.
+| Step | Action | Output |
+|------|--------|--------|
+| 1 | Pre-flight: disk check + taxonomy.py line count | guard |
+| 2 | `build-clusters.py` | `work/clusters.geojson` |
+| 3 | `build-tiles.py --layer 2` | `layer2-clusters.pmtiles` + `clusters-meta.json` |
+
+Applies London fix + geometric split + costco-uk data.
+
+**Script 2 — phase19-rebuild.sh (~45 min, rate-limited by OSM Overpass)**
+
+| Step | Action |
+|------|--------|
+| 1 | Ingest Decathlon EU×12 countries (FR/DE/GB/ES/IT/NL/PL/PT/SE/DK/NO/FI) |
+| 2 | Ingest Decathlon CA |
+| 3 | Ingest REI-US, Bass Pro Shops-US, Cabela's-US |
+| 4 | `build-clusters.py` (with sport chains in JSONL) |
+| 5 | `build-tiles.py --layer 2` (final rebuild incorporating all sport data) |
+
+**Total estimated: ~50 min.** Layer 2 rebuilt twice — first pass applies geometric
+fixes; second pass is the authoritative Phase 19 output with sport chains.
+
+Four changes are applied across both builds.
 
 ---
 
