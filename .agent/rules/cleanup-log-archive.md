@@ -5,107 +5,107 @@ Active config sections remain in `cleanup-log.md`.
 
 ---
 
-> *Archive compressed — 820 older lines removed. Full history in git log.*
+> *Archive compressed — 579 older lines removed. Full history in git log.*
 
-  `sync/`) plus `main.rs` and `config.rs`; `templates/` (4 HTML
-  files); `static/` (13 KB `wiki.js` + 19 KB `style.css`);
-  `tests/fixtures/architecture/` with 2 markdown fixtures;
-  `.gitignore` (46 B). `Cargo.toml` and `README.md` were
-  overwritten (93 B → 1,470 B; 751 B → 8,243 B). A garbage
-  top-level directory literally named `{src` — containing a
-  four-level chain of brace-expansion artefacts from how the zip
-  was originally created (quoted `mkdir` blocked shell expansion)
-  — was removed before any git operation. Nothing staged or
-  committed in the extraction step itself.
-- **Open follow-ups from the extraction (not acted on this
-  session):**
-  - `README.es.md` (403 B scaffold) is now out of sync with the
-    new 8,243 B English README — CLAUDE.md §6 bilingual-pair rule
-    in violation until a refresh pass lands. Editorial work;
-    track as open item rather than inline.
-  - `.gitkeep` at project root is redundant now that `src/` has
-    real files; remove at next commit touching this project.
-  - Registry row (`app-mediakit-knowledge` under `app-mediakit`)
-    currently reads "Scaffold-coded, 4 files" — state remains
-    Scaffold-coded per §8 (never run end-to-end) but file count
-    and notes need updating.
-  - Source-side disposition of
-    `content-wiki-documentation/app-mediakit-knowledge.zip`
-    undecided: delete from the sibling repo (cross-repo move,
-    separate commit there), or retain as an archive. Not
-    recorded in this repo's `handoffs-outbound.md` since the
-    direction is inbound, not outbound.
-- **BIM product family handoff landed — four project directories
-  created, rules extension added.** The zip
-  `/home/mathew/Documents/pointsav-bim-handoff.zip` (44 KB, 10
-  files) was unpacked into a `/tmp` staging area and 9 files were
-  placed into the monorepo:
-  - Four new project directories each with `CLAUDE.md` +
-    `RESEARCH.md`: `app-console-bim/`, `app-orchestration-bim/`,
-    `app-workplace-bim/`, `service-bim/`.
-  - One new `.claude/rules/` file:
-    `.claude/rules/bim-product-family.md` (9,238 B) — a new
-    *category* of rules file (product-family rules), outside the
-    four named in `~/Foundry/CLAUDE.md` §10. Surfaced to Master
-    Claude as a potential §10 extension.
-  - Joint research file placed as `RESEARCH.md` in **both**
-    `app-console-bim/` and `app-orchestration-bim/` — intentional
-    duplication for Task Claude — BIM to rationalise during its
-    cleanup pass, not prematurely.
-  - `RESEARCH-BIM-MARKET.md` not placed in the monorepo (already
-    present in `content-wiki-documentation/` at repo root,
-    byte-identical; per `repo-layout.md` sibling-repo rule, market
-    research belongs in content-wiki only).
-  - `CLAUDE-root-additions.md` held back — it describes patches to
-    a monorepo root `CLAUDE.md` that does not exist. Zip retained
-    at source path; Master Claude applies when the root CLAUDE.md
-    is created.
-- **Registry drift closed (four rows without directories).** The
-  2026-04-22 bootstrap registered the four BIM dirs as
-  Reserved-folder with "1 file (RESEARCH.md)" notes, but
-  `git ls-tree` showed no trace on any branch. The rows were
-  aspirational; the directories were never created. This session
-  creates them for the first time. Registry rows updated to
-  reflect the actual contents (2 files each). State remains
-  Reserved-folder (§8: Scaffold-coded requires a `Cargo.toml`
-  skeleton; these are research-phase, no code yet).
-- **Cross-repo BIM handover outbox entry opened.** Single
-  consolidated entry in `handoffs-outbound.md` headed "BIM
-  material → content-wiki-documentation", labelled as a **pattern
-  variant: raw-material handover, not a file move** — source files
-  remain in the monorepo permanently. Destination Root Claude
-  transforms the material into proper wiki topics per its own
-  repo-layout. Detection pattern for closure:
-  `"receive BIM material from pointsav-monorepo"` in the
-  destination repo's git log.
-- **Surfaced for Master Claude (workspace-scope follow-ups):**
-  1. **Root `CLAUDE.md` for `pointsav-monorepo` is missing.**
-     Required per §10 to wire the `.claude/rules/*` files into
-     Claude sessions. `CLAUDE-root-additions.md` in the handoff
-     zip (location:
-     `/home/mathew/Documents/pointsav-bim-handoff.zip` →
-     `CLAUDE-root-additions.md`, 1,594 B) describes four targeted
-     additions (`.claude/rules/bim-product-family.md` reference,
-     four BIM dirs in Repo structure, canonical-name guards,
-     IFC/F12 rules). Apply when the root CLAUDE.md is first
-     drafted.
-  2. **§10 canonical list may need to grow.**
-     `bim-product-family.md` is a fifth type of `.claude/rules/`
-     file beyond the four listed in §10. Decision: enumerate,
-     generalise, or name as a subcategory.
-  3. **`cluster-bim` clone provisioning pending.** Per §9, Master
-     Claude provisions clones. A future Task Claude — BIM needs
-     `~/Foundry/clones/cluster-bim/` with feature branch
-     `cluster/bim` and a `PROJECT-CLONES.md` row before it can
-     activate the four BIM projects.
-  4. **Stale paths in existing outbox entries.** The two prior
-     entries in `handoffs-outbound.md` use
-     `/home/mathew/Foundry/factory-pointsav/...` paths (non-
-     existent on disk) and helper `~/Foundry/tool-commit-as-next.sh`
-     (§7 canonical is `~/Foundry/bin/commit-as-next.sh`). A
-     destination Root Claude running the prescribed commands
-     verbatim would hit failures. Needs correction before
-     pickup. This session's new BIM entry uses correct paths.
+  Claude session in `content-wiki-documentation/` execute the
+  handoffs without reading anything from this session's context.
+- **Fifth (final) rename-series closure: Cognitive Forge term
+  retired.** `service-slm/cognitive-forge/` renamed to
+  `service-slm/router/`; former top-level `tool-cognitive-forge/`
+  moved in as `service-slm/router-trainer/`. Producer/consumer
+  now live together under `service-slm`. Rust Cargo.toml `name`
+  field + `main.rs` usage string updated. Python
+  `distill_knowledge.py` relocated from non-canonical `src/` to
+  `scripts/` alongside `ignite_teacher.sh`. Three binary/log
+  files stopped being tracked (`llamafile` 35 MB, `engine.log`,
+  `llama.log`) via `git rm --cached` + new `.gitignore` section;
+  physical files remain at new paths so the Python workflow still
+  finds them. The 15 MB `qwen2.5-coder-1.5b.gguf` under `weights/`
+  was already ignored. Registry Scaffold-coded 54 → 53, Total
+  98 → 97 (one top-level project absorbed into `service-slm`).
+  This closes the rename-series queue (5 of 5 done) and the
+  separate `llama.log` stray item surfaced earlier in this
+  session.
+- **Fourth rename-series closure: `service-email-egress-{ews,imap}`
+  wrappers flattened; consolidation plan reversed.** After
+  reviewing sub-crate contents, EWS and IMAP are two
+  protocol-specific adapters — not duplicates. Shared sub-crates:
+  `egress-ingress`, `egress-ledger`, `egress-roster`,
+  `data-ledgers/`. Protocol-specific: `egress-archive-ews` /
+  `egress-archive-imap`; EWS-only: `egress-prune`,
+  `egress-balancer`. Merging them would erase that architectural
+  distinction. Instead, flattened the redundant
+  `service-email-egress-ews/service-email-egress-ews/` wrapper
+  (and the imap equivalent) — 73 files promoted up one level.
+  Relative `../data-ledgers/` paths in Rust sources remain valid
+  because crate dirs and `data-ledgers/` both moved together.
+  Registry reclassified both from Defect → Scaffold-coded;
+  Defect count 2 → 0 (registry is now Defect-free); Scaffold-coded
+  52 → 54. The 13 dir-name / Cargo-name mismatches the 2026-04-18
+  audit flagged (e.g., dir `egress-ingress` containing
+  `Cargo.toml` with `name = "service-email-batch-ingress"`) are
+  unaddressed and remain as a separate audit finding.
+- **Third rename-series closure: `vendors-maxmind` reclassified
+  to `app-mediakit-telemetry/assets/`.** Not a rename but a
+  data-reclass: the directory held only the 63.5 MB
+  `GeoLite2-City.mmdb` + READMEs with no code. The vendor's own
+  README already named `app-mediakit-telemetry/assets/` as the
+  intended target path — the monorepo had never realised that
+  path. Moved the `.mmdb` + both READMEs into the documented
+  target; removed `vendors-maxmind/.keep`; empty directory
+  auto-removed by git. Closed the related "does it belong as a
+  `vendor-*` crate at all?" open question (answer: no;
+  non-workspace data directory). Updated monorepo `README.md`
+  line 151 and `USER_GUIDE_2026-03-30_V2.md` line 902 (in-transit
+  edit travels with the cross-repo handoff). Extended
+  `repo-layout.md` to name `assets/` and `data/` as conventional
+  project subfolders. Registry row removed; Defect 3 → 2, Total
+  rows 99 → 98. Python script reference in
+  `app-mediakit-telemetry/scripts/generic-omni-matrix-engine.py`
+  left unchanged (it refers to deployment-side path relative to
+  CWD — independent of monorepo-side layout). Separate `.mmdb` →
+  build-time-fetch task remains open under Structural defects.
+- **Open question surfaced.** `surveyor.py` hard-codes
+  `MAX_DAILY_VERIFICATIONS = 10`. The existing cleanup-log open
+  question — "Verification Surveyor daily throttle number — Under
+  operational review. Do not cite a specific number" — must
+  reconcile: either the code is authoritative (close the question,
+  value is 10) or the doc is authoritative (the code is out of step
+  and needs updating). Do not cite the number externally until
+  resolved.
+- **Second open question surfaced (os-infrastructure build
+  pipeline).** The two scripts `os-infrastructure/forge_iso.sh`
+  (ISO assembly) and `os-infrastructure/build_iso/compile_binary.sh`
+  (binary compile, renamed this session) are sequential build
+  stages but are not wired together — the assembly script does not
+  invoke the compile script, and there is no Makefile or top-level
+  driver. Operator must run them manually in order. Is this
+  intentional (operator-gated two-step) or drift (should become a
+  single driver script)? Pending decision before next pipeline
+  refactor.
+- **Handoff-outbound pattern piloted.** Added
+  `.claude/rules/handoffs-outbound.md` as a cross-repo file-move
+  outbox. Two entries lodged: `GUIDE-OPERATIONS.md` and
+  `USER_GUIDE_2026-03-30_V2.md` both → `content-wiki-documentation`.
+  Both files remain in place in this repo until a Root Claude in
+  the destination repo commits the add-side; only then does a
+  follow-up Root Claude session here commit the source-remove.
+  The pattern is passive — an outbox entry waits for pickup.
+- **Surfaced for Master Claude** (workspace-scope changes, outside
+  Root Claude's write lane per §9):
+  1. Formalise the cross-repo handoff pattern as an addendum in
+     `~/Foundry/CLAUDE.md` §9. Current §9 stops at clone
+     provisioning; the handoff mechanic is the natural extension
+     for file movement between engineering repos.
+  2. Extend `~/Foundry/CLAUDE.md` §10's `.claude/rules/` canonical
+     list from three files to four — add `handoffs-outbound.md`
+     alongside `repo-layout.md`, `project-registry.md`, and
+     `cleanup-log.md`.
+  3. Propagate both the `repo-layout.md` rule (§10 already names
+     the monorepo as reference implementation) and the new
+     `handoffs-outbound.md` pattern to the other engineering repos
+     over time. Order of propagation is `~/Foundry/NEXT.md`'s
+     concern.
 
 ---
 
