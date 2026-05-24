@@ -231,6 +231,34 @@ see `memory/paid-mobility-providers.md`.
 | Meijer US | From chain-coverage-audit.md |
 | Bodega Aurrera MX | From chain-coverage-audit.md |
 
+### Track E — Mobile UX Redesign (2026-05-24, this session)
+
+Changes to `www/index.html` at
+`/srv/foundry/deployments/gateway-orchestration-gis-1/www/index.html`.
+All 18 changes land in one commit. Current grade: B-/B → target: A.
+
+| ID | Change | Lines | Status |
+|---|---|---|---|
+| **E1** | Ring radius unified formula all tiers: `Math.max(1.0, span_km / 2 * 1.15)` | 1381, 2074 | IMPLEMENTING |
+| **E2** | ResizeObserver replaces `updateMapPadding()` — camera padding = `panel.offsetHeight` at all times | 455–461, 2286 | IMPLEMENTING |
+| **E3** | `viewport-fit=cover` in meta viewport tag | 5 | IMPLEMENTING |
+| **E4** | `env(safe-area-inset-bottom)` on `#data-panel` + `.nav-cluster` | 98–99 | IMPLEMENTING |
+| **E5** | `essential: true` on instant `fitBounds` | 795 | IMPLEMENTING |
+| **E6** | `.chain-search-input` → `font-size: 16px` (stops iOS auto-zoom) | ~188 | IMPLEMENTING |
+| **E7** | `inputmode="search" enterkeyhint="search"` on search input | HTML | IMPLEMENTING |
+| **E8** | Typography floor: 9px → 11px; dropdown → 13px; nav labels → 11px | CSS | IMPLEMENTING |
+| **E9** | `.ctx-label` → `flex: 1; min-width: 0` (drop hardcoded 170px) | CSS | IMPLEMENTING |
+| **E10** | Tap targets 44px: 8 interactive selectors | CSS | IMPLEMENTING |
+| **E11** | Tap targets 44px: `sublayer-opt`, `merged-group-item`, `chain-option` | CSS | IMPLEMENTING |
+| **E12** | Drag handle pill at top of `#data-panel` (mobile only) | HTML + CSS | IMPLEMENTING |
+| **E13** | Collapsed height: `64px → 80px` | CSS | IMPLEMENTING |
+| **E14** | `-webkit-overflow-scrolling: touch` on panel-content, modal-body, chain-dropdown | CSS | IMPLEMENTING |
+| **E15** | Landscape `@media` converts drawer to left side panel | CSS | IMPLEMENTING |
+| **E16** | Loading skeleton with CSS pulse animation while clusters-meta.json in flight | JS + CSS | IMPLEMENTING |
+| **E17** | `backdrop-filter: none` for `pointer: coarse` (Android GPU perf) | CSS | IMPLEMENTING |
+
+Commit message: `fix(gis-ui): mobile redesign — ring radius, camera padding, viewport-fit, tap targets, typography, drawer, landscape, loading`
+
 ---
 
 ## §5 — Holistic review — additive, does not block geometric build
