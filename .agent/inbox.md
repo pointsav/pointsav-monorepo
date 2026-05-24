@@ -175,7 +175,8 @@ to: totebox@project-design
 re: SOFT- pipeline — write .agent/binary-targets.yaml (declare only; Command Session builds)
 created: 2026-05-22T02:00:00Z
 priority: normal
-status: pending
+status: actioned
+actioned_at: 2026-05-23T16:50:00Z
 msg-id: command-20260522-binary-targets-project-design
 ---
 
