@@ -1053,6 +1053,18 @@ function updateBar(name, path) {
   const bar = document.getElementById('viewer-bar');
   bar.querySelectorAll('.bar-btn, .bar-link').forEach(el => el.remove());
 
+  const copyBtn = document.createElement('button');
+  copyBtn.className = 'bar-btn';
+  copyBtn.textContent = '⎘ Copy name';
+  copyBtn.title = 'Copy filename to clipboard';
+  copyBtn.addEventListener('click', () => {
+    navigator.clipboard.writeText(name).then(() => {
+      copyBtn.textContent = '✓ Copied';
+      setTimeout(() => { copyBtn.textContent = '⎘ Copy name'; }, 1500);
+    });
+  });
+  bar.appendChild(copyBtn);
+
   const printBtn = document.createElement('button');
   printBtn.className = 'bar-btn';
   printBtn.textContent = '⎙ Print';
