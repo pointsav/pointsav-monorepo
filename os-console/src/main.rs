@@ -78,6 +78,8 @@ fn inner_main() -> anyhow::Result<()> {
         &p.username,
         &p.tenant,
         &p.proof_endpoint,
+        &p.slm_endpoint,
+        &p.drafts_outbound_path,
     )));
     chassis.register(Box::new(InputCartridge::new_for(
         &p.username,
