@@ -82,12 +82,6 @@ impl LbugGraphStore {
 impl GraphStore for LbugGraphStore {
     fn init_schema(&self) -> Result<()> {
         let conn = self.conn()?;
-        // Note: P2-2.1 (2026-05-18) adds `worm_id` and `cites_json` columns
-        // for entity provenance and citation grounding. `IF NOT EXISTS` keeps
-        // pre-existing tables compatible; new columns gain a default of empty
-        // string for existing rows (handled at query time by val_to_string).
-        // A future migration step (P2-2.1-followup) populates worm_id for
-        // legacy rows from the CORPUS ledger replay.
         conn.query(
             "CREATE NODE TABLE IF NOT EXISTS Entity(\
                 id STRING PRIMARY KEY, \
@@ -104,6 +98,12 @@ impl GraphStore for LbugGraphStore {
             )",
         )
         .map_err(|e| anyhow!("init_schema Entity table failed: {}", e))?;
+
+        // Migrate pre-P2-2.1 databases: add worm_id + cites_json if absent.
+        // IF NOT EXISTS is not valid for ALTER TABLE in KuZu; suppress the
+        // error if the column already exists (idempotent).
+        let _ = conn.query("ALTER TABLE Entity ADD worm_id STRING DEFAULT ''");
+        let _ = conn.query("ALTER TABLE Entity ADD cites_json STRING DEFAULT ''");
 
         conn.query(
             "CREATE REL TABLE IF NOT EXISTS RelatedTo(\
