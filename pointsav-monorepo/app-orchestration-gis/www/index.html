@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Woodfine Location Intelligence</title>
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <script src="lib/pmtiles.js"></script>
@@ -38,9 +38,9 @@
         .panel-header { padding: 20px; border-bottom: 1px solid var(--border-soft); background: #fff; }
         .panel-header h1 { margin: 0; font-size: 16px; font-weight: 800; color: var(--brand-primary); text-transform: uppercase; letter-spacing: 0.5px; }
         .panel-header p  { margin: 2px 0 0 0; font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
-        .panel-content { padding: 20px; overflow-y: auto; }
+        .panel-content { padding: 20px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
         .data-block  { margin-bottom: 20px; }
-        .data-label  { font-size: 9px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+        .data-label  { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
         .data-value  { font-size: 18px; font-weight: 800; color: var(--text-main); }
         .tier-badge  { display: inline-block; padding: 6px 14px; border-radius: 8px; font-size: 14px; font-weight: 800; letter-spacing: 0.3px; }
 
@@ -57,7 +57,7 @@
         .civic-box span  { font-size: 18px; font-weight: 800; color: var(--brand-primary); display: block; }
         .civic-box small { font-size: 8px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; }
         .index-box { background: rgba(0,0,0,0.02); padding: 12px; border-radius: 8px; font-size: 11px; color: var(--text-main); border: 1px solid var(--border-soft); margin-top: 8px; }
-        .index-box strong { display: block; margin-bottom: 4px; color: var(--brand-primary); text-transform: uppercase; font-size: 9px; font-weight: 700; }
+        .index-box strong { display: block; margin-bottom: 4px; color: var(--brand-primary); text-transform: uppercase; font-size: 11px; font-weight: 700; }
         .empty-msg { padding: 40px; text-align: center; color: var(--text-muted); font-size: 13px; font-style: italic; }
 
         /* ── Layer controls (now inside bento box) ────────────────── */
@@ -91,21 +91,31 @@
         .zoom-btn { height: 60px; }
         .home-btn { height: 50px; font-size: 10px; font-weight: 800; text-transform: uppercase; text-align: center; }
         .nav-btn .icon  { font-size: 24px; font-weight: bold; line-height: 1; }
-        .nav-btn .label { font-size: 9px; font-weight: 800; margin-top: 4px; text-transform: uppercase; }
+        .nav-btn .label { font-size: 11px; font-weight: 800; margin-top: 4px; text-transform: uppercase; }
 
         /* ── Responsive ───────────────────────────────────────────── */
         @media (max-width: 768px) {
-            #data-panel      { top: auto; bottom: 0; left: 0; width: 100%; border-radius: 20px 20px 0 0; max-height: 45dvh; }
-            .nav-cluster     { bottom: 52dvh; right: 12px; }
+            #data-panel      { top: auto; bottom: 0; left: 0; width: 100%; border-radius: 20px 20px 0 0; max-height: 45dvh; padding-bottom: env(safe-area-inset-bottom, 0px); }
+            .nav-cluster     { bottom: 52dvh; right: 12px; padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px)); }
             .nav-btn         { width: 80px; }
             .panel-collapse-btn { display: flex; }
-            #data-panel.collapsed { max-height: 64px; overflow: hidden; }
+            #data-panel.collapsed { max-height: 80px; overflow: hidden; }
             #data-panel.collapsed .panel-collapse-btn { transform: rotate(180deg); }
+            .drawer-handle   { display: block; }
         }
 
         /* ── Touch targets ────────────────────────────────────────── */
         button, .lc-btn, .region-tab, .sublayer-opt, .merged-group-item,
         .nav-btn, .footer-btn, .ctx-back { touch-action: manipulation; }
+        .region-tab, .lc-btn, .reach-btn, .footer-btn, .catchment-master-toggle,
+        .ctx-back, .back-btn, .modal-close {
+            min-height: 44px;
+            padding-top: max(6px, calc((44px - 1.2em) / 2));
+            padding-bottom: max(6px, calc((44px - 1.2em) / 2));
+        }
+        .sublayer-opt, .merged-group-item, .chain-option {
+            min-height: 44px; display: flex; align-items: center;
+        }
 
         /* ── Mobile collapse button (hidden on desktop) ───────────── */
         .panel-collapse-btn {
@@ -130,9 +140,9 @@
 
         /* ── Footer & Modals ──────────────────────────────────────── */
         .panel-footer { padding: 12px 20px; border-top: 1px solid var(--border-soft); background: rgba(0,0,0,0.02); display: flex; gap: 10px; }
-        .footer-btn { 
-            flex: 1; border: none; background: transparent; padding: 6px; 
-            font-size: 9px; font-weight: 800; color: var(--text-muted); 
+        .footer-btn {
+            flex: 1; border: none; background: transparent; padding: 6px;
+            font-size: 11px; font-weight: 800; color: var(--text-muted);
             text-transform: uppercase; letter-spacing: 0.5px; cursor: pointer;
             border-radius: 4px; transition: all 0.15s;
         }
@@ -151,7 +161,7 @@
         .modal-header { padding: 20px; border-bottom: 1px solid var(--border-soft); display: flex; justify-content: space-between; align-items: center; }
         .modal-header h2 { margin: 0; font-size: 14px; font-weight: 800; color: var(--brand-primary); text-transform: uppercase; }
         .modal-close { border: none; background: transparent; font-size: 20px; cursor: pointer; color: var(--text-muted); }
-        .modal-body { padding: 24px; overflow-y: auto; font-size: 13px; line-height: 1.6; color: var(--text-main); }
+        .modal-body { padding: 24px; overflow-y: auto; -webkit-overflow-scrolling: touch; font-size: 13px; line-height: 1.6; color: var(--text-main); }
         .modal-body h3 { font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--brand-primary); margin: 20px 0 8px 0; }
         .modal-body p { margin: 0 0 12px 0; }
         .modal-body ul { margin: 0 0 16px 0; padding-left: 20px; }
@@ -185,14 +195,14 @@
 
         /* ── Chain search / retailer + place search ────────────────────── */
         .chain-search-wrap  { position: relative; margin-top: 8px; }
-        .chain-search-input { width: 100%; padding: 6px 28px 6px 10px; border: 1px solid var(--border-soft); border-radius: 6px; font-size: 12px; color: var(--brand-primary); outline: none; box-sizing: border-box; background: #fff; }
+        .chain-search-input { width: 100%; padding: 12px 32px 12px 12px; border: 1px solid var(--border-soft); border-radius: 6px; font-size: 16px; color: var(--brand-primary); outline: none; box-sizing: border-box; background: #fff; }
         .chain-search-input:focus { border-color: var(--brand-primary); box-shadow: 0 0 0 2px rgba(10,48,112,0.08); }
         .chain-search-input::placeholder { color: var(--text-muted); font-weight: 400; }
         .chain-search-clear { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--text-muted); font-size: 16px; line-height: 1; padding: 0 2px; }
-        .chain-dropdown { position: absolute; left: 0; right: 0; top: calc(100% + 2px); background: #fff; border: 1px solid var(--border-soft); border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.12); max-height: 260px; overflow-y: auto; z-index: 20; }
-        .chain-option { padding: 7px 12px; font-size: 12px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .chain-dropdown { position: absolute; left: 0; right: 0; top: calc(100% + 2px); background: #fff; border: 1px solid var(--border-soft); border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.12); max-height: 260px; overflow-y: auto; -webkit-overflow-scrolling: touch; z-index: 20; }
+        .chain-option { padding: 7px 12px; font-size: 13px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .chain-option:hover, .chain-option.focused { background: #EFF6FF; color: var(--brand-primary); font-weight: 700; }
-        .chain-section-label { padding: 5px 12px 3px 12px; font-size: 9px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; background: #f8fafc; border-bottom: 1px solid var(--border-soft); }
+        .chain-section-label { padding: 5px 12px 3px 12px; font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; background: #f8fafc; border-bottom: 1px solid var(--border-soft); }
         .chain-section-label + .chain-option { border-top: none; }
         .chain-option.place-option { font-weight: 500; color: var(--text-main); }
         .chain-option.place-option:hover, .chain-option.place-option.focused { color: var(--brand-primary); font-weight: 700; }
@@ -223,17 +233,17 @@
         .sublayer-opt.active { background: #EFF6FF; border-color: #BFDBFE; color: var(--brand-primary); }
         .sublayer-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
         .reach-control { display: flex; gap: 3px; margin-top: 8px; background: rgba(0,0,0,0.05); border-radius: 6px; padding: 2px; }
-        .reach-btn { flex: 1; border: none; background: transparent; padding: 4px 6px; font-size: 9px; font-weight: 800; color: var(--text-muted); border-radius: 4px; cursor: pointer; text-transform: uppercase; letter-spacing: 0.3px; transition: all 0.12s; }
+        .reach-btn { flex: 1; border: none; background: transparent; padding: 4px 6px; font-size: 11px; font-weight: 800; color: var(--text-muted); border-radius: 4px; cursor: pointer; text-transform: uppercase; letter-spacing: 0.3px; transition: all 0.12s; }
         .reach-btn.active { background: #fff; color: var(--brand-primary); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
         .reach-btn:disabled { opacity: 0.45; cursor: default; }
-        .vintage-row { display: flex; align-items: center; justify-content: space-between; margin-top: 7px; font-size: 9px; color: var(--text-muted); }
+        .vintage-row { display: flex; align-items: center; justify-content: space-between; margin-top: 7px; font-size: 11px; color: var(--text-muted); }
         .vintage-badge { background: rgba(0,0,0,0.05); border-radius: 4px; padding: 2px 6px; font-weight: 700; }
         .catchment-pop-stats { display: flex; gap: 0; margin-top: 8px; border-top: 1px solid var(--border-soft); padding-top: 8px; }
         .catchment-zone-stat { flex: 1; }
         .catchment-zone-stat + .catchment-zone-stat { border-left: 1px solid var(--border-soft); padding-left: 10px; margin-left: 6px; }
-        .catchment-zone-label { font-size: 9px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.4px; }
+        .catchment-zone-label { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.4px; }
         .catchment-zone-pop { font-size: 15px; font-weight: 900; color: var(--text-main); font-variant-numeric: tabular-nums; line-height: 1.2; margin-top: 1px; }
-        .catchment-zone-km { font-size: 9px; color: var(--text-muted); margin-top: 1px; }
+        .catchment-zone-km { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
         .data-value { font-variant-numeric: tabular-nums; }
         .rank-num { font-variant-numeric: tabular-nums; font-size: 24px; font-weight: 900; color: var(--brand-primary); line-height: 1.1; }
 
@@ -256,7 +266,32 @@
         .ctx-back:hover { background: var(--brand-primary); color: #fff; }
         .ctx-label {
             font-size: 10px; font-weight: 700; color: var(--text-muted);
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 170px;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            flex: 1; min-width: 0;
+        }
+
+        /* ── Drawer handle (mobile discoverability) ───────────────── */
+        .drawer-handle {
+            display: none; width: 40px; height: 4px; background: rgba(0,0,0,0.2);
+            border-radius: 2px; margin: 10px auto 6px; flex-shrink: 0;
+        }
+
+        /* ── Landscape: drawer → left side panel ─────────────────── */
+        @media (orientation: landscape) and (max-height: 500px) {
+            #data-panel {
+                bottom: auto; top: 0; left: 0; width: 320px; height: 100%;
+                max-height: none; border-radius: 0;
+            }
+            .nav-cluster { bottom: 30px; right: 24px; padding-bottom: 0; }
+        }
+
+        /* ── Loading skeleton (panel while clusters-meta in flight) ── */
+        @keyframes pulse { 0%,100%{ opacity:.4 } 50%{ opacity:1 } }
+        .loading-skeleton { padding: 40px; text-align: center; color: var(--text-muted); font-size: 13px; animation: pulse 1.4s ease-in-out infinite; }
+
+        /* ── Performance: disable blur on touch devices ───────────── */
+        @media (pointer: coarse) {
+            #data-panel { backdrop-filter: none; -webkit-backdrop-filter: none; background: rgba(255,255,255,0.97); }
         }
 
     </style>
@@ -265,6 +300,7 @@
     <div id="map"></div>
 
     <aside id="data-panel">
+        <div class="drawer-handle" aria-hidden="true"></div>
         <div class="panel-header">
             <button class="panel-collapse-btn"
                     onclick="document.getElementById('data-panel').classList.toggle('collapsed')"
@@ -278,6 +314,7 @@
             <div id="chain-search-wrap" class="chain-search-wrap">
                 <input id="chain-search-input" class="chain-search-input" type="text"
                        placeholder="Search city, town, or retailer…" autocomplete="off"
+                       inputmode="search" enterkeyhint="search"
                        oninput="onChainSearchInput(this.value)"
                        onfocus="if(this.value)onChainSearchInput(this.value)"
                        onblur="closeDropdown()"
@@ -452,12 +489,16 @@
     }
     function chainName(id) { return CHAIN_DISPLAY_NAMES[id] || formatChainId(String(id)); }
 
-    function updateMapPadding() {
-        if (window.innerWidth > 768) {
-            map.setPadding({ top: 0, bottom: 0, left: 380, right: 0 });
-        } else {
-            map.setPadding({ top: 0, bottom: Math.floor(window.innerHeight * 0.45), left: 0, right: 0 });
-        }
+    function initMapPadding() {
+        const panel = document.getElementById('data-panel');
+        const obs = new ResizeObserver(() => {
+            if (window.innerWidth <= 768) {
+                map.setPadding({ top: 0, bottom: panel.offsetHeight, left: 0, right: 0 });
+            } else {
+                map.setPadding({ top: 0, bottom: 0, left: 380, right: 0 });
+            }
+        });
+        obs.observe(panel);
     }
 
     function setNavContext(backLabel, backFn, currentLabel) {
@@ -795,6 +836,7 @@
                 padding: { top: 60, bottom: 60, left: 60, right: 60 },
                 maxZoom: 4.5,
                 duration: 0,
+                essential: true,
             });
             afterMove();
         }
@@ -1378,7 +1420,7 @@
             for (const c of clusterMeta) {
                 if (c.lon < b.getWest() - pad || c.lon > b.getEast() + pad) continue;
                 if (c.lat < b.getSouth() - pad || c.lat > b.getNorth() + pad) continue;
-                const km = c.t === 1 ? 1 : (c.rr || 3);
+                const km = Math.max(1.0, (c.span || 0) / 2 * 1.15);
                 const circle = makeCircleGeoJSON([c.lon, c.lat], km);
                 circle.features[0].properties = { cluster_id: c.id, rank: 4 - (c.t || 3), merged_count: 1, member_ids: c.id };
                 circles.push(circle.features[0]);
@@ -1662,11 +1704,13 @@
         });
 
         // Load cluster data into memory: nodes GeoJSON source + ring generation + BentoBox fallback
+        document.getElementById('inspector').innerHTML = '<div class="loading-skeleton">Loading map data…</div>';
         fetch('data/clusters-meta.json')
             .then(r => r.json())
             .then(data => {
                 clusterMeta  = data;
                 clusterIndex = new Map(data.map(c => [c.id, c]));
+                document.getElementById('inspector').innerHTML = '<div class="empty-msg">Select a commercial node to begin regional market analysis.</div>';
                 if (overviewActive) showOverview(); // refresh tier badge counts now that data is ready
                 // Populate the 'data' GeoJSON source — eliminates tile-fetch latency during zoom
                 const nodesGeoJSON = {
@@ -2071,7 +2115,7 @@
             selectedClusterId = p.cluster_id || null;
 
             const v3tier = p.tier ?? 4;
-            const km = v3tier === 1 ? 1 : (p.ring_radius_km || 3);
+            const km = Math.max(1.0, (p.span_km || 0) / 2 * 1.15);
 
             showClusterDetail(p, coords);
             if (catchmentActive && selectedClusterId) showCatchmentForCluster(selectedClusterId);
@@ -2282,8 +2326,7 @@
             }
         });
 
-        updateMapPadding();
-        window.addEventListener('resize', updateMapPadding);
+        initMapPadding();
         switchRegion('NA', { animate: false });
 
         map.on('mouseenter', 'nodes', () => { map.getCanvas().style.cursor = 'pointer'; });
