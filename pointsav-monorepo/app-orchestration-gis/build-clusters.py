@@ -34,7 +34,7 @@ from config import (
 )
 from taxonomy import (
     BRAND_FILL, ALL_DISPLAY_ISO, ISO_TO_CONTINENT,
-    DISPLAY_NAMES, category_of, tier_of, ring_radius_km,
+    DISPLAY_NAMES, category_of, tier_of, ring_radius_km, all_chains_for_iso,
 )
 from utils.region_engine import RegionEngine
 
@@ -459,13 +459,12 @@ def main():
 
     for iso in ALL_DISPLAY_ISO:
         chain_map = {}
-        for cat in ("hypermarket", "hardware", "price_club", "lifestyle", "electronics", "sport"):
-            for cid in (BRAND_FILL.get(cat) or {}).get(iso, []):
-                recs = load_chain_jsonl(cid)
-                for r in recs:
-                    # normalise iso_country_code to this ISO (handles legacy NORDICS codes)
-                    r["iso_country_code"] = iso
-                    chain_map.setdefault(cid, []).append(r)
+        for cid in all_chains_for_iso(iso):
+            recs = load_chain_jsonl(cid)
+            for r in recs:
+                # normalise iso_country_code to this ISO (handles legacy NORDICS codes)
+                r["iso_country_code"] = iso
+                chain_map.setdefault(cid, []).append(r)
 
         all_recs = [r for recs in chain_map.values() for r in recs]
         if not all_recs:
