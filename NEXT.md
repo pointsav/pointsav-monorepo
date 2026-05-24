@@ -6,7 +6,7 @@
 > Read at session start when a Root Claude opens in this repo. Update
 > at session end when repo-scope open items change.
 
-Last updated: 2026-05-22.
+Last updated: 2026-05-24.
 
 ---
 
@@ -21,15 +21,15 @@ under `.agent/plans/archive/`.
 
 **Execution progress:**
 
-- [x] Phase 2 — claim-authoring convention specced + staged + routed
-  (`.agent/plans/claim-authoring-convention.PROPOSAL.md`). [2026-05-21 totebox@claude-code]
-- [ ] Phase 2.4 — confirm to project-editorial once Command **ratifies** the
-  convention (heads-up already sent). [2026-05-21 totebox@claude-code]
-- [ ] Phase 3.1 — discharge the convention's Engine Verification Gate: a
-  render-pass test that comrak emits `<!--claim …-->` markers unchanged.
-  [2026-05-21 totebox@claude-code]
-- [ ] Phase 1 (engine dead-code descope) — **paused** pending the cluster-branch
-  topology fix (see BLOCKER below).
+- [x] Phases 1–5 + hygiene COMPLETE. 17 commits on `app-mediakit-knowledge` — all pass `cargo test` + `cargo clippy -D warnings`. [2026-05-22–24 totebox@claude-code]
+- [x] Phase 2 — claim-authoring convention ratified as doctrine claim #54. [2026-05-21 totebox@claude-code]
+- [x] 3 live fixes (`23deea11`) — IVC band "Phase 7" text removed; WCAG `#878d99→#666c78`; dtcg-to-css.py cubicBezier fixed. [2026-05-24 totebox@claude-code]
+- [ ] **Stage 6 — 17 commits unpromoted.** Command Session: `echo "y" | ~/Foundry/bin/promote.sh` → `cargo build --release` → `sudo systemctl restart` 3 wiki services. Outbox: `project-knowledge-20260524-session-close`. [2026-05-24 totebox@claude-code]
+- [ ] **Phase 6 — GATED** on: (1) `content-wiki-*` → `media-knowledge-*` GitHub rename; (2) MASTER Doctrine amendment. No Totebox work until Command confirms both. [2026-05-23 totebox@claude-code]
+- [ ] **Design commission → project-design** — 5 DESIGN-* drafts outboxed; MASTER COSIGN on DTCG required; `shell_chrome()` implementation to follow after ratification. [2026-05-24 totebox@claude-code]
+- [ ] **DS-ADR-07 amendment** — needed before font-loading token work. Flagged to Command. [2026-05-24 totebox@claude-code]
+- [ ] Phase 3.4 — continuous citation verification (reqwest + scheduler). Deferred; own sub-project.
+- [ ] Phase 3.6 — claim-record MCP API. Deferred; waiting on project-intelligence re: slm-mcp-server.
 
 ---
 
