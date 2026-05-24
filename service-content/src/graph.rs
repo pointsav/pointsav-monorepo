@@ -61,6 +61,10 @@ pub trait GraphStore: Send + Sync {
     /// equals `source_worm_id`. Used by the corpus drain loop to skip re-extraction
     /// after a service restart without relying on the in-memory HashSet.
     fn is_already_processed(&self, source_worm_id: &str) -> Result<bool>;
+    /// Flush the WAL to the main database file. Call after bulk write operations
+    /// (taxonomy upsert, corpus drain) to prevent WAL accumulation that causes
+    /// slow startup replay. Non-fatal: callers should warn on error but continue.
+    fn checkpoint(&self) -> Result<()>;
 }
 
 pub struct LbugGraphStore {
@@ -78,7 +82,10 @@ impl LbugGraphStore {
         let config = SystemConfig::default()
             .buffer_pool_size(buffer_pool_bytes)
             .max_num_threads(2)
-            .max_db_size(256 * 1024 * 1024);
+            .max_db_size(256 * 1024 * 1024)
+            // Checkpoint when WAL reaches 4 MB (C++ default is 16 MB — too large for our
+            // write pattern; an 11 MB un-checkpointed WAL caused a 45-min replay hang).
+            .checkpoint_threshold(4 * 1024 * 1024);
         let db = Database::new(db_path, config)
             .map_err(|e| anyhow!("Failed to open LadybugDB at {}: {}", db_path, e))?;
         Ok(Self { db: Arc::new(db) })
@@ -392,6 +399,13 @@ impl GraphStore for LbugGraphStore {
             .map_err(|e| anyhow!("is_already_processed execute failed: {}", e))?;
         Ok(result.into_iter().next().is_some())
     }
+
+    fn checkpoint(&self) -> Result<()> {
+        let conn = self.conn()?;
+        conn.query("CHECKPOINT")
+            .map(|_| ())
+            .map_err(|e| anyhow!("lbug CHECKPOINT failed: {}", e))
+    }
 }
 
 // ── SqliteGraphStore ─────────────────────────────────────────────────────────
@@ -622,6 +636,11 @@ impl GraphStore for SqliteGraphStore {
             )
             .map_err(|e| anyhow!("is_already_processed failed: {}", e))?;
         Ok(n > 0)
+    }
+
+    fn checkpoint(&self) -> Result<()> {
+        // SQLite WAL checkpoints via PRAGMA wal_checkpoint on close; no manual call needed.
+        Ok(())
     }
 }
 
