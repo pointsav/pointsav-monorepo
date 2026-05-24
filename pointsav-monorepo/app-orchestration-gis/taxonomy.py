@@ -148,6 +148,7 @@ BRAND_FILL: dict[str, dict[str, list[str]]] = {
         ],
         "PT": [
             "continente-pt",
+            "auchan-pt",   # 31 stores, Q758603 — Phase 20 2026-05-24
         ],
         "SE": [
             "coop-forum-se",
@@ -222,6 +223,8 @@ BRAND_FILL: dict[str, dict[str, list[str]]] = {
         ],
         "AT": [
             "hornbach-at",
+            "obi-at",      # ~50 stores, Q316004 — Phase 20 2026-05-24
+            "bauhaus-at",  # ~18 stores, Q532716 — Phase 20 2026-05-24
         ],
         "NL": [
             "praxis-nl",
@@ -276,19 +279,19 @@ BRAND_FILL: dict[str, dict[str, list[str]]] = {
         "DE": [],    # no Costco in DE; Metro/Selgros are B2B, excluded
         "ES": [
             "costco-es",
-            "makro-es",
+            # makro-es demoted 2026-05-24: B2B trade-only (Metro AG parent, trade card required)
         ],
         "IT": [],
         "GR": [],
         "PL": [
-            "makro-pl",
+            # makro-pl demoted 2026-05-24: B2B trade-only
         ],
         "AT": [],
         "NL": [
-            "makro-nl",
+            # makro-nl demoted 2026-05-24: B2B trade-only
         ],
         "PT": [
-            "makro-pt",   # Q704606; ~10 stores since 1989; same Makro-card model as ES/NL/PL
+            # makro-pt demoted 2026-05-24: B2B trade-only
         ],
         "SE": [
             "costco-se",
@@ -325,18 +328,21 @@ BRAND_FILL: dict[str, dict[str, list[str]]] = {
     "sport": {
         "US": ["rei-us", "bass-pro-shops-us", "cabelas-us"],
         "CA": ["decathlon-ca"],
+        "MX": ["decathlon-mx"],   # ~14 stores, Q509349 — Phase 20 2026-05-24
         "GB": ["decathlon-gb"],
         "FR": ["decathlon-fr"],
         "DE": ["decathlon-de"],
         "ES": ["decathlon-es"],
         "IT": ["decathlon-it"],
+        "GR": ["decathlon-gr"],   # ~6 stores, Q509349 — Phase 20 2026-05-24
         "NL": ["decathlon-nl"],
         "PL": ["decathlon-pl"],
         "PT": ["decathlon-pt"],
-        "SE": ["decathlon-se"],
+        "AT": ["decathlon-at"],   # ~6 stores, Q509349 — Phase 20 2026-05-24
+        "SE": ["decathlon-se", "xxl-se"],  # xxl-se ~31 stores, Q5447082 — Phase 20 2026-05-24
         "DK": ["decathlon-dk"],
-        "NO": ["decathlon-no"],
-        "FI": ["decathlon-fi"],
+        "NO": ["decathlon-no", "xxl-no"],  # xxl-no ~39 stores, Q5447082 — Phase 20 2026-05-24
+        "FI": ["decathlon-fi", "xxl-fi"],  # xxl-fi ~15 stores, Q5447082 — Phase 20 2026-05-24
     },
 
     # Civic categories have no BRAND_FILL — detected from OSM civic JSONL
@@ -384,7 +390,7 @@ DISPLAY_NAMES: dict[str, str] = {
     "sklavenitis-gr": "Sklavenitis",
     "billa-plus-at": "Billa Plus", "interspar-at": "Interspar",
     "albert-heijn-xl-nl": "Albert Heijn XL", "jumbo-nl": "Jumbo Foodmarkt",
-    "continente-pt": "Continente",
+    "continente-pt": "Continente", "auchan-pt": "Auchan",
     "coop-forum-se": "Coop Forum / Stora Coop",
     "bilka-dk": "Bilka", "foetex-dk": "Føtex",
     "obs-coop-no": "OBS Coop",
@@ -420,6 +426,7 @@ DISPLAY_NAMES: dict[str, str] = {
     "castorama-pl": "Castorama",
     "obi-pl": "OBI",
     "hornbach-at": "Hornbach",
+    "obi-at": "OBI", "bauhaus-at": "Bauhaus",
     "praxis-nl": "Praxis",
     "gamma-nl": "Gamma",
     "karwei-nl": "Karwei",
@@ -445,6 +452,8 @@ DISPLAY_NAMES: dict[str, str] = {
     "decathlon-pl": "Decathlon", "decathlon-pt": "Decathlon", "decathlon-se": "Decathlon",
     "decathlon-dk": "Decathlon", "decathlon-no": "Decathlon", "decathlon-fi": "Decathlon",
     "decathlon-ca": "Decathlon",
+    "decathlon-at": "Decathlon", "decathlon-gr": "Decathlon", "decathlon-mx": "Decathlon",
+    "xxl-no": "XXL", "xxl-se": "XXL", "xxl-fi": "XXL",
     "rei-us": "REI", "bass-pro-shops-us": "Bass Pro Shops", "cabelas-us": "Cabela's",
     # Lifestyle
     "ikea-us": "IKEA", "ikea-ca": "IKEA", "ikea-mx": "IKEA",
@@ -472,16 +481,22 @@ def category_of(chain_id: str) -> str | None:
     return _CHAIN_TO_CAT.get(chain_id)
 
 
-def tier_of(cats: set[str]) -> int | None:
+def tier_of(cats: set[str], tight: bool = False) -> int | None:
     """
     Composition-only tier rule.  cats = set of retail category keys present.
     Civic categories (medical, education) are ignored — they never gate the tier.
 
     T1 Regional:  hypermarket ∧ hardware ∧ (price_club ∨ lifestyle)
+                  OR tight cluster with 3+ anchor categories (H2b rule)
                   OR any 4+ retail anchor categories (destination cluster)
     T2 District:  hypermarket ∧ at least one other retail category
     T3 Local:     ≥ 2 distinct retail categories
     None:         singleton — not a co-location
+
+    H2b rule (tight=True): a tight 3-anchor cluster (all members within 1 km)
+    is elevated to T1 regardless of composition. Addresses EU retail parks where
+    hypermarket + hardware + sport/lifestyle are co-located tightly but lack a
+    price_club anchor (Costco absent from most EU markets).
 
     The n≥4 path handles 4-anchor clusters that lack hardware but still represent
     destination-grade co-locations (e.g. Walmart + Costco + IKEA + Decathlon).
@@ -499,6 +514,8 @@ def tier_of(cats: set[str]) -> int | None:
     has_life  = "lifestyle"   in retail
 
     if has_hyper and has_hw and (has_pc or has_life):
+        return 1
+    if tight and n >= 3:   # H2b: tight 3-anchor cluster → T1
         return 1
     if n >= 4:   # 4+ anchors = destination regardless of composition
         return 1
