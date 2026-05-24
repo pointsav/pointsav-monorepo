@@ -43,6 +43,22 @@ Last updated: 2026-05-20 (task@claude-code — project-software v0.0.1 complete;
 
 ---
 
+## project-knowledge cluster — open items [2026-05-24 totebox@claude-code]
+
+- [x] Phases 1–5 + hygiene COMPLETE. 17 commits on `app-mediakit-knowledge` — all pass `cargo test` + `cargo clippy -D warnings`. [2026-05-22–24 totebox@claude-code]
+- [x] Phase 2 — claim-authoring convention ratified as doctrine claim #54. [2026-05-21 totebox@claude-code]
+- [x] 3 live fixes (`23deea11`) — IVC band "Phase 7" text removed; WCAG `#878d99→#666c78`; dtcg-to-css.py cubicBezier fixed. [2026-05-24 totebox@claude-code]
+- [x] **Stage 6 — COMPLETE.** 17 commits promoted; binary built and deployed; all 3 services active (confirmed 2026-05-24, session-context). [2026-05-24 totebox@claude-code]
+- [x] **Three wikis confirmed live + fully synced** (2026-05-24 diagnosis): documentation.pointsav.com (233 articles), projects.woodfinegroup.com (30 articles), corporate.woodfinegroup.com (18 articles). Clone = origin = customer on projects + corporate. [2026-05-24 totebox@claude-code]
+- [x] **Fleet catalog drift** — woodfine-fleet-deployment MANIFESTs for media-knowledge-projects (port 9091→9093) and media-knowledge-corporate (port 9092→9095) corrected by Command Session (`55247d8`). [2026-05-24 command@claude-code]
+- [ ] **Phase 6 — GATED** on: (1) `content-wiki-*` → `media-knowledge-*` GitHub rename (operator, GitHub UI); (2) MASTER Doctrine amendment (source-of-truth inversion). After both: Command updates service unit `WIKI_CONTENT_DIR` so projects/corporate read from clone paths (symmetric with documentation). No Totebox work until Command confirms both. [2026-05-23 totebox@claude-code]
+- [ ] **Design commission → project-design** — 10 DESIGN-* drafts routed to project-design inbox by Command (`command-20260524-knowledge-design-routing`); MASTER COSIGN on DTCG required; `shell_chrome()` implementation to follow after ratification. [2026-05-24 command@claude-code]
+- [ ] **DS-ADR-07 amendment** — needed before font-loading token work. Flagged to Command. [2026-05-24 totebox@claude-code]
+- [ ] Phase 3.4 — continuous citation verification (reqwest + scheduler). Deferred; own sub-project.
+- [ ] Phase 3.6 — claim-record MCP API. Deferred; waiting on project-intelligence re: slm-mcp-server.
+
+---
+
 ## 🚨 OPERATIVE PLAN — Learning Loop Master Plan 2026-05-18
 
 > **See `.agent/plans/learning-loop-master-plan-2026-05-18.md` for full sequencing.** It consolidates the 10 prior plans (MASTER-PLAN, leapfrog, service-slm-arch, service-content-arch, tier-arch, sovereign-routing, universal-ai-gateway, service-audit, service-slm-hardening, d5-canonical) into a single phased TODO. Sections below remain valid carry-forward.
