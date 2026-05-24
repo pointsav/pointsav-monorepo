@@ -1239,7 +1239,7 @@
         for (const c of clusterMeta) {
             if (c.lon < b.getWest() - pad || c.lon > b.getEast() + pad) continue;
             if (c.lat < b.getSouth() - pad || c.lat > b.getNorth() + pad) continue;
-            const km = c.rr || (c.t === 1 ? 1 : 3);
+            const km = c.t === 1 ? 1 : (c.rr || 3);
             const d = haversineKm(lon, lat, c.lon, c.lat);
             if (d <= km && d < bestDist) { best = c; bestDist = d; }
         }
@@ -1324,7 +1324,7 @@
             for (const c of clusterMeta) {
                 if (c.lon < b.getWest() - pad || c.lon > b.getEast() + pad) continue;
                 if (c.lat < b.getSouth() - pad || c.lat > b.getNorth() + pad) continue;
-                const km = c.rr || (c.t === 1 ? 1 : 3);
+                const km = c.t === 1 ? 1 : (c.rr || 3);
                 const circle = makeCircleGeoJSON([c.lon, c.lat], km);
                 circle.features[0].properties = { cluster_id: c.id, rank: 4 - (c.t || 3), merged_count: 1, member_ids: c.id };
                 circles.push(circle.features[0]);
@@ -1988,7 +1988,7 @@
             selectedClusterId = p.cluster_id || null;
 
             const v3tier = p.tier ?? 4;
-            const km = p.ring_radius_km || (v3tier === 1 ? 1 : 3);
+            const km = v3tier === 1 ? 1 : (p.ring_radius_km || 3);
 
             showClusterDetail(p, coords);
             if (catchmentActive && selectedClusterId) showCatchmentForCluster(selectedClusterId);
