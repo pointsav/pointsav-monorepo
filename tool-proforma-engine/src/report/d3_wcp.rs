@@ -30,12 +30,24 @@ fn fmt_smart(v: f64) -> String {
     let abs = v.abs();
     if abs >= 1_000_000.0 {
         let m = v / 1_000_000.0;
-        if m < 0.0 { format!("({:.2}M)", m.abs()) } else { format!("{:.2}M", m) }
+        if m < 0.0 {
+            format!("({:.2}M)", m.abs())
+        } else {
+            format!("{:.2}M", m)
+        }
     } else if abs >= 1_000.0 {
         let k = v / 1_000.0;
-        if k < 0.0 { format!("({:.1}K)", k.abs()) } else { format!("{:.1}K", k) }
+        if k < 0.0 {
+            format!("({:.1}K)", k.abs())
+        } else {
+            format!("{:.1}K", k)
+        }
     } else {
-        if v < 0.0 { format!("(${:.0})", v.abs()) } else { format!("${:.0}", v) }
+        if v < 0.0 {
+            format!("(${:.0})", v.abs())
+        } else {
+            format!("${:.0}", v)
+        }
     }
 }
 

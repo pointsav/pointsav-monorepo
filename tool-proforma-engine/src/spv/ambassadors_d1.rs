@@ -14,11 +14,19 @@ const SPV_ACCT_ANNUAL: f64 = 2_399.0;
 const SPV_ACCT_SETUP: f64 = 1_375.0;
 
 fn spv_legal(y: usize) -> f64 {
-    if y == 0 { SPV_LEGAL_ANNUAL + SPV_LEGAL_SETUP } else { SPV_LEGAL_ANNUAL }
+    if y == 0 {
+        SPV_LEGAL_ANNUAL + SPV_LEGAL_SETUP
+    } else {
+        SPV_LEGAL_ANNUAL
+    }
 }
 
 fn spv_acct(y: usize) -> f64 {
-    if y == 0 { SPV_ACCT_ANNUAL + SPV_ACCT_SETUP } else { SPV_ACCT_ANNUAL }
+    if y == 0 {
+        SPV_ACCT_ANNUAL + SPV_ACCT_SETUP
+    } else {
+        SPV_ACCT_ANNUAL
+    }
 }
 
 pub fn derivation_json(wcp: &WcpData) -> serde_json::Value {
@@ -53,19 +61,20 @@ pub fn derive(wcp: &WcpData) -> WcpData {
         gna_berlin: std::array::from_fn(spv_acct),
         total_expenses: std::array::from_fn(|y| {
             (inc.total_expenses[y] - inc.gna_nyc[y] - inc.gna_berlin[y]) * sf
-                + spv_legal(y) + spv_acct(y)
+                + spv_legal(y)
+                + spv_acct(y)
         }),
         ebitda: std::array::from_fn(|y| {
-            inc.ebitda[y] * sf
-                + (inc.gna_nyc[y] + inc.gna_berlin[y]) * sf
-                - spv_legal(y) - spv_acct(y)
+            inc.ebitda[y] * sf + (inc.gna_nyc[y] + inc.gna_berlin[y]) * sf
+                - spv_legal(y)
+                - spv_acct(y)
         }),
         ebitda_per_share: [0.0; 10],
         taxes: std::array::from_fn(|y| inc.taxes[y] * sf),
         earnings: std::array::from_fn(|y| {
-            inc.earnings[y] * sf
-                + (inc.gna_nyc[y] + inc.gna_berlin[y]) * sf
-                - spv_legal(y) - spv_acct(y)
+            inc.earnings[y] * sf + (inc.gna_nyc[y] + inc.gna_berlin[y]) * sf
+                - spv_legal(y)
+                - spv_acct(y)
         }),
         earnings_per_share: [0.0; 10],
     };
@@ -94,7 +103,6 @@ fn scale_lp(lp: &WcpLp, sf: f64) -> WcpLp {
         nav: std::array::from_fn(|y| lp.nav[y] * sf),
     }
 }
-
 
 fn scale_book(book: &WcpBook, sf: f64) -> WcpBook {
     WcpBook {

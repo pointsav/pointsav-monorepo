@@ -18,11 +18,19 @@ const SPV_ACCT_ANNUAL: f64 = 2_399.0;
 const SPV_ACCT_SETUP: f64 = 1_375.0;
 
 fn spv_legal(y: usize) -> f64 {
-    if y == 0 { SPV_LEGAL_ANNUAL + SPV_LEGAL_SETUP } else { SPV_LEGAL_ANNUAL }
+    if y == 0 {
+        SPV_LEGAL_ANNUAL + SPV_LEGAL_SETUP
+    } else {
+        SPV_LEGAL_ANNUAL
+    }
 }
 
 fn spv_acct(y: usize) -> f64 {
-    if y == 0 { SPV_ACCT_ANNUAL + SPV_ACCT_SETUP } else { SPV_ACCT_ANNUAL }
+    if y == 0 {
+        SPV_ACCT_ANNUAL + SPV_ACCT_SETUP
+    } else {
+        SPV_ACCT_ANNUAL
+    }
 }
 
 pub fn derivation_json(wcp: &WcpData, pclp: &Pclp1Data) -> serde_json::Value {
@@ -107,7 +115,8 @@ pub fn derive(wcp: &WcpData, pclp: &Pclp1Data) -> WcpData {
         ebitda: std::array::from_fn(|y| {
             wcp.income.ebitda[y] * wcp_sf
                 + (wcp.income.gna_nyc[y] + wcp.income.gna_berlin[y]) * wcp_sf
-                - spv_legal(y) - spv_acct(y)
+                - spv_legal(y)
+                - spv_acct(y)
                 + pclp.years[y].ebitda * pclp_sf
                 + commission[y]
         }),
@@ -116,7 +125,8 @@ pub fn derive(wcp: &WcpData, pclp: &Pclp1Data) -> WcpData {
         earnings: std::array::from_fn(|y| {
             wcp.income.earnings[y] * wcp_sf
                 + (wcp.income.gna_nyc[y] + wcp.income.gna_berlin[y]) * wcp_sf
-                - spv_legal(y) - spv_acct(y)
+                - spv_legal(y)
+                - spv_acct(y)
                 + pclp.years[y].funding_from_ops * pclp_sf
                 + commission[y]
         }),
