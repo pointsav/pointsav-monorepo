@@ -161,37 +161,31 @@ Full AEC detail (sources, URLs, per-country coverage table):
 
 ### Track A — Data model fixes (prerequisite for S1 sign-off)
 
-These are changes to the Python pipeline. Run as overnight builds (S2).
-Not blocked on each other; A1–A4 can land before A5.
+Status audit (2026-05-24): A1, A2, A3, A5 were already implemented in Phase 19.
+The research briefs that prescribed them predate the implementation. Outstanding
+items are A4 and the three pipeline scripts below.
 
-| ID | Change | File | Notes |
+| ID | Change | File | Status |
 |---|---|---|---|
-| **A1** | Feature geometry = centroid, not anchor pin | `build-clusters.py:547` | keep anchor as `seed_lat/lon` |
-| **A2** | Emit canonical `tier`, `tight_intact`, `span_km` fields | `build-clusters.py` → `clusters-meta.json` | currently running on `?? 4` fallback |
-| **A3** | Emit `ring_radius_km` per co-location | `build-clusters.py` | `1.0` if T1-tight else `3.0` |
-| **A4** | Sync `build-tiles.py build_clusters_meta()` to §2 schema | `build-tiles.py:344` | drop bogus `rank_2km`; lon/lat = centroid |
-| **A5** | DBSCAN rewrite: one feature = one co-location (graph component) | `build-clusters.py` | centroid-based `cluster_id`; dedup anchors |
+| **A1** | Feature geometry = centroid, not anchor pin | `build-clusters.py:440` | **DONE** — `[clon, clat]` centroid; `seed_lat/lon` retains anchor |
+| **A2** | Emit `tier`, `tight_intact`, `span_km` | `build-clusters.py` | **DONE** — all three fields in schema |
+| **A3** | Emit `ring_radius_km` | `build-clusters.py` | **DONE** — `1.0` if tight_intact else `3.0` |
+| **A4** | Sync `build-tiles.py build_clusters_meta()` to §2 schema | `build-tiles.py:344` | **OUTSTANDING** — drop `rank_2km`; lon/lat = centroid |
+| **A5** | Two-pass DBSCAN: one feature = one co-location (graph component) | `build-clusters.py` | **DONE** — centroid-based `cluster_id`; dedup anchors; Phase 19 |
 
-**A5 is the full fix** (per `DBSCAN-TRIANGULATION-REDESIGN-2026-05-20.md`, now
-archived). A1–A4 are the quick bundle that delivers mid-point rendering + real
-tier data without waiting for A5.
-
-Additional pipeline changes:
-- **`taxonomy.py`** (NEW) — single declarative taxonomy: `CATEGORIES`, `BRAND_FILL`,
-  `THRESHOLDS`, `DISPLAY_COUNTRIES`, `category_of()`, `tier_of()`, `slots_for()`.
-  `all_chains_for_iso()` is the single loop authority.
-- **`region_engine.py`** — delete the Nominatim override; add `resolve_metro()`
-  gated on the published CBRE/Oxford metro list.
-- **`metro-markets.json`** (NEW) — committed catalogue of MSA/CBSA/CMA polygon IDs.
+Outstanding pipeline scripts:
 - **`build-geometric-ranking.py`** — compute `dist_rank_in_tier` (inverted
-  percentile, shrinkage-blended). Strip population/spend/IoU gates from tier
-  predicates — tier is composition only.
+  percentile, shrinkage-blended country+continent). Currently 0.0 placeholder.
 - **`build-regional-markets.py`** (NEW) — group co-locations by `regional_market`
   → rebuild `regional-markets.json` (~3,011 RMs). Point-in-polygon via
   RegionEngine.
 - **Alberta S0 prototype** — validate the full pipeline on AB-only subset before
   any global S2 overnight build. Sherwood Park must resolve to 3 co-locations
   in Strathcona County. S1 operator sign-off gates S2.
+
+**`taxonomy.py` single-authority rule:** `all_chains_for_iso()` is the sole loop
+in `build-clusters.py` (migrated 2026-05-24, commit pending). The Phase 21 bug
+class (hardcoded category tuple missing a category) is now closed.
 
 ### Track B — Frontend single-authority refactor (after A1–A3 land)
 
