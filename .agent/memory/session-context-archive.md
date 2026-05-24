@@ -5,6 +5,28 @@ Newest first.
 
 ---
 
+## 2026-05-21 | Totebox | claude-code
+
+**Done this session — knowledge-platform re-architecture + plan consolidation:**
+- Major strategic session. Dispatched recon agents (engine + design-system audit) and a 4-agent OPUS research sweep (leapfrog-2030 vision, AI-native contribution model, machine-readable/flat architecture, build-vs-adopt).
+- Authored `KNOWLEDGE-PLATFORM-VISION.md` (rev 4, `.agent/plans/`) — upstream vision & architecture. And `KNOWLEDGE-PLATFORM-PLAN.md` — project-knowledge's 8-phase execution plan.
+- **Six decisions confirmed by operator:** (1) claim-native data model — convention-first; (2) pairing contribution model (web-login retired; os-console ↔ os-mediakit); (3) MCP reversal — keep transport, re-found as claim+contribution API; (4) `INVENTIONS.md` disclosure machinery descoped → future `project-disclosure` tenant; (5) os-console/os-mediakit a later cross-project phase; (6) Stage 6 first.
+- Settled: custom Rust engine continues (not MediaWiki); three sovereign deployment instances; source-of-truth inversion (instance content repo canonical, GitHub downstream); rename `content-wiki-* → media-knowledge-*` (operator doing the GitHub side); Main Page owned by project-knowledge.
+- Cross-checked with project-editorial — accepted; reconciled (Gate-0 editorial standard; one-ruleset/two-consumers linter). Recorded as Vision §14.
+- Cleaned `.agent/plans/`: 12 superseded plans deleted, 3 Wikipedia-parity archived. Committed `80d50931` (Jennifer).
+- Drafted project-editorial's plan → `.agent/drafts-outbound/KNOWLEDGE-PLATFORM-EDITORIAL-PLAN.draft.md`.
+- Outbox: Doctrine-amendment request to Command (`project-knowledge-20260521-doctrine-amendment-request`); consolidated-plan handoff + strict 7-step cleanup to project-editorial (`project-knowledge-20260521-editorial-plan-handoff`).
+
+**Pending / carry-forward:** All execution phases subsequently completed 2026-05-22/23.
+
+**Operator preferences surfaced:**
+- Collapse plan sprawl: one upstream vision + one execution plan per cluster.
+- "We Own It" — sovereign in-house stack; custom-built, not adopted.
+- Respect archive boundaries — draft for other clusters, route via outbox.
+- Decisive, fast pace; confirm decisions in batches.
+
+---
+
 ## 2026-05-20b | Totebox | claude-code
 
 **Done this session:** Startup sequence only. No work performed — operator issued shutdown immediately after startup.

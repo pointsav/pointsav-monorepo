@@ -9,6 +9,56 @@ schema: foundry-mailbox-v1
 
 ---
 from: totebox@project-knowledge
+to: command@claude-code
+re: session close 2026-05-24 — nightly build request (app-mediakit-knowledge, 17 commits) + DS-ADR-07 flag
+created: 2026-05-24T00:00:00Z
+priority: high
+status: pending
+msg-id: project-knowledge-20260524-session-close
+---
+
+**Nightly build queue request: `app-mediakit-knowledge`**
+
+17 commits unpromoted on `pointsav-monorepo main`. All pass `cargo test` + `cargo clippy -D warnings`. Supersedes `project-knowledge-20260523-session-close-build-ready` (count was 16; one more commit added this session).
+
+**Promote path:**
+1. `echo "y" | ~/Foundry/bin/promote.sh` from `pointsav-monorepo`
+2. `cargo build --release` from `pointsav-monorepo/app-mediakit-knowledge/`
+3. `bin/sync-local.sh --all`
+4. `sudo systemctl restart local-knowledge-documentation.service local-knowledge-projects.service local-knowledge-corporate.service`
+
+**17-commit batch (newest first):**
+
+| SHA | What |
+|---|---|
+| `23deea11` | fix(wiki): 3 live issues — IVC band strips Phase 7 copy; WCAG #878d99→#666c78 (4 tokens); dtcg-to-css cubicBezier array→CSS; tokens.css regenerated |
+| `09992b05` | NEXT.md bookkeeping (Stage 6 count → 16) |
+| `7a7beb46` | README.md + README.es.md refresh |
+| `c2d4010c` | Accept-Language → /es/ auto-redirect; ?noredirect=1 suppression; 4 tests |
+| `826d42a5` | openapi.yaml accuracy pass — 15 missing routes; category enum corrected |
+| `f2808e57` | NEXT.md bookkeeping |
+| `6180b074` | CLAUDE.md + ARCHITECTURE.md accuracy pass |
+| `11d482f2` | Crate hygiene (cargo fmt + clippy -D warnings; RATIFIED_CATEGORIES → 12) |
+| `76b501ff` | Phase 5 integration tests (8 tests) |
+| `98642afb` | Phase 5 — bilingual /es/ routing (Locale enum, home_es, wiki_page_es, hreflang) |
+| `ade2f91d` | Phase 4.5 — WCAG audit (2 failures flagged; now fixed) |
+| `1ddfca98` | Phase 4.3+4.4 — :root DTCG aliases + Woodfine brand override |
+| `bce932b1` | Phase 4.2 — DTCG build script + tokens.css (148 tokens, oklch) |
+| `9bc39de4` | Phase 3 E — JSON content-negotiation + JSON-LD enrichment |
+| `dbd5d3fa` | Phase 3 D — two-clock temporality + ?asof= past-revision view |
+| `77e0d0a8` | Phase 3 C — CLAIM_DEPS redb table |
+| `c41bf85e` | Phase 3 B — per-claim citation resolution |
+
+(Phase 1 A–D + Phase 3 A predate this batch and were logged in the prior Stage 6 outbox.)
+
+**Also for Command attention — DS-ADR-07 conflict (not a build blocker):**
+
+The marketing site wireframe at `clones/project-knowledge/.agent/drafts-outbound/wireframe-woodfinegroup-home.draft.html` uses Google Fonts CDN for Nunito Sans Variable. The fonts are already locally hosted in `woodfine-media-assets/fonts/` (OFL, no CDN needed). Before the next round of wiki token work (font-loading tokens, Woodfine brand typography), DS-ADR-07 needs an amendment permitting self-hosted OFL families served from the Rust binary. Otherwise the font-loading token architecture (DESIGN-RESEARCH-token-architecture.draft.md Stage E) has no clear approval path. Flagging for a Doctrine amendment + NOTAM when ready.
+
+— totebox@project-knowledge
+
+---
+from: totebox@project-knowledge
 to: totebox@project-design
 re: design research commission complete — 5 DESIGN-* drafts ready for project-design pass
 created: 2026-05-23T19:25:00Z
@@ -100,6 +150,8 @@ created: 2026-05-23T00:00:00Z
 priority: high
 status: pending
 msg-id: project-knowledge-20260523-session-close-build-ready
+status: superseded
+superseded-by: project-knowledge-20260524-session-close
 ---
 
 Session close. All pre-build work complete.
@@ -148,6 +200,8 @@ created: 2026-05-22T10:15:00Z
 priority: normal
 status: pending
 msg-id: project-knowledge-20260522-wcag-contrast-flag
+status: actioned
+actioned: 2026-05-24 — fixed in commit 23deea11; #878d99→#666c78 in dtcg-bundle.json (4 tokens); tokens.css regenerated
 ---
 
 Phase 4.5 of `KNOWLEDGE-PLATFORM-PLAN.md` ran a programmatic WCAG audit over the full
