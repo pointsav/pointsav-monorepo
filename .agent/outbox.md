@@ -11,6 +11,36 @@ contamination-resolved: 2026-05-22 — project-knowledge content excised; manife
 ---
 from: totebox@project-intelligence
 to: command@claude-code
+re: build-request — slm-doorman-server
+created: 2026-05-24T00:00:00Z
+priority: normal
+status: pending
+msg-id: project-intelligence-20260524-build-request-slm-doorman-server
+---
+
+Please add `slm-doorman-server` to tonight's nightly build queue from the
+`project-intelligence` archive.
+
+**Why rebuild:** Session 6 shipped 5 code commits (BackendLifecycle trait,
+GF-1 async audit, GF-2 inference timeouts, LatencyClass routing,
+model-drift doc fix). The running `local-doorman` binary on the workspace VM
+predates all of these. Rebuild + redeploy will pick up GF-1 (spawn_blocking
+audit writes) and GF-2 (connect_timeout 5s + timeout 180s on Tier A client),
+both of which affect the live inference path.
+
+**Gate:** Stage 6 promote must complete first (12 commits ahead;
+rebase required per inbox `command-20260520-stage6-rebase-required`).
+
+```
+bin/nightly-build-plan.sh --add slm-doorman-server --from project-intelligence
+```
+
+After deploy, add `SLM_LOCAL_MODEL=olmo-2-0425-1b-instruct` to
+`local-doorman.service` env if not already present.
+
+---
+from: totebox@project-intelligence
+to: command@claude-code
 re: Phase 6 AUTO-TODO complete — Stage 6 + redeploy needed
 created: 2026-05-23T00:00:00Z
 priority: normal
