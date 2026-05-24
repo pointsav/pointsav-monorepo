@@ -16,6 +16,15 @@ consolidates:
 
 ---
 
+## STATUS — 2026-05-24 (session 5)
+
+| Area | State |
+|---|---|
+| Outbox archive sweep | **COMPLETE** — 11 stale Stage 6 messages archived to outbox-archive.md (67c9db6c) |
+| D10 wikilink validation | **COMPLETE** — 0 red links; fixed stale `[[sys-adr-07]]` → `[[architecture-decisions]]` (4723886) |
+| archive/ cleanup-log closure | **COMPLETE** — directory was already absent; entry closed (a76bac0) |
+| OS stub articles | **COMPLETE** — all OS articles exist as complete content; NEXT.md authorship roadmap updated to [x] (7493935) |
+
 ## STATUS — 2026-05-24 (session 4)
 
 | Area | State |

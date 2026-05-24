@@ -1,6 +1,6 @@
 # Open items — project-editorial
 
-> Persistent TODO tracker. Updated at session end. Last updated: 2026-05-24.
+> Persistent TODO tracker. Updated at session end. Last updated: 2026-05-24 (session 5).
 > Completed items remain here (checked) for one session before archiving to `archive/`.
 
 ---
@@ -51,6 +51,15 @@
 - [x] **E3 status field** — brand-family-swatch + brand-typography (all 4 EN+ES files) — added `status: active` (`80de908`)
 - [x] **E4 title case** — foundry-services-slice-model sentence case; slug drift logged in cleanup-log.md (`d8d82cf`)
 - [x] **Outbox pruned** — 12 actioned/stale messages archived; routing message added for 5 design drafts → project-design (`487d1da3`)
+
+---
+
+## DONE — 2026-05-24 (session 5, project-editorial)
+
+- [x] **Outbox archive sweep** — 11 stale Stage 6 messages archived to outbox-archive.md; outbox.md cleaned (67c9db6c)
+- [x] **D10 wikilink validation** — 0 red links across all 3 wikis; fixed stale `[[sys-adr-07]]` in style-guide-policy EN+ES (4723886)
+- [x] **archive/ cleanup-log entry** — closed; directory already absent from filesystem (a76bac0)
+- [x] **OS authorship roadmap** — all 6 OS articles verified complete at current slugs; NEXT.md updated to [x]; no stub creation needed (7493935)
 
 ---
 
