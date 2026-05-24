@@ -1,0 +1,1763 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Woodfine Projects — Co-location Tier Methodology</title>
+<meta name="description" content="The Woodfine Projects Wiki — editorial reference for co-location intelligence, BIM strategy, direct hold real property, governance and data methodology.">
+
+<!-- ============================================================================
+     DESIGN-COMPETITION-D — Brand Continuity
+     ----------------------------------------------------------------------------
+     Philosophy: a reader navigating from home.woodfinegroup.com to
+     projects.woodfinegroup.com should feel the brand DEEPEN, not shift. The
+     wiki IS the brand surface — not a separate engine.
+
+     Tokens inherited directly from wireframe-home-header-v2c.html (the
+     ratified home chrome). New tokens (--ed-*) layer the editorial
+     reading surface on top.
+
+     Auth model: anonymous reader sees ZERO editing chrome — the article
+     is a clean magazine spread. Logged-in users get a floating action
+     bar at the foot of the viewport. Talk/Discussion is logged-in only,
+     buried in the overflow menu.
+     ============================================================================ -->
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Barlow+Condensed:wght@400;500;600;700;800&family=Roboto+Slab:wght@300;400;500;700&family=Zilla+Slab:wght@300;400;500;700&family=Nunito+Sans:ital,opsz,wght@0,6..12,300;0,6..12,400;0,6..12,600;0,6..12,700;1,6..12,400&display=swap" rel="stylesheet">
+
+<style>
+/* ── DESIGN-* tokens (--ds-*) — inherited from home wireframe v2c ───────── */
+:root {
+  /* Paper / canvas */
+  --ds-paper-1: #FFFFFF;
+  --ds-paper-2: #F7F9FA;
+  --ds-paper-3: #E6E7E8;
+
+  /* Ink */
+  --ds-ink-1: #111827;
+  --ds-ink-2: #374151;
+  --ds-ink-3: #6B7280;
+  --ds-ink-4: #9CA3AF;
+
+  /* Rule */
+  --ds-rule-hairline: #E6E7E8;
+  --ds-rule-strong:   #9CA3AF;
+
+  /* Type families — matched to home; Barlow Condensed for editorial display */
+  --ds-display:   "Oswald", "Trade Gothic LT Std", "Helvetica Neue", Arial, sans-serif;
+  --ds-editorial: "Barlow Condensed", "Trade Gothic LT Std", Arial, sans-serif;
+  --ds-serif:     "Zilla Slab", "Roboto Slab", Georgia, serif;
+  --ds-sans:      "Nunito Sans", "Avenir LT Std", -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+
+  /* Type scale */
+  --ds-fs-utility:   10px;
+  --ds-fs-nav:       11px;
+  --ds-fs-body:      14px;
+  --ds-fs-cities:    14px;
+  --ds-fs-footnav:   10px;
+  --ds-fs-trademark: 10px;
+  --ds-fs-copyright: 10px;
+
+  /* Weights */
+  --ds-fw-regular:  400;
+  --ds-fw-medium:   500;
+  --ds-fw-semibold: 600;
+  --ds-fw-bold:     700;
+
+  /* Tracking */
+  --ds-ls-tight:       0.04em;
+  --ds-ls-medium:      0.10em;
+  --ds-ls-wide:        0.16em;
+  --ds-ls-extra-wide:  0.18em;
+
+  /* Spacing */
+  --ds-sp-1:   4px;
+  --ds-sp-2:   8px;
+  --ds-sp-3:  12px;
+  --ds-sp-4:  16px;
+  --ds-sp-5:  20px;
+  --ds-sp-6:  24px;
+  --ds-sp-7:  36px;
+  --ds-sp-8:  48px;
+  --ds-sp-9:  56px;
+  --ds-sp-10: 80px;
+  --ds-sp-11: 120px;
+  --ds-sp-12: 140px;
+
+  /* Motion */
+  --ds-motion-fast:   160ms;
+  --ds-motion-medium: 240ms;
+  --ds-easing-standard: cubic-bezier(0.2, 0, 0, 1);
+
+  /* Container */
+  --ds-container-max: 1440px;
+  --ds-reading-max:   720px;
+}
+
+/* ── ASSET-WOODFINE-* — brand tokens ────────────────────────────────────── */
+:root {
+  --wf-blue:      #164679;
+  --wf-blue-on:   #FFFFFF;
+  --wf-blue-tint: #E8EFF7;
+  --wf-gold:      #EAB308;
+}
+
+/* ── Editorial layer (--ed-*) — wiki-specific extensions ───────────────── */
+:root {
+  --ed-canvas:        var(--ds-paper-2);
+  --ed-surface:       var(--ds-paper-1);
+  --ed-quote-rule:    var(--wf-blue);
+  --ed-chip-bg:       var(--wf-blue-tint);
+  --ed-chip-ink:      var(--wf-blue);
+  --ed-toc-active:    var(--wf-blue);
+  --ed-hover-tint:    rgba(22, 70, 121, 0.06);
+
+  --ed-reading-fs:    19px;
+  --ed-reading-lh:    1.75;
+  --ed-body-fs:       17px;
+  --ed-body-lh:       1.7;
+
+  --ed-shadow-float:  0 8px 32px rgba(17, 24, 39, 0.12), 0 2px 8px rgba(17, 24, 39, 0.08);
+  --ed-shadow-card:   0 1px 2px rgba(17, 24, 39, 0.04);
+}
+
+/* ── Dark mode ─────────────────────────────────────────────────────────── */
+html[data-theme="dark"] {
+  --ds-paper-1: #111317;
+  --ds-paper-2: #09090B;
+  --ds-paper-3: #1C1F26;
+
+  --ds-ink-1: #F4F5F7;
+  --ds-ink-2: #D1D5DB;
+  --ds-ink-3: #9CA3AF;
+  --ds-ink-4: #6B7280;
+
+  --ds-rule-hairline: #1F232B;
+  --ds-rule-strong:   #2E3340;
+
+  --wf-blue:      #5C8FCE;
+  --wf-blue-on:   #0B1320;
+  --wf-blue-tint: rgba(92, 143, 206, 0.12);
+
+  --ed-canvas:    #09090B;
+  --ed-surface:   #111317;
+  --ed-shadow-float:  0 8px 32px rgba(0,0,0,0.6), 0 2px 8px rgba(0,0,0,0.4);
+  --ed-shadow-card:   0 1px 2px rgba(0,0,0,0.3);
+}
+
+/* ── Reset + base ──────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
+  margin: 0; padding: 0;
+  background: var(--ed-canvas);
+  color: var(--ds-ink-1);
+  font-family: var(--ds-sans);
+  font-size: var(--ds-fs-body);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html { scroll-behavior: smooth; }
+
+a { color: inherit; text-decoration: none; }
+a:focus-visible, button:focus-visible {
+  outline: 2px solid var(--wf-blue);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+::selection { background: var(--wf-blue); color: var(--wf-blue-on); }
+
+/* Skip link */
+.skip-link {
+  position: absolute; left: -10000px; top: auto;
+  width: 1px; height: 1px; overflow: hidden;
+}
+.skip-link:focus {
+  position: fixed; top: 8px; left: 8px;
+  width: auto; height: auto;
+  background: var(--wf-blue); color: var(--wf-blue-on);
+  padding: 8px 14px; z-index: 9999;
+  font-family: var(--ds-display);
+  font-size: var(--ds-fs-nav);
+  letter-spacing: var(--ds-ls-wide);
+  text-transform: uppercase;
+}
+
+/* ── Page ──────────────────────────────────────────────────────────────── */
+.page {
+  max-width: var(--ds-container-max);
+  width: 100%;
+  margin: 0 auto;
+  background: var(--ed-canvas);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SHELL HEADER — three rows, continuous with home.woodfinegroup.com
+   ═══════════════════════════════════════════════════════════════════════════ */
+.shell-header { display: flex; flex-direction: column; }
+
+/* Row 1 — utility stripe */
+.utility-row {
+  background: var(--ds-paper-3);
+  padding: var(--ds-sp-2) var(--ds-sp-9);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--ds-sp-6);
+  font-family: var(--ds-display);
+  font-size: var(--ds-fs-utility);
+  font-weight: var(--ds-fw-medium);
+  letter-spacing: var(--ds-ls-extra-wide);
+  text-transform: uppercase;
+  color: var(--ds-ink-4);
+}
+.utility-left, .utility-right {
+  display: flex; align-items: center; gap: var(--ds-sp-5);
+}
+.utility-tag {
+  color: var(--ds-ink-3);
+  border-left: 2px solid var(--wf-blue);
+  padding-left: var(--ds-sp-2);
+}
+.utility-row button {
+  color: var(--ds-ink-3);
+  background: transparent;
+  border: 0; padding: 0;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  cursor: pointer;
+  transition: color var(--ds-motion-fast) var(--ds-easing-standard);
+}
+.utility-row button:hover { color: var(--ds-ink-1); }
+.utility-row .lang-toggle::after { content: " \25BE"; margin-left: 4px; font-size: 0.85em; }
+
+.theme-toggle {
+  width: 22px; height: 22px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 50%;
+  border: 1px solid var(--ds-rule-strong) !important;
+  font-size: 10px;
+}
+.theme-toggle:hover { background: var(--ds-paper-1); }
+
+/* Row 2 — brand */
+.brand-row {
+  background: var(--ds-paper-2);
+  padding: var(--ds-sp-7) var(--ds-sp-9);
+  display: flex; justify-content: center; align-items: center;
+}
+.wordmark { display: inline-flex; align-items: center; justify-content: center; }
+.wordmark svg { width: 320px; height: 80px; display: block; }
+.wordmark .institutional-fill { fill: var(--ds-ink-1); transition: fill var(--ds-motion-medium) var(--ds-easing-standard); }
+
+/* Row 3 — nav (wiki = home nav + search + sister sites) */
+.nav-row {
+  background: var(--ds-paper-2);
+  border-top:    1px solid var(--ds-rule-hairline);
+  border-bottom: 1px solid var(--ds-rule-hairline);
+  padding: var(--ds-sp-3) var(--ds-sp-9);
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: var(--ds-sp-5);
+  font-family: var(--ds-display);
+  font-size: var(--ds-fs-nav);
+  font-weight: var(--ds-fw-medium);
+  letter-spacing: var(--ds-ls-wide);
+  text-transform: uppercase;
+}
+.nav-list {
+  display: flex; gap: var(--ds-sp-7);
+  list-style: none; margin: 0; padding: 0;
+}
+.nav-list.left  { justify-content: flex-start; color: var(--ds-ink-3); }
+.nav-list.right { justify-content: flex-end;   color: var(--wf-blue); }
+.nav-list a {
+  display: inline-flex; align-items: center;
+  height: 32px; padding: 0 var(--ds-sp-1);
+  line-height: 1;
+  transition: opacity var(--ds-motion-fast) var(--ds-easing-standard);
+}
+.nav-list a:hover { opacity: 0.7; }
+.nav-list a.sister::after {
+  content: "↗";
+  margin-left: 4px;
+  font-size: 0.9em;
+  opacity: 0.6;
+}
+
+.nav-search {
+  display: flex; align-items: center; justify-self: center;
+  background: var(--ds-paper-1);
+  border: 1px solid var(--ds-rule-hairline);
+  border-radius: 999px;
+  padding: 4px var(--ds-sp-3);
+  min-width: 280px;
+  transition: border-color var(--ds-motion-fast), box-shadow var(--ds-motion-fast);
+}
+.nav-search:focus-within {
+  border-color: var(--wf-blue);
+  box-shadow: 0 0 0 3px var(--wf-blue-tint);
+}
+.nav-search svg { width: 14px; height: 14px; color: var(--ds-ink-3); flex-shrink: 0; }
+.nav-search input {
+  border: 0; background: transparent;
+  padding: 6px var(--ds-sp-2);
+  font: inherit;
+  font-family: var(--ds-sans);
+  font-weight: var(--ds-fw-regular);
+  letter-spacing: var(--ds-ls-tight);
+  text-transform: none;
+  color: var(--ds-ink-1);
+  width: 100%;
+  outline: 0;
+}
+.nav-search input::placeholder { color: var(--ds-ink-4); }
+.nav-search kbd {
+  font-family: var(--ds-sans);
+  font-size: 10px;
+  color: var(--ds-ink-4);
+  border: 1px solid var(--ds-rule-hairline);
+  border-radius: 3px;
+  padding: 1px 5px;
+  background: var(--ds-paper-2);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   BREADCRUMB
+   ═══════════════════════════════════════════════════════════════════════════ */
+.breadcrumb-row {
+  background: var(--ed-canvas);
+  padding: var(--ds-sp-3) var(--ds-sp-9);
+  font-family: var(--ds-display);
+  font-size: var(--ds-fs-utility);
+  font-weight: var(--ds-fw-medium);
+  letter-spacing: var(--ds-ls-extra-wide);
+  text-transform: uppercase;
+  color: var(--ds-ink-3);
+  display: flex; align-items: center; gap: var(--ds-sp-3);
+  border-bottom: 1px solid var(--ds-rule-hairline);
+}
+.breadcrumb-row a:hover { color: var(--ds-ink-1); }
+.breadcrumb-sep { color: var(--ds-ink-4); }
+.breadcrumb-current { color: var(--ds-ink-1); }
+
+.view-switcher {
+  margin-left: auto;
+  display: flex;
+  gap: 4px;
+  background: var(--ds-paper-3);
+  padding: 3px;
+  border-radius: 999px;
+}
+.view-switcher button {
+  font: inherit;
+  font-family: var(--ds-display);
+  font-size: 10px;
+  letter-spacing: var(--ds-ls-extra-wide);
+  text-transform: uppercase;
+  font-weight: var(--ds-fw-medium);
+  color: var(--ds-ink-3);
+  background: transparent;
+  border: 0;
+  padding: 5px var(--ds-sp-4);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background var(--ds-motion-fast), color var(--ds-motion-fast);
+}
+.view-switcher button.active {
+  background: var(--ds-paper-1);
+  color: var(--ds-ink-1);
+  box-shadow: var(--ed-shadow-card);
+}
+.view-switcher button:not(.active):hover { color: var(--ds-ink-1); }
+
+.auth-toggle {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: var(--ds-display);
+  font-size: 10px;
+  letter-spacing: var(--ds-ls-extra-wide);
+  text-transform: uppercase;
+  background: transparent;
+  border: 1px solid var(--ds-rule-hairline);
+  color: var(--ds-ink-3);
+  padding: 5px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all var(--ds-motion-fast);
+}
+.auth-toggle:hover { color: var(--ds-ink-1); border-color: var(--ds-rule-strong); }
+.auth-toggle .auth-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--ds-ink-4);
+}
+.auth-toggle.logged-in .auth-dot { background: var(--wf-gold); }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   HOME VIEW — magazine landing
+   ═══════════════════════════════════════════════════════════════════════════ */
+.view { display: none; }
+.view.active { display: block; }
+
+.home-main { padding: 0; }
+
+/* ── Hero ──────────────────────────────────────────────────────────────── */
+.hero {
+  padding: var(--ds-sp-11) var(--ds-sp-9) var(--ds-sp-10);
+  border-bottom: 1px solid var(--ds-rule-hairline);
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: var(--ds-sp-10);
+  align-items: end;
+}
+.hero-eyebrow {
+  font-family: var(--ds-display);
+  font-size: 11px;
+  font-weight: var(--ds-fw-medium);
+  letter-spacing: var(--ds-ls-extra-wide);
+  text-transform: uppercase;
+  color: var(--wf-blue);
+  margin: 0 0 var(--ds-sp-5);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ds-sp-3);
+}
+.hero-eyebrow::before {
+  content: "";
+  width: 28px; height: 1px;
+  background: var(--wf-blue);
+}
+.hero-headline {
+  font-family: var(--ds-editorial);
+  font-size: clamp(48px, 6vw, 92px);
+  font-weight: 700;
+  line-height: 0.98;
+  letter-spacing: -0.01em;
+  color: var(--ds-ink-1);
+  margin: 0 0 var(--ds-sp-6);
+}
+.hero-headline em {
+  font-style: italic;
+  font-family: var(--ds-serif);
+  font-weight: 300;
+  color: var(--wf-blue);
+}
+.hero-subhead {
+  font-family: var(--ds-sans);
+  font-size: 20px;
+  line-height: 1.5;
+  font-weight: var(--ds-fw-regular);
+  color: var(--ds-ink-2);
+  margin: 0 0 var(--ds-sp-6);
+  max-width: 38ch;
+}
+.hero-lede {
+  font-family: var(--ds-serif);
+  font-size: 18px;
+  line-height: 1.65;
+  font-weight: 300;
+  color: var(--ds-ink-2);
+  margin: 0 0 var(--ds-sp-7);
+  max-width: 42ch;
+  border-top: 1px solid var(--ds-rule-hairline);
+  padding-top: var(--ds-sp-5);
+}
+.hero-cta {
+  font-family: var(--ds-display);
+  font-size: 12px;
+  font-weight: var(--ds-fw-semibold);
+  letter-spacing: var(--ds-ls-extra-wide);
+  text-transform: uppercase;
+  color: var(--wf-blue);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ds-sp-3);
+  padding: var(--ds-sp-3) 0;
+  border-bottom: 1px solid var(--wf-blue);
+  transition: gap var(--ds-motion-medium) var(--ds-easing-standard);
+}
+.hero-cta:hover { gap: var(--ds-sp-4); }
+.hero-cta::after { content: "→"; font-size: 1.2em; }
+
+.hero-aside {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ds-sp-4);
+}
+.hero-fact {
+  border-top: 1px solid var(--ds-rule-hairline);
+  padding: var(--ds-sp-4) 0 var(--ds-sp-3);
+}
+.hero-fact-num {
+  font-family: var(--ds-editorial);
+  font-size: 56px;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--ds-ink-1);
+  letter-spacing: -0.02em;
+}
+.hero-fact-label {
+  display: block;
+  font-family: var(--ds-display);
+  font-size: 10px;
+  font-weight: var(--ds-fw-medium);
+  letter-spacing: var(--ds-ls-extra-wide);
+  text-transform: uppercase;
+  color: var(--ds-ink-3);
+  margin-top: var(--ds-sp-2);
+}
+
+/* ── Editorial grid (3 columns) ────────────────────────────────────────── */
+.editorial-grid {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 0.85fr;
+  gap: var(--ds-sp-9);
+  padding: var(--ds-sp-10) var(--ds-sp-9);
+  border-bottom: 1px solid var(--ds-rule-hairline);
+}
+.column-eyebrow {
+  font-family: var(--ds-display);
+  font-size: 10px;
+  font-weight: var(--ds-fw-medium);
+  letter-spacing: var(--ds-ls-extra-wide);
+  text-transform: uppercase;
+  color: var(--ds-ink-3);
+  margin: 0 0 var(--ds-sp-4);
+  padding-bottom: var(--ds-sp-2);
+  border-bottom: 2px solid var(--ds-ink-1);
+}
+.article-card { display: block; }
+.article-card .card-kicker {
+  font-family: var(--ds-display);
+  font-size: 10px;
+  font-weight: var(--ds-fw-semibold);
+  letter-spacing: var(--ds-ls-extra-wide);
+  text-transform: uppercase;
+  color: var(--wf-blue);
+  margin-bottom: var(--ds-sp-3);
+}
+.article-card .card-title {
+  font-family: var(--ds-editorial);
+  font-weight: 600;
+  color: var(--ds-ink-1);
+  line-height: 1.02;
+  letter-spacing: -0.005em;
+  margin: 0 0 var(--ds-sp-4);
+  transition: color var(--ds-motion-fast);
+}
+.article-card:hover .card-title { color: var(--wf-blue); }
+.article-card .card-lede {
+  font-family: var(--ds-serif);
+  font-weight: 300;
+  color: var(--ds-ink-2);
+  line-height: 1.55;
+}
+.article-card .card-meta {
+  margin-top: var(--ds-sp-4);
+  font-family: var(--ds-display);
+  font-size: 10px;
+  font-weight: var(--ds-fw-medium);
+  letter-spacing: var(--ds-ls-extra-wide);
+  text-transform: uppercase;
+  color: var(--ds-ink-3);
+}
+
+.column-wide .card-title { font-size: 38px; }
+.column-wide .card-lede  { font-size: 17px; }
+.column-mid  .card-title { font-size: 28px; }
+.column-mid  .card-lede  { font-size: 15px; }
+
+.recent-list {
+  list-style: none; margin: 0; padding: 0;
+  display: flex; flex-direction: column;
+  gap: var(--ds-sp-4);
+}
+.recent-item {
+  padding-bottom: var(--ds-sp-4);
+  border-bottom: 1px solid var(--ds-rule-hairline);
+}
+.recent-item:last-child { border-bottom: 0; }
+.recent-item .recent-date {
+  font-family: var(--ds-display);
+  font-size: 10px;
+  font-weight: var(--ds-fw-medium);
+  letter-spacing: var(--ds-ls-extra-wide);
+  text-transform: uppercase;
+  color: var(--ds-ink-3);
+  margin-bottom: 4px;
+}
+.recent-item .recent-title {
+  font-family: var(--ds-sans);
+  font-size: 14px;
+  font-weight: var(--ds-fw-semibold);
+  color: var(--ds-ink-1);
+  line-height: 1.35;
+  display: block;
+  transition: color var(--ds-motion-fast);
+}
+.recent-item:hover .recent-title { color: var(--wf-blue); }
+
+/* ── Category pills (horizontal) ───────────────────────────────────────── */
+.categories {
+  padding: var(--ds-sp-9) var(--ds-sp-9);
+  border-bottom: 1px solid var(--ds-rule-hairline);
+}
+.categories-label {
+  font-family: var(--ds-display);
+  font-size: 11px;
+  font-weight: var(--ds-fw-medium);
+  letter-spacing: var(--ds-ls-extra-wide);
+  text-transform: uppercase;
+  color: var(--ds-ink-3);
+  margin: 0 0 var(--ds-sp-5);
+}
+.category-pills {
+  display: flex; flex-wrap: wrap;
+  gap: var(--ds-sp-3);
+  list-style: none; margin: 0; padding: 0;
+}
+.category-pills a {
+  display: inline-flex; align-items: center;
+  padding: var(--ds-sp-3) var(--ds-sp-5);
+  border: 1px solid var(--ds-rule-hairline);
+  border-radius: 999px;
+  font-family: var(--ds-display);
+  font-size: 11px;
+  font-weight: var(--ds-fw-medium);
+  letter-spacing: var(--ds-ls-wide);
+  text-transform: uppercase;
+  color: var(--ds-ink-2);
+  background: var(--ds-paper-1);
+  transition: all var(--ds-motion-fast);
+}
+.category-pills a:hover {
+  border-color: var(--wf-blue);
+  color: var(--wf-blue);
+  background: var(--wf-blue-tint);
+}
+.category-pills .count {
+  margin-left: var(--ds-sp-2);
+  color: var(--ds-ink-4);
+  font-weight: var(--ds-fw-regular);
+}
+
+/* ── Stats bar ─────────────────────────────────────────────────────────── */
+.stats-bar {
+  padding: var(--ds-sp-5) var(--ds-sp-9);
+  font-family: var(--ds-display);
+  font-size: 10px;
+  font-weight: var(--ds-fw-medium);
+  letter-spacing: var(--ds-ls-extra-wide);
+  text-transform: uppercase;
+  color: var(--ds-ink-3);
+  display: flex; justify-content: center;
+  gap: var(--ds-sp-5);
+  border-bottom: 1px solid var(--ds-rule-hairline);
+}
+.stats-bar .stat-sep { color: var(--ds-ink-4); }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ARTICLE VIEW — reading surface
+   ═══════════════════════════════════════════════════════════════════════════ */
+.article-shell {
+  display: grid;
+  grid-template-columns: 1fr min(var(--ds-reading-max), calc(100% - 2 * var(--ds-sp-9))) 1fr;
+  padding: var(--ds-sp-10) 0 var(--ds-sp-9);
+  gap: 0;
+  position: relative;
+}
+.article-shell > * { grid-column: 2; }
+.article-shell .full-bleed { grid-column: 1 / -1; }
+
+.article-header {
+  padding-bottom: var(--ds-sp-7);
+  border-bottom: 1px solid var(--ds-rule-hairline);
+  margin-bottom: var(--ds-sp-8);
+}
+.article-chip {
+  display: inline-block;
+  background: var(--ed-chip-bg);
+  color: var(--ed-chip-ink);
+  font-family: var(--ds-display);
+  font-size: 10px;
+  font-weight: var(--ds-fw-semibold);
+  letter-spacing: var(--ds-ls-extra-wide);
+  text-transform: uppercase;
+  padding: 5px 12px;
+  border-radius: 999px;
+  margin-bottom: var(--ds-sp-5);
+}
+.article-title {
+  font-family: var(--ds-editorial);
+  font-size: clamp(40px, 5vw, 64px);
+  font-weight: 700;
+  line-height: 1.02;
+  letter-spacing: -0.01em;
+  color: var(--ds-ink-1);
+  margin: 0 0 var(--ds-sp-4);
+}
+.article-meta {
+  display: flex; align-items: center; gap: var(--ds-sp-4);
+  font-family: var(--ds-display);
+  font-size: 10px;
+  font-weight: var(--ds-fw-medium);
+  letter-spacing: var(--ds-ls-extra-wide);
+  text-transform: uppercase;
+  color: var(--ds-ink-3);
+}
+.article-meta .reviewed-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--wf-gold);
+}
+.article-meta .meta-sep {
+  width: 3px; height: 3px; border-radius: 50%;
+  background: var(--ds-ink-4);
+}
+
+.article-lede {
+  font-family: var(--ds-serif);
+  font-size: var(--ed-reading-fs);
+  line-height: var(--ed-reading-lh);
+  font-weight: 300;
+  color: var(--ds-ink-1);
+  margin: 0 0 var(--ds-sp-8);
+  letter-spacing: 0.005em;
+}
+
+/* Article body — magazine-style two-column at wide widths */
+.article-body {
+  font-family: var(--ds-sans);
+  font-size: var(--ed-body-fs);
+  line-height: var(--ed-body-lh);
+  color: var(--ds-ink-2);
+}
+.article-body h2 {
+  font-family: var(--ds-editorial);
+  font-size: 30px;
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -0.005em;
+  color: var(--ds-ink-1);
+  margin: var(--ds-sp-9) 0 var(--ds-sp-4);
+  column-span: all;
+  scroll-margin-top: 80px;
+  position: relative;
+}
+.article-body h2::before {
+  content: "";
+  position: absolute;
+  left: -28px; top: 0.65em;
+  width: 16px; height: 1px;
+  background: var(--wf-blue);
+}
+.article-body h3 {
+  font-family: var(--ds-display);
+  font-size: 12px;
+  font-weight: var(--ds-fw-semibold);
+  letter-spacing: var(--ds-ls-extra-wide);
+  text-transform: uppercase;
+  color: var(--ds-ink-3);
+  margin: var(--ds-sp-6) 0 var(--ds-sp-3);
+}
+.article-body p {
+  margin: 0 0 var(--ds-sp-5);
+  break-inside: avoid-column;
+}
+.article-body p + p { text-indent: 0; }
+.article-body p:first-of-type::first-line {
+  font-weight: var(--ds-fw-semibold);
+  letter-spacing: 0.02em;
+}
+
+.article-body blockquote {
+  margin: var(--ds-sp-6) 0;
+  padding: var(--ds-sp-4) 0 var(--ds-sp-4) var(--ds-sp-5);
+  border-left: 2px solid var(--ed-quote-rule);
+  font-family: var(--ds-serif);
+  font-size: 22px;
+  font-weight: 300;
+  font-style: italic;
+  line-height: 1.5;
+  color: var(--ds-ink-1);
+  column-span: all;
+}
+
+.article-body a.citation {
+  color: var(--wf-blue);
+  font-family: var(--ds-sans);
+  font-feature-settings: "sups";
+  font-size: 0.7em;
+  vertical-align: super;
+  line-height: 0;
+  padding: 0 2px;
+  font-weight: var(--ds-fw-semibold);
+}
+.article-body a.citation:hover { background: var(--wf-blue-tint); }
+
+/* Two-column at ≥1024px */
+@media (min-width: 1024px) {
+  .article-body .two-col {
+    column-count: 2;
+    column-gap: var(--ds-sp-9);
+    column-rule: 1px solid var(--ds-rule-hairline);
+  }
+}
+
+.article-tier-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: var(--ds-sp-6) 0;
+  font-family: var(--ds-sans);
+  font-size: 14px;
+  column-span: all;
+}
+.article-tier-table th {
+  text-align: left;
+  font-family: var(--ds-display);
+  font-size: 10px;
+  font-weight: var(--ds-fw-semibold);
+  letter-spacing: var(--ds-ls-extra-wide);
+  text-transform: uppercase;
+  color: var(--ds-ink-3);
+  padding: var(--ds-sp-3) var(--ds-sp-3) var(--ds-sp-3) 0;
+  border-bottom: 2px solid var(--ds-ink-1);
+}
+.article-tier-table td {
+  padding: var(--ds-sp-3) var(--ds-sp-3) var(--ds-sp-3) 0;
+  border-bottom: 1px solid var(--ds-rule-hairline);
+  color: var(--ds-ink-2);
+  vertical-align: top;
+}
+.article-tier-table td:first-child {
+  font-family: var(--ds-editorial);
+  font-weight: 600;
+  font-size: 18px;
+  color: var(--ds-ink-1);
+  letter-spacing: 0.02em;
+}
+
+/* Section edit pencil — hover-only, anonymous reader */
+.section-edit {
+  position: absolute;
+  right: -36px; top: 0.4em;
+  width: 24px; height: 24px;
+  border: 0; background: transparent;
+  color: var(--ds-ink-4);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity var(--ds-motion-fast);
+  display: none;
+}
+html:not([data-auth="anon"]) .article-body h2:hover .section-edit { opacity: 1; }
+
+/* Footnotes */
+.footnotes {
+  margin-top: var(--ds-sp-10);
+  padding-top: var(--ds-sp-6);
+  border-top: 1px solid var(--ds-rule-hairline);
+  font-family: var(--ds-sans);
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--ds-ink-3);
+}
+.footnotes-label {
+  font-family: var(--ds-display);
+  font-size: 10px;
+  font-weight: var(--ds-fw-medium);
+  letter-spacing: var(--ds-ls-extra-wide);
+  text-transform: uppercase;
+  color: var(--ds-ink-3);
+  margin: 0 0 var(--ds-sp-3);
+}
+.footnotes ol {
+  list-style: none;
+  margin: 0; padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--ds-sp-3) var(--ds-sp-6);
+}
+.footnotes li { padding-left: 18px; position: relative; }
+.footnotes li::before {
+  content: "[" counter(fn) "]";
+  counter-increment: fn;
+  position: absolute; left: 0; top: 0;
+  color: var(--wf-blue);
+  font-weight: var(--ds-fw-semibold);
+}
+.footnotes ol { counter-reset: fn; }
+
+/* ── Floating TOC pill (right rail) ────────────────────────────────────── */
+.toc-floating {
+  position: fixed;
+  top: 50%;
+  right: var(--ds-sp-6);
+  transform: translateY(-50%);
+  z-index: 50;
+  display: none;
+}
+.article-view.active ~ .toc-floating,
+body.article-active .toc-floating { display: block; }
+
+.toc-floating ol {
+  list-style: none; margin: 0; padding: 0;
+  display: flex; flex-direction: column;
+  gap: var(--ds-sp-2);
+}
+.toc-floating a {
+  display: flex; align-items: center;
+  gap: var(--ds-sp-3);
+  padding: 6px 0;
+  font-family: var(--ds-display);
+  font-size: 10px;
+  font-weight: var(--ds-fw-medium);
+  letter-spacing: var(--ds-ls-extra-wide);
+  text-transform: uppercase;
+  color: var(--ds-ink-4);
+  transition: color var(--ds-motion-fast);
+}
+.toc-floating a::before {
+  content: "";
+  display: block;
+  width: 16px; height: 1px;
+  background: var(--ds-rule-strong);
+  transition: width var(--ds-motion-medium) var(--ds-easing-standard),
+              background var(--ds-motion-fast);
+}
+.toc-floating a:hover { color: var(--ds-ink-1); }
+.toc-floating a:hover::before { background: var(--ds-ink-1); }
+.toc-floating a.active {
+  color: var(--ed-toc-active);
+  font-weight: var(--ds-fw-semibold);
+}
+.toc-floating a.active::before {
+  width: 32px;
+  background: var(--ed-toc-active);
+  height: 2px;
+}
+.toc-floating .toc-label {
+  font-family: var(--ds-display);
+  font-size: 9px;
+  font-weight: var(--ds-fw-semibold);
+  letter-spacing: var(--ds-ls-extra-wide);
+  text-transform: uppercase;
+  color: var(--ds-ink-4);
+  margin-bottom: var(--ds-sp-3);
+}
+
+@media (max-width: 1280px) {
+  body.article-active .toc-floating { display: none; }
+}
+
+/* ── Floating action bar — logged-in only ──────────────────────────────── */
+.action-bar {
+  position: fixed;
+  bottom: var(--ds-sp-6);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 60;
+  display: none;
+  align-items: center;
+  gap: var(--ds-sp-1);
+  background: var(--ed-surface);
+  border: 1px solid var(--ds-rule-hairline);
+  box-shadow: var(--ed-shadow-float);
+  border-radius: 999px;
+  padding: 6px;
+}
+html[data-auth="user"] body.article-active .action-bar { display: flex; }
+
+.action-bar button {
+  font: inherit;
+  font-family: var(--ds-display);
+  font-size: 11px;
+  font-weight: var(--ds-fw-semibold);
+  letter-spacing: var(--ds-ls-wide);
+  text-transform: uppercase;
+  color: var(--ds-ink-2);
+  background: transparent;
+  border: 0;
+  padding: 8px 16px;
+  border-radius: 999px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: background var(--ds-motion-fast), color var(--ds-motion-fast);
+  position: relative;
+}
+.action-bar button:hover { background: var(--ed-hover-tint); color: var(--ds-ink-1); }
+.action-bar .primary {
+  background: var(--wf-blue);
+  color: var(--wf-blue-on);
+}
+.action-bar .primary:hover { background: var(--wf-blue); color: var(--wf-blue-on); opacity: 0.9; }
+.action-bar .icon-only { width: 36px; padding: 8px 0; justify-content: center; }
+.action-bar svg { width: 14px; height: 14px; }
+
+.overflow-menu {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  right: 0;
+  background: var(--ed-surface);
+  border: 1px solid var(--ds-rule-hairline);
+  box-shadow: var(--ed-shadow-float);
+  border-radius: 8px;
+  padding: 6px;
+  min-width: 200px;
+  display: none;
+  flex-direction: column;
+}
+.overflow-menu.open { display: flex; }
+.overflow-menu button {
+  justify-content: flex-start;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 11px;
+  letter-spacing: var(--ds-ls-medium);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SHELL FOOTER — matches home.woodfinegroup.com (variant C)
+   ═══════════════════════════════════════════════════════════════════════════ */
+.shell-footer {
+  margin: var(--ds-sp-10) var(--ds-sp-9) 0;
+  background: var(--ds-paper-3);
+  padding: var(--ds-sp-5) var(--ds-sp-11);
+  color: var(--ds-ink-2);
+}
+.shell-footer .footer-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  column-gap: var(--ds-sp-6);
+}
+.cities {
+  font-family: var(--ds-serif);
+  font-size: var(--ds-fs-cities);
+  font-weight: var(--ds-fw-regular);
+  color: var(--ds-ink-1);
+  letter-spacing: var(--ds-ls-tight);
+}
+.cities .sep {
+  display: inline-block;
+  margin: 0 var(--ds-sp-3);
+  color: var(--ds-ink-3);
+}
+.footnav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-family: var(--ds-display);
+  font-size: var(--ds-fs-footnav);
+  font-weight: var(--ds-fw-medium);
+  letter-spacing: var(--ds-ls-extra-wide);
+  text-transform: uppercase;
+  color: var(--ds-ink-3);
+  text-align: right;
+}
+.footnav a { transition: opacity var(--ds-motion-fast); }
+.footnav a:hover { opacity: 0.7; color: var(--ds-ink-1); }
+
+.copyright {
+  margin: var(--ds-sp-3) var(--ds-sp-10) var(--ds-sp-2);
+  font-family: var(--ds-sans);
+  font-size: var(--ds-fs-copyright);
+  color: var(--ds-ink-4);
+  letter-spacing: var(--ds-ls-tight);
+}
+.trademark {
+  margin: var(--ds-sp-2) var(--ds-sp-10) var(--ds-sp-8);
+  font-family: var(--ds-sans);
+  font-size: 9px;
+  font-weight: var(--ds-fw-regular);
+  line-height: 1.5;
+  color: var(--ds-ink-4);
+  letter-spacing: var(--ds-ls-tight);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   RESPONSIVE
+   ═══════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 1200px) {
+  .utility-row, .brand-row, .nav-row,
+  .breadcrumb-row, .stats-bar, .categories { padding-left: var(--ds-sp-7); padding-right: var(--ds-sp-7); }
+  .hero { padding: var(--ds-sp-10) var(--ds-sp-7); gap: var(--ds-sp-8); }
+  .editorial-grid { padding: var(--ds-sp-9) var(--ds-sp-7); gap: var(--ds-sp-7); }
+  .article-shell {
+    grid-template-columns: 1fr min(var(--ds-reading-max), calc(100% - 2 * var(--ds-sp-7))) 1fr;
+  }
+  .shell-footer { margin: var(--ds-sp-10) var(--ds-sp-7) 0; padding: var(--ds-sp-5) var(--ds-sp-10) var(--ds-sp-4); }
+  .copyright, .trademark { margin-left: var(--ds-sp-9); margin-right: var(--ds-sp-9); }
+}
+
+@media (max-width: 1024px) {
+  .utility-row, .brand-row, .nav-row,
+  .breadcrumb-row, .stats-bar, .categories { padding-left: var(--ds-sp-6); padding-right: var(--ds-sp-6); }
+  .wordmark svg { width: 240px; height: 60px; }
+  .brand-row { padding-top: var(--ds-sp-6); padding-bottom: var(--ds-sp-6); }
+  .nav-search { min-width: 220px; }
+  .nav-list { gap: var(--ds-sp-5); }
+
+  .hero {
+    grid-template-columns: 1fr;
+    padding: var(--ds-sp-9) var(--ds-sp-6);
+    gap: var(--ds-sp-6);
+  }
+  .hero-aside { flex-direction: row; flex-wrap: wrap; }
+  .hero-fact { flex: 1 1 30%; }
+
+  .editorial-grid {
+    grid-template-columns: 1fr 1fr;
+    padding: var(--ds-sp-7) var(--ds-sp-6);
+  }
+  .editorial-grid .column-narrow { grid-column: 1 / -1; }
+  .column-wide .card-title { font-size: 32px; }
+  .column-mid  .card-title { font-size: 24px; }
+
+  .article-shell {
+    grid-template-columns: 1fr min(var(--ds-reading-max), calc(100% - 2 * var(--ds-sp-6))) 1fr;
+    padding-top: var(--ds-sp-8);
+  }
+  .article-body h2::before { display: none; }
+
+  .shell-footer { margin: var(--ds-sp-9) var(--ds-sp-6) 0; }
+}
+
+@media (max-width: 768px) {
+  .utility-row, .brand-row, .nav-row,
+  .breadcrumb-row, .stats-bar, .categories { padding-left: var(--ds-sp-4); padding-right: var(--ds-sp-4); }
+  .utility-row { gap: var(--ds-sp-3); }
+  .utility-left .utility-tag { display: none; }
+  .wordmark svg { width: 200px; height: 50px; }
+
+  .nav-row {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
+    gap: var(--ds-sp-3);
+    justify-items: stretch;
+    padding: var(--ds-sp-3) var(--ds-sp-4);
+  }
+  .nav-search { min-width: 0; width: 100%; }
+  .nav-list.left, .nav-list.right { justify-content: center; gap: var(--ds-sp-4); font-size: 10px; }
+
+  .breadcrumb-row {
+    flex-wrap: wrap;
+    gap: var(--ds-sp-2);
+  }
+  .view-switcher, .auth-toggle { margin-left: 0; }
+
+  .hero { padding: var(--ds-sp-8) var(--ds-sp-4); }
+  .hero-headline { font-size: clamp(38px, 9vw, 56px); }
+  .hero-fact-num { font-size: 40px; }
+
+  .editorial-grid {
+    grid-template-columns: 1fr;
+    padding: var(--ds-sp-7) var(--ds-sp-4);
+    gap: var(--ds-sp-7);
+  }
+  .column-wide .card-title { font-size: 28px; }
+  .column-mid  .card-title { font-size: 22px; }
+
+  .article-shell {
+    grid-template-columns: 1fr min(100%, calc(100% - 2 * var(--ds-sp-4))) 1fr;
+    padding-top: var(--ds-sp-7);
+  }
+  .article-title { font-size: clamp(32px, 7vw, 44px); }
+  .article-lede  { font-size: 17px; }
+  .article-body  { font-size: 16px; }
+  .article-body .two-col { column-count: 1; }
+
+  .shell-footer { margin: var(--ds-sp-8) var(--ds-sp-3) 0; padding: var(--ds-sp-4) var(--ds-sp-5); }
+  .shell-footer .footer-row { grid-template-columns: 1fr; row-gap: var(--ds-sp-3); }
+  .footnav { text-align: left; flex-direction: row; gap: var(--ds-sp-4); flex-wrap: wrap; }
+  .copyright, .trademark { margin-left: var(--ds-sp-5); margin-right: var(--ds-sp-5); }
+
+  .action-bar { left: var(--ds-sp-3); right: var(--ds-sp-3); transform: none; justify-content: center; }
+}
+
+@media (max-width: 480px) {
+  .utility-row { padding: var(--ds-sp-2) var(--ds-sp-3); font-size: 9px; }
+  .brand-row { padding: var(--ds-sp-3); }
+  .wordmark svg { width: 160px; height: 40px; }
+  .nav-row { padding: var(--ds-sp-3); }
+  .nav-list.left, .nav-list.right { gap: var(--ds-sp-3); font-size: 9px; }
+
+  .hero { padding: var(--ds-sp-7) var(--ds-sp-4); }
+  .hero-aside { flex-direction: column; }
+
+  .action-bar button .label { display: none; }
+  .action-bar button { padding: 8px 10px; }
+  .action-bar .primary .label { display: inline; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    transition-duration: 0ms !important;
+    animation-duration: 0ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ── Print ─────────────────────────────────────────────────────────────── */
+@media print {
+  .utility-row, .nav-row, .breadcrumb-row, .stats-bar,
+  .toc-floating, .action-bar, .view-switcher, .auth-toggle { display: none !important; }
+  .home-view { display: none !important; }
+  .article-view { display: block !important; }
+  body { background: #fff; color: #000; }
+}
+</style>
+</head>
+<body class="home-active" data-auth="anon">
+
+<a class="skip-link" href="#main">Skip to main content</a>
+
+<div class="page">
+
+  <!-- ════════════════════════════════════════════════════════════════════
+       SHELL HEADER — three rows, continuous with home.woodfinegroup.com
+       ════════════════════════════════════════════════════════════════════ -->
+  <header class="shell-header" role="banner">
+
+    <!-- Row 1 — utility -->
+    <div class="utility-row">
+      <div class="utility-left">
+        <span class="utility-tag">Woodfine Projects · Editorial Reference</span>
+      </div>
+      <div class="utility-right">
+        <button class="lang-toggle" type="button" aria-label="Language: English (change language)">EN</button>
+        <button class="theme-toggle" type="button" id="themeToggle" aria-label="Toggle dark mode" title="Toggle dark mode">Aa</button>
+        <button type="button" id="loginToggle">Log in</button>
+      </div>
+    </div>
+
+    <!-- Row 2 — brand wordmark -->
+    <div class="brand-row">
+      <a class="wordmark" href="/" aria-label="Woodfine Capital Projects — home">
+        <svg viewBox="0 0 144 36" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Woodfine Capital Projects">
+          <g class="institutional-fill" fill-rule="evenodd">
+            <path d="M 16.069 29.8287 L 16.069 31.0989 L 26.233 31.0989 L 26.233 29.8287 Z"/>
+            <path d="M 118.051 29.8287 L 118.051 31.0989 L 128.216 31.0989 L 128.216 29.8287 Z"/>
+            <path d="M 33.1631 29.8204 C 32.967 29.5952 32.6824 29.4671 32.3157 29.4671 C 31.5695 29.4671 31.0194 30.0515 31.0194 30.8551 C 31.0194 31.6591 31.5695 32.2435 32.284 32.2435 C 32.6824 32.2435 33.0049 32.073 33.2072 31.7806 L 34.0293 32.3712 C 33.6563 32.8827 33.0239 33.12 32.4105 33.12 C 31.0131 33.12 29.995 32.2373 29.995 30.8551 C 29.995 29.4733 31.0131 28.5906 32.4105 28.5906 C 32.91 28.5906 33.5424 28.7549 33.9218 29.2237 L 33.1631 29.8204 Z M 37.745 28.7002 L 38.5608 28.7002 L 40.5084 33.0104 L 39.3955 33.0104 L 39.0096 32.0973 L 37.2708 32.0973 L 36.8976 33.0104 L 35.81 33.0104 L 37.745 28.7002 Z M 38.1244 29.9543 L 37.5807 31.2937 L 38.6746 31.2937 L 38.1244 29.9543 Z M 42.4662 28.7002 L 44.1293 28.7002 C 45.0589 28.7002 45.8303 28.9864 45.8303 30.0091 C 45.8303 31.0198 45.1157 31.33 44.1736 31.33 L 43.4527 31.33 L 43.4527 33.0104 L 42.4662 33.0104 L 42.4662 28.7002 Z M 43.4527 30.5264 L 44.1103 30.5264 C 44.4582 30.5264 44.8058 30.4107 44.8058 30.0091 C 44.8058 29.5647 44.338 29.5037 43.9586 29.5037 L 43.4527 29.5037 L 43.4527 30.5264 Z M 48.3257 28.7002 L 49.3121 28.7002 L 49.3121 33.0104 L 48.3257 33.0104 L 48.3257 28.7002 Z M 52.8391 29.5404 L 51.5618 29.5404 L 51.5618 28.7002 L 55.1029 28.7002 L 55.1029 29.5404 L 53.8255 29.5404 L 53.8255 33.0104 L 52.8391 33.0104 L 52.8391 29.5404 Z M 58.2563 28.7002 L 59.072 28.7002 L 61.0197 33.0104 L 59.9067 33.0104 L 59.5208 32.0973 L 57.782 32.0973 L 57.4089 33.0104 L 56.3213 33.0104 L 58.2563 28.7002 Z M 58.6356 29.9543 L 58.0919 31.2937 L 59.1858 31.2937 L 58.6356 29.9543 Z M 62.8889 28.7002 L 63.8753 28.7002 L 63.8753 32.1336 L 65.7028 32.1336 L 65.7028 33.0104 L 62.8889 33.0104 L 62.8889 28.7002 Z M 71.6435 28.7002 L 73.3064 28.7002 C 74.236 28.7002 75.0074 28.9864 75.0074 30.0091 C 75.0074 31.0198 74.2928 31.33 73.3506 31.33 L 72.6299 31.33 L 72.6299 33.0104 L 71.6435 33.0104 L 71.6435 28.7002 Z M 72.6299 30.5264 L 73.2876 30.5264 C 73.6351 30.5264 73.983 30.4107 73.983 30.0091 C 73.983 29.5647 73.5153 29.5037 73.1356 29.5037 L 72.6299 29.5037 L 72.6299 30.5264 Z M 77.2627 28.7002 L 78.9952 28.7002 C 79.9121 28.7002 80.6834 29.0045 80.6834 30.0091 C 80.6834 30.6117 80.3486 31.0804 79.7162 31.19 L 80.8543 33.0104 L 79.6717 33.0104 L 78.736 31.2876 L 78.2491 31.2876 L 78.2491 33.0104 L 77.2627 33.0104 L 77.2627 28.7002 Z M 78.2491 30.484 L 78.8308 30.484 C 79.1914 30.484 79.6591 30.4717 79.6591 30.0029 C 79.6591 29.5708 79.2544 29.5037 78.8942 29.5037 L 78.2491 29.5037 L 78.2491 30.484 Z M 85.0444 28.5906 C 86.442 28.5906 87.4599 29.4733 87.4599 30.8551 C 87.4599 32.2373 86.442 33.12 85.0444 33.12 C 83.6468 33.12 82.6289 32.2373 82.6289 30.8551 C 82.6289 29.4733 83.6468 28.5906 85.0444 28.5906 Z M 85.0444 32.2435 C 85.8853 32.2435 86.4355 31.6591 86.4355 30.8551 C 86.4355 30.0515 85.8853 29.4671 85.0444 29.4671 C 84.2035 29.4671 83.6533 30.0515 83.6533 30.8551 C 83.6533 31.6591 84.2035 32.2435 85.0444 32.2435 Z M 91.8267 31.5676 C 91.8267 32.3651 91.6117 33.12 90.3976 33.12 C 89.6895 33.12 89.1708 32.8033 89.0257 32.1154 L 89.9299 31.9025 C 89.9552 32.1093 90.1576 32.2798 90.3723 32.2798 C 90.8341 32.2798 90.8403 31.7867 90.8403 31.4642 L 90.8403 28.7002 L 91.8267 28.7002 L 91.8267 31.5676 Z M 94.6007 28.7002 L 97.6421 28.7002 L 97.6421 29.5767 L 95.5871 29.5767 L 95.5871 30.3806 L 97.5284 30.3806 L 97.5284 31.2571 L 95.5871 31.2571 L 95.5871 32.1336 L 97.7558 32.1336 L 97.7558 33.0104 L 94.6007 33.0104 L 94.6007 28.7002 Z M 103.11 29.8204 C 102.913 29.5952 102.629 29.4671 102.262 29.4671 C 101.516 29.4671 100.966 30.0515 100.966 30.8551 C 100.966 31.6591 101.516 32.2435 102.231 32.2435 C 102.629 32.2435 102.951 32.073 103.154 31.7806 L 103.976 32.3712 C 103.603 32.8827 102.97 33.12 102.357 33.12 C 100.96 33.12 99.9416 32.2373 99.9416 30.8551 C 99.9416 29.4733 100.96 28.5906 102.357 28.5906 C 102.857 28.5906 103.489 28.7549 103.868 29.2237 L 103.11 29.8204 Z M 107.236 29.5404 L 105.959 29.5404 L 105.959 28.7002 L 109.5 28.7002 L 109.5 29.5404 L 108.223 29.5404 L 108.223 33.0104 L 107.236 33.0104 L 107.236 29.5404 Z M 113.672 29.7533 C 113.514 29.5585 113.198 29.4671 112.957 29.4671 C 112.679 29.4671 112.293 29.589 112.293 29.9115 C 112.293 30.697 114.355 30.1916 114.355 31.7015 C 114.355 32.6633 113.552 33.12 112.628 33.12 C 112.053 33.12 111.547 32.9557 111.124 32.5783 L 111.825 31.8354 C 112.028 32.0911 112.356 32.2435 112.685 32.2435 C 113.008 32.2435 113.368 32.0973 113.368 31.7929 C 113.368 31.0013 111.269 31.4276 111.269 29.9909 C 111.269 29.0717 112.097 28.5906 112.976 28.5906 C 113.482 28.5906 113.969 28.7183 114.348 29.0412 L 113.672 29.7533 Z"/>
+            <path d="M 19.7019 23.1944 L 23.3651 23.1944 L 26.3901 9.48497 L 26.4456 9.48497 L 29.2485 23.1944 L 32.9395 23.1944 L 37.3244 3.15753 L 33.7444 3.15753 L 31.0802 16.2565 L 31.0247 16.2565 L 28.2495 3.15753 L 24.5585 3.15753 L 21.811 16.2565 L 21.7555 16.2565 L 19.0636 3.15753 L 15.5113 3.15753 L 19.7019 23.1944 Z M 38.5452 16.756 C 38.5452 21.6958 41.1539 23.472 44.8727 23.472 C 48.5914 23.472 51.2001 21.6958 51.2001 16.756 L 51.2001 9.59598 C 51.2001 4.65613 48.5914 2.88 44.8727 2.88 C 41.1539 2.88 38.5452 4.65613 38.5452 9.59598 L 38.5452 16.756 Z M 42.375 9.09645 C 42.375 6.87629 43.3463 6.26575 44.8727 6.26575 C 46.399 6.26575 47.3704 6.87629 47.3704 9.09645 L 47.3704 17.2555 C 47.3704 19.4757 46.399 20.0862 44.8727 20.0862 C 43.3463 20.0862 42.375 19.4757 42.375 17.2555 L 42.375 9.09645 Z M 53.4203 16.756 C 53.4203 21.6958 56.029 23.472 59.7477 23.472 C 63.4665 23.472 66.0752 21.6958 66.0752 16.756 L 66.0752 9.59598 C 66.0752 4.65613 63.4665 2.88 59.7477 2.88 C 56.029 2.88 53.4203 4.65613 53.4203 9.59598 L 53.4203 16.756 Z M 57.25 9.09645 C 57.25 6.87629 58.2214 6.26575 59.7477 6.26575 C 61.2741 6.26575 62.2454 6.87629 62.2454 9.09645 L 62.2454 17.2555 C 62.2454 19.4757 61.2741 20.0862 59.7477 20.0862 C 58.2214 20.0862 57.25 19.4757 57.25 17.2555 L 57.25 9.09645 Z M 68.4896 23.1944 L 73.818 23.1944 C 78.2028 23.1944 80.6449 21.3073 80.8114 16.2565 L 80.8114 10.0955 C 80.6449 5.04466 78.2028 3.15753 73.818 3.15753 L 68.4896 3.15753 L 68.4896 23.1944 Z M 72.3194 6.54326 L 73.6514 6.54326 C 76.0381 6.54326 76.9817 7.70885 76.9817 10.5395 L 76.9817 15.8124 C 76.9817 18.8096 75.7606 19.8087 73.6514 19.8087 L 72.3194 19.8087 L 72.3194 6.54326 Z M 86.9169 23.1944 L 86.9169 14.5358 L 91.7457 14.5358 L 91.7457 11.1501 L 86.9169 11.1501 L 86.9169 6.54326 L 93.0778 6.54326 L 93.0778 3.15753 L 83.0871 3.15753 L 83.0871 23.1944 L 86.9169 23.1944 Z M 99.4603 23.1944 L 99.4603 3.15753 L 95.6306 3.15753 L 95.6306 23.1944 L 99.4603 23.1944 Z M 105.594 23.1944 L 105.594 10.262 L 105.649 10.262 L 111.505 23.1944 L 115.168 23.1944 L 115.168 3.15753 L 111.671 3.15753 L 111.671 15.0354 L 111.616 15.0354 L 106.287 3.15753 L 102.097 3.15753 L 102.097 23.1944 L 105.594 23.1944 Z M 128.489 23.1944 L 128.489 19.8087 L 121.551 19.8087 L 121.551 14.5358 L 126.629 14.5358 L 126.629 11.1501 L 121.551 11.1501 L 121.551 6.54326 L 128.211 6.54326 L 128.211 3.15753 L 117.721 3.15753 L 117.721 23.1944 L 128.489 23.1944 Z"/>
+          </g>
+        </svg>
+      </a>
+    </div>
+
+    <!-- Row 3 — navigation (home items + search + sister sites) -->
+    <nav class="nav-row" role="navigation" aria-label="Main navigation">
+      <ul class="nav-list left">
+        <li><a href="/page/disclaimer">Disclaimer</a></li>
+        <li><a href="/page/contact">Contact us</a></li>
+      </ul>
+
+      <form class="nav-search" role="search" onsubmit="event.preventDefault();">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <circle cx="11" cy="11" r="7"/>
+          <path d="m21 21-4.3-4.3"/>
+        </svg>
+        <input type="search" placeholder="Search 30 articles…" aria-label="Search the wiki">
+        <kbd>/</kbd>
+      </form>
+
+      <ul class="nav-list right">
+        <li><a href="https://documentation.woodfinegroup.com/" class="sister" rel="noopener" aria-label="Documentation (opens in new tab)">Documentation</a></li>
+        <li><a href="https://corporate.woodfinegroup.com/" class="sister" rel="noopener" aria-label="Corporate (opens in new tab)">Corporate</a></li>
+        <li><a href="https://newsroom.woodfinegroup.com/" class="sister" rel="noopener" aria-label="Newsroom (opens in new tab)">Newsroom</a></li>
+      </ul>
+    </nav>
+
+  </header>
+
+  <!-- ════════════════════════════════════════════════════════════════════
+       BREADCRUMB + VIEW SWITCHER (prototype scaffolding only)
+       ════════════════════════════════════════════════════════════════════ -->
+  <div class="breadcrumb-row">
+    <a href="/">Projects</a>
+    <span class="breadcrumb-sep">/</span>
+    <a href="/category/co-location" id="crumb-cat">Co-location Intelligence</a>
+    <span class="breadcrumb-sep" id="crumb-sep" style="display:none;">/</span>
+    <span class="breadcrumb-current" id="crumb-current" style="display:none;">Co-location Tier Methodology</span>
+
+    <div class="view-switcher" role="tablist" aria-label="Prototype view">
+      <button type="button" class="active" data-view="home" role="tab">Home</button>
+      <button type="button" data-view="article" role="tab">Article</button>
+    </div>
+
+    <button type="button" class="auth-toggle" id="authToggle" aria-pressed="false">
+      <span class="auth-dot"></span>
+      <span class="auth-label">Anonymous</span>
+    </button>
+  </div>
+
+  <main id="main" role="main">
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         HOME VIEW
+         ══════════════════════════════════════════════════════════════════ -->
+    <section class="view home-view active" id="view-home" aria-labelledby="hero-headline">
+
+      <!-- HERO -->
+      <div class="hero">
+        <div class="hero-main">
+          <p class="hero-eyebrow">Featured · Co-location Intelligence</p>
+          <h1 class="hero-headline" id="hero-headline">
+            How we classify <em>5,702</em> commercial clusters.
+          </h1>
+          <p class="hero-subhead">
+            The Woodfine co-location tier methodology — the framework behind every retail-node decision across 13 countries.
+          </p>
+          <p class="hero-lede">
+            A tier is not a score. It is the joint reading of anchor density, civic adjacency, and catchment population — calibrated against ground-truth tenancy data refreshed every quarter, and never imputed where the source is silent.
+          </p>
+          <a href="#article" class="hero-cta" data-link-view="article">Read the methodology</a>
+        </div>
+
+        <aside class="hero-aside" aria-label="Methodology at a glance">
+          <div class="hero-fact">
+            <span class="hero-fact-num">5,702</span>
+            <span class="hero-fact-label">Indexed clusters</span>
+          </div>
+          <div class="hero-fact">
+            <span class="hero-fact-num">13</span>
+            <span class="hero-fact-label">Countries covered</span>
+          </div>
+          <div class="hero-fact">
+            <span class="hero-fact-num">4</span>
+            <span class="hero-fact-label">Tier definitions</span>
+          </div>
+          <div class="hero-fact">
+            <span class="hero-fact-num">Q2 26</span>
+            <span class="hero-fact-label">Last calibration</span>
+          </div>
+        </aside>
+      </div>
+
+      <!-- EDITORIAL GRID -->
+      <div class="editorial-grid">
+
+        <article class="article-card column-wide">
+          <h3 class="column-eyebrow">Real Property</h3>
+          <p class="card-kicker">Long Read · 12 min</p>
+          <h2 class="card-title">The Direct Hold Framework</h2>
+          <p class="card-lede">
+            Why Woodfine acquires rather than securitises. Direct hold means the asset stays on the balance sheet, the income remains rent, and the underwriting horizon stretches across one cycle — not three quarters. The framework drives the cluster selection, not the other way around: nodes that cannot be held are not indexed in the first place.
+          </p>
+          <p class="card-meta">By Editorial Desk · Reviewed May 2026</p>
+        </article>
+
+        <article class="article-card column-mid">
+          <h3 class="column-eyebrow">BIM Strategy</h3>
+          <p class="card-kicker">Reference · 6 min</p>
+          <h2 class="card-title">BIM Floor-Plate Methodology</h2>
+          <p class="card-lede">
+            How interior gross-leasable-area is derived from BIM models when listing data disagrees with the recorder of deeds. The reconciliation rules — and what counts as a tie-break.
+          </p>
+          <p class="card-meta">By Editorial Desk · Reviewed May 2026</p>
+        </article>
+
+        <aside class="column-narrow" aria-labelledby="recent-label">
+          <h3 class="column-eyebrow" id="recent-label">Recently Added</h3>
+          <ol class="recent-list">
+            <li class="recent-item">
+              <p class="recent-date">22 May 2026 · Governance</p>
+              <a href="#" class="recent-title">Tetrad Discipline: the four-leg ratification rule for archive milestones</a>
+            </li>
+            <li class="recent-item">
+              <p class="recent-date">18 May 2026 · Data Methodology</p>
+              <a href="#" class="recent-title">WorldPop 2026 grid integration and the population revision deltas</a>
+            </li>
+            <li class="recent-item">
+              <p class="recent-date">14 May 2026 · Co-location</p>
+              <a href="#" class="recent-title">Catchment polygon adjustments in dense civic-service overlap zones</a>
+            </li>
+            <li class="recent-item">
+              <p class="recent-date">09 May 2026 · Newsroom</p>
+              <a href="#" class="recent-title">Why we stopped publishing implied yield: a disclosure-posture note</a>
+            </li>
+          </ol>
+        </aside>
+
+      </div>
+
+      <!-- CATEGORY PILLS -->
+      <section class="categories" aria-labelledby="cat-label">
+        <p class="categories-label" id="cat-label">Browse by Category</p>
+        <ul class="category-pills">
+          <li><a href="#"><span>Co-location</span><span class="count">12</span></a></li>
+          <li><a href="#"><span>BIM Strategy</span><span class="count">5</span></a></li>
+          <li><a href="#"><span>Real Property</span><span class="count">6</span></a></li>
+          <li><a href="#"><span>Governance</span><span class="count">3</span></a></li>
+          <li><a href="#"><span>Data Methodology</span><span class="count">2</span></a></li>
+          <li><a href="#"><span>Newsroom</span><span class="count">2</span></a></li>
+        </ul>
+      </section>
+
+      <!-- STATS BAR -->
+      <div class="stats-bar">
+        <span>30 articles</span><span class="stat-sep">·</span>
+        <span>12 categories</span><span class="stat-sep">·</span>
+        <span>Last updated 2026-05-22</span>
+      </div>
+
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         ARTICLE VIEW — Co-location Tier Methodology
+         ══════════════════════════════════════════════════════════════════ -->
+    <article class="view article-view" id="view-article" aria-labelledby="article-title">
+
+      <div class="article-shell">
+
+        <header class="article-header">
+          <span class="article-chip">Co-location Intelligence</span>
+          <h1 class="article-title" id="article-title">Co-location Tier Methodology</h1>
+          <div class="article-meta">
+            <span class="reviewed-dot" aria-hidden="true"></span>
+            <span>Reviewed · May 2026</span>
+            <span class="meta-sep" aria-hidden="true"></span>
+            <span>8 min read</span>
+            <span class="meta-sep" aria-hidden="true"></span>
+            <span>Editorial Desk</span>
+          </div>
+        </header>
+
+        <p class="article-lede">
+          The Woodfine co-location tier methodology classifies retail commercial nodes by the density and diversity of anchor tenant categories, civic service adjacency, and estimated trade area population. The system operates across 13 countries and approximately 5,700 indexed clusters as of May 2026.
+        </p>
+
+        <div class="article-body">
+
+          <section id="overview">
+            <h2>Overview
+              <button class="section-edit" aria-label="Edit Overview"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="m18 2 4 4-14 14H4v-4L18 2Z"/></svg></button>
+            </h2>
+            <div class="two-col">
+              <p>
+                A tier expresses the readiness of a cluster to host direct-hold retail space. It is not a credit score, a price signal, or a forward yield. The tier is a structural reading of three jointly necessary conditions: a sufficient anchor base, a population catchment capable of sustaining repeat trade, and a civic-service envelope that anchors weekday foot traffic independent of the discretionary cycle.
+              </p>
+              <p>
+                The methodology has been in continuous use, with periodic recalibration, since the 2021 cohort. The current calibration was finalised in the second quarter of 2026, drawing on the WorldPop 2026 population grid<a href="#fn1" class="citation">[1]</a>, the United States LODES 2022 employment release<a href="#fn2" class="citation">[2]</a>, and the MITMA Spain 2023 mobility dataset<a href="#fn3" class="citation">[3]</a>.
+              </p>
+              <p>
+                Where source data are silent, no tier is published. Imputation is not used to fill data gaps; the silence is itself the disclosure.
+              </p>
+            </div>
+          </section>
+
+          <section id="tiers">
+            <h2>Tier definitions
+              <button class="section-edit" aria-label="Edit Tier definitions"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="m18 2 4 4-14 14H4v-4L18 2Z"/></svg></button>
+            </h2>
+
+            <p>
+              Four tiers exist. Each is defined by joint thresholds — failing any one disqualifies the higher tier. The model is intentionally conjunctive; a single strong dimension does not compensate for a weak one.
+            </p>
+
+            <table class="article-tier-table" aria-label="Tier definitions">
+              <thead>
+                <tr>
+                  <th scope="col">Tier</th>
+                  <th scope="col">Anchor density</th>
+                  <th scope="col">Civic adjacency</th>
+                  <th scope="col">Catchment (000s)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>T1</td><td>Six+ category anchors, two grocery-class</td><td>Within 600 m of two civic services</td><td>≥ 50</td></tr>
+                <tr><td>T2</td><td>Four+ category anchors, one grocery-class</td><td>Within 600 m of one civic service</td><td>≥ 25</td></tr>
+                <tr><td>T3</td><td>Three+ category anchors</td><td>Within 1 200 m of one civic service</td><td>≥ 12</td></tr>
+                <tr><td>T4</td><td>Two+ category anchors</td><td>Not required</td><td>≥ 6</td></tr>
+              </tbody>
+            </table>
+
+            <blockquote>
+              A tier reading is a reading of the place, not of the deal. The same cluster will return the same tier whether or not Woodfine is the prospective acquirer.
+            </blockquote>
+          </section>
+
+          <section id="sources">
+            <h2>Data sources
+              <button class="section-edit" aria-label="Edit Data sources"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="m18 2 4 4-14 14H4v-4L18 2Z"/></svg></button>
+            </h2>
+            <div class="two-col">
+              <p>
+                The methodology aggregates three categories of input: tenancy data licensed from regional retail intelligence providers, civic-service registries published by competent national authorities, and population catchments derived from open population grids.
+              </p>
+              <p>
+                Tenancy data are refreshed quarterly. Civic-service registries are refreshed annually where the national authority publishes on an annual cycle. Population grids are refreshed as published; the latest WorldPop release is 2026, the latest LODES vintage is 2022.
+              </p>
+              <p>
+                Where a national civic-service registry is not maintained on a published cycle, Woodfine relies on OpenStreetMap and Overture Maps adjudicated tags, with hand-review of the top two hundred clusters in the affected geography on a rolling 24-month cadence.
+              </p>
+              <h3>Refresh cadence</h3>
+              <p>
+                A cluster's tier may change between refresh cycles only on the basis of a verifiable on-the-ground change — a new anchor opening, a closure, or a published civic-service relocation. Algorithmic recalibration is logged separately and never retroactively applied.
+              </p>
+            </div>
+          </section>
+
+          <section id="catchment">
+            <h2>Catchment methodology
+              <button class="section-edit" aria-label="Edit Catchment methodology"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="m18 2 4 4-14 14H4v-4L18 2Z"/></svg></button>
+            </h2>
+            <div class="two-col">
+              <p>
+                Catchment is computed as the population residing within a network-distance polygon, parameterised by the dominant transit mode of the surrounding postal sector. In car-dominated sectors the catchment is a 12-minute drive isochrone. In transit-dominated sectors it is a 20-minute walk-plus-transit isochrone. In mixed sectors, both are computed and the union taken.
+              </p>
+              <p>
+                The isochrone is built on the latest published road-and-transit network for the country — typically OSM with national-authority overlays. The catchment value reported is the count of residents whose home address-grid centroid falls within the polygon, rounded to the nearest thousand.
+              </p>
+              <p>
+                Tourist and seasonal populations are excluded. Catchments are residential. Where a cluster's anchor mix is materially tourism-driven, the cluster carries a "tourism-weighted" annotation and is not assigned a tier under the standard methodology.
+              </p>
+            </div>
+          </section>
+
+          <section id="limitations">
+            <h2>Limitations
+              <button class="section-edit" aria-label="Edit Limitations"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="m18 2 4 4-14 14H4v-4L18 2Z"/></svg></button>
+            </h2>
+            <div class="two-col">
+              <p>
+                The methodology is structural. It does not forecast same-store sales, predict tenant default, or imply a yield. It cannot detect changes between refresh cycles in jurisdictions where civic data are sparse, and it does not attempt to.
+              </p>
+              <p>
+                A tier reading is necessary but never sufficient for an acquisition decision. Underwriting requires lease-level review, environmental review, and a separate capital-plan assessment — none of which are inputs to the tier.
+              </p>
+              <p>
+                Users of the methodology are reminded that it is a reading instrument, not a recommendation instrument. The taxonomy is offered as a public reference; the decisions Woodfine takes on the basis of it are not.
+              </p>
+            </div>
+          </section>
+
+          <section class="footnotes" aria-labelledby="fn-label">
+            <p class="footnotes-label" id="fn-label">References</p>
+            <ol>
+              <li id="fn1">WorldPop 2026 population grid (100 m resolution). Licensed under CC BY 4.0.</li>
+              <li id="fn2">US Census LODES vintage 2022 — workplace and residence area characteristics.</li>
+              <li id="fn3">MITMA Spain 2023 mobility origin-destination dataset, Ministerio de Transportes.</li>
+            </ol>
+          </section>
+
+        </div>
+      </div>
+
+    </article>
+
+  </main>
+
+  <!-- ════════════════════════════════════════════════════════════════════
+       SHELL FOOTER — variant C (trademark below copyright)
+       ════════════════════════════════════════════════════════════════════ -->
+  <footer class="shell-footer" role="contentinfo">
+    <div class="footer-row">
+      <div class="cities">Vancouver <span class="sep">|</span> New York</div>
+      <nav class="footnav" aria-label="Footer navigation">
+        <a href="/page/privacy">Privacy</a>
+        <a href="/page/terms">Terms</a>
+        <a href="/page/disclaimer">Disclaimer</a>
+        <a href="/page/contact">Contact</a>
+      </nav>
+    </div>
+  </footer>
+  <div class="copyright">© 2026 Woodfine Capital Projects Inc. All rights reserved.</div>
+  <div class="trademark">
+    Woodfine Capital Projects™, Woodfine Management Corp™, PointSav Digital Systems™, Totebox Orchestration™ and Totebox Archive™ are trademarks of Woodfine Capital Projects Inc. used in Canada, the United States, Latin America, and Europe. PointSav is a trademark of PointSav Digital Systems. All other trademarks are the property of their respective owners.
+  </div>
+
+</div><!-- /.page -->
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     FLOATING TOC — article view only, ≥1280px
+     ══════════════════════════════════════════════════════════════════════ -->
+<nav class="toc-floating" aria-label="On this page">
+  <p class="toc-label">On this page</p>
+  <ol>
+    <li><a href="#overview" data-toc>Overview</a></li>
+    <li><a href="#tiers" data-toc>Tier Definitions</a></li>
+    <li><a href="#sources" data-toc>Data Sources</a></li>
+    <li><a href="#catchment" data-toc>Catchment Methodology</a></li>
+    <li><a href="#limitations" data-toc>Limitations</a></li>
+  </ol>
+</nav>
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     FLOATING ACTION BAR — logged-in users only, article view only
+     ══════════════════════════════════════════════════════════════════════ -->
+<div class="action-bar" role="toolbar" aria-label="Article tools">
+  <button type="button" class="primary">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m18 2 4 4-14 14H4v-4L18 2Z"/></svg>
+    <span class="label">Edit this article</span>
+  </button>
+  <button type="button">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 2"/><circle cx="12" cy="12" r="9"/></svg>
+    <span class="label">History</span>
+  </button>
+  <button type="button" class="icon-only" id="overflowBtn" aria-haspopup="true" aria-expanded="false" aria-label="More actions">
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="6" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="18" cy="12" r="1.6"/></svg>
+    <div class="overflow-menu" id="overflowMenu" role="menu">
+      <button type="button" role="menuitem">Talk / Discussion</button>
+      <button type="button" role="menuitem">Watch this page</button>
+      <button type="button" role="menuitem">Cite this article</button>
+      <button type="button" role="menuitem">Print / PDF</button>
+      <button type="button" role="menuitem">Report an issue</button>
+    </div>
+  </button>
+</div>
+
+<script>
+/* ──────────────────────────────────────────────────────────────────────────
+   View switching (Home <-> Article) — prototype scaffolding
+   ────────────────────────────────────────────────────────────────────────── */
+(function(){
+  const switcher = document.querySelector('.view-switcher');
+  const viewHome = document.getElementById('view-home');
+  const viewArticle = document.getElementById('view-article');
+  const crumbSep = document.getElementById('crumb-sep');
+  const crumbCurrent = document.getElementById('crumb-current');
+
+  function setView(name) {
+    const isArticle = name === 'article';
+    viewHome.classList.toggle('active', !isArticle);
+    viewArticle.classList.toggle('active', isArticle);
+    document.body.classList.toggle('article-active', isArticle);
+    document.body.classList.toggle('home-active', !isArticle);
+    crumbSep.style.display = isArticle ? 'inline' : 'none';
+    crumbCurrent.style.display = isArticle ? 'inline' : 'none';
+    switcher.querySelectorAll('button').forEach(b => {
+      b.classList.toggle('active', b.dataset.view === name);
+      b.setAttribute('aria-selected', b.dataset.view === name);
+    });
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }
+
+  switcher.addEventListener('click', e => {
+    const btn = e.target.closest('button[data-view]');
+    if (btn) setView(btn.dataset.view);
+  });
+
+  document.querySelectorAll('[data-link-view]').forEach(a => {
+    a.addEventListener('click', e => {
+      e.preventDefault();
+      setView(a.dataset.linkView);
+    });
+  });
+})();
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Theme toggle (Woodfine-branded: small "Aa" pill in utility stripe)
+   ────────────────────────────────────────────────────────────────────────── */
+(function(){
+  const root = document.documentElement;
+  const btn = document.getElementById('themeToggle');
+  const stored = (() => { try { return localStorage.getItem('wf-theme'); } catch (e) { return null; } })();
+  const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const initial = stored || (prefersDark ? 'dark' : 'light');
+  root.setAttribute('data-theme', initial);
+
+  btn.addEventListener('click', () => {
+    const next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    root.setAttribute('data-theme', next);
+    try { localStorage.setItem('wf-theme', next); } catch (e) {}
+  });
+})();
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Auth toggle — anonymous vs logged-in (governs editing chrome visibility)
+   ────────────────────────────────────────────────────────────────────────── */
+(function(){
+  const btn = document.getElementById('authToggle');
+  const loginBtn = document.getElementById('loginToggle');
+  const label = btn.querySelector('.auth-label');
+
+  function setAuth(state) {
+    document.documentElement.setAttribute('data-auth', state);
+    const loggedIn = state === 'user';
+    btn.classList.toggle('logged-in', loggedIn);
+    btn.setAttribute('aria-pressed', loggedIn);
+    label.textContent = loggedIn ? 'Logged in — j.woodfine' : 'Anonymous';
+    if (loginBtn) loginBtn.textContent = loggedIn ? 'Sign out' : 'Log in';
+  }
+
+  btn.addEventListener('click', () => {
+    const cur = document.documentElement.getAttribute('data-auth') || 'anon';
+    setAuth(cur === 'anon' ? 'user' : 'anon');
+  });
+  if (loginBtn) loginBtn.addEventListener('click', () => {
+    const cur = document.documentElement.getAttribute('data-auth') || 'anon';
+    setAuth(cur === 'anon' ? 'user' : 'anon');
+  });
+})();
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Overflow menu in floating action bar
+   ────────────────────────────────────────────────────────────────────────── */
+(function(){
+  const btn = document.getElementById('overflowBtn');
+  const menu = document.getElementById('overflowMenu');
+  if (!btn || !menu) return;
+  btn.addEventListener('click', e => {
+    e.stopPropagation();
+    const open = menu.classList.toggle('open');
+    btn.setAttribute('aria-expanded', open);
+  });
+  document.addEventListener('click', e => {
+    if (!btn.contains(e.target)) {
+      menu.classList.remove('open');
+      btn.setAttribute('aria-expanded', 'false');
+    }
+  });
+})();
+
+/* ──────────────────────────────────────────────────────────────────────────
+   TOC active-section highlight via IntersectionObserver
+   ────────────────────────────────────────────────────────────────────────── */
+(function(){
+  const links = Array.from(document.querySelectorAll('.toc-floating a[data-toc]'));
+  if (!links.length) return;
+  const map = new Map();
+  links.forEach(a => {
+    const id = a.getAttribute('href').slice(1);
+    const target = document.getElementById(id);
+    if (target) map.set(target, a);
+  });
+
+  const obs = new IntersectionObserver(entries => {
+    // pick the highest-up section currently intersecting
+    const visible = entries
+      .filter(e => e.isIntersecting)
+      .sort((a, b) => a.target.getBoundingClientRect().top - b.target.getBoundingClientRect().top);
+    if (!visible.length) return;
+    const link = map.get(visible[0].target);
+    if (!link) return;
+    links.forEach(a => a.classList.toggle('active', a === link));
+  }, { rootMargin: '-20% 0px -65% 0px', threshold: [0, 0.5, 1] });
+
+  map.forEach((_, section) => obs.observe(section));
+})();
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Keyboard shortcut: "/" focuses the search box
+   ────────────────────────────────────────────────────────────────────────── */
+(function(){
+  const input = document.querySelector('.nav-search input');
+  if (!input) return;
+  document.addEventListener('keydown', e => {
+    if (e.key === '/' && document.activeElement !== input && !e.metaKey && !e.ctrlKey) {
+      e.preventDefault();
+      input.focus();
+    }
+  });
+})();
+</script>
+
+</body>
+</html>
