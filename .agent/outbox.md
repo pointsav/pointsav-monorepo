@@ -3,6 +3,78 @@ mailbox: outbox
 owner: task-project-proofreader
 location: ~/Foundry/clones/project-proofreader/.claude/
 schema: foundry-mailbox-v1
+
+---
+from: totebox@project-console
+to: command@claude-code
+re: Pairing Phase 3+4 complete — nightly build notes; shutdown
+created: 2026-05-24T00:00:00Z
+priority: normal
+status: pending
+msg-id: project-console-20260524-phase3-4-complete
+---
+
+Phases 3 and 4 of the pairing ceremony complete. Shutting down.
+
+**Commits on cluster/project-proofreader (pointsav-monorepo):**
+
+- `11135186` feat(pairing): Phase 3 — Kitty/Sixel pixel QR via ratatui-image; ratatui 0.29→0.30
+- `28000772` feat(pairing): Phase 4 — F11 System Cartridge; pending-pair approve/deny; status bar badge
+
+**CRITICAL build note — ratatui version walk:**
+
+Commit 11135186 (Phase 3) is an intermediate state: it upgraded ratatui 0.29→0.30 and
+ratatui-image v9→v10, but os-console does not compile at that SHA because app-console-content
+still expects ratatui 0.29 (tui-textarea 0.7 is not ratatui-0.30-compatible).
+
+Commit 28000772 (Phase 4) corrects this: rolls back to ratatui 0.29 + ratatui-image v9
+(which is ratatui-0.29-compatible) and adds app-console-system. The os-console binary
+compiles cleanly from the Phase 4 tip (verified: 13m 24s build, exit 0).
+
+**Always build from 28000772 or later — not from 11135186 alone.**
+
+**Nightly build items (supplement to existing msg project-console-20260523-build-request):**
+
+The binary-targets.yaml declaration is unchanged. Suggested nightly smoke test:
+
+```
+cargo build --release --package os-console     # produces os-console distributable
+./target/release/os-console --help             # exits 0 = binary links correctly
+cargo build --release --package pairing-server # server binary
+cargo build --release --package proofctl       # admin CLI
+```
+
+All three from crate roots within pointsav-monorepo at cluster/project-proofreader tip.
+The four-crate chain (app-console-keys → app-console-content + app-console-input +
+app-console-system → os-console) all on ratatui 0.29.
+
+**What Phase 3+4 added:**
+
+- `app-console-keys`: ratatui-image v9 Kitty/Sixel pixel QR in pairing screen;
+  Dense1x2 unicode fallback; picker initialized after enable_raw_mode() (local PTY only;
+  None over russh). Cartridge trait: two new default-impl methods `tick()` and
+  `pending_badge()` — existing cartridges (Content, Input) unaffected.
+
+- `app-console-system` (new, 5 files): F11 System Cartridge — operator panel;
+  polls GET /v1/pair/pending every 5s via background thread; Enter = approve,
+  D = deny, R = manual refresh. Badge count surfaced in status bar.
+
+- Status bar: shows `[N pending]` when connection requests are pending.
+
+**Registry changes:**
+
+- `app-console-keys` reclassified Reserved-folder → Active
+- `app-console-system` added as Scaffold-coded (new crate, not yet a workspace member)
+- Registry total: 98 rows
+
+Outstanding blockers (unchanged from prior outbox messages):
+- Stage 6 push authorization (history divergence — see msg project-console-20260522-stage6-history-divergence)
+- GCE firewall port 2222
+- pairing-server systemd unit deploy on VM
+- Peter SSH key + proofctl user add
+- Tag v0.1.0 after Stage 6
+
+— totebox@project-console / 2026-05-24
 ---
 
 # Outbox — Task Claude on project-console cluster
