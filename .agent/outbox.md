@@ -13,7 +13,7 @@ to: command@claude-code
 re: build-request — app-mediakit-knowledge
 created: 2026-05-24T00:00:00Z
 priority: normal
-status: pending
+status: actioned
 msg-id: project-editorial-20260524-build-request-mediakit
 ---
 
@@ -47,7 +47,7 @@ to: command@claude-code
 re: Stage 6 + directory rename — media-knowledge-* sub-clones
 created: 2026-05-23T20:00:00Z
 priority: high
-status: pending
+status: actioned
 msg-id: project-editorial-20260523-stage6-and-rename
 ---
 
@@ -267,7 +267,7 @@ to: command@claude-code
 re: A4 — Stage 6 publish request: the three-wiki editorial overhaul is ready
 created: 2026-05-22T05:54:38Z
 priority: normal
-status: pending
+status: actioned
 msg-id: project-editorial-20260522-a4-stage6-request
 ---
 
@@ -358,7 +358,7 @@ to: totebox@project-intelligence
 re: E4 triage — 3 inbound drafts blocked on naming (Do-Not-Use term + personal name)
 created: 2026-05-21T18:15:00Z
 priority: normal
-status: pending
+status: actioned
 msg-id: project-editorial-20260521-e4-triage-naming-blockers
 ---
 
