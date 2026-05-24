@@ -6,12 +6,15 @@
 #   Try gcloud instances.start in that zone; if the zone has capacity it
 #   comes back in ~60 s. This is the fast, cheap path.
 #
-# Mode 2 — Zone stockout recovery (fallback):
-#   The zone has ZONE_RESOURCE_POOL_EXHAUSTED and can't restart the VM.
-#   Try each FALLBACK_ZONES entry in order, provisioning a fresh VM if needed.
+# Mode 2 — Zone migration ONLY (not for stockouts):
+#   Provision a fresh VM in a different zone. REQUIRES --enable-zone-fallback flag.
+#   Each zone attempt creates a 256 GB disk ($2-20 per probe). Weights not present
+#   on the new disk — must be restored from snapshot (30-60 min). Use only for a
+#   deliberate operator-approved zone migration, never as a stockout workaround.
 #
-# Day-time stockout: --retry-cycles=N --retry-wait-seconds=M lets the script
-# spend a longer wall-clock budget hunting for L4 capacity (sleep + try again).
+# Default stockout behavior: retry 4 times at 15-min intervals in europe-west4-a.
+# Override with --retry-cycles=N --retry-wait-seconds=M. Zone fallback is not
+# attempted unless --enable-zone-fallback is explicitly passed on the command line.
 #
 # Wait-ready: --wait-ready[=SECONDS] polls https://<vm-ip>:9443/health with
 # bearer until it returns 200 (vLLM finished loading) or the timeout fires.
@@ -50,10 +53,12 @@ PROJECT="${SLM_YOYO_GCP_PROJECT:-woodfine-node-gcp-free}"
 PRIMARY_ZONE="${SLM_YOYO_GCP_ZONE:-europe-west4-a}"
 INSTANCE="${SLM_YOYO_GCP_INSTANCE:-yoyo-tier-b-1}"
 DOORMAN_ENV="${DOORMAN_ENV_FILE:-/etc/local-doorman/local-doorman.env}"
-# Zone fallback disabled by default — creating 256 GB disk clones across regions
-# to probe capacity costs $2-20/scan. Enable only for explicit operator-initiated
-# zone migration: SLM_YOYO_ALLOW_ZONE_FALLBACK=true ./scripts/start-yoyo.sh
-ALLOW_ZONE_FALLBACK="${SLM_YOYO_ALLOW_ZONE_FALLBACK:-false}"
+# Zone fallback is HARDCODED false — it cannot be enabled via env var.
+# Env vars in /etc/local-doorman/local-doorman.env persist and would silently
+# trigger fallback on every automated restart, costing $2-20 per zone probe.
+# Zone fallback requires --enable-zone-fallback on the command line (explicit,
+# operator-typed, not persistent). See Mode 2 header comment above.
+ALLOW_ZONE_FALLBACK=false
 BEARER_TOKEN="${SLM_YOYO_BEARER:-}"
 IMAGE_FAMILY="${SLM_YOYO_IMAGE_FAMILY:-slm-yoyo}"
 IMAGE_PROJECT="${SLM_YOYO_IMAGE_PROJECT:-${PROJECT}}"
@@ -75,8 +80,8 @@ MAX_LIFETIME_SECONDS="${SLM_YOYO_MAX_LIFETIME_SECONDS:-14400}"   # absolute ceil
 WAIT_READY=0       # 0 = no wait, >0 = poll seconds before exiting
 RUNTIME_SECONDS=0  # 0 = no hard cap; >0 = watchdog stops VM after this many seconds
 AUTO_SNAPSHOT=false
-RETRY_CYCLES=1
-RETRY_WAIT=300
+RETRY_CYCLES=4    # retry 4× before giving up (~1 h total at 15-min intervals)
+RETRY_WAIT=900    # 15 min between retries — stockouts typically clear within 30 min
 WEIGHTS_GCS_BUCKET="${SLM_YOYO_WEIGHTS_GCS_BUCKET:-woodfine-node-gcp-free-foundry-substrate}"
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -97,6 +102,16 @@ while [[ $# -gt 0 ]]; do
                 echo "Unknown --runtime format: ${raw} (use 1h, 90m, or bare seconds)" >&2
                 exit 1
             fi
+            shift ;;
+        --enable-zone-fallback)
+            ALLOW_ZONE_FALLBACK=true
+            log "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            log "WARNING: Zone fallback ENABLED via --enable-zone-fallback."
+            log "  Each fallback zone attempt creates a 256 GB disk (\$2-20 per probe)."
+            log "  Weights are NOT present on the new disk — restore from snapshot"
+            log "  takes 30-60 min. Use ONLY for deliberate zone migration."
+            log "  On stockout, the correct response is wait and retry in primary zone."
+            log "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
             shift ;;
         --help|-h)
             sed -n '2,46p' "$0"
@@ -538,10 +553,11 @@ attempt_start_once() {
         if is_stockout "${err}"; then
             log "Zone ${known_zone} has no L4 capacity."
             if [[ "${ALLOW_ZONE_FALLBACK}" != "true" ]]; then
-                log "Zone fallback disabled — skipping (set SLM_YOYO_ALLOW_ZONE_FALLBACK=true to scan other zones)."
+                log "Zone fallback disabled — waiting out stockout is the correct response."
+                log "To perform a deliberate zone migration, run: start-yoyo.sh --enable-zone-fallback"
                 return 3
             fi
-            log "Falling through to Mode 2 (ALLOW_ZONE_FALLBACK=true)."
+            log "Falling through to Mode 2 (--enable-zone-fallback was passed)."
         else
             log "ERROR: failed to start ${INSTANCE} in ${known_zone}: ${err}"
             return 1
@@ -549,10 +565,11 @@ attempt_start_once() {
     else
         log "No existing ${INSTANCE} in project ${PROJECT}."
         if [[ "${ALLOW_ZONE_FALLBACK}" != "true" ]]; then
-            log "Zone fallback disabled — cannot provision without an existing VM (set SLM_YOYO_ALLOW_ZONE_FALLBACK=true to enable)."
+            log "Zone fallback disabled — no existing VM found and fallback not enabled."
+            log "To perform a deliberate zone migration, run: start-yoyo.sh --enable-zone-fallback"
             return 3
         fi
-        log "Entering Mode 2 (provision) — ALLOW_ZONE_FALLBACK=true."
+        log "Entering Mode 2 (provision) — --enable-zone-fallback was passed."
     fi
 
     # Mode 2: provision a new VM in a time-scored fallback zone.
