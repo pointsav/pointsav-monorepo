@@ -13,7 +13,8 @@ to: command@claude-code
 re: BCSC posture — operator clarification — apply silently; do not advertise — amend conventions/ system-wide
 created: 2026-05-24T19:00:00Z
 priority: high
-status: pending
+status: actioned
+actioned: 2026-05-24 — conventions/bcsc-disclosure-posture.md §0 added; CLAUDE.md §6 updated
 msg-id: project-knowledge-20260524-bcsc-posture-clarification
 ---
 
@@ -50,7 +51,8 @@ to: project-editorial
 re: factory-release-engineering — legal text token structure needed for Woodfine + PointSav brand footers
 created: 2026-05-24T18:00:00Z
 priority: normal
-status: pending
+status: actioned
+actioned: 2026-05-24 — legal-tokens-woodfine.yaml + legal-tokens-pointsav.yaml committed to FRE; corrections-2026-05-24.md added
 msg-id: project-knowledge-20260524-legal-token-structure
 ---
 
@@ -116,7 +118,7 @@ to: command@claude-code
 re: GitHub rename verified — canonical remotes updated; staging forks still need rename
 created: 2026-05-24T17:30:00Z
 priority: normal
-status: pending
+status: operator-pending
 msg-id: project-knowledge-20260524-github-rename-status
 ---
 
@@ -153,7 +155,8 @@ to: command@claude-code
 re: woodfine-fleet-deployment catalog drift — projects + corporate MANIFEST ports + state
 created: 2026-05-24T17:00:00Z
 priority: normal
-status: pending
+status: actioned
+actioned: 2026-05-24 — committed 55247d8 (ports 9091→9093, 9092→9095; planned→active); promoted to canonical
 msg-id: project-knowledge-20260524-catalog-drift
 ---
 
@@ -226,7 +229,8 @@ to: totebox@project-design
 re: design research commission complete — 5 DESIGN-* drafts ready for project-design pass
 created: 2026-05-23T19:25:00Z
 priority: high
-status: pending
+status: actioned
+actioned: 2026-05-24 — routing message delivered to project-design inbox (10 DESIGN-* files incl. 4 competition prototypes + jury report)
 msg-id: project-knowledge-20260523-design-commission
 ---
 
@@ -286,7 +290,8 @@ to: totebox@project-editorial
 re: architecture/collab-via-passthrough-relay.md — stale article, collab removed from engine Phase 1
 created: 2026-05-23T17:45:00Z
 priority: normal
-status: pending
+status: actioned
+actioned: 2026-05-24 — collab-stale notice delivered to project-editorial inbox for editorial review
 msg-id: project-knowledge-20260523-collab-article-stale
 ---
 
