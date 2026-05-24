@@ -1,122 +1,138 @@
 ---
 artifact: brief
 status: active
-topic: knowledge-platform Phases 1–5 complete; Phase 6 gated on GitHub rename + Doctrine amendment
+topic: knowledge-platform — Phases 1–5 done; design competition in progress; Phase 6 gated; product strategy open
 archive: project-knowledge
 created: 2026-05-22
-updated: 2026-05-23
+updated: 2026-05-24
 owner: totebox@project-knowledge
 ---
 
-# BRIEF — Knowledge Platform Phases 1–5 complete
+# BRIEF — Knowledge Platform (consolidated)
 
 ## Mission
 
-Implement Phase 3 of `.agent/plans/KNOWLEDGE-PLATFORM-PLAN.md` §5 — the
-claim-layer engine ("the core leapfrog build", Vision §9). The authoring
-surface is frozen by `~/Foundry/conventions/claim-authoring-convention.md`
-(doctrine claim #54, ratified 2026-05-21). The engine implements the
-*extraction and use* of those claims.
+Build and ship `app-mediakit-knowledge` — a sovereign-data Wikipedia-pattern HTTP wiki engine.
+Not MediaWiki (PHP, heavy, not sovereign). Not Hugo (static, no auth, no edit workflow, no search-as-you-type).
+A Rust binary with Git-native content, Tantivy BM25 search, MCP JSON-RPC 2.0, bilingual routing,
+claim-layer citations, and an edit review queue. Three live instances:
+- `documentation.pointsav.com` → `local-knowledge-documentation.service` (port 9090)
+- `projects.woodfinegroup.com` → `local-knowledge-projects.service` (port 9093)
+- `corporate.woodfinegroup.com` → `local-knowledge-corporate.service` (port 9095)
 
-## Working context
+## Implementation state — Phases 1–5 complete (2026-05-23)
 
-- **Working branch:** `pointsav-monorepo` `main`. The old `cluster/project-knowledge`
-  branch was a stale relic — Command deleted it; `main` is confirmed canonical
-  for project-knowledge engine work.
-- **Commit path:** `~/Foundry/bin/commit-as-next.sh "<msg>"` from the monorepo
-  sub-clone. Each commit must compile (`cargo check --tests`) + pass its
-  module tests before committing.
-- **Crate:** `pointsav-monorepo/app-mediakit-knowledge/`.
+All on `pointsav-monorepo` `main`. 17 commits promoted via Stage 6. Binary rebuilt. Services live.
 
-## Done — Phase 4 DTCG token wiring, Commits F–H (2026-05-22)
+| Phase | Status | Key commits |
+|---|---|---|
+| 1 — render + chrome | Shipped | Route /wiki/{slug}, TOC, hatnote, tabs |
+| 1.1 — Wikipedia chrome | Shipped | Article/Talk/History tabs, language switcher, footer |
+| 2 — edit (Steps 1-7) | Shipped | JSON-LD, atomic edit, CodeMirror 6, citation autocomplete |
+| 3 — search + feeds | Shipped | Tantivy BM25, /feed.atom, /sitemap.xml, /llms.txt |
+| 4 — Git sync + MCP | Shipped | git2, redb, blake3, MCP JSON-RPC 2.0, git smart-HTTP, OpenAPI 3.1 |
+| 4 DTCG | Shipped | dtcg-bundle.json → dtcg-to-css.py → tokens.css + tokens-woodfine.css |
+| 5 — auth + edit review | Core shipped | Cookie sessions, argon2id, edit review queue |
+| 5.1+ ACLs / OIDC / webhooks | Deferred | Gated on BP5 clearance |
 
-All on monorepo `main`, all tested green:
+## Phase 6 — THREE-INSTANCE DEPLOYMENT SPLIT (gated)
 
-- **F — `bce932b1`** (§4.2) — `scripts/dtcg-bundle.json` (vendored canonical DTCG bundle
-  from project-design, `knowledge.*` semantic namespace, 148 tokens); `scripts/dtcg-to-css.py`
-  (hex→oklch converter + flattener + alias resolver); generates `static/tokens.css` (linked
-  first in `<head>` so style.css can override).
-- **G — `1ddfca98`** (§4.3+4.4) — `style.css` `:root` reconciled to DTCG semantic var aliases
-  (`--bg → var(--surface-background)`, etc.); `static/tokens-woodfine.css` (full Woodfine
-  brand override layer, all colors oklch); conditional `<link>` in chrome functions for
-  `WIKI_BRAND_THEME=woodfine`.
-- **H — `8406001a`** (§4.5) — WCAG 4.5:1 audit: 10 pairs pass, 2 fail (text.tertiary +
-  knowledge.editpencil at #878d99, 3.08–3.33:1); both decorative roles, pass 3:1 non-text
-  threshold; fix flagged to project-design via outbox.
+**Gate 1 (operator, GitHub UI):** Rename jwoodfine/pwoodfine staging forks from `content-wiki-{documentation,projects,corporate}` → `media-knowledge-{documentation,projects,corporate}` (6 repos). Canonical remotes already updated.
 
-## Done — Phase 3 Commits A–E (2026-05-22)
+**Gate 2 (Command Session):** MASTER Doctrine amendment — source-of-truth inversion for media-knowledge-* repos (Totebox clone = canonical; GitHub = downstream mirror).
 
-All on monorepo `main`, all tested green (94 tests passing after E):
+**Gate 3 (after 1+2):** Command updates service unit `WIKI_CONTENT_DIR` for projects + corporate to read from Totebox clone paths (not `/srv/foundry/customer/` paths).
 
-- **A — `7887f8ec`** (§3.1) — `src/claim.rs`: `Claim` struct, `Confidence`
-  enum, the `<!--claim …-->` / `<!--/claim-->` marker parser
-  (`extract_claims`). Engine Verification Gate discharged.
-- **B — `c41bf85e`** (§3.2) — `src/citations.rs`: per-claim citation
-  resolution — `resolve()` + `resolve_claim_cites()` → `ClaimCitations`.
-- **C — `77e0d0a8`** (§3.3) — `src/links.rs`: `CLAIM_DEPS` redb table;
-  `rebuild_claims_for_slug`, `claim_depends_on`, `claim_dependents`.
-- **D — `dbd5d3fa`** (§3.5) — two-clock temporality: `line_start`/`line_end`
-  on `Claim`, `blame_published_at()` in `history.rs`, `?asof=` past-revision
-  view in `wiki_page`, asof notice banner.
-- **E — `9bc39de4`** (§3.7+3.8) — JSON content-negotiation (`Accept:
-  application/json` → `{frontmatter, body_md, blake3, revision_sha, backlinks,
-  claims}`); JSON-LD enriched with `dateModified`, `description`, `version`,
-  `keywords`, `citation`. `Frontmatter` derives `Serialize`.
+Nothing for Totebox to do until Command confirms gates 1+2 clear.
 
-## Deferred out of the A–E tranche
+## Fleet catalog drift (outboxed to Command)
 
-- **§3.4 continuous citation verification** — background re-fetch + re-hash
-  of cited sources. Needs `reqwest` (removed Phase 1) + background scheduler.
-  Own sub-project; schedule dedicated Phase 3.4 effort.
-- **§3.6 claim-record MCP API** (`query_claims(topic, asof)`) — cross-cluster:
-  must reconcile with `service-slm`'s `slm-mcp-server`. Outbox sent to
-  project-intelligence 2026-05-22
-  (`project-knowledge-20260522-mcp-claims-reconcile`); 3.6 waits on reply.
+Two MANIFEST entries need correction:
+- `media-knowledge-projects`: port 9091→9093, state planned→active
+- `media-knowledge-corporate`: port 9092→9095, state planned→active
+
+## Active work stream — UI/UX design competition
+
+Three prior attempts failed because they worked incrementally within the existing CSS.
+Current approach: fresh start, four competing philosophies, extract DTCG tokens backwards from the winner.
+
+**Four HTML prototypes complete** (all in `.agent/drafts-outbound/`):
+
+| File | Philosophy | Lines | Key trait |
+|---|---|---|---|
+| `DESIGN-COMPETITION-A-stripe-precision.html` | Authority through restraint | 1,486 | Dominant search bar, zero decorative borders, floating editor pill |
+| `DESIGN-COMPETITION-B-wikipedia-evolved.html` | Encyclopedic register | 1,797 | Left-rail TOC, Zilla Slab serif lead, scroll-collapse header |
+| `DESIGN-COMPETITION-C-enterprise-learn.html` | Metadata is content | 1,511 | Audience-routed tiles, tree sidebar, citation accordion |
+| `DESIGN-COMPETITION-D-brand-continuity.html` | Zero visual discontinuity | 1,763 | wireframe-v2c token system, magazine layout, footnote citations |
+
+**Jury agent:** Launched 2026-05-24 (OPUS). Output: `DESIGN-COMPETITION-JURY-REPORT.draft.md`.
+**After jury:** Select winner or hybrid → implement in `src/server.rs` + `static/style.css` → extract tokens backwards into `scripts/dtcg-bundle.json`.
+
+**Footer defect in prototypes (fix in implementation pass, not jury pass):**
+
+Canonical footer (from `wireframe-home-header-v2c.html`):
+```
+© 2026 Woodfine Capital Projects Inc. All rights reserved.
+Woodfine Capital Projects™, Woodfine Management Corp™, PointSav Digital Systems™,
+Totebox Orchestration™, and Totebox Archive™ are trademarks of Woodfine Capital
+Projects Inc. used in Canada, the United States, Latin America, and Europe. All other
+trademarks are the property of their respective owners.
+```
+
+Designs A/B/C are missing parts or the entire trademark block. Design D adds a redundant
+`PointSav is a trademark of PointSav Digital Systems` line not in the canonical text.
+Implementation agent must use canonical text verbatim.
+
+## "21st-century Wikipedia" design principle (mandatory in all prototypes)
+
+The reading surface must look like a great magazine article, not a CMS admin panel.
+
+| Reader state | Visible UI |
+|---|---|
+| Anonymous reader | Clean title + lead + body. Zero edit controls. Status badge = coloured dot (expandable). Citation ribbon at bottom, collapsed. |
+| Logged-in contributor | Edit pencil on section hover. Full tools, not dominant. |
+| Mobile | All toolbars behind "..." overflow. |
+
+Talk/Discussion tabs: **never visible to anonymous readers.** History: accessible via "..." not a prominent tab.
+
+## Product strategy open questions (2026-05-24)
+
+These need answers before Phase 7+ scoping. Market research agent launched 2026-05-24.
+
+**Why not MediaWiki?** PHP, MySQL, heavy ops, not sovereign-data, Wikipedia-branded not product-branded, no modern TypeScript frontend, no claim-layer.
+
+**Why resist Hugo?** Hugo is fast and Git-native but fundamentally static: no search-as-you-type, no auth-gated content, no edit workflow, no revision history UI, no claim verification, no MCP API. "Never feels complete" because static = no server-side capability. Our engine provides all of that without giving up the flat-file + Git-native content model.
+
+**Q4 Inc as competitor:** Q4 (Toronto; TSXV: QFOR) serves public-company IR teams — IR websites, earnings call webcast, investor CRM, analytics. Their gap: no sovereign-data claim layer, no bilingual structured content, no edit review queue for regulatory disclosure text. Our overlap: regulated-content management for public companies. Our differentiation: claim-layer citation verification, BCSC/OSC disclosure posture baked in, Git-native audit trail, no vendor lock-in on the content store.
+
+**Google Cloud Console anti-pattern:** Feature-sprawl navigation — hundreds of product pages organized by product family, not by operator task. The anti-pattern is hierarchy depth: users must know the product name before they can find the capability. Our wiki engine organizes by topic/audience, not by product namespace.
+
+**Leapfrog 2030 direction:** The combination of claim-layer (§3.6 MCP API + service-slm), BCSC-verified disclosure posture, Git-native audit trail, and bilingual routing creates a compliance-grade knowledge layer that Confluence/Notion/Gitbook cannot offer regulated-industry clients. The 2030 differentiation: `query_claims(topic, asof)` cross-cluster MCP API lets AI agents verify whether a disclosure claim has changed since a given date — a capability no current platform has.
 
 ## Key files
 
 | File | Role |
 |---|---|
-| `src/claim.rs` | claim model + extractor + line tracking (Phase 3 A, D) |
-| `src/citations.rs` | per-claim citation resolution (Phase 3 B) |
-| `src/links.rs` | `CLAIM_DEPS` claim graph (Phase 3 C) |
-| `src/history.rs` | `blame_published_at()`, `get_file_at_rev()` (Phase 3 D) |
-| `src/server.rs` | `?asof=` past-revision view + JSON content-negotiation (Phase 3 D, E) |
-| `src/jsonld.rs` | JSON-LD enrichment (Phase 3 E) |
-| `src/render.rs` | `Frontmatter` derives `Serialize` (Phase 3 E) |
-| `scripts/dtcg-bundle.json` | vendored canonical DTCG token bundle (Phase 4 F) |
-| `scripts/dtcg-to-css.py` | DTCG → oklch CSS generator (Phase 4 F) |
-| `static/tokens.css` | generated token CSS, 148 tokens (Phase 4 F) |
-| `static/style.css` | `:root` reconciled to DTCG var aliases (Phase 4 G) |
-| `static/tokens-woodfine.css` | Woodfine brand override layer (Phase 4 G) |
+| `app-mediakit-knowledge/src/server.rs` | Main HTTP handler, routing, AppState |
+| `app-mediakit-knowledge/src/claim.rs` | Claim model + extractor (Phase 3 A/D) |
+| `app-mediakit-knowledge/scripts/dtcg-bundle.json` | DTCG canonical token vault |
+| `app-mediakit-knowledge/scripts/dtcg-to-css.py` | Token → CSS generator |
+| `app-mediakit-knowledge/static/style.css` | Main stylesheet |
+| `.agent/drafts-outbound/DESIGN-COMPETITION-*.html` | Four competing UI prototypes |
+| `.agent/drafts-outbound/DESIGN-COMPETITION-JURY-REPORT.draft.md` | Jury output (pending) |
+| `wireframe-home-header-v2c.html` | Ratified three-row header/footer pattern |
 
-## Done — KNOWLEDGE-PLATFORM-PLAN.md Phases 1+5 + pre-build polish (2026-05-22–23)
+## Commit + promote path
 
-All on monorepo `main`, full test suite green, `cargo clippy -D warnings` clean:
+`~/Foundry/bin/commit-as-next.sh "<msg>"` from `pointsav-monorepo/` sub-clone.
+Stage 6 via Command Session `bin/promote.sh`. After promote: `bin/sync-local.sh --all` + `sudo systemctl restart local-knowledge-{documentation,projects,corporate}`.
 
-- **K — `11d482f2`** (Phase 1 PLAN) — crate hygiene: `cargo fmt` + `clippy -D warnings` 24 fixes across 9 files; `RATIFIED_CATEGORIES` → 12 items (added "company" + "help").
-- **L — `6180b074`** (Phase 1 PLAN) — docs accuracy: `CLAUDE.md` + `ARCHITECTURE.md` updated (collab removed, Phase 5 shipped, new PLAN phases 1/3/4/5 documented).
-- **M — `f2808e57`** — NEXT.md bookkeeping (Stage 6 count → 13).
-- **I/J — `98642afb` + `76b501ff`** (Phase 5 PLAN) — bilingual `/es/` routing; 8 integration tests.
-- **N — `826d42a5`** — `openapi.yaml` accuracy pass: 15 missing routes added (Phase 5 /es/, auth/pending, `/api/complete`, `/api/preview`, `/category`, `/talk`); category enum corrected; collab flag removed.
-- **O — `c2d4010c`** — Accept-Language → `/es/` auto-redirect; `?noredirect=1` suppression; ES home lang-toggle href updated; 4 tests.
-- **P — `7a7beb46`** — README.md + README.es.md: Phase 2 collab removed, Phase 5.1 bilingual marked shipped, missing `<div>` fixed.
-- **Q — `09992b05`** — NEXT.md bookkeeping (Stage 6 count → 16).
+## Open items for this BRIEF
 
-## Done — Session 2026-05-23/24 additions
-
-- **Design research commission** — 5 OPUS DESIGN-RESEARCH-*/DESIGN-SPEC-* drafts commissioned and committed (`2610f6ca`). Routed to project-design via outbox (`project-knowledge-20260523-design-commission`). Covers: visual language, UX writing, service design/IA, header/footer component spec, token architecture. MASTER COSIGN on DTCG changes required before implementation; project-design has the ball.
-- **3 live-issue fixes (`23deea11`)** — (1) IVC band "Phase 7" roadmap text removed from production; (2) WCAG `#878d99`→`#666c78` applied at 4 token source locations in `dtcg-bundle.json`; (3) `dtcg-to-css.py` cubicBezier emit bug fixed (`[array]`→`cubic-bezier()`). `tokens.css` regenerated. All tests green.
-
-## Stage 6 status
-
-**17 commits unpromoted on monorepo `main`** — ready for tonight's build.
-Phase 1 ×4, Phase 3 A–E ×5, Phase 4 F–H ×3, Phase 5 I–J ×2, hygiene K–L ×2, openapi N, Accept-Language O, README P, NEXT Q, live-fixes R.
-Stage 6 (`echo "y" | ~/Foundry/bin/promote.sh`) + `cargo build --release` + `sudo systemctl restart` all 3 services — Command scope. Outbox: `project-knowledge-20260524-session-close`.
-
-## Next phase
-
-**Phase 6 — three-instance deployment split.** Gated on:
-1. `content-wiki-*` → `media-knowledge-*` GitHub rename (operator doing manually).
-2. MASTER Doctrine amendment for source-of-truth inversion (content repos canonical; GitHub downstream).
-Neither gate is Totebox scope. No Totebox work until Command confirms both are clear.
+- [ ] Jury report review → select winner/hybrid → implement
+- [ ] Fix footer trademark in winning implementation (use canonical text above)
+- [ ] Stage 6 staging fork renames (6 GitHub repos — operator action)
+- [ ] MASTER Doctrine amendment (Command scope)
+- [ ] §3.6 claim-record MCP API — waiting on project-intelligence reply
+- [ ] §3.4 continuous citation verification — own sub-project, not yet scoped
+- [ ] Phase 5.1+ (ACLs, OIDC, webhooks) — gated on BP5
