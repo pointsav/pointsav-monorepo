@@ -18,6 +18,7 @@ members = [
     "os-privategit",
     "tool-wallet",
     "app-privategit-workbench",
+    "tool-proforma-engine",
     "app-orchestration-bim",
     "tool-keyplan"
 ]
