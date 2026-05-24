@@ -1,6 +1,6 @@
 # Open items — project-editorial
 
-> Persistent TODO tracker. Updated at session end. Last updated: 2026-05-23.
+> Persistent TODO tracker. Updated at session end. Last updated: 2026-05-24.
 > Completed items remain here (checked) for one session before archiving to `archive/`.
 
 ---
@@ -54,16 +54,23 @@
 
 ---
 
+## DONE — 2026-05-24 (session 4, Command)
+
+- [x] **Stage 6: media-knowledge-documentation** — promoted (outbox actioned)
+- [x] **Stage 6: media-knowledge-projects** — promoted (outbox actioned)
+- [x] **Stage 6: media-knowledge-corporate** — promoted (outbox actioned)
+- [x] **Stage 6: woodfine-fleet-deployment** — promoted (outbox actioned)
+- [x] **app-mediakit-knowledge nightly build** — sha256 `14bdb9a3`, smoke_test: pass; services restarted
+- [x] **Local directory rename** — content-wiki-* → media-knowledge-* (actioned by Command)
+
 ## PENDING — Command Session
 
-- [ ] **Stage 6: content-wiki-documentation** — promote staging commits to canonical
-- [ ] **Stage 6: content-wiki-projects** — promote staging commits to canonical (includes all BIM batches)
-- [ ] **Stage 6: content-wiki-corporate** — promote staging commits to canonical
-- [ ] **Stage 6: woodfine-fleet-deployment** — promote BIM GUIDE commits
 - [ ] **pointsav-monorepo branch merge** — `readme-fixes-2026-05-16` → main (Phase D Rust code)
-- [ ] **project-knowledge services restart** — cargo build --release + restart 3 systemd services after monorepo merge
+- [ ] **project-knowledge services restart** — after monorepo main merge; cargo build --release + restart 3 services
 - [ ] **Admin README fixes** — pointsav-media-assets + woodfine-media-assets (admin-tier commits)
 - [ ] **Route design drafts** — forward project-editorial outbox routing message to project-design inbox (5 DESIGN-RESEARCH + component drafts)
+- [ ] **Staging mirror rename** — jwoodfine/content-wiki-* + pwoodfine/content-wiki-* → media-knowledge-* on GitHub (operator action first)
+- [ ] **NOTAM stale disk>95% entries** — archive 9 entries (10:28Z–15:58Z 2026-05-24); disk now at 54%
 
 ## PENDING — project-editorial
 

@@ -17,9 +17,9 @@ tetrad:                            # upgraded from `triad:` per Doctrine v0.0.10
       upstream: vendor/pointsav-monorepo
       focus: service-disclosure/ (NEW project — TOPIC/GUIDE/README schemas + CFG validators + genre template registry + frontmatter validators)
       leg_status: leg-pending           # service-disclosure crate not yet scaffolded (2026-05-21); D3 genre templates staged at clones/project-editorial/.agent/editorial-qa/templates/ pending the crate
-    - repo: content-wiki-documentation
-      path: content-wiki-documentation/
-      upstream: vendor/content-wiki-documentation
+    - repo: media-knowledge-documentation
+      path: media-knowledge-documentation/
+      upstream: vendor/media-knowledge-documentation
       focus: TOPIC content — including the three style-guide TOPICs (topic-style-guide-readme.md, topic-style-guide-topic.md, topic-style-guide-guide.md) plus TOPICs explaining the 4-family taxonomy + service split + customer-hostability
     - repo: pointsav-fleet-deployment
       path: pointsav-fleet-deployment/
@@ -48,7 +48,7 @@ tetrad:                            # upgraded from `triad:` per Doctrine v0.0.10
       future: per-tenant Customer instances when Customers spin up their own Foundry-pattern wikis
       status: substrate-shaped-cluster — substrate touches every wiki instance; informational/all-instances per Doctrine §IV.d sub-rule
   wiki:                                                # fourth leg per Doctrine v0.0.10 / claim #37 (Project Tetrad Discipline, ratified 2026-04-28)
-    - repo: vendor/content-wiki-documentation
+    - repo: vendor/media-knowledge-documentation
       drafts_via: cross-cluster sweep                  # THIS cluster IS the editorial gateway — refines drafts from all three input ports (Master/Root/Task drafts-outbound), not just self-staged
       gateway: project-editorial Task (this cluster)
       role: refines bulk drafts from Master + Root + Task drafts-outbound input ports per cluster-wiki-draft-pipeline.md (Doctrine claim #35); also self-stages drafts about its own substrate-explainer subjects
@@ -61,15 +61,15 @@ tetrad:                            # upgraded from `triad:` per Doctrine v0.0.10
       status: active                                   # gateway operational since workspace v0.1.31 ratification; bin/draft-sweep.sh helper landed at v0.1.32
 
 output_surfaces:                                       # editorial-gateway destinations per cluster-wiki-draft-pipeline.md §3
-  - surface: vendor-wiki-topics                        # vendor/content-wiki-documentation/topic-*.md (+ .es.md)
+  - surface: vendor-wiki-topics                        # vendor/media-knowledge-documentation/topic-*.md (+ .es.md)
     velocity: daily
     bilingual: true
     origin_ports: [task, master]
-  - surface: customer-wiki-corporate                   # customer/content-wiki-corporate/topic-*.md (+ .es.md)
+  - surface: customer-wiki-corporate                   # customer/media-knowledge-corporate/topic-*.md (+ .es.md)
     velocity: weekly
     bilingual: true
     origin_ports: [master]
-  - surface: customer-wiki-projects                    # customer/content-wiki-projects/topic-*.md (+ .es.md)
+  - surface: customer-wiki-projects                    # customer/media-knowledge-projects/topic-*.md (+ .es.md)
     velocity: weekly
     bilingual: true
     origin_ports: [master, task]
@@ -117,10 +117,10 @@ clones:
     path: pointsav-monorepo/
     upstream: vendor/pointsav-monorepo
     focus: service-disclosure/ (new project)
-  - repo: content-wiki-documentation
+  - repo: media-knowledge-documentation
     role: sibling
-    path: content-wiki-documentation/
-    upstream: vendor/content-wiki-documentation
+    path: media-knowledge-documentation/
+    upstream: vendor/media-knowledge-documentation
     focus: TOPIC source
   - repo: pointsav-fleet-deployment
     role: sibling
@@ -138,6 +138,16 @@ clones:
     path: woodfine-fleet-deployment/
     upstream: customer/woodfine-fleet-deployment
     focus: Customer-tier mirror
+  - repo: media-knowledge-projects
+    role: sibling
+    path: media-knowledge-projects/
+    upstream: customer/media-knowledge-projects
+    focus: Projects wiki content (co-location intelligence, BIM, GIS TOPICs)
+  - repo: media-knowledge-corporate
+    role: sibling
+    path: media-knowledge-corporate/
+    upstream: customer/media-knowledge-corporate
+    focus: Corporate wiki content (institutional finance, governance TOPICs)
 
 trajectory_capture: enabled (L1 capture-edit hook installed in all five sub-clones at provisioning)
 
@@ -187,7 +197,7 @@ design_extraction_rules:
 
 # Cluster manifest — project-editorial
 
-Multi-clone N=5 cluster (sixth multi-clone cluster overall). Five sub-clones
+Multi-clone N=7 cluster (sixth multi-clone cluster overall). Seven sub-clones
 in one cluster directory; one Task session writes to one `.git/index` at a
 time per Doctrine §IV.c.
 
