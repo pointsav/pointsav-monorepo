@@ -90,14 +90,20 @@ cannot attach a disk from europe-west4-a to a VM in any other zone. Therefore:
 **The VM MUST restart in europe-west4-a (Mode 1 restart).** Zone fallback (Mode 2) creates
 a new disk in a different zone — the weights are NOT there and must be re-downloaded.
 
+> **POLICY — NO ZONE FALLBACK FOR STOCKOUTS.**
+> `SLM_YOYO_ALLOW_ZONE_FALLBACK` MUST remain `false` (its default). Zone fallback (Mode 2)
+> is a migration-only tool — it is NEVER a response to a stockout. Provisioning an alternative
+> VM to work around a stockout creates a VM with an empty weights disk in the wrong zone,
+> costs money to clean up, and creates confusion about which VM is authoritative. The cost
+> of waiting is zero. The cost of a misplaced VM is not.
+
 If europe-west4-a has no L4 capacity (stockout, `start-yoyo.sh` exit code 3):
-- **Wait 10–30 min and retry.** Stockouts are transient; capacity rotates continuously.
-- Do NOT invoke zone fallback (Mode 2) for a transient stockout — the cost is $2–20/scan
-  in disk clone probes, plus 30–60 min for weight download if a new zone succeeds.
-- Use `--retry-cycles=6 --retry-wait-seconds=600` to hunt capacity over 1 hour automatically:
+- **Wait 15–30 min and retry.** Stockouts are transient; capacity rotates continuously.
+- Use `--retry-cycles=6 --retry-wait-seconds=600` to retry automatically over 1 hour:
   ```bash
   service-slm/scripts/start-yoyo.sh --runtime=2h --retry-cycles=6 --retry-wait-seconds=600
   ```
+- If capacity does not return within a day, flag in inbox and wait. Do NOT provision elsewhere.
 
 ### §2.3 — Daily operation: starting the Yo-Yo
 
@@ -145,11 +151,10 @@ sudo sed -i 's/SLM_YOYO_AUTO_RESTART=false/SLM_YOYO_AUTO_RESTART=true/' \
 sudo systemctl restart local-doorman.service
 ```
 
-### §2.5 — Zone fallback (Mode 2): when it IS appropriate
+### §2.5 — Zone fallback (Mode 2): planned migration only
 
-Mode 2 provisions a new VM in a different zone. Use ONLY when:
-- europe-west4-a is in sustained stockout (>4 hours, `--retry-cycles` exhausted), OR
-- Executing a deliberate zone migration (rare, planned)
+Mode 2 provisions a new VM in a different zone. **It is NOT for stockouts — see §2.2 policy.**
+Use ONLY when executing a deliberate zone migration (rare, operator-approved, planned in advance).
 
 **Mode 2 requires manual follow-up steps (the script prints these on exit 0):**
 1. Restore weights to the new disk — `vllm-weights-prep.service` pulls from GCS bucket
