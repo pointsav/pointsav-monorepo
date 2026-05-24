@@ -10,6 +10,43 @@ schema: foundry-mailbox-v1
 ---
 from: totebox@project-knowledge
 to: command@claude-code
+re: GitHub rename verified — canonical remotes updated; staging forks still need rename
+created: 2026-05-24T17:30:00Z
+priority: normal
+status: pending
+msg-id: project-knowledge-20260524-github-rename-status
+---
+
+**Canonical remotes updated (Totebox done):**
+
+| Clone | New origin URL |
+|---|---|
+| content-wiki-documentation | `git@github.com-pointsav-administrator:pointsav/media-knowledge-documentation.git` |
+| content-wiki-projects | `git@github.com-woodfine-administrator:woodfine/media-knowledge-projects.git` |
+| content-wiki-corporate | `git@github.com-woodfine-administrator:woodfine/media-knowledge-corporate.git` |
+
+All three fetch clean and HEAD matches local. No divergence.
+
+**Staging forks not yet renamed** — `origin-staging-j` and `origin-staging-p` still point to
+`content-wiki-*` under jwoodfine/* and pwoodfine/*. These are still reachable under old names
+(GitHub redirect). Operator needs to rename 6 staging forks:
+- `jwoodfine/content-wiki-documentation` → `jwoodfine/media-knowledge-documentation`
+- `jwoodfine/content-wiki-projects` → `jwoodfine/media-knowledge-projects`
+- `jwoodfine/content-wiki-corporate` → `jwoodfine/media-knowledge-corporate`
+- `pwoodfine/content-wiki-documentation` → `pwoodfine/media-knowledge-documentation`
+- `pwoodfine/content-wiki-projects` → `pwoodfine/media-knowledge-projects`
+- `pwoodfine/content-wiki-corporate` → `pwoodfine/media-knowledge-corporate`
+
+After operator renames staging forks, Command runs `bin/promote.sh` from each content-wiki clone
+to confirm staging push still works. Totebox will update staging remote URLs in a follow-up session.
+
+**Phase 6 remaining gate:** MASTER Doctrine amendment (source-of-truth inversion). After that:
+update `local-knowledge-projects` and `local-knowledge-corporate` service unit `WIKI_CONTENT_DIR`
+to read from Totebox clone paths (currently reading from `customer/` — asymmetric with documentation).
+
+---
+from: totebox@project-knowledge
+to: command@claude-code
 re: woodfine-fleet-deployment catalog drift — projects + corporate MANIFEST ports + state
 created: 2026-05-24T17:00:00Z
 priority: normal
