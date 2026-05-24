@@ -76,6 +76,17 @@ RATE_USD_PER_HOUR="${SLM_YOYO_RATE_USD_PER_HOUR:-0.71}"   # g2-standard-4 + L4 o
 MAX_LAUNCH_ATTEMPTS="${SLM_YOYO_MAX_LAUNCH_ATTEMPTS:-3}"
 MAX_LIFETIME_SECONDS="${SLM_YOYO_MAX_LIFETIME_SECONDS:-14400}"   # absolute ceiling, 4 h
 
+# ── Lifecycle logging (defined before flag parsing so --enable-zone-fallback can call it) ──
+log() {
+    local ts msg
+    ts="$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+    msg="[start-yoyo ${ts}] $*"
+    echo "${msg}"
+    if [[ -w "$(dirname "${LIFECYCLE_LOG}")" ]] || [[ -w "${LIFECYCLE_LOG}" ]] 2>/dev/null; then
+        echo "${msg}" >> "${LIFECYCLE_LOG}" 2>/dev/null || true
+    fi
+}
+
 # ── Flag parsing ─────────────────────────────────────────────────────────────
 WAIT_READY=0       # 0 = no wait, >0 = poll seconds before exiting
 RUNTIME_SECONDS=0  # 0 = no hard cap; >0 = watchdog stops VM after this many seconds
@@ -128,17 +139,6 @@ done
 if [[ "${RUNTIME_SECONDS}" -gt 0 ]]; then
     MAX_LIFETIME_SECONDS=$(( RUNTIME_SECONDS + 600 ))
 fi
-
-# ── Lifecycle logging ────────────────────────────────────────────────────────
-log() {
-    local ts msg
-    ts="$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
-    msg="[start-yoyo ${ts}] $*"
-    echo "${msg}"
-    if [[ -w "$(dirname "${LIFECYCLE_LOG}")" ]] || [[ -w "${LIFECYCLE_LOG}" ]] 2>/dev/null; then
-        echo "${msg}" >> "${LIFECYCLE_LOG}" 2>/dev/null || true
-    fi
-}
 
 # ── Cost guardrails — daily $-cap ledger (Phase 0 G8) ────────────────────────
 # bash has no float math — all money is integer cents.
