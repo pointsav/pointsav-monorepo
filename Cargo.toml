@@ -11,6 +11,7 @@ members = [
     "system-security",
     "xtask",
     "app-console-keys",
+    "app-console-system",
     "os-console"
 ]
 
