@@ -345,6 +345,7 @@ fn process_corpus(
         contact_vector: None,
         module_id: effective_module_id.clone(),
         confidence: 1.0,
+        node_type: "CorpusSource".to_string(),
         worm_id: None,
         cites: Vec::new(),
     };
@@ -446,6 +447,7 @@ fn process_corpus(
                                 contact_vector: contact_vector.clone(),
                                 module_id: effective_module_id.clone(),
                                 confidence: 0.95,
+                                node_type: classification.clone(),
                                 worm_id: None,
                                 cites: Vec::new(),
                             });
