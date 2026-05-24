@@ -113,6 +113,7 @@ async fn whatlinkshere_returns_backlinks_from_graph() {
         glossary: Arc::new(app_mediakit_knowledge::glossary::Glossary::default()),
         links,
         brand_theme: None,
+        brand_instance: "documentation".to_string(),
         db: None,
     };
 
