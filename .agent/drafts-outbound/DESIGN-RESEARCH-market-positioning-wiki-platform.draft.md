@@ -79,9 +79,9 @@ Its differentiation is speed-to-disclose and capital-markets analytics.
 - **Internal regulatory knowledge base.** Q4 manages what a company publishes to investors; it does
   not manage the internal documentation of *how disclosure decisions are made* — the policies,
   precedents, board resolutions, and legal opinions that sit behind a press release.
-- **Continuous-disclosure knowledge layer.** NI 51-102 / OSC SN 51-721 require a durable record of
-  material fact documentation. Q4 has no citation-linked wiki that connects a public claim to its
-  internal evidentiary basis.
+- **Internal evidentiary knowledge layer.** Regulated organisations need a durable record of
+  material fact documentation — the policies, precedents, and legal opinions behind every public
+  claim. Q4 has no citation-linked wiki that connects a public statement to its internal evidentiary basis.
 - **Multilingual regulatory content parity tracking.** Q4 IR websites support multiple languages but
   content parity (English claim updated, French page stale) is not tracked programmatically.
 - **Machine-readable claim export.** Q4 exposes analytics but not a structured JSON endpoint that
@@ -100,7 +100,7 @@ The current stack is already ahead of MediaWiki on every axis. The capabilities 
 into "lock-in for regulated clients":
 
 1. **Tamper-evident revision signing.** Each committed revision gets a deterministic content hash
-   stored in an append-only table. A regulator can independently verify that the published version
+   stored in an append-only table. An auditor can independently verify that the published version
    of any claim has not been altered since a given timestamp. No current wiki engine provides this
    without a blockchain overlay.
 
@@ -149,12 +149,12 @@ directly with audience-routed tiles ("For auditors / For engineers / For operato
 
 ## Positioning statement (draft)
 
-`app-mediakit-knowledge` is not a wiki. It is a **sovereign knowledge layer** for regulated
-organisations — the internal evidence base that sits behind every public disclosure, every compliance
-filing, and every investor communication. It combines the read experience of a great magazine, the
-audit trail of a blockchain without the infrastructure, and the AI integration of an MCP endpoint
-without the data egress risk. Hugo gives you a brochure. MediaWiki gives you a 2002 database. This
-gives you a compliance-grade knowledge system that a regulator can independently verify.
+`app-mediakit-knowledge` is not a wiki. It is a **sovereign knowledge layer** — the internal
+evidence base that sits behind every public statement, every compliance filing, and every investor
+communication. It combines the read experience of a great magazine, an append-only tamper-evident
+revision chain, and an MCP endpoint for AI agents — without external data egress. Hugo gives you a
+brochure. MediaWiki gives you a 2002 database. This gives you a compliance-grade knowledge system
+with an independently verifiable audit trail.
 
 ---
 

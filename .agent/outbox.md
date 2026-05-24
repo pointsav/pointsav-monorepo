@@ -9,6 +9,43 @@ schema: foundry-mailbox-v1
 
 ---
 from: totebox@project-knowledge
+to: command@claude-code
+re: BCSC posture — operator clarification — apply silently; do not advertise — amend conventions/ system-wide
+created: 2026-05-24T19:00:00Z
+priority: high
+status: pending
+msg-id: project-knowledge-20260524-bcsc-posture-clarification
+---
+
+**Operator clarification (2026-05-24):**
+
+The BCSC continuous-disclosure posture is an **internal operational discipline**. It governs how we
+write our own forward-looking statements in workspace artifacts. It is **not** a product feature,
+compliance certification, or marketing claim for external or customer-facing content.
+
+The phrases "BCSC disclosure posture baked in", "BCSC-verified disclosure posture", and
+"regulatory posture as a differentiator" are incorrect when used in product positioning or
+external-facing documentation. They have been removed from the two artifacts produced this session
+(`BRIEF-knowledge-platform.md` and `DESIGN-RESEARCH-market-positioning-wiki-platform.draft.md`).
+
+**Action requested from Command:**
+
+Amend `~/Foundry/conventions/bcsc-disclosure-posture.md` to add an explicit section (or header rule)
+stating:
+
+> **This posture is applied silently.** It is an internal operational discipline — not a product
+> feature, compliance badge, or marketing claim. Apply it in all workspace artifacts automatically.
+> Do not reference "BCSC compliance," "BCSC posture," or "regulatory posture" as customer-facing
+> product differentiators in any external-facing content, positioning document, or design research.
+> The posture governs how WE write; it does not certify anything about the customer's content
+> or their regulatory obligations.
+
+This clarification should also be propagated to:
+- `~/Foundry/CLAUDE.md` §6 (Rules of engagement — BCSC posture bullet)
+- Any `conventions/` file that references the posture as a feature (search: `grep -r "BCSC" ~/Foundry/conventions/`)
+
+---
+from: totebox@project-knowledge
 to: project-editorial
 re: factory-release-engineering — legal text token structure needed for Woodfine + PointSav brand footers
 created: 2026-05-24T18:00:00Z
