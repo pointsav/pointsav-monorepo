@@ -295,7 +295,13 @@ def run_dbscan_for_iso(iso: str, recs: list) -> list[dict]:
 
             cats = {category_of(m["chain_id"]) for m in members
                     if category_of(m["chain_id"]) is not None}
-            tier = tier_of(cats)
+            # Compute tight_intact before tier_of so H2b rule can use it
+            ti = all(
+                haversine_km(float(members[i]["latitude"]), float(members[i]["longitude"]),
+                             float(members[j]["latitude"]), float(members[j]["longitude"])) <= TAU_TIGHT_KM
+                for i in range(len(members)) for j in range(i + 1, len(members))
+            )
+            tier = tier_of(cats, ti)
             if tier is None:
                 continue
 
@@ -305,11 +311,6 @@ def run_dbscan_for_iso(iso: str, recs: list) -> list[dict]:
             clon = sum(lons) / len(lons)
 
             span = round(component_diameter(list(range(len(members))), members), 3)
-            ti   = all(
-                haversine_km(float(members[i]["latitude"]), float(members[i]["longitude"]),
-                             float(members[j]["latitude"]), float(members[j]["longitude"])) <= TAU_TIGHT_KM
-                for i in range(len(members)) for j in range(i + 1, len(members))
-            )
 
             # Geometric downgrade: T2 with span < 1.25km and ≤2 members is a
             # weak co-located pair, not a retail park → reclassify as T3.
