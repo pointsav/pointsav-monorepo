@@ -16,8 +16,8 @@ targets:
     notes: >
       Distributable TUI binary — user installs on their own machine (Linux Mint,
       macOS). Connects to system-gateway-mba on the VM via MBA peer-to-peer (russh).
-      Chassis + cartridges compiled in. Phase 1–6 complete; Phase 3 QR and
-      Phase 4 F11 pending.
+      Chassis + cartridges compiled in. Phases 1–5 complete (incl. Phase 3 QR,
+      Phase 4 F11 operator panel, Phase 5 draft mode). Phase 6 (offline + Tantivy) queued.
 
   - product_id: pairing-server
     binary_name: pairing-server
