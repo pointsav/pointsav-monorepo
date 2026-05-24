@@ -4,6 +4,31 @@ Rolling 3-session summary. Newest on top. Keep only 3 entries; push oldest to `s
 
 ---
 
+## 2026-05-24 | Totebox | claude-code
+
+**Done this session — design commission + 3 live fixes:**
+- **Housekeeping (A1–A2):** cleanup-log committed; session-start.md rewritten (Phase state, working branch, gotchas); BRIEF renamed `BRIEF-knowledge-platform.md`; README updated.
+- **Drafts-outbound triage (C1–C4):** 6 duplicate files git-rm'd; 9 landed articles moved to `archived/`; 3 misrouted project-intelligence drafts flagged to Command (C3); stale collab article flagged to project-editorial (C4).
+- **Outbox maintenance (E1):** 7 superseded messages marked actioned.
+- **5-agent OPUS design commission (2610f6ca):** DESIGN-RESEARCH-visual-language, DESIGN-RESEARCH-ux-writing, DESIGN-RESEARCH-service-design, DESIGN-SPEC-header-footer, DESIGN-RESEARCH-token-architecture — 3,700 lines total; routed to project-design. Key findings: IVC band leaks "Phase 7"; WCAG root at `text.tertiary`; recipe drift on home grid; duplicate `id="header-search-q"`; DS-ADR-07 conflict with CDN fonts.
+- **3 live-issue fixes (23deea11):** IVC band text scrubbed ("Phase 7" removed); WCAG `#878d99→#666c78` (4 token locations); dtcg-to-css.py cubicBezier emit bug fixed. Tests + clippy green.
+- **Stage 6:** 17 commits unpromoted on monorepo main. Build request outboxed to Command (`project-knowledge-20260524-session-close`).
+
+**Pending / carry-forward:**
+- **Phase 6 (three-instance split)** — still gated on: (1) `content-wiki-*` → `media-knowledge-*` GitHub rename; (2) MASTER Doctrine amendment. No Totebox work until Command confirms both.
+- **Design commission** — project-design has the 5 drafts; MASTER COSIGN required on DTCG changes; ratified DESIGN-SPEC-header-footer returns to project-knowledge for implementation.
+- **DS-ADR-07 amendment** — CDN font conflict flagged to Command; needed before font-loading token work (DESIGN-RESEARCH-token-architecture Stage E).
+- **§3.4 continuous citation verification** — deferred; needs reqwest + background scheduler.
+- **§3.6 claim-record MCP API** — waiting on project-intelligence re: slm-mcp-server reconciliation.
+- **leapfrog-facts.es.yaml** — ES DYK content; project-editorial scope.
+- **Misrouted project-intelligence drafts** — 3 files in drafts-outbound; Command to re-route.
+
+**Operator preferences surfaced:**
+- Auto mode approved for multi-agent commissions; minimal interruptions.
+- Favours parallel OPUS agent launches for research; commits all outputs in one batch.
+
+---
+
 ## 2026-05-23 | Totebox | claude-code
 
 **Done this session — pre-build polish; Phases 1–5 fully closed:**
@@ -47,23 +72,3 @@ Rolling 3-session summary. Newest on top. Keep only 3 entries; push oldest to `s
 
 ---
 
-## 2026-05-21 | Totebox | claude-code
-
-**Done this session — knowledge-platform re-architecture + plan consolidation:**
-- Major strategic session. Dispatched recon agents (engine + design-system audit) and a 4-agent OPUS research sweep (leapfrog-2030 vision, AI-native contribution model, machine-readable/flat architecture, build-vs-adopt).
-- Authored `KNOWLEDGE-PLATFORM-VISION.md` (rev 4, `.agent/plans/`) — upstream vision & architecture. And `KNOWLEDGE-PLATFORM-PLAN.md` — project-knowledge's 8-phase execution plan.
-- **Six decisions confirmed by operator:** (1) claim-native data model — convention-first; (2) pairing contribution model (web-login retired; os-console ↔ os-mediakit); (3) MCP reversal — keep transport, re-found as claim+contribution API; (4) `INVENTIONS.md` disclosure machinery descoped → future `project-disclosure` tenant; (5) os-console/os-mediakit a later cross-project phase; (6) Stage 6 first.
-- Settled: custom Rust engine continues (not MediaWiki); three sovereign deployment instances; source-of-truth inversion (instance content repo canonical, GitHub downstream); rename `content-wiki-* → media-knowledge-*` (operator doing the GitHub side); Main Page owned by project-knowledge.
-- Cross-checked with project-editorial — accepted; reconciled (Gate-0 editorial standard; one-ruleset/two-consumers linter). Recorded as Vision §14.
-- Cleaned `.agent/plans/`: 12 superseded plans deleted, 3 Wikipedia-parity archived. Committed `80d50931` (Jennifer).
-- Drafted project-editorial's plan → `.agent/drafts-outbound/KNOWLEDGE-PLATFORM-EDITORIAL-PLAN.draft.md`.
-- Outbox: Doctrine-amendment request to Command (`project-knowledge-20260521-doctrine-amendment-request`); consolidated-plan handoff + strict 7-step cleanup to project-editorial (`project-knowledge-20260521-editorial-plan-handoff`).
-
-**Pending / carry-forward:**
-- All execution phases subsequently completed 2026-05-22/23.
-
-**Operator preferences surfaced:**
-- Collapse plan sprawl: one upstream vision + one execution plan per cluster; old plans deleted once the new exist.
-- "We Own It" — sovereign in-house stack; the engine is custom-built, not adopted (saved as memory `principle-we-own-it`).
-- Respect archive boundaries — draft for other clusters, route via outbox; never write/delete in another archive.
-- Decisive, fast pace; reframe a question when asked rather than pushing it; confirm decisions in batches.
