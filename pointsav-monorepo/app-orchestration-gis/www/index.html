@@ -533,6 +533,23 @@
         }
     }
 
+    function toggleAecMaster(btn) {
+        aecActive = !aecActive;
+        btn.classList.toggle('active', aecActive);
+        btn.textContent = aecActive ? 'Hide' : 'Show on Map';
+        const sub = document.getElementById('aec-sublayers');
+        if (sub) sub.classList.toggle('visible', aecActive);
+        // Toggle AEC map layers — tiles present from Night 2+ build
+        const aecLayers = [
+            'layer8-ashrae', 'layer8-necb', 'layer8-eu-climate',
+            'layer9-koppen', 'layer10-seismic', 'layer11-flood',
+            'layer12-fema', 'layer12-eu-flood', 'layer13-ecoregions', 'layer15-wildfire',
+        ];
+        aecLayers.forEach(id => {
+            if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', aecActive ? 'visible' : 'none');
+        });
+    }
+
     function setCatchmentSubLayer(sublayer, btn) {
         catchmentSubLayer = sublayer;
         document.querySelectorAll('.sublayer-opt').forEach(el => el.classList.remove('active'));
@@ -682,6 +699,9 @@
     let catchmentSubLayer  = 'pop';  // 'pop' | 'spend' | 'rank'
     let catchmentReach     = 'home'; // 'home' | 'work' (work = planned)
     let catchmentCentroidCache = {}; // cluster_id → GeoJSON FeatureCollection
+
+    // ── AEC / Site Conditions state (layers available from Night 2+ build) ──
+    let aecActive = false;
 
 
     const map = new maplibregl.Map({
@@ -1217,6 +1237,15 @@
             // Mobility provenance
             mobility_source:  c.mobility_source  || 'radius',
             mobility_vintage: c.mobility_vintage || 'worldpop-2026',
+            // AEC / Site Conditions (populated incrementally Nights 2–5)
+            ashrae_zone:      c.ashrae_zone      || null,
+            necb_zone:        c.necb_zone        || null,
+            eu_climate_zone:  c.eu_climate_zone  || null,
+            koppen_class:     c.koppen_class      || null,
+            seismic_pga_g:    c.seismic_pga_g    ?? null,
+            flood_hazard:     c.flood_hazard      || null,
+            wildfire_hazard:  c.wildfire_hazard   || null,
+            ghi_kwh_m2_yr:    c.ghi_kwh_m2_yr    ?? null,
             // Civic context (from members array)
             hc_count_regional: civicM.filter(m => m.category === 'medical').length,
             hc_count_district: 0,
@@ -1501,6 +1530,29 @@
                             <span>Source</span>
                             <span class="vintage-badge" id="catchment-source-badge">${sourceBadgeTxt}</span>
                         </div>
+                    </div>
+                </div>
+            </div>
+            <div class="data-block" style="padding-top:6px;">
+                <div class="catchment-block">
+                    <div class="catchment-header">
+                        <div class="data-label" style="margin:0;">Site Conditions</div>
+                        <button class="catchment-master-toggle${aecActive ? ' active' : ''}"
+                                onclick="toggleAecMaster(this)">
+                            ${aecActive ? 'Hide' : 'Show on Map'}
+                        </button>
+                    </div>
+                    <div id="aec-sublayers" class="catchment-sublayers${aecActive ? ' visible' : ''}">
+                        ${(p.ashrae_zone || p.eu_climate_zone || p.necb_zone || p.koppen_class || p.seismic_pga_g != null || p.flood_hazard || p.wildfire_hazard || p.ghi_kwh_m2_yr != null) ? `
+                        <div style="font-size:11px;color:var(--text-main);display:grid;grid-template-columns:1fr 1fr;gap:4px 10px;margin-top:4px;">
+                            ${(p.ashrae_zone || p.eu_climate_zone || p.necb_zone) ? `<div style="grid-column:1/-1"><span style="color:var(--text-muted);">Climate Zone</span> <span>${p.ashrae_zone || p.eu_climate_zone || p.necb_zone}</span></div>` : ''}
+                            ${p.koppen_class ? `<div style="grid-column:1/-1"><span style="color:var(--text-muted);">Köppen</span> <span>${p.koppen_class}</span></div>` : ''}
+                            ${p.seismic_pga_g != null ? `<div><span style="color:var(--text-muted);">Seismic PGA</span> <span>${p.seismic_pga_g}g</span></div>` : ''}
+                            ${p.ghi_kwh_m2_yr != null ? `<div><span style="color:var(--text-muted);">Solar GHI</span> <span>${p.ghi_kwh_m2_yr} kWh/m²</span></div>` : ''}
+                            ${p.flood_hazard ? `<div><span style="color:var(--text-muted);">Flood</span> <span>${p.flood_hazard}</span></div>` : ''}
+                            ${p.wildfire_hazard ? `<div><span style="color:var(--text-muted);">Wildfire</span> <span>${p.wildfire_hazard}</span></div>` : ''}
+                        </div>` : `
+                        <div style="font-size:10px;color:var(--text-muted);font-style:italic;margin-top:4px;">Site data builds Night 2–5 (2026-05-25 onward)</div>`}
                     </div>
                 </div>
             </div>
