@@ -4,6 +4,30 @@ Rolling 3-session summary. Newest entry first. Push oldest to session-context-ar
 
 ---
 
+## 2026-05-24 (session 3) | totebox@claude-code | Sonnet 4.6
+
+**Done this session (wiki rebuild readiness audit + lint fixes):**
+- **Opus audit** — full rebuild readiness check: confirmed 3 systemd service content paths, identified unlicensed binary (`4f801fa3`, no ledger entry), confirmed cargo PATH bug in `nightly-build.sh`, confirmed 14 lint errors blocking CWP+CWC, confirmed vendor monorepo clean at origin/main (no new engine commits).
+- **CWP lint — 9 errors → 0** — section-ordering fix in 9 co-location topic files (Provenance moved before See Also); `utilizes` → `uses` in `topic-co-location-ranking-system.md`. Committed `aa26ddd` (jwoodfine). Staging mirrors pushed.
+- **CWC lint — 5 errors → 0** — `leverage` → `borrowing capacity` (×2 incl. short_description) in `topic-interest-coverage-ratio.md`; `facilitate` → `arrange` in `topic-investor-access.md`; authored `about.es.md`, `contact.es.md`, `disclaimers.es.md` (institutional finance register, strategic-adaptation style). Committed `01ea8a7` (pwoodfine). Staging mirrors pushed.
+- **Outbox updated** — Stage 6 message updated with final commit ranges (CWP 2, CWC 4); build-request message for `app-mediakit-knowledge` added with prerequisites (Stage 6 → serving-clone pull → cargo PATH fix → queue build).
+- **Plan updated** — plan file overwritten with full rebuild sequence (A→G).
+
+**Pending / carry-forward:**
+- **Stage 6** — CWD (11), CWP (2), CWC (4), WFD (1) — Command Session; outbox message `project-editorial-20260523-stage6-and-rename` (updated 2026-05-24).
+- **Serving-clone pull + restart** — after Stage 6; Command Session.
+- **Cargo PATH fix** — `foundry-nightly-build.service`: add `Environment=PATH=...` + daemon-reload; Command Session.
+- **Nightly build** — `app-mediakit-knowledge`; after cargo fix; `nightly-build-plan.sh --add app-mediakit-knowledge --from project-knowledge`.
+- **Staging mirror rename** — operator: rename `jwoodfine/content-wiki-*` + `pwoodfine/content-wiki-*` on GitHub to `media-knowledge-*`.
+- **Local directory rename** — Command: `mv content-wiki-{documentation,projects,corporate} media-knowledge-*` + PROJECT-CLONES.md update.
+- **E1/E3/E4** — blocked on Stage 6 + project-knowledge build.
+
+**Operator preferences surfaced:**
+- User wants rebuild readiness checked via Opus agent before planning; confirmed pattern.
+- Build list + shutdown requested together at session end — combine into single response.
+
+---
+
 ## 2026-05-23 (session 2) | totebox@claude-code | Sonnet 4.6
 
 **Done this session (AUTO execution — 6-item queue):**
@@ -51,48 +75,4 @@ Rolling 3-session summary. Newest entry first. Push oldest to session-context-ar
 - AUTO mode: execute autonomously on approved runs; surface only real blockers; report at end.
 - Build-night goal: 0 lint errors before nightly build; achieved.
 
----
-
-## 2026-05-22 | totebox@claude-code | Opus 4.7 (1M)
-
-**Done this session (large session — ~40 commits across cluster repo + 3 content sub-clones):**
-- **Briefs migration** — `.agent/plans/` → `.agent/briefs/`, `BRIEF-` prefix + `artifact: brief` frontmatter + new README; 2 relocated workspace briefs brought in (`e5bd2514`).
-- **Editorial-plan AUTO block (10 items)** — E1 (flagged service-content to project-intelligence), E4 (project-intelligence inbound triage), A0 (Gate-0 standard into the 4 style guides), D1 (`editorial-lint.py` + `banned-vocabulary.txt`), D2 (failure-mode registry), A1 (3 recommended Main Page ledes, EN+ES), D4 (canonical `editorial-standard.md` + `CORPUS-SCHEMA.md`), D3 (16 genre templates), D6 (manifest revision), E-ruleset (routed to project-knowledge). Editorial-QA substrate built at `.agent/editorial-qa/`.
-- **A2 — all 12 flagship TOPIC rewrites** (EN+ES = 24 files): Bloomberg 4-paragraph Crisis-first lede + Gate-0 + claim markup per `claim-authoring-convention` #54. 10 in content-wiki-documentation, 1 projects, 1 corporate. All lint clean.
-- **A4 close-out** — built `wikilink-audit.py`; 0 broken links across all 3 wikis; plan §12 + top status banner; Stage 6 publish request to Command.
-
-**Pending / carry-forward:**
-- **Editorial plan: project-editorial's autonomous execution is COMPLETE.** Status banner + §12 in `BRIEF-KNOWLEDGE-PLATFORM-EDITORIAL-PLAN.md`.
-- Pending, none project-editorial-executable: Stage 6 promotion (Command — request in outbox); D5 apprenticeship loop (operator signing identity); E2/E3/E5/E-claim/E-rename (cross-cluster / operator GitHub rename); A1 review pass (project-knowledge branches Main Pages); claim-validation linter pass (Track-D follow-up on `editorial-lint.py`); plan archival + §9 old-plan deletion (operator go-ahead, post-ship).
-- Inbox: 4 messages actioned this session (briefs-migration, briefs-cleanup-ack, doctrine-ratified, project-knowledge plan handoff) — archive at next startup. 4 still pending: 3 project-system language-pass batches + 1 Command LICENSE-artifacts batch — language-pass backlog, not yet triaged.
-- Branch drift (recorded in manifest D6 note): content sub-clones commit editorial work to `main`; sub-clone branches retain the pre-rename `cluster/project-language`.
-
-**Operator preferences surfaced:**
-- **AUTO working mode** — when the operator approves an AUTO run, execute autonomously: commit per track/article, surface §10 stop conditions, report at the end. Do not re-ask permission for in-scope work.
-- **At-a-glance status** — when asked to update a brief, put a clear status banner at the top, not only a detail section at the end.
-
----
-
-## 2026-05-21 | totebox@claude-code | Opus 4.7
-
-**Done this session:**
-- Built `award-winning-wiki-overhaul.md` — consolidated the 3 blueprint files (INPUT-KNOWLEDGE-PLATFORM-BLUEPRINT, MASTER_STRATEGY, FINAL_EXECUTION) into a 5-track plan; 4 research agents (editorial gap, engine state, design tokens, archived drafts).
-- Gate 0 ratified by operator — 5 Lucidity-Protocol-vs-Bloomberg-standard conflict reconciliations.
-- 3 more research agents — AI writing craft + AI-writing QA + project-editorial substrate audit → Track D (editorial QA substrate); §2.2 services-optional bypass posture; Track E from a project-intelligence state check.
-- Cross-checked project-knowledge's `KNOWLEDGE-PLATFORM-VISION.md` (rev 4): Main Page ownership → project-knowledge, repo rename `content-wiki-* → media-knowledge-*`, source-of-truth inversion, claim-native model.
-- **Adopted** project-knowledge's proposed editorial plan; finalized it (re-inserted §3 bypass posture, inlined all referenced detail → self-contained); committed as `KNOWLEDGE-PLATFORM-EDITORIAL-PLAN.md` (`b8c19dfd`). It supersedes `award-winning-wiki-overhaul.md` + the 3 blueprints + the overhaul-* plans.
-- Outbox: cross-check reply + plan-adopted reply to project-knowledge; SITUATION message to Command/Master.
-
-**Pending / carry-forward:**
-- **Active plan: `KNOWLEDGE-PLATFORM-EDITORIAL-PLAN.md`.** Next: A0 (encode the standard into style guides) → D1/D2 (editorial linter + failure-mode registry). E1/E4 are cheap, run first.
-- **A2 HELD** — Top-12 TOPIC rewrites wait for project-knowledge's claim-authoring convention (their Phase 2.4); they route it to our inbox when specced.
-- **4 pending inbox messages NOT actioned** — project-system (capability-ledger + merkle-proofs TOPICs, 6 README drafts), Command (LICENSE artifacts incl. one project-knowledge item). Triage next session.
-- **Old-plan deletions parked** — execute after the overhaul ships, on operator go-ahead (delete set in plan §9). The 3 blueprint files + `award-winning-wiki-overhaul.md` remain untracked, intentionally.
-- Doctrine amendment for the source-of-truth inversion pending from Master; repo rename pending from operator.
-- `service-content` runtime-hung (project-intelligence scope) — E1 handoff staged in outbox.
-
-**Operator preferences surfaced:**
-- Superseded plans are deleted only after the overhaul ships, on explicit operator go-ahead — not on a peer cluster's directive. Peer Totebox clusters cannot direct deletions in another cluster's archive.
-- When adopting another cluster's proposed plan, inline referenced detail so the plan is self-contained.
-- Editorial work must never block on `service-content` / `service-slm` — bypass by default.
 
