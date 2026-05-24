@@ -240,6 +240,11 @@ header .tag {
 #editor-status { font-size: 10px; color: #555; min-width: 50px; }
 #editor-cursor { font-size: 10px; color: #555; min-width: 90px; text-align: right; font-variant-numeric: tabular-nums; }
 #save-btn.saved { color: #89d185; border-color: #89d18555; }
+#ln-jump-input {
+  width: 52px; background: #3c3c3c; border: 1px solid #444; border-radius: 3px;
+  color: #eee; font-size: 11px; padding: 2px 5px; outline: none; text-align: center;
+}
+#ln-jump-input:focus { border-color: #4d9fff; }
 
 /* ── Go-to-line bar ───────────────────────────────────────────────────── */
 #goto-bar {
@@ -319,12 +324,12 @@ header .tag {
   font-family: "SF Mono","Fira Code","Consolas","Monaco",monospace;
   font-size: 12px;
   line-height: 1.6;
-  color: #3c4048;
+  color: #636d7e;
   user-select: none;
   cursor: default;
 }
 #editor-gutter div { line-height: 1.6; }
-#editor-gutter .gl-active { color: #ababab; }
+#editor-gutter .gl-active { color: #c8ccd4; }
 
 #editor-textarea {
   flex: 1;
@@ -474,6 +479,7 @@ header .tag {
         <span id="editor-status"></span>
         <button class="bar-btn" id="outline-btn" onclick="showOutline()" title="Document outline (Cmd+Shift+O)">Outline</button>
         <button class="bar-btn" id="comment-btn" onclick="toggleLineComment()" title="Toggle line comment">Comment</button>
+        <input id="ln-jump-input" type="number" min="1" placeholder="Ln" title="Go to line (Enter)" autocomplete="off">
         <button class="bar-btn" id="save-btn" onclick="saveFile()">Save</button>
       </div>
       <div id="goto-bar">
@@ -851,6 +857,18 @@ document.getElementById('goto-input').addEventListener('keydown', e => {
     hideGotoBar();
   }
   if (e.key === 'Escape') hideGotoBar();
+});
+
+document.getElementById('ln-jump-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    const n = parseInt(e.target.value, 10);
+    if (!isNaN(n)) { applyGotoLine(n); e.target.value = ''; }
+    document.getElementById('editor-textarea').focus();
+  }
+  if (e.key === 'Escape') {
+    e.target.value = '';
+    document.getElementById('editor-textarea').focus();
+  }
 });
 
 document.getElementById('editor-textarea').addEventListener('input', () => {
