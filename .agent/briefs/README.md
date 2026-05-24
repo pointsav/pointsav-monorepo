@@ -9,7 +9,7 @@ Durable, git-tracked project briefs for this archive. Read at session start
 
 | Brief | Topic | Status |
 |---|---|---|
-| `BRIEF-knowledge-platform.md` | Knowledge Platform — Phases 1–5 complete; Phase 6 gated on GitHub rename + Doctrine amendment | active |
+| `BRIEF-knowledge-platform.md` | Knowledge Platform — Phases 1–5 done; design competition in progress; Phase 6 gated; product strategy open | active |
 
 ## Artifact routing (this archive)
 
