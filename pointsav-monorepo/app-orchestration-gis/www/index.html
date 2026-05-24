@@ -95,10 +95,26 @@
 
         /* ── Responsive ───────────────────────────────────────────── */
         @media (max-width: 768px) {
-            #data-panel      { top: auto; bottom: 0; left: 0; width: 100%; border-radius: 20px 20px 0 0; max-height: 45vh; }
-            .nav-cluster     { bottom: 52vh; right: 12px; }
+            #data-panel      { top: auto; bottom: 0; left: 0; width: 100%; border-radius: 20px 20px 0 0; max-height: 45dvh; }
+            .nav-cluster     { bottom: 52dvh; right: 12px; }
             .nav-btn         { width: 80px; }
+            .panel-collapse-btn { display: flex; }
+            #data-panel.collapsed { max-height: 64px; overflow: hidden; }
+            #data-panel.collapsed .panel-collapse-btn { transform: rotate(180deg); }
         }
+
+        /* ── Touch targets ────────────────────────────────────────── */
+        button, .lc-btn, .region-tab, .sublayer-opt, .merged-group-item,
+        .nav-btn, .footer-btn, .ctx-back { touch-action: manipulation; }
+
+        /* ── Mobile collapse button (hidden on desktop) ───────────── */
+        .panel-collapse-btn {
+            display: none; position: absolute; right: 12px; top: 12px;
+            width: 44px; height: 44px; border: 0; background: transparent;
+            font-size: 20px; cursor: pointer; align-items: center; justify-content: center;
+            color: var(--text-muted); border-radius: 8px;
+        }
+        .panel-header { position: relative; }
 
         /* ── BentoBox Layout B — mobile cluster inspector ─────────── */
         @media (max-width: 480px) {
@@ -250,6 +266,9 @@
 
     <aside id="data-panel">
         <div class="panel-header">
+            <button class="panel-collapse-btn"
+                    onclick="document.getElementById('data-panel').classList.toggle('collapsed')"
+                    aria-label="Collapse panel">▾</button>
             <h1>Woodfine GIS</h1>
             <p>Location Intelligence</p>
             <div class="region-switch" id="region-tabs">
@@ -514,7 +533,7 @@
             // The zoomend handler suppresses showOverview() while catchment is active,
             // so dropping below RETAIL_ZOOM_THRESHOLD (9) does not lose cluster selection.
             if (meta && map.getZoom() > 9) {
-                map.flyTo({ center: [meta.lon, meta.lat], zoom: 8.5, duration: 800 });
+                map.flyTo({ center: [meta.lon, meta.lat], zoom: 8.5, duration: 800, essential: true });
             }
         } else {
             hideCatchment();
@@ -717,6 +736,7 @@
         attributionControl: false,
         maxBounds: [[-160.0, -5.0], [45.0, 80.0]],
         maxTileCacheSize: 500,
+        cooperativeGestures: window.matchMedia('(pointer: coarse)').matches,
     });
     map.touchZoomRotate.disableRotation();
     map.addControl(new maplibregl.AttributionControl({ compact: true }), 'bottom-left');
@@ -1020,9 +1040,9 @@
         if (inp) inp.value = p.name + (p.context ? ', ' + p.context : '');
         closeDropdown();
         if (p.bbox) {
-            map.fitBounds(p.bbox, { padding: 60, duration: 900, maxZoom: 12 });
+            map.fitBounds(p.bbox, { padding: 60, duration: 900, maxZoom: 12, essential: true });
         } else {
-            map.flyTo({ center: [p.lon, p.lat], zoom: 10, duration: 900 });
+            map.flyTo({ center: [p.lon, p.lat], zoom: 10, duration: 900, essential: true });
         }
     }
 
@@ -1185,6 +1205,7 @@
         const whM    = members.filter(m => m.category === 'price_club');
         const lifeM  = members.filter(m => m.category === 'lifestyle');
         const sportM = members.filter(m => m.category === 'sport');
+        const elecM  = members.filter(m => m.category === 'electronics');
         const civicM = members.filter(m => m.category === 'medical' || m.category === 'education');
         const anchorName = (hyperM[0] || lifeM[0] || members[0])?.name || '';
         return {
@@ -1225,6 +1246,7 @@
             wh_list:              JSON.stringify(whM.map(m => m.chain_id)),
             life_list:            JSON.stringify(lifeM.filter(m => m !== (hyperM[0] || lifeM[0] || members[0])).map(m => m.name)),
             sport_list:           JSON.stringify(sportM.map(m => m.name)),
+            elec_list:            JSON.stringify(elecM.map(m => m.name)),
             sub_entities_display: JSON.stringify([]),
             merged_zones:         [],
             unique_brands:        members.filter(m => !m.dist_km).length,
@@ -1410,10 +1432,11 @@
         const tvKey  = effectiveTierKey(p);
         const tc     = tierColor(tvKey);
 
-        let hw = [], wh = [], life = [], sport = [], subs = [], mz = [], preds = [];
+        let hw = [], wh = [], life = [], elec = [], sport = [], subs = [], mz = [], preds = [];
         try { hw    = JSON.parse(p.hw_list); } catch (_) {}
         try { wh    = JSON.parse(p.wh_list); } catch (_) {}
         try { life  = JSON.parse(p.life_list); } catch (_) {}
+        try { elec  = JSON.parse(p.elec_list); } catch (_) {}
         try { sport = JSON.parse(p.sport_list); } catch (_) {}
         try { subs  = JSON.parse(p.sub_entities_display); } catch (_) {}
         try { preds = JSON.parse(p.tier_predicates_fired); } catch (_) {}
@@ -1486,6 +1509,7 @@
                     ${hw.map(h => `<div class="pill">${chainName(h)}</div>`).join('')}
                     ${wh.map(w => `<div class="pill">${chainName(w)}</div>`).join('')}
                     ${life.map(l => `<div class="pill">${l}</div>`).join('')}
+                    ${elec.map(e => `<div class="pill">${e}</div>`).join('')}
                     ${sport.map(s => `<div class="pill">${s}</div>`).join('')}
                     ${subs.length > 0 ? `<div style="font-size:10px;color:var(--text-muted);width:100%;margin-top:3px;">+ ${subs.join(' · ')}</div>` : ''}
                     ${mz.length > 0 ? `<div style="font-size:10px;color:var(--text-muted);width:100%;margin-top:6px;font-style:italic;">Co-located within 150 m: ${mz.map(z => z.anchor || z.merged_anchor || '').filter(Boolean).join(' · ')}</div>` : ''}
@@ -2082,8 +2106,8 @@
             applyView();
 
             // Fly to ring-overview zoom: ring visible with context.
-            // Clicking inside the ring (proximity-fill) calls drillIntoCluster again
-            // and Math.max pushes to zoom 15/14 for street-level — two-step drill.
+            // Second-click street-level step is owned by the proximity-fill handler —
+            // keeps drillIntoCluster deterministic regardless of caller zoom level.
             const targetZoom = Math.max(map.getZoom(), km === 1 ? 12 : 11);
             map.flyTo({ center: coords, zoom: targetZoom, duration: 1200, essential: true });
         }
@@ -2158,7 +2182,24 @@
             const cid = props.cluster_id;
             if (!cid || !clusterIndex?.has(cid)) return;
             const c = clusterIndex.get(cid);
-            drillIntoCluster(metaToClusterProps(c), [c.lon, c.lat]);
+
+            // First click (or different cluster): select cluster at ring-overview zoom.
+            // Second click on same cluster already at overview: step to street level.
+            const v3tier    = c.t ?? 4;
+            const overviewZ = v3tier === 1 ? 12 : 11;
+            const streetZ   = v3tier === 1 ? 14 : 13;
+            const z = map.getZoom();
+
+            if (z < overviewZ - 0.25 || selectedClusterId !== cid) {
+                drillIntoCluster(metaToClusterProps(c), [c.lon, c.lat]);
+            } else {
+                map.flyTo({
+                    center: [c.lon, c.lat],
+                    zoom: Math.max(z, streetZ),
+                    duration: 800,
+                    essential: true,
+                });
+            }
             e.stopPropagation();
         });
         map.on('mouseenter', 'proximity-fill', () => { map.getCanvas().style.cursor = 'pointer'; });
