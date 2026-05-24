@@ -1164,6 +1164,7 @@
         const hwM    = members.filter(m => m.category === 'hardware');
         const whM    = members.filter(m => m.category === 'price_club');
         const lifeM  = members.filter(m => m.category === 'lifestyle');
+        const sportM = members.filter(m => m.category === 'sport');
         const civicM = members.filter(m => m.category === 'medical' || m.category === 'education');
         const anchorName = (hyperM[0] || lifeM[0] || members[0])?.name || '';
         return {
@@ -1202,7 +1203,9 @@
             // Anchor pill lists (built from members array)
             hw_list:              JSON.stringify(hwM.map(m => m.chain_id)),
             wh_list:              JSON.stringify(whM.map(m => m.chain_id)),
-            sub_entities_display: JSON.stringify(lifeM.map(m => m.name)),
+            life_list:            JSON.stringify(lifeM.filter(m => m !== (hyperM[0] || lifeM[0] || members[0])).map(m => m.name)),
+            sport_list:           JSON.stringify(sportM.map(m => m.name)),
+            sub_entities_display: JSON.stringify([]),
             merged_zones:         [],
             unique_brands:        members.filter(m => !m.dist_km).length,
             // Catchment population + spend (synthesize-od-study.py)
@@ -1308,7 +1311,7 @@
         setVis(['nodes', 'nodes-halo'], !local);
         setVis(['proximity-fill', 'proximity-line-t1', 'proximity-line-t234', 'proximity-ring-label'], local);
         setVis(['all-locations'], local);
-        setVis(['cluster-centroid'], local && prodView.selected !== null);
+        setVis(['cluster-centroid'], false);
         setVis(['proximity-merged-label'], false);
     }
 
@@ -1378,9 +1381,11 @@
         const tvKey  = effectiveTierKey(p);
         const tc     = tierColor(tvKey);
 
-        let hw = [], wh = [], subs = [], mz = [], preds = [];
+        let hw = [], wh = [], life = [], sport = [], subs = [], mz = [], preds = [];
         try { hw    = JSON.parse(p.hw_list); } catch (_) {}
         try { wh    = JSON.parse(p.wh_list); } catch (_) {}
+        try { life  = JSON.parse(p.life_list); } catch (_) {}
+        try { sport = JSON.parse(p.sport_list); } catch (_) {}
         try { subs  = JSON.parse(p.sub_entities_display); } catch (_) {}
         try { preds = JSON.parse(p.tier_predicates_fired); } catch (_) {}
         if (Array.isArray(p.merged_zones)) mz = p.merged_zones;
@@ -1451,6 +1456,8 @@
                     ${anchorLabel ? `<div class="pill alpha">${anchorLabel}</div>` : ''}
                     ${hw.map(h => `<div class="pill">${chainName(h)}</div>`).join('')}
                     ${wh.map(w => `<div class="pill">${chainName(w)}</div>`).join('')}
+                    ${life.map(l => `<div class="pill">${l}</div>`).join('')}
+                    ${sport.map(s => `<div class="pill">${s}</div>`).join('')}
                     ${subs.length > 0 ? `<div style="font-size:10px;color:var(--text-muted);width:100%;margin-top:3px;">+ ${subs.join(' · ')}</div>` : ''}
                     ${mz.length > 0 ? `<div style="font-size:10px;color:var(--text-muted);width:100%;margin-top:6px;font-style:italic;">Co-located within 150 m: ${mz.map(z => z.anchor || z.merged_anchor || '').filter(Boolean).join(' · ')}</div>` : ''}
                 </div>
