@@ -756,11 +756,59 @@ document.getElementById('text-content').addEventListener('click', e => {
 
   // Move editor cursor to that position and scroll into view
   ta.selectionStart = ta.selectionEnd = idx;
-  const lineNum = (src.substring(0, idx).match(/\n/g) || []).length;
-  ta.scrollTop = Math.max(0, lineNum * 12 * 1.6 - ta.clientHeight / 2);
   ta.focus();
+  const tacs   = window.getComputedStyle(ta);
+  const taLineH = parseFloat(tacs.lineHeight) || parseFloat(tacs.fontSize) * 1.6;
+  const taPadT  = parseFloat(tacs.paddingTop) || 0;
+  const lineNum = (src.substring(0, idx).match(/\n/g) || []).length;
+  ta.scrollTop = Math.max(0, taPadT + lineNum * taLineH - ta.clientHeight / 2 + taLineH / 2);
   updateGutterLines();
   updateEditorPos();
+});
+
+// ── Click-to-preview: click editor line → scroll viewer to matching element ──
+document.getElementById('editor-textarea').addEventListener('click', () => {
+  if (!editorPath) return;
+  if (editorPath.split('.').pop().toLowerCase() !== 'md') return;
+  const tv = document.getElementById('text-viewer');
+  if (tv.style.display === 'none') return;
+
+  const ta  = document.getElementById('editor-textarea');
+  const pos = ta.selectionStart;
+  const src = ta.value;
+  const lineStart = src.lastIndexOf('\n', pos - 1) + 1;
+  const lineEnd   = src.indexOf('\n', pos);
+  const line = src.substring(lineStart, lineEnd === -1 ? src.length : lineEnd).trim();
+  if (!line) return;
+
+  const tc = document.getElementById('text-content');
+  let target = null;
+
+  const headingMatch = line.match(/^(#{1,6})\s+(.+)/);
+  if (headingMatch) {
+    const tag  = 'h' + headingMatch[1].length;
+    const text = headingMatch[2].trim().slice(0, 40);
+    for (const el of tc.querySelectorAll(tag)) {
+      if (el.textContent.trim().startsWith(text.slice(0, 20))) { target = el; break; }
+    }
+  } else if (line.startsWith('```')) {
+    const lang = line.slice(3).trim();
+    for (const el of tc.querySelectorAll('pre')) {
+      const code = el.querySelector('code');
+      if (!lang || (code && code.className === 'lang-' + lang)) { target = el; break; }
+    }
+  } else {
+    const text = line.replace(/^[>*\-+\d.#]\s*/, '').replace(/\s+/g, ' ').slice(0, 40);
+    if (text.length < 5) return;
+    for (const el of tc.querySelectorAll('p,li,blockquote,td,th')) {
+      if (el.textContent.trim().replace(/\s+/g, ' ').startsWith(text.slice(0, 20))) { target = el; break; }
+    }
+  }
+
+  if (!target) return;
+  target.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  target.classList.add('preview-click-flash');
+  setTimeout(() => target.classList.remove('preview-click-flash'), 550);
 });
 
 // ── Live preview from editor textarea ────────────────────────────────────────
