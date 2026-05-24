@@ -29,6 +29,8 @@ pub struct ProfileConfig {
     pub slm_endpoint: String,
     #[serde(default = "default_pair_endpoint")]
     pub pair_endpoint: String,
+    #[serde(default = "default_drafts_outbound_path")]
+    pub drafts_outbound_path: String,
 }
 
 fn default_username() -> String { "operator".into() }
@@ -44,6 +46,10 @@ fn default_ssh_key_path() -> String {
 fn default_totebox_endpoint() -> String { "http://localhost:9000".into() }
 fn default_slm_endpoint() -> String { "http://localhost:8011".into() }
 fn default_pair_endpoint() -> String { "http://127.0.0.1:9201".into() }
+fn default_drafts_outbound_path() -> String {
+    let home = std::env::var("HOME").unwrap_or_else(|_| ".".into());
+    format!("{}/.local/share/os-console/drafts-outbound", home)
+}
 
 impl Default for ProfileConfig {
     fn default() -> Self {
@@ -58,6 +64,7 @@ impl Default for ProfileConfig {
             totebox_endpoint: default_totebox_endpoint(),
             slm_endpoint: default_slm_endpoint(),
             pair_endpoint: default_pair_endpoint(),
+            drafts_outbound_path: default_drafts_outbound_path(),
         }
     }
 }
