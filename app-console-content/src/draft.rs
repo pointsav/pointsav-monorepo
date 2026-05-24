@@ -110,8 +110,10 @@ pub fn stream_draft(
         };
         for choice in &chunk.choices {
             if let Some(content) = &choice.delta.content {
-                if !content.is_empty() && tx.send(DraftEvent::Token(content.clone())).is_err() {
-                    return; // receiver dropped — user navigated away
+                if !content.is_empty() {
+                    if tx.send(DraftEvent::Token(content.clone())).is_err() {
+                        return; // receiver dropped — user navigated away
+                    }
                 }
             }
             if choice.finish_reason.is_some() {
