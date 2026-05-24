@@ -6,7 +6,7 @@
 > Read at session start when a Root Claude opens in this repo. Update
 > at session end when repo-scope open items change.
 
-Last updated: 2026-05-27 (session 4).
+Last updated: 2026-05-24.
 
 ---
 
@@ -20,9 +20,8 @@ Pairing ceremony progress on `cluster/project-proofreader` branch:
 |---|---|---|
 | Phase 3 — Kitty/Sixel pixel QR | Complete | `11135186` |
 | Phase 4 — F11 System Cartridge; pending-pair panel | Complete | `28000772` |
-| Phase 5 — Draft mode; `/new` slash command; Doorman Tier B SSE | Complete | `5118ce77` |
-| Phase 6 — Offline mode; Tantivy full-text search | **Next** | — |
-| Phase 7–12 | Not started | — |
+| Phase 5 — Draft mode; `/new` slash command; Doorman Tier B SSE | **Current** | — |
+| Phase 6–12 | Not started | — |
 
 See `.agent/briefs/BRIEF-leapfrog-2030-coding.md` for the full roadmap.
 Stage 6 blocked — see `.agent/inbox.md` (`command-20260522-console-stage6-orphan-branch`).
@@ -31,40 +30,6 @@ Stage 6 blocked — see `.agent/inbox.md` (`command-20260522-console-stage6-orph
 
 Rule source: `.claude/rules/repo-layout.md` (introduced 2026-04-23).
 Each item below is a separate commit via `tool-commit-as-next.sh`.
-
-## app-orchestration-slm — post-MVP steps
-
-MVP scaffold landed 2026-05-27 (Steps 1+2: chassis scaffold + Yo-Yo proxy endpoints).
-Remaining plan steps in order:
-
-- [x] **Step 3 — Doorman self-registration** — `SLM_ORCHESTRATION_ENDPOINT` + `SLM_MODULE_ID`
-  + `SLM_ARCHIVE_ID` + `SLM_TIER_B_SUBSCRIBED` env vars added to
-  `service-slm/crates/slm-doorman-server/src/main.rs`; non-blocking tokio::spawn POSTs
-  to chassis `/v1/discovery/register` on startup. Commit `99e2f06a`. [2026-05-27 totebox@claude-code]
-
-- [x] **Step 4 — `adapter-hub` crate** — extracted
-  `service-slm/crates/slm-doorman/src/adapter_registry.rs` → new crate
-  `service-slm/crates/adapter-hub/`; `fuse_adapters()` stub added; slm-doorman re-exports;
-  `serde_yaml` added to workspace deps. 5/5 tests pass. Commit `99e2f06a`. [2026-05-27 totebox@claude-code]
-
-- [ ] **Step 5 — `lora-forge` scaffold** — new crate `service-slm/crates/lora-forge/`;
-  implement `build-corpus` (JSONL shard dedup + balanced sample + snapshot freeze) and
-  `synthesize-doctrine` (Tier C audit-proxy → constitutional corpus).
-  [2026-05-27 totebox@claude-code]
-
-- [ ] **Step 6 — rename `lora-training.sh` → `lora-loom/run.sh`** — git mv
-  `service-slm/compute/packer/scripts/lora-training.sh` →
-  `service-slm/compute/packer/scripts/lora-loom/run.sh`; add signed-marker verification
-  and snapshot SHA-256 check. [2026-05-27 totebox@claude-code]
-
-- [ ] **Step 7 — Constitutional adapter end-to-end** — gated on D4 Packer image pipeline.
-  `lora-forge synthesize-doctrine v0.0.14` → training tuples → chassis claims trainer slot →
-  `lora-loom` trains → adapter in `data/adapters/registry.yaml`.
-  [2026-05-27 totebox@claude-code; blocked on D4]
-
----
-
-## Code — fix broken build
 
 *(queue empty — Tier-2 project-root scripts closed 2026-04-23;
 see Recently closed below and `cleanup-log.md`)*
