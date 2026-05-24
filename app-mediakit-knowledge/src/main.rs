@@ -277,6 +277,8 @@ async fn serve(
     };
 
     tracing::info!(git_tenant = %git_tenant, "git remote enabled at /git-server/{}/info/refs", git_tenant);
+    let brand_instance = std::env::var("WIKI_BRAND_INSTANCE")
+        .unwrap_or_else(|_| "documentation".to_string());
     let state = AppState {
         content_dir,
         guide_dir,
@@ -290,6 +292,7 @@ async fn serve(
         glossary: Arc::new(glossary),
         links: link_graph,
         brand_theme,
+        brand_instance,
         db,
     };
     let app = router(state);

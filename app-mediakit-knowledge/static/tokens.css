@@ -124,6 +124,15 @@
   --border-subtle: oklch(93.06% 0.0059 264.52);
 
   /* Semantic — knowledge */
+  --knowledge-editorial-article-max: 720px;
+  --knowledge-editorial-reading-body-lh: 1.70;
+  --knowledge-editorial-reading-body-size: 17px;
+  --knowledge-editorial-reading-lead-lh: 1.75;
+  --knowledge-editorial-reading-lead-size: 19px;
+  --knowledge-editorial-status-draft: oklch(55.1% 0.0234 264.37);
+  --knowledge-editorial-status-featured: oklch(69.59% 0.1491 162.51);
+  --knowledge-editorial-status-stub: oklch(76.86% 0.1646 70.08);
+  --knowledge-editorial-toc-width: 240px;
   --knowledge-editpencil-color: oklch(53.03% 0.0202 264.39);
   --knowledge-featured-pin-accent: oklch(62.91% 0.1079 192.4);
   --knowledge-featured-pin-bg: oklch(96.39% 0.0351 196.71);

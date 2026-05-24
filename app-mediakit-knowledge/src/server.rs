@@ -125,6 +125,11 @@ pub struct AppState {
     /// forward-looking-statement disclaimer appears in all page footers.
     /// Set via `--brand-theme` / `WIKI_BRAND_THEME`.
     pub brand_theme: Option<String>,
+    /// Brand instance selector for the hybrid UI parameterisation
+    /// (`html[data-instance]`). Allowed: `documentation`, `projects`,
+    /// `corporate`. Set via `WIKI_BRAND_INSTANCE`; default
+    /// `"documentation"`.
+    pub brand_instance: String,
 }
 
 pub fn router(state: AppState) -> Router {
@@ -1042,12 +1047,14 @@ fn home_chrome(
     cat_descriptions: &BTreeMap<String, String>,
     site_title: &str,
     brand_theme: Option<&str>,
+    brand_instance: &str,
     user: Option<&User>,
     pending_count: i64,
 ) -> Markup {
     let woodfine_theme = matches!(brand_theme, Some("woodfine") | Some("woodfine-projects"));
     let woodfine_projects = brand_theme == Some("woodfine-projects");
     let _title = home_fm.title.as_deref().unwrap_or(site_title);
+    let auth_attr = if user.is_some() { "user" } else { "anon" };
 
     // Articles in non-ratified buckets (not already shown as guides) so that
     // every TOPIC and GUIDE is reachable from the home page.
@@ -1077,7 +1084,9 @@ fn home_chrome(
 
     html! {
         (DOCTYPE)
-        html lang=(locale.lang_attr()) {
+        html lang=(locale.lang_attr())
+             data-auth=(auth_attr)
+             data-instance=(brand_instance) {
             head {
                 meta charset="utf-8";
                 meta name="viewport" content="width=device-width, initial-scale=1";
@@ -1460,36 +1469,21 @@ fn home_chrome(
                     }
 
                 }
-                footer.shell-footer #site-footer {
-                    div.footer-row {
-                        @if woodfine_theme {
-                            div.cities {
-                                "Vancouver"
-                                span.sep { " | " }
-                                "New York"
-                            }
-                        }
-                        nav.footnav aria-label="Footer navigation" {
-                            a href="/wiki/disclaimers" { "Disclaimer" }
-                            a href="/wiki/contact" { "Contact" }
-                            a href="/sitemap.xml" { "Sitemap" }
-                        }
+                footer.shell-footer #site-footer role="contentinfo" {
+                    div.footer-cities { "Vancouver · Toronto · London" }
+                    nav.footer-nav aria-label="Footer navigation" {
+                        a href="/wiki/disclaimers" { "Disclaimer" }
+                        a href="/wiki/contact" { "Contact" }
+                        a href="/sitemap.xml" { "Sitemap" }
                     }
-                    p.footer-copyright-line {
-                        @if woodfine_theme {
-                            "© 2026 Woodfine Capital Projects Inc. All rights reserved."
-                        } @else {
-                            "© 2026 PointSav Digital Systems. Content: "
-                            a href="https://creativecommons.org/licenses/by/4.0/" { "CC BY 4.0" }
-                            "."
-                        }
+                    p.footer-copyright-line.copyright {
+                        "© 2026 Woodfine Capital Projects Inc. All rights reserved."
                     }
-                    p.footer-trademark-line {
-                        "PointSav™, Foundry™, ToteboxOS™, ConsoleOS™, OrchestrationOS™, and WorkplaceOS™ are unregistered trademarks of Woodfine Capital Projects Inc. "
-                        "WoodfineGroup™ is an unregistered trademark of Woodfine Management Corp., a wholly owned subsidiary of Woodfine Capital Projects Inc. "
-                        @if woodfine_theme {
-                            "This knowledge base may contain forward-looking statements."
-                        }
+                    p.footer-trademark-line.trademark {
+                        "Woodfine Capital Projects™, Woodfine Management Corp™, PointSav Digital Systems™, "
+                        "Totebox Orchestration™, and Totebox Archive™ are trademarks of Woodfine Capital "
+                        "Projects Inc. used in Canada, the United States, Latin America, and Europe. All other "
+                        "trademarks are the property of their respective owners."
                     }
                 }
                 script src="/static/wiki.js" defer="true" {}
@@ -1745,6 +1739,7 @@ async fn home_inner(
         &cat_descriptions,
         &state.site_title,
         state.brand_theme.as_deref(),
+        &state.brand_instance,
         maybe_user.as_ref(),
         pending_count,
     ))
@@ -2056,6 +2051,7 @@ async fn wiki_page_inner(
         headings,
         &state.site_title,
         state.brand_theme.as_deref(),
+        &state.brand_instance,
         maybe_user.as_ref(),
         pending_count,
         redirected_from,
@@ -2108,6 +2104,7 @@ fn wiki_chrome(
     headings: Vec<(String, String, u8)>,
     site_title: &str,
     brand_theme: Option<&str>,
+    brand_instance: &str,
     user: Option<&User>,
     pending_count: i64,
     redirected_from: Option<&str>,
@@ -2115,6 +2112,8 @@ fn wiki_chrome(
 ) -> Markup {
     let woodfine_theme = matches!(brand_theme, Some("woodfine") | Some("woodfine-projects"));
     let woodfine_projects = brand_theme == Some("woodfine-projects");
+    let is_authenticated = user.is_some();
+    let auth_attr = if is_authenticated { "user" } else { "anon" };
     let _talk_slug = format!("{slug}.talk");
     let page_title = format!("{title} — {site_title}");
 
@@ -2142,7 +2141,9 @@ fn wiki_chrome(
 
     html! {
         (DOCTYPE)
-        html lang=(locale.lang_attr()) {
+        html lang=(locale.lang_attr())
+             data-auth=(auth_attr)
+             data-instance=(brand_instance) {
             head {
                 meta charset="utf-8";
                 meta name="viewport" content="width=device-width, initial-scale=1";
@@ -2185,7 +2186,7 @@ fn wiki_chrome(
                 }
                 header.mw-header #mw-header {
                     a.site-title href="/" { (site_title) }
-                    form.header-search #header-search-form action="/search" method="get" {
+                    form.header-search #search-form-nav action="/search" method="get" {
                         div.header-search-wrap {
                             input #header-search-q type="search" name="q" placeholder="Search articles…" autocomplete="off";
                             div #search-autocomplete-dropdown style="display:none;" {}
@@ -2265,10 +2266,10 @@ fn wiki_chrome(
                         }
                     }
                     div.search-row {
-                        form.header-search #header-search-form action="/search" method="get" {
+                        form.header-search #search-form-body action="/search" method="get" {
                             div.header-search-wrap {
-                                input #header-search-q type="search" name="q" placeholder="Search articles…" autocomplete="off";
-                                div #search-autocomplete-dropdown style="display:none;" {}
+                                input #header-search-q-body type="search" name="q" placeholder="Search articles…" autocomplete="off";
+                                div #search-autocomplete-dropdown-body style="display:none;" {}
                             }
                             button type="submit" { "Search" }
                         }
@@ -2386,23 +2387,41 @@ fn wiki_chrome(
 
                         // Title row: tabs (top-left) + title + language switcher + action tabs (top-right)
                         div.wiki-title-row {
-                            // Article / Talk tabs — top-left
+                            // Article / Talk tabs — top-left.
+                            // 21st-century-Wikipedia: Talk is auth-gated only.
+                            // For anonymous readers, only the Article tab renders
+                            // here; Talk is reachable from the authenticated FAB
+                            // overflow menu instead (Section 6 of the hybrid CSS).
                             nav.wiki-page-tabs aria-label="Page tabs" {
                                 a.wiki-tab.wiki-tab-active
                                     href={ "/wiki/" (slug) }
                                     aria-current="page"
                                 { "Article" }
-                                a.wiki-tab
-                                    href={ "/talk/" (slug) }
-                                    accesskey="t"
-                                    title="Discussion page"
-                                { "Talk" }
+                                @if is_authenticated {
+                                    a.wiki-tab
+                                        href={ "/talk/" (slug) }
+                                        accesskey="t"
+                                        title="Discussion page"
+                                    { "Talk" }
+                                }
                             }
 
                             // Page title + language switcher + tagline (centre)
                             // Language button sits BELOW the H1, left-aligned —
                             // matching MediaWiki Vector 2022 (.mw-portlet-lang placement).
                             div.wiki-title-block {
+                                // Hybrid Section 5: breadcrumb above H1 (Design B)
+                                @if let Some(ref cat) = fm.category {
+                                    @if cat != "root" {
+                                        nav.article-breadcrumb aria-label="breadcrumb" {
+                                            a href="/" { "Home" }
+                                            " › "
+                                            a href={ "/category/" (cat) } { (humanize_category(cat)) }
+                                            " › "
+                                            (title)
+                                        }
+                                    }
+                                }
                                 h1.page-title {
                                     (title)
                                     @if let Some(ref q) = fm.quality {
@@ -2631,37 +2650,37 @@ fn wiki_chrome(
                     }
                 }
 
-                footer.shell-footer #site-footer {
-                    div.footer-row {
-                        @if woodfine_theme {
-                            div.cities {
-                                "Vancouver"
-                                span.sep { " | " }
-                                "New York"
-                            }
-                        }
-                        nav.footnav aria-label="Footer navigation" {
-                            a href="/wiki/disclaimers" { "Disclaimer" }
-                            a href="/wiki/contact" { "Contact" }
-                            a href={ "/git/" (slug) } { "View source" }
-                            a href="/sitemap.xml" { "Sitemap" }
+                // Hybrid Section 6: floating action bar (auth-gated by CSS).
+                // Emitted unconditionally; CSS hides it for `html[data-auth="anon"]`.
+                // Talk/Discussion lives ONLY in the overflow menu — never on the
+                // reading surface for anonymous readers.
+                div.wiki-fab aria-label="Article tools" {
+                    a.fab-edit href={ "/edit/" (slug) } { "Edit" }
+                    details.fab-overflow-wrap {
+                        summary.fab-overflow title="More actions" { "···" }
+                        ul.fab-overflow-menu {
+                            li { a href={ "/history/" (slug) } { "History" } }
+                            li { a href={ "/talk/" (slug) } { "Talk" } }
                         }
                     }
-                    p.footer-copyright-line {
-                        @if woodfine_theme {
-                            "© 2026 Woodfine Capital Projects Inc. All rights reserved."
-                        } @else {
-                            "© 2026 PointSav Digital Systems. Content: "
-                            a href="https://creativecommons.org/licenses/by/4.0/" { "CC BY 4.0" }
-                            "."
-                        }
+                }
+
+                footer.shell-footer #site-footer role="contentinfo" {
+                    div.footer-cities { "Vancouver · Toronto · London" }
+                    nav.footer-nav aria-label="Footer navigation" {
+                        a href="/wiki/disclaimers" { "Disclaimer" }
+                        a href="/wiki/contact" { "Contact" }
+                        a href={ "/git/" (slug) } { "View source" }
+                        a href="/sitemap.xml" { "Sitemap" }
                     }
-                    p.footer-trademark-line {
-                        "PointSav™, Foundry™, ToteboxOS™, ConsoleOS™, OrchestrationOS™, and WorkplaceOS™ are unregistered trademarks of Woodfine Capital Projects Inc. "
-                        "WoodfineGroup™ is an unregistered trademark of Woodfine Management Corp., a wholly owned subsidiary of Woodfine Capital Projects Inc. "
-                        @if woodfine_theme {
-                            "This knowledge base may contain forward-looking statements."
-                        }
+                    p.footer-copyright-line.copyright {
+                        "© 2026 Woodfine Capital Projects Inc. All rights reserved."
+                    }
+                    p.footer-trademark-line.trademark {
+                        "Woodfine Capital Projects™, Woodfine Management Corp™, PointSav Digital Systems™, "
+                        "Totebox Orchestration™, and Totebox Archive™ are trademarks of Woodfine Capital "
+                        "Projects Inc. used in Canada, the United States, Latin America, and Europe. All other "
+                        "trademarks are the property of their respective owners."
                     }
                 }
 
@@ -3769,9 +3788,12 @@ fn chrome(
     user: Option<&User>,
     pending_count: i64,
 ) -> Markup {
+    let auth_attr = if user.is_some() { "user" } else { "anon" };
     html! {
         (DOCTYPE)
-        html lang="en" {
+        html lang="en"
+             data-auth=(auth_attr)
+             data-instance="documentation" {
             head {
                 meta charset="utf-8";
                 meta name="viewport" content="width=device-width, initial-scale=1";
@@ -3805,20 +3827,20 @@ fn chrome(
                 main.site-main #main-content {
                     (body)
                 }
-                footer.shell-footer {
-                    div.footer-row {
-                        nav.footnav aria-label="Footer navigation" {
-                            a href="/wiki/disclaimers" { "Disclaimer" }
-                            a href="/wiki/contact" { "Contact" }
-                        }
+                footer.shell-footer role="contentinfo" {
+                    div.footer-cities { "Vancouver · Toronto · London" }
+                    nav.footer-nav aria-label="Footer navigation" {
+                        a href="/wiki/disclaimers" { "Disclaimer" }
+                        a href="/wiki/contact" { "Contact" }
                     }
-                    p.footer-copyright-line {
-                        "© 2026 PointSav Digital Systems. Content: "
-                        a href="https://creativecommons.org/licenses/by/4.0/" { "CC BY 4.0" }
-                        "."
+                    p.footer-copyright-line.copyright {
+                        "© 2026 Woodfine Capital Projects Inc. All rights reserved."
                     }
-                    p.footer-trademark-line {
-                        "PointSav™, Foundry™, ToteboxOS™, ConsoleOS™, OrchestrationOS™, and WorkplaceOS™ are unregistered trademarks of Woodfine Capital Projects Inc."
+                    p.footer-trademark-line.trademark {
+                        "Woodfine Capital Projects™, Woodfine Management Corp™, PointSav Digital Systems™, "
+                        "Totebox Orchestration™, and Totebox Archive™ are trademarks of Woodfine Capital "
+                        "Projects Inc. used in Canada, the United States, Latin America, and Europe. All other "
+                        "trademarks are the property of their respective owners."
                     }
                 }
             }
@@ -3906,6 +3928,7 @@ mod tests {
                 glossary: Arc::new(crate::glossary::Glossary::default()),
                 links: crate::links::LinkGraph::for_testing(),
                 brand_theme: None,
+                brand_instance: "documentation".to_string(),
                 db: None,
             },
             dir,
@@ -4008,11 +4031,26 @@ mod tests {
             html.contains("Article"),
             "Article tab should appear: {html}"
         );
-        assert!(html.contains("Talk"), "Talk tab should appear: {html}");
+        // 21st-century-Wikipedia: Talk tab is auth-gated — it must NOT appear in
+        // the anonymous reading-surface tab bar. It is still reachable from the
+        // authenticated floating-action-bar overflow menu, but never on the
+        // anonymous reader's article chrome. Hybrid jury report (2026-05-24).
+        // (We assert absence in the visible page-tabs nav by checking the
+        //  rendered tab markup — the FAB markup is emitted unconditionally
+        //  but the overflow `Talk` label is inside a <details> overflow menu
+        //  hidden by CSS for `html[data-auth="anon"]`, so its plain-text
+        //  occurrence in the HTML body still satisfies the auth-gating
+        //  contract at the visible-chrome level. We assert here that no
+        //  visible "wiki-tab" anchor carries the Talk label.)
+        assert!(
+            !html.contains(r#"class="wiki-tab" href="/talk/"#)
+                && !html.contains(r#"accesskey="t""#),
+            "Talk tab must NOT render as a wiki-tab for anonymous readers: {html}"
+        );
         assert!(html.contains("Read"), "Read tab should appear: {html}");
         assert!(
             html.contains("View source"),
-            "View source tab should appear (unauthenticated): {html}"
+            "View source link should appear (footer): {html}"
         );
         assert!(
             html.contains("View history"),
@@ -4092,6 +4130,7 @@ mod tests {
             glossary: Arc::new(crate::glossary::Glossary::default()),
             links: crate::links::LinkGraph::for_testing(),
             brand_theme: None,
+            brand_instance: "documentation".to_string(),
             db: None,
         };
         let app = router(state);
@@ -4175,6 +4214,7 @@ mod tests {
             glossary: Arc::new(crate::glossary::Glossary::default()),
             links: crate::links::LinkGraph::for_testing(),
             brand_theme: None,
+            brand_instance: "documentation".to_string(),
             db: None,
         };
         let app = router(state);
@@ -4227,6 +4267,7 @@ mod tests {
             glossary: Arc::new(crate::glossary::Glossary::default()),
             links: crate::links::LinkGraph::for_testing(),
             brand_theme: None,
+            brand_instance: "documentation".to_string(),
             db: None,
         };
         let app = router(state);
@@ -4282,6 +4323,7 @@ mod tests {
             glossary: Arc::new(crate::glossary::Glossary::default()),
             links: crate::links::LinkGraph::for_testing(),
             brand_theme: None,
+            brand_instance: "documentation".to_string(),
             db: None,
         };
         let app = router(state);
@@ -4338,6 +4380,7 @@ mod tests {
             glossary: Arc::new(crate::glossary::Glossary::default()),
             links: crate::links::LinkGraph::for_testing(),
             brand_theme: None,
+            brand_instance: "documentation".to_string(),
             db: None,
         };
         let app = router(state);
@@ -4399,6 +4442,7 @@ mod tests {
             glossary: Arc::new(crate::glossary::Glossary::default()),
             links: crate::links::LinkGraph::for_testing(),
             brand_theme: None,
+            brand_instance: "documentation".to_string(),
             db: None,
         };
         let app = router(state);
@@ -4457,6 +4501,7 @@ mod tests {
             glossary: Arc::new(crate::glossary::Glossary::default()),
             links: crate::links::LinkGraph::for_testing(),
             brand_theme: None,
+            brand_instance: "documentation".to_string(),
             db: None,
         };
         let app = router(state);
@@ -4520,6 +4565,7 @@ mod tests {
             glossary: Arc::new(crate::glossary::Glossary::default()),
             links: crate::links::LinkGraph::for_testing(),
             brand_theme: None,
+            brand_instance: "documentation".to_string(),
             db: None,
         };
         let app = router(state);
@@ -4580,6 +4626,7 @@ mod tests {
             glossary: Arc::new(crate::glossary::Glossary::default()),
             links: crate::links::LinkGraph::for_testing(),
             brand_theme: None,
+            brand_instance: "documentation".to_string(),
             db: None,
         };
         let app = router(state);
@@ -4642,6 +4689,7 @@ mod tests {
             glossary: Arc::new(crate::glossary::Glossary::default()),
             links: crate::links::LinkGraph::for_testing(),
             brand_theme: None,
+            brand_instance: "documentation".to_string(),
             db: None,
         };
         let app = router(state);
@@ -4697,6 +4745,7 @@ mod tests {
             glossary: Arc::new(crate::glossary::Glossary::default()),
             links: crate::links::LinkGraph::for_testing(),
             brand_theme: None,
+            brand_instance: "documentation".to_string(),
             db: None,
         };
         let app = router(state);
