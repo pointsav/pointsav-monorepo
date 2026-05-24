@@ -216,6 +216,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     }
                 }
             }
+            if let Err(e) = graph_drain.checkpoint() {
+                warn!("lbug checkpoint after corpus drain failed (non-fatal): {e}");
+            }
             ready_drain.store(true, Ordering::Release);
             info!("corpus drain complete — service ready");
         });
