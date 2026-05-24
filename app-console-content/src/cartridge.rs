@@ -12,11 +12,13 @@ use ratatui::{
 };
 use tui_textarea::TextArea;
 
+use crate::draft::{self, DraftEvent};
+use crate::drafts_out;
 use crate::proofreader::{self, ProofreadResponse, PROTOCOLS, DEFAULT_PROTOCOL_IDX};
 
 const SPINNER: &[&str] = &["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
 const PLACEHOLDER: &str =
-    "Paste or type text to proofread — Ctrl-S to submit · Tab to pick protocol";
+    "Paste or type text to proofread — Ctrl-S to submit · Tab to pick protocol · /new <title> to draft";
 
 // ── State machine ─────────────────────────────────────────────────────────────
 
@@ -39,6 +41,15 @@ enum ContentState {
         original: String,
         scroll: u16,
     },
+    DraftingNew {
+        title: String,
+        protocol_idx: usize,
+        rx: mpsc::Receiver<DraftEvent>,
+        buffer: String,
+        done: bool,
+        error: Option<String>,
+        scroll: u16,
+    },
     Error {
         message: String,
     },
@@ -50,19 +61,32 @@ pub struct ContentCartridge {
     username: String,
     tenant: String,
     proof_endpoint: String,
+    slm_endpoint: String,
+    drafts_outbound_path: String,
     state: ContentState,
     textarea: TextArea<'static>,
 }
 
 impl ContentCartridge {
     pub fn new() -> Self {
-        Self::new_for("operator", "local", "http://127.0.0.1:9092")
+        Self::new_for(
+            "operator",
+            "local",
+            "http://127.0.0.1:9092",
+            "http://localhost:8011",
+            &format!(
+                "{}/.local/share/os-console/drafts-outbound",
+                std::env::var("HOME").unwrap_or_else(|_| ".".into())
+            ),
+        )
     }
 
     pub fn new_for(
         username: impl Into<String>,
         tenant: impl Into<String>,
         proof_endpoint: impl Into<String>,
+        slm_endpoint: impl Into<String>,
+        drafts_outbound_path: impl Into<String>,
     ) -> Self {
         let mut ta = TextArea::default();
         ta.set_placeholder_text(PLACEHOLDER);
@@ -70,6 +94,8 @@ impl ContentCartridge {
             username: username.into(),
             tenant: tenant.into(),
             proof_endpoint: proof_endpoint.into(),
+            slm_endpoint: slm_endpoint.into(),
+            drafts_outbound_path: drafts_outbound_path.into(),
             state: ContentState::Input { protocol_idx: DEFAULT_PROTOCOL_IDX },
             textarea: ta,
         }
@@ -101,7 +127,7 @@ impl ContentCartridge {
         frame.render_widget(&self.textarea, chunks[0]);
 
         let hint = Paragraph::new(format!(
-            " Protocol: {}  —  {}    [Tab: change  Ctrl-S: submit  q/Ctrl-C: quit]",
+            " Protocol: {}  —  {}    [Tab: change  Ctrl-S: submit  /new <title> Ctrl-S: draft  q/Ctrl-C: quit]",
             slug, display
         ))
         .style(Style::default().fg(Color::DarkGray));
@@ -253,6 +279,57 @@ impl ContentCartridge {
         );
     }
 
+    fn render_drafting(
+        frame: &mut Frame,
+        area: Rect,
+        title: &str,
+        buffer: &str,
+        done: bool,
+        error: Option<&str>,
+        scroll: u16,
+    ) {
+        let (border_color, status) = if let Some(err) = error {
+            (Color::Red, format!(" Error: {} ", err))
+        } else if done {
+            (Color::Green, " [Enter: accept  Esc: discard] ".to_string())
+        } else {
+            (Color::Yellow, " [drafting…  Esc: cancel] ".to_string())
+        };
+
+        let title_str = format!(" F4: Content — Draft: \"{}\" {} ", title, status);
+        let outer = Block::default()
+            .borders(Borders::ALL)
+            .border_style(Style::default().fg(border_color))
+            .title(title_str.as_str());
+        let inner = outer.inner(area);
+        frame.render_widget(outer, area);
+
+        let lines: Vec<Line> = buffer
+            .lines()
+            .map(|l| Line::from(Span::styled(l.to_string(), Style::default().fg(Color::White))))
+            .collect();
+
+        let total = lines.len() as u16;
+        let visible = inner.height;
+        // Auto-scroll to bottom while streaming; user can override once done
+        let offset = if done {
+            scroll.min(total.saturating_sub(visible))
+        } else {
+            total.saturating_sub(visible)
+        };
+
+        frame.render_widget(Paragraph::new(lines.clone()).scroll((offset, 0)), inner);
+
+        if total > visible {
+            let mut sb = ScrollbarState::new(total as usize).position(offset as usize);
+            frame.render_stateful_widget(
+                Scrollbar::new(ScrollbarOrientation::VerticalRight),
+                inner,
+                &mut sb,
+            );
+        }
+    }
+
     // ── Event handlers ────────────────────────────────────────────────────────
 
     fn on_input_key(&mut self, event: &Event, protocol_idx: usize) -> CartridgeAction {
@@ -275,12 +352,39 @@ impl ContentCartridge {
             return CartridgeAction::Consumed;
         }
 
-        // Ctrl-S → submit
+        // Ctrl-S → proofread OR /new <title> → draft mode
         if key.code == KeyCode::Char('s') && key.modifiers.contains(KeyModifiers::CONTROL) {
             let text = self.textarea.lines().join("\n");
             if text.trim().is_empty() {
                 return CartridgeAction::Consumed;
             }
+
+            // Intercept /new <title> as draft-mode trigger
+            let trimmed = text.trim();
+            if let Some(rest) = trimmed.strip_prefix("/new") {
+                let title = rest.trim().to_string();
+                let title = if title.is_empty() { "Untitled".to_string() } else { title };
+                let protocol = PROTOCOLS[protocol_idx].0.to_string();
+                let tenant = self.tenant.clone();
+                let slm = self.slm_endpoint.clone();
+                // Use the title as the prompt — operator can refine before submitting
+                let prompt = title.clone();
+                let (tx, rx) = mpsc::channel();
+                thread::spawn(move || {
+                    draft::stream_draft(&prompt, &protocol, &tenant, &slm, tx);
+                });
+                self.state = ContentState::DraftingNew {
+                    title,
+                    protocol_idx,
+                    rx,
+                    buffer: String::new(),
+                    done: false,
+                    error: None,
+                    scroll: 0,
+                };
+                return CartridgeAction::Consumed;
+            }
+
             let protocol = PROTOCOLS[protocol_idx].0.to_string();
             let tenant = self.tenant.clone();
             let endpoint = self.proof_endpoint.clone();
@@ -328,6 +432,46 @@ impl ContentCartridge {
                 ta.set_placeholder_text(PLACEHOLDER);
                 self.textarea = ta;
                 self.state = ContentState::Input { protocol_idx: selected };
+            }
+            _ => {}
+        }
+        CartridgeAction::Consumed
+    }
+
+    fn on_drafting_key(&mut self, key: &crossterm::event::KeyEvent) -> CartridgeAction {
+        // Extract needed values without keeping a borrow across mutable calls
+        let (done, title, protocol_idx, buffer) = match &self.state {
+            ContentState::DraftingNew { done, title, protocol_idx, buffer, .. } => {
+                (*done, title.clone(), *protocol_idx, buffer.clone())
+            }
+            _ => return CartridgeAction::Consumed,
+        };
+
+        match key.code {
+            KeyCode::Esc => {
+                self.reset_textarea(protocol_idx);
+            }
+            KeyCode::Enter | KeyCode::Char('a') | KeyCode::Char('A') if done => {
+                let protocol = PROTOCOLS[protocol_idx].0.to_string();
+                let tenant = self.tenant.clone();
+                let username = self.username.clone();
+                let outdir = self.drafts_outbound_path.clone();
+                thread::spawn(move || {
+                    let _ = drafts_out::write_draft(
+                        &title, &protocol, &buffer, &tenant, &username, &outdir,
+                    );
+                });
+                self.reset_textarea(DEFAULT_PROTOCOL_IDX);
+            }
+            KeyCode::Up if done => {
+                if let ContentState::DraftingNew { scroll, .. } = &mut self.state {
+                    *scroll = scroll.saturating_sub(1);
+                }
+            }
+            KeyCode::Down if done => {
+                if let ContentState::DraftingNew { scroll, .. } = &mut self.state {
+                    *scroll = scroll.saturating_add(1);
+                }
             }
             _ => {}
         }
@@ -414,6 +558,19 @@ impl Cartridge for ContentCartridge {
             self.state = ns;
         }
 
+        // Drain SSE tokens for DraftingNew
+        if let ContentState::DraftingNew { rx, buffer, done, error, .. } = &mut self.state {
+            loop {
+                match rx.try_recv() {
+                    Ok(DraftEvent::Token(tok)) => buffer.push_str(&tok),
+                    Ok(DraftEvent::Done)        => { *done = true; break; }
+                    Ok(DraftEvent::Error(e))    => { *error = Some(e); *done = true; break; }
+                    Err(mpsc::TryRecvError::Empty)        => break,
+                    Err(mpsc::TryRecvError::Disconnected) => { *done = true; break; }
+                }
+            }
+        }
+
         // Tick spinner
         if let ContentState::Submitting { spinner, .. } = &mut self.state {
             *spinner = spinner.wrapping_add(1);
@@ -425,6 +582,7 @@ impl Cartridge for ContentCartridge {
             Picker(usize),
             Submitting(usize),
             Results(ProofreadResponse, String, u16),
+            Drafting(String, String, bool, Option<String>, u16),
             Error(String),
         }
         let cmd = match &self.state {
@@ -434,6 +592,9 @@ impl Cartridge for ContentCartridge {
             ContentState::Results { response, original, scroll } => {
                 Cmd::Results(response.clone(), original.clone(), *scroll)
             }
+            ContentState::DraftingNew { title, buffer, done, error, scroll, .. } => {
+                Cmd::Drafting(title.clone(), buffer.clone(), *done, error.clone(), *scroll)
+            }
             ContentState::Error { message }              => Cmd::Error(message.clone()),
         };
 
@@ -442,6 +603,9 @@ impl Cartridge for ContentCartridge {
             Cmd::Picker(sel)               => Self::render_picker(frame, area, sel),
             Cmd::Submitting(sp)            => Self::render_submitting(frame, area, sp),
             Cmd::Results(resp, orig, sc)   => Self::render_results(frame, area, &resp, &orig, sc),
+            Cmd::Drafting(t, buf, done, err, sc) => {
+                Self::render_drafting(frame, area, &t, &buf, done, err.as_deref(), sc)
+            }
             Cmd::Error(msg)                => Self::render_error(frame, area, &msg),
         }
     }
@@ -457,6 +621,7 @@ impl Cartridge for ContentCartridge {
             Picker(usize, Vec<String>),
             Submitting,
             Results,
+            Drafting,
             Error,
         }
         let kind = match &self.state {
@@ -464,17 +629,19 @@ impl Cartridge for ContentCartridge {
             ContentState::PickProtocol { selected, saved_text } => {
                 StateKind::Picker(*selected, saved_text.clone())
             }
-            ContentState::Submitting { .. } => StateKind::Submitting,
-            ContentState::Results { .. }    => StateKind::Results,
-            ContentState::Error { .. }      => StateKind::Error,
+            ContentState::Submitting { .. }  => StateKind::Submitting,
+            ContentState::Results { .. }     => StateKind::Results,
+            ContentState::DraftingNew { .. } => StateKind::Drafting,
+            ContentState::Error { .. }       => StateKind::Error,
         };
 
         match kind {
             StateKind::Input(pidx) => self.on_input_key(event, pidx),
             StateKind::Picker(sel, saved) => self.on_picker_key(key, sel, &saved),
             StateKind::Submitting => CartridgeAction::Consumed,
-            StateKind::Results => self.on_results_key(key),
-            StateKind::Error => {
+            StateKind::Results    => self.on_results_key(key),
+            StateKind::Drafting   => self.on_drafting_key(key),
+            StateKind::Error      => {
                 self.reset_textarea(DEFAULT_PROTOCOL_IDX);
                 CartridgeAction::Consumed
             }

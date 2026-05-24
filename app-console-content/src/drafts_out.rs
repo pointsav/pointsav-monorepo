@@ -80,46 +80,24 @@ fn epoch_to_iso(secs: u64) -> String {
     let mut year = 1970u32;
     loop {
         let in_year = if is_leap(year) { 366u64 } else { 365u64 };
-        if days < in_year {
-            break;
-        }
+        if days < in_year { break; }
         days -= in_year;
         year += 1;
     }
     let month_days = [
-        31u32,
-        if is_leap(year) { 29 } else { 28 },
-        31,
-        30,
-        31,
-        30,
-        31,
-        31,
-        30,
-        31,
-        30,
-        31,
+        31u32, if is_leap(year) { 29 } else { 28 }, 31, 30, 31, 30,
+        31, 31, 30, 31, 30, 31,
     ];
     let mut month = 1u32;
     let mut remaining = days as u32;
     for &d in &month_days {
-        if remaining < d {
-            break;
-        }
+        if remaining < d { break; }
         remaining -= d;
         month += 1;
     }
-    format!(
-        "{:04}-{:02}-{:02}T{:02}:{:02}:{:02}Z",
-        year,
-        month,
-        remaining + 1,
-        hour,
-        min,
-        sec
-    )
+    format!("{:04}-{:02}-{:02}T{:02}:{:02}:{:02}Z", year, month, remaining + 1, hour, min, sec)
 }
 
 fn is_leap(y: u32) -> bool {
-    y.is_multiple_of(4) && !y.is_multiple_of(100) || y.is_multiple_of(400)
+    (y % 4 == 0 && y % 100 != 0) || (y % 400 == 0)
 }
