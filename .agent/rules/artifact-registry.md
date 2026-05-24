@@ -1,7 +1,7 @@
 ---
 schema: foundry-artifact-registry-v1
 project: project-gis
-last_updated: 2026-05-22
+last_updated: 2026-05-24
 ---
 
 # project-gis Artifact Registry
@@ -18,6 +18,17 @@ Routing:
 ---
 
 ## A — Active / In-Progress
+
+### A6 — PROSE-RESEARCH: Geometric Site Selection (PhD paper scaffolding)
+- **File:** `PROSE-RESEARCH-geometric-site-selection.draft.md`
+- **Status:** DRAFT — scaffolding version 0.1 (2026-05-24) — at project-gis drafts-outbound
+- **Destination:** project-editorial → content-wiki-documentation/research/
+- **Content:** Multi-year research framework; thesis = geometric co-location is
+  the primary signal for National Tenancy site selection; demand data is
+  confirmatory. GIS map T1/T2/T3 is the experimental apparatus. 8 sections
+  scaffolded with TODO markers; 7 falsification tests defined.
+- **Research tasks pending:** CBRE/JLL acquisition (Year 2); Optimum Mosaic
+  integration; country-by-country T1 table; permutation test implementation
 
 ### A1 — TOPIC: O-D Catchment Methodology
 - **File:** `topic-od-catchment-methodology.draft.md`
