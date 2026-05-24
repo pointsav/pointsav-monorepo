@@ -26,8 +26,8 @@ All three staging mirrors are current. Run `promote.sh` from inside each sub-clo
 | Sub-clone dir | Canonical target | Commits to promote |
 |---|---|---|
 | `content-wiki-documentation/` | `pointsav/media-knowledge-documentation` | 11 (`69c6030..6f56859`) |
-| `content-wiki-projects/` | `woodfine/media-knowledge-projects` | 1 (`3a66249`) |
-| `content-wiki-corporate/` | `woodfine/media-knowledge-corporate` | 3 (`0fab5ad..04b5be8`) |
+| `content-wiki-projects/` | `woodfine/media-knowledge-projects` | 2 (`3a66249..aa26ddd`) |
+| `content-wiki-corporate/` | `woodfine/media-knowledge-corporate` | 4 (`0fab5ad..01ea8a7`) |
 | `woodfine-fleet-deployment/` | `woodfine/woodfine-fleet-deployment` | 1 (`285f5df`) — no staging mirrors; direct promote.sh |
 
 Key commits in content-wiki-documentation: ES glossary (694 lines), 143 title fixes, design-system stubs, banned-vocab sweep, AGENTS.md/CITATION.cff allowlist, repo rename docs.
