@@ -16,18 +16,20 @@ consolidates:
 
 ---
 
-## STATUS — 2026-05-23 (session 2)
+## STATUS — 2026-05-24 (session 3)
 
 | Area | State |
 |---|---|
 | Knowledge-platform editorial overhaul | **COMPLETE** (project-editorial scope). Stage 6 pending Command. |
-| Chrome sprint phases B–D + E2 | **COMPLETE** (committed on `readme-fixes-2026-05-16`). |
-| Chrome sprint A2 / A4 | **COMPLETE this session.** A4: 8 stubs (9fca6cd). A2: 143 title fixes (51e7724). |
-| Chrome sprint E1 / E3 / E4 | **Blocked — awaiting project-knowledge build + Stage 6.** |
-| GitHub presence elevation | **Research complete.** Item 8 + 11 done this session; remainder Command/admin-tier. |
+| Wiki rebuild lint blockers | **COMPLETE this session.** CWP 9 errors → 0 (aa26ddd). CWC 5 errors → 0 (01ea8a7). |
+| ES governance pages — corporate | **COMPLETE this session.** about.es.md, contact.es.md, disclaimers.es.md authored (01ea8a7). |
+| Stage 6 — all 4 repos | **Pending Command.** Outbox message updated with final ranges. |
+| Serving-clone pull + service restart | **Pending Command** (after Stage 6). |
+| Nightly build — cargo PATH fix | **Pending Command** — `foundry-nightly-build.service` needs `Environment=PATH=...` line. |
+| Nightly build — app-mediakit-knowledge | **Build-request in outbox.** Prerequisites: Stage 6 + cargo PATH fix first. |
+| Chrome sprint E1 / E3 / E4 | **Blocked — awaiting Stage 6 + project-knowledge build.** |
+| GitHub presence elevation | **Research complete.** Remainder Command/admin-tier. |
 | Publishing-tier naming | **All project-editorial items done.** Brief archived. |
-| Glossary ES translation | **COMPLETE** (694 lines, f82faeb). |
-| Corporate README cross-link | **COMPLETE** (0fab5ad in content-wiki-corporate). |
 | BCSC README sweep | **COMPLETE** — clean, no changes needed. |
 | Post-pass lint gate | **COMPLETE** — 0 errors, 246 sentence-length warnings (pre-existing). |
 

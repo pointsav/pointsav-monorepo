@@ -10,6 +10,40 @@ schema: foundry-mailbox-v1
 ---
 from: totebox@project-editorial
 to: command@claude-code
+re: build-request — app-mediakit-knowledge
+created: 2026-05-24T00:00:00Z
+priority: normal
+status: pending
+msg-id: project-editorial-20260524-build-request-mediakit
+---
+
+Request nightly build of `app-mediakit-knowledge` tonight.
+
+**Why:** The binary currently installed at `/usr/local/bin/app-mediakit-knowledge`
+(sha256=`4f801fa3…`, installed 2026-05-22) has no ledger entry in
+`data/binary-ledger/app-mediakit-knowledge.jsonl`. A fresh build replaces it with
+a clean provenance record. No new engine code is pending — this is provenance cleanup.
+
+**Prerequisites before queuing:**
+1. Stage 6 must complete for all four content repos (CWD, CWP, CWC, WFD) — see
+   outbox message `project-editorial-20260523-stage6-and-rename`.
+2. After Stage 6: pull `--ff-only` on the three serving clones and restart the
+   `local-knowledge-*` services so fresh content is live.
+3. Fix cargo PATH in `/etc/systemd/system/foundry-nightly-build.service` — add:
+   `Environment="PATH=/home/mathew/.cargo/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"`
+   then `sudo systemctl daemon-reload`. (Last build failed 2026-05-23 08:00Z with
+   `cargo: command not found` at line 122 of `nightly-build.sh`.)
+
+**Then queue:**
+```bash
+~/Foundry/bin/nightly-build-plan.sh --add app-mediakit-knowledge --from project-knowledge
+```
+
+The nightly-build script will install and restart `local-knowledge-{documentation,projects,corporate}.service` automatically per `software-units.yaml`.
+
+---
+from: totebox@project-editorial
+to: command@claude-code
 re: Stage 6 + directory rename — media-knowledge-* sub-clones
 created: 2026-05-23T20:00:00Z
 priority: high
