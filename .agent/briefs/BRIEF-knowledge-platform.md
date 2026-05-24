@@ -51,22 +51,17 @@ Two MANIFEST entries need correction:
 - `media-knowledge-projects`: port 9091→9093, state planned→active
 - `media-knowledge-corporate`: port 9092→9095, state planned→active
 
-## Active work stream — UI/UX design competition
+## UI/UX design — SHIPPED (2026-05-24, commit `9cf2c9ed`)
 
-Three prior attempts failed because they worked incrementally within the existing CSS.
-Current approach: fresh start, four competing philosophies, extract DTCG tokens backwards from the winner.
+Design competition complete. Jury verdict: hybrid D+A+B. Implementation committed, Stage 6 pending.
 
-**Four HTML prototypes complete** (all in `.agent/drafts-outbound/`):
+**What shipped:**
+- `static/style.css` — full hybrid rewrite; `--ds-*`/`--wf-*` tokens from wireframe-v2c verbatim; `--ed-*` editorial layer; three-row shell; D two-column article body; B numbered TOC + hatnote; A dark mode (`#09090B` canvas); WCAG AA verified
+- `src/server.rs` — `data-auth` + `data-instance` on `<html>`; Talk tab gated to auth-only; duplicate search `id` defect fixed; canonical footer trademark text; article breadcrumb
+- `scripts/dtcg-bundle.json` — `knowledge.editorial.*` namespace added; `static/tokens.css` regenerated (157 tokens)
+- 106 tests pass; `cargo clippy -D warnings` clean
 
-| File | Philosophy | Lines | Key trait |
-|---|---|---|---|
-| `DESIGN-COMPETITION-A-stripe-precision.html` | Authority through restraint | 1,486 | Dominant search bar, zero decorative borders, floating editor pill |
-| `DESIGN-COMPETITION-B-wikipedia-evolved.html` | Encyclopedic register | 1,797 | Left-rail TOC, Zilla Slab serif lead, scroll-collapse header |
-| `DESIGN-COMPETITION-C-enterprise-learn.html` | Metadata is content | 1,511 | Audience-routed tiles, tree sidebar, citation accordion |
-| `DESIGN-COMPETITION-D-brand-continuity.html` | Zero visual discontinuity | 1,763 | wireframe-v2c token system, magazine layout, footnote citations |
-
-**Jury agent:** Launched 2026-05-24 (OPUS). Output: `DESIGN-COMPETITION-JURY-REPORT.draft.md`.
-**After jury:** Select winner or hybrid → implement in `src/server.rs` + `static/style.css` → extract tokens backwards into `scripts/dtcg-bundle.json`.
+**Stage 6 pending (Command scope):** `bin/promote.sh` + `cargo build --release` + service restart × 3.
 
 **Footer defect in prototypes (fix in implementation pass, not jury pass):**
 
@@ -129,8 +124,8 @@ Stage 6 via Command Session `bin/promote.sh`. After promote: `bin/sync-local.sh 
 
 ## Open items for this BRIEF
 
-- [ ] Jury report review → select winner/hybrid → implement
-- [ ] Fix footer trademark in winning implementation (use canonical text above)
+- [x] Jury report review → hybrid D+A+B selected → implemented (`9cf2c9ed`, 2026-05-24)
+- [x] Fix footer trademark in winning implementation — done; canonical text verbatim
 - [ ] Stage 6 staging fork renames (6 GitHub repos — operator action)
 - [ ] MASTER Doctrine amendment (Command scope)
 - [ ] §3.6 claim-record MCP API — waiting on project-intelligence reply
