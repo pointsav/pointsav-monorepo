@@ -491,14 +491,29 @@
 
     function initMapPadding() {
         const panel = document.getElementById('data-panel');
+        let pendingSync = false;
+        let lastPadding = { bottom: -1, left: -1 };
+
+        function sync() {
+            pendingSync = false;
+            const bottom = window.innerWidth <= 768 ? panel.offsetHeight : 0;
+            const left   = window.innerWidth <= 768 ? 0 : 380;
+            if (bottom === lastPadding.bottom && left === lastPadding.left) return;
+            lastPadding = { bottom, left };
+            map.setPadding({ top: 0, bottom, left, right: 0 });
+        }
+
         const obs = new ResizeObserver(() => {
-            if (window.innerWidth <= 768) {
-                map.setPadding({ top: 0, bottom: panel.offsetHeight, left: 0, right: 0 });
-            } else {
-                map.setPadding({ top: 0, bottom: 0, left: 380, right: 0 });
-            }
+            if (map.isMoving()) { pendingSync = true; return; }
+            sync();
         });
         obs.observe(panel);
+
+        // Re-sync after any flyTo/easeTo settles, in case panel content changed mid-animation
+        map.on('moveend', () => { if (pendingSync) sync(); });
+        window.addEventListener('resize', sync);
+        if (window.visualViewport) window.visualViewport.addEventListener('resize', sync);
+        sync();
     }
 
     function setNavContext(backLabel, backFn, currentLabel) {
