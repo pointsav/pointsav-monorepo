@@ -103,11 +103,11 @@ These need answers before Phase 7+ scoping. Market research agent launched 2026-
 
 **Why resist Hugo?** Hugo is fast and Git-native but fundamentally static: no search-as-you-type, no auth-gated content, no edit workflow, no revision history UI, no claim verification, no MCP API. "Never feels complete" because static = no server-side capability. Our engine provides all of that without giving up the flat-file + Git-native content model.
 
-**Q4 Inc as competitor:** Q4 (Toronto; TSXV: QFOR) serves public-company IR teams — IR websites, earnings call webcast, investor CRM, analytics. Their gap: no sovereign-data claim layer, no bilingual structured content, no edit review queue for regulatory disclosure text. Our overlap: regulated-content management for public companies. Our differentiation: claim-layer citation verification, BCSC/OSC disclosure posture baked in, Git-native audit trail, no vendor lock-in on the content store.
+**Q4 Inc as competitor:** Q4 (Toronto; TSXV: QFOR) serves public-company IR teams — IR websites, earnings call webcast, investor CRM, analytics. Their gap: no sovereign-data claim layer, no bilingual structured content, no edit review queue for regulatory disclosure text. Our overlap: regulated-content management for public companies. Our differentiation: claim-layer citation verification, tamper-evident Git-native audit trail, no vendor lock-in on the content store.
 
 **Google Cloud Console anti-pattern:** Feature-sprawl navigation — hundreds of product pages organized by product family, not by operator task. The anti-pattern is hierarchy depth: users must know the product name before they can find the capability. Our wiki engine organizes by topic/audience, not by product namespace.
 
-**Leapfrog 2030 direction:** The combination of claim-layer (§3.6 MCP API + service-slm), BCSC-verified disclosure posture, Git-native audit trail, and bilingual routing creates a compliance-grade knowledge layer that Confluence/Notion/Gitbook cannot offer regulated-industry clients. The 2030 differentiation: `query_claims(topic, asof)` cross-cluster MCP API lets AI agents verify whether a disclosure claim has changed since a given date — a capability no current platform has.
+**Leapfrog 2030 direction:** The combination of claim-layer (§3.6 MCP API + service-slm), tamper-evident append-only revision hash chain, Git-native audit trail, and bilingual routing creates a compliance-grade knowledge layer that Confluence/Notion/Gitbook cannot offer regulated-industry clients. The 2030 differentiation: `query_claims(topic, asof)` cross-cluster MCP API lets AI agents verify whether a disclosure claim has changed since a given date — a capability no current platform has.
 
 ## Key files
 
