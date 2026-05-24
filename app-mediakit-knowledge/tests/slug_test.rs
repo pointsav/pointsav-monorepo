@@ -29,6 +29,7 @@ async fn make_state(content_dir: &tempfile::TempDir, state_dir: &tempfile::TempD
         glossary: Arc::new(app_mediakit_knowledge::glossary::Glossary::default()),
         links: LinkGraph::for_testing(),
         brand_theme: None,
+        brand_instance: "documentation".to_string(),
         db: None,
     }
 }

@@ -201,6 +201,18 @@
       "featured-pin": {
         "bg": { "$value": "{primitive.color.brand.teal.50}" },
         "accent": { "$value": "{primitive.color.brand.teal.60}" }
+      },
+      "editorial": {
+        "$description": "Hybrid UI editorial layer — added per DESIGN-COMPETITION-JURY-REPORT 2026-05-24. These tokens parameterise the reading surface (lead/body sizes, line-height), article geometry (max-width, TOC width), and status semantics (featured/stub/draft) for the article and home views. Mirrored in static/style.css as --ed-* and component-scoped CSS custom properties.",
+        "reading-lead-size": { "$value": "19px", "$type": "dimension" },
+        "reading-lead-lh":   { "$value": "1.75", "$type": "number" },
+        "reading-body-size": { "$value": "17px", "$type": "dimension" },
+        "reading-body-lh":   { "$value": "1.70", "$type": "number" },
+        "article-max":       { "$value": "720px", "$type": "dimension" },
+        "toc-width":         { "$value": "240px", "$type": "dimension" },
+        "status-featured":   { "$value": "#10B981", "$type": "color" },
+        "status-stub":       { "$value": "#F59E0B", "$type": "color" },
+        "status-draft":      { "$value": "#6B7280", "$type": "color" }
       }
     }
   },
