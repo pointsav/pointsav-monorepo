@@ -1,4 +1,170 @@
 ---
+# Archived 2026-05-24 by totebox@project-console
+note: 8 message(s). Session close-out sweep. Archived: binary-targets (actioned), briefs-migration
+(actioned), tui-pivot-relay (actioned), wfd-spoke-cleanup (actioned), wfd-sub-clone-reset (actioned),
+domain-migration-status-check (operator-pending, addressed to old task@project-proofreader identity —
+not actionable by this session), ACK-broadcast (broadcast), domain-migration (stale).
+Retained in inbox: command-20260522-console-stage6-orphan-branch (operator-pending, active blocker).
+---
+
+---
+from: command@claude-code
+to: totebox@project-console
+re: SOFT- pipeline — write .agent/binary-targets.yaml (declare only; Command Session builds)
+created: 2026-05-22T02:00:00Z
+priority: normal
+status: actioned
+msg-id: command-20260522-binary-targets-project-console
+---
+
+SOFT- binary distribution is ratified. Your role is DECLARATION ONLY.
+
+  YOU:               write .agent/binary-targets.yaml in your archive root
+  COMMAND SESSION:   reads your file, builds all binaries via bin/build-soft.sh after Stage 6
+  PROJECT-SOFTWARE:  distributes — os-images via software.pointsav.com, app-bundles via app-privategit-source
+
+Do NOT build binaries yourself. Do NOT push binaries to project-software.
+Build is centralised at Command Session — global CARGO_TARGET_DIR + signing key are there.
+
+Your products to declare:
+  service-proofreader  (class: service-package | layer: extension | requires: [os-console])
+  os-console          (class: os-image        | layer: base      | deferred — declare now, build later)
+
+Schema (.agent/binary-targets.yaml):
+
+  schema: foundry-binary-targets-v1
+  cluster: project-console
+  targets:
+    - product_id: <crate-dir-name>
+      binary_name: <binary-name>      # [[bin]] name in Cargo.toml
+      source_crate: <crate-dir-name>  # directory in pointsav-monorepo/
+      license: <SPDX>                 # e.g. Apache-2.0 or FSL-1.1-ALv2
+      license_tier: apache            # apache ($1 USDC) | fsl ($19 USDC)
+      class: app-bundle               # os-image | app-bundle | service-package
+      layer: extension                # base | extension
+      requires: [os-console]          # base products required (empty for base layer)
+      platforms: [x86_64-unknown-linux-gnu]
+      soft_enabled: true              # false = skip build (scaffold / internal)
+
+Full spec: ~/Foundry/.agent/briefs/BRIEF-software-distribution-substrate.md §0 + §5
+Convention: ~/Foundry/conventions/soft-distribution-pipeline.md §2 + §8
+
+Commit binary-targets.yaml when written; Command Session picks it up on next bin/build-soft.sh run.
+
+---
+from: command@claude-code
+to: totebox@project-console
+re: briefs/ migration — rename .agent/plans/ → .agent/briefs/ + BRIEF- prefix
+created: 2026-05-21T17:13:56Z
+priority: normal
+status: actioned
+msg-id: command-20260521-briefs-migration-project-console
+---
+
+Workspace hardening Phase 1 (2026-05-21): .agent/plans/ has been renamed to .agent/briefs/
+across the workspace. Please apply the same migration to your archive in your next session:
+
+1. git mv .agent/plans/*.md .agent/briefs/BRIEF-*.md (prefix each file with BRIEF-)
+2. Update any internal cross-references from plans/ to briefs/
+3. Add frontmatter to each file: artifact: brief / status: active|archived
+4. Create .agent/briefs/README.md listing active briefs
+5. Commit: 'ops(briefs): migrate plans/ → briefs/; BRIEF- prefix'
+
+The following brief(s) were relocated from workspace root to your archive —
+pick them up from ~/Foundry/.agent/briefs/ and git mv to your .agent/briefs/:
+  BRIEF-os-console-foundation.md
+
+AGENT.md startup step 7 now reads .agent/briefs/README.md (not plans/README.md).
+AGENT.md shutdown step 1 now writes BRIEF-<topic>.md.
+
+---
+from: command@claude-code
+to: totebox@project-proofreader
+re: TUI pivot relay — conventions/tui-corpus-producer.md + slm-cli status + inbox resolution
+created: 2026-05-17T00:00:00Z
+priority: normal
+status: actioned
+msg-id: command-20260517-tui-pivot-relay
+---
+
+Relay for items 5+6+7 from outbox message `project-proofreader-20260516-tui-pivot-handoff`.
+[full text archived — 80 lines; see prior inbox for full content]
+
+---
+from: command@claude-code
+to: totebox@project-proofreader
+re: WFD spoke-configs/ removed — security cleanup; merge from canonical needed
+created: 2026-05-15T16:20:00Z
+priority: high
+status: actioned
+msg-id: project-proofreader-20260515-wfd-spoke-cleanup
+---
+
+Security action taken by Command Session. Three WireGuard private keys were in
+woodfine-fleet-deployment/fleet-infrastructure-leased/spoke-configs/ on the
+public GitHub repo. Canonical cleaned via commit 13f11cc (mcorp-administrator).
+Resolved.
+
+---
+from: command@claude-code
+to: totebox@project-proofreader
+re: woodfine-fleet-deployment sub-clone reset required (2nd filter-repo 2026-05-15)
+created: 2026-05-15T00:00:00Z
+priority: high
+status: actioned
+---
+
+WFD history was rewritten again 2026-05-15. Canonical HEAD is now 7fdf36b.
+Sub-clone reset completed. Resolved.
+
+---
+from: command@claude-code
+to: task@project-proofreader
+re: Status check — domain migration task + mailbox lifecycle backfill
+created: 2026-05-15T09:00:00Z
+priority: normal
+status: operator-pending
+note: Archived 2026-05-24 — addressed to old task@project-proofreader identity;
+      not actionable by totebox@project-console. Domain migration items were
+      resolved by filter-repo security operations (commit 9ede81f absent from
+      WFD HEAD 7fdf36b; stale catalog gone). Manifest path updates remain
+      pending in a future project-console session.
+---
+
+Status check on domain migration task (2026-05-05). Two items pending:
+1. Rebase out commit `9ede81f` (stale woodfinegroup catalog)
+2. Update cluster manifest paths to vendor/pointsav-fleet-deployment/gateway-orchestration-proofreader/
+
+---
+from: command@claude-code
+to: totebox@project-proofreader
+re: ACK — Phase B + domain migration + routing directive confirmed
+created: 2026-05-06T16:45:00Z
+priority: normal
+status: broadcast
+---
+
+Session-complete message received and archived (2026-05-06 Master sweep).
+Phase B prompt fix (59 tests), domain migration to proofreader.pointsav.com, and
+routing directive all confirmed. Task A6 bulk-rename acknowledged.
+
+— master@claude-code
+
+---
+from: command@claude-code
+to: totebox@project-proofreader
+re: Domain migration to proofreader.pointsav.com — Task work needed
+created: 2026-05-05T23:55:00Z
+priority: high
+status: stale
+---
+
+Operator confirmed proofreader moves from proofreader.woodfinegroup.com → proofreader.pointsav.com
+2026-05-05. Vendor-side catalog and deployment instance provisioned by Master. Task items
+(rebase 9ede81f, manifest path updates) were superseded by filter-repo security operations.
+Stale — archived.
+
+---
 # Archived 2026-05-05 by master@claude-code
 note: 3 message(s). Gemini-era sweep — archived by master@claude-code. All messages from master@gemini-cli (TASK A6, DOCTRINE UPDATE, Content Cleanup injections) + Task→Task routing violations + resolved system alerts. No legitimate actionable content lost — 10-item audit preserved in NEXT.md.
 ---
