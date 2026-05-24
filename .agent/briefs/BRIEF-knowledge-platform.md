@@ -103,11 +103,16 @@ All on monorepo `main`, full test suite green, `cargo clippy -D warnings` clean:
 - **P — `7a7beb46`** — README.md + README.es.md: Phase 2 collab removed, Phase 5.1 bilingual marked shipped, missing `<div>` fixed.
 - **Q — `09992b05`** — NEXT.md bookkeeping (Stage 6 count → 16).
 
+## Done — Session 2026-05-23/24 additions
+
+- **Design research commission** — 5 OPUS DESIGN-RESEARCH-*/DESIGN-SPEC-* drafts commissioned and committed (`2610f6ca`). Routed to project-design via outbox (`project-knowledge-20260523-design-commission`). Covers: visual language, UX writing, service design/IA, header/footer component spec, token architecture. MASTER COSIGN on DTCG changes required before implementation; project-design has the ball.
+- **3 live-issue fixes (`23deea11`)** — (1) IVC band "Phase 7" roadmap text removed from production; (2) WCAG `#878d99`→`#666c78` applied at 4 token source locations in `dtcg-bundle.json`; (3) `dtcg-to-css.py` cubicBezier emit bug fixed (`[array]`→`cubic-bezier()`). `tokens.css` regenerated. All tests green.
+
 ## Stage 6 status
 
-**16 commits unpromoted on monorepo `main`** — ready for tonight's build.
-Phase 1 ×4, Phase 3 A–E ×5, Phase 4 F–H ×3, Phase 5 I–J ×2, hygiene K–L ×2, openapi N, Accept-Language O, README P, NEXT Q.
-Stage 6 (`~/Foundry/bin/promote.sh`) + binary rebuild + `sudo systemctl restart` all 3 services — Command scope.
+**17 commits unpromoted on monorepo `main`** — ready for tonight's build.
+Phase 1 ×4, Phase 3 A–E ×5, Phase 4 F–H ×3, Phase 5 I–J ×2, hygiene K–L ×2, openapi N, Accept-Language O, README P, NEXT Q, live-fixes R.
+Stage 6 (`echo "y" | ~/Foundry/bin/promote.sh`) + `cargo build --release` + `sudo systemctl restart` all 3 services — Command scope. Outbox: `project-knowledge-20260524-session-close`.
 
 ## Next phase
 
