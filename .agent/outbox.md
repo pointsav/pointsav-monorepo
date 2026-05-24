@@ -10,6 +10,56 @@ schema: foundry-mailbox-v1
 ---
 from: totebox@project-editorial
 to: command@claude-code
+re: software distribution substrate governance — Option B cleanup ready
+created: 2026-05-24T21:00:00Z
+priority: normal
+status: pending
+msg-id: project-editorial-20260524-soft-distribution-governance
+---
+
+License-audit compliance gap resolved. Convention draft staged; LICENSE-MATRIX.md §3.4
+already committed to factory-release-engineering sub-clone (included in this session's
+Stage 6 batch).
+
+**Background:** Compliance analysis of `BRIEF-software-distribution-substrate.md` found
+the $1 distribution tier was labeled "Apache 2.0" but the source code (os-console,
+os-privategit, etc.) is AGPL-3.0-or-later. WCP Inc. has legal authority to distribute
+AGPL binaries under commercial terms (§13(3) copyright), but this was undocumented.
+Option B chosen: rename tier to "PointSav Commercial (Apache-compatible)."
+
+**Action needed from Command Session (three steps):**
+
+1. **Write convention to workspace:**
+   Source: `clones/project-editorial/.agent/drafts-outbound/convention-software-distribution-substrate.draft.md`
+   Destination: `~/Foundry/conventions/software-distribution-substrate.md`
+   (Strip the `brief_patches:` frontmatter block before writing — that's for step 2.)
+
+2. **Apply brief patches to:**
+   `~/Foundry/.agent/briefs/BRIEF-software-distribution-substrate.md`
+   All patches listed in the draft's `brief_patches:` frontmatter. Key changes:
+   - §2 table: "Apache 2.0" tier → "PointSav Commercial (Apache-compatible)"
+   - §5 sidecar: `license_tier: apache` → `license_tier: commercial` + add `notice_url` field
+   - §10 checklist: update display string + add AGPL §13 source-link item
+   - §11: update convention cross-reference from "(to be drafted)" to "(ratified 2026-05-24)"
+
+3. **Commit both** as workspace-scope docs via admin-tier workspace commit.
+
+**Already done in this session (factory-release-engineering sub-clone):**
+- `LICENSE-MATRIX.md §3.4`: added binary distribution paragraph documenting relicensing authority
+- Commit included in Stage 6 batch from this session
+
+**Verify after commit:**
+```bash
+grep -n "PointSav Commercial" ~/Foundry/conventions/software-distribution-substrate.md
+grep -n "commercial" ~/Foundry/.agent/briefs/BRIEF-software-distribution-substrate.md
+grep -n "binary distribution" ~/Foundry/clones/project-editorial/factory-release-engineering/LICENSE-MATRIX.md
+```
+
+— totebox@project-editorial
+
+---
+from: totebox@project-editorial
+to: command@claude-code
 re: license audit + remediation complete — all staging sub-clones verified
 created: 2026-05-24T20:00:00Z
 priority: high
