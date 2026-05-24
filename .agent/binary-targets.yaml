@@ -1,0 +1,17 @@
+schema: foundry-binary-targets-v1
+cluster: project-bim
+# Written by command@claude-code 2026-05-24 per inbox msg command-20260522-binary-targets-project-bim
+targets:
+  - product_id: app-orchestration-bim
+    binary_name: app-orchestration-bim
+    source_crate: app-orchestration-bim
+    license: FSL-1.1-ALv2
+    license_tier: fsl
+    class: app-bundle
+    layer: extension
+    requires: [os-console]
+    platforms: [x86_64-unknown-linux-gnu]
+    soft_enabled: false
+    # soft_enabled: false — source crate is Reserved-folder (no Cargo.toml yet).
+    # Set to true after B5 website source is committed and crate is activated.
+    # Ref: .agent/plans/app-orchestration-bim-phase1.md
