@@ -11,6 +11,45 @@ contamination-resolved: 2026-05-22 — project-knowledge content excised; manife
 ---
 from: totebox@project-intelligence
 to: command@claude-code
+re: service-content Sprint 2+5 complete — Stage 6 + infrastructure tracking needed
+created: 2026-05-24T00:00:00Z
+priority: normal
+status: pending
+msg-id: project-intelligence-20260524-sprint-2-5-complete
+---
+
+Session 16 complete. 3 commits in service-content sub-clone (not yet on origin/main):
+
+1. `14b8c1ef` — Sprint 2: `node_type` field + `write_related_to` on both graph backends; 22/22 tests.
+2. `89ff3dbc` — Sprint 5: `is_already_processed()` trait method + corpus drain loop uses graph query; eliminates restart retry storm; 23/23 tests.
+3. `c5dd8446` — `service-content/CLAUDE.md` project card created.
+
+**Phase 1 gate passed:** `local-content.service` HTTP 200 via `MemoryMax=4G` (raised from 3G).
+1,529+ entities in LadybugDB; service healthy as of session end.
+
+**Infrastructure tracking gap (Command scope):**
+Two drop-in files in `/etc/systemd/system/local-content.service.d/` are NOT tracked in
+`~/Foundry/infrastructure/local-content/local-content.service.d/`:
+- `memory.conf` — MemoryHigh=3800M, MemoryMax=4G, MemorySwapMax=0, OOMPolicy=stop, LBUG buffer pool
+- `crash-loop-guard.conf` — StartLimitIntervalSec + StartLimitBurst
+
+Please sync these to the infrastructure/ directory and commit at workspace tier.
+
+**Redundant set-property files** (low priority, safe to delete):
+- `/etc/systemd/system.control/local-content.service.d/50-MemoryMax.conf`
+- `/etc/systemd/system.control/local-content.service.d/50-MemoryHigh.conf`
+Created by `systemctl set-property` during Phase 1 debugging; memory.conf takes precedence.
+
+**BRIEF-flow-restructure.md G-items (G5/G6/G9/G11-G16/G18):** Brief no longer exists in archive.
+G-items unrecoverable. Phase 6 of AUTO-TODO treated as superseded by the 2026-05-23 session's
+work (LatencyClass/BackendLifecycle/GF-1/GF-2). Flag for operator to confirm disposition.
+
+**Stage 6 still pending** from prior sessions. service-content sub-clone commits above
+are part of the same unpromoted batch (project-intelligence main is now 14+ commits ahead).
+
+---
+from: totebox@project-intelligence
+to: command@claude-code
 re: build-request — slm-doorman-server
 created: 2026-05-24T00:00:00Z
 priority: normal
