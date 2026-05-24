@@ -55,6 +55,12 @@ pub trait GraphStore: Send + Sync {
     ) -> Result<usize>;
     /// Write a directed RelatedTo edge between two entities by ID. Idempotent.
     fn write_related_to(&self, from_id: &str, to_id: &str, relation_type: &str) -> Result<()>;
+    /// Returns true if a CORPUS file (identified by its worm_id, e.g. the bare UUID
+    /// portion of `CORPUS_<worm_id>.json`) has already been fully extracted into the
+    /// graph — i.e. at least one non-Source entity exists whose `worm_id` field
+    /// equals `source_worm_id`. Used by the corpus drain loop to skip re-extraction
+    /// after a service restart without relying on the in-memory HashSet.
+    fn is_already_processed(&self, source_worm_id: &str) -> Result<bool>;
 }
 
 pub struct LbugGraphStore {
@@ -367,6 +373,25 @@ impl GraphStore for LbugGraphStore {
         .map_err(|e| anyhow!("write_related_to execute failed: {}", e))?;
         Ok(())
     }
+
+    fn is_already_processed(&self, source_worm_id: &str) -> Result<bool> {
+        let conn = self.conn()?;
+        let mut stmt = conn
+            .prepare(
+                "MATCH (e:Entity) \
+                 WHERE e.worm_id = $worm_id AND e.classification <> 'Source' \
+                 RETURN e.entity_name \
+                 LIMIT 1",
+            )
+            .map_err(|e| anyhow!("is_already_processed prepare failed: {}", e))?;
+        let result = conn
+            .execute(
+                &mut stmt,
+                vec![("worm_id", Value::String(source_worm_id.to_string()))],
+            )
+            .map_err(|e| anyhow!("is_already_processed execute failed: {}", e))?;
+        Ok(result.into_iter().next().is_some())
+    }
 }
 
 // ── SqliteGraphStore ─────────────────────────────────────────────────────────
@@ -584,6 +609,19 @@ impl GraphStore for SqliteGraphStore {
         )
         .map_err(|e| anyhow!("write_related_to failed: {}", e))?;
         Ok(())
+    }
+
+    fn is_already_processed(&self, source_worm_id: &str) -> Result<bool> {
+        let conn = self.conn.lock().unwrap();
+        let n: i64 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM entity \
+                 WHERE worm_id = ?1 AND classification != 'Source'",
+                params![source_worm_id],
+                |r| r.get(0),
+            )
+            .map_err(|e| anyhow!("is_already_processed failed: {}", e))?;
+        Ok(n > 0)
     }
 }
 
@@ -893,5 +931,24 @@ mod tests {
         let to_id = "mod-a__acme_corp";
         store.write_related_to(from_id, to_id, "employs").unwrap();
         store.write_related_to(from_id, to_id, "employs").unwrap(); // idempotent
+    }
+
+    #[test]
+    fn is_already_processed_detects_extracted_entities() {
+        let store = in_memory_store();
+        // Source node alone does not count as "processed".
+        let mut source = entity("CORPUS_TESTABC", "Source", "mod-a");
+        source.worm_id = None;
+        store.upsert_entities("mod-a", &[source]).unwrap();
+        assert!(!store.is_already_processed("TESTABC").unwrap());
+
+        // Once a non-Source entity with the worm_id is written, it counts.
+        let mut extracted = entity("Acme Corp", "Company", "mod-a");
+        extracted.worm_id = Some("TESTABC".to_string());
+        store.upsert_entities("mod-a", &[extracted]).unwrap();
+        assert!(store.is_already_processed("TESTABC").unwrap());
+
+        // Unrelated worm_id returns false.
+        assert!(!store.is_already_processed("OTHERID").unwrap());
     }
 }
