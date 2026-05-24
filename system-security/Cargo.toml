@@ -6,6 +6,9 @@ edition = "2021"
 [lib]
 # This is critical: tells Cargo to produce a .a file for the C linker
 crate-type = ["staticlib"]
+# no_std crate cannot link the test harness (std provides panic_impl)
+test = false
+doctest = false
 
 [dependencies]
 # PointSav no_std logic requires zero dependencies for Tier 6
