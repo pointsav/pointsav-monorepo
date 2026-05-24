@@ -459,7 +459,7 @@ def main():
 
     for iso in ALL_DISPLAY_ISO:
         chain_map = {}
-        for cat in ("hypermarket", "hardware", "price_club", "lifestyle", "sport"):
+        for cat in ("hypermarket", "hardware", "price_club", "lifestyle", "electronics", "sport"):
             for cid in (BRAND_FILL.get(cat) or {}).get(iso, []):
                 recs = load_chain_jsonl(cid)
                 for r in recs:
