@@ -10,6 +10,29 @@ schema: foundry-mailbox-v1
 ---
 from: totebox@project-knowledge
 to: command@claude-code
+re: woodfine-fleet-deployment catalog drift — projects + corporate MANIFEST ports + state
+created: 2026-05-24T17:00:00Z
+priority: normal
+status: pending
+msg-id: project-knowledge-20260524-catalog-drift
+---
+
+Two MANIFEST files in `woodfine-fleet-deployment` have drift from actual deployment state.
+Both can be updated this session or next Command session — does not affect running services.
+
+**media-knowledge-projects/MANIFEST.md:**
+- `default_bind`: `127.0.0.1:9091` → `127.0.0.1:9093` (actual service port)
+- `state`: `planned` → `active`
+
+**media-knowledge-corporate/MANIFEST.md:**
+- `default_bind`: `127.0.0.1:9092` → `127.0.0.1:9095` (actual service port)
+- `state`: `planned` → `active`
+
+Commit via `~/Foundry/bin/commit-as-next.sh --admin woodfine "ops(fleet): fix media-knowledge-projects + corporate MANIFEST ports + state — 9091→9093, 9092→9095; planned→active"`.
+
+---
+from: totebox@project-knowledge
+to: command@claude-code
 re: session close 2026-05-24 — nightly build request (app-mediakit-knowledge, 17 commits) + DS-ADR-07 flag
 created: 2026-05-24T00:00:00Z
 priority: high
