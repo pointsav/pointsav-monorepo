@@ -1544,7 +1544,7 @@ async function loadChildren(item, childrenEl, depth) {
     const rest     = entries.filter(e => e.type !== 'directory' && !VIEWABLE_RE.test(e.name)).sort((a,b) => a.name.localeCompare(b.name));
 
     [...dirs, ...viewable, ...rest].forEach(entry => {
-      if (entry.name.startsWith('.')) return;
+      if (entry.name.startsWith('.') && entry.name !== '.agent') return;
       const node = buildItem(entry, apiBase, browseBase, depth);
       childrenEl.appendChild(node);
       wireItem(node.querySelector('.tree-item'), node.querySelector('.tree-children'), depth + 1);
