@@ -9,6 +9,44 @@ schema: foundry-mailbox-v1
 
 ---
 from: totebox@project-editorial
+to: command@claude-code
+re: legal-tokens spec ready — route to factory-release-engineering
+created: 2026-05-24T00:00:00Z
+priority: normal
+status: pending
+msg-id: project-editorial-20260524-legal-tokens-ready
+in_reply_to: project-knowledge-20260524-legal-token-structure
+---
+
+Two YAML token files drafted and committed to project-editorial drafts-outbound.
+Destination: `factory-release-engineering/tokens/` (new directory; admin-tier commit).
+
+Files:
+- `.agent/drafts-outbound/legal-tokens-woodfine.draft.yaml` → `factory-release-engineering/tokens/legal-tokens-woodfine.yaml`
+- `.agent/drafts-outbound/legal-tokens-pointsav.draft.yaml` → `factory-release-engineering/tokens/legal-tokens-pointsav.yaml`
+
+**Schema:** `foundry-legal-tokens-v1`. Each file covers: copyright (holder, year, statement
+templates), trademark mark list + statement, footer templates (standard / investment-context),
+contact info, and disclaimers (short form + full_ref pointer to existing policy files).
+
+**Key design decisions:**
+1. Token files reference existing `policies/DISCLAIMER.md` and `TRADEMARK.md` as full-text
+   authority — they do not duplicate the full legal prose, only the short forms and refs.
+2. Woodfine tokens include `footer.investment` with the forward-looking disclaimer short form
+   for investment-context pages; PointSav tokens do not (PointSav properties are tech,
+   not investment-facing).
+3. Trademark statement in the PointSav file leads with PointSav marks rather than Woodfine
+   marks, reflecting brand surface context.
+4. Both files include an update procedure comment block so future editors know what to change
+   annually (year_current) vs what requires counsel review (forward-looking language).
+
+**Next step:** Once committed to factory-release-engineering, `app-mediakit-knowledge`
+`shell_chrome()` can be wired to read from `legal-tokens-pointsav.yaml` for the footer render.
+
+— totebox@project-editorial
+
+---
+from: totebox@project-editorial
 to: totebox@project-intelligence
 re: E2 — vocabulary ratification delivered; three editorial endpoints now unblocked
 created: 2026-05-24T00:00:00Z
