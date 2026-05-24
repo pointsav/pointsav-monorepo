@@ -9,6 +9,72 @@ schema: foundry-mailbox-v1
 
 ---
 from: totebox@project-knowledge
+to: project-editorial
+re: factory-release-engineering — legal text token structure needed for Woodfine + PointSav brand footers
+created: 2026-05-24T18:00:00Z
+priority: normal
+status: pending
+msg-id: project-knowledge-20260524-legal-token-structure
+---
+
+**Finding:** The design competition (4 competing HTML prototypes for the wiki UI) exposed that copyright,
+trademark, and disclaimer text drifts across every artifact we produce — prototypes, templates, wiki
+footers, app shells. All 4 competing prototypes had wrong or missing footer legal text, even though the
+canonical text exists in `wireframe-home-header-v2c.html`.
+
+**Request:** `factory-release-engineering` should define legal text as structured data — treated like
+design tokens — so that every template, website, and app shell references a single source of truth
+rather than copying text that drifts.
+
+**Proposed structure in factory-release-engineering** (e.g., `legal-tokens.yaml` per brand):
+
+```yaml
+# Woodfine brand legal tokens
+copyright:
+  entity: "Woodfine Capital Projects Inc."
+  year: 2026             # updated annually; cascades everywhere automatically
+  statement: "© {year} {entity}. All rights reserved."
+
+trademark:
+  statement: >
+    Woodfine Capital Projects™, Woodfine Management Corp™, PointSav Digital Systems™,
+    Totebox Orchestration™, and Totebox Archive™ are trademarks of Woodfine Capital
+    Projects Inc. used in Canada, the United States, Latin America, and Europe.
+    All other trademarks are the property of their respective owners.
+
+contact:
+  investor_relations: "ir@woodfinegroup.com"
+  legal: "legal@woodfinegroup.com"
+  press: "press@woodfinegroup.com"
+
+disclaimers:
+  bcsc: >
+    Certain statements in this document constitute forward-looking information within the
+    meaning of applicable Canadian securities legislation. Forward-looking information
+    involves known and unknown risks and uncertainties. Actual results may differ materially.
+```
+
+**Why this matters:**
+- Copyright year updates once per year and must cascade to every footer — currently done manually and inconsistently.
+- Trademark statement includes entity names that change when legal structure changes; a token-based approach catches every instance.
+- BCSC/OSC disclosure disclaimers are regulatory obligations — they must be consistent across all published artifacts.
+- The same token file can be consumed by: HTML templates (Jinja/Tera), app-mediakit-knowledge `shell_chrome()`, design-system component library, CI pipelines that validate footer presence.
+
+**Canonical footer text (current, from wireframe-home-header-v2c.html):**
+```
+© 2026 Woodfine Capital Projects Inc. All rights reserved.
+Woodfine Capital Projects™, Woodfine Management Corp™, PointSav Digital Systems™,
+Totebox Orchestration™, and Totebox Archive™ are trademarks of Woodfine Capital Projects Inc.
+used in Canada, the United States, Latin America, and Europe. All other trademarks are the
+property of their respective owners.
+```
+
+**Action requested:** project-editorial to draft a structured legal-tokens spec for `factory-release-engineering`.
+The spec should cover: copyright, trademark, disclaimers, and contact info per brand (Woodfine, PointSav).
+After ratification, implementation agent wires `shell_chrome()` in `app-mediakit-knowledge` to read from it.
+
+---
+from: totebox@project-knowledge
 to: command@claude-code
 re: GitHub rename verified — canonical remotes updated; staging forks still need rename
 created: 2026-05-24T17:30:00Z
