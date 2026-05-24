@@ -1,324 +1,415 @@
 ---
 schema: foundry-auto-todo-v1
-created: 2026-05-23
-supersedes: AUTO-TODO-phases-0-5 (2026-05-22 version — all phases done)
-author: totebox@project-intelligence (claude-sonnet-4-6, session 5)
+created: 2026-05-24
+supersedes: AUTO-TODO-phase-6 (2026-05-23 version — Phases 0–6 done; 262/262 tests; 13 commits promoted to origin/main by Command Session)
+author: totebox@project-intelligence (claude-sonnet-4-6, session 7)
 brief: BRIEF-flow-restructure.md
 decision_locked:
-  sprint1_done: true       # Source node before Doorman call already at main.rs:338-356
-  lbug_option: 1           # Accept ~13.5 MB disk bloat; lbug shared-link. Do NOT revisit.
-  latency_class: add       # Approved Phase 6 item — add LatencyClass enum + ComputeRequest field
-  backendlifecycle: add    # Approved Phase 6 item — trait wrapper for idle_monitor.rs
-  tier_a_model: 1B         # Tier A = OLMo 2 1B specialist (NUC-class only); 7B is wrong. Do NOT revisit.
+  phase_6_done: true            # latency_class + BackendLifecycle + GF-1 + GF-2 + model drift all done
+  sprint_1_done: true           # service-content Ring 2/3 fix at b8a70ee; do NOT redo
+  lbug_option_order: [B, A, C]  # Try MemoryMax=4G first; LBUG_BUILD_FROM_SOURCE second; pin 0.16.0 last
+  sprints_2_5_scope: service-content  # Sprints 2-5 are service-content scope only (graph.rs + main.rs + http.rs)
 ---
 
-# AUTO TODO — project-intelligence Phase 6
+# AUTO TODO — project-intelligence: service-content Sprints + lbug unblock
 
-> **Phases 0–5 are DONE.** Start here for Phase 6.
+> **Phases 0–6 (service-slm) are DONE.** 262/262 tests. 13 commits on origin/main.
+> This AUTO-TODO covers the next coding run: unblock service-content deployment,
+> then Sprints 2–5, then deferred W5 items, then housekeeping.
+>
 > Work through phases IN ORDER. Each phase has an explicit gate.
 > Commit after every discrete unit. Use `~/Foundry/bin/commit-as-next.sh "<msg>"`.
 > Do NOT use `git commit` directly (pre-commit gate blocks it).
 >
-> **Sprint 1 (service-content Ring 2/3 fix) is ALREADY DONE** — Source node write
-> before Doorman call is at `service-content/src/main.rs:338-356`. Do not redo it.
+> **service-content sub-clone** is at `./service-content/` relative to this archive.
+> It has a separate `.git/` — treat it as an independent repo for staging + commits.
 
 ---
 
-## Phase 0 — Verify state before touching code
+## Phase 0 — Verify state (~10 min)
 
-- [ ] **0A.** `cargo check --workspace` from `service-slm/` — must be clean.
-- [ ] **0B.** `cargo test --workspace` — must show 260/260 pass (or higher if new tests
-  exist from other sessions). If count differs, note the delta before continuing.
-- [ ] **0C.** `git status` — confirm no uncommitted changes from prior sessions.
-  If dirty: `git diff` to understand, then commit or stash before continuing.
-- [ ] **0D.** Confirm Sprint 1 is in code:
-  `grep -n "Sprint 1\|Source.*node\|write.*Source" service-content/src/main.rs`
-  Expected: lines ~338–356 show Source node write + comment. If absent, Phase 0 fails —
-  stop and surface via outbox to Command before proceeding.
+- [ ] **0A.** `cargo test --workspace` in `service-slm/` — confirm 262/262 green.
+  If count is higher (other sessions added tests), note the delta; do not fail.
+  If count is lower, stop and surface via outbox before continuing.
 
-**Gate:** all four checks pass. If 0B fails, diagnose before continuing.
+- [ ] **0B.** Confirm Sprint 1 is in service-content sub-clone:
+  ```bash
+  git -C service-content log --oneline | grep -i "sprint 1\|ring 2\|ring 3\|b8a70ee"
+  ```
+  Expected: commit b8a70ee (or its successor) visible in log. If absent, stop —
+  Sprint 1 fix is missing; do not proceed to Phase 1 coding.
+
+- [ ] **0C.** Check lbug / service-content deployment state:
+  ```bash
+  systemctl is-active local-content
+  journalctl -u local-content -n 20 --no-pager
+  ```
+  Note the failure mode: OOM kill, linker error, or service simply not started.
+  This determines which Phase 1 option to attempt first.
+
+- [ ] **0D.** Check disk:
+  ```bash
+  df -h /srv/foundry
+  ```
+  Must be <90% before building. If >90%, stop — surface to Command via outbox.
+
+**Gate:** 262/262 green; Sprint 1 confirmed; lbug state known; disk OK.
 
 ---
 
-## Phase 1 — Tier A model drift fixes (~15 min, doc + default only)
+## Phase 1 — lbug build blocker (~30 min)
 
-Documentation and default-value corrections only. No routing logic changes.
-Rationale: `BRIEF-flow-restructure.md §0` (pre-doctrine-audit 7B error corrected 2026-05-22).
+Critical path. service-content binary cannot deploy. Try options in order.
 
-- [ ] **1A.** Edit `service-slm/crates/slm-core/src/tier.rs` — update the `Tier::Local`
-  doc comment (line ~18):
-  ```rust
-  // BEFORE:
-  /// Tier A — local OLMo 3 7B Q4 (mistral.rs / llama.cpp HTTP on this VM).
-  // AFTER:
-  /// Tier A — on-device OLMo 2 1B specialist (NUC-class hardware Toteboxes only).
-  /// Unavailable on $7/mo e2-micro fleet nodes (DOCTRINE claim #54).
-  ```
+### Option B (try first — fastest): raise MemoryMax to 4G
 
-- [ ] **1B.** Edit `service-slm/crates/slm-doorman-server/src/main.rs` — update
-  `SLM_LOCAL_MODEL` default (line ~414):
-  ```rust
-  // BEFORE:
-  .unwrap_or_else(|_| "olmo-3-7b-instruct".to_string()),
-  // AFTER:
-  .unwrap_or_else(|_| "olmo-2-0425-1b-instruct".to_string()),
-  ```
-  Env var is not removed — operators can still override. Default now reflects the
-  correct Tier A model for NUC-class hardware Toteboxes.
-
-- [ ] **1C.** Edit `service-slm/CLAUDE.md` — three stale items:
-  - "177/177 tests" → "260/260 tests" (Phase 5 added 49 tests)
-  - Delete: "Tier A upgrade to OLMo 2 1124 7B Instruct pending (see NEXT.md)"
-  - In the node-class table, if the NUC row says "7B", correct to "OLMo 2 1B specialist"
-
-- [ ] **1D.** Commit:
-  ```
-  ~/Foundry/bin/commit-as-next.sh "docs(slm): reconcile Tier A model drift — 1B specialist (NUC) not 7B; test count 260"
-  ```
-
-**Gate:** `cargo check --workspace` clean.
-
----
-
-## Phase 2 — `latency_class` field in ComputeRequest (~50 LOC, ~1 hr)
-
-Corrected W1: routing is node-class-first, then `latency_class`, then `complexity`.
-`latency_class` captures the caller's latency contract, not just task complexity —
-a nightly extraction can be Low complexity but must route as Batch latency.
-
-### 2A. Add `LatencyClass` to `service-slm/crates/slm-core/src/tier.rs`
-
-After the `Complexity` enum, add:
-
-```rust
-/// Caller's latency contract for this request.
-/// Used alongside `Complexity` and node-class to select a tier.
-#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Hash, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-pub enum LatencyClass {
-    /// Respond as fast as possible; prefer on-device Tier A when available.
-    #[default]
-    Interactive,
-    /// Can tolerate seconds of queuing; prefer Tier B for quality.
-    Background,
-    /// Nightly batch work; always routes via Tier B (route_yoyo_only pattern).
-    Batch,
-}
-
-impl LatencyClass {
-    pub fn as_str(&self) -> &'static str {
-        match self {
-            LatencyClass::Interactive => "interactive",
-            LatencyClass::Background => "background",
-            LatencyClass::Batch => "batch",
-        }
-    }
-}
-```
-
-### 2B. Add to `pub use tier::{...}` in `service-slm/crates/slm-core/src/lib.rs`
-
-```rust
-pub use tier::{Complexity, LatencyClass, SpeculationRequest, Tier};
-```
-
-### 2C. Add field to `ComputeRequest` in `slm-core/src/lib.rs` (after `complexity` ~line 173)
-
-```rust
-#[serde(default)]
-pub latency_class: LatencyClass,
-```
-
-### 2D. Update `select_tier()` in `slm-doorman/src/router.rs` (line ~196)
-
-Add `latency_class` as the first routing signal (before complexity), consistent
-with node-class-first routing (`BRIEF-flow-restructure.md §7`):
-
-```rust
-// Batch latency always routes to Tier B — never local, never External without label.
-if req.latency_class == LatencyClass::Batch {
-    return self.require_tier(Tier::Yoyo, req);
-}
-// Interactive on a node with on-device Tier A: prefer Tier A unless complexity is High.
-// (Node-class gate in build_doorman() already prevents Tier A on Micro nodes.)
-```
-
-Read the existing `select_tier()` logic carefully before editing — slot `latency_class`
-in as the first check without disrupting the node-class gating already present.
-
-### 2E. Fix `minimal_request()` helper and any ComputeRequest struct literals in tests
-
-Add `latency_class: LatencyClass::default()` to any `ComputeRequest { .. }` struct
-literal in tests that fails to compile (exhaustive struct construction).
-
-### 2F. Add targeted tests in `slm-core/src/lib.rs` or `slm-doorman/tests/`
-
-- `batch_latency_routes_yoyo()` — `latency_class: Batch` → result is `Yoyo` (or
-  `TierUnavailable` if Yo-Yo not configured; not `Local`)
-- `interactive_prefers_local_when_available()` — `latency_class: Interactive`,
-  complexity Low, Tier A available → result is `Local`
-- Existing tests must pass without modification (`#[serde(default)]` covers missing field)
-
-- [ ] **2G.** Commit:
-  ```
-  ~/Foundry/bin/commit-as-next.sh "feat(slm): LatencyClass enum + ComputeRequest field (corrected W1)"
-  ```
-
-**Gate:** `cargo test --workspace` green. `cargo clippy --workspace -- -D warnings` clean.
-
----
-
-## Phase 3 — `BackendLifecycle` trait for `idle_monitor.rs` (~80 LOC, ~1 hr)
-
-Quarantine the Yo-Yo idle monitor behind a trait so core routing logic does not
-directly reference the concrete monitor struct. This is `BRIEF-flow-restructure.md §8.C`
-"Broker discipline" item.
-
-File: `service-slm/crates/slm-doorman-server/src/idle_monitor.rs`
-
-### 3A. Check the pinned Rust toolchain version first
+The LBUG_SHARED=1 binary is already built. The failure is likely OOM at the 2G
+systemd MemoryMax limit, not a linker failure.
 
 ```bash
-cat service-slm/rust-toolchain.toml
+sudo systemctl edit local-content.service
 ```
 
-If stable ≥ 1.75: use `impl Future` in trait (RPITIT).
-If stable < 1.75: use `Pin<Box<dyn Future<Output = ()> + Send>>` instead.
-
-### 3B. Define `BackendLifecycle` trait
-
-Add to `service-slm/crates/slm-doorman/src/backend_lifecycle.rs` (new file) or
-inline in `idle_monitor.rs`:
-
-```rust
-// If Rust ≥ 1.75 (RPITIT):
-pub trait BackendLifecycle: Send + Sync + 'static {
-    fn start(&self) -> impl std::future::Future<Output = ()> + Send;
-    fn stop(&self) -> impl std::future::Future<Output = ()> + Send;
-    fn is_healthy(&self) -> impl std::future::Future<Output = bool> + Send;
-    fn name(&self) -> &'static str;
-}
-
-// If Rust < 1.75 (use boxed futures):
-pub trait BackendLifecycle: Send + Sync + 'static {
-    fn start(&self) -> std::pin::Pin<Box<dyn std::future::Future<Output = ()> + Send>>;
-    fn stop(&self) -> std::pin::Pin<Box<dyn std::future::Future<Output = ()> + Send>>;
-    fn is_healthy(&self) -> std::pin::Pin<Box<dyn std::future::Future<Output = bool> + Send>>;
-    fn name(&self) -> &'static str;
-}
+In the override editor, add:
+```ini
+[Service]
+MemoryMax=4G
 ```
 
-### 3C. Implement `BackendLifecycle` for the idle monitor handle type
-
-Find the public type exported by `idle_monitor.rs`. Implement the trait:
-- `start()` → send a start signal (call `instances.start` or send to monitor task)
-- `stop()` → send a stop signal (idle-stop the VM)
-- `is_healthy()` → poll the Yo-Yo `/metrics` endpoint once with a short timeout
-- `name()` → `"yoyo-idle-monitor"`
-
-### 3D. Update usage site in `slm-doorman-server/src/main.rs`
-
-Replace the direct `IdleMonitorConfig` or handle type with
-`Option<Arc<dyn BackendLifecycle>>` in `AppState` (or equivalent). The spawn
-logic itself stays the same; only the type held in state changes.
-
-### 3E. Commit:
-```
-~/Foundry/bin/commit-as-next.sh "refactor(slm): BackendLifecycle trait; quarantine idle_monitor behind it"
+Then:
+```bash
+sudo systemctl daemon-reload
+sudo systemctl start local-content.service
+journalctl -u local-content -f
 ```
 
-**Gate:** `cargo test --workspace` green.
+Watch for 30 seconds. If the service stays up and healthz returns 200:
+```bash
+curl -s http://127.0.0.1:9081/healthz
+```
+→ Phase 1 done. Proceed to Phase 2.
+
+### Option A (if B fails): LBUG_BUILD_FROM_SOURCE
+
+```bash
+cd service-content
+LBUG_BUILD_FROM_SOURCE=1 cargo build --release -p service-content 2>&1 | grep -E "error|warning" | head -30
+```
+
+Inspect the output. If undefined symbols: check linker search path in build.rs
+or Cargo.toml `[package.metadata.lbug]`. Fix the linker flag and rebuild.
+
+After successful build:
+```bash
+sudo systemctl start local-content.service
+curl -s http://127.0.0.1:9081/healthz
+```
+
+### Option C (last resort): pin lbug = "=0.16.0"
+
+Only if A fails. This triggers a ~45 min cmake build.
+
+```bash
+# In service-content/Cargo.toml, find the lbug dependency and pin it:
+# lbug = { version = "=0.16.0", ... }
+cargo build --release -p service-content
+```
+
+- [ ] **1Z.** Commit whichever option succeeded:
+  ```
+  ~/Foundry/bin/commit-as-next.sh "fix(service-content): lbug deploy — [option B|A|C used]"
+  ```
+  Commit goes in the service-content sub-clone's `.git/`, not the archive `.git/`.
+
+**Gate:** `curl http://127.0.0.1:9081/healthz` returns 200 (not 503 warming, not connection refused).
+After gate passes, note option used in the Phase 1 commit message.
 
 ---
 
-## Phase 4 — GF-1: async audit writes off hot path (~30 min)
+## Phase 2 — service-content Sprint 2: Schema extension (~2 hr, ~150 LOC)
 
-`write_audit()` in `slm-doorman/src/router.rs` (line ~375) is called inside the
-async `dispatch()` path.
+Adds `node_type: String` and `source_worm_id: Option<String>` to the `Entity`
+schema (both SQLite GraphStore column and LadybugDB field), plus `RelatedTo` edge
+writes.
 
-- [ ] **4A.** Read `write_audit()` — is it `fn` (sync) or `async fn`?
-  - **If sync with `std::fs::write` or similar blocking I/O:** wrap the call in
-    `tokio::task::spawn_blocking(move || { ... })`. Do NOT await the handle —
-    fire-and-forget; log errors via `JoinHandle` if needed.
-  - **If already using `tokio::fs` or already spawned:** note "GF-1 already
-    addressed" in commit message and close this phase.
+**File:** `service-content/src/graph.rs`
 
-- [ ] **4B.** Commit if changed:
-  ```
-  ~/Foundry/bin/commit-as-next.sh "fix(slm): GF-1 — audit ledger write off async hot path"
-  ```
+- [ ] **2A.** Read `graph.rs` in full. Locate:
+  - `Entity` struct definition
+  - `SqliteGraphStore` impl (CREATE TABLE statement + INSERT)
+  - `GraphStore` trait definition
+  - Any existing `add_node` / `add_edge` methods
 
-**Gate:** `cargo test --workspace` green.
-
----
-
-## Phase 5 — GF-2: Tier A inference client timeouts (~20 min)
-
-`LocalTierClient` in `slm-doorman/src/tier/local.rs` (line ~38) uses
-`reqwest::Client::new()` for inference — no timeout. The health-check client has
-500 ms (line ~58) but inference does not. A hung Tier A call blocks a Doorman
-async task indefinitely.
-
-- [ ] **5A.** Find the inference `reqwest::Client` construction (line ~38).
-  Replace with a builder that sets timeouts:
+- [ ] **2B.** Add fields to `Entity`:
   ```rust
-  const LOCAL_INFERENCE_TIMEOUT_SECS: u64 = 180;
-
-  reqwest::Client::builder()
-      .connect_timeout(std::time::Duration::from_secs(5))
-      .timeout(std::time::Duration::from_secs(LOCAL_INFERENCE_TIMEOUT_SECS))
-      .build()
-      .expect("LocalTierClient inference HTTP client")
-  ```
-  180 s is a ceiling — the Doorman's outer deadline (60 s socket + 90 s outer)
-  is shorter, so this primarily prevents silent hangs after the outer deadline.
-
-- [ ] **5B.** Commit:
-  ```
-  ~/Foundry/bin/commit-as-next.sh "fix(slm): GF-2 — Tier A inference client connect + read timeouts"
+  pub node_type: String,
+  pub source_worm_id: Option<String>,
   ```
 
-**Gate:** `cargo test --workspace` green. `cargo clippy --workspace -- -D warnings` clean.
+- [ ] **2C.** Add `node_type TEXT NOT NULL DEFAULT 'generic'` and
+  `source_worm_id TEXT` columns to the CREATE TABLE statement.
+  If the table already exists at runtime, add a migration:
+  ```sql
+  ALTER TABLE entities ADD COLUMN node_type TEXT NOT NULL DEFAULT 'generic';
+  ALTER TABLE entities ADD COLUMN source_worm_id TEXT;
+  ```
+  Guard with `IF NOT EXISTS` semantics (SQLite: wrap in a BEGIN; ignore
+  "duplicate column" error, or check `pragma table_info`).
+
+- [ ] **2D.** Add `RelatedTo` edge variant (or a string literal `"related_to"`)
+  to the edge-type vocabulary used in INSERT statements.
+  Add a `write_related_to(from_id: &str, to_id: &str)` method on `SqliteGraphStore`
+  (or equivalent, matching whatever pattern `add_edge` already uses).
+
+- [ ] **2E.** Update all `Entity { .. }` struct literals (in tests + callers) to
+  include the two new fields. Use `node_type: "generic".to_string()` and
+  `source_worm_id: None` as defaults in existing literals.
+
+- [ ] **2F.** Verify existing round-trip tests still pass:
+  ```bash
+  cd service-content && cargo test 2>&1 | tail -5
+  ```
+
+- [ ] **2G.** Commit in service-content sub-clone:
+  ```
+  ~/Foundry/bin/commit-as-next.sh "feat(service-content): Sprint 2 — node_type/source_worm_id schema + RelatedTo writes"
+  ```
+
+**Gate:** `cargo test -p service-content` green; existing 8+ SqliteGraphStore
+round-trip tests still pass.
 
 ---
 
-## Phase 6 — Shutdown ops
+## Phase 3 — service-content Sprint 3: PUSH inversion (~2 hr, net ~-40 LOC)
 
-- [ ] **6A.** `cargo test --workspace` — final green run. Note total test count.
+Inverts graph mutation flow: service-content POSTs mutations to Doorman
+(`/v1/graph/mutate`) rather than writing the graph directly (PULL path deleted).
+Doorman gains an in-memory mutation queue + the new endpoint.
 
-- [ ] **6B.** Update `NEXT.md`:
-  - Check off Phase 6 items completed (latency_class, BackendLifecycle, GF-1, GF-2, model drift)
-  - Note which items were already done (Sprint 1) vs done this session
-  - Update Stage 6 carry-forward line with correct commit count
+**Files touched:**
+- `service-content/src/main.rs` — delete PULL path
+- `service-slm/crates/slm-doorman/src/` — add queue + handler
+- `service-slm/crates/slm-doorman-server/src/http.rs` — register route
 
-- [ ] **6C.** Update `BRIEF-flow-restructure.md` Status block:
-  - Mark Phase 6 items complete in §8.C
-  - Update `▶ RESUME HERE` to Phase 7 (W5 remainder — G5/G6/G9/G11–G16/G18)
-  - Note commit hash of last Phase 6 commit
+- [ ] **3A.** Read `service-content/src/main.rs`. Find the watcher loop that writes
+  directly to the graph store. This is the PULL path to delete (~120 LOC).
+  Also read `service-slm/crates/slm-doorman-server/src/http.rs` to see existing
+  route registration pattern.
 
-- [ ] **6D.** Update `.agent/memory/session-context.md`:
-  Prepend new entry per AGENT.md shutdown step §2b. Include done/pending/operator
-  preferences columns. Keep only 3 most recent entries; push oldest to
-  `session-context-archive.md`.
-
-- [ ] **6E.** Prepend outbox message to `.agent/outbox.md`:
+- [ ] **3B.** In `slm-doorman/src/`, add `graph_queue.rs` (or inline in `router.rs`):
+  ```rust
+  // In-memory, bounded channel for graph mutation requests.
+  // Bounded at 1024 pending mutations; back-pressure on overflow.
+  pub struct GraphMutationQueue {
+      tx: tokio::sync::mpsc::Sender<GraphMutation>,
+      rx: tokio::sync::Mutex<tokio::sync::mpsc::Receiver<GraphMutation>>,
+  }
   ```
-  re: Phase 6 complete — Stage 6 + Command ops needed
-  Phase 6 done: latency_class + BackendLifecycle + GF-1 + GF-2 + model drift docs.
-  Local main is now N commits ahead of origin/main (exact count: git log --oneline origin/main..HEAD | wc -l).
-  Command needs: (1) Stage 6 promote, (2) build+deploy slm-doorman-server binary,
-  (3) stop local-slm + SLM_FORCE_BROKER_MODE=true (see flow-restructure §12).
+  Define `GraphMutation` as a simple enum or struct covering the operations
+  service-content currently performs: `AddNode { entity: ... }`,
+  `AddEdge { from, to, rel_type }`.
+
+- [ ] **3C.** Add `POST /v1/graph/mutate` handler in
+  `slm-doorman-server/src/http.rs`. The handler:
+  - Deserialises the request body as `GraphMutation`
+  - Enqueues via the queue's `tx.send(...).await`
+  - Returns `202 Accepted` immediately (fire-and-forget queue)
+  - Returns `503 Service Unavailable` if queue is full (channel full)
+
+- [ ] **3D.** Delete the PULL path from `service-content/src/main.rs`.
+  Replace with a `POST http://127.0.0.1:9090/v1/graph/mutate` call
+  (Doorman's port) using `reqwest`. Use a fire-and-forget pattern
+  (spawn a task; log errors; do not block the watcher loop).
+
+- [ ] **3E.** Wire `GraphMutationQueue` into `AppState` in `slm-doorman-server/src/main.rs`.
+
+- [ ] **3F.** `cargo test --workspace` green in service-slm.
+  `cargo test -p service-content` green in service-content.
+
+- [ ] **3G.** Two commits — one per sub-clone:
+  ```
+  # In service-content sub-clone:
+  ~/Foundry/bin/commit-as-next.sh "feat(service-content): Sprint 3 — delete PULL graph write; POST to Doorman /v1/graph/mutate"
+
+  # In service-slm sub-clone (this archive's .git/):
+  ~/Foundry/bin/commit-as-next.sh "feat(slm): Sprint 3 — /v1/graph/mutate endpoint + GraphMutationQueue in Doorman"
   ```
 
-- [ ] **6F.** Commit ops files:
+**Gate:** `cargo test --workspace` green in both sub-clones.
+
+---
+
+## Phase 4 — service-content Sprint 4: /v1/draft/generate migration (~1 hr, ~120 LOC net)
+
+Moves the `/v1/draft/generate` endpoint from service-content to slm-doorman.
+
+**Files touched:**
+- `service-content/src/http.rs` — delete handler (~120 LOC deletion)
+- `service-slm/crates/slm-doorman-server/src/http.rs` — add equivalent handler
+
+- [ ] **4A.** Read `service-content/src/http.rs`. Find the `/v1/draft/generate`
+  handler. Copy its request/response types and logic before deleting.
+
+- [ ] **4B.** Add equivalent handler in `slm-doorman-server/src/http.rs`.
+  The handler behaviour is identical; only the binary that serves it changes.
+  Port: Doorman listens on 9090.
+
+- [ ] **4C.** Delete the handler from `service-content/src/http.rs`. Remove the
+  route registration too. If this leaves `http.rs` empty or near-empty,
+  consider whether the file should remain (leave it if other routes exist).
+
+- [ ] **4D.** `cargo test --workspace` green in service-slm.
+  `cargo test -p service-content` green.
+
+- [ ] **4E.** Smoke-test the endpoint from Doorman:
+  ```bash
+  curl -s -X POST http://127.0.0.1:9090/v1/draft/generate \
+    -H "Content-Type: application/json" \
+    -d '{"prompt": "test"}' | head -5
   ```
-  ~/Foundry/bin/commit-as-next.sh "ops(intelligence): Phase 6 done — NEXT.md + BRIEF + session-context + outbox"
+  (May return an error body — that's fine. Confirm it reaches the handler.)
+
+- [ ] **4F.** Two commits:
+  ```
+  # In service-content:
+  ~/Foundry/bin/commit-as-next.sh "feat(service-content): Sprint 4 — /v1/draft/generate removed (migrated to Doorman)"
+
+  # In service-slm:
+  ~/Foundry/bin/commit-as-next.sh "feat(slm): Sprint 4 — /v1/draft/generate migrated to Doorman"
   ```
 
-- [ ] **6G.** Run `git log --oneline -8` and verify the Phase 6 commits are all present.
+**Gate:** `cargo test --workspace` green; endpoint responds from Doorman port 9090.
 
-**Gate:** `git status` clean. All modified files committed. Session lock at
-`.agent/engines/claude-code/session.lock` is NOT committed (gitignored — do not stage).
+---
+
+## Phase 5 — service-content Sprint 5: processed_ledgers persistence (~1 hr, net ~+10 LOC)
+
+Replaces the in-RAM `HashSet<String>` processed_ledgers with a graph query.
+Eliminates the 114-file retry storm on service restart.
+
+**Files touched:**
+- `service-content/src/main.rs`
+- `service-content/src/graph.rs` (query method needed)
+
+- [ ] **5A.** Read `service-content/src/main.rs`. Find the `processed_ledgers`
+  `HashSet<String>`. Find where entries are added (after a file is processed)
+  and where it is checked (before processing a file).
+
+- [ ] **5B.** In `graph.rs`, add a `is_already_processed(worm_id: &str) -> bool`
+  query method on `SqliteGraphStore`:
+  ```sql
+  SELECT 1 FROM entities WHERE source_worm_id = ?1 LIMIT 1
+  ```
+  Returns `true` if a row with that `source_worm_id` exists.
+
+- [ ] **5C.** In `main.rs`:
+  - Remove the `HashSet<String>` processed_ledgers field (and its initialization).
+  - Replace the "already processed?" check with a call to `graph.is_already_processed(worm_id)`.
+  - The "mark as processed" step is already handled by Sprint 2's `source_worm_id` field
+    being written when the node is added. No separate insert needed.
+
+- [ ] **5D.** `cargo test -p service-content` green.
+
+- [ ] **5E.** Deploy and verify the fix:
+  ```bash
+  sudo systemctl restart local-content.service
+  sleep 5
+  journalctl -u local-content -n 30 --no-pager
+  ```
+  Expected: no "processing 114 files" batch in the log. If batch appears,
+  the graph query is not finding previously-processed entries — debug.
+
+- [ ] **5F.** Commit in service-content:
+  ```
+  ~/Foundry/bin/commit-as-next.sh "fix(service-content): Sprint 5 — persistent processed_ledgers via graph query; eliminate 114-file retry storm"
+  ```
+
+**Gate:** restart service-content; `journalctl` shows no 114-file batch retry.
+
+---
+
+## Phase 6 — Yo-Yo W5 items — SPEC PASS FIRST (~30 min + coding)
+
+The deferred G5/G6/G9/G11–G16/G18 items are referenced by number only in
+`BRIEF-flow-restructure.md §8.C`. Definitions must be recovered before coding.
+
+- [ ] **6A.** Read Phase 0 commit messages to recover G-item definitions:
+  ```bash
+  git show 35e2dea7 ed63476c a10539c6 --stat --format="%H %s%n%b"
+  ```
+  (Run in the service-slm sub-clone if these are slm commits.)
+
+- [ ] **6B.** Document each deferred item as a concrete checklist entry here
+  (edit this AUTO-TODO in place). Then implement in order.
+
+- [ ] **6C.** Gate per item: `cargo test --workspace` green after each.
+
+- [ ] **6D.** Commit per item:
+  ```
+  ~/Foundry/bin/commit-as-next.sh "fix(slm): W5 — G<N> <short description>"
+  ```
+
+**Gate:** all G-items defined + implemented; `cargo test --workspace` green.
+
+---
+
+## Phase 7 — Housekeeping (~20 min)
+
+- [ ] **7A.** Create `service-content/CLAUDE.md`. Per framework §8, Active-state
+  projects require a CLAUDE.md. service-content is Active. Use the template at
+  `~/Foundry/templates/project-CLAUDE.md.tmpl`. Populate: project state, mission,
+  current phase, key files (main.rs, graph.rs, http.rs), sprint history.
+
+- [ ] **7B.** Commit:
+  ```
+  ~/Foundry/bin/commit-as-next.sh "docs(service-content): CLAUDE.md — project card (framework §8 requirement)"
+  ```
+
+- [ ] **7C.** Check manifest contamination:
+  Read `.agent/manifest.md` — if it still contains project-gis content,
+  note "manifest contamination unresolved" in outbox. Do NOT attempt to fix it
+  from this Totebox session (Command scope).
+
+**Gate:** `service-content/CLAUDE.md` exists; `git status` clean.
+
+---
+
+## Phase 8 — Shutdown ops
+
+- [ ] **8A.** `cargo test --workspace` in service-slm — final green run. Note count.
+  `cargo test` in service-content — note count.
+
+- [ ] **8B.** Update `NEXT.md`:
+  - Check off completed Sprint items (2, 3, 4, 5, lbug)
+  - Note which phases remain (W5 G-items if not done)
+  - Update Stage 6 carry-forward line with commit count
+
+- [ ] **8C.** Update `BRIEF-flow-restructure.md` Status block:
+  - Mark Sprints 2–5 + lbug done
+  - Update `▶ RESUME HERE` to next open phase
+  - Note commit hashes of last commits per sprint
+
+- [ ] **8D.** Update `.agent/memory/session-context.md`:
+  Prepend new entry per AGENT.md shutdown §2b. Keep only 3 most recent;
+  push oldest to `session-context-archive.md`.
+
+- [ ] **8E.** Prepend outbox message to `.agent/outbox.md`:
+  Include: sprints done, commit count ahead of origin/main, Command actions needed
+  (Stage 6 promote, slm-doorman-server binary rebuild + deploy, service-content binary deploy).
+
+- [ ] **8F.** Commit ops files in archive `.git/`:
+  ```
+  ~/Foundry/bin/commit-as-next.sh "ops(intelligence): shutdown — NEXT.md + BRIEF + session-context + outbox"
+  ```
+
+- [ ] **8G.** `git log --oneline -10` in both sub-clones. Verify all sprint commits present.
+
+- [ ] **8H.** Remove session lock:
+  ```bash
+  rm -f .agent/engines/claude-code/session.lock
+  ```
+
+**Gate:** `git status` clean in both sub-clones. Session lock removed.
 
 ---
 
@@ -326,16 +417,17 @@ async task indefinitely.
 
 These remain **Command Session scope** — surface via outbox, do not attempt:
 
-- `bin/promote.sh` (Stage 6) — hook BLOCKS from Totebox
+- `~/Foundry/bin/promote.sh` (Stage 6) — hook BLOCKS from Totebox
 - `sudo systemctl stop local-slm.service` — requires Command Session
 - `sudo cp ... /usr/local/bin/` binary deploy — requires Command Session
 - Elastic Compute Packer image rebuild — requires Command Session
-
-Full checklist: `BRIEF-flow-restructure.md §12`.
+- Fixing `.agent/manifest.md` contamination (project-gis content) — Command scope
 
 ---
 
-## Deferred to Phase 7 (W5 remainder — Elastic Compute paid tier)
+## Deferred (not this session)
 
-`BRIEF-flow-restructure.md §8.C` items G5/G6/G9/G11–G16/G18.
-Not in this session. Open a new AUTO-TODO for Phase 7 when Phase 6 is confirmed promoted.
+- G5/G6/G9/G11–G16/G18 W5 items (Phase 6 above): implement after spec recovery
+- `README.es.md` refresh for `app-mediakit-knowledge` (cleanup-log open item)
+- `service-parser` removal (cleanup-log open item; requires confirming no callers)
+- `vendors-maxmind` → `vendor-maxmind` rename (cleanup-log open item)
