@@ -2081,8 +2081,10 @@
             if (map.getLayer('all-locations')) map.setPaintProperty('all-locations', 'circle-opacity', 0.70);
             applyView();
 
-            // Fly to cluster — zoom in enough to see the ring clearly
-            const targetZoom = Math.max(map.getZoom(), km === 1 ? 15 : 14);
+            // Fly to ring-overview zoom: ring visible with context.
+            // Clicking inside the ring (proximity-fill) calls drillIntoCluster again
+            // and Math.max pushes to zoom 15/14 for street-level — two-step drill.
+            const targetZoom = Math.max(map.getZoom(), km === 1 ? 12 : 11);
             map.flyTo({ center: coords, zoom: targetZoom, duration: 1200, essential: true });
         }
         // Expose on window so injected panel onclick handlers can call them
