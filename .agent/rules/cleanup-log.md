@@ -4,6 +4,36 @@ Living record of in-flight cleanup work, open questions, and decisions made duri
 
 ---
 
+## 2026-05-24 — Phase 21: electronics category + XXXLutz/Höffner lifestyle expansion
+
+- **`electronics` added as 6th retail anchor category in taxonomy.py.** Added to `_RETAIL_CATS`,
+  `CATEGORIES`, `BRAND_FILL`, and `DISPLAY_NAMES`. Flows into tier_of() via H2b (tight ≥3 → T1)
+  and n≥4 (≥4 anchors → T1) paths automatically; zero new tier branches. `all_chains_for_iso()`
+  updated to include `"electronics"` in its category loop.
+- **11 electronics YAML files created** in `cluster-totebox-personnel-1/service-fs/service-business/`:
+  mediamarkt-de, saturn-de, mediamarkt-at, mediamarkt-nl, mediamarkt-es, mediaworld-it,
+  mediamarkt-gr, mediamarkt-pl, mediamarkt-se, boulanger-fr, darty-fr.
+  format_exclude_names applied to DE/AT/NL/ES/PL/SE (Xpress/Express/Pickup sub-formats);
+  darty-fr excludes Darty Box/Mini/Fnac.
+- **5 lifestyle YAML files created:** xxxlutz-at, xxxlutz-de, xxxlutz-se, xxxlutz-fr,
+  hoeffner-de. mömax sub-brand excluded from all XXXLutz ingests. lifestyle AT/DE/SE/FR
+  updated in BRAND_FILL to include XXXLutz; DE also gains Höffner.
+- **phase21-rebuild.sh created** — ingests all 16 chains, runs build-clusters + build-tiles --layer 2.
+  Pre-flight checks phase20 complete marker. Schedule via crontab 2026-05-26 05:00 UTC.
+- **index.html Phase 21 updates:** electronics pill added to BentoBox anchor section
+  (canonical order: anchor → hw → price_club → lifestyle → electronics → sport → civic).
+  `elecM` filter + `elec_list` field added to `metaToClusterProps()`.
+- **index.html zoom second-click fix (Option B):** proximity-fill click handler now owns
+  street-level step — first click selects cluster at ring-overview (z12/z11), second click
+  on same ring flies to street level (z14/z13, 800 ms). `drillIntoCluster()` stays
+  deterministic (ring-overview always); no latent regression for RM panel or nodes callers.
+- **index.html mobile fixes (OPUS audit):** `cooperativeGestures` enabled for touch devices;
+  `essential: true` added to 3 missing flyTo/fitBounds calls; `touch-action: manipulation`
+  added to all interactive elements; `vh → dvh` in responsive rules; collapsible BentoBox
+  button added for mobile (44×44 px, hides panel below 64 px header strip).
+
+---
+
 > *Entries older than this point truncated for performance (861 lines removed — see git history).*
 
   left unchanged (it refers to deployment-side path relative to

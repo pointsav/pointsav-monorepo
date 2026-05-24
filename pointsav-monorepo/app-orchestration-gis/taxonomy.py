@@ -37,6 +37,11 @@ CATEGORIES = {
         "naics": "451110",
         "description": "Destination sporting-goods anchor (Decathlon-class, ≥3,000 sqm).",
     },
+    "electronics": {
+        "naics": "443142",
+        "label": "Electronics",
+        "description": "Large-format consumer electronics anchor (MediaMarkt-class, ≥3,000 sqm). EU Phase 21; NA (Best Buy) deferred to Phase 22.",
+    },
     "medical": {
         "label": "Medical — Regional Hospital",
         "naics": "622110",
@@ -50,7 +55,7 @@ CATEGORIES = {
 }
 
 # Retail-only set used in tier_of()
-_RETAIL_CATS = {"hypermarket", "hardware", "price_club", "lifestyle", "sport"}
+_RETAIL_CATS = {"hypermarket", "hardware", "price_club", "lifestyle", "sport", "electronics"}
 
 # ── CIVIC SCALE THRESHOLDS ────────────────────────────────────────────────────
 THRESHOLDS = {
@@ -309,16 +314,16 @@ BRAND_FILL: dict[str, dict[str, list[str]]] = {
         "CA": ["ikea-ca"],
         "MX": ["ikea-mx"],
         "GB": ["ikea-uk"],
-        "FR": ["ikea-fr"],
-        "DE": ["ikea-de"],
+        "FR": ["ikea-fr", "xxxlutz-fr"],   # xxxlutz-fr ~5 stores — Phase 21 2026-05-24
+        "DE": ["ikea-de", "xxxlutz-de", "hoeffner-de"],  # xxxlutz-de ~90, hoeffner-de ~25 — Phase 21 2026-05-24
         "ES": ["ikea-es"],
         "IT": ["ikea-it"],
         "GR": ["ikea-gr"],
         "PL": ["ikea-pl"],
-        "AT": ["ikea-at"],
+        "AT": ["ikea-at", "xxxlutz-at"],   # xxxlutz-at ~47 stores — Phase 21 2026-05-24
         "NL": ["ikea-nl"],
         "PT": ["ikea-pt"],
-        "SE": ["ikea-se"],
+        "SE": ["ikea-se", "xxxlutz-se"],   # xxxlutz-se ~5 stores — Phase 21 2026-05-24
         "DK": ["ikea-dk"],
         "NO": ["ikea-no"],
         "FI": ["ikea-fi"],
@@ -343,6 +348,27 @@ BRAND_FILL: dict[str, dict[str, list[str]]] = {
         "DK": ["decathlon-dk"],
         "NO": ["decathlon-no", "xxl-no"],  # xxl-no ~39 stores, Q5447082 — Phase 20 2026-05-24
         "FI": ["decathlon-fi", "xxl-fi"],  # xxl-fi ~15 stores, Q5447082 — Phase 20 2026-05-24
+    },
+
+    "electronics": {
+        "US": [],   # Best Buy deferred to Phase 22 (counter-factual analysis first)
+        "CA": [],
+        "MX": [],
+        "GB": [],   # Currys deferred to Phase 22 (UK coverage expansion)
+        "FR": ["boulanger-fr", "darty-fr"],   # Mulliez big-box + large-format Darty — Phase 21 2026-05-24
+        "DE": ["mediamarkt-de", "saturn-de"], # saturn-de rebranding in flight — Phase 21 2026-05-24
+        "ES": ["mediamarkt-es"],              # Phase 21 2026-05-24
+        "IT": ["mediaworld-it"],              # MediaMarkt branded as MediaWorld in IT — Phase 21 2026-05-24
+        "GR": ["mediamarkt-gr"],              # Phase 21 2026-05-24
+        "PL": ["mediamarkt-pl"],              # Phase 21 2026-05-24
+        "AT": ["mediamarkt-at"],              # Phase 21 2026-05-24
+        "NL": ["mediamarkt-nl"],              # Phase 21 2026-05-24
+        "PT": [],
+        "SE": ["mediamarkt-se"],              # Phase 21 2026-05-24
+        "DK": [],
+        "NO": [],
+        "FI": [],
+        "IS": [],
     },
 
     # Civic categories have no BRAND_FILL — detected from OSM civic JSONL
@@ -462,6 +488,17 @@ DISPLAY_NAMES: dict[str, str] = {
     "ikea-pl": "IKEA", "ikea-at": "IKEA", "ikea-nl": "IKEA",
     "ikea-pt": "IKEA", "ikea-se": "IKEA", "ikea-dk": "IKEA",
     "ikea-no": "IKEA", "ikea-fi": "IKEA",
+    # Electronics (Phase 21)
+    "mediamarkt-de": "MediaMarkt", "saturn-de": "Saturn",
+    "mediamarkt-at": "MediaMarkt", "mediamarkt-nl": "MediaMarkt",
+    "mediamarkt-es": "MediaMarkt", "mediaworld-it": "MediaWorld",
+    "mediamarkt-gr": "MediaMarkt", "mediamarkt-pl": "MediaMarkt",
+    "mediamarkt-se": "MediaMarkt",
+    "boulanger-fr": "Boulanger", "darty-fr": "Darty",
+    # Lifestyle additions (Phase 21)
+    "xxxlutz-at": "XXXLutz", "xxxlutz-de": "XXXLutz",
+    "xxxlutz-se": "XXXLutz", "xxxlutz-fr": "XXXLutz",
+    "hoeffner-de": "Höffner",
 }
 
 # ── REVERSE INDEX: chain_id → category ───────────────────────────────────────
@@ -532,7 +569,7 @@ def slots_for(iso: str, category: str) -> list[str]:
 def all_chains_for_iso(iso: str) -> dict[str, str]:
     """Return {chain_id: category} for all retail chains declared for iso."""
     result = {}
-    for cat in ("hypermarket", "hardware", "price_club", "lifestyle", "sport"):
+    for cat in ("hypermarket", "hardware", "price_club", "lifestyle", "sport", "electronics"):
         for cid in slots_for(iso, cat):
             result[cid] = cat
     return result
