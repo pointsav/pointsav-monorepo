@@ -1,2 +1,14 @@
 # Multi-agent session locks (ephemeral — not committed)
 .agent/engines/*/session.lock
+
+# Working copy directories — tracked in separate git repos
+pointsav-monorepo/
+
+# Build artifacts — generated outputs, never committed
+target/
+*.iso
+*.mmdb
+vendor-sel4-kernel/build/
+service-slm/router-trainer/engine/
+service-slm/router-trainer/*.log
+os-infrastructure/build_iso/
