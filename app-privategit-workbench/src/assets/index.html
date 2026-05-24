@@ -1058,10 +1058,22 @@ function updateBar(name, path) {
   copyBtn.textContent = '⎘ Copy name';
   copyBtn.title = 'Copy filename to clipboard';
   copyBtn.addEventListener('click', () => {
-    navigator.clipboard.writeText(name).then(() => {
+    const confirm = () => {
       copyBtn.textContent = '✓ Copied';
       setTimeout(() => { copyBtn.textContent = '⎘ Copy name'; }, 1500);
-    });
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(name).then(confirm);
+    } else {
+      const tmp = document.createElement('textarea');
+      tmp.value = name;
+      tmp.style.cssText = 'position:fixed;top:-9999px;left:-9999px;opacity:0';
+      document.body.appendChild(tmp);
+      tmp.select();
+      document.execCommand('copy');
+      document.body.removeChild(tmp);
+      confirm();
+    }
   });
   bar.appendChild(copyBtn);
 
