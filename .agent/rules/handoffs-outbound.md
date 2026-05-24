@@ -144,7 +144,7 @@ Refined output staging area: `clones/project-language/.claude/drafts-outbound/re
 
 ---
 
-## project-intelligence inbound batch — E4 triage (2026-05-21)
+## project-intelligence inbound batch — E4 triage (2026-05-21; language pass 2026-05-24)
 
 Editorial-plan §6 E4: locate + triage the drafts project-intelligence routed to
 project-editorial (referenced in the plan as commit `478c9465`).
@@ -163,11 +163,10 @@ gateway queue.
 | topic-apprenticeship-substrate (.md/.es) | Skip — prior session (inbox-archive) confirmed the published `content-wiki-documentation/architecture/apprenticeship-substrate.md` is authoritative; draft is an older skeleton. |
 | topic-doorman-protocol (.md/.es) | Skip — published version rewritten at `96e221d` is authoritative. |
 | topic-zero-container-inference (.md/.es) | Skip — published at `8a4fd6c`. (Separate flag: published version names competitors by product — future editorial cleanup, not E4.) |
-| topic-yo-yo-lora-training-pipeline (.md/.es) | **Blocked** — `state: draft-pending-language-pass`. "Yo-Yo" is a Do-Not-Use term; filename + body need a canonical rename before any language pass. |
-| topic-jennifer-datagraph-rebuild (.md/.es) | **Blocked** — personal name in filename + title; violates the no-personal-names rule. project-intelligence must re-name to a role noun / codename. |
-| guide-yo-yo-nightly-pipeline | **Blocked** — same "Yo-Yo" Do-Not-Use issue. |
+| topic-elastic-compute-lora-training-pipeline (.md/.es) | **destination-committed** (b67c6ba) — language pass complete 2026-05-24; committed to `media-knowledge-documentation/architecture/`. |
+| topic-service-slm-graph-store-migration (.md/.es) | **destination-committed** (b67c6ba) — language pass complete 2026-05-24; committed to `media-knowledge-documentation/services/`. |
+| guide-elastic-compute-nightly-pipeline | **destination-committed** (5411008) — language pass complete 2026-05-24; committed to `woodfine-fleet-deployment/cluster-intelligence/` (renamed from guide-yo-yo-nightly-pipeline via git mv). |
 
-**State:** `pending-source-rename` — the three non-skip drafts cannot enter a
-language pass until project-intelligence resolves the two naming blockers.
-Flagged to project-intelligence outbox 2026-05-21. No project-editorial commit
-to content repos results from E4.
+**State:** `closed` — all three non-skip drafts completed editorial language pass 2026-05-24.
+Naming blockers resolved by project-intelligence (Yo-Yo → Elastic Compute; jennifer → service-slm-graph-store-migration).
+Five files committed across two destination repos. E4 complete.
