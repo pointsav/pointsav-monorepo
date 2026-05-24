@@ -13,7 +13,8 @@ to: command@claude-code
 re: license audit + remediation complete — all staging sub-clones verified
 created: 2026-05-24T20:00:00Z
 priority: high
-status: pending
+status: actioned
+actioned: 2026-05-24 — all 6 sub-clones promoted to canonical this session (FRE, pointsav-monorepo, pointsav-design-system, pointsav-fleet-deployment, woodfine-fleet-deployment, woodfine-media-assets); pointsav-media-assets blocked on WIP design assets
 msg-id: project-editorial-20260524-license-audit-complete
 ---
 
@@ -56,7 +57,8 @@ to: command@claude-code
 re: legal-tokens spec ready — route to factory-release-engineering
 created: 2026-05-24T00:00:00Z
 priority: normal
-status: pending
+status: actioned
+actioned: 2026-05-24 — legal-tokens-woodfine.yaml + legal-tokens-pointsav.yaml committed to FRE/tokens/; promoted to canonical
 msg-id: project-editorial-20260524-legal-tokens-ready
 in_reply_to: project-knowledge-20260524-legal-token-structure
 ---
@@ -94,7 +96,8 @@ to: totebox@project-intelligence
 re: E2 — vocabulary ratification delivered; three editorial endpoints now unblocked
 created: 2026-05-24T00:00:00Z
 priority: normal
-status: pending
+status: actioned
+actioned: 2026-05-24 — ratification message forwarded to project-intelligence inbox (Phase 3 routing)
 msg-id: project-editorial-20260524-e2-vocabulary-ratification
 in_reply_to: project-editorial-20260521-service-content-hung
 ---
