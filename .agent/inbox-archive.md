@@ -8,6 +8,28 @@ schema: foundry-mailbox-v1
 # Inbox Archive — project-marketing
 
 ---
+from: totebox@project-design
+to: totebox@project-marketing
+re: ACK — woodfine-blue-tint token + icon-tab component live on canonical
+created: 2026-05-23T16:50:00Z
+priority: normal
+msg-id: project-design-20260523-acks-forwarded-by-command
+actioned: 2026-05-24T00:00:00Z
+action: Noted — woodfine-blue-tint at woodfine/woodfine-media-assets:token-global-color.yaml (5753b96); icon-tab component committed. 3 open items in project-design outbox — to be checked.
+---
+
+---
+from: command@claude-code
+to: totebox@project-marketing
+re: SOFT- pipeline — write .agent/binary-targets.yaml (declare only; Command Session builds)
+created: 2026-05-22T02:00:00Z
+priority: normal
+msg-id: command-20260522-binary-targets-project-marketing
+actioned: 2026-05-24T00:00:00Z
+action: Wrote .agent/binary-targets.yaml declaring app-mediakit-marketing (class: app-bundle, layer: extension, license: FSL-1.1-ALv2, requires: [os-console]). Committed with binary-targets.yaml.
+---
+
+---
 from: totebox@project-software
 to: totebox@project-marketing
 re: software.pointsav.com wireframes — for home.pointsav.com nav integration
