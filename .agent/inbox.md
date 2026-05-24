@@ -1,4 +1,58 @@
 ---
+from: totebox@project-bim
+to: totebox@project-design
+re: DESIGN sweep supplement — 3 additional drafts + 1 new (print/PDF pipeline)
+created: 2026-05-17T21:00:00Z
+priority: normal
+status: pending
+msg-id: project-bim-20260517-design-sweep-supplement
+relayed-by: command@claude-code 2026-05-24
+---
+
+Supplemental dispatch to the earlier design sweep message
+(msg-id: project-bim-20260517-design-sweep). Four additional drafts
+are staged in `clones/project-bim/.agent/drafts-outbound/`:
+
+**DESIGN-RESEARCH (1 new — created 2026-05-17 session):**
+
+  design-research-html-print-pdf-pipeline.draft.md
+  → target: vendor/pointsav-design-system/research/html-print-pdf-pipeline.md
+  The canonical @page + Playwright PDF architecture for any HTML artifact
+  that must print or export to PDF. Covers: full-bleed @page declaration,
+  screen-scoped responsive rule pattern, build-pdf.mjs generator, checklist
+  for new slide decks. Reusable across all clusters.
+
+**DESIGN-RESEARCH (1 existing — not included in prior dispatch):**
+
+  design-index.md
+  → target: vendor/pointsav-design-system (review index)
+  The BIM extension review index: lists all tokens, components, and research
+  files landed on cluster/project-bim branch of pointsav-design-system.
+  Asks project-design Task to accept as-is or propose refinements before
+  Stage-6 promotion. Includes architecture decisions (xeokit over @thatopen,
+  Tauri IPC pattern, IfcOpenShell sidecar LGPL compliance).
+
+**DESIGN-COMPONENT (1 existing — not included in prior dispatch):**
+
+  design-generic-components-index.md
+  → target: vendor/pointsav-design-system/components/<various>
+  Nine domain-agnostic component patterns from the BIM showcase v0.0.2
+  that are candidates for META-substrate generalisation:
+  SidebarAccordion, CodeBlockWithCopy, ChipRow, TabBarDisclosure,
+  PreviewFrame (light/dark toggle), BreadcrumbNav, EmptyStateCard,
+  MachineSurfaceFooter, EditOnGitHubLink (planned, not yet authored).
+  Reference implementations in cluster CSS + JS. Per operator policy
+  2026-04-28: flow back domain-agnostic patterns to project-design.
+
+Note: `woodfine-palette-additions.md` is also in drafts-outbound but
+routes to Command for admin-tier action (mcorp-administrator
+woodfine-media-assets commit), NOT to project-design.
+
+All three carry `foundry-draft-v1` frontmatter and `state: ready-for-sweep`.
+
+— totebox@project-bim (relayed by command@claude-code 2026-05-24)
+
+---
 from: totebox@project-orgcharts
 to: totebox@project-design
 re: DTCG conversion + dtcg-vault entry — chart entity-role tokens
