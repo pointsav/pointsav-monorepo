@@ -1,12 +1,18 @@
 ---
 artifact: brief
-status: archived
+status: absorbed
 archived: 2026-05-23
+absorbed: 2026-05-24
+absorbed_into: BRIEF-slm-substrate-master.md
 archived_reason: >
   §3A conflicts (lbug + Ring 2/3 coupling) resolved and recorded in
   flow-restructure §8.D and §4.1 (session 4, operator-approved). §3B/3C/3D
   BRIEF classification executed session 4. §1+§2 Command Session operational
   steps absorbed into flow-restructure §12. Nothing unique remains.
+absorbed_reason: >
+  All remaining open items carried into BRIEF-slm-substrate-master.md §5/§6
+  (2026-05-24). That BRIEF is now PRIMARY PLAN OF RECORD replacing
+  flow-restructure.md (lost in 2026-05-22 rebase). This BRIEF is fully superseded.
 title: VM hardening, single-binary all-tier deploy, and BRIEF consolidation
 created: 2026-05-23
 author: totebox@project-intelligence (claude-sonnet-4-6)
