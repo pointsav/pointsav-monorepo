@@ -13,7 +13,7 @@ to: command@claude-code
 re: session close 2026-05-24 — nightly build request (app-mediakit-knowledge, 17 commits) + DS-ADR-07 flag
 created: 2026-05-24T00:00:00Z
 priority: high
-status: pending
+status: actioned
 msg-id: project-knowledge-20260524-session-close
 ---
 
@@ -95,7 +95,7 @@ to: command@claude-code
 re: misrouted project-intelligence drafts in project-knowledge drafts-outbound — return to origin
 created: 2026-05-23T17:45:00Z
 priority: normal
-status: pending
+status: actioned
 msg-id: project-knowledge-20260523-misrouted-drafts-return
 ---
 
@@ -148,9 +148,9 @@ to: command@claude-code
 re: session close 2026-05-23 — Phases 1–5 complete; 16 commits ready for Stage 6 + build tonight
 created: 2026-05-23T00:00:00Z
 priority: high
-status: pending
+status: actioned
 msg-id: project-knowledge-20260523-session-close-build-ready
-status: superseded
+superseded-by: project-knowledge-20260524-session-close
 superseded-by: project-knowledge-20260524-session-close
 ---
 
