@@ -91,6 +91,7 @@ Repository-wide policies apply regardless of per-directory licensing:
   - CODE_OF_CONDUCT.md  — Contributor Covenant 2.1
   - CONTRIBUTING.md     — contribution workflow and CLA requirements
   - SECURITY.md         — vulnerability disclosure policy
+  - TRADEMARK.md        — trademark and trade-dress policy
 
 All of these are propagated from factory-release-engineering and should
 not be edited in this repository. Propose changes upstream.
