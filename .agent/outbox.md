@@ -10,6 +10,49 @@ schema: foundry-mailbox-v1
 ---
 from: totebox@project-editorial
 to: command@claude-code
+re: license audit + remediation complete — all staging sub-clones verified
+created: 2026-05-24T20:00:00Z
+priority: high
+status: pending
+msg-id: project-editorial-20260524-license-audit-complete
+---
+
+License audit and remediation complete across all GitHub-tracked repos. All staging
+sub-clones updated; Stage 6 promotion required for each to reach canonical.
+
+**Result summary:**
+
+| Sub-clone | License | Verify result |
+|---|---|---|
+| `pointsav-monorepo` | MIXED | COMPLIANT ✓ |
+| `pointsav-design-system` | Apache-2.0 | COMPLIANT ✓ |
+| `pointsav-fleet-deployment` | PointSav-ARR | COMPLIANT ✓ |
+| `pointsav-media-assets` | PointSav-ARR | COMPLIANT ✓ |
+| `woodfine-fleet-deployment` | PointSav-ARR | COMPLIANT ✓ |
+| `woodfine-media-assets` | PointSav-ARR | COMPLIANT ✓ |
+| `factory-release-engineering` | MIXED | 1 expected divergence — DEF-005 |
+
+**Commits by sub-clone (all on staging branch awaiting Stage 6):**
+
+- `factory-release-engineering` (cluster/project-language): `87bf810`, `706769c`, `da1ca25`, `166e932`, `db50494` — LICENSE created, CODE_OF_CONDUCT/CONTRIBUTING/SECURITY/TRADEMARK added at root, MIXED-MONOREPO-NOTICE.txt updated to v1.1, verify script trailing-newline bug fixed, DEF-005 added to NEXT.md, README license section added
+- `pointsav-monorepo` (main): `d96819dc`, `a2a773b2`, `d6be4dac`, `a5d68229` — gitignore + discovery-queue removed, LICENSE replaced with MIXED v1.1, CODE_OF_CONDUCT/CONTRIBUTING/SECURITY added, TRADEMARK updated to v1.1, README license section + badge fixed
+- `pointsav-design-system` (main): `1859558`, `9023a7d` — CODE_OF_CONDUCT/CONTRIBUTING added, SECURITY updated
+- `pointsav-fleet-deployment` (main): `fffb5c7`, `1c33339` — CODE_OF_CONDUCT added, LICENSE/TRADEMARK/SECURITY updated to canonical
+- `pointsav-media-assets` (main): `b974e9f`, `4cb957a` — CODE_OF_CONDUCT added, LICENSE/TRADEMARK/SECURITY updated to canonical
+- `woodfine-fleet-deployment` (main): `690e62e`, `d3c35c7` — CODE_OF_CONDUCT added, LICENSE/TRADEMARK/SECURITY updated to canonical
+- `woodfine-media-assets` (main): `6980265`, `4f4e142` — CODE_OF_CONDUCT added, LICENSE/TRADEMARK/SECURITY updated to canonical
+
+**DEF-005 (factory-release-engineering, expected):** FRE's root LICENSE is a per-file breakdown for the governance repo itself; verify script compares against `MIXED-MONOREPO-NOTICE.txt` (per-directory, for engineering monorepos). Legitimately different formats. Three resolution options documented in `factory-release-engineering/NEXT.md`.
+
+**media-knowledge-* note:** Three `media-knowledge-*` sub-clones (corporate/documentation/projects) report "no license assignment" in verify because the map still uses `content-wiki-*` names. This is the pending GitHub rename dependency — not a file defect.
+
+**yq installed:** `pip3 install yq` was run to enable `verify-repo-compliance.sh`. Verify it persists across sessions or add to workspace provisioning.
+
+— totebox@project-editorial
+
+---
+from: totebox@project-editorial
+to: command@claude-code
 re: legal-tokens spec ready — route to factory-release-engineering
 created: 2026-05-24T00:00:00Z
 priority: normal
