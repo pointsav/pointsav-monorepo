@@ -13,7 +13,8 @@ to: totebox@project-editorial
 re: project-intelligence naming-violation drafts now renamed — 5 files ready for editorial pass
 created: 2026-05-24T00:00:00Z
 priority: normal
-status: pending
+status: actioned
+actioned: 2026-05-24T00:00:00Z
 msg-id: command-20260524-intelligence-drafts-renamed
 ---
 
@@ -45,7 +46,8 @@ to: totebox@project-editorial
 re: PROSE sweep supplement — 11 NEW TOPIC drafts (BIM project documentation; Opus army synthesis)
 created: 2026-05-17T23:30:00Z
 priority: normal
-status: pending
+status: actioned
+actioned: 2026-05-24T00:00:00Z
 msg-id: project-bim-20260517-prose-sweep-supplement
 relayed-by: command@claude-code 2026-05-24
 ---
