@@ -13,13 +13,7 @@ use axum::{
 };
 use pulldown_cmark::{html as md_html, Options, Parser};
 use serde_json::{json, Value};
-use std::{
-    collections::HashMap,
-    env,
-    fs,
-    path::PathBuf,
-    sync::Arc,
-};
+use std::{collections::HashMap, env, fs, path::PathBuf, sync::Arc};
 use tower_http::services::ServeDir;
 
 // ---------------------------------------------------------------------------
@@ -31,6 +25,7 @@ struct AppState {
     vault_dir: PathBuf,
     design_system_dir: PathBuf,
     static_dir: PathBuf,
+    #[allow(dead_code)]
     tenant: String,
     public_url: String,
     tokens: Arc<HashMap<String, Value>>,
@@ -268,7 +263,7 @@ fn page_shell(title: &str, current_path: &str, content: &str, state: &AppState) 
     )
 }
 
-fn render_sidebar(current_path: &str, state: &AppState) -> String {
+fn render_sidebar(current_path: &str, _state: &AppState) -> String {
     let mut cat_links = String::new();
     let cats = known_categories();
     for (slug, display) in SIDEBAR_ORDER {
@@ -400,18 +395,26 @@ struct KpEntry {
     zone1: Option<f64>,
     zone2: Option<f64>,
     zone3: Option<f64>,
+    #[allow(dead_code)]
     status: String,
     note: String,
     category: String,
 }
 
 fn size_order(name: &str) -> u8 {
-    if name.contains("Small") || name.contains("1/8") { 0 }
-    else if name.contains("Medium") || name.contains("1/4") { 1 }
-    else if name.contains("Large") || name.contains("1/3") { 2 }
-    else if name.contains("1/2") { 3 }
-    else if name.contains("Full") { 4 }
-    else { 5 }
+    if name.contains("Small") || name.contains("1/8") {
+        0
+    } else if name.contains("Medium") || name.contains("1/4") {
+        1
+    } else if name.contains("Large") || name.contains("1/3") {
+        2
+    } else if name.contains("1/2") {
+        3
+    } else if name.contains("Full") {
+        4
+    } else {
+        5
+    }
 }
 
 fn cat_order(cat: &str) -> u8 {
@@ -427,7 +430,13 @@ fn cat_order(cat: &str) -> u8 {
     }
 }
 
-fn render_kp_zone_svg(z1: f64, z2: f64, z3: Option<f64>, category: &str, area_m2: Option<f64>) -> String {
+fn render_kp_zone_svg(
+    z1: f64,
+    z2: f64,
+    z3: Option<f64>,
+    category: &str,
+    area_m2: Option<f64>,
+) -> String {
     let d3 = z3.unwrap_or(0.0);
     let total = z1 + z2 + d3;
     if total <= 0.0 {
@@ -436,12 +445,12 @@ fn render_kp_zone_svg(z1: f64, z2: f64, z3: Option<f64>, category: &str, area_m2
 
     let accent = match category {
         "private-office" => "#1a3a5c",
-        "medical"        => "#7a1a1a",
-        "laboratory"     => "#1a4060",
-        "business"       => "#7a4a00",
-        "academic"       => "#4a4800",
-        "civic"          => "#1a5430",
-        _                => "#303040",
+        "medical" => "#7a1a1a",
+        "laboratory" => "#1a4060",
+        "business" => "#7a4a00",
+        "academic" => "#4a4800",
+        "civic" => "#1a5430",
+        _ => "#303040",
     };
 
     // Drawing area: x=22, y=10, max_w=153, h=94 within 180×112 viewBox.
@@ -458,13 +467,61 @@ fn render_kp_zone_svg(z1: f64, z2: f64, z3: Option<f64>, category: &str, area_m2
     let xr: f64 = x0 + plan_w;
 
     let size_tier: u8 = match (category, area_m2) {
-        ("private-office", Some(a)) => if a < 38.0 { 0 } else if a < 55.0 { 1 } else { 2 },
-        ("medical",        Some(a)) => if a < 270.0 { 0 } else if a < 410.0 { 1 } else { 2 },
-        ("laboratory",     Some(a)) => if a < 260.0 { 0 } else if a < 370.0 { 1 } else { 2 },
-        ("academic",       Some(a)) => if a < 175.0 { 0 } else if a < 315.0 { 1 } else { 2 },
-        ("business",       Some(a)) => if a < 360.0 { 0 } else if a < 545.0 { 1 } else { 2 },
-        ("civic",          Some(a)) => if a < 420.0 { 0 } else if a < 700.0 { 1 } else { 2 },
-        _                           => 1,
+        ("private-office", Some(a)) => {
+            if a < 38.0 {
+                0
+            } else if a < 55.0 {
+                1
+            } else {
+                2
+            }
+        }
+        ("medical", Some(a)) => {
+            if a < 270.0 {
+                0
+            } else if a < 410.0 {
+                1
+            } else {
+                2
+            }
+        }
+        ("laboratory", Some(a)) => {
+            if a < 260.0 {
+                0
+            } else if a < 370.0 {
+                1
+            } else {
+                2
+            }
+        }
+        ("academic", Some(a)) => {
+            if a < 175.0 {
+                0
+            } else if a < 315.0 {
+                1
+            } else {
+                2
+            }
+        }
+        ("business", Some(a)) => {
+            if a < 360.0 {
+                0
+            } else if a < 545.0 {
+                1
+            } else {
+                2
+            }
+        }
+        ("civic", Some(a)) => {
+            if a < 420.0 {
+                0
+            } else if a < 700.0 {
+                1
+            } else {
+                2
+            }
+        }
+        _ => 1,
     };
 
     let h1 = (z1 / total) * dh;
@@ -615,28 +672,36 @@ fn render_kp_zone_svg(z1: f64, z2: f64, z3: Option<f64>, category: &str, area_m2
                 s.push_str(&format!("<rect x=\"{:.1}\" y=\"{:.1}\" width=\"{:.1}\" height=\"5\" fill=\"#c8b48a\" stroke=\"#8b6a40\" stroke-width=\"0.5\" rx=\"0.3\"/>", x0 + 3.0, y1 + 3.0, cw));
                 s.push_str(&format!("<rect x=\"{:.1}\" y=\"{:.1}\" width=\"9\" height=\"9\" fill=\"#b8c8d8\" stroke=\"#5a7898\" stroke-width=\"0.4\" rx=\"0.3\"/>", (x0 + cw + 5.0).min(xr - 12.0), y1 + 2.0));
             }
-            if h3 >= 10.0 { door!(s, x0 + 4.0, y2, (h3 * 0.85).min(13.0)); }
+            if h3 >= 10.0 {
+                door!(s, x0 + 4.0, y2, (h3 * 0.85).min(13.0));
+            }
         }
 
         // ── Medical ────────────────────────────────────────────────────────
         "medical" => {
             // Doctor office boxes: S=1, L=2
-            let doc_n   = if size_tier == 2 { 2usize } else { 1 };
+            let doc_n = if size_tier == 2 { 2usize } else { 1 };
             // Dental chairs in Z1: S=2, M=4, L=6
-            let chair_n = match size_tier { 0 => 2usize, 1 => 4, _ => 6 };
+            let chair_n = match size_tier {
+                0 => 2usize,
+                1 => 4,
+                _ => 6,
+            };
             for i in 0..doc_n {
                 let ox = x0 + 1.0 + 21.0 * i as f64;
                 s.push_str(&format!("<rect x=\"{:.1}\" y=\"{:.1}\" width=\"19\" height=\"{:.1}\" fill=\"#e8e0d0\" stroke=\"{}\" stroke-width=\"0.6\"/>", ox, y0, h1, accent));
                 s.push_str(&format!("<rect x=\"{:.1}\" y=\"{:.1}\" width=\"10\" height=\"6\" fill=\"#c8b48a\" stroke=\"#8b6a40\" stroke-width=\"0.4\" rx=\"0.3\"/>", ox + 2.0, y0 + h1 - 9.0));
             }
-            let ch_x0  = x0 + 2.0 + 21.0 * doc_n as f64;
+            let ch_x0 = x0 + 2.0 + 21.0 * doc_n as f64;
             let ch_area = (xr - 28.0) - ch_x0;
             if h1 >= 15.0 && ch_area > 0.0 {
                 let sp = (ch_area / chair_n as f64).max(11.0);
                 let cy = y0 + h1 * 0.35;
                 for i in 0..chair_n {
                     let cx = ch_x0 + sp * i as f64;
-                    if cx + 10.0 > xr - 28.0 { break; }
+                    if cx + 10.0 > xr - 28.0 {
+                        break;
+                    }
                     s.push_str(&format!("<rect x=\"{:.1}\" y=\"{:.1}\" width=\"10\" height=\"7\" fill=\"#d0e4d0\" stroke=\"#5a8a6a\" stroke-width=\"0.5\" rx=\"1.5\"/>", cx, cy));
                     s.push_str(&format!("<circle cx=\"{:.1}\" cy=\"{:.1}\" r=\"3.5\" fill=\"#e4f0e4\" stroke=\"#5a8a6a\" stroke-width=\"0.4\"/>", cx + 5.0, cy - 4.0));
                 }
@@ -661,22 +726,30 @@ fn render_kp_zone_svg(z1: f64, z2: f64, z3: Option<f64>, category: &str, area_m2
         "laboratory" => {
             // Z1: reception + offices (S=1, M/L=2) + lab bench clusters (S=3, M=5, L=7)
             let office_n = if size_tier == 0 { 1usize } else { 2 };
-            let bench_n  = match size_tier { 0 => 3usize, 1 => 5, _ => 7 };
+            let bench_n = match size_tier {
+                0 => 3usize,
+                1 => 5,
+                _ => 7,
+            };
             let rec_h = (h1 * 0.55).max(15.0).min(h1);
             s.push_str(&format!("<rect x=\"{:.1}\" y=\"{:.1}\" width=\"16\" height=\"{:.1}\" fill=\"#e8e0d0\" stroke=\"{}\" stroke-width=\"0.5\"/>", x0 + 1.0, y0, rec_h, accent));
             for i in 0..office_n {
                 let ox = x0 + 19.0 + 20.0 * i as f64;
                 let off_h = (h1 * 0.65).min(h1);
                 s.push_str(&format!("<rect x=\"{:.1}\" y=\"{:.1}\" width=\"18\" height=\"{:.1}\" fill=\"#e8e0d0\" stroke=\"{}\" stroke-width=\"0.5\"/>", ox, y0, off_h, accent));
-                if off_h >= 16.0 { desk!(s, ox + 2.0, y0 + off_h - 13.0); }
+                if off_h >= 16.0 {
+                    desk!(s, ox + 2.0, y0 + off_h - 13.0);
+                }
             }
-            let bx0    = x0 + 20.0 + 20.0 * office_n as f64;
+            let bx0 = x0 + 20.0 + 20.0 * office_n as f64;
             let b_area = xr - 4.0 - bx0;
             if b_area > 0.0 && h1 >= 12.0 {
                 let bs = b_area / bench_n as f64;
                 for i in 0..bench_n {
                     let bx = bx0 + bs * i as f64;
-                    if bx + 11.0 > xr - 2.0 { break; }
+                    if bx + 11.0 > xr - 2.0 {
+                        break;
+                    }
                     s.push_str(&format!("<rect x=\"{:.1}\" y=\"{:.1}\" width=\"11\" height=\"6\" fill=\"#c0d0c8\" stroke=\"#5a8a6a\" stroke-width=\"0.5\" rx=\"0.3\"/>", bx, y0 + 4.0));
                     s.push_str(&format!("<circle cx=\"{:.1}\" cy=\"{:.1}\" r=\"2.5\" fill=\"#a0a8b0\" stroke=\"#607080\" stroke-width=\"0.4\"/>", bx + 5.5, y0 + 14.0));
                 }
@@ -685,7 +758,7 @@ fn render_kp_zone_svg(z1: f64, z2: f64, z3: Option<f64>, category: &str, area_m2
                 let sr_w = 30.0f64;
                 s.push_str(&format!("<rect x=\"{:.1}\" y=\"{:.1}\" width=\"{:.1}\" height=\"{:.1}\" fill=\"#e0e8e0\" stroke=\"{}\" stroke-width=\"0.5\"/>", x0 + 1.0, y1, sr_w, h2 * 0.85, accent));
                 round_table!(s, x0 + 1.0 + sr_w / 2.0, y1 + h2 * 0.42, 6.0, 4);
-                let sb_w = (plan_w - sr_w - 10.0).max(0.0).min(100.0);
+                let sb_w = (plan_w - sr_w - 10.0).clamp(0.0, 100.0);
                 if sb_w > 0.0 {
                     s.push_str(&format!("<rect x=\"{:.1}\" y=\"{:.1}\" width=\"{:.1}\" height=\"6\" fill=\"#c8d8c0\" stroke=\"#5a8a6a\" stroke-width=\"0.4\" rx=\"0.3\"/>", x0 + sr_w + 5.0, y1 + 3.0, sb_w));
                 }
@@ -698,24 +771,40 @@ fn render_kp_zone_svg(z1: f64, z2: f64, z3: Option<f64>, category: &str, area_m2
         // ── Business ───────────────────────────────────────────────────────
         "business" => {
             // Left Z1: exec offices (S=2, M=3, L=5). Right Z1: workstation grid.
-            let office_n: usize = match size_tier { 0 => 2, 1 => 3, _ => 5 };
-            let ws_cols:  usize = match size_tier { 0 => 3, 1 => 4, _ => 5 };
-            let ws_rows:  usize = match size_tier { 0 => 3, 1 => 4, _ => 5 };
-            let conf_n:   usize = if size_tier == 2 { 2 } else { 1 };
+            let office_n: usize = match size_tier {
+                0 => 2,
+                1 => 3,
+                _ => 5,
+            };
+            let ws_cols: usize = match size_tier {
+                0 => 3,
+                1 => 4,
+                _ => 5,
+            };
+            let ws_rows: usize = match size_tier {
+                0 => 3,
+                1 => 4,
+                _ => 5,
+            };
+            let conf_n: usize = if size_tier == 2 { 2 } else { 1 };
             let col_n = if office_n > 3 { 2usize } else { 1 };
-            let per_col = (office_n + col_n - 1) / col_n;
+            let per_col = office_n.div_ceil(col_n);
             let oh = ((h1 - 6.0) / per_col as f64).min(13.0);
             // Reception counter strip at top of office section
             s.push_str(&format!("<rect x=\"{:.1}\" y=\"{:.1}\" width=\"{:.1}\" height=\"3\" fill=\"#c8b48a\" stroke=\"#8b6a40\" stroke-width=\"0.3\" rx=\"0.3\"/>", x0 + 1.0, y0, 16.0 * col_n as f64 + 2.0 * (col_n - 1) as f64));
             for i in 0..per_col {
                 let oy = y0 + 5.0 + oh * i as f64;
-                if oy + oh > y0 + h1 - 1.0 { break; }
+                if oy + oh > y0 + h1 - 1.0 {
+                    break;
+                }
                 s.push_str(&format!("<rect x=\"{:.1}\" y=\"{:.1}\" width=\"16\" height=\"{:.1}\" fill=\"#e8e0d0\" stroke=\"{}\" stroke-width=\"0.5\"/>", x0 + 1.0, oy, oh - 0.5, accent));
             }
             if col_n == 2 {
                 for i in 0..(office_n - per_col) {
                     let oy = y0 + 5.0 + oh * i as f64;
-                    if oy + oh > y0 + h1 - 1.0 { break; }
+                    if oy + oh > y0 + h1 - 1.0 {
+                        break;
+                    }
                     s.push_str(&format!("<rect x=\"{:.1}\" y=\"{:.1}\" width=\"16\" height=\"{:.1}\" fill=\"#e8e0d0\" stroke=\"{}\" stroke-width=\"0.5\"/>", x0 + 19.0, oy, oh - 0.5, accent));
                 }
             }
@@ -729,7 +818,9 @@ fn render_kp_zone_svg(z1: f64, z2: f64, z3: Option<f64>, category: &str, area_m2
                     let wy = y0 + 1.0 + ws_sy * row as f64;
                     let ww = (ws_sx - 2.0).clamp(5.0, 16.0);
                     let wh = (ws_sy - 1.5).clamp(3.0, 10.0);
-                    if wx + ww > xr - 2.0 { break; }
+                    if wx + ww > xr - 2.0 {
+                        break;
+                    }
                     s.push_str(&format!("<rect x=\"{:.1}\" y=\"{:.1}\" width=\"{:.1}\" height=\"{:.1}\" fill=\"#d0c8e0\" stroke=\"#7060a0\" stroke-width=\"0.4\" rx=\"0.3\"/>", wx, wy, ww, wh));
                 }
             }
@@ -738,7 +829,9 @@ fn render_kp_zone_svg(z1: f64, z2: f64, z3: Option<f64>, category: &str, area_m2
                 let ch = (h2 * 0.48).clamp(8.0, 16.0);
                 for ci in 0..conf_n {
                     let cx_t = x0 + 4.0 + ci as f64 * (cw + 6.0);
-                    if cx_t + cw > xr - 26.0 { break; }
+                    if cx_t + cw > xr - 26.0 {
+                        break;
+                    }
                     let cy_t = y1 + (h2 - ch) / 2.0;
                     s.push_str(&format!("<rect x=\"{:.1}\" y=\"{:.1}\" width=\"{:.1}\" height=\"{:.1}\" fill=\"#d4c8a0\" stroke=\"#8b7a40\" stroke-width=\"0.5\" rx=\"1\"/>", cx_t, cy_t, cw, ch));
                     let cc = ((cw / 10.0) as usize).max(2);
@@ -812,7 +905,9 @@ fn render_kp_zone_svg(z1: f64, z2: f64, z3: Option<f64>, category: &str, area_m2
             // Z2: instructor desks + storage strip
             if h2 >= 12.0 {
                 desk!(s, x0 + 4.0, y1 + 3.0);
-                if size_tier >= 1 { desk!(s, x0 + 24.0, y1 + 3.0); }
+                if size_tier >= 1 {
+                    desk!(s, x0 + 24.0, y1 + 3.0);
+                }
                 let sw = (plan_w * 0.32).min(48.0);
                 s.push_str(&format!("<rect x=\"{:.1}\" y=\"{:.1}\" width=\"{:.1}\" height=\"5\" fill=\"#c8d8b8\" stroke=\"#5a7050\" stroke-width=\"0.4\" rx=\"0.3\"/>", xr - sw - 4.0, y1 + 4.0, sw));
             }
@@ -822,20 +917,31 @@ fn render_kp_zone_svg(z1: f64, z2: f64, z3: Option<f64>, category: &str, area_m2
         "civic" => {
             // Z1: offices left (S=2, M=4, L=5) + conf rooms right (S=1, M/L=2)
             // L tier also adds court room with theater seating far right
-            let office_n: usize = match size_tier { 0 => 2, 1 => 4, _ => 5 };
-            let conf_n:   usize = match size_tier { 0 => 1, _ => 2 };
+            let office_n: usize = match size_tier {
+                0 => 2,
+                1 => 4,
+                _ => 5,
+            };
+            let conf_n: usize = match size_tier {
+                0 => 1,
+                _ => 2,
+            };
             let ocols = if office_n > 3 { 2usize } else { 1 };
-            let oper_col = (office_n + ocols - 1) / ocols;
+            let oper_col = office_n.div_ceil(ocols);
             let oh = ((h1 - 2.0) / oper_col as f64).min(12.0);
             for i in 0..oper_col {
                 let oy = y0 + 1.0 + oh * i as f64;
-                if oy + oh > y0 + h1 - 1.0 { break; }
+                if oy + oh > y0 + h1 - 1.0 {
+                    break;
+                }
                 s.push_str(&format!("<rect x=\"{:.1}\" y=\"{:.1}\" width=\"13\" height=\"{:.1}\" fill=\"#e8e0d0\" stroke=\"{}\" stroke-width=\"0.4\"/>", x0 + 1.0, oy, oh - 0.5, accent));
             }
             if ocols == 2 {
                 for i in 0..(office_n - oper_col) {
                     let oy = y0 + 1.0 + oh * i as f64;
-                    if oy + oh > y0 + h1 - 1.0 { break; }
+                    if oy + oh > y0 + h1 - 1.0 {
+                        break;
+                    }
                     s.push_str(&format!("<rect x=\"{:.1}\" y=\"{:.1}\" width=\"13\" height=\"{:.1}\" fill=\"#e8e0d0\" stroke=\"{}\" stroke-width=\"0.4\"/>", x0 + 16.0, oy, oh - 0.5, accent));
                 }
             }
@@ -844,7 +950,9 @@ fn render_kp_zone_svg(z1: f64, z2: f64, z3: Option<f64>, category: &str, area_m2
             let conf_zone_x = xr - (conf_n as f64 * 32.0 + court_w + 2.0);
             for ci in 0..conf_n {
                 let cx = conf_zone_x + ci as f64 * 32.0;
-                if cx < x0 + 34.0 { continue; }
+                if cx < x0 + 34.0 {
+                    continue;
+                }
                 s.push_str(&format!("<rect x=\"{:.1}\" y=\"{:.1}\" width=\"28\" height=\"{:.1}\" fill=\"#e8e0d0\" stroke=\"{}\" stroke-width=\"0.5\"/>", cx, y0 + 1.0, h1 - 2.0, accent));
                 let cth = ((h1 - 2.0) * 0.48).min(12.0);
                 let cty = y0 + 1.0 + ((h1 - 2.0) - cth) / 2.0;
@@ -858,14 +966,16 @@ fn render_kp_zone_svg(z1: f64, z2: f64, z3: Option<f64>, category: &str, area_m2
                 for row in 0..cr_rows.min(4) {
                     for col in 0..3usize {
                         let sy = y0 + 3.0 + row as f64 * 7.0;
-                        if sy + 4.0 > y0 + h1 - 3.0 { break; }
+                        if sy + 4.0 > y0 + h1 - 3.0 {
+                            break;
+                        }
                         s.push_str(&format!("<rect x=\"{:.1}\" y=\"{:.1}\" width=\"7\" height=\"4\" fill=\"#b8c8d8\" stroke=\"#5a7898\" stroke-width=\"0.3\" rx=\"0.3\"/>", crx + 2.0 + col as f64 * 9.0, sy));
                     }
                 }
             }
             // Reception counter between offices and conf rooms
             let rec_start = x0 + 2.0 + 14.0 * ocols as f64 + 3.0;
-            let rec_end   = conf_zone_x - 2.0;
+            let rec_end = conf_zone_x - 2.0;
             if rec_end - rec_start >= 8.0 {
                 s.push_str(&format!("<rect x=\"{:.1}\" y=\"{:.1}\" width=\"{:.1}\" height=\"4\" fill=\"#c8b48a\" stroke=\"#8b6a40\" stroke-width=\"0.4\" rx=\"0.3\"/>", rec_start, y0 + 2.0, (rec_end - rec_start).min(28.0)));
             }
@@ -897,17 +1007,29 @@ fn render_kp_zone_svg(z1: f64, z2: f64, z3: Option<f64>, category: &str, area_m2
 }
 
 fn render_kp_fraction_svg(display_name: &str) -> String {
-    let fraction = if display_name.contains("1/8") { 0.125 }
-        else if display_name.contains("1/4") { 0.25 }
-        else if display_name.contains("1/3") { 1.0 / 3.0 }
-        else if display_name.contains("1/2") { 0.5 }
-        else { 1.0 };
+    let fraction = if display_name.contains("1/8") {
+        0.125
+    } else if display_name.contains("1/4") {
+        0.25
+    } else if display_name.contains("1/3") {
+        1.0 / 3.0
+    } else if display_name.contains("1/2") {
+        0.5
+    } else {
+        1.0
+    };
     let fill_w = (164.0 * fraction) as u32;
-    let label = if display_name.contains("1/8") { "1/8 Floor" }
-        else if display_name.contains("1/4") { "1/4 Floor" }
-        else if display_name.contains("1/3") { "1/3 Floor" }
-        else if display_name.contains("1/2") { "1/2 Floor" }
-        else { "Full Floor" };
+    let label = if display_name.contains("1/8") {
+        "1/8 Floor"
+    } else if display_name.contains("1/4") {
+        "1/4 Floor"
+    } else if display_name.contains("1/3") {
+        "1/3 Floor"
+    } else if display_name.contains("1/2") {
+        "1/2 Floor"
+    } else {
+        "Full Floor"
+    };
     format!(
         r##"<svg class="bim-kp-diagram" viewBox="0 0 180 112" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
   <text x="90" y="8" font-size="7" fill="#888" font-family="sans-serif" text-anchor="middle" letter-spacing="1.5">FLOOR PLATE</text>
@@ -986,7 +1108,8 @@ fn collect_key_plan_entries(token: &Value) -> Vec<KpEntry> {
     }
     // Sort: by category group, then Small → Medium → Large within each group
     entries.sort_by(|a, b| {
-        cat_order(&a.category).cmp(&cat_order(&b.category))
+        cat_order(&a.category)
+            .cmp(&cat_order(&b.category))
             .then(size_order(&a.display_name).cmp(&size_order(&b.display_name)))
             .then(a.display_name.cmp(&b.display_name))
     });
@@ -1069,7 +1192,14 @@ fn render_token_page(slug: &str, state: &AppState) -> String {
     let meta = cats.get(slug);
 
     let (display_name, ifc_anchor, uniclass, ifc_hierarchy, intro, elements_str) = match meta {
-        Some(m) => (m.display_name, m.ifc_anchor, m.uniclass, m.ifc_hierarchy, m.intro, m.elements),
+        Some(m) => (
+            m.display_name,
+            m.ifc_anchor,
+            m.uniclass,
+            m.ifc_hierarchy,
+            m.intro,
+            m.elements,
+        ),
         None => ("Tokens", "IfcRoot", "—", "IfcRoot", "", ""),
     };
 
@@ -1088,9 +1218,7 @@ fn render_token_page(slug: &str, state: &AppState) -> String {
                 })
                 .collect::<String>()
         }
-        _ => format!(
-            "<tr><td colspan=\"3\" style=\"color:var(--bim-fg-muted)\">No property sets defined for this category</td></tr>"
-        ),
+        _ => "<tr><td colspan=\"3\" style=\"color:var(--bim-fg-muted)\">No property sets defined for this category</td></tr>".to_string(),
     };
 
     // DTCG JSON bundle
@@ -1201,7 +1329,12 @@ fn render_token_page(slug: &str, state: &AppState) -> String {
         entries_tab = entries_tab,
     );
 
-    page_shell(display_name, &format!("/tokens/{}.dtcg", slug), &content, state)
+    page_shell(
+        display_name,
+        &format!("/tokens/{}.dtcg", slug),
+        &content,
+        state,
+    )
 }
 
 // ---------------------------------------------------------------------------
@@ -1209,7 +1342,6 @@ fn render_token_page(slug: &str, state: &AppState) -> String {
 // ---------------------------------------------------------------------------
 
 async fn home_handler(State(state): State<Arc<AppState>>) -> Html<String> {
-    let cats = known_categories();
     let token_count = state.token_count;
     let content = format!(
         r#"<div class="bim-hero">
@@ -1272,7 +1404,12 @@ async fn tokens_index_handler(State(state): State<Arc<AppState>>) -> Html<String
         crumbs = breadcrumbs(&[("/", "Home")]),
         cards = cards,
     );
-    Html(page_shell("Browse All BIM Objects", "/tokens", &content, &state))
+    Html(page_shell(
+        "Browse All BIM Objects",
+        "/tokens",
+        &content,
+        &state,
+    ))
 }
 
 async fn token_category_handler(
@@ -1326,12 +1463,7 @@ async fn research_index_handler(State(state): State<Arc<AppState>>) -> Html<Stri
     if let Ok(entries) = fs::read_dir(&research_dir) {
         let mut files: Vec<_> = entries
             .flatten()
-            .filter(|e| {
-                e.path()
-                    .extension()
-                    .map(|x| x == "md")
-                    .unwrap_or(false)
-            })
+            .filter(|e| e.path().extension().map(|x| x == "md").unwrap_or(false))
             .collect();
         files.sort_by_key(|e| e.file_name());
         for entry in files {
@@ -1371,7 +1503,10 @@ async fn research_item_handler(
     Path(slug): Path<String>,
     State(state): State<Arc<AppState>>,
 ) -> Result<Html<String>, StatusCode> {
-    let path = state.vault_dir.join("research").join(format!("{}.md", slug));
+    let path = state
+        .vault_dir
+        .join("research")
+        .join(format!("{}.md", slug));
     let md = fs::read_to_string(&path).map_err(|_| StatusCode::NOT_FOUND)?;
     let mut html_out = String::new();
     let parser = Parser::new_ext(&md, Options::all());
@@ -1387,7 +1522,12 @@ async fn research_item_handler(
         .find(|l| l.starts_with("# "))
         .map(|l| l.trim_start_matches("# ").to_string())
         .unwrap_or_else(|| slug.clone());
-    Ok(Html(page_shell(&title, &format!("/research/{}", slug), &content, &state)))
+    Ok(Html(page_shell(
+        &title,
+        &format!("/research/{}", slug),
+        &content,
+        &state,
+    )))
 }
 
 async fn components_index_handler(State(state): State<Arc<AppState>>) -> Html<String> {
@@ -1449,7 +1589,12 @@ async fn components_item_handler(
             html_out = html_out
         );
         let title = slug.replace('-', " ");
-        Ok(Html(page_shell(&title, &format!("/components/{}", slug), &content, &state)))
+        Ok(Html(page_shell(
+            &title,
+            &format!("/components/{}", slug),
+            &content,
+            &state,
+        )))
     } else if html_path.exists() {
         let html_out = fs::read_to_string(&html_path).map_err(|_| StatusCode::NOT_FOUND)?;
         let content = format!(
@@ -1458,7 +1603,12 @@ async fn components_item_handler(
             html_out = html_out
         );
         let title = slug.replace('-', " ");
-        Ok(Html(page_shell(&title, &format!("/components/{}", slug), &content, &state)))
+        Ok(Html(page_shell(
+            &title,
+            &format!("/components/{}", slug),
+            &content,
+            &state,
+        )))
     } else {
         Err(StatusCode::NOT_FOUND)
     }
@@ -1591,15 +1741,11 @@ const INLINE_JS: &str = r#"<script>
 // ---------------------------------------------------------------------------
 
 fn load_state() -> AppState {
-    let design_system_dir = PathBuf::from(
-        env::var("BIM_DESIGN_SYSTEM_DIR").unwrap_or_else(|_| ".".to_string()),
-    );
-    let vault_dir = PathBuf::from(
-        env::var("BIM_VAULT_DIR").unwrap_or_else(|_| ".".to_string()),
-    );
-    let static_dir = PathBuf::from(
-        env::var("BIM_STATIC_DIR").unwrap_or_else(|_| "./static".to_string()),
-    );
+    let design_system_dir =
+        PathBuf::from(env::var("BIM_DESIGN_SYSTEM_DIR").unwrap_or_else(|_| ".".to_string()));
+    let vault_dir = PathBuf::from(env::var("BIM_VAULT_DIR").unwrap_or_else(|_| ".".to_string()));
+    let static_dir =
+        PathBuf::from(env::var("BIM_STATIC_DIR").unwrap_or_else(|_| "./static".to_string()));
     let tenant = env::var("BIM_TENANT").unwrap_or_else(|_| "woodfine".to_string());
     let public_url =
         env::var("BIM_PUBLIC_URL").unwrap_or_else(|_| "https://bim.woodfinegroup.com".to_string());
