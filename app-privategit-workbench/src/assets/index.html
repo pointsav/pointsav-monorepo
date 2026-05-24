@@ -343,6 +343,8 @@ header .tag {
   line-height: 1.6;
   padding: 16px;
   tab-size: 4;
+  white-space: pre;
+  overflow-x: auto;
   overflow-y: auto;
 }
 #editor-textarea::-webkit-scrollbar { width: 8px; }
@@ -845,8 +847,11 @@ function applyGotoLine(n) {
   const idx   = Math.max(0, Math.min(n - 1, lines.length - 1));
   const pos   = lines.slice(0, idx).reduce((a, l) => a + l.length + 1, 0);
   ta.selectionStart = ta.selectionEnd = pos;
-  ta.scrollTop = Math.max(0, idx * 12 * 1.6 - ta.clientHeight / 2);
   ta.focus();
+  const cs     = window.getComputedStyle(ta);
+  const lineH  = parseFloat(cs.lineHeight) || parseFloat(cs.fontSize) * 1.6;
+  const padTop = parseFloat(cs.paddingTop) || 0;
+  ta.scrollTop = Math.max(0, padTop + idx * lineH - ta.clientHeight / 2 + lineH / 2);
   updateGutterLines();
   updateEditorPos();
 }
