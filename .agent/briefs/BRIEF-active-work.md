@@ -40,15 +40,15 @@ consolidates:
 |---|---|---|
 | 1 | Manifest path correction (content-wiki-* → media-knowledge-*) | DONE |
 | 2 | State file refresh | DONE |
-| 3 | Chrome sprint E1 — /wanted audit + stubs | pending |
-| 4 | Chrome sprint E3 — category count verification | pending |
-| 5 | Chrome sprint E4 — title sentence-case spot-check | pending |
-| 6 | topic-zero-container-inference — competitor name cleanup | pending |
-| 7 | topic-trajectory-substrate (EN + ES) | pending |
-| 8 | topic-disclosure-substrate (EN + ES) | pending |
-| 9 | topic-citation-substrate (EN + ES) | pending |
-| 10 | Style-guide series — 13 remaining genres (EN + ES each) | pending |
-| 11 | E2 — vocabulary ratification artifact + project-intelligence outbox | pending |
+| 3 | Chrome sprint E1 — /wanted audit + stubs | DONE — all top-30 wanted slugs exist on disk; engine wikilink resolution is transient post-binary-rebuild (project-knowledge scope); no stubs needed |
+| 4 | Chrome sprint E3 — category count verification | DONE — all 10 categories ≥5 EN articles; lowest is applications (7); no gaps |
+| 5 | Chrome sprint E4 — title sentence-case spot-check | DONE — 20 articles across 5 categories checked; all correct; no G1/G2 regressions found |
+| 6 | topic-zero-container-inference — competitor name cleanup | DONE — a16a78a; Yo-Yo + named competitors removed (EN+ES) |
+| 7 | topic-trajectory-substrate (EN + ES) | DONE (pre-existing) — substrate/ already has active article |
+| 8 | topic-disclosure-substrate (EN + ES) | DONE (pre-existing) — substrate/ already has active article |
+| 9 | topic-citation-substrate (EN + ES) | DONE (pre-existing) — substrate/ already has active article |
+| 10 | Style-guide series — 13 remaining genres (EN + ES each) | DONE — 4 commits: af1a599 (readme/memo/email), a27c430 (changelog/inventory/chat), 6947b7e (ticket-comment/meeting-notes/policy), 538418b (license-explainer/contract/cla/terms) |
+| 11 | E2 — vocabulary ratification artifact + project-intelligence outbox | DONE — 014f5205; artifact at drafts-outbound/vocabulary-ratification-e2.md; outbox message prepended |
 
 ---
 
