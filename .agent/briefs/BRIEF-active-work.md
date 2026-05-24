@@ -16,22 +16,39 @@ consolidates:
 
 ---
 
-## STATUS — 2026-05-24 (session 3)
+## STATUS — 2026-05-24 (session 4)
 
 | Area | State |
 |---|---|
-| Knowledge-platform editorial overhaul | **COMPLETE** (project-editorial scope). Stage 6 pending Command. |
-| Wiki rebuild lint blockers | **COMPLETE this session.** CWP 9 errors → 0 (aa26ddd). CWC 5 errors → 0 (01ea8a7). |
-| ES governance pages — corporate | **COMPLETE this session.** about.es.md, contact.es.md, disclaimers.es.md authored (01ea8a7). |
-| Stage 6 — all 4 repos | **Pending Command.** Outbox message updated with final ranges. |
-| Serving-clone pull + service restart | **Pending Command** (after Stage 6). |
-| Nightly build — cargo PATH fix | **Pending Command** — `foundry-nightly-build.service` needs `Environment=PATH=...` line. |
-| Nightly build — app-mediakit-knowledge | **Build-request in outbox.** Prerequisites: Stage 6 + cargo PATH fix first. |
-| Chrome sprint E1 / E3 / E4 | **Blocked — awaiting Stage 6 + project-knowledge build.** |
+| Knowledge-platform editorial overhaul | **COMPLETE** (project-editorial scope). Stage 6 actioned by Command. |
+| Wiki rebuild lint blockers | **COMPLETE** (session 3). CWP 9 errors → 0 (aa26ddd). CWC 5 errors → 0 (01ea8a7). |
+| ES governance pages — corporate | **COMPLETE** (session 3). about.es.md, contact.es.md, disclaimers.es.md authored (01ea8a7). |
+| Stage 6 — all 4 repos | **DONE.** Actioned by Command (both outbox messages `status: actioned`). |
+| Serving-clone pull + service restart | **DONE.** Nightly build (08:00Z) rebuilt app-mediakit-knowledge; services restarted. |
+| Nightly build — app-mediakit-knowledge | **DONE.** sha256 `14bdb9a3`, source commit `8cd450c6`, smoke_test: pass. |
+| Chrome sprint E1 / E3 / E4 | **Unblocked.** Stage 6 + nightly build complete. In AUTO queue. |
+| Manifest path correction | **Done this session** — `content-wiki-* → media-knowledge-*` paths updated; N=7 clones. |
+| State file refresh | **Done this session.** |
 | GitHub presence elevation | **Research complete.** Remainder Command/admin-tier. |
 | Publishing-tier naming | **All project-editorial items done.** Brief archived. |
 | BCSC README sweep | **COMPLETE** — clean, no changes needed. |
 | Post-pass lint gate | **COMPLETE** — 0 errors, 246 sentence-length warnings (pre-existing). |
+
+## AUTO queue — 2026-05-24 (session 4) — IN PROGRESS
+
+| # | Item | State |
+|---|---|---|
+| 1 | Manifest path correction (content-wiki-* → media-knowledge-*) | DONE |
+| 2 | State file refresh | DONE |
+| 3 | Chrome sprint E1 — /wanted audit + stubs | pending |
+| 4 | Chrome sprint E3 — category count verification | pending |
+| 5 | Chrome sprint E4 — title sentence-case spot-check | pending |
+| 6 | topic-zero-container-inference — competitor name cleanup | pending |
+| 7 | topic-trajectory-substrate (EN + ES) | pending |
+| 8 | topic-disclosure-substrate (EN + ES) | pending |
+| 9 | topic-citation-substrate (EN + ES) | pending |
+| 10 | Style-guide series — 13 remaining genres (EN + ES each) | pending |
+| 11 | E2 — vocabulary ratification artifact + project-intelligence outbox | pending |
 
 ---
 
