@@ -54,6 +54,7 @@ pub trait GraphStore: Send + Sync {
         location: &str,
     ) -> Result<usize>;
     /// Write a directed RelatedTo edge between two entities by ID. Idempotent.
+    #[allow(dead_code)]
     fn write_related_to(&self, from_id: &str, to_id: &str, relation_type: &str) -> Result<()>;
     /// Returns true if a CORPUS file (identified by its worm_id, e.g. the bare UUID
     /// portion of `CORPUS_<worm_id>.json`) has already been fully extracted into the
