@@ -1,9 +1,18 @@
 # app-infrastructure-leased
 
-Infrastructure cartridge for leased nodes (Laptop B).
+<div align="center">
 
-Runs on `os-infrastructure`. Deployed as `fleet-infrastructure-leased` in the showcase tier
-and `fleet-infrastructure-leased-1` in the PointSav Private Network.
+[ 🇪🇸 Leer este documento en Español ](./README.es.md)
 
-Part of the `app-infrastructure-*` family — three cartridges that together constitute the
-PointSav Private Network node software stack.
+</div>
+
+**Vendor:** PointSav Digital Systems
+**Crate type:** App surface — leased deployment posture
+
+---
+
+`app-infrastructure-leased` is the intended application-surface cartridge for the leased PPN node (Node 2 in the planned three-node topology). It provides the operator-facing layer above the leased-posture OS image, exposing mesh management, node status, and administrative controls for a node connecting to the sovereign mesh from leased hardware.
+
+This crate is the leased counterpart to `app-infrastructure-onprem` and `app-infrastructure-cloud`.
+
+*Reserved-folder — implementation pending. Gated on WireGuard Part A and PPN subnet ratification.*

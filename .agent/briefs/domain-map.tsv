@@ -1,0 +1,297 @@
+artefact_path	title	type	primary_domain	secondary_domain	wiki
+applications/app-mediakit-knowledge.md	app-mediakit-knowledge	TOPIC	applications		documentation
+applications/app-mediakit-marketing.md	app-mediakit-marketing	TOPIC	applications		documentation
+applications/app-orchestration-gis.md	app-orchestration-gis	TOPIC	applications		documentation
+applications/article-shell-leapfrog.md	article-shell-leapfrog	TOPIC	applications		documentation
+applications/documentation-pointsav-com-launch-2026-04-27.md	documentation-pointsav-com-launch-2026-04-27	TOPIC	applications		documentation
+applications/knowledge-wiki-home-page-design.md	knowledge-wiki-home-page-design	TOPIC	applications		documentation
+applications/location-intelligence-platform.md	location-intelligence-platform	TOPIC	applications		documentation
+architecture/3-layer-stack.md	3-layer-stack	TOPIC	platform-architecture		documentation
+architecture/3d-asset-tokens.md	3d-asset-tokens	TOPIC	platform-architecture		documentation
+architecture/architecture.md	architecture	TOPIC	platform-architecture		documentation
+architecture/building-design-system-bim.md	building-design-system-bim	TOPIC	platform-architecture		documentation
+architecture/capability-based-security.md	capability-based-security	TOPIC	platform-architecture		documentation
+architecture/city-code-as-composable-geometry.md	city-code-as-composable-geometry	TOPIC	platform-architecture		documentation
+architecture/co-location-methodology.md	co-location-methodology	TOPIC	platform-architecture		documentation
+architecture/collab-via-passthrough-relay.md	collab-via-passthrough-relay	TOPIC	platform-architecture		documentation
+architecture/crypto-attestation.md	crypto-attestation	TOPIC	platform-architecture		documentation
+architecture/cryptographic-ledgers.md	cryptographic-ledgers	TOPIC	platform-architecture		documentation
+architecture/customer-hostability.md	customer-hostability	TOPIC	platform-architecture		documentation
+architecture/data-sovereignty-telemetry.md	data-sovereignty-telemetry	TOPIC	platform-architecture		documentation
+architecture/decode-time-constraints.md	decode-time-constraints	TOPIC	platform-architecture		documentation
+architecture/development-regions.md	development-regions	TOPIC	platform-architecture		documentation
+architecture/direct-payment-settlement.md	direct-payment-settlement	TOPIC	platform-architecture		documentation
+architecture/doorman-protocol.md	doorman-protocol	TOPIC	platform-architecture		documentation
+architecture/economic-model.md	economic-model	TOPIC	platform-architecture		documentation
+architecture/flat-file-bim-leapfrog.md	flat-file-bim-leapfrog	TOPIC	platform-architecture		documentation
+architecture/foundry-doctrine-architecture.md	foundry-doctrine-architecture	TOPIC	platform-architecture		documentation
+architecture/foundry-doctrine-overview.md	foundry-doctrine-overview	TOPIC	platform-architecture		documentation
+architecture/identity-ledger-schema-design.md	identity-ledger-schema-design	TOPIC	platform-architecture		documentation
+architecture/leapfrog-2030-architecture.md	leapfrog-2030-architecture	TOPIC	platform-architecture		documentation
+architecture/location-intelligence-strategy.md	location-intelligence-strategy	TOPIC	platform-architecture		documentation
+architecture/machine-based-auth.md	machine-based-auth	TOPIC	platform-architecture		documentation
+architecture/personnel-permissions.md	personnel-permissions	TOPIC	platform-architecture		documentation
+architecture/poi-data-schema.md	poi-data-schema	TOPIC	platform-architecture		documentation
+architecture/pointsav-llm.md	pointsav-llm	TOPIC	platform-architecture		documentation
+architecture/sel4-foundation.md	sel4-foundation	TOPIC	platform-architecture		documentation
+architecture/slm-stack-architecture.md	slm-stack-architecture	TOPIC	platform-architecture		documentation
+architecture/sovereign-ai-routing.md	sovereign-ai-routing	TOPIC	platform-architecture		documentation
+architecture/three-ring-architecture.md	three-ring-architecture	TOPIC	platform-architecture		documentation
+architecture/totebox-orchestration-development.md	totebox-orchestration-development	TOPIC	platform-architecture		documentation
+architecture/totebox-session.md	totebox-session	TOPIC	platform-architecture		documentation
+architecture/verification-surveyor.md	verification-surveyor	TOPIC	platform-architecture		documentation
+architecture/vertical-seed-packs-marketplace.md	vertical-seed-packs-marketplace	TOPIC	platform-architecture		documentation
+architecture/zero-container-inference.md	zero-container-inference	TOPIC	platform-architecture		documentation
+design-system/brand-family-swatch.md	brand-family-swatch	TOPIC	design-system		documentation
+design-system/brand-typography.md	brand-typography	TOPIC	design-system		documentation
+design-system/climate-zone-tokens.md	From the app-orchestration-bim project root	TOPIC	design-system		documentation
+design-system/country-filter-chips.md	country-filter-chips	TOPIC	design-system		documentation
+design-system/design-color.md	design-color	TOPIC	design-system		documentation
+design-system/design-motion.md	design-motion	TOPIC	design-system		documentation
+design-system/design-philosophy.md	design-philosophy	TOPIC	design-system		documentation
+design-system/design-primitive-vocabulary.md	design-primitive-vocabulary	TOPIC	design-system		documentation
+design-system/design-spacing.md	design-spacing	TOPIC	design-system		documentation
+design-system/design-typography.md	design-typography	TOPIC	design-system		documentation
+design-system/guide-component-badge.md	guide-component-badge	TOPIC	design-system		documentation
+design-system/guide-component-breadcrumb.md	guide-component-breadcrumb	TOPIC	design-system		documentation
+design-system/guide-component-button.md	guide-component-button	TOPIC	design-system		documentation
+design-system/guide-component-checkbox.md	guide-component-checkbox	TOPIC	design-system		documentation
+design-system/guide-component-citation-authority-ribbon.md	guide-component-citation-authority-ribbon	TOPIC	design-system		documentation
+design-system/guide-component-freshness-ribbon.md	guide-component-freshness-ribbon	TOPIC	design-system		documentation
+design-system/guide-component-home-grid.md	guide-component-home-grid	TOPIC	design-system		documentation
+design-system/guide-component-input-text.md	guide-component-input-text	TOPIC	design-system		documentation
+design-system/guide-component-link.md	guide-component-link	TOPIC	design-system		documentation
+design-system/guide-component-navigation-bar.md	guide-component-navigation-bar	TOPIC	design-system		documentation
+design-system/guide-component-notification.md	guide-component-notification	TOPIC	design-system		documentation
+design-system/guide-component-research-trail-footer.md	guide-component-research-trail-footer	TOPIC	design-system		documentation
+design-system/guide-component-select.md	guide-component-select	TOPIC	design-system		documentation
+design-system/guide-component-surface.md	guide-component-surface	TOPIC	design-system		documentation
+design-system/guide-component-switch.md	guide-component-switch	TOPIC	design-system		documentation
+design-system/guide-component-tab.md	guide-component-tab	TOPIC	design-system		documentation
+design-system/map-side-drawer.md	map-side-drawer	TOPIC	design-system		documentation
+design-system/map-stats-panel.md	map-stats-panel	TOPIC	design-system		documentation
+design-system/neurodiversity-typography-standards.md	neurodiversity-typography-standards	TOPIC	design-system		documentation
+design-system/properties-panel-accessibility.md	properties-panel-accessibility	TOPIC	design-system		documentation
+design-system/spatial-tree-accessibility.md	spatial-tree-accessibility	TOPIC	design-system		documentation
+design-system/viewport-3d-accessibility.md	viewport-3d-accessibility	TOPIC	design-system		documentation
+design-system/wiki-component-library.md	wiki-component-library	TOPIC	design-system		documentation
+design-system/wiki-dark-mode.md	wiki-dark-mode	TOPIC	design-system		documentation
+design-system/wiki-typography-system.md	wiki-typography-system	TOPIC	design-system		documentation
+design-system/zoom-tier-reveal-pattern.md	zoom-tier-reveal-pattern	TOPIC	design-system		documentation
+governance/anti-homogenization-discipline.md	anti-homogenization-discipline	TOPIC	governance		documentation
+governance/canadian-simple-copyright.md	canadian-simple-copyright	TOPIC	governance		documentation
+governance/contributor-model.md	contributor-model	TOPIC	governance		documentation
+governance/favicon-matrix.md	favicon-matrix	TOPIC	governance		documentation
+governance/moonshot-initiatives.md	moonshot-initiatives	TOPIC	governance		documentation
+governance/ontological-governance.md	ontological-governance	TOPIC	governance		documentation
+governance/sovereign-airlock-doctrine.md	sovereign-airlock-doctrine	TOPIC	governance		documentation
+governance/sovereign-replacement-initiative.md	sovereign-replacement-initiative	TOPIC	governance		documentation
+governance/sys-adr-06.md	sys-adr-06	TOPIC	governance		documentation
+governance/sys-adr-07.md	sys-adr-07	TOPIC	governance		documentation
+governance/sys-adr-08.md	sys-adr-08	TOPIC	governance		documentation
+governance/sys-adr-10.md	sys-adr-10	TOPIC	governance		documentation
+governance/sys-adr-11.md	sys-adr-11	TOPIC	governance		documentation
+governance/sys-adr-13.md	sys-adr-13	TOPIC	governance		documentation
+governance/sys-adr-14.md	sys-adr-14	TOPIC	governance		documentation
+governance/sys-adr-15.md	sys-adr-15	TOPIC	governance		documentation
+governance/sys-adr-16.md	sys-adr-16	TOPIC	governance		documentation
+governance/sys-adr-17.md	sys-adr-17	TOPIC	governance		documentation
+governance/sys-adr-18.md	sys-adr-18	TOPIC	governance		documentation
+governance/sys-adr-19.md	sys-adr-19	TOPIC	governance		documentation
+infrastructure/edge-deployment.md	edge-deployment	TOPIC	infrastructure		documentation
+infrastructure/guide-totebox-orchestration-gis.md	GUIDE — Totebox Orchestration for GIS	TOPIC	infrastructure		documentation
+infrastructure/sovereign-mesh.md	sovereign-mesh	TOPIC	infrastructure		documentation
+infrastructure/sovereign-telemetry.md	sovereign-telemetry	TOPIC	infrastructure		documentation
+infrastructure/storage.md	storage	TOPIC	infrastructure		documentation
+infrastructure/telemetry-architecture.md	telemetry-architecture	TOPIC	infrastructure		documentation
+infrastructure/worm-ledger-architecture.md	worm-ledger-architecture	TOPIC	infrastructure		documentation
+infrastructure/worm-ledger-design.md	worm-ledger-design	TOPIC	infrastructure		documentation
+infrastructure/worm-ledger-storage-architecture.md	worm-ledger-storage-architecture	TOPIC	infrastructure		documentation
+patterns/article-shell-leapfrog.md	article-shell-leapfrog	TOPIC	platform-patterns		documentation
+patterns/collab-via-passthrough-relay.md	collab-via-passthrough-relay	TOPIC	platform-patterns		documentation
+patterns/knowledge-wiki-home-page-design.md	knowledge-wiki-home-page-design	TOPIC	platform-patterns		documentation
+patterns/knowledge-wiki-leapfrog-architecture.md	knowledge-wiki-leapfrog-architecture	TOPIC	platform-patterns		documentation
+patterns/location-intelligence-ux.md	location-intelligence-ux	TOPIC	platform-patterns		documentation
+patterns/pairing-as-permission.md	pairing-as-permission	TOPIC	platform-patterns		documentation
+patterns/reverse-funnel-editorial-pattern.md	reverse-funnel-editorial-pattern	TOPIC	platform-patterns		documentation
+patterns/source-of-truth-inversion.md	source-of-truth-inversion	TOPIC	platform-patterns		documentation
+patterns/wikipedia-leapfrog-design.md	wikipedia-leapfrog-design	TOPIC	platform-patterns		documentation
+patterns/zero-execution-routing.md	zero-execution-routing	TOPIC	platform-patterns		documentation
+reference/api-key-boundary-discipline.md	api-key-boundary-discipline	TOPIC	reference		documentation
+reference/bcsc-disclosure-posture.md	bcsc-disclosure-posture	TOPIC	reference		documentation
+reference/bim-aec-muscle-memory.md	bim-aec-muscle-memory	TOPIC	reference		documentation
+reference/bim-design-philosophy.md	bim-design-philosophy	TOPIC	reference		documentation
+reference/bim-market-context.md	bim-market-context	TOPIC	reference		documentation
+reference/bim-token-taxonomy.md	bim-token-taxonomy	TOPIC	reference		documentation
+reference/bim-token-three-layers.md	bim-token-three-layers	TOPIC	reference		documentation
+reference/bim-token-what-it-is.md	bim-token-what-it-is	TOPIC	reference		documentation
+reference/cluster-design-draft-pipeline.md	cluster-design-draft-pipeline	TOPIC	reference		documentation
+reference/cluster-wiki-draft-pipeline.md	cluster-wiki-draft-pipeline	TOPIC	reference		documentation
+reference/customer-first-ordering.md	customer-first-ordering	TOPIC	reference		documentation
+reference/data-vault-bookkeeping-substrate.md	data-vault-bookkeeping-substrate	TOPIC	reference		documentation
+reference/draft-research-trail-discipline.md	draft-research-trail-discipline	TOPIC	reference		documentation
+reference/editorial-language-registers.md	editorial-language-registers	TOPIC	reference		documentation
+reference/editorial-philosophy.md	editorial-philosophy	TOPIC	reference		documentation
+reference/glossary-documentation.md	glossary-documentation	TOPIC	reference		documentation
+reference/model-tier-discipline.md	model-tier-discipline	TOPIC	reference		documentation
+reference/news-release-standards.md	news-release-standards	TOPIC	reference		documentation
+reference/open-bim-regulatory-acceptance.md	open-bim-regulatory-acceptance	TOPIC	reference		documentation
+reference/project-tetrad-discipline.md	project-tetrad-discipline	TOPIC	reference		documentation
+reference/project-triad-discipline.md	project-triad-discipline	TOPIC	reference		documentation
+reference/root-files-discipline.md	root-files-discipline	TOPIC	reference		documentation
+reference/service-slm-operationalization-plan.md	service-slm-operationalization-plan	TOPIC	reference		documentation
+reference/style-guide-architecture.md	style-guide-architecture	TOPIC	reference		documentation
+reference/style-guide-changelog.md	Changelog	TOPIC	reference		documentation
+reference/style-guide-chat.md	style-guide-chat	TOPIC	reference		documentation
+reference/style-guide-cla.md	style-guide-cla	TOPIC	reference		documentation
+reference/style-guide-contract.md	style-guide-contract	TOPIC	reference		documentation
+reference/style-guide-email.md	style-guide-email	TOPIC	reference		documentation
+reference/style-guide-guide.md	style-guide-guide	TOPIC	reference		documentation
+reference/style-guide-inventory.md	style-guide-inventory	TOPIC	reference		documentation
+reference/style-guide-license-explainer.md	style-guide-license-explainer	TOPIC	reference		documentation
+reference/style-guide-meeting-notes.md	style-guide-meeting-notes	TOPIC	reference		documentation
+reference/style-guide-memo.md	style-guide-memo	TOPIC	reference		documentation
+reference/style-guide-policy.md	style-guide-policy	TOPIC	reference		documentation
+reference/style-guide-readme.md	style-guide-readme	TOPIC	reference		documentation
+reference/style-guide-terms.md	style-guide-terms	TOPIC	reference		documentation
+reference/style-guide-ticket-comment.md	style-guide-ticket-comment	TOPIC	reference		documentation
+reference/style-guide-topic.md	style-guide-topic	TOPIC	reference		documentation
+reference/tier-c-key-wiring.md	tier-c-key-wiring	TOPIC	reference		documentation
+reference/wiki-provider-landscape.md	wiki-provider-landscape	TOPIC	reference		documentation
+reference/wikipedia-leapfrog-pattern.md	wikipedia-leapfrog-pattern	TOPIC	reference		documentation
+reference/wikipedia-structure.md	wikipedia-structure	TOPIC	reference		documentation
+reference/zero-container-runtime.md	zero-container-runtime	TOPIC	reference		documentation
+services/fs-anchor-emitter.md	fs-anchor-emitter	TOPIC	platform-services		documentation
+services/message-courier.md	message-courier	TOPIC	platform-services		documentation
+services/pointsav-gis-engine.md	pointsav-gis-engine	TOPIC	platform-services		documentation
+services/service-business-clustering.md	service-business-clustering	TOPIC	platform-services		documentation
+services/service-content.md	service-content	TOPIC	platform-services		documentation
+services/service-egress.md	service-egress	TOPIC	platform-services		documentation
+services/service-email.md	service-email	TOPIC	platform-services		documentation
+services/service-extraction.md	service-extraction	TOPIC	platform-services		documentation
+services/service-fs-architecture.md	service-fs-architecture	TOPIC	platform-services		documentation
+services/service-fs-data-lake.md	service-fs-data-lake	TOPIC	platform-services		documentation
+services/service-fs-security-compliance.md	service-fs-security-compliance	TOPIC	platform-services		documentation
+services/service-people.md	service-people	TOPIC	platform-services		documentation
+services/service-places-filtering.md	service-places-filtering	TOPIC	platform-services		documentation
+services/service-search.md	service-search	TOPIC	platform-services		documentation
+services/service-slm-totebox-sysadmin.md	service-slm-totebox-sysadmin	TOPIC	platform-services		documentation
+services/service-slm-yoyo-operational.md	service-slm-yoyo-operational	TOPIC	platform-services		documentation
+services/service-slm.md	service-slm	TOPIC	platform-services		documentation
+services/service-wallet-settlement.md	service-wallet-settlement	TOPIC	platform-services		documentation
+services/template-ledger.md	template-ledger	TOPIC	platform-services		documentation
+substrate/adapter-composition.md	adapter-composition	TOPIC	platform-substrate		documentation
+substrate/apprenticeship-substrate.md	apprenticeship-substrate	TOPIC	platform-substrate		documentation
+substrate/brief-queue-substrate.md	brief-queue-substrate	TOPIC	platform-substrate		documentation
+substrate/citation-substrate.md	citation-substrate	TOPIC	platform-substrate		documentation
+substrate/code-for-machines-first.md	code-for-machines-first	TOPIC	platform-substrate		documentation
+substrate/compounding-doorman.md	compounding-doorman	TOPIC	platform-substrate		documentation
+substrate/compounding-substrate.md	compounding-substrate	TOPIC	platform-substrate		documentation
+substrate/customer-owned-graph-ip.md	customer-owned-graph-ip	TOPIC	platform-substrate		documentation
+substrate/design-system-substrate.md	design-system-substrate	TOPIC	platform-substrate		documentation
+substrate/disclosure-substrate.md	disclosure-substrate	TOPIC	platform-substrate		documentation
+substrate/four-tier-slm-substrate.md	four-tier-slm-substrate	TOPIC	platform-substrate		documentation
+substrate/jennifer-datagraph-rebuild.md	jennifer-datagraph-rebuild	TOPIC	platform-substrate		documentation
+substrate/knowledge-commons.md	knowledge-commons	TOPIC	platform-substrate		documentation
+substrate/knowledge-graph-grounded-apprenticeship.md	knowledge-graph-grounded-apprenticeship	TOPIC	platform-substrate		documentation
+substrate/language-protocol-substrate.md	language-protocol-substrate	TOPIC	platform-substrate		documentation
+substrate/llm-substrate-decision.md	llm-substrate-decision	TOPIC	platform-substrate		documentation
+substrate/location-intelligence-substrate.md	location-intelligence-substrate	TOPIC	platform-substrate		documentation
+substrate/mcp-substrate-protocol.md	mcp-substrate-protocol	TOPIC	platform-substrate		documentation
+substrate/merkle-proofs-as-substrate-primitive.md	merkle-proofs-as-substrate-primitive	TOPIC	platform-substrate		documentation
+substrate/meta-repo-pattern.md	meta-repo-pattern	TOPIC	platform-substrate		documentation
+substrate/reverse-flow-substrate.md	reverse-flow-substrate	TOPIC	platform-substrate		documentation
+substrate/seed-taxonomy-as-smb-bootstrap.md	seed-taxonomy-as-smb-bootstrap	TOPIC	platform-substrate		documentation
+substrate/single-boundary-compute-discipline.md	single-boundary-compute-discipline	TOPIC	platform-substrate		documentation
+substrate/sovereign-ai-commons.md	sovereign-ai-commons	TOPIC	platform-substrate		documentation
+substrate/substrate-native-compatibility.md	substrate-native-compatibility	TOPIC	platform-substrate		documentation
+substrate/substrate-without-inference-base-case.md	substrate-without-inference-base-case	TOPIC	platform-substrate		documentation
+substrate/system-substrate-doctrine.md	system-substrate-doctrine	TOPIC	platform-substrate		documentation
+substrate/tier-zero-customer-side-sovereign-specialist.md	tier-zero-customer-side-sovereign-specialist	TOPIC	platform-substrate		documentation
+substrate/trajectory-substrate.md	trajectory-substrate	TOPIC	platform-substrate		documentation
+substrate/tui-corpus-producer.md	tui-corpus-producer	TOPIC	platform-substrate		documentation
+substrate/yo-yo-lora-training-pipeline.md	yo-yo-lora-training-pipeline	TOPIC	platform-substrate		documentation
+substrate/yoyo-compute-substrate.md	yoyo-compute-substrate	TOPIC	platform-substrate		documentation
+systems/os-network-admin.md	os-network-admin	TOPIC	operating-systems		documentation
+systems/os-orchestration.md	os-orchestration	TOPIC	operating-systems		documentation
+systems/os-privategit.md	os-privategit	TOPIC	operating-systems		documentation
+systems/os-workplace.md	os-workplace	TOPIC	operating-systems		documentation
+systems/topic-console-os.md	topic-console-os	TOPIC	operating-systems		documentation
+systems/topic-infrastructure-os.md	topic-infrastructure-os	TOPIC	operating-systems		documentation
+systems/topic-mediakit-os.md	topic-mediakit-os	TOPIC	operating-systems		documentation
+systems/topic-totebox-archive.md	topic-totebox-archive	TOPIC	operating-systems		documentation
+systems/topic-totebox-orchestration.md	topic-totebox-orchestration	TOPIC	operating-systems		documentation
+systems/topic-totebox-os.md	topic-totebox-os	TOPIC	operating-systems		documentation
+woodfine-fleet-deployment/cluster-intelligence/guide-yo-yo-nightly-pipeline.md	guide-yo-yo-nightly-pipeline	GUIDE	operational-guide		woodfine
+woodfine-fleet-deployment/cluster-totebox-corporate/guide-deployment.md	Deployment Guide — cluster-totebox-corporate	GUIDE	operational-guide		woodfine
+woodfine-fleet-deployment/cluster-totebox-corporate/guide-provision-node.md	Node Provisioning Guide | Guía de Provisión de Nodo	GUIDE	operational-guide		woodfine
+woodfine-fleet-deployment/cluster-totebox-personnel/guide-cold-storage-sync.md	🧭 GUIDE: PHYSICAL EGRESS (COLD STORAGE BACKUP)	GUIDE	operational-guide		woodfine
+woodfine-fleet-deployment/cluster-totebox-personnel/guide-deployment.md	Deployment Guide — cluster-totebox-personnel	GUIDE	operational-guide		woodfine
+woodfine-fleet-deployment/cluster-totebox-personnel/guide-ingress-operations.md	🧭 GUIDE: INGRESS OPERATIONS & SELF-HEALING LOOP	GUIDE	operational-guide		woodfine
+woodfine-fleet-deployment/cluster-totebox-personnel/guide-linkedin-adapter.md	GUIDE: Physical Egress (service-message-courier)	GUIDE	operational-guide		woodfine
+woodfine-fleet-deployment/cluster-totebox-personnel/guide-msft-entra-id.md	GUIDE: MICROSOFT ENTRA ID SOVEREIGNTY	GUIDE	operational-guide		woodfine
+woodfine-fleet-deployment/cluster-totebox-personnel/guide-personnel-ledger.md	GUIDE: Personnel Ledger Operations	GUIDE	operational-guide		woodfine
+woodfine-fleet-deployment/cluster-totebox-personnel/guide-provision-node.md	Node Provisioning Guide | Guía de Provisión de Nodo	GUIDE	operational-guide		woodfine
+woodfine-fleet-deployment/cluster-totebox-personnel/guide-slm-execution.md	GUIDE: service-slm Execution Pipeline	GUIDE	operational-guide		woodfine
+woodfine-fleet-deployment/cluster-totebox-personnel/guide-sovereign-search.md	GUIDE: Sovereign Search Operations	GUIDE	operational-guide		woodfine
+woodfine-fleet-deployment/cluster-totebox-personnel/guide-totebox-orchestration.md	🧭 GUIDE: TOTEBOX ORCHESTRATION & AUTONOMOUS SYNTHESIS	GUIDE	operational-guide		woodfine
+woodfine-fleet-deployment/cluster-totebox-property/guide-bim-archive-operations.md	Edit MANIFEST.md to update last_ingestion and model_guids	GUIDE	operational-guide		woodfine
+woodfine-fleet-deployment/cluster-totebox-property/guide-deployment.md	Deployment Guide — cluster-totebox-property	GUIDE	operational-guide		woodfine
+woodfine-fleet-deployment/cluster-totebox-property/guide-provision-node.md	Node Provisioning Guide | Guía de Provisión de Nodo	GUIDE	operational-guide		woodfine
+woodfine-fleet-deployment/fleet-infrastructure-cloud/guide-deployment.md	Deployment Guide — fleet-infrastructure-cloud	GUIDE	operational-guide		woodfine
+woodfine-fleet-deployment/fleet-infrastructure-cloud/guide-provision-node.md	Node Provisioning Guide | Guía de Provisión de Nodo	GUIDE	operational-guide		woodfine
+woodfine-fleet-deployment/fleet-infrastructure-cloud/guide-provision-relay.md	Cloud Relay Provisioning Guide	GUIDE	operational-guide		woodfine
+woodfine-fleet-deployment/fleet-infrastructure-leased/guide-deploy-vpn.md	OPERATIONAL MANIFEST: SOVEREIGN OVERLAY NETWORK	GUIDE	operational-guide		woodfine
+woodfine-fleet-deployment/fleet-infrastructure-leased/guide-provision-standalone.md	Standalone Node Provisioning Guide	GUIDE	operational-guide		woodfine
+woodfine-fleet-deployment/fleet-infrastructure-onprem/guide-deployment.md	Deployment Guide — fleet-infrastructure-onprem	GUIDE	operational-guide		woodfine
+woodfine-fleet-deployment/fleet-infrastructure-onprem/guide-lxc-network-admin.md	🧭 GUIDE: PROVISIONING THE NETWORK LEDGER (LXC)	GUIDE	operational-guide		woodfine
+woodfine-fleet-deployment/fleet-infrastructure-onprem/guide-provision-node.md	Node Provisioning Guide | Guía de Provisión de Nodo	GUIDE	operational-guide		woodfine
+woodfine-fleet-deployment/fleet-infrastructure-onprem/guide-provision-onprem.md	GUIDE: Bare-Metal Provisioning & Mesh Fusion	GUIDE	operational-guide		woodfine
+woodfine-fleet-deployment/gateway-interface-command/guide-deployment.md	Deployment Guide — gateway-interface-command	GUIDE	operational-guide		woodfine
+woodfine-fleet-deployment/gateway-interface-command/guide-provision-node.md	Node Provisioning Guide | Guía de Provisión de Nodo	GUIDE	operational-guide		woodfine
+woodfine-fleet-deployment/gateway-knowledge-documentation-1/guide-knowledge-wiki-sprint-roadmap.md	Confirm HTTP 200 on all three:	GUIDE	operational-guide		woodfine
+woodfine-fleet-deployment/gateway-orchestration-bim/guide-bim-token-authoring.md	On the deployment host	GUIDE	operational-guide		woodfine
+woodfine-fleet-deployment/gateway-orchestration-bim/guide-deploy-bim-substrate.md	Expected: {"status":"ok"}	GUIDE	operational-guide		woodfine
+woodfine-fleet-deployment/gateway-orchestration-bim/guide-deployment.md	Deployment Guide — gateway-orchestration-bim	GUIDE	operational-guide		woodfine
+woodfine-fleet-deployment/gateway-orchestration-bim/guide-provision-node.md	Provision Node Guide — gateway-orchestration-bim	GUIDE	operational-guide		woodfine
+woodfine-fleet-deployment/gateway-orchestration-bim/guide-regulation-overlay-publishing.md	IDS syntax validation passes	GUIDE	operational-guide		woodfine
+woodfine-fleet-deployment/gateway-orchestration-gis/guide-deployment.md	Deployment Guide — gateway-orchestration-gis	GUIDE	operational-guide		woodfine
+woodfine-fleet-deployment/gateway-orchestration-gis/guide-provision-node.md	Provision Node Guide — gateway-orchestration-gis	GUIDE	operational-guide		woodfine
+woodfine-fleet-deployment/gateway-orchestration-gis-1/guide-gis-adding-a-chain.md	guide-gis-adding-a-chain	GUIDE	operational-guide		woodfine
+woodfine-fleet-deployment/media-knowledge-corporate/guide-deployment.md	Deployment Guide — media-knowledge-corporate	GUIDE	operational-guide		woodfine
+woodfine-fleet-deployment/media-knowledge-corporate/guide-provision-node.md	Node Provisioning Guide | Guía de Provisión de Nodo	GUIDE	operational-guide		woodfine
+woodfine-fleet-deployment/media-knowledge-documentation/guide-editorial-content-sweep.md	Guide — Monthly Editorial Content Sweep	GUIDE	operational-guide		woodfine
+woodfine-fleet-deployment/media-knowledge-documentation/guide-wiki-dark-mode-toggle.md	guide-wiki-dark-mode-toggle	GUIDE	operational-guide		woodfine
+woodfine-fleet-deployment/media-knowledge-documentation/guide-wiki-design-tokens.md	1. Confirm tokens.css is present	GUIDE	operational-guide		woodfine
+woodfine-fleet-deployment/media-knowledge-projects/guide-deployment.md	Deployment Guide — media-knowledge-projects	GUIDE	operational-guide		woodfine
+woodfine-fleet-deployment/media-knowledge-projects/guide-provision-node.md	Node Provisioning Guide | Guía de Provisión de Nodo	GUIDE	operational-guide		woodfine
+woodfine-fleet-deployment/media-marketing-landing/guide-deployment-marketing-site.md	Deployment Guide — Marketing Landing Site (Woodfine tenant)	GUIDE	operational-guide		woodfine
+woodfine-fleet-deployment/media-marketing-landing/guide-operate-marketing-landing.md	Start both tenants	GUIDE	operational-guide		woodfine
+woodfine-fleet-deployment/media-marketing-landing/guide-provision-marketing-site.md	Provision Node Guide — Marketing Landing Site (Woodfine tenant)	GUIDE	operational-guide		woodfine
+woodfine-fleet-deployment/media-marketing-landing/guide-telemetry-governance.md	Telemetry Governance Guide — media-marketing-landing	GUIDE	operational-guide		woodfine
+woodfine-fleet-deployment/media-marketing-landing/guide-telemetry-operations.md	🧭 guide-01: TELEMETRY OPERATIONS & COMPLIANCE	GUIDE	operational-guide		woodfine
+woodfine-fleet-deployment/node-console-operator/guide-command-ledger.md	🧭 GUIDE: UNIFIED COMMAND LEDGER OPERATIONS	GUIDE	operational-guide		woodfine
+woodfine-fleet-deployment/node-console-operator/guide-console-operations.md	🧭 GUIDE: CONSOLE OPERATIONS & THE DERIVATIVE HUD	GUIDE	operational-guide		woodfine
+woodfine-fleet-deployment/route-network-admin/guide-deployment.md	Deployment Guide — route-network-admin	GUIDE	operational-guide		woodfine
+woodfine-fleet-deployment/route-network-admin/guide-mesh-orchestration.md	Mesh Network Orchestration Guide	GUIDE	operational-guide		woodfine
+woodfine-fleet-deployment/route-network-admin/guide-provision-node.md	Node Provisioning Guide | Guía de Provisión de Nodo	GUIDE	operational-guide		woodfine
+woodfine-fleet-deployment/vault-privategit-source/guide-command-session.md	Guide — Running a Command Session	GUIDE	operational-guide		woodfine
+woodfine-fleet-deployment/vault-privategit-source/guide-deployment.md	Deployment Guide — vault-privategit-source	GUIDE	operational-guide		woodfine
+woodfine-fleet-deployment/vault-privategit-source/guide-doorman-deployment.md	GUIDE-doorman-deployment — service-slm Doorman installation and operations	GUIDE	operational-guide		woodfine
+woodfine-fleet-deployment/vault-privategit-source/guide-doorman.md	guide-doorman — operating the service-slm Doorman on `vault-privategit-source-1`	GUIDE	operational-guide		woodfine
+woodfine-fleet-deployment/vault-privategit-source/guide-open-archive.md	Guide — Opening a Totebox Archive	GUIDE	operational-guide		woodfine
+woodfine-fleet-deployment/vault-privategit-source/guide-operating-yoyo.md	Doorman is up	GUIDE	operational-guide		woodfine
+woodfine-fleet-deployment/vault-privategit-source/guide-provision-node.md	Node Provisioning Guide | Guía de Provisión de Nodo	GUIDE	operational-guide		woodfine
+woodfine-fleet-deployment/vault-privategit-source/guide-tier-a-sysadmin-tui.md	Operating the Tier A Sysadmin TUI	GUIDE	operational-guide		woodfine
+pointsav-fleet-deployment/media-knowledge-distribution/guide-deployment.md	🚀 guide-01: Deployment & Synchronization	GUIDE	operational-guide		pointsav
+pointsav-fleet-deployment/media-knowledge-distribution/guide-provision-node.md	Node Provisioning Guide | Guía de Provisión de Nodo	GUIDE	operational-guide		pointsav
+pointsav-fleet-deployment/media-knowledge-documentation/guide-deployment.md	guide-deployment — media-knowledge-documentation	GUIDE	operational-guide		pointsav
+pointsav-fleet-deployment/media-knowledge-documentation/guide-keep-the-home-page-the-gold-standard.md	guide-keep-the-home-page-the-gold-standard	GUIDE	operational-guide		pointsav
+pointsav-fleet-deployment/media-knowledge-documentation/guide-operate-knowledge-wiki.md	OS layer (any host with TCP connectivity to the VM IP):	GUIDE	operational-guide		pointsav
+pointsav-fleet-deployment/media-knowledge-documentation/guide-provision-node.md	guide-provision-node — media-knowledge-documentation	GUIDE	operational-guide		pointsav
+pointsav-fleet-deployment/media-marketing-landing/guide-telemetry-integration.md	🚀 GUIDE: TELEMETRY ENGINE INTEGRATION	GUIDE	operational-guide		pointsav
+pointsav-fleet-deployment/media-marketing-landing/guide-telemetry-operations.md	🧭 guide-01: TELEMETRY OPERATIONS & COMPLIANCE	GUIDE	operational-guide		pointsav
+pointsav-fleet-deployment/vault-privategit-design-system/guide-deployment.md	🚀 guide-01: Deployment & Synchronization	GUIDE	operational-guide		pointsav
+pointsav-fleet-deployment/vault-privategit-design-system/guide-provision-node.md	Node Provisioning Guide | Guía de Provisión de Nodo	GUIDE	operational-guide		pointsav
+pointsav-fleet-deployment/vault-privategit-source/guide-deployment.md	🚀 guide-01: Deployment & Synchronization	GUIDE	operational-guide		pointsav
+pointsav-fleet-deployment/vault-privategit-source/guide-provision-node.md	Node Provisioning Guide | Guía de Provisión de Nodo	GUIDE	operational-guide		pointsav

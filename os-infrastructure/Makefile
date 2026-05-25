@@ -27,7 +27,7 @@ $(BUILD_DIR)/os-infrastructure.iso: compile-all
 	microkit $(BOARD).system --search-path $(BUILD_DIR) -o $(BUILD_DIR)/final_mesh.elf
 	
 	# Step 2: Forge the Multiboot2 ISO
-	./forge_infrastructure_iso.sh
+	./forge_iso.sh
 	@echo "🟢 SUCCESS: Artifact staged at $(BUILD_DIR)/os-infrastructure.iso"
 
 clean:

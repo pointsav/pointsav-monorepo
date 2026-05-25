@@ -14,7 +14,6 @@ pub extern "C" fn _start() -> ! {
     // 2. Map capability pointers passed by the CBM (Root-Task)
 
     // 3. The Sovereign Polling Loop (Gatekeeper State Machine)
-    #[allow(clippy::empty_loop)]
     loop {
         // Block and wait for Inter-Process Communication (IPC) from system-network-interface
         // Handle read/write logic strictly within provisioned WORM boundaries
@@ -27,7 +26,5 @@ pub extern "C" fn _start() -> ! {
 #[cfg(not(test))]
 #[panic_handler]
 fn panic(_info: &PanicInfo) -> ! {
-    loop {
-        core::hint::spin_loop();
-    }
+    loop {}
 }

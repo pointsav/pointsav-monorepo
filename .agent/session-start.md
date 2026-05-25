@@ -1,71 +1,73 @@
 ---
 schema: foundry-session-start-v1
-archive: project-gis
-updated: 2026-05-14
+archive: project-proofreader
+updated: 2026-05-20
 ---
 
-# Session start — project-gis
+# Session start — project-proofreader
 
 > Step 8 of the session start ritual (AGENT.md §Session start).
 > Engine-agnostic — Claude Code and Gemini CLI both read this.
 
 ## This archive at a glance
 
-- **Mission:** Customer-facing location intelligence public demo. Owns `service-places` (public-purpose location data) and the GIS tile scoring pipeline. Live at `gis.woodfinegroup.com`. V2 0–1000 scoring live in tiles.
-- **Active branch:** `cluster/project-gis`
+- **Mission:** os-console platform — chassis-first Leapfrog 2030. Single binary (`os-console`) with
+  `app-console-keys` base chassis + compiled-in cartridges (F1–F12). `app-console-content` is the
+  F4 cartridge (proofreader + drafter). All owned in `pointsav-monorepo/`.
+- **Active branch:** `cluster/project-proofreader` (pending rename → `cluster/project-console`)
+- **Architecture plan:** `.agent/plans/os-console-platform.md` — read this before any architecture discussion
+- **Coding roadmap:** `.agent/plans/leapfrog-2030-coding.md` — phased plan; Phase 1 is next
 - **Inbox:** read `.agent/inbox.md` (step 4 — already done before this file)
-- **In-flight plans:** `comprehensive-data-and-legal-plan` (see `.agent/plans/`)
+
+## Critical state
+
+- **Phase 0 COMPLETE** — `app-console-content` crate committed; `cargo build` green; SSH TUI gate
+  passed (ratatui frame confirmed over port 2222 via `ssh -p 2222 -i ~/.ssh/google_compute_engine
+  mathew@localhost`).
+- **Phase 1 = chassis first** — next task is creating `app-console-keys` lib crate and converting
+  `app-console-content` from a standalone binary to a lib crate (F4 Cartridge). See
+  `leapfrog-2030-coding.md` Phase 1 checklist.
+- **No `app-console-keys/` Cargo.toml yet** — Reserved-folder in catalog; Phase 1 creates it.
+- **SSH key note**: `mathew` user has no standard `id_ed25519`; use `-i ~/.ssh/google_compute_engine`
+  for localhost testing until Phase 2 adds `proofctl user add`.
+- **russh 0.60 API**: native async fn in impl (no async_trait); `russh::keys::PrivateKey::random(&mut rand::rng(), Algorithm::Ed25519)`; `session.channel_success(channel)?` in pty_request + shell_request; TerminalHandle uses sink Vec<u8> + flush sends. See memory for full reference.
+- **Web UI is to be taken down** — blocked on Command Session (sudo). Teardown checklist in
+  `tui-pivot-2030.md` §Part 6. `local-proofreader-console.service` (9091) + `local-proofreader-public.service` (9097) + nginx vhost + cert.
+- **Pending rename:** project-proofreader → project-console. Outbox msg sent to Command.
+
+## Architecture at a glance (2026-05-20)
+
+- `os-console` = single binary; `app-console-keys` = base chassis (always-installed, like
+  `service-fs` for os-totebox); other cartridges are optional compiled-in lib crates.
+- **F-key map (WIP):** F1=help, F2=people, F3=email, F4=content, F5=minutebook, F6=bookkeeper,
+  F7=bim, F8=gis, F9=slm, F10=**app-console-mesh**, F11=system, **F12=input (The Anchor, immovable)**
+- **MBA** = peer-to-peer (os-console ↔ os-totebox/os-orchestration/etc.); NOT network-layer.
+  `system-gateway-mba` is server side; `app-console-keys` is client side (shows `MBA LINK ACTIVE`).
+- **PPN** = WireGuard infrastructure only; deliberately isolated from os-* application layer.
+- **Doorman:** `http://localhost:8011` (NOT 9080). Response field: `.content`.
+- **Input Machine (F12):** global intercept → POST to `service-input` → classify + route + audit.
+  SYS-ADR-10: cannot be bypassed from other panes.
 
 ## Known gotchas
 
-- This archive is in `state: provisioning` — sub-repos may not be fully cloned. Check `.agent/manifest.md` for current tetrad state.
-- GIS Phase C tile rebuild and D1 parent-child model are the next engineering milestones (operator-gated on WireGuard Part A).
-- Deep-seal sprint complete as of 2026-05-05; 2 follow-ups pending (boundary download + IPEDS EF URL).
-- This archive is primarily a drafts-outbound gateway for wiki TOPIC content — most GIS editorial content routes through `project-editorial`, not committed here.
+- **Do not swap or upgrade the SLM model** until the operator explicitly lifts the constraint.
+- `service-proofreader` backend (9092) stays live and unchanged.
+- Verdict POST to `/v1/verdict` closes the apprenticeship loop — preserve this path.
+- Long-poll timeout: 300s on `/v1/proofread`, 30s everywhere else.
+- Doorman wire: response carries `.content`, not `.choices[0].message.content`.
 - Commit via `~/Foundry/bin/commit-as-next.sh` only (staging-tier).
+- Port 2222 needs a GCE firewall rule — coordinate with Command Session / operator.
+- `tui-pivot-2030.md` is superseded by the new plans; ignore its Phase 7 chassis deferral and 9080 port references.
+
+## Technology stack
+
+ratatui 0.30 + crossterm 0.28 + russh 0.60 (feature-gated ssh-server) + tui-textarea 0.7 +
+similar 2.5 + syntect 5.2 + nucleo 0.5 + rusqlite 0.32 + pdfium-render 0.8 (Phase 7) + tokio
 
 ## Last session handoff
 
-*2026-05-23 — Phase 19 complete and building tonight. AEC parity research done.*
-
-### What is running tonight (DO NOT STOP)
-
-PID 2507282 — scheduled at 05:00 UTC 2026-05-24:
-```
-bash nightly-rebuild.sh && bash phase19-rebuild.sh
-```
-- Pass 1 (nightly-rebuild.sh): cluster rebuild with London fix + geometric T2→T3 split
-- Pass 2 (phase19-rebuild.sh): ingest 16 sport chains + final cluster/tile rebuild
-- Expected output: T1=1,157 / T2=2,889 / T3=1,656; logs to nightly-rebuild.log + phase19-rebuild.log
-- Monitor: `tail -f pointsav-monorepo/app-orchestration-gis/phase19-rebuild.log`
-
-### Commits this session (ready for Stage 6)
-
-| Commit | What |
-|---|---|
-| a2c974e4 | Phase 19: sport + geometric split + London fix + costco-uk + tonight approval |
-| 9886d9fa | AEC nightly build plan (Nights 2–5) |
-| e1792934 | AEC parity research (EU flood upgraded, eco-regions, CONABIO blocker) |
-| 34a48183 | AEC build plan — parity upgrades incorporated |
-
-### AEC nightly build sequence (Nights 2–5)
-
-Scripts not yet created. Must be written before each night's window:
-- **Night 2 (2026-05-25 05:00 UTC):** `build-aec-climate-solar.sh` — ASHRAE+NECB+EU climate zones+solar GHI
-- **Night 3 (2026-05-26 05:00 UTC):** `build-aec-koppen-ecozones.sh` — Köppen global + Resolve eco-regions + EU biogeo + PVGIS
-- **Night 4 (2026-05-27 05:00 UTC):** `build-aec-seismic.sh` — USGS/NRCan/ESHM20 seismic + GWL_FCS30 wetlands
-- **Night 5 (2026-05-28 05:00 UTC):** `build-aec-flood.sh` — FEMA + EU regulatory floods + AQUEDUCT + wildfire
-  - ⚠ Disk check required first: need ≥35 GB free on /srv/foundry
-  - ⚠ EFFIS wildfire data request needed: https://forest-fire.emergency.copernicus.eu/applications/data-and-services
-
-### After Night 5 (separate session)
-
-BentoBox "Site Conditions" section + MapLibre "Site & Hazard" layer controls.
-Full spec in AEC-NIGHTLY-BUILD-PLAN.md §After Night 5.
-
-### Other pending items
-
-- demand_rank pipeline: synthesize-od-study.py needs to run (layers 4/5/6 tiles deployed; scoring not yet populated)
-- DE lifestyle chains (XXXLutz/Höffner/Segmüller): Phase 20
-- Meijer US / Bodega Aurrera MX: Phase 19 or 20
-- Stage 6 promotion: 4 commits above need Command Session promotion
+*2026-05-23 (session 7): Stage 6 rebase complete — 11 os-console commits cleanly rebased
+onto local `main` (tip `9afc9e25`). Push BLOCKED: histories completely unrelated (local
+main and all remotes share zero ancestors). Escalated to Command via outbox. binary-targets.yaml
+written and build-request sent. Inbox msgs updated. Next coding: Phase 3 QR (Kitty/Sixel) or
+Phase 4 F11 system panel — after Command resolves Stage 6 history question.*

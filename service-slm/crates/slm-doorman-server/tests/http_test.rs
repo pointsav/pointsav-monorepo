@@ -345,11 +345,6 @@ async fn error_brief_cache_miss_returns_410() {
         audit_tenant_concurrency_cap: 100,
         queue_config: temp_queue_config(),
         service_content_endpoint: String::new(),
-        last_yoyo_dispatch: Arc::new(std::sync::atomic::AtomicU64::new(0)),
-        gateway_token: None,
-        node_class: "hardware",
-        tier_a_reason: "available",
-        idle_monitor: None,
     });
     let app = router(state);
 
@@ -564,7 +559,7 @@ async fn shadow_with_apprenticeship_enabled_returns_202_with_body_shape() {
             "task_type": "version-bump-manifest",
             "scope": {},
             "acceptance_test": "cargo test --workspace",
-            "body": "bump Cargo.toml version to 0.1.0 — update workspace manifest patch version"
+            "body": "bump Cargo.toml version to 0.1.0"
         },
         "actual_diff": "- version = \"0.0.9\"\n+ version = \"0.1.0\"\n"
     });
@@ -642,11 +637,6 @@ async fn shadow_enqueued_brief_file_exists_at_queue_path() {
         audit_tenant_concurrency_cap: 100,
         queue_config: queue_cfg,
         service_content_endpoint: String::new(),
-        last_yoyo_dispatch: Arc::new(std::sync::atomic::AtomicU64::new(0)),
-        gateway_token: None,
-        node_class: "hardware",
-        tier_a_reason: "available",
-        idle_monitor: None,
     });
 
     let app = router(state_with_queue);
@@ -661,9 +651,9 @@ async fn shadow_enqueued_brief_file_exists_at_queue_path() {
             "task_type": "version-bump-manifest",
             "scope": {},
             "acceptance_test": "cargo test --workspace",
-            "body": "implement shadow enqueue to persist apprenticeship corpus entries to queue dir"
+            "body": "implement shadow enqueue"
         },
-        "actual_diff": "+ enqueue_shadow(brief, diff)\n+ // persist to queue dir\n"
+        "actual_diff": "+ enqueue_shadow()\n"
     });
 
     let resp = app
@@ -701,94 +691,8 @@ async fn shadow_enqueued_brief_file_exists_at_queue_path() {
     );
     assert_eq!(
         entry["actual_diff"].as_str().unwrap_or(""),
-        "+ enqueue_shadow(brief, diff)\n+ // persist to queue dir\n",
+        "+ enqueue_shadow()\n",
         "queue file must preserve the actual_diff"
-    );
-}
-
-/// POST /v1/shadow with `source_tier: "external"` → 403 FORBIDDEN.
-///
-/// Tier-C contamination gate (Anthropic ToS, competing-models constraint).
-/// The shim must refuse to enqueue any brief whose `actual_diff` originated
-/// in a Tier-C-routed session. The queue file MUST NOT be written.
-#[tokio::test]
-async fn shadow_with_external_source_tier_returns_403_and_does_not_enqueue() {
-    let verifier: Arc<dyn VerdictVerifier> = Arc::new(RejectVerifier);
-    let state = app_state_with_apprenticeship(verifier);
-    let queue_dir = state.queue_config.base_dir.join("queue");
-    let app = router(state);
-
-    let brief_id = "shadow-contamination-guard-001";
-    let req_body = json!({
-        "brief": {
-            "brief_id": brief_id,
-            "created": "2026-05-18T00:00:00Z",
-            "senior_role": "task",
-            "senior_identity": "pwoodfine",
-            "task_type": "version-bump-manifest",
-            "scope": {},
-            "acceptance_test": "cargo test",
-            "body": "this brief originated through a Tier-C-routed session — reject"
-        },
-        "actual_diff": "+ poisoned line\n",
-        "source_tier": "external"
-    });
-
-    let resp = app
-        .oneshot(post_json("/v1/shadow", &req_body))
-        .await
-        .expect("oneshot");
-
-    assert_eq!(
-        resp.status(),
-        StatusCode::FORBIDDEN,
-        "/v1/shadow must return 403 when source_tier==external"
-    );
-
-    // The queue file MUST NOT exist. The contamination guard runs BEFORE
-    // the enqueue call, so no JSONL should land on disk.
-    let queue_file = queue_dir.join(format!("{brief_id}.brief.jsonl"));
-    assert!(
-        !queue_file.exists(),
-        "queue file must NOT be written for a 403 source_tier=external rejection; found {}",
-        queue_file.display()
-    );
-}
-
-/// POST /v1/shadow with `source_tier: "local"` → 202 ACCEPTED.
-///
-/// Confirms the contamination guard is targeted to `"external"` and does
-/// not reject permitted tier-of-origin values.
-#[tokio::test]
-async fn shadow_with_local_source_tier_returns_202() {
-    let verifier: Arc<dyn VerdictVerifier> = Arc::new(RejectVerifier);
-    let state = app_state_with_apprenticeship(verifier);
-    let app = router(state);
-
-    let req_body = json!({
-        "brief": {
-            "brief_id": "shadow-source-tier-local-001",
-            "created": "2026-05-18T00:00:00Z",
-            "senior_role": "task",
-            "senior_identity": "jwoodfine",
-            "task_type": "version-bump-manifest",
-            "scope": {},
-            "acceptance_test": "cargo test",
-            "body": "this brief originated through a Tier-A-routed session"
-        },
-        "actual_diff": "+ permitted line added by test\n",
-        "source_tier": "local"
-    });
-
-    let resp = app
-        .oneshot(post_json("/v1/shadow", &req_body))
-        .await
-        .expect("oneshot");
-
-    assert_eq!(
-        resp.status(),
-        StatusCode::ACCEPTED,
-        "/v1/shadow must return 202 for source_tier=local"
     );
 }
 
@@ -845,8 +749,6 @@ fn doorman_error_to_status(e: &DoormanError) -> StatusCode {
         DoormanError::QueueLockFailed { .. } => StatusCode::SERVICE_UNAVAILABLE,
         // Malformed brief detected and moved to poison bucket — 400 BAD_REQUEST.
         DoormanError::QueueMalformedBrief { .. } => StatusCode::BAD_REQUEST,
-        // Corpus quality gate rejected — 422 UNPROCESSABLE_ENTITY.
-        DoormanError::QueueQualityGateRejected { .. } => StatusCode::UNPROCESSABLE_ENTITY,
         // Graph proxy — caller omitted module-id header (400) or service-content
         // is unreachable/unconfigured (503).
         DoormanError::GraphProxyMissingModuleId => StatusCode::BAD_REQUEST,
@@ -854,10 +756,6 @@ fn doorman_error_to_status(e: &DoormanError) -> StatusCode {
         DoormanError::TierBTimeout | DoormanError::TierBCircuitOpen => {
             StatusCode::SERVICE_UNAVAILABLE
         }
-        // Tier A busy (slots_idle=0); no Tier B to escalate → 503.
-        DoormanError::TierABusy => StatusCode::SERVICE_UNAVAILABLE,
-        // Corpus quality gate (write-time corpus gate) rejected the entry → 422.
-        DoormanError::CorpusGateRejected { .. } => StatusCode::UNPROCESSABLE_ENTITY,
     }
 }
 
@@ -946,16 +844,18 @@ async fn lark_validation_runs_before_tier_b_dispatch() {
         temp_ledger(),
     );
 
-    use slm_core::{CanonicalMessage, Complexity, GrammarConstraint, ModuleId, RequestId, Tier};
+    use slm_core::{ChatMessage, Complexity, GrammarConstraint, ModuleId, RequestId, Tier};
     use std::str::FromStr;
 
     let req = slm_core::ComputeRequest {
         request_id: RequestId::new(),
         module_id: ModuleId::from_str("test").unwrap(),
         model: None,
-        messages: vec![CanonicalMessage::text("user", "ping")],
+        messages: vec![ChatMessage {
+            role: "user".to_string(),
+            content: "ping".to_string(),
+        }],
         complexity: Complexity::High,
-        latency_class: slm_core::LatencyClass::default(),
         tier_hint: Some(Tier::Yoyo),
         stream: false,
         max_tokens: None,
@@ -969,8 +869,6 @@ async fn lark_validation_runs_before_tier_b_dispatch() {
         )),
         speculation: None,
         graph_context_enabled: None,
-        adapter_version: None,
-        tools: None,
     };
 
     // Call route() directly on the Doorman. The pre-validation step (PS.3
@@ -1156,11 +1054,6 @@ async fn audit_proxy_valid_request_writes_audit_stub_and_returns_503() {
         audit_tenant_concurrency_cap: 100,
         queue_config: temp_queue_config(),
         service_content_endpoint: String::new(),
-        last_yoyo_dispatch: Arc::new(std::sync::atomic::AtomicU64::new(0)),
-        gateway_token: None,
-        node_class: "hardware",
-        tier_a_reason: "available",
-        idle_monitor: None,
     });
     let app = router(state);
 
@@ -1285,16 +1178,18 @@ async fn valid_lark_grammar_passes_through_to_tier_b() {
         temp_ledger(),
     );
 
-    use slm_core::{CanonicalMessage, Complexity, GrammarConstraint, ModuleId, RequestId, Tier};
+    use slm_core::{ChatMessage, Complexity, GrammarConstraint, ModuleId, RequestId, Tier};
     use std::str::FromStr;
 
     let req = slm_core::ComputeRequest {
         request_id: RequestId::new(),
         module_id: ModuleId::from_str("test").unwrap(),
         model: None,
-        messages: vec![CanonicalMessage::text("user", "ping")],
+        messages: vec![ChatMessage {
+            role: "user".to_string(),
+            content: "ping".to_string(),
+        }],
         complexity: Complexity::High,
-        latency_class: slm_core::LatencyClass::default(),
         tier_hint: Some(Tier::Yoyo),
         stream: false,
         max_tokens: None,
@@ -1308,8 +1203,6 @@ async fn valid_lark_grammar_passes_through_to_tier_b() {
         )),
         speculation: None,
         graph_context_enabled: None,
-        adapter_version: None,
-        tools: None,
     };
 
     let resp = doorman.route(&req).await;
@@ -1841,11 +1734,6 @@ async fn audit_proxy_unallowlisted_purpose_does_not_write_ledger_entry() {
         audit_tenant_concurrency_cap: 100,
         queue_config: temp_queue_config(),
         service_content_endpoint: String::new(),
-        last_yoyo_dispatch: Arc::new(std::sync::atomic::AtomicU64::new(0)),
-        gateway_token: None,
-        node_class: "hardware",
-        tier_a_reason: "available",
-        idle_monitor: None,
     });
     let app = router(state);
 
@@ -1989,11 +1877,6 @@ async fn audit_capture_valid_prose_edit_event_returns_200_and_writes_ledger() {
         audit_tenant_concurrency_cap: 100,
         queue_config: temp_queue_config(),
         service_content_endpoint: String::new(),
-        last_yoyo_dispatch: Arc::new(std::sync::atomic::AtomicU64::new(0)),
-        gateway_token: None,
-        node_class: "hardware",
-        tier_a_reason: "available",
-        idle_monitor: None,
     });
     let app = router(state);
 
@@ -2167,11 +2050,6 @@ async fn audit_capture_oversized_payload_returns_413() {
         audit_tenant_concurrency_cap: 100,
         queue_config: temp_queue_config(),
         service_content_endpoint: String::new(),
-        last_yoyo_dispatch: Arc::new(std::sync::atomic::AtomicU64::new(0)),
-        gateway_token: None,
-        node_class: "hardware",
-        tier_a_reason: "available",
-        idle_monitor: None,
     });
     let app = router(state);
 
@@ -2243,11 +2121,6 @@ async fn audit_capture_default_event_types_all_accepted() {
             audit_tenant_concurrency_cap: 100,
             queue_config: temp_queue_config(),
             service_content_endpoint: String::new(),
-            last_yoyo_dispatch: Arc::new(std::sync::atomic::AtomicU64::new(0)),
-            gateway_token: None,
-            node_class: "hardware",
-            tier_a_reason: "available",
-            idle_monitor: None,
         });
         let app = router(state);
 
@@ -2323,11 +2196,6 @@ async fn audit_proxy_oversized_request_returns_413() {
         audit_tenant_concurrency_cap: 100,
         queue_config: temp_queue_config(),
         service_content_endpoint: String::new(),
-        last_yoyo_dispatch: Arc::new(std::sync::atomic::AtomicU64::new(0)),
-        gateway_token: None,
-        node_class: "hardware",
-        tier_a_reason: "available",
-        idle_monitor: None,
     });
     let app = router(state);
 
@@ -2484,11 +2352,6 @@ async fn audit_tenant_concurrency_cap_rejects_excess_requests() {
         audit_tenant_concurrency_cap: 2,
         queue_config: temp_queue_config(),
         service_content_endpoint: String::new(),
-        last_yoyo_dispatch: Arc::new(std::sync::atomic::AtomicU64::new(0)),
-        gateway_token: None,
-        node_class: "hardware",
-        tier_a_reason: "available",
-        idle_monitor: None,
     });
 
     // Both requests below should fail immediately: no permits available.
@@ -2576,11 +2439,6 @@ async fn audit_tenant_concurrency_cap_per_tenant_independent() {
         audit_tenant_concurrency_cap: 1,
         queue_config: temp_queue_config(),
         service_content_endpoint: String::new(),
-        last_yoyo_dispatch: Arc::new(std::sync::atomic::AtomicU64::new(0)),
-        gateway_token: None,
-        node_class: "hardware",
-        tier_a_reason: "available",
-        idle_monitor: None,
     });
 
     // Two requests from different tenants; both should complete (200 OK
@@ -2928,24 +2786,16 @@ async fn anthropic_messages_system_prompt_returns_200() {
 
 /// POST /v1/messages with stream:true → 200 with text/event-stream content-type
 /// and all 6 SSE event types present in the response body.
-/// Tier A path: local_stream() sends stream:true to llama-server, which returns
-/// OpenAI SSE; build_stream_body() translates to Anthropic SSE token-by-token.
 #[tokio::test]
 async fn anthropic_messages_streaming_returns_sse_with_all_six_events() {
     let server = MockServer::start().await;
     Mock::given(method("POST"))
         .and(path("/v1/chat/completions"))
-        .respond_with(
-            ResponseTemplate::new(200)
-                .insert_header("content-type", "text/event-stream")
-                .set_body_string(
-                    "data: {\"choices\":[{\"delta\":{\"content\":\"streamed \"},\
-                     \"finish_reason\":null}]}\n\n\
-                     data: {\"choices\":[{\"delta\":{\"content\":\"response\"},\
-                     \"finish_reason\":null}]}\n\n\
-                     data: [DONE]\n\n",
-                ),
-        )
+        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
+            "choices": [
+                { "message": { "role": "assistant", "content": "streamed response" } }
+            ]
+        })))
         .expect(1)
         .mount(&server)
         .await;
@@ -2987,74 +2837,5 @@ async fn anthropic_messages_streaming_returns_sse_with_all_six_events() {
     assert!(body_str.contains("event: content_block_stop"),  "missing content_block_stop");
     assert!(body_str.contains("event: message_delta"),       "missing message_delta");
     assert!(body_str.contains("event: message_stop"),        "missing message_stop");
-    assert!(body_str.contains("streamed response") || body_str.contains("streamed "),
-            "SSE body must contain the response tokens");
-}
-
-// ===========================================================================
-// Section N — POST /v1/responses (OpenAI Responses API, Sprint 2)
-// ===========================================================================
-
-/// POST /v1/responses with string input → 200 with Responses API output shape.
-#[tokio::test]
-async fn responses_api_string_input_returns_responses_shape() {
-    let server = MockServer::start().await;
-    Mock::given(method("POST"))
-        .and(path("/v1/chat/completions"))
-        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
-            "choices": [{"message": {"role": "assistant", "content": "pong"}}]
-        })))
-        .expect(1)
-        .mount(&server)
-        .await;
-
-    let state = app_state_with_local(server.uri());
-    let app = router(state);
-
-    let req_body = json!({"model": "olmo-2-7b", "input": "ping"});
-    let resp = app
-        .oneshot(post_json("/v1/responses", &req_body))
-        .await
-        .expect("oneshot");
-
-    assert_eq!(resp.status(), StatusCode::OK);
-    let body = body_json(resp).await;
-    assert_eq!(body["object"], "response");
-    assert_eq!(body["model"], "olmo-2-7b");
-    assert!(body["id"].as_str().unwrap_or("").starts_with("resp_"),
-            "id must start with resp_");
-    let output = &body["output"][0];
-    assert_eq!(output["type"], "message");
-    assert_eq!(output["role"], "assistant");
-    assert_eq!(output["content"][0]["type"], "output_text");
-    assert_eq!(output["content"][0]["text"], "pong");
-}
-
-/// POST /v1/responses with array input → routes correctly.
-#[tokio::test]
-async fn responses_api_array_input_routes_correctly() {
-    let server = MockServer::start().await;
-    Mock::given(method("POST"))
-        .and(path("/v1/chat/completions"))
-        .respond_with(ResponseTemplate::new(200).set_body_json(json!({
-            "choices": [{"message": {"role": "assistant", "content": "array-ok"}}]
-        })))
-        .expect(1)
-        .mount(&server)
-        .await;
-
-    let state = app_state_with_local(server.uri());
-    let app = router(state);
-
-    let req_body = json!({
-        "input": [{"type": "message", "role": "user", "content": "hello"}]
-    });
-    let resp = app
-        .oneshot(post_json("/v1/responses", &req_body))
-        .await
-        .expect("oneshot");
-
-    assert_eq!(resp.status(), StatusCode::OK);
-    let body = body_json(resp).await;
-    assert_eq!(body["output"][0]["content"][0]["text"], "array-ok");
+    assert!(body_str.contains("streamed response"),          "SSE body must contain the response text");
 }

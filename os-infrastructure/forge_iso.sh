@@ -6,7 +6,7 @@ echo " 💿 FORGING PointSav Infrastructure ISO (Node 1)"
 echo "===================================================="
 
 # Define absolute paths based on the Factory Silo
-MONOREPO_ROOT="$HOME/Foundry/factory-pointsav/pointsav-monorepo"
+MONOREPO_ROOT="/srv/foundry/vendor/pointsav-monorepo"
 INFRA_DIR="$MONOREPO_ROOT/os-infrastructure"
 SECURITY_BUILD="$MONOREPO_ROOT/system-security/build"
 ISO_ROOT="$INFRA_DIR/build_iso"

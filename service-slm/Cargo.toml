@@ -4,7 +4,6 @@ members = [
     "crates/slm-core",
     "crates/slm-doorman",
     "crates/slm-doorman-server",
-    "crates/slm-mcp-server",
 ]
 exclude = [
     "cognitive-forge",
@@ -18,11 +17,9 @@ rust-version = "1.85"
 [workspace.dependencies]
 slm-core = { path = "crates/slm-core" }
 slm-doorman = { path = "crates/slm-doorman" }
-foundry-nodeclass = { path = "../foundry-nodeclass" }
 
 # Async runtime
 tokio = { version = "1.40", features = ["full"] }
-tokio-stream = { version = "0.1", features = ["sync"] }
 
 # HTTP
 axum = "0.8"
@@ -59,10 +56,6 @@ base64 = "0.22"
 # Observability
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
-
-# Hashing — sha2 for stable cross-process (brief_hash, diff_hash) dedup
-# in corpus_gate.rs and the sidecar JSONL index.
-sha2 = "0.10"
 
 [profile.release]
 opt-level = 3

@@ -352,9 +352,6 @@ pub fn archetypes_to_entities(rows: &[ArchetypeRow]) -> Vec<GraphEntity> {
             contact_vector: Some(r.gravity_keywords.clone()),
             module_id: "__taxonomy__".to_string(),
             confidence: 1.0,
-            node_type: String::new(),
-            worm_id: None,
-            cites: Vec::new(),
         })
         .collect()
 }
@@ -369,9 +366,6 @@ pub fn coa_to_entities(rows: &[CoaRow]) -> Vec<GraphEntity> {
             contact_vector: Some(r.gravity_keywords.clone()),
             module_id: "__taxonomy__".to_string(),
             confidence: 1.0,
-            node_type: String::new(),
-            worm_id: None,
-            cites: Vec::new(),
         })
         .collect()
 }
@@ -386,9 +380,6 @@ pub fn domains_to_entities(rows: &[DomainRow]) -> Vec<GraphEntity> {
             contact_vector: Some(r.gravity_keywords.clone()),
             module_id: "__taxonomy__".to_string(),
             confidence: 1.0,
-            node_type: String::new(),
-            worm_id: None,
-            cites: Vec::new(),
         })
         .collect()
 }
@@ -405,9 +396,6 @@ pub fn glossary_to_entities(rows: &[GlossaryRow]) -> Vec<GraphEntity> {
                 contact_vector: Some(r.definition.chars().take(200).collect()),
                 module_id: "__taxonomy__".to_string(),
                 confidence: 1.0,
-                node_type: String::new(),
-                worm_id: None,
-                cites: Vec::new(),
             }
         })
         .collect()
@@ -423,9 +411,6 @@ pub fn themes_to_entities(rows: &[ThemeRow]) -> Vec<GraphEntity> {
             contact_vector: Some(r.gravity_keywords.clone()),
             module_id: "__taxonomy__".to_string(),
             confidence: 1.0,
-            node_type: String::new(),
-            worm_id: None,
-            cites: Vec::new(),
         })
         .collect()
 }
@@ -440,9 +425,6 @@ pub fn topics_to_entities(rows: &[TopicRow]) -> Vec<GraphEntity> {
             contact_vector: Some(r.wiki_repo.clone()),
             module_id: "__taxonomy__".to_string(),
             confidence: 1.0,
-            node_type: String::new(),
-            worm_id: None,
-            cites: Vec::new(),
         })
         .collect()
 }
@@ -457,9 +439,6 @@ pub fn guides_to_entities(rows: &[GuideRow]) -> Vec<GraphEntity> {
             contact_vector: Some(r.wiki_repo.clone()),
             module_id: "__taxonomy__".to_string(),
             confidence: 1.0,
-            node_type: String::new(),
-            worm_id: None,
-            cites: Vec::new(),
         })
         .collect()
 }
@@ -548,6 +527,21 @@ pub fn bundle_to_entities(bundle: &TaxonomyBundle) -> Vec<GraphEntity> {
 }
 
 // ── Internal helpers ──────────────────────────────────────────────────────────
+
+#[allow(dead_code)]
+fn skip_header(csv: &str) -> &str {
+    if let Some(pos) = csv.find('\n') {
+        csv[pos + 1..].trim_start()
+    } else {
+        ""
+    }
+}
+
+/// Strip the first (header) line. Exposed for external tooling; not used internally.
+#[allow(dead_code)]
+pub fn skip_header_owned(csv: &str) -> String {
+    skip_header(csv).to_string()
+}
 
 fn csv_field(s: &str) -> String {
     if s.contains(',') || s.contains('"') || s.contains('\n') {
@@ -641,6 +635,19 @@ mod tests {
         let parsed = parse_guides(&csv).unwrap();
         assert_eq!(parsed.len(), 1);
         assert_eq!(parsed[0].guide_id, "guide-test");
+    }
+
+    // ── skip_header_owned ────────────────────────────────────────────────────
+
+    #[test]
+    fn skip_header_owned_removes_first_line() {
+        let csv = "header,row\ndata,row\n";
+        assert_eq!(skip_header_owned(csv), "data,row\n");
+    }
+
+    #[test]
+    fn skip_header_owned_empty_input() {
+        assert_eq!(skip_header_owned(""), "");
     }
 
     // ── guides_documentation.csv sanity ─────────────────────────────────────

@@ -33,7 +33,7 @@
 use std::fs::{self, OpenOptions};
 use std::io::{BufWriter, Write};
 use std::path::{Path, PathBuf};
-use std::sync::{Arc, Mutex};
+use std::sync::Mutex;
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
@@ -97,11 +97,6 @@ pub struct AuditEntry {
     pub completion_status: CompletionStatus,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub error_message: Option<String>,
-    /// Adapter version that served the request, if reported by the tier.
-    /// Required for retrospective adapter-version-aware audit queries.
-    /// Phase 1 of learning-loop-master-plan-2026-05-18.md (P1-1.6).
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub adapter_version: Option<String>,
 }
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, Eq, PartialEq)]
@@ -115,12 +110,10 @@ pub enum CompletionStatus {
 
 /// Append-only ledger writer. One process owns one `AuditLedger`; the
 /// internal mutex serialises concurrent writes from multiple request
-/// handlers. Cheaply cloneable — clone shares the same mutex and file
-/// path, so concurrent clones serialise correctly without extra locking.
-#[derive(Clone)]
+/// handlers.
 pub struct AuditLedger {
     base_dir: PathBuf,
-    inner: Arc<Mutex<()>>,
+    inner: Mutex<()>,
 }
 
 impl AuditLedger {
@@ -136,7 +129,7 @@ impl AuditLedger {
         fs::create_dir_all(&base_dir)?;
         Ok(Self {
             base_dir,
-            inner: Arc::new(Mutex::new(())),
+            inner: Mutex::new(()),
         })
     }
 
@@ -307,22 +300,12 @@ pub struct ExtractionAuditEntry {
     pub tier_used: String,
     /// Elapsed time for the Yo-Yo call, or circuit-check time when deferred.
     pub latency_ms: u64,
-    /// Model identifier returned by the upstream tier (empty string when deferred).
-    pub model: String,
-    /// Upstream inference cost in USD (0.0 when deferred or Tier A).
-    pub cost_usd: f64,
-    /// `true` when the caller attested the payload was sanitised before dispatch.
-    pub sanitised_outbound: bool,
     /// Kebab-case defer reason; present when `deferred: true`.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub defer_reason: Option<String>,
     /// Upstream error message; present on Yo-Yo call failure.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub error_message: Option<String>,
-    /// Adapter version that served the extraction request, if reported.
-    /// Phase 1 of learning-loop-master-plan-2026-05-18.md (P1-1.6).
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub adapter_version: Option<String>,
 }
 
 impl AuditLedger {
@@ -431,7 +414,6 @@ mod tests {
             sanitised_outbound: true,
             completion_status: CompletionStatus::Ok,
             error_message: None,
-            adapter_version: None,
         };
         ledger.append(&entry).unwrap();
         ledger.append(&entry).unwrap();
@@ -605,7 +587,6 @@ mod tests {
             sanitised_outbound: true,
             completion_status: CompletionStatus::Ok,
             error_message: None,
-            adapter_version: None,
         };
 
         // Now make the directory read-only so subsequent file opens fail.

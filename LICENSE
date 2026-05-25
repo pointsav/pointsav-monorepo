@@ -1,109 +1,15 @@
-MULTI-LICENSE NOTICE
-Version 1.1 — Effective 2026-05-24
-Copyright © 2026 Woodfine Capital Projects Inc. All rights reserved.
+COPYRIGHT © 2026 Woodfine Capital Projects Inc.
+ALL RIGHTS RESERVED.
 
-This repository contains code under multiple licenses. Each source file
-carries an SPDX-License-Identifier header identifying the license
-applicable to that file, per the REUSE Software Specification.
+PointSav Digital Systems™ and Woodfine Management Corp. operate under the intellectual property definitions of Woodfine Capital Projects Inc.
 
---------------------------------------------------------------------------------
-PER-DIRECTORY LICENSING
---------------------------------------------------------------------------------
+1. INCUBATION PHASE STATUS
+This repository and all associated source code, documentation, and architectural patterns are currently in an active Incubation Phase. 
 
-Licensing is assigned at the directory level. The authoritative mapping
-is maintained in:
+2. STRICT PROPRIETARY RETENTION
+At this time, no open-source license (e.g., MIT, Apache, GPL) is granted. You may not use, copy, modify, merge, publish, distribute, sublicense, or sell copies of this software, or permit persons to whom the software is furnished to do so, without explicit, written, cryptographic authorization from Woodfine Capital Projects Inc.
 
-  https://github.com/pointsav/factory-release-engineering/blob/main/mapping/repo-license-map.yaml
+3. LICENSING ROADMAP
+PointSav Digital Systems™ operates on a Vendor/Customer engineering model under the stewardship of Woodfine Capital Projects Inc. Upon the conclusion of the Incubation Phase and the incorporation of PointSav Digital Systems AG, portions of this architecture may transition to a source-available or delayed-open-source model (such as the Functional Source License or Business Source License) to foster knowledge transfer while preventing commercial free-riding. 
 
-Directories under AGPL-3.0-or-later:
-
-  os-console/        — platform console
-  os-privategit/     — private git module
-  os-totebox/        — core platform
-  os-workplace/      — workplace module
-  service-*/         — all platform services
-  system-*/          — all platform systems
-  tool-*/            — all platform tools
-  moonshot-*/        — experimental and speculative work
-  app-console-*/     — applications extending os-console
-  app-privategit-*/  — applications extending os-privategit
-  app-totebox-*/     — applications extending os-totebox
-  app-workplace-*/   — applications extending os-workplace
-  foundry-nodeclass/ — workspace node classification library
-  scripts/           — workspace build and automation scripts
-  slm/               — language model module configuration
-  docs/              — internal technical documentation
-
-Directories under FSL-1.1-ALv2 (Functional Source License 1.1 with
-Apache-2.0 future license):
-
-  os-infrastructure/   — infrastructure module
-  os-interface/        — interface module (renames to os-orchestration)
-  os-mediakit/         — media kit module
-  os-network-admin/    — network administration module
-  app-mediakit-*/      — applications extending os-mediakit
-  app-network-*/       — applications extending os-network-admin
-  templates/           — HTML/CSS shell templates for app-mediakit surfaces
-
-Directories carrying upstream third-party licenses:
-
-  vendor-virtio/     — virtio driver stubs; see vendor-virtio/README.md for SPDX
-  vendor-wireguard/  — WireGuard tooling; see vendor-wireguard/README.md for SPDX
-
-The full AGPL-3.0-or-later text is available at:
-  https://github.com/pointsav/factory-release-engineering/blob/main/licenses/AGPL-3.0.txt
-
-The full FSL-1.1-ALv2 text is available at:
-  https://github.com/pointsav/factory-release-engineering/blob/main/licenses/FSL-1.1-Apache-2.0.txt
-
---------------------------------------------------------------------------------
-LOCAL-ONLY DIRECTORIES (not tracked in this repository)
---------------------------------------------------------------------------------
-
-The following directories exist on operator machines but are gitignored and
-never committed to this repository:
-
-  app-infrastructure-*/  — per-deployment infrastructure instances
-  vendor-azure-auth/     — Microsoft Azure authentication libraries
-  vendor-gpu-drivers/    — GPU driver packages
-  vendor-linux-systemd/  — systemd library bindings
-  vendor-microsoft-graph/— Microsoft Graph SDK
-  vendor-phi3-mini/      — Phi-3 Mini model weights
-  vendor-sel4-kernel/    — seL4 microkernel source
-  vendor-slm-engine/     — local language model engine
-  discovery-queue/       — operator-local transaction queue
-
---------------------------------------------------------------------------------
-COMMERCIAL ALTERNATIVE
---------------------------------------------------------------------------------
-
-Customers who cannot accept the terms of AGPLv3 or who require use of
-FSL-licensed code before its Delayed Open Source Publication window
-expires may obtain a PointSav Commercial License. Contact
-corporate.secretary@woodfinegroup.com for details.
-
---------------------------------------------------------------------------------
-POLICIES AND GOVERNANCE
---------------------------------------------------------------------------------
-
-Repository-wide policies apply regardless of per-directory licensing:
-
-  - CODE_OF_CONDUCT.md  — Contributor Covenant 2.1
-  - CONTRIBUTING.md     — contribution workflow and CLA requirements
-  - SECURITY.md         — vulnerability disclosure policy
-  - TRADEMARK.md        — trademark and trade-dress policy
-
-All of these are propagated from factory-release-engineering and should
-not be edited in this repository. Propose changes upstream.
-
---------------------------------------------------------------------------------
-NO SINGLE-LICENSE WARRANTY
---------------------------------------------------------------------------------
-
-This notice describes the intended per-directory licensing. If an
-individual source file lacks an SPDX-License-Identifier header, or if
-the header is inconsistent with this notice, the conflict shall be
-resolved in favor of the source-file header when present, and in favor
-of this notice when the source-file header is absent. When both are
-absent, the file is unlicensed and may not be used, copied, modified,
-or distributed.
+Until such a corporate transition is finalized and cryptographically signed within this repository, ALL RIGHTS REMAIN STRICTLY RESERVED.

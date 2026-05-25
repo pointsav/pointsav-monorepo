@@ -21,7 +21,6 @@
 //! No live API calls per the standing operator guardrail.
 
 use std::collections::HashMap;
-use std::sync::atomic::AtomicU64;
 use std::sync::{Arc, Mutex};
 
 use axum::body::Body;
@@ -115,11 +114,6 @@ fn app_state_with_proxy_and_ledger_dir(
         audit_tenant_concurrency_cap: 100,
         queue_config: temp_queue_config(),
         service_content_endpoint: String::new(),
-        last_yoyo_dispatch: Arc::new(AtomicU64::new(0)),
-        gateway_token: None,
-        node_class: "hardware",
-        tier_a_reason: "available",
-        idle_monitor: None,
     })
 }
 
@@ -537,7 +531,6 @@ fn mixed_entry_types_in_jsonl_stream_distinguishable_by_field_presence() {
         sanitised_outbound: true,
         completion_status: CompletionStatus::Ok,
         error_message: None,
-        adapter_version: None,
     };
     ledger.append(&chat_entry).expect("append AuditEntry");
 
@@ -698,7 +691,6 @@ fn entry_type_tag_discriminates_all_entry_kinds() {
             sanitised_outbound: false,
             completion_status: CompletionStatus::Ok,
             error_message: None,
-            adapter_version: None,
         })
         .expect("append AuditEntry");
 

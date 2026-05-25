@@ -17,10 +17,8 @@ path = "src/lib.rs"
 [dependencies]
 slm-core = { workspace = true }
 slm-doorman = { workspace = true }
-foundry-nodeclass = { workspace = true }
 
 tokio = { workspace = true }
-tokio-stream = { workspace = true }
 axum = { workspace = true }
 
 serde = { workspace = true }
@@ -34,14 +32,7 @@ reqwest = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 
-# Prometheus metrics exporter (P3-3.1) — emits to a global recorder
-# from router.rs::write_audit and tier dispatch; served via /metrics
-# endpoint in the Prometheus textual format.
-metrics = "0.23"
-metrics-exporter-prometheus = { version = "0.15", default-features = false }
-
 anyhow = { workspace = true }
-sha2 = { workspace = true }
 
 # File locking for the brief queue (apprenticeship-substrate.md §7C).
 # Already a workspace dep used by slm-doorman for the promotion ledger;

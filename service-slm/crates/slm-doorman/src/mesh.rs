@@ -138,15 +138,14 @@ mod tests {
             )),
         };
         let dummy_req = {
-            use slm_core::{CanonicalMessage, Complexity, LatencyClass, ModuleId, RequestId};
+            use slm_core::{ChatMessage, Complexity, ModuleId, RequestId};
             use std::str::FromStr;
             ComputeRequest {
                 request_id: RequestId::new(),
                 module_id: ModuleId::from_str("foundry").unwrap(),
                 model: None,
-                messages: vec![CanonicalMessage::text("user", "hi")],
+                messages: vec![ChatMessage { role: "user".into(), content: "hi".into() }],
                 complexity: Complexity::High,
-                latency_class: LatencyClass::default(),
                 tier_hint: None,
                 stream: false,
                 max_tokens: None,
@@ -157,8 +156,6 @@ mod tests {
                 grammar: None,
                 speculation: None,
                 graph_context_enabled: None,
-                adapter_version: None,
-                tools: None,
             }
         };
         let selected = registry.select_optimal(&dummy_req).await;
@@ -172,15 +169,14 @@ mod tests {
             nodes: Arc::new(RwLock::new(vec![])),
         };
         let dummy_req = {
-            use slm_core::{CanonicalMessage, Complexity, LatencyClass, ModuleId, RequestId};
+            use slm_core::{ChatMessage, Complexity, ModuleId, RequestId};
             use std::str::FromStr;
             ComputeRequest {
                 request_id: RequestId::new(),
                 module_id: ModuleId::from_str("foundry").unwrap(),
                 model: None,
-                messages: vec![CanonicalMessage::text("user", "hi")],
+                messages: vec![ChatMessage { role: "user".into(), content: "hi".into() }],
                 complexity: Complexity::Medium,
-                latency_class: LatencyClass::default(),
                 tier_hint: None,
                 stream: false,
                 max_tokens: None,
@@ -191,8 +187,6 @@ mod tests {
                 grammar: None,
                 speculation: None,
                 graph_context_enabled: None,
-                adapter_version: None,
-                tools: None,
             }
         };
         let selected = registry.select_optimal(&dummy_req).await;

@@ -1,0 +1,10 @@
+{
+  "extracted_signals": {
+    "sender": "Columbia Daily Spectator <SpecNewsletters@columbiaspectator.com>",
+    "subject": "This Week in University News: Columbia announced major campus investments. Less than an hour earlier, it quietly finalized undergraduate expansion"
+  },
+  "source_artifact": "VAULT_INGRESS_totebox-ingress_14808889.eml",
+  "status": "AWAITING_HITL_CHECKOUT",
+  "timestamp": "2026-03-28T03:34:08.020357212+00:00",
+  "transaction_id": "78A2201E"
+}

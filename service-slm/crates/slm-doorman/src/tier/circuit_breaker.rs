@@ -120,16 +120,6 @@ impl CircuitBreaker {
         let inner = self.inner.read().unwrap_or_else(|p| p.into_inner());
         inner.state == CbState::Open
     }
-
-    /// Returns the current state as a static string: "closed", "open", or "half-open".
-    pub fn state_str(&self) -> &'static str {
-        let inner = self.inner.read().unwrap_or_else(|p| p.into_inner());
-        match inner.state {
-            CbState::Closed => "closed",
-            CbState::Open => "open",
-            CbState::HalfOpen => "half-open",
-        }
-    }
 }
 
 #[cfg(test)]

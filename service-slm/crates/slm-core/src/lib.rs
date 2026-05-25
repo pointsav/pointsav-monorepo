@@ -22,109 +22,15 @@ pub use error::{CoreError, Result};
 pub use mesh::{EnergySource, EnvironmentMetadata, NodeDescriptor, NodeId};
 pub use module_id::ModuleId;
 pub use request_id::RequestId;
-pub use tier::{Complexity, LatencyClass, SpeculationRequest, Tier};
+pub use tier::{Complexity, SpeculationRequest, Tier};
 
 use serde::{Deserialize, Serialize};
 
 /// One inbound message in OpenAI chat-completions shape.
-/// Retained for `AuditProxyRequest.messages` — do not migrate to `CanonicalMessage`.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ChatMessage {
     pub role: String,
     pub content: String,
-}
-
-/// Role of a participant in a conversation.
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
-#[serde(rename_all = "lowercase")]
-pub enum Role {
-    User,
-    Assistant,
-    System,
-    Tool,
-}
-
-impl Role {
-    pub fn as_str(&self) -> &'static str {
-        match self {
-            Role::User => "user",
-            Role::Assistant => "assistant",
-            Role::System => "system",
-            Role::Tool => "tool",
-        }
-    }
-}
-
-/// A typed content block in Anthropic Messages API format.
-/// Canonical internal representation used by all tier clients.
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
-#[serde(tag = "type", rename_all = "snake_case")]
-pub enum ContentBlock {
-    Text { text: String },
-    ToolUse { id: String, name: String, input: serde_json::Value },
-    ToolResult { tool_use_id: String, content: String },
-    Thinking { thinking: String },
-}
-
-/// A message in the canonical neutral format.
-/// All tier clients translate FROM this format TO their native wire format.
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct CanonicalMessage {
-    pub role: Role,
-    pub content: Vec<ContentBlock>,
-}
-
-impl CanonicalMessage {
-    /// Convenience constructor for simple single-text messages.
-    pub fn text(role: impl Into<String>, text: impl Into<String>) -> Self {
-        let role_str: String = role.into();
-        let role = match role_str.as_str() {
-            "assistant" => Role::Assistant,
-            "system" => Role::System,
-            "tool" => Role::Tool,
-            _ => Role::User,
-        };
-        Self {
-            role,
-            content: vec![ContentBlock::Text { text: text.into() }],
-        }
-    }
-
-    /// Concatenates all text and thinking blocks.
-    /// Used where only plain text matters (graph-context injection, apprenticeship).
-    pub fn text_content(&self) -> String {
-        self.content
-            .iter()
-            .filter_map(|b| match b {
-                ContentBlock::Text { text } => Some(text.as_str()),
-                ContentBlock::Thinking { thinking } => Some(thinking.as_str()),
-                _ => None,
-            })
-            .collect::<Vec<_>>()
-            .join("\n")
-    }
-}
-
-impl From<ChatMessage> for CanonicalMessage {
-    fn from(m: ChatMessage) -> Self {
-        CanonicalMessage::text(m.role, m.content)
-    }
-}
-
-/// A tool definition forwarded from the Anthropic Messages API `tools` array.
-///
-/// Matches the Anthropic wire shape:
-/// ```json
-/// {"name": "get_weather", "description": "...", "input_schema": {"type": "object", ...}}
-/// ```
-/// Tier translation: local and Yo-Yo tiers convert to OpenAI `tools[].function`; external
-/// tier passes through natively. Tool definitions are optional; absent means no tool use.
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct ToolDef {
-    pub name: String,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub description: Option<String>,
-    pub input_schema: serde_json::Value,
 }
 
 /// Decode-time grammar constraint that the caller wants the Doorman to
@@ -168,11 +74,9 @@ pub struct ComputeRequest {
     pub request_id: RequestId,
     pub module_id: ModuleId,
     pub model: Option<String>,
-    pub messages: Vec<CanonicalMessage>,
+    pub messages: Vec<ChatMessage>,
     #[serde(default)]
     pub complexity: Complexity,
-    #[serde(default)]
-    pub latency_class: LatencyClass,
     #[serde(default)]
     pub tier_hint: Option<Tier>,
     #[serde(default)]
@@ -210,19 +114,6 @@ pub struct ComputeRequest {
     /// DataGraph entity rows from bloating Claude Code prompts.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub graph_context_enabled: Option<bool>,
-    /// Optional adapter version hint. When set, the tier backend SHOULD load
-    /// this LoRA adapter version for the request (e.g. `coding-lora-2026-05-18`).
-    /// Backends MAY ignore the hint when the adapter isn't loaded; the actual
-    /// adapter version that served the request is reported back via
-    /// `ComputeResponse.adapter_version`. `None` means "use whatever is loaded".
-    /// Phase 1 of learning-loop-master-plan-2026-05-18.md (P1-1.6): required
-    /// for retrospective adapter-version-aware audit queries.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub adapter_version: Option<String>,
-    /// Tool definitions forwarded from the Anthropic Messages API (P1-1.7).
-    /// Absent from most requests; backends convert to OpenAI `tools` array.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub tools: Option<Vec<ToolDef>>,
 }
 
 #[cfg(test)]
@@ -236,9 +127,11 @@ mod tests {
             request_id: RequestId::new(),
             module_id: ModuleId::from_str("test-module").unwrap(),
             model: None,
-            messages: vec![CanonicalMessage::text("user", "hello")],
+            messages: vec![ChatMessage {
+                role: "user".to_string(),
+                content: "hello".to_string(),
+            }],
             complexity: Complexity::default(),
-            latency_class: LatencyClass::default(),
             tier_hint: None,
             stream: false,
             max_tokens: None,
@@ -249,8 +142,6 @@ mod tests {
             grammar: None,
             speculation: None,
             graph_context_enabled: None,
-            adapter_version: None,
-            tools: None,
         }
     }
 
@@ -341,54 +232,6 @@ mod tests {
     }
 
     #[test]
-    fn content_block_text_round_trip() {
-        let block = ContentBlock::Text { text: "hello world".to_string() };
-        let json = serde_json::to_string(&block).unwrap();
-        assert!(json.contains(r#""type":"text""#), "text type tag missing; got: {json}");
-        let back: ContentBlock = serde_json::from_str(&json).unwrap();
-        assert_eq!(back, block);
-    }
-
-    #[test]
-    fn content_block_tool_use_round_trip() {
-        let block = ContentBlock::ToolUse {
-            id: "tu_1".to_string(),
-            name: "bash".to_string(),
-            input: serde_json::json!({"cmd": "ls -la"}),
-        };
-        let json = serde_json::to_string(&block).unwrap();
-        assert!(json.contains(r#""type":"tool_use""#), "tool_use tag missing; got: {json}");
-        let back: ContentBlock = serde_json::from_str(&json).unwrap();
-        assert_eq!(back, block);
-    }
-
-    #[test]
-    fn canonical_message_text_helper() {
-        let msg = CanonicalMessage::text("user", "ping");
-        assert_eq!(msg.role, Role::User);
-        assert_eq!(msg.text_content(), "ping");
-    }
-
-    #[test]
-    fn canonical_message_round_trip() {
-        let msg = CanonicalMessage {
-            role: Role::Assistant,
-            content: vec![
-                ContentBlock::Text { text: "here is a tool call".to_string() },
-                ContentBlock::ToolUse {
-                    id: "tu_abc".to_string(),
-                    name: "read_file".to_string(),
-                    input: serde_json::json!({"path": "/tmp/x"}),
-                },
-            ],
-        };
-        let json = serde_json::to_string(&msg).unwrap();
-        let back: CanonicalMessage = serde_json::from_str(&json).unwrap();
-        assert_eq!(back.role, Role::Assistant);
-        assert_eq!(back.content.len(), 2);
-    }
-
-    #[test]
     fn compute_request_default_grammar_is_none() {
         // Construct a request without setting grammar; verify the field is None.
         let req = minimal_request();
@@ -402,7 +245,7 @@ mod tests {
         let json_without_grammar = serde_json::json!({
             "request_id": req.request_id,
             "module_id": req.module_id,
-            "messages": [{"role": "user", "content": [{"type": "text", "text": "test"}]}],
+            "messages": [{"role": "user", "content": "test"}],
         })
         .to_string();
         let req2: ComputeRequest = serde_json::from_str(&json_without_grammar).unwrap();
@@ -542,28 +385,12 @@ pub struct ComputeResponse {
     pub request_id: RequestId,
     pub tier_used: Tier,
     pub model: String,
-    /// Plain-text content (all text blocks concatenated). Non-empty for
-    /// text-only responses; may be empty when `content_blocks` contains
-    /// only `ToolUse` blocks (P1-1.7).
     pub content: String,
-    /// Rich content blocks (P1-1.7). Empty for plain-text responses
-    /// (callers use `content` directly). Populated when the model
-    /// returns tool-use blocks; may contain `ToolUse` and/or `Text`.
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub content_blocks: Vec<ContentBlock>,
     pub inference_ms: u64,
     pub cost_usd: f64,
     /// Yo-Yo or external-API implementation version, opaque string.
     #[serde(default)]
     pub upstream_version: Option<String>,
-    /// Adapter version that actually served the request. `None` when no LoRA
-    /// adapter is loaded (base model only) or when the backend does not
-    /// report adapter info (e.g. Tier C / Anthropic). Always reflects the
-    /// truth of WHAT served the request, regardless of what the request
-    /// hinted in `ComputeRequest.adapter_version`. Phase 1 of
-    /// learning-loop-master-plan-2026-05-18.md (P1-1.6).
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub adapter_version: Option<String>,
 }
 
 // ---------------------------------------------------------------------------

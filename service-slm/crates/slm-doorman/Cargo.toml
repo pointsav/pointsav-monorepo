@@ -49,21 +49,6 @@ base64 = { workspace = true }
 # Observability
 tracing = { workspace = true }
 
-# Stable cryptographic hash for corpus_gate dedup (brief_hash, diff_hash).
-sha2 = { workspace = true }
-
-# YAML for adapter_registry.rs (P3-3.4) — adapter version registry at
-# data/adapters/registry.yaml.
-serde_yaml = "0.9"
-
-# anyhow for adapter_registry.rs error wrapping (kept local to that module).
-anyhow = { workspace = true }
-
-# Metrics facade — router::write_audit emits counters/histograms via
-# this crate; the actual Prometheus recorder is installed at startup
-# by slm-doorman-server::metrics::init(). Phase 3 (P3-3.1).
-metrics = "0.23"
-
 [dev-dependencies]
 # Mock HTTP server for Yo-Yo client unit tests (B2)
 wiremock = "0.6"

@@ -1,0 +1,20 @@
+source_file	line	slug	display	category_hint	suggested_replacement
+/srv/foundry/clones/project-editorial/content-wiki-documentation/patterns/_index.md	26	substrate			
+/srv/foundry/clones/project-editorial/content-wiki-documentation/substrate/merkle-proofs-as-substrate-primitive.md	48	capability-ledger-substrate			
+/srv/foundry/clones/project-editorial/content-wiki-documentation/substrate/_index.md	29	patterns			
+/srv/foundry/clones/project-editorial/content-wiki-documentation/reference/wiki-provider-landscape.md	483	topic-knowledge-wiki-home-page-design			
+/srv/foundry/clones/project-editorial/content-wiki-documentation/reference/wiki-provider-landscape.md	484	topic-article-shell-leapfrog			
+/srv/foundry/clones/project-editorial/content-wiki-documentation/architecture/doorman-protocol.md	47	service-slm-architecture			
+/srv/foundry/clones/project-editorial/content-wiki-documentation/applications/app-mediakit-marketing.md	72	app-orchestration-bim			
+/srv/foundry/clones/project-editorial/content-wiki-documentation/systems/topic-console-os.md	41	topic-privategit-os			
+/srv/foundry/clones/project-editorial/content-wiki-documentation/systems/topic-mediakit-os.md	23	topic-wikipedia-layout			
+/srv/foundry/clones/project-editorial/content-wiki-documentation/systems/topic-mediakit-os.md	23	pointsav-design-system			
+/srv/foundry/clones/project-editorial/content-wiki-documentation/systems/topic-mediakit-os.md	24	pointsav-media-assets			
+/srv/foundry/clones/project-editorial/content-wiki-documentation/systems/topic-mediakit-os.md	45	topic-privategit-os			
+/srv/foundry/clones/project-editorial/content-wiki-documentation/systems/topic-mediakit-os.md	46	topic-user-interface-design			
+/srv/foundry/clones/project-editorial/content-wiki-documentation/systems/topic-infrastructure-os.md	43	topic-network-admin-os			
+/srv/foundry/clones/project-editorial/content-wiki-documentation/systems/topic-totebox-archive.md	42	topic-site-ledger-integration			
+/srv/foundry/clones/project-editorial/content-wiki-documentation/systems/_index.md	20	os-totebox			
+/srv/foundry/clones/project-editorial/content-wiki-documentation/systems/_index.md	21	totebox-orchestration			
+/srv/foundry/clones/project-editorial/woodfine-fleet-deployment/cluster-totebox-personnel/guide-personnel-ledger.md	46	guide-ingress-operations			
+/srv/foundry/clones/project-editorial/woodfine-fleet-deployment/cluster-totebox-personnel/guide-slm-execution.md	28	guide-ingress-operations			

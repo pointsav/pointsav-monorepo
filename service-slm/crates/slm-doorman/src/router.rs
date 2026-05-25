@@ -12,21 +12,17 @@
 //! deterministic processing" decision.
 
 use chrono::Utc;
-use slm_core::{CanonicalMessage, Complexity, ComputeRequest, ComputeResponse, GrammarConstraint, LatencyClass, Role, Tier};
+use slm_core::{Complexity, ComputeRequest, ComputeResponse, GrammarConstraint, Tier};
 use tracing::{info, warn};
 
 use crate::error::{DoormanError, Result};
 use crate::grammar_validation::LarkValidator;
 use crate::graph::GraphContextClient;
-use crate::ledger::{
-    AuditEntry, AuditLedger, CompletionStatus, ExtractionAuditEntry, ENTRY_TYPE_CHAT_COMPLETION,
-    ENTRY_TYPE_EXTRACT,
-};
+use crate::ledger::{AuditEntry, AuditLedger, CompletionStatus, ENTRY_TYPE_CHAT_COMPLETION};
 use crate::mesh::MeshRegistry;
 use crate::tier::{ExternalTierClient, LocalTierClient, YoYoTierClient};
 
 use std::collections::HashMap;
-use std::time::{Duration, Instant};
 
 #[derive(Default)]
 pub struct DoormanConfig {
@@ -102,36 +98,8 @@ impl Doorman {
         self.external.is_some()
     }
 
-    pub fn has_lark_validator(&self) -> bool {
-        self.lark_validator.is_some()
-    }
-
-    /// Returns the circuit breaker state string of the default (first)
-    /// Yo-Yo client, or `"unconfigured"` when no Yo-Yo clients exist.
-    pub fn default_yoyo_circuit_state(&self) -> &'static str {
-        self.yoyo
-            .values()
-            .next()
-            .map(|c| c.circuit_state())
-            .unwrap_or("unconfigured")
-    }
-
     pub fn ledger(&self) -> &AuditLedger {
         &self.ledger
-    }
-
-    /// Direct access to the graph context client — needed by callers that
-    /// want to capture graph_context separately from the prompt injection
-    /// path. Phase 2 (P2-2.5) of learning-loop-master-plan-2026-05-18.md:
-    /// apprenticeship.rs::dispatch_shadow embeds the queried context in
-    /// the JSONL tuple so LoRA training learns citation-grounded prose
-    /// (Doctrine claim #44 — co-evolution loop).
-    ///
-    /// Returns `None` when no client is configured (service-content not
-    /// wired). Callers MUST handle the None case as "no graph context
-    /// available" rather than failing.
-    pub fn graph_context_client(&self) -> Option<&GraphContextClient> {
-        self.graph_context_client.as_ref()
     }
 
     /// Pick a tier from the request and dispatch. The caller's `tier_hint`
@@ -162,8 +130,8 @@ impl Doorman {
                 .messages
                 .iter()
                 .rev()
-                .find(|m| m.role == Role::User)
-                .map(|m| m.text_content().chars().take(200).collect::<String>())
+                .find(|m| m.role == "user")
+                .map(|m| m.content.chars().take(200).collect::<String>())
                 .unwrap_or_default();
 
             if !query.is_empty() {
@@ -174,7 +142,10 @@ impl Doorman {
                     let mut cloned = req.clone();
                     cloned.messages.insert(
                         0,
-                        CanonicalMessage::text("system", format!("[ENTITY CONTEXT]\n{}", ctx)),
+                        slm_core::ChatMessage {
+                            role: "system".to_string(),
+                            content: format!("[ENTITY CONTEXT]\n{}", ctx),
+                        },
                     );
                     effective_req = cloned;
                     &effective_req
@@ -194,10 +165,6 @@ impl Doorman {
     }
 
     fn select_tier(&self, req: &ComputeRequest) -> Result<Tier> {
-        // Batch latency always routes to Tier B — never local regardless of node class.
-        if req.latency_class == LatencyClass::Batch {
-            return self.confirm_tier_with_req(Tier::Yoyo, req);
-        }
         if let Some(hint) = req.tier_hint {
             return self.confirm_tier_with_req(hint, req);
         }
@@ -280,26 +247,11 @@ impl Doorman {
 
         match tier {
             Tier::Local => {
-                let local = self
-                    .local
+                self.local
                     .as_ref()
-                    .ok_or(DoormanError::TierUnavailable(Tier::Local))?;
-                match local.complete(req).await {
-                    // Tier A busy and Tier B is configured → escalate so the
-                    // request gets served rather than immediately 503-ing.
-                    // Box::pin is required because dispatch is async and the
-                    // recursive call would otherwise create an infinitely sized
-                    // future (E0733).
-                    Err(DoormanError::TierABusy) if !self.yoyo.is_empty() => {
-                        info!(
-                            target: "slm_doorman::router",
-                            request_id = %req.request_id,
-                            "Tier A busy (slots_idle=0); escalating to Tier B"
-                        );
-                        Box::pin(self.dispatch(Tier::Yoyo, req)).await
-                    }
-                    other => other,
-                }
+                    .ok_or(DoormanError::TierUnavailable(Tier::Local))?
+                    .complete(req)
+                    .await
             }
             Tier::Yoyo => {
                 let client = if let Some(ref label) = req.yoyo_label {
@@ -318,38 +270,13 @@ impl Doorman {
                 };
 
                 // B4: fast-path health + circuit check before making any HTTP call.
-                // B2: when SLM_YOYO_AUTO_START=true and the backend is down,
-                // invoke start-yoyo.sh (path from SLM_YOYO_START_SCRIPT) and
-                // wait up to 90 s for the health probe to recover before falling
-                // back to Tier A.
                 if !client.allow_request() {
-                    let auto_start = std::env::var("SLM_YOYO_AUTO_START")
-                        .map(|v| v == "true")
-                        .unwrap_or(false);
-                    let came_up = if auto_start {
-                        info!(
-                            target: "slm_doorman::router",
-                            request_id = %req.request_id,
-                            "Tier B down; SLM_YOYO_AUTO_START=true — triggering start-yoyo.sh"
-                        );
-                        try_auto_start_yoyo(client).await
-                    } else {
-                        false
-                    };
-                    if !came_up {
-                        warn!(
-                            target: "slm_doorman::router",
-                            request_id = %req.request_id,
-                            auto_start,
-                            "Tier B unavailable; falling back to Tier A"
-                        );
-                        return self.try_local_fallback(req).await;
-                    }
-                    info!(
+                    warn!(
                         target: "slm_doorman::router",
                         request_id = %req.request_id,
-                        "Yo-Yo health probe up after auto-start; proceeding with Tier B"
+                        "Tier B unavailable (health probe down or circuit open); falling back to Tier A"
                     );
+                    return self.try_local_fallback(req).await;
                 }
 
                 match client.complete(req).await {
@@ -390,7 +317,6 @@ impl Doorman {
                 sanitised_outbound: req.sanitised_outbound,
                 completion_status: CompletionStatus::Ok,
                 error_message: None,
-                adapter_version: resp.adapter_version.clone(),
             },
             Err(e) => AuditEntry {
                 entry_type: ENTRY_TYPE_CHAT_COMPLETION.to_string(),
@@ -404,79 +330,18 @@ impl Doorman {
                 sanitised_outbound: req.sanitised_outbound,
                 completion_status: classify_error(e),
                 error_message: Some(e.to_string()),
-                adapter_version: None,
             },
         };
-        // Off-load blocking JSONL write to the thread pool (GF-1: avoid
-        // blocking the async hot path on O_APPEND + BufWriter flush).
-        // Fire-and-forget; the JoinHandle is intentionally dropped.
-        let ledger = self.ledger.clone();
-        let entry_for_write = entry.clone();
-        tokio::task::spawn_blocking(move || {
-            if let Err(write_err) = ledger.append(&entry_for_write) {
-                warn!(
-                    target: "slm_doorman::ledger",
-                    error = %write_err,
-                    request_id = %entry_for_write.request_id,
-                    "failed to append audit entry"
-                );
-            }
-        });
-
-        // Prometheus metric emit (P3-3.1). The recorder is installed by
-        // slm-doorman-server::metrics::init() at startup; if absent, the
-        // `metrics` facade no-ops. Labels: tier + model + adapter_version
-        // + completion_status. adapter_version is "none" when no LoRA is
-        // loaded so the label dimension stays bounded.
-        let adapter_label = entry
-            .adapter_version
-            .clone()
-            .unwrap_or_else(|| "none".to_string());
-        let status_label = match entry.completion_status {
-            CompletionStatus::Ok => "ok",
-            CompletionStatus::UpstreamError => "upstream_error",
-            CompletionStatus::PolicyDenied => "policy_denied",
-            CompletionStatus::TierUnavailable => "tier_unavailable",
-        };
-        metrics::counter!(
-            "slm_requests_total",
-            "tier" => entry.tier.as_str().to_string(),
-            "model" => entry.model.clone(),
-            "adapter_version" => adapter_label.clone(),
-            "completion_status" => status_label,
-        )
-        .increment(1);
-        metrics::counter!(
-            "slm_cost_usd_total",
-            "tier" => entry.tier.as_str().to_string(),
-            "model" => entry.model.clone(),
-        )
-        .increment(entry.cost_usd as u64);
-        metrics::histogram!(
-            "slm_latency_ms",
-            "tier" => entry.tier.as_str().to_string(),
-            "model" => entry.model.clone(),
-        )
-        .record(entry.inference_ms as f64);
-        metrics::counter!(
-            "slm_audit_writes_total",
-            "entry_type" => "chat-completion",
-        )
-        .increment(1);
-
-        // Cost ledger append (P3-3.5-followup). The global ledger is
-        // installed by main.rs at startup; absent ledger is a no-op.
-        // Failures are swallowed (tracing::warn) — cost-ledger
-        // failure must never propagate into the response path.
-        crate::cost_ledger::append_global(&crate::cost_ledger::CostRow {
-            ts: entry.timestamp_utc.to_rfc3339_opts(chrono::SecondsFormat::Secs, true),
-            request_id: entry.request_id.to_string(),
-            tier: entry.tier.as_str().to_string(),
-            model: entry.model.clone(),
-            cost_usd: entry.cost_usd,
-            inference_ms: entry.inference_ms,
-            adapter_version: entry.adapter_version.clone(),
-        });
+        if let Err(write_err) = self.ledger.append(&entry) {
+            // Audit failure must never silently drop. Surface to logs;
+            // upstream observability picks it up.
+            warn!(
+                target: "slm_doorman::ledger",
+                error = %write_err,
+                request_id = %req.request_id,
+                "failed to append audit entry"
+            );
+        }
     }
 }
 
@@ -493,16 +358,11 @@ impl Doorman {
     /// Yo-Yo node (OLMo 3 32B-Think). OLMo 7B (Tier A) cannot produce
     /// structured JSON arrays reliably and must never serve as a fallback for
     /// extraction.
-    ///
-    /// Writes one `ExtractionAuditEntry` (entry_type = "extract") per call so
-    /// extraction traffic is fully traceable in the audit ledger.
     pub async fn route_yoyo_only(
         &self,
         req: &ComputeRequest,
         label: &str,
     ) -> Result<ComputeResponse> {
-        let started = std::time::Instant::now();
-
         let client = self.yoyo.get(label).ok_or_else(|| {
             warn!(
                 target: "slm_doorman::router",
@@ -519,11 +379,6 @@ impl Doorman {
                 label,
                 "route_yoyo_only: circuit not allowing request (open or health-probe down)"
             );
-            let latency_ms = started.elapsed().as_millis() as u64;
-            self.append_extract_audit(
-                req, label, latency_ms, None, true,
-                Some("yoyo-circuit-open".to_string()), None,
-            );
             return Err(DoormanError::TierUnavailable(Tier::Yoyo));
         }
 
@@ -537,98 +392,7 @@ impl Doorman {
             }
         }
 
-        let result = client.complete(req).await;
-        let latency_ms = started.elapsed().as_millis() as u64;
-        match &result {
-            Ok(resp) => self.append_extract_audit(
-                req, label, latency_ms, Some(resp), false, None, None,
-            ),
-            Err(e) => self.append_extract_audit(
-                req, label, latency_ms, None, false, None, Some(e.to_string()),
-            ),
-        }
-        result
-    }
-
-    #[allow(clippy::too_many_arguments)]
-    fn append_extract_audit(
-        &self,
-        req: &ComputeRequest,
-        label: &str,
-        latency_ms: u64,
-        resp: Option<&ComputeResponse>,
-        deferred: bool,
-        defer_reason: Option<String>,
-        error_message: Option<String>,
-    ) {
-        let entry = ExtractionAuditEntry {
-            entry_type: ENTRY_TYPE_EXTRACT.to_string(),
-            timestamp_utc: Utc::now(),
-            request_id: req.request_id,
-            module_id: req.module_id.clone(),
-            extraction_ok: resp.is_some() && !deferred,
-            deferred,
-            entities_count: 0,  // entity count available only in the HTTP handler
-            tier_used: if deferred {
-                "deferred".to_string()
-            } else {
-                format!("yoyo_{}", label)
-            },
-            latency_ms,
-            model: resp.map(|r| r.model.clone()).unwrap_or_default(),
-            cost_usd: resp.map(|r| r.cost_usd).unwrap_or(0.0),
-            sanitised_outbound: req.sanitised_outbound,
-            defer_reason,
-            error_message,
-            adapter_version: resp.and_then(|r| r.adapter_version.clone()),
-        };
-        if let Err(e) = self.ledger.append_extract_entry(&entry) {
-            warn!(
-                target: "slm_doorman::ledger",
-                error = %e,
-                request_id = %req.request_id,
-                "route_yoyo_only: failed to append extraction audit entry"
-            );
-        }
-    }
-
-    /// Begin a streaming Tier-B request. Returns the raw vLLM HTTP response on
-    /// success; the caller translates the SSE body to the target wire format.
-    ///
-    /// Returns `Err(TierUnavailable(Tier::Yoyo))` if no Yo-Yo clients are
-    /// configured. Returns `Err(TierBCircuitOpen)` if the circuit is open.
-    /// Does NOT fall back to Tier A — streaming callers handle fallback
-    /// themselves.
-    pub async fn yoyo_stream(&self, req: &ComputeRequest) -> Result<reqwest::Response> {
-        let client = if let Some(ref label) = req.yoyo_label {
-            self.yoyo.get(label.as_str()).ok_or_else(|| {
-                warn!(
-                    target: "slm_doorman::router",
-                    label = label.as_str(),
-                    "yoyo_stream: requested label not configured"
-                );
-                DoormanError::TierUnavailable(Tier::Yoyo)
-            })?
-        } else {
-            self.yoyo
-                .values()
-                .next()
-                .ok_or_else(|| DoormanError::TierUnavailable(Tier::Yoyo))?
-        };
-        client.start_stream(req).await
-    }
-
-    /// Begin a streaming Tier-A request. Returns the raw llama-server HTTP
-    /// response on success; the caller translates the SSE body to the target
-    /// wire format.
-    ///
-    /// Returns `Err(TierUnavailable(Tier::Local))` if no local client is
-    /// configured. Does NOT fall back — streaming callers handle fallback.
-    pub async fn local_stream(&self, req: &ComputeRequest) -> Result<reqwest::Response> {
-        match &self.local {
-            Some(local) => local.start_stream(req).await,
-            None => Err(DoormanError::TierUnavailable(Tier::Local)),
-        }
+        client.complete(req).await
     }
 }
 
@@ -737,59 +501,13 @@ fn classify_error(e: &DoormanError) -> CompletionStatus {
         // server-side for unreachable service-content (UpstreamError).
         DoormanError::GraphProxyMissingModuleId => CompletionStatus::PolicyDenied,
         DoormanError::GraphProxyServiceUnavailable => CompletionStatus::UpstreamError,
-        DoormanError::QueueQualityGateRejected { .. } => CompletionStatus::PolicyDenied,
-        DoormanError::CorpusGateRejected { .. } => CompletionStatus::PolicyDenied,
-        // Tier A busy — all inference slots occupied, no Tier B to fall back to.
-        // Classified as TierUnavailable: the server cannot serve the request right
-        // now but the caller did nothing wrong.
-        DoormanError::TierABusy => CompletionStatus::TierUnavailable,
     }
-}
-
-/// On-demand Yo-Yo auto-start. Invokes the script at `SLM_YOYO_START_SCRIPT`
-/// and polls `client.is_healthy()` every 5 s for up to 90 s.
-/// Returns `true` if the backend becomes healthy within the budget.
-/// Non-fatal: script spawn failures are logged and `false` is returned.
-async fn try_auto_start_yoyo(client: &YoYoTierClient) -> bool {
-    let script = match std::env::var("SLM_YOYO_START_SCRIPT") {
-        Ok(s) => s,
-        Err(_) => {
-            warn!(
-                target: "slm_doorman::router",
-                "SLM_YOYO_AUTO_START=true but SLM_YOYO_START_SCRIPT not set — cannot auto-start"
-            );
-            return false;
-        }
-    };
-
-    match tokio::process::Command::new(&script).spawn() {
-        Ok(_child) => {
-            info!(target: "slm_doorman::router", script = %script, "auto-start: start-yoyo.sh spawned");
-        }
-        Err(e) => {
-            warn!(
-                target: "slm_doorman::router",
-                script = %script, error = %e,
-                "auto-start: failed to spawn start-yoyo.sh"
-            );
-            return false;
-        }
-    }
-
-    let deadline = Instant::now() + Duration::from_secs(90);
-    while Instant::now() < deadline {
-        tokio::time::sleep(Duration::from_secs(5)).await;
-        if client.is_healthy() {
-            return true;
-        }
-    }
-    false
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use slm_core::{CanonicalMessage, LatencyClass, ModuleId, RequestId};
+    use slm_core::{ChatMessage, ModuleId, RequestId};
     use std::str::FromStr;
 
     fn req(complexity: Complexity, hint: Option<Tier>, yoyo_label: Option<String>) -> ComputeRequest {
@@ -797,9 +515,11 @@ mod tests {
             request_id: RequestId::new(),
             module_id: ModuleId::from_str("foundry").unwrap(),
             model: None,
-            messages: vec![CanonicalMessage::text("user", "ping")],
+            messages: vec![ChatMessage {
+                role: "user".into(),
+                content: "ping".into(),
+            }],
             complexity,
-            latency_class: LatencyClass::default(),
             tier_hint: hint,
             stream: false,
             max_tokens: None,
@@ -810,8 +530,6 @@ mod tests {
             grammar: None,
             speculation: None,
             graph_context_enabled: None,
-            adapter_version: None,
-            tools: None,
         }
     }
 
@@ -830,21 +548,6 @@ mod tests {
         match result {
             Err(DoormanError::TierUnavailable(Tier::Local)) => {}
             other => panic!("expected TierUnavailable(Local), got {other:?}"),
-        }
-    }
-
-    #[test]
-    fn micro_class_no_local_tier_unavailable() {
-        // On Micro nodes build_doorman() sets local=None. Verify that a Doorman
-        // without a local client rejects every Local tier request, regardless of
-        // complexity or hint — DOCTRINE.md claims #49/#54 invariant.
-        let doorman = Doorman::new(DoormanConfig::default(), ledger());
-        for hint in [None, Some(Tier::Local)] {
-            let result = doorman.select_tier(&req(Complexity::Low, hint, None));
-            assert!(
-                matches!(result, Err(DoormanError::TierUnavailable(Tier::Local))),
-                "expected TierUnavailable(Local) but got {result:?}"
-            );
         }
     }
 
@@ -878,66 +581,5 @@ mod tests {
             .select_tier(&req(Complexity::High, None, None))
             .expect("should pick yoyo");
         assert_eq!(picked, Tier::Yoyo);
-    }
-
-    #[test]
-    fn batch_latency_routes_yoyo() {
-        // Batch always routes to Tier B — never local, regardless of complexity.
-        let yoyo = YoYoTierClient::new(
-            crate::tier::YoYoTierConfig {
-                endpoint: "http://invalid.example".into(),
-                default_model: "Olmo-3-1125-32B-Think".into(),
-                contract_version: crate::YOYO_CONTRACT_VERSION.into(),
-                pricing: crate::tier::PricingConfig::default(),
-            },
-            std::sync::Arc::new(crate::tier::StaticBearer::new("unused-in-selection-test")),
-        );
-        let mut yoyo_map = HashMap::new();
-        yoyo_map.insert("default".to_string(), yoyo);
-        let doorman = Doorman::new(
-            DoormanConfig {
-                local: None,
-                yoyo: yoyo_map,
-                external: None,
-                lark_validator: None,
-                graph_context_client: None,
-            },
-            ledger(),
-        );
-        let mut r = req(Complexity::Low, None, None);
-        r.latency_class = LatencyClass::Batch;
-        let picked = doorman.select_tier(&r).expect("should pick Yoyo for Batch latency");
-        assert_eq!(picked, Tier::Yoyo, "Batch latency must route Yoyo even at Low complexity");
-
-        // When Yoyo is not configured, Batch still must not fall back to Local.
-        let doorman_no_yoyo = Doorman::new(DoormanConfig::default(), ledger());
-        let result = doorman_no_yoyo.select_tier(&r);
-        assert!(
-            matches!(result, Err(DoormanError::TierUnavailable(Tier::Yoyo))),
-            "Batch with no Yoyo must return TierUnavailable(Yoyo), not Local; got {result:?}"
-        );
-    }
-
-    #[test]
-    fn interactive_prefers_local_when_available() {
-        // Interactive + Low complexity + Tier A configured → picks Local.
-        let local = crate::tier::LocalTierClient::new(crate::tier::LocalTierConfig {
-            endpoint: "http://invalid.example".into(),
-            default_model: "olmo-2-0425-1b-instruct".into(),
-        });
-        let doorman = Doorman::new(
-            DoormanConfig {
-                local: Some(local),
-                yoyo: HashMap::new(),
-                external: None,
-                lark_validator: None,
-                graph_context_client: None,
-            },
-            ledger(),
-        );
-        let mut r = req(Complexity::Low, None, None);
-        r.latency_class = LatencyClass::Interactive;
-        let picked = doorman.select_tier(&r).expect("should pick Local");
-        assert_eq!(picked, Tier::Local, "Interactive + Low + Tier A available must pick Local");
     }
 }

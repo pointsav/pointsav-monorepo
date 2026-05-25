@@ -1,0 +1,10 @@
+{
+  "extracted_signals": {
+    "sender": "\"John Doe\" <john.doe@apexplumbing.com>",
+    "subject": "Invoice 404 - Co-Location Site Water Mains"
+  },
+  "source_artifact": "TX_LIVE_FIRE_001.eml",
+  "status": "AWAITING_HITL_CHECKOUT",
+  "timestamp": "2026-03-28T03:34:07.019923963+00:00",
+  "transaction_id": "7C0165DB"
+}

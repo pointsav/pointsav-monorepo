@@ -38,11 +38,12 @@ struct Archetype {
 }
 
 #[derive(Deserialize)]
-struct SeedCoa {
-    chart_of_accounts: Vec<Coa>,
+struct SeedCOA {
+    chart_of_accounts: Vec<COA>,
 }
 #[derive(Deserialize)]
-struct Coa {
+#[allow(clippy::upper_case_acronyms)]
+struct COA {
     sub_domain: String,
 }
 
@@ -250,7 +251,7 @@ fn main() {
         load_options::<SeedArchetypes, _>(&format!("{}/Archetypes.json", seed_dir), |data| {
             data.archetypes.into_iter().map(|a| a.name).collect()
         });
-    let coa = load_options::<SeedCoa, _>(&format!("{}/ChartOfAccounts.json", seed_dir), |data| {
+    let coa = load_options::<SeedCOA, _>(&format!("{}/ChartOfAccounts.json", seed_dir), |data| {
         data.chart_of_accounts
             .into_iter()
             .map(|c| c.sub_domain)

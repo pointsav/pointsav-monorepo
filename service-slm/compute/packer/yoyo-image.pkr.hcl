@@ -78,10 +78,6 @@ build {
     source      = "scripts/adapter-publish.service"
     destination = "/tmp/adapter-publish.service"
   }
-  provisioner "file" {
-    source      = "scripts/yoyo-deadman.service"
-    destination = "/tmp/yoyo-deadman.service"
-  }
 
   # Lifecycle shell scripts
   provisioner "file" {
@@ -95,10 +91,6 @@ build {
   provisioner "file" {
     source      = "scripts/adapter-publish.sh"
     destination = "/tmp/adapter-publish.sh"
-  }
-  provisioner "file" {
-    source      = "scripts/yoyo-deadman.sh"
-    destination = "/tmp/yoyo-deadman.sh"
   }
 
   # Nginx TLS reverse proxy config

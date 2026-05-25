@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ category_title }} — {{ site_title }}</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="wiki-body">
+
+  <header class="wiki-header" id="wiki-header">
+    <div class="wiki-header-inner">
+      <a class="wiki-wordmark" href="/">{{ site_title }}</a>
+      <form class="wiki-search-form" action="/search" method="get" role="search">
+        <input id="wiki-search-input" class="wiki-search-input" type="search" name="q"
+          placeholder="Search documentation" autocomplete="off" aria-label="Search">
+        <div id="wiki-search-suggestions" class="wiki-search-suggestions" hidden></div>
+      </form>
+    </div>
+  </header>
+
+  <div class="wiki-layout">
+
+    <nav class="wiki-toc-sidebar" aria-label="Table of contents">
+      <div class="wiki-toc-header">Contents</div>
+      {% if toc %}
+      <ol class="wiki-toc-list">
+        {% for entry in toc %}
+        <li class="wiki-toc-item wiki-toc-level-{{ entry.level }}">
+          <a class="wiki-toc-link" href="#{{ entry.id }}">{{ entry.title }}</a>
+        </li>
+        {% endfor %}
+      </ol>
+      {% endif %}
+    </nav>
+
+    <main class="wiki-article" role="main">
+      <h1 class="wiki-article-title">{{ category_title }}</h1>
+
+      <div class="wiki-article-body">{{ body_html | safe }}</div>
+
+      {% if articles %}
+      <section class="wiki-category-articles">
+        <h2>Articles in this category</h2>
+        <ul class="wiki-category-list">
+          {% for a in articles %}
+          <li class="wiki-category-list-item">
+            <a href="/{{ a.category }}/{{ a.slug }}">{{ a.title }}</a>
+            {% if a.status == "draft" %}
+            <span class="wiki-badge wiki-badge-draft">draft</span>
+            {% elif a.status == "pre-build" %}
+            <span class="wiki-badge wiki-badge-prebuild">pre-build</span>
+            {% endif %}
+          </li>
+          {% endfor %}
+        </ul>
+      </section>
+      {% endif %}
+    </main>
+  </div>
+
+  <script src="/static/wiki.js"></script>
+</body>
+</html>

@@ -27,9 +27,7 @@
 
 use std::collections::HashMap;
 use std::str::FromStr;
-use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
-use std::time::{SystemTime, UNIX_EPOCH};
 
 use axum::body::Bytes;
 use axum::extract::State;
@@ -38,17 +36,14 @@ use axum::response::{IntoResponse, Json, Response};
 use axum::routing::{get, post};
 use axum::Router;
 use reqwest::Client as ReqwestClient;
-use tokio_stream::wrappers::ReceiverStream;
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use slm_core::{
     ApprenticeshipAttempt, ApprenticeshipBrief, AuditCaptureRequest, AuditCaptureResponse,
-    AuditProxyRequest, CanonicalMessage, ChatMessage, Complexity, ContentBlock, ComputeRequest,
-    DeferReason, ExtractionRequest, ExtractionResponse, GrammarConstraint, LatencyClass, ModuleId,
-    RequestId, Role, Tier, ToolDef,
+    AuditProxyRequest, ChatMessage, Complexity, ComputeRequest, DeferReason, ExtractionRequest,
+    ExtractionResponse, GrammarConstraint, ModuleId, RequestId, Tier,
 };
 use slm_doorman::ledger::{
-    AuditEntry, CompletionStatus,
     ENTRY_TYPE_AUDIT_CAPTURE, ENTRY_TYPE_AUDIT_PROXY, ENTRY_TYPE_AUDIT_PROXY_STUB,
     ENTRY_TYPE_EXTRACT,
 };
@@ -59,7 +54,6 @@ use slm_doorman::{
 };
 use tokio::sync::Semaphore;
 
-use crate::idle_monitor::BackendLifecycle;
 use crate::queue::QueueConfig;
 
 pub struct AppState {
@@ -110,36 +104,12 @@ pub struct AppState {
     /// is not set. Set to an empty string to mark the proxy as unconfigured
     /// (handlers return 503 with `GraphProxyServiceUnavailable`).
     pub service_content_endpoint: String,
-    /// Shared dispatch clock for the Yo-Yo idle monitor (B5).
-    /// The router stores Unix epoch seconds here on every successful Tier B
-    /// dispatch. The idle monitor reads this each poll cycle to prevent the
-    /// 5-min polling interval from triggering a premature VM stop when the
-    /// model is between requests (slots=0 between 26-second inferences).
-    /// Zero = no Tier B dispatch since Doorman boot.
-    pub last_yoyo_dispatch: Arc<AtomicU64>,
-    /// When `Some`, the `POST /v1/messages` handler validates the incoming
-    /// `x-api-key` header against this value and returns 401 on mismatch.
-    /// When `None`, auth is disabled (community-tier / development mode).
-    /// Set via `SLM_GATEWAY_TOKEN` env var at boot.
-    pub gateway_token: Option<String>,
-    /// Node class detected at Doorman startup via `foundry-nodeclass::detect()`.
-    /// One of: "micro", "hardware", "accelerated". Reported by `/readyz`.
-    pub node_class: &'static str,
-    /// Why Tier A is available or unavailable. Reported by `/readyz`.
-    /// "available" | "micro-node-class" | "force-broker-mode"
-    pub tier_a_reason: &'static str,
-    /// Yo-Yo idle monitor lifecycle handle. `Some` when GCP env vars are set
-    /// at boot. Type-erased so `AppState` does not directly reference the
-    /// concrete idle-monitor type (BackendLifecycle broker-discipline, §8.C).
-    pub idle_monitor: Option<Arc<dyn BackendLifecycle>>,
 }
 
 pub fn router(state: Arc<AppState>) -> Router {
     Router::new()
         .route("/healthz", get(healthz))
         .route("/readyz", get(readyz))
-        .route("/metrics", get(metrics_endpoint))
-        .route("/v1/cost/daily", get(cost_daily_endpoint))
         .route("/v1/contract", get(contract))
         .route("/v1/messages", post(anthropic_messages))
         .route("/v1/chat/completions", post(chat_completions))
@@ -151,416 +121,7 @@ pub fn router(state: Arc<AppState>) -> Router {
         .route("/v1/audit/capture", post(audit_capture))
         .route("/v1/graph/query", post(graph_query))
         .route("/v1/graph/mutate", post(graph_mutate))
-        .route("/v1/shadow-adapter", post(shadow_adapter))
-        .route("/v1/responses", post(responses_api))
         .with_state(state)
-}
-
-/// `POST /v1/shadow-adapter` — Adapter A/B comparison harness.
-///
-/// Phase 3 (P3-3.3) of learning-loop-master-plan-2026-05-18.md, retargeted
-/// from "Tier A vs Tier C" to "adapter v_a vs adapter v_b" comparison.
-///
-/// Wire shape:
-/// ```json
-/// {
-///   "prompt": "<text>",
-///   "adapter_a": "coding-lora-2026-05-15",
-///   "adapter_b": "coding-lora-2026-05-22",
-///   "module_id": "pointsav",
-///   "max_tokens": 1024
-/// }
-/// ```
-///
-/// Response:
-/// ```json
-/// {
-///   "adapter_a": {"version": "...", "content": "...", "latency_ms": 420, "tier": "yoyo"},
-///   "adapter_b": {"version": "...", "content": "...", "latency_ms": 510, "tier": "yoyo"},
-///   "prompt_hash": "sha256-hex"
-/// }
-/// ```
-///
-/// Both arms are dispatched concurrently; each writes an
-/// `entry_type: shadow-adapter-comparison` row to the audit ledger for
-/// offline eval. Used by the canary harness (P3-3.2) and operator-driven
-/// A/B sampling.
-#[derive(Deserialize)]
-struct ShadowAdapterBody {
-    #[serde(default)]
-    prompt: String,
-    #[serde(default)]
-    adapter_a: String,
-    #[serde(default)]
-    adapter_b: String,
-    #[serde(default)]
-    module_id: Option<String>,
-    #[serde(default)]
-    max_tokens: Option<u32>,
-}
-
-async fn shadow_adapter(
-    State(state): State<Arc<AppState>>,
-    Json(body): Json<ShadowAdapterBody>,
-) -> Result<Json<serde_json::Value>, ApiError> {
-    if body.prompt.trim().is_empty() {
-        return Err(ApiError::bad_request("prompt must not be empty"));
-    }
-    if body.adapter_a.trim().is_empty() || body.adapter_b.trim().is_empty() {
-        return Err(ApiError::bad_request(
-            "adapter_a and adapter_b must both be non-empty adapter IDs",
-        ));
-    }
-
-    let module_id = match &body.module_id {
-        Some(s) => ModuleId::from_str(s)
-            .map_err(|e| ApiError::bad_request(format!("invalid module_id: {e}")))?,
-        None => ModuleId::from_str("foundry").expect("compile-time-valid default moduleId"),
-    };
-
-    let messages = vec![CanonicalMessage::text("user", body.prompt.clone())];
-    let max_tokens = body.max_tokens.unwrap_or(512);
-
-    let req_a = ComputeRequest {
-        request_id: RequestId::new(),
-        module_id: module_id.clone(),
-        model: Some(body.adapter_a.clone()),
-        messages: messages.clone(),
-        complexity: Complexity::Medium,
-        latency_class: LatencyClass::default(),
-        tier_hint: None,
-        stream: false,
-        max_tokens: Some(max_tokens),
-        temperature: None,
-        sanitised_outbound: false,
-        tier_c_label: None,
-        yoyo_label: None,
-        grammar: None,
-        speculation: None,
-        graph_context_enabled: Some(false),
-        adapter_version: None,
-        tools: None,
-    };
-    let req_b = ComputeRequest {
-        request_id: RequestId::new(),
-        module_id: module_id.clone(),
-        model: Some(body.adapter_b.clone()),
-        messages,
-        complexity: Complexity::Medium,
-        latency_class: LatencyClass::default(),
-        tier_hint: None,
-        stream: false,
-        max_tokens: Some(max_tokens),
-        temperature: None,
-        sanitised_outbound: false,
-        tier_c_label: None,
-        yoyo_label: None,
-        grammar: None,
-        speculation: None,
-        graph_context_enabled: Some(false),
-        adapter_version: None,
-        tools: None,
-    };
-
-    // Concurrent dispatch — both arms run simultaneously.
-    let (res_a, res_b) = tokio::join!(
-        state.doorman.route(&req_a),
-        state.doorman.route(&req_b),
-    );
-
-    // Prompt hash for dedup and offline correlation.
-    use sha2::{Digest, Sha256};
-    let prompt_hash = format!("{:x}", Sha256::digest(body.prompt.as_bytes()));
-
-    // Write one audit entry per arm (entry_type distinguishes from normal completions).
-    let ts = Utc::now();
-    let write_comparison_entry = |res: &slm_doorman::error::Result<slm_core::ComputeResponse>,
-                                   req: &ComputeRequest,
-                                   version: &str| {
-        let entry = AuditEntry {
-            entry_type: "shadow-adapter-comparison".to_string(),
-            timestamp_utc: ts,
-            request_id: req.request_id,
-            module_id: req.module_id.clone(),
-            tier: res.as_ref().map(|r| r.tier_used).unwrap_or(Tier::Local),
-            model: version.to_string(),
-            inference_ms: res.as_ref().map(|r| r.inference_ms).unwrap_or(0),
-            cost_usd: res.as_ref().map(|r| r.cost_usd).unwrap_or(0.0),
-            sanitised_outbound: false,
-            completion_status: if res.is_ok() {
-                CompletionStatus::Ok
-            } else {
-                CompletionStatus::UpstreamError
-            },
-            error_message: res.as_ref().err().map(|e| e.to_string()),
-            adapter_version: Some(version.to_string()),
-        };
-        if let Err(e) = state.doorman.ledger().append(&entry) {
-            tracing::warn!(
-                target: "slm_doorman_server",
-                error = %e,
-                version,
-                "shadow_adapter: failed to write audit entry"
-            );
-        }
-    };
-    write_comparison_entry(&res_a, &req_a, &body.adapter_a);
-    write_comparison_entry(&res_b, &req_b, &body.adapter_b);
-
-    // Build the response arm — success carries content + latency, error carries message.
-    let arm_json = |res: slm_doorman::error::Result<slm_core::ComputeResponse>, version: &str| {
-        match res {
-            Ok(r) => serde_json::json!({
-                "version": version,
-                "content": r.content,
-                "latency_ms": r.inference_ms,
-                "tier": r.tier_used.as_str(),
-            }),
-            Err(e) => serde_json::json!({
-                "version": version,
-                "error": e.to_string(),
-            }),
-        }
-    };
-
-    Ok(Json(serde_json::json!({
-        "adapter_a": arm_json(res_a, &body.adapter_a),
-        "adapter_b": arm_json(res_b, &body.adapter_b),
-        "prompt_hash": prompt_hash,
-    })))
-}
-
-/// `POST /v1/responses` — OpenAI Responses API inbound shim (Sprint 2).
-///
-/// Accepts the OpenAI Responses API format (successor to Chat Completions)
-/// and maps it to Doorman's internal routing.  Provides a forward-compatible
-/// surface for SDK clients that have migrated off `POST /v1/chat/completions`.
-///
-/// Wire shape (input):
-/// ```json
-/// {
-///   "model": "olmo-2-7b",
-///   "input": "Hello" | [{"type": "message", "role": "user", "content": "Hello"}],
-///   "max_output_tokens": 1024,
-///   "temperature": 0.7
-/// }
-/// ```
-///
-/// Wire shape (output):
-/// ```json
-/// {
-///   "id": "resp_<uuid>",
-///   "object": "response",
-///   "model": "olmo-2-7b",
-///   "output": [{"type": "message", "role": "assistant",
-///               "content": [{"type": "output_text", "text": "..."}]}],
-///   "usage": {"input_tokens": N, "output_tokens": M, "total_tokens": N+M}
-/// }
-/// ```
-#[derive(Deserialize)]
-#[serde(untagged)]
-enum ResponsesInput {
-    Text(String),
-    Messages(Vec<ResponsesInputMessage>),
-}
-
-#[derive(Deserialize)]
-struct ResponsesInputMessage {
-    #[serde(default = "default_user_role")]
-    role: String,
-    #[serde(default)]
-    content: String,
-    #[serde(rename = "type", default)]
-    _type: Option<String>,
-}
-
-fn default_user_role() -> String {
-    "user".to_string()
-}
-
-#[derive(Deserialize)]
-struct ResponsesApiBody {
-    #[serde(default)]
-    model: Option<String>,
-    input: ResponsesInput,
-    #[serde(default)]
-    max_output_tokens: Option<u32>,
-    #[serde(default)]
-    temperature: Option<f32>,
-    #[serde(default)]
-    stream: bool,
-}
-
-async fn responses_api(
-    State(state): State<Arc<AppState>>,
-    headers: HeaderMap,
-    Json(body): Json<ResponsesApiBody>,
-) -> Result<Json<serde_json::Value>, ApiError> {
-    let module_id = match headers
-        .get("x-foundry-module-id")
-        .and_then(|v| v.to_str().ok())
-    {
-        Some(s) => ModuleId::from_str(s)
-            .map_err(|e| ApiError::bad_request(format!("invalid X-Foundry-Module-ID: {e}")))?,
-        None => ModuleId::from_str("foundry").expect("compile-time-valid default moduleId"),
-    };
-
-    let messages: Vec<CanonicalMessage> = match body.input {
-        ResponsesInput::Text(s) => vec![CanonicalMessage::text("user", &s)],
-        ResponsesInput::Messages(msgs) => msgs
-            .into_iter()
-            .map(|m| CanonicalMessage::text(&m.role, &m.content))
-            .collect(),
-    };
-
-    if messages.is_empty() {
-        return Err(ApiError::bad_request("input must not be empty"));
-    }
-
-    let req = ComputeRequest {
-        request_id: RequestId::new(),
-        module_id,
-        model: body.model.clone(),
-        messages,
-        complexity: Complexity::Medium,
-        latency_class: LatencyClass::default(),
-        tier_hint: None,
-        stream: body.stream,
-        max_tokens: body.max_output_tokens,
-        temperature: body.temperature,
-        sanitised_outbound: false,
-        tier_c_label: None,
-        yoyo_label: None,
-        grammar: None,
-        speculation: None,
-        graph_context_enabled: Some(false),
-        adapter_version: None,
-        tools: None,
-    };
-
-    let resp = state.doorman.route(&req).await.map_err(ApiError::from)?;
-
-    let input_tokens = resp.content.split_whitespace().count() as u32;
-    let output_tokens = resp.content.split_whitespace().count() as u32;
-    let resp_id = format!("resp_{}", req.request_id);
-    let model_name = body.model.as_deref().unwrap_or("olmo-2-7b");
-
-    Ok(Json(serde_json::json!({
-        "id": resp_id,
-        "object": "response",
-        "model": model_name,
-        "output": [{
-            "type": "message",
-            "role": "assistant",
-            "content": [{"type": "output_text", "text": resp.content}]
-        }],
-        "usage": {
-            "input_tokens": input_tokens,
-            "output_tokens": output_tokens,
-            "total_tokens": input_tokens + output_tokens
-        }
-    })))
-}
-
-/// `GET /metrics` — Prometheus textual format scrape endpoint.
-/// Phase 3 (P3-3.1) of learning-loop-master-plan-2026-05-18.md.
-/// Returns 200 with empty body when the recorder isn't installed
-/// (degraded mode — better than 503 for a Prometheus scraper).
-async fn metrics_endpoint() -> (StatusCode, [(axum::http::header::HeaderName, &'static str); 1], String) {
-    let body = crate::metrics::render();
-    (
-        StatusCode::OK,
-        [(
-            axum::http::header::CONTENT_TYPE,
-            "text/plain; version=0.0.4",
-        )],
-        body,
-    )
-}
-
-/// `GET /v1/cost/daily?date=YYYY-MM-DD` — daily cost rollup.
-///
-/// Phase 3 (P3-3.5-endpoint-followup) of
-/// learning-loop-master-plan-2026-05-18.md. Reads
-/// `data/cost-ledger/<date>.jsonl` and returns per-tier + per-model
-/// totals.
-///
-/// Returns 200 with an empty rollup when no rows for the date OR when
-/// the global cost ledger isn't installed (degraded mode). Defaults to
-/// today's UTC date when `date` query is absent.
-///
-/// Wire shape:
-/// ```json
-/// {
-///   "date": "2026-05-18",
-///   "request_count": 42,
-///   "total_cost_usd": 1.23,
-///   "total_inference_ms": 12345,
-///   "by_tier": {"yoyo": 1.20, "local": 0.0},
-///   "by_model": {"olmo-2-7b": 1.20, "olmo-2-1b": 0.0}
-/// }
-/// ```
-#[derive(Deserialize)]
-struct CostDailyQuery {
-    #[serde(default)]
-    date: Option<String>,
-}
-
-async fn cost_daily_endpoint(
-    axum::extract::Query(q): axum::extract::Query<CostDailyQuery>,
-) -> Result<Json<serde_json::Value>, ApiError> {
-    use slm_doorman::cost_ledger;
-    let date = q.date.unwrap_or_else(|| {
-        chrono::Utc::now().format("%Y-%m-%d").to_string()
-    });
-    if date.len() != 10 || date.chars().filter(|c| *c == '-').count() != 2 {
-        return Err(ApiError::bad_request(
-            "date must be YYYY-MM-DD (UTC); omit to default to today",
-        ));
-    }
-    // When the global ledger isn't installed (test mode / missing
-    // base dir), return an empty rollup rather than 503 — the surface
-    // is read-only, callers integrate against the wire shape.
-    let body = if cost_ledger::is_initialized() {
-        // No public accessor for GLOBAL — construct a CostLedger
-        // pointing at the same base_dir via from_env. Idempotent
-        // re-read; production cost matches.
-        match cost_ledger::CostLedger::from_env() {
-            Ok(ledger) => match ledger.daily_rollup(&date) {
-                Ok(rollup) => serde_json::to_value(&rollup)
-                    .unwrap_or_else(|_| serde_json::json!({})),
-                Err(e) => {
-                    return Err(ApiError {
-                        status: StatusCode::INTERNAL_SERVER_ERROR,
-                        body: serde_json::json!({
-                            "error": {"message": format!("cost ledger read failed: {e}")}
-                        }),
-                        retry_after_secs: None,
-                    });
-                }
-            },
-            Err(_) => serde_json::json!({
-                "date": date,
-                "request_count": 0,
-                "total_cost_usd": 0.0,
-                "total_inference_ms": 0,
-                "by_tier": {},
-                "by_model": {},
-                "_status": "cost_ledger_uninstalled",
-            }),
-        }
-    } else {
-        serde_json::json!({
-            "date": date,
-            "request_count": 0,
-            "total_cost_usd": 0.0,
-            "total_inference_ms": 0,
-            "by_tier": {},
-            "by_model": {},
-            "_status": "cost_ledger_uninstalled",
-        })
-    };
-    Ok(Json(body))
 }
 
 async fn healthz() -> &'static str {
@@ -568,32 +129,13 @@ async fn healthz() -> &'static str {
 }
 
 async fn readyz(State(state): State<Arc<AppState>>) -> impl IntoResponse {
-    let last_dispatch = state.last_yoyo_dispatch.load(Ordering::Relaxed);
-    let last_yoyo_dispatch_age_s: Option<u64> = if last_dispatch == 0 {
-        None
-    } else {
-        let now = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap_or_default()
-            .as_secs();
-        Some(now.saturating_sub(last_dispatch))
-    };
-
-    let tier_a = state.doorman.has_local();
-    let ai_available = tier_a || state.doorman.has_yoyo() || state.doorman.has_external();
+    // The Doorman is always ready in B1; B5+ may add upstream-tier
+    // readiness checks (e.g., probe Tier A /healthz) before flipping.
     let body = serde_json::json!({
         "ready": true,
-        "node_class": state.node_class,
-        "tier_a": tier_a,
-        "tier_a_reason": state.tier_a_reason,
-        "ai_available": ai_available,
-        "has_local": tier_a,
+        "has_local": state.doorman.has_local(),
         "has_yoyo": state.doorman.has_yoyo(),
         "has_external": state.doorman.has_external(),
-        "lark_validation_active": state.doorman.has_lark_validator(),
-        "apprenticeship_enabled": state.apprenticeship.is_some(),
-        "tier_b_circuit_state": state.doorman.default_yoyo_circuit_state(),
-        "last_yoyo_dispatch_age_s": last_yoyo_dispatch_age_s,
     });
     (StatusCode::OK, Json(body))
 }
@@ -677,9 +219,8 @@ async fn chat_completions(
         request_id,
         module_id,
         model: body.model,
-        messages: body.messages.into_iter().map(CanonicalMessage::from).collect(),
+        messages: body.messages,
         complexity,
-        latency_class: LatencyClass::default(),
         tier_hint: None,
         stream: body.stream,
         max_tokens: body.max_tokens,
@@ -690,18 +231,10 @@ async fn chat_completions(
         grammar: body.grammar,
         speculation: None,
         graph_context_enabled: None,
-        adapter_version: None,
-        tools: None,
     };
 
     let resp = state.doorman.route(&req).await.map_err(ApiError::from)?;
     let tier_str = resp.tier_used.as_str().to_string();
-    if tier_str.starts_with("yoyo") {
-        state.last_yoyo_dispatch.store(
-            SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default().as_secs(),
-            Ordering::Relaxed,
-        );
-    }
     let mut resp_headers = HeaderMap::new();
     if let Ok(v) = tier_str.parse() {
         resp_headers.insert("x-foundry-tier-used", v);
@@ -736,22 +269,13 @@ async fn verdict(
     Ok(Json(outcome))
 }
 
-/// `POST /v1/shadow` wire shape — brief + actual_diff + source_tier.
+/// `POST /v1/shadow` wire shape — brief + actual_diff.
 #[derive(Deserialize)]
 struct ShadowWireBody {
     brief: ApprenticeshipBrief,
     /// The diff that the senior actually committed (the post-hoc
     /// reference). Convention §7 path P2.
     actual_diff: String,
-    /// Tier-of-origin for `actual_diff`. When the `/v1/messages` shim
-    /// captures a Claude-Code session via the post-commit hook, this
-    /// carries the `X-Foundry-Tier-Used` value from the upstream
-    /// response. Value `"external"` triggers a 403 rejection per the
-    /// Anthropic ToS competing-models constraint (Tier-C outputs must
-    /// not enter the training corpus). Other values (`"local"`,
-    /// `"yoyo"`) or `None` (legacy / unknown provenance) are permitted.
-    #[serde(default)]
-    source_tier: Option<String>,
 }
 
 /// Response body for a successful `POST /v1/shadow` enqueue (202 ACCEPTED).
@@ -799,25 +323,6 @@ async fn shadow(
         ApiError::not_found("apprenticeship endpoints disabled (SLM_APPRENTICESHIP_ENABLED unset)")
     })?;
 
-    // Tier-C contamination gate (Anthropic ToS, competing-models constraint).
-    // If the caller declares the diff was authored through a Tier-C-routed
-    // session, refuse to enqueue — Tier-C outputs are prohibited from the
-    // training corpus. Defense-in-depth: the structural invariant in
-    // `pick_tier_for_brief` keeps apprentice attempts off Tier C, but
-    // `actual_diff` carries its own provenance independent of the apprentice
-    // routing decision.
-    if wire.source_tier.as_deref() == Some("external") {
-        tracing::warn!(
-            target: "contamination_guard",
-            brief_id = %wire.brief.brief_id,
-            source_tier = "external",
-            "rejected /v1/shadow: Tier-C source_tier prohibited by Anthropic ToS"
-        );
-        return Err(ApiError::forbidden(
-            "source_tier=\"external\" prohibited: Tier-C outputs must not enter the training corpus (Anthropic ToS, competing-models constraint)",
-        ));
-    }
-
     // Preserve the caller's brief_id as the audit_id. The brief_id is the
     // deterministic idempotency key for the queue file
     // (`<brief_id>.brief.jsonl`); using it as audit_id lets callers correlate
@@ -859,7 +364,6 @@ async fn shadow(
     let shadow_entry = crate::queue::ShadowQueueEntry {
         brief: wire.brief.clone(),
         actual_diff: wire.actual_diff.clone(),
-        source_tier: wire.source_tier.clone(),
     };
     let entry =
         crate::queue::enqueue_shadow(&state.queue_config, &shadow_entry).map_err(ApiError::from)?;
@@ -990,11 +494,16 @@ async fn extract(State(state): State<Arc<AppState>>, raw: Bytes) -> impl IntoRes
         module_id: module_id.clone(),
         model: None,
         messages: vec![
-            CanonicalMessage::text("system", "Extract named entities. Return a JSON array matching the schema exactly."),
-            CanonicalMessage::text("user", req.text),
+            ChatMessage {
+                role: "system".to_string(),
+                content: "Extract named entities. Return a JSON array matching the schema exactly.".to_string(),
+            },
+            ChatMessage {
+                role: "user".to_string(),
+                content: req.text,
+            },
         ],
         complexity: Complexity::High,
-        latency_class: LatencyClass::default(),
         tier_hint: Some(Tier::Yoyo),
         stream: false,
         max_tokens: Some(2048),
@@ -1005,8 +514,6 @@ async fn extract(State(state): State<Arc<AppState>>, raw: Bytes) -> impl IntoRes
         grammar: Some(GrammarConstraint::JsonSchema(req.schema)),
         speculation: None,
         graph_context_enabled: None,
-        adapter_version: None,
-        tools: None,
     };
 
     // 5. Route — no Tier A fallback.
@@ -1017,16 +524,8 @@ async fn extract(State(state): State<Arc<AppState>>, raw: Bytes) -> impl IntoRes
     // Capture error message before moving result.
     let error_message_for_audit = result.as_ref().err().map(|e| e.to_string());
 
-    // Update idle monitor dispatch clock: route_yoyo_only targets Tier B exclusively.
-    if result.is_ok() {
-        state.last_yoyo_dispatch.store(
-            SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default().as_secs(),
-            Ordering::Relaxed,
-        );
-    }
-
     // 6. Parse result into response fields.
-    let (entities, tier_used, model, cost_usd, extraction_ok, deferred, defer_reason_str) = match result {
+    let (entities, tier_used, model, extraction_ok, deferred, defer_reason_str) = match result {
         Ok(compute_resp) => {
             // Strip markdown fences if the model wrapped its output.
             let raw_content = compute_resp.content.trim().to_string();
@@ -1041,7 +540,6 @@ async fn extract(State(state): State<Arc<AppState>>, raw: Bytes) -> impl IntoRes
                     ents,
                     "yoyo_trainer".to_string(),
                     compute_resp.model,
-                    compute_resp.cost_usd,
                     true,
                     false,
                     None::<String>,
@@ -1050,7 +548,6 @@ async fn extract(State(state): State<Arc<AppState>>, raw: Bytes) -> impl IntoRes
                     vec![],
                     "deferred".to_string(),
                     "none".to_string(),
-                    0.0_f64,
                     false,
                     true,
                     Some("yoyo-transient".to_string()),
@@ -1061,7 +558,6 @@ async fn extract(State(state): State<Arc<AppState>>, raw: Bytes) -> impl IntoRes
             vec![],
             "deferred".to_string(),
             "none".to_string(),
-            0.0_f64,
             false,
             true,
             Some("yoyo-circuit-open".to_string()),
@@ -1070,7 +566,6 @@ async fn extract(State(state): State<Arc<AppState>>, raw: Bytes) -> impl IntoRes
             vec![],
             "deferred".to_string(),
             "none".to_string(),
-            0.0_f64,
             false,
             true,
             Some("yoyo-transient".to_string()),
@@ -1088,12 +583,8 @@ async fn extract(State(state): State<Arc<AppState>>, raw: Bytes) -> impl IntoRes
         entities_count: entities.len(),
         tier_used: tier_used.clone(),
         latency_ms,
-        model: model.clone(),
-        cost_usd,
-        sanitised_outbound: compute_req.sanitised_outbound,
         defer_reason: defer_reason_str.clone(),
         error_message: error_message_for_audit,
-        adapter_version: None,
     };
     if let Err(write_err) = state.doorman.ledger().append_extract_entry(&audit_entry) {
         tracing::warn!(
@@ -1111,7 +602,7 @@ async fn extract(State(state): State<Arc<AppState>>, raw: Bytes) -> impl IntoRes
         _ => DeferReason::YoyoTransient,
     });
 
-    let mut resp = Json(ExtractionResponse {
+    Json(ExtractionResponse {
         entities,
         tier_used,
         model,
@@ -1119,18 +610,7 @@ async fn extract(State(state): State<Arc<AppState>>, raw: Bytes) -> impl IntoRes
         deferred,
         defer_reason: defer_reason_enum,
     })
-    .into_response();
-
-    // Circuit-open: tell callers to back off for 5 minutes so they don't
-    // re-submit every boot and produce a Doorman flood when Tier B returns.
-    if defer_reason_str.as_deref() == Some("yoyo-circuit-open") {
-        resp.headers_mut().insert(
-            axum::http::header::RETRY_AFTER,
-            axum::http::HeaderValue::from_static("300"),
-        );
-    }
-
-    resp
+    .into_response()
 }
 
 /// `POST /v1/audit/proxy` — audited external provider call (PS.4 step 2).
@@ -1382,7 +862,6 @@ pub const AUDIT_CAPTURE_MAX_PAYLOAD_BYTES: usize = 16 * 1024; // 16 KiB
 const AUDIT_CAPTURE_VALID_EVENT_TYPES: &[&str] = &[
     "prose-edit",
     "design-edit",
-    "graph-query",
     "graph-mutation",
     "anchor-event",
     "verdict-issued",
@@ -1709,7 +1188,6 @@ fn urlencoding_encode(s: &str) -> String {
 
 /// Inbound: Anthropic Messages API request body.
 #[derive(Deserialize)]
-#[allow(dead_code)]
 struct AnthropicMessagesBody {
     model: String,
     #[serde(default)]
@@ -1724,16 +1202,6 @@ struct AnthropicMessagesBody {
     metadata: Option<serde_json::Value>,
     #[serde(default)]
     stop_sequences: Option<Vec<String>>,
-    #[serde(default)]
-    tools: Option<Vec<AnthropicToolDef>>,
-}
-
-#[derive(Deserialize)]
-struct AnthropicToolDef {
-    name: String,
-    #[serde(default)]
-    description: Option<String>,
-    input_schema: serde_json::Value,
 }
 
 #[derive(Deserialize)]
@@ -1751,7 +1219,6 @@ enum AnthropicContent {
 }
 
 #[derive(Deserialize)]
-#[allow(dead_code)]
 struct AnthropicContentBlock {
     #[serde(rename = "type")]
     block_type: String,
@@ -1773,32 +1240,22 @@ struct AnthropicContentBlock {
     content: Option<serde_json::Value>,
 }
 
-/// Translate Anthropic content (text or blocks) to canonical ContentBlock form.
-fn canonical_content(content: AnthropicContent) -> Vec<ContentBlock> {
+/// Flatten Anthropic content (text or blocks) to a plain string.
+/// Tool-use and tool-result blocks are omitted; thinking blocks are wrapped
+/// in `<thinking>` tags. This is the Sprint 0 simplification — Sprint 1
+/// replaces ChatMessage with CanonicalMessage and preserves all block types.
+fn flatten_anthropic_content(content: AnthropicContent) -> String {
     match content {
-        AnthropicContent::Text(s) => vec![ContentBlock::Text { text: s }],
+        AnthropicContent::Text(s) => s,
         AnthropicContent::Blocks(blocks) => blocks
             .into_iter()
             .filter_map(|b| match b.block_type.as_str() {
-                "text" => b.text.map(|t| ContentBlock::Text { text: t }),
-                "thinking" => b.thinking.map(|t| ContentBlock::Thinking { thinking: t }),
-                "tool_use" => {
-                    let id = b.id.as_ref()?.as_str()?.to_string();
-                    let name = b.name.as_ref()?.as_str()?.to_string();
-                    let input = b.input.unwrap_or(serde_json::Value::Null);
-                    Some(ContentBlock::ToolUse { id, name, input })
-                }
-                "tool_result" => {
-                    let tool_use_id = b.tool_use_id.as_ref()?.as_str()?.to_string();
-                    let content = match b.content? {
-                        serde_json::Value::String(s) => s,
-                        v => v.to_string(),
-                    };
-                    Some(ContentBlock::ToolResult { tool_use_id, content })
-                }
+                "text" => b.text,
+                "thinking" => b.thinking.map(|t| format!("<thinking>{}</thinking>", t)),
                 _ => None,
             })
-            .collect(),
+            .collect::<Vec<_>>()
+            .join("\n"),
     }
 }
 
@@ -1808,46 +1265,30 @@ fn anthropic_to_compute_request(
     module_id: ModuleId,
     request_id: RequestId,
 ) -> ComputeRequest {
-    let mut messages: Vec<CanonicalMessage> = Vec::new();
+    let mut messages: Vec<ChatMessage> = Vec::new();
 
     if let Some(system) = body.system {
         if !system.is_empty() {
-            messages.push(CanonicalMessage::text("system", system));
+            messages.push(ChatMessage { role: "system".to_string(), content: system });
         }
     }
 
     for msg in body.messages {
-        let role = match msg.role.as_str() {
-            "assistant" => Role::Assistant,
-            "system" => Role::System,
-            "tool" => Role::Tool,
-            _ => Role::User,
-        };
-        messages.push(CanonicalMessage {
-            role,
-            content: canonical_content(msg.content),
+        messages.push(ChatMessage {
+            role: msg.role,
+            content: flatten_anthropic_content(msg.content),
         });
     }
 
-    let (complexity, yoyo_label, tier_hint, tier_c_label) =
-        if body.model.starts_with("claude-haiku") {
-            (Complexity::Low, None, None, None)
-        } else if body.model.starts_with("claude-sonnet") {
-            (Complexity::High, Some("trainer".to_string()), None, None)
-        } else if body.model.starts_with("claude-opus") {
-            // Tier C passthrough: hint External + supply allowlisted label.
-            (Complexity::High, None, Some(Tier::External), Some("editorial-refinement".to_string()))
-        } else {
-            (Complexity::Medium, Some("trainer".to_string()), None, None)
-        };
-
-    let tools = body.tools.map(|defs| {
-        defs.into_iter().map(|d| ToolDef {
-            name: d.name,
-            description: d.description,
-            input_schema: d.input_schema,
-        }).collect()
-    });
+    let (complexity, yoyo_label) = if body.model.starts_with("claude-haiku") {
+        (Complexity::Low, None)
+    } else if body.model.starts_with("claude-sonnet") {
+        (Complexity::High, Some("trainer".to_string()))
+    } else if body.model.starts_with("claude-opus") {
+        (Complexity::High, None)
+    } else {
+        (Complexity::Medium, Some("trainer".to_string()))
+    };
 
     ComputeRequest {
         request_id,
@@ -1855,53 +1296,29 @@ fn anthropic_to_compute_request(
         model: Some(body.model),
         messages,
         complexity,
-        latency_class: LatencyClass::default(),
-        tier_hint,
+        tier_hint: None,
         stream: false, // Doorman always returns buffered; SSE is assembled by the handler
         max_tokens: Some(body.max_tokens),
         temperature: body.temperature,
         sanitised_outbound: false,
-        tier_c_label,
+        tier_c_label: None,
         yoyo_label,
         grammar: None,
         speculation: None,
         graph_context_enabled: Some(false),
-        adapter_version: None,
-        tools,
     }
 }
 
 /// Build a non-streaming Anthropic Messages API response body.
 fn compute_to_anthropic_response(resp: &slm_core::ComputeResponse, model: &str) -> serde_json::Value {
-    let (content_json, output_tokens, stop_reason) = if resp.content_blocks.is_empty() {
-        let tokens = resp.content.split_whitespace().count() as u32;
-        let blocks = serde_json::json!([{"type": "text", "text": resp.content}]);
-        (blocks, tokens, "end_turn")
-    } else {
-        let blocks: Vec<serde_json::Value> = resp.content_blocks.iter().map(|b| match b {
-            ContentBlock::Text { text } => serde_json::json!({"type": "text", "text": text}),
-            ContentBlock::ToolUse { id, name, input } => serde_json::json!({
-                "type": "tool_use", "id": id, "name": name, "input": input
-            }),
-            ContentBlock::ToolResult { tool_use_id, content } => serde_json::json!({
-                "type": "tool_result", "tool_use_id": tool_use_id, "content": content
-            }),
-            ContentBlock::Thinking { thinking } => serde_json::json!({"type": "thinking", "thinking": thinking}),
-        }).collect();
-        let has_tool_use = resp.content_blocks.iter().any(|b| matches!(b, ContentBlock::ToolUse { .. }));
-        let tokens: u32 = resp.content_blocks.iter().filter_map(|b| {
-            if let ContentBlock::Text { text } = b { Some(text.split_whitespace().count() as u32) } else { None }
-        }).sum();
-        let reason = if has_tool_use { "tool_use" } else { "end_turn" };
-        (serde_json::Value::Array(blocks), tokens, reason)
-    };
+    let output_tokens = resp.content.split_whitespace().count() as u32;
     serde_json::json!({
         "id": format!("msg_{}", resp.request_id),
         "type": "message",
         "role": "assistant",
-        "content": content_json,
+        "content": [{"type": "text", "text": resp.content}],
         "model": model,
-        "stop_reason": stop_reason,
+        "stop_reason": "end_turn",
         "stop_sequence": null,
         "usage": {
             "input_tokens": 0,
@@ -1910,212 +1327,37 @@ fn compute_to_anthropic_response(resp: &slm_core::ComputeResponse, model: &str) 
     })
 }
 
-// ── vLLM OpenAI SSE chunk types (used by build_stream_body) ─────────────────
-
-#[derive(serde::Deserialize)]
-struct OaiStreamChunk {
-    choices: Vec<OaiStreamChoice>,
-}
-#[derive(serde::Deserialize)]
-struct OaiStreamChoice {
-    delta: OaiStreamDelta,
-}
-#[derive(serde::Deserialize)]
-struct OaiStreamDelta {
-    content: Option<String>,
-}
-
-/// Translate a vLLM SSE response to Anthropic SSE format, yielding tokens
-/// incrementally as they arrive. Emits a `: ping` keepalive comment every 15s
-/// when no token arrives, preventing Claude Code from timing out on long
-/// generations.
-fn build_stream_body(
-    mut upstream: reqwest::Response,
-    model: String,
-    request_id: slm_core::RequestId,
-) -> axum::body::Body {
-    use axum::body::Bytes;
-    use std::time::Duration;
-
-    let (tx, rx) = tokio::sync::mpsc::channel::<Result<Bytes, std::convert::Infallible>>(32);
-
-    tokio::spawn(async move {
-        let msg_id = format!("msg_{}", request_id);
-
-        macro_rules! send_sse {
-            ($name:expr, $data:expr) => {{
-                let s = format!(
-                    "event: {}\ndata: {}\n\n",
-                    $name,
-                    serde_json::to_string(&$data).unwrap_or_default()
-                );
-                if tx.send(Ok(Bytes::from(s))).await.is_err() {
-                    return;
-                }
-            }};
-        }
-
-        // Preamble
-        send_sse!(
-            "message_start",
-            serde_json::json!({
-                "type": "message_start",
-                "message": {
-                    "id": &msg_id, "type": "message", "role": "assistant",
-                    "content": [], "model": &model,
-                    "stop_reason": null, "stop_sequence": null,
-                    "usage": {"input_tokens": 0, "output_tokens": 0}
-                }
-            })
-        );
-        send_sse!(
-            "content_block_start",
-            serde_json::json!({
-                "type": "content_block_start", "index": 0,
-                "content_block": {"type": "text", "text": ""}
-            })
-        );
-
-        // Stream vLLM SSE → Anthropic SSE
-        let mut buf = String::new();
-        let mut output_tokens: u32 = 0;
-        let ping_interval = Duration::from_secs(15);
-        let mut last_ping = tokio::time::Instant::now();
-
-        'outer: loop {
-            let elapsed = last_ping.elapsed();
-            let remaining = ping_interval.checked_sub(elapsed).unwrap_or(Duration::ZERO);
-
-            match tokio::time::timeout(remaining, upstream.chunk()).await {
-                Err(_) => {
-                    // 15s elapsed with no data — emit keepalive
-                    if tx.send(Ok(Bytes::from_static(b": ping\n\n"))).await.is_err() {
-                        return;
-                    }
-                    last_ping = tokio::time::Instant::now();
-                }
-                Ok(Err(_)) => break,   // network error
-                Ok(Ok(None)) => break, // end of stream
-                Ok(Ok(Some(bytes))) => {
-                    buf.push_str(&String::from_utf8_lossy(&bytes));
-
-                    while let Some(pos) = buf.find('\n') {
-                        let line = buf[..pos].trim_end_matches('\r').to_string();
-                        buf.drain(..=pos);
-
-                        if let Some(data) = line.strip_prefix("data: ") {
-                            if data == "[DONE]" {
-                                break 'outer;
-                            }
-                            if let Ok(chunk) = serde_json::from_str::<OaiStreamChunk>(data) {
-                                if let Some(text) = chunk
-                                    .choices
-                                    .into_iter()
-                                    .next()
-                                    .and_then(|c| c.delta.content)
-                                {
-                                    if !text.is_empty() {
-                                        output_tokens +=
-                                            text.split_whitespace().count() as u32;
-                                        send_sse!(
-                                            "content_block_delta",
-                                            serde_json::json!({
-                                                "type": "content_block_delta",
-                                                "index": 0,
-                                                "delta": {"type": "text_delta", "text": text}
-                                            })
-                                        );
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        // Closing sequence
-        send_sse!(
-            "content_block_stop",
-            serde_json::json!({"type": "content_block_stop", "index": 0})
-        );
-        send_sse!(
-            "message_delta",
-            serde_json::json!({
-                "type": "message_delta",
-                "delta": {"stop_reason": "end_turn", "stop_sequence": null},
-                "usage": {"output_tokens": output_tokens}
-            })
-        );
-        send_sse!("message_stop", serde_json::json!({"type": "message_stop"}));
-    });
-
-    axum::body::Body::from_stream(ReceiverStream::new(rx))
-}
-
-/// Last-resort buffered SSE: emit all 6 events in a single burst from a
-/// fully-buffered ComputeResponse. Used only when both Tier B (yoyo_stream)
-/// and Tier A (local_stream) streaming paths are unavailable.
+/// Build a fake-SSE response: buffer the full content, emit all 6 events at once.
+/// Claude Code's streaming UX receives the full response in a single burst rather
+/// than token-by-token. Real per-token streaming lands in Sprint 0b.
 fn anthropic_sse_body(resp: &slm_core::ComputeResponse, model: &str) -> String {
     let msg_id = format!("msg_{}", resp.request_id);
+    let output_tokens = resp.content.split_whitespace().count() as u32;
 
-    // For tool-use responses emit one content_block per block; for plain text
-    // emit the standard text_delta burst.
-    if resp.content_blocks.is_empty() {
-        let output_tokens = resp.content.split_whitespace().count() as u32;
-        let e_start = serde_json::json!({"type": "message_start", "message": {
+    let e_start = serde_json::json!({
+        "type": "message_start",
+        "message": {
             "id": &msg_id, "type": "message", "role": "assistant",
             "content": [], "model": model,
             "stop_reason": null, "stop_sequence": null,
             "usage": {"input_tokens": 0, "output_tokens": 0}
-        }});
-        let e_cb_start = serde_json::json!({"type": "content_block_start", "index": 0, "content_block": {"type": "text", "text": ""}});
-        let e_cb_delta = serde_json::json!({"type": "content_block_delta", "index": 0, "delta": {"type": "text_delta", "text": resp.content}});
-        let e_cb_stop  = serde_json::json!({"type": "content_block_stop", "index": 0});
-        let e_msg_delta = serde_json::json!({"type": "message_delta", "delta": {"stop_reason": "end_turn", "stop_sequence": null}, "usage": {"output_tokens": output_tokens}});
-        let e_msg_stop  = serde_json::json!({"type": "message_stop"});
-        format!(
-            "event: message_start\ndata: {e_start}\n\n\
-             event: content_block_start\ndata: {e_cb_start}\n\n\
-             event: content_block_delta\ndata: {e_cb_delta}\n\n\
-             event: content_block_stop\ndata: {e_cb_stop}\n\n\
-             event: message_delta\ndata: {e_msg_delta}\n\n\
-             event: message_stop\ndata: {e_msg_stop}\n\n"
-        )
-    } else {
-        let has_tool_use = resp.content_blocks.iter().any(|b| matches!(b, ContentBlock::ToolUse { .. }));
-        let stop_reason = if has_tool_use { "tool_use" } else { "end_turn" };
-        let e_start = serde_json::json!({"type": "message_start", "message": {
-            "id": &msg_id, "type": "message", "role": "assistant",
-            "content": [], "model": model,
-            "stop_reason": null, "stop_sequence": null,
-            "usage": {"input_tokens": 0, "output_tokens": 0}
-        }});
-        let mut out = format!("event: message_start\ndata: {e_start}\n\n");
-        for (i, block) in resp.content_blocks.iter().enumerate() {
-            let (cb_start, cb_delta) = match block {
-                ContentBlock::Text { text } => (
-                    serde_json::json!({"type": "content_block_start", "index": i, "content_block": {"type": "text", "text": ""}}),
-                    serde_json::json!({"type": "content_block_delta", "index": i, "delta": {"type": "text_delta", "text": text}}),
-                ),
-                ContentBlock::ToolUse { id, name, input } => (
-                    serde_json::json!({"type": "content_block_start", "index": i, "content_block": {"type": "tool_use", "id": id, "name": name, "input": {}}}),
-                    serde_json::json!({"type": "content_block_delta", "index": i, "delta": {"type": "input_json_delta", "partial_json": serde_json::to_string(input).unwrap_or_default()}}),
-                ),
-                _ => continue,
-            };
-            let cb_stop = serde_json::json!({"type": "content_block_stop", "index": i});
-            out.push_str(&format!(
-                "event: content_block_start\ndata: {cb_start}\n\n\
-                 event: content_block_delta\ndata: {cb_delta}\n\n\
-                 event: content_block_stop\ndata: {cb_stop}\n\n"
-            ));
         }
-        let e_msg_delta = serde_json::json!({"type": "message_delta", "delta": {"stop_reason": stop_reason, "stop_sequence": null}, "usage": {"output_tokens": 0}});
-        let e_msg_stop  = serde_json::json!({"type": "message_stop"});
-        out.push_str(&format!("event: message_delta\ndata: {e_msg_delta}\n\nevent: message_stop\ndata: {e_msg_stop}\n\n"));
-        out
-    }
+    });
+    let e_cb_start = serde_json::json!({"type": "content_block_start", "index": 0, "content_block": {"type": "text", "text": ""}});
+    let e_cb_delta = serde_json::json!({"type": "content_block_delta", "index": 0, "delta": {"type": "text_delta", "text": resp.content}});
+    let e_cb_stop  = serde_json::json!({"type": "content_block_stop",  "index": 0});
+    let e_msg_delta = serde_json::json!({"type": "message_delta", "delta": {"stop_reason": "end_turn", "stop_sequence": null}, "usage": {"output_tokens": output_tokens}});
+    let e_msg_stop  = serde_json::json!({"type": "message_stop"});
+
+    format!(
+        "event: message_start\ndata: {}\n\n\
+         event: content_block_start\ndata: {}\n\n\
+         event: content_block_delta\ndata: {}\n\n\
+         event: content_block_stop\ndata: {}\n\n\
+         event: message_delta\ndata: {}\n\n\
+         event: message_stop\ndata: {}\n\n",
+        e_start, e_cb_start, e_cb_delta, e_cb_stop, e_msg_delta, e_msg_stop
+    )
 }
 
 async fn anthropic_messages(
@@ -2123,21 +1365,6 @@ async fn anthropic_messages(
     headers: HeaderMap,
     Json(body): Json<AnthropicMessagesBody>,
 ) -> Result<Response, ApiError> {
-    // Validate x-api-key when a gateway token is configured.
-    if let Some(ref expected) = state.gateway_token {
-        let provided = headers
-            .get("x-api-key")
-            .and_then(|v| v.to_str().ok())
-            .unwrap_or("");
-        if provided != expected {
-            return Err(ApiError {
-                status: StatusCode::UNAUTHORIZED,
-                body: serde_json::json!({"error": {"type": "authentication_error", "message": "invalid api key"}}),
-                retry_after_secs: None,
-            });
-        }
-    }
-
     let module_id = match headers
         .get("x-foundry-module-id")
         .and_then(|v| v.to_str().ok())
@@ -2151,85 +1378,7 @@ async fn anthropic_messages(
     let stream = body.stream;
 
     let req = anthropic_to_compute_request(body, module_id, request_id);
-
-    // Real SSE: try Tier B then Tier A streaming; fall back to buffered +
-    // fake-SSE burst only when both are unavailable (last resort).
-    if stream {
-        match state.doorman.yoyo_stream(&req).await {
-            Ok(upstream) => {
-                state.last_yoyo_dispatch.store(
-                    SystemTime::now()
-                        .duration_since(UNIX_EPOCH)
-                        .unwrap_or_default()
-                        .as_secs(),
-                    Ordering::Relaxed,
-                );
-                let stream_body = build_stream_body(upstream, model, req.request_id);
-                return Ok(Response::builder()
-                    .status(StatusCode::OK)
-                    .header("content-type", "text/event-stream; charset=utf-8")
-                    .header("cache-control", "no-cache")
-                    .header("x-accel-buffering", "no")
-                    .header("x-foundry-tier-used", "yoyo")
-                    .body(stream_body)
-                    .expect("build SSE response"));
-            }
-            Err(e) => {
-                tracing::debug!(
-                    target: "slm_doorman_server",
-                    error = %e,
-                    "yoyo_stream unavailable; trying Tier A stream"
-                );
-            }
-        }
-        match state.doorman.local_stream(&req).await {
-            Ok(upstream) => {
-                return Ok(Response::builder()
-                    .status(StatusCode::OK)
-                    .header("content-type", "text/event-stream; charset=utf-8")
-                    .header("cache-control", "no-cache")
-                    .header("x-accel-buffering", "no")
-                    .header("x-foundry-tier-used", "local")
-                    .body(build_stream_body(upstream, model, req.request_id))
-                    .expect("build SSE response"));
-            }
-            Err(e) => {
-                tracing::debug!(
-                    target: "slm_doorman_server",
-                    error = %e,
-                    "local_stream unavailable; falling back to buffered SSE"
-                );
-            }
-        }
-    }
-
     let resp = state.doorman.route(&req).await.map_err(ApiError::from)?;
-    if resp.tier_used.as_str().starts_with("yoyo") {
-        state.last_yoyo_dispatch.store(
-            SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default().as_secs(),
-            Ordering::Relaxed,
-        );
-    }
-
-    let tier_header = resp.tier_used.as_str().to_string();
-
-    // P1-1.8 of learning-loop-master-plan-2026-05-18.md — fire-and-forget
-    // shadow-brief capture for non-streaming /v1/messages turns.
-    //
-    // Gated by `SLM_SHIM_TRAINING_CAPTURE=true` (default off — per operator
-    // directive 2026-05-18 no Tier C in production, so most useful for
-    // future SDK clients pointed at Doorman). Tier C responses are
-    // explicitly skipped (Anthropic ToS competing-models constraint).
-    //
-    // Apprenticeship config must be enabled — if SLM_APPRENTICESHIP_ENABLED
-    // is unset the queue infrastructure may not exist. Best-effort: any
-    // error is logged but NEVER propagates to the caller.
-    if state.apprenticeship.is_some()
-        && std::env::var("SLM_SHIM_TRAINING_CAPTURE").as_deref() == Ok("true")
-        && resp.tier_used != slm_core::Tier::External
-    {
-        capture_anthropic_shadow(&state, &req, &resp);
-    }
 
     if stream {
         let sse_body = anthropic_sse_body(&resp, &model);
@@ -2238,109 +1387,17 @@ async fn anthropic_messages(
             .header("content-type", "text/event-stream; charset=utf-8")
             .header("cache-control", "no-cache")
             .header("x-accel-buffering", "no")
-            .header("x-foundry-tier-used", &tier_header)
             .body(axum::body::Body::from(sse_body))
             .expect("build SSE response"))
     } else {
         let body = compute_to_anthropic_response(&resp, &model);
-        Ok(Response::builder()
-            .status(StatusCode::OK)
-            .header("content-type", "application/json")
-            .header("x-foundry-tier-used", &tier_header)
-            .body(axum::body::Body::from(
-                serde_json::to_vec(&body).unwrap_or_default(),
-            ))
-            .expect("build JSON response"))
-    }
-}
-
-/// Build an ApprenticeshipBrief from the inbound ComputeRequest + response
-/// and enqueue it as a shadow brief. Best-effort: every step that could
-/// fail is logged + swallowed so the caller's response is unaffected.
-///
-/// P1-1.8 of learning-loop-master-plan-2026-05-18.md.
-fn capture_anthropic_shadow(
-    state: &Arc<AppState>,
-    req: &slm_core::ComputeRequest,
-    resp: &slm_core::ComputeResponse,
-) {
-    use slm_core::{ApprenticeshipBrief, BriefScope, SeniorRole};
-
-    // Extract the last user message as the brief body. /v1/messages turns
-    // are conversational; the last user turn captures the "what was
-    // asked". Multi-turn context is lost — acceptable for first pass.
-    let last_user_body = req
-        .messages
-        .iter()
-        .rev()
-        .find(|m| m.role == slm_core::Role::User)
-        .map(|m| m.text_content())
-        .unwrap_or_default();
-
-    if last_user_body.trim().is_empty() {
-        tracing::debug!(
-            target: "contamination_guard",
-            request_id = %req.request_id,
-            "skipping anthropic shadow capture: no user message"
-        );
-        return;
-    }
-
-    // Brief ID is a deterministic hash of request_id so a duplicate POST
-    // of the same conversation doesn't enqueue twice.
-    let brief_id = format!("anth-{}", req.request_id);
-    let brief = ApprenticeshipBrief {
-        brief_id: brief_id.clone(),
-        created: chrono::Utc::now(),
-        senior_role: SeniorRole::Task("task-anthropic-shim".to_string()),
-        senior_identity: "anthropic-shim".to_string(),
-        task_type: "anthropic-conversation".to_string(),
-        scope: BriefScope {
-            cluster: Some(req.module_id.as_str().to_string()),
-            files: vec![],
-        },
-        acceptance_test: format!("model: {}", resp.model),
-        doctrine_citations: vec![],
-        shadow: true,
-        body: last_user_body,
-    };
-
-    // Use the assistant's response content as `actual_diff` (the "what
-    // happened" reference). For tool-use round-trips this is incomplete
-    // (P1-1.7 follow-up), but for plain text it captures the model output.
-    let actual_diff = resp.content.clone();
-
-    let entry = crate::queue::ShadowQueueEntry {
-        brief,
-        actual_diff,
-        source_tier: Some(resp.tier_used.as_str().to_string()),
-    };
-
-    match crate::queue::enqueue_shadow(&state.queue_config, &entry) {
-        Ok(_) => {
-            tracing::info!(
-                target: "slm_doorman_server::http",
-                brief_id = %brief_id,
-                tier_used = %resp.tier_used.as_str(),
-                "anthropic shadow brief enqueued (SLM_SHIM_TRAINING_CAPTURE)"
-            );
-        }
-        Err(e) => {
-            tracing::warn!(
-                target: "slm_doorman_server::http",
-                brief_id = %brief_id,
-                error = %e,
-                "anthropic shadow enqueue failed (non-fatal)"
-            );
-        }
+        Ok((StatusCode::OK, Json(body)).into_response())
     }
 }
 
 struct ApiError {
     status: StatusCode,
     body: serde_json::Value,
-    /// When `Some(n)`, emits `Retry-After: n` on the response.
-    retry_after_secs: Option<u32>,
 }
 
 impl ApiError {
@@ -2348,7 +1405,6 @@ impl ApiError {
         Self {
             status: StatusCode::BAD_REQUEST,
             body: serde_json::json!({ "error": { "message": msg.into() } }),
-            retry_after_secs: None,
         }
     }
 
@@ -2356,15 +1412,6 @@ impl ApiError {
         Self {
             status: StatusCode::NOT_FOUND,
             body: serde_json::json!({ "error": { "message": msg.into() } }),
-            retry_after_secs: None,
-        }
-    }
-
-    fn forbidden(msg: impl Into<String>) -> Self {
-        Self {
-            status: StatusCode::FORBIDDEN,
-            body: serde_json::json!({ "error": { "message": msg.into() } }),
-            retry_after_secs: None,
         }
     }
 }
@@ -2375,9 +1422,6 @@ impl From<DoormanError> for ApiError {
             DoormanError::TierUnavailable(_) | DoormanError::NotImplemented { .. } => {
                 StatusCode::SERVICE_UNAVAILABLE
             }
-            // Tier A busy: same 503 status but also needs Retry-After: 30.
-            // Handled after the match via `retry_after_secs`.
-            DoormanError::TierABusy => StatusCode::SERVICE_UNAVAILABLE,
             DoormanError::ExternalNotAllowlisted { .. } | DoormanError::VerifySignature(_) => {
                 StatusCode::FORBIDDEN
             }
@@ -2440,13 +1484,6 @@ impl From<DoormanError> for ApiError {
             DoormanError::QueueLockFailed { .. } => StatusCode::SERVICE_UNAVAILABLE,
             // Malformed brief detected and moved to poison bucket.
             DoormanError::QueueMalformedBrief { .. } => StatusCode::BAD_REQUEST,
-            // Corpus quality gate rejected the brief (too short, no diff, PII).
-            DoormanError::QueueQualityGateRejected { .. } => StatusCode::UNPROCESSABLE_ENTITY,
-            // Second-layer write-time corpus gate rejected the tuple
-            // (Do-Not-Use term, BCSC violation past flag threshold, duplicate,
-            // oversized diff). 422 UNPROCESSABLE_ENTITY mirrors the queue-gate
-            // mapping above.
-            DoormanError::CorpusGateRejected { .. } => StatusCode::UNPROCESSABLE_ENTITY,
             // Graph proxy — caller omitted the mandatory X-Foundry-Module-ID
             // header. Error is on the caller's side.
             DoormanError::GraphProxyMissingModuleId => StatusCode::BAD_REQUEST,
@@ -2461,28 +1498,15 @@ impl From<DoormanError> for ApiError {
                 StatusCode::SERVICE_UNAVAILABLE
             }
         };
-        let retry_after_secs = if matches!(e, DoormanError::TierABusy) {
-            Some(30)
-        } else {
-            None
-        };
         Self {
             status,
             body: serde_json::json!({ "error": { "message": e.to_string() } }),
-            retry_after_secs,
         }
     }
 }
 
 impl IntoResponse for ApiError {
     fn into_response(self) -> axum::response::Response {
-        let mut resp = (self.status, Json(self.body)).into_response();
-        if let Some(secs) = self.retry_after_secs {
-            if let Ok(v) = axum::http::HeaderValue::from_str(&secs.to_string()) {
-                resp.headers_mut()
-                    .insert(axum::http::header::RETRY_AFTER, v);
-            }
-        }
-        resp
+        (self.status, Json(self.body)).into_response()
     }
 }

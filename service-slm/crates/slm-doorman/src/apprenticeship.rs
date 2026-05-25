@@ -20,12 +20,12 @@ use std::path::{Path, PathBuf};
 use chrono::Utc;
 use regex::Regex;
 use slm_core::{
-    ApprenticeshipAttempt, ApprenticeshipBrief, CanonicalMessage, Complexity, ComputeRequest, LatencyClass,
-    ModuleId, RequestId, Tier, APPRENTICE_ESCALATE_THRESHOLD, DEFAULT_BRIEF_TIER_B_THRESHOLD_CHARS,
+    ApprenticeshipAttempt, ApprenticeshipBrief, ChatMessage, Complexity, ComputeRequest, ModuleId,
+    RequestId, Tier, APPRENTICE_ESCALATE_THRESHOLD, DEFAULT_BRIEF_TIER_B_THRESHOLD_CHARS,
 };
 use std::str::FromStr;
 use std::sync::OnceLock;
-use tracing::{debug, info, warn};
+use tracing::{debug, info};
 use uuid::Uuid;
 
 use crate::citations::{render_for_prompt, resolve as resolve_citations};
@@ -148,14 +148,19 @@ impl<'a> ApprenticeshipDispatcher<'a> {
             module_id,
             model: None,
             messages: vec![
-                CanonicalMessage::text("system", APPRENTICE_SYSTEM_PROMPT),
-                CanonicalMessage::text("user", prompt),
+                ChatMessage {
+                    role: "system".into(),
+                    content: APPRENTICE_SYSTEM_PROMPT.to_string(),
+                },
+                ChatMessage {
+                    role: "user".into(),
+                    content: prompt,
+                },
             ],
             complexity: match tier_hint {
                 Tier::Yoyo => Complexity::High,
                 _ => Complexity::Medium,
             },
-            latency_class: LatencyClass::default(),
             tier_hint: Some(tier_hint),
             stream: false,
             max_tokens: None,
@@ -166,8 +171,6 @@ impl<'a> ApprenticeshipDispatcher<'a> {
             grammar: None,
             speculation: None,
             graph_context_enabled: None,
-            adapter_version: None,
-            tools: None,
             };
 
         info!(
@@ -239,14 +242,19 @@ impl<'a> ApprenticeshipDispatcher<'a> {
             module_id,
             model: None,
             messages: vec![
-                CanonicalMessage::text("system", APPRENTICE_SYSTEM_PROMPT),
-                CanonicalMessage::text("user", prompt),
+                ChatMessage {
+                    role: "system".into(),
+                    content: APPRENTICE_SYSTEM_PROMPT.to_string(),
+                },
+                ChatMessage {
+                    role: "user".into(),
+                    content: prompt,
+                },
             ],
             complexity: match tier_hint {
                 Tier::Yoyo => Complexity::High,
                 _ => Complexity::Medium,
             },
-            latency_class: LatencyClass::default(),
             tier_hint: Some(tier_hint),
             stream: false,
             max_tokens: None,
@@ -257,8 +265,6 @@ impl<'a> ApprenticeshipDispatcher<'a> {
             grammar: None,
             speculation: None,
             graph_context_enabled: None,
-            adapter_version: None,
-            tools: None,
             };
 
         info!(
@@ -268,18 +274,6 @@ impl<'a> ApprenticeshipDispatcher<'a> {
             tier = tier_hint.as_str(),
             "dispatching shadow brief"
         );
-
-        // Capture graph context BEFORE dispatch so the JSONL tuple records
-        // exactly what the LoRA training pass sees as grounding.
-        // P2-2.5 of learning-loop-master-plan-2026-05-18.md — closes the
-        // co-evolution leg of Doctrine claim #44 (datagraph as grounding
-        // surface). Best-effort: a missing or unavailable graph degrades
-        // to `graph_context: null` in the tuple.
-        let graph_context_snapshot = if let Some(gc) = self.doorman.graph_context_client() {
-            gc.fetch_context(req.module_id.as_str(), &brief.body, 5).await
-        } else {
-            None
-        };
 
         let resp = self.doorman.route(&req).await?;
         let parsed = parse_attempt_content(&resp.content);
@@ -292,7 +286,6 @@ impl<'a> ApprenticeshipDispatcher<'a> {
             actual_diff,
             &self.config.doctrine_version,
             &self.config.tenant,
-            graph_context_snapshot.as_deref(),
         )?;
 
         Ok(ShadowOutcome {
@@ -322,23 +315,7 @@ fn write_shadow_tuple(
     actual_diff: &str,
     doctrine_version: &str,
     tenant: &str,
-    graph_context: Option<&str>,
 ) -> Result<()> {
-    // Tier-C contamination gate (Anthropic ToS, competing-models constraint).
-    // Defense-in-depth beneath the structural invariant in
-    // `pick_tier_for_brief` (which returns only Local/Yoyo). If an apprentice
-    // attempt somehow lands on Tier::External, refuse to write the tuple —
-    // Tier-C outputs are prohibited from the training corpus.
-    if matches!(attempt.tier, Tier::External) {
-        warn!(
-            target: "contamination_guard",
-            brief_id = %brief.brief_id,
-            task_type = %brief.task_type,
-            attempt_tier = "external",
-            "skipped corpus write: attempt.tier == Tier::External (Anthropic ToS)"
-        );
-        return Ok(());
-    }
     let dir = corpus_root
         .join("data")
         .join("training-corpus")
@@ -370,25 +347,6 @@ fn write_shadow_tuple(
 
     let sanitized_brief = sanitize_brief_for_corpus(brief);
     let sanitized_attempt = sanitize_attempt_for_corpus(attempt);
-
-    // Second-layer corpus quality gate (P1-1.1 of
-    // learning-loop-master-plan-2026-05-18.md). The first-layer
-    // queue::quality_gate_shadow ran at /v1/shadow enqueue; this second
-    // layer fires at write time and adds dedup + BCSC scan + Do-Not-Use
-    // scan + max-diff cap. Rejected tuples never land on disk.
-    //
-    // The index is opened per-call so the in-memory HashSet always
-    // reflects the latest on-disk state. Cost is one file read on each
-    // write (~ms for current corpus size). Optimisation: cache the
-    // CorpusIndex in AppState — deferred (low priority at current corpus sizes).
-    let gate_index = crate::corpus_gate::CorpusIndex::open(corpus_root)?;
-    let gate_outcome = crate::corpus_gate::check(
-        &gate_index,
-        &brief.brief_id,
-        &sanitized_brief.body,
-        actual_diff,
-    )?;
-
     // Per apprenticeship-substrate.md §7B + §8 (v0.0.13 amendment):
     //   - stage_at_capture: "review" (not "shadow"; "review" is the
     //     starting stage for every new task-type per §2)
@@ -397,14 +355,11 @@ fn write_shadow_tuple(
     //     signing promotes this tuple)
     //   - verdict: null (updated in-place by VerdictDispatcher on promotion)
     //   - doctrine_version: "0.0.13" (pinned at capture time per §9)
-    //   - corpus_gate: {brief_hash, diff_hash, bcsc_flagged, bcsc_violations}
-    //     (added P1-1.1 — JSONL row carries the gate outcome for audit replay)
     let record = serde_json::json!({
         "tuple_type": "apprenticeship",
         "doctrine_version": doctrine_version,
         "task_type": brief.task_type,
         "stage_at_capture": "review",
-        "tier_used": attempt.tier.as_str(),
         "brief": sanitized_brief,
         "attempt": sanitized_attempt,
         "verdict": serde_json::Value::Null,
@@ -417,11 +372,6 @@ fn write_shadow_tuple(
         "session_id": serde_json::Value::Null,
         "created": chrono::Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Secs, true),
         "promoted_at": serde_json::Value::Null,
-        "corpus_gate": gate_outcome,
-        // P2-2.5: graph_context captured at dispatch time so the LoRA
-        // training pass learns to ground prose in queried entities. Null
-        // when service-content was unavailable or no entities matched.
-        "graph_context": graph_context.map(|s| serde_json::Value::String(s.to_string())).unwrap_or(serde_json::Value::Null),
     });
     let line = serde_json::to_string(&record).map_err(|e| DoormanError::CorpusWrite {
         path: path.display().to_string(),
@@ -1171,66 +1121,5 @@ Shadow attempt for the apprentice.
         let row: serde_json::Value = serde_json::from_str(body.trim()).unwrap();
         assert_eq!(row["actual_diff"], "diff-1");
         assert!(row["final_diff"].is_null(), "final_diff is null at capture");
-    }
-
-    /// Tier-C contamination guard — `write_shadow_tuple` MUST refuse to
-    /// persist any apprenticeship attempt whose `tier == Tier::External`.
-    /// Defense-in-depth beneath the structural invariant in
-    /// `pick_tier_for_brief` (which never returns Tier::External). Anthropic
-    /// ToS prohibits Tier-C outputs from entering a training corpus that
-    /// trains a competing model.
-    #[test]
-    fn write_shadow_tuple_refuses_tier_external() {
-        let root = tmp_dir("contamination-guard");
-        let brief = brief_for("anything");
-        let attempt = empty_attempt(&brief, "claude-opus-4-5", Tier::External);
-
-        // Call returns Ok(()) — silent skip is the chosen failure mode so a
-        // bug in upstream provenance routing degrades to "no training data"
-        // rather than crashing the drain worker. The contamination_guard
-        // tracing line surfaces the skip.
-        write_shadow_tuple(&root, &brief, &attempt, "+ poisoned diff\n", "0.0.13", "pointsav", None)
-            .expect("Tier::External silent skip returns Ok");
-
-        // The corpus dir MUST NOT contain the tuple file. Either the dir
-        // does not exist, or it exists but is empty.
-        let dir = root
-            .join("data")
-            .join("training-corpus")
-            .join("apprenticeship")
-            .join("version-bump-manifest");
-        if dir.exists() {
-            let entries: Vec<_> = std::fs::read_dir(&dir).unwrap().collect();
-            assert!(
-                entries.is_empty(),
-                "Tier::External attempt must not write any corpus file; found {} entries",
-                entries.len()
-            );
-        }
-    }
-
-    /// Top-level `tier_used` field is present on the persisted JSONL row —
-    /// enables O(n) `jq 'select(.tier_used=="external")'` audit replay
-    /// without parsing the nested `attempt` subobject.
-    #[test]
-    fn write_shadow_tuple_includes_top_level_tier_used() {
-        let root = tmp_dir("tier-used-top");
-        let brief = brief_for("anything");
-        let attempt = empty_attempt(&brief, "olmo-2-1124-7b-instruct-q4_k_m", Tier::Local);
-
-        write_shadow_tuple(&root, &brief, &attempt, "+ ok diff\n", "0.0.13", "pointsav", None)
-            .expect("Tier::Local writes succeed");
-
-        let path = root
-            .join("data")
-            .join("training-corpus")
-            .join("apprenticeship")
-            .join("version-bump-manifest")
-            .join(format!("shadow-{}.jsonl", brief.brief_id));
-        let body = std::fs::read_to_string(&path).expect("tuple written");
-        let row: serde_json::Value = serde_json::from_str(body.trim()).unwrap();
-        assert_eq!(row["tier_used"], "local");
-        // Defensive: also verify the nested attempt.tier still matches.
-        assert_eq!(row["attempt"]["tier"], "local");
     }
 }

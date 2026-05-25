@@ -8,7 +8,7 @@ must be closed.
 
 State vocabulary — see `~/Foundry/CLAUDE.md` §8 for definitions.
 
-Last updated: 2026-05-14.
+Last updated: 2026-05-07.
 
 ---
 
@@ -30,14 +30,6 @@ Last updated: 2026-05-14.
 | app-console-people | Scaffold-coded | app-console | 5 files |
 | app-console-vault | Reserved-folder | app-console | Placeholder |
 
-## App — Infrastructure surface (`app-infrastructure-*`)
-
-| Project | State | Type | Notes |
-|---|---|---|---|
-| app-infrastructure-cloud | Reserved-folder | app-infrastructure | README pair only; runs on os-infrastructure; GCP node (fleet-infrastructure-cloud-1); scaffolded 2026-05-14 |
-| app-infrastructure-leased | Reserved-folder | app-infrastructure | README pair only; runs on os-infrastructure; Laptop B node (fleet-infrastructure-leased-1); scaffolded 2026-05-14 |
-| app-infrastructure-onprem | Reserved-folder | app-infrastructure | README pair only; runs on os-infrastructure; Laptop A node (fleet-infrastructure-onprem-1); scaffolded 2026-05-14 |
-
 ## App — MediaKit surface (`app-mediakit-*`)
 
 | Project | State | Type | Notes |
@@ -51,7 +43,6 @@ Last updated: 2026-05-14.
 
 | Project | State | Type | Notes |
 |---|---|---|---|
-| app-network-admin | Reserved-folder | app-network | README pair only; control-plane for os-network-admin; PPN mesh routing authority; scaffolded 2026-05-14 |
 | app-network-cluster | Reserved-folder | app-network | Placeholder |
 | app-network-gateway | Reserved-folder | app-network | Placeholder |
 | app-network-help | Reserved-folder | app-network | Placeholder |
@@ -75,8 +66,7 @@ Last updated: 2026-05-14.
 | Project | State | Type | Notes |
 |---|---|---|---|
 | app-privategit-design-system | Scaffold-coded | app-privategit | 4 files |
-| app-privategit-marketplace | Active | app-privategit | software.pointsav.com storefront — static pages, /v1/products, /v1/license, /v1/claim; workspace member; activated project-software 2026-05-17 |
-| app-privategit-source | Active | app-privategit | release server — /releases/* binary streaming + MANIFEST; /git/* 503 stub (smart-HTTP v0.0.2); workspace member; renamed from app-privategit-source-control 2026-05-17 |
+| app-privategit-source-control | Scaffold-coded | app-privategit | 4 files |
 
 ## App — Totebox surface (`app-totebox-*`)
 
@@ -103,7 +93,7 @@ Last updated: 2026-05-14.
 | os-interface | Scaffold-coded | os | 4 files; legacy name — canonical is `os-orchestration` (rename in flight) |
 | os-mediakit | Scaffold-coded | os | 4 files |
 | os-network-admin | Scaffold-coded | os | 12 files; ISO artefact — tracking status TBD |
-| os-privategit | Active | os | 4 files; deployment: vault-privategit-source-1 (software.pointsav.com:9202/9201); hosts marketplace + source + wallet; workspace member; activated project-software 2026-05-17 |
+| os-privategit | Scaffold-coded | os | 4 files |
 | os-totebox | Scaffold-coded | os | 6 files; IMG artefact — tracking status TBD |
 | os-workplace | Scaffold-coded | os | 4 files |
 
@@ -167,7 +157,6 @@ Last updated: 2026-05-14.
 | Project | State | Type | Notes |
 |---|---|---|---|
 | tool-acs-miner | Scaffold-coded | tool | 3 files; in workspace members |
-| tool-wallet | Active | tool | Polygon USDC watcher — eth_getLogs watch loop + eth_getTransactionReceipt check; writes receipts to local dir + service-fs fallback; workspace member; activated project-software 2026-05-17 |
 | tool-archive-rescue | Reserved-folder | tool | 3 files |
 | tool-cognitive-forge | Scaffold-coded | tool | 8 files; "Cognitive Forge" is a retired term per Do-Not-Use list — rename pending |
 | tool-edgar-extractor | Reserved-folder | tool | 2 files |
@@ -199,10 +188,10 @@ Last updated: 2026-05-14.
 
 ---
 
-## Summary (updated 2026-05-20)
+## Summary (updated 2026-05-07)
 
-- **Active:** 11 (`app-console-bookkeeper`, `app-mediakit-knowledge`, `app-privategit-marketplace`, `app-privategit-source`, `app-workplace-memo`, `app-workplace-presentation`, `app-workplace-proforma`, `os-privategit`, `service-extraction`, `service-slm`, `tool-wallet`)
-- **Scaffold-coded:** 47 (4 moved to Active 2026-05-17: marketplace + source + os-privategit + tool-wallet; 1 moved to Active prior: app-mediakit-knowledge)
+- **Active:** 6 (`app-console-bookkeeper`, `app-workplace-memo`, `app-workplace-presentation`, `app-workplace-proforma`, `service-extraction`, `service-slm`)
+- **Scaffold-coded:** 51 (includes `service-pty-bridge` + `service-email-egress` closed from Defect 2026-04-23)
 - **Reserved-folder:** 43
 - **Defect:** 0 (all 5 prior defects resolved 2026-04-23 — see `cleanup-log.md` Completed migrations)
 - **Not-a-project:** 2 (`discovery-queue`, `target`)
