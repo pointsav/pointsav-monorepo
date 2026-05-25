@@ -339,13 +339,20 @@ async fn check(args: CheckArgs) -> Result<()> {
         Some(log) => {
             let data = log["data"].as_str().unwrap_or("0x");
             let amount = parse_usdc_amount(data);
-            let block_hex = receipt["blockNumber"].as_str().unwrap_or("0x0").trim_start_matches("0x");
+            let block_hex = receipt["blockNumber"]
+                .as_str()
+                .unwrap_or("0x0")
+                .trim_start_matches("0x");
             let block_number = u64::from_str_radix(block_hex, 16).unwrap_or(0);
-            let from_padded = log["topics"].as_array()
+            let from_padded = log["topics"]
+                .as_array()
                 .and_then(|t| t.get(1))
                 .and_then(|v| v.as_str())
                 .unwrap_or("");
-            let from = format!("0x{}", from_padded.trim_start_matches("0x").trim_start_matches('0'));
+            let from = format!(
+                "0x{}",
+                from_padded.trim_start_matches("0x").trim_start_matches('0')
+            );
 
             let out = json!({
                 "confirmed": true,
