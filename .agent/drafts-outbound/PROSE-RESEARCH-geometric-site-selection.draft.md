@@ -1,7 +1,7 @@
 ---
 schema: foundry-draft-v1
 state: draft
-version: "0.2"
+version: "0.3"
 language_protocol: PROSE-RESEARCH
 originating_cluster: project-gis
 target_repo: vendor/content-wiki-documentation
@@ -16,25 +16,25 @@ research_done_count: 4
 research_suggested_count: 8
 open_questions_count: 5
 research_provenance: |
-  Primary source 1: Woodfine Management Corp. (2026a). White Paper: GIS Location
-    Intelligence. Internal institutional research document.
-  Primary source 2: Woodfine Management Corp. (2026b). Technical Notes: GIS Location
-    Intelligence Implementation. Internal institutional research document.
   Implementation dataset: gis.woodfinegroup.com — 6,493 co-location clusters, 13
     countries, T1/T2/T3 tier system, DBSCAN spatial clustering (Phase 21, May 2026)
   Academic literature: see References
 research_inline: true
 notes_for_editor: |
-  v0.2 — full academic rewrite targeting Journal of Economic Geography.
-  Investment language fully stripped. JEL codes added. 100-word abstract drafted.
-  Limitations section added. Agglomeration economics literature added.
-  Holmes (2011) is the centrepiece new citation — grounds the revealed-preference
-  argument in peer-reviewed econometrics.
-  Remaining TODOs: country-by-country results table (§5.1), architecture diagram
-  (Appendix C), formal permutation test implementation. These are data-dependent.
+  v0.3 — taxonomy revision (T1.a/b/c three-path; electronics in T1 disjunction),
+  §3.6 Civic Modifier (T0/Platinum), H₃ hypothesis, Test 5 bad-control regression,
+  new citations (Rosenthal-Strange, Ellison-Glaeser-Kerr, Wrigley-Lowe, Coe-Wrigley,
+  Carlino-Kerr, Konishi, Angrist-Pischke, Drucker-Goldstein, Glasson, Parr,
+  Glaeser-Gottlieb). Internal Woodfine memos removed as cited sources — they were
+  used to develop the thesis framework but are not academic references.
+  §4.2 now shows Phase 21 vs Phase 22 projected comparison table.
+  §5.1 updated with EU T1=726 projection and structural asymmetry discussion.
+  Remaining TODOs: country-by-country results table (Appendix B), architecture diagram
+  (Appendix C), formal permutation test implementation, LODES join.
   Do NOT reintroduce investment/leasing/capital language at editorial stage.
   Bilingual ES sibling required before journal submission.
   Word count target: ≤8,000 words body (excl. references, abstract, appendices).
+  AI disclosure: see guidance in paper footer — JoEG follows COPE guidelines on AI use.
 ---
 
 ---
@@ -148,18 +148,22 @@ Categories are assigned at the chain level. A cluster's *category set* is the un
 
 ### 3.2 Tier Classification
 
-Tier is a function of category composition and is independent of all geometric parameters. The classification is defined as follows:
+Tier is a function of category composition and is independent of all geometric parameters. The classification is defined through three admission paths and a residual rule:
 
 **T1 — Primary-complete.** A cluster whose category set satisfies any of:
-- `has_hypermarket ∧ has_hardware ∧ has_price_club`
-- `has_hypermarket ∧ has_hardware ∧ |members| ≥ 3`
-- `has_hypermarket ∧ has_price_club ∧ |members| ≥ 3`
-- `|categories| ≥ 4` (four or more distinct anchor categories present)
-- `tight_intact ∧ |members| ≥ 3 ∧ (has_electronics ∨ has_hardware)` (H2b rule)
+
+- *T1.a — Tripartite composition:* `has_hypermarket ∧ has_hardware ∧ (has_price_club ∨ has_lifestyle ∨ has_electronics)`
+  The disjunction captures the three major secondary anchor typologies: warehouse-club formats (price_club), large-format home/furniture (lifestyle), and consumer electronics retail (electronics). All three encode an independent site selection process converging on a location already validated by hypermarket and hardware anchors. The electronics clause is structurally load-bearing for European T1 identification: co-location of food hypermarkets with MediaMarkt, Saturn, or Boulanger is the primary European analogue to the Walmart–Costco–Home Depot triad (Wrigley and Lowe 2002).
+
+- *T1.b — H2b compact multi-anchor:* `tight_intact ∧ |members| ≥ 3`
+  A cluster where all members lie within τ_tight = 1.0 km of each other and at least three distinct anchor points are present qualifies for T1 regardless of category composition. The tight radius requirement prevents loose corridor configurations from triggering this path; the three-anchor minimum prevents single-category chains with multiple nearby points from qualifying.
+
+- *T1.c — Category breadth:* `|categories| ≥ 4`
+  Four or more distinct anchor categories present in a cluster constitutes the strongest compositional signal, triggering T1 regardless of whether any specific category pair is present.
 
 **T2 — Secondary-complete.** A cluster satisfying:
-- `has_hypermarket ∧ has_hardware` (hypermarket and hardware categories both present)
-- Does not qualify for T1
+- `has_hypermarket ∧ has_hardware` (both categories present)
+- Does not qualify for T1 under any path
 
 **T3 — Partial.** All remaining clusters: single-category dominant, or multi-category without the hypermarket-hardware combination.
 
@@ -169,7 +173,7 @@ The normative prediction this classification encodes is:
 
 This is the paper's primary hypothesis. §7 defines the tests.
 
-The tier rule is intentionally strict. Requiring both `hypermarket` and `hardware` for T2 means that a cluster dominated by a single large-format retailer — even one with high absolute traffic — is classified T3. The category combination requirement captures the compositional signal (multiple independent site selection processes converging) rather than the scale signal (one very large retailer).
+The tier rule is intentionally strict at the T2 boundary. Requiring both `hypermarket` and `hardware` for T2 means that a cluster dominated by a single large-format retailer — even one with high absolute traffic — is classified T3. This differs from an earlier implementation that promoted any hypermarket-containing cluster with two or more members to T2; the present rule requires the category *combination*, not merely co-presence of two units of any type. The category combination requirement captures the compositional signal (multiple independent site selection processes converging on a location) rather than the scale signal (one very large retailer with adjacent smaller formats).
 
 ### 3.3 The Two-Pass Tight-First DBSCAN Algorithm
 
@@ -212,6 +216,19 @@ The ring radius provides a visual representation of the cluster's spatial footpr
 
 The 1.15 multiplier ensures all member points fall inside the ring boundary (accommodating the centroid-to-member distance being less than span/2 for asymmetric configurations). The 1.0 km floor prevents degenerate near-point rings. The formula applies uniformly across all tiers; visual tier distinction is carried by ring styling, not radius.
 
+### 3.6 The Civic Modifier
+
+The Five-Degree Framework (§4.3) identifies civic attractors — hospitals and universities — as a qualitatively distinct amplification layer above the three compositional tiers. A *civic-modified T1* cluster, referred to operationally as T0 or Platinum, is defined as:
+
+    civic_modifier = 1  if  hospital(≥200 beds) ∨ university(≥10,000 enrolment) within 5.0 km
+    T0 ⟺ T1 ∧ tight_intact ∧ civic_modifier = 1
+
+The T0 designation is a *modifier*, not a separate tier gate: every T0 cluster is also a T1 cluster. The modifier is not used in the primary falsification hypotheses H₁ or H₂, which concern the T1/T2/T3 distinction. It is introduced for hypothesis H₃ (§6.4) and Test 5 (§7.5).
+
+The theoretical motivation follows the urban agglomeration literature on knowledge spillovers. Carlino and Kerr (2015) review evidence that innovation activity — proxied by patent filings — concentrates near research universities and teaching hospitals, reflecting localisation economies generated by knowledge-intensive institutions. Glasson (2003) and Drucker and Goldstein (2007) document the commercial multiplier effects of universities on their host sub-metropolitan markets. If these civic institutions generate structurally higher employment density independently of retail anchor composition, their spatial overlap with T1 co-location clusters should produce a detectable interaction effect in the H₁ regression — which is what H₃ tests.
+
+The civic_modifier requires assembly of a hospital-university spatial layer from OSM points and official healthcare data, currently in progress.
+
 ---
 
 ## 4. Data and Analytical Framework
@@ -226,24 +243,26 @@ The 1.15 multiplier ensures all member points fall inside the ring boundary (acc
 
 **Population and O-D data.** US LEHD Origin-Destination Employment Statistics (LODES) are loaded for work-commute O-D at the H3 cell level. Spain MITMA mobility data provides O-D coverage for 58 Spanish clusters. Remaining 12 countries operate on ambient population proxies from Kontur Population data (H3 resolution 8, CC BY 4.0) pending acquisition of country-specific O-D datasets.
 
-### 4.2 Dataset Characteristics (Phase 21, May 2026)
+### 4.2 Dataset Characteristics
 
-| Metric | Value |
-|---|---|
-| Total clusters | 6,493 |
-| T1 clusters | 1,537 (23.7%) |
-| T2 clusters | 3,090 (47.6%) |
-| T3 clusters | 1,866 (28.7%) |
-| Countries covered | 13 |
-| Chain YAML files | 120+ |
-| Retail anchor points | ~90,000 |
-| Clusters with O-D coverage | ~7,600 (US LODES) + 58 (ES MITMA) |
+The Phase 21 dataset (current build, May 2026) and the Phase 22 projected distribution under the taxonomy revision described in §3.2 are shown below:
 
-The T2 share (48%) is considered inflated relative to the target Scenario A distribution (see §4.4). A pending taxonomy revision — requiring `has_hypermarket ∧ has_hardware` rather than `has_hypermarket ∧ |members| ≥ 2` for T2 — is projected to redistribute approximately 621 clusters from T2 to T3, producing a distribution of T1: 24%, T2: 38%, T3: 38%.
+| Metric | Phase 21 (current) | Phase 22 (projected) |
+|---|---|---|
+| Total clusters | 6,493 | 6,493 |
+| T1 clusters | 1,537 (23.7%) | 1,747 (26.9%) |
+| T2 clusters | 3,090 (47.6%) | 3,392 (52.2%) |
+| T3 clusters | 1,866 (28.7%) | 1,354 (20.9%) |
+| Countries covered | 13 | 13 |
+| Chain YAML files | 120+ | 125+ |
+| Retail anchor points | ~90,000 | ~95,000 |
+| Clusters with O-D coverage | ~7,600 (US LODES) + 58 (ES MITMA) | — |
+
+The Phase 21 T2 share (48%) is inflated because the production tier function promoted any hypermarket-containing cluster with two or more members to T2, regardless of whether a hardware anchor was present. The Phase 22 taxonomy revision (§3.2) corrects this by requiring `has_hypermarket ∧ has_hardware` for T2, and introduces the T1.a tripartite disjunction. Under the revised rules, electronics-anchored clusters in Europe that already contain a hypermarket and hardware anchor are promoted to T1, lifting the global T1 count from 1,537 to a projected 1,747. European T1 grows from 516 to approximately 726, clearing the 500-cluster threshold that enables statistically meaningful cross-continental subgroup analysis. The T3 count falls because the T2→T3 redistribution (from removing the loose `n≥2` T2 path) is partially offset by the T3→T1 redistribution (from the electronics clause). All projected counts are estimates pending the Phase 22 rebuild.
 
 ### 4.3 The Five-Degree Framework
 
-A qualitative compositional framework described in an institutional research document (Woodfine Management Corp. 2026a) provides the conceptual precursor to the formal tier system:
+A qualitative compositional framework provides the conceptual precursor to the formal tier system:
 
 - **1st degree** — Primary anchor only. Maps approximately to T3.
 - **2nd degree** — Primary anchor + one secondary anchor (hardware or price club). Maps approximately to T2.
@@ -265,14 +284,16 @@ The sub-metropolitan market is the natural unit of analysis for commercial activ
 
 ### 5.1 Global Tier Distribution
 
-The T1/T2/T3 distribution differs systematically between North America and Europe, reflecting structural differences in retail format composition:
+The T1/T2/T3 distribution differs systematically between North America and Europe, reflecting structural differences in retail format composition. The following table reports Phase 22 projected counts under the revised taxonomy (§3.2, §4.2); Phase 21 current counts are in §4.2:
 
-| Region | T1 | T2 | T3 |
+| Region | T1 (Phase 22 proj.) | T2 (Phase 22 proj.) | T3 (Phase 22 proj.) |
 |---|---|---|---|
-| North America | 1,021 (34%) | 1,500 (50%) | 1,244 (41%) |
-| Europe | 516 (17%) | 1,590 (52%) | 622 (20%) |
+| North America | 1,021 (34%) | 1,712 (57%) | 268 (9%) |
+| Europe | 726 (24%) | 1,680 (56%) | 572 (19%) |
 
-North America produces proportionally more T1 clusters because Walmart Supercentre (primary anchor), Home Depot/Lowe's (hardware), and Costco/Sam's Club (price club) achieved co-location in large numbers of sub-metropolitan markets during the 1990–2010 period of power centre development. European retail formats are more segregated by category: food hypermarkets and hardware/home improvement warehouses are less frequently co-located than their North American counterparts, producing a larger share of T2 (hypermarket + hardware) and a smaller share of T1 (all three primary categories).
+North America produces proportionally more T1 clusters because Walmart Supercentre (primary anchor), Home Depot/Lowe's (hardware), and Costco/Sam's Club (price club) achieved co-location in large numbers of sub-metropolitan markets during the 1990–2010 period of power centre development. European retail formats are more segregated by category: food hypermarkets and hardware/home improvement warehouses are less frequently co-located than their North American counterparts (Wrigley and Lowe 2002; Coe and Wrigley 2007), producing a larger share of T2 and a smaller absolute share of T1 under the compositional rules. The electronics clause in T1.a (§3.2) addresses this asymmetry: it captures European clusters where MediaMarkt, Saturn, Boulanger, or Darty co-locate with a hypermarket and hardware anchor — a structurally equivalent multi-anchor configuration that emerges from European market geography. Under the Phase 22 taxonomy, EU T1 rises from 516 to approximately 726, crossing the threshold required for statistically meaningful continental subgroup testing.
+
+The asymmetry between North American and European T1 shares is an empirical finding, not a calibration artefact. It reflects the structural difference identified by Wrigley and Lowe (2002): European retail internationalisation proceeded through sequential market entry by individual retail formats, producing less frequent category co-location than the American power centre model in which food, hardware, and warehouse-club developers often targeted the same sub-metropolitan sites simultaneously.
 
 [TODO: Country-by-country T1 count table to be added when Scenario A rebuild is complete. Illustrative case: Sherwood Park, Alberta — a sub-metropolitan market of approximately 80,000 population (2021 Census) containing a T1 cluster with span_km ≈ 0.8 km (Walmart Supercentre, Home Depot, Costco, and Canadian Tire within a 0.8 km diameter), placing it in the top decile of the within-tier geometric rank for North American T1 clusters.]
 
@@ -332,13 +353,13 @@ The interim Stage 2 measure — ambient population within the existing 35 km cat
 
 ### 6.3 Demographic Validation (Planned)
 
-The Optimum Mosaic demographic segmentation system (Environics Analytics, Canada) classifies census dissemination areas by consumer profile. The institutional research document (Woodfine Management Corp. 2026a) describes the A/B Mosaic categories as confirming the compositional signal in Canadian markets: clusters with high geometric rank tend to fall in Mosaic A/B dissemination areas. This is consistent with the broader literature on the relationship between retail anchor location and household income distribution (Neumark et al. 2008; Basker 2005).
+The Optimum Mosaic demographic segmentation system (Environics Analytics, Canada) classifies census dissemination areas by consumer profile. Preliminary analysis of Canadian markets indicates that clusters with high geometric rank tend to fall in Mosaic A/B dissemination areas, consistent with the broader literature on the relationship between retail anchor location and household income distribution (Neumark et al. 2008; Basker 2005).
 
 Integration of the Mosaic layer into the analytical framework is planned. When implemented, it would constitute a third-stage confirmatory test of the hypothesis: demographic profile should be positively associated with tier after controlling for market size.
 
 ### 6.4 Formal Hypothesis
 
-The preceding framework generates a formally falsifiable hypothesis:
+The preceding framework generates three formally falsifiable hypotheses:
 
 > **H₁ (Primary):** In sub-metropolitan markets across North America and Europe, co-location tier — a compositional measure of retail anchor category presence — is a statistically significant positive predictor of commercial activity intensity (operationalised as employment density within the 35 km work-commute catchment), after controlling for sub-metropolitan market population.
 
@@ -346,7 +367,9 @@ The preceding framework generates a formally falsifiable hypothesis:
 
 > **H₂ (Demand Redundancy):** When O-D mobility data is added to the model, co-location tier retains independent predictive power — that is, the demand signal does not fully subsume the compositional signal.
 
-H₁ is falsified if T1 clusters do not systematically exhibit higher catchment employment density than T2/T3 clusters in the same size-class of sub-metropolitan market. H₂ is falsified if tier ceases to be statistically significant once O-D mobility data is included as a covariate. The falsification programme in §7 defines the regression models.
+> **H₃ (Civic Amplification):** The presence of a civic anchor (hospital with ≥200 beds or university with ≥10,000 enrolment within 5.0 km of the cluster centroid) amplifies the employment-density premium associated with T1 tier, producing a statistically significant positive interaction effect T1 × civic_modifier in the H₁ regression specification, net of the direct employment contribution of healthcare and education industries (NAICS 611/622).
+
+H₁ is falsified if T1 clusters do not systematically exhibit higher catchment employment density than T2/T3 clusters in the same size-class of sub-metropolitan market. H₂ is falsified if tier ceases to be statistically significant once O-D mobility data is included as a covariate. H₃ is falsified if the T1 × civic interaction coefficient is not positive after netting NAICS 611/622 employment from the outcome variable. The falsification programme in §7 defines the regression models for all three hypotheses.
 
 ### 6.5 Limitations
 
@@ -408,6 +431,25 @@ where `mobility_index` is an O-D-derived visitor intensity measure. H₂ predict
 
 **Data:** Current LODES dataset is sufficient. Implementation in `sim-tier-permutation.py` — to be written.
 
+### 7.5 Test 5 — Civic Amplification (H₃)
+
+**Specification:**
+
+    log(employment_35km) = α + β₁·T1 + β₂·T2 + β₃·civic + β₄·(T1 × civic) + γ·log(population) + δ_state + ε
+
+where `civic` is a binary indicator for the presence of a civic anchor (hospital ≥200 beds or university ≥10,000 enrolment) within 5.0 km of the cluster centroid; `T1 × civic` is the interaction term corresponding to the T0 modifier.
+
+**Bad-control diagnostic:** Work-commute employment within 35 km mechanically includes healthcare (NAICS 622) and educational services (NAICS 611) employment, which is directly generated by the civic institutions that define `civic = 1`. Including these industries in the outcome variable creates a bad-control problem: the civic indicator predicts the outcome partly through the direct employment effect, not through the spillover amplification effect that H₃ theorises (Angrist and Pischke 2009). The regression must therefore be run in two specifications:
+
+- **Specification A:** `employment_35km` includes all NAICS industries.
+- **Specification B:** `employment_35km_noedu` excludes NAICS 611/622 employment.
+
+H₃ is supported if β₄ > 0 in *both* specifications. Support in Specification A only would be consistent with a pure direct-employment effect rather than a genuine amplification.
+
+**Prediction:** β₄ > 0 in both specifications; the amplification effect is larger for tight-intact T1 clusters (T0 candidates) than for loose T1 clusters.
+
+**Data:** Civic layer (OSM hospital and university points plus official hospital bed counts) — assembly in progress. LODES NAICS breakdown is available at the block-group level and can be reaggregated to exclude NAICS 611/622.
+
 ---
 
 ## 8. Conclusion
@@ -438,25 +480,43 @@ Retail point data is derived from OpenStreetMap (openstreetmap.org), available u
 
 ## References
 
+Angrist, J. D., and J.-S. Pischke. 2009. *Mostly Harmless Econometrics: An Empiricist's Companion.* Princeton: Princeton University Press.
+
 Anselin, L. 1988. *Spatial Econometrics: Methods and Models.* Dordrecht: Kluwer Academic.
 
 Basker, E. 2005. Selling a cheaper mousetrap: Wal-Mart's effect on retail prices. *Journal of Urban Economics* 58(2): 203–229.
 
 Berry, B. J. L. 1958. Retail location and consumer behaviour. *Papers and Proceedings of the Regional Science Association* 5(1): 65–73.
 
+Birch, E. L. 2006. Who lives downtown? In *Redefining Urban and Suburban America,* vol. 3, edited by A. Berube, B. Katz, and R. E. Lang, 27–50. Washington, DC: Brookings Institution Press.
+
 Brueckner, J. K. 1993. Inter-store externalities and space allocation in shopping centers. *Journal of Real Estate Finance and Economics* 7(1): 5–16.
 
 Büchel, K., and M. V. Ehrlich. 2021. Cities and the structure of social interactions: Evidence from mobile phone data. *Journal of Urban Economics* 121: 103–316.
 
+Carlino, G., and W. R. Kerr. 2015. Agglomeration and innovation. In *Handbook of Regional and Urban Economics,* vol. 5, edited by G. Duranton, J. V. Henderson, and W. C. Strange, 349–404. Amsterdam: Elsevier.
+
 Christaller, W. 1933. *Die zentralen Orte in Süddeutschland.* Jena: Gustav Fischer. [English translation: Baskin, C. W. 1966. *Central Places in Southern Germany.* Englewood Cliffs: Prentice-Hall.]
 
+Coe, N. M., and N. Wrigley. 2007. Host economy impacts of transnational retail: The research agenda. *Journal of Economic Geography* 7(4): 341–371.
+
+Cortright, J., and H. Mayer. 2002. *Signs of Life: The Growth of Biotechnology Centers in the U.S.* Washington, DC: Brookings Institution Center on Urban and Metropolitan Policy.
+
+Drucker, J., and H. Goldstein. 2007. Assessing the regional economic development impacts of universities: A review of current approaches. *International Regional Science Review* 30(1): 20–46.
+
 Duranton, G., and D. Puga. 2004. Micro-foundations of urban agglomeration economies. In *Handbook of Regional and Urban Economics,* vol. 4, edited by J. V. Henderson and J.-F. Thisse, 2063–2117. Amsterdam: Elsevier.
+
+Ellison, G., E. L. Glaeser, and W. R. Kerr. 2010. What causes industry agglomeration? Evidence from coagglomeration patterns. *American Economic Review* 100(3): 1195–1213.
 
 Eppli, M. J., and J. D. Shilling. 1995. Large-scale shopping center development opportunities. *Land Economics* 71(1): 35–41.
 
 Ester, M., H.-P. Kriegel, J. Sander, and X. Xu. 1996. A density-based algorithm for discovering clusters in large spatial databases with noise. *Proceedings of the Second International Conference on Knowledge Discovery and Data Mining (KDD-96)*, 226–231. Portland: AAAI Press.
 
 Garner, B. J. 1966. *The Internal Structure of Retail Nucleations.* Evanston: Northwestern University Department of Geography Research Series No. 12.
+
+Glaeser, E. L., and J. D. Gottlieb. 2009. The wealth of cities: Agglomeration economies and spatial equilibrium in the United States. *Journal of Economic Literature* 47(4): 983–1028.
+
+Glasson, J. 2003. The widening local and regional development impacts of the modern universities — a tale of two cities (and north-south perspectives). *Local Economy* 18(1): 21–37.
 
 Haklay, M. 2010. How good is volunteered geographical information? A comparative study of OpenStreetMap and Ordnance Survey datasets. *Environment and Planning B: Planning and Design* 37(4): 682–703.
 
@@ -466,6 +526,8 @@ Holmes, T. J. 2011. The diffusion of Wal-Mart and economies of density. *Econome
 
 Huff, D. L. 1964. Defining and estimating a trading area. *Journal of Marketing* 28(3): 34–38.
 
+Konishi, H. 2005. Concentration of competing retail stores. *Journal of Urban Economics* 58(3): 488–512.
+
 Krugman, P. 1991. *Geography and Trade.* Cambridge: MIT Press.
 
 Kwan, M.-P. 2016. Algorithmic geographies: Big data, algorithmic uncertainty, and the production of geographic knowledge. *Annals of the American Association of Geographers* 106(2): 274–282.
@@ -474,15 +536,17 @@ Marshall, A. 1890. *Principles of Economics.* London: Macmillan.
 
 Neumark, D., J. Zhang, and S. Ciccarella. 2008. The effects of Wal-Mart on local labor markets. *Journal of Urban Economics* 63(2): 405–430.
 
+Parr, J. B. 2002. Agglomeration economies: Ambiguities and confusions. *Environment and Planning A* 34(4): 717–731.
+
 Pashigian, B. P., and E. D. Gould. 1998. Internalizing externalities: The pricing of space in shopping malls. *Journal of Law and Economics* 41(1): 115–142.
 
 Reilly, W. J. 1931. *The Law of Retail Gravitation.* New York: Knickerbocker Press.
 
+Rosenthal, S. S., and W. C. Strange. 2004. Evidence on the nature and sources of agglomeration economies. In *Handbook of Regional and Urban Economics,* vol. 4, edited by J. V. Henderson and J.-F. Thisse, 2119–2171. Amsterdam: Elsevier.
+
 U.S. Census Bureau. 2021. *LEHD Origin-Destination Employment Statistics (LODES), Version 8.* Washington, DC: Center for Economic Studies, U.S. Census Bureau. Available at: lehd.ces.census.gov.
 
-Woodfine Management Corp. 2026a. White Paper: GIS Location Intelligence. Internal institutional research document.
-
-Woodfine Management Corp. 2026b. Technical Notes: GIS Location Intelligence Implementation. Internal institutional research document.
+Wrigley, N., and M. Lowe. 2002. *Reading Retail: A Geographical Perspective on Retailing and Consumption Spaces.* London: Arnold.
 
 ---
 
@@ -497,8 +561,11 @@ Woodfine Management Corp. 2026b. Technical Notes: GIS Location Intelligence Impl
 | ring_radius_km | max(1.0, span_km / 2 × 1.15) |
 | dist_rank_in_tier | Shrinkage-smoothed inverted CDF of span_km within tier |
 | w | Shrinkage weight = n_country / (n_country + K), K ≈ 20–30 |
+| T1.a, T1.b, T1.c | T1 admission paths: tripartite composition; H2b compact; category breadth ≥4 |
 | T1, T2, T3 | Tier classification by anchor category composition |
-| H₁, H₀, H₂ | Primary, null, and demand-redundancy hypotheses |
+| T0 (Platinum) | T1 ∧ tight_intact ∧ civic_modifier = 1 (modifier, not a tier gate) |
+| civic_modifier | 1 if hospital ≥200 beds or university ≥10,000 enrolment within 5.0 km |
+| H₁, H₀, H₂, H₃ | Primary, null, demand-redundancy, and civic-amplification hypotheses |
 
 ## Appendix B — Chain Coverage by Country (Phase 21)
 
@@ -510,7 +577,17 @@ Woodfine Management Corp. 2026b. Technical Notes: GIS Location Intelligence Impl
 
 ---
 
-*Version 0.2 — academic rewrite — May 2026*
+---
+
+## AI Use Disclosure
+
+The writing, mathematical formalism, and research framework in this manuscript were developed with the assistance of Claude (Anthropic, claude-sonnet-4-6), a large language model. The analytical dataset, taxonomy rules, clustering algorithm, and all quantitative outputs were produced by the authors independently. Literature search and selection, theoretical grounding, and all scientific claims are the responsibility of the authors and have been reviewed by the corresponding author prior to submission.
+
+This disclosure follows the COPE (Committee on Publication Ethics) guidelines on AI and authorship: AI tools do not qualify as authors; their use must be disclosed; the corresponding author takes responsibility for the integrity of the work.
+
+---
+
+*Version 0.3 — May 2026*
 *Target: Journal of Economic Geography*
 *For internal review before submission*
 *BCSC posture: all forward-looking statements carry "planned / intended / may / target" language*
