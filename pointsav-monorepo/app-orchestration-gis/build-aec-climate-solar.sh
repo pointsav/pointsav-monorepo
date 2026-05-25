@@ -30,6 +30,7 @@ DRY_RUN=0
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WORK_DIR="$SCRIPT_DIR/work/aec"
+export WORK_DIR
 LOG="$SCRIPT_DIR/build-aec-climate-solar.log"
 STAMP="$(date -u '+%Y-%m-%dT%H:%M:%SZ')"
 TILES_OUT="/srv/foundry/deployments/gateway-orchestration-gis-1/www/tiles"
@@ -85,12 +86,30 @@ echo "[1/9] ASHRAE 169-2013 county→zone CSV" | tee -a "$LOG"
 
 ASHRAE_CSV="$WORK_DIR/ashrae-county-zones.csv"
 if [[ ! -f "$ASHRAE_CSV" ]]; then
-    # Primary: NREL OpenStudio Standards (stable GitHub raw)
-    ASHRAE_URL="https://raw.githubusercontent.com/NREL/openstudio-standards/master/lib/openstudio-standards/utilities/ashrae_climate_zone_lookup.csv"
-    curl -fsSL "$ASHRAE_URL" -o "$ASHRAE_CSV" 2>&1 | tee -a "$LOG" || {
-        echo "ERROR: ASHRAE CSV download failed from primary URL" | tee -a "$LOG"
+    # Source: NREL ResStock 2022 spatial_tract_lookup_table — IECC 2012 == ASHRAE 169-2013
+    # (original NREL openstudio-standards URL removed; file no longer exists at that path)
+    python3 - <<'PYEOF' 2>&1 | tee -a "$LOG"
+import urllib.request, csv, io
+url = "https://oedi-data-lake.s3.amazonaws.com/nrel-pds-building-stock/end-use-load-profiles-for-us-building-stock/2022/resstock_tmy3_release_1.1/geographic_information/spatial_tract_lookup_table.csv"
+out = "/srv/foundry/clones/project-gis/pointsav-monorepo/app-orchestration-gis/work/aec/ashrae-county-zones.csv"
+seen = {}
+reader = csv.DictReader(io.TextIOWrapper(urllib.request.urlopen(url), encoding='utf-8'))
+for row in reader:
+    g = row.get('nhgis_2010_county_gisjoin', '')
+    if g.startswith('G') and len(g) >= 8:
+        fips = g[1:3] + g[4:7]
+        if fips not in seen:
+            z = row.get('iecc_2012_climate_zone', '').strip()
+            if z: seen[fips] = z
+with open(out, 'w', newline='') as f:
+    w = csv.writer(f); w.writerow(['county_fips','climate_zone'])
+    [w.writerow([k,v]) for k,v in sorted(seen.items())]
+print(f"  {len(seen)} counties → {out}")
+PYEOF
+    if [[ ! -f "$ASHRAE_CSV" ]]; then
+        echo "ERROR: ASHRAE CSV generation failed" | tee -a "$LOG"
         exit 1
-    }
+    fi
 fi
 echo "  → $ASHRAE_CSV ($(wc -l < "$ASHRAE_CSV") rows)  ✓" | tee -a "$LOG"
 
@@ -148,7 +167,7 @@ if not os.path.exists(counties_geojson):
     subprocess.run([
         'ogr2ogr', '-f', 'GeoJSON', counties_geojson, shp,
         '-t_srs', 'EPSG:4326',
-        '-select', 'GEOID,NAME,STUSPS',
+        '-select', 'GEOID,NAME,STATEFP',
     ], check=True)
 
 with open(counties_geojson) as f:
@@ -255,13 +274,20 @@ echo "[5/9] Download GISCO LAU2 2021 boundaries" | tee -a "$LOG"
 
 GISCO_ZIP="$WORK_DIR/ref-lau-2021-01m.shp.zip"
 GISCO_DIR="$WORK_DIR/gisco-lau2"
-if [[ ! -d "$GISCO_DIR" ]]; then
-    curl -fL "https://gisco-services.ec.europa.eu/distribution/v2/lau/download/ref-lau-2021-01m.shp.zip" \
-         -o "$GISCO_ZIP" 2>&1 | tee -a "$LOG"
-    mkdir -p "$GISCO_DIR"
-    unzip -q "$GISCO_ZIP" -d "$GISCO_DIR"
+GISCO_SHP="$GISCO_DIR/LAU_RG_01M_2021_4326.shp"
+if [[ ! -f "$GISCO_SHP" ]]; then
+    if [[ ! -d "$GISCO_DIR" ]]; then
+        curl -fL "https://gisco-services.ec.europa.eu/distribution/v2/lau/download/ref-lau-2021-01m.shp.zip" \
+             -o "$GISCO_ZIP" 2>&1 | tee -a "$LOG"
+        mkdir -p "$GISCO_DIR"
+        unzip -q "$GISCO_ZIP" -d "$GISCO_DIR"
+    fi
+    # Outer zip contains nested per-projection zips; extract WGS84 one
+    if [[ -f "$GISCO_DIR/LAU_RG_01M_2021_4326.shp.zip" && ! -f "$GISCO_SHP" ]]; then
+        unzip -q "$GISCO_DIR/LAU_RG_01M_2021_4326.shp.zip" -d "$GISCO_DIR"
+    fi
 fi
-echo "  → $GISCO_DIR  ✓" | tee -a "$LOG"
+echo "  → $GISCO_SHP  ✓" | tee -a "$LOG"
 
 echo "" | tee -a "$LOG"
 echo "[6/9] Build EU climate zone GeoJSON (build-by-join)" | tee -a "$LOG"
@@ -366,28 +392,22 @@ ZONE_LOOKUPS = {
     },
 }
 
-# Find GISCO LAU2 shapefiles per country
-import glob
+# Use combined GISCO shapefile filtered by CNTR_CODE per country
+combined_shp = GISCO_DIR / "LAU_RG_01M_2021_4326.shp"
+if not combined_shp.exists():
+    print(f"  ERROR: combined GISCO shapefile not found at {combined_shp}")
+    sys.exit(1)
 
 features_merged = []
 
 for iso, lookup in ZONE_LOOKUPS.items():
-    pattern = str(GISCO_DIR / f"LAU_RG_01M_2021_4326_{iso}.shp")
-    files = glob.glob(pattern)
-    if not files:
-        # Also try without country suffix in filename
-        files = glob.glob(str(GISCO_DIR / "**" / f"*{iso}*.shp"), recursive=True)
-    if not files:
-        print(f"  WARN: no GISCO shapefile found for {iso}, skipping")
-        continue
-
-    shp_path = files[0]
     tmp_geojson = WORK_DIR / f"eu-climate-{iso.lower()}-raw.geojson"
-
-    subprocess.run([
-        'ogr2ogr', '-f', 'GeoJSON', str(tmp_geojson), shp_path,
-        '-t_srs', 'EPSG:4326',
-    ], check=True, capture_output=True)
+    if not tmp_geojson.exists():
+        subprocess.run([
+            'ogr2ogr', '-f', 'GeoJSON', str(tmp_geojson), str(combined_shp),
+            '-t_srs', 'EPSG:4326',
+            '-where', f"CNTR_CODE='{iso}'",
+        ], check=True, capture_output=True)
 
     with open(tmp_geojson) as f:
         data = json.load(f)
