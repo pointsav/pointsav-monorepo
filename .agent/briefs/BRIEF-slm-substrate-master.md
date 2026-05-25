@@ -1,0 +1,397 @@
+---
+artifact: brief
+status: active
+title: SLM Substrate Master — Yo-Yo + DataGraph + Learning Loop
+created: 2026-05-24
+author: totebox@project-intelligence (claude-sonnet-4-6)
+grounds_in:
+  - service-slm/ARCHITECTURE.md
+  - service-slm/docs/deploy/deploy-yoyo-tier-b.md
+  - service-slm/scripts/start-yoyo.sh
+  - service-content/CLAUDE.md
+  - DOCTRINE.md claims #49, #54
+  - conventions/four-tier-slm-substrate.md
+replaces:
+  - BRIEF-flow-restructure.md (deleted — Stage-6 rebase contamination 2026-05-22)
+  - BRIEF-vm-hardening-and-consolidation.md (absorbed)
+  - BRIEF-service-content-architecture.md (absorbed)
+  - BRIEF-sovereign-routing-comprehensive.md (absorbed)
+  - BRIEF-universal-ai-gateway.md (absorbed)
+  - BRIEF-learning-loop-master-plan.md (deferred items carried forward to §6)
+  - BRIEF-tier-architecture.md (absorbed)
+  - BRIEF-phase-3c-service-content-loRA-stub.md (deferred items carried forward to §6)
+notes: >
+  BRIEF-flow-restructure.md was the PRIMARY PLAN OF RECORD. It no longer exists on disk
+  (Stage-6 rebase 2026-05-22 overwrote .agent/ with project-knowledge content).
+  This BRIEF is its successor, reconstructed from session context (Sessions 4/6/16),
+  service-slm/NEXT.md, ARCHITECTURE.md, and the deploy runbook. All remaining items
+  in the absorbed BRIEFs are carried forward into §5 and §6 below.
+---
+
+# BRIEF — SLM Substrate Master
+
+> **This is the PRIMARY PLAN OF RECORD** for the service-slm / service-content /
+> Yo-Yo substrate. All SLM engineering sessions read this first.
+>
+> Reference docs (do not duplicate here): `service-slm/ARCHITECTURE.md`,
+> `service-slm/docs/deploy/deploy-yoyo-tier-b.md`, `service-content/CLAUDE.md`.
+
+---
+
+## §1 — Current live state (as of 2026-05-24)
+
+| Component | Version | Status | Notes |
+|---|---|---|---|
+| `slm-doorman-server` | rebuilt 2026-05-24 | **active** | GF-1 (async audit), GF-2 (inference timeouts), LatencyClass, BackendLifecycle — Phase 4 readyz fields present |
+| `service-content` | rebuilt 2026-05-24 | **active** | Sprint 2 (node_type + RelatedTo), Sprint 5 (graph-backed processed_ledgers) — 23/23 tests; 1,529 entities in LadybugDB |
+| `yoyo-tier-b-1` | 2026-05-13 Packer image | **TERMINATED** (europe-west4-a) | 256GB weights disk intact; L4 stockout blocks Mode 1 restart; start manually when capacity available |
+| `local-slm.service` | OLMo 2 1B | active | `SLM_FORCE_BROKER_MODE=true` — Tier A disabled; Doorman is pure broker |
+| `local-doorman.env` | — | current | `SLM_YOYO_GCP_ZONE=europe-west4-a`; IP `34.6.204.25` is the static IP for yoyo-tier-b-1 |
+
+**Tier routing (current):**
+- Tier A: disabled (`SLM_FORCE_BROKER_MODE=true`)
+- Tier B: circuit open (VM terminated — probes failing)
+- Tier C: not configured (no `ANTHROPIC_API_KEY`)
+- Result: `ai_available: false` once Doorman circuit opens from probe failures
+
+**Stage 6 state:** project-intelligence archive is 14+ commits ahead of `origin/main`.
+Rebase required per inbox `command-20260520-stage6-rebase-required` before promote.
+
+---
+
+## §2 — The Yo-Yo VM: what "permanent" means
+
+> This section answers: why do we keep the same VM and disk rather than provisioning fresh?
+
+### §2.1 — What is permanent (and what is not)
+
+**Permanent (persists across stop/start cycles):**
+- `yoyo-tier-b-1` — the GCE instance definition (name, zone, machine type, firewall rule, IAM bindings)
+- `yoyo-tier-b-1-weights` — the 256GB `pd-balanced` disk attached to the VM in europe-west4-a
+- Model weights — OLMo-3-1125-32B-Think Q4_K_M (~20GB GGUF) pre-loaded on the weights disk
+- Bearer token — stored in GCE instance metadata; used by Doorman to authenticate every request
+- OpenTofu state — `service-slm/compute/opentofu/` tracks the VM, disk, firewall, IAM
+
+**NOT permanent (intentional):**
+- The running VM instance — `g2-standard-4` Spot VM with L4; Google can preempt it within ~24h
+- The running vLLM process — restarts each time the VM boots (~2 min to load weights from disk)
+- KV cache (Ring 2) — ephemeral; rebuilt per session
+
+**Why this design:**
+- Model weights take 30–60 min to download from scratch (or from GCS). Pre-loading on disk reduces restart to ~2 min.
+- Spot pricing saves ~70% vs on-demand; preemption is accepted in exchange.
+- The persistent disk survives preemption — Google stops the VM, the disk stays attached.
+
+### §2.2 — Zone discipline: why europe-west4-a is locked
+
+The 256GB weights disk lives in europe-west4-a. GCE persistent disks are zone-bound — you
+cannot attach a disk from europe-west4-a to a VM in any other zone. Therefore:
+
+**The VM MUST restart in europe-west4-a (Mode 1 restart).** Zone fallback (Mode 2) creates
+a new disk in a different zone — the weights are NOT there and must be re-downloaded.
+
+> **POLICY — NO ZONE FALLBACK FOR STOCKOUTS.**
+> `SLM_YOYO_ALLOW_ZONE_FALLBACK` MUST remain `false` (its default). Zone fallback (Mode 2)
+> is a migration-only tool — it is NEVER a response to a stockout. Provisioning an alternative
+> VM to work around a stockout creates a VM with an empty weights disk in the wrong zone,
+> costs money to clean up, and creates confusion about which VM is authoritative. The cost
+> of waiting is zero. The cost of a misplaced VM is not.
+
+If europe-west4-a has no L4 capacity (stockout, `start-yoyo.sh` exit code 3):
+- **Wait 15–30 min and retry.** Stockouts are transient; capacity rotates continuously.
+- Use `--retry-cycles=6 --retry-wait-seconds=600` to retry automatically over 1 hour:
+  ```bash
+  service-slm/scripts/start-yoyo.sh --runtime=2h --retry-cycles=6 --retry-wait-seconds=600
+  ```
+- If capacity does not return within a day, flag in inbox and wait. Do NOT provision elsewhere.
+
+### §2.3 — Daily operation: starting the Yo-Yo
+
+```bash
+# From the project-intelligence archive root:
+service-slm/scripts/start-yoyo.sh --runtime=2h
+
+# Exit codes:
+# 0 = VM started; Doorman circuit closes within 30s of next probe
+# 3 = L4 stockout in europe-west4-a; wait 10–30 min and retry
+# 4 = daily budget cap hit ($3/day default); check SLM_YOYO_DAILY_BUDGET_USD
+```
+
+After exit 0: no manual env update needed. `yoyo-tier-b-1` retains its external IP
+(`34.6.204.25`) across stop/start cycles — it is a static assignment.
+
+**Verifying the Doorman closed the circuit:**
+```bash
+curl -s http://127.0.0.1:9080/readyz | python3 -m json.tool
+# Expect: "tier_b_circuit_state": "closed", "ai_available": true
+```
+
+**VM auto-stops via two independent mechanisms (whichever fires first):**
+1. **Idle monitor** (Doorman-side): stops the VM after 30 min of no inference requests
+   (`SLM_YOYO_IDLE_MINUTES=30` in `local-doorman.env`)
+2. **Dead-man's switch** (VM-side `yoyo-deadman.service`): stops the VM after `--runtime` wall
+   clock expires, even if Doorman is unreachable (guards against billing runaway)
+
+### §2.4 — If the VM gets preempted
+
+Google preempts Spot VMs without warning. When preempted:
+- The VM stops; `last-stop-reason=preempted` is written to instance metadata
+- The weights disk is unaffected — stays attached, ready for next boot
+
+**With `SLM_YOYO_AUTO_RESTART=false` (current setting):**
+The Doorman does not attempt to restart the VM. Operator must restart manually:
+```bash
+service-slm/scripts/start-yoyo.sh --runtime=2h
+```
+
+**To enable auto-restart** (adds cost risk if circuit stays closed after preemption):
+```bash
+sudo sed -i 's/SLM_YOYO_AUTO_RESTART=false/SLM_YOYO_AUTO_RESTART=true/' \
+    /etc/local-doorman/local-doorman.env
+sudo systemctl restart local-doorman.service
+```
+
+### §2.5 — Zone fallback (Mode 2): planned migration only
+
+Mode 2 provisions a new VM in a different zone. **It is NOT for stockouts — see §2.2 policy.**
+Use ONLY when executing a deliberate zone migration (rare, operator-approved, planned in advance).
+
+**Mode 2 requires manual follow-up steps (the script prints these on exit 0):**
+1. Restore weights to the new disk — `vllm-weights-prep.service` pulls from GCS bucket
+   `woodfine-node-gcp-free-foundry-substrate` using snapshot `SLM_YOYO_WEIGHTS_SNAPSHOT`
+   if set. Takes 30–60 min. Monitor: `gcloud compute ssh yoyo-tier-b-1 --zone=<new-zone> --command='journalctl -u vllm-weights-prep -f'`
+2. Update zone + IP in Doorman env:
+   ```bash
+   NEW_ZONE=<zone>; NEW_IP=$(gcloud compute instances describe yoyo-tier-b-1 \
+     --zone=${NEW_ZONE} --project=woodfine-node-gcp-free \
+     --format='value(networkInterfaces[0].accessConfigs[0].natIP)')
+   sudo sed -i "s|^SLM_YOYO_GCP_ZONE=.*|SLM_YOYO_GCP_ZONE=${NEW_ZONE}|" /etc/local-doorman/local-doorman.env
+   sudo sed -i "s|^SLM_YOYO_ENDPOINT=.*|SLM_YOYO_ENDPOINT=https://${NEW_IP}:9443|" /etc/local-doorman/local-doorman.env
+   sudo sed -i "s|^SLM_YOYO_TRAINER_ENDPOINT=.*|SLM_YOYO_TRAINER_ENDPOINT=https://${NEW_IP}:9443|" /etc/local-doorman/local-doorman.env
+   sudo sed -i "s|^SLM_YOYO_GRAPH_ENDPOINT=.*|SLM_YOYO_GRAPH_ENDPOINT=https://${NEW_IP}:9443|" /etc/local-doorman/local-doorman.env
+   sudo systemctl restart local-doorman.service
+   ```
+3. Update `service-slm/compute/opentofu/main.tf` zone variable + `tofu apply` (Command Session)
+4. Take a new weights snapshot in the new zone for future Mode 1 restarts (§2.6)
+
+### §2.6 — Weights snapshot management
+
+A snapshot allows Mode 2 zone fallback to restore weights quickly instead of re-downloading.
+Current snapshot: `yoyo-tier-b-1-weights-20260513-1923` in `woodfine-node-gcp-free-foundry-substrate`
+
+To take a new snapshot (after any model update, or post-zone-migration):
+```bash
+service-slm/scripts/create-yoyo-snapshot.sh
+```
+Update `SLM_YOYO_WEIGHTS_SNAPSHOT` in `/etc/local-doorman/local-doorman.env` with the
+new snapshot name. The script sets `instance-termination-action=STOP` so the disk persists.
+
+### §2.7 — First-time setup (rebuild from scratch)
+
+Only needed if the VM and disk are deleted and must be recreated from nothing.
+
+Full procedure: `service-slm/docs/deploy/deploy-yoyo-tier-b.md`
+
+Summary:
+1. Build Packer image: `cd service-slm/compute/packer/ && packer build yoyo-image.pkr.hcl` (~20–30 min)
+2. Provision infrastructure: `cd service-slm/compute/opentofu/ && tofu apply -var bearer_token=... -var workspace_ip=...`
+3. Upload weights to the new disk via `gcloud compute scp` or GCS download
+4. Set bearer token in instance metadata
+5. Wire Doorman env (`SLM_YOYO_ENDPOINT`, `SLM_YOYO_BEARER`, zone, etc.)
+6. Restart Doorman; verify circuit closes
+
+**Not needed now** — `yoyo-tier-b-1` and its weights disk are intact in europe-west4-a.
+
+---
+
+## §3 — DataGraph flow (service-content ↔ Doorman ↔ Yo-Yo)
+
+How data moves through the substrate once the Yo-Yo is running:
+
+```
+CORPUS_<worm_id>.json files (from service-extraction)
+    ↓
+service-content corpus drain loop
+    ├── Sprint 5: is_already_processed(worm_id) → graph query → SKIP if extracted
+    ├── Sprint 2: write Source entity to graph BEFORE calling Doorman
+    └── POST /v1/extract → Doorman
+                ↓
+           Doorman routes to Yo-Yo (Tier B)
+                ↓
+           OLMo-3-32B-Think extracts entities
+                ↓
+           POST /v1/graph/mutate → Doorman proxies to service-content
+                ↓
+           Entities written to LadybugDB (Tier A hardware) or SQLite (Micro)
+
+On every /v1/messages call:
+    Doorman → GET /v1/graph/context → service-content
+    Returns entity context → injected into system prompt
+```
+
+**Current state with Yo-Yo TERMINATED:**
+- `source node written` → logged per CORPUS file
+- `extraction deferred — tier B unavailable` → logged; CORPUS file will not be re-tried
+  on restart because Sprint 5 `is_already_processed` checks for non-Source entities.
+- When Yo-Yo starts, only CORPUS files WITHOUT extracted entities will be processed.
+  Files with a Source node but no extracted entities are picked up automatically.
+
+**Key env vars (service-content):**
+
+| Var | Value | Purpose |
+|---|---|---|
+| `SERVICE_CONTENT_GRAPH_BACKEND` | `lbug` | LadybugDB on hardware-class nodes |
+| `SERVICE_CONTENT_LBUG_BUFFER_POOL_MB` | `2048` | 2GB buffer pool |
+| `SERVICE_CONTENT_DOORMAN_ENDPOINT` | `http://127.0.0.1:9080` | Doorman for Tier B extraction |
+
+---
+
+## §4 — Tier routing reference
+
+| Tier | Model | Host | Gate | Current |
+|---|---|---|---|---|
+| A | OLMo 2 1B (`olmo-2-0425-1b-instruct`) | workspace VM (`local-slm.service`) | node_class=hardware AND NOT force-broker-mode | DISABLED — `SLM_FORCE_BROKER_MODE=true` |
+| B | OLMo-3-32B-Think Q4_K_M | `yoyo-tier-b-1` GCE L4 | Tier B circuit Closed | CIRCUIT OPEN (VM terminated) |
+| C | External API (Anthropic) | external | `ANTHROPIC_API_KEY` set, Tier B unavailable | NOT CONFIGURED |
+
+**LatencyClass routing** (shipped Session 6, 2026-05-23):
+- `Interactive` / `Background` → Tier A first, fallback Tier B
+- `Batch` → Tier B (Yo-Yo) first — corpus extraction uses Batch
+
+**Why Tier A is disabled on the workspace VM:**
+The workspace VM is `e2-standard-8` (Hardware-class per DOCTRINE claim #49).
+Tier A is designed for customer-side NUC-rung hardware (DOCTRINE claim #54 + §2 of
+`conventions/four-tier-slm-substrate.md`). The 1B model works on the workspace VM
+but is intentionally bypassed via `SLM_FORCE_BROKER_MODE=true` so all inference
+flows through the real Tier B path during development — keeping the training data
+representative of production.
+
+---
+
+## §5 — Immediate open items (no prerequisites)
+
+- [ ] **Start Yo-Yo when europe-west4-a L4 capacity is available**
+  ```bash
+  service-slm/scripts/start-yoyo.sh --runtime=2h
+  # If exit 3: retry-cycles approach:
+  service-slm/scripts/start-yoyo.sh --runtime=2h --retry-cycles=6 --retry-wait-seconds=600
+  ```
+
+- [ ] **End-to-end flow test** (after Yo-Yo starts — use `--wait-ready=300` to block until vLLM ready)
+  ```bash
+  # Verify Doorman circuit:
+  curl -s http://127.0.0.1:9080/readyz | python3 -m json.tool
+  # Manual inference test:
+  curl -s http://127.0.0.1:9080/v1/messages \
+    -H 'Content-Type: application/json' \
+    -H 'X-Foundry-Module-ID: test-yoyo' \
+    -d '{"model":"olmo","messages":[{"role":"user","content":"Name three Canadian cities."}]}' \
+    | python3 -m json.tool
+  # Expect: X-Foundry-Tier-Used: yoyo header; entity_count rising above 1,529 in healthz
+  ```
+
+- [ ] **Verify service-content drains deferred CORPUS files** (restart triggers drain loop)
+  ```bash
+  sudo systemctl restart local-content.service
+  journalctl -u local-content -f | grep -E 'entities extracted|extraction deferred'
+  ```
+
+---
+
+## §6 — Pending work (ordered by priority)
+
+### Command Session scope
+
+- [ ] **Stage 6 promote** — 14+ commits ahead of `origin/main`
+  Prerequisite: rebase per inbox `command-20260520-stage6-rebase-required`
+  ```bash
+  # From project-intelligence archive:
+  git rebase origin/main   # or merge
+  bin/promote.sh
+  bin/sync-local.sh --all
+  ```
+
+- [ ] **Infrastructure tracking** — two drop-in files not tracked in `~/Foundry/infrastructure/`:
+  - `/etc/systemd/system/local-content.service.d/memory.conf` (MemoryMax=4G, MemoryHigh=3800M)
+  - `/etc/systemd/system/local-content.service.d/crash-loop-guard.conf`
+  Copy to `~/Foundry/infrastructure/local-content/local-content.service.d/` and commit.
+
+- [ ] **Binary ledger update** — after today's deploys, verify fresh sha256 entries:
+  - `data/binary-ledger/service-content.jsonl`
+  - `data/binary-ledger/slm-doorman-server.jsonl`
+
+- [ ] **Packer image rebuild** (low priority, deferred) — rebuild `slm-yoyo` image for
+  G3 dead-man's-switch + G17 sticky stops (Phase 0 hardening). The VM currently runs
+  the 2026-05-13 image which predates G3/G17. Command Session: `cd service-slm/compute/packer && packer build yoyo-image.pkr.hcl`
+
+### Totebox next coding session
+
+- [ ] **Sprint 3 — PUSH inversion** (~150 LOC)
+  Delete PULL path from service-content; queue graph mutations in Doorman in-memory queue
+  (`slm-doorman/src/graph_queue.rs`). service-content becomes write-only via Doorman proxy.
+  Files: `service-content/src/main.rs`, `service-content/src/http.rs`,
+  `service-slm/crates/slm-doorman/src/` (new queue module)
+
+- [ ] **Sprint 4 — /v1/draft/generate migration** (~80 LOC)
+  Move endpoint from `service-content/src/http.rs` to `slm-doorman-server/src/http.rs`.
+  Currently returns 503 ("Doorman unconfigured for Tier C auth"); migration unblocks Tier C routing.
+
+- [ ] **service-slm audit fix** (~10 LOC)
+  Add `"graph-query"` and `"graph-mutation"` to `AUDIT_CAPTURE_VALID_EVENT_TYPES` in
+  `service-slm/crates/slm-doorman-server/src/http.rs` — graph proxy handlers currently
+  bypass audit validation.
+
+- [ ] **Yo-Yo env IP update robustness**
+  `start-yoyo.sh` `sed` for endpoint vars runs without `sudo` and fails silently on some paths.
+  Investigate and fix the `print_post_provision_steps()` env update in the script, or convert
+  to a dedicated `update-doorman-env.sh` helper that checks permissions first.
+
+- [ ] **is_already_processed integration test (LbugGraphStore)**
+  Sprint 5 test only covers `SqliteGraphStore`. A live `LbugGraphStore` integration test
+  requires a real lbug DB file and is deferred until CI has a lbug-capable runner.
+
+### Deferred / operator decision required
+
+- [ ] **LoRA training pipeline activation** (`scripts/lora-update.sh` HARD DISABLED)
+  Requires explicit operator approval + `SLM_LORA_AUTO_ENABLE=true` in env.
+  Full pipeline documented in `service-slm/docs/yoyo-training-substrate-and-service-content-integration.md`.
+
+- [ ] **Tier C activation** (Anthropic external API)
+  Add `ANTHROPIC_API_KEY` to `/etc/local-doorman/local-doorman.env` and restart Doorman.
+  Tier C becomes the fallback when Tier B is unavailable. Cost: per-token billing.
+  Operator decision: accept external API dependency for resilience.
+
+- [ ] **G-items from BRIEF-flow-restructure.md** (G5/G6/G9/G11-G16/G18)
+  Brief no longer exists; G-items unrecoverable. Phase 6 AUTO-TODO treated as superseded
+  by Session 6 (LatencyClass/BackendLifecycle/GF-1/GF-2). Command to confirm disposition.
+
+---
+
+## §7 — Definition of done (next gate)
+
+The substrate is in full operational state when ALL of the following pass:
+
+1. `start-yoyo.sh` exits 0 (europe-west4-a L4 available)
+2. `curl /readyz` → `tier_b_circuit_state: "closed"`, `ai_available: true` within 3 min of start
+3. One round-trip inference: `POST /v1/messages` → Yo-Yo → valid response with `X-Foundry-Tier-Used: yoyo`
+4. `curl http://127.0.0.1:9081/healthz` → `entity_count` rising above 1,529 over ~10 min
+5. `service-content` logs show `entities extracted` (not just `extraction deferred`)
+6. Stage 6 promoted; `origin/main` up to date
+
+Items 1–5 are Totebox scope. Item 6 is Command Session scope.
+
+---
+
+## §8 — Reference documents (do not duplicate, read instead)
+
+| Document | What it covers |
+|---|---|
+| `service-slm/ARCHITECTURE.md` | Three-ring memory model, Doorman protocol, tier routing, audit ledger |
+| `service-slm/docs/deploy/deploy-yoyo-tier-b.md` | Full first-time Yo-Yo setup runbook (Packer → OpenTofu → weights → wire) |
+| `service-slm/docs/yoyo-training-substrate-and-service-content-integration.md` | LoRA training pipeline + corpus ingestion integration |
+| `service-slm/docs/audit-endpoints-contract.md` | Audit ledger schema + endpoint contracts |
+| `service-slm/scripts/start-yoyo.sh` | Start script — exit codes, modes, cost guardrails (G1/G3/G8) |
+| `service-slm/compute/packer/yoyo-image.pkr.hcl` | Packer template — vLLM + CUDA + Nginx + LoRA systemd units |
+| `service-slm/compute/opentofu/main.tf` | OpenTofu — VM definition, persistent disk, firewall, IAM, Instance Schedule |
+| `service-content/CLAUDE.md` | service-content project card — feature table, env vars, build commands |
+| `service-content/src/graph.rs` | GraphStore trait + both backends (LbugGraphStore, SqliteGraphStore) |

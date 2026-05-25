@@ -1,0 +1,99 @@
+==============================================================================
+sim-1c-iou.py — T1 IoU sensitivity + spatial coverage
+Config: DISK_RADIUS_KM=3.0, P_THRESHOLD=0.20, civic gate=hc_count_regional>=1
+IoU formula: closed-form lens area for equal-radius circles (matches build-geometric-ranking.py)
+==============================================================================
+
+PART A — IoU sweep
+  Pre-IoU candidates: 763
+     IoU<=   survivors   removed      NA      EU
+      0.05         249       514     194      55
+      0.10         283       480     226      57
+      0.15         307       456     250      57
+
+  By-ISO breakdown of survivors:
+    IoU<=0.05: US=170, ES=34, CA=13, MX=11, DE=11, FR=5, GB=4, NO=1
+    IoU<=0.10: US=198, ES=34, CA=15, MX=13, DE=11, FR=7, GB=4, NO=1
+    IoU<=0.15: US=216, ES=34, MX=18, CA=16, DE=11, FR=7, GB=4, NO=1
+
+PART B — civic distance binning (3km vs 3-5km, raw medical anchors)
+  [Current T1 (tier==1)]
+    >=1 medical within 3km        : 122
+    only-medicals in 3-5km band   : 35  <-- T1 candidates that would
+                                                       lose civic gate at unified 3km radius
+    no medical anchors recorded   : 0
+    total medical anchors <=3km   : 338
+    total medical anchors 3-5km   : 292
+  [P=0.20 pre-IoU candidates]
+    >=1 medical within 3km        : 566
+    only-medicals in 3-5km band   : 197  <-- T1 candidates that would
+                                                       lose civic gate at unified 3km radius
+    no medical anchors recorded   : 0
+    total medical anchors <=3km   : 1740
+    total medical anchors 3-5km   : 1213
+
+  CAVEAT: hc_count_regional uses a per-anchor hospital_tier classification (regional/district)
+  loaded from the hospital ingest, which is NOT exposed through anchor_details. The numbers
+  above are an upper bound on T1 clusters whose civic gate is satisfied ONLY by hospitals in
+  the 3-5km band. Re-running build-clusters.py with TERTIARY_RADIUS_KM=3.0 (and re-running
+  build-geometric-ranking.py) is the only way to get exact numbers.
+
+PART C — spatial coverage at P=0.20 (no IoU)
+  Total qualifiers: 763
+  US qualifiers: 516 (across 14 states)
+  Top 15 US states:
+                                  CA: 165
+                                  TX: 64
+                                  IL: 54
+                                  NY: 42
+                                  NJ: 38
+                                  AZ: 33
+                                  FL: 21
+                                  MI: 15
+                                  PA: 14
+                                  MA: 11
+                                  GA: 11
+                                  MD: 11
+                                  VA: 11
+       (no-state, region=Nuevo León): 7
+    (no-state, region=New York-Newark-Jersey City Metro Area): 6
+  US states with 0 qualifiers (37):
+    AK, AL, AR, CO, CT, DE, HI, IA, ID, IN, KS, KY, LA, ME, MN, MO, MS, MT, NC, ND, NE, NH, NM, NV, OH, OK, OR, RI, SC, SD, TN, UT, VT, WA, WI, WV, WY
+
+  EU qualifiers: 100 (across 5 ISO codes)
+          ES: 37  (of 570 clusters in ISO)
+          GB: 27  (of 477 clusters in ISO)
+          DE: 19  (of 739 clusters in ISO)
+          FR: 16  (of 348 clusters in ISO)
+          NO: 1  (of 62 clusters in ISO)
+  EU ISOs with clusters but 0 qualifiers: AT, CZ, DK, FI, GR, IS, IT, NL, NORDICS, PL, PT, SE
+
+  Other NA (CA, MX) qualifiers: 147  {'MX': 119, 'CA': 28}
+
+  Proximity crowding (>=5 qualifiers within 200km radius):
+    755 candidate centroids meet threshold; 29 unique hotspots after 100km collapse.
+     US CA                                            (33.828,-118.353)  total=133
+     US CA                                            (32.768,-117.151)  total=122
+     MX Gustavo A. Madero                             (19.480,-99.096)  total=119
+     US PA                                            (39.916,-75.186)  total=116
+     US NY                                            (40.873,-73.908)  total=101
+     US IL                                            (42.038,-88.049)  total=54
+     US MD                                            (39.146,-76.647)  total=47
+     US TX                                            (33.156,-96.682)  total=43
+     US CA                                            (37.401,-122.110)  total=37
+     US AZ                                            (33.380,-111.773)  total=34
+     GB Hounslow and Richmond upon Thames             (51.444,-0.413)  total=27
+     US FL                                            (25.746,-80.333)  total=21
+     US TX                                            (29.789,-95.465)  total=21
+     CA Mississauga, Toronto                          (43.544,-79.684)  total=19
+     FR Val-d’Oise                                    (48.986,2.215)  total=16
+     US MI                                            (42.366,-83.337)  total=15
+     ES Zaragoza                                      (41.661,-0.907)  total=14
+     ES Navarra                                       (42.794,-1.614)  total=14
+     US QC                                            (45.505,-73.431)  total=13
+     US MA                                            (42.423,-71.089)  total=11
+     US GA                                            (34.046,-84.286)  total=11
+     ES Alicante/Alacant                              (38.352,-0.498)  total=11
+     ES Valencia/València                             (39.431,-0.416)  total=11
+     DE Berlin                                        (52.468,13.377)  total=10
+     ES Madrid                                        (40.403,-3.697)  total=7

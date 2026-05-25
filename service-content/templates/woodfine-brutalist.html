@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light"> 
+    <title>Woodfine Management Corp. - Direct-Hold Solutions</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        :root { --wf-bg: #F7F9FA; --wf-card: #FFFFFF; --wf-text: #111827; --wf-muted: #6B7280; --wf-border: #111827; --wf-accent: #164679; --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; --font-mono: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace; }
+        body { font-family: var(--font-sans); background-color: var(--wf-bg); color: var(--wf-text); line-height: 1.6; -webkit-font-smoothing: antialiased; }
+        .top-bar { position: sticky; top: 0; width: 100%; background: var(--wf-card); border-bottom: 2px solid var(--wf-border); z-index: 100; display: flex; justify-content: center; padding: 16px 24px; }
+        .nav-content { width: 100%; max-width: 1024px; display: flex; justify-content: space-between; align-items: center; }
+        .brand-logo { font-family: var(--font-sans); font-size: 1rem; font-weight: 800; letter-spacing: -0.02em; color: var(--wf-text); }
+        .nav-actions { display: flex; gap: 8px; align-items: center; }
+        .sys-btn { display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 16px; border: 2px solid var(--wf-border); border-radius: 9999px; font-family: var(--font-mono); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--wf-text); background: var(--wf-card); cursor: pointer; text-decoration: none; transition: all 0.1s ease; }
+        .sys-btn:hover { background: rgba(17, 24, 39, 0.05); }
+        .sys-btn.active-toggle { background: var(--wf-text); color: var(--wf-card); }
+        .document-wrapper { width: 100%; max-width: 1024px; margin: 48px auto 96px; padding: 0 24px; display: grid; grid-template-columns: 1fr 280px; gap: 64px; align-items: start; }
+        .reading-column { padding: 48px; background: var(--wf-card); border: 2px solid var(--wf-border); border-radius: 8px; }
+        .metadata-column { position: sticky; top: 96px; font-family: var(--font-mono); font-size: 0.75rem; color: var(--wf-text); display: flex; flex-direction: column; gap: 32px; line-height: 1.5; }
+        .meta-block { border-left: 2px solid var(--wf-border); padding-left: 16px; }
+        .meta-label { text-transform: uppercase; font-weight: 700; color: var(--wf-muted); margin-bottom: 8px; display: block; }
+        .release-header { margin-bottom: 40px; border-bottom: 2px solid var(--wf-border); padding-bottom: 24px; }
+        .release-flag { font-family: var(--font-mono); font-weight: 700; font-size: 0.875rem; letter-spacing: 0.05em; margin-bottom: 16px; display: block; color: var(--wf-accent); }
+        h1 { font-size: clamp(2rem, 5vw, 2.75rem); color: var(--wf-text); line-height: 1.1; letter-spacing: -0.02em; margin-bottom: 24px; font-weight: 800; }
+        h3 { font-size: 1.25rem; color: var(--wf-text); font-weight: 800; margin-top: 48px; margin-bottom: 16px; }
+        p { font-size: 1rem; color: #374151; margin-bottom: 24px; max-width: 65ch; }
+        strong { color: var(--wf-text); font-weight: 700; }
+        .legal-block { margin-top: 64px; padding-top: 40px; border-top: 2px solid var(--wf-border); }
+        .legal-block h3 { margin-top: 32px; margin-bottom: 16px; font-size: 1rem; }
+        .legal-block p { font-size: 0.875rem; color: var(--wf-muted); }
+        @media print { @page { margin: 1in; } body { background: #fff; color: #000; } .top-bar, .metadata-column, .sys-btn, input, label { display: none !important; } .document-wrapper { display: block; margin: 0; padding: 0; max-width: 100%; } .reading-column { border: none; padding: 0; } }
+        #lang-toggle { display: none; }
+        .lang-es, .dl-es, .lbl-es { display: none !important; }
+        #lang-toggle:checked ~ .interface-layer .lang-en, #lang-toggle:checked ~ .interface-layer .dl-en, #lang-toggle:checked ~ .interface-layer .lbl-en { display: none !important; }
+        #lang-toggle:checked ~ .interface-layer .lang-es { display: block !important; }
+        #lang-toggle:checked ~ .interface-layer .dl-es, #lang-toggle:checked ~ .interface-layer .lbl-es { display: inline-flex !important; }
+        @media (max-width: 900px) { .document-wrapper { grid-template-columns: 1fr; gap: 32px; padding: 0 16px; } .reading-column { padding: 32px 24px; } .metadata-column { position: relative; top: 0; flex-direction: row; flex-wrap: wrap; border-top: 2px solid var(--wf-border); padding-top: 32px; } }
+    </style>
+</head>
+<body>
+<input type="checkbox" id="lang-toggle">
+<div class="interface-layer">
+    <header class="top-bar">
+        <div class="nav-content">
+            <div class="brand-logo">Woodfine Management Corp.</div>
+            <div class="nav-actions">
+                <a href="https://github.com/woodfine" target="_blank" class="sys-btn">FLEET MANIFEST</a>
+                <button onclick="window.print()" class="sys-btn">PRINT</button>
+                <a href="/woodfine_media_release_en.pdf" class="sys-btn dl-en" download>PDF</a>
+                <a href="/woodfine_media_release_es.pdf" class="sys-btn dl-es" download>PDF</a>
+                <label for="lang-toggle" class="sys-btn active-toggle"><span class="lbl-en">ESPAÑOL</span><span class="lbl-es">ENGLISH</span></label>
+            </div>
+        </div>
+    </header>
+    <main class="document-wrapper">
+        <article class="reading-column" id="document-content">
+            <div class="lang-en">{{CONTENT_EN}}</div>
+            <div class="lang-es">{{CONTENT_ES}}</div>
+        </article>
+        <aside class="metadata-column">
+            <div class="meta-block"><span class="meta-label">Category</span><span>Financial Disclosure</span></div>
+            <div class="meta-block"><span class="meta-label">Date Issued</span><span>March 2, 2026</span></div>
+            <div class="meta-block"><span class="meta-label">Contact</span><span>Peter M. Woodfine<br>peter@woodfine.co<br>www.woodfine.co</span></div>
+            <div class="meta-block"><span class="meta-label">SHA-256 Checksum</span><span id="live-hash" style="color: var(--wf-text); word-break: break-all;">CALCULATING...</span></div>
+            <div class="meta-block" style="border-left: 2px solid var(--wf-border);"><span class="meta-label">Routing</span><span>DNS: DreamHost</span><br><span>Edge: GitHub Pages</span></div>
+        </aside>
+    </main>
+</div>
+<script>
+    async function updateHash() {
+        const isSpanish = document.getElementById('lang-toggle').checked;
+        const targetClass = isSpanish ? '.lang-es' : '.lang-en';
+        const contentNodes = document.querySelectorAll('#document-content ' + targetClass);
+        let textToHash = '';
+        contentNodes.forEach(node => { textToHash += node.innerText; });
+        const msgUint8 = new TextEncoder().encode(textToHash);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        document.getElementById('live-hash').innerText = hashHex;
+    }
+    document.getElementById('lang-toggle').addEventListener('change', updateHash);
+    window.addEventListener('DOMContentLoaded', updateHash);
+    if (navigator.sendBeacon) { window.addEventListener("unload", function() { navigator.sendBeacon("/telemetry-endpoint", JSON.stringify({ uri: window.location.pathname, timestamp: Date.now() })); }); }
+</script>
+</body>
+</html>

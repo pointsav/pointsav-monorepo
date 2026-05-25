@@ -1,0 +1,61 @@
+cff-version: 1.2.0
+message: >-
+  If you use or reference the PointSav Platform Monorepo, please cite it
+  using these metadata.
+type: software
+title: "PointSav Platform Monorepo — pointsav-monorepo"
+abstract: >-
+  PointSav Digital Systems' platform monorepo. Contains the full PointSav
+  service architecture: service-slm (AI Doorman + Yo-Yo orchestrator),
+  service-content (DataGraph / LadybugDB), service-extraction, app-mediakit-*
+  (wiki, marketing, knowledge engines), app-orchestration-*, and all OS-layer
+  crates. Implements the Compounding Substrate pattern (Foundry Doctrine 2030):
+  three-ring service architecture, three-tier compute routing (Local / Yo-Yo /
+  External API), federated content-addressable adapter composition, and
+  continued-pretraining path.
+authors:
+  - given-names: System Administrator
+    name-particle: PointSav
+    family-names: Digital Systems
+    email: open.source@pointsav.com
+    affiliation: PointSav Digital Systems
+repository-code: "https://github.com/pointsav/pointsav-monorepo"
+url: "https://github.com/pointsav/pointsav-monorepo"
+license: CC-BY-4.0
+version: "0.1.132"
+date-released: "2026-05-12"
+keywords:
+  - compounding-substrate
+  - ai-doorman
+  - knowledge-wiki
+  - service-slm
+  - olmo
+  - qlora
+  - rust
+  - sovereign-data
+  - regulated-smb
+  - leapfrog-2030
+identifiers:
+  - type: url
+    value: "https://github.com/pointsav/pointsav-monorepo/blob/main/DOCTRINE.md"
+    description: Foundry Doctrine 2030 — constitutional charter embedded in repo
+references:
+  - type: software
+    title: "Olmo 3 — Allen Institute for AI"
+    url: "https://allenai.org/olmo"
+    notes: >-
+      Tier A substrate model (OLMo-2-0425-1B-Instruct / OLMo-3-7B-Think);
+      Apache 2.0 + Open Data Commons license; L3 fully-open enables
+      continued pretraining via service-slm.
+preferred-citation:
+  type: software
+  title: "PointSav Platform Monorepo — pointsav-monorepo"
+  authors:
+    - given-names: System Administrator
+      name-particle: PointSav
+      family-names: Digital Systems
+      email: open.source@pointsav.com
+      affiliation: PointSav Digital Systems
+  version: "0.1.132"
+  date-released: "2026-05-12"
+  url: "https://github.com/pointsav/pointsav-monorepo"

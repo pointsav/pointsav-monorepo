@@ -1,0 +1,20 @@
+[Unit]
+Description=Yo-Yo first-boot weights bootstrap (GCS canonical or AllenAI source-derive)
+Documentation=file:///opt/llama.cpp file:///var/log/yoyo-weights-prep.log
+After=network-online.target local-fs.target
+Wants=network-online.target
+RequiresMountsFor=/data/weights
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/bin/vllm-weights-prep.sh
+StandardOutput=journal
+StandardError=journal
+
+# First-boot bootstrap can take ~95 min (HF download + convert + quantize + upload).
+# Path A (warm) finishes in ~5 min. Allow plenty of headroom.
+TimeoutStartSec=7200
+
+[Install]
+WantedBy=multi-user.target

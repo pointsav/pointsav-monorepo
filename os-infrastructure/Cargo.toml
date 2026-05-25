@@ -1,0 +1,12 @@
+[package]
+name = "os-infrastructure"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+system-substrate-broadcom = { path = "../system-substrate-broadcom" }
+system-network-interface = { path = "../system-network-interface" }
+
+[profile.release]
+panic = "abort"
+lto = true

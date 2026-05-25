@@ -1,0 +1,23 @@
+[Unit]
+Description=Weekly LoRA adapter update (DISABLED by default — operator-armed per SYS-ADR-10)
+Documentation=file:///srv/foundry/clones/project-intelligence/service-slm/scripts/lora-update.sh
+Documentation=file:///srv/foundry/clones/project-intelligence/.agent/plans/learning-loop-master-plan-2026-05-18.md
+
+[Timer]
+# Sunday 02:00 UTC — outside the nightly-run.timer window (00:00 UTC)
+# so the two don't compete for the Yo-Yo trainer.
+OnCalendar=Sun *-*-* 02:00:00 UTC
+Persistent=true
+RandomizedDelaySec=300
+
+[Install]
+# DO NOT set WantedBy=timers.target. Operator MUST explicitly enable
+# the timer once they're ready to trigger weekly retraining. SYS-ADR-10
+# (F12 mandatory): no automatic adapter promotion. The script
+# additionally requires SLM_LORA_AUTO_ENABLE=true + an operator-signed
+# approval tag at data/training-approved/<adapter-id>.tag.
+# Operator activation:
+#   sudo cp lora-update.{timer,service} /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now lora-update.timer
+WantedBy=

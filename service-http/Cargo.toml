@@ -1,0 +1,13 @@
+[package]
+name = "service-http"
+version = "1.0.0"
+edition = "2021"
+description = "Sovereign API Gateway (Totebox Internal Router)"
+
+[workspace]
+
+[dependencies]
+tokio = { version = "1", features = ["full"] }
+warp = "0.3"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"

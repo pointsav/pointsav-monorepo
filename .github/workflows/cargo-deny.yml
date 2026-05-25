@@ -1,0 +1,33 @@
+name: cargo deny check licenses
+
+on:
+  push:
+    branches: [ cluster/project-slm ]
+    paths:
+      - 'service-slm/**'
+      - '.github/workflows/cargo-deny.yml'
+  pull_request:
+    branches: [ cluster/project-slm ]
+    paths:
+      - 'service-slm/**'
+      - '.github/workflows/cargo-deny.yml'
+
+jobs:
+  deny:
+    name: cargo deny
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: service-slm
+
+      - name: Install cargo-deny
+        run: cargo install cargo-deny
+
+      - name: Run cargo deny check licenses
+        working-directory: service-slm
+        run: cargo deny check licenses
