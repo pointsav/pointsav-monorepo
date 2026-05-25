@@ -1,8 +1,8 @@
 @~/Foundry/AGENT.md
 
-# project-editorial — Archive Guide
+# project-system — Archive Guide
 
-> **State:** active | **Last updated:** 2026-05-26
+> **State:** active | **Last updated:** 2026-05-18
 > **Cluster manifest:** `.agent/manifest.md`
 > **Workspace AGENT.md takes precedence on conflict.**
 
@@ -10,10 +10,7 @@
 
 ## Cluster mission
 
-Editorial gateway cluster — sweep drafts-outbound from all clusters; refine
-to Bloomberg standard (banned vocab, BCSC posture, bilingual); produce `.es.md`
-Spanish pairs; route finished TOPIC-* articles to `media-knowledge-documentation`
-and GUIDE-* to `woodfine-fleet-deployment`. Owns the language-quality gate.
+See `.agent/manifest.md` for full mission statement.
 
 ## Tetrad
 
