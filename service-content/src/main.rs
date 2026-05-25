@@ -354,34 +354,34 @@ fn process_corpus(
                             graph_store.upsert_entities(effective_module_id, &graph_entities)
                         {
                             println!("  -> [GRAPH] Write failed: {}", e);
-                            return false;
+                            false
                         } else {
                             println!(
                                 "  -> [GRAPH] {} entities written to graph (module: {}).",
                                 graph_entities.len(),
                                 effective_module_id
                             );
-                            return true;
+                            true
                         }
                     } else {
                         println!("  -> [SYS_HALT] Extraction failed: extraction_ok false, no defer reason.");
-                        return false;
+                        false
                     }
                 } else {
                     println!("  -> [SYS_HALT] Doorman returned invalid JSON format.");
-                    return false;
+                    false
                 }
             } else {
                 println!(
                     "  -> [SYS_HALT] Doorman rejected payload: {}",
                     response.status()
                 );
-                return false;
+                false
             }
         }
         Err(e) => {
             println!("  -> [SYS_HALT] Doorman routing failed: {}", e);
-            return false;
+            false
         }
     }
 }
