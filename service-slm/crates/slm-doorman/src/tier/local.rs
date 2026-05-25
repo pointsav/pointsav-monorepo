@@ -10,6 +10,9 @@
 
 use std::time::{Duration, Instant};
 
+const LOCAL_INFERENCE_CONNECT_TIMEOUT_SECS: u64 = 5;
+const LOCAL_INFERENCE_TIMEOUT_SECS: u64 = 180;
+
 use serde::{Deserialize, Serialize};
 use slm_core::{CanonicalMessage, ContentBlock, ComputeRequest, ComputeResponse, GrammarConstraint, Tier};
 use tracing::debug;
@@ -33,10 +36,12 @@ pub struct LocalTierClient {
 
 impl LocalTierClient {
     pub fn new(config: LocalTierConfig) -> Self {
-        Self {
-            config,
-            http: reqwest::Client::new(),
-        }
+        let http = reqwest::Client::builder()
+            .connect_timeout(Duration::from_secs(LOCAL_INFERENCE_CONNECT_TIMEOUT_SECS))
+            .timeout(Duration::from_secs(LOCAL_INFERENCE_TIMEOUT_SECS))
+            .build()
+            .expect("LocalTierClient: failed to build reqwest client");
+        Self { config, http }
     }
 
     pub fn endpoint(&self) -> &str {
@@ -63,7 +68,7 @@ impl LocalTierClient {
             Err(_) => return false,
         };
         match resp.json::<LlamaHealthResponse>().await {
-            Ok(h) => h.slots_idle.map_or(false, |n| n == 0),
+            Ok(h) => h.slots_idle == Some(0),
             Err(_) => false,
         }
     }
@@ -383,7 +388,8 @@ fn is_false(b: &bool) -> bool {
 mod tests {
     use super::*;
     use slm_core::{
-        CanonicalMessage, Complexity, ComputeRequest, GrammarConstraint, ModuleId, RequestId, Tier,
+        CanonicalMessage, Complexity, ComputeRequest, GrammarConstraint, LatencyClass, ModuleId,
+        RequestId, Tier,
     };
     use std::str::FromStr;
     use wiremock::matchers::{method, path};
@@ -396,6 +402,7 @@ mod tests {
             model: Some("OLMo-3-7B-Q4_K_M.gguf".into()),
             messages: vec![CanonicalMessage::text("user", "ping")],
             complexity: Complexity::Low,
+            latency_class: LatencyClass::default(),
             tier_hint: Some(Tier::Local),
             stream: false,
             max_tokens: Some(20),

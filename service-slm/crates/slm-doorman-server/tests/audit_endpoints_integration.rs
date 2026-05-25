@@ -117,6 +117,9 @@ fn app_state_with_proxy_and_ledger_dir(
         service_content_endpoint: String::new(),
         last_yoyo_dispatch: Arc::new(AtomicU64::new(0)),
         gateway_token: None,
+        node_class: "hardware",
+        tier_a_reason: "available",
+        idle_monitor: None,
     })
 }
 

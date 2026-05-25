@@ -33,13 +33,13 @@
 
 use axum::{
     extract::{Path, Query, State},
-    http::{header, HeaderValue, StatusCode},
+    http::{header, HeaderMap, HeaderValue, StatusCode},
     response::{IntoResponse, Response},
     routing::{get, post},
     Json, Router,
 };
-use regex::Regex;
 use maud::{html, Markup, PreEscaped, DOCTYPE};
+use regex::Regex;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::collections::BTreeMap;
@@ -50,12 +50,35 @@ use tokio::fs;
 
 use crate::assets::StaticAsset;
 use crate::auth::CurrentUser;
-use crate::collab::CollabRooms;
 use crate::error::WikiError;
 use crate::jsonld::jsonld_for_topic;
-use crate::render::{extract_headings, inject_edit_pencils, parse_page, render_html_raw, Frontmatter, TranslationMap};
+use crate::render::{
+    extract_headings, inject_edit_pencils, parse_page, render_html_raw, Frontmatter, TranslationMap,
+};
 use crate::search::{search as run_search, SearchIndex};
 use crate::users::User;
+
+#[derive(Clone, Copy, PartialEq, Eq, Default)]
+enum Locale {
+    #[default]
+    En,
+    Es,
+}
+
+impl Locale {
+    fn lang_attr(self) -> &'static str {
+        match self {
+            Locale::En => "en",
+            Locale::Es => "es",
+        }
+    }
+    fn suffix(self) -> &'static str {
+        match self {
+            Locale::En => "",
+            Locale::Es => ".es",
+        }
+    }
+}
 
 #[derive(Clone)]
 pub struct AppState {
@@ -84,14 +107,6 @@ pub struct AppState {
     /// Phase 4 Step 4.1: git2 repository for content versioning. Mutex-wrapped
     /// because Repository is not thread-safe for mutating operations.
     pub git: Arc<Mutex<git2::Repository>>,
-    /// Phase 2 Step 7: per-slug collab WebSocket rooms. Always present
-    /// (cheap empty default); only the `/ws/collab/{slug}` route uses
-    /// it, and that route is only mounted when `enable_collab` is true.
-    pub collab: Arc<CollabRooms>,
-    /// Phase 2 Step 7: when true, mount the `/ws/collab/{slug}` route
-    /// and template `window.WIKI_COLLAB_ENABLED = true` into the editor
-    /// page so `saa-init.js` lazy-loads the collab JS bundle.
-    pub enable_collab: bool,
     /// Phase 4 Step 4.7: tenant name for the read-only git remote.
     pub git_tenant: String,
     /// Phase 4 Step 4.6: when true, mount `POST /mcp` and expose the
@@ -110,15 +125,21 @@ pub struct AppState {
     /// forward-looking-statement disclaimer appears in all page footers.
     /// Set via `--brand-theme` / `WIKI_BRAND_THEME`.
     pub brand_theme: Option<String>,
+    /// Brand instance selector for the hybrid UI parameterisation
+    /// (`html[data-instance]`). Allowed: `documentation`, `projects`,
+    /// `corporate`. Set via `WIKI_BRAND_INSTANCE`; default
+    /// `"documentation"`.
+    pub brand_instance: String,
 }
 
 pub fn router(state: AppState) -> Router {
-    let collab_enabled = state.enable_collab;
     let mcp_enabled = state.mcp_enabled;
     let mut r = Router::new()
         .route("/", get(index))
         // Wildcard capture allows category-scoped slugs: `/wiki/architecture/compounding-substrate`
         .route("/wiki/{*slug}", get(wiki_page))
+        .route("/es/", get(home_es))
+        .route("/es/wiki/{*slug}", get(wiki_page_es))
         .route("/static/{*path}", get(static_asset))
         .route("/healthz", get(healthz))
         // Phase 2 Step 2 — edit endpoint
@@ -135,10 +156,6 @@ pub fn router(state: AppState) -> Router {
         )
         // Phase 2 Step 5 — citation registry for autocomplete
         .route("/api/citations", get(crate::citations::get_citations))
-        // Phase 2 Step 6 — three-keystroke ladder stubs (501 until Phase 4
-        // wires the Doorman MCP server)
-        .route("/api/doorman/complete", post(doorman_complete))
-        .route("/api/doorman/instruct", post(doorman_instruct))
         // D2: search autocomplete
         .route("/api/complete", get(search_complete))
         // Leapfrog: Page Preview hover endpoint
@@ -168,17 +185,41 @@ pub fn router(state: AppState) -> Router {
         // Sprint C4 — Talk namespace
         .route("/talk/{*slug}", get(talk_page).post(talk_post))
         // Phase 5 — auth + edit review
-        .route("/special/login", get(crate::auth::get_login).post(crate::auth::post_login))
+        .route(
+            "/special/login",
+            get(crate::auth::get_login).post(crate::auth::post_login),
+        )
         .route("/special/logout", post(crate::auth::post_logout))
-        .route("/special/create-account", get(crate::auth::get_create_account).post(crate::auth::post_create_account))
-        .route("/special/pending-changes", get(crate::pending::review_queue))
+        .route(
+            "/special/create-account",
+            get(crate::auth::get_create_account).post(crate::auth::post_create_account),
+        )
+        .route(
+            "/special/pending-changes",
+            get(crate::pending::review_queue),
+        )
         .route("/special/pending/{id}", get(crate::pending::review_detail))
-        .route("/special/pending/{id}/accept", post(crate::pending::accept_edit))
-        .route("/special/pending/{id}/reject", post(crate::pending::reject_edit))
-        .route("/special/contributions/{username}", get(crate::pending::contributions))
+        .route(
+            "/special/pending/{id}/accept",
+            post(crate::pending::accept_edit),
+        )
+        .route(
+            "/special/pending/{id}/reject",
+            post(crate::pending::reject_edit),
+        )
+        .route(
+            "/special/contributions/{username}",
+            get(crate::pending::contributions),
+        )
         // Phase 4 Step 4.7 — read-only git remote (smart-HTTP)
-        .route("/git-server/{tenant}/info/refs", get(crate::git_protocol::info_refs))
-        .route("/git-server/{tenant}/git-upload-pack", post(crate::git_protocol::upload_pack))
+        .route(
+            "/git-server/{tenant}/info/refs",
+            get(crate::git_protocol::info_refs),
+        )
+        .route(
+            "/git-server/{tenant}/git-upload-pack",
+            post(crate::git_protocol::upload_pack),
+        )
         // axum 0.8 doesn't allow a literal `.md` suffix after a dynamic
         // segment, so the route captures `{slug}` as a single segment and
         // the handler strips an optional trailing `.md` for the
@@ -191,12 +232,6 @@ pub fn router(state: AppState) -> Router {
         .route("/special/categories", get(categories_index_page))
         // Phase 4 Step 4.8 — OpenAPI 3.1 specification
         .route("/openapi.yaml", get(openapi_yaml));
-    // Phase 2 Step 7 — collab WebSocket relay; only mounted when the CLI
-    // flag is set (default off — production deploys without --enable-collab
-    // never expose the route).
-    if collab_enabled {
-        r = r.route("/ws/collab/{slug}", get(crate::collab::ws_collab));
-    }
     // Phase 4 Step 4.6 — MCP JSON-RPC 2.0 endpoint; only mounted when
     // --enable-mcp is set (default off).
     if mcp_enabled {
@@ -220,16 +255,24 @@ async fn search_complete(
     let topic_files = collect_all_topic_files(
         &state.content_dir,
         &[state.guide_dir.as_deref(), state.guide_dir_2.as_deref()],
-    ).await.unwrap_or_default();
+    )
+    .await
+    .unwrap_or_default();
 
     let mut hits = Vec::new();
     for tf in &topic_files {
-        if hits.len() >= 10 { break; }
+        if hits.len() >= 10 {
+            break;
+        }
         let title = if let Ok(text) = fs::read_to_string(&tf.path).await {
             if let Ok(p) = crate::render::parse_page(&text) {
                 p.frontmatter.title.unwrap_or_else(|| tf.slug.clone())
-            } else { tf.slug.clone() }
-        } else { tf.slug.clone() };
+            } else {
+                tf.slug.clone()
+            }
+        } else {
+            tf.slug.clone()
+        };
         if title.to_lowercase().contains(&q) || tf.slug.to_lowercase().contains(&q) {
             hits.push(json!({"title": title, "slug": tf.slug}));
         }
@@ -244,18 +287,18 @@ async fn preview_api(
     if slug.contains("..") || slug.is_empty() {
         return Err(WikiError::NotFound(slug));
     }
-    
+
     let path = state.content_dir.join(format!("{slug}.md"));
     let text = match fs::read_to_string(&path).await {
         Ok(t) => t,
         Err(_) => return Err(WikiError::NotFound(slug)),
     };
-    
+
     let parsed = parse_page(&text)?;
     let title = parsed.frontmatter.title.unwrap_or_else(|| slug.clone());
     let snippet = crate::feeds::first_paragraph_snippet(&parsed.body_md, 300);
     let image_url = crate::feeds::first_image_url(&parsed.body_md);
-    
+
     Ok(Json(json!({
         "title": title,
         "snippet": snippet,
@@ -280,6 +323,12 @@ async fn openapi_yaml() -> impl IntoResponse {
 }
 
 #[derive(Deserialize)]
+struct IndexQueryParams {
+    /// Present as `?noredirect=1` (or any value) to suppress Accept-Language → /es/ redirect.
+    noredirect: Option<String>,
+}
+
+#[derive(Deserialize)]
 struct SearchQueryParams {
     #[serde(default)]
     q: String,
@@ -290,6 +339,10 @@ struct WikiPageQuery {
     redirectedfrom: Option<String>,
     #[serde(default)]
     printable: bool,
+    /// Past-revision view: a git SHA prefix, ref name, or `SHA~` parent
+    /// shorthand. When present, reads from git history instead of disk
+    /// (content_dir only). Blame enrichment is skipped for past revisions.
+    asof: Option<String>,
 }
 
 /// `GET /wanted` — "Wanted articles" page.
@@ -302,9 +355,7 @@ struct WikiPageQuery {
 /// Collects all topic slugs, picks one using a time-seeded index (no external
 /// crate needed), and issues a 302 redirect to `/wiki/<slug>`. Returns 404
 /// when the content directory is empty.
-async fn random_page(
-    State(state): State<Arc<AppState>>,
-) -> Result<Response, WikiError> {
+async fn random_page(State(state): State<Arc<AppState>>) -> Result<Response, WikiError> {
     let topic_files = collect_all_topic_files(
         &state.content_dir,
         &[state.guide_dir.as_deref(), state.guide_dir_2.as_deref()],
@@ -472,64 +523,6 @@ async fn search_page(
     ))
 }
 
-/// Stub handler for Phase 2 Step 6 Doorman endpoints.
-///
-/// Returns `501 Not Implemented` with a JSON body indicating that the full
-/// Doorman MCP integration lands in Phase 4. The client-side handlers in
-/// `saa-init.js` check for this status and display a one-time toast rather
-/// than treating it as an error.
-/// E3: Doorman `/complete` — forwards request body to WIKI_DOORMAN_URL when set.
-/// Returns 501 with a JSON explanation when WIKI_DOORMAN_URL is unset.
-async fn doorman_complete(
-    State(state): State<Arc<AppState>>,
-    Json(body): Json<serde_json::Value>,
-) -> impl IntoResponse {
-    doorman_proxy(&state, "/v1/complete", body).await
-}
-
-/// E3: Doorman `/instruct` — same forwarding logic as `/complete`.
-async fn doorman_instruct(
-    State(state): State<Arc<AppState>>,
-    Json(body): Json<serde_json::Value>,
-) -> impl IntoResponse {
-    doorman_proxy(&state, "/v1/instruct", body).await
-}
-
-async fn doorman_proxy(
-    state: &Arc<AppState>,
-    path: &str,
-    body: serde_json::Value,
-) -> Response {
-    let _ = state; // AppState doesn't need DOORMAN_URL; read from env directly.
-    let doorman_url = match std::env::var("WIKI_DOORMAN_URL") {
-        Ok(u) if !u.is_empty() => u,
-        _ => {
-            return (StatusCode::NOT_IMPLEMENTED, Json(json!({
-                "error": "Doorman not configured — set WIKI_DOORMAN_URL to enable",
-                "hint": "WIKI_DOORMAN_URL=http://localhost:9091",
-                "phase": 4,
-                "reason": "Phase 4 Step 4.6 wires Doorman MCP integration; set WIKI_DOORMAN_URL to enable"
-            }))).into_response();
-        }
-    };
-    let url = format!("{}{}", doorman_url.trim_end_matches('/'), path);
-    // Re-use reqwest::Client if available; we create a one-shot client here since
-    // doorman calls are infrequent editor interactions, not high-throughput paths.
-    let client = reqwest::Client::new();
-    match client.post(&url).json(&body).send().await {
-        Ok(resp) => {
-            let status = resp.status();
-            let bytes = resp.bytes().await.unwrap_or_default();
-            (axum::http::StatusCode::from_u16(status.as_u16()).unwrap_or(StatusCode::BAD_GATEWAY),
-             [(header::CONTENT_TYPE, "application/json")],
-             bytes).into_response()
-        }
-        Err(e) => {
-            (StatusCode::BAD_GATEWAY, Json(json!({"error": format!("Doorman unreachable: {e}")}))).into_response()
-        }
-    }
-}
-
 // ─── Home-page data types ───────────────────────────────────────────────────
 
 /// Summary of a single TOPIC used in the home-page category panels and
@@ -614,7 +607,9 @@ const RATIFIED_CATEGORIES: &[&str] = &[
     "applications",
     "governance",
     "infrastructure",
+    "company",
     "reference",
+    "help",
     "design-system",
 ];
 
@@ -734,12 +729,10 @@ pub async fn collect_all_topic_files(
     guide_dirs: &[Option<&FsPath>],
 ) -> std::io::Result<Vec<TopicFile>> {
     let mut files = collect_topic_files(content_dir).await?;
-    for gd_opt in guide_dirs {
-        if let Some(gd) = gd_opt {
-            if gd.is_dir() {
-                if let Ok(guide_files) = collect_topic_files(gd).await {
-                    files.extend(guide_files);
-                }
+    for gd in guide_dirs.iter().flatten() {
+        if gd.is_dir() {
+            if let Ok(guide_files) = collect_topic_files(gd).await {
+                files.extend(guide_files);
             }
         }
     }
@@ -848,7 +841,13 @@ fn recent_topics_by_last_edited(buckets: &CategoryBuckets, n: usize) -> Vec<Topi
         }
         // Try git commit date.
         if let Ok(output) = std::process::Command::new("git")
-            .args(["log", "-1", "--format=%cI", "--", t.file_path.to_str().unwrap_or("")])
+            .args([
+                "log",
+                "-1",
+                "--format=%cI",
+                "--",
+                t.file_path.to_str().unwrap_or(""),
+            ])
             .output()
         {
             let s = String::from_utf8_lossy(&output.stdout).trim().to_string();
@@ -889,10 +888,10 @@ async fn load_featured(content_dir: &FsPath, buckets: &CategoryBuckets) -> Optio
     let path = content_dir.join("featured-topic.yaml");
     let text = fs::read_to_string(path).await.ok()?;
     let pin: FeaturedTopicPin = serde_yaml::from_str(&text).ok()?;
-    
+
     // Find the topic summary in buckets to get title and snippet
     let summary = buckets.values().flatten().find(|t| t.slug == pin.slug)?;
-    
+
     Some(FeaturedArticle {
         title: summary.title.clone(),
         slug: summary.slug.clone(),
@@ -917,10 +916,15 @@ fn extract_short_description(text: &str) -> Option<String> {
     let end = after_first.find("\n---")?;
     let fm_text = &after_first[..end];
     let val: serde_yaml::Value = serde_yaml::from_str(fm_text).ok()?;
-    val.get("short_description")?.as_str().map(|s| s.to_string())
+    val.get("short_description")?
+        .as_str()
+        .map(|s| s.to_string())
 }
 
-async fn load_category_descriptions(content_dir: &FsPath, categories: &[&str]) -> BTreeMap<String, String> {
+async fn load_category_descriptions(
+    content_dir: &FsPath,
+    categories: &[&str],
+) -> BTreeMap<String, String> {
     let mut map = BTreeMap::new();
     for cat in categories {
         let path = content_dir.join(cat).join("_index.md");
@@ -933,21 +937,45 @@ async fn load_category_descriptions(content_dir: &FsPath, categories: &[&str]) -
     map
 }
 
+async fn load_dyk_localized(content_dir: &FsPath, locale: Locale) -> Option<LeapfrogFacts> {
+    if locale == Locale::Es {
+        let es_path = content_dir.join(format!("leapfrog-facts{}.yaml", locale.suffix()));
+        if es_path.exists() {
+            let text = fs::read_to_string(&es_path).await.ok()?;
+            if let Ok(facts) = serde_yaml::from_str(&text) {
+                return Some(facts);
+            }
+        }
+    }
+    load_dyk(content_dir).await
+}
+
 fn bucket_guides_by_domain(guides: &[TopicSummary]) -> BTreeMap<String, Vec<TopicSummary>> {
     let mut map = BTreeMap::new();
     for g in guides {
         let domain = if g.slug.contains("slm") || g.slug.contains("doorman") {
             "AI & SLM"
-        } else if g.slug.contains("personnel") || g.slug.contains("entra") || g.slug.contains("linkedin") {
+        } else if g.slug.contains("personnel")
+            || g.slug.contains("entra")
+            || g.slug.contains("linkedin")
+        {
             "Personnel"
-        } else if g.slug.contains("network") || g.slug.contains("mesh") || g.slug.contains("command") {
+        } else if g.slug.contains("network")
+            || g.slug.contains("mesh")
+            || g.slug.contains("command")
+        {
             "Network & Command"
-        } else if g.slug.contains("infrastructure") || g.slug.contains("provision") || g.slug.contains("lxc") {
+        } else if g.slug.contains("infrastructure")
+            || g.slug.contains("provision")
+            || g.slug.contains("lxc")
+        {
             "Infrastructure"
         } else {
             "General"
         };
-        map.entry(domain.to_string()).or_insert_with(Vec::new).push(g.clone());
+        map.entry(domain.to_string())
+            .or_insert_with(Vec::new)
+            .push(g.clone());
     }
     map
 }
@@ -958,7 +986,7 @@ fn bucket_guides_by_domain(guides: &[TopicSummary]) -> BTreeMap<String, Vec<Topi
 /// categories (excludes `index.md`, `_index.md`, and `*.es.md` siblings,
 /// matching `bucket_topics_by_category()` discipline).
 ///
-/// `category_count` is `RATIFIED_CATEGORIES.len()` — always 10, signalling
+/// `category_count` is `RATIFIED_CATEGORIES.len()` — always 12, signalling
 /// the platform's intended scope rather than only categories with
 /// articles.
 ///
@@ -992,18 +1020,21 @@ fn compute_home_stats(buckets: &CategoryBuckets) -> HomeStats {
 /// - Two-column main panel:
 ///   - Left: Optional featured TOPIC panel
 ///   - Right: Optional Leapfrog 2030 inventions bullet panel
-/// - By-category grid (all 10 ratified categories; empty ones show
+/// - By-category grid (all 12 ratified categories; empty ones show
 ///   "0 articles — in preparation")
 /// - Recent additions feed (top 5, sorted by `last_edited` descending)
 /// - Site footer with bilingual notice
+///
 /// How many articles to preview per category before showing "All N →".
 /// Categories with ≤ PREVIEW_LIMIT articles always show the full list.
 const PREVIEW_LIMIT: usize = 8;
 
-const WORDMARK_POINTSAV: &str = r##"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 40"><text x="0" y="30" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="24" font-weight="800" fill="#09090B" letter-spacing="-0.03em">POINT-SAV DIGITAL SYSTEMS</text></svg>"##;
-const WORDMARK_WOODFINE: &str = r##"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 350 40"><text x="0" y="30" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="24" font-weight="800" fill="#111827" letter-spacing="-0.03em">WOODFINE CAPITAL PROJECTS</text></svg>"##;
+const WORDMARK_POINTSAV: &str = r##"<span class="brand__mark" aria-hidden="true">&#x25A0;</span><span class="brand__wordmark">PointSav</span><span class="brand__sub">Digital Systems</span>"##;
+const WORDMARK_WOODFINE: &str = r##"<span class="brand__mark" aria-hidden="true">&#x25A0;</span><span class="brand__wordmark">Woodfine</span><span class="brand__sub">Capital Projects</span>"##;
 
+#[allow(clippy::too_many_arguments)]
 fn home_chrome(
+    locale: Locale,
     home_fm: &crate::render::Frontmatter,
     home_html: &str,
     buckets: &CategoryBuckets,
@@ -1016,12 +1047,14 @@ fn home_chrome(
     cat_descriptions: &BTreeMap<String, String>,
     site_title: &str,
     brand_theme: Option<&str>,
+    brand_instance: &str,
     user: Option<&User>,
     pending_count: i64,
 ) -> Markup {
     let woodfine_theme = matches!(brand_theme, Some("woodfine") | Some("woodfine-projects"));
     let woodfine_projects = brand_theme == Some("woodfine-projects");
     let _title = home_fm.title.as_deref().unwrap_or(site_title);
+    let auth_attr = if user.is_some() { "user" } else { "anon" };
 
     // Articles in non-ratified buckets (not already shown as guides) so that
     // every TOPIC and GUIDE is reachable from the home page.
@@ -1029,9 +1062,7 @@ fn home_chrome(
         guides.iter().map(|g| g.slug.as_str()).collect();
     let mut uncategorised: Vec<&TopicSummary> = buckets
         .iter()
-        .filter(|(cat, _)| {
-            !RATIFIED_CATEGORIES.contains(&cat.as_str()) && cat.as_str() != "root"
-        })
+        .filter(|(cat, _)| !RATIFIED_CATEGORIES.contains(&cat.as_str()) && cat.as_str() != "root")
         .flat_map(|(_, topics)| topics.iter())
         .filter(|t| !guide_slug_set.contains(t.slug.as_str()))
         .collect();
@@ -1043,7 +1074,9 @@ fn home_chrome(
         let mut out = String::new();
         let offset = s.len() % 3;
         for (i, ch) in s.chars().enumerate() {
-            if i > 0 && (i + 3 - offset) % 3 == 0 { out.push(','); }
+            if i > 0 && (i + 3 - offset) % 3 == 0 {
+                out.push(',');
+            }
             out.push(ch);
         }
         out
@@ -1051,17 +1084,63 @@ fn home_chrome(
 
     html! {
         (DOCTYPE)
-        html lang="en" data-theme=[brand_theme] {
+        html lang=(locale.lang_attr())
+             data-auth=(auth_attr)
+             data-instance=(brand_instance) {
             head {
                 meta charset="utf-8";
                 meta name="viewport" content="width=device-width, initial-scale=1";
                 title { (site_title) }
+                link rel="stylesheet" href="/static/tokens.css";
+                @if woodfine_theme {
+                    link rel="stylesheet" href="/static/tokens-woodfine.css";
+                }
                 link rel="stylesheet" href="/static/style.css";
+                // Anti-FOUT: apply stored theme before first paint
+                script { (PreEscaped(r#"(function(){var t=localStorage.getItem('wiki-theme')||'light';document.documentElement.setAttribute('data-theme',t);var w=localStorage.getItem('wiki-width')||'standard';document.documentElement.setAttribute('data-width',w);}());"#)) }
+                // hreflang + canonical for bilingual home
+                @match locale {
+                    Locale::En => {
+                        link rel="alternate" hreflang="es" href="/es/";
+                        link rel="canonical" href="/";
+                    }
+                    Locale::Es => {
+                        link rel="alternate" hreflang="en" href="/";
+                        link rel="canonical" href="/es/";
+                    }
+                }
             }
             body {
                 a.skip-to-content href="#mp-main" { "Skip to content" }
-                header.shell-header #mw-header {
+                header.shell-header {
                     div.utility-row {
+                        a.lang-toggle href=(match locale { Locale::En => "/es/", Locale::Es => "/?noredirect=1" }) {
+                            (match locale { Locale::En => "ES", Locale::Es => "EN" })
+                        }
+                        div.wiki-appearance-wrap #wiki-appearance-wrap {
+                            button.wiki-appearance-btn #wiki-appearance-btn
+                                aria-expanded="false"
+                                aria-controls="wiki-appearance-menu"
+                                title="Appearance"
+                            { "Aa" }
+                            div.wiki-appearance-menu #wiki-appearance-menu role="dialog" aria-label="Appearance" hidden="" {
+                                div.wiki-appearance-section {
+                                    p.wiki-appearance-label { "Color" }
+                                    div.wiki-appearance-options #wiki-theme-options {
+                                        button.wiki-appearance-opt #theme-auto data-theme-val="auto" { "Automatic" }
+                                        button.wiki-appearance-opt #theme-light data-theme-val="light" { "Light" }
+                                        button.wiki-appearance-opt #theme-dark data-theme-val="dark" { "Dark" }
+                                    }
+                                }
+                                div.wiki-appearance-section {
+                                    p.wiki-appearance-label { "Width" }
+                                    div.wiki-appearance-options #wiki-width-options {
+                                        button.wiki-appearance-opt #width-standard data-width-val="standard" { "Standard" }
+                                        button.wiki-appearance-opt #width-wide data-width-val="wide" { "Wide" }
+                                    }
+                                }
+                            }
+                        }
                         (auth_nav_widget(user, pending_count))
                     }
                     div.brand-row {
@@ -1378,36 +1457,21 @@ fn home_chrome(
                     }
 
                 }
-                footer.shell-footer #site-footer {
-                    div.footer-row {
-                        @if woodfine_theme {
-                            div.cities {
-                                "Vancouver"
-                                span.sep { " | " }
-                                "New York"
-                            }
-                        }
-                        nav.footnav aria-label="Footer navigation" {
-                            a href="/wiki/disclaimers" { "Disclaimer" }
-                            a href="/wiki/contact" { "Contact" }
-                            a href="/sitemap.xml" { "Sitemap" }
-                        }
+                footer.shell-footer #site-footer role="contentinfo" {
+                    div.footer-cities { "Vancouver · Toronto · London" }
+                    nav.footer-nav aria-label="Footer navigation" {
+                        a href="/wiki/disclaimers" { "Disclaimer" }
+                        a href="/wiki/contact" { "Contact" }
+                        a href="/sitemap.xml" { "Sitemap" }
                     }
-                    p.footer-copyright-line {
-                        @if woodfine_theme {
-                            "© 2026 Woodfine Capital Projects Inc. All rights reserved."
-                        } @else {
-                            "© 2026 PointSav Digital Systems. Content: "
-                            a href="https://creativecommons.org/licenses/by/4.0/" { "CC BY 4.0" }
-                            "."
-                        }
+                    p.footer-copyright-line.copyright {
+                        "© 2026 Woodfine Capital Projects Inc. All rights reserved."
                     }
-                    p.footer-trademark-line {
-                        "PointSav™, Foundry™, ToteboxOS™, ConsoleOS™, OrchestrationOS™, and WorkplaceOS™ are unregistered trademarks of Woodfine Capital Projects Inc. "
-                        "WoodfineGroup™ is an unregistered trademark of Woodfine Management Corp., a wholly owned subsidiary of Woodfine Capital Projects Inc. "
-                        @if woodfine_theme {
-                            "This knowledge base may contain forward-looking statements."
-                        }
+                    p.footer-trademark-line.trademark {
+                        "Woodfine Capital Projects™, Woodfine Management Corp™, PointSav Digital Systems™, "
+                        "Totebox Orchestration™, and Totebox Archive™ are trademarks of Woodfine Capital "
+                        "Projects Inc. used in Canada, the United States, Latin America, and Europe. All other "
+                        "trademarks are the property of their respective owners."
                     }
                 }
                 script src="/static/wiki.js" defer="true" {}
@@ -1435,7 +1499,11 @@ fn humanize_category(s: &str) -> String {
 
 /// Current flat-listing index behaviour, preserved for the absent-`index.md`
 /// case. Extracted verbatim from the pre-iteration-1 `index()` handler.
-async fn placeholder_index(state: &AppState, user: Option<&User>, pending_count: i64) -> Result<Markup, WikiError> {
+async fn placeholder_index(
+    state: &AppState,
+    user: Option<&User>,
+    pending_count: i64,
+) -> Result<Markup, WikiError> {
     let mut entries = fs::read_dir(&state.content_dir).await?;
     let mut pages: Vec<String> = Vec::new();
     while let Some(entry) = entries.next_entry().await? {
@@ -1485,7 +1553,12 @@ async fn category_page(
     CurrentUser(maybe_user): CurrentUser,
 ) -> Result<Markup, WikiError> {
     let pending_count = pending_count_for(&state, maybe_user.as_ref()).await;
-    let buckets = bucket_topics_by_category(&state.content_dir, state.guide_dir.as_deref(), state.guide_dir_2.as_deref()).await?;
+    let buckets = bucket_topics_by_category(
+        &state.content_dir,
+        state.guide_dir.as_deref(),
+        state.guide_dir_2.as_deref(),
+    )
+    .await?;
     let empty: Vec<TopicSummary> = Vec::new();
     let topics = buckets.get(&name).unwrap_or(&empty);
     let display = humanize_category(&name);
@@ -1498,7 +1571,10 @@ async fn category_page(
             match fs::read_to_string(&index_path).await {
                 Ok(text) => {
                     if let Ok(parsed) = crate::render::parse_page(&text) {
-                        Some(crate::render::render_html_raw(&parsed.body_md, &state.content_dir))
+                        Some(crate::render::render_html_raw(
+                            &parsed.body_md,
+                            &state.content_dir,
+                        ))
                     } else {
                         None
                     }
@@ -1551,34 +1627,85 @@ async fn category_page(
 async fn index(
     State(state): State<Arc<AppState>>,
     CurrentUser(maybe_user): CurrentUser,
+    Query(params): Query<IndexQueryParams>,
+    headers: HeaderMap,
+) -> Result<Response, WikiError> {
+    if params.noredirect.is_none() && prefers_spanish(&headers) {
+        return Ok(Response::builder()
+            .status(StatusCode::FOUND)
+            .header(header::LOCATION, "/es/")
+            .body(axum::body::Body::empty())
+            .unwrap());
+    }
+    home_inner(state, Locale::En, maybe_user)
+        .await
+        .map(IntoResponse::into_response)
+}
+
+fn prefers_spanish(headers: &HeaderMap) -> bool {
+    headers
+        .get("accept-language")
+        .and_then(|v| v.to_str().ok())
+        .map(|s| {
+            // Check only the first (highest-quality) language tag.
+            let first = s.split(',').next().unwrap_or("").trim();
+            let tag = first.split(';').next().unwrap_or("").trim();
+            tag.eq_ignore_ascii_case("es") || tag.to_ascii_lowercase().starts_with("es-")
+        })
+        .unwrap_or(false)
+}
+
+async fn home_es(
+    State(state): State<Arc<AppState>>,
+    CurrentUser(maybe_user): CurrentUser,
+) -> Result<Markup, WikiError> {
+    home_inner(state, Locale::Es, maybe_user).await
+}
+
+async fn home_inner(
+    state: Arc<AppState>,
+    locale: Locale,
+    maybe_user: Option<User>,
 ) -> Result<Markup, WikiError> {
     let pending_count = pending_count_for(&state, maybe_user.as_ref()).await;
-    let home_path = state.content_dir.join("index.md");
+    // Prefer locale-specific index (index.es.md) when available.
+    let home_path = state
+        .content_dir
+        .join(format!("index{}.md", locale.suffix()));
+    let home_path = if home_path.exists() {
+        home_path
+    } else {
+        state.content_dir.join("index.md")
+    };
     if !home_path.exists() {
         return placeholder_index(&state, maybe_user.as_ref(), pending_count).await;
     }
 
     let home_text = fs::read_to_string(&home_path).await?;
     let home_parsed = crate::render::parse_page(&home_text)?;
-    let buckets = bucket_topics_by_category(&state.content_dir, state.guide_dir.as_deref(), state.guide_dir_2.as_deref()).await?;
+    let buckets = bucket_topics_by_category(
+        &state.content_dir,
+        state.guide_dir.as_deref(),
+        state.guide_dir_2.as_deref(),
+    )
+    .await?;
     let recent = recent_topics_by_last_edited(&buckets, 10);
     let stats = compute_home_stats(&buckets);
     let home_html = crate::render::render_html_raw(&home_parsed.body_md, &state.content_dir);
     let home_html = crate::glossary::inject_glossary_tooltips(&home_html, &state.glossary);
     let featured = load_featured(&state.content_dir, &buckets).await;
-    let dyk = load_dyk(&state.content_dir).await;
+    let dyk = load_dyk_localized(&state.content_dir, locale).await;
     let ref_inv = load_reference_invariants(&state.content_dir).await;
-    let cat_descriptions = load_category_descriptions(&state.content_dir, RATIFIED_CATEGORIES).await;
+    let cat_descriptions =
+        load_category_descriptions(&state.content_dir, RATIFIED_CATEGORIES).await;
 
-    // Collect guide summaries for the dedicated guides section.
-    // A guide is any entry whose filename stem starts with "guide-".
     let mut guide_summaries: Vec<TopicSummary> = buckets
         .values()
         .flatten()
         .filter(|t| {
             t.slug
                 .split('/')
-                .last()
+                .next_back()
                 .map(|s| s.starts_with("guide-"))
                 .unwrap_or(false)
         })
@@ -1587,6 +1714,7 @@ async fn index(
     guide_summaries.sort_by(|a, b| a.title.cmp(&b.title));
 
     Ok(home_chrome(
+        locale,
         &home_parsed.frontmatter,
         &home_html,
         &buckets,
@@ -1599,6 +1727,7 @@ async fn index(
         &cat_descriptions,
         &state.site_title,
         state.brand_theme.as_deref(),
+        &state.brand_instance,
         maybe_user.as_ref(),
         pending_count,
     ))
@@ -1653,6 +1782,28 @@ async fn wiki_page(
     Path(slug): Path<String>,
     Query(q): Query<WikiPageQuery>,
     CurrentUser(maybe_user): CurrentUser,
+    headers: HeaderMap,
+) -> Result<Response, WikiError> {
+    wiki_page_inner(state, slug, Locale::En, q, maybe_user, headers).await
+}
+
+async fn wiki_page_es(
+    State(state): State<Arc<AppState>>,
+    Path(slug): Path<String>,
+    Query(q): Query<WikiPageQuery>,
+    CurrentUser(maybe_user): CurrentUser,
+    headers: HeaderMap,
+) -> Result<Response, WikiError> {
+    wiki_page_inner(state, slug, Locale::Es, q, maybe_user, headers).await
+}
+
+async fn wiki_page_inner(
+    state: Arc<AppState>,
+    slug: String,
+    locale: Locale,
+    q: WikiPageQuery,
+    maybe_user: Option<User>,
+    headers: HeaderMap,
 ) -> Result<Response, WikiError> {
     // Slug safety: reject path traversal. Allow at most one `/` separator
     // for category-scoped slugs (`architecture/compounding-substrate`).
@@ -1671,59 +1822,83 @@ async fn wiki_page(
         }
     }
 
+    // For ES locale, try the .es.md sibling first (before the EN file).
+    // `effective_locale` reflects what was actually served; used for lang= and hreflang.
+    let mut effective_locale = Locale::En;
+    if locale == Locale::Es && q.asof.is_none() {
+        let es_path = state
+            .content_dir
+            .join(format!("{slug}{}.md", Locale::Es.suffix()));
+        if es_path.exists() {
+            effective_locale = Locale::Es;
+        }
+    }
+
     // Try content_dir first; if not found, try guide_dir then guide_dir_2.
-    let primary_path = state.content_dir.join(format!("{slug}.md"));
-    let text = match fs::read_to_string(&primary_path).await {
-        Ok(t) => t,
-        Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
-            let guide_dirs: &[Option<&PathBuf>] = &[state.guide_dir.as_ref(), state.guide_dir_2.as_ref()];
-            let mut found: Option<String> = None;
-            for gd_opt in guide_dirs {
-                if let Some(gd) = gd_opt {
+    let primary_path = state
+        .content_dir
+        .join(format!("{slug}{}.md", effective_locale.suffix()));
+
+    // §3.5: past-revision view — read from git history when ?asof= is set.
+    // Only content_dir is git-tracked; guide_dir articles always use the
+    // disk path. Any git error (unknown rev, empty repo) becomes a 404.
+    let text = if let Some(ref rev) = q.asof {
+        match crate::history::get_file_at_rev(&state.content_dir, &slug, rev) {
+            Ok(t) if !t.is_empty() => t,
+            _ => return Err(WikiError::NotFound(slug)),
+        }
+    } else {
+        match fs::read_to_string(&primary_path).await {
+            Ok(t) => t,
+            Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
+                let guide_dirs: &[Option<&PathBuf>] =
+                    &[state.guide_dir.as_ref(), state.guide_dir_2.as_ref()];
+                let mut found: Option<String> = None;
+                for gd in guide_dirs.iter().flatten() {
                     let gp = gd.join(format!("{slug}.md"));
                     if let Ok(t) = fs::read_to_string(&gp).await {
                         found = Some(t);
                         break;
                     }
                 }
-            }
-            match found {
-                Some(t) => t,
-                None => {
-                    // Slug normalization fallback: if the slug has uppercase or
-                    // spaces, try the lowercase+hyphenated form and redirect.
-                    let norm = slug.to_lowercase().replace(' ', "-");
-                    if norm != slug {
-                        let norm_path = state.content_dir.join(format!("{norm}.md"));
-                        if norm_path.exists() {
-                            let location = format!("/wiki/{norm}");
-                            return Ok(Response::builder()
-                                .status(StatusCode::MOVED_PERMANENTLY)
-                                .header(header::LOCATION, location)
-                                .body(axum::body::Body::empty())
-                                .unwrap());
+                match found {
+                    Some(t) => t,
+                    None => {
+                        // Slug normalization fallback: if the slug has uppercase or
+                        // spaces, try the lowercase+hyphenated form and redirect.
+                        let norm = slug.to_lowercase().replace(' ', "-");
+                        if norm != slug {
+                            let norm_path = state.content_dir.join(format!("{norm}.md"));
+                            if norm_path.exists() {
+                                let location = format!("/wiki/{norm}");
+                                return Ok(Response::builder()
+                                    .status(StatusCode::MOVED_PERMANENTLY)
+                                    .header(header::LOCATION, location)
+                                    .body(axum::body::Body::empty())
+                                    .unwrap());
+                            }
                         }
-                    }
-                    // Bare-slug resolver: if the slug has no directory component,
-                    // search category subdirectories for a unique stem match and
-                    // 301-redirect to the qualified slug. Fixes wikilinks that were
-                    // written before the Wave-1 category-subdirectory migration.
-                    if !slug.contains('/') {
-                        if let Some(full) = resolve_bare_slug(&state, &slug).await {
-                            let location = format!("/wiki/{full}");
-                            return Ok(Response::builder()
-                                .status(StatusCode::MOVED_PERMANENTLY)
-                                .header(header::LOCATION, location)
-                                .body(axum::body::Body::empty())
-                                .unwrap());
+                        // Bare-slug resolver: if the slug has no directory component,
+                        // search category subdirectories for a unique stem match and
+                        // 301-redirect to the qualified slug. Fixes wikilinks that were
+                        // written before the Wave-1 category-subdirectory migration.
+                        if !slug.contains('/') {
+                            if let Some(full) = resolve_bare_slug(&state, &slug).await {
+                                let location = format!("/wiki/{full}");
+                                return Ok(Response::builder()
+                                    .status(StatusCode::MOVED_PERMANENTLY)
+                                    .header(header::LOCATION, location)
+                                    .body(axum::body::Body::empty())
+                                    .unwrap());
+                            }
                         }
+                        return Err(WikiError::NotFound(slug));
                     }
-                    return Err(WikiError::NotFound(slug));
                 }
             }
+            Err(e) => return Err(e.into()),
         }
-        Err(e) => return Err(e.into()),
-    };
+    }; // end of asof / disk read block
     let mut parsed = parse_page(&text)?;
 
     // A5: redirect_to frontmatter — 301 before any rendering.
@@ -1751,7 +1926,13 @@ async fn wiki_page(
     //
     // This means every article that has a sibling gets the language toggle
     // without requiring the content author to maintain `translations:` by hand.
-    if parsed.frontmatter.translations.as_ref().map(|t| t.is_empty()).unwrap_or(true) {
+    if parsed
+        .frontmatter
+        .translations
+        .as_ref()
+        .map(|t| t.is_empty())
+        .unwrap_or(true)
+    {
         let is_es = slug.ends_with(".es");
         if is_es {
             // Case B: we're on an ES article; offer EN link.
@@ -1774,21 +1955,97 @@ async fn wiki_page(
         }
     }
 
+    // §3.5: extract claims and enrich with per-span blame timestamps.
+    // fm_line_count converts body-relative line numbers to absolute file
+    // lines that topic_blame addresses. Blame is skipped for past-revision
+    // views (?asof=) — the claim graph reflects HEAD, not the past revision.
+    let fm_line_count = text[..text.len().saturating_sub(parsed.body_md.len())]
+        .matches('\n')
+        .count() as u32;
+    let mut claims = crate::claim::extract_claims(&parsed.body_md, &slug).claims;
+    if q.asof.is_none() {
+        crate::history::blame_published_at(&state.content_dir, &slug, fm_line_count, &mut claims);
+    }
+
+    // §3.7: JSON content-negotiation — return structured JSON when the client
+    // prefers application/json. Skips the HTML render path entirely.
+    let wants_json = headers
+        .get(header::ACCEPT)
+        .and_then(|v| v.to_str().ok())
+        .map(|s| {
+            s.split(',')
+                .any(|part| part.trim().starts_with("application/json"))
+        })
+        .unwrap_or(false);
+    if wants_json {
+        let blake3_hex = blake3::hash(text.as_bytes()).to_hex().to_string();
+        let revision_sha = crate::history::topic_history(&state.content_dir, &slug, 1)
+            .ok()
+            .and_then(|mut h| h.drain(..).next())
+            .map(|e| e.sha)
+            .unwrap_or_default();
+        let backlinks = state.links.backlinks(&slug).unwrap_or_default();
+        return Ok(Json(json!({
+            "frontmatter": serde_json::to_value(&parsed.frontmatter).unwrap_or_default(),
+            "body_md": parsed.body_md,
+            "blake3": blake3_hex,
+            "revision_sha": revision_sha,
+            "backlinks": backlinks,
+            "claims": claims,
+        }))
+        .into_response());
+    }
+
     // Two-step render: extract headings from clean comrak output (no edit pencils),
     // then inject pencils for the final body HTML. This keeps TOC text clean.
     let raw_html = render_html_raw(&parsed.body_md, &state.content_dir);
     let raw_html = crate::glossary::inject_glossary_tooltips(&raw_html, &state.glossary);
     let headings = extract_headings(&raw_html);
     let body_html = inject_edit_pencils(&raw_html);
+
+    // §3.5: past-revision notice — minimal engine-side render.
+    // Freshness-ribbon visual is project-design component `component-freshness-ribbon`.
+    let body_html = if let Some(ref rev) = q.asof {
+        let notice = format!(
+            concat!(
+                r#"<div class="wiki-asof-notice" style="background:#fef3cd;"#,
+                r#"border:1px solid #ffc107;padding:.5em 1em;margin-bottom:1em;"#,
+                r#"border-radius:3px"><strong>Historical revision:</strong> "#,
+                r#"showing <code>{slug}</code> as of <code>{rev}</code>. "#,
+                r#"<a href="/wiki/{slug}">Return to current revision.</a></div>"#,
+            ),
+            slug = &slug,
+            rev = rev,
+        );
+        format!("{notice}{body_html}")
+    } else {
+        body_html
+    };
+
     let title = parsed
         .frontmatter
         .title
         .clone()
         .unwrap_or_else(|| slug.clone());
-        
+
     let pending_count = pending_count_for(&state, maybe_user.as_ref()).await;
     let redirected_from = q.redirectedfrom.as_deref();
-    Ok(wiki_chrome(&title, &slug, parsed.frontmatter, &body_html, headings, &state.site_title, state.brand_theme.as_deref(), maybe_user.as_ref(), pending_count, redirected_from, q.printable).into_response())
+    Ok(wiki_chrome(
+        effective_locale,
+        &title,
+        &slug,
+        parsed.frontmatter,
+        &body_html,
+        headings,
+        &state.site_title,
+        state.brand_theme.as_deref(),
+        &state.brand_instance,
+        maybe_user.as_ref(),
+        pending_count,
+        redirected_from,
+        q.printable,
+    )
+    .into_response())
 }
 
 async fn static_asset(Path(path): Path<String>) -> Response {
@@ -1825,7 +2082,9 @@ async fn static_asset(Path(path): Path<String>) -> Response {
 /// - Reader density toggle (Off / Exceptions only / All; localStorage)
 /// - Per-section [edit] pencils (injected into rendered HTML by render module)
 /// - Footer block: categories → license → about/contact links
+#[allow(clippy::too_many_arguments)]
 fn wiki_chrome(
+    locale: Locale,
     title: &str,
     slug: &str,
     fm: Frontmatter,
@@ -1833,6 +2092,7 @@ fn wiki_chrome(
     headings: Vec<(String, String, u8)>,
     site_title: &str,
     brand_theme: Option<&str>,
+    brand_instance: &str,
     user: Option<&User>,
     pending_count: i64,
     redirected_from: Option<&str>,
@@ -1840,37 +2100,61 @@ fn wiki_chrome(
 ) -> Markup {
     let woodfine_theme = matches!(brand_theme, Some("woodfine") | Some("woodfine-projects"));
     let woodfine_projects = brand_theme == Some("woodfine-projects");
+    let is_authenticated = user.is_some();
+    let auth_attr = if is_authenticated { "user" } else { "anon" };
     let _talk_slug = format!("{slug}.talk");
     let page_title = format!("{title} — {site_title}");
 
     // B5: Precompute ToC entries with hierarchical section numbers (1, 2, 2.1, etc.)
     let numbered_headings: Vec<(String, String, u8, String)> = {
-        let mut counters = vec![0usize; 7];
-        headings.iter().map(|(id, text, level)| {
-            let lvl = *level as usize;
-            counters[lvl] += 1;
-            for c in &mut counters[lvl + 1..] {
-                *c = 0;
-            }
-            let num = counters[1..=lvl]
-                .iter()
-                .skip_while(|n| **n == 0)
-                .map(|n| n.to_string())
-                .collect::<Vec<_>>()
-                .join(".");
-            (id.clone(), text.clone(), *level, num)
-        })
-        .collect()
+        let mut counters = [0usize; 7];
+        headings
+            .iter()
+            .map(|(id, text, level)| {
+                let lvl = *level as usize;
+                counters[lvl] += 1;
+                for c in &mut counters[lvl + 1..] {
+                    *c = 0;
+                }
+                let num = counters[1..=lvl]
+                    .iter()
+                    .skip_while(|n| **n == 0)
+                    .map(|n| n.to_string())
+                    .collect::<Vec<_>>()
+                    .join(".");
+                (id.clone(), text.clone(), *level, num)
+            })
+            .collect()
     };
 
     html! {
         (DOCTYPE)
-        html lang="en" data-theme=[brand_theme] {
+        html lang=(locale.lang_attr())
+             data-auth=(auth_attr)
+             data-instance=(brand_instance) {
             head {
                 meta charset="utf-8";
                 meta name="viewport" content="width=device-width, initial-scale=1";
                 title { (page_title) }
+                link rel="stylesheet" href="/static/tokens.css";
+                @if woodfine_theme {
+                    link rel="stylesheet" href="/static/tokens-woodfine.css";
+                }
                 link rel="stylesheet" href="/static/style.css";
+                // Anti-FOUT: apply stored theme/width before first paint to
+                // avoid a flash of the default light theme for dark-mode users.
+                script { (PreEscaped(r#"(function(){var t=localStorage.getItem('wiki-theme')||'light';document.documentElement.setAttribute('data-theme',t);var w=localStorage.getItem('wiki-width')||'standard';document.documentElement.setAttribute('data-width',w);}());"#)) }
+                // hreflang + canonical for bilingual articles
+                @match locale {
+                    Locale::En => {
+                        link rel="alternate" hreflang="es" href={ "/es/wiki/" (slug) };
+                        link rel="canonical" href={ "/wiki/" (slug) };
+                    }
+                    Locale::Es => {
+                        link rel="alternate" hreflang="en" href={ "/wiki/" (slug) };
+                        link rel="canonical" href={ "/es/wiki/" (slug) };
+                    }
+                }
                 // JSON-LD baseline (Phase 2 Step 1) — schema.org TechArticle /
                 // DefinedTerm. Cumulative across phases; AEO crawlers + downstream
                 // consumers ingest the structured data.
@@ -1888,8 +2172,36 @@ fn wiki_chrome(
                         }
                     }
                 }
-                header.shell-header #mw-header {
+                header.shell-header {
                     div.utility-row {
+                        a.lang-toggle href=(match locale { Locale::En => format!("/es/wiki/{slug}"), Locale::Es => format!("/wiki/{slug}") }) {
+                            (match locale { Locale::En => "ES", Locale::Es => "EN" })
+                        }
+                        // Appearance menu button + popover
+                        div.wiki-appearance-wrap #wiki-appearance-wrap {
+                            button.wiki-appearance-btn #wiki-appearance-btn
+                                aria-expanded="false"
+                                aria-controls="wiki-appearance-menu"
+                                title="Appearance"
+                            { "Aa" }
+                            div.wiki-appearance-menu #wiki-appearance-menu role="dialog" aria-label="Appearance" hidden="" {
+                                div.wiki-appearance-section {
+                                    p.wiki-appearance-label { "Color" }
+                                    div.wiki-appearance-options #wiki-theme-options {
+                                        button.wiki-appearance-opt #theme-auto data-theme-val="auto" { "Automatic" }
+                                        button.wiki-appearance-opt #theme-light data-theme-val="light" { "Light" }
+                                        button.wiki-appearance-opt #theme-dark data-theme-val="dark" { "Dark" }
+                                    }
+                                }
+                                div.wiki-appearance-section {
+                                    p.wiki-appearance-label { "Width" }
+                                    div.wiki-appearance-options #wiki-width-options {
+                                        button.wiki-appearance-opt #width-standard data-width-val="standard" { "Standard" }
+                                        button.wiki-appearance-opt #width-wide data-width-val="wide" { "Wide" }
+                                    }
+                                }
+                            }
+                        }
                         (auth_nav_widget(user, pending_count))
                     }
                     div.brand-row {
@@ -1913,6 +2225,15 @@ fn wiki_chrome(
                             aria-controls="mobile-nav-drawer"
                         { "Menu" }
                     }
+                    div.search-row {
+                        form.header-search #search-form-body action="/search" method="get" {
+                            div.header-search-wrap {
+                                input #header-search-q-body type="search" name="q" placeholder="Search articles…" autocomplete="off";
+                                div #search-autocomplete-dropdown-body style="display:none;" {}
+                            }
+                            button type="submit" { "Search" }
+                        }
+                    }
                     nav.nav-row aria-label="Site navigation" {
                         ul.nav-list.left {
                             li { a href="/wiki/disclaimers" { "Disclaimer" } }
@@ -1930,15 +2251,6 @@ fn wiki_chrome(
                                 li { a href="https://pointsav.com" { "pointsav.com" } }
                                 li { a href="https://github.com/pointsav" { "GitHub" } }
                             }
-                        }
-                    }
-                    div.search-row {
-                        form.header-search #header-search-form action="/search" method="get" {
-                            div.header-search-wrap {
-                                input #header-search-q type="search" name="q" placeholder="Search articles…" autocomplete="off";
-                                div #search-autocomplete-dropdown style="display:none;" {}
-                            }
-                            button type="submit" { "Search" }
                         }
                     }
                 }
@@ -2054,23 +2366,41 @@ fn wiki_chrome(
 
                         // Title row: tabs (top-left) + title + language switcher + action tabs (top-right)
                         div.wiki-title-row {
-                            // Article / Talk tabs — top-left
+                            // Article / Talk tabs — top-left.
+                            // 21st-century-Wikipedia: Talk is auth-gated only.
+                            // For anonymous readers, only the Article tab renders
+                            // here; Talk is reachable from the authenticated FAB
+                            // overflow menu instead (Section 6 of the hybrid CSS).
                             nav.wiki-page-tabs aria-label="Page tabs" {
                                 a.wiki-tab.wiki-tab-active
                                     href={ "/wiki/" (slug) }
                                     aria-current="page"
                                 { "Article" }
-                                a.wiki-tab
-                                    href={ "/talk/" (slug) }
-                                    accesskey="t"
-                                    title="Discussion page"
-                                { "Talk" }
+                                @if is_authenticated {
+                                    a.wiki-tab
+                                        href={ "/talk/" (slug) }
+                                        accesskey="t"
+                                        title="Discussion page"
+                                    { "Talk" }
+                                }
                             }
 
                             // Page title + language switcher + tagline (centre)
                             // Language button sits BELOW the H1, left-aligned —
                             // matching MediaWiki Vector 2022 (.mw-portlet-lang placement).
                             div.wiki-title-block {
+                                // Hybrid Section 5: breadcrumb above H1 (Design B)
+                                @if let Some(ref cat) = fm.category {
+                                    @if cat != "root" {
+                                        nav.article-breadcrumb aria-label="breadcrumb" {
+                                            a href="/" { "Home" }
+                                            " › "
+                                            a href={ "/category/" (cat) } { (humanize_category(cat)) }
+                                            " › "
+                                            (title)
+                                        }
+                                    }
+                                }
                                 h1.page-title {
                                     (title)
                                     @if let Some(ref q) = fm.quality {
@@ -2138,7 +2468,7 @@ fn wiki_chrome(
                         // IVC masthead band placeholder (UX-DESIGN.md §4.5)
                         div.wiki-ivc-band role="status" aria-label="Verification status" {
                             span.ivc-band-text {
-                                "Verification not yet available — Phase 7"
+                                "Citation verification not yet available."
                             }
                             // Reader density toggle (UX-DESIGN.md §4.6)
                             // Preference persists to localStorage; no machinery honours it
@@ -2299,37 +2629,37 @@ fn wiki_chrome(
                     }
                 }
 
-                footer.shell-footer #site-footer {
-                    div.footer-row {
-                        @if woodfine_theme {
-                            div.cities {
-                                "Vancouver"
-                                span.sep { " | " }
-                                "New York"
-                            }
-                        }
-                        nav.footnav aria-label="Footer navigation" {
-                            a href="/wiki/disclaimers" { "Disclaimer" }
-                            a href="/wiki/contact" { "Contact" }
-                            a href={ "/git/" (slug) } { "View source" }
-                            a href="/sitemap.xml" { "Sitemap" }
+                // Hybrid Section 6: floating action bar (auth-gated by CSS).
+                // Emitted unconditionally; CSS hides it for `html[data-auth="anon"]`.
+                // Talk/Discussion lives ONLY in the overflow menu — never on the
+                // reading surface for anonymous readers.
+                div.wiki-fab aria-label="Article tools" {
+                    a.fab-edit href={ "/edit/" (slug) } { "Edit" }
+                    details.fab-overflow-wrap {
+                        summary.fab-overflow title="More actions" { "···" }
+                        ul.fab-overflow-menu {
+                            li { a href={ "/history/" (slug) } { "History" } }
+                            li { a href={ "/talk/" (slug) } { "Talk" } }
                         }
                     }
-                    p.footer-copyright-line {
-                        @if woodfine_theme {
-                            "© 2026 Woodfine Capital Projects Inc. All rights reserved."
-                        } @else {
-                            "© 2026 PointSav Digital Systems. Content: "
-                            a href="https://creativecommons.org/licenses/by/4.0/" { "CC BY 4.0" }
-                            "."
-                        }
+                }
+
+                footer.shell-footer #site-footer role="contentinfo" {
+                    div.footer-cities { "Vancouver · Toronto · London" }
+                    nav.footer-nav aria-label="Footer navigation" {
+                        a href="/wiki/disclaimers" { "Disclaimer" }
+                        a href="/wiki/contact" { "Contact" }
+                        a href={ "/git/" (slug) } { "View source" }
+                        a href="/sitemap.xml" { "Sitemap" }
                     }
-                    p.footer-trademark-line {
-                        "PointSav™, Foundry™, ToteboxOS™, ConsoleOS™, OrchestrationOS™, and WorkplaceOS™ are unregistered trademarks of Woodfine Capital Projects Inc. "
-                        "WoodfineGroup™ is an unregistered trademark of Woodfine Management Corp., a wholly owned subsidiary of Woodfine Capital Projects Inc. "
-                        @if woodfine_theme {
-                            "This knowledge base may contain forward-looking statements."
-                        }
+                    p.footer-copyright-line.copyright {
+                        "© 2026 Woodfine Capital Projects Inc. All rights reserved."
+                    }
+                    p.footer-trademark-line.trademark {
+                        "Woodfine Capital Projects™, Woodfine Management Corp™, PointSav Digital Systems™, "
+                        "Totebox Orchestration™, and Totebox Archive™ are trademarks of Woodfine Capital "
+                        "Projects Inc. used in Canada, the United States, Latin America, and Europe. All other "
+                        "trademarks are the property of their respective owners."
                     }
                 }
 
@@ -2385,7 +2715,9 @@ async fn what_links_here(
                 }
             }
         },
-        &state.site_title, maybe_user.as_ref(), pending_count,
+        &state.site_title,
+        maybe_user.as_ref(),
+        pending_count,
     ))
 }
 
@@ -2402,9 +2734,11 @@ async fn page_info(
     // Load the article file to extract frontmatter.
     let md_path = state.content_dir.join(format!("{slug}.md"));
     let (title, category, status, last_edited, word_count) = if md_path.exists() {
-        let raw = tokio::fs::read_to_string(&md_path).await.unwrap_or_default();
-        let parsed = crate::render::parse_page(&raw)
-            .unwrap_or_else(|_| crate::render::ParsedPage {
+        let raw = tokio::fs::read_to_string(&md_path)
+            .await
+            .unwrap_or_default();
+        let parsed =
+            crate::render::parse_page(&raw).unwrap_or_else(|_| crate::render::ParsedPage {
                 frontmatter: crate::render::Frontmatter::default(),
                 body_md: raw.clone(),
             });
@@ -2416,7 +2750,13 @@ async fn page_info(
         let word_count = parsed.body_md.split_whitespace().count();
         (title, category, status, last_edited, word_count)
     } else {
-        (slug.clone(), "—".to_string(), "—".to_string(), "—".to_string(), 0)
+        (
+            slug.clone(),
+            "—".to_string(),
+            "—".to_string(),
+            "—".to_string(),
+            0,
+        )
     };
 
     Ok(chrome(
@@ -2433,7 +2773,9 @@ async fn page_info(
             }
             p { a href={ "/wiki/" (slug) } { "← Back to article" } }
         },
-        &state.site_title, maybe_user.as_ref(), pending_count,
+        &state.site_title,
+        maybe_user.as_ref(),
+        pending_count,
     ))
 }
 
@@ -2448,9 +2790,11 @@ async fn cite_page(
 
     let md_path = state.content_dir.join(format!("{slug}.md"));
     let (title, last_edited) = if md_path.exists() {
-        let raw = tokio::fs::read_to_string(&md_path).await.unwrap_or_default();
-        let parsed = crate::render::parse_page(&raw)
-            .unwrap_or_else(|_| crate::render::ParsedPage {
+        let raw = tokio::fs::read_to_string(&md_path)
+            .await
+            .unwrap_or_default();
+        let parsed =
+            crate::render::parse_page(&raw).unwrap_or_else(|_| crate::render::ParsedPage {
                 frontmatter: crate::render::Frontmatter::default(),
                 body_md: raw.clone(),
             });
@@ -2466,10 +2810,9 @@ async fn cite_page(
     let url = format!("https://documentation.pointsav.com/wiki/{slug}");
     let site = &state.site_title;
     let apa = format!("PointSav Digital Systems. ({last_edited}). {title}. {site}. {url}");
-    let mla = format!(
-        "PointSav Digital Systems. \"{title}.\" {site}, {last_edited}, {url}."
-    );
-    let wiki = format!("{{{{cite web|url={url}|title={title}|website={site}|date={last_edited}}}}}");
+    let mla = format!("PointSav Digital Systems. \"{title}.\" {site}, {last_edited}, {url}.");
+    let wiki =
+        format!("{{{{cite web|url={url}|title={title}|website={site}|date={last_edited}}}}}");
 
     Ok(chrome(
         &format!("Cite: {title} — {site}"),
@@ -2484,7 +2827,9 @@ async fn cite_page(
             pre.wiki-cite-block { (wiki) }
             p { a href={ "/wiki/" (slug) } { "← Back to article" } }
         },
-        &state.site_title, maybe_user.as_ref(), pending_count,
+        &state.site_title,
+        maybe_user.as_ref(),
+        pending_count,
     ))
 }
 
@@ -2495,7 +2840,11 @@ async fn cite_page(
 /// Walks `content_dir` recursively, emits one `<url>` per TOPIC (excluding
 /// `*.es.md` bilingual siblings). Content-Type: `application/xml; charset=utf-8`.
 async fn sitemap_xml(State(state): State<Arc<AppState>>) -> Result<Response, WikiError> {
-    let topic_files = collect_all_topic_files(&state.content_dir, &[state.guide_dir.as_deref(), state.guide_dir_2.as_deref()]).await?;
+    let topic_files = collect_all_topic_files(
+        &state.content_dir,
+        &[state.guide_dir.as_deref(), state.guide_dir_2.as_deref()],
+    )
+    .await?;
     let mut slugs: Vec<String> = topic_files.into_iter().map(|tf| tf.slug).collect();
     slugs.sort();
 
@@ -2504,9 +2853,7 @@ async fn sitemap_xml(State(state): State<Arc<AppState>>) -> Result<Response, Wik
          <urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n",
     );
     for slug in &slugs {
-        xml.push_str(&format!(
-            "  <url><loc>/wiki/{slug}</loc></url>\n"
-        ));
+        xml.push_str(&format!("  <url><loc>/wiki/{slug}</loc></url>\n"));
     }
     xml.push_str("</urlset>\n");
 
@@ -2539,8 +2886,13 @@ async fn robots_txt() -> Response {
 /// surfaces (JSON-LD, Atom, JSON Feed, sitemap). Content-Type:
 /// `text/markdown; charset=utf-8`.
 async fn llms_txt(State(state): State<Arc<AppState>>) -> Result<Response, WikiError> {
-    let topic_files = collect_all_topic_files(&state.content_dir, &[state.guide_dir.as_deref(), state.guide_dir_2.as_deref()]).await?;
-    let mut tf_list: Vec<(String, PathBuf)> = topic_files.into_iter()
+    let topic_files = collect_all_topic_files(
+        &state.content_dir,
+        &[state.guide_dir.as_deref(), state.guide_dir_2.as_deref()],
+    )
+    .await?;
+    let mut tf_list: Vec<(String, PathBuf)> = topic_files
+        .into_iter()
         .map(|tf| (tf.slug, tf.path))
         .collect();
     tf_list.sort_by(|a, b| a.0.cmp(&b.0));
@@ -2604,14 +2956,13 @@ async fn llms_txt(State(state): State<Arc<AppState>>) -> Result<Response, WikiEr
 fn llms_txt_snippet(body_md: &str, max_chars: usize) -> String {
     let first = body_md
         .lines()
-        .filter(|l| {
+        .find(|l| {
             let t = l.trim();
             !t.is_empty() && !t.starts_with('#') && !t.starts_with("---")
         })
-        .next()
         .unwrap_or("");
     let clean: String = first
-        .trim_start_matches(|c| matches!(c, '-' | '*' | '+' | '>' | ' '))
+        .trim_start_matches(['-', '*', '+', '>', ' '])
         .chars()
         .filter(|&c| c != '`' && c != '*' && c != '_')
         .collect();
@@ -2682,7 +3033,9 @@ async fn recent_changes_page(
                 return Ok(chrome(
                     &format!("Recent changes — {}", state.site_title),
                     html! { h1 { "Recent changes" } p { "No git history yet." } },
-                    &state.site_title, maybe_user.as_ref(), pending_count,
+                    &state.site_title,
+                    maybe_user.as_ref(),
+                    pending_count,
                 ));
             }
         };
@@ -2692,23 +3045,43 @@ async fn recent_changes_page(
                 return Ok(chrome(
                     &format!("Recent changes — {}", state.site_title),
                     html! { h1 { "Recent changes" } p { "Empty repository." } },
-                    &state.site_title, maybe_user.as_ref(), pending_count,
+                    &state.site_title,
+                    maybe_user.as_ref(),
+                    pending_count,
                 ));
             }
         };
         let mut out = Vec::new();
-        let ancestors = id.ancestors().all()
+        let ancestors = id
+            .ancestors()
+            .all()
             .map_err(|e| WikiError::WriteFailed(format!("gix ancestors: {e}")))?;
         for item in ancestors.take(50) {
-            let item = match item { Ok(i) => i, Err(_) => continue };
-            let commit = match item.object() { Ok(c) => c, Err(_) => continue };
-            let author = match commit.author() { Ok(a) => a, Err(_) => continue };
-            let message = match commit.message() { Ok(m) => m, Err(_) => continue };
-            let time = match commit.time() { Ok(t) => t, Err(_) => continue };
+            let item = match item {
+                Ok(i) => i,
+                Err(_) => continue,
+            };
+            let commit = match item.object() {
+                Ok(c) => c,
+                Err(_) => continue,
+            };
+            let author = match commit.author() {
+                Ok(a) => a,
+                Err(_) => continue,
+            };
+            let message = match commit.message() {
+                Ok(m) => m,
+                Err(_) => continue,
+            };
+            let time = match commit.time() {
+                Ok(t) => t,
+                Err(_) => continue,
+            };
             let ts = {
                 use chrono::{TimeZone, Utc};
                 let secs = time.seconds;
-                Utc.timestamp_opt(secs, 0).single()
+                Utc.timestamp_opt(secs, 0)
+                    .single()
                     .map(|dt| dt.format("%Y-%m-%d %H:%M").to_string())
                     .unwrap_or_else(|| secs.to_string())
             };
@@ -2751,7 +3124,9 @@ async fn recent_changes_page(
                 }
             }
         },
-        &state.site_title, maybe_user.as_ref(), pending_count,
+        &state.site_title,
+        maybe_user.as_ref(),
+        pending_count,
     ))
 }
 
@@ -2765,7 +3140,8 @@ async fn all_pages_page(
     let topic_files = collect_all_topic_files(
         &state.content_dir,
         &[state.guide_dir.as_deref(), state.guide_dir_2.as_deref()],
-    ).await?;
+    )
+    .await?;
 
     // Collect (title, slug) pairs, sorted by title.
     let mut pages: Vec<(String, String)> = Vec::new();
@@ -2773,16 +3149,22 @@ async fn all_pages_page(
         let title = if let Ok(text) = fs::read_to_string(&tf.path).await {
             if let Ok(parsed) = crate::render::parse_page(&text) {
                 parsed.frontmatter.title.unwrap_or_else(|| tf.slug.clone())
-            } else { tf.slug.clone() }
-        } else { tf.slug.clone() };
+            } else {
+                tf.slug.clone()
+            }
+        } else {
+            tf.slug.clone()
+        };
         pages.push((title, tf.slug.clone()));
     }
-    pages.sort_by(|a, b| a.0.to_lowercase().cmp(&b.0.to_lowercase()));
+    pages.sort_by_key(|a| a.0.to_lowercase());
 
     // Group by first letter.
     let mut groups: BTreeMap<char, Vec<(String, String)>> = BTreeMap::new();
     for (title, slug) in pages {
-        let ch = title.chars().next()
+        let ch = title
+            .chars()
+            .next()
             .unwrap_or('#')
             .to_uppercase()
             .next()
@@ -2812,7 +3194,9 @@ async fn all_pages_page(
                 }
             }
         },
-        &state.site_title, maybe_user.as_ref(), pending_count,
+        &state.site_title,
+        maybe_user.as_ref(),
+        pending_count,
     ))
 }
 
@@ -2827,7 +3211,8 @@ async fn categories_index_page(
     let topic_files = collect_all_topic_files(
         &state.content_dir,
         &[state.guide_dir.as_deref(), state.guide_dir_2.as_deref()],
-    ).await?;
+    )
+    .await?;
 
     // Collect category → count pairs.
     let mut cat_counts: BTreeMap<String, usize> = BTreeMap::new();
@@ -2852,16 +3237,21 @@ async fn categories_index_page(
     let mut groups: BTreeMap<char, Vec<(String, String, usize)>> = BTreeMap::new();
     for (cat_slug, count) in &cat_counts {
         let display = humanize_category(cat_slug);
-        let ch = display.chars().next()
+        let ch = display
+            .chars()
+            .next()
             .unwrap_or('#')
             .to_uppercase()
             .next()
             .unwrap_or('#');
         let key = if ch.is_ascii_alphabetic() { ch } else { '#' };
-        groups.entry(key).or_default().push((display, cat_slug.clone(), *count));
+        groups
+            .entry(key)
+            .or_default()
+            .push((display, cat_slug.clone(), *count));
     }
     for entries in groups.values_mut() {
-        entries.sort_by(|a, b| a.0.to_lowercase().cmp(&b.0.to_lowercase()));
+        entries.sort_by_key(|a| a.0.to_lowercase());
     }
 
     Ok(chrome(
@@ -2888,7 +3278,9 @@ async fn categories_index_page(
                 }
             }
         },
-        &state.site_title, maybe_user.as_ref(), pending_count,
+        &state.site_title,
+        maybe_user.as_ref(),
+        pending_count,
     ))
 }
 
@@ -2903,7 +3295,8 @@ async fn statistics_page(
     let topic_files = collect_all_topic_files(
         &state.content_dir,
         &[state.guide_dir.as_deref(), state.guide_dir_2.as_deref()],
-    ).await?;
+    )
+    .await?;
 
     let article_count = topic_files.len();
     let mut category_set: std::collections::HashSet<String> = std::collections::HashSet::new();
@@ -2918,7 +3311,9 @@ async fn statistics_page(
                 }
                 if let Some(ref le) = parsed.frontmatter.last_edited {
                     let is_newer = most_recent.as_ref().map_or(true, |mr| le > mr);
-                    if is_newer { most_recent = Some(le.clone()); }
+                    if is_newer {
+                        most_recent = Some(le.clone());
+                    }
                 }
                 let html = crate::render::render_html_raw(&text, &state.content_dir);
                 redlink_count += re_redlink.find_iter(&html).count();
@@ -2942,7 +3337,9 @@ async fn statistics_page(
                 }
             }
         },
-        &state.site_title, maybe_user.as_ref(), pending_count,
+        &state.site_title,
+        maybe_user.as_ref(),
+        pending_count,
     ))
 }
 
@@ -3017,7 +3414,9 @@ async fn talk_page(
                 }
             }
         },
-        &state.site_title, maybe_user.as_ref(), pending_count,
+        &state.site_title,
+        maybe_user.as_ref(),
+        pending_count,
     ))
 }
 
@@ -3042,7 +3441,9 @@ async fn talk_post(
     let section_title = form.section_title.trim().to_string();
     let body_text = form.body.trim().to_string();
     if section_title.is_empty() || body_text.is_empty() {
-        return Err(WikiError::SlugInvalid("section_title and body are required".into()));
+        return Err(WikiError::SlugInvalid(
+            "section_title and body are required".into(),
+        ));
     }
 
     let talk_dir = state.content_dir.join("talk");
@@ -3050,7 +3451,9 @@ async fn talk_post(
     let talk_path = talk_file_path(&state.content_dir, &slug);
 
     let existing = if talk_path.is_file() {
-        tokio::fs::read_to_string(&talk_path).await.unwrap_or_default()
+        tokio::fs::read_to_string(&talk_path)
+            .await
+            .unwrap_or_default()
     } else {
         String::new()
     };
@@ -3126,7 +3529,13 @@ async fn history_page(
     };
 
     let pending_count = pending_count_for(&state, maybe_user.as_ref()).await;
-    Ok(chrome(&format!("History: {}", slug), body, &state.site_title, maybe_user.as_ref(), pending_count))
+    Ok(chrome(
+        &format!("History: {}", slug),
+        body,
+        &state.site_title,
+        maybe_user.as_ref(),
+        pending_count,
+    ))
 }
 
 async fn blame_page(
@@ -3163,7 +3572,13 @@ async fn blame_page(
     };
 
     let pending_count = pending_count_for(&state, maybe_user.as_ref()).await;
-    Ok(chrome(&format!("Blame: {}", slug), body, &state.site_title, maybe_user.as_ref(), pending_count))
+    Ok(chrome(
+        &format!("Blame: {}", slug),
+        body,
+        &state.site_title,
+        maybe_user.as_ref(),
+        pending_count,
+    ))
 }
 
 #[derive(Deserialize)]
@@ -3192,7 +3607,9 @@ async fn diff_page(
         let old = crate::history::get_file_at_rev(&content_dir, &slug2, &a2).unwrap_or_default();
         let new = crate::history::get_file_at_rev(&content_dir, &slug2, &b2).unwrap_or_default();
         (old, new)
-    }).await.map_err(|e| WikiError::WriteFailed(format!("diff spawn: {e}")))?;
+    })
+    .await
+    .map_err(|e| WikiError::WriteFailed(format!("diff spawn: {e}")))?;
 
     // Build two-column rows: (left_html, right_html, row_class)
     let line_diff = similar::TextDiff::from_lines(&old_text, &new_text);
@@ -3202,7 +3619,11 @@ async fn diff_page(
     let mut pending_del: Vec<String> = Vec::new();
     let mut pending_ins: Vec<String> = Vec::new();
 
-    fn flush_pending(del: &mut Vec<String>, ins: &mut Vec<String>, rows: &mut Vec<(String, String, &'static str)>) {
+    fn flush_pending(
+        del: &mut Vec<String>,
+        ins: &mut Vec<String>,
+        rows: &mut Vec<(String, String, &'static str)>,
+    ) {
         let max = del.len().max(ins.len());
         for i in 0..max {
             let old_line = del.get(i).map(|s| s.as_str()).unwrap_or("");
@@ -3212,9 +3633,13 @@ async fn diff_page(
             } else {
                 (html_escape(old_line), html_escape(new_line))
             };
-            let cls = if old_line.is_empty() { "diff-row-ins" }
-                      else if new_line.is_empty() { "diff-row-del" }
-                      else { "diff-row-chg" };
+            let cls = if old_line.is_empty() {
+                "diff-row-ins"
+            } else if new_line.is_empty() {
+                "diff-row-del"
+            } else {
+                "diff-row-chg"
+            };
             rows.push((left_html, right_html, cls));
         }
         del.clear();
@@ -3262,11 +3687,19 @@ async fn diff_page(
     };
 
     let pending_count = pending_count_for(&state, maybe_user.as_ref()).await;
-    Ok(chrome(&format!("Diff: {}", slug), body, &state.site_title, maybe_user.as_ref(), pending_count))
+    Ok(chrome(
+        &format!("Diff: {}", slug),
+        body,
+        &state.site_title,
+        maybe_user.as_ref(),
+        pending_count,
+    ))
 }
 
 fn html_escape(s: &str) -> String {
-    s.replace('&', "&amp;").replace('<', "&lt;").replace('>', "&gt;")
+    s.replace('&', "&amp;")
+        .replace('<', "&lt;")
+        .replace('>', "&gt;")
 }
 
 /// Build (left_html, right_html) from a word-level diff of two lines.
@@ -3286,21 +3719,30 @@ fn word_diff_pair(old_line: &str, new_line: &str) -> (String, String) {
                     right.push_str(&e);
                 }
             }
-            similar::DiffOp::Delete { old_index, old_len, .. } => {
+            similar::DiffOp::Delete {
+                old_index, old_len, ..
+            } => {
                 left.push_str("<del>");
                 for s in &old_sl[old_index..old_index + old_len] {
                     left.push_str(&html_escape(s));
                 }
                 left.push_str("</del>");
             }
-            similar::DiffOp::Insert { new_index, new_len, .. } => {
+            similar::DiffOp::Insert {
+                new_index, new_len, ..
+            } => {
                 right.push_str("<ins>");
                 for s in &new_sl[new_index..new_index + new_len] {
                     right.push_str(&html_escape(s));
                 }
                 right.push_str("</ins>");
             }
-            similar::DiffOp::Replace { old_index, old_len, new_index, new_len } => {
+            similar::DiffOp::Replace {
+                old_index,
+                old_len,
+                new_index,
+                new_len,
+            } => {
                 left.push_str("<del>");
                 for s in &old_sl[old_index..old_index + old_len] {
                     left.push_str(&html_escape(s));
@@ -3318,14 +3760,24 @@ fn word_diff_pair(old_line: &str, new_line: &str) -> (String, String) {
 }
 
 /// Shared shell for non-article pages (search, category, errors).
-fn chrome(_title: &str, body: Markup, site_title: &str, user: Option<&User>, pending_count: i64) -> Markup {
+fn chrome(
+    _title: &str,
+    body: Markup,
+    site_title: &str,
+    user: Option<&User>,
+    pending_count: i64,
+) -> Markup {
+    let auth_attr = if user.is_some() { "user" } else { "anon" };
     html! {
         (DOCTYPE)
-        html lang="en" {
+        html lang="en"
+             data-auth=(auth_attr)
+             data-instance="documentation" {
             head {
                 meta charset="utf-8";
                 meta name="viewport" content="width=device-width, initial-scale=1";
                 title { (site_title) }
+                link rel="stylesheet" href="/static/tokens.css";
                 link rel="stylesheet" href="/static/style.css";
             }
             body {
@@ -3354,20 +3806,20 @@ fn chrome(_title: &str, body: Markup, site_title: &str, user: Option<&User>, pen
                 main.site-main #main-content {
                     (body)
                 }
-                footer.shell-footer {
-                    div.footer-row {
-                        nav.footnav aria-label="Footer navigation" {
-                            a href="/wiki/disclaimers" { "Disclaimer" }
-                            a href="/wiki/contact" { "Contact" }
-                        }
+                footer.shell-footer role="contentinfo" {
+                    div.footer-cities { "Vancouver · Toronto · London" }
+                    nav.footer-nav aria-label="Footer navigation" {
+                        a href="/wiki/disclaimers" { "Disclaimer" }
+                        a href="/wiki/contact" { "Contact" }
                     }
-                    p.footer-copyright-line {
-                        "© 2026 PointSav Digital Systems. Content: "
-                        a href="https://creativecommons.org/licenses/by/4.0/" { "CC BY 4.0" }
-                        "."
+                    p.footer-copyright-line.copyright {
+                        "© 2026 Woodfine Capital Projects Inc. All rights reserved."
                     }
-                    p.footer-trademark-line {
-                        "PointSav™, Foundry™, ToteboxOS™, ConsoleOS™, OrchestrationOS™, and WorkplaceOS™ are unregistered trademarks of Woodfine Capital Projects Inc."
+                    p.footer-trademark-line.trademark {
+                        "Woodfine Capital Projects™, Woodfine Management Corp™, PointSav Digital Systems™, "
+                        "Totebox Orchestration™, and Totebox Archive™ are trademarks of Woodfine Capital "
+                        "Projects Inc. used in Canada, the United States, Latin America, and Europe. All other "
+                        "trademarks are the property of their respective owners."
                     }
                 }
             }
@@ -3398,11 +3850,15 @@ fn auth_nav_widget(user: Option<&User>, pending_count: i64) -> Markup {
 }
 
 async fn pending_count_for(state: &AppState, user: Option<&User>) -> i64 {
-    let Some(u) = user else { return 0; };
+    let Some(u) = user else {
+        return 0;
+    };
     if !u.is_admin() {
         return 0;
     }
-    let Some(db) = &state.db else { return 0; };
+    let Some(db) = &state.db else {
+        return 0;
+    };
     let db = db.clone();
     tokio::task::spawn_blocking(move || {
         let conn = db.lock().unwrap();
@@ -3445,15 +3901,15 @@ mod tests {
                 citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
                 search: Arc::new(index),
                 git: Arc::new(Mutex::new(repo)),
-                collab: Arc::new(crate::collab::CollabRooms::new()),
-                enable_collab: false,
                 site_title: "PointSav Documentation Wiki".to_string(),
                 git_tenant: "pointsav".to_string(),
-            mcp_enabled: false,
+                mcp_enabled: false,
                 glossary: Arc::new(crate::glossary::Glossary::default()),
                 links: crate::links::LinkGraph::for_testing(),
                 brand_theme: None,
-                db: None,            },
+                brand_instance: "documentation".to_string(),
+                db: None,
+            },
             dir,
             state_dir,
         )
@@ -3464,7 +3920,12 @@ mod tests {
         let (state, _dir, _state_dir) = fixture_state().await;
         let app = router(state);
         let resp = app
-            .oneshot(Request::builder().uri("/healthz").body(Body::empty()).unwrap())
+            .oneshot(
+                Request::builder()
+                    .uri("/healthz")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
             .await
             .unwrap();
         assert_eq!(resp.status(), StatusCode::OK);
@@ -3487,7 +3948,10 @@ mod tests {
         let body = resp.into_body().collect().await.unwrap().to_bytes();
         let html = std::str::from_utf8(&body).unwrap();
         assert!(html.contains("Test Topic"), "title should appear: {html}");
-        assert!(html.contains("Heading"), "body heading should appear: {html}");
+        assert!(
+            html.contains("Heading"),
+            "body heading should appear: {html}"
+        );
     }
 
     #[tokio::test]
@@ -3542,11 +4006,35 @@ mod tests {
         assert_eq!(resp.status(), StatusCode::OK);
         let body = resp.into_body().collect().await.unwrap().to_bytes();
         let html = std::str::from_utf8(&body).unwrap();
-        assert!(html.contains("Article"), "Article tab should appear: {html}");
-        assert!(html.contains("Talk"), "Talk tab should appear: {html}");
+        assert!(
+            html.contains("Article"),
+            "Article tab should appear: {html}"
+        );
+        // 21st-century-Wikipedia: Talk tab is auth-gated — it must NOT appear in
+        // the anonymous reading-surface tab bar. It is still reachable from the
+        // authenticated floating-action-bar overflow menu, but never on the
+        // anonymous reader's article chrome. Hybrid jury report (2026-05-24).
+        // (We assert absence in the visible page-tabs nav by checking the
+        //  rendered tab markup — the FAB markup is emitted unconditionally
+        //  but the overflow `Talk` label is inside a <details> overflow menu
+        //  hidden by CSS for `html[data-auth="anon"]`, so its plain-text
+        //  occurrence in the HTML body still satisfies the auth-gating
+        //  contract at the visible-chrome level. We assert here that no
+        //  visible "wiki-tab" anchor carries the Talk label.)
+        assert!(
+            !html.contains(r#"class="wiki-tab" href="/talk/"#)
+                && !html.contains(r#"accesskey="t""#),
+            "Talk tab must NOT render as a wiki-tab for anonymous readers: {html}"
+        );
         assert!(html.contains("Read"), "Read tab should appear: {html}");
-        assert!(html.contains("View source"), "View source tab should appear (unauthenticated): {html}");
-        assert!(html.contains("View history"), "View history tab should appear: {html}");
+        assert!(
+            html.contains("View source"),
+            "View source link should appear (footer): {html}"
+        );
+        assert!(
+            html.contains("View history"),
+            "View history tab should appear: {html}"
+        );
     }
 
     /// Verify that the tagline appears below the page title (item 9).
@@ -3615,15 +4103,15 @@ mod tests {
             citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
             search: Arc::new(index),
             git: Arc::new(Mutex::new(repo)),
-            collab: Arc::new(crate::collab::CollabRooms::new()),
-            enable_collab: false,
             site_title: "PointSav Documentation Wiki".to_string(),
             git_tenant: "pointsav".to_string(),
             mcp_enabled: false,
             glossary: Arc::new(crate::glossary::Glossary::default()),
-                links: crate::links::LinkGraph::for_testing(),
-                brand_theme: None,
-                db: None,        };
+            links: crate::links::LinkGraph::for_testing(),
+            brand_theme: None,
+            brand_instance: "documentation".to_string(),
+            db: None,
+        };
         let app = router(state);
         let resp = app
             .oneshot(
@@ -3663,9 +4151,18 @@ mod tests {
             .unwrap();
         let body = resp.into_body().collect().await.unwrap().to_bytes();
         let html = std::str::from_utf8(&body).unwrap();
-        assert!(html.contains("Exceptions only"), "density toggle should appear: {html}");
-        assert!(html.contains("density-off"), "Off button should appear: {html}");
-        assert!(html.contains("density-all"), "All button should appear: {html}");
+        assert!(
+            html.contains("Exceptions only"),
+            "density toggle should appear: {html}"
+        );
+        assert!(
+            html.contains("density-off"),
+            "Off button should appear: {html}"
+        );
+        assert!(
+            html.contains("density-all"),
+            "All button should appear: {html}"
+        );
     }
 
     /// Verify that per-section [edit] pencils appear on headings.
@@ -3690,15 +4187,15 @@ mod tests {
             citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
             search: Arc::new(index),
             git: Arc::new(Mutex::new(repo)),
-            collab: Arc::new(crate::collab::CollabRooms::new()),
-            enable_collab: false,
             site_title: "PointSav Documentation Wiki".to_string(),
             git_tenant: "pointsav".to_string(),
             mcp_enabled: false,
             glossary: Arc::new(crate::glossary::Glossary::default()),
-                links: crate::links::LinkGraph::for_testing(),
-                brand_theme: None,
-                db: None,        };
+            links: crate::links::LinkGraph::for_testing(),
+            brand_theme: None,
+            brand_instance: "documentation".to_string(),
+            db: None,
+        };
         let app = router(state);
         let resp = app
             .oneshot(
@@ -3743,15 +4240,15 @@ mod tests {
             citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
             search: Arc::new(index),
             git: Arc::new(Mutex::new(repo)),
-            collab: Arc::new(crate::collab::CollabRooms::new()),
-            enable_collab: false,
             site_title: "PointSav Documentation Wiki".to_string(),
             git_tenant: "pointsav".to_string(),
             mcp_enabled: false,
             glossary: Arc::new(crate::glossary::Glossary::default()),
-                links: crate::links::LinkGraph::for_testing(),
-                brand_theme: None,
-                db: None,        };
+            links: crate::links::LinkGraph::for_testing(),
+            brand_theme: None,
+            brand_instance: "documentation".to_string(),
+            db: None,
+        };
         let app = router(state);
         let resp = app
             .oneshot(
@@ -3764,9 +4261,15 @@ mod tests {
             .unwrap();
         let body = resp.into_body().collect().await.unwrap().to_bytes();
         let html = std::str::from_utf8(&body).unwrap();
-        assert!(html.contains("Alpha"), "category Alpha should appear: {html}");
+        assert!(
+            html.contains("Alpha"),
+            "category Alpha should appear: {html}"
+        );
         assert!(html.contains("Beta"), "category Beta should appear: {html}");
-        assert!(html.contains("wiki-categories"), "categories block should appear: {html}");
+        assert!(
+            html.contains("wiki-categories"),
+            "categories block should appear: {html}"
+        );
     }
 
     // Iteration-2 tests — additive; all existing tests remain unchanged.
@@ -3793,15 +4296,15 @@ mod tests {
             citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
             search: Arc::new(index),
             git: Arc::new(Mutex::new(repo)),
-            collab: Arc::new(crate::collab::CollabRooms::new()),
-            enable_collab: false,
             site_title: "PointSav Documentation Wiki".to_string(),
             git_tenant: "pointsav".to_string(),
             mcp_enabled: false,
             glossary: Arc::new(crate::glossary::Glossary::default()),
-                links: crate::links::LinkGraph::for_testing(),
-                brand_theme: None,
-                db: None,        };
+            links: crate::links::LinkGraph::for_testing(),
+            brand_theme: None,
+            brand_instance: "documentation".to_string(),
+            db: None,
+        };
         let app = router(state);
         let resp = app
             .oneshot(
@@ -3850,15 +4353,15 @@ mod tests {
             citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
             search: Arc::new(index),
             git: Arc::new(Mutex::new(repo)),
-            collab: Arc::new(crate::collab::CollabRooms::new()),
-            enable_collab: false,
             site_title: "PointSav Documentation Wiki".to_string(),
             git_tenant: "pointsav".to_string(),
             mcp_enabled: false,
             glossary: Arc::new(crate::glossary::Glossary::default()),
-                links: crate::links::LinkGraph::for_testing(),
-                brand_theme: None,
-                db: None,        };
+            links: crate::links::LinkGraph::for_testing(),
+            brand_theme: None,
+            brand_instance: "documentation".to_string(),
+            db: None,
+        };
         let app = router(state);
         let resp = app
             .oneshot(
@@ -3892,7 +4395,9 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         let state_dir = tempfile::tempdir().unwrap();
         // Create architecture/ subdirectory with one TOPIC.
-        tokio::fs::create_dir_all(dir.path().join("architecture")).await.unwrap();
+        tokio::fs::create_dir_all(dir.path().join("architecture"))
+            .await
+            .unwrap();
         tokio::fs::write(
             dir.path().join("architecture/compounding-substrate.md"),
             "---\ntitle: The Compounding Substrate\ncategory: architecture\n---\nSubstrate body.\n",
@@ -3910,15 +4415,15 @@ mod tests {
             citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
             search: Arc::new(index),
             git: Arc::new(Mutex::new(repo)),
-            collab: Arc::new(crate::collab::CollabRooms::new()),
-            enable_collab: false,
             site_title: "PointSav Documentation Wiki".to_string(),
             git_tenant: "pointsav".to_string(),
             mcp_enabled: false,
             glossary: Arc::new(crate::glossary::Glossary::default()),
-                links: crate::links::LinkGraph::for_testing(),
-                brand_theme: None,
-                db: None,        };
+            links: crate::links::LinkGraph::for_testing(),
+            brand_theme: None,
+            brand_instance: "documentation".to_string(),
+            db: None,
+        };
         let app = router(state);
         let resp = app
             .oneshot(
@@ -3929,7 +4434,11 @@ mod tests {
             )
             .await
             .unwrap();
-        assert_eq!(resp.status(), StatusCode::OK, "subdirectory TOPIC should resolve");
+        assert_eq!(
+            resp.status(),
+            StatusCode::OK,
+            "subdirectory TOPIC should resolve"
+        );
         let body = resp.into_body().collect().await.unwrap().to_bytes();
         let html = std::str::from_utf8(&body).unwrap();
         assert!(
@@ -3945,7 +4454,9 @@ mod tests {
     async fn wiki_page_bare_slug_redirects_to_qualified() {
         let dir = tempfile::tempdir().unwrap();
         let state_dir = tempfile::tempdir().unwrap();
-        tokio::fs::create_dir_all(dir.path().join("architecture")).await.unwrap();
+        tokio::fs::create_dir_all(dir.path().join("architecture"))
+            .await
+            .unwrap();
         tokio::fs::write(
             dir.path().join("architecture/bare-slug-test.md"),
             "---\ntitle: Bare Slug Test\ncategory: architecture\n---\nBody.\n",
@@ -3963,14 +4474,13 @@ mod tests {
             citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
             search: Arc::new(index),
             git: Arc::new(Mutex::new(repo)),
-            collab: Arc::new(crate::collab::CollabRooms::new()),
-            enable_collab: false,
             site_title: "Test Wiki".to_string(),
             git_tenant: "pointsav".to_string(),
             mcp_enabled: false,
             glossary: Arc::new(crate::glossary::Glossary::default()),
             links: crate::links::LinkGraph::for_testing(),
             brand_theme: None,
+            brand_instance: "documentation".to_string(),
             db: None,
         };
         let app = router(state);
@@ -3990,8 +4500,7 @@ mod tests {
         );
         let location = resp.headers().get("location").unwrap().to_str().unwrap();
         assert_eq!(
-            location,
-            "/wiki/architecture/bare-slug-test",
+            location, "/wiki/architecture/bare-slug-test",
             "redirect location should be the path-qualified slug"
         );
     }
@@ -4009,7 +4518,9 @@ mod tests {
         .await
         .unwrap();
         // Architecture subdirectory with one TOPIC.
-        tokio::fs::create_dir_all(dir.path().join("architecture")).await.unwrap();
+        tokio::fs::create_dir_all(dir.path().join("architecture"))
+            .await
+            .unwrap();
         tokio::fs::write(
             dir.path().join("architecture/my-article.md"),
             "---\ntitle: My Article\ncategory: architecture\n---\nContent here.\n",
@@ -4027,15 +4538,15 @@ mod tests {
             citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
             search: Arc::new(index),
             git: Arc::new(Mutex::new(repo)),
-            collab: Arc::new(crate::collab::CollabRooms::new()),
-            enable_collab: false,
             site_title: "PointSav Documentation Wiki".to_string(),
             git_tenant: "pointsav".to_string(),
             mcp_enabled: false,
             glossary: Arc::new(crate::glossary::Glossary::default()),
-                links: crate::links::LinkGraph::for_testing(),
-                brand_theme: None,
-                db: None,        };
+            links: crate::links::LinkGraph::for_testing(),
+            brand_theme: None,
+            brand_instance: "documentation".to_string(),
+            db: None,
+        };
         let app = router(state);
         let resp = app
             .oneshot(Request::builder().uri("/").body(Body::empty()).unwrap())
@@ -4088,15 +4599,15 @@ mod tests {
             citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
             search: Arc::new(index),
             git: Arc::new(Mutex::new(repo)),
-            collab: Arc::new(crate::collab::CollabRooms::new()),
-            enable_collab: false,
             site_title: "PointSav Documentation Wiki".to_string(),
             git_tenant: "pointsav".to_string(),
             mcp_enabled: false,
             glossary: Arc::new(crate::glossary::Glossary::default()),
-                links: crate::links::LinkGraph::for_testing(),
-                brand_theme: None,
-                db: None,        };
+            links: crate::links::LinkGraph::for_testing(),
+            brand_theme: None,
+            brand_instance: "documentation".to_string(),
+            db: None,
+        };
         let app = router(state);
         let resp = app
             .oneshot(
@@ -4151,15 +4662,15 @@ mod tests {
             citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
             search: Arc::new(index),
             git: Arc::new(Mutex::new(repo)),
-            collab: Arc::new(crate::collab::CollabRooms::new()),
-            enable_collab: false,
             site_title: "PointSav Documentation Wiki".to_string(),
             git_tenant: "pointsav".to_string(),
             mcp_enabled: false,
             glossary: Arc::new(crate::glossary::Glossary::default()),
-                links: crate::links::LinkGraph::for_testing(),
-                brand_theme: None,
-                db: None,        };
+            links: crate::links::LinkGraph::for_testing(),
+            brand_theme: None,
+            brand_instance: "documentation".to_string(),
+            db: None,
+        };
         let app = router(state);
         let resp = app
             .oneshot(
@@ -4207,15 +4718,15 @@ mod tests {
             citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
             search: Arc::new(index),
             git: Arc::new(Mutex::new(repo)),
-            collab: Arc::new(crate::collab::CollabRooms::new()),
-            enable_collab: false,
             site_title: "PointSav Documentation Wiki".to_string(),
             git_tenant: "pointsav".to_string(),
             mcp_enabled: false,
             glossary: Arc::new(crate::glossary::Glossary::default()),
-                links: crate::links::LinkGraph::for_testing(),
-                brand_theme: None,
-                db: None,        };
+            links: crate::links::LinkGraph::for_testing(),
+            brand_theme: None,
+            brand_instance: "documentation".to_string(),
+            db: None,
+        };
         let app = router(state);
         let resp = app
             .oneshot(
@@ -4232,6 +4743,380 @@ mod tests {
         assert!(
             !html.contains("wiki-lang-switcher"),
             "language switcher should NOT appear when no sibling exists: {html}"
+        );
+    }
+
+    /// Accept: application/json returns a JSON object with the expected keys.
+    #[tokio::test]
+    async fn wiki_page_json_content_negotiation_returns_json() {
+        let (state, _dir, _state_dir) = fixture_state().await;
+        let app = router(state);
+        let resp = app
+            .oneshot(
+                Request::builder()
+                    .uri("/wiki/topic-test")
+                    .header("accept", "application/json")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(resp.status(), StatusCode::OK);
+        let ct = resp
+            .headers()
+            .get("content-type")
+            .and_then(|v| v.to_str().ok())
+            .unwrap_or("");
+        assert!(
+            ct.contains("application/json"),
+            "content-type should be JSON: {ct}"
+        );
+        let body = resp.into_body().collect().await.unwrap().to_bytes();
+        let val: serde_json::Value = serde_json::from_slice(&body).unwrap();
+        assert!(val.get("frontmatter").is_some(), "missing frontmatter key");
+        assert!(val.get("body_md").is_some(), "missing body_md key");
+        assert!(val.get("blake3").is_some(), "missing blake3 key");
+        assert!(
+            val.get("revision_sha").is_some(),
+            "missing revision_sha key"
+        );
+        assert!(val.get("backlinks").is_some(), "missing backlinks key");
+        assert!(val.get("claims").is_some(), "missing claims key");
+        assert_eq!(val["frontmatter"]["title"], "Test Topic");
+    }
+
+    /// ?asof= with an unknown revision returns 404. The test content dir is
+    /// an empty git repo (no commits), so any SHA is unknown.
+    #[tokio::test]
+    async fn wiki_page_asof_unknown_revision_returns_404() {
+        let (state, _dir, _state_dir) = fixture_state().await;
+        let app = router(state);
+        let resp = app
+            .oneshot(
+                Request::builder()
+                    .uri("/wiki/topic-test?asof=deadbeefdeadbeef")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(resp.status(), StatusCode::NOT_FOUND);
+    }
+
+    // ── Phase 5.1: bilingual /es/ routing tests ───────────────────────────────
+
+    /// /es/ serves index.es.md with lang="es" when the ES index exists.
+    #[tokio::test]
+    async fn home_es_serves_es_index_when_present() {
+        let (state, dir, _state_dir) = fixture_state().await;
+        tokio::fs::write(
+            dir.path().join("index.md"),
+            "---\ntitle: Home EN\n---\nEnglish home content.\n",
+        )
+        .await
+        .unwrap();
+        tokio::fs::write(
+            dir.path().join("index.es.md"),
+            "---\ntitle: Inicio\n---\nContenido en español.\n",
+        )
+        .await
+        .unwrap();
+        let app = router(state);
+        let resp = app
+            .oneshot(Request::builder().uri("/es/").body(Body::empty()).unwrap())
+            .await
+            .unwrap();
+        assert_eq!(resp.status(), StatusCode::OK);
+        let body = resp.into_body().collect().await.unwrap().to_bytes();
+        let html = std::str::from_utf8(&body).unwrap();
+        assert!(html.contains(r#"lang="es""#), "should have lang=es: {html}");
+        assert!(
+            html.contains("Contenido en español"),
+            "should serve ES content: {html}"
+        );
+    }
+
+    /// /es/ falls back to index.md (returning 200) when index.es.md is absent.
+    #[tokio::test]
+    async fn home_es_falls_back_to_en_when_no_es_index() {
+        let (state, dir, _state_dir) = fixture_state().await;
+        tokio::fs::write(
+            dir.path().join("index.md"),
+            "---\ntitle: Home EN\n---\nEnglish home content.\n",
+        )
+        .await
+        .unwrap();
+        let app = router(state);
+        let resp = app
+            .oneshot(Request::builder().uri("/es/").body(Body::empty()).unwrap())
+            .await
+            .unwrap();
+        assert_eq!(resp.status(), StatusCode::OK);
+        let body = resp.into_body().collect().await.unwrap().to_bytes();
+        let html = std::str::from_utf8(&body).unwrap();
+        assert!(
+            html.contains("English home content"),
+            "fallback should serve EN content: {html}"
+        );
+    }
+
+    /// /es/wiki/{slug} serves the .es.md file with lang="es" when it exists.
+    #[tokio::test]
+    async fn wiki_page_es_serves_es_article_when_present() {
+        let (state, dir, _state_dir) = fixture_state().await;
+        tokio::fs::write(
+            dir.path().join("topic-test.es.md"),
+            "---\ntitle: Tema de Prueba\n---\n# Encabezado\n\nContenido en español.\n",
+        )
+        .await
+        .unwrap();
+        let app = router(state);
+        let resp = app
+            .oneshot(
+                Request::builder()
+                    .uri("/es/wiki/topic-test")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(resp.status(), StatusCode::OK);
+        let body = resp.into_body().collect().await.unwrap().to_bytes();
+        let html = std::str::from_utf8(&body).unwrap();
+        assert!(html.contains(r#"lang="es""#), "should have lang=es: {html}");
+        assert!(
+            html.contains("Encabezado"),
+            "should serve ES body content: {html}"
+        );
+    }
+
+    /// /es/wiki/{slug} falls back to the EN article (200, lang="en") when
+    /// no .es.md sibling exists.
+    #[tokio::test]
+    async fn wiki_page_es_falls_back_to_en_when_no_es_article() {
+        let (state, _dir, _state_dir) = fixture_state().await;
+        let app = router(state);
+        let resp = app
+            .oneshot(
+                Request::builder()
+                    .uri("/es/wiki/topic-test")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(resp.status(), StatusCode::OK);
+        let body = resp.into_body().collect().await.unwrap().to_bytes();
+        let html = std::str::from_utf8(&body).unwrap();
+        assert!(
+            html.contains(r#"lang="en""#),
+            "fallback should have lang=en: {html}"
+        );
+        assert!(
+            html.contains("Test Topic"),
+            "fallback should serve EN content: {html}"
+        );
+    }
+
+    /// /es/wiki/{slug} returns 404 when the slug exists in neither locale.
+    #[tokio::test]
+    async fn wiki_page_es_returns_404_for_unknown_slug() {
+        let (state, _dir, _state_dir) = fixture_state().await;
+        let app = router(state);
+        let resp = app
+            .oneshot(
+                Request::builder()
+                    .uri("/es/wiki/does-not-exist")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(resp.status(), StatusCode::NOT_FOUND);
+    }
+
+    /// The EN home page nav contains a link to /es/.
+    #[tokio::test]
+    async fn home_has_lang_toggle_to_es() {
+        let (state, dir, _state_dir) = fixture_state().await;
+        tokio::fs::write(
+            dir.path().join("index.md"),
+            "---\ntitle: Home\n---\nHome content.\n",
+        )
+        .await
+        .unwrap();
+        let app = router(state);
+        let resp = app
+            .oneshot(Request::builder().uri("/").body(Body::empty()).unwrap())
+            .await
+            .unwrap();
+        assert_eq!(resp.status(), StatusCode::OK);
+        let body = resp.into_body().collect().await.unwrap().to_bytes();
+        let html = std::str::from_utf8(&body).unwrap();
+        assert!(
+            html.contains(r#"href="/es/""#),
+            "EN home nav should link to /es/: {html}"
+        );
+    }
+
+    /// The ES article page nav contains a link back to the EN article.
+    #[tokio::test]
+    async fn wiki_page_es_has_lang_toggle_to_en() {
+        let (state, dir, _state_dir) = fixture_state().await;
+        tokio::fs::write(
+            dir.path().join("topic-test.es.md"),
+            "---\ntitle: Tema de Prueba\n---\nContenido en español.\n",
+        )
+        .await
+        .unwrap();
+        let app = router(state);
+        let resp = app
+            .oneshot(
+                Request::builder()
+                    .uri("/es/wiki/topic-test")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(resp.status(), StatusCode::OK);
+        let body = resp.into_body().collect().await.unwrap().to_bytes();
+        let html = std::str::from_utf8(&body).unwrap();
+        assert!(
+            html.contains(r#"href="/wiki/topic-test""#),
+            "ES article nav should link to EN article: {html}"
+        );
+    }
+
+    /// The ES article page head contains hreflang="en" and rel="canonical" tags.
+    #[tokio::test]
+    async fn wiki_page_es_has_hreflang_tags() {
+        let (state, dir, _state_dir) = fixture_state().await;
+        tokio::fs::write(
+            dir.path().join("topic-test.es.md"),
+            "---\ntitle: Tema de Prueba\n---\nContenido en español.\n",
+        )
+        .await
+        .unwrap();
+        let app = router(state);
+        let resp = app
+            .oneshot(
+                Request::builder()
+                    .uri("/es/wiki/topic-test")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(resp.status(), StatusCode::OK);
+        let body = resp.into_body().collect().await.unwrap().to_bytes();
+        let html = std::str::from_utf8(&body).unwrap();
+        assert!(
+            html.contains(r#"hreflang="en""#),
+            "ES article head should have hreflang=en: {html}"
+        );
+        assert!(
+            html.contains(r#"rel="canonical""#),
+            "ES article head should have canonical link: {html}"
+        );
+    }
+
+    /// `GET /` with `Accept-Language: es` redirects to `/es/`.
+    #[tokio::test]
+    async fn index_redirects_to_es_on_accept_language() {
+        let (state, dir, _state_dir) = fixture_state().await;
+        tokio::fs::write(
+            dir.path().join("index.md"),
+            "---\ntitle: Home\n---\nHome content.\n",
+        )
+        .await
+        .unwrap();
+        let app = router(state);
+        let resp = app
+            .oneshot(
+                Request::builder()
+                    .uri("/")
+                    .header("Accept-Language", "es,en;q=0.8")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(
+            resp.status(),
+            StatusCode::FOUND,
+            "Accept-Language: es should redirect to /es/"
+        );
+        assert_eq!(resp.headers().get("location").and_then(|v| v.to_str().ok()), Some("/es/"));
+    }
+
+    /// `GET /?noredirect=1` with `Accept-Language: es` serves EN home (no redirect).
+    #[tokio::test]
+    async fn index_noredirect_suppresses_accept_language_redirect() {
+        let (state, dir, _state_dir) = fixture_state().await;
+        tokio::fs::write(
+            dir.path().join("index.md"),
+            "---\ntitle: Home\n---\nHome content.\n",
+        )
+        .await
+        .unwrap();
+        let app = router(state);
+        let resp = app
+            .oneshot(
+                Request::builder()
+                    .uri("/?noredirect=1")
+                    .header("Accept-Language", "es,en;q=0.8")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(
+            resp.status(),
+            StatusCode::OK,
+            "noredirect=1 should suppress Accept-Language redirect"
+        );
+    }
+
+    /// `GET /` with no Accept-Language (or EN preference) serves EN home directly.
+    #[tokio::test]
+    async fn index_no_accept_language_serves_en() {
+        let (state, dir, _state_dir) = fixture_state().await;
+        tokio::fs::write(
+            dir.path().join("index.md"),
+            "---\ntitle: Home\n---\nHome content.\n",
+        )
+        .await
+        .unwrap();
+        let app = router(state);
+        let resp = app
+            .oneshot(Request::builder().uri("/").body(Body::empty()).unwrap())
+            .await
+            .unwrap();
+        assert_eq!(resp.status(), StatusCode::OK, "no Accept-Language should serve EN 200");
+    }
+
+    /// ES home lang-toggle links to `/?noredirect=1` to prevent redirect loop.
+    #[tokio::test]
+    async fn home_es_lang_toggle_links_to_en_with_noredirect() {
+        let (state, dir, _state_dir) = fixture_state().await;
+        tokio::fs::write(
+            dir.path().join("index.es.md"),
+            "---\ntitle: Inicio\n---\nContenido.\n",
+        )
+        .await
+        .unwrap();
+        let app = router(state);
+        let resp = app
+            .oneshot(Request::builder().uri("/es/").body(Body::empty()).unwrap())
+            .await
+            .unwrap();
+        assert_eq!(resp.status(), StatusCode::OK);
+        let body = resp.into_body().collect().await.unwrap().to_bytes();
+        let html = std::str::from_utf8(&body).unwrap();
+        assert!(
+            html.contains(r#"href="/?noredirect=1""#),
+            "ES home nav should link to /?noredirect=1 to prevent redirect loop: {html}"
         );
     }
 }

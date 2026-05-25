@@ -6,6 +6,7 @@ use axum::{
     Router,
 };
 use serde::{Deserialize, Serialize};
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -23,6 +24,10 @@ pub struct HttpState {
     /// `/srv/foundry/citations.yaml` (overridable via
     /// `FOUNDRY_CITATIONS_PATH`). Hot-reload polling is on by default.
     pub citations: Arc<CitationRegistry>,
+    /// Set to `true` once the initial CORPUS drain completes.
+    /// `false` while warming — healthz returns 503 and graph_context is
+    /// blocked to prevent stale reads before the graph is populated.
+    pub ready: Arc<AtomicBool>,
 }
 
 // ── request / response types ──────────────────────────────────────────────────
@@ -90,6 +95,17 @@ pub struct HealthResponse {
 // ── handlers ──────────────────────────────────────────────────────────────────
 
 async fn healthz(State(state): State<Arc<HttpState>>) -> (StatusCode, Json<HealthResponse>) {
+    if !state.ready.load(Ordering::Acquire) {
+        return (
+            StatusCode::SERVICE_UNAVAILABLE,
+            Json(HealthResponse {
+                status: "warming",
+                entity_count: 0,
+                failures: vec!["corpus drain in progress".to_string()],
+            }),
+        );
+    }
+
     let mut failures = Vec::new();
 
     // Probe graph store with a lightweight read — if the graph is broken this will error.
@@ -138,6 +154,12 @@ async fn graph_context(
     State(state): State<Arc<HttpState>>,
     Query(params): Query<ContextQuery>,
 ) -> Result<Json<Vec<GraphEntity>>, (StatusCode, String)> {
+    if !state.ready.load(Ordering::Acquire) {
+        return Err((
+            StatusCode::SERVICE_UNAVAILABLE,
+            "warming: corpus drain in progress".to_string(),
+        ));
+    }
     state
         .graph
         .query_context(&params.module_id, &params.q, params.limit)
@@ -354,6 +376,7 @@ pub async fn run_server(
     bind_addr: String,
     doorman_endpoint: String,
     ontology_dir: String,
+    ready: Arc<AtomicBool>,
 ) {
     // Load citation registry at startup (P2-2.4). Failure is non-fatal —
     // an empty registry returns "no match" for every query, which is the
@@ -386,6 +409,7 @@ pub async fn run_server(
         doorman_endpoint,
         ontology_dir,
         citations,
+        ready,
     });
 
     let app = Router::new()
