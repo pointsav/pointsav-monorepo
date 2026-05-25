@@ -1221,8 +1221,7 @@ async function openFile(path, name) {
         saveBarBtn.className = 'bar-btn';
         saveBarBtn.textContent = '💾 Save';
         saveBarBtn.addEventListener('click', saveFile);
-        document.getElementById('viewer-bar').querySelector('.bar-btn')
-          .insertAdjacentElement('afterend', saveBarBtn);
+        document.getElementById('bar-path').insertAdjacentElement('afterend', saveBarBtn);
         showEditorPanel(data.content);
         // For iframe HTML, set up srcdoc on the same content so live preview works
         if (mode === 'iframe') {
@@ -1232,7 +1231,7 @@ async function openFile(path, name) {
         }
       }
     }
-  } catch(e) { /* editor service unavailable, silent */ }
+  } catch(e) { showEditorStatus('⚠ ' + e.message, '#f85149', 6000); }
 }
 
 // ── Print current file ────────────────────────────────────────────────────────
