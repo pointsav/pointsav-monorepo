@@ -395,3 +395,40 @@ Items 1–5 are Totebox scope. Item 6 is Command Session scope.
 | `service-slm/compute/opentofu/main.tf` | OpenTofu — VM definition, persistent disk, firewall, IAM, Instance Schedule |
 | `service-content/CLAUDE.md` | service-content project card — feature table, env vars, build commands |
 | `service-content/src/graph.rs` | GraphStore trait + both backends (LbugGraphStore, SqliteGraphStore) |
+
+---
+
+## §9 — Audit findings (2026-05-25)
+
+Pre-Stage-6 promote audit by 3 parallel Explore agents. Findings are evidence-based
+(exact file:line). All BLOCKER items were fixed in the same session.
+
+### service-slm
+
+| # | File:Line | Severity | Finding | Status |
+|---|---|---|---|---|
+| SLM-1 | `crates/slm-doorman/src/error.rs:245/249` | BLOCKER | User-facing error message + doc said "90 s outer deadline"; OUTER_DEADLINE is now 180 s | **FIXED** `error.rs` updated this session |
+| SLM-2 | `crates/slm-doorman/src/router.rs:750/779` | BLOCKER | `try_auto_start_yoyo()` doc comment + `Duration::from_secs(90)` stale after OUTER_DEADLINE 90→180 raise | **FIXED** `router.rs` updated this session |
+| SLM-3 | `crates/slm-doorman/src/tier/circuit_breaker.rs` | — | Circuit breaker state machine correct (all 4 transitions + failure counter reset verified) | CORRECT |
+| SLM-4 | `infrastructure/` | LOW | systemd unit files for `local-doorman.service` / `local-content.service` not in this repo; `PartOf=`/`Requires=` cause unknown | NOT-IN-REPO — infra gap; root cause deferred |
+| SLM-5 | `scripts/start-yoyo.sh:398–450` | — | `update_doorman_env()` correctly updates all 4 env vars (ZONE + ENDPOINT + HEALTH + WEIGHTS); default `--wait-ready` is 5400 s | CORRECT |
+| SLM-6 | `crates/slm-doorman-server/src/http.rs:1382–1389` | — | `graph-query` and `graph-mutation` present in `AUDIT_CAPTURE_VALID_EVENT_TYPES` (6 types total) | CORRECT |
+| SLM-7 | `scripts/test-yoyo-flows.sh` | LOW | 11 tests (not 10); test 9 (SSH kill/recovery) is a SKIP placeholder | DEFERRED — Sprint 9 |
+
+### service-content
+
+| # | File:Line | Severity | Finding | Status |
+|---|---|---|---|---|
+| SC-1 | `service-content/src/graph.rs:628–639 / 384–401` | — | `is_already_processed()` logic correct in both SQLite and Lbug backends; correctly distinguishes Source-only (false) from extracted (true) | CORRECT |
+| SC-2 | `service-content/src/main.rs:418–425` | MEDIUM | Code acknowledges `defer_reason` but does not differentiate `yoyo-transient` vs `yoyo-circuit-open` at the drain level — operational visibility gap, not a correctness bug | DEFERRED — Sprint 2 follow-up |
+| SC-3 | `service-content/src/main.rs:35–36` | MEDIUM | No startup retry/wait loop; Doorman unavailable at boot causes first drain cycle to defer all files silently | DEFERRED — Sprint 3 |
+| SC-4 | `service-content/src/graph.rs:88` | — | WAL checkpoint 4 MB hardcoded (correct); checkpoint triggered automatically by lbug + manually after drain | CORRECT |
+| SC-5 | `service-content/src/main.rs:320–327` | MEDIUM | File-read + JSON-parse failures silently skip CORPUS files with no error log; malformed files are silently marked done | DEFERRED — add `error!()` + return Err before Sprint 3 |
+| SC-6 | Sprint 3 map | — | Drain loop at `main.rs:185`; Doorman call `main.rs:403`; entity write `main.rs:524`; new PUSH endpoint would be POST `/v1/extraction/push` in `http.rs` | REFERENCE |
+| SC-7 | LbugGraphStore vs SqliteGraphStore | — | All three trait methods (`write_entity`, `write_related_to`, `is_already_processed`) behave identically across both backends | CORRECT |
+
+### Brief cleanup
+
+17 contaminated project-gis briefs (9 active + 8 archive) introduced by Stage-6 rebase
+2026-05-22 removed this session via `git rm`. Archive items verified as GIS cluster content
+before deletion. 3 Wikipedia Parity archive briefs confirmed legitimate and retained.
