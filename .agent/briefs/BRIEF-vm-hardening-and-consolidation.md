@@ -1,6 +1,6 @@
 ---
 artifact: brief
-status: absorbed
+status: archived
 archived: 2026-05-23
 absorbed: 2026-05-24
 absorbed_into: BRIEF-slm-substrate-master.md
