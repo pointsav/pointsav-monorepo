@@ -1228,6 +1228,22 @@ async function openFile(path, name) {
           const frame = document.getElementById('preview-frame');
           frame.removeAttribute('src');
           frame.srcdoc = data.content;
+          // Inject click→source navigation once iframe finishes loading
+          frame.addEventListener('load', () => {
+            try {
+              frame.contentDocument.addEventListener('click', ev => {
+                const el = ev.target;
+                if (!el || el.tagName === 'BODY' || el.tagName === 'HTML') return;
+                if (el.tagName === 'A') ev.preventDefault();
+                window.postMessage({
+                  type:      'iframe-source-click',
+                  id:        el.id || '',
+                  text:      (el.textContent || '').trim().slice(0, 200),
+                  outerHTML: (el.outerHTML || '').slice(0, 500),
+                }, '*');
+              }, true);
+            } catch(err) {}
+          }, { once: true });
         }
       }
     }
@@ -1795,6 +1811,34 @@ async function buildSearchIndex() {
 }
 
 buildSearchIndex();
+
+// ── iframe → editor click navigation ─────────────────────────────────────────
+window.addEventListener('message', e => {
+  if (!e.data || e.data.type !== 'iframe-source-click') return;
+  const ta = document.getElementById('editor-textarea');
+  if (!ta || !ta.value) return;
+  const { id, text, outerHTML } = e.data;
+  const lines = ta.value.split('\n');
+  let found = -1;
+
+  // 1. Match by id attribute (most reliable)
+  if (id) {
+    found = lines.findIndex(l => l.includes('id="' + id + '"') || l.includes("id='" + id + "'"));
+  }
+  // 2. Match by opening tag text (progressively shorter slices of outerHTML)
+  if (found < 0 && outerHTML) {
+    for (let len = Math.min(outerHTML.length, 80); len >= 20 && found < 0; len -= 10) {
+      const s = outerHTML.slice(0, len);
+      found = lines.findIndex(l => l.includes(s));
+    }
+  }
+  // 3. Fallback: match by text content
+  if (found < 0 && text && text.length > 4) {
+    found = lines.findIndex(l => l.includes(text.slice(0, 100)));
+  }
+
+  if (found >= 0) applyGotoLine(found + 1);
+});
 
 // ── Search UI ─────────────────────────────────────────────────────────────────
 const searchInput   = document.getElementById('search-input');
