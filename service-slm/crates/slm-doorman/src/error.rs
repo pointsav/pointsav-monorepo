@@ -235,11 +235,11 @@ pub enum DoormanError {
 
     // ── Tier B resilience ────────────────────────────────────────────────
 
-    /// Tier B (Yo-Yo) request timed out. The 90-second outer deadline
+    /// Tier B (Yo-Yo) request timed out. The 180-second outer deadline
     /// (tokio::time::timeout) fired before the response completed — including
     /// any 503 Retry-After cold-start sleep. The router treats this as a
     /// transient upstream failure and may fall back to Tier A.
-    #[error("Tier B request timed out (90 s outer deadline exceeded)")]
+    #[error("Tier B request timed out (180 s outer deadline exceeded)")]
     TierBTimeout,
 
     /// Tier B (Yo-Yo) circuit breaker is open. Five consecutive failures

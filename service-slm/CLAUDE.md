@@ -36,7 +36,7 @@ As of 2026-05-07 (commit `0140176`):
   named nodes `"default"`, `"trainer"` (L4/OLMo 3 32B-Think), `"graph"`
   (H100/Llama 3.3 70B); `yoyo_label` on `ComputeRequest` selects target;
   deploy gated on D4 image-build pipeline. Resilience stack complete:
-  60 s socket + 90 s outer deadline; 3-state circuit breaker; background
+  60 s socket + 180 s outer deadline; 3-state circuit breaker; background
   `/health` probe every 30 s; Tier A fallback on timeout/open/upstream
   error; `X-Foundry-Tier-Used` header; Rust idle monitor (replaces shell
   scripts) stops GCP VM after 30 min idle via Compute Engine API.
@@ -80,7 +80,7 @@ As of 2026-05-07 (commit `0140176`):
 
 ```
 cargo check --workspace                # seconds incremental
-cargo test  --workspace                # 175 tests (14 slm-core + 102 slm-doorman + 8 server-lib + 4 audit + 48 http + 3 idle-monitor)
+cargo test  --workspace                # 262 tests
 cargo clippy --workspace --all-targets -- -D warnings
 cargo fmt   --all -- --check
 ```
