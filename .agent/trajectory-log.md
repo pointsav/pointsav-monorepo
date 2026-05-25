@@ -1,513 +1,185 @@
 ---
+log: trajectory
+owner: task-project-language
+location: ~/Foundry/clones/project-language/.claude/
 schema: foundry-trajectory-log-v1
-owner: task-project-bim
-created: 2026-04-28
+created: 2026-04-27
 ---
 
-# Trajectory log — project-bim cluster
+# Trajectory log — project-language cluster
 
-Session-level trajectory capture per Doctrine §XV + `conventions/
-trajectory-substrate.md` §2. L1 hook (post-commit) installed in all
-3 sub-clones at provisioning; every commit on `cluster/project-bim`
-branches enters
-`~/Foundry/data/training-corpus/engineering/project-bim/` for future
-cluster-adapter training.
+Per Doctrine §XV and `conventions/trajectory-substrate.md` §2.
+Session trajectory capture seed; populated by
+`bin/capture-trajectory.sh` (L2 capture, pending wiring per
+`trajectory-substrate.md` §7). Until L2 is wired, this file remains
+seed-only for L2 — L1 commit-edit capture happens automatically via
+the post-commit hook in each sub-clone (capturing to
+`/srv/foundry/data/training-corpus/engineering/project-language/<sha>.jsonl`).
 
-This file is the WRITE-side log Task sessions append to at
-session-end snapshot time. Cluster provisioning entry follows.
-
----
-
-## 2026-04-28 — Cluster provisioning (Master)
-
-Master Claude provisioned the cluster per operator direction. Three
-sub-clones from local upstream paths:
-
-| Sub-clone | Upstream local path | Size |
-|---|---|---|
-| pointsav-monorepo/ | /srv/foundry/vendor/pointsav-monorepo | ~446 MB |
-| pointsav-design-system/ | /srv/foundry/vendor/pointsav-design-system | ~3.6 MB |
-| woodfine-fleet-deployment/ | /srv/foundry/customer/woodfine-fleet-deployment | ~105 MB |
-
-Each sub-clone configured with:
-- `origin` → SSH alias for canonical (`pointsav-administrator` for
-  pointsav/* repos; `woodfine-administrator` for woodfine/*)
-- `origin-staging-j` → jwoodfine
-- `origin-staging-p` → pwoodfine
-- `cluster/project-bim` branch checked out from `main`
-- L1 trajectory capture hook (`bin/install-capture-hook.sh`) installed
-
-cluster/project-bim is at the same HEAD as main on all three sub-clones.
-
-Cluster scope per operator (workspace v0.1.59 chat):
-- 5 NEW projects in pointsav-monorepo: service-materials,
-  service-buildings, app-orchestration-bim, app-workplace-bim,
-  app-console-bim. (Possibly +service-codes pending research.)
-- Building Design System tokens in pointsav-design-system (parallel
-  to project-design's DTCG vault pattern).
-- Deployment catalogs in woodfine-fleet-deployment: existing
-  cluster-totebox-property/ (target instance for the per-property
-  archive) + NEW gateway-orchestration-bim/ (target catalog for
-  bim.woodfinegroup.com frontend).
-
-Tetrad legs (per Doctrine claim #37):
-- Vendor: pointsav-monorepo (5 NEW projects)
-- Customer: woodfine-fleet-deployment (cluster-totebox-property +
-  gateway-orchestration-bim catalog folders)
-- Deployment: ~/Foundry/deployments/cluster-totebox-property-1/ +
-  ~/Foundry/deployments/gateway-orchestration-bim-1/
-- Wiki: drafts-outbound/ → project-language gateway
-
-Three Sonnet research sub-agents dispatched in parallel from Master
-session at 2026-04-28T20:08Z:
-- A: BIM Design System prior art + token taxonomy + Revit muscle-memory
-- B: City Code as Geometry leapfrog research
-- C: US/EU regulatory acceptance for flat-file IFC architectures
-
-Reports land at `~/Foundry/.claude/sub-agent-results/`.
-
-Cluster manifest `.claude/manifest.md` will be authored by Master
-once research returns — pending for ~30 min.
-
-— Master Claude (provisioning), 2026-04-28
+Newest entries on top.
 
 ---
 
-## 2026-04-28 — Sub-agent A returned (~9 min, 414 lines)
+## Session Gemini CLI — 2026-05-03 wave-1 (Development Regions architecture)
 
-`A-bim-design-system-prior-art-2026-04-28.md` — three findings:
+**State at session end (2026-05-03):**
 
-**1. The space is genuinely empty.** No prior art for "Carbon for AEC."
-Closest candidates fragment across three layers: (a) Archilogic
-Honeycomb (MIT, Vue 3, Dec 2025) — design system FOR an AEC web app,
-not FOR AEC workflows; (b) Hypar Elements (Apache 2.0, C#) — element
-data vocabulary; (c) Speckle Objects Kit — BuiltElements namespace.
-The BIM-semantic UI layer (IFC tree browser, property inspector, 3D
-viewport with element selection) has no open prior art and must be
-built.
+- Completed PL.7 normalization for \`content-wiki-documentation\` (prefix removal, categorization, link updates).
+- Synchronized repository rules (AGENT.md, repo-layout.md) with \`.agent/\` nomenclature and formalised \`GUIDE-*\` routing.
+- Published complete GIS Co-location series (22 files) to Woodfine Projects wiki.
+- Architected "Development Regions" pipeline for 800+ nodes (400 NA, 400 EU) using curated Wikipedia/Wikidata API extraction.
+- Formalised cross-cluster requests to \`project-gis\` (data feed) and \`project-knowledge\` (implementation).
 
-**2. Token taxonomy validated** — 8 primitives anchored to IFC 4.3:
+**Major substrate state changes absorbed this session:**
+- \`schema: region-v1\` frontmatter spec defined.
+- Wikipedia REST API (summaries) + Wikidata (curated metrics) established as the "non-hack" data source.
+- \`archived-regions/\` lifecycle pattern codified for scale management.
 
-| Token | IFC Anchor |
-|---|---|
-| SPATIAL | IfcSpatialElement |
-| ELEMENTS | IfcBuiltElement |
-| SYSTEMS | IfcDistributionElement (MEP) |
-| MATERIALS | IfcMaterial + bSDD |
-| ASSEMBLIES | IfcElementAssembly |
-| PERFORMANCE | IfcPropertySet + IfcQuantitySet |
-| IDENTITY+CODES | IfcClassificationReference + IfcConstraint |
-| RELATIONSHIPS | IfcRel* relationship entities |
+**Wave dispatch ledger:**
+- Wave 1: Development Regions Architecture & Normalization (COMPLETE).
 
-Operator's draft (Materials/Elements/Spaces/Systems/Connections/
-Codes/Performance/Identity) refined: Connections → RELATIONSHIPS;
-Identity + Codes merged on `IfcClassificationReference`. Uniclass
-2015 recommended as the classification floor.
-
-**3. City-Code-as-Geometry: REAL but staged.** IDS 1.0 (June 2024)
-explicitly limited to alphanumeric — explicit gap. Solibri does
-geometric checking proprietarily. Singapore CORENET X (mandatory
-Oct 2026) is closest production city-as-publisher. CHEK (EU Horizon
-Europe, concluded 2025) demonstrates open research. Realistic
-roadmap: 2026-2028 ship IDS+bSDD-based codes; 2028-2032 leapfrog
-to IfcConstraint geometric encoding + jurisdiction packs. Hyperscaler
-moat is structurally incompatible because cities acting as neutral
-publishers contradicts subscription tenancy.
-
-**10 universal interface components** validated across Revit /
-ArchiCAD / Bonsai / BricsCAD: SpatialTree, PropertiesPanel,
-Viewport3D, ViewNavigator, Toolbar, StatusBar, SelectionFilter,
-TypeBrowser, SectionPlane, AnnotationLayer. Plus 4 console-unique
-(`GuidSearch`, `AuditLog`, `Dashboard`, `ExportPanel`) and 4
-workplace-unique (`MaterialsBrowser`, `TypeEditor`, `ClashDetector`,
-`VersionHistory`). Most components shared with `mode` prop.
-
-— Master Claude (sub-agent A return), 2026-04-28
+**Open items at session end:**
+- Await Top 400 lists from \`project-gis\`.
+- project-knowledge implementation of \`sync-regions.py\` and UI rendering.
+- 20+ drafts remaining in gateway pipeline (project-bim, project-data).
 
 ---
 
-## 2026-04-28 — Sub-agent C returned (~9 min, 460 lines)
+## Session 17230305b03d3e32 — substantial productivity wave (2026-04-27 → 2026-04-28)
 
-`C-bim-regulatory-acceptance-2026-04-28.md` — verdict
-**STRUCTURALLY FAVORABLE.**
+**State at session end (2026-04-28T04:30:00Z, approximate):**
 
-**Standards floor (cluster must declare + ship):**
+- 13 commits shipped across 3 sub-clones (`content-wiki-documentation` × 11, `woodfine-fleet-deployment` × 2 incl. moving GUIDE-mesh-execution → route-network-admin/ + Wave 3b GUIDE, `pointsav-fleet-deployment` × 1 [PL.6 GUIDE])
+- 26 markdown files published (12 bilingual TOPIC pairs + 2 English-only GUIDEs)
+- 21 completed_topics_this_milestone for the wiki leg per cluster manifest
+- All L1 capture hooks fired; L1 corpus has 13 fresh `<sha>.jsonl` entries
+- 13 verdict-eligible Stage-1 DPO tuples produced (deferred batch JSONL emission for next session)
 
-1. IFC export: IFC 2x3 + IFC 4 + IFC 4.3 (ISO 16739-1:2024). Stable
-   GUIDs, correct property sets, schema validation. IfcOpenShell
-   0.8.5 sidecar.
-2. COBie via `ifccsv` — mandatory for GSA, USACE, VA (US); UK BIM
-   Level 2.
-3. BCF 3.0 — mandatory for Spain (2025), Dubai (2024); accepted
-   everywhere.
-4. IDS 1.0 validation via `ifctester` — adoption growing post-June
-   2024 official release.
-5. ISO 19650-compliant metadata per information container —
-   git-based flat-file repo qualifies as a CDE solution under the
-   standard's technology-neutral language (UID = commit hash,
-   Status = branch/tag, Revision = git history, Classification =
-   directory + YAML, Change History = git log).
-6. BEP (BIM Execution Plan) documentation aligning PointSav's role
-   with project requirements.
+**Major substrate state changes absorbed this session:**
 
-**Structural advantages over hyperscalers (cannot be closed):**
+- Doctrine v0.0.10 / claim #37 (Project Tetrad Discipline) ratified 2026-04-28; cluster manifest amended with `tetrad:` + `wiki:` leg
+- Doctrine claim #35 (Reverse-Funnel Editorial Pattern) ratified workspace v0.1.31; this cluster IS service-language
+- Doctrine claim #38 (design-system-substrate) ratified workspace v0.1.x; design.pointsav.com LIVE since 2026-04-28 v0.0.1
+- v0.1.30 sub-agent dispatch pattern adopted (Sonnet > Opus for bulk; foreground; bounded brief; parent reviews; 6 rules per model-tier-discipline §1A)
+- v0.1.42 SLM operationalization plan ratified (prose-edit promoted to review stage; refinement velocity > perfection)
+- v0.1.33-pending Q1-Q4 ratified (Doorman audit-routing architecture: /v1/audit_proxy + /v1/audit_capture/<id> + bin/edit-via-doorman.sh + foundry-audit-ledger-v1 schema + cutover (ii) parallel)
+- v0.1.36 layer-scope rule on canonical identity store reaffirmed (Master 2026-04-28T03:55Z) — chmod-canonical workaround REJECTED, per-user copies + resolver is the pattern
 
-| Dimension | Hyperscalers | PointSav |
-|---|---|---|
-| ITAR / air-gapped defense | Cannot host CUI on standard cloud (requires IL4-IL6 isolation) | NATIVE — data never leaves customer hardware |
-| EU Data Act vs US CLOUD Act | US-origin clouds remain CLOUD Act-subject | NO CLOUD DEPENDENCY — structurally sovereign |
-| GDPR data residency | Contractual (BCRs + SCCs + regional centers) | ARCHITECTURAL — data never leaves customer jurisdiction |
-| HIPAA (VA healthcare BIM) | Requires Business Associate Agreement | No BAA — local storage |
-| FedRAMP | Required for cloud BIM | EXEMPT — not a cloud service |
-| EUPL-1.2 | Proprietary subscription | EU procurement preferred; FAR 12.212 compatible; DoD "prefer OSS" supportive |
-| Subscription-lapse data access | "You will need to enter into a new Token Flex Term…" (Tandem) | OWNER HOLDS THE FILES — permanent and unconditional access |
+**Wave dispatch ledger:**
 
-**Certifications path (cluster pursues):**
+| Wave | Sub-agents | Outputs | Commits |
+|---|---|---|---|
+| Tier-0 audits | 4 bash-only | 4 audit reports | (no commits; informed downstream) |
+| Sonnet batch 1 | 4 (#14 README, #15 glossary, #16 YAML, #21 glossary compliance) | 4 reports | informed PL.6 + cleanup decisions |
+| Sonnet batch 2 | 1 (#18 GUIDE-mesh proposal) | 1 proposal | actioned in commit 7f710f4 (Jennifer) |
+| Wave 1 | 5 (PL.1.a + PL.1.b + 3 fleet-root drift) | 1 commit (8b6f91a) + 1 staged for Master + 3 outbox proposals | 8b6f91a (PL.1.a Jennifer) + drafts-outbound/refined/profile-readme-jwoodfine.{md,es.md} (Master pickup) |
+| Wave 2 | 3 (top-3 substrate-explainer TOPICs) | 1 commit (fd1ff64) | fd1ff64 (Peter, +1093 lines) |
+| Wave 3 | 3 (4 PD substantives in 13-draft sweep batch) | 2 commits (70e0ff2 + eb21c6c) | 70e0ff2 (Peter, +527 lines) + eb21c6c (Jennifer, +125 lines) |
 
-- buildingSMART **IFC certification** — highest-leverage; recognized
-  in international BIM project acceptance
-- buildingSMART **openBIM software certification** — EU procurement
-  scoring weight (Denmark, Norway, Netherlands)
-- **CMMC Level 2 readiness documentation** — DoD subcontractor
-  positioning (process docs, not a software certification)
+**Open items at session end (next-session pickup priority order):**
 
-**Per-country EU/UK mandate snapshot:** Germany (BMDV Dec 2020
-infrastructure), Italy (all ≥€1M from Jan 2025), Spain (2024-2030
-plan; BCF mandatory), Denmark (2007 — world's first), Norway (2010),
-Netherlands (Open BIM Infrastructure 2012; uses CityJSONSeq for
-3DBAG 10M+ buildings), UK BIM Framework (Level 2 mandatory; ISO
-19650), Poland (€10M+ 2025 → all by 2030), Dubai (most comprehensive
-mandate globally — names ISO 19650 + IFC + IDS + BCF together).
+1. **Outbox FOLLOW-UP messages** waiting for Master pickup: layer-scope rollback ack + Wave 3 closure + 13-commit ledger + drift-decision waiting + various workspace-tier handoffs
+2. **Inbox**: empty placeholder; archive prepended with 3 newest 2026-04-28 messages (layer-scope + +1 design + 12-draft batch)
+3. **PL.4 naming-convention §10 ratification commit** — still gated on Q5 follow-up message from Master (still pending since v0.1.33-pending)
+4. **PL.7 chunked normalization** — full pass on the 27 legacy no-fm TOPICs is multi-week chunked Sonnet-sub-agent work; not started
+5. **Style-guide TOPICs** — 13 remaining genre templates (architecture, changelog, policy, license-explainer, memo, inventory, email, chat, ticket-comment, meeting-notes, contract, cla, terms); could batch as Sonnet sub-agents
+6. **JSONL `draft-refined` events** — 13 events deferred for batch emission to apprenticeship corpus; Tier-0 mechanical pass (pure Bash/Python writes to `/srv/foundry/data/training-corpus/apprenticeship/prose-edit/pointsav/<draft-id>.jsonl`)
+7. **6 skeleton drafts** in cluster drafts-outbound directories (PK collab × 2, PS merkle × 2, PR language-protocol × 1, plus PD worm-ledger ES skeleton — note that substantive ES was already generated in Wave 3a from EN canonical per §XII) wait for originating clusters to fill substance
+8. **Misplaced GUIDE drift cleanup** in woodfine-fleet-deployment — 3 fleet-root files (guide-physical-egress, guide-telemetry-operations, README-TOTEBOX-EGRESS) await operator decision on lowercase/uppercase GUIDE convention before Root coordination
+9. **service-language adapter implementation** (PL.2) — gated on project-slm PS.4 Doorman /v1/audit_proxy + /v1/audit_capture/<id> endpoints
 
-**6 open questions carry to operator-presence pass:**
+**Cluster manifest status**:
+- Amended on disk with `tetrad:` (renamed from `triad:`) + new `wiki:` leg block + output_surfaces: list + wiki_draft_triggers: list
+- Workspace-tier commit captured per Master (workspace v0.1.53 — see his 03:55Z message)
+- 21 completed_topics_this_milestone counted
 
-1. IFC version pinning (default support 2x3 + 4 + 4.3)
-2. CMMC Level 2 applicability per-project (operator + counsel)
-3. FedRAMP carve-out for any future cloud sync feature
-4. COBie v3 / IFC 4 mapping QA gap
-5. ISO 19650-3 CDE qualification (formal review with bSI-recognized
-   professional)
-6. EUPL-1.2 ITAR/classified work review (legal counsel)
+**Service health (workspace VM)**:
+- local-doorman.service ACTIVE (binds 127.0.0.1:9080); endpoints not implemented for GET probes — expected per OpenAI-compatible POST shape
+- local-slm.service ACTIVE
+- service-fs (per CLAUDE.md §15) — operational at 127.0.0.1:9100 with foundry-workspace moduleId
+- bin/draft-sweep.sh — 7 drafts pending sweep at session-start (refined this session; only skeletons remain)
 
-— Master Claude (sub-agent C return), 2026-04-28
+**Session author identity**: ps-administrator (mathew uid). Signing key at canonical /srv/foundry/identity/pointsav-administrator/id_pointsav-administrator (used for the workspace repo direct commits if any; this Task session committed only via bin/commit-as-next.sh which used jwoodfine + pwoodfine staging-tier keys at canonical 0600 mathew-only — worked cleanly post-layer-scope-correction at 03:55Z).
 
 ---
 
-## 2026-04-28 — Sub-agent B returned (~13 min, 376 lines)
-
-`B-bim-city-code-as-geometry-2026-04-28.md` — verdict
-**INVENTION IS REAL AND MATERIALLY NOVEL.**
-
-**Headline:** Twenty years of prior art exists in **post-design
-validation** (check finished IFC against rules after designer is
-done). NO prior art addresses **compositional-first code-as-geometry**
-(designer composes inside pre-constrained envelopes from the FIRST
-placement, before any compliance check runs). That framing is
-unoccupied.
-
-**Closest prior art (3 systems):**
-
-| System | Status | Closest match |
-|---|---|---|
-| Singapore CORENET X / IFC-SG | Gold standard government publication | City-as-publisher (validation, not composition) |
-| EU ACCORD AEC3PO ontology | Most semantically rigorous (OWL, 80 classes, 4297 entities) | Rules-as-data format (research-grade) |
-| Commercial zoning APIs (Gridics, Archistar, Symbium) | Production validators | Machine-readable zoning (post-design checking) |
-
-**The core conceptual gap (validator vs composer):**
-
-- **Code-as-validation (all prior art):** Designer creates freely;
-  tool runs after; violations reported as a list; designer corrects.
-  Code lives outside design environment.
-- **Code-as-design-system-token (the invention):** City publishes
-  building code as composable BIM design tokens. Designer assembles
-  inside pre-constrained envelopes from the first placement.
-  Violations become geometrically impossible by construction.
-  IBM Carbon analogy is exact: "developers don't draw a button and
-  then run accessibility checker — they compose from Carbon tokens
-  that are already accessible by construction."
-
-**Technical mechanism (4 layers):**
-
-1. **bSDD city dictionary** — `bsdd-cityofwoodfine.json` published
-   to buildingSMART Data Dictionary. Each zoning class + bylaw
-   property gets a dereferenceable URI. Existing infrastructure;
-   no new standard required.
-2. **IDS constraint specification** — `woodfine-rs1.ids` XML
-   referencing the city's bSDD URIs. Production-ready (IDS 1.0,
-   June 2024).
-3. **IFC geometric exclusion-zone tokens** — `woodfine-rs1-constraints.ifc`
-   carrying `IfcSpace` entities classified as `WoodfineZoning.ExclusionZone.Front`,
-   etc. Designer federates this `.ifc` fragment into site model;
-   exclusion zones are PHYSICALLY PRESENT as volumes; IfcClash
-   detects building-element intrusion in real time.
-4. **Per-jurisdiction overlay** — Municipal + Provincial + Federal +
-   Accessibility IDS files compose via sequential `ifctester` runs
-   today; in IFC 5 / IFCX (alpha) becomes USD-style explicit
-   sublayers with priority ordering.
-
-**Structural moat against hyperscalers (3 layers, all structural):**
-
-1. **Regulatory sovereignty** — Cities cannot award exclusive code-
-   interpretation rights to a single vendor whose pricing they
-   don't control. Cloud BIM cannot be the authoritative interpreter
-   of a city's own bylaw without the city's cooperation, and cities
-   structurally cannot grant that.
-2. **Flat-file portability** — bSDD JSON + IDS XML + IFC-SPF plain
-   text. Any IFC-capable tool can consume. No subscription gate.
-3. **Per-jurisdiction overlay at flat-file scale** — Multi-tenant
-   SaaS would need to hold all jurisdictions' codes as "tenants" in
-   one vendor's database. Regulatory bodies will not accept this.
-
-**First-deployment scope (6-8 weeks, no government approval needed):**
-
-- Week 1-2: `bsdd-woodfine-zoning.json` published to bSDD
-- Week 2-3: `woodfine-rs1.ids` IDS constraint file
-- Week 3-5: `woodfine-rs1-constraints.ifc` geometric exclusion-zone
-  fragments (front + side + rear setback volumes + height envelope
-  surface)
-- Week 5-6: Multi-jurisdiction overlay demonstration (Woodfine + BC
-  Building Code + simplified NFC fire code = three IDS files in one
-  validation run)
-- Week 6-7: DESIGN-COMPONENT draft `component-bim-code-rs1.draft.md`
-  for project-design pickup
-- Week 7-8: PROSE-TOPIC draft `topic-city-code-as-geometry.draft.md`
-  for project-language pickup; GUIDE runbook
-  `guide-bim-code-encoding.md` in fleet-deployment catalog
-
-All buildable with IfcOpenShell 0.8.5 + Bonsai today. No new
-standards required. Phase 2 (after demonstration): approach Woodfine's
-local BC municipality with the encoded bylaw, propose publishing
-relationship.
-
-**Doctrine claim candidates (operator-presence ratification):**
-
-- **Claim #40 — Flat-File BIM Substrate** (broader; includes the 5
-  hyperscaler-incompatible capabilities from `BIM_Buildable
-  Architecture.md`: asset-anchored / offline-field / vendor-
-  obsolescence-survivable / IoT-direct / BIM+lease+ledger
-  convergence)
-- **Claim #41 — City Code as Composable Geometry** (specific
-  invention; cities as design-system publishers; compositional-first
-  code-as-token model)
-
-— Master Claude (sub-agent B return), 2026-04-28
+*Session began 2026-04-27 morning; ran continuously through 2026-04-28 ~04:30Z; pause at operator request for shutdown.*
 
 ---
 
-## 2026-04-28 — First Task session: v0.0.1 baseline shipped
+## Session 12376c0e4bc33ea7 — 2026-04-28 evening through 2026-04-29 02:35Z
 
-Task Claude opened the cluster on 2026-04-28 (operator green-lit "yes"
-post-sweep). Session commits across all three sub-clones on
-`cluster/project-bim` branch:
+**Session arc**: governance cross-reference + iteration-1 documentation.pointsav.com home-page Wikipedia-leapfrog redesign (full ship cycle).
 
-- `pointsav-monorepo` `3fb2759` (Peter Woodfine) — 48 files; 6 NEW
-  projects scaffold-coded + registry transitions (3 Reserved-folder →
-  Active; 1 retired with split into 3 sibling Active services).
-- `pointsav-design-system` `6f2ceaa` (Jennifer Woodfine) — 21 files;
-  Building Design System BIM extension (8 token categories anchored
-  to IFC 4.3 + Uniclass classification floor + 3 universal AEC
-  component recipes + 3 AI-readable research files).
-- `woodfine-fleet-deployment` `05ccb19` (Peter Woodfine) — 5 files;
-  gateway-orchestration-bim/ catalog folder NEW + cluster-totebox-property/
-  GUIDE-bim-archive-operations.md.
+### Iteration-1 ship — content-side commits
 
-All three commits via `bin/commit-as-next.sh` (staging-tier, signed,
-Stage-6 hold preserved). L1 trajectory hook fired on each commit;
-shadow brief dispatched to Doorman.
+| Commit | Author | Files | Insertions | Description |
+|---|---|---|---|---|
+| 622091c | Peter | 3 | 227 | index.md + index.es.md + featured-topic.yaml (wiki home + Spanish bilingual pair + featured-TOPIC pin) |
+| 020f074 | Peter | 18 | 614 | 9 category subdirectories (architecture/services/systems/applications/governance/infrastructure/company/reference/help) each with _index.md + _index.es.md bilingual category landings |
 
-### Cluster-tier sub-agent research dispatched + returned
+**Both commits Stage-6-promoted by Master at workspace v0.1.70 (00:55Z)** — canonical content-wiki-documentation main `70e0ff2 → 020f074`; staging-j and staging-p caught up 17 commits each.
 
-BB.1–BB.4 dispatched in parallel as background Sonnet sub-agents at
-session start. All four returned within the session. Reports at
-`.claude/sub-agent-results/`:
+### Iteration-1 ship — engine + deployment
 
-- BB.1 (947 lines) — IfcOpenShell Rust subprocess. Critical: ifctester
-  exits 0 regardless of validation outcome; parse JSON.
-- BB.2 (346 lines) — xeokit chosen over @thatopen for double-precision
-  rendering. License correction: combined work AGPL-3.0 not EUPL-1.2.
-- BB.3 (865 lines) — Tauri 2.10 BIM-scale. Never pipe IFC over IPC;
-  convertFileSrc + Channel<T>; sidecar download + SHA-256 verify not
-  bundle.
-- BB.4 (525 lines) — Bonsai. SpatialTree storey-default expansion;
-  build purpose-built widget, not Outliner-as-tree.
+Master executed at workspace v0.1.70 (00:55Z) per operator chat-surface authorization:
+1. Stage-6 promotion of `cluster/project-language → main`
+2. Binary rebuild of `app-mediakit-knowledge` from project-knowledge `cf136e1` (10.3 MB)
+3. `local-knowledge.service` restart — active since 00:51:29Z
 
-All four findings encoded directly in the relevant project CLAUDE.md
-files at v0.0.1 commit.
+**Smoke test result**: `curl -sI https://documentation.pointsav.com/` returned `HTTP/1.1 200 OK`, Content-Length 10759 (vs old smaller placeholder). 9-panel by-category grid rendering correctly. Bloomberg-grade register + claim #39 Provenance footer + Q5.A 9-category set visible at the public URL. **Iteration-1 visibly LIVE.**
 
-### Tetrad legs
+### Sub-agent dispatches this session
 
-Per Doctrine claim #37 — vendor / customer / deployment satisfied;
-wiki partial (1 substantive PROSE-TOPIC draft + DESIGN-INDEX
-manifest). 7 PROSE + 15 individual DESIGN drafts queue for v0.0.2.
+| Brief | Model | Tokens | Output |
+|---|---|---|---|
+| Iteration-1 home-page artifact production (Q5 decision-aid + Wikipedia home-page pattern survey + TOPIC-HOME draft + project-knowledge engine-spec outline) | claude-sonnet-4-6 | ~85K | 4 artifacts in chat; operator ratified Q5 (4 sub-decisions); drafts staged to cluster drafts-outbound |
+| Refinement pass on TOPIC-HOME drafts (Q1+Q2 closures absorbed; banned-vocab + BCSC + citation registry + LOOSE markers + Provenance footer per claim #39 §2.3) | claude-sonnet-4-6 | ~85K | 2 refined drafts in chat; written to drafts-outbound + content-wiki-documentation as 622091c |
+| 9 category landing pages bilingual pairs (18 files; Bloomberg-grade English ~150-200 words + Spanish strategic-adaptation ~80-120 words per DOCTRINE §XII) | claude-sonnet-4-6 | ~70K | 18 artifacts in chat; written to content-wiki-documentation as 020f074 |
 
-### Cross-cluster outbox messages
+All 3 dispatches via operator-override pattern (`feedback_operator_override_sonnet_dispatch.md`).
 
-Four heads-up messages staged in `.claude/outbox.md` addressed to
-project-design, project-data, project-language, project-slm. Plus
-v0.0.1-handoff message to Master with workspace-tier action items
-(systemd unit + nginx + DNS + certbot) and Doctrine claim
-ratification proposals (#40 Flat-File BIM Substrate; #41 City Code
-as Composable Geometry).
+### Governance cross-reference outcome
 
-### Material licensing fact
+5 Woodfine linguistic-token protocols cross-referenced against `customer/woodfine-media-assets/tokens/linguistic/` canonical:
+- 4 byte-identical (`wf-protocol-trademark.yaml` / `wf-protocol-trademark-web.yaml` / `wf-protocol-disclaimer-email.yaml` / `legal-disclaimers.yaml`)
+- 1 needed Option-B augmentation (`wf-protocol-legal.yaml` — preserve §1 ENTITY POSTURE + add §2 STRATEGIC OBJECTIVE + §3 SYNTACTICAL ENFORCEMENT + renumber EXECUTION TEMPLATE to §4 with `instruction:` field)
 
-`app-workplace-bim` is AGPL-3.0 (xeokit coupling). The other 5 NEW
-projects remain EUPL-1.2.
+Master executed admin-tier commit at workspace v0.1.66 (`df6f541` by `mcorp-administrator`); pushed to `woodfine/woodfine-media-assets` main on GitHub. Substrate-substantiation discipline applied — Master held until explicit operator chat-surface confirmation per v0.1.65 lesson.
 
-— Task Claude (project-bim, first session), 2026-04-28T22:50Z
+### Master-staged for next session sweep
 
----
+`~/Foundry/.claude/drafts-outbound/topic-compounding-substrate.draft.md` — operator selected Option A (substrate-grade fix) for the v0.1.70 featured-topic.yaml `slug: compounding-substrate` not-found defensive-suppress on documentation.pointsav.com home page. Master staged ~250-line bulk PROSE-TOPIC draft at workspace drafts-outbound with `target_path: architecture/topic-compounding-substrate.md` + `audience: vendor-public` + `bcsc_class: current-fact-with-forward-looking-elements`. Next session sweep refines and commits to canonical content-wiki-documentation main.
 
-## 2026-04-28T23:46Z — bim.woodfinegroup.com LIVE on HTTP
+### Tetrad wiki-leg counter
 
-Operator (sudo prompt) ran
-`/srv/foundry/infrastructure/local-bim-orchestration/bootstrap.sh`
-after Master mirrored the cluster compute/ files to workspace tier.
-v0.0.1 binary serving on 127.0.0.1:9096; nginx vhost forwarding from
-public 80 → 127.0.0.1:9096; HTTP probe `curl http://bim.woodfinegroup.com/healthz`
-returned 200.
+`completed_topics_this_milestone: 31` (was 21 at v0.1.59 + 1 home-page bilingual pair + 9 category-landing bilingual pairs = +10 this session).
 
-DNS A record `bim.woodfinegroup.com → 34.53.65.203` was operator-
-provisioned 2026-04-28 between 23:00Z and 23:30Z. certbot ran later
-(timestamp not exactly captured but verified 200 with valid cert by
-2026-04-29T01:00Z).
+### Refined drafts retained in cluster drafts-outbound
 
-— Task Claude (project-bim, second session), live-up landing
+`TOPIC-HOME.draft.md` + `TOPIC-HOME.es.draft.md` retained with `state: draft-refined` per the reverse-funnel worked-example pattern. Master archives to `archive-2026-04/` at next workspace housekeeping sweep.
+
+### Open items at session end (next-session pickup priority order)
+
+1. **Sweep Master-staged `topic-compounding-substrate.draft.md`** at session start — refine + commit to `architecture/topic-compounding-substrate.md` on canonical content-wiki-documentation main; closes the featured-pin gap on documentation.pointsav.com home
+2. **3 follow-up options queued in workspace NEXT.md** for operator-presence decision (bulk `category:` frontmatter add to ~30 root TOPICs / 10 hard-to-place TOPIC classification / STOP)
+3. **project-bim 8 PROSE-TOPIC drafts** when project-bim Task ships v0.0.2 milestone with substantive bulk
+4. **MEDIA-* substrate proposal** narrative authoring queued at workspace tier (PROSE-LEGAL boundary with project-design's tokens-as-data DESIGN-* family)
+5. **3 Root-pickup handoffs** at content-wiki-documentation (repo-layout.md `featured-topic.yaml` entry + content-contract.md §4 `category: root` explicit + naming-convention.md §10 Q5 ratification commit)
+6. **PL.7 chunked normalization** — full pass on the 27+ root TOPICs awaiting category subdirectory migration; multi-week chunked Sonnet sub-agent work
+7. **JSONL `draft-refined` events** for this session's draft refinements (TOPIC-HOME + 9 category landings) — Tier-0 mechanical pass to apprenticeship corpus
+8. **operator-presence sweep** for Q5 (Pass-2 schema fields when ready) + Q6 (lowercase/uppercase GUIDE convention) + Q8 (Wikipedia structural-review convention) + Q9 (glossary CSV canonical-source-of-truth across 3 content-wiki repos)
+
+### Toggle observation (sysadmin scope, non-blocking)
+
+Both 622091c and 020f074 landed as Peter despite the toggle "advancing" between them. Master picked this up in workspace NEXT.md "Workspace-tier infrastructure gaps" subsection. Not blocking.
+
+### Cluster posture at shutdown
+
+Iteration-1 LIVE at documentation.pointsav.com. Two clean commits on cluster branch promoted to canonical. 6 Master messages this session archived. Drafts-outbound has 2 refined-state drafts (worked-example retention). No work in flight at shutdown.
+
+**Session author identity**: ps-administrator (mathew uid). Signing key at canonical `/srv/foundry/identity/pointsav-administrator/id_pointsav-administrator` (used for the workspace repo direct commits — none this session). This Task session committed via `bin/commit-as-next.sh` using staging-tier keys (jwoodfine + pwoodfine) at canonical 0600 mathew-only — worked cleanly with no chmod.
 
 ---
 
-## 2026-04-29 — v0.0.2 visual upgrade — implementation cycle
-
-Second Task session opened 2026-04-28T22:00Z+; ran through several
-substantial threads before yielding.
-
-### Operator-iterated framing
-
-The session traversed multiple operator clarifications about what
-`bim.woodfinegroup.com` IS:
-- Initially proposed: PointSav-extension feel
-- Operator clarified: Woodfine tenant of PointSav software (Stripe-
-  customer-dashboard pattern)
-- Operator further clarified: NOT the property dashboard (that's
-  app-console-bim querying os-console); IS the BIM token catalog
-  for Woodfine's architects + engineers + BIM operators
-- Operator final: "original copy of the two best 'design system'
-  websites" — Carbon-shape stays at design.pointsav.com; pick a
-  different best-in-class for bim.woodfinegroup.com so bankers /
-  collaborators / contributors can distinguish at a glance
-
-### Three sub-agents dispatched (BB.13 + BB.14 in this session)
-
-- BB.13 (cluster research, 640 lines) — Untitled UI 3 + design-system-
-  showcase patterns survey + AEC vernacular markers; verdict: Inter +
-  JetBrains Mono + drafting-blue palette + 5 mandatory AEC markers
-- BB.14 (cluster research, 416 lines) — best-in-class design-system
-  websites landscape; recommendation: Adobe Spectrum-shape + Source
-  Serif 4 / Geist Sans / Geist Mono typography stack; 14/15 score on
-  bankers' thumbnail-distinguishability test vs Carbon's 3/15
-
-### Woodfine brand pull
-
-Read /srv/foundry/customer/woodfine-media-assets/. Confirmed canonical
-palette (woodfine-canvas #F7F9FA, white #FFFFFF, slate #111827,
-slate-translucent rgba(17,24,39,0.15), grey-mid #6B7280, grey-light
-#e9ecef, blue #164679, accent-secure #54924E in theme CSS only).
-Logo + signet specs locked under DS-ADR-08 "Institutional Brutalism."
-
-### Implementation — v0.0.2 commit ef0d974
-
-14 files, +2167 / -202 lines in pointsav-monorepo:
-- nav.rs (new) — sidebar IFC tree (8 token categories + components +
-  research + code overlays)
-- script.js (new, 103 lines) — copy/clipboard + tab disclosure + preview
-  theme toggle (zero-JS baseline preserved via <details>)
-- render.rs (rewrite, +934 net) — Spectrum-shape templates with
-  isometric building-mass hero SVG (IFC anchor labels: IfcSite,
-  IfcBuilding, IfcBuildingStorey, IfcSpace.ExclusionZone)
-- style.css (rewrite, ~1023 lines, 18 sections) — full CSS-custom-
-  property design-token layer mirroring Woodfine canonical
-- main.rs — new routes /tokens (index), /tokens/<key> (per-category
-  detail), /code-overlays (Doctrine claim #41 surface, empty-state
-  at v0.0.2), /static (ServeDir)
-- compute/{bootstrap.sh, local-bim-orchestration.service} — v0.0.2
-  font-sync step 3b + BIM_STATIC_DIR env var
-- 3 self-hosted WOFF2 fonts at static/fonts/ (~570 KB total): Geist
-  Sans + Geist Mono + Source Serif 4 Variable Roman; all OFL 1.1
-
-### 3 cross-repo / cross-cluster drafts staged
-
-- WOODFINE-PALETTE-ADDITIONS.md (admin-only repo handoff) — 7 AEC
-  semantic color additions + accent-secure→woodfine-green promotion
-- DESIGN-GENERIC-COMPONENTS-INDEX.md — 9 domain-agnostic patterns
-  flowing to project-design META-substrate
-- topic-flat-file-bim-leapfrog.draft.md (already staged at v0.0.1) —
-  pending project-language gateway sweep
-
-### Local validation
-
-cargo build --release -p app-orchestration-bim — clean, 47.08 s.
-Binary smoke on port 9099 against live deployment instance: all 10
-routes 200; all 3 fonts served via /static/fonts/; /readyz returns
-{components_count:3, tokens_count:8, research_count:3}.
-
-### Production state at session end
-
-| | Status |
-|---|---|
-| DNS | ✅ live |
-| HTTPS / TLS cert | ✅ valid (Master ran certbot) |
-| v0.0.1 binary at /usr/local/bin/ | ✅ serving (the LIVE state visitors see right now) |
-| v0.0.2 binary at target/release/ | ✅ ready (2.50 MB, mtime 2026-04-29T00:39Z) |
-| Workspace mirror at /srv/foundry/infrastructure/local-bim-orchestration/ | ❌ still v0.0.1 (mtime 23:36Z) — pending Master re-mirror + bootstrap re-run |
-
-Master messages in outbox at 00:50Z + 01:05Z name the exact two-command
-sequence to land v0.0.2 (re-mirror cluster compute/ → infra/ +
-sudo bootstrap.sh).
-
-### Session yield — 2026-04-29T01:10Z
-
-Cluster sub-clones all clean. Cluster history at session yield:
-- pointsav-monorepo: `ef0d974` (v0.0.2 visual upgrade) <- `0a478a3`
-  (v0.0.1.1 patch) <- `3fb2759` (v0.0.1 baseline)
-- pointsav-design-system: `6f2ceaa` (v0.0.1 BDS extension)
-- woodfine-fleet-deployment: `05ccb19` (v0.0.1 customer leg)
-
-Workspace-tier mirroring + binary redeploy + manifest tetrad-status
-flip pending Master action. Background routine `trig_01KY6e4wqYJtnrKYiN8EhFJF`
-fires 2026-04-29T23:34Z to verify the v0.0.2 launch and report
-VERDICT: LIVE / PARTIAL / NOT-LIVE.
-
-— Task Claude (project-bim, second session yield), 2026-04-29T01:10Z
-
----
-
-## 2026-05-07 — Leapfrog 2030 overhaul + business-side launch (Task Claude)
-
-Three-session arc completed. bim.woodfinegroup.com is live on HTTP at port 9096.
-
-**Commits this arc:**
-- 5a034f7 — Phase 1+2: hero section, four-tab token detail, IBC 2024 overlay, /about page,
-  OG meta tags, sidebar Overview section, plain-English category intros
-- 1040c91 — Phase 1+2 continued: IBC nav item, footer consolidation, copyright line
-- 58e2777 — Phase 3+4: footer copyright entity corrected (Woodfine Capital Projects Inc.),
-  light code blocks (#F7F9FA), Token Format tab header strip, /about corporate contact
-
-**Key decisions made this session:**
-- Light code blocks: black (#0E0F12) → #F7F9FA; IBM Carbon institutional aesthetic over
-  terminal aesthetic. Header strip with schema label for Token Format tab specifically.
-- Copyright entity: confirmed against factory-release-engineering TRADEMARK.md — WCI, not WMC.
-- "BIM Token" trademark: not registrable (too generic/descriptive); no referral sent.
-- Token data license: unlicensed gap surfaced; CC BY 4.0 recommended, flagged to Master.
-
-**Artifacts in drafts-outbound (26 files):**
-- 14 DESIGN items → project-design
-- 11 TOPIC/GUIDE items → project-editorial
-- Routing request posted to cluster outbox for Master
-
-**Still pending (Master scope):**
-- certbot TLS for bim.woodfinegroup.com
-- 4 factory-release-engineering defects (LICENSE-MATRIX, EUPL-1.2 recipe, SPDX headers,
-  token data license)
-- Stage-6 promotion of cluster/project-bim branch to staging remotes
-
-— Task Claude (project-bim), 2026-05-07
+*Session 12376c0e4bc33ea7 began 2026-04-28T21:58Z, ran continuously through 2026-04-29T02:35Z; shutdown at operator request.*

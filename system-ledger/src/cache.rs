@@ -61,14 +61,11 @@ impl CheckpointCache {
 
     /// Lookup by `(origin, tree_size)`. Returns the most-recent
     /// matching entry. O(N) over the cache; N is small (default 64).
-    pub fn lookup_by_tree_size(
-        &self,
-        origin: &str,
-        tree_size: u64,
-    ) -> Option<&SignedCheckpoint> {
-        self.entries.iter().rev().find(|c| {
-            c.checkpoint.origin == origin && c.checkpoint.tree_size == tree_size
-        })
+    pub fn lookup_by_tree_size(&self, origin: &str, tree_size: u64) -> Option<&SignedCheckpoint> {
+        self.entries
+            .iter()
+            .rev()
+            .find(|c| c.checkpoint.origin == origin && c.checkpoint.tree_size == tree_size)
     }
 
     /// Lookup by `(origin, root_hash)`. Returns the most-recent
@@ -79,9 +76,10 @@ impl CheckpointCache {
         origin: &str,
         root_hash: &Hash256,
     ) -> Option<&SignedCheckpoint> {
-        self.entries.iter().rev().find(|c| {
-            c.checkpoint.origin == origin && &c.checkpoint.root_hash == root_hash
-        })
+        self.entries
+            .iter()
+            .rev()
+            .find(|c| c.checkpoint.origin == origin && &c.checkpoint.root_hash == root_hash)
     }
 }
 

@@ -82,12 +82,18 @@ pub struct TaxonomyBundle {
 // ── Parsers ───────────────────────────────────────────────────────────────────
 
 pub fn parse_archetypes(csv: &str) -> Result<Vec<ArchetypeRow>, String> {
-    let mut rdr = ReaderBuilder::new().flexible(true).from_reader(csv.as_bytes());
+    let mut rdr = ReaderBuilder::new()
+        .flexible(true)
+        .from_reader(csv.as_bytes());
     let mut rows = Vec::new();
     for result in rdr.records() {
         let r = result.map_err(|e| format!("archetypes CSV parse error: {e}"))?;
         if r.len() < 5 {
-            return Err(format!("archetypes row has {} columns, need 5: {:?}", r.len(), r.iter().collect::<Vec<_>>()));
+            return Err(format!(
+                "archetypes row has {} columns, need 5: {:?}",
+                r.len(),
+                r.iter().collect::<Vec<_>>()
+            ));
         }
         rows.push(ArchetypeRow {
             id: r[0].trim().to_string(),
@@ -101,7 +107,9 @@ pub fn parse_archetypes(csv: &str) -> Result<Vec<ArchetypeRow>, String> {
 }
 
 pub fn parse_coa(csv: &str) -> Result<Vec<CoaRow>, String> {
-    let mut rdr = ReaderBuilder::new().flexible(true).from_reader(csv.as_bytes());
+    let mut rdr = ReaderBuilder::new()
+        .flexible(true)
+        .from_reader(csv.as_bytes());
     let mut rows = Vec::new();
     for result in rdr.records() {
         let r = result.map_err(|e| format!("coa CSV parse error: {e}"))?;
@@ -119,7 +127,9 @@ pub fn parse_coa(csv: &str) -> Result<Vec<CoaRow>, String> {
 }
 
 pub fn parse_domain(csv: &str) -> Result<Vec<DomainRow>, String> {
-    let mut rdr = ReaderBuilder::new().flexible(true).from_reader(csv.as_bytes());
+    let mut rdr = ReaderBuilder::new()
+        .flexible(true)
+        .from_reader(csv.as_bytes());
     let mut rows = Vec::new();
     for result in rdr.records() {
         let r = result.map_err(|e| format!("domain CSV parse error: {e}"))?;
@@ -138,7 +148,9 @@ pub fn parse_domain(csv: &str) -> Result<Vec<DomainRow>, String> {
 }
 
 pub fn parse_glossary(csv: &str) -> Result<Vec<GlossaryRow>, String> {
-    let mut rdr = ReaderBuilder::new().flexible(true).from_reader(csv.as_bytes());
+    let mut rdr = ReaderBuilder::new()
+        .flexible(true)
+        .from_reader(csv.as_bytes());
     let mut rows = Vec::new();
     for result in rdr.records() {
         let r = result.map_err(|e| format!("glossary CSV parse error: {e}"))?;
@@ -156,7 +168,9 @@ pub fn parse_glossary(csv: &str) -> Result<Vec<GlossaryRow>, String> {
 }
 
 pub fn parse_themes(csv: &str) -> Result<Vec<ThemeRow>, String> {
-    let mut rdr = ReaderBuilder::new().flexible(true).from_reader(csv.as_bytes());
+    let mut rdr = ReaderBuilder::new()
+        .flexible(true)
+        .from_reader(csv.as_bytes());
     let mut rows = Vec::new();
     for result in rdr.records() {
         let r = result.map_err(|e| format!("themes CSV parse error: {e}"))?;
@@ -176,7 +190,9 @@ pub fn parse_themes(csv: &str) -> Result<Vec<ThemeRow>, String> {
 }
 
 pub fn parse_topics(csv: &str) -> Result<Vec<TopicRow>, String> {
-    let mut rdr = ReaderBuilder::new().flexible(true).from_reader(csv.as_bytes());
+    let mut rdr = ReaderBuilder::new()
+        .flexible(true)
+        .from_reader(csv.as_bytes());
     let mut rows = Vec::new();
     for result in rdr.records() {
         let r = result.map_err(|e| format!("topics CSV parse error: {e}"))?;
@@ -196,7 +212,9 @@ pub fn parse_topics(csv: &str) -> Result<Vec<TopicRow>, String> {
 }
 
 pub fn parse_guides(csv: &str) -> Result<Vec<GuideRow>, String> {
-    let mut rdr = ReaderBuilder::new().flexible(true).from_reader(csv.as_bytes());
+    let mut rdr = ReaderBuilder::new()
+        .flexible(true)
+        .from_reader(csv.as_bytes());
     let mut rows = Vec::new();
     for result in rdr.records() {
         let r = result.map_err(|e| format!("guides CSV parse error: {e}"))?;
@@ -221,7 +239,13 @@ pub fn parse_guides(csv: &str) -> Result<Vec<GuideRow>, String> {
 pub fn serialize_archetypes(rows: &[ArchetypeRow]) -> String {
     let mut out = String::from("id,name,signature,healing_trigger,gravity_keywords\n");
     for r in rows {
-        out.push_str(&csv_row(&[&r.id, &r.name, &r.signature, &r.healing_trigger, &r.gravity_keywords]));
+        out.push_str(&csv_row(&[
+            &r.id,
+            &r.name,
+            &r.signature,
+            &r.healing_trigger,
+            &r.gravity_keywords,
+        ]));
     }
     out
 }
@@ -230,7 +254,12 @@ pub fn serialize_archetypes(rows: &[ArchetypeRow]) -> String {
 pub fn serialize_coa(rows: &[CoaRow]) -> String {
     let mut out = String::from("reference_number,category,type,gravity_keywords\n");
     for r in rows {
-        out.push_str(&csv_row(&[&r.reference_number, &r.category, &r.type_, &r.gravity_keywords]));
+        out.push_str(&csv_row(&[
+            &r.reference_number,
+            &r.category,
+            &r.type_,
+            &r.gravity_keywords,
+        ]));
     }
     out
 }
@@ -238,7 +267,13 @@ pub fn serialize_coa(rows: &[CoaRow]) -> String {
 pub fn serialize_domains(rows: &[DomainRow]) -> String {
     let mut out = String::from("domain_id,domain_name,category,thesis,gravity_keywords\n");
     for r in rows {
-        out.push_str(&csv_row(&[&r.domain_id, &r.domain_name, &r.category, &r.thesis, &r.gravity_keywords]));
+        out.push_str(&csv_row(&[
+            &r.domain_id,
+            &r.domain_name,
+            &r.category,
+            &r.thesis,
+            &r.gravity_keywords,
+        ]));
     }
     out
 }
@@ -247,7 +282,12 @@ pub fn serialize_domains(rows: &[DomainRow]) -> String {
 pub fn serialize_glossary(rows: &[GlossaryRow]) -> String {
     let mut out = String::from("term_en,term_es,definition,domain\n");
     for r in rows {
-        out.push_str(&csv_row(&[&r.term_en, &r.term_es, &r.definition, &r.domain]));
+        out.push_str(&csv_row(&[
+            &r.term_en,
+            &r.term_es,
+            &r.definition,
+            &r.domain,
+        ]));
     }
     out
 }
@@ -256,7 +296,14 @@ pub fn serialize_glossary(rows: &[GlossaryRow]) -> String {
 pub fn serialize_themes(rows: &[ThemeRow]) -> String {
     let mut out = String::from("id,name,scope,thesis,gravity_keywords,active_state\n");
     for r in rows {
-        out.push_str(&csv_row(&[&r.id, &r.name, &r.scope, &r.thesis, &r.gravity_keywords, &r.active_state]));
+        out.push_str(&csv_row(&[
+            &r.id,
+            &r.name,
+            &r.scope,
+            &r.thesis,
+            &r.gravity_keywords,
+            &r.active_state,
+        ]));
     }
     out
 }
@@ -265,7 +312,14 @@ pub fn serialize_themes(rows: &[ThemeRow]) -> String {
 pub fn serialize_topics(rows: &[TopicRow]) -> String {
     let mut out = String::from("topic_id,title,domain,wiki_repo,wiki_path,active_state\n");
     for r in rows {
-        out.push_str(&csv_row(&[&r.topic_id, &r.title, &r.domain, &r.wiki_repo, &r.wiki_path, &r.active_state]));
+        out.push_str(&csv_row(&[
+            &r.topic_id,
+            &r.title,
+            &r.domain,
+            &r.wiki_repo,
+            &r.wiki_path,
+            &r.active_state,
+        ]));
     }
     out
 }
@@ -274,7 +328,14 @@ pub fn serialize_topics(rows: &[TopicRow]) -> String {
 pub fn serialize_guides(rows: &[GuideRow]) -> String {
     let mut out = String::from("guide_id,title,domain,wiki_repo,wiki_path,active_state\n");
     for r in rows {
-        out.push_str(&csv_row(&[&r.guide_id, &r.title, &r.domain, &r.wiki_repo, &r.wiki_path, &r.active_state]));
+        out.push_str(&csv_row(&[
+            &r.guide_id,
+            &r.title,
+            &r.domain,
+            &r.wiki_repo,
+            &r.wiki_path,
+            &r.active_state,
+        ]));
     }
     out
 }
@@ -282,90 +343,104 @@ pub fn serialize_guides(rows: &[GuideRow]) -> String {
 // ── GraphEntity converters ────────────────────────────────────────────────────
 
 pub fn archetypes_to_entities(rows: &[ArchetypeRow]) -> Vec<GraphEntity> {
-    rows.iter().map(|r| GraphEntity {
-        entity_name: r.name.clone(),
-        classification: "archetype".to_string(),
-        role_vector: Some(r.signature.clone()),
-        location_vector: Some(r.healing_trigger.clone()),
-        contact_vector: Some(r.gravity_keywords.clone()),
-        module_id: "__taxonomy__".to_string(),
-        confidence: 1.0,
-    }).collect()
+    rows.iter()
+        .map(|r| GraphEntity {
+            entity_name: r.name.clone(),
+            classification: "archetype".to_string(),
+            role_vector: Some(r.signature.clone()),
+            location_vector: Some(r.healing_trigger.clone()),
+            contact_vector: Some(r.gravity_keywords.clone()),
+            module_id: "__taxonomy__".to_string(),
+            confidence: 1.0,
+        })
+        .collect()
 }
 
 pub fn coa_to_entities(rows: &[CoaRow]) -> Vec<GraphEntity> {
-    rows.iter().map(|r| GraphEntity {
-        entity_name: format!("{} — {} {}", r.reference_number, r.category, r.type_),
-        classification: "coa-profile".to_string(),
-        role_vector: Some(format!("{} {}", r.category, r.type_)),
-        location_vector: Some(r.reference_number.clone()),
-        contact_vector: Some(r.gravity_keywords.clone()),
-        module_id: "__taxonomy__".to_string(),
-        confidence: 1.0,
-    }).collect()
+    rows.iter()
+        .map(|r| GraphEntity {
+            entity_name: format!("{} — {} {}", r.reference_number, r.category, r.type_),
+            classification: "coa-profile".to_string(),
+            role_vector: Some(format!("{} {}", r.category, r.type_)),
+            location_vector: Some(r.reference_number.clone()),
+            contact_vector: Some(r.gravity_keywords.clone()),
+            module_id: "__taxonomy__".to_string(),
+            confidence: 1.0,
+        })
+        .collect()
 }
 
 pub fn domains_to_entities(rows: &[DomainRow]) -> Vec<GraphEntity> {
-    rows.iter().map(|r| GraphEntity {
-        entity_name: r.domain_name.clone(),
-        classification: "domain".to_string(),
-        role_vector: Some(r.thesis.clone()),
-        location_vector: Some(r.category.clone()),
-        contact_vector: Some(r.gravity_keywords.clone()),
-        module_id: "__taxonomy__".to_string(),
-        confidence: 1.0,
-    }).collect()
+    rows.iter()
+        .map(|r| GraphEntity {
+            entity_name: r.domain_name.clone(),
+            classification: "domain".to_string(),
+            role_vector: Some(r.thesis.clone()),
+            location_vector: Some(r.category.clone()),
+            contact_vector: Some(r.gravity_keywords.clone()),
+            module_id: "__taxonomy__".to_string(),
+            confidence: 1.0,
+        })
+        .collect()
 }
 
 pub fn glossary_to_entities(rows: &[GlossaryRow]) -> Vec<GraphEntity> {
-    rows.iter().map(|r| {
-        let classification = format!("glossary-{}", r.domain);
-        GraphEntity {
-            entity_name: r.term_en.clone(),
-            classification,
-            role_vector: Some(r.term_es.clone()),
-            location_vector: Some(r.domain.clone()),
-            contact_vector: Some(r.definition.chars().take(200).collect()),
-            module_id: "__taxonomy__".to_string(),
-            confidence: 1.0,
-        }
-    }).collect()
+    rows.iter()
+        .map(|r| {
+            let classification = format!("glossary-{}", r.domain);
+            GraphEntity {
+                entity_name: r.term_en.clone(),
+                classification,
+                role_vector: Some(r.term_es.clone()),
+                location_vector: Some(r.domain.clone()),
+                contact_vector: Some(r.definition.chars().take(200).collect()),
+                module_id: "__taxonomy__".to_string(),
+                confidence: 1.0,
+            }
+        })
+        .collect()
 }
 
 pub fn themes_to_entities(rows: &[ThemeRow]) -> Vec<GraphEntity> {
-    rows.iter().map(|r| GraphEntity {
-        entity_name: r.name.clone(),
-        classification: "theme".to_string(),
-        role_vector: Some(format!("{} — {}", r.scope, r.thesis)),
-        location_vector: Some(r.scope.clone()),
-        contact_vector: Some(r.gravity_keywords.clone()),
-        module_id: "__taxonomy__".to_string(),
-        confidence: 1.0,
-    }).collect()
+    rows.iter()
+        .map(|r| GraphEntity {
+            entity_name: r.name.clone(),
+            classification: "theme".to_string(),
+            role_vector: Some(format!("{} — {}", r.scope, r.thesis)),
+            location_vector: Some(r.scope.clone()),
+            contact_vector: Some(r.gravity_keywords.clone()),
+            module_id: "__taxonomy__".to_string(),
+            confidence: 1.0,
+        })
+        .collect()
 }
 
 pub fn topics_to_entities(rows: &[TopicRow]) -> Vec<GraphEntity> {
-    rows.iter().map(|r| GraphEntity {
-        entity_name: r.title.clone(),
-        classification: "topic".to_string(),
-        role_vector: Some(r.domain.clone()),
-        location_vector: Some(r.wiki_path.clone()),
-        contact_vector: Some(r.wiki_repo.clone()),
-        module_id: "__taxonomy__".to_string(),
-        confidence: 1.0,
-    }).collect()
+    rows.iter()
+        .map(|r| GraphEntity {
+            entity_name: r.title.clone(),
+            classification: "topic".to_string(),
+            role_vector: Some(r.domain.clone()),
+            location_vector: Some(r.wiki_path.clone()),
+            contact_vector: Some(r.wiki_repo.clone()),
+            module_id: "__taxonomy__".to_string(),
+            confidence: 1.0,
+        })
+        .collect()
 }
 
 pub fn guides_to_entities(rows: &[GuideRow]) -> Vec<GraphEntity> {
-    rows.iter().map(|r| GraphEntity {
-        entity_name: r.title.clone(),
-        classification: "guide".to_string(),
-        role_vector: Some(r.domain.clone()),
-        location_vector: Some(r.wiki_path.clone()),
-        contact_vector: Some(r.wiki_repo.clone()),
-        module_id: "__taxonomy__".to_string(),
-        confidence: 1.0,
-    }).collect()
+    rows.iter()
+        .map(|r| GraphEntity {
+            entity_name: r.title.clone(),
+            classification: "guide".to_string(),
+            role_vector: Some(r.domain.clone()),
+            location_vector: Some(r.wiki_path.clone()),
+            contact_vector: Some(r.wiki_repo.clone()),
+            module_id: "__taxonomy__".to_string(),
+            confidence: 1.0,
+        })
+        .collect()
 }
 
 // ── Directory loader ──────────────────────────────────────────────────────────
@@ -475,7 +550,11 @@ fn csv_field(s: &str) -> String {
 }
 
 fn csv_row(fields: &[&str]) -> String {
-    let mut row = fields.iter().map(|f| csv_field(f)).collect::<Vec<_>>().join(",");
+    let mut row = fields
+        .iter()
+        .map(|f| csv_field(f))
+        .collect::<Vec<_>>()
+        .join(",");
     row.push('\n');
     row
 }
@@ -579,12 +658,20 @@ mod tests {
             env!("CARGO_MANIFEST_DIR"),
             "/ontology/guides/guides_documentation.csv"
         );
-        let Ok(csv) = std::fs::read_to_string(csv_path) else { return; };
+        let Ok(csv) = std::fs::read_to_string(csv_path) else {
+            return;
+        };
         let rows = parse_guides(&csv).expect("guides_documentation.csv must parse cleanly");
-        assert!(!rows.is_empty(), "guides_documentation.csv must have at least one row");
+        assert!(
+            !rows.is_empty(),
+            "guides_documentation.csv must have at least one row"
+        );
         for row in &rows {
             assert!(!row.guide_id.is_empty(), "guide_id must not be empty");
-            assert_eq!(row.domain, "documentation", "all guides must have domain=documentation");
+            assert_eq!(
+                row.domain, "documentation",
+                "all guides must have domain=documentation"
+            );
         }
     }
 
@@ -599,8 +686,15 @@ mod tests {
                    1,The Executive,Strategic Direction,Stagnation,strategy|leadership\n\
                    2,The Guardian,Risk & Compliance,Breach,compliance|audit\n";
         let rows = parse_archetypes(csv).unwrap();
-        assert_eq!(rows.len(), 2, "both rows must be returned — not 1 (first dropped)");
-        assert_eq!(rows[0].name, "The Executive", "first row must be The Executive");
+        assert_eq!(
+            rows.len(),
+            2,
+            "both rows must be returned — not 1 (first dropped)"
+        );
+        assert_eq!(
+            rows[0].name, "The Executive",
+            "first row must be The Executive"
+        );
         assert_eq!(rows[1].name, "The Guardian");
     }
 
