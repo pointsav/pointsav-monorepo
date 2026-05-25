@@ -1091,9 +1091,6 @@ fn home_chrome(
                 meta charset="utf-8";
                 meta name="viewport" content="width=device-width, initial-scale=1";
                 title { (site_title) }
-                link rel="preconnect" href="https://fonts.googleapis.com";
-                link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="";
-                link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Nunito+Sans:wght@300;400;600;700&family=Roboto+Slab:wght@400;500;600&display=swap" rel="stylesheet";
                 link rel="stylesheet" href="/static/tokens.css";
                 @if woodfine_theme {
                     link rel="stylesheet" href="/static/tokens-woodfine.css";
@@ -2139,9 +2136,6 @@ fn wiki_chrome(
                 meta charset="utf-8";
                 meta name="viewport" content="width=device-width, initial-scale=1";
                 title { (page_title) }
-                link rel="preconnect" href="https://fonts.googleapis.com";
-                link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="";
-                link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Nunito+Sans:wght@300;400;600;700&family=Roboto+Slab:wght@400;500;600&display=swap" rel="stylesheet";
                 link rel="stylesheet" href="/static/tokens.css";
                 @if woodfine_theme {
                     link rel="stylesheet" href="/static/tokens-woodfine.css";
@@ -3783,9 +3777,6 @@ fn chrome(
                 meta charset="utf-8";
                 meta name="viewport" content="width=device-width, initial-scale=1";
                 title { (site_title) }
-                link rel="preconnect" href="https://fonts.googleapis.com";
-                link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="";
-                link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Nunito+Sans:wght@300;400;600;700&family=Roboto+Slab:wght@400;500;600&display=swap" rel="stylesheet";
                 link rel="stylesheet" href="/static/tokens.css";
                 link rel="stylesheet" href="/static/style.css";
             }
