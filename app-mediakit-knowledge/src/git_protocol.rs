@@ -1,14 +1,14 @@
+use crate::server::AppState;
 use axum::{
     body::Bytes,
     extract::{Path, Query, State},
     http::{header, StatusCode},
     response::{IntoResponse, Response},
 };
-use std::process::Stdio;
-use tokio::io::AsyncWriteExt;
 use serde::Deserialize;
+use std::process::Stdio;
 use std::sync::Arc;
-use crate::server::AppState;
+use tokio::io::AsyncWriteExt;
 
 #[derive(Deserialize)]
 pub struct InfoRefsQuery {
@@ -24,27 +24,27 @@ pub async fn info_refs(
     if params.service != "git-upload-pack" {
         return (StatusCode::BAD_REQUEST, "Only git-upload-pack is supported").into_response();
     }
-    
+
     // Validate tenant
     if tenant != state.git_tenant && format!("{}.git", state.git_tenant) != tenant {
         return (StatusCode::NOT_FOUND, "Tenant not found").into_response();
     }
 
     let mut cmd = tokio::process::Command::new("git");
-    cmd.args([
-        "upload-pack",
-        "--stateless-rpc",
-        "--advertise-refs",
-    ])
-    .arg(&state.content_dir)
-    .stdout(Stdio::piped())
-    .stderr(Stdio::piped());
+    cmd.args(["upload-pack", "--stateless-rpc", "--advertise-refs"])
+        .arg(&state.content_dir)
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped());
 
     let output = match cmd.output().await {
         Ok(o) => o,
         Err(e) => {
             tracing::error!(error = %e, "failed to run git upload-pack --advertise-refs");
-            return (StatusCode::INTERNAL_SERVER_ERROR, format!("Failed to run git upload-pack: {e}")).into_response();
+            return (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                format!("Failed to run git upload-pack: {e}"),
+            )
+                .into_response();
         }
     };
 
@@ -55,11 +55,18 @@ pub async fn info_refs(
     tracing::debug!("git info/refs advertisement sent");
     (
         [
-            (header::CONTENT_TYPE, "application/x-git-upload-pack-advertisement"),
-            (header::CACHE_CONTROL, "no-cache, max-age=0, must-revalidate"),
+            (
+                header::CONTENT_TYPE,
+                "application/x-git-upload-pack-advertisement",
+            ),
+            (
+                header::CACHE_CONTROL,
+                "no-cache, max-age=0, must-revalidate",
+            ),
         ],
         body,
-    ).into_response()
+    )
+        .into_response()
 }
 
 pub async fn upload_pack(
@@ -83,7 +90,11 @@ pub async fn upload_pack(
         Ok(c) => c,
         Err(e) => {
             tracing::error!(error = %e, "failed to spawn git upload-pack --stateless-rpc");
-            return (StatusCode::INTERNAL_SERVER_ERROR, format!("Failed to spawn git upload-pack: {e}")).into_response();
+            return (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                format!("Failed to spawn git upload-pack: {e}"),
+            )
+                .into_response();
         }
     };
 
@@ -105,5 +116,6 @@ pub async fn upload_pack(
     (
         [(header::CONTENT_TYPE, "application/x-git-upload-pack-result")],
         body,
-    ).into_response()
+    )
+        .into_response()
 }
