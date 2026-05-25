@@ -1,40 +1,31 @@
-target/
-.build_workspace/
-
-# Asymmetric Storage Protocol: Enforce Tier-1 Quarantine
-*.gguf
-**/weights/*
-.DS_Store
-
-# service-slm/router-trainer — local runtime artifacts (provisioned per-operator,
-# not tracked in Git). Kept here so the Python workflow can still find them on
-# the filesystem. See cleanup-log.md 2026-04-23 entry for rationale.
-service-slm/router-trainer/engine/llamafile
-service-slm/router-trainer/**/*.log
-node_modules/
-
-# Customer deployment instances — local-only, not tracked per CLAUDE.md §10
-woodfine-fleet-deployment/
-
-# Runtime data directories
-service-content/data/
-
-# Agent runtime lock files
-.agent/scheduled_tasks.lock
-
 # Multi-agent session locks (ephemeral — not committed)
 .agent/engines/*/session.lock
 
-# Operator-specific runtime env files — never commit, copy from *.env.example
-service-totebox-egress/totebox-index.env
-service-content/.env
+# Working copy directories — tracked in separate git repos
+pointsav-monorepo/
 
-# Large binary / build artifacts — download or build at runtime, never commit
-app-mediakit-telemetry/assets/GeoLite2-City.mmdb
-os-infrastructure/*.iso
-os-infrastructure/build_iso/
-os-network-admin/*.iso
-os-totebox/*.img
+# Build artifacts — generated outputs, never committed
+target/
+*.iso
+*.mmdb
 vendor-sel4-kernel/build/
+service-slm/router-trainer/engine/
+service-slm/router-trainer/*.log
+os-infrastructure/build_iso/
 vendor-sel4-kernel/.venv/
 _QUARANTINE_ROOT/
+
+# Local-only vendor copies — carry upstream licenses; not tracked in this repo
+vendor-azure-auth/
+vendor-gpu-drivers/
+vendor-linux-systemd/
+vendor-microsoft-graph/
+vendor-phi3-mini/
+vendor-sel4-kernel/
+vendor-slm-engine/
+
+# Local-only operational directories — provisioned at runtime, not part of source
+app-infrastructure-cloud/
+app-infrastructure-leased/
+app-infrastructure-onprem/
+discovery-queue/
