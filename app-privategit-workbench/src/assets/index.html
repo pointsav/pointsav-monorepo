@@ -1105,6 +1105,8 @@ setInterval(autosaveFile, 30000);
 // ── Close current file ────────────────────────────────────────────────────────
 function closeFile() {
   if (editorDirty && !confirm('You have unsaved changes. Close anyway?')) return;
+  sessionStorage.removeItem('wb-path');
+  sessionStorage.removeItem('wb-name');
   currentPath = null;
   viewMode    = 'none';
   hideEditorPanel();
@@ -1175,6 +1177,13 @@ function updateBar(name, path) {
   link.textContent = 'open in new tab ↗';
   bar.appendChild(link);
 
+  const reloadBtn = document.createElement('button');
+  reloadBtn.className = 'bar-btn';
+  reloadBtn.textContent = '↻ Reload';
+  reloadBtn.title = 'Reload page — reopens this file automatically';
+  reloadBtn.addEventListener('click', () => location.reload());
+  bar.appendChild(reloadBtn);
+
   const closeBtn = document.createElement('button');
   closeBtn.className = 'bar-btn';
   closeBtn.textContent = '✕';
@@ -1189,6 +1198,8 @@ async function openFile(path, name) {
   if (editorDirty && !confirm('You have unsaved changes. Open a different file?')) return;
   currentPath = path;
   const fname = name || path.split('/').pop();
+  sessionStorage.setItem('wb-path', path);
+  sessionStorage.setItem('wb-name', fname);
   const mode  = fileMode(fname);
   hideViewerContent();
   updateBar(fname, path);
@@ -1835,6 +1846,13 @@ async function buildSearchIndex() {
 }
 
 buildSearchIndex();
+
+// ── Restore last open file on reload ─────────────────────────────────────────
+(function restoreLastFile() {
+  const p = sessionStorage.getItem('wb-path');
+  const n = sessionStorage.getItem('wb-name');
+  if (p) openFile(p, n || p.split('/').pop());
+})();
 
 // ── iframe → editor click navigation ─────────────────────────────────────────
 window.addEventListener('message', e => {
