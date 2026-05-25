@@ -23,8 +23,8 @@ path = "src/lib.rs"
 # Phase 1 deps only. Phases 3 (search), 4 (git), 5 (auth), 7 (federation),
 # 8 (disclosure mode) add more deps as they land. See ARCHITECTURE.md.
 [dependencies]
-axum = { version = "0.8", features = ["ws"] }
-tokio = { version = "1", features = ["rt-multi-thread", "macros", "signal", "fs", "process"] }
+axum = "0.8"
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "signal", "fs", "process", "io-util"] }
 tower = "0.5"
 tower-http = { version = "0.6", features = ["trace", "set-header", "compression-br", "compression-gzip"] }
 comrak = "0.52"
@@ -59,16 +59,7 @@ tantivy = "0.24"
 # for mtime → FixedDateTime conversions in feeds.rs.
 atom_syndication = "0.12"
 chrono = "0.4"
-# Phase 2 Step 7: real-time collab via yjs (client-side); server is a
-# passthrough WebSocket relay (per-slug rooms via tokio::sync::broadcast).
-# No yrs/Yjs Rust port needed for the relay; persistence is via the
-# existing /edit POST when user clicks save. futures-util pulls in the
-# StreamExt::split needed for axum WebSocket sender/receiver split.
-futures-util = "0.3"
 csv = "1.3"
-# E3: Doorman proxy — forwards /api/doorman/* to WIKI_DOORMAN_URL when set.
-# default-features = false + rustls avoids the openssl-sys system-lib dep.
-reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
 regex = "1.10"
 # File-system watcher for incremental Tantivy search reindex.
 # The recommended backend on Linux is inotify (default); macos uses kqueue.
