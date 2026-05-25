@@ -1,0 +1,15 @@
+[package]
+name = "service-fs"
+version = "1.0.1"
+edition = "2021"
+authors = ["PointSav Digital Systems"]
+description = "Bare-Metal Unikernel File System Gatekeeper. Enforces WORM storage boundaries."
+
+[[bin]]
+name = "service-fs"
+path = "src/main.rs"
+# Excluded from test builds: #[panic_handler] conflicts with std test harness
+test = false
+
+[dependencies]
+# Pure bare-metal enclave. Zero OS dependencies permitted.

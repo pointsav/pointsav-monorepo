@@ -1,0 +1,8 @@
+{
+  "themes": [
+    { "name": "Co-Location Mandate Expansion", "id": "THM-01", "gravity_keywords": ["Co-Location", "National Retailers", "Walmart", "Costco", "Regional Markets"] },
+    { "name": "Flow-Through Taxation Structuring", "id": "THM-02", "gravity_keywords": ["Flow-Through", "Taxation", "Regulated Reporting Entities"] },
+    { "name": "Broadcom Driver Migration", "id": "THM-03", "gravity_keywords": ["Broadcom", "Driver Migration", "FreeBSD", "Legacy Silicon"] },
+    { "name": "Q3 Capital Procurement", "id": "THM-04", "gravity_keywords": ["Capital Procurement", "Narrow Bank Model", "Interest Coverage Ratio"] }
+  ]
+}
