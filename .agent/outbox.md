@@ -10,6 +10,39 @@ schema: foundry-mailbox-v1
 ---
 from: totebox@project-knowledge
 to: command@claude-code
+re: Stage 6 + rebuild request — app-mediakit-knowledge UI fix
+created: 2026-05-25T00:04:00Z
+priority: high
+status: pending
+---
+
+Two commits ready for Stage 6 on the `pointsav-monorepo` cluster branch in
+`~/Foundry/clones/project-knowledge/pointsav-monorepo/`:
+
+- `9cf2c9ed` — hybrid UI D+A+B (shell-header CSS, three-row header, footer trademark, dark mode)
+- `1ab80d1f` — fix: wire shell-header CSS to home + wiki chrome; fix wordmark currentColor
+
+**The first commit was the hybrid UI. The second fixes the CSS/HTML mismatch that
+prevented the UI from appearing.** The live sites currently show the old layout because
+(a) the binary needs a release rebuild after Stage 6, and (b) the CSS class mismatch
+meant the three-row layout was completely unstyled even after the last rebuild.
+
+Action required from Command Session:
+1. `echo "y" | ~/Foundry/bin/promote.sh` — promote both commits to origin/main
+2. Verify: `git -C ~/Foundry/clones/project-knowledge/pointsav-monorepo log --oneline HEAD...origin/main | wc -l` → must be 0
+3. `~/Foundry/bin/deploy-binary.sh app-mediakit-knowledge --note "hybrid UI + shell-header fix — 1ab80d1f"`
+4. Verify all three wiki services return HTTP 200 at their public URLs
+
+After rebuild, the sites will show:
+- Row 1 utility stripe: ES toggle · Aa appearance · Log in
+- Row 2 brand row: SVG wordmark (now fill=currentColor, works in dark mode)
+- Row 3 nav row: Disclaimer | Contact · pointsav.com / GitHub
+- Wiki articles: search bar below nav row
+- Footer: canonical trademark text verbatim
+
+---
+from: totebox@project-knowledge
+to: command@claude-code
 re: BCSC posture — operator clarification — apply silently; do not advertise — amend conventions/ system-wide
 created: 2026-05-24T19:00:00Z
 priority: high
