@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Content-Security-Policy"
+    content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; connect-src 'none'; img-src 'self' data:; font-src 'self' data:" />
+  <title>Workplace Proforma</title>
+
+  <!-- Application styles -->
+  <link rel="stylesheet" href="styles/app.css" />
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════════════════════
+       APPLICATION CHROME
+  ═══════════════════════════════════════════════════════ -->
+
+  <div id="app-shell">
+
+    <!-- ── Menu bar ── -->
+    <div id="menubar" role="menubar">
+      <button class="menu-item" id="menu-file">File</button>
+      <button class="menu-item" id="menu-edit">Edit</button>
+      <button class="menu-item" id="menu-view">View</button>
+      <button class="menu-item" id="menu-insert">Insert</button>
+      <button class="menu-item" id="menu-format">Format</button>
+      <button class="menu-item" id="menu-data">Data</button>
+      <button class="menu-item" id="menu-tools">Tools</button>
+      <div class="menubar-spacer"></div>
+      <span id="doc-title-display" class="doc-title-display">Untitled</span>
+      <div class="menubar-spacer"></div>
+      <span id="save-state" class="save-state" aria-live="polite"></span>
+    </div>
+
+    <!-- ── Toolbar ── -->
+    <div id="toolbar" role="toolbar" aria-label="Formatting">
+
+      <!-- Font size (the proforma uses a fixed monospace tabular font; size is adjustable) -->
+      <select id="font-size" title="Font Size" class="toolbar-select size-select">
+        <option value="10">10</option>
+        <option value="11">11</option>
+        <option value="12" selected>12</option>
+        <option value="13">13</option>
+        <option value="14">14</option>
+        <option value="16">16</option>
+      </select>
+
+      <div class="toolbar-divider"></div>
+
+      <!-- Text style -->
+      <button id="btn-bold"   class="toolbar-btn" title="Bold (Cmd+B)"      data-style="bold"><b>B</b></button>
+      <button id="btn-italic" class="toolbar-btn" title="Italic (Cmd+I)"    data-style="italic"><i>I</i></button>
+      <button id="btn-underline" class="toolbar-btn" title="Underline (Cmd+U)" data-style="underline"><u>U</u></button>
+
+      <div class="toolbar-divider"></div>
+
+      <!-- Number formats -->
+      <button class="toolbar-btn" id="fmt-general"  title="General Format"     data-fmt="general">123</button>
+      <button class="toolbar-btn" id="fmt-currency" title="Currency Format"    data-fmt="currency">$</button>
+      <button class="toolbar-btn" id="fmt-percent"  title="Percent Format"     data-fmt="percent">%</button>
+      <button class="toolbar-btn" id="fmt-comma"    title="Thousands Separator" data-fmt="comma">,</button>
+
+      <!-- Decimal places -->
+      <button class="toolbar-btn" id="dec-increase" title="Increase Decimals"  data-act="dec-inc">.0 →</button>
+      <button class="toolbar-btn" id="dec-decrease" title="Decrease Decimals"  data-act="dec-dec">← .0</button>
+
+      <div class="toolbar-divider"></div>
+
+      <!-- Alignment -->
+      <button class="toolbar-btn" title="Align Left"   data-align="left">⬤↙</button>
+      <button class="toolbar-btn" title="Align Centre" data-align="center">⬤↓</button>
+      <button class="toolbar-btn" title="Align Right"  data-align="right">⬤↘</button>
+
+      <div class="toolbar-divider"></div>
+
+      <!-- Borders / gridlines toggle -->
+      <button class="toolbar-btn" id="btn-gridlines" title="Show/Hide Gridlines" data-act="gridlines">⊞</button>
+
+      <!-- Recalculate -->
+      <button class="toolbar-btn" id="btn-recalc" title="Recalculate (F9)" data-act="recalc">∑</button>
+
+      <div class="toolbar-spacer"></div>
+
+      <!-- Export / Print -->
+      <button class="toolbar-btn action-btn" id="btn-print"      title="Print / Save as PDF">⎙ Print</button>
+      <button class="toolbar-btn action-btn" id="btn-export-xlsx" title="Export as XLSX (legacy)">↓ XLSX</button>
+
+    </div>
+
+    <!-- ── Formula bar ── -->
+    <div id="formulabar" role="region" aria-label="Formula Bar">
+      <div class="cell-ref" id="cell-ref">A1</div>
+      <div class="formula-divider"></div>
+      <span class="fx-label">fx</span>
+      <input id="formula-input"
+             type="text"
+             class="formula-input"
+             spellcheck="false"
+             autocomplete="off"
+             autocorrect="off"
+             aria-label="Formula or cell value" />
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════
+         WORKBOOK DESKTOP + GRID
+         The analog of memo's document-desktop/document-canvas.
+    ═══════════════════════════════════════════════════════ -->
+    <div id="workbook-desktop">
+      <div id="grid-container">
+        <!-- The grid is rendered dynamically by grid.js -->
+        <div id="grid-scroll">
+          <table id="proforma-grid" role="grid" aria-label="Proforma Grid">
+            <!-- Populated by grid.js -->
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Sheet tabs ── -->
+    <div id="sheet-tabs" role="tablist" aria-label="Sheets">
+      <button class="sheet-tab active" role="tab" data-sheet="sheet1">Sheet1</button>
+      <button class="sheet-tab sheet-tab-add" title="Add Sheet">+</button>
+    </div>
+
+    <!-- ── Status bar ── -->
+    <div id="statusbar" role="status" aria-live="polite">
+      <span id="status-cell">A1</span>
+      <span class="statusbar-sep">·</span>
+      <span id="status-engine">Ready</span>
+      <span class="statusbar-sep">·</span>
+      <span id="status-schema">Schema 1.0</span>
+      <span class="statusbar-sep">·</span>
+      <span id="status-selection">—</span>
+      <div class="statusbar-spacer"></div>
+      <span id="status-platform"></span>
+    </div>
+
+  </div><!-- /#app-shell -->
+
+  <!-- ═══════════════════════════════════════════════════════
+       DROP-DOWN MENUS (hidden by default)
+  ═══════════════════════════════════════════════════════ -->
+  <div id="dropdown-overlay" class="hidden"></div>
+
+  <nav id="menu-file-dropdown" class="dropdown hidden" role="menu">
+    <button role="menuitem" data-action="new">New Proforma</button>
+    <button role="menuitem" data-action="open">Open…</button>
+    <div class="dropdown-sep"></div>
+    <button role="menuitem" data-action="save">Save</button>
+    <button role="menuitem" data-action="save-as">Save As…</button>
+    <div class="dropdown-sep"></div>
+    <button role="menuitem" data-action="print">Print / Save as PDF…</button>
+    <button role="menuitem" data-action="export-xlsx">Export as XLSX…</button>
+  </nav>
+
+  <nav id="menu-edit-dropdown" class="dropdown hidden" role="menu">
+    <button role="menuitem" data-action="undo">Undo</button>
+    <button role="menuitem" data-action="redo">Redo</button>
+    <div class="dropdown-sep"></div>
+    <button role="menuitem" data-action="cut">Cut</button>
+    <button role="menuitem" data-action="copy">Copy</button>
+    <button role="menuitem" data-action="paste">Paste</button>
+    <div class="dropdown-sep"></div>
+    <button role="menuitem" data-action="find">Find…</button>
+  </nav>
+
+  <nav id="menu-view-dropdown" class="dropdown hidden" role="menu">
+    <button role="menuitem" data-action="toggle-gridlines">Gridlines</button>
+    <button role="menuitem" data-action="toggle-headers">Row/Column Headers</button>
+    <button role="menuitem" data-action="toggle-formulabar">Formula Bar</button>
+    <div class="dropdown-sep"></div>
+    <button role="menuitem" data-action="zoom-in">Zoom In</button>
+    <button role="menuitem" data-action="zoom-out">Zoom Out</button>
+    <button role="menuitem" data-action="zoom-reset">Reset Zoom</button>
+  </nav>
+
+  <nav id="menu-insert-dropdown" class="dropdown hidden" role="menu">
+    <button role="menuitem" data-action="insert-row">Row Above</button>
+    <button role="menuitem" data-action="insert-row-below">Row Below</button>
+    <button role="menuitem" data-action="insert-column">Column Left</button>
+    <button role="menuitem" data-action="insert-column-right">Column Right</button>
+    <div class="dropdown-sep"></div>
+    <button role="menuitem" data-action="insert-sheet">Sheet…</button>
+  </nav>
+
+  <nav id="menu-format-dropdown" class="dropdown hidden" role="menu">
+    <button role="menuitem" data-action="format-general">General</button>
+    <button role="menuitem" data-action="format-currency">Currency</button>
+    <button role="menuitem" data-action="format-percent">Percent</button>
+    <button role="menuitem" data-action="format-number">Number (2 dp)</button>
+    <button role="menuitem" data-action="format-integer">Integer</button>
+    <div class="dropdown-sep"></div>
+    <button role="menuitem" data-action="format-bold">Bold</button>
+    <button role="menuitem" data-action="format-italic">Italic</button>
+    <button role="menuitem" data-action="format-underline">Underline</button>
+  </nav>
+
+  <nav id="menu-data-dropdown" class="dropdown hidden" role="menu">
+    <button role="menuitem" data-action="named-ranges">Named Ranges…</button>
+    <button role="menuitem" data-action="trace-dependencies">Trace Dependencies</button>
+    <div class="dropdown-sep"></div>
+    <button role="menuitem" data-action="sort">Sort Selection…</button>
+  </nav>
+
+  <nav id="menu-tools-dropdown" class="dropdown hidden" role="menu">
+    <button role="menuitem" data-action="recalculate">Recalculate Now (F9)</button>
+    <button role="menuitem" data-action="calc-options">Calculation Options…</button>
+    <div class="dropdown-sep"></div>
+    <button role="menuitem" data-action="schema-info">Schema Information…</button>
+    <button role="menuitem" data-action="audit-history">Audit History…</button>
+  </nav>
+
+  <!-- ─── Scripts ─────────────────────────────────────────── -->
+  <!--
+    Load order matters. No module bundler is used.
+    window.__TAURI__ is available because withGlobalTauri=true in tauri.conf.json.
+  -->
+  <script src="js/schema.js"></script>      <!-- JSON schema defaults and validation -->
+  <script src="js/engine.js"></script>      <!-- MVP formula engine -->
+  <script src="js/grid.js"></script>        <!-- Grid rendering and cell interaction -->
+  <script src="js/formula-bar.js"></script> <!-- Formula bar wiring -->
+  <script src="js/toolbar.js"></script>     <!-- Formatting and toolbar actions -->
+  <script src="js/export.js"></script>      <!-- PDF print and XLSX export -->
+  <script src="js/app.js"></script>         <!-- State, file I/O, menus, shortcuts -->
+
+</body>
+</html>

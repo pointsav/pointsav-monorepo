@@ -1,0 +1,7 @@
+# Build artifacts — generated during ISO assembly; never commit
+*.iso
+*.elf
+*.bin
+linker.ld
+build_iso/staging/
+build_iso/system-substrate

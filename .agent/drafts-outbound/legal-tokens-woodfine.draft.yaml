@@ -1,0 +1,94 @@
+# legal-tokens-woodfine.yaml
+# Canonical legal text tokens — Woodfine brand
+# Destination: factory-release-engineering/tokens/legal-tokens-woodfine.yaml
+# Consumed by: app-mediakit-knowledge shell_chrome(), HTML templates, CI footer validation
+#
+# Source authority: factory-release-engineering/TRADEMARK.md,
+#   policies/DISCLAIMER.md, policies/HOMEPAGE-DISCLAIMER.md
+#
+# Drafted by: project-editorial 2026-05-24
+# Routing: Command Session → factory-release-engineering (admin-tier)
+
+schema: foundry-legal-tokens-v1
+brand: woodfine
+brand_surface: woodfinegroup.com
+owner: "Woodfine Capital Projects Inc."
+effective: 2026-01-01
+
+copyright:
+  holder: "Woodfine Capital Projects Inc."
+  year_founded: 2011
+  year_current: 2026
+  # Templates: use {year_current} for new work; {year_founded}–{year_current} for full-history properties
+  statement: "© {year_current} {holder}. All rights reserved."
+  statement_range: "© {year_founded}–{year_current} {holder}. All rights reserved."
+
+trademarks:
+  owned:
+    - "Woodfine Capital Projects™"
+    - "Woodfine Management Corp™"
+    - "PointSav Digital Systems™"
+    - "Totebox Orchestration™"
+    - "Totebox Archive™"
+  jurisdictions:
+    - Canada
+    - United States
+    - Latin America
+    - Europe
+  statement: >
+    Woodfine Capital Projects™, Woodfine Management Corp™, PointSav Digital Systems™,
+    Totebox Orchestration™, and Totebox Archive™ are trademarks of Woodfine Capital
+    Projects Inc., used in Canada, the United States, Latin America, and Europe.
+    All other trademarks are the property of their respective owners.
+
+footer:
+  # Standard footer — all Woodfine-brand properties
+  standard: |
+    © {copyright.year_current} {copyright.holder}. All rights reserved.
+    {trademarks.statement}
+  # Extended footer — investment-context pages (home.woodfinegroup.com, offering pages)
+  investment: |
+    © {copyright.year_current} {copyright.holder}. All rights reserved.
+    {trademarks.statement}
+    {disclaimers.forward_looking.short}
+
+contact:
+  investor_relations: "ir@woodfinegroup.com"
+  legal: "legal@woodfinegroup.com"
+  press: "press@woodfinegroup.com"
+  trademark: "corporate.secretary@woodfinegroup.com"
+
+disclaimers:
+  forward_looking:
+    # Short form — footers and page-level notices
+    short: >
+      This document contains forward-looking information within the meaning of applicable
+      Canadian securities legislation. Forward-looking information involves known and
+      unknown risks and uncertainties. Actual results may differ materially from those
+      anticipated. The Company disclaims any obligation to update forward-looking
+      statements except as required by applicable securities legislation.
+    # Full form — see source file
+    full_ref: "policies/DISCLAIMER.md §5"
+  no_offer:
+    short: >
+      Nothing herein constitutes an offer to sell, or solicitation to buy, investment
+      units in any Woodfine direct-hold solution. Any offering is made exclusively by
+      means of the applicable Private Placement Memorandum.
+    full_ref: "policies/DISCLAIMER.md §2"
+  investor_restriction:
+    short: >
+      Access is restricted to verified Accredited Investors under National Instrument
+      45-106 and equivalent frameworks in applicable jurisdictions.
+    full_ref: "policies/DISCLAIMER.md §2"
+  homepage:
+    # Abbreviated form — home.woodfinegroup.com only
+    ref: "policies/HOMEPAGE-DISCLAIMER.md"
+
+# ── Update procedure ──────────────────────────────────────────────────────────
+# copyright.year_current     — update at the start of each calendar year
+# trademarks.owned           — update when marks are registered, abandoned, or renamed
+# contact.*                  — update when organisational contacts change
+# disclaimers.forward_looking.short — update only if regulatory language changes;
+#                               confirm with counsel before any edit
+# After any update: run CI footer-validation check to confirm cascade across all
+# consuming templates (shell_chrome, HTML prototypes, readmes/).

@@ -1,6 +1,6 @@
-# project-proofreader — Gemini CLI entry point
+# project-infrastructure — Gemini CLI entry point
 
-You are a **Totebox Session** for the `project-proofreader` archive.
+You are a **Totebox Session** for the `project-infrastructure` archive.
 
 Before any action, execute the 8-step startup ritual defined in:
 
