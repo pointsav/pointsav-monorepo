@@ -1,36 +1,17 @@
+# SOFT- binary distribution — product declaration for project-knowledge.
+# Declaration only. Command Session reads this and builds via bin/build-soft.sh
+# after Stage 6. Do NOT build binaries from this archive.
+# Spec: ~/Foundry/conventions/soft-distribution-pipeline.md §2 + §8
 schema: foundry-binary-targets-v1
-cluster: project-gis
-
+cluster: project-knowledge
 targets:
-  - product_id: os-orchestration
-    binary_name: os-orchestration
-    source_crate: os-orchestration
-    license: FSL-1.1-ALv2
-    license_tier: fsl
-    class: os-image
-    layer: base
-    requires: []
-    platforms: [x86_64-unknown-linux-gnu]
-    soft_enabled: false   # scaffold — src does not yet exist
-
-  - product_id: app-orchestration-gis
-    binary_name: app-orchestration-gis
-    source_crate: app-orchestration-gis
-    license: FSL-1.1-ALv2
-    license_tier: fsl
+  - product_id: app-mediakit-knowledge
+    binary_name: app-mediakit-knowledge      # [[bin]] name in Cargo.toml
+    source_crate: app-mediakit-knowledge     # directory in pointsav-monorepo/
+    license: Apache-2.0                      # SPDX — per crate Cargo.toml
+    license_tier: apache                     # apache ($1 USDC)
     class: app-bundle
     layer: extension
     requires: [os-console]
     platforms: [x86_64-unknown-linux-gnu]
-    soft_enabled: false   # scaffold — Cargo.toml does not yet exist
-
-  - product_id: app-console-gis
-    binary_name: app-console-gis
-    source_crate: app-console-gis
-    license: FSL-1.1-ALv2
-    license_tier: fsl
-    class: app-bundle
-    layer: extension
-    requires: [os-console]
-    platforms: [x86_64-unknown-linux-gnu]
-    soft_enabled: false   # scaffold
+    soft_enabled: true
