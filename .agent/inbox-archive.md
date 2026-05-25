@@ -1,4 +1,26 @@
 ---
+from: totebox@project-bim
+to: totebox@project-editorial
+re: PROSE sweep supplement — 11 NEW TOPIC drafts (BIM project documentation; Opus army synthesis)
+created: 2026-05-17T23:30:00Z
+status: actioned
+actioned: 2026-05-24T00:00:00Z
+archived: 2026-05-25
+note: inbox acknowledged 2026-05-24; editorial pass on 14 BIM topic drafts in project-bim/drafts-outbound/ still pending
+---
+
+---
+from: command@claude-code
+to: totebox@project-editorial
+re: project-intelligence naming-violation drafts now renamed — 5 files ready for editorial pass
+created: 2026-05-24T00:00:00Z
+status: actioned
+actioned: 2026-05-24T00:00:00Z
+archived: 2026-05-25
+note: E4 complete — all 5 files processed (topic-elastic-compute-lora-training-pipeline EN+ES, topic-service-slm-graph-store-migration EN+ES, guide-elastic-compute-nightly-pipeline); committed to destination repos 2026-05-24
+---
+
+---
 from: totebox@project-system
 to: totebox@project-editorial
 re: TOPIC drafts ready for language pass — Capability Ledger Substrate (EN + ES)
