@@ -1029,8 +1029,8 @@ fn compute_home_stats(buckets: &CategoryBuckets) -> HomeStats {
 /// Categories with ≤ PREVIEW_LIMIT articles always show the full list.
 const PREVIEW_LIMIT: usize = 8;
 
-const WORDMARK_POINTSAV: &str = r##"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 40"><text x="0" y="30" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="24" font-weight="800" fill="currentColor" letter-spacing="-0.03em">POINT-SAV DIGITAL SYSTEMS</text></svg>"##;
-const WORDMARK_WOODFINE: &str = r##"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 350 40"><text x="0" y="30" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="24" font-weight="800" fill="currentColor" letter-spacing="-0.03em">WOODFINE CAPITAL PROJECTS</text></svg>"##;
+const WORDMARK_POINTSAV: &str = r##"<span class="brand__mark" aria-hidden="true">&#x25A0;</span><span class="brand__wordmark">PointSav</span><span class="brand__sub">Digital Systems</span>"##;
+const WORDMARK_WOODFINE: &str = r##"<span class="brand__mark" aria-hidden="true">&#x25A0;</span><span class="brand__wordmark">Woodfine</span><span class="brand__sub">Capital Projects</span>"##;
 
 #[allow(clippy::too_many_arguments)]
 fn home_chrome(
@@ -1091,6 +1091,9 @@ fn home_chrome(
                 meta charset="utf-8";
                 meta name="viewport" content="width=device-width, initial-scale=1";
                 title { (site_title) }
+                link rel="preconnect" href="https://fonts.googleapis.com";
+                link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="";
+                link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Nunito+Sans:wght@300;400;600;700&family=Roboto+Slab:wght@400;500;600&display=swap" rel="stylesheet";
                 link rel="stylesheet" href="/static/tokens.css";
                 @if woodfine_theme {
                     link rel="stylesheet" href="/static/tokens-woodfine.css";
@@ -2136,6 +2139,9 @@ fn wiki_chrome(
                 meta charset="utf-8";
                 meta name="viewport" content="width=device-width, initial-scale=1";
                 title { (page_title) }
+                link rel="preconnect" href="https://fonts.googleapis.com";
+                link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="";
+                link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Nunito+Sans:wght@300;400;600;700&family=Roboto+Slab:wght@400;500;600&display=swap" rel="stylesheet";
                 link rel="stylesheet" href="/static/tokens.css";
                 @if woodfine_theme {
                     link rel="stylesheet" href="/static/tokens-woodfine.css";
@@ -3777,6 +3783,9 @@ fn chrome(
                 meta charset="utf-8";
                 meta name="viewport" content="width=device-width, initial-scale=1";
                 title { (site_title) }
+                link rel="preconnect" href="https://fonts.googleapis.com";
+                link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="";
+                link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Nunito+Sans:wght@300;400;600;700&family=Roboto+Slab:wght@400;500;600&display=swap" rel="stylesheet";
                 link rel="stylesheet" href="/static/tokens.css";
                 link rel="stylesheet" href="/static/style.css";
             }
