@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Access Funds — Professional Centres Canada LP (Simple V10 Final)</title>
+    <style>
+        /* ==========================================================================
+           ACCESS FUNDS — PROFESSIONAL CENTRES CANADA LP (SIMPLE V10)
+           LEAPFROG 2030 (STRICT FOUNDATION PARITY SYNC)
+           Target: US Letter Proportion (1056x816) - 100% Publishable
+           ========================================================================== */
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            background-color: #E2E8F0;
+            display: flex; justify-content: center; padding: 40px; margin: 0;
+        }
+
+        .print-canvas {
+            position: relative; width: 1056px; height: 816px; background-color: #FFFFFF;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1); overflow: hidden;
+        }
+
+        @media print {
+            @page { size: landscape; margin: 0; }
+            body { padding: 0; margin: 0; background: #FFFFFF; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .print-canvas { box-shadow: none; width: 1056px; height: 816px; page-break-after: avoid; }
+        }
+
+        svg { shape-rendering: geometricPrecision; }
+        path { shape-rendering: crispEdges; }
+        marker path { shape-rendering: geometricPrecision; }
+
+        /* ==========================================
+           INSTITUTIONAL TYPOGRAPHY (DS-ADR-08)
+           ========================================== */
+        .token-disclaimer { position: absolute; top: 20px; right: 40px; font-size: 9px; font-weight: 600; color: #64748B; text-transform: uppercase; letter-spacing: 0.08em; z-index: 5; }
+        .token-signature { position: absolute; bottom: 14px; right: 40px; font-size: 10px; line-height: 1.4; text-align: right; color: #000000; z-index: 5; }
+
+        .title-container-left { position: absolute; top: 30px; left: 40px; width: 450px; text-align: left; z-index: 5; }
+        .t-kicker { font-size: 11px; font-weight: 800; color: #0F172A; text-transform: uppercase; letter-spacing: 0.06em; margin: 0 0 2px 0; }
+        .t-headline { font-size: 14px; font-weight: 900; color: #000000; text-transform: uppercase; letter-spacing: -0.02em; margin: 0 0 4px 0; }
+        .t-subtitle { font-size: 12px; font-style: italic; color: #334155; padding-bottom: 6px; border-bottom: 1px solid #CBD5E1; margin: 0 0 6px 0; }
+        .t-preamble { font-size: 9px; line-height: 1.3; color: #475569; text-align: left; margin: 0; }
+
+        .zone-floater { position: absolute; font-size: 10px; line-height: 1.3; color: #334155; z-index: 5; }
+        
+        /* Interactive labels for super loops */
+        .action-label {
+            position: absolute; font-size: 9px; font-weight: 800; text-transform: uppercase; 
+            letter-spacing: 0.06em; z-index: 5; background: #FFFFFF; padding: 2px 4px; border-radius: 2px; line-height: 1.2;
+        }
+
+        /* ==========================================
+           STRUCTURAL CSS (SVG, Tokens, Markers)
+           ========================================== */
+        .svg-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; }
+
+        .marker {
+            position: absolute; background-color: #FFFFFF; color: #334155;
+            font-size: 10px; font-weight: 700; text-transform: uppercase;
+            padding: 2px 4px; text-align: center; z-index: 3; line-height: 1.2;
+            transform: translate(-50%, -50%);
+        }
+
+        /* ==========================================
+           SCALED NODE TOKENS
+           ========================================== */
+        .token-base {
+            position: absolute; display: flex; flex-direction: column;
+            width: 170px; height: 90px; padding: 8px;
+            text-align: center; box-sizing: border-box; z-index: 4;
+            background-color: #F1F8E9; border: 2px solid #2E7D32; border-radius: 0;
+        }
+
+        .token-green  { background-color: #F1F8E9; border: 2px solid #2E7D32; }
+        .token-blue   { background-color: #E3F2FD; border: 2px solid #1565C0; }
+        .token-purple { background-color: #F3E5F5; border: 2px solid #7B1FA2; }
+        .token-olive  { background-color: #F9FBE7; border: 2px solid #827717; }
+        .token-grey   { background-color: #F8FAFC; border: 2px dashed #94A3B8; }
+
+        .token-yellow {
+            position: absolute; display: flex; flex-direction: column;
+            width: 210px; height: 90px; padding: 10px;
+            text-align: center; box-sizing: border-box; z-index: 4;
+            background-color: #FFFDE7; border: 2px dashed #F57F17; border-radius: 110px;
+        }
+        .token-purple-ellipse-dotted {
+            position: absolute; display: flex; flex-direction: column;
+            width: 210px; height: 90px; padding: 10px;
+            text-align: center; box-sizing: border-box; z-index: 4;
+            background-color: #F3E5F5; border: 2px dotted #7B1FA2; border-radius: 110px;
+        }
+        .token-orange-ellipse-dashed {
+            position: absolute; display: flex; flex-direction: column;
+            width: 210px; height: 90px; padding: 10px;
+            text-align: center; box-sizing: border-box; z-index: 4;
+            background-color: #FFF3E0; border: 2px dashed #E65100; border-radius: 110px;
+        }
+
+        /* ==========================================
+           INTERNAL NODE ZONES & TYPOGRAPHY
+           ========================================== */
+        .zone-top    { display: flex; flex-direction: column; gap: 2px; align-items: center; }
+        .zone-mid    { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; gap: 2px; align-items: center; }
+        .zone-bottom { display: flex; flex-direction: column; align-items: center; }
+
+        .t-title   { font-weight: 800; font-size: 11px; color: #000000; margin: 0; line-height: 1.1; letter-spacing: -0.01em; }
+        .t-code    { font-family: ui-monospace, SFMono-Regular, monospace; font-size: 8.5px; color: #475569; margin: 0; }
+        .t-alias   { font-style: italic; font-size: 9px; color: #000000; margin: 0; }
+        .t-country { font-size: 8.5px; color: #475569; margin: 0; }
+        .t-legal   { font-size: 9px; color: #000000; margin: 0; line-height: 1.2; }
+        .t-legalb   { font-size: 8.5px; color: #000000; margin: 0; line-height: 1.2; }
+        .t-node    { position: absolute; bottom: 3px; right: 6px; font-family: ui-monospace, SFMono-Regular, monospace; font-size: 9px; font-weight: 700; color: #94A3B8; margin: 0; }
+
+        .t-glyph {
+            position: absolute; bottom: 3px; left: 6px;
+            font-family: ui-monospace, SFMono-Regular, monospace;
+            font-size: 12px; font-weight: 700; line-height: 1; margin: 0;
+        }
+
+        .token-yellow .t-node,
+        .token-orange-ellipse-dashed .t-node,
+        .token-purple-ellipse-dotted .t-node { bottom: 10px; right: 30px; }
+
+        .token-yellow .t-glyph,
+        .token-orange-ellipse-dashed .t-glyph,
+        .token-purple-ellipse-dotted .t-glyph { bottom: 10px; left: 30px; }
+
+        /* ==========================================
+           PANEL BLOCK — FIXED COUNTRY NAMES
+           ========================================== */
+        .panel-block {
+            position: absolute; z-index: 4;
+            border: 1.5px solid #94A3B8; border-radius: 4px;
+            padding: 6px 6px; font-size: 10px;
+            background: #F8FAFC; box-sizing: border-box;
+        }
+        .panel-block h4 {
+            font-size: 9px; font-weight: 800; color: #0F172A;
+            margin: 0 0 5px 0; padding-bottom: 3px;
+            border-bottom: 1px solid #CBD5E1; text-transform: uppercase;
+        }
+        .panel-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 4px;
+        }
+        .panel-cell {
+            position: relative; border: 1.5px solid #94A3B8; border-radius: 3px;
+            padding: 4px 4px 18px; text-align: center; background: #FFFFFF;
+            display: flex; flex-direction: column; min-height: 48px; box-sizing: border-box;
+        }
+        .panel-cell.full-span { margin-bottom: 4px; }
+        .panel-cell .pc { font-weight: 700; font-size: 9px; color: #000000; }
+        
+        /* Forces country names to the absolute bottom center */
+        .panel-cell .ps { 
+            position: absolute; bottom: 4px; left: 0; right: 0;
+            font-size: 8px; color: #475569; margin: 0; text-align: center; 
+        }
+        .panel-cell .pn { position: absolute; bottom: 2px; right: 4px; font-family: ui-monospace, monospace; font-size: 8px; color: #94A3B8; font-weight: 700; }
+    </style>
+</head>
+<body>
+
+<div class="print-canvas">
+
+    <div class="token-disclaimer">PRIVATE &amp; CONFIDENTIAL — NOT FOR REDISTRIBUTION — INVESTMENT PROFESSIONALS ONLY</div>
+
+    <div class="token-signature">
+        April 16, 2026<br>
+        Prepared by Woodfine Management Corp.
+    </div>
+
+    <div class="title-container-left">
+        <p class="t-kicker">ACCESS FUND</p>
+        <p class="t-headline">IRISH COLLECTIVE ASSET-MANAGEMENT VEHICLE (ICAV)</p>
+        <p class="t-subtitle">External Assets<br>Woodfine Direct-Hold Solutions</p>
+        <p class="t-preamble">Subscription Agreements, or electronic equivalents thereof, must be presented by a licensed broker-dealer authorized in the jurisdiction of the direct-hold solution (CIRO/BCSC in Canada, FINRA/SEC in the US, CNMV in Spain and AMIB/CNBV in Mexico) and approved by the auditor of the investment vehicle. Referrals must be paid exclusively through licensed professionals in strict compliance with local securities regulations.</p>
+    </div>
+
+    <div class="zone-floater" style="right: 40px; top: 60px; width: 280px;">
+        <div style="display: flex; justify-content: flex-end; align-items: center; gap: 8px; margin-bottom: 5px;">
+            <span>Zero-fee offering</span>
+            <span style="color: #E65100; font-weight: bold; font-size: 14px;">✳</span>
+            <div style="width: 32px; height: 16px; background: #FFF3E0; border: 2px dotted #E65100; border-radius: 16px; flex-shrink: 0;"></div>
+        </div>
+        <div style="display: flex; justify-content: flex-end; align-items: center; gap: 8px; margin-bottom: 5px;">
+            <span>Incentive-based fee</span>
+            <span style="color: #7B1FA2; font-weight: bold; font-size: 14px;">✝</span>
+            <div style="width: 32px; height: 16px; background: #F3E5F5; border: 2px dotted #7B1FA2; border-radius: 16px; flex-shrink: 0;"></div>
+        </div>
+        <div style="display: flex; justify-content: flex-end; align-items: center; gap: 8px;">
+            <span>Unit-based compensation</span>
+            <span style="color: #F57F17; font-weight: bold; font-size: 14px;">‡</span>
+            <div style="width: 32px; height: 16px; background: #FFFDE7; border: 2px dashed #F57F17; border-radius: 16px; flex-shrink: 0;"></div>
+        </div>
+    </div>
+
+    <svg class="svg-layer" viewBox="0 0 1056 816">
+        <defs>
+            <marker id="arrow-green"  viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#2E7D32"/></marker>
+            <marker id="arrow-blue"   viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#1565C0"/></marker>
+            <marker id="arrow-purple" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#7B1FA2"/></marker>
+            <marker id="arrow-orange" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#E65100"/></marker>
+            <marker id="arrow-amber"  viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#F57F17"/></marker>
+            <marker id="arrow-olive"  viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#827717"/></marker>
+        </defs>
+
+        <path d="M 420 490 L 420 410" fill="none" stroke="#7B1FA2" stroke-width="2" marker-end="url(#arrow-purple)"/>
+
+        <path d="M 595 270 L 595 490" fill="none" stroke="#1565C0" stroke-width="2" marker-end="url(#arrow-blue)"/>
+
+        <path d="M 745 270 L 745 320" fill="none" stroke="#1565C0" stroke-width="2" marker-end="url(#arrow-blue)"/>
+
+        <path d="M 745 410 L 745 490" fill="none" stroke="#827717" stroke-width="2" marker-end="url(#arrow-olive)"/>
+
+        <path d="M 565 535 L 525 535" fill="none" stroke="#E65100" stroke-width="2" marker-end="url(#arrow-orange)"/>
+
+        <path d="M 270 535 L 315 535" fill="none" stroke="#1565C0" stroke-width="2" marker-end="url(#arrow-blue)"/>
+
+        <path d="M 565 665 L 525 665" fill="none" stroke="#1565C0" stroke-width="2" marker-end="url(#arrow-blue)"/>
+
+        <path d="M 270 665 L 315 665" fill="none" stroke="#2E7D32" stroke-width="2" marker-end="url(#arrow-green)"/>
+
+        <path d="M 420 620 L 420 580" fill="none" stroke="#F57F17" stroke-width="2" marker-end="url(#arrow-amber)"/>
+
+        <path d="M 100 665 L 60 665 L 60 365 L 335 365" fill="none" stroke="#2E7D32" stroke-width="2" marker-end="url(#arrow-green)"/>
+
+        <path d="M 420 710 L 420 750 L 30 750 L 30 225 L 100 225" fill="none" stroke="#F57F17" stroke-width="2" marker-end="url(#arrow-amber)"/>
+
+        <path d="M 830 365 L 845 365" fill="none" stroke="#94A3B8" stroke-width="1.5" stroke-dasharray="4,4"/>
+
+        <path d="M 775 535 L 845 535" fill="none" stroke="#94A3B8" stroke-width="1.5" stroke-dasharray="4,4"/>
+    </svg>
+
+    <div class="action-label" style="left: 60px; top: 515px; color: #64748B; text-align: center; transform: translate(-50%, -50%);">BONUS<br>SHARES</div>
+    <div class="action-label" style="left: 225px; top: 750px; color: #64748B; text-align: center; transform: translate(-50%, -50%);">COMMISSIONS</div>
+    <div class="action-label" style="left: 420px; top: 450px; color: #64748B; text-align: center; transform: translate(-50%, -50%);">MANAGEMENT FEES<br>CARRY</div>
+
+    <div class="token-base token-grey" style="left: 100px; top: 180px;">
+        <div class="zone-top"><p class="t-title">Sales Agreement</p></div>
+        <div class="zone-mid"><p class="t-alias">"Broker/Dealer"</p></div>
+        <div class="zone-bottom"><p class="t-country">(Qualified Jurisdictions)</p></div>
+        <p class="t-node">24</p>
+    </div>
+
+    <div class="token-base token-blue" style="left: 520px; top: 180px; width: 300px; padding: 0; display: flex; flex-direction: row; box-sizing: border-box;">
+        
+        <div style="flex: 1; border-right: 1px solid #1565C0; display: flex; flex-direction: column; padding: 8px; position: relative;">
+            <div class="zone-top"><p class="t-title">Access Fund</p></div>
+            <div class="zone-mid"><p class="t-legal">Well-Informed</p></div>
+            <div class="zone-bottom"><p class="t-country">(Global)</p></div>
+            <p class="t-node" style="bottom: 3px; right: 6px;">56</p>
+        </div>
+        
+        <div style="flex: 1; display: flex; flex-direction: column; padding: 8px; position: relative;">
+            <div class="zone-top"><p class="t-title">Exchange-Traded Notes</p></div>
+            <div class="zone-mid"><p class="t-legal">Mass Affluent</p></div>
+            <div class="zone-bottom"><p class="t-country">(Global)</p></div>
+            <p class="t-node" style="bottom: 3px; right: 6px;">57</p>
+        </div>
+
+    </div>
+
+    <div class="token-base token-purple" style="left: 335px; top: 320px;">
+        <div class="zone-top"><p class="t-title">SPV Manager</p></div>
+        <div class="zone-mid"><p class="t-alias">"Manager"</p></div>
+        <div class="zone-bottom"><p class="t-country">(Home Jurisdiction)</p></div>
+        <p class="t-node">45</p>
+    </div>
+
+    <div class="token-base token-olive" style="left: 660px; top: 320px;">
+        <div class="zone-top"><p class="t-title">Euro Notes</p></div>
+        <div class="zone-mid"><p class="t-alias">"Exchange-Traded Notes"</p></div>
+        <div class="zone-bottom"><p class="t-country">(Vienna Stock Exchange)</p></div>
+        <p class="t-node">6</p>
+    </div>
+
+    <div class="token-base token-blue" style="left: 100px; top: 490px;">
+        <div class="zone-top"><p class="t-title">Club Deals</p></div>
+        <div class="zone-mid">
+            <p class="t-legal">Qualified Investors<br>(Jurisdictional Investor Limits)</p>
+        </div>
+        <div class="zone-bottom"><p class="t-country">(Non-Residents)</p></div>
+        <p class="t-node">55</p>
+    </div>
+
+    <div class="token-purple-ellipse-dotted" style="left: 315px; top: 490px;">
+        <div class="zone-top"><p class="t-title">Cross-Border Flow-Through<br>for Immovable Property</p></div>
+        <div class="zone-mid"><p class="t-alias">"SPV – Special Purpose Vehicle"</p></div>
+        <div class="zone-bottom"><p class="t-country">(Local Jurisdiction)</p></div>
+        <p class="t-glyph" style="color: #7B1FA2;">✝</p>
+        <p class="t-node">50</p>
+    </div>
+
+    <div class="token-orange-ellipse-dashed" style="left: 565px; top: 490px;">
+        <div class="zone-top"><p class="t-title">Alternatives Access Fund<br>ELTIF ICAV</p></div>
+        <div class="zone-mid"><p class="t-alias">"ICAV – Access Fund"</p></div>
+        <div class="zone-bottom"><p class="t-country">(Ireland)</p></div>
+        <p class="t-glyph" style="color: #E65100;">✳</p>
+        <p class="t-node">9</p>
+    </div>
+
+    <div class="token-base token-green" style="left: 100px; top: 620px;">
+        <div class="zone-top"><p class="t-title">Woodfine Capital<br>Projects Inc.</p></div>
+        <div class="zone-mid"><p class="t-code">WCP-CA-01-HLD</p><p class="t-alias">"Parent Company"</p></div>
+        <div class="zone-bottom"><p class="t-country">(Canada)</p></div>
+        <p class="t-node">16</p>
+    </div>
+
+    <div class="token-yellow" style="left: 315px; top: 620px;">
+        <div class="zone-top"><p class="t-title">Woodfine<br>Direct-Hold Solutions</p></div>
+        <div class="zone-mid"><p class="t-code">XXX-XX-00-AST</p><p class="t-alias">"Direct-Hold Solution"</p></div>
+        <div class="zone-bottom"><p class="t-country">(Local Jurisdiction)</p></div>
+        <p class="t-glyph" style="color: #F57F17;">‡</p>
+        <p class="t-node">58</p>
+    </div>
+
+    <div class="token-base token-blue" style="left: 565px; top: 620px;">
+        <div class="zone-top"><p class="t-title">Investment Units</p></div>
+        <div class="zone-mid">
+            <p class="t-legal">Mass Affluent</p>
+            <p class="t-legalb">(Prospectus Marketing Period Only)</p>
+             <p class="t-legal">Qualified Investors</p>
+        </div>
+        <div class="zone-bottom"><p class="t-country">(Residents of Local Jurisdiction)</p></div>
+        <p class="t-node">59</p>
+    </div>
+
+    <div class="panel-block" style="left: 845px; top: 320px; width: 195px;">
+        <h4>Exchange-traded Notes:</h4>
+        <div class="panel-grid">
+            <div class="panel-cell"><div class="pc">Custodian</div><div class="ps">(Ireland)</div><div class="pn">7</div></div>
+            <div class="panel-cell"><div class="pc">Issuer</div><div class="ps">(Ireland)</div><div class="pn">8</div></div>
+        </div>
+    </div>
+
+    <div class="panel-block" style="left: 845px; top: 470px; width: 195px;">
+        <h4>Ireland ICAV appointing:</h4>
+        <div class="panel-cell full-span">
+            <div class="pc">Alternative Investment<br>Fund Manager</div>
+            <div class="ps">(Ireland)</div>
+            <div class="pn">10</div>
+        </div>
+        <div class="panel-grid">
+            <div class="panel-cell"><div class="pc">Depositary</div><div class="ps">(Ireland)</div><div class="pn">11</div></div>
+            <div class="panel-cell"><div class="pc">Fund Administrator</div><div class="ps">(Ireland)</div><div class="pn">12</div></div>
+            <div class="panel-cell"><div class="pc">Auditor</div><div class="ps">(Ireland)</div><div class="pn">13</div></div>
+            <div class="panel-cell"><div class="pc">Transfer Agent</div><div class="ps">(Ireland)</div><div class="pn">14</div></div>
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>
