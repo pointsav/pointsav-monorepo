@@ -1,0 +1,401 @@
+Loading /srv/foundry/clones/project-gis/pointsav-monorepo/app-orchestration-gis/work/clusters.geojson ...
+  10,213 clusters
+Loading /srv/foundry/clones/project-gis/pointsav-monorepo/app-orchestration-gis/work/catchment-data.json ...
+  10,213 catchment entries
+  rank_pp_iso: feature=10,213  catchment=0  missing=0
+
+Continent totals — NA=7,755  EU=2,458  Total=10,213
+
+==========================================================================================
+THRESHOLD SWEEP — composition + civic gates held constant; IoU dedup SKIPPED.
+(Real qualifying counts after IoU enforcement will be slightly lower.)
+==========================================================================================
+
+--- threshold rank_pp_iso <= 0.10 ---
+  NA qualifying: 276 / 7,755 (3.56%)
+  EU qualifying: 19 / 2,458 (0.77%)
+  TOTAL        : 295
+  Newly added at this step: 295
+  New cluster IDs at this step (sorted by continent/iso/rank):
+  cluster_id                                       iso     rpp  comp        display_name
+  c_ikea_de_51x491_7x37                            DE   0.0595  WH+HYPER    Dortmund — Co-location 3
+  c_ikea_de_52x534_13x514                          DE   0.0663  WH+HYPER    Berlin — Co-location 14
+  c_marktkauf_de_52x403_13x249                     DE   0.0825  WH+HYPER    Potsdam-Mittelmark — Co-location 1
+  c_ikea_de_52x528_13x215                          DE   0.0880  WH+HYPER    Berlin — Co-location 1
+  c_kaufland_de_52x397_13x241                      DE   0.0907  WH+HYPER    Potsdam-Mittelmark — Co-location 2
+  c_makro_es_42x832__1x675                         ES   0.0333  WH+HYPER    Navarra — Co-location 2
+  c_leclerc_fr_48x832_2x328                        FR   0.0057  LS+HYPER    Paris — Co-location 16
+  c_leclerc_fr_48x839_2x322                        FR   0.0115  LS+HYPER    Paris — Co-location 14
+  c_carrefour_hypermarket_fr_48x826_2x394          FR   0.0172  LS+HYPER    Val-de-Marne — Co-location 1
+  c_auchan_fr_48x812_2x362                         FR   0.0287  LS+HYPER    Val-de-Marne — Co-location 4
+  c_leclerc_fr_48x745_2x365                        FR   0.0776  LS+HYPER    Val-de-Marne — Co-location 11
+  c_carrefour_hypermarket_fr_48x755_2x371          FR   0.0920  LS+HYPER    Val-de-Marne — Co-location 10
+  c_tesco_uk_51x537__0x247                         GB   0.0377  WH+HYPER    Brent — Co-location 3
+  c_ikea_uk_51x554__0x26                           GB   0.0398  WH+HYPER    Brent — Co-location 1
+  c_costco_uk_51x557__0x272                        GB   0.0419  WH+HYPER    Brent — Co-location 2
+  c_sainsburys_uk_51x539__0x303                    GB   0.0440  WH+HYPER    Brent — Co-location 4
+  c_sainsburys_uk_51x606__0x066                    GB   0.0755  WH+HYPER    Haringey and Islington — Co-location 6
+  c_sainsburys_uk_51x583__0x027                    GB   0.0860  WH+HYPER    Redbridge and Waltham Forest — Co-location 1
+  c_tesco_uk_51x399__0x1                           GB   0.0901  LS+HYPER    Croydon — Co-location 4
+  c_home_depot_ca_43x707__79x562                   CA   0.0096  WH+HYPER    Toronto — Co-location 1
+  c_costco_ca_43x712__79x555                       CA   0.0112  WH+HYPER    Toronto — Co-location 2
+  c_costco_ca_43x731__79x456                       CA   0.0209  WH+HYPER    Toronto — Co-location 13
+  c_home_depot_ca_43x708__79x314                   CA   0.0562  WH+HYPER    Toronto — Co-location 5
+  c_home_depot_ca_43x763__79x298                   CA   0.0610  WH+HYPER    Toronto — Co-location 19
+  c_costco_ca_43x759__79x298                       CA   0.0626  WH+HYPER    Toronto — Co-location 20
+  c_home_depot_ca_43x853__79x252                   CA   0.0995  WH+HYPER    Markham, Toronto — Co-location 1
+  c_walmart_mx_19x45__99x218                       MX   0.0015  WH+HYPER    Migu el Hidalgo — Co-location 2
+  c_costco_mx_19x442__99x206                       MX   0.0031  WH+HYPER    Migu el Hidalgo — Co-location 4
+  c_walmart_mx_19x422__99x206                      MX   0.0046  WH+HYPER    Migu el Hidalgo — Co-location 9
+  c_walmart_mx_19x435__99x21                       MX   0.0061  WH+HYPER    Migu el Hidalgo — Co-location 3
+  c_walmart_mx_19x503__99x203                      MX   0.0076  WH+HYPER    Azcapotzalco — Co-location 5
+  c_soriana_mx_19x504__99x204                      MX   0.0092  WH+HYPER    Azcapotzalco — Co-location 6
+  c_walmart_mx_19x441__99x184                      MX   0.0107  WH+HYPER    Migu el Hidalgo — Co-location 5
+  c_walmart_mx_19x435__99x186                      MX   0.0122  WH+HYPER    Migu el Hidalgo — Co-location 6
+  c_walmart_mx_19x434__99x19                       MX   0.0138  WH+HYPER    Migu el Hidalgo — Co-location 7
+  c_soriana_mx_19x44__99x2                         MX   0.0153  WH+HYPER    Migu el Hidalgo — Co-location 1
+  c_home_depot_mx_19x486__99x237                   MX   0.0183  WH+HYPER    Naucalpan de Juárez — Co-location 2
+  c_soriana_mx_19x471__99x171                      MX   0.0214  WH+HYPER    Azcapotzalco — Co-location 4
+  c_walmart_mx_19x471__99x164                      MX   0.0229  WH+HYPER    Azcapotzalco — Co-location 3
+  c_soriana_mx_19x468__99x16                       MX   0.0245  WH+HYPER    Azcapotzalco — Co-location 1
+  c_home_depot_mx_19x464__99x16                    MX   0.0260  WH+HYPER    Azcapotzalco — Co-location 2
+  c_soriana_mx_19x409__99x184                      MX   0.0275  WH+HYPER    Migu el Hidalgo — Co-location 10
+  c_walmart_mx_19x49__99x134                       MX   0.0291  WH+HYPER    Gustavo A. Madero — Co-location 2
+  c_costco_mx_19x482__99x13                        MX   0.0306  WH+HYPER    Gustavo A. Madero — Co-location 3
+  c_walmart_mx_19x444__99x153                      MX   0.0321  WH+HYPER    Cuauhtémoc — Co-location 4
+  c_soriana_mx_19x451__99x164                      MX   0.0336  WH+HYPER    Cuauhtémoc — Co-location 6
+  c_walmart_mx_19x558__99x019                      MX   0.0352  WH+HYPER    Ecatepec de Morelos — Co-location 5
+  c_walmart_mx_19x457__99x142                      MX   0.0367  WH+HYPER    Cuauhtémoc — Co-location 3
+  c_soriana_mx_19x449__99x152                      MX   0.0382  WH+HYPER    Cuauhtémoc — Co-location 5
+  c_soriana_mx_19x456__99x137                      MX   0.0398  WH+HYPER    Cuauhtémoc — Co-location 1
+  c_walmart_mx_19x434__99x168                      MX   0.0413  WH+HYPER    Cuauhtémoc — Co-location 7
+  c_soriana_mx_19x571__99x042                      MX   0.0428  WH+HYPER    Ecatepec de Morelos — Co-location 3
+  c_soriana_mx_19x465__99x125                      MX   0.0443  WH+HYPER    Gustavo A. Madero — Co-location 4
+  c_walmart_mx_19x472__99x121                      MX   0.0459  WH+HYPER    Gustavo A. Madero — Co-location 1
+  c_soriana_mx_19x384__99x189                      MX   0.0474  WH+HYPER    Benito Juárez — Co-location 6
+  c_costco_mx_19x387__99x191                       MX   0.0489  WH+HYPER    Álvaro Obregón — Co-location 3
+  c_walmart_mx_19x477__99x1                        MX   0.0550  WH+HYPER    Gustavo A. Madero — Co-location 6
+  c_walmart_mx_19x515__99x231                      MX   0.0566  WH+HYPER    Naucalpan de Juárez — Co-location 4
+  c_soriana_mx_19x513__99x21                       MX   0.0581  WH+HYPER    Tlalnepantla de Baz — Co-location 5
+  c_costco_mx_19x508__99x235                       MX   0.0596  WH+HYPER    Naucalpan de Juárez — Co-location 3
+  ... (+235 more)
+
+--- threshold rank_pp_iso <= 0.15 ---
+  NA qualifying: 374 / 7,755 (4.82%)
+  EU qualifying: 27 / 2,458 (1.10%)
+  TOTAL        : 401
+  Newly added at this step: 106
+  New cluster IDs at this step (sorted by continent/iso/rank):
+  cluster_id                                       iso     rpp  comp        display_name
+  c_sainsburys_uk_51x617__0x019                    GB   0.1006  WH+HYPER    Redbridge and Waltham Forest — Co-location 10
+  c_sainsburys_uk_51x604__0x021                    GB   0.1027  WH+HYPER    Redbridge and Waltham Forest — Co-location 2
+  c_costco_uk_51x609__0x032                        GB   0.1048  WH+HYPER    Redbridge and Waltham Forest — Co-location 4
+  c_sainsburys_uk_51x376__0x118                    GB   0.1195  WH+HYPER    Croydon — Co-location 1
+  c_ikea_uk_51x38__0x124                           GB   0.1216  WH+HYPER    Croydon — Co-location 2
+  c_costco_uk_51x496__0x403                        GB   0.1363  WH+HYPER    Hounslow and Richmond upon Thames — Co-location 3
+  c_tesco_uk_51x608__0x002                         GB   0.1426  WH+HYPER    Redbridge and Waltham Forest — Co-location 8
+  c_sainsburys_uk_51x435__0x376                    GB   0.1447  WH+HYPER    Hounslow and Richmond upon Thames — Co-location 1
+  c_costco_ca_43x851__79x251                       CA   0.1011  WH+HYPER    Markham, Toronto — Co-location 2
+  c_costco_ca_43x521__79x689                       CA   0.1027  WH+HYPER    Mississauga, Toronto — Co-location 6
+  c_home_depot_ca_43x518__79x685                   CA   0.1075  WH+HYPER    Oakville, Toronto — Co-location 1
+  c_home_depot_ca_45x558__73x73                    CA   0.1156  WH+HYPER    Laval, Montréal — Co-location 2
+  c_home_depot_ca_45x537__73x664                   CA   0.1188  WH+HYPER    Montréal — Co-location 3
+  c_costco_ca_45x536__73x66                        CA   0.1204  WH+HYPER    Montréal — Co-location 1
+  c_costco_ca_45x574__73x757                       CA   0.1268  WH+HYPER    Laval, Montréal — Co-location 1
+  c_home_depot_mx_19x58__99x041                    MX   0.1009  WH+HYPER    Ecatepec de Morelos — Co-location 2
+  c_walmart_mx_19x409__99x075                      MX   0.1040  WH+HYPER    Iztacalco — Co-location 2
+  c_soriana_mx_19x37__99x158                       MX   0.1055  WH+HYPER    Benito Juárez — Co-location 22
+  c_walmart_mx_19x358__99x152                      MX   0.1070  WH+HYPER    Benito Juárez — Co-location 14
+  c_walmart_mx_19x365__99x167                      MX   0.1086  WH+HYPER    Benito Juárez — Co-location 10
+  c_walmart_mx_19x369__99x164                      MX   0.1101  WH+HYPER    Benito Juárez — Co-location 11
+  c_walmart_mx_19x359__99x168                      MX   0.1162  WH+HYPER    Coyoacán — Co-location 6
+  c_walmart_mx_19x345__99x156                      MX   0.1269  WH+HYPER    Coyoacán — Co-location 9
+  c_walmart_mx_19x384__99x08                       MX   0.1284  WH+HYPER    Iztapalapa — Co-location 1
+  c_soriana_mx_19x405__99x068                      MX   0.1361  WH+HYPER    Iztacalco — Co-location 1
+  c_home_depot_mx_19x328__99x21                    MX   0.1391  WH+HYPER    Álvaro Obregón — Co-location 9
+  c_soriana_mx_19x385__99x075                      MX   0.1407  WH+HYPER    Iztapalapa — Co-location 2
+  c_home_depot_mx_19x379__99x058                   MX   0.1422  WH+HYPER    Iztapalapa — Co-location 3
+  c_soriana_mx_19x322__99x132                      MX   0.1498  WH+HYPER    Coyoacán — Co-location 8
+  c_costco_us_37x721__122x182                      US   0.1002  WH+HYPER    San Francisco-Oakland-Fremont Metro Area — Co-location 27
+  c_costco_us_38x862__77x057                       US   0.1011  WH+HYPER    Washington-Arlington-Alexandria Metro Area — Co-location 107
+  c_costco_us_38x92__76x95                         US   0.1027  WH+HYPER    Washington-Arlington-Alexandria Metro Area — Co-location 43
+  c_target_us_33x392__111x865                      US   0.1030  WH+HYPER    Phoenix-Mesa-Chandler Metro Area — Co-location 62
+  c_target_us_32x741__117x055                      US   0.1051  WH+HYPER    San Diego-Chula Vista-Carlsbad Metro Area — Co-location 20
+  c_costco_us_33x623__111x901                      US   0.1056  WH+HYPER    Phoenix-Mesa-Chandler Metro Area — Co-location 15
+  c_walmart_us_32x742__117x054                     US   0.1057  WH+HYPER    San Diego-Chula Vista-Carlsbad Metro Area — Co-location 15
+  c_home_depot_us_32x744__117x036                  US   0.1059  WH+HYPER    San Diego-Chula Vista-Carlsbad Metro Area — Co-location 23
+  c_home_depot_us_32x85__96x688                    US   0.1085  WH+HYPER    Dallas-Fort Worth-Arlington Metro Area — Co-location 24
+  c_walmart_us_33x381__111x837                     US   0.1093  WH+HYPER    Phoenix-Mesa-Chandler Metro Area — Co-location 24
+  c_home_depot_us_33x383__111x842                  US   0.1094  WH+HYPER    Phoenix-Mesa-Chandler Metro Area — Co-location 31
+  c_walmart_us_26x005__80x318                      US   0.1118  WH+HYPER    Miami-Fort Lauderdale-West Palm Beach Metro Area — Co-locati
+  c_home_depot_us_32x782__117x102                  US   0.1135  WH+HYPER    San Diego-Chula Vista-Carlsbad Metro Area — Co-location 6
+  c_home_depot_us_37x564__122x281                  US   0.1136  WH+HYPER    San Francisco-Oakland-Fremont Metro Area — Co-location 24
+  c_costco_us_37x562__122x274                      US   0.1138  WH+HYPER    San Francisco-Oakland-Fremont Metro Area — Co-location 26
+  c_costco_us_37x478__122x216                      US   0.1144  WH+HYPER    San Francisco-Oakland-Fremont Metro Area — Co-location 63
+  c_costco_us_33x376__111x84                       US   0.1149  WH+HYPER    Phoenix-Mesa-Chandler Metro Area — Co-location 35
+  c_costco_us_25x923__80x299                       US   0.1150  WH+HYPER    Miami-Fort Lauderdale-West Palm Beach Metro Area — Co-locati
+  c_home_depot_us_37x828__122x284                  US   0.1156  LS+HYPER    San Francisco-Oakland-Fremont Metro Area — Co-location 54
+  c_walmart_us_33x308__111x902                     US   0.1164  WH+HYPER    Phoenix-Mesa-Chandler Metro Area — Co-location 43
+  c_target_us_33x476__112x218                      US   0.1178  WH+HYPER    Phoenix-Mesa-Chandler Metro Area — Co-location 21
+  c_walmart_us_33x471__112x224                     US   0.1179  WH+HYPER    Phoenix-Mesa-Chandler Metro Area — Co-location 11
+  c_home_depot_us_33x464__112x218                  US   0.1181  WH+HYPER    Phoenix-Mesa-Chandler Metro Area — Co-location 14
+  c_walmart_us_33x637__112x098                     US   0.1189  WH+HYPER    Phoenix-Mesa-Chandler Metro Area — Co-location 36
+  c_home_depot_us_32x796__96x685                   US   0.1195  WH+HYPER    Dallas-Fort Worth-Arlington Metro Area — Co-location 58
+  c_target_us_29x782__95x716                       US   0.1201  WH+HYPER    Houston-Pasadena-The Woodlands Metro Area — Co-location 5
+  c_home_depot_us_40x097__75x303                   US   0.1224  WH+HYPER    Philadelphia-Camden-Wilmington Metro Area — Co-location 8
+  c_home_depot_us_39x115__77x187                   US   0.1227  LS+HYPER    Washington-Arlington-Alexandria Metro Area — Co-location 86
+  c_costco_us_26x009__80x361                       US   0.1246  WH+HYPER    Miami-Fort Lauderdale-West Palm Beach Metro Area — Co-locati
+  c_home_depot_us_25x865__80x314                   US   0.1270  WH+HYPER    Miami-Fort Lauderdale-West Palm Beach Metro Area — Co-locati
+  c_walmart_us_39x927__75x141                      US   0.1280  LS+HYPER    Philadelphia-Camden-Wilmington Metro Area — Co-location 25
+  ... (+46 more)
+
+--- threshold rank_pp_iso <= 0.20 ---
+  NA qualifying: 476 / 7,755 (6.14%)
+  EU qualifying: 35 / 2,458 (1.42%)
+  TOTAL        : 511
+  Newly added at this step: 110
+  New cluster IDs at this step (sorted by continent/iso/rank):
+  cluster_id                                       iso     rpp  comp        display_name
+  c_ikea_de_53x551_9x942                           DE   0.1949  WH+HYPER    Hamburg — Co-location 5
+  c_costco_fr_48x776_2x591                         FR   0.1695  WH+HYPER    Val-de-Marne — Co-location 7
+  c_leclerc_fr_48x612_2x428                        FR   0.1983  LS+HYPER    Essonne — Co-location 10
+  c_costco_uk_51x354__0x117                        GB   0.1593  WH+HYPER    Croydon — Co-location 3
+  c_tesco_uk_51x444__0x413                         GB   0.1656  WH+HYPER    Hounslow and Richmond upon Thames — Co-location 4
+  c_sainsburys_uk_51x426__0x378                    GB   0.1677  WH+HYPER    Hounslow and Richmond upon Thames — Co-location 2
+  c_costco_uk_51x664__0x361                        GB   0.1698  WH+HYPER    Hertfordshire — Co-location 3
+  c_costco_uk_51x423__0x413                        GB   0.1740  WH+HYPER    West Surrey — Co-location 2
+  c_home_depot_ca_45x506__73x386                   CA   0.1734  WH+HYPER    Saint-Bruno-de-Montarville, Montréal — Co-location 2
+  c_costco_ca_45x502__73x382                       CA   0.1750  WH+HYPER    Saint-Bruno-de-Montarville, Montréal — Co-location 3
+  c_costco_ca_43x865__79x019                       CA   0.1926  WH+HYPER    Ajax, Toronto — Co-location 3
+  c_home_depot_ca_43x867__79x015                   CA   0.1958  WH+HYPER    Ajax, Toronto — Co-location 2
+  c_costco_ca_44x071__79x49                        CA   0.1990  WH+HYPER    East Gwillimbury, ON
+  c_walmart_mx_19x321__99x139                      MX   0.1514  WH+HYPER    Coyoacán — Co-location 4
+  c_walmart_mx_19x304__99x172                      MX   0.1544  WH+HYPER    Coyoacán — Co-location 13
+  c_walmart_mx_19x617__99x04                       MX   0.1575  WH+HYPER    Tecámac — Co-location 1
+  c_soriana_mx_19x619__99x028                      MX   0.1590  WH+HYPER    Tecámac — Co-location 2
+  c_walmart_mx_19x607__99x046                      MX   0.1606  WH+HYPER    Ecatepec de Morelos — Co-location 4
+  c_costco_mx_19x548__99x271                       MX   0.1621  WH+HYPER    Atizapán de Zaragoza — Co-location 3
+  c_walmart_mx_19x318__99x126                      MX   0.1682  WH+HYPER    Coyoacán — Co-location 5
+  c_walmart_mx_19x311__99x125                      MX   0.1697  WH+HYPER    Coyoacán — Co-location 3
+  c_home_depot_mx_19x309__99x125                   MX   0.1713  WH+HYPER    Coyoacán — Co-location 2
+  c_home_depot_mx_19x302__99x118                   MX   0.1728  WH+HYPER    Coyoacán — Co-location 1
+  c_walmart_mx_19x299__99x136                      MX   0.1743  WH+HYPER    Tlalpan — Co-location 1
+  c_walmart_mx_19x282__99x173                      MX   0.1774  WH+HYPER    Tlalpan — Co-location 10
+  c_walmart_mx_19x296__99x155                      MX   0.1789  WH+HYPER    Tlalpan — Co-location 6
+  c_soriana_mx_19x295__99x157                      MX   0.1804  WH+HYPER    Tlalpan — Co-location 7
+  c_costco_mx_19x354__99x275                       MX   0.1850  WH+HYPER    Cuajimalpa de Morelos — Co-location 3
+  c_soriana_mx_19x512__98x883                      MX   0.1927  WH+HYPER    Texcoco — Co-location 5
+  c_walmart_mx_19x293__99x124                      MX   0.1942  WH+HYPER    Tlalpan — Co-location 3
+  c_soriana_mx_19x295__99x129                      MX   0.1957  WH+HYPER    Tlalpan — Co-location 2
+  c_walmart_mx_19x295__99x109                      MX   0.1972  WH+HYPER    Tlalpan — Co-location 4
+  c_target_us_29x596__95x628                       US   0.1510  WH+HYPER    Houston-Pasadena-The Woodlands Metro Area — Co-location 8
+  c_home_depot_us_29x603__95x615                   US   0.1511  WH+HYPER    Houston-Pasadena-The Woodlands Metro Area — Co-location 11
+  c_walmart_us_29x614__95x645                      US   0.1534  WH+HYPER    Houston-Pasadena-The Woodlands Metro Area — Co-location 42
+  c_home_depot_us_32x842__97x243                   US   0.1548  WH+HYPER    Dallas-Fort Worth-Arlington Metro Area — Co-location 63
+  c_walmart_us_33x38__111x773                      US   0.1556  WH+HYPER    Phoenix-Mesa-Chandler Metro Area — Co-location 117
+  c_costco_us_42x516__83x117                       US   0.1568  WH+HYPER    Detroit-Warren-Dearborn Metro Area — Co-location 3
+  c_home_depot_us_42x506__83x112                   US   0.1570  WH+HYPER    Detroit-Warren-Dearborn Metro Area — Co-location 1
+  c_walmart_us_42x366__83x337                      US   0.1581  WH+HYPER    Detroit-Warren-Dearborn Metro Area — Co-location 48
+  c_target_us_42x366__83x334                       US   0.1582  WH+HYPER    Detroit-Warren-Dearborn Metro Area — Co-location 51
+  c_home_depot_us_25x775__80x324                   US   0.1585  WH+HYPER    Miami-Fort Lauderdale-West Palm Beach Metro Area — Co-locati
+  c_home_depot_us_33x929__84x355                   US   0.1593  WH+HYPER    Atlanta-Sandy Springs-Roswell Metro Area — Co-location 17
+  c_walmart_us_33x651__112x234                     US   0.1598  WH+HYPER    Phoenix-Mesa-Chandler Metro Area — Co-location 4
+  c_costco_us_33x643__112x233                      US   0.1599  WH+HYPER    Phoenix-Mesa-Chandler Metro Area — Co-location 2
+  c_costco_us_33x642__112x231                      US   0.1601  WH+HYPER    Phoenix-Mesa-Chandler Metro Area — Co-location 3
+  c_target_us_29x553__95x383                       US   0.1602  WH+HYPER    Houston-Pasadena-The Woodlands Metro Area — Co-location 55
+  c_walmart_us_30x009__95x283                      US   0.1612  WH+HYPER    Houston-Pasadena-The Woodlands Metro Area — Co-location 45
+  c_walmart_us_25x77__80x344                       US   0.1616  WH+HYPER    Miami-Fort Lauderdale-West Palm Beach Metro Area — Co-locati
+  c_target_us_39x83__75x091                        US   0.1646  WH+HYPER    Philadelphia-Camden-Wilmington Metro Area — Co-location 3
+  c_home_depot_us_39x819__75x094                   US   0.1647  WH+HYPER    Philadelphia-Camden-Wilmington Metro Area — Co-location 5
+  c_costco_us_25x775__80x322                       US   0.1655  WH+HYPER    Miami-Fort Lauderdale-West Palm Beach Metro Area — Co-locati
+  c_costco_us_42x433__83x429                       US   0.1658  WH+HYPER    Detroit-Warren-Dearborn Metro Area — Co-location 41
+  c_walmart_us_38x936__76x721                      US   0.1663  WH+HYPER    Washington-Arlington-Alexandria Metro Area — Co-location 29
+  c_home_depot_us_37x511__121x946                  US   0.1680  WH+HYPER    San Francisco-Oakland-Fremont Metro Area — Co-location 15
+  c_costco_us_37x77__122x411                       US   0.1684  WH+HYPER    San Francisco-Oakland-Fremont Metro Area — Co-location 62
+  c_costco_us_40x237__75x234                       US   0.1686  WH+HYPER    Philadelphia-Camden-Wilmington Metro Area — Co-location 6
+  c_home_depot_us_40x248__75x239                   US   0.1687  WH+HYPER    Philadelphia-Camden-Wilmington Metro Area — Co-location 1
+  c_costco_us_37x642__122x401                      US   0.1700  WH+HYPER    San Francisco-Oakland-Fremont Metro Area — Co-location 35
+  c_target_us_25x736__80x321                       US   0.1706  WH+HYPER    Miami-Fort Lauderdale-West Palm Beach Metro Area — Co-locati
+  ... (+50 more)
+
+--- threshold rank_pp_iso <= 0.25 ---
+  NA qualifying: 577 / 7,755 (7.44%)
+  EU qualifying: 36 / 2,458 (1.46%)
+  TOTAL        : 613
+  Newly added at this step: 102
+  New cluster IDs at this step (sorted by continent/iso/rank):
+  cluster_id                                       iso     rpp  comp        display_name
+  c_costco_uk_53x47__2x342                         GB   0.2495  WH+HYPER    Greater Manchester South West — Co-location 1
+  c_home_depot_ca_44x062__79x485                   CA   0.2006  WH+HYPER    Newmarket, Toronto — Co-location 2
+  c_costco_ca_44x065__79x422                       CA   0.2055  WH+HYPER    Newmarket, Toronto — Co-location 4
+  c_home_depot_ca_43x356__79x807                   CA   0.2247  WH+HYPER    Burlington, Hamilton — Co-location 1
+  c_costco_ca_49x251__122x917                      CA   0.2360  WH+HYPER    Burnaby, Vancouver — Co-location 3
+  c_home_depot_ca_49x263__123x017                  CA   0.2376  WH+HYPER    Burnaby, Vancouver — Co-location 1
+  c_costco_ca_49x26__122x999                       CA   0.2392  WH+HYPER    Burnaby, Vancouver — Co-location 2
+  c_costco_ca_49x193__123x122                      CA   0.2488  WH+HYPER    Richmond, Vancouver — Co-location 1
+  c_costco_mx_19x284__99x139                       MX   0.2034  WH+HYPER    Tlalpan — Co-location 5
+  c_home_depot_mx_19x548__99x289                   MX   0.2064  WH+HYPER    Atizapán de Zaragoza — Co-location 2
+  c_walmart_mx_19x285__99x176                      MX   0.2080  WH+HYPER    Tlalpan — Co-location 9
+  c_soriana_mx_19x504__98x88                       MX   0.2125  WH+HYPER    Texcoco — Co-location 4
+  c_walmart_mx_19x516__98x869                      MX   0.2141  WH+HYPER    Texcoco — Co-location 2
+  c_soriana_mx_19x659__99x082                      MX   0.2156  WH+HYPER    Tultitlán, MX
+  c_walmart_mx_19x299__98x886                      MX   0.2202  WH+HYPER    Ixtapaluca — Co-location 1
+  c_soriana_mx_19x297__98x88                       MX   0.2217  WH+HYPER    Ixtapaluca — Co-location 2
+  c_soriana_mx_20x6__103x448                       MX   0.2385  WH+HYPER    Zapopan — Co-location 14
+  c_soriana_mx_20x635__103x399                     MX   0.2401  WH+HYPER    Zapopan — Co-location 18
+  c_soriana_mx_20x629__103x418                     MX   0.2416  WH+HYPER    Zapopan — Co-location 16
+  c_soriana_mx_20x651__103x401                     MX   0.2431  WH+HYPER    Zapopan — Co-location 15
+  c_walmart_mx_20x643__103x415                     MX   0.2446  WH+HYPER    Zapopan — Co-location 13
+  c_walmart_mx_20x649__103x31                      MX   0.2492  WH+HYPER    Guadalajara — Co-location 1
+  c_home_depot_us_37x375__122x018                  US   0.2016  WH+HYPER    San Jose-Sunnyvale-Santa Clara Metro Area — Co-location 2
+  c_walmart_us_41x745__88x198                      US   0.2021  WH+HYPER    Chicago-Naperville-Elgin Metro Area — Co-location 15
+  c_home_depot_us_41x748__88x203                   US   0.2022  WH+HYPER    Chicago-Naperville-Elgin Metro Area — Co-location 17
+  c_costco_us_41x745__88x203                       US   0.2024  WH+HYPER    Chicago-Naperville-Elgin Metro Area — Co-location 18
+  c_target_us_39x133__76x634                       US   0.2027  WH+HYPER    Baltimore-Columbia-Towson Metro Area — Co-location 37
+  c_costco_us_33x296__111x745                      US   0.2036  WH+HYPER    Phoenix-Mesa-Chandler Metro Area — Co-location 34
+  c_target_us_33x388__111x683                      US   0.2038  WH+HYPER    Phoenix-Mesa-Chandler Metro Area — Co-location 45
+  c_home_depot_us_33x385__111x683                  US   0.2039  WH+HYPER    Phoenix-Mesa-Chandler Metro Area — Co-location 51
+  c_walmart_us_33x391__111x699                     US   0.2041  WH+HYPER    Phoenix-Mesa-Chandler Metro Area — Co-location 20
+  c_costco_us_37x391__121x885                      US   0.2056  WH+HYPER    San Jose-Sunnyvale-Santa Clara Metro Area — Co-location 14
+  c_walmart_us_33x623__112x392                     US   0.2061  WH+HYPER    Phoenix-Mesa-Chandler Metro Area — Co-location 60
+  c_walmart_us_42x56__83x443                       US   0.2075  WH+HYPER    Detroit-Warren-Dearborn Metro Area — Co-location 49
+  c_costco_us_34x091__84x278                       US   0.2087  WH+HYPER    Atlanta-Sandy Springs-Roswell Metro Area — Co-location 11
+  c_home_depot_us_26x242__80x257                   US   0.2106  WH+HYPER    Miami-Fort Lauderdale-West Palm Beach Metro Area — Co-locati
+  c_costco_us_42x496__82x935                       US   0.2113  WH+HYPER    Detroit-Warren-Dearborn Metro Area — Co-location 80
+  c_home_depot_us_37x365__121x948                  US   0.2116  WH+HYPER    San Jose-Sunnyvale-Santa Clara Metro Area — Co-location 11
+  c_costco_us_37x357__121x939                      US   0.2118  WH+HYPER    San Jose-Sunnyvale-Santa Clara Metro Area — Co-location 12
+  c_home_depot_us_32x985__117x075                  US   0.2133  WH+HYPER    San Diego-Chula Vista-Carlsbad Metro Area — Co-location 11
+  c_costco_us_32x988__117x078                      US   0.2135  WH+HYPER    San Diego-Chula Vista-Carlsbad Metro Area — Co-location 13
+  c_costco_us_33x555__117x677                      US   0.2144  WH+HYPER    Los Angeles-Long Beach-Anaheim Metro Area — Co-location 120
+  c_ikea_us_42x138__71x068                         US   0.2149  WH+HYPER    Boston-Cambridge-Newton Metro Area — Co-location 1
+  c_costco_us_42x137__71x066                       US   0.2150  WH+HYPER    Boston-Cambridge-Newton Metro Area — Co-location 4
+  c_walmart_us_32x576__97x13                       US   0.2157  WH+HYPER    Dallas-Fort Worth-Arlington Metro Area — Co-location 27
+  c_costco_us_33x389__111x669                      US   0.2166  WH+HYPER    Phoenix-Mesa-Chandler Metro Area — Co-location 56
+  c_walmart_us_42x239__87x949                      US   0.2172  WH+HYPER    Chicago-Naperville-Elgin Metro Area — Co-location 26
+  c_walmart_us_26x288__80x252                      US   0.2197  WH+HYPER    Miami-Fort Lauderdale-West Palm Beach Metro Area — Co-locati
+  c_target_us_26x297__80x253                       US   0.2198  WH+HYPER    Miami-Fort Lauderdale-West Palm Beach Metro Area — Co-locati
+  c_home_depot_us_39x137__76x593                   US   0.2200  WH+HYPER    Baltimore-Columbia-Towson Metro Area — Co-location 36
+  c_home_depot_us_42x493__83x521                   US   0.2201  WH+HYPER    Detroit-Warren-Dearborn Metro Area — Co-location 36
+  c_home_depot_us_42x564__70x978                   US   0.2226  WH+HYPER    Boston-Cambridge-Newton Metro Area — Co-location 10
+  c_costco_us_42x557__70x977                       US   0.2228  WH+HYPER    Boston-Cambridge-Newton Metro Area — Co-location 11
+  c_walmart_us_42x554__70x968                      US   0.2229  WH+HYPER    Boston-Cambridge-Newton Metro Area — Co-location 5
+  c_home_depot_us_34x065__117x271                  US   0.2238  WH+HYPER    Riverside-San Bernardino-Ontario Metro Area — Co-location 13
+  c_costco_us_34x068__117x262                      US   0.2240  WH+HYPER    Riverside-San Bernardino-Ontario Metro Area — Co-location 15
+  c_home_depot_us_42x131__71x066                   US   0.2241  WH+HYPER    Boston-Cambridge-Newton Metro Area — Co-location 2
+  c_target_us_38x655__77x289                       US   0.2246  WH+HYPER    Washington-Arlington-Alexandria Metro Area — Co-location 5
+  c_ikea_us_38x643__77x289                         US   0.2248  WH+HYPER    Washington-Arlington-Alexandria Metro Area — Co-location 3
+  c_costco_us_38x643__77x292                       US   0.2249  WH+HYPER    Washington-Arlington-Alexandria Metro Area — Co-location 4
+  ... (+42 more)
+
+--- threshold rank_pp_iso <= 0.30 ---
+  NA qualifying: 699 / 7,755 (9.01%)
+  EU qualifying: 41 / 2,458 (1.67%)
+  TOTAL        : 740
+  Newly added at this step: 127
+  New cluster IDs at this step (sorted by continent/iso/rank):
+  cluster_id                                       iso     rpp  comp        display_name
+  c_auchan_fr_50x626_2x967                         FR   0.2644  LS+HYPER    Nord — Co-location 11
+  c_auchan_fr_50x632_2x969                         FR   0.2960  LS+HYPER    Nord — Co-location 9
+  c_tesco_uk_51x884__0x193                         GB   0.2621  WH+HYPER    Hertfordshire — Co-location 4
+  c_costco_uk_53x53__2x159                         GB   0.2704  WH+HYPER    Greater Manchester North East — Co-location 2
+  c_tesco_uk_53x546__2x126                         GB   0.2809  WH+HYPER    Greater Manchester North East — Co-location 1
+  c_costco_ca_49x12__122x656                       CA   0.2536  WH+HYPER    Langley District Municipality, Vancouver — Co-location 3
+  c_home_depot_ca_45x759__74x016                   CA   0.2568  WH+HYPER    Bellefeuille, Montréal — Co-location 2
+  c_costco_ca_43x344__79x821                       CA   0.2665  WH+HYPER    Burlington, Hamilton — Co-location 2
+  c_ikea_ca_43x328__79x829                         CA   0.2777  WH+HYPER    Burlington, Hamilton — Co-location 5
+  c_costco_ca_45x765__74x019                       CA   0.2825  WH+HYPER    Saint-Jérôme, Quebec
+  c_soriana_mx_20x659__103x398                     MX   0.2508  WH+HYPER    Zapopan — Co-location 17
+  c_walmart_mx_20x667__103x41                      MX   0.2523  WH+HYPER    Zapopan — Co-location 3
+  c_walmart_mx_20x65__103x419                      MX   0.2538  WH+HYPER    Zapopan — Co-location 12
+  c_soriana_mx_20x654__103x424                     MX   0.2554  WH+HYPER    Zapopan — Co-location 8
+  c_soriana_mx_20x657__103x433                     MX   0.2569  WH+HYPER    Zapopan — Co-location 4
+  c_soriana_mx_20x658__103x421                     MX   0.2584  WH+HYPER    Zapopan — Co-location 1
+  c_home_depot_mx_20x661__103x422                  MX   0.2599  WH+HYPER    Zapopan — Co-location 2
+  c_soriana_mx_20x691__103x414                     MX   0.2630  WH+HYPER    Zapopan — Co-location 10
+  c_soriana_mx_20x678__103x412                     MX   0.2645  WH+HYPER    Zapopan — Co-location 11
+  c_walmart_mx_20x679__103x433                     MX   0.2661  WH+HYPER    Zapopan — Co-location 5
+  c_soriana_mx_20x675__103x429                     MX   0.2676  WH+HYPER    Zapopan — Co-location 6
+  c_costco_mx_20x679__103x428                      MX   0.2691  WH+HYPER    Zapopan — Co-location 7
+  c_walmart_mx_20x693__103x441                     MX   0.2706  WH+HYPER    Zapopan — Co-location 9
+  c_walmart_mx_20x709__103x411                     MX   0.2722  WH+HYPER    Zapopan — Co-location 20
+  c_walmart_mx_19x25__99x59                        MX   0.2752  WH+HYPER    Metepec — Co-location 6
+  c_walmart_mx_20x72__103x344                      MX   0.2768  WH+HYPER    Zapopan — Co-location 21
+  c_walmart_mx_20x73__103x451                      MX   0.2783  WH+HYPER    Zapopan — Co-location 22
+  c_walmart_mx_20x731__103x433                     MX   0.2798  WH+HYPER    Zapopan — Co-location 19
+  c_walmart_mx_20x744__103x41                      MX   0.2813  WH+HYPER    Zapopan — Co-location 24
+  c_soriana_mx_20x716__103x321                     MX   0.2844  WH+HYPER    Guadalajara — Co-location 3
+  c_soriana_mx_20x733__103x452                     MX   0.2859  WH+HYPER    Zapopan — Co-location 25
+  c_soriana_mx_25x71__100x261                      MX   0.2905  WH+HYPER    San Nicolásde los Garza — Co-location 7
+  c_soriana_mx_25x688__100x256                     MX   0.2920  WH+HYPER    Guadalupe — Co-location 8
+  c_soriana_mx_25x68__100x251                      MX   0.2936  WH+HYPER    Guadalupe — Co-location 11
+  c_home_depot_us_45x013__93x017                   US   0.2505  WH+HYPER    Minneapolis-St. Paul-Bloomington Metro Area — Co-location 9
+  c_walmart_us_37x331__121x86                      US   0.2507  WH+HYPER    San Jose-Sunnyvale-Santa Clara Metro Area — Co-location 33
+  c_walmart_us_42x003__88x34                       US   0.2522  WH+HYPER    Chicago-Naperville-Elgin Metro Area — Co-location 62
+  c_walmart_us_40x908__74x562                      US   0.2525  WH+HYPER    New York-Newark-Jersey City Metro Area — Co-location 75
+  c_target_us_40x906__74x56                        US   0.2527  WH+HYPER    New York-Newark-Jersey City Metro Area — Co-location 84
+  c_home_depot_us_40x903__74x564                   US   0.2529  WH+HYPER    New York-Newark-Jersey City Metro Area — Co-location 93
+  c_costco_us_40x907__74x568                       US   0.2530  WH+HYPER    New York-Newark-Jersey City Metro Area — Co-location 105
+  c_target_us_28x089__82x505                       US   0.2536  WH+HYPER    Tampa-St. Petersburg-Clearwater Metro Area — Co-location 12
+  c_target_us_45x127__93x269                       US   0.2553  WH+HYPER    Minneapolis-St. Paul-Bloomington Metro Area — Co-location 27
+  c_home_depot_us_45x129__93x264                   US   0.2555  WH+HYPER    Minneapolis-St. Paul-Bloomington Metro Area — Co-location 36
+  c_walmart_us_45x121__93x266                      US   0.2556  WH+HYPER    Minneapolis-St. Paul-Bloomington Metro Area — Co-location 13
+  c_home_depot_us_38x795__77x523                   US   0.2563  WH+HYPER    Washington-Arlington-Alexandria Metro Area — Co-location 22
+  c_costco_us_33x265__111x638                      US   0.2572  WH+HYPER    Phoenix-Mesa-Chandler Metro Area — Co-location 105
+  c_walmart_us_39x8__105x103                       US   0.2606  WH+HYPER    Denver-Aurora-Centennial Metro Area — Co-location 8
+  c_home_depot_us_39x88__104x986                   US   0.2609  WH+HYPER    Denver-Aurora-Centennial Metro Area — Co-location 11
+  c_home_depot_us_28x098__82x501                   US   0.2623  WH+HYPER    Tampa-St. Petersburg-Clearwater Metro Area — Co-location 24
+  c_home_depot_us_39x72__75x027                    US   0.2626  WH+HYPER    Philadelphia-Camden-Wilmington Metro Area — Co-location 16
+  c_target_us_39x788__105x113                      US   0.2634  WH+HYPER    Denver-Aurora-Centennial Metro Area — Co-location 28
+  c_target_us_28x663__81x418                       US   0.2641  WH+HYPER    Orlando-Kissimmee-Sanford Metro Area — Co-location 4
+  c_home_depot_us_28x663__81x416                   US   0.2643  WH+HYPER    Orlando-Kissimmee-Sanford Metro Area — Co-location 6
+  c_costco_us_28x661__81x417                       US   0.2644  WH+HYPER    Orlando-Kissimmee-Sanford Metro Area — Co-location 8
+  c_home_depot_us_30x18__95x45                     US   0.2658  WH+HYPER    Houston-Pasadena-The Woodlands Metro Area — Co-location 31
+  c_target_us_29x536__95x151                       US   0.2660  WH+HYPER    Houston-Pasadena-The Woodlands Metro Area — Co-location 14
+  c_walmart_us_28x576__81x309                      US   0.2661  WH+HYPER    Orlando-Kissimmee-Sanford Metro Area — Co-location 18
+  c_costco_us_39x862__105x067                      US   0.2671  WH+HYPER    Denver-Aurora-Centennial Metro Area — Co-location 17
+  c_walmart_us_39x868__105x057                     US   0.2672  WH+HYPER    Denver-Aurora-Centennial Metro Area — Co-location 22
+  ... (+67 more)
+
+==========================================================================================
+ANOMALY CHECK — low-competition ISOs (where rank_pp_iso percentiles
+are coarse because the ISO has few total clusters).
+==========================================================================================
+
+Clusters per ISO (sorted):
+  US   6,478
+  DE     739
+  MX     654
+  CA     623
+  ES     570
+  GB     477
+  FR     348
+  FI     115
+  NO      62
+  PL      43
+  NL      30
+  NORDICS    18
+  DK      14
+  IT      13
+  SE      11
+  AT       5
+  GR       5
+  PT       4
+  IS       3
+  CZ       1
+
+No qualifiers found in low-population ISOs (<50 clusters).
+
+==========================================================================================
+SUMMARY MATRIX
+==========================================================================================
+   threshold      NA      EU   TOTAL     NA %     EU %
+        0.10     276      19     295    3.56%    0.77%
+        0.15     374      27     401    4.82%    1.10%
+        0.20     476      35     511    6.14%    1.42%
+        0.25     577      36     613    7.44%    1.46%
+        0.30     699      41     740    9.01%    1.67%
+
+FIRST THRESHOLD WHERE NA >= 500: rank_pp_iso <= 0.25  (NA=577  EU=36  TOTAL=613)
+
+Note: Counts above EXCLUDE IoU dedup (T1:iou gate in _eval_t1()).
+Real T1 counts after IoU enforcement will be lower (typically 20-40%% reduction).

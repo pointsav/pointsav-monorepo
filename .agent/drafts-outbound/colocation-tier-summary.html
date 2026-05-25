@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Co-location Coverage Summary — Phase 15</title>
+<style>
+  /* ── Print setup ─────────────────────────────────────── */
+  @page {
+    size: letter landscape;
+    margin: 0.55in 0.5in 0.45in 0.5in;
+  }
+  @media print {
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .no-print { display: none; }
+  }
+
+  /* ── Base ────────────────────────────────────────────── */
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-size: 7.8pt;
+    color: #111;
+    background: #fff;
+    line-height: 1.35;
+  }
+
+  /* ── Page shell ──────────────────────────────────────── */
+  .page {
+    width: 10in;
+    margin: 0 auto;
+    padding: 0;
+  }
+
+  /* ── Header ──────────────────────────────────────────── */
+  .hdr {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    border-bottom: 1.5pt solid #111;
+    padding-bottom: 4pt;
+    margin-bottom: 7pt;
+  }
+  .hdr-left h1 {
+    font-size: 11pt;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+  .hdr-left span {
+    font-size: 7.2pt;
+    color: #555;
+    margin-left: 8pt;
+  }
+  .hdr-right {
+    font-size: 7pt;
+    color: #555;
+    text-align: right;
+    line-height: 1.5;
+  }
+
+  /* ── Region columns ──────────────────────────────────── */
+  .grid {
+    display: grid;
+    grid-template-columns: 2.8fr 1fr 3.2fr 1.5fr;
+    gap: 10pt;
+    align-items: start;
+  }
+
+  /* ── Region block ────────────────────────────────────── */
+  .region {
+    break-inside: avoid;
+  }
+  .region-title {
+    font-size: 7pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #fff;
+    padding: 2.5pt 5pt;
+    margin-bottom: 4pt;
+    border-radius: 2pt;
+  }
+  /* Region accent colours */
+  .r-na   .region-title { background: #1a3a6b; }
+  .r-uk   .region-title { background: #003153; }
+  .r-eu   .region-title { background: #5c1f1f; }
+  .r-nor  .region-title { background: #1a4a2e; }
+
+  /* ── Country card ────────────────────────────────────── */
+  .country {
+    margin-bottom: 6pt;
+    border: 0.5pt solid #d0d0d0;
+    border-radius: 2pt;
+    overflow: hidden;
+  }
+  .country-hdr {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 2.5pt 5pt;
+    border-bottom: 0.5pt solid #d0d0d0;
+  }
+  .country-name {
+    font-size: 7.8pt;
+    font-weight: 700;
+  }
+  .country-iso {
+    font-size: 6.5pt;
+    color: #888;
+    font-weight: 400;
+    margin-left: 3pt;
+  }
+  .country-total {
+    font-size: 7pt;
+    color: #444;
+  }
+  .country-total strong {
+    font-size: 8pt;
+    font-weight: 700;
+    color: #111;
+  }
+
+  .country-body {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+  }
+
+  /* ── Tier bar ────────────────────────────────────────── */
+  .tiers {
+    padding: 3pt 5pt;
+    border-right: 0.5pt solid #ebebeb;
+  }
+  .tier-label {
+    font-size: 6pt;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #888;
+    margin-bottom: 2pt;
+  }
+  .tier-row {
+    display: flex;
+    align-items: center;
+    gap: 4pt;
+    margin-bottom: 1.5pt;
+  }
+  .tier-tag {
+    font-size: 6pt;
+    font-weight: 700;
+    width: 15pt;
+    text-align: center;
+    padding: 1pt 0;
+    border-radius: 1.5pt;
+    color: #fff;
+    flex-shrink: 0;
+  }
+  .t1 { background: #1a3a6b; }
+  .t2 { background: #3d6ea8; }
+  .t3 { background: #7a9cc5; }
+
+  .tier-bar-wrap {
+    flex: 1;
+    height: 6pt;
+    background: #f0f0f0;
+    border-radius: 1pt;
+    overflow: hidden;
+  }
+  .tier-bar {
+    height: 100%;
+    border-radius: 1pt;
+  }
+  .tier-n {
+    font-size: 6.5pt;
+    font-weight: 600;
+    color: #333;
+    width: 22pt;
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  /* ── Category pills ──────────────────────────────────── */
+  .cats {
+    padding: 3pt 5pt;
+  }
+  .cat-label {
+    font-size: 6pt;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #888;
+    margin-bottom: 2pt;
+  }
+  .cat-row {
+    display: flex;
+    align-items: center;
+    gap: 3pt;
+    margin-bottom: 1.5pt;
+  }
+  .cat-name {
+    font-size: 6.5pt;
+    color: #333;
+    width: 46pt;
+    flex-shrink: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .cat-bar-wrap {
+    flex: 1;
+    height: 5pt;
+    background: #f0f0f0;
+    border-radius: 1pt;
+    overflow: hidden;
+  }
+  .cat-bar {
+    height: 100%;
+    border-radius: 1pt;
+  }
+  .cat-n {
+    font-size: 6pt;
+    color: #666;
+    width: 26pt;
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  /* Category colours */
+  .c-medical     { background: #e05c5c; }
+  .c-education   { background: #4a7cc7; }
+  .c-hypermarket { background: #e89d2e; }
+  .c-hardware    { background: #5a9a5a; }
+  .c-price_club  { background: #8b5cb3; }
+  .c-lifestyle   { background: #d9735e; }
+
+  /* Tier bar colours */
+  .bt1 { background: #1a3a6b; }
+  .bt2 { background: #3d6ea8; }
+  .bt3 { background: #7a9cc5; }
+
+  /* ── Top types ───────────────────────────────────────── */
+  .types {
+    padding: 2pt 5pt 3pt;
+    border-top: 0.5pt solid #ebebeb;
+    grid-column: span 2;
+  }
+  .types-label {
+    font-size: 6pt;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #888;
+    margin-bottom: 1.5pt;
+  }
+  .type-list {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2pt 6pt;
+  }
+  .type-list li {
+    font-size: 6pt;
+    color: #555;
+  }
+  .type-list li::before {
+    content: "·";
+    color: #aaa;
+    margin-right: 2pt;
+  }
+
+  /* ── Legend ──────────────────────────────────────────── */
+  .footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-top: 0.5pt solid #bbb;
+    margin-top: 6pt;
+    padding-top: 3pt;
+  }
+  .legend {
+    display: flex;
+    gap: 10pt;
+    align-items: center;
+  }
+  .legend-group {
+    display: flex;
+    gap: 5pt;
+    align-items: center;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 2pt;
+    font-size: 6pt;
+    color: #555;
+  }
+  .legend-dot {
+    width: 7pt;
+    height: 5pt;
+    border-radius: 1pt;
+    flex-shrink: 0;
+  }
+  .footer-note {
+    font-size: 5.8pt;
+    color: #888;
+    text-align: right;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- HEADER -->
+  <div class="hdr">
+    <div class="hdr-left">
+      <h1>Co-location Coverage Summary<span>Phase 15 · 5,163 clusters · 16 countries</span></h1>
+    </div>
+    <div class="hdr-right">
+      Woodfine Management Corp. &nbsp;|&nbsp; Confidential<br>
+      Source: PointSav GIS Platform &nbsp;·&nbsp; Generated 2026-05-22
+    </div>
+  </div>
+
+  <!-- BODY GRID: 4 regions side by side -->
+  <div class="grid">
+
+    <!-- ═══ NORTH AMERICA ═══ -->
+    <div class="region r-na">
+      <div class="region-title">North America — 3,686 clusters</div>
+
+      <!-- United States -->
+      <div class="country">
+        <div class="country-hdr">
+          <span class="country-name">United States <span class="country-iso">US</span></span>
+          <span class="country-total"><strong>3,031</strong> clusters &nbsp;·&nbsp; 23,092 members</span>
+        </div>
+        <div class="country-body">
+          <div class="tiers">
+            <div class="tier-label">Tiers</div>
+            <div class="tier-row">
+              <span class="tier-tag t1">T1</span>
+              <div class="tier-bar-wrap"><div class="tier-bar bt1" style="width:43.5%"></div></div>
+              <span class="tier-n">881</span>
+            </div>
+            <div class="tier-row">
+              <span class="tier-tag t2">T2</span>
+              <div class="tier-bar-wrap"><div class="tier-bar bt2" style="width:100%"></div></div>
+              <span class="tier-n">2,028</span>
+            </div>
+            <div class="tier-row">
+              <span class="tier-tag t3">T3</span>
+              <div class="tier-bar-wrap"><div class="tier-bar bt3" style="width:6%"></div></div>
+              <span class="tier-n">122</span>
+            </div>
+          </div>
+          <div class="cats">
+            <div class="cat-label">Co-tenant categories</div>
+            <div class="cat-row"><span class="cat-name">Medical</span><div class="cat-bar-wrap"><div class="cat-bar c-medical" style="width:100%"></div></div><span class="cat-n">8,277</span></div>
+            <div class="cat-row"><span class="cat-name">Education</span><div class="cat-bar-wrap"><div class="cat-bar c-education" style="width:62%"></div></div><span class="cat-n">5,131</span></div>
+            <div class="cat-row"><span class="cat-name">Hypermarket</span><div class="cat-bar-wrap"><div class="cat-bar c-hypermarket" style="width:56%"></div></div><span class="cat-n">4,602</span></div>
+            <div class="cat-row"><span class="cat-name">Hardware</span><div class="cat-bar-wrap"><div class="cat-bar c-hardware" style="width:44%"></div></div><span class="cat-n">3,629</span></div>
+            <div class="cat-row"><span class="cat-name">Price Club</span><div class="cat-bar-wrap"><div class="cat-bar c-price_club" style="width:17%"></div></div><span class="cat-n">1,411</span></div>
+          </div>
+          <div class="types">
+            <div class="types-label">Dominant types</div>
+            <ul class="type-list">
+              <li>Hypermarket + Hardware (1,785)</li>
+              <li>Hypermarket + Hardware + Price Club (853)</li>
+              <li>Hypermarket + Price Club (234)</li>
+              <li>Hardware + Price Club (117)</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Canada -->
+      <div class="country">
+        <div class="country-hdr">
+          <span class="country-name">Canada <span class="country-iso">CA</span></span>
+          <span class="country-total"><strong>371</strong> clusters &nbsp;·&nbsp; 2,873 members</span>
+        </div>
+        <div class="country-body">
+          <div class="tiers">
+            <div class="tier-label">Tiers</div>
+            <div class="tier-row">
+              <span class="tier-tag t1">T1</span>
+              <div class="tier-bar-wrap"><div class="tier-bar bt1" style="width:22%"></div></div>
+              <span class="tier-n">64</span>
+            </div>
+            <div class="tier-row">
+              <span class="tier-tag t2">T2</span>
+              <div class="tier-bar-wrap"><div class="tier-bar bt2" style="width:100%"></div></div>
+              <span class="tier-n">291</span>
+            </div>
+            <div class="tier-row">
+              <span class="tier-tag t3">T3</span>
+              <div class="tier-bar-wrap"><div class="tier-bar bt3" style="width:5.5%"></div></div>
+              <span class="tier-n">16</span>
+            </div>
+          </div>
+          <div class="cats">
+            <div class="cat-label">Co-tenant categories</div>
+            <div class="cat-row"><span class="cat-name">Medical</span><div class="cat-bar-wrap"><div class="cat-bar c-medical" style="width:100%"></div></div><span class="cat-n">1,021</span></div>
+            <div class="cat-row"><span class="cat-name">Education</span><div class="cat-bar-wrap"><div class="cat-bar c-education" style="width:69%"></div></div><span class="cat-n">703</span></div>
+            <div class="cat-row"><span class="cat-name">Hardware</span><div class="cat-bar-wrap"><div class="cat-bar c-hardware" style="width:55%"></div></div><span class="cat-n">564</span></div>
+            <div class="cat-row"><span class="cat-name">Hypermarket</span><div class="cat-bar-wrap"><div class="cat-bar c-hypermarket" style="width:48%"></div></div><span class="cat-n">487</span></div>
+            <div class="cat-row"><span class="cat-name">Price Club</span><div class="cat-bar-wrap"><div class="cat-bar c-price_club" style="width:8%"></div></div><span class="cat-n">86</span></div>
+          </div>
+          <div class="types">
+            <div class="types-label">Dominant types</div>
+            <ul class="type-list">
+              <li>Hypermarket + Hardware (283)</li>
+              <li>Hypermarket + Hardware + Price Club (56)</li>
+              <li>Hardware + Price Club (13)</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mexico -->
+      <div class="country">
+        <div class="country-hdr">
+          <span class="country-name">Mexico <span class="country-iso">MX</span></span>
+          <span class="country-total"><strong>284</strong> clusters &nbsp;·&nbsp; 8,339 members</span>
+        </div>
+        <div class="country-body">
+          <div class="tiers">
+            <div class="tier-label">Tiers</div>
+            <div class="tier-row">
+              <span class="tier-tag t1">T1</span>
+              <div class="tier-bar-wrap"><div class="tier-bar bt1" style="width:50%"></div></div>
+              <span class="tier-n">68</span>
+            </div>
+            <div class="tier-row">
+              <span class="tier-tag t2">T2</span>
+              <div class="tier-bar-wrap"><div class="tier-bar bt2" style="width:100%"></div></div>
+              <span class="tier-n">137</span>
+            </div>
+            <div class="tier-row">
+              <span class="tier-tag t3">T3</span>
+              <div class="tier-bar-wrap"><div class="tier-bar bt3" style="width:58%"></div></div>
+              <span class="tier-n">79</span>
+            </div>
+          </div>
+          <div class="cats">
+            <div class="cat-label">Co-tenant categories</div>
+            <div class="cat-row"><span class="cat-name">Medical</span><div class="cat-bar-wrap"><div class="cat-bar c-medical" style="width:100%"></div></div><span class="cat-n">3,942</span></div>
+            <div class="cat-row"><span class="cat-name">Education</span><div class="cat-bar-wrap"><div class="cat-bar c-education" style="width:86%"></div></div><span class="cat-n">3,385</span></div>
+            <div class="cat-row"><span class="cat-name">Hypermarket</span><div class="cat-bar-wrap"><div class="cat-bar c-hypermarket" style="width:14%"></div></div><span class="cat-n">533</span></div>
+            <div class="cat-row"><span class="cat-name">Price Club</span><div class="cat-bar-wrap"><div class="cat-bar c-price_club" style="width:7%"></div></div><span class="cat-n">279</span></div>
+            <div class="cat-row"><span class="cat-name">Hardware</span><div class="cat-bar-wrap"><div class="cat-bar c-hardware" style="width:5%"></div></div><span class="cat-n">198</span></div>
+          </div>
+          <div class="types">
+            <div class="types-label">Dominant types</div>
+            <ul class="type-list">
+              <li>Hypermarket + Price Club (88)</li>
+              <li>Hardware + Price Club (79)</li>
+              <li>Hypermarket + Hardware + Price Club (67)</li>
+              <li>Hypermarket + Hardware (48)</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ UK ═══ -->
+    <div class="region r-uk">
+      <div class="region-title">United Kingdom — 310 clusters</div>
+
+      <!-- GB -->
+      <div class="country">
+        <div class="country-hdr">
+          <span class="country-name">United Kingdom <span class="country-iso">GB</span></span>
+          <span class="country-total"><strong>310</strong> clusters &nbsp;·&nbsp; 5,612 members</span>
+        </div>
+        <div class="country-body">
+          <div class="tiers" style="grid-column:span 2">
+            <div class="tier-label">Tiers</div>
+            <div class="tier-row">
+              <span class="tier-tag t1">T1</span>
+              <div class="tier-bar-wrap"><div class="tier-bar bt1" style="width:4.4%"></div></div>
+              <span class="tier-n">13</span>
+            </div>
+            <div class="tier-row">
+              <span class="tier-tag t2">T2</span>
+              <div class="tier-bar-wrap"><div class="tier-bar bt2" style="width:100%"></div></div>
+              <span class="tier-n">297</span>
+            </div>
+            <div class="tier-row">
+              <span class="tier-tag t3">T3</span>
+              <div class="tier-bar-wrap"><div class="tier-bar bt3" style="width:0%"></div></div>
+              <span class="tier-n">—</span>
+            </div>
+          </div>
+          <div class="cats" style="grid-column:span 2; border-top:0.5pt solid #ebebeb;">
+            <div class="cat-label">Co-tenant categories</div>
+            <div class="cat-row"><span class="cat-name">Hypermarket</span><div class="cat-bar-wrap"><div class="cat-bar c-hypermarket" style="width:100%"></div></div><span class="cat-n">2,385</span></div>
+            <div class="cat-row"><span class="cat-name">Medical</span><div class="cat-bar-wrap"><div class="cat-bar c-medical" style="width:61%"></div></div><span class="cat-n">1,466</span></div>
+            <div class="cat-row"><span class="cat-name">Education</span><div class="cat-bar-wrap"><div class="cat-bar c-education" style="width:58%"></div></div><span class="cat-n">1,377</span></div>
+            <div class="cat-row"><span class="cat-name">Hardware</span><div class="cat-bar-wrap"><div class="cat-bar c-hardware" style="width:14%"></div></div><span class="cat-n">333</span></div>
+          </div>
+          <div class="types">
+            <div class="types-label">Dominant types</div>
+            <ul class="type-list">
+              <li>Hypermarket + Hardware (264)</li>
+              <li>Hypermarket + Price Club (18)</li>
+              <li>Hypermarket + Lifestyle (13)</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ CONTINENTAL EUROPE ═══ -->
+    <div class="region r-eu">
+      <div class="region-title">Continental Europe — 1,014 clusters</div>
+
+      <!-- DE -->
+      <div class="country">
+        <div class="country-hdr">
+          <span class="country-name">Germany <span class="country-iso">DE</span></span>
+          <span class="country-total"><strong>549</strong> clusters &nbsp;·&nbsp; 5,812 members</span>
+        </div>
+        <div class="country-body">
+          <div class="tiers">
+            <div class="tier-label">Tiers</div>
+            <div class="tier-row"><span class="tier-tag t1">T1</span><div class="tier-bar-wrap"><div class="tier-bar bt1" style="width:3.5%"></div></div><span class="tier-n">18</span></div>
+            <div class="tier-row"><span class="tier-tag t2">T2</span><div class="tier-bar-wrap"><div class="tier-bar bt2" style="width:100%"></div></div><span class="tier-n">518</span></div>
+            <div class="tier-row"><span class="tier-tag t3">T3</span><div class="tier-bar-wrap"><div class="tier-bar bt3" style="width:2.5%"></div></div><span class="tier-n">13</span></div>
+          </div>
+          <div class="cats">
+            <div class="cat-label">Co-tenant categories</div>
+            <div class="cat-row"><span class="cat-name">Education</span><div class="cat-bar-wrap"><div class="cat-bar c-education" style="width:100%"></div></div><span class="cat-n">2,367</span></div>
+            <div class="cat-row"><span class="cat-name">Medical</span><div class="cat-bar-wrap"><div class="cat-bar c-medical" style="width:80%"></div></div><span class="cat-n">1,888</span></div>
+            <div class="cat-row"><span class="cat-name">Hardware</span><div class="cat-bar-wrap"><div class="cat-bar c-hardware" style="width:33%"></div></div><span class="cat-n">783</span></div>
+            <div class="cat-row"><span class="cat-name">Hypermarket</span><div class="cat-bar-wrap"><div class="cat-bar c-hypermarket" style="width:31%"></div></div><span class="cat-n">739</span></div>
+            <div class="cat-row"><span class="cat-name">Lifestyle</span><div class="cat-bar-wrap"><div class="cat-bar c-lifestyle" style="width:1.5%"></div></div><span class="cat-n">35</span></div>
+          </div>
+          <div class="types">
+            <div class="types-label">Dominant types</div>
+            <ul class="type-list">
+              <li>Hypermarket + Hardware (515)</li>
+              <li>Hypermarket + Lifestyle + Hardware (18)</li>
+              <li>Lifestyle + Hardware (13)</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- FR -->
+      <div class="country">
+        <div class="country-hdr">
+          <span class="country-name">France <span class="country-iso">FR</span></span>
+          <span class="country-total"><strong>190</strong> clusters &nbsp;·&nbsp; 4,622 members</span>
+        </div>
+        <div class="country-body">
+          <div class="tiers">
+            <div class="tier-label">Tiers</div>
+            <div class="tier-row"><span class="tier-tag t1">T1</span><div class="tier-bar-wrap"><div class="tier-bar bt1" style="width:13%"></div></div><span class="tier-n">21</span></div>
+            <div class="tier-row"><span class="tier-tag t2">T2</span><div class="tier-bar-wrap"><div class="tier-bar bt2" style="width:100%"></div></div><span class="tier-n">165</span></div>
+            <div class="tier-row"><span class="tier-tag t3">T3</span><div class="tier-bar-wrap"><div class="tier-bar bt3" style="width:2.4%"></div></div><span class="tier-n">4</span></div>
+          </div>
+          <div class="cats">
+            <div class="cat-label">Co-tenant categories</div>
+            <div class="cat-row"><span class="cat-name">Education</span><div class="cat-bar-wrap"><div class="cat-bar c-education" style="width:100%"></div></div><span class="cat-n">2,354</span></div>
+            <div class="cat-row"><span class="cat-name">Medical</span><div class="cat-bar-wrap"><div class="cat-bar c-medical" style="width:68%"></div></div><span class="cat-n">1,602</span></div>
+            <div class="cat-row"><span class="cat-name">Hypermarket</span><div class="cat-bar-wrap"><div class="cat-bar c-hypermarket" style="width:16%"></div></div><span class="cat-n">371</span></div>
+            <div class="cat-row"><span class="cat-name">Hardware</span><div class="cat-bar-wrap"><div class="cat-bar c-hardware" style="width:11%"></div></div><span class="cat-n">260</span></div>
+            <div class="cat-row"><span class="cat-name">Lifestyle</span><div class="cat-bar-wrap"><div class="cat-bar c-lifestyle" style="width:1.4%"></div></div><span class="cat-n">33</span></div>
+          </div>
+          <div class="types">
+            <div class="types-label">Dominant types</div>
+            <ul class="type-list">
+              <li>Hypermarket + Hardware (156)</li>
+              <li>Hypermarket + Lifestyle + Hardware (21)</li>
+              <li>Hypermarket + Lifestyle (8)</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- ES -->
+      <div class="country">
+        <div class="country-hdr">
+          <span class="country-name">Spain <span class="country-iso">ES</span></span>
+          <span class="country-total"><strong>127</strong> clusters &nbsp;·&nbsp; 2,848 members</span>
+        </div>
+        <div class="country-body">
+          <div class="tiers">
+            <div class="tier-label">Tiers</div>
+            <div class="tier-row"><span class="tier-tag t1">T1</span><div class="tier-bar-wrap"><div class="tier-bar bt1" style="width:25.5%"></div></div><span class="tier-n">25</span></div>
+            <div class="tier-row"><span class="tier-tag t2">T2</span><div class="tier-bar-wrap"><div class="tier-bar bt2" style="width:100%"></div></div><span class="tier-n">98</span></div>
+            <div class="tier-row"><span class="tier-tag t3">T3</span><div class="tier-bar-wrap"><div class="tier-bar bt3" style="width:4%"></div></div><span class="tier-n">4</span></div>
+          </div>
+          <div class="cats">
+            <div class="cat-label">Co-tenant categories</div>
+            <div class="cat-row"><span class="cat-name">Education</span><div class="cat-bar-wrap"><div class="cat-bar c-education" style="width:100%"></div></div><span class="cat-n">1,335</span></div>
+            <div class="cat-row"><span class="cat-name">Medical</span><div class="cat-bar-wrap"><div class="cat-bar c-medical" style="width:69%"></div></div><span class="cat-n">921</span></div>
+            <div class="cat-row"><span class="cat-name">Hypermarket</span><div class="cat-bar-wrap"><div class="cat-bar c-hypermarket" style="width:30%"></div></div><span class="cat-n">403</span></div>
+            <div class="cat-row"><span class="cat-name">Hardware</span><div class="cat-bar-wrap"><div class="cat-bar c-hardware" style="width:10%"></div></div><span class="cat-n">135</span></div>
+            <div class="cat-row"><span class="cat-name">Price Club</span><div class="cat-bar-wrap"><div class="cat-bar c-price_club" style="width:2.4%"></div></div><span class="cat-n">32</span></div>
+          </div>
+          <div class="types">
+            <div class="types-label">Dominant types</div>
+            <ul class="type-list">
+              <li>Hypermarket + Hardware (81)</li>
+              <li>Hypermarket + Hardware + Price Club (12)</li>
+              <li>Hypermarket + Price Club (10)</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- IT + NL + PT + GR + AT — small countries in a mini-grid -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:4pt;">
+
+        <!-- IT -->
+        <div class="country">
+          <div class="country-hdr"><span class="country-name">Italy <span class="country-iso">IT</span></span><span class="country-total"><strong>48</strong></span></div>
+          <div class="country-body">
+            <div class="tiers" style="grid-column:span 2">
+              <div class="tier-row"><span class="tier-tag t1">T1</span><div class="tier-bar-wrap"><div class="tier-bar bt1" style="width:8.1%"></div></div><span class="tier-n">3</span></div>
+              <div class="tier-row"><span class="tier-tag t2">T2</span><div class="tier-bar-wrap"><div class="tier-bar bt2" style="width:100%"></div></div><span class="tier-n">37</span></div>
+              <div class="tier-row"><span class="tier-tag t3">T3</span><div class="tier-bar-wrap"><div class="tier-bar bt3" style="width:21.6%"></div></div><span class="tier-n">8</span></div>
+            </div>
+            <div class="types"><ul class="type-list"><li>Hypermarket+Hardware (37)</li><li>Lifestyle+Hardware (8)</li></ul></div>
+          </div>
+        </div>
+
+        <!-- NL -->
+        <div class="country">
+          <div class="country-hdr"><span class="country-name">Netherlands <span class="country-iso">NL</span></span><span class="country-total"><strong>48</strong></span></div>
+          <div class="country-body">
+            <div class="tiers" style="grid-column:span 2">
+              <div class="tier-row"><span class="tier-tag t1">T1</span><div class="tier-bar-wrap"><div class="tier-bar bt1" style="width:6.7%"></div></div><span class="tier-n">2</span></div>
+              <div class="tier-row"><span class="tier-tag t2">T2</span><div class="tier-bar-wrap"><div class="tier-bar bt2" style="width:100%"></div></div><span class="tier-n">30</span></div>
+              <div class="tier-row"><span class="tier-tag t3">T3</span><div class="tier-bar-wrap"><div class="tier-bar bt3" style="width:53.3%"></div></div><span class="tier-n">16</span></div>
+            </div>
+            <div class="types"><ul class="type-list"><li>Hypermarket+Hardware (29)</li><li>Lifestyle+Hardware (7)</li></ul></div>
+          </div>
+        </div>
+
+        <!-- PT -->
+        <div class="country">
+          <div class="country-hdr"><span class="country-name">Portugal <span class="country-iso">PT</span></span><span class="country-total"><strong>22</strong></span></div>
+          <div class="country-body">
+            <div class="tiers" style="grid-column:span 2">
+              <div class="tier-row"><span class="tier-tag t1">T1</span><div class="tier-bar-wrap"><div class="tier-bar bt1" style="width:10.5%"></div></div><span class="tier-n">2</span></div>
+              <div class="tier-row"><span class="tier-tag t2">T2</span><div class="tier-bar-wrap"><div class="tier-bar bt2" style="width:100%"></div></div><span class="tier-n">19</span></div>
+              <div class="tier-row"><span class="tier-tag t3">T3</span><div class="tier-bar-wrap"><div class="tier-bar bt3" style="width:5.3%"></div></div><span class="tier-n">1</span></div>
+            </div>
+            <div class="types"><ul class="type-list"><li>Hypermarket+Hardware (18)</li></ul></div>
+          </div>
+        </div>
+
+        <!-- GR -->
+        <div class="country">
+          <div class="country-hdr"><span class="country-name">Greece <span class="country-iso">GR</span></span><span class="country-total"><strong>19</strong></span></div>
+          <div class="country-body">
+            <div class="tiers" style="grid-column:span 2">
+              <div class="tier-row"><span class="tier-tag t1">T1</span><div class="tier-bar-wrap"><div class="tier-bar bt1" style="width:12.5%"></div></div><span class="tier-n">2</span></div>
+              <div class="tier-row"><span class="tier-tag t2">T2</span><div class="tier-bar-wrap"><div class="tier-bar bt2" style="width:100%"></div></div><span class="tier-n">16</span></div>
+              <div class="tier-row"><span class="tier-tag t3">T3</span><div class="tier-bar-wrap"><div class="tier-bar bt3" style="width:6.3%"></div></div><span class="tier-n">1</span></div>
+            </div>
+            <div class="types"><ul class="type-list"><li>Hypermarket+Hardware (14)</li></ul></div>
+          </div>
+        </div>
+
+        <!-- AT -->
+        <div class="country" style="grid-column:span 2">
+          <div class="country-hdr"><span class="country-name">Austria <span class="country-iso">AT</span></span><span class="country-total"><strong>11</strong> clusters</span></div>
+          <div class="country-body">
+            <div class="tiers" style="grid-column:span 2">
+              <div class="tier-row"><span class="tier-tag t1">T1</span><div class="tier-bar-wrap"><div class="tier-bar bt1" style="width:57%"></div></div><span class="tier-n">4</span></div>
+              <div class="tier-row"><span class="tier-tag t2">T2</span><div class="tier-bar-wrap"><div class="tier-bar bt2" style="width:100%"></div></div><span class="tier-n">7</span></div>
+            </div>
+            <div class="types"><ul class="type-list"><li>Hypermarket+Lifestyle+Hardware (4)</li><li>Hypermarket+Hardware (4)</li></ul></div>
+          </div>
+        </div>
+
+      </div><!-- /small-grid -->
+    </div>
+
+    <!-- ═══ NORDIC ═══ -->
+    <div class="region r-nor">
+      <div class="region-title">Nordic — 129 clusters</div>
+
+      <!-- SE -->
+      <div class="country">
+        <div class="country-hdr">
+          <span class="country-name">Sweden <span class="country-iso">SE</span></span>
+          <span class="country-total"><strong>48</strong> clusters &nbsp;·&nbsp; 595 members</span>
+        </div>
+        <div class="country-body">
+          <div class="tiers">
+            <div class="tier-label">Tiers</div>
+            <div class="tier-row"><span class="tier-tag t1">T1</span><div class="tier-bar-wrap"><div class="tier-bar bt1" style="width:22.9%"></div></div><span class="tier-n">8</span></div>
+            <div class="tier-row"><span class="tier-tag t2">T2</span><div class="tier-bar-wrap"><div class="tier-bar bt2" style="width:100%"></div></div><span class="tier-n">35</span></div>
+            <div class="tier-row"><span class="tier-tag t3">T3</span><div class="tier-bar-wrap"><div class="tier-bar bt3" style="width:14.3%"></div></div><span class="tier-n">5</span></div>
+          </div>
+          <div class="cats">
+            <div class="cat-label">Co-tenant categories</div>
+            <div class="cat-row"><span class="cat-name">Medical</span><div class="cat-bar-wrap"><div class="cat-bar c-medical" style="width:100%"></div></div><span class="cat-n">238</span></div>
+            <div class="cat-row"><span class="cat-name">Education</span><div class="cat-bar-wrap"><div class="cat-bar c-education" style="width:96%"></div></div><span class="cat-n">229</span></div>
+            <div class="cat-row"><span class="cat-name">Hardware</span><div class="cat-bar-wrap"><div class="cat-bar c-hardware" style="width:28%"></div></div><span class="cat-n">66</span></div>
+            <div class="cat-row"><span class="cat-name">Hypermarket</span><div class="cat-bar-wrap"><div class="cat-bar c-hypermarket" style="width:20%"></div></div><span class="cat-n">48</span></div>
+            <div class="cat-row"><span class="cat-name">Lifestyle</span><div class="cat-bar-wrap"><div class="cat-bar c-lifestyle" style="width:5%"></div></div><span class="cat-n">12</span></div>
+          </div>
+          <div class="types">
+            <div class="types-label">Dominant types</div>
+            <ul class="type-list">
+              <li>Hypermarket + Hardware (34)</li>
+              <li>Hypermarket + Lifestyle + Hardware (8)</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- FI -->
+      <div class="country">
+        <div class="country-hdr">
+          <span class="country-name">Finland <span class="country-iso">FI</span></span>
+          <span class="country-total"><strong>53</strong> clusters &nbsp;·&nbsp; 736 members</span>
+        </div>
+        <div class="country-body">
+          <div class="tiers">
+            <div class="tier-label">Tiers</div>
+            <div class="tier-row"><span class="tier-tag t1">T1</span><div class="tier-bar-wrap"><div class="tier-bar bt1" style="width:2%"></div></div><span class="tier-n">1</span></div>
+            <div class="tier-row"><span class="tier-tag t2">T2</span><div class="tier-bar-wrap"><div class="tier-bar bt2" style="width:100%"></div></div><span class="tier-n">51</span></div>
+            <div class="tier-row"><span class="tier-tag t3">T3</span><div class="tier-bar-wrap"><div class="tier-bar bt3" style="width:2%"></div></div><span class="tier-n">1</span></div>
+          </div>
+          <div class="cats">
+            <div class="cat-label">Co-tenant categories</div>
+            <div class="cat-row"><span class="cat-name">Medical</span><div class="cat-bar-wrap"><div class="cat-bar c-medical" style="width:100%"></div></div><span class="cat-n">333</span></div>
+            <div class="cat-row"><span class="cat-name">Education</span><div class="cat-bar-wrap"><div class="cat-bar c-education" style="width:74%"></div></div><span class="cat-n">248</span></div>
+            <div class="cat-row"><span class="cat-name">Hypermarket</span><div class="cat-bar-wrap"><div class="cat-bar c-hypermarket" style="width:30%"></div></div><span class="cat-n">99</span></div>
+            <div class="cat-row"><span class="cat-name">Hardware</span><div class="cat-bar-wrap"><div class="cat-bar c-hardware" style="width:16%"></div></div><span class="cat-n">54</span></div>
+          </div>
+          <div class="types">
+            <div class="types-label">Dominant types</div>
+            <ul class="type-list">
+              <li>Hypermarket + Hardware (51)</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- DK -->
+      <div class="country">
+        <div class="country-hdr">
+          <span class="country-name">Denmark <span class="country-iso">DK</span></span>
+          <span class="country-total"><strong>18</strong> clusters &nbsp;·&nbsp; 283 members</span>
+        </div>
+        <div class="country-body">
+          <div class="tiers">
+            <div class="tier-label">Tiers</div>
+            <div class="tier-row"><span class="tier-tag t1">T1</span><div class="tier-bar-wrap"><div class="tier-bar bt1" style="width:8.3%"></div></div><span class="tier-n">1</span></div>
+            <div class="tier-row"><span class="tier-tag t2">T2</span><div class="tier-bar-wrap"><div class="tier-bar bt2" style="width:100%"></div></div><span class="tier-n">12</span></div>
+            <div class="tier-row"><span class="tier-tag t3">T3</span><div class="tier-bar-wrap"><div class="tier-bar bt3" style="width:41.7%"></div></div><span class="tier-n">5</span></div>
+          </div>
+          <div class="cats">
+            <div class="cat-label">Co-tenant categories</div>
+            <div class="cat-row"><span class="cat-name">Education</span><div class="cat-bar-wrap"><div class="cat-bar c-education" style="width:100%"></div></div><span class="cat-n">120</span></div>
+            <div class="cat-row"><span class="cat-name">Medical</span><div class="cat-bar-wrap"><div class="cat-bar c-medical" style="width:86%"></div></div><span class="cat-n">103</span></div>
+            <div class="cat-row"><span class="cat-name">Hardware</span><div class="cat-bar-wrap"><div class="cat-bar c-hardware" style="width:33%"></div></div><span class="cat-n">40</span></div>
+            <div class="cat-row"><span class="cat-name">Hypermarket</span><div class="cat-bar-wrap"><div class="cat-bar c-hypermarket" style="width:12%"></div></div><span class="cat-n">14</span></div>
+          </div>
+          <div class="types">
+            <div class="types-label">Dominant types</div>
+            <ul class="type-list">
+              <li>Hypermarket + Hardware (12)</li>
+              <li>Lifestyle + Hardware (5)</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- NO -->
+      <div class="country">
+        <div class="country-hdr">
+          <span class="country-name">Norway <span class="country-iso">NO</span></span>
+          <span class="country-total"><strong>10</strong> clusters &nbsp;·&nbsp; 47 members</span>
+        </div>
+        <div class="country-body">
+          <div class="tiers" style="grid-column:span 2">
+            <div class="tier-row"><span class="tier-tag t1">T1</span><div class="tier-bar-wrap"><div class="tier-bar bt1" style="width:11.1%"></div></div><span class="tier-n">1</span></div>
+            <div class="tier-row"><span class="tier-tag t2">T2</span><div class="tier-bar-wrap"><div class="tier-bar bt2" style="width:100%"></div></div><span class="tier-n">9</span></div>
+          </div>
+          <div class="types"><ul class="type-list"><li>Hypermarket+Hardware (6)</li><li>Hypermarket+Lifestyle (3)</li></ul></div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /grid -->
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <div class="legend">
+      <div class="legend-group">
+        <span style="font-size:6pt;color:#555;font-weight:600;margin-right:2pt;">Tiers:</span>
+        <div class="legend-item"><div class="legend-dot" style="background:#1a3a6b"></div>T1 — Elite</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#3d6ea8"></div>T2 — Strong</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#7a9cc5"></div>T3 — Emerging</div>
+      </div>
+      <div class="legend-group" style="margin-left:12pt;">
+        <span style="font-size:6pt;color:#555;font-weight:600;margin-right:2pt;">Categories:</span>
+        <div class="legend-item"><div class="legend-dot c-medical"></div>Medical</div>
+        <div class="legend-item"><div class="legend-dot c-education"></div>Education</div>
+        <div class="legend-item"><div class="legend-dot c-hypermarket"></div>Hypermarket</div>
+        <div class="legend-item"><div class="legend-dot c-hardware"></div>Hardware</div>
+        <div class="legend-item"><div class="legend-dot c-price_club"></div>Price Club</div>
+        <div class="legend-item"><div class="legend-dot c-lifestyle"></div>Lifestyle</div>
+      </div>
+    </div>
+    <div class="footer-note">
+      Category bars: proportional within each country (longest bar = largest category).<br>
+      Tier bars: proportional within each country (T2 always anchors at 100%).
+    </div>
+  </div>
+
+</div><!-- /page -->
+</body>
+</html>
