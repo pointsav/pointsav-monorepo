@@ -1,8 +1,8 @@
 @~/Foundry/AGENT.md
 
-# project-data — Archive Guide
+# project-orgcharts — Archive Guide
 
-> **State:** active | **Last updated:** 2026-06-01
+> **State:** active | **Last updated:** 2026-05-18
 > **Cluster manifest:** `.agent/manifest.md`
 > **Workspace AGENT.md takes precedence on conflict.**
 
@@ -10,7 +10,7 @@
 
 ## Cluster mission
 
-See `.agent/manifest.md` for full mission statement.
+Author Woodfine corporate org charts (and over time, other corporate visualizations) using the PointSav design system. Every UI pattern that emerges during chart authoring — node shapes, hierarchy connectors, role badges, brand placement — is **backfilled as a reusable component into `pointsav-de...
 
 ## Tetrad
 
