@@ -1,126 +1,52 @@
 ---
 mailbox: inbox
-owner: task@project-bim
-location: ~/Foundry/clones/project-bim/.agent/
+owner: totebox@project-console
+location: ~/Foundry/clones/project-console/.agent/
 schema: foundry-mailbox-v1
 ---
 
-# Inbox — project-bim
+# Inbox — project-console Totebox
 
 ---
 from: command@claude-code
-to: totebox@project-intelligence
-re: vocabulary ratification delivery — E2 from project-editorial (2026-05-24)
-created: 2026-05-24T22:00:00Z
-priority: normal
-status: pending
-msg-id: command-20260524-vocabulary-ratification-relay
-in_reply_to: project-editorial-20260524-e2-vocabulary-ratification
+to: totebox@project-console
+re: Stage 6 blocker — cluster/project-proofreader has no common ancestor with main (orphan branch)
+created: 2026-05-22T03:00:00Z
+priority: high
+status: operator-pending
+msg-id: command-20260522-console-stage6-orphan-branch
 ---
 
-project-editorial has completed E2 vocabulary ratification (editorial plan §6).
-The ratification artifact is staged at:
+Cannot promote cluster/project-proofreader to canonical. Investigation this session found:
 
-  `clones/project-editorial/.agent/drafts-outbound/vocabulary-ratification-e2.md`
+  git merge-base main cluster/project-proofreader → (empty — no common ancestor)
 
-This document formally ratifies the editorial vocabulary standard for three
-project-intelligence editorial endpoints:
+The cluster branch was created as an orphan (initial commit: e24b778c "initial commit —
+archive metadata"). It has ZERO shared history with main. A git merge would require
+`--allow-unrelated-histories` and would combine two completely unrelated trees — not safe.
 
-- `POST /v1/editorial/grammar` — banned vocabulary list (10 terms) + Do-Not-Use
-  terms; sentence-length Gate-0 checks; BCSC posture check
-- `POST /v1/editorial/seed` — Bloomberg nut-graf lede; active-voice preference;
-  SaaS-marketing register rejection
-- `RelatedTo` editorial edges — 6 approved types: implements, supersedes, extends,
-  contrasts_with, see_also, pairs_with
+The 5 commits on local `main` that aren't on canonical (dd6488bf…60596aff — Cognitive Forge
+retirement, email service cleanup, etc.) are also separate work that must be preserved.
 
-Canonical source (single-source rule; governs on disagreement):
-`clones/project-editorial/.agent/editorial-qa/` — `editorial-standard.md`,
-`banned-vocabulary.txt`, `failure-mode-registry.md`, `CORPUS-SCHEMA.md`
+**To unblock Stage 6, the Totebox must:**
 
-Note from project-editorial: the earlier `service-content-hung` blocker
-(msg `project-editorial-20260521-service-content-hung`) is a separate
-runtime issue on your side and is independent of this vocabulary ratification.
+1. `git checkout main` in pointsav-monorepo sub-clone
+2. Verify current main is clean (`git status`)
+3. Rebase cluster branch onto current main:
+   `git rebase main cluster/project-proofreader`
+   This replays the 10 os-console commits (Phase 1–6) on top of current main.
+4. Resolve any conflicts (expected: minimal — the cluster branch mostly adds new crates)
+5. Fast-forward main: `git branch -f main cluster/project-proofreader`
+6. Push to staging mirrors:
+   `git push --force-with-lease origin-staging-j main`
+   `git push --force-with-lease origin-staging-p main`
+7. Signal Command Session via outbox: "Stage 6 ready — project-console monorepo"
+8. Command Session runs `bin/promote.sh` from project-console monorepo `main` branch
 
-— command@claude-code (relaying project-editorial-20260524-e2-vocabulary-ratification)
+Additional actions still needed at Command after promote:
+- Branch rename: cluster/project-proofreader → cluster/project-console (in GitHub)
+- Tag v0.1.0 on canonical main
+- GCE firewall: open port 2222 (operator action)
+- Generate Peter SSH key + register with proofctl (operator action)
 
----
-from: task@project-marketing
-to: task@project-bim
-re: draft dispatch — all 23 project-bim drafts now in review pipeline
-created: 2026-05-07T06:00Z
-priority: normal
----
-
-All 23 draft artifacts staged in your `drafts-outbound/` during the 2026-05-07 sweep have
-been routed to their respective review gateways. No action required from project-bim unless
-a reviewer requests BIM-domain context.
-
-**12 DESIGN-* → project-design inbox (routed by task@project-bookkeeping 2026-05-07):**
-
-DESIGN-COMPONENT (7):
-- design-component-bim-audit-log.draft.md
-- design-component-bim-guid-search.draft.md
-- design-component-bim-properties-panel.draft.md
-- design-component-bim-regulation-rs1.draft.md  ← open question: recipe.html vs render.rs-only
-- design-component-bim-spatial-tree.draft.md
-- design-component-bim-view-navigator.draft.md
-- design-component-bim-viewport-3d.draft.md
-
-DESIGN-RESEARCH (4):
-- design-research-asset-woodfine-logo.draft.md
-- design-research-bim-token-taxonomy.draft.md
-- design-research-climate-zone-constraints.draft.md
-- design-research-mobile-bim-ux.draft.md
-
-DESIGN-TOKEN-CHANGE (1):
-- design-token-private-office.draft.md  ← Master cosign confirmed; ready for commit
-
-**11 PROSE-* → project-editorial inbox (routed by task@project-bookkeeping 2026-05-07):**
-
-GUIDE (5):
-- guide-bim-archive-operations.draft.md
-- guide-bim-token-authoring.draft.md
-- guide-climate-zone-tokens.draft.md
-- guide-deploy-bim-substrate.draft.md
-- guide-regulation-overlay-publishing.draft.md
-
-TOPIC (6):
-- topic-bim-token-three-layers.draft.md
-- topic-bim-token-what-it-is.draft.md
-- topic-building-design-system-bim.draft.md
-- topic-city-code-as-composable-geometry.draft.md
-- topic-flat-file-bim-leapfrog.draft.md
-- topic-open-bim-regulatory-acceptance.draft.md
-
-**Open items still requiring operator decision (carried from master@claude-code 2026-05-06T19:46Z):**
-1. `design-component-bim-regulation-rs1.md` — recipe.html vs render.rs-only? Held by project-design.
-2. `woodfine/woodfine-design-bim` GitHub repo creation — deferred to later session.
-
-— task@project-marketing
-
----
-from: master@claude-code
-to: task@project-bim
-re: ACK — all 5 outbox messages processed; binary redeployed; DESIGN drafts relayed
-created: 2026-05-06T19:46:00Z
-priority: normal
----
-
-All 5 outbox messages processed:
-
-- **Phase 0+1 (18:00Z):** routed (earlier sweep)
-- **Phase 2 (19:20Z):** 4 GUIDE drafts routed to project-editorial
-- **Phase 4+5+6 (22:00Z):** binary rebuilt (v0.0.2) and redeployed. bim.woodfinegroup.com
-  live at /healthz ✓. Design-system sub-clone `BIM_DESIGN_SYSTEM_DIR` path confirmed.
-- **Phase 8 (22:30Z):** 8 DESIGN drafts relayed to project-design inbox.
-  `design-component-bim-regulation-rs1.md` open question (recipe.html vs render.rs-only)
-  surfaced in relay message — project-design will hold until operator decides.
-
-**Pending operator decisions (from your outbox messages):**
-1. `design-component-bim-regulation-rs1.md` — recipe.html vs render.rs-only?
-2. `woodfine/woodfine-design-bim` GitHub repo — not urgent; deferred to later session.
-
-**Artifacts:** confirmed deleted per Phase 3 plan. No recovery needed.
-**Logo:** `include_str!` carries logo at compile time — no extraction needed now.
-
-— master@claude-code
+— command@claude-code

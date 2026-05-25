@@ -1,36 +1,55 @@
 schema: foundry-binary-targets-v1
-cluster: project-gis
+cluster: project-console
+updated: 2026-05-23
 
 targets:
-  - product_id: os-orchestration
-    binary_name: os-orchestration
-    source_crate: os-orchestration
-    license: FSL-1.1-ALv2
-    license_tier: fsl
-    class: os-image
+  - product_id: os-console
+    binary_name: os-console
+    source_crate: os-console
+    license: AGPL-3.0-or-later
+    license_tier: apache
+    class: app-bundle
     layer: base
     requires: []
-    platforms: [x86_64-unknown-linux-gnu]
-    soft_enabled: false   # scaffold — src does not yet exist
+    platforms: [x86_64-unknown-linux-gnu, aarch64-apple-darwin, x86_64-apple-darwin]
+    soft_enabled: true
+    notes: >
+      Distributable TUI binary — user installs on their own machine (Linux Mint,
+      macOS). Connects to system-gateway-mba on the VM via MBA peer-to-peer (russh).
+      Chassis + cartridges compiled in. Phases 1–5 complete (incl. Phase 3 QR,
+      Phase 4 F11 operator panel, Phase 5 draft mode). Phase 6 (offline + Tantivy) queued.
 
-  - product_id: app-orchestration-gis
-    binary_name: app-orchestration-gis
-    source_crate: app-orchestration-gis
-    license: FSL-1.1-ALv2
-    license_tier: fsl
-    class: app-bundle
+  - product_id: pairing-server
+    binary_name: pairing-server
+    source_crate: system-gateway-mba
+    license: AGPL-3.0-or-later
+    license_tier: apache
+    class: service-package
     layer: extension
     requires: [os-console]
     platforms: [x86_64-unknown-linux-gnu]
-    soft_enabled: false   # scaffold — Cargo.toml does not yet exist
+    soft_enabled: true
+    notes: >
+      VM-side pairing server (tiny_http, port 9201). Issues 8-char Crockford
+      pairing codes; os-console polls for approval. Needs systemd unit on VM.
 
-  - product_id: app-console-gis
-    binary_name: app-console-gis
-    source_crate: app-console-gis
-    license: FSL-1.1-ALv2
-    license_tier: fsl
+  - product_id: proofctl
+    binary_name: proofctl
+    source_crate: system-gateway-mba
+    license: AGPL-3.0-or-later
+    license_tier: apache
     class: app-bundle
     layer: extension
     requires: [os-console]
-    platforms: [x86_64-unknown-linux-gnu]
-    soft_enabled: false   # scaffold
+    platforms: [x86_64-unknown-linux-gnu, aarch64-apple-darwin, x86_64-apple-darwin]
+    soft_enabled: true
+    notes: >
+      Operator CLI — proofctl pair list/approve/deny, user add/list.
+      Runs on the VM alongside pairing-server.
+
+# NOTE — service-proofreader not declared here:
+# The inbox (command-20260522-binary-targets-project-console) listed
+# service-proofreader as a product to declare, but this binary is not
+# present in the current cluster branch (it was built at SHA eb0ffd3,
+# pre-cluster). Command Session should declare it from whichever cluster
+# owns that crate, or confirm whether a rebuild from this branch is intended.

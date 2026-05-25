@@ -1,79 +1,64 @@
 ---
 schema: foundry-sub-agent-queue-v1
-owner: task-project-bim
-created: 2026-04-28
-last_updated: 2026-04-28T22:00:00Z
+owner: task-project-proofreader
+location: ~/Foundry/clones/project-proofreader/.claude/
+scope: cluster-local (per v0.1.30 §1A.4 layer-scope rule — workspace
+  queue at ~/Foundry/.claude/sub-agent-queue.md is for cross-cluster
+  briefs only)
 ---
 
-# Sub-agent queue — project-bim cluster
+# Sub-agent queue — project-proofreader
 
-Cluster-scope sub-agent briefs dispatched under v0.1.30 §1A discipline.
-Standing operator-override per `feedback_operator_override_sonnet_dispatch.md`
-applies to this cluster (operator green-lit "yes" 2026-04-28 first session
-start; standing for cluster scope).
+Per `~/Foundry/conventions/model-tier-discipline.md` §1A. Bounded
+Sonnet (or Haiku) briefs the cluster Task proposes for ratification +
+dispatch. Each entry: bounded scope, file paths, confidence gate,
+result.
 
-Per-brief outputs land in `.claude/sub-agent-results/`. Parent Task
-reviews each result before commit-or-queue-next per §1A.6.
+## Ready now
 
----
+*(no pending briefs — Round 9 batch all dispatched + completed +
+ratified post-hoc by Master 2026-04-28T03:58Z)*
 
-## In-flight (foreground+parallel — read-only research)
+## Completed
 
-| ID | Subject | Model | Status | Output file |
-|---|---|---|---|---|
-| BB.1 | IfcOpenShell 0.8.5 Rust subprocess invocation patterns | sonnet | in-flight | sub-agent-results/BB.1-ifcopenshell-rust-subprocess-2026-04-28.md |
-| BB.2 | xeokit (AGPL-3.0) vs @thatopen (MIT) decision for app-workplace-bim | sonnet | in-flight | sub-agent-results/BB.2-xeokit-vs-thatopen-2026-04-28.md |
-| BB.3 | Tauri 2.10 best practices for BIM-scale models (memory, IPC, mobile) | sonnet | in-flight | sub-agent-results/BB.3-tauri-bim-scale-2026-04-28.md |
-| BB.4 | Bonsai (formerly BlenderBIM) interface conventions deep-dive | sonnet | in-flight | sub-agent-results/BB.4-bonsai-interface-deepdive-2026-04-28.md |
+### 2026-04-28 — Round 9 batch (4 briefs, dispatched in parallel under operator override)
 
-Dispatched 2026-04-28T21:58Z. Parallel because read-only research with
-no shared filesystem write surface. 30-min soft cap each; ~600-1100
-lines of markdown report each. Returns inform BB.5–BB.10 scaffolding
-decisions.
+Operator green-lit dispatch 2026-04-28T01:30Z under the broad "take
+care of all open issues" framing per Master's 04:02Z message. All
+four briefs ratified post-hoc by Master at 03:58Z. Per v0.1.30 §1A
+each brief was bounded + scope-correct + parallel-safe (different
+`.git/index` per brief, or none).
 
-## Pending (foreground+serial — sequential writing dispatches per §1A.2)
-
-| ID | Subject | Model | Blocked-on | Notes |
-|---|---|---|---|---|
-| BB.5 | Scaffold service-materials Rust crate | sonnet | none (independent) | Reserved-folder → Scaffold-coded; bSDD URI references + IfcMaterial + Pset_Material* |
-| BB.6 | Scaffold service-buildings Rust crate | sonnet | none (independent) | IFC GUID-keyed element store; per-element YAML sidecars; Speckle-style hash-addressed object store |
-| BB.7 | Scaffold service-codes Rust crate | sonnet | BB.1 (uses ifctester invocation pattern) | The City-Code-as-Composable-Geometry invention; bSDD + IDS + IFC fragments |
-| BB.8 | Scaffold app-orchestration-bim (Axum + server-rendered HTML; Building Design System showcase) | sonnet | BB.11 (token contracts), BB.12 (component recipe contracts) | Mirrors app-privategit-design pattern; port 9096 |
-| BB.9 | Scaffold app-workplace-bim (Tauri 2.10) | sonnet | BB.1, BB.2, BB.3 | Pattern 1 architecture per BIM_Buildable Architecture.md |
-| BB.10 | Scaffold app-console-bim | sonnet | BB.4 (UX conventions to NOT-mirror from Bonsai) | Mode-prop READ surface; BimGuidSearch + BimAuditLog + BimDashboard + BimExportPanel |
-
-Sequential because each writes to the same parent's `.git/index` per §1A.2.
-Parent commits each before dispatching the next.
-
-## Pending (parent-direct — drafts staging without sub-agent)
-
-| ID | Subject | Notes |
+| Brief | Subject | Result |
 |---|---|---|
-| BB.11 | Stage 8 PROSE-TOPIC drafts in drafts-outbound/ | foundry-draft-v1 + Research-trail per claim #39; project-language sweeps |
-| BB.12 | Stage 8 DESIGN drafts in drafts-outbound/ | 1 RESEARCH + 7 COMPONENT (foundry-draft-v1 + component_metadata block) |
+| #1 | TOPIC skeletons #2 + #3 (Tetrad wiki leg) | 2 files in `.claude/drafts-outbound/`: `topic-editorial-pipeline-three-stages.md` (~154 lines) + `topic-customer-tier-catalog-pattern.md` (~156 lines). Surfaced 2 additional planned_topics worth queueing: `topic-proofreader-apprenticeship-corpus.md` + `topic-banned-vocabulary-governance.md`. |
+| #2 | Customer-catalog GUIDE refresh for new login | Two files in `woodfine-fleet-deployment/media-proofreader-woodfinegroup/`: `guide-deployment.md` §2+§3 + `guide-provision-node.md` §8+§12 updated. Caught + corrected an in-scope error in §12. Committed as `a932f5f`. |
+| #3 | Stale-reference sweep (read-only) | 5 doc files in `app-console-proofreader/` flagged for cleanup. 0 source-code hits (Rust already correct). `[intentional-historical]` tags applied to dated coordination notes. |
+| #4 | Doc cleanup follow-up to Brief #3 | 4 files in `app-console-proofreader/` updated: `ARCHITECTURE.md`, `README.md`, `README.es.md`, `CLAUDE.md`. 6 individual edits. Surfaced routes-table follow-up which orchestrator closed inline. Committed as part of `c7deaac`. |
 
-Parent-direct rather than dispatched: drafts are short-form templated
-content with stable structure; sub-agent dispatch overhead exceeds the
-work. Parent writes them in-line, then commits.
+Total Sonnet wall-clock: ~3 min (4 agents dispatched in parallel).
+Total work delivered: ~3.5h equivalent of bounded implementation.
 
----
+## Notes
 
-## Completed briefs
+- Per Master's 04:02Z message: per-cluster sub-agent queues are the
+  right home for cluster-scope briefs (this file). Workspace queue
+  at `~/Foundry/.claude/sub-agent-queue.md` is for cross-cluster
+  proposals only.
+- The operator-override path stays valid for future bounded Sonnet
+  briefs. PP.1 + Round 9 batch of 4 set a clear precedent.
+- Rule reminder per v0.1.30 §1A: dispatch is foreground+serial when
+  writing to the same `.git/index`; parallel across different
+  indexes (or read-only).
 
-*(none yet — first batch in flight as of 2026-04-28T21:58Z.)*
+## Discipline reminders
 
----
-
-## Notes for next Task session
-
-- BB.1–BB.4 results are decision inputs: BB.2 (xeokit vs @thatopen) gates
-  BB.9 (app-workplace-bim) embed choice. BB.4 (Bonsai) gates BB.10
-  (app-console-bim) "what NOT to copy" list. BB.1 + BB.3 inform BB.9
-  Tauri config + IfcOpenShell sidecar wiring.
-- If a sub-agent comes back with confident, evidence-backed pushback on
-  the cluster manifest's defaults (e.g., "@thatopen wins on 7 of 8
-  axes"), update the manifest before scaffolding. Surface significant
-  pushback to Master via outbox before re-architecting.
-- Sub-agent results are LOCAL to this cluster (`.claude/sub-agent-results/`).
-  Workspace-level Master research from cluster provisioning lives at
-  `~/Foundry/.claude/sub-agent-results/A-bim-* B-bim-* C-bim-*`.
+- v0.1.30 rule 1: bounded brief — one task, one result; self-
+  contained; cap response length
+- v0.1.30 rule 4: layer scope preserved — Task sub-agents stay in
+  Task scope (cluster directory only)
+- v0.1.30 rule 5: anti-slop — must contribute to a real next step
+- v0.1.30 rule 6: parent reviews → commit OR queue next; parent
+  never delegates the commit decision
+- CLAUDE.md §11 + Master's 03:58Z reminder: Tasks do NOT chmod
+  workspace identity files; surface via outbox if signing fails
