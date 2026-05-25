@@ -1,0 +1,109 @@
+Four Development Classes: Professional Centres, Suburban Office, Retail Select, Tech Industrial
+
+Files:
+CONSTRUCTION_2025_10_31_Design Slides_Openstudio_Woodfine Response.docx
+
+
+tool-builidngwidth
+
+need to expand to RUST ENGINE
+
+BIM Objects catgeories:
+Key Plans
+Tiles
+Floor Plates
+
+The tool-buildingwidth is a RUST ENGINE that computes Key Plans into Tiles, then Tiles into Floor Plates
+
+PART 1: Key Plans
+How do we get a Key Plan? The Architectus make them for us.
+
+Here are the samples and the matrix of all the Key Plans we have so far:
+**READ the files below**
+DISCOVERY_MCorp_Sketches_Key Plans_Summary
+DISCOVERY_MCorp_Sketches_Key Plans_Summary_Notes
+PROJECTS_MCorp_Design Slides_Key Plans_Sample.pdf
+CONSTRUCTION_2026_01_06_Key Plan_Professional Office_FFE_FIN.xlsx (Tab Summary_Key Plans)
+
+
+These are the files we send to the architects to make the Key Plans.
+**READ the files below**
+--- April 01, 2025 -- Collaborators #11 ---
+--- March 03, 2025 -- Collaborators #32 --- 
+--- May 06, 2025 -- Collaborators #27 ---
+
+
+Deliverable 1: BIM Objects for each Key Plan
+We need to make a list of all the BIM Objects - Key plans we are going to need. 
+
+We have a frist draft of the list
+**READ the files below** 
+PROJECTS_MCorp_Database_Floor Plates_Key Plans_Index
+CONSTRUCTION_MCorp_2026_01_06_Database_Floor Plans_Key Plans_Index_FIN.xlsx
+
+
+PART 2: Tiles
+
+Take the Key Plan Objects and you make Tiles Objects based on combining the different Key Plans Objects of the same categoy to make Tiles that are BIM Objects.
+
+**READ the files below**
+PROJECTS_MCorp_Tear Sheet_Floor Plates_Tiles_Combinations.pdf
+PROJECTS_MCorp_Tear Sheet_Floor Plates_Tiles_Alternatives.pdf
+CONSTRUCTION_2026_01_06_Tear Sheet_Floor Plates_Tiles_Alternatives_V2_FIN.xlsx
+CONSTRUCTION_MCorp_2026_01_06_Tiles_Leasing Plan Efficiencies_FIN.docx
+
+Deliverabe 2: BIM Object for each of the Tiles
+We need to make a likst of the BIM Objects - Tiles we are going to need.
+
+If there is a Key Plan that is itself a Tile, for example Lobby Atrium, we don't want to have both a Key Plan and a Tile, we can just have it as a Key Plan.
+
+A cilmate zone is a Tile or therefor combination of Tiles, people have contorl of the cilmate.
+
+Within a Tile the deminising space share contorl of cilmate zone in one tile
+
+
+
+PART 3: Floor Plates
+
+**READ the files below**
+CONSTRUCTION_2026_01_06_Tear Sheet_Floor Plans_Key Plans_Methodology_FIN.xlsx
+PROJECTS_MCorp_Tear Sheet_Floor Plates_Key Plans_Methodology.pdf
+
+Make Floor Plate Objects out of the combination of BIM Objects Tiles and BIM Object Key Plans.
+
+Part of the compute - RUST ENGINE:
+
+Matrix of Floor Plates
+Main Floor Professional Centres
+Main Floor Suburban Office
+Second Floor Tenant Lounge Professional Centres
+Second Floor Tenant Lounge Suburban Office
+Medium Floor Plate Tech Industrial
+Large Floor Plate Tech Industrial
+Small Florr Plate Retail Select
+Medium Floor Plate Retail Select
+Large Floor Plate Retail Select
+
+The point of the tool is bi-directional if the Floor Plate size is fixed and the Key Plan size is fixed (Object Size) we need to adjust the second section "Tiles" to end up with Floor Plates Objects that have no remainder where either Key Plans or Tiles don't overlap.
+
+If they do overlay, we need to know how we can adjust the size of the Key Plans or the size of the Floor Plates to elminate the remainder there may be a need for Special Tile.
+
+Files: Floor Plate Methodolgy - PDF
+You can see where the "ring" is.
+
+We are looking for efficiency in nesting Key Plans into Tiles, and Tiles into Floor Pates for the future leashold deminisng and cilmate zones (environmental controls within the space).
+
+
+Notes:
+Key Plan = Tile = Floor Plate
+
+We need the RUST ENGINE to give us:
+Key Plan = Tiles + Key Plans = Floor Plate
+
+Reason is for example emergency stairs, we dont need them to be a Key Plan and a Tile, it is just a Key Plan.
+
+PART 4: Building Width Calculator
+
+**READ the files below**
+building-width-calculator.docx
+DISCOVERY_MCorp_Sketches_Key Plans_Business_Notes.pdf
