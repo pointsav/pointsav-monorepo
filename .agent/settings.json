@@ -1,10 +1,44 @@
 {
   "permissions": {
     "allow": [
-      "Bash(systemctl is-active *)",
+      "Read",
+      "Write",
+      "Edit",
+      "Bash(mkdir *)",
+      "Bash(mkdir -p *)",
+      "Bash(cp *)",
+      "Bash(git add *)",
+      "Bash(git status)",
+      "Bash(git status *)",
+      "Bash(git -C * status *)",
+      "Bash(git -C * log *)",
+      "Bash(git -C * remote *)",
+      "Bash(git -C * add *)",
+      "Bash(git -C * diff *)",
+      "Bash(git -C * branch *)",
+      "Bash(git -C * rev-parse *)",
+      "Bash(~/Foundry/bin/commit-as-next.sh *)",
+      "Bash(/srv/foundry/bin/commit-as-next.sh *)",
+      "Bash(~/Foundry/bin/foundry-role.sh *)",
+      "Bash(~/Foundry/bin/foundry-health.sh *)",
+      "Bash(/srv/foundry/bin/foundry-role.sh *)",
+      "Bash(/srv/foundry/bin/foundry-health.sh *)",
+      "Bash(curl -s *)",
+      "Bash(curl -sS *)",
+      "Bash(systemctl status *)",
+      "Bash(systemctl show *)",
       "Bash(systemctl list-units *)",
-      "Bash(systemctl cat *)",
-      "Bash(systemctl show *)"
+      "Bash(systemctl is-active *)",
+      "Bash(journalctl -u *)",
+      "Bash(journalctl --unit *)",
+      "Bash(cargo clippy)",
+      "Bash(cargo check)",
+      "Bash(cargo build *)",
+      "Bash(cargo test *)",
+      "Bash(~/Foundry/bin/claude-role.sh *)",
+      "Bash(~/Foundry/bin/draft-sweep.sh *)",
+      "Bash(/srv/foundry/bin/claude-role.sh *)",
+      "Bash(/srv/foundry/bin/draft-sweep.sh *)"
     ]
   }
 }
