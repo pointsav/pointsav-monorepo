@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Consolidated — Record Keeping, Reporting and Assurance</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #164679; display: flex; align-items: center; justify-content: center; min-height: 100vh; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
+    #__bundler_loading { position: fixed; bottom: 20px; right: 20px; font: 13px/1.4 -apple-system, BlinkMacSystemFont, sans-serif; color: #666; background: #fff; padding: 8px 14px; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.12); z-index: 10000; }
+    #__bundler_thumbnail { position: fixed; inset: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #164679; z-index: 9999; }
+    #__bundler_thumbnail svg { width: 100%; height: 100%; object-fit: contain; }
+    #__bundler_placeholder { color: #999; font-size: 14px; }
+  </style>
+  <noscript>
+    <style>#__bundler_loading { display: none; }</style>
+    <div style="position:fixed;bottom:12px;left:12px;font:13px/1.4 -apple-system,BlinkMacSystemFont,sans-serif;color:#999;background:rgba(255,255,255,0.9);padding:6px 12px;border-radius:6px;box-shadow:0 1px 4px rgba(0,0,0,0.08);z-index:10000;">
+      This page requires JavaScript to display.
+    </div>
+  </noscript>
+</head>
+<body>
+  <div id="__bundler_thumbnail">
+  <svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+    <rect x="120" y="120" width="960" height="80" fill="#E8EFF7" stroke="#164679" stroke-width="3"></rect>
+    <rect x="120" y="240" width="600" height="60" fill="#FDE8DD" stroke="#F15F22" stroke-width="3"></rect>
+    <rect x="120" y="340" width="600" height="60" fill="#EEF6EC" stroke="#54924E" stroke-width="3"></rect>
+    <rect x="760" y="340" width="320" height="60" fill="#FAEFCC" stroke="#C89211" stroke-width="3"></rect>
+    <rect x="160" y="500" width="160" height="80" fill="#EEE6F1" stroke="#7C468C" stroke-width="3"></rect>
+    <rect x="380" y="500" width="160" height="80" fill="#EEF6EC" stroke="#54924E" stroke-width="3"></rect>
+    <rect x="600" y="500" width="160" height="80" fill="#FAEFCC" stroke="#C89211" stroke-width="3"></rect>
+    <rect x="820" y="500" width="200" height="80" rx="40" ry="40" fill="#FAEFCC" stroke="#C89211" stroke-width="3" stroke-dasharray="6,6"></rect>
+    <rect x="120" y="660" width="960" height="50" fill="#F2F4F6" stroke="#111827" stroke-width="3"></rect>
+  </svg>
+</div>
+  <div id="__bundler_loading">Unpacking...</div>
+
+  <script>
+    
+document.addEventListener('DOMContentLoaded', async function() {
+  const loading = document.getElementById('__bundler_loading');
+  function setStatus(msg) { if (loading) loading.textContent = msg; }
+
+  // Error sink persists across replaceWith since it's on window, not the DOM.
+  window.addEventListener('error', function(e) {
+    var p = document.body || document.documentElement;
+    var d = document.getElementById('__bundler_err') || p.appendChild(document.createElement('div'));
+    d.id = '__bundler_err';
+    d.style.cssText = 'position:fixed;bottom:12px;left:12px;right:12px;font:12px/1.4 ui-monospace,monospace;background:#2a1215;color:#ff8a80;padding:10px 14px;border-radius:8px;border:1px solid #5c2b2e;z-index:99999;white-space:pre-wrap;max-height:40vh;overflow:auto';
+    d.textContent = (d.textContent ? d.textContent + String.fromCharCode(10) : '') +
+      '[bundle] ' + (e.message || e.type) +
+      (e.filename ? ' (' + e.filename.slice(0, 60) + ':' + e.lineno + ')' : '');
+  }, true);
+
+  try {
+    const manifestEl = document.querySelector('script[type="__bundler/manifest"]');
+    const templateEl = document.querySelector('script[type="__bundler/template"]');
+    if (!manifestEl || !templateEl) {
+      setStatus('Error: missing bundle data');
+      console.error('[bundler] Missing script tags — manifestEl:', !!manifestEl, 'templateEl:', !!templateEl);
+      return;
+    }
+
+    const manifest = JSON.parse(manifestEl.textContent);
+    let template = JSON.parse(templateEl.textContent);
+
+    const uuids = Object.keys(manifest);
+    setStatus('Unpacking ' + uuids.length + ' assets...');
+
+    const blobUrls = {};
+    await Promise.all(uuids.map(async (uuid) => {
+      const entry = manifest[uuid];
+      try {
+        const binaryStr = atob(entry.data);
+        const bytes = new Uint8Array(binaryStr.length);
+        for (let i = 0; i < binaryStr.length; i++) bytes[i] = binaryStr.charCodeAt(i);
+
+        let finalBytes = bytes;
+        if (entry.compressed) {
+          if (typeof DecompressionStream !== 'undefined') {
+            const ds = new DecompressionStream('gzip');
+            const writer = ds.writable.getWriter();
+            const reader = ds.readable.getReader();
+            writer.write(bytes);
+            writer.close();
+            const chunks = [];
+            let totalLen = 0;
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+              chunks.push(value);
+              totalLen += value.length;
+            }
+            finalBytes = new Uint8Array(totalLen);
+            let offset = 0;
+            for (const chunk of chunks) { finalBytes.set(chunk, offset); offset += chunk.length; }
+          } else {
+            console.warn('DecompressionStream not available, asset ' + uuid + ' may not render');
+          }
+        }
+
+        blobUrls[uuid] = URL.createObjectURL(new Blob([finalBytes], { type: entry.mime }));
+      } catch (err) {
+        console.error('Failed to decode asset ' + uuid + ':', err);
+        blobUrls[uuid] = URL.createObjectURL(new Blob([], { type: entry.mime }));
+      }
+    }));
+
+    const extResEl = document.querySelector('script[type="__bundler/ext_resources"]');
+    const extResources = extResEl ? JSON.parse(extResEl.textContent) : [];
+    const resourceMap = {};
+    for (const entry of extResources) {
+      if (blobUrls[entry.uuid]) resourceMap[entry.id] = blobUrls[entry.uuid];
+    }
+
+    setStatus('Rendering...');
+    for (const uuid of uuids) template = template.split(uuid).join(blobUrls[uuid]);
+
+    // Strip integrity + crossorigin — blob URLs from a file:// document inherit
+    // a null origin, so crossorigin forces a CORS fetch that SRI then rejects.
+    // The manifest bytes are ours; SRI protects against CDN compromise, not this.
+    template = template.replace(/\s+integrity="[^"]*"/gi, '').replace(/\s+crossorigin="[^"]*"/gi, '');
+
+    const resourceScript = '<script>window.__resources = ' +
+      JSON.stringify(resourceMap).split('</' + 'script>').join('<\\/' + 'script>') +
+      ';</' + 'script>';
+    // Inject after <head> so the DOCTYPE stays first; prepending the script
+    // would push the parser into quirks mode. DOMParser always emits a <head>
+    // (synthesizing one if the source HTML omitted it) but may carry
+    // attributes through, so match the full opening tag. slice() rather than
+    // replace() keeps us clear of $-pattern substitution in resourceScript.
+    const headOpen = template.match(/<head[^>]*>/i);
+    if (headOpen) {
+      const i = headOpen.index + headOpen[0].length;
+      template = template.slice(0, i) + resourceScript + template.slice(i);
+    }
+
+    // Parse the template and swap the root element. Scripts inserted via
+    // DOMParser/replaceWith are inert per spec — re-create each with
+    // createElement so they execute, awaiting onload for src scripts to
+    // preserve ordering (React before ReactDOM before Babel before text/babel).
+    const doc = new DOMParser().parseFromString(template, 'text/html');
+    document.documentElement.replaceWith(doc.documentElement);
+    const dead = Array.from(document.scripts);
+    for (const old of dead) {
+      const s = document.createElement('script');
+      for (const a of old.attributes) s.setAttribute(a.name, a.value);
+      s.textContent = old.textContent;
+      // text/babel scripts with a src: fetch and inline. transformScriptTags
+      // does XHR against the src, but blob:null/ from a file:// origin is
+      // silently dropped. Inlining makes it a plain inline babel script,
+      // which transformScriptTags handles unconditionally.
+      if ((s.type === 'text/babel' || s.type === 'text/jsx') && s.src) {
+        const r = await fetch(s.src);
+        s.textContent = await r.text();
+        s.removeAttribute('src');
+      }
+      const p = s.src ? new Promise(function(r) { s.onload = s.onerror = r; }) : null;
+      old.replaceWith(s);
+      if (p) await p;
+    }
+    // Babel standalone auto-transforms type=text/babel on DOMContentLoaded,
+    // which fired before we swapped the document. Trigger manually if present.
+    if (window.Babel && typeof window.Babel.transformScriptTags === 'function') {
+      window.Babel.transformScriptTags();
+    }
+  } catch (err) {
+    setStatus('Error unpacking: ' + err.message);
+    console.error('Bundle unpack error:', err);
+  }
+});
+
+  </script>
+
+  <script type="__bundler/manifest">
+{}
+  </script>
+
+  <script type="__bundler/ext_resources">
+[]
+  </script>
+
+  <script type="__bundler/template">
+"<!DOCTYPE html>\n<html data-src-ver=\"2cd2ade1\" lang=\"en\"><head>\n\n\n\n\n\n\n<meta charset=\"UTF-8\">\n<title>Consolidated — Record Keeping, Reporting and Assurance<\u002Ftitle>\n\n<style>\n  :root{\n    /* Woodfine brand palette */\n    --wf-blue:#164679;\n    --wf-black:#000000;\n    --wf-grey:#E6E7E8;\n    --wf-green:#54924E;\n    --wf-orange:#F15F22;\n    --wf-red:#ED1B2F;\n    --wf-purple:#7C468C;\n    --wf-gold:#C89211;\n\n    /* Neutrals */\n    --ink:#111827;\n    --ink-2:#374151;\n    --ink-3:#6B7280;\n    --ink-4:#9CA3AF;\n    --paper:#FFFFFF;\n    --paper-2:#F7F9FA;\n    --paper-3:#E6E7E8;\n    --rule:#E6E7E8;\n    --rule-strong:#9CA3AF;\n\n    /* Accent mapped to Woodfine Blue */\n    --accent:#164679;\n    --accent-2:#2B5E95;\n    --accent-tint:#E3ECF5;\n    --highlight:#FEF3C7;\n    --highlight-fg:#C89211;\n\n    /* Tier colors (borders + tints) preserved from source */\n    --tier-blue-b:#164679;   --tier-blue-t:#E8EFF7;\n    --tier-orange-b:#F15F22; --tier-orange-t:#FDE8DD;\n    --tier-gold-b:#C89211;   --tier-gold-t:#FAEFCC;\n    --tier-green-b:#54924E;  --tier-green-t:#EEF6EC;\n    --tier-purple-b:#7C468C; --tier-purple-t:#EEE6F1;\n    --tier-grey-b:#9CA3AF;   --tier-grey-t:#F2F2F2;\n  }\n\n  *{margin:0;padding:0;box-sizing:border-box}\n  html,body{background:#F7F9FA;}\n  body{\n    font-family:-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Arial,sans-serif;\n    font-feature-settings:\"tnum\";\n    color:var(--ink);\n    display:flex;justify-content:center;padding:40px;\n    -webkit-font-smoothing:antialiased;\n  }\n\n  .sheet{\n    position:relative;width:1056px;height:816px;flex-shrink:0;\n    background:var(--paper);\n    box-shadow:0 4px 12px rgba(0,0,0,0.15);\n    overflow:hidden;\n  }\n\n  /* ---------- TITLE BLOCK ---------- */\n  .title-block{\n    position:absolute;top:28px;left:56px;right:56px;\n    display:flex;justify-content:space-between;align-items:flex-end;\n    padding-bottom:14px;border-bottom:.5px solid var(--rule);\n  }\n  .kicker{\n    font-size:9.5px;font-weight:600;letter-spacing:.28em;\n    color:var(--accent);text-transform:uppercase;margin-bottom:6px;\n  }\n  .headline{\n    font-weight:800;font-size:22px;letter-spacing:-.015em;\n    line-height:1.05;color:var(--ink);\n  }\n  .subhead{\n    font-style:italic;font-weight:400;font-size:12px;\n    color:var(--ink-3);max-width:380px;text-align:right;line-height:1.45;\n  }\n\n  /* ---------- TIER GRID ---------- */\n  /* Row anchors\n     Tier 1 Assurance      top 104  h 32   (row1 label y 104)\n     Tier 2 Reporting      top 168  h 32\n     Tier 3 Consolidated   top 232  h 32   sub-row 272 h 32\n     Entity band           top 344 .. 612\n     Record Keeping        top 648  h 32\n  */\n\n  /* Left category column */\n  .cat{\n    position:absolute;left:56px;width:140px;\n    font-size:9px;font-weight:700;letter-spacing:.26em;text-transform:uppercase;\n    color:var(--ink-3);\n    display:flex;align-items:center;justify-content:flex-start;\n    padding-right:10px;\n    border-right:.5px solid var(--rule);\n    height:32px;\n  }\n  .cat.tall{flex-direction:column;align-items:flex-start;justify-content:flex-start;padding-top:6px;gap:6px;}\n  .cat .sub{\n    font-size:9px;font-weight:700;letter-spacing:.26em;text-transform:uppercase;\n    color:var(--ink-3);\n    padding-top:6px;border-top:.5px dashed var(--rule);width:100%;\n  }\n\n  /* Tier rule (solid hairline separator, full-width) */\n  .row-rule{\n    position:absolute;left:56px;right:56px;\n    height:0;border-top:.5px solid var(--rule);\n  }\n  .row-rule.solid{border-top:1px solid var(--ink);}\n\n  /* Bar (tier consolidation labels) */\n  .bar{\n    position:absolute;height:32px;\n    border-radius:3px;border:1px solid;\n    display:flex;align-items:center;justify-content:center;\n    font-size:10.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;\n    color:var(--ink);\n    padding:0 12px;\n  }\n  .bar-blue  {background:var(--tier-blue-t);  border-color:var(--tier-blue-b);}\n  .bar-orange{background:var(--tier-orange-t);border-color:var(--tier-orange-b);}\n  .bar-gold  {background:var(--tier-gold-t);  border-color:var(--tier-gold-b);}\n  .bar-green {background:var(--tier-green-t); border-color:var(--tier-green-b);}\n\n  /* Entity box */\n  .ebox{\n    position:absolute;\n    border:.75px solid;\n    background:var(--paper);\n    display:flex;align-items:center;justify-content:center;\n    font-size:10.5px;font-weight:500;color:var(--ink);\n    text-align:center;line-height:1.2;padding:0 6px;\n  }\n  .ebox.gold  {background:var(--tier-gold-t);  border-color:var(--tier-gold-b);}\n  .ebox.green {background:var(--tier-green-t); border-color:var(--tier-green-b);}\n  .ebox.purple{background:var(--tier-purple-t);border-color:var(--tier-purple-b);}\n  .ebox.grey  {background:var(--tier-grey-t);  border-color:var(--tier-grey-b);}\n  .ebox.strong{font-weight:700;letter-spacing:.04em;text-transform:uppercase;font-size:10px;}\n\n  /* Ellipse (Direct-Hold marker) — GOLD per swap */\n  .ellipse{\n    position:absolute;\n    border:1.5px dashed var(--tier-gold-b);\n    background:var(--tier-gold-t);\n    border-radius:999px;\n    display:flex;align-items:center;justify-content:center;\n    color:var(--ink);\n    font-size:10.5px;font-weight:500;line-height:1.2;text-align:center;\n  }\n\n  /* Record Keeping band — Option H5 (ink) */\n  .rk-row{\n    position:absolute;left:208px;width:792px;top:632px;height:32px;\n    background:#F2F4F6;\n    border:.75px solid var(--ink);\n    border-radius:2px;\n    display:grid;grid-template-columns:auto 1fr;\n    align-items:center;\n  }\n  .rk-row .rk-tag{\n    background:var(--ink);color:#fff;\n    height:100%;\n    display:flex;align-items:center;\n    padding:0 14px;\n    font-size:9.5px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;\n  }\n  .rk-row .rk-items{\n    display:flex;align-items:center;justify-content:center;\n    gap:80px;\n    font-size:11px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;\n    color:var(--ink);\n  }\n  .rk-row .dot{color:var(--ink-4);font-weight:400;letter-spacing:0;}\n\n  /* Group container (Option B) */\n  .group-frame{\n    position:absolute;border:.75px solid #C8CDD3;border-radius:4px;\n    background:rgba(244,246,248,0.5);\n    z-index:0;pointer-events:none;\n  }\n  .group-frame .tag{\n    position:absolute;top:-8px;left:12px;background:var(--paper);padding:0 6px;\n    font-size:8px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-3);\n  }\n\n  /* SVG connectors */\n  svg.wires{position:absolute;inset:0;pointer-events:none;}\n  svg.wires line, svg.wires path{stroke:var(--ink-3);stroke-width:.75;fill:none;}\n  svg.wires .dashed{stroke-dasharray:3,3;}\n  svg.wires circle{fill:var(--ink-3);stroke:none;}\n\n  /* Footnotes */\n  .fn{\n    position:absolute;\n    font-style:italic;font-size:9.5px;color:var(--ink-3);line-height:1.45;\n    letter-spacing:.005em;\n  }\n  .fn sup{font-size:8px;padding-right:3px;color:var(--accent);font-style:normal;font-weight:700;}\n\n  /* Signature */\n  .token-signature{\n    position:absolute;bottom:24px;right:56px;\n    font-size:10px;line-height:1.45;text-align:right;color:var(--ink);\n    letter-spacing:.01em;\n  }\n\n  @media print{\n    @page{size:letter landscape;margin:0;}\n    html,body{background:#fff;padding:0;margin:0;}\n    body{padding:0;}\n    .sheet{box-shadow:none;width:1056px;height:816px;background:var(--paper);}\n  }\n<\u002Fstyle>\n<\u002Fhead>\n<body data-cc-id=\"cc-1\" style=\"cursor: crosshair;\">\n<div class=\"sheet\" data-cc-id=\"cc-3\">\n\n  <!-- ============== TITLE BLOCK ============== -->\n  <div class=\"title-block\">\n    <div>\n      <div class=\"kicker\">Organizational Governance<\u002Fdiv>\n      <h1 class=\"headline\" data-cc-id=\"cc-2\" style=\"font-size: 18px;\">RECORD KEEPING, REPORTING AND ASSURANCE<\u002Fh1>\n    <\u002Fdiv>\n    <div class=\"subhead\">\n      Consolidation scopes across accounting, reporting, and assurance tiers for the Woodfine group of entities.\n    <\u002Fdiv>\n  <\u002Fdiv>\n\n  <!-- ============== TIER SEPARATORS ============== -->\n  <!-- Individual grey boxes behind each left-column label -->\n  <div style=\"position:absolute;left:48px;top:104px;width:156px;height:32px;background:#E8ECEF;border:.5px solid var(--rule);border-radius:3px;z-index:0;pointer-events:none;\"><\u002Fdiv>\n  <div style=\"position:absolute;left:48px;top:168px;width:156px;height:32px;background:#E8ECEF;border:.5px solid var(--rule);border-radius:3px;z-index:0;pointer-events:none;\"><\u002Fdiv>\n  <div style=\"position:absolute;left:48px;top:232px;width:156px;height:32px;background:#E8ECEF;border:.5px solid var(--rule);border-radius:3px;z-index:0;pointer-events:none;\"><\u002Fdiv>\n  <div style=\"position:absolute;left:48px;top:358px;width:156px;height:32px;background:#E8ECEF;border:.5px solid var(--rule);border-radius:3px;z-index:0;pointer-events:none;\"><\u002Fdiv>\n  <div style=\"position:absolute;left:48px;top:414px;width:156px;height:32px;background:#E8ECEF;border:.5px solid var(--rule);border-radius:3px;z-index:0;pointer-events:none;\"><\u002Fdiv>\n  <div style=\"position:absolute;left:48px;top:470px;width:156px;height:32px;background:#E8ECEF;border:.5px solid var(--rule);border-radius:3px;z-index:0;pointer-events:none;\"><\u002Fdiv>\n  <!-- Record Keeping label box -->\n  <div style=\"position:absolute;left:48px;top:632px;width:156px;height:32px;background:#E8ECEF;border:.5px solid var(--rule);border-radius:3px;z-index:0;pointer-events:none;\"><\u002Fdiv>\n  <div class=\"row-rule\" style=\"top:152px;\"><\u002Fdiv>\n  <div class=\"row-rule\" style=\"top:216px;\"><\u002Fdiv>\n  <div class=\"row-rule\" style=\"top:320px;\"><\u002Fdiv>\n  <div class=\"row-rule\" style=\"top:612px;\"><\u002Fdiv>\n\n  <!-- ============== TIER 1 &middot; ASSURANCE ============== -->\n  <div class=\"cat\" style=\"top:104px;\">Assurance<\u002Fdiv>\n  <div class=\"bar bar-blue\" style=\"top:104px;left:208px;width:792px;\">Woodfine Group Consolidated<\u002Fdiv>\n  <div class=\"bar bar-blue\" style=\"top: 168px; left: 710px; width: 290px;\" data-cc-id=\"cc-5\">Direct-Hold Solutions Consolidated<\u002Fdiv>\n\n  <!-- ============== TIER 2 &middot; REPORTING ============== -->\n  <div class=\"cat\" style=\"top:168px;\">Reporting<\u002Fdiv>\n  <div class=\"bar bar-orange\" style=\"top:168px;left:208px;width:488px;\" data-cc-id=\"cc-4\">WCP Consolidated<\u002Fdiv>\n\n  <!-- ============== TIER 3 &middot; CONSOLIDATED ============== -->\n  <div class=\"cat\" style=\"top:232px;\">Consolidated<\u002Fdiv>\n  <div class=\"bar bar-orange\" style=\"top:232px;left:208px;width:792px;\">Woodfine Group Consolidated<\u002Fdiv>\n  <div class=\"bar bar-green\" style=\"top:272px;left:208px;width:488px;\">WCP Consolidated<\u002Fdiv>\n  <div class=\"bar bar-gold\" style=\"top: 272px; left: 710px; width: 290px; align-items: center;\" data-cc-id=\"cc-6\">Direct-Hold Solutions Consolidated<\u002Fdiv>\n\n  <!-- ============== LEFT CATEGORY (Tax / Compilation / Bookkeeping) — individual rows -->\n  <div class=\"cat\" style=\"top:358px;\">Tax<\u002Fdiv>\n  <div class=\"cat\" style=\"top:414px;\">Compilation<\u002Fdiv>\n  <div class=\"cat\" style=\"top:470px;\">Bookkeeping<\u002Fdiv>\n\n  <!-- ============== ENTITY TREE ============== -->\n  <!-- Option B: three labeled containers, one per family -->\n\n  <!-- Frame 1: Manager (MCorp) -->\n  <div class=\"group-frame\" style=\"left:216px;top:349px;width:128px;height:172px;\">\n    <span class=\"tag\">Manager<\u002Fspan>\n  <\u002Fdiv>\n\n  <!-- Frame 2: Parent Company and Subsidiaries (WCP family) — extended right -->\n  <div class=\"group-frame\" style=\"left:348px;top:349px;width:336px;height:172px;\">\n    <span class=\"tag\">Parent Company and Subsidiaries<\u002Fspan>\n  <\u002Fdiv>\n\n  <!-- Frame 3: Investment Vehicle (GP-Admin + Direct-Hold) — extended left -->\n  <div class=\"group-frame\" style=\"left:688px;top:349px;width:324px;height:172px;\">\n    <span class=\"tag\">Investment Vehicle<\u002Fspan>\n  <\u002Fdiv>\n\n  <!-- All five entity boxes are uniform 112×44 -->\n\n  <!-- MCorp (purple) — centered in Frame 1 (Manager) -->\n  <div class=\"ebox purple\" style=\"left:224px;top:431px;width:112px;height:44px;line-height:1.2;flex-direction:column;font-size:10px;\">MCorp<span style=\"font-size:8.5px;color:var(--ink-3);font-weight:400;\">(Delaware)<\u002Fspan><\u002Fdiv>\n\n  <!-- WCP parent bar (296px = 3×96 + 2×4 gaps) + three children with 4px gaps -->\n  <div class=\"ebox green strong\" style=\"left:360px;top:369px;width:296px;height:30px;\">WCP<\u002Fdiv>\n  <div class=\"ebox green\" style=\"left:360px;top:431px;width:96px;height:44px;\">Benetti<\u002Fdiv>\n  <div class=\"ebox green\" style=\"left:460px;top:431px;width:96px;height:44px;\">Advisors<\u002Fdiv>\n  <div class=\"ebox green\" style=\"left:560px;top:431px;width:96px;height:44px;\">Credit<\u002Fdiv>\n\n  <!-- General Partner / Administrator — GOLD per swap -->\n  <div class=\"ebox gold\" style=\"left:716px;top:431px;width:112px;height:44px;font-size:10px;line-height:1.2;padding:0 6px;font-weight:500;\" data-cc-id=\"cc-1\">General Partner /<br>Administrator<\u002Fdiv>\n  <div class=\"ellipse\" style=\"left: 868px; top: 431px; width: 112px; height: 44px; text-align: center; font-size: 10px; line-height: 1.2; color: var(--ink); font-weight: 500; letter-spacing: normal; text-transform: none;\" data-cc-id=\"cc-2\">Direct-Hold<br>Solutions<\u002Fdiv>\n\n  <!-- TitleCos — recentered under ellipse -->\n  <div class=\"ebox grey\" style=\"left:652px;top:553px;width:88px;height:30px;\">TitleCo 1<\u002Fdiv>\n  <div class=\"ebox grey\" style=\"left:748px;top:553px;width:88px;height:30px;\">TitleCo 2<\u002Fdiv>\n  <div class=\"ebox grey\" style=\"left:844px;top:553px;width:88px;height:30px;\">TitleCo 3<\u002Fdiv>\n  <div class=\"ebox grey\" style=\"left:940px;top:553px;width:88px;height:30px;border-style:dashed;color:var(--ink-4);opacity:.55;font-size:14px;font-weight:400;\" title=\"additional TitleCos as required\">+<\u002Fdiv>\n\n  <!-- ============== SVG CONNECTORS ============== -->\n  <svg class=\"wires\" viewBox=\"0 0 1056 816\" preserveAspectRatio=\"none\">\n    <!-- zone separators removed per Option C refinement -->\n\n    <!-- WCP trunk down + fan-out to MCorp / Benetti / Advisors / Credit / GP-Admin -->\n    <line x1=\"508\" y1=\"399\" x2=\"508\" y2=\"413\"><\u002Fline>\n    <line x1=\"280\" y1=\"413\" x2=\"772\" y2=\"413\"><\u002Fline>\n    <line x1=\"280\" y1=\"413\" x2=\"280\" y2=\"431\"><\u002Fline>\n    <line x1=\"408\" y1=\"413\" x2=\"408\" y2=\"431\"><\u002Fline>\n    <line x1=\"508\" y1=\"413\" x2=\"508\" y2=\"431\"><\u002Fline>\n    <line x1=\"608\" y1=\"413\" x2=\"608\" y2=\"431\"><\u002Fline>\n    <line x1=\"772\" y1=\"413\" x2=\"772\" y2=\"431\"><\u002Fline>\n\n    <!-- GP-Admin -> Direct-Hold Solutions horizontal connector -->\n    <line x1=\"828\" y1=\"453\" x2=\"868\" y2=\"453\"><\u002Fline>\n\n    <!-- Direct-Hold Solutions fan-out to TitleCos -->\n    <line x1=\"924\" y1=\"475\" x2=\"924\" y2=\"541\"><\u002Fline>\n    <line x1=\"696\" y1=\"541\" x2=\"984\" y2=\"541\"><\u002Fline>\n    <line x1=\"696\" y1=\"541\" x2=\"696\" y2=\"553\"><\u002Fline>\n    <line x1=\"792\" y1=\"541\" x2=\"792\" y2=\"553\"><\u002Fline>\n    <line x1=\"888\" y1=\"541\" x2=\"888\" y2=\"553\"><\u002Fline>\n    <line x1=\"984\" y1=\"541\" x2=\"984\" y2=\"553\"><\u002Fline>\n  <\u002Fsvg>\n\n  <!-- ============== RECORD KEEPING BAND — Option H5 (tier bar) ============== -->\n  <div class=\"cat\" style=\"top:632px;\">Record Keeping<\u002Fdiv>\n  <div class=\"rk-row\">\n    <div class=\"rk-tag\">Records<\u002Fdiv>\n    <div class=\"rk-items\">\n      <span>Receipts<\u002Fspan>\n      <span class=\"dot\">·<\u002Fspan>\n      <span>Invoices<\u002Fspan>\n      <span class=\"dot\">·<\u002Fspan>\n      <span>Forms<\u002Fspan>\n    <\u002Fdiv>\n  <\u002Fdiv>\n\n  <!-- ============== FOOTNOTES ============== -->\n  <div class=\"fn\" style=\"top:692px;left:56px;width:640px;\">\n    <sup>1<\u002Fsup>Each accountant is free to use any software, so long as MCorp receives <em>.CSV<\u002Fem> files.<br>\n    <sup>2<\u002Fsup>All consolidations require their own workbook with an individual <em>.CSV<\u002Fem> file.<br>\n    <sup>3<\u002Fsup>Record keeping to be completed by MCorp and/or the Local Building Manager.\n  <\u002Fdiv>\n\n  <!-- ============== SIGNATURE ============== -->\n  <div class=\"token-signature\">\n    April 27, 2026<br>\n    Prepared by Woodfine Management Corp.\n  <\u002Fdiv>\n\n<\u002Fdiv>\n\n<\u002Fbody><\u002Fhtml>"
+  </script>
+</body>
+</html>

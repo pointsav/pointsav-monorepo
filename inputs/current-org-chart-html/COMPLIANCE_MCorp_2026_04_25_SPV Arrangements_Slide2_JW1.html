@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SPV Arrangements · Detail</title>
+<style>
+  :root{
+    /* ──────────────────────────────────────────────────────────────
+       Tokens — sourced from token-global-color.v2.yaml
+       (Design System · Woodfine Media Assets · v2).
+       Same token set as Slide 1 (SPV Arrangements.html); do not
+       diverge — the two sheets ship as a print package.
+       ────────────────────────────────────────────────────────────── */
+    --woodfine-blue:    #164679;
+    --woodfine-black:   #000000;
+    --woodfine-grey:    #E6E7E8;
+    --woodfine-green:   #54924E;
+    --woodfine-orange:  #F15F22;
+    --woodfine-red:     #ED1B2F;
+    --woodfine-purple:  #7C468C;
+    --woodfine-white:   #FFFFFF;
+
+    --woodfine-canvas:  #F7F9FA;
+    --woodfine-slate:   #111827;
+    --woodfine-grey-mid:    #6B7280;
+    --woodfine-grey-light:  #E9ECEF;
+
+    --ink-100: #111827;
+    --ink-200: #374151;
+    --ink-300: #6B7280;
+    --ink-400: #9CA3AF;
+
+    --paper-100: #FFFFFF;
+    --paper-200: #F7F9FA;
+    --paper-300: #E6E7E8;
+
+    --rule-default: #E6E7E8;
+    --rule-strong:  #9CA3AF;
+
+    --accent-green-500: #54924E;
+    --accent-green-50:  #EEF6EC;
+
+    --highlight-500: #F15F22;
+    --highlight-50:  #FDE8DD;
+
+    --ink:        var(--ink-100);
+    --ink-2:      var(--ink-200);
+    --ink-3:      var(--ink-300);
+    --ink-4:      var(--ink-400);
+    --paper:      var(--paper-100);
+    --paper-2:    var(--paper-200);
+    --paper-3:    var(--paper-300);
+    --rule:       var(--rule-default);
+
+    --accent:        var(--woodfine-blue);
+    --accent-tint:   #E8EFF7;
+    --highlight-fg:  var(--highlight-500);
+
+    --col-1:      var(--woodfine-grey-mid);
+    --col-1-tint: var(--paper-300);
+    --col-2:      var(--woodfine-blue);
+    --col-2-tint: #E8EFF7;
+    --col-3:      var(--woodfine-green);
+    --col-3-tint: var(--accent-green-50);
+  }
+
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{background:#F7F9FA;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+    font-feature-settings:"tnum";
+    color:var(--ink);
+    display:flex;justify-content:center;padding:40px;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  .sheet{
+    position:relative;width:1056px;height:816px;flex-shrink:0;
+    background:var(--paper);
+    box-shadow:0 4px 12px rgba(0,0,0,0.15);
+    overflow:hidden;
+  }
+
+  /* ---------- TITLE BLOCK (matches Slide 1) ---------- */
+  .title-block{
+    position:absolute;top:28px;left:56px;right:56px;
+    display:flex;justify-content:space-between;align-items:flex-end;
+    padding-bottom:14px;border-bottom:.5px solid var(--rule);
+  }
+  .kicker{
+    font-size:9.5px;font-weight:600;letter-spacing:.28em;
+    color:var(--accent);text-transform:uppercase;margin-bottom:6px;
+  }
+  .headline{
+    font-weight:800;font-size:18px;letter-spacing:-.015em;
+    line-height:1.05;color:var(--ink);
+    text-transform:uppercase;
+  }
+  .headline em{
+    font-style:italic;font-weight:600;color:var(--ink-2);
+    text-transform:none;letter-spacing:0;
+  }
+  .subhead{
+    font-style:italic;font-weight:400;font-size:12px;
+    color:var(--ink-3);max-width:380px;text-align:right;line-height:1.45;
+  }
+
+  /* ---------- LEGEND (variation axis, mirrors Slide 1 colors) ---------- */
+  .legend{
+    display:flex;gap:14px;justify-content:flex-end;
+    margin-top:6px;
+  }
+  .legend-item{
+    display:flex;align-items:center;gap:6px;
+    font-size:10px;color:var(--ink-3);
+  }
+  .legend-swatch{
+    display:inline-block;width:14px;height:10px;
+    border:.75px solid var(--ink-3);
+  }
+  .legend-swatch.s-1{background:var(--col-1-tint);border-color:var(--col-1);}
+  .legend-swatch.s-2{background:var(--col-2-tint);border-color:var(--col-2);}
+  .legend-swatch.s-3{background:var(--col-3-tint);border-color:var(--col-3);}
+
+  /* ---------- MATRIX ---------- */
+  .matrix{
+    position:absolute;top:130px;left:56px;right:56px;bottom:96px;
+    display:flex;flex-direction:column;
+  }
+
+  /* Section super-band (IB / AM) */
+  .section-band{
+    display:grid;
+    grid-template-columns:140px 2fr 3fr;
+    gap:0;
+    border-top:.75px solid var(--ink);
+  }
+  .section-band .cell{
+    padding:6px 12px 6px;
+    font-size:9.5px;font-weight:700;letter-spacing:.24em;
+    text-transform:uppercase;color:var(--ink);
+    border-bottom:.5px solid var(--ink-3);
+  }
+  .section-band .cell.spacer{
+    border-bottom-color:transparent;
+  }
+  .section-band .cell.ib{
+    border-right:.5px solid var(--rule);
+  }
+
+  /* Column heads — per-level chips, variation-tinted */
+  .col-row{
+    display:grid;
+    grid-template-columns:140px repeat(5, 1fr);
+    border-bottom:.75px solid var(--ink);
+  }
+  .col-row .lvl{
+    padding:10px 10px 12px;
+    border-right:.5px solid var(--rule);
+    background:var(--accent-tint);
+    display:flex;flex-direction:column;gap:3px;
+    text-align:left;
+  }
+  .col-row .lvl:last-child{border-right:none;}
+  .lvl .lvl-num{
+    font-size:8.5px;font-weight:700;letter-spacing:.22em;
+    text-transform:uppercase;color:var(--ink-3);
+  }
+  .lvl .lvl-name{
+    font-size:12px;font-weight:700;color:var(--ink);
+    line-height:1.15;
+  }
+  .lvl .lvl-name .star{
+    color:var(--highlight-fg);font-weight:700;margin-left:1px;
+  }
+  .lvl .lvl-bar{
+    height:3px;width:36px;margin-top:4px;
+  }
+  .lvl.v-1 .lvl-bar{background:var(--col-1);}
+  .lvl.v-2 .lvl-bar{background:var(--col-2);}
+  .lvl.v-3 .lvl-bar{background:var(--col-3);}
+  .lvl.v-1 .lvl-num{color:var(--col-1);}
+  .lvl.v-2 .lvl-num{color:var(--col-2);}
+  .lvl.v-3 .lvl-num{color:var(--col-3);}
+
+  .col-row .row-head-cell{
+    background:var(--paper-2);border-right:.5px solid var(--rule);
+  }
+
+  /* Body rows */
+  .body-rows{flex:1;display:flex;flex-direction:column;}
+  .body-row{
+    display:grid;
+    grid-template-columns:140px repeat(5, 1fr);
+    border-bottom:.5px solid var(--rule);
+    flex:1 1 auto;
+    min-height:0;
+  }
+  .body-row:last-child{border-bottom:.75px solid var(--ink);}
+  .body-row.tall{flex:1.6 1 auto;}
+  .body-row.short{flex:.55 1 auto;}
+
+  .row-head{
+    padding:10px 12px;
+    font-size:10px;font-weight:700;color:var(--ink);
+    letter-spacing:.04em;
+    background:var(--paper-2);
+    border-right:.5px solid var(--rule);
+    display:flex;align-items:flex-start;
+  }
+  .row-head .num{
+    color:var(--ink-4);font-weight:700;font-size:8.5px;
+    letter-spacing:.18em;margin-right:6px;
+    padding-top:1px;
+  }
+
+  .cell-v{
+    padding:10px 12px;
+    border-right:.5px solid var(--rule);
+    font-size:10.5px;line-height:1.4;color:var(--ink);
+    display:flex;flex-direction:column;justify-content:center;
+    gap:3px;
+  }
+  .cell-v:last-child{border-right:none;}
+  .cell-v.center{align-items:center;text-align:center;justify-content:center;}
+  .cell-v.prose{
+    font-size:9.5px;line-height:1.45;color:var(--ink-2);
+    justify-content:flex-start;padding-top:10px;
+  }
+  .cell-v .v{font-weight:700;letter-spacing:.01em;}
+  .cell-v .v.yes{color:var(--col-3);}
+  .cell-v .v.no{color:var(--ink);}
+  .cell-v .v.maybe{color:var(--ink-3);font-style:italic;font-weight:600;}
+  .cell-v .sub{
+    font-size:8.5px;font-weight:500;color:var(--ink-3);font-style:italic;
+    letter-spacing:.01em;
+  }
+  .cell-v .pct{font-weight:700;font-size:13px;letter-spacing:-.01em;}
+
+  /* Column tints — Private SPV = grey, Club Deal = white, Access Fund = green */
+  .body-row .cell-v.tint-1{background:#EDEEEF;}
+  .body-row .cell-v.tint-2{background:var(--paper);}
+  .body-row .cell-v.tint-3{background:rgba(238,246,236,0.55);}
+
+  /* Zebra: alternate rows get a soft warm-grey band so rows read horizontally */
+  .body-row:nth-child(even) .row-head{background:#EDEFF2;}
+  .body-row:nth-child(even) .cell-v.tint-1{background:#E2E3E5;}
+  .body-row:nth-child(even) .cell-v.tint-2{background:#F4F5F6;}
+  .body-row:nth-child(even) .cell-v.tint-3{background:#DCE9D6;}
+
+  /* Row separator: hairline only — zebra carries the row read */
+  .body-row{border-bottom-color:var(--rule);border-bottom-width:.5px;}
+
+  /* Footnote · matches Slide 1 */
+  .token-footnote{
+    position:absolute;bottom:24px;left:56px;
+    font-size:9.5px;line-height:1.4;color:var(--ink-3);font-style:italic;
+    max-width:580px;
+  }
+  .token-footnote .star{
+    color:var(--highlight-fg);font-weight:700;font-style:normal;margin-right:4px;
+  }
+
+  /* Signature · matches Slide 1, with sheet wayfinder */
+  .token-signature{
+    position:absolute;bottom:24px;right:56px;
+    font-size:10px;line-height:1.45;text-align:right;color:var(--ink);
+    letter-spacing:.01em;
+  }
+  .sheet-wayfinder{
+    font-size:9px;font-weight:700;letter-spacing:.24em;
+    text-transform:uppercase;color:var(--ink-4);
+    margin-bottom:4px;
+  }
+
+  @media print{
+    @page{size:letter landscape;margin:0;}
+    html,body{background:#fff;padding:0;margin:0;}
+    body{padding:0;}
+    .sheet{box-shadow:none;width:1056px;height:816px;background:var(--paper);}
+  }
+</style>
+</head>
+<body>
+
+<div class="sheet" data-screen-label="SPV Arrangements · Detail">
+
+  <!-- ───────── TITLE ───────── -->
+  <div class="title-block">
+    <div>
+      <div class="kicker">Compliance Memorandum · Structural Comparison</div>
+      <h1 class="headline">SPV Arrangements <em></em></h1>
+    </div>
+    <div>
+      <div class="subhead"></div>
+      <div class="legend">
+        <span class="legend-item"><span class="legend-swatch s-1"></span>Private SPV</span>
+        <span class="legend-item"><span class="legend-swatch s-2"></span>Club Deal</span>
+        <span class="legend-item"><span class="legend-swatch s-3"></span>Access Fund</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ───────── MATRIX ───────── -->
+  <div class="matrix">
+
+    <!-- Section super-band -->
+    <div class="section-band">
+      <div class="cell spacer"></div>
+      <div class="cell ib">Investment Banking</div>
+      <div class="cell am">Asset Management</div>
+    </div>
+
+    <!-- Column heads -->
+    <div class="col-row">
+      <div class="row-head-cell"></div>
+      <div class="lvl v-1">
+        <span class="lvl-num">Level 1</span>
+        <span class="lvl-name">Private SPV</span>
+        <span class="lvl-bar"></span>
+      </div>
+      <div class="lvl v-2">
+        <span class="lvl-num">Level 2</span>
+        <span class="lvl-name">Club Deal</span>
+        <span class="lvl-bar"></span>
+      </div>
+      <div class="lvl v-1">
+        <span class="lvl-num">Level 3</span>
+        <span class="lvl-name">Private SPV</span>
+        <span class="lvl-bar"></span>
+      </div>
+      <div class="lvl v-2">
+        <span class="lvl-num">Level 4</span>
+        <span class="lvl-name">Club Deal</span>
+        <span class="lvl-bar"></span>
+      </div>
+      <div class="lvl v-3">
+        <span class="lvl-num">Level 5</span>
+        <span class="lvl-name">Access Fund<span class="star">∗</span></span>
+        <span class="lvl-bar"></span>
+      </div>
+    </div>
+
+    <!-- Body rows -->
+    <div class="body-rows">
+
+      <!-- Row 1 · Limited Partnership -->
+      <div class="body-row short">
+        <div class="row-head">Limited Partnership</div>
+        <div class="cell-v center tint-1"><span class="v">Closed-end</span></div>
+        <div class="cell-v center tint-2"><span class="v">Closed-end</span></div>
+        <div class="cell-v center tint-1"><span class="v">Closed-end</span></div>
+        <div class="cell-v center tint-2"><span class="v">Closed-end</span></div>
+        <div class="cell-v center tint-3"><span class="v">Closed-end</span></div>
+      </div>
+
+      <!-- Row 2 · LP Subscription Form -->
+      <div class="body-row tall">
+        <div class="row-head">LP Subscription Form</div>
+        <div class="cell-v tint-1">
+          <span>Family, friends &amp; business associates</span>
+        </div>
+        <div class="cell-v tint-2">
+          <span>Family, friends &amp; business associates</span>
+          <span class="sub">&lt; 50 investors (Canada)</span>
+        </div>
+        <div class="cell-v tint-1">
+          <span>Family, friends &amp; business associates</span>
+          <span class="sub">— or —</span>
+          <span>Accredited investors</span>
+        </div>
+        <div class="cell-v tint-2">
+          <span>Family, friends &amp; business associates</span>
+          <span class="sub">&lt; 50 investors (Canada)</span>
+          <span class="sub">— or —</span>
+          <span>Accredited investors</span>
+          <span class="sub">&lt; 300 investors (Canada)</span>
+        </div>
+        <div class="cell-v tint-3">
+          <span>Accredited investors</span>
+          <span class="sub">&lt; 300 investors (Canada)</span>
+        </div>
+      </div>
+
+      <!-- Row 3 · LP Redemption -->
+      <div class="body-row short">
+        <div class="row-head">LP Redemption</div>
+        <div class="cell-v center tint-1"><span class="v no">No</span></div>
+        <div class="cell-v center tint-2"><span class="v no">No</span></div>
+        <div class="cell-v center tint-1"><span class="v no">No</span></div>
+        <div class="cell-v center tint-2"><span class="v no">No</span></div>
+        <div class="cell-v center tint-3"><span class="v yes">Yes</span></div>
+      </div>
+
+      <!-- Row 4 · Offering Documents -->
+      <div class="body-row">
+        <div class="row-head">Offering Documents</div>
+        <div class="cell-v center tint-1"><span class="v no">None</span></div>
+        <div class="cell-v center tint-2"><span class="v no">None</span></div>
+        <div class="cell-v center tint-1"><span class="v">Private Placement</span></div>
+        <div class="cell-v center tint-2"><span class="v">Private Placement</span></div>
+        <div class="cell-v center tint-3"><span class="v">Offering Memorandum</span></div>
+      </div>
+
+      <!-- Row 5 · Referral Fees -->
+      <div class="body-row short">
+        <div class="row-head">Investment Vehicle Referral Fees</div>
+        <div class="cell-v center tint-1"><span class="pct">6%</span></div>
+        <div class="cell-v center tint-2"><span class="pct">6%</span></div>
+        <div class="cell-v center tint-1"><span class="pct">6%</span></div>
+        <div class="cell-v center tint-2"><span class="pct">6%</span></div>
+        <div class="cell-v center tint-3"><span class="pct">6%</span></div>
+      </div>
+
+      <!-- Row 6 · GP Management Fees -->
+      <div class="body-row short">
+        <div class="row-head">GP Management Fees</div>
+        <div class="cell-v center tint-1"><span class="v no">No</span></div>
+        <div class="cell-v center tint-2"><span class="v maybe">Maybe</span></div>
+        <div class="cell-v center tint-1"><span class="v maybe">Maybe</span></div>
+        <div class="cell-v center tint-2"><span class="v maybe">Maybe</span></div>
+        <div class="cell-v center tint-3"><span class="v yes">Yes</span></div>
+      </div>
+
+      <!-- Row 7 · GP Profit Sharing -->
+      <div class="body-row short">
+        <div class="row-head">GP Profit Sharing</div>
+        <div class="cell-v center tint-1"><span class="v no">No</span></div>
+        <div class="cell-v center tint-2"><span class="v maybe">Maybe</span></div>
+        <div class="cell-v center tint-1"><span class="v maybe">Maybe</span></div>
+        <div class="cell-v center tint-2"><span class="v maybe">Maybe</span></div>
+        <div class="cell-v center tint-3"><span class="v yes">Yes</span></div>
+      </div>
+
+      <!-- Row 8 · Final Sale -->
+      <div class="body-row tall">
+        <div class="row-head">Final Sale</div>
+        <div class="cell-v prose tint-1">
+          At the discretion of the Limited Partner.
+        </div>
+        <div class="cell-v prose tint-2">
+          At the discretion of the Limited Partner.
+        </div>
+        <div class="cell-v prose tint-1">
+          Limited Partners may not exit during the initial period except by&nbsp;<strong>unanimous</strong>
+          decision. Thereafter, one- or two-year
+          extensions; one vote required for Final Sale, unanimous to extend.
+        </div>
+        <div class="cell-v prose tint-2">
+          Limited Partners may not exit during the initial period except by&nbsp;<strong>unanimous</strong>
+          decision. Thereafter, one- or two-year
+          extensions; one vote required for Final Sale, unanimous to extend.
+        </div>
+        <div class="cell-v prose tint-3">
+          Limited Partners may not exit during the initial period except by&nbsp;<strong>majority</strong>
+          decision. Thereafter, one- or two-year
+          extensions; one vote required for Final Sale, majority to extend.
+        </div>
+      </div>
+
+    </div><!-- /body-rows -->
+  </div><!-- /matrix -->
+
+  <!-- ───────── FOOTNOTE ───────── -->
+  <div class="token-footnote">
+    <span class="star">∗</span>Access-fund structure ceases to be a viable SPV template once the underlying fund vehicle is registered.
+  </div>
+
+  <!-- ───────── SIGNATURE ───────── -->
+  <div class="token-signature">
+    <div class="sheet-wayfinder">Sheet 2 of 2</div>
+    <span>April 25, 2026</span><br>
+    Prepared by Woodfine Management Corp.
+  </div>
+
+</div>
+
+</body>
+</html>

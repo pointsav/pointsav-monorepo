@@ -1,0 +1,54 @@
+/* ==========================================================================
+ * tokens-woodfine.css — Woodfine Color Matrix as portable CSS custom properties
+ * --------------------------------------------------------------------------
+ * Self-contained :root block. Drop into any stylesheet <head>.
+ * Source of truth: pointsav-design-system/themes/MEMO-Woodfine-Color-Matrix.md
+ * Ratified 2026-04-28 from the Group B canonical chart series (JW14
+ * Accounting/Counsel pair + JW9 Accounting Statements).
+ *
+ * Usage rules (carried from the MEMO):
+ *   - Bind --accent to ONE of --wf-blue (governance/counsel) or --wf-green
+ *     (accounting/finance/ops). Other palette colours are PER-ENTITY markers,
+ *     not chart-wide accents.
+ *   - Never use #000000 for body text. Use --ink (#111827).
+ *   - Tints are ~10% wash. Custom tints belong inside the artifact that
+ *     needs them (local <style> variable), not promoted globally.
+ *   - --wf-red is reserved for alerts / required action only.
+ *   - Dark mode is forbidden — surfaces assume paper-replication.
+ * ========================================================================== */
+
+:root {
+  /* ── Surfaces ────────────────────────────────────────────────────────── */
+  --paper:    #FFFFFF;   /* Document / card                                  */
+  --paper-2:  #F7F9FA;   /* Outer canvas (off-white)                         */
+  --paper-3:  #E6E7E8;   /* Tertiary surface                                 */
+
+  /* ── Neutral scale (typography & rules) ──────────────────────────────── */
+  --ink:         #111827;   /* Body text — substitute for #000               */
+  --ink-2:       #374151;   /* Secondary — bullets, sub-labels               */
+  --ink-3:       #6B7280;   /* Tertiary — kickers, footnotes                 */
+  --ink-4:       #9CA3AF;   /* Quaternary — entity tags                      */
+  --rule:        #E6E7E8;   /* Hairline 0.5 px                               */
+  --rule-strong: #9CA3AF;   /* Bold 1 px                                     */
+
+  /* ── Brand palette ───────────────────────────────────────────────────── */
+  --wf-blue:    #164679;  --wf-blue-tint:   #E8EFF7;  /* Counsel / governance        */
+  --wf-green:   #54924E;  --wf-green-tint:  #EEF6EC;  /* Accounting / finance / ops  */
+  --wf-green-2: #6BAE64;                              /* Softer green (+8% lightness) */
+  --wf-orange:  #F15F22;  --wf-orange-tint: #FDE8DD;  /* Cross-cutting highlight     */
+  --wf-purple:  #7C468C;  --wf-purple-tint: #EEE6F1;  /* Cross-border / non-resident */
+  --wf-gold:    #F57F17;  --wf-gold-tint:   #FFFDE7;  /* Investment-vehicle marker   */
+  --wf-red:     #ED1B2F;                              /* Alerts only — sparingly     */
+  --wf-grey:    #E6E7E8;                              /* Neutral fill / placeholder  */
+
+  /* ── Per-chart accent (set ONE per artifact) ─────────────────────────── */
+  --accent:      var(--wf-blue);       /* or var(--wf-green) */
+  --accent-tint: var(--wf-blue-tint);  /* or var(--wf-green-tint) */
+}
+
+/* Single-line domain swap (governance → finance):
+ *
+ *   :root { --accent: var(--wf-green); --accent-tint: var(--wf-green-tint); }
+ *
+ * Same one-line swap that flips the JW14 Accounting/Counsel template pair.
+ */

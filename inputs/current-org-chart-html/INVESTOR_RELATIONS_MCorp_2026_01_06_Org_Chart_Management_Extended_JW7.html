@@ -1,0 +1,320 @@
+<!DOCTYPE html><html lang="en"><head>
+
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Org Chart — Management Extended — Woodfine Management Corp.</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            background-color: #E2E8F0;
+            display: flex; justify-content: center; padding: 40px; margin: 0;
+        }
+        .print-canvas {
+            position: relative; width: 1056px; height: 816px; background-color: #FFFFFF;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1); overflow: hidden;
+        }
+        @media print {
+            @page { size: landscape; margin: 0; }
+            body { padding: 0; margin: 0; background: #FFFFFF; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .print-canvas { box-shadow: none; width: 1056px; height: 816px; page-break-after: avoid; }
+        }
+        svg { shape-rendering: geometricPrecision; }
+        path, line { shape-rendering: crispEdges; }
+        marker path { shape-rendering: geometricPrecision; }
+
+        /* ── Page chrome ─────────────────────────────────── */
+        .token-disclaimer { position: absolute; top: 20px; right: 40px; font-size: 9px; font-weight: 600; color: #64748B; text-transform: uppercase; letter-spacing: 0.08em; z-index: 5; }
+        .token-signature  { position: absolute; bottom: 14px; right: 40px; font-size: 10px; line-height: 1.4; text-align: right; color: #000000; z-index: 5; }
+
+        .title-container-left { position: absolute; top: 24px; left: 40px; width: 460px; text-align: left; z-index: 5; }
+        .t-kicker   { font-size: 11px; font-weight: 800; color: #0F172A; text-transform: uppercase; letter-spacing: 0.06em; margin: 0 0 2px 0; }
+        .t-headline { font-size: 14px; font-weight: 900; color: #000000; text-transform: uppercase; letter-spacing: -0.02em; padding-bottom: 6px; border-bottom: 1px solid #CBD5E1; margin: 0 0 6px 0; }
+
+        .zone-floater { position: absolute; font-size: 10px; line-height: 1.3; color: #334155; z-index: 5; }
+        .svg-layer    { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; }
+
+        /* ── Tokens ──────────────────────────────────────── */
+        .token-base {
+            position: absolute; display: flex; flex-direction: column;
+            width: 170px; padding: 6px 8px;
+            text-align: center; box-sizing: border-box; z-index: 4;
+            background-color: #FFFFFF; border: 2px solid #94A3B8; border-radius: 0;
+        }
+        .token-base.tall    { height: 76px; padding: 8px; }
+        .token-base.std     { height: 76px; padding: 8px; }
+        .token-base.compact { height: 60px; padding: 6px 8px; }
+        .token-base.short   { height: 60px; padding: 6px 8px; }
+
+        .token-olive { background-color: #F9FBE7; border: 2px solid #827717; }
+        .token-blue  { background-color: #E3F2FD; border: 2px solid #1565C0; }
+        .token-green { background-color: #F1F8E9; border: 2px solid #2E7D32; }
+        .token-grey  { background-color: #F8FAFC; border: 2px dashed #94A3B8; }
+
+        .zone-top { display: flex; flex-direction: column; gap: 1px; align-items: center; }
+        .zone-mid { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; gap: 1px; align-items: center; }
+
+        .t-title { font-weight: 800; font-size: 11px; color: #000000; margin: 0; line-height: 1.15; letter-spacing: -0.01em; }
+        .t-alias { font-style: italic; font-size: 10px; color: #000000; margin: 0; line-height: 1.2; }
+        .t-node  { position: absolute; bottom: 2px; right: 5px; font-family: ui-monospace, SFMono-Regular, monospace; font-size: 9px; font-weight: 700; color: #94A3B8; margin: 0; }
+
+        .token-base.compact .t-title { font-size: 10.5px; }
+        .token-base.compact .t-alias { font-size: 9.5px; }
+        .token-base.short   .t-title { font-size: 9.5px; }
+        .token-base.short   .t-alias { font-size: 9px; }
+
+        /* ── Yellow pill (Direct-Hold) ──────────────────── */
+        .token-yellow {
+            position: absolute; display: flex; flex-direction: column;
+            width: 210px; height: 90px; padding: 10px;
+            text-align: center; box-sizing: border-box; z-index: 4;
+            background-color: #FFFDE7; border: 2px dashed #F57F17; border-radius: 110px;
+        }
+        .token-yellow .zone-top    { display: flex; flex-direction: column; gap: 2px; align-items: center; }
+        .token-yellow .zone-mid    { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; gap: 2px; align-items: center; }
+        .token-yellow .zone-bottom { display: flex; flex-direction: column; align-items: center; }
+        .token-yellow .t-title   { font-weight: 800; font-size: 10.5px; color: #000000; margin: 0; line-height: 1.1; letter-spacing: -0.01em; }
+        .token-yellow .t-alias   { font-style: italic; font-size: 9px; color: #000000; margin: 0; }
+        .token-yellow .t-country { font-size: 8.5px; color: #475569; margin: 0; }
+        .token-yellow .t-node    { position: absolute; bottom: 10px; right: 30px; font-family: ui-monospace, SFMono-Regular, monospace; font-size: 9px; font-weight: 700; color: #94A3B8; margin: 0; }
+        .token-yellow .t-glyph   { position: absolute; bottom: 10px; left: 30px; font-family: ui-monospace, SFMono-Regular, monospace; font-size: 11px; font-weight: 700; margin: 0; color: #F57F17; }
+
+        /* ── Section divider ─────────────────────────────── */
+        .section-divider { position: absolute; left: 40px; right: 40px; height: 0; border-top: 1px dashed #CBD5E1; z-index: 3; }
+
+        /* ── Legend ──────────────────────────────────────── */
+        .legend-grid   { display: grid; grid-template-columns: 1fr 1fr; column-gap: 16px; row-gap: 4px; }
+        .legend-row    { display: flex; justify-content: flex-end; align-items: center; gap: 8px; }
+        .legend-row span { text-align: right; }
+        .legend-swatch { width: 28px; height: 14px; flex-shrink: 0; }
+    </style>
+</head>
+<body data-cc-id="cc-1" style="cursor: crosshair;">
+
+<div class="print-canvas" data-cc-id="cc-6">
+
+    <div class="token-disclaimer">PRIVATE &amp; CONFIDENTIAL — NOT FOR REDISTRIBUTION — INVESTMENT PROFESSIONALS ONLY</div>
+
+    <div class="token-signature">
+        April 27, 2026<br>
+        Prepared by Woodfine Management Corp.
+    </div>
+
+    <div class="title-container-left">
+        <p class="t-kicker">ORGANIZATIONAL CHART</p>
+        <p class="t-headline">EXTENDED MANAGEMENT STRUCTURE</p>
+    </div>
+
+    <svg class="svg-layer" viewBox="0 0 1056 816">
+        <defs>
+            <marker id="arr" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M 0 0 L 10 5 L 0 10 z" fill="#475569"></path>
+            </marker>
+        </defs>
+
+        <!-- Row 1 ↔ Row 2 (bus at y=172) -->
+        <!-- Bus -->
+        <line x1="125" y1="172" x2="729.5" y2="172" stroke="#475569" stroke-width="1.5"></line>
+        <!-- Drops from Row 2 tops up into bus (no arrow) -->
+        <line x1="326.5" y1="192" x2="326.5" y2="172" stroke="#475569" stroke-width="1.5"></line>
+        <line x1="528" y1="192" x2="528" y2="172" stroke="#475569" stroke-width="1.5"></line>
+        <line x1="729.5" y1="192" x2="729.5" y2="172" stroke="#475569" stroke-width="1.5"></line>
+        <!-- Stems UP into Row 1 parents (arrow at top) -->
+        <line x1="125" y1="172" x2="125" y2="152" stroke="#475569" stroke-width="1.5" marker-end="url(#arr)"></line>
+        <line x1="326.5" y1="172" x2="326.5" y2="152" stroke="#475569" stroke-width="1.5" marker-end="url(#arr)"></line>
+
+        <!-- Row 2 ↔ Row 3 (bus at y=284) -->
+        <line x1="125" y1="284" x2="931" y2="284" stroke="#475569" stroke-width="1.5"></line>
+        <!-- Drops from Row 3 tops up into bus (no arrow) -->
+        <line x1="125" y1="300" x2="125" y2="284" stroke="#475569" stroke-width="1.5"></line>
+        <line x1="326.5" y1="300" x2="326.5" y2="284" stroke="#475569" stroke-width="1.5"></line>
+        <line x1="528" y1="300" x2="528" y2="284" stroke="#475569" stroke-width="1.5"></line>
+        <line x1="729.5" y1="300" x2="729.5" y2="284" stroke="#475569" stroke-width="1.5"></line>
+        <line x1="931" y1="300" x2="931" y2="284" stroke="#475569" stroke-width="1.5"></line>
+        <!-- Stems UP into Row 2 parents (arrow at top) -->
+        <line x1="326.5" y1="284" x2="326.5" y2="268" stroke="#475569" stroke-width="1.5" marker-end="url(#arr)"></line>
+        <line x1="528" y1="284" x2="528" y2="268" stroke="#475569" stroke-width="1.5" marker-end="url(#arr)"></line>
+        <line x1="729.5" y1="284" x2="729.5" y2="268" stroke="#475569" stroke-width="1.5" marker-end="url(#arr)"></line>
+
+        <!-- Row 3 ↔ Row 4 -->
+        <!-- Col 1: Box 19 ↔ Box 9 (double-ended arrow) -->
+        <line x1="125" y1="408" x2="125" y2="376" stroke="#475569" stroke-width="1.5" marker-start="url(#arr)" marker-end="url(#arr)"></line>
+
+        <!-- Boxes 14, 15, 16 → Box 13 via bus at y=420 (stems from R4 tops up to bus) -->
+        <line x1="528" y1="432" x2="528" y2="420" stroke="#475569" stroke-width="1.5"></line>
+        <line x1="729.5" y1="432" x2="729.5" y2="420" stroke="#475569" stroke-width="1.5"></line>
+        <line x1="931" y1="432" x2="931" y2="420" stroke="#475569" stroke-width="1.5"></line>
+        <!-- Bus -->
+        <line x1="528" y1="420" x2="931" y2="420" stroke="#475569" stroke-width="1.5"></line>
+        <!-- Stem UP into Box 13 (arrow) -->
+        <line x1="931" y1="420" x2="931" y2="376" stroke="#475569" stroke-width="1.5" marker-end="url(#arr)"></line>
+
+        <!-- Box 20 → Boxes 11 & 10 (Y-junction): vertical up from 20, elbow at y=400, stubs up into 10 (x=326.5) and 11 (x=528) -->
+        <line x1="326.5" y1="500" x2="326.5" y2="400" stroke="#475569" stroke-width="1.5"></line>
+        <line x1="326.5" y1="400" x2="528" y2="400" stroke="#475569" stroke-width="1.5"></line>
+        <line x1="326.5" y1="400" x2="326.5" y2="376" stroke="#475569" stroke-width="1.5" marker-end="url(#arr)"></line>
+        <line x1="528" y1="400" x2="528" y2="376" stroke="#475569" stroke-width="1.5" marker-end="url(#arr)"></line>
+
+        <!-- Row 4 ↔ Row 5 (arrows up into Row 4 bottoms) -->
+        <line x1="125" y1="500" x2="125" y2="468" stroke="#475569" stroke-width="1.5" marker-end="url(#arr)"></line>
+        <line x1="729.5" y1="500" x2="729.5" y2="468" stroke="#475569" stroke-width="1.5" marker-end="url(#arr)"></line>
+        <line x1="931" y1="500" x2="931" y2="468" stroke="#475569" stroke-width="1.5" marker-end="url(#arr)"></line>
+
+        <!-- Boxes 21 ↔ 20 horizontal (no arrow — peer connector) -->
+        <line x1="125" y1="484" x2="326.5" y2="484" stroke="#475569" stroke-width="1.5"></line>
+
+    </svg>
+
+    <div class="token-base token-olive tall" style="left: 40px; top: 76px;">
+        <div class="zone-top"><p class="t-title" data-cc-id="cc-2" style="">Director<br>Chair of the<br>Board of Directors</p></div>
+        <div class="zone-mid"><p class="t-alias">Ian Thomas</p></div>
+        <p class="t-node">70</p>
+    </div>
+    <div class="token-base token-olive tall" style="left: 241.5px; top: 76px;">
+        <div class="zone-top"><p class="t-title">Director<br>Executive Officer</p></div>
+        <div class="zone-mid"><p class="t-alias">Peter M. Woodfine</p></div>
+        <p class="t-node">71</p>
+    </div>
+    <div class="token-base token-grey tall" style="left: 443px; top: 76px;">
+        <div class="zone-top"><p class="t-title">Independent<br>WCP Director</p></div>
+        <div class="zone-mid"><p class="t-alias">Ralph Peterson</p></div>
+        <p class="t-node">72</p>
+    </div>
+    <div class="token-base token-grey tall" style="left: 644.5px; top: 76px;">
+        <div class="zone-top"><p class="t-title">Independent<br>WCP Director</p></div>
+        <div class="zone-mid"><p class="t-alias">TBD</p></div>
+        <p class="t-node">73</p>
+    </div>
+    <div class="token-base token-grey tall" style="left: 846px; top: 76px;">
+        <div class="zone-top"><p class="t-title">Independent<br>WCP Director</p></div>
+        <div class="zone-mid"><p class="t-alias">TBD</p></div>
+        <p class="t-node">74</p>
+    </div>
+
+    <div class="token-base token-olive std" style="left: 241.5px; top: 192px;">
+        <div class="zone-top"><p class="t-title">Operating Officer</p></div>
+        <div class="zone-mid"><p class="t-alias">Ben Elzen</p></div>
+        <p class="t-node">75</p>
+    </div>
+    <div class="token-base token-olive std" style="left: 443px; top: 192px;">
+        <div class="zone-top"><p class="t-title">Financial Officer</p></div>
+        <div class="zone-mid"><p class="t-alias">Wayne Herbert</p></div>
+        <p class="t-node">76</p>
+    </div>
+    <div class="token-base token-olive std" style="left: 644.5px; top: 192px;">
+        <div class="zone-top"><p class="t-title">Corporate Secretary</p></div>
+        <div class="zone-mid"><p class="t-alias">Peter Leveque</p></div>
+        <p class="t-node">77</p>
+    </div>
+
+    <div class="token-base token-grey tall" style="left: 40px; top: 300px;">
+        <div class="zone-top"><p class="t-title" data-cc-id="cc-3" style="">PointSav Digital Systems</p></div>
+        <p class="t-node">78</p>
+    </div>
+    <div class="token-base token-blue tall" style="left: 241.5px; top: 300px;">
+        <div class="zone-top"><p class="t-title">Head of Construction</p></div>
+        <div class="zone-mid"><p class="t-alias">Jennifer M. Woodfine</p></div>
+        <p class="t-node">79</p>
+    </div>
+    <div class="token-base token-blue tall" style="left: 443px; top: 300px;">
+        <div class="zone-top"><p class="t-title">Head of Real Estate</p></div>
+        <div class="zone-mid"><p class="t-alias">Peter M. Woodfine</p></div>
+        <p class="t-node">80</p>
+    </div>
+    <div class="token-base token-blue tall" style="left: 644.5px; top: 300px;">
+        <div class="zone-top"><p class="t-title">Investor Relations</p></div>
+        <div class="zone-mid"><p class="t-alias">Laura Capello</p></div>
+        <p class="t-node">81</p>
+    </div>
+    <div class="token-base token-blue tall" style="left: 846px; top: 300px;">
+        <div class="zone-top"><p class="t-title">Head of Compliance</p></div>
+        <div class="zone-mid"><p class="t-alias">Mathew Woodfine</p></div>
+        <p class="t-node">82</p>
+    </div>
+
+    <div class="token-base token-green compact" style="left: 40px; top: 408px;">
+        <div class="zone-top"><p class="t-title">Control Architect</p></div>
+        <p class="t-node">83</p>
+    </div>
+    <div class="token-base token-blue compact" style="left: 443px; top: 432px;">
+        <div class="zone-top"><p class="t-title">IT Support</p></div>
+        <p class="t-node">84</p>
+    </div>
+    <div class="token-base token-blue compact" style="left: 644.5px; top: 432px;">
+        <div class="zone-top"><p class="t-title">Office Support</p></div>
+        <p class="t-node">85</p>
+    </div>
+    <div class="token-base token-green compact" style="left: 846px; top: 432px;">
+        <div class="zone-top"><p class="t-title">Service Providers<br>Alignment of Principles</p></div>
+        <p class="t-node">86</p>
+    </div>
+
+    <div class="token-base token-blue compact" style="left: 40px; top: 500px;">
+        <div class="zone-top"><p class="t-title">Site Manager</p></div>
+        <p class="t-node">87</p>
+    </div>
+    <div class="token-base token-blue compact" style="left: 241.5px; top: 500px;">
+        <div class="zone-top"><p class="t-title">Building Manager</p></div>
+        <p class="t-node">88</p>
+    </div>
+    <div class="token-base token-blue compact" style="left: 644.5px; top: 500px;">
+        <div class="zone-top"><p class="t-title">Bookkeeper</p></div>
+        <p class="t-node">89</p>
+    </div>
+    <div class="token-base token-green compact" style="left: 846px; top: 500px;">
+        <div class="zone-top"><p class="t-title">Broker/Dealers<br>Allocations</p></div>
+        <p class="t-node">90</p>
+    </div>
+
+    <div class="token-base token-grey short" style="left: 443px; top: 592px;">
+        <div class="zone-top"><p class="t-title" style="font-size: 9.5px; letter-spacing: -0.03em;">Independent Director of the<br>General Partner/Administrator</p></div>
+        <div class="zone-mid"><p class="t-alias">Herb Evers</p></div>
+        <p class="t-node">91</p>
+    </div>
+    <div class="token-base token-grey short" style="left: 644.5px; top: 592px;">
+        <div class="zone-top"><p class="t-title" style="font-size: 9.5px; letter-spacing: -0.03em;">Independent Director of the<br>General Partner/Administrator</p></div>
+        <div class="zone-mid"><p class="t-alias">Bruce Andrews</p></div>
+        <p class="t-node">92</p>
+    </div>
+    <div class="token-base token-grey short" style="left: 846px; top: 592px;">
+        <div class="zone-top"><p class="t-title" style="font-size: 9.5px; letter-spacing: -0.03em;">Independent Director of the<br>General Partner/Administrator</p></div>
+        <div class="zone-mid"><p class="t-alias">TBD</p></div>
+        <p class="t-node">93</p>
+    </div>
+
+    <div class="section-divider" style="top: 664px;"></div>
+
+    <div class="token-yellow" style="left: 40px; top: 678px;">
+        <div class="zone-top"><p class="t-title">Woodfine Professional<br>Centres Limited Partnership</p></div>
+        <div class="zone-mid"><p class="t-alias">"Direct-Hold Solution"</p></div>
+        <div class="zone-bottom"><p class="t-country">(Canada)</p></div>
+        <p class="t-glyph"></p>
+        <p class="t-node">17</p>
+    </div>
+    <div class="token-yellow" style="left: 295.3px; top: 678px;">
+        <div class="zone-top"><p class="t-title">Woodfine Professional<br>Centres 2 Limited Partnership</p></div>
+        <div class="zone-mid"><p class="t-alias">"Direct-Hold Solution"</p></div>
+        <div class="zone-bottom"><p class="t-country">(United States)</p></div>
+        <p class="t-glyph"></p>
+        <p class="t-node">32</p>
+    </div>
+    <div class="token-yellow" style="left: 550.7px; top: 678px;">
+        <div class="zone-top"><p class="t-title" style="font-size:9.5px;">Woodfine Professional Centres 3<br>Sociedad Anónima Cotizada<br>de Inversión Inmobiliaria</p></div>
+        <div class="zone-mid"><p class="t-alias">"Direct-Hold Solution"</p></div>
+        <div class="zone-bottom"><p class="t-country">(Spain)</p></div>
+        <p class="t-glyph"></p>
+        <p class="t-node">33</p>
+    </div>
+    <div class="token-yellow" style="left: 806px; top: 678px;">
+        <div class="zone-top"><p class="t-title" style="font-size:9.5px;">Woodfine Professional Centres 4<br>Fideicomiso de Infraestructura<br>en Bienes Raíces</p></div>
+        <div class="zone-mid"><p class="t-alias">"Direct-Hold Solution"</p></div>
+        <div class="zone-bottom"><p class="t-country">(Mexico)</p></div>
+        <p class="t-glyph"></p>
+        <p class="t-node">34</p>
+    </div>
+
+</div>
+
+
+
+</body></html>

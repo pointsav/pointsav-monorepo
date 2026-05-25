@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SPV Arrangements</title>
+<style>
+  :root{
+    /* ──────────────────────────────────────────────────────────────
+       Tokens — sourced from token-global-color.v2.yaml
+       (Design System · Woodfine Media Assets · v2).
+       Do not invent new values; map every UI hue to a token below.
+       ────────────────────────────────────────────────────────────── */
+
+    /* Brand core */
+    --woodfine-blue:    #164679;
+    --woodfine-black:   #000000;
+    --woodfine-grey:    #E6E7E8;   /* v2: lightened from #e9ecef */
+    --woodfine-green:   #54924E;
+    --woodfine-orange:  #F15F22;
+    --woodfine-red:     #ED1B2F;
+    --woodfine-purple:  #7C468C;
+    --woodfine-white:   #FFFFFF;
+
+    /* Canvas / slate (legacy v1 retained) */
+    --woodfine-canvas:  #F7F9FA;
+    --woodfine-slate:   #111827;
+    --woodfine-grey-mid:    #6B7280;
+    --woodfine-grey-light:  #E9ECEF;
+
+    /* Ink scale (text) */
+    --ink-100: #111827;   /* body / primary */
+    --ink-200: #374151;   /* secondary */
+    --ink-300: #6B7280;   /* tertiary / meta */
+    --ink-400: #9CA3AF;   /* placeholder */
+
+    /* Paper scale (surfaces) */
+    --paper-100: #FFFFFF;
+    --paper-200: #F7F9FA;
+    --paper-300: #E6E7E8;
+
+    /* Rules / dividers */
+    --rule-default: #E6E7E8;
+    --rule-strong:  #9CA3AF;
+
+    /* Accent · primary brand accent (green) */
+    --accent-green-500: #54924E;
+    --accent-green-400: #6BAE64;
+    --accent-green-50:  #EEF6EC;
+
+    /* Highlight (orange) · consolidation / footnote flag */
+    --highlight-500: #F15F22;
+    --highlight-50:  #FDE8DD;
+
+    /* ── Local aliases for the sheet (semantic → token) ── */
+    --ink:        var(--ink-100);
+    --ink-2:      var(--ink-200);
+    --ink-3:      var(--ink-300);
+    --ink-4:      var(--ink-400);
+    --paper:      var(--paper-100);
+    --paper-2:    var(--paper-200);
+    --paper-3:    var(--paper-300);
+    --rule:       var(--rule-default);
+
+    /* Primary accent — Woodfine Blue (used in titles & column heads) */
+    --accent:        var(--woodfine-blue);
+    --accent-2:      #2B6CB0;
+    --accent-tint:   #E8EFF7;
+    --highlight:     var(--highlight-50);
+    --highlight-fg:  var(--highlight-500);
+
+    /* Tri-tone variation axis · mirrors the Venn column heads
+       col-1 · Private SPV   → Grey-mid (neutral kit-of-parts)
+       col-2 · Club Deal     → Woodfine Blue (primary)
+       col-3 · Access Fund   → Woodfine Green */
+    --col-1:      var(--woodfine-grey-mid);
+    --col-1-tint: var(--paper-300);
+    --col-2:      var(--woodfine-blue);
+    --col-2-tint: #E8EFF7;
+    --col-3:      var(--woodfine-green);
+    --col-3-tint: var(--accent-green-50);
+  }
+
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{background:#F7F9FA;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+    font-feature-settings:"tnum";
+    color:var(--ink);
+    display:flex;justify-content:center;padding:40px;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  .sheet{
+    position:relative;width:1056px;height:816px;flex-shrink:0;
+    background:var(--paper);
+    box-shadow:0 4px 12px rgba(0,0,0,0.15);
+    overflow:hidden;
+  }
+
+  /* ---------- TITLE BLOCK ---------- */
+  .title-block{
+    position:absolute;top:28px;left:56px;right:56px;
+    display:flex;justify-content:space-between;align-items:flex-end;
+    padding-bottom:14px;border-bottom:.5px solid var(--rule);
+  }
+  .kicker{
+    font-size:9.5px;font-weight:600;letter-spacing:.28em;
+    color:var(--accent);text-transform:uppercase;margin-bottom:6px;
+  }
+  .headline{
+    font-weight:800;font-size:18px;letter-spacing:-.015em;
+    line-height:1.05;color:var(--ink);
+    text-transform:uppercase;
+  }
+  .headline em{
+    font-style:italic;font-weight:600;color:var(--ink-2);
+    text-transform:none;letter-spacing:0;
+  }
+  .subhead{
+    font-style:italic;font-weight:400;font-size:12px;
+    color:var(--ink-3);max-width:360px;text-align:right;line-height:1.45;
+  }
+
+  /* ---------- SECTION ---------- */
+  .section{position:absolute;left:56px;right:56px;}
+  .section-header{
+    display:flex;align-items:center;gap:12px;
+    margin-bottom:10px;
+  }
+  .sec-title{
+    font-size:10px;font-weight:700;letter-spacing:.24em;
+    text-transform:uppercase;color:var(--ink);
+  }
+  .sec-rule{flex:1;height:1px;background:var(--ink);}
+
+  /* ---------- COLUMN HEADS (shared axis between two charts) ---------- */
+  .col-heads{
+    position:absolute;left:56px;right:56px;
+    display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;
+  }
+  .col-head{
+    border:.75px solid var(--accent);
+    background:var(--accent);color:var(--paper);
+    padding:7px 10px;
+    font-size:10px;font-weight:600;
+    text-transform:uppercase;letter-spacing:.08em;
+    text-align:center;line-height:1.2;
+    display:flex;align-items:center;justify-content:center;gap:8px;
+    min-height:28px;
+  }
+  .col-heads .col-head:nth-child(1){background:var(--col-1);border-color:var(--col-1);}
+  .col-heads .col-head:nth-child(2){background:var(--col-2);border-color:var(--col-2);}
+  .col-heads .col-head:nth-child(3){background:var(--col-3);border-color:var(--col-3);}
+  .col-head .num{
+    font-style:italic;font-weight:400;font-size:9.5px;
+    opacity:.75;letter-spacing:0;text-transform:none;
+  }
+
+  /* ---------- CHART (SPV diagram grid) ---------- */
+  .chart{position:absolute;left:56px;right:56px;}
+  .chart-grid{
+    display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;
+    height:100%;
+  }
+
+  .panel{
+    position:relative;
+    border:.75px solid var(--rule);
+    background:var(--paper);
+    padding:12px 14px 10px;
+    display:flex;flex-direction:column;
+    min-height:0;
+  }
+  .panel-head{
+    display:flex;align-items:baseline;justify-content:space-between;
+    gap:8px;padding-bottom:8px;border-bottom:.5px solid var(--rule);
+    flex:0 0 auto;
+  }
+  .panel-name{
+    display:flex;align-items:baseline;gap:8px;
+  }
+  .panel-tag{
+    font-size:9px;font-weight:700;letter-spacing:.20em;
+    text-transform:uppercase;color:var(--ink-3);
+  }
+  .panel-h{
+    font-size:12.5px;font-weight:700;color:var(--ink);
+    letter-spacing:-.005em;line-height:1.2;
+  }
+  .panel-h em{font-style:italic;font-weight:500;}
+  .panel-h .star{color:var(--highlight-fg);font-weight:700;margin-left:2px;}
+  .panel-code{
+    font-size:8.5px;font-weight:700;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--ink-4);
+  }
+
+  .diag{
+    flex:1 1 auto;min-height:0;
+    display:flex;align-items:center;justify-content:center;
+    padding:8px 2px 4px;
+  }
+  .diag svg{display:block;width:100%;height:100%;max-height:100%;overflow:visible;}
+
+  .panel-foot{
+    flex:0 0 auto;
+    margin-top:6px;padding-top:6px;border-top:.5px solid var(--rule);
+    font-size:9.5px;line-height:1.4;color:var(--ink-3);font-style:italic;
+  }
+  .panel-foot .flag{
+    color:var(--highlight-fg);font-weight:700;font-style:normal;margin-right:3px;
+  }
+
+  /* "Not applicable" placeholder cell (preserves the 3-col rhythm) */
+  .panel.empty{
+    background:transparent;
+    border:.75px dashed var(--ink-4);
+    align-items:center;justify-content:center;
+    padding:20px 16px;text-align:center;
+  }
+  .panel.empty .na-tag{
+    font-size:9px;font-weight:700;letter-spacing:.22em;
+    text-transform:uppercase;color:var(--ink-4);margin-bottom:8px;
+  }
+  .panel.empty .na-body{
+    font-size:11px;font-style:italic;color:var(--ink-3);line-height:1.45;max-width:220px;
+  }
+
+  /* ---------- SVG primitives ---------- */
+  .e-rect{stroke-width:.75;}
+  .e-rect.t-1{fill:var(--col-1-tint);stroke:var(--col-1);}
+  .e-rect.t-2{fill:var(--col-2-tint);stroke:var(--col-2);}
+  .e-rect.t-3{fill:var(--col-3-tint);stroke:var(--col-3);}
+  .e-rect.dark{fill:var(--col-2);stroke:var(--col-2);}
+  .e-rect.lead{fill:var(--woodfine-grey-mid);stroke:#4B5563;}
+
+  .e-label{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+    font-size:11px;font-weight:700;fill:var(--ink);text-anchor:middle;
+  }
+  .e-label.light{fill:var(--paper);}
+  .e-label.sm{font-size:9.5px;}
+  .e-label.xs{font-size:8.5px;}
+
+  .e-side{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+    font-size:10px;fill:var(--ink-3);font-weight:500;
+  }
+  .e-side.center{text-anchor:middle;}
+  .e-side.sm{font-size:9px;}
+
+  .conn{stroke:var(--ink);stroke-width:.75;fill:none;stroke-linecap:square;}
+  .conn-soft{stroke:var(--ink-3);stroke-width:.5;fill:none;}
+  .conn-bracket{stroke:var(--ink-3);stroke-width:.6;fill:none;}
+
+  .scope{stroke:var(--ink-3);stroke-width:.75;stroke-dasharray:4 3;fill:none;}
+  .scope-label{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+    font-size:7.5px;font-weight:700;letter-spacing:.18em;
+    text-transform:uppercase;fill:var(--ink-3);
+  }
+
+  .e-ellipsis{
+    font-weight:700;font-size:12px;fill:var(--ink);text-anchor:middle;
+    letter-spacing:.04em;
+  }
+  .e-asterisk{
+    font-size:12px;font-weight:700;fill:var(--highlight-fg);text-anchor:middle;
+  }
+
+  /* ---------- LEGEND (right-side inline, near subhead) ---------- */
+  .legend{
+    display:flex;gap:14px;justify-content:flex-end;
+    margin-top:6px;
+  }
+  .legend-item{
+    display:flex;align-items:center;gap:5px;
+    font-size:10px;color:var(--ink-3);font-style:normal;
+  }
+  .legend-chip{
+    display:inline-block;min-width:30px;padding:1px 4px;text-align:center;
+    border:.75px solid var(--accent);
+    background:var(--paper);color:var(--ink);
+    font-weight:700;font-size:9px;letter-spacing:.04em;
+    line-height:1.1;
+  }
+  .legend-chip.filled{background:var(--col-2);color:var(--paper);border-color:var(--col-2);}
+
+  /* ---------- SIGNATURE ---------- */
+  .token-signature{
+    position:absolute;bottom:24px;right:56px;
+    font-size:10px;line-height:1.45;text-align:right;color:var(--ink);
+    letter-spacing:.01em;
+  }
+  .token-footnote{
+    position:absolute;bottom:24px;left:56px;
+    font-size:9.5px;line-height:1.4;color:var(--ink-3);font-style:italic;
+    max-width:580px;
+  }
+  .token-footnote .star{color:var(--highlight-fg);font-weight:700;font-style:normal;margin-right:4px;}
+
+  /* ---------- PRINT ---------- */
+  @media print{
+    @page{size:letter landscape;margin:0;}
+    html,body{background:#fff;padding:0;margin:0;}
+    body{padding:0;}
+    .sheet{box-shadow:none;width:1056px;height:816px;background:var(--paper);}
+  }
+</style>
+</head>
+<body>
+
+<div class="sheet" data-screen-label="SPV Arrangements">
+
+  <!-- ───────── TITLE ───────── -->
+  <div class="title-block">
+    <div>
+      <div class="kicker">Compliance Memorandum · Structural Reference</div>
+      <h1 class="headline">SPV ARRANGEMENTS</h1>
+    </div>
+    <div>
+      <div class="subhead">.</div>
+      <div class="legend">
+        <span class="legend-item"><span class="legend-chip">GP</span>General Partner</span>
+        <span class="legend-item"><span class="legend-chip">LP</span>Limited Partner</span>
+        <span class="legend-item"><span class="legend-chip filled">AF</span>Access Fund</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ───────── SECTION I · INVESTMENT BANKING ───────── -->
+  <div class="section" style="top:130px;">
+    <div class="section-header">
+      <span class="sec-title">Investment Banking</span>
+      <span class="sec-rule"></span>
+    </div>
+  </div>
+
+  <!-- TOP CHART · IB (Direct + Club + N/A) -->
+  <div class="chart" style="top:164px;height:236px;">
+    <div class="chart-grid">
+
+      <!-- ── Level 1 · Direct ── -->
+      <article class="panel">
+        <header class="panel-head">
+          <div class="panel-name">
+            <span class="panel-tag">Level 1</span>
+            <span class="panel-h">Private SPV</span>
+          </div>
+          <span class="panel-code"></span>
+        </header>
+        <div class="diag">
+          <svg viewBox="0 0 280 160" preserveAspectRatio="xMidYMid meet">
+            <!-- GP -->
+            <rect class="e-rect t-1" x="82" y="18" width="88" height="32" rx="2"/>
+            <text class="e-label" x="126" y="39">GP</text>
+            <!-- LP -->
+            <rect class="e-rect t-1" x="82" y="110" width="88" height="32" rx="2"/>
+            <text class="e-label" x="126" y="131">LP</text>
+            <!-- vertical connector -->
+            <line class="conn" x1="126" y1="50" x2="126" y2="110"/>
+            <!-- bracket: same investor holds both roles -->
+            <path class="conn-bracket" d="M 168 30 L 184 30 L 184 130 L 168 130"/>
+            <line class="conn-bracket" x1="184" y1="80" x2="198" y2="80"/>
+            <text class="e-side" x="204" y="84">Investor A</text>
+          </svg>
+        </div>
+        <div class="panel-foot" style="font-size: 12px">Single beneficial owner; the same investor holds both the GP and the sole LP interest.</div>
+      </article>
+
+      <!-- ── Level 2 · Club ── -->
+      <article class="panel">
+        <header class="panel-head">
+          <div class="panel-name">
+            <span class="panel-tag">Level 2</span>
+            <span class="panel-h">Club deal</span>
+          </div>
+          <span class="panel-code"></span>
+        </header>
+        <div class="diag">
+          <svg viewBox="0 0 280 160" preserveAspectRatio="xMidYMid meet">
+            <!-- top label "Lead Investor" -->
+            <text class="e-side center" x="140" y="10">Lead Investor</text>
+            <!-- GP -->
+            <rect class="e-rect lead" x="106" y="26" width="68" height="28" rx="2"/>
+            <text class="e-label light" x="140" y="44">GP</text>
+            <!-- bus -->
+            <line class="conn" x1="140" y1="54" x2="140" y2="76"/>
+            <line class="conn" x1="30"  y1="76" x2="249" y2="76"/>
+            <line class="conn" x1="30"  y1="76" x2="30"  y2="96"/>
+            <line class="conn" x1="103" y1="76" x2="103" y2="96"/>
+            <line class="conn" x1="176" y1="76" x2="176" y2="96"/>
+            <line class="conn" x1="249" y1="76" x2="249" y2="96"/>
+            <!-- LP boxes -->
+            <rect class="e-rect lead" x="0"   y="96" width="60" height="26" rx="2"/>
+            <text class="e-label light sm" x="30"  y="113">LP 1</text>
+            <rect class="e-rect t-2" x="73"  y="96" width="60" height="26" rx="2"/>
+            <text class="e-label sm" x="103" y="113">LP 2</text>
+            <rect class="e-rect t-2" x="146" y="96" width="60" height="26" rx="2"/>
+            <text class="e-label sm" x="176" y="113">LP 3</text>
+            <rect class="e-rect t-2" x="219" y="96" width="60" height="26" rx="2"/>
+            <text class="e-ellipsis" x="249" y="116">⋯</text>
+            <!-- bottom investor labels -->
+            <text class="e-side center sm" x="30"  y="140">Lead Investor</text>
+            <text class="e-side center sm" x="103" y="140">Investor A</text>
+            <text class="e-side center sm" x="176" y="140">Investor B</text>
+          </svg>
+        </div>
+        <div class="panel-foot" style="font-size: 12px">Lead investor holds the GP; multiple investors syndicate at LP level.</div>
+      </article>
+
+      <!-- ── n/a · IB does not run access funds ── -->
+      <article class="panel empty">
+        <div class="na-tag">— Not applicable —</div>
+        <div class="na-body" style="font-size: 12px">Access Fund structures are not employed at Investment Banking level. See Asset Management · Level 5.</div>
+      </article>
+
+    </div>
+  </div>
+
+  <!-- ───────── COLUMN HEADS · shared variation axis ───────── -->
+  <div class="col-heads" style="top:418px;">
+    <div class="col-head"><span>Private SPV</span></div>
+    <div class="col-head"><span>Club Deal</span></div>
+    <div class="col-head"><span>Access Fund</span></div>
+  </div>
+
+  <!-- ───────── SECTION II · ASSET MANAGEMENT ───────── -->
+  <div class="section" style="top:464px;">
+    <div class="section-header">
+      <span class="sec-title">Asset Management</span>
+      <span class="sec-rule"></span>
+    </div>
+  </div>
+
+  <!-- BOTTOM CHART · AM (Private SPV + Club + Access Fund) -->
+  <div class="chart" style="top:498px;height:262px;">
+    <div class="chart-grid">
+
+      <!-- ── Level 3 · Direct ── -->
+      <article class="panel">
+        <header class="panel-head">
+          <div class="panel-name">
+            <span class="panel-tag">Level 3</span>
+            <span class="panel-h">Private SPV</span>
+          </div>
+          <span class="panel-code"></span>
+        </header>
+        <div class="diag">
+          <svg viewBox="0 0 280 180" preserveAspectRatio="xMidYMid meet">
+            <!-- GP -->
+            <rect class="e-rect t-1" x="82" y="26" width="88" height="32" rx="2"/>
+            <text class="e-label" x="126" y="47">GP</text>
+            <line class="conn-soft" x1="170" y1="42" x2="188" y2="42"/>
+            <text class="e-side" x="194" y="45">Manager</text>
+            <!-- LP -->
+            <rect class="e-rect t-1" x="82" y="122" width="88" height="32" rx="2"/>
+            <text class="e-label" x="126" y="143">LP</text>
+            <line class="conn-soft" x1="170" y1="138" x2="188" y2="138"/>
+            <text class="e-side" x="194" y="141">Investor A</text>
+            <!-- vertical connector -->
+            <line class="conn" x1="126" y1="58" x2="126" y2="122"/>
+          </svg>
+        </div>
+        <div class="panel-foot" style="font-size: 12px">Manager holds the GP. Single underlying investor holds LP.</div>
+      </article>
+
+      <!-- ── Level 4 · Club ── -->
+      <article class="panel">
+        <header class="panel-head">
+          <div class="panel-name">
+            <span class="panel-tag">Level 4</span>
+            <span class="panel-h">Club deal</span>
+          </div>
+          <span class="panel-code"></span>
+        </header>
+        <div class="diag">
+          <svg viewBox="0 0 280 180" preserveAspectRatio="xMidYMid meet">
+            <!-- GP -->
+            <rect class="e-rect t-2" x="106" y="14" width="68" height="28" rx="2"/>
+            <text class="e-label" x="140" y="32">GP</text>
+            <line class="conn-soft" x1="174" y1="28" x2="190" y2="28"/>
+            <text class="e-side" x="196" y="31">Manager</text>
+            <!-- bus -->
+            <line class="conn" x1="140" y1="42" x2="140" y2="68"/>
+            <line class="conn" x1="30"  y1="68" x2="249" y2="68"/>
+            <line class="conn" x1="30"  y1="68" x2="30"  y2="92"/>
+            <line class="conn" x1="103" y1="68" x2="103" y2="92"/>
+            <line class="conn" x1="176" y1="68" x2="176" y2="92"/>
+            <line class="conn" x1="249" y1="68" x2="249" y2="92"/>
+            <!-- LP -->
+            <rect class="e-rect t-2" x="0"   y="92" width="60" height="26" rx="2"/>
+            <text class="e-label sm" x="30"  y="109">LP 1</text>
+            <rect class="e-rect t-2" x="73"  y="92" width="60" height="26" rx="2"/>
+            <text class="e-label sm" x="103" y="109">LP 2</text>
+            <rect class="e-rect t-2" x="146" y="92" width="60" height="26" rx="2"/>
+            <text class="e-label sm" x="176" y="109">LP 3</text>
+            <rect class="e-rect t-2" x="219" y="92" width="60" height="26" rx="2"/>
+            <text class="e-ellipsis" x="249" y="112">⋯</text>
+            <!-- labels -->
+            <text class="e-side center sm" x="30"  y="138">Lead Investor</text>
+            <text class="e-side center sm" x="103" y="138">Investor A</text>
+            <text class="e-side center sm" x="176" y="138">Investor B</text>
+          </svg>
+        </div>
+        <div class="panel-foot" style="font-size: 12px">Manager holds the GP. Multiple investors syndicate at LP level.</div>
+      </article>
+
+      <!-- ── Level 5 · Access Fund ── -->
+      <article class="panel">
+        <header class="panel-head">
+          <div class="panel-name">
+            <span class="panel-tag">Level 5</span>
+            <span class="panel-h">Access fund<span class="star">∗</span></span>
+          </div>
+          <span class="panel-code"></span>
+        </header>
+        <div class="diag">
+          <svg viewBox="0 0 280 200" preserveAspectRatio="xMidYMid meet">
+
+            <!-- ── Manager-held fund column (left) ── -->
+            <!-- outer GP -->
+            <rect class="e-rect t-3" x="18" y="8" width="62" height="26" rx="2"/>
+            <text class="e-label sm" x="49" y="25">GP</text>
+            <line class="conn-soft" x1="80" y1="21" x2="96" y2="21"/>
+            <text class="e-side sm" x="100" y="24">Manager</text>
+            <!-- connector down to Fd -->
+            <line class="conn" x1="49" y1="34" x2="49" y2="48"/>
+            <!-- AF (dark fill) -->
+            <rect class="e-rect dark" x="18" y="48" width="62" height="28" rx="2"/>
+            <text class="e-label light sm" x="49" y="66">AF</text>
+            <text class="e-asterisk" x="88" y="56">∗</text>
+            <!-- connector down + right, entering SPV scope -->
+            <line class="conn" x1="49"  y1="76" x2="49"  y2="100"/>
+            <line class="conn" x1="49"  y1="100" x2="170" y2="100"/>
+            <line class="conn" x1="170" y1="100" x2="170" y2="118"/>
+
+            <!-- ── SPV Scope (dashed frame) ── -->
+            <rect class="scope" x="90" y="96" width="184" height="100"/>
+            <text class="scope-label" x="96" y="108">SPV Scope</text>
+
+            <!-- inner GP -->
+            <rect class="e-rect t-3" x="144" y="118" width="52" height="22" rx="2"/>
+            <text class="e-label xs" x="170" y="133">GP</text>
+
+            <!-- inner bus to LPs -->
+            <line class="conn" x1="170" y1="140" x2="170" y2="156"/>
+            <line class="conn" x1="110" y1="156" x2="254" y2="156"/>
+            <line class="conn" x1="110" y1="156" x2="110" y2="166"/>
+            <line class="conn" x1="170" y1="156" x2="170" y2="166"/>
+            <line class="conn" x1="220" y1="156" x2="220" y2="166"/>
+            <line class="conn" x1="254" y1="156" x2="254" y2="166"/>
+
+            <!-- inner LPs -->
+            <rect class="e-rect t-3" x="88"  y="166" width="44" height="18" rx="2"/>
+            <text class="e-label xs" x="110" y="178">LP 1</text>
+            <rect class="e-rect t-3" x="148" y="166" width="44" height="18" rx="2"/>
+            <text class="e-label xs" x="170" y="178">LP 2</text>
+            <rect class="e-rect t-3" x="198" y="166" width="44" height="18" rx="2"/>
+            <text class="e-label xs" x="220" y="178">LP 3</text>
+            <text class="e-ellipsis" x="254" y="180" style="font-size:10px">⋯</text>
+
+            <!-- inner investor labels (very compact) -->
+            <text class="e-side center sm" x="110" y="194" style="font-size:8.5px">Investor A</text>
+            <text class="e-side center sm" x="170" y="194" style="font-size:8.5px">Investor B</text>
+            <text class="e-side center sm" x="220" y="194" style="font-size:8.5px">Investor C</text>
+          </svg>
+        </div>
+        <div class="panel-foot" style="font-size: 12px"><span class="flag">∗</span>Manager-held fund acts as the access vehicle; investors enter via the sub-vehicle.</div>
+      </article>
+
+    </div>
+  </div>
+
+  <!-- ───────── FOOTNOTE ───────── -->
+  <div class="token-footnote" style="font-size: 11px">
+    <span class="star">∗</span>Structure no longer viable as an SPV template once the fund vehicle is registered.
+  </div>
+
+  <!-- ───────── SIGNATURE ───────── -->
+  <div class="token-signature">
+    <span>April 25, 2026</span><br>
+    Prepared by Woodfine Management Corp.
+  </div>
+
+</div>
+
+</body>
+</html>
