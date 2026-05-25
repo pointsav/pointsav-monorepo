@@ -1,9 +1,8 @@
 @~/Foundry/AGENT.md
 
-# project-console — Archive Guide
+# project-infrastructure — Archive Guide
 
-> **State:** active | **Last updated:** 2026-05-20
-> **Renamed from:** project-proofreader (2026-05-20)
+> **State:** active | **Last updated:** 2026-05-18
 > **Cluster manifest:** `.agent/manifest.md`
 > **Workspace AGENT.md takes precedence on conflict.**
 
@@ -11,7 +10,7 @@
 
 ## Cluster mission
 
-Console OS (`os-console`) — AGPL-3.0 OS family owning all `app-console-*` UI surfaces. Live deployment: **https://proofreader.pointsav.com** (`app-console-proofreader`). Reserved: `app-console-gis` (F8), `app-console-slm` (F9), `app-console-system` (F11).
+PPN cartridges and network OS work — the software layer that constitutes the PointSav Private Network and the infrastructure nodes that run it.
 
 ## Tetrad
 
