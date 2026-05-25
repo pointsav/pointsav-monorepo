@@ -1,3 +1,4 @@
+#![allow(clippy::unit_arg)]
 //! criterion benchmarks for the kernel-side ledger consultation
 //! latency budget. Master 4b deliverable from
 //! `~/Foundry/clones/project-system/.claude/inbox-archive.md`.
