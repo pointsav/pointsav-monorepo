@@ -2,8 +2,8 @@
 schema: foundry-doc-v1
 document_version: 0.3.0
 component: app-mediakit-knowledge
-status: active — Phases 1 through 4 shipped; Phase 5 (auth + webhooks) is next milestone, gated on Stage 6 promotion + BP5 clearance
-last_updated: 2026-05-12
+status: active — Phases 1–5 (original plan) + KNOWLEDGE-PLATFORM-PLAN.md Phases 1, 3, 4, 5 shipped; Phase 6 gated on GitHub rename + MASTER Doctrine amendment
+last_updated: 2026-05-22
 session: 4
 companion_docs:
   - docs/INVENTIONS.md
@@ -42,10 +42,10 @@ are documented separately in [`docs/INVENTIONS.md`](docs/INVENTIONS.md).
 |---|---|---|
 | 1 — render | **shipped** (722ae18, 2026-04-26) | project-knowledge |
 | 1.1 — Wikipedia chrome | **shipped** (additive; TOC, hatnote, tabs, density toggle, language switcher) | project-knowledge |
-| 2 — edit + collab | **shipped** (Steps 1-7; JSON-LD, atomic edit, CodeMirror 6, SAA squiggles, citation autocomplete, yjs collab relay) | project-knowledge |
+| 2 — edit | **shipped** (Steps 1-7; JSON-LD, atomic edit, CodeMirror 6, SAA squiggles, citation autocomplete; real-time collab removed in Phase 1 cleanup 2026-05-22) | project-knowledge |
 | 3 — search + feeds | **shipped** (Steps 3.1-3.4; Tantivy BM25, Atom, JSON Feed, sitemap, robots.txt, llms.txt, raw Markdown) | project-knowledge |
 | 4 — Git sync + MCP | **shipped** (Steps 4.1-4.8; git2 commit-on-edit, history/blame/diff, redb link-graph, blake3 hashes, MCP native JSON-RPC 2.0, git smart-HTTP, OpenAPI 3.1) | project-knowledge |
-| 5 — auth + webhooks | designed — **next milestone**; gated on Stage 6 promotion + BP5 operator clearance | project-knowledge |
+| 5 — auth + edit review | **shipped** (cookie sessions, argon2id, edit review queue); 5.1+ (ACLs, SSO, webhooks) deferred pending BP5 clearance | project-knowledge |
 | 6 — wikilink resolution + portable identity | designed | project-knowledge |
 | 7 — federation seam (blake3 + ActivityPub) | designed | project-knowledge |
 | 8 — disclosure mode | per Master v0.1.10 ratification, **migrates to a future `project-disclosure` cluster**; convention extended in v0.1.14 with §6 cadence sub-bullets for two-clock + Disclosure-Diff + Subscriber Proof-of-Receipt | project-disclosure (TBD) |
@@ -114,7 +114,7 @@ time and document chosen version in `Cargo.toml` comments.
 | Editor lint (squiggles) | `@codemirror/lint` | 2 |
 | Editor autocomplete (citations) | `@codemirror/autocomplete` | 2 |
 | Editor Live Preview | `codemirror-rich-markdoc` or `ixora` | 2 |
-| Real-time collab | `y-codemirror.next` + `yjs` + self-hosted `y-websocket` | 2.x (opt-in flag) |
+| Real-time collab | removed — yjs + y-websocket deleted in Phase 1 cleanup (2026-05-22) | — |
 | Search | `tantivy` 0.24+ | 3 |
 | Feed generation | `atom_syndication` + `serde_json` | 3 |
 | JSON-LD serialisation | `serde_json` (typed schema.org structs) | 3 (baseline from 1) |
