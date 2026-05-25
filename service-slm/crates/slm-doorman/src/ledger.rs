@@ -33,7 +33,7 @@
 use std::fs::{self, OpenOptions};
 use std::io::{BufWriter, Write};
 use std::path::{Path, PathBuf};
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
@@ -115,10 +115,12 @@ pub enum CompletionStatus {
 
 /// Append-only ledger writer. One process owns one `AuditLedger`; the
 /// internal mutex serialises concurrent writes from multiple request
-/// handlers.
+/// handlers. Cheaply cloneable — clone shares the same mutex and file
+/// path, so concurrent clones serialise correctly without extra locking.
+#[derive(Clone)]
 pub struct AuditLedger {
     base_dir: PathBuf,
-    inner: Mutex<()>,
+    inner: Arc<Mutex<()>>,
 }
 
 impl AuditLedger {
@@ -134,7 +136,7 @@ impl AuditLedger {
         fs::create_dir_all(&base_dir)?;
         Ok(Self {
             base_dir,
-            inner: Mutex::new(()),
+            inner: Arc::new(Mutex::new(())),
         })
     }
 

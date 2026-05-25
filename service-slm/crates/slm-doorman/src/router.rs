@@ -12,7 +12,7 @@
 //! deterministic processing" decision.
 
 use chrono::Utc;
-use slm_core::{CanonicalMessage, Complexity, ComputeRequest, ComputeResponse, GrammarConstraint, Role, Tier};
+use slm_core::{CanonicalMessage, Complexity, ComputeRequest, ComputeResponse, GrammarConstraint, LatencyClass, Role, Tier};
 use tracing::{info, warn};
 
 use crate::error::{DoormanError, Result};
@@ -194,6 +194,10 @@ impl Doorman {
     }
 
     fn select_tier(&self, req: &ComputeRequest) -> Result<Tier> {
+        // Batch latency always routes to Tier B — never local regardless of node class.
+        if req.latency_class == LatencyClass::Batch {
+            return self.confirm_tier_with_req(Tier::Yoyo, req);
+        }
         if let Some(hint) = req.tier_hint {
             return self.confirm_tier_with_req(hint, req);
         }
@@ -403,16 +407,21 @@ impl Doorman {
                 adapter_version: None,
             },
         };
-        if let Err(write_err) = self.ledger.append(&entry) {
-            // Audit failure must never silently drop. Surface to logs;
-            // upstream observability picks it up.
-            warn!(
-                target: "slm_doorman::ledger",
-                error = %write_err,
-                request_id = %req.request_id,
-                "failed to append audit entry"
-            );
-        }
+        // Off-load blocking JSONL write to the thread pool (GF-1: avoid
+        // blocking the async hot path on O_APPEND + BufWriter flush).
+        // Fire-and-forget; the JoinHandle is intentionally dropped.
+        let ledger = self.ledger.clone();
+        let entry_for_write = entry.clone();
+        tokio::task::spawn_blocking(move || {
+            if let Err(write_err) = ledger.append(&entry_for_write) {
+                warn!(
+                    target: "slm_doorman::ledger",
+                    error = %write_err,
+                    request_id = %entry_for_write.request_id,
+                    "failed to append audit entry"
+                );
+            }
+        });
 
         // Prometheus metric emit (P3-3.1). The recorder is installed by
         // slm-doorman-server::metrics::init() at startup; if absent, the
@@ -780,7 +789,7 @@ async fn try_auto_start_yoyo(client: &YoYoTierClient) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use slm_core::{CanonicalMessage, ModuleId, RequestId};
+    use slm_core::{CanonicalMessage, LatencyClass, ModuleId, RequestId};
     use std::str::FromStr;
 
     fn req(complexity: Complexity, hint: Option<Tier>, yoyo_label: Option<String>) -> ComputeRequest {
@@ -790,6 +799,7 @@ mod tests {
             model: None,
             messages: vec![CanonicalMessage::text("user", "ping")],
             complexity,
+            latency_class: LatencyClass::default(),
             tier_hint: hint,
             stream: false,
             max_tokens: None,
@@ -824,6 +834,21 @@ mod tests {
     }
 
     #[test]
+    fn micro_class_no_local_tier_unavailable() {
+        // On Micro nodes build_doorman() sets local=None. Verify that a Doorman
+        // without a local client rejects every Local tier request, regardless of
+        // complexity or hint — DOCTRINE.md claims #49/#54 invariant.
+        let doorman = Doorman::new(DoormanConfig::default(), ledger());
+        for hint in [None, Some(Tier::Local)] {
+            let result = doorman.select_tier(&req(Complexity::Low, hint, None));
+            assert!(
+                matches!(result, Err(DoormanError::TierUnavailable(Tier::Local))),
+                "expected TierUnavailable(Local) but got {result:?}"
+            );
+        }
+    }
+
+    #[test]
     fn high_complexity_prefers_yoyo_when_configured() {
         // Pure selection logic — no network. We construct a Doorman with
         // a Yo-Yo config that points at a bogus endpoint; select_tier
@@ -853,5 +878,66 @@ mod tests {
             .select_tier(&req(Complexity::High, None, None))
             .expect("should pick yoyo");
         assert_eq!(picked, Tier::Yoyo);
+    }
+
+    #[test]
+    fn batch_latency_routes_yoyo() {
+        // Batch always routes to Tier B — never local, regardless of complexity.
+        let yoyo = YoYoTierClient::new(
+            crate::tier::YoYoTierConfig {
+                endpoint: "http://invalid.example".into(),
+                default_model: "Olmo-3-1125-32B-Think".into(),
+                contract_version: crate::YOYO_CONTRACT_VERSION.into(),
+                pricing: crate::tier::PricingConfig::default(),
+            },
+            std::sync::Arc::new(crate::tier::StaticBearer::new("unused-in-selection-test")),
+        );
+        let mut yoyo_map = HashMap::new();
+        yoyo_map.insert("default".to_string(), yoyo);
+        let doorman = Doorman::new(
+            DoormanConfig {
+                local: None,
+                yoyo: yoyo_map,
+                external: None,
+                lark_validator: None,
+                graph_context_client: None,
+            },
+            ledger(),
+        );
+        let mut r = req(Complexity::Low, None, None);
+        r.latency_class = LatencyClass::Batch;
+        let picked = doorman.select_tier(&r).expect("should pick Yoyo for Batch latency");
+        assert_eq!(picked, Tier::Yoyo, "Batch latency must route Yoyo even at Low complexity");
+
+        // When Yoyo is not configured, Batch still must not fall back to Local.
+        let doorman_no_yoyo = Doorman::new(DoormanConfig::default(), ledger());
+        let result = doorman_no_yoyo.select_tier(&r);
+        assert!(
+            matches!(result, Err(DoormanError::TierUnavailable(Tier::Yoyo))),
+            "Batch with no Yoyo must return TierUnavailable(Yoyo), not Local; got {result:?}"
+        );
+    }
+
+    #[test]
+    fn interactive_prefers_local_when_available() {
+        // Interactive + Low complexity + Tier A configured → picks Local.
+        let local = crate::tier::LocalTierClient::new(crate::tier::LocalTierConfig {
+            endpoint: "http://invalid.example".into(),
+            default_model: "olmo-2-0425-1b-instruct".into(),
+        });
+        let doorman = Doorman::new(
+            DoormanConfig {
+                local: Some(local),
+                yoyo: HashMap::new(),
+                external: None,
+                lark_validator: None,
+                graph_context_client: None,
+            },
+            ledger(),
+        );
+        let mut r = req(Complexity::Low, None, None);
+        r.latency_class = LatencyClass::Interactive;
+        let picked = doorman.select_tier(&r).expect("should pick Local");
+        assert_eq!(picked, Tier::Local, "Interactive + Low + Tier A available must pick Local");
     }
 }

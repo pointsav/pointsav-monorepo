@@ -32,7 +32,10 @@ const PRICE_MAP: &[(u64, &str)] = &[
 // ── CLI ───────────────────────────────────────────────────────────────────────
 
 #[derive(Parser)]
-#[command(name = "tool-wallet", about = "Polygon USDC payment watcher and receipt writer")]
+#[command(
+    name = "tool-wallet",
+    about = "Polygon USDC payment watcher and receipt writer"
+)]
 struct Cli {
     #[command(subcommand)]
     command: Command,
@@ -52,13 +55,21 @@ enum Command {
 struct WatchArgs {
     #[arg(env = "POLYGON_RPC_URL", long, help = "Polygon JSON-RPC endpoint")]
     rpc_url: String,
-    #[arg(env = "POLYGON_WALLET_ADDRESS", long, help = "Receiving wallet address")]
+    #[arg(
+        env = "POLYGON_WALLET_ADDRESS",
+        long,
+        help = "Receiving wallet address"
+    )]
     wallet_address: String,
     #[arg(env = "FS_ENDPOINT", long, default_value = "http://127.0.0.1:8020")]
     fs_endpoint: String,
     #[arg(env = "FS_MODULE_ID", long, default_value = "software")]
     fs_module_id: String,
-    #[arg(env = "RECEIPTS_DIR", long, default_value = "/var/lib/local-software/receipts")]
+    #[arg(
+        env = "RECEIPTS_DIR",
+        long,
+        default_value = "/var/lib/local-software/receipts"
+    )]
     receipts_dir: String,
     #[arg(long, default_value = "30", help = "Poll interval in seconds")]
     poll_secs: u64,
@@ -97,7 +108,12 @@ struct LicenseReceipt {
 
 // ── RPC helpers ───────────────────────────────────────────────────────────────
 
-async fn rpc_call(client: &reqwest::Client, rpc_url: &str, method: &str, params: Value) -> Result<Value> {
+async fn rpc_call(
+    client: &reqwest::Client,
+    rpc_url: &str,
+    method: &str,
+    params: Value,
+) -> Result<Value> {
     let body = json!({
         "jsonrpc": "2.0",
         "id": 1,
@@ -209,7 +225,9 @@ async fn watch(args: WatchArgs) -> Result<()> {
     // Fetch current block to start from
     let head_hex = rpc_call(&client, &args.rpc_url, "eth_blockNumber", json!([])).await?;
     let head_str = head_hex.as_str().unwrap_or("0x0").trim_start_matches("0x");
-    let mut last_block = u64::from_str_radix(head_str, 16).unwrap_or(0).saturating_sub(1);
+    let mut last_block = u64::from_str_radix(head_str, 16)
+        .unwrap_or(0)
+        .saturating_sub(1);
     tracing::info!(start_block = last_block, "starting watch from block");
 
     loop {
@@ -218,7 +236,10 @@ async fn watch(args: WatchArgs) -> Result<()> {
         // Get current block
         let head_hex = match rpc_call(&client, &args.rpc_url, "eth_blockNumber", json!([])).await {
             Ok(v) => v,
-            Err(e) => { tracing::warn!("eth_blockNumber failed: {e}"); continue; }
+            Err(e) => {
+                tracing::warn!("eth_blockNumber failed: {e}");
+                continue;
+            }
         };
         let head_str = head_hex.as_str().unwrap_or("0x0").trim_start_matches("0x");
         let current_block = match u64::from_str_radix(head_str, 16) {
@@ -233,26 +254,42 @@ async fn watch(args: WatchArgs) -> Result<()> {
         let from_block = format!("0x{:x}", last_block + 1);
         let to_block = format!("0x{:x}", current_block.saturating_sub(1)); // 1 confirmation
 
-        let logs = match rpc_call(&client, &args.rpc_url, "eth_getLogs", json!([{
-            "address": USDC_CONTRACT,
-            "fromBlock": from_block,
-            "toBlock": to_block,
-            "topics": [TRANSFER_TOPIC, null, wallet_padded]
-        }])).await {
+        let logs = match rpc_call(
+            &client,
+            &args.rpc_url,
+            "eth_getLogs",
+            json!([{
+                "address": USDC_CONTRACT,
+                "fromBlock": from_block,
+                "toBlock": to_block,
+                "topics": [TRANSFER_TOPIC, null, wallet_padded]
+            }]),
+        )
+        .await
+        {
             Ok(v) => v,
-            Err(e) => { tracing::warn!("eth_getLogs failed: {e}"); continue; }
+            Err(e) => {
+                tracing::warn!("eth_getLogs failed: {e}");
+                continue;
+            }
         };
 
         if let Some(log_arr) = logs.as_array() {
             for log in log_arr {
                 let tx_hash = log["transactionHash"].as_str().unwrap_or("").to_lowercase();
-                let block_hex = log["blockNumber"].as_str().unwrap_or("0x0").trim_start_matches("0x");
+                let block_hex = log["blockNumber"]
+                    .as_str()
+                    .unwrap_or("0x0")
+                    .trim_start_matches("0x");
                 let block_number = u64::from_str_radix(block_hex, 16).unwrap_or(0);
                 let data = log["data"].as_str().unwrap_or("0x");
                 let amount = parse_usdc_amount(data);
 
                 let from_padded = log["topics"].get(1).and_then(|v| v.as_str()).unwrap_or("");
-                let customer_ref = format!("0x{}", from_padded.trim_start_matches("0x").trim_start_matches('0'));
+                let customer_ref = format!(
+                    "0x{}",
+                    from_padded.trim_start_matches("0x").trim_start_matches('0')
+                );
 
                 let product_id = PRICE_MAP
                     .iter()
@@ -287,7 +324,9 @@ async fn watch(args: WatchArgs) -> Result<()> {
                     &args.fs_endpoint,
                     &args.fs_module_id,
                     &client,
-                ).await {
+                )
+                .await
+                {
                     tracing::error!("receipt write failed: {e:#}");
                 }
             }
@@ -309,7 +348,8 @@ async fn check(args: CheckArgs) -> Result<()> {
         &args.rpc_url,
         "eth_getTransactionReceipt",
         json!([tx_hash]),
-    ).await?;
+    )
+    .await?;
 
     if receipt.is_null() {
         let out = json!({"confirmed": false, "reason": "transaction not found or not mined"});
@@ -329,8 +369,14 @@ async fn check(args: CheckArgs) -> Result<()> {
     let logs = receipt["logs"].as_array().cloned().unwrap_or_default();
     let matching = logs.iter().find(|log| {
         let topics = log["topics"].as_array();
-        let topic0 = topics.and_then(|t| t.first()).and_then(|v| v.as_str()).unwrap_or("");
-        let topic2 = topics.and_then(|t| t.get(2)).and_then(|v| v.as_str()).unwrap_or("");
+        let topic0 = topics
+            .and_then(|t| t.first())
+            .and_then(|v| v.as_str())
+            .unwrap_or("");
+        let topic2 = topics
+            .and_then(|t| t.get(2))
+            .and_then(|v| v.as_str())
+            .unwrap_or("");
         topic0.to_lowercase() == TRANSFER_TOPIC
             && topic2.to_lowercase() == wallet_padded.to_lowercase()
     });

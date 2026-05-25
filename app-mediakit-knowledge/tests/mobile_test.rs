@@ -32,14 +32,13 @@ async fn build_state(content_dir: &Path) -> (AppState, tempfile::TempDir) {
         citations_yaml: std::path::PathBuf::from("/nonexistent/citations.yaml"),
         search: Arc::new(index),
         git: Arc::new(Mutex::new(repo)),
-        collab: Arc::new(app_mediakit_knowledge::collab::CollabRooms::new()),
-        enable_collab: false,
         site_title: "Test Wiki".to_string(),
         git_tenant: "pointsav".to_string(),
         mcp_enabled: false,
         glossary: Arc::new(app_mediakit_knowledge::glossary::Glossary::default()),
         links: app_mediakit_knowledge::links::LinkGraph::for_testing(),
         brand_theme: None,
+        brand_instance: "documentation".to_string(),
         db: None,
     };
     (state, state_dir)
@@ -73,7 +72,10 @@ async fn mobile_nav_toggle_button_present() {
     let (status, html) = get_wiki(state, "topic-hello").await;
     assert_eq!(status, StatusCode::OK);
     // Button id and ARIA wiring
-    assert!(html.contains("id=\"nav-toggle\""), "nav-toggle button missing");
+    assert!(
+        html.contains("id=\"nav-toggle\""),
+        "nav-toggle button missing"
+    );
     assert!(
         html.contains("aria-controls=\"mobile-nav-drawer\""),
         "nav-toggle missing aria-controls"
@@ -83,7 +85,10 @@ async fn mobile_nav_toggle_button_present() {
         "nav-toggle should start unexpanded"
     );
     // CSS class for touch-target sizing
-    assert!(html.contains("nav-toggle-btn"), "nav-toggle-btn class missing");
+    assert!(
+        html.contains("nav-toggle-btn"),
+        "nav-toggle-btn class missing"
+    );
 }
 
 // ─── Test 2: nav drawer present, initially hidden ────────────────────────────

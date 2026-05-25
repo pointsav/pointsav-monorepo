@@ -128,8 +128,25 @@ fn allowed_write_ext(path: &Path) -> bool {
     };
     matches!(
         ext.to_lowercase().as_str(),
-        "md" | "txt" | "html" | "css" | "js" | "ts" | "json" | "toml" | "yaml" | "yml"
-            | "sh" | "rs" | "py" | "rb" | "go" | "conf" | "ini" | "env" | "lock" | "svg"
+        "md" | "txt"
+            | "html"
+            | "css"
+            | "js"
+            | "ts"
+            | "json"
+            | "toml"
+            | "yaml"
+            | "yml"
+            | "sh"
+            | "rs"
+            | "py"
+            | "rb"
+            | "go"
+            | "conf"
+            | "ini"
+            | "env"
+            | "lock"
+            | "svg"
     )
 }
 
@@ -163,10 +180,7 @@ fn err(status: StatusCode, msg: impl Into<String>) -> Response {
 }
 
 /// GET /file?path=<url_path>
-async fn get_file(
-    State(state): State<AppState>,
-    Query(q): Query<FileQuery>,
-) -> Response {
+async fn get_file(State(state): State<AppState>, Query(q): Query<FileQuery>) -> Response {
     let (fs_path, writable) = match resolve_path(&state.roots, &q.path) {
         Ok(v) => v,
         Err(e) => return err(StatusCode::BAD_REQUEST, e.to_string()),
@@ -196,7 +210,12 @@ async fn get_file(
         Err(e) => return err(StatusCode::INTERNAL_SERVER_ERROR, e.to_string()),
     };
 
-    Json(FileResponse { content, mtime, writable }).into_response()
+    Json(FileResponse {
+        content,
+        mtime,
+        writable,
+    })
+    .into_response()
 }
 
 /// PUT /file?path=<url_path>
@@ -209,7 +228,11 @@ async fn put_file(
     body: Bytes,
 ) -> Response {
     // CSRF guard
-    if headers.get("x-foundry-editor").and_then(|v| v.to_str().ok()) != Some("1") {
+    if headers
+        .get("x-foundry-editor")
+        .and_then(|v| v.to_str().ok())
+        != Some("1")
+    {
         return err(StatusCode::FORBIDDEN, "missing X-Foundry-Editor header");
     }
 
@@ -223,11 +246,17 @@ async fn put_file(
     }
 
     if !allowed_write_ext(&fs_path) {
-        return err(StatusCode::FORBIDDEN, "file extension not allowed for writes");
+        return err(
+            StatusCode::FORBIDDEN,
+            "file extension not allowed for writes",
+        );
     }
 
     if body.len() > state.max_bytes {
-        return err(StatusCode::PAYLOAD_TOO_LARGE, "file exceeds max_bytes limit");
+        return err(
+            StatusCode::PAYLOAD_TOO_LARGE,
+            "file exceeds max_bytes limit",
+        );
     }
 
     // mtime conflict check
@@ -242,7 +271,10 @@ async fn put_file(
                         .map(|d| d.as_secs())
                         .unwrap_or(0);
                     if server_mtime != client_mtime {
-                        return err(StatusCode::CONFLICT, "file modified on disk since last read");
+                        return err(
+                            StatusCode::CONFLICT,
+                            "file modified on disk since last read",
+                        );
                     }
                 }
             }
@@ -257,7 +289,10 @@ async fn put_file(
     // Atomic write: write to .tmp, then rename
     let tmp_path = fs_path.with_extension(format!(
         "{}.tmp",
-        fs_path.extension().and_then(|e| e.to_str()).unwrap_or("bin")
+        fs_path
+            .extension()
+            .and_then(|e| e.to_str())
+            .unwrap_or("bin")
     ));
 
     let write_result: Result<()> = (|| {
@@ -302,7 +337,10 @@ async fn main() -> Result<()> {
     // Inject module_id into SPA HTML as a bootstrap <meta> tag
     let spa_html = SPA_HTML.replacen(
         "<head>",
-        &format!("<head>\n<meta name=\"workbench-module-id\" content=\"{}\">", config.module_id),
+        &format!(
+            "<head>\n<meta name=\"workbench-module-id\" content=\"{}\">",
+            config.module_id
+        ),
         1,
     );
 

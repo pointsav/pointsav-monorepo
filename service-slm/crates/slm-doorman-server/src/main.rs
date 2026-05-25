@@ -9,7 +9,11 @@
 //! Environment configuration:
 //!   SLM_BIND_ADDR             default 127.0.0.1:9080
 //!   SLM_LOCAL_ENDPOINT        default http://127.0.0.1:8080  (Tier A)
-//!   SLM_LOCAL_MODEL           default olmo-3-7b-instruct
+//!   SLM_LOCAL_MODEL           default olmo-2-0425-1b-instruct
+//!   SLM_FORCE_BROKER_MODE     set `true` or `1` to disable Tier A even on
+//!                             capable hardware. Useful for testing broker-only
+//!                             mode or deploying on Hardware without a model.
+//!                             `/readyz` reports `tier_a_reason: force-broker-mode`.
 //!   SLM_YOYO_ENDPOINT         optional; absent = no Yo-Yo (community-tier mode)
 //!   SLM_YOYO_MODEL            default Olmo-3-1125-32B-Think
 //!   SLM_YOYO_BEARER           static bearer token used by Tier B (B2);
@@ -58,8 +62,9 @@
 //! with no Yo-Yo configured (Optional Intelligence). B5 verifies this
 //! end-to-end.
 
+use foundry_nodeclass::NodeClass;
 use slm_doorman_server::http;
-use slm_doorman_server::idle_monitor::IdleMonitorConfig;
+use slm_doorman_server::idle_monitor::{BackendLifecycle, IdleMonitorConfig, IdleMonitorHandle};
 use std::sync::atomic::AtomicU64;
 use slm_doorman_server::queue::{
     dequeue_shadow, ensure_dirs, reap_expired_leases, release_shadow, QueueConfig, ReleaseOutcome,
@@ -119,7 +124,7 @@ async fn main() -> anyhow::Result<()> {
         .parse()
         .context("SLM_BIND_ADDR must be a socket address")?;
 
-    let doorman = build_doorman()?;
+    let DoormanBoot { doorman, node_class, tier_a_reason } = build_doorman()?;
     let apprenticeship = build_apprenticeship_config();
     let brief_cache = Arc::new(BriefCache::default());
     let verdict_dispatcher = match apprenticeship.as_ref() {
@@ -150,6 +155,16 @@ async fn main() -> anyhow::Result<()> {
     let service_content_endpoint = std::env::var("SERVICE_CONTENT_ENDPOINT")
         .unwrap_or_else(|_| http::DEFAULT_SERVICE_CONTENT_ENDPOINT.to_string());
 
+    // Yo-Yo idle monitor — build handle before AppState so it can be stored
+    // as Option<Arc<dyn BackendLifecycle>>. start() is called after state build.
+    let idle_monitor_handle: Option<Arc<dyn BackendLifecycle>> =
+        if let Some(mut idle_cfg) = IdleMonitorConfig::from_env() {
+            idle_cfg.last_yoyo_dispatch = Arc::clone(&last_yoyo_dispatch);
+            Some(Arc::new(IdleMonitorHandle::new(idle_cfg)))
+        } else {
+            None
+        };
+
     let state = Arc::new(http::AppState {
         doorman,
         apprenticeship,
@@ -173,6 +188,9 @@ async fn main() -> anyhow::Result<()> {
         last_yoyo_dispatch: Arc::clone(&last_yoyo_dispatch),
         // Gateway auth — None disables auth (community-tier mode).
         gateway_token: std::env::var("SLM_GATEWAY_TOKEN").ok(),
+        node_class,
+        tier_a_reason,
+        idle_monitor: idle_monitor_handle,
     });
 
     info!(
@@ -349,24 +367,12 @@ async fn main() -> anyhow::Result<()> {
     }
     // ────────────────────────────────────────────────────────────────────
 
-    // ── Yo-Yo idle monitor (B5) ─────────────────────────────────────────
-    //
-    // Polls llama-server /metrics every 5 min. After SLM_YOYO_IDLE_MINUTES
-    // (default 30) of zero active slots, sends a GCP instances.stop request
-    // via the workspace SA ADC token from the GCE metadata server.
-    // Requires all four GCP env vars — absent any, the monitor does not start.
-    if let Some(mut idle_cfg) = IdleMonitorConfig::from_env() {
-        // Wire in the shared dispatch clock so the idle monitor can account for
-        // Tier B dispatches that occurred between 5-min poll intervals.
-        idle_cfg.last_yoyo_dispatch = Arc::clone(&last_yoyo_dispatch);
-        info!(
-            idle_threshold_secs = idle_cfg.idle_threshold.as_secs(),
-            gcp_instance = %idle_cfg.gcp_instance,
-            "Yo-Yo idle monitor enabled"
-        );
-        tokio::spawn(slm_doorman_server::idle_monitor::run_idle_monitor(idle_cfg));
+    // ── Yo-Yo idle monitor (B5) — started via BackendLifecycle trait ────────
+    if let Some(ref handle) = state.idle_monitor {
+        info!(name = handle.name(), "backend lifecycle: starting");
+        handle.start().await;
     }
-    // ────────────────────────────────────────────────────────────────────
+    // ────────────────────────────────────────────────────────────────────────
 
     let app = http::router(state);
     let listener = tokio::net::TcpListener::bind(bind_addr)
@@ -378,13 +384,42 @@ async fn main() -> anyhow::Result<()> {
     Ok(())
 }
 
-fn build_doorman() -> anyhow::Result<Doorman> {
-    let local = Some(LocalTierClient::new(LocalTierConfig {
-        endpoint: std::env::var("SLM_LOCAL_ENDPOINT")
-            .unwrap_or_else(|_| "http://127.0.0.1:8080".to_string()),
-        default_model: std::env::var("SLM_LOCAL_MODEL")
-            .unwrap_or_else(|_| "olmo-3-7b-instruct".to_string()),
-    }));
+struct DoormanBoot {
+    doorman: Doorman,
+    node_class: &'static str,
+    tier_a_reason: &'static str,
+}
+
+fn build_doorman() -> anyhow::Result<DoormanBoot> {
+    let caps = foundry_nodeclass::detect();
+    let force_broker = std::env::var("SLM_FORCE_BROKER_MODE")
+        .map(|v| matches!(v.trim(), "true" | "1"))
+        .unwrap_or(false);
+    let on_node_ai = caps.supports_on_node_ai() && !force_broker;
+
+    let tier_a_reason: &'static str = if force_broker {
+        "force-broker-mode"
+    } else if caps.node_class == NodeClass::Micro {
+        "micro-node-class"
+    } else {
+        "available"
+    };
+
+    let local = if on_node_ai {
+        Some(LocalTierClient::new(LocalTierConfig {
+            endpoint: std::env::var("SLM_LOCAL_ENDPOINT")
+                .unwrap_or_else(|_| "http://127.0.0.1:8080".to_string()),
+            default_model: std::env::var("SLM_LOCAL_MODEL")
+                .unwrap_or_else(|_| "olmo-2-0425-1b-instruct".to_string()),
+        }))
+    } else {
+        info!(
+            node_class = caps.node_class.as_str(),
+            reason = tier_a_reason,
+            "Tier A local client disabled; Doorman will operate as pure broker"
+        );
+        None
+    };
 
     let mut yoyo = std::collections::HashMap::new();
 
@@ -500,16 +535,20 @@ fn build_doorman() -> anyhow::Result<Doorman> {
                 GraphContextClient::new(ep)
             });
 
-    Ok(Doorman::new(
-        DoormanConfig {
-            local,
-            yoyo,
-            external,
-            lark_validator,
-            graph_context_client,
-        },
-        ledger,
-    ))
+    Ok(DoormanBoot {
+        doorman: Doorman::new(
+            DoormanConfig {
+                local,
+                yoyo,
+                external,
+                lark_validator,
+                graph_context_client,
+            },
+            ledger,
+        ),
+        node_class: caps.node_class.as_str(),
+        tier_a_reason,
+    })
 }
 
 fn build_yoyo_client(

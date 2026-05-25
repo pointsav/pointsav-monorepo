@@ -44,8 +44,8 @@ use serde::{Deserialize, Serialize};
 use slm_core::{
     ApprenticeshipAttempt, ApprenticeshipBrief, AuditCaptureRequest, AuditCaptureResponse,
     AuditProxyRequest, CanonicalMessage, ChatMessage, Complexity, ContentBlock, ComputeRequest,
-    DeferReason, ExtractionRequest, ExtractionResponse, GrammarConstraint, ModuleId, RequestId,
-    Role, Tier, ToolDef,
+    DeferReason, ExtractionRequest, ExtractionResponse, GrammarConstraint, LatencyClass, ModuleId,
+    RequestId, Role, Tier, ToolDef,
 };
 use slm_doorman::ledger::{
     AuditEntry, CompletionStatus,
@@ -59,6 +59,7 @@ use slm_doorman::{
 };
 use tokio::sync::Semaphore;
 
+use crate::idle_monitor::BackendLifecycle;
 use crate::queue::QueueConfig;
 
 pub struct AppState {
@@ -121,6 +122,16 @@ pub struct AppState {
     /// When `None`, auth is disabled (community-tier / development mode).
     /// Set via `SLM_GATEWAY_TOKEN` env var at boot.
     pub gateway_token: Option<String>,
+    /// Node class detected at Doorman startup via `foundry-nodeclass::detect()`.
+    /// One of: "micro", "hardware", "accelerated". Reported by `/readyz`.
+    pub node_class: &'static str,
+    /// Why Tier A is available or unavailable. Reported by `/readyz`.
+    /// "available" | "micro-node-class" | "force-broker-mode"
+    pub tier_a_reason: &'static str,
+    /// Yo-Yo idle monitor lifecycle handle. `Some` when GCP env vars are set
+    /// at boot. Type-erased so `AppState` does not directly reference the
+    /// concrete idle-monitor type (BackendLifecycle broker-discipline, §8.C).
+    pub idle_monitor: Option<Arc<dyn BackendLifecycle>>,
 }
 
 pub fn router(state: Arc<AppState>) -> Router {
@@ -216,6 +227,7 @@ async fn shadow_adapter(
         model: Some(body.adapter_a.clone()),
         messages: messages.clone(),
         complexity: Complexity::Medium,
+        latency_class: LatencyClass::default(),
         tier_hint: None,
         stream: false,
         max_tokens: Some(max_tokens),
@@ -235,6 +247,7 @@ async fn shadow_adapter(
         model: Some(body.adapter_b.clone()),
         messages,
         complexity: Complexity::Medium,
+        latency_class: LatencyClass::default(),
         tier_hint: None,
         stream: false,
         max_tokens: Some(max_tokens),
@@ -410,6 +423,7 @@ async fn responses_api(
         model: body.model.clone(),
         messages,
         complexity: Complexity::Medium,
+        latency_class: LatencyClass::default(),
         tier_hint: None,
         stream: body.stream,
         max_tokens: body.max_output_tokens,
@@ -565,9 +579,15 @@ async fn readyz(State(state): State<Arc<AppState>>) -> impl IntoResponse {
         Some(now.saturating_sub(last_dispatch))
     };
 
+    let tier_a = state.doorman.has_local();
+    let ai_available = tier_a || state.doorman.has_yoyo() || state.doorman.has_external();
     let body = serde_json::json!({
         "ready": true,
-        "has_local": state.doorman.has_local(),
+        "node_class": state.node_class,
+        "tier_a": tier_a,
+        "tier_a_reason": state.tier_a_reason,
+        "ai_available": ai_available,
+        "has_local": tier_a,
         "has_yoyo": state.doorman.has_yoyo(),
         "has_external": state.doorman.has_external(),
         "lark_validation_active": state.doorman.has_lark_validator(),
@@ -659,6 +679,7 @@ async fn chat_completions(
         model: body.model,
         messages: body.messages.into_iter().map(CanonicalMessage::from).collect(),
         complexity,
+        latency_class: LatencyClass::default(),
         tier_hint: None,
         stream: body.stream,
         max_tokens: body.max_tokens,
@@ -973,6 +994,7 @@ async fn extract(State(state): State<Arc<AppState>>, raw: Bytes) -> impl IntoRes
             CanonicalMessage::text("user", req.text),
         ],
         complexity: Complexity::High,
+        latency_class: LatencyClass::default(),
         tier_hint: Some(Tier::Yoyo),
         stream: false,
         max_tokens: Some(2048),
@@ -1833,6 +1855,7 @@ fn anthropic_to_compute_request(
         model: Some(body.model),
         messages,
         complexity,
+        latency_class: LatencyClass::default(),
         tier_hint,
         stream: false, // Doorman always returns buffered; SSE is assembled by the handler
         max_tokens: Some(body.max_tokens),

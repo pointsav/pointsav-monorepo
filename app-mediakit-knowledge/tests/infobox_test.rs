@@ -31,14 +31,13 @@ async fn build_state(content_dir: &Path) -> (AppState, tempfile::TempDir) {
         citations_yaml: std::path::PathBuf::from("/nonexistent/citations.yaml"),
         search: Arc::new(index),
         git: Arc::new(Mutex::new(repo)),
-        collab: Arc::new(app_mediakit_knowledge::collab::CollabRooms::new()),
-        enable_collab: false,
         site_title: "Test Wiki".to_string(),
         git_tenant: "pointsav".to_string(),
         mcp_enabled: false,
         glossary: Arc::new(app_mediakit_knowledge::glossary::Glossary::default()),
         links: app_mediakit_knowledge::links::LinkGraph::for_testing(),
         brand_theme: None,
+        brand_instance: "documentation".to_string(),
         db: None,
     };
     (state, state_dir)
@@ -91,7 +90,10 @@ async fn infobox_title_not_in_data_rows() {
     let (state, _sd) = build_state(dir.path()).await;
     let (_, html) = get_wiki(state, "topic-bio").await;
     // The infobox table should have the born row but NOT a <th>title</th> row
-    assert!(html.contains("<th>born</th>") || html.contains(">born<"), "born row missing");
+    assert!(
+        html.contains("<th>born</th>") || html.contains(">born<"),
+        "born row missing"
+    );
     assert!(
         !html.contains("<th>title</th>"),
         "title key must not appear as a data row — it is a reserved key"
@@ -143,12 +145,18 @@ async fn infobox_image_not_in_data_rows() {
     .unwrap();
     let (state, _sd) = build_state(dir.path()).await;
     let (_, html) = get_wiki(state, "topic-img").await;
-    assert!(!html.contains("<th>image</th>"), "image key must not appear as a data row");
+    assert!(
+        !html.contains("<th>image</th>"),
+        "image key must not appear as a data row"
+    );
     assert!(
         !html.contains("<th>image_caption</th>"),
         "image_caption key must not appear as a data row"
     );
-    assert!(html.contains("<th>field</th>") || html.contains(">field<"), "regular field missing");
+    assert!(
+        html.contains("<th>field</th>") || html.contains(">field<"),
+        "regular field missing"
+    );
 }
 
 // ─── Main block: hatnote rendered with wiki-hatnote class ────────────────────

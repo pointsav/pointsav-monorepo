@@ -15,7 +15,7 @@
 //!   response headers for the audit ledger
 //!
 //! Resilience stack (added 2026-05-06):
-//! - 60 s reqwest socket timeout + 90 s tokio outer deadline
+//! - 60 s reqwest socket timeout + 180 s tokio outer deadline
 //! - Three-state circuit breaker (Closed → Open → HalfOpen → Closed)
 //! - Background health probe: polls /health every 30 s; marks
 //!   `health_up` false after 3 consecutive failures
@@ -46,7 +46,7 @@ const SOCKET_TIMEOUT: Duration = Duration::from_secs(60);
 
 /// Hard outer deadline wrapping the entire complete() call, including any
 /// 503 Retry-After sleep. Fires DoormanError::TierBTimeout to caller.
-const OUTER_DEADLINE: Duration = Duration::from_secs(90);
+const OUTER_DEADLINE: Duration = Duration::from_secs(180);
 
 // ── Health probe ──────────────────────────────────────────────────────────────
 /// How often the health probe polls /health.
@@ -321,7 +321,7 @@ impl YoYoTierClient {
                 warn!(
                     target: "slm_doorman::tier::yoyo",
                     latency_ms = elapsed_ms,
-                    "Tier B: outer 90 s deadline exceeded"
+                    "Tier B: outer 180 s deadline exceeded"
                 );
                 Err(DoormanError::TierBTimeout)
             }
@@ -743,7 +743,7 @@ fn is_false(b: &bool) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use slm_core::{CanonicalMessage, ComputeRequest, ModuleId, RequestId};
+    use slm_core::{CanonicalMessage, ComputeRequest, LatencyClass, ModuleId, RequestId};
     use std::str::FromStr;
     use std::sync::atomic::{AtomicUsize, Ordering};
     use wiremock::matchers::{header, method, path};
@@ -756,6 +756,7 @@ mod tests {
             model: Some("Olmo-3-1125-32B-Think".into()),
             messages: vec![CanonicalMessage::text("user", "ping")],
             complexity: slm_core::Complexity::High,
+            latency_class: LatencyClass::default(),
             tier_hint: Some(Tier::Yoyo),
             stream: false,
             max_tokens: Some(20),

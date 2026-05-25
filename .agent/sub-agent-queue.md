@@ -1,98 +1,79 @@
 ---
-queue: cluster-sub-agent-queue
-owner: task-project-knowledge
-location: ~/Foundry/clones/project-knowledge/.claude/
 schema: foundry-sub-agent-queue-v1
-ratified: 2026-04-28T04:00:00Z by master-claude
-operator_authorization: 2026-04-28 "take care of all open issues" broad framing
+owner: task-project-bim
+created: 2026-04-28
+last_updated: 2026-04-28T22:00:00Z
 ---
 
-# Cluster sub-agent queue — project-knowledge
+# Sub-agent queue — project-bim cluster
 
-Cluster-scope sub-agent briefs ratified by Master for dispatch. Per
-v0.1.30 §1A.4 layer-scope rule, this queue holds briefs that touch
-only this cluster's territory (drafts-outbound/, prose-edit corpus
-path, app-mediakit-knowledge/, pointsav-monorepo cleanup-log within
-this cluster's sub-clone). Master-scope briefs (workspace docs, IaC,
-conventions, cross-cluster propagation) live in
-`~/Foundry/.claude/sub-agent-queue.md`.
+Cluster-scope sub-agent briefs dispatched under v0.1.30 §1A discipline.
+Standing operator-override per `feedback_operator_override_sonnet_dispatch.md`
+applies to this cluster (operator green-lit "yes" 2026-04-28 first session
+start; standing for cluster scope).
 
-Brief files at `~/Foundry/clones/project-knowledge/.claude/proposed-briefs/`
-are the authoritative content; this queue links by reference.
-
-Parent review discipline (§1A rule 6): the parent Opus session reviews
-each sub-agent output before commit-or-queue-next. Never delegate the
-commit decision.
+Per-brief outputs land in `.claude/sub-agent-results/`. Parent Task
+reviews each result before commit-or-queue-next per §1A.6.
 
 ---
 
-## Phase 4 — app-mediakit-knowledge
+## In-flight (foreground+parallel — read-only research)
 
-BP1 cleared 2026-04-28 (operator via Master workspace v0.1.54). Brief
-01-phase4-decomposition.md executed and produced the 8 sub-step briefs
-below. Each brief is a separate file in `proposed-briefs/`. Brief 4.1 and
-4.2 require PK.3 (libgit2-dev system-lib install). Brief 4.6 is
-outbox-first; its first dispatch writes an outbox to project-slm and
-implementation gates on project-slm's reply.
-
-| # | Brief file | Gated by | Status |
-|---|---|---|---|
-| 4.1 | `proposed-briefs/phase4-41-git2-wiring.md` | PK.3 (libgit2-dev install alongside libssl-dev) | READY-after-PK.3 |
-| 4.2 | `proposed-briefs/phase4-42-history-blame.md` | Step 4.1 complete; PK.3 for link-time libgit2 | READY-after-PK.3 + 4.1 |
-| 4.3 | `proposed-briefs/phase4-43-diff.md` | Step 4.2 complete | READY-after-4.2 |
-| 4.4 | `proposed-briefs/phase4-44-redb-linkgraph.md` | Step 4.1 complete | READY-after-4.1 |
-| 4.5 | `proposed-briefs/phase4-45-blake3-hashing.md` | Steps 4.1 + 4.4 complete | READY-after-4.4 |
-| 4.6 | `proposed-briefs/phase4-46-mcp-server.md` | Step 4.1 complete; DISPATCH 1 = outbox-only; DISPATCH 2 gates on project-slm reply | OUTBOX-FIRST — two-dispatch |
-| 4.7 | `proposed-briefs/phase4-47-git-remote.md` | Step 4.1 complete | READY-after-4.1 |
-| 4.8 | `proposed-briefs/phase4-48-openapi.md` | All steps 4.1–4.7 complete | READY-after-all |
-
----
-
-## Wiki-leg expansion — project-knowledge cluster
-
-| # | Brief file | Tier | Sequencing | Status |
+| ID | Subject | Model | Status | Output file |
 |---|---|---|---|---|
-| 2 | `proposed-briefs/02-collab-relay-expansion.md` | Sonnet | sequential (writes to drafts-outbound/) | DONE |
-| 3 | `proposed-briefs/03-source-of-truth-inversion.md` | Sonnet | sequential | DONE |
-| 4 | `proposed-briefs/04-wikipedia-leapfrog-design.md` | Sonnet | sequential | DONE |
+| BB.1 | IfcOpenShell 0.8.5 Rust subprocess invocation patterns | sonnet | in-flight | sub-agent-results/BB.1-ifcopenshell-rust-subprocess-2026-04-28.md |
+| BB.2 | xeokit (AGPL-3.0) vs @thatopen (MIT) decision for app-workplace-bim | sonnet | in-flight | sub-agent-results/BB.2-xeokit-vs-thatopen-2026-04-28.md |
+| BB.3 | Tauri 2.10 best practices for BIM-scale models (memory, IPC, mobile) | sonnet | in-flight | sub-agent-results/BB.3-tauri-bim-scale-2026-04-28.md |
+| BB.4 | Bonsai (formerly BlenderBIM) interface conventions deep-dive | sonnet | in-flight | sub-agent-results/BB.4-bonsai-interface-deepdive-2026-04-28.md |
 
----
+Dispatched 2026-04-28T21:58Z. Parallel because read-only research with
+no shared filesystem write surface. 30-min soft cap each; ~600-1100
+lines of markdown report each. Returns inform BB.5–BB.10 scaffolding
+decisions.
 
-## Read-only audits — project-knowledge cluster (parallelisable batch)
+## Pending (foreground+serial — sequential writing dispatches per §1A.2)
 
-Per §1A rule 2, read-only sub-agents may parallelise.
-
-| # | Brief file | Tier | Status |
-|---|---|---|---|
-| 5 | `proposed-briefs/05-jsonl-corpus-audit.md` | Sonnet | DONE |
-| 6 | `proposed-briefs/06-frontmatter-validation.md` | Sonnet | DONE |
-| 7 | `proposed-briefs/07-static-asset-audit.md` | Haiku | DONE |
-| 8 | `proposed-briefs/08-cleanup-log-triage.md` | Sonnet | DONE |
-
----
-
-## Completed
-
-| # | Brief | Outcome | Commit / fix |
-|---|---|---|---|
-| 5 | JSONL corpus integrity audit | All 6 clean against foundry-draft-v1; corpus ready for Stage-1 DPO | (no action — clean) |
-| 6 | Frontmatter validation | 5 of 6 compliant; .es draft missing `references:` | Fix applied to `topic-collab-via-passthrough-relay.es.draft.md` (mirror sibling, 9 entries) |
-| 7 | static/ asset audit | 1 unused: `wikilink-redlink` + `--link-redlink` var | `c4a5677` — both removed from style.css per CLAUDE.md §6 |
-| 8 | cleanup-log triage | A:3 / B:3 / C:5 / D:10 | `c4a5677` — 3 Category A fixes applied (registry state + 2 cleanup-log reclassifications); B/C carried |
-| 2 | collab-relay skeleton expansion | Both files (English + Spanish) expanded to bulk-draft; 7 placeholders → substantive prose; frontmatter `draft_shape: bulk-draft` + `authored_with: sonnet-4-6` | (drafts-outbound/ — operational state, no commit; project-language sweeps via bin/draft-sweep.sh) |
-| 3 | source-of-truth-inversion TOPIC | New 149-line bulk draft authored at `topic-source-of-truth-inversion.draft.md`; 6 sections; pattern + 4 application instances + BCSC posture + claim #34 connection; thin source on §3-§5 flagged with planned qualifiers | (drafts-outbound/ — operational state; JSONL event emitted to apprenticeship corpus) |
-| 4 | wikipedia-leapfrog-design TOPIC | New 478-line bulk draft authored at `topic-wikipedia-leapfrog-design.draft.md`; 5 sections; muscle-memory contract + 5 additions + visual divergence + two-audience contract + forward reference; some sections slightly over target lengths (project-language pares) | (drafts-outbound/ — operational state; JSONL event emitted to apprenticeship corpus) |
-
----
-
-## Dispatch log
-
-| Timestamp | Brief # | Sub-agent | Tier | Outcome |
+| ID | Subject | Model | Blocked-on | Notes |
 |---|---|---|---|---|
-| 2026-04-28T04:10:00Z | 5 | a3bbf3265932f3bc2 | sonnet | All 6 JSONL clean; report 60 lines |
-| 2026-04-28T04:10:00Z | 6 | a714f9cbe5750e806 | sonnet | 5/6 PASS, 1 FAIL (.es missing references); fix applied |
-| 2026-04-28T04:10:00Z | 7 | a62be694a339e1029 | haiku | 1 unused class + var; both removed in c4a5677 |
-| 2026-04-28T04:10:00Z | 8 | aec72226002fdd9ee | sonnet | Triage 4 categories; A applied in c4a5677; B/C carried in cleanup-log session entry |
-| 2026-04-28T04:25:00Z | 2 | afb428295fc17051f | sonnet | Both English + Spanish skeletons expanded to bulk-draft; all 7 placeholders replaced; frontmatter updated |
-| 2026-04-28T04:30:00Z | 3 | a09c5835d16eaf6e1 | sonnet | New TOPIC drafted (149 lines); thin source on app-workplace projects flagged with planned qualifiers |
-| 2026-04-28T04:35:00Z | 4 | a04ac301a03633778 | sonnet | New TOPIC drafted (478 lines); two-audience contract preserved; some sections slightly over target |
+| BB.5 | Scaffold service-materials Rust crate | sonnet | none (independent) | Reserved-folder → Scaffold-coded; bSDD URI references + IfcMaterial + Pset_Material* |
+| BB.6 | Scaffold service-buildings Rust crate | sonnet | none (independent) | IFC GUID-keyed element store; per-element YAML sidecars; Speckle-style hash-addressed object store |
+| BB.7 | Scaffold service-codes Rust crate | sonnet | BB.1 (uses ifctester invocation pattern) | The City-Code-as-Composable-Geometry invention; bSDD + IDS + IFC fragments |
+| BB.8 | Scaffold app-orchestration-bim (Axum + server-rendered HTML; Building Design System showcase) | sonnet | BB.11 (token contracts), BB.12 (component recipe contracts) | Mirrors app-privategit-design pattern; port 9096 |
+| BB.9 | Scaffold app-workplace-bim (Tauri 2.10) | sonnet | BB.1, BB.2, BB.3 | Pattern 1 architecture per BIM_Buildable Architecture.md |
+| BB.10 | Scaffold app-console-bim | sonnet | BB.4 (UX conventions to NOT-mirror from Bonsai) | Mode-prop READ surface; BimGuidSearch + BimAuditLog + BimDashboard + BimExportPanel |
+
+Sequential because each writes to the same parent's `.git/index` per §1A.2.
+Parent commits each before dispatching the next.
+
+## Pending (parent-direct — drafts staging without sub-agent)
+
+| ID | Subject | Notes |
+|---|---|---|
+| BB.11 | Stage 8 PROSE-TOPIC drafts in drafts-outbound/ | foundry-draft-v1 + Research-trail per claim #39; project-language sweeps |
+| BB.12 | Stage 8 DESIGN drafts in drafts-outbound/ | 1 RESEARCH + 7 COMPONENT (foundry-draft-v1 + component_metadata block) |
+
+Parent-direct rather than dispatched: drafts are short-form templated
+content with stable structure; sub-agent dispatch overhead exceeds the
+work. Parent writes them in-line, then commits.
+
+---
+
+## Completed briefs
+
+*(none yet — first batch in flight as of 2026-04-28T21:58Z.)*
+
+---
+
+## Notes for next Task session
+
+- BB.1–BB.4 results are decision inputs: BB.2 (xeokit vs @thatopen) gates
+  BB.9 (app-workplace-bim) embed choice. BB.4 (Bonsai) gates BB.10
+  (app-console-bim) "what NOT to copy" list. BB.1 + BB.3 inform BB.9
+  Tauri config + IfcOpenShell sidecar wiring.
+- If a sub-agent comes back with confident, evidence-backed pushback on
+  the cluster manifest's defaults (e.g., "@thatopen wins on 7 of 8
+  axes"), update the manifest before scaffolding. Surface significant
+  pushback to Master via outbox before re-architecting.
+- Sub-agent results are LOCAL to this cluster (`.claude/sub-agent-results/`).
+  Workspace-level Master research from cluster provisioning lives at
+  `~/Foundry/.claude/sub-agent-results/A-bim-* B-bim-* C-bim-*`.

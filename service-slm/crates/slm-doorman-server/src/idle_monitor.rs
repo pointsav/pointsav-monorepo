@@ -36,6 +36,7 @@
 //!                                  resuming /metrics polling; default 90
 
 use std::collections::VecDeque;
+use std::pin::Pin;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
@@ -118,6 +119,10 @@ pub struct IdleMonitorConfig {
     /// allowing the VM to boot before being counted as unreachable again.
     /// Default 90.
     pub restart_boot_grace: Duration,
+    /// On-demand VM rate in USD/hour — used to estimate `vm_cost_usd` for the
+    /// G7 VM-hours ledger row written on each confirmed stop. Default 0.71
+    /// (g2-standard-4 + L4 on-demand). Env: SLM_YOYO_RATE_USD_PER_HOUR.
+    pub rate_usd_per_hour: f64,
 }
 
 impl IdleMonitorConfig {
@@ -148,6 +153,10 @@ impl IdleMonitorConfig {
             .ok()
             .and_then(|s| s.parse().ok())
             .unwrap_or(90);
+        let rate_usd_per_hour: f64 = std::env::var("SLM_YOYO_RATE_USD_PER_HOUR")
+            .ok()
+            .and_then(|s| s.parse().ok())
+            .unwrap_or(0.71);
 
         Some(Self {
             yoyo_endpoint,
@@ -161,6 +170,7 @@ impl IdleMonitorConfig {
             auto_restart_enabled,
             max_restarts_per_hour,
             restart_boot_grace: Duration::from_secs(restart_boot_grace_secs),
+            rate_usd_per_hour,
         })
     }
 }
@@ -176,6 +186,20 @@ pub fn gcp_stop_url(project: &str, zone: &str, instance: &str) -> String {
 pub fn gcp_start_url(project: &str, zone: &str, instance: &str) -> String {
     format!(
         "https://compute.googleapis.com/compute/v1/projects/{project}/zones/{zone}/instances/{instance}/start"
+    )
+}
+
+/// GET URL for the instance resource — used by the G10 stop-verification poll.
+pub fn gcp_get_url(project: &str, zone: &str, instance: &str) -> String {
+    format!(
+        "https://compute.googleapis.com/compute/v1/projects/{project}/zones/{zone}/instances/{instance}"
+    )
+}
+
+/// POST URL for `instances.setMetadata` — used by the G17 last-stop-reason write.
+pub fn gcp_set_metadata_url(project: &str, zone: &str, instance: &str) -> String {
+    format!(
+        "https://compute.googleapis.com/compute/v1/projects/{project}/zones/{zone}/instances/{instance}/setMetadata"
     )
 }
 
@@ -263,12 +287,12 @@ pub async fn run_idle_monitor(config: IdleMonitorConfig) {
                         instance = %config.gcp_instance,
                         "Yo-Yo idle threshold reached; sending GCP stop request"
                     );
-                    match stop_gcp_instance(&client, &config).await {
+                    match stop_gcp_instance(&client, &config, "idle").await {
                         Ok(()) => {
                             info!(
                                 target: "slm_doorman::idle_monitor",
                                 instance = %config.gcp_instance,
-                                "GCP stop request accepted"
+                                "Yo-Yo VM stopped and verified TERMINATED (idle shutdown)"
                             );
                             stop_sent = true;
                         }
@@ -327,12 +351,12 @@ pub async fn run_idle_monitor(config: IdleMonitorConfig) {
                                 instance = %config.gcp_instance,
                                 "Yo-Yo metrics unreachable past safety threshold (crash-guard); sending stop"
                             );
-                            match stop_gcp_instance(&client, &config).await {
+                            match stop_gcp_instance(&client, &config, "crash-guard").await {
                                 Ok(()) => {
                                     info!(
                                         target: "slm_doorman::idle_monitor",
                                         instance = %config.gcp_instance,
-                                        "GCP stop request accepted (crash-guard)"
+                                        "Yo-Yo VM stopped and verified TERMINATED (crash-guard)"
                                     );
                                     stop_sent = true;
                                 }
@@ -349,6 +373,34 @@ pub async fn run_idle_monitor(config: IdleMonitorConfig) {
                 } else if config.auto_restart_enabled
                     && unreachable_for >= PREEMPTION_PROBE_THRESHOLD
                 {
+                    // G17: a deliberate stop (operator / deadman / idle /
+                    // crash-guard / budget-ceiling) is sticky — never auto-restart
+                    // it. Only a genuine preemption (reason absent, `running`, or
+                    // `preempted`) warrants recovery.
+                    let deliberate = match get_gcp_instance(&client, &config).await {
+                        Ok(inst) => matches!(
+                            inst.last_stop_reason().unwrap_or(""),
+                            "operator" | "deadman" | "idle" | "crash-guard" | "budget-ceiling"
+                        ),
+                        Err(e) => {
+                            warn!(
+                                target: "slm_doorman::idle_monitor",
+                                error = %e,
+                                "could not read last-stop-reason; proceeding with restart decision"
+                            );
+                            false
+                        }
+                    };
+                    if deliberate {
+                        warn!(
+                            target: "slm_doorman::idle_monitor",
+                            instance = %config.gcp_instance,
+                            "Yo-Yo VM is down by a deliberate stop (sticky) — NOT auto-restarting"
+                        );
+                        // Mark settled so we don't re-evaluate every poll cycle.
+                        stop_sent = true;
+                        continue;
+                    }
                     // Preemption detected: VM is unreachable and we didn't stop it.
                     // Attempt instances.start subject to the rolling budget.
                     let now = Instant::now();
@@ -471,10 +523,13 @@ async fn fetch_gcp_adc_token(client: &reqwest::Client) -> Result<String, String>
     Ok(t.access_token)
 }
 
-/// POST `instances.stop` to the GCP Compute Engine API.
+/// POST `instances.stop`, then VERIFY the VM reaches TERMINATED (G10) before
+/// reporting success — the API call only ACCEPTS the stop. On a confirmed stop
+/// it writes a G7 VM-hours ledger row tagged with `stop_reason`.
 async fn stop_gcp_instance(
     client: &reqwest::Client,
     config: &IdleMonitorConfig,
+    stop_reason: &str,
 ) -> Result<(), String> {
     let token = fetch_gcp_adc_token(client).await?;
     let url = gcp_stop_url(&config.gcp_project, &config.gcp_zone, &config.gcp_instance);
@@ -487,11 +542,195 @@ async fn stop_gcp_instance(
         .send()
         .await
         .map_err(|e| format!("GCP API request failed: {e}"))?;
-    if resp.status().is_success() {
-        Ok(())
-    } else {
-        Err(format!("GCP instances.stop returned HTTP {}", resp.status()))
+    if !resp.status().is_success() {
+        return Err(format!("GCP instances.stop returned HTTP {}", resp.status()));
     }
+    // G10: the API only ACCEPTS the stop. Poll the instance status until it
+    // reaches TERMINATED before reporting success — "shut down" must mean
+    // verified-down, not just requested.
+    let deadline = Instant::now() + Duration::from_secs(120);
+    loop {
+        match get_gcp_instance(client, config).await {
+            Ok(inst) if inst.status == "TERMINATED" || inst.status == "STOPPED" => {
+                // G17: tag the stop as deliberate so a restarted idle monitor
+                // treats it as sticky and does not auto-restart it.
+                set_stop_reason(client, config, stop_reason).await;
+                // G7: record the VM-hours lifecycle row now the stop is confirmed.
+                record_vm_hours_stop(config, stop_reason, inst.last_start_timestamp.as_deref());
+                return Ok(());
+            }
+            Ok(_) => {}
+            Err(e) => {
+                tracing::debug!(
+                    target: "slm_doorman::idle_monitor",
+                    error = %e,
+                    "stop-verification status poll failed; retrying"
+                );
+            }
+        }
+        if Instant::now() >= deadline {
+            return Err(
+                "stop accepted but VM did not reach TERMINATED within 120s".to_string(),
+            );
+        }
+        tokio::time::sleep(Duration::from_secs(5)).await;
+    }
+}
+
+/// One GCE instance metadata key/value pair.
+#[derive(serde::Deserialize, serde::Serialize, Clone)]
+struct MetadataItem {
+    key: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    value: Option<String>,
+}
+
+/// Subset of the GCE instance resource the idle monitor reads.
+struct GcpInstance {
+    status: String,
+    last_start_timestamp: Option<String>,
+    metadata_fingerprint: String,
+    metadata_items: Vec<MetadataItem>,
+}
+
+impl GcpInstance {
+    /// The `last-stop-reason` metadata value, if set (G17).
+    fn last_stop_reason(&self) -> Option<&str> {
+        self.metadata_items
+            .iter()
+            .find(|i| i.key == "last-stop-reason")
+            .and_then(|i| i.value.as_deref())
+    }
+}
+
+/// GET the instance resource — status, lastStartTimestamp, and metadata.
+/// `status` is `RUNNING` | `TERMINATED` | `STOPPING` | `PROVISIONING` | ...
+async fn get_gcp_instance(
+    client: &reqwest::Client,
+    config: &IdleMonitorConfig,
+) -> Result<GcpInstance, String> {
+    #[derive(serde::Deserialize, Default)]
+    struct MetadataResp {
+        #[serde(default)]
+        fingerprint: String,
+        #[serde(default)]
+        items: Vec<MetadataItem>,
+    }
+    #[derive(serde::Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    struct InstanceResp {
+        status: String,
+        #[serde(default)]
+        last_start_timestamp: Option<String>,
+        #[serde(default)]
+        metadata: MetadataResp,
+    }
+    let token = fetch_gcp_adc_token(client).await?;
+    let url = gcp_get_url(&config.gcp_project, &config.gcp_zone, &config.gcp_instance);
+    let resp = client
+        .get(&url)
+        .bearer_auth(&token)
+        .send()
+        .await
+        .map_err(|e| format!("GCP API request failed: {e}"))?;
+    if !resp.status().is_success() {
+        return Err(format!("GCP instances.get returned HTTP {}", resp.status()));
+    }
+    let info: InstanceResp = resp
+        .json()
+        .await
+        .map_err(|e| format!("instance JSON parse failed: {e}"))?;
+    Ok(GcpInstance {
+        status: info.status,
+        last_start_timestamp: info.last_start_timestamp,
+        metadata_fingerprint: info.metadata.fingerprint,
+        metadata_items: info.metadata.items,
+    })
+}
+
+/// G17: record why the VM was stopped as the `last-stop-reason` instance
+/// metadata key, so a (possibly restarted) idle monitor can tell a deliberate
+/// stop from a preemption and not auto-restart a VM someone meant to be down.
+/// Best-effort — every failure is logged, never propagated.
+async fn set_stop_reason(client: &reqwest::Client, config: &IdleMonitorConfig, reason: &str) {
+    #[derive(serde::Serialize)]
+    struct SetMetadataBody {
+        fingerprint: String,
+        items: Vec<MetadataItem>,
+    }
+    let inst = match get_gcp_instance(client, config).await {
+        Ok(i) => i,
+        Err(e) => {
+            warn!(
+                target: "slm_doorman::idle_monitor",
+                error = %e,
+                "could not read metadata to set last-stop-reason"
+            );
+            return;
+        }
+    };
+    // Preserve every existing metadata item, replacing only last-stop-reason —
+    // setMetadata is a whole-replace operation.
+    let mut items: Vec<MetadataItem> = inst
+        .metadata_items
+        .into_iter()
+        .filter(|i| i.key != "last-stop-reason")
+        .collect();
+    items.push(MetadataItem {
+        key: "last-stop-reason".to_string(),
+        value: Some(reason.to_string()),
+    });
+    let token = match fetch_gcp_adc_token(client).await {
+        Ok(t) => t,
+        Err(e) => {
+            warn!(target: "slm_doorman::idle_monitor", error = %e, "ADC token fetch failed for setMetadata");
+            return;
+        }
+    };
+    let url = gcp_set_metadata_url(&config.gcp_project, &config.gcp_zone, &config.gcp_instance);
+    let body = SetMetadataBody {
+        fingerprint: inst.metadata_fingerprint,
+        items,
+    };
+    match client.post(&url).bearer_auth(&token).json(&body).send().await {
+        Ok(r) if r.status().is_success() => {}
+        Ok(r) => warn!(
+            target: "slm_doorman::idle_monitor",
+            status = %r.status(),
+            "setMetadata for last-stop-reason returned non-success"
+        ),
+        Err(e) => warn!(
+            target: "slm_doorman::idle_monitor",
+            error = %e,
+            "setMetadata for last-stop-reason failed"
+        ),
+    }
+}
+
+/// G7: write a `stopped` VM-hours row to the global cost ledger. `billed_seconds`
+/// is derived from the GCE `lastStartTimestamp` — best-effort: an absent or
+/// unparseable value records the event with zero billed time rather than
+/// dropping it. Ledger-append failure is swallowed (non-fatal).
+fn record_vm_hours_stop(config: &IdleMonitorConfig, stop_reason: &str, last_start: Option<&str>) {
+    let now = chrono::Utc::now();
+    let billed_seconds: u64 = last_start
+        .and_then(|s| chrono::DateTime::parse_from_rfc3339(s).ok())
+        .map(|start| {
+            (now - start.with_timezone(&chrono::Utc))
+                .num_seconds()
+                .max(0) as u64
+        })
+        .unwrap_or(0);
+    let vm_cost_usd = billed_seconds as f64 / 3600.0 * config.rate_usd_per_hour;
+    slm_doorman::cost_ledger::append_vm_hours_global(&slm_doorman::cost_ledger::VmHoursRow {
+        ts: now.to_rfc3339(),
+        instance: config.gcp_instance.clone(),
+        event: "stopped".to_string(),
+        zone: config.gcp_zone.clone(),
+        billed_seconds,
+        vm_cost_usd,
+        stop_reason: Some(stop_reason.to_string()),
+    });
 }
 
 /// POST `instances.start` to the GCP Compute Engine API.
@@ -700,6 +939,24 @@ mod tests {
         );
     }
 
+    #[test]
+    fn gcp_get_url_is_well_formed() {
+        let url = gcp_get_url("my-project", "europe-west4-a", "yoyo-tier-b-1");
+        assert_eq!(
+            url,
+            "https://compute.googleapis.com/compute/v1/projects/my-project/zones/europe-west4-a/instances/yoyo-tier-b-1"
+        );
+    }
+
+    #[test]
+    fn gcp_set_metadata_url_is_well_formed() {
+        let url = gcp_set_metadata_url("my-project", "europe-west4-a", "yoyo-tier-b-1");
+        assert_eq!(
+            url,
+            "https://compute.googleapis.com/compute/v1/projects/my-project/zones/europe-west4-a/instances/yoyo-tier-b-1/setMetadata"
+        );
+    }
+
     // ── parse_metric ─────────────────────────────────────────────────────────
 
     #[test]
@@ -793,5 +1050,70 @@ mod tests {
         let mut budget = RestartBudget::new(Duration::from_secs(3600));
         assert!(!budget.try_consume(0, Instant::now()));
         assert_eq!(budget.count(), 0);
+    }
+}
+
+// ── BackendLifecycle trait ─────────────────────────────────────────────────────
+
+/// Lifecycle interface for a backend managed by the Doorman.
+/// Object-safe: uses `Pin<Box<dyn Future>>` so implementors can be stored as
+/// `Arc<dyn BackendLifecycle>` in `AppState`.
+pub trait BackendLifecycle: Send + Sync + 'static {
+    fn start(&self) -> Pin<Box<dyn std::future::Future<Output = ()> + Send>>;
+    fn stop(&self) -> Pin<Box<dyn std::future::Future<Output = ()> + Send>>;
+    fn is_healthy(&self) -> Pin<Box<dyn std::future::Future<Output = bool> + Send>>;
+    fn name(&self) -> &'static str;
+}
+
+/// Wraps `IdleMonitorConfig` behind `BackendLifecycle`.
+/// `start()` spawns the idle monitor task; `stop()` is a no-op (the task
+/// stops when the process exits); `is_healthy()` probes `/metrics`.
+pub struct IdleMonitorHandle {
+    config: Arc<IdleMonitorConfig>,
+}
+
+impl IdleMonitorHandle {
+    pub fn new(config: IdleMonitorConfig) -> Self {
+        Self { config: Arc::new(config) }
+    }
+}
+
+impl BackendLifecycle for IdleMonitorHandle {
+    fn start(&self) -> Pin<Box<dyn std::future::Future<Output = ()> + Send>> {
+        let config = (*self.config).clone();
+        Box::pin(async move {
+            tokio::spawn(run_idle_monitor(config));
+        })
+    }
+
+    fn stop(&self) -> Pin<Box<dyn std::future::Future<Output = ()> + Send>> {
+        Box::pin(async move {
+            warn!(
+                target: "slm_doorman::idle_monitor",
+                "BackendLifecycle::stop called — graceful stop not implemented; \
+                 monitor stops when the process exits"
+            );
+        })
+    }
+
+    fn is_healthy(&self) -> Pin<Box<dyn std::future::Future<Output = bool> + Send>> {
+        let endpoint = self.config.yoyo_endpoint.clone();
+        let bearer = self.config.yoyo_bearer.clone();
+        Box::pin(async move {
+            let client = reqwest::Client::builder()
+                .timeout(Duration::from_millis(500))
+                .build()
+                .unwrap_or_default();
+            let url = format!("{}/metrics", endpoint.trim_end_matches('/'));
+            let mut req = client.get(&url);
+            if let Some(token) = &bearer {
+                req = req.bearer_auth(token);
+            }
+            req.send().await.map(|r| r.status().is_success()).unwrap_or(false)
+        })
+    }
+
+    fn name(&self) -> &'static str {
+        "yoyo-idle-monitor"
     }
 }

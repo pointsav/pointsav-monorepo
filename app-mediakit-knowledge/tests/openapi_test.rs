@@ -14,10 +14,9 @@ async fn fixture() -> (AppState, TempDir, TempDir) {
     let repo = app_mediakit_knowledge::git::open_or_init(content_dir.path()).unwrap();
     app_mediakit_knowledge::git::ensure_commit_identity_from_env(&repo).unwrap();
 
-    let search =
-        app_mediakit_knowledge::search::build_index(content_dir.path(), state_dir.path())
-            .await
-            .unwrap();
+    let search = app_mediakit_knowledge::search::build_index(content_dir.path(), state_dir.path())
+        .await
+        .unwrap();
 
     (
         AppState {
@@ -27,14 +26,13 @@ async fn fixture() -> (AppState, TempDir, TempDir) {
             citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
             search: Arc::new(search),
             git: Arc::new(Mutex::new(repo)),
-            collab: Arc::new(app_mediakit_knowledge::collab::CollabRooms::new()),
-            enable_collab: false,
             site_title: "Test Wiki".to_string(),
             git_tenant: "pointsav".to_string(),
             mcp_enabled: false,
             glossary: Arc::new(app_mediakit_knowledge::glossary::Glossary::default()),
             links: app_mediakit_knowledge::links::LinkGraph::for_testing(),
             brand_theme: None,
+            brand_instance: "documentation".to_string(),
             db: None,
         },
         content_dir,
@@ -73,11 +71,15 @@ async fn test_openapi_yaml_content_type() {
         )
         .await
         .unwrap();
-    let ct = resp.headers()
+    let ct = resp
+        .headers()
         .get("content-type")
         .and_then(|v| v.to_str().ok())
         .unwrap_or("");
-    assert!(ct.contains("yaml"), "expected content-type to contain 'yaml', got: {ct}");
+    assert!(
+        ct.contains("yaml"),
+        "expected content-type to contain 'yaml', got: {ct}"
+    );
 }
 
 #[tokio::test]
@@ -97,8 +99,8 @@ async fn test_openapi_yaml_parses_as_valid_yaml() {
     assert_eq!(resp.status(), StatusCode::OK);
     let bytes = resp.into_body().collect().await.unwrap().to_bytes();
     let text = std::str::from_utf8(&bytes).expect("openapi.yaml should be UTF-8");
-    let doc: serde_yaml::Value = serde_yaml::from_str(text)
-        .expect("openapi.yaml should parse as valid YAML");
+    let doc: serde_yaml::Value =
+        serde_yaml::from_str(text).expect("openapi.yaml should parse as valid YAML");
     assert!(doc.is_mapping(), "openapi.yaml root should be a mapping");
 }
 

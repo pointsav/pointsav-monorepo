@@ -115,6 +115,9 @@ pub mod test_helpers {
             service_content_endpoint: String::new(),
             last_yoyo_dispatch: Arc::new(AtomicU64::new(0)),
             gateway_token: None,
+            node_class: "hardware",
+            tier_a_reason: "available",
+            idle_monitor: None,
         })
     }
 
@@ -148,6 +151,9 @@ pub mod test_helpers {
             service_content_endpoint: String::new(),
             last_yoyo_dispatch: Arc::new(AtomicU64::new(0)),
             gateway_token: None,
+            node_class: "hardware",
+            tier_a_reason: "available",
+            idle_monitor: None,
         })
     }
 
@@ -179,6 +185,9 @@ pub mod test_helpers {
             service_content_endpoint: String::new(),
             last_yoyo_dispatch: Arc::new(AtomicU64::new(0)),
             gateway_token: None,
+            node_class: "hardware",
+            tier_a_reason: "available",
+            idle_monitor: None,
         })
     }
 
@@ -234,6 +243,9 @@ pub mod test_helpers {
             service_content_endpoint: String::new(),
             last_yoyo_dispatch: Arc::new(AtomicU64::new(0)),
             gateway_token: None,
+            node_class: "hardware",
+            tier_a_reason: "available",
+            idle_monitor: None,
         })
     }
 
@@ -305,6 +317,9 @@ pub mod test_helpers {
             service_content_endpoint: String::new(),
             last_yoyo_dispatch: Arc::new(AtomicU64::new(0)),
             gateway_token: None,
+            node_class: "hardware",
+            tier_a_reason: "available",
+            idle_monitor: None,
         });
         (state, ledger_dir)
     }
@@ -355,6 +370,9 @@ pub mod test_helpers {
             service_content_endpoint: String::new(),
             last_yoyo_dispatch: Arc::new(AtomicU64::new(0)),
             gateway_token: None,
+            node_class: "hardware",
+            tier_a_reason: "available",
+            idle_monitor: None,
         });
         (state, ledger_dir)
     }
@@ -402,6 +420,9 @@ pub mod test_helpers {
             service_content_endpoint: String::new(),
             last_yoyo_dispatch: Arc::new(AtomicU64::new(0)),
             gateway_token,
+            node_class: "hardware",
+            tier_a_reason: "available",
+            idle_monitor: None,
         })
     }
 
@@ -425,6 +446,9 @@ pub mod test_helpers {
             service_content_endpoint: service_content_endpoint.into(),
             last_yoyo_dispatch: Arc::new(AtomicU64::new(0)),
             gateway_token: None,
+            node_class: "hardware",
+            tier_a_reason: "available",
+            idle_monitor: None,
         })
     }
 }

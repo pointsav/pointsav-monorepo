@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Co-location Report — 2026-05-23 04:08 UTC</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 14px; background: #0f172a; color: #e2e8f0; line-height: 1.5; }
+  .container { max-width: 1100px; margin: 0 auto; padding: 32px 20px; }
+  h1 { font-size: 22px; font-weight: 700; color: #f8fafc; margin-bottom: 4px; }
+  .subtitle { color: #94a3b8; font-size: 13px; margin-bottom: 32px; }
+  h2 { font-size: 16px; font-weight: 600; color: #cbd5e1; margin: 32px 0 12px; border-bottom: 1px solid #1e293b; padding-bottom: 6px; }
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 32px; }
+  .stat-card { background: #1e293b; border-radius: 8px; padding: 16px 20px; }
+  .stat-card .label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; color: #64748b; margin-bottom: 4px; }
+  .stat-card .value { font-size: 28px; font-weight: 800; }
+  .stat-card .pct { font-size: 12px; color: #64748b; margin-top: 2px; }
+  .t1-color { color: #60a5fa; } .t2-color { color: #4ade80; } .t3-color { color: #facc15; } .tot-color { color: #f8fafc; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; padding: 8px 10px; color: #64748b; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #1e293b; }
+  td { padding: 7px 10px; border-bottom: 1px solid #0f172a; }
+  tr:hover td { background: #1e293b; }
+  .section-header td { background: #0f172a; color: #475569; font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; padding: 10px 10px 4px; font-weight: 600; border-bottom: none; }
+  .iso { font-weight: 700; color: #94a3b8; width: 48px; }
+  .t1 { color: #60a5fa; font-weight: 600; } .t2 { color: #4ade80; } .t3 { color: #facc15; } .total { font-weight: 600; }
+  .pct { color: #475569; font-size: 11px; }
+  .num { text-align: right; font-variant-numeric: tabular-nums; }
+  .cluster-id { font-family: monospace; font-size: 11px; color: #64748b; }
+  .cluster-id a { color: #60a5fa; text-decoration: none; } .cluster-id a:hover { text-decoration: underline; }
+  .bar { height: 10px; background: #4ade80; border-radius: 2px; min-width: 2px; }
+  .note { background: #1e293b; border-left: 3px solid #60a5fa; padding: 12px 16px; border-radius: 4px; margin-bottom: 16px; font-size: 13px; color: #94a3b8; }
+  .note strong { color: #e2e8f0; }
+  .tag { display: inline-block; background: #0f172a; border: 1px solid #334155; border-radius: 4px; padding: 2px 8px; font-size: 11px; color: #94a3b8; margin: 2px; }
+  .tag.fixed { border-color: #16a34a; color: #4ade80; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Co-location Cluster Report</h1>
+  <div class="subtitle">Phase 18 build · 2026-05-23 04:08 UTC · 17 countries · London splitter fix committed 29f4f23a (pending rebuild)</div>
+
+  <div class="note">
+    <strong>Build status:</strong> Current data is Phase 18 (2026-05-22, commit 570bda53).
+    Tonight's nightly rebuild will apply the <span class="tag fixed">London splitter fix</span> — cluster <code>co_gb_n5150596_w011882</code> (487 members / 22 km span) will split into correct retail-park clusters.
+    Cluster totals will shift slightly; T1 count in GB may decrease as the London monster is partitioned.
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card"><div class="label">Total clusters</div><div class="value tot-color">5,702</div><div class="pct">17 countries</div></div>
+    <div class="stat-card"><div class="label">T1 Regional</div><div class="value t1-color">1,157</div><div class="pct">20.3% of total</div></div>
+    <div class="stat-card"><div class="label">T2 District</div><div class="value t2-color">4,283</div><div class="pct">75.1% of total</div></div>
+    <div class="stat-card"><div class="label">T3 Local</div><div class="value t3-color">262</div><div class="pct">4.6% of total</div></div>
+  </div>
+
+  <h2>Clusters by Country</h2>
+  <table>
+    <thead><tr><th>ISO</th><th>T1 Regional</th><th>T2 District</th><th>T3 Local</th><th>Total</th></tr></thead>
+    <tbody><tr class="section-header"><td colspan="5">North America</td></tr>
+<tr><td class="iso">US</td><td class="t1">881 <span class="pct">(29%)</span></td><td class="t2">2028 <span class="pct">(67%)</span></td><td class="t3">122 <span class="pct">(4%)</span></td><td class="total">3031</td></tr>
+<tr class="section-header"><td colspan="5">Europe</td></tr>
+<tr><td class="iso">DE</td><td class="t1">22 <span class="pct">(4%)</span></td><td class="t2">537 <span class="pct">(95%)</span></td><td class="t3">9 <span class="pct">(2%)</span></td><td class="total">568</td></tr>
+<tr><td class="iso">GB</td><td class="t1">23 <span class="pct">(5%)</span></td><td class="t2">407 <span class="pct">(95%)</span></td><td class="t3">0 <span class="pct">(0%)</span></td><td class="total">430</td></tr>
+<tr><td class="iso">FR</td><td class="t1">23 <span class="pct">(6%)</span></td><td class="t2">358 <span class="pct">(93%)</span></td><td class="t3">3 <span class="pct">(1%)</span></td><td class="total">384</td></tr>
+<tr><td class="iso">CA</td><td class="t1">64 <span class="pct">(17%)</span></td><td class="t2">291 <span class="pct">(78%)</span></td><td class="t3">16 <span class="pct">(4%)</span></td><td class="total">371</td></tr>
+<tr><td class="iso">MX</td><td class="t1">68 <span class="pct">(24%)</span></td><td class="t2">137 <span class="pct">(48%)</span></td><td class="t3">79 <span class="pct">(28%)</span></td><td class="total">284</td></tr>
+<tr><td class="iso">PL</td><td class="t1">17 <span class="pct">(11%)</span></td><td class="t2">130 <span class="pct">(86%)</span></td><td class="t3">5 <span class="pct">(3%)</span></td><td class="total">152</td></tr>
+<tr><td class="iso">ES</td><td class="t1">29 <span class="pct">(20%)</span></td><td class="t2">112 <span class="pct">(78%)</span></td><td class="t3">2 <span class="pct">(1%)</span></td><td class="total">143</td></tr>
+<tr><td class="iso">IT</td><td class="t1">8 <span class="pct">(11%)</span></td><td class="t2">62 <span class="pct">(86%)</span></td><td class="t3">2 <span class="pct">(3%)</span></td><td class="total">72</td></tr>
+<tr><td class="iso">DK</td><td class="t1">4 <span class="pct">(6%)</span></td><td class="t2">62 <span class="pct">(93%)</span></td><td class="t3">1 <span class="pct">(1%)</span></td><td class="total">67</td></tr>
+<tr><td class="iso">FI</td><td class="t1">1 <span class="pct">(2%)</span></td><td class="t2">53 <span class="pct">(96%)</span></td><td class="t3">1 <span class="pct">(2%)</span></td><td class="total">55</td></tr>
+<tr><td class="iso">NL</td><td class="t1">4 <span class="pct">(8%)</span></td><td class="t2">35 <span class="pct">(66%)</span></td><td class="t3">14 <span class="pct">(26%)</span></td><td class="total">53</td></tr>
+<tr><td class="iso">SE</td><td class="t1">4 <span class="pct">(15%)</span></td><td class="t2">17 <span class="pct">(65%)</span></td><td class="t3">5 <span class="pct">(19%)</span></td><td class="total">26</td></tr>
+<tr><td class="iso">PT</td><td class="t1">2 <span class="pct">(9%)</span></td><td class="t2">19 <span class="pct">(86%)</span></td><td class="t3">1 <span class="pct">(5%)</span></td><td class="total">22</td></tr>
+<tr><td class="iso">GR</td><td class="t1">2 <span class="pct">(11%)</span></td><td class="t2">16 <span class="pct">(84%)</span></td><td class="t3">1 <span class="pct">(5%)</span></td><td class="total">19</td></tr>
+<tr><td class="iso">AT</td><td class="t1">4 <span class="pct">(33%)</span></td><td class="t2">8 <span class="pct">(67%)</span></td><td class="t3">0 <span class="pct">(0%)</span></td><td class="total">12</td></tr>
+<tr><td class="iso">NO</td><td class="t1">1 <span class="pct">(10%)</span></td><td class="t2">9 <span class="pct">(90%)</span></td><td class="t3">0 <span class="pct">(0%)</span></td><td class="total">10</td></tr>
+<tr><td class="iso">IS</td><td class="t1">0 <span class="pct">(0%)</span></td><td class="t2">2 <span class="pct">(67%)</span></td><td class="t3">1 <span class="pct">(33%)</span></td><td class="total">3</td></tr>
+</tbody>
+  </table>
+
+  <h2>T2 Composition Breakdown</h2>
+  <div class="note"><strong>Root cause of T2 dominance:</strong> 3,863 of 4,283 T2 clusters (90.2%) are the single combo Hypermarket + Hardware — the globally dominant retail-strip pattern. Adding Sport as a 7th category (Phase 19, see BRIEF-ADD-SPORT-CATEGORY-2026-05-23.md) will open new T1 and T3 paths.</div>
+  <table>
+    <thead><tr><th>Tier descriptor</th><th>Count</th><th>Share</th><th></th></tr></thead>
+    <tbody><tr><td>Hypermarket + Hardware</td><td class="num">3863</td><td class="num">90.2%</td><td><div class="bar" style="width:180px"></div></td></tr>
+<tr><td>Hypermarket + Price Club</td><td class="num">358</td><td class="num">8.4%</td><td><div class="bar" style="width:16px"></div></td></tr>
+<tr><td>Hypermarket + Lifestyle</td><td class="num">58</td><td class="num">1.4%</td><td><div class="bar" style="width:2px"></div></td></tr>
+<tr><td>Hypermarket + Lifestyle + Price Club</td><td class="num">4</td><td class="num">0.1%</td><td><div class="bar" style="width:0px"></div></td></tr>
+</tbody>
+  </table>
+
+  <h2>Top 60 T1 Regional Co-locations (by span)</h2>
+  <table>
+    <thead><tr><th>ISO</th><th>Cluster ID (→ Google Maps)</th><th>Composition</th><th style="text-align:right">Span km</th><th style="text-align:right">Members</th><th>Market</th></tr></thead>
+    <tbody><tr><td class="iso">GB</td><td class="cluster-id"><a href="https://www.google.com/maps/@51.6010,-0.0504,14z" target="_blank">co_gb_n5160100_w005042</a></td><td>Hypermarket + Hardware + Price Club</td><td class="num">6.43</td><td class="num">22</td><td>rm_gb_haringey</td></tr>
+<tr><td class="iso">ES</td><td class="cluster-id"><a href="https://www.google.com/maps/@38.3528,-0.4941,14z" target="_blank">co_es_n3835282_w049412</a></td><td>Hypermarket + Hardware + Price Club</td><td class="num">6.07</td><td class="num">24</td><td>rm_es_alicante</td></tr>
+<tr><td class="iso">GB</td><td class="cluster-id"><a href="https://www.google.com/maps/@51.8969,-0.2024,14z" target="_blank">co_gb_n5189686_w020244</a></td><td>Hypermarket + Hardware + Price Club</td><td class="num">3.33</td><td class="num">16</td><td>rm_gb_stevenage</td></tr>
+<tr><td class="iso">US</td><td class="cluster-id"><a href="https://www.google.com/maps/@39.6242,-105.0906,14z" target="_blank">co_us_n3962415_w10509060</a></td><td>Hypermarket + Hardware + Price Club</td><td class="num">3.25</td><td class="num">10</td><td>rm_us_lakewood</td></tr>
+<tr><td class="iso">PL</td><td class="cluster-id"><a href="https://www.google.com/maps/@53.3977,14.5074,14z" target="_blank">co_pl_n5339774_e1450740</a></td><td>Hypermarket + Lifestyle + Hardware + Price Club</td><td class="num">3.15</td><td class="num">7</td><td>rm_pl_szczecin</td></tr>
+<tr><td class="iso">GB</td><td class="cluster-id"><a href="https://www.google.com/maps/@50.9287,-1.4400,14z" target="_blank">co_gb_n5092871_w143996</a></td><td>Hypermarket + Hardware + Price Club</td><td class="num">3.08</td><td class="num">15</td><td>rm_gb_southampton</td></tr>
+<tr><td class="iso">US</td><td class="cluster-id"><a href="https://www.google.com/maps/@34.8280,-82.2990,14z" target="_blank">co_us_n3482795_w8229896</a></td><td>Hypermarket + Hardware + Price Club</td><td class="num">3.06</td><td class="num">7</td><td>rm_us_greenville</td></tr>
+<tr><td class="iso">IT</td><td class="cluster-id"><a href="https://www.google.com/maps/@45.4344,9.0832,14z" target="_blank">co_it_n4543441_e908317</a></td><td>Hypermarket + Lifestyle + Hardware</td><td class="num">3.00</td><td class="num">5</td><td>rm_it_cesano_boscone</td></tr>
+<tr><td class="iso">US</td><td class="cluster-id"><a href="https://www.google.com/maps/@32.8980,-96.4626,14z" target="_blank">co_us_n3289802_w9646263</a></td><td>Hypermarket + Hardware + Price Club</td><td class="num">3.00</td><td class="num">6</td><td>rm_us_rockwall</td></tr>
+<tr><td class="iso">US</td><td class="cluster-id"><a href="https://www.google.com/maps/@32.6760,-97.0238,14z" target="_blank">co_us_n3267596_w9702379</a></td><td>Hypermarket + Hardware + Price Club</td><td class="num">3.00</td><td class="num">4</td><td>rm_us_grand_prairie</td></tr>
+<tr><td class="iso">ES</td><td class="cluster-id"><a href="https://www.google.com/maps/@41.9640,2.8038,14z" target="_blank">co_es_n4196397_e280378</a></td><td>Hypermarket + Lifestyle + Hardware</td><td class="num">2.99</td><td class="num">11</td><td>rm_es_girona</td></tr>
+<tr><td class="iso">US</td><td class="cluster-id"><a href="https://www.google.com/maps/@31.6294,-106.3915,14z" target="_blank">co_us_n3162945_w10639151</a></td><td>Hypermarket + Hardware + Price Club</td><td class="num">2.99</td><td class="num">5</td><td>rm_us_el_paso</td></tr>
+<tr><td class="iso">US</td><td class="cluster-id"><a href="https://www.google.com/maps/@42.2635,-84.4378,14z" target="_blank">co_us_n4226353_w8443780</a></td><td>Hypermarket + Hardware + Price Club</td><td class="num">2.99</td><td class="num">5</td><td>rm_us_jackson</td></tr>
+<tr><td class="iso">US</td><td class="cluster-id"><a href="https://www.google.com/maps/@39.0427,-94.3686,14z" target="_blank">co_us_n3904273_w9436864</a></td><td>Hypermarket + Hardware + Price Club</td><td class="num">2.99</td><td class="num">6</td><td>rm_us_independence</td></tr>
+<tr><td class="iso">FR</td><td class="cluster-id"><a href="https://www.google.com/maps/@50.6358,2.9702,14z" target="_blank">co_fr_n5063576_e297017</a></td><td>Hypermarket + Lifestyle + Hardware</td><td class="num">2.99</td><td class="num">6</td><td>rm_fr_lille</td></tr>
+<tr><td class="iso">US</td><td class="cluster-id"><a href="https://www.google.com/maps/@43.1908,-88.1332,14z" target="_blank">co_us_n4319082_w8813317</a></td><td>Hypermarket + Hardware + Price Club</td><td class="num">2.99</td><td class="num">5</td><td>rm_us_menomonee_falls</td></tr>
+<tr><td class="iso">US</td><td class="cluster-id"><a href="https://www.google.com/maps/@42.2237,-88.2947,14z" target="_blank">co_us_n4222369_w8829467</a></td><td>Hypermarket + Hardware + Price Club</td><td class="num">2.99</td><td class="num">5</td><td>rm_us_crystal_lake</td></tr>
+<tr><td class="iso">US</td><td class="cluster-id"><a href="https://www.google.com/maps/@35.4417,-97.4123,14z" target="_blank">co_us_n3544173_w9741228</a></td><td>Hypermarket + Hardware + Price Club</td><td class="num">2.99</td><td class="num">5</td><td>rm_us_midwest_city</td></tr>
+<tr><td class="iso">US</td><td class="cluster-id"><a href="https://www.google.com/maps/@35.1307,-106.6133,14z" target="_blank">co_us_n3513069_w10661329</a></td><td>Hypermarket + Hardware + Price Club</td><td class="num">2.98</td><td class="num">4</td><td>rm_us_albuquerque</td></tr>
+<tr><td class="iso">US</td><td class="cluster-id"><a href="https://www.google.com/maps/@47.7839,-122.3401,14z" target="_blank">co_us_n4778395_w12234006</a></td><td>Hypermarket + Hardware + Price Club</td><td class="num">2.98</td><td class="num">3</td><td>rm_us_edmonds</td></tr>
+<tr><td class="iso">ES</td><td class="cluster-id"><a href="https://www.google.com/maps/@42.8266,-1.6618,14z" target="_blank">co_es_n4282657_w166177</a></td><td>Hypermarket + Hardware + Price Club</td><td class="num">2.98</td><td class="num">7</td><td>rm_es_pamplona</td></tr>
+<tr><td class="iso">US</td><td class="cluster-id"><a href="https://www.google.com/maps/@33.7813,-117.9527,14z" target="_blank">co_us_n3378126_w11795266</a></td><td>Hypermarket + Hardware + Price Club</td><td class="num">2.98</td><td class="num">4</td><td>rm_us_garden_grove</td></tr>
+<tr><td class="iso">GB</td><td class="cluster-id"><a href="https://www.google.com/maps/@54.6264,-5.8547,14z" target="_blank">co_gb_n5462642_w585472</a></td><td>Hypermarket + Lifestyle + Hardware</td><td class="num">2.98</td><td class="num">7</td><td>rm_gb_northdown</td></tr>
+<tr><td class="iso">US</td><td class="cluster-id"><a href="https://www.google.com/maps/@40.4057,-105.0555,14z" target="_blank">co_us_n4040570_w10505555</a></td><td>Hypermarket + Hardware + Price Club</td><td class="num">2.98</td><td class="num">5</td><td>rm_us_loveland</td></tr>
+<tr><td class="iso">CA</td><td class="cluster-id"><a href="https://www.google.com/maps/@51.0630,-113.9845,14z" target="_blank">co_ca_n5106302_w11398454</a></td><td>Hypermarket + Hardware + Price Club</td><td class="num">2.98</td><td class="num">5</td><td>rm_ca_calgary</td></tr>
+<tr><td class="iso">US</td><td class="cluster-id"><a href="https://www.google.com/maps/@29.7314,-95.4609,14z" target="_blank">co_us_n2973138_w9546093</a></td><td>Hypermarket + Hardware + Price Club</td><td class="num">2.97</td><td class="num">6</td><td>rm_us_houston</td></tr>
+<tr><td class="iso">US</td><td class="cluster-id"><a href="https://www.google.com/maps/@42.9099,-78.7611,14z" target="_blank">co_us_n4290994_w7876114</a></td><td>Hypermarket + Hardware + Price Club</td><td class="num">2.97</td><td class="num">4</td><td>rm_us_cheektowaga</td></tr>
+<tr><td class="iso">US</td><td class="cluster-id"><a href="https://www.google.com/maps/@38.7879,-90.6125,14z" target="_blank">co_us_n3878786_w9061254</a></td><td>Hypermarket + Hardware + Price Club</td><td class="num">2.97</td><td class="num">3</td><td>rm_us_st_peters</td></tr>
+<tr><td class="iso">US</td><td class="cluster-id"><a href="https://www.google.com/maps/@38.6471,-77.2977,14z" target="_blank">co_us_n3864714_w7729771</a></td><td>Hypermarket + Lifestyle + Hardware + Price Club</td><td class="num">2.97</td><td class="num">9</td><td>rm_us_potomac_mills</td></tr>
+<tr><td class="iso">US</td><td class="cluster-id"><a href="https://www.google.com/maps/@35.5642,-97.6464,14z" target="_blank">co_us_n3556424_w9764639</a></td><td>Hypermarket + Hardware + Price Club</td><td class="num">2.96</td><td class="num">5</td><td>rm_us_oklahoma_city</td></tr>
+<tr><td class="iso">FR</td><td class="cluster-id"><a href="https://www.google.com/maps/@48.5940,7.7066,14z" target="_blank">co_fr_n4859396_e770663</a></td><td>Hypermarket + Lifestyle + Hardware</td><td class="num">2.96</td><td class="num">3</td><td>rm_fr_strasbourg</td></tr>
+<tr><td class="iso">ES</td><td class="cluster-id"><a href="https://www.google.com/maps/@41.6197,-0.9000,14z" target="_blank">co_es_n4161968_w090000</a></td><td>Hypermarket + Lifestyle + Hardware</td><td class="num">2.96</td><td class="num">4</td><td>rm_es_zaragoza</td></tr>
+<tr><td class="iso">US</td><td class="cluster-id"><a href="https://www.google.com/maps/@40.5125,-111.9914,14z" target="_blank">co_us_n4051252_w11199142</a></td><td>Hypermarket + Hardware + Price Club</td><td class="num">2.96</td><td class="num">5</td><td>rm_us_riverton</td></tr>
+<tr><td class="iso">MX</td><td class="cluster-id"><a href="https://www.google.com/maps/@24.1272,-110.3369,14z" target="_blank">co_mx_n2412718_w11033690</a></td><td>Hypermarket + Hardware + Price Club</td><td class="num">2.96</td><td class="num">8</td><td>rm_mx_la_paz</td></tr>
+<tr><td class="iso">US</td><td class="cluster-id"><a href="https://www.google.com/maps/@36.0616,-95.8717,14z" target="_blank">co_us_n3606161_w9587173</a></td><td>Hypermarket + Hardware + Price Club</td><td class="num">2.96</td><td class="num">6</td><td>rm_us_tulsa</td></tr>
+<tr><td class="iso">US</td><td class="cluster-id"><a href="https://www.google.com/maps/@40.2789,-111.6941,14z" target="_blank">co_us_n4027887_w11169413</a></td><td>Hypermarket + Hardware + Price Club</td><td class="num">2.96</td><td class="num">5</td><td>rm_us_orem</td></tr>
+<tr><td class="iso">US</td><td class="cluster-id"><a href="https://www.google.com/maps/@29.7030,-95.7723,14z" target="_blank">co_us_n2970299_w9577230</a></td><td>Hypermarket + Hardware + Price Club</td><td class="num">2.96</td><td class="num">4</td><td>rm_us_houston</td></tr>
+<tr><td class="iso">US</td><td class="cluster-id"><a href="https://www.google.com/maps/@34.6739,-118.1516,14z" target="_blank">co_us_n3467392_w11815156</a></td><td>Hypermarket + Hardware + Price Club</td><td class="num">2.96</td><td class="num">6</td><td>rm_us_lancaster</td></tr>
+<tr><td class="iso">US</td><td class="cluster-id"><a href="https://www.google.com/maps/@42.8487,-106.2575,14z" target="_blank">co_us_n4284871_w10625753</a></td><td>Hypermarket + Hardware + Price Club</td><td class="num">2.95</td><td class="num">5</td><td>rm_us_casper</td></tr>
+<tr><td class="iso">US</td><td class="cluster-id"><a href="https://www.google.com/maps/@45.6164,-122.4866,14z" target="_blank">co_us_n4561644_w12248663</a></td><td>Hypermarket + Hardware + Price Club</td><td class="num">2.95</td><td class="num">6</td><td>rm_us_vancouver</td></tr>
+<tr><td class="iso">US</td><td class="cluster-id"><a href="https://www.google.com/maps/@33.8829,-84.3201,14z" target="_blank">co_us_n3388292_w8432006</a></td><td>Hypermarket + Hardware + Price Club</td><td class="num">2.95</td><td class="num">4</td><td>rm_us_chamblee</td></tr>
+<tr><td class="iso">US</td><td class="cluster-id"><a href="https://www.google.com/maps/@33.1041,-96.8019,14z" target="_blank">co_us_n3310409_w9680193</a></td><td>Hypermarket + Hardware + Price Club</td><td class="num">2.94</td><td class="num">6</td><td>rm_us_frisco</td></tr>
+<tr><td class="iso">US</td><td class="cluster-id"><a href="https://www.google.com/maps/@45.0236,-93.0222,14z" target="_blank">co_us_n4502360_w9302220</a></td><td>Hypermarket + Hardware + Price Club</td><td class="num">2.94</td><td class="num">4</td><td>rm_us_maplewood</td></tr>
+<tr><td class="iso">US</td><td class="cluster-id"><a href="https://www.google.com/maps/@34.1416,-118.2591,14z" target="_blank">co_us_n3414160_w11825906</a></td><td>Hypermarket + Hardware + Price Club</td><td class="num">2.94</td><td class="num">4</td><td>rm_us_glendale</td></tr>
+<tr><td class="iso">US</td><td class="cluster-id"><a href="https://www.google.com/maps/@24.8138,-107.4166,14z" target="_blank">co_us_n2481383_w10741663</a></td><td>Hypermarket + Hardware + Price Club</td><td class="num">2.94</td><td class="num">4</td><td>rm_us_sinaloa</td></tr>
+<tr><td class="iso">US</td><td class="cluster-id"><a href="https://www.google.com/maps/@33.7278,-84.7547,14z" target="_blank">co_us_n3372779_w8475472</a></td><td>Hypermarket + Hardware + Price Club</td><td class="num">2.94</td><td class="num">5</td><td>rm_us_douglasville</td></tr>
+<tr><td class="iso">MX</td><td class="cluster-id"><a href="https://www.google.com/maps/@24.8138,-107.4166,14z" target="_blank">co_mx_n2481383_w10741663</a></td><td>Hypermarket + Hardware + Price Club</td><td class="num">2.94</td><td class="num">4</td><td>rm_mx_culiac_n</td></tr>
+<tr><td class="iso">US</td><td class="cluster-id"><a href="https://www.google.com/maps/@32.7863,-117.1199,14z" target="_blank">co_us_n3278630_w11711988</a></td><td>Hypermarket + Lifestyle + Hardware + Price Club</td><td class="num">2.94</td><td class="num">5</td><td>rm_us_san_diego</td></tr>
+<tr><td class="iso">US</td><td class="cluster-id"><a href="https://www.google.com/maps/@30.2257,-97.8302,14z" target="_blank">co_us_n3022571_w9783019</a></td><td>Hypermarket + Hardware + Price Club</td><td class="num">2.93</td><td class="num">8</td><td>rm_us_austin</td></tr>
+<tr><td class="iso">US</td><td class="cluster-id"><a href="https://www.google.com/maps/@33.1332,-117.1149,14z" target="_blank">co_us_n3313322_w11711491</a></td><td>Hypermarket + Hardware + Price Club</td><td class="num">2.93</td><td class="num">3</td><td>rm_us_san_marcos</td></tr>
+<tr><td class="iso">US</td><td class="cluster-id"><a href="https://www.google.com/maps/@32.9125,-96.7573,14z" target="_blank">co_us_n3291250_w9675732</a></td><td>Hypermarket + Hardware + Price Club</td><td class="num">2.93</td><td class="num">3</td><td>rm_us_dallas</td></tr>
+<tr><td class="iso">US</td><td class="cluster-id"><a href="https://www.google.com/maps/@42.3874,-71.0772,14z" target="_blank">co_us_n4238741_w7107722</a></td><td>Hypermarket + Hardware + Price Club</td><td class="num">2.93</td><td class="num">7</td><td>rm_us_boston</td></tr>
+<tr><td class="iso">US</td><td class="cluster-id"><a href="https://www.google.com/maps/@41.8551,-87.9685,14z" target="_blank">co_us_n4185508_w8796855</a></td><td>Hypermarket + Hardware + Price Club</td><td class="num">2.93</td><td class="num">3</td><td>rm_us_oakbrook_terrace</td></tr>
+<tr><td class="iso">US</td><td class="cluster-id"><a href="https://www.google.com/maps/@34.6149,-98.4357,14z" target="_blank">co_us_n3461486_w9843566</a></td><td>Hypermarket + Hardware + Price Club</td><td class="num">2.92</td><td class="num">5</td><td>rm_us_lawton</td></tr>
+<tr><td class="iso">US</td><td class="cluster-id"><a href="https://www.google.com/maps/@29.5464,-95.1497,14z" target="_blank">co_us_n2954640_w9514973</a></td><td>Hypermarket + Hardware + Price Club</td><td class="num">2.92</td><td class="num">7</td><td>rm_us_houston</td></tr>
+<tr><td class="iso">GB</td><td class="cluster-id"><a href="https://www.google.com/maps/@51.6763,-0.3822,14z" target="_blank">co_gb_n5167634_w038221</a></td><td>Hypermarket + Hardware + Price Club</td><td class="num">2.92</td><td class="num">7</td><td>rm_gb_hertsmere</td></tr>
+<tr><td class="iso">PL</td><td class="cluster-id"><a href="https://www.google.com/maps/@52.2081,20.9359,14z" target="_blank">co_pl_n5220812_e2093589</a></td><td>Hypermarket + Hardware + Price Club</td><td class="num">2.92</td><td class="num">5</td><td>rm_pl_warszawa</td></tr>
+<tr><td class="iso">US</td><td class="cluster-id"><a href="https://www.google.com/maps/@42.6122,-83.3038,14z" target="_blank">co_us_n4261220_w8330385</a></td><td>Hypermarket + Hardware + Price Club</td><td class="num">2.92</td><td class="num">5</td><td>rm_us_pontiac</td></tr>
+<tr><td class="iso">AT</td><td class="cluster-id"><a href="https://www.google.com/maps/@47.0232,15.4188,14z" target="_blank">co_at_n4702323_e1541883</a></td><td>Hypermarket + Lifestyle + Hardware</td><td class="num">2.92</td><td class="num">5</td><td>rm_at_graz</td></tr>
+<tr><td class="iso">US</td><td class="cluster-id"><a href="https://www.google.com/maps/@37.6080,-122.0704,14z" target="_blank">co_us_n3760804_w12207041</a></td><td>Hypermarket + Hardware + Price Club</td><td class="num">2.92</td><td class="num">5</td><td>rm_us_union_city</td></tr>
+</tbody>
+  </table>
+
+  <h2>Build sequence — tonight</h2>
+  <table>
+    <thead><tr><th>Step</th><th>Command</th><th>Output</th><th>Est. time</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td><code>python3 build-clusters.py</code></td><td>work/clusters.geojson</td><td>~4 min</td></tr>
+      <tr><td>2</td><td><code>python3 build-tiles.py --layer 2</code></td><td>layer2-clusters.pmtiles + clusters-meta.json</td><td>~2 min</td></tr>
+    </tbody>
+  </table>
+  <div class="note" style="margin-top:12px">
+    <strong>One-liner:</strong> <code>bash nightly-rebuild.sh</code> from <code>app-orchestration-gis/</code> — pre-flight checks disk (&gt;5 GB) and taxonomy.py line count before running.
+    Log written to <code>nightly-rebuild.log</code>.
+  </div>
+
+</div>
+</body>
+</html>

@@ -1,8 +1,62 @@
 # NEXT.md — service-slm
 
-> Last updated: 2026-05-21 (is_busy fix + deploy + local flow verified + perf tuning)
+> Last updated: 2026-05-25 (Yo-Yo integration test; extraction timeout defect surfaced)
 > Read at session start. Update before session end so the next
 > session knows where to pick up.
+
+---
+
+## SESSION 2026-05-25 — YO-YO INTEGRATION TEST + TEST SCRIPT FIXES
+
+**Test run results (2-run composite across one SPOT VM session, preempted at 12m36s):**
+- PASS: tests 1 (Tier B inference), 3 (graph context injection), 4 (audit proxy), 6 (mesh routing), 10 (DataGraph REST API)
+- FAIL-fixed: tests 2, 5, 8 — test script bugs patched in commit `5968efdb`
+
+**Shipped:**
+- [x] `fix(test-yoyo-flows)`: grammar `max_tokens` 40→300; strip `<think>` before JSON parse; fix apprenticeship glob depth; test 8 handles broker-mode 503.
+
+**Open defects discovered + fix status:**
+
+- [x] **Extraction timeout (YOYO-EXTRACT-TIMEOUT)** — FIXED, deployed, **awaiting live verification**.
+  `OUTER_DEADLINE` in `crates/slm-doorman/src/tier/yoyo.rs` raised 90s→180s (commit `8daa4f7d`).
+  Binary live at `/usr/local/bin/slm-doorman-server`. Verification blocked by L4 stockout +
+  SPOT preemptions on 2026-05-25. Test plan at `~/.claude/plans/shiny-marinating-grove.md`.
+  Resume with: `sudo bash service-slm/scripts/start-yoyo.sh --wait-ready=360 --runtime=1h`
+  (use 360s not 300s — vLLM took >300s to load in one run).
+  Pass condition: `entity_count` rises above 1,530 and `tier_b_circuit_state` stays `"closed"`.
+- [ ] **Doorman restart → service-content restart**: restarting `local-doorman.service` also
+  stops `local-content.service` (systemd dependency). After any doorman restart, manually run
+  `sudo systemctl start local-content.service`. Root fix: investigate `PartOf=`/`BindsTo=`
+  in service unit drop-ins; decouple if safe.
+- [ ] **SPOT preemption resilience**: VM preempted twice on 2026-05-25 (at 12m36s and 21min).
+  `start-yoyo.sh` retry logic handles zone stockouts but not in-session preemptions. Consider
+  a post-start monitoring loop that detects preemption and re-invokes `start-yoyo.sh`.
+  Also: `--wait-ready=300` too short; raise default to 360s (or pass `--wait-ready=360`).
+
+**IMMEDIATE — Command Session:**
+- [ ] Stage 6 promote (~12 commits on this session alone, total ahead by more). Rebase required per inbox `command-20260520-stage6-rebase-required` — confirm before promote.
+- [ ] After promote: `bin/sync-local.sh --all` + rebuild + redeploy `slm-doorman-server` on workspace VM.
+- [ ] Update `local-doorman.service` env to include `SLM_LOCAL_MODEL=olmo-2-0425-1b-instruct` if not already set.
+
+---
+
+## SESSION 2026-05-23 — PHASE 6 AUTO-TODO COMPLETE
+
+**Shipped (5 commits, 262/262 tests):**
+- [x] `refactor(slm)`: `LatencyClass` enum (`Interactive`/`Background`/`Batch`) in slm-core; `select_tier()` Batch→Yoyo first; 2 new routing tests.
+- [x] `refactor(slm)`: `BackendLifecycle` trait; `AppState.idle_monitor: Option<Arc<dyn BackendLifecycle>>`; `IdleMonitorHandle`; `main.rs` refactored.
+- [x] `fix(slm)`: GF-1 — `AuditLedger` made `Clone` (Arc mutex); `write_audit()` fires append into `spawn_blocking`.
+- [x] `fix(slm)`: GF-2 — `LocalTierClient` inference client `connect_timeout(5s)` + `timeout(180s)`.
+- [x] doc: `SLM_LOCAL_MODEL` default → `"olmo-2-0425-1b-instruct"`; `Tier::Local` doc corrected; CLAUDE.md test count updated.
+
+**IMMEDIATE — Command Session:**
+- [ ] Stage 6 promote (~11 commits on this session alone, total ahead by more). Rebase required per inbox `command-20260520-stage6-rebase-required` — confirm before promote.
+- [ ] After promote: `bin/sync-local.sh --all` + rebuild + redeploy `slm-doorman-server` on workspace VM.
+- [ ] Update `local-doorman.service` env to include `SLM_LOCAL_MODEL=olmo-2-0425-1b-instruct` if not already set.
+
+**Deferred (Command Session scope, not Totebox):**
+- [ ] Rebuild `slm-yoyo` Packer image for Phase-0 G3/G17 (spot config).
+- [ ] `scripts/lora-update.sh` — remains HARD DISABLED; operator approval + `SLM_LORA_AUTO_ENABLE=true` required before activation.
 
 ---
 

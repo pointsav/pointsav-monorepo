@@ -13,21 +13,11 @@
 
 import * as esbuild from 'esbuild';
 
-// Phase 2 Step 7 — second bundle for collab. Default-off; loaded lazily
-// by saa-init.js only when window.WIKI_COLLAB_ENABLED is set by the
-// server (--enable-collab CLI flag). Keeps the SAA bundle lean for
-// production deploys that don't enable collab.
-
 const builds = [
   {
     entryPoints: ['entry.js'],
     outfile: '../static/vendor/cm-saa.bundle.js',
     globalName: 'CMSAA',
-  },
-  {
-    entryPoints: ['entry-collab.js'],
-    outfile: '../static/vendor/cm-collab.bundle.js',
-    globalName: 'CMCOLLAB',
   },
 ];
 

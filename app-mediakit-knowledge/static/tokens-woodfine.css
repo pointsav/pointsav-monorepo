@@ -1,0 +1,38 @@
+/* Woodfine brand token override layer.
+ * Loaded after tokens.css, before style.css, when WIKI_BRAND_THEME=woodfine.
+ * Overrides the DTCG semantic variables with Woodfine institutional values.
+ * Phase 4.4: full token-set swap, not just --accent.
+ *
+ * Source: Woodfine Management Corp. brand spec (woodfinegroup.com)
+ * Hex → oklch conversion via scripts/dtcg-to-css.py algorithm.
+ */
+
+:root {
+  /* Surface */
+  --surface-background:   oklch(98.09% 0.0026 229.85); /* #F7F9FA unified canvas */
+  --surface-layer:        oklch(100.0% 0.0001 263.28); /* #FFFFFF raised surfaces */
+  --surface-layer-accent: oklch(96.21% 0.0097 252.90); /* #EEF3F9 Woodfine-tinted aside */
+  --surface-layer-hover:  oklch(92.58% 0.0128 252.70); /* hover state */
+  --surface-inverse:      oklch(21.01% 0.0318 264.67); /* #111827 inverse */
+
+  /* Text */
+  --text-primary:     oklch(21.01% 0.0318 264.67); /* #111827 Deep Slate */
+  --text-secondary:   oklch(55.10% 0.0234 264.37); /* #6B7280 muted */
+  --text-tertiary:    oklch(65.00% 0.0180 264.00); /* lighter muted */
+  --text-placeholder: oklch(72.00% 0.0140 264.00);
+  --text-disabled:    oklch(85.97% 0.0107 261.80);
+
+  /* Interactive — Woodfine Blue replaces IBM Blue */
+  --interactive-link:           oklch(39.06% 0.1005 253.05); /* #164679 */
+  --interactive-link-visited:   oklch(31.42% 0.0790 253.24); /* #0F3258 */
+  --interactive-link-hover:     oklch(48.39% 0.1346 253.65); /* #1A5FA8 */
+  --interactive-link-redlink:   var(--color-link-redlink);    /* unchanged */
+  --interactive-button-primary: oklch(39.06% 0.1005 253.05); /* #164679 */
+  --interactive-focus-ring:     oklch(39.06% 0.1005 253.05); /* #164679 */
+
+  /* Border */
+  --border-interactive: oklch(39.06% 0.1005 253.05); /* #164679 */
+
+  /* Engine-specific alias — overrides steel-blue to Woodfine Blue */
+  --accent: #164679;
+}

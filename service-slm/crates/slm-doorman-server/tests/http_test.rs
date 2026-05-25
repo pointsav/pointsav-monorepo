@@ -347,6 +347,9 @@ async fn error_brief_cache_miss_returns_410() {
         service_content_endpoint: String::new(),
         last_yoyo_dispatch: Arc::new(std::sync::atomic::AtomicU64::new(0)),
         gateway_token: None,
+        node_class: "hardware",
+        tier_a_reason: "available",
+        idle_monitor: None,
     });
     let app = router(state);
 
@@ -641,6 +644,9 @@ async fn shadow_enqueued_brief_file_exists_at_queue_path() {
         service_content_endpoint: String::new(),
         last_yoyo_dispatch: Arc::new(std::sync::atomic::AtomicU64::new(0)),
         gateway_token: None,
+        node_class: "hardware",
+        tier_a_reason: "available",
+        idle_monitor: None,
     });
 
     let app = router(state_with_queue);
@@ -949,6 +955,7 @@ async fn lark_validation_runs_before_tier_b_dispatch() {
         model: None,
         messages: vec![CanonicalMessage::text("user", "ping")],
         complexity: Complexity::High,
+        latency_class: slm_core::LatencyClass::default(),
         tier_hint: Some(Tier::Yoyo),
         stream: false,
         max_tokens: None,
@@ -1151,6 +1158,9 @@ async fn audit_proxy_valid_request_writes_audit_stub_and_returns_503() {
         service_content_endpoint: String::new(),
         last_yoyo_dispatch: Arc::new(std::sync::atomic::AtomicU64::new(0)),
         gateway_token: None,
+        node_class: "hardware",
+        tier_a_reason: "available",
+        idle_monitor: None,
     });
     let app = router(state);
 
@@ -1284,6 +1294,7 @@ async fn valid_lark_grammar_passes_through_to_tier_b() {
         model: None,
         messages: vec![CanonicalMessage::text("user", "ping")],
         complexity: Complexity::High,
+        latency_class: slm_core::LatencyClass::default(),
         tier_hint: Some(Tier::Yoyo),
         stream: false,
         max_tokens: None,
@@ -1832,6 +1843,9 @@ async fn audit_proxy_unallowlisted_purpose_does_not_write_ledger_entry() {
         service_content_endpoint: String::new(),
         last_yoyo_dispatch: Arc::new(std::sync::atomic::AtomicU64::new(0)),
         gateway_token: None,
+        node_class: "hardware",
+        tier_a_reason: "available",
+        idle_monitor: None,
     });
     let app = router(state);
 
@@ -1977,6 +1991,9 @@ async fn audit_capture_valid_prose_edit_event_returns_200_and_writes_ledger() {
         service_content_endpoint: String::new(),
         last_yoyo_dispatch: Arc::new(std::sync::atomic::AtomicU64::new(0)),
         gateway_token: None,
+        node_class: "hardware",
+        tier_a_reason: "available",
+        idle_monitor: None,
     });
     let app = router(state);
 
@@ -2152,6 +2169,9 @@ async fn audit_capture_oversized_payload_returns_413() {
         service_content_endpoint: String::new(),
         last_yoyo_dispatch: Arc::new(std::sync::atomic::AtomicU64::new(0)),
         gateway_token: None,
+        node_class: "hardware",
+        tier_a_reason: "available",
+        idle_monitor: None,
     });
     let app = router(state);
 
@@ -2225,6 +2245,9 @@ async fn audit_capture_default_event_types_all_accepted() {
             service_content_endpoint: String::new(),
             last_yoyo_dispatch: Arc::new(std::sync::atomic::AtomicU64::new(0)),
             gateway_token: None,
+            node_class: "hardware",
+            tier_a_reason: "available",
+            idle_monitor: None,
         });
         let app = router(state);
 
@@ -2302,6 +2325,9 @@ async fn audit_proxy_oversized_request_returns_413() {
         service_content_endpoint: String::new(),
         last_yoyo_dispatch: Arc::new(std::sync::atomic::AtomicU64::new(0)),
         gateway_token: None,
+        node_class: "hardware",
+        tier_a_reason: "available",
+        idle_monitor: None,
     });
     let app = router(state);
 
@@ -2460,6 +2486,9 @@ async fn audit_tenant_concurrency_cap_rejects_excess_requests() {
         service_content_endpoint: String::new(),
         last_yoyo_dispatch: Arc::new(std::sync::atomic::AtomicU64::new(0)),
         gateway_token: None,
+        node_class: "hardware",
+        tier_a_reason: "available",
+        idle_monitor: None,
     });
 
     // Both requests below should fail immediately: no permits available.
@@ -2549,6 +2578,9 @@ async fn audit_tenant_concurrency_cap_per_tenant_independent() {
         service_content_endpoint: String::new(),
         last_yoyo_dispatch: Arc::new(std::sync::atomic::AtomicU64::new(0)),
         gateway_token: None,
+        node_class: "hardware",
+        tier_a_reason: "available",
+        idle_monitor: None,
     });
 
     // Two requests from different tenants; both should complete (200 OK

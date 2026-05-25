@@ -52,15 +52,14 @@ async fn fixture_state() -> (AppState, tempfile::TempDir, tempfile::TempDir) {
         citations_yaml: std::path::PathBuf::from("/nonexistent/citations.yaml"),
         search: Arc::new(index),
         git: Arc::new(Mutex::new(repo)),
-        collab: Arc::new(app_mediakit_knowledge::collab::CollabRooms::new()),
-        enable_collab: false,
         site_title: "PointSav Documentation Wiki".to_string(),
         git_tenant: "pointsav".to_string(),
         mcp_enabled: false,
         glossary: Arc::new(app_mediakit_knowledge::glossary::Glossary::default()),
-                links: app_mediakit_knowledge::links::LinkGraph::for_testing(),
-                brand_theme: None,
-                db: None,
+        links: app_mediakit_knowledge::links::LinkGraph::for_testing(),
+        brand_theme: None,
+        brand_instance: "documentation".to_string(),
+        db: None,
     };
     (state, dir, state_dir)
 }
@@ -79,16 +78,11 @@ async fn search_with_no_query_returns_empty_form() {
         .await
         .unwrap();
     assert_eq!(resp.status(), StatusCode::OK);
-    let html = std::str::from_utf8(
-        &resp.into_body().collect().await.unwrap().to_bytes(),
-    )
-    .unwrap()
-    .to_string();
+    let html = std::str::from_utf8(&resp.into_body().collect().await.unwrap().to_bytes())
+        .unwrap()
+        .to_string();
     assert!(html.contains("<form"), "search form missing: {html}");
-    assert!(
-        html.contains(r#"name="q""#),
-        "search input missing: {html}"
-    );
+    assert!(html.contains(r#"name="q""#), "search input missing: {html}");
     // No results section yet
     assert!(
         !html.contains("search-results"),
@@ -110,11 +104,9 @@ async fn search_returns_matching_topic() {
         .await
         .unwrap();
     assert_eq!(resp.status(), StatusCode::OK);
-    let html = std::str::from_utf8(
-        &resp.into_body().collect().await.unwrap().to_bytes(),
-    )
-    .unwrap()
-    .to_string();
+    let html = std::str::from_utf8(&resp.into_body().collect().await.unwrap().to_bytes())
+        .unwrap()
+        .to_string();
     assert!(
         html.contains("topic-alpha"),
         "alpha should match 'substrate': {html}"
@@ -139,15 +131,10 @@ async fn search_returns_empty_for_no_match() {
         .await
         .unwrap();
     assert_eq!(resp.status(), StatusCode::OK);
-    let html = std::str::from_utf8(
-        &resp.into_body().collect().await.unwrap().to_bytes(),
-    )
-    .unwrap()
-    .to_string();
-    assert!(
-        html.contains("No results"),
-        "no-match copy missing: {html}"
-    );
+    let html = std::str::from_utf8(&resp.into_body().collect().await.unwrap().to_bytes())
+        .unwrap()
+        .to_string();
+    assert!(html.contains("No results"), "no-match copy missing: {html}");
 }
 
 #[tokio::test]
@@ -189,11 +176,9 @@ async fn post_edit_triggers_reindex() {
         )
         .await
         .unwrap();
-    let html = std::str::from_utf8(
-        &resp.into_body().collect().await.unwrap().to_bytes(),
-    )
-    .unwrap()
-    .to_string();
+    let html = std::str::from_utf8(&resp.into_body().collect().await.unwrap().to_bytes())
+        .unwrap()
+        .to_string();
     assert!(
         html.contains("topic-alpha"),
         "reindex should make new keyword searchable: {html}"
@@ -210,11 +195,9 @@ async fn post_edit_triggers_reindex() {
         )
         .await
         .unwrap();
-    let html = std::str::from_utf8(
-        &resp.into_body().collect().await.unwrap().to_bytes(),
-    )
-    .unwrap()
-    .to_string();
+    let html = std::str::from_utf8(&resp.into_body().collect().await.unwrap().to_bytes())
+        .unwrap()
+        .to_string();
     // We only seeded topic-alpha with "substrate"; after reindex it's gone.
     assert!(
         html.contains("No results"),
@@ -257,11 +240,9 @@ async fn post_create_triggers_reindex() {
         )
         .await
         .unwrap();
-    let html = std::str::from_utf8(
-        &resp.into_body().collect().await.unwrap().to_bytes(),
-    )
-    .unwrap()
-    .to_string();
+    let html = std::str::from_utf8(&resp.into_body().collect().await.unwrap().to_bytes())
+        .unwrap()
+        .to_string();
     assert!(
         html.contains("topic-brand-new"),
         "newly-created TOPIC should be searchable by title: {html}"

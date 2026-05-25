@@ -34,12 +34,7 @@ async fn stream_file(path: PathBuf, content_type: &'static str) -> Response {
         Ok(file) => {
             let stream = ReaderStream::new(file);
             let body = Body::from_stream(stream);
-            (
-                StatusCode::OK,
-                [(header::CONTENT_TYPE, content_type)],
-                body,
-            )
-                .into_response()
+            (StatusCode::OK, [(header::CONTENT_TYPE, content_type)], body).into_response()
         }
         Err(_) => (
             StatusCode::NOT_FOUND,
@@ -73,7 +68,10 @@ async fn product_index(
 ) -> (StatusCode, Json<Value>) {
     let base = release_path(&state.releases_dir, &[&product]);
     if !base.exists() {
-        return (StatusCode::NOT_FOUND, Json(json!({"error": "product not found"})));
+        return (
+            StatusCode::NOT_FOUND,
+            Json(json!({"error": "product not found"})),
+        );
     }
     let versions: Vec<String> = fs::read_dir(&base)
         .into_iter()
@@ -82,7 +80,10 @@ async fn product_index(
         .filter(|e| e.path().is_dir())
         .filter_map(|e| e.file_name().into_string().ok())
         .collect();
-    (StatusCode::OK, Json(json!({"product": product, "versions": versions})))
+    (
+        StatusCode::OK,
+        Json(json!({"product": product, "versions": versions})),
+    )
 }
 
 async fn manifest(
@@ -99,7 +100,10 @@ async fn binary(
 ) -> Response {
     // Strip .sig suffix to detect signature requests
     if let Some(base_platform) = platform.strip_suffix(".sig") {
-        let path = release_path(&state.releases_dir, &[&product, &version, &format!("{base_platform}.sig")]);
+        let path = release_path(
+            &state.releases_dir,
+            &[&product, &version, &format!("{base_platform}.sig")],
+        );
         return stream_file(path, "application/octet-stream").await;
     }
 
@@ -151,8 +155,8 @@ async fn main() -> Result<()> {
         .init();
 
     let bind_addr = std::env::var("SOURCE_BIND").unwrap_or_else(|_| "127.0.0.1:9201".into());
-    let releases_dir = std::env::var("RELEASES_DIR")
-        .unwrap_or_else(|_| "/var/lib/local-software/releases".into());
+    let releases_dir =
+        std::env::var("RELEASES_DIR").unwrap_or_else(|_| "/var/lib/local-software/releases".into());
 
     let state = Arc::new(AppState { releases_dir });
 

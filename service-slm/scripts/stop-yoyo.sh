@@ -14,8 +14,8 @@
 # preserving the weights disk's current state for zone-migration recovery.
 #
 # Exit codes:
-#   0 — VM stopped successfully (or already stopped)
-#   1 — gcloud stop failure (auth/permission/unknown)
+#   0 — VM stopped + verified TERMINATED (or already stopped)
+#   1 — gcloud stop failure, or the VM did not reach TERMINATED within 120s
 #
 # Usage:
 #   ./scripts/stop-yoyo.sh
@@ -78,6 +78,14 @@ if [[ "${SNAPSHOT_BEFORE_STOP}" == "true" ]]; then
 fi
 
 # ── Stop ─────────────────────────────────────────────────────────────────────
+# G17: tag the stop as deliberate (operator) BEFORE stopping, so the Doorman
+# idle monitor reads `last-stop-reason=operator` and treats the VM as sticky —
+# a deliberate stop must never be silently auto-restarted.
+gcloud compute instances add-metadata "${INSTANCE}" \
+    --project="${PROJECT}" --zone="${ZONE}" \
+    --metadata=last-stop-reason=operator >/dev/null 2>&1 \
+    || log "WARN: could not set last-stop-reason metadata (idle monitor may auto-restart)."
+
 log "Stopping ${INSTANCE} in ${PROJECT}/${ZONE} ..."
 err=$(gcloud compute instances stop "${INSTANCE}" \
     --project="${PROJECT}" --zone="${ZONE}" 2>&1)
@@ -91,5 +99,21 @@ if [[ "${rc}" -ne 0 ]]; then
     exit 1
 fi
 
-log "VM stopped."
-exit 0
+# G10: `instances stop` returns when the operation is ACCEPTED, not when the VM
+# is actually down. Poll the instance status until it reaches TERMINATED before
+# claiming success — "shut down" must mean verified-down, not just requested.
+log "Stop request accepted — verifying the VM reaches TERMINATED..."
+verify_deadline=$(( $(date +%s) + 120 ))
+status=""
+while [[ $(date +%s) -lt ${verify_deadline} ]]; do
+    status=$(gcloud compute instances describe "${INSTANCE}" \
+        --project="${PROJECT}" --zone="${ZONE}" \
+        --format='value(status)' 2>/dev/null || echo "")
+    if [[ "${status}" == "TERMINATED" || "${status}" == "STOPPED" ]]; then
+        log "VM verified ${status}."
+        exit 0
+    fi
+    sleep 5
+done
+log "ERROR: VM did not reach TERMINATED within 120s (last status: ${status:-unknown}). Manual check required."
+exit 1
