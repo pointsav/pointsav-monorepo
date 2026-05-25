@@ -5,6 +5,19 @@ Newest first.
 
 ---
 
+## 2026-05-22 | Totebox | claude-code
+
+**Done this session — Phase 1 + Phase 2 complete; Phase 3 Commits A–C:**
+- Branch-topology blocker: `cluster/project-knowledge` diverged 374 commits; escalated to Command; `main` confirmed as working branch.
+- Phase 2 (claim-authoring convention) ratified as doctrine claim #54.
+- Phase 1 (engine dead-code descope): 4 commits, ~−2,600 lines, `cargo test` green.
+- Phase 3 Commits A/B/C: `claim.rs` extractor, per-claim citation resolution, claim graph in redb.
+- `.agent/binary-targets.yaml` written.
+
+**Operator preferences:** Per-commit discipline; surface drift, don't absorb it into feature commits.
+
+---
+
 ## 2026-05-21 | Totebox | claude-code
 
 **Done this session — knowledge-platform re-architecture + plan consolidation:**

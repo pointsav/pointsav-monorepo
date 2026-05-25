@@ -4,6 +4,28 @@ Rolling 3-session summary. Newest on top. Keep only 3 entries; push oldest to `s
 
 ---
 
+## 2026-05-25 | Totebox | claude-code
+
+**Done this session — round-2 design competition + self-hosted fonts:**
+- **Round-2 design competition:** Three OPUS agents produced new prototypes (platform-document / institutional-register / editorial-standard). OPUS jury scored proto-platform-document 84/100 as winner; institutional-register contributed three grafts (three-row header, ledger stripe, article-meta DL). editorial-standard rejected.
+- **Jury spec produced:** `DESIGN-WIKI-REDESIGN-SPEC.draft.md` (416 lines) in `.agent/drafts-outbound/`.
+- **Redesign implemented (`70259d32`):** CSS rewritten from 4,362 → 2,347 lines using platform-document as base. Three-row header (utility/brand/nav-row, 32/72/48px). Oswald + Nunito Sans + Roboto Slab. Ledger stripe. Article-meta DL. Dark mode `#0B1220` canvas. 106 tests pass.
+- **Self-hosted fonts (`784ceea7`):** Command blocked `70259d32` for GDPR Art. 44 — Google Fonts CDN transfers IPs to Google US. Downloaded Nunito Sans + Roboto Slab WOFF2 (latin + latin-ext) into `static/fonts/`; added 6 `@font-face` declarations to `style.css`; removed all Google Fonts `<link>` tags from `server.rs`. Zero third-party origin calls. Tests pass.
+- **Both commits queued for Stage 6.** Outbox updated.
+
+**Pending / carry-forward:**
+- **Stage 6 — two commits pending** (`70259d32` + `784ceea7`): Command runs `bin/promote.sh` + `deploy-binary.sh` + restart 3 services.
+- **Phase 6 (three-instance split)** — still gated on GitHub rename + MASTER Doctrine amendment.
+- **§3.6 claim-record MCP API** — waiting on project-intelligence.
+- **§3.4 continuous citation verification** — deferred.
+- **Phase 5.1+** — gated on BP5.
+
+**Operator preferences surfaced:**
+- Design direction: "completely different approach" — wanted to move away from Wikipedia-clone aesthetic. Platform-document (Stripe/Linear institutional) was the right call.
+- Responsive to Command blocks: accepted self-hosting fix immediately ("yes").
+
+---
+
 ## 2026-05-24 | Totebox | claude-code
 
 **Done this session — design commission + 3 live fixes:**
@@ -51,24 +73,4 @@ Rolling 3-session summary. Newest on top. Keep only 3 entries; push oldest to `s
 - Pre-build sessions: wants everything lined up and committed before shutdown, minimal interruptions ("can we lin eit all up so I can leave ti on auto").
 - Batch all remaining in-scope work and shut down clean — don't leave partial tasks.
 
----
-
-## 2026-05-22 | Totebox | claude-code
-
-**Done this session — Phase 1 + Phase 2 complete; Phase 3 Commits A–C:**
-- **Branch-topology blocker found + escalated.** The monorepo's `cluster/project-knowledge` branch had diverged badly from `main` (a stale 2026-05-03 relic, 374 commits behind). Escalated to Command; Command deleted it — **`main` is the confirmed working branch** for project-knowledge engine work.
-- **Phase 2 (claim-authoring convention)** — specced, staged, routed; Command ratified it as **doctrine claim #54** (`~/Foundry/conventions/claim-authoring-convention.md`). LANDED notice sent to project-editorial (their Track-A2 unblocked).
-- **Phase 1 (engine dead-code descope) COMPLETE** — 4 commits on monorepo `main`: `8f51ddfc` templates, `959f8e6f` Doorman, `bf35f38d` MCP read tools, `3d9cd9ec` collab. ~−2,600 lines; full `cargo test` green. Fixed a latent implicit-dep bug (tokio `io-util` was transitively via axum `ws`).
-- **Phase 3 (claim-layer engine) — Commits A/B/C** on `main`: `7887f8ec` (`claim.rs` extractor + Engine Verification Gate discharged), `c41bf85e` (per-claim citation resolution), `77e0d0a8` (claim graph in redb).
-- Wrote `.agent/binary-targets.yaml` — SOFT- pipeline declaration for `app-mediakit-knowledge`.
-
-**Pending / carry-forward (resolved next session):**
-- Phase 3 Commits D–E, crate hygiene, docs accuracy pass, Phase 4 DTCG, Phase 5 bilingual routing — all completed 2026-05-22/23.
-- Stage 6 count: was 7 at close of this session; now 16.
-
-**Operator preferences surfaced:**
-- Per-commit discipline endorsed — small, compile-and-test-verified commits; present a plan for multi-step engine work, then execute on go-ahead.
-- Surface drift, don't bundle it — pre-existing fmt/clippy non-compliance was reverted out of the Phase 1 descope, not silently absorbed into a feature commit.
-
----
 
