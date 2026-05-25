@@ -157,7 +157,7 @@ fn hex_short(hash: &[u8; 32]) -> String {
     for b in &hash[..8] {
         s.push_str(&format!("{b:02x}"));
     }
-    s.push_str("…");
+    s.push('…');
     s
 }
 
