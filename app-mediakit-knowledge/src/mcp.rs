@@ -10,8 +10,7 @@
 ///   prompts/list · prompts/get
 ///
 /// Tools:
-///   search_topics, get_revision, create_topic, propose_edit,
-///   link_citation, list_backlinks
+///   create_topic, propose_edit, link_citation
 ///
 /// Resources: wiki://topic/{slug}
 ///
@@ -65,11 +64,7 @@ pub async fn handler(
 
 // ─── Method dispatch ────────────────────────────────────────────────────────
 
-async fn dispatch(
-    state: &AppState,
-    method: &str,
-    params: &Value,
-) -> Result<Value, (i32, String)> {
+async fn dispatch(state: &AppState, method: &str, params: &Value) -> Result<Value, (i32, String)> {
     match method {
         "initialize" => initialize(params),
         "initialized" | "notifications/initialized" => Ok(Value::Null),
@@ -104,29 +99,6 @@ fn initialize(_params: &Value) -> Result<Value, (i32, String)> {
 
 fn tools_list() -> Result<Value, (i32, String)> {
     Ok(json!({ "tools": [
-        {
-            "name": "search_topics",
-            "description": "Full-text BM25 search across all wiki topics. Returns matching articles with title, slug, and snippet.",
-            "inputSchema": {
-                "type": "object",
-                "properties": {
-                    "query": { "type": "string", "description": "Search query" },
-                    "limit": { "type": "integer", "description": "Max results (default 10, max 50)" }
-                },
-                "required": ["query"]
-            }
-        },
-        {
-            "name": "get_revision",
-            "description": "Retrieve a wiki article by slug. Returns frontmatter fields and rendered HTML.",
-            "inputSchema": {
-                "type": "object",
-                "properties": {
-                    "slug": { "type": "string", "description": "Article slug, e.g. 'compounding-substrate' or 'architecture/compounding-substrate'" }
-                },
-                "required": ["slug"]
-            }
-        },
         {
             "name": "create_topic",
             "description": "Propose a new wiki article. Per SYS-ADR-10, proposals are not auto-committed — the operator must press F12 to persist.",
@@ -164,17 +136,6 @@ fn tools_list() -> Result<Value, (i32, String)> {
                 },
                 "required": ["query"]
             }
-        },
-        {
-            "name": "list_backlinks",
-            "description": "List all wiki articles that link to a given slug.",
-            "inputSchema": {
-                "type": "object",
-                "properties": {
-                    "slug": { "type": "string", "description": "Target article slug" }
-                },
-                "required": ["slug"]
-            }
         }
     ]}))
 }
@@ -192,74 +153,13 @@ async fn tools_call(state: &AppState, params: &Value) -> Result<Value, (i32, Str
         .unwrap_or_else(|| Value::Object(serde_json::Map::new()));
 
     let text = match name {
-        "search_topics" => tool_search_topics(state, &args)?,
-        "get_revision" => tool_get_revision(state, &args).await?,
         "create_topic" => tool_create_topic(&args)?,
         "propose_edit" => tool_propose_edit(&args)?,
         "link_citation" => tool_link_citation(state, &args).await?,
-        "list_backlinks" => tool_list_backlinks(state, &args)?,
         _ => return Err((-32601, format!("unknown tool: {name}"))),
     };
 
     Ok(json!({ "content": [{ "type": "text", "text": text }], "isError": false }))
-}
-
-fn tool_search_topics(state: &AppState, args: &Value) -> Result<String, (i32, String)> {
-    let q = args
-        .get("query")
-        .and_then(|v| v.as_str())
-        .ok_or_else(|| (-32602i32, "missing param: query".to_string()))?;
-    let limit = args
-        .get("limit")
-        .and_then(|v| v.as_u64())
-        .unwrap_or(10)
-        .min(50) as usize;
-    let hits = crate::search::search(&state.search, q, limit)
-        .map_err(|e| (-32000i32, format!("search error: {e}")))?;
-    let items: Vec<Value> = hits
-        .iter()
-        .map(|h| {
-            json!({ "slug": h.slug, "title": h.title, "snippet": h.snippet })
-        })
-        .collect();
-    Ok(serde_json::to_string_pretty(&json!({ "query": q, "count": items.len(), "hits": items }))
-        .unwrap())
-}
-
-async fn tool_get_revision(state: &AppState, args: &Value) -> Result<String, (i32, String)> {
-    let slug = args
-        .get("slug")
-        .and_then(|v| v.as_str())
-        .ok_or_else(|| (-32602i32, "missing param: slug".to_string()))?;
-    if slug.contains("..") {
-        return Err((-32602, "invalid slug".to_string()));
-    }
-    let topic_files = crate::server::collect_all_topic_files(
-        &state.content_dir,
-        &[state.guide_dir.as_deref(), state.guide_dir_2.as_deref()],
-    )
-    .await
-    .map_err(|e| (-32000i32, format!("io error: {e}")))?;
-    let tf = topic_files
-        .into_iter()
-        .find(|tf| tf.slug == slug)
-        .ok_or_else(|| (-32000i32, format!("article not found: {slug}")))?;
-    let text = tokio::fs::read_to_string(&tf.path)
-        .await
-        .map_err(|e| (-32000i32, format!("read error: {e}")))?;
-    let parsed = crate::render::parse_page(&text)
-        .map_err(|e| (-32000i32, format!("parse error: {e}")))?;
-    let html = crate::render::render_html_raw(&parsed.body_md, &state.content_dir);
-    Ok(serde_json::to_string_pretty(&json!({
-        "slug": slug,
-        "title": parsed.frontmatter.title,
-        "category": parsed.frontmatter.category,
-        "last_edited": parsed.frontmatter.last_edited,
-        "status": parsed.frontmatter.status,
-        "short_description": parsed.frontmatter.short_description,
-        "html": html
-    }))
-    .unwrap())
 }
 
 fn tool_create_topic(args: &Value) -> Result<String, (i32, String)> {
@@ -284,10 +184,7 @@ fn tool_propose_edit(args: &Value) -> Result<String, (i32, String)> {
     ))
 }
 
-async fn tool_link_citation(
-    state: &AppState,
-    args: &Value,
-) -> Result<String, (i32, String)> {
+async fn tool_link_citation(state: &AppState, args: &Value) -> Result<String, (i32, String)> {
     let query = args
         .get("query")
         .and_then(|v| v.as_str())
@@ -299,37 +196,15 @@ async fn tool_link_citation(
     let matches: Vec<Value> = entries
         .iter()
         .filter(|c| {
-            c.id.to_lowercase().contains(&q_lower)
-                || c.title.to_lowercase().contains(&q_lower)
+            c.id.to_lowercase().contains(&q_lower) || c.title.to_lowercase().contains(&q_lower)
         })
         .take(10)
-        .map(|c| {
-            json!({ "id": c.id, "title": c.title, "url": c.url })
-        })
+        .map(|c| json!({ "id": c.id, "title": c.title, "url": c.url }))
         .collect();
-    Ok(
-        serde_json::to_string_pretty(
-            &json!({ "query": query, "count": matches.len(), "matches": matches }),
-        )
-        .unwrap(),
+    Ok(serde_json::to_string_pretty(
+        &json!({ "query": query, "count": matches.len(), "matches": matches }),
     )
-}
-
-fn tool_list_backlinks(state: &AppState, args: &Value) -> Result<String, (i32, String)> {
-    let slug = args
-        .get("slug")
-        .and_then(|v| v.as_str())
-        .ok_or_else(|| (-32602i32, "missing param: slug".to_string()))?;
-    let backlinks = state
-        .links
-        .backlinks(slug)
-        .map_err(|e| (-32000i32, format!("backlinks error: {e}")))?;
-    Ok(
-        serde_json::to_string_pretty(
-            &json!({ "slug": slug, "count": backlinks.len(), "backlinks": backlinks }),
-        )
-        .unwrap(),
-    )
+    .unwrap())
 }
 
 // ─── resources/list ─────────────────────────────────────────────────────────

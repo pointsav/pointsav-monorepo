@@ -65,16 +65,6 @@ enum Command {
         #[arg(long, env = "WIKI_GUIDE_DIR_2")]
         guide_dir_2: Option<PathBuf>,
 
-        /// Phase 2 Step 7: enable real-time collaborative editing via
-        /// y-codemirror.next + a tokio broadcast WebSocket relay at
-        /// `/ws/collab/{slug}`. Default off; the route is only mounted
-        /// when this flag is set, and `cm-collab.bundle.js` is only
-        /// loaded by the editor when `window.WIKI_COLLAB_ENABLED` is
-        /// templated by the server. Two operators editing the same
-        /// TOPIC see each other's cursors.
-        #[arg(long, env = "WIKI_ENABLE_COLLAB")]
-        enable_collab: bool,
-
         /// Display name shown in the browser tab, site header, and home-page
         /// H1 fallback. Allows the same binary to serve multiple wiki
         /// instances with different branding.
@@ -106,6 +96,11 @@ enum Command {
         /// or via the argon2 crate's own CLI.
         #[arg(long, env = "WIKI_ADMIN_PASSWORD_HASH")]
         admin_password_hash: Option<String>,
+
+        /// Optional brand theme selector. Set to "woodfine" to activate the
+        /// BCSC forward-looking-statement disclaimer in all page footers.
+        #[arg(long, env = "WIKI_BRAND_THEME")]
+        brand_theme: Option<String>,
     },
 }
 
@@ -126,16 +121,33 @@ async fn main() -> Result<()> {
             state_dir,
             guide_dir,
             guide_dir_2,
-            enable_collab,
             site_title,
             git_tenant,
             enable_mcp,
             admin_username,
             admin_password_hash,
-        } => serve(content_dir, guide_dir, guide_dir_2, bind, citations_yaml, state_dir, enable_collab, site_title, git_tenant, enable_mcp, admin_username, admin_password_hash).await,
+            brand_theme,
+        } => {
+            serve(
+                content_dir,
+                guide_dir,
+                guide_dir_2,
+                bind,
+                citations_yaml,
+                state_dir,
+                site_title,
+                git_tenant,
+                enable_mcp,
+                admin_username,
+                admin_password_hash,
+                brand_theme,
+            )
+            .await
+        }
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 async fn serve(
     content_dir: PathBuf,
     guide_dir: Option<PathBuf>,
@@ -143,12 +155,12 @@ async fn serve(
     bind: SocketAddr,
     citations_yaml: PathBuf,
     state_dir: PathBuf,
-    enable_collab: bool,
     site_title: String,
     git_tenant: String,
     enable_mcp: bool,
     admin_username: Option<String>,
     admin_password_hash: Option<String>,
+    brand_theme: Option<String>,
 ) -> Result<()> {
     if !content_dir.is_dir() {
         bail!(
@@ -158,13 +170,19 @@ async fn serve(
     }
     if let Some(ref gd) = guide_dir {
         if !gd.is_dir() {
-            bail!("guide directory does not exist or is not a directory: {}", gd.display());
+            bail!(
+                "guide directory does not exist or is not a directory: {}",
+                gd.display()
+            );
         }
         tracing::info!(guide_dir = %gd.display(), "guide directory enabled");
     }
     if let Some(ref gd2) = guide_dir_2 {
         if !gd2.is_dir() {
-            bail!("guide directory 2 does not exist or is not a directory: {}", gd2.display());
+            bail!(
+                "guide directory 2 does not exist or is not a directory: {}",
+                gd2.display()
+            );
         }
         tracing::info!(guide_dir_2 = %gd2.display(), "guide directory 2 enabled");
     }
@@ -188,7 +206,9 @@ async fn serve(
     {
         let (tx, mut rx) = mpsc::channel::<notify::Result<notify::Event>>(64);
         let mut watcher: RecommendedWatcher = Watcher::new(
-            move |res| { let _ = tx.blocking_send(res); },
+            move |res| {
+                let _ = tx.blocking_send(res);
+            },
             notify::Config::default(),
         )?;
         watcher.watch(&content_dir, RecursiveMode::Recursive)?;
@@ -198,12 +218,11 @@ async fn serve(
             let _w = watcher; // keep alive in this task
             while let Some(event) = rx.recv().await {
                 let Ok(ev) = event else { continue };
-                let is_write = matches!(
-                    ev.kind,
-                    EventKind::Create(_) | EventKind::Modify(_)
-                );
+                let is_write = matches!(ev.kind, EventKind::Create(_) | EventKind::Modify(_));
                 let is_remove = matches!(ev.kind, EventKind::Remove(_));
-                if !is_write && !is_remove { continue }
+                if !is_write && !is_remove {
+                    continue;
+                }
                 for path in &ev.paths {
                     if path.extension().map(|e| e == "md").unwrap_or(false) {
                         let slug = content_path_to_slug(&cdir, path);
@@ -237,9 +256,8 @@ async fn serve(
 
     // Phase 4 Steps 4.4+4.5: open or create the redb link graph.
     tracing::info!("opening link graph");
-    let link_graph = app_mediakit_knowledge::links::LinkGraph::open_or_create(
-        &state_dir.join("links.redb"),
-    )?;
+    let link_graph =
+        app_mediakit_knowledge::links::LinkGraph::open_or_create(&state_dir.join("links.redb"))?;
     let link_graph = Arc::new(link_graph);
     tracing::info!("link graph ready");
 
@@ -258,10 +276,9 @@ async fn serve(
         None
     };
 
-    if enable_collab {
-        tracing::info!("collab WebSocket relay enabled at /ws/collab/{{slug}}");
-    }
     tracing::info!(git_tenant = %git_tenant, "git remote enabled at /git-server/{}/info/refs", git_tenant);
+    let brand_instance = std::env::var("WIKI_BRAND_INSTANCE")
+        .unwrap_or_else(|_| "documentation".to_string());
     let state = AppState {
         content_dir,
         guide_dir,
@@ -269,13 +286,13 @@ async fn serve(
         citations_yaml,
         search: search_arc,
         git: Arc::new(std::sync::Mutex::new(git_repo)),
-        collab: Arc::new(app_mediakit_knowledge::collab::CollabRooms::new()),
-        enable_collab,
         site_title,
         git_tenant,
         mcp_enabled: enable_mcp,
         glossary: Arc::new(glossary),
         links: link_graph,
+        brand_theme,
+        brand_instance,
         db,
     };
     let app = router(state);

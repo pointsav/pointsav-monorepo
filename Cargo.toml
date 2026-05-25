@@ -1,6 +1,7 @@
 [workspace]
 resolver = "2"
 members = [
+    "foundry-nodeclass",
     "service-people",
     "service-content",
     "app-console-content",
@@ -11,7 +12,15 @@ members = [
     "moonshot-toolkit",
     "service-fs",
     "system-security",
-    "xtask"
+    "xtask",
+    "app-privategit-marketplace",
+    "app-privategit-source",
+    "os-privategit",
+    "tool-wallet",
+    "app-privategit-workbench",
+    "tool-proforma-engine",
+    "app-orchestration-bim",
+    "tool-keyplan"
 ]
 
 [profile.dev]

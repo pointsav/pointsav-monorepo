@@ -12,7 +12,6 @@
 //!   GET  /special/create-account — admin-only account creation form
 //!   POST /special/create-account — create new user
 
-use std::sync::Arc;
 use axum::{
     extract::{FromRequestParts, Query, State},
     http::{request::Parts, StatusCode},
@@ -21,6 +20,7 @@ use axum::{
 };
 use maud::{html, Markup, DOCTYPE};
 use serde::Deserialize;
+use std::sync::Arc;
 
 use crate::server::AppState;
 use crate::users::{self, User};
@@ -40,7 +40,10 @@ pub fn set_session_cookie(token: &str) -> String {
 }
 
 pub fn clear_session_cookie() -> String {
-    format!("{}=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0", SESSION_COOKIE)
+    format!(
+        "{}=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0",
+        SESSION_COOKIE
+    )
 }
 
 fn parse_session_token(cookie_header: &str) -> Option<String> {
@@ -115,8 +118,7 @@ impl FromRequestParts<Arc<AppState>> for LoggedInUser {
                 created_at: 0,
             }));
         }
-        let CurrentUser(maybe_user) =
-            CurrentUser::from_request_parts(parts, state).await.unwrap();
+        let CurrentUser(maybe_user) = CurrentUser::from_request_parts(parts, state).await.unwrap();
         match maybe_user {
             Some(user) => Ok(LoggedInUser(user)),
             None => {
@@ -268,7 +270,11 @@ pub async fn post_login(
 
     match result {
         Ok(Ok(Some((_user, token)))) => {
-            let redirect_to = if next.starts_with('/') { next } else { "/".to_string() };
+            let redirect_to = if next.starts_with('/') {
+                next
+            } else {
+                "/".to_string()
+            };
             let mut resp = Redirect::to(&redirect_to).into_response();
             resp.headers_mut().insert(
                 axum::http::header::SET_COOKIE,
@@ -277,7 +283,10 @@ pub async fn post_login(
             resp
         }
         _ => {
-            let error_url = format!("/special/login?error=Invalid+username+or+password&next={}", next);
+            let error_url = format!(
+                "/special/login?error=Invalid+username+or+password&next={}",
+                next
+            );
             Redirect::to(&error_url).into_response()
         }
     }
@@ -314,10 +323,7 @@ pub async fn post_logout(
 // Account creation (admin only)
 // ─────────────────────────────────────────────────────────────────────
 
-pub async fn get_create_account(
-    State(state): State<Arc<AppState>>,
-    admin: AdminUser,
-) -> Markup {
+pub async fn get_create_account(State(state): State<Arc<AppState>>, admin: AdminUser) -> Markup {
     let db = state.db.as_ref().unwrap().clone();
     let users_list = tokio::task::spawn_blocking(move || {
         let conn = db.lock().unwrap();
@@ -412,7 +418,11 @@ pub async fn post_create_account(
 
     let username = form.username.trim().to_string();
     let password = form.password.clone();
-    let role = if form.role == "admin" { "admin" } else { "editor" };
+    let role = if form.role == "admin" {
+        "admin"
+    } else {
+        "editor"
+    };
 
     let result = tokio::task::spawn_blocking(move || {
         let conn = db.lock().unwrap();

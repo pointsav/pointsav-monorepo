@@ -56,14 +56,14 @@ async fn fixture_state() -> (AppState, tempfile::TempDir, tempfile::TempDir) {
         citations_yaml: std::path::PathBuf::from("/nonexistent/citations.yaml"),
         search: Arc::new(index),
         git: Arc::new(Mutex::new(repo)),
-        collab: Arc::new(app_mediakit_knowledge::collab::CollabRooms::new()),
-        enable_collab: false,
         site_title: "PointSav Documentation Wiki".to_string(),
         git_tenant: "pointsav".to_string(),
         mcp_enabled: false,
         glossary: Arc::new(app_mediakit_knowledge::glossary::Glossary::default()),
-                links: app_mediakit_knowledge::links::LinkGraph::for_testing(),
-                db: None,
+        links: app_mediakit_knowledge::links::LinkGraph::for_testing(),
+        brand_theme: None,
+        brand_instance: "documentation".to_string(),
+        db: None,
     };
 
     (state, dir, state_dir)
@@ -117,7 +117,10 @@ async fn atom_feed_body_is_parseable_xml_with_feed_element() {
     let xml = std::str::from_utf8(&bytes).unwrap();
 
     // Must contain the Atom `<feed` element and XML declaration.
-    assert!(xml.contains("<feed"), "Atom body should contain <feed: {xml}");
+    assert!(
+        xml.contains("<feed"),
+        "Atom body should contain <feed: {xml}"
+    );
     assert!(
         xml.contains("PointSav Knowledge"),
         "Atom body should contain feed title: {xml}"
@@ -266,8 +269,8 @@ async fn json_feed_version_field_starts_with_jsonfeed_url() {
         .unwrap();
 
     let bytes = resp.into_body().collect().await.unwrap().to_bytes();
-    let json: serde_json::Value = serde_json::from_slice(&bytes)
-        .expect("JSON feed body should parse as JSON");
+    let json: serde_json::Value =
+        serde_json::from_slice(&bytes).expect("JSON feed body should parse as JSON");
 
     let version = json["version"]
         .as_str()
@@ -302,10 +305,7 @@ async fn json_feed_lists_expected_topics() {
         "items should contain at least 2 entries: {json}"
     );
 
-    let ids: Vec<&str> = items
-        .iter()
-        .filter_map(|i| i["id"].as_str())
-        .collect();
+    let ids: Vec<&str> = items.iter().filter_map(|i| i["id"].as_str()).collect();
     let has_alpha = ids.iter().any(|id| id.contains("topic-alpha"));
     let has_beta = ids.iter().any(|id| id.contains("topic-beta"));
     assert!(has_alpha, "items should include topic-alpha: {json}");

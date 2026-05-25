@@ -1,8 +1,8 @@
 //! Integration tests for the Phase 4 redb link-graph + blake3 hash store.
 
+use std::path::PathBuf;
 use std::sync::Arc;
 use std::sync::Mutex;
-use std::path::PathBuf;
 
 use app_mediakit_knowledge::links::LinkGraph;
 use app_mediakit_knowledge::server::{router, AppState};
@@ -16,7 +16,8 @@ use tower::ServiceExt;
 #[test]
 fn backlink_added_by_rebuild() {
     let g = LinkGraph::for_testing();
-    g.rebuild_for_slug("article-a", "See [[target-slug]].").unwrap();
+    g.rebuild_for_slug("article-a", "See [[target-slug]].")
+        .unwrap();
     let bl = g.backlinks("target-slug").unwrap();
     assert_eq!(bl, vec!["article-a"]);
 }
@@ -24,17 +25,23 @@ fn backlink_added_by_rebuild() {
 #[test]
 fn backlink_cleared_when_link_removed() {
     let g = LinkGraph::for_testing();
-    g.rebuild_for_slug("article-a", "See [[target-slug]].").unwrap();
+    g.rebuild_for_slug("article-a", "See [[target-slug]].")
+        .unwrap();
     g.rebuild_for_slug("article-a", "No links here.").unwrap();
     let bl = g.backlinks("target-slug").unwrap();
-    assert!(bl.is_empty(), "backlink should be gone after rebuild without the link");
+    assert!(
+        bl.is_empty(),
+        "backlink should be gone after rebuild without the link"
+    );
 }
 
 #[test]
 fn multiple_sources_link_to_same_target() {
     let g = LinkGraph::for_testing();
-    g.rebuild_for_slug("article-a", "See [[shared-target]].").unwrap();
-    g.rebuild_for_slug("article-b", "Also [[shared-target]].").unwrap();
+    g.rebuild_for_slug("article-a", "See [[shared-target]].")
+        .unwrap();
+    g.rebuild_for_slug("article-b", "Also [[shared-target]].")
+        .unwrap();
     let mut bl = g.backlinks("shared-target").unwrap();
     bl.sort();
     assert_eq!(bl, vec!["article-a", "article-b"]);
@@ -43,7 +50,8 @@ fn multiple_sources_link_to_same_target() {
 #[test]
 fn self_links_are_recorded_in_graph() {
     let g = LinkGraph::for_testing();
-    g.rebuild_for_slug("page", "This page references [[page]] itself.").unwrap();
+    g.rebuild_for_slug("page", "This page references [[page]] itself.")
+        .unwrap();
     let bl = g.backlinks("page").unwrap();
     assert_eq!(bl, vec!["page"]);
 }
@@ -81,12 +89,9 @@ async fn whatlinkshere_returns_backlinks_from_graph() {
     .await
     .unwrap();
 
-    let index = app_mediakit_knowledge::search::build_index(
-        content_dir.path(),
-        state_dir.path(),
-    )
-    .await
-    .unwrap();
+    let index = app_mediakit_knowledge::search::build_index(content_dir.path(), state_dir.path())
+        .await
+        .unwrap();
     let repo = app_mediakit_knowledge::git::open_or_init(content_dir.path()).unwrap();
     let links = LinkGraph::for_testing();
 
@@ -102,13 +107,13 @@ async fn whatlinkshere_returns_backlinks_from_graph() {
         citations_yaml: PathBuf::from("/nonexistent/citations.yaml"),
         search: Arc::new(index),
         git: Arc::new(Mutex::new(repo)),
-        collab: Arc::new(app_mediakit_knowledge::collab::CollabRooms::new()),
-        enable_collab: false,
         site_title: "Test Wiki".to_string(),
         git_tenant: "pointsav".to_string(),
         mcp_enabled: false,
         glossary: Arc::new(app_mediakit_knowledge::glossary::Glossary::default()),
         links,
+        brand_theme: None,
+        brand_instance: "documentation".to_string(),
         db: None,
     };
 
@@ -124,7 +129,9 @@ async fn whatlinkshere_returns_backlinks_from_graph() {
         .unwrap();
 
     assert_eq!(resp.status(), StatusCode::OK);
-    let body = axum::body::to_bytes(resp.into_body(), usize::MAX).await.unwrap();
+    let body = axum::body::to_bytes(resp.into_body(), usize::MAX)
+        .await
+        .unwrap();
     let html = std::str::from_utf8(&body).unwrap();
     assert!(
         html.contains("origin-article"),

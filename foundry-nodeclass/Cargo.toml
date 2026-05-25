@@ -1,0 +1,10 @@
+[package]
+name = "foundry-nodeclass"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0 OR MIT"
+rust-version = "1.85"
+description = "Runtime node-class detection for the Totebox fleet"
+
+[dependencies]
+# No external dependencies — pure std filesystem probes.

@@ -28,26 +28,29 @@ impl Config {
     pub fn from_env() -> Result<Self> {
         Ok(Self {
             content_path: std::env::var("CONTENT_PATH")
-                .context("CONTENT_PATH is required")?.into(),
-            git_remote: std::env::var("GIT_REMOTE")
-                .unwrap_or_else(|_| "origin".into()),
+                .context("CONTENT_PATH is required")?
+                .into(),
+            git_remote: std::env::var("GIT_REMOTE").unwrap_or_else(|_| "origin".into()),
             sync_interval_secs: std::env::var("SYNC_INTERVAL")
                 .unwrap_or_else(|_| "60".into())
-                .parse().context("SYNC_INTERVAL must be a positive integer")?,
+                .parse()
+                .context("SYNC_INTERVAL must be a positive integer")?,
             cache_size: std::env::var("CACHE_SIZE")
                 .unwrap_or_else(|_| "256".into())
-                .parse().context("CACHE_SIZE must be a positive integer")?,
+                .parse()
+                .context("CACHE_SIZE must be a positive integer")?,
             editor_auth_url: std::env::var("EDITOR_AUTH").ok(),
             editor_enabled: std::env::var("EDITOR_ENABLED")
                 .unwrap_or_else(|_| "false".into())
-                .parse().context("EDITOR_ENABLED must be 'true' or 'false'")?,
+                .parse()
+                .context("EDITOR_ENABLED must be 'true' or 'false'")?,
             bind_addr: std::env::var("BIND_ADDR")
                 .unwrap_or_else(|_| "0.0.0.0:3000".into())
-                .parse().context("BIND_ADDR must be a valid socket address")?,
+                .parse()
+                .context("BIND_ADDR must be a valid socket address")?,
             site_title: std::env::var("SITE_TITLE")
                 .unwrap_or_else(|_| "PointSav Documentation".into()),
-            base_url: std::env::var("BASE_URL")
-                .unwrap_or_else(|_| "http://localhost:3000".into()),
+            base_url: std::env::var("BASE_URL").unwrap_or_else(|_| "http://localhost:3000".into()),
         })
     }
 }

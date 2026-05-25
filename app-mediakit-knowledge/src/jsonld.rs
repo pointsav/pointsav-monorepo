@@ -37,11 +37,28 @@ pub fn jsonld_for_topic(meta: &Frontmatter, slug: &str) -> String {
         }
     });
 
-    // Optional fields drawn from the catch-all `extra` map (these are not
-    // first-class fields on Frontmatter today; ARCHITECTURE.md §6 lists them
-    // as optional). Soft-fail if absent or wrong shape.
+    // Optional fields — all soft-fail when absent.
     if let Some(serde_yaml::Value::String(date)) = meta.extra.get("last_revised") {
         obj["datePublished"] = json!(date);
+    }
+    if let Some(date) = &meta.last_edited {
+        obj["dateModified"] = json!(date);
+    }
+    if let Some(desc) = &meta.short_description {
+        obj["description"] = json!(desc);
+    }
+    if let Some(ver) = &meta.document_version {
+        obj["version"] = json!(ver);
+    }
+    if let Some(cats) = &meta.categories {
+        if !cats.is_empty() {
+            obj["keywords"] = json!(cats);
+        }
+    }
+    if let Some(cites) = &meta.cites {
+        if !cites.is_empty() {
+            obj["citation"] = json!(cites);
+        }
     }
 
     if let Some(authors_val) = meta.extra.get("authors") {
@@ -113,6 +130,48 @@ mod tests {
     fn falls_back_to_slug_when_title_missing() {
         let html = jsonld_for_topic(&fm(), "topic-x");
         assert!(html.contains(r#""name":"topic-x""#));
+    }
+
+    #[test]
+    fn date_modified_from_last_edited() {
+        let mut f = fm();
+        f.last_edited = Some("2026-05-22".to_string());
+        let html = jsonld_for_topic(&f, "topic-x");
+        assert!(html.contains(r#""dateModified":"2026-05-22""#), "{html}");
+    }
+
+    #[test]
+    fn description_from_short_description() {
+        let mut f = fm();
+        f.short_description = Some("A short desc.".to_string());
+        let html = jsonld_for_topic(&f, "topic-x");
+        assert!(html.contains(r#""description":"A short desc.""#), "{html}");
+    }
+
+    #[test]
+    fn version_from_document_version() {
+        let mut f = fm();
+        f.document_version = Some("1.2.3".to_string());
+        let html = jsonld_for_topic(&f, "topic-x");
+        assert!(html.contains(r#""version":"1.2.3""#), "{html}");
+    }
+
+    #[test]
+    fn keywords_from_categories() {
+        let mut f = fm();
+        f.categories = Some(vec!["architecture".to_string(), "systems".to_string()]);
+        let html = jsonld_for_topic(&f, "topic-x");
+        assert!(html.contains(r#""keywords""#), "{html}");
+        assert!(html.contains("architecture"), "{html}");
+    }
+
+    #[test]
+    fn citation_from_cites() {
+        let mut f = fm();
+        f.cites = Some(vec!["ni-51-102".to_string(), "rfc-9162".to_string()]);
+        let html = jsonld_for_topic(&f, "topic-x");
+        assert!(html.contains(r#""citation""#), "{html}");
+        assert!(html.contains("ni-51-102"), "{html}");
     }
 
     #[test]
