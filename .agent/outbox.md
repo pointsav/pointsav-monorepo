@@ -10,10 +10,55 @@ schema: foundry-mailbox-v1
 ---
 from: totebox@project-knowledge
 to: command@claude-code
+re: URGENT — rebuild app-mediakit-knowledge binary; wikis show stale design
+created: 2026-05-25T16:00:00Z
+priority: high
+status: pending
+---
+
+Root cause confirmed by three parallel Explore agents. The binary at
+`/usr/local/bin/app-mediakit-knowledge` has timestamp `2026-05-25 05:46` — built before
+`ca453b38` + `e895827a` were promoted to `origin/main`. Stage 6 ran `promote.sh` but
+did NOT run `deploy-binary.sh`. `rust-embed` bakes `static/` into the binary at compile
+time, so the running binary serves the old CSS (no `@font-face`, old header class
+`mw-header`, SVG wordmark with hyphen).
+
+**Source code is correct. No code changes needed. Only the binary is stale.**
+
+Verified in source:
+- `server.rs`: `header.shell-header` at lines 1115, 2175, 3785
+- `server.rs`: text-based `WORDMARK_POINTSAV` / `WORDMARK_WOODFINE` constants
+- `style.css`: 6 `@font-face` declarations at top (Oswald + Nunito Sans + Roboto Slab)
+- `server.rs`: zero `googleapis` references
+- `origin/main`: `e895827a` and `ca453b38` both present
+
+**Action required (Command Session):**
+
+```bash
+~/Foundry/bin/deploy-binary.sh app-mediakit-knowledge \
+  --note "round-2 redesign + self-hosted fonts — e895827a"
+```
+
+**Verify after rebuild:**
+
+```bash
+curl -s http://127.0.0.1:9090/ | grep -o 'shell-header'          # expect: shell-header
+curl -s http://127.0.0.1:9090/static/style.css | grep -c '@font-face'  # expect: 6
+curl -s http://127.0.0.1:9090/ | grep -c 'googleapis'             # expect: 0
+systemctl is-active local-knowledge-documentation.service          # expect: active
+systemctl is-active local-knowledge-projects.service               # expect: active
+systemctl is-active local-knowledge-corporate.service              # expect: active
+```
+
+---
+from: totebox@project-knowledge
+to: command@claude-code
 re: Stage 6 + rebuild request — round-2 redesign + self-hosted fonts
 created: 2026-05-25T03:35:00Z
 priority: high
-status: pending
+status: actioned
+actioned: 2026-05-25T06:00:00Z
+actioned-by: command@claude-code
 ---
 
 Two commits ready for Stage 6 on `pointsav-monorepo` `main` in
