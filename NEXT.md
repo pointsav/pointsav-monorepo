@@ -6,248 +6,97 @@
 > Read at session start when a Root Claude opens in this repo. Update
 > at session end when repo-scope open items change.
 
-Last updated: 2026-05-20 (task@claude-code — project-software v0.0.1 complete; shutdown sweep items below).
+Last updated: 2026-05-21.
 
 ---
 
-## project-software cluster — open items [2026-05-20 task@claude-code]
+## Knowledge platform — canonical plan
 
-### Operator actions required (blocked on human)
+The three-wiki knowledge platform is governed by two documents in
+`.agent/plans/`: **`KNOWLEDGE-PLATFORM-VISION.md`** (vision & architecture —
+upstream) and **`KNOWLEDGE-PLATFORM-PLAN.md`** (project-knowledge execution
+plan — 8 phases). All prior knowledge-platform, Wikipedia-parity, and blueprint
+plans were superseded and removed 2026-05-21; the parity plans are archived
+under `.agent/plans/archive/`.
 
-- [ ] **WALLET** — populate `/etc/systemd/system/local-software-wallet.service.d/wallet.conf`:
-  uncomment `POLYGON_RPC_URL=https://polygon-rpc.com` and `POLYGON_WALLET_ADDRESS=0x...`,
-  then `sudo systemctl daemon-reload && sudo systemctl start local-software-wallet`
-- [ ] **DNS + TLS** — add A record `software.pointsav.com → 34.53.65.203`,
-  then `sudo certbot --nginx -d software.pointsav.com`
+**Execution progress:**
 
-### Command Session actions
-
-- [ ] **Stage 6** — promote monorepo cluster/project-software branch (5 unpromoted commits:
-  scaffold, implementation, wireframes, port-fix, registry-summary)
-- [ ] **Sync binary ledger** — after Stage 6: `bin/deploy-binary.sh` for any rebuilt binaries;
-  verify `data/binary-ledger/app-privategit-marketplace.jsonl` last sha matches `/usr/local/bin/`
-
-### Cross-cluster (blocked on project-bookkeeping)
-
-- [ ] **LicenseReceipt schema ratification** — project-bookkeeping must ack schema in
-  `clones/project-software/.agent/drafts-outbound/DATA-license-receipt-schema-v1.md`
-  before either side codes the integration (outbox msg-id: project-software-20260517-license-receipt-schema)
-
-### v0.0.2 scope (deferred)
-
-- [ ] `tool-wallet address` subcommand — BIP-32 HD derivation (requires `WALLET_SEED_PATH`)
-- [ ] Storefront chrome: adopt `pointsav-design-system` tokens from `design.pointsav.com/tokens.full.json`
-- [ ] Binary hosting migration: move from GitHub Releases to `app-privategit-source` Git LFS
-  (trigger: paid-customer count > 10)
-- [ ] Solana chain support (deferred per manifest)
+- [x] **Phase 2 — claim-authoring convention COMPLETE.** Specced, routed,
+  ratified by Command as doctrine claim #54
+  (`~/Foundry/conventions/claim-authoring-convention.md`); LANDED notice sent
+  to project-editorial. [2026-05-21 totebox@claude-code]
+- [x] **Phase 1 — engine dead-code descope COMPLETE.** 4 commits on `main`
+  (`8f51ddfc` templates, `959f8e6f` Doorman, `bf35f38d` MCP read tools,
+  `3d9cd9ec` collab). Compiles + full `cargo test` green.
+  [2026-05-22 totebox@claude-code]
+- [x] **Phase 3 Commits A–C** — claim-layer engine foundation. `7887f8ec`
+  (`claim.rs` extractor + Engine Verification Gate discharged), `c41bf85e`
+  (per-claim citation resolution), `77e0d0a8` (claim graph in redb). All
+  tested green. [2026-05-22 totebox@claude-code]
+- [ ] **Phase 3 Commit D — RESUME HERE next session.** §3.5 two-clock
+  temporality. Operator chose **Option A** — per-span `gix-blame` for
+  `published_at` (not coarse file-level) — plus the `?asof=` past-revision
+  view. Then Commit E (§3.7 JSON content-negotiation + §3.8 JSON-LD).
+  Full pick-up detail: `.agent/briefs/BRIEF-knowledge-platform-phase3.md`.
+  [2026-05-22 totebox@claude-code]
+- [ ] **Phase 3.4 — continuous citation verification** — deferred out of the
+  A–E tranche; its own sub-project (HTTP client + background scheduler +
+  drift detection). [2026-05-22 totebox@claude-code]
+- [ ] **Phase 3.6 — claim-record MCP API** (`query_claims`) — deferred;
+  cross-cluster, must reconcile with `service-slm`'s `slm-mcp-server`. Outbox
+  sent to project-intelligence. [2026-05-22 totebox@claude-code]
+- [ ] **Stage 6 — 7 commits unpromoted** on monorepo `main` (Phase 1 ×4 +
+  Phase 3 A/B/C ×3). Command Session promotes + rebuilds the binary. Outbox
+  notified. [2026-05-22 totebox@claude-code]
+- [ ] **Crate-hygiene drift (pre-existing, NOT Phase 1).** `app-mediakit-knowledge`
+  is not `cargo fmt`-clean (a `cargo fmt` run reformats ~37 files) and
+  `cargo clippy --all-targets -- -D warnings` fails with pre-existing lints in
+  `feeds.rs`, `glossary.rs`, `history.rs`, `edit.rs` etc. — files Phase 1 never
+  touched. This contradicts the crate `CLAUDE.md`'s stated standard. Needs its
+  own fmt + clippy cleanup task; do not bundle into feature work.
+  [2026-05-22 totebox@claude-code]
+- [ ] **Crate-doc accuracy pass (post-Phase-1).** `app-mediakit-knowledge`
+  `CLAUDE.md`, `ARCHITECTURE.md`, and `NEXT.md` still describe collab / Doorman
+  / the removed MCP read tools as shipped, and `CLAUDE.md` lists the
+  now-deleted `docs/STEP-7-COLLAB-SMOKE.md`. Needs a descope-wide doc-sync pass.
+  [2026-05-22 totebox@claude-code]
 
 ---
 
-## project-knowledge cluster — open items [2026-05-24 totebox@claude-code]
+## app-mediakit-knowledge — Phase 6A shipped (2026-05-13)
 
-- [x] Phases 1–5 + hygiene COMPLETE. 17 commits on `app-mediakit-knowledge` — all pass `cargo test` + `cargo clippy -D warnings`. [2026-05-22–24 totebox@claude-code]
-- [x] Phase 2 — claim-authoring convention ratified as doctrine claim #54. [2026-05-21 totebox@claude-code]
-- [x] 3 live fixes (`23deea11`) — IVC band "Phase 7" text removed; WCAG `#878d99→#666c78`; dtcg-to-css.py cubicBezier fixed. [2026-05-24 totebox@claude-code]
-- [x] **Stage 6 — COMPLETE.** 17 commits promoted; binary built and deployed; all 3 services active (confirmed 2026-05-24, session-context). [2026-05-24 totebox@claude-code]
-- [x] **Three wikis confirmed live + fully synced** (2026-05-24 diagnosis): documentation.pointsav.com (233 articles), projects.woodfinegroup.com (30 articles), corporate.woodfinegroup.com (18 articles). Clone = origin = customer on projects + corporate. [2026-05-24 totebox@claude-code]
-- [x] **Fleet catalog drift** — woodfine-fleet-deployment MANIFESTs for media-knowledge-projects (port 9091→9093) and media-knowledge-corporate (port 9092→9095) corrected by Command Session (`55247d8`). [2026-05-24 command@claude-code]
-- [ ] **Phase 6 — GATED** on: (1) `content-wiki-*` → `media-knowledge-*` GitHub rename (operator, GitHub UI); (2) MASTER Doctrine amendment (source-of-truth inversion). After both: Command updates service unit `WIKI_CONTENT_DIR` so projects/corporate read from clone paths (symmetric with documentation). No Totebox work until Command confirms both. [2026-05-23 totebox@claude-code]
-- [x] **Design commission → project-design** — 10 DESIGN-* drafts routed to project-design inbox by Command (`command-20260524-knowledge-design-routing`). MASTER COSIGN on DTCG and `shell_chrome()` implementation deferred; separate task. [2026-05-24 command@claude-code]
-- [x] **Hybrid UI implemented** (`9cf2c9ed`) — design competition D+A+B hybrid: three-row shell, editorial token layer, 21st-century Wikipedia progressive disclosure, canonical footer trademark, WCAG AA, 106 tests green. Stage 6 pending (Command scope). [2026-05-24 totebox@claude-code]
-- [ ] **Stage 6 — hybrid UI** — promote `9cf2c9ed` + `cargo build --release` + `sudo systemctl restart local-knowledge-{documentation,projects,corporate}` (Command scope). [2026-05-24 totebox@claude-code]
-- [ ] **DS-ADR-07 amendment** — needed before font-loading token work. Flagged to Command. [2026-05-24 totebox@claude-code]
-- [ ] Phase 3.4 — continuous citation verification (reqwest + scheduler). Deferred; own sub-project.
-- [ ] Phase 3.6 — claim-record MCP API. Deferred; waiting on project-intelligence re: slm-mcp-server.
+- [x] `inject_wiki_prefixes` trailing-quote bug fixed (`src/render.rs`)
+- [x] Slug normalisation fallback: mixed-case URL → 301 → canonical lowercase (`src/server.rs`)
+- [x] Redirect hatnote via `?redirectedfrom=` (`src/server.rs`, `static/style.css`)
+- [x] 4 new integration tests in `tests/slug_test.rs` — all pass
 
----
+**Stage 6 — promote complete** (confirmed 2026-05-13):
+- [x] `promote.sh` on `pointsav-monorepo` — Phase 6A in `origin/main` [2026-05-13 task@claude-code]
 
-## 🚨 OPERATIVE PLAN — Learning Loop Master Plan 2026-05-18
+**Binary rebuild + service restart pending** (Master scope):
+- [ ] `cargo build --release` from `app-mediakit-knowledge/` subdirectory [2026-05-13 task@claude-code]
+- [ ] `sudo cp target/release/app-mediakit-knowledge /usr/local/bin/` [2026-05-13 task@claude-code]
+- [ ] `sudo systemctl restart` all 3 wiki services + smoke verify [2026-05-13 task@claude-code]
 
-> **See `.agent/plans/learning-loop-master-plan-2026-05-18.md` for full sequencing.** It consolidates the 10 prior plans (MASTER-PLAN, leapfrog, service-slm-arch, service-content-arch, tier-arch, sovereign-routing, universal-ai-gateway, service-audit, service-slm-hardening, d5-canonical) into a single phased TODO. Sections below remain valid carry-forward.
+**Phase 6B — DID portable identity**: gated on BP6 operator decision. Plan at `.agent/plans/PHASE-6B-DID-IDENTITY.md`.
 
-### Phase 0 — this week (containment, ~2 days)
-
-> **Operator directive 2026-05-18:** stay away from Claude API key; stick
-> with Claude Pro Max 20x. Tier C remains UNCONFIGURED in production
-> (`SLM_TIER_C_ANTHROPIC_API_KEY` UNSET; 503 failsafe correct). Doorman-path
-> cost ceiling revised to $300/mo. Capture path for Claude Pro Max sessions
-> = git post-commit hook (`bin/capture-edit.py`), NOT `/v1/messages` shim.
-
-- [ ] **P0-0.1** Stage 6 promote 6 commits; redeploy Doorman; `SLM_APPRENTICESHIP_ENABLED=true` (Command Session, 15 min)
-- [x] ~~**P0-0.2** Anthropic Console limit~~ **DEFERRED per operator directive** (no Tier C in production)
-- [ ] **P0-0.3** GCP Billing Budget API: **$300/mo** with 50/80/100% alerts + auto-stop Cloud Function (operator from laptop with billing.admin, 2 hr)
-- [x] **P0-0.4** Tier-C provenance guard + `tier_used` top-level JSONL field (shipped 2026-05-18 by task@claude-code: ShadowWireBody + ShadowQueueEntry `source_tier` field; 403 at /v1/shadow; Tier::External rejection in write_shadow_tuple; 3 new tests)
-- [x] **P0-0.5** `--runtime=14h` default in nightly-run.sh (shipped 2026-05-18 by task@claude-code)
-- [x] **P0-0.6** journalctl vacuum (Command, sudo — pending) + service-extraction/target prune (task — shipped 2026-05-18; freed 625 MB)
-- [x] **Outbox to project-editorial:** Do-Not-Use regex set ratification request staged (`outbox.md`)
-
-### Phase 1 — overnight build (mostly shipped 2026-05-18)
-- [x] P1-1.1 Corpus quality gate (shipped 100b2bae; `corpus_gate.rs`, 9 tests; max-diff cap + dedup + BCSC flag + Do-Not-Use reject)
-- [ ] P1-1.2 Hold-out eval set curation + ssh-signing (operator action — `eval-prepare.sh` shipped 232e2e2c for candidate selection)
-- [ ] P1-1.3 `bin/eval-adapter.sh` — F12 gate-keeper for adapter promotion (deferred; depends on P1-1.2 sign)
-- [ ] P1-1.4 F12 corpus promotion gate + `bin/promote-corpus.sh` (deferred; would land alongside `_review/` subdir refactor — risky for an autonomous session)
-- [ ] P1-1.5 Operator signs first verdict batch — unblocks `feedback/` DPO pairs (operator action)
-- [x] P1-1.6 Adapter-version tagging on ComputeRequest/Response + AuditEntry/ExtractionAuditEntry + Prometheus labels (shipped 100b2bae)
-- [ ] P1-1.7 Tool-use round-trip completion — `tools: Vec<ToolDef>` + `ContentBlock` response (deferred; ~300 LOC across 3 tier clients; want operator review of API shape before touching)
-- [x] P1-1.8 Wire `/v1/messages` → `enqueue_shadow()` (shipped 100b2bae; `SLM_SHIM_TRAINING_CAPTURE` gated; Tier-C exclusion defended)
-- [x] P1-1.9 LoRA training toolchain (shipped 232e2e2c; `corpus-snapshot.sh`, `export-dpo.sh`, `lora-update.sh`, systemd unit set — disabled by default, SLM_LORA_AUTO_ENABLE gate + approval tag)
-- [ ] P1-1.10 First dry-run training pass on Yo-Yo trainer — explicitly excluded per operator directive (no Yo-Yo spend tonight)
-
-### Phase 2 — content creation flow (partially shipped 2026-05-18)
-- [x] P2-2.1 `worm_id` + `cites:` on GraphEntity (shipped 773113d5; schema + LadybugDB columns + backward-compat row parsing)
-- [ ] P2-2.2 RelatedTo edges substrate (deferred; needs project-editorial taxonomy ratification + service-content extraction prompt changes)
-- [ ] P2-2.3 `POST /v1/editorial/seed` aggregated endpoint (stretch; not shipped)
-- [x] P2-2.4 `citations.yaml` resolver + `/v1/citations/resolve` endpoint (shipped 773113d5; hot-reload + empty-file degraded mode)
-- [x] P2-2.5 `graph_context` field on apprenticeship JSONL (shipped 100b2bae; closes Doctrine #44 grounding loop)
-- [ ] P2-2.6 `POST /v1/editorial/grammar` endpoint (deferred; blocked on editorial vocab ratification)
-- [ ] P2-2.7 Deprecate `/v1/draft/generate` (stretch; not shipped)
-- [ ] P2-2.8 Local vector index + retrieval (deferred; sqlite-vec dep + Yo-Yo embedder)
-
-### Phase 3 — observability & scale (partially shipped 2026-05-18)
-- [x] P3-3.1 Prometheus metrics exporter + `/metrics` endpoint (shipped 100b2bae; 4 counters + 1 histogram emitted from `router::write_audit`)
-- [x] P3-3.2 Canary task set + `scripts/canary-run.sh` (shipped 51212dbb; 10 tasks × 7 categories + Bash/jq/yq runner with promote/flag/reject thresholds)
-- [x] P3-3.3 `/v1/shadow-adapter` A/B harness — SKELETON (shipped f17d703d; wire shape frozen, 501 NOT_IMPLEMENTED; dual-dispatch deferred to followup)
-- [x] P3-3.4 Adapter version registry skeleton (shipped 100b2bae; `adapter_registry.rs` + YAML schema + lifecycle methods; Sigstore signature field reserved, no signing yet)
-- [x] P3-3.5 Daily Tier-B cost ledger (shipped 100b2bae + 36de591e + d45629fc; `cost_ledger.rs` + write_audit wiring + `GET /v1/cost/daily?date=` endpoint)
-- [x] P3-3.6 Burn-and-restart runbook (shipped 232e2e2c; 4-phase contamination response procedure)
-
-### Phase 4 — artifact creation + cross-project routing (partially shipped 2026-05-18)
-- [x] Outbox to Command for forward to project-editorial: 4 TOPIC + 5 GUIDE data + endpoint specs (shipped 478c9465)
-- [x] Outbox to Command: 4 CONVENTION proposals (tier-c-prohibition / learning-loop / corpus-quality-gate / adapter-version substrates) (shipped 478c9465)
-- [ ] service-slm/ARCHITECTURE.md update with adapter substrate + corpus gate sections (deferred)
-- [ ] service-slm/DEVELOPMENT.md update with new endpoints + corpus tools workflow (deferred)
-- [ ] service-content/ARCHITECTURE.md update with worm_id + cites + citations endpoint (deferred)
-
-### Resource & cost decisions (ratified in plan)
-- Stay CPU-only on workspace VM; reject local-GPU reshape; keep Yo-Yo burst pattern
-- 7B Tier A — don't upgrade to 13B until VM resized to n2-standard-8
-- Embeddings = `nomic-embed-text-v1.5` on Yo-Yo trainer (NOT workspace VM; reject `bge-small` per BCSC)
-- Vector index = sqlite-vec OR redb + `instant-distance` HNSW
-- Nightly training Yo-Yo = preemptible L4, $15-40/mo, separate from inference Yo-Yo
-- **Cost ceiling: $300/mo Doorman-path** ($200 Yo-Yo Spot + $100 workspace baseline; Tier C $0 — disabled per operator directive 2026-05-18). Claude Pro Max 20x is a separate operator-managed line item.
-
-### Operator decisions outstanding
-1. ~~Anthropic legal review of "competing-models" clause~~ — moot for now; Pro Max 20x outputs are operator-side, not gateway-routed
-2. Eval scorer choice for diffs (edit-distance vs Pro Max judge vs human spot-check)
-3. F12 adapter-promotion authority (single signer vs multi-sig)
-4. Confirm GCS bucket `gs://woodfine-node-gcp-free-foundry-substrate/adapters/`
+**JS bundle cleanup** (backlog — low priority): vendored JS bundles in `app-mediakit-knowledge/static/vendor/` were kept per operator P7b decision 2026-05-16. Schedule explicitly when operator is ready; no session work until then.
 
 ---
 
 ## Currently open
 
-### VM stability — crash prevention [2026-05-16 task@claude-code]
+### ~~BLOCKER — stale `cluster/project-knowledge` branch~~ — RESOLVED 2026-05-21
 
-Root causes identified and addressed after 2× daily crash pattern (GCP host maintenance + cgroup OOM).
-
-- [x] **LadybugDB buffer pool blowup** — `SystemConfig::default()` allocated 12.8 GB (80% RAM). Fixed: explicit `buffer_pool_size` from env var `SERVICE_CONTENT_LBUG_BUFFER_POOL_MB` (default 64 MB). Deployed `7672e76f`. Dropin: `MemoryMax=3G`, pool=2048 MB.
-- [x] **local-slm MemoryMax reverts to 3G on daemon-reload** — created `/etc/systemd/system/local-slm.service.d/memory.conf` with `MemoryMax=6G`. Verified `6442450944` bytes after reload.
-- [x] **vm.swappiness=10** — set via `/etc/sysctl.d/99-foundry-inference.conf`. Prevents inference workload swap.
-- [x] **Retry storm on circuit-open extract** — added `Retry-After: 300` header to `/v1/extract` when `yoyo-circuit-open`. Deployed `31397dad`.
-- [x] **GCP host maintenance — MIGRATE confirmed** — `onHostMaintenance=MIGRATE`, `automaticRestart=True`, `preemptible=False`. VM already correctly configured. Crashes were OOM-only, not host maintenance.
-- [x] **journald cap** — `/etc/systemd/journald.conf.d/foundry-cap.conf` created with `SystemMaxUse=2G`; journald restarted. Done session 3 (2026-05-16).
-- [ ] **Delete unused 7B-Think weights** — `/var/lib/local-slm/weights/` has wrong 7B variant (4.5 GB). Recover disk space once 7B → OLMo 2 1B is confirmed stable.
-
-### service-content — ontology CSVs + Domains.json [2026-05-16 task@claude-code]
-
-**DONE** — commit `7e55e530` (Jennifer Woodfine):
-- `topics_documentation.csv`: 167 documentation wiki articles registered (168 total rows).
-- `guides_documentation.csv`: 38 additional GUIDEs registered (44 unique fleet guides total).
-- `Domains.json`: `"Sovereign Telemetry"` → `"Verified System Telemetry"` (Do-Not-Use §5).
-- **Known gap:** ~30 topic titles are slug-derived (fallback) rather than H1-extracted. Low-priority editorial cleanup only.
-- **Stage 6** already complete on session start — `main == origin/main`. No promotion action needed this session.
-- **Yo-Yo 1-hr test:** DONE. Watchdog fired at T+1hr (2026-05-16T17:33:40Z) but `stop-yoyo.sh` failed — `SCRIPT_DIR: unbound variable` in watchdog subshell. VM stopped manually; bug fixed in `2a4c8ade` (SCRIPT_DIR defined at line 40 of `start-yoyo.sh`).
-
-### service-slm / service-content — Sprint 0a prerequisites [2026-05-14 task@claude-code]
-
-**Sprint 0a SHIPPED** — `POST /v1/messages` live on workspace VM (`fdd1a223` + `7cd9ca61`).
-
-- [x] **Add `graph_context_enabled: Option<bool>` to `ComputeRequest`** — done; shim sets `Some(false)` (`slm-core/src/lib.rs:116`, `http.rs:1308`)
-- [x] **Decide opus → Tier C path** — Path A shipped (2026-05-16): `claude-opus-*` routes `tier_hint: External`, `tier_c_label: "editorial-refinement"` (`31397dad`). Requires `has_external=true` at runtime (Tier C env config). Currently returns 503 (unconfigured) which is correct failsafe.
-- [x] **Reconcile apprenticeship flag drift** — `compute/systemd/slm-doorman.service:37` updated to `true` (2026-05-15)
-
-**Sprint 0b — SHIPPED (2026-05-16/17):**
-- [x] **Real per-token SSE streaming** — `build_stream_body()` using `reqwest::chunk()` + `ReceiverStream`; 15s keepalive pings. Commit `21fff1f5`.
-- [x] **On-demand Yo-Yo lazy-start** — `SLM_YOYO_AUTO_START=true` gate in `dispatch()`; 90s health poll. Commit `c20dacc5`.
-- [x] **Integration tests** — 9-test `anthropic_shim_test.rs` suite; gateway auth (`x-api-key`); `x-foundry-tier-used` header on all paths. Commit `33dd6f3b`.
-- [x] **readyz extended fields** — `lark_validation_active`, `apprenticeship_enabled`, `tier_b_circuit_state`, `last_yoyo_dispatch_age_s`. Commit `33dd6f3b`.
-- [x] **service-content SIGTERM handler** — `#[cfg(unix)]` tokio::select! in `http::run_server()`. Commit `a21fdaae`.
-- [x] **service-content structured logging** — JSON tracing subscriber + `info!`/`warn!`/`error!` throughout. Commit `a21fdaae`.
-
-**Sprint 1 — next:**
-- [ ] **D5 — CanonicalMessage + ContentBlock** (~230 LOC). Full research + implementation plan at `.agent/plans/d5-canonical-message-sprint1.md`. Replaces `ChatMessage { role, content: String }` with typed content blocks; unlocks tool_use round-trip through gateway. Files: slm-core + all 3 tier clients + apprenticeship.rs + mesh.rs + router.rs + http.rs + tests. Key constraint: keep `ChatMessage` for `AuditProxyRequest` (audit_proxy.rs stays unchanged).
-- [ ] **Wire `SLM_TIER_C_ANTHROPIC_*` env** for opus → Tier C passthrough (routing is wired in `31397dad`; ExternalTierClient needs API key + endpoint env vars set in `local-doorman.env`).
-
-### service-content — Ring 2/Ring 3 decoupling [2026-05-14 task@claude-code]
-
-Current `main.rs` is the **legacy watcher** that `service-content/ARCHITECTURE.md` designates
-deprecated. Ring 2 ingest halts completely when Ring 3 (Doorman) is unavailable — the Community
-Tier principle is aspirational, not real. See `.agent/plans/service-content-architecture-2026.md`.
-
-- [x] **Sprint 1 — deterministic Source node write** — done (2026-05-15, `889bc993`). Source node written before Doorman call; graph grows regardless of Tier B reachability.
-- [ ] **Persistent extraction queue** (replace per-boot retry)
-  `processed_ledgers: Vec<String>` resets on restart. 114 deferred files retry every boot.
-  Fix: disk-backed set (sidecar JSONL or SQLite) + Yo-Yo-up notification trigger.
-- [x] **Validate `module_id`; reject `__` prefix** — done (2026-05-15, `889bc993`). Rejects `__`-prefixed overrides.
-- [ ] **Wire `RelatedTo` edges in graph store**
-  `graph.rs:66-72` declares `RelatedTo` table; it is never populated anywhere. Graph is
-  node-only. Everything in ARCHITECTURE.md §8 about linked nodes is unmet.
-- [x] **Fix `main.rs:293` unwrap** — done (2026-05-15, `889bc993`).
-- [ ] **Move `/v1/draft/generate` to Doorman** (Ring violation — Ring 2 generating text via Ring 3).
-
-### service-slm — audit ledger completeness [2026-05-14 task@claude-code]
-
-- [x] **`ExtractionAuditEntry` missing fields** — done (2026-05-15, `889bc993`). `model`, `cost_usd`, `sanitised_outbound` added.
-- [x] **Add `"graph-query"` to `AUDIT_CAPTURE_VALID_EVENT_TYPES`** — done (2026-05-15, `889bc993`).
-
-### Leapfrog compound loop — close the flywheel [2026-05-14 task@claude-code]
-
-The compound moat (apprenticeship → LoRA → sovereign model) requires these steps in order.
-See `.agent/plans/leapfrog-2026.md` for full strategic analysis.
-
-- [x] **1. Git post-commit hook** — done (2026-05-15). `service-slm/scripts/capture-edit.sh` (54 LOC). Reads `.git/foundry-brief-id`; POSTs diff to `/v1/shadow`. Install: `ln -sf ... .git/hooks/post-commit`. Agent session writes brief_id to file before committing; clears at session end.
-- [ ] **2. Eval harness** — held-out eval set + regression test for Tier A and Tier B tasks.
-  Must exist BEFORE first LoRA training run (no way to measure improvement otherwise).
-- [x] **3. Corpus quality gate** — shipped (2026-05-16, `31c389b7`): MIN_BRIEF_BODY_CHARS=50, MIN_DIFF_CHARS=20, PII patterns (API keys, SSH private keys). 422 on rejection.
-- [ ] **4. Ratify `conventions/permissible-model-substrate.md`** — BCSC posture, OLMo-only
-  rule, upgrade procedure as policy. Excludes Qwen/DeepSeek/Yi/GLM (PRC-headquartered).
-- [ ] **5. Tier A upgrade** — `OLMo-2-1124-7B-Instruct-Q4_K_M.gguf`, `MemoryMax=6G`.
-  Current 1B cannot produce reliable flat-schema tool-call args (blocks haiku-tier shim).
-  Requires weights download to `/var/lib/local-slm/weights/` + unit file update + redeploy.
-- [ ] **6. First LoRA training run** — on Yo-Yo #1 after steps 1–3 complete.
-- [ ] **7. mistralrs-server migration** — at LoRA milestone; enables hot-swap adapters at runtime.
-
-### app-mediakit-knowledge — Phase 4 continuation
-
-**CLOSED (2026-05-15).** Steps 4.1–4.8 all confirmed shipped in source:
-`src/mcp.rs` (Step 4.6, `POST /mcp` default-off), `src/git_protocol.rs` (Step 4.7
-smart-HTTP). Project-root `NEXT.md` already says "Phase 4 COMPLETE". CLAUDE.md and
-project NEXT.md are authoritative.
-
-Remaining open item: **Deploy** — rebuild release binary, restart
-`local-knowledge-documentation.service` and `local-knowledge-projects.service`.
-This requires operator presence on the workspace VM; no code work needed.
-
-### Leapfrog 2030 Architecture & Multi-Yo-Yo Roadmap
-- **Software layer complete** (180/180 tests as of 2026-05-15). See `service-slm/NEXT.md`.
-- **Yo-Yo #1 VM live** — `yoyo-tier-b-1` in `europe-west4-a` (relocated from `us-central1-a` via Mode 2 stockout cascade; confirmed 2026-05-15). L4, image `slm-yoyo-20260507-061137`. Doorman wired; nginx TLS + bearer auth verified working.
-- **Idle monitor fixed** (`890b3f6`) — was returning HTTP 411 (missing `Content-Length: 0`
-  on GCP POST); fixed with `.body("")`. The SA (Editor role) can stop instances without
-  additional IAM grant — step 2 below is no longer required.
-- **VM currently TERMINATED** — stopped 2026-05-16 (manually, after 1-hr watchdog failed due to SCRIPT_DIR bug; bug fixed in `2a4c8ade`). No Instance Schedule active; operator must start manually when weights are ready.
-- **Remaining operator steps:**
-  1. Upload OLMo 3 32B-Think Q4 weights (~20 GB) to `/data/weights/olmo-3-32b-think-q4.gguf`
-     on the Yo-Yo VM via `gcloud compute scp`. This is the only blocker for full
-     nightly drain cycle. Once loaded, VM starts at 02:00 UTC, vLLM serves, drain
-     worker routes briefs to Tier B, idle monitor stops VM after 30 min idle.
-  2. ~~Grant `roles/compute.instanceAdmin.v1`~~ — not needed; Editor role sufficient.
-  3. Run smoke test per `service-slm/docs/deploy/deploy-yoyo-tier-b.md` §8.
-  4. Re-enable apprenticeship: set `SLM_APPRENTICESHIP_ENABLED=true` in `local-doorman.env`.
-- Runbook: `service-slm/docs/deploy/deploy-yoyo-tier-b.md`.
+- [x] **RESOLVED.** Command deleted `cluster/project-knowledge` from local,
+  origin (canonical), and both staging remotes — the 33 commits were confirmed
+  all mailbox/ops housekeeping. **`main` is the confirmed working branch** for
+  project-knowledge engine work. Phase 1 unblocked.
+  [2026-05-21 totebox@claude-code]
 
 ### Layout hygiene — defect closures queued
 
-Rule source: `.agent/rules/repo-layout.md` (introduced 2026-04-23).
+Rule source: `.claude/rules/repo-layout.md` (introduced 2026-04-23).
 Each item below is a separate commit via `tool-commit-as-next.sh`.
 
 *(queue empty — Tier-2 project-root scripts closed 2026-04-23;
@@ -255,14 +104,14 @@ see Recently closed below and `cleanup-log.md`)*
 
 ### Awaiting cross-repo handoff
 
-Entries lodged in `.agent/rules/handoffs-outbound.md`. Pattern is
+Entries lodged in `.claude/rules/handoffs-outbound.md`. Pattern is
 passive — nothing moves until Master Claude or a Root Claude in
 the destination repo picks up the entry and commits the add-side.
 Source files remain in place here until the destination has
 committed; only then does a follow-up Root Claude session commit
 the source-remove.
 
-- **`guide-operations.md` → `content-wiki-documentation`** — see
+- **`GUIDE-OPERATIONS.md` → `content-wiki-documentation`** — see
   outbox for destination path and rationale.
 - **`USER_GUIDE_2026-03-30_V2.md` → `content-wiki-documentation`**
   (with `_V2` dropped in transit) — see outbox.
@@ -283,7 +132,9 @@ the source-remove.
   `app-console-*` and `app-network-*` projects contain both
   patterns; the registry's `Type` column does not distinguish.
   Surfaced during bookkeeper activation.
-- **`BIM.zip` triage** — verified 2026-05-07: no zip artefact present on disk; item closed.
+- **`BIM.zip` triage** — user-added working-tree artefact; determine
+  whether source data, extraction seed, or stray; gitignore or
+  delete.
 
 ### Rename series
 
@@ -293,24 +144,14 @@ migrations)*
 
 ### Structural defects
 
-- **lbug 0.16.1 prebuilt packaging regression** [2026-05-13] — The prebuilt `liblbug.a`
-  (both `compat` and `perf` Linux x86_64 variants) shipped without the companion
-  `libfastpfor.a`, causing undefined `__fastpack*` symbols at link time. Workaround:
-  build from source via `LBUG_SHARED=1`. Resolution options:
-  (a) pin `lbug` to the last version with a self-contained static prebuilt (was working
-  with lbug as of 2026-05-08 binary), or
-  (b) add a `build.rs` env override to force shared-lib path by default.
-  Upstream: report packaging regression to lbug crate maintainers.
-
-- ~~**`start-yoyo.sh` Mode 2 Doorman env bug**~~ — **CLOSED (2026-05-15).** `update_doorman_env` already called at line 421 in Mode 2 path (confirmed in code). Both Mode 1 (line 388) and Mode 2 (line 421) call it unconditionally.
-
-- ~~**`start-yoyo.sh` watchdog `SCRIPT_DIR` unbound variable**~~ — **CLOSED (2026-05-16).** `SCRIPT_DIR` was used at line 469 in the `--runtime` watchdog subshell but never defined. 1-hr watchdog fired but `stop-yoyo.sh` call failed; VM left running. Fix: `SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"` added after `set -uo pipefail`. Commit `2a4c8ade` (Peter Woodfine).
-
 - **Workspace `Cargo.toml` unification** — per 2026-04-18 audit,
   workspace declares only 8 of ~70+ crates as members. Other crates
   are treated as standalone workspaces (hence 23 stray
   `Cargo.lock` files). Unifying would consolidate targets and
   resolve profile inheritance.
+- **Monorepo `.gitignore` deduplication** — the "Asymmetric Storage
+  Protocol: Enforce Tier-1 Quarantine" block is duplicated four
+  times. Normalise to a single copy.
 - **Large binaries** — tracked artefacts that should move to
   build-time fetch:
   - `app-mediakit-telemetry/assets/GeoLite2-City.mmdb` (63.5 MB)
@@ -327,9 +168,42 @@ migrations)*
   - ISO / IMG artefacts in `os-infrastructure/`,
     `os-network-admin/`, `os-totebox/` (tracking status TBD).
 
+### New projects to register — Reverse-Flow Substrate (Doctrine claim #52)
+
+Six new Reserved-folder projects are named in DOCTRINE.md claim #52
+(ratified 2026-04-30) and `conventions/reverse-flow-substrate.md`.
+Create directory + bilingual READMEs + registry row in one commit per
+project (workspace §9: directory creation and registry row must land
+together). Activation to Active follows the standard framework §8
+procedure (CLAUDE.md + NEXT.md + registry row update).
+
+| Project | Prefix type | App OS | Notes |
+|---|---|---|---|
+| `service-market` | `service-*` | `os-totebox` | Ring 2 data marketplace — outbound connectors (Snowflake, AWS Data Exchange, LiveRamp) + inbound Delta Sharing API |
+| `service-exchange` | `service-*` | `os-totebox` | Ring 2 ad exchange — IAB OpenRTB 2.6; SSP + DSP bidirectional; Prebid Server sidecar; `iab-specs-openrtb` crate |
+| `app-orchestration-market` | `app-orchestration-*` | `os-orchestration` | Browser marketplace storefront; deployed as `gateway-orchestration-market-N` |
+| `app-orchestration-exchange` | `app-orchestration-*` | `os-orchestration` | Browser ad campaign UI; deployed as `gateway-orchestration-exchange-N` |
+| `app-console-market` | `app-console-*` | `os-console` | Secure TUI for industries where web delivery is too risky (financial, health, legal data) |
+| `app-console-exchange` | `app-console-*` | `os-console` | Secure TUI ad exchange surface; same risk-profile rationale |
+
+Also note: `app-orchestration-gis` (from `project-gis` cluster,
+deployed as `gateway-orchestration-gis-1`) is absent from the project
+registry — close this registry drift in the same pass.
+
 ### Conformance and activations
 
-*(queue empty — see Recently closed 2026-05-07 below)*
+- **`app-workplace-memo` activation.** Scaffold-coded with 47 files,
+  described by its sibling as "running on Linux Mint." Needs
+  `CLAUDE.md` + `NEXT.md` to become Active per framework §8.
+- **`app-workplace-proforma` CLAUDE.md commit-convention decision.**
+  Its `CLAUDE.md` exists but is marked "not committed to git." Per
+  the 2026-04-22 framework decision (committed convention is
+  canonical), this file either needs committing or explicit
+  conformance to a local-only exception.
+- **`service-extraction/CLAUDE.md` staleness.** The in-module
+  `CLAUDE.md` describes v0.2/v0.4 development but the code is a
+  149-line filesystem-watching router — different implementation.
+  Align before any new refactor of this service.
 
 ### Stashes parked in this repo
 
@@ -340,27 +214,9 @@ migrations)*
 - `stash@{1}` — pre-existing — "On service-extraction-v04: main:
   registry + BIM untracked — parked before task [21] resume".
 
-## Recently closed (2026-05-07)
-
-- **Reverse-Flow Substrate project registrations (Doctrine claim #52)** — six new
-  Reserved-folder projects created with bilingual READMEs and registry rows in one
-  commit each: `service-market`, `service-exchange`, `app-orchestration-market`,
-  `app-orchestration-exchange`, `app-console-market`, `app-console-exchange`.
-- **`app-orchestration-gis` registry drift** — directory created; Reserved-folder row
-  added to registry. Deployed instance `gateway-orchestration-gis-1` was missing from
-  the project registry.
-- **`.gitignore` deduplication** — "Asymmetric Storage Protocol: Enforce Tier-1
-  Quarantine" block was duplicated 4× (lines 4–18). Normalised to a single copy.
-- **`service-extraction/CLAUDE.md`** — CLAUDE.md created; describes the 149-line
-  filesystem-watching router accurately (replaces the stale v0.2/v0.4 framing in README).
-- **`app-workplace-memo` activation** — CLAUDE.md + NEXT.md added; registry row
-  promoted from Scaffold-coded → Active per framework §8.
-- **`app-workplace-proforma/CLAUDE.md`** — local-only file committed to git; header
-  updated to standard CLAUDE.md format.
-
 ## Recently closed (2026-04-23)
 
-- Repo-layout rule introduced — `.agent/rules/repo-layout.md`
+- Repo-layout rule introduced — `.claude/rules/repo-layout.md`
   codifies allowed files at the monorepo root and at each project
   directory root; names the sibling repos
   (`content-wiki-documentation`, `pointsav-design-system`, etc.)
@@ -384,9 +240,9 @@ migrations)*
   with a code-reference pointer to the new path; the operator
   decision on `MAX_DAILY_VERIFICATIONS = 10` remains open.
 - Handoff-outbound pattern introduced —
-  `.agent/rules/handoffs-outbound.md` logs cross-repo file moves
+  `.claude/rules/handoffs-outbound.md` logs cross-repo file moves
   kept in place here until a Root Claude in the destination repo
-  commits them. Two entries lodged (`guide-operations.md`,
+  commits them. Two entries lodged (`GUIDE-OPERATIONS.md`,
   `USER_GUIDE_2026-03-30_V2.md`, both to
   `content-wiki-documentation`). Formalisation of the pattern in
   `~/Foundry/CLAUDE.md` §9 and §10 surfaced for Master Claude in
@@ -470,7 +326,7 @@ migrations)*
 
 - Workspace-level open items: `~/Foundry/NEXT.md`
 - Workspace changelog: `~/Foundry/CHANGELOG.md`
-- Project registry: `.agent/rules/project-registry.md`
-- Cleanup log: `.agent/rules/cleanup-log.md`
-- Repo layout rule: `.agent/rules/repo-layout.md`
-- Handoffs outbound: `.agent/rules/handoffs-outbound.md`
+- Project registry: `.claude/rules/project-registry.md`
+- Cleanup log: `.claude/rules/cleanup-log.md`
+- Repo layout rule: `.claude/rules/repo-layout.md`
+- Handoffs outbound: `.claude/rules/handoffs-outbound.md`
