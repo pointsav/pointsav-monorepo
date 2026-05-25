@@ -1,0 +1,241 @@
+{
+  "$schema": "https://design-tokens.github.io/community-group/format/",
+  "$description": "BIM INTERIOR token category — furniture BIM Objects and circulation constraints for Key Plan authoring. Each furniture token carries confirmed Steelcase/manufacturer product data (dimensions mm, clearance mm, SKU, weight, IFC class, source URL). Circulation tokens carry the applicable code reference and spatial thresholds. Used as input to tool-keyplan for constraint validation and DTCG compilation. Sources: steelcase.com product pages (retrieved 2026-05-22), coalesse.com, AEC Floor Plates Key Plans Notes.pdf, ASR A1.2 (2011), DIN 18040, ArbStättV §12.",
+  "bim": {
+    "interior": {
+      "furniture": {
+        "task-chair": {
+          "steelcase-leap-v2": {
+            "$type": "bim.furniture-object",
+            "$value": {
+              "manufacturer": "Steelcase",
+              "product_line": "Leap 462 Series",
+              "model": "Leap V2",
+              "sku": null,
+              "series_code": "462",
+              "dimensions_mm": {
+                "w": 686,
+                "d": 629,
+                "h_min": 978,
+                "h_max": 1099
+              },
+              "seat_height_mm": {
+                "min": 410,
+                "max": 540
+              },
+              "clearance_mm": {
+                "front": 700,
+                "sides": 150,
+                "rear": 200
+              },
+              "weight_kg": null,
+              "weight_note": "33 kg confirmed as gross/packaged weight from UK steelcase.com; net weight not published",
+              "ifc_class": "IfcFurnishingElement",
+              "url": "https://www.steelcase.com/products/office-chairs/leap/"
+            },
+            "$description": "Steelcase Leap V2 ergonomic task chair (462 Series). W 686 mm × D 629 mm (seat-travel envelope) × H 978–1099 mm. Seat height 410–540 mm. No public SKU — configured to order. Source: uk.steelcase.com + au.steelcase.com (retrieved 2026-05-22)."
+          }
+        },
+        "desk": {
+          "steelcase-migration-se-58x29": {
+            "$type": "bim.furniture-object",
+            "$value": {
+              "manufacturer": "Steelcase",
+              "product_line": "Migration",
+              "model": "Migration SE Height-Adjustable Desk — 58\" × 29\"",
+              "sku": "MGELCRQ",
+              "sku_note": "Base ordering code for rectangle C-leg extended-height variant; individual configurations carry unique model strings",
+              "dimensions_mm": {
+                "w": 1473,
+                "d": 737,
+                "h_min": 574,
+                "h_max": 1237
+              },
+              "clearance_mm": {
+                "front": 1200,
+                "sides": 200,
+                "rear": 0
+              },
+              "weight_kg": 46.7,
+              "weight_note": "Confirmed for 58\" × 29\" configuration only; other sizes not published",
+              "ifc_class": "IfcFurnishingElement",
+              "url": "https://www.steelcase.com/products/height-adjustable-desks/migration-se/"
+            },
+            "$description": "Steelcase Migration SE height-adjustable desk, 58\" × 29\" (1473 × 737 mm). Extended-height base: 574–1237 mm. Motor: 24V DC, 33 mm/sec. Weight capacity 99.8 kg surface load. Source: steelcase.com product page + user manual part 1323350001 (retrieved 2026-05-22)."
+          }
+        },
+        "table": {
+          "steelcase-groupwork-36": {
+            "$type": "bim.furniture-object",
+            "$value": {
+              "manufacturer": "Steelcase",
+              "product_line": "Groupwork",
+              "model": "Groupwork 36-Inch Working Height Round Table",
+              "sku": null,
+              "sku_note": "AL3636USC appeared in a spec snippet but could not be confirmed from a live Steelcase page",
+              "dimensions_mm": {
+                "w": 914,
+                "d": 914,
+                "h_min": 724,
+                "h_max": 724
+              },
+              "shape": "round",
+              "diameter_mm": 914,
+              "clearance_mm": {
+                "front": 750,
+                "sides": 750,
+                "rear": 750
+              },
+              "weight_kg": null,
+              "weight_note": "Not confirmed from steelcase.com; 49.6–92.6 lbs range cited for Groupwork rectangular variants",
+              "seating_capacity": 4,
+              "seating_note": "Steelcase rates the 36\" round as 4 persons; used here as a 3-person round per FFE program",
+              "ifc_class": "IfcFurnishingElement",
+              "url": "https://www.steelcase.com/products/conference-collaborative-tables/groupwork/"
+            },
+            "$description": "Steelcase Groupwork 36-Inch Working Height Round Table. Diameter 914 mm, H 724 mm. Steelcase rates as 4-person; used as 3-person round in Private Office Key Plans per FFE program. Source: steelcase.com/products/conference-collaborative-tables/groupwork/ (retrieved 2026-05-22)."
+          }
+        },
+        "storage": {
+          "steelcase-ts-mobile-pedestal": {
+            "$type": "bim.furniture-object",
+            "$value": {
+              "manufacturer": "Steelcase",
+              "product_line": "TS Series Storage",
+              "model": "TS Series Mobile Pedestal with Steel Top",
+              "sku": null,
+              "sku_note": "Configured to order; no public SKU on steelcase.com",
+              "dimensions_mm": {
+                "w": 387,
+                "d": 559,
+                "h_min": 533,
+                "h_max": 533
+              },
+              "configuration": "mobile — casters standard; box/box/file drawer options",
+              "clearance_mm": {
+                "front": 700,
+                "sides": 100,
+                "rear": 0
+              },
+              "weight_kg": null,
+              "weight_note": "Not published on steelcase.com",
+              "ifc_class": "IfcFurnishingElement",
+              "url": "https://www.steelcase.com/products/workstation-storage/ts-series/"
+            },
+            "$description": "Steelcase TS Series Mobile Pedestal with Steel Top. W 387 mm × D 559 mm × H 533 mm. BBF drawer configuration. Mobile (casters). Source: TS Series brochure IM#18-0101973 via steelcase.com (retrieved 2026-05-22)."
+          },
+          "steelcase-currency-bookcase-36": {
+            "$type": "bim.furniture-object",
+            "$value": {
+              "manufacturer": "Steelcase",
+              "product_line": "Currency",
+              "model": "Currency Enhanced Bookcase — 36\" W × 15\" D × 72 11/16\" H",
+              "sku": null,
+              "sku_note": "Configured to order; no single public SKU",
+              "dimensions_mm": {
+                "w": 914,
+                "d": 381,
+                "h_min": 1846,
+                "h_max": 1846
+              },
+              "shelves": "4 adjustable at 1-1/4\" increments",
+              "clearance_mm": {
+                "front": 900,
+                "sides": 100,
+                "rear": 0
+              },
+              "weight_kg": null,
+              "weight_note": "Not published on steelcase.com web pages; available in NASPO spec PDF only",
+              "ifc_class": "IfcFurnishingElement",
+              "url": "https://www.steelcase.com/products/private-offices/currency/"
+            },
+            "$description": "Steelcase Currency Enhanced Bookcase, 36\" wide (914 × 381 × 1846 mm). 4 adjustable shelves. Source: Currency NASPO spec guide June 2025 via steelcase.com (retrieved 2026-05-22)."
+          }
+        },
+        "lounge-chair": {
+          "coalesse-wing-ch445": {
+            "$type": "bim.furniture-object",
+            "$value": {
+              "manufacturer": "Carl Hansen & Son",
+              "product_line": "Coalesse Partners / Carl Hansen",
+              "model": "Wing Chair CH445",
+              "designer": "Hans J. Wegner (1960)",
+              "sku": "CH445",
+              "dimensions_mm": {
+                "w": 899,
+                "d": 896,
+                "h_min": 1031,
+                "h_max": 1031
+              },
+              "seat_height_mm": {
+                "min": 391,
+                "max": 391
+              },
+              "clearance_mm": {
+                "front": 600,
+                "sides": 200,
+                "rear": 150
+              },
+              "weight_kg": 36,
+              "weight_note": "36 kg confirmed from multiple authorized retailers; not directly confirmed from steelcase.com (page returned 404)",
+              "ifc_class": "IfcFurnishingElement",
+              "url": "https://www.coalesse.com/products/seating/lounge-seating/ch445-wing-chair/",
+              "url_note": "steelcase.com/products/lounge-chairs/wing-chair-ch445/ returned 404 on 2026-05-22; Coalesse URL is authoritative Steelcase-family source"
+            },
+            "$description": "Wing Chair CH445 by Carl Hansen & Son (Coalesse Partners product). W 899 mm × D 896 mm × H 1031 mm. Seat height 391 mm. Weight 36 kg. Designed Hans J. Wegner 1960. Source: coalesse.com/products/seating/lounge-seating/ch445-wing-chair/ (retrieved 2026-05-22)."
+          }
+        },
+        "utility": {
+          "generic-coat-rack": {
+            "$type": "bim.furniture-object",
+            "$value": {
+              "manufacturer": "Generic",
+              "product_line": null,
+              "model": "Freestanding coat rack — hook panel",
+              "sku": null,
+              "dimensions_mm": {
+                "w": 400,
+                "d": 300,
+                "h_min": 1800,
+                "h_max": 1800
+              },
+              "clearance_mm": {
+                "front": 600,
+                "sides": 300,
+                "rear": 0
+              },
+              "weight_kg": null,
+              "ifc_class": "IfcFurnishingElement",
+              "url": null
+            },
+            "$description": "Generic freestanding coat rack / hook panel. Non-Steelcase; dimensions are representative (400 × 300 mm footprint, 1800 mm height). Used in Zone 3 corridor entry of Private Office Key Plans."
+          }
+        }
+      },
+      "circulation": {
+        "standard-private-office": {
+          "$type": "bim.circulation-constraint",
+          "$value": {
+            "standard": "ASR A1.2 (Technische Regeln für Arbeitsstätten — Raumabmessungen und Bewegungsflächen)",
+            "min_room_area_per_person_m2": 8.0,
+            "min_aisle_single_mm": 875,
+            "min_aisle_two_way_mm": 1200,
+            "wheelchair_turning_radius_mm": 750,
+            "wheelchair_turning_diameter_mm": 1500,
+            "wheelchair_note": "DIN 18040 — 1500 mm turning circle diameter (750 mm radius) required at door approach",
+            "european_lighting_standard_desk_to_window_max_m": 6.0,
+            "european_lighting_note": "All desk positions must be within 6.0 m of an exterior glazed facade",
+            "applies_to": ["PO-1", "PO-2", "PO-3"],
+            "code_references": [
+              "ASR A1.2 §4.1 (2011) — 8 m² minimum room area per person",
+              "ArbStättV §12 — 875 mm single-person aisle, 1200 mm two-way",
+              "DIN 18040-1 — 1500 mm wheelchair turning circle at door",
+              "European Lighting Standard EN 12464-1 — desk within 6 m of facade glazing"
+            ]
+          },
+          "$description": "Circulation constraints for Private Office Key Plans. ASR A1.2: minimum 8 m² per person. ArbStättV §12: 875 mm single-person aisle. DIN 18040: 1500 mm wheelchair turning circle. European Lighting Standard EN 12464-1: desk within 6 m of exterior glazing."
+        }
+      }
+    }
+  }
+}

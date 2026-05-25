@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>PO-1 — Private Office Small — Floor Plan</title>
+<style>
+  body { font-family: system-ui, -apple-system, sans-serif; background: #f1f5f9; margin: 0; padding: 32px; color: #1e293b; }
+  h1 { font-size: 20px; font-weight: 700; margin: 0 0 4px; }
+  .meta { font-size: 13px; color: #64748b; margin: 0 0 24px; }
+  .card { background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 28px; display: inline-block; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+  .note { font-size: 11px; color: #94a3b8; margin-top: 6px; }
+  table { border-collapse: collapse; margin-top: 20px; font-size: 12px; min-width: 820px; }
+  thead tr { background: #f8fafc; }
+  th { text-align: left; padding: 7px 12px; border-bottom: 2px solid #e2e8f0; font-weight: 600; color: #475569; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; }
+  td { padding: 6px 12px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+  td:nth-child(4) { font-family: monospace; font-size: 10px; color: #475569; }
+  .zone-badge { display: inline-block; padding: 1px 7px; border-radius: 10px; font-size: 10px; font-weight: 600; }
+  .z1 { background:#eff6ff; color:#1d4ed8; }
+  .z2 { background:#fefce8; color:#92400e; }
+  .z3 { background:#f0fdf4; color:#15803d; }
+  .swatch { display:inline-block; width:11px; height:11px; border-radius:2px; margin-right:5px; vertical-align:middle; }
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>Private Office — Small (PO-1)</h1>
+  <p class="meta">30.19 m² &nbsp;/&nbsp; 325 SF &nbsp;·&nbsp; Zone 1 = 6.0 m &nbsp;·&nbsp; Zone 2 = 3.8 m &nbsp;·&nbsp; Zone 3 = 2.0 m &nbsp;·&nbsp; tool-keyplan v0.0.1</p>
+
+  <!--
+    Scale: 1:20  (1 mm = 0.05 px)
+    Plan orientation: rotated 90° — facade at LEFT, corridor at RIGHT
+    Plan width  = 2558 mm → 128 px (vertical in SVG)
+    Plan depth  = 11800 mm → 590 px (horizontal in SVG)
+    Coordinate transform:
+      SVG_x = 110 + plan_y * 0.05   (plan depth → horizontal)
+      SVG_y =  55 + plan_x * 0.05   (plan width  → vertical)
+  -->
+  <svg width="900" height="310" viewBox="0 0 900 310" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <marker id="a" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+        <path d="M0,0 L6,3 L0,6Z" fill="#94a3b8"/>
+      </marker>
+      <marker id="b" markerWidth="6" markerHeight="6" refX="1" refY="3" orient="auto">
+        <path d="M6,0 L0,3 L6,6Z" fill="#94a3b8"/>
+      </marker>
+    </defs>
+
+    <!-- Zone fills -->
+    <rect x="110" y="55" width="300" height="128" fill="#eff6ff"/>
+    <rect x="410" y="55" width="190" height="128" fill="#fefce8"/>
+    <rect x="600" y="55" width="100" height="128" fill="#f8fafc"/>
+
+    <!-- Zone zone dividers -->
+    <line x1="410" y1="55" x2="410" y2="183" stroke="#94a3b8" stroke-width="1" stroke-dasharray="5,3"/>
+    <line x1="600" y1="55" x2="600" y2="183" stroke="#94a3b8" stroke-width="1" stroke-dasharray="5,3"/>
+
+    <!-- Room outline -->
+    <rect x="110" y="55" width="590" height="128" fill="none" stroke="#1e3a5f" stroke-width="2"/>
+
+    <!-- Facade wall (solid blue bar) -->
+    <rect x="106" y="55" width="6" height="128" fill="#2563eb" rx="1"/>
+    <!-- Window hatching on facade -->
+    <line x1="109" y1="70"  x2="109" y2="85"  stroke="white" stroke-width="1.5"/>
+    <line x1="109" y1="95"  x2="109" y2="110" stroke="white" stroke-width="1.5"/>
+    <line x1="109" y1="120" x2="109" y2="135" stroke="white" stroke-width="1.5"/>
+    <line x1="109" y1="150" x2="109" y2="165" stroke="white" stroke-width="1.5"/>
+
+    <!-- Corridor wall (right) -->
+    <rect x="700" y="55" width="4" height="128" fill="#64748b" rx="1"/>
+
+    <!-- Zone labels above room -->
+    <text x="260" y="40" text-anchor="middle" font-size="11" fill="#1d4ed8" font-weight="700">Zone 1 — Habitat</text>
+    <text x="260" y="52" text-anchor="middle" font-size="9.5" fill="#94a3b8">6 000 mm</text>
+    <text x="505" y="40" text-anchor="middle" font-size="11" fill="#92400e" font-weight="700">Zone 2 — Magazine</text>
+    <text x="505" y="52" text-anchor="middle" font-size="9.5" fill="#94a3b8">3 800 mm</text>
+    <text x="650" y="40" text-anchor="middle" font-size="11" fill="#374151" font-weight="700">Zone 3</text>
+    <text x="650" y="52" text-anchor="middle" font-size="9.5" fill="#94a3b8">2 000 mm</text>
+
+    <!-- FACADE + CORRIDOR axis labels -->
+    <text x="76" y="119" text-anchor="middle" font-size="10" fill="#2563eb" font-weight="700" transform="rotate(-90,76,119)">FACADE</text>
+    <text x="720" y="119" text-anchor="middle" font-size="10" fill="#475569" font-weight="600" transform="rotate(90,720,119)">CORRIDOR</text>
+
+    <!-- ① Desk — Migration SE 58"×29" (1473 × 737 mm) at plan (0, 0) -->
+    <!-- SVG: x=110, y=55, w=737*0.05=37, h=1473*0.05=74 -->
+    <rect x="110" y="55" width="37" height="74" fill="#bfdbfe" stroke="#3b82f6" stroke-width="1.5"/>
+    <text x="128" y="90"  text-anchor="middle" font-size="9"  fill="#1e40af" font-weight="700">DESK</text>
+    <text x="128" y="103" text-anchor="middle" font-size="8.5" fill="#1e40af">①</text>
+
+    <!-- ② Leap V2 chair (686 × 629 mm) at plan (393.5, 787) -->
+    <!-- SVG: x=110+787*0.05=149, y=55+393.5*0.05=75, w=629*0.05=31, h=686*0.05=34 -->
+    <rect x="149" y="75" width="31" height="34" fill="#fde68a" stroke="#f59e0b" stroke-width="1.5" rx="4"/>
+    <text x="165" y="94" text-anchor="middle" font-size="8" fill="#78350f">②</text>
+
+    <!-- ③ Groupwork 36" round table (914 mm dia) at plan (1500, 1800) -->
+    <!-- SVG top-left: x=110+1800*0.05=200, y=55+1500*0.05=130 → cx=200+23=223, cy=130+23=153 -->
+    <circle cx="223" cy="153" r="23" fill="#bbf7d0" stroke="#16a34a" stroke-width="1.5"/>
+    <text x="223" y="157" text-anchor="middle" font-size="8" fill="#15803d" font-weight="600">③</text>
+
+    <!-- ④ TS Mobile Pedestal (387 × 559 mm) at plan (0, 6050) -->
+    <!-- SVG: x=110+6050*0.05=413, y=55, w=559*0.05=28, h=387*0.05=19 -->
+    <rect x="413" y="55" width="28" height="19" fill="#fecaca" stroke="#ef4444" stroke-width="1.5"/>
+    <text x="427" y="67" text-anchor="middle" font-size="7.5" fill="#991b1b" font-weight="600">④</text>
+
+    <!-- ⑤ Currency Bookcase 36" (914 × 381 mm) at plan (437, 6050) -->
+    <!-- SVG: x=110+6050*0.05=413, y=55+437*0.05=77, w=381*0.05=19, h=914*0.05=46 -->
+    <rect x="413" y="77" width="19" height="46" fill="#fca5a5" stroke="#ef4444" stroke-width="1.5"/>
+    <text x="422" y="103" text-anchor="middle" font-size="7.5" fill="#991b1b" font-weight="600">⑤</text>
+
+    <!-- ⑥ Coat rack (400 × 300 mm) at plan (0, 9850) -->
+    <!-- SVG: x=110+9850*0.05=603, y=55, w=300*0.05=15, h=400*0.05=20 -->
+    <rect x="603" y="55" width="15" height="20" fill="#d9f99d" stroke="#65a30d" stroke-width="1.5" rx="2"/>
+    <text x="611" y="68" text-anchor="middle" font-size="7.5" fill="#3f6212" font-weight="600">⑥</text>
+
+    <!-- Clearance / aisle gap between desk and table — dotted guideline -->
+    <line x1="147" y1="100" x2="200" y2="138" stroke="#94a3b8" stroke-width="0.75" stroke-dasharray="2,2"/>
+
+    <!-- Dimension: total depth -->
+    <line x1="110" y1="200" x2="700" y2="200" stroke="#94a3b8" stroke-width="1" marker-start="url(#b)" marker-end="url(#a)"/>
+    <text x="405" y="213" text-anchor="middle" font-size="10" fill="#475569">11 800 mm  (38′ 9″)</text>
+
+    <!-- Dimension: room width (right side, vertical) -->
+    <line x1="730" y1="55" x2="730" y2="183" stroke="#94a3b8" stroke-width="1" marker-start="url(#b)" marker-end="url(#a)"/>
+    <text x="742" y="120" text-anchor="middle" font-size="10" fill="#475569" transform="rotate(90,742,120)">2 558 mm (8′ 4″)</text>
+
+    <!-- Z1 depth tick -->
+    <line x1="410" y1="195" x2="410" y2="205" stroke="#94a3b8" stroke-width="1"/>
+    <text x="260"  y="225" text-anchor="middle" font-size="9" fill="#94a3b8">6 000</text>
+    <text x="505"  y="225" text-anchor="middle" font-size="9" fill="#94a3b8">3 800</text>
+    <text x="650"  y="225" text-anchor="middle" font-size="9" fill="#94a3b8">2 000</text>
+
+    <!-- Constraint badges -->
+    <rect x="110" y="245" width="218" height="18" rx="9" fill="#dcfce7" stroke="#86efac" stroke-width="1"/>
+    <text x="219" y="257" text-anchor="middle" font-size="9.5" fill="#15803d" font-weight="700">✓ ASR A1.2 · European Lighting · DIN 18040</text>
+
+    <!-- Scale note -->
+    <text x="700" y="280" text-anchor="end" font-size="9" fill="#cbd5e1">Scale 1:20 · landscape rotation · facade at left</text>
+    <text x="700" y="291" text-anchor="end" font-size="9" fill="#cbd5e1">Positions geometry-derived — not yet traced from sketch PDF</text>
+  </svg>
+
+  <!-- Furniture legend -->
+  <table>
+    <thead>
+      <tr>
+        <th style="width:28px">#</th>
+        <th>Item</th>
+        <th>Model</th>
+        <th>DTCG token</th>
+        <th>Zone</th>
+        <th style="width:60px">W mm</th>
+        <th style="width:60px">D mm</th>
+        <th style="width:100px">Position (x, y)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="swatch" style="background:#bfdbfe;border:1px solid #3b82f6"></span>①</td>
+        <td>Desk</td>
+        <td>Steelcase Migration SE 58″×29″</td>
+        <td>desk.steelcase-migration-se-58x29</td>
+        <td><span class="zone-badge z1">Z1</span></td>
+        <td>1 473</td><td>737</td><td>0, 0</td>
+      </tr>
+      <tr>
+        <td><span class="swatch" style="background:#fde68a;border:1px solid #f59e0b"></span>②</td>
+        <td>Task chair</td>
+        <td>Steelcase Leap V2 (462 Series)</td>
+        <td>task-chair.steelcase-leap-v2</td>
+        <td><span class="zone-badge z1">Z1</span></td>
+        <td>686</td><td>629</td><td>394, 787</td>
+      </tr>
+      <tr>
+        <td><span class="swatch" style="background:#bbf7d0;border:1px solid #16a34a"></span>③</td>
+        <td>Round table</td>
+        <td>Steelcase Groupwork 36″ Round</td>
+        <td>table.steelcase-groupwork-36</td>
+        <td><span class="zone-badge z1">Z1</span></td>
+        <td>914 ⌀</td><td>914 ⌀</td><td>1 500, 1 800</td>
+      </tr>
+      <tr>
+        <td><span class="swatch" style="background:#fecaca;border:1px solid #ef4444"></span>④</td>
+        <td>Filing pedestal</td>
+        <td>Steelcase TS Series Mobile Pedestal</td>
+        <td>storage.steelcase-ts-mobile-pedestal</td>
+        <td><span class="zone-badge z2">Z2</span></td>
+        <td>387</td><td>559</td><td>0, 6 050</td>
+      </tr>
+      <tr>
+        <td><span class="swatch" style="background:#fca5a5;border:1px solid #ef4444"></span>⑤</td>
+        <td>Bookcase</td>
+        <td>Steelcase Currency Enhanced Bookcase 36″</td>
+        <td>storage.steelcase-currency-bookcase-36</td>
+        <td><span class="zone-badge z2">Z2</span></td>
+        <td>914</td><td>381</td><td>437, 6 050</td>
+      </tr>
+      <tr>
+        <td><span class="swatch" style="background:#d9f99d;border:1px solid #65a30d"></span>⑥</td>
+        <td>Coat rack</td>
+        <td>Generic — hook panel (non-Steelcase)</td>
+        <td>utility.generic-coat-rack</td>
+        <td><span class="zone-badge z3">Z3</span></td>
+        <td>400</td><td>300</td><td>0, 9 850</td>
+      </tr>
+    </tbody>
+  </table>
+  <p class="note">Bounding box: 2 558 × 11 800 mm = 30.19 m² &nbsp;·&nbsp; Positions are geometry-derived — refinement from DISCOVERY_MCorp_Sketches_Key Plans_Private Office.pdf is pending.</p>
+</div>
+</body>
+</html>

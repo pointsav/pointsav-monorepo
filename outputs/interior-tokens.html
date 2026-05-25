@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>interior.dtcg.json — BIM Furniture Token Viewer</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: system-ui, -apple-system, sans-serif; background: #f1f5f9; margin: 0; padding: 32px; color: #1e293b; }
+  h1 { font-size: 20px; font-weight: 700; margin: 0 0 4px; }
+  .meta { font-size: 13px; color: #64748b; margin: 0 0 28px; }
+
+  /* ── Section headings ── */
+  .section-head { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: #94a3b8; margin: 32px 0 10px; }
+  .section-head:first-of-type { margin-top: 0; }
+
+  /* ── Token cards ── */
+  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; }
+  .card {
+    background: white; border: 1px solid #e2e8f0; border-radius: 10px;
+    padding: 20px 22px; box-shadow: 0 1px 3px rgba(0,0,0,.05);
+  }
+  .card-head { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 14px; }
+  .cat-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+  .card-title { font-size: 14px; font-weight: 700; line-height: 1.3; }
+  .card-model { font-size: 12px; color: #64748b; margin-top: 2px; }
+
+  /* ── Token path pill ── */
+  .token-path {
+    font-family: monospace; font-size: 10px; color: #475569;
+    background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px;
+    padding: 5px 9px; margin-bottom: 14px; word-break: break-all; line-height: 1.5;
+  }
+
+  /* ── Dim grid ── */
+  .dim-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 12px; }
+  .dim-cell { background: #f8fafc; border-radius: 6px; padding: 7px 8px; text-align: center; }
+  .dim-label { font-size: 9px; text-transform: uppercase; letter-spacing: .05em; color: #94a3b8; font-weight: 600; }
+  .dim-val { font-size: 13px; font-weight: 700; color: #1e293b; margin-top: 2px; }
+  .dim-unit { font-size: 9px; color: #94a3b8; }
+
+  /* ── Extra fields ── */
+  .fields { font-size: 11.5px; color: #475569; }
+  .fields dt { float: left; clear: left; width: 110px; font-weight: 600; color: #64748b; padding: 2px 0; }
+  .fields dd { margin-left: 115px; padding: 2px 0; border-bottom: 1px solid #f1f5f9; }
+  .fields dd:last-child { border: none; }
+
+  /* ── SKU badge ── */
+  .sku-badge { display: inline-block; font-family: monospace; font-size: 10px; background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; border-radius: 4px; padding: 1px 6px; }
+  .sku-null { color: #94a3b8; font-style: italic; }
+
+  /* ── IFC badge ── */
+  .ifc-badge { display: inline-block; font-size: 10px; background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; border-radius: 4px; padding: 1px 6px; font-family: monospace; }
+
+  /* ── Clearance mini-bar ── */
+  .clearance-row { display: flex; gap: 6px; margin-bottom: 12px; }
+  .clr-cell { flex: 1; background: #fefce8; border: 1px solid #fde68a; border-radius: 6px; padding: 5px 6px; text-align: center; }
+  .clr-label { font-size: 9px; text-transform: uppercase; letter-spacing: .04em; color: #78350f; font-weight: 600; }
+  .clr-val { font-size: 12px; font-weight: 700; color: #92400e; margin-top: 1px; }
+
+  /* ── Source link ── */
+  .source-link { font-size: 10px; color: #94a3b8; margin-top: 10px; }
+  .source-link a { color: #3b82f6; text-decoration: none; }
+  .source-link a:hover { text-decoration: underline; }
+
+  /* ── Circulation card (full-width) ── */
+  .circulation-card {
+    background: white; border: 1px solid #e2e8f0; border-radius: 10px;
+    padding: 20px 22px; box-shadow: 0 1px 3px rgba(0,0,0,.05);
+  }
+  .constraint-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; margin-top: 14px; }
+  .constraint-cell { background: #f8fafc; border-radius: 8px; padding: 10px 12px; }
+  .constraint-label { font-size: 9px; text-transform: uppercase; letter-spacing: .05em; color: #94a3b8; font-weight: 600; }
+  .constraint-val { font-size: 16px; font-weight: 700; color: #1e293b; margin-top: 3px; }
+  .constraint-unit { font-size: 10px; color: #64748b; }
+  .constraint-code { font-size: 10px; color: #94a3b8; margin-top: 2px; font-style: italic; }
+  .code-refs { margin-top: 14px; }
+  .code-ref { font-size: 11px; color: #475569; padding: 3px 0; border-bottom: 1px solid #f1f5f9; }
+  .code-ref:last-child { border: none; }
+
+  /* ── Category colours ── */
+  .c-task    { background: #fde68a; }
+  .c-desk    { background: #bfdbfe; }
+  .c-table   { background: #bbf7d0; }
+  .c-storage { background: #fecaca; }
+  .c-lounge  { background: #e9d5ff; }
+  .c-utility { background: #d9f99d; }
+</style>
+</head>
+<body>
+
+<h1>interior.dtcg.json — BIM Furniture Tokens</h1>
+<p class="meta">
+  pointsav-design-system · tokens/bim/interior.dtcg.json &nbsp;·&nbsp;
+  7 furniture tokens &nbsp;·&nbsp; 1 circulation constraint &nbsp;·&nbsp;
+  Sources: steelcase.com · coalesse.com · ASR A1.2 · DIN 18040 · EN 12464-1 (retrieved 2026-05-22)
+</p>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section-head">Furniture BIM Objects — $type: bim.furniture-object</div>
+<div class="cards">
+
+  <!-- ① Task Chair — Leap V2 -->
+  <div class="card">
+    <div class="card-head">
+      <div class="cat-dot c-task"></div>
+      <div>
+        <div class="card-title">Steelcase Leap V2</div>
+        <div class="card-model">Leap 462 Series · Task Chair</div>
+      </div>
+    </div>
+    <div class="token-path">bim.interior.furniture.<strong>task-chair</strong>.steelcase-leap-v2</div>
+    <div class="dim-grid">
+      <div class="dim-cell">
+        <div class="dim-label">Width</div>
+        <div class="dim-val">686 <span class="dim-unit">mm</span></div>
+      </div>
+      <div class="dim-cell">
+        <div class="dim-label">Depth</div>
+        <div class="dim-val">629 <span class="dim-unit">mm</span></div>
+      </div>
+      <div class="dim-cell">
+        <div class="dim-label">Height</div>
+        <div class="dim-val">978–1099 <span class="dim-unit">mm</span></div>
+      </div>
+    </div>
+    <div class="clearance-row">
+      <div class="clr-cell"><div class="clr-label">Front</div><div class="clr-val">700 mm</div></div>
+      <div class="clr-cell"><div class="clr-label">Sides</div><div class="clr-val">150 mm</div></div>
+      <div class="clr-cell"><div class="clr-label">Rear</div><div class="clr-val">200 mm</div></div>
+    </div>
+    <dl class="fields">
+      <dt>SKU</dt><dd><span class="sku-null">null — configured to order</span></dd>
+      <dt>Seat height</dt><dd>410–540 mm</dd>
+      <dt>Weight</dt><dd>33 kg gross (net unpublished)</dd>
+      <dt>IFC class</dt><dd><span class="ifc-badge">IfcFurnishingElement</span></dd>
+    </dl>
+    <div class="source-link">steelcase.com/products/office-chairs/leap/</div>
+  </div>
+
+  <!-- ② Desk — Migration SE -->
+  <div class="card">
+    <div class="card-head">
+      <div class="cat-dot c-desk"></div>
+      <div>
+        <div class="card-title">Steelcase Migration SE</div>
+        <div class="card-model">Migration · Height-Adjustable Desk 58″ × 29″</div>
+      </div>
+    </div>
+    <div class="token-path">bim.interior.furniture.<strong>desk</strong>.steelcase-migration-se-58x29</div>
+    <div class="dim-grid">
+      <div class="dim-cell">
+        <div class="dim-label">Width</div>
+        <div class="dim-val">1 473 <span class="dim-unit">mm</span></div>
+      </div>
+      <div class="dim-cell">
+        <div class="dim-label">Depth</div>
+        <div class="dim-val">737 <span class="dim-unit">mm</span></div>
+      </div>
+      <div class="dim-cell">
+        <div class="dim-label">Height</div>
+        <div class="dim-val">574–1237 <span class="dim-unit">mm</span></div>
+      </div>
+    </div>
+    <div class="clearance-row">
+      <div class="clr-cell"><div class="clr-label">Front</div><div class="clr-val">1 200 mm</div></div>
+      <div class="clr-cell"><div class="clr-label">Sides</div><div class="clr-val">200 mm</div></div>
+      <div class="clr-cell"><div class="clr-label">Rear</div><div class="clr-val">0 mm</div></div>
+    </div>
+    <dl class="fields">
+      <dt>SKU</dt><dd><span class="sku-badge">MGELCRQ</span> <span style="font-size:10px;color:#94a3b8">(base order code)</span></dd>
+      <dt>Weight</dt><dd>46.7 kg (confirmed, 58″×29″ only)</dd>
+      <dt>Motor</dt><dd>24V DC · 33 mm/sec</dd>
+      <dt>Load capacity</dt><dd>99.8 kg surface load</dd>
+      <dt>IFC class</dt><dd><span class="ifc-badge">IfcFurnishingElement</span></dd>
+    </dl>
+    <div class="source-link">steelcase.com/products/height-adjustable-desks/migration-se/</div>
+  </div>
+
+  <!-- ③ Table — Groupwork 36" -->
+  <div class="card">
+    <div class="card-head">
+      <div class="cat-dot c-table"></div>
+      <div>
+        <div class="card-title">Steelcase Groupwork 36″ Round</div>
+        <div class="card-model">Groupwork · Working Height Round Table</div>
+      </div>
+    </div>
+    <div class="token-path">bim.interior.furniture.<strong>table</strong>.steelcase-groupwork-36</div>
+    <div class="dim-grid">
+      <div class="dim-cell">
+        <div class="dim-label">Diameter</div>
+        <div class="dim-val">914 <span class="dim-unit">mm ⌀</span></div>
+      </div>
+      <div class="dim-cell">
+        <div class="dim-label">Height</div>
+        <div class="dim-val">724 <span class="dim-unit">mm</span></div>
+      </div>
+      <div class="dim-cell">
+        <div class="dim-label">Seating</div>
+        <div class="dim-val">4 <span class="dim-unit">persons</span></div>
+      </div>
+    </div>
+    <div class="clearance-row">
+      <div class="clr-cell"><div class="clr-label">Front</div><div class="clr-val">750 mm</div></div>
+      <div class="clr-cell"><div class="clr-label">Sides</div><div class="clr-val">750 mm</div></div>
+      <div class="clr-cell"><div class="clr-label">Rear</div><div class="clr-val">750 mm</div></div>
+    </div>
+    <dl class="fields">
+      <dt>SKU</dt><dd><span class="sku-null">null — unconfirmed</span></dd>
+      <dt>Shape</dt><dd>round</dd>
+      <dt>PO-1 program</dt><dd>used as 3-person per FFE (Steelcase rates 4)</dd>
+      <dt>IFC class</dt><dd><span class="ifc-badge">IfcFurnishingElement</span></dd>
+    </dl>
+    <div class="source-link">steelcase.com/products/conference-collaborative-tables/groupwork/</div>
+  </div>
+
+  <!-- ④ Storage — TS Mobile Pedestal -->
+  <div class="card">
+    <div class="card-head">
+      <div class="cat-dot c-storage"></div>
+      <div>
+        <div class="card-title">Steelcase TS Series Mobile Pedestal</div>
+        <div class="card-model">TS Series Storage · Steel Top</div>
+      </div>
+    </div>
+    <div class="token-path">bim.interior.furniture.<strong>storage</strong>.steelcase-ts-mobile-pedestal</div>
+    <div class="dim-grid">
+      <div class="dim-cell">
+        <div class="dim-label">Width</div>
+        <div class="dim-val">387 <span class="dim-unit">mm</span></div>
+      </div>
+      <div class="dim-cell">
+        <div class="dim-label">Depth</div>
+        <div class="dim-val">559 <span class="dim-unit">mm</span></div>
+      </div>
+      <div class="dim-cell">
+        <div class="dim-label">Height</div>
+        <div class="dim-val">533 <span class="dim-unit">mm</span></div>
+      </div>
+    </div>
+    <div class="clearance-row">
+      <div class="clr-cell"><div class="clr-label">Front</div><div class="clr-val">700 mm</div></div>
+      <div class="clr-cell"><div class="clr-label">Sides</div><div class="clr-val">100 mm</div></div>
+      <div class="clr-cell"><div class="clr-label">Rear</div><div class="clr-val">0 mm</div></div>
+    </div>
+    <dl class="fields">
+      <dt>SKU</dt><dd><span class="sku-null">null — configured to order</span></dd>
+      <dt>Configuration</dt><dd>Mobile (casters) · BBF drawers</dd>
+      <dt>IFC class</dt><dd><span class="ifc-badge">IfcFurnishingElement</span></dd>
+    </dl>
+    <div class="source-link">steelcase.com/products/workstation-storage/ts-series/</div>
+  </div>
+
+  <!-- ⑤ Storage — Currency Bookcase -->
+  <div class="card">
+    <div class="card-head">
+      <div class="cat-dot c-storage"></div>
+      <div>
+        <div class="card-title">Steelcase Currency Enhanced Bookcase 36″</div>
+        <div class="card-model">Currency · 36″ W × 15″ D × 72 11⁄16″ H</div>
+      </div>
+    </div>
+    <div class="token-path">bim.interior.furniture.<strong>storage</strong>.steelcase-currency-bookcase-36</div>
+    <div class="dim-grid">
+      <div class="dim-cell">
+        <div class="dim-label">Width</div>
+        <div class="dim-val">914 <span class="dim-unit">mm</span></div>
+      </div>
+      <div class="dim-cell">
+        <div class="dim-label">Depth</div>
+        <div class="dim-val">381 <span class="dim-unit">mm</span></div>
+      </div>
+      <div class="dim-cell">
+        <div class="dim-label">Height</div>
+        <div class="dim-val">1 846 <span class="dim-unit">mm</span></div>
+      </div>
+    </div>
+    <div class="clearance-row">
+      <div class="clr-cell"><div class="clr-label">Front</div><div class="clr-val">900 mm</div></div>
+      <div class="clr-cell"><div class="clr-label">Sides</div><div class="clr-val">100 mm</div></div>
+      <div class="clr-cell"><div class="clr-label">Rear</div><div class="clr-val">0 mm</div></div>
+    </div>
+    <dl class="fields">
+      <dt>SKU</dt><dd><span class="sku-null">null — configured to order</span></dd>
+      <dt>Shelves</dt><dd>4 adjustable (1-1/4″ increments)</dd>
+      <dt>Source</dt><dd>NASPO spec guide June 2025</dd>
+      <dt>IFC class</dt><dd><span class="ifc-badge">IfcFurnishingElement</span></dd>
+    </dl>
+    <div class="source-link">steelcase.com/products/private-offices/currency/</div>
+  </div>
+
+  <!-- ⑥ Lounge Chair — Wing CH445 -->
+  <div class="card">
+    <div class="card-head">
+      <div class="cat-dot c-lounge"></div>
+      <div>
+        <div class="card-title">Wing Chair CH445</div>
+        <div class="card-model">Coalesse Partners / Carl Hansen &amp; Son · Lounge Chair</div>
+      </div>
+    </div>
+    <div class="token-path">bim.interior.furniture.<strong>lounge-chair</strong>.coalesse-wing-ch445</div>
+    <div class="dim-grid">
+      <div class="dim-cell">
+        <div class="dim-label">Width</div>
+        <div class="dim-val">899 <span class="dim-unit">mm</span></div>
+      </div>
+      <div class="dim-cell">
+        <div class="dim-label">Depth</div>
+        <div class="dim-val">896 <span class="dim-unit">mm</span></div>
+      </div>
+      <div class="dim-cell">
+        <div class="dim-label">Height</div>
+        <div class="dim-val">1 031 <span class="dim-unit">mm</span></div>
+      </div>
+    </div>
+    <div class="clearance-row">
+      <div class="clr-cell"><div class="clr-label">Front</div><div class="clr-val">600 mm</div></div>
+      <div class="clr-cell"><div class="clr-label">Sides</div><div class="clr-val">200 mm</div></div>
+      <div class="clr-cell"><div class="clr-label">Rear</div><div class="clr-val">150 mm</div></div>
+    </div>
+    <dl class="fields">
+      <dt>SKU</dt><dd><span class="sku-badge">CH445</span></dd>
+      <dt>Designer</dt><dd>Hans J. Wegner (1960)</dd>
+      <dt>Seat height</dt><dd>391 mm</dd>
+      <dt>Weight</dt><dd>36 kg</dd>
+      <dt>Note</dt><dd>Not in PO-1 FFE program — token only</dd>
+      <dt>IFC class</dt><dd><span class="ifc-badge">IfcFurnishingElement</span></dd>
+    </dl>
+    <div class="source-link">coalesse.com/products/seating/lounge-seating/ch445-wing-chair/</div>
+  </div>
+
+  <!-- ⑦ Utility — Generic Coat Rack -->
+  <div class="card">
+    <div class="card-head">
+      <div class="cat-dot c-utility"></div>
+      <div>
+        <div class="card-title">Generic Coat Rack</div>
+        <div class="card-model">Utility · Freestanding hook panel (non-Steelcase)</div>
+      </div>
+    </div>
+    <div class="token-path">bim.interior.furniture.<strong>utility</strong>.generic-coat-rack</div>
+    <div class="dim-grid">
+      <div class="dim-cell">
+        <div class="dim-label">Width</div>
+        <div class="dim-val">400 <span class="dim-unit">mm</span></div>
+      </div>
+      <div class="dim-cell">
+        <div class="dim-label">Depth</div>
+        <div class="dim-val">300 <span class="dim-unit">mm</span></div>
+      </div>
+      <div class="dim-cell">
+        <div class="dim-label">Height</div>
+        <div class="dim-val">1 800 <span class="dim-unit">mm</span></div>
+      </div>
+    </div>
+    <div class="clearance-row">
+      <div class="clr-cell"><div class="clr-label">Front</div><div class="clr-val">600 mm</div></div>
+      <div class="clr-cell"><div class="clr-label">Sides</div><div class="clr-val">300 mm</div></div>
+      <div class="clr-cell"><div class="clr-label">Rear</div><div class="clr-val">0 mm</div></div>
+    </div>
+    <dl class="fields">
+      <dt>SKU</dt><dd><span class="sku-null">null — generic</span></dd>
+      <dt>Manufacturer</dt><dd>Generic (representative dimensions)</dd>
+      <dt>Zone</dt><dd>Z3 — corridor entry of Private Office</dd>
+      <dt>IFC class</dt><dd><span class="ifc-badge">IfcFurnishingElement</span></dd>
+    </dl>
+  </div>
+
+</div><!-- /cards -->
+
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="section-head" style="margin-top:36px">Circulation Constraint — $type: bim.circulation-constraint</div>
+<div class="circulation-card">
+  <div class="card-head">
+    <div>
+      <div class="card-title">standard-private-office</div>
+      <div class="card-model">ASR A1.2 · ArbStättV §12 · DIN 18040 · EN 12464-1</div>
+    </div>
+  </div>
+  <div class="token-path">bim.interior.<strong>circulation</strong>.standard-private-office</div>
+  <div class="constraint-grid">
+    <div class="constraint-cell">
+      <div class="constraint-label">Min area / person</div>
+      <div class="constraint-val">8.0 <span class="constraint-unit">m²</span></div>
+      <div class="constraint-code">ASR A1.2 §4.1</div>
+    </div>
+    <div class="constraint-cell">
+      <div class="constraint-label">Aisle — single</div>
+      <div class="constraint-val">875 <span class="constraint-unit">mm</span></div>
+      <div class="constraint-code">ArbStättV §12</div>
+    </div>
+    <div class="constraint-cell">
+      <div class="constraint-label">Aisle — two-way</div>
+      <div class="constraint-val">1 200 <span class="constraint-unit">mm</span></div>
+      <div class="constraint-code">ArbStättV §12</div>
+    </div>
+    <div class="constraint-cell">
+      <div class="constraint-label">Wheelchair turning ⌀</div>
+      <div class="constraint-val">1 500 <span class="constraint-unit">mm</span></div>
+      <div class="constraint-code">DIN 18040-1</div>
+    </div>
+    <div class="constraint-cell">
+      <div class="constraint-label">Desk to facade max</div>
+      <div class="constraint-val">6.0 <span class="constraint-unit">m</span></div>
+      <div class="constraint-code">EN 12464-1</div>
+    </div>
+    <div class="constraint-cell">
+      <div class="constraint-label">Applies to</div>
+      <div class="constraint-val" style="font-size:13px">PO-1 / 2 / 3</div>
+    </div>
+  </div>
+  <div class="code-refs" style="margin-top:16px">
+    <div style="font-size:11px;font-weight:700;color:#64748b;margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em">Code references</div>
+    <div class="code-ref">ASR A1.2 §4.1 (2011) — 8 m² minimum room area per person</div>
+    <div class="code-ref">ArbStättV §12 — 875 mm single-person aisle, 1 200 mm two-way</div>
+    <div class="code-ref">DIN 18040-1 — 1 500 mm wheelchair turning circle at door</div>
+    <div class="code-ref">European Lighting Standard EN 12464-1 — desk within 6 m of facade glazing</div>
+  </div>
+</div>
+
+</body>
+</html>
