@@ -106,13 +106,17 @@ sudo install -m 644 /tmp/vllm-weights-prep.service /etc/systemd/system/vllm-weig
 sudo install -m 644 /tmp/llama-server.service /etc/systemd/system/llama-server.service
 sudo install -m 644 /tmp/lora-training.service /etc/systemd/system/lora-training.service
 sudo install -m 644 /tmp/adapter-publish.service /etc/systemd/system/adapter-publish.service
+sudo install -m 644 /tmp/yoyo-deadman.service /etc/systemd/system/yoyo-deadman.service
 
 echo "==> Installing lifecycle scripts"
 sudo install -m 755 /tmp/vllm-weights-prep.sh /usr/local/bin/vllm-weights-prep.sh
 sudo install -m 755 /tmp/lora-training.sh /usr/local/bin/lora-training.sh
 sudo install -m 755 /tmp/adapter-publish.sh /usr/local/bin/adapter-publish.sh
+sudo install -m 755 /tmp/yoyo-deadman.sh /usr/local/bin/yoyo-deadman.sh
 
 # Enable units that should run at boot.
+# Phase 0 G3: yoyo-deadman — VM-side dead-man's-switch; self-stops the VM at
+# max-lifetime regardless of Doorman/watchdog state.
 # vllm-weights-prep downloads weights before llama-server starts (Requires/After).
 # vllm.service is installed but NOT enabled — llama-server.service handles inference.
 # lora-training is intentionally NOT enabled — it activates after Master
@@ -120,6 +124,7 @@ sudo install -m 755 /tmp/adapter-publish.sh /usr/local/bin/adapter-publish.sh
 # adapter-publish is on-demand (no [Install] section).
 sudo systemctl enable vllm-weights-prep.service
 sudo systemctl enable llama-server.service
+sudo systemctl enable yoyo-deadman.service
 
 # -- Nginx TLS -----------------------------------------------------------------
 echo "==> Generating self-signed TLS certificate for Nginx"

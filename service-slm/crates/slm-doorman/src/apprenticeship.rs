@@ -20,7 +20,7 @@ use std::path::{Path, PathBuf};
 use chrono::Utc;
 use regex::Regex;
 use slm_core::{
-    ApprenticeshipAttempt, ApprenticeshipBrief, CanonicalMessage, Complexity, ComputeRequest,
+    ApprenticeshipAttempt, ApprenticeshipBrief, CanonicalMessage, Complexity, ComputeRequest, LatencyClass,
     ModuleId, RequestId, Tier, APPRENTICE_ESCALATE_THRESHOLD, DEFAULT_BRIEF_TIER_B_THRESHOLD_CHARS,
 };
 use std::str::FromStr;
@@ -155,6 +155,7 @@ impl<'a> ApprenticeshipDispatcher<'a> {
                 Tier::Yoyo => Complexity::High,
                 _ => Complexity::Medium,
             },
+            latency_class: LatencyClass::default(),
             tier_hint: Some(tier_hint),
             stream: false,
             max_tokens: None,
@@ -245,6 +246,7 @@ impl<'a> ApprenticeshipDispatcher<'a> {
                 Tier::Yoyo => Complexity::High,
                 _ => Complexity::Medium,
             },
+            latency_class: LatencyClass::default(),
             tier_hint: Some(tier_hint),
             stream: false,
             max_tokens: None,
