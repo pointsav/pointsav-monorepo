@@ -6,8 +6,8 @@
 //! - `GET /special/contributions/{username}` accessible in auth-less mode
 //! - `GET /special/pending-changes` redirects unauthenticated requests to login
 
-use app_mediakit_knowledge::{search, users};
 use app_mediakit_knowledge::server::{router, AppState};
+use app_mediakit_knowledge::{search, users};
 use axum::{
     body::Body,
     http::{Request, StatusCode},
@@ -32,13 +32,13 @@ async fn authless_state() -> (AppState, tempfile::TempDir, tempfile::TempDir) {
         citations_yaml: std::path::PathBuf::from("/nonexistent/citations.yaml"),
         search: Arc::new(index),
         git: Arc::new(Mutex::new(repo)),
-        collab: Arc::new(app_mediakit_knowledge::collab::CollabRooms::new()),
-        enable_collab: false,
         site_title: "PointSav Documentation Wiki".to_string(),
         git_tenant: "pointsav".to_string(),
         mcp_enabled: false,
         glossary: Arc::new(app_mediakit_knowledge::glossary::Glossary::default()),
         links: app_mediakit_knowledge::links::LinkGraph::for_testing(),
+        brand_theme: None,
+        brand_instance: "documentation".to_string(),
         db: None,
     };
     (state, dir, state_dir)
@@ -69,13 +69,13 @@ async fn auth_state_with_token() -> (AppState, String, tempfile::TempDir, tempfi
         citations_yaml: std::path::PathBuf::from("/nonexistent/citations.yaml"),
         search: Arc::new(index),
         git: Arc::new(Mutex::new(repo)),
-        collab: Arc::new(app_mediakit_knowledge::collab::CollabRooms::new()),
-        enable_collab: false,
         site_title: "PointSav Documentation Wiki".to_string(),
         git_tenant: "pointsav".to_string(),
         mcp_enabled: false,
         glossary: Arc::new(app_mediakit_knowledge::glossary::Glossary::default()),
         links: app_mediakit_knowledge::links::LinkGraph::for_testing(),
+        brand_theme: None,
+        brand_instance: "documentation".to_string(),
         db: Some(db),
     };
     (state, token, dir, state_dir)
