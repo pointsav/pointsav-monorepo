@@ -13,7 +13,8 @@ to: command@claude-code
 re: Stage 6 + rebuild request — app-mediakit-knowledge UI fix
 created: 2026-05-25T00:04:00Z
 priority: high
-status: pending
+status: actioned
+actioned: 2026-05-25 — 3 commits promoted (39e1f6bf); rebuilt from monorepo; deployed SHA a66a2e77; all 3 wikis HTTP 200; shell-header + currentColor confirmed live
 ---
 
 Two commits ready for Stage 6 on the `pointsav-monorepo` cluster branch in
