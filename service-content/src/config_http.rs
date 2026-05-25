@@ -63,7 +63,7 @@ async fn get_domains(
     for domain in &["corporate", "documentation", "projects"] {
         let path = format!("{}/domains/domain_{}.csv", state.ontology_dir, domain);
         if let Ok(csv) = std::fs::read_to_string(&path) {
-            let rows = parse_domain(&csv).map_err(|e| err422(e))?;
+            let rows = parse_domain(&csv).map_err(err422)?;
             all.extend(rows);
         }
     }
@@ -114,16 +114,16 @@ async fn post_archetypes(
     State(state): State<Arc<HttpState>>,
     body: String,
 ) -> Result<Json<serde_json::Value>, (StatusCode, String)> {
-    let rows = parse_archetypes(&body).map_err(|e| err422(e))?;
+    let rows = parse_archetypes(&body).map_err(err422)?;
     let entities = archetypes_to_entities(&rows);
     state
         .graph
         .delete_by_classification("__taxonomy__", "archetype")
-        .map_err(|e| err500(e))?;
+        .map_err(err500)?;
     let count = state
         .graph
         .upsert_entities("__taxonomy__", &entities)
-        .map_err(|e| err500(e))?;
+        .map_err(err500)?;
     Ok(Json(
         serde_json::json!({"loaded": count, "classification": "archetype"}),
     ))
@@ -133,16 +133,16 @@ async fn post_coa(
     State(state): State<Arc<HttpState>>,
     body: String,
 ) -> Result<Json<serde_json::Value>, (StatusCode, String)> {
-    let rows = parse_coa(&body).map_err(|e| err422(e))?;
+    let rows = parse_coa(&body).map_err(err422)?;
     let entities = coa_to_entities(&rows);
     state
         .graph
         .delete_by_classification("__taxonomy__", "coa-profile")
-        .map_err(|e| err500(e))?;
+        .map_err(err500)?;
     let count = state
         .graph
         .upsert_entities("__taxonomy__", &entities)
-        .map_err(|e| err500(e))?;
+        .map_err(err500)?;
     Ok(Json(
         serde_json::json!({"loaded": count, "classification": "coa-profile"}),
     ))
@@ -152,16 +152,16 @@ async fn post_domains(
     State(state): State<Arc<HttpState>>,
     body: String,
 ) -> Result<Json<serde_json::Value>, (StatusCode, String)> {
-    let rows = parse_domain(&body).map_err(|e| err422(e))?;
+    let rows = parse_domain(&body).map_err(err422)?;
     let entities = domains_to_entities(&rows);
     state
         .graph
         .delete_by_classification("__taxonomy__", "domain")
-        .map_err(|e| err500(e))?;
+        .map_err(err500)?;
     let count = state
         .graph
         .upsert_entities("__taxonomy__", &entities)
-        .map_err(|e| err500(e))?;
+        .map_err(err500)?;
     Ok(Json(
         serde_json::json!({"loaded": count, "classification": "domain"}),
     ))
@@ -179,17 +179,17 @@ async fn post_glossary(
             format!("domain must be one of: {}", valid.join(", ")),
         ));
     }
-    let rows = parse_glossary(&body).map_err(|e| err422(e))?;
+    let rows = parse_glossary(&body).map_err(err422)?;
     let entities = glossary_to_entities(&rows);
     let classification = format!("glossary-{}", domain);
     state
         .graph
         .delete_by_classification("__taxonomy__", &classification)
-        .map_err(|e| err500(e))?;
+        .map_err(err500)?;
     let count = state
         .graph
         .upsert_entities("__taxonomy__", &entities)
-        .map_err(|e| err500(e))?;
+        .map_err(err500)?;
     Ok(Json(
         serde_json::json!({"loaded": count, "classification": classification}),
     ))
@@ -199,16 +199,16 @@ async fn post_themes(
     State(state): State<Arc<HttpState>>,
     body: String,
 ) -> Result<Json<serde_json::Value>, (StatusCode, String)> {
-    let rows = parse_themes(&body).map_err(|e| err422(e))?;
+    let rows = parse_themes(&body).map_err(err422)?;
     let entities = themes_to_entities(&rows);
     state
         .graph
         .delete_by_classification("__taxonomy__", "theme")
-        .map_err(|e| err500(e))?;
+        .map_err(err500)?;
     let count = state
         .graph
         .upsert_entities("__taxonomy__", &entities)
-        .map_err(|e| err500(e))?;
+        .map_err(err500)?;
     Ok(Json(
         serde_json::json!({"loaded": count, "classification": "theme"}),
     ))
@@ -226,16 +226,16 @@ async fn post_topics(
             format!("domain must be one of: {}", valid.join(", ")),
         ));
     }
-    let rows = parse_topics(&body).map_err(|e| err422(e))?;
+    let rows = parse_topics(&body).map_err(err422)?;
     let entities = topics_to_entities(&rows);
     state
         .graph
         .delete_by_classification_and_location("__taxonomy__", "topic", &domain)
-        .map_err(|e| err500(e))?;
+        .map_err(err500)?;
     let count = state
         .graph
         .upsert_entities("__taxonomy__", &entities)
-        .map_err(|e| err500(e))?;
+        .map_err(err500)?;
     Ok(Json(
         serde_json::json!({"loaded": count, "classification": "topic", "domain": domain}),
     ))
@@ -253,16 +253,16 @@ async fn post_guides(
     State(state): State<Arc<HttpState>>,
     body: String,
 ) -> Result<Json<serde_json::Value>, (StatusCode, String)> {
-    let rows = parse_guides(&body).map_err(|e| err422(e))?;
+    let rows = parse_guides(&body).map_err(err422)?;
     let entities = guides_to_entities(&rows);
     state
         .graph
         .delete_by_classification("__taxonomy__", "guide")
-        .map_err(|e| err500(e))?;
+        .map_err(err500)?;
     let count = state
         .graph
         .upsert_entities("__taxonomy__", &entities)
-        .map_err(|e| err500(e))?;
+        .map_err(err500)?;
     Ok(Json(
         serde_json::json!({"loaded": count, "classification": "guide"}),
     ))
@@ -277,16 +277,16 @@ async fn reload_guides(
     let csv = std::fs::read_to_string(&path).map_err(|_| err404("guides"))?;
     // Pass full CSV including header row — csv ReaderBuilder has has_headers=true by default,
     // which consumes the header row and iterates only data rows via .records().
-    let rows = parse_guides(&csv).map_err(|e| err422(e))?;
+    let rows = parse_guides(&csv).map_err(err422)?;
     let entities = guides_to_entities(&rows);
     state
         .graph
         .delete_by_classification("__taxonomy__", "guide")
-        .map_err(|e| err500(e))?;
+        .map_err(err500)?;
     let count = state
         .graph
         .upsert_entities("__taxonomy__", &entities)
-        .map_err(|e| err500(e))?;
+        .map_err(err500)?;
     Ok(Json(
         serde_json::json!({"reloaded": count, "classification": "guide", "source": path}),
     ))

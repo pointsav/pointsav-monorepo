@@ -19,6 +19,7 @@ pub trait GraphStore: Send + Sync {
     fn upsert_entities(&self, module_id: &str, entities: &[GraphEntity]) -> Result<usize>;
     fn query_context(&self, module_id: &str, query: &str, limit: usize)
         -> Result<Vec<GraphEntity>>;
+    #[allow(dead_code)]
     fn list_entities(&self, module_id: &str) -> Result<Vec<GraphEntity>>;
     /// Delete all entities matching module_id + classification. Returns count deleted.
     fn delete_by_classification(&self, module_id: &str, classification: &str) -> Result<usize>;

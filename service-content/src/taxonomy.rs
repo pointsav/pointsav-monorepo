@@ -528,6 +528,7 @@ pub fn bundle_to_entities(bundle: &TaxonomyBundle) -> Vec<GraphEntity> {
 
 // ── Internal helpers ──────────────────────────────────────────────────────────
 
+#[allow(dead_code)]
 fn skip_header(csv: &str) -> &str {
     if let Some(pos) = csv.find('\n') {
         csv[pos + 1..].trim_start()
@@ -537,6 +538,7 @@ fn skip_header(csv: &str) -> &str {
 }
 
 /// Strip the first (header) line. Exposed for external tooling; not used internally.
+#[allow(dead_code)]
 pub fn skip_header_owned(csv: &str) -> String {
     skip_header(csv).to_string()
 }

@@ -3,10 +3,8 @@ use serde::{Deserialize, Serialize};
 use std::env;
 use std::fs::{self, OpenOptions};
 use std::io::{self, Write};
-use std::path::Path;
 use std::thread;
 use std::time::Duration;
-use webbrowser;
 
 #[derive(Serialize, Deserialize, Clone)]
 struct EntityBundle {
@@ -44,6 +42,7 @@ struct SeedCOA {
     chart_of_accounts: Vec<COA>,
 }
 #[derive(Deserialize)]
+#[allow(clippy::upper_case_acronyms)]
 struct COA {
     sub_domain: String,
 }
@@ -150,7 +149,7 @@ where
     T: for<'de> Deserialize<'de>,
     F: Fn(T) -> Vec<String>,
 {
-    let content = fs::read_to_string(path).unwrap_or_else(|_| format!("{{}}"));
+    let content = fs::read_to_string(path).unwrap_or_else(|_| "{}".to_string());
     let data: T =
         serde_json::from_str(&content).unwrap_or_else(|_| panic!("Failed to parse {}", path));
     extractor(data)
@@ -178,7 +177,7 @@ fn main() {
     let mut target_file = None;
     if let Ok(entries) = fs::read_dir(queue_dir) {
         for entry in entries.flatten() {
-            if entry.path().extension().map_or(false, |ext| ext == "json") {
+            if entry.path().extension().is_some_and(|ext| ext == "json") {
                 target_file = Some(entry.path());
                 break;
             }
