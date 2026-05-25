@@ -634,6 +634,7 @@ mod tests {
             model: model.map(|s| s.to_string()),
             messages: vec![CanonicalMessage::text("user", "ping")],
             complexity: slm_core::Complexity::Low,
+            latency_class: slm_core::LatencyClass::default(),
             tier_hint: Some(Tier::External),
             stream: false,
             max_tokens: Some(50),
