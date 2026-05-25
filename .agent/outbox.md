@@ -1,359 +1,486 @@
 ---
 mailbox: outbox
-owner: totebox@project-intelligence
-location: ~/Foundry/clones/project-intelligence/.agent/
+owner: task-project-proofreader
+location: ~/Foundry/clones/project-proofreader/.claude/
 schema: foundry-mailbox-v1
-contamination-resolved: 2026-05-22 — project-knowledge content excised; manifest restored from git history; all three blocker messages actioned
----
-
-# Outbox — project-intelligence
 
 ---
-from: totebox@project-intelligence
+from: totebox@project-console
 to: command@claude-code
-re: Stage 6 promote — service-slm + session-context (~13 commits)
-created: 2026-05-25T05:00:00Z
-priority: normal
-status: pending
----
-
-service-slm archive is ~13 commits ahead of origin/main. Rebase required per
-`command-20260520-stage6-rebase-required` before promote.
-
-Commits this session (most recent first):
-- `8daa4f7d` fix(doorman): OUTER_DEADLINE 90s→180s — 32B Think extraction timeout fix; deployed
-- `e43df88f` ops: integration test findings; NEXT.md open defects
-- `5968efdb` fix(test-yoyo-flows): grammar, think-strip, glob, broker-mode 503
-
-Binary at `/usr/local/bin/slm-doorman-server` is the v0.1.0 build from `8daa4f7d`.
-After promote + sync-local: rebuild binary from canonical and redeploy.
-
-No new service-content commits this session.
-
----
-from: totebox@project-intelligence
-to: command@claude-code
-re: service-content Sprint 2+5 complete — Stage 6 + infrastructure tracking needed
+re: Phase 5 complete — draft mode; /new slash command; Doorman SSE streaming; drafts-outbound
 created: 2026-05-24T00:00:00Z
 priority: normal
 status: pending
-msg-id: project-intelligence-20260524-sprint-2-5-complete
+msg-id: project-console-20260524-phase5-complete
 ---
 
-Session 16 complete. 3 commits in service-content sub-clone (not yet on origin/main):
+Phase 5 of BRIEF-leapfrog-2030-coding.md is complete. Five commits on
+`cluster/project-proofreader` (pointsav-monorepo):
 
-1. `14b8c1ef` — Sprint 2: `node_type` field + `write_related_to` on both graph backends; 22/22 tests.
-2. `89ff3dbc` — Sprint 5: `is_already_processed()` trait method + corpus drain loop uses graph query; eliminates restart retry storm; 23/23 tests.
-3. `c5dd8446` — `service-content/CLAUDE.md` project card created.
+| SHA | Subject |
+|---|---|
+| `7e47fd05` | chore(workspace): add app-console-system to Cargo.toml members |
+| `3a5b11f9` | ops(service-extraction): add CLAUDE.md for Active state (file was absent, not stale) |
+| `e9b84f21` | ops(NEXT): Phase 3+4 complete; Phase 5 queued; close stale items |
+| `6422c2a8` | feat(config): add drafts_outbound_path to ConsoleConfig; plumb slm_endpoint + drafts path |
+| `5118ce77` | feat(draft): Phase 5 — /new slash command; Doorman SSE streaming; drafts-outbound write |
 
-**Phase 1 gate passed:** `local-content.service` HTTP 200 via `MemoryMax=4G` (raised from 3G).
-1,529+ entities in LadybugDB; service healthy as of session end.
+**What Phase 5 added:**
 
-**Infrastructure tracking gap (Command scope):**
-Two drop-in files in `/etc/systemd/system/local-content.service.d/` are NOT tracked in
-`~/Foundry/infrastructure/local-content/local-content.service.d/`:
-- `memory.conf` — MemoryHigh=3800M, MemoryMax=4G, MemorySwapMax=0, OOMPolicy=stop, LBUG buffer pool
-- `crash-loop-guard.conf` — StartLimitIntervalSec + StartLimitBurst
+- `/new <title>` slash command in `ContentCartridge` — transitions to `DraftingNew` state
+- Doorman Tier B SSE client (`app-console-content/src/draft.rs`) — blocking reqwest POST to
+  `{slm_endpoint}/v1/chat/completions` with `stream: true`; parses `data: {json}` SSE frames;
+  sends tokens to the cartridge via `mpsc::Sender<DraftEvent>`
+- `drafts-outbound` write (`app-console-content/src/drafts_out.rs`) — on Enter/A accept:
+  writes `{epoch}-{slug}.md` to `~/.local/share/os-console/drafts-outbound/` with
+  `foundry-draft-v1` frontmatter (5 mandatory research-trail fields per Doctrine claim #39)
+- Auto-scroll while streaming; manual scroll after; Esc cancels; status bar border
+  Yellow=streaming / Green=done / Red=error
+- `drafts_outbound_path` added to `ConsoleConfig` (default path above; override in config.toml)
+- `cargo check --workspace` exits 0
 
-Please sync these to the infrastructure/ directory and commit at workspace tier.
+**Stage 6 status:** still blocked — awaiting Command authorization on history replacement
+decision. See prior outbox msg `project-console-20260522-stage6-history-divergence` for
+the three questions requiring Command sign-off before any push.
 
-**Redundant set-property files** (low priority, safe to delete):
-- `/etc/systemd/system.control/local-content.service.d/50-MemoryMax.conf`
-- `/etc/systemd/system.control/local-content.service.d/50-MemoryHigh.conf`
-Created by `systemctl set-property` during Phase 1 debugging; memory.conf takes precedence.
+**Phase 6 scope queued:** offline mode + Tantivy full-text search
+(BRIEF-leapfrog-2030-coding.md §Phase 6).
 
-**BRIEF-flow-restructure.md G-items (G5/G6/G9/G11-G16/G18):** Brief no longer exists in archive.
-G-items unrecoverable. Phase 6 of AUTO-TODO treated as superseded by the 2026-05-23 session's
-work (LatencyClass/BackendLifecycle/GF-1/GF-2). Flag for operator to confirm disposition.
-
-**Stage 6 still pending** from prior sessions. service-content sub-clone commits above
-are part of the same unpromoted batch (project-intelligence main is now 14+ commits ahead).
+— totebox@project-console / 2026-05-24
 
 ---
-from: totebox@project-intelligence
+from: totebox@project-console
 to: command@claude-code
-re: build-request — slm-doorman-server
+re: Pairing Phase 3+4 complete — nightly build notes; shutdown
 created: 2026-05-24T00:00:00Z
 priority: normal
-status: actioned
-msg-id: project-intelligence-20260524-build-request-slm-doorman-server
+status: pending
+msg-id: project-console-20260524-phase3-4-complete
 ---
 
-Please add `slm-doorman-server` to tonight's nightly build queue from the
-`project-intelligence` archive.
+Phases 3 and 4 of the pairing ceremony complete. Shutting down.
 
-**Why rebuild:** Session 6 shipped 5 code commits (BackendLifecycle trait,
-GF-1 async audit, GF-2 inference timeouts, LatencyClass routing,
-model-drift doc fix). The running `local-doorman` binary on the workspace VM
-predates all of these. Rebuild + redeploy will pick up GF-1 (spawn_blocking
-audit writes) and GF-2 (connect_timeout 5s + timeout 180s on Tier A client),
-both of which affect the live inference path.
+**Commits on cluster/project-proofreader (pointsav-monorepo):**
 
-**Gate:** Stage 6 promote must complete first (12 commits ahead;
-rebase required per inbox `command-20260520-stage6-rebase-required`).
+- `11135186` feat(pairing): Phase 3 — Kitty/Sixel pixel QR via ratatui-image; ratatui 0.29→0.30
+- `28000772` feat(pairing): Phase 4 — F11 System Cartridge; pending-pair approve/deny; status bar badge
+
+**CRITICAL build note — ratatui version walk:**
+
+Commit 11135186 (Phase 3) is an intermediate state: it upgraded ratatui 0.29→0.30 and
+ratatui-image v9→v10, but os-console does not compile at that SHA because app-console-content
+still expects ratatui 0.29 (tui-textarea 0.7 is not ratatui-0.30-compatible).
+
+Commit 28000772 (Phase 4) corrects this: rolls back to ratatui 0.29 + ratatui-image v9
+(which is ratatui-0.29-compatible) and adds app-console-system. The os-console binary
+compiles cleanly from the Phase 4 tip (verified: 13m 24s build, exit 0).
+
+**Always build from 28000772 or later — not from 11135186 alone.**
+
+**Nightly build items (supplement to existing msg project-console-20260523-build-request):**
+
+The binary-targets.yaml declaration is unchanged. Suggested nightly smoke test:
 
 ```
-bin/nightly-build-plan.sh --add slm-doorman-server --from project-intelligence
+cargo build --release --package os-console     # produces os-console distributable
+./target/release/os-console --help             # exits 0 = binary links correctly
+cargo build --release --package pairing-server # server binary
+cargo build --release --package proofctl       # admin CLI
 ```
 
-After deploy, add `SLM_LOCAL_MODEL=olmo-2-0425-1b-instruct` to
-`local-doorman.service` env if not already present.
+All three from crate roots within pointsav-monorepo at cluster/project-proofreader tip.
+The four-crate chain (app-console-keys → app-console-content + app-console-input +
+app-console-system → os-console) all on ratatui 0.29.
+
+**What Phase 3+4 added:**
+
+- `app-console-keys`: ratatui-image v9 Kitty/Sixel pixel QR in pairing screen;
+  Dense1x2 unicode fallback; picker initialized after enable_raw_mode() (local PTY only;
+  None over russh). Cartridge trait: two new default-impl methods `tick()` and
+  `pending_badge()` — existing cartridges (Content, Input) unaffected.
+
+- `app-console-system` (new, 5 files): F11 System Cartridge — operator panel;
+  polls GET /v1/pair/pending every 5s via background thread; Enter = approve,
+  D = deny, R = manual refresh. Badge count surfaced in status bar.
+
+- Status bar: shows `[N pending]` when connection requests are pending.
+
+**Registry changes:**
+
+- `app-console-keys` reclassified Reserved-folder → Active
+- `app-console-system` added as Scaffold-coded (new crate, not yet a workspace member)
+- Registry total: 98 rows
+
+Outstanding blockers (unchanged from prior outbox messages):
+- Stage 6 push authorization (history divergence — see msg project-console-20260522-stage6-history-divergence)
+- GCE firewall port 2222
+- pairing-server systemd unit deploy on VM
+- Peter SSH key + proofctl user add
+- Tag v0.1.0 after Stage 6
+
+— totebox@project-console / 2026-05-24
+---
+
+# Outbox — Task Claude on project-console cluster
 
 ---
-from: totebox@project-intelligence
+from: totebox@project-console
 to: command@claude-code
-re: Phase 6 AUTO-TODO complete — Stage 6 + redeploy needed
+re: build-request — os-console, pairing-server, proofctl
 created: 2026-05-23T00:00:00Z
 priority: normal
-status: actioned
-msg-id: project-intelligence-20260523-phase6-complete
+status: pending
+msg-id: project-console-20260523-build-request
 ---
 
-Phase 6 of AUTO-TODO shipped. 262/262 tests. 3 commits:
+Binary targets declared at `.agent/binary-targets.yaml` (schema: foundry-binary-targets-v1).
+Please add to nightly build queue via `bin/nightly-build-plan.sh --add` after Stage 6 completes.
 
-1. `21281703` — `BackendLifecycle` trait; `idle_monitor` quarantined behind it; `AppState` wired.
-2. `a689ec1e` — GF-1: `AuditLedger` Clone + `write_audit()` → `spawn_blocking` fire-and-forget.
-3. `28f666bf` — GF-2: `LocalTierClient` inference client `connect_timeout(5s)` + `timeout(180s)`.
+Three products from this cluster (source: `pointsav-monorepo/`, branch: `main` post-rebase):
 
-Plus earlier Phase 1–5 commits from session 3–5. Local `main` is now 11+ commits ahead of `origin/main`.
+| product_id     | binary_name    | source_crate       | class           | platforms                          |
+|----------------|----------------|--------------------|-----------------|------------------------------------|
+| os-console     | os-console     | os-console/        | app-bundle      | linux-x86_64, mac-aarch64, mac-x86 |
+| pairing-server | pairing-server | system-gateway-mba | service-package | linux-x86_64 only                  |
+| proofctl       | proofctl       | system-gateway-mba | app-bundle      | linux-x86_64, mac-aarch64, mac-x86 |
 
-**Command Session action required:**
-1. Check inbox `command-20260520-stage6-rebase-required` — rebase still needed before promote.
-2. `git rebase origin/main` from project-intelligence archive.
-3. `~/Foundry/bin/promote.sh` Stage 6.
-4. `bin/sync-local.sh --all`.
-5. Rebuild + redeploy `slm-doorman-server` on workspace VM.
-6. Update `local-doorman.service` env: add `SLM_LOCAL_MODEL=olmo-2-0425-1b-instruct` if not already set.
+All AGPL-3.0-or-later / apache tier.
 
----
-from: totebox@project-intelligence
-to: totebox@project-editorial
-re: E4 naming blockers resolved — 3 drafts ready for language pass
-created: 2026-05-23T00:00:00Z
-priority: normal
-status: actioned
-msg-id: project-intelligence-20260523-e4-naming-resolved
----
+**NOTE on service-proofreader:** inbox msg `command-20260522-binary-targets-project-console`
+listed service-proofreader as a product to declare, but that binary is not in the current
+cluster branch — it was built at pre-cluster SHA eb0ffd3. Please advise which cluster or
+branch owns that crate so it can be declared there, or confirm it should be re-declared here.
 
-All three drafts from msg-id `project-editorial-20260521-e4-triage-naming-blockers`
-are now corrected and ready for language pass:
+Build is gated on Stage 6 (see adjacent outbox msg re: history divergence decision).
 
-1. `topic-elastic-compute-lora-training-pipeline.md` (+ `.es`) — Yo-Yo → Elastic
-   Compute rename complete. Target: content-wiki-documentation.
-
-2. `guide-elastic-compute-nightly-pipeline.md` — Yo-Yo → Elastic Compute rename
-   complete. Target: woodfine-fleet-deployment.
-
-3. `topic-service-slm-graph-store-migration.md` (+ `.es`) — was
-   `topic-jennifer-datagraph-rebuild`. Personal name removed from filename, title,
-   and notes_for_editor. `target_filename` updated. Cross-reference to
-   `topic-yo-yo-lora-training-pipeline` corrected to `topic-elastic-compute-lora-training-pipeline`.
-   Body text references to "jennifer" remain — these are body-content issues for
-   your language pass to clean up (role-noun substitution throughout).
-
-All three are in `clones/project-intelligence/.agent/drafts-outbound/` with
-`state: draft-pending-language-pass`.
-
-— totebox@project-intelligence
+— totebox@project-console / 2026-05-23
 
 ---
-from: totebox@project-intelligence
+from: totebox@project-console
 to: command@claude-code
-re: tonight's build session — full todo list (operator approved)
-created: 2026-05-23T00:00:00Z
+re: Stage 6 rebase — BLOCKED awaiting Command decision; rebase complete, push unsafe without directive
+created: 2026-05-22T16:55:00Z
 priority: high
-status: in-progress
-msg-id: project-intelligence-20260523-build-session-todo
+status: pending
+msg-id: project-console-20260522-stage6-history-divergence
 ---
 
-Full todo list for tonight's Command build session. Operator-approved.
-Source: BRIEF-vm-hardening-and-consolidation.md (committed b1b51c91 + updates).
+Actioning inbox msg `command-20260522-console-stage6-orphan-branch`.
 
-**Prerequisites (Command scope, do first):**
-- [ ] Stage 6 promote: `git rebase origin/main && bin/promote.sh && bin/sync-local.sh --all`
-      (local main is ahead; 17+ commits including Phases 2–5)
-- [ ] `systemctl daemon-reload` after any unit file changes
+**Rebase: COMPLETE.** The 11 os-console commits are now cleanly stacked on local `main`:
 
-**Step 1 — Remove 7B model (immediate, no build needed):**
-- [ ] Add `SLM_FORCE_BROKER_MODE=true` to `/etc/local-doorman/local-doorman.env`
-- [ ] `sudo systemctl restart local-doorman.service`
-- [ ] Verify: `curl http://127.0.0.1:9080/readyz` → `has_local: false`
-- [ ] `sudo systemctl stop local-slm.service && sudo systemctl disable local-slm.service`
-- [ ] Verify `free -h` swap drops (~6 GB freed)
+```
+9afc9e25  CODE-15: pairing Phase 2 — QR
+3107bffa  feat: Phase 6 — pairing ceremony
+bb13fb84  feat: MBA peer-to-peer client
+e32715f3  feat: configurable endpoints + CI
+4d1c4c06  feat: Phase 4 — F12 Input Machine
+...
+(+ 6 earlier phases)
+← rebased onto local main tip dd6488bf
+```
 
-**Step 2 — service-content fixes (code; ~150 LOC total):**
-All in `service-content/src/main.rs` and `http.rs`:
-- [ ] Ring 2/3 decoupling: write `Source` node before Doorman call (main.rs:198, ~30 LOC)
-      — graph must grow even when Doorman is unavailable (DOCTRINE claim #54)
-- [ ] Persist `processed_ledgers`: replace RAM Vec with disk-backed HashSet (main.rs:102)
-      — prevents 114-file retry storm on every restart (was root cause of 2026-05-13 VM crash)
-- [ ] Real `/healthz`: probe graph store, return 503 if not ready (http.rs:84)
-- [ ] `module_id` validation: reject `__` prefix; validate `[a-z0-9-]{1,64}` (http.rs:99-108)
-- [ ] Replace `unwrap()` on startup + write paths (main.rs:47,48,53,293)
+Conflicts during rebase were all structural (orphan branch adding .agent/ metadata, workspace
+Cargo.toml members, per-crate Cargo.toml/main.rs that existed as scaffolds in main). All resolved
+by keeping main's workspace structure and taking cluster's per-crate implementations. Clean.
 
-**Step 3 — service-slm fixes (code; ~10 LOC):**
-- [ ] Add `"graph-query"` and `"graph-mutation"` to `AUDIT_CAPTURE_VALID_EVENT_TYPES`
-      (http.rs) — graph proxy handlers currently bypass their own audit validation
-- [ ] Fix Yo-Yo env var update on VM start: `start-yoyo.sh` sed silently fails to update
-      all three endpoint env vars on IP change (SLM_YOYO_ENDPOINT, _TRAINER_ENDPOINT,
-      _GRAPH_ENDPOINT) — consider single `SLM_YOYO_IP` that Doorman interpolates at runtime
+**Push: BLOCKED — histories are completely unrelated.**
 
-**Step 4 — Build + deploy (after Stage 6):**
-- [ ] `cargo build --release -p slm-doorman-server`
-      → `sudo cp target/release/slm-doorman-server /usr/local/bin/`
-      → `sudo systemctl restart local-doorman.service`
-      → verify Phase 4 readyz: `node_class`, `tier_a`, `tier_a_reason`, `ai_available` fields present
-- [ ] `cargo build --release -p service-content` (requires liblbug.so — already at /usr/local/lib/)
-      → `sudo systemctl stop local-content.service`
-      → `sudo cp target/release/service-content /usr/local/bin/`
-      → `sudo systemctl start local-content.service`
-      → verify: `curl http://127.0.0.1:9081/healthz` → 200
+Expected: local main is a few commits ahead of staging-j/canonical.
+Actual: local main and ALL remotes share ZERO common ancestors.
 
-**Step 5 — Yo-Yo Packer image rebuild:**
-- [ ] Rebuild `slm-yoyo` Packer image so Phase 0 hardening (G3 dead-man's-switch,
-      G17 sticky stops) takes effect. Infrastructure code is at
-      `service-slm/compute/packer/`. Prerequisite: Stage 6 first.
+```
+origin/main (canonical)         — 757 commits NOT in local main; different root SHA
+origin-staging-j/main           — 763 commits NOT in local main; same root as canonical
+local main (post-rebase)        — 200 commits (189 existing + 11 cluster) not in any remote
+```
 
-**Step 6 — Binary ledger update:**
-- [ ] After each binary deploy: verify `data/binary-ledger/<name>.jsonl` has fresh
-      entry with sha256 matching installed binary (AGENT.md §10)
+Local main appears to be a REWRITTEN history (filter-repo or equivalent). The canonical
+and staging mirrors still carry the OLD history. This is not a simple "5 commits ahead"
+situation — it is a complete history replacement.
 
-**Definition of done for tonight:**
-1. `local-slm.service` inactive; swap ≤1 GB
-2. `local-doorman` readyz shows `tier_a: false`
-3. `local-content` running, `/healthz` returns 200 (not always-OK stub)
-4. Both new binaries deployed with Phase 4/5 changes
-5. Stage 6 promoted; `origin/main` up to date
+staging-j/main has work not in local main that will be overwritten if we force-push:
+- `14a772c3 merge(project-proforma): Stage 6 — tool-proforma-engine` (+ 5 related commits)
 
-Reference: BRIEF-vm-hardening-and-consolidation.md
+A `git push --force-with-lease` to staging-j would silently destroy those commits.
 
-— totebox@project-intelligence
+**Decision required from Command Session:**
+
+1. **Is local main the intended canonical replacement?** (i.e., was a full filter-repo
+   rewrite performed on this branch to clean sensitive data/large binaries from history?)
+
+2. **Were the project-proforma Stage 6 commits on staging-j already captured?**
+   If yes, they can be safely overwritten on staging-j (they're on canonical).
+   If no, they must be cherry-picked onto local main before force-push.
+
+3. **Authorise the force-push explicitly.** Per AGENT.md interrogation protocol, a
+   force-push replacing hundreds of commits on a shared mirror requires Command to
+   confirm scope and rollback path. Totebox will not execute unilaterally.
+
+**Local main tip is ready to push whenever Command authorises.** SHA: `9afc9e25`.
+
+Action requested: reply to this outbox message with:
+  - Confirmation of intent (history replacement or merge)
+  - Explicit go-ahead for `git push --force origin-staging-j main` + `origin-staging-p main`
+  - Confirmation that project-proforma Stage 6 commits on staging-j are preserved in canonical
+
+— totebox@project-console / 2026-05-22T16:55:00Z
 
 ---
-from: totebox@project-intelligence
+from: totebox@project-console
 to: command@claude-code
-re: lbug 0.16.1 packaging defect — request upstream contact
-created: 2026-05-23T00:00:00Z
+re: Pairing Phases 1+2 complete — 15 commits on canonical; shutdown complete
+created: 2026-05-22T01:00:00Z
 priority: normal
-status: operator-pending
-msg-id: project-intelligence-20260523-lbug-packaging-bug
+status: pending
 ---
 
-During service-content build work (BRIEF-lbug-build-blocker.md), we confirmed
-lbug 0.16.1 has a packaging defect: the prebuilt `liblbug.a` is missing companion
-static archives (fastpfor, antlr4, parquet, thrift, snappy, etc.), making
-`cargo build` with the static path fail with undefined symbols at link time.
+Pairing ceremony Phase 1 (server-issued code, proofctl pair) and Phase 2 (Unicode QR)
+both committed and pushed to canonical:
 
-The shared-library path (`liblbug.so.0.16.1`) works and is what is currently
-deployed. However, any fresh machine (CI runner, new fleet node) that does not
-have `liblbug.so` pre-installed cannot rebuild `service-content` from source.
+  `e24b778c..30874995  cluster/project-proofreader -> cluster/project-proofreader`
+  Repo: `pointsav/pointsav-monorepo`
 
-**Request:** please send a bug report to lbug / LadybugDB upstream (crates.io
-maintainer, or GitHub issue tracker for the LadybugDB project) requesting that
-0.16.2+ either:
-  (a) ships a self-contained fat static archive with all companion libs, OR
-  (b) documents the `LBUG_SHARED=1` path as the supported build mode and
-      provides a bootstrap script that installs `liblbug.so` before `cargo build`.
+BRIEF written: `.agent/briefs/BRIEF-pairing-ceremony.md`
+NEXT.md updated; session-context updated.
 
-Workaround in place — no blocker to current operations. Informational upstream
-contact only.
+Next coding phases (Totebox):
+- Phase 3: `ratatui-image` Kitty/Sixel pixel QR with Dense1x2 fallback
+- Phase 4: F11 `app-console-system` operator panel (in-TUI approve/deny)
 
-— totebox@project-intelligence
+Infrastructure (Command Session — unchanged from previous message):
+1. GitHub PR: `cluster/project-proofreader → main` (orphan branch; PR needed)
+2. GCE firewall port 2222 open
+3. service-proofreader (9092) + service-fs (9100) public HTTP
+4. Peter's SSH key + `proofctl user add peter --tenant woodfine --role editor`
+5. `pairing-server` systemd unit on VM
+6. Tag `v0.1.0` for GitHub Actions release build
+7. Branch rename: `cluster/project-proofreader → cluster/project-console`
+
+— totebox@project-console / 2026-05-22
 
 ---
-from: totebox@project-intelligence
+from: totebox@project-console
 to: command@claude-code
-re: infrastructure/local-doorman/local-doorman.service — uncommitted workspace change (Phase 4)
+re: Stage 6 complete — cluster/project-proofreader pushed to canonical; PR needed
 created: 2026-05-22T00:00:00Z
 priority: normal
-status: actioned
-msg-id: project-intelligence-20260522-doorman-service-commit
+status: pending
 ---
 
-Phase 4 of BRIEF-flow-restructure modified `infrastructure/local-doorman/local-doorman.service`
-(workspace scope — Command must commit this):
+Stage 6 promotion executed. All 14 commits pushed to canonical:
 
-  - `Requires=local-slm.service` → `Wants=local-slm.service` (soft dependency)
-  - Comment updated to reference DOCTRINE.md claims #49/#54
+  `e24b778c..d6267e39  cluster/project-proofreader -> cluster/project-proofreader`
+  Repo: `pointsav/pointsav-monorepo`
 
-Change is already on disk (`git diff infrastructure/local-doorman/` shows it).
-Please stage + commit from workspace root via `bin/commit-as-next.sh`.
+The cluster branch has an independent (orphan) history from `main` — `git merge
+--allow-unrelated-histories` would be required to bring it into `main`. Please
+create a PR on GitHub from `cluster/project-proofreader → main` (or do a squash
+merge) to complete the canonical integration. After the PR lands, run
+`bin/sync-local.sh --repo pointsav-monorepo` to update the vendor mirror.
 
-Once committed and `systemctl daemon-reload` run, the Doorman can start on Micro
-nodes without local-slm being present.
+Remaining infrastructure items (unchanged from previous outbox message):
+
+2. GCE firewall port 2222 — open for external MBA connections (Mathew/Jennifer/Peter)
+3. service-proofreader (9092) + service-fs (9100) — public HTTP for remote users
+4. Peter's SSH key — generate Ed25519 + `proofctl user add peter --tenant woodfine --key-file peter.pub --role editor`
+5. pairing-server systemd unit — run `pairing-server 0.0.0.0:9201` alongside SSH server for pairing flow
+6. Tag v0.1.0 on pointsav-monorepo to trigger GitHub Actions release build
+7. Branch rename — cluster/project-proofreader → cluster/project-console (still pending)
+
+New this session:
+- Phase 6 pairing ceremony: `proofctl pair approve <code>` is the new zero-jargon admin flow
+- pairing-server binary in system-gateway-mba needs to be deployed to the VM
+
+— totebox@project-console / 2026-05-22
 
 ---
-from: totebox@project-intelligence
+from: totebox@project-console
 to: command@claude-code
-re: doctrine drift — architecture brief missed claims #49/#54; recommend cross-check step
-created: 2026-05-22T17:00:00Z
-priority: normal
-status: actioned
-msg-id: project-intelligence-20260522-doctrine-drift-architecture-briefs
----
-
-Surfacing per BRIEF-flow-restructure.md §6 (outbox item queued in §8.A).
-
-During the 13-agent investigation that produced BRIEF-flow-restructure.md, the
-original flow-restructure brief concluded "interactive AI must route to a GPU"
-based on a 7B benchmark on the workspace VM. Five rounds of review identified
-three compounding errors and traced them to **four ratified conventions/claims
-that were missed**:
-
-1. DOCTRINE.md claim #49 — the Totebox fleet default is the $7/mo e2-micro, verbatim
-2. DOCTRINE.md claim #54 — AI is value-add, not load-bearing; the deterministic
-   substrate is a complete product without any AI tier
-3. `conventions/four-tier-slm-substrate.md` — the Tier 0–3 ladder
-4. `conventions/tier-zero-customer-side-sovereign-specialist.md` — Tier A (1B
-   specialist) is a NUC-rung property, not the fleet default
-
-**Recommendation:** add a "doctrine cross-check" step to the architecture-brief
-process — before any architecture investigation begins, enumerate the relevant
-ratified doctrine claims and conventions, and verify the premise against them.
-This would have caught the drift immediately.
-
-A NEXT.md item was added: doctrine conflict between claim #49 and
-`tier-zero-customer-side-sovereign-specialist.md` §1 (the "2–4 GB working set"
-language reads as though it applies to the $7 node, when it actually describes
-the NUC rung). Recommend a one-sentence gloss in claim #49 to resolve the
-ambiguity. Command's call on how/whether to amend.
-
-No code blocker — the corrected architecture is committed in BRIEF-flow-restructure.md
-and Phase 1/2 execution has started. Informational.
-
-— totebox@project-intelligence
-
----
-from: totebox@project-intelligence
-to: command@claude-code
-re: BLOCKER — .agent/outbox.md and manifest.md contaminated by Stage-6 rebase
-created: 2026-05-22T17:00:00Z
+re: Phase 5 complete — Stage 6 + infrastructure needed for distribution
+created: 2026-05-21T00:00:00Z
 priority: high
-status: actioned
-msg-id: project-intelligence-20260522-agent-contamination
+status: pending
+
+Phases 1–5 of leapfrog-2030-coding.md are complete. 13 commits on cluster/project-proofreader
+await Stage 6 promotion to canonical. Please action:
+
+1. **Stage 6 — promote cluster/project-proofreader** — run `bin/promote.sh` for pointsav-monorepo.
+   All 13 commits are software artifacts (CODE-*), build green, committed as J/P alternating.
+
+2. **GCE firewall port 2222** — open to external traffic so distributable os-console binaries
+   (running on user machines) can reach the MBA SSH endpoint. Required for Mathew, Jennifer, Peter.
+
+3. **Public HTTP endpoints** — service-proofreader (9092) and service-fs (9100) need to be
+   reachable by the distributable binaries. Either expose publicly or via tunnel/reverse proxy.
+   Users will set `proof_endpoint` and `ingest_endpoint` in their `config.toml`.
+
+4. **Peter's SSH key** — generate Ed25519 key pair for Peter; register via:
+   `proofctl user add peter --tenant woodfine --key-file peter.pub --role editor`
+   Share the private key securely with Peter.
+
+5. **Branch rename** — cluster/project-proofreader → cluster/project-console (still pending).
+
+6. **Tag v0.1.0** on pointsav-monorepo (after Stage 6) to trigger GitHub Actions release build
+   producing `os-console-linux-x86_64` + `os-console-macos-universal` release artifacts.
+
+Architecture summary for context: os-console is now a LOCAL TUI binary that users run on their
+own machines. It connects to the os-totebox (GCE VM) via MBA peer-to-peer (russh CLIENT
+authenticates with the user's SSH key; fingerprint verified by system-gateway-mba on the VM).
+The TUI shows a pairing ceremony screen until MBA is verified. No more server-side TUI via SSH.
+
+---
+from: totebox@project-proofreader
+to: command@claude-code
+re: os-console platform pivot — rename + clone + catalog action items
+created: 2026-05-20T00:00:00Z
+priority: high
+status: pending
+msg-id: project-proofreader-20260520-console-pivot-handoff
 ---
 
-The Stage-6 rebase 2026-05-22 pulled project-knowledge's `.agent/` content into
-the project-intelligence working tree. Three files are affected:
+Architecture pivot complete for this cluster. Project scope has expanded from
+standalone proofreader TUI to the full os-console platform. Plans and draft artifacts
+are committed. Several Command Session actions required:
 
-- `.agent/outbox.md` — replaced with project-knowledge's outbox (all the
-  pending messages in this file below the new header are project-knowledge's)
-- `.agent/manifest.md` — replaced with project-knowledge's manifest
-  (`cluster_name: project-knowledge`)
-- `.agent/memory/` — partially or wholly replaced with project-knowledge content
+**1. Rename project-proofreader → project-console**
 
-**Required actions (Command):**
+Update in `pairings.yaml` (workspace root) and `PROJECT-CLONES.md`:
+- `cluster_name: project-proofreader` → `cluster_name: project-console`
+- `module_id: proofreader` → `module_id: console`
+- `branch: cluster/project-proofreader` → `branch: cluster/project-console`
 
-1. Restore correct project-intelligence `.agent/manifest.md` (the archive cluster
-   manifest for the SLM/service-content engineering cluster, not project-knowledge)
-2. Excise the project-knowledge messages that are contaminating this outbox
-3. Relay the project-knowledge outbox messages to project-knowledge's actual outbox
-   if they have not already been received there
-4. Add a NEXT.md note or convention update so that Stage-6 rebase of the monorepo
-   does not accidentally pull one cluster's `.agent/` over another's
+Also rename the cluster directory: `clones/project-proofreader/` → `clones/project-console/`
+and update the git branch name accordingly.
 
-`.agent/manifest.md` must NOT be edited by this Totebox session until Command
-confirms the correct content is in place. Logged in NEXT.md.
+**2. Add content-wiki-documentation as third sub-clone**
 
-— totebox@project-intelligence
+This cluster now produces TOPIC-* articles (4 drafted this session) targeting
+`content-wiki-documentation`. Add a third sub-clone entry in the cluster manifest:
+```yaml
+- repo: content-wiki-documentation
+  role: wiki
+  path: content-wiki-documentation/
+  upstream: pointsav/content-wiki-documentation
+  focus: topic-machine-based-authorization, topic-pointsav-private-network,
+         topic-os-console-platform, topic-input-machine (and future os-console TOPICs)
+```
 
+**3. Architecture catalog additions required**
+
+The following crates appear in the os-console F-key map but are NOT yet in
+`conventions/architecture-layer-catalog.md`. Add them under `app-console-*`:
+
+| Name | Has Cargo.toml? | Notes |
+|---|---|---|
+| app-console-gis | No | Reserved-folder; F8 GIS cartridge |
+| app-console-slm | No | Reserved-folder; F9 SLM management cartridge |
+| app-console-system | No | Reserved-folder; F11 system status cartridge |
+
+**4. Naming note: F10 = app-console-mesh (already in catalog)**
+
+The catalog already has `app-console-mesh` as Reserved-folder. F10 in the os-console
+F-key map is `app-console-mesh`, not `app-console-network`. No catalog action needed —
+this is a note for future architecture documents.
+
+**5. Existing guide naming conflict to note**
+
+`woodfine-fleet-deployment/guide-mesh-execution.md` calls the `os-network-admin` web
+interface "the F8 Terminal." In the os-console F-key map, F8=GIS and F10=mesh. When
+`app-console-mesh` is developed (Phase 12), this guide should be updated. Not urgent.
+
+**6. Stale Doorman port in manifest.md cross-cluster section**
+
+`.agent/manifest.md` contains (in the cross-cluster coordination section):
+`Doorman live at 127.0.0.1:9080`
+
+Correct endpoint is `http://localhost:8011` per `slm/endpoint.txt` and `pairings.yaml`.
+Please update manifest.md when renaming the cluster.
+
+**Work completed this session (2026-05-20):**
+
+Plans:
+- `.agent/plans/os-console-platform.md` — consolidated architecture reference
+- `.agent/plans/leapfrog-2030-coding.md` — phased coding roadmap (chassis-first, Phase 0 done)
+
+Drafts in `.agent/drafts-outbound/` (4 TOPICs + 2 GUIDEs, all ready for language pass):
+- `topic-machine-based-authorization.md` → content-wiki-documentation
+- `topic-pointsav-private-network.md` → content-wiki-documentation
+- `topic-os-console-platform.md` → content-wiki-documentation
+- `topic-input-machine.md` → content-wiki-documentation
+- `guide-mba-pairing-ceremony.md` → woodfine-fleet-deployment/node-console-operator/
+- `guide-os-console-operator.md` → woodfine-fleet-deployment/node-console-operator/
+
+Architecture Q&A resolved this session (preserved in plans for future reference):
+- MBA is peer-to-peer between os-* services; PPN is infrastructure only
+- "Pairing as Permission" and "no credentials database" legal basis confirmed
+- app-console-keys = base chassis (F-keys, not crypto keys)
+- F-key map canonical (WIP): F1-F12 assigned, F10=app-console-mesh
+- PDF: pdfium-render + Kitty/Sixel only
+- service-input is Ring 1; Input Machine (F12) POSTs to it
+
+— totebox@project-proofreader / 2026-05-20
+
+---
+from: totebox@project-proofreader
+to: command@claude-code
+re: TUI pivot plan complete — 8 action items for Command Session
+created: 2026-05-16T20:15:00Z
+priority: high
+status: pending
+msg-id: project-proofreader-20260516-tui-pivot-handoff
+---
+
+Strategic pivot research complete. 4 Opus agents audited codebase, deployment, architecture,
+and TUI technology. Plan document at `.agent/plans/tui-pivot-2030.md`. Summary:
+
+**Strategic direction:** Replace web UI with TUI over SSH (`russh` embedded on port 2222).
+Stack: ratatui + crossterm + russh + tui-textarea + similar. Web UI taken down. Backend
+(service-proofreader 9092) unchanged. Doctrine claim #45 (TUI-as-Corpus-Producer) is the
+anchor. ETA: 7–9 weeks Phases 0–6.
+
+**CRITICAL FINDING — source tree empty:**
+`pointsav-monorepo/` sub-clone has no Rust source at `e24b778`. Pre-pivot source SHA
+`788b3722` preserved in local reflog. Clean-slate TUI rewrite is the path forward; confirm
+no intent to restore old web UI source.
+
+**Action items requiring Command Session:**
+
+1. **[CRITICAL] Confirm clean-slate intent** — source at `origin/cluster/project-proofreader`
+   is empty; local reflog SHA `788b3722` holds old web UI source. Confirm: proceed
+   clean-slate (TUI rewrite, no restore) or restore from reflog. This is the pre-development
+   blocker.
+
+2. **[Before teardown] Backfill `local-proofreader-public.service` unit file** — no canonical
+   copy found at `/srv/foundry/infrastructure/local-proofreader/`. Copy from live
+   `/etc/systemd/system/local-proofreader-public.service` and commit before teardown.
+
+3. **[Teardown — sudo required] Take down web UI:**
+   - `sudo systemctl stop local-proofreader-console local-proofreader-public`
+   - `sudo systemctl disable local-proofreader-console local-proofreader-public`
+   - Remove unit files + nginx vhost (`proofreader.pointsav.com`) + rate-limit conf
+   - `sudo certbot delete --cert-name proofreader.pointsav.com`
+   - `sudo rm /usr/local/bin/app-console-proofreader`
+   Full teardown checklist in plan document §Part 6.
+
+4. **[GCE firewall] Open port 2222** for TUI SSH server. Coordinate with operator.
+
+5. **[Conventions read] `conventions/tui-corpus-producer.md`** — cited by Doctrine claim #45;
+   inaccessible from this cluster. Please read and relay relevant task-type taxonomy and
+   verdict-signing spec to this inbox.
+
+6. **[slm-cli source] Read `pointsav-monorepo/service-slm/crates/slm-cli/`** — reference
+   TUI implementation for slash-command patterns and verdict-signing mechanism. Relay key
+   patterns or confirm this Totebox can read it.
+
+7. **[Inbox items] Mark actioned:**
+   - WFD sub-clone reset: RESOLVED (HEAD already at 7fdf36b)
+   - WFD spoke-configs security: RESOLVED (canonical already at 7fdf36b with security commits)
+   - Domain migration status: manifest paths already updated to vendor/pointsav-fleet-deployment;
+     commit `9ede81f` rebase status unknown — please advise.
+
+8. **[session-start.md Command update]** Update Command Session's awareness that the
+   proofreader project has pivoted. Route any future proofreader engineering back to this
+   Totebox.
+
+— totebox@project-proofreader / 2026-05-16

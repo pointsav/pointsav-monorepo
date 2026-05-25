@@ -1,333 +1,46 @@
 # NEXT.md — service-slm
 
-> Last updated: 2026-05-25 (Yo-Yo integration test; extraction timeout defect surfaced)
+> Last updated: 2026-05-12T18:30Z (nightly test run complete; vllm.service crash-loop diagnosed)
 > Read at session start. Update before session end so the next
 > session knows where to pick up.
 
 ---
 
-## SESSION 2026-05-25 — YO-YO INTEGRATION TEST + TEST SCRIPT FIXES
+## ⚠️ CRITICAL — VM NEEDS SERVICE FIX ON NEXT START
 
-**Test run results (2-run composite across one SPOT VM session, preempted at 12m36s):**
-- PASS: tests 1 (Tier B inference), 3 (graph context injection), 4 (audit proxy), 6 (mesh routing), 10 (DataGraph REST API)
-- FAIL-fixed: tests 2, 5, 8 — test script bugs patched in commit `5968efdb`
+`vllm.service` is still **enabled** in the boot image and crashes on every start (CUDA OOM — 32B BF16 doesn't fit in 22 GiB L4). `llama-server.service` was running ad-hoc (not `systemctl enable`), so it does not survive a restart. **On the next VM start, immediately SSH in and run:**
 
-**Shipped:**
-- [x] `fix(test-yoyo-flows)`: grammar `max_tokens` 40→300; strip `<think>` before JSON parse; fix apprenticeship glob depth; test 8 handles broker-mode 503.
+```bash
+gcloud compute ssh yoyo-tier-b-1 --zone=us-west1-b --project=woodfine-node-gcp-free
+# On VM:
+sudo systemctl mask vllm.service
+sudo systemctl enable llama-server.service
+sudo systemctl start llama-server.service
+sudo systemctl status llama-server.service
+# Verify /readyz returns 200, then snapshot boot disk:
+gcloud compute disks snapshot yoyo-tier-b-1 --zone=us-west1-b \
+  --project=woodfine-node-gcp-free --snapshot-names=yoyo-tier-b-1-boot-llama-fix
+```
 
-**Open defects discovered + fix status:**
+**Root cause details (2026-05-12T18:30Z investigation):**
+- vllm.service crash-loops: `torch.OutOfMemoryError` at 21.37 GiB allocated, needs 540 MiB more
+- vLLM config: `gpu_memory_utilization=0.97`, `enable_lora=True`, `max_loras=8`, `max_lora_rank=64`, `dtype=bfloat16` (no quantization)
+- The BF16 full-precision model at `/data/weights/model` doesn't fit with LoRA adapter slots
+- llama-server (CUDA build, Q3_K_M GGUF) fits at 16.1 GiB / 22.5 GiB — was working before
 
-- [x] **Extraction timeout (YOYO-EXTRACT-TIMEOUT)** — FIXED, deployed, **awaiting live verification**.
-  `OUTER_DEADLINE` in `crates/slm-doorman/src/tier/yoyo.rs` raised 90s→180s (commit `8daa4f7d`).
-  Binary live at `/usr/local/bin/slm-doorman-server`. Verification blocked by L4 stockout +
-  SPOT preemptions on 2026-05-25. Test plan at `~/.claude/plans/shiny-marinating-grove.md`.
-  Resume with: `sudo bash service-slm/scripts/start-yoyo.sh --wait-ready=360 --runtime=1h`
-  (use 360s not 300s — vLLM took >300s to load in one run).
-  Pass condition: `entity_count` rises above 1,530 and `tier_b_circuit_state` stays `"closed"`.
-- [ ] **Doorman restart → service-content restart**: restarting `local-doorman.service` also
-  stops `local-content.service` (systemd dependency). After any doorman restart, manually run
-  `sudo systemctl start local-content.service`. Root fix: investigate `PartOf=`/`BindsTo=`
-  in service unit drop-ins; decouple if safe.
-- [ ] **SPOT preemption resilience**: VM preempted twice on 2026-05-25 (at 12m36s and 21min).
-  `start-yoyo.sh` retry logic handles zone stockouts but not in-session preemptions. Consider
-  a post-start monitoring loop that detects preemption and re-invokes `start-yoyo.sh`.
-  Also: `--wait-ready=300` too short; raise default to 360s (or pass `--wait-ready=360`).
+**Long-term fix:** Rebuild Packer image with `vllm.service` masked and `llama-server.service` enabled. This is the next Packer build task (already in Remaining below).
 
-**IMMEDIATE — Command Session:**
-- [ ] Stage 6 promote (~12 commits on this session alone, total ahead by more). Rebase required per inbox `command-20260520-stage6-rebase-required` — confirm before promote.
-- [ ] After promote: `bin/sync-local.sh --all` + rebuild + redeploy `slm-doorman-server` on workspace VM.
-- [ ] Update `local-doorman.service` env to include `SLM_LOCAL_MODEL=olmo-2-0425-1b-instruct` if not already set.
-
----
-
-## SESSION 2026-05-23 — PHASE 6 AUTO-TODO COMPLETE
-
-**Shipped (5 commits, 262/262 tests):**
-- [x] `refactor(slm)`: `LatencyClass` enum (`Interactive`/`Background`/`Batch`) in slm-core; `select_tier()` Batch→Yoyo first; 2 new routing tests.
-- [x] `refactor(slm)`: `BackendLifecycle` trait; `AppState.idle_monitor: Option<Arc<dyn BackendLifecycle>>`; `IdleMonitorHandle`; `main.rs` refactored.
-- [x] `fix(slm)`: GF-1 — `AuditLedger` made `Clone` (Arc mutex); `write_audit()` fires append into `spawn_blocking`.
-- [x] `fix(slm)`: GF-2 — `LocalTierClient` inference client `connect_timeout(5s)` + `timeout(180s)`.
-- [x] doc: `SLM_LOCAL_MODEL` default → `"olmo-2-0425-1b-instruct"`; `Tier::Local` doc corrected; CLAUDE.md test count updated.
-
-**IMMEDIATE — Command Session:**
-- [ ] Stage 6 promote (~11 commits on this session alone, total ahead by more). Rebase required per inbox `command-20260520-stage6-rebase-required` — confirm before promote.
-- [ ] After promote: `bin/sync-local.sh --all` + rebuild + redeploy `slm-doorman-server` on workspace VM.
-- [ ] Update `local-doorman.service` env to include `SLM_LOCAL_MODEL=olmo-2-0425-1b-instruct` if not already set.
-
-**Deferred (Command Session scope, not Totebox):**
-- [ ] Rebuild `slm-yoyo` Packer image for Phase-0 G3/G17 (spot config).
-- [ ] `scripts/lora-update.sh` — remains HARD DISABLED; operator approval + `SLM_LORA_AUTO_ENABLE=true` required before activation.
-
----
-
-## SESSION 2026-05-21 — IS_BUSY FIX + DEPLOY + LOCAL FLOW VERIFIED
-
-**Shipped:**
-- [x] `fix(slm)`: `is_busy()` always-true when llama-server omits `slots_idle` — `Option<u32>` fix + new test. Commit `6a80c5e3`. 125 slm-doorman tests pass.
-- [x] Built + deployed `slm-doorman-server` and `slm-mcp-server` release binaries.
-- [x] Wired env vars: `SERVICE_CONTENT_ENDPOINT`, `SLM_SHIM_TRAINING_CAPTURE=true`, `SLM_AUDIT_DIR=/var/lib/local-doorman/audit`.
-- [x] Fixed `ReadWritePaths` + created audit dir.
-- [x] End-to-end verified: `/v1/messages` → Tier A OLMo → Anthropic response format ✅.
-- [x] Training capture confirmed live (shadow brief enqueued on commit hook).
-- [x] Perf tuning: `--threads 6 --threads-batch 8 CPUQuota=600%` applied to `local-slm.service` (system file). Baseline 1.71 tok/s → 1.95 tok/s (+14%). Memory BW is bottleneck. Plan: `.agent/plans/olmo-performance-tuning.md`.
-
-**IMMEDIATE — Command Session:**
-- [ ] Stage 6 promote (~43 commits). **Rebase required first** — see inbox message `command-20260520-stage6-rebase-required`. Totebox must: commit external.rs (already done), `git rebase origin/main`, push staging mirrors, then notify outbox.
-- [ ] Sync `~/Foundry/infrastructure/local-slm/` with new `--threads 6 --threads-batch 8` + `CPUQuota=600%` changes.
-- [ ] `bin/sync-local.sh --all` after Stage 6.
-
-**IMMEDIATE — Operator:**
-- [ ] Commercial API key (ANTHROPIC_API_KEY) when ready to enable Tier C. Local-only testing first (deliberate).
-- [ ] `ANTHROPIC_BASE_URL` discussion: route Claude Code through Doorman? OLMo 7B too slow for coding — discuss.
-- [ ] GCP Billing Budget (see below).
-
-**Performance — next steps:**
-- [ ] Try `--flash-attn on` in `local-slm.service` (currently `auto`).
-- [ ] Evaluate IQ4_XS quantization for ~1.2x speed gain.
-- [ ] mistralrs-server as D43 target (SLM-STACK spec) — better AVX2 kernels.
-
----
-
-## SESSION 2026-05-18 — OVERNIGHT LEARNING-LOOP BUILD
-
-12 signed commits totalling ~3700 LOC. See
-`.agent/plans/learning-loop-master-plan-2026-05-18.md` for the master
-plan; `ARCHITECTURE.md` §15 for substrate documentation.
-
-### Shipped — new modules in slm-doorman
-
-- `corpus_gate.rs` (P1-1.1, ~490 LOC + 9 tests). Second-layer
-  write-time gate: max-diff cap, sha256 dedup, BCSC flag-only,
-  Do-Not-Use reject. JSONL row carries `corpus_gate` audit-replay
-  field.
-- `adapter_registry.rs` (P3-3.4, ~270 LOC + 3 tests).
-  `data/adapters/registry.yaml` schema + stage lifecycle
-  (eval_pending → eval_ok → promoted → retired/rejected). Sigstore
-  signature field reserved.
-- `cost_ledger.rs` (P3-3.5-partial, ~260 LOC + 3 tests). Per-response
-  rows at `data/cost-ledger/<date>.jsonl`. **Writer wiring into
-  write_audit deferred** — endpoint half is the surface today.
-- `metrics.rs` in slm-doorman-server (P3-3.1, ~120 LOC). Prometheus
-  recorder + `/metrics` endpoint.
-
-### Shipped — edits to existing modules
-
-- P0-0.4 Tier-C contamination guard: `ShadowWireBody.source_tier`
-  field; 403 in shadow handler; `write_shadow_tuple` early-return
-  on `Tier::External`; top-level `tier_used` JSONL field.
-- P1-1.6 adapter-version threading: `ComputeRequest/Response`,
-  `AuditEntry`/`ExtractionAuditEntry`, all 16 ComputeRequest sites,
-  all 3 ComputeResponse sites; Yo-Yo parses
-  `X-Foundry-Adapter-Version` header.
-- P1-1.8 `/v1/messages` → enqueue_shadow capture; gated by
-  `SLM_SHIM_TRAINING_CAPTURE=true` + tier != External.
-- P2-2.5 `graph_context` parameter on `write_shadow_tuple`;
-  populated from `GraphContextClient.fetch_context`; new
-  `Doorman::graph_context_client()` accessor.
-- P3-3.1 4 Prometheus metric emits in `router::write_audit`:
-  `slm_requests_total{tier,model,adapter_version,completion_status}`,
-  `slm_cost_usd_total{tier,model}`, `slm_latency_ms{tier,model}`,
-  `slm_audit_writes_total{entry_type}`.
-- P3-3.3 SKELETON: `/v1/shadow-adapter` endpoint with frozen wire
-  shape; returns 501 NOT_IMPLEMENTED until P3-3.3-followup.
-- P0-0.5 `--runtime=14h` default in `nightly-run.sh`.
-
-### Shipped — scripts + systemd + docs
-
-- `scripts/corpus-snapshot.sh` (P1-1.9): zstd tarball + sha256
-  manifest + per-tuple shasum list.
-- `scripts/export-dpo.sh` (P1-1.9): DPO export with LIMA threshold
-  gate. Defense-in-depth Tier C exclusion.
-- `scripts/lora-update.sh` (P1-1.9): orchestrator. **HARD DISABLED**
-  by default (`SLM_LORA_AUTO_ENABLE=true` env + operator approval
-  tag required).
-- `scripts/eval-prepare.sh` (P1-1.2-prep): stratified candidate
-  selection for operator ssh-signing.
-- `compute/systemd/lora-update.{timer,service}`: Sunday 02:00 UTC;
-  empty `WantedBy=` so `daemon-reload` leaves disabled.
-- `docs/runbook-corpus-contamination.md` (P3-3.6): 4-phase
-  burn-and-restart procedure.
-- `ARCHITECTURE.md` §15: closed-loop substrate documentation.
-
-### Compile + test state
-
-- `cargo check -p slm-doorman` ✓ green (1m57s).
-- `cargo check -p slm-doorman-server` ✓ green (3m08s with metrics
-  deps; 6s incremental).
-- `cargo test --workspace` — attempted but stalled on VM memory
-  pressure (4.5G swap of 16G; 2 stuck cargo processes killed after
-  1hr in disk-I/O wait). Run from a freshly-rebooted state when
-  Stage 6 wants verification.
-
-### IMMEDIATE — Command Session next actions
-
-- [ ] **Stage 6 promote 9 commits** (`6bca8f94`..`f17d703d`).
-  Pattern: stash `.agent/engines/claude-code/settings.local.json`,
-  `echo "y" | ~/Foundry/bin/promote.sh`, restore.
-- [ ] **Rebuild + redeploy Doorman**:
-  ```bash
-  cd /srv/foundry/clones/project-intelligence/service-slm
-  cargo build --release -p slm-doorman-server
-  sudo cp target/release/slm-doorman-server /usr/local/bin/local-doorman
-  sudo systemctl restart local-doorman
-  curl -sS http://127.0.0.1:9090/metrics | head -20    # verify P3-3.1
-  ```
-- [ ] **Flip apprenticeship on**:
-  ```bash
-  sudo sed -i 's/SLM_APPRENTICESHIP_ENABLED=false/SLM_APPRENTICESHIP_ENABLED=true/' \
-    /etc/systemd/system/local-doorman.service
-  sudo systemctl daemon-reload
-  sudo systemctl restart local-doorman
-  ```
-  Drain 27+ paused/pending briefs.
-- [ ] `bin/sync-local.sh --all` after Stage 6.
-- [ ] Forward Phase 4 outboxes to project-editorial.
-
-### IMMEDIATE — operator-only (from laptop)
-
-- [ ] **GCP Billing Budget**: $300/mo on project 369270631281 with
-  50/80/100% alerts + auto-stop Cloud Function (`roles/billing.admin`
-  on billing account 0169E0-25F3AE-A5F545).
-- [ ] **Sign eval holdout**: run `scripts/eval-prepare.sh`, review,
-  ssh-sign with `ssh-keygen -Y sign -n eval-holdout-v1`.
-- [ ] **Sign first verdict batch**: ssh-sign 10 shadow tuples to
-  unblock DPO feedback pairs.
-
-### DEFERRED — next coding session
-
-- [x] P1-1.4 F12 corpus promotion gate — in-place layout; `bin/promote-corpus.sh`
-  (operator SSH-signed, namespace corpus-promote-v1); SYS-ADR-10 closed.
-- [x] P1-1.7 Tool-use round-trip — `ToolDef` + `content_blocks: Vec<ContentBlock>`;
-  OAI tool_calls wiring across Tier A/B; 2 new shim tests; 246 pass.
-- [ ] P2-2.2 RelatedTo edges substrate — needs editorial taxonomy
-  ratification (outbox staged).
-- [ ] P2-2.3 `/v1/editorial/seed` — depends on P2-2.2 + P2-2.1 wiring.
-- [ ] P2-2.6 `/v1/editorial/grammar` — blocked on editorial vocab.
-- [ ] P2-2.7 deprecate `/v1/draft/generate` — architectural cleanup.
-- [ ] P2-2.8 Local vector index + retrieval (sqlite-vec).
-- [x] P3-3.2 Canary task set + `bin/canary-run.sh` — landed `77481f74`.
-- [x] P3-3.3-followup adapter A/B dual-dispatch — landed c7ebd778.
-- [ ] P3-3.4-followup Sigstore adapter signing (operator key).
-- [x] P3-3.5-followup wire `write_audit` → `cost_ledger.append` — landed `80083e6e`; awaiting Stage 6.
-
----
-
-## SESSION 2026-05-18 — 7B UPGRADE + D5 SPRINT 1 + DRAIN FIX (session paused)
-
-**Tier A upgrade: OLMo 2 1124 7B Instruct Q4_K_M running.**
-- `local-slm.service` updated: `--parallel 1 --no-repack`, MemoryMax=7G, MemoryHigh=6500M
-- Drop-in: `/etc/systemd/system/local-slm.service.d/memory.conf`
-- Performance: ~5.5s short, 80-120s long prompts (CPU-only)
-- Git-tracked in `~/Foundry/infrastructure/local-slm/`
-
-**D5 Sprint 1 shipped (`ae653cdb`):** `CanonicalMessage` + `ContentBlock` replace flat `ChatMessage` in `ComputeRequest`. 211 tests pass.
-
-**Drain worker spin-loop fixed (`c67bb284`):** Drain worker now checks `apprenticeship.is_none()` at top of loop and sleeps instead of dequeue→retry spinning. `skip_header`/`skip_header_owned` dead code removed from service-content.
-
-### IMMEDIATE — do first next session
-
-- [ ] **Rebuild + restart Doorman** (c67bb284 not yet deployed):
-  ```bash
-  cd /srv/foundry/clones/project-intelligence/service-slm
-  cargo build --release -p slm-doorman-server
-  sudo cp target/release/slm-doorman-server /usr/local/bin/local-doorman
-  sudo sed -i 's/SLM_APPRENTICESHIP_ENABLED=false/SLM_APPRENTICESHIP_ENABLED=true/' \
-    /etc/systemd/system/local-doorman.service
-  sudo systemctl daemon-reload && sudo systemctl restart local-doorman
-  sudo mv /srv/foundry/data/apprenticeship/queue-paused/*.brief.jsonl \
-          /srv/foundry/data/apprenticeship/queue/
-  ```
-- [ ] **Stage 6 promote** — `561b74ce`, `ae653cdb`, `c67bb284` unpromoted:
-  ```bash
-  cp .agent/engines/claude-code/session.lock /tmp/
-  echo "y" | ~/Foundry/bin/promote.sh
-  mv /tmp/session.lock .agent/engines/claude-code/session.lock
-  ~/Foundry/bin/sync-local.sh --all
-  ```
-
-### NEXT — hardening tasks
-
-- [x] **Task 3:** 503 busy-rejection — `is_busy()` health probe + `TierABusy` error + `Retry-After: 30` header + Tier B escalation — landed `c38e66de`/`e2a93a99`/`160668cd`; awaiting Stage 6.
-- [x] **Task 4:** Anthropic shim integration tests — 14 tests in `anthropic_shim_test.rs`; fixed `doorman_error_to_status` E0004 + shadow diff-length bug — landed `93620c1b`; awaiting Stage 6.
-- [x] **Sprint 2a:** Tier C switched to native Anthropic Messages API (`/v1/messages`, `x-api-key`, `anthropic-version` header); tool_use content blocks in response; updated test suite.
-- [x] **Sprint 2b:** `POST /v1/responses` OpenAI Responses API shim — accepts string/array input; returns Responses shape; 2 tests in `http_test.rs`.
-- [x] **Sprint 3:** `crates/slm-mcp-server/` — 6 Foundry MCP tools via rmcp 1.7.0 stdio; `.mcp.json` at repo root; `slm-mcp-server` binary. 250 tests pass.
-- [x] **Sprint 0b:** Real per-token streaming via `yoyo_stream` + `local_stream`; `anthropic_sse_body()` kept as last-resort buffered fallback only. Done.
-- [ ] **Sprint 3 — deploy:** `cargo build --release -p slm-mcp-server && sudo cp target/release/slm-mcp-server /usr/local/bin/` — then `.mcp.json` at repo root is ready.
-- [x] **P3-3.2 followup:** Canary task set + `bin/canary-run.sh` — landed `77481f74`. Done.
-- [x] **P1-1.7:** Tool-use round-trip — `ToolDef` + `content_blocks`; OAI wiring Tier A/B; 2 shim tests. Landed `661909d1`. Done.
-
----
-
-## ⚠️ CRITICAL — MANUAL START SEQUENCE (confirmed 2026-05-15)
-
-### On every VM start:
-1. Run `start-yoyo.sh --runtime=2h` (exit 3 = stockout, wait; exit 0 = proceed)
-2. Update **all three** endpoints with new VM IP (the sed in start-yoyo.sh fails silently — always do manually):
-   ```bash
-   NEW_IP=$(gcloud compute instances describe yoyo-tier-b-1 --zone=europe-west4-a \
-       --project=woodfine-node-gcp-free --format='value(networkInterfaces[0].accessConfigs[0].natIP)')
-   sudo sed -i "s|^SLM_YOYO_ENDPOINT=.*|SLM_YOYO_ENDPOINT=https://${NEW_IP}:9443|" /etc/local-doorman/local-doorman.env
-   sudo sed -i "s|^SLM_YOYO_TRAINER_ENDPOINT=.*|SLM_YOYO_TRAINER_ENDPOINT=https://${NEW_IP}:9443|" /etc/local-doorman/local-doorman.env
-   sudo sed -i "s|^SLM_YOYO_GRAPH_ENDPOINT=.*|SLM_YOYO_GRAPH_ENDPOINT=https://${NEW_IP}:9443|" /etc/local-doorman/local-doorman.env
-   sudo systemctl restart local-doorman.service
-   ```
-3. **Wait 90s** for Doorman health probe to confirm Tier B — BEFORE restarting service-content:
-   ```bash
-   journalctl -u local-doorman.service -f --since "now" | grep -E "recovered|unavailable"
-   # EXPECT: "Tier B recovered" within 90s
-   ```
-4. Restart service-content (clears processed_ledgers):
-   ```bash
-   sudo systemctl restart local-content.service
-   # Takes ~16 min to load — do NOT restart again while loading
-   ```
-5. Drop verification file, watch for successful extractions.
-
-### VM boot state (confirmed 2026-05-15):
-- **`llama-server.service` IS enabled and starts automatically** — no SSH fix needed ✓
-- `vllm.service` is masked — no crash-loop ✓
-- nginx proxies 9443 → llama-server:8000; no bearer auth needed for `/health` endpoint
-- model: `Olmo-3-1125-32B-Think` (Q3_K_M GGUF, 16.1 GiB on 22.5 GiB L4) ✓
-
-### Infrastructure state:
-- `service-content` MemoryMax raised to **6G** (`/etc/systemd/system/local-content.service.d/memory.conf`) — takes ~16 min to load 10K-entity LadybugDB graph
-- `SLM_YOYO_HOURLY_USD=0.84`, `SLM_YOYO_WEIGHTS_GCS_BUCKET=woodfine-node-gcp-free-foundry-substrate` — already set in `/etc/local-doorman/local-doorman.env` ✓
-
-### Still TODO after next successful start:
-- Snapshot boot disk (one-time — avoids SSH on every restart):
-  ```bash
-  gcloud compute disks snapshot yoyo-tier-b-1 --zone=europe-west4-a \
-    --project=woodfine-node-gcp-free \
-    --snapshot-names=yoyo-tier-b-1-boot-llama-fix-$(date +%Y%m%d)
-  ```
-- Verify Doorman health probe recovers (was timing out during 2026-05-15 test — needs re-test with correct sequence)
-
----
-
-## SESSION 2026-05-16 — IDLE MONITOR HARDENED + TEST LOOPS PASSED
-
-**Commits this session:**
-- `3e873ea4` fix: idle monitor dispatch-clock — `last_yoyo_dispatch` AtomicU64 prevents premature 24-min stop (poll granularity fix)
-- `b93f745b` feat: idle monitor preemption auto-restart + `parse_metric` prefix fix + 22 tests — 198/198 tests
-
-**Two 30-min test loops completed (both via `/v1/messages` Anthropic shim → `claude-sonnet-4-6` → Tier B):**
-- Trainer label: completed (timer-based, no GCP preemption)
-- Graph label: 318 requests / 1803s — survived GCP preemption mid-test (VM auto-restarted manually; preemption auto-restart now handles this automatically in production)
-
-**Auto-restart now live:** `SLM_YOYO_AUTO_RESTART=true`, `SLM_YOYO_MAX_RESTARTS_PER_HOUR=3`, boot-grace 90s. When Doorman detects `/metrics` unreachable + `stop_sent=false` for ≥60s, it calls `instances.start` automatically.
-
-**Stage 6 still pending** — `b93f745b` and `3e873ea4` are local; need promotion to canonical when ready.
+**Also needed in `start-yoyo.sh`:** `update_doorman_env()` is only called when zone changes (Mode 1 same-zone restart skips it). But Spot instances get a new external IP every restart. Fix: always call `update_doorman_env` on Mode 1 success, not just when zone differs. Bug is on line 340 of `scripts/start-yoyo.sh`.
 
 ---
 
 ## YO-YO #1 — FULLY LIVE + DATAGRAPH PIPELINE WORKING (2026-05-12)
 
 **Current VM state:**
-- `yoyo-tier-b-1` **TERMINATED** in `europe-west4-a` — manually stopped at 06:10Z 2026-05-16 after two test loops ✓ No billing.
-- Zone `europe-west4-a` intermittent L4 stockout — `start-yoyo.sh` exits 3 cleanly on stockout; wait for capacity; **do NOT provision in other zones**
-- `llama-server.service` **IS enabled** (confirmed 2026-05-15) — starts automatically on boot, no SSH fix needed ✓
-- `SLM_YOYO_WEIGHTS_SNAPSHOT=yoyo-tier-b-1-weights-20260512-0248` ✓ (weights disk snapshot good; 148 GB)
+- `yoyo-tier-b-1` **STOPPED** in `us-west1-b` — stopped 2026-05-12T18:30Z
+- Zone `us-west1-b` in **L4 stockout** as of 2026-05-12T18:30Z — cannot start until capacity returns
+- `llama-server.service` was running at 14.7 tok/s before shutdown; **not enabled** (see fix above)
+- `SLM_YOYO_WEIGHTS_SNAPSHOT=yoyo-tier-b-1-weights-20260512-0248` ✓ (weights disk snapshot good)
 
 **Architecture (committed):**
 - vLLM → llama-server for Tier B (vLLM OOM on L4; llama-server runs Q3_K_M natively)
@@ -343,8 +56,8 @@ plan; `ARCHITECTURE.md` §15 for substrate documentation.
 - `SLM_YOYO_WEIGHTS_GCS_BUCKET` not set — training markers are local-only until configured
 
 **Zone fix — committed 9873f73 (2026-05-12):**
-- Root cause of 24h missed shutdown: `nightly-run.sh` calls `stop-yoyo.sh` as a subprocess without sourcing the env file. `stop-yoyo.sh` fell back to its hardcoded default `us-central1-a` → 404. Both paths now correct: script defaults fixed + Doorman restarted.
-- `SLM_YOYO_GCP_ZONE=europe-west4-a` in `/etc/local-doorman/local-doorman.env` ✓ (VM migrated to EU zone)
+- Root cause of 24h missed shutdown: `nightly-run.sh` calls `stop-yoyo.sh` as a subprocess without sourcing the env file. `stop-yoyo.sh` fell back to its hardcoded default `us-central1-a` → 404. The Rust idle monitor IS a systemd service (reads env file) so it would have worked, but Doorman was also restarted mid-session with stale zone state. Both paths now correct: script defaults fixed + Doorman restarted with `us-west1-b` env.
+- `SLM_YOYO_GCP_ZONE=us-west1-b` confirmed in `/etc/local-doorman/local-doorman.env` ✓
 - Doorman restarted 2026-05-12T16:17Z, healthy ✓
 
 **Nightly test run outcome (2026-05-12T17:05–17:55Z):**
@@ -357,15 +70,11 @@ plan; `ARCHITECTURE.md` §15 for substrate documentation.
 - `SLM_YOYO_WEIGHTS_GCS_BUCKET` not set → markers written locally only
 
 **Remaining:**
-- [x] **`nightly-run.timer`**: Created + enabled (commit `ec047bd`). Fires 00:00 UTC daily. ✓ (PAUSED — manual trigger only until pricing verified over several days)
-- [x] **`start-yoyo.sh` Mode 1 IP update** — confirmed unconditional in T-4 (2026-05-14). ✓
-- [x] **Sprint 0a: POST /v1/messages Anthropic shim** — committed fdd1a22 (2026-05-14). ✓
-- [x] **`graph_context_enabled` on ComputeRequest** — committed 6e6b992 + 34d8d8d (2026-05-14). ✓
-- [x] **vllm.service fix on VM** — confirmed 2026-05-15: llama-server.service IS enabled at boot, vllm.service IS masked. No SSH fix needed. ✓
-- [x] **`start-yoyo.sh --runtime=<duration>`** — committed; watchdog tested and verified (stopped VM exactly at T+60min, 2026-05-15). ✓
-- [x] Set `SLM_YOYO_HOURLY_USD=0.84` + `SLM_YOYO_WEIGHTS_GCS_BUCKET=woodfine-node-gcp-free-foundry-substrate` in `/etc/local-doorman/local-doorman.env` ✓
-- [ ] Next Packer image rebuild — bake vllm.service mask + llama-server.service enable; prevents SSH-on-every-restart
-- [x] **Sprint 0b: real per-token streaming** — `yoyo_stream` + `local_stream` provide real streaming; `anthropic_sse_body()` is last-resort fallback only. Done.
+- [x] **`nightly-run.timer`**: Created + enabled (commit `ec047bd`). Fires 00:00 UTC daily. corpus-rebuild.timer + local-workspace-feeder.timer disabled (redundant). ✓
+- [ ] **vllm.service fix on VM** (see CRITICAL block above) — mask vllm, enable llama-server
+- [ ] **`start-yoyo.sh` line 340** — always call `update_doorman_env` on Mode 1 success (not just zone-change)
+- [ ] Set `SLM_YOYO_WEIGHTS_GCS_BUCKET` in `/etc/local-doorman/local-doorman.env` for training dispatch
+- [ ] Next Packer image build (will bake CUDA llama-server + mask vllm.service; current VM patched manually)
 - [ ] LoRA training marker (Test 11): workspace dispatch service needs to be written
 - [ ] ProtectHome fix: `/srv/foundry/infrastructure/local-content/local-content.service` line 51 (outboxed)
 

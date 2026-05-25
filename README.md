@@ -6,7 +6,7 @@
 ### *Trustworthy Records Infrastructure for Institutions That Own Their Assets*
 ### *Infraestructura de Registros Verificables para Instituciones que Poseen sus Activos*
 
-[![License: MIXED](https://img.shields.io/badge/License-MIXED-yellow.svg?style=flat-square)](LICENSE)
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg?style=flat-square)](https://opensource.org/licenses/Apache-2.0)
 [![Compliance: WORM](https://img.shields.io/badge/Compliance-WORM_Ready-22863a.svg?style=flat-square)](#)
 [![Foundation: seL4 Verified](https://img.shields.io/badge/Foundation-seL4_Verified-6f42c1.svg?style=flat-square)](#the-trustworthy-systems-foundation)
 [![WCAG: 2.2 AAA](https://img.shields.io/badge/WCAG-2.2_AAA-0075ca.svg?style=flat-square)](https://github.com/pointsav/pointsav-design-system)
@@ -170,20 +170,13 @@ Every third-party dependency is tracked as formal technical debt. For each quara
 
 ---
 
+*© 2026 PointSav Digital Systems™. Apache 2.0 licensed components are governed by the terms of that licence. Proprietary components are all rights reserved.*
+
 *→ Versión en español: [README.es.md](./README.es.md)*
 
 
-<!-- ================================================================== -->
-<!-- This section is generated from factory-release-engineering.         -->
-<!-- Do not edit here. Propose changes upstream.                          -->
-<!-- ================================================================== -->
+---
 
-## License
-
-This repository is licensed under **Multiple Licenses** — each directory carries its own SPDX-identified license. See the `LICENSE` file in the root of this repository for the full per-directory breakdown, which is authoritative.
-
-Customers who cannot accept the terms of AGPL-3.0-or-later or FSL-1.1-ALv2 may obtain a PointSav Commercial License. Contact corporate.secretary@woodfinegroup.com.
-
-Copyright © 2026 Woodfine Capital Projects Inc. — all rights not expressly granted by the license are reserved.
+*Copyright © 2026 Woodfine Capital Projects Inc. See [LICENSE](LICENSE) for terms.*
 
 *Woodfine Capital Projects™, Woodfine Management Corp™, PointSav Digital Systems™, Totebox Orchestration™, and Totebox Archive™ are trademarks of Woodfine Capital Projects Inc., used in Canada, the United States, Latin America, and Europe. All other trademarks are the property of their respective owners.*

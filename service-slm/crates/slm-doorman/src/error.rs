@@ -86,13 +86,6 @@ pub enum DoormanError {
         corpus_path: String,
     },
 
-    /// Tier A (llama-server) reported `slots_idle == 0` — all inference slots
-    /// are occupied. When no Tier B is configured the router propagates this
-    /// error; the HTTP layer returns 503 with `Retry-After: 30`.
-    /// When Tier B is available the router escalates the request instead.
-    #[error("Tier A (llama-server) is busy (slots_idle=0); no Tier B available — retry after 30 s")]
-    TierABusy,
-
     #[error(
         "Tier A (llama-server) does not accept {dialect} grammars; \
          {advice}"
@@ -306,24 +299,6 @@ pub enum DoormanError {
         /// Path of the malformed brief file (original location).
         path: String,
         /// Parse-error description.
-        reason: String,
-    },
-
-    /// A brief or shadow entry was rejected by the corpus quality gate before
-    /// being written to the queue. 422 UNPROCESSABLE_ENTITY.
-    #[error("corpus quality gate rejected brief: {reason}")]
-    QueueQualityGateRejected {
-        /// Human-readable rejection reason (safe to return to caller).
-        reason: String,
-    },
-
-    /// A tuple was rejected by the second-layer corpus_gate (write-time)
-    /// just before `write_shadow_tuple` or `write_dpo_pair`. Distinct
-    /// from `QueueQualityGateRejected` (first-layer, enqueue-time). 422.
-    /// Phase 1 of learning-loop-master-plan-2026-05-18.md (P1-1.1).
-    #[error("corpus gate rejected tuple: {reason}")]
-    CorpusGateRejected {
-        /// Human-readable rejection reason (safe to return to caller).
         reason: String,
     },
 }

@@ -9,11 +9,7 @@
 //! Environment configuration:
 //!   SLM_BIND_ADDR             default 127.0.0.1:9080
 //!   SLM_LOCAL_ENDPOINT        default http://127.0.0.1:8080  (Tier A)
-//!   SLM_LOCAL_MODEL           default olmo-2-0425-1b-instruct
-//!   SLM_FORCE_BROKER_MODE     set `true` or `1` to disable Tier A even on
-//!                             capable hardware. Useful for testing broker-only
-//!                             mode or deploying on Hardware without a model.
-//!                             `/readyz` reports `tier_a_reason: force-broker-mode`.
+//!   SLM_LOCAL_MODEL           default olmo-3-7b-instruct
 //!   SLM_YOYO_ENDPOINT         optional; absent = no Yo-Yo (community-tier mode)
 //!   SLM_YOYO_MODEL            default Olmo-3-1125-32B-Think
 //!   SLM_YOYO_BEARER           static bearer token used by Tier B (B2);
@@ -62,10 +58,8 @@
 //! with no Yo-Yo configured (Optional Intelligence). B5 verifies this
 //! end-to-end.
 
-use foundry_nodeclass::NodeClass;
 use slm_doorman_server::http;
-use slm_doorman_server::idle_monitor::{BackendLifecycle, IdleMonitorConfig, IdleMonitorHandle};
-use std::sync::atomic::AtomicU64;
+use slm_doorman_server::idle_monitor::IdleMonitorConfig;
 use slm_doorman_server::queue::{
     dequeue_shadow, ensure_dirs, reap_expired_leases, release_shadow, QueueConfig, ReleaseOutcome,
 };
@@ -92,39 +86,12 @@ use tracing::info;
 async fn main() -> anyhow::Result<()> {
     init_tracing();
 
-    // Install Prometheus metrics recorder (P3-3.1). Failure is non-fatal:
-    // `metrics::init()` returns Ok in degraded mode so a missing/duplicate
-    // recorder never blocks Doorman startup.
-    let _ = slm_doorman_server::metrics::init();
-
-    // Install global cost ledger (P3-3.5-followup). Failure is non-fatal:
-    // router::write_audit calls `cost_ledger::append_global()` which
-    // no-ops when the ledger isn't installed. The ledger writes to
-    // `$FOUNDRY_ROOT/data/cost-ledger/<date>.jsonl`.
-    match slm_doorman::cost_ledger::CostLedger::from_env() {
-        Ok(ledger) => {
-            tracing::info!(
-                target: "slm_doorman_server::main",
-                path = %ledger.base_dir().display(),
-                "cost ledger initialised"
-            );
-            let _ = slm_doorman::cost_ledger::init(ledger);
-        }
-        Err(e) => {
-            tracing::warn!(
-                target: "slm_doorman_server::main",
-                error = %e,
-                "cost ledger init failed; per-response cost rows will be skipped"
-            );
-        }
-    }
-
     let bind_addr: SocketAddr = std::env::var("SLM_BIND_ADDR")
         .unwrap_or_else(|_| "127.0.0.1:9080".to_string())
         .parse()
         .context("SLM_BIND_ADDR must be a socket address")?;
 
-    let DoormanBoot { doorman, node_class, tier_a_reason } = build_doorman()?;
+    let doorman = build_doorman()?;
     let apprenticeship = build_apprenticeship_config();
     let brief_cache = Arc::new(BriefCache::default());
     let verdict_dispatcher = match apprenticeship.as_ref() {
@@ -144,26 +111,11 @@ async fn main() -> anyhow::Result<()> {
     // AppState so both the handler and the drain worker share the same config.
     let queue_cfg = QueueConfig::from_env();
 
-    // Shared dispatch clock — updated by the HTTP router on every successful
-    // Tier B dispatch; read by the idle monitor to prevent premature VM stops
-    // when the 5-min poll catches an inter-request gap (slots=0).
-    let last_yoyo_dispatch = Arc::new(AtomicU64::new(0));
-
     // Graph proxy — reuse the SERVICE_CONTENT_ENDPOINT already consumed by
     // GraphContextClient above. Default to 127.0.0.1:9081 if unset so the
     // proxy is available in community-tier deployments without extra config.
     let service_content_endpoint = std::env::var("SERVICE_CONTENT_ENDPOINT")
         .unwrap_or_else(|_| http::DEFAULT_SERVICE_CONTENT_ENDPOINT.to_string());
-
-    // Yo-Yo idle monitor — build handle before AppState so it can be stored
-    // as Option<Arc<dyn BackendLifecycle>>. start() is called after state build.
-    let idle_monitor_handle: Option<Arc<dyn BackendLifecycle>> =
-        if let Some(mut idle_cfg) = IdleMonitorConfig::from_env() {
-            idle_cfg.last_yoyo_dispatch = Arc::clone(&last_yoyo_dispatch);
-            Some(Arc::new(IdleMonitorHandle::new(idle_cfg)))
-        } else {
-            None
-        };
 
     let state = Arc::new(http::AppState {
         doorman,
@@ -184,13 +136,6 @@ async fn main() -> anyhow::Result<()> {
         queue_config: Arc::new(queue_cfg.clone()),
         // Graph proxy — base URL for service-content (datagraph-access-discipline).
         service_content_endpoint,
-        // Dispatch clock shared with the idle monitor.
-        last_yoyo_dispatch: Arc::clone(&last_yoyo_dispatch),
-        // Gateway auth — None disables auth (community-tier mode).
-        gateway_token: std::env::var("SLM_GATEWAY_TOKEN").ok(),
-        node_class,
-        tier_a_reason,
-        idle_monitor: idle_monitor_handle,
     });
 
     info!(
@@ -212,11 +157,11 @@ async fn main() -> anyhow::Result<()> {
     //   2. `queue_reaper`       — reclaims expired leases from queue-in-flight/
     //      so crashed workers' briefs are retried.
     //
-    // Both tasks run regardless of SLM_APPRENTICESHIP_ENABLED.  The drain
-    // worker checks the flag at the top of each poll cycle: when disabled it
-    // skips dequeue entirely and sleeps, so no brief is ever picked up while
-    // the flag is off.  This keeps the queue infrastructure live and ready
-    // for the flag to be enabled without a restart.
+    // Both tasks run regardless of SLM_APPRENTICESHIP_ENABLED.  If
+    // apprenticeship is disabled the drain worker finds no briefs in the queue
+    // (capture-edit.py also checks the flag before writing) and exits each
+    // poll cycle immediately.  This keeps the queue infrastructure live and
+    // ready for the flag to be enabled without a restart.
     //
     // Env vars:
     //   SLM_QUEUE_DRAIN_INTERVAL_SEC   drain poll interval; default 30s
@@ -251,14 +196,6 @@ async fn main() -> anyhow::Result<()> {
             );
 
             loop {
-                // Skip dequeue entirely when apprenticeship is disabled.
-                // Without this guard the worker would dequeue, re-queue with
-                // Retry, then immediately dequeue again — a tight spin loop.
-                if drain_doorman_arc.apprenticeship.is_none() {
-                    tokio::time::sleep(drain_interval).await;
-                    continue;
-                }
-
                 match dequeue_shadow(&drain_cfg, &worker_id) {
                     Ok(None) => {
                         // Queue empty; sleep and poll again.
@@ -272,7 +209,7 @@ async fn main() -> anyhow::Result<()> {
                             "drain worker: dispatching queued shadow brief"
                         );
 
-                        // Apprenticeship is guaranteed enabled here (checked above).
+                        // Only dispatch if apprenticeship is enabled.
                         let outcome = if let Some(cfg) = drain_doorman_arc.apprenticeship.as_ref() {
                             use slm_doorman::ApprenticeshipDispatcher;
                             let dispatcher = ApprenticeshipDispatcher::with_cache(
@@ -310,7 +247,12 @@ async fn main() -> anyhow::Result<()> {
                                 }
                             }
                         } else {
-                            // Unreachable: apprenticeship.is_none() is checked at loop top.
+                            // Apprenticeship disabled — re-queue the brief for when
+                            // the operator enables the flag without restarting.
+                            tracing::debug!(
+                                brief_id = %brief_id,
+                                "drain worker: apprenticeship disabled; re-queuing brief"
+                            );
                             ReleaseOutcome::Retry
                         };
 
@@ -367,12 +309,21 @@ async fn main() -> anyhow::Result<()> {
     }
     // ────────────────────────────────────────────────────────────────────
 
-    // ── Yo-Yo idle monitor (B5) — started via BackendLifecycle trait ────────
-    if let Some(ref handle) = state.idle_monitor {
-        info!(name = handle.name(), "backend lifecycle: starting");
-        handle.start().await;
+    // ── Yo-Yo idle monitor (B5) ─────────────────────────────────────────
+    //
+    // Polls llama-server /metrics every 5 min. After SLM_YOYO_IDLE_MINUTES
+    // (default 30) of zero active slots, sends a GCP instances.stop request
+    // via the workspace SA ADC token from the GCE metadata server.
+    // Requires all four GCP env vars — absent any, the monitor does not start.
+    if let Some(idle_cfg) = IdleMonitorConfig::from_env() {
+        info!(
+            idle_threshold_secs = idle_cfg.idle_threshold.as_secs(),
+            gcp_instance = %idle_cfg.gcp_instance,
+            "Yo-Yo idle monitor enabled"
+        );
+        tokio::spawn(slm_doorman_server::idle_monitor::run_idle_monitor(idle_cfg));
     }
-    // ────────────────────────────────────────────────────────────────────────
+    // ────────────────────────────────────────────────────────────────────
 
     let app = http::router(state);
     let listener = tokio::net::TcpListener::bind(bind_addr)
@@ -384,42 +335,13 @@ async fn main() -> anyhow::Result<()> {
     Ok(())
 }
 
-struct DoormanBoot {
-    doorman: Doorman,
-    node_class: &'static str,
-    tier_a_reason: &'static str,
-}
-
-fn build_doorman() -> anyhow::Result<DoormanBoot> {
-    let caps = foundry_nodeclass::detect();
-    let force_broker = std::env::var("SLM_FORCE_BROKER_MODE")
-        .map(|v| matches!(v.trim(), "true" | "1"))
-        .unwrap_or(false);
-    let on_node_ai = caps.supports_on_node_ai() && !force_broker;
-
-    let tier_a_reason: &'static str = if force_broker {
-        "force-broker-mode"
-    } else if caps.node_class == NodeClass::Micro {
-        "micro-node-class"
-    } else {
-        "available"
-    };
-
-    let local = if on_node_ai {
-        Some(LocalTierClient::new(LocalTierConfig {
-            endpoint: std::env::var("SLM_LOCAL_ENDPOINT")
-                .unwrap_or_else(|_| "http://127.0.0.1:8080".to_string()),
-            default_model: std::env::var("SLM_LOCAL_MODEL")
-                .unwrap_or_else(|_| "olmo-2-0425-1b-instruct".to_string()),
-        }))
-    } else {
-        info!(
-            node_class = caps.node_class.as_str(),
-            reason = tier_a_reason,
-            "Tier A local client disabled; Doorman will operate as pure broker"
-        );
-        None
-    };
+fn build_doorman() -> anyhow::Result<Doorman> {
+    let local = Some(LocalTierClient::new(LocalTierConfig {
+        endpoint: std::env::var("SLM_LOCAL_ENDPOINT")
+            .unwrap_or_else(|_| "http://127.0.0.1:8080".to_string()),
+        default_model: std::env::var("SLM_LOCAL_MODEL")
+            .unwrap_or_else(|_| "olmo-3-7b-instruct".to_string()),
+    }));
 
     let mut yoyo = std::collections::HashMap::new();
 
@@ -535,20 +457,16 @@ fn build_doorman() -> anyhow::Result<DoormanBoot> {
                 GraphContextClient::new(ep)
             });
 
-    Ok(DoormanBoot {
-        doorman: Doorman::new(
-            DoormanConfig {
-                local,
-                yoyo,
-                external,
-                lark_validator,
-                graph_context_client,
-            },
-            ledger,
-        ),
-        node_class: caps.node_class.as_str(),
-        tier_a_reason,
-    })
+    Ok(Doorman::new(
+        DoormanConfig {
+            local,
+            yoyo,
+            external,
+            lark_validator,
+            graph_context_client,
+        },
+        ledger,
+    ))
 }
 
 fn build_yoyo_client(

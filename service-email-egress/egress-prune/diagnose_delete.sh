@@ -4,7 +4,7 @@ set -euo pipefail
 # © 2026 PointSav Digital Systems
 INDEX_CARD="../totebox-index.env"
 source "$INDEX_CARD"
-ROSTER_PATH="../data-ledgers/email-corpus-index.jsonl"
+ROSTER_PATH="../data-ledgers/personnel_roster.jsonl"
 
 echo "SYSTEM EVENT: Firing Single Destruction Probe at Exchange Kernel..."
 TOKEN=$(curl -s -X POST https://login.microsoftonline.com/$AZURE_TENANT_ID/oauth2/v2.0/token \
