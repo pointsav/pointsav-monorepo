@@ -2,6 +2,28 @@
 
 ---
 
+### 2026-05-24 | totebox@project-console | claude-sonnet-4-6
+
+**Done this session:**
+- T1-A: app-console-system added to Cargo.toml workspace members (`7e47fd05`)
+- T1-C/D: NEXT.md updated (Phase 3+4 complete, Phase 5 queued); service-extraction CLAUDE.md created (`e9b84f21`, `3a5b11f9`)
+- Phase 5 COMPLETE — draft mode: `/new <title>` slash command in ContentCartridge; Doorman Tier B SSE streaming client (`draft.rs`); `drafts-outbound` write with `foundry-draft-v1` frontmatter; `drafts_outbound_path` added to ConsoleConfig. Commits `6422c2a8` + `5118ce77`. `cargo check --workspace` exits 0.
+- Session close-out: NEXT.md updated (Phase 5 → Complete, Phase 6 → Next, commit `894452c1`); binary-targets.yaml notes updated; Phase 5 outbox notification sent to Command (`053847d`); inbox archived 8 actioned/stale messages, only Stage 6 blocker retained (`edc2b84`)
+
+**Pending / carry-forward:**
+- Stage 6 push: waiting Command decision on history-replacement force-push authorization. See outbox msg `project-console-20260522-stage6-history-divergence` for the 3 questions requiring sign-off.
+- Phase 6: offline mode + Tantivy full-text search (next coding phase)
+- pairing-server systemd unit deployment on VM (Command/operator)
+- GCE firewall port 2222 (operator action)
+- Tag v0.1.0 (after Stage 6)
+- Peter's SSH key + proofctl user add (Command is generating this — seen in COMMAND shell 2026-05-24)
+- Manifest path updates (fleet_deployment_repo, catalog_subfolder) — stale domain migration item
+
+**Operator preferences surfaced:**
+- "plan we can leave on auto" = write a tight AUTO plan then execute without further approval per step
+
+---
+
 ### 2026-05-23 | totebox@project-console | claude-sonnet-4-6
 
 **Done this session:**
@@ -47,19 +69,4 @@
 
 **Operator preferences surfaced:**
 - "lets keep going" = continue next phase in sequence without asking; minimal confirmation needed on sequential coding phases
-
----
-
-### 2026-05-21 | totebox@project-console | claude-sonnet-4-6
-
-**Done this session:**
-- Picked up from compaction mid-Phase 2; completed Phase 2 (system-gateway-mba + SSH server; `jennifer@woodfine | MBA LINK ACTIVE` gate passed)
-- Phase 3 COMPLETE: ContentCartridge full proofread workflow — tui-textarea, 9-protocol picker, Ctrl-S → 300s HTTP submit via std::thread, similar::TextDiff diff view, A/R verdict POST
-- Phase 4 COMPLETE: F12 InputCartridge (The Anchor) — path modal, confirm dialog, service-fs POST, SQLite audit, CartridgeAction::GoBack, chassis `previous: FKey`
-- Architecture pivot: operator clarified that os-console should be LOCAL distributable binaries (not server-side SSH TUI). Three users: Mathew (Linux Mint), Jennifer (macOS 13.x), Peter (macOS current)
-- Phase 5 COMPLETE: configurable endpoints in ConsoleConfig; GitHub Actions release CI (Linux x86_64 + macOS universal)
-- Phase 5 cont.: MBA peer-to-peer — `os-console/src/mba_client.rs`; pairing ceremony TUI (static `proofctl user add` screen)
-- All committed: 5 new commits (af462797, 480dd105, 0b8088c4, a020a2cd, ce6c6621)
-
-**Pending at close:** Stage 6, Phase 6 pairing ceremony (server-issued code, zero-jargon flow).
 
