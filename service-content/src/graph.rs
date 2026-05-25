@@ -466,9 +466,8 @@ impl GraphStore for SqliteGraphStore {
         )
         .map_err(|e| anyhow!("init_schema failed: {}", e))?;
         // Idempotent migration for databases created before Sprint 2.
-        let _ = conn.execute_batch(
-            "ALTER TABLE entity ADD COLUMN node_type TEXT NOT NULL DEFAULT ''",
-        );
+        let _ =
+            conn.execute_batch("ALTER TABLE entity ADD COLUMN node_type TEXT NOT NULL DEFAULT ''");
         Ok(())
     }
 
@@ -944,8 +943,12 @@ mod tests {
     #[test]
     fn write_related_to_idempotent() {
         let store = in_memory_store();
-        store.upsert_entities("mod-a", &[entity("Alice", "Person", "mod-a")]).unwrap();
-        store.upsert_entities("mod-a", &[entity("Acme Corp", "Company", "mod-a")]).unwrap();
+        store
+            .upsert_entities("mod-a", &[entity("Alice", "Person", "mod-a")])
+            .unwrap();
+        store
+            .upsert_entities("mod-a", &[entity("Acme Corp", "Company", "mod-a")])
+            .unwrap();
         let from_id = "mod-a__alice";
         let to_id = "mod-a__acme_corp";
         store.write_related_to(from_id, to_id, "employs").unwrap();
