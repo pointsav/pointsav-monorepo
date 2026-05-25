@@ -66,13 +66,14 @@
             width: 100%; border: none; background: transparent;
             padding: 6px 4px; font-size: 11px; font-weight: 700;
             color: var(--text-muted); cursor: pointer; border-radius: 6px;
-            text-align: left; transition: all 0.15s; margin-bottom: 2px;
+            text-align: left; transition: all 0.15s; margin-bottom: 1px;
         }
         .lc-btn:hover:not(.lc-disabled) { background: rgba(22,70,121,0.06); color: var(--text-main); }
         .lc-btn.lc-active { color: var(--brand-primary); }
         .lc-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
         .lc-disabled { cursor: default; opacity: 0.45; pointer-events: none; }
         .lc-planned { margin-left: auto; font-size: 8px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; background: rgba(0,0,0,0.05); padding: 2px 5px; border-radius: 4px; }
+        .lc-group-label { font-size: 9px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.6px; padding: 4px 4px 2px; }
 
         /* ── Region switcher (panel header tabs) ──────────────────── */
         .region-switch { display: flex; gap: 4px; margin-top: 10px; padding: 3px; background: rgba(0,0,0,0.05); border-radius: 8px; }
@@ -88,6 +89,7 @@
             display: flex; flex-direction: column; align-items: center; justify-content: center; transition: all 0.15s;
         }
         .nav-btn:hover { background: #f9fbff; border-color: var(--brand-primary); }
+        .nav-btn.active { background: var(--brand-primary); color: #fff; border-color: var(--brand-primary); }
         .zoom-btn { height: 60px; }
         .home-btn { height: 50px; font-size: 10px; font-weight: 800; text-transform: uppercase; text-align: center; }
         .nav-btn .icon  { font-size: 24px; font-weight: bold; line-height: 1; }
@@ -335,6 +337,7 @@
         <div class="panel-footer">
             <button class="footer-btn" onclick="openModal('modal-credits')">Data Credits</button>
             <button class="footer-btn" onclick="openModal('modal-disclaimer')">Disclaimer</button>
+            <button class="footer-btn" onclick="openModal('modal-methodology')">Methodology</button>
         </div>
     </aside>
 
@@ -389,6 +392,35 @@
                 <p>Woodfine Group does not guarantee the accuracy, completeness, or timeliness of the data. Retailer locations and catchment analysis should not be used for high-stakes site selection, navigation, or critical infrastructure planning without independent verification.</p>
                 <h3>Privacy Notice</h3>
                 <p>We do not utilize real-time individual tracking data. Catchment population and consumer-spend metrics are derived from WorldPop high-resolution population grids assigned to clusters via a distance-decay radius model. No personally identifiable information (PII) is processed or displayed.</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-methodology" class="modal-overlay" onclick="closeModal(event, 'modal-methodology')">
+        <div class="modal-box" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h2>Methodology</h2>
+                <button class="modal-close" onclick="closeModal(null, 'modal-methodology')">×</button>
+            </div>
+            <div class="modal-body">
+                <h3>Tier Classification</h3>
+                <p>Each location on this map is assigned a tier based on the composition of large-format retail anchors present within the co-location cluster — not on retailer count or proximity alone.</p>
+                <ul>
+                    <li><strong>Regional (T1):</strong> A hypermarket, hardware retailer, and at least one of: warehouse club, lifestyle anchor, or electronics anchor — three independent format categories co-located within a sub-metropolitan market.</li>
+                    <li><strong>District (T2):</strong> A hypermarket and hardware retailer co-located without the third anchor category.</li>
+                    <li><strong>Local (T3):</strong> A single large-format anchor category present without a qualifying co-location pair.</li>
+                </ul>
+                <h3>Data and Scale</h3>
+                <p>The framework is applied to 6,493 co-location clusters across thirteen countries in North America and Europe, using OpenStreetMap point-of-interest records as the primary source. Clusters are identified by a two-pass spatial clustering algorithm (DBSCAN) calibrated to sub-metropolitan retail park configurations. Within each tier, clusters are ranked by geometric compactness and catchment characteristics.</p>
+                <h3>Catchment Areas</h3>
+                <p>Population and consumer spend figures are derived from WorldPop 100 m population grids and modelled per-capita spend estimates, aggregated to H3 hexagonal cells within a 150 km radius of each cluster centroid. The intended refinement — replacing the radius-based catchment with mobility-defined catchments derived from parking-lot geo-fencing — is a planned extension as origin-destination panel data is acquired.</p>
+                <h3>Limitations</h3>
+                <ul>
+                    <li>OSM coverage varies by country and retailer format. Major chains in the thirteen study countries are well-mapped; newer formats and smaller markets may be under-represented.</li>
+                    <li>Spend figures are modelled estimates, not transaction data. They reflect demographic proxies, not observed retail sales.</li>
+                    <li>The tier classification reflects anchor composition at a point in time. Store openings and closures are incorporated through periodic dataset rebuilds.</li>
+                </ul>
+                <p style="font-size:12px;color:#666;margin-top:20px;">This methodology is documented in a technical note prepared by Woodfine Management Corp. (2026). For the full technical note or enquiries about the dataset, contact <a href="mailto:corporate.secretary@woodfinegroup.com" style="color:#164679;">corporate.secretary@woodfinegroup.com</a>.</p>
             </div>
         </div>
     </div>
@@ -602,6 +634,7 @@
                     map.setLayoutProperty('all-locations', 'visibility', 'visible');
                     map.setPaintProperty('all-locations', 'circle-opacity', 0.70);
                 }
+                if (map.getLayer('all-locations-hit')) map.setLayoutProperty('all-locations-hit', 'visibility', 'visible');
                 applyView();
                 buildProdRings();
             }
@@ -611,12 +644,13 @@
     function toggleAecMaster(btn) {
         aecActive = !aecActive;
         btn.classList.toggle('active', aecActive);
-        btn.textContent = aecActive ? 'Hide' : 'Show on Map';
+        const lbl = btn.querySelector('.label');
+        if (lbl) lbl.textContent = aecActive ? 'Hide' : 'Climate';
         const sub = document.getElementById('aec-sublayers');
         if (sub) sub.classList.toggle('visible', aecActive);
         // Toggle AEC map layers — tiles present from Night 2+ build
         const aecLayers = [
-            'layer8-ashrae', 'layer8-necb', 'layer8-eu-climate',
+            'layer8-ashrae', 'layer8-ashrae-line', 'layer8-necb', 'layer8-eu-climate',
             'layer9-koppen', 'layer10-seismic', 'layer11-flood',
             'layer12-fema', 'layer12-eu-flood', 'layer13-ecoregions', 'layer15-wildfire',
         ];
@@ -1218,12 +1252,27 @@
             </div>
             <div class="data-block">
                 <div class="data-label">Layers</div>
+
+                <div class="lc-group-label">Co-location</div>
                 <button class="lc-btn lc-active" id="lc-clusters" onclick="toggleLayer('nodes', this)">
-                    <span class="lc-dot" style="background:#0A3070"></span>Co-location Clusters
+                    <span class="lc-dot" style="background:#0A3070"></span>Cluster Bubbles
                 </button>
+
+                <div class="lc-group-label">Climate Zones</div>
+                <button class="lc-btn${aecActive ? ' lc-active' : ''}" id="lc-aec-master" onclick="toggleAecMasterGlobal(this)">
+                    <span class="lc-dot" style="background:linear-gradient(135deg,#22d3ee 40%,#facc15 100%)"></span>ASHRAE · EU Climate
+                </button>
+
+                <div class="lc-group-label">Mobility &amp; Catchment</div>
                 <div class="lc-btn lc-disabled">
-                    <span class="lc-dot" style="background:#e5e7eb"></span>Catchment Areas
-                    <span class="lc-planned">Planned</span>
+                    <span class="lc-dot" style="background:#3b82f6"></span>Work Origins · Population · Spend
+                    <span class="lc-planned">Cluster only</span>
+                </div>
+
+                <div class="lc-group-label">Site Conditions</div>
+                <div class="lc-btn lc-disabled">
+                    <span class="lc-dot" style="background:#a78bfa"></span>Köppen · Seismic · Flood · Wildfire
+                    <span class="lc-planned">Night 3+</span>
                 </div>
             </div>
             <div style="padding:16px 0 4px;text-align:center;font-size:11px;color:var(--text-muted);font-style:italic;">
@@ -1403,10 +1452,24 @@
     }
 
     function toggleLayer(layerId, btn) {
-        const current = map.getLayoutProperty(layerId, 'visibility');
+        const ids = (layerId === 'nodes') ? ['nodes', 'nodes-halo'] : [layerId];
+        const current = map.getLayoutProperty(ids[0], 'visibility');
         const newVis  = (current === 'visible') ? 'none' : 'visible';
-        map.setLayoutProperty(layerId, 'visibility', newVis);
+        ids.forEach(id => { if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', newVis); });
         btn.classList.toggle('lc-active', newVis === 'visible');
+    }
+
+    function toggleAecMasterGlobal(btn) {
+        aecActive = !aecActive;
+        btn.classList.toggle('lc-active', aecActive);
+        const aecLayers = [
+            'layer8-ashrae', 'layer8-ashrae-line', 'layer8-necb', 'layer8-eu-climate',
+            'layer9-koppen', 'layer10-seismic', 'layer11-flood',
+            'layer12-fema', 'layer12-eu-flood', 'layer13-ecoregions', 'layer15-wildfire',
+        ];
+        aecLayers.forEach(id => {
+            if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', aecActive ? 'visible' : 'none');
+        });
     }
 
 
@@ -1418,7 +1481,7 @@
         const local = prodView.mode === 'LOCAL';
         setVis(['nodes', 'nodes-halo'], !local);
         setVis(['proximity-fill', 'proximity-line-t1', 'proximity-line-t234', 'proximity-ring-label'], local);
-        setVis(['all-locations'], local);
+        setVis(['all-locations', 'all-locations-hit'], local);
         setVis(['cluster-centroid'], false);
         setVis(['proximity-merged-label'], false);
     }
@@ -1616,25 +1679,17 @@
             </div>
             <div class="data-block" style="padding-top:6px;">
                 <div class="catchment-block">
-                    <div class="catchment-header">
-                        <div class="data-label" style="margin:0;">Site Conditions</div>
-                        <button class="catchment-master-toggle${aecActive ? ' active' : ''}"
-                                onclick="toggleAecMaster(this)">
-                            ${aecActive ? 'Hide' : 'Show on Map'}
-                        </button>
-                    </div>
-                    <div id="aec-sublayers" class="catchment-sublayers${aecActive ? ' visible' : ''}">
-                        ${(p.ashrae_zone || p.eu_climate_zone || p.necb_zone || p.koppen_class || p.seismic_pga_g != null || p.flood_hazard || p.wildfire_hazard || p.ghi_kwh_m2_yr != null) ? `
-                        <div style="font-size:11px;color:var(--text-main);display:grid;grid-template-columns:1fr 1fr;gap:4px 10px;margin-top:4px;">
-                            ${(p.ashrae_zone || p.eu_climate_zone || p.necb_zone) ? `<div style="grid-column:1/-1"><span style="color:var(--text-muted);">Climate Zone</span> <span>${p.ashrae_zone || p.eu_climate_zone || p.necb_zone}</span></div>` : ''}
-                            ${p.koppen_class ? `<div style="grid-column:1/-1"><span style="color:var(--text-muted);">Köppen</span> <span>${p.koppen_class}</span></div>` : ''}
-                            ${p.seismic_pga_g != null ? `<div><span style="color:var(--text-muted);">Seismic PGA</span> <span>${p.seismic_pga_g}g</span></div>` : ''}
-                            ${p.ghi_kwh_m2_yr != null ? `<div><span style="color:var(--text-muted);">Solar GHI</span> <span>${p.ghi_kwh_m2_yr} kWh/m²</span></div>` : ''}
-                            ${p.flood_hazard ? `<div><span style="color:var(--text-muted);">Flood</span> <span>${p.flood_hazard}</span></div>` : ''}
-                            ${p.wildfire_hazard ? `<div><span style="color:var(--text-muted);">Wildfire</span> <span>${p.wildfire_hazard}</span></div>` : ''}
-                        </div>` : `
-                        <div style="font-size:10px;color:var(--text-muted);font-style:italic;margin-top:4px;">Site data builds Night 2–5 (2026-05-25 onward)</div>`}
-                    </div>
+                    <div class="data-label" style="margin:0 0 4px;">Site Conditions</div>
+                    ${(p.ashrae_zone || p.eu_climate_zone || p.necb_zone || p.koppen_class || p.seismic_pga_g != null || p.flood_hazard || p.wildfire_hazard || p.ghi_kwh_m2_yr != null) ? `
+                    <div style="font-size:11px;color:var(--text-main);display:grid;grid-template-columns:1fr 1fr;gap:4px 10px;margin-top:4px;">
+                        ${(p.ashrae_zone || p.eu_climate_zone || p.necb_zone) ? `<div style="grid-column:1/-1"><span style="color:var(--text-muted);">Climate Zone</span> <span>${p.ashrae_zone || p.eu_climate_zone || p.necb_zone}</span></div>` : ''}
+                        ${p.koppen_class ? `<div style="grid-column:1/-1"><span style="color:var(--text-muted);">Köppen</span> <span>${p.koppen_class}</span></div>` : ''}
+                        ${p.seismic_pga_g != null ? `<div><span style="color:var(--text-muted);">Seismic PGA</span> <span>${p.seismic_pga_g}g</span></div>` : ''}
+                        ${p.ghi_kwh_m2_yr != null ? `<div><span style="color:var(--text-muted);">Solar GHI</span> <span>${p.ghi_kwh_m2_yr} kWh/m²</span></div>` : ''}
+                        ${p.flood_hazard ? `<div><span style="color:var(--text-muted);">Flood</span> <span>${p.flood_hazard}</span></div>` : ''}
+                        ${p.wildfire_hazard ? `<div><span style="color:var(--text-muted);">Wildfire</span> <span>${p.wildfire_hazard}</span></div>` : ''}
+                    </div>` : `
+                    <div style="font-size:10px;color:var(--text-muted);font-style:italic;margin-top:4px;">Köppen · Seismic · Solar — Night 3+</div>`}
                 </div>
             </div>
             ${civicLine ? `
@@ -1853,6 +1908,22 @@
                 'circle-stroke-width': 2,
                 'circle-stroke-color': ['match', ['get', 'tier'], 3, '#111827', '#FFFFFF'],
                 'circle-opacity': 1.0,
+            },
+        });
+
+        // Hit layer: invisible wider circle for easier retailer click targeting at Retail Level
+        map.addLayer({
+            id: 'all-locations-hit', type: 'circle',
+            source: 'locations-src', 'source-layer': 'locations',
+            layout: { visibility: 'none' },
+            paint: {
+                'circle-radius': ['interpolate', ['linear'], ['zoom'],
+                    2,  3,
+                    6,  5,
+                    10, 7,
+                    14, 10],
+                'circle-color': 'rgba(0,0,0,0)',
+                'circle-opacity': 0,
             },
         });
 
@@ -2122,6 +2193,62 @@
         }, 'proximity-fill');
 
 
+        // ── AEC / Site Conditions layers (Night 2 — climate zones) ──────────────
+        // Inserted before proximity-vignette so they render beneath rings/clusters.
+
+        map.addSource('aec-ashrae-src', {
+            type: 'vector',
+            url: 'pmtiles://tiles/layer8-ashrae-zones-us.pmtiles',
+        });
+        map.addLayer({
+            id: 'layer8-ashrae', type: 'fill',
+            source: 'aec-ashrae-src', 'source-layer': 'ashrae_zones',
+            layout: { visibility: 'none' },
+            paint: {
+                'fill-color': [
+                    'match', ['get', 'ashrae_zone'],
+                    '1A','#ef4444','1B','#f97316',
+                    '2A','#fb923c','2B','#fbbf24',
+                    '3A','#eab308','3B','#84cc16','3C','#10b981',
+                    '4A','#06b6d4','4B','#3b82f6','4C','#6366f1',
+                    '5A','#8b5cf6','5B','#a855f7','5C','#d946ef',
+                    '6A','#c084fc','6B','#e879f9',
+                    '7','#9ca3af','8','#6b7280',
+                    '#cccccc'
+                ],
+                'fill-opacity': 0.55,
+            },
+        }, 'proximity-vignette');
+        map.addLayer({
+            id: 'layer8-ashrae-line', type: 'line',
+            source: 'aec-ashrae-src', 'source-layer': 'ashrae_zones',
+            layout: { visibility: 'none' },
+            paint: { 'line-color': '#ffffff', 'line-width': 0.5, 'line-opacity': 0.7 },
+        }, 'proximity-vignette');
+
+        map.addSource('aec-eu-climate-src', {
+            type: 'vector',
+            url: 'pmtiles://tiles/layer8-eu-climate-zones.pmtiles',
+        });
+        map.addLayer({
+            id: 'layer8-eu-climate', type: 'fill',
+            source: 'aec-eu-climate-src', 'source-layer': 'eu_climate_zones',
+            layout: { visibility: 'none' },
+            paint: {
+                'fill-color': [
+                    'match', ['get', 'zone_code'],
+                    'H1a','#8b5cf6','H1b','#6366f1','H1c','#3b82f6',
+                    'H2a','#10b981','H2b','#06b6d4','H2c','#eab308','H2d','#fbbf24',
+                    'H3','#fb923c',
+                    '#cccccc'
+                ],
+                'fill-opacity': 0.55,
+            },
+        }, 'proximity-vignette');
+
+        // Update aecLayers toggle to also cover the line layer
+        // (handled by the existing toggleAEC function checking map.getLayer(id))
+
         // ── Cluster zoom helper — shared by nodes click + proximity-fill click ──
         function drillIntoCluster(p, coords) {
             prodView.mode = 'LOCAL';
@@ -2132,8 +2259,9 @@
             const v3tier = p.tier ?? 4;
             const km = Math.max(1.0, (p.span_km || 0) / 2 * 1.15);
 
+            catchmentActive = true;
             showClusterDetail(p, coords);
-            if (catchmentActive && selectedClusterId) showCatchmentForCluster(selectedClusterId);
+            showCatchmentForCluster(selectedClusterId);
 
             // Mark ring centre with a small tier-coloured dot
             map.getSource('anchors').setData({ type: 'FeatureCollection', features: [] });
@@ -2231,8 +2359,8 @@
 
         // ── Click handler: proximity-fill (Retail Level ring navigation) ──
         map.on('click', 'proximity-fill', (e) => {
-            // Retailer dot on top — let all-locations handler take it
-            const retailerHits = map.queryRenderedFeatures(e.point, { layers: ['all-locations', 'individual-points'] });
+            // Retailer dot on top — let all-locations / hit-layer handler take it
+            const retailerHits = map.queryRenderedFeatures(e.point, { layers: ['all-locations', 'all-locations-hit', 'individual-points'] });
             if (retailerHits.length) return;
 
             const props = e.features[0]?.properties;
@@ -2249,7 +2377,7 @@
             const streetZ   = v3tier === 1 ? 14 : 13;
             const z = map.getZoom();
 
-            if (z < overviewZ - 0.25 || selectedClusterId !== cid) {
+            if (prodView.mode !== 'LOCAL' || selectedClusterId !== cid) {
                 drillIntoCluster(metaToClusterProps(c), [c.lon, c.lat]);
             } else {
                 map.flyTo({
@@ -2304,6 +2432,7 @@
                     if (map.getLayer('proximity-line-t234')) map.setLayoutProperty('proximity-line-t234', 'visibility', 'none');
                     if (map.getLayer('proximity-ring-label')) map.setLayoutProperty('proximity-ring-label', 'visibility', 'none');
                     if (map.getLayer('all-locations')) map.setLayoutProperty('all-locations', 'visibility', 'none');
+                    if (map.getLayer('all-locations-hit')) map.setLayoutProperty('all-locations-hit', 'visibility', 'none');
                     return;
                 }
                 showOverview();
@@ -2315,6 +2444,7 @@
                     map.setLayoutProperty('all-locations', 'visibility', 'visible');
                     map.setPaintProperty('all-locations', 'circle-opacity', 0.70);
                 }
+                if (map.getLayer('all-locations-hit')) map.setLayoutProperty('all-locations-hit', 'visibility', 'visible');
                 applyView();
                 buildProdRings();
             }
@@ -2388,6 +2518,43 @@
         map.on('mouseenter', 'all-locations', () => { map.getCanvas().style.cursor = 'pointer'; });
         map.on('mouseleave', 'all-locations', () => { map.getCanvas().style.cursor = ''; });
 
+        // ── Click handler: all-locations-hit (wider invisible hit target) ──
+        map.on('click', 'all-locations-hit', (e) => {
+            if (e.features.length === 0) return;
+            const p    = e.features[0].properties;
+            const name = p.location_name || p.chain_id || '—';
+            const familyToCat = { Hardware: 'hardware', Warehouse: 'warehouse', Hypermarket: 'anchor', Food: 'food', Furniture: 'furniture', Pharmacy: 'pharmacy', Department: 'department' };
+            const catIdToCat  = { hospital: 'medical', university: 'academic' };
+            const cat = (p.brand_family && familyToCat[p.brand_family])
+                      || (p.category_id && catIdToCat[p.category_id])
+                      || 'hardware';
+            const coords = e.features[0].geometry.coordinates;
+            let enclosing = null;
+            const ringHits = map.queryRenderedFeatures(e.point, { layers: ['proximity-fill'] });
+            if (ringHits.length > 0) {
+                const cid = ringHits[0].properties?.cluster_id;
+                if (cid && clusterIndex?.has(cid)) enclosing = clusterIndex.get(cid);
+            }
+            if (!enclosing) enclosing = findEnclosingCluster(coords[0], coords[1]);
+            if (enclosing) {
+                if (selectedClusterId !== enclosing.id) {
+                    selectedClusterProps = metaToClusterProps(enclosing);
+                    selectedClusterId    = enclosing.id;
+                    showClusterDetail(selectedClusterProps, [enclosing.lon, enclosing.lat]);
+                }
+                updateSelEl(chainName(name), cat, p.street_address || null, p.city || null,
+                            countryName(p.iso_country_code) || null, null);
+            } else {
+                const backMode = selectedClusterProps ? 'cluster' : 'overview';
+                showElementDetail({ name: chainName(name), cat, addr: p.street_address || null,
+                                    city: p.city || null, rgn: countryName(p.iso_country_code) || null,
+                                    backMode });
+            }
+            e.stopPropagation();
+        });
+        map.on('mouseenter', 'all-locations-hit', () => { map.getCanvas().style.cursor = 'pointer'; });
+        map.on('mouseleave', 'all-locations-hit', () => { map.getCanvas().style.cursor = ''; });
+
         // ── Click handler: secondary anchor/store dots ──────────────
         map.on('click', 'individual-points', (e) => {
             if (e.features.length === 0) return;
@@ -2403,28 +2570,18 @@
         map.on('mouseenter', 'individual-points', () => { map.getCanvas().style.cursor = 'pointer'; });
         map.on('mouseleave', 'individual-points', () => { map.getCanvas().style.cursor = ''; });
 
-        // Empty map space: Back button is the only way out of cluster-zoom mode
-        map.on('click', (e) => {
-            if (!selectedClusterId || prodView.mode === 'GLOBAL') return;
-            const hit = map.queryRenderedFeatures(e.point, {
-                layers: ['nodes', 'nodes-halo', 'all-locations', 'individual-points'],
-            });
-            if (hit.length > 0) return;
-            flyToOverview();
-        });
+        // Background map click intentionally does NOT exit cluster mode.
+        // Use the Back button (context strip) to return to overview.
 
-        // Auto-detect active region when map center crosses into a different region's bounds
+        // Auto-detect active region when map center crosses the Atlantic midpoint meridian.
+        // Midpoint of NA east edge (-40°) and EU west edge (-25°) = -32.5°.
+        // Using a single meridian (not bounding-box entry) makes the switch fire immediately
+        // as the user pans past mid-ocean rather than waiting until they're inside EU bounds.
         map.on('moveend', () => {
             if (prodView.mode !== 'GLOBAL') return;
-            const { lng, lat } = map.getCenter();
-            for (const [key, r] of Object.entries(REGIONS)) {
-                if (key === currentRegion) continue;
-                const [[west, south], [east, north]] = r.bounds;
-                if (lng >= west && lng <= east && lat >= south && lat <= north) {
-                    setRegionContext(key);
-                    break;
-                }
-            }
+            const { lng } = map.getCenter();
+            const detected = lng < -32.5 ? 'NA' : 'EU';
+            if (detected !== currentRegion) setRegionContext(detected);
         });
     });
 
