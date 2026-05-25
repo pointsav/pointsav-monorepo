@@ -1,0 +1,17 @@
+[package]
+name = "app-orchestration-bim"
+version = "0.0.2"
+edition = "2021"
+description = "BIM Object Library — Woodfine server-rendered catalog (Axum + DTCG)"
+license = "Apache-2.0"
+
+[[bin]]
+name = "app-orchestration-bim"
+path = "src/main.rs"
+
+[dependencies]
+axum = "0.7"
+tokio = { version = "1", features = ["full"] }
+serde_json = "1"
+tower-http = { version = "0.5", features = ["fs"] }
+pulldown-cmark = "0.12"

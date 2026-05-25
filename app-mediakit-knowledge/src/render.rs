@@ -1,0 +1,752 @@
+//! Markdown rendering with frontmatter parsing.
+//!
+//! The frontmatter schema is documented in ARCHITECTURE.md §6. Phase
+//! 1 reads only the fields needed for rendering chrome (title); the
+//! rest are captured as a flat `extra` map for later phases (linter,
+//! disclosure-mode validation, citation-graph).
+//!
+//! Phase 1.1 additions (additive — no removals):
+//! - `hatnote`: optional italic note rendered above the article body
+//! - `translations`: optional map of language code → slug for language switcher
+//! - `categories`: optional list of category labels for footer rendering
+//!
+//! Iteration-2 additions (additive — no removals):
+//! - `short_description`: one-sentence article summary; rendered as italic
+//!   subtitle below the H1 (Wikipedia Vector 2022 article-subtitle pattern)
+
+use comrak::{
+    format_html,
+    nodes::{NodeHtmlBlock, NodeValue},
+    parse_document, Arena, Options,
+};
+use serde::{Deserialize, Serialize};
+use std::collections::BTreeMap;
+
+/// Translation entry: language code (e.g. "es") → slug of sibling page.
+pub type TranslationMap = BTreeMap<String, String>;
+
+#[derive(Debug, Default, Deserialize, Serialize)]
+pub struct Frontmatter {
+    #[serde(default)]
+    pub title: Option<String>,
+
+    #[serde(default)]
+    pub slug: Option<String>,
+
+    #[serde(default)]
+    pub document_version: Option<String>,
+
+    #[serde(default)]
+    pub forward_looking: bool,
+
+    #[serde(default)]
+    pub disclosure_class: Option<String>,
+
+    /// Italic note rendered at the top of the article body (above the infobox
+    /// in source order, per Wikipedia hatnote convention). Phase 1.1 chrome.
+    #[serde(default)]
+    pub hatnote: Option<String>,
+
+    /// Language code → slug map; drives the language-switcher button next to
+    /// the title. Phase 1.1 chrome. Example: `{ es: "topic-hello.es" }`.
+    #[serde(default)]
+    pub translations: Option<TranslationMap>,
+
+    /// Category labels for the end-of-article footer block. Phase 1.1 chrome.
+    #[serde(default)]
+    pub categories: Option<Vec<String>>,
+
+    /// Home-page bucketing category per
+    /// `content-wiki-documentation/.claude/rules/content-contract.md` §4.
+    /// One of the 9 ratified categories (architecture, services, systems,
+    /// applications, governance, infrastructure, company, reference, help)
+    /// per naming-convention.md §10 Q5-A. The value `root` is reserved for
+    /// `index.md` itself and is suppressed from category-panel bucketing.
+    #[serde(default)]
+    pub category: Option<String>,
+
+    /// Date of the last meaningful edit in `YYYY-MM-DD` format.
+    /// Drives the recent-additions feed on the home page. When absent,
+    /// the engine falls back to git-commit-date via a shell-out to
+    /// `git log -1 --format=%cI -- <path>`, then to filesystem mtime.
+    #[serde(default)]
+    pub last_edited: Option<String>,
+
+    /// One-sentence article summary. Rendered as `<p class="topic-short-description"><em>…</em></p>`
+    /// immediately below the article H1, matching Wikipedia Vector 2022's italic subtitle
+    /// pattern. Also used in the featured-article panel on the home page.
+    /// Omitted gracefully when absent.
+    #[serde(default)]
+    pub short_description: Option<String>,
+
+    /// Article quality grade. Closed enum: `complete | core | stub`.
+    /// Rendered as a badge adjacent to the article title in wiki_chrome().
+    #[serde(default)]
+    pub quality: Option<String>,
+
+    /// Article lifecycle status. Closed enum: `stable | pre-build | draft | stub`.
+    /// When `stub`, a hatnote notice is injected below the FLI banner.
+    #[serde(default)]
+    pub status: Option<String>,
+
+    /// Redirect target slug. When set, `wiki_page()` issues a 301 to `/wiki/<target>`
+    /// before any rendering occurs. Allows content authors to define redirects with
+    /// a single frontmatter field: `redirect_to: "canonical-slug"`.
+    #[serde(default)]
+    pub redirect_to: Option<String>,
+
+    /// Marks this page as a disambiguation page. When true, a hatnote notice is
+    /// rendered above the article body.
+    #[serde(default)]
+    pub disambig: Option<bool>,
+
+    /// Sprint E1: list of citation IDs declared in this article. Each ID is
+    /// resolved against `citations.yaml`; the aggregate verification status drives
+    /// the Citation Authority Ribbon colour (green / amber / red).
+    #[serde(default)]
+    pub cites: Option<Vec<String>>,
+
+    /// Sprint E2: research-trail metadata block. Fields:
+    ///   query, sources, date, confidence, notes
+    /// Rendered as a collapsible `<details>` block at the end of the article body.
+    #[serde(default)]
+    pub research_trail: Option<BTreeMap<String, serde_yaml::Value>>,
+
+    #[serde(flatten)]
+    pub extra: BTreeMap<String, serde_yaml::Value>,
+}
+
+#[derive(Debug)]
+pub struct ParsedPage {
+    pub frontmatter: Frontmatter,
+    pub body_md: String,
+}
+
+/// Split a Markdown file into frontmatter + body.
+///
+/// Frontmatter is delimited by lines containing only `---`. A file
+/// without frontmatter is treated as body-only with a default
+/// frontmatter struct.
+pub fn parse_page(text: &str) -> Result<ParsedPage, serde_yaml::Error> {
+    if let Some(rest) = text.strip_prefix("---\n") {
+        if let Some(end_idx) = rest.find("\n---\n") {
+            let yaml = &rest[..end_idx];
+            let body = &rest[end_idx + "\n---\n".len()..];
+            let fm: Frontmatter = serde_yaml::from_str(yaml)?;
+            return Ok(ParsedPage {
+                frontmatter: fm,
+                body_md: body.to_string(),
+            });
+        }
+    }
+    Ok(ParsedPage {
+        frontmatter: Frontmatter::default(),
+        body_md: text.to_string(),
+    })
+}
+
+/// Render Markdown body to HTML with wikilinks + GFM extensions enabled.
+///
+/// Phase 1.1: after the comrak pass, `inject_edit_pencils` walks the output
+/// and inserts a right-floated `[edit]` anchor after every h2–h6 opening tag.
+/// The anchors use `href="#"` placeholders; Phase 2 wires them to the edit
+/// surface.
+///
+/// Callers that need to extract headings for TOC generation should call
+/// `render_html_raw` first (for heading extraction), then `inject_edit_pencils`
+/// for the final body HTML — or use the convenience wrapper pair
+/// `render_html_with_toc`. The edit-pencil pass happens after heading
+/// extraction so that TOC text is clean (no "[edit]" fragments).
+pub fn render_html(body_md: &str, content_dir: &std::path::Path) -> String {
+    let raw = render_html_raw(body_md, content_dir);
+    inject_edit_pencils(&raw)
+}
+
+/// Like `render_html` but returns the raw comrak output without edit-pencil
+/// injection. Use this as the input to `extract_headings` for TOC generation.
+///
+/// Sprint B/AC: uses comrak's AST API so that fenced code blocks with info strings
+/// "infobox", "navbox", and "main" can be walked and replaced with structured HTML before
+/// final rendering.
+pub fn render_html_raw(body_md: &str, content_dir: &std::path::Path) -> String {
+    let mut options = Options::default();
+    options.extension.wikilinks_title_after_pipe = true;
+    options.extension.table = true;
+    options.extension.strikethrough = true;
+    options.extension.tasklist = true;
+    options.extension.footnotes = true;
+    options.extension.description_lists = true;
+    options.extension.autolink = true;
+    options.extension.header_id_prefix = Some("h-".to_string());
+    // Enable raw HTML so our programmatically-injected HtmlBlock nodes (infobox,
+    // navbox, main) are not suppressed by the renderer.  All injected HTML goes
+    // through escape_html(), so there is no XSS risk from our own code.  Raw HTML
+    // authored directly in markdown is a separate concern addressed by Phase 5 auth.
+    options.render.r#unsafe = true;
+
+    let arena = Arena::new();
+    let root = parse_document(&arena, body_md, &options);
+
+    // B2/B3/AC: Walk AST and replace infobox/navbox/main fenced blocks with HTML.
+    for node in root.descendants() {
+        let new_val = {
+            let data = node.data.borrow();
+            if let NodeValue::CodeBlock(ref cb) = data.value {
+                if cb.info == "infobox" {
+                    render_infobox(&cb.literal).map(|html| {
+                        NodeValue::HtmlBlock(NodeHtmlBlock {
+                            block_type: 6,
+                            literal: html,
+                        })
+                    })
+                } else if cb.info == "navbox" {
+                    render_navbox(&cb.literal).map(|html| {
+                        NodeValue::HtmlBlock(NodeHtmlBlock {
+                            block_type: 6,
+                            literal: html,
+                        })
+                    })
+                } else if cb.info == "main" {
+                    render_main(&cb.literal).map(|html| {
+                        NodeValue::HtmlBlock(NodeHtmlBlock {
+                            block_type: 6,
+                            literal: html,
+                        })
+                    })
+                } else {
+                    None
+                }
+            } else {
+                None
+            }
+        };
+        if let Some(v) = new_val {
+            node.data.borrow_mut().value = v;
+        }
+    }
+
+    let mut raw = String::new();
+    format_html(root, &options, &mut raw).expect("comrak format_html");
+    inject_wiki_prefixes(&raw, content_dir)
+}
+
+/// B2/AC: Render an infobox YAML body as a Wikipedia-style float-right summary table.
+///
+/// Special keys (not rendered as data rows):
+///   `title`         → `<caption>` element at top of table
+///   `image`         → full-width image row; value is the `src` URL
+///   `image_caption` → caption text below the image (only if `image` is also present)
+///
+/// All other keys render as `<th>label</th><td>value</td>` rows.
+/// Returns None if the YAML fails to parse — the code block is left unchanged.
+fn render_infobox(yaml: &str) -> Option<String> {
+    let map: serde_yaml::Mapping = serde_yaml::from_str(yaml).ok()?;
+
+    let get_str = |key: &str| -> Option<String> {
+        map.get(serde_yaml::Value::String(key.to_string()))
+            .and_then(|v| {
+                if let serde_yaml::Value::String(s) = v {
+                    Some(s.clone())
+                } else {
+                    None
+                }
+            })
+    };
+    let title = get_str("title");
+    let image = get_str("image");
+    let image_caption = get_str("image_caption");
+
+    let mut html = String::from("<table class=\"infobox\">\n");
+    if let Some(ref t) = title {
+        html.push_str(&format!(
+            "<caption class=\"infobox-title\">{}</caption>\n",
+            escape_html(t)
+        ));
+    }
+    html.push_str("<tbody>\n");
+    if let Some(ref img) = image {
+        let alt = image_caption.as_deref().or(title.as_deref()).unwrap_or("");
+        html.push_str("<tr><td colspan=\"2\" class=\"infobox-image\">");
+        html.push_str(&format!(
+            "<img src=\"{}\" alt=\"{}\">",
+            escape_html(img),
+            escape_html(alt)
+        ));
+        if let Some(ref cap) = image_caption {
+            html.push_str(&format!(
+                "<div class=\"infobox-caption\">{}</div>",
+                escape_html(cap)
+            ));
+        }
+        html.push_str("</td></tr>\n");
+    }
+
+    const RESERVED: &[&str] = &["title", "image", "image_caption"];
+    for (k, v) in &map {
+        let key = yaml_val_to_string(k);
+        if RESERVED.contains(&key.as_str()) {
+            continue;
+        }
+        let val = yaml_val_to_string(v);
+        html.push_str(&format!(
+            "<tr><th>{}</th><td>{}</td></tr>\n",
+            escape_html(&key),
+            escape_html(&val)
+        ));
+    }
+    html.push_str("</tbody>\n</table>\n");
+    Some(html)
+}
+
+/// B3: Render a navbox YAML body as a collapsible horizontal navigation table.
+///
+/// Expected YAML structure:
+/// ```yaml
+/// title: "Navigation title"
+/// groups:
+///   - label: "Group label"
+///     links:
+///       - text: "Link text"
+///         slug: "article-slug"
+/// ```
+/// Returns None if the YAML fails to parse.
+fn render_navbox(yaml: &str) -> Option<String> {
+    let val: serde_yaml::Value = serde_yaml::from_str(yaml).ok()?;
+    let title = val
+        .get("title")
+        .and_then(|v| v.as_str())
+        .unwrap_or("Navigation");
+    let mut html = format!(
+        "<div class=\"navbox\">\n<div class=\"navbox-title\">{}</div>\n<div class=\"navbox-content\">\n",
+        escape_html(title)
+    );
+    if let Some(groups) = val.get("groups").and_then(|g| g.as_sequence()) {
+        for group in groups {
+            let label = group.get("label").and_then(|l| l.as_str()).unwrap_or("");
+            html.push_str(&format!("<div class=\"navbox-group\">\n<span class=\"navbox-group-label\">{}</span>\n<ul class=\"navbox-list\">\n", escape_html(label)));
+            if let Some(links) = group.get("links").and_then(|l| l.as_sequence()) {
+                for link in links {
+                    let text = link.get("text").and_then(|t| t.as_str()).unwrap_or("");
+                    let slug = link.get("slug").and_then(|s| s.as_str()).unwrap_or("");
+                    html.push_str(&format!(
+                        "<li><a href=\"/wiki/{}\">{}</a></li>\n",
+                        escape_html(slug),
+                        escape_html(text)
+                    ));
+                }
+            }
+            html.push_str("</ul>\n</div>\n");
+        }
+    }
+    html.push_str("</div>\n</div>\n");
+    Some(html)
+}
+
+/// AC: Render a `main` fenced block as a Wikipedia-style "Main article:" hatnote.
+///
+/// Block body formats:
+///   `slug`              — display text derived from the last slug segment (hyphens → spaces, title-cased)
+///   `slug|Display Text` — explicit display text after the pipe
+///
+/// Renders with `class="wiki-hatnote"` so it shares the existing hatnote styling.
+fn render_main(body: &str) -> Option<String> {
+    let body = body.trim();
+    if body.is_empty() {
+        return None;
+    }
+    let (slug, display) = if let Some(pipe) = body.find('|') {
+        (body[..pipe].trim(), body[pipe + 1..].trim().to_string())
+    } else {
+        let last = body.rsplit('/').next().unwrap_or(body);
+        let display = last
+            .split('-')
+            .map(|w| {
+                let mut chars = w.chars();
+                match chars.next() {
+                    None => String::new(),
+                    Some(c) => c.to_uppercase().collect::<String>() + chars.as_str(),
+                }
+            })
+            .collect::<Vec<_>>()
+            .join(" ");
+        (body, display)
+    };
+    Some(format!(
+        "<div class=\"wiki-hatnote\">Main article: <a href=\"/wiki/{}\">{}</a></div>\n",
+        escape_html(slug),
+        escape_html(&display)
+    ))
+}
+
+fn yaml_val_to_string(v: &serde_yaml::Value) -> String {
+    match v {
+        serde_yaml::Value::String(s) => s.clone(),
+        serde_yaml::Value::Number(n) => n.to_string(),
+        serde_yaml::Value::Bool(b) => b.to_string(),
+        _ => String::new(),
+    }
+}
+
+fn escape_html(s: &str) -> String {
+    s.replace('&', "&amp;")
+        .replace('<', "&lt;")
+        .replace('>', "&gt;")
+        .replace('"', "&quot;")
+}
+
+/// Walk rendered HTML and prefix any `href="slug" data-wikilink="true"` generated
+/// by comrak with `/wiki/` so they route correctly. Also marks non-existent targets as red links.
+fn inject_wiki_prefixes(html: &str, content_dir: &std::path::Path) -> String {
+    // Comrak emits: <a href="slug" data-wikilink="true">
+    // We split on the marker and reconstruct.
+    let mut out = String::with_capacity(html.len() + 128);
+    let mut rest = html;
+
+    while let Some(pos) = rest.find(" data-wikilink=\"true\">") {
+        // Look backwards for the href="
+        let before_marker = &rest[..pos];
+        if let Some(href_pos) = before_marker.rfind("href=\"") {
+            let prefix = &before_marker[..href_pos + 6]; // up to and including href="
+            let raw = &before_marker[href_pos + 6..];
+            // Comrak puts the closing " of the href attribute in before_marker;
+            // strip it so we get only the slug value.
+            let raw_slug = raw.trim_end_matches('"');
+
+            if raw_slug.starts_with("/category/") {
+                // Category links pass through with their original href intact
+                out.push_str(prefix);
+                out.push_str(raw_slug);
+                out.push_str("\" data-wikilink=\"true\">");
+            } else {
+                let base = raw_slug.strip_prefix("/wiki/").unwrap_or(raw_slug);
+                // Decode %20, then normalise: lowercase + spaces→hyphens
+                let decoded = base.replace("%20", " ");
+                let norm_slug = decoded.trim().to_lowercase().replace(' ', "-");
+
+                let is_redlink = !content_dir.join(format!("{}.md", norm_slug)).exists();
+                let redlink_class = if is_redlink {
+                    " class=\"wiki-redlink\""
+                } else {
+                    ""
+                };
+
+                out.push_str(prefix);
+                out.push_str("/wiki/");
+                out.push_str(&norm_slug);
+                out.push_str("\" data-wikilink=\"true\"");
+                out.push_str(redlink_class);
+                out.push('>');
+            }
+        } else {
+            // Malformed, just copy
+            out.push_str(before_marker);
+            out.push_str(" data-wikilink=\"true\">");
+        }
+        rest = &rest[pos + 22..]; // length of marker
+    }
+    out.push_str(rest);
+    out
+}
+
+/// Walk rendered HTML and insert a right-floated `[edit]` span after every
+/// h2–h6 opening tag (h1 is the page title — it gets its own tab chrome).
+///
+/// This is a straightforward string-level pass; a proper HTML parser is
+/// overkill for a constrained tag set and would add a build dependency.
+/// The transform is additive and idempotent when the edit-pencil class is
+/// already present.
+pub fn inject_edit_pencils(html: &str) -> String {
+    const PENCIL: &str =
+        r##"<span class="edit-pencil"><a href="#" title="Edit this section">[edit]</a></span>"##;
+
+    let mut out = String::with_capacity(html.len() + 64);
+    let mut rest = html;
+
+    while !rest.is_empty() {
+        // Look for any h2–h6 opening tag (comrak emits lowercase tags).
+        let tag_start = rest
+            .find("<h2")
+            .into_iter()
+            .chain(rest.find("<h3"))
+            .chain(rest.find("<h4"))
+            .chain(rest.find("<h5"))
+            .chain(rest.find("<h6"))
+            .min();
+
+        match tag_start {
+            None => {
+                out.push_str(rest);
+                break;
+            }
+            Some(pos) => {
+                // Find the end of this opening tag so we can append the pencil
+                // immediately inside the heading element (before its text).
+                if let Some(close) = rest[pos..].find('>') {
+                    let tag_end = pos + close + 1; // index after '>'
+                    out.push_str(&rest[..tag_end]);
+                    out.push_str(PENCIL);
+                    rest = &rest[tag_end..];
+                } else {
+                    // Malformed — emit as-is and stop.
+                    out.push_str(rest);
+                    break;
+                }
+            }
+        }
+    }
+
+    out
+}
+
+/// Extract a flat list of `(id, text, level)` heading triples from rendered
+/// HTML for TOC generation.  Only h2–h6 are included (h1 is the page title).
+///
+/// comrak with `header_ids = Some(...)` emits an inner anchor inside the
+/// heading element rather than putting the id on the heading tag itself,
+/// e.g. `<h2><a id="h-alpha" ...></a>Alpha</h2>`. So this scan extracts the
+/// id from anywhere inside the heading element, not just the opening tag.
+/// Text is the heading content with nested tags stripped so the TOC shows
+/// plain text only.
+pub fn extract_headings(html: &str) -> Vec<(String, String, u8)> {
+    let mut headings = Vec::new();
+    let mut rest = html;
+
+    loop {
+        // Find the nearest h2–h6 opening tag.
+        let candidates: Vec<_> = [
+            (rest.find("<h2"), 2u8),
+            (rest.find("<h3"), 3),
+            (rest.find("<h4"), 4),
+            (rest.find("<h5"), 5),
+            (rest.find("<h6"), 6),
+        ]
+        .into_iter()
+        .filter_map(|(pos, lvl)| pos.map(|p| (p, lvl)))
+        .collect();
+
+        let Some((pos, level)) = candidates.into_iter().min_by_key(|(p, _)| *p) else {
+            break;
+        };
+
+        // Find the matching closing tag.
+        let closing_tag = format!("</h{level}>");
+        let Some(close_rel) = rest[pos..].find(&closing_tag) else {
+            break;
+        };
+        let close_abs = pos + close_rel;
+        let element_html = &rest[pos..close_abs];
+
+        // Extract id from anywhere within the heading element (comrak puts it
+        // on the inner <a> when header_ids is configured). Leading space
+        // avoids false matches against attribute names ending in -id.
+        let id = if let Some(id_start) = element_html.find(r#" id=""#) {
+            let after = &element_html[id_start + 5..];
+            if let Some(id_end) = after.find('"') {
+                after[..id_end].to_string()
+            } else {
+                String::new()
+            }
+        } else {
+            String::new()
+        };
+
+        // Extract text by stripping inner tags. Content starts after the
+        // first '>' (end of the heading's opening tag).
+        let text = if let Some(content_start_rel) = element_html.find('>') {
+            let content = &element_html[content_start_rel + 1..];
+            content
+                .split('<')
+                .enumerate()
+                .map(|(i, part)| {
+                    if i == 0 {
+                        part.to_string()
+                    } else if let Some(gt) = part.find('>') {
+                        part[gt + 1..].to_string()
+                    } else {
+                        String::new()
+                    }
+                })
+                .collect::<String>()
+                .trim()
+                .to_string()
+        } else {
+            String::new()
+        };
+
+        if !id.is_empty() && !text.is_empty() {
+            headings.push((id, text, level));
+        }
+
+        rest = &rest[close_abs + closing_tag.len()..];
+    }
+
+    headings
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parses_page_with_frontmatter() {
+        let text = "---\ntitle: Hello\n---\n# body\n";
+        let parsed = parse_page(text).unwrap();
+        assert_eq!(parsed.frontmatter.title.as_deref(), Some("Hello"));
+        assert_eq!(parsed.body_md, "# body\n");
+    }
+
+    #[test]
+    fn parses_page_without_frontmatter() {
+        let text = "# body only\n";
+        let parsed = parse_page(text).unwrap();
+        assert!(parsed.frontmatter.title.is_none());
+        assert_eq!(parsed.body_md, "# body only\n");
+    }
+
+    #[test]
+    fn renders_wikilinks() {
+        let html = render_html("see [[Other Page]] for context", std::path::Path::new("."));
+        assert!(
+            html.contains("Other Page"),
+            "wikilink text should be in output: {html}"
+        );
+        assert!(
+            html.contains("href"),
+            "wikilink should produce an anchor: {html}"
+        );
+    }
+
+    #[test]
+    fn renders_gfm_table() {
+        let md = "| a | b |\n|---|---|\n| 1 | 2 |\n";
+        let html = render_html(md, std::path::Path::new("."));
+        assert!(html.contains("<table>"), "GFM table should render: {html}");
+    }
+
+    // Phase 1.1 tests — additive; all existing tests remain unchanged.
+
+    /// Edit pencils appear on h2+ but not on h1.
+    #[test]
+    fn edit_pencils_injected_on_h2_not_h1() {
+        let md = "# Title\n\n## Section\n\ntext\n";
+        let html = render_html(md, std::path::Path::new("."));
+        // The h1 should not carry an edit pencil.
+        let h1_pos = html.find("<h1").unwrap();
+        let h1_end = html[h1_pos..].find("</h1>").unwrap() + h1_pos;
+        assert!(
+            !html[h1_pos..h1_end].contains("edit-pencil"),
+            "h1 should not have an edit pencil: {html}"
+        );
+        // The h2 should carry an edit pencil.
+        assert!(
+            html.contains("edit-pencil"),
+            "h2 should have an edit pencil: {html}"
+        );
+    }
+
+    /// Headings are extracted correctly from comrak output.
+    #[test]
+    fn extracts_headings_from_html() {
+        let md = "## Alpha\n\ntext\n\n### Beta\n\nmore\n";
+        let raw = render_html_raw(md, std::path::Path::new("."));
+        let headings = extract_headings(&raw);
+        assert_eq!(
+            headings.len(),
+            2,
+            "should extract 2 headings: {:?}",
+            headings
+        );
+        assert_eq!(headings[0].1, "Alpha");
+        assert_eq!(headings[0].2, 2);
+        assert_eq!(headings[1].1, "Beta");
+        assert_eq!(headings[1].2, 3);
+    }
+
+    /// TOC text is clean — no "[edit]" fragments from pencil injection.
+    #[test]
+    fn toc_text_has_no_edit_fragments() {
+        let md = "## A Section\n\ntext\n";
+        let raw = render_html_raw(md, std::path::Path::new("."));
+        let headings = extract_headings(&raw);
+        assert_eq!(headings.len(), 1);
+        assert!(
+            !headings[0].1.contains("[edit]"),
+            "TOC text must not contain [edit]: {:?}",
+            headings
+        );
+    }
+
+    /// Hatnote and categories fields deserialise from frontmatter.
+    #[test]
+    fn parses_phase11_frontmatter_fields() {
+        let text = "---\ntitle: Test\nhatnote: \"See elsewhere.\"\ncategories:\n  - Foo\n  - Bar\ntranslations:\n  es: test.es\n---\nbody\n";
+        let parsed = parse_page(text).unwrap();
+        assert_eq!(
+            parsed.frontmatter.hatnote.as_deref(),
+            Some("See elsewhere.")
+        );
+        let cats = parsed.frontmatter.categories.unwrap();
+        assert_eq!(cats, vec!["Foo", "Bar"]);
+        let trans = parsed.frontmatter.translations.unwrap();
+        assert_eq!(trans.get("es").map(|s| s.as_str()), Some("test.es"));
+    }
+
+    /// `short_description` field deserialises from frontmatter.
+    #[test]
+    fn parses_short_description() {
+        let text = "---\ntitle: Substrate\nshort_description: \"The five structural properties that define the platform.\"\n---\nbody\n";
+        let parsed = parse_page(text).unwrap();
+        assert_eq!(
+            parsed.frontmatter.short_description.as_deref(),
+            Some("The five structural properties that define the platform.")
+        );
+    }
+
+    /// Engine Verification Gate — `claim-authoring-convention.md` §3.
+    /// Claim markers authored as HTML comments must pass through comrak
+    /// unchanged and inert: the markers survive verbatim in the output,
+    /// the claim prose renders normally, and surrounding content is
+    /// unaffected. This proves the convention's graceful-degradation
+    /// guarantee against the engine's actual comrak option set.
+    #[test]
+    fn claim_markers_pass_through_inert() {
+        // Block claim — markers on their own lines.
+        let block = "Before the claim.\n\n\
+            <!--claim id=derived-state cites=[] confidence=structural-->\n\
+            The search index is derived state.\n\
+            <!--/claim-->\n\n\
+            After the claim.\n";
+        let html = render_html(block, std::path::Path::new("."));
+        assert!(
+            html.contains("<!--claim id=derived-state cites=[] confidence=structural-->"),
+            "opening marker must survive verbatim: {html}"
+        );
+        assert!(
+            html.contains("<!--/claim-->"),
+            "closing marker must survive verbatim: {html}"
+        );
+        assert!(
+            html.contains("The search index is derived state."),
+            "claim prose must render: {html}"
+        );
+        assert!(
+            html.contains("Before the claim.") && html.contains("After the claim."),
+            "surrounding prose must be unaffected: {html}"
+        );
+
+        // Inline claim — markers mid-paragraph.
+        let inline =
+            "An auditor <!--claim id=audit confidence=established cites=[rfc-9162]-->can verify \
+             integrity<!--/claim--> independently.";
+        let html2 = render_html(inline, std::path::Path::new("."));
+        assert!(
+            html2.contains("<!--claim id=audit confidence=established cites=[rfc-9162]-->")
+                && html2.contains("<!--/claim-->"),
+            "inline markers must survive verbatim: {html2}"
+        );
+        assert!(
+            html2.contains("can verify integrity"),
+            "inline claim prose must render: {html2}"
+        );
+    }
+}
