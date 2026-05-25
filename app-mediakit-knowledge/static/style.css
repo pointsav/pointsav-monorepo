@@ -210,7 +210,9 @@ a:focus-visible, button:focus-visible, input:focus-visible {
   letter-spacing: var(--ds-ls-medium);
 }
 .shell-utility button,
-.shell-utility a {
+.shell-utility a,
+.shell-header .utility-row button,
+.shell-header .utility-row a {
   color: var(--ds-ink-3);
   background: transparent;
   border: 0;
@@ -222,7 +224,9 @@ a:focus-visible, button:focus-visible, input:focus-visible {
   transition: color var(--ds-motion-fast) var(--ds-easing-standard);
 }
 .shell-utility button:hover,
-.shell-utility a:hover { color: var(--ds-ink-1); }
+.shell-utility a:hover,
+.shell-header .utility-row button:hover,
+.shell-header .utility-row a:hover { color: var(--ds-ink-1); }
 
 /* Row 2 — brand */
 .shell-brand,
@@ -342,6 +346,20 @@ a:focus-visible, button:focus-visible, input:focus-visible {
   letter-spacing: 0;
   text-transform: none;
   pointer-events: none;
+}
+
+/* Search row below nav — wiki article pages */
+.shell-header .search-row {
+  background: var(--ds-paper-2);
+  border-bottom: 1px solid var(--ds-rule-hairline);
+  padding: var(--ds-sp-3) var(--ds-sp-9);
+  display: flex;
+  justify-content: center;
+}
+.shell-header .search-row form.header-search {
+  flex: 0 1 520px;
+  max-width: 520px;
+  margin: 0;
 }
 
 /* Mobile-only ≤767px: utility row collapses to icon-only */

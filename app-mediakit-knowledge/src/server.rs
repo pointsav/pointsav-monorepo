@@ -1029,8 +1029,8 @@ fn compute_home_stats(buckets: &CategoryBuckets) -> HomeStats {
 /// Categories with ≤ PREVIEW_LIMIT articles always show the full list.
 const PREVIEW_LIMIT: usize = 8;
 
-const WORDMARK_POINTSAV: &str = r##"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 40"><text x="0" y="30" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="24" font-weight="800" fill="#09090B" letter-spacing="-0.03em">POINT-SAV DIGITAL SYSTEMS</text></svg>"##;
-const WORDMARK_WOODFINE: &str = r##"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 350 40"><text x="0" y="30" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="24" font-weight="800" fill="#111827" letter-spacing="-0.03em">WOODFINE CAPITAL PROJECTS</text></svg>"##;
+const WORDMARK_POINTSAV: &str = r##"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 40"><text x="0" y="30" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="24" font-weight="800" fill="currentColor" letter-spacing="-0.03em">POINT-SAV DIGITAL SYSTEMS</text></svg>"##;
+const WORDMARK_WOODFINE: &str = r##"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 350 40"><text x="0" y="30" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="24" font-weight="800" fill="currentColor" letter-spacing="-0.03em">WOODFINE CAPITAL PROJECTS</text></svg>"##;
 
 #[allow(clippy::too_many_arguments)]
 fn home_chrome(
@@ -1112,46 +1112,34 @@ fn home_chrome(
             }
             body {
                 a.skip-to-content href="#mp-main" { "Skip to content" }
-                header.mw-header #mw-header {
-                    a.site-title href="/" { (site_title) }
-                    form.header-search #header-search-form action="/search" method="get" {
-                        div.header-search-wrap {
-                            input #header-search-q type="search" name="q" placeholder="Search articles…" autocomplete="off";
-                            div #search-autocomplete-dropdown style="display:none;" {}
-                        }
-                        button type="submit" { "Search" }
-                    }
-                    div.wiki-appearance-wrap #wiki-appearance-wrap {
-                        button.wiki-appearance-btn #wiki-appearance-btn
-                            aria-expanded="false"
-                            aria-controls="wiki-appearance-menu"
-                            title="Appearance"
-                        { "Aa" }
-                        div.wiki-appearance-menu #wiki-appearance-menu role="dialog" aria-label="Appearance" hidden="" {
-                            div.wiki-appearance-section {
-                                p.wiki-appearance-label { "Color" }
-                                div.wiki-appearance-options #wiki-theme-options {
-                                    button.wiki-appearance-opt #theme-auto data-theme-val="auto" { "Automatic" }
-                                    button.wiki-appearance-opt #theme-light data-theme-val="light" { "Light" }
-                                    button.wiki-appearance-opt #theme-dark data-theme-val="dark" { "Dark" }
-                                }
-                            }
-                            div.wiki-appearance-section {
-                                p.wiki-appearance-label { "Width" }
-                                div.wiki-appearance-options #wiki-width-options {
-                                    button.wiki-appearance-opt #width-standard data-width-val="standard" { "Standard" }
-                                    button.wiki-appearance-opt #width-wide data-width-val="wide" { "Wide" }
-                                }
-                            }
-                        }
-                    }
-                    nav.site-nav {
-                        a href="/" { "Home" }
-                        a href="/special/all-pages" { "All pages" }
-                        a href="/special/categories" { "Categories" }
-                        a href="/special/recent-changes" { "Recent changes" }
+                header.shell-header {
+                    div.utility-row {
                         a.lang-toggle href=(match locale { Locale::En => "/es/", Locale::Es => "/?noredirect=1" }) {
                             (match locale { Locale::En => "ES", Locale::Es => "EN" })
+                        }
+                        div.wiki-appearance-wrap #wiki-appearance-wrap {
+                            button.wiki-appearance-btn #wiki-appearance-btn
+                                aria-expanded="false"
+                                aria-controls="wiki-appearance-menu"
+                                title="Appearance"
+                            { "Aa" }
+                            div.wiki-appearance-menu #wiki-appearance-menu role="dialog" aria-label="Appearance" hidden="" {
+                                div.wiki-appearance-section {
+                                    p.wiki-appearance-label { "Color" }
+                                    div.wiki-appearance-options #wiki-theme-options {
+                                        button.wiki-appearance-opt #theme-auto data-theme-val="auto" { "Automatic" }
+                                        button.wiki-appearance-opt #theme-light data-theme-val="light" { "Light" }
+                                        button.wiki-appearance-opt #theme-dark data-theme-val="dark" { "Dark" }
+                                    }
+                                }
+                                div.wiki-appearance-section {
+                                    p.wiki-appearance-label { "Width" }
+                                    div.wiki-appearance-options #wiki-width-options {
+                                        button.wiki-appearance-opt #width-standard data-width-val="standard" { "Standard" }
+                                        button.wiki-appearance-opt #width-wide data-width-val="wide" { "Wide" }
+                                    }
+                                }
+                            }
                         }
                         (auth_nav_widget(user, pending_count))
                     }
@@ -2184,44 +2172,35 @@ fn wiki_chrome(
                         }
                     }
                 }
-                header.mw-header #mw-header {
-                    a.site-title href="/" { (site_title) }
-                    form.header-search #search-form-nav action="/search" method="get" {
-                        div.header-search-wrap {
-                            input #header-search-q type="search" name="q" placeholder="Search articles…" autocomplete="off";
-                            div #search-autocomplete-dropdown style="display:none;" {}
-                        }
-                        button type="submit" { "Search" }
-                    }
-                    // Appearance menu button + popover
-                    div.wiki-appearance-wrap #wiki-appearance-wrap {
-                        button.wiki-appearance-btn #wiki-appearance-btn
-                            aria-expanded="false"
-                            aria-controls="wiki-appearance-menu"
-                            title="Appearance"
-                        { "Aa" }
-                        div.wiki-appearance-menu #wiki-appearance-menu role="dialog" aria-label="Appearance" hidden="" {
-                            div.wiki-appearance-section {
-                                p.wiki-appearance-label { "Color" }
-                                div.wiki-appearance-options #wiki-theme-options {
-                                    button.wiki-appearance-opt #theme-auto data-theme-val="auto" { "Automatic" }
-                                    button.wiki-appearance-opt #theme-light data-theme-val="light" { "Light" }
-                                    button.wiki-appearance-opt #theme-dark data-theme-val="dark" { "Dark" }
-                                }
-                            }
-                            div.wiki-appearance-section {
-                                p.wiki-appearance-label { "Width" }
-                                div.wiki-appearance-options #wiki-width-options {
-                                    button.wiki-appearance-opt #width-standard data-width-val="standard" { "Standard" }
-                                    button.wiki-appearance-opt #width-wide data-width-val="wide" { "Wide" }
-                                }
-                            }
-                        }
-                    }
-                    nav.site-nav {
-                        a href="/" { "Home" }
+                header.shell-header {
+                    div.utility-row {
                         a.lang-toggle href=(match locale { Locale::En => format!("/es/wiki/{slug}"), Locale::Es => format!("/wiki/{slug}") }) {
                             (match locale { Locale::En => "ES", Locale::Es => "EN" })
+                        }
+                        // Appearance menu button + popover
+                        div.wiki-appearance-wrap #wiki-appearance-wrap {
+                            button.wiki-appearance-btn #wiki-appearance-btn
+                                aria-expanded="false"
+                                aria-controls="wiki-appearance-menu"
+                                title="Appearance"
+                            { "Aa" }
+                            div.wiki-appearance-menu #wiki-appearance-menu role="dialog" aria-label="Appearance" hidden="" {
+                                div.wiki-appearance-section {
+                                    p.wiki-appearance-label { "Color" }
+                                    div.wiki-appearance-options #wiki-theme-options {
+                                        button.wiki-appearance-opt #theme-auto data-theme-val="auto" { "Automatic" }
+                                        button.wiki-appearance-opt #theme-light data-theme-val="light" { "Light" }
+                                        button.wiki-appearance-opt #theme-dark data-theme-val="dark" { "Dark" }
+                                    }
+                                }
+                                div.wiki-appearance-section {
+                                    p.wiki-appearance-label { "Width" }
+                                    div.wiki-appearance-options #wiki-width-options {
+                                        button.wiki-appearance-opt #width-standard data-width-val="standard" { "Standard" }
+                                        button.wiki-appearance-opt #width-wide data-width-val="wide" { "Wide" }
+                                    }
+                                }
+                            }
                         }
                         (auth_nav_widget(user, pending_count))
                     }
@@ -2246,6 +2225,15 @@ fn wiki_chrome(
                             aria-controls="mobile-nav-drawer"
                         { "Menu" }
                     }
+                    div.search-row {
+                        form.header-search #search-form-body action="/search" method="get" {
+                            div.header-search-wrap {
+                                input #header-search-q-body type="search" name="q" placeholder="Search articles…" autocomplete="off";
+                                div #search-autocomplete-dropdown-body style="display:none;" {}
+                            }
+                            button type="submit" { "Search" }
+                        }
+                    }
                     nav.nav-row aria-label="Site navigation" {
                         ul.nav-list.left {
                             li { a href="/wiki/disclaimers" { "Disclaimer" } }
@@ -2263,15 +2251,6 @@ fn wiki_chrome(
                                 li { a href="https://pointsav.com" { "pointsav.com" } }
                                 li { a href="https://github.com/pointsav" { "GitHub" } }
                             }
-                        }
-                    }
-                    div.search-row {
-                        form.header-search #search-form-body action="/search" method="get" {
-                            div.header-search-wrap {
-                                input #header-search-q-body type="search" name="q" placeholder="Search articles…" autocomplete="off";
-                                div #search-autocomplete-dropdown-body style="display:none;" {}
-                            }
-                            button type="submit" { "Search" }
                         }
                     }
                 }
