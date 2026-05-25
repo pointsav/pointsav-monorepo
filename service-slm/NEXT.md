@@ -1,8 +1,30 @@
 # NEXT.md — service-slm
 
-> Last updated: 2026-05-23 (Phase 6 AUTO-TODO: LatencyClass, BackendLifecycle, GF-1, GF-2)
+> Last updated: 2026-05-25 (Yo-Yo integration test; extraction timeout defect surfaced)
 > Read at session start. Update before session end so the next
 > session knows where to pick up.
+
+---
+
+## SESSION 2026-05-25 — YO-YO INTEGRATION TEST + TEST SCRIPT FIXES
+
+**Test run results (2-run composite across one SPOT VM session, preempted at 12m36s):**
+- PASS: tests 1 (Tier B inference), 3 (graph context injection), 4 (audit proxy), 6 (mesh routing), 10 (DataGraph REST API)
+- FAIL-fixed: tests 2, 5, 8 — test script bugs patched in commit `5968efdb`
+
+**Shipped:**
+- [x] `fix(test-yoyo-flows)`: grammar `max_tokens` 40→300; strip `<think>` before JSON parse; fix apprenticeship glob depth; test 8 handles broker-mode 503.
+
+**Open defects discovered:**
+
+- [ ] **Extraction timeout**: `service-content/src/graph.rs` (or `main.rs`) calls `/v1/extract` with `timeout_secs:20`. The OLMo 3 32B-Think model needs 90-136s for entity extraction. The 20s timeout causes immediate failures → circuit opens → all corpus extraction deferred on every boot. Fix: increase to 180s, OR route extraction to a non-Think model. Track as `YOYO-EXTRACT-TIMEOUT`.
+- [ ] **Doorman restart → service-content restart**: restarting `local-doorman.service` also restarts `local-content.service` (systemd dependency). The extra restart caused corpus drain to repeat. Investigate `PartOf=`/`BindsTo=` in service unit drop-ins; decouple if safe.
+- [ ] **Spot preemption resilience**: SPOT VM preempted at 12m36s (much shorter than 1h). The `start-yoyo.sh` script's retry logic is for zone stockouts, not in-session preemptions. Consider adding a post-start loop that detects preemption and re-starts via the same script.
+
+**IMMEDIATE — Command Session:**
+- [ ] Stage 6 promote (~12 commits on this session alone, total ahead by more). Rebase required per inbox `command-20260520-stage6-rebase-required` — confirm before promote.
+- [ ] After promote: `bin/sync-local.sh --all` + rebuild + redeploy `slm-doorman-server` on workspace VM.
+- [ ] Update `local-doorman.service` env to include `SLM_LOCAL_MODEL=olmo-2-0425-1b-instruct` if not already set.
 
 ---
 
