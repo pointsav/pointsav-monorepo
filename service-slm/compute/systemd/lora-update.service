@@ -1,0 +1,23 @@
+[Unit]
+Description=LoRA adapter update orchestrator (snapshot → DPO → trainer → eval → registry)
+Documentation=file:///srv/foundry/clones/project-intelligence/service-slm/scripts/lora-update.sh
+After=local-doorman.service network-online.target
+
+[Service]
+Type=oneshot
+User=mathew
+EnvironmentFile=-/etc/local-doorman/local-doorman.env
+# SLM_LORA_AUTO_ENABLE is the hard gate — explicitly set in
+# /etc/local-doorman/local-doorman.env by the operator when ready.
+# Absence (default) makes the script exit 2 without doing anything.
+Environment="FOUNDRY_ROOT=/srv/foundry"
+ExecStart=/srv/foundry/clones/project-intelligence/service-slm/scripts/lora-update.sh
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=lora-update
+# Allow up to 4h for the whole pipeline (snapshot + export + Yo-Yo
+# training poll + pull + eval + register). The script itself has
+# internal step timeouts; this is the outer ceiling.
+TimeoutStartSec=14400
+# No automatic restart on failure — failures need operator review.
+Restart=no

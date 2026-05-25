@@ -95,10 +95,7 @@ pub async fn collect_recent_items(
                 Some(s) => s.to_string(),
                 None => continue,
             };
-            if stem.ends_with(".es")
-                || stem == "index"
-                || stem == "_index"
-                || stem.starts_with('_')
+            if stem.ends_with(".es") || stem == "index" || stem == "_index" || stem.starts_with('_')
             {
                 continue;
             }
@@ -143,7 +140,7 @@ pub async fn collect_recent_items(
     }
 
     // Sort by mtime descending (most-recently modified first).
-    items.sort_by(|a, b| b.updated.cmp(&a.updated));
+    items.sort_by_key(|i| std::cmp::Reverse(i.updated));
     items.truncate(limit);
 
     Ok(items)
@@ -156,19 +153,18 @@ pub async fn collect_recent_items(
 pub fn first_paragraph_snippet(body_md: &str, max_chars: usize) -> String {
     let para = body_md
         .lines()
-        .filter(|l| {
+        .find(|l| {
             let trimmed = l.trim();
             !trimmed.is_empty()
                 && !trimmed.starts_with('#')
                 && !trimmed.starts_with("---")
                 && !trimmed.starts_with("===")
         })
-        .next()
         .unwrap_or("");
 
     // Strip crude Markdown tokens: leading list markers, emphasis, backticks.
     let clean: String = para
-        .trim_start_matches(|c| matches!(c, '-' | '*' | '+' | '>' | ' '))
+        .trim_start_matches(['-', '*', '+', '>', ' '])
         .chars()
         .filter(|&c| c != '`' && c != '*' && c != '_')
         .collect();
@@ -219,31 +215,36 @@ pub fn render_atom(items: &[FeedItem]) -> String {
                 rel: "alternate".to_string(),
                 ..Default::default()
             };
-            let mut entry = Entry::default();
-            entry.id = format!("urn:pointsav:knowledge:topic:{}", item.slug);
-            entry.title = Text::plain(item.title.clone());
-            entry.updated = item.updated.into();
-            entry.links = vec![link];
-            if !item.summary.is_empty() {
-                entry.summary = Some(Text::plain(item.summary.clone()));
+            Entry {
+                id: format!("urn:pointsav:knowledge:topic:{}", item.slug),
+                title: Text::plain(item.title.clone()),
+                updated: item.updated.into(),
+                links: vec![link],
+                summary: if !item.summary.is_empty() {
+                    Some(Text::plain(item.summary.clone()))
+                } else {
+                    None
+                },
+                ..Entry::default()
             }
-            entry
         })
         .collect();
 
-    let mut feed = Feed::default();
-    feed.id = "urn:pointsav:knowledge:feed".to_string();
-    feed.title = Text::plain("PointSav Knowledge");
-    feed.updated = feed_updated;
-    feed.authors = vec![Person {
-        name: "PointSav Knowledge".to_string(),
-        ..Default::default()
-    }];
-    feed.generator = Some(Generator {
-        value: "app-mediakit-knowledge".to_string(),
-        ..Default::default()
-    });
-    feed.entries = entries;
+    let feed = Feed {
+        id: "urn:pointsav:knowledge:feed".to_string(),
+        title: Text::plain("PointSav Knowledge"),
+        updated: feed_updated,
+        authors: vec![Person {
+            name: "PointSav Knowledge".to_string(),
+            ..Default::default()
+        }],
+        generator: Some(Generator {
+            value: "app-mediakit-knowledge".to_string(),
+            ..Default::default()
+        }),
+        entries,
+        ..Feed::default()
+    };
 
     feed.to_string()
 }
@@ -296,9 +297,7 @@ pub async fn get_atom(State(state): State<Arc<AppState>>) -> Result<Response, Wi
 /// Collects the 25 most-recently-modified TOPICs and returns a JSON Feed 1.1
 /// document. Content-Type is set automatically by axum's `Json` extractor
 /// (`application/json`).
-pub async fn get_json_feed(
-    State(state): State<Arc<AppState>>,
-) -> Result<Json<Value>, WikiError> {
+pub async fn get_json_feed(State(state): State<Arc<AppState>>) -> Result<Json<Value>, WikiError> {
     let items = collect_recent_items(&state.content_dir, 25).await?;
     let value = render_json_feed(&items);
     Ok(Json(value))
@@ -310,8 +309,7 @@ mod tests {
 
     #[test]
     fn first_paragraph_snippet_returns_first_non_heading_line() {
-        let body =
-            "\n\n## Heading\n\nThis is the first paragraph.\n\nSecond paragraph.\n";
+        let body = "\n\n## Heading\n\nThis is the first paragraph.\n\nSecond paragraph.\n";
         let s = first_paragraph_snippet(body, 180);
         assert!(
             s.contains("first paragraph"),
@@ -325,7 +323,11 @@ mod tests {
         let body = "A ".repeat(200);
         let s = first_paragraph_snippet(&body, 50);
         // Should be truncated (≤ 54 chars including the ellipsis + some slack).
-        assert!(s.len() <= 55, "snippet should be ≤50 chars: len={}", s.len());
+        assert!(
+            s.len() <= 55,
+            "snippet should be ≤50 chars: len={}",
+            s.len()
+        );
     }
 
     #[test]
@@ -337,7 +339,10 @@ mod tests {
             summary: "A short summary.".to_string(),
         }];
         let xml = render_atom(&items);
-        assert!(xml.contains("<feed"), "Atom output should contain <feed: {xml}");
+        assert!(
+            xml.contains("<feed"),
+            "Atom output should contain <feed: {xml}"
+        );
         assert!(
             xml.contains("topic-test"),
             "Atom output should contain slug: {xml}"
