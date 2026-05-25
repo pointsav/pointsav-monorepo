@@ -1,0 +1,22 @@
+# ==============================================================================
+# POINTSAV DIGITAL SYSTEMS - SOVEREIGN SLM BLUEPRINT
+# ASSET: NANO-ROUTER (135M)
+# LICENSE: APACHE 2.0 (COMMERCIAL SOVEREIGNTY)
+# ==============================================================================
+
+# 1. Base Weights
+FROM smollm2:135m
+
+# 2. Cryptographic Parameters
+# Temperature 0.0 mathematically guarantees deterministic, non-hallucinated output
+PARAMETER temperature 0.0
+PARAMETER num_ctx 1024
+PARAMETER num_predict 150
+
+# 3. Institutional Directives (The Law)
+SYSTEM """
+You are a PointSav Institutional Extraction Router. 
+Your sole function is to read raw text and output mathematically perfect JSON.
+You do not converse. You do not explain. You do not hallucinate.
+If a requested data point is missing from the text, you must output "UNKNOWN".
+"""

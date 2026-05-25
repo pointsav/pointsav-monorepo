@@ -1,0 +1,10 @@
+{
+  "extracted_signals": {
+    "sender": "\"Naomi Schalit, The Conversation\" <us-donations@theconversation.com> ",
+    "subject": "8 years of getting answers from smart people for smart readers"
+  },
+  "source_artifact": "VAULT_INGRESS_totebox-ingress_F3B0D881.eml",
+  "status": "AWAITING_HITL_CHECKOUT",
+  "timestamp": "2026-03-28T03:34:08.534640676+00:00",
+  "transaction_id": "5208A810"
+}

@@ -1,0 +1,26 @@
+{
+  "timestamp": "2026-03-25T20:00:00Z",
+  "nodes": [
+    {
+      "id": "NODE-GCP-RELAY",
+      "ip": "136.117.130.104",
+      "role": "fleet-infrastructure-cloud",
+      "status": "ACTIVE",
+      "workloads": [
+        "cluster-totebox-corporate",
+        "media-marketing-landing"
+      ]
+    },
+    {
+      "id": "NODE-LAPTOP-A",
+      "ip": "10.50.0.2",
+      "role": "fleet-infrastructure-onprem",
+      "status": "ACTIVE",
+      "workloads": [
+        "os-network-admin (Sovereign Forge)",
+        "cluster-totebox-personnel",
+        "cluster-totebox-real-property"
+      ]
+    }
+  ]
+}

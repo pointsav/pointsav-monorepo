@@ -1,0 +1,19 @@
+# app-privategit-workbench — production config for local-workbench instance
+bind = "127.0.0.1:9210"
+max_bytes = 2097152  # 2 MiB
+module_id = "development"
+
+[[root]]
+url_prefix = "_sandbox-jennifer"
+fs_path = "/home/jennifer/sandbox"
+writable = true
+
+[[root]]
+url_prefix = "_clones/project-jennifer"
+fs_path = "/srv/foundry/clones/project-jennifer"
+writable = true
+
+[[root]]
+url_prefix = "_clones/project-development"
+fs_path = "/srv/foundry/clones/project-development"
+writable = true

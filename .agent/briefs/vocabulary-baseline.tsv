@@ -1,0 +1,308 @@
+term	definition	wiki_slug	source	glossary_status	bilingual_status	in_documentation	in_corporate	in_projects	notes
+Accounting			runtime	runtime-term	en	true	true	false	
+Auditor			runtime	runtime-term	en	true	true	false	
+Bank			runtime	runtime-term	en	true	true	true	
+Broadcom Driver Migration			runtime	runtime-term	en	false	false	false	
+Capability-Based Manager			runtime	runtime-term	en	false	false	false	
+Co-location			runtime	runtime-term	en	true	false	true	
+Co-Location Mandate Expansion			runtime	runtime-term	en	false	false	false	
+Collaborators			runtime	runtime-term	en	false	false	false	
+Contributors			runtime	runtime-term	en	true	true	true	
+Counsel			runtime	runtime-term	en	true	false	false	
+Direct-Hold Solutions			runtime	runtime-term	en	true	true	false	
+Finance			runtime	runtime-term	en	true	false	false	
+Fixed Floor Plate			runtime	runtime-term	en	false	false	true	
+Flow-Through Taxation			runtime	runtime-term	en	false	false	false	
+Flow-Through Taxation Structuring			runtime	runtime-term	en	false	false	false	
+Geometry of Sustainability			runtime	runtime-term	en	false	false	true	
+Governance			runtime	runtime-term	en	true	true	true	
+Institutional-Grade			runtime	runtime-term	en	false	false	true	
+Leasing			runtime	runtime-term	en	true	false	false	
+Microkernel			runtime	runtime-term	en	true	false	false	
+Municipalities			runtime	runtime-term	en	false	false	true	
+Perpetual Equity			runtime	runtime-term	en	false	true	false	
+PointSav Digital Systems			runtime	runtime-term	en	true	true	true	
+PointSav Digital Systems AG	The proprietary Trade Name of the digital infrastructure entity.		runtime	runtime-term	en	false	false	false	flag:AG-suffix — use PointSav Digital Systems per §4
+Professional Services			runtime	runtime-term	en	true	false	false	
+Q3 Capital Procurement			runtime	runtime-term	en	false	false	false	
+Qualified Investment			runtime	runtime-term	en	false	false	false	
+Sovereign Telemetry			runtime	runtime-term	en	false	false	false	
+The Architect			runtime	runtime-term	en	true	true	true	
+The Artisan			runtime	runtime-term	en	false	false	false	
+The Catalyst			runtime	runtime-term	en	false	false	false	
+The Constructor			runtime	runtime-term	en	true	false	false	
+The Engineer			runtime	runtime-term	en	true	false	false	
+The Envoy			runtime	runtime-term	en	false	false	false	
+The Executive			runtime	runtime-term	en	true	false	false	
+The Fiduciary			runtime	runtime-term	en	true	true	true	
+The Guardian			runtime	runtime-term	en	true	false	false	
+The Sage			runtime	runtime-term	en	false	false	false	
+The Steward			runtime	runtime-term	en	false	false	false	
+Totebox Archive			runtime	runtime-term	en	true	true	true	
+Vertical Warehouses			runtime	runtime-term	en	false	false	true	
+Woodfine Professional Centres			runtime	runtime-term	en	false	true	true	
+AEC Community	*Comunidad AEC*	reference/glossary-documentation	wiki	canonical	en	false	false	false	
+Artificial Intelligence or AI	*Inteligencia Artificial (IA)*	reference/glossary-documentation	wiki	canonical	en	false	false	false	
+Blockchain	*Cadena de Bloques*	reference/glossary-documentation	wiki	canonical	en	true	false	false	
+Book-Entry	*Anotación en Cuenta*	reference/glossary-documentation	wiki	canonical	en	false	false	false	
+Building Connectivity	*Conectividad del Edificio*	reference/glossary-documentation	wiki	canonical	en	false	false	false	
+Business Administration	*Administración de Empresas*	reference/glossary-documentation	wiki	canonical	en	false	false	false	
+Cascading Style Sheet or CSS	*Hojas de Estilo en Cascada*	reference/glossary-documentation	wiki	canonical	en	false	false	false	
+Cloud Computing	*Computación en la Nube*	reference/glossary-documentation	wiki	canonical	en	false	false	false	
+Console OS	*SO de Consola*	reference/glossary-documentation	wiki	canonical	en	true	false	false	
+Container	*Contenedor*	reference/glossary-documentation	wiki	canonical	en	true	false	true	
+DevOps	*DevOps*	reference/glossary-documentation	wiki	canonical	en	false	false	false	
+Digital Transformation	*Transformación Digital*	reference/glossary-documentation	wiki	canonical	en	true	false	false	
+Digital Twin	*Gemelo Digital*	reference/glossary-documentation	wiki	canonical	en	true	false	false	
+Docker	*Docker*	reference/glossary-documentation	wiki	canonical	en	true	false	false	
+GitHub	*GitHub*	reference/glossary-documentation	wiki	canonical	en	true	true	true	
+HTML	*HTML*	reference/glossary-documentation	wiki	canonical	en	true	true	true	
+Information Technology	*Information Technology*	reference/glossary-documentation	wiki	canonical	en	false	false	false	
+Infrastructure OS	*SO de Infraestructura*	reference/glossary-documentation	wiki	canonical	en	true	false	false	
+IoT Devices	*Dispositivos de IoT*	reference/glossary-documentation	wiki	canonical	en	false	false	false	
+MediaKit OS	*SO de MediaKit*	reference/glossary-documentation	wiki	canonical	en	true	false	false	
+Microkernel Operating System	*Microkernel*	reference/glossary-documentation	wiki	canonical	en	false	false	false	
+Network Admin OS	*SO de Administración de Red*	reference/glossary-documentation	wiki	canonical	en	true	false	false	
+Operating System	*Sistema Operativo*	reference/glossary-documentation	wiki	canonical	en	true	false	false	
+OrchestrationOS	*SO de Orquestación*	reference/glossary-documentation	wiki	canonical	en	true	false	false	flag:duplicate-heading
+OrchestrationOS – BIM Server	*Servidor BIM de OrchestrationOS*	reference/glossary-documentation	wiki	canonical	en	false	false	false	
+OrchestrationOS – Command Centre	*Centro de Comando de OrchestrationOS*	reference/glossary-documentation	wiki	canonical	en	false	false	false	
+OrchestrationOS – Data Engine	*Motor de Datos de OrchestrationOS*	reference/glossary-documentation	wiki	canonical	en	false	false	false	
+OrchestrationOS – GIS Engine	*Motor GIS de OrchestrationOS*	reference/glossary-documentation	wiki	canonical	en	false	false	false	
+PrivateGit OS	*SO de PrivateGit*	reference/glossary-documentation	wiki	canonical	en	false	false	false	
+Property Management	*Administración de Propiedades*	reference/glossary-documentation	wiki	canonical	en	false	false	false	
+PropertyArchive	*PropertyArchive*	reference/glossary-documentation	wiki	canonical	en	true	false	true	
+Public Cloud	Traditional off-premise infrastructure. In the 2030 Doctrine, this represents a structural dependency that Sovereign Infrastructure aims to mitigate.	reference/glossary-documentation	wiki	canonical	en	true	false	false	
+Public Cloud Resources	Traditional off-premise infrastructure. In the 2030 Doctrine, this represents a structural dependency that Sovereign Infrastructure aims to mitigate.	reference/glossary-documentation	wiki	canonical	en	true	false	false	
+Record Keeping	*Mantenimiento de Registros*	reference/glossary-documentation	wiki	canonical	en	true	false	false	
+service-extraction	*service-extraction*	reference/glossary-documentation	wiki	canonical	en	true	false	false	
+service-search	*service-search*	reference/glossary-documentation	wiki	canonical	en	true	false	false	flag:truncated-entry — needs stub repair
+Smart Building	*Edificio Inteligente*	reference/glossary-documentation	wiki	canonical	en	false	false	false	
+Surveillance	Monitoring of user activity or system behaviour for security or analytical purposes. PointSav replaces third-party surveillance dependencies with zero-cookie first-party telemetry pipelines.	reference/glossary-documentation	wiki	canonical	en	true	false	false	
+Technofeudalism	A term describing structural dependency on platform providers who control access to data and services. Cited as context for the vendor lock-in problem that PointSav is designed to resolve.	reference/glossary-documentation	wiki	canonical	en	false	false	false	
+Totebox OS	*SO Totebox*	reference/glossary-documentation	wiki	canonical	en	true	false	false	
+Totebox Services	*Servicios Totebox*	reference/glossary-documentation	wiki	canonical	en	false	false	false	
+Unikernel	*Unikernel*	reference/glossary-documentation	wiki	canonical	en	true	false	false	
+User Experience or Service Design or UX	*Experiencia de Usuario (UX)*	reference/glossary-documentation	wiki	canonical	en	false	false	false	
+User Interface or Product Design or UI	*Interfaz de Usuario (UI)*	reference/glossary-documentation	wiki	canonical	en	false	false	false	
+Virtual Machine or VM	*Máquina Virtual (VM)*	reference/glossary-documentation	wiki	canonical	en	false	false	false	
+Workplace OS	*SO de Workplace*	reference/glossary-documentation	wiki	canonical	en	true	false	false	
+Workplace OS – Browser	*Navegador de Workplace OS*	reference/glossary-documentation	wiki	canonical	en	false	false	false	
+Workplace OS – Calculator	*Calculadora de Workplace OS*	reference/glossary-documentation	wiki	canonical	en	false	false	false	
+Workplace OS – File Manager	*Gestor de Archivos de Workplace OS*	reference/glossary-documentation	wiki	canonical	en	false	false	false	
+Workplace OS – PDF Viewer	*Visor de PDF de Workplace OS*	reference/glossary-documentation	wiki	canonical	en	false	false	false	
+Workplace OS – Spreadsheet	*Hoja de Cálculo de Workplace OS*	reference/glossary-documentation	wiki	canonical	en	false	false	false	
+Workplace OS – Word Processor	*Procesador de Textos de Workplace OS*	reference/glossary-documentation	wiki	canonical	en	false	false	false	
+.EXE		reference/glossary-documentation	wiki	stub	en	true	true	true	
+.FIN		reference/glossary-documentation	wiki	stub	en	true	true	true	
+.PUB		reference/glossary-documentation	wiki	stub	en	true	true	true	
+Administration Suite		reference/glossary-documentation	wiki	stub	en	false	false	false	
+AI Bots		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Alfred P. Sloan		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Apache Web Server		reference/glossary-documentation	wiki	stub	en	false	false	false	
+App – Building ID		reference/glossary-documentation	wiki	stub	en	false	false	false	
+App – Community		reference/glossary-documentation	wiki	stub	en	false	false	false	
+App – Workplace OS		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Applications		reference/glossary-documentation	wiki	stub	en	true	false	false	
+Assignments		reference/glossary-documentation	wiki	stub	en	true	false	false	
+Audit Trail		reference/glossary-documentation	wiki	stub	en	true	true	true	
+Authentication		reference/glossary-documentation	wiki	stub	en	true	false	false	
+Backup		reference/glossary-documentation	wiki	stub	en	true	false	false	
+Bare Metal Resources		reference/glossary-documentation	wiki	stub	en	true	false	false	
+Berkeley Software Distribution or FreeBSD		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Big Tech or Big Tech Ecosystem or Ring Fence		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Bootable Disk Image		reference/glossary-documentation	wiki	stub	en	true	false	false	
+Building Router		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Business Software		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Buying Program		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Chart of Accounts		reference/glossary-documentation	wiki	stub	en	true	false	false	
+Command Line Interface		reference/glossary-documentation	wiki	stub	en	true	false	false	
+Commits		reference/glossary-documentation	wiki	stub	en	true	true	true	
+Community Members		reference/glossary-documentation	wiki	stub	en	true	false	false	
+Configuration		reference/glossary-documentation	wiki	stub	en	true	false	true	
+Console OS – BIM		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Console OS – Building Preferences		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Console OS – Input Machine		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Console OS – Maps		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Console OS – Marketplace		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Contact Us		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Container Orchestration – OS Level Virtualization		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Container Orchestration – Platform for Containerized APPs		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Content Creation		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Cookies		reference/glossary-documentation	wiki	stub	en	true	false	false	
+Cookies Notification		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Cookies Preferences		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Creative Design		reference/glossary-documentation	wiki	stub	en	true	false	false	
+Customer Relationship Management (CRM)		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Customers		reference/glossary-documentation	wiki	stub	en	true	false	false	
+Device-based Permissions		reference/glossary-documentation	wiki	stub	en	true	false	false	
+Disclaimer		reference/glossary-documentation	wiki	stub	en	true	false	false	
+Documentation		reference/glossary-documentation	wiki	stub	en	true	true	true	
+Downstream		reference/glossary-documentation	wiki	stub	en	true	false	false	
+e-Commerce		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Economic Model		reference/glossary-documentation	wiki	stub	en	true	true	false	
+Edge Computing		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Enterprise		reference/glossary-documentation	wiki	stub	en	true	true	true	
+Enterprise Resource Management (ERP)		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Enterprise User		reference/glossary-documentation	wiki	stub	en	false	false	false	
+es in a Totebox Archive using Tantivy. Operates without a running database engine — the index is static and binary and can be searched on an air-gapped machine. Satisfies DARP compliance: data must be searchable without proprietary software.		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Financial Community		reference/glossary-documentation	wiki	stub	en	true	false	false	
+Fog Computing		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Fork		reference/glossary-documentation	wiki	stub	en	true	false	false	
+Freely Transferable		reference/glossary-documentation	wiki	stub	en	true	true	false	
+FreshRSS		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Gamification		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Geo-Spatial		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Geometric Security		reference/glossary-documentation	wiki	stub	en	false	false	false	
+GitHub – PointSav		reference/glossary-documentation	wiki	stub	en	false	false	false	
+GitHub – WCP		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Graphic Design		reference/glossary-documentation	wiki	stub	en	true	false	false	
+Installation Guide		reference/glossary-documentation	wiki	stub	en	false	false	false	
+IoT Connect		reference/glossary-documentation	wiki	stub	en	false	false	false	
+IoT Device Providers		reference/glossary-documentation	wiki	stub	en	false	false	false	
+IoT Sensors		reference/glossary-documentation	wiki	stub	en	true	false	false	
+IT Support		reference/glossary-documentation	wiki	stub	en	true	false	false	
+Jawbone		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Key Note Slides		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Kubernetes		reference/glossary-documentation	wiki	stub	en	true	false	false	
+LaTeX		reference/glossary-documentation	wiki	stub	en	true	false	false	
+Leased Server Resources		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Licensing Agreement		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Local Administrators		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Login		reference/glossary-documentation	wiki	stub	en	true	false	false	
+LoRa		reference/glossary-documentation	wiki	stub	en	true	false	false	
+Machine Authorization		reference/glossary-documentation	wiki	stub	en	true	false	false	
+MAN Files or MAN.txt		reference/glossary-documentation	wiki	stub	en	false	false	false	
+MariaDB		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Mark Up Language		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Marketing Directory		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Markup Language		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Media Assets		reference/glossary-documentation	wiki	stub	en	true	false	false	
+MediaKit OS – Distribution		reference/glossary-documentation	wiki	stub	en	false	false	false	
+MediaKit OS – Hosting		reference/glossary-documentation	wiki	stub	en	false	false	false	
+MediaKit OS – Marketing		reference/glossary-documentation	wiki	stub	en	false	false	false	
+MediaKit OS – Wiki		reference/glossary-documentation	wiki	stub	en	false	false	false	
+MediaWiki		reference/glossary-documentation	wiki	stub	en	true	false	false	
+Metadata		reference/glossary-documentation	wiki	stub	en	true	false	false	
+Micro Virtual Machines or Micro VM		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Microservices		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Mobile Devices		reference/glossary-documentation	wiki	stub	en	true	false	false	
+Nano Virtual Machines or Nano VM		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Newsfeed		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Newswire Services		reference/glossary-documentation	wiki	stub	en	false	false	false	
+On-prem Resources		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Open Source		reference/glossary-documentation	wiki	stub	en	true	false	false	
+OrchestrationOS – IoT Connect		reference/glossary-documentation	wiki	stub	en	false	false	false	
+P1 – Input Machine		reference/glossary-documentation	wiki	stub	en	false	false	false	
+P3 – Users		reference/glossary-documentation	wiki	stub	en	false	false	false	
+P4 – Interface		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Package Manager		reference/glossary-documentation	wiki	stub	en	true	false	false	
+Pairing		reference/glossary-documentation	wiki	stub	en	true	false	true	
+Permissions		reference/glossary-documentation	wiki	stub	en	true	false	false	
+Personal Computer		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Platform		reference/glossary-documentation	wiki	stub	en	true	true	true	
+PointSav		reference/glossary-documentation	wiki	stub	en	true	true	true	
+PointSav Corporate Support Centre		reference/glossary-documentation	wiki	stub	en	false	false	false	
+PointSav Documentation or PointSav Documentation Wiki		reference/glossary-documentation	wiki	stub	en	false	false	false	
+PointSav Landing Page		reference/glossary-documentation	wiki	stub	en	false	false	false	
+PointSav.com		reference/glossary-documentation	wiki	stub	en	true	true	true	
+Privacy Policy		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Product Design		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Products		reference/glossary-documentation	wiki	stub	en	true	false	false	
+Proprietary Technology		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Public Browser Delivery		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Public Browser Delivery – BIM		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Public Browser Delivery – Input Machine		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Public Browser Delivery – Maps		reference/glossary-documentation	wiki	stub	en	false	false	false	
+README Files or README.txt		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Real Estate Community		reference/glossary-documentation	wiki	stub	en	false	false	false	
+RSS Feeds		reference/glossary-documentation	wiki	stub	en	false	false	false	
+RSS Reader		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Scaling		reference/glossary-documentation	wiki	stub	en	true	false	false	
+Service Design		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Service Providers		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Services		reference/glossary-documentation	wiki	stub	en	true	true	true	
+Software		reference/glossary-documentation	wiki	stub	en	true	true	true	
+Source Code		reference/glossary-documentation	wiki	stub	en	true	true	true	
+Specialty Software		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Stakeholders		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Subdomain		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Tech Community		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Technical Debt		reference/glossary-documentation	wiki	stub	en	true	false	false	
+Technical Lead		reference/glossary-documentation	wiki	stub	en	true	false	false	
+Technology Selection		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Tenants		reference/glossary-documentation	wiki	stub	en	true	false	true	
+Terminal		reference/glossary-documentation	wiki	stub	en	true	false	false	
+Tokens		reference/glossary-documentation	wiki	stub	en	true	false	false	
+Topic Templates		reference/glossary-documentation	wiki	stub	en	true	false	false	
+Topics		reference/glossary-documentation	wiki	stub	en	true	false	false	
+Totebox Archive – Corporate		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Totebox Archive – Metadata and FTP		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Totebox Archive – Personnel		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Totebox Archive – Property		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Totebox Orchestration		reference/glossary-documentation	wiki	stub	en	true	true	true	
+Totebox OS – BIM		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Totebox OS – Bookkeeper		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Totebox OS – Business		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Totebox OS – Calendar		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Totebox OS – Chat		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Totebox OS – Conferencing		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Totebox OS – eMail		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Totebox OS – FTP		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Totebox OS – IoT Device Library		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Totebox OS – IoT Sensor Library		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Totebox OS – Minutebook		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Totebox OS – Parking Lots		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Totebox OS – People		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Totebox OS – Places		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Totebox OS – Published Work		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Totebox OS – Research		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Totebox OS – RSS Feed		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Type II Hypervisor		reference/glossary-documentation	wiki	stub	en	true	false	false	
+Upstream		reference/glossary-documentation	wiki	stub	en	true	false	false	
+Use Cases		reference/glossary-documentation	wiki	stub	en	true	false	false	
+User Guide		reference/glossary-documentation	wiki	stub	en	false	false	false	
+User-centred		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Usernames and Passwords		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Users		reference/glossary-documentation	wiki	stub	en	true	false	false	
+Virtualization		reference/glossary-documentation	wiki	stub	en	true	false	false	
+Wallet		reference/glossary-documentation	wiki	stub	en	true	false	false	
+WCP Corporate Brochure or WCP Investor Presentation		reference/glossary-documentation	wiki	stub	en	false	false	false	
+WCP Corporate Wiki		reference/glossary-documentation	wiki	stub	en	false	false	false	
+WCP Landing Page		reference/glossary-documentation	wiki	stub	en	false	false	false	
+WCP Newsroom		reference/glossary-documentation	wiki	stub	en	false	false	false	
+WCP Projects Wiki		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Web 3.0		reference/glossary-documentation	wiki	stub	en	false	false	false	
+What You See Is What You Get or WYSIWYG		reference/glossary-documentation	wiki	stub	en	false	false	false	
+White Paper Discovery Process		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Wi-Fi		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Wireframes		reference/glossary-documentation	wiki	stub	en	false	false	false	
+WordPress		reference/glossary-documentation	wiki	stub	en	true	false	false	
+World Wide Web		reference/glossary-documentation	wiki	stub	en	false	false	false	
+Administration Panel or System Administrator or Control Panel or System Preferences	Standard IT infrastructure term, re-contextualized within PointSav's air-gapped and zero-execution routing topology.	reference/glossary-documentation	wiki	boilerplate-stub	en	false	false	false	
+Audience Data	Standard IT infrastructure term, re-contextualized within PointSav's air-gapped and zero-execution routing topology.	reference/glossary-documentation	wiki	boilerplate-stub	en	true	false	false	
+CCTV Data Collection	Standard IT infrastructure term, re-contextualized within PointSav's air-gapped and zero-execution routing topology.	reference/glossary-documentation	wiki	boilerplate-stub	en	false	false	false	
+Console OS – Systems Administrator	Standard IT infrastructure term, re-contextualized within PointSav's air-gapped and zero-execution routing topology.	reference/glossary-documentation	wiki	boilerplate-stub	en	false	false	false	
+Content Management System (CMS)	Standard IT infrastructure term, re-contextualized within PointSav's air-gapped and zero-execution routing topology.	reference/glossary-documentation	wiki	boilerplate-stub	en	false	false	false	
+Data Entry	Standard IT infrastructure term, re-contextualized within PointSav's air-gapped and zero-execution routing topology.	reference/glossary-documentation	wiki	boilerplate-stub	en	true	false	false	
+Data Migration	Standard IT infrastructure term, re-contextualized within PointSav's air-gapped and zero-execution routing topology.	reference/glossary-documentation	wiki	boilerplate-stub	en	true	false	false	
+Decentralized Network	Standard IT infrastructure term, re-contextualized within PointSav's air-gapped and zero-execution routing topology.	reference/glossary-documentation	wiki	boilerplate-stub	en	false	false	false	
+Design System	Standard IT infrastructure term, re-contextualized within PointSav's air-gapped and zero-execution routing topology.	reference/glossary-documentation	wiki	boilerplate-stub	en	true	false	false	
+Design System Components	Standard IT infrastructure term, re-contextualized within PointSav's air-gapped and zero-execution routing topology.	reference/glossary-documentation	wiki	boilerplate-stub	en	false	false	false	
+Distributed Network	Standard IT infrastructure term, re-contextualized within PointSav's air-gapped and zero-execution routing topology.	reference/glossary-documentation	wiki	boilerplate-stub	en	false	false	false	
+File System	Standard IT infrastructure term, re-contextualized within PointSav's air-gapped and zero-execution routing topology.	reference/glossary-documentation	wiki	boilerplate-stub	en	true	false	false	
+First-party Data	Standard IT infrastructure term, re-contextualized within PointSav's air-gapped and zero-execution routing topology.	reference/glossary-documentation	wiki	boilerplate-stub	en	false	false	false	
+MediaKit OS – Design System	Standard IT infrastructure term, re-contextualized within PointSav's air-gapped and zero-execution routing topology.	reference/glossary-documentation	wiki	boilerplate-stub	en	false	false	false	
+MediaKit OS – System Administration	Standard IT infrastructure term, re-contextualized within PointSav's air-gapped and zero-execution routing topology.	reference/glossary-documentation	wiki	boilerplate-stub	en	false	false	false	
+P2 – System Administration / Package Manager	Standard IT infrastructure term, re-contextualized within PointSav's air-gapped and zero-execution routing topology.	reference/glossary-documentation	wiki	boilerplate-stub	en	false	false	false	
+PointSav Design System	Standard IT infrastructure term, re-contextualized within PointSav's air-gapped and zero-execution routing topology.	reference/glossary-documentation	wiki	boilerplate-stub	en	false	false	false	
+PointSav Private Network	Standard IT infrastructure term, re-contextualized within PointSav's air-gapped and zero-execution routing topology.	reference/glossary-documentation	wiki	boilerplate-stub	en	true	false	false	
+Private Network	Standard IT infrastructure term, re-contextualized within PointSav's air-gapped and zero-execution routing topology.	reference/glossary-documentation	wiki	boilerplate-stub	en	true	false	false	
+Public Browser Delivery – Data Marketplace	Standard IT infrastructure term, re-contextualized within PointSav's air-gapped and zero-execution routing topology.	reference/glossary-documentation	wiki	boilerplate-stub	en	false	false	false	
+Real-Time Operating System	Standard IT infrastructure term, re-contextualized within PointSav's air-gapped and zero-execution routing topology.	reference/glossary-documentation	wiki	boilerplate-stub	en	false	false	false	
+Second-party Data	Standard IT infrastructure term, re-contextualized within PointSav's air-gapped and zero-execution routing topology.	reference/glossary-documentation	wiki	boilerplate-stub	en	false	false	false	
+System Design	Standard IT infrastructure term, re-contextualized within PointSav's air-gapped and zero-execution routing topology.	reference/glossary-documentation	wiki	boilerplate-stub	en	true	false	false	
+Third-party Data	Standard IT infrastructure term, re-contextualized within PointSav's air-gapped and zero-execution routing topology.	reference/glossary-documentation	wiki	boilerplate-stub	en	false	false	false	
+Totebox OS – IoT Data	Standard IT infrastructure term, re-contextualized within PointSav's air-gapped and zero-execution routing topology.	reference/glossary-documentation	wiki	boilerplate-stub	en	false	false	false	
+Windows Operating System	Standard IT infrastructure term, re-contextualized within PointSav's air-gapped and zero-execution routing topology.	reference/glossary-documentation	wiki	boilerplate-stub	en	false	false	false	
+Zero-party Data	Standard IT infrastructure term, re-contextualized within PointSav's air-gapped and zero-execution routing topology.	reference/glossary-documentation	wiki	boilerplate-stub	en	false	false	false	

@@ -1,0 +1,18 @@
+[package]
+name = "system-ledger"
+version = "0.2.1"
+edition = "2021"
+
+[dependencies]
+system-core = { path = "../system-core" }
+tempfile = "3"
+sha2 = "0.10"
+serde_json = "1"
+
+[dev-dependencies]
+ed25519-dalek = { version = "2", default-features = false, features = ["std"] }
+criterion = { version = "0.5", default-features = false, features = ["plotters", "cargo_bench_support"] }
+
+[[bench]]
+name = "consult"
+harness = false

@@ -1,0 +1,24 @@
+# training-trigger.timer — Sunday 02:00 UTC corpus threshold check
+#
+# Installs to: /etc/systemd/system/training-trigger.timer
+# Companion:   training-trigger.service
+#
+# Install (operator):
+#   sudo cp training-trigger.timer training-trigger.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now training-trigger.timer
+#
+# Verify:
+#   systemctl status training-trigger.timer
+#   systemctl list-timers training-trigger.timer
+
+[Unit]
+Description=Phase 3 corpus threshold check — Sunday 02:00 UTC
+
+[Timer]
+OnCalendar=Sun *-*-* 02:00:00 UTC
+Persistent=true
+Unit=training-trigger.service
+
+[Install]
+WantedBy=timers.target

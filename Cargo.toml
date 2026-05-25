@@ -1,0 +1,32 @@
+[workspace]
+resolver = "2"
+members = [
+    "foundry-nodeclass",
+    "service-people",
+    "service-content",
+    "app-console-content",
+    "tool-acs-miner",
+    "system-core",
+    "system-ledger",
+    "system-gateway-mba",
+    "moonshot-toolkit",
+    "service-fs",
+    "system-security",
+    "xtask",
+    "app-privategit-marketplace",
+    "app-privategit-source",
+    "os-privategit",
+    "tool-wallet",
+    "app-privategit-workbench",
+    "tool-proforma-engine",
+    "app-orchestration-bim",
+    "tool-keyplan"
+]
+
+[profile.dev]
+panic = "abort"     # Required for bare-metal evaluation
+
+[profile.release]
+opt-level = "z"     # Optimize for minimum binary size
+lto = true          # Link-time optimization
+panic = "abort"     # Strip panic unwinding overhead

@@ -1,0 +1,7 @@
+guide_id,title,domain,wiki_repo,wiki_path,active_state
+guide-operating-yoyo,Operating the Yo-Yo Tier B Compute Node,documentation,woodfine/woodfine-fleet-deployment,vault-privategit-source/guide-operating-yoyo.md,active
+guide-doorman,Doorman Protocol Operations,documentation,woodfine/woodfine-fleet-deployment,vault-privategit-source/guide-doorman.md,active
+guide-doorman-deployment,Doorman Deployment Guide,documentation,woodfine/woodfine-fleet-deployment,vault-privategit-source/guide-doorman-deployment.md,active
+guide-slm-execution,SLM Execution and Inference Operations,documentation,woodfine/woodfine-fleet-deployment,cluster-totebox-personnel/guide-slm-execution.md,active
+guide-console-operations,Console Operator Guide,documentation,woodfine/woodfine-fleet-deployment,node-console-operator/guide-console-operations.md,active
+guide-provision-node,Node Provisioning Guide,documentation,woodfine/woodfine-fleet-deployment,vault-privategit-source/guide-provision-node.md,active

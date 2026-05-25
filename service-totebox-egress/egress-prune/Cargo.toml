@@ -1,0 +1,9 @@
+[package]
+name = "service-email-prune"
+version = "0.2.0"
+edition = "2021"
+
+[dependencies]
+tokio = { version = "1", features = ["full"] }
+reqwest = { version = "0.11", features = ["json"] }
+chrono = "0.4"

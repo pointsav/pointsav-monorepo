@@ -1,0 +1,8 @@
+[package]
+name = "moonshot-slm"
+version = "0.1.0"
+edition = "2021"
+authors = ["PointSav Digital Systems"]
+description = "Sovereign language model training pipeline — LoRA adapter lifecycle, DPO/SFT automation, and evaluation harness."
+
+[dependencies]

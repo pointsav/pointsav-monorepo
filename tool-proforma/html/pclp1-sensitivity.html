@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PCLP 1 — Sensitivity Analysis</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: system-ui, -apple-system, sans-serif; font-size: 14px; background: #f0f2f5; color: #1a1a1a; }
+
+header { background: #0f1923; color: #fff; padding: 18px 32px; display: flex; align-items: baseline; gap: 24px; }
+header h1 { font-size: 17px; font-weight: 600; white-space: nowrap; }
+header p { font-size: 12px; color: #8899aa; }
+
+.main { max-width: 1280px; margin: 0 auto; padding: 24px 32px; }
+
+/* CONTROLS */
+.controls { background: #fff; border-radius: 10px; padding: 22px 28px; margin-bottom: 20px; box-shadow: 0 1px 4px rgba(0,0,0,.07); }
+.controls-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: #888; margin-bottom: 18px; }
+.slider-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 28px; }
+.slider-item label { font-size: 12px; color: #666; display: block; margin-bottom: 2px; }
+.slider-item .val { font-size: 26px; font-weight: 700; color: #0f1923; line-height: 1; margin-bottom: 8px; }
+.slider-item .val span { font-size: 15px; font-weight: 400; color: #888; }
+input[type=range] { width: 100%; height: 4px; accent-color: #0f1923; cursor: pointer; }
+.slider-item .range-row { display: flex; justify-content: space-between; font-size: 11px; color: #bbb; margin-top: 5px; }
+
+/* METRICS */
+.metrics { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-bottom: 20px; }
+.mc { background: #fff; border-radius: 10px; padding: 16px 18px; box-shadow: 0 1px 4px rgba(0,0,0,.07); }
+.mc-label { font-size: 11px; color: #888; margin-bottom: 6px; }
+.mc-base { font-size: 20px; font-weight: 700; color: #0f1923; }
+.mc-stressed { font-size: 13px; margin-top: 5px; font-weight: 600; }
+.up   { color: #16a34a; }
+.down { color: #dc2626; }
+.flat { color: #888; }
+.mc-sub { font-size: 11px; color: #aaa; margin-top: 2px; }
+
+/* CHARTS */
+.chart-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+.chart-card { background: #fff; border-radius: 10px; padding: 20px; box-shadow: 0 1px 4px rgba(0,0,0,.07); }
+.chart-card h3 { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: #888; margin-bottom: 14px; }
+
+/* TABLE */
+.table-wrap { background: #fff; border-radius: 10px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.07); margin-bottom: 20px; }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+thead th { background: #0f1923; color: #fff; padding: 10px 13px; text-align: right; font-weight: 500; font-size: 11.5px; white-space: nowrap; }
+thead th:first-child { text-align: left; }
+tbody td { padding: 8px 13px; text-align: right; border-bottom: 1px solid #f2f2f2; white-space: nowrap; }
+tbody td:first-child { text-align: left; font-weight: 600; color: #333; }
+tbody tr:hover td { background: #f8f9ff; }
+.section-row td { background: #f7f8fa; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: #888; padding: 6px 13px; }
+.delta-pos { color: #16a34a; font-size: 11px; }
+.delta-neg { color: #dc2626; font-size: 11px; }
+.delta-0   { color: #aaa; font-size: 11px; }
+
+.badge { display: inline-block; padding: 1px 6px; border-radius: 3px; font-size: 11px; font-weight: 700; }
+.badge-red    { background: #fee2e2; color: #dc2626; }
+.badge-yellow { background: #fef9c3; color: #b45309; }
+.badge-green  { background: #dcfce7; color: #15803d; }
+
+/* FLAGS */
+.flags-card { background: #fff; border-radius: 10px; padding: 20px 24px; box-shadow: 0 1px 4px rgba(0,0,0,.07); margin-bottom: 20px; }
+.flags-card h3 { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: #888; margin-bottom: 14px; }
+.flag-list { display: flex; flex-direction: column; gap: 8px; }
+.flag-item { display: flex; align-items: flex-start; gap: 10px; font-size: 13px; }
+.flag-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 4px; flex-shrink: 0; }
+.dot-red    { background: #dc2626; }
+.dot-yellow { background: #ca8a04; }
+.dot-green  { background: #16a34a; }
+.no-flags { color: #888; font-size: 13px; font-style: italic; }
+
+/* NOTES */
+.notes { background: #fff; border-radius: 10px; padding: 20px 24px; box-shadow: 0 1px 4px rgba(0,0,0,.07); font-size: 12.5px; color: #555; line-height: 1.7; }
+.notes h3 { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: #888; margin-bottom: 12px; }
+.notes ul { margin-left: 18px; }
+.notes li { margin-bottom: 4px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>PCLP 1 — Sensitivity Analysis</h1>
+  <p>Woodfine Professional Centres LP &nbsp;·&nbsp; $250M Equity &nbsp;·&nbsp; Jan 6, 2026 &nbsp;·&nbsp; Move sliders to stress-test assumptions</p>
+</header>
+
+<div class="main">
+
+  <!-- SLIDERS -->
+  <div class="controls">
+    <div class="controls-title">Assumptions</div>
+    <div class="slider-grid">
+
+      <div class="slider-item">
+        <label>Cap Rate (Valuation)</label>
+        <div class="val" id="val-cap">6.25<span>%</span></div>
+        <input type="range" id="sl-cap" min="4" max="10" step="0.25" value="6.25">
+        <div class="range-row"><span>4%</span><span>Base 6.25%</span><span>10%</span></div>
+      </div>
+
+      <div class="slider-item">
+        <label>Occupancy at Stabilization</label>
+        <div class="val" id="val-occ">100<span>%</span></div>
+        <input type="range" id="sl-occ" min="50" max="100" step="5" value="100">
+        <div class="range-row"><span>50%</span><span>Base 100%</span><span>100%</span></div>
+      </div>
+
+      <div class="slider-item">
+        <label>Development Yield (NOI / Cost)</label>
+        <div class="val" id="val-dev">10.50<span>%</span></div>
+        <input type="range" id="sl-dev" min="6" max="15" step="0.25" value="10.5">
+        <div class="range-row"><span>6%</span><span>Base 10.5%</span><span>15%</span></div>
+      </div>
+
+      <div class="slider-item">
+        <label>Debenture Interest Rate</label>
+        <div class="val" id="val-debt">5.00<span>%</span></div>
+        <input type="range" id="sl-debt" min="3" max="9" step="0.25" value="5">
+        <div class="range-row"><span>3%</span><span>Base 5%</span><span>9%</span></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- METRIC CARDS -->
+  <div class="metrics">
+    <div class="mc">
+      <div class="mc-label">Y8 NAV / Unit</div>
+      <div class="mc-base" id="m-nav8-base">$380</div>
+      <div class="mc-stressed" id="m-nav8-str">—</div>
+      <div class="mc-sub">on $100 invested</div>
+    </div>
+    <div class="mc">
+      <div class="mc-label">Y8 Distribution / Unit</div>
+      <div class="mc-base" id="m-dist8-base">$24.09</div>
+      <div class="mc-stressed" id="m-dist8-str">—</div>
+      <div class="mc-sub">24.1% yield on cost</div>
+    </div>
+    <div class="mc">
+      <div class="mc-label">Total Distributions (10Y)</div>
+      <div class="mc-base" id="m-totdist-base">$83.18</div>
+      <div class="mc-stressed" id="m-totdist-str">—</div>
+      <div class="mc-sub">per unit over 10 years</div>
+    </div>
+    <div class="mc">
+      <div class="mc-label">Min Interest Coverage</div>
+      <div class="mc-base" id="m-mincov-base">1.31×</div>
+      <div class="mc-stressed" id="m-mincov-str">—</div>
+      <div class="mc-sub">Y7 in base case</div>
+    </div>
+    <div class="mc">
+      <div class="mc-label">Peak Debt / Asset Value</div>
+      <div class="mc-base" id="m-peakltv-base">62.0%</div>
+      <div class="mc-stressed" id="m-peakltv-str">—</div>
+      <div class="mc-sub">Y7 in base case</div>
+    </div>
+  </div>
+
+  <!-- CHARTS -->
+  <div class="chart-row">
+    <div class="chart-card">
+      <h3>NAV per Unit ($100 invested)</h3>
+      <canvas id="chart-nav" height="200"></canvas>
+    </div>
+    <div class="chart-card">
+      <h3>Annual Distribution per Unit</h3>
+      <canvas id="chart-dist" height="200"></canvas>
+    </div>
+  </div>
+
+  <!-- TABLE -->
+  <div class="table-wrap">
+    <table id="main-table">
+      <thead>
+        <tr>
+          <th style="text-align:left">Metric</th>
+          <th>Y1</th><th>Y2</th><th>Y3</th><th>Y4</th><th>Y5</th>
+          <th>Y6</th><th>Y7</th><th>Y8</th><th>Y9</th><th>Y10</th>
+        </tr>
+      </thead>
+      <tbody id="table-body"></tbody>
+    </table>
+  </div>
+
+  <!-- FLAGS -->
+  <div class="flags-card">
+    <h3>Stress Flags</h3>
+    <div class="flag-list" id="flag-list"></div>
+  </div>
+
+  <!-- NOTES -->
+  <div class="notes">
+    <h3>Model Notes</h3>
+    <ul>
+      <li><strong>Cap Rate</strong> affects asset valuation and NAV only — it does not change operating cash flows or distributions.</li>
+      <li><strong>Occupancy</strong> scales NOI proportionally from Y4. A 10pp occupancy drop lowers both distributions and asset values.</li>
+      <li><strong>Development Yield</strong> is NOI as a % of invested capital. Lower yield = lower rents relative to construction cost.</li>
+      <li><strong>Debt Rate</strong> scales interest on the debenture schedule. Higher rates reduce coverage ratios and distributable income from Y4.</li>
+      <li><strong>Debt schedule is fixed</strong> (Phase 2: $350M gross; Phase 3: ~$987M peak). In practice, higher debt costs might require renegotiation.</li>
+      <li><strong>Benetti Holdings dilution (10%)</strong> is held constant. Its economic impact is embedded in the diluted unit count (2,777,777).</li>
+      <li><strong>Income continuity (Y1–Y3)</strong> treated as non-cash in this model consistent with the Excel. Cash flow in construction years is driven by equity investment and construction spend only.</li>
+      <li><strong>Outstanding question:</strong> the Advisory Fee is modelled flat at $2.5M/year. At 1% of gross funded value (~$1.2B by Y7), the fee could be as high as $12M/year — clarify the fee base with the issuer.</li>
+    </ul>
+  </div>
+
+</div><!-- /main -->
+
+<script>
+// ─── BASE CASE DATA (parsed from model) ─────────────────────────────────────
+const YEARS = [1,2,3,4,5,6,7,8,9,10];
+const DILUTED = 2777777;
+
+const BASE = {
+  noi:         [0, 0, 0, 22771875, 22771875, 58419375, 58419375, 127168125, 127168125, 127168125],
+  ebitda:      [-20950000, -3450000, -3450000, 8821875, 19321875, 34719375, 54969375, 123718125, 123718125, 123718125],
+  interest:    [0, -78379, -40548, 4372303, 13119456, 25929020, 41854259, 49360667, 48988880, 48617093],
+  distPU:      [0, 0, 0, 1.44, 2.01, 2.85, 4.25, 24.09, 24.21, 24.33],
+  cash:        [156758333, 81095046, 5393927, 11088884, 16959126, 27963161, 1629310, 1629310, 1629310, 1629310],
+  debt:        [0, 0, 0, 175000000, 350000000, 687500000, 987229637, 979793891, 972320967, 964885628],
+  assetValue:  [277850000, 278478379, 278268927, 545188884, 720809126, 1290048161, 1591089310, 2036319310, 2036319310, 2215528884],
+  navPU:       [100.03, 100.25, 100.18, 133.27, 133.49, 216.92, 217.39, 380.35, 383.04, 452.98],
+  coverage:    [null, null, null, 2.02, 1.47, 1.34, 1.31, 2.51, 2.53, 2.54],
+  wip:         [72291667, 144583333, 216875000, 169750000, 339500000, 327375000, 654750000, 0, 0, 0],
+  debtToAV:    [0, 0, 0, 0.321, 0.486, 0.533, 0.620, 0.481, 0.477, 0.435]
+};
+
+// Expenses implied = noi - ebitda (stays fixed in stressed model)
+const EXPENSES = BASE.noi.map((n,i) => n - BASE.ebitda[i]);
+
+// ─── STRESSED MODEL ──────────────────────────────────────────────────────────
+function stress(capRate, occupancy, devYield, debtRate) {
+  const occF  = occupancy / 100;
+  const devF  = devYield  / 10.5;   // multiplier vs base
+  const intF  = debtRate  / 5.0;    // multiplier vs base
+
+  const out = { noi:[], ebitda:[], interest:[], distPU:[], navPU:[], coverage:[], debtToAV:[], cash:BASE.cash.slice() };
+
+  for (let i = 0; i < 10; i++) {
+    // NOI: zero in construction years regardless
+    const noi = i < 3 ? 0 : BASE.noi[i] * occF * devF;
+    out.noi.push(noi);
+
+    // EBITDA = noi - fixed expenses
+    const ebitda = noi - EXPENSES[i];
+    out.ebitda.push(ebitda);
+
+    // Interest: scale only debt-paying years (positive base interest)
+    const interest = BASE.interest[i] <= 0 ? BASE.interest[i] : BASE.interest[i] * intF;
+    out.interest.push(interest);
+
+    // Distributable income = ebitda - interest - debt repayment
+    // Debt repayment ~10% of EBITDA when EBITDA > 0 and debt > 0
+    const debtRepay = (ebitda > 0 && BASE.debt[i] > 0) ? ebitda * 0.10 : 0;
+    const distributable = ebitda - interest - debtRepay;
+    const dist = Math.max(0, distributable);
+    out.distPU.push(dist / DILUTED);
+
+    // Asset value
+    let assetVal;
+    if (i < 3) {
+      assetVal = BASE.assetValue[i]; // carry at par during construction
+    } else {
+      const capNOI = capRate > 0 ? noi / (capRate / 100) : 0;
+      assetVal = BASE.cash[i] + capNOI + BASE.wip[i];
+    }
+
+    const nav = (assetVal - BASE.debt[i]) / DILUTED;
+    out.navPU.push(nav);
+
+    // Coverage
+    const cov = interest > 0 ? ebitda / interest : null;
+    out.coverage.push(cov);
+
+    // Debt to asset value
+    out.debtToAV.push(assetVal > 0 ? BASE.debt[i] / assetVal : 0);
+  }
+
+  return out;
+}
+
+// ─── CHART SETUP ─────────────────────────────────────────────────────────────
+const LABELS = YEARS.map(y => 'Y' + y);
+const BASE_NAV_COLOR   = 'rgba(15,25,35,0.8)';
+const STRESS_NAV_COLOR = 'rgba(220,38,38,0.85)';
+const BASE_DIST_COLOR  = 'rgba(15,25,35,0.8)';
+const STRESS_DIST_COLOR = 'rgba(220,38,38,0.85)';
+
+function makeChart(id, label1, data1, label2, data2, isCurrency) {
+  const ctx = document.getElementById(id).getContext('2d');
+  return new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: LABELS,
+      datasets: [
+        { label: label1, data: data1, borderColor: BASE_NAV_COLOR, backgroundColor: 'rgba(15,25,35,0.06)', tension: 0.3, pointRadius: 4, borderWidth: 2, fill: true },
+        { label: label2, data: data2, borderColor: STRESS_NAV_COLOR, backgroundColor: 'rgba(220,38,38,0.05)', tension: 0.3, pointRadius: 4, borderWidth: 2, borderDash: [5,3], fill: false }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      plugins: { legend: { position: 'bottom', labels: { font: { size: 11 }, boxWidth: 20 } } },
+      scales: {
+        y: { beginAtZero: false, ticks: { font: { size: 11 }, callback: v => isCurrency ? '$'+v.toFixed(0) : v } },
+        x: { ticks: { font: { size: 11 } } }
+      }
+    }
+  });
+}
+
+const navChart  = makeChart('chart-nav',  'Base Case', BASE.navPU,  'Stressed', BASE.navPU.slice(), true);
+const distChart = makeChart('chart-dist', 'Base Case', BASE.distPU, 'Stressed', BASE.distPU.slice(), true);
+
+// ─── TABLE RENDER ────────────────────────────────────────────────────────────
+function fmt(v, isMoney, dec) {
+  if (v === null || v === undefined || isNaN(v)) return '—';
+  dec = dec ?? 2;
+  if (isMoney) return '$' + v.toFixed(dec);
+  return v.toFixed(dec);
+}
+function fmtM(v) {
+  if (v === null || isNaN(v)) return '—';
+  return '$' + (v / 1e6).toFixed(1) + 'M';
+}
+function fmtPct(v) {
+  if (v === null || isNaN(v)) return '—';
+  return (v * 100).toFixed(1) + '%';
+}
+function delta(stressed, base, higher_is_good) {
+  const d = stressed - base;
+  const pct = base !== 0 ? d / Math.abs(base) * 100 : 0;
+  if (Math.abs(d) < 0.01) return `<span class="delta-0">—</span>`;
+  const cls = (d > 0) === higher_is_good ? 'delta-pos' : 'delta-neg';
+  const sign = d > 0 ? '+' : '';
+  return `<span class="${cls}">${sign}${pct.toFixed(0)}%</span>`;
+}
+
+function renderTable(S) {
+  const rows = [
+    // [label, section, fn to get cells, higher-is-good for delta]
+    { sep: 'Income & EBITDA' },
+    { label: 'NOI ($M)',              base: i => fmtM(BASE.noi[i]),    str: i => fmtM(S.noi[i]),    hig: true },
+    { label: 'EBITDA ($M)',           base: i => fmtM(BASE.ebitda[i]), str: i => fmtM(S.ebitda[i]), hig: true },
+    { label: 'Interest ($M)',         base: i => fmtM(Math.max(0,BASE.interest[i])), str: i => fmtM(Math.max(0,S.interest[i])), hig: false },
+    { sep: 'Returns to Investors' },
+    { label: 'Distribution / Unit',  base: i => '$'+BASE.distPU[i].toFixed(2), str: i => '$'+S.distPU[i].toFixed(2), hig: true },
+    { label: 'NAV / Unit',           base: i => '$'+BASE.navPU[i].toFixed(2),  str: i => '$'+S.navPU[i].toFixed(2),  hig: true },
+    { sep: 'Risk Metrics' },
+    { label: 'Coverage Ratio',       base: i => BASE.coverage[i] ? BASE.coverage[i].toFixed(2)+'×' : '—', str: i => S.coverage[i] ? coverBadge(S.coverage[i]) : '—', hig: true },
+    { label: 'Debt / Asset Value',   base: i => fmtPct(BASE.debtToAV[i]), str: i => fmtPct(S.debtToAV[i]), hig: false },
+    { label: 'Cash Balance ($M)',    base: i => fmtM(BASE.cash[i]),    str: i => fmtM(BASE.cash[i]), hig: true },
+  ];
+
+  let html = '';
+  rows.forEach(row => {
+    if (row.sep) {
+      html += `<tr class="section-row"><td colspan="11">${row.sep}</td></tr>`;
+      return;
+    }
+    html += `<tr><td>${row.label}</td>`;
+    for (let i = 0; i < 10; i++) {
+      const b = row.base(i);
+      const s = row.str(i);
+      html += `<td>${s}</td>`;
+    }
+    html += `</tr>`;
+  });
+
+  document.getElementById('table-body').innerHTML = html;
+}
+
+function coverBadge(v) {
+  if (v === null) return '—';
+  const txt = v.toFixed(2) + '×';
+  if (v < 1.25) return `<span class="badge badge-red">${txt}</span>`;
+  if (v < 1.5)  return `<span class="badge badge-yellow">${txt}</span>`;
+  return `<span class="badge badge-green">${txt}</span>`;
+}
+
+// ─── FLAGS ───────────────────────────────────────────────────────────────────
+function renderFlags(S, capRate, occupancy, devYield, debtRate) {
+  const flags = [];
+
+  // Permanent flags (always shown)
+  flags.push({ color: 'yellow', text: 'Benetti Holdings: 10% unit dilution (~277,777 units) is unexplained. Clarify consideration before investing.' });
+  flags.push({ color: 'yellow', text: 'Income continuity Y1–Y3 ($3.05M–$3.5M) described as land appreciation — confirm whether these are actual cash receipts.' });
+  flags.push({ color: 'yellow', text: 'Advisory fee modelled flat at $2.5M/year. At 1% of gross funded value (~$1.2B by Y7), fee could reach $12M/year. Confirm fee base.' });
+  flags.push({ color: 'red',    text: 'Alert sheet in workbook is empty. Confirm what validation checks were intended.' });
+
+  // Dynamic flags based on stressed model
+  const minCov = Math.min(...S.coverage.filter(v => v !== null));
+  if (minCov < 1.0)  flags.push({ color: 'red',    text: `Coverage ratio falls below 1.0× (minimum: ${minCov.toFixed(2)}×) — debt service cannot be met from operations. Covenant breach likely.` });
+  else if (minCov < 1.25) flags.push({ color: 'red',    text: `Coverage ratio falls below 1.25× (minimum: ${minCov.toFixed(2)}×) — below typical covenant floor. High default risk.` });
+  else if (minCov < 1.5)  flags.push({ color: 'yellow', text: `Coverage ratio is thin (minimum: ${minCov.toFixed(2)}×) — modest occupancy shortfall or cost overrun could breach covenants.` });
+
+  // Cash thin in Y3
+  if (BASE.cash[2] < 5000000) flags.push({ color: 'yellow', text: `Y3 ending cash is $${(BASE.cash[2]/1e6).toFixed(1)}M — very thin before Phase 2 debt closes. No buffer for construction delays or cost overruns.` });
+
+  // Y8 distribution jump
+  if (S.distPU[7] > 15) flags.push({ color: 'yellow', text: `Y8 distribution jumps to $${S.distPU[7].toFixed(2)}/unit — driven by Phase 3 lease-up assumed instantaneous. Commercial lease-up typically takes 1–3 years; model likely overstates Y8 distributions.` });
+
+  // Stressed NAV warning
+  const stressedY8nav = S.navPU[7];
+  if (stressedY8nav < 150) flags.push({ color: 'red',    text: `At current assumptions, Y8 NAV is $${stressedY8nav.toFixed(2)}/unit — investor does not recover par value ($100) by Y8 in capital terms.` });
+  else if (stressedY8nav < 200) flags.push({ color: 'yellow', text: `At current assumptions, Y8 NAV is $${stressedY8nav.toFixed(2)}/unit — limited capital appreciation vs base case ($380).` });
+
+  // Peak leverage
+  const peakLTV = Math.max(...S.debtToAV.filter(v => v > 0));
+  if (peakLTV > 0.75) flags.push({ color: 'red',    text: `Peak debt/asset value reaches ${(peakLTV*100).toFixed(0)}% — very high leverage. Small cap rate increase could make refinancing difficult.` });
+  else if (peakLTV > 0.60) flags.push({ color: 'yellow', text: `Peak debt/asset value reaches ${(peakLTV*100).toFixed(0)}% — elevated leverage in mid-cycle.` });
+
+  if (occupancy < 85) flags.push({ color: 'red',    text: `At ${occupancy}% occupancy, check whether distributions can be sustained through Y4–Y7 debt repayment schedule.` });
+
+  if (capRate > 7.5) flags.push({ color: 'red',    text: `At ${capRate}% cap rate, asset values fall sharply and refinancing of Phase 2/3 debentures may not be supportable by asset coverage ratios.` });
+
+  if (debtRate > 7) flags.push({ color: 'red',    text: `At ${debtRate}% debenture rate, interest coverage Y5–Y7 approaches or breaks 1.0×. Debt issuance at this rate would be highly stressed.` });
+
+  const html = flags.map(f =>
+    `<div class="flag-item">
+       <div class="flag-dot dot-${f.color}"></div>
+       <div>${f.text}</div>
+     </div>`
+  ).join('');
+
+  document.getElementById('flag-list').innerHTML = html || `<div class="no-flags">No critical flags at current assumptions.</div>`;
+}
+
+// ─── METRIC CARDS ────────────────────────────────────────────────────────────
+function renderMetrics(S) {
+  const totDistBase = BASE.distPU.reduce((a,b) => a+b, 0);
+  const totDistStr  = S.distPU.reduce((a,b) => a+b, 0);
+  const minCovBase  = Math.min(...BASE.coverage.filter(v=>v!==null));
+  const minCovStr   = Math.min(...S.coverage.filter(v=>v!==null));
+  const peakLTVBase = Math.max(...BASE.debtToAV.filter(v=>v>0));
+  const peakLTVStr  = Math.max(...S.debtToAV.filter(v=>v>0));
+
+  function setCard(baseId, strId, baseVal, strVal, fmt, higherGood) {
+    document.getElementById(baseId).textContent = fmt(baseVal);
+    const d = strVal - baseVal;
+    const cls = Math.abs(d) < 0.001 ? 'flat' : (d > 0) === higherGood ? 'up' : 'down';
+    const sign = d >= 0 ? '+' : '';
+    document.getElementById(strId).className = 'mc-stressed ' + cls;
+    document.getElementById(strId).textContent = `Stressed: ${fmt(strVal)}`;
+  }
+
+  setCard('m-nav8-base',    'm-nav8-str',    BASE.navPU[7],   S.navPU[7],   v => '$'+v.toFixed(0), true);
+  setCard('m-dist8-base',   'm-dist8-str',   BASE.distPU[7],  S.distPU[7],  v => '$'+v.toFixed(2), true);
+  setCard('m-totdist-base', 'm-totdist-str', totDistBase,     totDistStr,   v => '$'+v.toFixed(2), true);
+  setCard('m-mincov-base',  'm-mincov-str',  minCovBase,      minCovStr,    v => v.toFixed(2)+'×', true);
+  setCard('m-peakltv-base', 'm-peakltv-str', peakLTVBase*100, peakLTVStr*100, v => v.toFixed(1)+'%', false);
+}
+
+// ─── MAIN UPDATE ─────────────────────────────────────────────────────────────
+function update() {
+  const capRate = parseFloat(document.getElementById('sl-cap').value);
+  const occupancy = parseFloat(document.getElementById('sl-occ').value);
+  const devYield  = parseFloat(document.getElementById('sl-dev').value);
+  const debtRate  = parseFloat(document.getElementById('sl-debt').value);
+
+  document.getElementById('val-cap').innerHTML  = capRate.toFixed(2)  + '<span>%</span>';
+  document.getElementById('val-occ').innerHTML  = occupancy.toFixed(0) + '<span>%</span>';
+  document.getElementById('val-dev').innerHTML  = devYield.toFixed(2)  + '<span>%</span>';
+  document.getElementById('val-debt').innerHTML = debtRate.toFixed(2)  + '<span>%</span>';
+
+  const S = stress(capRate, occupancy, devYield, debtRate);
+
+  // Update charts
+  navChart.data.datasets[1].data  = S.navPU;
+  distChart.data.datasets[1].data = S.distPU;
+  navChart.update();
+  distChart.update();
+
+  renderTable(S);
+  renderMetrics(S);
+  renderFlags(S, capRate, occupancy, devYield, debtRate);
+}
+
+// Init
+['sl-cap','sl-occ','sl-dev','sl-debt'].forEach(id =>
+  document.getElementById(id).addEventListener('input', update)
+);
+update();
+</script>
+</body>
+</html>

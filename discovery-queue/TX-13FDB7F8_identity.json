@@ -1,0 +1,10 @@
+{
+  "extracted_signals": {
+    "sender": "\"Neal Barnard, MD, Physicians Committee\" <info@pcrm.org>",
+    "subject": "Animals are in danger now. Please help."
+  },
+  "source_artifact": "VAULT_INGRESS_totebox-ingress_22A1D215.eml",
+  "status": "AWAITING_HITL_CHECKOUT",
+  "timestamp": "2026-03-29T04:52:04.092706338+00:00",
+  "transaction_id": "13FDB7F8"
+}

@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Woodfine Management Corp. | Template Ledger</title>
+    <style>
+        /* Woodfine Management Corp. Neuro-Inclusive Color System */
+        :root {
+            --wf-navy: #0A192F;
+            --wf-gold: #C5A880;
+            --bg-color: #F8F9FA;      /* Slightly softer off-white to reduce glare */
+            --text-main: #1E293B;     /* Slate-800: Softer than pure black/navy for reading */
+            --text-muted: #475569;
+            --border-soft: #CBD5E1;   /* Slate-300: Defines structure without caging the eye */
+            --border-hard: #0A192F;
+        }
+        
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+            letter-spacing: 0.01em; /* Micro-adjustment for dyslexia readability */
+        }
+
+        aside {
+            width: 300px; /* Optimized for 13" laptops */
+            border-right: 1px solid var(--border-soft);
+            padding: 2rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            background-color: #FFFFFF;
+        }
+
+        .wordmark {
+            font-weight: 800;
+            font-size: 1.1rem;
+            letter-spacing: -0.01em;
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            color: var(--wf-navy);
+            line-height: 1.3;
+            border-bottom: 3px solid var(--wf-gold);
+        }
+
+        .search-container input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            font-size: 1rem;
+            border: 1px solid var(--border-soft);
+            border-radius: 6px; /* Softened corners reduce visual aggression */
+            background: var(--bg-color);
+            font-family: inherit;
+            box-sizing: border-box;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .search-container input:focus {
+            background-color: #FFFFFF;
+            border-color: var(--wf-navy);
+            box-shadow: 0 0 0 3px rgba(10, 25, 47, 0.1);
+        }
+
+        .taxonomy-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        /* Nav Buttons: Shifted away from ALL CAPS */
+        .tax-btn {
+            background: transparent;
+            border: none;
+            border-radius: 6px;
+            padding: 0.6rem 1rem;
+            text-align: left;
+            font-family: inherit;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            color: var(--text-muted);
+            transition: all 0.1s ease;
+        }
+
+        .tax-btn:hover {
+            background-color: var(--bg-color);
+            color: var(--wf-navy);
+        }
+
+        .tax-btn.active {
+            background-color: var(--wf-navy);
+            color: #FFFFFF;
+        }
+
+        main {
+            flex-grow: 1;
+            padding: 2rem;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+            gap: 2rem;
+            align-items: start;
+        }
+
+        /* Card: Softer shadows, cleaner lines */
+        .card {
+            border: 1px solid var(--border-soft);
+            border-radius: 8px;
+            background: #FFFFFF;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border-soft);
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            background-color: #FFFFFF;
+            gap: 1rem;
+        }
+
+        .header-left {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        .card-category {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--wf-gold);
+        }
+
+        .card-title {
+            font-weight: 700;
+            font-size: 1.15rem;
+            margin: 0;
+            color: var(--wf-navy);
+            line-height: 1.3;
+        }
+
+        /* The Search Key: Prominent but not aggressive */
+        .card-key-display {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--wf-navy);
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            background-color: var(--bg-color);
+            padding: 0.4rem 0.75rem;
+            border-radius: 6px;
+            border: 1px solid var(--border-soft);
+            white-space: nowrap;
+        }
+
+        .attachment-tray {
+            background-color: var(--bg-color);
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border-soft);
+        }
+
+        .attachment-tray-label {
+            font-weight: 700;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            font-size: 0.8rem;
+        }
+
+        .attachment-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            color: var(--wf-navy);
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .attachment-list li {
+            padding: 0.2rem 0;
+            display: flex;
+            align-items: center;
+        }
+
+        /* Email Body: Highly tuned for readability */
+        .card-body {
+            padding: 1.5rem;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 0.85rem;
+            line-height: 1.6; /* Increased for dyslexia/tracking */
+            color: var(--text-muted);
+            background-color: #FFFFFF;
+            max-height: 200px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+
+        .telemetry-block {
+            color: var(--wf-navy);
+            font-weight: 600;
+            background-color: var(--bg-color);
+            padding: 0.75rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+            border-left: 3px solid var(--wf-gold);
+        }
+
+        .card-footer {
+            padding: 1rem 1.5rem;
+            background-color: var(--bg-color);
+            border-top: 1px solid var(--border-soft);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .text-copy-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: underline;
+            padding: 0.5rem;
+            border-radius: 4px;
+        }
+        
+        .text-copy-btn:hover {
+            color: var(--wf-navy);
+            background-color: rgba(0,0,0,0.05);
+        }
+
+        /* Action Buttons: Title Case, softer interaction */
+        .action-btn {
+            background-color: var(--wf-navy);
+            border: 1px solid var(--wf-navy);
+            border-radius: 6px;
+            color: #FFFFFF;
+            font-weight: 600;
+            font-size: 0.9rem;
+            padding: 0.6rem 1.2rem;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .action-btn:hover {
+            background-color: var(--wf-gold);
+            border-color: var(--wf-gold);
+            color: var(--wf-navy);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        #zeroState {
+            position: absolute;
+            top: 30%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: var(--text-muted);
+            padding: 3rem;
+            background: #FFFFFF;
+            border-radius: 8px;
+            border: 1px dashed var(--border-soft);
+        }
+
+        #zeroState h2 {
+            margin: 0 0 0.5rem 0;
+            color: var(--wf-navy);
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body>
+
+    <aside>
+        <div class="wordmark">Woodfine Management Corp.<br><span style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">Template Ledger</span></div>
+        
+        <div class="search-container">
+            <input type="text" id="searchInput" placeholder="Search inventory..." autocomplete="off">
+        </div>
+
+        <div class="taxonomy-nav" id="taxonomyNav">
+            <button class="tax-btn active" data-filter="all">All Categories</button>
+            <button class="tax-btn" data-filter="collaborators">Collaborators</button>
+            <button class="tax-btn" data-filter="compliance">Compliance</button>
+            <button class="tax-btn" data-filter="contributors">Contributors</button>
+            <button class="tax-btn" data-filter="finance">Finance</button>
+            <button class="tax-btn" data-filter="general">General</button>
+            <button class="tax-btn" data-filter="scheduling">Scheduling</button>
+        </div>
+
+        <div style="margin-top: auto; font-size: 0.8rem; color: var(--text-muted); border-top: 1px solid var(--border-soft); padding-top: 1rem; line-height: 1.5;">
+            <strong>System:</strong> service-email-template<br>
+            <strong>Compiled:</strong> Mar 30, 2026
+        </div>
+    </aside>
+
+    <main>
+        <div id="zeroState" class="hidden">
+            <h2>No Results Found</h2>
+            <p>Adjust your search parameters or check taxonomy filters.</p>
+        </div>
+
+        <div class="grid" id="templateGrid">
+            
+            <div class="card" data-category="compliance" data-search="tmpl-042 direct-hold solutions rider compliance capital contributors">
+                <div class="card-header">
+                    <div class="header-left">
+                        <span class="card-category">Compliance</span>
+                        <h3 class="card-title">Direct-Hold Solutions Rider</h3>
+                    </div>
+                    <div class="card-key-display">[TMPL-042]</div>
+                </div>
+                
+                <div class="attachment-tray">
+                    <div class="attachment-tray-label">Required Attachments</div>
+                    <ul class="attachment-list"><li>📎 direct-hold_solutions_rider_v1.pdf</li></ul>
+                </div>
+
+                <div class="card-body"><div class="telemetry-block">KEY: [TMPL-042]
+SUBJ: Direct-Hold Solutions - Compliance Rider</div>Please find attached the latest compliance rider required for all new capital contributors. Ensure this is signed before finalizing the ledger.</div>
+                
+                <div class="card-footer">
+                    <button class="text-copy-btn">Copy Body Text</button>
+                    <button class="action-btn copy-key-btn" data-key="[TMPL-042]">Copy Key</button>
+                </div>
+            </div>
+
+            <div class="card" data-category="collaborators" data-search="tmpl-088 vendor nda non disclosure agreement partner">
+                <div class="card-header">
+                    <div class="header-left">
+                        <span class="card-category">Collaborators</span>
+                        <h3 class="card-title">Standard Vendor NDA</h3>
+                    </div>
+                    <div class="card-key-display">[TMPL-088]</div>
+                </div>
+                
+                <div class="attachment-tray">
+                    <div class="attachment-tray-label">Required Attachments</div>
+                    <ul class="attachment-list"><li>📎 woodfine_nda_standard.pdf</li></ul>
+                </div>
+
+                <div class="card-body"><div class="telemetry-block">KEY: [TMPL-088]
+SUBJ: Non-Disclosure Agreement - Woodfine Mgmt.</div>Attached is the standard Non-Disclosure Agreement for external vendors and partners. Please execute and return before we commence technical integration.</div>
+                
+                <div class="card-footer">
+                    <button class="text-copy-btn">Copy Body Text</button>
+                    <button class="action-btn copy-key-btn" data-key="[TMPL-088]">Copy Key</button>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const searchInput = document.getElementById('searchInput');
+            const taxButtons = document.querySelectorAll('.tax-btn');
+            const cards = document.querySelectorAll('.card');
+            const zeroState = document.getElementById('zeroState');
+            
+            let currentFilter = 'all';
+            let currentSearch = '';
+
+            function filterLedger() {
+                let visibleCount = 0;
+                cards.forEach(card => {
+                    const searchableText = card.getAttribute('data-search').toLowerCase();
+                    const category = card.getAttribute('data-category').toLowerCase();
+                    const matchesSearch = searchableText.includes(currentSearch);
+                    const matchesCategory = currentFilter === 'all' || category === currentFilter;
+
+                    if (matchesSearch && matchesCategory) {
+                        card.classList.remove('hidden');
+                        visibleCount++;
+                    } else {
+                        card.classList.add('hidden');
+                    }
+                });
+
+                if (visibleCount === 0) { zeroState.classList.remove('hidden'); } 
+                else { zeroState.classList.add('hidden'); }
+            }
+
+            searchInput.addEventListener('input', (e) => {
+                currentSearch = e.target.value.toLowerCase().trim();
+                filterLedger();
+            });
+
+            taxButtons.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    taxButtons.forEach(b => b.classList.remove('active'));
+                    e.target.classList.add('active');
+                    currentFilter = e.target.getAttribute('data-filter');
+                    filterLedger();
+                });
+            });
+
+            document.querySelectorAll('.copy-key-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const keyToCopy = e.target.getAttribute('data-key');
+                    navigator.clipboard.writeText(keyToCopy).then(() => {
+                        const originalText = e.target.innerText;
+                        e.target.innerText = "Copied!";
+                        e.target.style.backgroundColor = "var(--wf-gold)";
+                        e.target.style.color = "var(--wf-navy)";
+                        
+                        setTimeout(() => {
+                            e.target.innerText = originalText;
+                            e.target.style.backgroundColor = "var(--wf-navy)";
+                            e.target.style.color = "#FFFFFF";
+                        }, 1500);
+                    });
+                });
+            });
+
+            document.querySelectorAll('.text-copy-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const card = e.target.closest('.card');
+                    const textToCopy = card.querySelector('.card-body').innerText;
+                    navigator.clipboard.writeText(textToCopy).then(() => {
+                        const originalText = e.target.innerText;
+                        e.target.innerText = "Text Copied!";
+                        setTimeout(() => { e.target.innerText = originalText; }, 1500);
+                    });
+                });
+            });
+        });
+    </script>
+</body>
+</html>

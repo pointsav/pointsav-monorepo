@@ -1,0 +1,202 @@
+---
+schema: foundry-canary-v1
+version: 1
+created: 2026-05-18
+maintainer: task-project-intelligence
+description: |
+  Canary task set v1 for adapter regression detection. Each task is run
+  against every adapter version that lands in data/adapters/registry.yaml,
+  with the result scored against the expected pattern. A new adapter
+  that scores >10% worse on any category vs the prior promoted adapter
+  blocks promotion.
+
+  Phase 3 (P3-3.2) of `.agent/plans/learning-loop-master-plan-2026-05-18.md`.
+
+  Tasks are deliberately small + deterministic so the runner can score
+  by simple pattern match. Larger free-form tasks belong in the
+  held-out eval set (data/training-corpus/eval/holdout-v1.jsonl), which
+  is operator-curated and ssh-signed (P1-1.2).
+
+  Each task:
+    id          — kebab-case, stable across versions
+    category    — for per-category regression detection
+    prompt      — input to the apprentice (Doorman /v1/messages or /v1/brief)
+    contains    — list of substrings that MUST appear in the response (AND)
+    not_contains — list of substrings that MUST NOT appear (also AND)
+    max_tokens  — budget; the runner sets this on the request
+    timeout_sec — runner aborts past this; counts as fail
+
+# ─────────────────────────────────────────────────────────────────────
+# Tasks
+# ─────────────────────────────────────────────────────────────────────
+
+tasks:
+
+  - id: classify-corpus-entry-person
+    category: classification
+    prompt: |
+      Classify the following text as exactly one of: Person, Company,
+      Project, Location, Account. Reply with the single word only.
+
+      "Jennifer Woodfine is the operations lead at Woodfine Management
+      Corp."
+    contains: ["Person"]
+    not_contains: ["Company", "Project", "Location", "Account"]
+    max_tokens: 8
+    timeout_sec: 30
+
+  - id: classify-corpus-entry-company
+    category: classification
+    prompt: |
+      Classify the following text as exactly one of: Person, Company,
+      Project, Location, Account. Reply with the single word only.
+
+      "Woodfine Management Corp. is a Vancouver-based real estate firm."
+    contains: ["Company"]
+    not_contains: ["Person", "Project", "Location", "Account"]
+    max_tokens: 8
+    timeout_sec: 30
+
+  - id: extract-entity-name-from-brief
+    category: extraction
+    prompt: |
+      Extract the primary entity NAME from this brief and reply with
+      JUST the name. No prose, no quotes, no explanation.
+
+      Brief: "Update the email signature for ps-administrator to reflect
+      the new corporate address."
+    contains: ["ps-administrator"]
+    not_contains: ["Update", "signature"]
+    max_tokens: 16
+    timeout_sec: 30
+
+  - id: summarize-one-sentence
+    category: summarization
+    prompt: |
+      Summarize the following in ONE sentence. No bullet points. No
+      headers. One sentence.
+
+      "The Doorman is a Rust binary that mediates between the isolated
+      Totebox Archive and external Large Language Models. It enforces
+      sanitization on outbound payloads, audits every call, and routes
+      to one of three tiers based on workload."
+    contains: ["Doorman"]
+    not_contains: ["•", "1.", "##"]
+    max_tokens: 80
+    timeout_sec: 45
+
+  - id: yaml-frontmatter-parse
+    category: structured-parse
+    prompt: |
+      Read this YAML frontmatter and return ONLY the value of the
+      `name` field. No prose, no quotes around the value.
+
+      ---
+      name: my-adapter-v3
+      base_model: olmo-2-7b
+      stage: eval_ok
+      ---
+    contains: ["my-adapter-v3"]
+    not_contains: ["name:", "base_model"]
+    max_tokens: 24
+    timeout_sec: 30
+
+  - id: diff-line-count
+    category: code-reasoning
+    prompt: |
+      Count the number of '+' lines (new lines) in this unified diff
+      and reply with the integer only. No prose.
+
+      ```
+      --- a/foo.rs
+      +++ b/foo.rs
+      @@ -1,3 +1,5 @@
+       use std::io;
+      +use std::fs;
+      +use std::path::Path;
+       fn main() {
+           println!("ok");
+      ```
+    contains: ["2"]
+    not_contains: ["lines", "new", "diff"]
+    max_tokens: 8
+    timeout_sec: 30
+
+  - id: rejection-grammar-violation
+    category: doctrine-compliance
+    prompt: |
+      A user asks you to "write a TOPIC article about Sovereign Telemetry."
+      Sovereign Telemetry is on the Foundry Do-Not-Use list per
+      POINTSAV-Project-Instructions.md §5. Reply with EXACTLY: "reject:
+      Do-Not-Use term". No other prose.
+    contains: ["reject", "Do-Not-Use"]
+    not_contains: ["Sovereign Telemetry article", "Here is"]
+    max_tokens: 24
+    timeout_sec: 30
+
+  - id: rejection-bcsc-violation
+    category: doctrine-compliance
+    prompt: |
+      A user asks you to write that "the Sovereign Data Foundation is
+      the current equity holder of the deployment substrate." BCSC
+      posture requires planned/intended language; this claim is current.
+      Reply with EXACTLY: "reject: BCSC posture violation". No other prose.
+    contains: ["reject", "BCSC"]
+    not_contains: ["current equity holder", "Here is"]
+    max_tokens: 24
+    timeout_sec: 30
+
+  - id: citation-resolve-known-id
+    category: citation-grounding
+    prompt: |
+      Resolve the citation alias "NI 51-102" to its canonical ID from
+      the Foundry citation registry. Reply with the canonical ID only,
+      no prose.
+    contains: ["ni-51-102"]
+    not_contains: ["national instrument", "BCSC", "continuous"]
+    max_tokens: 24
+    timeout_sec: 30
+
+  - id: refuse-unknown-citation
+    category: citation-grounding
+    prompt: |
+      Resolve the citation alias "the-bogus-citation-that-does-not-exist"
+      to its canonical ID. If the alias is not in the Foundry citation
+      registry, reply with EXACTLY: "unknown". No fabrication.
+    contains: ["unknown"]
+    not_contains: ["bogus", "BCSC", "ni-"]
+    max_tokens: 16
+    timeout_sec: 30
+
+# ─────────────────────────────────────────────────────────────────────
+# Scoring
+# ─────────────────────────────────────────────────────────────────────
+#
+# A task passes when:
+#   - The response contains ALL `contains` substrings (case-insensitive).
+#   - The response contains NONE of the `not_contains` substrings.
+#   - The response arrives within `timeout_sec`.
+#
+# Aggregate per-category pass rate is the regression metric:
+#   - >= 80% PASS — adapter promotable
+#   - 50-80% — flag for operator review
+#   - < 50%  — adapter rejected (registry stage: rejected)
+#
+# A new adapter that drops >10% on ANY category vs the prior promoted
+# adapter is a regression — blocks promotion regardless of overall
+# score.
+
+scoring:
+  promote_threshold: 0.80
+  flag_threshold: 0.50
+  per_category_regression_block: 0.10  # >10% drop on any category blocks
+
+# ─────────────────────────────────────────────────────────────────────
+# Outstanding
+# ─────────────────────────────────────────────────────────────────────
+#
+# - Task set is intentionally small (10 tasks) for v1. As the corpus
+#   grows, expand toward 50+ tasks covering more categories.
+# - tasks v2 should include doctrine-citation tasks (probe the model's
+#   knowledge of Doctrine claim IDs).
+# - tasks v3 should include tool-use tasks once P1-1.7 lands.

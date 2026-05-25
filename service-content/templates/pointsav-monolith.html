@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light"> 
+    <title>PointSav Digital Systems™ - System Architecture</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        :root { --ps-bg: #FFFFFF; --ps-card: #FFFFFF; --ps-text: #09090B; --ps-muted: #6B7280; --ps-border: #E5E7EB; --ps-accent: #869FB9; --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; --font-mono: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace; }
+        body { font-family: var(--font-sans); background-color: var(--ps-bg); color: var(--ps-text); line-height: 1.5; -webkit-font-smoothing: antialiased; }
+        .top-bar { position: sticky; top: 0; width: 100%; background: var(--ps-card); border-bottom: 1px solid var(--ps-border); z-index: 100; display: flex; justify-content: center; padding: 16px 24px; }
+        .nav-content { width: 100%; max-width: 1024px; display: flex; justify-content: space-between; align-items: center; }
+        .brand-logo { font-family: var(--font-mono); font-size: 0.875rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--ps-text); }
+        .nav-actions { display: flex; gap: 8px; align-items: center; }
+        .sys-btn { display: inline-flex; align-items: center; gap: 8px; height: 32px; padding: 0 16px; border: 1px solid var(--ps-border); border-radius: 4px; font-family: var(--font-mono); font-size: 0.75rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; color: var(--ps-text); background: var(--ps-card); cursor: pointer; text-decoration: none; transition: all 0.1s ease; }
+        .sys-btn:hover { border-color: var(--ps-text); background: rgba(9, 9, 11, 0.03); }
+        .sys-btn.active-toggle { background: var(--ps-text); color: var(--ps-card); border-color: var(--ps-text); }
+        .document-wrapper { width: 100%; max-width: 1024px; margin: 48px auto 96px; padding: 0 24px; display: grid; grid-template-columns: 1fr 280px; gap: 64px; align-items: start; }
+        .reading-column { padding: 48px 0; border: none; }
+        .metadata-column { position: sticky; top: 96px; font-family: var(--font-mono); font-size: 0.75rem; color: var(--ps-muted); display: flex; flex-direction: column; gap: 32px; line-height: 1.5; }
+        .meta-block { border-left: 2px solid var(--ps-border); padding-left: 16px; }
+        .meta-label { text-transform: uppercase; font-weight: 600; color: var(--ps-text); margin-bottom: 8px; display: block; }
+        .release-header { margin-bottom: 32px; border-bottom: 1px solid var(--ps-border); padding-bottom: 16px; }
+        .release-flag { font-family: var(--font-mono); font-weight: 600; font-size: 0.875rem; letter-spacing: 0.05em; margin-bottom: 16px; display: block; color: var(--ps-muted); }
+        h1 { font-size: clamp(2rem, 5vw, 2.5rem); color: var(--ps-text); line-height: 1.1; letter-spacing: -0.02em; margin-bottom: 24px; font-weight: 700; }
+        h3 { font-size: 1.25rem; color: var(--ps-text); font-weight: 700; margin-top: 48px; margin-bottom: 16px; }
+        p { font-size: 1rem; color: #374151; margin-bottom: 24px; max-width: 65ch; }
+        strong { color: var(--ps-text); font-weight: 700; }
+        .legal-block { margin-top: 80px; padding-top: 40px; border-top: 1px solid var(--ps-border); }
+        .legal-block h3 { margin-top: 32px; margin-bottom: 16px; font-size: 1rem; }
+        @media print { @page { margin: 1in; } body { background: #fff; color: #000; } .top-bar, .metadata-column, .sys-btn, input, label { display: none !important; } .document-wrapper { display: block; margin: 0; padding: 0; max-width: 100%; } }
+        #lang-toggle { display: none; }
+        .lang-es, .dl-es, .lbl-es { display: none !important; }
+        #lang-toggle:checked ~ .interface-layer .lang-en, #lang-toggle:checked ~ .interface-layer .dl-en, #lang-toggle:checked ~ .interface-layer .lbl-en { display: none !important; }
+        #lang-toggle:checked ~ .interface-layer .lang-es { display: block !important; }
+        #lang-toggle:checked ~ .interface-layer .dl-es, #lang-toggle:checked ~ .interface-layer .lbl-es { display: inline-flex !important; }
+        @media (max-width: 900px) { .document-wrapper { grid-template-columns: 1fr; gap: 32px; } .metadata-column { position: relative; top: 0; flex-direction: row; flex-wrap: wrap; border-top: 1px solid var(--ps-border); padding-top: 32px; } }
+    </style>
+</head>
+<body>
+<input type="checkbox" id="lang-toggle">
+<div class="interface-layer">
+    <header class="top-bar">
+        <div class="nav-content">
+            <div class="brand-logo">PointSav Digital Systems™</div>
+            <div class="nav-actions">
+                <a href="https://github.com/pointsav" target="_blank" class="sys-btn">MONOREPO</a>
+                <button onclick="window.print()" class="sys-btn">PRINT</button>
+                <a href="/pointsav_media_release_en.pdf" class="sys-btn dl-en" download>PDF</a>
+                <a href="/pointsav_media_release_es.pdf" class="sys-btn dl-es" download>PDF</a>
+                <label for="lang-toggle" class="sys-btn active-toggle"><span class="lbl-en">ESPAÑOL</span><span class="lbl-es">ENGLISH</span></label>
+            </div>
+        </div>
+    </header>
+    <main class="document-wrapper">
+        <article class="reading-column" id="document-content">
+            <div class="lang-en">{{CONTENT_EN}}</div>
+            <div class="lang-es">{{CONTENT_ES}}</div>
+        </article>
+        <aside class="metadata-column">
+            <div class="meta-block"><span class="meta-label">Category</span><span>System Architecture Disclosure</span></div>
+            <div class="meta-block"><span class="meta-label">Date Issued</span><span>March 2, 2026</span></div>
+            <div class="meta-block"><span class="meta-label">Entity</span><span>PointSav Digital Systems™<br>Vancouver, BC</span></div>
+            <div class="meta-block"><span class="meta-label">SHA-256 Checksum</span><span id="live-hash" style="color: var(--ps-text); word-break: break-all;">CALCULATING...</span></div>
+            <div class="meta-block" style="border-left: 2px solid var(--ps-border);"><span class="meta-label">Routing</span><span>DNS: DreamHost</span><br><span>Edge: GitHub Pages</span></div>
+        </aside>
+    </main>
+</div>
+<script>
+    async function updateHash() {
+        const isSpanish = document.getElementById('lang-toggle').checked;
+        const targetClass = isSpanish ? '.lang-es' : '.lang-en';
+        const contentNodes = document.querySelectorAll('#document-content ' + targetClass);
+        let textToHash = '';
+        contentNodes.forEach(node => { textToHash += node.innerText; });
+        const msgUint8 = new TextEncoder().encode(textToHash);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        document.getElementById('live-hash').innerText = hashHex;
+    }
+    document.getElementById('lang-toggle').addEventListener('change', updateHash);
+    window.addEventListener('DOMContentLoaded', updateHash);
+    if (navigator.sendBeacon) { window.addEventListener("unload", function() { navigator.sendBeacon("/telemetry-endpoint", JSON.stringify({ uri: window.location.pathname, timestamp: Date.now() })); }); }
+</script>
+</body>
+</html>
