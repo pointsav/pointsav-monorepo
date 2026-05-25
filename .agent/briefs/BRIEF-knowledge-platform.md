@@ -122,10 +122,30 @@ These need answers before Phase 7+ scoping. Market research agent launched 2026-
 `~/Foundry/bin/commit-as-next.sh "<msg>"` from `pointsav-monorepo/` sub-clone.
 Stage 6 via Command Session `bin/promote.sh`. After promote: `bin/sync-local.sh --all` + `sudo systemctl restart local-knowledge-{documentation,projects,corporate}`.
 
+## Round-2 design competition (2026-05-25)
+
+OPUS reviewer graded the D+A+B hybrid C+. Three new prototype directions launched:
+- **proto-platform-document** (Stripe/Linear) — **jury winner, 84/100**
+- **proto-institutional-register** (Q4/Bloomberg) — 71/100; three grafts kept
+- **proto-editorial-standard** (FT/Economist) — 61/100; rejected
+
+Jury spec: `.agent/drafts-outbound/DESIGN-WIKI-REDESIGN-SPEC.draft.md` (416 lines).
+
+**Implemented as `70259d32`:** CSS rewritten (2,347 lines); three-row header; Oswald +
+Nunito Sans + Roboto Slab font stack; ledger stripe; article-meta DL; dark mode
+`#0B1220`; self-hosted WOFF2 via `@font-face` (all fonts same-origin, no CDN).
+
+**`784ceea7`:** Google Fonts CDN links removed; Nunito Sans + Roboto Slab WOFF2
+downloaded to `static/fonts/`; GDPR Art. 44 compliant.
+
+Both commits queued for Stage 6. Command block message actioned.
+
 ## Open items for this BRIEF
 
-- [x] Jury report review → hybrid D+A+B selected → implemented (`9cf2c9ed`, 2026-05-24)
-- [x] Fix footer trademark in winning implementation — done; canonical text verbatim
+- [x] Round-1 jury → hybrid D+A+B → implemented (`9cf2c9ed`, 2026-05-24)
+- [x] Round-2 jury → platform-document base → implemented (`70259d32`, 2026-05-25)
+- [x] Self-host fonts, remove Google Fonts CDN (`784ceea7`, 2026-05-25)
+- [ ] **Stage 6 — two commits pending** (`70259d32` + `784ceea7`) — Command scope
 - [ ] Stage 6 staging fork renames (6 GitHub repos — operator action)
 - [ ] MASTER Doctrine amendment (Command scope)
 - [ ] §3.6 claim-record MCP API — waiting on project-intelligence reply
