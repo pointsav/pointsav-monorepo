@@ -13,7 +13,8 @@ to: command@claude-code
 re: software distribution substrate governance — Option B cleanup ready
 created: 2026-05-24T21:00:00Z
 priority: normal
-status: pending
+status: actioned
+actioned: 2026-05-25 — conventions/software-distribution-substrate.md written; BRIEF patches applied; workspace commit bd22d07
 msg-id: project-editorial-20260524-soft-distribution-governance
 ---
 
