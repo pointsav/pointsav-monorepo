@@ -1,9 +1,18 @@
 # app-infrastructure-onprem
 
-Infrastructure cartridge for on-premises nodes (Laptop A).
+<div align="center">
 
-Runs on `os-infrastructure`. Deployed as `fleet-infrastructure-onprem` in the showcase tier
-and `fleet-infrastructure-onprem-1` in the PointSav Private Network.
+[ 🇪🇸 Leer este documento en Español ](./README.es.md)
 
-Part of the `app-infrastructure-*` family — three cartridges that together constitute the
-PointSav Private Network node software stack.
+</div>
+
+**Vendor:** PointSav Digital Systems
+**Crate type:** App surface — on-premises deployment posture
+
+---
+
+`app-infrastructure-onprem` is the intended application-surface cartridge for the on-premises PPN node (Node 1 — the bare-metal edge anchor). It provides the operator-facing layer above `os-infrastructure`, exposing mesh management, node status, and administrative controls for a node running the Broadcom 14e4:16b4 NIC substrate.
+
+This crate is the on-premises counterpart to `app-infrastructure-leased` and `app-infrastructure-cloud`.
+
+*Reserved-folder — implementation pending. Gated on WireGuard Part A and the Genesis Protocol operator decision.*

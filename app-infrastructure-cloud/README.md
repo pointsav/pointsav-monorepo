@@ -1,12 +1,18 @@
 # app-infrastructure-cloud
 
-Infrastructure cartridge for cloud nodes (GCP foundry-workspace).
+<div align="center">
 
-Runs on `os-infrastructure`. Deployed as `fleet-infrastructure-cloud` in the showcase tier
-and `fleet-infrastructure-cloud-1` in the PointSav Private Network.
+[ 🇪🇸 Leer este documento en Español ](./README.es.md)
 
-This node serves as the command hub: it hosts Totebox archives, the SLM Doorman, and all
-Command Session state for the Foundry workspace.
+</div>
 
-Part of the `app-infrastructure-*` family — three cartridges that together constitute the
-PointSav Private Network node software stack.
+**Vendor:** PointSav Digital Systems
+**Crate type:** App surface — cloud relay deployment posture
+
+---
+
+`app-infrastructure-cloud` is the intended application-surface cartridge for the GCP cloud relay node (the hub in the PPN hub-and-spoke topology, at `10.50.0.1`). It provides the operator-facing layer above the cloud deployment OS image, exposing relay configuration, peer status, and administrative controls for the node that anchors WireGuard reachability across the mesh.
+
+This crate is the cloud counterpart to `app-infrastructure-onprem` and `app-infrastructure-leased`.
+
+*Reserved-folder — implementation pending. Gated on WireGuard Part A and GCP static IP provisioning.*

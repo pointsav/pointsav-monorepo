@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Search: {{ query }} — {{ site_title }}</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="wiki-body">
+
+  <header class="wiki-header" id="wiki-header">
+    <div class="wiki-header-inner">
+      <a class="wiki-wordmark" href="/">{{ site_title }}</a>
+      <form class="wiki-search-form" action="/search" method="get" role="search">
+        <input class="wiki-search-input" type="search" name="q" value="{{ query }}"
+          placeholder="Search documentation" autocomplete="off" aria-label="Search">
+      </form>
+    </div>
+  </header>
+
+  <main class="wiki-search-page">
+    <h1>Search results for &#8220;{{ query }}&#8221;</h1>
+    <p class="wiki-search-count">
+      {{ result_count }} result{% if result_count != 1 %}s{% endif %}
+    </p>
+
+    {% if results %}
+    <ol class="wiki-search-results">
+      {% for r in results %}
+      <li class="wiki-search-result">
+        <a class="wiki-search-result-title" href="/{{ r.slug }}">{{ r.title }}</a>
+        {% if r.excerpt %}
+        <p class="wiki-search-result-excerpt">{{ r.excerpt }}</p>
+        {% endif %}
+      </li>
+      {% endfor %}
+    </ol>
+    {% else %}
+    <p class="wiki-search-empty">
+      No results found. Check spelling or try a different search term.
+    </p>
+    {% endif %}
+  </main>
+
+  <script src="/static/wiki.js"></script>
+</body>
+</html>
