@@ -1097,7 +1097,7 @@ fn home_chrome(
                 }
                 link rel="stylesheet" href="/static/style.css";
                 // Anti-FOUT: apply stored theme before first paint
-                script { (PreEscaped(r#"(function(){var t=localStorage.getItem('wiki-theme')||'auto';document.documentElement.setAttribute('data-theme',t);var w=localStorage.getItem('wiki-width')||'standard';document.documentElement.setAttribute('data-width',w);}());"#)) }
+                script { (PreEscaped(r#"(function(){var t=localStorage.getItem('wiki-theme')||'light';document.documentElement.setAttribute('data-theme',t);var w=localStorage.getItem('wiki-width')||'standard';document.documentElement.setAttribute('data-width',w);}());"#)) }
                 // hreflang + canonical for bilingual home
                 @match locale {
                     Locale::En => {
@@ -2143,7 +2143,7 @@ fn wiki_chrome(
                 link rel="stylesheet" href="/static/style.css";
                 // Anti-FOUT: apply stored theme/width before first paint to
                 // avoid a flash of the default light theme for dark-mode users.
-                script { (PreEscaped(r#"(function(){var t=localStorage.getItem('wiki-theme')||'auto';document.documentElement.setAttribute('data-theme',t);var w=localStorage.getItem('wiki-width')||'standard';document.documentElement.setAttribute('data-width',w);}());"#)) }
+                script { (PreEscaped(r#"(function(){var t=localStorage.getItem('wiki-theme')||'light';document.documentElement.setAttribute('data-theme',t);var w=localStorage.getItem('wiki-width')||'standard';document.documentElement.setAttribute('data-width',w);}());"#)) }
                 // hreflang + canonical for bilingual articles
                 @match locale {
                     Locale::En => {
