@@ -312,11 +312,6 @@ def run_dbscan_for_iso(iso: str, recs: list) -> list[dict]:
 
             span = round(component_diameter(list(range(len(members))), members), 3)
 
-            # Geometric downgrade: T2 with span < 1.25km and ≤2 members is a
-            # weak co-located pair, not a retail park → reclassify as T3.
-            if tier == 2 and span < 1.25 and len(members) <= 2:
-                tier = 3
-
             clusters.append({
                 "iso":        iso,
                 "clat":       clat,
@@ -445,7 +440,7 @@ def assemble_feature(c: dict, engine: RegionEngine) -> dict:
 # ── MAIN ──────────────────────────────────────────────────────────────────────
 
 def main():
-    print("build-clusters.py — two-pass DBSCAN + geometric T2→T3 split (2026-05-23)")
+    print("build-clusters.py — two-pass DBSCAN, composition-only tier (Phase 22)")
     print("Loading boundary engine...")
     engine = RegionEngine(BOUNDARIES_DIR)
 
