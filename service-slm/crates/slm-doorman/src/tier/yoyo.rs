@@ -15,7 +15,7 @@
 //!   response headers for the audit ledger
 //!
 //! Resilience stack (added 2026-05-06):
-//! - 60 s reqwest socket timeout + 180 s tokio outer deadline
+//! - 60 s reqwest socket timeout + 90 s tokio outer deadline
 //! - Three-state circuit breaker (Closed → Open → HalfOpen → Closed)
 //! - Background health probe: polls /health every 30 s; marks
 //!   `health_up` false after 3 consecutive failures
@@ -33,7 +33,7 @@ use std::time::{Duration, Instant};
 
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
-use slm_core::{CanonicalMessage, ContentBlock, ComputeRequest, ComputeResponse, GrammarConstraint, Tier};
+use slm_core::{ChatMessage, ComputeRequest, ComputeResponse, GrammarConstraint, Tier};
 use tracing::{debug, info, warn};
 
 use crate::error::{DoormanError, Result};
@@ -46,7 +46,7 @@ const SOCKET_TIMEOUT: Duration = Duration::from_secs(60);
 
 /// Hard outer deadline wrapping the entire complete() call, including any
 /// 503 Retry-After sleep. Fires DoormanError::TierBTimeout to caller.
-const OUTER_DEADLINE: Duration = Duration::from_secs(180);
+const OUTER_DEADLINE: Duration = Duration::from_secs(90);
 
 // ── Health probe ──────────────────────────────────────────────────────────────
 /// How often the health probe polls /health.
@@ -173,8 +173,7 @@ impl YoYoTierClient {
         if let Ok(handle) = tokio::runtime::Handle::try_current() {
             let health_up_clone = Arc::clone(&health_up);
             let endpoint = config.endpoint.clone();
-            let probe_bearer = bearer.clone();
-            handle.spawn(run_health_probe(endpoint, health_up_clone, probe_bearer));
+            handle.spawn(run_health_probe(endpoint, health_up_clone));
         }
 
         Self {
@@ -201,78 +200,6 @@ impl YoYoTierClient {
     /// Returns true if both the health probe and circuit breaker allow a request.
     pub fn allow_request(&self) -> bool {
         self.health_up.load(Ordering::Relaxed) && self.circuit.allow_request()
-    }
-
-    /// Returns true if the background health probe reports the backend as up.
-    /// Does not check the circuit breaker — use `allow_request()` for dispatch decisions.
-    pub fn is_healthy(&self) -> bool {
-        self.health_up.load(Ordering::Relaxed)
-    }
-
-    /// Returns the current circuit breaker state as a string:
-    /// "closed", "open", or "half-open".
-    pub fn circuit_state(&self) -> &'static str {
-        self.circuit.state_str()
-    }
-
-    /// Begin a streaming request to vLLM. Returns the raw HTTP response; the
-    /// caller is responsible for consuming the SSE body and translating it to
-    /// the target wire format (Anthropic SSE, OpenAI SSE, etc.).
-    ///
-    /// Unlike `complete()`, there is no outer 90-second deadline — the caller's
-    /// SSE consumer drives the timeout. The circuit breaker is checked on entry;
-    /// `record_success()` is called when a 200 response is received and
-    /// `record_failure()` on any network error.
-    pub async fn start_stream(&self, req: &ComputeRequest) -> Result<reqwest::Response> {
-        if !self.circuit.allow_request() {
-            return Err(DoormanError::TierBCircuitOpen);
-        }
-
-        let model = req.model.clone().unwrap_or_else(|| self.config.default_model.clone());
-        let extra_body = match req.grammar.as_ref() {
-            None => None,
-            Some(GrammarConstraint::Lark(s)) | Some(GrammarConstraint::Gbnf(s)) => {
-                Some(serde_json::json!({"structured_outputs": {"grammar": s}}))
-            }
-            Some(GrammarConstraint::JsonSchema(v)) => {
-                Some(serde_json::json!({"structured_outputs": {"json": v}}))
-            }
-        };
-        let tools = req.tools.as_ref().map(|defs| {
-            defs.iter().map(|d| OaiToolDef {
-                kind: "function",
-                function: OaiFunctionDef {
-                    name: d.name.clone(),
-                    description: d.description.clone(),
-                    parameters: d.input_schema.clone(),
-                },
-            }).collect::<Vec<_>>()
-        });
-        let body = OpenAiChatRequest {
-            model: model.clone(),
-            messages: canonical_to_oai(&req.messages),
-            stream: true,
-            max_tokens: req.max_tokens,
-            temperature: req.temperature,
-            extra_body,
-            tools,
-        };
-        let url = format!(
-            "{}/v1/chat/completions",
-            self.config.endpoint.trim_end_matches('/')
-        );
-        debug!(target: "slm_doorman::tier::yoyo", %url, %model, "tier-B stream request");
-
-        match self.send_with_retries(&url, &body, req).await {
-            Ok(resp) => {
-                self.circuit.record_success();
-                Ok(resp)
-            }
-            Err(e) => {
-                self.circuit.record_failure();
-                Err(e)
-            }
-        }
     }
 
     /// Route one request to Tier B with full resilience stack:
@@ -321,7 +248,7 @@ impl YoYoTierClient {
                 warn!(
                     target: "slm_doorman::tier::yoyo",
                     latency_ms = elapsed_ms,
-                    "Tier B: outer 180 s deadline exceeded"
+                    "Tier B: outer 90 s deadline exceeded"
                 );
                 Err(DoormanError::TierBTimeout)
             }
@@ -353,24 +280,13 @@ impl YoYoTierClient {
             }
         };
 
-        let tools = req.tools.as_ref().map(|defs| {
-            defs.iter().map(|d| OaiToolDef {
-                kind: "function",
-                function: OaiFunctionDef {
-                    name: d.name.clone(),
-                    description: d.description.clone(),
-                    parameters: d.input_schema.clone(),
-                },
-            }).collect::<Vec<_>>()
-        });
         let body = OpenAiChatRequest {
             model: model.clone(),
-            messages: canonical_to_oai(&req.messages),
+            messages: req.messages.clone(),
             stream: req.stream,
             max_tokens: req.max_tokens,
             temperature: req.temperature,
             extra_body,
-            tools,
         };
         let url = format!(
             "{}/v1/chat/completions",
@@ -393,45 +309,23 @@ impl YoYoTierClient {
             .get("x-foundry-yoyo-version")
             .and_then(|v| v.to_str().ok())
             .map(|s| s.to_string());
-        // Tier B reports the loaded adapter via the X-Foundry-Adapter-Version
-        // response header (Phase 1 of learning-loop-master-plan-2026-05-18.md
-        // P1-1.6). Server-side mistralrs / vLLM populates this when a LoRA
-        // is mounted; absent header means base model only.
-        let adapter_version = resp
-            .headers()
-            .get("x-foundry-adapter-version")
-            .and_then(|v| v.to_str().ok())
-            .map(|s| s.to_string());
 
         let body: OpenAiChatResponse = resp.json().await?;
-        let msg = body
+        let content = body
             .choices
             .into_iter()
             .next()
-            .map(|c| c.message)
+            .map(|c| c.message.content)
             .ok_or_else(|| DoormanError::UpstreamShape("no choices in response".into()))?;
-
-        let (content, content_blocks) = if !msg.tool_calls.is_empty() {
-            let blocks = msg.tool_calls.into_iter().map(|tc| {
-                let input = serde_json::from_str(&tc.function.arguments)
-                    .unwrap_or(serde_json::Value::Null);
-                ContentBlock::ToolUse { id: tc.id, name: tc.function.name, input }
-            }).collect();
-            (String::new(), blocks)
-        } else {
-            (msg.content.unwrap_or_default(), Vec::new())
-        };
 
         Ok(ComputeResponse {
             request_id: req.request_id,
             tier_used: Tier::Yoyo,
             model,
             content,
-            content_blocks,
             inference_ms,
             cost_usd: self.config.pricing.yoyo_cost_usd(inference_ms),
             upstream_version,
-            adapter_version,
         })
     }
 
@@ -542,7 +436,7 @@ impl YoYoTierClient {
 /// Background health probe task. Spawned once per `YoYoTierClient::new()`.
 /// Polls `<endpoint>/health` every 30 s with a 2 s timeout.
 /// Three consecutive failures set `health_up` to false; one recovery resets.
-async fn run_health_probe(endpoint: String, health_up: Arc<AtomicBool>, bearer: Arc<dyn BearerTokenProvider>) {
+async fn run_health_probe(endpoint: String, health_up: Arc<AtomicBool>) {
     let http = reqwest::Client::builder()
         .timeout(HEALTH_PROBE_TIMEOUT)
         .danger_accept_invalid_certs(true)
@@ -562,10 +456,8 @@ async fn run_health_probe(endpoint: String, health_up: Arc<AtomicBool>, bearer: 
     loop {
         tokio::time::sleep(HEALTH_PROBE_INTERVAL).await;
 
-        let token = bearer.token().await.unwrap_or_default();
         let ok = http
             .get(&url)
-            .bearer_auth(token)
             .send()
             .await
             .map(|r| r.status().is_success())
@@ -602,92 +494,9 @@ async fn run_health_probe(endpoint: String, health_up: Arc<AtomicBool>, bearer: 
 }
 
 #[derive(Serialize)]
-#[serde(untagged)]
-enum OaiWireMessage {
-    Text { role: String, content: String },
-    ToolCall { role: String, content: serde_json::Value, tool_calls: Vec<OaiToolCall> },
-    ToolResult { role: String, content: String, tool_call_id: String },
-}
-
-#[derive(Serialize)]
-struct OaiToolCall {
-    id: String,
-    #[serde(rename = "type")]
-    kind: &'static str,
-    function: OaiFunction,
-}
-
-#[derive(Serialize)]
-struct OaiFunction {
-    name: String,
-    arguments: String,
-}
-
-fn canonical_to_oai(msgs: &[CanonicalMessage]) -> Vec<OaiWireMessage> {
-    let mut out = Vec::new();
-    for msg in msgs {
-        let role = msg.role.as_str().to_string();
-        let texts: Vec<&str> = msg.content.iter().filter_map(|b| match b {
-            ContentBlock::Text { text } => Some(text.as_str()),
-            ContentBlock::Thinking { thinking } => Some(thinking.as_str()),
-            _ => None,
-        }).collect();
-        let tool_uses: Vec<_> = msg.content.iter().filter_map(|b| match b {
-            ContentBlock::ToolUse { id, name, input } => Some((id, name, input)),
-            _ => None,
-        }).collect();
-        let tool_results: Vec<_> = msg.content.iter().filter_map(|b| match b {
-            ContentBlock::ToolResult { tool_use_id, content } => Some((tool_use_id, content)),
-            _ => None,
-        }).collect();
-
-        if !tool_uses.is_empty() {
-            out.push(OaiWireMessage::ToolCall {
-                role,
-                content: serde_json::Value::Null,
-                tool_calls: tool_uses.into_iter().map(|(id, name, input)| OaiToolCall {
-                    id: id.clone(),
-                    kind: "function",
-                    function: OaiFunction {
-                        name: name.clone(),
-                        arguments: serde_json::to_string(input).unwrap_or_default(),
-                    },
-                }).collect(),
-            });
-        } else if !tool_results.is_empty() {
-            for (tool_use_id, content) in tool_results {
-                out.push(OaiWireMessage::ToolResult {
-                    role: "tool".to_string(),
-                    content: content.clone(),
-                    tool_call_id: tool_use_id.clone(),
-                });
-            }
-        } else {
-            out.push(OaiWireMessage::Text { role, content: texts.join("\n") });
-        }
-    }
-    out
-}
-
-#[derive(Serialize)]
-struct OaiToolDef {
-    #[serde(rename = "type")]
-    kind: &'static str,
-    function: OaiFunctionDef,
-}
-
-#[derive(Serialize)]
-struct OaiFunctionDef {
-    name: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    description: Option<String>,
-    parameters: serde_json::Value,
-}
-
-#[derive(Serialize)]
 struct OpenAiChatRequest {
     model: String,
-    messages: Vec<OaiWireMessage>,
+    messages: Vec<ChatMessage>,
     #[serde(skip_serializing_if = "is_false")]
     stream: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -701,9 +510,6 @@ struct OpenAiChatRequest {
     /// `guided_grammar` top-level extra_body fields were removed in vLLM 0.12.
     #[serde(skip_serializing_if = "Option::is_none")]
     extra_body: Option<serde_json::Value>,
-    /// Tool definitions (P1-1.7). Forwarded from `ComputeRequest.tools`.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    tools: Option<Vec<OaiToolDef>>,
 }
 
 #[derive(Deserialize)]
@@ -713,27 +519,7 @@ struct OpenAiChatResponse {
 
 #[derive(Deserialize)]
 struct OpenAiChatChoice {
-    message: OaiResponseMessage,
-}
-
-#[derive(Deserialize)]
-struct OaiResponseMessage {
-    #[serde(default)]
-    content: Option<String>,
-    #[serde(default)]
-    tool_calls: Vec<OaiResponseToolCall>,
-}
-
-#[derive(Deserialize)]
-struct OaiResponseToolCall {
-    id: String,
-    function: OaiResponseFunction,
-}
-
-#[derive(Deserialize)]
-struct OaiResponseFunction {
-    name: String,
-    arguments: String,
+    message: ChatMessage,
 }
 
 fn is_false(b: &bool) -> bool {
@@ -743,7 +529,7 @@ fn is_false(b: &bool) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use slm_core::{CanonicalMessage, ComputeRequest, LatencyClass, ModuleId, RequestId};
+    use slm_core::{ChatMessage, ComputeRequest, ModuleId, RequestId};
     use std::str::FromStr;
     use std::sync::atomic::{AtomicUsize, Ordering};
     use wiremock::matchers::{header, method, path};
@@ -754,9 +540,11 @@ mod tests {
             request_id: RequestId::new(),
             module_id: ModuleId::from_str("foundry").unwrap(),
             model: Some("Olmo-3-1125-32B-Think".into()),
-            messages: vec![CanonicalMessage::text("user", "ping")],
+            messages: vec![ChatMessage {
+                role: "user".into(),
+                content: "ping".into(),
+            }],
             complexity: slm_core::Complexity::High,
-            latency_class: LatencyClass::default(),
             tier_hint: Some(Tier::Yoyo),
             stream: false,
             max_tokens: Some(20),
@@ -767,8 +555,6 @@ mod tests {
             grammar: None,
             speculation: None,
             graph_context_enabled: None,
-            adapter_version: None,
-            tools: None,
         }
     }
 

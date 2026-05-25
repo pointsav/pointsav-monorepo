@@ -38,10 +38,7 @@ DOORMAN="${SLM_DOORMAN_ENDPOINT:-http://127.0.0.1:9080}"
 SERVICE_CONTENT="${SERVICE_CONTENT_ENDPOINT:-http://127.0.0.1:9081}"
 INSTANCE="${SLM_YOYO_GCP_INSTANCE:-yoyo-tier-b-1}"
 PROJECT="${SLM_YOYO_GCP_PROJECT:-woodfine-node-gcp-free}"
-if [[ -z "${SLM_YOYO_GCP_ZONE:-}" ]] && [[ -r /etc/local-doorman/local-doorman.env ]]; then
-    SLM_YOYO_GCP_ZONE=$(grep '^SLM_YOYO_GCP_ZONE=' /etc/local-doorman/local-doorman.env | cut -d= -f2- | head -1)
-fi
-ZONE="${SLM_YOYO_GCP_ZONE:-europe-west4-a}"
+ZONE="${SLM_YOYO_GCP_ZONE:-us-west1-b}"
 INCLUDE_IDLE_TEST=false
 INCLUDE_VLLM_RESTART=false
 TIMESTAMP="$(date -u +%Y%m%d-%H%M%SZ)"
@@ -169,9 +166,8 @@ else
 fi
 
 # Apprenticeship state inferred from corpus presence (env file is root-owned).
-# Corpus path is apprenticeship/<task-type>/<tenant>/*.jsonl (two levels deep).
 if [[ -d /srv/foundry/data/training-corpus/apprenticeship ]] && \
-   find /srv/foundry/data/training-corpus/apprenticeship -name "*.jsonl" -maxdepth 3 -quit 2>/dev/null | grep -q .; then
+   compgen -G "/srv/foundry/data/training-corpus/apprenticeship/*/draft-*.jsonl" >/dev/null 2>&1; then
     APPRENTICESHIP_ENABLED=true
     echo "  Apprenticeship: corpus present (recent JSONL events visible)"
 else
@@ -221,7 +217,7 @@ if [[ "${TIER_B_UP}" != "true" ]]; then
 else
     schema='{"type":"object","properties":{"name":{"type":"string"},"age":{"type":"integer"}},"required":["name","age"]}'
     body=$(cat <<EOF
-{"model":"olmo-3-32b","messages":[{"role":"user","content":"Return a JSON object with name=Alice and age=30."}],"max_tokens":300,"yoyo_label":"default","grammar":{"type":"json-schema","value":${schema}}}
+{"model":"olmo-3-32b","messages":[{"role":"user","content":"Return a JSON object with name=Alice and age=30."}],"max_tokens":40,"yoyo_label":"default","grammar":{"type":"json-schema","value":${schema}}}
 EOF
 )
     out=$(curl -sS -o /tmp/yoyo-flow-b2 -w '%{http_code}' --max-time 60 \
@@ -231,7 +227,7 @@ EOF
         "${DOORMAN}/v1/chat/completions" 2>/dev/null || echo "000")
     tier=$(extract_tier_used /tmp/yoyo-flow-b2)
     if [[ "${out}" == "200" ]] && [[ "${tier}" == "yoyo" ]]; then
-        content=$(python3 -c 'import json,re,sys; d=json.load(open(sys.argv[1])); raw=d.get("content","") or d.get("choices",[{}])[0].get("message",{}).get("content",""); print(re.sub(r"<think>.*?</think>","",raw,flags=re.DOTALL).strip())' /tmp/yoyo-flow-b2 2>/dev/null || echo "")
+        content=$(python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(d.get("content","") or d.get("choices",[{}])[0].get("message",{}).get("content",""))' /tmp/yoyo-flow-b2 2>/dev/null || echo "")
         if echo "${content}" | python3 -c 'import json,sys; obj=json.loads(sys.stdin.read()); assert "name" in obj and "age" in obj' >/dev/null 2>&1; then
             record "2-grammar-constrained" "PASS" "schema-conforming JSON returned"
         else
@@ -355,10 +351,7 @@ fi
 echo "=== Test 8: Circuit breaker open ==="
 if [[ "${INCLUDE_VLLM_RESTART}" != "true" ]]; then
     if [[ "${TIER_B_UP}" != "true" ]]; then
-        # Tier B already down → circuit should be OPEN.
-        # In hardware force-broker-mode: no Tier A → expect 503. On accelerated nodes
-        # with Tier A: expect 200 + tier_used=local.
-        has_local=$(echo "${readyz_resp}" | python3 -c 'import json,sys; print(json.loads(sys.stdin.read()).get("has_local","false"))' 2>/dev/null || echo "false")
+        # Tier B already down → circuit should be OPEN. Verify Tier A fallback.
         out=$(curl -sS -o /tmp/yoyo-flow-b8 -w '%{http_code}' --max-time 30 \
             -H "Content-Type: application/json" \
             -d '{"model":"olmo-3-32b","messages":[{"role":"user","content":"hi"}],"max_tokens":2,"yoyo_label":"default"}' \
@@ -366,10 +359,8 @@ if [[ "${INCLUDE_VLLM_RESTART}" != "true" ]]; then
         tier=$(extract_tier_used /tmp/yoyo-flow-b8)
         if [[ "${out}" == "200" ]] && [[ "${tier}" == "local" ]]; then
             record "8-circuit-breaker" "PASS" "Tier B down + circuit open → Tier A fallback (tier_used=local), HTTP 200"
-        elif [[ "${out}" == "503" ]] && [[ "${has_local}" == "false" ]]; then
-            record "8-circuit-breaker" "PASS" "Tier B down, no Tier A (broker-mode) → 503 as expected"
         else
-            record "8-circuit-breaker" "FAIL" "Tier B down but unexpected response (HTTP ${out}, tier_used=${tier}, has_local=${has_local})"
+            record "8-circuit-breaker" "FAIL" "Tier B down but no Tier A fallback (HTTP ${out}, tier_used=${tier})"
         fi
     else
         record "8-circuit-breaker" "SKIP" "opt-in only (--include-vllm-restart); requires SSH to kill vLLM"

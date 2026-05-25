@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>
+    Editing: {{ slug }}{% if section_heading %} § {{ section_heading }}{% endif %}
+    — {{ site_title }}
+  </title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="wiki-body wiki-editor-body">
+
+  <header class="wiki-header" id="wiki-header">
+    <div class="wiki-header-inner">
+      <a class="wiki-wordmark" href="/">{{ site_title }}</a>
+      <span class="wiki-editor-label">
+        Editing: <a href="/{{ slug }}">{{ slug }}</a>
+        {% if section_heading %} § {{ section_heading }}{% endif %}
+      </span>
+    </div>
+  </header>
+
+  <main class="wiki-editor-page">
+
+    {% if conflict_message %}
+    <div class="wiki-notice wiki-notice-conflict" role="alert">
+      <strong>Edit conflict.</strong> {{ conflict_message }}
+    </div>
+    {% endif %}
+
+    <div class="wiki-editor-toolbar" role="toolbar" aria-label="Editor toolbar">
+      <button type="button" class="wiki-toolbar-btn" data-action="bold"><strong>B</strong></button>
+      <button type="button" class="wiki-toolbar-btn" data-action="italic"><em>I</em></button>
+      <button type="button" class="wiki-toolbar-btn" data-action="wikilink">[[…]]</button>
+      <button type="button" class="wiki-toolbar-btn" data-action="reference">[^n]</button>
+      <button type="button" class="wiki-toolbar-btn" data-action="heading2">H2</button>
+      <button type="button" class="wiki-toolbar-btn" data-action="heading3">H3</button>
+      <button type="button" class="wiki-toolbar-btn" data-action="table">Table</button>
+      <span class="wiki-toolbar-sep"></span>
+      <span class="wiki-editor-status" id="wiki-editor-status"></span>
+    </div>
+
+    <div id="wiki-wikilink-suggestions" class="wiki-wikilink-suggestions" hidden></div>
+
+    <div class="wiki-editor-panes">
+      <div class="wiki-editor-source-pane">
+        <div class="wiki-pane-label">Markdown source</div>
+        <textarea id="wiki-editor-source" class="wiki-editor-source"
+          spellcheck="true" autocorrect="off" autocapitalize="off"
+          aria-label="Markdown source editor">{{ section_markdown }}</textarea>
+      </div>
+      <div class="wiki-editor-preview-pane">
+        <div class="wiki-pane-label">
+          Preview
+          <span class="wiki-preview-updating" id="wiki-preview-spinner" hidden>updating…</span>
+        </div>
+        <div id="wiki-editor-preview" class="wiki-editor-preview wiki-article-body"></div>
+      </div>
+    </div>
+
+    <div class="wiki-editor-footer">
+      <div class="wiki-editor-summary-row">
+        <label class="wiki-editor-summary-label" for="wiki-edit-summary">
+          Edit summary
+          <span class="wiki-required">(required, min 10 characters)</span>
+        </label>
+        <input id="wiki-edit-summary" class="wiki-editor-summary-input"
+          type="text" name="edit_summary" maxlength="200" autocomplete="off"
+          placeholder="e.g. Corrected crate version for tantivy 0.22">
+        <span class="wiki-summary-counter" id="wiki-summary-counter">0 / 200</span>
+      </div>
+      <div class="wiki-editor-actions">
+        <button id="wiki-submit-btn" class="wiki-btn wiki-btn-primary" type="button" disabled>
+          Save changes
+        </button>
+        <a class="wiki-btn wiki-btn-secondary" href="/{{ slug }}">Cancel</a>
+        <span class="wiki-editor-hint">
+          Saved as a Git commit to
+          <code>content-wiki-documentation</code>
+          under your identity.
+        </span>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Hidden fields read by wiki.js -->
+  <span id="wiki-edit-slug"    hidden>{{ slug }}</span>
+  <span id="wiki-edit-section" hidden>{{ section_heading | default(value="") }}</span>
+  <span id="wiki-edit-base-sha" hidden>{{ base_sha }}</span>
+
+  <script src="/static/wiki.js"></script>
+</body>
+</html>
