@@ -106,10 +106,12 @@ fn cmd_plan(spec_path: &std::path::Path, format: PlanFormat) -> Result<(), Strin
     let spec = read_spec(spec_path)?;
     let plan = BuildPlan::from_spec(&spec).map_err(|e| format!("plan: {e:?}"))?;
     let rendered = match format {
-        PlanFormat::Json => serde_json::to_string(&plan)
-            .map_err(|e| format!("render plan: {e}"))?,
-        PlanFormat::PrettyJson => serde_json::to_string_pretty(&plan)
-            .map_err(|e| format!("render plan: {e}"))?,
+        PlanFormat::Json => {
+            serde_json::to_string(&plan).map_err(|e| format!("render plan: {e}"))?
+        }
+        PlanFormat::PrettyJson => {
+            serde_json::to_string_pretty(&plan).map_err(|e| format!("render plan: {e}"))?
+        }
     };
     println!("{rendered}");
     Ok(())
@@ -118,8 +120,10 @@ fn cmd_plan(spec_path: &std::path::Path, format: PlanFormat) -> Result<(), Strin
 fn cmd_build(spec_path: &std::path::Path) -> Result<(), String> {
     let spec = read_spec(spec_path)?;
     let plan = BuildPlan::from_spec(&spec).map_err(|e| format!("plan: {e:?}"))?;
-    println!("Would execute BuildPlan (plan_hash = {})",
-        hex_short(&plan.plan_hash));
+    println!(
+        "Would execute BuildPlan (plan_hash = {})",
+        hex_short(&plan.plan_hash)
+    );
     println!("Steps:");
     for (i, step) in plan.steps.iter().enumerate() {
         let cmd_summary = match &step.command {
