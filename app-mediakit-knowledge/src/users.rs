@@ -5,9 +5,9 @@
 //! no public sign-up. The first admin is seeded from env on startup
 //! when the users table is empty.
 
+use argon2::password_hash::{rand_core::OsRng, PasswordHasher, SaltString};
 use argon2::{Argon2, PasswordHash, PasswordVerifier};
-use argon2::password_hash::{PasswordHasher, SaltString, rand_core::OsRng};
-use rusqlite::{Connection, OptionalExtension, params};
+use rusqlite::{params, Connection, OptionalExtension};
 use std::sync::{Arc, Mutex};
 use uuid::Uuid;
 
@@ -30,7 +30,8 @@ pub type DbPool = Arc<Mutex<Connection>>;
 
 /// Create all tables. Idempotent — safe to call on every startup.
 pub fn init_schema(conn: &Connection) -> rusqlite::Result<()> {
-    conn.execute_batch("
+    conn.execute_batch(
+        "
         CREATE TABLE IF NOT EXISTS users (
             id          TEXT PRIMARY KEY,
             username    TEXT UNIQUE NOT NULL,
@@ -59,7 +60,8 @@ pub fn init_schema(conn: &Connection) -> rusqlite::Result<()> {
         CREATE INDEX IF NOT EXISTS idx_pending_slug   ON pending_edits(slug, status);
         CREATE INDEX IF NOT EXISTS idx_pending_author ON pending_edits(author_id, submitted_at);
         CREATE INDEX IF NOT EXISTS idx_pending_status ON pending_edits(status, submitted_at);
-    ")
+    ",
+    )
 }
 
 /// Seed the admin user if the table is empty. The password hash must be
@@ -70,11 +72,7 @@ pub fn seed_admin_if_empty(
     username: &str,
     password_hash: &str,
 ) -> rusqlite::Result<()> {
-    let count: i64 = conn.query_row(
-        "SELECT COUNT(*) FROM users",
-        [],
-        |row| row.get(0),
-    )?;
+    let count: i64 = conn.query_row("SELECT COUNT(*) FROM users", [], |row| row.get(0))?;
     if count == 0 {
         let now = chrono::Utc::now().timestamp();
         conn.execute(
@@ -89,8 +87,12 @@ pub fn seed_admin_if_empty(
 /// Verify a plaintext password against the stored argon2id hash.
 /// Returns true if valid.
 pub fn verify_password(password: &str, hash: &str) -> bool {
-    let Ok(parsed) = PasswordHash::new(hash) else { return false; };
-    Argon2::default().verify_password(password.as_bytes(), &parsed).is_ok()
+    let Ok(parsed) = PasswordHash::new(hash) else {
+        return false;
+    };
+    Argon2::default()
+        .verify_password(password.as_bytes(), &parsed)
+        .is_ok()
 }
 
 /// Hash a plaintext password with argon2id. Used when creating accounts via UI.
@@ -108,14 +110,17 @@ pub fn get_by_username(conn: &Connection, username: &str) -> rusqlite::Result<Op
     conn.query_row(
         "SELECT id, username, password_hash, role, created_at FROM users WHERE username = ?1",
         params![username],
-        |row| Ok(User {
-            id: row.get(0)?,
-            username: row.get(1)?,
-            password_hash: row.get(2)?,
-            role: row.get(3)?,
-            created_at: row.get(4)?,
-        }),
-    ).optional()
+        |row| {
+            Ok(User {
+                id: row.get(0)?,
+                username: row.get(1)?,
+                password_hash: row.get(2)?,
+                role: row.get(3)?,
+                created_at: row.get(4)?,
+            })
+        },
+    )
+    .optional()
 }
 
 /// Look up a user by session token. Returns None if token not found or expired.
@@ -126,14 +131,17 @@ pub fn get_by_session(conn: &Connection, token: &str) -> rusqlite::Result<Option
          FROM sessions s JOIN users u ON u.id = s.user_id
          WHERE s.token = ?1 AND s.expires_at > ?2",
         params![token, now],
-        |row| Ok(User {
-            id: row.get(0)?,
-            username: row.get(1)?,
-            password_hash: row.get(2)?,
-            role: row.get(3)?,
-            created_at: row.get(4)?,
-        }),
-    ).optional()
+        |row| {
+            Ok(User {
+                id: row.get(0)?,
+                username: row.get(1)?,
+                password_hash: row.get(2)?,
+                role: row.get(3)?,
+                created_at: row.get(4)?,
+            })
+        },
+    )
+    .optional()
 }
 
 /// Create a session token and insert it. Returns the token string.
@@ -156,15 +164,19 @@ pub fn delete_session(conn: &Connection, token: &str) -> rusqlite::Result<()> {
 /// List all users (for admin UI).
 pub fn list_users(conn: &Connection) -> rusqlite::Result<Vec<User>> {
     let mut stmt = conn.prepare(
-        "SELECT id, username, password_hash, role, created_at FROM users ORDER BY created_at"
+        "SELECT id, username, password_hash, role, created_at FROM users ORDER BY created_at",
     )?;
-    let users = stmt.query_map([], |row| Ok(User {
-        id: row.get(0)?,
-        username: row.get(1)?,
-        password_hash: row.get(2)?,
-        role: row.get(3)?,
-        created_at: row.get(4)?,
-    }))?.collect::<rusqlite::Result<Vec<_>>>()?;
+    let users = stmt
+        .query_map([], |row| {
+            Ok(User {
+                id: row.get(0)?,
+                username: row.get(1)?,
+                password_hash: row.get(2)?,
+                role: row.get(3)?,
+                created_at: row.get(4)?,
+            })
+        })?
+        .collect::<rusqlite::Result<Vec<_>>>()?;
     Ok(users)
 }
 

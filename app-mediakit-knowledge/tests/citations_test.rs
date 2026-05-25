@@ -37,13 +37,13 @@ async fn citation_state() -> (AppState, tempfile::TempDir, tempfile::TempDir) {
             citations_yaml: PathBuf::from("/srv/foundry/citations.yaml"),
             search: Arc::new(index),
             git: Arc::new(Mutex::new(repo)),
-            collab: Arc::new(app_mediakit_knowledge::collab::CollabRooms::new()),
-            enable_collab: false,
             git_tenant: "pointsav".to_string(),
-        mcp_enabled: false,
+            mcp_enabled: false,
             glossary: Arc::new(app_mediakit_knowledge::glossary::Glossary::default()),
-                links: app_mediakit_knowledge::links::LinkGraph::for_testing(),
-                db: None,
+            links: app_mediakit_knowledge::links::LinkGraph::for_testing(),
+            brand_theme: None,
+            brand_instance: "documentation".to_string(),
+            db: None,
             site_title: "PointSav Documentation Wiki".to_string(),
         },
         dir,
@@ -100,13 +100,9 @@ async fn get_citations_returns_array() {
 
     assert_eq!(resp.status(), StatusCode::OK);
     let body = resp.into_body().collect().await.unwrap().to_bytes();
-    let parsed: serde_json::Value = serde_json::from_slice(&body)
-        .expect("response body must be valid JSON");
-    assert!(
-        parsed.is_array(),
-        "expected JSON array, got: {}",
-        parsed
-    );
+    let parsed: serde_json::Value =
+        serde_json::from_slice(&body).expect("response body must be valid JSON");
+    assert!(parsed.is_array(), "expected JSON array, got: {}", parsed);
     let arr = parsed.as_array().unwrap();
     assert!(
         !arr.is_empty(),
@@ -135,8 +131,8 @@ async fn get_citations_contains_ni_51_102() {
 
     assert_eq!(resp.status(), StatusCode::OK);
     let body = resp.into_body().collect().await.unwrap().to_bytes();
-    let entries: Vec<serde_json::Value> = serde_json::from_slice(&body)
-        .expect("response body must be a valid JSON array");
+    let entries: Vec<serde_json::Value> =
+        serde_json::from_slice(&body).expect("response body must be a valid JSON array");
 
     let found = entries
         .iter()
@@ -165,8 +161,8 @@ async fn every_citation_entry_has_id_and_title() {
 
     assert_eq!(resp.status(), StatusCode::OK);
     let body = resp.into_body().collect().await.unwrap().to_bytes();
-    let entries: Vec<serde_json::Value> = serde_json::from_slice(&body)
-        .expect("response body must be a valid JSON array");
+    let entries: Vec<serde_json::Value> =
+        serde_json::from_slice(&body).expect("response body must be a valid JSON array");
 
     for (i, entry) in entries.iter().enumerate() {
         let id = entry.get("id").and_then(|v| v.as_str());
