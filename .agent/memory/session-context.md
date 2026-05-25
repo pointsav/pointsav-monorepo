@@ -7,6 +7,61 @@ from Command Stage-6 rebase 2026-05-22 — flagged for Command; see outbox).
 
 ---
 
+## Session: 2026-05-25 | Role: totebox | Engine: claude-sonnet-4-6
+
+### Done this session
+- **Yo-Yo integration test #1 (composite, 2-run)**: tests 1, 3, 4, 6, 10 PASS. VM preempted at 12m36s.
+- **Three test script bugs fixed** (`5968efdb`): grammar `max_tokens` 40→300; strip `<think>` before JSON parse; fix apprenticeship glob depth; test 8 accepts 503 in broker-mode.
+- **NEXT.md updated** (`e43df88f`) with session findings and three open defects.
+- **OUTER_DEADLINE fix** (`8daa4f7d`): `crates/slm-doorman/src/tier/yoyo.rs` line 49 raised 90s→180s; doc comment + warn! log updated. Binary rebuilt + deployed to `/usr/local/bin/slm-doorman-server`. 262/262 tests pass.
+- **Integration test #2 (verification run)**: blocked by L4 stockout + two SPOT preemptions in europe-west4-a. Fix is correct but live extraction verification deferred.
+
+### Pending / carry-forward
+- **Extraction timeout fix NEEDS LIVE VERIFICATION**: run `sudo bash service-slm/scripts/start-yoyo.sh --wait-ready=360 --runtime=1h` when L4 capacity available. Test plan: `~/.claude/plans/shiny-marinating-grove.md`. Pass: entity_count > 1,530, circuit stays closed, no "180 s deadline exceeded" in Doorman log.
+- **Doorman restart → local-content restart**: after any `sudo systemctl restart local-doorman`, immediately `sudo systemctl start local-content.service`. Root fix: decouple systemd dependency.
+- **SPOT preemption resilience**: two preemptions in one day; `--wait-ready` should be 360s not 300s.
+- **Stage 6 promote**: ~13 commits ahead of origin/main. Command Session scope. Rebase required per `command-20260520-stage6-rebase-required`.
+- **SLM_APPRENTICESHIP_ENABLED**: restored to `false` at shutdown; set to `true` during next test run.
+
+### Operator preferences surfaced
+- Test runs are watched live together with the operator — no unattended test sessions.
+- Operator stops retry loops manually when L4 stockout persists.
+
+---
+
+## Session: 2026-05-24 session 16 | Role: totebox | Engine: claude-sonnet-4-6
+
+### Done this session
+- **Phase 1 (lbug deploy) complete**: raised `MemoryMax=4G` / `MemoryHigh=3800M` in
+  `/etc/systemd/system/local-content.service.d/memory.conf`; `local-content.service`
+  now returns HTTP 200 from `/healthz` with 1,529+ entities in LadybugDB.
+- **Sprint 2 (service-content)**: `node_type: String` added to `GraphEntity`; `write_related_to()`
+  added to `GraphStore` trait + both backends; `related_to` table in SQLite; 22/22 tests. Commit `14b8c1ef`.
+- **Sprint 5 (service-content)**: `is_already_processed(source_worm_id)` added to `GraphStore` trait
+  + both backends; corpus drain loop checks graph instead of JSONL file; eliminates restart retry storm;
+  23/23 tests. Commit `89ff3dbc`.
+- **service-content/CLAUDE.md**: project card created. Commit `c5dd8446`.
+- **Phase 6 (W5 G-items)**: BRIEF-flow-restructure.md no longer exists; G5/G6/G9/G11-G16/G18
+  unrecoverable. Flagged to Command via outbox. Treated as superseded by 2026-05-23 session.
+
+### Pending / carry-forward
+- **Stage 6 promote** — service-content sub-clone has 3 new commits (Sprints 2/5 + CLAUDE.md)
+  plus project-intelligence archive has outbox/session-context updates to commit.
+  Command must rebase + promote. Prior session's stage6-rebase-required still applies.
+- **Infrastructure tracking** (Command scope): `memory.conf` + `crash-loop-guard.conf` in
+  `/etc/systemd/system/local-content.service.d/` not tracked in `infrastructure/`. Outbox flagged.
+- **Sprint 3 (PUSH inversion)**: deferred — Doorman already has `/v1/graph/mutate` proxy;
+  in-memory queue design requires service-slm changes; next coding session.
+- **Sprint 4 (/v1/draft/generate migration)**: deferred.
+- **G-items (G5/G6/G9/G11-G16/G18)**: unrecoverable; Command to confirm disposition.
+- **`is_already_processed` LbugGraphStore test**: only SQLite backend is tested (LbugGraphStore
+  requires a live lbug db file; test infrastructure is SQLite-only).
+
+### Operator preferences surfaced
+- AUTO mode confirmed — no interruptions through phases; operator directs by plan only.
+
+---
+
 ## Session: 2026-05-23 session 6 | Role: totebox | Engine: claude-sonnet-4-6
 
 ### Done this session
@@ -68,31 +123,3 @@ from Command Stage-6 rebase 2026-05-22 — flagged for Command; see outbox).
 - Approves proposed wording for BRIEF edits before applying — review one diff at a time
 
 ---
-
-## Session: 2026-05-22 session 3 | Role: totebox | Engine: claude-code
-
-### Done this session
-- **Phase 4 (service-slm Doorman node-class gating)**:
-  - `foundry-nodeclass/src/lib.rs`: added `NodeClass::as_str()` method
-  - `slm-doorman-server/Cargo.toml`: added `foundry-nodeclass = { workspace = true }`
-  - `slm-doorman-server/src/main.rs`: reworked `build_doorman()` → `DoormanBoot`; detects node class via `foundry_nodeclass::detect()`; gates `local` client on `caps.supports_on_node_ai() && !SLM_FORCE_BROKER_MODE`; returns `node_class: &'static str` + `tier_a_reason: &'static str`
-  - `slm-doorman-server/src/http.rs`: added `node_class: &'static str` + `tier_a_reason: &'static str` to `AppState`; `readyz` now emits `node_class`, `tier_a`, `tier_a_reason`, `ai_available`; ~19 AppState construction sites updated in lib.rs + test files
-  - `slm-doorman/src/router.rs`: added `micro_class_no_local_tier_unavailable` invariant test
-  - `infrastructure/local-doorman/local-doorman.service`: `Requires=local-slm.service` → `Wants=` (soft dep); workspace git, Command must commit
-  - `BRIEF-flow-restructure.md`: Phases 1–4 marked done, Phase 5 resume point set
-  - `NEXT.md`: Phase 4 complete note + Stage 6 promote reminder
-  - Outbox: added message to Command re: infrastructure change needing workspace commit
-- `cargo check --workspace` clean; `cargo test --workspace` running (in progress at session end)
-
-### Pending / carry-forward
-- **`cargo test --workspace`** running in background — verify all 241+ tests green before committing
-- **Commit Phase 4** via `commit-as-next.sh` — 11 files modified in project-intelligence archive
-- **Phase 5**: `TOTEBOX_NODE_CLASS=micro` integration tests + cgroup sandbox (`tests/micro_node.rs`)
-- **Workspace commit** (Command scope): `infrastructure/local-doorman/local-doorman.service` needs staging + commit from `/srv/foundry/`
-- **Stage 6 promote**: 10+ commits ahead of origin/main; needs `git rebase origin/main` first (Command scope)
-- `service-content/CLAUDE.md` doesn't exist — low priority
-- Inbox `project-editorial-20260521-e4-triage-naming-blockers` — 3 drafts need rename before re-staging
-
-### Operator preferences surfaced
-- No new preferences surfaced this session
-
