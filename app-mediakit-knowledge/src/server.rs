@@ -1160,13 +1160,15 @@ fn home_chrome(
                         span.nav-divider aria-hidden="true" {}
                         ul.nav-list.right {
                             @if woodfine_projects {
-                                li { a href="https://corporate.woodfinegroup.com" { "Corporate" } }
-                                li { a href="/wiki/newsroom" { "Newsroom" } }
-                            } @else if woodfine_theme {
+                                li { a href="https://home.woodfinegroup.com" { "Home" } }
                                 li { a href="https://projects.woodfinegroup.com" { "Projects" } }
-                                li { a href="/wiki/newsroom" { "Newsroom" } }
+                                li { a href="https://woodfinegroup.com" { "Newsroom" } }
+                            } @else if woodfine_theme {
+                                li { a href="https://home.woodfinegroup.com" { "Home" } }
+                                li { a href="https://corporate.woodfinegroup.com" { "Corporate" } }
+                                li { a href="https://woodfinegroup.com" { "Newsroom" } }
                             } @else {
-                                li { a href="https://pointsav.com" { "pointsav.com" } }
+                                li { a href="https://home.pointsav.com" { "Home" } }
                                 li { a href="https://github.com/pointsav" { "GitHub" } }
                             }
                         }
@@ -1458,11 +1460,12 @@ fn home_chrome(
 
                 }
                 footer.shell-footer #site-footer role="contentinfo" {
-                    div.footer-cities { "Vancouver · Toronto · London" }
+                    div.footer-cities { "Vancouver · New York · Berlin" }
                     nav.footer-nav aria-label="Footer navigation" {
                         a href="/wiki/disclaimers" { "Disclaimer" }
                         a href="/wiki/contact" { "Contact" }
                         a href="/sitemap.xml" { "Sitemap" }
+                        a href="/wiki/pointsav-media-kit" { "PointSav Media Kit" }
                     }
                     p.footer-copyright-line.copyright {
                         "© 2026 Woodfine Capital Projects Inc. All rights reserved."
@@ -1472,6 +1475,13 @@ fn home_chrome(
                         "Totebox Orchestration™, and Totebox Archive™ are trademarks of Woodfine Capital "
                         "Projects Inc. used in Canada, the United States, Latin America, and Europe. All other "
                         "trademarks are the property of their respective owners."
+                    }
+                    div.footer-badges {
+                        a.footer-badge rel="license"
+                          href="https://creativecommons.org/licenses/by/4.0/"
+                          title="Content licensed under Creative Commons Attribution 4.0 International" {
+                            img src="/static/cc-by-4.svg" alt="CC BY 4.0" width="88" height="31";
+                        }
                     }
                 }
                 script src="/static/wiki.js" defer="true" {}
@@ -2242,13 +2252,15 @@ fn wiki_chrome(
                         span.nav-divider aria-hidden="true" {}
                         ul.nav-list.right {
                             @if woodfine_projects {
-                                li { a href="https://corporate.woodfinegroup.com" { "Corporate" } }
-                                li { a href="/wiki/newsroom" { "Newsroom" } }
-                            } @else if woodfine_theme {
+                                li { a href="https://home.woodfinegroup.com" { "Home" } }
                                 li { a href="https://projects.woodfinegroup.com" { "Projects" } }
-                                li { a href="/wiki/newsroom" { "Newsroom" } }
+                                li { a href="https://woodfinegroup.com" { "Newsroom" } }
+                            } @else if woodfine_theme {
+                                li { a href="https://home.woodfinegroup.com" { "Home" } }
+                                li { a href="https://corporate.woodfinegroup.com" { "Corporate" } }
+                                li { a href="https://woodfinegroup.com" { "Newsroom" } }
                             } @else {
-                                li { a href="https://pointsav.com" { "pointsav.com" } }
+                                li { a href="https://home.pointsav.com" { "Home" } }
                                 li { a href="https://github.com/pointsav" { "GitHub" } }
                             }
                         }
@@ -2645,12 +2657,13 @@ fn wiki_chrome(
                 }
 
                 footer.shell-footer #site-footer role="contentinfo" {
-                    div.footer-cities { "Vancouver · Toronto · London" }
+                    div.footer-cities { "Vancouver · New York · Berlin" }
                     nav.footer-nav aria-label="Footer navigation" {
                         a href="/wiki/disclaimers" { "Disclaimer" }
                         a href="/wiki/contact" { "Contact" }
                         a href={ "/git/" (slug) } { "View source" }
                         a href="/sitemap.xml" { "Sitemap" }
+                        a href="/wiki/pointsav-media-kit" { "PointSav Media Kit" }
                     }
                     p.footer-copyright-line.copyright {
                         "© 2026 Woodfine Capital Projects Inc. All rights reserved."
@@ -2660,6 +2673,13 @@ fn wiki_chrome(
                         "Totebox Orchestration™, and Totebox Archive™ are trademarks of Woodfine Capital "
                         "Projects Inc. used in Canada, the United States, Latin America, and Europe. All other "
                         "trademarks are the property of their respective owners."
+                    }
+                    div.footer-badges {
+                        a.footer-badge rel="license"
+                          href="https://creativecommons.org/licenses/by/4.0/"
+                          title="Content licensed under Creative Commons Attribution 4.0 International" {
+                            img src="/static/cc-by-4.svg" alt="CC BY 4.0" width="88" height="31";
+                        }
                     }
                 }
 
@@ -3798,7 +3818,7 @@ fn chrome(
                         }
                         span.nav-divider aria-hidden="true" {}
                         ul.nav-list.right {
-                            li { a href="https://pointsav.com" { "pointsav.com" } }
+                            li { a href="https://home.pointsav.com" { "Home" } }
                             li { a href="https://github.com/pointsav" { "GitHub" } }
                         }
                     }
@@ -3807,10 +3827,11 @@ fn chrome(
                     (body)
                 }
                 footer.shell-footer role="contentinfo" {
-                    div.footer-cities { "Vancouver · Toronto · London" }
+                    div.footer-cities { "Vancouver · New York · Berlin" }
                     nav.footer-nav aria-label="Footer navigation" {
                         a href="/wiki/disclaimers" { "Disclaimer" }
                         a href="/wiki/contact" { "Contact" }
+                        a href="/wiki/pointsav-media-kit" { "PointSav Media Kit" }
                     }
                     p.footer-copyright-line.copyright {
                         "© 2026 Woodfine Capital Projects Inc. All rights reserved."
@@ -3820,6 +3841,13 @@ fn chrome(
                         "Totebox Orchestration™, and Totebox Archive™ are trademarks of Woodfine Capital "
                         "Projects Inc. used in Canada, the United States, Latin America, and Europe. All other "
                         "trademarks are the property of their respective owners."
+                    }
+                    div.footer-badges {
+                        a.footer-badge rel="license"
+                          href="https://creativecommons.org/licenses/by/4.0/"
+                          title="Content licensed under Creative Commons Attribution 4.0 International" {
+                            img src="/static/cc-by-4.svg" alt="CC BY 4.0" width="88" height="31";
+                        }
                     }
                 }
             }

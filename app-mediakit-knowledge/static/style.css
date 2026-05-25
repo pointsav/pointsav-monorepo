@@ -1369,6 +1369,9 @@ html[data-theme="dark"] .toc a.is-active { color: var(--link); border-left-color
 }
 .footer-copyright-line { margin-bottom: 6px; }
 .footer-trademark-line { margin-top: 6px; }
+.footer-badges { display: flex; gap: 12px; align-items: center; margin-top: 16px; }
+.footer-badge img { display: block; height: 31px; width: auto; opacity: 0.75; border-radius: 3px; transition: opacity 0.15s; }
+.footer-badge:hover img { opacity: 1; }
 
 /* ---------- Auth gating: hide Talk tab + edit pencil for anon ---------- */
 [data-auth="anon"] .article__tab--talk,
@@ -2230,9 +2233,10 @@ html[data-theme="dark"] .toc-rail a.toc-active { border-left-color: var(--link);
 .wiki-home-search button:hover { background: var(--navy-deep); }
 
 /* Home top panels (TFA, DYK, etc.) */
-.wiki-home-top-panels { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; padding: 24px 28px 0; max-width: var(--content-max); margin: 0 auto; }
+.wiki-home-top-panels { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 24px 28px 0; max-width: var(--content-max); margin: 0 auto; }
+@media (max-width: 875px) { .wiki-home-top-panels { grid-template-columns: 1fr; } }
 .wiki-home-box { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
-.wiki-home-box h2 { font-family: var(--font-display); font-size: 14px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; padding: 14px 20px 10px; border-bottom: 1px solid var(--rule); color: var(--fg-1); }
+.wiki-home-box h2 { font-family: var(--font-display); font-size: 13px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; padding: 11px 20px; background: var(--navy); color: #fff; border-bottom: none; margin: 0; }
 .wiki-home-box-body { padding: 16px 20px; font-size: 14px; line-height: 1.6; }
 .wiki-home-box-body h3 a { color: var(--fg-1); font-family: var(--font-display); font-size: 18px; font-weight: 400; }
 .wiki-home-box-body ul { list-style: disc; padding-left: 20px; margin: 0; }
