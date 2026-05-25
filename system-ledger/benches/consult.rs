@@ -1,10 +1,10 @@
+#![allow(clippy::unit_arg)]
 //! criterion benchmarks for the kernel-side ledger consultation
 //! latency budget. Master 4b deliverable from
 //! `~/Foundry/clones/project-system/.claude/inbox-archive.md`.
 //!
 //! Run with: `cargo bench -p system-ledger`. Numbers surface in
 //! `target/criterion/<bench>/report/`.
-#![allow(clippy::unit_arg)]
 
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use ed25519_dalek::{Signer, SigningKey};
@@ -201,7 +201,7 @@ fn bench_verify_inclusion_proof_raw_8_leaves(c: &mut Criterion) {
     let proof = make_inclusion_proof(&leaves, 4);
     c.bench_function(
         "InclusionProof::verify (raw, tree-size 8 — 3-hash path)",
-        |b| b.iter(|| black_box(proof.verify(&leaves[4], &root)).unwrap()),
+        |b| b.iter(|| black_box(proof.verify(&leaves[4], &root).unwrap())),
     );
 }
 
@@ -213,7 +213,7 @@ fn bench_verify_inclusion_proof_raw_1024_leaves(c: &mut Criterion) {
     let proof = make_inclusion_proof(&leaves, 512);
     c.bench_function(
         "InclusionProof::verify (raw, tree-size 1024 — 10-hash path)",
-        |b| b.iter(|| black_box(proof.verify(&leaves[512], &root)).unwrap()),
+        |b| b.iter(|| black_box(proof.verify(&leaves[512], &root).unwrap())),
     );
 }
 
@@ -245,7 +245,11 @@ fn bench_signed_checkpoint_verify_inclusion_proof(c: &mut Criterion) {
         "SignedCheckpoint::verify_inclusion_proof (composed, 1024-leaf tree)",
         |b| {
             b.iter(|| {
-                black_box(signed.verify_inclusion_proof(&proof, &leaves[512], "apex", &pk)).unwrap()
+                black_box(
+                    signed
+                        .verify_inclusion_proof(&proof, &leaves[512], "apex", &pk)
+                        .unwrap(),
+                )
             })
         },
     );
@@ -300,7 +304,11 @@ fn bench_apply_witness_record_with_proof(c: &mut Criterion) {
                     ledger
                 },
                 |mut ledger| {
-                    black_box(ledger.apply_witness_record(witness.clone(), proof.clone())).unwrap()
+                    black_box(
+                        ledger
+                            .apply_witness_record(witness.clone(), proof.clone())
+                            .unwrap(),
+                    )
                 },
                 criterion::BatchSize::SmallInput,
             )

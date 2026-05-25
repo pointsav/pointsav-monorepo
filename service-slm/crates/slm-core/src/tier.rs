@@ -15,8 +15,7 @@ pub struct SpeculationRequest {
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum Tier {
-    /// Tier A — on-device OLMo 2 1B specialist (NUC-class hardware Toteboxes only).
-    /// Unavailable on $7/mo e2-micro fleet nodes (DOCTRINE claim #54).
+    /// Tier A — local OLMo 3 7B Q4 (mistral.rs / llama.cpp HTTP on this VM).
     Local,
     /// Tier B — Yo-Yo OLMo-3-1125-32B-Think on multi-cloud GPU burst.
     Yoyo,
@@ -52,30 +51,6 @@ impl Complexity {
             Complexity::Low => "low",
             Complexity::Medium => "medium",
             Complexity::High => "high",
-        }
-    }
-}
-
-/// Caller's latency contract for this request.
-/// Used alongside `Complexity` and node-class to select a tier.
-#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Hash, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-pub enum LatencyClass {
-    /// Respond as fast as possible; prefer on-device Tier A when available.
-    #[default]
-    Interactive,
-    /// Can tolerate seconds of queuing; prefer Tier B for quality.
-    Background,
-    /// Nightly batch work; always routes via Tier B (route_yoyo_only pattern).
-    Batch,
-}
-
-impl LatencyClass {
-    pub fn as_str(&self) -> &'static str {
-        match self {
-            LatencyClass::Interactive => "interactive",
-            LatencyClass::Background => "background",
-            LatencyClass::Batch => "batch",
         }
     }
 }

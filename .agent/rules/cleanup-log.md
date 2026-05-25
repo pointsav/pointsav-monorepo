@@ -4,273 +4,245 @@ Living record of in-flight cleanup work, open questions, and decisions made duri
 
 ---
 
-## 2026-05-25 — app-mediakit-knowledge: round-2 design redesign (commit `70259d32`)
+## How this file is maintained
 
-- **Second design competition run.** Three OPUS prototype agents produced new directions:
-  proto-platform-document (Stripe/Linear platform aesthetic), proto-institutional-register
-  (Q4/Bloomberg newspaper-of-record), proto-editorial-standard (FT/Economist literary).
-- **Jury verdict: platform-document wins (84/100)** with three surgical grafts from
-  institutional-register: three-row header structure (utility/brand/nav-row), ledger stripe
-  (navy bg, 4-fact statistics), article meta as `<dl>` with vertical rules.
-  editorial-standard rejected outright (wrong reading register for technical wiki).
-- **CSS rewritten** (2,347 lines, replacing 4,362-line prior file): Oswald + Nunito Sans +
-  Roboto Slab via Google Fonts CDN; three-row header geometry (utility-h 32px, brand-h 72px,
-  nav-h 48px); ledger stripe; article-meta DL grid; dark mode on `#0B1220` canvas;
-  accent-gold `#C7A961` decorative-only.
-- **server.rs changes:** Google Fonts `<link>` preconnect + stylesheet tags added to all
-  three chrome functions. Wordmark constants (`WORDMARK_POINTSAV`, `WORDMARK_WOODFINE`)
-  rewritten as HTML spans with `text-transform:none` — no more "POINT-SAV" hyphenation.
-- **dtcg-bundle.json additions:** `color-dark` namespace (11 dark primitives), `layout`
-  namespace (8 dimensional tokens), `accent-gold`, platform font-family entries.
-- **Spec file produced:** `DESIGN-WIKI-REDESIGN-SPEC.draft.md` (416 lines) in
-  `.agent/drafts-outbound/` — complete implementation brief including Google Fonts URLs,
-  token JSON, CSS selector-level delta, Maud Rust patterns, 15-step verification checklist.
-- **Tests:** 106 unit tests + all integration suites pass. Stage 6 + rebuild outboxed.
-
-## 2026-05-25 — app-mediakit-knowledge: shell-header CSS mismatch fix
-
-- **Root cause identified and fixed.** The hybrid UI (commit `9cf2c9ed`) wrote all three-row
-  header CSS under `.shell-header` selectors, but `home_chrome()` and `wiki_chrome()` both
-  emitted `header.mw-header` — so the brand-row, utility-row, and nav-row layout CSS was
-  completely orphaned. No three-row layout ever rendered in production.
-- **Both functions updated** to emit `header.shell-header`. Search-row kept as fourth row
-  in wiki article pages (below nav-row, centered search pill).
-- **Wordmark SVG fill fixed** from hardcoded `#09090B`/`#111827` to `fill="currentColor"` —
-  was invisible in dark mode.
-- **CSS utility-row button/link selectors added.** `.shell-header .utility-row button/a` now
-  covered alongside `.shell-utility button/a`.
-- **`.search-row` CSS added** for the wiki article search bar row (no styles previously existed).
-- **Tests:** all 106 tests pass. Committed as `1ab80d1f`. Stage 6 + rebuild outboxed to Command.
-
-## 2026-05-24 — Phase 21: electronics category + XXXLutz/Höffner lifestyle expansion
-
-- **`electronics` added as 6th retail anchor category in taxonomy.py.** Added to `_RETAIL_CATS`,
-  `CATEGORIES`, `BRAND_FILL`, and `DISPLAY_NAMES`. Flows into tier_of() via H2b (tight ≥3 → T1)
-  and n≥4 (≥4 anchors → T1) paths automatically; zero new tier branches. `all_chains_for_iso()`
-  updated to include `"electronics"` in its category loop.
-- **11 electronics YAML files created** in `cluster-totebox-personnel-1/service-fs/service-business/`:
-  mediamarkt-de, saturn-de, mediamarkt-at, mediamarkt-nl, mediamarkt-es, mediaworld-it,
-  mediamarkt-gr, mediamarkt-pl, mediamarkt-se, boulanger-fr, darty-fr.
-  format_exclude_names applied to DE/AT/NL/ES/PL/SE (Xpress/Express/Pickup sub-formats);
-  darty-fr excludes Darty Box/Mini/Fnac.
-- **5 lifestyle YAML files created:** xxxlutz-at, xxxlutz-de, xxxlutz-se, xxxlutz-fr,
-  hoeffner-de. mömax sub-brand excluded from all XXXLutz ingests. lifestyle AT/DE/SE/FR
-  updated in BRAND_FILL to include XXXLutz; DE also gains Höffner.
-- **phase21-rebuild.sh created** — ingests all 16 chains, runs build-clusters + build-tiles --layer 2.
-  Pre-flight checks phase20 complete marker. Schedule via crontab 2026-05-26 05:00 UTC.
-- **index.html Phase 21 updates:** electronics pill added to BentoBox anchor section
-  (canonical order: anchor → hw → price_club → lifestyle → electronics → sport → civic).
-  `elecM` filter + `elec_list` field added to `metaToClusterProps()`.
-- **index.html zoom second-click fix (Option B):** proximity-fill click handler now owns
-  street-level step — first click selects cluster at ring-overview (z12/z11), second click
-  on same ring flies to street level (z14/z13, 800 ms). `drillIntoCluster()` stays
-  deterministic (ring-overview always); no latent regression for RM panel or nodes callers.
-- **index.html mobile fixes (OPUS audit):** `cooperativeGestures` enabled for touch devices;
-  `essential: true` added to 3 missing flyTo/fitBounds calls; `touch-action: manipulation`
-  added to all interactive elements; `vh → dvh` in responsive rules; collapsible BentoBox
-  button added for mobile (44×44 px, hides panel below 64 px header strip).
+- **Read at session start.** Claude Code reads this file at the start of every session (per the instruction in `CLAUDE.md`). The tables below reflect the current state of in-flight work. Apply the guidance before touching any related files.
+- **Update at session end.** When a session includes meaningful cleanup — renames across multiple files, deprecated code removal, resolving an open question, surfacing a new one — append a dated entry to the top of the **Session entries** section at the bottom of this file.
+- **Do not log trivial edits.** Single-file typo fixes, comment tweaks, or routine formatting changes do not belong here. This log is a record of decisions, not of every keystroke.
+- **Commit each update with the code changes it describes.** The log and the work it documents travel together through git history.
 
 ---
 
-> *Entries older than this point truncated for performance (861 lines removed — see git history).*
+## Interpreting build signals during cleanup
 
-  left unchanged (it refers to deployment-side path relative to
-  CWD — independent of monorepo-side layout). Separate `.mmdb` →
-  build-time-fetch task remains open under Structural defects.
-- **Open question surfaced.** `surveyor.py` hard-codes
-  `MAX_DAILY_VERIFICATIONS = 10`. The existing cleanup-log open
-  question — "Verification Surveyor daily throttle number — Under
-  operational review. Do not cite a specific number" — must
-  reconcile: either the code is authoritative (close the question,
-  value is 10) or the doc is authoritative (the code is out of step
-  and needs updating). Do not cite the number externally until
-  resolved.
-- **Second open question surfaced (os-infrastructure build
-  pipeline).** The two scripts `os-infrastructure/forge_iso.sh`
-  (ISO assembly) and `os-infrastructure/build_iso/compile_binary.sh`
-  (binary compile, renamed this session) are sequential build
-  stages but are not wired together — the assembly script does not
-  invoke the compile script, and there is no Makefile or top-level
-  driver. Operator must run them manually in order. Is this
-  intentional (operator-gated two-step) or drift (should become a
-  single driver script)? Pending decision before next pipeline
-  refactor.
-- **Handoff-outbound pattern piloted.** Added
-  `.claude/rules/handoffs-outbound.md` as a cross-repo file-move
-  outbox. Two entries lodged: `GUIDE-OPERATIONS.md` and
-  `USER_GUIDE_2026-03-30_V2.md` both → `content-wiki-documentation`.
-  Both files remain in place in this repo until a Root Claude in
-  the destination repo commits the add-side; only then does a
-  follow-up Root Claude session here commit the source-remove.
-  The pattern is passive — an outbox entry waits for pickup.
-- **Surfaced for Master Claude** (workspace-scope changes, outside
-  Root Claude's write lane per §9):
-  1. Formalise the cross-repo handoff pattern as an addendum in
-     `~/Foundry/CLAUDE.md` §9. Current §9 stops at clone
-     provisioning; the handoff mechanic is the natural extension
-     for file movement between engineering repos.
-  2. Extend `~/Foundry/CLAUDE.md` §10's `.claude/rules/` canonical
-     list from three files to four — add `handoffs-outbound.md`
-     alongside `repo-layout.md`, `project-registry.md`, and
-     `cleanup-log.md`.
-  3. Propagate both the `repo-layout.md` rule (§10 already names
-     the monorepo as reference implementation) and the new
-     `handoffs-outbound.md` pattern to the other engineering repos
-     over time. Order of propagation is `~/Foundry/NEXT.md`'s
-     concern.
-- **`app-mediakit-knowledge/` populated from cross-repo zip.** The
-  zip `content-wiki-documentation/app-mediakit-knowledge.zip`
-  (42 KB, 44 entries) extracted into the existing Scaffold-coded
-  `app-mediakit-knowledge/` directory, promoting it from a 4-file
-  scaffold to a working-looking Rust crate skeleton: `src/` with
-  5 modules (`editor/`, `renderer/`, `search/`, `server/`,
-  `sync/`) plus `main.rs` and `config.rs`; `templates/` (4 HTML
-  files); `static/` (13 KB `wiki.js` + 19 KB `style.css`);
-  `tests/fixtures/architecture/` with 2 markdown fixtures;
-  `.gitignore` (46 B). `Cargo.toml` and `README.md` were
-  overwritten (93 B → 1,470 B; 751 B → 8,243 B). A garbage
-  top-level directory literally named `{src` — containing a
-  four-level chain of brace-expansion artefacts from how the zip
-  was originally created (quoted `mkdir` blocked shell expansion)
-  — was removed before any git operation. Nothing staged or
-  committed in the extraction step itself.
-- **Open follow-ups from the extraction (not acted on this
-  session):**
-  - `README.es.md` (403 B scaffold) is now out of sync with the
-    new 8,243 B English README — CLAUDE.md §6 bilingual-pair rule
-    in violation until a refresh pass lands. Editorial work;
-    track as open item rather than inline.
-  - `.gitkeep` at project root is redundant now that `src/` has
-    real files; remove at next commit touching this project.
-  - Registry row (`app-mediakit-knowledge` under `app-mediakit`)
-    currently reads "Scaffold-coded, 4 files" — state remains
-    Scaffold-coded per §8 (never run end-to-end) but file count
-    and notes need updating.
-  - Source-side disposition of
-    `content-wiki-documentation/app-mediakit-knowledge.zip`
-    undecided: delete from the sibling repo (cross-repo move,
-    separate commit there), or retain as an archive. Not
-    recorded in this repo's `handoffs-outbound.md` since the
-    direction is inbound, not outbound.
-- **BIM product family handoff landed — four project directories
-  created, rules extension added.** The zip
-  `/home/mathew/Documents/pointsav-bim-handoff.zip` (44 KB, 10
-  files) was unpacked into a `/tmp` staging area and 9 files were
-  placed into the monorepo:
-  - Four new project directories each with `CLAUDE.md` +
-    `RESEARCH.md`: `app-console-bim/`, `app-orchestration-bim/`,
-    `app-workplace-bim/`, `service-bim/`.
-  - One new `.claude/rules/` file:
-    `.claude/rules/bim-product-family.md` (9,238 B) — a new
-    *category* of rules file (product-family rules), outside the
-    four named in `~/Foundry/CLAUDE.md` §10. Surfaced to Master
-    Claude as a potential §10 extension.
-  - Joint research file placed as `RESEARCH.md` in **both**
-    `app-console-bim/` and `app-orchestration-bim/` — intentional
-    duplication for Task Claude — BIM to rationalise during its
-    cleanup pass, not prematurely.
-  - `RESEARCH-BIM-MARKET.md` not placed in the monorepo (already
-    present in `content-wiki-documentation/` at repo root,
-    byte-identical; per `repo-layout.md` sibling-repo rule, market
-    research belongs in content-wiki only).
-  - `CLAUDE-root-additions.md` held back — it describes patches to
-    a monorepo root `CLAUDE.md` that does not exist. Zip retained
-    at source path; Master Claude applies when the root CLAUDE.md
-    is created.
-- **Registry drift closed (four rows without directories).** The
-  2026-04-22 bootstrap registered the four BIM dirs as
-  Reserved-folder with "1 file (RESEARCH.md)" notes, but
-  `git ls-tree` showed no trace on any branch. The rows were
-  aspirational; the directories were never created. This session
-  creates them for the first time. Registry rows updated to
-  reflect the actual contents (2 files each). State remains
-  Reserved-folder (§8: Scaffold-coded requires a `Cargo.toml`
-  skeleton; these are research-phase, no code yet).
-- **Cross-repo BIM handover outbox entry opened.** Single
-  consolidated entry in `handoffs-outbound.md` headed "BIM
-  material → content-wiki-documentation", labelled as a **pattern
-  variant: raw-material handover, not a file move** — source files
-  remain in the monorepo permanently. Destination Root Claude
-  transforms the material into proper wiki topics per its own
-  repo-layout. Detection pattern for closure:
-  `"receive BIM material from pointsav-monorepo"` in the
-  destination repo's git log.
-- **Surfaced for Master Claude (workspace-scope follow-ups):**
-  1. **Root `CLAUDE.md` for `pointsav-monorepo` is missing.**
-     Required per §10 to wire the `.claude/rules/*` files into
-     Claude sessions. `CLAUDE-root-additions.md` in the handoff
-     zip (location:
-     `/home/mathew/Documents/pointsav-bim-handoff.zip` →
-     `CLAUDE-root-additions.md`, 1,594 B) describes four targeted
-     additions (`.claude/rules/bim-product-family.md` reference,
-     four BIM dirs in Repo structure, canonical-name guards,
-     IFC/F12 rules). Apply when the root CLAUDE.md is first
-     drafted.
-  2. **§10 canonical list may need to grow.**
-     `bim-product-family.md` is a fifth type of `.claude/rules/`
-     file beyond the four listed in §10. Decision: enumerate,
-     generalise, or name as a subcategory.
-  3. **`cluster-bim` clone provisioning pending.** Per §9, Master
-     Claude provisions clones. A future Task Claude — BIM needs
-     `~/Foundry/clones/cluster-bim/` with feature branch
-     `cluster/bim` and a `PROJECT-CLONES.md` row before it can
-     activate the four BIM projects.
-  4. **Stale paths in existing outbox entries.** The two prior
-     entries in `handoffs-outbound.md` use
-     `/home/mathew/Foundry/factory-pointsav/...` paths (non-
-     existent on disk) and helper `~/Foundry/tool-commit-as-next.sh`
-     (§7 canonical is `~/Foundry/bin/commit-as-next.sh`). A
-     destination Root Claude running the prescribed commands
-     verbatim would hit failures. Needs correction before
-     pickup. This session's new BIM entry uses correct paths.
+Until the workspace `Cargo.toml` is unified (see Layer 1 audit findings), `cargo build --workspace` and `cargo check` at the repo root only exercise the 8 declared members. The other ~70 crates are not covered by workspace-level commands. When making changes to any crate outside the declared members, run `cargo check` inside that crate's directory specifically. Do not rely on workspace-root build signals to confirm correctness across the full repo. This caveat lifts when the workspace is unified.
 
 ---
 
-## 2026-04-22
+## Active legacy-to-canonical renames
 
-- **Project framework bootstrap.** Added `.claude/rules/project-registry.md`
-  with 100-row inventory of every top-level directory, classified by
-  state per `~/Foundry/CLAUDE.md` §8 (Reserved-folder /
-  Scaffold-coded / Active / Defect / Not-a-project). Framework docs,
-  templates, and activation procedure live workspace-level. This
-  cleanup-log was also introduced onto `main` today (previously
-  present only on feature branches — drift closed).
-- **Taxonomy expanded to seven domains.** Added `app-orchestration-*`
-  to the in-force `app-[os]-*` list in
-  `~/Foundry/IT_SUPPORT_Nomenclature_Matrix_V8.md` §3. Triggered by
-  `app-orchestration-bim` appearing during the session — would have
-  been an unmatched-prefix defect under the original six-domain
-  rule. Now conformant; `os-orchestration` already exists as a
-  Systemic Wordmark (§2).
-- **Four BIM-research directories registered.** `app-console-bim`,
-  `app-orchestration-bim`, `app-workplace-bim`, `service-bim` — each
-  with a single `RESEARCH.md`. Classified as Reserved-folder pending
-  decision to activate.
-- **Audit cleanup.** Removed 2 `__MACOSX/` directories and 16
-  tracked `.DS_Store` / AppleDouble files from extraction-artefact
-  scaffolding in the egress crates. Added `.DS_Store` to
-  `.gitignore`.
+These substitutions are known and in progress. Canonical names are from the Nomenclature Matrix. When the last occurrence of a legacy name is removed from the repo, move the row to the **Completed migrations** section with the date of completion.
+
+| Legacy | Canonical | Status | Notes |
+|---|---|---|---|
+| `cluster-totebox-real-property` | `cluster-totebox-property` | In flight | Appears in older deployment manifests and doc references. |
+| `os-interface`, `os-integration` | `os-orchestration` | In flight | Legacy names predate the current three-layer stack nomenclature. |
+| `RealPropertyArchive` | `PropertyArchive` | In flight | Appears in older archive-type documentation and possibly in legacy code comments. |
 
 ---
 
-## 2026-04-18 — Layer 1 structural audit — findings
+## Deprecations — flag and remove
 
-- **Headline finding:** Workspace `Cargo.toml` declares only 8 of ~70+ crates as members. Everything else is treated as standalone workspaces, which explains the 23 stray `Cargo.lock` files scattered through the repo. `cargo build --workspace` will skip almost everything; profile/edition inheritance is not reaching most crates.
-- **Severity counts:** 1 Critical, 1 High, 4 Medium, 1 Low.
-  - Critical: workspace under-declaration (8 of ~70+ crates).
-  - High: 23 stray `Cargo.lock` files inside member crates.
-  - Medium: prefix violations (2); dir-name vs `Cargo.toml` name mismatches (13); doubly-nested `service-email-egress-{ews,imap}` scaffolding; many `app-console-*` / `app-network-*` directories without `Cargo.toml`.
-  - Low: `discovery-queue` orphan data directory at root.
-- **Good news on prefix adherence:** across ~85 directories, adherence to the seven canonical prefixes is approximately 97.6%. Only two violations found: `pointsav-pty-bridge` (no recognized prefix) and `vendors-maxmind` (plural form instead of canonical `vendor-`).
-- **Nested redundancy:** `service-email-egress-ews` and `service-email-egress-imap` both contain a redundant intermediate directory of the same name — a doubly-nested copy-paste scaffolding pattern producing depth-3 crates. All 13 directory-name / `Cargo.toml`-name mismatches are concentrated in these nested egress areas (short dir names like `egress-ingress` aliasing qualified crate names like `service-email-batch-ingress`).
-- **No modifications were made in this session — audit only.**
-- **Next:** Open Questions section of this log to be updated separately with five new questions raised by the audit.
+Names no longer in use. Any occurrence in the repo should be flagged and removed. If a removal blocks something active, surface it — do not leave the legacy name in place silently.
+
+| Name | Status | Notes |
+|---|---|---|
+| `fleet-command-authority` | Deprecated — remove | Node no longer in use. Should not appear in any current deployment manifest, build script, or documentation. |
 
 ---
 
-## 2026-04-18
+## Intentional exceptions — do not migrate
 
-- Initialized this cleanup log. Seeded active renames, deprecations, intentional exceptions, and open questions from Section 13 of the PointSav Project Instructions.
-- Established the session-start / session-end read-and-update pattern in CLAUDE.md.
-- No code changes in this session. Next session should confirm the active renames table against a fresh grep of the repo to establish a baseline count of remaining occurrences per legacy term.
-- Open question surfaced: whether the `service-parser` / `service-extraction` consolidation is scoped for a specific MEMO version or tracked informally. Answer will determine how we prioritize closing that migration.
+Items that may look like candidates for cleanup but are intentionally preserved as-is. Do not "fix" these without confirmation.
+
+| Item | Rationale |
+|---|---|
+| `cluster-totebox-personnel-1` and other numbered personnel instances | Exist locally but intentionally absent from GitHub and the MEMO. Not a naming error. Do not flag as legacy. |
+| Two ConsoleOS operating patterns (multi-service `node-console-operator` and single-service nodes) | Both patterns are valid. The MEMO documents `node-console-operator` only, by design, to keep official documentation clean. Do not flag the single-service pattern as an inconsistency. |
+| `service-llm` references in legacy docs | Legacy documentation predates `service-slm` naming; read as `service-slm`. Code is correct (code references are already `service-slm`). No migration action needed — this is a permanent documentation-reading convention, not an in-flight rename. Reclassified from Active renames to here per Brief 8 audit 2026-04-28. |
+
+---
+
+## Open questions
+
+Pending confirmations that affect how Claude should describe or reason about parts of the system. Do not invent values for these. If a task requires an answer, stop and surface the question.
+
+| Question | Current handling |
+|---|---|
+| Verification Surveyor daily throttle number | Under operational review. Do not cite a specific number. Refer to it as "a system-enforced daily limit" until confirmed in a future MEMO version. **Code reference (2026-04-23):** `app-console-content/scripts/surveyor.py` hard-codes `MAX_DAILY_VERIFICATIONS = 10`; whether this value is authoritative or drift is the pending decision. |
+| User Guide language on Sovereign Data Foundation | The User Guide contains language treating the Foundation as a current equity holder and active auditor. Requires a language review pass before any User Guide content is reused in public-facing materials. Flag any passage that describes the Foundation as current or active. |
+| Is the per-crate independent workspace pattern intentional (some crates meant to be extractable and published separately) or accidental drift? | Pending decision — do not act on related findings until answered. |
+| Are `app-console-*` and `app-network-*` directories without `Cargo.toml` intentional scaffolding for planned work, or abandoned attempts? | Pending decision — do not act on related findings until answered. |
+| ~~Should the doubly-nested `service-email-egress-{ews,imap}` structure be flattened, or does the nesting reflect a real protocol-implementation hierarchy?~~ | **Answered 2026-04-23:** wrappers flattened; two crates kept separate (distinct protocol adapters, not duplicates). 13 Cargo.toml name mismatches remain as separate structural audit finding (not an open question — a known defect). Reclassified per Brief 8 audit 2026-04-28. |
+| What is `discovery-queue` — runtime data that should be gitignored, reference data that belongs elsewhere, or a misplaced crate? | Pending decision — do not act on related findings until answered. |
+| ~~Does `vendors-maxmind` (containing a GeoLite2 database, not code) belong as a `vendor-*` crate at all, or should it move to a non-workspace data directory?~~ | **Answered 2026-04-23:** non-workspace data directory. Moved to `app-mediakit-telemetry/assets/` (matching the authoritative target path already documented in the vendor's README). `vendor-*` crate framing rejected: the directory contained only data, no code. |
+
+---
+
+## Completed migrations
+
+Migrations fully resolved in the repo. Moved here from **Active legacy-to-canonical renames** when the last occurrence of the legacy name is removed. Empty for now.
+
+| Legacy | Canonical | Closed | Notes |
+|---|---|---|---|
+| `service-parser` | `service-extraction` | 2026-04-23 | Legacy-era scaffold containing only a README that described an AI-routing architecture since superseded by `service-extraction`'s deterministic Parser-Combinators approach. Zero runtime references, never a workspace member, one commit in history. No code or data to recycle into `service-extraction`; README deleted without migration. |
+| `pointsav-pty-bridge` | `service-pty-bridge` | 2026-04-23 | Prefix-violation defect flagged in 2026-04-18 audit (brand prefix `pointsav-` not one of the seven canonical prefixes). Canonical target `service-pty-bridge` fits the daemon runtime role. Working Rust crate with one source file; directory renamed via `git mv`, `Cargo.toml` `name` field updated in the same commit. Not a workspace member, zero external import references, no callers needed updating. |
+| `tool-cognitive-forge` + `service-slm/cognitive-forge` | `service-slm/router-trainer/` + `service-slm/router/` | 2026-04-23 | Closes the last rename-series item and removes the "Cognitive Forge" Do-Not-Use term in one commit. The Rust runtime sub-crate at `service-slm/cognitive-forge/` renamed to `service-slm/router/` (Cargo.toml `name` field + `main.rs` usage string updated). The Python distillation workflow at `tool-cognitive-forge/` moved in to `service-slm/router-trainer/`, joining the runtime as producer/consumer pair. Rationale for split naming: the runtime is a router (of messages to service handlers); the trainer distils knowledge to produce the routing model. Inside `router-trainer/`, `distill_knowledge.py` moved from a non-canonical `src/` into `scripts/` alongside `ignite_teacher.sh`. Three binary/log files untracked from Git and covered by new `.gitignore` patterns (still physically present at new paths for the Python workflow): 35 MB `engine/llamafile`, 22 KB `engine/engine.log`, 89 B `llama.log`. The 15 MB `engine/weights/qwen2.5-coder-1.5b.gguf` was already covered by the existing `**/weights/*` + `*.gguf` patterns — no new ignore needed. Git history retains all blobs; shrinking history is separate `git-filter-repo` work. Registry: `tool-cognitive-forge` row removed; Scaffold-coded 54 → 53, Total 98 → 97. `llama.log` surfaced earlier in this session is closed by this commit. |
+| `vendors-maxmind` | `app-mediakit-telemetry/assets/` | 2026-04-23 | Not a rename but a reclassification: the `vendors-maxmind` directory was a data container holding `GeoLite2-City.mmdb` + READMEs, no code. The vendor's own README already named `app-mediakit-telemetry/assets/` as the intended location — the monorepo had never realised that path. Moved the `.mmdb` + READMEs into their documented target; deleted the empty `vendors-maxmind/` directory. Monorepo `README.md` line 151 and `USER_GUIDE_2026-03-30_V2.md` line 902 updated to the new path. `repo-layout.md` extended to name `assets/` as a conventional project subfolder. Python script reference in `app-mediakit-telemetry/scripts/generic-omni-matrix-engine.py` left unchanged — it reads a deployment-side path relative to CWD, not the monorepo-side path. Separate `.mmdb` → build-time-fetch task remains open under Structural defects. |
+
+---
+
+## Session entries
+
+Newest on top. Append a dated block when a session includes meaningful cleanup work. Format:
+
+```
+## YYYY-MM-DD
+- What changed (files touched, counts, rationale)
+- What was left pending and why
+- New open questions surfaced
+```
+
+---
+
+## 2026-05-12 — Phase 4 Steps 4.4+4.5 — redb wikilink graph + blake3 content hashes
+
+- **`src/links.rs`** (new, 230 lines): `LinkGraph` struct backed by redb. Two tables in
+  `<state_dir>/links.redb`: `outlinks` (composite key `"from_slug\x00to_slug"` → u8 sentinel;
+  supports prefix scan for outlinks and full-scan filter for backlinks) and `hashes`
+  (`"slug\x00revision_sha"` → 32-byte blake3 digest; federation-seam baseline for Phase 7).
+  Public API: `open_or_create`, `rebuild_for_slug`, `backlinks`, `record_hash`,
+  `lookup_by_hash`, `for_testing`. Wikilink parser: regex `r"\[\[([^\]|#\[]+)"`, output
+  slugified (lowercased, spaces → hyphens, anchors/aliases stripped). `for_testing()` uses
+  tempfile + atomic counter for isolated parallel test databases.
+
+- **`tests/links_test.rs`** (new, 133 lines): 7 integration tests — 6 unit-level graph
+  tests (backlink add/clear, multiple sources, self-links, blake3 round-trip, unknown hash)
+  + 1 route-level test (`whatlinkshere_returns_backlinks_from_graph` via tempfile fixture +
+  oneshot router pattern matching `tests/feeds_test.rs`).
+
+- **Wiring across 20 files:**
+  - `src/error.rs`: new `WikiError::LinkGraph(String)` variant; mapped to HTTP 500.
+  - `src/lib.rs`: `pub mod links;` added.
+  - `src/main.rs`: `LinkGraph::open_or_create(&state_dir.join("links.redb"))` at startup
+    (after git repo and glossary); stored in `Arc<LinkGraph>`; passed as `AppState.links`.
+  - `src/server.rs`: `AppState.links: Arc<LinkGraph>` field; `GET /special/whatlinkshere/{slug}`
+    route + `what_links_here` handler (reads `backlinks()`, renders HTML list); "What links here"
+    link in article footer chrome. All `AppState` test constructors updated.
+  - `src/edit.rs`: `post_edit` and `post_create` both call `record_hash(slug, oid_sha, body)`
+    after git commit succeeds, and `rebuild_for_slug(slug, body)` unconditionally. Failures
+    logged non-fatally (link graph is derived state, rebuildable).
+  - All 11 pre-existing integration test files: `links: LinkGraph::for_testing()` added to
+    `AppState` construction (1–2 lines each).
+
+- **Cargo**: `redb = "4.1"` + `blake3 = "1.8"` added to `[dependencies]`.
+
+- **Test results**: 7/7 `links_test` pass (`cargo test --test links_test`). `cargo check`
+  clean. Pre-existing `doorman_stubs_return_correct_json_shape` failure unchanged (unrelated).
+
+- **Stage 6 needed**: Wikipedia Parity Phases 1+2A+3 commits (`3b557cf`, `68c643c`, `b8a1ad8`,
+  `3cee49d`) + this Phase 4 commit (`177813e`) + cleanup-log entry (this commit) need
+  `bin/promote.sh` from Command Session to reach canonical `pointsav/pointsav-monorepo` main.
+
+- **Pending**: Step 4.6 (MCP server via rmcp) and Step 4.7 (git smart-HTTP remote) per
+  `docs/PHASE-4-PLAN.md`. Deploy: `systemctl restart local-knowledge-documentation.service`
+  after Stage 6 binary rebuild.
+
+---
+
+
+## 2026-05-12 — Wikipedia Parity Phase 3 — keyboard shortcuts + TOC pin + AJAX page navigation
+
+- **wiki.js rewritten** (~619 lines → ~530 lines). Module-level state vars added for idempotent
+  re-init on AJAX navigation: `_sectionObserver`, `_hoverCard`, `_hoverTimer`, `_hoverTarget`,
+  `_hoverCache`, `_glossaryTip`, `_fnTip`.
+
+- **5 content-dependent init functions extracted/renamed** to support AJAX page swap:
+  `initHoverCards()`, `initGlossaryTooltips()`, `initFootnoteTooltips()`,
+  `initNavboxes()`, `initCollapsibleSections()`, `initActiveTocTracking()` (stores observer
+  ref in `_sectionObserver`; disconnects before content swap). Called at boot and in
+  `reinitContentInteractions()` after every AJAX navigation.
+
+- **Keyboard shortcuts (Part 1)**: `?` key toggles shortcut help overlay; `Esc` closes it.
+  AccessKey attributes added to server.rs — `accesskey="r"` (Read), `accesskey="e"` (Edit),
+  `accesskey="s"` (View source), `accesskey="h"` (View history), `accesskey="t"` (Talk).
+  Browsers trigger via Alt+Shift+key (Firefox/Linux), Alt+key (Chrome), Ctrl+Option (macOS).
+
+- **TOC pin button (Part 2)**: `button.toc-pin-btn #toc-pin-btn` added to `div.toc-header` in
+  server.rs (after the existing `[hide]` toggle). `initTocPin()` in wiki.js — pin state
+  persisted to `localStorage['wiki-toc-pinned']`; pinned TOC cannot be collapsed by the hide
+  button; `applyPinState()` toggles `toc-pinned` class + `aria-pressed` + button text.
+
+- **AJAX page navigation (Part 3)**: `initAjaxNavigation()` intercepts `/wiki/*` link clicks
+  and `popstate` events. `navigateTo()` uses `fetch()` + `DOMParser` + DOM swap of
+  `#mw-content-text`, `#vector-toc`, `h1.page-title`, `nav #p-views`, `.wiki-breadcrumb`,
+  `document.title`. Loading bar (`#wiki-loading-bar`) with CSS-driven progress at page top.
+  Modifier clicks (Ctrl/Meta/Alt/Shift) and non-`/wiki/` links fall through to full navigation.
+  On fetch error → `window.location.href` fallback. `history.pushState` for forward nav;
+  `history.replaceState` seeds initial state. Uses `.then/.catch` (not async/await) for
+  broad browser compat.
+
+- **CSS additions** (~80 lines appended): `#wiki-loading-bar` (fixed top-of-page progress bar);
+  `#toc-pin-btn` + `.toc-pin-active` (pin button next to hide toggle); `#wiki-shortcut-overlay`
+  + `#wiki-shortcut-panel` + `#wiki-shortcut-close` + `.wiki-shortcut-note` (keyboard overlay).
+
+- **Commit**: `3cee49d` (Jennifer). 60/60 lib tests pass. `doorman_stubs_return_correct_json_shape`
+  pre-existing failure, unrelated.
+
+- **Deployment**: Release build needed; install + `systemctl restart` pending for both services.
+
+---
+
+## 2026-05-12 — Wikipedia Parity Phase 2A — article typography regression fix + color token port
+
+- **Regression fix**: Phase 1 changed `article.wiki-article` → `div #mw-content-text`, silently
+  breaking all `article { }` CSS rules (article typography: Georgia serif, heading borders, link
+  colors, code blocks, blockquotes, tables). Fixed by replacing the entire article-body block
+  (lines 118–197) with `.page-body { }` equivalents. `.page-body` is the `div.page-body` wrapper
+  that the server renders inside `div#mw-content-text`.
+
+- **`--mw-*` tokens wired into article rules**: `.page-body a` → `var(--mw-color-link)`,
+  `.page-body a:visited` → `var(--mw-color-link-visited)`, code/pre backgrounds →
+  `var(--mw-color-base-10)`, borders → `var(--mw-color-base-50)`.
+
+- **9 hardcoded hex colors in secondary `:root` block ported** to existing CSS variables:
+  `--toc-bg`, `--tab-active-border`, `--tab-hover-bg`, `--density-btn-bg`,
+  `--density-btn-active-bg`, `--density-btn-active-fg`, `--hatnote-color`, `--cat-bg`.
+
+- **4 body-level hardcoded colors ported**: `.wiki-lang-btn:hover color` → `var(--bg)`;
+  `.wiki-home-featured background` → `var(--mw-color-base-10)`; `.wiki-home-dyk background` →
+  `var(--bg)`; `a.wiki-redlink color` → `var(--mw-color-link-redlink)`.
+
+- **Left unchanged** (UI-specific palettes with no matching token): `#b58900` FLI notice border;
+  `#a55858`/`#d73c3c`/`#b52e2e`/`#ffeef0`/`#f5c2c7` editor/auth error-state palette.
+
+- **Commit**: `68c643c` (Jennifer). 60/60 lib tests pass. `doorman_stubs_return_correct_json_shape`
+  pre-existing failure, unrelated to this change.
+
+- **Deployment**: Release build in progress; install + `systemctl restart` pending.
+
+---
+
+## 2026-05-12 — Wikipedia Parity Phase 1 DOM standardisation
+
+- **7 structural class/ID names renamed** to MediaWiki/Vector 2022 equivalents across
+  `src/server.rs`, `static/style.css`, `static/wiki.js` (commit `3b557cf`, Peter).
+  PointSav-specific classes (`wiki-home-*`, `wiki-cat-*`, `wiki-special-*`, etc.) left unchanged.
+
+  | Old | New | Scope |
+  |---|---|---|
+  | `.site-header` / `#site-header` | `.mw-header` / `#mw-header` | `<header>` chrome |
+  | `div.wiki-left-rail` | `div #mw-panel` | left sidebar |
+  | `nav.wiki-nav-portlet` | `nav.vector-main-menu` | nav portlet |
+  | `nav.wiki-toc` / `#wiki-toc` | `nav.vector-toc` / `#vector-toc` | TOC |
+  | `main.wiki-main` | `main.mw-body` | page body wrapper |
+  | `nav.wiki-action-tabs` | `nav #p-views` | Read/Edit/History tabs |
+  | `article.wiki-article` | `div #mw-content-text` | article body |
+
+- **CSS custom properties seeded** in `:root` — 9 `--mw-*` aliases referencing the
+  existing PointSav variables (Phase 2 token port entrypoints). No existing rules broken.
+
+- **Maud syntax fix applied**: in Rust 2021, `element#id` (no preceding `.class`) is a
+  reserved prefixed identifier. Correct form is `element #id` (space before `#`). Affected
+  three elements: `div #mw-panel`, `nav #p-views`, `div #mw-content-text`.
+
+- **One test updated**: `server::tests::wiki_page_renders_navigation_portlet` assertion
+  changed from `"wiki-nav-portlet"` to `"vector-main-menu"`. 60/60 lib tests pass.
+  `doorman_stubs_return_correct_json_shape` failure confirmed pre-existing (unrelated to
+  this change).
+
+- **No new open questions** from this session.
+
+---
+
+> **Archived entries:** session logs before this point are in `cleanup-log-archive.md`.

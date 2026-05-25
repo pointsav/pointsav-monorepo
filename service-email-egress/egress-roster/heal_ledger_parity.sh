@@ -23,7 +23,7 @@ if not usb_path:
     print("FATAL: Could not read PHYSICAL_USB_PATH from totebox-index.env")
     sys.exit(1)
 
-roster_path = "../data-ledgers/email-corpus-index.jsonl"
+roster_path = "../data-ledgers/personnel_roster.jsonl"
 vault_new = os.path.join(usb_path, "new")
 
 valid_lines = []
