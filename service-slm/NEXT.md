@@ -15,11 +15,23 @@
 **Shipped:**
 - [x] `fix(test-yoyo-flows)`: grammar `max_tokens` 40→300; strip `<think>` before JSON parse; fix apprenticeship glob depth; test 8 handles broker-mode 503.
 
-**Open defects discovered:**
+**Open defects discovered + fix status:**
 
-- [ ] **Extraction timeout**: `service-content/src/graph.rs` (or `main.rs`) calls `/v1/extract` with `timeout_secs:20`. The OLMo 3 32B-Think model needs 90-136s for entity extraction. The 20s timeout causes immediate failures → circuit opens → all corpus extraction deferred on every boot. Fix: increase to 180s, OR route extraction to a non-Think model. Track as `YOYO-EXTRACT-TIMEOUT`.
-- [ ] **Doorman restart → service-content restart**: restarting `local-doorman.service` also restarts `local-content.service` (systemd dependency). The extra restart caused corpus drain to repeat. Investigate `PartOf=`/`BindsTo=` in service unit drop-ins; decouple if safe.
-- [ ] **Spot preemption resilience**: SPOT VM preempted at 12m36s (much shorter than 1h). The `start-yoyo.sh` script's retry logic is for zone stockouts, not in-session preemptions. Consider adding a post-start loop that detects preemption and re-starts via the same script.
+- [x] **Extraction timeout (YOYO-EXTRACT-TIMEOUT)** — FIXED, deployed, **awaiting live verification**.
+  `OUTER_DEADLINE` in `crates/slm-doorman/src/tier/yoyo.rs` raised 90s→180s (commit `8daa4f7d`).
+  Binary live at `/usr/local/bin/slm-doorman-server`. Verification blocked by L4 stockout +
+  SPOT preemptions on 2026-05-25. Test plan at `~/.claude/plans/shiny-marinating-grove.md`.
+  Resume with: `sudo bash service-slm/scripts/start-yoyo.sh --wait-ready=360 --runtime=1h`
+  (use 360s not 300s — vLLM took >300s to load in one run).
+  Pass condition: `entity_count` rises above 1,530 and `tier_b_circuit_state` stays `"closed"`.
+- [ ] **Doorman restart → service-content restart**: restarting `local-doorman.service` also
+  stops `local-content.service` (systemd dependency). After any doorman restart, manually run
+  `sudo systemctl start local-content.service`. Root fix: investigate `PartOf=`/`BindsTo=`
+  in service unit drop-ins; decouple if safe.
+- [ ] **SPOT preemption resilience**: VM preempted twice on 2026-05-25 (at 12m36s and 21min).
+  `start-yoyo.sh` retry logic handles zone stockouts but not in-session preemptions. Consider
+  a post-start monitoring loop that detects preemption and re-invokes `start-yoyo.sh`.
+  Also: `--wait-ready=300` too short; raise default to 360s (or pass `--wait-ready=360`).
 
 **IMMEDIATE — Command Session:**
 - [ ] Stage 6 promote (~12 commits on this session alone, total ahead by more). Rebase required per inbox `command-20260520-stage6-rebase-required` — confirm before promote.

@@ -11,6 +11,28 @@ contamination-resolved: 2026-05-22 — project-knowledge content excised; manife
 ---
 from: totebox@project-intelligence
 to: command@claude-code
+re: Stage 6 promote — service-slm + session-context (~13 commits)
+created: 2026-05-25T05:00:00Z
+priority: normal
+status: pending
+---
+
+service-slm archive is ~13 commits ahead of origin/main. Rebase required per
+`command-20260520-stage6-rebase-required` before promote.
+
+Commits this session (most recent first):
+- `8daa4f7d` fix(doorman): OUTER_DEADLINE 90s→180s — 32B Think extraction timeout fix; deployed
+- `e43df88f` ops: integration test findings; NEXT.md open defects
+- `5968efdb` fix(test-yoyo-flows): grammar, think-strip, glob, broker-mode 503
+
+Binary at `/usr/local/bin/slm-doorman-server` is the v0.1.0 build from `8daa4f7d`.
+After promote + sync-local: rebuild binary from canonical and redeploy.
+
+No new service-content commits this session.
+
+---
+from: totebox@project-intelligence
+to: command@claude-code
 re: service-content Sprint 2+5 complete — Stage 6 + infrastructure tracking needed
 created: 2026-05-24T00:00:00Z
 priority: normal

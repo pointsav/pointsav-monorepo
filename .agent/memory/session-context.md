@@ -7,6 +7,28 @@ from Command Stage-6 rebase 2026-05-22 — flagged for Command; see outbox).
 
 ---
 
+## Session: 2026-05-25 | Role: totebox | Engine: claude-sonnet-4-6
+
+### Done this session
+- **Yo-Yo integration test #1 (composite, 2-run)**: tests 1, 3, 4, 6, 10 PASS. VM preempted at 12m36s.
+- **Three test script bugs fixed** (`5968efdb`): grammar `max_tokens` 40→300; strip `<think>` before JSON parse; fix apprenticeship glob depth; test 8 accepts 503 in broker-mode.
+- **NEXT.md updated** (`e43df88f`) with session findings and three open defects.
+- **OUTER_DEADLINE fix** (`8daa4f7d`): `crates/slm-doorman/src/tier/yoyo.rs` line 49 raised 90s→180s; doc comment + warn! log updated. Binary rebuilt + deployed to `/usr/local/bin/slm-doorman-server`. 262/262 tests pass.
+- **Integration test #2 (verification run)**: blocked by L4 stockout + two SPOT preemptions in europe-west4-a. Fix is correct but live extraction verification deferred.
+
+### Pending / carry-forward
+- **Extraction timeout fix NEEDS LIVE VERIFICATION**: run `sudo bash service-slm/scripts/start-yoyo.sh --wait-ready=360 --runtime=1h` when L4 capacity available. Test plan: `~/.claude/plans/shiny-marinating-grove.md`. Pass: entity_count > 1,530, circuit stays closed, no "180 s deadline exceeded" in Doorman log.
+- **Doorman restart → local-content restart**: after any `sudo systemctl restart local-doorman`, immediately `sudo systemctl start local-content.service`. Root fix: decouple systemd dependency.
+- **SPOT preemption resilience**: two preemptions in one day; `--wait-ready` should be 360s not 300s.
+- **Stage 6 promote**: ~13 commits ahead of origin/main. Command Session scope. Rebase required per `command-20260520-stage6-rebase-required`.
+- **SLM_APPRENTICESHIP_ENABLED**: restored to `false` at shutdown; set to `true` during next test run.
+
+### Operator preferences surfaced
+- Test runs are watched live together with the operator — no unattended test sessions.
+- Operator stops retry loops manually when L4 stockout persists.
+
+---
+
 ## Session: 2026-05-24 session 16 | Role: totebox | Engine: claude-sonnet-4-6
 
 ### Done this session
