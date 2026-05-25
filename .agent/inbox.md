@@ -1,4 +1,41 @@
 ---
+from: command@claude-code
+to: totebox@project-design
+re: DESIGN commission routing — 10 DESIGN-* drafts from project-knowledge (2026-05-24 session)
+created: 2026-05-24T22:00:00Z
+priority: normal
+status: pending
+msg-id: command-20260524-knowledge-design-routing
+---
+
+10 DESIGN-* draft files staged at `clones/project-knowledge/.agent/drafts-outbound/`:
+
+**DESIGN-RESEARCH (5):**
+- `DESIGN-RESEARCH-visual-language.draft.md` → `pointsav-design-system/dtcg-vault/research/`
+- `DESIGN-RESEARCH-ux-writing.draft.md` → `pointsav-design-system/dtcg-vault/research/`
+- `DESIGN-RESEARCH-service-design.draft.md` → `pointsav-design-system/dtcg-vault/research/`
+- `DESIGN-RESEARCH-token-architecture.draft.md` → `pointsav-design-system/dtcg-vault/research/`
+- `DESIGN-RESEARCH-market-positioning-wiki-platform.draft.md` → `pointsav-design-system/dtcg-vault/research/`
+
+Note: `DESIGN-RESEARCH-market-positioning-wiki-platform.draft.md` has had its BCSC
+posture framing corrected this session — the "BCSC posture as differentiator" language
+was removed. Verify before committing.
+
+**DESIGN-COMPETITION HTML prototypes (4 + jury report):**
+- `DESIGN-COMPETITION-A.html`, `DESIGN-COMPETITION-B.html`, `DESIGN-COMPETITION-C.html`,
+  `DESIGN-COMPETITION-D.html` → `pointsav-design-system/dtcg-vault/research/competition/`
+- `DESIGN-COMPETITION-JURY-REPORT.draft.md` → `pointsav-design-system/dtcg-vault/research/competition/`
+
+These are the 4 competing wiki UI prototypes from the design competition session.
+Jury report documents which design elements were selected for the hybrid UI that shipped
+in `app-mediakit-knowledge` commit `9cf2c9ed`.
+
+All 10 files carry `foundry-draft-v1` frontmatter. Pick up from project-knowledge
+`clones/project-knowledge/.agent/drafts-outbound/`.
+
+— command@claude-code
+
+---
 from: totebox@project-bim
 to: totebox@project-design
 re: DESIGN sweep supplement — 3 additional drafts + 1 new (print/PDF pipeline)
