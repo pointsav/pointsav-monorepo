@@ -62,7 +62,10 @@
         "heading": { "$value": "Charter, 'Bitstream Charter', Georgia, serif", "$description": "System-stack serif for headings — no self-hosted variable font at this stage. (Master co-sign decision C 2026-04-30; F-3 2026-05-07)" },
         "sans": { "$value": "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif", "$description": "System-stack sans-serif. IBM Plex Sans deferred to when self-hosted. (F-3 2026-05-07)" },
         "mono": { "$value": "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace", "$description": "System-stack mono. IBM Plex Mono deferred to when self-hosted. (F-3 2026-05-07)" },
-        "kbd": { "$value": "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" }
+        "kbd": { "$value": "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" },
+        "display": { "$value": "'Oswald', ui-sans-serif, system-ui, sans-serif", "$description": "Display / wordmark face — proto-platform-document jury winner 2026-05-25. Loaded via Google Fonts; fallback chain is system sans. Used for .brand__wordmark and hero headings." },
+        "platform-body": { "$value": "'Nunito Sans', ui-sans-serif, system-ui, sans-serif", "$description": "Platform UI body face — proto-platform-document jury winner 2026-05-25. Loaded via Google Fonts. Used for nav, utility row, sidebar, meta, and all chrome text." },
+        "platform-serif": { "$value": "'Roboto Slab', ui-serif, Georgia, serif", "$description": "Platform serif face — proto-platform-document jury winner 2026-05-25. Loaded via Google Fonts. Used for article prose headings (H2–H4) and blockquote attribution." }
       },
       "size": {
         "$type": "dimension",
@@ -137,6 +140,41 @@
       "compact": { "$value": 0.75, "$description": "24px row grid (0.75 × 32px)" },
       "comfortable": { "$value": 1, "$description": "32px row grid (baseline)" },
       "spacious": { "$value": 1.5, "$description": "48px row grid (1.5 × 32px)" }
+    },
+
+    "color-dark": {
+      "$type": "color",
+      "$description": "Dark-mode primitive palette — proto-platform-document design winner (jury 2026-05-25). Mirrors --bg/--fg CSS vars defined in html[data-theme=dark] block in style.css.",
+      "paper-1": { "$value": "#111A2C", "$description": "Dark elevated surface (--bg-elevated in dark mode)" },
+      "paper-2": { "$value": "#0B1220", "$description": "Dark base background (--bg in dark mode)" },
+      "paper-3": { "$value": "#16213A", "$description": "Dark subtle surface (--bg-subtle in dark mode)" },
+      "paper-hover": { "$value": "#1C2A45", "$description": "Dark hover state (--bg-hover in dark mode)" },
+      "ink-1": { "$value": "#F3F6FA", "$description": "Dark primary text (--fg-1 in dark mode)" },
+      "ink-2": { "$value": "#C9D1DC", "$description": "Dark secondary text (--fg-2 in dark mode)" },
+      "ink-3": { "$value": "#94A3B8", "$description": "Dark tertiary text (--fg-3 in dark mode)" },
+      "ink-4": { "$value": "#64748B", "$description": "Dark muted text (--fg-4 in dark mode)" },
+      "rule": { "$value": "#1F2C44", "$description": "Dark border (--border in dark mode)" },
+      "rule-strong": { "$value": "#2E3E5C", "$description": "Dark strong border (--border-strong in dark mode)" },
+      "link": { "$value": "#7AAEEA", "$description": "Dark mode link colour (--link in dark mode)" }
+    },
+
+    "layout": {
+      "$type": "dimension",
+      "$description": "Three-row header geometry + content-width constraints — proto-platform-document system (jury winner 2026-05-25). These values are the source of truth; style.css :root vars are generated from this namespace.",
+      "sidebar-w": { "$value": "272px", "$description": "Article sidebar (TOC rail) width" },
+      "toc-w": { "$value": "248px", "$description": "Standalone TOC panel width" },
+      "utility-h": { "$value": "32px", "$description": "Top utility row height" },
+      "brand-h": { "$value": "72px", "$description": "Brand / wordmark row height" },
+      "nav-h": { "$value": "48px", "$description": "Site navigation row height" },
+      "header-h": { "$value": "152px", "$description": "Total three-row header height (32+72+48)" },
+      "content-max": { "$value": "1440px", "$description": "Maximum content area width" },
+      "reading-max": { "$value": "760px", "$description": "Comfortable reading line width" }
+    },
+
+    "accent-gold": {
+      "$type": "color",
+      "$description": "Brand accent gold — from proto-platform-document --accent token (jury winner 2026-05-25). Used for wordmark underline, ledger stripe accent, and decorative brand moments.",
+      "base": { "$value": "#C7A961", "$description": "PointSav accent gold — WCAG AA on --navy-deep (#0F3258): 4.52:1" }
     }
   },
 

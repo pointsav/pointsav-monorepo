@@ -13,6 +13,11 @@ pub struct GraphEntity {
     pub contact_vector: Option<String>,
     pub module_id: String,
     pub confidence: f64,
+    /// Fine-grained type tag within a classification bucket. Defaults to
+    /// empty string for backward-compatible deserialization. Sprint 2
+    /// (P2-2.2) — enables RelatedTo edge traversal by type.
+    #[serde(default)]
+    pub node_type: String,
     /// WORM ledger ID of the CORPUS file this entity was extracted from
     /// (e.g. `CORPUS_01J9Q...`). Phase 2 of
     /// learning-loop-master-plan-2026-05-18.md (P2-2.1) — provenance for
@@ -48,6 +53,18 @@ pub trait GraphStore: Send + Sync {
         classification: &str,
         location: &str,
     ) -> Result<usize>;
+    /// Write a directed RelatedTo edge between two entities by ID. Idempotent.
+    fn write_related_to(&self, from_id: &str, to_id: &str, relation_type: &str) -> Result<()>;
+    /// Returns true if a CORPUS file (identified by its worm_id, e.g. the bare UUID
+    /// portion of `CORPUS_<worm_id>.json`) has already been fully extracted into the
+    /// graph — i.e. at least one non-Source entity exists whose `worm_id` field
+    /// equals `source_worm_id`. Used by the corpus drain loop to skip re-extraction
+    /// after a service restart without relying on the in-memory HashSet.
+    fn is_already_processed(&self, source_worm_id: &str) -> Result<bool>;
+    /// Flush the WAL to the main database file. Call after bulk write operations
+    /// (taxonomy upsert, corpus drain) to prevent WAL accumulation that causes
+    /// slow startup replay. Non-fatal: callers should warn on error but continue.
+    fn checkpoint(&self) -> Result<()>;
 }
 
 pub struct LbugGraphStore {
@@ -65,7 +82,10 @@ impl LbugGraphStore {
         let config = SystemConfig::default()
             .buffer_pool_size(buffer_pool_bytes)
             .max_num_threads(2)
-            .max_db_size(256 * 1024 * 1024);
+            .max_db_size(256 * 1024 * 1024)
+            // Checkpoint when WAL reaches 4 MB (C++ default is 16 MB — too large for our
+            // write pattern; an 11 MB un-checkpointed WAL caused a 45-min replay hang).
+            .checkpoint_threshold(4 * 1024 * 1024);
         let db = Database::new(db_path, config)
             .map_err(|e| anyhow!("Failed to open LadybugDB at {}: {}", db_path, e))?;
         Ok(Self { db: Arc::new(db) })
@@ -94,16 +114,16 @@ impl GraphStore for LbugGraphStore {
                 confidence DOUBLE, \
                 created_at STRING, \
                 worm_id STRING, \
-                cites_json STRING\
+                cites_json STRING, \
+                node_type STRING\
             )",
         )
         .map_err(|e| anyhow!("init_schema Entity table failed: {}", e))?;
 
-        // Migrate pre-P2-2.1 databases: add worm_id + cites_json if absent.
-        // IF NOT EXISTS is not valid for ALTER TABLE in KuZu; suppress the
-        // error if the column already exists (idempotent).
+        // Idempotent migrations — suppress errors when columns already exist.
         let _ = conn.query("ALTER TABLE Entity ADD worm_id STRING DEFAULT ''");
         let _ = conn.query("ALTER TABLE Entity ADD cites_json STRING DEFAULT ''");
+        let _ = conn.query("ALTER TABLE Entity ADD node_type STRING DEFAULT ''");
 
         conn.query(
             "CREATE REL TABLE IF NOT EXISTS RelatedTo(\
@@ -133,7 +153,8 @@ impl GraphStore for LbugGraphStore {
                      e.module_id = $module_id, \
                      e.confidence = $confidence, \
                      e.worm_id = $worm_id, \
-                     e.cites_json = $cites_json",
+                     e.cites_json = $cites_json, \
+                     e.node_type = $node_type",
             )
             .map_err(|e| anyhow!("Failed to prepare upsert statement: {}", e))?;
 
@@ -188,6 +209,7 @@ impl GraphStore for LbugGraphStore {
                         Value::String(entity.worm_id.clone().unwrap_or_default()),
                     ),
                     ("cites_json", Value::String(cites_json)),
+                    ("node_type", Value::String(entity.node_type.clone())),
                 ],
             )
             .map_err(|e| anyhow!("Failed to upsert entity '{}': {}", entity.entity_name, e))?;
@@ -223,7 +245,7 @@ impl GraphStore for LbugGraphStore {
                    AND lower(e.entity_name) CONTAINS $query \
                  RETURN e.entity_name, e.classification, e.role_vector, \
                         e.location_vector, e.contact_vector, e.module_id, e.confidence, \
-                        e.worm_id, e.cites_json \
+                        e.worm_id, e.cites_json, e.node_type \
                  LIMIT $limit",
             )
             .map_err(|e| anyhow!("Failed to prepare query_context statement: {}", e))?;
@@ -251,7 +273,7 @@ impl GraphStore for LbugGraphStore {
                  WHERE e.module_id = $module_id \
                  RETURN e.entity_name, e.classification, e.role_vector, \
                         e.location_vector, e.contact_vector, e.module_id, e.confidence, \
-                        e.worm_id, e.cites_json",
+                        e.worm_id, e.cites_json, e.node_type",
             )
             .map_err(|e| anyhow!("Failed to prepare list_entities statement: {}", e))?;
 
@@ -337,6 +359,53 @@ impl GraphStore for LbugGraphStore {
         })?;
         Ok(0)
     }
+
+    fn write_related_to(&self, from_id: &str, to_id: &str, relation_type: &str) -> Result<()> {
+        let conn = self.conn()?;
+        let mut stmt = conn
+            .prepare(
+                "MATCH (a:Entity {id: $from_id}), (b:Entity {id: $to_id}) \
+                 MERGE (a)-[r:RelatedTo]->(b) \
+                 SET r.relation_type = $relation_type",
+            )
+            .map_err(|e| anyhow!("write_related_to prepare failed: {}", e))?;
+        conn.execute(
+            &mut stmt,
+            vec![
+                ("from_id", Value::String(from_id.to_string())),
+                ("to_id", Value::String(to_id.to_string())),
+                ("relation_type", Value::String(relation_type.to_string())),
+            ],
+        )
+        .map_err(|e| anyhow!("write_related_to execute failed: {}", e))?;
+        Ok(())
+    }
+
+    fn is_already_processed(&self, source_worm_id: &str) -> Result<bool> {
+        let conn = self.conn()?;
+        let mut stmt = conn
+            .prepare(
+                "MATCH (e:Entity) \
+                 WHERE e.worm_id = $worm_id AND e.classification <> 'Source' \
+                 RETURN e.entity_name \
+                 LIMIT 1",
+            )
+            .map_err(|e| anyhow!("is_already_processed prepare failed: {}", e))?;
+        let result = conn
+            .execute(
+                &mut stmt,
+                vec![("worm_id", Value::String(source_worm_id.to_string()))],
+            )
+            .map_err(|e| anyhow!("is_already_processed execute failed: {}", e))?;
+        Ok(result.into_iter().next().is_some())
+    }
+
+    fn checkpoint(&self) -> Result<()> {
+        let conn = self.conn()?;
+        conn.query("CHECKPOINT")
+            .map(|_| ())
+            .map_err(|e| anyhow!("lbug CHECKPOINT failed: {}", e))
+    }
 }
 
 // ── SqliteGraphStore ─────────────────────────────────────────────────────────
@@ -381,14 +450,26 @@ impl GraphStore for SqliteGraphStore {
                 confidence      REAL NOT NULL DEFAULT 0.0,
                 created_at      TEXT NOT NULL DEFAULT '',
                 worm_id         TEXT NOT NULL DEFAULT '',
-                cites_json      TEXT NOT NULL DEFAULT '[]'
+                cites_json      TEXT NOT NULL DEFAULT '[]',
+                node_type       TEXT NOT NULL DEFAULT ''
+            );
+            CREATE TABLE IF NOT EXISTS related_to (
+                from_id         TEXT NOT NULL,
+                to_id           TEXT NOT NULL,
+                relation_type   TEXT NOT NULL DEFAULT '',
+                PRIMARY KEY (from_id, to_id, relation_type)
             );
             CREATE INDEX IF NOT EXISTS idx_entity_module
                 ON entity(module_id);
             CREATE INDEX IF NOT EXISTS idx_entity_module_cls
                 ON entity(module_id, classification);",
         )
-        .map_err(|e| anyhow!("init_schema failed: {}", e))
+        .map_err(|e| anyhow!("init_schema failed: {}", e))?;
+        // Idempotent migration for databases created before Sprint 2.
+        let _ = conn.execute_batch(
+            "ALTER TABLE entity ADD COLUMN node_type TEXT NOT NULL DEFAULT ''",
+        );
+        Ok(())
     }
 
     fn upsert_entities(&self, module_id: &str, entities: &[GraphEntity]) -> Result<usize> {
@@ -410,8 +491,8 @@ impl GraphStore for SqliteGraphStore {
                 "INSERT INTO entity(
                     id, entity_name, classification, role_vector,
                     location_vector, contact_vector, module_id, confidence,
-                    created_at, worm_id, cites_json)
-                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)
+                    created_at, worm_id, cites_json, node_type)
+                 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)
                  ON CONFLICT(id) DO UPDATE SET
                     entity_name     = excluded.entity_name,
                     classification  = excluded.classification,
@@ -421,7 +502,8 @@ impl GraphStore for SqliteGraphStore {
                     module_id       = excluded.module_id,
                     confidence      = excluded.confidence,
                     worm_id         = excluded.worm_id,
-                    cites_json      = excluded.cites_json",
+                    cites_json      = excluded.cites_json,
+                    node_type       = excluded.node_type",
                 params![
                     id,
                     entity.entity_name,
@@ -434,6 +516,7 @@ impl GraphStore for SqliteGraphStore {
                     now,
                     entity.worm_id.as_deref().unwrap_or(""),
                     cites_json,
+                    entity.node_type.as_str(),
                 ],
             )
             .map_err(|e| anyhow!("Failed to upsert entity '{}': {}", entity.entity_name, e))?;
@@ -455,7 +538,8 @@ impl GraphStore for SqliteGraphStore {
         let mut stmt = conn
             .prepare(
                 "SELECT entity_name, classification, role_vector, location_vector,
-                        contact_vector, module_id, confidence, worm_id, cites_json
+                        contact_vector, module_id, confidence, worm_id, cites_json,
+                        node_type
                  FROM entity
                  WHERE module_id = ?1 AND lower(entity_name) LIKE ?2
                  LIMIT ?3",
@@ -479,7 +563,8 @@ impl GraphStore for SqliteGraphStore {
         let mut stmt = conn
             .prepare(
                 "SELECT entity_name, classification, role_vector, location_vector,
-                        contact_vector, module_id, confidence, worm_id, cites_json
+                        contact_vector, module_id, confidence, worm_id, cites_json,
+                        node_type
                  FROM entity
                  WHERE module_id = ?1",
             )
@@ -528,6 +613,35 @@ impl GraphStore for SqliteGraphStore {
             .map_err(|e| anyhow!("delete_by_classification_and_location failed: {}", e))?;
         Ok(n)
     }
+
+    fn write_related_to(&self, from_id: &str, to_id: &str, relation_type: &str) -> Result<()> {
+        let conn = self.conn.lock().unwrap();
+        conn.execute(
+            "INSERT OR IGNORE INTO related_to(from_id, to_id, relation_type)
+             VALUES (?1, ?2, ?3)",
+            params![from_id, to_id, relation_type],
+        )
+        .map_err(|e| anyhow!("write_related_to failed: {}", e))?;
+        Ok(())
+    }
+
+    fn is_already_processed(&self, source_worm_id: &str) -> Result<bool> {
+        let conn = self.conn.lock().unwrap();
+        let n: i64 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM entity \
+                 WHERE worm_id = ?1 AND classification != 'Source'",
+                params![source_worm_id],
+                |r| r.get(0),
+            )
+            .map_err(|e| anyhow!("is_already_processed failed: {}", e))?;
+        Ok(n > 0)
+    }
+
+    fn checkpoint(&self) -> Result<()> {
+        // SQLite WAL checkpoints via PRAGMA wal_checkpoint on close; no manual call needed.
+        Ok(())
+    }
 }
 
 fn sqlite_row_to_entity(row: &rusqlite::Row<'_>) -> rusqlite::Result<GraphEntity> {
@@ -536,6 +650,7 @@ fn sqlite_row_to_entity(row: &rusqlite::Row<'_>) -> rusqlite::Result<GraphEntity
     let contact: String = row.get(4)?;
     let worm: String = row.get(7)?;
     let cites_json: String = row.get(8)?;
+    let node_type: String = row.get(9).unwrap_or_default();
     Ok(GraphEntity {
         entity_name: row.get(0)?,
         classification: row.get(1)?,
@@ -548,6 +663,7 @@ fn sqlite_row_to_entity(row: &rusqlite::Row<'_>) -> rusqlite::Result<GraphEntity
         },
         module_id: row.get(5)?,
         confidence: row.get(6)?,
+        node_type,
         worm_id: if worm.is_empty() { None } else { Some(worm) },
         cites: serde_json::from_str(&cites_json).unwrap_or_default(),
     })
@@ -573,13 +689,13 @@ fn val_to_f64(v: &Value) -> f64 {
 }
 
 /// Convert a `QueryResult` iterator into `Vec<GraphEntity>`.
-/// Each row yields 9 columns in RETURN order:
+/// Each row yields 10 columns in RETURN order:
 /// 0 entity_name, 1 classification, 2 role_vector, 3 location_vector,
-/// 4 contact_vector, 5 module_id, 6 confidence, 7 worm_id, 8 cites_json
+/// 4 contact_vector, 5 module_id, 6 confidence, 7 worm_id, 8 cites_json,
+/// 9 node_type
 ///
-/// P2-2.1 (2026-05-18) — worm_id + cites_json columns added for provenance
-/// and citation grounding. Rows with fewer than 9 columns are pre-2026-05-18
-/// schema versions; columns 7-8 default to None/empty for those rows.
+/// Columns 7-9 are optional — absent in legacy rows; default to
+/// None / empty Vec / "" for backward compat.
 fn rows_to_entities(result: lbug::QueryResult<'_>) -> Result<Vec<GraphEntity>> {
     let mut out = Vec::new();
     for row in result {
@@ -636,6 +752,11 @@ fn rows_to_entities(result: lbug::QueryResult<'_>) -> Result<Vec<GraphEntity>> {
         } else {
             Vec::new()
         };
+        let node_type = if row.len() >= 10 {
+            val_to_string(&row[9])
+        } else {
+            String::new()
+        };
 
         out.push(GraphEntity {
             entity_name,
@@ -645,6 +766,7 @@ fn rows_to_entities(result: lbug::QueryResult<'_>) -> Result<Vec<GraphEntity>> {
             contact_vector,
             module_id,
             confidence,
+            node_type,
             worm_id,
             cites,
         });
@@ -671,6 +793,7 @@ mod tests {
             contact_vector: None,
             module_id: module.to_string(),
             confidence: 0.9,
+            node_type: "TestType".to_string(),
             worm_id: Some("CORPUS_TEST".to_string()),
             cites: vec!["cite-1".to_string()],
         }
@@ -806,5 +929,45 @@ mod tests {
             listed[0].cites,
             vec!["cite-doctrine-49", "cite-doctrine-54"]
         );
+    }
+
+    #[test]
+    fn node_type_preserved() {
+        let store = in_memory_store();
+        let mut e = entity("Alice", "Person", "mod-a");
+        e.node_type = "LegalEntity".to_string();
+        store.upsert_entities("mod-a", &[e]).unwrap();
+        let listed = store.list_entities("mod-a").unwrap();
+        assert_eq!(listed[0].node_type, "LegalEntity");
+    }
+
+    #[test]
+    fn write_related_to_idempotent() {
+        let store = in_memory_store();
+        store.upsert_entities("mod-a", &[entity("Alice", "Person", "mod-a")]).unwrap();
+        store.upsert_entities("mod-a", &[entity("Acme Corp", "Company", "mod-a")]).unwrap();
+        let from_id = "mod-a__alice";
+        let to_id = "mod-a__acme_corp";
+        store.write_related_to(from_id, to_id, "employs").unwrap();
+        store.write_related_to(from_id, to_id, "employs").unwrap(); // idempotent
+    }
+
+    #[test]
+    fn is_already_processed_detects_extracted_entities() {
+        let store = in_memory_store();
+        // Source node alone does not count as "processed".
+        let mut source = entity("CORPUS_TESTABC", "Source", "mod-a");
+        source.worm_id = None;
+        store.upsert_entities("mod-a", &[source]).unwrap();
+        assert!(!store.is_already_processed("TESTABC").unwrap());
+
+        // Once a non-Source entity with the worm_id is written, it counts.
+        let mut extracted = entity("Acme Corp", "Company", "mod-a");
+        extracted.worm_id = Some("TESTABC".to_string());
+        store.upsert_entities("mod-a", &[extracted]).unwrap();
+        assert!(store.is_already_processed("TESTABC").unwrap());
+
+        // Unrelated worm_id returns false.
+        assert!(!store.is_already_processed("OTHERID").unwrap());
     }
 }
