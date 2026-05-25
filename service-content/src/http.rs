@@ -9,8 +9,8 @@ use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use std::time::Duration;
 
-use crate::graph::{GraphEntity, GraphStore};
 use crate::config_http::config_routes;
+use crate::graph::{GraphEntity, GraphStore};
 
 // ── shared server state ───────────────────────────────────────────────────────
 
@@ -123,7 +123,12 @@ async fn draft_generate(
     let entities = state
         .graph
         .query_context(&body.module_id, &body.query_hint, body.max_entities)
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("graph query failed: {e}")))?;
+        .map_err(|e| {
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                format!("graph query failed: {e}"),
+            )
+        })?;
 
     let entity_count = entities.len();
 
@@ -140,13 +145,20 @@ async fn draft_generate(
     let user_message = format!(
         "Module: {module_id}\nQuery context: {hint}\n\n{entity_block}",
         module_id = body.module_id,
-        hint = if body.query_hint.is_empty() { "(all entities)" } else { &body.query_hint },
+        hint = if body.query_hint.is_empty() {
+            "(all entities)"
+        } else {
+            &body.query_hint
+        },
         entity_block = entity_block
     );
 
     // Truncate to keep under 8 000 chars (~2 000 tokens).
     let user_message = if user_message.len() > 8000 {
-        format!("{}\n\n[truncated — {entity_count} entities total]", &user_message[..7900])
+        format!(
+            "{}\n\n[truncated — {entity_count} entities total]",
+            &user_message[..7900]
+        )
     } else {
         user_message
     };
@@ -250,7 +262,12 @@ fn format_entity_block(entities: &[GraphEntity]) -> String {
 
 // ── server entrypoint ─────────────────────────────────────────────────────────
 
-pub async fn run_server(store: Arc<dyn GraphStore>, bind_addr: String, doorman_endpoint: String, ontology_dir: String) {
+pub async fn run_server(
+    store: Arc<dyn GraphStore>,
+    bind_addr: String,
+    doorman_endpoint: String,
+    ontology_dir: String,
+) {
     let state = Arc::new(HttpState {
         graph: store,
         doorman_endpoint,

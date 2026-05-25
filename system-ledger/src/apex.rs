@@ -47,7 +47,10 @@ pub enum ApexVerdict {
     /// Handover height: BOTH apexes valid simultaneously. Checkpoint
     /// MUST carry both signatures (per
     /// [`system_core::SignedCheckpoint::verify_apex_handover`]).
-    Handover { old_apex: ApexEntry, new_apex: ApexEntry },
+    Handover {
+        old_apex: ApexEntry,
+        new_apex: ApexEntry,
+    },
 }
 
 /// Errors when applying apex state changes.
@@ -78,7 +81,9 @@ pub struct ApexHistory {
 
 impl ApexHistory {
     pub fn new() -> Self {
-        Self { entries: Vec::new() }
+        Self {
+            entries: Vec::new(),
+        }
     }
 
     /// Record the first apex (genesis). Errors if any apex already
@@ -143,7 +148,10 @@ impl ApexHistory {
     /// The current apex — most recent entry with `effective_until =
     /// None`. `None` if no genesis has been recorded.
     pub fn current(&self) -> Option<&ApexEntry> {
-        self.entries.iter().rev().find(|e| e.effective_until.is_none())
+        self.entries
+            .iter()
+            .rev()
+            .find(|e| e.effective_until.is_none())
     }
 
     /// Who is valid at `height`? Returns [`ApexVerdict::Handover`]
@@ -165,7 +173,9 @@ impl ApexHistory {
 
         match valid.len() {
             0 => ApexVerdict::NoApex,
-            1 => ApexVerdict::Single { apex: valid.remove(0).clone() },
+            1 => ApexVerdict::Single {
+                apex: valid.remove(0).clone(),
+            },
             2 => {
                 // Sort by effective_from; the older one (smaller
                 // effective_from) is the outgoing apex.
@@ -304,7 +314,8 @@ mod tests {
         }
 
         // Handover at height 100 (the N+2 checkpoint with both sigs).
-        h.apply_handover(&pk(0x11), "apex-new", pk(0x22), 100).unwrap();
+        h.apply_handover(&pk(0x11), "apex-new", pk(0x22), 100)
+            .unwrap();
 
         // At handover height 100: BOTH apexes valid (handover
         // verdict).
@@ -344,8 +355,10 @@ mod tests {
         // Sanity: chained handovers work. P-old → P-mid → P-new.
         let mut h = ApexHistory::new();
         h.record_genesis("apex-old", pk(0x11), 0).unwrap();
-        h.apply_handover(&pk(0x11), "apex-mid", pk(0x22), 100).unwrap();
-        h.apply_handover(&pk(0x22), "apex-new", pk(0x33), 200).unwrap();
+        h.apply_handover(&pk(0x11), "apex-mid", pk(0x22), 100)
+            .unwrap();
+        h.apply_handover(&pk(0x22), "apex-new", pk(0x33), 200)
+            .unwrap();
 
         // At height 100: handover P-old↔P-mid.
         match h.check_height(100) {
