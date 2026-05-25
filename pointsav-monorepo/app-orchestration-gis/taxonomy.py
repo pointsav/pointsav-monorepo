@@ -523,22 +523,25 @@ def tier_of(cats: set[str], tight: bool = False) -> int | None:
     Composition-only tier rule.  cats = set of retail category keys present.
     Civic categories (medical, education) are ignored — they never gate the tier.
 
-    T1 Regional:  hypermarket ∧ hardware ∧ (price_club ∨ lifestyle)
-                  OR tight cluster with 3+ anchor categories (H2b rule)
+    T1 Regional:  hypermarket ∧ hardware ∧ (price_club ∨ lifestyle ∨ electronics)
+                  OR tight cluster with 3+ members (H2b rule)
                   OR any 4+ retail anchor categories (destination cluster)
-    T2 District:  hypermarket ∧ at least one other retail category
-    T3 Local:     ≥ 2 distinct retail categories
+    T2 District:  hypermarket ∧ hardware (both required; no tertiary anchor)
+    T3 Local:     all remaining co-locations
     None:         singleton — not a co-location
 
-    H2b rule (tight=True): a tight 3-anchor cluster (all members within 1 km)
-    is elevated to T1 regardless of composition. Addresses EU retail parks where
-    hypermarket + hardware + sport/lifestyle are co-located tightly but lack a
-    price_club anchor (Costco absent from most EU markets).
+    Three T1 admission paths (T1.a / T1.b / T1.c):
+      T1.a — tripartite composition: hyper + hw + one of (pc, lifestyle, electronics).
+             Electronics is load-bearing for EU T1: MediaMarkt/Saturn/Boulanger
+             clusters that include a hypermarket and hardware anchor qualify.
+      T1.b — H2b compact: tight cluster with ≥3 members, any composition.
+             Addresses dense EU retail parks lacking a price_club anchor.
+      T1.c — category breadth: 4+ distinct retail anchor categories.
 
-    The n≥4 path handles 4-anchor clusters that lack hardware but still represent
-    destination-grade co-locations (e.g. Walmart + Costco + IKEA + Decathlon).
-    No effect when fewer than 5 categories are active (all size-4 combos in a
-    4-category world already satisfy the primary T1 rule).
+    Change A (code-paper alignment): T2 now requires has_hyper AND has_hw.
+    The prior `has_hyper and n >= 2` rule promoted hypermarket-only clusters
+    to T2; that was a code bug relative to the intended compositional definition.
+    Removes ~621 clusters from T2 → T3.
     """
     retail = cats & _RETAIL_CATS
     n = len(retail)
@@ -549,14 +552,19 @@ def tier_of(cats: set[str], tight: bool = False) -> int | None:
     has_hw    = "hardware"    in retail
     has_pc    = "price_club"  in retail
     has_life  = "lifestyle"   in retail
+    has_elec  = "electronics" in retail
 
-    if has_hyper and has_hw and (has_pc or has_life):
+    # T1.a — tripartite: hyper + hw + (price_club or lifestyle or electronics)
+    if has_hyper and has_hw and (has_pc or has_life or has_elec):
         return 1
-    if tight and n >= 3:   # H2b: tight 3-anchor cluster → T1
+    # T1.b — H2b: compact multi-anchor regardless of composition
+    if tight and n >= 3:
         return 1
-    if n >= 4:   # 4+ anchors = destination regardless of composition
+    # T1.c — category breadth ≥4
+    if n >= 4:
         return 1
-    if has_hyper and n >= 2:
+    # T2 — hypermarket + hardware (both required)
+    if has_hyper and has_hw:
         return 2
     return 3
 
