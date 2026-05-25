@@ -1078,6 +1078,30 @@ async function saveFile() {
   showEditorStatus('Saved', '#89d185', 2500);
 }
 
+// ── Autosave (every 30 s while dirty) ────────────────────────────────────────
+async function autosaveFile() {
+  if (!editorPath || !editorDirty) return;
+  const content = document.getElementById('editor-textarea').value;
+  const headers = {
+    'Content-Type': 'text/plain; charset=utf-8',
+    'X-Foundry-Editor': '1',
+  };
+  if (editorMtime) headers['X-Foundry-Mtime'] = String(editorMtime);
+  try {
+    const res = await fetch('/_api/edit/file?path=' + encodeURIComponent(editorPath), {
+      method: 'PUT', headers, body: content,
+    });
+    if (res.ok) {
+      const data = await res.json();
+      editorMtime = data.mtime || editorMtime;
+      setDirty(false);
+      showEditorStatus('Autosaved', '#89d185', 2000);
+    }
+    // 409 conflict or other errors: skip silently, let user resolve via manual Save
+  } catch(e) { /* network error — skip */ }
+}
+setInterval(autosaveFile, 30000);
+
 // ── Close current file ────────────────────────────────────────────────────────
 function closeFile() {
   if (editorDirty && !confirm('You have unsaved changes. Close anyway?')) return;
