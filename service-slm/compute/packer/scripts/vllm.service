@@ -1,0 +1,37 @@
+[Unit]
+Description=vLLM OpenAI-compatible inference server (Yo-Yo Tier B)
+Documentation=https://docs.vllm.ai
+After=network.target vllm-weights-prep.service
+Requires=vllm-weights-prep.service
+
+[Service]
+Type=simple
+Environment=PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+# Model path is on the persistent weights disk. The Q4_K_M GGUF is produced by
+# vllm-weights-prep.service (either pulled from our GCS canonical artifact, or
+# derived from AllenAI source on first-boot). Tokenizer files come from the
+# same bootstrap step and live alongside in /data/weights/tokenizer.
+#
+# --enable-lora: vLLM is configured to serve LoRA adapters at runtime. The
+# initial --lora-modules list is empty; adapters land via lora-training.service
+# + adapter-publish.service to /data/weights/adapters/ and are loaded on
+# discovery (Doorman code change pending; until then, vLLM serves base only).
+ExecStart=/opt/vllm/bin/python3 -m vllm.entrypoints.openai.api_server \
+    --model /data/weights/model \
+    --tokenizer /data/weights/tokenizer \
+    --tensor-parallel-size 1 \
+    --port 8000 \
+    --host 127.0.0.1 \
+    --served-model-name Olmo-3-32B-Think Olmo-3-1125-32B-Think olmo-3-32b \
+    --max-model-len 4096 \
+    --enable-lora \
+    --max-loras 8 \
+    --max-lora-rank 64 \
+    --enforce-eager \
+    --gpu-memory-utilization 0.97
+Restart=on-failure
+RestartSec=10
+TimeoutStartSec=600
+
+[Install]
+WantedBy=multi-user.target

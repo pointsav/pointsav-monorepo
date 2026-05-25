@@ -1,0 +1,9 @@
+target/
+Cargo.lock.bak
+*.swp
+.DS_Store
+
+# Runtime data — never check in; transient-queues/ is staging for
+# cognitive-bridge.sh payloads. Live state moves to service-fs/data/.
+transient-queues/
+!transient-queues/README.md
