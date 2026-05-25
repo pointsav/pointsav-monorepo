@@ -188,21 +188,36 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     let path = entry.path();
                     if path.extension().and_then(|s| s.to_str()) == Some("json") {
                         let filename = path.file_name().unwrap().to_str().unwrap().to_string();
-                        let already_done = ledgers_drain.lock().unwrap().contains(&filename);
-                        if filename.starts_with("CORPUS_") && !already_done {
-                            if process_corpus(
-                                &path,
-                                &crm_dir_drain,
-                                &doorman_drain,
-                                &module_drain,
-                                &graph_drain,
-                            ) {
-                                append_processed_ledger(&processed_path_drain, &filename);
+                        if filename.starts_with("CORPUS_") {
+                            let in_memory = ledgers_drain.lock().unwrap().contains(&filename);
+                            // Sprint 5: fall back to graph query so a restart does not
+                            // re-extract files whose entities are already in the graph.
+                            let source_worm_id = filename
+                                .strip_prefix("CORPUS_")
+                                .and_then(|s| s.strip_suffix(".json"))
+                                .unwrap_or(&filename);
+                            let already_done = in_memory
+                                || graph_drain
+                                    .is_already_processed(source_worm_id)
+                                    .unwrap_or(false);
+                            if !already_done {
+                                if process_corpus(
+                                    &path,
+                                    &crm_dir_drain,
+                                    &doorman_drain,
+                                    &module_drain,
+                                    &graph_drain,
+                                ) {
+                                    append_processed_ledger(&processed_path_drain, &filename);
+                                }
+                                ledgers_drain.lock().unwrap().insert(filename);
                             }
-                            ledgers_drain.lock().unwrap().insert(filename);
                         }
                     }
                 }
+            }
+            if let Err(e) = graph_drain.checkpoint() {
+                warn!("lbug checkpoint after corpus drain failed (non-fatal): {e}");
             }
             ready_drain.store(true, Ordering::Release);
             info!("corpus drain complete — service ready");
@@ -345,6 +360,7 @@ fn process_corpus(
         contact_vector: None,
         module_id: effective_module_id.clone(),
         confidence: 1.0,
+        node_type: "CorpusSource".to_string(),
         worm_id: None,
         cites: Vec::new(),
     };
@@ -446,7 +462,8 @@ fn process_corpus(
                                 contact_vector: contact_vector.clone(),
                                 module_id: effective_module_id.clone(),
                                 confidence: 0.95,
-                                worm_id: None,
+                                node_type: classification.clone(),
+                                worm_id: Some(worm_id.to_string()),
                                 cites: Vec::new(),
                             });
 

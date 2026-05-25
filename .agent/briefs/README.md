@@ -9,18 +9,18 @@ or moving to `briefs/archive/`. All engines read this index at session start (AG
 
 | File | Purpose |
 |---|---|
-| [BRIEF-flow-restructure.md](BRIEF-flow-restructure.md) | **PRIMARY PLAN OF RECORD** — $7-node fleet architecture; node-class ladder; Phases 0–5 DONE; Phase 6 next; §12 = Command Session transition checklist |
-| [BRIEF-service-content-architecture.md](BRIEF-service-content-architecture.md) | EXTENDS primary — Ring 2/3 coupling defect; 5-sprint PUSH inversion; Sprint 1 (~30 LOC) is the immediate next code item |
-| [BRIEF-lbug-build-blocker.md](BRIEF-lbug-build-blocker.md) | CONFLICT — cargo build blocked (static link); Options A/B/C to try; keep active until resolved |
-| [BRIEF-sovereign-routing-comprehensive.md](BRIEF-sovereign-routing-comprehensive.md) | EXTENDS primary — legal research; Sprint 0–5 detail; Sprint 0a done; training data format; LoRA hyperparameters |
-| [BRIEF-universal-ai-gateway.md](BRIEF-universal-ai-gateway.md) | EXTENDS primary — exact LOC/file Sprint breakdown; pricing/customer transition milestones |
-| [BRIEF-tier-architecture.md](BRIEF-tier-architecture.md) | EXTENDS primary — model family policy; BCSC-permissible families; §2 corrected 2026-05-23 (1B not 7B for Tier A) |
-| [BRIEF-learning-loop-master-plan.md](BRIEF-learning-loop-master-plan.md) | EXTENDS primary — corpus quality gate; eval harness; DPO pairs; **deferred to Phase 7** (7B premise corrected) |
-| [BRIEF-phase-3c-service-content-loRA-stub.md](BRIEF-phase-3c-service-content-loRA-stub.md) | EXTENDS primary — deferred Phase 3.6–3.10 (draft generation, citation linkage, LoRA scheduler) |
+| [BRIEF-slm-substrate-master.md](BRIEF-slm-substrate-master.md) | **PRIMARY PLAN OF RECORD** — SLM substrate (Yo-Yo + DataGraph + Learning Loop); replaces BRIEF-flow-restructure.md (lost 2026-05-22 rebase); §5/§6 = immediate + pending work; §2 = Yo-Yo permanent VM design |
 | [BRIEF-claim-authoring-convention.md](BRIEF-claim-authoring-convention.md) | UNRELATED — knowledge platform editorial convention (pending Command ratification) |
 | [BRIEF-KNOWLEDGE-PLATFORM-PLAN.md](BRIEF-KNOWLEDGE-PLATFORM-PLAN.md) | UNRELATED — knowledge platform 8-phase execution plan |
 | [BRIEF-KNOWLEDGE-PLATFORM-VISION.md](BRIEF-KNOWLEDGE-PLATFORM-VISION.md) | UNRELATED — knowledge platform upstream vision + architecture |
 | [BRIEF-layer3-compliance-report.md](BRIEF-layer3-compliance-report.md) | UNRELATED — security/WireGuard compliance (URGENT — separate track) |
+
+**Note:** The following BRIEFs listed above were referenced in README but are no longer on disk
+(lost in Stage-6 rebase contamination 2026-05-22). Their open items are absorbed into
+`BRIEF-slm-substrate-master.md §6`:
+`BRIEF-flow-restructure.md`, `BRIEF-service-content-architecture.md`, `BRIEF-lbug-build-blocker.md`,
+`BRIEF-sovereign-routing-comprehensive.md`, `BRIEF-universal-ai-gateway.md`,
+`BRIEF-tier-architecture.md`, `BRIEF-learning-loop-master-plan.md`, `BRIEF-phase-3c-service-content-loRA-stub.md`
 
 ## Archived briefs
 

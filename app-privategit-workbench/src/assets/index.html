@@ -123,9 +123,9 @@ header .tag {
   padding: 0 12px; font-size: 11px; flex-shrink: 0;
   display: flex; align-items: center; gap: 10px; height: 32px; overflow: hidden;
 }
-.viewer-bar .bar-path { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #888; }
+.viewer-bar .bar-path { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #aaa; }
 .bar-btn {
-  font-size: 10px; color: #999; background: #3c3c3c; border: 1px solid #555;
+  font-size: 10px; color: #ccc; background: #3c3c3c; border: 1px solid #555;
   border-radius: 3px; padding: 2px 8px; cursor: pointer; white-space: nowrap;
   flex-shrink: 0; line-height: 1.6;
 }
@@ -145,7 +145,7 @@ header .tag {
 #preview-frame { flex: 1; border: none; background: #fff; display: none; }
 
 /* ── Text viewer (md + code) ──────────────────────────────────────── */
-#text-viewer { flex: 1; overflow-y: auto; display: none; }
+#text-viewer { flex: 1; min-height: 0; overflow-y: auto; display: none; }
 #text-viewer::-webkit-scrollbar { width: 8px; }
 #text-viewer::-webkit-scrollbar-thumb { background: #555; border-radius: 4px; }
 
@@ -226,6 +226,7 @@ header .tag {
   flex-direction: column;
   width: 440px; min-width: 200px; flex-shrink: 0;
   background: #1e1e1e;
+  position: relative;
 }
 #editor-panel.visible { display: flex; }
 
@@ -234,11 +235,16 @@ header .tag {
   padding: 0 12px; font-size: 11px; flex-shrink: 0;
   display: flex; align-items: center; gap: 8px; height: 32px;
 }
-.editor-bar .editor-title { color: #888; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; font-size: 10px; flex: 1; }
+.editor-bar .editor-title { color: #aaa; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; font-size: 10px; flex: 1; }
 #editor-dirty { color: #e8c07d; font-size: 14px; line-height: 1; }
-#editor-status { font-size: 10px; color: #555; min-width: 50px; }
-#editor-cursor { font-size: 10px; color: #555; min-width: 90px; text-align: right; font-variant-numeric: tabular-nums; }
+#editor-status { font-size: 10px; color: #999; min-width: 50px; }
+#editor-cursor { font-size: 10px; color: #999; min-width: 90px; text-align: right; font-variant-numeric: tabular-nums; }
 #save-btn.saved { color: #89d185; border-color: #89d18555; }
+#ln-jump-input {
+  width: 52px; background: #3c3c3c; border: 1px solid #444; border-radius: 3px;
+  color: #eee; font-size: 11px; padding: 2px 5px; outline: none; text-align: center;
+}
+#ln-jump-input:focus { border-color: #4d9fff; }
 
 /* ── Go-to-line bar ───────────────────────────────────────────────────── */
 #goto-bar {
@@ -254,6 +260,51 @@ header .tag {
 }
 #goto-input:focus { border-color: #4d9fff; }
 .goto-hint { font-size: 10px; color: #444; white-space: nowrap; }
+
+/* ── Find/Replace bar ─────────────────────────────────────────────── */
+#find-bar {
+  display: none; flex-direction: column; flex-shrink: 0;
+  background: #252526; border-bottom: 1px solid #333; border-left: 1px solid #333;
+  padding: 4px 8px; gap: 3px;
+}
+#find-bar.visible { display: flex; }
+.find-row { display: flex; align-items: center; gap: 5px; }
+.find-row input {
+  flex: 1; min-width: 0; background: #3c3c3c; border: 1px solid #555;
+  border-radius: 3px; color: #eee; font-size: 12px; padding: 3px 8px; outline: none;
+}
+.find-row input:focus { border-color: #4d9fff; }
+#find-count { font-size: 10px; color: #666; white-space: nowrap; min-width: 54px; text-align: right; }
+.find-btn {
+  font-size: 11px; color: #999; background: #3c3c3c; border: 1px solid #555;
+  border-radius: 3px; padding: 2px 7px; cursor: pointer; line-height: 1.6;
+  white-space: nowrap; flex-shrink: 0;
+}
+.find-btn:hover { background: #4a4a4a; color: #eee; }
+
+/* ── Document Outline panel ────────────────────────────────────────────── */
+#outline-panel {
+  display: none; position: absolute; top: 33px; right: 8px;
+  width: 300px; max-height: 360px;
+  background: #252526; border: 1px solid #555; border-radius: 4px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.65);
+  flex-direction: column; z-index: 100;
+}
+#outline-panel.visible { display: flex; }
+#outline-filter {
+  background: #3c3c3c; border: none; border-bottom: 1px solid #444;
+  color: #eee; font-size: 12px; padding: 5px 10px; outline: none;
+  border-radius: 4px 4px 0 0; width: 100%; box-sizing: border-box;
+}
+#outline-list { overflow-y: auto; flex: 1; }
+.outline-item {
+  padding: 4px 10px; font-size: 12px; color: #ccc; cursor: pointer;
+  display: flex; align-items: baseline; gap: 6px;
+  overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+}
+.outline-item:hover, .outline-item.outline-focused { background: #094771; color: #eee; }
+.outline-depth { color: #569cd6; font-size: 10px; width: 22px; flex-shrink: 0; text-align: right; }
+.outline-empty { padding: 10px; font-size: 11px; color: #555; text-align: center; }
 
 #editor-wrap {
   flex: 1;
@@ -273,12 +324,12 @@ header .tag {
   font-family: "SF Mono","Fira Code","Consolas","Monaco",monospace;
   font-size: 12px;
   line-height: 1.6;
-  color: #3c4048;
+  color: #636d7e;
   user-select: none;
   cursor: default;
 }
 #editor-gutter div { line-height: 1.6; }
-#editor-gutter .gl-active { color: #ababab; }
+#editor-gutter .gl-active { color: #c8ccd4; }
 
 #editor-textarea {
   flex: 1;
@@ -292,6 +343,8 @@ header .tag {
   line-height: 1.6;
   padding: 16px;
   tab-size: 4;
+  white-space: pre;
+  overflow-x: auto;
   overflow-y: auto;
 }
 #editor-textarea::-webkit-scrollbar { width: 8px; }
@@ -342,6 +395,18 @@ header .tag {
         <div class="tree-node">
           <div class="tree-item" data-api="/_api/sandbox-mathew/" data-browse="/_sandbox-mathew/" data-type="dir" style="padding-left:14px">
             <span class="arrow">▶</span><span class="icon">📁</span><span class="label">Mathew</span>
+          </div>
+          <div class="tree-children collapsed" style="padding-left:12px"></div>
+        </div>
+      </div>
+
+      <div class="section-header open" data-section="command">
+        <span class="arrow">▶</span> Command Workspace
+      </div>
+      <div class="section-body" id="section-command">
+        <div class="tree-node">
+          <div class="tree-item" data-api="/_api/command/" data-browse="/_command/" data-type="dir" style="padding-left:14px">
+            <span class="arrow">▶</span><span class="icon">📁</span><span class="label">~/Foundry</span>
           </div>
           <div class="tree-children collapsed" style="padding-left:12px"></div>
         </div>
@@ -414,12 +479,33 @@ header .tag {
         <span id="editor-cursor"></span>
         <span id="editor-dirty" style="display:none" title="Unsaved changes">●</span>
         <span id="editor-status"></span>
+        <button class="bar-btn" id="outline-btn" onclick="showOutline()" title="Document outline (Cmd+Shift+O)">Outline</button>
+        <button class="bar-btn" id="comment-btn" onclick="toggleLineComment()" title="Toggle line comment">Comment</button>
+        <input id="ln-jump-input" type="text" inputmode="numeric" placeholder="Ln" title="Go to line (Enter)" autocomplete="off">
         <button class="bar-btn" id="save-btn" onclick="saveFile()">Save</button>
       </div>
       <div id="goto-bar">
         <span class="goto-label">Go to line:</span>
         <input id="goto-input" type="number" min="1" placeholder="…" autocomplete="off">
         <span class="goto-hint">↵ jump · Esc close</span>
+      </div>
+      <div id="outline-panel">
+        <input id="outline-filter" type="text" placeholder="Filter symbols…" autocomplete="off" spellcheck="false">
+        <div id="outline-list"></div>
+      </div>
+      <div id="find-bar">
+        <div class="find-row">
+          <input id="find-input" type="text" placeholder="Find…" autocomplete="off" spellcheck="false">
+          <span id="find-count"></span>
+          <button class="find-btn" id="find-prev" title="Previous (Shift+Enter)">↑</button>
+          <button class="find-btn" id="find-next" title="Next (Enter)">↓</button>
+          <button class="find-btn" id="find-close" title="Close (Esc)">✕</button>
+        </div>
+        <div class="find-row">
+          <input id="replace-input" type="text" placeholder="Replace with…" autocomplete="off" spellcheck="false">
+          <button class="find-btn" id="replace-one">Replace</button>
+          <button class="find-btn" id="replace-all-btn">All</button>
+        </div>
       </div>
       <div id="editor-wrap">
         <div id="editor-gutter"></div>
@@ -462,7 +548,7 @@ function fileMode(name) {
   if (IFRAME_EXTS.has(ext)) return 'iframe';
   if (IMAGE_EXTS.has(ext))  return 'image';
   if (TEXT_EXTS.has(ext))   return 'text';
-  return 'iframe';
+  return 'text';
 }
 
 // ── Escape HTML ───────────────────────────────────────────────────────────────
@@ -555,6 +641,8 @@ function mdToHtml(src) {
 
     if (!line.trim()) { i++; continue; }
 
+    if (line.startsWith('\x00CB')) { out += line + '\n'; i++; continue; }
+
     let para = '';
     while (i < lines.length) {
       const l = lines[i];
@@ -612,6 +700,7 @@ function showEditorPanel(content) {
 function hideEditorPanel() {
   document.getElementById('editor-panel').classList.remove('visible');
   document.getElementById('resizer2').style.display = 'none';
+  document.getElementById('find-bar').classList.remove('visible');
   editorPath  = null;
   editorMtime = 0;
   setDirty(false);
@@ -667,11 +756,59 @@ document.getElementById('text-content').addEventListener('click', e => {
 
   // Move editor cursor to that position and scroll into view
   ta.selectionStart = ta.selectionEnd = idx;
-  const lineNum = (src.substring(0, idx).match(/\n/g) || []).length;
-  ta.scrollTop = Math.max(0, lineNum * 12 * 1.6 - ta.clientHeight / 2);
   ta.focus();
+  const tacs   = window.getComputedStyle(ta);
+  const taLineH = parseFloat(tacs.lineHeight) || parseFloat(tacs.fontSize) * 1.6;
+  const taPadT  = parseFloat(tacs.paddingTop) || 0;
+  const lineNum = (src.substring(0, idx).match(/\n/g) || []).length;
+  ta.scrollTop = Math.max(0, taPadT + lineNum * taLineH - ta.clientHeight / 2 + taLineH / 2);
   updateGutterLines();
   updateEditorPos();
+});
+
+// ── Click-to-preview: click editor line → scroll viewer to matching element ──
+document.getElementById('editor-textarea').addEventListener('click', () => {
+  if (!editorPath) return;
+  if (editorPath.split('.').pop().toLowerCase() !== 'md') return;
+  const tv = document.getElementById('text-viewer');
+  if (tv.style.display === 'none') return;
+
+  const ta  = document.getElementById('editor-textarea');
+  const pos = ta.selectionStart;
+  const src = ta.value;
+  const lineStart = src.lastIndexOf('\n', pos - 1) + 1;
+  const lineEnd   = src.indexOf('\n', pos);
+  const line = src.substring(lineStart, lineEnd === -1 ? src.length : lineEnd).trim();
+  if (!line) return;
+
+  const tc = document.getElementById('text-content');
+  let target = null;
+
+  const headingMatch = line.match(/^(#{1,6})\s+(.+)/);
+  if (headingMatch) {
+    const tag  = 'h' + headingMatch[1].length;
+    const text = headingMatch[2].trim().slice(0, 40);
+    for (const el of tc.querySelectorAll(tag)) {
+      if (el.textContent.trim().startsWith(text.slice(0, 20))) { target = el; break; }
+    }
+  } else if (line.startsWith('```')) {
+    const lang = line.slice(3).trim();
+    for (const el of tc.querySelectorAll('pre')) {
+      const code = el.querySelector('code');
+      if (!lang || (code && code.className === 'lang-' + lang)) { target = el; break; }
+    }
+  } else {
+    const text = line.replace(/^[>*\-+\d.#]\s*/, '').replace(/\s+/g, ' ').slice(0, 40);
+    if (text.length < 5) return;
+    for (const el of tc.querySelectorAll('p,li,blockquote,td,th')) {
+      if (el.textContent.trim().replace(/\s+/g, ' ').startsWith(text.slice(0, 20))) { target = el; break; }
+    }
+  }
+
+  if (!target) return;
+  target.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  target.classList.add('preview-click-flash');
+  setTimeout(() => target.classList.remove('preview-click-flash'), 550);
 });
 
 // ── Live preview from editor textarea ────────────────────────────────────────
@@ -758,8 +895,11 @@ function applyGotoLine(n) {
   const idx   = Math.max(0, Math.min(n - 1, lines.length - 1));
   const pos   = lines.slice(0, idx).reduce((a, l) => a + l.length + 1, 0);
   ta.selectionStart = ta.selectionEnd = pos;
-  ta.scrollTop = Math.max(0, idx * 12 * 1.6 - ta.clientHeight / 2);
   ta.focus();
+  const cs     = window.getComputedStyle(ta);
+  const lineH  = parseFloat(cs.lineHeight) || parseFloat(cs.fontSize) * 1.6;
+  const padTop = parseFloat(cs.paddingTop) || 0;
+  ta.scrollTop = Math.max(0, padTop + idx * lineH - ta.clientHeight / 2 + lineH / 2);
   updateGutterLines();
   updateEditorPos();
 }
@@ -770,6 +910,18 @@ document.getElementById('goto-input').addEventListener('keydown', e => {
     hideGotoBar();
   }
   if (e.key === 'Escape') hideGotoBar();
+});
+
+document.getElementById('ln-jump-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    const n = parseInt(e.target.value, 10);
+    if (!isNaN(n)) { applyGotoLine(n); e.target.value = ''; }
+    document.getElementById('editor-textarea').focus();
+  }
+  if (e.key === 'Escape') {
+    e.target.value = '';
+    document.getElementById('editor-textarea').focus();
+  }
 });
 
 document.getElementById('editor-textarea').addEventListener('input', () => {
@@ -926,6 +1078,21 @@ async function saveFile() {
   showEditorStatus('Saved', '#89d185', 2500);
 }
 
+// ── Close current file ────────────────────────────────────────────────────────
+function closeFile() {
+  if (editorDirty && !confirm('You have unsaved changes. Close anyway?')) return;
+  currentPath = null;
+  viewMode    = 'none';
+  hideEditorPanel();
+  document.getElementById('viewer-placeholder').style.display = '';
+  document.getElementById('preview-frame').style.display      = 'none';
+  document.getElementById('text-viewer').style.display        = 'none';
+  document.getElementById('image-viewer').style.display       = 'none';
+  document.getElementById('bar-path').textContent = '';
+  document.getElementById('viewer-bar').querySelectorAll('.bar-btn, .bar-link').forEach(el => el.remove());
+  setTreeActive(null);
+}
+
 // ── Viewer helpers ────────────────────────────────────────────────────────────
 function hideViewerContent() {
   document.getElementById('viewer-placeholder').style.display = 'none';
@@ -938,6 +1105,30 @@ function updateBar(name, path) {
   document.getElementById('bar-path').textContent = name;
   const bar = document.getElementById('viewer-bar');
   bar.querySelectorAll('.bar-btn, .bar-link').forEach(el => el.remove());
+
+  const copyBtn = document.createElement('button');
+  copyBtn.className = 'bar-btn';
+  copyBtn.textContent = '⎘ Copy name';
+  copyBtn.title = 'Copy filename to clipboard';
+  copyBtn.addEventListener('click', () => {
+    const confirm = () => {
+      copyBtn.textContent = '✓ Copied';
+      setTimeout(() => { copyBtn.textContent = '⎘ Copy name'; }, 1500);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(name).then(confirm);
+    } else {
+      const tmp = document.createElement('textarea');
+      tmp.value = name;
+      tmp.style.cssText = 'position:fixed;top:-9999px;left:-9999px;opacity:0';
+      document.body.appendChild(tmp);
+      tmp.select();
+      document.execCommand('copy');
+      document.body.removeChild(tmp);
+      confirm();
+    }
+  });
+  bar.appendChild(copyBtn);
 
   const printBtn = document.createElement('button');
   printBtn.className = 'bar-btn';
@@ -959,10 +1150,19 @@ function updateBar(name, path) {
   link.rel = 'noreferrer';
   link.textContent = 'open in new tab ↗';
   bar.appendChild(link);
+
+  const closeBtn = document.createElement('button');
+  closeBtn.className = 'bar-btn';
+  closeBtn.textContent = '✕';
+  closeBtn.title = 'Close file';
+  closeBtn.addEventListener('click', closeFile);
+  bar.appendChild(closeBtn);
 }
 
 // ── Open file in viewer + optional editor ─────────────────────────────────────
 async function openFile(path, name) {
+  if (path === currentPath) return;
+  if (editorDirty && !confirm('You have unsaved changes. Open a different file?')) return;
   currentPath = path;
   const fname = name || path.split('/').pop();
   const mode  = fileMode(fname);
@@ -1050,10 +1250,265 @@ function printCurrent() {
   }
 }
 
+// ── Find / Replace ────────────────────────────────────────────────────────────
+let findMatches = [];
+let findIdx     = -1;
+
+function escapeRegex(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+
+function buildFindMatches() {
+  const term = document.getElementById('find-input').value;
+  const ta   = document.getElementById('editor-textarea');
+  findMatches = [];
+  if (!term) return;
+  const re = new RegExp(escapeRegex(term), 'gi');
+  let m;
+  while ((m = re.exec(ta.value)) !== null) {
+    findMatches.push({ start: m.index, end: m.index + m[0].length });
+  }
+}
+
+function updateFindCount() {
+  const el   = document.getElementById('find-count');
+  const term = document.getElementById('find-input').value;
+  if (!term)              { el.textContent = ''; return; }
+  if (!findMatches.length){ el.textContent = 'No results'; return; }
+  el.textContent = (findIdx + 1) + ' / ' + findMatches.length;
+}
+
+function findGo(dir) {
+  if (!findMatches.length) { updateFindCount(); return; }
+  findIdx = (findIdx + dir + findMatches.length) % findMatches.length;
+  const m  = findMatches[findIdx];
+  const ta = document.getElementById('editor-textarea');
+  ta.focus();
+  ta.selectionStart = m.start;
+  ta.selectionEnd   = m.end;
+  const line = ta.value.substring(0, m.start).split('\n').length - 1;
+  ta.scrollTop = Math.max(0, line * 12 * 1.6 - ta.clientHeight / 3);
+  updateFindCount();
+}
+
+function showFindBar() {
+  const bar = document.getElementById('find-bar');
+  bar.classList.add('visible');
+  const inp = document.getElementById('find-input');
+  const ta  = document.getElementById('editor-textarea');
+  const sel = ta.value.substring(ta.selectionStart, ta.selectionEnd);
+  if (sel && !sel.includes('\n')) inp.value = sel;
+  inp.focus(); inp.select();
+  buildFindMatches();
+  findIdx = -1;
+  if (findMatches.length) findGo(1); else updateFindCount();
+}
+
+function hideFindBar() {
+  document.getElementById('find-bar').classList.remove('visible');
+  document.getElementById('editor-textarea').focus();
+}
+
+document.getElementById('find-input').addEventListener('input', () => {
+  buildFindMatches(); findIdx = -1;
+  if (findMatches.length) findGo(1); else updateFindCount();
+});
+document.getElementById('find-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter')  { e.preventDefault(); findGo(e.shiftKey ? -1 : 1); }
+  if (e.key === 'Escape') { e.preventDefault(); hideFindBar(); }
+});
+document.getElementById('replace-input').addEventListener('keydown', e => {
+  if (e.key === 'Escape') { e.preventDefault(); hideFindBar(); }
+});
+document.getElementById('find-prev').addEventListener('click', () => findGo(-1));
+document.getElementById('find-next').addEventListener('click', () => findGo(1));
+document.getElementById('find-close').addEventListener('click', hideFindBar);
+
+document.getElementById('replace-one').addEventListener('click', () => {
+  if (!findMatches.length) return;
+  if (findIdx < 0) { findGo(1); return; }
+  const ta     = document.getElementById('editor-textarea');
+  const repVal = document.getElementById('replace-input').value;
+  const m      = findMatches[findIdx];
+  ta.focus(); ta.selectionStart = m.start; ta.selectionEnd = m.end;
+  document.execCommand('insertText', false, repVal);
+  setDirty(true); schedulePreview(); updateGutterLines();
+  const savedIdx = findIdx;
+  buildFindMatches();
+  if (!findMatches.length) { findIdx = -1; updateFindCount(); return; }
+  findIdx = Math.min(savedIdx, findMatches.length - 1);
+  const next = findMatches[findIdx];
+  ta.selectionStart = next.start; ta.selectionEnd = next.end;
+  updateFindCount();
+});
+
+document.getElementById('replace-all-btn').addEventListener('click', () => {
+  const findVal = document.getElementById('find-input').value;
+  if (!findVal || !findMatches.length) return;
+  const ta     = document.getElementById('editor-textarea');
+  const repVal = document.getElementById('replace-input').value;
+  const newVal = ta.value.replace(new RegExp(escapeRegex(findVal), 'gi'), repVal);
+  ta.focus(); ta.select();
+  document.execCommand('insertText', false, newVal);
+  setDirty(true); schedulePreview(); updateGutterLines();
+  buildFindMatches(); findIdx = -1; updateFindCount();
+});
+
+// ── Toggle line comment ───────────────────────────────────────────────────────
+function commentPrefix() {
+  if (!editorPath) return '# ';
+  const ext = editorPath.split('.').pop().toLowerCase();
+  return ['rs','js','ts','jsx','tsx','css','scss','go','java','c','cpp','h','hpp'].includes(ext)
+    ? '// ' : '# ';
+}
+
+function toggleLineComment() {
+  const ta     = document.getElementById('editor-textarea');
+  const val    = ta.value;
+  const ss     = ta.selectionStart;
+  const se     = ta.selectionEnd;
+  const prefix = commentPrefix();
+  const marker = prefix.trimEnd();
+
+  const lineStart = val.lastIndexOf('\n', ss - 1) + 1;
+  const lineEndRaw = val.indexOf('\n', se);
+  const blockEnd  = lineEndRaw === -1 ? val.length : lineEndRaw;
+
+  const lines = val.substring(lineStart, blockEnd).split('\n');
+  const nonEmpty = lines.filter(l => l.trim());
+  const allCommented = nonEmpty.length > 0 && nonEmpty.every(l => l.trimStart().startsWith(marker));
+
+  const newLines = lines.map(l => {
+    if (allCommented) {
+      const trimmed = l.trimStart();
+      const lead    = l.slice(0, l.length - trimmed.length);
+      if (trimmed.startsWith(prefix))  return lead + trimmed.slice(prefix.length);
+      if (trimmed.startsWith(marker))  return lead + trimmed.slice(marker.length);
+      return l;
+    } else {
+      if (!l.trim()) return l;
+      const lead = l.slice(0, l.length - l.trimStart().length);
+      return lead + prefix + l.trimStart();
+    }
+  });
+
+  const newBlock = newLines.join('\n');
+  ta.focus(); ta.selectionStart = lineStart; ta.selectionEnd = blockEnd;
+  document.execCommand('insertText', false, newBlock);
+
+  const delta = newBlock.length - (blockEnd - lineStart);
+  ta.selectionStart = lineStart;
+  ta.selectionEnd   = Math.max(lineStart, se + delta);
+  setDirty(true); schedulePreview(); updateGutterLines(); updateEditorPos();
+}
+
+// ── Document Outline (Cmd+Shift+O) ───────────────────────────────────────────
+let outlineRawItems = [];
+let outlineFocusIdx = -1;
+
+function buildOutlineRaw() {
+  const ta  = document.getElementById('editor-textarea');
+  const ext = editorPath ? editorPath.split('.').pop().toLowerCase() : '';
+  const lines = ta.value.split('\n');
+  outlineRawItems = [];
+  let offset = 0;
+  for (const line of lines) {
+    if (ext === 'toml') {
+      const m = line.match(/^\[([\w. -]+)\]$/);
+      if (m) outlineRawItems.push({ label: '[' + m[1] + ']', depth: -1, offset });
+    } else {
+      const m = line.match(/^(#{1,6})\s+(.+)/);
+      if (m) outlineRawItems.push({ label: m[2].trim(), depth: m[1].length, offset });
+    }
+    offset += line.length + 1;
+  }
+}
+
+function renderOutline(filter) {
+  const list  = document.getElementById('outline-list');
+  const lower = (filter || '').toLowerCase();
+  const shown = outlineRawItems.filter(it => !lower || it.label.toLowerCase().includes(lower));
+  list.innerHTML = '';
+  if (!shown.length) {
+    list.innerHTML = '<div class="outline-empty">No symbols found</div>';
+    outlineFocusIdx = -1;
+    return;
+  }
+  shown.forEach(item => {
+    const div   = document.createElement('div');
+    div.className = 'outline-item';
+    const tag   = item.depth < 0 ? '§' : 'H' + item.depth;
+    const indent = item.depth > 1 ? (item.depth - 1) * 10 : 0;
+    div.style.paddingLeft = (10 + indent) + 'px';
+    div.innerHTML = `<span class="outline-depth">${tag}</span><span>${item.label}</span>`;
+    div.addEventListener('click', () => {
+      const ta = document.getElementById('editor-textarea');
+      ta.focus();
+      ta.selectionStart = ta.selectionEnd = item.offset;
+      const lineNum = ta.value.substring(0, item.offset).split('\n').length - 1;
+      ta.scrollTop = Math.max(0, lineNum * 12 * 1.6 - ta.clientHeight / 3);
+      hideOutline();
+      updateEditorPos();
+    });
+    list.appendChild(div);
+  });
+  outlineFocusIdx = -1;
+}
+
+function showOutline() {
+  buildOutlineRaw();
+  const panel = document.getElementById('outline-panel');
+  panel.classList.add('visible');
+  const inp = document.getElementById('outline-filter');
+  inp.value = '';
+  renderOutline('');
+  inp.focus();
+}
+
+function hideOutline() {
+  document.getElementById('outline-panel').classList.remove('visible');
+  document.getElementById('editor-textarea').focus();
+}
+
+document.getElementById('outline-filter').addEventListener('input', e => {
+  renderOutline(e.target.value);
+});
+
+document.getElementById('outline-filter').addEventListener('keydown', e => {
+  const list  = document.getElementById('outline-list');
+  const items = list.querySelectorAll('.outline-item');
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    if (outlineFocusIdx >= 0) items[outlineFocusIdx].classList.remove('outline-focused');
+    outlineFocusIdx = Math.min(outlineFocusIdx + 1, items.length - 1);
+    if (outlineFocusIdx >= 0) { items[outlineFocusIdx].classList.add('outline-focused'); items[outlineFocusIdx].scrollIntoView({ block: 'nearest' }); }
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    if (outlineFocusIdx >= 0) items[outlineFocusIdx].classList.remove('outline-focused');
+    outlineFocusIdx = Math.max(outlineFocusIdx - 1, 0);
+    if (outlineFocusIdx >= 0) { items[outlineFocusIdx].classList.add('outline-focused'); items[outlineFocusIdx].scrollIntoView({ block: 'nearest' }); }
+  } else if (e.key === 'Enter') {
+    e.preventDefault();
+    const focused = list.querySelector('.outline-focused') || list.querySelector('.outline-item');
+    if (focused) focused.click();
+  } else if (e.key === 'Escape') {
+    e.preventDefault();
+    hideOutline();
+  }
+});
+
 // ── Keyboard shortcuts ────────────────────────────────────────────────────────
 window.addEventListener('keydown', e => {
   if ((e.metaKey || e.ctrlKey) && e.key === 'p') { e.preventDefault(); printCurrent(); }
   if ((e.metaKey || e.ctrlKey) && e.key === 's') { e.preventDefault(); saveFile(); }
+  if ((e.metaKey || e.ctrlKey) && e.key === 'f') {
+    if (document.getElementById('editor-panel').classList.contains('visible')) {
+      e.preventDefault(); showFindBar();
+    }
+  }
+  if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === 'O') {
+    if (document.getElementById('editor-panel').classList.contains('visible')) {
+      e.preventDefault(); showOutline();
+    }
+  }
 });
 
 // ── Mark a tree item active ───────────────────────────────────────────────────
@@ -1142,7 +1597,7 @@ async function loadChildren(item, childrenEl, depth) {
     const rest     = entries.filter(e => e.type !== 'directory' && !VIEWABLE_RE.test(e.name)).sort((a,b) => a.name.localeCompare(b.name));
 
     [...dirs, ...viewable, ...rest].forEach(entry => {
-      if (entry.name.startsWith('.')) return;
+      if (entry.name.startsWith('.') && entry.name !== '.agent') return;
       const node = buildItem(entry, apiBase, browseBase, depth);
       childrenEl.appendChild(node);
       wireItem(node.querySelector('.tree-item'), node.querySelector('.tree-children'), depth + 1);

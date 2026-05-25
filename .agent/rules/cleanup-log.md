@@ -4,6 +4,44 @@ Living record of in-flight cleanup work, open questions, and decisions made duri
 
 ---
 
+## 2026-05-25 — app-mediakit-knowledge: round-2 design redesign (commit `70259d32`)
+
+- **Second design competition run.** Three OPUS prototype agents produced new directions:
+  proto-platform-document (Stripe/Linear platform aesthetic), proto-institutional-register
+  (Q4/Bloomberg newspaper-of-record), proto-editorial-standard (FT/Economist literary).
+- **Jury verdict: platform-document wins (84/100)** with three surgical grafts from
+  institutional-register: three-row header structure (utility/brand/nav-row), ledger stripe
+  (navy bg, 4-fact statistics), article meta as `<dl>` with vertical rules.
+  editorial-standard rejected outright (wrong reading register for technical wiki).
+- **CSS rewritten** (2,347 lines, replacing 4,362-line prior file): Oswald + Nunito Sans +
+  Roboto Slab via Google Fonts CDN; three-row header geometry (utility-h 32px, brand-h 72px,
+  nav-h 48px); ledger stripe; article-meta DL grid; dark mode on `#0B1220` canvas;
+  accent-gold `#C7A961` decorative-only.
+- **server.rs changes:** Google Fonts `<link>` preconnect + stylesheet tags added to all
+  three chrome functions. Wordmark constants (`WORDMARK_POINTSAV`, `WORDMARK_WOODFINE`)
+  rewritten as HTML spans with `text-transform:none` — no more "POINT-SAV" hyphenation.
+- **dtcg-bundle.json additions:** `color-dark` namespace (11 dark primitives), `layout`
+  namespace (8 dimensional tokens), `accent-gold`, platform font-family entries.
+- **Spec file produced:** `DESIGN-WIKI-REDESIGN-SPEC.draft.md` (416 lines) in
+  `.agent/drafts-outbound/` — complete implementation brief including Google Fonts URLs,
+  token JSON, CSS selector-level delta, Maud Rust patterns, 15-step verification checklist.
+- **Tests:** 106 unit tests + all integration suites pass. Stage 6 + rebuild outboxed.
+
+## 2026-05-25 — app-mediakit-knowledge: shell-header CSS mismatch fix
+
+- **Root cause identified and fixed.** The hybrid UI (commit `9cf2c9ed`) wrote all three-row
+  header CSS under `.shell-header` selectors, but `home_chrome()` and `wiki_chrome()` both
+  emitted `header.mw-header` — so the brand-row, utility-row, and nav-row layout CSS was
+  completely orphaned. No three-row layout ever rendered in production.
+- **Both functions updated** to emit `header.shell-header`. Search-row kept as fourth row
+  in wiki article pages (below nav-row, centered search pill).
+- **Wordmark SVG fill fixed** from hardcoded `#09090B`/`#111827` to `fill="currentColor"` —
+  was invisible in dark mode.
+- **CSS utility-row button/link selectors added.** `.shell-header .utility-row button/a` now
+  covered alongside `.shell-utility button/a`.
+- **`.search-row` CSS added** for the wiki article search bar row (no styles previously existed).
+- **Tests:** all 106 tests pass. Committed as `1ab80d1f`. Stage 6 + rebuild outboxed to Command.
+
 ## 2026-05-24 — Phase 21: electronics category + XXXLutz/Höffner lifestyle expansion
 
 - **`electronics` added as 6th retail anchor category in taxonomy.py.** Added to `_RETAIL_CATS`,

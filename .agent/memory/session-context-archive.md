@@ -5,6 +5,21 @@ Newest first.
 
 ---
 
+## Session: 2026-05-22 session 3 | Role: totebox | Engine: claude-code
+
+### Done this session
+- **Phase 4 (service-slm Doorman node-class gating)**: node-class probe wired into Doorman build;
+  readyz emits node_class/tier_a/tier_a_reason; 241+ tests; Wants= dep softened.
+
+### Pending / carry-forward
+- Stage 6 promote; Phase 5 micro integration tests; infrastructure/local-doorman commit.
+
+### Operator preferences surfaced
+- No new preferences surfaced this session.
+
+
+---
+
 ## 2026-05-22 | Totebox | claude-sonnet-4-6
 
 **Done this session:**

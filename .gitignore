@@ -12,3 +12,20 @@ vendor-sel4-kernel/build/
 service-slm/router-trainer/engine/
 service-slm/router-trainer/*.log
 os-infrastructure/build_iso/
+vendor-sel4-kernel/.venv/
+_QUARANTINE_ROOT/
+
+# Local-only vendor copies — carry upstream licenses; not tracked in this repo
+vendor-azure-auth/
+vendor-gpu-drivers/
+vendor-linux-systemd/
+vendor-microsoft-graph/
+vendor-phi3-mini/
+vendor-sel4-kernel/
+vendor-slm-engine/
+
+# Local-only operational directories — provisioned at runtime, not part of source
+app-infrastructure-cloud/
+app-infrastructure-leased/
+app-infrastructure-onprem/
+discovery-queue/
