@@ -4,6 +4,21 @@ Living record of in-flight cleanup work, open questions, and decisions made duri
 
 ---
 
+## 2026-05-25 — app-mediakit-knowledge: shell-header CSS mismatch fix
+
+- **Root cause identified and fixed.** The hybrid UI (commit `9cf2c9ed`) wrote all three-row
+  header CSS under `.shell-header` selectors, but `home_chrome()` and `wiki_chrome()` both
+  emitted `header.mw-header` — so the brand-row, utility-row, and nav-row layout CSS was
+  completely orphaned. No three-row layout ever rendered in production.
+- **Both functions updated** to emit `header.shell-header`. Search-row kept as fourth row
+  in wiki article pages (below nav-row, centered search pill).
+- **Wordmark SVG fill fixed** from hardcoded `#09090B`/`#111827` to `fill="currentColor"` —
+  was invisible in dark mode.
+- **CSS utility-row button/link selectors added.** `.shell-header .utility-row button/a` now
+  covered alongside `.shell-utility button/a`.
+- **`.search-row` CSS added** for the wiki article search bar row (no styles previously existed).
+- **Tests:** all 106 tests pass. Committed as `1ab80d1f`. Stage 6 + rebuild outboxed to Command.
+
 ## 2026-05-24 — Phase 21: electronics category + XXXLutz/Höffner lifestyle expansion
 
 - **`electronics` added as 6th retail anchor category in taxonomy.py.** Added to `_RETAIL_CATS`,
