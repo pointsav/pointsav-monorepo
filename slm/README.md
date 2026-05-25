@@ -1,1 +1,1 @@
-SLM routing for this archive via the shared Doorman instance (module: proofreader).
+SLM routing for this archive via the shared Doorman instance (module: infrastructure).
