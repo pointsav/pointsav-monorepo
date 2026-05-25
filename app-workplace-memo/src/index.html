@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Content-Security-Policy"
+    content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; connect-src 'none'; img-src 'self' data:; font-src 'self' data:" />
+  <title>Workplace Memo</title>
+
+  <!-- Application styles -->
+  <link rel="stylesheet" href="styles/app.css" />
+
+  <!--
+    Paged.js — MIT licensed — https://pagedjs.org
+    Renders the document canvas with live pagination.
+    Self-hosted; no CDN call.
+  -->
+  <script src="js/vendor/paged.polyfill.js" defer></script>
+
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════════════════════
+       APPLICATION CHROME
+  ═══════════════════════════════════════════════════════ -->
+
+  <div id="app-shell">
+
+    <!-- ── Menu bar ── -->
+    <div id="menubar" role="menubar">
+      <button class="menu-item" id="menu-file">File</button>
+      <button class="menu-item" id="menu-edit">Edit</button>
+      <button class="menu-item" id="menu-insert">Insert</button>
+      <button class="menu-item" id="menu-format">Format</button>
+      <button class="menu-item" id="menu-document">Document</button>
+      <button class="menu-item" id="menu-view">View</button>
+      <div class="menubar-spacer"></div>
+      <span id="doc-title-display" class="doc-title-display">Untitled</span>
+      <div class="menubar-spacer"></div>
+      <span id="save-state" class="save-state" aria-live="polite"></span>
+    </div>
+
+    <!-- ── Toolbar (ribbon) ── -->
+    <div id="toolbar" role="toolbar" aria-label="Formatting">
+
+      <!-- Font family -->
+      <select id="font-family" title="Font Family" class="toolbar-select font-select">
+        <option value="EB Garamond">EB Garamond</option>
+        <option value="Source Serif 4">Source Serif 4</option>
+        <option value="Lora">Lora</option>
+        <option value="Playfair Display">Playfair Display</option>
+        <option value="Fraunces">Fraunces</option>
+        <option value="DM Sans">DM Sans</option>
+        <option value="IBM Plex Sans">IBM Plex Sans</option>
+        <option value="Source Code Pro">Source Code Pro</option>
+      </select>
+
+      <!-- Font size -->
+      <select id="font-size" title="Font Size" class="toolbar-select size-select">
+        <option value="10">10</option>
+        <option value="11">11</option>
+        <option value="12" selected>12</option>
+        <option value="14">14</option>
+        <option value="16">16</option>
+        <option value="18">18</option>
+        <option value="20">20</option>
+        <option value="24">24</option>
+        <option value="28">28</option>
+        <option value="32">32</option>
+        <option value="36">36</option>
+        <option value="48">48</option>
+        <option value="60">60</option>
+        <option value="72">72</option>
+      </select>
+
+      <div class="toolbar-divider"></div>
+
+      <!-- Text style -->
+      <button id="btn-bold"   class="toolbar-btn" title="Bold (Cmd+B)"      data-cmd="bold"><b>B</b></button>
+      <button id="btn-italic" class="toolbar-btn" title="Italic (Cmd+I)"    data-cmd="italic"><i>I</i></button>
+      <button id="btn-underline" class="toolbar-btn" title="Underline (Cmd+U)" data-cmd="underline"><u>U</u></button>
+      <button id="btn-strike" class="toolbar-btn" title="Strikethrough"     data-cmd="strikeThrough"><s>S</s></button>
+
+      <div class="toolbar-divider"></div>
+
+      <!-- Text colour -->
+      <div class="toolbar-colour-wrap" title="Text Colour">
+        <button class="toolbar-btn colour-btn" id="btn-colour">A</button>
+        <input type="color" id="colour-picker" value="#000000" />
+      </div>
+
+      <!-- Highlight -->
+      <div class="toolbar-colour-wrap" title="Highlight">
+        <button class="toolbar-btn colour-btn" id="btn-highlight">H</button>
+        <input type="color" id="highlight-picker" value="#ffff00" />
+      </div>
+
+      <div class="toolbar-divider"></div>
+
+      <!-- Alignment -->
+      <button class="toolbar-btn" title="Align Left"    data-cmd="justifyLeft">⬤↙</button>
+      <button class="toolbar-btn" title="Align Centre"  data-cmd="justifyCenter">⬤↓</button>
+      <button class="toolbar-btn" title="Align Right"   data-cmd="justifyRight">⬤↘</button>
+      <button class="toolbar-btn" title="Justify"       data-cmd="justifyFull">⬛</button>
+
+      <div class="toolbar-divider"></div>
+
+      <!-- Lists -->
+      <button class="toolbar-btn" title="Bullet List"   data-cmd="insertUnorderedList">• —</button>
+      <button class="toolbar-btn" title="Numbered List" data-cmd="insertOrderedList">1 —</button>
+
+      <!-- Indent -->
+      <button class="toolbar-btn" title="Decrease Indent" data-cmd="outdent">←</button>
+      <button class="toolbar-btn" title="Increase Indent" data-cmd="indent">→</button>
+
+      <div class="toolbar-divider"></div>
+
+      <!-- Template selector -->
+      <label class="toolbar-label" for="template-select">Template</label>
+      <select id="template-select" class="toolbar-select template-select" title="Document Template">
+        <option value="corporate">Corporate Memo</option>
+        <option value="technical">Technical Spec</option>
+        <option value="minimal">Minimal Report</option>
+        <option value="confidential">Confidential Brief</option>
+      </select>
+
+      <div class="toolbar-spacer"></div>
+
+      <!-- Export / Print -->
+      <button class="toolbar-btn action-btn" id="btn-print"  title="Print / Save as PDF">⎙ Print</button>
+      <button class="toolbar-btn action-btn" id="btn-export" title="Save as HTML">↓ HTML</button>
+
+    </div>
+
+    <!-- ── Ruler ── -->
+    <div id="ruler" role="presentation" aria-hidden="true">
+      <canvas id="ruler-canvas" height="20"></canvas>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════
+         DOCUMENT DESKTOP + CANVAS
+         Paged.js transforms this into paginated pages.
+    ═══════════════════════════════════════════════════════ -->
+    <div id="document-desktop">
+      <div id="document-canvas"
+           contenteditable="true"
+           spellcheck="true"
+           autocorrect="off"
+           autocomplete="off"
+           role="document"
+           aria-label="Document"
+           aria-multiline="true">
+        <h1>Untitled Document</h1>
+        <p>Begin typing your document here.</p>
+      </div>
+    </div>
+
+    <!-- ── Status bar ── -->
+    <div id="statusbar" role="status" aria-live="polite">
+      <span id="status-page">Page 1 of 1</span>
+      <span class="statusbar-sep">·</span>
+      <span id="status-words">0 words</span>
+      <span class="statusbar-sep">·</span>
+      <span id="status-template">Corporate Memo</span>
+      <div class="statusbar-spacer"></div>
+      <span id="status-platform"></span>
+    </div>
+
+  </div><!-- /#app-shell -->
+
+  <!-- ═══════════════════════════════════════════════════════
+       DROP-DOWN MENUS (hidden by default)
+  ═══════════════════════════════════════════════════════ -->
+  <div id="dropdown-overlay" class="hidden"></div>
+
+  <nav id="menu-file-dropdown" class="dropdown hidden" role="menu">
+    <button role="menuitem" data-action="new">New Document</button>
+    <button role="menuitem" data-action="open">Open…</button>
+    <div class="dropdown-sep"></div>
+    <button role="menuitem" data-action="save">Save</button>
+    <button role="menuitem" data-action="save-as">Save As…</button>
+    <div class="dropdown-sep"></div>
+    <button role="menuitem" data-action="export-html">Export as HTML…</button>
+    <button role="menuitem" data-action="print">Print / Save as PDF…</button>
+  </nav>
+
+  <nav id="menu-insert-dropdown" class="dropdown hidden" role="menu">
+    <button role="menuitem" data-action="insert-hr">Horizontal Rule</button>
+    <button role="menuitem" data-action="insert-table">Table…</button>
+    <button role="menuitem" data-action="insert-pagebreak">Page Break</button>
+  </nav>
+
+  <nav id="menu-document-dropdown" class="dropdown hidden" role="menu">
+    <button role="menuitem" data-action="page-size-a4">Paper: A4</button>
+    <button role="menuitem" data-action="page-size-letter">Paper: Letter</button>
+    <div class="dropdown-sep"></div>
+    <button role="menuitem" data-action="margins-normal">Margins: Normal (25mm)</button>
+    <button role="menuitem" data-action="margins-narrow">Margins: Narrow (15mm)</button>
+    <button role="menuitem" data-action="margins-wide">Margins: Wide (38mm)</button>
+    <div class="dropdown-sep"></div>
+    <button role="menuitem" data-action="fonts-panel">Manage Fonts…</button>
+  </nav>
+
+  <!-- Fonts panel -->
+  <aside id="fonts-panel" class="panel hidden" role="dialog" aria-label="Fonts">
+    <div class="panel-header">
+      <span>Fonts</span>
+      <button class="panel-close" id="fonts-panel-close">✕</button>
+    </div>
+    <div class="panel-body">
+      <p class="panel-note">
+        Fonts downloaded here are stored locally and embedded in exported documents.
+        All fonts are SIL Open Font Licence.
+      </p>
+      <div id="fonts-list"></div>
+    </div>
+  </aside>
+
+  <!-- ─── Scripts ─────────────────────────────────────────── -->
+  <!--
+    Load order matters. No module bundler is used.
+    window.__TAURI__ is available because withGlobalTauri=true in tauri.conf.json.
+  -->
+  <script src="js/font-data.js"></script>       <!-- generated: base64 font data -->
+  <script src="js/templates.js"></script>        <!-- template CSS bundles -->
+  <script src="js/fonts.js"></script>            <!-- font panel and @font-face injection -->
+  <script src="js/pagination.js"></script>       <!-- Paged.js config and page counter -->
+  <script src="js/ruler.js"></script>            <!-- margin ruler with drag handles -->
+  <script src="js/toolbar.js"></script>          <!-- formatting commands -->
+  <script src="js/export.js"></script>           <!-- HTML assembly and print trigger -->
+  <script src="js/editor.js"></script>           <!-- canvas, state, file I/O, menus -->
+
+</body>
+</html>

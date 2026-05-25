@@ -1,0 +1,14 @@
+[Unit]
+Description=Yo-Yo adapter publish (uploads trained adapter to GCS)
+Documentation=file:///var/log/yoyo-adapter-publish.log
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/adapter-publish.sh
+StandardOutput=journal
+StandardError=journal
+
+# No [Install] section — this is an on-demand oneshot triggered by
+# lora-training.service via `systemctl start adapter-publish.service` with
+# the ADAPTER_OUT_DIR env var. It does not run at boot.
