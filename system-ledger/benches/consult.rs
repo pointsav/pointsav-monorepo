@@ -66,9 +66,7 @@ fn signed_checkpoint(
 
 fn bench_capability_hash(c: &mut Criterion) {
     let cap = fixture_capability();
-    c.bench_function("Capability::hash", |b| {
-        b.iter(|| black_box(cap.hash()))
-    });
+    c.bench_function("Capability::hash", |b| b.iter(|| black_box(cap.hash())));
 }
 
 fn bench_verify_signer_single(c: &mut Criterion) {
@@ -82,11 +80,7 @@ fn bench_verify_signer_single(c: &mut Criterion) {
 fn bench_verify_apex_handover(c: &mut Criterion) {
     let (sk_old, pk_old) = keypair(0x11);
     let (sk_new, pk_new) = keypair(0x22);
-    let signed = signed_checkpoint(
-        100,
-        0xCD,
-        &[("apex-old", &sk_old), ("apex-new", &sk_new)],
-    );
+    let signed = signed_checkpoint(100, 0xCD, &[("apex-old", &sk_old), ("apex-new", &sk_new)]);
     c.bench_function("SignedCheckpoint::verify_apex_handover (2-sig)", |b| {
         b.iter(|| {
             black_box(
@@ -104,10 +98,18 @@ fn bench_cache_hit(c: &mut Criterion) {
     // Fill cache with 64 entries; the target lookup is the LAST one
     // inserted (most-recent — best cache-hit case).
     for h in 0..64u64 {
-        ledger.cache.insert(signed_checkpoint(h, h as u8, &[("apex", &sk)]));
+        ledger
+            .cache
+            .insert(signed_checkpoint(h, h as u8, &[("apex", &sk)]));
     }
     c.bench_function("cache lookup_by_tree_size (hit, most-recent)", |b| {
-        b.iter(|| black_box(ledger.cache.lookup_by_tree_size("foundry.bench.cap-ledger", 63)))
+        b.iter(|| {
+            black_box(
+                ledger
+                    .cache
+                    .lookup_by_tree_size("foundry.bench.cap-ledger", 63),
+            )
+        })
     });
 }
 
@@ -115,10 +117,18 @@ fn bench_cache_miss(c: &mut Criterion) {
     let (sk, _pk) = keypair(0x11);
     let mut ledger = InMemoryLedger::new();
     for h in 0..64u64 {
-        ledger.cache.insert(signed_checkpoint(h, h as u8, &[("apex", &sk)]));
+        ledger
+            .cache
+            .insert(signed_checkpoint(h, h as u8, &[("apex", &sk)]));
     }
     c.bench_function("cache lookup_by_tree_size (miss, full scan)", |b| {
-        b.iter(|| black_box(ledger.cache.lookup_by_tree_size("foundry.bench.cap-ledger", 99999)))
+        b.iter(|| {
+            black_box(
+                ledger
+                    .cache
+                    .lookup_by_tree_size("foundry.bench.cap-ledger", 99999),
+            )
+        })
     });
 }
 
@@ -129,13 +139,7 @@ fn bench_consult_capability_allow(c: &mut Criterion) {
     let cap = fixture_capability();
     let root = signed_checkpoint(5, 0xAA, &[("apex", &sk)]);
     c.bench_function("consult_capability (Allow path; 1-sig apex verify)", |b| {
-        b.iter(|| {
-            black_box(
-                ledger
-                    .consult_capability(&cap, &root, 1000, None)
-                    .unwrap(),
-            )
-        })
+        b.iter(|| black_box(ledger.consult_capability(&cap, &root, 1000, None).unwrap()))
     });
 }
 

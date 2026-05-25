@@ -92,7 +92,10 @@ pub fn verify_witness_signature(
         .flush()
         .map_err(|e| WitnessVerifyError::TempFileFailed(format!("flush signers: {e}")))?;
 
-    let sig_path = sig_file.path().to_str().ok_or(WitnessVerifyError::NonUtf8Path)?;
+    let sig_path = sig_file
+        .path()
+        .to_str()
+        .ok_or(WitnessVerifyError::NonUtf8Path)?;
     let signers_path = signers_file
         .path()
         .to_str()
@@ -277,6 +280,9 @@ mod tests {
         // we return Ok(false). Either Ok(false) or
         // ShellOutFailed acceptable (ssh-keygen behaviour varies on
         // truncation patterns); we assert it's not Ok(true).
-        assert!(!matches!(r, Ok(true)), "truncated sig must not verify; got {r:?}");
+        assert!(
+            !matches!(r, Ok(true)),
+            "truncated sig must not verify; got {r:?}"
+        );
     }
 }
