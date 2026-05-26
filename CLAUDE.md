@@ -1,6 +1,6 @@
 @~/Foundry/AGENT.md
 
-# project-knowledge — Archive Guide
+# project-editorial — Archive Guide
 
 > **State:** active | **Last updated:** 2026-05-26
 > **Cluster manifest:** `.agent/manifest.md`
@@ -10,10 +10,10 @@
 
 ## Cluster mission
 
-Build and maintain `app-mediakit-knowledge` — the Rust-based wiki engine
-serving `documentation.pointsav.com`, `projects.woodfinegroup.com`, and
-`corporate.woodfinegroup.com`. Manages the three `media-knowledge-*` content
-repos (canonical per Doctrine §IV.e — GitHub is downstream mirror).
+Editorial gateway cluster — sweep drafts-outbound from all clusters; refine
+to Bloomberg standard (banned vocab, BCSC posture, bilingual); produce `.es.md`
+Spanish pairs; route finished TOPIC-* articles to `media-knowledge-documentation`
+and GUIDE-* to `woodfine-fleet-deployment`. Owns the language-quality gate.
 
 ## Tetrad
 
