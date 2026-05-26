@@ -134,6 +134,10 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "axum 0.7.9",
+ "base64 0.22.1",
+ "chrono",
+ "ed25519-dalek",
+ "hex",
  "serde",
  "serde_json",
  "tokio",
