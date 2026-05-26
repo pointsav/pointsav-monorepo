@@ -1058,6 +1058,7 @@ async function saveFile() {
         editorMtime = d.mtime || editorMtime;
         setDirty(false);
         showEditorStatus('Saved', '#89d185', 2500);
+        refreshViewerFromEditor();
       } else {
         showEditorStatus('Save failed', '#f85149', 4000);
       }
@@ -1076,6 +1077,38 @@ async function saveFile() {
   editorMtime = data.mtime || editorMtime;
   setDirty(false);
   showEditorStatus('Saved', '#89d185', 2500);
+  refreshViewerFromEditor();
+}
+
+// ── Refresh the viewer from in-memory editor content ─────────────────────────
+// Called after a successful save so the viewer reflects the just-saved content
+// immediately, without waiting for the user to re-open the file and without
+// re-fetching from disk (which may be served stale by the browser/proxy cache).
+function refreshViewerFromEditor() {
+  const ta = document.getElementById('editor-textarea');
+  if (!ta || !currentPath) return;
+  const content = ta.value;
+  const fname = (currentPath.split('/').pop() || '').toLowerCase();
+  const ext = fname.split('.').pop();
+
+  if (viewMode === 'iframe') {
+    const frame = document.getElementById('preview-frame');
+    if (frame) {
+      frame.removeAttribute('src');
+      frame.srcdoc = content;
+    }
+  } else if (viewMode === 'text') {
+    const tc = document.getElementById('text-content');
+    if (!tc) return;
+    if (ext === 'md') {
+      tc.className = 'md-view';
+      tc.innerHTML = mdToHtml(content);
+    } else {
+      tc.className = 'code-view';
+      tc.textContent = content;
+    }
+  }
+  // image mode: editor doesn't author binary images; nothing to refresh
 }
 
 // ── Autosave (every 30 s while dirty) ────────────────────────────────────────
@@ -1096,6 +1129,7 @@ async function autosaveFile() {
       editorMtime = data.mtime || editorMtime;
       setDirty(false);
       showEditorStatus('Autosaved', '#89d185', 2000);
+      refreshViewerFromEditor();
     }
     // 409 conflict or other errors: skip silently, let user resolve via manual Save
   } catch(e) { /* network error — skip */ }
@@ -1193,6 +1227,16 @@ function updateBar(name, path) {
 }
 
 // ── Open file in viewer + optional editor ─────────────────────────────────────
+// ── Cache-bust helper ────────────────────────────────────────────────────────
+// Appends a `_cb=<timestamp>` query param to bypass any browser / proxy cache
+// when re-fetching viewer content. The static-file routes in nginx do not set
+// explicit Cache-Control headers, so browsers may heuristically cache; this
+// guarantees a fresh round-trip after edits.
+function cacheBust(path) {
+  const sep = path.indexOf('?') >= 0 ? '&' : '?';
+  return path + sep + '_cb=' + Date.now();
+}
+
 async function openFile(path, name) {
   if (path === currentPath) return;
   if (editorDirty && !confirm('You have unsaved changes. Open a different file?')) return;
@@ -1208,13 +1252,13 @@ async function openFile(path, name) {
     viewMode = 'iframe';
     const frame = document.getElementById('preview-frame');
     frame.style.display = 'block';
-    frame.src = path;
+    frame.src = cacheBust(path);
 
   } else if (mode === 'image') {
     viewMode = 'image';
     const iv = document.getElementById('image-viewer');
     iv.style.display = 'flex';
-    document.getElementById('image-el').src = path;
+    document.getElementById('image-el').src = cacheBust(path);
 
   } else {
     viewMode = 'text';
@@ -1224,7 +1268,7 @@ async function openFile(path, name) {
     tc.className = '';
     tc.textContent = 'Loading…';
     try {
-      const res = await fetch(path);
+      const res = await fetch(cacheBust(path), { cache: 'no-store' });
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const text = await res.text();
       const ext = fname.split('.').pop().toLowerCase();
