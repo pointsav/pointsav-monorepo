@@ -14,8 +14,10 @@ use std::{
     io::Write,
     net::SocketAddr,
     path::{Path, PathBuf},
-    sync::Arc,
-    time::UNIX_EPOCH,
+    process::Command,
+    sync::{mpsc, Arc},
+    thread,
+    time::{Duration, UNIX_EPOCH},
 };
 use tokio::net::TcpListener;
 
@@ -503,6 +505,198 @@ async fn duplicate_file(State(state): State<AppState>, Query(q): Query<FileQuery
 }
 
 // ---------------------------------------------------------------------------
+// Create file
+// ---------------------------------------------------------------------------
+
+#[derive(Serialize)]
+struct CreateResponse {
+    ok: bool,
+    path: String,
+    name: String,
+}
+
+/// POST /create?path=<url_path>
+/// Creates an empty file at the given path. Path must resolve to a writable
+/// root and the extension must be allowed for writes. 409 if file exists.
+async fn create_file(State(state): State<AppState>, Query(q): Query<FileQuery>) -> Response {
+    let (fs_path, writable) = match resolve_path(&state.roots, &q.path) {
+        Ok(v) => v,
+        Err(e) => return err(StatusCode::BAD_REQUEST, e.to_string()),
+    };
+
+    if !writable {
+        return err(StatusCode::FORBIDDEN, "path is not writable");
+    }
+
+    if !allowed_write_ext(&fs_path) {
+        return err(
+            StatusCode::FORBIDDEN,
+            "file extension not allowed for writes",
+        );
+    }
+
+    if fs_path.exists() {
+        return err(StatusCode::CONFLICT, "file already exists");
+    }
+
+    if let Err(e) = fs::write(&fs_path, b"") {
+        return err(StatusCode::INTERNAL_SERVER_ERROR, e.to_string());
+    }
+
+    let name = fs_path
+        .file_name()
+        .and_then(|n| n.to_str())
+        .unwrap_or("")
+        .to_string();
+
+    Json(CreateResponse {
+        ok: true,
+        path: q.path.trim_start_matches('/').to_string(),
+        name,
+    })
+    .into_response()
+}
+
+// ---------------------------------------------------------------------------
+// Delete file
+// ---------------------------------------------------------------------------
+
+/// POST /delete?path=<url_path>
+/// Deletes the file at the given path. Path must resolve to a writable root.
+/// 400 if it resolves to a directory.
+async fn delete_file(State(state): State<AppState>, Query(q): Query<FileQuery>) -> Response {
+    let (fs_path, writable) = match resolve_path(&state.roots, &q.path) {
+        Ok(v) => v,
+        Err(e) => return err(StatusCode::BAD_REQUEST, e.to_string()),
+    };
+
+    if !writable {
+        return err(StatusCode::FORBIDDEN, "path is not writable");
+    }
+
+    if !fs_path.exists() {
+        return err(StatusCode::NOT_FOUND, "file not found");
+    }
+
+    if fs_path.is_dir() {
+        return err(StatusCode::BAD_REQUEST, "path is a directory");
+    }
+
+    if let Err(e) = fs::remove_file(&fs_path) {
+        return err(StatusCode::INTERNAL_SERVER_ERROR, e.to_string());
+    }
+
+    let mut resp_map = HashMap::new();
+    resp_map.insert("ok", serde_json::Value::Bool(true));
+    Json(resp_map).into_response()
+}
+
+// ---------------------------------------------------------------------------
+// Git status
+// ---------------------------------------------------------------------------
+
+#[derive(Deserialize)]
+struct GitStatusQuery {
+    root: String,
+}
+
+/// GET /git-status?root=<url_prefix>
+/// Runs `git status --porcelain --untracked-files=all` in the resolved
+/// directory. Returns a map of relative-path → status. Empty map on any
+/// failure (not a git repo, git absent, timeout, etc.).
+async fn git_status(State(state): State<AppState>, Query(q): Query<GitStatusQuery>) -> Response {
+    let mut empty: HashMap<&str, serde_json::Value> = HashMap::new();
+    empty.insert("files", serde_json::json!({}));
+
+    let (fs_path, _writable) = match resolve_path(&state.roots, &q.root) {
+        Ok(v) => v,
+        Err(_) => return Json(&empty).into_response(),
+    };
+
+    if !fs_path.is_dir() {
+        return Json(&empty).into_response();
+    }
+
+    // Only report status if fs_path itself is a git work tree (has a .git
+    // directory or file). Without this, `git status` walks upward and
+    // surfaces noise from an enclosing repo (e.g. ~/Foundry).
+    if !fs_path.join(".git").exists() {
+        return Json(&empty).into_response();
+    }
+
+    // Run git in a worker thread with a 5-second timeout.
+    let (tx, rx) = mpsc::channel();
+    let path_clone = fs_path.clone();
+    thread::spawn(move || {
+        let out = Command::new("git")
+            .args([
+                "-c",
+                "core.quotePath=off",
+                "-c",
+                "safe.directory=*",
+                "status",
+                "--porcelain",
+                "--untracked-files=all",
+            ])
+            .current_dir(&path_clone)
+            .output();
+        let _ = tx.send(out);
+    });
+
+    let output = match rx.recv_timeout(Duration::from_secs(5)) {
+        Ok(Ok(o)) => o,
+        _ => return Json(&empty).into_response(),
+    };
+
+    if !output.status.success() {
+        return Json(&empty).into_response();
+    }
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let mut files: HashMap<String, String> = HashMap::new();
+    for line in stdout.lines() {
+        if line.len() < 3 {
+            continue;
+        }
+        let code = &line[..2];
+        let rest = line[3..].trim();
+        // Handle rename "old -> new" — take the new name
+        let path = if let Some(idx) = rest.find(" -> ") {
+            rest[idx + 4..].to_string()
+        } else {
+            rest.to_string()
+        };
+        if path.is_empty() {
+            continue;
+        }
+        let status = match code {
+            "??" => "untracked",
+            "A " | "AM" => "staged",
+            "D " | " D" => "deleted",
+            "M " | " M" | "MM" => "modified",
+            _ => {
+                // Generic: any M in either column → modified; A → staged; D → deleted
+                let chars: Vec<char> = code.chars().collect();
+                if chars.contains(&'D') {
+                    "deleted"
+                } else if chars.contains(&'A') {
+                    "staged"
+                } else if chars.contains(&'M') {
+                    "modified"
+                } else {
+                    continue;
+                }
+            }
+        };
+        files.insert(path, status.to_string());
+    }
+
+    let mut resp: HashMap<&str, serde_json::Value> = HashMap::new();
+    resp.insert("files", serde_json::to_value(files).unwrap_or(serde_json::json!({})));
+    Json(resp).into_response()
+}
+
+// ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
 
@@ -535,6 +729,9 @@ async fn main() -> Result<()> {
         .route("/file", get(get_file).put(put_file))
         .route("/rename", post(rename_file))
         .route("/duplicate", post(duplicate_file))
+        .route("/create", post(create_file))
+        .route("/delete", post(delete_file))
+        .route("/git-status", get(git_status))
         .with_state(state);
 
     let addr: SocketAddr = config.bind.parse().context("parsing bind address")?;
