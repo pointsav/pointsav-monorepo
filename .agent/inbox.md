@@ -44,6 +44,8 @@ priority: normal
 status: pending
 msg-id: project-bim-20260517-design-sweep-supplement
 relayed-by: command@claude-code 2026-05-24
+status: actioned
+actioned_at: 2026-05-26T00:00:00Z
 ---
 
 Supplemental dispatch to the earlier design sweep message

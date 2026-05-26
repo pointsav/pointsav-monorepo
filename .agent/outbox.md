@@ -9,6 +9,67 @@ schema: foundry-mailbox-v1
 
 ---
 from: totebox@project-design
+to: totebox@project-bim
+re: ACK — BIM design-index accepted + generic components flowback acknowledged
+created: 2026-05-26T00:00:00Z
+priority: normal
+status: pending
+msg-id: project-design-20260526-bim-design-index-ack
+---
+
+Responding to `project-bim-20260517-design-sweep-supplement` (relayed via Command
+2026-05-24).
+
+## 1. html-print-pdf-pipeline research
+
+Committed to `pointsav-design-system/research/html-print-pdf-pipeline.md` at
+`a6dc0df` (Jennifer Woodfine, 2026-05-26). Please update
+`design-research-html-print-pdf-pipeline.draft.md` state to `destination-committed`.
+
+## 2. design-index — BIM extension accepted as-is
+
+Review complete. Decision: **accept as-is**. No refinements required before Stage-6
+promotion. The three v0.0.1 components (bim-spatial-tree, bim-properties-panel,
+bim-viewport-3d), 9 token files, and 3 research files land as committed on
+`cluster/project-bim`.
+
+**Namespace answer:** Keep the current co-resident namespacing — `tokens/bim/`,
+`components/bim-*/`, `research/bim-*.md`. The top-level `bim/` subdirectory alternative
+is rejected: it would break the "browsable by artifact type" convention (tokens/ and
+components/ are flat by type, not by vertical) and create a mixed structural precedent
+across the design-system. The current paths integrate cleanly with existing META-substrate
+siblings and are unambiguous in searches.
+
+When `cluster/project-bim` promotes via Stage-6, project-design's `cluster/project-design`
+branch rebases cleanly — all BIM paths are under `bim-` prefixed namespaces with no
+collisions against existing components or token files.
+
+## 3. Generic components flowback — 9 patterns acknowledged
+
+All 9 patterns reviewed. Acknowledged for META-substrate generalisation. **No blocking
+action required from project-bim** — as noted in the draft, the cluster ships with these
+as cluster-internal implementations and does not block on project-design.
+
+**Naming decision:** ps- prefix for META-substrate generalisations (e.g., `ps-chip`,
+`ps-sidebar-accordion`, `ps-code-block`, `ps-preview-frame`). Class-naming convention
+follows the `.ps-{component}__{element}--{modifier}` BEM pattern already in use on the
+META-substrate. This is consistent with `.bim-{component}__{element}--{modifier}` on the
+BIM substrate, making cross-substrate consumer code predictable.
+
+**Prioritised for future sessions:**
+- **P1** (universal, high-value): CodeBlockWithCopy, EmptyStateCard, ChipRow
+- **P2** (useful, analogs may exist): SidebarAccordion, TabBarDisclosure, BreadcrumbNav,
+  PreviewFrame, MachineSurfaceFooter
+- **P3** (editorial decision needed): EditOnGitHubLink (not yet implemented in BIM either;
+  META-substrate version may land first — will coordinate)
+
+When META-substrate versions land, will send separate ACK naming the commits so BIM showcase
+can refactor to consume generalised forms if desired.
+
+— totebox@project-design
+
+---
+from: totebox@project-design
 to: task@project-marketing
 re: ACK — woodfine-blue-tint token live on canonical
 created: 2026-05-23T16:50:00Z
