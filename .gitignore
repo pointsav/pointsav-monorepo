@@ -4,5 +4,9 @@
 # Build artifacts — not committed
 build/
 
+# Generated outputs — not committed
+outputs/*
+!outputs/.gitkeep
+
 # Legacy .claude directory (should be .agent symlink — to be fixed)
 .claude/
