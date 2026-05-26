@@ -4,7 +4,7 @@ status: active
 topic: knowledge-platform — Phases 1–5 done; design competition in progress; Phase 6 gated; product strategy open
 archive: project-knowledge
 created: 2026-05-22
-updated: 2026-05-24
+updated: 2026-05-26
 owner: totebox@project-knowledge
 ---
 
@@ -145,7 +145,9 @@ Both commits queued for Stage 6. Command block message actioned.
 - [x] Round-1 jury → hybrid D+A+B → implemented (`9cf2c9ed`, 2026-05-24)
 - [x] Round-2 jury → platform-document base → implemented (`70259d32`, 2026-05-25)
 - [x] Self-host fonts, remove Google Fonts CDN (`784ceea7`, 2026-05-25)
-- [ ] **Stage 6 — two commits pending** (`70259d32` + `784ceea7`) — Command scope
+- [x] B-grade milestone — cities, nav links, CC badge, Media Kit link, Wikipedia pane headings (`0b3c4d26`, 2026-05-26)
+- [x] PointSav Media Kit content stub — `pointsav-media-kit.md` in content-wiki-documentation (`1911223`, 2026-05-26)
+- [ ] **Stage 6 — four commits pending** (`70259d32` + `784ceea7` + `0b3c4d26` + content `1911223`) — Command scope
 - [ ] Stage 6 staging fork renames (6 GitHub repos — operator action)
 - [ ] MASTER Doctrine amendment (Command scope)
 - [ ] §3.6 claim-record MCP API — waiting on project-intelligence reply
