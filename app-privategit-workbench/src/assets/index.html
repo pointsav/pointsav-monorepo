@@ -1226,6 +1226,123 @@ function updateBar(name, path) {
   bar.appendChild(closeBtn);
 }
 
+// ── Rename + Duplicate — viewer-bar buttons for writable files ───────────────
+// Inserted by openFile() after the editor responds writable:true, so the
+// buttons only appear for files the service will let us mutate. Placed in the
+// viewer bar after the existing "⎘ Copy name" button.
+function addRenameDuplicateButtons() {
+  const bar = document.getElementById('viewer-bar');
+  if (!bar) return;
+  // Anchor: insert after "⎘ Copy name" so writable verbs cluster together
+  const buttons = bar.querySelectorAll('.bar-btn');
+  let anchor = null;
+  for (const b of buttons) {
+    if (b.textContent && b.textContent.indexOf('Copy name') >= 0) { anchor = b; break; }
+  }
+
+  const renameBtn = document.createElement('button');
+  renameBtn.className = 'bar-btn';
+  renameBtn.textContent = '✎ Rename';
+  renameBtn.title = 'Rename this file';
+  renameBtn.addEventListener('click', renameCurrent);
+
+  const dupBtn = document.createElement('button');
+  dupBtn.className = 'bar-btn';
+  dupBtn.textContent = '⧉ Duplicate';
+  dupBtn.title = 'Duplicate this file in place';
+  dupBtn.addEventListener('click', duplicateCurrent);
+
+  if (anchor && anchor.nextSibling) {
+    anchor.parentNode.insertBefore(renameBtn, anchor.nextSibling);
+    anchor.parentNode.insertBefore(dupBtn, renameBtn.nextSibling);
+  } else {
+    bar.appendChild(renameBtn);
+    bar.appendChild(dupBtn);
+  }
+}
+
+async function renameCurrent() {
+  if (!editorPath) return;
+  const oldName = editorPath.split('/').pop();
+  const newName = prompt('Rename file to:', oldName);
+  if (newName === null) return;                     // user cancelled
+  const trimmed = newName.trim();
+  if (!trimmed || trimmed === oldName) return;     // no-op
+  if (trimmed.indexOf('/') >= 0 || trimmed.indexOf('\\') >= 0) {
+    alert('Filename must not contain slashes.');
+    return;
+  }
+
+  let res;
+  try {
+    res = await fetch(
+      '/_api/edit/rename?from=' + encodeURIComponent(editorPath) +
+      '&to=' + encodeURIComponent(trimmed),
+      { method: 'POST' },
+    );
+  } catch(e) {
+    alert('Rename failed: network error');
+    return;
+  }
+
+  if (!res.ok) {
+    let msg = 'Rename failed';
+    try { const d = await res.json(); msg = d.error || msg; } catch(e) {}
+    alert(msg);
+    return;
+  }
+
+  const data = await res.json();
+  const newApiPath = data.new_path;
+  const newDisplayName = data.new_name;
+  // The browse path is "/" + api path
+  const newBrowsePath = '/' + newApiPath;
+
+  // Update in-memory + sessionStorage state to reflect the rename
+  currentPath = newBrowsePath;
+  editorPath  = newApiPath;
+  sessionStorage.setItem('wb-path', newBrowsePath);
+  sessionStorage.setItem('wb-name', newDisplayName);
+
+  // Rebuild the viewer bar with the new name + path, then re-attach the
+  // writable-only buttons (Save / Rename / Duplicate).
+  updateBar(newDisplayName, newBrowsePath);
+  const saveBarBtn = document.createElement('button');
+  saveBarBtn.className = 'bar-btn';
+  saveBarBtn.textContent = '💾 Save';
+  saveBarBtn.addEventListener('click', saveFile);
+  document.getElementById('bar-path').insertAdjacentElement('afterend', saveBarBtn);
+  addRenameDuplicateButtons();
+
+  showEditorStatus('Renamed', '#89d185', 2500);
+}
+
+async function duplicateCurrent() {
+  if (!editorPath) return;
+
+  let res;
+  try {
+    res = await fetch(
+      '/_api/edit/duplicate?path=' + encodeURIComponent(editorPath),
+      { method: 'POST' },
+    );
+  } catch(e) {
+    alert('Duplicate failed: network error');
+    return;
+  }
+
+  if (!res.ok) {
+    let msg = 'Duplicate failed';
+    try { const d = await res.json(); msg = d.error || msg; } catch(e) {}
+    alert(msg);
+    return;
+  }
+
+  const data = await res.json();
+  // Open the new copy immediately — gives the user a clear signal it worked
+  openFile('/' + data.new_path, data.new_name);
+}
+
 // ── Open file in viewer + optional editor ─────────────────────────────────────
 // ── Cache-bust helper ────────────────────────────────────────────────────────
 // Appends a `_cb=<timestamp>` query param to bypass any browser / proxy cache
@@ -1301,6 +1418,12 @@ async function openFile(path, name) {
         saveBarBtn.textContent = '💾 Save';
         saveBarBtn.addEventListener('click', saveFile);
         document.getElementById('bar-path').insertAdjacentElement('afterend', saveBarBtn);
+
+        // Rename + Duplicate — only available when the file resolved through a
+        // writable root (same gate as Save). Inserted after the existing
+        // "⎘ Copy name" button so the writable verbs cluster together.
+        addRenameDuplicateButtons();
+
         showEditorPanel(data.content);
         // For iframe HTML, set up srcdoc on the same content so live preview works
         if (mode === 'iframe') {
