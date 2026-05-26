@@ -331,13 +331,48 @@ header .tag {
 #editor-gutter div { line-height: 1.6; }
 #editor-gutter .gl-active { color: #c8ccd4; }
 
-#editor-textarea {
+#editor-code-wrap {
   flex: 1;
+  position: relative;
+  overflow: hidden;
+  background: #1e1e1e;
+}
+#editor-highlight {
+  position: absolute;
+  inset: 0;
+  padding: 16px;
+  margin: 0;
+  overflow: hidden;
+  font: 12px/1.6 "SF Mono","Fira Code","Consolas","Monaco",monospace;
+  white-space: pre;
+  tab-size: 4;
+  pointer-events: none;
+  color: #d4d4d4;
+  background: transparent;
+  z-index: 0;
+  word-wrap: normal;
+}
+.hl-kw { color: #569cd6; }
+.hl-str { color: #ce9178; }
+.hl-cmt { color: #6a9955; }
+.hl-num { color: #b5cea8; }
+.hl-type { color: #4ec9b0; }
+.hl-fn { color: #dcdcaa; }
+.hl-macro { color: #c586c0; }
+.hl-attr { color: #9cdcfe; }
+.hl-tag { color: #569cd6; }
+
+#editor-textarea {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   resize: none;
   border: none;
   outline: none;
-  background: #1e1e1e;
-  color: #d4d4d4;
+  background: transparent;
+  color: transparent;
+  caret-color: #d4d4d4;
   font-family: "SF Mono","Fira Code","Consolas","Monaco",monospace;
   font-size: 12px;
   line-height: 1.6;
@@ -346,9 +381,107 @@ header .tag {
   white-space: pre;
   overflow-x: auto;
   overflow-y: auto;
+  z-index: 1;
 }
+#editor-textarea::selection { background: rgba(77, 159, 255, 0.35); color: inherit; }
 #editor-textarea::-webkit-scrollbar { width: 8px; }
 #editor-textarea::-webkit-scrollbar-thumb { background: #555; border-radius: 4px; }
+
+/* ── Tab bar ──────────────────────────────────────────────────────── */
+#tab-bar {
+  display: flex;
+  overflow-x: auto;
+  background: #252526;
+  border-bottom: 1px solid #333;
+  min-height: 33px;
+  scrollbar-width: thin;
+  flex-shrink: 0;
+}
+#tab-bar:empty { display: none; }
+#tab-bar::-webkit-scrollbar { height: 3px; }
+#tab-bar::-webkit-scrollbar-thumb { background: #444; border-radius: 2px; }
+.tab {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 6px 0 12px;
+  min-width: 80px;
+  max-width: 200px;
+  font-size: 12px;
+  color: #999;
+  cursor: pointer;
+  border-right: 1px solid #333;
+  white-space: nowrap;
+  overflow: hidden;
+  flex-shrink: 0;
+  user-select: none;
+}
+.tab:hover { background: #2d2d2d; color: #ccc; }
+.tab.active { background: #1e1e1e; color: #eee; border-top: 2px solid #4d9fff; }
+.tab .tab-name { flex: 1; overflow: hidden; text-overflow: ellipsis; }
+.tab .tab-dirty { color: #e8c07d; font-size: 9px; flex-shrink: 0; }
+.tab .tab-close {
+  color: #555; background: none; border: none; cursor: pointer;
+  font-size: 16px; line-height: 1; padding: 0 4px; flex-shrink: 0;
+}
+.tab .tab-close:hover { color: #eee; background: #555; border-radius: 2px; }
+
+/* ── Recovery bar ─────────────────────────────────────────────────── */
+#recovery-bar {
+  background: #664400;
+  color: #ffd080;
+  padding: 6px 12px;
+  font-size: 12px;
+  display: none;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+#recovery-bar.visible { display: flex; }
+#recovery-restore {
+  background: #e8c07d; color: #000; border: none;
+  padding: 2px 8px; border-radius: 3px; cursor: pointer; font-size: 11px;
+}
+#recovery-discard {
+  background: none; color: #ffd080; border: 1px solid #ffd080;
+  padding: 2px 8px; border-radius: 3px; cursor: pointer; font-size: 11px;
+}
+
+/* ── Context menu ─────────────────────────────────────────────────── */
+#ctx-menu {
+  display: none;
+  position: fixed;
+  z-index: 2000;
+  background: #252526;
+  border: 1px solid #454545;
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0,0,0,.5);
+  font-size: 12px;
+  min-width: 180px;
+  padding: 4px 0;
+}
+#ctx-menu button {
+  display: block; width: 100%; text-align: left;
+  padding: 5px 14px; background: none; border: none;
+  color: #ccc; cursor: pointer; font-size: 12px;
+}
+#ctx-menu button:hover { background: #094771; color: #fff; }
+#ctx-menu hr { margin: 3px 0; border: none; border-top: 1px solid #454545; }
+
+/* ── Pinned section ───────────────────────────────────────────────── */
+#pinned-section { display: none; }
+#pinned-section.visible { display: block; }
+
+/* ── Git status badges ────────────────────────────────────────────── */
+.tree-git {
+  font-size: 9px;
+  margin-left: 4px;
+  flex-shrink: 0;
+}
+.tree-git[data-s="modified"]  { color: #e8c07d; }
+.tree-git[data-s="untracked"] { color: #79c0ff; }
+.tree-git[data-s="staged"]    { color: #89d185; }
+.tree-git[data-s="deleted"]   { color: #f85149; }
 
 /* ── Print ────────────────────────────────────────────────────────── */
 @media print {
@@ -372,6 +505,8 @@ header .tag {
   </div>
 </header>
 
+<div id="tab-bar"></div>
+
 <div class="layout">
 
   <div class="sidebar" id="sidebar">
@@ -381,6 +516,11 @@ header .tag {
     </div>
 
     <div id="tree-panel">
+
+      <div id="pinned-section">
+        <div class="section-header open" style="cursor:default;">📌 Pinned</div>
+        <div id="pinned-body" class="section-body"></div>
+      </div>
 
       <div class="section-header open" data-section="sandboxes">
         <span class="arrow">▶</span> Sandboxes
@@ -507,9 +647,17 @@ header .tag {
           <button class="find-btn" id="replace-all-btn">All</button>
         </div>
       </div>
+      <div id="recovery-bar">
+        <span id="recovery-msg"></span>
+        <button id="recovery-restore">Restore</button>
+        <button id="recovery-discard">Discard</button>
+      </div>
       <div id="editor-wrap">
         <div id="editor-gutter"></div>
-        <textarea id="editor-textarea" spellcheck="false" autocorrect="off" autocapitalize="off"></textarea>
+        <div id="editor-code-wrap">
+          <pre id="editor-highlight" aria-hidden="true"></pre>
+          <textarea id="editor-textarea" spellcheck="false" autocorrect="off" autocapitalize="off"></textarea>
+        </div>
       </div>
     </div>
 
@@ -531,6 +679,15 @@ let editorMtime  = 0;
 let editorDirty  = false;
 let previewTimer = null;
 let statusTimer  = null;
+let hlTimer      = null;   // syntax-highlight debounce
+
+// Tab state — each tab caches its file content so switching is instant.
+// {path, name, content, mtime, dirty, editorPath, editorMtime, viewMode, scrollTop, writable}
+let tabs         = [];
+let activeTabIdx = -1;
+
+// Git status badges: maps a tree url-path to a status string.
+const gitStatus  = new Map();
 
 // ── File type routing ─────────────────────────────────────────────────────────
 const IFRAME_EXTS = new Set(['html','htm','pdf']);
@@ -671,6 +828,12 @@ function setDirty(dirty) {
   const btn = document.getElementById('save-btn');
   dot.style.display = dirty ? 'inline' : 'none';
   btn.classList.toggle('saved', !dirty);
+  if (activeTabIdx >= 0 && activeTabIdx < tabs.length) {
+    if (tabs[activeTabIdx].dirty !== dirty) {
+      tabs[activeTabIdx].dirty = dirty;
+      renderTabBar();
+    }
+  }
 }
 
 function showEditorStatus(msg, color, ms) {
@@ -693,6 +856,7 @@ function showEditorPanel(content) {
   showEditorStatus('', null, 0);
   updateGutterLines();
   updateEditorPos();
+  applyHighlight();
   const isMarkdown = editorPath && editorPath.split('.').pop().toLowerCase() === 'md';
   document.getElementById('text-content').classList.toggle('click-to-edit', isMarkdown);
 }
@@ -701,11 +865,14 @@ function hideEditorPanel() {
   document.getElementById('editor-panel').classList.remove('visible');
   document.getElementById('resizer2').style.display = 'none';
   document.getElementById('find-bar').classList.remove('visible');
+  document.getElementById('recovery-bar').classList.remove('visible');
   editorPath  = null;
   editorMtime = 0;
   setDirty(false);
   const gutter = document.getElementById('editor-gutter');
   if (gutter) { gutter.innerHTML = ''; gutter.dataset.lineCount = '0'; gutter.dataset.activeLine = '0'; }
+  const hl = document.getElementById('editor-highlight');
+  if (hl) hl.innerHTML = '';
   document.getElementById('text-content').classList.remove('click-to-edit');
 }
 
@@ -927,6 +1094,7 @@ document.getElementById('ln-jump-input').addEventListener('keydown', e => {
 document.getElementById('editor-textarea').addEventListener('input', () => {
   setDirty(true);
   schedulePreview();
+  scheduleHighlight();
   updateGutterLines();
   updateEditorPos();
 });
@@ -934,8 +1102,11 @@ document.getElementById('editor-textarea').addEventListener('input', () => {
 document.getElementById('editor-textarea').addEventListener('keyup', updateEditorPos);
 document.getElementById('editor-textarea').addEventListener('click', updateEditorPos);
 document.getElementById('editor-textarea').addEventListener('scroll', () => {
+  const ta = document.getElementById('editor-textarea');
   const gutter = document.getElementById('editor-gutter');
-  if (gutter) gutter.scrollTop = document.getElementById('editor-textarea').scrollTop;
+  if (gutter) gutter.scrollTop = ta.scrollTop;
+  const hl = document.getElementById('editor-highlight');
+  if (hl) { hl.scrollTop = ta.scrollTop; hl.scrollLeft = ta.scrollLeft; }
 });
 
 // ── Editor keyboard features ──────────────────────────────────────────────────
@@ -1056,9 +1227,12 @@ async function saveFile() {
       if (res2.ok) {
         const d = await res2.json();
         editorMtime = d.mtime || editorMtime;
+        if (activeTabIdx >= 0) tabs[activeTabIdx].editorMtime = editorMtime;
         setDirty(false);
         showEditorStatus('Saved', '#89d185', 2500);
         refreshViewerFromEditor();
+        writeCrashBackup();
+        refreshGitStatusForCurrent();
       } else {
         showEditorStatus('Save failed', '#f85149', 4000);
       }
@@ -1075,9 +1249,12 @@ async function saveFile() {
 
   const data = await res.json();
   editorMtime = data.mtime || editorMtime;
+  if (activeTabIdx >= 0) tabs[activeTabIdx].editorMtime = editorMtime;
   setDirty(false);
   showEditorStatus('Saved', '#89d185', 2500);
   refreshViewerFromEditor();
+  writeCrashBackup();
+  refreshGitStatusForCurrent();
 }
 
 // ── Refresh the viewer from in-memory editor content ─────────────────────────
@@ -1127,9 +1304,12 @@ async function autosaveFile() {
     if (res.ok) {
       const data = await res.json();
       editorMtime = data.mtime || editorMtime;
+      if (activeTabIdx >= 0) tabs[activeTabIdx].editorMtime = editorMtime;
       setDirty(false);
       showEditorStatus('Autosaved', '#89d185', 2000);
       refreshViewerFromEditor();
+      writeCrashBackup();
+      refreshGitStatusForCurrent();
     }
     // 409 conflict or other errors: skip silently, let user resolve via manual Save
   } catch(e) { /* network error — skip */ }
@@ -1137,20 +1317,24 @@ async function autosaveFile() {
 setInterval(autosaveFile, 30000);
 
 // ── Close current file ────────────────────────────────────────────────────────
+// Delegates to closeTab so the tab system stays in sync.
 function closeFile() {
-  if (editorDirty && !confirm('You have unsaved changes. Close anyway?')) return;
-  sessionStorage.removeItem('wb-path');
-  sessionStorage.removeItem('wb-name');
-  currentPath = null;
-  viewMode    = 'none';
-  hideEditorPanel();
-  document.getElementById('viewer-placeholder').style.display = '';
-  document.getElementById('preview-frame').style.display      = 'none';
-  document.getElementById('text-viewer').style.display        = 'none';
-  document.getElementById('image-viewer').style.display       = 'none';
-  document.getElementById('bar-path').textContent = '';
-  document.getElementById('viewer-bar').querySelectorAll('.bar-btn, .bar-link').forEach(el => el.remove());
-  setTreeActive(null);
+  if (activeTabIdx >= 0) {
+    closeTab(activeTabIdx);
+  } else {
+    sessionStorage.removeItem('wb-path');
+    sessionStorage.removeItem('wb-name');
+    currentPath = null;
+    viewMode    = 'none';
+    hideEditorPanel();
+    document.getElementById('viewer-placeholder').style.display = '';
+    document.getElementById('preview-frame').style.display      = 'none';
+    document.getElementById('text-viewer').style.display        = 'none';
+    document.getElementById('image-viewer').style.display       = 'none';
+    document.getElementById('bar-path').textContent = '';
+    document.getElementById('viewer-bar').querySelectorAll('.bar-btn, .bar-link').forEach(el => el.remove());
+    setTreeActive(null);
+  }
 }
 
 // ── Viewer helpers ────────────────────────────────────────────────────────────
@@ -1301,6 +1485,12 @@ async function renameCurrent() {
   // Update in-memory + sessionStorage state to reflect the rename
   currentPath = newBrowsePath;
   editorPath  = newApiPath;
+  if (activeTabIdx >= 0) {
+    tabs[activeTabIdx].path = newBrowsePath;
+    tabs[activeTabIdx].name = newDisplayName;
+    tabs[activeTabIdx].editorPath = newApiPath;
+    renderTabBar();
+  }
   sessionStorage.setItem('wb-path', newBrowsePath);
   sessionStorage.setItem('wb-name', newDisplayName);
 
@@ -1355,10 +1545,31 @@ function cacheBust(path) {
 }
 
 async function openFile(path, name) {
-  if (path === currentPath) return;
-  if (editorDirty && !confirm('You have unsaved changes. Open a different file?')) return;
+  // If already open in a tab, just activate it
+  const existingIdx = tabs.findIndex(t => t.path === path);
+  if (existingIdx >= 0) {
+    if (existingIdx !== activeTabIdx) await switchTab(existingIdx);
+    return;
+  }
+  // Save-on-switch: silently persist the active dirty file before changing context
+  if (editorDirty && editorPath) await autosaveFile();
+  // Evict oldest non-dirty tab if at cap (12)
+  if (tabs.length >= 12) {
+    const evictIdx = tabs.findIndex(t => !t.dirty);
+    if (evictIdx >= 0) {
+      tabs.splice(evictIdx, 1);
+      if (activeTabIdx > evictIdx) activeTabIdx--;
+      else if (activeTabIdx === evictIdx) activeTabIdx = -1;
+    }
+  }
+  // Push the new tab
+  const fname0 = name || path.split('/').pop();
+  tabs.push({ path, name: fname0, dirty: false });
+  activeTabIdx = tabs.length - 1;
+  renderTabBar();
+
   currentPath = path;
-  const fname = name || path.split('/').pop();
+  const fname = fname0;
   sessionStorage.setItem('wb-path', path);
   sessionStorage.setItem('wb-name', fname);
   const mode  = fileMode(fname);
@@ -1413,6 +1624,13 @@ async function openFile(path, name) {
       if (data.writable && typeof data.content === 'string') {
         editorPath  = apiPath;
         editorMtime = data.mtime || 0;
+        if (activeTabIdx >= 0) {
+          tabs[activeTabIdx].content     = data.content;
+          tabs[activeTabIdx].editorPath  = apiPath;
+          tabs[activeTabIdx].editorMtime = editorMtime;
+          tabs[activeTabIdx].viewMode    = viewMode;
+          tabs[activeTabIdx].writable    = true;
+        }
         const saveBarBtn = document.createElement('button');
         saveBarBtn.className = 'bar-btn';
         saveBarBtn.textContent = '💾 Save';
@@ -1425,6 +1643,7 @@ async function openFile(path, name) {
         addRenameDuplicateButtons();
 
         showEditorPanel(data.content);
+        maybeShowRecoveryBar(apiPath, data.mtime || 0);
         // For iframe HTML, set up srcdoc on the same content so live preview works
         if (mode === 'iframe') {
           const frame = document.getElementById('preview-frame');
@@ -1780,9 +1999,11 @@ function buildItem(entry, apiBase, browseBase, depth) {
     item.dataset.href  = browseBase + name;
     item.dataset.type  = 'file';
     item.dataset.label = name;
+    const gs = gitStatus.get(browseBase + name);
+    const badge = gs ? `<span class="tree-git" data-s="${gs}">●</span>` : '';
     item.innerHTML =
       `<span class="icon" style="margin-left:14px">${iconFor(name, false)}</span>` +
-      `<span class="label">${name}</span>`;
+      `<span class="label">${name}</span>` + badge;
   }
 
   const children = document.createElement('div');
@@ -1799,6 +2020,15 @@ async function loadChildren(item, childrenEl, depth) {
   if (item.dataset.loaded) return;
   item.dataset.loaded = '1';
   childrenEl.innerHTML = '<div class="loading">Loading…</div>';
+
+  // Fetch git status for top-level clone directory before rendering children
+  // so badges appear immediately.
+  const browse = item.dataset.browse || '';
+  const cloneMatch = browse.match(/^\/(_clones\/[^/]+)\/$/);
+  if (cloneMatch) {
+    await fetchGitStatus(cloneMatch[1]);
+  }
+
   try {
     const res = await fetch(item.dataset.api);
     if (!res.ok) throw new Error(res.status);
@@ -1837,6 +2067,7 @@ function wireItem(item, childrenEl, depth) {
     childrenEl.classList.toggle('collapsed', !isOpen);
     if (isOpen) await loadChildren(item, childrenEl, depth);
   });
+  attachContextMenu(item);
 }
 
 // ── Wire pre-rendered items ───────────────────────────────────────────────────
@@ -2014,11 +2245,792 @@ async function buildSearchIndex() {
 
 buildSearchIndex();
 
-// ── Restore last open file on reload ─────────────────────────────────────────
-(function restoreLastFile() {
-  const p = sessionStorage.getItem('wb-path');
-  const n = sessionStorage.getItem('wb-name');
-  if (p) openFile(p, n || p.split('/').pop());
+// ─────────────────────────────────────────────────────────────────────────────
+// Tabs
+// ─────────────────────────────────────────────────────────────────────────────
+function renderTabBar() {
+  const bar = document.getElementById('tab-bar');
+  bar.innerHTML = '';
+  tabs.forEach((tab, i) => {
+    const el = document.createElement('div');
+    el.className = 'tab' + (i === activeTabIdx ? ' active' : '');
+    el.title = tab.path;
+    const nameEl = document.createElement('span');
+    nameEl.className = 'tab-name';
+    nameEl.textContent = tab.name;
+    el.appendChild(nameEl);
+    if (tab.dirty) {
+      const d = document.createElement('span');
+      d.className = 'tab-dirty';
+      d.textContent = '●';
+      el.appendChild(d);
+    }
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'tab-close';
+    closeBtn.title = 'Close';
+    closeBtn.textContent = '×';
+    closeBtn.addEventListener('click', e => { e.stopPropagation(); closeTab(i); });
+    el.appendChild(closeBtn);
+    el.addEventListener('click', e => {
+      if (e.target.classList.contains('tab-close')) return;
+      switchTab(i);
+    });
+    bar.appendChild(el);
+  });
+  persistTabs();
+}
+
+function persistTabs() {
+  try {
+    sessionStorage.setItem('wb-tabs', JSON.stringify(tabs.map(t => ({ path: t.path, name: t.name }))));
+    sessionStorage.setItem('wb-active-tab', String(activeTabIdx));
+  } catch(e) {}
+}
+
+async function switchTab(idx) {
+  if (idx === activeTabIdx) return;
+  if (idx < 0 || idx >= tabs.length) return;
+  // Cache current tab state
+  if (activeTabIdx >= 0 && activeTabIdx < tabs.length) {
+    const ta = document.getElementById('editor-textarea');
+    const cur = tabs[activeTabIdx];
+    cur.content     = ta.value;
+    cur.scrollTop   = ta.scrollTop;
+    cur.dirty       = editorDirty;
+    cur.editorPath  = editorPath;
+    cur.editorMtime = editorMtime;
+    cur.viewMode    = viewMode;
+    if (editorDirty && editorPath) await autosaveFile();
+  }
+  activeTabIdx = idx;
+  const tab = tabs[idx];
+  // If we have no cached content yet, fall through to a full openFile
+  if (tab.content === undefined) {
+    const path = tab.path;
+    const name = tab.name;
+    // Remove the placeholder tab; openFile will push a new one
+    tabs.splice(idx, 1);
+    if (activeTabIdx >= tabs.length) activeTabIdx = tabs.length - 1;
+    renderTabBar();
+    await openFile(path, name);
+    return;
+  }
+  // Restore tab state
+  currentPath = tab.path;
+  editorPath  = tab.editorPath || null;
+  editorMtime = tab.editorMtime || 0;
+  viewMode    = tab.viewMode || 'text';
+  hideViewerContent();
+  updateBar(tab.name, tab.path);
+  if (viewMode === 'iframe') {
+    const frame = document.getElementById('preview-frame');
+    frame.style.display = 'block';
+    if (tab.editorPath && tab.content !== undefined) {
+      frame.removeAttribute('src');
+      frame.srcdoc = tab.content;
+    } else {
+      frame.src = cacheBust(tab.path);
+    }
+  } else if (viewMode === 'image') {
+    document.getElementById('image-viewer').style.display = 'flex';
+    document.getElementById('image-el').src = cacheBust(tab.path);
+  } else {
+    const tv = document.getElementById('text-viewer');
+    const tc = document.getElementById('text-content');
+    tv.style.display = 'block';
+    if (tab.content !== undefined) {
+      const ext = tab.name.split('.').pop().toLowerCase();
+      if (ext === 'md') { tc.className = 'md-view'; tc.innerHTML = mdToHtml(tab.content); }
+      else { tc.className = 'code-view'; tc.textContent = tab.content; }
+    }
+  }
+  if (tab.editorPath && tab.content !== undefined) {
+    // Re-attach Save / Rename / Duplicate buttons to the viewer bar
+    const saveBarBtn = document.createElement('button');
+    saveBarBtn.className = 'bar-btn';
+    saveBarBtn.textContent = '💾 Save';
+    saveBarBtn.addEventListener('click', saveFile);
+    document.getElementById('bar-path').insertAdjacentElement('afterend', saveBarBtn);
+    addRenameDuplicateButtons();
+    showEditorPanel(tab.content);
+    const ta = document.getElementById('editor-textarea');
+    if (tab.scrollTop) ta.scrollTop = tab.scrollTop;
+  } else {
+    hideEditorPanel();
+  }
+  setDirty(!!tab.dirty);
+  sessionStorage.setItem('wb-path', tab.path);
+  sessionStorage.setItem('wb-name', tab.name);
+  renderTabBar();
+}
+
+async function closeTab(idx) {
+  if (idx < 0 || idx >= tabs.length) return;
+  if (tabs[idx].dirty && !confirm('Close "' + tabs[idx].name + '"? Unsaved changes will be lost.')) return;
+  tabs.splice(idx, 1);
+  if (tabs.length === 0) {
+    activeTabIdx = -1;
+    currentPath = null;
+    viewMode = 'none';
+    hideEditorPanel();
+    document.getElementById('viewer-placeholder').style.display = '';
+    document.getElementById('preview-frame').style.display = 'none';
+    document.getElementById('text-viewer').style.display = 'none';
+    document.getElementById('image-viewer').style.display = 'none';
+    document.getElementById('bar-path').textContent = 'No file selected';
+    document.getElementById('viewer-bar').querySelectorAll('.bar-btn, .bar-link').forEach(el => el.remove());
+    sessionStorage.removeItem('wb-path');
+    sessionStorage.removeItem('wb-name');
+    setTreeActive(null);
+    renderTabBar();
+  } else {
+    if (idx === activeTabIdx) {
+      activeTabIdx = Math.min(idx, tabs.length - 1);
+      // Force the new active tab to render
+      const prevActive = activeTabIdx;
+      activeTabIdx = -1;
+      await switchTab(prevActive);
+    } else if (idx < activeTabIdx) {
+      activeTabIdx--;
+      renderTabBar();
+    } else {
+      renderTabBar();
+    }
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Crash-backup + recovery
+// ─────────────────────────────────────────────────────────────────────────────
+function writeCrashBackup() {
+  if (!editorPath) return;
+  try {
+    const key = 'wb-crash:' + editorPath;
+    const content = document.getElementById('editor-textarea').value;
+    localStorage.setItem(key, JSON.stringify({ content, ts: Date.now() }));
+    const keys = Object.keys(localStorage).filter(k => k.startsWith('wb-crash:'));
+    if (keys.length > 30) {
+      const oldest = keys
+        .map(k => {
+          let ts = 0;
+          try { ts = JSON.parse(localStorage.getItem(k) || '{"ts":0}').ts || 0; } catch(e) {}
+          return { k, ts };
+        })
+        .sort((a, b) => a.ts - b.ts)[0];
+      if (oldest) localStorage.removeItem(oldest.k);
+    }
+  } catch(e) {}
+}
+
+function maybeShowRecoveryBar(apiPath, fileMtimeSecs) {
+  let bk = null;
+  try { bk = JSON.parse(localStorage.getItem('wb-crash:' + apiPath) || 'null'); } catch(e) {}
+  const bar = document.getElementById('recovery-bar');
+  if (!bk || !bk.ts || bk.ts <= (fileMtimeSecs || 0) * 1000) {
+    bar.classList.remove('visible');
+    return;
+  }
+  const mins = Math.round((Date.now() - bk.ts) / 60000);
+  document.getElementById('recovery-msg').textContent =
+    'Unsaved backup from ' + (mins < 1 ? 'just now' : (mins + ' min ago')) + ' found.';
+  bar.classList.add('visible');
+  document.getElementById('recovery-restore').onclick = () => {
+    const ta = document.getElementById('editor-textarea');
+    ta.value = bk.content;
+    setDirty(true);
+    applyHighlight();
+    updateGutterLines();
+    updateEditorPos();
+    bar.classList.remove('visible');
+    localStorage.removeItem('wb-crash:' + apiPath);
+  };
+  document.getElementById('recovery-discard').onclick = () => {
+    bar.classList.remove('visible');
+    localStorage.removeItem('wb-crash:' + apiPath);
+  };
+}
+
+// beforeunload guard — warn before navigation/close if anything is dirty
+window.addEventListener('beforeunload', e => {
+  if (editorDirty || tabs.some(t => t.dirty)) {
+    e.preventDefault();
+    e.returnValue = '';
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Pinned files
+// ─────────────────────────────────────────────────────────────────────────────
+function loadPins() {
+  try { return JSON.parse(localStorage.getItem('wb-pins') || '[]'); } catch(e) { return []; }
+}
+function savePins(pins) {
+  try { localStorage.setItem('wb-pins', JSON.stringify(pins)); } catch(e) {}
+}
+
+function renderPinnedSection() {
+  const pins = loadPins();
+  const section = document.getElementById('pinned-section');
+  const body = document.getElementById('pinned-body');
+  if (!pins.length) { section.classList.remove('visible'); return; }
+  section.classList.add('visible');
+  body.innerHTML = '';
+  pins.forEach((pin, i) => {
+    const item = document.createElement('div');
+    item.className = 'tree-item viewable';
+    item.style.paddingLeft = '14px';
+    item.dataset.href = pin.path;
+    item.dataset.label = pin.name;
+    item.dataset.type = 'file';
+    item.dataset.pinIdx = String(i);
+    const ic = document.createElement('span');
+    ic.className = 'icon';
+    ic.style.marginLeft = '14px';
+    ic.textContent = '📌';
+    const lab = document.createElement('span');
+    lab.className = 'label';
+    lab.textContent = pin.alias || pin.name;
+    item.appendChild(ic);
+    item.appendChild(lab);
+    item.addEventListener('click', () => { setTreeActive(item); openFile(pin.path, pin.name); });
+    attachContextMenu(item);
+    body.appendChild(item);
+  });
+}
+
+function pinFile(path, name) {
+  const alias = prompt('Alias for pinned file (Enter to use filename):', name);
+  if (alias === null) return;
+  const pins = loadPins();
+  if (pins.some(p => p.path === path)) return;
+  pins.push({ path, name, alias: alias || name });
+  savePins(pins);
+  renderPinnedSection();
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Context menu
+// ─────────────────────────────────────────────────────────────────────────────
+function showCtxMenu(x, y, items) {
+  const menu = document.getElementById('ctx-menu');
+  menu.innerHTML = '';
+  items.forEach(item => {
+    if (item === '-') {
+      const hr = document.createElement('hr');
+      menu.appendChild(hr);
+      return;
+    }
+    const btn = document.createElement('button');
+    btn.textContent = item.label;
+    btn.addEventListener('click', () => { hideCtxMenu(); item.action(); });
+    menu.appendChild(btn);
+  });
+  menu.style.display = 'block';
+  menu.style.left = Math.min(x, window.innerWidth - 200) + 'px';
+  menu.style.top  = Math.min(y, window.innerHeight - menu.offsetHeight - 10) + 'px';
+}
+function hideCtxMenu() { document.getElementById('ctx-menu').style.display = 'none'; }
+document.addEventListener('click', e => { if (!e.target.closest('#ctx-menu')) hideCtxMenu(); });
+document.addEventListener('contextmenu', e => {
+  if (!e.target.closest('.tree-item')) hideCtxMenu();
+});
+
+function attachContextMenu(item) {
+  item.addEventListener('contextmenu', e => {
+    e.preventDefault();
+    const isFile  = item.dataset.type === 'file';
+    const isDir   = item.dataset.type === 'dir';
+    const isPinned = item.dataset.pinIdx !== undefined;
+    const path  = item.dataset.href;
+    const name  = item.dataset.label;
+    const writable = path && !path.startsWith('/_command/');
+
+    let items = [];
+    if (isPinned) {
+      const idx = parseInt(item.dataset.pinIdx, 10);
+      items = [
+        { label: 'Open', action: () => openFile(path, name) },
+        '-',
+        { label: '✎ Edit alias', action: () => {
+            const pins = loadPins();
+            const alias = prompt('New alias:', pins[idx] && pins[idx].alias || name);
+            if (alias === null) return;
+            if (pins[idx]) { pins[idx].alias = alias || name; savePins(pins); renderPinnedSection(); }
+          }},
+        { label: 'Unpin', action: () => {
+            const pins = loadPins(); pins.splice(idx, 1); savePins(pins); renderPinnedSection();
+          }},
+      ];
+    } else if (isFile && writable) {
+      items = [
+        { label: 'Open', action: () => openFile(path, name) },
+        '-',
+        { label: '📌 Pin to top', action: () => pinFile(path, name) },
+        { label: '✎ Rename',    action: () => renameByPath(path, name) },
+        { label: '⧉ Duplicate', action: () => duplicateByPath(path, name) },
+        '-',
+        { label: '🗑 Delete', action: () => deleteFileByPath(path, name, item) },
+      ];
+    } else if (isFile) {
+      items = [
+        { label: 'Open', action: () => openFile(path, name) },
+        { label: '📌 Pin to top', action: () => pinFile(path, name) },
+      ];
+    } else if (isDir) {
+      items = [
+        { label: '📄 New file here', action: () => createFileInDir(item) },
+      ];
+    }
+    if (items.length) showCtxMenu(e.clientX, e.clientY, items);
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// File create / delete / by-path rename / duplicate
+// ─────────────────────────────────────────────────────────────────────────────
+async function createFileInDir(dirItem) {
+  const fname = prompt('New filename (with extension):');
+  if (!fname || !fname.trim()) return;
+  const trimmed = fname.trim();
+  if (trimmed.indexOf('/') >= 0) { alert('Filename must not contain slashes.'); return; }
+  const dirBrowse = (dirItem.dataset.browse || '').replace(/\/$/, '');
+  const newPath   = dirBrowse + '/' + trimmed;
+  const apiPath   = newPath.replace(/^\//, '');
+  try {
+    const res = await fetch('/_api/edit/create?path=' + encodeURIComponent(apiPath), { method: 'POST' });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) { alert(data.error || 'Create failed'); return; }
+    // Best-effort tree refresh: re-expand parent dir
+    const node = dirItem.closest('.tree-node');
+    const childrenEl = node && node.querySelector('.tree-children');
+    if (childrenEl) {
+      dirItem.dataset.loaded = '';
+      childrenEl.innerHTML = '';
+      childrenEl.classList.remove('collapsed');
+      dirItem.classList.add('open');
+      const depth = Math.round((parseInt(dirItem.style.paddingLeft) - 14) / 14) + 1;
+      await loadChildren(dirItem, childrenEl, depth);
+    }
+    openFile(newPath, trimmed);
+  } catch(e) { alert('Create failed: ' + e.message); }
+}
+
+async function deleteFileByPath(path, name, treeItem) {
+  if (!confirm('Delete "' + name + '"?\nThis cannot be undone.')) return;
+  const apiPath = path.replace(/^\//, '');
+  try {
+    const res = await fetch('/_api/edit/delete?path=' + encodeURIComponent(apiPath), { method: 'POST' });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) { alert(data.error || 'Delete failed'); return; }
+    // Close any open tab for this file
+    const tabIdx = tabs.findIndex(t => t.path === path);
+    if (tabIdx >= 0) {
+      tabs.splice(tabIdx, 1);
+      if (activeTabIdx === tabIdx) {
+        if (tabs.length) {
+          activeTabIdx = -1;
+          await switchTab(Math.min(tabIdx, tabs.length - 1));
+        } else {
+          activeTabIdx = -1;
+          currentPath = null;
+          hideEditorPanel();
+          document.getElementById('viewer-placeholder').style.display = '';
+          document.getElementById('preview-frame').style.display = 'none';
+          document.getElementById('text-viewer').style.display = 'none';
+          document.getElementById('image-viewer').style.display = 'none';
+          document.getElementById('bar-path').textContent = 'No file selected';
+          document.getElementById('viewer-bar').querySelectorAll('.bar-btn, .bar-link').forEach(el => el.remove());
+          sessionStorage.removeItem('wb-path');
+          sessionStorage.removeItem('wb-name');
+        }
+      } else if (activeTabIdx > tabIdx) {
+        activeTabIdx--;
+      }
+      renderTabBar();
+    }
+    // Remove from tree
+    const node = treeItem.closest('.tree-node');
+    if (node) node.remove();
+    else treeItem.remove();
+  } catch(e) { alert('Delete failed: ' + e.message); }
+}
+
+async function renameByPath(path, name) {
+  const apiPath = path.replace(/^\//, '');
+  const newName = prompt('Rename file to:', name);
+  if (newName === null) return;
+  const trimmed = newName.trim();
+  if (!trimmed || trimmed === name) return;
+  if (trimmed.indexOf('/') >= 0 || trimmed.indexOf('\\') >= 0) {
+    alert('Filename must not contain slashes.'); return;
+  }
+  try {
+    const res = await fetch(
+      '/_api/edit/rename?from=' + encodeURIComponent(apiPath) +
+      '&to=' + encodeURIComponent(trimmed),
+      { method: 'POST' },
+    );
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) { alert(data.error || 'Rename failed'); return; }
+    // If currently open, redirect
+    if (currentPath === path) {
+      currentPath = '/' + data.new_path;
+      editorPath = data.new_path;
+      if (activeTabIdx >= 0) {
+        tabs[activeTabIdx].path = currentPath;
+        tabs[activeTabIdx].name = data.new_name;
+        tabs[activeTabIdx].editorPath = data.new_path;
+      }
+      sessionStorage.setItem('wb-path', currentPath);
+      sessionStorage.setItem('wb-name', data.new_name);
+      updateBar(data.new_name, currentPath);
+      const saveBarBtn = document.createElement('button');
+      saveBarBtn.className = 'bar-btn';
+      saveBarBtn.textContent = '💾 Save';
+      saveBarBtn.addEventListener('click', saveFile);
+      document.getElementById('bar-path').insertAdjacentElement('afterend', saveBarBtn);
+      addRenameDuplicateButtons();
+      renderTabBar();
+    }
+  } catch(e) { alert('Rename failed: ' + e.message); }
+}
+
+async function duplicateByPath(path, name) {
+  const apiPath = path.replace(/^\//, '');
+  try {
+    const res = await fetch('/_api/edit/duplicate?path=' + encodeURIComponent(apiPath), { method: 'POST' });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) { alert(data.error || 'Duplicate failed'); return; }
+    openFile('/' + data.new_path, data.new_name);
+  } catch(e) { alert('Duplicate failed: ' + e.message); }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Syntax highlighting
+// ─────────────────────────────────────────────────────────────────────────────
+function escHtml(s) {
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+const HL_KEYWORDS = {
+  rust: new Set(['fn','let','mut','pub','use','mod','struct','enum','trait','impl','for','in','if','else','while','loop','return','match','as','async','await','move','ref','self','Self','crate','super','where','dyn','const','static','type','break','continue','box','unsafe','extern']),
+  js:   new Set(['var','let','const','function','if','else','for','while','do','return','break','continue','switch','case','default','new','delete','typeof','instanceof','this','class','extends','super','import','export','from','as','async','await','yield','try','catch','finally','throw','of','in','null','true','false','undefined','void']),
+  ts:   new Set(['var','let','const','function','if','else','for','while','do','return','break','continue','switch','case','default','new','delete','typeof','instanceof','this','class','extends','super','import','export','from','as','async','await','yield','try','catch','finally','throw','of','in','null','true','false','undefined','void','interface','type','enum','readonly','public','private','protected','implements','declare','namespace','keyof','infer']),
+  python: new Set(['def','class','import','from','as','if','elif','else','for','while','in','not','and','or','is','return','yield','try','except','finally','raise','with','pass','break','continue','lambda','None','True','False','global','nonlocal','async','await']),
+  sh:   new Set(['if','then','else','elif','fi','for','do','done','while','until','case','esac','in','function','return','break','continue','local','export','echo','set','unset','source']),
+};
+HL_KEYWORDS.bash = HL_KEYWORDS.sh;
+HL_KEYWORDS.zsh  = HL_KEYWORDS.sh;
+HL_KEYWORDS.jsx  = HL_KEYWORDS.js;
+HL_KEYWORDS.tsx  = HL_KEYWORDS.ts;
+HL_KEYWORDS.py   = HL_KEYWORDS.python;
+
+function tokenize(code, lang) {
+  if (code == null) return '';
+  if (code.length > 150000) return escHtml(code);
+  switch (lang) {
+    case 'rs':
+    case 'rust':   return tokenizeRust(code);
+    case 'js':
+    case 'jsx':
+    case 'ts':
+    case 'tsx':    return tokenizeJs(code, lang);
+    case 'html':
+    case 'htm':
+    case 'xml':    return tokenizeHtml(code);
+    case 'css':
+    case 'scss':
+    case 'less':   return tokenizeCss(code);
+    case 'json':   return tokenizeJson(code);
+    case 'toml':   return tokenizeToml(code);
+    case 'yaml':
+    case 'yml':    return tokenizeYaml(code);
+    case 'md':
+    case 'markdown': return tokenizeMd(code);
+    case 'py':
+    case 'python': return tokenizePython(code);
+    case 'sh':
+    case 'bash':
+    case 'zsh':    return tokenizeShell(code);
+    default:       return escHtml(code);
+  }
+}
+
+// Generic regex-based tokenizer driver. Pattern is an Array of [regex, className].
+// First match wins per position.
+function genericTokenize(code, patterns) {
+  let out = '';
+  let i = 0;
+  const len = code.length;
+  while (i < len) {
+    let matched = false;
+    for (const [re, cls] of patterns) {
+      re.lastIndex = i;
+      const m = re.exec(code);
+      if (m && m.index === i) {
+        out += '<span class="' + cls + '">' + escHtml(m[0]) + '</span>';
+        i = re.lastIndex;
+        matched = true;
+        break;
+      }
+    }
+    if (!matched) {
+      out += escHtml(code[i]);
+      i++;
+    }
+  }
+  return out;
+}
+
+function rustPattern() {
+  const kw = [...HL_KEYWORDS.rust].join('|');
+  return [
+    [/\/\/[^\n]*/g, 'hl-cmt'],
+    [/\/\*[\s\S]*?\*\//g, 'hl-cmt'],
+    [/r#?"(?:[^"\\]|\\.)*"/g, 'hl-str'],
+    [/"(?:[^"\\]|\\.)*"/g, 'hl-str'],
+    [/'(?:[^'\\]|\\.)'/g, 'hl-str'],
+    [/[a-zA-Z_][a-zA-Z0-9_]*!/g, 'hl-macro'],
+    [new RegExp('\\b(?:' + kw + ')\\b', 'g'), 'hl-kw'],
+    [/\b[A-Z][A-Za-z0-9_]*\b/g, 'hl-type'],
+    [/\b[a-z_][A-Za-z0-9_]*(?=\s*\()/g, 'hl-fn'],
+    [/\b\d[\d_]*(?:\.\d[\d_]*)?(?:[eE][+-]?\d+)?(?:[ui](?:8|16|32|64|size)|f(?:32|64))?\b/g, 'hl-num'],
+  ];
+}
+function tokenizeRust(code) { return genericTokenize(code, rustPattern()); }
+
+function jsPattern(lang) {
+  const set = HL_KEYWORDS[lang] || HL_KEYWORDS.js;
+  const kw = [...set].join('|');
+  return [
+    [/\/\/[^\n]*/g, 'hl-cmt'],
+    [/\/\*[\s\S]*?\*\//g, 'hl-cmt'],
+    [/`(?:[^`\\$]|\\.|\$(?!\{))*`/g, 'hl-str'],
+    [/"(?:[^"\\]|\\.)*"/g, 'hl-str'],
+    [/'(?:[^'\\]|\\.)*'/g, 'hl-str'],
+    [new RegExp('\\b(?:' + kw + ')\\b', 'g'), 'hl-kw'],
+    [/\b[A-Z][A-Za-z0-9_]*\b/g, 'hl-type'],
+    [/\b[a-z_$][A-Za-z0-9_$]*(?=\s*\()/g, 'hl-fn'],
+    [/\b\d[\d_]*(?:\.\d[\d_]*)?(?:[eE][+-]?\d+)?\b/g, 'hl-num'],
+  ];
+}
+function tokenizeJs(code, lang) { return genericTokenize(code, jsPattern(lang)); }
+
+function tokenizePython(code) {
+  const kw = [...HL_KEYWORDS.python].join('|');
+  return genericTokenize(code, [
+    [/#[^\n]*/g, 'hl-cmt'],
+    [/"""[\s\S]*?"""/g, 'hl-str'],
+    [/'''[\s\S]*?'''/g, 'hl-str'],
+    [/"(?:[^"\\]|\\.)*"/g, 'hl-str'],
+    [/'(?:[^'\\]|\\.)*'/g, 'hl-str'],
+    [new RegExp('\\b(?:' + kw + ')\\b', 'g'), 'hl-kw'],
+    [/\b[A-Z][A-Za-z0-9_]*\b/g, 'hl-type'],
+    [/\b[a-z_][A-Za-z0-9_]*(?=\s*\()/g, 'hl-fn'],
+    [/\b\d+(?:\.\d+)?\b/g, 'hl-num'],
+  ]);
+}
+
+function tokenizeShell(code) {
+  const kw = [...HL_KEYWORDS.sh].join('|');
+  return genericTokenize(code, [
+    [/#[^\n]*/g, 'hl-cmt'],
+    [/"(?:[^"\\]|\\.)*"/g, 'hl-str'],
+    [/'(?:[^'\\]|\\.)*'/g, 'hl-str'],
+    [/\$\{[^}]+\}/g, 'hl-attr'],
+    [/\$[A-Za-z_][A-Za-z0-9_]*/g, 'hl-attr'],
+    [new RegExp('\\b(?:' + kw + ')\\b', 'g'), 'hl-kw'],
+    [/\b\d+\b/g, 'hl-num'],
+  ]);
+}
+
+function tokenizeHtml(code) {
+  // Manual tokenizer to handle nested attributes
+  let out = '';
+  let i = 0;
+  const len = code.length;
+  while (i < len) {
+    if (code.startsWith('<!--', i)) {
+      const end = code.indexOf('-->', i + 4);
+      const stop = end === -1 ? len : end + 3;
+      out += '<span class="hl-cmt">' + escHtml(code.slice(i, stop)) + '</span>';
+      i = stop;
+      continue;
+    }
+    if (code[i] === '<') {
+      const end = code.indexOf('>', i);
+      const stop = end === -1 ? len : end + 1;
+      const seg = code.slice(i, stop);
+      // Tokenize attribute names and values inside the tag
+      out += seg.replace(/(&|<|>|")/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[m])
+        .replace(/(&lt;\/?)([A-Za-z][\w-]*)/, '$1<span class="hl-tag">$2</span>')
+        .replace(/([A-Za-z][\w:-]*)(=)(&quot;[^&]*?&quot;|&#39;[^&]*?&#39;)/g, (_, a, eq, v) =>
+          '<span class="hl-attr">' + a + '</span>' + eq + '<span class="hl-str">' + v + '</span>');
+      i = stop;
+      continue;
+    }
+    // Plain text until next <
+    const next = code.indexOf('<', i);
+    const stop = next === -1 ? len : next;
+    out += escHtml(code.slice(i, stop));
+    i = stop;
+  }
+  return out;
+}
+
+function tokenizeCss(code) {
+  return genericTokenize(code, [
+    [/\/\*[\s\S]*?\*\//g, 'hl-cmt'],
+    [/"(?:[^"\\]|\\.)*"/g, 'hl-str'],
+    [/'(?:[^'\\]|\\.)*'/g, 'hl-str'],
+    [/#[0-9a-fA-F]{3,8}\b/g, 'hl-num'],
+    [/\b\d+(?:\.\d+)?(?:px|em|rem|%|vh|vw|ms|s|deg|fr)?\b/g, 'hl-num'],
+    [/@[a-zA-Z-]+/g, 'hl-macro'],
+    [/[a-zA-Z-]+(?=\s*:)/g, 'hl-attr'],
+  ]);
+}
+
+function tokenizeJson(code) {
+  return genericTokenize(code, [
+    [/"(?:[^"\\]|\\.)*"\s*:/g, 'hl-attr'],
+    [/"(?:[^"\\]|\\.)*"/g, 'hl-str'],
+    [/\b(?:true|false|null)\b/g, 'hl-kw'],
+    [/-?\b\d+(?:\.\d+)?(?:[eE][+-]?\d+)?\b/g, 'hl-num'],
+  ]);
+}
+
+function tokenizeToml(code) {
+  return genericTokenize(code, [
+    [/#[^\n]*/g, 'hl-cmt'],
+    [/"(?:[^"\\]|\\.)*"/g, 'hl-str'],
+    [/'(?:[^'\\]|\\.)*'/g, 'hl-str'],
+    [/^\s*\[\[?[^\]]+\]\]?/gm, 'hl-tag'],
+    [/^\s*[A-Za-z_][\w.-]*(?=\s*=)/gm, 'hl-attr'],
+    [/\b(?:true|false)\b/g, 'hl-kw'],
+    [/-?\b\d+(?:\.\d+)?\b/g, 'hl-num'],
+  ]);
+}
+
+function tokenizeYaml(code) {
+  return genericTokenize(code, [
+    [/#[^\n]*/g, 'hl-cmt'],
+    [/"(?:[^"\\]|\\.)*"/g, 'hl-str'],
+    [/'(?:[^'\\]|\\.)*'/g, 'hl-str'],
+    [/^[\s-]*[A-Za-z_][\w.-]*(?=\s*:)/gm, 'hl-attr'],
+    [/\b(?:true|false|null|yes|no|~)\b/g, 'hl-kw'],
+    [/-?\b\d+(?:\.\d+)?\b/g, 'hl-num'],
+  ]);
+}
+
+function tokenizeMd(code) {
+  return genericTokenize(code, [
+    [/^#{1,6}\s+.*$/gm, 'hl-tag'],
+    [/```[\s\S]*?```/g, 'hl-str'],
+    [/`[^`]+`/g, 'hl-str'],
+    [/\*\*[^*]+\*\*/g, 'hl-kw'],
+    [/\*[^*]+\*/g, 'hl-fn'],
+    [/\[([^\]]+)\]\(([^)]+)\)/g, 'hl-attr'],
+  ]);
+}
+
+function scheduleHighlight() {
+  if (hlTimer) clearTimeout(hlTimer);
+  hlTimer = setTimeout(applyHighlight, 100);
+}
+
+function applyHighlight() {
+  const hl = document.getElementById('editor-highlight');
+  const ta = document.getElementById('editor-textarea');
+  if (!hl || !ta) return;
+  if (!editorPath) { hl.innerHTML = ''; return; }
+  const ext = editorPath.split('.').pop().toLowerCase();
+  let html = tokenize(ta.value, ext);
+  // Ensure trailing newline so the highlight pre matches the textarea height
+  if (!html.endsWith('\n')) html += '\n';
+  hl.innerHTML = html;
+  hl.scrollTop  = ta.scrollTop;
+  hl.scrollLeft = ta.scrollLeft;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Git status badges
+// ─────────────────────────────────────────────────────────────────────────────
+async function fetchGitStatus(urlPrefix) {
+  try {
+    const res = await fetch('/_api/edit/git-status?root=' + encodeURIComponent(urlPrefix));
+    if (!res.ok) return;
+    const data = await res.json();
+    const archivePrefix = '/_clones/' + urlPrefix.replace(/^_clones\//, '');
+    // Clear old entries for this prefix
+    for (const k of [...gitStatus.keys()]) {
+      if (k.startsWith(archivePrefix + '/')) gitStatus.delete(k);
+    }
+    for (const [rel, status] of Object.entries(data.files || {})) {
+      gitStatus.set(archivePrefix + '/' + rel, status);
+    }
+    refreshGitBadgesInTree();
+  } catch(e) {}
+}
+
+function refreshGitBadgesInTree() {
+  document.querySelectorAll('.tree-item[data-href]').forEach(item => {
+    const href = item.dataset.href;
+    const existing = item.querySelector('.tree-git');
+    const gs = gitStatus.get(href);
+    if (gs) {
+      if (existing) {
+        existing.setAttribute('data-s', gs);
+      } else {
+        const span = document.createElement('span');
+        span.className = 'tree-git';
+        span.setAttribute('data-s', gs);
+        span.textContent = '●';
+        item.appendChild(span);
+      }
+    } else if (existing) {
+      existing.remove();
+    }
+  });
+}
+
+function currentArchivePrefix() {
+  // From currentPath like "/_clones/project-foo/src/main.rs" → "_clones/project-foo"
+  if (!currentPath) return null;
+  const m = currentPath.match(/^\/(_clones\/[^/]+)/);
+  return m ? m[1] : null;
+}
+
+function refreshGitStatusForCurrent() {
+  const p = currentArchivePrefix();
+  if (p) fetchGitStatus(p);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Pinned + restore on startup
+// ─────────────────────────────────────────────────────────────────────────────
+renderPinnedSection();
+
+(async function restoreTabs() {
+  let saved = [];
+  try { saved = JSON.parse(sessionStorage.getItem('wb-tabs') || '[]'); } catch(e) {}
+  let activeIdx = parseInt(sessionStorage.getItem('wb-active-tab') || '0', 10);
+  if (!saved.length) {
+    // Legacy fallback: single-file restoration
+    const p = sessionStorage.getItem('wb-path');
+    const n = sessionStorage.getItem('wb-name');
+    if (p) await openFile(p, n || p.split('/').pop());
+    return;
+  }
+  for (const t of saved) {
+    try { await openFile(t.path, t.name); } catch(e) { /* skip broken tabs */ }
+  }
+  if (activeIdx >= 0 && activeIdx < tabs.length && activeIdx !== activeTabIdx) {
+    try { await switchTab(activeIdx); } catch(e) {}
+  }
 })();
 
 // ── iframe → editor click navigation ─────────────────────────────────────────
@@ -2099,5 +3111,8 @@ searchInput.addEventListener('keydown', e => {
   setTimeout(pollIndex, 500);
 })();
 </script>
+
+<div id="ctx-menu"></div>
+
 </body>
 </html>
