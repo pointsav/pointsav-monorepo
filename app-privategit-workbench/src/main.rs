@@ -4,7 +4,7 @@ use axum::{
     extract::{Query, State},
     http::{HeaderMap, StatusCode},
     response::{Html, IntoResponse, Json, Response},
-    routing::get,
+    routing::{get, post},
     Router,
 };
 use serde::{Deserialize, Serialize};
@@ -148,6 +148,17 @@ fn allowed_write_ext(path: &Path) -> bool {
             | "lock"
             | "svg"
     )
+}
+
+/// Join the parent of a url_path with a new filename.
+/// e.g. ("_clones/foo/bar/baz.md", "qux.md") -> "_clones/foo/bar/qux.md"
+/// e.g. ("baz.md", "qux.md") -> "qux.md"
+fn join_parent_url(url_path: &str, new_name: &str) -> String {
+    let trimmed = url_path.trim_start_matches('/');
+    match trimmed.rsplit_once('/') {
+        Some((parent, _)) => format!("{}/{}", parent, new_name),
+        None => new_name.to_string(),
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -323,6 +334,175 @@ async fn put_file(
 }
 
 // ---------------------------------------------------------------------------
+// Rename
+// ---------------------------------------------------------------------------
+
+#[derive(Deserialize)]
+struct RenameQuery {
+    from: String,
+    to: String,
+}
+
+#[derive(Serialize)]
+struct RenameResponse {
+    ok: bool,
+    new_path: String,
+    new_name: String,
+}
+
+/// POST /rename?from=<url_path>&to=<new_filename>
+/// Renames the file within its current directory. `to` must be a bare
+/// filename (no slashes). Source must resolve to a writable root.
+async fn rename_file(State(state): State<AppState>, Query(q): Query<RenameQuery>) -> Response {
+    let new_name = q.to.trim();
+    if new_name.is_empty() {
+        return err(StatusCode::BAD_REQUEST, "new name is empty");
+    }
+    if new_name.contains('/') || new_name.contains('\\') {
+        return err(
+            StatusCode::BAD_REQUEST,
+            "new name must not contain slashes",
+        );
+    }
+
+    let (fs_path, writable) = match resolve_path(&state.roots, &q.from) {
+        Ok(v) => v,
+        Err(e) => return err(StatusCode::BAD_REQUEST, e.to_string()),
+    };
+
+    if !fs_path.exists() {
+        return err(StatusCode::NOT_FOUND, "source file not found");
+    }
+    if !writable {
+        return err(StatusCode::FORBIDDEN, "path is not writable");
+    }
+
+    // Same-name check (before any disk activity)
+    let old_name = match fs_path.file_name().and_then(|n| n.to_str()) {
+        Some(n) => n,
+        None => return err(StatusCode::BAD_REQUEST, "source has no filename"),
+    };
+    if old_name == new_name {
+        return err(StatusCode::BAD_REQUEST, "new name is the same as old name");
+    }
+
+    let parent = match fs_path.parent() {
+        Some(p) => p,
+        None => return err(StatusCode::BAD_REQUEST, "source has no parent directory"),
+    };
+    let new_fs_path = parent.join(new_name);
+
+    if new_fs_path.exists() {
+        return err(StatusCode::CONFLICT, "destination already exists");
+    }
+
+    if let Err(e) = fs::rename(&fs_path, &new_fs_path) {
+        return err(StatusCode::INTERNAL_SERVER_ERROR, e.to_string());
+    }
+
+    let new_url_path = join_parent_url(&q.from, new_name);
+    Json(RenameResponse {
+        ok: true,
+        new_path: new_url_path,
+        new_name: new_name.to_string(),
+    })
+    .into_response()
+}
+
+// ---------------------------------------------------------------------------
+// Duplicate
+// ---------------------------------------------------------------------------
+
+#[derive(Serialize)]
+struct DuplicateResponse {
+    ok: bool,
+    new_path: String,
+    new_name: String,
+}
+
+/// Insert "-copy" (or "-copy-N") before the extension. Returns a filename
+/// that does not currently exist in `parent`. Tries N=2..=99.
+fn generate_copy_name(parent: &Path, original: &str) -> Option<String> {
+    let (stem, ext) = match original.rsplit_once('.') {
+        Some((s, e)) if !s.is_empty() => (s.to_string(), Some(e.to_string())),
+        _ => (original.to_string(), None),
+    };
+
+    let make = |suffix: &str| -> String {
+        match &ext {
+            Some(e) => format!("{}{}.{}", stem, suffix, e),
+            None => format!("{}{}", stem, suffix),
+        }
+    };
+
+    // First try "-copy"
+    let first = make("-copy");
+    if !parent.join(&first).exists() {
+        return Some(first);
+    }
+
+    // Then "-copy-2".."-copy-99"
+    for n in 2..=99 {
+        let candidate = make(&format!("-copy-{}", n));
+        if !parent.join(&candidate).exists() {
+            return Some(candidate);
+        }
+    }
+
+    None
+}
+
+/// POST /duplicate?path=<url_path>
+/// Copies the file in place with "-copy" inserted before the extension.
+/// Source must resolve to a writable root.
+async fn duplicate_file(State(state): State<AppState>, Query(q): Query<FileQuery>) -> Response {
+    let (fs_path, writable) = match resolve_path(&state.roots, &q.path) {
+        Ok(v) => v,
+        Err(e) => return err(StatusCode::BAD_REQUEST, e.to_string()),
+    };
+
+    if !fs_path.exists() {
+        return err(StatusCode::NOT_FOUND, "source file not found");
+    }
+    if !fs_path.is_file() {
+        return err(StatusCode::BAD_REQUEST, "source is not a file");
+    }
+    if !writable {
+        return err(StatusCode::FORBIDDEN, "path is not writable");
+    }
+
+    let original_name = match fs_path.file_name().and_then(|n| n.to_str()) {
+        Some(n) => n,
+        None => return err(StatusCode::BAD_REQUEST, "source has no filename"),
+    };
+    let parent = match fs_path.parent() {
+        Some(p) => p,
+        None => return err(StatusCode::BAD_REQUEST, "source has no parent directory"),
+    };
+
+    let new_name = match generate_copy_name(parent, original_name) {
+        Some(n) => n,
+        None => return err(
+            StatusCode::CONFLICT,
+            "could not find an available copy name (tried -copy through -copy-99)",
+        ),
+    };
+    let new_fs_path = parent.join(&new_name);
+
+    if let Err(e) = fs::copy(&fs_path, &new_fs_path) {
+        return err(StatusCode::INTERNAL_SERVER_ERROR, e.to_string());
+    }
+
+    let new_url_path = join_parent_url(&q.path, &new_name);
+    Json(DuplicateResponse {
+        ok: true,
+        new_path: new_url_path,
+        new_name,
+    })
+    .into_response()
+}
+
+// ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
 
@@ -353,6 +533,8 @@ async fn main() -> Result<()> {
     let app = Router::new()
         .route("/", get(get_spa))
         .route("/file", get(get_file).put(put_file))
+        .route("/rename", post(rename_file))
+        .route("/duplicate", post(duplicate_file))
         .with_state(state);
 
     let addr: SocketAddr = config.bind.parse().context("parsing bind address")?;
