@@ -51,7 +51,28 @@ header .tag {
   width: 300px; min-width: 160px;
   background: #252526; flex-shrink: 0;
   display: flex; flex-direction: column; overflow: hidden;
+  transition: width 0.15s ease;
 }
+.sidebar.sb-collapsed { min-width: 32px; }
+.sidebar.sb-collapsed #tree-panel,
+.sidebar.sb-collapsed #search-panel { visibility: hidden; pointer-events: none; overflow: hidden; }
+
+/* ── Sidebar toolbar (≡ toggle + 👁 hidden-files) ─────────────────── */
+#sidebar-toolbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 4px 6px; flex-shrink: 0; gap: 4px;
+  border-bottom: 1px solid #333;
+}
+.sb-tool-btn {
+  background: none; border: none; cursor: pointer;
+  color: #666; font-size: 13px; padding: 3px 5px; border-radius: 3px;
+  line-height: 1; flex-shrink: 0;
+}
+.sb-tool-btn:hover { background: #3c3c3c; color: #ccc; }
+.sb-tool-btn.active { color: #4d9fff; background: #0d3a5c; }
+#sb-toggle-btn { font-size: 15px; }
+.sidebar.sb-collapsed #sidebar-toolbar { justify-content: center; }
+.sidebar.sb-collapsed .sb-tool-btn:not(#sb-toggle-btn) { display: none; }
 
 /* ── Resize handles ───────────────────────────────────────────────── */
 .resizer { width: 5px; background: #2d2d2d; cursor: col-resize; flex-shrink: 0; transition: background 0.15s; }
@@ -471,6 +492,8 @@ header .tag {
 /* ── Pinned section ───────────────────────────────────────────────── */
 #pinned-section { display: none; }
 #pinned-section.visible { display: block; }
+.pinned-folder-children { overflow: hidden; }
+.pinned-folder-children.collapsed { display: none; }
 
 /* ── Git status badges ────────────────────────────────────────────── */
 .tree-git {
@@ -544,6 +567,11 @@ header .tag {
 
   <div class="sidebar" id="sidebar">
 
+    <div id="sidebar-toolbar">
+      <button id="sb-toggle-btn" class="sb-tool-btn" title="Toggle sidebar (collapse/expand)">☰</button>
+      <button id="sb-hidden-btn" class="sb-tool-btn" title="Toggle hidden files (.agent, .claude, etc.)">👁</button>
+    </div>
+
     <div id="search-panel">
       <div id="search-results"></div>
     </div>
@@ -556,7 +584,7 @@ header .tag {
       </div>
 
       <div class="section-header open" data-section="sandboxes">
-        <span class="arrow">▶</span> Sandboxes
+        <span class="arrow">▶</span> ~/sandbox
       </div>
       <div class="section-body" id="section-sandboxes">
         <div class="tree-node">
@@ -574,7 +602,7 @@ header .tag {
       </div>
 
       <div class="section-header open" data-section="command">
-        <span class="arrow">▶</span> Command Workspace
+        <span class="arrow">▶</span> ~/Foundry
       </div>
       <div class="section-body" id="section-command">
         <div class="tree-node">
@@ -586,7 +614,7 @@ header .tag {
       </div>
 
       <div class="section-header open" data-section="clones">
-        <span class="arrow">▶</span> Cluster Archives
+        <span class="arrow">▶</span> 📁 clones/
       </div>
       <div class="section-body" id="section-clones">
         <div class="loading">Loading archives…</div>
@@ -722,6 +750,12 @@ let activeTabIdx = -1;
 // Git status badges: maps a tree url-path to a status string.
 const gitStatus  = new Map();
 
+// Sidebar collapse state
+let sidebarPinnedWidth = parseInt(sessionStorage.getItem('wb-sidebar-w') || '300');
+
+// Hidden-files toggle (persists across reloads)
+let showHidden = localStorage.getItem('wb-show-hidden') === '1';
+
 // ── File type routing ─────────────────────────────────────────────────────────
 const IFRAME_EXTS = new Set(['html','htm','pdf']);
 const IMAGE_EXTS  = new Set(['png','jpg','jpeg','gif','svg','webp','ico','bmp','avif']);
@@ -749,6 +783,43 @@ function fileMode(name) {
 // ── Escape HTML ───────────────────────────────────────────────────────────────
 function esc(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── Sidebar collapse ──────────────────────────────────────────────────────────
+function collapseSidebar() {
+  const sb = document.getElementById('sidebar');
+  const w = sb.offsetWidth;
+  if (w > 36) { sidebarPinnedWidth = w; sessionStorage.setItem('wb-sidebar-w', w); }
+  sb.style.width = '32px';
+  sb.classList.add('sb-collapsed');
+}
+function expandSidebar() {
+  const sb = document.getElementById('sidebar');
+  sb.style.width = sidebarPinnedWidth + 'px';
+  sb.classList.remove('sb-collapsed');
+}
+function toggleSidebar() {
+  const sb = document.getElementById('sidebar');
+  if (sb.classList.contains('sb-collapsed')) expandSidebar(); else collapseSidebar();
+}
+
+// ── Hidden-files toggle ───────────────────────────────────────────────────────
+function toggleHiddenFiles() {
+  showHidden = !showHidden;
+  localStorage.setItem('wb-show-hidden', showHidden ? '1' : '0');
+  const btn = document.getElementById('sb-hidden-btn');
+  if (btn) btn.classList.toggle('active', showHidden);
+  // Reload all expanded directory nodes so the new filter applies.
+  document.querySelectorAll('.tree-item[data-type="dir"][data-loaded]').forEach(item => {
+    item.removeAttribute('data-loaded');
+    const node = item.closest('.tree-node');
+    const children = node && node.querySelector('.tree-children');
+    if (children && !children.classList.contains('collapsed')) {
+      children.innerHTML = '';
+      const depth = Math.round((parseInt(item.style.paddingLeft) - 14) / 14) + 1;
+      loadChildren(item, children, depth);
+    }
+  });
 }
 
 // ── Markdown renderer ─────────────────────────────────────────────────────────
@@ -2221,7 +2292,7 @@ async function loadChildren(item, childrenEl, depth) {
     const rest     = entries.filter(e => e.type !== 'directory' && !VIEWABLE_RE.test(e.name)).sort((a,b) => a.name.localeCompare(b.name));
 
     [...dirs, ...viewable, ...rest].forEach(entry => {
-      if (entry.name.startsWith('.') && entry.name !== '.agent') return;
+      if (!showHidden && entry.name.startsWith('.')) return;
       const node = buildItem(entry, apiBase, browseBase, depth);
       childrenEl.appendChild(node);
       wireItem(node.querySelector('.tree-item'), node.querySelector('.tree-children'), depth + 1);
@@ -2299,6 +2370,11 @@ resizer.addEventListener('mousedown', () => {
   document.body.style.cursor = 'col-resize';
   document.body.style.userSelect = 'none';
   document.getElementById('preview-frame').style.pointerEvents = 'none';
+  // Ensure sidebar is expanded before dragging, and capture current width as restore target.
+  const sb = document.getElementById('sidebar');
+  if (sb.classList.contains('sb-collapsed')) expandSidebar();
+  const w = sb.offsetWidth;
+  if (w > 36) { sidebarPinnedWidth = w; sessionStorage.setItem('wb-sidebar-w', w); }
 });
 document.addEventListener('mousemove', e => {
   if (!resizing1) return;
@@ -2312,6 +2388,9 @@ document.addEventListener('mouseup', () => {
   document.body.style.cursor = '';
   document.body.style.userSelect = '';
   document.getElementById('preview-frame').style.pointerEvents = '';
+  // Persist the new width as the sidebar restore target.
+  const w = document.getElementById('sidebar').offsetWidth;
+  if (w > 36) { sidebarPinnedWidth = w; sessionStorage.setItem('wb-sidebar-w', w); }
 });
 
 // ── Resize viewer/editor (resizer2) ──────────────────────────────────────────
@@ -2653,25 +2732,70 @@ function renderPinnedSection() {
   section.classList.add('visible');
   body.innerHTML = '';
   pins.forEach((pin, i) => {
-    const item = document.createElement('div');
-    item.className = 'tree-item viewable';
-    item.style.paddingLeft = '14px';
-    item.dataset.href = pin.path;
-    item.dataset.label = pin.name;
-    item.dataset.type = 'file';
-    item.dataset.pinIdx = String(i);
-    const ic = document.createElement('span');
-    ic.className = 'icon';
-    ic.style.marginLeft = '14px';
-    ic.textContent = '📌';
-    const lab = document.createElement('span');
-    lab.className = 'label';
-    lab.textContent = pin.alias || pin.name;
-    item.appendChild(ic);
-    item.appendChild(lab);
-    item.addEventListener('click', () => { setTreeActive(item); openFile(pin.path, pin.name); });
-    attachContextMenu(item);
-    body.appendChild(item);
+    if (pin.isDir) {
+      // Folder pin — expandable tree node
+      const node = document.createElement('div');
+      node.className = 'tree-node';
+      const item = document.createElement('div');
+      item.className = 'tree-item';
+      item.style.paddingLeft = '14px';
+      item.dataset.type = 'dir';
+      item.dataset.api = pin.apiPath || '';
+      item.dataset.browse = pin.path;
+      item.dataset.label = pin.name;
+      item.dataset.pinIdx = String(i);
+      const arr = document.createElement('span'); arr.className = 'arrow'; arr.textContent = '▶';
+      const ic  = document.createElement('span'); ic.className = 'icon'; ic.textContent = '📁';
+      const lab = document.createElement('span'); lab.className = 'label'; lab.textContent = pin.alias || pin.name;
+      item.appendChild(arr); item.appendChild(ic); item.appendChild(lab);
+      const children = document.createElement('div');
+      children.className = 'pinned-folder-children collapsed';
+      children.style.paddingLeft = '12px';
+      item.addEventListener('click', async e => {
+        e.stopPropagation();
+        const isOpen = item.classList.toggle('open');
+        children.classList.toggle('collapsed', !isOpen);
+        if (isOpen && !item.dataset.loaded) {
+          item.dataset.loaded = '1';
+          children.innerHTML = '<div class="loading">Loading…</div>';
+          try {
+            const res = await fetch(pin.apiPath || '');
+            if (!res.ok) throw new Error(res.status);
+            const entries = await res.json();
+            children.innerHTML = '';
+            if (!entries.length) { children.innerHTML = '<div class="empty">Empty</div>'; return; }
+            const dirs = entries.filter(e => e.type === 'directory').sort((a,b) => a.name.localeCompare(b.name));
+            const vw   = entries.filter(e => e.type !== 'directory' && VIEWABLE_RE.test(e.name)).sort((a,b) => a.name.localeCompare(b.name));
+            const rest = entries.filter(e => e.type !== 'directory' && !VIEWABLE_RE.test(e.name)).sort((a,b) => a.name.localeCompare(b.name));
+            [...dirs, ...vw, ...rest].forEach(entry => {
+              if (!showHidden && entry.name.startsWith('.')) return;
+              const childNode = buildItem(entry, pin.apiPath, pin.path, 1);
+              children.appendChild(childNode);
+              wireItem(childNode.querySelector('.tree-item'), childNode.querySelector('.tree-children'), 2);
+            });
+          } catch(e) { children.innerHTML = `<div class="err">Error: ${e.message}</div>`; }
+        }
+      });
+      attachContextMenu(item);
+      node.appendChild(item);
+      node.appendChild(children);
+      body.appendChild(node);
+    } else {
+      // File pin — single clickable item
+      const item = document.createElement('div');
+      item.className = 'tree-item viewable';
+      item.style.paddingLeft = '14px';
+      item.dataset.href = pin.path;
+      item.dataset.label = pin.name;
+      item.dataset.type = 'file';
+      item.dataset.pinIdx = String(i);
+      const ic = document.createElement('span'); ic.className = 'icon'; ic.style.marginLeft = '14px'; ic.textContent = '📌';
+      const lab = document.createElement('span'); lab.className = 'label'; lab.textContent = pin.alias || pin.name;
+      item.appendChild(ic); item.appendChild(lab);
+      item.addEventListener('click', () => { setTreeActive(item); openFile(pin.path, pin.name); });
+      attachContextMenu(item);
+      body.appendChild(item);
+    }
   });
 }
 
@@ -2680,7 +2804,17 @@ function pinFile(path, name) {
   if (alias === null) return;
   const pins = loadPins();
   if (pins.some(p => p.path === path)) return;
-  pins.push({ path, name, alias: alias || name });
+  pins.push({ path, name, alias: alias || name, isDir: false });
+  savePins(pins);
+  renderPinnedSection();
+}
+
+function pinFolder(browsePath, name, apiPath) {
+  const alias = prompt('Alias for pinned folder (Enter to use folder name):', name);
+  if (alias === null) return;
+  const pins = loadPins();
+  if (pins.some(p => p.path === browsePath)) return;
+  pins.push({ path: browsePath, name, alias: alias || name, isDir: true, apiPath });
   savePins(pins);
   renderPinnedSection();
 }
@@ -2725,19 +2859,25 @@ function attachContextMenu(item) {
     let items = [];
     if (isPinned) {
       const idx = parseInt(item.dataset.pinIdx, 10);
-      items = [
-        { label: 'Open', action: () => openFile(path, name) },
+      const pins = loadPins();
+      const pin = pins[idx];
+      const baseItems = [
         '-',
         { label: '✎ Edit alias', action: () => {
-            const pins = loadPins();
-            const alias = prompt('New alias:', pins[idx] && pins[idx].alias || name);
+            const pins2 = loadPins();
+            const alias = prompt('New alias:', pins2[idx] && pins2[idx].alias || name);
             if (alias === null) return;
-            if (pins[idx]) { pins[idx].alias = alias || name; savePins(pins); renderPinnedSection(); }
+            if (pins2[idx]) { pins2[idx].alias = alias || name; savePins(pins2); renderPinnedSection(); }
           }},
         { label: 'Unpin', action: () => {
-            const pins = loadPins(); pins.splice(idx, 1); savePins(pins); renderPinnedSection();
+            const pins2 = loadPins(); pins2.splice(idx, 1); savePins(pins2); renderPinnedSection();
           }},
       ];
+      if (pin && pin.isDir) {
+        items = [{ label: 'Open in tree', action: () => {} }, ...baseItems];
+      } else {
+        items = [{ label: 'Open', action: () => openFile(path, name) }, ...baseItems];
+      }
     } else if (isFile && writable) {
       items = [
         { label: 'Open', action: () => openFile(path, name) },
@@ -2754,9 +2894,14 @@ function attachContextMenu(item) {
         { label: '📌 Pin to top', action: () => pinFile(path, name) },
       ];
     } else if (isDir) {
-      items = [
-        { label: '📄 New file here', action: () => createFileInDir(item) },
-      ];
+      const browse = item.dataset.browse || '';
+      const api    = item.dataset.api || '';
+      const isWritableDir = browse && !browse.startsWith('/_command/');
+      items = [{ label: '📁 Pin folder', action: () => pinFolder(browse, name, api) }];
+      if (isWritableDir) {
+        items.push('-');
+        items.push({ label: '📄 New file here', action: () => createFileInDir(item) });
+      }
     }
     if (items.length) showCtxMenu(e.clientX, e.clientY, items);
   });
@@ -3286,6 +3431,40 @@ searchInput.addEventListener('keydown', e => {
 (function pollIndex() {
   if (indexingDone) { if (searchInput.value.trim()) renderSearch(); return; }
   setTimeout(pollIndex, 500);
+})();
+
+// ── Sidebar toolbar wiring ────────────────────────────────────────────────────
+(function initSidebarToolbar() {
+  // Apply saved sidebar width on startup.
+  const sb = document.getElementById('sidebar');
+  sb.style.width = sidebarPinnedWidth + 'px';
+
+  // Toggle button
+  const toggleBtn = document.getElementById('sb-toggle-btn');
+  if (toggleBtn) toggleBtn.addEventListener('click', e => { e.stopPropagation(); toggleSidebar(); });
+
+  // Hidden-files button — show active state on startup if enabled
+  const hiddenBtn = document.getElementById('sb-hidden-btn');
+  if (hiddenBtn) {
+    hiddenBtn.classList.toggle('active', showHidden);
+    hiddenBtn.addEventListener('click', e => { e.stopPropagation(); toggleHiddenFiles(); });
+  }
+
+  // Clicking anywhere on a collapsed sidebar expands it
+  sb.addEventListener('click', e => {
+    if (sb.classList.contains('sb-collapsed') && !e.target.closest('#sb-toggle-btn')) {
+      expandSidebar();
+    }
+  });
+
+  // Editor textarea focus → collapse sidebar
+  const ta = document.getElementById('editor-textarea');
+  if (ta) {
+    ta.addEventListener('mousedown', () => {
+      const s = document.getElementById('sidebar');
+      if (!s.classList.contains('sb-collapsed')) collapseSidebar();
+    });
+  }
 })();
 </script>
 
