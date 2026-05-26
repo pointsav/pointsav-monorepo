@@ -1,8 +1,8 @@
 @~/Foundry/AGENT.md
 
-# project-infrastructure — Archive Guide
+# project-knowledge — Archive Guide
 
-> **State:** active | **Last updated:** 2026-05-18
+> **State:** active | **Last updated:** 2026-05-26
 > **Cluster manifest:** `.agent/manifest.md`
 > **Workspace AGENT.md takes precedence on conflict.**
 
@@ -10,7 +10,10 @@
 
 ## Cluster mission
 
-PPN cartridges and network OS work — the software layer that constitutes the PointSav Private Network and the infrastructure nodes that run it.
+Build and maintain `app-mediakit-knowledge` — the Rust-based wiki engine
+serving `documentation.pointsav.com`, `projects.woodfinegroup.com`, and
+`corporate.woodfinegroup.com`. Manages the three `media-knowledge-*` content
+repos (canonical per Doctrine §IV.e — GitHub is downstream mirror).
 
 ## Tetrad
 
