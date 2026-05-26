@@ -361,10 +361,7 @@ async fn rename_file(State(state): State<AppState>, Query(q): Query<RenameQuery>
         return err(StatusCode::BAD_REQUEST, "new name is empty");
     }
     if new_name.contains('/') || new_name.contains('\\') {
-        return err(
-            StatusCode::BAD_REQUEST,
-            "new name must not contain slashes",
-        );
+        return err(StatusCode::BAD_REQUEST, "new name must not contain slashes");
     }
 
     let (fs_path, writable) = match resolve_path(&state.roots, &q.from) {
@@ -484,10 +481,12 @@ async fn duplicate_file(State(state): State<AppState>, Query(q): Query<FileQuery
 
     let new_name = match generate_copy_name(parent, original_name) {
         Some(n) => n,
-        None => return err(
-            StatusCode::CONFLICT,
-            "could not find an available copy name (tried -copy through -copy-99)",
-        ),
+        None => {
+            return err(
+                StatusCode::CONFLICT,
+                "could not find an available copy name (tried -copy through -copy-99)",
+            )
+        }
     };
     let new_fs_path = parent.join(&new_name);
 
@@ -692,7 +691,10 @@ async fn git_status(State(state): State<AppState>, Query(q): Query<GitStatusQuer
     }
 
     let mut resp: HashMap<&str, serde_json::Value> = HashMap::new();
-    resp.insert("files", serde_json::to_value(files).unwrap_or(serde_json::json!({})));
+    resp.insert(
+        "files",
+        serde_json::to_value(files).unwrap_or(serde_json::json!({})),
+    );
     Json(resp).into_response()
 }
 
