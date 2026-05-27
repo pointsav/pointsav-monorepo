@@ -75,6 +75,7 @@ if [[ $DRY_RUN -eq 1 ]]; then
 fi
 
 mkdir -p "$WORK_DIR"
+export WORK_DIR
 echo "Work dir: $WORK_DIR" | tee -a "$LOG"
 
 # ── Step 1 — Beck et al. 2023 Köppen-Geiger GeoTIFF (global, 1km) ────────────
