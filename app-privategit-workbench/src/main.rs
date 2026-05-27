@@ -226,7 +226,7 @@ async fn get_file(State(state): State<AppState>, Query(q): Query<FileQuery>) -> 
         .map(|d| d.as_secs())
         .unwrap_or(0);
 
-    let content = match fs::read_to_string(&fs_path) {
+    let content = match tokio::fs::read_to_string(&fs_path).await {
         Ok(c) => c,
         Err(e) => return err(StatusCode::INTERNAL_SERVER_ERROR, e.to_string()),
     };

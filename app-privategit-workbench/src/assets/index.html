@@ -741,6 +741,8 @@ let editorDirty  = false;
 let previewTimer = null;
 let statusTimer  = null;
 let hlTimer      = null;   // syntax-highlight debounce
+let gutterTimer  = null;   // gutter-lines rebuild debounce
+let autosaveRunning = false; // dedup guard for concurrent autosave calls
 
 // Tab state — each tab caches its file content so switching is instant.
 // {path, name, content, mtime, dirty, editorPath, editorMtime, viewMode, scrollTop, writable}
@@ -965,7 +967,7 @@ function showEditorPanel(content) {
   showEditorStatus('', null, 0);
   updateGutterLines();
   updateEditorPos();
-  applyHighlight();
+  scheduleHighlight();
   const isMarkdown = editorPath && editorPath.split('.').pop().toLowerCase() === 'md';
   document.getElementById('text-content').classList.toggle('click-to-edit', isMarkdown);
 }
@@ -1204,7 +1206,8 @@ document.getElementById('editor-textarea').addEventListener('input', () => {
   setDirty(true);
   schedulePreview();
   scheduleHighlight();
-  updateGutterLines();
+  if (gutterTimer) clearTimeout(gutterTimer);
+  gutterTimer = setTimeout(updateGutterLines, 200);
   updateEditorPos();
 });
 
@@ -1399,29 +1402,32 @@ function refreshViewerFromEditor() {
 
 // ── Autosave (every 30 s while dirty) ────────────────────────────────────────
 async function autosaveFile() {
-  if (!editorPath || !editorDirty) return;
-  const content = document.getElementById('editor-textarea').value;
-  const headers = {
-    'Content-Type': 'text/plain; charset=utf-8',
-    'X-Foundry-Editor': '1',
-  };
-  if (editorMtime) headers['X-Foundry-Mtime'] = String(editorMtime);
+  if (!editorPath || !editorDirty || autosaveRunning) return;
+  autosaveRunning = true;
   try {
-    const res = await fetch('/_api/edit/file?path=' + encodeURIComponent(editorPath), {
-      method: 'PUT', headers, body: content,
-    });
-    if (res.ok) {
-      const data = await res.json();
-      editorMtime = data.mtime || editorMtime;
-      if (activeTabIdx >= 0) tabs[activeTabIdx].editorMtime = editorMtime;
-      setDirty(false);
-      showEditorStatus('Autosaved', '#89d185', 2000);
-      refreshViewerFromEditor();
-      writeCrashBackup();
-      refreshGitStatusForCurrent();
-    }
-    // 409 conflict or other errors: skip silently, let user resolve via manual Save
-  } catch(e) { /* network error — skip */ }
+    const content = document.getElementById('editor-textarea').value;
+    const headers = {
+      'Content-Type': 'text/plain; charset=utf-8',
+      'X-Foundry-Editor': '1',
+    };
+    if (editorMtime) headers['X-Foundry-Mtime'] = String(editorMtime);
+    try {
+      const res = await fetch('/_api/edit/file?path=' + encodeURIComponent(editorPath), {
+        method: 'PUT', headers, body: content,
+      });
+      if (res.ok) {
+        const data = await res.json();
+        editorMtime = data.mtime || editorMtime;
+        if (activeTabIdx >= 0) tabs[activeTabIdx].editorMtime = editorMtime;
+        setDirty(false);
+        showEditorStatus('Autosaved', '#89d185', 2000);
+        refreshViewerFromEditor();
+        writeCrashBackup();
+        refreshGitStatusForCurrent();
+      }
+      // 409 conflict or other errors: skip silently, let user resolve via manual Save
+    } catch(e) { /* network error — skip */ }
+  } finally { autosaveRunning = false; }
 }
 setInterval(autosaveFile, 30000);
 
@@ -1567,6 +1573,18 @@ function addRenameDuplicateButtons() {
   }
 }
 
+function patchTreeItemAfterRename(oldBrowsePath, newBrowsePath, newName) {
+  document.querySelectorAll('.tree-item[data-href]').forEach(item => {
+    if (item.dataset.href === oldBrowsePath) {
+      item.dataset.href   = newBrowsePath;
+      item.dataset.browse = newBrowsePath;
+      item.dataset.label  = newName;
+      const lbl = item.querySelector('.label');
+      if (lbl) lbl.textContent = newName;
+    }
+  });
+}
+
 async function renameCurrent() {
   if (!editorPath) return;
   const oldName = editorPath.split('/').pop();
@@ -1603,6 +1621,7 @@ async function renameCurrent() {
   const newDisplayName = data.new_name;
   // The browse path is "/" + api path
   const newBrowsePath = '/' + newApiPath;
+  const oldBrowsePath = '/' + editorPath;   // capture before state update
 
   // Update in-memory + sessionStorage state to reflect the rename
   currentPath = newBrowsePath;
@@ -1625,6 +1644,7 @@ async function renameCurrent() {
   saveBarBtn.addEventListener('click', saveFile);
   document.getElementById('bar-path').insertAdjacentElement('afterend', saveBarBtn);
   addRenameDuplicateButtons();
+  patchTreeItemAfterRename(oldBrowsePath, newBrowsePath, newDisplayName);
 
   showEditorStatus('Renamed', '#89d185', 2500);
 }
@@ -1673,8 +1693,8 @@ async function openFile(path, name) {
     if (existingIdx !== activeTabIdx) await switchTab(existingIdx);
     return;
   }
-  // Save-on-switch: silently persist the active dirty file before changing context
-  if (editorDirty && editorPath) await autosaveFile();
+  // Save-on-switch: fire and forget — captures editorPath+value at call time
+  if (editorDirty && editorPath) autosaveFile();
   // Evict oldest non-dirty tab if at cap (12)
   if (tabs.length >= 12) {
     const evictIdx = tabs.findIndex(t => !t.dirty);
@@ -1694,7 +1714,7 @@ async function openFile(path, name) {
   const fname = fname0;
   sessionStorage.setItem('wb-path', path);
   sessionStorage.setItem('wb-name', fname);
-  const mode   = fileMode(fname);
+  const mode = fileMode(fname);
   const apiPath = path.replace(/^\//, '');
   hideViewerContent();
   updateBar(fname, path);
@@ -1725,15 +1745,17 @@ async function openFile(path, name) {
     tv.style.display = 'block';
     tc.className = '';
     tc.textContent = 'Loading…';
-    try {
-      const res = await fetch(cacheBust(path), { cache: 'no-store' });
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      const text = await res.text();
+    hideEditorPanel();
+    // Fire viewer + editor fetches in parallel — saves one sequential round-trip
+    const viewerP = fetch(cacheBust(path), { cache: 'no-store' }).then(r => r.ok ? r.text() : null).catch(() => null);
+    const editorP = fetch('/_api/edit/file?path=' + encodeURIComponent(apiPath)).then(r => r.ok ? r.json() : null).catch(() => null);
+    const [viewerText, editorData] = await Promise.all([viewerP, editorP]);
+    if (viewerText !== null) {
       const ext = fname.split('.').pop().toLowerCase();
 
       // JSON schema detection — peek first 6 KB for known document types
       if (ext === 'json') {
-        const peek = text.slice(0, 6144);
+        const peek = viewerText.slice(0, 6144);
         // Schema-versioned formats
         const isVersionedDoc = peek.includes('"proforma_version"') ||
             peek.includes('"presentation_version"') ||
@@ -1762,22 +1784,35 @@ async function openFile(path, name) {
         }
       }
 
-      if (ext === 'md') {
-        tc.className = 'md-view';
-        tc.innerHTML = mdToHtml(text);
-      } else {
-        tc.className = 'code-view';
-        tc.textContent = text;
-      }
-    } catch(e) {
-      tc.className = 'code-view';
-      tc.textContent = 'Could not load file: ' + e.message;
+      if (ext === 'md') { tc.className = 'md-view'; tc.innerHTML = mdToHtml(viewerText); }
+      else { tc.className = 'code-view'; tc.textContent = viewerText; }
+    } else {
+      tc.className = 'code-view'; tc.textContent = 'Could not load file';
     }
+    if (editorData && editorData.writable && typeof editorData.content === 'string') {
+      editorPath  = apiPath;
+      editorMtime = editorData.mtime || 0;
+      if (activeTabIdx >= 0) {
+        tabs[activeTabIdx].content     = editorData.content;
+        tabs[activeTabIdx].editorPath  = apiPath;
+        tabs[activeTabIdx].editorMtime = editorMtime;
+        tabs[activeTabIdx].viewMode    = viewMode;
+        tabs[activeTabIdx].writable    = true;
+      }
+      const saveBarBtn = document.createElement('button');
+      saveBarBtn.className = 'bar-btn';
+      saveBarBtn.textContent = '💾 Save';
+      saveBarBtn.addEventListener('click', saveFile);
+      document.getElementById('bar-path').insertAdjacentElement('afterend', saveBarBtn);
+      addRenameDuplicateButtons();
+      showEditorPanel(editorData.content);
+      maybeShowRecoveryBar(apiPath, editorData.mtime || 0);
+    }
+    return;
   }
 
   // Try to load into editor (editor-service returns writable:true only for allowed paths)
   hideEditorPanel();
-
   try {
     const editRes = await fetch('/_api/edit/file?path=' + encodeURIComponent(apiPath));
     if (editRes.ok) {
@@ -2269,13 +2304,8 @@ async function loadChildren(item, childrenEl, depth) {
   item.dataset.loaded = '1';
   childrenEl.innerHTML = '<div class="loading">Loading…</div>';
 
-  // Fetch git status for top-level clone directory before rendering children
-  // so badges appear immediately.
   const browse = item.dataset.browse || '';
   const cloneMatch = browse.match(/^\/(_clones\/[^/]+)\/$/);
-  if (cloneMatch) {
-    await fetchGitStatus(cloneMatch[1]);
-  }
 
   try {
     const res = await fetch(item.dataset.api);
@@ -2297,6 +2327,8 @@ async function loadChildren(item, childrenEl, depth) {
       childrenEl.appendChild(node);
       wireItem(node.querySelector('.tree-item'), node.querySelector('.tree-children'), depth + 1);
     });
+    // Fetch git status after tree renders — badges appear ~1s later, non-blocking
+    if (cloneMatch) fetchGitStatus(cloneMatch[1]);
   } catch(e) {
     childrenEl.innerHTML = `<div class="err">Error: ${e.message}</div>`;
   }
@@ -2556,7 +2588,7 @@ async function switchTab(idx) {
     cur.editorPath  = editorPath;
     cur.editorMtime = editorMtime;
     cur.viewMode    = viewMode;
-    if (editorDirty && editorPath) await autosaveFile();
+    if (editorDirty && editorPath) autosaveFile();  // fire-and-forget
   }
   activeTabIdx = idx;
   const tab = tabs[idx];
@@ -3014,6 +3046,7 @@ async function renameByPath(path, name) {
       addRenameDuplicateButtons();
       renderTabBar();
     }
+    patchTreeItemAfterRename(path, '/' + data.new_path, data.new_name);
   } catch(e) { alert('Rename failed: ' + e.message); }
 }
 
@@ -3261,7 +3294,7 @@ function tokenizeMd(code) {
 
 function scheduleHighlight() {
   if (hlTimer) clearTimeout(hlTimer);
-  hlTimer = setTimeout(applyHighlight, 100);
+  hlTimer = setTimeout(applyHighlight, 300);
 }
 
 function applyHighlight() {
