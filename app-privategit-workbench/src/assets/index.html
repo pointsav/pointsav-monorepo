@@ -130,24 +130,6 @@ header .tag {
   flex-shrink: 0; line-height: 1.6;
 }
 .bar-btn:hover { background: #4a4a4a; color: #eee; }
-
-/* ── Viewer-bar overflow menu ─────────────────────────────────────────── */
-.bar-overflow-wrap { position: relative; flex-shrink: 0; }
-.bar-overflow-menu {
-  display: none; position: absolute; right: 0; top: calc(100% + 2px);
-  background: #252526; border: 1px solid #454545; border-radius: 4px;
-  box-shadow: 0 4px 12px rgba(0,0,0,.5); min-width: 160px; padding: 4px 0;
-  z-index: 200;
-}
-.bar-overflow-menu.open { display: block; }
-.bar-overflow-menu button, .bar-overflow-menu a {
-  display: block; width: 100%; text-align: left;
-  padding: 5px 14px; background: none; border: none;
-  color: #ccc; cursor: pointer; font-size: 12px; text-decoration: none;
-  white-space: nowrap; box-sizing: border-box; line-height: 1.6;
-}
-.bar-overflow-menu button:hover, .bar-overflow-menu a:hover { background: #094771; color: #fff; }
-
 .viewer-bar .bar-link {
   font-size: 10px; color: #4d9fff; text-decoration: none; white-space: nowrap; flex-shrink: 0;
 }
@@ -718,11 +700,16 @@ const TEXT_EXTS   = new Set([
 const VIEWABLE_RE  = /\.(html?|pdf|md|txt|csv|json|yaml|yml|toml|ini|conf|env|log|sh|bash|rs|js|ts|jsx|tsx|css|py|png|jpg|jpeg|gif|svg|webp|bmp)$/i;
 const INDEXABLE_RE = /\.(html?|md|txt|pdf|csv|json|yaml|yml)$/i;
 
+// Document types rendered via the server-side /document route.
+// JSON schema detection (proforma, etc.) happens in openFile() after content is fetched.
+const DOCUMENT_EXTS = new Set(['geojson']);
+
 function fileMode(name) {
   const ext = name.split('.').pop().toLowerCase();
-  if (IFRAME_EXTS.has(ext)) return 'iframe';
-  if (IMAGE_EXTS.has(ext))  return 'image';
-  if (TEXT_EXTS.has(ext))   return 'text';
+  if (IFRAME_EXTS.has(ext))    return 'iframe';
+  if (IMAGE_EXTS.has(ext))     return 'image';
+  if (DOCUMENT_EXTS.has(ext))  return 'document';
+  if (TEXT_EXTS.has(ext))      return 'text';
   return 'text';
 }
 
@@ -1350,7 +1337,7 @@ function closeFile() {
     document.getElementById('text-viewer').style.display        = 'none';
     document.getElementById('image-viewer').style.display       = 'none';
     document.getElementById('bar-path').textContent = '';
-    document.getElementById('viewer-bar').querySelectorAll('.bar-btn, .bar-link, .bar-overflow-wrap').forEach(el => el.remove());
+    document.getElementById('viewer-bar').querySelectorAll('.bar-btn, .bar-link').forEach(el => el.remove());
     setTreeActive(null);
   }
 }
@@ -1366,37 +1353,19 @@ function hideViewerContent() {
 function updateBar(name, path) {
   document.getElementById('bar-path').textContent = name;
   const bar = document.getElementById('viewer-bar');
-  bar.querySelectorAll('.bar-btn, .bar-link, .bar-overflow-wrap').forEach(el => el.remove());
+  bar.querySelectorAll('.bar-btn, .bar-link').forEach(el => el.remove());
 
-  // Download — primary visible action
-  const dlBtn = document.createElement('a');
-  dlBtn.className = 'bar-btn';
-  dlBtn.href = path;
-  dlBtn.download = name;
-  dlBtn.textContent = '⬇ Download';
-  bar.appendChild(dlBtn);
-
-  // ⋯ overflow wrap: secondary actions behind one click
-  const overflowWrap = document.createElement('div');
-  overflowWrap.className = 'bar-overflow-wrap';
-
-  const overflowBtn = document.createElement('button');
-  overflowBtn.className = 'bar-btn';
-  overflowBtn.id = 'bar-overflow-btn';
-  overflowBtn.textContent = '⋯';
-  overflowBtn.title = 'More actions';
-  overflowWrap.appendChild(overflowBtn);
-
-  const overflowMenu = document.createElement('div');
-  overflowMenu.className = 'bar-overflow-menu';
-  overflowMenu.id = 'bar-overflow-menu';
-
-  const copyItem = document.createElement('button');
-  copyItem.textContent = '⎘ Copy name';
-  copyItem.addEventListener('click', () => {
-    closeBarOverflow();
+  const copyBtn = document.createElement('button');
+  copyBtn.className = 'bar-btn';
+  copyBtn.textContent = '⎘ Copy name';
+  copyBtn.title = 'Copy filename to clipboard';
+  copyBtn.addEventListener('click', () => {
+    const confirm = () => {
+      copyBtn.textContent = '✓ Copied';
+      setTimeout(() => { copyBtn.textContent = '⎘ Copy name'; }, 1500);
+    };
     if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(name);
+      navigator.clipboard.writeText(name).then(confirm);
     } else {
       const tmp = document.createElement('textarea');
       tmp.value = name;
@@ -1405,38 +1374,53 @@ function updateBar(name, path) {
       tmp.select();
       document.execCommand('copy');
       document.body.removeChild(tmp);
+      confirm();
     }
   });
-  overflowMenu.appendChild(copyItem);
+  bar.appendChild(copyBtn);
 
-  const printItem = document.createElement('button');
-  printItem.textContent = '⎙ Print';
-  printItem.addEventListener('click', () => { closeBarOverflow(); printCurrent(); });
-  overflowMenu.appendChild(printItem);
+  // Platform PDF button — server-side WeasyPrint rendering
+  const pdfExts = new Set(['html','htm','geojson']);
+  const barExt  = name.split('.').pop().toLowerCase();
+  if (pdfExts.has(barExt)) {
+    const apiPath = path.replace(/^\//, '');
+    const pdfLink = document.createElement('a');
+    pdfLink.className = 'bar-btn';
+    pdfLink.href = '/_api/edit/pdf?path=' + encodeURIComponent(apiPath);
+    pdfLink.download = name.replace(/\.[^.]+$/, '.pdf');
+    pdfLink.textContent = '⬇ PDF';
+    pdfLink.title = 'Download PDF (platform rendering)';
+    bar.appendChild(pdfLink);
+  }
 
-  const newTabItem = document.createElement('a');
-  newTabItem.textContent = 'Open in new tab ↗';
-  newTabItem.href = path;
-  newTabItem.target = '_blank';
-  newTabItem.rel = 'noreferrer';
-  newTabItem.addEventListener('click', closeBarOverflow);
-  overflowMenu.appendChild(newTabItem);
+  const printBtn = document.createElement('button');
+  printBtn.className = 'bar-btn';
+  printBtn.textContent = '⎙ Print';
+  printBtn.addEventListener('click', printCurrent);
+  bar.appendChild(printBtn);
 
-  const reloadItem = document.createElement('button');
-  reloadItem.textContent = '↻ Reload page';
-  reloadItem.title = 'Reload — reopens this file automatically';
-  reloadItem.addEventListener('click', () => { closeBarOverflow(); location.reload(); });
-  overflowMenu.appendChild(reloadItem);
+  const dlBtn = document.createElement('a');
+  dlBtn.className = 'bar-btn';
+  dlBtn.href = path;
+  dlBtn.download = name;
+  dlBtn.textContent = '⬇ Download';
+  bar.appendChild(dlBtn);
 
-  overflowBtn.addEventListener('click', e => {
-    e.stopPropagation();
-    overflowMenu.classList.toggle('open');
-  });
+  const link = document.createElement('a');
+  link.className = 'bar-link';
+  link.href = path;
+  link.target = '_blank';
+  link.rel = 'noreferrer';
+  link.textContent = 'open in new tab ↗';
+  bar.appendChild(link);
 
-  overflowWrap.appendChild(overflowMenu);
-  bar.appendChild(overflowWrap);
+  const reloadBtn = document.createElement('button');
+  reloadBtn.className = 'bar-btn';
+  reloadBtn.textContent = '↻ Reload';
+  reloadBtn.title = 'Reload page — reopens this file automatically';
+  reloadBtn.addEventListener('click', () => location.reload());
+  bar.appendChild(reloadBtn);
 
-  // Close — always last
   const closeBtn = document.createElement('button');
   closeBtn.className = 'bar-btn';
   closeBtn.textContent = '✕';
@@ -1445,17 +1429,19 @@ function updateBar(name, path) {
   bar.appendChild(closeBtn);
 }
 
-function closeBarOverflow() {
-  const m = document.getElementById('bar-overflow-menu');
-  if (m) m.classList.remove('open');
-}
-
 // ── Rename + Duplicate — viewer-bar buttons for writable files ───────────────
-// Inserted by openFile() after the editor responds writable:true.
-// Placed immediately before the ⋯ overflow wrap.
+// Inserted by openFile() after the editor responds writable:true, so the
+// buttons only appear for files the service will let us mutate. Placed in the
+// viewer bar after the existing "⎘ Copy name" button.
 function addRenameDuplicateButtons() {
   const bar = document.getElementById('viewer-bar');
   if (!bar) return;
+  // Anchor: insert after "⎘ Copy name" so writable verbs cluster together
+  const buttons = bar.querySelectorAll('.bar-btn');
+  let anchor = null;
+  for (const b of buttons) {
+    if (b.textContent && b.textContent.indexOf('Copy name') >= 0) { anchor = b; break; }
+  }
 
   const renameBtn = document.createElement('button');
   renameBtn.className = 'bar-btn';
@@ -1469,10 +1455,9 @@ function addRenameDuplicateButtons() {
   dupBtn.title = 'Duplicate this file in place';
   dupBtn.addEventListener('click', duplicateCurrent);
 
-  const overflowWrap = bar.querySelector('.bar-overflow-wrap');
-  if (overflowWrap) {
-    bar.insertBefore(renameBtn, overflowWrap);
-    bar.insertBefore(dupBtn, overflowWrap);
+  if (anchor && anchor.nextSibling) {
+    anchor.parentNode.insertBefore(renameBtn, anchor.nextSibling);
+    anchor.parentNode.insertBefore(dupBtn, renameBtn.nextSibling);
   } else {
     bar.appendChild(renameBtn);
     bar.appendChild(dupBtn);
@@ -1606,7 +1591,8 @@ async function openFile(path, name) {
   const fname = fname0;
   sessionStorage.setItem('wb-path', path);
   sessionStorage.setItem('wb-name', fname);
-  const mode  = fileMode(fname);
+  const mode   = fileMode(fname);
+  const apiPath = path.replace(/^\//, '');
   hideViewerContent();
   updateBar(fname, path);
 
@@ -1622,6 +1608,13 @@ async function openFile(path, name) {
     iv.style.display = 'flex';
     document.getElementById('image-el').src = cacheBust(path);
 
+  } else if (mode === 'document') {
+    // Server-side document renderer (geojson, etc.)
+    viewMode = 'iframe';
+    const frame = document.getElementById('preview-frame');
+    frame.style.display = 'block';
+    frame.src = '/_api/edit/document?path=' + encodeURIComponent(apiPath);
+
   } else {
     viewMode = 'text';
     const tv = document.getElementById('text-viewer');
@@ -1629,32 +1622,59 @@ async function openFile(path, name) {
     tv.style.display = 'block';
     tc.className = '';
     tc.textContent = 'Loading…';
-    // Content is rendered below from the API fetch (eliminates a second round-trip).
+    try {
+      const res = await fetch(cacheBust(path), { cache: 'no-store' });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const text = await res.text();
+      const ext = fname.split('.').pop().toLowerCase();
+
+      // JSON schema detection — peek first 512 chars for known document types
+      if (ext === 'json') {
+        const peek = text.slice(0, 512);
+        if (peek.includes('"proforma_version"') ||
+            peek.includes('"presentation_version"') ||
+            peek.includes('"schedule_version"')) {
+          // Switch to server-side document renderer
+          viewMode = 'iframe';
+          tv.style.display = 'none';
+          const frame = document.getElementById('preview-frame');
+          frame.style.display = 'block';
+          frame.src = '/_api/edit/document?path=' + encodeURIComponent(apiPath);
+          // Add PDF button for this document type
+          const bar = document.getElementById('viewer-bar');
+          if (!bar.querySelector('.doc-pdf-btn')) {
+            const pdfLink = document.createElement('a');
+            pdfLink.className = 'bar-btn doc-pdf-btn';
+            pdfLink.href = '/_api/edit/pdf?path=' + encodeURIComponent(apiPath);
+            pdfLink.download = fname.replace(/\.[^.]+$/, '.pdf');
+            pdfLink.textContent = '⬇ PDF';
+            pdfLink.title = 'Download PDF (platform rendering)';
+            bar.appendChild(pdfLink);
+          }
+          // Text viewer is hidden; continue to editor loading below
+        }
+      }
+
+      if (ext === 'md') {
+        tc.className = 'md-view';
+        tc.innerHTML = mdToHtml(text);
+      } else {
+        tc.className = 'code-view';
+        tc.textContent = text;
+      }
+    } catch(e) {
+      tc.className = 'code-view';
+      tc.textContent = 'Could not load file: ' + e.message;
+    }
   }
 
-  // Single fetch: returns {content, mtime, writable}.
-  // For text/code/markdown this also drives the viewer — no separate raw fetch needed.
-  const apiPath = path.replace(/^\//, '');
+  // Try to load into editor (editor-service returns writable:true only for allowed paths)
   hideEditorPanel();
 
   try {
     const editRes = await fetch('/_api/edit/file?path=' + encodeURIComponent(apiPath));
     if (editRes.ok) {
       const data = await editRes.json();
-
-      // Populate text viewer from API content (replaces the old raw fetch branch)
-      if (viewMode === 'text' && typeof data.content === 'string') {
-        const tc = document.getElementById('text-content');
-        const ext = fname.split('.').pop().toLowerCase();
-        if (ext === 'md') {
-          tc.className = 'md-view';
-          tc.innerHTML = mdToHtml(data.content);
-        } else {
-          tc.className = 'code-view';
-          tc.textContent = data.content;
-        }
-      }
-
       if (data.writable && typeof data.content === 'string') {
         editorPath  = apiPath;
         editorMtime = data.mtime || 0;
@@ -1701,19 +1721,8 @@ async function openFile(path, name) {
           }, { once: true });
         }
       }
-    } else if (viewMode === 'text') {
-      const tc = document.getElementById('text-content');
-      tc.className = 'code-view';
-      tc.textContent = 'Could not load file (HTTP ' + editRes.status + ')';
     }
-  } catch(e) {
-    if (viewMode === 'text') {
-      const tc = document.getElementById('text-content');
-      tc.className = 'code-view';
-      tc.textContent = 'Could not load file: ' + e.message;
-    }
-    showEditorStatus('⚠ ' + e.message, '#f85149', 6000);
-  }
+  } catch(e) { showEditorStatus('⚠ ' + e.message, '#f85149', 6000); }
 }
 
 // ── Print current file ────────────────────────────────────────────────────────
@@ -2071,7 +2080,7 @@ async function loadChildren(item, childrenEl, depth) {
   const browse = item.dataset.browse || '';
   const cloneMatch = browse.match(/^\/(_clones\/[^/]+)\/$/);
   if (cloneMatch) {
-    fetchGitStatus(cloneMatch[1]); // fire-and-forget; badges applied by refreshGitBadgesInTree()
+    await fetchGitStatus(cloneMatch[1]);
   }
 
   try {
@@ -2423,7 +2432,7 @@ async function closeTab(idx) {
     document.getElementById('text-viewer').style.display = 'none';
     document.getElementById('image-viewer').style.display = 'none';
     document.getElementById('bar-path').textContent = 'No file selected';
-    document.getElementById('viewer-bar').querySelectorAll('.bar-btn, .bar-link, .bar-overflow-wrap').forEach(el => el.remove());
+    document.getElementById('viewer-bar').querySelectorAll('.bar-btn, .bar-link').forEach(el => el.remove());
     sessionStorage.removeItem('wb-path');
     sessionStorage.removeItem('wb-name');
     setTreeActive(null);
@@ -2575,10 +2584,7 @@ function showCtxMenu(x, y, items) {
   menu.style.top  = Math.min(y, window.innerHeight - menu.offsetHeight - 10) + 'px';
 }
 function hideCtxMenu() { document.getElementById('ctx-menu').style.display = 'none'; }
-document.addEventListener('click', e => {
-  if (!e.target.closest('#ctx-menu')) hideCtxMenu();
-  if (!e.target.closest('.bar-overflow-wrap')) closeBarOverflow();
-});
+document.addEventListener('click', e => { if (!e.target.closest('#ctx-menu')) hideCtxMenu(); });
 document.addEventListener('contextmenu', e => {
   if (!e.target.closest('.tree-item')) hideCtxMenu();
 });
@@ -2687,7 +2693,7 @@ async function deleteFileByPath(path, name, treeItem) {
           document.getElementById('text-viewer').style.display = 'none';
           document.getElementById('image-viewer').style.display = 'none';
           document.getElementById('bar-path').textContent = 'No file selected';
-          document.getElementById('viewer-bar').querySelectorAll('.bar-btn, .bar-link, .bar-overflow-wrap').forEach(el => el.remove());
+          document.getElementById('viewer-bar').querySelectorAll('.bar-btn, .bar-link').forEach(el => el.remove());
           sessionStorage.removeItem('wb-path');
           sessionStorage.removeItem('wb-name');
         }
