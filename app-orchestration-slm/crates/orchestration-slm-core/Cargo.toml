@@ -1,0 +1,12 @@
+[package]
+name = "orchestration-slm-core"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+description = "Shared types for the app-orchestration-slm Yo-Yo broker chassis"
+
+[dependencies]
+serde = { workspace = true }
+chrono = { workspace = true }
+uuid = { workspace = true }
