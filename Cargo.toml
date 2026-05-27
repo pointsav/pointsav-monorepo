@@ -12,7 +12,20 @@ members = [
     "xtask",
     "app-console-keys",
     "app-console-system",
-    "os-console"
+    "os-console",
+    "app-privategit-marketplace",
+    "app-privategit-source",
+    "os-privategit",
+    "tool-wallet",
+    "app-privategit-workbench",
+    "tool-proforma-engine",
+    "app-orchestration-bim",
+    "tool-keyplan",
+    # PPN focus crates
+    "system-substrate-broadcom",
+    "system-network-interface",
+    "os-network-admin",
+    "app-network-admin",
 ]
 
 [profile.dev]
