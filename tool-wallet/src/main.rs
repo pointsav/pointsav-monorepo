@@ -13,7 +13,7 @@ use clap::{Parser, Subcommand};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use sha2::{Digest, Sha256};
-use std::{fs, path::PathBuf};
+use std::{fs, path::{Path, PathBuf}};
 
 // USDC contract on Polygon PoS (native USDC, not bridged)
 const USDC_CONTRACT: &str = "0x3c499c542cef5e3811e1192ce70d8cc03d5c3359";
@@ -21,12 +21,10 @@ const USDC_CONTRACT: &str = "0x3c499c542cef5e3811e1192ce70d8cc03d5c3359";
 const TRANSFER_TOPIC: &str = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef";
 
 // Known license prices in 6-decimal USDC units → product_id
+// $1.00 USDC = 1_000_000 units; $19.00 USDC = 19_000_000 units
 const PRICE_MAP: &[(u64, &str)] = &[
-    (180_000_000, "keys-console"),
-    (240_000_000, "business-applications"),
-    (300_000_000, "bms-bridge"),
-    (360_000_000, "peak-forecast"),
-    (420_000_000, "command-centre"),
+    (1_000_000,  "os-privategit"),       // Apache 2.0 — $1.00 USDC
+    (19_000_000, "os-privategit-fsl"),   // FSL — $19.00 USDC
 ];
 
 // ── CLI ───────────────────────────────────────────────────────────────────────
@@ -96,6 +94,7 @@ struct AddressArgs {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 struct LicenseReceipt {
     product_id: String,
+    license_tier: String,   // "apache" | "fsl"
     version: String,
     customer_ref: String,
     price_usdc: u64,
@@ -210,6 +209,42 @@ async fn confirm_and_write_receipt(
     Ok(())
 }
 
+// ── tx-log writer ─────────────────────────────────────────────────────────────
+
+async fn append_tx_log(receipt: &LicenseReceipt, receipts_dir: &str) {
+    use tokio::io::AsyncWriteExt;
+    let log_path = PathBuf::from(receipts_dir)
+        .parent()
+        .unwrap_or(Path::new("/var/lib/local-software"))
+        .join("tx-log.jsonl");
+    let entry = json!({
+        "date": &receipt.confirmed_at[..10],
+        "sku": &receipt.product_id,
+        "tx_hash": &receipt.tx_hash,
+        "crypto_amount_usdc": receipt.price_usdc as f64 / 1_000_000.0,
+        "license_tier": &receipt.license_tier,
+        "spot_rate_cad": null,
+        "cad_equivalent": null,
+        "chain": &receipt.chain,
+    });
+    let line = serde_json::to_string(&entry).unwrap_or_default() + "\n";
+    match tokio::fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(&log_path)
+        .await
+    {
+        Ok(mut f) => {
+            if let Err(e) = f.write_all(line.as_bytes()).await {
+                tracing::warn!("tx-log.jsonl write failed: {e}");
+            } else {
+                tracing::info!(sku = %receipt.product_id, "tx-log.jsonl appended");
+            }
+        }
+        Err(e) => tracing::warn!("tx-log.jsonl open failed: {e}"),
+    }
+}
+
 // ── watch ─────────────────────────────────────────────────────────────────────
 
 async fn watch(args: WatchArgs) -> Result<()> {
@@ -297,11 +332,21 @@ async fn watch(args: WatchArgs) -> Result<()> {
                     .map(|(_, id)| id.to_string())
                     .unwrap_or_else(|| format!("unknown-{amount}"));
 
+                let license_tier = if amount == 1_000_000 {
+                    "apache"
+                } else if amount == 19_000_000 {
+                    "fsl"
+                } else {
+                    "unknown"
+                }
+                .to_string();
+
                 let license_key = generate_license_key(&product_id, &tx_hash, &customer_ref);
 
                 let receipt = LicenseReceipt {
                     product_id: product_id.clone(),
-                    version: "0.0.1".into(),
+                    license_tier: license_tier.clone(),
+                    version: "0.0.1".into(), // matches promoted binary version
                     customer_ref: customer_ref.clone(),
                     price_usdc: amount,
                     tx_hash: tx_hash.clone(),
@@ -318,7 +363,7 @@ async fn watch(args: WatchArgs) -> Result<()> {
                     "confirmed USDC payment — writing receipt"
                 );
 
-                if let Err(e) = confirm_and_write_receipt(
+                match confirm_and_write_receipt(
                     &receipt,
                     &args.receipts_dir,
                     &args.fs_endpoint,
@@ -327,7 +372,8 @@ async fn watch(args: WatchArgs) -> Result<()> {
                 )
                 .await
                 {
-                    tracing::error!("receipt write failed: {e:#}");
+                    Ok(()) => append_tx_log(&receipt, &args.receipts_dir).await,
+                    Err(e) => tracing::error!("receipt write failed: {e:#}"),
                 }
             }
         }
