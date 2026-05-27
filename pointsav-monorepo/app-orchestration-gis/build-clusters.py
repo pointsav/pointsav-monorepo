@@ -233,11 +233,11 @@ def make_cluster_id(iso: str, clat: float, clon: float) -> str:
 # ── TIER DESCRIPTOR ───────────────────────────────────────────────────────────
 
 def tier_descriptor(cats: set[str]) -> str:
-    retail = cats & {"hypermarket", "hardware", "price_club", "lifestyle", "sport"}
+    retail = cats & {"hypermarket", "hardware", "price_club", "lifestyle", "sport", "electronics"}
     parts = []
     for k, label in [("hypermarket", "Hypermarket"), ("lifestyle", "Lifestyle"),
                      ("hardware", "Hardware"), ("price_club", "Price Club"),
-                     ("sport", "Sport")]:
+                     ("sport", "Sport"), ("electronics", "Electronics")]:
         if k in retail:
             parts.append(label)
     return " + ".join(parts) if parts else "Unknown"
