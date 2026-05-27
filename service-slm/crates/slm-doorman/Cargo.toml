@@ -8,6 +8,7 @@ rust-version.workspace = true
 
 [dependencies]
 slm-core = { workspace = true }
+adapter-hub = { workspace = true }
 
 # Async runtime + HTTP client (used by tier clients; real wire logic lands in B2/B4)
 tokio = { workspace = true }

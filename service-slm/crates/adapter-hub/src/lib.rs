@@ -1,19 +1,20 @@
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 
-//! Adapter version registry — Phase 3 (P3-3.4) of
-//! learning-loop-master-plan-2026-05-18.md.
+//! Adapter registry and fuse-at-build composition for the service-slm substrate.
 //!
-//! Tracks every LoRA adapter trained by the substrate as a versioned
-//! artifact with full provenance: base model, corpus snapshot SHA,
-//! training timestamp, signer, evaluation result, and promotion status.
+//! Tracks every LoRA adapter trained by the substrate as a versioned artifact with
+//! full provenance: base model, corpus snapshot SHA, training timestamp, signer,
+//! evaluation result, and promotion status.
 //!
-//! Loaded from `data/adapters/registry.yaml` at startup; serves as the
-//! source of truth for `ComputeRequest.adapter_version` resolution and
-//! for the `/v1/adapters/registry` introspection endpoint.
+//! Loaded from `data/adapters/registry.yaml` at startup; serves as the source of
+//! truth for `ComputeRequest.adapter_version` resolution and for the
+//! `/v1/adapters/registry` introspection endpoint.
 //!
-//! Sigstore signing of registry entries is deferred to P3-3.4-followup
-//! (requires key setup); the schema here pre-allocates a `signature:`
-//! field so adding signatures later is a non-breaking change.
+//! Fuse-at-build composition (`fuse_adapters`) pre-composes adapter tuples into a
+//! single GGUF delta for deployment on llama-server nodes that do not yet support
+//! runtime hot-swap. The real merge implementation is deferred until the llama.cpp
+//! LoRA-merge PR lands upstream; the current stub returns a symbolic composed ID so
+//! the rest of the substrate can be wired end-to-end.
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -152,17 +153,13 @@ impl AdapterRegistry {
         &self.path
     }
 
-    /// Look up an adapter by canonical ID. Returns `None` when not in
-    /// the registry — caller decides whether that's an error (e.g.
-    /// `ComputeRequest.adapter_version` pointed at an unknown adapter)
-    /// or fine (e.g. the request just left `adapter_version: None`).
+    /// Look up an adapter by canonical ID.
     pub fn get(&self, id: &str) -> Option<AdapterEntry> {
         self.inner.read().expect("registry poisoned").get(id).cloned()
     }
 
     /// Return every adapter currently in the registry, sorted by
-    /// `trained_at` descending (newest first). Used by the
-    /// `GET /v1/adapters/registry` endpoint.
+    /// `trained_at` descending (newest first).
     pub fn list(&self) -> Vec<AdapterEntry> {
         let guard = self.inner.read().expect("registry poisoned");
         let mut entries: Vec<AdapterEntry> = guard.values().cloned().collect();
@@ -170,8 +167,7 @@ impl AdapterRegistry {
         entries
     }
 
-    /// Return only adapters at `stage == "promoted"` — production loader
-    /// can use this to discover what to mount.
+    /// Return only adapters at `stage == "promoted"`.
     pub fn promoted(&self) -> Vec<AdapterEntry> {
         self.list()
             .into_iter()
@@ -180,11 +176,7 @@ impl AdapterRegistry {
     }
 
     /// Append a new entry to the registry. The YAML file is rewritten
-    /// (in-place) under the write lock. Atomicity is best-effort —
-    /// future hardening: write to `registry.yaml.new`, fsync, rename.
-    ///
-    /// Reserved for `bin/lora-update.sh` to call after a successful
-    /// training run.
+    /// in-place under the write lock.
     pub fn append(&self, mut entry: AdapterEntry) -> anyhow::Result<()> {
         let mut guard = self.inner.write().expect("registry poisoned");
         if entry.stage_changed_at.is_empty() {
@@ -200,9 +192,7 @@ impl AdapterRegistry {
         Ok(())
     }
 
-    /// Update an existing entry's stage (e.g. `eval_pending` →
-    /// `eval_ok` or `eval_ok` → `promoted`). Returns `Err` when the
-    /// adapter ID isn't in the registry.
+    /// Update an existing entry's stage (e.g. `eval_pending` → `eval_ok`).
     pub fn set_stage(&self, id: &str, new_stage: &str) -> anyhow::Result<()> {
         let mut guard = self.inner.write().expect("registry poisoned");
         let entry = guard
@@ -239,6 +229,25 @@ fn write_registry(path: &Path, entries: &HashMap<String, AdapterEntry>) -> anyho
     std::fs::write(&tmp, body)?;
     std::fs::rename(&tmp, path)?;
     Ok(())
+}
+
+/// Fuse-at-build adapter composition.
+///
+/// Pre-composes a base adapter with zero or more overlay adapters into a single
+/// composed identifier. The real GGUF merge is deferred until the llama.cpp
+/// runtime LoRA hot-swap PR lands upstream; this stub returns a symbolic ID so
+/// the rest of the training pipeline can be wired end-to-end without the
+/// hardware-level constraint.
+///
+/// Returns a canonical composed ID in the form `base+overlay1+overlay2`.
+pub fn fuse_adapters(base: &str, overlays: &[&str]) -> anyhow::Result<String> {
+    if base.is_empty() {
+        anyhow::bail!("fuse_adapters: base adapter ID must not be empty");
+    }
+    if overlays.is_empty() {
+        return Ok(base.to_string());
+    }
+    Ok(format!("{}+{}", base, overlays.join("+")))
 }
 
 #[cfg(test)]
@@ -287,7 +296,6 @@ mod tests {
         assert_eq!(got.base_model, "OLMo-2-7B");
         assert!(!got.stage_changed_at.is_empty(), "stage_changed_at auto-stamped");
 
-        // Reload from disk — confirm persistence.
         let r2 = AdapterRegistry::open(&path).unwrap();
         assert_eq!(r2.len(), 1);
         assert_eq!(r2.get("coding-lora-v1").unwrap().corpus_sha, "abc123");
@@ -322,7 +330,6 @@ mod tests {
         assert_eq!(r.get("lora-v2").unwrap().stage, "promoted");
         assert_eq!(r.promoted().len(), 1);
 
-        // Unknown adapter → error.
         let err = r.set_stage("does-not-exist", "promoted");
         assert!(err.is_err());
 
@@ -361,5 +368,15 @@ mod tests {
         assert_eq!(listed[1].id, "c");
         assert_eq!(listed[2].id, "a");
         std::fs::remove_file(&path).ok();
+    }
+
+    #[test]
+    fn fuse_adapters_stub() {
+        assert_eq!(fuse_adapters("base", &[]).unwrap(), "base");
+        assert_eq!(
+            fuse_adapters("constitutional", &["engineering", "role"]).unwrap(),
+            "constitutional+engineering+role"
+        );
+        assert!(fuse_adapters("", &["x"]).is_err());
     }
 }

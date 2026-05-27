@@ -1,0 +1,13 @@
+[package]
+name = "adapter-hub"
+version = "0.1.0"
+description = "LoRA adapter version registry and fuse-at-build composition for the service-slm substrate."
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+serde = { workspace = true }
+serde_yaml = { workspace = true }
+chrono = { workspace = true }
+anyhow = { workspace = true }
