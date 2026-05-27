@@ -194,6 +194,7 @@
         .sub-loc-item        { padding: 6px 0; border-bottom: 1px solid var(--border-soft); font-size: 11px; color: var(--text-main); }
         .back-btn            { border: none; background: none; cursor: pointer; color: var(--text-muted); font-size: 11px; font-weight: 700; padding: 0 0 12px 0; display: flex; align-items: center; gap: 4px; }
         .sel-el-block        { background: rgba(22,70,121,0.04); border-radius: 8px; padding: 10px 12px; border-left: 3px solid var(--brand-primary); }
+        .sel-el-pinned       { position: sticky; top: 0; background: rgba(248, 250, 252, 0.96); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); z-index: 2; margin: 0 -20px 16px; padding: 10px 20px; border-radius: 0; border-left: none; border-bottom: 1px solid var(--border-soft); }
 
         /* ── Chain search / retailer + place search ────────────────────── */
         .chain-search-wrap  { position: relative; margin-top: 8px; }
@@ -731,7 +732,13 @@
             return;
         }
         fetch(`data/catchment-cells/${clusterId}.json`)
-            .then(r => r.ok ? r.json() : null)
+            .then(r => {
+                if (!r.ok) {
+                    console.warn(`[catchment] centroids missing for cluster ${clusterId} (HTTP ${r.status}). Polygon rings still render.`);
+                    return null;
+                }
+                return r.json();
+            })
             .then(data => {
                 if (!data) return;
                 if (Object.keys(catchmentCentroidCache).length > 8) {
@@ -743,7 +750,7 @@
                     map.getSource('catchment-centroids-src')?.setData(data);
                 }
             })
-            .catch(() => {}); // centroids not yet built — degrade gracefully
+            .catch(err => { console.warn(`[catchment] centroid fetch failed for ${clusterId}:`, err); });
     }
 
     function colorMatchExpr() {
@@ -982,9 +989,7 @@
     function clearChainFilter() {
         activeChainFilter = null;
         applyChainFilterStyling();
-        if (map.getLayer('nodes')) {
-            map.setPaintProperty('nodes', 'circle-opacity', 0.88);
-        }
+        applyBubbleAecOverlayStyle();
         if (map.getLayer('nodes-highlight')) {
             map.setLayoutProperty('nodes-highlight', 'visibility', 'none');
         }
@@ -1203,15 +1208,14 @@
         if (map.getSource('proximity-circle-src')) map.getSource('proximity-circle-src').setData({ type: 'FeatureCollection', features: [] });
         if (map.getSource('proximity-vignette-src')) map.getSource('proximity-vignette-src').setData({ type: 'FeatureCollection', features: [] });
         if (map.getSource('proximity-merged-label-src')) map.getSource('proximity-merged-label-src').setData({ type: 'FeatureCollection', features: [] });
-        // Restore Co-location Level paint and filters (applyView handles visibility)
+        // Restore Co-location Level filters (applyView handles visibility; applyBubbleAecOverlayStyle sets opacity)
         if (map.getLayer('nodes')) {
-            map.setPaintProperty('nodes', 'circle-opacity', 0.88);
             map.setFilter('nodes', ['<', ['get', 'tier'], 4]);
         }
         if (map.getLayer('nodes-halo')) {
-            map.setPaintProperty('nodes-halo', 'circle-opacity', 0.10);
             map.setFilter('nodes-halo', ['==', ['get', 'tier'], 1]);
         }
+        applyBubbleAecOverlayStyle();
         if (map.getLayer('nodes-label')) map.setFilter('nodes-label', ['<=', ['get', 'tier'], 2]);
         if (map.getSource('anchors')) {
             map.getSource('anchors').setData({ type: 'FeatureCollection', features: [] });
@@ -1299,6 +1303,36 @@
         applyView();
         buildProdRings();
         applyChainFilterStyling();
+        renderRetailLevelInspector();
+    }
+
+    function renderRetailLevelInspector() {
+        document.getElementById('inspector').innerHTML = `
+            <div class="data-block">
+                <div class="data-label">Retail View</div>
+                <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">
+                    Click a ring to inspect its cluster.
+                </div>
+            </div>
+            <div class="data-block">
+                <div class="data-label">Layers</div>
+                <div class="lc-group-label">Catchment (150 km)</div>
+                <button class="lc-btn${catchmentActive ? ' lc-active' : ''}" id="lc-catchment-master"
+                        onclick="toggleCatchmentMasterFromRetail(this)">
+                    <span class="lc-dot" style="background:#f97316"></span>Population &amp; Spend Heatmap
+                    ${!selectedClusterId ? '<span class="lc-planned">Pick a ring</span>' : ''}
+                </button>
+            </div>
+        `;
+    }
+
+    function toggleCatchmentMasterFromRetail(btn) {
+        if (!selectedClusterId) {
+            btn.classList.add('lc-disabled');
+            setTimeout(() => btn.classList.remove('lc-disabled'), 1200);
+            return;
+        }
+        toggleCatchmentMaster(btn);
     }
 
     // Convert compact clusterMeta entry (§2 schema) to the property shape expected by showClusterDetail
@@ -1470,6 +1504,27 @@
         aecLayers.forEach(id => {
             if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', aecActive ? 'visible' : 'none');
         });
+        applyBubbleAecOverlayStyle();
+    }
+
+    function applyBubbleAecOverlayStyle() {
+        if (!map.getLayer('nodes')) return;
+        if (aecActive) {
+            map.setPaintProperty('nodes', 'circle-opacity', 0);
+            map.setPaintProperty('nodes', 'circle-stroke-width', 2);
+            map.setPaintProperty('nodes', 'circle-stroke-color', [
+                'match', ['get', 'tier'], 1, '#164679', 2, '#54924E', 3, '#EAB308', '#CBD5E1'
+            ]);
+            map.setPaintProperty('nodes', 'circle-stroke-opacity', 0.95);
+            if (map.getLayer('nodes-halo')) map.setPaintProperty('nodes-halo', 'circle-opacity', 0);
+        } else {
+            map.setPaintProperty('nodes', 'circle-opacity', 0.88);
+            map.setPaintProperty('nodes', 'circle-stroke-width', 1.5);
+            map.setPaintProperty('nodes', 'circle-stroke-color', 'rgba(10, 48, 112, 0.25)');
+            map.setPaintProperty('nodes', 'circle-stroke-opacity', 1);
+            if (map.getLayer('nodes-halo')) map.setPaintProperty('nodes-halo', 'circle-opacity', 0.10);
+            if (activeChainFilter) applyClusterBubbleStroke();
+        }
     }
 
 
@@ -1602,6 +1657,12 @@
                 <div class="data-label">Regional Market</div>
                 ${regionBlock}
             </div>
+            <div id="sel-el" class="sel-el-block sel-el-pinned data-block">
+                <div class="data-label">Selected Location</div>
+                <div style="font-size:11px;color:var(--text-muted);font-style:italic;padding:4px 0;">
+                    Click a retailer dot in this ring to inspect.
+                </div>
+            </div>
             <div class="data-block bento-tier-cell">
                 <span class="tier-badge bento-tier-badge"
                       role="status"
@@ -1697,12 +1758,6 @@
                 <div class="data-label">Civic Context</div>
                 <div style="font-size:12px;color:var(--text-main);margin-top:4px;line-height:1.5;">${civicLine}</div>
             </div>` : ''}
-            <div id="sel-el" class="sel-el-block data-block" style="border-bottom:none;">
-                <div class="data-label">Selected Location</div>
-                <div style="font-size:11px;color:var(--text-muted);font-style:italic;padding:4px 0;">
-                    Click a retailer dot in this ring to inspect.
-                </div>
-            </div>
         `;
     }
 
