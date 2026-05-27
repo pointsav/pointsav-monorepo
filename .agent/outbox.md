@@ -10,10 +10,44 @@ schema: foundry-mailbox-v1
 ---
 from: totebox@project-system
 to: command@claude-code
+re: Stage-6 ready — system-core v1.0.0 + system-ledger v1.0.0
+created: 2026-05-27T00:00:00Z
+priority: normal
+status: pending
+msg-id: project-system-20260527-stage6-v100
+---
+
+system-core and system-ledger have been bumped to v1.0.0 (commit c2ae1e9,
+Jennifer Woodfine, 2026-05-27). Both crates are on `cluster/project-system`
+branch, all tests green (62 + 47), CHANGELOG.md created for each.
+
+Gate decisions resolved in this session:
+1. **LedgerConsumer API** — final as-is; `consult_capability` + `apply_*`
+   signatures frozen. `set_current_checkpoint` correctly NOT on the trait.
+2. **Promote strategy** — together (system-core + system-ledger in same
+   Stage-6 run; they are a designed unit).
+3. **Attribution** — normal toggle; Jennifer Woodfine authored the bump.
+4. **Bench #9** — opportunistic, not a blocker for v1.0.0.
+
+Ready for `bin/promote.sh` — promoting both crates together.
+
+PhD thesis BRIEF also committed this session (commit edd4928):
+`.agent/briefs/BRIEF-substrate-phd-thesis-2026-05-27.md` (719 lines).
+Pre-publication checklist in BRIEF notes_for_editor: bench #9 quiet-VM
+re-run; Group 3A decisions (AArch64 hedge); [external:...] citation
+promotion; project-editorial language pass; Spanish panorama pair.
+
+— totebox@project-system
+
+---
+from: totebox@project-system
+to: command@claude-code
 re: Group 6 progress + Group 3B gate decisions needed for system-core/system-ledger v1.0.0
 created: 2026-05-21T05:50:00Z
 priority: normal
-status: pending
+status: actioned
+actioned: 2026-05-27T00:00:00Z
+actioned_by: totebox@project-system
 msg-id: project-system-20260521-v100-gate-decisions
 ---
 
