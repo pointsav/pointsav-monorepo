@@ -176,25 +176,19 @@ Prerequisite for Stage-6 promotion of `system-core` and `system-ledger` to v1.0.
 
 ## Group 3 — Architecture decisions (gate items — need answers before code)
 
-### 3A — Phase 1C decisions (seL4 cross-compile)
+### 3A — Phase 1C decisions (seL4 cross-compile) ✓ _(decided 2026-05-27)_
 
-_[OPERATOR DECISION required for all three — surface to operator/Master before scheduling Phase 1C session]_
+- [x] **Decision: cross-compile toolchain** — _(decided 2026-05-27)_
+  **CHOSEN: operator-installed system dependency** — `apt-get install gcc-aarch64-linux-gnu qemu-system-aarch64`.
+  Simplest; workspace VM is long-lived so one-time install is appropriate.
 
-- [ ] **Decision: cross-compile toolchain**
-  Options: (a) Nix-pinned toolchain, (b) Bazel hermetic toolchain, (c) Docker image with fixed toolchain,
-  (d) operator-installed system dependency (`apt-get install gcc-aarch64-linux-gnu`).
-  Implications: determines reproducible-build harness design and `plan_hash` stability guarantee.
+- [x] **Decision: seL4 source vendoring strategy** — _(decided 2026-05-27)_
+  **CHOSEN: `vendor-sel4-kernel/` snapshot** — already at 1074 files; use it.
+  Maintains hermetic-build property (no network at build time). Accept maintenance commitment for version bumps.
 
-- [ ] **Decision: seL4 source vendoring strategy**
-  Options: (a) git submodule pinned to seL4 v15.0.0 + Microkit 2.2.0,
-  (b) Cargo `build.rs` fetch at compile time (breaks hermetic-build property),
-  (c) `vendor-sel4-kernel` snapshot (already exists at 1074 files; needs maintenance commitment).
-  Recommendation: (c) if `vendor-sel4-kernel` is current; verify its contents first.
-
-- [ ] **Decision: toolchain installation ownership**
-  Options: (a) operator-trigger one-time install,
-  (b) Master-trigger via `infrastructure/configure/`,
-  (c) Task-trigger per-cluster (apt-get in a setup script).
+- [x] **Decision: toolchain installation ownership** — _(decided 2026-05-27)_
+  **CHOSEN: operator-manual one-time install** — operator runs `sudo apt-get install` directly.
+  No infrastructure scripting overhead for a single VM install.
 
 ### 3B — Stage-6 promotion decisions
 
@@ -224,36 +218,30 @@ _[MASTER DECISION — surfaced in STAGING-outbox-draft.md §6]_
 
 - [ ] **Decision: should `fs-anchor-emitter` promote same Stage-6 run as `system-core`?**
 
-### 3D — Phase 2 decisions
+### 3D — Phase 2 decisions ✓ _(decided 2026-05-27)_
 
-_[OPERATOR DECISION — from RESEARCH-netbsd-veriexec-bootflow.md §8]_
+- [x] **Decision: AArch64 hardware target** — _(decided 2026-05-27)_
+  **CHOSEN: QEMU on workspace VM** — `qemu-system-aarch64`; available immediately once installed.
+  Fast prototype iteration; no procurement. Real hardware is Phase 3+.
 
-- [ ] **Decision: AArch64 hardware target**
-  Options: (a) QEMU AArch64 VM on workspace VM (available immediately, no cost),
-  (b) physical Raspberry Pi 4/5 or Honeycomb LX2 (requires procurement),
-  (c) leased cloud AArch64 bare-metal.
-  Recommendation: QEMU first for prototype.
+- [x] **Decision: shim crate location** — _(decided 2026-05-27)_
+  **CHOSEN: new crate `system-substrate-netbsd/`** — parallel to `system-substrate-broadcom/`
+  and `system-substrate-freebsd/`. Consistent naming pattern; isolates BSD compat code.
 
-- [ ] **Decision: shim crate location**
-  Options: (a) add implementation to existing `system-substrate/` (already Scaffold-coded as "hardware bridge"),
-  (b) new crate `system-substrate-netbsd/` parallel to `system-substrate-broadcom/`.
+- [x] **Decision: Phase 2 os-* candidate** — _(decided 2026-05-27)_
+  **CHOSEN: `os-totebox`** — Doctrine claim #34 names Totebox as the compat-bottom boot vehicle.
+  Most direct falsification test for the Two-Bottoms thesis claim.
 
-- [ ] **Decision: Phase 2 os-* candidate**
-  Survey recommendation: `os-console` (primary), `os-totebox` (backup).
-  `os-console` has more active Python scaffold; `os-totebox` is the doctrine-named compat-bottom boot vehicle.
-
-- [ ] **Decision: image signing key for `signatures.veriexec`**
-  Options: (a) use existing `ps-administrator` SSH key from identity store,
-  (b) generate dedicated "Foundry image signing" key (requires Master — identity store is Master-tier).
+- [x] **Decision: image signing key for `signatures.veriexec`** — _(decided 2026-05-27)_
+  **CHOSEN: new dedicated image-signing key** — separate from `ps-administrator` (commit signing).
+  Trust domains must not be conflated. Requires Master Session to provision key in identity store.
+  _[BLOCKED: Master Session must generate + add key before Phase 2 Veriexec table can be signed]_
 
 ---
 
-## Group 4 — Phase 1C: seL4 cross-compile (gate: Group 3A decisions)
+## Group 4 — Phase 1C: seL4 cross-compile _(gate decisions resolved 2026-05-27 — UNBLOCKED)_
 
-_[BLOCKED: 3 decisions from Group 3A required first]_
-
-- [ ] **Install AArch64 cross-compile toolchain on workspace VM**
-  Based on decision in 3A. Likely: `apt-get install gcc-aarch64-linux-gnu binutils-aarch64-linux-gnu`.
+- [ ] **Install AArch64 cross-compile toolchain on workspace VM** — _[operator runs: `sudo apt-get install gcc-aarch64-linux-gnu binutils-aarch64-linux-gnu qemu-system-aarch64`]_
 
 - [ ] **Audit `vendor-sel4-kernel/` contents and version**
   Confirm seL4 version, Microkit version, and that it matches `moonshot-toolkit/ARCHITECTURE.md` §5 reference.
@@ -283,9 +271,10 @@ _[BLOCKED: 3 decisions from Group 3A required first]_
 
 ---
 
-## Group 5 — Phase 2: NetBSD compat-bottom prototype (gate: Phase 1C + Group 3D decisions)
+## Group 5 — Phase 2: NetBSD compat-bottom prototype (gate: Phase 1C complete + image-signing key provisioned by Master)
 
-_[BLOCKED: Phase 1C must close; Group 3D decisions required]_
+_[Group 3D decisions resolved 2026-05-27. Remaining blocker: Phase 1C seL4 hello-world; image-signing key (Master Session needed)]_
+_Target: `os-totebox` as first compat-bottom boot vehicle. Shim crate: `system-substrate-netbsd/`._
 
 ### 5A — NetBSD AArch64 VM provisioning
 
