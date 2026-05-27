@@ -80,20 +80,28 @@ Status values: `stub` → `scaffolded` → `language-cleared` → `submission-re
 
 ## A — Active / In-Progress
 
-### A6 — PROSE-RESEARCH: Geometric Site Selection (PhD paper scaffolding)
+### A6 — PROSE-RESEARCH: Geometric Site Selection (JoEG preparation)
 - **File:** `PROSE-RESEARCH-geometric-site-selection.draft.md`
-- **Status:** DISPATCHED — v0.4 (2026-05-27) — at project-gis drafts-outbound, dispatched to project-editorial
-- **Destination:** project-editorial → content-wiki-documentation/research/
+- **Status:** DISPATCHED — v0.4.1 (2026-05-27) — journal prep pipeline handed to project-editorial (msg-id: project-gis-20260527-a6-thesis-journal-handoff)
+- **Destination:** project-editorial → content-wiki-documentation/research/geometric-site-selection-national-tenancy.md
+- **Target journal:** Journal of Economic Geography (OUP, A-ranked ABS)
+- **Live preview:** https://gis.woodfinegroup.com/research.html (research.html, commit 1a160ce3)
 - **Content:** Continental-scale cluster analysis paper; geometric co-location as spatial leading indicator.
-  v0.4: 8 sections, §3.7 mobility catchments, §7.2 OLS regression, Bloomberg register, banned vocabulary clean.
-- **Editorial gates (project-editorial to resolve before publication):**
-  - Appendix B country-by-country T1 table (Phase 22 data available — run taxonomy.py export)
-  - §5.3 LODES employment medians (placeholder or "v0.5" note)
-  - Appendix C data-flow diagram (placeholder or defer to v0.5)
-  - BCSC disclosure pass (bcsc_class: public-disclosure-safe in frontmatter; verify no active Foundation language)
-  - Paper NOT submitted to any journal — draft notice must read "in preparation for intended submission to JEG (OUP)"
-  - Bilingual ES sibling required before journal submission
-- **Research tasks pending:** CBRE/JLL acquisition (Year 2); permutation test implementation
+  v0.4.1: 6,493 clusters, 13 countries, T1/T2/T3 system, §3.7 mobility catchments, §7.2 OLS regression spec,
+  Bloomberg register, banned vocabulary clean, all inline TODOs cleared.
+- **Figures required (8 total — see frontmatter figures_required: block):**
+  - Must-have (6): F1 Decision Tree, F2 DBSCAN Schematic, F3 Continental Map, F4 Country Bar,
+    F5 Span_km Violin, F6 OLS Forest Plot (BLOCKED — needs §7.2 regression run)
+  - Enhancing (2): F7 Co-occurrence Heatmap, F8 Density Small-Multiple (online supplement)
+- **Blocking before submission:**
+  - [ ] §7.2 OLS regression run (cluster-level panel, country FE) — produces F6
+  - [ ] Permutation test implemented (§7.1)
+  - [ ] All 6 must-have figures produced
+  - [ ] BCSC language audit
+  - [ ] Bilingual ES sibling commissioned
+  - [ ] Word count ≤8,500 words body
+  - [ ] AI disclosure complies with JoEG/COPE guidelines
+- **Research tasks pending:** CBRE/JLL acquisition (Year 2); Phase 22 CSV export for regression
 
 ### A1 — TOPIC: O-D Catchment Methodology
 - **File:** `topic-od-catchment-methodology.draft.md`
