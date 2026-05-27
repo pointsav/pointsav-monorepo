@@ -63,7 +63,11 @@ pub fn find_user(conn: &Connection, fingerprint: &str) -> Result<Option<User>> {
     match result {
         Ok((username, tenant_str, role)) => {
             let tenant = Tenant::from_str(&tenant_str).unwrap_or(Tenant::Pointsav);
-            Ok(Some(User { username, tenant, role }))
+            Ok(Some(User {
+                username,
+                tenant,
+                role,
+            }))
         }
         Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
         Err(e) => Err(e.into()),

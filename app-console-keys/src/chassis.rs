@@ -79,11 +79,15 @@ impl AppConsoleKeys {
     pub fn set_pairing_awaiting(&mut self, code: String, request_id: String, fingerprint: String) {
         // Pre-generate the pixel QR state for Kitty/Sixel rendering if picker is available.
         let qr_content = format!("PAIR:{}", code.replace('-', ""));
-        self.qr_state = self.picker.as_mut().and_then(|p| {
-            crate::qr::qr_image(&qr_content)
-                .map(|img| p.new_resize_protocol(img))
-        });
-        self.pairing_state = PairingState::AwaitingApproval { code, request_id, fingerprint };
+        self.qr_state = self
+            .picker
+            .as_mut()
+            .and_then(|p| crate::qr::qr_image(&qr_content).map(|img| p.new_resize_protocol(img)));
+        self.pairing_state = PairingState::AwaitingApproval {
+            code,
+            request_id,
+            fingerprint,
+        };
     }
 
     pub fn set_pairing_error(&mut self, msg: String) {
@@ -195,8 +199,7 @@ impl AppConsoleKeys {
 
         if let Event::Key(key) = event {
             if key.code == KeyCode::Char('q')
-                || (key.code == KeyCode::Char('c')
-                    && key.modifiers.contains(KeyModifiers::CONTROL))
+                || (key.code == KeyCode::Char('c') && key.modifiers.contains(KeyModifiers::CONTROL))
             {
                 return ChassisAction::Quit;
             }
@@ -230,7 +233,9 @@ impl AppConsoleKeys {
                     Line::from(""),
                     Line::from(Span::styled(
                         "  Connecting to your workspace…",
-                        Style::default().fg(Color::White).add_modifier(Modifier::BOLD),
+                        Style::default()
+                            .fg(Color::White)
+                            .add_modifier(Modifier::BOLD),
                     )),
                     Line::from(""),
                     Line::from(Span::styled(
@@ -250,7 +255,9 @@ impl AppConsoleKeys {
                 let block = Block::default()
                     .borders(Borders::ALL)
                     .border_style(
-                        Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD),
+                        Style::default()
+                            .fg(Color::Cyan)
+                            .add_modifier(Modifier::BOLD),
                     )
                     .title(" Connect this computer to your workspace ");
                 let inner = block.inner(area);
@@ -308,17 +315,10 @@ impl AppConsoleKeys {
                     if inner.width >= qr_w + 32 {
                         let cols = Layout::default()
                             .direction(Direction::Horizontal)
-                            .constraints([
-                                Constraint::Length(qr_w),
-                                Constraint::Fill(1),
-                            ])
+                            .constraints([Constraint::Length(qr_w), Constraint::Fill(1)])
                             .split(inner);
 
-                        frame.render_stateful_widget(
-                            StatefulImage::new(),
-                            cols[0],
-                            proto,
-                        );
+                        frame.render_stateful_widget(StatefulImage::new(), cols[0], proto);
                         frame.render_widget(Paragraph::new(right_content), cols[1]);
                         return;
                     }
@@ -335,10 +335,7 @@ impl AppConsoleKeys {
                 if !qr_text.is_empty() && inner.width >= qr_col_w + 32 {
                     let cols = Layout::default()
                         .direction(Direction::Horizontal)
-                        .constraints([
-                            Constraint::Length(qr_col_w),
-                            Constraint::Fill(1),
-                        ])
+                        .constraints([Constraint::Length(qr_col_w), Constraint::Fill(1)])
                         .split(inner);
 
                     let qr_lines: Vec<Line> =
@@ -399,7 +396,9 @@ impl AppConsoleKeys {
                     Line::from(""),
                     Line::from(Span::styled(
                         "  Your administrator didn't approve this computer.",
-                        Style::default().fg(Color::White).add_modifier(Modifier::BOLD),
+                        Style::default()
+                            .fg(Color::White)
+                            .add_modifier(Modifier::BOLD),
                     )),
                     Line::from(""),
                     Line::from(Span::styled(
@@ -430,7 +429,9 @@ impl AppConsoleKeys {
                     Line::from(""),
                     Line::from(Span::styled(
                         "  The code timed out — nothing was lost.",
-                        Style::default().fg(Color::White).add_modifier(Modifier::BOLD),
+                        Style::default()
+                            .fg(Color::White)
+                            .add_modifier(Modifier::BOLD),
                     )),
                     Line::from(""),
                     Line::from(Span::styled(
