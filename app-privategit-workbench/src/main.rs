@@ -3,7 +3,7 @@ use axum::{
     body::Bytes,
     extract::{Query, State},
     http::{HeaderMap, StatusCode},
-    response::{Html, IntoResponse, Json, Response},
+    response::{Html, IntoResponse, Json, Redirect, Response},
     routing::{get, post},
     Router,
 };
@@ -14,7 +14,7 @@ use std::{
     io::Write,
     net::SocketAddr,
     path::{Path, PathBuf},
-    process::Command,
+    process::{Command, Stdio},
     sync::{mpsc, Arc},
     thread,
     time::{Duration, UNIX_EPOCH},
@@ -699,6 +699,420 @@ async fn git_status(State(state): State<AppState>, Query(q): Query<GitStatusQuer
 }
 
 // ---------------------------------------------------------------------------
+// Document type detection
+// ---------------------------------------------------------------------------
+
+#[derive(Debug, PartialEq)]
+enum DocType {
+    HtmlDoc,   // .html / .htm — inject @page CSS then WeasyPrint
+    GeoJson,   // .geojson
+    Proforma,  // .json with "proforma_version" key
+    Other,     // fall through to existing code-view behavior
+}
+
+fn detect_doc_type(path: &Path, content_peek: Option<&str>) -> DocType {
+    let ext = path
+        .extension()
+        .and_then(|e| e.to_str())
+        .unwrap_or("")
+        .to_lowercase();
+    match ext.as_str() {
+        "html" | "htm" => DocType::HtmlDoc,
+        "geojson" => DocType::GeoJson,
+        "json" => {
+            if let Some(peek) = content_peek {
+                let p = &peek[..peek.len().min(512)];
+                if p.contains("\"proforma_version\"") {
+                    return DocType::Proforma;
+                }
+            }
+            DocType::Other
+        }
+        _ => DocType::Other,
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Platform PDF rendering helpers
+// ---------------------------------------------------------------------------
+
+const WEASYPRINT_BIN: &str = "/usr/bin/weasyprint";
+
+/// Inject a minimal @page CSS block for page numbers before </head>.
+/// The document content and all existing styles are untouched.
+fn inject_page_css(html: &str) -> String {
+    const PAGE_CSS: &str = concat!(
+        "<style>\n",
+        "@page {\n",
+        "  size: letter;\n",
+        "  margin: 2cm 2cm 2.5cm 2cm;\n",
+        "  @bottom-center {\n",
+        "    content: counter(page) \" / \" counter(pages);\n",
+        "    font-size: 9pt;\n",
+        "    color: #666;\n",
+        "    font-family: -apple-system, BlinkMacSystemFont, sans-serif;\n",
+        "  }\n",
+        "}\n",
+        "@page :first { margin-top: 3cm; }\n",
+        "</style>\n"
+    );
+    if html.contains("</head>") {
+        html.replacen("</head>", &format!("{}</head>", PAGE_CSS), 1)
+    } else if html.contains("<body") {
+        html.replacen(
+            "<body",
+            &format!("<head>{}</head>\n<body", PAGE_CSS),
+            1,
+        )
+    } else {
+        format!("{}{}", PAGE_CSS, html)
+    }
+}
+
+/// Spawn weasyprint and pipe HTML → PDF bytes.
+/// Blocking — call via spawn_blocking from async context.
+fn run_weasyprint(html: String) -> Result<Vec<u8>> {
+    let mut child = Command::new(WEASYPRINT_BIN)
+        .args(["-", "-"])
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::null())
+        .spawn()
+        .context("spawning weasyprint — is it installed at /home/mathew/.local/bin/weasyprint?")?;
+
+    if let Some(stdin) = child.stdin.as_mut() {
+        stdin
+            .write_all(html.as_bytes())
+            .context("writing HTML to weasyprint stdin")?;
+    }
+    drop(child.stdin.take());
+
+    let output = child.wait_with_output().context("weasyprint wait_with_output")?;
+
+    if !output.status.success() {
+        return Err(anyhow!(
+            "weasyprint exited {}",
+            output.status
+        ));
+    }
+    if output.stdout.is_empty() {
+        return Err(anyhow!("weasyprint produced empty output"));
+    }
+    Ok(output.stdout)
+}
+
+// ---------------------------------------------------------------------------
+// GET /document — renders a document as HTML for the iframe viewer
+// ---------------------------------------------------------------------------
+
+/// GET /document?path=<url_path>
+/// Returns a standalone HTML page for known document types.
+/// Unknown types redirect to the raw browse path.
+async fn get_document(
+    State(state): State<AppState>,
+    Query(q): Query<FileQuery>,
+) -> Response {
+    let (fs_path, _writable) = match resolve_path(&state.roots, &q.path) {
+        Ok(v) => v,
+        Err(e) => return err(StatusCode::BAD_REQUEST, e.to_string()),
+    };
+
+    if !fs_path.exists() || !fs_path.is_file() {
+        return err(StatusCode::NOT_FOUND, "file not found");
+    }
+
+    let content = match fs::read_to_string(&fs_path) {
+        Ok(s) => s,
+        Err(e) => return err(StatusCode::INTERNAL_SERVER_ERROR, e.to_string()),
+    };
+
+    let doc_type = detect_doc_type(&fs_path, Some(&content));
+
+    match doc_type {
+        DocType::HtmlDoc => {
+            // HTML files already render correctly via nginx static serving.
+            // Redirect to the raw browse path so the iframe loads it directly.
+            let browse_path = format!("/{}", q.path.trim_start_matches('/'));
+            Redirect::temporary(&browse_path).into_response()
+        }
+        DocType::Proforma => render_proforma_document(&content, &fs_path),
+        DocType::GeoJson => render_geojson_placeholder(&content, &fs_path),
+        DocType::Other => {
+            let browse_path = format!("/{}", q.path.trim_start_matches('/'));
+            Redirect::temporary(&browse_path).into_response()
+        }
+    }
+}
+
+fn render_proforma_document(content: &str, path: &Path) -> Response {
+    let fname = path
+        .file_name()
+        .and_then(|n| n.to_str())
+        .unwrap_or("proforma.json");
+
+    // Extract title and sheet names from JSON without full parse
+    let title = extract_json_string_field(content, "title")
+        .unwrap_or_else(|| fname.to_string());
+    let version = extract_json_string_field(content, "proforma_version")
+        .unwrap_or_else(|| "1.0".to_string());
+
+    let html = format!(
+        r#"<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{title}</title>
+<style>
+body {{ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+       margin: 0; padding: 32px 48px; background: #fff; color: #24292e; }}
+.badge {{ display: inline-block; background: #0066cc22; color: #4d9fff;
+          border: 1px solid #4d9fff44; font-size: 11px; font-weight: 700;
+          text-transform: uppercase; letter-spacing: .06em;
+          padding: 2px 8px; border-radius: 3px; margin-bottom: 12px; }}
+h1 {{ font-size: 1.6em; margin: 0 0 4px; }}
+.meta {{ font-size: 12px; color: #666; margin-bottom: 32px; }}
+.notice {{ background: #f6f8fa; border: 1px solid #e1e4e8; border-radius: 6px;
+           padding: 16px 20px; font-size: 13px; color: #444; }}
+</style>
+</head>
+<body>
+<div class="badge">Proforma v{version}</div>
+<h1>{title}</h1>
+<div class="meta">{fname}</div>
+<div class="notice">
+  Full spreadsheet renderer is coming in the next sprint.<br>
+  Use <strong>Download PDF</strong> in the toolbar to render this proforma to PDF now.
+</div>
+</body>
+</html>"#,
+        title = esc_html(&title),
+        version = esc_html(&version),
+        fname = esc_html(fname),
+    );
+
+    Html(html).into_response()
+}
+
+fn render_geojson_placeholder(content: &str, path: &Path) -> Response {
+    let fname = path
+        .file_name()
+        .and_then(|n| n.to_str())
+        .unwrap_or("data.geojson");
+
+    // Count features by counting occurrences of "\"type\":\"Feature\""
+    let feature_count = content.matches("\"Feature\"").count();
+
+    let html = format!(
+        r#"<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>{fname}</title>
+<style>
+body {{ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+       margin: 0; padding: 32px 48px; background: #fff; color: #24292e; }}
+.badge {{ display: inline-block; background: #28a74522; color: #28a745;
+          border: 1px solid #28a74544; font-size: 11px; font-weight: 700;
+          text-transform: uppercase; letter-spacing: .06em;
+          padding: 2px 8px; border-radius: 3px; margin-bottom: 12px; }}
+h1 {{ font-size: 1.4em; margin: 0 0 4px; }}
+.meta {{ font-size: 12px; color: #666; margin-bottom: 32px; }}
+.notice {{ background: #f6f8fa; border: 1px solid #e1e4e8; border-radius: 6px;
+           padding: 16px 20px; font-size: 13px; color: #444; }}
+</style>
+</head>
+<body>
+<div class="badge">GeoJSON</div>
+<h1>{fname}</h1>
+<div class="meta">{feature_count} feature{pl}</div>
+<div class="notice">
+  Interactive map viewer (MapLibre GL) is coming in the next sprint.
+</div>
+</body>
+</html>"#,
+        fname = esc_html(fname),
+        feature_count = feature_count,
+        pl = if feature_count == 1 { "" } else { "s" },
+    );
+
+    Html(html).into_response()
+}
+
+/// Minimal HTML entity escaping for injecting values into HTML attributes/text.
+fn esc_html(s: &str) -> String {
+    s.replace('&', "&amp;")
+        .replace('<', "&lt;")
+        .replace('>', "&gt;")
+        .replace('"', "&quot;")
+}
+
+/// Extract a top-level string field value from JSON without a full parse.
+/// Returns None if not found. Only suitable for simple flat string fields.
+fn extract_json_string_field(json: &str, field: &str) -> Option<String> {
+    let needle = format!("\"{}\"", field);
+    let pos = json.find(&needle)?;
+    let after = json[pos + needle.len()..].trim_start();
+    let after = after.strip_prefix(':')?.trim_start();
+    let after = after.strip_prefix('"')?;
+    let end = after.find('"')?;
+    Some(after[..end].to_string())
+}
+
+// ---------------------------------------------------------------------------
+// GET /pdf — platform PDF rendering via WeasyPrint subprocess
+// ---------------------------------------------------------------------------
+
+/// GET /pdf?path=<url_path>
+/// Renders the file to PDF via WeasyPrint and returns it as a download.
+/// For HTML files: injects @page CSS then renders.
+/// For proforma JSON: renders the proforma viewer HTML then renders.
+/// For other types: returns 422 Unprocessable Content.
+async fn get_pdf(
+    State(state): State<AppState>,
+    Query(q): Query<FileQuery>,
+) -> Response {
+    let (fs_path, _writable) = match resolve_path(&state.roots, &q.path) {
+        Ok(v) => v,
+        Err(e) => return err(StatusCode::BAD_REQUEST, e.to_string()),
+    };
+
+    if !fs_path.exists() || !fs_path.is_file() {
+        return err(StatusCode::NOT_FOUND, "file not found");
+    }
+
+    let content = match fs::read_to_string(&fs_path) {
+        Ok(s) => s,
+        Err(e) => return err(StatusCode::INTERNAL_SERVER_ERROR, e.to_string()),
+    };
+
+    let doc_type = detect_doc_type(&fs_path, Some(&content));
+
+    let html = match doc_type {
+        DocType::HtmlDoc => inject_page_css(&content),
+        DocType::Proforma => {
+            // Phase 2 will have a full proforma spreadsheet renderer.
+            // For now, render the basic metadata summary with page CSS.
+            let title = extract_json_string_field(&content, "title")
+                .or_else(|| {
+                    fs_path
+                        .file_stem()
+                        .and_then(|s| s.to_str())
+                        .map(|s| s.to_string())
+                })
+                .unwrap_or_else(|| "Proforma".to_string());
+
+            let version = extract_json_string_field(&content, "proforma_version")
+                .unwrap_or_else(|| "1.0".to_string());
+
+            let fname = fs_path
+                .file_name()
+                .and_then(|n| n.to_str())
+                .unwrap_or("proforma.json");
+
+            format!(
+                r#"<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>{title}</title>
+<style>
+@page {{ size: letter; margin: 2cm 2cm 2.5cm 2cm;
+  @bottom-center {{ content: counter(page) " / " counter(pages);
+    font-size: 9pt; color: #666; font-family: sans-serif; }} }}
+body {{ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        margin: 0; padding: 32px 48px; color: #24292e; }}
+h1 {{ font-size: 1.6em; margin: 0 0 4px; }}
+.meta {{ font-size: 12px; color: #666; margin-bottom: 32px; }}
+pre {{ background: #f6f8fa; border: 1px solid #e1e4e8; border-radius: 6px;
+       padding: 16px; font-size: 11px; white-space: pre-wrap; word-break: break-word; }}
+</style>
+</head>
+<body>
+<h1>{title}</h1>
+<div class="meta">Proforma v{version} — {fname}</div>
+<p><em>Full spreadsheet renderer ships in the next sprint. This PDF shows the raw JSON for reference.</em></p>
+<pre>{json_preview}</pre>
+</body>
+</html>"#,
+                title = esc_html(&title),
+                version = esc_html(&version),
+                fname = esc_html(fname),
+                json_preview = esc_html(&content[..content.len().min(4000)]),
+            )
+        }
+        DocType::GeoJson => {
+            // PDF = feature properties as a data table (MapLibre is WebGL; WeasyPrint cannot render it)
+            let feature_count = content.matches("\"Feature\"").count();
+            let fname = fs_path
+                .file_name()
+                .and_then(|n| n.to_str())
+                .unwrap_or("data.geojson");
+
+            format!(
+                r#"<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>{fname}</title>
+<style>
+@page {{ size: letter landscape; margin: 2cm;
+  @bottom-center {{ content: counter(page) " / " counter(pages);
+    font-size: 9pt; color: #666; font-family: sans-serif; }} }}
+body {{ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        margin: 0; padding: 24px; color: #24292e; }}
+h1 {{ font-size: 1.3em; margin: 0 0 8px; }}
+.meta {{ font-size: 12px; color: #666; margin-bottom: 24px; }}
+pre {{ background: #f6f8fa; border: 1px solid #e1e4e8; border-radius: 6px;
+       padding: 16px; font-size: 10px; white-space: pre-wrap; word-break: break-word; }}
+</style>
+</head>
+<body>
+<h1>{fname}</h1>
+<div class="meta">{feature_count} feature{pl}</div>
+<pre>{json_preview}</pre>
+</body>
+</html>"#,
+                fname = esc_html(fname),
+                feature_count = feature_count,
+                pl = if feature_count == 1 { "" } else { "s" },
+                json_preview = esc_html(&content[..content.len().min(8000)]),
+            )
+        }
+        DocType::Other => {
+            return err(
+                StatusCode::UNPROCESSABLE_ENTITY,
+                "PDF export is not supported for this file type",
+            );
+        }
+    };
+
+    let stem = fs_path
+        .file_stem()
+        .and_then(|s| s.to_str())
+        .unwrap_or("document")
+        .to_string();
+
+    match tokio::task::spawn_blocking(move || run_weasyprint(html)).await {
+        Ok(Ok(pdf_bytes)) => {
+            let cd = format!("attachment; filename=\"{}.pdf\"", stem);
+            let mut headers = HeaderMap::new();
+            headers.insert("content-type", "application/pdf".parse().unwrap());
+            headers.insert("content-disposition", cd.parse().unwrap());
+            (StatusCode::OK, headers, Bytes::from(pdf_bytes)).into_response()
+        }
+        Ok(Err(e)) => err(
+            StatusCode::INTERNAL_SERVER_ERROR,
+            format!("PDF render failed: {}", e),
+        ),
+        Err(e) => err(
+            StatusCode::INTERNAL_SERVER_ERROR,
+            format!("PDF render task panicked: {}", e),
+        ),
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
 
@@ -734,6 +1148,8 @@ async fn main() -> Result<()> {
         .route("/create", post(create_file))
         .route("/delete", post(delete_file))
         .route("/git-status", get(git_status))
+        .route("/document", get(get_document))
+        .route("/pdf", get(get_pdf))
         .with_state(state);
 
     let addr: SocketAddr = config.bind.parse().context("parsing bind address")?;
