@@ -180,11 +180,15 @@ to `draft` (JOURNAL):
 
 ## Active JOURNAL manuscripts (updated 2026-05-27)
 
-| File | Domain | Target journal | State |
+All papers target the top 3 venues in their domain. Primary venue listed; alternates in each
+paper's frontmatter. All venues require double-blind peer review — `forbidden_terms_cleared`
+pass is simultaneously the double-blind anonymization pass.
+
+| File | Domain | Primary target (top-3 strategy) | State |
 |---|---|---|---|
-| JOURNAL-retail-colocation-v0.1.draft.md | Economic geography | Journal of Economic Geography | draft |
-| JOURNAL-trustworthy-systems-v0.1.draft.md | Systems CS | ACM TOCS | draft |
-| JOURNAL-aec-data-layers-v0.1.draft.md | AEC/construction | Automation in Construction | draft (scaffolded) |
-| JOURNAL-private-network-v0.1.stub.md | Networking/ZTA | IEEE JSAC | stub |
-| JOURNAL-totebox-orchestration-v0.1.stub.md | Systems/ML | OSDI / EuroSys | stub |
-| JOURNAL-desktop-environment-v0.1.stub.md | HCI/BIM | ACM CHI | stub |
+| JOURNAL-retail-colocation-v0.1.draft.md | Economic geography | *Economic Geography* (Wiley, IF 7.2) | draft |
+| JOURNAL-trustworthy-systems-v0.1.draft.md | Systems CS | ASPLOS (ACM, 19.4% AR) | draft |
+| JOURNAL-aec-data-layers-v0.1.draft.md | AEC/construction | *Automation in Construction* (Elsevier, IF 12.0) | draft (scaffolded) |
+| JOURNAL-private-network-v0.1.stub.md | Networking/ZTA | *IEEE TIFS* (IEEE, IF 9.65) | stub |
+| JOURNAL-totebox-orchestration-v0.1.stub.md | Systems/ML | MLSys (ACM, 22% AR) | stub |
+| JOURNAL-desktop-environment-v0.1.stub.md | HCI/BIM | *ACM TOCHI* (ACM, Q1 HCI) | stub |
