@@ -1,7 +1,7 @@
 # CLAUDE.md — moonshot-toolkit
 
 > **State:** Active  —  **Last updated:** 2026-05-27
-> **Version:** 0.1.3  (per `~/Foundry/CLAUDE.md` §7 and DOCTRINE.md §VIII)
+> **Version:** 0.2.0  (per `~/Foundry/CLAUDE.md` §7 and DOCTRINE.md §VIII)
 > **Registry row:** `pointsav-monorepo/.claude/rules/project-registry.md`
 
 ---
@@ -22,18 +22,23 @@ exercised."
 
 ## Current state
 
-Phase 1B complete at v0.1.3. All three Phase 1B deliverables shipped:
-- `src/spec.rs` (445 lines) — SystemSpec TOML parser; PDs ≤ 63,
-  channels, memory regions, IRQ delivery; 12 tests.
-- `src/plan.rs` (310 lines) — BuildPlan generator; deterministic
-  plan_hash (SHA-256 of canonical JSON); 10 tests.
-- `src/main.rs` (241 lines) — clap CLI; `validate` / `plan` / `build`
-  subcommands; `build` is a stub pending cross-compile toolchain; 8 tests.
+Phase 1C.a complete at v0.2.0. `build` subcommand now executes real
+`aarch64-linux-gnu-gcc` invocations:
+- `validate` / `plan` subcommands: unchanged from v0.1.3.
+- `build` subcommand: `CompilePd` cross-compiles to AArch64 bare-metal
+  static ELF (-nostdlib -nostartfiles -ffreestanding -static -no-pie
+  -march=armv8-a); `AssembleImage` returns actionable error (Phase 1C.d).
+- `examples/hello-world.toml` + `examples/hello.c`: minimal Phase 1C
+  PD spec that cross-compiles cleanly to `build/hello.elf`.
 
 30 tests total (`cargo test --all-targets`). Zero warnings.
+30 tests remain (test count unchanged; `build_command_errors_without_source_file`
+replaces the old stub test).
 
-Next milestone: seL4 hello-world cross-compile + QEMU AArch64 boot
-(task #14). Blocked on Group 3A decisions — see NEXT.md.
+Phase 1C.c (QEMU boot) blocked on `seL4_tools` elfloader (separate repo;
+seL4 kernel needs elfloader to set up MMU before jumping to
+0xffffff8040000000). Phase 1C.d (image assembly) blocked on Microkit SDK
+or Rust image assembler. Both are follow-ons — see NEXT.md.
 
 ## Build and test
 
