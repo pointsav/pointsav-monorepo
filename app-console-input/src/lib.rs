@@ -1,4 +1,5 @@
-// Architectural Scaffold
-pub fn system_status() -> &'static str {
-    "SYSTEM EVENT: app-console-input scaffold verified."
-}
+pub mod audit;
+pub mod cartridge;
+pub mod ingest;
+
+pub use cartridge::InputCartridge;

@@ -1,0 +1,499 @@
+use std::sync::mpsc;
+use std::thread;
+
+use app_console_keys::{Cartridge, CartridgeAction, FKey};
+use crossterm::event::{Event, KeyCode, KeyModifiers};
+use ratatui::{
+    layout::{Constraint, Direction, Layout, Rect},
+    style::{Color, Modifier, Style},
+    text::{Line, Span},
+    widgets::{Block, Borders, Clear, Paragraph},
+    Frame,
+};
+
+use crate::{
+    audit::{self, IngestRecord},
+    ingest::{self, IngestResult},
+};
+
+const SPINNER: &[&str] = &["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
+
+// ── Single-line path input ───────────────────────────────────────────────────
+
+struct PathInput {
+    text: String,
+    cursor: usize,
+}
+
+impl PathInput {
+    fn new() -> Self {
+        Self { text: String::new(), cursor: 0 }
+    }
+
+    fn handle_key(&mut self, key: &crossterm::event::KeyEvent) -> Option<PathInputAction> {
+        match key.code {
+            KeyCode::Esc => return Some(PathInputAction::Cancel),
+            KeyCode::Enter => {
+                let t = self.text.trim().to_string();
+                if !t.is_empty() {
+                    return Some(PathInputAction::Submit(t));
+                }
+            }
+            KeyCode::Char(c) if !key.modifiers.contains(KeyModifiers::CONTROL) => {
+                self.text.insert(self.cursor, c);
+                self.cursor += c.len_utf8();
+            }
+            KeyCode::Backspace => {
+                if self.cursor > 0 {
+                    let len = self.text[..self.cursor]
+                        .chars()
+                        .last()
+                        .map(|c| c.len_utf8())
+                        .unwrap_or(1);
+                    self.cursor -= len;
+                    self.text.remove(self.cursor);
+                }
+            }
+            KeyCode::Delete => {
+                if self.cursor < self.text.len() {
+                    self.text.remove(self.cursor);
+                }
+            }
+            KeyCode::Left => {
+                if self.cursor > 0 {
+                    let len = self.text[..self.cursor]
+                        .chars()
+                        .last()
+                        .map(|c| c.len_utf8())
+                        .unwrap_or(1);
+                    self.cursor -= len;
+                }
+            }
+            KeyCode::Right => {
+                if self.cursor < self.text.len() {
+                    let len = self.text[self.cursor..]
+                        .chars()
+                        .next()
+                        .map(|c| c.len_utf8())
+                        .unwrap_or(1);
+                    self.cursor += len;
+                }
+            }
+            KeyCode::Home => self.cursor = 0,
+            KeyCode::End  => self.cursor = self.text.len(),
+            _ => {}
+        }
+        None
+    }
+
+    fn render_into(&self, frame: &mut Frame, area: Rect) {
+        let before = &self.text[..self.cursor];
+        let cursor_char = self.text[self.cursor..].chars().next().unwrap_or(' ');
+        let after = if self.cursor < self.text.len() {
+            &self.text[self.cursor + cursor_char.len_utf8()..]
+        } else {
+            ""
+        };
+        let line = Line::from(vec![
+            Span::raw(before.to_string()),
+            Span::styled(
+                cursor_char.to_string(),
+                Style::default().fg(Color::Black).bg(Color::White),
+            ),
+            Span::raw(after.to_string()),
+        ]);
+        frame.render_widget(
+            Paragraph::new(line)
+                .block(Block::default().borders(Borders::ALL).border_style(
+                    Style::default().fg(Color::White),
+                )),
+            area,
+        );
+    }
+}
+
+enum PathInputAction {
+    Submit(String),
+    Cancel,
+}
+
+// ── State machine ─────────────────────────────────────────────────────────────
+
+enum InputState {
+    Entry,
+    Confirm { path: String },
+    Submitting {
+        path: String,
+        spinner: usize,
+        rx: mpsc::Receiver<anyhow::Result<IngestResult>>,
+    },
+    Done {
+        path: String,
+        result: IngestResult,
+    },
+    Error {
+        message: String,
+    },
+}
+
+// ── InputCartridge ────────────────────────────────────────────────────────────
+
+pub struct InputCartridge {
+    username: String,
+    tenant: String,
+    ingest_endpoint: String,
+    state: InputState,
+    path_input: PathInput,
+}
+
+impl InputCartridge {
+    pub fn new() -> Self {
+        Self::new_for("operator", "local", "http://127.0.0.1:9100")
+    }
+
+    pub fn new_for(
+        username: impl Into<String>,
+        tenant: impl Into<String>,
+        ingest_endpoint: impl Into<String>,
+    ) -> Self {
+        Self {
+            username: username.into(),
+            tenant: tenant.into(),
+            ingest_endpoint: ingest_endpoint.into(),
+            state: InputState::Entry,
+            path_input: PathInput::new(),
+        }
+    }
+
+    fn reset(&mut self) {
+        self.state = InputState::Entry;
+        self.path_input = PathInput::new();
+    }
+
+    fn render_modal(frame: &mut Frame, area: Rect) -> Rect {
+        let vchunks = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints([
+                Constraint::Fill(1),
+                Constraint::Length(12),
+                Constraint::Fill(1),
+            ])
+            .split(area);
+        let hchunks = Layout::default()
+            .direction(Direction::Horizontal)
+            .constraints([
+                Constraint::Fill(1),
+                Constraint::Percentage(70),
+                Constraint::Fill(1),
+            ])
+            .split(vchunks[1]);
+        frame.render_widget(Clear, hchunks[1]);
+        hchunks[1]
+    }
+
+    fn render_entry(&self, frame: &mut Frame, area: Rect) {
+        let modal = Self::render_modal(frame, area);
+
+        let block = Block::default()
+            .borders(Borders::ALL)
+            .border_style(Style::default().fg(Color::Magenta).add_modifier(Modifier::BOLD))
+            .title(" F12: Input Machine — The Anchor (SYS-ADR-10) ");
+        let inner = block.inner(modal);
+        frame.render_widget(block, modal);
+
+        let chunks = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints([
+                Constraint::Length(1),
+                Constraint::Length(1),
+                Constraint::Length(3),
+                Constraint::Length(1),
+                Constraint::Fill(1),
+            ])
+            .split(inner);
+
+        frame.render_widget(
+            Paragraph::new("  File path to submit for ingest:")
+                .style(Style::default().fg(Color::White)),
+            chunks[1],
+        );
+
+        self.path_input.render_into(frame, chunks[2]);
+
+        frame.render_widget(
+            Paragraph::new("  [Enter: confirm  Esc: cancel]")
+                .style(Style::default().fg(Color::DarkGray)),
+            chunks[3],
+        );
+    }
+
+    fn render_confirm(frame: &mut Frame, area: Rect, path: &str) {
+        let modal = Self::render_modal(frame, area);
+
+        let block = Block::default()
+            .borders(Borders::ALL)
+            .border_style(Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD))
+            .title(" F12: Input Machine — Confirm Ingest ");
+        let inner = block.inner(modal);
+        frame.render_widget(block, modal);
+
+        let lines = vec![
+            Line::from(""),
+            Line::from(Span::styled("  Submit this file for ingest?", Style::default().fg(Color::White))),
+            Line::from(""),
+            Line::from(vec![
+                Span::styled("  Path: ", Style::default().fg(Color::DarkGray)),
+                Span::styled(path.to_string(), Style::default().fg(Color::Cyan)),
+            ]),
+            Line::from(""),
+            Line::from(Span::styled(
+                "  [Y: submit  N / Esc: cancel]",
+                Style::default().fg(Color::DarkGray),
+            )),
+        ];
+        frame.render_widget(Paragraph::new(lines), inner);
+    }
+
+    fn render_submitting(frame: &mut Frame, area: Rect, spinner: usize) {
+        let modal = Self::render_modal(frame, area);
+
+        let block = Block::default()
+            .borders(Borders::ALL)
+            .border_style(Style::default().fg(Color::Magenta))
+            .title(" F12: Input Machine — Submitting... ");
+        let inner = block.inner(modal);
+        frame.render_widget(block, modal);
+
+        let mid = Rect { y: inner.y + inner.height / 2, height: 2, ..inner };
+        frame.render_widget(
+            Paragraph::new(format!(
+                "  {} Submitting to service-fs — please wait…",
+                SPINNER[spinner % SPINNER.len()]
+            ))
+            .style(Style::default().fg(Color::Yellow)),
+            mid,
+        );
+    }
+
+    fn render_done(frame: &mut Frame, area: Rect, path: &str, result: &IngestResult) {
+        let modal = Self::render_modal(frame, area);
+
+        let (title, color) = if result.warning.is_some() {
+            (" F12: Input Machine — Submitted (warning) ", Color::Yellow)
+        } else {
+            (" F12: Input Machine — Submitted ", Color::Green)
+        };
+
+        let block = Block::default()
+            .borders(Borders::ALL)
+            .border_style(Style::default().fg(color).add_modifier(Modifier::BOLD))
+            .title(title);
+        let inner = block.inner(modal);
+        frame.render_widget(block, modal);
+
+        let mut lines = vec![
+            Line::from(""),
+            Line::from(vec![
+                Span::styled("  ✓ ", Style::default().fg(Color::Green)),
+                Span::styled(path.to_string(), Style::default().fg(Color::White)),
+            ]),
+            Line::from(""),
+            Line::from(vec![
+                Span::styled("  Payload ID: ", Style::default().fg(Color::DarkGray)),
+                Span::styled(result.payload_id.clone(), Style::default().fg(Color::Cyan)),
+            ]),
+        ];
+        if let Some(ledger) = &result.ledger_root {
+            lines.push(Line::from(vec![
+                Span::styled("  Ledger:     ", Style::default().fg(Color::DarkGray)),
+                Span::styled(ledger.clone(), Style::default().fg(Color::Cyan)),
+            ]));
+        }
+        if let Some(warn) = &result.warning {
+            lines.push(Line::from(""));
+            lines.push(Line::from(Span::styled(
+                format!("  ⚠ {}", warn),
+                Style::default().fg(Color::Yellow),
+            )));
+        }
+        lines.push(Line::from(""));
+        lines.push(Line::from(Span::styled(
+            "  [any key: return to previous pane]",
+            Style::default().fg(Color::DarkGray),
+        )));
+
+        frame.render_widget(Paragraph::new(lines), inner);
+    }
+
+    fn render_error(frame: &mut Frame, area: Rect, message: &str) {
+        let modal = Self::render_modal(frame, area);
+
+        let block = Block::default()
+            .borders(Borders::ALL)
+            .border_style(Style::default().fg(Color::Red).add_modifier(Modifier::BOLD))
+            .title(" F12: Input Machine — Error ");
+        let inner = block.inner(modal);
+        frame.render_widget(block, modal);
+
+        let lines = vec![
+            Line::from(""),
+            Line::from(Span::styled(
+                format!("  Error: {}", message),
+                Style::default().fg(Color::Red),
+            )),
+            Line::from(""),
+            Line::from(Span::styled(
+                "  [any key: return to previous pane]",
+                Style::default().fg(Color::DarkGray),
+            )),
+        ];
+        frame.render_widget(Paragraph::new(lines), inner);
+    }
+}
+
+impl Default for InputCartridge {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl Cartridge for InputCartridge {
+    fn fkey(&self) -> FKey {
+        FKey::F12
+    }
+
+    fn title(&self) -> &str {
+        "Input"
+    }
+
+    fn render(&mut self, frame: &mut Frame, area: Rect) {
+        // Poll HTTP result
+        let new_state: Option<InputState> = if let InputState::Submitting { rx, path, .. } = &mut self.state {
+            match rx.try_recv() {
+                Ok(Ok(result)) => {
+                    let ts = chrono::Utc::now().to_rfc3339();
+                    let _ = audit::append(&IngestRecord {
+                        created_at: ts,
+                        username: self.username.clone(),
+                        tenant: self.tenant.clone(),
+                        path: path.clone(),
+                        ledger_id: result.ledger_root.clone(),
+                        status: if result.warning.is_some() { "warned".into() } else { "ok".into() },
+                    });
+                    Some(InputState::Done { path: path.clone(), result })
+                }
+                Ok(Err(e)) => {
+                    let ts = chrono::Utc::now().to_rfc3339();
+                    let _ = audit::append(&IngestRecord {
+                        created_at: ts,
+                        username: self.username.clone(),
+                        tenant: self.tenant.clone(),
+                        path: path.clone(),
+                        ledger_id: None,
+                        status: "error".into(),
+                    });
+                    Some(InputState::Error { message: e.to_string() })
+                }
+                Err(mpsc::TryRecvError::Disconnected) => {
+                    Some(InputState::Error { message: "HTTP thread disconnected".into() })
+                }
+                Err(mpsc::TryRecvError::Empty) => None,
+            }
+        } else {
+            None
+        };
+        if let Some(ns) = new_state {
+            self.state = ns;
+        }
+
+        if let InputState::Submitting { spinner, .. } = &mut self.state {
+            *spinner = spinner.wrapping_add(1);
+        }
+
+        enum Cmd<'a> {
+            Entry,
+            Confirm(&'a str),
+            Submitting(usize),
+            Done(&'a str, &'a IngestResult),
+            Error(&'a str),
+        }
+
+        let cmd = match &self.state {
+            InputState::Entry                       => Cmd::Entry,
+            InputState::Confirm { path }            => Cmd::Confirm(path.as_str()),
+            InputState::Submitting { spinner, .. }  => Cmd::Submitting(*spinner),
+            InputState::Done { path, result }       => Cmd::Done(path.as_str(), result),
+            InputState::Error { message }           => Cmd::Error(message.as_str()),
+        };
+
+        match cmd {
+            Cmd::Entry              => self.render_entry(frame, area),
+            Cmd::Confirm(p)         => Self::render_confirm(frame, area, p),
+            Cmd::Submitting(sp)     => Self::render_submitting(frame, area, sp),
+            Cmd::Done(p, r)         => Self::render_done(frame, area, p, r),
+            Cmd::Error(m)           => Self::render_error(frame, area, m),
+        }
+    }
+
+    fn handle_event(&mut self, event: &Event) -> CartridgeAction {
+        let Event::Key(key) = event else {
+            return CartridgeAction::None;
+        };
+
+        // F12 pressed again while in Entry → cancel and go back
+        if key.code == KeyCode::F(12) {
+            self.reset();
+            return CartridgeAction::GoBack;
+        }
+
+        match &self.state {
+            InputState::Entry => {
+                match self.path_input.handle_key(key) {
+                    Some(PathInputAction::Submit(path)) => {
+                        self.state = InputState::Confirm { path };
+                    }
+                    Some(PathInputAction::Cancel) => {
+                        self.reset();
+                        return CartridgeAction::GoBack;
+                    }
+                    None => {}
+                }
+                CartridgeAction::Consumed
+            }
+
+            InputState::Confirm { .. } => {
+                match key.code {
+                    KeyCode::Char('y') | KeyCode::Char('Y') => {
+                        let path = if let InputState::Confirm { path } = &self.state {
+                            path.clone()
+                        } else {
+                            unreachable!()
+                        };
+                        let username = self.username.clone();
+                        let tenant = self.tenant.clone();
+                        let endpoint = self.ingest_endpoint.clone();
+                        let path_clone = path.clone();
+                        let (tx, rx) = mpsc::channel();
+                        thread::spawn(move || {
+                            let _ = tx.send(ingest::submit(&path_clone, &username, &tenant, &endpoint));
+                        });
+                        self.state = InputState::Submitting { path, spinner: 0, rx };
+                    }
+                    KeyCode::Char('n') | KeyCode::Char('N') | KeyCode::Esc => {
+                        self.reset();
+                        return CartridgeAction::GoBack;
+                    }
+                    _ => {}
+                }
+                CartridgeAction::Consumed
+            }
+
+            InputState::Submitting { .. } => CartridgeAction::Consumed,
+
+            InputState::Done { .. } | InputState::Error { .. } => {
+                self.reset();
+                CartridgeAction::GoBack
+            }
+        }
+    }
+}
