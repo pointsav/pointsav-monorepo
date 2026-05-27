@@ -4,10 +4,11 @@ artifact_type: JOURNAL
 state: draft
 version: "0.1"
 title: "TODO — working title: Capability-Secured Session Orchestration: A Runtime Architecture for Multi-Tenant AI Workload Isolation"
-target_journal: "TODO — OSDI / EuroSys / MLSys"
-target_publisher: "USENIX / ACM / MLSys"
+target_journal: "MLSys (ACM Conference on Machine Learning and Systems)"
+target_publisher: "ACM"
 impact_factor: ""
-alternate_venue: "ACM SOSP; IEEE TPDS"
+acceptance_rate: "22% (2025)"
+alternate_venue: "ASPLOS (ACM SIGARCH, 19.4% AR); OSDI (USENIX, ~20-25% AR)"
 authors:
   - name: "Mathew Woodfine"
     affiliation: "Woodfine Management Corp., Vancouver, British Columbia, Canada"

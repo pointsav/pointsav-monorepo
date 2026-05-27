@@ -27,12 +27,12 @@ Status values: `stub` → `scaffolded` → `language-cleared` → `submission-re
 
 | ID | File | Title (working) | Target Journal | Lead Author | Status |
 |----|------|-----------------|----------------|-------------|--------|
-| J1 | `JOURNAL-retail-colocation-v0.1.draft.md` | Retail Anchor Co-location Composition as a Spatial Leading Indicator of Commercial Activity | Journal of Economic Geography (OUP) | Jennifer M. Woodfine | scaffolded |
-| J2 | `JOURNAL-trustworthy-systems-v0.1.draft.md` | Composing Trustworthy Systems from Verified Primitives | ACM TOCS | Mathew Woodfine | scaffolded |
-| J3 | `JOURNAL-aec-data-layers-v0.1.draft.md` | Open-Source Building-Systems Data Layers for Urban-Scale Site Analysis | Automation in Construction (Elsevier) | Jennifer M. Woodfine | scaffolded |
-| J4 | `JOURNAL-private-network-v0.1.stub.md` | Zero-Trust Private Network Architecture for Distributed Operational Systems | IEEE JSAC | Peter M. Woodfine | stub |
-| J5 | `JOURNAL-totebox-orchestration-v0.1.stub.md` | Capability-Secured Session Orchestration | OSDI / EuroSys / MLSys | Mathew Woodfine | stub |
-| J6 | `JOURNAL-desktop-environment-v0.1.stub.md` | Muscle-Memory-Preserving Desktop Environments for Professional AEC Software Migration | ACM CHI / IJHCS | Jennifer M. Woodfine | stub |
+| J1 | `JOURNAL-retail-colocation-v0.1.draft.md` | Retail Anchor Co-location Composition as a Spatial Leading Indicator of Commercial Activity | Economic Geography (Wiley, IF 7.2) | Jennifer M. Woodfine | scaffolded |
+| J2 | `JOURNAL-trustworthy-systems-v0.1.draft.md` | Composing Trustworthy Systems from Verified Primitives | ASPLOS (ACM, 19.4% AR) | Mathew Woodfine | scaffolded |
+| J3 | `JOURNAL-aec-data-layers-v0.1.draft.md` | Open-Source Building-Systems Data Layers for Urban-Scale Site Analysis | Automation in Construction (Elsevier, IF 12.0) | Jennifer M. Woodfine | scaffolded |
+| J4 | `JOURNAL-private-network-v0.1.stub.md` | Zero-Trust Private Network Architecture for Distributed Operational Systems | IEEE TIFS (IEEE, IF 9.65) | Peter M. Woodfine | stub |
+| J5 | `JOURNAL-totebox-orchestration-v0.1.stub.md` | Capability-Secured Session Orchestration | MLSys (ACM, 22% AR) | Mathew Woodfine | stub |
+| J6 | `JOURNAL-desktop-environment-v0.1.stub.md` | Muscle-Memory-Preserving Desktop Environments for Professional AEC Software Migration | ACM TOCHI | Jennifer M. Woodfine | stub |
 
 ### Pre-submission blockers by paper
 

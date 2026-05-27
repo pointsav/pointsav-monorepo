@@ -4,10 +4,10 @@ artifact_type: JOURNAL
 state: draft
 version: "0.1"
 title: "TODO — working title: Zero-Trust Private Network Architecture for Distributed Operational Systems: A Customer-Rooted Mesh Design"
-target_journal: "IEEE Journal on Selected Areas in Communications"
-target_publisher: "IEEE"
-impact_factor: "13.8"
-alternate_venue: "IEEE/ACM Transactions on Networking; USENIX NSDI"
+target_journal: "IEEE Transactions on Information Forensics and Security"
+target_publisher: "IEEE Signal Processing Society"
+impact_factor: "9.65"
+alternate_venue: "Computers & Security (Elsevier, IF 7.98); IEEE Transactions on Network and Service Management (IEEE, IF 6.44)"
 authors:
   - name: "Peter M. Woodfine"
     affiliation: "Woodfine Management Corp., Vancouver, British Columbia, Canada"
