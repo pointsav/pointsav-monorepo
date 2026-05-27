@@ -4,6 +4,36 @@ Rolling 3-session summary. Newest on top. Keep only 3 entries; push oldest to `s
 
 ---
 
+## 2026-05-27 (continued) — Totebox Session — claude-code (claude-sonnet-4-6)
+
+**Done this session (continuation of prior context):**
+- Group 3A + 3D architecture decisions: all 7 resolved (carried from prior session)
+- Phase 1C toolchain install: gcc-aarch64-linux-gnu v13.3.0, qemu-system-aarch64 v8.2.2 (carried)
+- Phase 1C.a DONE: `moonshot-toolkit build` now calls real `aarch64-linux-gnu-gcc`
+  - CompilePd produces AArch64 bare-metal static ELF (entry 0x40010c). Verified.
+  - `examples/hello-world.toml` + `examples/hello.c` added.
+  - Test renamed to `build_command_errors_without_source_file`.
+  - moonshot-toolkit v0.1.3 → v0.2.0. CHANGELOG.md created.
+  - Commit `34a1111` (Jennifer Woodfine).
+- Phase 1C.b DONE: seL4 v15.0.0-dev kernel.elf built for AArch64 QEMU
+  - KernelPlatform=qemu-arm-virt, KernelSel4Arch=aarch64, KernelPrinting=ON.
+  - AArch64 static ELF, entry 0xffffff8040000000. Gitignored (build artefact).
+  - VM deps installed: device-tree-compiler, libxml2-utils, pyfdt, tempita.
+
+**Pending / carry-forward:**
+- Phase 1C.c (QEMU boot): blocked on `seL4_tools` elfloader (not in vendor-sel4-kernel)
+- Phase 1C.d (AssembleImage): blocked on Microkit SDK or Rust image assembler
+- Stage-6 for system-core+system-ledger v1.0.0: outbox `project-system-20260527-stage6-v100`
+- Image-signing key for Veriexec: outbox `project-system-20260527-image-signing-key`
+- Bench #9 quiet-VM re-run: verify_inclusion_proof composed 1024-leaf
+- PhD thesis pre-publication checklist (bench #9, citations, language pass, ES panorama)
+- fleet-deployment file-mode drift: Command Session review needed
+
+**Operator preferences:**
+- Auto Mode active; all decisions proceed without stopping for clarifications
+
+---
+
 ## 2026-05-27 — Totebox Session — claude-code (claude-sonnet-4-6)
 
 **Done this session:**
