@@ -353,5 +353,253 @@
 
 </div>
 
+<script>
+/* ── Org Chart Drag-Editor v1 ─────────────────────────────────────── */
+(function () {
+  'use strict';
+  const canvas = document.querySelector('.print-canvas') || document.querySelector('.sheet');
+  if (!canvas) return;
+
+  let editMode = false, dragging = null, selected = null, saveTimer = null;
+
+  /* ── Toolbar ──────────────────────────────────────────────────── */
+  const toolbar = document.createElement('div');
+  toolbar.setAttribute('data-drag-ui','1');
+  Object.assign(toolbar.style, {
+    position:'fixed', top:'12px', right:'12px', zIndex:'9999',
+    display:'flex', gap:'6px', alignItems:'center',
+    background:'#1e1e1e', border:'1px solid #444', borderRadius:'6px',
+    padding:'5px 10px', font:'700 11px/1 -apple-system,sans-serif',
+    color:'#ccc', userSelect:'none', boxShadow:'0 2px 8px rgba(0,0,0,0.4)',
+  });
+  const editBtn = document.createElement('button');
+  editBtn.textContent = '✏️ Edit Layout';
+  Object.assign(editBtn.style, {
+    background:'#333', border:'1px solid #555', color:'#ccc',
+    cursor:'pointer', borderRadius:'4px', padding:'4px 8px',
+    font:'700 11px/1 -apple-system,sans-serif',
+  });
+  const statusEl = document.createElement('span');
+  Object.assign(statusEl.style, { fontSize:'10px', color:'#666', minWidth:'70px' });
+  statusEl.setAttribute('data-drag-ui','1');
+  toolbar.append(editBtn, statusEl);
+  document.body.appendChild(toolbar);
+
+  /* print: hide toolbar */
+  const pStyle = document.createElement('style');
+  pStyle.setAttribute('data-drag-ui','1');
+  pStyle.textContent = '@media print{[data-drag-ui]{display:none!important}}';
+  document.head.appendChild(pStyle);
+
+  /* ── SVG path helpers ─────────────────────────────────────────── */
+  function parsePts(d) {
+    const re = /([ML])\s*([\d.+-]+)\s+([\d.+-]+)/g;
+    const pts = []; let m;
+    while ((m = re.exec(d)) !== null)
+      pts.push({ cmd:m[1], x:parseFloat(m[2]), y:parseFloat(m[3]) });
+    return pts;
+  }
+  function buildD(pts) { return pts.map(p => `${p.cmd} ${p.x} ${p.y}`).join(' '); }
+
+  /* ── Connected SVG paths (detected on pickup) ─────────────────── */
+  function findConnected(box) {
+    const svgEl = canvas.querySelector('svg');
+    if (!svgEl) return [];
+    const cs = window.getComputedStyle(box);
+    const bx=parseFloat(cs.left)||0, bw=parseFloat(cs.width)||0;
+    const by=parseFloat(cs.top)||0,  bh=parseFloat(cs.height)||0;
+    const PAD=30, result=[];
+    svgEl.querySelectorAll('path[d]').forEach(path => {
+      const pts = parsePts(path.getAttribute('d'));
+      if (pts.length < 2) return;
+      const s=pts[0], e=pts[pts.length-1];
+      const hitS = s.x>=bx-PAD&&s.x<=bx+bw+PAD&&s.y>=by-PAD&&s.y<=by+bh+PAD;
+      const hitE = e.x>=bx-PAD&&e.x<=bx+bw+PAD&&e.y>=by-PAD&&e.y<=by+bh+PAD;
+      if (hitS||hitE) result.push({path,origPts:pts.map(p=>({...p})),hitS,hitE});
+    });
+    return result;
+  }
+
+  /* ── Update connected path endpoints ──────────────────────────── */
+  function moveConnected(conn, dx, dy) {
+    conn.forEach(({path,origPts,hitS,hitE}) => {
+      const n=origPts.length, pts=origPts.map(p=>({...p}));
+      if (hitS) {
+        pts[0].x+=dx; pts[0].y+=dy;
+        if (n>1) {
+          if (Math.abs(origPts[1].y-origPts[0].y)<1) pts[1].y=pts[0].y;
+          else                                        pts[1].x=pts[0].x;
+        }
+      }
+      if (hitE) {
+        pts[n-1].x+=dx; pts[n-1].y+=dy;
+        if (n>1) {
+          if (Math.abs(origPts[n-1].y-origPts[n-2].y)<1) pts[n-2].y=pts[n-1].y;
+          else                                            pts[n-2].x=pts[n-1].x;
+        }
+      }
+      path.setAttribute('d', buildD(pts));
+    });
+  }
+
+  /* ── Selection highlight ──────────────────────────────────────── */
+  function select(el) {
+    if (selected===el) return;
+    deselect();
+    selected=el;
+    if (el.tagName.toLowerCase()==='path') {
+      el._sw = el.getAttribute('stroke-width')||'2';
+      el.setAttribute('stroke-width', parseFloat(el._sw)+2);
+      el.style.filter = 'drop-shadow(0 0 4px #4d9fff)';
+    } else {
+      el.style.outline = '2px solid #4d9fff';
+      el.style.boxShadow = '0 0 10px rgba(77,159,255,.35)';
+    }
+  }
+  function deselect() {
+    if (!selected) return;
+    const el=selected; selected=null;
+    if (el.tagName.toLowerCase()==='path') {
+      if (el._sw!==undefined) el.setAttribute('stroke-width',el._sw);
+      el.style.filter='';
+    } else { el.style.outline=''; el.style.boxShadow=''; }
+  }
+
+  /* ── Wire a box for drag ──────────────────────────────────────── */
+  function wireBox(el) {
+    el.addEventListener('mousedown', e => {
+      if (!editMode||e.button!==0) return;
+      e.stopPropagation();
+      select(el);
+      const cs=window.getComputedStyle(el);
+      dragging={el, startX:e.clientX, startY:e.clientY,
+        origLeft:parseFloat(cs.left)||0, origTop:parseFloat(cs.top)||0,
+        conn:findConnected(el), isPath:false};
+      el.style.cursor='grabbing';
+      e.preventDefault();
+    });
+  }
+
+  /* ── Wire a path for drag ─────────────────────────────────────── */
+  function wirePath(path) {
+    path.addEventListener('mousedown', e => {
+      if (!editMode||e.button!==0) return;
+      e.stopPropagation();
+      select(path);
+      dragging={el:path, startX:e.clientX, startY:e.clientY,
+        origPts:parsePts(path.getAttribute('d')).map(p=>({...p})), isPath:true};
+      path.style.cursor='grabbing';
+      e.preventDefault();
+    });
+  }
+
+  /* ── mousemove ────────────────────────────────────────────────── */
+  document.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    const dx=e.clientX-dragging.startX, dy=e.clientY-dragging.startY;
+    if (dragging.isPath) {
+      dragging.el.setAttribute('d', buildD(dragging.origPts.map(p=>({cmd:p.cmd,x:p.x+dx,y:p.y+dy}))));
+    } else {
+      dragging.el.style.left=(dragging.origLeft+dx)+'px';
+      dragging.el.style.top =(dragging.origTop +dy)+'px';
+      moveConnected(dragging.conn,dx,dy);
+    }
+  });
+
+  /* ── mouseup ──────────────────────────────────────────────────── */
+  document.addEventListener('mouseup', () => {
+    if (!dragging) return;
+    dragging.el.style.cursor='grab';
+    dragging=null;
+    scheduleSave();
+  });
+
+  /* ── Keyboard: escape to deselect, arrows to nudge ────────────── */
+  document.addEventListener('keydown', e => {
+    if (e.key==='Escape') { deselect(); return; }
+    if (!editMode||!selected||selected.tagName.toLowerCase()==='path') return;
+    const s=e.shiftKey?10:1;
+    const l=parseFloat(selected.style.left)||0, t=parseFloat(selected.style.top)||0;
+    const m={ArrowLeft:['left',l-s],ArrowRight:['left',l+s],ArrowUp:['top',t-s],ArrowDown:['top',t+s]};
+    if (m[e.key]) { selected.style[m[e.key][0]]=m[e.key][1]+'px'; e.preventDefault(); scheduleSave(); }
+  });
+
+  /* canvas background click → deselect */
+  canvas.addEventListener('mousedown', e => { if (e.target===canvas) deselect(); });
+
+  /* ── Toggle edit mode ─────────────────────────────────────────── */
+  function setEditMode(on) {
+    editMode=on;
+    editBtn.textContent=on?'✅ Editing':'✏️ Edit Layout';
+    editBtn.style.color=on?'#89d185':'#ccc';
+    editBtn.style.borderColor=on?'#89d185':'#555';
+    const svgEl=canvas.querySelector('svg');
+    canvas.querySelectorAll('*').forEach(el => {
+      if (window.getComputedStyle(el).position==='absolute')
+        el.style.cursor=on?'grab':'';
+    });
+    if (svgEl) {
+      svgEl.style.pointerEvents=on?'all':'';
+      svgEl.querySelectorAll('path[d]').forEach(p => {
+        p.style.cursor=on?'grab':'';
+        p.style.pointerEvents=on?'stroke':'';
+      });
+    }
+    if (!on) deselect();
+  }
+  editBtn.addEventListener('click', () => setEditMode(!editMode));
+
+  /* ── Wire up all abs-positioned elements + SVG paths ─────────── */
+  canvas.querySelectorAll('*').forEach(el => {
+    if (window.getComputedStyle(el).position==='absolute') wireBox(el);
+  });
+  const svgEl=canvas.querySelector('svg');
+  if (svgEl) svgEl.querySelectorAll('path[d]').forEach(wirePath);
+
+  /* ── Auto-save ────────────────────────────────────────────────── */
+  function scheduleSave() {
+    clearTimeout(saveTimer);
+    statusEl.textContent='unsaved…';
+    saveTimer=setTimeout(doSave,2000);
+  }
+
+  function doSave() {
+    deselect();
+    /* strip edit-mode inline styles temporarily before cloning */
+    const cleanup=[];
+    const strip = el => {
+      ['cursor','pointerEvents','filter','outline','boxShadow'].forEach(prop => {
+        const v=el.style[prop];
+        if (v) { cleanup.push([el,prop,v]); el.style[prop]=''; }
+      });
+    };
+    canvas.querySelectorAll('*').forEach(strip);
+    strip(canvas);
+
+    const clone=document.documentElement.cloneNode(true);
+    clone.querySelectorAll('[data-drag-ui]').forEach(el=>el.remove());
+    const html='<!DOCTYPE html>\n'+clone.outerHTML;
+
+    /* restore live DOM */
+    cleanup.forEach(([el,prop,val])=>el.style[prop]=val);
+
+    if (window.parent&&window.parent!==window) {
+      window.parent.postMessage({type:'wb-save-content',content:html},'*');
+      statusEl.textContent='saved ✓';
+      setTimeout(()=>{statusEl.textContent='';},3000);
+    } else {
+      /* standalone: download */
+      const a=document.createElement('a');
+      a.href=URL.createObjectURL(new Blob([html],{type:'text/html'}));
+      a.download=(document.title||'chart')+'_edited.html';
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      URL.revokeObjectURL(a.href);
+      statusEl.textContent='downloaded ✓';
+      setTimeout(()=>{statusEl.textContent='';},3000);
+    }
+  }
+})();
+</script>
+
 </body>
 </html>
