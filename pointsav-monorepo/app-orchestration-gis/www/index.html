@@ -652,8 +652,8 @@
         // Toggle AEC map layers — tiles present from Night 2+ build
         const aecLayers = [
             'layer8-ashrae', 'layer8-ashrae-line', 'layer8-necb', 'layer8-eu-climate',
-            'layer9-koppen', 'layer10-seismic', 'layer11-flood',
-            'layer12-fema', 'layer12-eu-flood', 'layer13-ecoregions', 'layer15-wildfire',
+            'layer10-seismic', 'layer11-flood',
+            'layer12-fema', 'layer12-eu-flood', 'layer15-wildfire',
         ];
         aecLayers.forEach(id => {
             if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', aecActive ? 'visible' : 'none');
@@ -818,6 +818,8 @@
 
     // ── AEC / Site Conditions state (layers available from Night 2+ build) ──
     let aecActive = false;
+    let koppenActive = false;
+    let ecoregionsActive = false;
 
 
     const map = new maplibregl.Map({
@@ -1274,9 +1276,15 @@
                 </div>
 
                 <div class="lc-group-label">Site Conditions</div>
+                <button class="lc-btn${koppenActive ? ' lc-active' : ''}" id="lc-koppen" onclick="toggleKoppenLayer(this)">
+                    <span class="lc-dot" style="background:linear-gradient(135deg,#0000FF 25%,#96FF96 50%,#FF0000 75%)"></span>Köppen-Geiger Climate
+                </button>
+                <button class="lc-btn${ecoregionsActive ? ' lc-active' : ''}" id="lc-ecoregions" onclick="toggleEcoregionsLayer(this)">
+                    <span class="lc-dot" style="background:linear-gradient(135deg,#1a9641 40%,#2c7bb6 100%)"></span>Ecoregions (Biomes)
+                </button>
                 <div class="lc-btn lc-disabled">
-                    <span class="lc-dot" style="background:#a78bfa"></span>Köppen · Seismic · Flood · Wildfire
-                    <span class="lc-planned">Night 3+</span>
+                    <span class="lc-dot" style="background:#a78bfa"></span>Seismic · Flood · Wildfire
+                    <span class="lc-planned">Night 4+</span>
                 </div>
             </div>
             <div style="padding:16px 0 4px;text-align:center;font-size:11px;color:var(--text-muted);font-style:italic;">
@@ -1498,8 +1506,8 @@
         btn.classList.toggle('lc-active', aecActive);
         const aecLayers = [
             'layer8-ashrae', 'layer8-ashrae-line', 'layer8-necb', 'layer8-eu-climate',
-            'layer9-koppen', 'layer10-seismic', 'layer11-flood',
-            'layer12-fema', 'layer12-eu-flood', 'layer13-ecoregions', 'layer15-wildfire',
+            'layer10-seismic', 'layer11-flood',
+            'layer12-fema', 'layer12-eu-flood', 'layer15-wildfire',
         ];
         aecLayers.forEach(id => {
             if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', aecActive ? 'visible' : 'none');
@@ -1509,7 +1517,7 @@
 
     function applyBubbleAecOverlayStyle() {
         if (!map.getLayer('nodes')) return;
-        if (aecActive) {
+        if (aecActive || koppenActive || ecoregionsActive) {
             map.setPaintProperty('nodes', 'circle-opacity', 0);
             map.setPaintProperty('nodes', 'circle-stroke-width', 2);
             map.setPaintProperty('nodes', 'circle-stroke-color', [
@@ -1527,6 +1535,24 @@
         }
     }
 
+
+    function toggleKoppenLayer(btn) {
+        koppenActive = !koppenActive;
+        btn.classList.toggle('lc-active', koppenActive);
+        if (map.getLayer('layer9-koppen')) {
+            map.setLayoutProperty('layer9-koppen', 'visibility', koppenActive ? 'visible' : 'none');
+        }
+        applyBubbleAecOverlayStyle();
+    }
+
+    function toggleEcoregionsLayer(btn) {
+        ecoregionsActive = !ecoregionsActive;
+        btn.classList.toggle('lc-active', ecoregionsActive);
+        if (map.getLayer('layer13-ecoregions')) {
+            map.setLayoutProperty('layer13-ecoregions', 'visibility', ecoregionsActive ? 'visible' : 'none');
+        }
+        applyBubbleAecOverlayStyle();
+    }
 
     // Derive production layer visibility from (prodView.mode, prodView.selected). The only writer.
     function applyView() {
@@ -2298,6 +2324,53 @@
                     '#cccccc'
                 ],
                 'fill-opacity': 0.55,
+            },
+        }, 'proximity-vignette');
+
+        // ── AEC layer9 — Köppen-Geiger + Ecoregions (Night 3 build) ─────────────
+        map.addSource('layer9-koppen-src', {
+            type: 'vector',
+            url: 'pmtiles://tiles/layer9-koppen-global.pmtiles',
+        });
+        map.addLayer({
+            id: 'layer9-koppen', type: 'fill',
+            source: 'layer9-koppen-src', 'source-layer': 'koppen',
+            layout: { visibility: 'none' },
+            paint: {
+                'fill-color': ['match', ['get', 'koppen_class'],
+                    'Af','#0000FF', 'Am','#0077FF', 'Aw','#46A9FA',
+                    'BWh','#FF0000', 'BWk','#FF9696', 'BSh','#F5A500', 'BSk','#FFDC64',
+                    'Csa','#FFFF00', 'Csb','#C8C800', 'Csc','#969600',
+                    'Cfa','#96FF96', 'Cfb','#64C864', 'Cfc','#329632',
+                    'Dfa','#C8FF50', 'Dfb','#96C800', 'Dfc','#6E9600', 'Dfd','#4B6400',
+                    'ET','#B2B2B2', 'EF','#FFFFFF', '#CCCCCC'
+                ],
+                'fill-opacity': 0.45,
+            },
+        }, 'proximity-vignette');
+
+        map.addSource('layer9-ecoregions-src', {
+            type: 'vector',
+            url: 'pmtiles://tiles/layer9-ecoregions-global.pmtiles',
+        });
+        map.addLayer({
+            id: 'layer13-ecoregions', type: 'fill',
+            source: 'layer9-ecoregions-src', 'source-layer': 'ecoregions',
+            layout: { visibility: 'none' },
+            paint: {
+                'fill-color': ['match', ['get', 'BIOME_NAME'],
+                    'Tropical & Subtropical Moist Broadleaf Forests', '#1a9641',
+                    'Tropical & Subtropical Dry Broadleaf Forests', '#a6d96a',
+                    'Tropical & Subtropical Grasslands, Savannas & Shrublands', '#fdae61',
+                    'Temperate Broadleaf & Mixed Forests', '#2c7bb6',
+                    'Temperate Conifer Forests', '#abd9e9',
+                    'Boreal Forests/Taiga', '#4393c3',
+                    'Mediterranean Forests, Woodlands & Scrub', '#d7191c',
+                    'Deserts & Xeric Shrublands', '#d9ef8b',
+                    'Tundra', '#f7f7f7',
+                    '#cccccc'
+                ],
+                'fill-opacity': 0.40,
             },
         }, 'proximity-vignette');
 
