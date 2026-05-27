@@ -4,10 +4,10 @@ artifact_type: JOURNAL
 state: draft
 version: "0.1"
 title: "TODO — working title: Muscle-Memory-Preserving Desktop Environments for Professional AEC Software Migration: A Keystroke-Economy Analysis"
-target_journal: "ACM CHI"
+target_journal: "ACM Transactions on Computer-Human Interaction"
 target_publisher: "ACM"
 impact_factor: ""
-alternate_venue: "ACM UIST; International Journal of Human-Computer Studies (Elsevier)"
+alternate_venue: "International Journal of Human-Computer Studies (Elsevier, IF 6.96); Human-Computer Interaction (Taylor & Francis, IF ~4.5)"
 authors:
   - name: "Jennifer M. Woodfine"
     affiliation: "Woodfine Management Corp., Vancouver, British Columbia, Canada"

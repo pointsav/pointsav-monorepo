@@ -4,10 +4,11 @@ artifact_type: JOURNAL
 state: draft
 version: "0.1"
 title: "Composing Trustworthy Systems from Verified Primitives: A Substrate Architecture for Customer-Sovereign Capability Ledgers on a Two-Bottom Operating System Stack"
-target_journal: "ACM Transactions on Computer Systems"
-target_publisher: "ACM"
+target_journal: "ASPLOS (ACM SIGARCH/SIGPLAN Symposium on Architectural Support for Programming Languages and Operating Systems)"
+target_publisher: "ACM SIGARCH"
 impact_factor: ""
-alternate_venue: "ACM SOSP (if conference timing aligns)"
+acceptance_rate: "19.4% (2025)"
+alternate_venue: "EuroSys (ACM SIGOPS, 14.7% AR); SOSP (ACM SIGOPS, ~20% AR); ACM Transactions on Computer Systems (TOCS, journal fallback for longer format)"
 authors:
   - name: "Mathew Woodfine"
     affiliation: "Woodfine Management Corp., Vancouver, British Columbia, Canada"
