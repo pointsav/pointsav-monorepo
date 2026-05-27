@@ -79,27 +79,44 @@ echo "Work dir: $WORK_DIR" | tee -a "$LOG"
 
 # ── Step 1 — Beck et al. 2023 Köppen-Geiger GeoTIFF (global, 1km) ────────────
 #
-# Source: Beck, H.E., McVicar, T.R., Vergopolan, N., et al. (2023).
-#         High-resolution (1 km) Köppen-Geiger maps for 1901–2099
-#         based on constrained CMIP6 projections. Sci Data 10, 724.
-# URL:    https://zenodo.org/records/7872081
-# File:   koppen_geiger_0p0083.tif (present-day 1980–2016 classification)
+# Source: Beck, H.E., Zimmermann, N.E., McVicar, T.R., et al. (2018).
+#         Present and future Köppen-Geiger climate classification maps at
+#         1-km resolution. Scientific Data 5, 180214.
+# URL:    https://figshare.com/articles/dataset/Present_and_future_K_ppen-Geiger_climate_classification_maps_at_1-km_resolution/6396959
+# File:   Beck_KG_V1_present.tif (present-day 1980–2016 classification, inside Beck_KG_V1.zip)
 # License: CC BY 4.0
 #
 # Class codes in the raster (integer 1–30) map to the standard KG symbols
 # (Af, Am, Aw, BSh, ... EF). Reclassification table embedded below.
 
 echo "" | tee -a "$LOG"
-echo "[1/11] Beck et al. 2023 Köppen-Geiger GeoTIFF" | tee -a "$LOG"
+echo "[1/11] Beck et al. 2018 Köppen-Geiger GeoTIFF" | tee -a "$LOG"
 
 KG_TIF="$WORK_DIR/koppen_geiger.tif"
 if [[ ! -f "$KG_TIF" ]]; then
-    # Present-period classification (1980–2016 base)
-    KG_URL="https://zenodo.org/records/7872081/files/koppen_geiger_0p0083.tif"
-    curl -fL "$KG_URL" -o "$KG_TIF" 2>&1 | tee -a "$LOG" || {
-        echo "ERROR: Köppen-Geiger GeoTIFF download failed" | tee -a "$LOG"
+    # Download zip (Beck_KG_V1.zip ~70 MB), extract present-day TIF, delete zip
+    KG_ZIP="$WORK_DIR/Beck_KG_V1.zip"
+    KG_ZIP_URL="https://ndownloader.figshare.com/files/12407516"
+    curl -fL "$KG_ZIP_URL" -o "$KG_ZIP" 2>&1 | tee -a "$LOG" || {
+        echo "ERROR: Köppen-Geiger zip download failed" | tee -a "$LOG"
         exit 1
     }
+    # File in zip is Beck_KG_V1_present_0p0083.tif (1km = 0.0083°); not Beck_KG_V1_present.tif
+    unzip -p "$KG_ZIP" "Beck_KG_V1_present_0p0083.tif" > "$KG_TIF" || {
+        echo "ERROR: Could not extract Beck_KG_V1_present_0p0083.tif from zip" | tee -a "$LOG"
+        # Fallback: find the largest present-period TIF (the 1km file is ~22MB in the zip)
+        PRESENT_NAME=$(unzip -l "$KG_ZIP" | grep -i 'present_0p0083' | awk '{print $NF}' | head -1)
+        if [[ -z "$PRESENT_NAME" ]]; then
+            PRESENT_NAME=$(unzip -l "$KG_ZIP" | grep -i present | grep '\.tif' | sort -k1 -rn | awk '{print $NF}' | head -1)
+        fi
+        if [[ -n "$PRESENT_NAME" ]]; then
+            unzip -p "$KG_ZIP" "$PRESENT_NAME" > "$KG_TIF" || { echo "ERROR: fallback extract failed" | tee -a "$LOG"; exit 1; }
+        else
+            echo "ERROR: no present-period TIF found in zip" | tee -a "$LOG"
+            exit 1
+        fi
+    }
+    rm -f "$KG_ZIP"
 fi
 echo "  → $KG_TIF ($(du -sh "$KG_TIF" | cut -f1))  ✓" | tee -a "$LOG"
 
@@ -130,7 +147,7 @@ if [[ ! -f "$KG_GEOJSON" ]]; then
     ogr2ogr -f GPKG "$KG_SIMPLIFIED_GPKG" "$KG_RAW_GPKG" \
         -simplify 0.01 \
         -dialect SQLite \
-        -sql "SELECT kg_code, geometry FROM koppen WHERE kg_code > 0" \
+        -sql "SELECT kg_code, geom FROM koppen WHERE kg_code > 0" \
         2>&1 | tee -a "$LOG"
 
     # Reclassify integer codes to standard KG symbols in Python
