@@ -20,8 +20,9 @@ Pairing ceremony progress on `cluster/project-proofreader` branch:
 |---|---|---|
 | Phase 3 — Kitty/Sixel pixel QR | Complete | `11135186` |
 | Phase 4 — F11 System Cartridge; pending-pair panel | Complete | `28000772` |
-| Phase 5 — Draft mode; `/new` slash command; Doorman Tier B SSE | **Current** | — |
-| Phase 6–12 | Not started | — |
+| Phase 5 — Draft mode; `/new` slash command; Doorman Tier B SSE | Complete | `5118ce77` |
+| Phase 6 — Offline mode; Tantivy full-text search | **Next** | — |
+| Phase 7–12 | Not started | — |
 
 See `.agent/briefs/BRIEF-leapfrog-2030-coding.md` for the full roadmap.
 Stage 6 blocked — see `.agent/inbox.md` (`command-20260522-console-stage6-orphan-branch`).
