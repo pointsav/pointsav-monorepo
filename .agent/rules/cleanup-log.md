@@ -200,6 +200,38 @@ Newest on top. Append a dated block when a session includes meaningful cleanup w
 
 ---
 
+## 2026-05-27 — Phase 1C.a moonshot-toolkit v0.2.0 + seL4 AArch64 kernel build
+
+One commit to project-system cluster branch.
+
+**moonshot-toolkit v0.2.0 (`34a1111`, Jennifer Woodfine)**
+- `cmd_build` stub replaced with real `std::process::Command` execution.
+  `CompilePd` invokes `aarch64-linux-gnu-gcc` with bare-metal flags
+  (-nostdlib -nostartfiles -ffreestanding -static -no-pie -march=armv8-a).
+  Produces AArch64 bare-metal static ELF.
+- `AssembleImage` returns actionable error (Phase 1C.d — needs Microkit SDK
+  or Rust image assembler).
+- `examples/hello-world.toml` + `examples/hello.c` added.
+  `moonshot-toolkit build examples/hello-world.toml` produces `build/hello.elf`
+  (AArch64 static ELF, entry 0x40010c). Verified on workspace VM.
+- Test renamed: `build_command_succeeds_as_stub` → `build_command_errors_without_source_file`.
+- CHANGELOG.md created. `.gitignore` files for build/ added to both
+  moonshot-toolkit/ and vendor-sel4-kernel/.
+- 30 tests pass; clippy/fmt clean.
+
+**seL4 AArch64 kernel built (Phase 1C.b, not committed)**
+- `vendor-sel4-kernel/build/aarch64-qemu/kernel.elf` built from v15.0.0-dev
+  with KernelPlatform=qemu-arm-virt, KernelSel4Arch=aarch64, KernelPrinting=ON.
+- AArch64 static ELF, entry 0xffffff8040000000 (seL4 kernel VA).
+- Build directory gitignored; kernel is a build artefact.
+- VM deps installed: device-tree-compiler, libxml2-utils, pyfdt, tempita.
+
+**Phase 1C blockers surfaced:**
+- Phase 1C.c (QEMU boot): seL4 kernel needs elfloader from `seL4_tools` repo
+  (separate from kernel source) to set up MMU before jumping to high VA.
+- Phase 1C.d (AssembleImage): needs Microkit SDK or Rust image assembler.
+  Both documented in moonshot-toolkit/NEXT.md Blocked section.
+
 ## 2026-05-27 — v1.0.0 version bumps + PhD thesis BRIEF
 
 Two commits to project-system cluster branch.
