@@ -7,16 +7,16 @@
 //! - `validate <spec.toml>` — parse + invariant-check; exit 0 on
 //!   valid, non-zero on parse/validation failure
 //! - `plan <spec.toml>` — parse + generate + print BuildPlan
-//! - `build <spec.toml>` — parse + plan + STUB execute (prints
-//!   "would run" for each step). Actual execution lands in
-//!   cluster task #14 (FUTURE session).
+//! - `build <spec.toml>` — cross-compile each PD to AArch64 ELF
+//!   (aarch64-linux-gnu-gcc), then assemble image. AssembleImage
+//!   step requires Microkit SDK or Rust image assembler (Phase 1C.d).
 
 use std::path::PathBuf;
 use std::process::ExitCode;
 
 use clap::{Parser, Subcommand};
 
-use moonshot_toolkit::plan::{BuildCommand, BuildPlan};
+use moonshot_toolkit::plan::{BuildCommand, BuildPlan, BuildStep};
 use moonshot_toolkit::spec::SystemSpec;
 
 #[derive(Parser, Debug)]
@@ -49,9 +49,10 @@ enum Command {
         #[arg(long, value_enum, default_value_t = PlanFormat::Json)]
         format: PlanFormat,
     },
-    /// Stub: parse + plan + print "would run X" for each step.
-    /// Actual seL4 cross-compile lands in a FUTURE session
-    /// (cluster task #14).
+    /// Cross-compile each protection domain to an AArch64 ELF using
+    /// aarch64-linux-gnu-gcc, then assemble a bootable seL4 image.
+    /// AssembleImage requires Microkit SDK or Rust image assembler
+    /// (Phase 1C.d follow-on).
     Build {
         /// Path to system-spec.toml.
         spec_path: PathBuf,
@@ -120,36 +121,70 @@ fn cmd_plan(spec_path: &std::path::Path, format: PlanFormat) -> Result<(), Strin
 fn cmd_build(spec_path: &std::path::Path) -> Result<(), String> {
     let spec = read_spec(spec_path)?;
     let plan = BuildPlan::from_spec(&spec).map_err(|e| format!("plan: {e:?}"))?;
-    println!(
-        "Would execute BuildPlan (plan_hash = {})",
-        hex_short(&plan.plan_hash)
-    );
-    println!("Steps:");
+    println!("Building plan (plan_hash = {})", hex_short(&plan.plan_hash));
+    std::fs::create_dir_all("build").map_err(|e| format!("create build/: {e}"))?;
+    let n = plan.steps.len();
     for (i, step) in plan.steps.iter().enumerate() {
-        let cmd_summary = match &step.command {
-            BuildCommand::CompilePd {
-                pd_name,
-                source_path,
-                binary_target,
-            } => format!("CompilePd {pd_name}: {source_path} -> {binary_target}"),
-            BuildCommand::AssembleImage {
-                pd_binary_paths,
-                output_image,
-                ..
-            } => format!(
-                "AssembleImage: [{}] -> {}",
-                pd_binary_paths.join(", "),
-                output_image
-            ),
-        };
-        println!("  [{}] {} — would run: {}", i + 1, step.name, cmd_summary);
+        println!("[{}/{}] {}", i + 1, n, step.name);
+        execute_step(step)?;
     }
-    eprintln!(
-        "\nNOTE: v0.1.x stub — actual seL4 cross-compile lands in cluster task #14 \
-         (FUTURE session; requires aarch64-linux-gnu toolchain + seL4 source vendoring + \
-         reproducible-build harness)."
-    );
+    println!("✓ build complete");
     Ok(())
+}
+
+fn execute_step(step: &BuildStep) -> Result<(), String> {
+    match &step.command {
+        BuildCommand::CompilePd {
+            pd_name,
+            source_path,
+            binary_target,
+        } => {
+            // Cross-compile to bare-metal AArch64 ELF.
+            // -nostdlib -nostartfiles: no libc or crt0 — PD provides _start
+            // -ffreestanding: no hosted-environment assumptions
+            // -static -no-pie: seL4 Microkit PDs are loaded at a fixed
+            //   virtual address; dynamic linking is not available in-kernel
+            // -mgeneral-regs-only: exclude FPU/SIMD (seL4 kernel doesn't save
+            //   FPU state by default; PDs that need FPU must opt in explicitly)
+            let output = std::process::Command::new("aarch64-linux-gnu-gcc")
+                .args([
+                    "-nostdlib",
+                    "-nostartfiles",
+                    "-ffreestanding",
+                    "-static",
+                    "-no-pie",
+                    "-march=armv8-a",
+                    "-mgeneral-regs-only",
+                    source_path,
+                    "-o",
+                    binary_target,
+                ])
+                .output()
+                .map_err(|e| format!("compile-pd-{pd_name}: exec aarch64-linux-gnu-gcc: {e}"))?;
+            if !output.status.success() {
+                let stderr = String::from_utf8_lossy(&output.stderr);
+                return Err(format!("compile-pd-{pd_name}:\n{stderr}"));
+            }
+            println!("  ✓ {binary_target}");
+            Ok(())
+        }
+        BuildCommand::AssembleImage {
+            pd_binary_paths,
+            output_image,
+            ..
+        } => {
+            // Phase 1C.d: assemble seL4 bootable image from PD ELFs.
+            // Requires Microkit SDK (microkit.py) or a Rust image assembler —
+            // neither is available yet. PD compile steps above produce the
+            // inputs; this step is the remaining gap.
+            Err(format!(
+                "assemble-image → {output_image}: not yet implemented; \
+                 requires Microkit SDK or Rust image assembler (Phase 1C.d). \
+                 PD binaries ready: [{}]",
+                pd_binary_paths.join(", ")
+            ))
+        }
+    }
 }
 
 fn hex_short(hash: &[u8; 32]) -> String {
@@ -219,15 +254,23 @@ stack_bytes = 4096
     }
 
     #[test]
-    fn build_command_succeeds_as_stub() {
+    fn build_command_errors_without_source_file() {
+        // minimal_spec references "src/hello.rs" which does not exist at
+        // test time. cmd_build invokes aarch64-linux-gnu-gcc; the missing
+        // source file causes a compile error (or exec error if the
+        // toolchain is absent).
         let f = write_spec(minimal_spec());
         let r = cmd_build(f.path());
-        assert!(r.is_ok(), "build stub should succeed; got {r:?}");
+        assert!(
+            r.is_err(),
+            "build should fail when source file is absent; got {r:?}"
+        );
     }
 
     #[test]
     fn empty_spec_build_errors_at_plan_step() {
-        // No protection_domains → plan generation refuses.
+        // No protection_domains → plan generation refuses before any
+        // external command is invoked.
         let f = write_spec("");
         let r = cmd_build(f.path());
         assert!(r.is_err(), "empty spec should fail plan; got {r:?}");
