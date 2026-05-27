@@ -2,6 +2,39 @@
 
 ---
 
+### 2026-05-27 | totebox@project-knowledge | claude-sonnet-4-6
+
+**Done this session:**
+- Full site audit via OPUS agents: identified two root causes for "C grade / no links work"
+  1. Four chrome nav articles missing (disclaimers, contact, about, contribute) → all 404
+  2. CSS/HTML mismatch: new proto-platform-document CSS not wired to server.rs HTML classes
+- Phase 1 COMPLETE: Created 4 governance stub articles in content-wiki-documentation (`86d7567`)
+  All four `/wiki/{slug}` routes now return 200 immediately (disk-served)
+- Phase 2 COMPLETE: Rewrote wiki_chrome() HTML structure to match proto-platform-document CSS
+  Key changes: .wiki-layout → .shell, div#mw-panel → nav.sidebar, main.mw-body →
+  main.article-wrap + article.article__body, h1.page-title → h1.article__title,
+  p.topic-short-description → p.article__lede, div.page-body → div.prose, TOC moved
+  to aside.toc beside article prose, right rail removed/consolidated into sidebar,
+  dl.article__meta added for metadata row. Commit `1a2feb69` (jwoodfine).
+- Phase 3 COMPLETE: Route wildcard fixes — /git/{slug} → /git/{*slug},
+  /special/whatlinkshere/, /special/pageinfo/, /special/cite/ same treatment.
+  Fixes 404 for category-scoped articles. Same commit `1a2feb69`.
+- 106/106 lib tests pass; clippy clean. Outbox msg to Command for Stage 6 + rebuild.
+
+**Pending / carry-forward:**
+- Phase 4 (Command scope): Stage 6 (bin/promote.sh) → cargo build --release →
+  deploy-binary.sh → systemctl restart local-knowledge-{documentation,projects,corporate}
+- Outbox msg `project-knowledge-20260527-stage6-knowledge-platform` pending Command pickup
+- After deploy: visual check that article body shows new .shell/.article-wrap/.prose layout
+- ES bilingual pairs for the 4 governance stub articles (lower priority)
+- .agent/manifest.md contains wrong cluster_name (project-bim) — needs Command correction
+
+**Operator preferences surfaced:**
+- OPUS agents for site audits — "send out several OPUS agents to make full analysis"
+- "plan we can leave on auto" = execute without per-step approval once plan approved
+
+---
+
 ### 2026-05-24 | totebox@project-console | claude-sonnet-4-6
 
 **Done this session:**
@@ -47,26 +80,4 @@
 **Operator preferences surfaced:**
 - "route to Command first" — when a destructive operation (force-push) has unexpected scope, escalate rather than proceed
 
----
-
-### 2026-05-22 | totebox@project-console | claude-sonnet-4-6
-
-**Done this session:**
-- Phase 6 pairing ceremony MVP (d6267e39): server-issued 8-char Crockford code; `pairing-server` binary (tiny_http port 9201); `proofctl pair list/approve/deny`; `PairingState`/`PairingEvent` enums; background `spawn_status_poll` thread; zero-jargon TUI screens in chassis
-- Phase 2 Unicode QR (30874995): `qrcode 0.14` Dense1x2 half-block QR beside code pill on wide terminals; narrow fallback; QR encodes `PAIR:<code>`; `app-console-keys/src/qr.rs`
-- Both commits pushed to canonical: `e24b778c..30874995 cluster/project-proofreader`
-- BRIEF-pairing-ceremony.md created; NEXT.md updated; session-context updated
-
-**Pending / carry-forward:**
-- GitHub PR: `cluster/project-proofreader → main` on pointsav/pointsav-monorepo (orphan branch; needs `--allow-unrelated-histories` or squash)
-- Phase 3 QR: `ratatui-image` Kitty/Sixel pixel-perfect QR with Dense1x2 fallback
-- Phase 4: F11 `app-console-system` operator panel (approve/deny pair requests in-TUI)
-- Deploy `pairing-server` to VM with systemd unit
-- GCE firewall port 2222 open for external MBA connections
-- Tag `v0.1.0` to trigger GitHub Actions release build
-- Peter's SSH key: Ed25519 + `proofctl user add peter --tenant woodfine`
-- Three per-user config.toml files (mathew, jennifer, peter)
-
-**Operator preferences surfaced:**
-- "lets keep going" = continue next phase in sequence without asking; minimal confirmation needed on sequential coding phases
 
