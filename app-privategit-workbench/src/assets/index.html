@@ -2933,6 +2933,8 @@ function attachContextMenu(item) {
       if (isWritableDir) {
         items.push('-');
         items.push({ label: '📄 New file here', action: () => createFileInDir(item) });
+        items.push('-');
+        items.push({ label: '🗑 Delete folder', action: () => deleteFolderByPath(browse, name, item) });
       }
     }
     if (items.length) showCtxMenu(e.clientX, e.clientY, items);
@@ -3003,6 +3005,47 @@ async function deleteFileByPath(path, name, treeItem) {
       renderTabBar();
     }
     // Remove from tree
+    const node = treeItem.closest('.tree-node');
+    if (node) node.remove();
+    else treeItem.remove();
+  } catch(e) { alert('Delete failed: ' + e.message); }
+}
+
+async function deleteFolderByPath(browsePath, name, treeItem) {
+  if (!confirm('Delete folder "' + name + '" and all its contents?\nThis cannot be undone.')) return;
+  const apiPath = browsePath.replace(/^\//, '').replace(/\/$/, '');
+  try {
+    const res = await fetch('/_api/edit/delete?path=' + encodeURIComponent(apiPath), { method: 'POST' });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) { alert(data.error || 'Delete failed'); return; }
+    // Close any tabs whose paths start with this folder
+    const prefix = browsePath.endsWith('/') ? browsePath : browsePath + '/';
+    const toClose = tabs.map((t, i) => i).filter(i => tabs[i].path.startsWith(prefix));
+    for (let i = toClose.length - 1; i >= 0; i--) {
+      const idx = toClose[i];
+      tabs.splice(idx, 1);
+      if (activeTabIdx === idx) {
+        activeTabIdx = -1;
+      } else if (activeTabIdx > idx) {
+        activeTabIdx--;
+      }
+    }
+    if (activeTabIdx === -1 && tabs.length) {
+      await switchTab(0);
+    } else if (!tabs.length) {
+      currentPath = null;
+      hideEditorPanel();
+      document.getElementById('viewer-placeholder').style.display = '';
+      document.getElementById('preview-frame').style.display = 'none';
+      document.getElementById('text-viewer').style.display = 'none';
+      document.getElementById('image-viewer').style.display = 'none';
+      document.getElementById('bar-path').textContent = 'No file selected';
+      document.getElementById('viewer-bar').querySelectorAll('.bar-btn, .bar-link').forEach(el => el.remove());
+      sessionStorage.removeItem('wb-path');
+      sessionStorage.removeItem('wb-name');
+    } else {
+      renderTabBar();
+    }
     const node = treeItem.closest('.tree-node');
     if (node) node.remove();
     else treeItem.remove();
