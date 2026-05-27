@@ -100,11 +100,15 @@ if [[ ! -f "$USGS_TIF" ]]; then
         "https://earthquake.usgs.gov/static/lfs/nshm/2023/nshm2023_pga_2in50_conus.tif" \
         2>&1 | tee -a "$LOG"
 fi
-if [[ ! -f "$USGS_TIF" ]]; then
-    echo "ERROR: USGS PGA raster not downloaded — check URL at https://doi.org/10.5066/P9PRVCF1" | tee -a "$LOG"
-    exit 1
+# Validate: a real GeoTIFF starts with II (little-endian) or MM (big-endian) TIFF magic
+if [[ ! -f "$USGS_TIF" ]] || ! file "$USGS_TIF" | grep -qi "TIFF"; then
+    echo "WARN: USGS PGA raster not a valid GeoTIFF (URL may have changed — check https://doi.org/10.5066/P9PRVCF1); US seismic sampling will be skipped" | tee -a "$LOG"
+    rm -f "$USGS_TIF"
+    SKIP_USGS=1
+else
+    echo "  → $USGS_TIF ($(du -sh "$USGS_TIF" | cut -f1))  ✓" | tee -a "$LOG"
+    SKIP_USGS=0
 fi
-echo "  → $USGS_TIF ($(du -sh "$USGS_TIF" | cut -f1))  ✓" | tee -a "$LOG"
 
 # ── Step 2 — NRCan 2015 seismic hazard raster (Canada) ───────────────────────
 #
@@ -124,14 +128,24 @@ echo "[2/9] NRCan 2015 seismic PGA grid (Canada, 2%/50yr)" | tee -a "$LOG"
 NRCAN_ZIP="$WORK_DIR/nrcan-seismic-ca.zip"
 NRCAN_CSV="$WORK_DIR/nrcan-pga-2p50.csv"
 if [[ ! -f "$NRCAN_CSV" ]]; then
-    curl -L --retry 3 --retry-delay 10 -o "$NRCAN_ZIP" \
-        "https://earthquakescanada.nrcan.gc.ca/hazard-alea/interpolat/2015/2015_pga_2p50.csv.zip" \
-        2>&1 | tee -a "$LOG"
-    unzip -o -j "$NRCAN_ZIP" "*.csv" -d "$WORK_DIR" 2>&1 | tee -a "$LOG"
-    # Rename to canonical name (actual filename inside zip may differ)
-    for f in "$WORK_DIR"/2015_pga*.csv "$WORK_DIR"/pga*.csv; do
-        [[ -f "$f" ]] && mv "$f" "$NRCAN_CSV" && break
-    done
+    # Re-download only if we don't have a valid zip (a real zip starts with PK magic bytes)
+    if [[ ! -f "$NRCAN_ZIP" ]] || ! file "$NRCAN_ZIP" | grep -qi "zip"; then
+        rm -f "$NRCAN_ZIP"
+        curl -L --retry 3 --retry-delay 10 -o "$NRCAN_ZIP" \
+            "https://earthquakescanada.nrcan.gc.ca/hazard-alea/interpolat/2015/2015_pga_2p50.csv.zip" \
+            2>&1 | tee -a "$LOG"
+    fi
+    # Validate zip before extracting — URL may return an HTML error page
+    if file "$NRCAN_ZIP" 2>/dev/null | grep -qi "zip"; then
+        unzip -o -j "$NRCAN_ZIP" "*.csv" -d "$WORK_DIR" 2>&1 | tee -a "$LOG" || true
+        # Rename to canonical name (actual filename inside zip may differ)
+        for f in "$WORK_DIR"/2015_pga*.csv "$WORK_DIR"/pga*.csv; do
+            [[ -f "$f" ]] && mv "$f" "$NRCAN_CSV" && break
+        done
+    else
+        echo "  WARN: NRCAN download is not a valid zip — URL may have changed (file: $(file "$NRCAN_ZIP" 2>/dev/null | cut -d: -f2-))" | tee -a "$LOG"
+        rm -f "$NRCAN_ZIP"
+    fi
 fi
 if [[ ! -f "$NRCAN_CSV" ]]; then
     echo "WARN: NRCan PGA CSV not downloaded — CA seismic sampling will be skipped" | tee -a "$LOG"
@@ -157,7 +171,8 @@ import json, subprocess, csv, math, pathlib, sys
 META = pathlib.Path("$META_PATH")
 USGS_TIF = "$USGS_TIF"
 NRCAN_CSV = "$NRCAN_CSV"
-SKIP_NRCAN = int("$SKIP_NRCAN")
+SKIP_NRCAN = int("${SKIP_NRCAN:-1}")
+SKIP_USGS  = int("${SKIP_USGS:-0}")
 
 clusters = json.loads(META.read_text())
 use_gdallocationinfo = $USE_GDALLOCATIONINFO
@@ -187,17 +202,17 @@ if not SKIP_NRCAN and pathlib.Path(NRCAN_CSV).exists():
 
 def sample_usgs(lon, lat):
     """Sample USGS NSHM 2023 PGA raster at (lon, lat) → float g or None."""
-    if use_gdallocationinfo:
-        try:
-            result = subprocess.run(
-                ["gdallocationinfo", "-valonly", "-wgs84", USGS_TIF, str(lon), str(lat)],
-                capture_output=True, text=True, timeout=10
-            )
-            val = result.stdout.strip()
-            return round(float(val), 4) if val else None
-        except Exception:
-            return None
-    return None  # fallback: skip if gdallocationinfo unavailable
+    if SKIP_USGS or not use_gdallocationinfo:
+        return None
+    try:
+        result = subprocess.run(
+            ["gdallocationinfo", "-valonly", "-wgs84", USGS_TIF, str(lon), str(lat)],
+            capture_output=True, text=True, timeout=10
+        )
+        val = result.stdout.strip()
+        return round(float(val), 4) if val else None
+    except Exception:
+        return None
 
 def sample_nrcan(lon, lat):
     """Nearest-neighbour lookup in NRCan CSV grid → float g or None."""
