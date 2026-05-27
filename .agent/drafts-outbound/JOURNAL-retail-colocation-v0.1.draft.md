@@ -4,9 +4,10 @@ artifact_type: JOURNAL
 state: draft
 version: "0.1"
 title: "Retail Anchor Co-location Composition as a Spatial Leading Indicator of Commercial Activity: A Continental-Scale Cluster Analysis"
-target_journal: "Journal of Economic Geography"
-target_publisher: "Oxford University Press"
-impact_factor: "3.8"
+target_journal: "Economic Geography"
+target_publisher: "Wiley-Blackwell"
+impact_factor: "7.2"
+alternate_venue: "Journal of Economic Geography (Oxford University Press, IF 6.3); Regional Studies (Taylor & Francis, IF 5.54)"
 authors:
   - name: "Jennifer M. Woodfine"
     affiliation: "Woodfine Management Corp., Vancouver, British Columbia, Canada"
