@@ -1,0 +1,19 @@
+[package]
+name = "service-ppn-pairing"
+version = "0.1.0"
+edition = "2021"
+description = "PPN node-join ceremony HTTP server — Crockford base32 short code + Unicode QR, approve/deny via os-network-admin TUI."
+
+[[bin]]
+name = "ppn-pairing-server"
+path = "src/main.rs"
+
+[dependencies]
+system-pairing-codes = { path = "../system-pairing-codes" }
+anyhow = "1"
+rusqlite = { version = "0.32", features = ["bundled"] }
+chrono = "0.4"
+uuid = { version = "1", features = ["v4"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tiny_http = "0.12"
