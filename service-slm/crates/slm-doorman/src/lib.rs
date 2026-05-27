@@ -28,6 +28,11 @@ pub mod router;
 pub mod tier;
 pub mod verdict;
 
+// Adapter registry and fuse-at-build composition — lives in the adapter-hub crate.
+// Re-exported here so callers that already depend on slm-doorman don't need to add
+// a separate adapter-hub dependency until they explicitly want to.
+pub use adapter_hub::{fuse_adapters, AdapterEntry, AdapterRegistry};
+
 pub use apprenticeship::{
     apprentice_prompt, build_attempt, parse_attempt_content, pick_tier_for_brief,
     shadow_corpus_path, ApprenticeshipConfig, ApprenticeshipDispatcher, ParsedAttempt,
