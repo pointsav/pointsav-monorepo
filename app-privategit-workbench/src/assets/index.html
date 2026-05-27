@@ -3416,6 +3416,31 @@ window.addEventListener('message', e => {
   if (found >= 0) applyGotoLine(found + 1);
 });
 
+// ── Org-chart drag-editor: save relay ────────────────────────────────────────
+window.addEventListener('message', async e => {
+  if (!e.data || e.data.type !== 'wb-save-content') return;
+  if (!editorPath || typeof e.data.content !== 'string') return;
+  try {
+    const res = await fetch('/_api/edit/file?path=' + encodeURIComponent(editorPath), {
+      method: 'PUT',
+      headers: { 'Content-Type': 'text/html; charset=utf-8', 'X-Foundry-Editor': '1' },
+      body: e.data.content,
+    });
+    if (res.ok) {
+      const data = await res.json();
+      editorMtime = data.mtime || editorMtime;
+      if (activeTabIdx >= 0) {
+        tabs[activeTabIdx].content     = e.data.content;
+        tabs[activeTabIdx].editorMtime = editorMtime;
+      }
+      const ta = document.getElementById('editor-textarea');
+      if (ta && editorPath) ta.value = e.data.content;
+      setDirty(false);
+      showEditorStatus('Drag-saved', '#89d185', 2500);
+    }
+  } catch(err) {}
+});
+
 // ── Search UI ─────────────────────────────────────────────────────────────────
 const searchInput   = document.getElementById('search-input');
 const searchPanel   = document.getElementById('search-panel');
