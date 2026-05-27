@@ -183,15 +183,18 @@ async fn verify_key_endpoint(
     Json(req): Json<VerifyKeyRequest>,
 ) -> (StatusCode, Json<Value>) {
     let Some(vk) = &state.verify_key else {
+        tracing::warn!(result = "service-unavailable", "verify-key: VERIFY_KEY_PUB not set");
         return (
             StatusCode::SERVICE_UNAVAILABLE,
             Json(json!({"error": "verify key not configured — set VERIFY_KEY_PUB"})),
         );
     };
+    let key_fp = hex::encode(&vk.as_bytes()[..4]);
 
     let token_bytes = match URL_SAFE_NO_PAD.decode(&req.license_key_b64) {
         Ok(b) => b,
         Err(_) => {
+            tracing::info!(product_id = %req.product_id, key_fp = %key_fp, result = "unauthorized", reason = "malformed-token", "verify-key");
             return (
                 StatusCode::UNAUTHORIZED,
                 Json(json!({"valid": false, "reason": "malformed token"})),
@@ -200,6 +203,7 @@ async fn verify_key_endpoint(
     };
 
     if token_bytes.len() <= 64 {
+        tracing::info!(product_id = %req.product_id, key_fp = %key_fp, result = "unauthorized", reason = "token-too-short", "verify-key");
         return (
             StatusCode::UNAUTHORIZED,
             Json(json!({"valid": false, "reason": "token too short"})),
@@ -211,6 +215,7 @@ async fn verify_key_endpoint(
     let sig = Signature::from_bytes(&sig_arr);
 
     if vk.verify_strict(payload_bytes, &sig).is_err() {
+        tracing::info!(product_id = %req.product_id, key_fp = %key_fp, result = "unauthorized", reason = "invalid-signature", "verify-key");
         return (
             StatusCode::UNAUTHORIZED,
             Json(json!({"valid": false, "reason": "invalid signature"})),
@@ -220,6 +225,7 @@ async fn verify_key_endpoint(
     let payload: LicensePayload = match serde_json::from_slice(payload_bytes) {
         Ok(p) => p,
         Err(_) => {
+            tracing::info!(product_id = %req.product_id, key_fp = %key_fp, result = "unauthorized", reason = "invalid-payload", "verify-key");
             return (
                 StatusCode::UNAUTHORIZED,
                 Json(json!({"valid": false, "reason": "invalid payload"})),
@@ -228,6 +234,7 @@ async fn verify_key_endpoint(
     };
 
     if payload.product != req.product_id {
+        tracing::info!(product_id = %req.product_id, key_fp = %key_fp, result = "forbidden", reason = "wrong-product", "verify-key");
         return (
             StatusCode::FORBIDDEN,
             Json(json!({"valid": false, "reason": "wrong product"})),
@@ -237,6 +244,7 @@ async fn verify_key_endpoint(
     // ISO 8601 YYYY-MM-DD is lexicographically ordered — string compare is correct.
     let today = chrono::Utc::now().format("%Y-%m-%d").to_string();
     if payload.channel_expiry < today {
+        tracing::info!(product_id = %payload.product, key_fp = %key_fp, result = "forbidden", reason = "channel-expired", expired = %payload.channel_expiry, "verify-key");
         return (
             StatusCode::FORBIDDEN,
             Json(json!({
@@ -247,6 +255,7 @@ async fn verify_key_endpoint(
         );
     }
 
+    tracing::info!(product_id = %payload.product, key_fp = %key_fp, result = "ok", "verify-key");
     (
         StatusCode::OK,
         Json(json!({
