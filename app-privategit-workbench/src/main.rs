@@ -585,11 +585,12 @@ async fn delete_file(State(state): State<AppState>, Query(q): Query<FileQuery>) 
         return err(StatusCode::NOT_FOUND, "file not found");
     }
 
-    if fs_path.is_dir() {
-        return err(StatusCode::BAD_REQUEST, "path is a directory");
-    }
-
-    if let Err(e) = fs::remove_file(&fs_path) {
+    let result = if fs_path.is_dir() {
+        fs::remove_dir_all(&fs_path)
+    } else {
+        fs::remove_file(&fs_path)
+    };
+    if let Err(e) = result {
         return err(StatusCode::INTERNAL_SERVER_ERROR, e.to_string());
     }
 
