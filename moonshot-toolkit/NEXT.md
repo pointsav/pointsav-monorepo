@@ -1,58 +1,49 @@
 # NEXT.md — moonshot-toolkit
 
-> Last updated: 2026-04-27
+> Last updated: 2026-05-27
 > Read at session start. Update before session end.
 
 ---
 
 ## Right now
 
-- Framework §9 activation landed (this commit). Next commits in
-  this AUTO session: src/spec.rs (#35) + src/plan.rs (#36) +
-  src/main.rs CLI rewrite (#37).
+- Nothing in progress. Phase 1B (spec + plan + CLI) is complete at v0.1.3.
+  Phase 1C (seL4 cross-compile hello-world, task #14) is blocked on 3A
+  architecture decisions — see Blocked section below.
 
 ## Queue
 
-- Implement `src/spec.rs` per task #35: SystemSpec data model
-  (PDs ≤ 63, channels, memory regions, IRQ delivery), serde TOML
-  parser, validation rules. Tests for valid round-trip + each
-  invariant violation.
-- Implement `src/plan.rs` per task #36: BuildPlan generation
-  with content-addressed inputs and deterministic plan_hash.
-  Tests for determinism + spec → plan output binding.
-- Rewrite `src/main.rs` per task #37: clap-based CLI with
-  `validate` / `plan` / `build` subcommands. `build` is a stub
-  in v0.1.x (prints "would run X" for each step) — actual seL4
-  cross-compile + QEMU boot is the future-session milestone (#14).
+- **CHANGELOG.md** — not yet created. Add entries for v0.1.3 / v0.1.x per workspace §7 versioning convention when next touching this crate.
+- **Sigstore Cosign + customer-apex cosignature** — `plan_hash` field is in place; cosignature emission deferred until `moonshot-toolkit build` produces real binary outputs (post-#14).
 
 ## Blocked
 
-- Actual seL4 hello-world build (#14) — Blocked on:
-  (a) cross-compile toolchain installation (aarch64-linux-gnu-gcc
-  or equivalent in workspace); (b) seL4 source vendoring strategy
-  decision (git submodule vs Cargo build.rs fetch vs
-  vendor-sel4-kernel snapshot); (c) reproducible-build harness
-  selection (Nix vs Bazel-hermetic). Surface to operator + Master
-  before scheduling that session.
+- **seL4 hello-world build (#14)** — Blocked on three Group 3A decisions
+  not yet made (as of 2026-05-27):
+  1. Cross-compile toolchain: `aarch64-linux-gnu-gcc` (system dep), Nix,
+     Bazel, or Docker?
+  2. seL4 source vendoring: `vendor-sel4-kernel/` snapshot (already
+     present), git submodule, or Cargo `build.rs` fetch?
+  3. Toolchain installation ownership: operator-manual, Master Session,
+     or Task-tier automated?
+  Once these are decided → Group 4 seL4 cross-compile work can begin.
 
 ## Deferred
 
-- `build-totebox.sh` legacy shell sketch — Deferred: kept in
-  place as migration reference until Phase 1B Rust replacement is
-  operational. Remove when `moonshot-toolkit build` produces a
-  bootable image end-to-end. Tracked as a task #14 closure
-  artefact.
-- `src/main.rs` legacy stub (14-line "Forging Managed Substrate"
-  print routine) — Deferred to #37 rewrite this session.
-- Sigstore Cosign + customer-apex cosignature emission per
-  convention §6.1 — Deferred until BuildPlan output is real
-  (post-#14). The plan_hash field is in v0.1.x; cosignature
-  on top of plan_hash is straightforward when binary outputs
-  exist.
+- `build-totebox.sh` legacy shell sketch — kept as migration reference
+  until `moonshot-toolkit build` produces a bootable image end-to-end
+  (post-#14). Remove then.
+- `no_std` eligibility — not a constraint for the build orchestrator
+  (runs on the workspace VM, not in the kernel). No action needed.
 
 ## Recently done
 
-- 2026-04-27: framework §9 activation — CLAUDE.md / AGENTS.md /
-  NEXT.md / ARCHITECTURE.md / DEVELOPMENT.md created; bilingual
-  READMEs updated; workspace member entry added; registry row
-  Scaffold-coded → Active.
+- 2026-05-27: NEXT.md updated to v0.1.3 delivered state — tasks #35/#36/#37
+  closed; stale "Right now" cleared; Group 3A blockers for #14 made explicit.
+- 2026-04-27 (Phase 1B): `src/spec.rs` (445 lines, 12 tests) + `src/plan.rs`
+  (310 lines, 10 tests) + `src/main.rs` CLI rewrite (241 lines, 8 tests).
+  30 tests total (`cargo test --all-targets`). `validate` / `plan` / `build`
+  (stub) subcommands working. v0.1.3.
+- 2026-04-27: framework §9 activation — CLAUDE.md / AGENTS.md / NEXT.md /
+  ARCHITECTURE.md / DEVELOPMENT.md created; bilingual READMEs; workspace
+  member; registry row Scaffold-coded → Active.
