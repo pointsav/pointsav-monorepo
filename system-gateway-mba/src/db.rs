@@ -90,6 +90,7 @@ pub fn add_user(
     Ok(())
 }
 
+#[allow(clippy::type_complexity)]
 pub fn list_users(conn: &Connection) -> Result<Vec<(String, String, String, String, bool)>> {
     let mut stmt = conn.prepare(
         "SELECT fingerprint, username, tenant, role, active FROM users ORDER BY created_at",
