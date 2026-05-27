@@ -1,6 +1,6 @@
 [package]
 name = "system-ledger"
-version = "0.2.1"
+version = "1.0.0"
 edition = "2021"
 rust-version = "1.73"
 description = "Kernel-side state machine for the Capability Ledger Substrate: LRU checkpoint cache, revocation set, apex history with post-handover invariant, and proof-verified witness record application."
