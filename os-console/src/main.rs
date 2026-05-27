@@ -60,11 +60,7 @@ fn inner_main() -> anyhow::Result<()> {
             &mba.fingerprint,
         ) {
             Ok((request_id, code)) => {
-                chassis.set_pairing_awaiting(
-                    code,
-                    request_id.clone(),
-                    mba.fingerprint.clone(),
-                );
+                chassis.set_pairing_awaiting(code, request_id.clone(), mba.fingerprint.clone());
                 let rx = pairing::spawn_status_poll(p.pair_endpoint.clone(), request_id);
                 chassis.set_pair_rx(rx);
             }
