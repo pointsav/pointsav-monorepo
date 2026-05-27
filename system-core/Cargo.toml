@@ -1,6 +1,6 @@
 [package]
 name = "system-core"
-version = "0.2.0"
+version = "1.0.0"
 edition = "2021"
 rust-version = "1.73"
 description = "Substrate-primitive types for the Capability Ledger Substrate: Capability, WitnessRecord, C2SP signed-note checkpoints, and RFC 9162 Merkle proof primitives."
