@@ -1,4 +1,141 @@
 ---
+from: totebox@project-gis
+to: totebox@project-editorial
+re: A6 thesis handoff — journal prep pipeline; 8-figure brief embedded
+created: 2026-05-27T00:00:00Z
+priority: high
+status: pending
+msg-id: project-gis-20260527-a6-thesis-journal-handoff
+---
+
+Handing off artifact A6 (PROSE-RESEARCH: Geometric Site Selection) to project-editorial
+for journal preparation pipeline. Paper is v0.4.1 with all inline TODO markers cleared.
+Live at https://gis.woodfinegroup.com/research.html for reference.
+
+**Source file:** `.agent/drafts-outbound/PROSE-RESEARCH-geometric-site-selection.draft.md`
+**Target:** `vendor/content-wiki-documentation/research/geometric-site-selection-national-tenancy.md`
+**Target journal:** Journal of Economic Geography (Oxford University Press) — A-ranked ABS
+**Schema:** foundry-draft-v1 | State: dispatched | BCSC class: public-disclosure-safe
+
+---
+
+### Journal pipeline tasks for project-editorial to own
+
+1. **Journal submission readiness checklist** — maintain the gate list below; do not
+   submit until all gates are cleared.
+
+2. **Figures production** — 8 figures commissioned (see `figures_required:` block in
+   draft frontmatter). Six are must-have before submission. F6 (OLS coefficient plot)
+   is blocked until §7.2 regression is run on the cluster dataset.
+
+3. **§7.2 OLS regression** — the regression described in §7.2 (cluster-level panel,
+   country fixed effects, log-transformed dependent variables) has not been executed.
+   This is the key empirical test. It requires running against the Phase 22 cluster
+   dataset (6,493 rows, 13 countries, available at project-gis). Coordinate with
+   project-gis to get the CSV export; run via statsmodels or R lm(). Results go into
+   §7.2 body text and produce F6.
+
+4. **Permutation test** — §7.1 cites a planned permutation test (spatial random
+   reassignment). Not yet implemented. Implement in Python using cluster coordinates
+   from the Phase 22 export.
+
+5. **Bilingual ES sibling** — required before journal submission. Commission ES translation
+   via language-protocol pipeline. Target: same content, `*.es.md` alongside the EN file.
+
+6. **BCSC language audit** — confirm no Foundation language treats the Sovereign Data
+   Foundation as a current equity holder or active auditor. `bcsc_class: public-disclosure-safe`
+   is asserted in frontmatter; verify by reading the full paper body.
+
+---
+
+### Do NOT submit until
+
+- [ ] §7.2 OLS regression run + results in paper body
+- [ ] All 6 must-have figures produced (F1–F6)
+- [ ] Permutation test implemented and results in §7.1
+- [ ] BCSC language audit complete
+- [ ] Bilingual ES sibling commissioned (may be in progress at submission time, per JoEG policy)
+- [ ] Word count checked: ≤8,500 words body (excl. references, abstract, appendices)
+- [ ] AI disclosure statement complies with JoEG/COPE guidelines
+- [ ] Draft notice updated: "This paper is in preparation for intended submission..."
+  (already correct in v0.4.1 — do not weaken to "submitted" until actually submitted)
+
+---
+
+### 8-Figure Brief (full specification inline)
+
+All figure specs are also in the draft frontmatter `figures_required:` YAML block for
+machine-readable access.
+
+**F1 — Tier Classification Decision Tree** (§3.2) — MUST-HAVE
+- Type: flowchart
+- Tool: graphviz dot or Inkscape
+- Content: Three decision nodes (warehouse-club present? → full hypermarket present?
+  → hardware present?). Leaf nodes: T1 (N=1,747), T2 (N=3,393), T3 (N=1,353).
+  Phase 22 actual counts. ANCHOR_CATEGORIES legend with canonical chain examples.
+- JoEG format: ~90mm single-column, 300 DPI
+
+**F2 — Two-Pass DBSCAN Algorithm Schematic** (§3.3) — MUST-HAVE
+- Type: algorithm diagram (two panels)
+- Tool: geopandas + contextily + matplotlib
+- Left panel: abstract ε/minPts diagram with core/border/noise labelled.
+- Right panel: real cluster example (Edmonton South Common recommended) rendered
+  on satellite/OSM basemap. Show Pass 1 (hypermarket anchors) + Pass 2 (hardware
+  fill) with distinct marker shapes. Annotate span_km arrow.
+
+**F3 — Continental Cluster Distribution Map** (§5.1) — MUST-HAVE
+- Type: two-panel dot map
+- Tool: geopandas + matplotlib, Natural Earth 1:10m boundaries
+- Left: North America — Albers Equal Area Conic (EPSG:5070 or similar)
+- Right: Europe — Lambert Azimuthal Equal Area (EPSG:3035)
+- Dot colour = tier (T1/T2/T3 palette), dot size = span_km
+- DO NOT use Web Mercator — geography journal standard requires equal-area projection
+- 300 DPI, 190mm wide (two-column JoEG)
+
+**F4 — Per-Country T1 Share + Count** (§5.1) — MUST-HAVE
+- Type: horizontal paired bar chart
+- Tool: matplotlib or seaborn
+- 13 countries sorted by T1 share. Two bars per country: count (left) + share % (right).
+- NA mean line and EU mean line on each panel.
+- Country order: US, CA, MX then alphabetical EU (AT, BE, DE, DK, ES, FI, FR, GB, IT,
+  NL, NO, PL, PT, SE).
+
+**F5 — Span_km Distribution by Tier** (§5.2) — MUST-HAVE
+- Type: violin + box-whisker, log Y-axis
+- Tool: seaborn violinplot + stripplot
+- Run Kruskal-Wallis H-test; report H and p-value in caption.
+- Three-colour tier palette consistent with F3.
+
+**F6 — OLS Falsification Coefficient Plot** (§7.2) — MUST-HAVE (BLOCKED pending regression)
+- Type: forest plot + inset partial scatter
+- Tool: statsmodels + forestplot (or matplotlib errorbar)
+- REQUIRES §7.2 OLS to be run first on Phase 22 cluster-level data.
+- Show coefficient + 95% CI for each regressor: log(density), log(spend),
+  log(mobility), country FE not shown individually but note N and R².
+- Inset: T1 dummy vs log(density) residual partial scatter.
+
+**F7 — Anchor Co-occurrence Heatmap** (§3.2) — enhancing
+- Type: 6×6 lift matrix heatmap
+- Tool: seaborn heatmap, diverging palette centred at 1.0
+- Rows/columns: hypermarket, hardware, warehouse_club, electronics, sporting, pharmacy
+- Cell = observed co-occurrence / expected-if-independent (lift ratio)
+
+**F8 — T1 vs Population Density Small-Multiple** (§7, online supplement) — enhancing
+- Type: 2×3 map grid (6 metro areas)
+- Tool: geopandas + matplotlib
+- Suggested metros: Edmonton, Calgary, Chicago, Houston, London, Paris
+- Each panel: H3 res-7 hex bins coloured by log(pop density), T1 dots overlaid
+- For online supplement only (not print); 600 DPI, 240mm wide
+
+---
+
+Cluster Phase 22 data export (for regression + figures): coordinate with project-gis.
+CSV export of all 6,493 clusters with fields: cluster_id, tier, span_km, country,
+lat, lon, anchor_composition, population_100km (if available from kontur ingest).
+
+— totebox@project-gis / 2026-05-27
+
+---
 mailbox: outbox
 owner: totebox@project-knowledge
 location: ~/Foundry/clones/project-knowledge/.agent/
