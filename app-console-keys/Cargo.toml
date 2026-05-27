@@ -5,7 +5,7 @@ edition = "2021"
 description = "os-console base chassis — Cartridge trait, F-key navigation, tab strip, status bar"
 
 [dependencies]
-ratatui = "0.30"
+ratatui = "0.29"
 crossterm = { version = "0.28", features = ["event-stream"] }
 anyhow = "1"
 serde = { version = "1", features = ["derive"] }
@@ -14,4 +14,4 @@ reqwest = { version = "0.12", features = ["json", "blocking"] }
 serde_json = "1"
 qrcode = "0.14"
 image = { version = "0.25", default-features = false }
-ratatui-image = { version = "10", default-features = false, features = ["crossterm"] }
+ratatui-image = { version = "9", default-features = false, features = ["crossterm"] }
