@@ -365,13 +365,12 @@ _[BLOCKED: Groups 2 + 3B must complete first]_
 - [x] **Outbox to Command Session: Group 3B gate decisions** _(done 2026-05-21, commit `6e25c46` — msg project-system-20260521-v100-gate-decisions)_
   Surfaces: LedgerConsumer API finality, promote-together-or-separate, commit attribution, quiet-VM bench re-run.
 
-- [ ] **Stage system-core + system-ledger v1.0.0 version bumps**
-  _[BLOCKED: Group 3B Decision 1 (LedgerConsumer API finality) + Decision 2 (promote strategy) + Decision 3 (attribution) — awaiting Master/Operator reply to outbox msg project-system-20260521-v100-gate-decisions]_
-  MAJOR: first declared-stable API; v1.0.0 freezes the public surface.
-  When unblocked: update `Cargo.toml`, `CLAUDE.md` headers, `CHANGELOG.md` entries.
+- [x] **Stage system-core + system-ledger v1.0.0 version bumps** _(done 2026-05-27, commit `c2ae1e9`)_
+  Decisions resolved in session: LedgerConsumer API final as-is; promote together; normal attribution; bench #9 opportunistic.
+  Updated: `Cargo.toml` (0.2.0/0.2.1 → 1.0.0), `CLAUDE.md` headers, `CHANGELOG.md` created for each.
 
-- [ ] **Commit v1.0.0 bumps and outbox "Stage-6 ready" to Command Session**
-  _[BLOCKED: follows v1.0.0 bumps above]_
+- [x] **Commit v1.0.0 bumps and outbox "Stage-6 ready" to Command Session** _(done 2026-05-27)_
+  Outbox msg `project-system-20260527-stage6-v100` prepended; prior gate-decisions msg marked actioned.
 
 ---
 
