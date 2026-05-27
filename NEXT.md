@@ -1,46 +1,107 @@
-# NEXT.md — project-editorial
+# NEXT.md — project-infrastructure (cluster/project-infrastructure branch)
 
 > **Scope: this archive only.** Cross-repo and workspace-level items live at `~/Foundry/NEXT.md`.
+> Full TODO with all sections and sequencing: `.agent/plans/project-infrastructure-todo.md`.
 
-Last updated: 2026-05-28
-
----
-
-## JOURNAL programme — data-gated blockers
-
-- [ ] **J1 §7.2 primary spec** — `log(catchment_entropy) ~ tier + log(pop_150km) + C(country)` — blocked on Phase 24B (Kontur population join to clusters-ols.csv + O-D data join). project-gis owns. Outbox sent `project-editorial-20260528-j1-j3-return`. [2026-05-28 totebox@project-editorial]
-- [ ] **J1 permutation test** — `sim-tier-permutation.py` needs writing (10,000 shuffles, one-tailed p-value, cluster coords at project-gis `work/clusters-ols.csv`). project-gis owns. [2026-05-28 totebox@project-editorial]
-- [ ] **J2 Bench #9 re-run** — `verify_inclusion_proof` 1024-leaf; ±11% CI → <5% CI; quiet GCP n2 host. project-system owns. Outbox sent `project-editorial-20260528-j2-return`. [2026-05-28 totebox@project-editorial]
-- [ ] **J2 citation placeholders** — 9 `[external: ...]` stubs need stable IDs in `citations.yaml`. project-system owns. [2026-05-28 totebox@project-editorial]
-- [ ] **J3 §6 Results** — AEC nightly build coverage metrics (4 scripts × N countries). project-gis owns. Outbox sent `project-editorial-20260528-j3-coverage-metrics` + `project-editorial-20260528-j1-j3-return`. [2026-05-28 totebox@project-editorial]
-- [ ] **J4 §4–§5 benchmarks** — WireGuard tunnel establishment, rekey latency, policy-change propagation, failure-mode behaviour. project-infrastructure owns. Outbox sent `project-editorial-20260528-j4-return`. [2026-05-28 totebox@project-editorial]
-- [ ] **J4 two unresolved citations** — Cameron CA audit-log incident study + ZTA latency comparison. project-infrastructure to find or substitute. [2026-05-28 totebox@project-editorial]
-- [ ] **J5 full writing pass** — HOLD until J2 submitted. project-orchestration owns. Outbox sent `project-editorial-20260528-j5-return`. [2026-05-28 totebox@project-editorial]
-- [ ] **J6 §6 Results** — user study execution (§5 protocol in JOURNAL file). project-bim owns. Outbox sent `project-editorial-20260528-j6-return`. [2026-05-28 totebox@project-editorial]
-
-## JOURNAL programme — operator actions (all papers)
-
-- [ ] **ORCID IDs** for Jennifer M. Woodfine, Peter M. Woodfine, Mathew Woodfine — required before any submission. [2026-05-28 totebox@project-editorial]
-- [ ] **J1 bilingual ES sibling** — Spanish translation of J1 required before Economic Geography submission (per JoEG policy). [2026-05-28 totebox@project-editorial]
-
-## Inbox — pending pickup
-
-- [ ] `command-20260526-dev-phase3-drafts-relay` — two Phase 3 drafts from project-development waiting for editorial pass (GUIDE-workbench-setup.md, TOPIC-privategit-workbench.md at `clones/project-development/.agent/drafts-outbound/`). [2026-05-26 command@claude-code]
-
-## Convention layer — pending (from earlier session)
-
-- [ ] `conventions/artifact-classification.yaml` — add JOURNAL entry (schema, gateway, destinations, bilingual_pair: false). [2026-05-27 totebox@project-editorial]
-- [ ] `conventions/journal-artifact-discipline.md` — new file; copy/adapt from `.agent/rules/journal-artifact-discipline.md`. Command Session scope. [2026-05-27 totebox@project-editorial]
-- [ ] `conventions/artifact-registry.md` — add JOURNAL section row. Command Session scope. [2026-05-27 totebox@project-editorial]
-- [ ] Foundry `NEXT.md` — add JOURNAL programme tracking checkbox. Command Session scope. [2026-05-27 totebox@project-editorial]
+Last updated: 2026-05-27 (session 4).
 
 ---
 
-## Completed this session (2026-05-28)
+## Blocking — operator decisions needed first
 
-- [x] J3 full writing pass + language pass — `02117825`
-- [x] J6 §1–§5 writing pass + language pass — `da4925a4`
-- [x] J4 §1–§3 + §6–§7 writing pass + language pass — `67eb9a37`
-- [x] J1 §7.0 preliminary OLS (Model A + B) + F6 partial + OLS script — `37523014`
-- [x] Project-gis messages archived + JOURNAL brief updated to 2026-05-28 — `a34825b6`
-- [x] 5 JOURNAL return outbox messages sent to source projects — `25023ce9`
+- [x] **Decide: EAPOL-monitor-mode vs Genesis Protocol** — **RESOLVED: Genesis Protocol.**
+  BRIEF-PPN-ARCHITECTURE.md (2026-05-27) establishes Genesis Protocol as the canonical
+  bootstrap architecture. EAPOL approach superseded entirely. Code rewrite gated on Q2–Q6.
+  [2026-05-27 totebox@claude-code]
+
+- [ ] **Q2: Ratify `10.50.0.0/24` as the canonical PPN subnet**
+  Code hardcodes `10.50.0.1/2/3`; `guide-lxc-network-admin.md` also uses this range (de
+  facto confirmed). Confirm, then update `route-network-admin/guide-mesh-orchestration.md`
+  + `INVENTORY.yaml`. [2026-05-27 totebox@claude-code]
+
+- [ ] **Q3: Provide GCP static IP for cloud relay**
+  Needed to complete `fleet-infrastructure-cloud/guide-provision-relay.md` and
+  `os-network-admin/scripts/mesh_status.sh` (`[ENTER_YOUR_GCP_STATIC_IP_HERE]` placeholder).
+  [2026-05-27 totebox@claude-code]
+
+- [ ] **Q4: Confirm Laptop B local IP + `network.woodfinegroup.com` DNS status**
+  `guide-deploy-vpn.md` has `<LOCAL_IP_OF_LAPTOP_B>` placeholder.
+  `guide-mesh-execution.md` references `https://network.woodfinegroup.com`.
+  [2026-05-27 totebox@claude-code]
+
+- [ ] **Q5: Is service-slm Doorman deployed at `localhost:9080`?**
+  `app-network-admin/src/main.rs` F8 Gateway still calls subprocess `/opt/pointsav/f8-gateway/system-slm`.
+  Must be replaced with HTTP to `localhost:9080` (BRIEF §9.2 Step 5). [2026-05-27 totebox@claude-code]
+
+- [ ] **Q6: Flag stale editorial pickup to Command Session outbox?**
+  5 draft pairs in `.agent/drafts-outbound/` — 7 days without pickup. [2026-05-27 totebox@claude-code]
+
+---
+
+## BRIEF — PPN Architecture (gate for all code decisions)
+
+- [x] **`BRIEF-PPN-ARCHITECTURE.md` written** — Yale PhD thesis quality; 385 lines / 39.5 KB;
+  57-citation bibliography; Genesis Protocol confirmed; CPace PAKE + SAS short-code pairing;
+  CAmkES OS personality; intransitive non-interference invariant. Committed 2026-05-27.
+  All code work in §9.2 build order is now unblocked at the architecture level; operator
+  decisions Q2–Q6 gate individual implementation steps. [2026-05-27 totebox@claude-code]
+
+---
+
+## Code — implement Genesis Protocol (gated on Q2–Q6)
+
+- [ ] **Rewrite `os-infrastructure/src/main.rs`** — Genesis Protocol boot sequence
+  (blind boot → mDNS scan → genesis fork → WebSocket holding pattern → admin claim).
+  Replaces broken EAPOL approach. BRIEF §9.2 Step 1. [2026-05-27 totebox@claude-code]
+
+- [ ] **Implement `system-substrate-broadcom/src/lib.rs`** — `silicon_ping() -> bool`,
+  Broadcom 14e4:16b4 PCI detection, no_std. BRIEF §9.2 Step 2. [2026-05-27 totebox@claude-code]
+
+- [ ] **Implement `system-network-interface/src/lib.rs`** — WireGuard/mDNS substrate
+  (replaces 4-line scaffold). BRIEF §9.2 Step 3. [2026-05-27 totebox@claude-code]
+
+- [ ] **Short-code pairing ceremony for node join** — CPace PAKE + Crockford base32 8-char
+  code; mirrors project-console Phases 1–4. BRIEF §9.2 Step 4. [2026-05-27 totebox@claude-code]
+
+- [ ] **Replace F8 Gateway subprocess with HTTP to `localhost:9080`** — Q5 must be
+  confirmed first. BRIEF §9.2 Step 5. [2026-05-27 totebox@claude-code]
+
+- [ ] **Replace JSON mesh payloads with 16-byte binary protocol** — BRIEF §9.2 Step 6.
+  [2026-05-27 totebox@claude-code]
+
+- [ ] **Add focus crates to root `Cargo.toml` workspace members** — `os-infrastructure`,
+  `os-network-admin`, `system-network-interface`, `system-substrate-broadcom`.
+  [2026-05-27 totebox@claude-code]
+
+---
+
+## TOPIC leg — drafts staged, needs editorial pickup
+
+Five draft pairs in `.agent/drafts-outbound/`; pickup notice sent to project-editorial.
+
+- [ ] `topic-sovereign-mesh` + `.es` — expands stub at `infrastructure/sovereign-mesh.md` [session 2]
+- [ ] `topic-genesis-protocol` + `.es` — new; `architecture/genesis-protocol.md` [session 3]
+- [ ] `topic-ppn-command-protocol` + `.es` — new; `architecture/ppn-command-protocol.md` [session 3]
+- [ ] `topic-service-pointsav-link` + `.es` — new; `architecture/service-pointsav-link.md` [session 3]
+
+---
+
+## GUIDE leg — cross-repo fix (Command Session scope)
+
+- [ ] **`fleet-infrastructure-leased/guide-deploy-vpn.md`** — fix hardcoded path
+  `$HOME/Foundry/pointsav-monorepo/` → `/srv/foundry/vendor/pointsav-monorepo/`.
+  Edit lives in `customer/woodfine-fleet-deployment` — Command Session admin-tier.
+  [2026-05-20 task@claude-code]
+
+---
+
+## Completed this cluster (archived for reference)
+
+- [x] Sweep project-intelligence contamination from archive (2026-05-20 session 1)
+- [x] Fix `session-start.md`, `manifest.md` slug mismatch, `NEXT.md`, memory init (session 1)
+- [x] Stage `sovereign-mesh.md` + `.es.md` drafts to `drafts-outbound/` (session 2)
+- [x] Fix `os-infrastructure/Makefile` script name (session 2)
+- [x] Fix `os-infrastructure/forge_iso.sh` hardcoded path (session 2)
+- [x] Gitignore build artifacts in `os-infrastructure/` and `os-network-admin/` (session 2)
+- [x] Create `app-infrastructure-onprem/`, `-leased/`, `-cloud/` Reserved-folder scaffolds (session 2)
+- [x] Split `system-network-interface` → extract F8 Gateway binary to `app-network-admin/` (session 2)
