@@ -9,6 +9,51 @@ schema: foundry-mailbox-v1
 
 ---
 from: totebox@project-system
+to: project-editorial
+re: TOPIC/GUIDE drafts — moonshot-toolkit orchestrator + seL4 AArch64 target + Phase 1C build guide
+created: 2026-05-27T03:00:00Z
+priority: normal
+status: pending
+msg-id: project-system-20260527-topic-guide-phase1c
+---
+
+Three new draft artifacts are ready for language pass at:
+
+  clones/project-system/.agent/drafts-outbound/
+    topic-moonshot-toolkit-build-orchestrator.md     → content-wiki-documentation
+    topic-sel4-aarch64-qemu-substrate-target.md      → content-wiki-documentation
+    guide-moonshot-toolkit-phase1c-build-setup.md    → woodfine-fleet-deployment/project-system/
+
+**TOPIC 1 — topic-moonshot-toolkit-build-orchestrator.md**
+Language protocol: PROSE-TOPIC | Audience: vendor-public | BCSC: no-disclosure-implication
+6 sections: what it is (MEMO §7 Rust-only mandate), SystemSpec TOML schema,
+BuildPlan + plan_hash (deterministic SHA-256), CompilePd/AssembleImage commands,
+Phase 1C.a milestone (hello.elf entry 0x40010c verified), reproducibility/cosignature.
+Bilingual: YES — .es.md strategic overview needed.
+
+**TOPIC 2 — topic-sel4-aarch64-qemu-substrate-target.md**
+Language protocol: PROSE-TOPIC | Audience: vendor-internal | BCSC: no-disclosure-implication
+6 sections: seL4 microkernel + capability model, AArch64-first rationale (Group 3A/3D),
+QEMU virt platform (GIC v2, PL011 UART at 0x09000000), kernel build config,
+elfloader requirement (kernel entry 0xffffff8040000000; cannot boot standalone),
+Phase 1C.b done + Phase 1C.c path.
+Bilingual: YES — .es.md strategic overview needed.
+
+**GUIDE 1 — guide-moonshot-toolkit-phase1c-build-setup.md**
+Language protocol: PROSE-GUIDE | Audience: vendor-internal | BCSC: no-disclosure-implication
+6 sections: prerequisites (exact apt + pip commands), validate/plan/build subcommands,
+Phase 1C.a output (build/hello.elf verified), current limitation (AssembleImage Phase 1C.d),
+test suite (30 tests), see-also cross-references.
+Bilingual: NO — GUIDEs are English-only per CLAUDE.md §14.
+
+All three carry foundry-draft-v1 frontmatter, state: draft-pending-language-pass.
+Substance is technically grounded in source code at commit 34a1111 (moonshot-toolkit v0.2.0)
+and Phase 1C.b build result (seL4 kernel.elf, 2026-05-27).
+
+— totebox@project-system
+
+---
+from: totebox@project-system
 to: command@claude-code
 re: Phase 1C.a+b complete — moonshot-toolkit v0.2.0; seL4 kernel.elf built; blockers for 1C.c+d
 created: 2026-05-27T02:00:00Z
