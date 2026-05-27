@@ -1,11 +1,25 @@
 [package]
 name = "system-gateway-mba"
-version = "1.0.0"
+version = "0.1.0"
 edition = "2021"
+description = "Machine-Based Authorization gateway — SSH fingerprint auth, user registry, proofctl CLI"
+
+[[bin]]
+name = "proofctl"
+path = "src/bin/proofctl.rs"
+
+[[bin]]
+name = "pairing-server"
+path = "src/bin/pairing_server.rs"
 
 [dependencies]
+anyhow = "1"
+rusqlite = { version = "0.32", features = ["bundled"] }
+russh = "0.60"
+clap = { version = "4", features = ["derive"] }
+chrono = "0.4"
+rand = "0.10"
+uuid = { version = "1", features = ["v4"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
 tiny_http = "0.12"
-serde_json = "1.0"
-ssh-key = { version = "0.6", features = ["ed25519"] }
-ed25519-dalek = "2.0"
-hex = "0.4"
