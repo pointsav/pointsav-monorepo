@@ -21,7 +21,7 @@ a fourth entry is added.
 - Session was disk-blocked mid-session (ENOSPC on home partition); user cleared space.
 
 **Commits this session:**
-- `[pending]` — brief: PPN architecture Yale PhD thesis draft + NEXT.md + session-context
+- `289df71c` — brief: PPN architecture — Yale PhD thesis draft; Genesis Protocol confirmed; session-4 context + NEXT.md
 
 **Pending / carry-forward:**
 - Q2: Ratify `10.50.0.0/24` as canonical PPN subnet
