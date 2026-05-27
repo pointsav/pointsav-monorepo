@@ -467,7 +467,7 @@ fi
 # ── Step 9 — Summary + phase marker ──────────────────────────────────────────
 
 echo "" | tee -a "$LOG"
-TILE4_COUNT=$(ls "$TILES_OUT"/layer10-seismic-*.pmtiles 2>/dev/null | wc -l)
+TILE4_COUNT=$(find "$TILES_OUT" -name "layer10-seismic-*.pmtiles" 2>/dev/null | wc -l)
 echo "── Night 4 Complete: $(date -u '+%Y-%m-%dT%H:%M:%SZ') ──" | tee -a "$LOG"
 echo "   layer10 PMTiles produced: $TILE4_COUNT" | tee -a "$LOG"
 echo "   clusters-meta.json: $(wc -c < "$META_PATH") bytes" | tee -a "$LOG"
