@@ -36,10 +36,13 @@ notes_for_editor: |
     Global rewrites: abstract rewritten to 120–150 words, consequence-first;
     §5 subsections open with quantitative findings; banned vocabulary scrubbed;
     Bloomberg topic sentences applied; forward-looking claims qualified.
-  Remaining TODOs: country-by-country results table (Appendix B), architecture
-  diagram (Appendix C), formal permutation test implementation, LODES join,
-  hospital-university civic layer assembly, commercial mobility panel
-  acquisition for full polygon-and-device protocol.
+  v0.4.1 (2026-05-27): Country T1/T2/T3 table filled (Phase 22 actual data);
+  LODES medians and chain table deferred to v0.5 with explicit placeholder text;
+  architecture diagram deferred to v0.5; all inline TODO markers cleared.
+  Remaining open items for v0.5: formal permutation test implementation, LODES
+  join, hospital-university civic layer assembly, commercial mobility panel
+  acquisition for full polygon-and-device protocol, chain-by-country table,
+  architecture diagram, bilingual ES sibling.
   Do NOT reintroduce investment/leasing/capital language at editorial stage.
   Bilingual ES sibling required before journal submission.
   Word count target: ≤8,500 words body (excl. references, abstract, appendices).
@@ -328,7 +331,31 @@ North America produces proportionally more T1 clusters because Walmart Supercent
 
 The asymmetry between North American and European T1 shares is an empirical finding, not a calibration artefact. It reflects the structural difference identified by Wrigley and Lowe (2002): European retail internationalisation proceeded through sequential market entry by individual retail formats, producing less frequent category co-location than the American power centre model in which food, hardware, and warehouse-club developers often targeted the same sub-metropolitan sites simultaneously.
 
-[TODO: Country-by-country T1 count table to be added when Scenario A rebuild is complete. Illustrative case: Sherwood Park, Alberta — a sub-metropolitan market of approximately 80,000 population (2021 Census) containing a T1 cluster with span_km ≈ 0.8 km (Walmart Supercentre, Home Depot, Costco, and Canadian Tire within a 0.8 km diameter), placing it in the top decile of the within-tier geometric rank for North American T1 clusters.]
+The following table reports Phase 22 actual counts (6,493 clusters, May 2026):
+
+| Country | T1 | T2 | T3 | Total |
+|---|---|---|---|---|
+| US | 889 | 1,779 | 436 | 3,104 |
+| FR | 247 | 161 | 216 | 624 |
+| DE | 227 | 338 | 157 | 722 |
+| MX | 68 | 48 | 170 | 286 |
+| CA | 64 | 283 | 28 | 375 |
+| ES | 62 | 64 | 92 | 218 |
+| PL | 53 | 96 | 15 | 164 |
+| IT | 43 | 35 | 99 | 177 |
+| GB | 22 | 400 | 35 | 457 |
+| AT | 21 | 8 | 35 | 64 |
+| NL | 19 | 19 | 38 | 76 |
+| SE | 11 | 8 | 9 | 28 |
+| PT | 8 | 21 | 12 | 41 |
+| GR | 5 | 11 | 6 | 22 |
+| DK | 4 | 62 | 1 | 67 |
+| FI | 2 | 52 | 1 | 55 |
+| NO | 1 | 6 | 3 | 10 |
+| IS | 0 | 2 | 1 | 3 |
+| **Total** | **1,746** | **3,393** | **1,354** | **6,493** |
+
+Illustrative case: Sherwood Park, Alberta — a sub-metropolitan market of approximately 80,000 population (2021 Census) containing a T1 cluster with span_km ≈ 0.8 km (Walmart Supercentre, Home Depot, Costco, and Canadian Tire within a 0.8 km diameter), placing it in the top decile of the within-tier geometric rank for North American T1 clusters. The US concentration of T1 clusters (889 of 1,746; 51%) reflects the power-centre development pattern of the 1990–2010 period discussed in §5.1.
 
 ### 5.2 Geometric Rank Distribution
 
@@ -346,9 +373,7 @@ T3 clusters have a lower median span than T2 because T3 includes many single-anc
 
 The correlation between cluster tier and total employment within the 35 km work-commute catchment is positive across the 7,600 US clusters with LODES O-D coverage. Cluster-level summary statistics:
 
-- T1 median catchment employment: [TODO — pending join of lodes-work-summary-us.jsonl to clusters-meta.json in build-geometric-ranking.py]
-- T2 median: [TODO]
-- T3 median: [TODO]
+Catchment employment medians are pending integration of LODES 2021 commuter-flow data; joined values will appear in v0.5.
 
 The join is straightforward and will populate this section in v0.5. The permutation test (§7, Test 4) can be run with current data and is the priority for the next data processing pass.
 
@@ -633,11 +658,11 @@ Zhao, S., Y. Chen, Y. Duan, and Z. Xu. 2025. Site selection analysis and predict
 
 ## Appendix B — Chain Coverage by Country (Phase 21)
 
-*[TODO: Full chain-by-country table from taxonomy.py — to be added at v0.5 once Scenario A rebuild is complete.]*
+A full chain-by-country inventory is in preparation and will appear in v0.5. The Phase 22 build includes chains from 17 countries across 6,493 clusters; chain-level attribution is queryable from the live map at gis.woodfinegroup.com.
 
 ## Appendix C — Analytical Framework Architecture
 
-*[TODO: Data flow diagram — YAML ingest → JSONL → DBSCAN → clusters-meta.json → PMTiles → MapLibre. To be added at v0.5.]*
+*A data flow diagram (YAML ingest → JSONL → DBSCAN → clusters-meta.json → PMTiles → MapLibre) is in preparation and will appear in v0.5.*
 
 ---
 
