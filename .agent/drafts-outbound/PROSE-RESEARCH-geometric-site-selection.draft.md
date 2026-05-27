@@ -1,6 +1,6 @@
 ---
 schema: foundry-draft-v1
-state: draft
+state: dispatched
 version: "0.4"
 language_protocol: PROSE-RESEARCH
 originating_cluster: project-gis
