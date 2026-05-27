@@ -1,26 +1,18 @@
 [workspace]
 resolver = "2"
 members = [
-    "foundry-nodeclass",
     "service-people",
     "service-content",
     "app-console-content",
     "tool-acs-miner",
-    "system-core",
-    "system-ledger",
+    "app-console-input",
     "system-gateway-mba",
-    "moonshot-toolkit",
     "service-fs",
     "system-security",
     "xtask",
-    "app-privategit-marketplace",
-    "app-privategit-source",
-    "os-privategit",
-    "tool-wallet",
-    "app-privategit-workbench",
-    "tool-proforma-engine",
-    "app-orchestration-bim",
-    "tool-keyplan"
+    "app-console-keys",
+    "app-console-system",
+    "os-console"
 ]
 
 [profile.dev]
