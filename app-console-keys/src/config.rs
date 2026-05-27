@@ -33,19 +33,37 @@ pub struct ProfileConfig {
     pub drafts_outbound_path: String,
 }
 
-fn default_username() -> String { "operator".into() }
-fn default_tenant() -> String { "local".into() }
-fn default_proof_endpoint() -> String { "http://127.0.0.1:9092".into() }
-fn default_ingest_endpoint() -> String { "http://127.0.0.1:9100".into() }
-fn default_totebox_host() -> String { "127.0.0.1".into() }
-fn default_totebox_ssh_port() -> u16 { 2222 }
+fn default_username() -> String {
+    "operator".into()
+}
+fn default_tenant() -> String {
+    "local".into()
+}
+fn default_proof_endpoint() -> String {
+    "http://127.0.0.1:9092".into()
+}
+fn default_ingest_endpoint() -> String {
+    "http://127.0.0.1:9100".into()
+}
+fn default_totebox_host() -> String {
+    "127.0.0.1".into()
+}
+fn default_totebox_ssh_port() -> u16 {
+    2222
+}
 fn default_ssh_key_path() -> String {
     let home = std::env::var("HOME").unwrap_or_else(|_| ".".into());
     format!("{}/.ssh/id_ed25519", home)
 }
-fn default_totebox_endpoint() -> String { "http://localhost:9000".into() }
-fn default_slm_endpoint() -> String { "http://localhost:8011".into() }
-fn default_pair_endpoint() -> String { "http://127.0.0.1:9201".into() }
+fn default_totebox_endpoint() -> String {
+    "http://localhost:9000".into()
+}
+fn default_slm_endpoint() -> String {
+    "http://localhost:8011".into()
+}
+fn default_pair_endpoint() -> String {
+    "http://127.0.0.1:9201".into()
+}
 fn default_drafts_outbound_path() -> String {
     let home = std::env::var("HOME").unwrap_or_else(|_| ".".into());
     format!("{}/.local/share/os-console/drafts-outbound", home)
