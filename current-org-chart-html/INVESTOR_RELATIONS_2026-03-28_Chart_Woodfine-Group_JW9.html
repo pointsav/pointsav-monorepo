@@ -286,7 +286,15 @@
   const statusEl = document.createElement('span');
   Object.assign(statusEl.style, { fontSize:'10px', color:'#666', minWidth:'70px' });
   statusEl.setAttribute('data-drag-ui','1');
-  toolbar.append(editBtn, statusEl);
+  const dupBtn = document.createElement('button');
+  dupBtn.textContent = '⊕ Duplicate';
+  dupBtn.setAttribute('data-drag-ui','1');
+  Object.assign(dupBtn.style, {
+    background:'#333', border:'1px solid #555', color:'#666',
+    cursor:'pointer', borderRadius:'4px', padding:'4px 8px',
+    font:'700 11px/1 -apple-system,sans-serif',
+  });
+  toolbar.append(editBtn, dupBtn, statusEl);
   document.body.appendChild(toolbar);
 
   /* print: hide toolbar */
@@ -421,6 +429,7 @@
   /* ── Keyboard: escape to deselect, arrows to nudge ────────────── */
   document.addEventListener('keydown', e => {
     if (e.key==='Escape') { deselect(); return; }
+    if ((e.ctrlKey||e.metaKey)&&e.key==='d'&&editMode&&selected&&selected.tagName.toLowerCase()!=='path') { e.preventDefault(); duplicateSelected(); return; }
     if (!editMode||!selected||selected.tagName.toLowerCase()==='path') return;
     const s=e.shiftKey?10:1;
     const l=parseFloat(selected.style.left)||0, t=parseFloat(selected.style.top)||0;
@@ -449,6 +458,8 @@
         p.style.pointerEvents=on?'stroke':'';
       });
     }
+    dupBtn.style.color=on?'#ccc':'#666';
+    dupBtn.style.borderColor=on?'#555':'#444';
     if (!on) deselect();
   }
   editBtn.addEventListener('click', () => setEditMode(!editMode));
@@ -461,6 +472,20 @@
   if (svgEl) svgEl.querySelectorAll('path[d]').forEach(wirePath);
 
   /* ── Auto-save ────────────────────────────────────────────────── */
+  /* ── Duplicate selected box ───────────────────────────────── */
+  function duplicateSelected() {
+    if (!selected||selected.tagName.toLowerCase()==='path') return;
+    const clone=selected.cloneNode(true);
+    clone.style.left=(parseFloat(selected.style.left)||0)+20+'px';
+    clone.style.top =(parseFloat(selected.style.top )||0)+20+'px';
+    canvas.appendChild(clone);
+    wireBox(clone);
+    deselect();
+    select(clone);
+    scheduleSave();
+  }
+  dupBtn.addEventListener('click', () => { if (editMode) duplicateSelected(); });
+
   function scheduleSave() {
     clearTimeout(saveTimer);
     statusEl.textContent='unsaved…';
