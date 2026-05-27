@@ -1,12 +1,12 @@
 ---
 schema: foundry-artifact-registry-v1
 project: project-gis
-last_updated: 2026-05-24
+last_updated: 2026-05-27
 ---
 
-# project-gis Artifact Registry
+# project-editorial Artifact Registry
 
-Persistent record of all editorial, design, and data artifacts being built
+Persistent record of all editorial, design, data, and JOURNAL artifacts being built
 for this project. Updated as artifacts are staged, dispatched, or completed.
 Companion to `tasks.md` (sprint history) and `outstanding-todo.md` (backlog).
 
@@ -14,6 +14,47 @@ Routing:
 - TOPIC / GUIDE / TEXT / PROSE → `project-editorial`
 - DESIGN-RESEARCH / DESIGN-TOKEN / COMPONENT → `project-design`
 - DATA artifacts remain in this archive
+- JOURNAL → `drafts-outbound/` (staged for external journal submission)
+
+---
+
+## J — JOURNAL Artifacts (PhD Thesis Programme)
+
+Academic papers under the `foundry-journal-v1` schema. Named natural-person
+authors only. No internal Foundry vocabulary. Rules: `.agent/rules/journal-artifact-discipline.md`.
+
+Status values: `stub` → `scaffolded` → `language-cleared` → `submission-ready` → `submitted` → `published`
+
+| ID | File | Title (working) | Target Journal | Lead Author | Status |
+|----|------|-----------------|----------------|-------------|--------|
+| J1 | `JOURNAL-retail-colocation-v0.1.draft.md` | Retail Anchor Co-location Composition as a Spatial Leading Indicator of Commercial Activity | Journal of Economic Geography (OUP) | Jennifer M. Woodfine | scaffolded |
+| J2 | `JOURNAL-trustworthy-systems-v0.1.draft.md` | Composing Trustworthy Systems from Verified Primitives | ACM TOCS | Mathew Woodfine | scaffolded |
+| J3 | `JOURNAL-aec-data-layers-v0.1.draft.md` | Open-Source Building-Systems Data Layers for Urban-Scale Site Analysis | Automation in Construction (Elsevier) | Jennifer M. Woodfine | scaffolded |
+| J4 | `JOURNAL-private-network-v0.1.stub.md` | Zero-Trust Private Network Architecture for Distributed Operational Systems | IEEE JSAC | Peter M. Woodfine | stub |
+| J5 | `JOURNAL-totebox-orchestration-v0.1.stub.md` | Capability-Secured Session Orchestration | OSDI / EuroSys / MLSys | Mathew Woodfine | stub |
+| J6 | `JOURNAL-desktop-environment-v0.1.stub.md` | Muscle-Memory-Preserving Desktop Environments for Professional AEC Software Migration | ACM CHI / IJHCS | Jennifer M. Woodfine | stub |
+
+### Pre-submission blockers by paper
+
+**J1 — Retail Co-location:**
+- Language pass: remove all internal Foundry vocabulary (`forbidden_terms_cleared: false`)
+- CBRE/JLL leasing-data acquisition (Year 2 research)
+- Optimum Mosaic integration; country-by-country T1 table completion
+- Word-count trim to ≤8,500 words body
+- ORCID IDs for all three authors
+
+**J2 — Trustworthy Systems:**
+- Language pass: remove §1.2 "Foundry continuous-disclosure posture", §7.2 "Honest We Own It" scoresheet references, "Research Trail" appendix (`forbidden_terms_cleared: false`)
+- Bench #9 quiet-VM re-run (22 outliers, ±11% CI — explicitly flagged)
+- Promote all `[external: ...]` citation placeholders to `citations.yaml` stable IDs
+- ORCID IDs for all three authors
+
+**J3 — AEC Data Layers:**
+- Full body writing pass (all sections are scaffold/TODO)
+- Language pass after writing (`forbidden_terms_cleared: false`)
+- ORCID IDs for all three authors
+
+**J4–J6:** Stub only — body writing not yet started
 
 ---
 

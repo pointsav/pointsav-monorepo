@@ -1,0 +1,190 @@
+---
+name: journal-artifact-discipline
+description: Rules and schema for JOURNAL artifacts — peer-reviewed academic papers. Distinct from TOPIC-*, GUIDE-*, and PROSE-RESEARCH.
+metadata:
+  type: project
+---
+
+# JOURNAL Artifact Discipline
+
+Peer-reviewed academic papers produced by the Foundry workspace. Applies to all
+files matching `JOURNAL-*.draft.md` or `JOURNAL-*.stub.md` in any `drafts-outbound/`.
+
+---
+
+## Purpose and distinction
+
+| Artifact type | Audience | Branding | Goal |
+|---|---|---|---|
+| TOPIC-* | Practitioners (internal wiki) | PointSav-branded | Explain existing knowledge |
+| GUIDE-* | Operators | PointSav-branded | Enable a specific procedure |
+| PROSE-RESEARCH | Project researchers | Internal | Scaffold academic thinking |
+| **JOURNAL** | Peer reviewers + academic community | **No branding** | Test a falsifiable claim |
+
+JOURNAL is the promotion target of PROSE-RESEARCH when the falsification programme
+is stable. The two artifact types are not interchangeable — a JOURNAL manuscript
+must be publishable without modification (after language-pass) to an external journal.
+
+---
+
+## Frontmatter schema (`foundry-journal-v1`)
+
+```yaml
+schema: foundry-journal-v1
+artifact_type: JOURNAL
+state: draft           # draft | under-review | accepted | published | archived
+version: "0.1"
+title: "..."
+target_journal: "..."
+target_publisher: "..."
+impact_factor: ""      # fill before submission
+alternate_venue: ""    # optional second-choice venue
+authors:
+  - name: "Jennifer M. Woodfine"
+    affiliation: "Woodfine Management Corp., Vancouver, British Columbia, Canada"
+    email: jmwoodfine@gmail.com
+    orcid: ""           # required before submission
+    credit_roles:
+      - Conceptualization
+      - Methodology
+      - Writing – Original Draft
+      - Writing – Review & Editing
+subject_codes:          # ACM CCS / JEL / domain-specific
+  - "..."
+keywords:
+  - "..."
+bcsc_class: no-disclosure-implication
+ai_tool_used: "claude-sonnet-4-6 (Anthropic)"
+corresponding_author: jmwoodfine@gmail.com
+word_count_body: 0      # fill at each revision
+word_count_target: 8500
+submission_status: not-submitted
+cites: []
+forbidden_terms_cleared: false  # set true only after full language pass
+```
+
+---
+
+## Author rules
+
+- Named natural persons only: **Peter M. Woodfine**, **Jennifer M. Woodfine**, **Mathew Woodfine**
+- AI is a tool, not an author; disclosed per COPE 2024 in §18 of the manuscript
+- ORCID IDs required before any journal submission (leave blank until obtained)
+- Affiliation primary: `Woodfine Management Corp., Vancouver, British Columbia, Canada`
+- Affiliation alternative: `Independent Researcher, Vancouver, BC, Canada`
+- Corresponding author: jmwoodfine@gmail.com
+
+---
+
+## Mandatory 22 structural sections
+
+Every JOURNAL manuscript must contain all 22 sections. Stubs may have empty
+section bodies; promotion to `under-review` requires all sections populated.
+
+1. **Title** — no internal product names; no Do-Not-Use vocabulary
+2. **Authors** — Peter M. Woodfine / Jennifer M. Woodfine / Mathew Woodfine
+3. **Affiliations** — Woodfine Management Corp. or Independent Researcher
+4. **Corresponding author email**
+5. **ORCID IDs** (leave blank in `draft` state; mandatory for `under-review`)
+6. **Keywords** — domain-appropriate; no internal terms
+7. **Subject codes** — ACM CCS, JEL, CCS, PACS (domain-specific)
+8. **Abstract** — 150–250 words; falsifiable claim sentence 1; method sentences 2–3; result quantified; no unhedged forward-looking claims
+9. **Introduction** — research gap + three contributions
+10. **Literature Review** — establishes gap; no structural positioning by competitor name
+11. **Methodology**
+12. **Results**
+13. **Discussion** — composition-as-contribution framing
+14. **Limitations** — explicit; hedged forward-looking claims match BCSC posture
+15. **Conclusion**
+16. **Formal Hypotheses** — H₁ (primary) + H₀ (null) minimum; H₂+ optional
+17. **Falsification Programme** — test specifications; conditions for falsification
+18. **AI Use Disclosure** — per COPE 2024; model identified; human editorial direction stated
+19. **CRediT Contributor Roles** — conceptualization, methodology, software, writing at minimum
+20. **Conflict of Interest Declaration**
+21. **Funding Statement** — or "No external funding received"
+22. **Data Availability Statement**
+
+---
+
+## Forbidden vocabulary
+
+The following terms must never appear in any JOURNAL manuscript body text.
+`forbidden_terms_cleared: false` until a dedicated language-pass session
+has verified their absence.
+
+**Internal product and system names:**
+PointSav, Foundry, Totebox, Doorman, service-slm, app-console-*, app-workplace-*,
+app-network-*, app-mediakit-*, moonshot-*, os-console, os-network-admin, os-privategit,
+system-ledger (use the crate's public name instead), service-extraction, service-fs
+(use the function/interface name instead), cluster-totebox-*, vault-privategit-*
+
+**Internal process and governance terms:**
+BCSC, Bloomberg standard, F12 (commit action), Task Claude, Root Claude, Master Claude,
+Command Session, Totebox Session, Totebox Archive, drafts-outbound, Stage 6, Doctrine
+claim #N, NEXT.md, cleanup-log, Scaffold-coded, Reserved-folder, sprint, foundry-draft-v1,
+foundry-journal-v1, commit SHA, jwoodfine, pwoodfine, ps-administrator, mcorp-administrator,
+Linguistic Air-Lock, Cognitive Forge, Data Vault
+
+**Descriptive sovereign language (BCSC posture):**
+Sovereign Data Foundation (descriptive use) — use "planned/intended" framing only
+"sovereign" (as a descriptive adjective for infrastructure) — use "customer-controlled",
+"customer-rooted", or "trustworthy" instead
+
+**Generic banned marketing vocabulary:**
+seamless, robust, cutting-edge, leverage, next-generation, groundbreaking, revolutionary,
+transformative, game-changing, state-of-the-art (use specific claim + citation instead)
+
+---
+
+## Forward-looking language (BCSC posture)
+
+Any deployment, production use, or roadmap item not yet delivered must carry
+"planned", "intended", "may", or "target". Inherited from bcsc-disclosure-posture.md.
+Applied identically in JOURNAL manuscripts as in all other Foundry artifacts.
+
+This rule applies in both directions:
+- Over-hedging already-delivered items (committed code, passing tests, benchmarks)
+  with "planned/intended" is also an error — state facts as facts.
+- Under-hedging forward-looking items (future deployments, roadmap features) is
+  a disclosure violation — hedge them.
+
+---
+
+## PROSE-RESEARCH → JOURNAL promotion criteria
+
+All six criteria must be met before changing `state` from `draft` (PROSE-RESEARCH)
+to `draft` (JOURNAL):
+
+1. Falsification programme stable: test specifications written; conditions for
+   falsification explicit
+2. Literature review establishes a gap: prior work surveyed; the gap is
+   compositional or empirical; no citation more than 3 years old as the primary claim
+3. Forbidden vocabulary scrubbed: language pass complete; `forbidden_terms_cleared: true`
+4. Target journal named with rationale: impact factor confirmed; recent article
+   alignment documented in notes_for_editor
+5. Named-author byline confirmed: operator has approved author list and credit roles
+6. Abstract conforms: ≤250 words; falsifiable claim sentence 1; method; quantified result
+
+---
+
+## Submission workflow
+
+1. `draft` → language pass → `forbidden_terms_cleared: true`
+2. Operator reviews manuscript + byline
+3. ORCID IDs obtained for all authors
+4. Word count confirmed on target
+5. Operator submits to journal; update `submission_status: submitted`
+6. On decision: update `state` to `under-review` / `accepted` / `archived`
+
+---
+
+## Active JOURNAL manuscripts (updated 2026-05-27)
+
+| File | Domain | Target journal | State |
+|---|---|---|---|
+| JOURNAL-retail-colocation-v0.1.draft.md | Economic geography | Journal of Economic Geography | draft |
+| JOURNAL-trustworthy-systems-v0.1.draft.md | Systems CS | ACM TOCS | draft |
+| JOURNAL-aec-data-layers-v0.1.draft.md | AEC/construction | Automation in Construction | draft (scaffolded) |
+| JOURNAL-private-network-v0.1.stub.md | Networking/ZTA | IEEE JSAC | stub |
+| JOURNAL-totebox-orchestration-v0.1.stub.md | Systems/ML | OSDI / EuroSys | stub |
+| JOURNAL-desktop-environment-v0.1.stub.md | HCI/BIM | ACM CHI | stub |
