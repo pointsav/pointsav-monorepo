@@ -52,6 +52,17 @@
 //!                             /v1/audit/proxy and /v1/audit/capture. Excess
 //!                             requests → 503 SERVICE_UNAVAILABLE with
 //!                             Retry-After: 5. Default 4.
+//!   SLM_ORCHESTRATION_ENDPOINT  base URL of the app-orchestration-slm chassis
+//!                             (e.g. http://10.0.0.1:9180). When set, the
+//!                             Doorman POSTs its identity to the chassis on
+//!                             startup (non-blocking). Absent = standalone mode.
+//!   SLM_MODULE_ID             flat module identifier for chassis registration
+//!                             (e.g. "project-jennifer"). Required when
+//!                             SLM_ORCHESTRATION_ENDPOINT is set.
+//!   SLM_ARCHIVE_ID            archive name for chassis registration
+//!                             (e.g. "cluster-totebox-jennifer").
+//!   SLM_TIER_B_SUBSCRIBED     "true" or "1" if this archive has a paid Tier B
+//!                             subscription via the chassis. Default false.
 //!   RUST_LOG                  default slm_doorman=info,slm_doorman_server=info
 //!
 //! Per `conventions/three-ring-architecture.md` the Doorman boots fine
@@ -322,6 +333,55 @@ async fn main() -> anyhow::Result<()> {
             "Yo-Yo idle monitor enabled"
         );
         tokio::spawn(slm_doorman_server::idle_monitor::run_idle_monitor(idle_cfg));
+    }
+    // ────────────────────────────────────────────────────────────────────
+
+    // ── Chassis self-registration (app-orchestration-slm) ────────────────
+    //
+    // When SLM_ORCHESTRATION_ENDPOINT is set, POST our identity to the
+    // chassis on startup so it can include us in GET /v1/fleet.
+    // Non-blocking — a registration failure never prevents the Doorman
+    // from serving local requests.
+    //
+    // Env vars:
+    //   SLM_ORCHESTRATION_ENDPOINT  chassis base URL (e.g. http://10.0.0.1:9180)
+    //   SLM_MODULE_ID               flat module identifier (e.g. "project-jennifer")
+    //   SLM_ARCHIVE_ID              archive name (e.g. "cluster-totebox-jennifer")
+    //   SLM_TIER_B_SUBSCRIBED       "true" if this archive has a paid Tier B
+    //                               subscription; default false
+    if let Ok(chassis_endpoint) = std::env::var("SLM_ORCHESTRATION_ENDPOINT") {
+        let module_id = std::env::var("SLM_MODULE_ID").unwrap_or_default();
+        let archive_id = std::env::var("SLM_ARCHIVE_ID").unwrap_or_default();
+        let tier_b_subscribed = std::env::var("SLM_TIER_B_SUBSCRIBED")
+            .map(|v| v.eq_ignore_ascii_case("true") || v == "1")
+            .unwrap_or(false);
+        info!(
+            %chassis_endpoint,
+            %module_id,
+            %archive_id,
+            tier_b_subscribed,
+            "registering with orchestration chassis"
+        );
+        tokio::spawn(async move {
+            let body = serde_json::json!({
+                "module_id": module_id,
+                "archive_id": archive_id,
+                "doorman_endpoint": "",
+                "tier_b_subscribed": tier_b_subscribed
+            });
+            let url = format!("{chassis_endpoint}/v1/discovery/register");
+            match reqwest::Client::new().post(&url).json(&body).send().await {
+                Ok(resp) if resp.status().is_success() => {
+                    tracing::info!(%url, "chassis registration succeeded");
+                }
+                Ok(resp) => {
+                    tracing::warn!(%url, status = %resp.status(), "chassis registration rejected");
+                }
+                Err(e) => {
+                    tracing::warn!(%url, error = %e, "chassis registration failed; continuing");
+                }
+            }
+        });
     }
     // ────────────────────────────────────────────────────────────────────
 
