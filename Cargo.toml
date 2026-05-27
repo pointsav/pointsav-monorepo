@@ -26,6 +26,9 @@ members = [
     "system-network-interface",
     "os-network-admin",
     "app-network-admin",
+    # PPN node-join ceremony
+    "system-pairing-codes",
+    "service-ppn-pairing",
 ]
 
 [profile.dev]
