@@ -2,7 +2,7 @@
 schema: foundry-plan-v1
 title: project-system — Comprehensive Work Plan
 created: 2026-05-20
-updated: 2026-05-21 (Group 6 mechanical done; Group 7 complete)
+updated: 2026-05-27 (Group 4 Phase 1C.a+b complete; 1C.c+d+e blockers documented)
 author: task@claude-code (session startup, sonnet-4-6)
 status: active
 ---
@@ -241,32 +241,35 @@ _[MASTER DECISION — surfaced in STAGING-outbox-draft.md §6]_
 
 ## Group 4 — Phase 1C: seL4 cross-compile _(gate decisions resolved 2026-05-27 — UNBLOCKED)_
 
-- [ ] **Install AArch64 cross-compile toolchain on workspace VM** — _[operator runs: `sudo apt-get install gcc-aarch64-linux-gnu binutils-aarch64-linux-gnu qemu-system-aarch64`]_
+- [x] **Install AArch64 cross-compile toolchain on workspace VM** _(done 2026-05-27 — `sudo apt-get install gcc-aarch64-linux-gnu binutils-aarch64-linux-gnu qemu-system-aarch64`; also installed `device-tree-compiler`, `libxml2-utils`, Python deps `pyfdt tempita`)_
 
-- [ ] **Audit `vendor-sel4-kernel/` contents and version**
-  Confirm seL4 version, Microkit version, and that it matches `moonshot-toolkit/ARCHITECTURE.md` §5 reference.
-  (seL4 v15.0.0, Microkit 2.2.0, rust-sel4 4.0.0 per manifest)
+- [x] **Audit `vendor-sel4-kernel/` contents and version** _(done 2026-05-27 — seL4 v15.0.0-dev; `qemu-arm-virt` platform config confirmed; pre-existing build was x86/pc99 — irrelevant; AArch64 build directory created)_
 
-- [ ] **Implement `moonshot-toolkit build` subcommand — actual execution**
-  Replace the "would run" stub with real `std::process::Command` invocations.
-  Each `BuildStep` variant (`CompilePd`, `AssembleImage`) gets an executor function.
-  Gate: hermetic build property must hold (no network at build time).
+- [x] **Implement `moonshot-toolkit build` subcommand — actual execution** _(done 2026-05-27 — Phase 1C.a; `CompilePd` calls `aarch64-linux-gnu-gcc` with bare-metal flags; `AssembleImage` returns actionable error for Phase 1C.d; `examples/hello-world.toml` + `examples/hello.c` added; moonshot-toolkit v0.2.0)_
 
-- [ ] **Write a minimal `system-spec.toml` for a seL4 hello-world**
-  One PD, no channels, one memory region (UART for output).
-  This is the validation fixture for `moonshot-toolkit build`.
+- [x] **Write a minimal `system-spec.toml` for a seL4 hello-world** _(done 2026-05-27 — `moonshot-toolkit/examples/hello-world.toml` + `examples/hello.c`; `moonshot-toolkit build examples/hello-world.toml` produces `build/hello.elf` AArch64 static ELF)_
 
-- [ ] **Boot seL4 hello-world in QEMU AArch64**
-  `qemu-system-aarch64 -machine virt -cpu cortex-a72 -m 2G -nographic \`
-  `-kernel <image> -append "..."`
-  Confirm PD runs and outputs via UART.
+- [x] **Build seL4 kernel ELF for AArch64 QEMU** _(done 2026-05-27 — Phase 1C.b; `vendor-sel4-kernel/build/aarch64-qemu/kernel.elf` built with KernelPlatform=qemu-arm-virt, KernelSel4Arch=aarch64, KernelPrinting=ON, KernelDebugBuild=ON; AArch64 static ELF entry 0xffffff8040000000)_
 
-- [ ] **Cosign the resulting image with Sigstore Cosign + customer-apex key**
+- [ ] **[BLOCKED: seL4_tools elfloader] Boot seL4 hello-world in QEMU AArch64** — Phase 1C.c
+  seL4 kernel runs at virtual address 0xffffff8040000000; requires `elfloader` from
+  `seL4_tools` repo (separate from kernel source) to set up MMU before jumping.
+  `qemu-system-aarch64 -machine virt -cpu cortex-a53 -m 512M -nographic -kernel <elfloader+kernel image>`
+  Unblocked by: cloning `seL4_tools` + building combined elfloader+kernel+rootserver image.
+
+- [ ] **[BLOCKED: Phase 1C.c + Microkit SDK] AssembleImage — Phase 1C.d**
+  `AssembleImage` step returns an actionable error. Requires Microkit SDK (`pip install microkit`)
+  or a Rust image assembler (`moonshot-toolkit/src/assemble.rs`).
+  Unblocked by: installing Microkit SDK or implementing Rust image assembler.
+
+- [ ] **Cosign the resulting image with Sigstore Cosign + customer-apex key** — Phase 1C.e
   Per `system-substrate-doctrine.md` §6.1 release-artefact format.
   The `plan_hash` becomes the signed artefact.
+  Unblocked by: Phase 1C.d complete (image exists to sign).
 
 - [ ] **Write Phase 1C commit(s) and stage for promotion**
-  moonshot-toolkit v0.1.x → v0.2.0 (MINOR: `build` now actually builds).
+  moonshot-toolkit v0.2.0 ✓ (committed this session). Phase 1C closes when
+  AssembleImage is implemented and QEMU boots the hello-world image.
   Outbox to Command Session: "Phase 1C closed; Phase 2 greenlit."
 
 ---
