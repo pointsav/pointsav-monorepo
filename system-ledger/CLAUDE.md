@@ -1,7 +1,7 @@
 # CLAUDE.md — system-ledger
 
-> **State:** Active  —  **Last updated:** 2026-05-20
-> **Version:** 0.2.1  (per `~/Foundry/CLAUDE.md` §7 and DOCTRINE.md §VIII)
+> **State:** Active  —  **Last updated:** 2026-05-27
+> **Version:** 1.0.0  (per `~/Foundry/CLAUDE.md` §7 and DOCTRINE.md §VIII)
 > **Registry row:** `pointsav-monorepo/.claude/rules/project-registry.md`
 
 ---
@@ -26,7 +26,7 @@ implemented: `cache.rs` (CheckpointCache LRU 64-entry), `revocation.rs`
 (RevocationSet O(1) HashSet + audit sidecar), `apex.rs` (ApexHistory
 + N+3+ post-handover invariant), `witness.rs` (ssh-keygen -Y verify
 wrapper, namespace `capability-witness-v1`), `lib.rs` (LedgerConsumer
-trait + InMemoryLedger). 44 tests + 10 criterion benchmarks.
+trait + InMemoryLedger). 47 tests + 12 criterion benchmarks.
 
 `apply_witness_record` takes an `InclusionProof` parameter (since
 v0.2.0): witness arrivals are Merkle-inclusion-proof gated, no trust
@@ -40,7 +40,7 @@ cargo test  -p system-ledger
 cargo bench -p system-ledger   # criterion; release profile
 ```
 
-44 tests pass on Rust stable. `witness.rs` tests require
+47 tests pass on Rust stable. `witness.rs` tests require
 `/usr/bin/ssh-keygen` in PATH (present on the workspace VM).
 
 ## File layout
@@ -52,7 +52,7 @@ system-ledger/
 ├── CLAUDE.md / AGENTS.md / NEXT.md / ARCHITECTURE.md
 ├── BENCHMARKS.md              # published benchmark numbers
 ├── benches/
-│   └── consult.rs             # 10 criterion benchmarks
+│   └── consult.rs             # 12 criterion benchmarks
 └── src/
     ├── lib.rs       # LedgerConsumer trait + InMemoryLedger
     ├── cache.rs     # CheckpointCache — LRU 64-entry

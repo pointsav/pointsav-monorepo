@@ -4534,10 +4534,8 @@ dependencies = [
 ]
 
 [[package]]
-name = "system-configuration-sys"
-version = "0.6.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8e1d1b10ced5ca923a1fcb8d03e96b8d3268065d724548c0211415ff6ac6bac4"
+name = "system-core"
+version = "1.0.0"
 dependencies = [
  "core-foundation-sys",
  "libc",
@@ -4560,12 +4558,8 @@ dependencies = [
 ]
 
 [[package]]
-name = "system-network-interface"
-version = "1.1.0"
-
-[[package]]
-name = "system-pairing-codes"
-version = "0.1.0"
+name = "system-ledger"
+version = "1.0.0"
 dependencies = [
  "qrcode",
  "rand 0.10.1",
