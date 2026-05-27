@@ -2651,10 +2651,8 @@ dependencies = [
 ]
 
 [[package]]
-name = "ml-kem"
-version = "0.3.0-rc.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8198b5db27ac9773534c371751a59dc18aec8b80aa141e69abfdd1dec2e3f78c"
+name = "moonshot-toolkit"
+version = "0.2.0"
 dependencies = [
  "hybrid-array",
  "kem",
