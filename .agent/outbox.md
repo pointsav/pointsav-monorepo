@@ -10,6 +10,47 @@ schema: foundry-mailbox-v1
 ---
 from: totebox@project-system
 to: command@claude-code
+re: Phase 1C.a+b complete — moonshot-toolkit v0.2.0; seL4 kernel.elf built; blockers for 1C.c+d
+created: 2026-05-27T02:00:00Z
+priority: normal
+status: pending
+msg-id: project-system-20260527-phase1c-progress
+---
+
+Phase 1C progress this session (2026-05-27, commit 34a1111, Jennifer Woodfine):
+
+**Phase 1C.a DONE** — `moonshot-toolkit build` now executes real commands:
+- `CompilePd` invokes `aarch64-linux-gnu-gcc` v13.3.0 with bare-metal flags
+  (-nostdlib -nostartfiles -ffreestanding -static -no-pie -march=armv8-a)
+- `moonshot-toolkit build examples/hello-world.toml` produces `build/hello.elf`
+  (AArch64 bare-metal static ELF, entry 0x40010c). Verified on workspace VM.
+- Version bumped to v0.2.0. CHANGELOG.md created. 30 tests pass.
+
+**Phase 1C.b DONE** — seL4 AArch64 kernel built:
+- `vendor-sel4-kernel/build/aarch64-qemu/kernel.elf` built from v15.0.0-dev
+  source with KernelPlatform=qemu-arm-virt, KernelSel4Arch=aarch64,
+  KernelPrinting=ON, KernelDebugBuild=ON.
+- AArch64 static ELF, entry 0xffffff8040000000 (seL4 kernel VA space).
+- Build deps installed: device-tree-compiler, libxml2-utils, pyfdt, tempita.
+
+**Phase 1C.c BLOCKED** — QEMU boot:
+- seL4 kernel runs at virtual address 0xffffff8040000000; needs `elfloader`
+  from `seL4_tools` repo (separate from kernel source) to set up MMU.
+- Without elfloader, QEMU loads the kernel ELF but produces no boot output.
+- Unblocked by: cloning `seL4_tools` + building combined image.
+
+**Phase 1C.d BLOCKED** — AssembleImage:
+- Returns actionable error message; awaits Microkit SDK or Rust image assembler.
+
+Also still pending: Stage-6 for system-core+system-ledger v1.0.0
+(outbox msg `project-system-20260527-stage6-v100`).
+Image-signing key still needed (outbox msg `project-system-20260527-image-signing-key`).
+
+— totebox@project-system
+
+---
+from: totebox@project-system
+to: command@claude-code
 re: Phase 2 gate — new image-signing key needed in identity store
 created: 2026-05-27T01:00:00Z
 priority: normal
