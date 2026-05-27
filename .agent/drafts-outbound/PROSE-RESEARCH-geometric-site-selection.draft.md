@@ -47,6 +47,102 @@ notes_for_editor: |
   Bilingual ES sibling required before journal submission.
   Word count target: ≤8,500 words body (excl. references, abstract, appendices).
   AI disclosure: see guidance in paper footer — JoEG follows COPE guidelines.
+figures_required:
+  must_have:
+    - id: F1
+      title: "Tier Classification Decision Tree"
+      type: flowchart
+      section: "§3.2"
+      priority: must-have
+      build: |
+        graphviz (dot) or Inkscape. Three decision nodes: warehouse-club present?
+        → full hypermarket present? → hardware present? Leaf nodes label tier +
+        N count (T1=1,747 / T2=3,393 / T3=1,353 from Phase 22). Include
+        ANCHOR_CATEGORIES legend with canonical chain examples per tier.
+    - id: F2
+      title: "Two-Pass DBSCAN Algorithm Schematic"
+      type: algorithm_diagram
+      section: "§3.3"
+      priority: must-have
+      build: |
+        Two panels. Left: abstract ε/minPts diagram with noise points and core
+        points labelled. Right: real cluster worked example (e.g. Edmonton South
+        Common or a T1 NA cluster) rendered with geopandas + contextily basemap
+        + matplotlib. Show Pass 1 (hypermarket anchors) and Pass 2 (hardware
+        fill) with different marker shapes. Annotate span_km.
+    - id: F3
+      title: "Continental Cluster Distribution Map (NA + EU)"
+      type: dot_map
+      section: "§5.1"
+      priority: must-have
+      build: |
+        Two-panel figure. Left: North America (Albers Equal Area Conic).
+        Right: Europe (Lambert Azimuthal Equal Area). Dot colour = tier
+        (T1 dark, T2 mid, T3 light), size = span_km. Boundaries from Natural
+        Earth 1:10m. Built with geopandas + matplotlib. DO NOT use Web Mercator
+        — journal reviewers will reject it for a geography paper. Export at
+        300 DPI, ~190mm wide for two-column JoEG layout.
+    - id: F4
+      title: "Per-Country T1 Share and Count"
+      type: bar_chart
+      section: "§5.1"
+      priority: must-have
+      build: |
+        Horizontal paired bar chart. Y-axis: 13 countries sorted by T1 share.
+        Left bars: T1 count. Right bars: T1 share (%). Add vertical NA mean
+        line and EU mean line for each panel. matplotlib or seaborn. Caption
+        must note Phase 22 data (6,493 clusters). Country order: US, CA, MX
+        then alphabetical EU.
+    - id: F5
+      title: "Span_km Distribution by Tier"
+      type: violin_plot
+      section: "§5.2"
+      priority: must-have
+      build: |
+        Violin + box-whisker overlay. X-axis: T1, T2, T3. Y-axis: span_km,
+        log scale. Seaborn violinplot + stripplot (jitter). Run Kruskal-Wallis
+        H-test; report H-statistic and p-value in caption. Three-colour
+        palette matching F3 tier colours.
+    - id: F6
+      title: "OLS Falsification Coefficient Plot"
+      type: forest_plot
+      section: "§7.2"
+      priority: must-have
+      build: |
+        BLOCKED until §7.2 OLS regression is run (cluster-level panel, country
+        fixed effects, log(density) + log(spend) + log(mobility) regressors).
+        Once run: forest plot (coefficient + 95% CI) for each regressor, plus
+        inset partial scatter (T1 dummy vs log(density) residuals). statsmodels
+        + forestplot library or matplotlib errorbar. This is the key empirical
+        figure — do not skip.
+  enhancing:
+    - id: F7
+      title: "Anchor Co-occurrence Heatmap"
+      type: heatmap
+      section: "§3.2"
+      priority: enhancing
+      build: |
+        6×6 lift matrix. Rows/columns: the six anchor categories from
+        ANCHOR_CATEGORIES (hypermarket, hardware, warehouse_club, electronics,
+        sporting, pharmacy). Cell value: observed co-occurrence / expected if
+        independent (lift). Seaborn heatmap, diverging palette centred at 1.0.
+        Export as square panel, ~90mm for single-column layout.
+    - id: F8
+      title: "T1 Cluster vs Population Density Small-Multiple"
+      type: map_small_multiple
+      section: "§7 (online supplement)"
+      priority: enhancing
+      build: |
+        2×3 grid (6 metros). Suggested: Edmonton, Calgary, Chicago, Houston,
+        London, Paris. Each panel: H3 res-7 hex bins coloured by log(population
+        density), T1 cluster dots overlaid. geopandas + matplotlib. For online
+        supplement, not the print version — 600 DPI PNG, 240mm wide.
+  submission_gates:
+    - "F6 (OLS plot) requires §7.2 regression run first — not possible from cluster data alone"
+    - "All 6 must-have figures must exist before journal submission"
+    - "BCSC disclosure pass required (bcsc_class: public-disclosure-safe confirmed in frontmatter)"
+    - "Bilingual ES sibling must be commissioned through project-editorial before submission"
+    - "AI disclosure statement in paper footer must comply with JoEG/COPE guidelines"
 ---
 
 ---
