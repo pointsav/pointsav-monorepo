@@ -55,7 +55,11 @@ Last updated: 2026-04-23.
 
 | Project | State | Type | Notes |
 |---|---|---|---|
-| app-orchestration-bim | Reserved-folder | app-orchestration | 1 file (RESEARCH.md); triggered taxonomy expansion to seventh in-force domain on 2026-04-22 |
+| app-orchestration-bim | Reserved-folder | app-orchestration | 2 files (CLAUDE.md + RESEARCH.md byte-identical to app-console-bim copy, Task Claude — BIM to rationalise); triggered taxonomy expansion to seventh in-force domain on 2026-04-22; directory created 2026-04-23 (closes registry drift) |
+| app-orchestration-exchange | Reserved-folder | app-orchestration | Browser ad campaign UI; deployed as gateway-orchestration-exchange-N; Doctrine claim #52 |
+| app-orchestration-gis | Reserved-folder | app-orchestration | GIS/mapping orchestration surface; deployed as gateway-orchestration-gis-1; registry drift closed 2026-05-07 |
+| app-orchestration-market | Reserved-folder | app-orchestration | Browser marketplace storefront; deployed as gateway-orchestration-market-N; Doctrine claim #52 |
+| app-orchestration-slm | Scaffold-coded | app-orchestration | Commercial Yo-Yo broker chassis (DOCTRINE #23); 3-crate workspace (orchestration-slm-core, orchestration-slm, orchestration-slm-server); port :9180; MVP scaffold 2026-05-27; deploys as gateway-orchestration-slm-N on os-orchestration |
 
 ## App — PrivateGit surface (`app-privategit-*`)
 
@@ -184,12 +188,12 @@ Last updated: 2026-04-23.
 
 ## Summary (2026-05-23)
 
-- **Active:** 5 (`app-console-bookkeeper`, `app-console-keys`, `app-workplace-presentation`, `app-workplace-proforma`, `service-extraction`)
-- **Scaffold-coded:** 54 (added `app-console-system` 2026-05-23)
-- **Reserved-folder:** 35 (`app-console-keys` reclassified Active)
-- **Defect:** 0
+- **Active:** 6 (`app-console-bookkeeper`, `app-console-keys`, `app-workplace-presentation`, `app-workplace-proforma`, `service-extraction`, `app-orchestration-slm` Scaffold-coded)
+- **Scaffold-coded:** 55 (includes `app-orchestration-slm` added 2026-05-27; `app-console-system` added 2026-05-23)
+- **Reserved-folder:** 39 (added exchange, gis, market, slm orchestration rows)
+- **Defect:** 0 (all 5 prior defects resolved 2026-04-23 — see `cleanup-log.md` Completed migrations)
 - **Not-a-project:** 2 (`discovery-queue`, `target`)
 - **Dormant:** 0
 - **Archived:** 0
 
-**Total rows:** 98.
+**Total rows:** 102. Last updated: 2026-05-27.

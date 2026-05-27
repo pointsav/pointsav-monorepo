@@ -223,6 +223,50 @@ Newest on top. Append a dated block when a session includes meaningful cleanup w
 
 ---
 
+## 2026-05-27 — app-orchestration-slm MVP scaffold
+
+- **New project directory** `app-orchestration-slm/` created — commercial Yo-Yo broker chassis
+  implementing DOCTRINE claim #23 (multi-Totebox paid tier). Follows the `app-orchestration-bim`
+  chassis pattern, deploys as `gateway-orchestration-slm-N` on `os-orchestration` host.
+
+- **Three-crate Cargo workspace** (standalone, not a monorepo root member):
+  - `orchestration-slm-core` — shared wire types: `FleetMember`, `RegistrationRequest`,
+    `ReadyzResponse`, `YoyoLabel`, `CHASSIS_VERSION`
+  - `orchestration-slm` — business logic: `FleetRegistry` (in-memory RwLock HashMap),
+    `YoyoProxyClient` (reqwest client with 90s timeout), `MeteringLedger` (per-tenant
+    in-process cost metering), `ChassisError` (thiserror enum)
+  - `orchestration-slm-server` — axum binary on `:9180`, 7 MVP endpoints
+
+- **MVP endpoints live:**
+  `GET /healthz`, `GET /readyz` (Yo-Yo probe + fleet count), `GET /v1/fleet`,
+  `POST /v1/discovery/register`, `POST /v1/yoyo/proxy`, `POST /v1/yoyo/trainer`,
+  `POST /v1/yoyo/graph`
+
+- **Auth model (MVP):** `Authorization: Bearer <module-id>` → fleet lookup (401 if unregistered),
+  `X-Foundry-Module-ID` header match (403 if spoofed), `tier_b_subscribed` flag (402 if free tier).
+  SSH-signed token validation deferred to Phase 3.
+
+- **No new Yo-Yo VMs.** Chassis front-ends existing Yo-Yo #1 (`"trainer"` L4 24GB) and
+  Yo-Yo #2 (`"graph"` H100 80GB) via `ORCHESTRATION_YOYO_TRAINER_ENDPOINT` /
+  `ORCHESTRATION_YOYO_GRAPH_ENDPOINT` env vars.
+
+- **Tests:** 13 tests across fleet.rs + metering.rs + http.rs; all pass. `cargo check --workspace`
+  clean (0 warnings, 0 errors).
+
+- **Registry:** `app-orchestration-slm` row added as Scaffold-coded; total 105 rows.
+
+- **Stage 6 pending:** commit needs `bin/promote.sh` from Command Session.
+
+- **Pending (post-MVP):**
+  - Step 3: update Doorman `slm-doorman-server/src/main.rs` to POST to
+    `SLM_ORCHESTRATION_ENDPOINT` on startup (chassis self-registration)
+  - Step 4: `adapter-hub` crate split from `slm-doorman/src/adapter_registry.rs`
+  - Step 5: `lora-forge` scaffold + `build-corpus`
+  - Step 6: rename `compute/packer/scripts/lora-training.sh` → `lora-loom/run.sh`
+  - Phase 2: `/v1/graph/federated`, `/v1/training/schedule`, `/v1/adapters`
+
+---
+
 ## 2026-05-12 — Wikipedia Parity Phase 2A — article typography regression fix + color token port
 
 - **Regression fix**: Phase 1 changed `article.wiki-article` → `div #mw-content-text`, silently
