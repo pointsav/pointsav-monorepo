@@ -86,6 +86,46 @@ Migrations fully resolved in the repo. Moved here from **Active legacy-to-canoni
 
 Newest on top. Append a dated block when a session includes meaningful cleanup work. Format:
 
+---
+
+## 2026-05-27 — User feedback sprint: Issues 1–3, 5; AEC Night 3 recovery
+
+### GIS map UI fixes (index.html — commit 16d3d975)
+- **Issue 1 (AEC bubble overlay):** Added `applyBubbleAecOverlayStyle()` function. When AEC layers are active,
+  cluster bubbles become hollow tier-coloured rings (circle-opacity=0, stroke=tier colour) so Köppen/ASHRAE
+  fills show through. Toggle off restores solid bubbles. Wired into `toggleAecMasterGlobal()`, `showOverview()`,
+  `clearChainFilter()`.
+- **Issue 2 (sel-el pinned):** Moved `#sel-el` Selected Location div from bottom of `showClusterDetail()` HTML
+  to second position (after Regional Market, before tier badge). Added `.sel-el-pinned` CSS
+  (`position:sticky; top:0; backdrop-filter`) so it stays visible while scrolling the panel.
+- **Issue 3 (Retail View inspector):** Added `renderRetailLevelInspector()` + `toggleCatchmentMasterFromRetail()`
+  functions; wired call to end of `setRetailLevel()`. Retail Zoom now shows a proper inspector panel with
+  Catchment toggle (disabled-flash if no ring selected). Fixed silent 404 in `loadCatchmentCentroids()` to
+  emit `console.warn` with cluster ID and HTTP status.
+- **Issue 5 (electronics tier descriptor):** Added `"electronics"` to `retail` set and `("electronics", "Electronics")`
+  to label tuple in `build-clusters.py:tier_descriptor()`. Overnight rebuild scheduled for 2026-05-29 05:00 UTC
+  (crontab, `nightly-rebuild.log`).
+
+### AEC Night 3 recovery (build-aec-koppen-ecozones.sh — commit 16d3d975)
+- **Root cause 1 — wrong TIF filename:** Script expected `Beck_KG_V1_present.tif` inside the zip; actual
+  filename in `Beck_KG_V1.zip` is `Beck_KG_V1_present_0p0083.tif` (1km = 0.0083° resolution). Fallback
+  grabbed `Beck_KG_V1_future_0p5.tif` (32K, coarse 0.5° version) — wrong scale entirely (2,284 polygons
+  from a global dataset that should produce tens of millions).
+- **Root cause 2 — GPKG geometry column:** Step 3 SQL queried `geometry` column; `gdal_polygonize` writes
+  GPKG with column named `geom`. Fixed both in the script.
+- **Recovery:** Correct 23MB TIF extracted from freshly-downloaded zip at /tmp, wrong intermediates removed,
+  Night 3 restarted (PID 1805638 at 03:17 UTC). Expected completion ~04:00–04:30 UTC, before Night 4
+  seismic at 05:00 UTC.
+- **Night 4 (seismic) at 05:00 UTC today, Night 5 (flood) at 05:00 UTC May 28 — crontabbed, unchanged.**
+- **Disk: 37G free** — adequate for Night 3 + Night 4 running concurrently.
+
+### Pending (this session)
+- **Issue 6 (research.html):** Deferred to next session. Content review required: 7 TODO markers in thesis
+  draft (Appendix B country table fillable from Phase 22 data, §5.3 LODES note, Appendix C diagram placeholder).
+  Confirmed paper NOT submitted to any journal — draft notice must use "in preparation for intended submission"
+  language only.
+- **Issue 4 (mobility catchments):** Multi-session roadmap (LODES S1–S4, ~4 sessions total). Not sequenced.
+
 ```
 ## YYYY-MM-DD
 - What changed (files touched, counts, rationale)
