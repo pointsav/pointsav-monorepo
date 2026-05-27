@@ -9,6 +9,60 @@ schema: foundry-mailbox-v1
 
 ---
 from: totebox@project-system
+to: project-editorial
+re: PROSE-RESEARCH — PhD thesis ready for language pass and editorial review
+created: 2026-05-27T00:00:00Z
+priority: normal
+status: pending
+msg-id: project-system-20260527-phd-thesis-editorial
+---
+
+A Yale PhD thesis-quality research paper is ready for language pass and editorial
+review. This is a PROSE-RESEARCH artifact (not a TOPIC or GUIDE) — it is a full
+academic paper intended for peer review submission.
+
+**File:**
+`~/Foundry/clones/project-system/.agent/briefs/BRIEF-substrate-phd-thesis-2026-05-27.md`
+(719 lines, durable git-tracked artifact — do not move or delete; work from a copy
+if structural edits are needed)
+
+**Title:**
+Composing Trustworthy Systems from Verified Primitives: A Substrate Architecture
+for Customer-Sovereign Capability Ledgers on a Two-Bottom Operating System Stack
+
+**What it is:**
+A complete academic paper structured as a Yale/JEG-standard PhD thesis chapter.
+Style reference: `PROSE-RESEARCH-geometric-site-selection.draft.md` (project-gis).
+Covers: system-* Rust crate layer (system-core v1.0.0, system-ledger v1.0.0),
+service-fs WORM ledger stack, seL4 microkernel + NetBSD compatibility shim
+two-bottom design, and how this architecture yields freely transferable Totebox
+Archives. Includes formal hypotheses (H₁, H₀, H₂), falsification programme,
+Criterion benchmark table, "Honest We Own It" ownership scoresheet, ~30 Chicago
+author-date references, appendices (Notation, Benchmarks), and AI Use Disclosure.
+
+**Produced by:** 12 Opus sub-agents + synthesis by Sonnet; author credit
+Jennifer Woodfine / Woodfine Management Corp., Vancouver BC.
+
+**Pre-publication checklist (from notes_for_editor in frontmatter):**
+1. Bench #9 quiet-VM re-run needed before final numbers are publication-quality
+   (current CI ±11% — needs load avg < 1.0 on the workspace VM)
+2. Group 3A architecture decisions (AArch64 vs x86_64) — hedges in §5 can be
+   sharpened once those decisions are confirmed
+3. Five `[external: …]` placeholder citations need promotion to stable IDs in
+   `~/Foundry/citations.yaml` before submission
+4. Language pass — Bloomberg standard; no AI-product marketing vocabulary;
+   BCSC posture applied throughout (all Foundation references use planned/intended
+   language; verify this is preserved)
+5. Spanish-language panorama pair (`BRIEF-substrate-phd-thesis-2026-05-27.es.md`)
+   needed before any wiki-adjacent publication
+
+**BCSC class:** no-disclosure-implication (pure technical architecture description;
+no forward-looking commercial claims).
+
+— totebox@project-system
+
+---
+from: totebox@project-system
 to: command@claude-code
 re: Stage-6 ready — system-core v1.0.0 + system-ledger v1.0.0
 created: 2026-05-27T00:00:00Z
