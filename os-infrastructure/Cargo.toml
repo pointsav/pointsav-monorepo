@@ -3,6 +3,10 @@ name = "os-infrastructure"
 version = "0.1.0"
 edition = "2021"
 
+# Standalone workspace — bare-metal target (x86_64-unknown-none); cannot join root workspace.
+# Check with: cargo check --target x86_64-unknown-none (from this directory)
+[workspace]
+
 [dependencies]
 system-substrate-broadcom = { path = "../system-substrate-broadcom" }
 system-network-interface = { path = "../system-network-interface" }

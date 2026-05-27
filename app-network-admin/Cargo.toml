@@ -4,8 +4,6 @@ version = "0.1.0"
 edition = "2021"
 description = "F8 Terminal Gateway — HTTP command surface (:8085) and mesh broadcast (:8090) for os-network-admin."
 
-[workspace]
-
 [dependencies]
 tokio = { version = "1", features = ["full"] }
 warp = "0.3"
