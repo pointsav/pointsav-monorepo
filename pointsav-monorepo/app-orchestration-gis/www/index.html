@@ -339,6 +339,7 @@
             <button class="footer-btn" onclick="openModal('modal-credits')">Data Credits</button>
             <button class="footer-btn" onclick="openModal('modal-disclaimer')">Disclaimer</button>
             <button class="footer-btn" onclick="openModal('modal-methodology')">Methodology</button>
+            <a class="footer-btn" href="/research.html" target="_blank" rel="noopener">Research Paper</a>
         </div>
     </aside>
 
@@ -422,6 +423,7 @@
                     <li>The tier classification reflects anchor composition at a point in time. Store openings and closures are incorporated through periodic dataset rebuilds.</li>
                 </ul>
                 <p style="font-size:12px;color:#666;margin-top:20px;">This methodology is documented in a technical note prepared by Woodfine Management Corp. (2026). For the full technical note or enquiries about the dataset, contact <a href="mailto:corporate.secretary@woodfinegroup.com" style="color:#164679;">corporate.secretary@woodfinegroup.com</a>.</p>
+                <p style="margin-top:16px;font-size:13px;"><a href="/research.html" target="_blank" rel="noopener" style="color:var(--brand-primary);">Read the full technical paper →</a></p>
             </div>
         </div>
     </div>
@@ -640,24 +642,6 @@
                 buildProdRings();
             }
         }
-    }
-
-    function toggleAecMaster(btn) {
-        aecActive = !aecActive;
-        btn.classList.toggle('active', aecActive);
-        const lbl = btn.querySelector('.label');
-        if (lbl) lbl.textContent = aecActive ? 'Hide' : 'Climate';
-        const sub = document.getElementById('aec-sublayers');
-        if (sub) sub.classList.toggle('visible', aecActive);
-        // Toggle AEC map layers — tiles present from Night 2+ build
-        const aecLayers = [
-            'layer8-ashrae', 'layer8-ashrae-line', 'layer8-necb', 'layer8-eu-climate',
-            'layer10-seismic', 'layer11-flood',
-            'layer12-fema', 'layer12-eu-flood', 'layer15-wildfire',
-        ];
-        aecLayers.forEach(id => {
-            if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', aecActive ? 'visible' : 'none');
-        });
     }
 
     function setCatchmentSubLayer(sublayer, btn) {
