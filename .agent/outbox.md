@@ -9,6 +9,37 @@ schema: foundry-mailbox-v1
 
 ---
 from: totebox@project-system
+to: command@claude-code
+re: Phase 2 gate — new image-signing key needed in identity store
+created: 2026-05-27T01:00:00Z
+priority: normal
+status: pending
+msg-id: project-system-20260527-image-signing-key
+---
+
+Group 3D decisions are resolved (2026-05-27). Phase 2 NetBSD compat-bottom
+prototype can proceed once Phase 1C (seL4 hello-world) closes — except for
+one Master-tier action:
+
+**A dedicated image-signing SSH key is needed in the identity store.**
+
+Context: Veriexec strict mode 3 requires a signed fingerprint table
+(`signatures.veriexec`). The signing key must be separate from `ps-administrator`
+to keep commit-signing and image-signing trust domains distinct. If `ps-administrator`
+is rotated for governance reasons, it must not invalidate all prior image signatures.
+
+**Request:** Generate a new SSH key (`id_foundry-image-signing` or similar) in
+`~/Foundry/identity/` with the standard 0600 permissions, add it to
+`identity/allowed_signers`, and confirm the key name/path back via inbox so
+Phase 2 Veriexec table signing can reference it.
+
+Phase 2 target: `os-totebox` first compat-bottom boot. Shim crate: `system-substrate-netbsd/`.
+Hardware target: QEMU AArch64 on workspace VM.
+
+— totebox@project-system
+
+---
+from: totebox@project-system
 to: project-editorial
 re: PROSE-RESEARCH — PhD thesis ready for language pass and editorial review
 created: 2026-05-27T00:00:00Z
