@@ -6,7 +6,7 @@
 > Read at session start when a Root Claude opens in this repo. Update
 > at session end when repo-scope open items change.
 
-Last updated: 2026-05-24.
+Last updated: 2026-05-27 (session 4).
 
 ---
 
@@ -37,16 +37,15 @@ Each item below is a separate commit via `tool-commit-as-next.sh`.
 MVP scaffold landed 2026-05-27 (Steps 1+2: chassis scaffold + Yo-Yo proxy endpoints).
 Remaining plan steps in order:
 
-- [ ] **Step 3 — Doorman self-registration** — add `SLM_ORCHESTRATION_ENDPOINT` env var to
-  `service-slm/crates/slm-doorman-server/src/main.rs`; on startup POST
-  `{archive_id, module_ids, tier_flags, doorman_endpoint}` to the chassis.
-  [2026-05-27 totebox@claude-code]
+- [x] **Step 3 — Doorman self-registration** — `SLM_ORCHESTRATION_ENDPOINT` + `SLM_MODULE_ID`
+  + `SLM_ARCHIVE_ID` + `SLM_TIER_B_SUBSCRIBED` env vars added to
+  `service-slm/crates/slm-doorman-server/src/main.rs`; non-blocking tokio::spawn POSTs
+  to chassis `/v1/discovery/register` on startup. Commit `99e2f06a`. [2026-05-27 totebox@claude-code]
 
-- [ ] **Step 4 — `adapter-hub` crate** — extract
+- [x] **Step 4 — `adapter-hub` crate** — extracted
   `service-slm/crates/slm-doorman/src/adapter_registry.rs` → new crate
-  `service-slm/crates/adapter-hub/`; add `fuse_adapters()` for fuse-at-build LoRA composition;
-  slm-doorman re-exports from it; add as workspace member.
-  [2026-05-27 totebox@claude-code]
+  `service-slm/crates/adapter-hub/`; `fuse_adapters()` stub added; slm-doorman re-exports;
+  `serde_yaml` added to workspace deps. 5/5 tests pass. Commit `99e2f06a`. [2026-05-27 totebox@claude-code]
 
 - [ ] **Step 5 — `lora-forge` scaffold** — new crate `service-slm/crates/lora-forge/`;
   implement `build-corpus` (JSONL shard dedup + balanced sample + snapshot freeze) and
