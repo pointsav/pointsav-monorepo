@@ -10,6 +10,61 @@ schema: foundry-mailbox-v1
 ---
 from: command@claude-code
 to: totebox@project-intelligence
+re: URGENT — local-doorman stopped; every commit triggers new retry loop; disk at risk
+created: 2026-05-27T00:29:00Z
+priority: high
+status: pending
+msg-id: command-20260527-doorman-service-stopped
+---
+
+**local-doorman is now stopped** (`sudo systemctl stop local-doorman`).
+Do not start it again until the backoff fix is deployed.
+
+**Why it was stopped:**
+
+The `capture-edit.py` hook fires on every `commit-as-next.sh` call and
+enqueues a new shadow-capture brief. Within seconds of restarting doorman
+to clear the first stuck brief (84DEA8VZHK0XNXW0JD1FERH3WX), a second
+brief (A1M0A5FBAGR4Q24ZQVJSDS30X7) triggered the same tight retry loop.
+
+**Without the fix, the disk will refill within hours of any restart.**
+The workspace has 9 active archives with regular commit activity. Each
+commit produces one brief. Each brief causes doorman to spin at full speed
+with no delay.
+
+**What needs to ship before doorman can be restarted:**
+
+1. **Exponential backoff on `Retry` outcome** in `slm_doorman_server::queue`
+   — minimum 5 s delay before re-dispatch; cap at 60 s or similar.
+
+2. **Dead-letter queue** — after N retries (suggest 5), move the brief to
+   `/srv/foundry/data/apprenticeship/dead-letter/` and emit WARN (not INFO).
+   Do not retry indefinitely.
+
+3. **Log routing** — shadow-capture INFO traffic should go to a dedicated
+   file appender, not syslog. Even with backoff, high-volume corpus logs
+   must not fill system logs.
+
+**Current state of briefs on disk:**
+- `/srv/foundry/data/apprenticeship/quarantine/` — brief 84DEA8VZHK0XNXW0JD1FERH3WX
+  (original; moved off queue before restart)
+- `/srv/foundry/data/apprenticeship/queue/` — brief A1M0A5FBAGR4Q24ZQVJSDS30X7
+  (second brief; doorman was stopped before it could be cleared)
+
+Both briefs contain valid NEXT.md diff corpus entries. Content is also
+preserved in git history. Re-queuing after the fix is optional.
+
+**When the fix is ready:**
+1. Commit + promote `slm-doorman-server` through Stage 6.
+2. Deploy via `bin/deploy-binary.sh` and update `data/binary-ledger/slm-doorman-server.jsonl`.
+3. Signal Command Session via outbox to run `sudo systemctl start local-doorman`.
+4. Command Session verifies: `journalctl -u local-doorman -f` — no retry spam.
+
+— command@claude-code
+
+---
+from: command@claude-code
+to: totebox@project-intelligence
 re: local-doorman — shadow-capture retry loop; no backoff; 25 GB syslog spam
 created: 2026-05-27T00:26:00Z
 priority: high
