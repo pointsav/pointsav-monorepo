@@ -19,7 +19,7 @@
 //!   category subdirectories (`architecture/`, `services/`, etc.) so that all
 //!   130+ TOPICs are visible to the bucketing, featured-pin, and slug-resolution
 //!   logic. Slugs for subdirectory TOPICs take the form `<category>/<stem>`.
-//! - `short_description` subtitle: rendered as `<p class="topic-short-description">
+//! - `short_description` subtitle: rendered as `<p class="article__lede">
 //!   <em>…</em></p>` immediately below the article H1.
 //! - Leapfrog 2030 facts panel: reads `leapfrog-facts.yaml` from `content_dir`;
 //!   renders a "Leapfrog 2030" bullet panel on the home page right column.
@@ -224,11 +224,11 @@ pub fn router(state: AppState) -> Router {
         // segment, so the route captures `{slug}` as a single segment and
         // the handler strips an optional trailing `.md` for the
         // git-clone-style UX (`/git/topic-foo.md` or `/git/topic-foo`).
-        .route("/git/{slug}", get(git_markdown))
+        .route("/git/{*slug}", get(git_markdown))
         // Wikipedia-parity special pages
-        .route("/special/whatlinkshere/{slug}", get(what_links_here))
-        .route("/special/pageinfo/{slug}", get(page_info))
-        .route("/special/cite/{slug}", get(cite_page))
+        .route("/special/whatlinkshere/{*slug}", get(what_links_here))
+        .route("/special/pageinfo/{*slug}", get(page_info))
+        .route("/special/cite/{*slug}", get(cite_page))
         .route("/special/categories", get(categories_index_page))
         // Phase 4 Step 4.8 — OpenAPI 3.1 specification
         .route("/openapi.yaml", get(openapi_yaml));
@@ -2235,15 +2235,6 @@ fn wiki_chrome(
                             aria-controls="mobile-nav-drawer"
                         { "Menu" }
                     }
-                    div.search-row {
-                        form.header-search #search-form-body action="/search" method="get" {
-                            div.header-search-wrap {
-                                input #header-search-q-body type="search" name="q" placeholder="Search articles…" autocomplete="off";
-                                div #search-autocomplete-dropdown-body style="display:none;" {}
-                            }
-                            button type="submit" { "Search" }
-                        }
-                    }
                     nav.nav-row aria-label="Site navigation" {
                         ul.nav-list.left {
                             li { a href="/wiki/disclaimers" { "Disclaimer" } }
@@ -2323,58 +2314,34 @@ fn wiki_chrome(
                 }
                 div.mobile-nav-overlay #mobile-nav-overlay aria-hidden="true" {}
 
-                // Article-page three-column layout: left rail + article body + right rail
-                div.wiki-layout {
+                // Article layout: sidebar + article body (two-column shell)
+                div.shell {
 
-                    // --- Left rail: navigation portlet + collapsible TOC ---
-                    div #mw-panel {
-                        // Navigation portlet (Wikipedia: vector-main-menu)
-                        nav.vector-main-menu aria-label="Navigation" {
-                            h3.wiki-portlet-heading { "Navigation" }
-                            ul.wiki-portlet-links {
-                                li { a href="/" { "Main page" } }
-                                li { a href="/random" { "Random article" } }
-                                li { a href="/wanted" { "Wanted articles" } }
-                                li { a href="/special/all-pages" { "All pages" } }
-                                li { a href="/special/categories" { "Categories" } }
-                                li { a href="/special/recent-changes" { "Recent changes" } }
-                                li { a href="/special/statistics" { "Statistics" } }
-                                li { a href="/search" { "Search" } }
-                            }
+                    // --- Sidebar: navigation portlet + page tools ---
+                    nav.sidebar aria-label="Site navigation" {
+                        h3.wiki-portlet-heading { "Navigation" }
+                        ul.wiki-portlet-links {
+                            li { a href="/" { "Main page" } }
+                            li { a href="/random" { "Random article" } }
+                            li { a href="/wanted" { "Wanted articles" } }
+                            li { a href="/special/all-pages" { "All pages" } }
+                            li { a href="/special/categories" { "Categories" } }
+                            li { a href="/special/recent-changes" { "Recent changes" } }
+                            li { a href="/special/statistics" { "Statistics" } }
+                            li { a href="/search" { "Search" } }
                         }
-                        // Contents / ToC portlet with hierarchical section numbers
-                        @if !numbered_headings.is_empty() {
-                            nav.vector-toc #vector-toc aria-label="Contents" {
-                                div.toc-header {
-                                    span.toc-title { "Contents" }
-                                    button.toc-toggle #toc-toggle
-                                        aria-controls="toc-list"
-                                        aria-expanded="true"
-                                        title="Toggle table of contents"
-                                    { "[hide]" }
-                                    button.toc-pin-btn #toc-pin-btn
-                                        aria-label="Pin table of contents"
-                                        aria-pressed="false"
-                                        title="Keep table of contents visible"
-                                    { "[pin]" }
-                                }
-                                ol.toc-list #toc-list {
-                                    @for (id, text, level, num) in &numbered_headings {
-                                        li class={ "toc-level-" (level) } {
-                                            a href={ "#" (id) } {
-                                                span.toc-numb { (num) }
-                                                " "
-                                                span.toc-text { (text) }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
+                        h3.wiki-portlet-heading { "Tools" }
+                        ul.wiki-portlet-links {
+                            li { a href={ "/special/whatlinkshere/" (slug) } { "What links here" } }
+                            li { a href={ "/special/pageinfo/" (slug) } { "Page information" } }
+                            li { a href={ "/special/cite/" (slug) } { "Cite this page" } }
+                            li { a href={ "/git/" (slug) } { "Download as Markdown" } }
                         }
                     }
 
-                    // --- Main article column ---
-                    main.mw-body {
+                    // --- Article body column (two-column: prose + TOC) ---
+                    main.article-wrap {
+                    article.article__body {
 
                         // Title row: tabs (top-left) + title + language switcher + action tabs (top-right)
                         div.wiki-title-row {
@@ -2404,7 +2371,7 @@ fn wiki_chrome(
                                 // Hybrid Section 5: breadcrumb above H1 (Design B)
                                 @if let Some(ref cat) = fm.category {
                                     @if cat != "root" {
-                                        nav.article-breadcrumb aria-label="breadcrumb" {
+                                        nav.crumb aria-label="breadcrumb" {
                                             a href="/" { "Home" }
                                             " › "
                                             a href={ "/category/" (cat) } { (humanize_category(cat)) }
@@ -2413,7 +2380,7 @@ fn wiki_chrome(
                                         }
                                     }
                                 }
-                                h1.page-title {
+                                h1.article__title {
                                     (title)
                                     @if let Some(ref q) = fm.quality {
                                         span class={ "quality-badge quality-" (q) } { (q) }
@@ -2447,7 +2414,7 @@ fn wiki_chrome(
                                 }
                                 p.wiki-tagline { "From " (site_title.trim_end_matches(" Wiki")) }
                                 @if let Some(ref desc) = fm.short_description {
-                                    p.topic-short-description { em { (desc) } }
+                                    p.article__lede { (desc) }
                                 }
                             }
 
@@ -2472,6 +2439,32 @@ fn wiki_chrome(
                                         li { a href={ "/special/pageinfo/" (slug) } { "Page information" } }
                                         li { a href={ "/special/cite/" (slug) } { "Cite this page" } }
                                         li { a href={ "/git/" (slug) } { "Download as Markdown" } }
+                                    }
+                                }
+                            }
+                        }
+
+                        // Article metadata row (last-edited / category / editor)
+                        @if fm.last_edited.is_some() || fm.category.is_some() {
+                            dl.article__meta {
+                                @if let Some(ref date) = fm.last_edited {
+                                    div.article__meta-item {
+                                        dt { "Last edited" }
+                                        dd { time datetime=(date) { (date) } }
+                                    }
+                                }
+                                @if let Some(ref cat) = fm.category {
+                                    @if cat != "root" {
+                                        div.article__meta-item {
+                                            dt { "Category" }
+                                            dd { a href={ "/category/" (cat) } { (humanize_category(cat)) } }
+                                        }
+                                    }
+                                }
+                                @if let Some(editor) = fm.extra.get("editor").and_then(|v| v.as_str()) {
+                                    div.article__meta-item {
+                                        dt { "Editor" }
+                                        dd { (editor) }
                                     }
                                 }
                             }
@@ -2537,10 +2530,8 @@ fn wiki_chrome(
                         }
 
                         // Article body
-                        div #mw-content-text {
-                            div.page-body {
-                                (PreEscaped(body_html))
-                            }
+                        div.prose #mw-content-text {
+                            (PreEscaped(body_html))
                         }
 
                         // E2: Research Trail Footer — collapsible <details> from frontmatter.
@@ -2581,7 +2572,7 @@ fn wiki_chrome(
                                         span.cats-label { "Categories:" }
                                         ul.cats-list {
                                             @for cat in cats {
-                                                li { a href={ "/category/" (cat.to_lowercase()) } { (cat) } }
+                                                li { a href={ "/category/" (cat) } { (cat) } }
                                             }
                                         }
                                     }
@@ -2610,34 +2601,25 @@ fn wiki_chrome(
                         }
                     }
 
-                    // --- Right rail: page tools portlet (B4 — Wikipedia toolbox) ---
-                    div.wiki-right-rail {
-                        nav.wiki-page-tools aria-label="Page tools" {
-                            h3.wiki-portlet-heading { "Tools" }
-                            ul.wiki-portlet-links {
-                                li {
-                                    a href={ "/special/whatlinkshere/" (slug) } {
-                                        "What links here"
-                                    }
-                                }
-                                li {
-                                    a href={ "/wiki/" (slug) } rel="bookmark"
-                                        title="Permanent link to this revision" {
-                                        "Permanent link"
-                                    }
-                                }
-                                li {
-                                    a href={ "/special/pageinfo/" (slug) } {
-                                        "Page information"
-                                    }
-                                }
-                                li {
-                                    a href={ "/special/cite/" (slug) } {
-                                        "Cite this page"
+                    // --- Right-side TOC (sticky, beside article prose) ---
+                    @if !numbered_headings.is_empty() {
+                        aside.toc {
+                            div.toc__header {
+                                span.toc__title { "Contents" }
+                            }
+                            ol {
+                                @for (id, text, level, num) in &numbered_headings {
+                                    li class={ "toc-level-" (level) } {
+                                        a href={ "#" (id) } {
+                                            span.toc-numb { (num) }
+                                            " "
+                                            (text)
+                                        }
                                     }
                                 }
                             }
                         }
+                    }
                     }
                 }
 
@@ -4347,7 +4329,7 @@ mod tests {
         let body = resp.into_body().collect().await.unwrap().to_bytes();
         let html = std::str::from_utf8(&body).unwrap();
         assert!(
-            html.contains("topic-short-description"),
+            html.contains("article__lede"),
             "short_description container class should appear: {html}"
         );
         assert!(
@@ -4404,12 +4386,12 @@ mod tests {
         let body = resp.into_body().collect().await.unwrap().to_bytes();
         let html = std::str::from_utf8(&body).unwrap();
         assert!(
-            html.contains("vector-main-menu"),
-            "navigation portlet should appear: {html}"
+            html.contains("sidebar"),
+            "navigation sidebar should appear: {html}"
         );
         assert!(
-            html.contains("wiki-page-tools"),
-            "page tools portlet should appear: {html}"
+            html.contains("What links here"),
+            "page tools should appear in sidebar: {html}"
         );
         assert!(
             !html.contains("wiki-breadcrumb"),
