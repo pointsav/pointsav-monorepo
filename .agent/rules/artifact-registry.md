@@ -21,14 +21,18 @@ Routing:
 
 ### A6 — PROSE-RESEARCH: Geometric Site Selection (PhD paper scaffolding)
 - **File:** `PROSE-RESEARCH-geometric-site-selection.draft.md`
-- **Status:** DRAFT — scaffolding version 0.1 (2026-05-24) — at project-gis drafts-outbound
+- **Status:** DISPATCHED — v0.4 (2026-05-27) — at project-gis drafts-outbound, dispatched to project-editorial
 - **Destination:** project-editorial → content-wiki-documentation/research/
-- **Content:** Multi-year research framework; thesis = geometric co-location is
-  the primary signal for National Tenancy site selection; demand data is
-  confirmatory. GIS map T1/T2/T3 is the experimental apparatus. 8 sections
-  scaffolded with TODO markers; 7 falsification tests defined.
-- **Research tasks pending:** CBRE/JLL acquisition (Year 2); Optimum Mosaic
-  integration; country-by-country T1 table; permutation test implementation
+- **Content:** Continental-scale cluster analysis paper; geometric co-location as spatial leading indicator.
+  v0.4: 8 sections, §3.7 mobility catchments, §7.2 OLS regression, Bloomberg register, banned vocabulary clean.
+- **Editorial gates (project-editorial to resolve before publication):**
+  - Appendix B country-by-country T1 table (Phase 22 data available — run taxonomy.py export)
+  - §5.3 LODES employment medians (placeholder or "v0.5" note)
+  - Appendix C data-flow diagram (placeholder or defer to v0.5)
+  - BCSC disclosure pass (bcsc_class: public-disclosure-safe in frontmatter; verify no active Foundation language)
+  - Paper NOT submitted to any journal — draft notice must read "in preparation for intended submission to JEG (OUP)"
+  - Bilingual ES sibling required before journal submission
+- **Research tasks pending:** CBRE/JLL acquisition (Year 2); permutation test implementation
 
 ### A1 — TOPIC: O-D Catchment Methodology
 - **File:** `topic-od-catchment-methodology.draft.md`
