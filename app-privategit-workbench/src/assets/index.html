@@ -700,11 +700,16 @@ const TEXT_EXTS   = new Set([
 const VIEWABLE_RE  = /\.(html?|pdf|md|txt|csv|json|yaml|yml|toml|ini|conf|env|log|sh|bash|rs|js|ts|jsx|tsx|css|py|png|jpg|jpeg|gif|svg|webp|bmp)$/i;
 const INDEXABLE_RE = /\.(html?|md|txt|pdf|csv|json|yaml|yml)$/i;
 
+// Document types rendered via the server-side /document route.
+// JSON schema detection (proforma, etc.) happens in openFile() after content is fetched.
+const DOCUMENT_EXTS = new Set(['geojson']);
+
 function fileMode(name) {
   const ext = name.split('.').pop().toLowerCase();
-  if (IFRAME_EXTS.has(ext)) return 'iframe';
-  if (IMAGE_EXTS.has(ext))  return 'image';
-  if (TEXT_EXTS.has(ext))   return 'text';
+  if (IFRAME_EXTS.has(ext))    return 'iframe';
+  if (IMAGE_EXTS.has(ext))     return 'image';
+  if (DOCUMENT_EXTS.has(ext))  return 'document';
+  if (TEXT_EXTS.has(ext))      return 'text';
   return 'text';
 }
 
@@ -1374,6 +1379,20 @@ function updateBar(name, path) {
   });
   bar.appendChild(copyBtn);
 
+  // Platform PDF button — server-side WeasyPrint rendering
+  const pdfExts = new Set(['html','htm','geojson']);
+  const barExt  = name.split('.').pop().toLowerCase();
+  if (pdfExts.has(barExt)) {
+    const apiPath = path.replace(/^\//, '');
+    const pdfLink = document.createElement('a');
+    pdfLink.className = 'bar-btn';
+    pdfLink.href = '/_api/edit/pdf?path=' + encodeURIComponent(apiPath);
+    pdfLink.download = name.replace(/\.[^.]+$/, '.pdf');
+    pdfLink.textContent = '⬇ PDF';
+    pdfLink.title = 'Download PDF (platform rendering)';
+    bar.appendChild(pdfLink);
+  }
+
   const printBtn = document.createElement('button');
   printBtn.className = 'bar-btn';
   printBtn.textContent = '⎙ Print';
@@ -1572,7 +1591,8 @@ async function openFile(path, name) {
   const fname = fname0;
   sessionStorage.setItem('wb-path', path);
   sessionStorage.setItem('wb-name', fname);
-  const mode  = fileMode(fname);
+  const mode   = fileMode(fname);
+  const apiPath = path.replace(/^\//, '');
   hideViewerContent();
   updateBar(fname, path);
 
@@ -1588,6 +1608,13 @@ async function openFile(path, name) {
     iv.style.display = 'flex';
     document.getElementById('image-el').src = cacheBust(path);
 
+  } else if (mode === 'document') {
+    // Server-side document renderer (geojson, etc.)
+    viewMode = 'iframe';
+    const frame = document.getElementById('preview-frame');
+    frame.style.display = 'block';
+    frame.src = '/_api/edit/document?path=' + encodeURIComponent(apiPath);
+
   } else {
     viewMode = 'text';
     const tv = document.getElementById('text-viewer');
@@ -1600,6 +1627,34 @@ async function openFile(path, name) {
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const text = await res.text();
       const ext = fname.split('.').pop().toLowerCase();
+
+      // JSON schema detection — peek first 512 chars for known document types
+      if (ext === 'json') {
+        const peek = text.slice(0, 512);
+        if (peek.includes('"proforma_version"') ||
+            peek.includes('"presentation_version"') ||
+            peek.includes('"schedule_version"')) {
+          // Switch to server-side document renderer
+          viewMode = 'iframe';
+          tv.style.display = 'none';
+          const frame = document.getElementById('preview-frame');
+          frame.style.display = 'block';
+          frame.src = '/_api/edit/document?path=' + encodeURIComponent(apiPath);
+          // Add PDF button for this document type
+          const bar = document.getElementById('viewer-bar');
+          if (!bar.querySelector('.doc-pdf-btn')) {
+            const pdfLink = document.createElement('a');
+            pdfLink.className = 'bar-btn doc-pdf-btn';
+            pdfLink.href = '/_api/edit/pdf?path=' + encodeURIComponent(apiPath);
+            pdfLink.download = fname.replace(/\.[^.]+$/, '.pdf');
+            pdfLink.textContent = '⬇ PDF';
+            pdfLink.title = 'Download PDF (platform rendering)';
+            bar.appendChild(pdfLink);
+          }
+          // Text viewer is hidden; continue to editor loading below
+        }
+      }
+
       if (ext === 'md') {
         tc.className = 'md-view';
         tc.innerHTML = mdToHtml(text);
@@ -1614,7 +1669,6 @@ async function openFile(path, name) {
   }
 
   // Try to load into editor (editor-service returns writable:true only for allowed paths)
-  const apiPath = path.replace(/^\//, '');
   hideEditorPanel();
 
   try {
