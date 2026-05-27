@@ -32,6 +32,41 @@ Stage 6 blocked — see `.agent/inbox.md` (`command-20260522-console-stage6-orph
 Rule source: `.claude/rules/repo-layout.md` (introduced 2026-04-23).
 Each item below is a separate commit via `tool-commit-as-next.sh`.
 
+## app-orchestration-slm — post-MVP steps
+
+MVP scaffold landed 2026-05-27 (Steps 1+2: chassis scaffold + Yo-Yo proxy endpoints).
+Remaining plan steps in order:
+
+- [ ] **Step 3 — Doorman self-registration** — add `SLM_ORCHESTRATION_ENDPOINT` env var to
+  `service-slm/crates/slm-doorman-server/src/main.rs`; on startup POST
+  `{archive_id, module_ids, tier_flags, doorman_endpoint}` to the chassis.
+  [2026-05-27 totebox@claude-code]
+
+- [ ] **Step 4 — `adapter-hub` crate** — extract
+  `service-slm/crates/slm-doorman/src/adapter_registry.rs` → new crate
+  `service-slm/crates/adapter-hub/`; add `fuse_adapters()` for fuse-at-build LoRA composition;
+  slm-doorman re-exports from it; add as workspace member.
+  [2026-05-27 totebox@claude-code]
+
+- [ ] **Step 5 — `lora-forge` scaffold** — new crate `service-slm/crates/lora-forge/`;
+  implement `build-corpus` (JSONL shard dedup + balanced sample + snapshot freeze) and
+  `synthesize-doctrine` (Tier C audit-proxy → constitutional corpus).
+  [2026-05-27 totebox@claude-code]
+
+- [ ] **Step 6 — rename `lora-training.sh` → `lora-loom/run.sh`** — git mv
+  `service-slm/compute/packer/scripts/lora-training.sh` →
+  `service-slm/compute/packer/scripts/lora-loom/run.sh`; add signed-marker verification
+  and snapshot SHA-256 check. [2026-05-27 totebox@claude-code]
+
+- [ ] **Step 7 — Constitutional adapter end-to-end** — gated on D4 Packer image pipeline.
+  `lora-forge synthesize-doctrine v0.0.14` → training tuples → chassis claims trainer slot →
+  `lora-loom` trains → adapter in `data/adapters/registry.yaml`.
+  [2026-05-27 totebox@claude-code; blocked on D4]
+
+---
+
+## Code — fix broken build
+
 *(queue empty — Tier-2 project-root scripts closed 2026-04-23;
 see Recently closed below and `cleanup-log.md`)*
 
