@@ -96,6 +96,39 @@ Newest on top. Append a dated block when a session includes meaningful cleanup w
 
 ---
 
+## 2026-05-27 — v1.0.0 version bumps + PhD thesis BRIEF
+
+Two commits to project-system cluster branch.
+
+**PhD thesis BRIEF (`edd4928`, Jennifer Woodfine)**
+- `.agent/briefs/BRIEF-substrate-phd-thesis-2026-05-27.md` (719 lines) created.
+- Yale PhD thesis-quality research document: system-* layer, service-fs,
+  seL4/NetBSD two-bottom architecture, Totebox Archive transferability.
+- Schema: `foundry-draft-v1`, `language_protocol: PROSE-RESEARCH`,
+  `audience: academic`, `bcsc_class: no-disclosure-implication`.
+- 12 Opus research agents used for source material gathering.
+- Pre-publication checklist in notes_for_editor: bench #9 quiet-VM re-run;
+  Group 3A AArch64 decisions; citation promotion; language pass; ES panorama.
+
+**v1.0.0 version bumps (`c2ae1e9`, Jennifer Woodfine)**
+- `system-core/Cargo.toml`: 0.2.0 → 1.0.0 (API stable; leaf crate).
+- `system-ledger/Cargo.toml`: 0.2.1 → 1.0.0 (API stable; depends on system-core path).
+- `system-core/CLAUDE.md`: version header updated to 1.0.0; last-updated 2026-05-27.
+- `system-ledger/CLAUDE.md`: version header updated to 1.0.0; test count 44→47,
+  bench count 10→12; last-updated 2026-05-27.
+- `system-core/CHANGELOG.md` created: 4 entries covering v1.0.0/0.2.0/0.1.21/0.1.4/0.1.1.
+- `system-ledger/CHANGELOG.md` created: 4 entries covering v1.0.0/0.2.1/0.2.0/0.1.21.
+- Outbox msg `project-system-20260527-stage6-v100` written to Command Session.
+- 62 + 47 tests passing; zero warnings.
+
+**Open questions surfaced this session:**
+- `pointsav-fleet-deployment` working tree has file-mode drift (32 files 644→755,
+  likely extraction artefact) + `.claude/rules/project-registry.md` appears deleted
+  (structural: `.claude/` is now a symlink to `.agent/`). Neither committed.
+  Needs Command Session review.
+- `pointsav-monorepo` sub-clone is on `main` branch (switched to `cluster/project-system`
+  this session, but the system-* code lives in the project-system archive directly).
+
 ## 2026-05-21 — Groups 6 + 7 — Stage-6 prep + WFD housekeeping
 
 Five commits to project-system cluster branch, one commit to WFD sub-repo.
