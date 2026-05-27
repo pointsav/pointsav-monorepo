@@ -1,6 +1,6 @@
 # CLAUDE.md — moonshot-toolkit
 
-> **State:** Active  —  **Last updated:** 2026-04-27
+> **State:** Active  —  **Last updated:** 2026-05-27
 > **Version:** 0.1.3  (per `~/Foundry/CLAUDE.md` §7 and DOCTRINE.md §VIII)
 > **Registry row:** `pointsav-monorepo/.claude/rules/project-registry.md`
 
@@ -22,52 +22,42 @@ exercised."
 
 ## Current state
 
-Activated 2026-04-27 per framework §9 (Master Option A lean +
-operator confirmation). Activation commit: framework §9 docs +
-workspace member entry + registry row update; existing
-`src/main.rs` (14-line legacy stub) and `build-totebox.sh`
-(shell sketch) preserved in place.
+Phase 1B complete at v0.1.3. All three Phase 1B deliverables shipped:
+- `src/spec.rs` (445 lines) — SystemSpec TOML parser; PDs ≤ 63,
+  channels, memory regions, IRQ delivery; 12 tests.
+- `src/plan.rs` (310 lines) — BuildPlan generator; deterministic
+  plan_hash (SHA-256 of canonical JSON); 10 tests.
+- `src/main.rs` (241 lines) — clap CLI; `validate` / `plan` / `build`
+  subcommands; `build` is a stub pending cross-compile toolchain; 8 tests.
 
-The CLI rewrite (`validate` / `plan` / `build` subcommands), the
-SystemSpec TOML parser (`src/spec.rs`), and the BuildPlan generator
-(`src/plan.rs`) land in subsequent commits per cluster tasks
-#35 / #36 / #37. The actual seL4 hello-world cross-compile +
-QEMU AArch64 boot — task #14 — is FUTURE work needing
-cross-compile toolchain installation and seL4 source vendoring
-strategy decisions; surface to operator before scheduling.
+30 tests total (`cargo test --all-targets`). Zero warnings.
+
+Next milestone: seL4 hello-world cross-compile + QEMU AArch64 boot
+(task #14). Blocked on Group 3A decisions — see NEXT.md.
 
 ## Build and test
 
 ```
 cargo check -p moonshot-toolkit
-cargo test  -p moonshot-toolkit
-```
-
-After the CLI rewrite (next commits in this session):
-
-```
-cargo run -p moonshot-toolkit -- validate <path/to/system-spec.toml>
-cargo run -p moonshot-toolkit -- plan <path/to/system-spec.toml>
-cargo run -p moonshot-toolkit -- build <path/to/system-spec.toml>  # STUB in v0.1.x
+cargo test  -p moonshot-toolkit --all-targets   # 30 tests
+cargo run   -p moonshot-toolkit -- validate <path/to/system-spec.toml>
+cargo run   -p moonshot-toolkit -- plan     <path/to/system-spec.toml>
+cargo run   -p moonshot-toolkit -- build    <path/to/system-spec.toml>  # stub in v0.1.x
 ```
 
 ## File layout
 
 ```
 moonshot-toolkit/
-├── Cargo.toml             # workspace member as of v0.1.x activation
-├── README.md              # bilingual pair (English)
-├── README.es.md           # bilingual pair (Spanish overview)
-├── CLAUDE.md              # this file
-├── AGENTS.md              # vendor-neutral pointer
-├── NEXT.md                # open items
-├── ARCHITECTURE.md        # CLI + SystemSpec + BuildPlan design
-├── DEVELOPMENT.md         # cross-compile toolchain + QEMU notes (FUTURE)
-├── build-totebox.sh       # legacy shell sketch — pending Rust replacement
+├── Cargo.toml             # workspace member; v0.1.3
+├── README.md / README.es.md   # bilingual pair
+├── CLAUDE.md / AGENTS.md / NEXT.md / ARCHITECTURE.md / DEVELOPMENT.md
+├── build-totebox.sh       # legacy shell sketch — remove after task #14 ships
 └── src/
-    ├── main.rs            # legacy stub — pending CLI rewrite (#37)
-    ├── spec.rs            # SystemSpec TOML parser (#35)
-    └── plan.rs            # BuildPlan generator (#36)
+    ├── lib.rs             # re-exports SystemSpec + BuildPlan for library consumers
+    ├── spec.rs            # SystemSpec TOML parser (445 lines, 12 tests)
+    ├── plan.rs            # BuildPlan generator (310 lines, 10 tests)
+    └── main.rs            # clap CLI — validate/plan/build (241 lines, 8 tests)
 ```
 
 ## Hard constraints — do not violate
