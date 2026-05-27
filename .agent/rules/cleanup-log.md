@@ -135,6 +135,31 @@ Newest on top. Append a dated block when a session includes meaningful cleanup w
 
 ---
 
+## 2026-05-27 — app-orchestration-slm Steps 3+4 — chassis self-registration + adapter-hub
+
+- **Step 3:** `slm-doorman-server/src/main.rs` — added non-blocking chassis self-registration.
+  When `SLM_ORCHESTRATION_ENDPOINT` is set, a `tokio::spawn` POSTs
+  `{module_id, archive_id, doorman_endpoint, tier_b_subscribed}` to the chassis
+  `/v1/discovery/register` endpoint at startup. Four new env vars documented in the module
+  doc comment alongside existing `SLM_*` vars. Zero impact on existing deployments (guarded
+  by env var presence check). `reqwest` and `serde_json` were already in `Cargo.toml`.
+
+- **Step 4:** extracted `slm-doorman/src/adapter_registry.rs` (dead code — not exported
+  from lib.rs, zero callers) → new crate `service-slm/crates/adapter-hub/`. Added:
+  `fuse_adapters(base, overlays) -> String` stub (returns symbolic composed ID; real GGUF
+  merge deferred until llama.cpp LoRA hot-swap PR upstream). Added `serde_yaml = "0.9"` to
+  workspace deps (was missing; adapter_registry.rs used it but could never compile as-is).
+  `slm-doorman/src/lib.rs` re-exports `AdapterEntry`, `AdapterRegistry`, `fuse_adapters`.
+  5 tests migrated + 1 new `fuse_adapters_stub` test — all 5 pass.
+
+- **Commit:** `99e2f06a` (Jennifer). `cargo check --workspace` clean. Pre-existing
+  `micro_node` integration test failure (stale `AppState` fields) unchanged.
+
+- **Stage 6 pending:** `99e2f06a` (and prior `49a802a2` MVP scaffold) need `bin/promote.sh`
+  from Command Session.
+
+---
+
 ## 2026-05-12 — Phase 4 Steps 4.4+4.5 — redb wikilink graph + blake3 content hashes
 
 - **`src/links.rs`** (new, 230 lines): `LinkGraph` struct backed by redb. Two tables in
