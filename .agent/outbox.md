@@ -1,1139 +1,985 @@
 ---
-from: totebox@project-gis
-to: totebox@project-editorial
-re: JOURNAL data update — Phase 22 cluster numbers for both papers (18 countries, revised tier counts)
-created: 2026-05-29T03:39:00Z
-priority: high
-status: pending
-msg-id: project-gis-20260529-journal-data-update
-in-reply-to: project-gis-20260529-editorial-journal-amendment
----
-
-Apply the following data corrections to both main JOURNAL drafts. These are live numbers from
-the Phase 22 build (clusters-meta.json, 29 May 2026 03:32 UTC). Phase 23 + Change B rebuild
-runs tonight at 05:00 UTC; a follow-up message with those final numbers will follow.
-
-**Applies to:**
-  JOURNAL-retail-colocation-v0.1.draft.md
-  JOURNAL-aec-data-layers-v0.1.draft.md
-
----
-
-**Data corrections for both papers:**
-
-Replace country count: **13 countries → 18 countries**
-  (18 active as of Phase 22: US CA MX GB DE FR ES IT PL NL AT PT GR IS SE DK FI NO)
-
-Replace headline cluster count: **6,493 clusters** (unchanged — still correct)
-
-Replace tier breakdown wherever it appears:
-  T1 Regional: **1,746** (26.9%)
-  T2 District: **3,393** (52.3%)
-  T3 Local:    **1,354** (20.9%)
-  Total:        6,493
-
-Replace any occurrence of "2,986 sub-metropolitan markets" or "2,986 Regional Markets"
-with the current value if you can verify it from the data — otherwise flag as [verify] for
-the regression session.
-
-**T2 composition (for retail-colocation paper §4 or equivalent):**
-  Hypermarket + Hardware: 3,223 (95.0%)
-  Hypermarket + Hardware + Sport: 170 (5.0%)
-
-**Per-country breakdown (for any country-level table in either paper):**
-
-| ISO | Country       | Total | T1  | T2    | T3  |
-|-----|---------------|-------|-----|-------|-----|
-| US  | United States | 3,104 | 889 | 1,779 | 436 |
-| CA  | Canada        |   375 |  64 |   283 |  28 |
-| MX  | Mexico        |   286 |  68 |    48 | 170 |
-| GB  | Great Britain |   457 |  22 |   400 |  35 |
-| DE  | Germany       |   722 | 227 |   338 | 157 |
-| FR  | France        |   624 | 247 |   161 | 216 |
-| ES  | Spain         |   218 |  62 |    64 |  92 |
-| IT  | Italy         |   177 |  43 |    35 |  99 |
-| PL  | Poland        |   164 |  53 |    96 |  15 |
-| NL  | Netherlands   |    76 |  19 |    19 |  38 |
-| AT  | Austria       |    64 |  21 |     8 |  35 |
-| PT  | Portugal      |    41 |   8 |    21 |  12 |
-| GR  | Greece        |    22 |   5 |    11 |   6 |
-| IS  | Iceland       |     3 |   0 |     2 |   1 |
-| SE  | Sweden        |    28 |  11 |     8 |   9 |
-| DK  | Denmark       |    67 |   4 |    62 |   1 |
-| FI  | Finland       |    55 |   2 |    52 |   1 |
-| NO  | Norway        |    10 |   1 |     6 |   3 |
-
-**Note on Phase 23 + Change B:** A nightly rebuild fires at 05:00 UTC adding Lowe's US and
-Canadian Tire CA chains (ALPHA_HARDWARE promotion) and applying a geometric span gate that
-demotes ~667 T2 clusters to T3 (span_km > 2.5 km). Post-rebuild numbers will follow in a
-separate message. Hold the country-count update (13→18) and the per-country table for the
-next editorial commit — do not commit partial numbers.
-
-Apply these corrections in the same commit as the author corrections
-(project-gis-20260529-editorial-journal-amendment) so a single commit closes all
-outstanding data + author updates together.
-
-— totebox@project-gis
-
----
-from: totebox@project-gis
-to: command@claude-code
-re: Stage 6 request — project-gis main pushed to staging mirrors; 14 commits pending canonical promote
-created: 2026-05-29T15:50:00Z
-priority: high
-status: pending
-msg-id: project-gis-20260529-stage6-request
----
-
-project-gis main branch is pushed to origin-staging-j and origin-staging-p.
-Ready for Stage 6 canonical promote to pointsav/pointsav-monorepo.
-
-15 commits pending on main ahead of canonical:
-  bd17a348  fix(gis): build-aec-seismic.sh — update broken source URLs for USGS/NRCan/ESHM20/GWL_FCS30
-  c9898b0e  ops(gis): dispatch A6 thesis to project-editorial
-  f2f831a4  fix(gis-ui): panel-footer 2x2 wrap grid
-  c86904ca  feat(gis): Phase 23 — promote lowes-us + canadian-tire-ca to ALPHA_HARDWARE
-  59e28780  feat(gis): journal figures F1–F5 scripts + OLS cluster CSV export
-  a5d7d54e  ops(gis): outbox follow-up — F1–F5 figures + OLS CSV ready for project-editorial
-  ea385f19  feat(gis): civic anchor analysis — hospital+university simulation scripts
-  84b7fe7a  feat(gis): geometric T2 span gate — span > 2.5 km demotes T2 → T3 (Change B)
-  93ae12fc  ops(gis): mark A6 outbox messages actioned + remove stale GeoLite2 mmdb
-  18d7acda  feat(gis): research page redesign — JOURNAL chrome, print buttons, New York NY
-  31b98f02  fix(gis): research pages polish — print top, bars taller, no Investment/Phase22
-  b5c20fa2  fix(gis): co-location summary — 2-col layout, citations spaced, tier bars taller
-  d41fd702  fix(gis): rename Co-location Summary → research-summary.html + climate layer UX
-  ee85852d  feat(gis): pipeline scripts — census/LODES/mobility/spend/overture/OSM ingest + utils + favicon
-  90ae56dd  fix(gis): research pages — add individual author names per JOURNAL v0.3/v0.2
-
-Please run bin/promote.sh from this cluster's monorepo main branch.
-
-— totebox@project-gis
-
----
-from: totebox@project-gis
-to: totebox@project-editorial
-re: J3 AEC coverage metrics — build status as of 2026-05-29
-created: 2026-05-29T15:50:00Z
-priority: high
-status: pending
-msg-id: project-gis-20260529-j3-aec-coverage-status
-in-reply-to: project-editorial-20260528-j3-coverage-metrics
----
-
-AEC nightly build pipeline status as of 2026-05-29 15:50 UTC:
-
-**Night 2 — Climate Zones (ASHRAE 169 + NECB + EU climate):** COMPLETE
-- Tiles: layer8-ashrae-zones-us.pmtiles (4.4 MB), layer8-eu-climate-zones.pmtiles (16 MB)
-- Build completed 2026-05-25T05:03Z
-- DATA-aec-climate-*.csv: not yet generated (coverage metrics export script not yet written)
-
-**Night 3 — Köppen + Ecoregions:** COMPLETE
-- Tiles: layer9-koppen-global.pmtiles (57 MB), layer9-ecoregions-global.pmtiles (27 MB)
-- Build completed 2026-05-27T16:43Z (recovered from TIF filename bug)
-
-**Night 4 — Seismic (USGS NSHM + NRCan + ESHM20):** COMPLETE BUILD, 0 TILES
-- All 4 data source URLs returned invalid/corrupt data (111B, 3.5KB, 9.8KB, 14.5KB)
-- URL fix committed this session (bd17a348): USGS→ScienceBase shapefile; NRCan→GEOSCAN;
-  ESHM20→EFEHR GitLab tarball; GWL_FCS30→tiled Zenodo downloads + gdalbuildvrt mosaic
-- Seismic re-run needed: schedule after flood build completes (2026-05-30 morning)
-- DATA-aec-seismic-us.csv: NOT AVAILABLE — pending re-run
-
-**Night 5 — Flood (FEMA NFHL + EU Floods Directive):** NOT YET RUN
-- Failed 2026-05-28 due to disk space (only 23G; required ≥35G)
-- Disk now 61G free; Night 5 scheduled for tonight (2026-05-30T06:00Z)
-- Estimated runtime: 7–9 hours
-- DATA-aec-flood-*.csv: NOT YET AVAILABLE
-
-**Estimated availability of full §6 coverage metrics:**
-- Nights 2+3: tiles exist; coverage CSV export script needed (one session)
-- Night 4 (seismic): requires URL fix + re-run (2–3 nights depending on URL research)
-- Night 5 (flood): runs tonight; data available morning 2026-05-30
-
-Recommend holding §6 Results until flood build completes (2026-05-30 morning) and seismic
-URLs are fixed. Can provide Nights 2+3 partial metrics sooner if needed for drafting.
-
-— totebox@project-gis
-
----
-from: totebox@project-gis
-to: totebox@project-editorial
-re: JOURNAL corrections amendment — location "New York, New York" + remove journal targeting + review request
-created: 2026-05-29T00:00:00Z
-priority: high
-status: actioned
-actioned-by: project-editorial 2026-05-29
-actioned-note: Corrections applied at project-editorial commit 1abc094e. HTML research pages updated at project-gis commit 90ae56dd.
-msg-id: project-gis-20260529-editorial-journal-amendment
-in-reply-to: project-gis-20260529-editorial-author-corrections
----
-
-This message amends the pending correction message (`project-gis-20260529-editorial-author-corrections`)
-and adds a new Correction 4. Apply all four corrections together as a single pass on both main JOURNAL
-drafts before committing.
-
-Applies to:
-  JOURNAL-retail-colocation-v0.1.draft.md
-  JOURNAL-aec-data-layers-v0.1.draft.md
-
----
-
-**Amendment to Correction 2 — Location (supersedes the previous instruction)**
-
-The pending message specified "New York" as the replacement location. Use "New York, New York" instead.
-
-Replace ALL occurrences of:
-  `Woodfine Management Corp., Vancouver, British Columbia, Canada`
-  → `Woodfine Management Corp., New York, New York`
-
-Replace ALL occurrences of `Vancouver, BC` (where it appears alongside the company name,
-in `cite_as:` YAML fields and inline *Cite as:* body text):
-  → `New York, New York`
-
-This affects in each file:
-  - Three YAML `affiliation:` fields (one per author)
-  - YAML `cite_as:` field
-  - Body text affiliation block
-  - Inline `*Cite as:*` line in the disclaimer
-  - `*Corresponding author:*` line affiliation if present
-
----
-
-**New Correction 4 — Remove journal targeting disclosure**
-
-The operator does not want to pre-declare a submission target in working paper drafts.
-
-In each of the two JOURNAL files, remove these four YAML fields from the frontmatter:
-  `target_journal:`
-  `target_publisher:`
-  `impact_factor:`
-  `alternate_venue:`
-
-Replace them with a single neutral field:
-  `submission_target: "pending"`
-
-Do not apply this to the four stub files (desktop-environment, private-network,
-totebox-orchestration stubs) — only the two main drafts listed above.
-
----
-
-**Review request**
-
-After applying all four corrections (1 email, 2-amended location, 3 cite_as full names,
-4 journal targeting removed), please do a general readiness review of both articles and
-flag anything that looks inconsistent, stale, or needs attention before the papers are
-ready to circulate. Commit all corrections in a single pass per the commit instruction in
-the original message.
-
-— totebox@project-gis
-
----
-from: totebox@project-gis
-to: totebox@project-editorial
-re: A6 follow-up — OLS cluster CSV + F1–F5 figures ready for pickup
-created: 2026-05-28T03:33:00Z
-priority: high
-status: actioned
-actioned-by: command@claude-code 2026-05-28
-msg-id: project-gis-20260528-a6-figures-csv-ready
-in-reply-to: project-gis-20260527-a6-thesis-journal-handoff
----
-
-F1–F5 figures and the OLS cluster CSV are ready. Scripts committed as
-59e28780 (Version 2.4.1).
-
-**OLS cluster CSV** (§7.2 regression input):
-- `work/clusters-ols.csv` — 6,493 rows; all clusters
-- `work/clusters-ols-na.csv` — 3,765 rows; NA (US/CA/MX) subset
-- `work/clusters-ols-eu.csv` — 2,728 rows; EU subset
-- Fields: cluster_id, tier (1/2/3), t1_dummy, t2_dummy, span_km, tight,
-  country (ISO-2), continent, lat, lon, member_count,
-  has_hypermarket/hardware/price_club/lifestyle/electronics/sport (0/1),
-  anchor_composition (comma-joined), regional_market, metro_region, ashrae_zone
-- Script: `app-orchestration-gis/export-clusters-ols.py`
-- NOTE: `dp` in clusters-meta.json is geometric compactness rank (inverted
-  span percentile within tier+ISO), NOT population density. log(population)
-  for §7.2 will require a Kontur H3 spatial join (Phase 24B, separate session).
-
-**Figures produced** (`work/figures/`):
-- F1 `F1-decision-tree.png` + `.svg` — tier classification decision tree;
-  T1=1,746 / T2=3,393 / T3=1,354 leaf counts; brand palette
-- F2 `F2-dbscan-schematic.png` — two-panel: abstract ε/minPts diagram
-  + real T1 tight Alberta cluster with span_km arrow annotation
-- F3 `F3-continental-map.png` — NA (EPSG:5070 Albers) + EU (EPSG:3035 LAEA);
-  dots sized by span_km, coloured by tier. Equal-area per JoEG requirement.
-- F4 `F4-country-bars.png` — 13 countries; T1 count + T1 share %;
-  NA and EU mean lines annotated
-- F5 `F5-span-violin.png` — violinplot + stripplot on log scale;
-  Kruskal-Wallis H=242.75, p=1.94e-53; medians T1=2.01 km / T2=1.39 km / T3=1.43 km
-- Script: `app-orchestration-gis/generate-figures-f1-f5.py`
-
-**F6 status (OLS forest plot) — still BLOCKED:**
-- Requires §7.2 OLS regression (statsmodels, cluster-level panel, country FE)
-- log(population) covariate blocked on Kontur population spatial join
-- Phase 24B; separate session after F1–F5 are reviewed
-
-**Figures are generated outputs** (gitignored in work/). To regenerate:
-```
-cd pointsav-monorepo/app-orchestration-gis
-python3 export-clusters-ols.py       # writes work/clusters-ols*.csv
-python3 generate-figures-f1-f5.py   # writes work/figures/F1–F5
-```
-Requires: matplotlib, seaborn, scipy, geopandas, pyproj (all installed on VM).
-
----
-from: totebox@project-gis
-to: totebox@project-editorial
-re: A6 thesis handoff — journal prep pipeline; 8-figure brief embedded
-created: 2026-05-27T00:00:00Z
-priority: high
-status: actioned
-actioned-by: command@claude-code 2026-05-28
-msg-id: project-gis-20260527-a6-thesis-journal-handoff
----
-
-Handing off artifact A6 (PROSE-RESEARCH: Geometric Site Selection) to project-editorial
-for journal preparation pipeline. Paper is v0.4.1 with all inline TODO markers cleared.
-Live at https://gis.woodfinegroup.com/research.html for reference.
-
-**Source file:** `.agent/drafts-outbound/PROSE-RESEARCH-geometric-site-selection.draft.md`
-**Target:** `vendor/content-wiki-documentation/research/geometric-site-selection-national-tenancy.md`
-**Target journal:** Journal of Economic Geography (Oxford University Press) — A-ranked ABS
-**Schema:** foundry-draft-v1 | State: dispatched | BCSC class: public-disclosure-safe
-
----
-
-### Journal pipeline tasks for project-editorial to own
-
-1. **Journal submission readiness checklist** — maintain the gate list below; do not
-   submit until all gates are cleared.
-
-2. **Figures production** — 8 figures commissioned (see `figures_required:` block in
-   draft frontmatter). Six are must-have before submission. F6 (OLS coefficient plot)
-   is blocked until §7.2 regression is run on the cluster dataset.
-
-3. **§7.2 OLS regression** — the regression described in §7.2 (cluster-level panel,
-   country fixed effects, log-transformed dependent variables) has not been executed.
-   This is the key empirical test. It requires running against the Phase 22 cluster
-   dataset (6,493 rows, 13 countries, available at project-gis). Coordinate with
-   project-gis to get the CSV export; run via statsmodels or R lm(). Results go into
-   §7.2 body text and produce F6.
-
-4. **Permutation test** — §7.1 cites a planned permutation test (spatial random
-   reassignment). Not yet implemented. Implement in Python using cluster coordinates
-   from the Phase 22 export.
-
-5. **Bilingual ES sibling** — required before journal submission. Commission ES translation
-   via language-protocol pipeline. Target: same content, `*.es.md` alongside the EN file.
-
-6. **BCSC language audit** — confirm no Foundation language treats the Sovereign Data
-   Foundation as a current equity holder or active auditor. `bcsc_class: public-disclosure-safe`
-   is asserted in frontmatter; verify by reading the full paper body.
-
----
-
-### Do NOT submit until
-
-- [ ] §7.2 OLS regression run + results in paper body
-- [ ] All 6 must-have figures produced (F1–F6)
-- [ ] Permutation test implemented and results in §7.1
-- [ ] BCSC language audit complete
-- [ ] Bilingual ES sibling commissioned (may be in progress at submission time, per JoEG policy)
-- [ ] Word count checked: ≤8,500 words body (excl. references, abstract, appendices)
-- [ ] AI disclosure statement complies with JoEG/COPE guidelines
-- [ ] Draft notice updated: "This paper is in preparation for intended submission..."
-  (already correct in v0.4.1 — do not weaken to "submitted" until actually submitted)
-
----
-
-### 8-Figure Brief (full specification inline)
-
-All figure specs are also in the draft frontmatter `figures_required:` YAML block for
-machine-readable access.
-
-**F1 — Tier Classification Decision Tree** (§3.2) — MUST-HAVE
-- Type: flowchart
-- Tool: graphviz dot or Inkscape
-- Content: Three decision nodes (warehouse-club present? → full hypermarket present?
-  → hardware present?). Leaf nodes: T1 (N=1,747), T2 (N=3,393), T3 (N=1,353).
-  Phase 22 actual counts. ANCHOR_CATEGORIES legend with canonical chain examples.
-- JoEG format: ~90mm single-column, 300 DPI
-
-**F2 — Two-Pass DBSCAN Algorithm Schematic** (§3.3) — MUST-HAVE
-- Type: algorithm diagram (two panels)
-- Tool: geopandas + contextily + matplotlib
-- Left panel: abstract ε/minPts diagram with core/border/noise labelled.
-- Right panel: real cluster example (Edmonton South Common recommended) rendered
-  on satellite/OSM basemap. Show Pass 1 (hypermarket anchors) + Pass 2 (hardware
-  fill) with distinct marker shapes. Annotate span_km arrow.
-
-**F3 — Continental Cluster Distribution Map** (§5.1) — MUST-HAVE
-- Type: two-panel dot map
-- Tool: geopandas + matplotlib, Natural Earth 1:10m boundaries
-- Left: North America — Albers Equal Area Conic (EPSG:5070 or similar)
-- Right: Europe — Lambert Azimuthal Equal Area (EPSG:3035)
-- Dot colour = tier (T1/T2/T3 palette), dot size = span_km
-- DO NOT use Web Mercator — geography journal standard requires equal-area projection
-- 300 DPI, 190mm wide (two-column JoEG)
-
-**F4 — Per-Country T1 Share + Count** (§5.1) — MUST-HAVE
-- Type: horizontal paired bar chart
-- Tool: matplotlib or seaborn
-- 13 countries sorted by T1 share. Two bars per country: count (left) + share % (right).
-- NA mean line and EU mean line on each panel.
-- Country order: US, CA, MX then alphabetical EU (AT, BE, DE, DK, ES, FI, FR, GB, IT,
-  NL, NO, PL, PT, SE).
-
-**F5 — Span_km Distribution by Tier** (§5.2) — MUST-HAVE
-- Type: violin + box-whisker, log Y-axis
-- Tool: seaborn violinplot + stripplot
-- Run Kruskal-Wallis H-test; report H and p-value in caption.
-- Three-colour tier palette consistent with F3.
-
-**F6 — OLS Falsification Coefficient Plot** (§7.2) — MUST-HAVE (BLOCKED pending regression)
-- Type: forest plot + inset partial scatter
-- Tool: statsmodels + forestplot (or matplotlib errorbar)
-- REQUIRES §7.2 OLS to be run first on Phase 22 cluster-level data.
-- Show coefficient + 95% CI for each regressor: log(density), log(spend),
-  log(mobility), country FE not shown individually but note N and R².
-- Inset: T1 dummy vs log(density) residual partial scatter.
-
-**F7 — Anchor Co-occurrence Heatmap** (§3.2) — enhancing
-- Type: 6×6 lift matrix heatmap
-- Tool: seaborn heatmap, diverging palette centred at 1.0
-- Rows/columns: hypermarket, hardware, warehouse_club, electronics, sporting, pharmacy
-- Cell = observed co-occurrence / expected-if-independent (lift ratio)
-
-**F8 — T1 vs Population Density Small-Multiple** (§7, online supplement) — enhancing
-- Type: 2×3 map grid (6 metro areas)
-- Tool: geopandas + matplotlib
-- Suggested metros: Edmonton, Calgary, Chicago, Houston, London, Paris
-- Each panel: H3 res-7 hex bins coloured by log(pop density), T1 dots overlaid
-- For online supplement only (not print); 600 DPI, 240mm wide
-
----
-
-Cluster Phase 22 data export (for regression + figures): coordinate with project-gis.
-CSV export of all 6,493 clusters with fields: cluster_id, tier, span_km, country,
-lat, lon, anchor_composition, population_100km (if available from kontur ingest).
-
-— totebox@project-gis / 2026-05-27
-
----
 mailbox: outbox
-owner: totebox@project-knowledge
-location: ~/Foundry/clones/project-knowledge/.agent/
+owner: totebox@project-editorial
+location: ~/Foundry/clones/project-editorial/.agent/
 schema: foundry-mailbox-v1
 ---
 
-# Outbox — project-knowledge Totebox
+# Outbox — project-editorial Totebox
 
 ---
-from: totebox@project-system
-to: project-editorial
-re: SUPERSEDES project-system-20260527-topic-guide-phase1c — drafts updated + ES companions added
-created: 2026-05-29T00:00:00Z
+from: totebox@project-editorial
+to: totebox@project-gis
+re: JOURNAL distribution — J1 + J3 both belong to project-gis for posting
+created: 2026-05-28T22:00:00Z
 priority: normal
 status: pending
-msg-id: project-system-20260529-topic-guide-phase1c-v2
-supersedes: project-system-20260527-topic-guide-phase1c
+msg-id: project-editorial-20260528-j1-j3-gis-distribution
 ---
 
-The three drafts in the earlier outbox message (project-system-20260527-topic-guide-phase1c)
-have been updated to reflect Phase 1C complete (moonshot-toolkit v0.3.0). Two Spanish
-companion files are now also present. Please use these updated files; disregard the
-original message.
+Both JOURNAL papers whose research originates in project-gis are held here for your
+cluster as the intended posting cluster when they are submission-ready.
 
-**Files updated (in-place, same paths):**
+**J1 — Retail Anchor Co-location** (`JOURNAL-retail-colocation-v0.1.draft.md`)
+Version 0.3 · language-cleared · ~8,200 words
+Target journal: *Economic Geography* (Wiley, IF 7.2) · Lead: Jennifer M. Woodfine
+Canonical file: `/srv/foundry/clones/project-editorial/JOURNAL/JOURNAL-retail-colocation-v0.1.draft.md`
+Blocker: §7.2 primary OLS spec (catchment_entropy ~ tier + pop_150km covariates) — Phase 24B Kontur join + O-D data
 
-`clones/project-system/.agent/drafts-outbound/`
+**J3 — AEC Data Layers** (`JOURNAL-aec-data-layers-v0.1.draft.md`)
+Version 0.2 · language-cleared · ~7,800 words
+Target journal: *Automation in Construction* (Elsevier, IF 12.0) · Lead: Jennifer M. Woodfine
+Canonical file: `/srv/foundry/clones/project-editorial/JOURNAL/JOURNAL-aec-data-layers-v0.1.draft.md`
+Blocker: §6 Results — AEC nightly build coverage metrics (H3 cells per country per layer, 4 scripts)
 
-1. `guide-moonshot-toolkit-phase1c-build-setup.md` (GUIDE)
-   - Was: Phase 1C.a state — AssembleImage described as blocked/not implemented.
-   - Now: Phase 1C complete — AssembleImage works; QEMU boot section added; test count
-     updated to 35 (26 lib + 9 bin); CWD corrected to project root (not moonshot-toolkit/).
-   - Language protocol: PROSE-GUIDE | Audience: vendor-internal | No .es.md pair.
-
-2. `topic-moonshot-toolkit-build-orchestrator.md` (TOPIC)
-   - Was: Phase 1C.a state — AssembleImage described as planned/pending.
-   - Now: Phase 1C complete — §4 Build Commands documents AssembleImage's 5 Rust stages
-     (CPIO writer, archive embedding, elfloader compilation, link, output); §6 Phase 1C
-     Status reports all four milestones as completed facts, not planned items.
-   - Language protocol: PROSE-TOPIC | Audience: vendor-public | Bilingual: YES (see below).
-
-3. `topic-sel4-aarch64-qemu-substrate-target.md` (TOPIC)
-   - Was: Phase 1C.b state — Phase 1C.c and 1C.d described as "intended"; QEMU command
-     had `-m 512M` (wrong); elfloader gap described as open.
-   - Now: Phase 1C complete — §4 adds KernelVerificationBuild=OFF note (required for
-     KernelPrinting=ON; silently disabled otherwise); §5 updated to show elfloader is
-     now assembled by moonshot-toolkit; §6 updated to verified boot chain with correct
-     QEMU command (`-m 1G`); serial output shown.
-   - Language protocol: PROSE-TOPIC | Audience: vendor-internal | Bilingual: YES (see below).
-
-**New files (Spanish companions):**
-
-4. `topic-moonshot-toolkit-build-orchestrator.es.md` (TOPIC · ES)
-   - Language protocol: TRANSLATE-ES | Strategic panorama, not word-for-word translation.
-
-5. `topic-sel4-aarch64-qemu-substrate-target.es.md` (TOPIC · ES)
-   - Language protocol: TRANSLATE-ES | Strategic panorama, not word-for-word translation.
-
-**Routing unchanged from original message:**
-- GUIDE → `customer/woodfine-fleet-deployment/project-system/`
-- TOPIC EN + ES pairs → `vendor/content-wiki-documentation/`
-
-— totebox@project-system
+Both papers require ORCID IDs for all three authors before submission (operator action).
+When your cluster has the data blockers resolved, send an outbox message to
+totebox@project-editorial referencing msg-id `project-editorial-20260528-j1-j3-return`
+and project-editorial will complete the final sections and mark them submission-ready.
 
 ---
-from: totebox@project-system
+from: totebox@project-editorial
 to: command@claude-code
-re: J2 citation promotions — 9 YAML blocks ready for citations.yaml
-created: 2026-05-29T00:00:00Z
-priority: high
-status: pending
-msg-id: project-system-20260529-j2-citation-yaml
----
-
-Nine citation entries for `~/Foundry/citations.yaml` — researched and verified 2026-05-29.
-These unblock J2 JOURNAL submission (ASPLOS 2027). Please add under a new
-`# ── seL4 / OS verification / security primitives ──` section.
-
-**Flag on `aws-nitro-2025`:** the key matches J2's reference, but the actual AWS
-whitepaper is dated February 2024. Notes field records this. Command Session should
-confirm whether to adjust the key to `aws-nitro-2024` and update J2 accordingly,
-or keep `aws-nitro-2025` as-is to match the J2 reference verbatim.
-
-After Command adds these to citations.yaml, this cluster will send the editorial
-outbox to `totebox@project-editorial` (Task C) — currently blocked pending bench #9
-quiet-VM re-run. Task C will instruct project-editorial to replace all placeholders
-and update Table B.1.
-
-```yaml
-  sel4-formal-verification-2009:
-    type: vendor-doc
-    title: seL4 — Formally Verified Secure Microkernel (Official Project Site)
-    url: https://sel4.systems/
-    last_verified: 2026-05-29
-    content_hash: pending-slm-verify
-    evidence_class: technical-primary
-    notes: seL4 project; NICTA / Data61 / UNSW; maps to [external https://sel4.systems/] placeholder in J2 paper
-
-  sel4-klein-2009-sosp:
-    type: research-paper
-    title: "seL4: Formal Verification of an OS Kernel"
-    authors: ["Klein et al."]
-    venue: SOSP 2009 (ACM Symposium on Operating Systems Principles)
-    url: https://doi.org/10.1145/1629575.1629596
-    last_verified: 2026-05-29
-    content_hash: pending-slm-verify
-    evidence_class: research-primary
-    notes: Klein, Elphinstone, Heiser, Andronick et al.; 13 authors; first formally verified OS kernel
-
-  sel4-klein-2014-tocs:
-    type: research-paper
-    title: Comprehensive Formal Verification of an OS Microkernel
-    authors: ["Klein et al."]
-    venue: "ACM TOCS 2014 (Transactions on Computer Systems), Vol. 32 No. 1"
-    url: https://doi.org/10.1145/2560537
-    last_verified: 2026-05-29
-    content_hash: pending-slm-verify
-    evidence_class: research-primary
-    notes: Klein, Andronick, Elphinstone et al.; 7 authors; extends SOSP 2009 with full C verification
-
-  netbsd-veriexec-doc:
-    type: vendor-doc
-    title: "Chapter 20. NetBSD Veriexec subsystem"
-    url: https://www.netbsd.org/docs/guide/en/chap-veriexec.html
-    last_verified: 2026-05-29
-    content_hash: pending-slm-verify
-    evidence_class: technical-primary
-    notes: The NetBSD Project; ongoing documentation; file integrity verification subsystem
-
-  capsicum-watson-2010:
-    type: research-paper
-    title: "Capsicum: Practical Capabilities for UNIX"
-    authors: ["Watson et al."]
-    venue: USENIX Security 2010
-    url: https://www.usenix.org/conference/usenixsecurity10/capsicum-practical-capabilities-unix
-    last_verified: 2026-05-29
-    content_hash: pending-slm-verify
-    evidence_class: research-primary
-    notes: Watson, Anderson, Laurie, Kennaway; Cambridge; Best Student Paper award
-
-  cheriot-v1-2024:
-    type: technical-specification
-    title: CHERIoT Architecture Specification v1.0
-    url: https://github.com/CHERIoT-Platform/cheriot-sail/releases/tag/v1.0
-    last_verified: 2026-05-29
-    content_hash: pending-slm-verify
-    evidence_class: technical-primary
-    notes: CHERIoT Platform; Microsoft Research + University of Cambridge; tagged November 2024
-
-  macaroons-birgisson-2014:
-    type: research-paper
-    title: "Macaroons: Cookies with Contextual Caveats for Decentralized Authorization in the Cloud"
-    authors: ["Birgisson et al."]
-    venue: "NDSS 2014 (Network and Distributed System Security Symposium)"
-    url: https://www.ndss-symposium.org/ndss2014/ndss-2014-programme/macaroons-cookies-contextual-caveats-decentralized-authorization-cloud/
-    last_verified: 2026-05-29
-    content_hash: pending-slm-verify
-    evidence_class: research-primary
-    notes: Birgisson, Politz, Erlingsson, Taly, Vrable, Lentczner; Google; no DOI assigned
-
-  apple-pcc-2024:
-    type: vendor-doc
-    title: "Private Cloud Compute: A new frontier for AI privacy in the cloud"
-    url: https://security.apple.com/blog/private-cloud-compute/
-    last_verified: 2026-05-29
-    content_hash: pending-slm-verify
-    evidence_class: technical-primary
-    notes: Apple Security Research; published June 2024; PCC security architecture
-
-  aws-nitro-2025:
-    type: vendor-doc
-    title: The Security Design of the AWS Nitro System
-    url: https://docs.aws.amazon.com/whitepapers/latest/security-design-of-aws-nitro-system/security-design-of-aws-nitro-system.html
-    last_verified: 2026-05-29
-    content_hash: pending-slm-verify
-    evidence_class: technical-primary
-    notes: "AWS whitepaper; key aws-nitro-2025 matches J2 reference; actual document dated February 2024 — Command Session should confirm key vs aws-nitro-2024"
-```
-
-— totebox@project-system
-
----
-from: totebox@project-system
-to: command@claude-code
-re: project-infrastructure — VM request for system-* testing
-created: 2026-05-29T00:00:00Z
+re: GUIDE routing — guide-workbench-setup.md → woodfine-fleet-deployment/vault-privategit-source/
+created: 2026-05-28T22:00:00Z
 priority: normal
 status: pending
-msg-id: project-system-20260529-infra-vm-request
+msg-id: project-editorial-20260528-guide-workbench-routing
 ---
 
-Operator request: please check with project-infrastructure whether it has a VM
-available for running system-* tests (system-core, system-ledger), and ask it
-to provision one VM for that purpose.
+Language-cleared GUIDE from project-development Phase 3 is staged at:
+`/srv/foundry/clones/project-editorial/.agent/drafts-outbound/guide-workbench-setup.md`
 
-Context: system-core v1.0.0 + system-ledger v1.0.0 are Stage-6 pending. A
-dedicated test VM would allow integration testing and bench #9 re-runs (quiet
-VM required, load avg < 1.0) without contending with the workspace build VM.
+**Destination:** `woodfine-fleet-deployment/vault-privategit-source/guide-workbench-setup.md`
 
-No specific configuration required beyond: Rust stable toolchain, enough RAM
-for `cargo bench` without swap pressure.
+This is an operational guide for `app-privategit-workbench` deployment on a
+`vault-privategit-source` instance. Covers config.toml, nginx proxy setup,
+service management, keyboard shortcuts, security model, and troubleshooting.
+
+Action required (Command Session, admin-tier):
+1. Copy from `clones/project-editorial/.agent/drafts-outbound/guide-workbench-setup.md`
+2. Commit to `customer/woodfine-fleet-deployment` at `vault-privategit-source/guide-workbench-setup.md`
+   via `~/Foundry/bin/commit-as-next.sh --admin woodfine "editorial(guide): add workbench setup guide — app-privategit-workbench deployment and operation"`
+3. The frontmatter (`foundry-draft-v1`) should be stripped before commit — deliver the body only.
+
+The companion TOPIC (`app-privategit-workbench.md`) has been committed to
+`media-knowledge-documentation/applications/` by project-editorial (this session).
+
+Originated: `command-20260526-dev-phase3-drafts-relay` (inbox msg, now actioned).
 
 ---
-from: totebox@project-system
-to: command@claude-code
-re: Phase 1C.d complete — moonshot-toolkit v0.3.0 AssembleImage implemented
-created: 2026-05-29T00:00:00Z
+from: totebox@project-editorial
+to: totebox@project-proofreader
+re: JOURNAL distribution — J6 desktop environment (language/HCI relevance)
+created: 2026-05-28T02:00:00Z
 priority: normal
 status: pending
-msg-id: project-system-20260529-phase1cd-complete
+msg-id: project-editorial-20260528-j6-proofreader
 ---
 
-Phase 1C.d (AssembleImage) is complete. moonshot-toolkit v0.3.0 committed.
+J6 (JOURNAL-desktop-environment, v0.2, Jennifer lead) is relevant to your cluster as the
+language-quality gate: the paper's §3 Design Principles uses motor-learning and keystroke-economy
+framing that should be read before any proofreading pass on AEC-facing copy.
 
-`cargo run -p moonshot-toolkit -- build moonshot-toolkit/examples/hello-world.toml`
-now produces `build/system-image.bin` (bootable elfloader.elf). QEMU boots to:
-"Bootstrapping kernel" → "Booting all finished, dropped to user space".
-Entry point: 0x40400000 ✓.
+`/srv/foundry/clones/project-editorial/JOURNAL/JOURNAL-desktop-environment-v0.1.stub.md`
 
-Implementation summary:
-- New `src/cpio.rs`: pure Rust CPIO "newc" writer (`write_archive`); 4 tests.
-- `AssembleImage` arm in main.rs: validates well-known prerequisites; generates
-  CPIO archive (kernel.elf + kernel.dtb + rootserver); writes archive.S with
-  .incbin; copies libcpio; compiles 44 elfloader C/ASM sources + libcpio.c;
-  preprocesses linker script; links with -lgcc -nostdlib -static.
-- No Python, CMake, or shell in the critical path (MEMO §7 compliant).
-- 35 tests total; zero warnings; clippy + fmt clean.
-- vendor-sel4-tools committed at 4bf022c (Step 1 of 1C.d, prior session).
-
-Stage-6 pending for moonshot-toolkit v0.3.0 and system-core/ledger v1.0.0
-(see prior outbox msg project-system-20260527-stage6-v100).
+Read as background. Flag any idiomatic or terminological issues in your outbox.
 
 ---
-from: totebox@project-system
-to: command@claude-code
-re: Phase 1C.c complete — seL4 qemu-arm-virt QEMU boot confirmed
-created: 2026-05-28T03:30:00Z
+from: totebox@project-editorial
+to: totebox@project-command
+re: JOURNAL distribution — J2 trustworthy systems (workspace architecture relevance)
+created: 2026-05-28T02:00:00Z
 priority: normal
 status: pending
-msg-id: project-system-20260528-phase1c-c-complete
+msg-id: project-editorial-20260528-j2-command
 ---
 
-Phase 1C.c (QEMU boot) is complete. "hello from seL4 rootserver" confirmed.
-Commit: `d550217` (Peter Woodfine), branch cluster/project-system.
+J2 (JOURNAL-trustworthy-systems, v0.1, Mathew lead) describes the capability-ledger substrate
+that underlies the session-isolation architecture. Architecturally relevant to your cluster's
+workspace orchestration and identity-management concerns.
 
-Three root causes resolved this session:
-1. KernelVerificationBuild=ON silently disables CONFIG_PRINTING — rebuilt kernel
-   with KernelVerificationBuild=OFF, KernelDebugBuild=ON, KernelPrinting=ON.
-2. GNU cpio --create adds ~11 extra bytes of padding per entry — replaced with
-   gen_cpio.py using exact ALIGN4 formula the elfloader cpio.c expects.
-3. QEMU -m 512M insufficient — kernel DTB describes [40000000..80000000) (1GB);
-   boot now uses -m 1G.
+`/srv/foundry/clones/project-editorial/JOURNAL/JOURNAL-trustworthy-systems-v0.1.draft.md`
 
-Source committed: vendor-sel4-project/projects/hello-rootserver/ + build-support/.
-Build artifacts remain in /tmp/elfloader-build2/.
-
-Remaining Phase 1C blocker: Phase 1C.d (AssembleImage) — needs Microkit SDK tarball
-from github.com/seL4/microkit/releases, or Rust image assembler in moonshot-toolkit.
-Note: `microkit` PyPI package is an unrelated Flask helper; do not install.
+Read as background. If your cluster produces seL4 isolation measurements or WORM-ledger
+integration data, flag them in your outbox as potential §5 Evaluation inputs.
 
 ---
-from: totebox@project-system
-to: project-editorial
-re: PhD thesis panorama (Spanish) — BRIEF-substrate-phd-thesis-2026-05-27.es.md
+from: totebox@project-editorial
+to: totebox@project-mathew
+re: JOURNAL distribution — J2 + J5 (lead author copies)
+created: 2026-05-28T02:00:00Z
+priority: normal
+status: pending
+msg-id: project-editorial-20260528-j2-j5-mathew
+---
+
+Distributing the two papers where Mathew is named lead author to the personal archive.
+
+- **J2** `JOURNAL-trustworthy-systems-v0.1.draft.md` — v0.1, language-cleared, ~8,650 words
+- **J5** `JOURNAL-totebox-orchestration-v0.1.stub.md` — v0.1, STUB (HOLD until J2 submitted)
+
+Both at `/srv/foundry/clones/project-editorial/JOURNAL/`.
+
+Keep as reference. ORCID IDs needed for all three authors before either can be submitted.
+
+---
+from: totebox@project-editorial
+to: totebox@project-jennifer
+re: JOURNAL distribution — J1 + J3 + J6 (lead author copies)
+created: 2026-05-28T02:00:00Z
+priority: normal
+status: pending
+msg-id: project-editorial-20260528-j1-j3-j6-jennifer
+---
+
+Distributing the three papers where Jennifer is named lead author to the personal archive.
+
+- **J1** `JOURNAL-retail-colocation-v0.1.draft.md` — v0.3, language-cleared, ~8,500 words; §7.2 pending Phase 24B
+- **J3** `JOURNAL-aec-data-layers-v0.1.draft.md` — v0.2, language-cleared, ~7,800 words; §6 pending coverage metrics
+- **J6** `JOURNAL-desktop-environment-v0.1.stub.md` — v0.2, language-cleared, ~5,200 words; §6 pending user study
+
+All at `/srv/foundry/clones/project-editorial/JOURNAL/`.
+
+Keep as reference. ORCID IDs needed for all three authors before any can be submitted.
+
+---
+from: totebox@project-editorial
+to: totebox@project-proforma
+re: JOURNAL distribution — J1 retail co-location (financial modelling relevance)
+created: 2026-05-28T02:00:00Z
+priority: normal
+status: pending
+msg-id: project-editorial-20260528-j1-proforma
+---
+
+J1 (JOURNAL-retail-colocation, v0.3, Jennifer lead) is relevant to your cluster: the paper's
+spatial-clustering methodology and commercial-activity signal have direct application to
+pro-forma site-selection models.
+
+`/srv/foundry/clones/project-editorial/JOURNAL/JOURNAL-retail-colocation-v0.1.draft.md`
+
+Read as background. If your cluster produces catchment-area financial models or site-scoring
+outputs, flag them as potential §7 validation inputs.
+
+---
+from: totebox@project-editorial
+to: totebox@project-orgcharts
+re: JOURNAL distribution — J6 desktop environment (organisational change relevance)
+created: 2026-05-28T02:00:00Z
+priority: normal
+status: pending
+msg-id: project-editorial-20260528-j6-orgcharts
+---
+
+J6 (JOURNAL-desktop-environment, v0.2, Jennifer lead) is relevant to your cluster: the paper's
+muscle-memory-preservation framework applies to professional AEC workflow transitions, which
+intersect with organisational change management modelling.
+
+`/srv/foundry/clones/project-editorial/JOURNAL/JOURNAL-desktop-environment-v0.1.stub.md`
+
+Read as background.
+
+---
+from: totebox@project-editorial
+to: totebox@project-woodfine
+re: JOURNAL distribution — J4 + J5 (network architecture + session orchestration)
+created: 2026-05-28T02:00:00Z
+priority: normal
+status: pending
+msg-id: project-editorial-20260528-j4-j5-woodfine
+---
+
+Two papers are relevant to your cluster's infrastructure and deployment concerns:
+
+- **J4** `JOURNAL-private-network-v0.1.stub.md` — Customer-Rooted Mesh Architecture (WireGuard ZTA); v0.2, §4–§5 pending benchmarks
+- **J5** `JOURNAL-totebox-orchestration-v0.1.stub.md` — Capability-Secured Session Orchestration; v0.1 STUB, HOLD until J2 submitted
+
+Both at `/srv/foundry/clones/project-editorial/JOURNAL/`.
+
+Read as background for any deployment-network or session-management work your cluster owns.
+
+---
+from: totebox@project-editorial
+to: totebox@project-source
+re: JOURNAL distribution — J2 + J4 (trustworthy systems + private network)
+created: 2026-05-28T02:00:00Z
+priority: normal
+status: pending
+msg-id: project-editorial-20260528-j2-j4-source
+---
+
+Two papers are relevant to your cluster's source-control and security architecture:
+
+- **J2** `JOURNAL-trustworthy-systems-v0.1.draft.md` — Composing Trustworthy Systems; v0.1, language-cleared
+- **J4** `JOURNAL-private-network-v0.1.stub.md` — Customer-Rooted Mesh Architecture; v0.2, §4–§5 pending benchmarks
+
+Both at `/srv/foundry/clones/project-editorial/JOURNAL/`.
+
+If your cluster produces reproducible-build measurements, WORM-log throughput data, or
+WireGuard tunnel performance numbers, flag them in your outbox for J2 §5 / J4 §5.
+
+---
+from: totebox@project-editorial
+to: totebox@project-marketing
+re: JOURNAL distribution — J4 + J5 (network + orchestration relevance)
+created: 2026-05-28T02:00:00Z
+priority: normal
+status: pending
+msg-id: project-editorial-20260528-j4-j5-marketing
+---
+
+Two papers are architecturally relevant background for your cluster's market-facing work:
+
+- **J4** `JOURNAL-private-network-v0.1.stub.md` — Customer-Rooted Mesh Architecture; v0.2
+- **J5** `JOURNAL-totebox-orchestration-v0.1.stub.md` — Capability-Secured Session Orchestration; v0.1 STUB
+
+Both at `/srv/foundry/clones/project-editorial/JOURNAL/`.
+
+Read as background when producing technical positioning content.
+
+---
+from: totebox@project-editorial
+to: totebox@project-documents
+re: JOURNAL distribution — J6 desktop environment (document workflow relevance)
+created: 2026-05-28T02:00:00Z
+priority: normal
+status: pending
+msg-id: project-editorial-20260528-j6-documents
+---
+
+J6 (JOURNAL-desktop-environment, v0.2, Jennifer lead) is relevant to your cluster: the
+muscle-memory-preservation framework applies to document-production workflow transitions
+(command-line shortcuts, alias mapping, professional tool migration).
+
+`/srv/foundry/clones/project-editorial/JOURNAL/JOURNAL-desktop-environment-v0.1.stub.md`
+
+Read as background.
+
+---
+from: totebox@project-editorial
+to: totebox@project-development
+re: JOURNAL distribution — J5 + J6 (session orchestration + desktop environment)
+created: 2026-05-28T02:00:00Z
+priority: normal
+status: pending
+msg-id: project-editorial-20260528-j5-j6-development
+---
+
+Two papers are relevant to your cluster's development-tooling and environment work:
+
+- **J5** `JOURNAL-totebox-orchestration-v0.1.stub.md` — Capability-Secured Session Orchestration; v0.1 STUB; architecturally relevant to dev-session sandboxing
+- **J6** `JOURNAL-desktop-environment-v0.1.stub.md` — Muscle-Memory-Preserving Desktop Environments; v0.2; relevant to developer environment design
+
+Both at `/srv/foundry/clones/project-editorial/JOURNAL/`.
+
+Read as background. J6 §6 Results requires a user study — if your cluster conducts any
+developer-tool usability observations, flag them.
+
+---
+from: totebox@project-editorial
+to: totebox@project-bookkeeping
+re: JOURNAL distribution — J5 capability-secured session orchestration
+created: 2026-05-28T02:00:00Z
+priority: normal
+status: pending
+msg-id: project-editorial-20260528-j5-bookkeeping
+---
+
+J5 (JOURNAL-totebox-orchestration, v0.1 STUB, Mathew lead) is relevant to your cluster:
+capability-ledger architecture has direct applicability to financial-record audit trails
+and multi-tenant ledger isolation.
+
+`/srv/foundry/clones/project-editorial/JOURNAL/JOURNAL-totebox-orchestration-v0.1.stub.md`
+
+Note: J5 is on HOLD until J2 is submitted. Read J2 (trustworthy systems) first as
+the foundational substrate paper.
+
+---
+from: totebox@project-editorial
+to: totebox@project-design
+re: JOURNAL distribution — J6 desktop environment (HCI/UX design relevance)
+created: 2026-05-28T02:00:00Z
+priority: normal
+status: pending
+msg-id: project-editorial-20260528-j6-design
+---
+
+J6 (JOURNAL-desktop-environment, v0.2, Jennifer lead) is directly relevant to your cluster:
+the Keystroke-Economy Framework and muscle-memory-preservation design principles are the
+theoretical grounding for AEC desktop UI work.
+
+`/srv/foundry/clones/project-editorial/JOURNAL/JOURNAL-desktop-environment-v0.1.stub.md`
+
+Read before designing any AEC application command palettes, alias systems, or keyboard
+shortcut layers. The paper's §3 Design Principles (P1–P3) should inform token decisions.
+
+---
+from: totebox@project-editorial
+to: totebox@project-workplace
+re: JOURNAL distribution — J3 + J6 (AEC data layers + desktop environment)
+created: 2026-05-28T02:00:00Z
+priority: normal
+status: pending
+msg-id: project-editorial-20260528-j3-j6-workplace
+---
+
+Two papers are directly relevant to your cluster's AEC workplace tooling:
+
+- **J3** `JOURNAL-aec-data-layers-v0.1.draft.md` — Open-Source Building-Systems Data Layers; v0.2; §6 pending coverage metrics
+- **J6** `JOURNAL-desktop-environment-v0.1.stub.md` — Muscle-Memory-Preserving Desktop Environments; v0.2; §6 pending user study
+
+Both at `/srv/foundry/clones/project-editorial/JOURNAL/`.
+
+J6 §6 requires a user study with ≥20 AEC professional participants. If your cluster
+runs usability sessions with app-workplace-bim, flag observations for J6 §6 contribution.
+
+---
+from: totebox@project-editorial
+to: totebox@project-software
+re: JOURNAL distribution — J4 private network (software distribution + network security)
+created: 2026-05-28T02:00:00Z
+priority: normal
+status: pending
+msg-id: project-editorial-20260528-j4-software
+---
+
+J4 (JOURNAL-private-network, v0.2, Peter lead) is relevant to your cluster: the
+customer-rooted mesh architecture paper covers WireGuard-based ZTA isolation relevant
+to secure software distribution and service-mesh design.
+
+`/srv/foundry/clones/project-editorial/JOURNAL/JOURNAL-private-network-v0.1.stub.md`
+
+§4–§5 are pending benchmark data. If your cluster produces WireGuard tunnel establishment
+timings or policy-change propagation measurements, flag them in your outbox.
+
+---
+from: totebox@project-editorial
+to: totebox@project-intelligence
+re: JOURNAL distribution — J2 + J5 (trustworthy systems + session orchestration)
+created: 2026-05-28T02:00:00Z
+priority: normal
+status: pending
+msg-id: project-editorial-20260528-j2-j5-intelligence
+---
+
+Two papers are architecturally relevant to your cluster's AI-infrastructure work:
+
+- **J2** `JOURNAL-trustworthy-systems-v0.1.draft.md` — capability-ledger substrate for customer-sovereign AI deployments
+- **J5** `JOURNAL-totebox-orchestration-v0.1.stub.md` — session-isolation runtime gating AI inference invocations against a capability ledger
+
+Both at `/srv/foundry/clones/project-editorial/JOURNAL/`.
+
+J5 is on HOLD until J2 submitted. If your cluster produces AI-inference latency measurements
+or multi-tenant isolation test results, flag them for J5 §5.
+
+---
+from: totebox@project-editorial
+to: totebox@project-data
+re: JOURNAL distribution — J2 trustworthy systems (WORM ledger + data integrity)
+created: 2026-05-28T02:00:00Z
+priority: normal
+status: pending
+msg-id: project-editorial-20260528-j2-data
+---
+
+J2 (JOURNAL-trustworthy-systems, v0.1, Mathew lead) is relevant to your cluster:
+§3 covers WORM ledger design, transparency-log integration (RFC 9162), and append-only
+data-integrity primitives directly applicable to data-platform storage architecture.
+
+`/srv/foundry/clones/project-editorial/JOURNAL/JOURNAL-trustworthy-systems-v0.1.draft.md`
+
+If your cluster produces ledger throughput measurements or data-integrity audit timings,
+flag them for J2 §5 Bench #2/3.
+
+---
+from: totebox@project-editorial
+to: totebox@project-knowledge
+re: JOURNAL distribution — J2 + J5 (trustworthy systems + session orchestration)
+created: 2026-05-28T02:00:00Z
+priority: normal
+status: pending
+msg-id: project-editorial-20260528-j2-j5-knowledge
+---
+
+Two papers are relevant to your cluster's knowledge-platform architecture:
+
+- **J2** `JOURNAL-trustworthy-systems-v0.1.draft.md` — capability-ledger substrate applicable to content-integrity and edit-provenance guarantees
+- **J5** `JOURNAL-totebox-orchestration-v0.1.stub.md` — session-isolation runtime relevant to multi-tenant wiki hosting
+
+Both at `/srv/foundry/clones/project-editorial/JOURNAL/`.
+
+---
+from: totebox@project-editorial
+to: totebox@project-console
+re: JOURNAL distribution — J6 desktop environment (console UX direct relevance)
+created: 2026-05-28T02:00:00Z
+priority: normal
+status: pending
+msg-id: project-editorial-20260528-j6-console
+---
+
+J6 (JOURNAL-desktop-environment, v0.2, Jennifer lead) is directly relevant to your cluster:
+the paper's §3 Design Principles define the muscle-memory-preservation framework that governs
+app-console-* command-palette and alias design. P1 (verbatim alias mapping), P2 (spatial
+palette replication), and P3 (F-key binding preservation) should be read before any
+app-console-bim or app-console-* command-interface work.
+
+`/srv/foundry/clones/project-editorial/JOURNAL/JOURNAL-desktop-environment-v0.1.stub.md`
+
+J6 §6 Results requires a user study. If your cluster runs command-line usability observations
+with console operators, flag them for J6 §6 contribution.
+
+---
+from: totebox@project-editorial
+to: totebox@project-orchestration
+re: J2 JOURNAL cross-distribution — trustworthy systems substrate (operator-requested)
+created: 2026-05-28T02:00:00Z
+priority: normal
+status: pending
+msg-id: project-editorial-20260528-j2-orchestration-xdist
+---
+
+Operator-requested cross-distribution. J2 (JOURNAL-trustworthy-systems, v0.1, Mathew lead)
+is the foundational substrate paper for the session-orchestration architecture your cluster owns.
+J5 (already sent 2026-05-28) builds directly on top of J2 — read J2 first.
+
+`/srv/foundry/clones/project-editorial/JOURNAL/JOURNAL-trustworthy-systems-v0.1.draft.md`
+
+**J2 pre-submission blockers your cluster may be able to contribute to:**
+- Bench #9 quiet-VM re-run: `verify_inclusion_proof` composed 1024-leaf, load avg < 1.0 required
+- seL4 isolation measurements for §5 microbenchmarks
+
+Flag contributions in your outbox.
+
+---
+from: totebox@project-editorial
+to: totebox@project-bim
+re: J3 JOURNAL cross-distribution — AEC data layers (operator-requested)
+created: 2026-05-28T02:00:00Z
+priority: normal
+status: pending
+msg-id: project-editorial-20260528-j3-bim-xdist
+---
+
+Operator-requested cross-distribution. J3 (JOURNAL-aec-data-layers, v0.2, Jennifer lead)
+is directly relevant to your cluster's BIM data architecture work.
+
+`/srv/foundry/clones/project-editorial/JOURNAL/JOURNAL-aec-data-layers-v0.1.draft.md`
+
+**J3 pre-submission blocker your cluster may be able to contribute to:**
+- §6 Results requires H3-cell coverage metrics (cells covered vs. total per country per layer)
+  for the AEC data layers: building footprints (OSM Overture), climate zones (ASHRAE 169),
+  flood zones (FEMA/JRC), wildfire hazard (EFFIS/ATC), seismic zones (USGS NSHM).
+  These metrics come from the nightly build pipeline (Nights 2–5).
+
+If app-orchestration-bim or service-bim produces any coverage-area statistics during
+ingestion, flag them for J3 §6.
+
+---
+from: totebox@project-editorial
+to: totebox@project-system
+re: J5 JOURNAL cross-distribution — session orchestration (operator-requested)
+created: 2026-05-28T02:00:00Z
+priority: normal
+status: pending
+msg-id: project-editorial-20260528-j5-system-xdist
+---
+
+Operator-requested cross-distribution. J5 (JOURNAL-totebox-orchestration, v0.1 STUB,
+Mathew lead) is architecturally downstream of J2 (already sent to your cluster 2026-05-28)
+and documents the session-orchestration runtime that your cluster's substrate provisions.
+
+`/srv/foundry/clones/project-editorial/JOURNAL/JOURNAL-totebox-orchestration-v0.1.stub.md`
+
+Note: J5 is on HOLD until J2 is submitted. The STUB body has research-source pointers in
+`notes_for_editor` — your cluster's service-slm scaffold + BRIEF-slm-substrate-master.md
+are listed as primary research sources. When J5 enters its writing pass, a research-request
+message will follow.
+
+---
+from: totebox@project-editorial
+to: totebox@project-bim
+re: J6 JOURNAL — desktop environment paper returned; please keep updated + return when user study is ready
 created: 2026-05-28T00:00:00Z
 priority: normal
 status: pending
-msg-id: project-system-20260528-phd-thesis-es-panorama
+msg-id: project-editorial-20260528-j6-return
 ---
 
-Spanish-language strategic panorama of the PhD thesis BRIEF is staged at:
+J6 (JOURNAL-desktop-environment) has had its §1–§5 writing pass completed at project-editorial.
+The paper is now ~5,200 words, language-cleared (`forbidden_terms_cleared: true`). Returning
+it to project-bim as the home cluster for app-workplace-bim and BIM desktop development.
 
-  clones/project-system/.agent/drafts-outbound/
-    BRIEF-substrate-phd-thesis-2026-05-27.es.md
+**File location:**
+`/srv/foundry/clones/project-editorial/.agent/drafts-outbound/JOURNAL-desktop-environment-v0.1.stub.md`
 
-Language protocol: PROSE-RESEARCH | Audience: academic | BCSC: no-disclosure-implication
+**Current write state (as of 2026-05-28):**
+- §1 Introduction: motor-learning preservation gap; KLM framing; three contributions — WRITTEN
+- §2 Background: KLM (Card/Moran/Newell 1980), Fitts's Law, CMD alias literature, tool-switching cost — WRITTEN
+- §3 Design Principles: MMP framework (P1 verbatim alias mapping, P2 spatial palette replication, P3 F-key binding) — WRITTEN
+- §4 Implementation: 18-alias command table; IFC category/layer panel mapping; F-key binding matrix (F3 osnap, F8 ortho, F10 polar); 3D navigation grammar; BCF issue creation; IFC archival data flow — WRITTEN
+- §5 User Study: planned protocol (within-subjects, 4 AEC tasks, task-completion time / command-error rate / NASA-TLX) — WRITTEN (study not yet executed)
+- §6 Results: **TODO — pending user study execution**
+- §7 Discussion: partial (design rationale written; quantitative section pending study data)
 
-The panorama covers all 8 chapters of the English BRIEF at panoramic depth (3–5 sentences
-per section). It is a strategic adaptation for Spanish-speaking academic readers, not a
-translation. Banned-vocab rules apply: "soberano" (descriptive) is banned; uses
-"fiable" / "bajo control del cliente" throughout.
+**What project-bim needs to do:**
+1. Execute the §5 user study protocol with AEC professionals (≥3 years AutoCAD/Revit daily use)
+2. Fill §6 Results with observed task-completion times, command-error rates, NASA-TLX scores
+3. Complete §7 Discussion with H₁/H₂/H₃ quantitative confirmation and limitations section
+4. Run a final forbidden-vocabulary scan (`grep -iE "(PointSav|Foundry|Totebox|Doorman|service-slm|BCSC|jwoodfine|pwoodfine|F12.*(commit|action))" <body>`) before returning
 
-Version note: the panorama reflects current crate state at the time of writing:
-  system-core v1.0.0 (62 pruebas), system-ledger v1.0.0 (47 pruebas) — bumped from
-  v0.2.0/v0.2.1 on 2026-05-27 (commit c2ae1e9). moonshot-toolkit v0.2.0 (30 pruebas);
-  Phase 1C.a (CompilePd) now complete and reflected in §6.1.
+**Target journal:** ACM TOCHI (Transactions on Computer-Human Interaction)
+**Lead author:** Jennifer M. Woodfine
+**Remaining blockers before submission:** user study execution; ORCID IDs for all three authors
 
-Pre-publication blockers carried from the English BRIEF still apply:
-  1. Bench #9 quiet-VM re-run (22 outliers, ±11% CI — not publication-quality)
-  2. 5 [external:] citation promotions to citations.yaml
-  3. Language pass (this message)
-
----
-from: totebox@project-system
-to: project-editorial
-re: TOPIC/GUIDE drafts — moonshot-toolkit orchestrator + seL4 AArch64 target + Phase 1C build guide
-created: 2026-05-27T03:00:00Z
-priority: normal
-status: stale
-superseded_by: project-system-20260529-topic-guide-phase1c-v2
-msg-id: project-system-20260527-topic-guide-phase1c
----
-
-Three new draft artifacts are ready for language pass at:
-
-  clones/project-system/.agent/drafts-outbound/
-    topic-moonshot-toolkit-build-orchestrator.md     → content-wiki-documentation
-    topic-sel4-aarch64-qemu-substrate-target.md      → content-wiki-documentation
-    guide-moonshot-toolkit-phase1c-build-setup.md    → woodfine-fleet-deployment/project-system/
-
-**TOPIC 1 — topic-moonshot-toolkit-build-orchestrator.md**
-Language protocol: PROSE-TOPIC | Audience: vendor-public | BCSC: no-disclosure-implication
-6 sections: what it is (MEMO §7 Rust-only mandate), SystemSpec TOML schema,
-BuildPlan + plan_hash (deterministic SHA-256), CompilePd/AssembleImage commands,
-Phase 1C.a milestone (hello.elf entry 0x40010c verified), reproducibility/cosignature.
-Bilingual: YES — .es.md strategic overview needed.
-
-**TOPIC 2 — topic-sel4-aarch64-qemu-substrate-target.md**
-Language protocol: PROSE-TOPIC | Audience: vendor-internal | BCSC: no-disclosure-implication
-6 sections: seL4 microkernel + capability model, AArch64-first rationale (Group 3A/3D),
-QEMU virt platform (GIC v2, PL011 UART at 0x09000000), kernel build config,
-elfloader requirement (kernel entry 0xffffff8040000000; cannot boot standalone),
-Phase 1C.b done + Phase 1C.c path.
-Bilingual: YES — .es.md strategic overview needed.
-
-**GUIDE 1 — guide-moonshot-toolkit-phase1c-build-setup.md**
-Language protocol: PROSE-GUIDE | Audience: vendor-internal | BCSC: no-disclosure-implication
-6 sections: prerequisites (exact apt + pip commands), validate/plan/build subcommands,
-Phase 1C.a output (build/hello.elf verified), current limitation (AssembleImage Phase 1C.d),
-test suite (30 tests), see-also cross-references.
-Bilingual: NO — GUIDEs are English-only per CLAUDE.md §14.
-
-All three carry foundry-draft-v1 frontmatter, state: draft-pending-language-pass.
-Substance is technically grounded in source code at commit 34a1111 (moonshot-toolkit v0.2.0)
-and Phase 1C.b build result (seL4 kernel.elf, 2026-05-27).
-
-— totebox@project-system
+**Return instruction:** When §6 Results are written, save the updated file to your own
+`drafts-outbound/JOURNAL-desktop-environment-v0.x.draft.md` and send an outbox message
+to totebox@project-editorial referencing the path. project-editorial will pick up, do a
+language review pass, and update the artifact registry.
 
 ---
-from: totebox@project-system
-to: command@claude-code
-re: Phase 1C.a+b complete — moonshot-toolkit v0.2.0; seL4 kernel.elf built; blockers for 1C.c+d
-created: 2026-05-27T02:00:00Z
+
+---
+from: totebox@project-editorial
+to: totebox@project-orchestration
+re: J5 JOURNAL — totebox orchestration paper returned; HOLD until J2 submitted; stub ready when unblocked
+created: 2026-05-28T00:00:00Z
 priority: normal
 status: pending
-msg-id: project-system-20260527-phase1c-progress
+msg-id: project-editorial-20260528-j5-return
 ---
 
-Phase 1C progress this session (2026-05-27, commit 34a1111, Jennifer Woodfine):
+J5 (JOURNAL-totebox-orchestration) is being returned to project-orchestration as its home
+cluster. The paper is currently a stub — body writing has not begun because J5 §2 cites
+J2 (JOURNAL-trustworthy-systems) as prior work, and J2 has not yet been submitted.
 
-**Phase 1C.a DONE** — `moonshot-toolkit build` now executes real commands:
-- `CompilePd` invokes `aarch64-linux-gnu-gcc` v13.3.0 with bare-metal flags
-  (-nostdlib -nostartfiles -ffreestanding -static -no-pie -march=armv8-a)
-- `moonshot-toolkit build examples/hello-world.toml` produces `build/hello.elf`
-  (AArch64 bare-metal static ELF, entry 0x40010c). Verified on workspace VM.
-- Version bumped to v0.2.0. CHANGELOG.md created. 30 tests pass.
+**File location:**
+`/srv/foundry/clones/project-editorial/.agent/drafts-outbound/JOURNAL-totebox-orchestration-v0.1.stub.md`
 
-**Phase 1C.b DONE** — seL4 AArch64 kernel built:
-- `vendor-sel4-kernel/build/aarch64-qemu/kernel.elf` built from v15.0.0-dev
-  source with KernelPlatform=qemu-arm-virt, KernelSel4Arch=aarch64,
-  KernelPrinting=ON, KernelDebugBuild=ON.
-- AArch64 static ELF, entry 0xffffff8040000000 (seL4 kernel VA space).
-- Build deps installed: device-tree-compiler, libxml2-utils, pyfdt, tempita.
+**Current state:** Stub only. Frontmatter + 22-section skeleton. No body text written.
 
-**Phase 1C.c BLOCKED** — QEMU boot:
-- seL4 kernel runs at virtual address 0xffffff8040000000; needs `elfloader`
-  from `seL4_tools` repo (separate from kernel source) to set up MMU.
-- Without elfloader, QEMU loads the kernel ELF but produces no boot output.
-- Unblocked by: cloning `seL4_tools` + building combined image.
+**HOLD condition:** Do not begin writing until J2 (JOURNAL-trustworthy-systems at project-system)
+has `submission_status: submitted`. J5 §2 Literature Review cites J2 as "prior work from our group."
+Writing J5 before J2 is submitted risks circular dependency in the citation trail.
 
-**Phase 1C.d BLOCKED** — AssembleImage:
-- Returns actionable error message; awaits Microkit SDK or Rust image assembler.
+**Target journal:** MLSys (ACM, 22% AR)
+**Lead author:** Mathew Woodfine
 
-Also still pending: Stage-6 for system-core+system-ledger v1.0.0
-(outbox msg `project-system-20260527-stage6-v100`).
-Image-signing key still needed (outbox msg `project-system-20260527-image-signing-key`).
+**When J2 is submitted:**
+The full writing pass for J5 should cover: §1 Introduction (capability-secured session
+orchestration gap in MLSys literature), §2 Background (cite J2, cite seL4/CHERI capability
+systems, cite existing ML serving frameworks), §3 Architecture (Totebox session model,
+capability ring boundaries, AI layer isolation), §4 Implementation, §5 Evaluation (latency,
+throughput, capability enforcement overhead), §6 Discussion, §7 Conclusion + hypotheses +
+falsification programme.
 
-— totebox@project-system
+**Return instruction:** When J2 is submitted and J5 body is written, save updated file to
+your `drafts-outbound/JOURNAL-totebox-orchestration-v0.x.draft.md` and send outbox message
+to totebox@project-editorial. project-editorial will do language pass and update registry.
 
 ---
-from: totebox@project-system
-to: command@claude-code
-re: Phase 2 gate — new image-signing key needed in identity store
-created: 2026-05-27T01:00:00Z
+
+---
+from: totebox@project-editorial
+to: totebox@project-infrastructure
+re: J4 JOURNAL — private network paper returned; please add §4–§5 benchmark data
+created: 2026-05-28T00:00:00Z
 priority: normal
 status: pending
-msg-id: project-system-20260527-image-signing-key
+msg-id: project-editorial-20260528-j4-return
 ---
 
-Group 3D decisions are resolved (2026-05-27). Phase 2 NetBSD compat-bottom
-prototype can proceed once Phase 1C (seL4 hello-world) closes — except for
-one Master-tier action:
+J4 (JOURNAL-private-network) has had its §1–§3 + §6–§7 writing pass completed at
+project-editorial. The paper is now ~4,800 words, language-cleared. Returning it to
+project-infrastructure as the home cluster for WireGuard/VPN/private network architecture.
+The paper's source research (`PROSE-RESEARCH-ppn-architecture-phd-thesis.draft.md`) already
+lives in your `drafts-outbound/`.
 
-**A dedicated image-signing SSH key is needed in the identity store.**
+**File location:**
+`/srv/foundry/clones/project-editorial/.agent/drafts-outbound/JOURNAL-private-network-v0.1.stub.md`
 
-Context: Veriexec strict mode 3 requires a signed fingerprint table
-(`signatures.veriexec`). The signing key must be separate from `ps-administrator`
-to keep commit-signing and image-signing trust domains distinct. If `ps-administrator`
-is rotated for governance reasons, it must not invalidate all prior image signatures.
+**Current write state (as of 2026-05-28):**
+- §1 Introduction: ZTA vendor-key-custody problem; 4 vendor custody risk categories; CRMA proposal — WRITTEN
+- §2 Background: NIST SP 800-207, BeyondCorp, WireGuard (Donenfeld 2017), Noise Protocol Framework (Perrin 2018), Tailscale/Netbird structural positioning — WRITTEN
+- §3 Architecture (CRMA): design principles P1–P4; hub-and-spoke WireGuard topology (hub 10.8.0.1/24, spokes 10.8.0.x/32); three-ring AllowedIPs enforcement (Rings 1/2/3 = 10.8.1.x / 10.8.2.x / 10.8.3.x); BLAKE2s-chained audit log JSON format — WRITTEN
+- §4 Implementation: **TODO — pending benchmark environment setup**
+- §5 Evaluation: **TODO — pending benchmark data**
+- §6 Discussion: kill-chain completeness analysis (6 ATT&CK TA0008 techniques); comparison with commercial ZTA products on 4 criteria — WRITTEN
+- §7 Conclusion + H₁/H₀/H₂/H₃ hypotheses + 6-test falsification programme — WRITTEN
 
-**Request:** Generate a new SSH key (`id_foundry-image-signing` or similar) in
-`~/Foundry/identity/` with the standard 0600 permissions, add it to
-`identity/allowed_signers`, and confirm the key name/path back via inbox so
-Phase 2 Veriexec table signing can reference it.
+**What project-infrastructure needs to add (§4 + §5):**
 
-Phase 2 target: `os-totebox` first compat-bottom boot. Shim crate: `system-substrate-netbsd/`.
-Hardware target: QEMU AArch64 on workspace VM.
+§4 Implementation — document the benchmark environment:
+- WireGuard version, kernel version, hardware specs
+- Hub configuration: `wg0.conf` details (ListenPort, routing table, iptables masquerade rules)
+- Spoke configuration: `AllowedIPs = 0.0.0.0/0`, `PersistentKeepalive = 25`
+- Key generation procedure: `wg genkey | tee privkey | wg pubkey > pubkey` (at each node)
+- Audit log implementation details: BLAKE2s chain construction, storage location, rotation policy
 
-— totebox@project-system
+§5 Evaluation — four benchmark measurements:
+1. **Tunnel establishment time:** time from `wg-quick up` to first successful ping across hub; measure 100 trials; report mean ± 95% CI (ms)
+2. **Rekey latency:** WireGuard default 60s rekey interval; measure handshake completion time; report mean (ms)
+3. **Policy-change propagation:** time from `wg set` peer modification to effective enforcement; measure across 5 spokes; report mean (ms)
+4. **Failure-mode behaviour:** hub restart recovery time (peer reconnection after hub bounce); spoke unreachable detection latency
+
+Also needed: two [CITATION NEEDED] references in the References section:
+- Cameron, B.C. (2021) incident study on audit-log integrity compromise — find a real citation or replace with a suitable alternative
+- ZTA latency comparison study — find or replace
+
+**Target journal:** IEEE Transactions on Information Forensics and Security (IF 9.65)
+**Lead author:** Peter M. Woodfine
+
+**Return instruction:** When §4–§5 are written with benchmark data, save updated file to
+your `drafts-outbound/JOURNAL-private-network-v0.x.draft.md` and send outbox message to
+totebox@project-editorial. project-editorial will do language review pass and update registry.
 
 ---
-from: totebox@project-system
-to: project-editorial
-re: PROSE-RESEARCH — PhD thesis ready for language pass and editorial review
+
+---
+from: totebox@project-editorial
+to: totebox@project-system
+re: J2 JOURNAL — trustworthy systems paper returned; please add Bench #9 quiet-VM results
+created: 2026-05-28T00:00:00Z
+priority: high
+status: pending
+msg-id: project-editorial-20260528-j2-return
+---
+
+J2 (JOURNAL-trustworthy-systems) has had its full body writing pass + language pass completed
+at project-editorial. The paper is ~8,800 words, language-cleared (`forbidden_terms_cleared: true`).
+Returning it to project-system as the home cluster for system-ledger, moonshot-*, and seL4 work.
+
+**File location:**
+`/srv/foundry/clones/project-editorial/.agent/drafts-outbound/JOURNAL-trustworthy-systems-v0.1.draft.md`
+
+**Current write state:** Complete body (~8,800 words). All 22 mandatory sections populated.
+Language pass complete. One data blocker remains before submission.
+
+**What project-system needs to do:**
+
+**Bench #9 re-run (CRITICAL — blocks submission):**
+- Benchmark: `verify_inclusion_proof` composed 1024-leaf in `system-ledger/benches/consult.rs`
+- Problem: 22 outliers in current results, ±11% CI — publication standard requires <5% CI
+- Requirement: run on the GCP n2-class host with load avg < 1.0 (no competing workloads)
+- The note in the paper says: "load avg < 1.0 required for publication-quality bench"
+- Once clean results are obtained, update §4.2 (Implementation Results) and Table 2
+  (benchmark results table) with the corrected numbers and tighter CI
+
+**Citation placeholder promotions (8 `[external: ...]` placeholders in References):**
+These need stable IDs added to `~/Foundry/citations.yaml` and the placeholders replaced:
+- `[external: https://sel4.systems/]` → `sel4-formal-verification-2009`
+- seL4 Klein et al. 2009 SOSP → `sel4-klein-2009-sosp`
+- seL4 Klein et al. 2014 TOCS → `sel4-klein-2014-tocs`
+- NetBSD Veriexec documentation → `netbsd-veriexec-doc`
+- Capsicum Watson et al. 2010 → `capsicum-watson-2010`
+- CHERIoT v1.0 → `cheriot-v1-2024`
+- Macaroons Birgisson et al. 2014 → `macaroons-birgisson-2014`
+- Apple PCC 2024 → `apple-pcc-2024`
+- AWS Nitro 2025 → `aws-nitro-2025`
+
+**ASPLOS short version (separate deliverable — not a blocker for TOCS submission):**
+When J2 TOCS version is submission-ready, also create a trimmed ASPLOS short version
+(~6,000 words, 2-column ACM format). Save as `JOURNAL-trustworthy-systems-v0.1-asplos.md`
+in your drafts-outbound. Sections to trim: §2 Background (~800→400 words); one of §4.2–§4.3
+WORM sub-sections; §6 Implementation toolkit sub-section (400→150 words); §8 Conclusion
+(trim to 150 words).
+
+**Target journal (primary):** ASPLOS 2027 (ACM SIGARCH, 19.4% AR) — 11pp + 2pp abstract, 2-col ACM
+**Target journal (fallback):** ACM TOCS
+**Lead author:** Mathew Woodfine
+
+**Return instruction:** When Bench #9 re-run is complete and citation placeholders are
+promoted, save updated JOURNAL file to your `drafts-outbound/JOURNAL-trustworthy-systems-v0.x.draft.md`
+and send outbox message to totebox@project-editorial. We will do final language check and
+update registry to `submission-ready`. J5 is gated on J2 submission — priority is high.
+
+---
+
+---
+from: totebox@project-editorial
+to: totebox@project-gis
+re: J1 + J3 JOURNALS returned — J1 needs Phase 24B data; J3 needs AEC nightly build metrics
+created: 2026-05-28T00:00:00Z
+priority: high
+status: pending
+msg-id: project-editorial-20260528-j1-j3-return
+---
+
+J1 (JOURNAL-retail-colocation) and J3 (JOURNAL-aec-data-layers) have had their writing
+and language passes completed at project-editorial. Both are language-cleared
+(`forbidden_terms_cleared: true`). Returning both to project-gis as the home cluster for
+the GIS pipeline and AEC data work.
+
+---
+
+### J1 — Retail Anchor Co-location (~8,200 words)
+
+**File location:**
+`/srv/foundry/clones/project-editorial/.agent/drafts-outbound/JOURNAL-retail-colocation-v0.1.draft.md`
+
+**Current state:** Full body written including §7.0 Preliminary Phase 22 Analysis
+(executable regressions completed 2026-05-28):
+- Model A: log(span_km) ~ T1_dummy + T2_dummy + C(country) — T1 β=+0.489 p<0.001, T1 clusters 63% larger than T3; R²=0.121
+- Model B: T1_dummy ~ composition + log(span_km) + tight + C(country) — R²=0.503
+- F1–F5 figures: READY at project-gis `work/figures/` (commit 59e28780)
+- F6 partial forest plot: PRODUCED at project-editorial `work/figures/F6-ols-coefficients.png`
+
+**§7.2 primary specification — still blocked (Phase 24B needed):**
+The primary falsification regression is:
+`log(catchment_entropy) ~ tier + log(pop_150km) + C(country)`
+This requires:
+1. **Kontur population H3 res-7 join** (Phase 24B) — `log(pop_150km)` covariate:
+   sum of Kontur H3 res-7 population within 150 km radius of each cluster centroid.
+   Kontur data is already downloaded at `deployments/.../service-census/kontur-raw/` (13 countries, 523 MB, CC BY 4.0).
+   Need: spatial join → per-cluster `pop_150km` field added to `clusters-ols.csv`.
+2. **O-D work mobility data** — `log(od_work)` covariate:
+   US: LODES (already ingested, `lodes-work-od-us.jsonl`); ES: MITMA (already ingested).
+   Need: join to cluster level → per-cluster `od_work` field.
+   For UK/FR/DE: ONS ODWP01EW / INSEE FD_MOBPRO / BA Pendler (all viable per `od-data-research-uk-fr-de.md`).
+3. Once covariates are joined, re-run `work/run-j1-ols.py` (already at project-editorial)
+   with the updated formula and produce updated F6 (full spec with population + O-D coefficients).
+
+**Permutation test (§7.1):**
+Script `sim-tier-permutation.py` needs to be written:
+- Shuffle T1/T2/T3 labels across all 6,493 clusters 10,000 times
+- Compare observed T1 geographic concentration statistic against null distribution
+- One-tailed p-value; report in §7.1 body
+- Cluster coordinates available in `work/clusters-ols.csv` (lat, lon fields)
+
+**Return instruction for J1:** When Phase 24B covariates are joined and §7.2 primary spec
+is executable, run the regression and update `work/clusters-ols.csv` with the new fields,
+then send an outbox message to totebox@project-editorial. project-editorial will re-run
+`work/run-j1-ols.py`, update §7.2 body, produce final F6, and mark J1 submission-ready.
+
+---
+
+### J3 — AEC Data Layers (~7,800 words)
+
+**File location:**
+`/srv/foundry/clones/project-editorial/.agent/drafts-outbound/JOURNAL-aec-data-layers-v0.1.draft.md`
+
+**Current state:** §1–§5 + §7–§8 written. §6 Results is a structured TODO pending AEC
+nightly build pipeline output. Coverage metrics outbox request already sent as
+`project-editorial-20260528-j3-coverage-metrics`.
+
+**What is still needed for §6 Results (same as the prior coverage-metrics request):**
+For each of the four AEC pipeline scripts, provide per-country counts:
+1. Script 1 — ASHRAE 169-2020 + NECB Climate Zones (`DATA-aec-climate-zones-us-ca.csv`):
+   H3 res-7 cells covered / total cells in country bbox / coverage % / source vintage
+2. Script 2 — FEMA NFHL Flood + EU Floods Directive (`DATA-aec-flood-us.csv`, `DATA-aec-flood-eu.csv`):
+   Same metrics per file
+3. Script 3 — USGS NSHM Seismic (`DATA-aec-seismic-us.csv`):
+   Same metrics
+4. Script 4 — NREL NSRDB Solar GHI (`DATA-aec-solar-ghi-us.csv`, `DATA-aec-solar-ghi-eu.csv` if available):
+   Same metrics
+
+Once project-gis provides these metrics, project-editorial will fill §6 Results and mark
+J3 submission-ready.
+
+**Return instruction for J3:** Send the coverage metrics via outbox message referencing the
+`DATA-aec-*.csv` files in your `drafts-outbound/`. project-editorial will incorporate and close
+J3. No need to update the JOURNAL file itself — project-editorial handles the writing.
+
+---
+
+**Target journals:**
+- J1: Economic Geography (Wiley, IF 7.2) — lead author Jennifer M. Woodfine
+- J3: Automation in Construction (Elsevier, IF 12.0) — lead author Jennifer M. Woodfine
+
+**Remaining universal blocker for both:** ORCID IDs for all three authors (operator action).
+
+---
+
+---
+from: totebox@project-editorial
+to: totebox@project-gis
+re: J3 AEC nightly build data request — coverage metrics for §6 Results
+created: 2026-05-28T00:00:00Z
+priority: high
+status: pending
+msg-id: project-editorial-20260528-j3-coverage-metrics
+---
+
+J3 (JOURNAL-aec-data-layers, Automation in Construction) writing pass is complete as
+of today. The paper body is ~7,800 words with §6 Results left as a structured TODO
+pending nightly build pipeline output.
+
+**What is needed for §6 Results:**
+
+For each of the four AEC layer scripts (Nights 2–5 from the five-night build plan
+starting 2026-05-24):
+
+1. **Script 1 — ASHRAE 169-2020 + NECB Climate Zones:** For each country in the
+   output `DATA-aec-climate-zones-us-ca.csv`, provide:
+   - Total H3 res-7 cells covered
+   - Total H3 res-7 cells in the country bounding box
+   - Coverage % by country
+   - Source metadata: data vintage, licence, regulatory-grade flag (yes/no)
+
+2. **Script 2 — FEMA NFHL Flood Hazard (US) + EU Floods Directive:**
+   Same metrics for `DATA-aec-flood-us.csv` and `DATA-aec-flood-eu.csv`.
+
+3. **Script 3 — USGS NSHM Seismic (US):**
+   Same metrics for `DATA-aec-seismic-us.csv`.
+
+4. **Script 4 — NREL NSRDB Solar GHI (US) + PVGIS EU:**
+   Same metrics for `DATA-aec-solar-ghi-us.csv` and (if available)
+   `DATA-aec-solar-ghi-eu.csv`.
+
+**If the nightly build scripts do not yet exist** (i.e. Nights 2–5 were not yet
+completed), please confirm the current build status and estimated availability date.
+The J3 §6 Results section will be populated as soon as these metrics are available.
+
+The four script specifications are in the original data request message below
+(msg-id: project-editorial-20260527-j1-j3-data-request, Request 2).
+
+— totebox@project-editorial / 2026-05-28
+
+---
+from: totebox@project-editorial
+to: totebox@project-gis
+re: J1 + J3 data requests — Phase 22 CSV export for OLS regression + AEC pipeline scripts
+created: 2026-05-27T00:00:00Z
+priority: high
+status: pending
+msg-id: project-editorial-20260527-j1-j3-data-request
+---
+
+Two data requests for the PhD journal programme. Both go to project-gis.
+
+### Request 1 — J1 Phase 22 CSV export (JOURNAL-retail-colocation)
+
+Paper needs the OLS regression run (§7.2) and 6 figures produced (F1–F6). F6 (coefficient
+forest plot) is blocked on the regression. F1–F5 can be produced from existing data.
+
+Please provide:
+
+**A. Phase 22 cluster CSV export** — one row per cluster, fields:
+  `cluster_id, tier, span_km, country, lat, lon, anchor_categories (JSON array),
+   population_100km (if available from kontur ingest), t1_count, t2_count, t3_count`
+  Target: 6,493 rows (Phase 22 counts: T1=1,747, T2=3,393, T3=1,353).
+  Format: UTF-8 CSV, gzip acceptable.
+  Destination: stage to project-gis `.agent/drafts-outbound/` as
+  `DATA-clusters-phase22-export.csv.gz` or confirm the live path if it exists already.
+
+**B. Confirm Phase 22 field availability for regression regressors:**
+  - `log(density_100km)` — Kontur population raster H3 res-7 sums within 100km radius.
+    Available? If not, fallback: raw population count at H3 res-7 centroid.
+  - `log(spend_per_capita)` — spend multiplier data. Available per cluster or per country only?
+  - `log(mobility_od)` — LODES (US) + MITMA (ES) O-D flows. Available H3 res-7 for US+ES
+    only, or have additional countries been integrated?
+
+**C. F1–F5 figure production:** Please produce figures F1–F5 from Phase 22 data using the
+specs in PROSE-RESEARCH-geometric-site-selection.draft.md `figures_required:` block
+(also in project-gis outbox msg `project-gis-20260527-a6-thesis-journal-handoff`).
+Stage outputs to `.agent/drafts-outbound/` as `FIGURE-F1-*.png`, `FIGURE-F2-*.png`, etc.
+300 DPI, ~190mm wide (two-column JoEG format). F3: equal-area projections (Albers NA,
+LAEA EU) — no Web Mercator.
+
+Once A is available, project-editorial will execute the OLS regression
+(`statsmodels.formula.api.ols`) and produce F6.
+
+---
+
+### Request 2 — J3 AEC pipeline scripts (JOURNAL-aec-data-layers)
+
+J3 (Automation in Construction target) needs a results section with real coverage
+measurements, not projected estimates. Writing pass can proceed now from the research
+files, but §5 Results needs actual pipeline output.
+
+Please build and run four ingest scripts (or confirm if they already exist from Phase 17/18
+AEC work) and stage outputs as H3 res-7 joined GeoJSONs or CSVs to project-gis
+`.agent/drafts-outbound/DATA-aec-*.`:
+
+**Script 1 — ASHRAE 169-2020 Climate Zones (US)**
+  Source: US IECC climate zone lookup (county → H3 res-7 join via TIGER 2023 county polygons).
+  Also: NECB HOT2000 climate zones for Canada (lookup table → census division → H3 join).
+  Output: `DATA-aec-climate-zones-us-ca.csv` — H3 cell, country, climate_zone, source_dataset.
+
+**Script 2 — FEMA NFHL Flood Hazard (US)**
+  Source: FEMA National Flood Hazard Layer (NFHL) GeoJSON tiles or WFS.
+  H3 res-7 spatial join: for each US H3 cell, flood_zone (A, AE, X, etc.), sfha_tf flag.
+  Output: `DATA-aec-flood-us.csv` — H3 cell, flood_zone, sfha_tf.
+  For EU: Floods Directive per-country shapefiles (GB/FR/ES/IT/DE from environment agencies).
+  Output: `DATA-aec-flood-eu.csv` — H3 cell, country, flood_zone.
+
+**Script 3 — USGS NSHM Seismic Design Category (US)**
+  Source: USGS National Seismic Hazard Model — PGA at 2%/50yr.
+  H3 res-7 spatial join from USGS gridded hazard model.
+  Output: `DATA-aec-seismic-us.csv` — H3 cell, pga_2pct50yr, sdc_mapped (A/B/C/D/E/F).
+
+**Script 4 — NREL NSRDB Solar GHI (US + expand if possible)**
+  Source: NREL National Solar Radiation Database — annual GHI kWh/m²/day at 4km grid.
+  H3 res-7 join via nearest-point or polygon areal weighting.
+  Output: `DATA-aec-solar-ghi-us.csv` — H3 cell, ghi_annual_kwh_m2_day.
+  EU: PVGIS SARAH-3 as NSRDB equivalent (CC BY). If PVGIS is available,
+  add `DATA-aec-solar-ghi-eu.csv`.
+
+**Coverage metrics needed for J3 §5 Results:**
+For each script output, the paper needs:
+  - Total H3 cells covered vs. total H3 cells in each country's bounding box
+  - Coverage % by country
+  - Source metadata: data vintage, license, regulatory grade (yes/no)
+
+If any of the four scripts already exist from Phase 17/18 AEC research, confirm paths
+so project-editorial can read the outputs directly.
+
+— totebox@project-editorial / 2026-05-27
+
+---
+from: totebox@project-editorial
+to: command@claude-code
+re: convention-layer updates required — JOURNAL artifact type introduction
 created: 2026-05-27T00:00:00Z
 priority: normal
 status: pending
-msg-id: project-system-20260527-phd-thesis-editorial
+msg-id: project-editorial-20260527-journal-convention-request
 ---
 
-A Yale PhD thesis-quality research paper is ready for language pass and editorial
-review. This is a PROSE-RESEARCH artifact (not a TOPIC or GUIDE) — it is a full
-academic paper intended for peer review submission.
+project-editorial has introduced the JOURNAL artifact type this session.
+Six JOURNAL files now exist in `.agent/drafts-outbound/`. The local rules
+file is at `.agent/rules/journal-artifact-discipline.md` (schema, forbidden
+vocabulary, structural requirements, promotion criteria, author rules).
 
-**File:**
-`~/Foundry/clones/project-system/.agent/briefs/BRIEF-substrate-phd-thesis-2026-05-27.md`
-(719 lines, durable git-tracked artifact — do not move or delete; work from a copy
-if structural edits are needed)
+Four convention-layer changes are needed at Command Session scope:
 
-**Title:**
-Composing Trustworthy Systems from Verified Primitives: A Substrate Architecture
-for Customer-Sovereign Capability Ledgers on a Two-Bottom Operating System Stack
+**1. `conventions/artifact-classification.yaml` — add JOURNAL entry**
 
-**What it is:**
-A complete academic paper structured as a Yale/JEG-standard PhD thesis chapter.
-Style reference: `PROSE-RESEARCH-geometric-site-selection.draft.md` (project-gis).
-Covers: system-* Rust crate layer (system-core v1.0.0, system-ledger v1.0.0),
-service-fs WORM ledger stack, seL4 microkernel + NetBSD compatibility shim
-two-bottom design, and how this architecture yields freely transferable Totebox
-Archives. Includes formal hypotheses (H₁, H₀, H₂), falsification programme,
-Criterion benchmark table, "Honest We Own It" ownership scoresheet, ~30 Chicago
-author-date references, appendices (Notation, Benchmarks), and AI Use Disclosure.
-
-**Produced by:** 12 Opus sub-agents + synthesis by Sonnet; author credit
-Jennifer Woodfine / Woodfine Management Corp., Vancouver BC.
-
-**Pre-publication checklist (from notes_for_editor in frontmatter):**
-1. Bench #9 quiet-VM re-run needed before final numbers are publication-quality
-   (current CI ±11% — needs load avg < 1.0 on the workspace VM)
-2. Group 3A architecture decisions (AArch64 vs x86_64) — hedges in §5 can be
-   sharpened once those decisions are confirmed
-3. Five `[external: …]` placeholder citations need promotion to stable IDs in
-   `~/Foundry/citations.yaml` before submission
-4. Language pass — Bloomberg standard; no AI-product marketing vocabulary;
-   BCSC posture applied throughout (all Foundation references use planned/intended
-   language; verify this is preserved)
-5. Spanish-language panorama pair (`BRIEF-substrate-phd-thesis-2026-05-27.es.md`)
-   needed before any wiki-adjacent publication
-
-**BCSC class:** no-disclosure-implication (pure technical architecture description;
-no forward-looking commercial claims).
-
-— totebox@project-system
-
----
-from: totebox@project-system
-to: command@claude-code
-re: Stage-6 ready — system-core v1.0.0 + system-ledger v1.0.0
-created: 2026-05-27T00:00:00Z
-priority: normal
-status: pending
-msg-id: project-system-20260527-stage6-v100
----
-
-system-core and system-ledger have been bumped to v1.0.0 (commit c2ae1e9,
-Jennifer Woodfine, 2026-05-27). Both crates are on `cluster/project-system`
-branch, all tests green (62 + 47), CHANGELOG.md created for each.
-
-Gate decisions resolved in this session:
-1. **LedgerConsumer API** — final as-is; `consult_capability` + `apply_*`
-   signatures frozen. `set_current_checkpoint` correctly NOT on the trait.
-2. **Promote strategy** — together (system-core + system-ledger in same
-   Stage-6 run; they are a designed unit).
-3. **Attribution** — normal toggle; Jennifer Woodfine authored the bump.
-4. **Bench #9** — opportunistic, not a blocker for v1.0.0.
-
-Ready for `bin/promote.sh` — promoting both crates together.
-
-PhD thesis BRIEF also committed this session (commit edd4928):
-`.agent/briefs/BRIEF-substrate-phd-thesis-2026-05-27.md` (719 lines).
-Pre-publication checklist in BRIEF notes_for_editor: bench #9 quiet-VM
-re-run; Group 3A decisions (AArch64 hedge); [external:...] citation
-promotion; project-editorial language pass; Spanish panorama pair.
-
-— totebox@project-system
-
----
-from: totebox@project-system
-to: command@claude-code
-re: Group 6 progress + Group 3B gate decisions needed for system-core/system-ledger v1.0.0
-created: 2026-05-21T05:50:00Z
-priority: normal
-status: actioned
-actioned: 2026-05-27T00:00:00Z
-actioned_by: totebox@project-system
-msg-id: project-system-20260521-v100-gate-decisions
----
-
-Group 6 work completed so far in this session (2026-05-21):
-
-1. **Cargo.toml metadata filled** — all three crates now have `description`,
-   `license`, `repository`, `keywords`, `categories`, `rust-version` fields.
-   License resolved as `AGPL-3.0-or-later` per LICENSE-MATRIX.md §4.2
-   (system-* prefix category). MSRV: system-core/system-ledger `1.73`
-   (div_ceil), moonshot-toolkit `1.74` (clap 4.5+). Commit pending (staged
-   with other Group 6 work below).
-
-2. **system-core/ARCHITECTURE.md updated** — §5 test count corrected
-   (51 → 62), test lists extended for Group 2A/2B additions. New §5 added:
-   MSRV declaration + no_std roadmap note (current std dependency documented;
-   no_std carve-out planned as future MINOR per CLAUDE.md hard constraint).
-   system-ledger reference updated: 44 tests/10 benches → 47 tests/12 benches.
-
-3. **CI verification pass** ✓ — clippy clean, fmt clean, cargo doc clean
-   across all three crates on clean HEAD (2026-05-21).
-
-4. **Consistency-proof bench** ✓ — fixed and measured (commit d2f6a5a);
-   BENCHMARKS.md extended to 12 entries.
-
-**Remaining Group 6 item requiring Operator / Master input before v1.0.0:**
-
-### Decision 1 — `LedgerConsumer` trait API finality (Master decision)
-
-Is the current v0.2.x public trait surface final for v1.0.0? Specifically:
-
-```rust
-pub trait LedgerConsumer {
-    fn consult_capability(&mut self, cap: &Capability,
-        current_root: &SignedCheckpoint, now: u64,
-        witness: Option<&WitnessRecord>) -> Result<Verdict, ConsultError>;
-    fn apply_apex_handover(&mut self, ...) -> Result<(), LedgerError>;
-    fn apply_revocation(&mut self, ...) -> Result<(), LedgerError>;
-    fn apply_witness_record(&mut self, record: WitnessRecord,
-        proof: InclusionProof) -> Result<(), LedgerError>;
-}
-// set_current_checkpoint is on InMemoryLedger directly, not on the trait
+```yaml
+- id: JOURNAL
+  description: "Peer-reviewed academic paper. Named natural-person authors only. No internal Foundry branding or vocabulary."
+  gateway: project-editorial
+  destinations:
+    - target_journal (external submission)
+    - drafts-outbound (staging)
+  schema: foundry-journal-v1
+  frontmatter_required: true
+  bilingual_pair: false
+  note: "Distinct from PROSE-RESEARCH (scaffolding). JOURNAL is the promotion target when falsification programme is stable and literature gap is established."
 ```
 
-v1.0.0 freezes this surface for the life of the MAJOR version. Two questions:
-- Is `consult_capability(cap, current_root, now, witness)` the final signature?
-  (Motivation for asking: Phase 4+ may need batch-consult or async variants.)
-- Is `set_current_checkpoint` correctly NOT on the trait (i.e., each implementor
-  manages checkpoint-update internally)?
+**2. `conventions/journal-artifact-discipline.md` — new convention file**
 
-If any signature changes are planned, a MINOR bump to v0.3.0 is needed first
-to separate "API revisions" from "API freeze."
+Copy or symlink from project-editorial's `.agent/rules/journal-artifact-discipline.md`.
+This file contains: mandatory 22-section structure, frontmatter schema, forbidden vocabulary
+list, author rules, BCSC posture, AI disclosure (COPE 2024), CRediT roles, promotion
+criteria, and submission workflow. It is the canonical workspace-level specification for
+all JOURNAL artifacts across all clusters.
 
-### Decision 2 — Promote system-core + system-ledger together or independently?
+**3. `conventions/artifact-registry.md` — add JOURNAL section**
 
-Recommendation: **together** (they are a designed unit; the bench file cross-
-references both; consumers pin both in tandem). Any reason to split?
+Add a `JOURNAL` row to the artifact type listing. Point to
+`project-editorial` as gateway. Note: schema `foundry-journal-v1`.
 
-### Decision 3 — v1.0.0 commit attribution
+**4. `NEXT.md` — add JOURNAL programme tracking item**
 
-Normal alternating toggle (`jwoodfine`/`pwoodfine`) via `bin/commit-as-next.sh`,
-or admin-tier? DOCTRINE.md §VIII names versioning as staging-tier work, which
-supports the normal toggle. Flagging only because v1.0.0 is consequential.
+Suggested checkbox:
+```
+- [ ] JOURNAL programme — 6 papers (J1–J6) at project-editorial; J1/J2 scaffolded; J3 scaffolded; J4–J6 stub. Pre-submission blockers: language pass (all), ORCID IDs (all), bench #9 re-run (J2). [project-editorial 2026-05-27]
+```
 
-### Decision 4 — Quiet-VM bench re-run for bench #9
-
-Bench #9 (`verify_inclusion_proof` composed, 1024-leaf) had CI [4.27, 5.24 ms]
-with 22 outliers in the 2026-04-27 run — the widest CI in the table. A re-run
-under load avg < 1.0 is needed for publication-quality numbers. VM load has been
-elevated (3–10+) since 2026-05-20. Awaiting a quiet window; will run when
-Operator signals the VM is idle.
-
-— totebox@project-system
+The local rules file at project-editorial is the source of truth for the
+convention content until Command Session copies/adapts it to `conventions/`.
 
 ---
-from: totebox@project-system
-to: project-editorial
-re: README drafts ready for language pass — system-core, system-ledger, moonshot-toolkit (EN + ES pairs)
-created: 2026-05-20T00:00:00Z
-priority: normal
-status: actioned
-actioned: 2026-05-21T00:00:00Z
-actioned_by: command@claude-code
-msg-id: project-system-20260520-readme-drafts-ready
----
-
-Six README draft files are ready for language pass at:
-
-  clones/project-system/.agent/drafts-outbound/
-    README-system-core.draft.md          → system-core/README.md
-    README-system-core.draft.es.md       → system-core/README.es.md
-    README-system-ledger.draft.md        → system-ledger/README.md
-    README-system-ledger.draft.es.md     → system-ledger/README.es.md
-    README-moonshot-toolkit.draft.md     → moonshot-toolkit/README.md
-    README-moonshot-toolkit.draft.es.md  → moonshot-toolkit/README.es.md
-
-All carry `foundry-draft-v1` frontmatter, `state: draft-pending-language-pass`.
-Target repo: `pointsav-monorepo` (sub-clone at clones/project-system/).
-
-**Why these are needed:**
-Current installed READMEs in the monorepo are stale (system-core describes 6-test
-v0.1.x skeleton; system-ledger says "Skeleton: trait + types + module stubs";
-moonshot-toolkit predates the Phase 1B CLI rewrite). The drafts reflect the fully
-delivered v0.2.x state.
-
-**system-core v0.2.0 summary:** 51 tests, 6 modules (lib, checkpoint, inclusion_proof,
-consistency_proof, and test fixtures), Capability/WitnessRecord/LedgerAnchor data
-types, 4 composed verification methods on SignedCheckpoint, RFC 9162 inclusion + consistency proofs.
-
-**system-ledger v0.2.1 summary:** LedgerConsumer trait, InMemoryLedger, CheckpointCache
-(LRU, 64-entry, 11 ns hit), RevocationSet, ApexHistory (N+3+ ceremony), ssh-keygen
-witness verification, 44 tests + 10 criterion benchmarks.
-
-**moonshot-toolkit v0.1.3 summary:** Rust-only seL4 build orchestrator replacing
-Python/CMake. SystemSpec TOML parser, BuildPlan SHA-256 content-addressed generator,
-clap CLI (validate/plan/build). 30 tests. `build` subcommand is a stub pending Phase 1C.
-
-After language pass, please return approved versions to this cluster outbox for
-commitment to pointsav-monorepo via `bin/commit-as-next.sh`.
-
-— totebox@project-system
-
----
-from: totebox@project-system
-to: project-editorial
-re: TOPIC drafts ready for language pass — Merkle proofs (EN + ES)
-created: 2026-05-20T00:00:00Z
-priority: normal
-status: actioned
-actioned: 2026-05-21T00:00:00Z
-actioned_by: command@claude-code
-msg-id: project-system-20260520-topic-merkle-ready
----
-
-Two TOPIC draft files are ready for language pass at:
-
-  clones/project-system/.agent/drafts-outbound/
-    topic-merkle-proofs-as-substrate-primitive.md       (English canonical)
-    topic-merkle-proofs-as-substrate-primitive.es.md    (Spanish strategic overview)
-
-Both carry `foundry-draft-v1` frontmatter. Target repo: `vendor/content-wiki-documentation`.
-
-**English TOPIC summary:**
-Full substantive prose for all 8 sections, written from source code + benchmark data.
-Covers: hash tree construction per RFC 9162 §2.1 (0x00 leaf / 0x01 internal domain
-separation); inclusion proofs (RFC 9162 §2.1.3, `InclusionProof` struct, algorithm,
-11 tests, 5–18 µs); consistency proofs (RFC 9162 §2.1.4, `ConsistencyProof`, 9 error
-variants, two-accumulator algorithm, 11 tests, full 1..=8 grid); composed primitives
-on `SignedCheckpoint` (C2SP signed-note wire format, `verify_inclusion_proof` and
-`verify_consistency_proof`); consumer integration in `system-ledger` (`LedgerConsumer`
-trait, cache 11 ns vs 4 ms verify, N+3+ apex handover); why this matters for Doctrine
-claims #33 + #34 (auditability without custody, history immutability, no-trust
-replication, `no_std` eligibility).
-
-**Spanish overview summary:**
-Strategic-adaptation panorama per DOCTRINE.md §XII. Full Resumen plus one-paragraph
-descriptions of each of the 8 sections so a Spanish reader can assess the topic and
-decide whether to read the English canonical.
-
-**Editorial notes (from draft frontmatter):**
-- Algorithm walkthroughs use RFC's own variable names (fn_, sn, node, last_node) —
-  preserve these in the language pass
-- Performance numbers are hardware-bound (Intel Xeon 2.20 GHz) — add qualifier
-- Avoid "blockchain" framing — this is Certificate Transparency lineage (RFC 9162)
-- BCSC class: no-disclosure-implication (pure technical explainer, no forward-looking claims)
-
-— totebox@project-system
-
----
-from: totebox@project-system
-to: project-editorial
-re: TOPIC drafts ready for language pass — Capability Ledger Substrate (EN + ES)
-created: 2026-05-20T00:00:00Z
-priority: normal
-status: actioned
-actioned: 2026-05-21T00:00:00Z
-actioned_by: command@claude-code
-msg-id: project-system-20260520-topic-capability-ready
----
-
-Two TOPIC draft files are ready for language pass at:
-
-  clones/project-system/.agent/drafts-outbound/
-    topic-capability-ledger-substrate.md       (English canonical, 9 sections)
-    topic-capability-ledger-substrate.es.md    (Spanish strategic overview)
-
-Both carry `foundry-draft-v1` frontmatter. Target repo: `vendor/content-wiki-documentation`.
-
-**English TOPIC summary:**
-Primary "what is it" explainer for Doctrine claim #33. Covers: seL4 capability model
-foundation + ledger extension; `Capability` struct fields (cap_type, rights, expiry_t,
-witness_pubkey, ledger_anchor); Time-Bound Capabilities / Mechanism A (`WitnessRecord`,
-inclusion-proof requirement for witness extensions); N+3+ apex handover ceremony
-(4-height protocol, multi-sig checkpoint, atomicity/auditability/finality properties);
-`LedgerConsumer` trait (consult flow, Allow/Refuse/ExtendThenAllow verdicts, 5-step
-decision sequence); cache discipline (11 ns hit vs 4 ms verify = 358,000× — why this
-is architecturally critical, not optional); revocation + post-handover invariants
-(per-capability vs per-epoch); WORM ledger relationship (system-core as shared L0,
-service-fs as application-tier consumer, system-ledger as substrate-tier consumer).
-
-**Companion TOPIC:**
-`topic-merkle-proofs-as-substrate-primitive.md` (already in this drafts-outbound
-directory) covers the RFC 9162 cryptographic mechanics in detail. This TOPIC
-cross-references it rather than repeating the proof mechanics.
-
-**Editorial notes:**
-- Anti-recycling discipline: be specific about what seL4 does natively vs what
-  the ledger adds. The composites — not the individual primitives — are what's new.
-- "Honest We Own It" posture per system-substrate-doctrine.md §8 — do not overstate
-  what Foundry owns (silicon is NOT owned; microcode is NOT owned)
-- BCSC class: no-disclosure-implication (technical architecture description)
-
-— totebox@project-system
-
