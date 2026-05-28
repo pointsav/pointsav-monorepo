@@ -70,12 +70,31 @@ links to `/?noredirect=1`; 4 tests. `c2d4010c`.
 Phase 2 row: collab removed. Phase 5.1 bilingual routing marked shipped.
 Missing `<div>` in EN README fixed. `7a7beb46`.
 
+## Phase 6A+6B+6C — COMPLETE (commit `afa67bfa`, 2026-05-28)
+
+| Phase | What |
+|---|---|
+| 6A — wiki.js AJAX nav fix | `navigateTo()` stale selectors fixed (3 pairs); `initToc`, `initTocPin`, `initActiveTocTracking` corrected; `id="toc-list"` added to server.rs |
+| 6B — home page section caps | Uncategorised block removed; guides capped at 6; data fetch aligned to 8 |
+| 6C — topnav header | `header.topnav` 1fr/auto/1fr grid in all 3 chrome functions; `WORDMARK_SVG_POINTSAV` constant; `--header-h` 152px→80px |
+
+Stage 6 promoted by Command. Binary rebuild queued in nightly (~1am Vancouver 2026-05-28).
+
+**After rebuild verify:**
+- documentation.pointsav.com topnav SVG wordmark visible; sidebar sticky top correct
+- Click any article link — title, TOC, breadcrumb all update (was broken pre-6A)
+- Home page guides section caps at 6 items
+
+**Post-6C cleanup (future session, not blocking):**
+- [ ] Remove legacy `.shell-header` CSS block (now dead code) — low priority
+- [ ] ES bilingual pairs for 4 governance stubs (disclaimers, contact, about, contribute)
+- [ ] `.agent/manifest.md` wrong `cluster_name` (project-bim) — Command correction needed
+- [ ] Dark mode topnav: verify SVG invert looks correct on dark backgrounds
+
 ## Open: Stage 6 promotion
 
-**16 commits unpromoted on monorepo `main`** (Phase 1 ×4, Phase 3 A–E ×5, Phase 4 F–H ×2,
-Phase 5 I–J ×2, crate hygiene K–L ×2, openapi N ×1, Accept-Language O ×1, README P ×1).
-Promote via `~/Foundry/bin/promote.sh` from Command Session. Binary rebuild required after
-promote. Outbox messages sent.
+**COMPLETE (2026-05-28)** — `afa67bfa` promoted to canonical by Command. Binary rebuild
+queued for nightly ~1am Vancouver. Prior binary remains active until rebuild completes.
 
 ---
 
