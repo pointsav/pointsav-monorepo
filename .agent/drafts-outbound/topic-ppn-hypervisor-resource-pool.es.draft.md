@@ -145,9 +145,44 @@ ejercer el mecanismo manualmente a través del monitor QEMU:
 El script `infrastructure/virt/vm-prove.sh` incluye `-device virtio-balloon` para que el
 controlador de balloon esté presente en la VM de prueba desde el primer arranque.
 
+## Planificado: extensión de recursos entre nodos
+
+El pool por nodo es la capa implementada. La extensión distribuida planificada tiene
+como objetivo permitir que las VMs tomen prestado cómputo de otros nodos físicos de la
+malla cuando la capacidad local esté bajo presión.
+
+**No se requiere reinicio.** Las operaciones estándar del pool — inflación, deflación del
+balloon y cambios de peso en cgroups v2 — son dinámicas. El controlador de balloon
+señala al controlador dentro del invitado; el controlador responde; el pool del nodo
+se ajusta. No se necesita reiniciar el invitado ni el anfitrión. Esto aplica tanto al
+flujo manual del operador (monitor QEMU) como al controlador automatizado planificado.
+
+**virtio-mem** (kernel Linux desde la versión 5.8; QEMU desde 5.1) es el mecanismo
+previsto para la capa entre nodos. Donde `virtio_balloon` infla y deflacta un único
+dispositivo, `virtio-mem` admite la conexión y desconexión en caliente de bloques de
+memoria individuales. El modelo previsto: un nodo prestamista anuncia bloques no
+utilizados a una VM solicitante en otro nodo a través de la malla WireGuard. Se prevé
+que el modelo de capacidades de seL4 garantice que el nodo prestamista no retenga
+capacidad de lectura sobre los bloques que presta.
+
+Las decisiones de colocación entre nodos se prevé que permanezcan en
+`gateway-orchestration-command-1` (capa de Orquestación de Totebox). El **ledger de
+capacidades distribuido** — planificado para desarrollo en `moonshot-protocol` y
+`moonshot-database` — tiene como objetivo transportar concesiones de préstamo firmadas
+criptográficamente, vinculadas a la identidad de la ceremonia de emparejamiento de
+cada nodo. Se prevé que la revocación se propague como un chisme Merkle DAG a través
+de la malla sin depender de una autoridad central.
+
+El controlador automático de balloon — el componente dentro de `os-infrastructure` que
+dispararía la inflación y deflación en respuesta a señales de demanda — es un hito
+planificado que precede a la capa de préstamo entre nodos.
+
+Ver: [[ppn-distributed-vm-fabric]]
+
 ## Temas relacionados
 
 - **Infrastructure OS** — el hipervisor Tipo I que implementa el controlador de balloon
 - **Totebox Archive** — la bóveda soberana de datos que se ejecuta dentro de cada VM
 - **OS Orchestration** — el agregador de datos sin estado (separado del pool de recursos)
 - **Malla Soberana** — la capa de transporte WireGuard que conecta los nodos PPN
+- **Tejido VM Distribuido PPN** — la extensión entre nodos planificada: préstamo virtio-mem, ledger de capacidades distribuido, planificador entre nodos

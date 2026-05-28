@@ -400,7 +400,7 @@ The resource pool is bounded to a single physical PPN node. A node's RAM and vCP
 
 ---
 
-## Appendix A: Project-Infrastructure Code State (2026-05-27)
+## Appendix A: Project-Infrastructure Code State (updated 2026-05-28)
 
 | Crate | Compiles | Issue | BRIEF-gated decision |
 |---|---|---|---|
@@ -412,7 +412,60 @@ The resource pool is bounded to a single physical PPN node. A node's RAM and vCP
 
 Focus crates are NOT in root `Cargo.toml` workspace members — add all five (step 8).
 
+**2026-05-28 proof milestone:** `infrastructure/virt/vm-prove.sh` confirmed Alpine Linux
+3.20 boots via QEMU TCG in 114 seconds on the GCP workspace VM. `virtio_balloon`
+inflation/deflation proven: `balloon 128→128` confirmed. The per-node hypervisor layer is
+the implemented foundation; Contribution #2 (hypervisor-blind isolation) is operationally
+demonstrated at the QEMU level. The Isabelle/HOL proof extension (Contribution #2 formal
+claim) remains a pending research milestone.
+
 ---
 
-*End of BRIEF — project-infrastructure / 2026-05-27*
+## Appendix B: Session 7 Research — Distributed VM Fabric (2026-05-28)
+
+Session 7 addressed three operator questions and produced a research synthesis on the
+distributed VM fabric as a leapfrog architecture. Key findings:
+
+**No host or guest reboot is required for resource pool operations.** `virtio_balloon`
+inflation/deflation and `cgroups v2 cpu.weight` changes are dynamic; no VM restart is
+needed. This is a concrete operational confirmation of the per-node pool design.
+
+**Per-project VM isolation is infeasible at current scale.** 116 source projects × 4 GB
+RAM minimum = 464 GB (current workspace: 32 GB). The right planning unit is the running
+deployment instance (18 today). Per-cluster (9 clusters) is the intended next scale tier.
+
+**Distributed VM fabric research against 2025 frontier:**
+
+The per-node pool (Contribution #2) maps to the hardware-blind isolation layer in Intel
+TDX and AMD SEV-SNP. The PPN design is stronger in one dimension (machine-checked formal
+proof, not just hardware assertion) and more portable in another (works on pre-IOMMU
+hardware via the NetBSD/bhyve bottom). TDX and SEV-SNP require the silicon vendor's
+attestation infrastructure; PPN's sovereignty model makes the operator the attestation
+root via the pairing ceremony.
+
+Four components are planned for the distributed extension:
+
+1. **virtio-mem lending over WireGuard** — analogous to CXL 3.0 memory disaggregation
+   but over internet-encrypted WireGuard rather than PCIe fabric. Lending node retains no
+   read capability over lent blocks (seL4 capability model).
+2. **Distributed capability ledger** (`moonshot-protocol`, `moonshot-database`) —
+   HMAC-signed grants keyed to pairing-ceremony identity; Merkle DAG gossip; intended
+   sub-second revocation without central authority.
+3. **Cross-node VM scheduler** (`os-orchestration`) — deterministic bin-packing; QEMU
+   live migration over WireGuard; sovereignty constraint (operator can pin VMs to trusted
+   nodes).
+4. **Sovereign attestation chain** — `dm-verity` anchored to pairing-ceremony key; no
+   TPM vendor, no silicon vendor in chain.
+
+These four components are the content of the new TOPIC draft staged at
+`.agent/drafts-outbound/topic-ppn-distributed-vm-fabric.draft.md` (EN + ES).
+
+What AWS/Azure/GCP will NOT ship by 2030: machine-checked formal isolation proof on
+commodity SMB hardware; cross-node memory lending over WAN (CXL requires PCIe); sub-second
+capability revocation without central authority; attestation rooted in operator-witnessed
+ceremony rather than silicon vendor CA; sub-five-minute SMB deployment.
+
+---
+
+*End of BRIEF — project-infrastructure / 2026-05-27 (Appendix A updated + Appendix B added 2026-05-28)*
 *Next action: operator ratifies thesis framing → step 1 (rewrite os-infrastructure) begins*

@@ -103,6 +103,15 @@ un nodo, el hipervisor gestiona su asignación de recursos local.
 
 Ver: [[ppn-hypervisor-resource-pool]]
 
+La extensión distribuida planificada de esta capa tiene como objetivo permitir que las
+VMs tomen prestado cómputo de otros nodos físicos a través de la malla WireGuard —
+usando bloques de memoria de conexión en caliente mediante `virtio-mem`, coordinados
+por un ledger de capacidades distribuido en `moonshot-protocol`. El préstamo de memoria
+entre nodos, el controlador automático de balloon y un planificador de VMs entre nodos
+son hitos planificados; solo el pool por nodo está implementado hoy.
+
+Ver también: [[ppn-distributed-vm-fabric]]
+
 ### Capa de Orquestación de Totebox
 
 La capa de Orquestación de Totebox es el plano de datos. Se ejecuta dentro de las VMs
@@ -181,3 +190,4 @@ están diseñados de modo que un fallo o vulnerabilidad en uno no se propague al
 - [[ppn-hypervisor-resource-pool]] — virtio_balloon por nodo + planificación de vCPU
 - [[totebox-archive]] — bóveda de datos WORM soberana, imagen de disco libremente transferible
 - [[os-orchestration]] — agregador PSP sin estado, consultas de múltiples archivos, nivel de pago
+- [[ppn-distributed-vm-fabric]] — tejido VM entre nodos planificado: préstamo virtio-mem, ledger de capacidades distribuido, atestación soberana
