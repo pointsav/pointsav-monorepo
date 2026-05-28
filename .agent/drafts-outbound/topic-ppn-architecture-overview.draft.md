@@ -101,6 +101,14 @@ its local resource allocation.
 
 See: [[ppn-hypervisor-resource-pool]]
 
+The planned distributed extension of this layer is intended to allow VMs to borrow
+compute from other physical nodes over the WireGuard mesh — using `virtio-mem` hot-plug
+memory blocks coordinated by a distributed capability ledger in `moonshot-protocol`.
+Cross-node memory lending, the automated balloon controller, and a cross-node VM
+scheduler are planned milestones; only the per-node pool is implemented today.
+
+See also: [[ppn-distributed-vm-fabric]]
+
 ### Totebox Orchestration layer
 
 The Totebox Orchestration layer is the data plane. It runs inside the VMs managed by the
@@ -172,3 +180,4 @@ designed so that a failure or compromise of one does not cascade to the other.
 - [[ppn-hypervisor-resource-pool]] — per-node virtio_balloon + vCPU scheduling
 - [[totebox-archive]] — sovereign WORM data vault, freely transferable disk image
 - [[os-orchestration]] — stateless PSP aggregator, multi-archive queries, paid tier
+- [[ppn-distributed-vm-fabric]] — planned cross-node VM fabric: virtio-mem lending, distributed capability ledger, sovereign attestation
