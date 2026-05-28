@@ -295,13 +295,14 @@ def run_dbscan_for_iso(iso: str, recs: list) -> list[dict]:
 
             cats = {category_of(m["chain_id"]) for m in members
                     if category_of(m["chain_id"]) is not None}
-            # Compute tight_intact before tier_of so H2b rule can use it
+            # Compute tight_intact and span before tier_of (both feed the tier rule)
             ti = all(
                 haversine_km(float(members[i]["latitude"]), float(members[i]["longitude"]),
                              float(members[j]["latitude"]), float(members[j]["longitude"])) <= TAU_TIGHT_KM
                 for i in range(len(members)) for j in range(i + 1, len(members))
             )
-            tier = tier_of(cats, ti)
+            span = round(component_diameter(list(range(len(members))), members), 3)
+            tier = tier_of(cats, ti, span)
             if tier is None:
                 continue
 
@@ -309,8 +310,6 @@ def run_dbscan_for_iso(iso: str, recs: list) -> list[dict]:
             lons = [float(m["longitude"]) for m in members]
             clat = sum(lats) / len(lats)
             clon = sum(lons) / len(lons)
-
-            span = round(component_diameter(list(range(len(members))), members), 3)
 
             clusters.append({
                 "iso":        iso,
