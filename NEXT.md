@@ -3,7 +3,7 @@
 > **Scope: this archive only.** Cross-repo and workspace-level items live at `~/Foundry/NEXT.md`.
 > Full TODO with all sections and sequencing: `.agent/plans/project-infrastructure-todo.md`.
 
-Last updated: 2026-05-28 (session 5).
+Last updated: 2026-05-28 (session 6).
 
 ---
 
@@ -17,10 +17,11 @@ Last updated: 2026-05-28 (session 5).
   then `scp target/release/os-network-admin mathew@10.8.0.6:~/bin/`. Run with
   `PAIRING_SERVER=http://10.8.0.9:9202 ~/bin/os-network-admin`. [2026-05-28 totebox@claude-code]
 
-- [ ] **Run `infrastructure/virt/vm-prove.sh` on Laptop A** — boots Alpine Linux VM with
-  QEMU/KVM; proves Totebox services can run inside a VM reachable over the PPN mesh.
-  Laptop A has real hardware VT-x; GCP VM needs `--tcg` flag (nested virt not enabled).
-  [2026-05-28 totebox@claude-code]
+- [x] **Run `infrastructure/virt/vm-prove.sh` — GCP TCG proof complete 2026-05-28.**
+  Alpine Linux 3.20 (kernel 6.6.31-0-virt) booted in 114s via TCG. virtio_balloon
+  inflation confirmed: `balloon 128` → `actual=128`; deflation: `balloon 256` →
+  `actual=256`. Full KVM proof on Laptop A (hardware VT-x) remains for production
+  validation. [2026-05-28 totebox@claude-code]
 
 - [ ] **Deferred: os-network-admin ratatui TUI** — keyboard approve/deny (a/d); QR rendering
   via `system-pairing-codes::qr_unicode`; expiry countdown. Full §9.2 Step 4 UX.
