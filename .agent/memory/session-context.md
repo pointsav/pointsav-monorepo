@@ -9,6 +9,35 @@ Rolling 3-session summary. Newest entry first. Keep only 3; push oldest to sessi
 
 ---
 
+## 2026-05-28 | totebox@claude-code | preview-viewers + routing-correction
+
+**Done:**
+- Created `preview/po-1-floor-plan.html` — SVG floor plan of PO-1 at 1:20 scale; 6 furniture pieces; dimension callouts; zone fills; HTML legend table
+- Created `preview/interior-tokens.html` — HTML viewer for interior.dtcg.json; 7 furniture Object cards + circulation constraint panel; colour-coded by category
+- Copied `preview/interior.dtcg.json` — point-in-time snapshot in preview/ for local serving
+- Copied all 3 new preview files to `outputs/` for rsync access
+- Copied `interior.dtcg.json` to correct location: `woodfine-bim-library/tokens/bim/interior.dtcg.json`
+- Updated BRIEF-tool-keyplan.md: interior.dtcg.json and key-plans.dtcg.json locations corrected
+
+**Operator corrections (saved to memory):**
+- In project-bim, say **BIM Objects** not "tokens"
+- All BIM Object files route to `woodfine-bim-library`, not `pointsav-design-system`
+
+**CRITICAL — routing errors from prior session to resolve:**
+- `pointsav-design-system/tokens/bim/interior.dtcg.json` — misrouted; pending admin-tier removal by Command
+- `pointsav-design-system/tokens/bim/key-plans.dtcg.json` — PO-1 structured furniture_refs applied here in error; `woodfine-bim-library/tokens/bim/key-plans.dtcg.json` still needs that update
+
+**Pending / carry-forward:**
+- Apply PO-1 structured furniture_refs to `woodfine-bim-library/tokens/bim/key-plans.dtcg.json`
+- Deliverable 1b: `woodfine-bim-library/key-plans/key-plans-registry.md` standalone Markdown
+- Corporate Office SVG diagrams: no furniture; blocked on zone depth data
+- Apply Decisions 1–4 to DTCG Objects + delete BIM_TOKENS block from HTML
+- DTCG 6 missing Object files
+- Binary ledger entry at Command Session for app-orchestration-bim v0.0.3
+- Stage 6: 37+ commits ahead of origin on cluster/project-bim
+
+---
+
 ## 2026-05-23 | totebox@claude-code | tool-keyplan-scaffold
 
 **Done:**
@@ -61,21 +90,3 @@ Rolling 3-session summary. Newest entry first. Keep only 3; push oldest to sessi
 
 **Operator preferences surfaced:** none new this session.
 
----
-
-## 2026-05-21b | totebox@claude-code | plan-bim-objects-v2-committed
-
-**Done:**
-- Merged Deliverable 1 spec (authoritative FIN.xlsx sizes, Q1–Q6, Decisions 1–4) into plan-bim-objects.md → status: draft-v2
-- Committed: 667c5f2 "plan: BIM Objects draft-v2 — authoritative sizes + Q1-Q6 + Decisions 1-4"
-- Copied v2 to `outputs/plan-bim-objects.md` — accessible via `fpull bim outputs/`
-
-**Pending / carry-forward:**
-- Deliverable 1: write `woodfine-bim-library/key-plans/key-plans-registry.md` — READY, all data in plan-bim-objects.md v2
-- Apply Decisions 1–4 to existing DTCG tokens + delete BIM_TOKENS block from HTML
-- B5: Rust source for app-orchestration-bim (HIGH)
-- DTCG 6 missing files (unblocked by Decision 3)
-- Rust crate scaffold (deferred until DTCG complete)
-- Stage 6: 32+ commits ahead of origin
-
-**Operator preferences surfaced:** will proceed with Deliverable 1 in next session.

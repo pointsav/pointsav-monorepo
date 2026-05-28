@@ -32,8 +32,10 @@ computed bounding box, and compliance record
 | `pointsav-monorepo/tool-keyplan/src/main.rs` | committed | Engine implementation |
 | `pointsav-monorepo/tool-keyplan/configs/po-1.toml` | committed | PO-1 input config |
 | `pointsav-monorepo/Cargo.toml` | committed | tool-keyplan added to members |
-| `pointsav-design-system/tokens/bim/interior.dtcg.json` | committed | Furniture + circulation BIM Objects |
-| `pointsav-design-system/tokens/bim/key-plans.dtcg.json` | committed | PO-1 structured furniture_refs |
+| `woodfine-bim-library/tokens/bim/interior.dtcg.json` | committed | Furniture + circulation BIM Objects (canonical location) |
+| `woodfine-bim-library/tokens/bim/key-plans.dtcg.json` | pending update | PO-1 structured furniture_refs not yet applied to wbl copy |
+| `pointsav-design-system/tokens/bim/interior.dtcg.json` | misrouted — pending admin removal | Copy created in wrong repo; wbl is canonical |
+| `pointsav-design-system/tokens/bim/key-plans.dtcg.json` | misrouted — pending admin removal | PO-1 update applied here in error; wbl is canonical |
 
 ## Furniture BIM Objects — PO-1 (interior.dtcg.json)
 

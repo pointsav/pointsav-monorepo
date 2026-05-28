@@ -9,9 +9,19 @@ Attribution format: `[YYYY-MM-DD role@engine]`
 
 - [x] **tool-keyplan v0.0.1 — committed 2026-05-23** `[2026-05-23 totebox@claude-code]`
   - Monorepo: a4ba3e96 — Cargo.toml + tool-keyplan/ crate (6 files)
-  - Design system: 730b50d — interior.dtcg.json (7 furniture BIM Objects) + key-plans.dtcg.json (PO-1 structured refs)
   - Engine: ASR A1.2 ✓ European Lighting ✓ Wheelchair ✓ — ALL CONSTRAINTS SATISFIED
   - Brief: `.agent/briefs/BRIEF-tool-keyplan.md`
+  - NOTE: interior.dtcg.json + key-plans.dtcg.json were committed to pointsav-design-system in error — see routing items below
+
+- [ ] **ROUTING FIX — apply PO-1 furniture_refs to wbl key-plans.dtcg.json** `[2026-05-28 totebox@claude-code]`
+  - `woodfine-bim-library/tokens/bim/key-plans.dtcg.json` PO-1 entry still has old `furniture_program` string array
+  - Apply structured `furniture_refs` + `bounding_box_mm` + `circulation_ref` + `compliance` from the pointsav-design-system copy
+  - interior.dtcg.json already copied to wbl (2026-05-28) ✓
+
+- [ ] **ROUTING FIX — Command: admin-tier removal of misrouted BIM Objects** `[2026-05-28 totebox@claude-code]`
+  - `pointsav-design-system/tokens/bim/interior.dtcg.json` — created in wrong repo; wbl is canonical
+  - `pointsav-design-system/tokens/bim/key-plans.dtcg.json` — PO-1 update applied here in error; wbl is canonical
+  - Requires Command Session (mcorp-administrator identity to remove from pointsav-design-system)
 
 - [ ] **Deliverable 1b — key-plans-registry.md** `[2026-05-22 totebox@claude-code]`
   - Write `woodfine-bim-library/key-plans/key-plans-registry.md` standalone Markdown
