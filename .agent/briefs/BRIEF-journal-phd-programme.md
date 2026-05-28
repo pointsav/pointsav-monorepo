@@ -2,8 +2,9 @@
 artifact: brief
 name: BRIEF-journal-phd-programme
 status: active
-version: "0.1"
+version: "0.3"
 created: 2026-05-27
+updated: 2026-05-28
 owner: totebox@project-editorial
 ---
 
@@ -18,16 +19,16 @@ Registry: `.agent/rules/artifact-registry.md` §J
 
 ---
 
-## Status banner (2026-05-27)
+## Status banner (2026-05-28)
 
-| ID | File | Body state | Blocked on | Next action |
-|----|------|------------|------------|-------------|
-| J1 | JOURNAL-retail-colocation-v0.1.draft.md | Complete (~7,800w) | OLS regression data (project-gis) | Send data request → execute regression → 6 figures |
-| J2 | JOURNAL-trustworthy-systems-v0.1.draft.md | Complete (~8,800w) | Language pass (25+ violations) | Execute language pass this session |
-| J3 | JOURNAL-aec-data-layers-v0.1.draft.md | Scaffold (0w body) | Writing pass + pipeline data | Begin §1–§3 writing now from research files |
-| J4 | JOURNAL-private-network-v0.1.stub.md | Stub (0w) | Writing pass | Begin §1–§2 writing now |
-| J5 | JOURNAL-totebox-orchestration-v0.1.stub.md | Stub (0w) | J2 must be under-review first | HOLD |
-| J6 | JOURNAL-desktop-environment-v0.1.stub.md | Stub (0w) | Writing pass | Begin §1/§3/§5 writing with BIM docs |
+| ID | File | Body state | Cleared | Next action |
+|----|------|------------|---------|-------------|
+| J1 | JOURNAL-retail-colocation-v0.1.draft.md | Complete v0.3 (~8,200w) | language-cleared | §7.2 primary spec pending Phase 24B (pop + O-D data); permutation test; F1–F5 at project-gis |
+| J2 | JOURNAL-trustworthy-systems-v0.1.draft.md | Complete (~8,800w) | language-cleared | Bench #9 quiet-VM re-run; ASPLOS short-version reformat (~6,000w) |
+| J3 | JOURNAL-aec-data-layers-v0.1.draft.md | Full body v0.2 (~7,800w) | language-cleared | §6 Results pending AEC nightly build coverage metrics from project-gis |
+| J4 | JOURNAL-private-network-v0.1.stub.md | §1-§3+§6-§7 written v0.2 (~4,800w) | language-cleared | §4 Implementation + §5 Evaluation pending benchmark data |
+| J5 | JOURNAL-totebox-orchestration-v0.1.stub.md | Stub (0w) | — | HOLD until J2 submitted |
+| J6 | JOURNAL-desktop-environment-v0.1.stub.md | §1-§5 written v0.2 (~5,200w) | language-cleared | §6 Results pending user study execution |
 
 ---
 
@@ -36,42 +37,37 @@ Registry: `.agent/rules/artifact-registry.md` §J
 **Primary:** Economic Geography (Wiley-Blackwell, IF 7.2)
 **Alternates:** Journal of Economic Geography (OUP, IF 6.3); Regional Studies (T&F, IF 5.54)
 
-### Current state
+### Current state (2026-05-28)
 
-Body is complete — Abstract, §1–§8 written from PROSE-RESEARCH v0.4.1. The `word_count_body: 0`
-frontmatter field is stale; actual word count is ~7,800. Body needs updating.
+Body complete v0.3 (~8,200 words). Language pass COMPLETE (`forbidden_terms_cleared: true`).
+New §7.0 "Preliminary Phase 22 Analysis" added with executable OLS results.
 
-### Blockers
+**§7.0 OLS results (executable — committed 37523014):**
+- Model A: `log(span_km) ~ T1_dummy + T2_dummy + C(country)` — N=6,481, 17 countries, R²=0.121
+  - T1 β=+0.489 [0.359, 0.619] p<0.001 → exp(0.489)=1.631, T1 clusters 63% larger than T3
+  - T2 β=+0.008 p=0.833 (not significant — T2 spans same as T3)
+- Model B: `T1_dummy ~ has_price_club + has_electronics + has_lifestyle + has_sport + log_span_km + tight + C(country)` — R²=0.503
+  - has_price_club β=+0.639 p<0.001; has_electronics β=+0.489; has_lifestyle β=+0.311; has_sport β=+0.135
+- F6 partial forest plot produced at `work/figures/F6-ols-coefficients.png`
 
-1. **§7.2 OLS regression not executed.** Requires Phase 22 cluster CSV (6,493 rows, 13 countries)
-   from project-gis. Model: `log(T1_share) = α + β₁·log(density_100km) + β₂·log(spend_per_capita)
-   + β₃·log(mobility_od) + Σδ_c·country_c + ε`. Country fixed effects. Results go into §7.2 body
-   and produce F6 (forest plot).
+**F1–F5 status:** Ready at project-gis `work/figures/` (commit 59e28780). Scripts at
+`app-orchestration-gis/generate-figures-f1-f5.py`. Regenerate: run from project-gis.
 
-2. **Permutation test (§7.1) not implemented.** Spatial random reassignment test: shuffle T1/T2/T3
-   labels across all 6,493 clusters 10,000 times; compare observed T1 geographic concentration
-   statistic against null distribution. One-tailed p-value. Requires cluster coordinates from
-   Phase 22 CSV.
+### Remaining blockers
 
-3. **6 must-have figures not produced** (F1–F6). F1–F5 can be produced from existing Phase 22
-   data now. F6 blocked pending regression.
+1. **§7.2 primary spec not executable.** Requires Kontur population join (Phase 24B) for
+   `log(pop_150km)` covariate and O-D data for `log(od_work)`. Separate session after Phase 24B.
 
-4. **Language pass** not yet done (`forbidden_terms_cleared: false`). Body has minimal internal
-   vocabulary — quick pass expected.
+2. **Permutation test (§7.1) not yet implemented.** Script `sim-tier-permutation.py` needs
+   writing — shuffle T1/T2/T3 labels 10,000 times, one-tailed p-value. Cluster coordinates
+   available in `work/clusters-ols.csv`.
 
-5. **`word_count_body: 0` frontmatter** — update to actual count after language pass.
+3. **F6 update pending.** Current partial F6 shows composition predictors only. Full F6
+   (including population + O-D covariates) needs §7.2 primary spec first.
 
-### Execution order
+4. **ORCID IDs** for all three authors (operator action).
 
-1. Send outbox message to project-gis: Phase 22 CSV export request + figure-production script
-   stubs (F1–F5 can be produced immediately from existing data) — DONE in this session's outbox.
-2. project-gis returns CSV + confirms data schema.
-3. project-editorial executes OLS regression (statsmodels) + produces F6.
-4. project-editorial produces F1–F5 (matplotlib/seaborn, specifications in PROSE-RESEARCH
-   frontmatter `figures_required:` block and in project-gis outbox message).
-5. Language pass: scan for internal vocabulary; update `forbidden_terms_cleared: true`.
-6. Update `word_count_body` frontmatter.
-7. Send to operator for byline review.
+5. **Bilingual ES sibling** required before journal submission.
 
 ### Figure production specifications
 
@@ -96,46 +92,12 @@ and in project-gis outbox message `project-gis-20260527-a6-thesis-journal-handof
 **Primary:** ASPLOS 2027 (ACM SIGARCH, 19.4% AR) — 11pp + 2pp abstract, 2-col ACM
 **Alternates:** EuroSys 2027 (14.7% AR); SOSP 2027 (~20% AR); ACM TOCS (journal fallback)
 
-### Current state
+### Current state (2026-05-28)
 
-Body complete (~8,800 words). Strong academic content. Forbidden vocabulary scattered through
-body — requires a systematic language pass.
+Body complete (~8,800 words). Language pass COMPLETE (`forbidden_terms_cleared: true`).
+All forbidden vocabulary removed per language-pass session.
 
-### Forbidden vocabulary to remove (body text only; frontmatter is clean)
-
-| Location | Forbidden term | Replace with |
-|----------|----------------|-------------|
-| §1.2 line 144 | "Foundry continuous-disclosure posture [conventions/bcsc-disclosure-posture.md]" | Remove the parenthetical entirely — "language per our internal research governance standards" or just delete the clause |
-| §1.2 line 146 | "scaffold-coded state" | "prototype stage" or "not yet production-deployed" |
-| §2.2 line 176 | "Doctrine Invention #7 [conventions/worm-ledger-design.md]" | Remove the bracketed reference; retain "making the customer's ledger externally timestamped" |
-| §3.1 line 207 | "Totebox Archive" | "customer-controlled deployment instance" (throughout) |
-| §4.1 (table) | `service-fs/src/http.rs`, `service-fs/src/mcp.rs` etc. | Replace file path references with "implementation module" or describe by function |
-| §4.1 line 304 | "Substrate Substitution [DOCTRINE.md claim #29]" | Remove bracketed doctrine reference; retain the concept description |
-| §4.2 reference | `service-fs` throughout | "the ledger server" or "the WORM ledger service" |
-| §5 and elsewhere | `moonshot-kernel` | "the planned no_std capability kernel" |
-| §5 and elsewhere | `moonshot-toolkit` | "the build orchestrator" (when referring to the tool) |
-| §5 and elsewhere | `moonshot-database` | "the planned storage backend" |
-| §6.1 | `vendor-sel4-kernel` | "the vendored seL4 kernel source tree" |
-| §7.2 body | "Honest We Own It scoresheet [conventions/...]" | Remove entirely; replace with the actual property description |
-| §7.2 | `ps-administrator SSH key` | "the operator's apex signing key" |
-| Appendix | Research Trail section (lines 692–733) | Delete entirely — internal-only artifact |
-| Throughout | `[conventions/...md]` internal path references | Remove bracketed paths; retain surrounding text |
-| Throughout | `os-*` in context of product family name | Replace with "the operating system runtime family" where generic; specific product names (os-console, os-network-admin) must be removed |
-| Throughout | `[external: https://...]` citation placeholders | Promote to stable citations.yaml IDs (see checklist below) |
-
-### Citation promotions needed (8 `[external: ...]` placeholders)
-
-| Placeholder | Stable ID to create in citations.yaml |
-|-------------|--------------------------------------|
-| `[external: https://sel4.systems/]` | `sel4-formal-verification-2009` |
-| seL4 Klein et al. 2009 SOSP | `sel4-klein-2009-sosp` |
-| seL4 2014 TOCS | `sel4-klein-2014-tocs` |
-| NetBSD Veriexec documentation | `netbsd-veriexec-doc` |
-| Capsicum Watson et al. 2010 | `capsicum-watson-2010` |
-| CHERIoT v1.0 | `cheriot-v1-2024` |
-| Macaroons Birgisson et al. 2014 | `macaroons-birgisson-2014` |
-| Apple PCC (2024) | `apple-pcc-2024` |
-| AWS Nitro (2025) | `aws-nitro-2025` |
+**Remaining blockers before submission:**
 
 ### Bench #9 re-run
 
@@ -161,52 +123,31 @@ from 400 words to 150); §8 Conclusion (trim to 150 words).
 **Alternates:** Journal of Computing in Civil Engineering (ASCE, IF 6.04);
   Journal of Information Technology in Construction (ITcon, IF 3.8, open access)
 
-### Current state
+### Current state (2026-05-28)
 
-Frontmatter and scaffold complete. All body sections are TODO stubs. Research material is
-available in two files:
-- Source 1: `AEC-LAYERS-RESEARCH.md` (in project-gis `.agent/drafts-outbound/` or accessible
-  via project-gis archive — contains the Phase 17/18 pipeline research and country-by-country
-  data source audit)
-- Source 2: `AEC-DATA-PARITY-RESEARCH.md` (in project-gis `.agent/drafts-outbound/` — contains
-  parity scorecard, §7 data table)
+Full body written v0.2 (~7,800 words). Committed `02117825`. Language pass COMPLETE
+(`forbidden_terms_cleared: true`).
 
-### Writing plan (can start now)
+**What was written:** §1 Introduction (AEC site analysis gap, 4 regulatory data categories,
+3 contributions), §2 Background (ASHRAE 169-2020/IECC, Floods Directive 2007/60/EC, FEMA
+NFHL, USGS NSHM, NECB, RESOLVE 2017 ecoregions, H3 spatial indexing), §3 AEC Data Layer
+Taxonomy (8-row table with regulatory standing, scope, license, complexity), §4 Per-Country
+Coverage Assessment (16 ISO parity scorecard from AEC-DATA-PARITY-RESEARCH.md), §5 Integration
+Pipeline (H3 res-7 approach, PMTiles, API/point enrichment, build-by-join), §6 Results
+(structured TODO pending nightly build data), §7 Discussion + Formal Hypotheses + Falsification
+Programme (7 tests), §8 Conclusion.
 
-§1 Introduction — write from research frontmatter notes_for_editor "contribution angle":
-  Three contributions already drafted in frontmatter. Gap statement: no systematic comparative
-  assessment of open-license AEC geospatial data across North America and Europe exists.
+### Remaining blockers
 
-§2 Literature Review — AEC site analysis tools, GIS data quality literature, H3 spatial
-  indexing (Brodsky 2018), OpenStreetMap quality for infrastructure analysis (Haklay 2010).
+1. **§6 Results — concrete coverage metrics.** Needs AEC nightly build pipeline output:
+   - Script 1: ASHRAE 169-2020 + NECB climate zones → `DATA-aec-climate-zones-us-ca.csv`
+   - Script 2: FEMA NFHL flood (US) + EU Floods Directive → `DATA-aec-flood-us.csv` + `DATA-aec-flood-eu.csv`
+   - Script 3: USGS NSHM seismic → `DATA-aec-seismic-us.csv`
+   - Script 4: NREL NSRDB solar GHI → `DATA-aec-solar-ghi-us.csv`
+   Outbox message `project-editorial-20260528-j3-coverage-metrics` sent to project-gis.
+   Metrics needed per script: H3 cells covered vs. total per country, coverage %, source vintage.
 
-§3 Methodology — H3 res-7 pipeline; eight data layer categories; 16 countries; source
-  evaluation criteria (regulatory grade, license class, spatial resolution, last-updated).
-
-§4 Data Sources — write from AEC-LAYERS-RESEARCH.md key findings in notes_for_editor:
-  US all-four-Tier-1-complete, EU floods Directive 2007/60/EC, Canada NECB HOT2000 open,
-  Mexico CONABIO CC BY-NC conflict, ASCE 7 copyright, Solargis ShareAlike conflict,
-  Resolve 2017 eco-regions baseline.
-
-§5 Results — parity scorecard table from AEC-DATA-PARITY-RESEARCH.md §7 (already exists);
-  copy in with proper academic framing. Quantify: "X of 8 layer categories achieve
-  regulatory-grade open coverage across Y of 16 countries."
-
-§6 Discussion — coverage gaps (Canada flood, Mexico CC BY-NC, pan-EU climate zones);
-  integration pattern recommendations; limitations (static snapshot, OSM data quality).
-
-§7–§8 Formal hypotheses + falsification programme + conclusion (write from contribution angle).
-
-### Pipeline data needed (request to project-gis)
-
-To populate §5 Results with real measurements (not projected estimates), need the
-Phase 17/18 AEC pipeline scripts run against actual data:
-- ASHRAE 169-2020 climate zones (US IECC + NECB HOT2000 for Canada)
-- FEMA NFHL flood hazard H3 join
-- USGS NSHM seismic design category (SDC) H3 join
-- NREL NSRDB solar GHI H3 join
-
-Send outbox message to project-gis with full script specs — DONE in this session.
+2. **ORCID IDs** for all three authors (operator action).
 
 ---
 
@@ -216,37 +157,44 @@ Send outbox message to project-gis with full script specs — DONE in this sessi
 **Alternates:** Computers & Security (Elsevier, IF 7.98);
   IEEE Transactions on Network and Service Management (IF 6.44)
 
-### Current state
+### Current state (2026-05-28)
 
-Stub only. All body sections are TODO. No blocking dependencies on other papers.
+§1–§3 + §6 Discussion + §7 Conclusion written v0.2 (~4,800 words). Committed `67eb9a37`.
+Language pass COMPLETE (`forbidden_terms_cleared: true`). Title updated to CRMA (Customer-Rooted
+Mesh Architecture).
 
-### Writing plan (can start now)
+**Full title:** "Customer-Rooted Mesh Architecture for Distributed Operational Systems:
+Zero-Trust Isolation Without Vendor Key Custody"
 
-§1 Introduction — Research gap: Zero Trust Architecture (Kindervag 2010; NIST SP 800-207, 2020)
-  literature focuses on access control policy, not on the data-plane implementation of private
-  network overlays that carry application traffic between Zero-Trust subjects. WireGuard
-  (Donenfeld 2017) has become the dominant open-source private network protocol since its
-  Linux kernel merge (v5.6, March 2020), but its integration with customer-sovereign key
-  management and capability-based access control has not been systematically characterised.
-  Three contributions: (1) a composability model for WireGuard-based private network overlays
-  and ZTA policy engines; (2) a key distribution architecture that roots WireGuard peer keys
-  in a customer-controlled signing infrastructure; (3) a formal threat model showing which
-  classes of lateral movement attacks the architecture prevents by construction.
+**What was written:**
+- §1 Introduction: ZTA vendor-key-custody problem; 4 risk categories; CRMA proposal
+- §2 Background: NIST SP 800-207, BeyondCorp, WireGuard (Donenfeld 2017), Noise Protocol
+  Framework (Perrin 2018), Tailscale/Netbird structural positioning
+- §3 Architecture: CRMA design principles P1–P4 (node-local key generation, public-key-only
+  coordinator, topology-derived AllowedIPs, customer-controlled audit log); hub-and-spoke
+  WireGuard topology; three-ring AllowedIPs enforcement (Ring 1=10.8.1.x, Ring 2=10.8.2.x,
+  Ring 3=10.8.3.x); BLAKE2s-chained audit log JSON format
+- §6 Discussion: kill-chain completeness analysis (6 ATT&CK TA0008 techniques), practical
+  limitations, comparison with commercial ZTA products on 4 criteria
+- §7 Conclusion: H₁/H₀/H₂/H₃ hypotheses + 6-test falsification programme
 
-§2 Background — Kindervag 2010 ZTA original; NIST SP 800-207 (Rose et al. 2020) formal spec;
-  BeyondCorp (Ward and Beyer 2014); WireGuard cryptographic design (Donenfeld 2017, IEEE S&P);
-  Noise Protocol Framework (Perrin 2018); existing ZTA overlay implementations (Tailscale,
-  Netbird).
+**H₁:** Customer-rooted WireGuard mesh achieves equivalent lateral-movement resistance to
+vendor-managed ZTA products, with customer-held routing keys and transparent audit logs,
+measurable via kill-chain completeness metric under a defined threat model.
 
-H₁ (formal): A private network overlay architecture that roots WireGuard peer-key distribution
-in a customer-controlled signing infrastructure and enforces capability-based access policy
-at the network-layer achieves lateral-movement resistance that is measurable via a kill-chain
-completeness metric under a defined threat model, and achieves this without a trusted
-third-party key server at runtime.
+### Remaining blockers
 
-H₀ (null): WireGuard-based private networks with third-party key management do not exhibit
-systematically different lateral-movement resistance compared to customer-sovereign key
-management under the same threat model.
+1. **§4 Implementation:** Benchmark setup needs documenting — performance measurements of
+   tunnel establishment time, rekey latency (60s default), policy-change propagation, failure-mode
+   behaviour (peer unreachable, hub restart, key rotation).
+
+2. **§5 Evaluation:** Benchmark data (tunnel establishment time, rekey latency, policy-change
+   propagation, failure-mode behaviour) required for quantified results.
+
+3. **[CITATION NEEDED] placeholders in References:** Cameron CA incident study (audit-log
+   integrity) + ZTA latency comparisons need verified citations with DOIs.
+
+4. **ORCID IDs** for all three authors (operator action).
 
 ---
 
@@ -264,54 +212,71 @@ J2 submission status updates to `submitted` or `under-review`.
 **Alternates:** International Journal of Human-Computer Studies (Elsevier, IF 6.96);
   Human-Computer Interaction (T&F, IF ~4.5)
 
-### Current state
+### Current state (2026-05-28)
 
-Stub only. Venue confirmed as TOCHI (journal, full article). BIM muscle-memory
-documentation available in `.agent/rules/bim-product-family.md` and
-`app-workplace-bim/CLAUDE.md` — readable from this archive.
+§1–§5 written v0.2 (~5,200 words). Committed `da4925a4`. Language pass COMPLETE
+(`forbidden_terms_cleared: true`).
 
-### Writing plan (can start now)
+**Full title:** "Muscle-Memory-Preserving Desktop Environments for Professional AEC Software Migration"
 
-§1 Introduction — Research gap: professional AEC software migration studies focus on feature
-  parity and training, not on motor-learning preservation. Card, Moran, Newell (1980)
-  Keystroke-Level Model established that expert performance is dominated by physical-motor
-  execution time, not cognitive planning time. Expert AutoCAD users have years of embedded
-  command aliases (L→LINE, PL→PLINE, TR→TRIM) and spatial-motor paths to toolbars; a
-  new interface that breaks these requires re-learning at the motor, not just cognitive, level.
-  Three contributions: (1) formal taxonomy of muscle-memory preservation strategies for
-  professional software migration; (2) implementation of three preservation mechanisms
-  (alias mapping, palette layout replication, F-key binding); (3) comparative user study
-  measuring task-completion time and error rate for experienced AutoCAD users on the
-  new system vs. a blank-slate alternative.
+**What was written:**
+- §1 Introduction: motor-learning preservation gap; KLM framing; 3 contributions
+- §2 Background: KLM (Card, Moran, Newell 1980), Fitts's Law (Fitts 1954), CMD alias
+  literature, HCI studies of CAD users, prior tool-switching cost work
+- §3 Design Principles: MMP framework — 3 principles: (P1) verbatim command-alias mapping,
+  (P2) spatial palette replication (Fitts's Law justification), (P3) F-key binding preservation
+- §4 Implementation: Table 1 (18 AutoCAD aliases → new environment); IFC category/layer panel
+  mapping (IfcWall/Door/Window/Slab etc.); F-key binding matrix (F3 osnap, F8 ortho, F10 polar,
+  F12 archival); 3D navigation grammar (Navisworks orbit/pan/zoom equivalence); BCF 3.0 issue
+  creation workflow; §4.6 IFC archival data flow
+- §5 User Study: planned study protocol — within-subjects design; 4 AEC tasks; measures:
+  task-completion time, command-error rate, NASA-TLX, qualitative interview; comparative
+  condition: blank-slate interface
 
-§3 Design Principles — write from bim-product-family.md §"Muscle memory targets":
-  Phase 1 core alias set (L, PL, C, M, CO, TR, O, F, LA), F3/F8/F10 toggle preservation,
-  layer-panel-to-IFC-element-category mapping. Generalise to three principles:
-  (1) Command-alias mapping verbatim; (2) Spatial-layout replication for toolbars and panels;
-  (3) F-key and Ctrl- shortcut preservation.
+### Remaining blockers
 
-§5 User Study — write protocol sketch: experienced AutoCAD users (≥3 years daily use),
-  within-subjects design (counterbalanced), four standard AEC tasks (draw perimeter, trim
-  to boundary, offset element, assign layer), measures: task-completion time (TLM-predicted
-  vs. actual), command-error rate (wrong alias invocations per task), SUS satisfaction score.
-  Comparative condition: blank-slate interface with same geometry engine, no alias mapping.
+1. **§6 Results — pending user study execution.** Participants: AEC professionals with ≥3
+   years AutoCAD/Revit daily use. Measures per §5 protocol.
 
-Source for implementation details: `.agent/rules/bim-product-family.md` §Phase 1 muscle
-memory targets; app-workplace-bim CLAUDE.md Phase 1 scope.
+2. **§7 Discussion (partial).** Design rationale written. Quantitative H₁/H₂/H₃ confirmation
+   and limitations section need user study data to complete.
+
+3. **ORCID IDs** for all three authors (operator action).
 
 ---
 
-## Execution order (recommended)
+## Execution order — completed vs. remaining
 
-1. **This session:** J2 language pass (all substitutions per table above). Execute now.
-2. **Coordinate project-gis:** Phase 22 CSV + F1–F5 figure production scripts + J3 AEC pipeline.
-   Outbox message sent this session.
-3. **Next session:** J3 §1–§5 writing pass (all research material available now).
-4. **Next session:** J4 §1–§2 writing (no blocking dependencies).
-5. **Next session:** J6 §1/§3/§5 writing (BIM docs available now).
-6. **When project-gis returns Phase 22 CSV:** J1 OLS regression → F6 → J1 language pass → J1 submission-ready.
-7. **After J2 language pass + ASPLOS reformat:** J2 submission-ready (pending Bench #9 re-run).
-8. **After J3 writing + pipeline data:** J3 submission-ready.
+### COMPLETE (2026-05-27 to 2026-05-28)
+- ✅ J1 language pass — `forbidden_terms_cleared: true`
+- ✅ J2 language pass — `forbidden_terms_cleared: true`
+- ✅ J3 full writing pass (~7,800 words) + language pass
+- ✅ J4 §1–§3 + §6–§7 writing pass (~4,800 words) + language pass
+- ✅ J6 §1–§5 writing pass (~5,200 words) + language pass
+- ✅ J1 §7.0 OLS preliminary regressions (Model A + B, Phase 22 data)
+- ✅ F6 partial forest plot produced (`work/figures/F6-ols-coefficients.png`)
+- ✅ OLS regression script committed (`work/run-j1-ols.py`)
+- ✅ Outbox to project-gis: J3 AEC nightly build coverage metrics (2026-05-28)
+- ✅ F1–F5 confirmed ready at project-gis (commit 59e28780)
+
+### NEXT — data-gated
+1. **When project-gis returns AEC nightly build data:** Fill J3 §6 Results with H3 coverage
+   metrics → J3 submission-ready (modulo ORCID IDs).
+2. **Phase 24B (Kontur population join + O-D data):** Execute J1 §7.2 primary specification
+   (`log[od_work] ~ tier + log[pop_150km]`) → update F6 → J1 submission-ready.
+3. **Benchmark data (J4):** Fill §4 Implementation + §5 Evaluation with tunnel/rekey/policy-change
+   measurements → J4 submission-ready.
+4. **User study execution (J6):** Fill §6 Results + §7 Discussion quantitative section → J6 submission-ready.
+
+### NEXT — independent (can do any time)
+5. **J1 permutation test:** Write `sim-tier-permutation.py` (shuffle T1/T2/T3 labels 10,000 times,
+   one-tailed p-value). Cluster coordinates at `work/clusters-ols.csv`.
+6. **J2 ASPLOS short version:** Separate trimming session → ~6,000 words, 2-column ACM format.
+   Create `JOURNAL-trustworthy-systems-v0.1-asplos.md`. Cut: §2 Background, §4.2–§4.3, §6 moonshot-toolkit.
+7. **J2 Bench #9 re-run:** Coordinate via project-system outbox; quiet VM, load avg < 1.0.
+8. **All papers: ORCID IDs** — operator action required for all three authors.
+
+### HOLD
 9. **J5:** Hold until J2 submitted.
 
 ---

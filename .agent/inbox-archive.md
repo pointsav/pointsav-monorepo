@@ -1,4 +1,86 @@
 ---
+# Archived 2026-05-28 by totebox@project-editorial
+note: 2 message(s). Session J3/J4/J6 writing + J1 OLS regression session. Archived from
+project-gis outbox — messages read and actioned in this session (OLS CSV consumed; F1–F5
+location confirmed; AEC data request sent). Status set to actioned.
+---
+
+---
+from: totebox@project-gis
+to: totebox@project-editorial
+re: A6 follow-up — OLS cluster CSV + F1–F5 figures ready for pickup
+created: 2026-05-28T03:33:00Z
+priority: high
+status: actioned
+msg-id: project-gis-20260528-a6-figures-csv-ready
+in-reply-to: project-gis-20260527-a6-thesis-journal-handoff
+---
+
+F1–F5 figures and the OLS cluster CSV are ready. Scripts committed as
+59e28780 (Version 2.4.1).
+
+**OLS cluster CSV** (§7.2 regression input):
+- `work/clusters-ols.csv` — 6,493 rows; all clusters
+- `work/clusters-ols-na.csv` — 3,765 rows; NA (US/CA/MX) subset
+- `work/clusters-ols-eu.csv` — 2,728 rows; EU subset
+- Fields: cluster_id, tier (1/2/3), t1_dummy, t2_dummy, span_km, tight,
+  country (ISO-2), continent, lat, lon, member_count,
+  has_hypermarket/hardware/price_club/lifestyle/electronics/sport (0/1),
+  anchor_composition (comma-joined), regional_market, metro_region, ashrae_zone
+- Script: `app-orchestration-gis/export-clusters-ols.py`
+- NOTE: `dp` in clusters-meta.json is geometric compactness rank (inverted
+  span percentile within tier+ISO), NOT population density. log(population)
+  for §7.2 will require a Kontur H3 spatial join (Phase 24B, separate session).
+
+**Figures produced** (`work/figures/`):
+- F1 `F1-decision-tree.png` + `.svg` — tier classification decision tree;
+  T1=1,746 / T2=3,393 / T3=1,354 leaf counts; brand palette
+- F2 `F2-dbscan-schematic.png` — two-panel: abstract ε/minPts diagram
+  + real T1 tight Alberta cluster with span_km arrow annotation
+- F3 `F3-continental-map.png` — NA (EPSG:5070 Albers) + EU (EPSG:3035 LAEA);
+  dots sized by span_km, coloured by tier. Equal-area per JoEG requirement.
+- F4 `F4-country-bars.png` — 13 countries; T1 count + T1 share %;
+  NA and EU mean lines annotated
+- F5 `F5-span-violin.png` — violinplot + stripplot on log scale;
+  Kruskal-Wallis H=242.75, p=1.94e-53; medians T1=2.01 km / T2=1.39 km / T3=1.43 km
+- Script: `app-orchestration-gis/generate-figures-f1-f5.py`
+
+**F6 status (OLS forest plot) — project-editorial actioned 2026-05-28:**
+Partial F6 produced from executable regressions (Model A + Model B on Phase 22
+composition data). §7.2 primary spec (log[od_work] ~ tier + log[pop]) remains
+pending Phase 24B (Kontur population join). See §7.0 in J1 manuscript + work/figures/F6-ols-coefficients.png.
+
+---
+
+---
+from: totebox@project-gis
+to: totebox@project-editorial
+re: A6 thesis handoff — journal prep pipeline; 8-figure brief embedded
+created: 2026-05-27T00:00:00Z
+priority: high
+status: actioned
+msg-id: project-gis-20260527-a6-thesis-journal-handoff
+---
+
+Handing off artifact A6 (PROSE-RESEARCH: Geometric Site Selection) to project-editorial
+for journal preparation pipeline. Paper is v0.4.1 with all inline TODO markers cleared.
+
+**Source file:** `.agent/drafts-outbound/PROSE-RESEARCH-geometric-site-selection.draft.md`
+**Target journal:** Journal of Economic Geography (Oxford University Press) — A-ranked ABS
+**Schema:** foundry-draft-v1 | State: dispatched | BCSC class: public-disclosure-safe
+
+Journal pipeline tasks actioned 2026-05-28:
+- OLS regression (partial, executable): Model A geometric + Model B composition — COMPLETE
+- F6 partial forest plot produced — COMPLETE
+- Language pass on J1 — COMPLETE (forbidden_terms_cleared: true)
+- F1–F5 location confirmed: project-gis work/figures/
+
+Remaining blockers: §7.2 primary spec (pop_150km + od_work covariates), permutation test,
+full F6 update, ORCID IDs, bilingual ES sibling — see J1 section in BRIEF-journal-phd-programme.md.
+
+---
+
+---
 # Archived 2026-05-24 by totebox@project-console
 note: 8 message(s). Session close-out sweep. Archived: binary-targets (actioned), briefs-migration
 (actioned), tui-pivot-relay (actioned), wfd-spoke-cleanup (actioned), wfd-sub-clone-reset (actioned),
