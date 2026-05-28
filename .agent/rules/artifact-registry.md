@@ -32,7 +32,7 @@ Status values: `stub` → `scaffolded` → `language-cleared` → `submission-re
 | J3 | `JOURNAL-aec-data-layers-v0.1.draft.md` | Open-Source Building-Systems Data Layers for Urban-Scale Site Analysis | Automation in Construction (Elsevier, IF 12.0) | Jennifer M. Woodfine | language-cleared |
 | J4 | `JOURNAL-private-network-v0.1.stub.md` | Zero-Trust Private Network Architecture for Distributed Operational Systems | IEEE TIFS (IEEE, IF 9.65) | Peter M. Woodfine | stub |
 | J5 | `JOURNAL-totebox-orchestration-v0.1.stub.md` | Capability-Secured Session Orchestration | MLSys (ACM, 22% AR) | Mathew Woodfine | stub |
-| J6 | `JOURNAL-desktop-environment-v0.1.stub.md` | Muscle-Memory-Preserving Desktop Environments for Professional AEC Software Migration | ACM TOCHI | Jennifer M. Woodfine | stub |
+| J6 | `JOURNAL-desktop-environment-v0.1.stub.md` | Muscle-Memory-Preserving Desktop Environments for Professional AEC Software Migration | ACM TOCHI | Jennifer M. Woodfine | language-cleared |
 
 ### Pre-submission blockers by paper
 
