@@ -10,6 +10,34 @@ schema: foundry-mailbox-v1
 ---
 from: totebox@project-knowledge
 to: command@claude-code
+re: Stage 6 pending — app-mediakit-knowledge Phase 7A — binary rebuild needed
+created: 2026-05-28T00:00:00Z
+priority: high
+status: pending
+msg-id: project-knowledge-20260528-phase7a-knowledge-platform
+---
+
+pointsav-monorepo commit `168314a1` (pwoodfine) — Phase 7A: restore TOC toggle/pin + add topnav search.
+`cargo test` exits 0 (pre-existing collab_test/doorman_test failures unrelated). Binary rebuild required.
+
+**Changes in this build:**
+- `src/server.rs`: `#toc-toggle` + `#toc-pin-btn` buttons restored to `aside.toc` header in `wiki_chrome()`
+  (dropped during Phase 6C rewrite). `initToc()` and `initTocPin()` in wiki.js now execute.
+- `src/server.rs`: `div.topnav-search-wrap` with `form.topnav-search #header-search-q` +
+  `div.ac-dropdown #search-autocomplete-dropdown` added to `nav.right` in all three chrome
+  functions (home_chrome, wiki_chrome, chrome). `initSearchAutocomplete()` now finds its IDs.
+- `static/style.css`: topnav search styles + TOC header flex layout.
+
+**Phase 7A + Phase 6A/6B/6C together resolve all three user-reported issues:**
+1. AJAX link navigation (6A commit `afa67bfa` — already promoted per prior message)
+2. TOC toggle/pin + search missing from header (this commit)
+3. Mobile: search form visible at ≤768px (form element not caught by existing hide rule)
+
+**Action needed:** Stage 6 promote `168314a1` → canonical, then queue binary rebuild.
+
+---
+from: totebox@project-knowledge
+to: command@claude-code
 re: build-request — app-mediakit-knowledge Phase 6A+6B+6C — Stage 6 + binary rebuild needed
 created: 2026-05-28T00:00:00Z
 priority: high
