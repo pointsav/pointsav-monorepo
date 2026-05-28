@@ -275,9 +275,14 @@ async fn main() -> anyhow::Result<()> {
                             );
                         }
 
-                        // Do NOT sleep between briefs — drain the queue as fast as
-                        // the apprentice tier allows.  The poll sleep only fires when
-                        // the queue is empty.
+                        // Back off after a transient failure so we don't spin
+                        // tight-looping on briefs when the inference tier is
+                        // unavailable (circuit open, Yo-Yo offline, etc.).
+                        if outcome == ReleaseOutcome::Retry {
+                            tokio::time::sleep(drain_interval).await;
+                        }
+                        // Do NOT sleep on Done/Poison — drain the queue as fast
+                        // as the apprentice tier allows when it IS available.
                     }
                     Err(slm_doorman::DoormanError::QueueLockFailed { .. }) => {
                         // Another worker (or the reaper) holds the lock.  Back off
