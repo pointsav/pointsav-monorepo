@@ -173,13 +173,14 @@ fn execute_step(step: &BuildStep) -> Result<(), String> {
             output_image,
             ..
         } => {
-            // Phase 1C.d: assemble seL4 bootable image from PD ELFs.
-            // Requires Microkit SDK (microkit.py) or a Rust image assembler —
-            // neither is available yet. PD compile steps above produce the
-            // inputs; this step is the remaining gap.
+            // Phase 1C.d: assemble seL4 bootable image from PD ELFs + kernel.
+            // The Microkit SDK is distributed as a release tarball (not a PyPI
+            // package) from github.com/seL4/microkit/releases. The interim path
+            // is to implement the Microkit image format in Rust (see NEXT.md).
             Err(format!(
-                "assemble-image → {output_image}: not yet implemented; \
-                 requires Microkit SDK or Rust image assembler (Phase 1C.d). \
+                "assemble-image → {output_image}: not yet implemented (Phase 1C.d). \
+                 Requires: Microkit SDK tarball (github.com/seL4/microkit/releases) \
+                 or Rust image assembler implementing the Microkit image format. \
                  PD binaries ready: [{}]",
                 pd_binary_paths.join(", ")
             ))
