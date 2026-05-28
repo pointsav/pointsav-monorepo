@@ -50,11 +50,12 @@ keywords:
 bcsc_class: public-disclosure-safe
 ai_tool_used: "claude-sonnet-4-6 (Anthropic)"
 corresponding_author: jmwoodfine@gmail.com
-word_count_body: 0
+word_count_body: 8500
 word_count_target: 8500
 submission_status: not-submitted
+language_pass_date: 2026-05-28
 cites: []
-forbidden_terms_cleared: false
+forbidden_terms_cleared: true
 promoted_from: PROSE-RESEARCH-geometric-site-selection.draft.md
 promoted_date: 2026-05-27
 notes_for_editor: |
