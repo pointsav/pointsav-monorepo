@@ -7,10 +7,9 @@
 
 ## Right now
 
-- Nothing in progress. Phase 1C.a complete at v0.2.0 (`build` subcommand
-  executes real aarch64-linux-gnu-gcc; `examples/hello-world.toml` +
-  `examples/hello.c` added; CHANGELOG.md created). Phase 1C.c and 1C.d
-  are blocked — see Blocked section below.
+- Nothing in progress. Phase 1C.c complete (`d550217`): seL4 qemu-arm-virt
+  AArch64 QEMU boot confirmed — "hello from seL4 rootserver" output observed.
+  Phase 1C.d still blocked — see Blocked section below.
 
 ## Queue
 
@@ -19,13 +18,12 @@
 
 ## Blocked
 
-- **Phase 1C.c — QEMU boot** — seL4 kernel ELF (`vendor-sel4-kernel/build/
-  aarch64-qemu/kernel.elf`, AArch64) is built. But seL4 requires the
-  `elfloader` (from `seL4_tools` repo, separate from kernel source) to
-  set up the MMU before jumping to the kernel at 0xffffff8040000000.
-  Without the elfloader, QEMU loads the ELF but the kernel can't boot.
-  Unblocked by: cloning `seL4_tools` repo + building elfloader + linking
-  kernel + rootserver into combined bootable image.
+- ~~**Phase 1C.c — QEMU boot**~~ COMPLETE (`d550217`, 2026-05-28).
+  Boot: elfloader → seL4 kernel → hello-rootserver → "hello from seL4 rootserver".
+  Three root causes resolved: KernelVerificationBuild=ON disabled CONFIG_PRINTING;
+  GNU cpio padding mismatch (replaced with Python CPIO writer); QEMU -m 512M <
+  kernel DTB range (boot with -m 1G). Elfloader entry 0x40400000, kernel at
+  0xffffff8040000000, rootserver at 0x400000.
 
 - **Phase 1C.d — Image assembly** — `AssembleImage` step returns an actionable
   error. Requires either:
@@ -56,10 +54,14 @@
   `build/hello.elf` (AArch64 static ELF, entry 0x40010c). CHANGELOG.md
   created. QEMU boot blocked on elfloader (Phase 1C.c). Image assembly
   blocked on Microkit/Rust assembler (Phase 1C.d).
+- 2026-05-28 (Phase 1C.c): QEMU boot confirmed. "hello from seL4 rootserver"
+  output. kernel.elf rebuilt with KernelVerificationBuild=OFF KernelPrinting=ON;
+  Python CPIO writer (gen_cpio.py) replaces GNU cpio; QEMU -m 1G required.
+  Source committed: `vendor-sel4-project/build-support/qemu-arm-virt/`.
 - 2026-05-27 (seL4 kernel / Phase 1C.b): `vendor-sel4-kernel/build/
   aarch64-qemu/kernel.elf` built with aarch64-linux-gnu-gcc v13.3.0,
-  KernelPlatform=qemu-arm-virt, KernelSel4Arch=aarch64, KernelPrinting=ON.
-  AArch64 static ELF, entry 0xffffff8040000000. Needs elfloader for QEMU boot.
+  KernelPlatform=qemu-arm-virt, KernelSel4Arch=aarch64. Rebuilt with
+  KernelPrinting=ON for Phase 1C.c.
 - 2026-05-27: NEXT.md + CLAUDE.md updated to v0.1.3 delivered state;
   Group 3A blockers resolved; decisions recorded in project-system-todo.md.
 - 2026-04-27 (Phase 1B): `src/spec.rs` (445 lines, 12 tests) + `src/plan.rs`
