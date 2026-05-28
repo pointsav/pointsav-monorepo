@@ -42,11 +42,15 @@ use crate::tier::circuit_breaker::CircuitBreaker;
 // ── Timeouts ─────────────────────────────────────────────────────────────────
 /// Per-socket read timeout on the reqwest client. Covers slow body reads and
 /// stalled TCP connections. Combined with the outer tokio deadline below.
-const SOCKET_TIMEOUT: Duration = Duration::from_secs(60);
+/// Raised from 60 s to 180 s: Think-class models (OLMo-3 32B Think) spend
+/// ~500 tokens on reasoning blocks before emitting the answer. At 8-9 tok/s
+/// that takes 55-60 s just for thinking, exceeding the old 60 s limit.
+const SOCKET_TIMEOUT: Duration = Duration::from_secs(180);
 
 /// Hard outer deadline wrapping the entire complete() call, including any
 /// 503 Retry-After sleep. Fires DoormanError::TierBTimeout to caller.
-const OUTER_DEADLINE: Duration = Duration::from_secs(90);
+/// Raised from 90 s to 300 s to accommodate 180 s socket timeout + one retry.
+const OUTER_DEADLINE: Duration = Duration::from_secs(300);
 
 // ── Health probe ──────────────────────────────────────────────────────────────
 /// How often the health probe polls /health.
@@ -248,7 +252,7 @@ impl YoYoTierClient {
                 warn!(
                     target: "slm_doorman::tier::yoyo",
                     latency_ms = elapsed_ms,
-                    "Tier B: outer 90 s deadline exceeded"
+                    "Tier B: outer 300 s deadline exceeded"
                 );
                 Err(DoormanError::TierBTimeout)
             }

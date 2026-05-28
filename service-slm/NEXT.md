@@ -1,12 +1,34 @@
 # NEXT.md — service-slm
 
-> Last updated: 2026-05-12T18:30Z (nightly test run complete; vllm.service crash-loop diagnosed)
+> Last updated: 2026-05-28T05:30Z — Think-model timeout + think-block stripping fix deployed; Yo-Yo TERMINATED (idle/session end)
 > Read at session start. Update before session end so the next
 > session knows where to pick up.
 
 ---
 
-## ⚠️ CRITICAL — VM NEEDS SERVICE FIX ON NEXT START
+## ✅ SYSTEM STATUS (2026-05-28)
+
+| Service | State | Notes |
+|---|---|---|
+| `local-doorman.service` | active | `SLM_FORCE_BROKER_MODE=true`; SOCKET_TIMEOUT=180s/OUTER=300s; think-strip deployed |
+| `yoyo-tier-b-1` | **TERMINATED** | Stopped 2026-05-28T05:25 UTC; start when resuming work |
+| `local-content.service` | active | LadybugDB loaded ~05:09; CORPUS drain failing until Yo-Yo up |
+| `local-slm.service` | active | Tier A disabled; kept for service health only |
+| Shadow capture | queued | 8GKR brief in queue (retrying); 539 done; drain-backoff fix deployed |
+
+**To start the Yo-Yo after it idles/stops:**
+```bash
+cd /srv/foundry/clones/project-intelligence
+service-slm/scripts/start-yoyo.sh --runtime=2h
+```
+Wait ~2 min for model load, then the Doorman circuit closes automatically.
+
+**⚠️ idle timer is 120 min** (`SLM_YOYO_IDLE_MINUTES=120`). Can lower to 30–60 min once
+inference is reliably flowing (shadow briefs dispatching first-try).
+
+---
+
+## ⚠️ STALE CRITICAL NOTE FROM 2026-05-12 (RESOLVED)
 
 `vllm.service` is still **enabled** in the boot image and crashes on every start (CUDA OOM — 32B BF16 doesn't fit in 22 GiB L4). `llama-server.service` was running ad-hoc (not `systemctl enable`), so it does not survive a restart. **On the next VM start, immediately SSH in and run:**
 
