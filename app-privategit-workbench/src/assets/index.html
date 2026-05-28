@@ -1629,25 +1629,11 @@ async function openFile(path, name) {
     tv.style.display = 'block';
     tc.className = '';
     tc.textContent = 'Loading…';
-    try {
-      const res = await fetch(cacheBust(path), { cache: 'no-store' });
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      const text = await res.text();
-      const ext = fname.split('.').pop().toLowerCase();
-      if (ext === 'md') {
-        tc.className = 'md-view';
-        tc.innerHTML = mdToHtml(text);
-      } else {
-        tc.className = 'code-view';
-        tc.textContent = text;
-      }
-    } catch(e) {
-      tc.className = 'code-view';
-      tc.textContent = 'Could not load file: ' + e.message;
-    }
+    // Content is rendered below from the API fetch (eliminates a second round-trip).
   }
 
-  // Try to load into editor (editor-service returns writable:true only for allowed paths)
+  // Single fetch: returns {content, mtime, writable}.
+  // For text/code/markdown this also drives the viewer — no separate raw fetch needed.
   const apiPath = path.replace(/^\//, '');
   hideEditorPanel();
 
@@ -1655,6 +1641,20 @@ async function openFile(path, name) {
     const editRes = await fetch('/_api/edit/file?path=' + encodeURIComponent(apiPath));
     if (editRes.ok) {
       const data = await editRes.json();
+
+      // Populate text viewer from API content (replaces the old raw fetch branch)
+      if (viewMode === 'text' && typeof data.content === 'string') {
+        const tc = document.getElementById('text-content');
+        const ext = fname.split('.').pop().toLowerCase();
+        if (ext === 'md') {
+          tc.className = 'md-view';
+          tc.innerHTML = mdToHtml(data.content);
+        } else {
+          tc.className = 'code-view';
+          tc.textContent = data.content;
+        }
+      }
+
       if (data.writable && typeof data.content === 'string') {
         editorPath  = apiPath;
         editorMtime = data.mtime || 0;
@@ -1701,8 +1701,19 @@ async function openFile(path, name) {
           }, { once: true });
         }
       }
+    } else if (viewMode === 'text') {
+      const tc = document.getElementById('text-content');
+      tc.className = 'code-view';
+      tc.textContent = 'Could not load file (HTTP ' + editRes.status + ')';
     }
-  } catch(e) { showEditorStatus('⚠ ' + e.message, '#f85149', 6000); }
+  } catch(e) {
+    if (viewMode === 'text') {
+      const tc = document.getElementById('text-content');
+      tc.className = 'code-view';
+      tc.textContent = 'Could not load file: ' + e.message;
+    }
+    showEditorStatus('⚠ ' + e.message, '#f85149', 6000);
+  }
 }
 
 // ── Print current file ────────────────────────────────────────────────────────
@@ -2060,7 +2071,7 @@ async function loadChildren(item, childrenEl, depth) {
   const browse = item.dataset.browse || '';
   const cloneMatch = browse.match(/^\/(_clones\/[^/]+)\/$/);
   if (cloneMatch) {
-    await fetchGitStatus(cloneMatch[1]);
+    fetchGitStatus(cloneMatch[1]); // fire-and-forget; badges applied by refreshGitBadgesInTree()
   }
 
   try {
