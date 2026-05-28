@@ -1,7 +1,7 @@
 ---
 schema: foundry-artifact-registry-v1
 project: project-gis
-last_updated: 2026-05-27
+last_updated: 2026-05-28
 ---
 
 # project-editorial Artifact Registry
@@ -27,8 +27,8 @@ Status values: `stub` → `scaffolded` → `language-cleared` → `submission-re
 
 | ID | File | Title (working) | Target Journal | Lead Author | Status |
 |----|------|-----------------|----------------|-------------|--------|
-| J1 | `JOURNAL-retail-colocation-v0.1.draft.md` | Retail Anchor Co-location Composition as a Spatial Leading Indicator of Commercial Activity | Economic Geography (Wiley, IF 7.2) | Jennifer M. Woodfine | scaffolded |
-| J2 | `JOURNAL-trustworthy-systems-v0.1.draft.md` | Composing Trustworthy Systems from Verified Primitives | ASPLOS (ACM, 19.4% AR) | Mathew Woodfine | scaffolded |
+| J1 | `JOURNAL-retail-colocation-v0.1.draft.md` | Retail Anchor Co-location Composition as a Spatial Leading Indicator of Commercial Activity | Economic Geography (Wiley, IF 7.2) | Jennifer M. Woodfine | language-cleared |
+| J2 | `JOURNAL-trustworthy-systems-v0.1.draft.md` | Composing Trustworthy Systems from Verified Primitives | ASPLOS (ACM, 19.4% AR) | Mathew Woodfine | language-cleared |
 | J3 | `JOURNAL-aec-data-layers-v0.1.draft.md` | Open-Source Building-Systems Data Layers for Urban-Scale Site Analysis | Automation in Construction (Elsevier, IF 12.0) | Jennifer M. Woodfine | scaffolded |
 | J4 | `JOURNAL-private-network-v0.1.stub.md` | Zero-Trust Private Network Architecture for Distributed Operational Systems | IEEE TIFS (IEEE, IF 9.65) | Peter M. Woodfine | stub |
 | J5 | `JOURNAL-totebox-orchestration-v0.1.stub.md` | Capability-Secured Session Orchestration | MLSys (ACM, 22% AR) | Mathew Woodfine | stub |
@@ -37,16 +37,20 @@ Status values: `stub` → `scaffolded` → `language-cleared` → `submission-re
 ### Pre-submission blockers by paper
 
 **J1 — Retail Co-location:**
-- Language pass: remove all internal Foundry vocabulary (`forbidden_terms_cleared: false`)
+- ~~Language pass~~ — COMPLETE 2026-05-28 (`forbidden_terms_cleared: true`; body scanned clean)
+- Phase 22 CSV from project-gis → OLS regression (§7.2) → F6 coefficient forest plot
+- F1–F5 figures — data request sent to project-gis 2026-05-27; pending production
+- §5.3 TODO slots (LODES employment join) — executable once `build-geometric-ranking.py` run
+- §5.1 country-by-country T1 table; Appendix B chain table; Appendix C data flow diagram
+- Permutation test (`sim-tier-permutation.py`) — to be written
 - CBRE/JLL leasing-data acquisition (Year 2 research)
-- Optimum Mosaic integration; country-by-country T1 table completion
-- Word-count trim to ≤8,500 words body
 - ORCID IDs for all three authors
 
 **J2 — Trustworthy Systems:**
-- Language pass: remove §1.2 "Foundry continuous-disclosure posture", §7.2 "Honest We Own It" scoresheet references, "Research Trail" appendix (`forbidden_terms_cleared: false`)
+- ~~Language pass~~ — COMPLETE 2026-05-28 (`forbidden_terms_cleared: true`)
 - Bench #9 quiet-VM re-run (22 outliers, ±11% CI — explicitly flagged)
 - Promote all `[external: ...]` citation placeholders to `citations.yaml` stable IDs
+- ASPLOS short version (~6,000 words, 2-column ACM format)
 - ORCID IDs for all three authors
 
 **J3 — AEC Data Layers:**
