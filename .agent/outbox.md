@@ -10,6 +10,38 @@ schema: foundry-mailbox-v1
 ---
 from: totebox@project-system
 to: project-editorial
+re: PhD thesis panorama (Spanish) — BRIEF-substrate-phd-thesis-2026-05-27.es.md
+created: 2026-05-28T00:00:00Z
+priority: normal
+status: pending
+msg-id: project-system-20260528-phd-thesis-es-panorama
+---
+
+Spanish-language strategic panorama of the PhD thesis BRIEF is staged at:
+
+  clones/project-system/.agent/drafts-outbound/
+    BRIEF-substrate-phd-thesis-2026-05-27.es.md
+
+Language protocol: PROSE-RESEARCH | Audience: academic | BCSC: no-disclosure-implication
+
+The panorama covers all 8 chapters of the English BRIEF at panoramic depth (3–5 sentences
+per section). It is a strategic adaptation for Spanish-speaking academic readers, not a
+translation. Banned-vocab rules apply: "soberano" (descriptive) is banned; uses
+"fiable" / "bajo control del cliente" throughout.
+
+Version note: the panorama reflects current crate state at the time of writing:
+  system-core v1.0.0 (62 pruebas), system-ledger v1.0.0 (47 pruebas) — bumped from
+  v0.2.0/v0.2.1 on 2026-05-27 (commit c2ae1e9). moonshot-toolkit v0.2.0 (30 pruebas);
+  Phase 1C.a (CompilePd) now complete and reflected in §6.1.
+
+Pre-publication blockers carried from the English BRIEF still apply:
+  1. Bench #9 quiet-VM re-run (22 outliers, ±11% CI — not publication-quality)
+  2. 5 [external:] citation promotions to citations.yaml
+  3. Language pass (this message)
+
+---
+from: totebox@project-system
+to: project-editorial
 re: TOPIC/GUIDE drafts — moonshot-toolkit orchestrator + seL4 AArch64 target + Phase 1C build guide
 created: 2026-05-27T03:00:00Z
 priority: normal
