@@ -1,6 +1,8 @@
 ---
 artifact: brief
-status: active
+status: archived
+superseded_by: BRIEF-app-mediakit-knowledge-2030.md
+archived_date: 2026-05-28
 topic: knowledge-platform — Phases 1–5 done; design competition in progress; Phase 6 gated; product strategy open
 archive: project-knowledge
 created: 2026-05-22
