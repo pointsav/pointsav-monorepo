@@ -13,6 +13,9 @@ ExecStart=/opt/llama.cpp/build/bin/llama-server \
     -c 4096 \
     -a Olmo-3-1125-32B-Think,Olmo-3-32B-Think,olmo-3-32b \
     -np 4 \
+    -fa \
+    --reasoning-format deepseek \
+    --reasoning-budget 1024 \
     --metrics
 Restart=on-failure
 RestartSec=15
