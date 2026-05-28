@@ -364,5 +364,83 @@ Steps 1–3 are gated on Q2 (subnet ratification). Step 5 is gated on Q5 (Doorma
 
 ---
 
-*End of BRIEF — project-infrastructure / 2026-05-28*
+---
+
+## 11. Session 7 Research: Infrastructure Questions + Distributed VM Fabric (2026-05-28)
+
+Three operator questions were researched and a distributed VM fabric architecture was
+synthesised. Results recorded here; full editorial output staged as TOPIC/GUIDE drafts.
+
+### Q1 — Do Laptop A and Laptop B need to be rebooted to pool their resources?
+
+**No.** Standard pool operations are dynamic:
+- `virtio_balloon` inflation/deflation: the QEMU monitor signals the in-guest driver,
+  the driver responds, the pool adjusts — no guest or host reboot.
+- `cgroups v2 cpu.weight` changes take effect on running QEMU processes immediately.
+
+**What IS blocking (deployment work, not reboots):** `service-ppn-pairing` not yet
+deployed on the GCP VM; `os-network-admin` not yet installed on Laptop A; node-join
+ceremony not yet run on real hardware. These are §7 deployment steps, not OS changes.
+
+### Q2 — Do we have a test VM running?
+
+**Proof complete; no persistent VM is running.** `infrastructure/virt/vm-prove.sh` ran
+2026-05-28 (commit `04388865`): Alpine Linux 3.20 booted via QEMU TCG in 114 seconds;
+`virtio_balloon` inflation/deflation confirmed. The QCOW2 image exists; the VM is a
+one-shot proof script, not a persistent systemd service.
+
+### Q3 — Feasibility of one VM per project and one VM per deployment folder
+
+**Not feasible at per-project granularity; per-cluster is the right target.**
+
+| Scope | Count | Min RAM | Verdict |
+|---|---|---|---|
+| Per source project | 116 | 464 GB | Infeasible (32 GB available) |
+| Per deployment instance | 18 | ~72 GB | Right unit for capacity planning |
+| Per logical cluster | 9 | ~36–72 GB | Intended next scale tier |
+
+The right unit is the **running deployment instance** (18 today), not the source project
+(116, most of which are dormant scaffold-coded crates).
+
+### Q4 — Most sophisticated distributed virtualization we can build; leapfrog 2030
+
+**Four components planned above the proven per-node layer:**
+
+1. **virtio-mem lending over WireGuard** — analogous to CXL 3.0 (PCIe memory
+   disaggregation) but works over any encrypted network including WAN. seL4 capability
+   model ensures lending node retains no read capability over lent memory blocks.
+   Reserved: `moonshot-network/`.
+
+2. **Distributed capability ledger** — HMAC-signed grants keyed to pairing-ceremony
+   identity; Merkle DAG gossip across the WireGuard mesh; intended sub-second revocation
+   without central authority (vs. IAM 10–60 sec centrally propagated).
+   Reserved: `moonshot-protocol/`, `moonshot-database/`.
+
+3. **Cross-node VM scheduler** — deterministic bin-packing; QEMU live migration over
+   WireGuard; sovereignty constraint (operator can pin VMs to specific trusted nodes).
+   Reserved: `os-orchestration/`.
+
+4. **Sovereign attestation chain** — `dm-verity` root filesystem hash anchored to
+   pairing-ceremony key; no TPM vendor, no silicon vendor in chain. Intel TDX / AMD
+   SEV-SNP require the silicon vendor's CA; PPN sovereignty makes the operator the
+   attestation root.
+
+**What this leapfrogs by 2030:** machine-checked formal isolation proof on SMB hardware
+(AWS/Azure/GCP have none); cross-node memory lending over WAN (CXL requires PCIe fabric);
+sub-second decentralised capability revocation; operator-sovereign attestation without a
+cloud vendor; sub-five-minute SMB deployment. None of these will be shipped by major cloud
+providers by 2030 due to backward-compatibility constraints and the cloud-tenant threat
+model they are optimised for.
+
+**Editorial output staged:** two new TOPIC draft pairs in `.agent/drafts-outbound/`:
+- `topic-ppn-distributed-vm-fabric.draft.md` + `.es` (new full TOPIC)
+- `topic-ppn-hypervisor-resource-pool.draft.md` updated: §3 "Planned: cross-node resource
+  extension" added
+- `topic-ppn-architecture-overview.draft.md` updated: distributed fabric paragraph in
+  hypervisor layer section
+- `guide-ppn-first-deployment.draft.md` updated: VM capacity planning table added
+
+---
+
+*End of BRIEF — project-infrastructure / 2026-05-28 (§11 added 2026-05-28)*
 *Activating the first ceremony: service-ppn-pairing on GCP VM + os-network-admin on Laptop A*

@@ -203,6 +203,24 @@ What this does NOT yet demonstrate:
 
 ---
 
+## VM capacity planning
+
+When sizing how many VMs to run, the right unit of analysis is the **running deployment
+instance** — not the source project. The monorepo contains ~116 source-code directories,
+but most are dormant scaffold-coded crates that do not need a running VM.
+
+| Scope | Count (today) | Min RAM needed | Notes |
+|---|---|---|---|
+| Per source project | 116 | ~464 GB | Impractical; most projects are dormant |
+| Per deployment instance | 18 | ~72 GB | Right unit for capacity planning |
+| Per logical cluster | 9 | ~36–72 GB | Natural grouping per PROJECT-CLONES.md |
+| Single-node proof-of-concept | 1 | 4–8 GB | Fits the current GCP workspace VM |
+
+The current workspace VM (32 GB RAM) fits a single-node proof-of-concept with headroom
+for a few concurrent VMs. Scaling to per-cluster isolation (9 clusters) is the intended
+next tier; upgrading workspace RAM is the primary prerequisite — not additional
+provisioning work.
+
 ## Troubleshooting
 
 | Symptom | Likely cause | Resolution |
