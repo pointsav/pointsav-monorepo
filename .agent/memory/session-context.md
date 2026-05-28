@@ -2,22 +2,29 @@
 
 ---
 
-### 2026-05-28 | totebox@project-intelligence | claude-sonnet-4-6
+### 2026-05-28 | totebox@project-intelligence | claude-sonnet-4-6 (session 2)
 
 **Done this session:**
-- Confirmed Yo-Yo VM `yoyo-tier-b-1` is TERMINATED (GCP status confirmed via `gcloud compute instances describe`)
-- All three services confirmed active: local-doorman, local-slm, local-knowledge-documentation
-- Doorman readyz: `has_yoyo: true` (endpoint configured), `ai_available: false` (VM down — expected)
-- Performed shutdown: archived 2 stale inbox messages (doorman retry-loop messages from 2026-05-27, backoff fix already deployed in prior session); misdirected project-console inbox message archived
+- Multi-agent analysis of CORPUS extraction failures: root causes identified (throughput gap ~5-7x due to missing Flash Attention; slot starvation; grammar silently disabled with thinking; reqwest decode-error misclassification)
+- Multi-agent code audit: SC-2/3/5/3d/3e/3f audit items in service-content; SLM-1..SLM-6 in service-slm
+- Plan written, approved, executed. 3 commits:
+  - `446df43f` (Peter): Tier 2 — deepseek reasoning_content field; reqwest decode→TierBTimeout; Doorman restart after IP update; Packer template adds -fa/deepseek/budget flags
+  - `e263d6f0` (Jennifer): Tier 3 — service-content SC-3 health-check, SC-5 logging, SC-2 defer differentiation, SC-3d retry loop, SC-3e write order, SC-3f buffer pool
+  - `08896158` (Peter): ops — NEXT.md + BRIEF updated; Stage 6 count updated to 16+
+- 111/111 lib tests pass; service-content cargo check clean
 
 **Pending / carry-forward:**
-- **Verify CORPUS extraction** after next Yo-Yo start: `sudo journalctl -u local-content -f | grep -E 'entities extracted|WATCHER|deferred'` — should succeed now with 180s timeout + think-block stripping deployed
-- Stage 6 promote: archive is 16+ commits ahead of origin/main (Command Session scope)
-- Binary ledger: `data/binary-ledger/slm-doorman-server.jsonl` needs fresh sha256 for deployed binary
-- Shadow briefs `8GKR3472S2X79VC10Q4ECZHNE1` + `9AAHPV2R3HDPFA6SA9K97963RB` queued; will retry on Yo-Yo start
+- **Rebuild binaries** — slm-doorman-server and service-content need `cargo build --release` + `systemctl restart` to pick up this session's fixes (commits 446df43f + e263d6f0)
+- **Verify CORPUS extraction** after next Yo-Yo start + binary rebuild: `sudo journalctl -u local-content -f | grep -E 'entities extracted|WATCHER|deferred|RETRY'`
+- **Packer rebuild** — adds `-fa`, `--reasoning-format deepseek`, `--reasoning-budget 1024` to llama-server.service on the next Yo-Yo image
+- Stage 6 promote: archive is 16+ commits ahead of origin/main (Command Session scope); prerequisite rebase per inbox `command-20260520-stage6-rebase-required`
+- Binary ledger: `data/binary-ledger/slm-doorman-server.jsonl` + `service-content.jsonl` need fresh sha256 entries after rebuild
+- Yo-Yo VM TERMINATED — start with `service-slm/scripts/start-yoyo.sh --runtime=2h` when L4 capacity in europe-west4-a is available
 
 **Operator preferences surfaced:**
-- "SHUTDOWN" = execute shutdown checklist; no elaboration needed
+- "STARTUP" / "SHUTDOWN" = execute full checklist
+- Plan mode with AskUserQuestion for operator decisions before coding
+- "All 6 SC-* fixes in a single commit" — batch SC-* fixes together per audit cohort
 
 ---
 
