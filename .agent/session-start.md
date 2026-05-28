@@ -1,7 +1,7 @@
 ---
 schema: foundry-session-start-v1
 archive: project-marketing
-updated: 2026-05-24
+updated: 2026-05-28
 ---
 
 # Session start — project-marketing
@@ -26,8 +26,9 @@ updated: 2026-05-24
 
 ## Last session handoff
 
-*2026-05-24 — Three items completed:*
-*1. binary-targets.yaml declared (app-mediakit-marketing, FSL, app-bundle, extension layer) — inbox actioned.*
-*2. SEO head blocks applied to both home pages (meta description, canonical, OG, Twitter card, JSON-LD Organization schema). Live and verified on home.pointsav.com + home.woodfinegroup.com.*
-*3. robots.txt + sitemap.xml added to both sites via nginx static-file location blocks. Live on HTTPS.*
-*All outbox messages archived (project-design ACKs received). Outbox is clean. No open items.*
+*2026-05-28 — Housekeeping session:*
+*1. Generated landscape PDFs of both home pages via WeasyPrint (extracted bundler inner HTML to work around JS rendering). Deleted per operator request.*
+*2. Established `outputs/` folder — `.gitkeep` + gitignore rule committed (6fa271b, Peter Woodfine).*
+*Outbox clean. No open items.*
+
+*Note: WeasyPrint v61.1 is at `/usr/bin/weasyprint` — use for future HTML→PDF needs.*

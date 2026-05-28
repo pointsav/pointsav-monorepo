@@ -4,6 +4,23 @@ Rolling 3-session summary. Newest entry first. Keep 3 entries max; push oldest t
 
 ---
 
+## 2026-05-28 | totebox | claude-code
+
+**Done this session:**
+- Resumed from context summary (prior session had built BIM Library + Location Intelligence pages, applied SEO, robots/sitemap).
+- Generated landscape PDFs of both home pages (home.woodfinegroup.com, home.pointsav.com) using WeasyPrint — extracted inner HTML from bundler JSON string to work around JS rendering. Rendered at 1400×900px.
+- Created `outputs/` folder: added `.gitkeep` + gitignore rule (`outputs/*`, `!outputs/.gitkeep`). Committed as `6fa271b` (Peter Woodfine).
+- Deleted both PDFs per operator request (folder remains tracked in git).
+
+**Pending / carry-forward:**
+- Bootstrap deploys + certbot TLS still operator-gated.
+- Source-level `<title>` fix on next bundle rebuild (NEXT.md).
+
+**Operator preferences surfaced:**
+- WeasyPrint available on VM at `/usr/bin/weasyprint` (v61.1). Use for future HTML→PDF needs.
+
+---
+
 ## 2026-05-24 | totebox | claude-code
 
 **Done this session:**
@@ -37,17 +54,3 @@ Rolling 3-session summary. Newest entry first. Keep 3 entries max; push oldest t
 **Operator preferences surfaced:**
 - No new preferences this session.
 
----
-
-## 2026-05-20 | totebox | claude-code
-
-**Done this session:**
-- Startup: role confirmed, lock written, inbox clear, no NOTAM blockers.
-- Researched SEO gap for brand searches ("pointsav", "woodfinegroup").
-- Drafted full SEO head blocks for both home pages. Operator approved preview; applied 2026-05-24.
-
-**Pending / carry-forward:**
-- All completed 2026-05-24. ✓
-
-**Operator preferences surfaced:**
-- No preferences flagged this session.
