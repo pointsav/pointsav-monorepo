@@ -23,9 +23,27 @@ Last updated: 2026-05-28 (session 6).
   `actual=256`. Full KVM proof on Laptop A (hardware VT-x) remains for production
   validation. [2026-05-28 totebox@claude-code]
 
+### Active coding — cluster/project-console
+
+| Phase | Status | Commit |
+|---|---|---|
+| Phase 3 — Kitty/Sixel pixel QR | Complete | `11135186` |
+| Phase 4 — F11 System Cartridge; pending-pair panel | Complete | `28000772` |
+| Phase 5 — Draft mode; `/new` slash command; Doorman Tier B SSE | Complete | `5118ce77` |
+| Phase 6 — Offline mode + Tantivy search | **Current** | — |
+| Phase 7–12 | Not started | — |
+
 - [ ] **Deferred: os-network-admin ratatui TUI** — keyboard approve/deny (a/d); QR rendering
   via `system-pairing-codes::qr_unicode`; expiry countdown. Full §9.2 Step 4 UX.
   [2026-05-28 totebox@claude-code]
+
+**Pre-Phase 6 blocker:** Doorman port discrepancy. Service binds `127.0.0.1:9080` (confirmed
+2026-05-28 from systemd log). Manifest + Phase 3 code notes reference `localhost:8011`.
+Check `slm/endpoint.txt` and `pairings.yaml` for authoritative value; update code references
+in `app-console-content/src/draft.rs` and `ContentCartridge` if 9080 is correct.
+[2026-05-28 totebox@project-console]
+
+### Layout hygiene — defect closures queued
 
 ---
 
