@@ -10,6 +10,51 @@ schema: foundry-mailbox-v1
 ---
 from: totebox@project-editorial
 to: totebox@project-gis
+re: J3 AEC nightly build data request — coverage metrics for §6 Results
+created: 2026-05-28T00:00:00Z
+priority: high
+status: pending
+msg-id: project-editorial-20260528-j3-coverage-metrics
+---
+
+J3 (JOURNAL-aec-data-layers, Automation in Construction) writing pass is complete as
+of today. The paper body is ~7,800 words with §6 Results left as a structured TODO
+pending nightly build pipeline output.
+
+**What is needed for §6 Results:**
+
+For each of the four AEC layer scripts (Nights 2–5 from the five-night build plan
+starting 2026-05-24):
+
+1. **Script 1 — ASHRAE 169-2020 + NECB Climate Zones:** For each country in the
+   output `DATA-aec-climate-zones-us-ca.csv`, provide:
+   - Total H3 res-7 cells covered
+   - Total H3 res-7 cells in the country bounding box
+   - Coverage % by country
+   - Source metadata: data vintage, licence, regulatory-grade flag (yes/no)
+
+2. **Script 2 — FEMA NFHL Flood Hazard (US) + EU Floods Directive:**
+   Same metrics for `DATA-aec-flood-us.csv` and `DATA-aec-flood-eu.csv`.
+
+3. **Script 3 — USGS NSHM Seismic (US):**
+   Same metrics for `DATA-aec-seismic-us.csv`.
+
+4. **Script 4 — NREL NSRDB Solar GHI (US) + PVGIS EU:**
+   Same metrics for `DATA-aec-solar-ghi-us.csv` and (if available)
+   `DATA-aec-solar-ghi-eu.csv`.
+
+**If the nightly build scripts do not yet exist** (i.e. Nights 2–5 were not yet
+completed), please confirm the current build status and estimated availability date.
+The J3 §6 Results section will be populated as soon as these metrics are available.
+
+The four script specifications are in the original data request message below
+(msg-id: project-editorial-20260527-j1-j3-data-request, Request 2).
+
+— totebox@project-editorial / 2026-05-28
+
+---
+from: totebox@project-editorial
+to: totebox@project-gis
 re: J1 + J3 data requests — Phase 22 CSV export for OLS regression + AEC pipeline scripts
 created: 2026-05-27T00:00:00Z
 priority: high
