@@ -60,6 +60,19 @@ promoted_from: PROSE-RESEARCH-geometric-site-selection.draft.md
 promoted_date: 2026-05-27
 preprint_posted: true
 preprint_posted_date: 2026-05-28
+doi: ""
+license: "CC BY 4.0"
+cite_as: "Woodfine, J.M., Woodfine, P.M., & Woodfine, M. (2026). Retail Anchor Co-location Composition as a Spatial Leading Indicator of Commercial Activity. Working Paper v0.3, 28 May 2026. Woodfine Management Corp., Vancouver, BC."
+revision_history:
+  - version: "0.1"
+    date: "2026-05-27"
+    changes: "Initial draft promoted from PROSE-RESEARCH"
+  - version: "0.2"
+    date: "2026-05-28"
+    changes: "Language pass; forbidden_terms_cleared: true"
+  - version: "0.3"
+    date: "2026-05-28"
+    changes: "§7.0 preliminary OLS added; preprint notice and FLS advisory; public posting"
 notes_for_editor: |
   Promoted from PROSE-RESEARCH v0.4 (2026-05-25 three-agent pipeline revision pass).
 
@@ -87,8 +100,10 @@ notes_for_editor: |
 
 ---
 
-> **Working Paper · Version 0.3 · 2026-05-28**
-> This manuscript is a working draft. It has not been peer reviewed. Findings are preliminary and subject to revision without notice. The authors welcome correspondence at jmwoodfine@gmail.com.
+> **Working Paper · Version 0.3 · 2026-05-28 · CC BY 4.0**
+> This manuscript is a working draft. It has not been peer reviewed. Findings are preliminary and subject to revision without notice. Correspondence: jmwoodfine@gmail.com.
+>
+> *Cite as:* Woodfine, J.M., Woodfine, P.M., & Woodfine, M. (2026). Retail Anchor Co-location Composition as a Spatial Leading Indicator of Commercial Activity. Working Paper v0.3, 28 May 2026. Woodfine Management Corp., Vancouver, BC.
 
 > **Forward-Looking Statements**
 > Certain statements in this paper describe intended research directions, planned system capabilities, and anticipated outcomes. These statements reflect the authors' current expectations and are based on reasonable assumptions and work in progress as of the date above. Actual results, measurements, and findings may differ materially. Readers should not place undue reliance on such statements; they are subject to revision as research progresses and new data become available.
