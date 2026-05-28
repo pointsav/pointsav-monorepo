@@ -527,8 +527,11 @@ async fn extract(State(state): State<Arc<AppState>>, raw: Bytes) -> impl IntoRes
     // 6. Parse result into response fields.
     let (entities, tier_used, model, extraction_ok, deferred, defer_reason_str) = match result {
         Ok(compute_resp) => {
+            // Strip <think>…</think> blocks emitted by Think-class models
+            // (e.g. OLMo-3 32B Think) before attempting JSON parse.
+            let content_no_think = strip_think_blocks(&compute_resp.content);
             // Strip markdown fences if the model wrapped its output.
-            let raw_content = compute_resp.content.trim().to_string();
+            let raw_content = content_no_think.trim().to_string();
             let stripped = raw_content
                 .strip_prefix("```json")
                 .unwrap_or(&raw_content)
@@ -1151,6 +1154,22 @@ async fn graph_mutate(
     // 5. Return service-content response.
     let status = StatusCode::from_u16(sc_status.as_u16()).unwrap_or(StatusCode::BAD_GATEWAY);
     (status, Json(sc_body)).into_response()
+}
+
+/// Strip `<think>…</think>` reasoning blocks produced by Think-class models
+/// (e.g. OLMo-3 32B Think) before structured-output parsing. Returns the
+/// content after the last `</think>` tag, or the full string if none present.
+fn strip_think_blocks(s: &str) -> String {
+    // Find the last </think> tag; everything after it is the real answer.
+    if let Some(pos) = s.rfind("</think>") {
+        s[pos + "</think>".len()..].to_string()
+    } else if s.contains("<think>") {
+        // Opened but never closed — model was cut off mid-think. Return empty
+        // so the caller sees a parse failure (deferred) rather than garbage JSON.
+        String::new()
+    } else {
+        s.to_string()
+    }
 }
 
 /// Simple percent-encoding for URL query parameters (encodes spaces, special chars).

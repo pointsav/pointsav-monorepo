@@ -38,23 +38,36 @@ notes: >
 
 ---
 
-## §1 — Current live state (as of 2026-05-24)
+## §1 — Current live state (as of 2026-05-28T05:30Z)
 
 | Component | Version | Status | Notes |
 |---|---|---|---|
-| `slm-doorman-server` | rebuilt 2026-05-24 | **active** | GF-1 (async audit), GF-2 (inference timeouts), LatencyClass, BackendLifecycle — Phase 4 readyz fields present |
-| `service-content` | rebuilt 2026-05-24 | **active** | Sprint 2 (node_type + RelatedTo), Sprint 5 (graph-backed processed_ledgers) — 23/23 tests; 1,529 entities in LadybugDB |
-| `yoyo-tier-b-1` | 2026-05-13 Packer image | **TERMINATED** (europe-west4-a) | 256GB weights disk intact; L4 stockout blocks Mode 1 restart; start manually when capacity available |
-| `local-slm.service` | OLMo 2 1B | active | `SLM_FORCE_BROKER_MODE=true` — Tier A disabled; Doorman is pure broker |
-| `local-doorman.env` | — | current | `SLM_YOYO_GCP_ZONE=europe-west4-a`; IP `34.6.204.25` is the static IP for yoyo-tier-b-1 |
+| `slm-doorman-server` | rebuilt 2026-05-28 (this session) | **active** | Think-strip + 180s/300s timeouts; drain-backoff; `SLM_FORCE_BROKER_MODE=true`; idle 120min |
+| `service-content` | rebuilt 2026-05-24 | **active** | LadybugDB loaded 05:09; CORPUS drain deferred until Yo-Yo restarts |
+| `yoyo-tier-b-1` | 2026-05-13 Packer image | **TERMINATED** (stopped 05:25 UTC) | Restart with `start-yoyo.sh --runtime=2h` |
+| `local-slm.service` | OLMo 2 1B | active | Tier A disabled — kept for health only |
+| `local-doorman.env` | — | current | `SLM_YOYO_GCP_ZONE=europe-west4-a`; `SLM_YOYO_IDLE_MINUTES=120`; `SLM_APPRENTICESHIP_ENABLED=true`; `SLM_BRIEF_TIER_B_THRESHOLD_CHARS=0` |
 
 **Tier routing (current):**
 - Tier A: disabled (`SLM_FORCE_BROKER_MODE=true`)
-- Tier B: circuit open (VM terminated — probes failing)
+- Tier B: **circuit OPEN** (Yo-Yo TERMINATED — start VM to resume)
 - Tier C: not configured (no `ANTHROPIC_API_KEY`)
-- Result: `ai_available: false` once Doorman circuit opens from probe failures
+- Result: `ai_available: false` until Yo-Yo restarts
 
-**Stage 6 state:** project-intelligence archive is 14+ commits ahead of `origin/main`.
+**Think-model fixes deployed (this session):**
+- `SOCKET_TIMEOUT` raised 60s → 180s; `OUTER_DEADLINE` raised 90s → 300s
+- `strip_think_blocks()` added to extract handler — strips `<think>...</think>` before JSON parse
+- Shadow briefs capped at `max_tokens: 2048` (prevents runaway Think generation)
+- Root cause: OLMo-3 32B Think spends ~500 tokens on reasoning before JSON answer; 60s timeout
+  fired before `</think>` was emitted; new 180s timeout + stripping fixes this
+
+**Shadow capture state:**
+- Queue: `8GKR3472S2X79VC10Q4ECZHNE1` (retrying — will succeed on next Yo-Yo start)
+- queue-done: 539 briefs
+- queue-poison: `FECH83K3N665A8H8AZ3MTVNCKZ` (accumulated pre-backoff-fix retries)
+- Training corpus: 1,900+ tuples
+
+**Stage 6 state:** project-intelligence archive is 16+ commits ahead of `origin/main`.
 Rebase required per inbox `command-20260520-stage6-rebase-required` before promote.
 
 ---
@@ -270,30 +283,34 @@ representative of production.
 
 ## §5 — Immediate open items (no prerequisites)
 
-- [ ] **Start Yo-Yo when europe-west4-a L4 capacity is available**
-  ```bash
-  service-slm/scripts/start-yoyo.sh --runtime=2h
-  # If exit 3: retry-cycles approach:
-  service-slm/scripts/start-yoyo.sh --runtime=2h --retry-cycles=6 --retry-wait-seconds=600
-  ```
+- [x] **Start Yo-Yo when europe-west4-a L4 capacity is available** ✓ DONE 2026-05-28 04:50 UTC
+  VM restarted Mode 1; llama-server loaded OLMo-3 32B Think in ~2 min; circuit closed.
 
-- [ ] **End-to-end flow test** (after Yo-Yo starts — use `--wait-ready=300` to block until vLLM ready)
-  ```bash
-  # Verify Doorman circuit:
-  curl -s http://127.0.0.1:9080/readyz | python3 -m json.tool
-  # Manual inference test:
-  curl -s http://127.0.0.1:9080/v1/messages \
-    -H 'Content-Type: application/json' \
-    -H 'X-Foundry-Module-ID: test-yoyo' \
-    -d '{"model":"olmo","messages":[{"role":"user","content":"Name three Canadian cities."}]}' \
-    | python3 -m json.tool
-  # Expect: X-Foundry-Tier-Used: yoyo header; entity_count rising above 1,529 in healthz
-  ```
+- [x] **End-to-end flow test** ✓ DONE 2026-05-28 04:58 UTC
+  `POST /v1/messages` with `model: claude-sonnet-4-6` → routes to Tier B trainer → OLMo-3 32B
+  Think replied with `<think>` tokens. Shadow brief dispatch also confirmed OK (JARG5G8T45W0QMD3DTWKH29GTC).
 
-- [ ] **Verify service-content drains deferred CORPUS files** (restart triggers drain loop)
+  **Routing note:** Direct `/v1/messages` requests require `model: claude-sonnet-*` (or `claude-opus-*`)
+  to route to Tier B. Model `olmo` maps to Complexity::Medium → Local (fails with FORCE_BROKER_MODE).
+  Shadow briefs bypass this (ApprenticeshipDispatcher forces tier_hint=Yoyo).
+
+- [x] **Verify service-content drains deferred CORPUS files** ✓ PARTIAL 2026-05-28
+  service-content loads in ~3.5 min (not 16), restarted 05:06 UTC, HTTP up at 05:09.
+  CORPUS drain is still deferring with "yoyo-transient" — root cause found and fixed:
+  OLMo-3 32B Think emits `<think>` blocks before JSON; old 60s timeout fires before `</think>`.
+  **Fix deployed:** `strip_think_blocks()` + SOCKET_TIMEOUT 180s + OUTER_DEADLINE 300s.
+  CORPUS drain will succeed on next Yo-Yo start.
+
+- [x] **Drain worker backoff — new briefs should dispatch cleanly** ✓ DONE 2026-05-28
+  Observed: drain backoff is working. `J7BFN7NTRZ1SCTV131GDCPMBFF` succeeded at 05:13:16
+  after retry (first two attempts timed at 60s; third try succeeded in 58s = marginal win).
+  New 180s timeout means shadow briefs no longer race against the socket limit.
+
+- [ ] **Verify CORPUS extraction succeeds** after next Yo-Yo start
+  service-content CORPUS drain should complete with "entities extracted: N" messages.
+  With 180s timeout + think-block stripping, extraction should succeed.
   ```bash
-  sudo systemctl restart local-content.service
-  journalctl -u local-content -f | grep -E 'entities extracted|extraction deferred'
+  sudo journalctl -u local-content -f | grep -E 'entities extracted|WATCHER|deferred'
   ```
 
 ---

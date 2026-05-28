@@ -163,7 +163,10 @@ impl<'a> ApprenticeshipDispatcher<'a> {
             },
             tier_hint: Some(tier_hint),
             stream: false,
-            max_tokens: None,
+            // Cap at 2048 tokens so Think-model reasoning blocks don't run
+            // indefinitely. At ~9 tok/s on 32B Think, 2048 tokens ≈ 228 s —
+            // well within the 300 s OUTER_DEADLINE.
+            max_tokens: Some(2048),
             temperature: None,
             sanitised_outbound: true,
             tier_c_label: None,
@@ -257,7 +260,10 @@ impl<'a> ApprenticeshipDispatcher<'a> {
             },
             tier_hint: Some(tier_hint),
             stream: false,
-            max_tokens: None,
+            // Cap at 2048 tokens so Think-model reasoning blocks don't run
+            // indefinitely. At ~9 tok/s on 32B Think, 2048 tokens ≈ 228 s —
+            // well within the 300 s OUTER_DEADLINE.
+            max_tokens: Some(2048),
             temperature: None,
             sanitised_outbound: true,
             tier_c_label: None,
