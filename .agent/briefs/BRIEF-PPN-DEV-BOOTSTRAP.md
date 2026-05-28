@@ -60,22 +60,47 @@ ssh mathew@10.8.0.1    # Laptop B
 Two-layer architecture per BRIEF-sovereign-os-family-master-plan.md:
 
 ```
-TOTEBOX ORCHESTRATION LAYER (MBA pairings)
-──────────────────────────────────────────
+OPERATOR SURFACE
+────────────────────────────────────────────────────
+  station-workplace-mathew-1 [Laptop A / iMac, 10.8.0.6]
+    ├── os-network-admin  (Foundation OS layer — PPN control plane)
+    │     Zero cryptographic authority. Routing + tunnel integrity.
+    │     Polls service-ppn-pairing; operator approves node-join codes.
+    └── app-network-admin  (F8 Terminal interface on top of os-network-admin)
+          HTTP :8085 (intent → service-slm → authorised command)
+          UDP  :8090 (signed 16-byte binary broadcast to PPN peers)
+
+TOTEBOX ORCHESTRATION LAYER (MBA pairings — data plane)
+──────────────────────────────────────────────────────
   gateway-orchestration-command-1 [GCP VM — co-tenant with fleet-cloud-1]
     └── cluster-totebox-* / media-* / vault-privategit-* / node-console-*
+    Uses PSP (PointSav Protocol) — capability-based binary over TLS.
+    Stateless data aggregator. Holds no keys to archives.
 
-POINTSAV PRIVATE NETWORK LAYER (WireGuard)
-──────────────────────────────────────────
-  route-network-admin-1 [Laptop B — WireGuard hub]
+POINTSAV PRIVATE NETWORK LAYER (WireGuard — physical transport plane)
+──────────────────────────────────────────────────────────────────────
+  route-network-admin-1 [Laptop B — WireGuard hub, 10.8.0.1]
     ├── fleet-infrastructure-cloud-1 [GCP VM] (10.8.0.9 → target 10.42.10.1)
     └── station-workplace-mathew-1  [Laptop A] (10.8.0.6 → target 10.42.20.2)
+
+HYPERVISOR LAYER (os-infrastructure — not yet compiled)
+───────────────────────────────────────────────────────
+  Each physical node manages a pool of VMs.
+  Resource pool: virtio_balloon (memory) + vCPU scheduling (cgroups v2 cpu.weight).
+  Gives more / less CPU + RAM to each VM on demand. Per-node pool, not cross-node.
 ```
 
-**`os-network-admin` runs on Laptop A.** It is the operator's admin surface for the PPN
-layer. It polls `service-ppn-pairing` on the GCP VM and shows pending node-join requests.
-The operator approves new nodes from Laptop A; approved WireGuard public keys are written
-to `nodes.jsonl` on the GCP VM.
+**`os-network-admin` runs on Laptop A.** Foundation OS layer — PPN control plane.
+Zero cryptographic authority. It polls `service-ppn-pairing` on the GCP VM and shows
+pending node-join requests. The operator approves new nodes from Laptop A; approved
+WireGuard public keys are written to `nodes.jsonl` on the GCP VM.
+
+**`app-network-admin`** is the F8 Terminal interface that runs on top of `os-network-admin`.
+It provides an HTTP command surface (port 8085) and UDP mesh broadcast (port 8090) for
+translating operator intent into signed mesh commands via `service-slm`.
+
+**`route-network-admin`** is the deployment instance name for the network admin node in the
+customer fleet — not a separate codebase.
 
 **Governance gap (from sovereign-os-family master plan §4):** `route-network-admin-1` is
 the only sovereign component currently absent from `pairings.yaml`. The WireGuard hub has
@@ -142,15 +167,68 @@ of the BRIEF-PPN-ARCHITECTURE.md build order.
 
 The thesis claim (BRIEF-PPN-ARCHITECTURE.md §1.1 Contribution #3): "sub-five-minute SMB
 deployment" and "formally-isolated VMs." The development environment proves the concept
-using KVM (where available) as the compat-bottom stand-in.
+using KVM/QEMU (where available) as the compat-bottom stand-in.
 
-**TCB delta — what each hypervisor proves:**
+### What a VM is in this architecture
+
+Each VM provisioned by the PPN is a **sovereign execution environment** for one
+Totebox Archive (`cluster-totebox-corporate-1`, `-personnel-1`, `-property-1`) or one
+gateway node (`gateway-orchestration-command-1`). The VM:
+
+- Packages the Totebox Archive as a **bootable disk image** — freely transferable between
+  physical nodes, clouds, or bare metal without losing integrity or historical context
+- Cannot see the PPN's WireGuard keys, nodes.jsonl, or the node-join ceremony
+- Cannot see other VMs on the same physical host
+- Presents an MBA keypair to connect to `gateway-orchestration-command-1` via PSP
+- Does not know which physical node or hypervisor it runs on
+
+This is the isolation invariant from BRIEF-PPN-ARCHITECTURE.md §1.1 Contribution #2.
+
+### What os-orchestration does (data layer — separate from the VM/PPN layers)
+
+`os-orchestration` is stateless. It aggregates **data access** across Totebox Archives
+via the PointSav Protocol (PSP) — a capability-based binary protocol over TLS. It:
+
+- Sends signed capability objects (read permission for a specific record, fixed time window)
+- Toteboxes verify and emit only query results — never raw records
+- Holds no keys to archives; if compromised, the underlying Toteboxes remain sealed
+
+**os-orchestration does not manage compute resources.** It does not schedule VMs, allocate
+CPU, or move RAM between nodes. That is the hypervisor layer's job.
+
+### Resource pool management (PPN hypervisor layer)
+
+The PPN hypervisor (`os-infrastructure`) manages a per-node pool of CPU and RAM:
+
+- **virtio_balloon** — the balloon controller inflates the balloon in a VM (guest gives RAM
+  back to the host pool) or deflates it (guest receives more RAM). Per BRIEF §9.4.
+- **vCPU scheduling** — cgroups v2 `cpu.weight` per QEMU process; contended vCPUs
+  distributed proportionally to weight table in the capability ledger.
+- **Scope is per-node** — each physical node manages its own pool. Cross-node workload
+  placement is `gateway-orchestration-command-1`'s job (MBA-authorized scheduling).
+
+### TCB delta — what each hypervisor proves
 
 | Hypervisor | Isolation claim | Formal proof | Status |
 |---|---|---|---|
 | QEMU/KVM (Linux) | Process isolation + EPT | None | **Used for proof today on Laptop A** |
 | NetBSD/bhyve | EPT isolation; VeriExec load-time integrity | Argued (not proved) | compat bottom target |
 | seL4 (AArch64) | Machine-checked IFC; intransitive non-interference | Murray et al. 2013 | native bottom target (moonshot-kernel) |
+
+### KVM availability
+
+- **Laptop A (iMac / Intel Sandy Bridge)**: VT-x present; KVM available on Linux Mint.
+  Use `vm-prove.sh` without `--tcg`.
+- **GCP VM (foundry-workspace)**: runs AS a KVM guest; nested virtualisation NOT enabled
+  by default. Use `vm-prove.sh --tcg` (QEMU TCG). KVM can be enabled:
+  `gcloud compute instances update foundry-workspace --enable-nested-virtualization`.
+
+**Proof script:** `infrastructure/virt/vm-prove.sh`
+
+Includes `-device virtio-balloon` — installs the balloon driver in the guest. From the
+QEMU monitor (`Ctrl-A c`): `balloon 128` inflates the balloon (reclaims RAM to host pool);
+`info balloon` shows current allocation. This is the first live proof of PPN resource pool
+management.
 
 **KVM availability:**
 - **Laptop A (iMac / Intel Sandy Bridge)**: VT-x present; KVM available on Linux Mint
