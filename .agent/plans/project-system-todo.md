@@ -2,7 +2,7 @@
 schema: foundry-plan-v1
 title: project-system — Comprehensive Work Plan
 created: 2026-05-20
-updated: 2026-05-27 (Group 4 Phase 1C.a+b complete; 1C.c+d+e blockers documented)
+updated: 2026-05-28 (Phase 1C.c complete `d550217`; 1C.d still blocked on Microkit SDK)
 author: task@claude-code (session startup, sonnet-4-6)
 status: active
 ---
@@ -251,16 +251,16 @@ _[MASTER DECISION — surfaced in STAGING-outbox-draft.md §6]_
 
 - [x] **Build seL4 kernel ELF for AArch64 QEMU** _(done 2026-05-27 — Phase 1C.b; `vendor-sel4-kernel/build/aarch64-qemu/kernel.elf` built with KernelPlatform=qemu-arm-virt, KernelSel4Arch=aarch64, KernelPrinting=ON, KernelDebugBuild=ON; AArch64 static ELF entry 0xffffff8040000000)_
 
-- [ ] **[BLOCKED: seL4_tools elfloader] Boot seL4 hello-world in QEMU AArch64** — Phase 1C.c
-  seL4 kernel runs at virtual address 0xffffff8040000000; requires `elfloader` from
-  `seL4_tools` repo (separate from kernel source) to set up MMU before jumping.
-  `qemu-system-aarch64 -machine virt -cpu cortex-a53 -m 512M -nographic -kernel <elfloader+kernel image>`
-  Unblocked by: cloning `seL4_tools` + building combined elfloader+kernel+rootserver image.
+- [x] **Boot seL4 hello-world in QEMU AArch64** — Phase 1C.c _(done 2026-05-28 `d550217`;
+  elfloader entry 0x40400000; kernel at 0xffffff8040000000; "hello from seL4 rootserver"
+  confirmed. 3 root causes: KernelVerificationBuild=ON, cpio padding, QEMU -m 512M.
+  Build scripts: `vendor-sel4-project/build-support/qemu-arm-virt/`. Boot: -m 1G.)_
 
-- [ ] **[BLOCKED: Phase 1C.c + Microkit SDK] AssembleImage — Phase 1C.d**
-  `AssembleImage` step returns an actionable error. Requires Microkit SDK (`pip install microkit`)
+- [ ] **[BLOCKED: Microkit SDK tarball] AssembleImage — Phase 1C.d**
+  `AssembleImage` step returns an actionable error. Requires Microkit SDK tarball from
+  `github.com/seL4/microkit/releases` (NOT `pip install microkit` — that's a Flask helper)
   or a Rust image assembler (`moonshot-toolkit/src/assemble.rs`).
-  Unblocked by: installing Microkit SDK or implementing Rust image assembler.
+  Unblocked by: downloading Microkit SDK tarball or implementing Rust image assembler.
 
 - [ ] **Cosign the resulting image with Sigstore Cosign + customer-apex key** — Phase 1C.e
   Per `system-substrate-doctrine.md` §6.1 release-artefact format.
