@@ -130,6 +130,24 @@ header .tag {
   flex-shrink: 0; line-height: 1.6;
 }
 .bar-btn:hover { background: #4a4a4a; color: #eee; }
+
+/* ── Viewer-bar overflow menu ─────────────────────────────────────────── */
+.bar-overflow-wrap { position: relative; flex-shrink: 0; }
+.bar-overflow-menu {
+  display: none; position: absolute; right: 0; top: calc(100% + 2px);
+  background: #252526; border: 1px solid #454545; border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0,0,0,.5); min-width: 160px; padding: 4px 0;
+  z-index: 200;
+}
+.bar-overflow-menu.open { display: block; }
+.bar-overflow-menu button, .bar-overflow-menu a {
+  display: block; width: 100%; text-align: left;
+  padding: 5px 14px; background: none; border: none;
+  color: #ccc; cursor: pointer; font-size: 12px; text-decoration: none;
+  white-space: nowrap; box-sizing: border-box; line-height: 1.6;
+}
+.bar-overflow-menu button:hover, .bar-overflow-menu a:hover { background: #094771; color: #fff; }
+
 .viewer-bar .bar-link {
   font-size: 10px; color: #4d9fff; text-decoration: none; white-space: nowrap; flex-shrink: 0;
 }
@@ -1332,7 +1350,7 @@ function closeFile() {
     document.getElementById('text-viewer').style.display        = 'none';
     document.getElementById('image-viewer').style.display       = 'none';
     document.getElementById('bar-path').textContent = '';
-    document.getElementById('viewer-bar').querySelectorAll('.bar-btn, .bar-link').forEach(el => el.remove());
+    document.getElementById('viewer-bar').querySelectorAll('.bar-btn, .bar-link, .bar-overflow-wrap').forEach(el => el.remove());
     setTreeActive(null);
   }
 }
@@ -1348,19 +1366,37 @@ function hideViewerContent() {
 function updateBar(name, path) {
   document.getElementById('bar-path').textContent = name;
   const bar = document.getElementById('viewer-bar');
-  bar.querySelectorAll('.bar-btn, .bar-link').forEach(el => el.remove());
+  bar.querySelectorAll('.bar-btn, .bar-link, .bar-overflow-wrap').forEach(el => el.remove());
 
-  const copyBtn = document.createElement('button');
-  copyBtn.className = 'bar-btn';
-  copyBtn.textContent = '⎘ Copy name';
-  copyBtn.title = 'Copy filename to clipboard';
-  copyBtn.addEventListener('click', () => {
-    const confirm = () => {
-      copyBtn.textContent = '✓ Copied';
-      setTimeout(() => { copyBtn.textContent = '⎘ Copy name'; }, 1500);
-    };
+  // Download — primary visible action
+  const dlBtn = document.createElement('a');
+  dlBtn.className = 'bar-btn';
+  dlBtn.href = path;
+  dlBtn.download = name;
+  dlBtn.textContent = '⬇ Download';
+  bar.appendChild(dlBtn);
+
+  // ⋯ overflow wrap: secondary actions behind one click
+  const overflowWrap = document.createElement('div');
+  overflowWrap.className = 'bar-overflow-wrap';
+
+  const overflowBtn = document.createElement('button');
+  overflowBtn.className = 'bar-btn';
+  overflowBtn.id = 'bar-overflow-btn';
+  overflowBtn.textContent = '⋯';
+  overflowBtn.title = 'More actions';
+  overflowWrap.appendChild(overflowBtn);
+
+  const overflowMenu = document.createElement('div');
+  overflowMenu.className = 'bar-overflow-menu';
+  overflowMenu.id = 'bar-overflow-menu';
+
+  const copyItem = document.createElement('button');
+  copyItem.textContent = '⎘ Copy name';
+  copyItem.addEventListener('click', () => {
+    closeBarOverflow();
     if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(name).then(confirm);
+      navigator.clipboard.writeText(name);
     } else {
       const tmp = document.createElement('textarea');
       tmp.value = name;
@@ -1369,39 +1405,38 @@ function updateBar(name, path) {
       tmp.select();
       document.execCommand('copy');
       document.body.removeChild(tmp);
-      confirm();
     }
   });
-  bar.appendChild(copyBtn);
+  overflowMenu.appendChild(copyItem);
 
-  const printBtn = document.createElement('button');
-  printBtn.className = 'bar-btn';
-  printBtn.textContent = '⎙ Print';
-  printBtn.addEventListener('click', printCurrent);
-  bar.appendChild(printBtn);
+  const printItem = document.createElement('button');
+  printItem.textContent = '⎙ Print';
+  printItem.addEventListener('click', () => { closeBarOverflow(); printCurrent(); });
+  overflowMenu.appendChild(printItem);
 
-  const dlBtn = document.createElement('a');
-  dlBtn.className = 'bar-btn';
-  dlBtn.href = path;
-  dlBtn.download = name;
-  dlBtn.textContent = '⬇ Download';
-  bar.appendChild(dlBtn);
+  const newTabItem = document.createElement('a');
+  newTabItem.textContent = 'Open in new tab ↗';
+  newTabItem.href = path;
+  newTabItem.target = '_blank';
+  newTabItem.rel = 'noreferrer';
+  newTabItem.addEventListener('click', closeBarOverflow);
+  overflowMenu.appendChild(newTabItem);
 
-  const link = document.createElement('a');
-  link.className = 'bar-link';
-  link.href = path;
-  link.target = '_blank';
-  link.rel = 'noreferrer';
-  link.textContent = 'open in new tab ↗';
-  bar.appendChild(link);
+  const reloadItem = document.createElement('button');
+  reloadItem.textContent = '↻ Reload page';
+  reloadItem.title = 'Reload — reopens this file automatically';
+  reloadItem.addEventListener('click', () => { closeBarOverflow(); location.reload(); });
+  overflowMenu.appendChild(reloadItem);
 
-  const reloadBtn = document.createElement('button');
-  reloadBtn.className = 'bar-btn';
-  reloadBtn.textContent = '↻ Reload';
-  reloadBtn.title = 'Reload page — reopens this file automatically';
-  reloadBtn.addEventListener('click', () => location.reload());
-  bar.appendChild(reloadBtn);
+  overflowBtn.addEventListener('click', e => {
+    e.stopPropagation();
+    overflowMenu.classList.toggle('open');
+  });
 
+  overflowWrap.appendChild(overflowMenu);
+  bar.appendChild(overflowWrap);
+
+  // Close — always last
   const closeBtn = document.createElement('button');
   closeBtn.className = 'bar-btn';
   closeBtn.textContent = '✕';
@@ -1410,19 +1445,17 @@ function updateBar(name, path) {
   bar.appendChild(closeBtn);
 }
 
+function closeBarOverflow() {
+  const m = document.getElementById('bar-overflow-menu');
+  if (m) m.classList.remove('open');
+}
+
 // ── Rename + Duplicate — viewer-bar buttons for writable files ───────────────
-// Inserted by openFile() after the editor responds writable:true, so the
-// buttons only appear for files the service will let us mutate. Placed in the
-// viewer bar after the existing "⎘ Copy name" button.
+// Inserted by openFile() after the editor responds writable:true.
+// Placed immediately before the ⋯ overflow wrap.
 function addRenameDuplicateButtons() {
   const bar = document.getElementById('viewer-bar');
   if (!bar) return;
-  // Anchor: insert after "⎘ Copy name" so writable verbs cluster together
-  const buttons = bar.querySelectorAll('.bar-btn');
-  let anchor = null;
-  for (const b of buttons) {
-    if (b.textContent && b.textContent.indexOf('Copy name') >= 0) { anchor = b; break; }
-  }
 
   const renameBtn = document.createElement('button');
   renameBtn.className = 'bar-btn';
@@ -1436,9 +1469,10 @@ function addRenameDuplicateButtons() {
   dupBtn.title = 'Duplicate this file in place';
   dupBtn.addEventListener('click', duplicateCurrent);
 
-  if (anchor && anchor.nextSibling) {
-    anchor.parentNode.insertBefore(renameBtn, anchor.nextSibling);
-    anchor.parentNode.insertBefore(dupBtn, renameBtn.nextSibling);
+  const overflowWrap = bar.querySelector('.bar-overflow-wrap');
+  if (overflowWrap) {
+    bar.insertBefore(renameBtn, overflowWrap);
+    bar.insertBefore(dupBtn, overflowWrap);
   } else {
     bar.appendChild(renameBtn);
     bar.appendChild(dupBtn);
@@ -2378,7 +2412,7 @@ async function closeTab(idx) {
     document.getElementById('text-viewer').style.display = 'none';
     document.getElementById('image-viewer').style.display = 'none';
     document.getElementById('bar-path').textContent = 'No file selected';
-    document.getElementById('viewer-bar').querySelectorAll('.bar-btn, .bar-link').forEach(el => el.remove());
+    document.getElementById('viewer-bar').querySelectorAll('.bar-btn, .bar-link, .bar-overflow-wrap').forEach(el => el.remove());
     sessionStorage.removeItem('wb-path');
     sessionStorage.removeItem('wb-name');
     setTreeActive(null);
@@ -2530,7 +2564,10 @@ function showCtxMenu(x, y, items) {
   menu.style.top  = Math.min(y, window.innerHeight - menu.offsetHeight - 10) + 'px';
 }
 function hideCtxMenu() { document.getElementById('ctx-menu').style.display = 'none'; }
-document.addEventListener('click', e => { if (!e.target.closest('#ctx-menu')) hideCtxMenu(); });
+document.addEventListener('click', e => {
+  if (!e.target.closest('#ctx-menu')) hideCtxMenu();
+  if (!e.target.closest('.bar-overflow-wrap')) closeBarOverflow();
+});
 document.addEventListener('contextmenu', e => {
   if (!e.target.closest('.tree-item')) hideCtxMenu();
 });
@@ -2639,7 +2676,7 @@ async function deleteFileByPath(path, name, treeItem) {
           document.getElementById('text-viewer').style.display = 'none';
           document.getElementById('image-viewer').style.display = 'none';
           document.getElementById('bar-path').textContent = 'No file selected';
-          document.getElementById('viewer-bar').querySelectorAll('.bar-btn, .bar-link').forEach(el => el.remove());
+          document.getElementById('viewer-bar').querySelectorAll('.bar-btn, .bar-link, .bar-overflow-wrap').forEach(el => el.remove());
           sessionStorage.removeItem('wb-path');
           sessionStorage.removeItem('wb-name');
         }
