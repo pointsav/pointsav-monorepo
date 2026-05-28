@@ -1076,6 +1076,19 @@ fn home_chrome(
                         }
                     }
                     nav.right {
+                        div.topnav-search-wrap {
+                            form.topnav-search action="/search" method="get" role="search" {
+                                input #header-search-q
+                                    type="search"
+                                    name="q"
+                                    placeholder="Search…"
+                                    autocomplete="off"
+                                    aria-label="Search this wiki"
+                                    spellcheck="false";
+                                button.topnav-search-btn type="submit" aria-label="Search" { "→" }
+                            }
+                            div.ac-dropdown #search-autocomplete-dropdown {}
+                        }
                         @if woodfine_projects {
                             a href="https://home.woodfinegroup.com" { "Home" }
                             a href="https://projects.woodfinegroup.com" { "Projects" }
@@ -2150,6 +2163,19 @@ fn wiki_chrome(
                         }
                     }
                     nav.right {
+                        div.topnav-search-wrap {
+                            form.topnav-search action="/search" method="get" role="search" {
+                                input #header-search-q
+                                    type="search"
+                                    name="q"
+                                    placeholder="Search…"
+                                    autocomplete="off"
+                                    aria-label="Search this wiki"
+                                    spellcheck="false";
+                                button.topnav-search-btn type="submit" aria-label="Search" { "→" }
+                            }
+                            div.ac-dropdown #search-autocomplete-dropdown {}
+                        }
                         @if woodfine_projects {
                             a href="https://home.woodfinegroup.com" { "Home" }
                             a href="https://projects.woodfinegroup.com" { "Projects" }
@@ -2554,6 +2580,14 @@ fn wiki_chrome(
                         aside.toc {
                             div.toc__header {
                                 span.toc__title { "Contents" }
+                                button.toc-toggle #toc-toggle
+                                    aria-expanded="true"
+                                    title="Toggle table of contents"
+                                { "[hide]" }
+                                button.toc-pin-btn #toc-pin-btn
+                                    aria-pressed="false"
+                                    title="Pin table of contents"
+                                { "Pin" }
                             }
                             ol #toc-list {
                                 @for (id, text, level, num) in &numbered_headings {
@@ -3741,6 +3775,19 @@ fn chrome(
                         (PreEscaped(WORDMARK_SVG_POINTSAV))
                     }
                     nav.right {
+                        div.topnav-search-wrap {
+                            form.topnav-search action="/search" method="get" role="search" {
+                                input #header-search-q
+                                    type="search"
+                                    name="q"
+                                    placeholder="Search…"
+                                    autocomplete="off"
+                                    aria-label="Search this wiki"
+                                    spellcheck="false";
+                                button.topnav-search-btn type="submit" aria-label="Search" { "→" }
+                            }
+                            div.ac-dropdown #search-autocomplete-dropdown {}
+                        }
                         a href="https://home.pointsav.com" { "Home" }
                         a href="https://software.pointsav.com" target="_blank" rel="noopener" { "Software" }
                         a href="https://pointsav.com" target="_blank" rel="noopener" { "Newsroom" }
