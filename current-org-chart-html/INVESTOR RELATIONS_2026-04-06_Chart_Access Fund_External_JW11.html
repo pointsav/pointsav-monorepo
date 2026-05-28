@@ -390,7 +390,15 @@
     cursor:'pointer', borderRadius:'4px', padding:'4px 8px',
     font:'700 11px/1 -apple-system,sans-serif',
   });
-  toolbar.append(editBtn, dupBtn, statusEl);
+  const delBtn = document.createElement('button');
+  delBtn.textContent = '✕ Delete';
+  delBtn.setAttribute('data-drag-ui','1');
+  Object.assign(delBtn.style, {
+    background:'#333', border:'1px solid #555', color:'#666',
+    cursor:'pointer', borderRadius:'4px', padding:'4px 8px',
+    font:'700 11px/1 -apple-system,sans-serif',
+  });
+  toolbar.append(editBtn, dupBtn, delBtn, statusEl);
   document.body.appendChild(toolbar);
 
   /* print: hide toolbar */
@@ -526,6 +534,7 @@
   document.addEventListener('keydown', e => {
     if (e.key==='Escape') { deselect(); return; }
     if ((e.ctrlKey||e.metaKey)&&e.key==='d'&&editMode&&selected&&selected.tagName.toLowerCase()!=='path') { e.preventDefault(); duplicateSelected(); return; }
+    if ((e.key==='Delete'||e.key==='Backspace')&&editMode&&selected) { e.preventDefault(); deleteSelected(); return; }
     if (!editMode||!selected||selected.tagName.toLowerCase()==='path') return;
     const s=e.shiftKey?10:1;
     const l=parseFloat(selected.style.left)||0, t=parseFloat(selected.style.top)||0;
@@ -556,6 +565,8 @@
     }
     dupBtn.style.color=on?'#ccc':'#666';
     dupBtn.style.borderColor=on?'#555':'#444';
+    delBtn.style.color=on?'#ccc':'#666';
+    delBtn.style.borderColor=on?'#555':'#444';
     if (!on) deselect();
   }
   editBtn.addEventListener('click', () => setEditMode(!editMode));
@@ -580,7 +591,20 @@
     select(clone);
     scheduleSave();
   }
+  function deleteSelected() {
+    if (!selected) return;
+    if (selected.tagName.toLowerCase()==='path') {
+      selected.remove();
+      deselect();
+    } else {
+      findConnected(selected).forEach(({path}) => path.remove());
+      selected.remove();
+      deselect();
+    }
+    scheduleSave();
+  }
   dupBtn.addEventListener('click', () => { if (editMode) duplicateSelected(); });
+  delBtn.addEventListener('click', () => { if (editMode) deleteSelected(); });
 
   function scheduleSave() {
     clearTimeout(saveTimer);
