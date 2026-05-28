@@ -85,6 +85,7 @@ Last updated: 2026-05-27.
 | app-workplace-pdf | Scaffold-coded | app-workplace | Wave 2; pdfium-render crate (Apache 2.0); CLAUDE.md + NEXT.md; src-tauri stub; no Tauri crate yet |
 | app-workplace-presentation | Active | app-workplace | Wave 1; Tauri v1.7 slides; CLAUDE.md + NEXT.md + src-tauri skeleton added 2026-05-27 |
 | app-workplace-proforma | Active | app-workplace | Wave 2; Tauri v1.7; CLAUDE.md + NEXT.md; minimumSystemVersion 10.13 confirmed |
+| app-workplace-http-prototype | Active | app-workplace | HTTP prototype; port 9110; Stage 1 Memo active; rust-embed; WireGuard PPN; retired when Wave 1 ships |
 | app-workplace-workbench | Active | app-workplace | Wave 1; Tauri v1.7 WebView shell; configurable port; CLAUDE.md + NEXT.md + src-tauri skeleton added 2026-05-27 |
 
 ## OS (`os-*`)
@@ -191,7 +192,7 @@ Last updated: 2026-05-27.
 
 ## Summary (2026-05-27)
 
-- **Active:** 7 (`app-console-bookkeeper`, `app-console-keys`, `app-workplace-memo`, `app-workplace-presentation`, `app-workplace-proforma`, `app-workplace-workbench`, `service-extraction`)
+- **Active:** 8 (`app-console-bookkeeper`, `app-console-keys`, `app-workplace-http-prototype`, `app-workplace-memo`, `app-workplace-presentation`, `app-workplace-proforma`, `app-workplace-workbench`, `service-extraction`)
 - **Scaffold-coded:** 56 (includes `app-orchestration-slm` 2026-05-27; `app-console-system` 2026-05-23; `app-workplace-gis` + `app-workplace-pdf` 2026-05-28; `app-workplace-memo` reclassified Active)
 - **Reserved-folder:** 39 (added exchange, gis, market, slm orchestration rows; `app-workplace-bim` remains reserved-folder)
 - **Defect:** 0 (all 5 prior defects resolved 2026-04-23 — see `cleanup-log.md` Completed migrations)
@@ -199,4 +200,4 @@ Last updated: 2026-05-27.
 - **Dormant:** 0
 - **Archived:** 0
 
-**Total rows:** 105. Last updated: 2026-05-28.
+**Total rows:** 106. Last updated: 2026-05-28.
