@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Memo — Workplace</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header id="app-header">
+  <span class="logo"><a href="/" style="color:inherit;text-decoration:none">Workplace</a></span>
+  <span class="version">Memo</span>
+</header>
+
+<div id="memo-layout">
+  <div id="memo-toolbar">
+    <button id="btn-bold"  title="Bold (Ctrl+B)"   onclick="fmt('bold')"><b>B</b></button>
+    <button id="btn-italic" title="Italic (Ctrl+I)" onclick="fmt('italic')"><i>I</i></button>
+    <span class="sep"></span>
+    <button id="btn-h1" title="Heading 1" onclick="fmtBlock('h1')">H1</button>
+    <button id="btn-h2" title="Heading 2" onclick="fmtBlock('h2')">H2</button>
+    <button id="btn-h3" title="Heading 3" onclick="fmtBlock('h3')">H3</button>
+    <span class="sep"></span>
+    <button id="btn-ul" title="Bullet list" onclick="fmt('insertUnorderedList')">•</button>
+    <span class="sep"></span>
+    <button id="btn-save" title="Save (Ctrl+S)" onclick="saveFile()">Save</button>
+    <div class="open-wrap">
+      <button id="btn-open-toggle" title="Open file" onclick="toggleOpenMenu()">Open ▾</button>
+      <div id="open-menu">
+        <button onclick="promptNewDocument()">+ New document</button>
+        <div class="menu-sep"></div>
+        <div id="open-menu-files"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="memo-editor"
+       contenteditable="true"
+       spellcheck="true"
+       data-placeholder="Start typing…"></div>
+
+  <div id="memo-status">No file open</div>
+</div>
+
+<script>
+// ── State ────────────────────────────────────────────────────────────────
+let currentPath = null;
+let dirty = false;
+let autoSaveTimer = null;
+
+// ── Init ─────────────────────────────────────────────────────────────────
+(function init() {
+  const params = new URLSearchParams(window.location.search);
+  const path = params.get('path');
+  if (path) {
+    loadFile(path);
+  } else {
+    setStatus('No file open — use Open ▾ to open or create a file');
+  }
+  loadOpenMenuFiles();
+})();
+
+// ── File I/O ─────────────────────────────────────────────────────────────
+async function loadFile(path) {
+  try {
+    const res = await fetch(`/api/files/read?path=${encodeURIComponent(path)}`);
+    if (!res.ok) { setStatus('Error loading file.'); return; }
+    const content = await res.text();
+    document.getElementById('memo-editor').innerHTML = content;
+    currentPath = path;
+    const name = path.split('/').pop();
+    setDirty(false);
+    document.title = `${name} — Memo`;
+    setStatus(name);
+  } catch {
+    setStatus('Network error loading file.');
+  }
+}
+
+async function saveFile() {
+  if (!currentPath) {
+    const name = prompt('Save as (document name):');
+    if (!name || !name.trim()) return;
+    try {
+      const res = await fetch('/api/files/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: name.trim() }),
+      });
+      if (!res.ok) { setStatus('Failed to create file.'); return; }
+      const { path } = await res.json();
+      currentPath = path;
+      history.replaceState(null, '', `/memo?path=${encodeURIComponent(path)}`);
+    } catch {
+      setStatus('Network error creating file.'); return;
+    }
+  }
+  const content = document.getElementById('memo-editor').innerHTML;
+  try {
+    const res = await fetch('/api/files/save', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ path: currentPath, content }),
+    });
+    if (res.ok) {
+      setDirty(false);
+      const name = currentPath.split('/').pop();
+      setStatus(`Saved — ${name}`);
+      setTimeout(() => setStatus(name), 2000);
+    } else {
+      setStatus('Save failed.');
+    }
+  } catch {
+    setStatus('Network error saving file.');
+  }
+}
+
+async function promptNewDocument() {
+  hideOpenMenu();
+  const name = prompt('Document name:');
+  if (!name || !name.trim()) return;
+  try {
+    const res = await fetch('/api/files/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: name.trim() }),
+    });
+    if (!res.ok) { alert('Failed to create document.'); return; }
+    const { path } = await res.json();
+    window.location = `/memo?path=${encodeURIComponent(path)}`;
+  } catch {
+    alert('Network error.');
+  }
+}
+
+async function loadOpenMenuFiles() {
+  try {
+    const res = await fetch('/api/files');
+    const files = await res.json();
+    const container = document.getElementById('open-menu-files');
+    if (!files.length) {
+      container.innerHTML = '<button disabled style="color:var(--text-dim)">No files yet</button>';
+      return;
+    }
+    container.innerHTML = files.map(f =>
+      `<a href="/memo?path=${encodeURIComponent(f.path)}">${escHtml(f.name)}</a>`
+    ).join('');
+  } catch { /* silent */ }
+}
+
+// ── Formatting ───────────────────────────────────────────────────────────
+function fmt(cmd) {
+  document.execCommand(cmd, false, null);
+  document.getElementById('memo-editor').focus();
+  updateToolbarState();
+}
+
+function fmtBlock(tag) {
+  document.execCommand('formatBlock', false, tag);
+  document.getElementById('memo-editor').focus();
+  updateToolbarState();
+}
+
+function updateToolbarState() {
+  document.getElementById('btn-bold').classList.toggle('active', document.queryCommandState('bold'));
+  document.getElementById('btn-italic').classList.toggle('active', document.queryCommandState('italic'));
+  document.getElementById('btn-ul').classList.toggle('active', document.queryCommandState('insertUnorderedList'));
+  const block = document.queryCommandValue('formatBlock').toLowerCase();
+  ['h1','h2','h3'].forEach(t => {
+    document.getElementById(`btn-${t}`).classList.toggle('active', block === t);
+  });
+}
+
+// ── Dirty tracking ───────────────────────────────────────────────────────
+function setDirty(val) {
+  dirty = val;
+  if (val) {
+    const base = currentPath ? currentPath.split('/').pop() : 'Untitled';
+    document.title = `• ${base} — Memo`;
+  }
+  if (autoSaveTimer) clearTimeout(autoSaveTimer);
+  if (val && currentPath) {
+    autoSaveTimer = setTimeout(saveFile, 30000);
+  }
+}
+
+// ── Open menu ────────────────────────────────────────────────────────────
+function toggleOpenMenu() {
+  const menu = document.getElementById('open-menu');
+  const isOpen = menu.classList.contains('open');
+  if (!isOpen) loadOpenMenuFiles();
+  menu.classList.toggle('open', !isOpen);
+}
+
+function hideOpenMenu() {
+  document.getElementById('open-menu').classList.remove('open');
+}
+
+// ── Utility ──────────────────────────────────────────────────────────────
+function setStatus(msg) {
+  document.getElementById('memo-status').textContent = msg;
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── Event wiring ─────────────────────────────────────────────────────────
+document.getElementById('memo-editor').addEventListener('input', () => setDirty(true));
+document.addEventListener('selectionchange', updateToolbarState);
+
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+    e.preventDefault();
+    saveFile();
+  }
+});
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('.open-wrap')) hideOpenMenu();
+});
+</script>
+</body>
+</html>
