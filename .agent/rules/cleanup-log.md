@@ -88,26 +88,42 @@ Newest on top. Append a dated block when a session includes meaningful cleanup w
 
 ---
 
-## 2026-05-28 — app-mediakit-knowledge Phase 6A+6B+6C — AJAX nav fix, home page caps, topnav header
+## 2026-05-28 — app-mediakit-knowledge Phase 7A — restore TOC toggle/pin, add topnav search
 
-- **Phase 6A (wiki.js):** Root cause of "articles not loading" confirmed — `navigateTo()` was
-  targeting 3 stale selectors from Phase 2 DOM renames: `#vector-toc` → `aside.toc`,
-  `h1.page-title` → `h1.article__title`, `.wiki-breadcrumb` → `nav.crumb`. All 6 occurrences
-  fixed. Also fixed `initToc()`, `initTocPin()` getElementById → querySelector, and
-  `initActiveTocTracking()` heading selector `.mw-body h2[id]` → `.prose h2[id], .prose h3[id]`.
-  server.rs: added `id="toc-list"` to TOC `<ol>`.
+- **Root cause diagnosis:** Phase 6C (commit `afa67bfa`) replaced the 3-row `header.shell-header`
+  with a single-row `header.topnav` but (a) dropped the TOC toggle/pin buttons from `aside.toc`,
+  causing `initToc()` and `initTocPin()` in wiki.js to early-return (IDs not found), and (b)
+  removed search entirely — no `#header-search-q` emitted, so `initSearchAutocomplete()` no-ops.
+  The AJAX navigation link fix (Phase 6A) was already committed but binary rebuild still pending.
 
-- **Phase 6B (server.rs home page):** Removed `div.wiki-home-uncategorised` block (orphan files
-  should not surface on the front page). Guides capped at 6 (`.iter().take(6)`). Data fetch
-  aligned: `recent_topics_by_last_edited(&buckets, 10)` → `(&buckets, 8)`.
+- **`src/server.rs` — TOC buttons restored** in `div.toc__header` inside `aside.toc`. Added
+  `button.toc-toggle #toc-toggle` and `button.toc-pin-btn #toc-pin-btn` alongside
+  `span.toc__title`. These IDs now exist in the DOM so `initToc()` and `initTocPin()` execute.
 
-- **Phase 6C (server.rs + style.css):** Replaced 3-row `header.shell-header` (152px) with
-  single-row `header.topnav` (80px) in all three chrome functions. `WORDMARK_SVG_POINTSAV`
-  constant added: verbatim PointSav SVG from `home.pointsav.com` (320×80px). `.topnav` CSS:
-  `1fr auto 1fr` grid, Oswald 11px uppercase navy links, dark-mode SVG invert.
-  `--header-h` updated 152px → 80px.
+- **`src/server.rs` — search form added to all three topnav locations** (`home_chrome`,
+  `wiki_chrome`, `chrome`). `div.topnav-search-wrap` wraps `form.topnav-search` (with
+  `input #header-search-q`) and `div.ac-dropdown #search-autocomplete-dropdown {}`. Both IDs
+  are required by `initSearchAutocomplete()` which calls `getElementById` and early-returns if
+  either is null.
 
-- **Commit:** `afa67bfa` (Jennifer). 106/106 tests pass. Stage 6 + binary rebuild pending.
+- **`static/style.css` — two CSS blocks added:**
+  - `.topnav-search-wrap` / `.topnav-search` / `#search-autocomplete-dropdown` / `.ac-item`
+    (topnav search + autocomplete dropdown; mobile override narrows input to 100px at ≤768px).
+    Mobile search stays visible because the existing `@media (max-width: 768px)` rule only hides
+    `a:not(.lang-toggle)` and `.wiki-appearance-wrap` — a `<form>` element is not affected.
+  - `.toc__header { display: flex }` + `#toc-toggle`, `#toc-pin-btn` button styles.
+    `.toc__title { flex: 1 }` updated (border-bottom/padding moved to `.toc__header` container).
+
+- **`static/wiki.js` — no changes needed.** Post-Phase-6A selectors (`aside.toc`,
+  `h1.article__title`, `nav.crumb`) are already correct. Search and TOC init functions already
+  reference the correct IDs — they were silently no-opping because the DOM elements were absent.
+
+- **Tests:** `cargo check` clean. `cargo test` exits 0. Only pre-existing integration test
+  failures in `collab_test.rs` / `doorman_test.rs` (stale `AppState.collab` / `enable_collab`
+  fields from a removed module — unrelated to this change).
+
+- **Stage 6 pending:** this commit (Phase 7A) + prior `afa67bfa` (Phase 6A/6B/6C) need
+  `bin/promote.sh` from Command Session + nightly binary rebuild to reach live service.
 
 ---
 
