@@ -109,7 +109,10 @@ ALPHA_LIFESTYLE = {
 ALPHA_HARDWARE = {
     # Home Depot is in BOTH ALPHA_ANCHORS (can initiate clusters) and ALPHA_HARDWARE
     # (contributes s_hw scoring when another Fortune-scale anchor is the cluster origin).
-    "NA": {"home-depot-us", "home-depot-ca", "home-depot-mx", "alaska-industrial-hardware-us", "menards-us"},
+    "NA": {"home-depot-us", "home-depot-ca", "home-depot-mx", "alaska-industrial-hardware-us", "menards-us",
+           # Phase 23: hardware #2 chains promoted for NA T3 parity with EU
+           "lowes-us",           # Lowe's US: Fortune 500 hardware #2, 1,875+ stores
+           "canadian-tire-ca"},  # Canadian Tire: CA hardware #1 by count, 600+ stores
     "EU": {
         # Primary large-format hardware anchors — sufficient alone for T2
         "leroy-merlin-es", "leroy-merlin-it", "leroy-merlin-gr", "leroy-merlin-pl",
@@ -128,7 +131,8 @@ ALPHA_HARDWARE = {
 }
 GENERIC_HARDWARE = {
     # lowes-ca removed 2026-05-22: Lowe's exited Canada; 1 stale record
-    "NA": {"lowes-us", "canadian-tire-ca", "peavey-mart-ca"},
+    # lowes-us + canadian-tire-ca promoted to ALPHA_HARDWARE Phase 23 (2026-05-28)
+    "NA": {"peavey-mart-ca"},
     "EU": {
         # ── TODO: these chains need better OSM brand:wikidata coverage ──────────
         # Each currently has 0 records. Once re-ingested with sufficient data,
