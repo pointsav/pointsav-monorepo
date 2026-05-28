@@ -38,8 +38,11 @@ Status values: `stub` → `scaffolded` → `language-cleared` → `submission-re
 
 **J1 — Retail Co-location:**
 - ~~Language pass~~ — COMPLETE 2026-05-28 (`forbidden_terms_cleared: true`; body scanned clean)
-- Phase 22 CSV from project-gis → OLS regression (§7.2) → F6 coefficient forest plot
-- F1–F5 figures — data request sent to project-gis 2026-05-27; pending production
+- ~~F1–F5 figures~~ — READY at project-gis `work/figures/` (produced 2026-05-28)
+- ~~Phase 22 CSV~~ — READY at project-gis `work/clusters-ols.csv` (6,493 rows, 2026-05-28)
+- ~~§7.0 preliminary OLS~~ — COMPLETE 2026-05-28: Model A (T1 span β=+0.489, p<0.001) + Model B (R²=0.503); F6 partial produced
+- §7.2 primary spec (catchment_entropy ~ tier + log[pop_150km] + country FE) — pending Phase 24B (Kontur population join + O-D data)
+- F6 update with §7.2 spec results — pending Phase 24B
 - §5.3 TODO slots (LODES employment join) — executable once `build-geometric-ranking.py` run
 - §5.1 country-by-country T1 table; Appendix B chain table; Appendix C data flow diagram
 - Permutation test (`sim-tier-permutation.py`) — to be written

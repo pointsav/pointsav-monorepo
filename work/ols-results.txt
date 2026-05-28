@@ -1,0 +1,95 @@
+J1 OLS REGRESSION RESULTS — Phase 22 clusters
+N = 6,481 clusters | 17 countries
+Tier: T1=1,746 T2=3,388 T3=1,347
+
+MODEL 1: log(span_km) ~ T1 + T2 + country FE
+                            OLS Regression Results                            
+==============================================================================
+Dep. Variable:            log_span_km   R-squared:                       0.121
+Model:                            OLS   Adj. R-squared:                  0.118
+Method:                 Least Squares   F-statistic:                     43.19
+Date:                Thu, 28 May 2026   Prob (F-statistic):           3.56e-07
+Time:                        03:50:46   Log-Likelihood:                -7748.3
+No. Observations:                6481   AIC:                         1.553e+04
+Df Residuals:                    6462   BIC:                         1.566e+04
+Df Model:                          18                                         
+Covariance Type:              cluster                                         
+====================================================================================
+                       coef    std err          z      P>|z|      [0.025      0.975]
+------------------------------------------------------------------------------------
+Intercept           -0.0187      0.024     -0.793      0.428      -0.065       0.028
+C(country)[T.CA]    -0.1627      0.024     -6.683      0.000      -0.210      -0.115
+C(country)[T.DE]    -0.0239      0.013     -1.791      0.073      -0.050       0.002
+C(country)[T.DK]     0.1766      0.032      5.531      0.000       0.114       0.239
+C(country)[T.ES]     0.4093      0.006     63.937      0.000       0.397       0.422
+C(country)[T.FI]     0.1309      0.033      3.951      0.000       0.066       0.196
+C(country)[T.FR]    -0.2064      0.008    -26.085      0.000      -0.222      -0.191
+C(country)[T.GB]     0.7603      0.031     24.855      0.000       0.700       0.820
+C(country)[T.GR]     0.4039      0.015     27.710      0.000       0.375       0.432
+C(country)[T.IT]    -0.0225      0.006     -4.038      0.000      -0.033      -0.012
+C(country)[T.MX]     0.2558      0.006     44.147      0.000       0.244       0.267
+C(country)[T.NL]     0.3097      0.006     50.321      0.000       0.298       0.322
+C(country)[T.NO]    -0.2613      0.021    -12.564      0.000      -0.302      -0.221
+C(country)[T.PL]     0.2200      0.018     12.021      0.000       0.184       0.256
+C(country)[T.PT]    -0.1253      0.016     -8.068      0.000      -0.156      -0.095
+C(country)[T.SE]    -0.4117      0.009    -48.071      0.000      -0.429      -0.395
+C(country)[T.US]     0.0084      0.017      0.491      0.623      -0.025       0.042
+t1_dummy             0.4889      0.066      7.355      0.000       0.359       0.619
+t2_dummy             0.0084      0.040      0.211      0.833      -0.069       0.086
+==============================================================================
+Omnibus:                      608.088   Durbin-Watson:                   1.857
+Prob(Omnibus):                  0.000   Jarque-Bera (JB):              790.962
+Skew:                          -0.847   Prob(JB):                    1.76e-172
+Kurtosis:                       3.244   Cond. No.                         55.9
+==============================================================================
+
+Notes:
+[1] Standard Errors are robust to cluster correlation (cluster)
+
+MODEL 2: T1_dummy ~ composition + log(span_km) + tight + country FE
+                            OLS Regression Results                            
+==============================================================================
+Dep. Variable:               t1_dummy   R-squared:                       0.503
+Model:                            OLS   Adj. R-squared:                  0.501
+Method:                 Least Squares   F-statistic:                     240.2
+Date:                Thu, 28 May 2026   Prob (F-statistic):           9.33e-15
+Time:                        03:50:46   Log-Likelihood:                -1665.9
+No. Observations:                6481   AIC:                             3378.
+Df Residuals:                    6458   BIC:                             3534.
+Df Model:                          22                                         
+Covariance Type:              cluster                                         
+====================================================================================
+                       coef    std err          z      P>|z|      [0.025      0.975]
+------------------------------------------------------------------------------------
+Intercept           -0.2187      0.033     -6.604      0.000      -0.284      -0.154
+C(country)[T.CA]     0.2167      0.020     11.056      0.000       0.178       0.255
+C(country)[T.DE]     0.2250      0.015     15.035      0.000       0.196       0.254
+C(country)[T.DK]     0.2242      0.019     11.702      0.000       0.187       0.262
+C(country)[T.ES]     0.1389      0.017      8.187      0.000       0.106       0.172
+C(country)[T.FI]     0.2074      0.018     11.368      0.000       0.172       0.243
+C(country)[T.FR]     0.2047      0.018     11.630      0.000       0.170       0.239
+C(country)[T.GB]     0.1343      0.023      5.765      0.000       0.089       0.180
+C(country)[T.GR]     0.1980      0.015     13.281      0.000       0.169       0.227
+C(country)[T.IT]     0.0726      0.017      4.192      0.000       0.039       0.107
+C(country)[T.MX]    -0.1161      0.036     -3.211      0.001      -0.187      -0.045
+C(country)[T.NL]     0.0305      0.015      2.000      0.045       0.001       0.060
+C(country)[T.NO]     0.1853      0.014     13.558      0.000       0.158       0.212
+C(country)[T.PL]     0.2824      0.014     20.010      0.000       0.255       0.310
+C(country)[T.PT]     0.2617      0.027      9.805      0.000       0.209       0.314
+C(country)[T.SE]     0.3262      0.032     10.115      0.000       0.263       0.389
+C(country)[T.US]     0.2076      0.023      8.846      0.000       0.162       0.254
+has_price_club       0.6393      0.028     22.844      0.000       0.584       0.694
+has_lifestyle        0.3111      0.035      9.010      0.000       0.243       0.379
+has_electronics      0.4892      0.025     19.672      0.000       0.440       0.538
+has_sport            0.1350      0.040      3.370      0.001       0.056       0.213
+log_span_km          0.0828      0.017      4.999      0.000       0.050       0.115
+tight                0.0463      0.043      1.078      0.281      -0.038       0.130
+==============================================================================
+Omnibus:                      164.876   Durbin-Watson:                   1.802
+Prob(Omnibus):                  0.000   Jarque-Bera (JB):              185.679
+Skew:                          -0.362   Prob(JB):                     4.79e-41
+Kurtosis:                       3.406   Cond. No.                         56.1
+==============================================================================
+
+Notes:
+[1] Standard Errors are robust to cluster correlation (cluster)
