@@ -50,7 +50,7 @@
   var STORAGE_KEY_TOC = 'vector-toc-expanded';
 
   function initToc() {
-    var toc    = document.getElementById('vector-toc');
+    var toc    = document.querySelector('aside.toc');
     var toggle = document.getElementById('toc-toggle');
     var list   = document.getElementById('toc-list');
     if (!toc || !toggle || !list) return;
@@ -89,7 +89,7 @@
   function initTocPin() {
     var pinBtn = document.getElementById('toc-pin-btn');
     if (!pinBtn) return;
-    var toc    = document.getElementById('vector-toc');
+    var toc    = document.querySelector('aside.toc');
 
     var pinned = localStorage.getItem(STORAGE_KEY_PIN) === '1';
     applyPinState(toc, pinBtn, pinned);
@@ -715,7 +715,7 @@
     var tocList = document.getElementById('toc-list');
     if (!tocList) return;
 
-    var headings = document.querySelectorAll('.mw-body h2[id], .mw-body h3[id]');
+    var headings = document.querySelectorAll('.prose h2[id], .prose h3[id]');
     if (!headings.length) return;
 
     if (_sectionObserver) {
@@ -864,13 +864,13 @@
         if (contentEl) contentEl.innerHTML = newContent.innerHTML;
 
         // Swap desktop TOC (re-init events after swap)
-        var newToc = doc.querySelector('#vector-toc');
-        var tocEl  = document.querySelector('#vector-toc');
+        var newToc = doc.querySelector('aside.toc');
+        var tocEl  = document.querySelector('aside.toc');
         if (newToc && tocEl) tocEl.innerHTML = newToc.innerHTML;
 
         // Swap page title
-        var newTitle = doc.querySelector('h1.page-title');
-        var titleEl  = document.querySelector('h1.page-title');
+        var newTitle = doc.querySelector('h1.article__title');
+        var titleEl  = document.querySelector('h1.article__title');
         if (newTitle && titleEl) titleEl.innerHTML = newTitle.innerHTML;
 
         // Swap action tabs (Read/Edit/History hrefs change per slug)
@@ -879,8 +879,8 @@
         if (newTabs && tabsEl) tabsEl.innerHTML = newTabs.innerHTML;
 
         // Swap breadcrumb if present
-        var newCrumb = doc.querySelector('.wiki-breadcrumb');
-        var crumbEl  = document.querySelector('.wiki-breadcrumb');
+        var newCrumb = doc.querySelector('nav.crumb');
+        var crumbEl  = document.querySelector('nav.crumb');
         if (newCrumb && crumbEl) crumbEl.innerHTML = newCrumb.innerHTML;
 
         // Update document title
