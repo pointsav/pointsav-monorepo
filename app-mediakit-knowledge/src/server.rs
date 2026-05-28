@@ -607,9 +607,7 @@ const RATIFIED_CATEGORIES: &[&str] = &[
     "applications",
     "governance",
     "infrastructure",
-    "company",
     "reference",
-    "help",
     "design-system",
 ];
 
@@ -950,43 +948,13 @@ async fn load_dyk_localized(content_dir: &FsPath, locale: Locale) -> Option<Leap
     load_dyk(content_dir).await
 }
 
-fn bucket_guides_by_domain(guides: &[TopicSummary]) -> BTreeMap<String, Vec<TopicSummary>> {
-    let mut map = BTreeMap::new();
-    for g in guides {
-        let domain = if g.slug.contains("slm") || g.slug.contains("doorman") {
-            "AI & SLM"
-        } else if g.slug.contains("personnel")
-            || g.slug.contains("entra")
-            || g.slug.contains("linkedin")
-        {
-            "Personnel"
-        } else if g.slug.contains("network")
-            || g.slug.contains("mesh")
-            || g.slug.contains("command")
-        {
-            "Network & Command"
-        } else if g.slug.contains("infrastructure")
-            || g.slug.contains("provision")
-            || g.slug.contains("lxc")
-        {
-            "Infrastructure"
-        } else {
-            "General"
-        };
-        map.entry(domain.to_string())
-            .or_insert_with(Vec::new)
-            .push(g.clone());
-    }
-    map
-}
-
 /// Compute home-page stats banner contents.
 ///
 /// `article_count` is the total number of bucketed topics across all
 /// categories (excludes `index.md`, `_index.md`, and `*.es.md` siblings,
 /// matching `bucket_topics_by_category()` discipline).
 ///
-/// `category_count` is `RATIFIED_CATEGORIES.len()` — always 12, signalling
+/// `category_count` is `RATIFIED_CATEGORIES.len()`, signalling
 /// the platform's intended scope rather than only categories with
 /// articles.
 ///
@@ -1010,24 +978,6 @@ fn compute_home_stats(buckets: &CategoryBuckets) -> HomeStats {
 }
 
 // ─── Home-page chrome ───────────────────────────────────────────────────────
-
-/// Render the home-page shell.
-///
-/// Structure:
-/// - Site header (reuses `chrome()` pattern)
-/// - Lede (rendered body Markdown from `index.md`)
-/// - Stats banner ("N articles across N categories — last updated YYYY-MM-DD.")
-/// - Two-column main panel:
-///   - Left: Optional featured TOPIC panel
-///   - Right: Optional Leapfrog 2030 inventions bullet panel
-/// - By-category grid (all 12 ratified categories; empty ones show
-///   "0 articles — in preparation")
-/// - Recent additions feed (top 5, sorted by `last_edited` descending)
-/// - Site footer with bilingual notice
-///
-/// How many articles to preview per category before showing "All N →".
-/// Categories with ≤ PREVIEW_LIMIT articles always show the full list.
-const PREVIEW_LIMIT: usize = 8;
 
 const WORDMARK_POINTSAV: &str = r##"<span class="brand__mark" aria-hidden="true">&#x25A0;</span><span class="brand__wordmark">PointSav</span><span class="brand__sub">Digital Systems</span>"##;
 const WORDMARK_WOODFINE: &str = r##"<span class="brand__mark" aria-hidden="true">&#x25A0;</span><span class="brand__wordmark">Woodfine</span><span class="brand__sub">Capital Projects</span>"##;
@@ -1176,31 +1126,35 @@ fn home_chrome(
                 }
                 main.site-main #mp-main {
 
-                    // ── Welcome banner (#mp-topbanner) ──────────────────────
-                    div #mp-topbanner .wiki-home-welcome {
-                        h1 {
-                            "Welcome to "
-                            (site_title)
-                            ","
-                        }
-                        p.wiki-home-tagline {
-                            "the corporate knowledge wiki for the PointSav Digital Systems platform."
-                        }
-                        @if stats.article_count > 0 {
-                            p.wiki-home-stats aria-label="Wiki scale" {
-                                strong { (fmt_commas(stats.article_count)) }
-                                " article"
-                                @if stats.article_count != 1 { "s" }
-                                " in "
-                                strong { (stats.category_count) }
-                                " categories"
-                                @if let Some(ref d) = stats.last_updated {
-                                    " — last updated " time datetime=(d) { (d) }
-                                }
+                    // ── Hero banner ──────────────────────────────────────────
+                    section.hero #mp-topbanner {
+                        div.hero__eyebrow { "Knowledge Wiki" }
+                        h1.hero__title { (site_title) }
+                        @if !home_html.is_empty() {
+                            div.hero__lede { (PreEscaped(home_html)) }
+                        } @else {
+                            p.hero__lede {
+                                "The corporate knowledge wiki for the PointSav Digital Systems platform."
                             }
                         }
-                        @if !home_html.is_empty() {
-                            div.wiki-home-lede { (PreEscaped(home_html)) }
+                        @if stats.article_count > 0 {
+                            div.hero__meta {
+                                div.hero__stat {
+                                    strong { (fmt_commas(stats.article_count)) }
+                                    " article"
+                                    @if stats.article_count != 1 { "s" }
+                                }
+                                div.hero__stat {
+                                    strong { (stats.category_count) }
+                                    " categories"
+                                }
+                                @if let Some(ref d) = stats.last_updated {
+                                    div.hero__stat {
+                                        "Updated "
+                                        time datetime=(d) { (d) }
+                                    }
+                                }
+                            }
                         }
                         div.wiki-home-search {
                             form action="/search" method="get" {
@@ -1212,128 +1166,150 @@ fn home_chrome(
                         }
                     }
 
-                    // ── Four-box editorial grid (#mp-upper) ─────────────────
-                    div #mp-upper .wiki-home-top-panels {
-
-                        // TFA — From today's featured article
-                        @if let Some(ref featured) = featured {
-                            section #mp-tfa .wiki-home-box .wiki-home-featured {
-                                h2 { "From today's featured article" }
-                                div.wiki-home-box-body.featured-content {
-                                    h3 { a href={ "/wiki/" (featured.slug) } { (featured.title) } }
-                                    @if !featured.snippet.is_empty() {
-                                        p { (featured.snippet) " " a href={ "/wiki/" (featured.slug) } { em { "Full article..." } } }
-                                    } @else {
-                                        p { a href={ "/wiki/" (featured.slug) } { em { "Read the full article..." } } }
-                                    }
+                    // ── Ledger stripe ────────────────────────────────────────
+                    @if stats.article_count > 0 {
+                        div.ledger-stripe {
+                            div.ledger-stripe__inner {
+                                div.ledger-fact {
+                                    span.num { (fmt_commas(stats.article_count)) }
+                                    span.label { "Articles" }
                                 }
-                                div.wiki-home-box-footer {
-                                    a href="/special/all-pages" { "Archive" }
-                                    " · "
-                                    a href="/feed.atom" { "Subscribe" }
-                                    " · "
-                                    a href="/wiki/about" { "About" }
+                                div.ledger-fact {
+                                    span.num { (stats.category_count) }
+                                    span.label { "Categories" }
                                 }
-                            }
-                        }
-
-                        // DYK — Did you know...
-                        @if let Some(ref dyk) = dyk {
-                            section #mp-dyk .wiki-home-box .wiki-home-dyk {
-                                h2 { "Did you know\u{00a0}..." }
-                                ul.wiki-home-box-body {
-                                    @for fact in &dyk.facts {
-                                        li {
-                                            "… that "
-                                            (fact.text)
-                                            @if !fact.text.ends_with('?') { "?" }
-                                            @if let Some(ref slug) = fact.link_slug {
-                                                " " a href={ "/wiki/" (slug) } { "[more]" }
-                                            }
-                                        }
-                                    }
+                                div.ledger-fact {
+                                    span.num { (fmt_commas(guides.len())) }
+                                    span.label { "Guides" }
                                 }
-                                div.wiki-home-box-footer {
-                                    a href="/special/all-pages" { "Archive" }
-                                    " · "
-                                    a href="/wiki/contribute" { "Nominate" }
-                                }
-                            }
-                        }
-
-                        // ITN — Recently updated (our "In the news" analogue)
-                        @if !recent.is_empty() {
-                            section #mp-itn .wiki-home-box .wiki-home-itn {
-                                h2 { "Recently updated" }
-                                ul.wiki-home-box-body.wiki-home-recent {
-                                    @for t in recent.iter().take(5) {
-                                        li.wiki-home-recent-item {
-                                            @if let Some(ref d) = t.last_edited {
-                                                span.wiki-home-recent-date { (d) }
-                                            }
-                                            a href={ "/wiki/" (t.slug) } { (t.title) }
-                                        }
-                                    }
-                                }
-                                div.wiki-home-box-footer {
-                                    a href="/special/recent-changes" { "All changes" }
-                                    " · "
-                                    a href="/feed.atom" { "Feed" }
-                                }
-                            }
-                        }
-
-                        // Reference invariants — data-driven panel loaded from reference-invariants.yaml
-                        @if let Some(ref ri) = ref_inv {
-                            section #mp-otd .wiki-home-box .wiki-home-otd {
-                                h2 { (ri.heading) }
-                                ul.wiki-home-box-body.wiki-home-doctrine-list {
-                                    @for item in &ri.items {
-                                        li {
-                                            @if let Some(ref label) = item.label {
-                                                strong { (label) " — " }
-                                            }
-                                            (item.text)
-                                            @if let Some(ref slug) = item.link_slug {
-                                                " " a href={ "/wiki/" (slug) } { "[more]" }
-                                            }
-                                        }
+                                @if let Some(ref d) = stats.last_updated {
+                                    div.ledger-fact {
+                                        span.num { (d) }
+                                        span.label { "Last Updated" }
                                     }
                                 }
                             }
                         }
-
                     }
 
-                    // ── Browse by area (demoted category grid) ───────────────
-                    h2.wiki-home-section-title { "Browse by area" }
-                    div.wiki-home-grid {
-                        @for cat in RATIFIED_CATEGORIES {
-                            @let all_in_cat = buckets.get(*cat).map(|v| v.as_slice()).unwrap_or(&[]);
-                            @let topics: Vec<&TopicSummary> = all_in_cat.iter().filter(|t| t.status.as_deref() != Some("stub")).collect();
-                            @let count = topics.len();
-                            div.wiki-home-cat-section {
-                                div.wiki-home-cat-section-head {
-                                    h2 {
-                                        a href={ "/category/" (cat) } { (humanize_category(cat)) }
-                                    }
-                                    @if count > 0 {
-                                        span.wiki-home-cat-section-count {
-                                            (count) " article" @if count != 1 { "s" }
-                                        }
-                                    }
-                                    @if count > PREVIEW_LIMIT {
-                                        a.wiki-home-cat-section-all href={ "/category/" (cat) } {
-                                            "All " (count) " →"
+                    // ── Featured article ─────────────────────────────────────
+                    @if let Some(ref featured) = featured {
+                        div.featured #mp-tfa {
+                            div.featured__row {
+                                span.dot {}
+                                "Featured article"
+                            }
+                            h2.featured__title {
+                                a href={ "/wiki/" (featured.slug) } { (featured.title) }
+                            }
+                            @if !featured.snippet.is_empty() {
+                                p.featured__excerpt { (featured.snippet) }
+                            }
+                            a.featured__cta href={ "/wiki/" (featured.slug) } {
+                                "Read the full article"
+                                (PreEscaped(r#"<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M1 7h12M8 2l5 5-5 5"/></svg>"#))
+                            }
+                            div.featured__row style="margin-top:16px;font-size:12px;gap:6px;" {
+                                a href="/special/all-pages" { "Archive" }
+                                " · "
+                                a href="/feed.atom" { "Subscribe" }
+                                " · "
+                                a href="/wiki/about" { "About" }
+                            }
+                        }
+                    }
+
+                    // ── Did you know ─────────────────────────────────────────
+                    @if let Some(ref dyk) = dyk {
+                        section #mp-dyk .wiki-home-box .wiki-home-dyk {
+                            h2 { "Did you know\u{00a0}..." }
+                            ul.wiki-home-box-body {
+                                @for fact in &dyk.facts {
+                                    li {
+                                        "… that "
+                                        (fact.text)
+                                        @if !fact.text.ends_with('?') { "?" }
+                                        @if let Some(ref slug) = fact.link_slug {
+                                            " " a href={ "/wiki/" (slug) } { "[more]" }
                                         }
                                     }
                                 }
-                                @if count == 0 {
-                                    p.wiki-home-cat-in-prep { "In preparation." }
-                                } @else {
-                                    @if let Some(desc) = cat_descriptions.get(*cat) {
-                                        p.wiki-home-cat-desc { (desc) }
+                            }
+                            div.wiki-home-box-footer {
+                                a href="/special/all-pages" { "Archive" }
+                                " · "
+                                a href="/wiki/contribute" { "Nominate" }
+                            }
+                        }
+                    }
+
+                    // ── Reference invariants ─────────────────────────────────
+                    @if let Some(ref ri) = ref_inv {
+                        section #mp-otd .wiki-home-box .wiki-home-otd {
+                            h2 { (ri.heading) }
+                            ul.wiki-home-box-body.wiki-home-doctrine-list {
+                                @for item in &ri.items {
+                                    li {
+                                        @if let Some(ref label) = item.label {
+                                            strong { (label) " — " }
+                                        }
+                                        (item.text)
+                                        @if let Some(ref slug) = item.link_slug {
+                                            " " a href={ "/wiki/" (slug) } { "[more]" }
+                                        }
                                     }
+                                }
+                            }
+                        }
+                    }
+
+                    // ── Recently updated ─────────────────────────────────────
+                    @if !recent.is_empty() {
+                        div.section-head #mp-itn {
+                            h2 { "Recently updated" }
+                            a.section-head__hint href="/special/recent-changes" { "All changes →" }
+                        }
+                        div.recent {
+                            @for t in recent.iter().take(8) {
+                                a.recent__item href={ "/wiki/" (t.slug) } {
+                                    div {
+                                        span.recent__title { (t.title) }
+                                        @if let Some(cat) = t.slug.split_once('/').map(|(c, _)| c) {
+                                            span.recent__crumb { (humanize_category(cat)) }
+                                        }
+                                    }
+                                    @if let Some(cat) = t.slug.split_once('/').map(|(c, _)| c) {
+                                        span.recent__cat { (humanize_category(cat)) }
+                                    }
+                                    @if let Some(ref d) = t.last_edited {
+                                        span.recent__date { (d) }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // ── Browse by area ───────────────────────────────────────
+                    div.section-head {
+                        h2 { "Browse by area" }
+                    }
+                    div.cat-grid {
+                        @for cat in RATIFIED_CATEGORIES {
+                            @let all_in_cat = buckets.get(*cat).map(|v| v.as_slice()).unwrap_or(&[]);
+                            @let count = all_in_cat.iter()
+                                .filter(|t| t.status.as_deref() != Some("stub"))
+                                .count();
+                            a.cat-card href={ "/category/" (cat) } {
+                                div.cat-card__head {
+                                    span.cat-card__name { (humanize_category(cat)) }
+                                    @if count > 0 {
+                                        span.cat-card__count { (count) }
+                                    }
+                                }
+                                @if let Some(desc) = cat_descriptions.get(*cat) {
+                                    p.cat-card__desc { (desc) }
+                                } @else if count == 0 {
+                                    p.cat-card__desc { "In preparation." }
                                 }
                             }
                         }
@@ -1356,27 +1332,26 @@ fn home_chrome(
 
                     // ── Operational guides ───────────────────────────────────
                     @if !guides.is_empty() {
-                        @let domains = bucket_guides_by_domain(guides);
-                        div.wiki-home-guides.wiki-home-box {
+                        div.section-head {
                             h2 { "Operational guides" }
-                            div.wiki-home-guides-grid.wiki-home-box-body {
-                                @for (domain, items) in domains {
-                                    div.wiki-home-guide-domain {
-                                        h3 { (domain) }
-                                        ul.wiki-home-guides-list {
-                                            @for g in items {
-                                                li.wiki-home-guides-item {
-                                                    a href={ "/wiki/" (g.slug) } { (g.title) }
-                                                }
-                                            }
+                            a.section-head__hint href="/special/all-pages" { "All guides →" }
+                        }
+                        div.recent {
+                            @for g in guides {
+                                a.recent__item href={ "/wiki/" (g.slug) } {
+                                    div {
+                                        span.recent__title { (g.title) }
+                                        @if !g.lede_first_line.is_empty() {
+                                            span.recent__crumb { (g.lede_first_line) }
                                         }
                                     }
+                                    @if let Some(cat) = g.slug.split_once('/').map(|(c, _)| c) {
+                                        span.recent__cat { (humanize_category(cat)) }
+                                    }
+                                    @if let Some(ref d) = g.last_edited {
+                                        span.recent__date { (d) }
+                                    }
                                 }
-                            }
-                            div.wiki-home-box-footer {
-                                a href="/special/all-pages" { "All guides" }
-                                " · "
-                                a href="/wiki/about" { "About this wiki" }
                             }
                         }
                     }
