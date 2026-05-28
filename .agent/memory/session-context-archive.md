@@ -24,3 +24,12 @@
 **Done:** Phase 0 spike — russh + ratatui SSH TUI on port 2222; workspace Cargo.toml; proofctl stub; gate passed.
 
 **Pending at close:** Phase 1 (chassis), architecture Q&A.
+
+
+### 2026-05-24 | totebox@project-console | claude-sonnet-4-6
+
+**Done this session:**
+- Phase 5 COMPLETE: `/new` slash command, Doorman SSE streaming, drafts-outbound write with foundry-draft-v1 frontmatter. Commits `6422c2a8` + `5118ce77`.
+- Inbox archived 8 messages; Stage 6 blocker retained.
+
+**Pending:** Stage 6 push blocked on Command decision (history divergence); Phase 6 offline+Tantivy; pairing-server systemd; GCE port 2222; Peter SSH key.

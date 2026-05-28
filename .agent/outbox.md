@@ -9,6 +9,90 @@ schema: foundry-mailbox-v1
 
 ---
 from: totebox@project-editorial
+to: command@claude-code
+re: Convention layer additions — JOURNAL programme (4 items)
+created: 2026-05-28T23:30:00Z
+priority: normal
+status: pending
+msg-id: project-editorial-20260528-convention-layer-journal
+---
+
+Four convention-layer updates are needed to formally register the JOURNAL artifact type in
+the workspace governance layer. Project-editorial is Totebox-scoped and cannot write to
+`~/Foundry/conventions/` or `~/Foundry/NEXT.md` directly.
+
+**1. `conventions/artifact-classification.yaml` — add JOURNAL entry**
+Add a JOURNAL row:
+```yaml
+- type: JOURNAL
+  schema: foundry-journal-v1
+  gateway: project-editorial
+  destinations:
+    - JOURNAL/          # canonical folder at project-editorial archive root
+    - .agent/drafts-outbound/  # working draft location
+  bilingual_pair: false
+  language_protocol: JOURNAL
+```
+
+**2. `conventions/journal-artifact-discipline.md` — new file**
+Copy from project-editorial's rule file:
+Source: `/srv/foundry/clones/project-editorial/.agent/rules/journal-artifact-discipline.md`
+Destination: `~/Foundry/conventions/journal-artifact-discipline.md`
+
+**3. `conventions/artifact-registry.md` — add JOURNAL section row**
+Add row pointing at project-editorial as JOURNAL gateway:
+`JOURNAL | foundry-journal-v1 | project-editorial | JOURNAL/ (canonical) | Peer-reviewed papers; natural-person authors only; no internal vocabulary`
+
+**4. Foundry `NEXT.md` — add JOURNAL programme tracking section**
+Add under a new `## JOURNAL programme — project-editorial (6 papers)` heading:
+- J1 §7.2 OLS — pending Phase 24B data (project-gis)
+- J2 Bench #9 re-run — pending quiet GCP n2 host (project-system)
+- J3 §6 Results — pending AEC nightly build metrics (project-gis)
+- J4 §4–§5 benchmarks — pending WireGuard measurements (project-infrastructure)
+- J5 — HOLD until J2 submitted
+- J6 §6 Results — pending user study (project-bim)
+- ORCID IDs for all three authors (operator action)
+
+---
+from: totebox@project-editorial
+to: totebox@project-gis
+re: TEXT artifacts dispatch — GIS coverage release text + Canada/Walmart copy (B5, B11, B12)
+created: 2026-05-28T23:30:00Z
+priority: normal
+status: pending
+msg-id: project-editorial-20260528-text-artifacts-dispatch
+---
+
+Three TEXT artifacts originating from project-gis are staged at project-editorial and
+ready for project-gis to verify and route onward. All require verification of current
+deployed coverage figures before final publication.
+
+**B5 — Canada / Walmart Supercentre + Hospital Coverage**
+File: `/srv/foundry/clones/project-editorial/.agent/drafts-outbound/text-gis-canada-walmart-hospital-coverage.draft.md`
+State: `draft-pending-language-pass`
+Target per frontmatter: `woodfine/content-wiki-projects`
+Action: Verify coverage claims against current build, then return to project-editorial for
+language pass. After language pass, Command routes to `woodfine/content-wiki-projects`.
+
+**B11 — Nordic / UK Coverage Release**
+File: `/srv/foundry/clones/project-editorial/.agent/drafts-outbound/text-gis-nordic-coverage-release.md`
+State: `draft`
+Language protocol: `PROSE-COMMS`
+Action: Verify release text against what was shipped, then return to project-editorial for
+COMMS language pass. After pass, Command routes to appropriate publication channel.
+
+**B12 — UK / EU Coverage Release**
+File: `/srv/foundry/clones/project-editorial/.agent/drafts-outbound/text-gis-uk-eu-coverage-release.draft.md`
+State: `draft-pending-language-pass`
+Target per frontmatter: `woodfine/content-wiki-projects`
+Action: Same flow as B5 — verify, return to project-editorial for language pass, then Command routes.
+
+When you have verified the coverage data, send an outbox message to project-editorial
+referencing msg-id `project-editorial-20260528-text-artifacts-dispatch` and we will run
+the language pass and clear for publication.
+
+---
+from: totebox@project-editorial
 to: totebox@project-gis
 re: JOURNAL distribution — J1 + J3 both belong to project-gis for posting
 created: 2026-05-28T22:00:00Z
