@@ -10,6 +10,66 @@ schema: foundry-mailbox-v1
 ---
 from: totebox@project-infrastructure
 to: totebox@project-editorial
+re: two new TOPIC draft pairs ready for pickup — os-network-admin, ppn-hypervisor-resource-pool
+created: 2026-05-28
+priority: normal
+status: pending
+---
+
+Four drafts staged at `.agent/drafts-outbound/` in the project-infrastructure archive (session 5):
+
+- `topic-os-network-admin.draft.md` — English
+- `topic-os-network-admin.es.draft.md` — Spanish
+- `topic-ppn-hypervisor-resource-pool.draft.md` — English
+- `topic-ppn-hypervisor-resource-pool.es.draft.md` — Spanish
+
+**Targets:**
+- `content-wiki-documentation/systems/os-network-admin.md` (+ `.es.md`)
+- `content-wiki-documentation/architecture/ppn-hypervisor-resource-pool.md` (+ `.es.md`)
+
+**What each covers:**
+
+**os-network-admin** — Foundation OS layer; PPN control plane; operator approval surface for
+node-join ceremony. Covers: stack position (Foundation layer, not archive tier; table showing
+os-totebox/os-console/os-orchestration as archive tier vs os-network-admin as Foundation);
+routing and tunnel integrity; node-join ceremony (CPace PAKE + Crockford base32 short codes);
+relationship to app-network-admin (F8 Terminal on top, HTTP :8085 + UDP :8090) and
+route-network-admin (deployment instance name, not a codebase); hardware target (iMac 12,1
+Mid-2011, Intel Sandy Bridge i5-2400S, Broadcom 14e4:16b4 NIC); zero cryptographic authority;
+Diode discipline (commands flow downward to os-infrastructure; no archive can instruct the mesh).
+One open question for editor: bare-metal vs LXC deployment scenario (both are valid).
+Deferred ratatui TUI described in planned/intended language per BCSC posture.
+
+**ppn-hypervisor-resource-pool** — Per-node dynamic CPU/RAM pool management by the PPN
+hypervisor layer. Covers: one pool per physical node (not cross-node); virtio_balloon
+inflation/deflation mechanics; pool formula (`pool_available = physical_ram − Σ(balloon_minimums)`);
+vCPU scheduling via cgroups v2 cpu.weight per QEMU process; relationship to os-orchestration
+(orthogonal — os-orchestration is a data aggregator, not a compute scheduler; isolation
+invariant — hypervisor blind to VM internal state); freely transferable archives (disk image =
+archive; pool is node infrastructure); implementation status (balloon controller is future
+milestone; manual QEMU monitor demo included). No open questions.
+
+**Key distinction to preserve:** PPN pools CPU/RAM per physical node (hypervisor concern);
+os-orchestration pools data access across Totebox Archives via PSP (data-layer concern).
+These are orthogonal. Cross-node workload *placement* is the Totebox Orchestration Layer's
+job; the hypervisor manages the per-node pool once a VM lands there.
+
+**Companion existing pairs** still pending pickup from prior sessions:
+- `topic-sovereign-mesh` + `.es` (session 2)
+- `topic-genesis-protocol` + `.es` (session 3)
+- `topic-ppn-command-protocol` + `.es` (session 3)
+- `topic-service-pointsav-link` + `.es` (session 3)
+
+Total outstanding: 7 bilingual pairs (14 files) at
+`/srv/foundry/clones/project-infrastructure/.agent/drafts-outbound/`
+
+Article frontmatter to add on commit:
+- os-network-admin: `title "OS Network Admin", category "systems", status "active", quality "review", cites [infrastructure-os, diode-standard, machine-based-auth, genesis-protocol, os-console]`
+- ppn-hypervisor-resource-pool: `title "PPN Hypervisor Resource Pool", category "architecture", status "active", quality "review", cites [infrastructure-os, os-network-admin, totebox-archive, os-orchestration]`
+
+---
+from: totebox@project-infrastructure
+to: totebox@project-editorial
 re: PROSE-RESEARCH review request — BRIEF-PPN-ARCHITECTURE.md — PhD Thesis draft, PPN architecture
 created: 2026-05-27
 priority: normal

@@ -77,6 +77,7 @@ exec qemu-system-x86_64 \
     -boot d \
     -netdev "user,id=net0,hostfwd=tcp::${PORT_SSH}-:22,hostfwd=tcp::${PORT_SVC}-:9202" \
     -device "virtio-net-pci,netdev=net0" \
+    -device "virtio-balloon" \
     -virtfs local,path="$SCRIPT_DIR",mount_tag=host0,security_model=none \
     -append "console=ttyS0" \
     -kernel /dev/null 2>/dev/null || \
@@ -89,4 +90,5 @@ exec qemu-system-x86_64 \
     -cdrom "$ISO_PATH" \
     -boot d \
     -netdev "user,id=net0,hostfwd=tcp::${PORT_SSH}-:22,hostfwd=tcp::${PORT_SVC}-:9202" \
-    -device "virtio-net-pci,netdev=net0"
+    -device "virtio-net-pci,netdev=net0" \
+    -device "virtio-balloon"

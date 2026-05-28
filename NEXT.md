@@ -3,7 +3,7 @@
 > **Scope: this archive only.** Cross-repo and workspace-level items live at `~/Foundry/NEXT.md`.
 > Full TODO with all sections and sequencing: `.agent/plans/project-infrastructure-todo.md`.
 
-Last updated: 2026-05-27 (session 4).
+Last updated: 2026-05-28 (session 5).
 
 ---
 
@@ -98,12 +98,32 @@ Last updated: 2026-05-27 (session 4).
 
 ## TOPIC leg — drafts staged, needs editorial pickup
 
-Five draft pairs in `.agent/drafts-outbound/`; pickup notice sent to project-editorial.
+Seven draft pairs in `.agent/drafts-outbound/`; pickup notice to be sent to project-editorial.
 
 - [ ] `topic-sovereign-mesh` + `.es` — expands stub at `infrastructure/sovereign-mesh.md` [session 2]
 - [ ] `topic-genesis-protocol` + `.es` — new; `architecture/genesis-protocol.md` [session 3]
 - [ ] `topic-ppn-command-protocol` + `.es` — new; `architecture/ppn-command-protocol.md` [session 3]
 - [ ] `topic-service-pointsav-link` + `.es` — new; `architecture/service-pointsav-link.md` [session 3]
+- [ ] `topic-os-network-admin` + `.es` — new; `systems/os-network-admin.md` [session 5]
+- [ ] `topic-ppn-hypervisor-resource-pool` + `.es` — new; `architecture/ppn-hypervisor-resource-pool.md` [session 5]
+
+---
+
+## Future milestones — balloon controller + PSP + Phase 4 gateway
+
+- [ ] **Balloon controller in `os-infrastructure`** — the virtio_balloon controller that decides
+  when to inflate/deflate each VM's balloon in response to demand signals. Planned milestone.
+  Until implemented, operators use QEMU monitor: `balloon 128` / `info balloon`.
+  [2026-05-28 totebox@claude-code]
+
+- [ ] **PSP (PointSav Protocol) implementation** — the capability-based binary protocol over TLS
+  that `os-orchestration` uses to query Totebox Archives. Stateless aggregator sends signed
+  capability objects; Totebox verifies and emits only result rows. Planned milestone.
+  [2026-05-28 totebox@claude-code]
+
+- [ ] **Phase 4 gateway: `gateway-orchestration-command-1`** — inbound MBA connections via PSP;
+  multi-archive query routing. Gated on PSP protocol implementation.
+  [2026-05-28 totebox@claude-code]
 
 ---
 
