@@ -94,7 +94,7 @@ gcloud compute disks snapshot yoyo-tier-b-1 --zone=us-west1-b \
 **Remaining:**
 - [x] **`nightly-run.timer`**: Created + enabled (commit `ec047bd`). Fires 00:00 UTC daily. corpus-rebuild.timer + local-workspace-feeder.timer disabled (redundant). ✓
 - [ ] **vllm.service fix on VM** (see CRITICAL block above) — mask vllm, enable llama-server
-- [ ] **`start-yoyo.sh` line 340** — always call `update_doorman_env` on Mode 1 success (not just zone-change)
+- [x] **`start-yoyo.sh` Doorman restart** — `update_doorman_env()` now restarts local-doorman.service after writing new IP to env file; commit `446df43f` ✓
 - [ ] Set `SLM_YOYO_WEIGHTS_GCS_BUCKET` in `/etc/local-doorman/local-doorman.env` for training dispatch
 - [ ] Next Packer image build (will bake CUDA llama-server + mask vllm.service; current VM patched manually)
 - [ ] LoRA training marker (Test 11): workspace dispatch service needs to be written
