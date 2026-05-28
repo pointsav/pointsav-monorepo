@@ -62,6 +62,8 @@ scaffolded_from:
   - AEC-DATA-PARITY-RESEARCH.md
 scaffolded_date: 2026-05-27
 writing_pass_date: 2026-05-28
+preprint_posted: true
+preprint_posted_date: 2026-05-28
 notes_for_editor: |
   Writing pass complete 2026-05-28. All sections written except §6 Results,
   which requires concrete coverage metrics from the nightly build pipeline
@@ -79,6 +81,12 @@ notes_for_editor: |
 ---
 
 ---
+
+> **Working Paper · Version 0.2 · 2026-05-28**
+> This manuscript is a working draft. It has not been peer reviewed. Findings are preliminary and subject to revision without notice. The authors welcome correspondence at jmwoodfine@gmail.com.
+
+> **Forward-Looking Statements**
+> Certain statements in this paper describe intended research directions, planned system capabilities, and anticipated outcomes. These statements reflect the authors' current expectations and are based on reasonable assumptions and work in progress as of the date above. Actual results, measurements, and findings may differ materially. Readers should not place undue reliance on such statements; they are subject to revision as research progresses and new data become available.
 
 # Open-Source Building-Systems Data Layers for Urban-Scale Site Analysis: A Continental Coverage Assessment Across Sixteen Countries
 

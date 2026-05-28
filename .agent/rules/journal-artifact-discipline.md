@@ -167,6 +167,54 @@ to `draft` (JOURNAL):
 
 ---
 
+## Public posting requirements
+
+When a JOURNAL manuscript with `state: draft` or `state: under-review` is posted to
+a public URL (operator website, research portal, preprint server), two blocks are
+mandatory in the paper body and two fields are mandatory in the frontmatter.
+
+### Mandatory body blocks (insert after frontmatter `---`, before the title heading `# ...`)
+
+**Block 1 — Preprint / WIP notice**
+```markdown
+> **Working Paper · Version X.X · YYYY-MM-DD**
+> This manuscript is a working draft. It has not been peer reviewed. Findings are
+> preliminary and subject to revision without notice. The authors welcome
+> correspondence at jmwoodfine@gmail.com.
+```
+Version from `version:` field; date from `language_pass_date:` or today if absent.
+
+**Block 2 — Forward-Looking Statements advisory** (place immediately after Block 1)
+```markdown
+> **Forward-Looking Statements**
+> Certain statements in this paper describe intended research directions, planned
+> system capabilities, and anticipated outcomes. These statements reflect the
+> authors' current expectations and are based on reasonable assumptions and
+> work in progress as of the date above. Actual results, measurements, and
+> findings may differ materially. Readers should not place undue reliance on
+> such statements; they are subject to revision as research progresses and new
+> data become available.
+```
+
+Neither block may contain: BCSC, securities, regulation, compliance, PointSav,
+Foundry, or any term from the Forbidden vocabulary list above.
+
+### Mandatory frontmatter fields (add at first public posting)
+
+```yaml
+preprint_posted: true
+preprint_posted_date: YYYY-MM-DD
+```
+
+### Standard basis
+
+Block 1 follows the arXiv/bioRxiv/SSRN working-paper convention. Block 2 follows
+standard forward-looking-statements language used in economics, systems, and applied
+research preprints. Together they satisfy the silent disclosure posture required for
+publicly-posted research documents without referencing any regulatory framework by name.
+
+---
+
 ## Submission workflow
 
 1. `draft` → language pass → `forbidden_terms_cleared: true`
