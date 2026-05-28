@@ -272,6 +272,39 @@ PPN's differentiation is the combination: every competitor approaching PPN's boo
 
 ---
 
+### 9.4 Resource Pool Management
+
+**The PPN hypervisor as a per-node resource pool manager.**
+
+Each physical PPN node controls a pool of its own CPU and RAM. `os-infrastructure` (the Type I hypervisor layer) allocates that pool dynamically across the VMs it runs. When demand rises in one VM, the hypervisor shifts resources to it; when demand drops, resources return to the pool for other VMs to use.
+
+**Memory: virtio_balloon**
+
+The primary reclaim mechanism is the `virtio_balloon` paravirtual device. `os-infrastructure` plays the role of balloon controller:
+
+1. A balloon driver runs inside each guest VM (standard in Alpine, NetBSD, and all modern Linux distributions).
+2. When the controller wants to reclaim memory from a VM, it inflates the balloon: the driver inside the VM allocates pages and hands them to the balloon (removing them from the guest's usable pool). The host recovers those pages for the node-level pool.
+3. When the controller wants to give a VM more memory, it deflates the balloon: the driver releases balloon pages back to the guest.
+
+The node-level pool at any instant is:
+```
+pool_available = physical_ram − Σ(balloon_minimums across all VMs)
+```
+
+`memory-balloon reclaim` is tracked as a benchmark metric in §10 Evaluation Criteria (Claim C macro benchmark). The benchmark target is that the controller can complete a full reclaim-and-redistribute cycle within the cold-boot time envelope.
+
+**CPU: vCPU scheduling weights**
+
+CPU pool management uses cgroups v2 `cpu.weight` per QEMU process. Higher-weight VMs receive proportionally more vCPU time under contention. At zero contention, all VMs run at full speed. The weight table is maintained in the capability ledger alongside memory minimums.
+
+**Scope: per-node, not cross-node**
+
+The resource pool is bounded to a single physical PPN node. A node's RAM and vCPUs are not shared with other nodes across the WireGuard mesh. Cross-node workload placement — routing work to whichever node has capacity — is the responsibility of the Totebox Orchestration Layer (`os-orchestration` + `gateway-orchestration-command-1`), which assigns workloads to cluster-totebox-* nodes via MBA pairing. The PPN pool and the Totebox workload scheduler are orthogonal and communicate only at the boundary of VM lifecycle events (create, destroy, resize).
+
+**Implementation status:** `virtio_balloon` device flag is available in QEMU 7.x+ and in the NetBSD/bhyve bhyve(8) `virtio_balloon` module. The balloon controller logic (`os-infrastructure` deciding when to inflate/deflate based on demand signals from each VM) is a future milestone in the §9.2 build order.
+
+---
+
 ## 10. Evaluation Criteria
 
 **Claim A — Sub-5-minute, 2-question deployment:**
