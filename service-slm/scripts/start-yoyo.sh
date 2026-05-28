@@ -276,6 +276,15 @@ update_doorman_env() {
         fi
         echo "Updated SLM_YOYO_WEIGHTS_SNAPSHOT=${WEIGHTS_SNAPSHOT} in ${DOORMAN_ENV}."
     fi
+
+    # Restart Doorman so it picks up the new SLM_YOYO_ENDPOINT from the env file.
+    # Systemd services load env vars at start — editing the file is not enough.
+    echo "Restarting local-doorman.service to apply new endpoint..."
+    if sudo systemctl restart local-doorman.service 2>/dev/null; then
+        echo "Doorman restarted."
+    else
+        echo "Note: could not auto-restart Doorman — run: sudo systemctl restart local-doorman.service"
+    fi
 }
 
 # ── Helper: poll vLLM /health endpoint until 200 or timeout ──────────────────
