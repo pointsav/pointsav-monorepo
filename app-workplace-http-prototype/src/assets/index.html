@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Workplace — HTTP Prototype</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header id="app-header">
+  <span class="logo">Workplace</span>
+  <span class="version">HTTP prototype · Stage 1</span>
+</header>
+
+<div id="surface-selector">
+  <h2>Select a surface</h2>
+
+  <div class="surface-grid">
+    <div class="surface-tile active" onclick="window.location='/memo'">
+      <div class="tile-icon">📝</div>
+      <div class="tile-name">Memo</div>
+      <div class="tile-tag">Active</div>
+    </div>
+    <div class="surface-tile">
+      <div class="tile-icon">📊</div>
+      <div class="tile-name">Proforma</div>
+      <div class="tile-tag">Coming soon</div>
+    </div>
+    <div class="surface-tile">
+      <div class="tile-icon">🖼</div>
+      <div class="tile-name">Presentation</div>
+      <div class="tile-tag">Coming soon</div>
+    </div>
+    <div class="surface-tile">
+      <div class="tile-icon">📅</div>
+      <div class="tile-name">Schedule</div>
+      <div class="tile-tag">Coming soon</div>
+    </div>
+    <div class="surface-tile">
+      <div class="tile-icon">💻</div>
+      <div class="tile-name">Code</div>
+      <div class="tile-tag">Coming soon</div>
+    </div>
+    <div class="surface-tile">
+      <div class="tile-icon">📄</div>
+      <div class="tile-name">PDF</div>
+      <div class="tile-tag">Coming soon</div>
+    </div>
+    <div class="surface-tile">
+      <div class="tile-icon">🗺</div>
+      <div class="tile-name">GIS</div>
+      <div class="tile-tag">Coming soon</div>
+    </div>
+    <div class="surface-tile">
+      <div class="tile-icon">🏗</div>
+      <div class="tile-name">BIM</div>
+      <div class="tile-tag">Coming soon</div>
+    </div>
+  </div>
+
+  <div id="recent-section">
+    <h3>Recent Memo files</h3>
+    <ul id="recent-list">
+      <li><span class="file-name" style="color:var(--text-dim)">Loading…</span></li>
+    </ul>
+    <button id="new-doc-btn" onclick="newDocument()">+ New document</button>
+  </div>
+</div>
+
+<script>
+async function loadRecentFiles() {
+  try {
+    const res = await fetch('/api/files');
+    const files = await res.json();
+    const list = document.getElementById('recent-list');
+    if (!files.length) {
+      list.innerHTML = '<li><span class="file-name" style="color:var(--text-dim)">No files yet — create one below.</span></li>';
+      return;
+    }
+    list.innerHTML = files.map(f =>
+      `<li>
+        <span class="file-name">${escHtml(f.name)}</span>
+        <a href="/memo?path=${encodeURIComponent(f.path)}">Open</a>
+      </li>`
+    ).join('');
+  } catch {
+    document.getElementById('recent-list').innerHTML =
+      '<li><span class="file-name" style="color:var(--text-dim)">Could not load files.</span></li>';
+  }
+}
+
+async function newDocument() {
+  const name = prompt('Document name (no extension needed):');
+  if (!name || !name.trim()) return;
+  try {
+    const res = await fetch('/api/files/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: name.trim() }),
+    });
+    if (!res.ok) { alert('Failed to create document.'); return; }
+    const { path } = await res.json();
+    window.location = `/memo?path=${encodeURIComponent(path)}`;
+  } catch {
+    alert('Network error creating document.');
+  }
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+loadRecentFiles();
+</script>
+</body>
+</html>
