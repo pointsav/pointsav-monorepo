@@ -1,114 +1,85 @@
-# Session Context — project-infrastructure
-
-Rolling 3-session summary. Newest on top. Push oldest to `session-context-archive.md` when
-a fourth entry is added.
+## Session context — rolling 3-session summary
 
 ---
 
-## 2026-05-28 session 6 | Totebox | claude-code (Sonnet 4.6)
+### 2026-05-28 | totebox@project-knowledge | claude-sonnet-4-6
 
 **Done this session:**
-- Wrote two new TOPIC bilingual pairs (EN+ES) and committed to drafts-outbound:
-  - `topic-totebox-archive` — sovereign WORM data vault; disk image IS the archive;
-    freely transferable; JSONL/GeoParquet/Markdown; Diode + PSP access only; MBA keypair;
-    cluster naming convention; what it is NOT.
-  - `topic-ppn-architecture-overview` — four-layer architecture overview (operator / PPN /
-    hypervisor / Totebox Orchestration); three key properties (isolation invariant, freely
-    transferable archives, zero crypto authority at network plane); what PPN is NOT; links
-    to all 8 detailed TOPICs.
-- Wrote three GUIDE drafts and committed to drafts-outbound:
-  - `guide-ppn-first-deployment` — 5-step first-deployment sequence from BRIEF §7, all steps
-    unblocked, with exact commands and troubleshooting table.
-  - `guide-node-join-ceremony` — approval workflow (node side: Crockford base32 short code;
-    operator side: poll + approve via curl); CPace PAKE + SAS; nodes.jsonl; 600s TTL.
-  - `guide-vm-prove-balloon-demo` — vm-prove.sh walkthrough; virtio_balloon demo from QEMU
-    monitor; pool formula; GCP nested virt enablement; proves-vs-not-yet table.
-- Updated manifest.md: wiki leg leg-pending → leg-active; 7 TOPICs + 3 GUIDEs in
-  staged_for_pickup.
-- VM proof on GCP TCG: Alpine Linux 3.20 (kernel 6.6.31-0-virt) booted in 114s; full
-  virtio_balloon cycle confirmed: `balloon 128` → `actual=128`; `balloon 256` → `actual=256`.
-- Added `infrastructure/virt/.gitignore` — excludes Alpine ISO + QCOW2 work artifacts.
-- Sent outbox session 6 pickup notice to project-editorial (9 TOPIC pairs + 3 GUIDEs total).
-
-**Commits this session:**
-- `5029e0fd` — docs(ppn): totebox-archive + ppn-architecture-overview TOPICs; 3 GUIDE drafts; manifest leg-active
-- `04388865` — chore(vm-prove): mark GCP TCG balloon proof complete
-- `d608f18b` — chore: gitignore virt/work/ — Alpine ISO + QCOW2 are build artifacts
+- Phase 6A COMPLETE: Fixed AJAX navigation (articles not loading on click). Root cause confirmed:
+  wiki.js `navigateTo()` had 3 stale selectors from Phase 2 DOM renames. `#vector-toc` (now
+  `aside.toc`), `h1.page-title` (now `h1.article__title`), `.wiki-breadcrumb` (now `nav.crumb`).
+  Content body (`#mw-content-text`) still matched, giving a confusing partial-update symptom where
+  article text changed but title/TOC/breadcrumb froze. All 6 occurrences fixed. Also fixed
+  `initToc()`, `initTocPin()`, and `initActiveTocTracking()` heading selector.
+  server.rs: added `id="toc-list"` to TOC `<ol>`.
+- Phase 6B COMPLETE: Home page section caps. Removed uncategorised catch-all block entirely.
+  Guides capped at 6 (`.iter().take(6)`). Data fetch aligned to render cap (10→8).
+- Phase 6C COMPLETE: Header redesign matching home.pointsav.com. `WORDMARK_SVG_POINTSAV` constant
+  with verbatim SVG path data (320×80). All three chrome functions (home_chrome, wiki_chrome, chrome)
+  now render `header.topnav` grid `1fr auto 1fr`. `--header-h` 152px → 80px. Dark mode SVG invert.
+  Commit `afa67bfa` (Jennifer). 106/106 tests pass.
+- Command actioned Stage 6 (outbox `project-knowledge-20260528-phase6-knowledge-platform`):
+  promoted `afa67bfa` to canonical; binary rebuild queued in nightly queue for ~1am Vancouver.
 
 **Pending / carry-forward:**
-- Q2: Ratify `10.50.0.0/24` as canonical PPN subnet (de facto confirmed in guide-lxc-network-admin)
-- Q3: GCP static IP for cloud relay
-- Q4: Laptop B local IP + `network.woodfinegroup.com` DNS status
-- Q5: Is service-slm Doorman deployed at `localhost:9080`? (app-network-admin F8 still uses subprocess)
-- Q6: Flag stale editorial pickup to Command Session?
-- All 7 Genesis Protocol code steps in BRIEF §9.2 gated on Q2–Q6
-- 9 TOPIC pairs + 3 GUIDEs in drafts-outbound awaiting project-editorial pickup
-- 12 commits ahead of origin/main — Stage 6 from Command Session when ready
+- Binary rebuild deploying tonight (~1am Vancouver) — services active on prior binary until then.
+  After rebuild: visual check on documentation.pointsav.com (topnav SVG wordmark, article link nav).
+- Phase 6 Part B + deployment split (Phase 6 per KNOWLEDGE-PLATFORM-PLAN.md §6) gated on
+  content-wiki-* GitHub rename + MASTER Doctrine amendment.
+- `.agent/manifest.md` wrong `cluster_name` (project-bim) — needs Command correction.
+- `.shell-header` legacy CSS can be cleaned up in a future session (now dead code).
+- ES bilingual pairs for 4 governance stubs (lower priority).
 
 **Operator preferences surfaced:**
-- "keep going" / "what can we do next" workflow: plans work items in NEXT.md, approves plan,
-  then runs phases sequentially; no need to pause between phases once plan is approved.
+- "leapfrog 2003 UI/UX" — dramatically higher visual quality; match live family sites exactly.
+- OPUS agents for site audits — sends parallel agents to analyze current vs. target before planning.
+- "plan we can leave on auto" = execute without per-step approval once plan approved.
 
 ---
 
-## 2026-05-28 session 5 | Totebox | claude-code (Sonnet 4.6)
+### 2026-05-27 | totebox@project-knowledge | claude-sonnet-4-6
 
 **Done this session:**
-- Wrote os-network-admin TOPIC bilingual pair (EN+ES) — corrects published wiki article that
-  conflates os-network-admin (Foundation OS) with app-network-admin (F8 Terminal on top).
-  Staged draft is the corrected replacement; project-editorial applies it on pickup.
-- Wrote ppn-hypervisor-resource-pool TOPIC bilingual pair (EN+ES) — per-node CPU/RAM pool
-  management; virtio_balloon formula; cgroups v2 cpu.weight; orthogonality with os-orchestration.
-- Updated BRIEF-PPN-DEV-BOOTSTRAP.md §3 (four-layer diagram) and §6 (virtio_balloon proof plan).
-- Updated BRIEF-PPN-ARCHITECTURE.md §9.4 (Resource Pool Management added).
-- Added `-device "virtio-balloon"` to both QEMU invocations in `infrastructure/virt/vm-prove.sh`.
-- Updated NEXT.md: dev-environment bootstrap tasks, future milestones.
-- Sent outbox session 5 pickup notice to project-editorial.
-
-**Commits this session:**
-- `7ec14c86` — docs(ppn): document resource pool, os-network-admin; add virtio_balloon to vm-prove.sh
-- (and `565bc755` from earlier in same conversation — dev-environment bootstrap)
+- Full site audit via OPUS agents: identified two root causes for "C grade / no links work"
+  1. Four chrome nav articles missing (disclaimers, contact, about, contribute) → all 404
+  2. CSS/HTML mismatch: new proto-platform-document CSS not wired to server.rs HTML classes
+- Phase 1 COMPLETE: Created 4 governance stub articles in content-wiki-documentation (`86d7567`)
+  All four `/wiki/{slug}` routes now return 200 immediately (disk-served)
+- Phase 2 COMPLETE: Rewrote wiki_chrome() HTML structure to match proto-platform-document CSS
+  Key changes: .wiki-layout → .shell, div#mw-panel → nav.sidebar, main.mw-body →
+  main.article-wrap + article.article__body, h1.page-title → h1.article__title,
+  p.topic-short-description → p.article__lede, div.page-body → div.prose, TOC moved
+  to aside.toc beside article prose, right rail removed/consolidated into sidebar,
+  dl.article__meta added for metadata row. Commit `1a2feb69` (jwoodfine).
+- Phase 3 COMPLETE: Route wildcard fixes — /git/{slug} → /git/{*slug},
+  /special/whatlinkshere/, /special/pageinfo/, /special/cite/ same treatment.
+  Fixes 404 for category-scoped articles. Same commit `1a2feb69`.
+- 106/106 lib tests pass; clippy clean. Outbox msg to Command for Stage 6 + rebuild.
 
 **Pending / carry-forward:**
-- Q2–Q6 operator decisions (same as session 4)
-- All 7 code implementation steps gated on those decisions
-- 7 TOPIC pairs in drafts-outbound awaiting project-editorial pickup
+- See 2026-05-28 entry — Phase 6 deployed; binary rebuild tonight.
 
 **Operator preferences surfaced:**
-- Produces TOPIC and GUIDE drafts proactively alongside code work — "what can we do next,
-  also need to make TOPIC and GUIDE and send them to project-editorial."
-- Wants accuracy audit of existing published topics when new TOPICs are added.
+- OPUS agents for site audits — "send out several OPUS agents to make full analysis"
+- "plan we can leave on auto" = execute without per-step approval once plan approved
 
 ---
 
-## 2026-05-27 session 4 | Totebox | claude-code (Sonnet 4.6)
+### 2026-05-24 | totebox@project-console | claude-sonnet-4-6
 
 **Done this session:**
-- Ran 10 parallel Opus research agents covering: SMB hypervisor market, Type I hypervisor
-  survey, seL4 formal verification, NetBSD/bhyve compat bottom, zero-config node federation,
-  capability isolation proofs, OS personalities on microkernels, competitive differentiation,
-  novel contribution claims, Yale PhD thesis structure.
-- Synthesised agent outputs into `BRIEF-PPN-ARCHITECTURE.md` (385 lines, 57 citations) —
-  Yale PhD thesis-quality architectural foundation for PPN. Genesis Protocol confirmed as
-  canonical bootstrap; CPace PAKE + Crockford base32 SAS pairing; CAmkES OS personality;
-  intransitive non-interference as formal isolation invariant.
-- Updated NEXT.md: resolved EAPOL vs Genesis Protocol blocking item; restructured into
-  BRIEF gate + Q2–Q6 operator decisions + Code implementation sequence.
-- Session was disk-blocked mid-session (ENOSPC on home partition); user cleared space.
-
-**Commits this session:**
-- `289df71c` — brief: PPN architecture — Yale PhD thesis draft; Genesis Protocol confirmed; session-4 context + NEXT.md
+- T1-A: app-console-system added to Cargo.toml workspace members (`7e47fd05`)
+- T1-C/D: NEXT.md updated (Phase 3+4 complete, Phase 5 queued); service-extraction CLAUDE.md created (`e9b84f21`, `3a5b11f9`)
+- Phase 5 COMPLETE — draft mode: `/new <title>` slash command in ContentCartridge; Doorman Tier B SSE streaming client (`draft.rs`); `drafts-outbound` write with `foundry-draft-v1` frontmatter; `drafts_outbound_path` added to ConsoleConfig. Commits `6422c2a8` + `5118ce77`. `cargo check --workspace` exits 0.
+- Session close-out: NEXT.md updated (Phase 5 → Complete, Phase 6 → Next, commit `894452c1`); binary-targets.yaml notes updated; Phase 5 outbox notification sent to Command (`053847d`); inbox archived 8 actioned/stale messages, only Stage 6 blocker retained (`edc2b84`)
 
 **Pending / carry-forward:**
-- Q2: Ratify `10.50.0.0/24` as canonical PPN subnet
-- Q3: GCP static IP for cloud relay
-- Q4: Laptop B local IP + `network.woodfinegroup.com` DNS status
-- Q5: Is service-slm Doorman deployed at `localhost:9080`?
-- Q6: Flag stale editorial drafts (5 pairs, 7+ days) to Command Session?
-- All 7 code implementation steps in BRIEF §9.2 gated on Q2–Q6
+- Stage 6 push: waiting Command decision on history-replacement force-push authorization. See outbox msg `project-console-20260522-stage6-history-divergence` for the 3 questions requiring sign-off.
+- Phase 6: offline mode + Tantivy full-text search (next coding phase)
+- pairing-server systemd unit deployment on VM (Command/operator)
+- GCE firewall port 2222 (operator action)
+- Tag v0.1.0 (after Stage 6)
+- Peter's SSH key + proofctl user add (Command is generating this — seen in COMMAND shell 2026-05-24)
 
 **Operator preferences surfaced:**
-- Produce research-first BRIEF before any code work — establish "Yale PhD thesis" quality
-  foundation so no tokens wasted building wrong thing.
-- 2-question bootstrap UX is the north star: "Is this the first node?" / "What is the
-  address of the existing network?" — everything else flows from this simplicity invariant.
+- "plan we can leave on auto" = write a tight AUTO plan then execute without further approval per step
