@@ -20,6 +20,7 @@ Engine-agnostic: all engines (Claude Code, Gemini CLI) read and write here.
 | File | Subject | Status |
 |---|---|---|
 | BRIEF-PPN-ARCHITECTURE.md | PPN architecture — Yale PhD thesis quality; Genesis Protocol; seL4; CAmkES; intransitive non-interference. Gates all code work. | active |
+| BRIEF-PPN-DEV-BOOTSTRAP.md | Operational BRIEF — activate first PPN ceremony on live WireGuard mesh (Laptop A + B + GCP). Dogfood principle; deployment steps; virtualization proof; address plan migration. | active |
 | BRIEF-active-work.md | Current work queue — consolidated action brief | active |
 | BRIEF-KNOWLEDGE-PLATFORM-EDITORIAL-PLAN.md | Knowledge-platform editorial execution plan (complete; archival operator-gated §9) | active |
 | BRIEF-framework-pointsav-products-services.md | PointSav products & services — research-archive framework (standing reference) | active |
