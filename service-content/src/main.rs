@@ -9,8 +9,17 @@ use serde_json::Value;
 use std::fs;
 use std::path::Path;
 use std::sync::Arc;
+use std::sync::mpsc::RecvTimeoutError;
 use std::thread;
 use std::time::Duration;
+
+#[derive(Debug)]
+enum ExtractResult {
+    Success,
+    DeferTransient,
+    DeferCircuitOpen,
+    Failed,
+}
 
 fn main() -> NotifyResult<()> {
     println!("================================================================");
@@ -108,8 +117,43 @@ fn main() -> NotifyResult<()> {
         ));
     });
 
+    // ── SC-3: Doorman startup health-check ───────────────────────────────────
+    // Poll /healthz for up to 30 s before the first drain. If Doorman is
+    // unreachable at boot, all CORPUS files would be deferred and lost until
+    // restart. A brief wait here avoids that silent data-loss pattern.
+    {
+        let health_url = format!("{}/healthz", doorman_endpoint);
+        let client = reqwest::blocking::Client::new();
+        let mut wait_secs = 1u64;
+        let deadline = std::time::Instant::now() + Duration::from_secs(30);
+        let mut ready = false;
+        while std::time::Instant::now() < deadline {
+            match client
+                .get(&health_url)
+                .timeout(Duration::from_secs(2))
+                .send()
+            {
+                Ok(r) if r.status().is_success() => {
+                    ready = true;
+                    break;
+                }
+                _ => {}
+            }
+            thread::sleep(Duration::from_secs(wait_secs));
+            wait_secs = (wait_secs * 2).min(8);
+        }
+        if ready {
+            println!("[SYSTEM] Doorman ready.");
+        } else {
+            println!("[SYSTEM] Warning: Doorman unreachable after 30 s — CORPUS drain will proceed (files may defer to retry queue).");
+        }
+    }
+
     // ── Process any pre-existing CORPUS_* files ───────────────────────────────
+    // processed_ledgers: permanently done (success, circuit-open defer, hard failure)
+    // deferred_ledgers: transient defer — retried every 30 s by the watcher timeout
     let mut processed_ledgers: Vec<String> = Vec::new();
+    let mut deferred_ledgers: Vec<String> = Vec::new();
 
     if let Ok(entries) = fs::read_dir(Path::new(&corpus_dir)) {
         for entry in entries.flatten() {
@@ -117,22 +161,29 @@ fn main() -> NotifyResult<()> {
             if path.extension().and_then(|s| s.to_str()) == Some("json") {
                 let filename = path.file_name().unwrap().to_str().unwrap().to_string();
                 if filename.starts_with("CORPUS_") {
-                    let _ = process_corpus(
+                    match process_corpus(
                         &path,
                         &crm_dir,
                         &doorman_endpoint,
                         &module_id,
                         &graph_store,
-                    );
-                    processed_ledgers.push(filename);
+                    ) {
+                        ExtractResult::Success
+                        | ExtractResult::DeferCircuitOpen
+                        | ExtractResult::Failed => {
+                            processed_ledgers.push(filename);
+                        }
+                        ExtractResult::DeferTransient => {
+                            deferred_ledgers.push(filename);
+                        }
+                    }
                 }
             }
         }
     }
 
     // ── Watcher loop (blocking — runs on the main task) ───────────────────────
-    // std::sync::mpsc is fine here; recv() blocks the main async task's thread
-    // but the HTTP server lives on a separate tokio worker thread.
+    // Uses recv_timeout so the loop wakes every 30 s to retry deferred files.
     let (tx, rx) = std::sync::mpsc::channel();
     let mut watcher = notify::recommended_watcher(tx)?;
     watcher.watch(Path::new(&corpus_dir), RecursiveMode::NonRecursive)?;
@@ -141,26 +192,38 @@ fn main() -> NotifyResult<()> {
     println!("[SYSTEM] Active Kernel Surveillance Engaged on Corpus Plane...");
 
     loop {
-        match rx.recv() {
+        match rx.recv_timeout(Duration::from_secs(30)) {
             Ok(Ok(Event { paths, .. })) => {
                 for path in paths {
                     if let Some(extension) = path.extension() {
                         if extension == "json" {
-                            let filename = path.file_name().unwrap().to_str().unwrap().to_string();
+                            let filename =
+                                path.file_name().unwrap().to_str().unwrap().to_string();
                             if filename.starts_with("CORPUS_")
                                 && !processed_ledgers.contains(&filename)
+                                && !deferred_ledgers.contains(&filename)
                             {
                                 println!("\n[WATCHER] New Corpus Detected: {}", filename);
                                 thread::sleep(Duration::from_millis(250));
-                                processed_ledgers.push(filename.clone());
-                                if !process_corpus(
+                                // Mark in-flight in deferred to prevent double-fire
+                                // if the watcher emits multiple events for the same write.
+                                deferred_ledgers.push(filename.clone());
+                                match process_corpus(
                                     &path,
                                     &crm_dir,
                                     &doorman_endpoint,
                                     &module_id,
                                     &graph_store,
                                 ) {
-                                    println!("  -> [WATCHER] Extraction failed for {} — skipping until restart.", filename);
+                                    ExtractResult::Success
+                                    | ExtractResult::DeferCircuitOpen
+                                    | ExtractResult::Failed => {
+                                        deferred_ledgers.retain(|f| f != &filename);
+                                        processed_ledgers.push(filename);
+                                    }
+                                    ExtractResult::DeferTransient => {
+                                        // stays in deferred_ledgers; retried on next timeout
+                                    }
                                 }
                             }
                         }
@@ -168,9 +231,40 @@ fn main() -> NotifyResult<()> {
                 }
             }
             Ok(_) => {}
-            Err(_) => {}
+            Err(RecvTimeoutError::Timeout) => {
+                // Retry transient-deferred files
+                if !deferred_ledgers.is_empty() {
+                    println!(
+                        "[RETRY] Retrying {} deferred CORPUS file(s)...",
+                        deferred_ledgers.len()
+                    );
+                }
+                let retry_queue: Vec<String> = deferred_ledgers.drain(..).collect();
+                for filename in retry_queue {
+                    let path = Path::new(&corpus_dir).join(&filename);
+                    match process_corpus(
+                        &path,
+                        &crm_dir,
+                        &doorman_endpoint,
+                        &module_id,
+                        &graph_store,
+                    ) {
+                        ExtractResult::Success
+                        | ExtractResult::DeferCircuitOpen
+                        | ExtractResult::Failed => {
+                            processed_ledgers.push(filename);
+                        }
+                        ExtractResult::DeferTransient => {
+                            deferred_ledgers.push(filename);
+                        }
+                    }
+                }
+            }
+            Err(RecvTimeoutError::Disconnected) => break,
         }
     }
+
+    Ok(())
 }
 
 fn process_corpus(
@@ -179,14 +273,27 @@ fn process_corpus(
     doorman_endpoint: &str,
     module_id: &str,
     graph_store: &Arc<dyn GraphStore>,
-) -> bool {
+) -> ExtractResult {
+    // SC-5: log read failures instead of silently returning
     let content = match fs::read_to_string(filepath) {
         Ok(c) => c,
-        Err(_) => return false,
+        Err(e) => {
+            eprintln!(
+                "  -> [ERROR] Failed to read CORPUS file {:?}: {}",
+                filepath, e
+            );
+            return ExtractResult::Failed;
+        }
     };
     let payload: Value = match serde_json::from_str(&content) {
         Ok(v) => v,
-        Err(_) => return false,
+        Err(e) => {
+            eprintln!(
+                "  -> [ERROR] Malformed CORPUS JSON in {:?}: {}",
+                filepath, e
+            );
+            return ExtractResult::Failed;
+        }
     };
 
     let worm_id = payload["worm_id"].as_str().unwrap_or("UNKNOWN");
@@ -200,7 +307,7 @@ fn process_corpus(
         .unwrap_or(module_id);
 
     if corpus_text.is_empty() {
-        return false;
+        return ExtractResult::Failed;
     }
 
     println!(
@@ -246,142 +353,160 @@ fn process_corpus(
 
     match res {
         Ok(response) => {
-            if response.status().is_success() {
-                if let Ok(extract_resp) = response.json::<serde_json::Value>() {
-                    // Tier B unavailable — graceful defer, no retry this session.
-                    // File remains in processed_ledgers; next boot will retry.
-                    if extract_resp["deferred"].as_bool().unwrap_or(false) {
-                        let reason = extract_resp["defer_reason"].as_str().unwrap_or("unknown");
-                        println!("  -> [WATCHER] Extraction deferred ({}): Tier B unavailable — will retry next boot.", reason);
-                        return true;
-                    }
-
-                    if extract_resp["extraction_ok"].as_bool().unwrap_or(false) {
-                        let semantic_entities = extract_resp["entities"]
-                            .as_array()
-                            .cloned()
-                            .unwrap_or_default();
-
-                        let mut enriched_crm = Vec::new();
-                        let mut graph_entities: Vec<GraphEntity> = Vec::new();
-
-                        for ent in &semantic_entities {
-                            let entity_name = ent["entity_name"].as_str().unwrap_or("").to_string();
-                            let classification =
-                                ent["classification"].as_str().unwrap_or("").to_string();
-                            let role_vector = ent
-                                .get("role_vector")
-                                .and_then(|v| v.as_str())
-                                .filter(|s| !s.is_empty() && *s != "null")
-                                .map(str::to_string);
-                            let location_vector = ent
-                                .get("location_vector")
-                                .and_then(|v| v.as_str())
-                                .filter(|s| !s.is_empty() && *s != "null")
-                                .map(str::to_string);
-                            let contact_vector = ent
-                                .get("contact_vector")
-                                .and_then(|v| v.as_str())
-                                .filter(|s| !s.is_empty() && *s != "null")
-                                .map(str::to_string);
-
-                            // Build GraphEntity for the graph write path
-                            graph_entities.push(GraphEntity {
-                                entity_name: entity_name.clone(),
-                                classification: classification.clone(),
-                                role_vector: role_vector.clone(),
-                                location_vector: location_vector.clone(),
-                                contact_vector: contact_vector.clone(),
-                                module_id: effective_module_id.to_string(),
-                                confidence: 0.95,
-                            });
-
-                            // Build the legacy JSON CRM record
-                            let mut new_ent = serde_json::Map::new();
-                            new_ent
-                                .insert("entity_name".to_string(), serde_json::json!(entity_name));
-                            new_ent.insert(
-                                "classification".to_string(),
-                                serde_json::json!(classification),
-                            );
-                            new_ent.insert(
-                                "role_vector".to_string(),
-                                role_vector
-                                    .as_deref()
-                                    .map(|s| serde_json::json!(s))
-                                    .unwrap_or(serde_json::json!("UNVERIFIED")),
-                            );
-                            new_ent.insert("confidence".to_string(), serde_json::json!(0.95));
-                            new_ent.insert(
-                                "context_anchor".to_string(),
-                                serde_json::json!("SLM NEURAL INFERENCE"),
-                            );
-
-                            let loc = location_vector
-                                .as_deref()
-                                .map(|s| serde_json::json!(s))
-                                .unwrap_or(serde_json::json!("UNVERIFIED"));
-                            new_ent.insert("location_vector".to_string(), loc);
-
-                            let mut latent = Vec::new();
-                            if let Some(contact) = contact_vector.as_deref() {
-                                if contact.contains('@') {
-                                    latent.push(format!("mailto:{}", contact));
-                                } else {
-                                    latent.push(format!("tel:{}", contact));
-                                }
-                            }
-                            new_ent.insert("latent_vectors".to_string(), serde_json::json!(latent));
-
-                            enriched_crm.push(Value::Object(new_ent));
-                        }
-
-                        let semantic_ledger = serde_json::json!({
-                            "worm_id": format!("{}_SEMANTIC", worm_id),
-                            "source_asset": "SLM_INFERENCE",
-                            "extracted_crm_entities": enriched_crm
-                        });
-
-                        let out_file = format!("{}/SEMANTIC_{}.json", crm_dir, worm_id);
-                        fs::write(&out_file, semantic_ledger.to_string()).unwrap();
-                        println!(
-                            "  -> [WATCHER] Semantic Integration Complete: {} Nodes Secured.",
-                            enriched_crm.len()
-                        );
-
-                        // ── Graph write path ──────────────────────────────────
-                        if let Err(e) =
-                            graph_store.upsert_entities(effective_module_id, &graph_entities)
-                        {
-                            println!("  -> [GRAPH] Write failed: {}", e);
-                            false
-                        } else {
-                            println!(
-                                "  -> [GRAPH] {} entities written to graph (module: {}).",
-                                graph_entities.len(),
-                                effective_module_id
-                            );
-                            true
-                        }
-                    } else {
-                        println!("  -> [SYS_HALT] Extraction failed: extraction_ok false, no defer reason.");
-                        false
-                    }
-                } else {
-                    println!("  -> [SYS_HALT] Doorman returned invalid JSON format.");
-                    false
-                }
-            } else {
+            if !response.status().is_success() {
                 println!(
                     "  -> [SYS_HALT] Doorman rejected payload: {}",
                     response.status()
                 );
-                false
+                return ExtractResult::Failed;
             }
+
+            let extract_resp = match response.json::<serde_json::Value>() {
+                Ok(v) => v,
+                Err(_) => {
+                    println!("  -> [SYS_HALT] Doorman returned invalid JSON format.");
+                    return ExtractResult::Failed;
+                }
+            };
+
+            // SC-2: differentiate defer reasons — circuit-open skips until restart,
+            // transient retries after 30 s backoff.
+            if extract_resp["deferred"].as_bool().unwrap_or(false) {
+                let reason = extract_resp["defer_reason"].as_str().unwrap_or("unknown");
+                return match reason {
+                    "yoyo-circuit-open" => {
+                        println!(
+                            "  -> [WATCHER] Extraction deferred (circuit-open): skipping until restart."
+                        );
+                        ExtractResult::DeferCircuitOpen
+                    }
+                    _ => {
+                        println!(
+                            "  -> [WATCHER] Extraction deferred ({}): will retry in 30 s.",
+                            reason
+                        );
+                        ExtractResult::DeferTransient
+                    }
+                };
+            }
+
+            if !extract_resp["extraction_ok"].as_bool().unwrap_or(false) {
+                println!(
+                    "  -> [SYS_HALT] Extraction failed: extraction_ok false, no defer reason."
+                );
+                return ExtractResult::Failed;
+            }
+
+            let semantic_entities = extract_resp["entities"]
+                .as_array()
+                .cloned()
+                .unwrap_or_default();
+
+            let mut enriched_crm = Vec::new();
+            let mut graph_entities: Vec<GraphEntity> = Vec::new();
+
+            for ent in &semantic_entities {
+                let entity_name = ent["entity_name"].as_str().unwrap_or("").to_string();
+                let classification =
+                    ent["classification"].as_str().unwrap_or("").to_string();
+                let role_vector = ent
+                    .get("role_vector")
+                    .and_then(|v| v.as_str())
+                    .filter(|s| !s.is_empty() && *s != "null")
+                    .map(str::to_string);
+                let location_vector = ent
+                    .get("location_vector")
+                    .and_then(|v| v.as_str())
+                    .filter(|s| !s.is_empty() && *s != "null")
+                    .map(str::to_string);
+                let contact_vector = ent
+                    .get("contact_vector")
+                    .and_then(|v| v.as_str())
+                    .filter(|s| !s.is_empty() && *s != "null")
+                    .map(str::to_string);
+
+                // Build GraphEntity for the graph write path
+                graph_entities.push(GraphEntity {
+                    entity_name: entity_name.clone(),
+                    classification: classification.clone(),
+                    role_vector: role_vector.clone(),
+                    location_vector: location_vector.clone(),
+                    contact_vector: contact_vector.clone(),
+                    module_id: effective_module_id.to_string(),
+                    confidence: 0.95,
+                });
+
+                // Build the legacy JSON CRM record
+                let mut new_ent = serde_json::Map::new();
+                new_ent
+                    .insert("entity_name".to_string(), serde_json::json!(entity_name));
+                new_ent.insert(
+                    "classification".to_string(),
+                    serde_json::json!(classification),
+                );
+                new_ent.insert(
+                    "role_vector".to_string(),
+                    role_vector
+                        .as_deref()
+                        .map(|s| serde_json::json!(s))
+                        .unwrap_or(serde_json::json!("UNVERIFIED")),
+                );
+                new_ent.insert("confidence".to_string(), serde_json::json!(0.95));
+                new_ent.insert(
+                    "context_anchor".to_string(),
+                    serde_json::json!("SLM NEURAL INFERENCE"),
+                );
+
+                let loc = location_vector
+                    .as_deref()
+                    .map(|s| serde_json::json!(s))
+                    .unwrap_or(serde_json::json!("UNVERIFIED"));
+                new_ent.insert("location_vector".to_string(), loc);
+
+                let mut latent = Vec::new();
+                if let Some(contact) = contact_vector.as_deref() {
+                    if contact.contains('@') {
+                        latent.push(format!("mailto:{}", contact));
+                    } else {
+                        latent.push(format!("tel:{}", contact));
+                    }
+                }
+                new_ent.insert("latent_vectors".to_string(), serde_json::json!(latent));
+
+                enriched_crm.push(Value::Object(new_ent));
+            }
+
+            let semantic_ledger = serde_json::json!({
+                "worm_id": format!("{}_SEMANTIC", worm_id),
+                "source_asset": "SLM_INFERENCE",
+                "extracted_crm_entities": enriched_crm
+            });
+
+            // SC-3e: graph write first — if it fails, CRM is not written,
+            // keeping the two stores consistent.
+            if let Err(e) = graph_store.upsert_entities(effective_module_id, &graph_entities) {
+                println!("  -> [GRAPH] Write failed: {}", e);
+                return ExtractResult::Failed;
+            }
+            println!(
+                "  -> [GRAPH] {} entities written to graph (module: {}).",
+                graph_entities.len(),
+                effective_module_id
+            );
+
+            // CRM write second — only reaches here if graph succeeded.
+            let out_file = format!("{}/SEMANTIC_{}.json", crm_dir, worm_id);
+            fs::write(&out_file, semantic_ledger.to_string()).unwrap();
+            println!(
+                "  -> [WATCHER] Semantic Integration Complete: {} Nodes Secured.",
+                enriched_crm.len()
+            );
+
+            ExtractResult::Success
         }
         Err(e) => {
             println!("  -> [SYS_HALT] Doorman routing failed: {}", e);
-            false
+            ExtractResult::Failed
         }
     }
 }

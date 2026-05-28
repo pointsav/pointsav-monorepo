@@ -39,7 +39,14 @@ pub struct LbugGraphStore {
 
 impl LbugGraphStore {
     pub fn new(db_path: &str) -> Result<Self> {
-        let db = Database::new(db_path, SystemConfig::default())
+        let config = match std::env::var("SERVICE_CONTENT_LBUG_BUFFER_POOL_MB")
+            .ok()
+            .and_then(|s| s.parse::<u64>().ok())
+        {
+            Some(mb) => SystemConfig::default().buffer_pool_size(mb * 1024 * 1024),
+            None => SystemConfig::default(),
+        };
+        let db = Database::new(db_path, config)
             .map_err(|e| anyhow!("Failed to open LadybugDB at {}: {}", db_path, e))?;
         Ok(Self { db: Arc::new(db) })
     }
