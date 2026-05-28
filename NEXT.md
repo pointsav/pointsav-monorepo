@@ -7,6 +7,27 @@ Last updated: 2026-05-27 (session 4).
 
 ---
 
+## Dev-environment bootstrap (unblocked — activate first ceremony)
+
+- [ ] **Deploy `service-ppn-pairing` on GCP VM** — build release binary + install systemd unit
+  `infrastructure/systemd/local-ppn-pairing.service`. Listens on `0.0.0.0:9202`.
+  [2026-05-28 totebox@claude-code]
+
+- [ ] **Build + copy `os-network-admin` to Laptop A (iMac)** — `cargo build --release -p os-network-admin`
+  then `scp target/release/os-network-admin mathew@10.8.0.6:~/bin/`. Run with
+  `PAIRING_SERVER=http://10.8.0.9:9202 ~/bin/os-network-admin`. [2026-05-28 totebox@claude-code]
+
+- [ ] **Run `infrastructure/virt/vm-prove.sh` on Laptop A** — boots Alpine Linux VM with
+  QEMU/KVM; proves Totebox services can run inside a VM reachable over the PPN mesh.
+  Laptop A has real hardware VT-x; GCP VM needs `--tcg` flag (nested virt not enabled).
+  [2026-05-28 totebox@claude-code]
+
+- [ ] **Deferred: os-network-admin ratatui TUI** — keyboard approve/deny (a/d); QR rendering
+  via `system-pairing-codes::qr_unicode`; expiry countdown. Full §9.2 Step 4 UX.
+  [2026-05-28 totebox@claude-code]
+
+---
+
 ## Blocking — operator decisions needed first
 
 - [x] **Decide: EAPOL-monitor-mode vs Genesis Protocol** — **RESOLVED: Genesis Protocol.**
