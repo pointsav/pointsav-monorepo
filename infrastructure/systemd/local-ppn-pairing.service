@@ -1,0 +1,14 @@
+[Unit]
+Description=PPN node-join pairing server
+Documentation=https://github.com/pointsav/pointsav-monorepo
+After=network.target
+
+[Service]
+ExecStart=/usr/local/bin/service-ppn-pairing 0.0.0.0:9202
+Restart=on-failure
+RestartSec=5
+User=mathew
+WorkingDirectory=/home/mathew
+
+[Install]
+WantedBy=multi-user.target
