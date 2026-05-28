@@ -252,17 +252,20 @@ publicly-posted research documents without referencing any regulatory framework 
 
 ---
 
-## Active JOURNAL manuscripts (updated 2026-05-27)
+## Active JOURNAL manuscripts (updated 2026-05-28)
 
 All papers target the top 3 venues in their domain. Primary venue listed; alternates in each
 paper's frontmatter. All venues require double-blind peer review — `forbidden_terms_cleared`
 pass is simultaneously the double-blind anonymization pass.
 
-| File | Domain | Primary target (top-3 strategy) | State |
-|---|---|---|---|
-| JOURNAL-retail-colocation-v0.1.draft.md | Economic geography | *Economic Geography* (Wiley, IF 7.2) | draft |
-| JOURNAL-trustworthy-systems-v0.1.draft.md | Systems CS | ASPLOS (ACM, 19.4% AR) | draft |
-| JOURNAL-aec-data-layers-v0.1.draft.md | AEC/construction | *Automation in Construction* (Elsevier, IF 12.0) | draft (scaffolded) |
-| JOURNAL-private-network-v0.1.stub.md | Networking/ZTA | *IEEE TIFS* (IEEE, IF 9.65) | stub |
-| JOURNAL-totebox-orchestration-v0.1.stub.md | Systems/ML | MLSys (ACM, 22% AR) | stub |
-| JOURNAL-desktop-environment-v0.1.stub.md | HCI/BIM | *ACM TOCHI* (ACM, Q1 HCI) | stub |
+Canonical current versions are in `JOURNAL/` at the archive root.
+Working drafts (may differ from canonical) are in `.agent/drafts-outbound/`.
+
+| File | Domain | Primary target (top-3 strategy) | Ver | State |
+|---|---|---|---|---|
+| JOURNAL-retail-colocation-v0.1.draft.md | Economic geography | *Economic Geography* (Wiley, IF 7.2) | 0.3 | language-cleared; §7.2 pending Phase 24B |
+| JOURNAL-trustworthy-systems-v0.1.draft.md | Systems CS | ASPLOS (ACM, 19.4% AR) | 0.1 | language-cleared; Bench #9 re-run pending |
+| JOURNAL-aec-data-layers-v0.1.draft.md | AEC/construction | *Automation in Construction* (Elsevier, IF 12.0) | 0.2 | language-cleared; §6 Results pending coverage metrics |
+| JOURNAL-private-network-v0.1.stub.md | Networking/ZTA | *IEEE TIFS* (IEEE, IF 9.65) | 0.2 | language-cleared; §4–§5 pending benchmarks |
+| JOURNAL-totebox-orchestration-v0.1.stub.md | Systems/ML | MLSys (ACM, 22% AR) | 0.1 | stub — HOLD until J2 submitted |
+| JOURNAL-desktop-environment-v0.1.stub.md | HCI/BIM | *ACM TOCHI* (ACM, Q1 HCI) | 0.2 | language-cleared; §6 Results pending user study |
