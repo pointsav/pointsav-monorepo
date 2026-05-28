@@ -141,12 +141,12 @@
         }
 
         /* ── Footer & Modals ──────────────────────────────────────── */
-        .panel-footer { padding: 12px 20px; border-top: 1px solid var(--border-soft); background: rgba(0,0,0,0.02); display: flex; gap: 10px; }
+        .panel-footer { padding: 12px 20px; border-top: 1px solid var(--border-soft); background: rgba(0,0,0,0.02); display: flex; flex-wrap: wrap; gap: 8px; }
         .footer-btn {
-            flex: 1; border: none; background: transparent; padding: 6px;
+            flex: 1 1 calc(50% - 4px); border: none; background: transparent; padding: 6px;
             font-size: 11px; font-weight: 800; color: var(--text-muted);
             text-transform: uppercase; letter-spacing: 0.5px; cursor: pointer;
-            border-radius: 4px; transition: all 0.15s;
+            border-radius: 4px; transition: all 0.15s; text-align: center; text-decoration: none; display: block;
         }
         .footer-btn:hover { background: rgba(0,0,0,0.05); color: var(--brand-primary); }
 
