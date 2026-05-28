@@ -2,7 +2,27 @@
 
 ---
 
-### 2026-05-31 | totebox@project-intelligence | claude-sonnet-4-6 (sessions 13+14 — brief consolidation; corpus audit; P1/P2/Sprint 4a; training architecture revised)
+### 2026-05-28 | totebox@project-console | claude-sonnet-4-6
+
+**Done this session:**
+- Startup only. No code changes.
+- NOTAM hazard resolved: 17 health alerts (doorman-unreachable, services-down) cascaded from 2026-05-27T00:34Z. Root cause: `slm-doorman-server` killed by SIGTERM after spin-loop on shadow brief `84DEA8VZHK0XNXW0JD1FERH3WX`. Apprenticeship queue was empty; restarted `local-doorman` — service now healthy.
+- Doorman port discrepancy discovered: service binds `127.0.0.1:9080` per systemd logs; manifest + Phase 3 code note says `localhost:8011`. `app-console-content` code references 8011. Must resolve before Phase 6 work (offline mode polls doorman healthz). Added to monorepo NEXT.md.
+- Archive-level NEXT.md (`/srv/foundry/clones/project-console/NEXT.md`) contains project-infrastructure content ("NEXT.md — project-infrastructure (cluster/project-infrastructure branch)") — contamination noted in outbox for Command.
+- Updated monorepo `NEXT.md`: Phase 5 → Complete; Phase 6 → Current (was still showing Phase 5 as Current since `894452c1` shutdown update didn't land in monorepo on rebased main).
+
+**Pending / carry-forward:**
+- Stage 6 push: waiting Command authorization for force-push. See outbox `project-console-20260522-stage6-history-divergence`.
+- **Pre-Phase 6 blocker:** doorman port — verify which is authoritative (9080 from service log vs 8011 from manifest). Check `slm/endpoint.txt` and `pairings.yaml`. If 9080 is correct, update code references in `app-console-content/src/draft.rs` and `ContentCartridge`.
+- Phase 6: offline mode + Tantivy full-text search.
+- Pairing-server systemd unit, GCE firewall port 2222, Peter's SSH key — Command/operator.
+- Archive-level NEXT.md replacement (currently has project-infrastructure content) — Command decision needed.
+
+**Operator preferences surfaced:** (none new this session)
+
+---
+
+### 2026-05-24 | totebox@project-console | claude-sonnet-4-6
 
 **Done this session:**
 
@@ -40,14 +60,6 @@
 **Done:** Full audit of shadow capture chain. Fix A: pass diff via `HOOK_DIFF` env var (heredoc was consuming stdin). Fix B: rewrote `APPRENTICE_SYSTEM_PROMPT` to remove Claude-specific jargon; OLMo was preambling before `---` causing 100% escalation. New binary deployed 00:41 UTC. Stage 6 complete by Command (`a0649002`, `aef13fd9`, `b57f9d22`).
 
 **Pending carried forward:** Fix C (GBNF grammar) deferred — now indefinitely deferred per session 14 architecture revision. Yo-Yo 1h test when L4 capacity returns. Stale shim test fields.
-
----
-
-### 2026-05-30 | totebox@project-intelligence | claude-sonnet-4-6 (session 11 — drain-apprenticeship.timer conflict found and killed; flow confirmed)
-
-**Done:** Identified `drain-apprenticeship.timer` (legacy shell drainer, wrong format) as root cause of all poison. Stopped and disabled it. Recovered 25 briefs. Flow confirmed: `0BDB1DF0` dispatched, OLMo at 124% CPU.
-
-**Pending carried forward:** Stage 6 (actioned by Command), orchestration-slm deploy (still pending operator), drain-timer systemd cleanup (still pending).
 
 ---
 

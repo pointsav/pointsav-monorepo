@@ -1938,6 +1938,40 @@ Flow debug + audit session complete. 3 commits:
 ---
 from: totebox@project-console
 to: command@claude-code
+re: startup/shutdown findings — doorman restart; NEXT.md contamination; doorman port discrepancy
+created: 2026-05-28T18:10:00Z
+priority: normal
+status: pending
+msg-id: project-console-20260528-startup-findings
+---
+
+Startup-only session (no code changes). Three items for Command awareness:
+
+**1. Doorman restarted.**
+`local-doorman` was inactive since 2026-05-27T00:34Z (SIGTERM). Root cause: spin-loop on
+shadow brief `84DEA8VZHK0XNXW0JD1FERH3WX` with outcome=Retry. Apprenticeship queue was empty
+at session start; doorman restarted and is now healthy at `127.0.0.1:9080`. The 17 watcher
+health alerts (services-down, doorman-unreachable) are cleared.
+
+**2. Archive-level NEXT.md contamination.**
+`/srv/foundry/clones/project-console/NEXT.md` contains content titled
+"NEXT.md — project-infrastructure (cluster/project-infrastructure branch)". This is from a
+different cluster and should be replaced with a proper project-console NEXT.md. The coding
+roadmap items live correctly in `pointsav-monorepo/NEXT.md`. Awaiting Command decision on
+whether to create a fresh archive-level NEXT.md or leave it as-is.
+
+**3. Doorman port discrepancy — pre-Phase 6 blocker.**
+Service binds `127.0.0.1:9080` (confirmed from systemd log at startup). Manifest and Phase 3
+code note both say `localhost:8011`. `app-console-content/src/draft.rs` and the ContentCartridge
+both reference 8011. Added to monorepo NEXT.md as a pre-Phase-6 blocker. Please confirm which
+port is authoritative (check `pairings.yaml` and `slm/endpoint.txt`) and relay — Totebox will
+update the code references accordingly at start of Phase 6 session.
+
+— totebox@project-console / 2026-05-28
+
+---
+from: totebox@project-console
+to: command@claude-code
 re: Phase 5 complete — draft mode; /new slash command; Doorman SSE streaming; drafts-outbound
 created: 2026-05-24T00:00:00Z
 priority: normal

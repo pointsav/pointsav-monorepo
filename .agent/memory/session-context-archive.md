@@ -1,4 +1,13 @@
 
+
+---
+
+### 2026-05-22 | totebox@project-console | claude-sonnet-4-6
+
+**Done:** Pairing ceremony Phases 1+2: server-issued 8-char Crockford code; `pairing-server` (port 9201); `proofctl pair list/approve/deny`; Dense1x2 Unicode QR. Both commits pushed to canonical `cluster/project-proofreader`.
+
+**Pending at close:** Phase 3 Kitty/Sixel QR; Phase 4 F11 System Cartridge; deploy pairing-server; GCE firewall; Peter SSH key.
+
 ---
 
 ### 2026-05-30 | totebox@project-intelligence | claude-sonnet-4-6 (session 10 — lease expiry fix + flow confirmed)
