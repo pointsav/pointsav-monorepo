@@ -177,12 +177,14 @@ mandatory in the paper body and two fields are mandatory in the frontmatter.
 
 **Block 1 — Preprint / WIP notice**
 ```markdown
-> **Working Paper · Version X.X · YYYY-MM-DD**
+> **Working Paper · Version X.X · YYYY-MM-DD · CC BY 4.0**
 > This manuscript is a working draft. It has not been peer reviewed. Findings are
-> preliminary and subject to revision without notice. The authors welcome
-> correspondence at jmwoodfine@gmail.com.
+> preliminary and subject to revision without notice. Correspondence: jmwoodfine@gmail.com.
+>
+> *Cite as:* [full cite_as string from frontmatter]
 ```
-Version from `version:` field; date from `language_pass_date:` or today if absent.
+Version from `version:` field; date from `language_pass_date:` or today if absent;
+cite_as string from the `cite_as:` frontmatter field.
 
 **Block 2 — Forward-Looking Statements advisory** (place immediately after Block 1)
 ```markdown
@@ -204,7 +206,31 @@ Foundry, or any term from the Forbidden vocabulary list above.
 ```yaml
 preprint_posted: true
 preprint_posted_date: YYYY-MM-DD
+doi: ""                # fill when registered on Zenodo (ISO 26324); leave blank until then
+license: "CC BY 4.0"  # Creative Commons Attribution 4.0 — de facto open-access preprint standard
+cite_as: "Author, F.M. et al. (YYYY). Title. Working Paper vX.X, DD Month YYYY. Woodfine Management Corp., Vancouver, BC."
+revision_history:
+  - version: "X.X"
+    date: "YYYY-MM-DD"
+    changes: "Description of changes this version"
 ```
+
+**Versioning standards applied:**
+- `version:` field follows Semantic Versioning (SemVer): MAJOR.MINOR — increment MINOR per writing pass,
+  MAJOR per accepted publication
+- `doi:` follows ISO 26324; register on Zenodo (free, CERN-operated) to mint a DOI per version plus
+  a stable concept DOI across all versions; operator action required (Zenodo account)
+- `license:` CC BY 4.0 is the standard for open-access academic preprints
+- `cite_as:` provides a formatted citation string readers can copy; version and date must match `version:` and
+  `language_pass_date:` / `preprint_posted_date:`
+- `revision_history:` tracks version changes chronologically; one entry per version; newest last
+
+**Git tagging (per public posting):**
+Create an annotated tag immediately before the commit that records the public posting:
+```bash
+git tag -a "J<N>-v<X.X>-<YYYY-MM-DD>" -m "JOURNAL-<slug> v<X.X> public posting"
+```
+Tags are not pushed automatically — pushed separately when operator confirms external URL is live.
 
 ### Standard basis
 
