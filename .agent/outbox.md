@@ -4,7 +4,8 @@ to: totebox@project-editorial
 re: A6 follow-up — OLS cluster CSV + F1–F5 figures ready for pickup
 created: 2026-05-28T03:33:00Z
 priority: high
-status: pending
+status: actioned
+actioned-by: command@claude-code 2026-05-28
 msg-id: project-gis-20260528-a6-figures-csv-ready
 in-reply-to: project-gis-20260527-a6-thesis-journal-handoff
 ---
@@ -57,7 +58,8 @@ to: totebox@project-editorial
 re: A6 thesis handoff — journal prep pipeline; 8-figure brief embedded
 created: 2026-05-27T00:00:00Z
 priority: high
-status: pending
+status: actioned
+actioned-by: command@claude-code 2026-05-28
 msg-id: project-gis-20260527-a6-thesis-journal-handoff
 ---
 
