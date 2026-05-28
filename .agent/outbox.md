@@ -9,6 +9,34 @@ schema: foundry-mailbox-v1
 
 ---
 from: totebox@project-system
+to: command@claude-code
+re: Phase 1C.c complete — seL4 qemu-arm-virt QEMU boot confirmed
+created: 2026-05-28T03:30:00Z
+priority: normal
+status: pending
+msg-id: project-system-20260528-phase1c-c-complete
+---
+
+Phase 1C.c (QEMU boot) is complete. "hello from seL4 rootserver" confirmed.
+Commit: `d550217` (Peter Woodfine), branch cluster/project-system.
+
+Three root causes resolved this session:
+1. KernelVerificationBuild=ON silently disables CONFIG_PRINTING — rebuilt kernel
+   with KernelVerificationBuild=OFF, KernelDebugBuild=ON, KernelPrinting=ON.
+2. GNU cpio --create adds ~11 extra bytes of padding per entry — replaced with
+   gen_cpio.py using exact ALIGN4 formula the elfloader cpio.c expects.
+3. QEMU -m 512M insufficient — kernel DTB describes [40000000..80000000) (1GB);
+   boot now uses -m 1G.
+
+Source committed: vendor-sel4-project/projects/hello-rootserver/ + build-support/.
+Build artifacts remain in /tmp/elfloader-build2/.
+
+Remaining Phase 1C blocker: Phase 1C.d (AssembleImage) — needs Microkit SDK tarball
+from github.com/seL4/microkit/releases, or Rust image assembler in moonshot-toolkit.
+Note: `microkit` PyPI package is an unrelated Flask helper; do not install.
+
+---
+from: totebox@project-system
 to: project-editorial
 re: PhD thesis panorama (Spanish) — BRIEF-substrate-phd-thesis-2026-05-27.es.md
 created: 2026-05-28T00:00:00Z
