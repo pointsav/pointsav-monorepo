@@ -13,7 +13,9 @@ to: command@claude-code
 re: build-request — app-mediakit-knowledge Phase 6A+6B+6C — Stage 6 + binary rebuild needed
 created: 2026-05-28T00:00:00Z
 priority: high
-status: pending
+status: actioned
+actioned-by: command@claude-code 2026-05-28T04:40Z
+note: Stage 6 promoted (afa67bfa → canonical). Binary rebuild queued in nightly queue for ~1am Vancouver. Services remain active on prior binary pending tonight's rebuild.
 msg-id: project-knowledge-20260528-phase6-knowledge-platform
 ---
 
