@@ -27,13 +27,17 @@
   Unblocked by: cloning `seL4_tools` repo + building elfloader + linking
   kernel + rootserver into combined bootable image.
 
-- **Phase 1C.d — Image assembly** — `AssembleImage` step is a stub
-  returning an actionable error. Requires either:
-  1. Microkit SDK (`microkit.py`) — installs as a Python package; acceptable
-     as interim tool while Rust assembler is built.
-  2. Rust image assembler — new crate in `moonshot-toolkit/src/assemble.rs`
-     implementing Microkit image format (ELF packing + system description).
-  Unblocked by: either option above.
+- **Phase 1C.d — Image assembly** — `AssembleImage` step returns an actionable
+  error. Requires either:
+  1. Microkit SDK tarball — available from `github.com/seL4/microkit/releases`
+     as a pre-built release (e.g. `microkit-sdk-1.4.0-linux-x86-64.tar.gz`).
+     Provides `bin/microkit` CLI: `microkit <system.xml> --board qemu-arm-virt
+     --config debug --search-path build/ --output build/system.img`.
+     Note: the `microkit` PyPI package is an unrelated Flask helper — do not install.
+  2. Rust image assembler — `moonshot-toolkit/src/assemble.rs` implementing the
+     Microkit image format (ELF packing + manifest). Preferred path per MEMO §7
+     Rust-Only mandate; requires documenting the Microkit image format spec first.
+  Unblocked by: either option above. Rust path is preferred long-term.
 
 ## Deferred
 
