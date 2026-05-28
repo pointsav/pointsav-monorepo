@@ -396,12 +396,20 @@ async fn main() -> anyhow::Result<()> {
 }
 
 fn build_doorman() -> anyhow::Result<Doorman> {
-    let local = Some(LocalTierClient::new(LocalTierConfig {
-        endpoint: std::env::var("SLM_LOCAL_ENDPOINT")
-            .unwrap_or_else(|_| "http://127.0.0.1:8080".to_string()),
-        default_model: std::env::var("SLM_LOCAL_MODEL")
-            .unwrap_or_else(|_| "olmo-3-7b-instruct".to_string()),
-    }));
+    let force_broker = std::env::var("SLM_FORCE_BROKER_MODE")
+        .map(|v| matches!(v.trim(), "true" | "1"))
+        .unwrap_or(false);
+    let local = if force_broker {
+        info!("SLM_FORCE_BROKER_MODE=true: Tier A disabled; all inference routes to Yo-Yo");
+        None
+    } else {
+        Some(LocalTierClient::new(LocalTierConfig {
+            endpoint: std::env::var("SLM_LOCAL_ENDPOINT")
+                .unwrap_or_else(|_| "http://127.0.0.1:8080".to_string()),
+            default_model: std::env::var("SLM_LOCAL_MODEL")
+                .unwrap_or_else(|_| "olmo-3-7b-instruct".to_string()),
+        }))
+    };
 
     let mut yoyo = std::collections::HashMap::new();
 
