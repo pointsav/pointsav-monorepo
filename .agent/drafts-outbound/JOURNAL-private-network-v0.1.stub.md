@@ -55,6 +55,8 @@ word_count_target: 9000
 submission_status: not-submitted
 writing_pass_date: 2026-05-28
 language_pass_date: 2026-05-28
+preprint_posted: true
+preprint_posted_date: 2026-05-28
 cites:
   - donenfeld-2017-wireguard
   - rose-2020-nist-800-207
@@ -82,6 +84,12 @@ notes_for_editor: |
   "Zero Trust for Next-Generation Networking" special issue — if open, preferred
   submission path. Standard TIFS track is the fallback.
 ---
+
+> **Working Paper · Version 0.2 · 2026-05-28**
+> This manuscript is a working draft. It has not been peer reviewed. Findings are preliminary and subject to revision without notice. The authors welcome correspondence at jmwoodfine@gmail.com.
+
+> **Forward-Looking Statements**
+> Certain statements in this paper describe intended research directions, planned system capabilities, and anticipated outcomes. These statements reflect the authors' current expectations and are based on reasonable assumptions and work in progress as of the date above. Actual results, measurements, and findings may differ materially. Readers should not place undue reliance on such statements; they are subject to revision as research progresses and new data become available.
 
 # Customer-Rooted Mesh Architecture for Distributed Operational Systems: Zero-Trust Isolation Without Vendor Key Custody
 

@@ -54,6 +54,8 @@ word_count_target: 9500
 submission_status: not-submitted
 cites: []
 forbidden_terms_cleared: false
+preprint_posted: true
+preprint_posted_date: 2026-05-28
 notes_for_editor: |
   STUB — no body content yet. Research material needed before writing pass.
 
@@ -84,6 +86,12 @@ notes_for_editor: |
     5. ORCID IDs for all three authors
     6. Confirm target venue (OSDI vs. MLSys vs. EuroSys) based on system vs. ML angle
 ---
+
+> **Working Paper · Version 0.1 · 2026-05-28**
+> This manuscript is a working draft. It has not been peer reviewed. Findings are preliminary and subject to revision without notice. The authors welcome correspondence at jmwoodfine@gmail.com.
+
+> **Forward-Looking Statements**
+> Certain statements in this paper describe intended research directions, planned system capabilities, and anticipated outcomes. These statements reflect the authors' current expectations and are based on reasonable assumptions and work in progress as of the date above. Actual results, measurements, and findings may differ materially. Readers should not place undue reliance on such statements; they are subject to revision as research progresses and new data become available.
 
 # TODO: Capability-Secured Session Orchestration
 
