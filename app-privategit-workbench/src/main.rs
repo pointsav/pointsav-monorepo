@@ -729,8 +729,18 @@ fn detect_doc_type(path: &Path, content_peek: Option<&str>) -> DocType {
         "geojson" => DocType::GeoJson,
         "json" => {
             if let Some(peek) = content_peek {
-                let p = &peek[..peek.len().min(512)];
+                // 6 KB is enough to find all discriminating fields in every known proforma variant
+                let p = &peek[..peek.len().min(6144)];
                 if p.contains("\"proforma_version\"") {
+                    return DocType::Proforma;
+                }
+                // Bespoke tool-proforma output (no version field): entity + date + data section key
+                if p.contains("\"entity\"")
+                    && p.contains("\"date\"")
+                    && (p.contains("\"income\"")
+                        || p.contains("\"years\"")
+                        || p.contains("\"areas\""))
+                {
                     return DocType::Proforma;
                 }
             }
@@ -856,16 +866,20 @@ async fn get_document(
 }
 
 fn render_proforma_document(content: &str, path: &Path) -> Response {
-    let fname = path
-        .file_name()
-        .and_then(|n| n.to_str())
-        .unwrap_or("proforma.json");
+    // Prefer companion .html produced by tool-proforma — correct by definition.
+    let html_path = path.with_extension("html");
+    if html_path.exists() {
+        if let Ok(html) = fs::read_to_string(&html_path) {
+            return Html(html).into_response();
+        }
+    }
 
-    // Extract title and sheet names from JSON without full parse
-    let title = extract_json_string_field(content, "title")
-        .unwrap_or_else(|| fname.to_string());
-    let version = extract_json_string_field(content, "proforma_version")
-        .unwrap_or_else(|| "1.0".to_string());
+    // Fallback: no companion HTML found
+    let fname = path.file_name().and_then(|n| n.to_str()).unwrap_or("proforma.json");
+    let title = extract_json_string_field(content, "title").unwrap_or_else(|| fname.to_string());
+    let entity = extract_json_string_field(content, "entity").unwrap_or_default();
+    let date = extract_json_string_field(content, "date").unwrap_or_default();
+    let sep = if !entity.is_empty() && !date.is_empty() { " — " } else { "" };
 
     let html = format!(
         r#"<!DOCTYPE html>
@@ -875,31 +889,27 @@ fn render_proforma_document(content: &str, path: &Path) -> Response {
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{title}</title>
 <style>
-body {{ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+body {{ font-family: "Liberation Sans", Arial, sans-serif;
        margin: 0; padding: 32px 48px; background: #fff; color: #24292e; }}
-.badge {{ display: inline-block; background: #0066cc22; color: #4d9fff;
-          border: 1px solid #4d9fff44; font-size: 11px; font-weight: 700;
-          text-transform: uppercase; letter-spacing: .06em;
-          padding: 2px 8px; border-radius: 3px; margin-bottom: 12px; }}
-h1 {{ font-size: 1.6em; margin: 0 0 4px; }}
-.meta {{ font-size: 12px; color: #666; margin-bottom: 32px; }}
+h1 {{ font-size: 1.5em; margin: 0 0 4px; }}
+.meta {{ font-size: 12px; color: #666; margin-bottom: 24px; }}
 .notice {{ background: #f6f8fa; border: 1px solid #e1e4e8; border-radius: 6px;
            padding: 16px 20px; font-size: 13px; color: #444; }}
 </style>
 </head>
 <body>
-<div class="badge">Proforma v{version}</div>
 <h1>{title}</h1>
-<div class="meta">{fname}</div>
+<div class="meta">{entity}{sep}{date}</div>
 <div class="notice">
-  Full spreadsheet renderer is coming in the next sprint.<br>
-  Use <strong>Download PDF</strong> in the toolbar to render this proforma to PDF now.
+  No rendered companion .html found alongside this proforma.<br>
+  Run tool-proforma to generate the companion HTML, then reload.
 </div>
 </body>
 </html>"#,
         title = esc_html(&title),
-        version = esc_html(&version),
-        fname = esc_html(fname),
+        entity = esc_html(&entity),
+        sep = sep,
+        date = esc_html(&date),
     );
 
     Html(html).into_response()
@@ -1002,55 +1012,49 @@ async fn get_pdf(
     let html = match doc_type {
         DocType::HtmlDoc => inject_page_css(&content, &q),
         DocType::Proforma => {
-            // Phase 2 will have a full proforma spreadsheet renderer.
-            // For now, render the basic metadata summary with page CSS.
-            let title = extract_json_string_field(&content, "title")
-                .or_else(|| {
-                    fs_path
-                        .file_stem()
-                        .and_then(|s| s.to_str())
-                        .map(|s| s.to_string())
-                })
-                .unwrap_or_else(|| "Proforma".to_string());
+            // Prefer companion .html produced by tool-proforma; inject @page CSS for pagination.
+            let html_path = fs_path.with_extension("html");
+            if html_path.exists() {
+                match fs::read_to_string(&html_path) {
+                    Ok(companion_html) => inject_page_css(&companion_html, &q),
+                    Err(e) => return err(StatusCode::INTERNAL_SERVER_ERROR, e.to_string()),
+                }
+            } else {
+                // Fallback when no companion HTML exists
+                let title = extract_json_string_field(&content, "title")
+                    .or_else(|| fs_path.file_stem().and_then(|s| s.to_str()).map(|s| s.to_string()))
+                    .unwrap_or_else(|| "Proforma".to_string());
+                let entity = extract_json_string_field(&content, "entity").unwrap_or_default();
+                let date = extract_json_string_field(&content, "date").unwrap_or_default();
+                let fname = fs_path.file_name().and_then(|n| n.to_str()).unwrap_or("proforma.json");
+                let sep = if !entity.is_empty() && !date.is_empty() { " — " } else { "" };
 
-            let version = extract_json_string_field(&content, "proforma_version")
-                .unwrap_or_else(|| "1.0".to_string());
-
-            let fname = fs_path
-                .file_name()
-                .and_then(|n| n.to_str())
-                .unwrap_or("proforma.json");
-
-            format!(
-                r#"<!DOCTYPE html>
+                let body = format!(
+                    r#"<!DOCTYPE html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>{title}</title>
+<head><meta charset="UTF-8"><title>{title}</title>
 <style>
-@page {{ size: letter; margin: 2cm 2cm 2.5cm 2cm;
-  @bottom-center {{ content: counter(page) " / " counter(pages);
-    font-size: 9pt; color: #666; font-family: "Liberation Sans", Arial, sans-serif; }} }}
 body {{ font-family: "Liberation Sans", Arial, sans-serif;
         margin: 0; padding: 32px 48px; color: #24292e; }}
-h1 {{ font-size: 1.6em; margin: 0 0 4px; }}
+h1 {{ font-size: 1.5em; margin: 0 0 4px; }}
 .meta {{ font-size: 12px; color: #666; margin-bottom: 32px; }}
-pre {{ background: #f6f8fa; border: 1px solid #e1e4e8; border-radius: 6px;
-       padding: 16px; font-size: 11px; white-space: pre-wrap; word-break: break-word; }}
+p {{ font-size: 13px; color: #444; }}
 </style>
 </head>
 <body>
 <h1>{title}</h1>
-<div class="meta">Proforma v{version} — {fname}</div>
-<p><em>Full spreadsheet renderer ships in the next sprint. This PDF shows the raw JSON for reference.</em></p>
-<pre>{json_preview}</pre>
+<div class="meta">{entity}{sep}{date} — {fname}</div>
+<p>Run tool-proforma to generate the companion .html, then re-export this PDF.</p>
 </body>
 </html>"#,
-                title = esc_html(&title),
-                version = esc_html(&version),
-                fname = esc_html(fname),
-                json_preview = esc_html(&content[..content.len().min(4000)]),
-            )
+                    title = esc_html(&title),
+                    entity = esc_html(&entity),
+                    sep = sep,
+                    date = esc_html(&date),
+                    fname = esc_html(fname),
+                );
+                inject_page_css(&body, &q)
+            }
         }
         DocType::GeoJson => {
             // PDF = feature properties as a data table (MapLibre is WebGL; WeasyPrint cannot render it)
