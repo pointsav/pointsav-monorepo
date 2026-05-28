@@ -2,6 +2,32 @@
 
 ---
 
+### 2026-05-28 (session close) | totebox@project-editorial | claude-sonnet-4-6
+
+**Done this session:**
+- Full inbox/outbox/NEXT.md sweep at session start; plan created and approved.
+- `command-20260526-dev-phase3-drafts-relay` actioned: TOPIC committed to `media-knowledge-documentation/applications/app-privategit-workbench.md` + ES stub; GUIDE (`guide-workbench-setup.md`) staged to drafts-outbound + routed to Command via outbox `project-editorial-20260528-guide-workbench-routing`.
+- A6 PROSE-RESEARCH editorial pass complete (forbidden-terms clean, BCSC clean, DATA PENDING annotations for §7.2); committed to wiki — `a77e1bb` (Peter). Placed at `reference/geometric-site-selection-national-tenancy.md` + ES stub (no `research/` category in wiki; `reference/` used per prior pattern for BIM market context).
+- B5/B11/B12 TEXT artifacts (Canada/Walmart, Nordic coverage, UK/EU coverage) dispatched to project-gis for coverage verification + return; outbox msg-id `project-editorial-20260528-text-artifacts-dispatch`.
+- Convention layer outbox message sent to Command (msg-id `project-editorial-20260528-convention-layer-journal`): 4 items — artifact-classification.yaml JOURNAL row, conventions/journal-artifact-discipline.md new file, artifact-registry.md JOURNAL row, Foundry NEXT.md JOURNAL section.
+- B13–B16 registry drift surfaced: files not in drafts-outbound; project-gis must write and dispatch these 4 TOPIC files. Noted in NEXT.md and artifact registry.
+- Artifact registry updated: A6 → COMMITTED `a77e1bb`; B5/B11/B12 → DISPATCHED; B13–B16 → REGISTRY DRIFT.
+
+**Pending / carry-forward:**
+- All JOURNAL data blockers remain (Phase 24B / Bench #9 / AEC metrics / WireGuard benchmarks / user study) — external projects
+- ORCID IDs for all three authors — operator action
+- B5/B11/B12 TEXT: awaiting coverage verification from project-gis before language pass at project-editorial
+- B13–B16 TOPIC: need to be written and dispatched by project-gis
+- Convention layer (4 items): Command Session scope — msg sent
+- GUIDE `guide-workbench-setup.md` → woodfine-fleet-deployment: Command Session scope — msg sent
+- Stage 6 for all JOURNAL + wiki commits — Command Session scope
+- Git tags (J1-v0.3 … J6-v0.2) not yet pushed
+
+**Operator preferences surfaced:**
+- (none new this session)
+
+---
+
 ### 2026-05-28 (continuation) | totebox@project-editorial | claude-sonnet-4-6
 
 **Done this session:**
@@ -57,13 +83,4 @@
 - Wants JOURNAL programme fully tracked and recoverable across sessions — save everything at shutdown
 - "send back to their respective projects" = outbox messages with file path + exact blockers + return instructions
 
----
-
-### 2026-05-24 | totebox@project-console | claude-sonnet-4-6
-
-**Done this session:**
-- Phase 5 COMPLETE: `/new` slash command, Doorman SSE streaming, drafts-outbound write with foundry-draft-v1 frontmatter. Commits `6422c2a8` + `5118ce77`.
-- Inbox archived 8 messages; Stage 6 blocker retained.
-
-**Pending:** Stage 6 push blocked on Command decision (history divergence); Phase 6 offline+Tantivy; pairing-server systemd; GCE port 2222; Peter SSH key.
 

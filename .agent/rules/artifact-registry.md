@@ -142,7 +142,7 @@ Status values: `stub` → `scaffolded` → `language-cleared` → `submission-re
 - **Status:** STAGED in drafts-outbound/ — at project-editorial
 
 ### B5 — TEXT: Canada/Walmart Supercentre + Hospital Coverage
-- **Status:** STAGED in drafts-outbound/ (text-gis-canada-walmart-hospital-coverage.draft.md)
+- **Status:** DISPATCHED to project-gis 2026-05-28 (msg-id `project-editorial-20260528-text-artifacts-dispatch`) — awaiting coverage verification + language pass return
 
 ### B6 — DESIGN-RESEARCH: Bento Merged Zones Disclosure
 - **Status:** IMPLEMENTED 21cf18df (2026-05-17) — merged-ring UX shipped in index.html (Union-Find groupOverlappingClusters, showMergedGroupPanel). Editorial draft still at project-design for write-up.
@@ -160,22 +160,22 @@ Status values: `stub` → `scaffolded` → `language-cleared` → `submission-re
 - **Status:** STAGED in drafts-outbound/ — at project-design
 
 ### B11 — TEXT: Nordic/UK Coverage Release
-- **Status:** STAGED in drafts-outbound/ — at project-editorial
+- **Status:** DISPATCHED to project-gis 2026-05-28 (msg-id `project-editorial-20260528-text-artifacts-dispatch`) — awaiting coverage verification + language pass return
 
 ### B12 — TEXT: UK/EU Coverage Release
-- **Status:** STAGED in drafts-outbound/ — at project-editorial
+- **Status:** DISPATCHED to project-gis 2026-05-28 (msg-id `project-editorial-20260528-text-artifacts-dispatch`) — awaiting coverage verification + language pass return
 
 ### B13 — TOPIC: Regional Name Resolution Architecture
-- **Status:** STAGED in drafts-outbound/ — at project-editorial
+- **Status:** REGISTRY DRIFT — file not found in drafts-outbound (2026-05-28 audit). File not staged; project-gis must write and dispatch. [2026-05-28]
 
 ### B14 — TOPIC: Co-location Tier Nomenclature
-- **Status:** STAGED in drafts-outbound/ — at project-editorial
+- **Status:** REGISTRY DRIFT — file not found in drafts-outbound (2026-05-28 audit). File not staged; project-gis must write and dispatch. [2026-05-28]
 
 ### B15 — TOPIC: GIS as BIM Substrate
-- **Status:** STAGED in drafts-outbound/ — at project-editorial
+- **Status:** REGISTRY DRIFT — file not found in drafts-outbound (2026-05-28 audit). File not staged; project-gis must write and dispatch. [2026-05-28]
 
 ### B16 — TOPIC: UK/EU Food Retail Coverage
-- **Status:** STAGED in drafts-outbound/ — at project-editorial
+- **Status:** REGISTRY DRIFT — file not found in drafts-outbound (2026-05-28 audit). File not staged; project-gis must write and dispatch. [2026-05-28]
 
 ---
 
