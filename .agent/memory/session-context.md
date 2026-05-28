@@ -5,6 +5,82 @@ a fourth entry is added.
 
 ---
 
+## 2026-05-28 session 6 | Totebox | claude-code (Sonnet 4.6)
+
+**Done this session:**
+- Wrote two new TOPIC bilingual pairs (EN+ES) and committed to drafts-outbound:
+  - `topic-totebox-archive` — sovereign WORM data vault; disk image IS the archive;
+    freely transferable; JSONL/GeoParquet/Markdown; Diode + PSP access only; MBA keypair;
+    cluster naming convention; what it is NOT.
+  - `topic-ppn-architecture-overview` — four-layer architecture overview (operator / PPN /
+    hypervisor / Totebox Orchestration); three key properties (isolation invariant, freely
+    transferable archives, zero crypto authority at network plane); what PPN is NOT; links
+    to all 8 detailed TOPICs.
+- Wrote three GUIDE drafts and committed to drafts-outbound:
+  - `guide-ppn-first-deployment` — 5-step first-deployment sequence from BRIEF §7, all steps
+    unblocked, with exact commands and troubleshooting table.
+  - `guide-node-join-ceremony` — approval workflow (node side: Crockford base32 short code;
+    operator side: poll + approve via curl); CPace PAKE + SAS; nodes.jsonl; 600s TTL.
+  - `guide-vm-prove-balloon-demo` — vm-prove.sh walkthrough; virtio_balloon demo from QEMU
+    monitor; pool formula; GCP nested virt enablement; proves-vs-not-yet table.
+- Updated manifest.md: wiki leg leg-pending → leg-active; 7 TOPICs + 3 GUIDEs in
+  staged_for_pickup.
+- VM proof on GCP TCG: Alpine Linux 3.20 (kernel 6.6.31-0-virt) booted in 114s; full
+  virtio_balloon cycle confirmed: `balloon 128` → `actual=128`; `balloon 256` → `actual=256`.
+- Added `infrastructure/virt/.gitignore` — excludes Alpine ISO + QCOW2 work artifacts.
+- Sent outbox session 6 pickup notice to project-editorial (9 TOPIC pairs + 3 GUIDEs total).
+
+**Commits this session:**
+- `5029e0fd` — docs(ppn): totebox-archive + ppn-architecture-overview TOPICs; 3 GUIDE drafts; manifest leg-active
+- `04388865` — chore(vm-prove): mark GCP TCG balloon proof complete
+- `d608f18b` — chore: gitignore virt/work/ — Alpine ISO + QCOW2 are build artifacts
+
+**Pending / carry-forward:**
+- Q2: Ratify `10.50.0.0/24` as canonical PPN subnet (de facto confirmed in guide-lxc-network-admin)
+- Q3: GCP static IP for cloud relay
+- Q4: Laptop B local IP + `network.woodfinegroup.com` DNS status
+- Q5: Is service-slm Doorman deployed at `localhost:9080`? (app-network-admin F8 still uses subprocess)
+- Q6: Flag stale editorial pickup to Command Session?
+- All 7 Genesis Protocol code steps in BRIEF §9.2 gated on Q2–Q6
+- 9 TOPIC pairs + 3 GUIDEs in drafts-outbound awaiting project-editorial pickup
+- 12 commits ahead of origin/main — Stage 6 from Command Session when ready
+
+**Operator preferences surfaced:**
+- "keep going" / "what can we do next" workflow: plans work items in NEXT.md, approves plan,
+  then runs phases sequentially; no need to pause between phases once plan is approved.
+
+---
+
+## 2026-05-28 session 5 | Totebox | claude-code (Sonnet 4.6)
+
+**Done this session:**
+- Wrote os-network-admin TOPIC bilingual pair (EN+ES) — corrects published wiki article that
+  conflates os-network-admin (Foundation OS) with app-network-admin (F8 Terminal on top).
+  Staged draft is the corrected replacement; project-editorial applies it on pickup.
+- Wrote ppn-hypervisor-resource-pool TOPIC bilingual pair (EN+ES) — per-node CPU/RAM pool
+  management; virtio_balloon formula; cgroups v2 cpu.weight; orthogonality with os-orchestration.
+- Updated BRIEF-PPN-DEV-BOOTSTRAP.md §3 (four-layer diagram) and §6 (virtio_balloon proof plan).
+- Updated BRIEF-PPN-ARCHITECTURE.md §9.4 (Resource Pool Management added).
+- Added `-device "virtio-balloon"` to both QEMU invocations in `infrastructure/virt/vm-prove.sh`.
+- Updated NEXT.md: dev-environment bootstrap tasks, future milestones.
+- Sent outbox session 5 pickup notice to project-editorial.
+
+**Commits this session:**
+- `7ec14c86` — docs(ppn): document resource pool, os-network-admin; add virtio_balloon to vm-prove.sh
+- (and `565bc755` from earlier in same conversation — dev-environment bootstrap)
+
+**Pending / carry-forward:**
+- Q2–Q6 operator decisions (same as session 4)
+- All 7 code implementation steps gated on those decisions
+- 7 TOPIC pairs in drafts-outbound awaiting project-editorial pickup
+
+**Operator preferences surfaced:**
+- Produces TOPIC and GUIDE drafts proactively alongside code work — "what can we do next,
+  also need to make TOPIC and GUIDE and send them to project-editorial."
+- Wants accuracy audit of existing published topics when new TOPICs are added.
+
+---
+
 ## 2026-05-27 session 4 | Totebox | claude-code (Sonnet 4.6)
 
 **Done this session:**
@@ -36,72 +112,3 @@ a fourth entry is added.
   foundation so no tokens wasted building wrong thing.
 - 2-question bootstrap UX is the north star: "Is this the first node?" / "What is the
   address of the existing network?" — everything else flows from this simplicity invariant.
-
----
-
-## 2026-05-20 session 3 | Totebox | claude-code
-
-**Done this session:**
-- Wrote three TOPIC draft pairs (EN + ES) and committed to drafts-outbound:
-  - `topic-genesis-protocol` — 5-step Genesis Protocol, deferred fleet assembly,
-    machine-based-auth relationship. One open question noted (EAPOL vs intended arch).
-  - `topic-ppn-command-protocol` — 16-byte binary packet, 4-step dispatch, simultaneous
-    broadcast rationale, Diode Standard relationship.
-  - `topic-service-pointsav-link` — four properties (default off, hot-plug, clean severance,
-    policy in adapter not kernel), Universal Standard.
-- Sent outbox pickup notice to project-editorial covering all five staged draft pairs
-  (sovereign-mesh from session 2 + three new pairs from this session).
-- Updated NEXT.md TOPIC leg to list all four pending draft pairs.
-
-**Commits this session:**
-- `94290124` — editorial: stage three TOPIC draft pairs (genesis-protocol, ppn-command-protocol, service-pointsav-link EN+ES)
-- `de899d74` — outbox: notify project-editorial of three new TOPIC draft pairs
-- `4d5b6272` — next: update TOPIC leg — add three new draft pairs staged session 3
-
-**Pending / carry-forward:**
-- All 4 operator decisions still blocking (EAPOL vs Genesis Protocol; subnet ratification;
-  GCP static IP; Laptop A/B IPs + DNS)
-- `os-infrastructure/src/main.rs` missing symbols — blocked on above
-- 5 draft pairs in drafts-outbound awaiting project-editorial pickup
-- GUIDE fixes (guide-deploy-vpn.md, guide-mesh-orchestration.md) — some cross-repo / Command Session scope
-- Section 4c new code work (Genesis Protocol impl, F8/service-slm wiring, binary protocol) — blocked on decisions
-
-**Operator preferences surfaced:**
-- Asked "what else is on the list" — wants a clear view of remaining work before shutdown
-- No new preferences beyond sessions 1+2
-
----
-
-## 2026-05-20 session 2 | Totebox | claude-code
-
-**Done this session:**
-- Stage sovereign-mesh TOPIC: expanded one-sentence stub to full PPN architecture topic
-  (hub-spoke topology, WireGuard overlay, ppn0, 16-byte binary protocol on port 8090,
-  Genesis Protocol + Diode Standard integration, three node roles). EN + ES drafts staged
-  to `.agent/drafts-outbound/`. Outbox message sent to project-editorial.
-- Fixed `os-infrastructure/Makefile` — wrong script name (`forge_infrastructure_iso.sh` → `forge_iso.sh`)
-- Fixed `os-infrastructure/forge_iso.sh` — old monorepo path → `/srv/foundry/vendor/pointsav-monorepo`
-- Gitignored build artifacts in `os-infrastructure/` and `os-network-admin/` — 14 tracked binaries
-  removed from index; `.gitignore` created in both crates
-- Created `app-infrastructure-onprem/`, `app-infrastructure-leased/`, `app-infrastructure-cloud/`
-  Reserved-folder scaffolds with bilingual READMEs
-- Split `system-network-interface` — extracted F8 Terminal Gateway binary to new `app-network-admin/`
-  crate; `system-network-interface` is now a pure lib with no std deps; both compile clean
-
-**Commits this session:**
-- `88831f63` — topic: stage sovereign-mesh EN+ES drafts
-- `d3c6a7c8` — fix: Makefile, forge_iso.sh, gitignore build artifacts
-- `a958b217` — scaffold: app-infrastructure-onprem, -leased, -cloud
-- `b2eb755c` — refactor: split system-network-interface → app-network-admin
-
-**Pending / carry-forward:**
-- 4 operator decisions still blocking code and guide work (EAPOL vs Genesis Protocol;
-  subnet `10.50.0.0/24` ratification; GCP static IP; Laptop A/B IPs + DNS status)
-- `os-infrastructure/src/main.rs` missing symbols — blocked on above decision
-- sovereign-mesh drafts need project-editorial pickup → commit to content-wiki-documentation
-- GUIDE fix: `guide-deploy-vpn.md` path (cross-repo, Command Session admin-tier scope)
-
-**Operator preferences surfaced:**
-- Works through NEXT.md items systematically — confirmed each section before proceeding
-- No notable new preferences beyond what was recorded in session 1
-

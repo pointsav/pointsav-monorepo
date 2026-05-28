@@ -4,6 +4,45 @@ Entries aged out of the rolling 3-session summary in `session-context.md`. Newes
 
 ---
 
+## 2026-05-20 session 3 | Totebox | claude-code
+
+**Done this session:**
+- Wrote three TOPIC draft pairs (EN + ES) and committed to drafts-outbound:
+  - `topic-genesis-protocol` — 5-step Genesis Protocol, deferred fleet assembly,
+    machine-based-auth relationship. One open question noted (EAPOL vs intended arch).
+  - `topic-ppn-command-protocol` — 16-byte binary packet, 4-step dispatch, simultaneous
+    broadcast rationale, Diode Standard relationship.
+  - `topic-service-pointsav-link` — four properties (default off, hot-plug, clean severance,
+    policy in adapter not kernel), Universal Standard.
+- Sent outbox pickup notice to project-editorial covering all five staged draft pairs
+  (sovereign-mesh from session 2 + three new pairs from this session).
+- Updated NEXT.md TOPIC leg to list all four pending draft pairs.
+
+**Commits:** `94290124`, `de899d74`, `4d5b6272`
+
+**Pending / carry-forward:**
+- All 4 operator decisions still blocking (EAPOL vs Genesis Protocol; subnet ratification;
+  GCP static IP; Laptop A/B IPs + DNS)
+- 5 draft pairs in drafts-outbound awaiting project-editorial pickup
+
+---
+
+## 2026-05-20 session 2 | Totebox | claude-code
+
+**Done this session:**
+- Stage sovereign-mesh TOPIC: expanded one-sentence stub to full PPN architecture topic.
+- Fixed `os-infrastructure/Makefile` and `forge_iso.sh` paths.
+- Gitignored build artifacts in `os-infrastructure/` and `os-network-admin/`.
+- Created `app-infrastructure-onprem/`, `-leased/`, `-cloud/` Reserved-folder scaffolds.
+- Split `system-network-interface` — extracted F8 Terminal Gateway binary to `app-network-admin/`.
+
+**Commits:** `88831f63`, `d3c6a7c8`, `a958b217`, `b2eb755c`
+
+**Pending / carry-forward:**
+- 4 operator decisions blocking code + guides; sovereign-mesh drafts need editorial pickup.
+
+---
+
 ## 2026-05-20 session 1 | Totebox | claude-code
 
 **Done this session:**
