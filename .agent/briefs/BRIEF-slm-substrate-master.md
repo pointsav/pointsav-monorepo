@@ -38,13 +38,13 @@ notes: >
 
 ---
 
-## §1 — Current live state (as of 2026-05-28T05:30Z)
+## §1 — Current live state (as of 2026-05-28T~18:00Z)
 
 | Component | Version | Status | Notes |
 |---|---|---|---|
-| `slm-doorman-server` | rebuilt 2026-05-28 (this session) | **active** | Think-strip + 180s/300s timeouts; drain-backoff; `SLM_FORCE_BROKER_MODE=true`; idle 120min |
-| `service-content` | rebuilt 2026-05-24 | **active** | LadybugDB loaded 05:09; CORPUS drain deferred until Yo-Yo restarts |
-| `yoyo-tier-b-1` | 2026-05-13 Packer image | **TERMINATED** (stopped 05:25 UTC) | Restart with `start-yoyo.sh --runtime=2h` |
+| `slm-doorman-server` | rebuilt 2026-05-28 (prev session) | **active** | Think-strip + 180s/300s timeouts; drain-backoff; `SLM_FORCE_BROKER_MODE=true`; idle 120min; **NEEDS REBUILD** for reasoning_content + reqwest-reclassify fixes (commit `446df43f`) |
+| `service-content` | rebuilt 2026-05-24 | **active** | LadybugDB loaded; CORPUS drain deferred until Yo-Yo restarts; **NEEDS REBUILD** for SC-2/3/5 fixes (commit `e263d6f0`) |
+| `yoyo-tier-b-1` | 2026-05-13 Packer image | **TERMINATED** | Restart with `start-yoyo.sh --runtime=2h`; next rebuild adds -fa/deepseek/budget flags |
 | `local-slm.service` | OLMo 2 1B | active | Tier A disabled — kept for health only |
 | `local-doorman.env` | — | current | `SLM_YOYO_GCP_ZONE=europe-west4-a`; `SLM_YOYO_IDLE_MINUTES=120`; `SLM_APPRENTICESHIP_ENABLED=true`; `SLM_BRIEF_TIER_B_THRESHOLD_CHARS=0` |
 
@@ -54,12 +54,24 @@ notes: >
 - Tier C: not configured (no `ANTHROPIC_API_KEY`)
 - Result: `ai_available: false` until Yo-Yo restarts
 
-**Think-model fixes deployed (this session):**
+**Think-model fixes deployed (prev session commit `d835cab5`):**
 - `SOCKET_TIMEOUT` raised 60s → 180s; `OUTER_DEADLINE` raised 90s → 300s
 - `strip_think_blocks()` added to extract handler — strips `<think>...</think>` before JSON parse
 - Shadow briefs capped at `max_tokens: 2048` (prevents runaway Think generation)
 - Root cause: OLMo-3 32B Think spends ~500 tokens on reasoning before JSON answer; 60s timeout
   fired before `</think>` was emitted; new 180s timeout + stripping fixes this
+
+**Flow debug session fixes (this session — code complete; binaries need rebuild):**
+- `reasoning_content` field added to `ComputeResponse`; extract handler uses it when
+  `--reasoning-format deepseek` is active (clean JSON in content; no stripping needed)
+- reqwest decode errors (issue #2839) reclassified as `TierBTimeout` for correct backoff
+- `start-yoyo.sh` `update_doorman_env()` now restarts local-doorman.service after writing
+  new IP to env file — previously IP was written but Doorman kept running with old endpoint
+- `llama-server.service` Packer template: `-fa`, `--reasoning-format deepseek`,
+  `--reasoning-budget 1024` added (active after next Packer rebuild)
+- service-content SC-3 (Doorman startup health-check), SC-5 (log CORPUS errors),
+  SC-2 (defer_reason differentiation), SC-3d (30s retry loop), SC-3e (graph-first write),
+  SC-3f (buffer pool env var) — all in commit `e263d6f0`
 
 **Shadow capture state:**
 - Queue: `8GKR3472S2X79VC10Q4ECZHNE1` (retrying — will succeed on next Yo-Yo start)
@@ -306,11 +318,18 @@ representative of production.
   after retry (first two attempts timed at 60s; third try succeeded in 58s = marginal win).
   New 180s timeout means shadow briefs no longer race against the socket limit.
 
-- [ ] **Verify CORPUS extraction succeeds** after next Yo-Yo start
-  service-content CORPUS drain should complete with "entities extracted: N" messages.
-  With 180s timeout + think-block stripping, extraction should succeed.
+- [ ] **Rebuild + deploy slm-doorman-server and service-content** to pick up this session's fixes
   ```bash
-  sudo journalctl -u local-content -f | grep -E 'entities extracted|WATCHER|deferred'
+  cargo build --release -p slm-doorman-server
+  cargo build --release -p service-content
+  sudo systemctl restart local-doorman.service local-content.service
+  ```
+
+- [ ] **Verify CORPUS extraction succeeds** after next Yo-Yo start + binary rebuild
+  service-content CORPUS drain should complete with "entities extracted: N" messages.
+  With SC-2/3/5 fixes + deepseek format (after Packer rebuild), extraction should succeed cleanly.
+  ```bash
+  sudo journalctl -u local-content -f | grep -E 'entities extracted|WATCHER|deferred|RETRY'
   ```
 
 ---
@@ -319,7 +338,7 @@ representative of production.
 
 ### Command Session scope
 
-- [ ] **Stage 6 promote** — 14+ commits ahead of `origin/main`
+- [ ] **Stage 6 promote** — 16+ commits ahead of `origin/main` (2 more added this session: `446df43f` Tier 2, `e263d6f0` Tier 3)
   Prerequisite: rebase per inbox `command-20260520-stage6-rebase-required`
   ```bash
   # From project-intelligence archive:
@@ -358,10 +377,9 @@ representative of production.
   `service-slm/crates/slm-doorman-server/src/http.rs` — graph proxy handlers currently
   bypass audit validation.
 
-- [ ] **Yo-Yo env IP update robustness**
-  `start-yoyo.sh` `sed` for endpoint vars runs without `sudo` and fails silently on some paths.
-  Investigate and fix the `print_post_provision_steps()` env update in the script, or convert
-  to a dedicated `update-doorman-env.sh` helper that checks permissions first.
+- [x] **Yo-Yo env IP update + Doorman restart** — `update_doorman_env()` now restarts
+  local-doorman.service after writing new IP; commit `446df43f` ✓
+  (Remaining: non-writable path still prints instructions only — low priority)
 
 - [ ] **is_already_processed integration test (LbugGraphStore)**
   Sprint 5 test only covers `SqliteGraphStore`. A live `LbugGraphStore` integration test
